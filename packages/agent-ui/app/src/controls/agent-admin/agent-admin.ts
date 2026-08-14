@@ -171,18 +171,21 @@ import {
   sanitizeModel,
   runStubAgentTurn,
   sanitizeNumber,
-  SURFACE_HELP,
-  type SurfaceHelpKey,
+  ADMIN_HELP,
+  helpKeyForKind,
+  TURN_LOG_CAP,
+  type AdminHelpKey,
   type AgentConfigSnapshot,
   type AdminAgentTurn,
   type AdminAgentSurfaceTurn,
   type AdminTurn,
   type AdminTurnRequest,
 } from './agent-admin-schema.ts'
-// GH #844 — the Surface tab's question-mark help affordance (a `ui-tooltip` card per group header and
-// element row). The factory owns the DOM shape + the `ui-tooltip`/`ui-icon` tag registrations; the COPY it
-// projects lives in `agent-admin-schema.ts` above, shared with the rows' own native `title` hints.
-import { buildSurfaceHelp, buildSurfaceHelpForSummary } from './surface-help.ts'
+// GH #844, widened admin-wide by GH #866 — the question-mark help affordance (a `ui-tooltip` card per
+// group header, section header and element row). The factory owns the DOM shape + the `ui-tooltip`/
+// `ui-icon` tag registrations; the COPY it projects lives in `agent-admin-schema.ts` above, shared with
+// the rows' own native `title` hints.
+import { buildAdminHelp, buildAdminHelpForSummary } from './admin-help.ts'
 import { EFFORT_LEVELS, type EffortLevel, type TurnReference } from '../conversation/composer-options.ts'
 import {
   ENTRY_KINDS,
@@ -317,9 +320,9 @@ const CAPABILITY_KINDS: ReadonlyArray<{ kind: string; label: string; addLabel: s
   { kind: ENTRY_KINDS.catalog, label: 'Catalogs', addLabel: 'Add catalog', liveHeading: 'Catalogs available to you' },
 ]
 
-/** Dialog Turns retention cap (vision rev.5) — a bounded ring; the oldest records fall off. Session-
- *  ephemeral by design (like `#history`): the store persists the agent's CONFIG, never its traffic. */
-const TURN_LOG_CAP = 20
+// GH #866 — `TURN_LOG_CAP` moved to `agent-admin-schema.ts` (imported above): the Context: Dialog help
+// card states the retention figure, and the copy table is data, so the constant lives with the data
+// rather than being hand-copied into prose. Same value, same meaning, one home.
 
 /** GH #63 — max CONSECUTIVE renderer-error-driven surface turns before the loop halts visibly (the
  *  produce() `maxRounds: 3` self-correct discipline, applied to the client-turn loop): an error turn is
@@ -1037,16 +1040,20 @@ export class UIAgentAdminElement extends UIElement {
     // flexible spacer, then trailing action/selection content pinned to the right edge — every
     // `surfaceRow` and its caller-appended trailing content (catalog select / note) follows this.
     //
-    // GH #844 — the row's copy is no longer a literal at the call site: `help` names its `SURFACE_HELP`
+    // GH #844 — the row's copy is no longer a literal at the call site: `help` names its `ADMIN_HELP`
     // entry (agent-admin-schema.ts) and BOTH renderings come from it — the native `title` hover hint from
     // `.summary`, and the question-mark card from the whole record. One source, so the hint and the card
-    // structurally cannot drift. The icon lands directly after the label (before the spacer): it reads as
-    // part of the label, and it is hidden at rest until this row is hovered or the icon itself is focused
-    // (agent-admin.css — the reveal is CSS-only; the focus half is the a11y floor, not an extra).
+    // structurally cannot drift. It is hidden at rest until this row is hovered or the icon itself is
+    // focused (agent-admin.css — the reveal is CSS-only; the focus half is the a11y floor, not an extra).
+    //
+    // GH #866 (Kim's ruling 2, 2026-08-14, from the Planner row's screenshot) — the icon lands AFTER the
+    // spacer, at the row's trailing edge. It used to sit directly after the label, which read as part of
+    // the label rather than as the row's own affordance; the row grammar is space-between, and the help
+    // icon is trailing content like any other (admin-help.ts's header states the whole placement law).
     const surfaceRow = (
       surface: string,
       label: string,
-      help: SurfaceHelpKey,
+      help: AdminHelpKey,
     ): { row: HTMLElement; toggle: HTMLElement & { checked: boolean; disabled: boolean } } => {
       const row = document.createElement('div')
       row.setAttribute('data-part', 'surface-row')
@@ -1058,10 +1065,10 @@ export class UIAgentAdminElement extends UIElement {
       const rowLabel = document.createElement('span')
       rowLabel.setAttribute('data-part', 'surface-label')
       rowLabel.textContent = label
-      rowLabel.title = SURFACE_HELP[help].summary
+      rowLabel.title = ADMIN_HELP[help].summary
       const spacer = document.createElement('span')
       spacer.setAttribute('data-part', 'surface-spacer')
-      row.append(toggle, rowLabel, buildSurfaceHelp(help), spacer)
+      row.append(toggle, rowLabel, spacer, buildAdminHelp(help))
       return { row, toggle }
     }
 
@@ -1146,9 +1153,13 @@ export class UIAgentAdminElement extends UIElement {
     })
     this.#surfaceGenuiDogfoodSwitch = genuiDogfoodSwitch
     // Switch leads, label next — the GH #138 row grammar the modality rows above already follow. GH #844
-    // adds the help icon in the SAME position a modality row carries it: directly after the label.
-    genuiDogfoodLabel.title = SURFACE_HELP['genui-dogfood'].summary
-    genuiDogfoodRow.append(genuiDogfoodSwitch, genuiDogfoodLabel, buildSurfaceHelp('genui-dogfood'))
+    // adds the help icon in the SAME position a modality row carries it; GH #866 (Kim's ruling 2) moves
+    // that position to the row's TRAILING edge, so this row gains the same `surface-spacer` the modality
+    // rows use to get there — [switch | label | spacer | ?], one grammar for both row flavors.
+    genuiDogfoodLabel.title = ADMIN_HELP['genui-dogfood'].summary
+    const genuiDogfoodSpacer = document.createElement('span')
+    genuiDogfoodSpacer.setAttribute('data-part', 'surface-spacer')
+    genuiDogfoodRow.append(genuiDogfoodSwitch, genuiDogfoodLabel, genuiDogfoodSpacer, buildAdminHelp('genui-dogfood'))
     genuiGroup.detail.append(genuiDogfoodRow)
 
     // ADR-0174 cl.1 / OF3 (ruled here) — the planner-stage pilot's own modality row, placed beside GenUI
@@ -1220,6 +1231,9 @@ export class UIAgentAdminElement extends UIElement {
     })
     bankrollRow.append(bankrollLabel, bankrollSpacer, bankrollReset)
     const bankrollItem = settingsItem('bankroll', 'Bankroll', bankrollRow)
+    // GH #866 — a switch-less heading row: the icon is the row's only trailing content, so the summary
+    // label's own flex-grow already puts it at the inline end (no spacer element needed here).
+    bankrollItem.append(buildAdminHelpForSummary('bankroll'))
     this.#bankrollItem = bankrollItem as HTMLElement & { hidden: boolean }
 
     surfaceOptions.append(markdown.row, a2uiGroup.group, genuiGroup.group, planner.row, authoring.row)
@@ -1230,7 +1244,11 @@ export class UIAgentAdminElement extends UIElement {
     // ui-disclosure's own slot partition adopts them into the summary part at connect (ADR-0158), no
     // connect-order placement dance required.
     const agentItem = settingsItem('agent', 'Agent', settingsEl)
-    agentItem.append(agentSwitch)
+    // GH #866 (Kim's ruling 1, 2026-08-14, from the group-header screenshot) — on a heading row that ALSO
+    // carries a master switch the order is `[?] [switch]`: the help icon immediately before the switch,
+    // the switch keeping the outermost position. That is DOM order here — both are `slot="summary"`
+    // children and `ui-disclosure` adopts them in order after its own label (ADR-0158).
+    agentItem.append(buildAdminHelpForSummary('agent'), agentSwitch)
 
     // S7-d (LLD §16.4) — "Reset Agent" at the model-grid fold's content END: a second content element in
     // the SAME settingsItem below (`modelGrid` is wholesale-`replaceChildren`d by `#renderModelGrid` on
@@ -1284,12 +1302,20 @@ export class UIAgentAdminElement extends UIElement {
     this.#deleteAgentRow = deleteAgentRow
     deleteAgentRow.append(deleteAgentLabel, deleteAgentSpacer, deleteAgentBtn)
 
+    // GH #866 — the Model fold's own heading-row icon. Built here rather than inline in the append below
+    // only because `settingsItem(...)`'s content rest-parameter and a `slot="summary"` child are two
+    // different things: the icon must be appended AFTER, like every other slotted control on this file.
+    // GH #845's `deleteAgentRow` rides the SAME call as ordinary fold CONTENT — the two are orthogonal.
+    const modelItem = settingsItem('model', 'Model', modelGrid, resetAgentRow, deleteAgentRow)
+    modelItem.append(buildAdminHelpForSummary('model'))
+
     // GH #574 — Agent tab: who it is (Agent · Model · Bankroll — persona state lives with the persona).
     agentContent.append(
       agentItem,
-      // GH #845 (LLD-C7) — `delete-agent-row` joins as a FURTHER sibling in this same variadic call
-      // (`...content`), after Reset: both are model-fold content-end rows, neither is grid content.
-      settingsItem('model', 'Model', modelGrid, resetAgentRow, deleteAgentRow),
+      // GH #845 (LLD-C7) — `delete-agent-row` joins as a FURTHER sibling in the same variadic
+      // `settingsItem(...)` call above, after Reset: both are model-fold content-end rows, neither is grid
+      // content. GH #866 hoisted that call to `modelItem` so its heading row can carry a help icon.
+      modelItem,
       // GH #541 — Bankroll sits adjacent to Surface Options (the modality choices it reads alongside),
       // as its own group rather than a row inside them; GH #574 moved the WHOLE Surface Options fold to
       // its own tab, so Bankroll now closes out the Agent tab instead.
@@ -1299,14 +1325,19 @@ export class UIAgentAdminElement extends UIElement {
     // kinds below — Skills/Workflows/Resources/Tools). Pattern sources rides the Surface tab instead
     // (see the CAPABILITY_KINDS loop below) — it configures HOW the GenUI modality renders, not a
     // capability the agent has.
-    capabilitiesContent.append(settingsItem(ENTRY_KINDS.promptSection, 'Instructions', promptSections.host))
+    // GH #866 — Instructions is a capability SECTION like the four kinds below, so it opts into the same
+    // help seam through the same lookup (`helpKeyForKind`), never a second hand-written mapping. It
+    // carries no master switch, so its icon is the heading row's only trailing content.
+    const promptSectionsItem = settingsItem(ENTRY_KINDS.promptSection, 'Instructions', promptSections.host)
+    appendSectionHelp(promptSectionsItem, ENTRY_KINDS.promptSection)
+    capabilitiesContent.append(promptSectionsItem)
     // GH #574 — Surface tab: how it renders (Surface Options · Pattern sources).
     // GH #844 — a GROUP HEADER's help icon rides its fold's heading row exactly as the master switches
     // already do: appended as an ordinary fold child marked `slot="summary"`, adopted into the summary
     // part by `ui-disclosure` itself at connect (ADR-0158). No placement dance, and it stays on the
     // heading row whether the fold is open or closed.
     const surfaceOptionsItem = settingsItem('surface', 'Surface Options', surfaceOptions)
-    surfaceOptionsItem.append(buildSurfaceHelpForSummary('surface-options'))
+    surfaceOptionsItem.append(buildAdminHelpForSummary('surface-options'))
     surfaceContent.append(surfaceOptionsItem)
     for (const { kind, label, addLabel } of CAPABILITY_KINDS) {
       const section = this.#makeSection(kind, addLabel)
@@ -1336,9 +1367,13 @@ export class UIAgentAdminElement extends UIElement {
         catalogHeader.setAttribute('data-detail', 'a2ui-catalog')
         const catalogLabel = document.createElement('span')
         catalogLabel.setAttribute('data-part', 'surface-detail-label')
-        catalogLabel.textContent = SURFACE_HELP['a2ui-catalog'].title
-        catalogLabel.title = SURFACE_HELP['a2ui-catalog'].summary
-        catalogHeader.append(catalogLabel, buildSurfaceHelp('a2ui-catalog'))
+        catalogLabel.textContent = ADMIN_HELP['a2ui-catalog'].title
+        catalogLabel.title = ADMIN_HELP['a2ui-catalog'].summary
+        // GH #866 (Kim's ruling 2) — trailing-edge placement, reached the same way every other row does:
+        // a `surface-spacer` between the label and the icon.
+        const catalogSpacer = document.createElement('span')
+        catalogSpacer.setAttribute('data-part', 'surface-spacer')
+        catalogHeader.append(catalogLabel, catalogSpacer, buildAdminHelp('a2ui-catalog'))
         a2uiGroup.detail.append(catalogHeader, section.host)
         continue
       }
@@ -1361,15 +1396,15 @@ export class UIAgentAdminElement extends UIElement {
         if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
       })
       this.#kindSwitches.set(kind, kindSwitch)
+      // GH #866 — the help icon goes on FIRST, the master switch after it (Kim's ruling 1: `[?] [switch]`
+      // at the trailing edge, the switch outermost). GH #844's Surface-tab-only boundary is GONE: EVERY
+      // kind opts in through the one `helpKeyForKind` lookup, so a kind that has no help record still
+      // mounts nothing (the seam is default-off by construction, not by an `if` per kind here).
+      appendSectionHelp(item, kind)
       item.append(kindSwitch)
       // GH #574 — Pattern sources rides the Surface tab (how it renders, alongside Surface Options —
       // the modality it conditions); every other capability kind rides Capabilities (what it can do).
-      // GH #844 — and so its fold heading row (and ONLY its, of the capability kinds) carries a help
-      // icon: the affordance is Surface-tab-scoped by ruling, and the Capabilities tab's own four kinds
-      // are a separate, deliberately deferred pass. The icon slots onto the summary beside the master
-      // switch already there, the same ADR-0158 adoption.
       if (kind === ENTRY_KINDS.patternSource) {
-        item.append(buildSurfaceHelpForSummary('pattern-source'))
         surfaceContent.append(item)
       } else capabilitiesContent.append(item)
     }
@@ -3477,6 +3512,9 @@ export class UIAgentAdminElement extends UIElement {
           systemPrompt: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), this.#bankrollForPrompt(store)),
         },
         openStates.get('agent') ?? true,
+        // GH #866 — its OWN record, not the Agent tab's: this item is the compiled, read-only projection,
+        // which is a different thing to explain than the editor that produces it.
+        'context-agent',
       ),
     )
     for (const { kind, label } of CAPABILITY_KINDS) {
@@ -3498,6 +3536,9 @@ export class UIAgentAdminElement extends UIElement {
             })),
           },
           openStates.get(kind) ?? false,
+          // GH #866 — the SAME per-kind record the Capabilities/Surface tab's own fold uses: one concept,
+          // one explanation, whether you are editing it or reading what it compiled to.
+          helpKeyForKind(kind),
         ),
       )
     }
@@ -3519,7 +3560,16 @@ export class UIAgentAdminElement extends UIElement {
     for (let i = this.#turnLog.length - 1; i >= 0; i -= 1) {
       const turn = this.#turnLog[i]!
       const label = String(turn.n).padStart(2, '0')
-      const item = contextItem(`turn-${turn.n}`, label, { arm: turn.arm, request: turn.request, response: turn.response }, openStates.get(`turn-${turn.n}`) ?? turn === newest)
+      // GH #866 — every turn fold carries the SAME `context-turn` record: what the reader needs explained
+      // is the RECORD SHAPE (which arm ran, what was sent, what came back, how long the log is kept), not
+      // this particular turn — so one entry serves them all rather than per-turn copy that cannot exist.
+      const item = contextItem(
+        `turn-${turn.n}`,
+        label,
+        { arm: turn.arm, request: turn.request, response: turn.response },
+        openStates.get(`turn-${turn.n}`) ?? turn === newest,
+        'context-turn',
+      )
       item.setAttribute('data-part', 'context-turn')
       items.push(item)
     }
@@ -3891,13 +3941,37 @@ function foldItem(part: string, key: string, summary: string, open: boolean): HT
  *  its summary renders as a plain section heading (the shared heading register, chevron kept: the
  *  folds are load-bearing, the Agent item carries the full composed system prompt and every dialog turn
  *  carries its whole request payload) and the JSON body is the section's ONE card. */
-function contextItem(key: string, summary: string, value: unknown, open: boolean): HTMLElement {
+function contextItem(key: string, summary: string, value: unknown, open: boolean, help?: AdminHelpKey): HTMLElement {
   const item = foldItem('context-item', key, summary, open)
+  // GH #866 — the Context views' section headers carry the SAME affordance the Settings tabs do, built by
+  // the SAME factory and slotted the SAME way (ADR-0158). It is appended BEFORE the JSON body so it is a
+  // `slot="summary"` child at connect, and these folds carry no switch, so the icon is the heading row's
+  // only trailing content. `help` is optional rather than required because a Context item is not always a
+  // helped CONCEPT — a Dialog turn is a log record, and its own record is passed by `#renderContextTurns`.
+  if (help !== undefined) item.append(buildAdminHelpForSummary(help))
   const pre = document.createElement('pre')
   pre.setAttribute('data-part', 'context-json')
   pre.textContent = JSON.stringify(value, null, 2)
   item.append(pre)
   return item
+}
+
+/**
+ * GH #866 — the entry-list SECTION opt-in, applied: give `item`'s heading row the help icon explaining
+ * `kind`, or leave it untouched when that kind opts out (`helpKeyForKind` returns `undefined`).
+ *
+ * WHY here and not inside `mountEntryList`: the entry-list primitive has been HEADLESS since GH #225 —
+ * a section's header IS this `ui-disclosure`'s summary row, which the primitive neither owns nor can
+ * reach (it is handed a body host, not the fold). So the opt-in is a lookup the CONSUMER applies to its
+ * OWN fold: a bare `mountEntryList(...)` — the standalone ADR-0164 mount, any future consumer — mounts
+ * zero help icons and is byte-identical, which is exactly what "shared, so keep it default-off" asks for.
+ *
+ * Called BEFORE the section's master switch is appended, per Kim's 2026-08-14 ordering ruling.
+ */
+function appendSectionHelp(item: HTMLElement, kind: string): void {
+  const key = helpKeyForKind(kind)
+  if (key === undefined) return
+  item.append(buildAdminHelpForSummary(key))
 }
 
 /** One Settings-tab section (GH #225 — Kim's ruling, the GH #222 pattern applied back to the config

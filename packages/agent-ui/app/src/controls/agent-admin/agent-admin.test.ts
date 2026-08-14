@@ -4071,7 +4071,7 @@ describe('UIAgentAdminElement — the Catalogs section (ADR-0170)', () => {
     // row but is never painted on the row's line (`ui-tooltip` moves it into a top-layer popover panel).
     // The no-mirror law is about the row's OWN chrome, so read exactly that: every child except the help.
     const rowChrome = [...a2uiRow.children]
-      .filter((child) => child.getAttribute('data-part') !== 'surface-help')
+      .filter((child) => child.getAttribute('data-part') !== 'admin-help')
       .map((child) => child.textContent ?? '')
       .join('')
     expect(rowChrome, 'the row names the modality and nothing else').toBe('A2UI')

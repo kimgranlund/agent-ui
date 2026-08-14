@@ -101,7 +101,7 @@
   --ui-agent-admin-provider-gap: var(--md-sys-space-xs); /* the gap above each subsequent provider-group heading in the Model grid ([data-part='model-provider']) */
   --ui-agent-admin-spacer-min-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the shared flex-spacer floor (surface-spacer) */
   --ui-agent-admin-detail-indent: var(--md-sys-space-md); /* GH #541 — the nested detail zone's own indent under a surface row (surface-detail) */
-  /* GH #844 — the Surface tab's help affordance (surface-help-icon + the surface-help-card inside
+  /* GH #844 — the Surface tab's help affordance (admin-help-icon + the admin-help-card inside
      ui-tooltip's panel). The icon cell routes through `--md-sys-icon-*`, the one dimensional family sized
      for GLYPHS rather than gaps (ui-icon is a 1em×1em cell, icon.css — so this lands as the button's own
      font-size and the glyph fills it); the card's cap is a READING MEASURE, minted as a literal for the
@@ -684,10 +684,18 @@
     opacity: 0.45;
   }
 
-  /* ── GH #844: the help affordance — a question-mark icon on every Surface-tab group header and element
-     row, opening a `ui-tooltip` card. HIDDEN AT REST; revealed by hovering the row/heading it belongs to,
-     AND by focusing the icon itself. Both halves are load-bearing — a hover-only reveal leaves the whole
-     affordance unreachable from the keyboard, which GH #844 rules out in as many words.
+  /* ── GH #844 (the Surface tab), widened admin-wide by GH #866: the help affordance — a question-mark
+     icon on every group header, section header and element row, opening a `ui-tooltip` card. HIDDEN AT
+     REST; revealed by hovering the row/heading it belongs to, AND by focusing the icon itself. Both halves
+     are load-bearing — a hover-only reveal leaves the whole affordance unreachable from the keyboard,
+     which GH #844 rules out in as many words.
+
+     PLACEMENT (Kim's two rulings, 2026-08-14): the icon sits at the row's TRAILING edge, and where that
+     edge also carries a master switch the order is `[?] [switch]`. No rule here implements that — it is
+     DOM order plus the flex-growing spacer/summary-text the rows already have (agent-admin.ts appends
+     `[toggle, label, spacer, help]` on a row and `[help, switch]` as `slot="summary"` children on a fold;
+     disclosure.css freezes slotted controls at `flex: none` and grows the label). Stated here because
+     this is where someone will look for it.
 
      `opacity`, never `display`/`visibility`/`hidden`: the icon must stay FOCUSABLE while invisible (that
      is exactly how a Tab into it can reveal it — an unfocusable icon has no keyboard path at all), and it
@@ -695,13 +703,13 @@
      is travelling to it. The tooltip PANEL is not styled here beyond its card: it lives in the Popover
      top layer with ui-tooltip's own surface/frame/forced-colors handling, inherited unchanged.
 
-     ADDRESSING: the icon is `[data-part='surface-help'] > [data-part='anchor']`, never a bespoke part
+     ADDRESSING: the icon is `[data-part='admin-help'] > [data-part='anchor']`, never a bespoke part
      name — `ui-tooltip` stamps `data-part="anchor"` on its first element child at connect, clobbering
      anything the author set (the same platform fact entry-list.css's `ui-menu` trigger already lives
      with). Scoping through the HOST's own marker is what keeps these rules from reaching any OTHER
      control's anchor part inside this element. ────────────────────────────────────────────────────── */
 
-  [data-part='surface-help'] > [data-part='anchor'] {
+  [data-part='admin-help'] > [data-part='anchor'] {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -718,32 +726,36 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    [data-part='surface-help'] > [data-part='anchor'] {
+    [data-part='admin-help'] > [data-part='anchor'] {
       transition: none;
     }
   }
 
-  /* The reveal — four triggers, one declaration: the modality row hovered, a nested detail row hovered, a
-     fold's heading row hovered, or the icon itself hovered/focused. `:focus`, not `:focus-visible` alone:
-     a programmatic `focus()` (a test probe, a skip target) must reveal it too, and an always-visible-
-     while-focused help icon has no "was that really the keyboard?" ambiguity worth suppressing. */
-  [data-part='surface-row']:hover [data-part='surface-help'] > [data-part='anchor'],
-  [data-part='surface-detail-row']:hover [data-part='surface-help'] > [data-part='anchor'],
-  [data-part='settings-item'] > [data-part='details'] > [data-part='summary']:hover [data-part='surface-help'] > [data-part='anchor'],
-  [data-part='surface-help'] > [data-part='anchor']:hover,
-  [data-part='surface-help'] > [data-part='anchor']:focus {
+  /* The reveal — one declaration, one trigger per surface the icon can ride: the modality row hovered, a
+     nested detail row hovered, a fold's heading row hovered (all THREE fold flavors since GH #866 — the
+     Settings sections and both Context views, which is the same list the heading-register rule below
+     already carries), or the icon itself hovered/focused. `:focus`, not `:focus-visible` alone: a
+     programmatic `focus()` (a test probe, a skip target) must reveal it too, and an always-visible-while-
+     focused help icon has no "was that really the keyboard?" ambiguity worth suppressing. */
+  [data-part='surface-row']:hover [data-part='admin-help'] > [data-part='anchor'],
+  [data-part='surface-detail-row']:hover [data-part='admin-help'] > [data-part='anchor'],
+  [data-part='settings-item'] > [data-part='details'] > [data-part='summary']:hover [data-part='admin-help'] > [data-part='anchor'],
+  [data-part='context-item'] > [data-part='details'] > [data-part='summary']:hover [data-part='admin-help'] > [data-part='anchor'],
+  [data-part='context-turn'] > [data-part='details'] > [data-part='summary']:hover [data-part='admin-help'] > [data-part='anchor'],
+  [data-part='admin-help'] > [data-part='anchor']:hover,
+  [data-part='admin-help'] > [data-part='anchor']:focus {
     opacity: 1;
   }
 
   /* An explicit ring: the button carries no border/background of its own, so the UA default ring has
      nothing to sit against on some engines. Forced colors keeps it as the system Highlight. */
-  [data-part='surface-help'] > [data-part='anchor']:focus-visible {
+  [data-part='admin-help'] > [data-part='anchor']:focus-visible {
     outline: 2px solid var(--ui-agent-admin-help-focus-ink);
     outline-offset: 1px;
   }
 
   @media (forced-colors: active) {
-    [data-part='surface-help'] > [data-part='anchor']:focus-visible {
+    [data-part='admin-help'] > [data-part='anchor']:focus-visible {
       outline-color: Highlight;
     }
   }
@@ -751,7 +763,7 @@
   /* The card itself — `ui-tooltip` moves it into its own top-layer panel at connect, so these rules
      style the CONTENT plane only (surface, frame and padding are tooltip.css's). Capped to a reading
      measure: a help card that spans the whole viewport is a wall, not an explanation. */
-  [data-part='surface-help-card'] {
+  [data-part='admin-help-card'] {
     display: flex;
     flex-direction: column;
     gap: var(--ui-agent-admin-help-card-gap);
@@ -761,17 +773,17 @@
     text-align: start; /* the anchor is a button — never inherit its centered UA text-align */
   }
 
-  [data-part='surface-help-title'] {
+  [data-part='admin-help-title'] {
     font-size: 0.875rem; /* the shared Settings heading register (the settings-item summary rule above) */
     font-weight: 600;
   }
 
-  [data-part='surface-help-summary'],
-  [data-part='surface-help-body'] {
+  [data-part='admin-help-summary'],
+  [data-part='admin-help-body'] {
     margin: 0;
   }
 
-  [data-part='surface-help-facts'] {
+  [data-part='admin-help-facts'] {
     margin: 0;
     /* A typographic marker indent — relative to the card's OWN text, not the card-chrome scale, so it
        tracks the copy at any density. */
