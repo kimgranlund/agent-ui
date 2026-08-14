@@ -837,10 +837,109 @@ export function saveImportedPersona(persona: Persona): void {
   localStorage.setItem(IMPORTED_PERSONAS_KEY, JSON.stringify(next))
 }
 
-/** The full roster the page offers: the shipped presets first, then the imported library in import
- *  order. Read FRESH (never cached) — the page rebuilds nothing else when an import lands. */
+// ── GH #845 — roster management: an explicit display order, delete, rename (LLD-C11/C12/C13) ──────────
+// The page-owned half of the Edit Agents drawer. Everything here is plain functions over localStorage +
+// the existing library record — the component knows none of it (it receives `AgentRosterEntry[]`, and the
+// only new field it reads, `deletable`, is a visibility gate whose MEANING is decided right here).
+
+/**
+ * LLD-C11/§8a — the persisted display order: `string[]` of persona ids, the roster's own reading order.
+ *
+ * An explicit ORDER ARRAY, ruled over widening the library record: a per-record field cannot order shipped
+ * PRESETS relative to imported entries (presets never live in `IMPORTED_PERSONAS_KEY` at all), and AC6
+ * reorders the whole roster, presets included.
+ */
+export const ROSTER_ORDER_KEY = `${PERSIST_PREFIX}.rosterOrder`
+
+/** Fail-closed exactly like `loadImportedPersonas` — a corrupt/foreign record reads as NO order (which
+ *  degrades to today's byte-exact natural order), never a throw at page boot. */
+export function loadRosterOrder(): string[] {
+  if (typeof localStorage === 'undefined') return []
+  const raw = localStorage.getItem(ROSTER_ORDER_KEY)
+  if (raw === null) return []
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter((id): id is string => typeof id === 'string')
+  } catch {
+    return []
+  }
+}
+
+export function saveRosterOrder(ids: readonly string[]): void {
+  if (typeof localStorage === 'undefined') return
+  localStorage.setItem(ROSTER_ORDER_KEY, JSON.stringify([...ids]))
+}
+
+/**
+ * The full roster the page offers: the shipped presets first, then the imported library in import order —
+ * then GH #845's stored order applied ON TOP, here and only here.
+ *
+ * `personaRoster()` itself is the ONE choke point (LLD §8a): every caller — this page or another — sees
+ * one order, so a reorder can never be half-applied. Listed ids first, in stored order (an id no longer
+ * present is SKIPPED, so a ghost left by a delete elsewhere can never resurrect); everything unlisted is
+ * appended in the natural order above, so a fresh mint/import lands at the END and an absent/empty/corrupt
+ * order record reproduces today's order byte for byte.
+ *
+ * Read FRESH (never cached) — the page rebuilds nothing else when an import lands.
+ */
 export function personaRoster(): Persona[] {
-  return [...AGENT_PRESETS.map(personaFromPreset), ...loadImportedPersonas()]
+  const natural = [...AGENT_PRESETS.map(personaFromPreset), ...loadImportedPersonas()]
+  const order = loadRosterOrder()
+  if (order.length === 0) return natural
+  const byId = new Map(natural.map((p) => [p.id, p]))
+  const listed: Persona[] = []
+  for (const id of order) {
+    const persona = byId.get(id)
+    if (persona === undefined) continue // a ghost id — skipped, never resurrected
+    byId.delete(id) // and never listed twice, however corrupt the record
+    listed.push(persona)
+  }
+  return [...listed, ...natural.filter((p) => byId.has(p.id))]
+}
+
+/**
+ * LLD-C12/§8b — delete a custom persona: its roster record AND every persisted key it ever wrote.
+ *
+ * IMPORTED-ONLY, fail-closed (`false` on a shipped preset, removing nothing): the page never offers the
+ * affordance for a preset and the component hides it structurally, so this guard is defense in depth —
+ * three independent layers, none of which is the only one.
+ *
+ * Composes `resetPersona` rather than re-implementing its sweep: delete = reset + forget the records.
+ * `resetPersona` is the TESTED key-sweep (every `agent-admin-app.<id>.*` key including the seedVersion
+ * marker, which lives inside the namespace by design, plus the cached store instance); what it
+ * deliberately does NOT touch is the two RECORDS that say the persona exists at all — its contract is
+ * "back to shipped state", not "gone" — so this function removes those two on top: the library entry and
+ * the order-array mention. `ACTIVE_PRESET_KEY` is NOT this function's concern: the page's own fallback
+ * `applyPersona` rewrites it, and a persistence function has no business deciding who becomes active.
+ */
+export function deleteImportedPersona(persona: Persona): boolean {
+  if (persona.imported !== true) return false
+  resetPersona(persona)
+  if (typeof localStorage === 'undefined') return true
+  localStorage.setItem(IMPORTED_PERSONAS_KEY, JSON.stringify(loadImportedPersonas().filter((p) => p.id !== persona.id)))
+  saveRosterOrder(loadRosterOrder().filter((id) => id !== persona.id))
+  return true
+}
+
+/**
+ * LLD-C13/§8c — rename a custom persona durably.
+ *
+ * Imported-only (same fail-closed guard). The LIVE record is re-read through `loadImportedPersonas()`
+ * rather than trusting the caller's possibly-stale object, then written back through the existing
+ * last-write-wins `saveImportedPersona` — so a rename can never resurrect a stale `seed` a concurrent
+ * edit had already moved on from. The record's `seed` BYTES are untouched: a persona's edits live under
+ * its store keys, not in this record, so nothing about the agent itself changes and no reload semantics
+ * appear anywhere. It survives a reload because this record IS what `personaRoster()` reads at boot.
+ */
+export function renameImportedPersona(persona: Persona, label: string): boolean {
+  if (persona.imported !== true) return false
+  const trimmed = label.trim()
+  if (trimmed.length === 0) return false
+  const current = loadImportedPersonas().find((p) => p.id === persona.id)
+  if (current === undefined) return false
+  saveImportedPersona({ ...current, label: trimmed })
+  return true
 }
 
 // ── the Builder (ADR-0178 cl.4 / LLD-C7, GH #633) ─────────────────────────────────────────────────────

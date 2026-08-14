@@ -215,19 +215,29 @@ function slug(label: string): string {
  *  other persona's persisted store, which is the one failure mode library semantics must not have).
  *
  *  `tag` picks the uniquify WORDING only — the loop itself (base slug, taken-id/taken-label check,
- *  numeric suffix once both collide) is the ONE mechanism both a file import (`importedPersonaFrom`,
- *  `'imported'`) and a from-scratch mint (`mintBlankPersona`, GH #637 S1, `'new'`) run through, so a
- *  colliding blank agent gets the exact same collision-safety an imported one already has. */
+ *  numeric suffix once both collide) is the ONE mechanism a file import (`importedPersonaFrom`,
+ *  `'imported'`), a from-scratch mint (`mintBlankPersona`, GH #637 S1, `'new'`) and a duplicate
+ *  (`duplicatePersonaFrom`, GH #845, `'copy'`) all run through, so each gets the exact same
+ *  collision-safety, and no second numbering scheme was invented for the third caller. */
 function mintIdentity(
   label: string,
   taken: ReadonlySet<string>,
   takenLabels: ReadonlySet<string>,
-  tag: 'imported' | 'new',
+  tag: 'imported' | 'new' | 'copy',
 ): { id: string; label: string } {
   const base = slug(label)
-  const idFor = (n: number): string => (tag === 'imported' ? `${base}-imported${n > 1 ? `-${n}` : ''}` : `${base}${n > 1 ? `-${n}` : ''}`)
+  const idFor = (n: number): string =>
+    tag === 'imported'
+      ? `${base}-imported${n > 1 ? `-${n}` : ''}`
+      : tag === 'copy'
+        ? `${base}-copy${n > 1 ? `-${n}` : ''}`
+        : `${base}${n > 1 ? `-${n}` : ''}`
   const labelFor = (n: number): string =>
-    tag === 'imported' ? `${label} (imported${n > 1 ? ` ${n}` : ''})` : `${label}${n > 1 ? ` ${n}` : ''}`
+    tag === 'imported'
+      ? `${label} (imported${n > 1 ? ` ${n}` : ''})`
+      : tag === 'copy'
+        ? `${label} (copy${n > 1 ? ` ${n}` : ''})`
+        : `${label}${n > 1 ? ` ${n}` : ''}`
   let n = 1
   let id = idFor(n)
   let display = labelFor(n)
@@ -269,6 +279,41 @@ export function importedPersonaFrom(file: PersonaFile, roster: readonly Persona[
  * never a fresh agent's default values (the page composes those from the SAME shipped defaults
  * `ui-agent-admin` itself falls back to when no store is set, `agent-admin.ts` connected()).
  */
+/**
+ * GH #845 (LLD-C14/§8d) — duplicate ANY persona into a fresh, editable custom copy.
+ *
+ * The copy's seed is `exportPersonaFile(source, store).state` — the persona's CURRENT persisted state,
+ * byte-for-byte what an export would carry, never the original seed: duplicating an agent you have been
+ * editing must give you the agent you have been editing. That is also why this lives HERE rather than in
+ * the presets module — the snapshot projection and the identity mint are both this file's machinery, and
+ * this function is just the two composed.
+ *
+ * The SOURCE is never mutated: `readPersonaState` reads through the store, the state object is fresh, and
+ * nothing is written anywhere by this call. The caller persists the result through `saveImportedPersona`,
+ * which stamps `imported: true` unconditionally — so a duplicated PRESET becomes an ordinary custom agent
+ * (renamable, deletable) by exactly the construction an import already gets, with no special case.
+ *
+ * `taken` is the roster to be unique against — pass a FRESH read unioned with any in-memory rows, the same
+ * discipline `importedPersonaFrom`'s own call site documents (a second tab may have minted since boot).
+ */
+export function duplicatePersonaFrom(source: Persona, store: PersonaStateReader | undefined, taken: readonly Persona[]): Persona {
+  const snapshot = exportPersonaFile(source, store)
+  const { id, label } = mintIdentity(
+    source.label,
+    new Set(taken.map((p) => p.id)),
+    new Set(taken.map((p) => p.label)),
+    'copy',
+  )
+  return {
+    id,
+    label,
+    tagline: source.tagline,
+    ...(source.category === undefined ? {} : { category: source.category }),
+    seed: { ...snapshot.state },
+    imported: true,
+  }
+}
+
 export function mintBlankPersona(seed: Readonly<Record<string, unknown>>, roster: readonly Persona[]): Persona {
   const { id, label } = mintIdentity(
     'New agent',

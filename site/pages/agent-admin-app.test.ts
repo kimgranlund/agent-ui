@@ -13,7 +13,18 @@ import '@agent-ui/app/agent-admin'
 import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 import { ENTRY_KINDS, entriesStoreKey } from '@agent-ui/app'
 import type { Entry } from '@agent-ui/app'
-import { AGENT_PRESETS, presetSeed } from './agent-admin-presets.ts'
+import {
+  ACTIVE_PRESET_KEY,
+  AGENT_PRESETS,
+  ROSTER_ORDER_KEY,
+  loadImportedPersonas,
+  loadRosterOrder,
+  personaRoster,
+  personaStore,
+  presetSeed,
+  saveImportedPersona,
+  type Persona,
+} from './agent-admin-presets.ts'
 
 declare const process: { cwd(): string }
 
@@ -1138,5 +1149,283 @@ describe('the "New agent → Generate" IA entry (LLD-C8) / GH #686 S7-d — the 
     const source = readFileSync('site/pages/agent-admin-app.ts', 'utf8')
     const body = source.slice(source.indexOf('function applyPersona'))
     expect(body.indexOf('admin.authoringStore = undefined')).toBeLessThan(body.indexOf('admin.store = personaStore(persona)'))
+  })
+})
+
+// ── GH #845 (LLD-C17) — the Edit Agents drawer, driven on the REAL page module ────────────────────────
+// Unlike the source-text pins above, this suite IMPORTS the page (the a2ui-live.ask-lifecycle.test.ts /
+// workbench.summary-fail-arm.test.ts precedent) and drives its actual affordances: the picker's Edit
+// Agents item, the drawer's own row buttons, the component's delete seam. What jsdom cannot supply is the
+// native <dialog> modal surface — stubbed below with the SANCTIONED minimal mirror drawer.test.ts/
+// modal.test.ts already use (ADR-0125 re-application), so `open` really syncs and the control's own logic
+// runs; the top layer / scrim / focus trap / real geometry are agent-admin-app.browser.test.ts's job.
+//
+// The module is imported ONCE (module cache) — so this describe owns the page for its whole run and each
+// test leaves the roster as it found it.
+describe('GH #845 — the Edit Agents drawer on the real page module', () => {
+  const dialogOpen = new WeakMap<HTMLDialogElement, boolean>()
+  const popoverOpen = new WeakMap<HTMLElement, boolean>()
+
+  beforeAll(async () => {
+    // The Popover API is likewise absent in jsdom, and `notify()`'s own toast region calls `showPopover()`
+    // on every message. That is not cosmetic here: an unstubbed throw aborts the CLICK HANDLER it fires
+    // from, midway — measured, and it is exactly how the rename leg first failed (the record was written,
+    // the field never closed). The toast-region.test.ts stub, re-applied.
+    const popoverProto = HTMLElement.prototype as unknown as { showPopover?: () => void; hidePopover?: () => void }
+    if (typeof popoverProto.showPopover !== 'function') {
+      popoverProto.showPopover = function (this: HTMLElement): void {
+        popoverOpen.set(this, true)
+      }
+      popoverProto.hidePopover = function (this: HTMLElement): void {
+        if (!popoverOpen.get(this)) throw new Error('InvalidStateError: not currently showing') // platform parity
+        popoverOpen.set(this, false)
+      }
+    }
+    const proto = HTMLDialogElement.prototype as unknown as { showModal?: () => void; close?: () => void }
+    if (typeof proto.showModal !== 'function') {
+      Object.defineProperty(HTMLDialogElement.prototype, 'open', {
+        configurable: true,
+        get(this: HTMLDialogElement): boolean {
+          return dialogOpen.get(this) ?? false
+        },
+        set(this: HTMLDialogElement, v: boolean): void {
+          dialogOpen.set(this, Boolean(v))
+        },
+      })
+      proto.showModal = function (this: HTMLDialogElement): void {
+        dialogOpen.set(this, true)
+      }
+      proto.close = function (this: HTMLDialogElement): void {
+        if (!(dialogOpen.get(this) ?? false)) return
+        dialogOpen.set(this, false)
+        this.dispatchEvent(new Event('close'))
+      }
+    }
+    // A clean slate BEFORE the page module's boot-time roster read: a leftover library/order record from
+    // a sibling suite in this file would otherwise decide this suite's row counts.
+    localStorage.clear()
+    await import('./agent-admin-app.ts')
+    await whenFlushed()
+  })
+
+  const page = (): HTMLElement => document.querySelector('ui-agent-admin') as HTMLElement
+  const drawer = (): HTMLElement & { open: boolean } => document.querySelector('ui-drawer') as HTMLElement & { open: boolean }
+  const rows = (): HTMLElement[] => [...drawer().querySelectorAll('[data-roster-row]')] as HTMLElement[]
+  const rowFor = (id: string): HTMLElement => drawer().querySelector(`[data-roster-row="${id}"]`) as HTMLElement
+  const action = (row: HTMLElement, name: string): HTMLElement | null => row.querySelector(`[data-row-action="${name}"]`)
+  const click = (el: Element): void => {
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  }
+  const openDrawer = async (): Promise<void> => {
+    const item = page().querySelector('[value="agent-admin:edit-agents"]') as HTMLElement
+    expect(item, 'the picker composes the Edit Agents item — the page registered the seam').not.toBeNull()
+    click(item)
+    await whenFlushed()
+  }
+  /** A real custom agent on the live page, minted the way an import would (not a hand-written record). */
+  async function mintCustom(label: string): Promise<Persona> {
+    const persona: Persona = { id: `${label.toLowerCase()}-probe`, label, tagline: 'A probe persona.', seed: { name: label }, imported: true }
+    saveImportedPersona(persona)
+    // The page re-reads the roster on its own choke point; the picker's Edit Agents item drives it.
+    await openDrawer()
+    return persona
+  }
+
+  /** Leave the page exactly as this suite found it, THROUGH ITS OWN VERBS wherever possible: every custom
+   *  agent a test minted is deleted the way a user would (which also exercises the active-fallback path),
+   *  and the stored order is dropped so the next test starts from the natural one. A failing test must not
+   *  be able to decide the next one's roster. */
+  afterEach(async () => {
+    drawer().open = false
+    if (loadImportedPersonas().length > 0) {
+      await openDrawer()
+      for (const button of [...drawer().querySelectorAll('[data-row-action="delete"]')]) {
+        click(button)
+        await whenFlushed()
+      }
+      drawer().open = false
+    }
+    localStorage.removeItem(ROSTER_ORDER_KEY)
+    await whenFlushed()
+  })
+
+  it('the seam OPENS the drawer, with one row per roster entry in PICKER order', async () => {
+    await openDrawer()
+    expect(drawer().open, 'onEditAgentsRequest’s callback really opened it').toBe(true)
+    const rosterIds = personaRoster().map((p) => p.id)
+    expect(rows().map((r) => r.dataset['rosterRow']), 'one row per entry, in the picker’s own order').toEqual(rosterIds)
+    // The drawer and the picker read ONE order — never two independent reads that could disagree.
+    const optionIds = [...page().querySelectorAll('[data-part="agent-select"] [role="option"]')]
+      .map((o) => o.getAttribute('value'))
+      .filter((v) => v !== null && !v.startsWith('agent-admin:'))
+    expect(optionIds).toEqual(rosterIds)
+  })
+
+  it('a PRESET row has NO rename and NO delete affordance — structurally absent, never present-and-disabled', async () => {
+    await openDrawer()
+    const preset = rowFor(AGENT_PRESETS[0]!.id)
+    expect(action(preset, 'delete'), 'querySelector is null — the button was never built').toBeNull()
+    expect(action(preset, 'rename'), 'and neither was the pencil').toBeNull()
+    expect(action(preset, 'duplicate'), 'but ANY agent can be duplicated (AC6)').not.toBeNull()
+    expect(preset.querySelectorAll('[disabled]').length, 'nothing is offered-then-refused here').toBeLessThanOrEqual(1)
+  })
+
+  it('a CUSTOM row carries rename, duplicate AND delete', async () => {
+    const persona = await mintCustom('Probe')
+    const row = rowFor(persona.id)
+    for (const name of ['rename', 'duplicate', 'delete']) {
+      expect(action(row, name), `${name} is offered on a library record`).not.toBeNull()
+    }
+    // Every affordance names WHICH agent it acts on — icon-only ones have nothing else to say it.
+    expect(action(row, 'rename')?.getAttribute('aria-label')).toContain('Probe')
+    expect(action(row, 'up')?.getAttribute('aria-label')).toContain('Probe')
+    click(action(row, 'delete')!)
+    await whenFlushed()
+  })
+
+  it('the first row’s "up" and the last row’s "down" are disabled — the ends have nowhere to go', async () => {
+    await openDrawer()
+    const all = rows()
+    expect(all.length, 'anti-vacuous: there really are several rows').toBeGreaterThan(2)
+    expect(action(all[0]!, 'up')?.hasAttribute('disabled')).toBe(true)
+    expect(action(all[0]!, 'down')?.hasAttribute('disabled'), 'the first row can still go down').toBe(false)
+    expect(action(all[all.length - 1]!, 'down')?.hasAttribute('disabled')).toBe(true)
+  })
+
+  it('REORDER: a "down" press persists through saveRosterOrder and the very next roster push carries the new order', async () => {
+    await openDrawer()
+    const before = rows().map((r) => r.dataset['rosterRow'])
+    click(action(rowFor(before[0]!)!, 'down')!)
+    await whenFlushed()
+
+    const swapped = [before[1], before[0], ...before.slice(2)]
+    expect(loadRosterOrder(), 'persisted — it survives a reload').toEqual(swapped)
+    expect(personaRoster().map((p) => p.id), 'the ONE ordered read reflects it').toEqual(swapped)
+    expect(rows().map((r) => r.dataset['rosterRow']), 'the open drawer rebuilt itself').toEqual(swapped)
+    const optionIds = [...page().querySelectorAll('[data-part="agent-select"] [role="option"]')]
+      .map((o) => o.getAttribute('value'))
+      .filter((v) => v !== null && !v.startsWith('agent-admin:'))
+    expect(optionIds, 'AC6’s "drives picker order" — measured on the picker itself').toEqual(swapped)
+
+    click(action(rowFor(before[0]!)!, 'up')!) // put it back for the suites below
+    await whenFlushed()
+    expect(personaRoster().map((p) => p.id)).toEqual(before)
+  })
+
+  it('DUPLICATE: any agent copies to a new editable custom row at the roster’s end, source untouched', async () => {
+    await openDrawer()
+    const source = AGENT_PRESETS[0]!
+    const countBefore = rows().length
+    click(action(rowFor(source.id)!, 'duplicate')!)
+    await whenFlushed()
+
+    expect(rows().length).toBe(countBefore + 1)
+    const minted = rows()[rows().length - 1]!
+    expect(minted.textContent, 'the copy label').toContain('(copy)')
+    expect(action(minted, 'delete'), 'a duplicated PRESET is an ordinary custom agent — deletable').not.toBeNull()
+    expect(action(minted, 'rename'), '…and renamable').not.toBeNull()
+    expect(rowFor(source.id), 'the SOURCE row is still there, untouched').not.toBeNull()
+    expect(action(rowFor(source.id)!, 'delete'), 'and still protected').toBeNull()
+
+    // clean up: delete the copy again through the row's own affordance
+    click(action(minted, 'delete')!)
+    await whenFlushed()
+    expect(rows().length).toBe(countBefore)
+  })
+
+  it('RENAME: the pencil swaps the label for a field, Enter commits durably, Escape reverts', async () => {
+    const persona = await mintCustom('Renameable')
+    click(action(rowFor(persona.id)!, 'rename')!)
+    await whenFlushed()
+
+    let field = rowFor(persona.id).querySelector('[data-row-field="rename"]') as HTMLElement & { value: string }
+    expect(field, 'the label swapped for a real editable field').not.toBeNull()
+    expect(field.value, 'seeded with the current label').toBe('Renameable')
+
+    // Escape reverts — no write, the plain label comes back.
+    field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    await whenFlushed()
+    expect(rowFor(persona.id).querySelector('[data-row-field="rename"]'), 'the field is gone').toBeNull()
+    expect(loadImportedPersonas().find((p) => p.id === persona.id)?.label, 'and nothing was written').toBe('Renameable')
+
+    // Enter commits.
+    click(action(rowFor(persona.id)!, 'rename')!)
+    await whenFlushed()
+    field = rowFor(persona.id).querySelector('[data-row-field="rename"]') as HTMLElement & { value: string }
+    field.value = 'Renamed By Probe'
+    field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    await whenFlushed()
+
+    expect(loadImportedPersonas().find((p) => p.id === persona.id)?.label, 'persisted — survives a reload').toBe('Renamed By Probe')
+    expect(rowFor(persona.id).textContent, 'and the row shows it').toContain('Renamed By Probe')
+
+    click(action(rowFor(persona.id)!, 'delete')!)
+    await whenFlushed()
+  })
+
+  it('RENAME rejects a colliding label VISIBLY and keeps the field open (never a silent no-op)', async () => {
+    const persona = await mintCustom('Collider')
+    click(action(rowFor(persona.id)!, 'rename')!)
+    await whenFlushed()
+    const field = rowFor(persona.id).querySelector('[data-row-field="rename"]') as HTMLElement & { value: string }
+    field.value = AGENT_PRESETS[0]!.label // already taken by a shipped preset
+    field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    await whenFlushed()
+
+    expect(rowFor(persona.id).querySelector('[data-row-field="rename"]'), 'the field STAYS — the user can fix it').not.toBeNull()
+    expect(loadImportedPersonas().find((p) => p.id === persona.id)?.label, 'nothing was written').toBe('Collider')
+    expect(document.querySelector('ui-toast-region')?.textContent ?? '', 'and the refusal is announced').toContain('already called')
+    // While renaming there IS no pencil — the row offers Save instead. That is the swap, not a bug.
+    expect(action(rowFor(persona.id)!, 'rename'), 'the pencil is replaced by the field + Save').toBeNull()
+    expect(action(rowFor(persona.id)!, 'confirm'), 'and Save is the other commit path').not.toBeNull()
+
+    const stillOpen = rowFor(persona.id).querySelector('[data-row-field="rename"]') as HTMLElement
+    stillOpen.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })) // back out
+    await whenFlushed()
+    expect(rowFor(persona.id).querySelector('[data-row-field="rename"]')).toBeNull()
+  })
+
+  it('DELETE of the ACTIVE custom agent: record + keys gone, and the active agent falls back to personaRoster()[0]', async () => {
+    const persona = await mintCustom('Doomed')
+    // Make it ACTIVE the way the page does, then give it real persisted state to orphan.
+    const select = page().querySelector('[data-part="agent-select"]') as HTMLElement
+    click(select.querySelector(`[role="option"][value="${persona.id}"]`)!)
+    await whenFlushed()
+    expect(localStorage.getItem(ACTIVE_PRESET_KEY), 'it really is the active agent now').toBe(persona.id)
+    personaStore(persona).set('name', 'edited before deletion')
+    const prefix = `agent-admin-app.${persona.id}.`
+    expect(Object.keys(localStorage).filter((k) => k.startsWith(prefix)).length, 'anti-vacuous: there IS state to orphan').toBeGreaterThan(0)
+
+    await openDrawer()
+    click(action(rowFor(persona.id)!, 'delete')!)
+    await whenFlushed()
+
+    expect(Object.keys(localStorage).filter((k) => k.startsWith(prefix)), 'zero orphaned keys (enumerated)').toEqual([])
+    expect(loadImportedPersonas().map((p) => p.id), 'the library record is gone').not.toContain(persona.id)
+    expect(rowFor(persona.id), 'the row is gone').toBeNull()
+
+    const fallback = personaRoster()[0]!
+    expect(localStorage.getItem(ACTIVE_PRESET_KEY), 'the active agent fell back to the first ordered entry').toBe(fallback.id)
+    expect((page() as HTMLElement & { store?: { get(k: string): unknown } }).store?.get('name'), 'and the component is on the fallback’s own store')
+      .toBe(fallback.seed['name'])
+  })
+
+  it('the component’s OWN Delete affordances follow the active agent’s deletable axis on the real page', async () => {
+    const row = page().querySelector('[data-part="delete-agent-row"]') as HTMLElement
+    const item = page().querySelector('[data-value="delete-agent"]') as HTMLElement
+    expect(localStorage.getItem(ACTIVE_PRESET_KEY), 'a shipped preset is active after the delete leg above').toBe(personaRoster()[0]!.id)
+    expect([row.hidden, item.hidden], 'a preset offers neither (AC5)').toEqual([true, true])
+
+    const persona = await mintCustom('Deletable')
+    const select = page().querySelector('[data-part="agent-select"]') as HTMLElement
+    click(select.querySelector(`[role="option"][value="${persona.id}"]`)!)
+    await whenFlushed()
+    expect([row.hidden, item.hidden], 'a custom agent offers BOTH').toEqual([false, false])
+
+    // And the component's own row genuinely deletes through the shared page handler.
+    click(page().querySelector('[data-part="delete-agent-button"]')!)
+    await whenFlushed()
+    expect(loadImportedPersonas().map((p) => p.id)).not.toContain(persona.id)
+    expect([row.hidden, item.hidden], 'the fallback preset re-hides them').toEqual([true, true])
   })
 })

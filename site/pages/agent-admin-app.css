@@ -36,3 +36,93 @@ body {
   min-inline-size: 0;
   min-block-size: 0;
 }
+
+/* ── GH #845 — the Edit Agents drawer's PAGE-OWNED content (LLD-C16) ───────────────────────────────────
+   `ui-drawer` itself is consumed unmodified: its surface, docking, radius, scrim, padding and motion are
+   all drawer.css's (ADR-0188). Everything here styles the rows this page builds INSIDE it — content the
+   control is opaque to by design (ADR-0188 intake §6). Page-local token block first, consumers below, so
+   the raw-value ban holds the same way a component sheet's own chain does: every colour resolves to an
+   `--md-sys-color-*` ROLE and every dimension to an `--md-sys-space-*` constant, minted once here. */
+.roster-drawer {
+  --roster-gap: var(--md-sys-space-sm);
+  --roster-row-gap: var(--md-sys-space-xs);
+  --roster-rule: var(--md-sys-color-neutral-outline-variant);
+  --roster-hint-ink: var(--md-sys-color-neutral-on-surface-variant);
+  /* The danger family, ONE family over from ui-button's own soft-variant primary ladder — the same
+     consumer-side repoint agent-admin.css makes for the component's own delete button, applied to the
+     page's row buttons. No ui-button contract moves; the VERB ("Delete") carries the intent without
+     colour (ADR-0057). */
+  --roster-danger-bg: var(--md-sys-color-danger-container-low);
+  --roster-danger-bg-hover: var(--md-sys-color-danger-container);
+  --roster-danger-bg-active: var(--md-sys-color-danger-container-high);
+  --roster-danger-ink: var(--md-sys-color-danger-high);
+}
+
+.roster-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--roster-row-gap);
+}
+
+.roster-head > h2 {
+  margin: 0;
+}
+
+.roster-hint {
+  margin: 0;
+  color: var(--roster-hint-ink);
+}
+
+.roster-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--roster-row-gap);
+  margin-block: var(--roster-gap);
+  /* A long roster scrolls INSIDE the drawer — the head and the Done footer stay reachable. */
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-block-size: 0;
+}
+
+.roster-row {
+  display: flex;
+  align-items: center;
+  gap: var(--roster-row-gap);
+  padding-block: var(--roster-row-gap);
+  border-block-end: 1px solid var(--roster-rule);
+}
+
+.roster-row:last-child {
+  border-block-end: none;
+}
+
+/* The one flexible cell — pushes the action cluster to the row's inline end (the surface-spacer idiom). */
+.roster-spacer {
+  flex: 1 1 auto;
+  min-inline-size: var(--roster-row-gap);
+}
+
+.roster-label {
+  /* A long agent name truncates rather than wrapping the row into two lines of buttons. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roster-rename {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+/* The row's delete button — the SAME repoint shape as the component's own, keyed on this page's class. */
+.roster-danger {
+  --ui-button-bg: var(--roster-danger-bg);
+  --ui-button-bg-hover: var(--roster-danger-bg-hover);
+  --ui-button-bg-active: var(--roster-danger-bg-active);
+  --ui-button-ink: var(--roster-danger-ink);
+}
+
+.roster-foot {
+  display: flex;
+  justify-content: flex-end;
+}

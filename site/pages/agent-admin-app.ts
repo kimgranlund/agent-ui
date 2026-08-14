@@ -52,8 +52,25 @@ import '@agent-ui/app/agent-admin' // self-defines ui-agent-admin
 import './agent-admin-app.css' // page-local: full-viewport layout + the preset strip chrome
 import type { AgentRosterEntry, GenerateSeed, UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
-import { ACTIVE_PRESET_KEY, builderStore, personaRoster, personaStore, resetPersona, saveImportedPersona, type Persona } from './agent-admin-presets.ts'
-import { exportPersonaFile, importedPersonaFrom, mintBlankPersona, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
+// GH #845 — the Edit Agents drawer's own container (ADR-0188). Consumed UNMODIFIED and TYPE-ONLY here:
+// the tag self-defines through the `@agent-ui/components/components` barrel this page already imports at
+// [3], and its sheet rides `component-styles.css` at [2] — nothing new to register or import for it.
+import type { UIDrawerElement } from '@agent-ui/components/controls/drawer'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
+import {
+  ACTIVE_PRESET_KEY,
+  builderStore,
+  deleteImportedPersona,
+  personaRoster,
+  personaStore,
+  renameImportedPersona,
+  resetPersona,
+  saveImportedPersona,
+  saveRosterOrder,
+  type Persona,
+} from './agent-admin-presets.ts'
+import { duplicatePersonaFrom, exportPersonaFile, importedPersonaFrom, mintBlankPersona, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
 import { librariesForCategory, setLiveIntegrations, setLiveServices } from './agent-admin-libraries.ts'
 // GH #637 S1 — the blank agent's seed: the EXACT shipped default `ui-agent-admin` itself falls back to
 // when no store prop is ever set (agent-admin.ts connected()'s own `initial` object) — pure reuse, so a
@@ -101,7 +118,11 @@ let armSurfaceTurn: (() => void) | undefined
  *  title/tagline zone + the agentMenu's own aria-checked loop) AND after every mint/import (a fresh row
  *  needs a fresh push — the seam's own re-callable contract, LLD §16.3). */
 function pushRoster(activeId: string): void {
-  const entries: AgentRosterEntry[] = roster.map((p) => ({ id: p.id, label: p.label }))
+  // GH #845 — one line wider: `deletable` is the component's VISIBILITY axis for its two Delete
+  // affordances (the overflow item + the config-surface row), and this page decides what it means —
+  // "a library record this page minted or imported", never a shipped preset. `AGENT_PRESETS` rows carry
+  // no `imported` flag, so they map to `false` and the component hides Delete for them structurally.
+  const entries: AgentRosterEntry[] = roster.map((p) => ({ id: p.id, label: p.label, deletable: p.imported === true }))
   admin.setAgentRoster(entries, activeId)
 }
 admin.onAgentSelect((id) => {
@@ -135,6 +156,11 @@ admin.onResetRequest(() => {
   resetPersona(active)
   applyPersona(active)
 })
+// GH #845 — the two new seams (LLD §7). "Edit Agents" opens THIS page's management surface (the component
+// never knows what it is); Delete routes both of the component's own affordances into the ONE page-side
+// handler the drawer's own rows also call directly.
+admin.onEditAgentsRequest(() => openRosterDrawer())
+admin.onDeleteAgentRequest((id) => deleteAgent(id))
 
 // ADR-0179 OQ4 (admin-three-pane-ia.lld.md §2) — the Co-pilot place's empty state hosts the flow's OTHER
 // front door, where the user already is. It reaches this page's mint path through the component's
@@ -180,6 +206,249 @@ const toasts = document.createElement('ui-toast-region') as UIToastRegionElement
 function notify(message: string, urgent = false): void {
   if (toasts.isConnected) toasts.show({ message, urgent })
   else console.info(`[agent-admin-app] ${message}`)
+}
+
+// ── GH #845 — the Edit Agents drawer (LLD §7, page-owned composition) ──────────────────────────────────
+// ONE `ui-drawer`, consumed byte-unmodified (ADR-0188): the control owns docking, the top layer, the
+// scrim, focus containment + restore, and Escape; EVERY row below is page markup it is opaque to — which
+// is exactly the fence ADR-0188's intake §6 drew ("roster lists, danger rows, reorder/duplicate
+// affordances all page-owned"). Content is REBUILT on every open and after every mutation: a row carries
+// no state between rebuilds except an in-flight rename field, which a rebuild drops — acceptable by
+// ruling (a rename is a short gesture; a lost draft is re-typed, never corrupted).
+
+const drawer = document.createElement('ui-drawer') as UIDrawerElement
+drawer.setAttribute('edge', 'end')
+// Forwarded onto the control's own `<dialog>` part (ADR-0188 cl.5) — the host stays free of role/aria-*.
+drawer.setAttribute('aria-label', 'Manage agents')
+drawer.className = 'roster-drawer'
+
+const drawerRows = document.createElement('div')
+drawerRows.className = 'roster-rows'
+
+/** Which row is currently being renamed in place (at most one) — the ONLY piece of drawer state that
+ *  outlives a row node, held here rather than in the DOM so a rebuild reproduces it deterministically. */
+let renamingId: string | undefined
+
+{
+  const head = document.createElement('header')
+  head.className = 'roster-head'
+  const title = document.createElement('h2')
+  title.textContent = 'Manage agents'
+  const hint = document.createElement('p')
+  hint.className = 'roster-hint'
+  hint.textContent = 'Reorder the picker, rename or duplicate an agent, or delete one you made.'
+  head.append(title, hint)
+  const foot = document.createElement('footer')
+  foot.className = 'roster-foot'
+  const close = document.createElement('ui-button') as UIButtonElement
+  close.setAttribute('variant', 'soft')
+  close.textContent = 'Done'
+  close.addEventListener('click', () => {
+    drawer.open = false
+  })
+  foot.append(close)
+  drawer.append(head, drawerRows, foot)
+}
+
+/** An icon-only ghost row button — the fleet's `icon-only` opt-in plus a REAL accessible name that says
+ *  WHICH agent it acts on ("Move “Fable” up"), since the glyph alone names neither the verb nor the row. */
+function iconAction(glyph: string, label: string, action: string, onClick: () => void): UIButtonElement {
+  const button = document.createElement('ui-button') as UIButtonElement
+  button.setAttribute('variant', 'ghost')
+  button.setAttribute('icon-only', '')
+  button.setAttribute('aria-label', label)
+  button.dataset['rowAction'] = action
+  const icon = document.createElement('ui-icon')
+  icon.setAttribute('slot', 'leading')
+  icon.setAttribute('glyph', glyph)
+  button.append(icon)
+  button.addEventListener('click', onClick)
+  return button
+}
+
+/** A LABELED ghost row button. Duplicate and Delete are worded, not glyphed: the shipped Phosphor pack
+ *  carries no copy/duplicate glyph, and for Delete a verb is owed anyway — ADR-0057, intent never travels
+ *  by colour alone, the `entry-delete` ("Remove") wordmark precedent. `aria-label` still names the agent. */
+function wordAction(text: string, label: string, action: string, onClick: () => void): UIButtonElement {
+  const button = document.createElement('ui-button') as UIButtonElement
+  button.setAttribute('variant', 'ghost')
+  button.setAttribute('aria-label', label)
+  button.dataset['rowAction'] = action
+  button.textContent = text
+  button.addEventListener('click', onClick)
+  return button
+}
+
+/** One roster row: `[ up · down | label — or the inline rename field | spacer | rename? · duplicate · delete? ]`.
+ *  A PRESET's rename and delete affordances are STRUCTURALLY ABSENT (never present-and-disabled) — the
+ *  `entry-delete`/TKT-0048 precedent, "present ONLY for a non-built-in entry", applied one tier up. */
+function rosterRow(persona: Persona, index: number, total: number): HTMLElement {
+  const row = document.createElement('div')
+  row.className = 'roster-row'
+  row.dataset['rosterRow'] = persona.id
+  if (persona.imported === true) row.dataset['custom'] = ''
+
+  const up = iconAction('caret-up', `Move “${persona.label}” up`, 'up', () => moveAgent(persona.id, -1))
+  const down = iconAction('caret-down', `Move “${persona.label}” down`, 'down', () => moveAgent(persona.id, 1))
+  // First row's up and last row's down have nowhere to go — disabled, never absent (their column must
+  // keep its box, or every row below would shift by a button width).
+  if (index === 0) up.setAttribute('disabled', '')
+  if (index === total - 1) down.setAttribute('disabled', '')
+  row.append(up, down)
+
+  if (renamingId === persona.id) {
+    const field = document.createElement('ui-text-field') as UITextFieldElement
+    field.className = 'roster-rename'
+    field.dataset['rowField'] = 'rename'
+    field.setAttribute('aria-label', `Rename “${persona.label}”`)
+    field.value = persona.label
+    const commit = (): void => {
+      if (commitRename(persona, field.value)) renamingId = undefined
+      renderDrawerRows()
+    }
+    field.addEventListener('keydown', (event) => {
+      const key = (event as KeyboardEvent).key
+      if (key === 'Enter') {
+        event.preventDefault()
+        commit()
+      } else if (key === 'Escape') {
+        // Reverts, and never reaches the drawer's own dialog — Escape here means "stop renaming", not
+        // "close the surface" (the platform's cancel would otherwise dismiss the whole drawer).
+        event.preventDefault()
+        event.stopPropagation()
+        renamingId = undefined
+        renderDrawerRows()
+      }
+    })
+    row.append(field, spacer(), wordAction('Save', `Save the new name for “${persona.label}”`, 'confirm', commit))
+    return row
+  }
+
+  const label = document.createElement('span')
+  label.className = 'roster-label'
+  label.textContent = persona.label
+  row.append(label, spacer())
+
+  if (persona.imported === true) {
+    row.append(
+      iconAction('pencil-simple', `Rename “${persona.label}”`, 'rename', () => {
+        renamingId = persona.id
+        renderDrawerRows()
+      }),
+    )
+  }
+  row.append(wordAction('Duplicate', `Duplicate “${persona.label}”`, 'duplicate', () => duplicateAgent(persona.id)))
+  if (persona.imported === true) {
+    const remove = wordAction('Delete', `Delete “${persona.label}”`, 'delete', () => deleteAgent(persona.id))
+    remove.classList.add('roster-danger') // the page-side danger repoint (agent-admin-app.css)
+    row.append(remove)
+  }
+  return row
+}
+
+function spacer(): HTMLElement {
+  const el = document.createElement('span')
+  el.className = 'roster-spacer'
+  return el
+}
+
+/** Rebuild the whole list from `roster` — the SAME array `pushRoster` reads, so the drawer's order and
+ *  the picker's order are one fact, never two reads that could disagree. */
+function renderDrawerRows(): void {
+  drawerRows.replaceChildren(...roster.map((persona, index) => rosterRow(persona, index, roster.length)))
+}
+
+/** Open the management surface. The list is built from a FRESH ordered `personaRoster()` read (LLD §7's
+ *  own words) by going through `refreshRoster` first — so an open can never paint a stale roster, whatever
+ *  wrote to the library since the last mutation (a second tab, for one). `refreshRoster` skips the row
+ *  rebuild while the drawer is closed, hence the explicit render on the next line. */
+function openRosterDrawer(): void {
+  refreshRoster()
+  renderDrawerRows()
+  drawer.open = true
+}
+
+/** The ONE page choke point after ANY roster mutation (LLD §7): refresh the in-memory view from the fresh
+ *  ORDERED read, re-push the picker, and rebuild the drawer if it is open. `roster` is a captured `const`
+ *  every closure on this page shares — its CONTENTS are replaced, never the binding. */
+function refreshRoster(): void {
+  roster.splice(0, roster.length, ...personaRoster())
+  pushRoster(active.id)
+  if (drawer.open) renderDrawerRows()
+}
+
+/** Reorder: swap two ids in the persisted order array (materialized from the CURRENT picker order, so the
+ *  very first reorder pins today's order before changing it) and refresh. No toast — the row visibly moves. */
+function moveAgent(id: string, delta: -1 | 1): void {
+  const ids = roster.map((p) => p.id)
+  const from = ids.indexOf(id)
+  const to = from + delta
+  if (from < 0 || to < 0 || to >= ids.length) return
+  const moved = ids[from]!
+  ids[from] = ids[to]!
+  ids[to] = moved
+  saveRosterOrder(ids)
+  refreshRoster()
+}
+
+/** Duplicate ANY agent (a preset included) into a fresh editable custom copy, from its CURRENT edited
+ *  state — the export snapshot, never the seed. The source is never mutated; `saveImportedPersona` stamps
+ *  `imported: true`, so a duplicated preset becomes an ordinary custom agent by construction. */
+function duplicateAgent(id: string): void {
+  const persona = roster.find((p) => p.id === id)
+  if (persona === undefined) return
+  const copy = duplicatePersonaFrom(persona, personaStore(persona), [...personaRoster(), ...roster])
+  saveImportedPersona(copy)
+  refreshRoster()
+  notify(`Duplicated “${persona.label}” as “${copy.label}”.`)
+}
+
+/** Commit an inline rename, page-side validation first (trimmed non-empty, no collision with another
+ *  entry's label). A rejection is announced and the field STAYS — never a silent no-op. */
+function commitRename(persona: Persona, next: string): boolean {
+  const label = next.trim()
+  if (label.length === 0) {
+    notify('An agent needs a name.', true)
+    return false
+  }
+  if (roster.some((p) => p.id !== persona.id && p.label === label)) {
+    notify(`Another agent is already called “${label}”.`, true)
+    return false
+  }
+  if (!renameImportedPersona(persona, label)) {
+    notify(`“${persona.label}” is a shipped agent — it cannot be renamed.`, true)
+    return false
+  }
+  const before = persona.label
+  refreshRoster()
+  notify(`Renamed “${before}” to “${label}”.`)
+  return true
+}
+
+/** The ONE delete handler every affordance shares — the component's overflow item and config-surface row
+ *  (through `onDeleteAgentRequest`) and the drawer's own rows (directly, page-owned content).
+ *
+ *  An ACTIVE agent that vanishes falls back sanely: the fresh ordered roster's FIRST entry, which can
+ *  never be empty because presets are undeletable. `applyPersona` is what rewrites `ACTIVE_PRESET_KEY` and
+ *  swaps the store — this function does not touch either, and neither does the persistence layer. */
+function deleteAgent(id: string): void {
+  const persona = roster.find((p) => p.id === id)
+  if (persona === undefined) return
+  const label = persona.label
+  if (!deleteImportedPersona(persona)) {
+    // Defense in depth, three independent layers deep: the component hides the affordance for a protected
+    // entry, the drawer omits the row's button structurally, and the persistence guard still refuses.
+    notify(`“${label}” is a shipped agent — it cannot be deleted.`, true)
+    return
+  }
+  // Catch the in-memory view up BEFORE any push, so no re-push can ever name the record just removed.
+  roster.splice(0, roster.length, ...personaRoster())
+  if (active.id === id) {
+    const fallback = roster[0]
+    if (fallback !== undefined) applyPersona(fallback)
+  }
+  refreshRoster()
+  notify(`Deleted “${label}”.`)
 }
 
 function exportActivePersona(): void {
@@ -267,7 +536,10 @@ fileInput.addEventListener('change', () => {
 })
 
 applyPersona(active) // also stages the header's own roster row (pushRoster, inside applyPersona)
-root.append(admin, toasts, fileInput)
+// GH #845 — the drawer mounts at boot beside the toast region (its own children move into the control's
+// `<dialog>` part at connect); it renders nothing until `open` is set, so an unopened drawer costs one
+// `display: contents` host and no layout.
+root.append(admin, toasts, fileInput, drawer)
 
 // GH #114 (review finding): this page uses the SAME site/lib/admin-live-runner.ts backend as
 // agent-admin.ts (identical /__a2ui/agent/chat + /__a2ui/agent endpoints), but was missed when that

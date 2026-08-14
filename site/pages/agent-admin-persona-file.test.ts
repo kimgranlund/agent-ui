@@ -48,6 +48,7 @@ import {
   PERSONA_FILE_KIND,
   PERSONA_FILE_VERSION,
   PERSONA_STATE_KEYS,
+  duplicatePersonaFrom,
   exportPersonaFile,
   importedPersonaFrom,
   mintBlankPersona,
@@ -766,5 +767,80 @@ describe('a persona’s Surface Options / master toggles survive a reload, per p
     expect(reloaded(secondImport).get(SURFACE_A2UI_KEY)).toBeUndefined()
     expect(reloaded(firstImport).get(SURFACE_A2UI_KEY)).toBe(false)
     touched.push(secondImport)
+  })
+})
+
+// ── GH #845 (LLD-C14/§8d) — duplicatePersonaFrom ─────────────────────────────────────────────────────
+// A duplicate is an EXPORT SNAPSHOT wearing a fresh identity. The load-bearing claims: it captures the
+// CURRENT edited state (not the seed), it never touches the source, its identity rides the ONE existing
+// collision loop (no second numbering scheme), and duplicating a PRESET yields something the library can
+// hold — which is what makes AC6's "any agent → a new editable custom copy" true rather than aspirational.
+
+describe('duplicatePersonaFrom — the current edited state, a fresh identity, an untouched source (GH #845)', () => {
+  const SOURCE = personaFromPreset(SOURCE_PRESET)
+
+  it('the copy’s seed IS the source’s export snapshot — its EDITS, never its original seed', () => {
+    const store = authoredStore() // the seed, then edited the way an admin would (rename, sections, switches)
+    const copy = duplicatePersonaFrom(SOURCE, store, [SOURCE])
+    expect(copy.seed, 'byte-equal to what an export would have carried').toEqual(exportPersonaFile(SOURCE, store).state)
+    expect((copy.seed as Record<string, unknown>)['name'], 'the EDITED name, not the preset’s').toBe('Meridian Night Concierge')
+    expect((copy.seed as Record<string, unknown>)['name']).not.toBe(SOURCE.seed['name'])
+    // Every key it carries is a declared persona-state key — a duplicate can smuggle nothing new in.
+    for (const key of Object.keys(copy.seed)) expect(PERSONA_STATE_KEYS).toContain(key)
+  })
+
+  it('the SOURCE persona and its store are byte-untouched by the duplication', () => {
+    const store = authoredStore()
+    const sourceBefore = JSON.stringify(SOURCE)
+    const stateBefore = JSON.stringify(readPersonaState(store))
+    duplicatePersonaFrom(SOURCE, store, [SOURCE])
+    expect(JSON.stringify(SOURCE), 'the persona object is not mutated').toBe(sourceBefore)
+    expect(JSON.stringify(readPersonaState(store)), 'and neither is its store').toBe(stateBefore)
+  })
+
+  it('the copy is an independent object — mutating its seed cannot reach back into the snapshot’s source state', () => {
+    const store = authoredStore()
+    const copy = duplicatePersonaFrom(SOURCE, store, [SOURCE])
+    ;(copy.seed as Record<string, unknown>)['name'] = 'MUTATED'
+    expect(readPersonaState(store)['name'], 'the source store is unaffected — the state was copied, not aliased').toBe('Meridian Night Concierge')
+  })
+
+  it('identity rides the ONE existing collision loop: `-copy`, then `-copy-2` — never a second scheme', () => {
+    const store = authoredStore()
+    // The id is slugged from the LABEL, exactly as `importedPersonaFrom`/`mintBlankPersona` mint theirs
+    // (never from the source id) — pinned as a LITERAL here so a change to that rule reddens visibly.
+    expect(SOURCE.label).toBe('The Hotel Concierge')
+    const first = duplicatePersonaFrom(SOURCE, store, [SOURCE])
+    expect(first.id).toBe('the-hotel-concierge-copy')
+    expect(first.label).toBe('The Hotel Concierge (copy)')
+
+    const second = duplicatePersonaFrom(SOURCE, store, [SOURCE, first])
+    expect(second.id, 'the numeric suffix, exactly as an import/mint collision gets').toBe('the-hotel-concierge-copy-2')
+    expect(second.label).toBe('The Hotel Concierge (copy 2)')
+
+    // And a copy OF a copy keeps composing through the same loop rather than colliding.
+    const third = duplicatePersonaFrom(first, store, [SOURCE, first, second])
+    expect(third.id).toBe('the-hotel-concierge-copy-copy')
+    // A colon can never survive the slug — which is exactly why the component's reserved sentinel ids
+    // (`agent-admin:new-agent`/`…:edit-agents`) cannot collide with anything this mint produces.
+    for (const minted of [first, second, third]) expect(minted.id).not.toContain(':')
+  })
+
+  it('a duplicated PRESET is a LIBRARY record — editable, deletable, renamable by the same construction an import gets', () => {
+    const store = authoredStore()
+    const copy = duplicatePersonaFrom(SOURCE, store, [SOURCE])
+    expect(copy.imported, 'flagged at the mint').toBe(true)
+    saveImportedPersona(copy) // stamps `imported: true` unconditionally — the page's own persist step
+    const record = loadImportedPersonas().find((p) => p.id === copy.id)
+    expect(record, 'it really lands in the persisted library').toBeDefined()
+    expect(record?.imported).toBe(true)
+    expect(personaRoster().map((p) => p.id), 'and therefore on the roster').toContain(copy.id)
+    expect(record?.tagline, 'roster metadata carries over — a copy is the same KIND of agent').toBe(SOURCE.tagline)
+  })
+
+  it('a source with NO store (never opened) duplicates cleanly rather than throwing', () => {
+    const copy = duplicatePersonaFrom(SOURCE, undefined, [SOURCE])
+    expect(copy.id).toBe('the-hotel-concierge-copy')
+    expect(copy.seed, 'an empty snapshot is a valid one — readPersonaState answers {} for no reader').toEqual(exportPersonaFile(SOURCE, undefined).state)
   })
 })
