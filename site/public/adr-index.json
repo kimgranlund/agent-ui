@@ -1318,7 +1318,7 @@
   {
     "name": "ADR-0190",
     "url": "./adr-index.html#adr-0190",
-    "description": "Capabilities-menu toggle semantics: per-turn inclusion, never a roster write",
+    "description": "Capabilities-menu toggle semantics: a GLOBAL enable/disable over the three-tier reach model",
     "level": "L3",
     "section": "Records"
   }
