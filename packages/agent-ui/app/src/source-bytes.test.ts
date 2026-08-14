@@ -46,8 +46,6 @@ const SCAN_ROOTS = [`${ROOT}/packages/agent-ui/app/src`]
  *  binary asset class to the tree is a deliberate act — it reds this gate until it is named here. */
 const BINARY_ASSET_EXTENSIONS: readonly string[] = ['.png']
 
-type Dirent = { name: string; isDirectory(): boolean; isFile(): boolean }
-
 /** Every GIT-TRACKED file under `dir` (absolute paths, ANY extension). The fence's concern is
  *  COMMITTED source — an operator checkout also carries untracked local artifacts (.DS_Store,
  *  a visual run's __screenshots__/*.png) that no fence ever greps and no commit ever ships;

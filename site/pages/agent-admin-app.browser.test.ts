@@ -89,6 +89,39 @@ describe("agent-admin-app — the header's agent-select (S7-d: setAgentRoster/on
     expect(select.value).toBe(resolvedActive().id)
   })
 
+  // GH #905 — on the REAL page, at boot, with no click anywhere: the active agent's ROW is marked, not just
+  // the trigger label. The marker is `ui-select`'s own selected mechanism (`aria-selected`, painted by
+  // select.css's `[role='option'][aria-selected='true']` rule) — the owner's report was a panel where every
+  // row rendered identically because the silent `value =` write moves the trigger label and nothing else.
+  it('marks the ACTIVE agent\'s ROW selected — one marker, agreeing with the committed value, painted, and never on the #845 management items', async () => {
+    await raf()
+    const select = agentSelect()
+    const marked = [...select.querySelectorAll('[role="option"][aria-selected="true"]')] as HTMLElement[]
+    expect(marked.map((o) => o.getAttribute('value')), 'exactly one row is marked, and it is the committed agent').toEqual([select.value])
+    for (const item of [...select.querySelectorAll('[data-part="roster-action"]')] as HTMLElement[]) {
+      expect(item.hasAttribute('aria-selected'), `${item.textContent} is a management VERB — never "where you are"`).toBe(false)
+    }
+
+    // The PAINT leg on the real page. Read with focus parked outside the panel: the focus and selected
+    // fills resolve to the same token (select.css), so a fill measured on the focused row would prove
+    // nothing — and a pointer-opened panel (the owner's screenshot) matches no :focus-visible anyway.
+    const panel = select.querySelector('[data-part="listbox"]') as HTMLElement
+    ;(select.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await raf()
+    const focused = document.activeElement as HTMLElement | null
+    if (focused !== null && panel.contains(focused)) focused.blur()
+    await raf()
+    expect(panel.contains(document.activeElement), 'focus is outside the panel — the fill below is selection, not a focus ring').toBe(false)
+    const activeRow = marked[0]!
+    const otherRow = rosterOptions().find((o) => o.getAttribute('value') !== select.value)!
+    const activeBg = getComputedStyle(activeRow).backgroundColor
+    expect(activeBg, 'the marked row paints a real fill, not the bare panel surface').not.toMatch(/rgba\([^)]*,\s*0\)$/)
+    expect(getComputedStyle(otherRow).backgroundColor, 'and an unselected sibling does not wear it').not.toBe(activeBg)
+    // Leave the picker as the next test expects to find it: closed.
+    ;(select as unknown as { open: boolean }).open = false
+    await raf()
+  })
+
   it('picking a different agent through the REAL select commits, persists, and swaps the admin store', async () => {
     await raf()
     const select = agentSelect()
@@ -105,6 +138,17 @@ describe("agent-admin-app — the header's agent-select (S7-d: setAgentRoster/on
 
     expect(localStorage.getItem(ACTIVE_PRESET_KEY), 'the committed agent persists').toBe(target.id)
     expect(select.value, 'the select reflects the commit (setAgentRoster re-push, LLD §16.3)').toBe(target.id)
+
+    // GH #905 — and the MARKER moved with the switch: the page's own re-push (applyPersona → pushRoster)
+    // rebuilds the rows, so the proof is that the FRESH nodes carry it on the newly-active row alone.
+    expect(
+      [...select.querySelectorAll('[role="option"][aria-selected="true"]')].map((o) => o.getAttribute('value')),
+      'one marker, on the agent the user just picked — never left behind on the previous one',
+    ).toEqual([target.id])
+    expect(
+      [...select.querySelectorAll('[data-part="roster-action"][aria-selected="true"]')],
+      'a switch never plants the marker on New Agent / Edit Agents',
+    ).toHaveLength(0)
   })
 })
 

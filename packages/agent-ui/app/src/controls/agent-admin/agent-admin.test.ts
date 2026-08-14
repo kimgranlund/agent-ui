@@ -1214,6 +1214,101 @@ describe("UIAgentAdminElement — the picker's roster-actions group + the two-ax
   })
 })
 
+// ── GH #905 — the picker marks the ACTIVE agent's row selected. jsdom owns the mechanism (which attribute
+// lands on which node, and how it MOVES); the real-engine leg (the fill actually paints inside the opened
+// panel, distinct from an unselected sibling's) lives in agent-admin.browser.test.ts.
+describe("UIAgentAdminElement — the picker's selected row (GH #905)", () => {
+  const adopted = async (): Promise<void> => {
+    await Promise.resolve()
+    await Promise.resolve()
+  }
+  function selectOf(el: UIAgentAdminElement): HTMLElement & { value: string } {
+    return el.querySelector('[data-part="agent-select"]') as HTMLElement & { value: string }
+  }
+  /** Every roster row's own selected state, in panel order: `[value, aria-selected]`. Management items are
+   *  excluded by selector so their own state is asserted separately (they must carry NONE). */
+  function rosterMarks(el: UIAgentAdminElement): [string, string | null][] {
+    const rows = [...selectOf(el).querySelectorAll('[role="option"]:not([data-part="roster-action"])')]
+    return rows.map((o) => [o.getAttribute('value') ?? '', o.getAttribute('aria-selected')])
+  }
+
+  it('THE DEFECT: a push marks the active row `aria-selected="true"` — the select\'s own mechanism, not a hand-painted class', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.setAgentRoster([{ id: 'alpha', label: 'Alpha' }, { id: 'fable', label: 'Fable' }], 'fable')
+    await adopted()
+    expect(rosterMarks(el), 'exactly one row reads selected, and it is the active one').toEqual([
+      ['alpha', 'false'],
+      ['fable', 'true'],
+    ])
+    // The trigger already read the active label before this fix — the panel is what was blank.
+    expect(selectOf(el).value, "the control's own committed value agrees").toBe('fable')
+  })
+
+  it('THE MARKER MOVES: a switch re-push moves it; a REBUILD under an unchanged activeId keeps it (the drawer rename/reorder push)', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const roster = [{ id: 'alpha', label: 'Alpha' }, { id: 'fable', label: 'Fable' }]
+    el.setAgentRoster(roster, 'fable')
+    await adopted()
+    el.setAgentRoster(roster, 'alpha')
+    await adopted()
+    expect(rosterMarks(el), 'it followed the switch — no stale second marker left behind').toEqual([
+      ['alpha', 'true'],
+      ['fable', 'false'],
+    ])
+
+    // `value` is UNCHANGED here, so a reflect keyed on the value signal alone would be an Object.is no-op
+    // and the freshly-minted nodes would come back blank. This is the rename/reorder re-push.
+    el.setAgentRoster([{ id: 'alpha', label: 'Alpha renamed' }, { id: 'fable', label: 'Fable' }], 'alpha')
+    await adopted()
+    expect(rosterMarks(el), 'the rebuilt nodes are marked too — mint-time stamping, not a value-change reflect').toEqual([
+      ['alpha', 'true'],
+      ['fable', 'false'],
+    ])
+  })
+
+  it('a REAL user pick lands the marker on the picked row (commit reflect, then the page\'s own re-push agrees)', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const roster = [{ id: 'alpha', label: 'Alpha' }, { id: 'fable', label: 'Fable' }]
+    // The shipped page's exact shape: the pick funnels through applyPersona → pushRoster.
+    el.onAgentSelect((id) => el.setAgentRoster(roster, id))
+    el.setAgentRoster(roster, 'fable')
+    await adopted()
+    ;(selectOf(el).querySelector('[role="option"][value="alpha"]') as HTMLElement)
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await adopted()
+    expect(rosterMarks(el)).toEqual([['alpha', 'true'], ['fable', 'false']])
+  })
+
+  it('THE #845 MANAGEMENT ITEMS NEVER CARRY IT — not on a push, and not after one is committed', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.onNewAgentRequest(() => {})
+    el.onEditAgentsRequest(() => {})
+    el.setAgentRoster([{ id: 'alpha', label: 'Alpha' }], 'alpha')
+    await adopted()
+    const actions = (): HTMLElement[] => [...selectOf(el).querySelectorAll('[data-part="roster-action"]')] as HTMLElement[]
+    expect(actions(), 'both verbs are present to be judged').toHaveLength(2)
+    for (const item of actions()) {
+      expect(item.hasAttribute('aria-selected'), `${item.textContent} is a VERB — it carries no selected state at all`).toBe(false)
+    }
+
+    // Commit one: selectionCommit's own reflect stamps every option, then the queued rebuild wipes it.
+    ;(selectOf(el).querySelector('[value="agent-admin:new-agent"]') as HTMLElement)
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await adopted()
+    for (const item of actions()) {
+      expect(item.getAttribute('aria-selected'), 'after a sentinel commit + the queued rebuild: no marker survives on a verb').not.toBe('true')
+    }
+    expect(rosterMarks(el), 'and the ROSTER row is still the marked one').toEqual([['alpha', 'true']])
+  })
+
+  it('nothing active ⇒ nothing marked (an empty activeId marks no row rather than the first)', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.setAgentRoster([{ id: 'alpha', label: 'Alpha' }, { id: 'fable', label: 'Fable' }])
+    await adopted()
+    expect(rosterMarks(el)).toEqual([['alpha', 'false'], ['fable', 'false']])
+  })
+})
+
 // ── GH #845 (LLD-C8/C9) — the danger repoint's own text-level gates: role-purity in the CSS, and the
 // descriptor mirroring the parts/seams/reserved values it documents (the descriptor-mirrors-source law).
 // Reads its own file text (not the module-level consts further down this file — those initialize AFTER

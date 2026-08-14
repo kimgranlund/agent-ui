@@ -3258,6 +3258,163 @@ describe('ui-agent-admin cross-engine — the picker\'s New Agent / Edit Agents 
   })
 })
 
+// ── GH #905 — the picker marks the ACTIVE agent's row selected ──────────────────────────────────────────
+// The defect was "every row renders identically; only the trigger tells you where you are", so the proof
+// obligation is a PAINT one and jsdom cannot discharge it: the marker is `aria-selected` (ui-select's own
+// selected mechanism) and only a real engine resolves select.css's `[aria-selected='true']` fill.
+//
+// ONE MEASUREMENT HAZARD, handled explicitly rather than assumed away: `--ui-select-option-bg-focus` and
+// `--ui-select-option-bg-selected` resolve to the SAME colour (both `primary-container-low`, select.css),
+// and the overlay focuses the active option on open (`focusOnOpen`) — so a fill measured on a FOCUSED row
+// would prove nothing about selection. Every paint read below therefore happens with focus provably OUTSIDE
+// the panel (asserted, not hoped), which is also the real-mouse condition the owner's screenshot was taken
+// in: a pointer-opened panel matches no `:focus-visible`, which is exactly why that screenshot showed a
+// uniform list.
+describe("ui-agent-admin cross-engine — the picker's selected row (GH #905)", () => {
+  const frames = async (n = 3): Promise<void> => {
+    for (let i = 0; i < n; i++) await new Promise((r) => requestAnimationFrame(r))
+  }
+
+  const ROSTER = [
+    { id: 'alpha', label: 'Alpha' },
+    { id: 'fable', label: 'Fable' },
+    { id: 'concierge', label: 'The Hotel Concierge' },
+  ] as const
+
+  /** A mounted admin with all three roster rows + both #845 management items, panel OPEN. */
+  async function openPicker(activeId: string): Promise<{
+    el: UIAgentAdminElement
+    select: HTMLElement & { value: string; open: boolean }
+    panel: HTMLElement
+    picks: string[]
+  }> {
+    const { el } = mountAgentAdminAt(1200)
+    const picks: string[] = []
+    el.onNewAgentRequest(() => {})
+    el.onEditAgentsRequest(() => {})
+    el.onAgentSelect((id) => picks.push(id))
+    el.setAgentRoster([...ROSTER], activeId)
+    await frames()
+    const select = el.querySelector('[data-part="agent-select"]') as HTMLElement & { value: string; open: boolean }
+    ;(select.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await frames()
+    const panel = select.querySelector('[data-part="listbox"]') as HTMLElement
+    expect(panel.matches(':popover-open'), `${server.browser}: the panel is really open`).toBe(true)
+    return { el, select, panel, picks }
+  }
+
+  const rowOf = (panel: HTMLElement, value: string): HTMLElement =>
+    panel.querySelector(`[role="option"][value="${value}"]`) as HTMLElement
+  const bgOf = (node: HTMLElement): string => getComputedStyle(node).backgroundColor
+  const inkOf = (node: HTMLElement): string => getComputedStyle(node).color
+  /** Park focus OUTSIDE the panel so a fill read is the SELECTED fill alone (see the hazard note above). */
+  const parkFocus = async (panel: HTMLElement): Promise<void> => {
+    const focused = document.activeElement as HTMLElement | null
+    if (focused !== null && panel.contains(focused)) focused.blur()
+    await frames()
+    expect(panel.contains(document.activeElement), `${server.browser}: focus is outside the panel — the fill read below is selection, not a focus ring`).toBe(false)
+  }
+  /** A fully transparent computed background — the "no marker at all" reading the defect produced. */
+  const isTransparent = (color: string): boolean =>
+    color === 'transparent' || /rgba\([^)]*,\s*0\)$/.test(color)
+
+  it('THE FIX, PAINTED: the active row carries aria-selected="true" and a real fill its unselected siblings do not have', async () => {
+    const { panel } = await openPicker('fable')
+    await parkFocus(panel)
+
+    const rows = [...panel.querySelectorAll('[role="option"]:not([data-part="roster-action"])')] as HTMLElement[]
+    expect(rows.map((r) => r.getAttribute('value')), 'all three roster rows painted, in push order').toEqual(['alpha', 'fable', 'concierge'])
+    expect(
+      rows.filter((r) => r.getAttribute('aria-selected') === 'true').map((r) => r.getAttribute('value')),
+      'EXACTLY ONE row reads selected, and it is the active agent',
+    ).toEqual(['fable'])
+
+    const active = rowOf(panel, 'fable')
+    expect(active.getBoundingClientRect().height, `${server.browser}: the marked row is a real, visible box`).toBeGreaterThan(0)
+    const activeBg = bgOf(active)
+    expect(isTransparent(activeBg), `${server.browser}: the selected row paints a REAL fill (got ${activeBg})`).toBe(false)
+    for (const id of ['alpha', 'concierge']) {
+      const other = rowOf(panel, id)
+      expect(bgOf(other), `${server.browser}: ${id} is not the active agent — it must NOT wear the selected fill`).not.toBe(activeBg)
+      expect(isTransparent(bgOf(other)), 'an unselected row keeps the panel surface').toBe(true)
+    }
+    // Non-colour-blind reading too (ADR-0057's register): the ink shifts with the fill, so the row differs
+    // on two channels, not one.
+    expect(inkOf(active), `${server.browser}: the selected row's ink is repointed alongside its fill`).not.toBe(inkOf(rowOf(panel, 'alpha')))
+  })
+
+  it('IT MOVES: a switch re-push hands the fill to the NEW active row and takes it off the old one — one marker, always', async () => {
+    const { el, panel } = await openPicker('fable')
+    await parkFocus(panel)
+    const wasActiveBg = bgOf(rowOf(panel, 'fable'))
+
+    el.setAgentRoster([...ROSTER], 'concierge')
+    await frames()
+    // The re-push MINTS fresh nodes (the wholesale rebuild), so re-query — and focus cannot be confounding
+    // the read: the node that had it is gone.
+    await parkFocus(panel)
+    const nowActive = rowOf(panel, 'concierge')
+    expect(
+      [...panel.querySelectorAll('[role="option"][aria-selected="true"]')].map((r) => r.getAttribute('value')),
+      'the marker moved wholesale — never two markers, never a stale one',
+    ).toEqual(['concierge'])
+    expect(bgOf(nowActive), `${server.browser}: the new active row wears the SAME selected fill the old one had`).toBe(wasActiveBg)
+    expect(isTransparent(bgOf(rowOf(panel, 'fable'))), 'and the previously-active row is back to the plain panel surface').toBe(true)
+  })
+
+  it('IT MOVES ON A REAL CLICK: the shipped page shape (pick → re-push) lands the fill on the row the user clicked', async () => {
+    const { el, panel, picks } = await openPicker('fable')
+    // The page's own wiring: onAgentSelect → applyPersona → pushRoster (agent-admin-app.ts).
+    el.onAgentSelect((id) => {
+      picks.push(id)
+      el.setAgentRoster([...ROSTER], id)
+    })
+    rowOf(panel, 'alpha').click()
+    await frames()
+    expect(picks, `${server.browser}: the real click reached the page seam`).toEqual(['alpha'])
+
+    // Re-open and read the panel the user would see next.
+    const select = el.querySelector('[data-part="agent-select"]') as HTMLElement & { open: boolean }
+    ;(select.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await frames()
+    await parkFocus(panel)
+    expect(
+      [...panel.querySelectorAll('[role="option"][aria-selected="true"]')].map((r) => r.getAttribute('value')),
+      'where you are is where you just went',
+    ).toEqual(['alpha'])
+    expect(isTransparent(bgOf(rowOf(panel, 'alpha'))), `${server.browser}: and it paints`).toBe(false)
+  })
+
+  it('THE #845 MANAGEMENT ITEMS NEVER CARRY IT: New Agent / Edit Agents read unselected and paint like plain rows', async () => {
+    const { el, panel } = await openPicker('fable')
+    await parkFocus(panel)
+    const items = [...panel.querySelectorAll('[data-part="roster-action"]')] as HTMLElement[]
+    expect(items.map((i) => (i.textContent ?? '').trim()), 'both verbs are present to be judged').toEqual(['New Agent', 'Edit Agents'])
+    const plainBg = bgOf(rowOf(panel, 'alpha'))
+    for (const item of items) {
+      expect(item.hasAttribute('aria-selected'), `${item.textContent} is a VERB — no selected state at all`).toBe(false)
+      expect(bgOf(item), `${server.browser}: ${item.textContent} paints like an unselected row, never the selected fill`).toBe(plainBg)
+    }
+
+    // And it stays true through the state that could plant one: committing a sentinel (the commit trait
+    // reflects onto every option) — the queued rebuild is what clears it.
+    ;(panel.querySelector('[data-part="roster-action"][value="agent-admin:new-agent"]') as HTMLElement).click()
+    await frames()
+    const select = el.querySelector('[data-part="agent-select"]') as HTMLElement
+    ;(select.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await frames()
+    await parkFocus(panel)
+    for (const item of [...panel.querySelectorAll('[data-part="roster-action"]')] as HTMLElement[]) {
+      expect(item.getAttribute('aria-selected'), `${server.browser}: no marker survives on a verb after it is committed`).not.toBe('true')
+      expect(bgOf(item), 'and none of them paints the selected fill').not.toBe(bgOf(rowOf(panel, 'fable')))
+    }
+    expect(
+      [...panel.querySelectorAll('[role="option"][aria-selected="true"]')].map((r) => r.getAttribute('value')),
+      'the ROSTER row is still the only marked node',
+    ).toEqual(['fable'])
+  })
+})
+
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 //  GH #867 — unobtrusive scrolling: the Context: System JSON card scrolls with a thin, at-rest-invisible
 //  scrollbar (revealed only on hover), never the platform-default chunky bar. MEASURED (both engines under
