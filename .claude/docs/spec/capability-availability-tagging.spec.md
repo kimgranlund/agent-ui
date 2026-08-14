@@ -1,6 +1,20 @@
 # SPEC — Per-entry availability mode + composer tagging grammar (GH #850 · GH #849, one joint contract)
 
-> Status: proposed · v0.3 · 2026-08-14 (v0.2, v0.1 2026-08-13) · Layer: SPEC (execution contract)
+> Status: proposed · v0.4 · 2026-08-14 (v0.3 2026-08-14 · v0.2, v0.1 2026-08-13) · Layer: SPEC (execution contract)
+> v0.4 changelog (the GH #891 extension — the owner's UX delta on the shipped arc, same day): §11
+> added, four new requirements. SPEC-R9 — reference chips DROP the sigil prefix (the owner's
+> screenshot: a chip reading "/ itinerary-timeline ×"); kind identity moves to an optional
+> consumer-supplied icon, so §10's v0.3 chip-treatment bullet ("the trigger character itself is the
+> per-kind mark") is SUPERSEDED by R9 and annotated in place — it stays as the ship record.
+> SPEC-R10 — the sent user bubble gains display-only reference tags: the visual layer reconciled
+> with R4's framed-wire law, which is byte-unchanged (framed text stays the wire/history truth and
+> never renders in the bubble). SPEC-R11 — the third composer menu (capabilities rows + switches),
+> specified composer-GENERIC and fork-independent. SPEC-R12 — the consumer wiring, GATED on
+> [ADR-0190](../adr/0190-capabilities-menu-toggle-semantics.md): the switch's semantics (per-turn
+> inclusion vs a persistent roster write) is a GENUINE contract fork — real alternatives, binding on
+> later work, not derivable from existing law — so it is filed `proposed` for Kim rather than ruled
+> silently (the §3 table's own default-no doctrine cuts the other way here, deliberately). New
+> slices S4–S7 (§11.5); S4/S5/S6 are parallel and fork-independent, S7 alone waits on the ADR.
 > v0.3 changelog (the BUILD-STATE pass, filed with the arc's last slice): all three slices have
 > landed — §9's table carries each one's PR, and §10's bookings are marked repaired in the slice
 > that repaired them. §10's four open questions are CLOSED with pointers to where each was
@@ -383,7 +397,9 @@ requirements already stated (the SPEC's altitude is unchanged by any of them):
 - Chip visual treatment per kind and the row cohabitation — S2: the trigger character itself is the
   per-kind mark (no icon-set dependency), consumer `contextItems` chips keep the row's leading
   positions and composer-owned reference chips follow, each family rebuilding only its own
-  (`conversation-composer.ts`'s `#syncReferenceChips`).
+  (`conversation-composer.ts`'s `#syncReferenceChips`). *(Sigil clause SUPERSEDED v0.4 by SPEC-R9 —
+  GH #891 drops the sigil from the chip; the cohabitation/rebuild clauses stand. This bullet stays
+  verbatim as the v0.3 ship record.)*
 - The framing block's exact byte grammar — S3: one `## Referenced for this message` header, a
   `### {label} ({kind})` block per resolved prose entry (description then content, verbatim), typed
   text last — the ambient projection's own block shape reused; `entries.ts`'s `resolveTurnReferences`
@@ -394,3 +410,171 @@ requirements already stated (the SPEC's altitude is unchanged by any of them):
   by #848 itself (PR #856): an in-place `label` write, no second display field, so SPEC-R8's roster
   projection reads display truth straight off the entry and the "single repoint site" it named stayed
   a repoint site nobody had to use.
+
+---
+
+## 11 · GH #891 extension — chip rendering · sent-bubble reference tags · the capabilities menu
+
+The owner's UX delta (GH #891, 2026-08-14) on the shipped R1–R8 contract. Three asks, four
+requirements. Everything here is ADDITIVE to the shipped arc: no R1–R8 semantics change, and every
+widened seam keeps the byte-identical-default law (§5). The one genuine contract fork — what the
+capabilities switch MEANS — is [ADR-0190](../adr/0190-capabilities-menu-toggle-semantics.md)
+(`proposed`, Kim ratifies); SPEC-R12 and slice S7 are gated on it, nothing else is.
+
+### 11.1 · SPEC-R9 — Reference chips: no sigil; kind identity is an optional consumer icon
+
+The committed chip MUST NOT render the trigger character (`/` or `@`) as a visible label part —
+the owner's screenshot reads "/ itinerary-timeline ×", and the sigil prefix is the defect named
+(GH #891 ask 1). The `[data-part="reference-chip-sigil"]` node is REMOVED, not restyled. What
+identifies the chip instead:
+
+- **Family** (rides-this-turn vs consumer context tag) — the shipped accent ink
+  (`--ui-conversation-composer-reference-chip-*`, conversation-composer.css) already carries it;
+  unchanged.
+- **Kind** (skill vs workflow vs resource vs tool) — an OPTIONAL leading icon: `ReferenceOption`
+  gains `icon?: string` (a `ui-icon` glyph name, opaque to the composer — the §5 layering law:
+  the composer never maps `kind` to anything, the CONSUMER supplies the glyph), round-tripped
+  onto `TurnReference` exactly as `kind` is. `ui-agent-admin` maps the four capability kinds to
+  glyphs from the curated set (`icons.gen.ts`; extend the set via the GH #868 process only if
+  none fits — exact glyph choice is build-altitude, ruled inside this constraint). `icon` absent
+  ⇒ a label-only chip (the generic-consumer default), never a placeholder box.
+- **CSS hook** — the shipped `data-kind` attribute on the chip stays; a themed consumer may
+  restyle per kind without any icon.
+
+AX is unchanged by construction: the sigil was `aria-hidden` (the dismiss button carries the full
+accessible name, "Remove {label} from this turn"); the icon rides `data-role="icon"` the same way
+every fleet adornment does.
+*(→ GH #891 ask 1; §5's layering clause; GH #868's curated-glyph process)*
+- **AC1** *Given* a commit, *then* the chip renders NO text node equal to the trigger character and
+  no `[data-part="reference-chip-sigil"]` exists in the DOM; the chip's visible text is exactly the
+  entry's label.
+- **AC2** *Given* a `ReferenceOption` carrying `icon`, *then* the chip renders a leading `ui-icon`
+  with that glyph and the reference delivered to `onSubmit` carries the same `icon` value; *given*
+  no `icon`, *then* the chip is label + dismiss only.
+- **AC3** *Given* the existing composer suite, *then* every non-sigil assertion passes unmodified
+  (dismiss/dedupe/clear-on-send byte-identical); `npm run check && npm test` exit-code green.
+
+### 11.2 · SPEC-R10 — The sent bubble: typed text + display-only reference tags (R4 unchanged)
+
+GH #891 ask 2, ruled: **nothing remains inline in the typed text** (the shipped commit behavior —
+token text leaves the editor, §3's inline-pill rejection stands, not reopened), and the record of
+"what rode this turn" moves from the pre-send chips (which clear on send) to the SENT user bubble.
+
+- `UIConversationElement.addUserMessage` widens ADDITIVELY to `(text, references?)`; the internal
+  composer→bubble forwarder (conversation.ts's `onSubmit` registration) passes the turn's
+  references through. Absent/empty ⇒ the bubble is byte-identical to HEAD (the existing suite
+  passes unmodified).
+- With references, the user bubble gains a `[data-part="reference-tags"]` row: one small tag per
+  reference — label plus the R9 icon when present — visually attached to the bubble, distinct from
+  the body text, dismiss-less (the turn is sent; there is nothing to remove).
+- The tags are DISPLAY-ONLY truth of *what the user attached*: the bubble body stays the TYPED
+  text verbatim (SPEC-R4's "the conversation UI keeps showing the typed text" clause, now with the
+  tags carrying the attachment record), and the FRAMED text never renders in any bubble — wire
+  truth stays where R4 put it (history, the turn log, the Context views). R4's semantics, ACs, and
+  byte grammar are untouched.
+*(→ GH #891 ask 2; SPEC-R4; SPEC-R6's clear-on-send law)*
+- **AC1** *Given* a send with one committed reference, *then* the sent user bubble's body is the
+  typed text (never the framed text — a `not.toContain` on the framing header) and the bubble
+  carries one reference tag with the entry's label.
+- **AC2** *Given* a send with zero references (or a consumer calling single-arg `addUserMessage`),
+  *then* the bubble DOM is byte-identical to HEAD.
+- **AC3** *Given* the R4 suite, *then* it passes unmodified — the recorded history turn is still
+  the framed text.
+
+### 11.3 · SPEC-R11 — The capabilities menu: a third trigger, composer-generic, fork-independent
+
+The composer gains a third options-row affordance (GH #891 ask 3's surface), sibling of the
+Models/Effort pickers, specified so that BOTH ADR-0190 arms wire onto it unchanged — the composer
+never learns which arm won:
+
+- **Prop** — `capabilities?: readonly CapabilityRow[]` (composer-options.ts vocabulary;
+  `CapabilityRow {id, label, kind, description?, icon?, included: boolean}`), default `undefined`
+  ⇒ NO trigger, NO DOM, byte-identical render (the `models`/`mentionables` default-off law).
+  `kind`/`icon` are opaque strings (§5's layering clause); rows group by `kind` in
+  first-appearance order (the `#buildReferenceOptions` grouping law, reused).
+- **Trigger** — a picker-pill `ui-button` in the options-leading cell, built the `#buildPicker`
+  way (leading glyph + caret, the GH #868 trigger convention; exact glyph build-altitude from the
+  curated set), busy-disabled with the other triggers.
+- **Panel** — opens on trigger, lists every row: label (+icon, +description) and a real
+  `ui-switch` reflecting `included`. The panel STAYS OPEN across toggles (multi-toggle in one
+  visit — this is a steering surface, not a commit-and-close picker, which is why it is NOT a
+  `ui-menu` menuitem panel: menuitem action semantics close on activate). Escape, outside
+  interaction, send, and `busy` close it; disconnect never orphans it (the reference-menu
+  top-layer discipline).
+- **Callback up, never state down** — flipping a switch fires `onCapabilityToggle(id: string,
+  included: boolean)` and mutates NOTHING locally: the consumer owns the state and hands a new
+  `capabilities` array down (the `onModelChange` props-down/callbacks-up law, verbatim). The
+  composer stays store-blind under EITHER ADR arm — the fork is entirely consumer-side.
+- **Event law** — NO new event name (ADR-0153's closed vocabulary, owned by the `ALLOWED_EVENTS`
+  constants); the embedded switches' own `change`/`toggle` MUST NOT escape the host (`events: []`
+  — the editor-`input` suppression discipline, applied at the panel boundary).
+- **Relation to `@`/`/`** — the menu is the BROWSE/STEER surface (see every capability's state at
+  a glance, flip several); the typeahead stays the keyboard-first quick path. They are siblings
+  over the same consumer-owned truth, not alternatives: whether a menu-ON converges with the
+  reference/chip mechanism is ARM SEMANTICS (SPEC-R12), not composer behavior.
+*(→ GH #891 ask 3; SPEC-R6's default-off law; SPEC-R7's event law; ADR-0153)*
+- **AC1** *Given* no `capabilities` prop, *then* the composer's DOM is byte-identical to HEAD
+  (existing suite unmodified).
+- **AC2** *Given* rows in two kinds, *then* the panel groups them, each row's switch reflects its
+  `included`, and flipping one fires `onCapabilityToggle` with that row's id and the NEW state —
+  while the panel stays open and the row's own DOM state changes only when the consumer hands a
+  new array down.
+- **AC3** *Given* the built diff, *then* no new event name appears and no switch event crosses the
+  host boundary (the R7 AC2 grep + suites, exit-code green); a browser-shard case walks
+  open → toggle → Escape with focus discipline asserted.
+
+### 11.4 · SPEC-R12 — The switch's semantics: GATED on ADR-0190 (the roster-vs-turn fork)
+
+What `included` MEANS — and therefore what `ui-agent-admin` wires `onCapabilityToggle` to — is
+the fork [ADR-0190](../adr/0190-capabilities-menu-toggle-semantics.md) puts to Kim, `proposed`
+with a recommendation, never ruled silently (GH #891's own open question):
+
+- **Arm A — per-turn/ephemeral (the ADR's recommendation):** the switch steers THIS conversation's
+  outgoing composition only. Rows derive fresh per open: ambient entries (`isAmbient`) show
+  `included: true`, invocable entries `included: false` unless invoked; toggling never writes the
+  entry store — an OFF on an ambient entry excludes it from the outgoing turn's projections
+  host-side (zero transport change: prompt + `integrations` are computed per request), an ON on an
+  invocable entry includes it exactly as a `/` commit does. Whether that ON mints the same
+  reference/chip or rides a parallel ephemeral include list is the arm's own build ruling, inside
+  R4's fail-closed constraints.
+- **Arm B — persistent roster write:** the switch mirrors the entry's persisted state
+  (`enabled`/availability) and a flip writes the store through the consumer — the composer menu
+  becomes a remote control of the entry rows (SPEC-R2's surface). The composer contract is
+  identical; only the agent-admin wiring differs.
+
+Under EITHER arm: the composer never writes a store (R11), resolution stays by id and fail-closed
+(R4), and the master switches win (R3/R4's precedence, unchanged). This requirement has no ACs of
+its own until the ADR rules — S7 builds the ratified arm and mints the ACs from that arm's text.
+*(→ GH #891 ask 3; ADR-0190; SPEC-N1's seam; SPEC-R2/R3/R4)*
+
+### 11.5 · Non-goals (SPEC-N2) + slices + bookings
+
+Non-goals, this extension:
+- **A composer-side store write** — off the table under BOTH ADR arms (R11); the fork is about
+  consumer semantics only.
+- **Transport/schema changes** — R4 AC4's empty-diff fence extends to every S4–S7 diff.
+- **Replacing the typeahead** — the `@`/`/` quick path stands (R5–R7 untouched); the menu is a
+  sibling surface.
+- **The non-capability kinds** — `prompt-section`/`pattern-source`/`catalog` never appear in the
+  menu (SPEC-R1's four-kind scope).
+- **Framed text in any bubble** — the wire truth renders only where R4 already put it.
+
+| Slice | Scope | Gate (exit-code judged, foreground) | Depends on |
+|---|---|---|---|
+| **S4 — chip de-sigil + kind icon** | SPEC-R9 + its bookings | composer suite additions · `npm run check && npm test` | nothing (shipped arc) |
+| **S5 — sent-bubble reference tags** | SPEC-R10 + its bookings | conversation suite additions incl. R10 AC1's not-the-framed-text assertion · `npm run check && npm test` | nothing |
+| **S6 — capabilities menu, composer contract** | SPEC-R11 + its bookings | composer suite + ONE browser-shard case (R11 AC3) · `npm run check && npm test` | nothing |
+| **S7 — capabilities wiring** | SPEC-R12 (the ratified arm) | agent-admin suites + a dev-surface pixel proof (the S3 precedent) · `npm run check && npm test` | S6 + **ADR-0190 ratified** |
+
+S4/S5/S6 are mutually independent and fork-independent. S7 is the ONLY fork-gated work.
+
+Stale records this extension falsifies — repaired IN the landing slice, never a follow-up:
+
+| Record | Stale claim | Repair slice |
+|---|---|---|
+| `conversation-composer.ts` — `CommittedReference`'s doc ("the chip's sigil") + `#syncReferenceChips`'s sigil comment | the trigger character renders as the chip's per-kind mark | S4 |
+| `conversation-composer.css` — the reference-chip comment block's sigil prose | same claim, style-side | S4 |
+| `conversation-composer.md` + `conversation-composer.lld.md` | pre-R9/R11 chip anatomy + prop/callback inventory | S4 (chip) · S6 (menu) |
+| `conversation.md` + `conversation.lld.md` | single-arg `addUserMessage`, bubble anatomy | S5 |
+| `agent-admin.md` — the reach-path section | no capabilities-menu projection | S7 |
+| this SPEC's §10 chip-treatment bullet | annotated in place (v0.4) | done in this change ✔ |
