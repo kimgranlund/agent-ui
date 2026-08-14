@@ -69,6 +69,16 @@
   --md-sys-state-focus-ring-width: 2px;
   --md-sys-state-focus-ring-offset: 2px;
 
+  /* Unobtrusive-scrollbar affordance (GH #867) — the shared thin/auto-hiding scroll-surface geometry: a
+     CONSTANT (no [scale]/[density] multiplier — a scrollbar gutter does not resize with the control ramp),
+     so it sits on :root like the focus-ring geometry above, NOT the `*` ramp. Feeds BOTH engines' knobs from
+     ONE number: Firefox's `scrollbar-width: thin` keyword (unitless, reads no token) plus `::-webkit-
+     scrollbar { width/height }` (Chromium/WebKit, which has no "thin" keyword of its own) — so this constant
+     is the WebKit leg's own thin-ness, and the thumb radius derives from it (half the gutter) rather than a
+     second hand-tuned number. A component mints its own-chain `--ui-{cmp}-scrollbar-size` from this in its
+     `:where()` token block and consumes THAT in `@scope`, same as every other dimensional constant here. */
+  --md-sys-scrollbar-size: 8px;
+
   /* Motion (the interaction-states standard) — state-transition timing. CONSTANTS (no var() over a
      subtree-repointable multiplier), so on :root like the focus-ring geometry, NOT the `*` ramp. A control's
      `@scope` block transitions its state-PAINT properties (background/colour/border) over --md-sys-motion-duration-fast —

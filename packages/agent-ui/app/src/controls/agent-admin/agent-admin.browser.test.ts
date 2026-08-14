@@ -3134,6 +3134,82 @@ describe('ui-agent-admin cross-engine — the picker\'s New Agent / Edit Agents 
   })
 })
 
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #867 — unobtrusive scrolling: the Context: System JSON card scrolls with a thin, at-rest-invisible
+//  scrollbar (revealed only on hover), never the platform-default chunky bar. MEASURED (both engines under
+//  test fully expose the computed-style surface this probes — verified empirically, not assumed): a bare
+//  `overflow: auto` box renders with a ZERO-width overlay gutter in this headless harness regardless of any
+//  CSS here, so a gutter-width COMPARISON against an untreated control cannot discriminate "thin" from
+//  "chunky" in this environment — the honest, engine-capability-respecting probe is the computed STYLE
+//  itself: `scrollbar-width: thin` (the standard property) and the `::-webkit-scrollbar{,-thumb}` pseudo
+//  values this fix actually declares, both of which getComputedStyle resolves in Chromium AND WebKit here.
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-agent-admin cross-engine smoke — GH #867: the context-json card scrolls with an unobtrusive (thin) scrollbar, never the platform-default chunky bar', () => {
+  it('overflows for real, scrolls (scrollTop moves), and computes the thin/at-rest-transparent/reveal-on-hover treatment', async () => {
+    const { el } = mountAgentAdminAt(900)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    activateTab(el, 'Context: System')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const agentJson = el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]') as HTMLElement
+    expect(agentJson.textContent, 'the real compiled config, not a stub').toContain('systemPrompt')
+    // Force a real, deterministic overflow (the real config's own length varies harmlessly above/below the
+    // shipped 20rem cap) — an inline `max-block-size` override is test-only sizing, not a CSS change, the
+    // same "constrain the box, then measure" shape editor.browser.test.ts's own scroll leg already uses.
+    agentJson.style.maxBlockSize = '40px'
+    await new Promise((r) => requestAnimationFrame(r))
+    expect(agentJson.scrollHeight, 'a real overflow to actually scroll').toBeGreaterThan(agentJson.clientHeight)
+
+    // scrollability itself is UNCHANGED by this fix — a real scrollTop move.
+    agentJson.scrollTop = 0
+    agentJson.scrollTop = 40
+    expect(agentJson.scrollTop, `${server.browser}: still genuinely scrollable`).toBeGreaterThan(0)
+
+    // THIN, never the platform-default chunky bar (both engines under test expose this back).
+    expect(getComputedStyle(agentJson).scrollbarWidth, `${server.browser}: scrollbar-width`).toBe('thin')
+    // The webkit legacy pseudo (both Chromium AND WebKit honour it) resolves to the SAME shared token —
+    // a real, narrow gutter, never the ~15-17px platform default.
+    expect(getComputedStyle(agentJson, '::-webkit-scrollbar').width, `${server.browser}: ::-webkit-scrollbar width`).toBe('8px')
+    // Nothing chunky AT REST — the thumb is transparent until interaction.
+    expect(getComputedStyle(agentJson, '::-webkit-scrollbar-thumb').backgroundColor, `${server.browser}: thumb transparent at rest`).toBe(
+      'rgba(0, 0, 0, 0)',
+    )
+
+    // Reveal-on-hover: the SAME thumb pseudo resolves to a REAL, non-transparent colour once hovered —
+    // the overlay-scrollbar illusion this fix builds from plain CSS.
+    await userEvent.hover(agentJson)
+    expect(getComputedStyle(agentJson, '::-webkit-scrollbar-thumb').backgroundColor, `${server.browser}: thumb paints on hover`).not.toBe(
+      'rgba(0, 0, 0, 0)',
+    )
+    await userEvent.unhover(agentJson)
+  })
+
+  it('the SAME card, reached via Context: Dialog\'s turn payload, gets the identical treatment (one selector, both tabs — contextItem() builds both)', async () => {
+    const { el } = mountAgentAdminAt(900)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    goToPlace(el, 'Chat')
+    const composer = el.querySelector('[data-part="chat-pane"] ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = 'gh867 probe'
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    const start = Date.now()
+    while (el.querySelectorAll('[data-part="context-turn"]').length === 0) {
+      if (Date.now() - start > 8000) throw new Error('stub turn never logged')
+      await new Promise((r) => setTimeout(r, 50))
+    }
+    activateTab(el, 'Context: Dialog')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const turnJson = el.querySelector('[data-part="context-turn"] [data-part="context-json"]') as HTMLElement
+    expect(turnJson, 'a real turn payload card').not.toBeNull()
+    expect(turnJson.scrollHeight, 'the turn payload also overflows for real').toBeGreaterThanOrEqual(turnJson.clientHeight)
+    expect(getComputedStyle(turnJson).scrollbarWidth, `${server.browser}: same treatment as Context: System's card — ONE selector, no forked copy`).toBe(
+      'thin',
+    )
+    expect(getComputedStyle(turnJson, '::-webkit-scrollbar').width, `${server.browser}: same webkit gutter width, one shared token`).toBe('8px')
+  })
+})
+
 
 
 

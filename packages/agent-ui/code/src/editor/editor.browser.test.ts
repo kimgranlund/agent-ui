@@ -1087,3 +1087,53 @@ describe('ui-code-editor — the mode-toggle is a zero-footprint corner overlay 
     expect(t.top - host.top, 'the toggle must stick to the scrollport top, not ride the content away').toBeLessThan(10)
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #867 — unobtrusive scrolling: the host's own scroller (confirmed above — "the host itself is the
+//  scroller") computes a thin, at-rest-transparent, reveal-on-hover treatment, never the platform-default
+//  chunky bar. MEASURED (both engines under test): a bare `overflow: auto` box renders a ZERO-width
+//  overlay gutter in this headless harness regardless of any CSS, so a gutter-width COMPARISON against an
+//  untreated control cannot discriminate "thin" from "chunky" here — the honest probe is the computed
+//  STYLE this fix actually declares (`scrollbar-width` + the `::-webkit-scrollbar{,-thumb}` pseudo values),
+//  which getComputedStyle resolves in both Chromium and WebKit here.
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-code-editor — GH #867: the entry-content box scrolls with an unobtrusive (thin) scrollbar, never the platform-default chunky bar', () => {
+  it('overflows for real, scrolls (scrollTop moves), and computes the thin/at-rest-transparent/reveal-on-hover treatment', async () => {
+    const { field } = mount(`<ui-code-editor language="plain" style="inline-size: 320px; block-size: 80px; display: block"></ui-code-editor>`)
+    field.value = Array.from({ length: 40 }, (_, i) => `scroll line ${i}`).join('\n')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    expect(field.scrollHeight, 'a real overflow to actually scroll').toBeGreaterThan(field.clientHeight)
+
+    // scrollability itself is UNCHANGED by this fix — a real scrollTop move.
+    field.scrollTop = 0
+    field.scrollTop = 40
+    expect(field.scrollTop, `${server.browser}: still genuinely scrollable`).toBeGreaterThan(0)
+
+    expect(getComputedStyle(field).scrollbarWidth, `${server.browser}: scrollbar-width`).toBe('thin')
+    expect(getComputedStyle(field, '::-webkit-scrollbar').width, `${server.browser}: ::-webkit-scrollbar width — a real, narrow gutter`).toBe('8px')
+    expect(getComputedStyle(field, '::-webkit-scrollbar-thumb').backgroundColor, `${server.browser}: thumb transparent at rest`).toBe(
+      'rgba(0, 0, 0, 0)',
+    )
+
+    await userEvent.hover(field)
+    expect(getComputedStyle(field, '::-webkit-scrollbar-thumb').backgroundColor, `${server.browser}: thumb paints on hover`).not.toBe(
+      'rgba(0, 0, 0, 0)',
+    )
+    await userEvent.unhover(field)
+  })
+
+  it('language="markdown" — CodeMirror\'s own `.cm-scroller` gets the identical treatment (ADR-0139: the scroller CM itself mounts, defensively covered too)', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" style="inline-size: 320px; block-size: 80px; display: block"></ui-code-editor>`)
+    field.value = Array.from({ length: 40 }, (_, i) => `scroll line ${i}`).join('\n')
+    await expect.poll(() => field.querySelector('.cm-scroller') !== null, { timeout: 5000 }).toBe(true)
+    const scroller = field.querySelector('.cm-scroller') as HTMLElement
+
+    expect(getComputedStyle(scroller).scrollbarWidth, `${server.browser}: .cm-scroller scrollbar-width`).toBe('thin')
+    expect(getComputedStyle(scroller, '::-webkit-scrollbar').width, `${server.browser}: .cm-scroller ::-webkit-scrollbar width`).toBe('8px')
+    expect(getComputedStyle(scroller, '::-webkit-scrollbar-thumb').backgroundColor, `${server.browser}: .cm-scroller thumb transparent at rest`).toBe(
+      'rgba(0, 0, 0, 0)',
+    )
+  })
+})

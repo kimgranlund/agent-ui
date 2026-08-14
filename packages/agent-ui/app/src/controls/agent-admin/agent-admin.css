@@ -112,6 +112,13 @@
   --ui-agent-admin-help-focus-ink: var(--md-sys-color-primary);
   --ui-agent-admin-help-card-max-inline-size: 22rem;
   --ui-agent-admin-help-card-gap: var(--md-sys-space-xs);
+
+  /* GH #867 — the unobtrusive-scrollbar own-chain (context-json's own two-axis scroll box): the fleet
+     dimensional constant + the fleet colour role, repointed here exactly like every other dimensional/colour
+     read in this block (TKT-0066 item 5's own-chain law) rather than a direct `@scope` read of either. */
+  --ui-agent-admin-scrollbar-size: var(--md-sys-scrollbar-size);
+  --ui-agent-admin-scrollbar-thumb: var(--md-sys-color-neutral-scrollbar-thumb);
+  --ui-agent-admin-scrollbar-thumb-hover: var(--md-sys-color-neutral-scrollbar-thumb-hover);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-agent-admin) consumes ONLY --ui-agent-admin-* ════════════════ */
@@ -961,6 +968,42 @@
     max-block-size: 20rem;
     overflow-y: auto;
     white-space: pre;
+    /* GH #867 — unobtrusive scrolling, both axes: THIN everywhere (never the platform-default chunky bar)
+       and INVISIBLE at rest (`scrollbar-color`'s thumb leg + the webkit thumb both start transparent),
+       painting the thumb only on hover/focus-within — an overlay-scrollbar illusion built from plain CSS
+       rather than relying on any one engine's own auto-hide behaviour (a `thin` keyword alone does not
+       auto-hide on every platform). Scrolling itself is UNCHANGED (still real `overflow: auto` above, both
+       axes) — this only repaints the gutter/thumb, never touches scrollability or keyboard/wheel reach. */
+    scrollbar-width: thin; /* Firefox / the standard property */
+    scrollbar-color: transparent transparent; /* thumb, track — both invisible until hover/focus-within below */
+  }
+  [data-part='context-json']:hover,
+  [data-part='context-json']:focus-within {
+    scrollbar-color: var(--ui-agent-admin-scrollbar-thumb) transparent;
+  }
+  /* Chromium/WebKit's own scrollbar hooks — pseudo-elements, so a separate rule set (cannot join the
+     declaration block above). Same at-rest-transparent/reveal-on-hover shape as the standard property. */
+  [data-part='context-json']::-webkit-scrollbar {
+    /* `::-webkit-scrollbar` is a non-standard WebKit pseudo-element, not a normal box — its documented API
+       is the PHYSICAL `width`/`height` pair (no logical-property mapping), unlike every other rule in this
+       file's own logical-property discipline. */
+    width: var(--ui-agent-admin-scrollbar-size);
+    height: var(--ui-agent-admin-scrollbar-size);
+  }
+  [data-part='context-json']::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  [data-part='context-json']::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: calc(var(--ui-agent-admin-scrollbar-size) / 2); /* clean rounded corners, never a square chunk */
+  }
+  [data-part='context-json']:hover::-webkit-scrollbar-thumb,
+  [data-part='context-json']:focus-within::-webkit-scrollbar-thumb {
+    background: var(--ui-agent-admin-scrollbar-thumb);
+  }
+  [data-part='context-json']:hover::-webkit-scrollbar-thumb:hover,
+  [data-part='context-json']:focus-within::-webkit-scrollbar-thumb:hover {
+    background: var(--ui-agent-admin-scrollbar-thumb-hover);
   }
 
   /* forced-colors: active — every bordered surface above uses a real 1px border (not a shadow/tint),

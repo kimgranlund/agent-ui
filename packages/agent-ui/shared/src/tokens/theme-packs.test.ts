@@ -8,10 +8,13 @@ declare const process: { cwd(): string }
 // undeclared role. "Core" is the default's full property set MINUS the 16 hand-authored roles NO
 // stock Ultimate Tokens export produces (TKT-0087's investigation, verified against the repo's real
 // 11-palette config — every one of these 16 is independently named there, not a rounded-off count):
-// focus-ring, the six neutral-tint-* roles, neutral-track/-hover, primary-selected, and the six raw
-// 050/950 alpha-triple primitives feeding the tint roles. A pack omitting one of these 16 is CORRECT
-// (not a gap to close) — an element inside the themed subtree inherits it from :root via ordinary CSS
-// custom-property cascade, since a `[theme]` block is always a :root descendant.
+// focus-ring, the six neutral-tint-* roles, neutral-track/-hover, primary-selected, the six raw
+// 050/950 alpha-triple primitives feeding the tint roles, and (GH #867) the scrollbar-thumb/-thumb-hover
+// pair — 18 roles now, not 16; scrollbar-thumb is an ALIAS of neutral-track/-hover (tokens.css), and an
+// alias of a hand-authored role a stock export never produces is, by the same reasoning, never produced
+// either. A pack omitting one of these 18 is CORRECT (not a gap to close) — an element inside the themed
+// subtree inherits it from :root via ordinary CSS custom-property cascade, since a `[theme]` block is
+// always a :root descendant.
 //
 // Two checks: (1) property-name parity against the core set (2) scheme-completeness — wherever the
 // DEFAULT pairs a role via `light-dark(...)`, the pack must too (never a flat value standing in for a
@@ -41,6 +44,10 @@ const BESPOKE_EXEMPT = new Set([
   '--md-sys-color-neutral-950-50',
   '--md-sys-color-neutral-950-100',
   '--md-sys-color-neutral-950-140',
+  // GH #867 — aliases of the neutral-track pair above (`var(--md-sys-color-neutral-track{,-hover})`,
+  // tokens.css); a stock export that never produces the aliased role never produces the alias either.
+  '--md-sys-color-neutral-scrollbar-thumb',
+  '--md-sys-color-neutral-scrollbar-thumb-hover',
 ])
 
 /** name -> declared value (the FIRST `:root`/`[theme=...]` block only — every pack + tokens.css is

@@ -93,6 +93,14 @@
   --ui-code-editor-toggle-ink-disabled: var(--md-sys-color-neutral-low);
   --ui-code-editor-toggle-bg-hover: var(--md-sys-color-neutral-container);
   --ui-code-editor-toggle-size: 24px; /* WCAG 2.5.8 minimum target size (the ui-split --ui-split-hit-slop precedent) — this control carries no [scale]/[size] lever, so a fixed own-chain token, not --md-sys-height-sm */
+
+  /* GH #867 — the unobtrusive-scrollbar own-chain: the fleet dimensional constant + the fleet colour role,
+     repointed here (TKT-0066 item 5's own-chain law) rather than a direct `@scope` read of either. Consumed
+     by BOTH the host's own scroll box and CodeMirror's internal `.cm-scroller` (ADR-0139 — the scroller
+     that actually owns the scroll varies by mode, so both surfaces read the SAME two tokens). */
+  --ui-code-editor-scrollbar-size: var(--md-sys-scrollbar-size);
+  --ui-code-editor-scrollbar-thumb: var(--md-sys-color-neutral-scrollbar-thumb);
+  --ui-code-editor-scrollbar-thumb-hover: var(--md-sys-color-neutral-scrollbar-thumb-hover);
 }
 
 /* disabled → a role-REPOINT (NOT opacity, tokens.md canon), the textarea precedent. */
@@ -129,6 +137,34 @@
     border: 1px solid var(--ui-code-editor-border);
     border-radius: var(--ui-code-editor-radius);
     cursor: text;
+    /* GH #867 — unobtrusive scrolling: THIN + invisible-at-rest, painting the thumb only on hover/focus-
+       within (the agent-admin.css context-json precedent, same shared tokens). Scrolling itself (the
+       `overflow-y: auto` above) is unchanged — this is cosmetic gutter/thumb only. */
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  :scope:hover,
+  :scope:focus-within {
+    scrollbar-color: var(--ui-code-editor-scrollbar-thumb) transparent;
+  }
+  :scope::-webkit-scrollbar {
+    width: var(--ui-code-editor-scrollbar-size); /* physical, not logical — see agent-admin.css's own note on this non-standard pseudo */
+    height: var(--ui-code-editor-scrollbar-size);
+  }
+  :scope::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  :scope::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: calc(var(--ui-code-editor-scrollbar-size) / 2);
+  }
+  :scope:hover::-webkit-scrollbar-thumb,
+  :scope:focus-within::-webkit-scrollbar-thumb {
+    background: var(--ui-code-editor-scrollbar-thumb);
+  }
+  :scope:hover::-webkit-scrollbar-thumb:hover,
+  :scope:focus-within::-webkit-scrollbar-thumb:hover {
+    background: var(--ui-code-editor-scrollbar-thumb-hover);
   }
 
   /* the plain contenteditable editor part (the editable-first fallback surface). `:not([hidden])` is
@@ -170,6 +206,39 @@
   }
   :scope > [data-part='cm'] .cm-placeholder {
     color: var(--ui-code-editor-placeholder);
+  }
+  /* GH #867 — CodeMirror mounts its OWN scroll container (`.cm-scroller`, CM6's base theme; ADR-0139) that
+     can end up owning the real scroll independently of the host's own `overflow-y: auto` above (a bounded-
+     height host — the resize handle dragged shorter, or a future max-block-size — leaves CM's internal
+     `.cm-editor { height:100% }` bounded too, so `.cm-scroller` genuinely scrolls). Same treatment, same
+     tokens, so the two surfaces never visually disagree about "unobtrusive" regardless of which one is
+     actually doing the scrolling in a given layout. */
+  :scope > [data-part='cm'] .cm-scroller {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  :scope > [data-part='cm'] .cm-scroller:hover,
+  :scope > [data-part='cm'] .cm-scroller:focus-within {
+    scrollbar-color: var(--ui-code-editor-scrollbar-thumb) transparent;
+  }
+  :scope > [data-part='cm'] .cm-scroller::-webkit-scrollbar {
+    width: var(--ui-code-editor-scrollbar-size);
+    height: var(--ui-code-editor-scrollbar-size);
+  }
+  :scope > [data-part='cm'] .cm-scroller::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  :scope > [data-part='cm'] .cm-scroller::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: calc(var(--ui-code-editor-scrollbar-size) / 2);
+  }
+  :scope > [data-part='cm'] .cm-scroller:hover::-webkit-scrollbar-thumb,
+  :scope > [data-part='cm'] .cm-scroller:focus-within::-webkit-scrollbar-thumb {
+    background: var(--ui-code-editor-scrollbar-thumb);
+  }
+  :scope > [data-part='cm'] .cm-scroller:hover::-webkit-scrollbar-thumb:hover,
+  :scope > [data-part='cm'] .cm-scroller:focus-within::-webkit-scrollbar-thumb:hover {
+    background: var(--ui-code-editor-scrollbar-thumb-hover);
   }
 
   /* class-based highlight — the markdown constructs' colours ONLY, never weight/style (cm-editor.ts's
