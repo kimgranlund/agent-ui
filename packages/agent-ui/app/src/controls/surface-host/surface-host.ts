@@ -66,7 +66,7 @@
 //     those; an element already disabled for a payload/checks reason when the sweep ran is never added,
 //     so it is never touched on the way back either.
 
-import { UIElement, prop, withViewTransition, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
+import { UIContainerElement, UIElement, prop, withViewTransition, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import { createRenderer } from '@agent-ui/a2ui'
 import type { RendererHost, ClientMessageListener, A2uiClientMessage } from '@agent-ui/a2ui'
 
@@ -185,8 +185,9 @@ export class UISurfaceHostElement extends UIElement {
     }, this.viewTransitions && this.#settledOnce)
   }
 
-  /** End of a batch: forwards to the `RendererHost`, then stretches a root `ui-column` to fill the
-   *  artboard (`applyRootStretch`, unchanged from the `canvas-surface.ts` embryo). A no-op pre-connect.
+  /** End of a batch: forwards to the `RendererHost`, then stretches the root to fill the artboard
+   *  (`applyRootStretch` — GH #892 broadened this from the `canvas-surface.ts` embryo's ui-column-only
+   *  check to every layout-primitive root; see the method body). A no-op pre-connect.
    *  GH #742/ADR-0183 Amendment: on a re-render (settled once, opted in) this rides the SAME
    *  `withViewTransition` channel the wrapped ingest() lines queued through — the spec's FIFO
    *  update-callback queue is what keeps the validator + root-stretch BEHIND the last queued
@@ -204,7 +205,18 @@ export class UISurfaceHostElement extends UIElement {
       if (this.#host === undefined || this.#surface === undefined) return
       this.#host.finalize()
       const root = this.#surface.firstElementChild
+      // GH #892 — a rendered surface should fill the artboard's available width, root INCLUDED, not just
+      // its (already-stretching-by-default, ADR-0030) descendants. `ui-column` owns a dedicated `stretch`
+      // PROP (ADR-0016/ADR-0030 — a reflected, semantic opt-in, not an implementation detail) so it gets
+      // the attribute below unchanged. The sibling layout primitives (ui-row/ui-card/ui-list/ui-grid, …)
+      // carry no equivalent prop of their own — `UIContainerElement` is the exact "layout primitive, not
+      // an intrinsic control" discriminator the fleet already draws (row/column/card/list/grid all extend
+      // it; button/badge/pill/etc. extend `UIElement` directly), so an imperative `align-self: stretch` on
+      // the mounted instance is the width-fill for those without minting a `stretch` prop on each. A root
+      // that is an intrinsic control (e.g. a lone Button) is untouched by either branch and keeps its own
+      // natural width — the GH #892 acceptance's named exception.
       if (root && root.tagName.toLowerCase() === 'ui-column') root.setAttribute('stretch', '')
+      else if (root instanceof UIContainerElement) root.style.alignSelf = 'stretch'
       // ADR-0187 — the host's OWN facts, read once the surface has settled: finalize happened, and the
       // mount point holds no element. Presentation of a state already established, never a re-judgment
       // (`root === null` here IS "no root ever attached" — the renderer appends exactly one root element

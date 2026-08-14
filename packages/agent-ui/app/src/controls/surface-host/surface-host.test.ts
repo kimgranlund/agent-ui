@@ -169,6 +169,56 @@ describe('ui-surface-host — a real A2UI stream renders inside the surface + ap
     expect(btn).not.toBeNull()
     expect(btn!.textContent).toBe('Go')
   })
+
+  // GH #892 — the root-fill treatment generalized off ui-column specifically to ANY UIContainerElement
+  // root: a Row (a layout primitive with no `stretch` prop of its own) gets an imperative
+  // `align-self: stretch` instead of the ui-column-only attribute; the geometry proof is the browser leg
+  // (surface-host.browser.test.ts) — jsdom cannot resolve computed flex geometry — this pins the JS-level
+  // contract cheaply.
+  it('a Row root (no `stretch` prop of its own) gets `align-self: stretch` at finalize()', async () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's2', catalogId: 'agent-ui' } }))
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 's2',
+          components: [
+            { id: 'root', component: 'Row', children: ['btn'] },
+            { id: 'btn', component: 'Button', variant: 'solid', label: 'Go', action: { action: 'go' } },
+          ],
+        },
+      }),
+    )
+    const surface = el.querySelector('[data-part="surface"]') as HTMLElement
+    const root = surface.firstElementChild as HTMLElement
+    expect(root.tagName.toLowerCase()).toBe('ui-row')
+    expect(root.style.alignSelf).toBe('')
+
+    el.finalize()
+    expect(root.style.alignSelf).toBe('stretch')
+    expect(root.hasAttribute('stretch')).toBe(false) // the ui-column-only attribute never applies to a Row
+  })
+
+  // GH #892's named exception — an intrinsic control (extends UIElement directly, not UIContainerElement)
+  // as the WHOLE root is untouched by either branch: it keeps its own natural width, never force-stretched.
+  it('a Button root (an intrinsic control, not a layout primitive) is untouched — no stretch attribute, no align-self', () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's3', catalogId: 'agent-ui' } }))
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 's3', components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Go' }] },
+      }),
+    )
+    const surface = el.querySelector('[data-part="surface"]') as HTMLElement
+    const root = surface.firstElementChild as HTMLElement
+    expect(root.tagName.toLowerCase()).toBe('ui-button')
+
+    el.finalize()
+    expect(root.hasAttribute('stretch')).toBe(false)
+    expect(root.style.alignSelf).toBe('')
+  })
 })
 
 // ── ADR-0187 / GH #829 clause 6 — the terminal-empty presentational brace ──────────────────────────────

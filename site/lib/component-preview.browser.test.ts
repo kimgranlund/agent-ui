@@ -184,3 +184,9 @@ describe('component-preview — direct canvas interaction survives a knob edit (
     expect(after?.getAttribute('size'), 'the click did not commit — the a2ui payload never re-rendered with `lg`').toBe('lg')
   })
 })
+
+// GH #892 note: the gallery/preview mount's WIDTH-FILL contract rides the shared `site/lib/canvas-surface.ts`
+// helper this element composes (`createCanvasSurface`/`applyRootStretch`) — measured directly, at a
+// controlled width, in `canvas-surface.browser.test.ts` (the docs-page's own two-column responsive grid
+// squeezes `.canvas-surface` down to a few dozen px at this suite's default 414px mobile viewport, which
+// would make a width-fill assertion HERE measure the grid's incidental squeeze, not this ticket's fix).

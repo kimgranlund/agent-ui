@@ -271,6 +271,106 @@ describe('ui-surface-host [bare] — the chromeless chat mount (GH #241)', () =>
   })
 })
 
+// ── GH #892 — a rendered surface's ROOT fills its container's available width, cross-engine ────────────
+//
+// `applyRootStretch`'s ui-column-only check left every OTHER layout-primitive root (Row/Card/List/Grid)
+// shrink-wrapped to content under the mount's `align-items: center` — the reported symptom ("cards in the
+// test-chat bubbles don't use the available width"). These measure the two mount shapes the fix touches:
+// the chromeless in-bubble mount ([wrap][bare], conversation.ts's exact composition) and the chromed
+// checkered artboard (the docs-preview/canvas shape, unbare) — plus the named exception (an intrinsic
+// control root stays its own natural width in EITHER shape).
+
+/** The surface's own CONTENT-box width — subtracts its own padding so a Row/Card root's rect is compared
+ *  against the box it actually has to fill, not the padding-inclusive border box. */
+const contentWidth = (el: HTMLElement): number => {
+  const cs = getComputedStyle(el)
+  return el.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+}
+
+describe('ui-surface-host — GH #892: a Row/Card root fills the mount, an intrinsic root does not', () => {
+  it('[wrap][bare] in-bubble mount: a Row root fills the message column width (conversation.ts shape)', () => {
+    const { host, column } = mountBareHost()
+    host.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'r1', catalogId: 'agent-ui' } }))
+    host.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'r1',
+          components: [
+            { id: 'root', component: 'Row', gap: 'md', children: ['b1', 'b2'] },
+            { id: 'b1', component: 'Button', variant: 'soft', label: 'One' },
+            { id: 'b2', component: 'Button', variant: 'soft', label: 'Two' },
+          ],
+        },
+      }),
+    )
+    host.finalize()
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    const root = surface.firstElementChild as HTMLElement
+    expect(root.tagName.toLowerCase()).toBe('ui-row')
+    const columnWidth = column.getBoundingClientRect().width
+    expect(root.getBoundingClientRect().width, 'the Row root did not fill the bubble column').toBeCloseTo(columnWidth, 0)
+  })
+
+  it('chromed checkered artboard (unbare): a Card root fills the artboard content box, up to its 32rem cap', () => {
+    const el = mountHost('700px', '400px') // wider than the 32rem/512px cap — proves the cap, not the host, bounds it
+    el.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'c1', catalogId: 'agent-ui' } }))
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'c1',
+          components: [
+            { id: 'root', component: 'Card', children: ['s_content'] },
+            { id: 's_content', component: 'CardContent', children: ['s_text'] },
+            { id: 's_text', component: 'Text', variant: 'body', text: 'A rendered card.' },
+          ],
+        },
+      }),
+    )
+    el.finalize()
+    const surface = el.querySelector('[data-part="surface"]') as HTMLElement
+    const root = surface.firstElementChild as HTMLElement
+    expect(root.tagName.toLowerCase()).toBe('ui-card')
+    expect(root.getBoundingClientRect().width, 'the Card root did not fill the artboard').toBeCloseTo(contentWidth(surface), 0)
+  })
+
+  it('negative control: a lone Button root (an intrinsic control) stays its own natural width in BOTH mount shapes', () => {
+    // Chromed artboard shape.
+    const canvas = mountHost()
+    canvas.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'btn1', catalogId: 'agent-ui' } }))
+    canvas.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 'btn1', components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Go' }] },
+      }),
+    )
+    canvas.finalize()
+    const canvasSurface = canvas.querySelector('[data-part="surface"]') as HTMLElement
+    const canvasBtn = canvasSurface.firstElementChild as HTMLElement
+    expect(canvasBtn.getBoundingClientRect().width, 'a lone Button root was force-stretched in the artboard').toBeLessThan(
+      contentWidth(canvasSurface) * 0.5,
+    )
+
+    // In-bubble shape.
+    const { host: bubble, column } = mountBareHost()
+    bubble.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'btn2', catalogId: 'agent-ui' } }))
+    bubble.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 'btn2', components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Go' }] },
+      }),
+    )
+    bubble.finalize()
+    const bubbleSurface = bubble.querySelector('[data-part="surface"]') as HTMLElement
+    const bubbleBtn = bubbleSurface.firstElementChild as HTMLElement
+    const columnWidth = column.getBoundingClientRect().width
+    expect(bubbleBtn.getBoundingClientRect().width, 'a lone Button root was force-stretched in the bubble').toBeLessThan(
+      columnWidth * 0.5,
+    )
+  })
+})
+
 // ── GH #742/ADR-0183 Amendment — view transitions on RE-RENDERS, real platform (the jsdom half stubs
 // the API; this is the genuine startViewTransition where the engine ships it, and the feature-detect
 // honesty where it does not — the router probe's established split) ───────────────────────────────────
