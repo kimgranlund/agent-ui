@@ -29,6 +29,22 @@
 // Enter-with-menu-open commits and never sends. Unset rosters ⇒ `@`/`/` are plain characters and this
 // element renders byte-identically to before (the `models`/`providers` default-off law).
 //
+// GH #891 (same SPEC, §11 — SPEC-R11, slice S6): the THIRD options-row affordance, `capabilities` — a
+// default-off row list (`CapabilityRow[]`, rows DOWN) behind a picker-pill trigger, each row a real
+// `ui-switch`, every flip reported UP through `onCapabilityToggle(id, included)` with ZERO local mutation
+// (the shipped `onModelChange` props-down/callbacks-up law). It is the BROWSE/STEER sibling of the `@`/`/`
+// typeahead's keyboard-first quick path, not a replacement for it. Deliberately NOT a `ui-menu`: menuitem
+// action semantics close on activate, and this panel stays open across several toggles in one visit. What a
+// flip MEANS (this turn only vs the persisted roster) is the CONSUMER's ruling (ADR-0190/SPEC-R12) — this
+// element is store-blind and fork-blind under either arm, and no new event name is minted (`events: []`
+// holds: the embedded switches' own `change` is suppressed at the panel boundary).
+//
+// GH #891 (same SPEC, §11 — SPEC-R9, slice S4): the committed chip drops the sigil prefix. Kind identity
+// rides an OPTIONAL consumer-supplied glyph (`ReferenceOption.icon` → the chip's leading `ui-icon`, round-
+// tripped onto `TurnReference`) plus the shipped `data-kind` hook; the composer still maps NOTHING (§5's
+// layering clause — `ui-agent-admin` owns the kind→glyph table). A roster entry with no `icon` renders a
+// label-only chip, so every pre-R9 consumer keeps exactly the chip it had, minus the `@`/`/` character.
+//
 // The editable surface (LLD CVC-C3′, TKT-0058): the ADR-0014 contenteditable pattern via its multi-line
 // sibling `ui-textarea` (ADR-0134) — a stable `<div data-part="editor" contenteditable="plaintext-only"
 // role="textbox" aria-multiline="true">`, created ONCE and never re-rendered; surface→model on `input`
@@ -39,14 +55,14 @@
 // the editor; the focus ring renders on the HOST frame (conversation-composer.css, :has(editor:focus)).
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
-import type { UIButtonElement, UIMenuElement } from '@agent-ui/components/components'
+import type { UIButtonElement, UIMenuElement, UISwitchElement } from '@agent-ui/components/components'
 // The PURE placement function out of the overlay trait (flip + viewport shift) — NOT the `overlay()`
 // controller itself: that controller announces `close`/`toggle` ON ITS HOST (ADR-0101), and this element's
 // contract is `events: []` with no menu event allowed to escape the host (SPEC-R7). Borrowing only the
 // measured-placement math keeps the fleet's one positioning model without opening an event surface the
 // descriptor denies exists.
 import { computePosition } from '@agent-ui/components/traits/overlay'
-import type { PickerOption, ProviderOption, ContextItem, ReferenceOption, TurnReference } from './composer-options.ts'
+import type { PickerOption, ProviderOption, ContextItem, ReferenceOption, TurnReference, CapabilityRow } from './composer-options.ts'
 
 // The editor's editable mode (ADR-0014 cl.1, the ui-textarea reuse).
 const EDITABLE = 'plaintext-only'
@@ -64,12 +80,6 @@ interface ActiveToken {
   start: number
   /** Offset just past the token (the caret). */
   end: number
-}
-
-/** A committed reference plus the trigger that minted it (the chip's sigil — mention vs invocation). */
-interface CommittedReference {
-  trigger: Trigger
-  ref: TurnReference
 }
 
 // Module-level id counter — stable, unique `[role="listbox"]`/`[role="option"]` ids for
@@ -155,6 +165,12 @@ const props = {
   // as ONE menu grouped by `kind`, filtered directly by name — never a two-stage `/tool <name>` grammar
   // (the SPEC's §3 ruling). Same default-off law as `mentionables`.
   invocables: { ...prop.json<readonly ReferenceOption[] | undefined>(undefined), attribute: false as const },
+  // GH #891 (SPEC-R11) — the capabilities panel's rows: the BROWSE/STEER sibling of the `@`/`/` typeahead.
+  // `undefined`/empty ⇒ NO trigger, NO panel DOM, byte-identical render (the `models`/`mentionables`
+  // default-off law). Rows are CONSUMER-owned truth in both directions: `included` renders, a flip reports
+  // through `onCapabilityToggle`, and this element writes nothing — so the ADR-0190 fork (what `included`
+  // MEANS: this turn only, or the persisted roster) lives entirely on the consumer side of this seam.
+  capabilities: { ...prop.json<readonly CapabilityRow[] | undefined>(undefined), attribute: false as const },
   // Replaces `ui-conversation` reaching into `#field`/`#sendBtn`/`#micBtn`/the picker triggers directly to
   // set `.disabled`; this element owns disabling its OWN parts from ONE prop. Reflects — `[busy]` on the
   // host is the CSS hook for the whole-composer dim (the v1 form's `data-busy`, moved to the host).
@@ -222,8 +238,29 @@ export class UIConversationComposerElement extends UIElement {
   // must NOT reopen the menu — the characters are plain inert text from that point on.
   #dismissedToken: { trigger: Trigger; start: number } | undefined
   // The committed references — composer-OWNED state (NOT a prop, unlike consumer-owned `contextItems`):
-  // minted by a commit, dropped by a chip dismiss, cleared by a successful send.
-  #references: CommittedReference[] = []
+  // minted by a commit, dropped by a chip dismiss, cleared by a successful send. GH #891 (SPEC-R9): the
+  // list holds the `TurnReference`s THEMSELVES now. Until R9 each entry also carried the `Trigger` that
+  // minted it, for the chip's sigil prefix — that node is REMOVED (kind identity is the optional
+  // consumer-supplied `icon` + `data-kind`), and with its one reader gone the trigger had no consumer left.
+  #references: TurnReference[] = []
+
+  // ── GH #891 — the capabilities panel's own state (SPEC-R11) ────────────────────────────────────────
+  // The trigger pill (built lazily on the first non-empty `capabilities`, the picker precedent) + the
+  // control-created panel it opens. NOT a `ui-menu`: a menu's items are `role=menuitem` ACTION semantics
+  // that close on activate, and this panel must stay open across several toggles (a steering surface, not
+  // a commit-and-close picker) — so it follows the reference-menu's own `popover="manual"` discipline
+  // instead, where this element owns every close path and no menu event can escape (`events: []`).
+  #capabilitiesTrigger: UIButtonElement | undefined
+  #capabilitiesPanel: HTMLElement | undefined
+  #capabilitiesOpen = false
+  #capabilitiesBuiltFrom: readonly CapabilityRow[] | undefined
+  // The STRUCTURAL signature the rendered rows were built from (ids/labels/kinds/glyphs/descriptions —
+  // never `included`), so a consumer answering a flip updates switches in place instead of rebuilding the
+  // panel under the user's own keyboard focus. See `#syncCapabilityStates`.
+  #capabilitiesShape = ''
+  // The trigger's click + the outside-interaction watcher ride THIS connection (the trigger DOM survives a
+  // reconnect, `this.listen` does not — the `#modelsListenerArmed` reason, verbatim).
+  #capabilitiesListenerArmed = false
 
   #onSubmitCb: ((text: string, references?: readonly TurnReference[]) => void) | undefined
   #onModelChangeCb: ((id: string) => void) | undefined
@@ -231,6 +268,7 @@ export class UIConversationComposerElement extends UIElement {
   #onProviderChangeCb: ((id: string) => void) | undefined
   #onModeChangeCb: ((id: string) => void) | undefined
   #onContextDismissCb: ((id: string) => void) | undefined
+  #onCapabilityToggleCb: ((id: string, included: boolean) => void) | undefined
   #onMicClickCb: (() => void) | undefined
 
   protected connected(): void {
@@ -238,6 +276,7 @@ export class UIConversationComposerElement extends UIElement {
     this.#effortListenerArmed = false
     this.#providersListenerArmed = false
     this.#modesListenerArmed = false
+    this.#capabilitiesListenerArmed = false
     // The chip row's OWN dismiss listeners ride `this.listen(...)` too (per-chip, inside #syncContextChips)
     // — but that method only rebuilds (and re-arms) when the `contextItems` REFERENCE changes. Without this
     // reset, a reconnect with the SAME reference short-circuits the rebuild, leaving the prior connection's
@@ -368,6 +407,10 @@ export class UIConversationComposerElement extends UIElement {
       this.#syncModelsPicker(this.#effectiveModels(), this.model)
       this.#syncEffortsPicker(this.efforts, this.effort)
       this.#syncModesPicker(this.modes, this.mode)
+      // GH #891 (SPEC-R11) — the capabilities trigger renders LAST in the leading cell: the three shipped
+      // pickers keep the positions they have, so an existing consumer's options row is unchanged above and
+      // to the left of the new affordance (the additive-render law this row already follows).
+      this.#syncCapabilitiesPicker(this.capabilities)
       this.#syncContextChips(this.contextItems ?? EMPTY_CONTEXT_ITEMS)
     })
 
@@ -422,6 +465,28 @@ export class UIConversationComposerElement extends UIElement {
     this.listen(this.#sendBtn!, 'click', () => this.#send())
     this.listen(this.#micBtn!, 'click', () => this.#onMicClickCb?.())
 
+    // ── GH #891 (SPEC-R11) — the capabilities panel's two remaining close paths (the others are its
+    // trigger, `#send`, `#applyBusy`, and the disconnect disposer below). HOST-level, so they cover a
+    // keydown/pointerdown anywhere in the composer as well as the panel's own switches. ──
+    this.listen(this, 'keydown', (e) => {
+      // Only ever the capabilities panel: the typeahead's own Escape branch runs on the EDITOR's listener
+      // and stops propagation there, so a typeahead-only Escape never reaches this handler at all.
+      if (!this.#capabilitiesOpen || (e as KeyboardEvent).key !== 'Escape') return
+      e.preventDefault()
+      e.stopPropagation() // an ancestor overlay (a modal ui-conversation-dialog) must not ALSO light-dismiss
+      this.#closeCapabilitiesPanel()
+      this.#capabilitiesTrigger?.focus() // return focus to the affordance that opened it
+    })
+    // Outside interaction — `pointerdown` on the DOCUMENT, not a platform light-dismiss: the panel is
+    // `popover="manual"` (the reference-menu reason — this element owns every close path, so no platform
+    // `toggle` can desync the open flag). Rides `this.listen`, so it dies with the connection.
+    this.listen(document, 'pointerdown', (e) => {
+      if (!this.#capabilitiesOpen) return
+      const target = e.target as Node | null
+      if (target && (this.#capabilitiesPanel?.contains(target) || this.#capabilitiesTrigger?.contains(target))) return
+      this.#closeCapabilitiesPanel()
+    })
+
     // ── click-to-focus (LLD CVC-C8): clicking the component's own area focuses the editor — but NOT a
     // click on a button/menu/chip ("not its tags, menus, buttons"), each of which owns its own focus. ──
     this.listen(this, 'click', (e) => {
@@ -429,10 +494,16 @@ export class UIConversationComposerElement extends UIElement {
       // `[data-part="reference-chip"]` joins the tags exclusion (GH #849) — a reference chip is a TAG, the
       // same "not its tags, menus, buttons" class as a context chip. (A click on a typeahead OPTION is
       // deliberately NOT excluded: the commit keeps the editor focused, which is exactly this law.)
+      // `[data-part="capabilities-panel"]` joins it wholesale (GH #891): the panel holds REAL focusable
+      // controls, so stealing focus to the editor would undo the very switch-click that landed here — the
+      // panel is excluded as one region rather than by naming `ui-switch`, so a future row adornment cannot
+      // silently fall outside the exclusion.
       if (
         target &&
         target !== this &&
-        target.closest('ui-button, ui-menu, [data-part="context-chip"], [data-part="reference-chip"]')
+        target.closest(
+          'ui-button, ui-menu, [data-part="context-chip"], [data-part="reference-chip"], [data-part="capabilities-panel"]',
+        )
       ) {
         return
       }
@@ -446,8 +517,11 @@ export class UIConversationComposerElement extends UIElement {
 
     // Never leave an orphaned top-layer panel behind on disconnect (the picker `menu.open = false` law,
     // and the overlay trait's own `host.effect(() => cleanup)` idiom): a scope-owned disposer closes the
-    // typeahead whenever this connection ends.
-    this.effect(() => () => this.#closeReferenceMenu())
+    // typeahead — and (GH #891) the capabilities panel — whenever this connection ends.
+    this.effect(() => () => {
+      this.#closeReferenceMenu()
+      this.#closeCapabilitiesPanel()
+    })
 
     // Motion gate (interaction-states standard, the ui-textarea reuse) — arm `ready` ONE frame past first
     // paint so the upgrade/first paint SNAPS and only subsequent state changes animate. `states`
@@ -503,6 +577,19 @@ export class UIConversationComposerElement extends UIElement {
     this.#onContextDismissCb = cb
   }
 
+  /** GH #891 (SPEC-R11) — fires with a `capabilities` row's `id` and the NEW `included` state when its
+   *  switch is flipped. This element mutates NOTHING: the row's rendered switch is re-asserted from the
+   *  CURRENT prop immediately, so the visible state changes only once the consumer hands a new
+   *  `capabilities` array down (props down, callbacks up — the `onModelChange` law verbatim). The panel
+   *  STAYS OPEN across flips (a steering surface, not a commit-and-close picker).
+   *
+   *  What `included` means — this turn only, or the persisted roster — is the CONSUMER's ruling
+   *  (ADR-0190/SPEC-R12); this seam is identical under either arm. See `onModelChange` for the registration
+   *  timing law (safe before or after connect). */
+  onCapabilityToggle(cb: (id: string, included: boolean) => void): void {
+    this.#onCapabilityToggleCb = cb
+  }
+
   /** Fires when the mic button is clicked. OPT-IN: the button stays hidden until this is actually called —
    *  reveals it immediately if already connected, or on the next connect otherwise (the `onSubmit`
    *  precedent — safe to call before or after connect). Deliberately inert beyond this callback — no
@@ -525,9 +612,10 @@ export class UIConversationComposerElement extends UIElement {
     if (text === '') return
     // GH #849 (SPEC-R6) — the chips clear WITH the text on a successful send, and the references ride the
     // callback's second argument (a stable EMPTY array in the overwhelmingly common no-chips case).
-    const references = this.#references.length === 0 ? EMPTY_REFERENCES : this.#references.map((r) => r.ref)
+    const references = this.#references.length === 0 ? EMPTY_REFERENCES : [...this.#references]
     this.value = '' // the caret-guard effect wipes the editor surface on the next flush
     this.#closeReferenceMenu()
+    this.#closeCapabilitiesPanel() // GH #891 (SPEC-R11) — a send closes the steering panel too
     if (this.#references.length > 0) {
       this.#references = []
       this.#syncReferenceChips()
@@ -543,9 +631,11 @@ export class UIConversationComposerElement extends UIElement {
   #applyBusy(busy: boolean): void {
     const editor = this.#editor!
     if (busy) {
-      // A turn in flight makes the editor non-editable — never leave the typeahead open over a composer
-      // nobody can type into (the same "never leave a hidden host's popover open" law the pickers follow).
+      // A turn in flight makes the editor non-editable — never leave the typeahead (or, GH #891, the
+      // capabilities panel) open over a composer nobody can type into or steer (the same "never leave a
+      // hidden host's popover open" law the pickers follow).
       this.#closeReferenceMenu()
+      this.#closeCapabilitiesPanel()
       editor.setAttribute('contenteditable', 'false')
       editor.setAttribute('aria-disabled', 'true')
       this.internals.ariaBusy = 'true'
@@ -562,6 +652,7 @@ export class UIConversationComposerElement extends UIElement {
     if (this.#effortTrigger) this.#effortTrigger.disabled = busy
     if (this.#providersTrigger) this.#providersTrigger.disabled = busy
     if (this.#modesTrigger) this.#modesTrigger.disabled = busy
+    if (this.#capabilitiesTrigger) this.#capabilitiesTrigger.disabled = busy // GH #891 — busy-disabled with the others
   }
 
   /** GH #257 — the Models picker's CURRENT effective option list: when `providers` is set AND non-empty, an
@@ -865,6 +956,257 @@ export class UIConversationComposerElement extends UIElement {
     this.#syncChipRowVisibility()
   }
 
+  // ── GH #891 — the capabilities panel (SPEC-R11: a third trigger, rows down, one callback up) ─────────
+
+  /** Build-or-update the capabilities trigger from the CURRENT `capabilities` prop. `undefined`/empty hides
+   *  the trigger and closes the panel (never destroys either — the picker law) so a consumer that clears the
+   *  prop mid-interaction cannot leave an orphan panel over a trigger that no longer exists.
+   *
+   *  Unlike the four pickers this is NOT a `ui-menu`: the trigger is a bare picker-pill `ui-button` (built
+   *  the `#buildPicker` way — the same soft pill, leading glyph and caret, so it reads as their sibling) and
+   *  the panel is control-created (`#ensureCapabilitiesPanel`). Reason (SPEC-R11): `ui-menu`'s items carry
+   *  `role=menuitem` ACTION semantics and close on activate, while this panel must stay open across several
+   *  toggles in one visit. */
+  #syncCapabilitiesPicker(rows: readonly CapabilityRow[] | undefined): void {
+    if (rows === undefined || rows.length === 0) {
+      this.#closeCapabilitiesPanel()
+      this.#capabilitiesTrigger?.toggleAttribute('hidden', true) // ui-button honours [hidden] itself (button.css, GH #665)
+      return
+    }
+    if (this.#capabilitiesTrigger === undefined) {
+      const trigger = document.createElement('ui-button') as UIButtonElement
+      trigger.setAttribute('variant', 'soft')
+      trigger.setAttribute('data-picker', 'capabilities')
+      trigger.setAttribute('aria-expanded', 'false')
+      this.#capabilitiesTrigger = trigger
+      this.#optionsLeading!.append(trigger)
+    }
+    const trigger = this.#capabilitiesTrigger
+    if (!this.#capabilitiesListenerArmed) {
+      this.#capabilitiesListenerArmed = true
+      this.listen(trigger, 'click', () => {
+        if (this.busy) return
+        if (this.#capabilitiesOpen) this.#closeCapabilitiesPanel()
+        else this.#openCapabilitiesPanel()
+      })
+    }
+    trigger.toggleAttribute('hidden', false)
+    // The label never counts or names the rows (a "3 on" badge would be a second, drift-prone rendering of
+    // state the panel itself already shows) — the pickers' own fallback-label shape, one word.
+    trigger.textContent = 'Capabilities'
+    // GH #868's trigger convention: leading identity glyph + trailing caret, re-appended after every label
+    // write (`textContent =` wipes both — `#appendCaret`'s own documented reason). `list` is the curated
+    // set's roster/inventory glyph and is free again since GH #868 moved the Models trigger to `sparkle`;
+    // it is also distinct from all four kind glyphs a row can carry (entries.ts's KIND_GLYPHS).
+    this.#appendLeadingIcon(trigger, 'list')
+    this.#appendCaret(trigger)
+    if (this.#capabilitiesBuiltFrom === rows) return
+    this.#capabilitiesBuiltFrom = rows
+    // A flip's own answer — the consumer handing back the SAME rows with one `included` changed — must NOT
+    // tear the panel's DOM down: this is a keyboard-reachable surface, and replacing the `ui-switch` the user
+    // just Space-toggled would drop DOM focus to the body mid-visit. So a state-only pass runs whenever the
+    // panel's STRUCTURE (the rows' ids/labels/kinds/glyphs/descriptions, in order) is unchanged, and a full
+    // rebuild only when the roster itself really changed. (The reference-equality guard above still
+    // short-circuits the common "an unrelated prop re-ran this effect" pass before either.)
+    if (!this.#syncCapabilityStates(rows)) this.#buildCapabilityRows(rows)
+  }
+
+  /** The structural signature of one row — everything a rebuild would be needed to change. `included` is
+   *  deliberately ABSENT: that is the state a flip moves, and moving it must never rebuild. */
+  #capabilityShapeOf(rows: readonly CapabilityRow[]): string {
+    return JSON.stringify(rows.map((r) => [r.id, r.label, r.kind, r.icon ?? '', r.description ?? '']))
+  }
+
+  /** State-only update: `true` when the panel's rendered structure already matches `rows` (so only each
+   *  switch's `checked`/`disabled` needed writing, focus untouched), `false` when a real rebuild is due. */
+  #syncCapabilityStates(rows: readonly CapabilityRow[]): boolean {
+    const panel = this.#capabilitiesPanel
+    if (!panel) return false
+    if (this.#capabilityShapeOf(rows) !== this.#capabilitiesShape) return false
+    const rendered = [...panel.querySelectorAll<HTMLElement>('[data-part="capability-row"]')]
+    if (rendered.length !== rows.length) return false // defensive: a shape match with a DOM mismatch is a rebuild
+    for (const [index, row] of rendered.entries()) {
+      const control = row.querySelector<UISwitchElement>('[data-part="capability-switch"]')
+      if (!control) return false
+      control.checked = rows[index]!.included
+      control.disabled = this.busy
+    }
+    return true
+  }
+
+  /** The panel itself, built ONCE on the first non-empty `capabilities` (the lazy-picker precedent).
+   *  `role="group"` + `aria-label`, NOT a listbox/menu: these are real `ui-switch` controls a user tabs into
+   *  and flips, so the platform's own switch semantics are the AX story and this container only groups them.
+   *  `popover="manual"` for the reference-menu's reason — this element owns every close path, so no platform
+   *  light-dismiss `toggle` can desync `#capabilitiesOpen`.
+   *
+   *  The `change` listener is bound to the PANEL, not per row (a rebuild would otherwise re-arm one listener
+   *  per row per pass) and with `addEventListener`, not `this.listen` — the panel outlives a reconnect
+   *  exactly like the picker menus do, and this handler is stateless: it reads the CURRENT `capabilities` and
+   *  the CURRENT callback on every invocation. */
+  #ensureCapabilitiesPanel(): HTMLElement {
+    if (this.#capabilitiesPanel) return this.#capabilitiesPanel
+    const panel = document.createElement('div')
+    panel.dataset.part = 'capabilities-panel'
+    panel.setAttribute('role', 'group')
+    panel.setAttribute('popover', 'manual')
+    panel.setAttribute('aria-label', 'Capabilities')
+    panel.id = `ui-conversation-composer-capabilities-${++_nextMenuId}`
+    // A toggling `ui-switch` emits `input` AND `change` (UIIndicatorElement's own click handler emits both,
+    // in that order — measured by this slice's `events: []` leak probe, which caught the `input` half that
+    // SPEC-R11's own "change/toggle" wording does not name). `input` carries no state this element needs, so
+    // it is suppressed and nothing more; the fence is "no switch event crosses the host", not a name list.
+    panel.addEventListener('input', (event) => event.stopPropagation())
+    panel.addEventListener('change', (event) => {
+      // SPEC-R11's event law: `events: []` — an embedded switch's own `change` (UIElement.emit is bubbling +
+      // composed) must NOT cross the host boundary, exactly as the editor's `input` is suppressed. Stopped
+      // UNCONDITIONALLY, before any row lookup, so nothing inside this panel can ever leak.
+      event.stopPropagation()
+      const target = event.target as HTMLElement | null
+      const row = target?.closest<HTMLElement>('[data-part="capability-row"]')
+      const id = row?.dataset.id
+      if (!row || id === undefined) return
+      const control = target as UISwitchElement
+      const next = control.checked === true // the switch already flipped ITSELF (indicator-element.ts)
+      // Zero local mutation (SPEC-R11): re-assert the switch from the CURRENT prop, so the visible state
+      // moves only when the consumer hands a new `capabilities` array down. Without this the row would
+      // silently disagree with its own truth the moment a consumer declined (or deferred) the flip.
+      control.checked = this.capabilities?.find((r) => r.id === id)?.included === true
+      this.#onCapabilityToggleCb?.(id, next)
+      // ...and the panel STAYS OPEN — multi-toggle in one visit is the whole point of this surface.
+    })
+    this.#capabilitiesPanel = panel
+    this.append(panel)
+    return panel
+  }
+
+  /** Rebuild the panel's rows from the CURRENT prop. Grouped by `kind` in FIRST-APPEARANCE order, with a
+   *  header per group exactly when the set spans more than one kind — `#buildReferenceOptions`'s own
+   *  grouping law, reused rather than re-invented (and it suppresses a redundant single header the same way).
+   *  Unconditional, unlike `#rebuildPickerItems`'s GH #670 bail: this panel is THIS element's own div (not a
+   *  `ui-menu` whose panel part appears only after its own connect), so there is no pre-connect pass that
+   *  could render an empty shell and freeze the caller's guard. */
+  #buildCapabilityRows(rows: readonly CapabilityRow[]): void {
+    const panel = this.#ensureCapabilitiesPanel()
+    panel.replaceChildren()
+    this.#capabilitiesShape = this.#capabilityShapeOf(rows)
+    const kinds = [...new Set(rows.map((r) => r.kind))]
+    const grouped = kinds.length > 1
+    for (const kind of kinds) {
+      let container: HTMLElement = panel
+      if (grouped) {
+        const group = document.createElement('div')
+        group.dataset.part = 'capability-group'
+        group.setAttribute('role', 'group')
+        group.setAttribute('aria-label', kindLabel(kind))
+        const heading = document.createElement('span')
+        heading.dataset.part = 'capability-group-label'
+        heading.setAttribute('aria-hidden', 'true') // the group's own aria-label is what AT announces
+        heading.textContent = kindLabel(kind)
+        group.append(heading)
+        panel.append(group)
+        container = group
+      }
+      for (const capability of rows) {
+        if (capability.kind !== kind) continue
+        const row = document.createElement('div')
+        row.dataset.part = 'capability-row'
+        row.dataset.id = capability.id
+        row.dataset.kind = capability.kind
+        if (capability.icon !== undefined && capability.icon !== '') {
+          const icon = document.createElement('ui-icon')
+          icon.dataset.part = 'capability-row-icon'
+          icon.setAttribute('data-role', 'icon')
+          icon.setAttribute('glyph', capability.icon)
+          row.append(icon)
+        }
+        const text = document.createElement('span')
+        text.dataset.part = 'capability-row-text'
+        const label = document.createElement('span')
+        label.dataset.part = 'capability-row-label'
+        label.textContent = capability.label
+        text.append(label)
+        if (capability.description !== undefined && capability.description !== '') {
+          const description = document.createElement('span')
+          description.dataset.part = 'capability-row-description'
+          description.textContent = capability.description
+          text.append(description)
+        }
+        row.append(text)
+        const control = document.createElement('ui-switch') as UISwitchElement
+        control.dataset.part = 'capability-switch'
+        control.checked = capability.included
+        // The row's label is the switch's accessible name. Deliberately the bare label, with no arm-flavoured
+        // verb ("Include…"/"Enable…"): what a flip MEANS is the consumer's ruling (ADR-0190), and baking one
+        // arm's wording into the AX name would be this element learning the fork it must stay blind to.
+        control.setAttribute('aria-label', capability.label)
+        control.disabled = this.busy
+        row.append(control)
+        container.append(row)
+      }
+    }
+  }
+
+  #openCapabilitiesPanel(): void {
+    const panel = this.#ensureCapabilitiesPanel()
+    panel.toggleAttribute('data-open', true) // the CSS/test-visible truth (the reference-menu law)
+    if (!this.#capabilitiesOpen) {
+      this.#capabilitiesOpen = true
+      const show = (panel as HTMLElement & { showPopover?: () => void }).showPopover
+      if (typeof show === 'function') {
+        try {
+          show.call(panel)
+        } catch {
+          // Already showing, or a pre-Popover-API engine — `data-open` above still carries the state.
+        }
+      }
+    }
+    this.#capabilitiesTrigger?.setAttribute('aria-expanded', 'true')
+    this.#capabilitiesTrigger?.setAttribute('aria-controls', panel.id)
+    this.#positionCapabilitiesPanel()
+  }
+
+  #closeCapabilitiesPanel(): void {
+    this.#capabilitiesTrigger?.setAttribute('aria-expanded', 'false')
+    this.#capabilitiesTrigger?.removeAttribute('aria-controls')
+    const panel = this.#capabilitiesPanel
+    if (!panel) return
+    panel.removeAttribute('data-open')
+    if (!this.#capabilitiesOpen) return
+    this.#capabilitiesOpen = false
+    const hide = (panel as HTMLElement & { hidePopover?: () => void }).hidePopover
+    if (typeof hide === 'function') {
+      try {
+        hide.call(panel)
+      } catch {
+        // Not currently showing — a harmless no-op (the reference menu guards the same call the same way).
+      }
+    }
+  }
+
+  /** Anchored to its own TRIGGER (not the editor — this panel belongs to the options row), preferring ABOVE
+   *  it for the composer's own reason: a chat composer sits at the bottom of its surface. Same pure
+   *  `computePosition` math + top layer as the typeahead. */
+  #positionCapabilitiesPanel(): void {
+    const panel = this.#capabilitiesPanel
+    const trigger = this.#capabilitiesTrigger
+    if (!panel || !trigger) return
+    const rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+    const { top, left, placement } = computePosition(
+      'top-start',
+      trigger.getBoundingClientRect(),
+      panel.getBoundingClientRect(),
+      window.innerWidth,
+      window.innerHeight,
+      0.25 * rootPx,
+    )
+    panel.style.position = 'fixed'
+    panel.style.top = `${top}px`
+    panel.style.left = `${left}px`
+    panel.style.margin = '0'
+    panel.setAttribute('data-placement', placement)
+  }
+
   /** The shared chip row is shown exactly when it holds at least one chip of EITHER family — for a
    *  roster-less consumer that is `contextItems.length === 0`, the pre-GH #849 condition verbatim. */
   #syncChipRowVisibility(): void {
@@ -1148,7 +1490,15 @@ export class UIConversationComposerElement extends UIElement {
     this.value = next
     editor.toggleAttribute('data-empty', next === '')
     this.#placeCaret(token.start)
-    this.#addReference(token.trigger, { id: chosen.id, label: chosen.label, kind: chosen.kind })
+    // GH #891 (SPEC-R9 AC2) — `icon` round-trips onto the reference exactly as `kind` does, and ONLY when
+    // the roster entry carried one (never an explicit `icon: undefined` key, so a no-icon consumer's
+    // delivered reference is byte-identical to the pre-R9 `{id,label,kind}` shape).
+    this.#addReference({
+      id: chosen.id,
+      label: chosen.label,
+      kind: chosen.kind,
+      ...(chosen.icon === undefined || chosen.icon === '' ? {} : { icon: chosen.icon }),
+    })
     this.#closeReferenceMenu()
     this.#dismissedToken = undefined
   }
@@ -1175,29 +1525,39 @@ export class UIConversationComposerElement extends UIElement {
 
   /** Add a committed reference, deduped by `kind`+`id`: mentioning the same entry twice is one attachment,
    *  not two identical chips (resolution is by id — a duplicate would resolve to the same bytes twice). */
-  #addReference(trigger: Trigger, ref: TurnReference): void {
-    if (this.#references.some((r) => r.ref.kind === ref.kind && r.ref.id === ref.id)) return
-    this.#references = [...this.#references, { trigger, ref }]
+  #addReference(ref: TurnReference): void {
+    if (this.#references.some((r) => r.kind === ref.kind && r.id === ref.id)) return
+    this.#references = [...this.#references, ref]
     this.#syncReferenceChips()
   }
 
   /** Rebuild the composer-owned reference chips at the END of the shared chip row (consumer `contextItems`
    *  chips keep the row's leading positions — `#syncContextChips`'s own insertion point). Each chip is
-   *  dismissable BEFORE send, which drops that reference from the turn entirely (SPEC-R6 AC2). */
+   *  dismissable BEFORE send, which drops that reference from the turn entirely (SPEC-R6 AC2).
+   *
+   *  GH #891 (SPEC-R9) — the chip carries NO sigil: the `@`/`/` the user typed is not part of the label
+   *  (the owner's screenshot read "/ itinerary-timeline ×"), so the `[data-part="reference-chip-sigil"]`
+   *  node is GONE, not restyled. What identifies the chip instead: the accent ink (family — rides-this-turn
+   *  vs a neutral consumer context tag, unchanged), the `data-kind` CSS hook (unchanged), and an OPTIONAL
+   *  leading `ui-icon` whose glyph the CONSUMER supplied on the roster entry (`ReferenceOption.icon` — the
+   *  composer renders it, never maps a kind to one). No icon ⇒ label + dismiss only, never a placeholder box. */
   #syncReferenceChips(): void {
     const row = this.#contextChips!
     for (const stale of [...row.querySelectorAll('[data-part="reference-chip"]')]) stale.remove()
-    for (const { trigger, ref } of this.#references) {
+    for (const ref of this.#references) {
       const chip = document.createElement('span')
       chip.dataset.part = 'reference-chip'
       chip.dataset.kind = ref.kind
-      // The trigger character IS the per-kind visual distinction (mention vs invocation) — no icon-set
-      // dependency, and it reads exactly like what the user typed. `aria-hidden`: the chip's dismiss button
-      // already carries the full accessible name ("Remove <label> from this turn").
-      const sigil = document.createElement('span')
-      sigil.dataset.part = 'reference-chip-sigil'
-      sigil.setAttribute('aria-hidden', 'true')
-      sigil.textContent = trigger
+      // `data-role="icon"` — the fleet adornment convention (every leading glyph in this file rides it).
+      // AX is unchanged by construction: `ui-icon` is decorative by default (its own `internals.ariaHidden`,
+      // icon.ts — no `aria-hidden` attribute to set from out here), and the dismiss button below still
+      // carries the chip's full accessible name ("Remove {label} from this turn").
+      const icon = ref.icon === undefined || ref.icon === '' ? undefined : document.createElement('ui-icon')
+      if (icon) {
+        icon.dataset.part = 'reference-chip-icon'
+        icon.setAttribute('data-role', 'icon')
+        icon.setAttribute('glyph', ref.icon!)
+      }
       const label = document.createElement('span')
       label.dataset.part = 'reference-chip-label'
       label.textContent = ref.label
@@ -1206,20 +1566,21 @@ export class UIConversationComposerElement extends UIElement {
       dismiss.setAttribute('icon-only', '')
       dismiss.setAttribute('aria-label', `Remove ${ref.label} from this turn`)
       dismiss.dataset.part = 'reference-chip-dismiss'
-      const icon = document.createElement('ui-icon')
-      icon.setAttribute('slot', 'leading')
-      icon.setAttribute('data-role', 'icon')
-      icon.setAttribute('glyph', 'x')
-      dismiss.append(icon)
+      const dismissIcon = document.createElement('ui-icon')
+      dismissIcon.setAttribute('slot', 'leading')
+      dismissIcon.setAttribute('data-role', 'icon')
+      dismissIcon.setAttribute('glyph', 'x')
+      dismiss.append(dismissIcon)
       this.listen(dismiss, 'click', () => this.#removeReference(ref.kind, ref.id))
-      chip.append(sigil, label, dismiss)
+      if (icon) chip.append(icon)
+      chip.append(label, dismiss)
       row.append(chip)
     }
     this.#syncChipRowVisibility()
   }
 
   #removeReference(kind: string, id: string): void {
-    this.#references = this.#references.filter((r) => !(r.ref.kind === kind && r.ref.id === id))
+    this.#references = this.#references.filter((r) => !(r.kind === kind && r.id === id))
     this.#syncReferenceChips()
   }
 }

@@ -133,6 +133,8 @@ parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-D
     description: 'GH #306/ADR-0160 amendment — the sender label ("You"/"Agent"), `[data-part="who"]`, the first child of a user/agent turn''s `[data-part="turn"]` wrapper (OUTSIDE the bubble). Absent for a system turn.'
   - name: narration
     description: 'The per-agent-turn `ui-status-stream` instance (`[data-part="narration"]`), composed fresh per turn. GH #306/ADR-0160 amendment — renders OUTSIDE the bubble, as the agent turn''s `[data-part="turn"]` wrapper''s second child (after `who`, before the bubble).'
+  - name: reference-tags
+    description: 'GH #891/SPEC-R10 — the SENT user turn''s attachment record (`[data-part="reference-tags"]`), appended INSIDE the user bubble after its `[data-part="body"]`, and ONLY when that turn actually carried references (`addUserMessage`''s optional second argument; an absent/empty list appends nothing at all, so a reference-less bubble is byte-identical to pre-R10). One `[data-part="reference-tag"][data-kind]` per reference — an optional leading `[data-part="reference-tag-icon"]` `ui-icon` (the `TurnReference.icon` glyph the consumer supplied, SPEC-R9) plus a `[data-part="reference-tag-label"]`. DISMISS-LESS by contract: the turn is sent, so there is nothing to remove (the pre-send dismiss affordance is the composer chip''s, and it clears with the text). DISPLAY-ONLY: the bubble body stays the typed text, and the FRAMED attachment text SPEC-R4 puts on the wire never renders in any bubble.'
   - name: mounts
     description: The container (`[data-part="mounts"]`) an agent bubble's OWN inline `ui-surface-host` children mount into.
   - name: annotation
@@ -159,7 +161,7 @@ aria:
   roleSource: none
   childModel: ADR-0180 (GH #688) restates the pre-ADR-0180 "none" — the thread/composer/header are EITHER JS-created by this element's own connect-time logic (the byte-identical default) OR, opt-in, ADOPTED from an author-supplied `:scope > ui-conversation-{header,dialog,composer}` direct child (see `slots:` above); nothing is ever a platform `<slot>`, and the imperative API never changes shape between the two paths. The one consumer-owned node OUTSIDE that three-tag contract, GH #666's empty-log state, is handed over imperatively (`setEmptyState`) and seated inside the adopted-or-created dialog (`[data-part=log]`) — it is the consumer's own DOM, so its roles/labels are the consumer's to declare.
 
-contentModel: 'GH #306/ADR-0160 amendment — [data-part=bubble] and (user/agent only) its owning [data-part=turn] wrapper both carry a [data-role=user|agent|system] speaker kind (references/naming.md §6 registry). A user/agent turn is [data-part=turn][data-role=…] > [data-part=who] ("You"/"Agent"), then (agent only) [data-part=narration], then [data-part=bubble][data-role=…] holding a [data-part=body] text cell (plain textContent by default; a registered setContentRenderer replaces its children instead, SPEC-R12 — never for the user bubble) and (agent only) [data-part=mounts]/[data-part=annotation]/[data-part=disclosure]/[data-part=actions] children. A system turn has neither [data-part=who] nor [data-part=narration] nor a [data-part=turn] wrapper — its [data-part=bubble][data-role=system] is a direct child of [data-part=log], holding only [data-part=body]. None of this turn anatomy is EVER author-composed (SPEC-R4/SPEC-R13 unchanged) — ADR-0180 (GH #688) only widens WHICH ELEMENT seats the log/composer/header bands (adopted vs created, see slots: above), never who builds a turn'
+contentModel: 'GH #306/ADR-0160 amendment — [data-part=bubble] and (user/agent only) its owning [data-part=turn] wrapper both carry a [data-role=user|agent|system] speaker kind (references/naming.md §6 registry). A user/agent turn is [data-part=turn][data-role=…] > [data-part=who] ("You"/"Agent"), then (agent only) [data-part=narration], then [data-part=bubble][data-role=…] holding a [data-part=body] text cell (plain textContent by default; a registered setContentRenderer replaces its children instead, SPEC-R12 — never for the user bubble), then (GH #891/SPEC-R10, user only, and only for a turn that carried references) a [data-part=reference-tags] row, and (agent only) [data-part=mounts]/[data-part=annotation]/[data-part=disclosure]/[data-part=actions] children. A system turn has neither [data-part=who] nor [data-part=narration] nor a [data-part=turn] wrapper — its [data-part=bubble][data-role=system] is a direct child of [data-part=log], holding only [data-part=body]. None of this turn anatomy is EVER author-composed (SPEC-R4/SPEC-R13 unchanged) — ADR-0180 (GH #688) only widens WHICH ELEMENT seats the log/composer/header bands (adopted vs created, see slots: above), never who builds a turn'
 
 keyboard:
   - keys: Enter
@@ -348,7 +350,23 @@ conv.setContentRenderer((text) => markdownToNode(text))
 unchanged; the renderer function is entirely consumer-supplied code the app/site layer already has
 permission to import. Unregistered (default `undefined`) behavior is byte-identical to before this hook
 existed. **`addUserMessage`'s text never routes through this renderer** — user-authored text stays
-unescaped/unmodified (SPEC-R4 AC1), deliberately unaffected by this hook.
+unescaped/unmodified (SPEC-R4 AC1), deliberately unaffected by this hook. The same holds for GH #891's
+reference tags: a tag's label is written as plain text, never through the renderer.
+
+## The sent user turn shows what it attached (GH #891/SPEC-R10)
+
+The composer's reference chips clear on send (SPEC-R6), so the record of "what rode this turn" moves onto
+the SENT bubble: with references, a user bubble gains a `[data-part="reference-tags"]` row after its body —
+one small, **dismiss-less** tag per reference (label + the consumer's kind glyph when the roster supplied
+one). It arrives two ways, the same way: the composed composer's send forwards the turn's committed
+references automatically, and `addUserMessage(text, references)` takes them directly for a consumer
+replaying its own transcript. A turn with no references appends **nothing** — no empty row, no changed box.
+
+The tags are **display-only** truth of what the user attached. The bubble body stays the TYPED text, and the
+FRAMED attachment text (the labeled block a consumer like `ui-agent-admin` builds at send time, SPEC-R4)
+never renders in any bubble — that wire truth lives in history, the turn log, and the Context views, exactly
+where SPEC-R4 put it. `ui-conversation` interprets neither `kind` nor `icon`; both stay the consumer's own
+opaque strings, as they already are on the roster props.
 
 ## The empty-log state is a consumer-owned node in the log area (GH #666)
 
@@ -401,10 +419,14 @@ conv.onModeChange((id) => { /* persist the new mode */ })
 conv.contextItems = [{ id: 'sel-1', label: 'Context Selection' }]
 conv.onContextDismiss((id) => { /* remove `id` from contextItems */ })
 // GH #849 — the composer's `@`/`/` reference typeahead, pass-through props; a committed reference rides
-// `onSubmit`'s widened SECOND argument (a single-argument consumer is unaffected).
-conv.mentionables = [{ id: 'res-1', label: 'Menu PDF', kind: 'resource' }]
-conv.invocables = [{ id: 'svc:calc:*', label: 'Calculator', kind: 'tool' }]
+// `onSubmit`'s widened SECOND argument (a single-argument consumer is unaffected). GH #891/SPEC-R9 — an
+// entry may also carry an `icon` glyph name, rendered on the chip and on the sent bubble's own tags.
+conv.mentionables = [{ id: 'res-1', label: 'Menu PDF', kind: 'resource', icon: 'file-text' }]
+conv.invocables = [{ id: 'svc:calc:*', label: 'Calculator', kind: 'tool', icon: 'gear' }]
 conv.onSubmit((text, references) => { /* resolve `references` by id at send time */ })
+// GH #891/SPEC-R10 — the imperative twin: a consumer replaying a transcript passes the turn's references
+// too, and the bubble shows the same display-only tags a live send produces (single-arg stays valid).
+conv.addUserMessage('Total the dinner order', [{ id: 'res-1', label: 'Menu PDF', kind: 'resource', icon: 'file-text' }])
 conv.onMicClick(() => { /* wire real voice input here — none is built in */ }) // ALSO reveals the mic button — hidden until this is called
 ```
 

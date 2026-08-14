@@ -26,8 +26,8 @@
 GH #891 adds a third composer menu beside the Models/Effort triggers: every capability entry
 listed with an enable/disable switch. The composer-side contract is fork-independent and already
 specified (SPEC-R11: rows down as a default-off prop, one `onCapabilityToggle(id, included)`
-callback up, the composer never writes any store under either arm — the shipped SPEC-N1/§5
-store-blind seam holds regardless). What the fork decides is the CONSUMER's wiring in
+callback up, the composer never writes any store under either arm — the store-blind seam of the
+SPEC's §5 layering clause holds regardless). What the fork decides is the CONSUMER's wiring in
 `ui-agent-admin`: the semantics a user learns.
 
 Rev.1 of this ADR proposed the per-turn/ephemeral arm (arm A), weighing the shipped #849/#850

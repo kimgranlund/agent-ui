@@ -2032,7 +2032,11 @@ describe('UIAgentAdminElement — the composer reach path (GH #849/SPEC-R8/R4)',
     addEntry(el, ENTRY_KINDS.resource, 'Menu PDF')
     setEntry(el, ENTRY_KINDS.resource, 'menu-pdf', { label: 'Dinner menu' })
     await whenFlushed()
-    expect(chatComposer(el).mentionables).toEqual([{ id: 'menu-pdf', label: 'Dinner menu', kind: ENTRY_KINDS.resource }])
+    // GH #891/SPEC-R9 — the projection also hands the composer this kind's own glyph (`icon`), which is why
+    // the expected shape carries one: the composer renders it, never derives it (entries.ts's KIND_GLYPHS).
+    expect(chatComposer(el).mentionables).toEqual([
+      { id: 'menu-pdf', label: 'Dinner menu', kind: ENTRY_KINDS.resource, icon: 'file-text' },
+    ])
   })
 
   it('SPEC-R8: the Co-pilot composer reads the BUILDER store — unarmed, it offers nothing at all', async () => {

@@ -29,6 +29,14 @@
 > later work, not derivable from existing law — so it is filed `proposed` for Kim rather than ruled
 > silently (the §3 table's own default-no doctrine cuts the other way here, deliberately). New
 > slices S4–S7 (§11.5); S4/S5/S6 are parallel and fork-independent, S7 alone waits on the ADR.
+> v0.4 build-fold (S4's own commit, 2026-08-14 — wording only, no clause changed; authored against v0.4's
+> §11 text and landing alongside v0.5, whose §12 it does not touch): the doc-check's two polish items
+> landed with the slice that first built against them — R9's icon-AX sentence now reads as the NEW node
+> it is (MUST ride `data-role="icon"`) rather than describing shipped behavior, its `ui-agent-admin`
+> sentence is normative (MUST supply), and §11.4's + ADR-0190's "SPEC-N1's seam" anchors are sharpened to
+> the clause they actually mean — §5's layering clause (the store-blind composer seam); SPEC-N1 is the
+> base contract's non-goals list and says nothing about that seam (the transcribed-citation law, §3 of
+> `agent-ui-doc-standards`, applied to this SPEC's own prose).
 > v0.3 changelog (the BUILD-STATE pass, filed with the arc's last slice): all three slices have
 > landed — §9's table carries each one's PR, and §10's bookings are marked repaired in the slice
 > that repaired them. §10's four open questions are CLOSED with pointers to where each was
@@ -461,16 +469,16 @@ identifies the chip instead:
 - **Kind** (skill vs workflow vs resource vs tool) — an OPTIONAL leading icon: `ReferenceOption`
   gains `icon?: string` (a `ui-icon` glyph name, opaque to the composer — the §5 layering law:
   the composer never maps `kind` to anything, the CONSUMER supplies the glyph), round-tripped
-  onto `TurnReference` exactly as `kind` is. `ui-agent-admin` maps the four capability kinds to
-  glyphs from the curated set (`icons.gen.ts`; extend the set via the GH #868 process only if
-  none fits — exact glyph choice is build-altitude, ruled inside this constraint). `icon` absent
+  onto `TurnReference` exactly as `kind` is. `ui-agent-admin` MUST supply that glyph for the four
+  capability kinds from the curated set (`icons.gen.ts`; extend the set via the GH #868 process only
+  if none fits — exact glyph choice is build-altitude, ruled inside this constraint). `icon` absent
   ⇒ a label-only chip (the generic-consumer default), never a placeholder box.
 - **CSS hook** — the shipped `data-kind` attribute on the chip stays; a themed consumer may
   restyle per kind without any icon.
 
 AX is unchanged by construction: the sigil was `aria-hidden` (the dismiss button carries the full
-accessible name, "Remove {label} from this turn"); the icon rides `data-role="icon"` the same way
-every fleet adornment does.
+accessible name, "Remove {label} from this turn"), and the NEW icon node MUST ride `data-role="icon"`
+the same way every fleet adornment does — decorative, adding no accessible name of its own.
 *(→ GH #891 ask 1; §5's layering clause; GH #868's curated-glyph process)*
 - **AC1** *Given* a commit, *then* the chip renders NO text node equal to the trigger character and
   no `[data-part="reference-chip-sigil"]` exists in the DOM; the chip's visible text is exactly the
@@ -572,7 +580,7 @@ with a recommendation, never ruled silently (GH #891's own open question):
 Under EITHER arm: the composer never writes a store (R11), resolution stays by id and fail-closed
 (R4), and the master switches win (R3/R4's precedence, unchanged). This requirement has no ACs of
 its own until the ADR rules — S7 builds the ratified arm and mints the ACs from that arm's text.
-*(→ GH #891 ask 3; ADR-0190; SPEC-N1's seam; SPEC-R2/R3/R4)*
+*(→ GH #891 ask 3; ADR-0190; §5's layering clause — the store-blind composer seam; SPEC-R2/R3/R4)*
 
 *(v0.5 annotation — RULED: the owner's 2026-08-14 utterance (ADR-0190 rev.2, Context, verbatim)
 picked arm B, refined into the three-tier reach model. The ruled contract with its ACs is
@@ -605,10 +613,10 @@ Stale records this extension falsifies — repaired IN the landing slice, never 
 
 | Record | Stale claim | Repair slice |
 |---|---|---|
-| `conversation-composer.ts` — `CommittedReference`'s doc ("the chip's sigil") + `#syncReferenceChips`'s sigil comment | the trigger character renders as the chip's per-kind mark | S4 |
-| `conversation-composer.css` — the reference-chip comment block's sigil prose | same claim, style-side | S4 |
-| `conversation-composer.md` + `conversation-composer.lld.md` | pre-R9/R11 chip anatomy + prop/callback inventory | S4 (chip) · S6 (menu) |
-| `conversation.md` + `conversation.lld.md` | single-arg `addUserMessage`, bubble anatomy | S5 |
+| `conversation-composer.ts` — `CommittedReference`'s doc ("the chip's sigil") + `#syncReferenceChips`'s sigil comment | the trigger character renders as the chip's per-kind mark | S4 ✔ (the `CommittedReference` wrapper itself went with the node — the sigil was its `trigger` field's only reader) |
+| `conversation-composer.css` — the reference-chip comment block's sigil prose | same claim, style-side | S4 ✔ |
+| `conversation-composer.md` + `conversation-composer.lld.md` | pre-R9/R11 chip anatomy + prop/callback inventory | S4 ✔ (chip — the LLD's v4/CVC-C18 section, with CVC-C15's sigil sentence annotated in place as the S2 ship record) · S6 ✔ (menu — the descriptor's new `capabilities` attribute/property/parts + the LLD's v5/CVC-C21–C25 section) |
+| `conversation.md` + the conversation LLD (`app-surfaces-m2.lld.md` — the file this row's shorthand names; no `conversation.lld.md` exists) | single-arg `addUserMessage`, bubble anatomy | S5 ✔ (descriptor parts + contentModel + prose; the LLD's §5 sketch annotated in place and repaired by its new §11 amendment) |
 | `agent-admin.md` — the reach-path section | no capabilities-menu projection | S7 |
 | this SPEC's §10 chip-treatment bullet | annotated in place (v0.4) | done in this change ✔ |
 

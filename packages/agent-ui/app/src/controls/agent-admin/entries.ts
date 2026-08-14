@@ -350,13 +350,47 @@ export interface ComposerRosters {
   invocables: ReferenceOption[]
 }
 
+/**
+ * GH #891 (SPEC-R9) — the kind→glyph table: THE domain mapping the composer deliberately does not own.
+ * `ReferenceOption.icon` is an opaque `ui-icon` glyph name to that element (§5's layering clause), so this
+ * module — which already owns every other projection of a kind's meaning — is where the four capability
+ * kinds get their mark.
+ *
+ * Glyph choices, from the CURATED set only (`icons.gen.ts`/`ICON_NAMES`; nothing had to be added, so the
+ * GH #868 extension process stays unused — its bar is "no curated glyph fits"):
+ *   · `resource` → `file-text`  — a resource IS attached material; the file glyph is literal.
+ *   · `tool`     → `gear`       — the fleet's mechanism glyph (`wrench` is not in the curated set).
+ *   · `workflow` → `share-network` — nodes-and-edges reads as a multi-step flow (`list` would say
+ *                                   "some items", which is the ambiguity GH #868 rejected for Models).
+ *   · `skill`    → `star`       — a named capability. NOT `sparkle`/`brain`: those two are already the
+ *                                Models/Effort trigger glyphs in this very composer (GH #868), and a chip
+ *                                repeating a picker's glyph reads as that picker's state.
+ * A kind absent from this table (prompt sections, pattern sources, catalogs — none of which is ever a
+ * mentionable/invocable) simply gets no icon: the composer then renders a label-only chip, its own
+ * documented default, so this table needs no fallback glyph.
+ */
+const KIND_GLYPHS: Readonly<Record<string, string>> = {
+  [ENTRY_KINDS.skill]: 'star',
+  [ENTRY_KINDS.workflow]: 'share-network',
+  [ENTRY_KINDS.resource]: 'file-text',
+  [ENTRY_KINDS.tool]: 'gear',
+}
+
 /** One entry → one `ReferenceOption`. `label` is read from the entry ITSELF on every build, which is the
  *  whole of SPEC-R8's rename-following clause (GH #848 landed the rename as an in-place `label` write, so
  *  a fresh read IS the propagation — nothing to repoint). An empty description is OMITTED rather than sent
- *  as `''`, so the menu row renders label-only instead of an empty second line. */
+ *  as `''`, so the menu row renders label-only instead of an empty second line — and (GH #891/SPEC-R9) an
+ *  unmapped kind's `icon` is omitted the same way, never sent as an empty glyph name. */
 function referenceOptionOf(entry: Entry): ReferenceOption {
   const description = entry.description.trim()
-  return { id: entry.id, label: entry.label, kind: entry.kind, ...(description === '' ? {} : { description }) }
+  const icon = KIND_GLYPHS[entry.kind]
+  return {
+    id: entry.id,
+    label: entry.label,
+    kind: entry.kind,
+    ...(description === '' ? {} : { description }),
+    ...(icon === undefined ? {} : { icon }),
+  }
 }
 
 /** The entries of one group that may appear in a menu / resolve at send: the kind's MASTER switch on AND

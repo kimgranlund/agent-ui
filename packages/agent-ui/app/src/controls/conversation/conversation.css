@@ -54,6 +54,20 @@
   /* GH #291/ADR-0160 clause 3 — the settled-turn action-chip row. */
   --ui-conversation-actions-gap: var(--md-sys-space-xs);
   --ui-conversation-actions-margin-block-start: var(--md-sys-space-xs);
+  /* GH #891/SPEC-R10 — the SENT user turn's display-only reference tags. Deliberately NOT the composer's
+     own accent chip treatment: inside an already-accent user bubble, a second accent pill would read as a
+     nested control. These are quieter — a translucent wash of the bubble's own ink (so one token works in
+     both schemes and against either bubble tone) plus the variant ink, i.e. an annotation ON the bubble,
+     not a widget IN it. The row's own rhythm reuses the actions-row spacing values above rather than
+     minting a second pair of gap constants for the same "small row under the body" job. */
+  --ui-conversation-reference-tag-bg: color-mix(in oklab, currentColor 10%, transparent);
+  --ui-conversation-reference-tag-ink: var(--ui-conversation-ink-variant);
+  --ui-conversation-reference-tags-gap: var(--ui-conversation-actions-gap);
+  --ui-conversation-reference-tags-margin-block-start: var(--ui-conversation-actions-margin-block-start);
+  /* The gap INSIDE one tag (glyph ↔ label). Minted here rather than written as a literal in @scope: 4px is a
+     shipped ladder rung, and the SPEC-R11c/AC19 spacing-drift gate (site/lib/shell-spacing-gate.test.ts)
+     requires the token spelling for any literal that equals one. */
+  --ui-conversation-reference-tag-gap: var(--md-sys-space-xs);
 }
 
 /* ════════════════ [ui-conversation] STYLES — @scope (ui-conversation) consumes ONLY --ui-conversation-* ══ */
@@ -254,6 +268,33 @@
     margin-block-start: var(--ui-conversation-actions-margin-block-start);
   }
 
+  /* GH #891/SPEC-R10 — the SENT turn's attachment record: one dismiss-less tag per reference, appended
+     after the body inside the user bubble (conversation.ts's `#buildReferenceTags`). Only ever rendered
+     when the turn really carried references — an empty row is never appended, so nothing here can change
+     a reference-less bubble's box. Distinct from the body text (own pill background + variant ink), and
+     WITHOUT the composer chip's dismiss affordance: the turn is sent, there is nothing left to remove. */
+  [data-part='reference-tags'] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ui-conversation-reference-tags-gap);
+    margin-block-start: var(--ui-conversation-reference-tags-margin-block-start);
+  }
+  [data-part='reference-tag'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-conversation-reference-tag-gap);
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px; /* pill — the composer chip's own value, deliberately shared across the two surfaces */
+    background: var(--ui-conversation-reference-tag-bg);
+    color: var(--ui-conversation-reference-tag-ink);
+    font-size: 0.7rem;
+  }
+  /* No size declaration: `ui-icon` is a 1em cell (icon.css's Display-class law) inheriting the tag's own
+     font-size + ink, so the glyph lands on the tag's rhythm for free. */
+  [data-part='reference-tag-icon'] {
+    flex: 0 0 auto;
+  }
+
   /* ── the composed message-composition child (TKT-0056 · TKT-0058) ───────────────────────────────────── */
   /* `ui-conversation-composer`'s own frame/layout/parts live in conversation-composer.css; this rule ONLY
      places it as THIS element's flex child: `flex: 0 0 auto` (a custom element defaults to
@@ -277,6 +318,14 @@
   @scope (ui-conversation) {
     :scope {
       border-color: CanvasText;
+    }
+    /* GH #891/SPEC-R10 — the reference tags are the one NEW element here with a colour-carried boundary
+       (a translucent wash), and forced-colors overrides exactly that: without a real border the tag would
+       dissolve into the bubble it annotates. An explicit outline keeps the pill readable as a distinct
+       object, the same "give a colour-only boundary a real border" move the composer's own block makes. */
+    [data-part='reference-tag'] {
+      border: 1px solid CanvasText;
+      color: CanvasText;
     }
   }
 }

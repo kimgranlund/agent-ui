@@ -459,11 +459,20 @@ describe('buildComposerRosters (GH #849/SPEC-R8) — the menu roster projection'
     const { mentionables, invocables } = buildComposerRosters(groups())
     // `@` = Resources: both modes present, the disabled row absent.
     expect(mentionables.map((o) => o.id)).toEqual(['menu', 'brand'])
-    expect(mentionables[0]).toEqual({ id: 'menu', label: 'Menu PDF', kind: ENTRY_KINDS.resource, description: 'Tonight’s menu' })
+    // GH #891/SPEC-R9 — the projection now also carries this kind's own GLYPH (`icon`), the domain mapping
+    // the composer deliberately does not own.
+    expect(mentionables[0]).toEqual({
+      id: 'menu',
+      label: 'Menu PDF',
+      kind: ENTRY_KINDS.resource,
+      description: 'Tonight’s menu',
+      icon: 'file-text',
+    })
     expect(mentionables[1], 'an empty description is omitted, never sent as an empty second line').toEqual({
       id: 'brand',
       label: 'Brand guide',
       kind: ENTRY_KINDS.resource,
+      icon: 'file-text',
     })
     // `/` = Skills + Workflows + Tools, in that kind order; the master-OFF tool kind is absent wholesale.
     expect(invocables.map((o) => o.id)).toEqual(['style', 'review'])
@@ -504,6 +513,31 @@ describe('buildComposerRosters (GH #849/SPEC-R8) — the menu roster projection'
       ]),
     ])
     expect(invocables.map((o) => o.id)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('GH #891/SPEC-R9: every capability kind projects its OWN glyph — and only mapped kinds get one', () => {
+    const rosters = buildComposerRosters([
+      refGroup(ENTRY_KINDS.resource, [entry({ id: 'r', kind: ENTRY_KINDS.resource, label: 'R' })]),
+      refGroup(ENTRY_KINDS.skill, [entry({ id: 's', kind: ENTRY_KINDS.skill, label: 'S' })]),
+      refGroup(ENTRY_KINDS.workflow, [entry({ id: 'w', kind: ENTRY_KINDS.workflow, label: 'W' })]),
+      refGroup(ENTRY_KINDS.tool, [entry({ id: 't', kind: ENTRY_KINDS.tool, label: 'T' })]),
+    ])
+    expect(rosters.mentionables.map((o) => [o.kind, o.icon])).toEqual([[ENTRY_KINDS.resource, 'file-text']])
+    expect(rosters.invocables.map((o) => [o.kind, o.icon])).toEqual([
+      [ENTRY_KINDS.skill, 'star'],
+      [ENTRY_KINDS.workflow, 'share-network'],
+      [ENTRY_KINDS.tool, 'gear'],
+    ])
+    // That every one of these names really EXISTS in the curated pack is proven where it can be proven for
+    // real — `conversation-composer.browser.test.ts` renders a chip with one and asserts a resolved <svg>
+    // (an unregistered name renders `data-icon-missing`, resolve.ts). Re-listing `ICON_NAMES` here would
+    // both copy an enumerable set (the GH #754 drift class) and open an app→icons edge the DAG doesn't grant.
+    // The four glyphs are DISTINCT (one kind, one mark) and none collides with the composer's own picker
+    // triggers (`sparkle`/`brain`, GH #868) — a chip repeating a picker's glyph would read as that picker.
+    const glyphs = [...rosters.mentionables, ...rosters.invocables].map((o) => o.icon)
+    expect(new Set(glyphs).size).toBe(4)
+    expect(glyphs).not.toContain('sparkle')
+    expect(glyphs).not.toContain('brain')
   })
 
   it('the two trigger rosters map disjoint kinds, and their union is the four availability kinds', () => {

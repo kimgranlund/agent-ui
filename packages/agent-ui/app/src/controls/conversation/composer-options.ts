@@ -43,6 +43,12 @@ export interface ReferenceOption {
   label: string
   kind: string
   description?: string
+  /** GH #891 (SPEC-R9) — OPTIONAL: a `ui-icon` glyph name identifying this entry's KIND on the committed
+   *  chip (and, GH #891 ask 3, on a capabilities row). OPAQUE to the composer, exactly as `kind` is: this
+   *  element renders the glyph it is handed and never maps a kind to one — the CONSUMER owns that table
+   *  (`ui-agent-admin`'s `KIND_GLYPHS`), the SPEC's §5 layering clause. Absent ⇒ a label-only chip (the
+   *  generic-consumer default), never a placeholder box. */
+  icon?: string
 }
 
 /** GH #849 (SPEC-R6) — the STRUCTURED reference a committed mention/invocation attaches to a turn, and
@@ -54,6 +60,35 @@ export interface TurnReference {
   id: string
   label: string
   kind: string
+  /** GH #891 (SPEC-R9 AC2) — the `ReferenceOption.icon` this reference was committed from, round-tripped
+   *  VERBATIM exactly as `kind` is (absent when the roster entry carried none). It rides so a consumer can
+   *  render the same kind mark on the SENT turn (SPEC-R10's bubble tags) without re-deriving the mapping
+   *  it already owns; resolution is still by `id` alone (GH #402), and nothing here is load-bearing on the
+   *  wire (SPEC-R4's resolution never reads it). */
+  icon?: string
+}
+
+/** GH #891 (capability-availability-tagging.spec.md SPEC-R11) — ONE row of the composer's capabilities
+ *  panel: the BROWSE/STEER surface beside the `@`/`/` typeahead's keyboard-first quick path. GENERIC by the
+ *  same construction as `ReferenceOption` (the SPEC's §5 layering clause): `kind` and `icon` are OPAQUE
+ *  strings this element groups/renders and never interprets, and `included` is CONSUMER-OWNED state — the
+ *  composer renders it, reports a flip through `onCapabilityToggle`, and mutates nothing (props down,
+ *  callbacks up, the `onModelChange` law verbatim).
+ *
+ *  What `included` MEANS — a per-turn inclusion vs a persisted roster write — is deliberately NOT decided
+ *  here: it is the consumer-side fork of ADR-0190 (SPEC-R12), and this contract is identical under either
+ *  arm because the composer never writes a store under either. */
+export interface CapabilityRow {
+  id: string
+  label: string
+  kind: string
+  description?: string
+  /** A `ui-icon` glyph name, same opaque-string law as `ReferenceOption.icon` (SPEC-R9). */
+  icon?: string
+  /** Whether this capability is currently steered ON. Reflected onto the row's `ui-switch`; never written
+   *  by this element — a flip fires `onCapabilityToggle(id, included)` and the CONSUMER hands a new
+   *  `capabilities` array down. */
+  included: boolean
 }
 
 /** The reasoning-effort levels a live model call can be dialed to — the same low/medium/high/xhigh
