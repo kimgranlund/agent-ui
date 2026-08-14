@@ -615,7 +615,13 @@ export function resolveTurnReferences(
   const blocks: string[] = []
   const toolIds: string[] = []
   for (const reference of references) {
-    const key = `${reference.kind} ${reference.id}`
+    // The dedupe key joins two FREE-FORM strings, so the separator has to be one neither can contain: an
+    // id may carry `:` (`svc:calc:*`, ADR-0185) or a space, and any printable joiner would let one pair
+    // forge another's key (entries.test.ts pins exactly that). NUL is the joiner — written as the ESCAPE
+    // `\x00`, never as a raw byte: a literal NUL in the source made `grep` classify this whole file as
+    // binary and SKIP it, blinding every grep-based fence over app/src (SPEC-R6 AC1's connector-token fence
+    // among them) to anything in it. That was GH #899; source-bytes.test.ts is the standing trip-wire.
+    const key = `${reference.kind}\x00${reference.id}`
     if (seen.has(key)) continue
     seen.add(key)
     const entry = reachable.get(reference.kind)?.get(reference.id)

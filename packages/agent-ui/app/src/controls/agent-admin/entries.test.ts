@@ -865,6 +865,37 @@ describe('resolveTurnReferences (GH #849/SPEC-R4) — send-time resolution', () 
     expect(out.text, 'no prose reference ⇒ the typed text is untouched, byte for byte').toBe('add these')
   })
 
+  // GH #899 — the dedupe key's SEPARATOR, previously unpinned by any test. `entries.ts` joins `kind` and
+  // `id` with a NUL; #899 rewrote that NUL from a raw byte (which made grep read the whole file as binary
+  // and skip it) into the `\x00` escape, and this test is what makes "behaviour-identical" mechanical
+  // rather than asserted: both fields are FREE-FORM strings — an id may carry `:` (`svc:calc:*`, ADR-0185)
+  // or a space — so the joiner must be a character NEITHER can contain. The first pair below collides
+  // under `''` or `':'`, the second under `' '`; all four resolve only while the joiner stays unforgeable.
+  // A duplicate PROPER (same kind AND id) rides along, so the test can't pass by dedupe being broken.
+  it('GH #899: the dedupe key separator is unforgeable — near-miss kind/id pairs stay distinct, a true duplicate still folds', () => {
+    const forgeable: ReferenceGroup[] = [
+      refGroup('resource', [
+        entry({ id: 'a:b', kind: ENTRY_KINDS.resource, label: 'PAIR-1A' }),
+        entry({ id: 'x y', kind: ENTRY_KINDS.resource, label: 'PAIR-2A' }),
+      ]),
+      refGroup('resource:a', [entry({ id: 'b', kind: ENTRY_KINDS.resource, label: 'PAIR-1B' })]),
+      refGroup('resource x', [entry({ id: 'y', kind: ENTRY_KINDS.resource, label: 'PAIR-2B' })]),
+    ]
+    const out = resolveTurnReferences(
+      'go',
+      [
+        ref('resource', 'a:b'), // ┐ one concatenation under a '' or ':' joiner: "resourcea:b" / "resource:a:b"
+        ref('resource:a', 'b'), // ┘
+        ref('resource', 'x y'), // ┐ one concatenation under a ' ' joiner: "resource x y"
+        ref('resource x', 'y'), // ┘
+        ref('resource', 'a:b'), // a duplicate PROPER — folds into the first
+      ],
+      forgeable,
+    )
+    for (const label of ['PAIR-1A', 'PAIR-1B', 'PAIR-2A', 'PAIR-2B']) expect(out.text).toContain(`### ${label} (resource)`)
+    expect([...out.text.matchAll(/^### /gm)], 'four distinct references, one folded duplicate').toHaveLength(4)
+  })
+
   it('AC3 (fail-closed): a deleted id, a disabled entry and a master-OFF kind each contribute nothing — the rest survive', () => {
     const state: ReferenceGroup[] = [
       refGroup(ENTRY_KINDS.resource, [entry({ id: 'menu', kind: ENTRY_KINDS.resource, label: 'Menu PDF', content: 'stays' })]),
