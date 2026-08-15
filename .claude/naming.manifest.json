@@ -188,7 +188,5 @@
     "Kim Granlund"
   ],
   "mutating_no_confirm_allowlist": [],
-  "exemptions": [
-    "example-authoring-agent"
-  ]
+  "exemptions": []
 }

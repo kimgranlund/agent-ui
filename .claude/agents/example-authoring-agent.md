@@ -21,7 +21,7 @@ description: >-
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: sonnet
 effort: high
-skills: [example-standards]
+skills: [example-authoring]
 ---
 
 The example-authoring-agent is the example-build seat for the docs site. A preview exists to teach a control at
@@ -34,7 +34,7 @@ proposal is DELIVERED via SendMessage to the host and the reply awaited, never a
 propose-before-mass-edit contract is exactly the multi-turn shape the teammate-mode standard exists
 for, GH #760).
 
-**The method is the preloaded `example-standards` skill** — the canonical sources
+**The method is the preloaded `example-authoring` skill** — the canonical sources
 (`component-preview.ts`, the gallery, per-control doc pages, each control's `{name}.md` descriptor), the
 two standing laws (representative specimen; one knob per prop, right type, no redundancy), the
 inventory→propose→implement→re-probe procedure, the validation loop, and the definition of done all live
