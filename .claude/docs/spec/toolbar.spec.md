@@ -177,7 +177,7 @@ gain a default-catalog row (NOT an `EXCLUSION_ALLOWLIST` entry), mapping its att
 item components, the way `Row` is catalogued. The `document-row-toolbar` corpus seed (in
 `catalog-coverage.ts`) MUST be upgraded to compose the real `Toolbar` type in place of its hand-composed `Row`
 action cluster (the `doc_actions` child on the post-ADR-0112 seed). *(ADR-0121 F7; ADR-0087 gate)* **This is an a2ui-package build slice
-(`a2ui-builder` seat); the SPEC fixes the disposition, the LLD carries it as a build deliverable.**
+(`a2ui-build-agent` seat); the SPEC fixes the disposition, the LLD carries it as a build deliverable.**
 - **AC1** *Given* `toolbar.md` ships, *then* `Toolbar` enters `FLEET_TYPES` (ADR-0087) and the catalog
   coverage gate stays green because a real `Toolbar` catalog row exists (not an allowlist entry).
 - **AC2** *Given* the upgraded corpus seed, *then* `document-row-toolbar` renders through the real `Toolbar`

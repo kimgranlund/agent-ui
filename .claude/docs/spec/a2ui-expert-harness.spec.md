@@ -2,7 +2,7 @@
 
 > Status: proposed · v0.4 · 2026-08-06 (v0.3 2026-07-29, v0.2 2026-07-03, v0.1 2026-06-26) · Layer: SPEC (execution contract)
 > **v0.4 amendment (2026-08-06, SPEC-R2 + SPEC-R3 only — GH #493, PR #492's rubric-fit escalation):**
-> the `a2ui-reviewer` critic's artifact classes widen from three to five (adds: a compose-time MECHANISM
+> the `a2ui-review-agent` critic's artifact classes widen from three to five (adds: a compose-time MECHANISM
 > function — `compose.ts`-class code that assembles/derives/selects at compose time; a skill-doc PATTERN
 > section — an `a2ui-multi-catalog`-class pattern row), and the SPEC-R3 rubric set widens from three to
 > five: **`a2ui-mechanism.md`** and **`a2ui-skill-pattern.md`**, SIBLINGS of `a2ui-catalog.md` (split,
@@ -19,13 +19,13 @@
 > archive (filename derivation, never-overwrite, merge precedence, no-expiry) — §5.3 cites them rather
 > than restating them. Append-only: no other clause in this document changes.
 > **v0.2 reconciliation (2026-07-03, the expert-harness intake):** the v0.1 draft predated the corpus
-> store (ADRs 0060–0064, all shipped `23e2494`), the `a2ui-builder` seat, the seed shelf (ADR-0055),
+> store (ADRs 0060–0064, all shipped `23e2494`), the `a2ui-build-agent` seat, the seed shelf (ADR-0055),
 > and the form-family catalog rows (ADR-0053/0054); every requirement is re-ruled against that tree.
 > Headlines: **SPEC-R4's deterministic gates are REALIZED** (the shared `validateA2ui` + admission's
 > `E_*` codes + the standing `corpus-data.test.ts` gate — no gate code left to build); **SPEC-R2's
-> three maker agents become one maker/critic pair** (`a2ui-composer` + `a2ui-reviewer`; catalog-author
-> is `a2ui-builder` territory, corpus-curator is the realized pipeline); **SPEC-R1's four skills
-> become two** (`a2ui-compose` merges patterns+composition; `a2ui-corpus-curate` is a thin pointer;
+> three maker agents become one maker/critic pair** (`a2ui-payload-authoring-agent` + `a2ui-review-agent`; catalog-author
+> is `a2ui-build-agent` territory, corpus-curator is the realized pipeline); **SPEC-R1's four skills
+> become two** (`a2ui-payload-authoring` merges patterns+composition; `a2ui-corpus-curation` is a thin pointer;
 > `a2ui-jsonl-mcp` is trigger-deferred to the streaming producer wave); **rubrics live at
 > `.claude/docs/rubrics/`** (the estate's home — the v0.1 `specs/rubrics/` path never existed);
 > **SPEC-R3's corpus-quality rubric activates the ADR-0060 judge seam** via a deterministic
@@ -62,11 +62,11 @@ Normative per RFC 2119; each carries an ID, PRD trace, and acceptance criteria.
 
 ### 3.1 The capability inventory
 
-**SPEC-R1 — Domain-expertise skills.** The harness MUST provide progressive-disclosure skills covering the realized authoring surfaces: (a) **composing A2UI** — idiomatic node shapes per catalog type AND composability (adjacency-list trees, `ChildList` templating, data binding, actions/checks) as ONE skill, `a2ui-compose` (the v0.1 patterns/composition split shared one routing surface and is merged — ADR-0067; the v0.1 §6 granularity item, resolved); (b) **corpus curation** — a THIN procedure over the realized pipeline (seed authoring → `import-seeds` → gates → judge verdicts → rescore), `a2ui-corpus-curate`, citing the corpus LLD rather than restating it. The v0.1 (c) JSONL+MCP skill is **trigger-deferred**: the streaming pipeline's producer scope is deliberately unbuilt (streaming LLD v0.2); a skill teaching unbuilt workflows would fabricate — it lands with the streaming producer wave. *(→ PRD-G3)*
-- **AC1** *Given* the two skills, *when* checked, *then* each passes `harness_checks.py skill` (trigger-bearing description, ≤500-line body, validation loop present) and each description fences its siblings (`component-author`, `a2ui-builder` dispatch territory, `docs-author`, each other).
+**SPEC-R1 — Domain-expertise skills.** The harness MUST provide progressive-disclosure skills covering the realized authoring surfaces: (a) **composing A2UI** — idiomatic node shapes per catalog type AND composability (adjacency-list trees, `ChildList` templating, data binding, actions/checks) as ONE skill, `a2ui-payload-authoring` (the v0.1 patterns/composition split shared one routing surface and is merged — ADR-0067; the v0.1 §6 granularity item, resolved); (b) **corpus curation** — a THIN procedure over the realized pipeline (seed authoring → `import-seeds` → gates → judge verdicts → rescore), `a2ui-corpus-curation`, citing the corpus LLD rather than restating it. The v0.1 (c) JSONL+MCP skill is **trigger-deferred**: the streaming pipeline's producer scope is deliberately unbuilt (streaming LLD v0.2); a skill teaching unbuilt workflows would fabricate — it lands with the streaming producer wave. *(→ PRD-G3)*
+- **AC1** *Given* the two skills, *when* checked, *then* each passes `harness_checks.py skill` (trigger-bearing description, ≤500-line body, validation loop present) and each description fences its siblings (`component-author`, `a2ui-build-agent` dispatch territory, `site-authoring`, each other).
 - **AC2** *Given* the trigger corpora, *when* the SPEC-N2 tripwire runs, *then* it passes and the named misses are dispositioned by a human/critic read.
 
-**SPEC-R2 — Authoring agents: one maker/critic pair.** The harness MUST provide: **`a2ui-composer`** (maker — emits valid `createSurface`→`updateComponents`→`updateDataModel` payloads/streams with bindings/actions/checks, conditioned by the corpus, self-checked ONLY against deterministic gates, graded by the `a2ui-payload` rubric) and **`a2ui-reviewer`** (critic — grades ONE a2ui artifact: payload, catalog row, corpus record, compose-time mechanism function, or skill-doc pattern section — the last two per the v0.4/GH #493 amendment — against the named rubric; authors the corpus judge verdicts). Each MUST declare scoped `tools:`, a `model:`, a when-to-dispatch description, and (makers) the rubric it is graded by. The v0.1 **catalog-author is RETIRED** — catalog rows are package source bound to `ui-*` factories, `a2ui-builder`'s charter (`.claude/agents/a2ui-builder.md`); the v0.1 **corpus-curator is RETIRED** — curation's deterministic half is the realized pipeline (`tools/corpus/import-seeds.ts` + `admit()`), its judgment half is the judge (SPEC-R3); an agent would re-own what scripts decide (`process.md` rule 1). The composer/builder routing boundary MUST be repaired in the same change that lands the composer (payload *composition* → composer; package/renderer/catalog *code* → builder). *(→ PRD-G3; ADR-0067)*
+**SPEC-R2 — Authoring agents: one maker/critic pair.** The harness MUST provide: **`a2ui-payload-authoring-agent`** (maker — emits valid `createSurface`→`updateComponents`→`updateDataModel` payloads/streams with bindings/actions/checks, conditioned by the corpus, self-checked ONLY against deterministic gates, graded by the `a2ui-payload` rubric) and **`a2ui-review-agent`** (critic — grades ONE a2ui artifact: payload, catalog row, corpus record, compose-time mechanism function, or skill-doc pattern section — the last two per the v0.4/GH #493 amendment — against the named rubric; authors the corpus judge verdicts). Each MUST declare scoped `tools:`, a `model:`, a when-to-dispatch description, and (makers) the rubric it is graded by. The v0.1 **catalog-author is RETIRED** — catalog rows are package source bound to `ui-*` factories, `a2ui-build-agent`'s charter (`.claude/agents/a2ui-build-agent.md`); the v0.1 **corpus-curator is RETIRED** — curation's deterministic half is the realized pipeline (`tools/corpus/import-seeds.ts` + `admit()`), its judgment half is the judge (SPEC-R3); an agent would re-own what scripts decide (`process.md` rule 1). The composer/builder routing boundary MUST be repaired in the same change that lands the composer (payload *composition* → composer; package/renderer/catalog *code* → builder). *(→ PRD-G3; ADR-0067)*
 - **AC1** *Given* each agent file, *when* checked, *then* it passes `harness_checks.py agent` (scoped tools, model set, trigger description, no enforcement-in-prose).
 - **AC2** *Given* a composer artifact, *when* it is verified, *then* the verifier is a gate or the critic seat — never the composer's self-assessment (SPEC-R8).
 
@@ -83,13 +83,13 @@ Normative per RFC 2119; each carries an ID, PRD trace, and acceptance criteria.
 **SPEC-R5 — Discovery & composition (orchestration).** Skills, agents, rubrics, and gates MUST discover and compose through declared wiring (frontmatter + descriptions): a skill captures a *procedure*; a subagent is dispatched for *isolated making or grading*; a rubric is *referenced* for judgment; a gate is *invoked* for a true/false check. The artifact map lives in THIS SPEC (§5.1 — one fact, one home; the v0.1 separate `a2ui-artifact-map.md` is retired). Reachability MUST be mechanically checked: every maker names a resolvable grading rubric, every skill's referenced tools/rubrics resolve, no rubric is an orphan. *(→ PRD-G3)*
 - **AC1** *Given* the artifact set, *when* `scripts/harness_wiring_check.py` runs, *then* it exits 0, and a planted dangling rubric reference or self-grading maker line makes it exit 1 (negative controls).
 
-**SPEC-R6 — Generation→verification→self-correction loop.** The harness MUST encode the bounded loop: an agent generates an artifact conditioned by the corpus (few-shot over the committed shard now; `retrieve()` programmatically at scale), the deterministic gates verify it FIRST, the critic rubric grades only what gates pass, and on failure the maker self-corrects — bounded at `maxRounds = 3`, then halt-and-report (no unbounded retry). Rounds are HOST-orchestrated (the maker cannot invoke the critic): gate failures feed straight back to the maker within a round; a below-bar critic verdict — the per-dimension scores + cited findings — returns to the maker as the next round's input (the self-correction channel; the maker still never ASSIGNS scores to its own output, SPEC-R8). This wave the loop is **procedural** — encoded in the composer charter + the `a2ui-compose` skill, with `tools/harness/validate-payload.ts` as the deterministic check any seat can run; the **programmatic driver** (prompt→stream→validate→retry as code) is the live-agent wave's (NEXT item 4), and the streaming LLD-C2 dependency is re-pointed there (ADR-0067; applied in `a2ui-streaming-pipeline.lld.md` §1/§3). *(→ PRD-G3, PRD-G4)*
+**SPEC-R6 — Generation→verification→self-correction loop.** The harness MUST encode the bounded loop: an agent generates an artifact conditioned by the corpus (few-shot over the committed shard now; `retrieve()` programmatically at scale), the deterministic gates verify it FIRST, the critic rubric grades only what gates pass, and on failure the maker self-corrects — bounded at `maxRounds = 3`, then halt-and-report (no unbounded retry). Rounds are HOST-orchestrated (the maker cannot invoke the critic): gate failures feed straight back to the maker within a round; a below-bar critic verdict — the per-dimension scores + cited findings — returns to the maker as the next round's input (the self-correction channel; the maker still never ASSIGNS scores to its own output, SPEC-R8). This wave the loop is **procedural** — encoded in the composer charter + the `a2ui-payload-authoring` skill, with `tools/harness/validate-payload.ts` as the deterministic check any seat can run; the **programmatic driver** (prompt→stream→validate→retry as code) is the live-agent wave's (NEXT item 4), and the streaming LLD-C2 dependency is re-pointed there (ADR-0067; applied in `a2ui-streaming-pipeline.lld.md` §1/§3). *(→ PRD-G3, PRD-G4)*
 - **AC1** *Given* a generation task, *when* the loop runs, *then* an artifact is accepted only after passing its gates and meeting its rubric bar, or the loop halts at its bound and reports the failure — the round count and verdicts recorded.
 
 **SPEC-R7 — Authored-via-harness + governance.** Every skill/agent/rubric MUST be authored with the corresponding authoring skill (`skill-author` / `agent-author` / `rubric-author`), pass its `harness_checks.py` mode, and score ≥ its authoring rubric's bar under an independent reviewer seat (`skill-reviewer`/`agent-reviewer`/`doc-reviewer`); every artifact MUST obey `process.md` placement (deterministic→script; judgment→rubric; procedure→skill). *(→ PRD-G3; Constraint C3)*
 - **AC1** *Given* each authored artifact, *when* scored by its authoring-skill rubric, *then* it clears the gated dimensions; *when* placement is checked, *then* no true/false check lives in agent prose.
 
-**SPEC-R8 — Generator/critic separation.** No agent MAY grade its own output. Verification MUST be a deterministic gate or a separate critic/rubric invocation in an independent context. The corpus judge honors this by construction: the critic (`a2ui-reviewer`) authors verdicts against `a2ui-corpus.md`; the composer and the pipeline never do. *(→ PRD-G4)*
+**SPEC-R8 — Generator/critic separation.** No agent MAY grade its own output. Verification MUST be a deterministic gate or a separate critic/rubric invocation in an independent context. The corpus judge honors this by construction: the critic (`a2ui-review-agent`) authors verdicts against `a2ui-corpus.md`; the composer and the pipeline never do. *(→ PRD-G4)*
 - **AC1** *Given* an agent's artifact, *when* it is verified, *then* the verifier is a gate or a distinct critic — never the producing agent's self-assessment.
 
 ---
@@ -109,31 +109,31 @@ Normative per RFC 2119; each carries an ID, PRD trace, and acceptance criteria.
 
 | Artifact | Kind | Authored via | Verified by | Implements |
 |---|---|---|---|---|
-| `a2ui-compose` | skill | skill-author | `harness_checks.py skill` + skill-reviewer | SPEC-R1a |
-| `a2ui-corpus-curate` | skill | skill-author | `harness_checks.py skill` + skill-reviewer | SPEC-R1b |
-| `a2ui-composer` | agent (maker) | agent-author | graded by `a2ui-payload` rubric via `a2ui-reviewer` | SPEC-R2, R6 |
-| `a2ui-reviewer` | agent (critic) | agent-author | `harness_checks.py agent` + agent-reviewer; calibrated per SPEC-R3 AC2 | SPEC-R2, R8 |
+| `a2ui-payload-authoring` | skill | skill-author | `harness_checks.py skill` + skill-reviewer | SPEC-R1a |
+| `a2ui-corpus-curation` | skill | skill-author | `harness_checks.py skill` + skill-reviewer | SPEC-R1b |
+| `a2ui-payload-authoring-agent` | agent (maker) | agent-author | graded by `a2ui-payload` rubric via `a2ui-review-agent` | SPEC-R2, R6 |
+| `a2ui-review-agent` | agent (critic) | agent-author | `harness_checks.py agent` + agent-reviewer; calibrated per SPEC-R3 AC2 | SPEC-R2, R8 |
 | `a2ui-payload.md` | rubric | rubric-author | `harness_checks.py rubric` + doc-reviewer | SPEC-R3 |
 | `a2ui-catalog.md` | rubric | rubric-author | `harness_checks.py rubric` + doc-reviewer | SPEC-R3 |
 | `a2ui-corpus.md` (judge standard) | rubric | rubric-author | rubric gate + doc-reviewer + calibration record | SPEC-R3 |
 | `validateA2ui` · admission `E_*` · `corpus-data.test.ts` | gates | **realized** (renderer/corpus LLDs) | the parity probe + the §8 matrix suites | SPEC-R4 |
-| `tools/harness/validate-payload.ts` | tool (CLI) | a2ui-builder | fixture run-log (good + 4 invalid classes) | SPEC-R6 |
-| `src/corpus/judge.ts` + `tools/corpus/rescore.ts` + `import-seeds --verdicts` | tool | a2ui-builder | `judge.test.ts` + the activation run | SPEC-R3 (ADR-0068) |
+| `tools/harness/validate-payload.ts` | tool (CLI) | a2ui-build-agent | fixture run-log (good + 4 invalid classes) | SPEC-R6 |
+| `src/corpus/judge.ts` + `tools/corpus/rescore.ts` + `import-seeds --verdicts` | tool | a2ui-build-agent | `judge.test.ts` + the activation run | SPEC-R3 (ADR-0068) |
 | `scripts/harness_wiring_check.py` | script | hand | its negative controls | SPEC-R5, R7 |
 | `scripts/routing-corpus.json` (per skill) | eval corpus | skill-author | `routing_eval.py` tripwire + read | SPEC-N2 |
 
-### 5.2 Agent frontmatter contract (per SPEC-R2; keys as the installed build uses them — `a2ui-builder.md` is the live precedent)
+### 5.2 Agent frontmatter contract (per SPEC-R2; keys as the installed build uses them — `a2ui-build-agent.md` is the live precedent)
 
 ```yaml
 ---
-name: a2ui-composer
+name: a2ui-payload-authoring-agent
 description: >-
   Compose ONE A2UI payload/stream for a given intent against a named catalog … Use when …
-  NOT for package source (a2ui-builder), ui-* controls (component-builder), grading (a2ui-reviewer).
+  NOT for package source (a2ui-build-agent), ui-* controls (component-build-agent), grading (a2ui-review-agent).
 tools: Read, Grep, Glob, Write, Bash     # scoped; Bash solely for the validate-payload CLI
 model: sonnet
 effort: high
-skills: [a2ui-compose]
+skills: [a2ui-payload-authoring]
 ---
 # graded by: a2ui-payload rubric (.claude/docs/rubrics/a2ui-payload.md) — never self-grades (SPEC-R8)
 ```
@@ -166,7 +166,7 @@ interface VerdictsFile {
 unchanged; its LIFETIME is what this amendment settles. A judged `import-seeds --verdicts <path>` run that
 reaches the store write archives that same file VERBATIM into
 `packages/agent-ui/a2ui/corpus/verdicts/<date>--<slug>.json`, in the store write's own all-or-nothing step,
-and the curator commits it **with** the shard (the `a2ui-corpus-curate` procedure owns that step). So a
+and the curator commits it **with** the shard (the `a2ui-corpus-curation` procedure owns that step). So a
 `passed:false` entry IS the durable record of an admission-time `E_QUALITY` — the one outcome `admit()`
 writes nowhere — and it has two readers over one shared merge: `import-seeds`' unjudged-run disposition
 guard, and `admission-coverage.test.ts`'s judged-ness leg, which reds when a seat re-admits a refused seed

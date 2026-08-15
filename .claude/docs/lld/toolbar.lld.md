@@ -3,13 +3,13 @@
 > Refines: [`../spec/toolbar.spec.md`](../spec/toolbar.spec.md) (SPEC-R1…R12) under
 > [ADR-0121](../adr/0121-ui-toolbar-pattern-control.md) (proposed; every fork as recommended). Build plan:
 > [`../decompositions/toolbar-ship.decomp.json`](../decompositions/toolbar-ship.decomp.json) (coverage-clean,
-> plan mode). · proposed · 2026-07-10 · designer (agent-ui-component-design)
+> plan mode). · proposed · 2026-07-10 · designer (component-design)
 >
 > **Composes on:** `UIContainerElement` (the surface-axes + non-form base `ui-row`/`ui-tabs` use) + the
 > `roving-focus` trait (`traits/roving-focus.ts`, reused decoupled from selection) + the ADR-0015 container
 > surface seam (`_surface/`) + the ADR-0052 `[data-box]` z-scope. **No new package, no new trait, no new base
 > class**: one ordinary control folder, `controls/toolbar/`. The only cross-package work is the F7 `Toolbar`
-> catalog row (an a2ui-package build slice, `a2ui-builder` seat).
+> catalog row (an a2ui-package build slice, `a2ui-build-agent` seat).
 >
 > **Freeze discipline.** §3's interface is the fan-out contract. A builder who cannot satisfy it STOPS and
 > escalates — the fix is a coordinated LLD repair, never a local deviation.
@@ -213,7 +213,7 @@ The `Toolbar` type is A2UI-emittable (SPEC-R11 / ADR-0121 F7). The moment `toolb
 fleet-derived gate (`descriptor-glob → PascalCase`) admits `Toolbar` into `FLEET_TYPES` and demands a catalog
 row (or an allowlist entry) — this LLD directs a **row**, not an exclusion. The row maps the descriptor
 attributes to catalog attrs (`orientation`/`align`/`justify`/`gap`/`overflow`/`elevation`/`brightness`/`label`)
-and takes a `children` list of item components, mirroring how `Row` is catalogued (the a2ui-builder seat owns
+and takes a `children` list of item components, mirroring how `Row` is catalogued (the a2ui-build-agent seat owns
 the exact `factories.ts`/`catalog.json` mechanics — this LLD fixes the shape, not the wire code).
 
 The `document-row-toolbar` seed (in `catalog-coverage.ts`) is upgraded: its **action cluster** — the
@@ -223,7 +223,7 @@ as item children), the same "hand-composed shape → real type" upgrade the seed
 `Row[Icon,Text]` → `Attachment` (feed-family LLD-C15). The `Attachment` card and the overlay children
 themselves are unchanged (they already ride their real types).
 
-**Sequencing:** LLD-C10/C11 are dispatched to the `a2ui-builder` seat AFTER the component (LLD-C1..C9) is
+**Sequencing:** LLD-C10/C11 are dispatched to the `a2ui-build-agent` seat AFTER the component (LLD-C1..C9) is
 green — the catalog row needs the shipped descriptor to derive its type, and the corpus seed needs the row.
 
 ## 5 · Site surfaces (LLD-C12)
@@ -234,7 +234,7 @@ green — the catalog row needs the shipped descriptor to derive its type, and t
   toolbar, `elevation=0`, flush) and (b) a **floating** raised bar (`elevation=2`, positioned by the demo's
   own layout — a formatting palette), each populated with multiple real `ui-button`s (icon + label), plus a
   keyboard-focus callout demonstrating the one-Tab-stop roving. Both postures visible on one page (TKT-0009).
-- **`component-preview.ts`** — a representative specimen (the `example-builder` concern): a populated toolbar
+- **`component-preview.ts`** — a representative specimen (the `example-authoring-agent` concern): a populated toolbar
   (e.g. a bold/italic/underline group + an alignment group + undo/redo), NOT a one-child lorem stub — the
   whole-shape/representative-specimen law. Knob config surfaces `orientation`/`align`/`justify`/`gap`/
   `overflow`/`elevation` as the appropriate knob types (menu/enum), one knob per prop.

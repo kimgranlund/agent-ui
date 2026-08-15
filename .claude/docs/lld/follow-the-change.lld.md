@@ -162,7 +162,7 @@ prose"). `#logTurn`'s patch record: byte-unchanged (SPEC-R7 AC2).
   SPEC-R7 note content.
 - `agent-admin.browser.test.ts` additions (real engine): SPEC-R3 AC1 real scroll position ·
   AC3 focus identity · SPEC-R4 AC2 narrow band paint truth · SPEC-R5 animationend/reduced-motion.
-  Respect the shard split; no re-monolith, no heap bump (`agent-ui-component-testing`).
+  Respect the shard split; no re-monolith, no heap bump (`component-testing`).
 - `agent-admin.md`: one new Behavior row (the reaction + its degrade ladder), cites ADR-0181.
 - Grammar gates (`site/lib/adr.test.ts` + `site/lib/docs-grammar.test.ts`) green at every doc
   commit, including this wave's.

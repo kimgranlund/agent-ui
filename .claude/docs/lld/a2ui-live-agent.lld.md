@@ -415,7 +415,7 @@ an already-parsed `ProvidersConfig`; the Node reader (proxy + the vitest shape t
 `readFileSync` + `JSON.parse` — the SAME treatment `catalog.json` gets below; the browser switcher reads
 the file via a Vite JSON import (§2 data-access decision).
 
-**buildSystemPrompt (LLD-C4):** three parts — grammar (from the `a2ui-compose` references, DRY) +
+**buildSystemPrompt (LLD-C4):** three parts — grammar (from the `a2ui-payload-authoring` references, DRY) +
 catalog inventory DERIVED from `catalog.json` at run time + the few-shot exemplars. The drift gate
 (LLD-C8b) asserts the derived catalog inventory == `Object.keys(catalog.components)` and each row's
 props (a planted row absent fails) — the catalog half is mechanically gated; the grammar half is a

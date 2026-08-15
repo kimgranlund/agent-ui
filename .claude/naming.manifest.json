@@ -1,0 +1,194 @@
+{
+  "$schema_note": "Seed manifest for the agent-ui .claude/ estate (34 artifacts: 28 skills, 6 agents). Exemptions enumerated verbatim from the first naming-audit run 2026-08-14; the array only shrinks.",
+  "schema_scope": "grammar",
+  "verb_lex": [
+    "create",
+    "execute",
+    "retire",
+    "lint",
+    "run",
+    "mint",
+    "sweep",
+    "seed"
+  ],
+  "process_lex": [
+    "audit",
+    "planning",
+    "authoring",
+    "triage",
+    "review",
+    "migration",
+    "build",
+    "composition",
+    "curation",
+    "design",
+    "testing",
+    "packaging",
+    "release",
+    "hygiene"
+  ],
+  "role_lex": [
+    "leader",
+    "orchestrator",
+    "coordinator"
+  ],
+  "object_vocab": [
+    {
+      "canonical": "skill",
+      "plural": "skills",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "harness",
+      "plural": null,
+      "banned_aliases": []
+    },
+    {
+      "canonical": "component",
+      "plural": "components",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "catalog",
+      "plural": "catalogs",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "corpus",
+      "plural": "corpora",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "doc",
+      "plural": "docs",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "example",
+      "plural": "examples",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "prompt",
+      "plural": "prompts",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "layout",
+      "plural": "layouts",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "app",
+      "plural": "apps",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "ui",
+      "plural": null,
+      "banned_aliases": []
+    },
+    {
+      "canonical": "package",
+      "plural": "packages",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "seat-map",
+      "plural": null,
+      "banned_aliases": []
+    },
+    {
+      "canonical": "library",
+      "plural": "libraries",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "a2ui",
+      "plural": null,
+      "banned_aliases": []
+    },
+    {
+      "canonical": "payload",
+      "plural": "payloads",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "standard",
+      "plural": "standards",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "pattern",
+      "plural": "patterns",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "fact",
+      "plural": "facts",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "kind",
+      "plural": "kinds",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "admin",
+      "plural": null,
+      "banned_aliases": []
+    },
+    {
+      "canonical": "integration",
+      "plural": "integrations",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "fleet",
+      "plural": "fleets",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "repo",
+      "plural": "repos",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "site",
+      "plural": "sites",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "project",
+      "plural": "projects",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "meta-line",
+      "plural": "meta-lines",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "multi-catalog",
+      "plural": "multi-catalogs",
+      "banned_aliases": []
+    },
+    {
+      "canonical": "composition",
+      "plural": "compositions",
+      "banned_aliases": []
+    }
+  ],
+  "brand_tokens": [
+    "agent-ui",
+    "agent-admin"
+  ],
+  "author_registry": [
+    "kim",
+    "Kim Granlund"
+  ],
+  "mutating_no_confirm_allowlist": [],
+  "exemptions": [
+    "example-authoring-agent"
+  ]
+}

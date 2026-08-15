@@ -268,7 +268,7 @@ output (the PRD §3 law, repo-standing).
   20-path exemplar corpus passing. (S9 is a real build item: the pre-existing S3 sweep walks
   `.claude/docs` only and blanks backticked text by construction, GH #321 — it cannot fire here.)
 - **SPEC-R12 — Four pattern rows, each S9-swept** *(serves PRD-G5 · ADR-0164 cl.5)*.
-  `agent-ui-composition-patterns` carries four new rows: the data-table toolbar, the record-CRUD
+  `composition-patterns` carries four new rows: the data-table toolbar, the record-CRUD
   loop, the schema-driven settings page, and the resource-list manager (the last two are ADR-0164
   cl.5's, ratified and owed already). Each row names an owner ADR id and an in-repo exemplar path
   that resolves under S9 — cl.5's bare-filename shorthands ("`agent-admin.ts`'s `settingsItem`",

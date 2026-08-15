@@ -5,7 +5,7 @@ version: 1.1
 > Layer: rubric (a **runtime-consumed** judge standard, not a graded-once document) · 2026-07-03
 > Grades one `CorpusRecord` for tier-2 admission (corpus SPEC-R8). It is read at runtime by
 > `admit()`'s injected judge seam (ADR-0060) through the verdict adapter (ADR-0068): the
-> `a2ui-reviewer` critic scores each record against **these exact dimensions** and authors a
+> `a2ui-review-agent` critic scores each record against **these exact dimensions** and authors a
 > VerdictsFile; `createVerdictJudge` plumbs those verdicts into the pipeline; `import-seeds --verdicts`
 > and `rescore` consume them. Change a dimension name or the aggregation and you change what the corpus
 > admits — treat this document as load-bearing code, not prose.

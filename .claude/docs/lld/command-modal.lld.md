@@ -4,7 +4,7 @@
 > [ADR-0125](../adr/0125-ui-command-modal-composition-and-catalog-exclusion.md) (proposed; every fork as
 > recommended). Build plan:
 > [`../decompositions/command-modal-ship.decomp.json`](../decompositions/command-modal-ship.decomp.json)
-> (coverage-clean `--strict`, plan mode). · proposed · 2026-07-10 · designer (agent-ui-component-design)
+> (coverage-clean `--strict`, plan mode). · proposed · 2026-07-10 · designer (component-design)
 >
 > **Composes on:** `UIElement` (the coordinator base — the `ui-theme-provider`/`ui-form-provider` precedent,
 > no surface of its own) + a **nested `ui-modal`** (the whole surface + dismissal contract, ADR-0017/0019/0020;
@@ -423,7 +423,7 @@ demands a catalog row *or* an allowlist entry. This LLD directs a **permanent `E
 `a2ui/src/catalog/default/index.test.ts` (the `Map` seeded with `Toast`/`ToastRegion`/`ThemeProvider`), keyed
 `'CommandModal'` with the ADR-0112 cl.6 reason string ("app-owner launcher chrome, never agent-emittable"). The
 standing residue-guard already asserts every allowlist entry is genuinely absent from every catalog/factory key,
-so this stays honest by construction. **Sequencing:** dispatched to the `a2ui-builder` seat once the descriptor
+so this stays honest by construction. **Sequencing:** dispatched to the `a2ui-build-agent` seat once the descriptor
 (LLD-C12) ships — the type derives from it. No catalog row, no corpus seed, no factory code.
 
 ## 5 · Site surfaces (LLD-C17)
@@ -436,7 +436,7 @@ so this stays honest by construction. **Sequencing:** dispatched to the `a2ui-bu
   (leading `ui-icon` + label + a `[data-role=shortcut]` display), the author `[slot=empty]` affordance, and a
   keyboard-flow callout (type-to-filter → arrow to move the highlight → Enter to select+close → Escape to
   dismiss). Show BOTH hotkey modes: a consumer-wired open button AND a `hotkey="mod+k"` instance.
-- **`component-preview.ts`** — a representative specimen (the `example-builder` concern): a populated, grouped
+- **`component-preview.ts`** — a representative specimen (the `example-authoring-agent` concern): a populated, grouped
   command list (Navigation/Edit/Account with icons + shortcuts), NOT a one-child stub — the whole-shape/
   representative-specimen law. Knob config surfaces `label`/`placeholder`/`hotkey`/`open` as the appropriate knob
   types (input/toggle), one knob per prop.

@@ -56,9 +56,9 @@ browser and the `app` package learn nothing about MCP (SPEC-R6/N1). The ADR-0185
 The ADR-0185 **Repairs** (GH #787) are not components; they are edits folded into the slice
 whose code falsifies each record (SPEC-N2): S1 carries the [`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md)
 v0.15 amendment (SPEC-R23's and SPEC-R28's wire sentences gain the ADR-0185 delta, append-only
-changelog discipline) + the `agent-ui-integration-standards` SKILL
+changelog discipline) + the `integration-standards` SKILL
 Admin-surfacing repoint; S4 carries `site/pages/agent-schema.ts`'s MCP-services pointer and the
-`agent-admin-library-kinds` skill's pack row. Closing #787 = S1 and S4 merged.
+`admin-library-kinds` skill's pack row. Closing #787 = S1 and S4 merged.
 
 ## 3 · Interfaces (exact shapes — no builder guesses)
 

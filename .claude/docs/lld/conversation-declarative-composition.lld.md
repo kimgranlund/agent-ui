@@ -1,6 +1,6 @@
 # LLD — `ui-conversation` declarative composition (GH #688): `ui-conversation-header` + `ui-conversation-dialog` + the adoption seam
 
-> Status: proposed · v1 · 2026-08-10 · Layer: app (`app/src/controls/conversation/`) · designer (agent-ui-component-design)
+> Status: proposed · v1 · 2026-08-10 · Layer: app (`app/src/controls/conversation/`) · designer (component-design)
 >
 > Refines: [ADR-0180](../adr/0180-conversation-declarative-composition-opt-in.md) (proposed — **the
 > whole build is BLOCKED until Kim ratifies it**; this LLD exists so the builder starts the moment the

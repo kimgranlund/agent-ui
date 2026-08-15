@@ -1,6 +1,6 @@
 # Rubric — a2ui-mechanism (a compose-time mechanism function)
 
-> Status: proposed · v0.1 · 2026-08-06 · Layer: rubric (the referential standard `a2ui-reviewer` grades a
+> Status: proposed · v0.1 · 2026-08-06 · Layer: rubric (the referential standard `a2ui-review-agent` grades a
 > compose-time mechanism function against).
 > Charter: GH #493 (PR #492's escalation — three of five M-D artifacts fit `a2ui-catalog.md` only by
 > analogy) · extends [`../spec/a2ui-expert-harness.spec.md`](../spec/a2ui-expert-harness.spec.md)
@@ -46,7 +46,7 @@ would. Scale 1–5; 1 = failure, 3 = adequate, 5 = excellent.
 - **Every remaining [review] dimension (M3, M4) ≥ 4.**
 - **No compensation across dimensions** — a 5 elsewhere cannot offset a sub-4 dimension.
 
-The `a2ui-reviewer` critic scores against this rubric in a fresh context (generator ≠ critic,
+The `a2ui-review-agent` critic scores against this rubric in a fresh context (generator ≠ critic,
 a2ui-expert-harness.spec.md SPEC-R8); the co-located test suite via `npm test` (exit code, never grep)
 is the deterministic half.
 

@@ -681,7 +681,7 @@ exclusions E1–E7 recorded and gate-encoded (E7 render-time only — its valida
 13/14 upstream functions, and the three pinned upstream example payloads validate AND render
 byte-identical to source (`upstream-fixtures.test.ts`). Both independent reviews passed (code-checker:
 clean, one stale-branch blocker → merged + hand-reconciled with #418's `a2uiEnabled` axis, its
-regression suite back green, no prompt-baseline re-capture needed; a2ui-reviewer: PROMOTABLE, all six
+regression suite back green, no prompt-baseline re-capture needed; a2ui-review-agent: PROMOTABLE, all six
 rubric dimensions ≥4, its four adversarial exclusion probes shipped as suite coverage). **The live
 catalog-switch leg:** picked `a2ui-basic` in the real admin store → one real live turn
 (`claude-sonnet-5`) → the request carried `catalogId:"a2ui-basic"`, the streamed `createSurface` came
@@ -705,7 +705,7 @@ the fleet's own design language instead of bare model HTML, provable live in one
 **Scope.** ADR-0162's S0–S5 decomposition as written (`decompositions/genui-dogfood.decomp.md`):
 S0 docs → S1 the committed, freshness-gated
 CSS+IIFE asset pair under `sandbox-frame/dogfood/` → S2 frame injection + browser probes → S3 the
-byte-pinned prompt segment (teaching + drift-gated derived inventory, via the a2ui-prompt-author
+byte-pinned prompt segment (teaching + drift-gated derived inventory, via the a2ui-prompt-authoring
 recapture flow — no ad hoc edits) → S4 surfacing (`GenuiSurfaceConfig.dogfood`, the agent-admin
 Surface-Options toggle, `gen-ui-live`'s toggle) → S5 the cross-half bundle-tags ≡ inventory-tags
 set-equality gate. Optional phase 3: a live-turn GenUI demo surface outside agent-admin + B3's judged

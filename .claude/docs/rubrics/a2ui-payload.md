@@ -13,7 +13,7 @@ version: 1.1
 > it as its `rubricVersion`. **1.1 = P8 added (2026-08-06, GH #474); the pre-P8 document is
 > retroactively 1.0 — P1–P7 text unchanged.** Bump it whenever a dimension or anchor moves.
 
-The maker `a2ui-composer` is graded by this rubric; the critic `a2ui-reviewer` scores against it in an
+The maker `a2ui-payload-authoring-agent` is graded by this rubric; the critic `a2ui-review-agent` scores against it in an
 independent context — the composer never self-grades (SPEC-R8). It rides the SPEC-R6 loop: the deterministic
 gates run **first** (the `validate-payload` CLI), and this rubric's `[review]` dimensions are scored **only on a
 gate-green payload** — a payload that does not validate cannot be judged on composition. Dimension IDs are `P#`;

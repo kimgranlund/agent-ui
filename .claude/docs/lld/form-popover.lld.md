@@ -129,8 +129,8 @@ four props exactly (the contract↔props trip-wire targets this fence). `events:
 
 ### LLD-C7 — Site
 
-- `form-popover-doc.html` + demo page per `docs-author`; preview specimen + knobs in
-  `site/lib/component-preview.ts` (example-builder's file — the specimen is the reference
+- `form-popover-doc.html` + demo page per `site-authoring`; preview specimen + knobs in
+  `site/lib/component-preview.ts` (example-authoring-agent's file — the specimen is the reference
   content: summary trigger, 6-item check group, radio group, text field; knobs: one per prop).
 - The first-leg recipe page (built by the recipe slice) gains a cross-link: "packaged as
   `ui-form-popover`"; the control's doc page links back to the recipe for the long form.

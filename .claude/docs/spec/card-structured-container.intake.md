@@ -1,6 +1,6 @@
 # Design intake — `ui-card` structured-container formatting (GH #807, component arm; sibling GH #808, catalog arm)
 
-> Status: proposed · v0.1 · 2026-08-13 · Layer: intake record (fork sheet, `agent-ui-component-design`
+> Status: proposed · v0.1 · 2026-08-13 · Layer: intake record (fork sheet, `component-design`
 > procedure)
 > Refines: GH #807 (owner ruling, intake round 2026-08-12: "direction, not spec" — the Figma
 > `dialog-bubble` frame sets direction; final geometry/type resolve through this process).
@@ -103,7 +103,7 @@ adjacent-sibling rhythm, `card.css:379-381`) reproduces the mock's body exactly,
 all, with **zero fork** — every mechanism is already shipped and already composable today.
 
 No new row-idiom control is recommended. The one thing this intake asks a later build to do is
-non-code: add this recipe as a named row to `agent-ui-composition-patterns`'s table (a Repairs
+non-code: add this recipe as a named row to `composition-patterns`'s table (a Repairs
 item on the ADR, §6) so it is taught once instead of re-derived per consumer — documentation debt,
 not a design fork.
 
@@ -197,7 +197,7 @@ decomposition:
 - Leaf 3 — `card-header.md` descriptor + doc/demo page gain the `format` row and a structured
   specimen (the mock's "DATE SELECTION" card, using ONLY shipped children — `ui-icon` /
   `ui-badge` / `ui-row` / `ui-text` — proving §4's whole composition end to end).
-- Leaf 4 — `agent-ui-composition-patterns` table gains the label/value-chip row recipe (§4b) as a
+- Leaf 4 — `composition-patterns` table gains the label/value-chip row recipe (§4b) as a
   named row — doc debt, not code, but part of the same DoD.
 - Leaf 5 (once #808 is unblocked by this record) — the catalog `CardHeader` row gains the `format`
   mark; `Badge`'s existing `intent` mark is what the status affordance rides.

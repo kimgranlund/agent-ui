@@ -36,7 +36,7 @@
 > sentence is normative (MUST supply), and §11.4's + ADR-0190's "SPEC-N1's seam" anchors are sharpened to
 > the clause they actually mean — §5's layering clause (the store-blind composer seam); SPEC-N1 is the
 > base contract's non-goals list and says nothing about that seam (the transcribed-citation law, §3 of
-> `agent-ui-doc-standards`, applied to this SPEC's own prose).
+> `doc-standards`, applied to this SPEC's own prose).
 > v0.3 changelog (the BUILD-STATE pass, filed with the arc's last slice): all three slices have
 > landed — §9's table carries each one's PR, and §10's bookings are marked repaired in the slice
 > that repaired them. §10's four open questions are CLOSED with pointers to where each was
@@ -45,7 +45,7 @@
 > grammar in `entries.ts`'s `resolveTurnReferences` doc comment, the chip treatment in
 > `conversation-composer.ts`, the row control in `entry-list.ts`), and the fourth was answered by
 > GH #848 shipping the rename as an in-place `label` write. Status stays `proposed` by convention —
-> the tree is the ship record, statuses lag by design (`agent-ui-doc-standards` §2).
+> the tree is the ship record, statuses lag by design (`doc-standards` §2).
 > v0.2 changelog (the doc-checker fix-then-ship pass, same day): SPEC-R4 owns the history
 > byte-growth trade + §8 gains the no-cap non-goal · R4 AC4's fence-precedent anchor repaired
 > (the transcribed SPEC-R22 referent was plan-failure semantics — the §3-of-doc-standards
@@ -416,7 +416,7 @@ of which change carried each repair:
 
 | Record | Stale claim | Repair slice |
 |---|---|---|
-| `.claude/skills/agent-admin-library-kinds/SKILL.md` (Multi-enable row) | "N independent on/offs, all enabled compose" | S1 — gained the availability conjunct (PR #855) ✔ |
+| `.claude/skills/admin-library-kinds/SKILL.md` (Multi-enable row) | "N independent on/offs, all enabled compose" | S1 — gained the availability conjunct (PR #855) ✔ |
 | `packages/agent-ui/app/src/controls/agent-admin/agent-admin.md` (system-view paragraph) | "every enabled capability entry" composes | S1 (PR #855) ✔ — S3 extended the same section with the reach path it promised (PR #859) |
 | `entries.ts`'s ALM-C1 section header | "every ENABLED capability entry projected after it as labeled prose" | S1 (PR #855) ✔ |
 | `agent-admin.ts`'s `#capabilityGroups` / `#enabledToolIds` doc comments | "does the enabled-filter/sort/master-gate itself" (and the ids projection's own filter description) — no availability conjunct | S1 (PR #855) ✔ |
@@ -789,4 +789,4 @@ Stale records S8 falsifies — repaired IN that slice, never a follow-up:
 | `entries.ts` — the ALM-C1 section header + `composeLiveSystemPrompt`'s doc comment | "each such entry rendered as `### {label}` + description + content" / "the model genuinely receives every ambient entry" (whole-content phrasing) | S8 |
 | `entries.ts` — `resolveTurnReferences`' framing-grammar comment | "reuses the ambient projection's own `### {label}` block shape … the model meets an attachment in the same shape it already meets a capability" — the ambient shape becomes the index line; the framing keeps the block shape | S8 |
 | `agent-admin.md` — the system-view paragraph | ambient entries compose as full labeled prose | S8 |
-| `.claude/skills/agent-admin-library-kinds/SKILL.md` — the composition row | same whole-content claim (S1 added the availability conjunct; the SHAPE claim now drifts) | S8 |
+| `.claude/skills/admin-library-kinds/SKILL.md` — the composition row | same whole-content claim (S1 added the availability conjunct; the SHAPE claim now drifts) | S8 |

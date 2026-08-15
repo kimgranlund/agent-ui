@@ -198,7 +198,7 @@ Ran `git grep -c -i "app-shell" 6f19bb1` across the whole tree (ref-pinned, immu
 switching). It confirmed the critic's four `scripts/` sites verbatim — and surfaced TWO more files
 that NEITHER enumeration ever named:
 
-1. **`.claude/skills/agent-ui-compose-app/SKILL.md:5,33,35` — the highest-impact site in the whole
+1. **`.claude/skills/app-composition/SKILL.md:5,33,35` — the highest-impact site in the whole
    campaign.** A LIVE skill teaching consumers to compose applications on `ui-app-shell` +
    `ui-app-shell-region`, pointing at the deleted demo page `site/pages/app-shell.ts`. Line 5 sits in
    the skill's own `description`, which is loaded into every session's routing menu — it is in the
@@ -254,7 +254,7 @@ Two dispatches to re-fire, in this order (one writer at a time):
    deriving its own targets. Confirmed starting points (NOT the boundary): `measure-size.mjs:26`,
    `:196-197`, `:302`; `publish-packages.mjs:28-35` and `:67` (the `'app-shell'` npm keyword that
    SHIPS); `_page.ts:895-896` vs `_page.css:342` contradiction; and
-   `.claude/skills/agent-ui-compose-app/SKILL.md:5,33,35` — a LIVE skill routing future work to the
+   `.claude/skills/app-composition/SKILL.md:5,33,35` — a LIVE skill routing future work to the
    removed component (coordinator-ruled IN scope). Plus the ONE behavior question:
    `vitest.config.ts:158` + the publish caveat may be DEAD CONFIG — determine with a repo-wide
    `?url`/`?raw` sweep, but do NOT remove live config in that slice; report it.

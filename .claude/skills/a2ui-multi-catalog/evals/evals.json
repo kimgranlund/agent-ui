@@ -110,13 +110,13 @@
       "id": "n10",
       "expect": "no-trigger",
       "prompt": "Add an entry kind — a new library section in the agent-admin settings pane.",
-      "owner": "agent-admin-library-kinds"
+      "owner": "admin-library-kinds"
     },
     {
       "id": "n11",
       "expect": "no-trigger",
       "prompt": "Add a catalog to the persona's shelf in agent-admin — the Catalogs library section.",
-      "owner": "agent-admin-library-kinds"
+      "owner": "admin-library-kinds"
     },
     {
       "id": "t13",
@@ -137,7 +137,7 @@
       "id": "n12",
       "prompt": "Compose an A2UI payload against the base--persona derived catalog",
       "expect": "no-trigger",
-      "owner": "a2ui-compose (payload authoring — the derived catalog is just the target, §5 owns the derive step, not the compose)"
+      "owner": "a2ui-payload-authoring (payload authoring — the derived catalog is just the target, §5 owns the derive step, not the compose)"
     }
   ]
 }

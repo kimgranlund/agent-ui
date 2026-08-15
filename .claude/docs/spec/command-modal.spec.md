@@ -237,7 +237,7 @@ descriptor↔props trip-wire MUST pass with zero drift. *(ADR-0125)*
 **SPEC-R13 — Permanent catalog exclusion.** `CommandModal` (the descriptor-derived PascalCase type) MUST be a
 **permanent `EXCLUSION_ALLOWLIST` entry** (in `a2ui/src/catalog/default/index.test.ts`), NOT a catalog row — it
 is app-owner launcher chrome (the ADR-0112 cl.6 Toast/ThemeProvider class), never agent-emittable. *(ADR-0125
-F8; ADR-0087 gate)* **This is an a2ui-package edit (`a2ui-builder` seat); the SPEC fixes the disposition, the
+F8; ADR-0087 gate)* **This is an a2ui-package edit (`a2ui-build-agent` seat); the SPEC fixes the disposition, the
 LLD carries it as a build deliverable.**
 - **AC1** *Given* `command-modal.md` ships, *then* `CommandModal` enters `FLEET_TYPES` (ADR-0087) and the catalog
   coverage gate stays green because `CommandModal` is in `EXCLUSION_ALLOWLIST` (with the ADR-0112 cl.6 reason),
