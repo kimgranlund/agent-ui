@@ -67,6 +67,11 @@ import '@agent-ui/components/controls/icon'
 import '@agent-ui/code/editor'
 import '@agent-ui/components/controls/field'
 import '@agent-ui/components/controls/text-field'
+// GH #917 — the per-entry Edit/Add drawer's vehicle (ADR-0188), created by `entry-list.ts` on this element's
+// behalf: the same registers-before-createElement contract every tag above rides. `entry-list.ts` imports
+// only the TYPE (a mount function is not a custom element and owns no registration), so a consumer that
+// mounts a `entryDrawer` section registers `ui-drawer` itself — this element is that consumer.
+import '@agent-ui/components/controls/drawer'
 // S7-c (LLD §16.1/§16.3) — the unified header bar's own controls: `ui-toggle` (S7-a, ADR-0179 GH #686
 // Amendment) for the wide pane pills, `ui-segmented-control`/`ui-segment` for the narrow single-select
 // rendering of the SAME visibility choice, `ui-select` for the agent roster, and `ui-menu` for the narrow
@@ -205,6 +210,7 @@ import {
   pickedPatternSource,
   resolveTurnReferences,
   hasAvailabilityMode,
+  hasDrawerCrud,
   hasRenamableName,
   type LiveCapabilityGroup,
   type LiveBankrollState,
@@ -213,7 +219,16 @@ import {
 // ADR-0164 cl.2/cl.7 — the generic data core + the section-shell mount function both moved to the shared
 // `entry-list/` folder (a `settings/` sibling, public `./entry-data`/`./entry-list` subpaths); this
 // element is that extraction's first CONSUMER now, not its owner.
-import { entriesStoreKey, isAmbient, readEntries, renameEntry, validateNewEntry, type Entry, type EntryLibraryPack } from '../entry-list/entry-data.ts'
+import {
+  describeEntry,
+  entriesStoreKey,
+  isAmbient,
+  readEntries,
+  renameEntry,
+  validateNewEntry,
+  type Entry,
+  type EntryLibraryPack,
+} from '../entry-list/entry-data.ts'
 import { mountEntryList, showAddError, type EntryListSection } from '../entry-list/entry-list.ts'
 import { lintPromptSections } from './prompt-lint.ts'
 // ADR-0178 cl.2 — the three-filter apply gate + the canonical key set it enumerates (LLD-C1). A pure
@@ -2554,6 +2569,12 @@ export class UIAgentAdminElement extends UIElement {
       // surface (the live prompt's `### {label}` blocks, the snapshot's per-kind lists, the Context: System
       // view) follows on its own next FRESH read — nothing to repoint, because the store IS display truth.
       onRename: (id, label) => this.#updateEntries(kind, (entries) => renameEntry(entries, id, label)),
+      // GH #917 (Phase 0 D2) — the DESCRIPTION write, through that same one-writer seam, with `describeEntry`
+      // (entry-data.ts) owning the whole law exactly as `renameEntry` does one line up: the trim, and the
+      // deliberate absence of an empty-value refusal (an entry may legitimately have no description — it is
+      // annotation, not identity). Description became editable when the per-entry Edit drawer made it a form
+      // field; before that it was settable at add time only.
+      onDescriptionChange: (id, description) => this.#updateEntries(kind, (entries) => describeEntry(entries, id, description)),
       },
       // GH #47/#48 — this kind's library packs, captured at compose time (the sections' build-once law;
       // the `libraries` prop doc names the set-before-append requirement). The kind's master switch no
@@ -2583,6 +2604,13 @@ export class UIAgentAdminElement extends UIElement {
         rejectOnCollision: isCatalog,
         availabilityToggle: hasAvailabilityMode(kind),
         rename: hasRenamableName(kind),
+        // GH #917 — `entryDrawer` is the four capability kinds' opt-in through its OWN rule
+        // (`hasDrawerCrud`, entries.ts, minted beside the two above rather than folded into either — see its
+        // doc for why three rules that coincide today stay three rules): those rows carried the full
+        // Invocable/Rename/Remove cluster plus an always-mounted editor and a permanent dashed add-form,
+        // which is the crowding this drawer relieves. The other three sections keep byte-identical rows and
+        // their inline add-form.
+        entryDrawer: hasDrawerCrud(kind),
       },
     )
     this.#capabilitySections.set(kind, section)

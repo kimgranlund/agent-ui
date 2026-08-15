@@ -80,6 +80,27 @@ export function hasRenamableName(kind: string): boolean {
   return RENAMABLE_KINDS.includes(kind)
 }
 
+/** GH #917 — the kinds whose per-entry CRUD routes through the Edit/Add DRAWER (`entry-list.ts`'s
+ *  `entryDrawer` option) instead of inline row affordances. These are the four kinds whose rows carried the
+ *  FULL cluster — the Invocable pill, Rename, Remove and an always-mounted content editor, plus a permanent
+ *  dashed add-form under the list — which is the crowding the drawer exists to relieve.
+ *
+ *  A THIRD list beside `AVAILABILITY_KINDS`/`RENAMABLE_KINDS`, not a reuse of either and not their
+ *  intersection — the same law those two state about each other, applied once more: the three sets coincide
+ *  today, but each answers a DIFFERENT question (what may be reached ambiently · what may be renamed · whose
+ *  CRUD is drawered), and folding rules that merely agree today into one expression is how the next kind
+ *  silently inherits the wrong one. The excluded kinds are excluded on their own merits: a `catalog` row's
+ *  only verb is Remove (no rename, no content, no availability, adds come from the library picker —
+ *  ADR-0170 cl.8), so a drawer there would hold a single button and add a click; `prompt-section` and
+ *  `pattern-source` rows carry neither the pill nor the rename pair, so they are not the crowded shape either
+ *  — each is one line here whenever that judgment changes. */
+export const DRAWER_CRUD_KINDS: readonly string[] = [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool]
+
+/** `true` iff `kind`'s per-entry CRUD routes through the drawer (`DRAWER_CRUD_KINDS`). */
+export function hasDrawerCrud(kind: string): boolean {
+  return DRAWER_CRUD_KINDS.includes(kind)
+}
+
 /** GH #849 / capability-availability-tagging.spec.md SPEC-R5/R8 — the kinds the composer's `@` trigger
  *  reaches: MENTIONS attach material, and a Resource is the one kind that IS material. */
 export const MENTIONABLE_KINDS: readonly string[] = [ENTRY_KINDS.resource]

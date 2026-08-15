@@ -16,6 +16,15 @@
 // change) timing are byte-identical to the ui-textarea it replaces (ADR-0139 cl.4/cl.6 make this a drop-in
 // tag+type swap); `selectToEnd()` carries over as the same mid-edit caret-restoration seam (ADR-0134).
 //
+// GH #917 — a kind may instead route its per-entry CRUD through a `ui-drawer` (`entryDrawer`, opt-in): the
+// row collapses to `[switch | label | badges | Edit]` and the Invocable pill / Rename trigger / Remove button
+// / content editor all move into ONE shared form (`entry-form.ts`), which the same drawer also renders in ADD
+// mode — so the add-toggle opens a drawer instead of revealing the permanently-mounted dashed form, and that
+// form is not built at all. The WRITES are untouched — the form commits through the same handlers this module
+// already owned — so preset protection, the rename refusal, availability semantics and the fail-closed add
+// keep their existing homes; only the surface moves. A section that does not opt in renders byte-identically
+// to before, dashed form included.
+//
 // DOM ownership: `mountEntryList` builds the section shell (list host + add-form host — headless since GH #225) ONCE
 // and returns a `render(entries)` that rebuilds the list body from scratch on every call — acceptable
 // because `render` is only invoked on a genuine entries-array change (add/delete/toggle, or an external
@@ -25,51 +34,20 @@
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import type { UIIconElement } from '@agent-ui/components/controls/icon'
 import type { UICodeEditorElement } from '@agent-ui/code/editor'
+import type { UIDrawerElement } from '@agent-ui/components/controls/drawer'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import type { UIFieldElement } from '@agent-ui/components/controls/field'
 import type { UIToggleElement } from '@agent-ui/components/controls/toggle'
 import { ENTRY_AVAILABILITY, entryAvailability, slugify } from './entry-data.ts'
-import type { Entry, EntryAvailability, EntryLibraryPack, NewEntryInput } from './entry-data.ts'
+import type { Entry, EntryLibraryPack, NewEntryInput } from './entry-data.ts'
+import { buildEntryForm, type EntryFormHandlers, type EntryFormMode } from './entry-form.ts'
 
-export interface EntryListHandlers {
+/** The row's OWN writer plus every writer the drawer form commits through (`EntryFormHandlers` — one
+ *  declaration and one doc per member lives there, so the two surfaces can never drift onto different
+ *  contracts for the same write). `onToggle` stays here because the enabled switch never leaves the row:
+ *  it is STATE, not CRUD (GH #917's Phase 0 ruling §2). */
+export interface EntryListHandlers extends EntryFormHandlers {
   onToggle(id: string, enabled: boolean): void
-  onContentChange(id: string, content: string): void
-  onDelete(id: string): void
-  /** Returns `true` on a successful add, `false` on a fail-closed rejection (component-reviewer MAJOR
-   *  fix: the caller needs this to decide whether to reset/hide the form — resetting on a REJECTED
-   *  submit silently discarded the typed description/content the user still needs to see and fix.
-   *
-   *  GH #783/LLD-C5 — an OPTIONAL second argument carries the ADDING PACK's own `rejectOnCollision`
-   *  flag through to the caller's one `validateNewEntry` call (the library-menu select handler supplies
-   *  it; the hand-author form omits it entirely — byte-identical to before). The return stays the BARE
-   *  boolean ADR-0164 cl.3 pins: nothing in this arc is async, and `submitAdd` branches on the raw
-   *  return, so a `Promise` would be always-truthy — resetting the form on a rejection, the exact defect
-   *  the boolean return exists to prevent. Every existing single-argument implementation stays valid by
-   *  TS structural typing (§6.1's non-decision). */
-  onAdd(input: NewEntryInput, context?: { rejectOnCollision?: boolean }): boolean
-  /** GH #850 / capability-availability-tagging.spec.md SPEC-R2 — the per-entry AVAILABILITY write, called
-   *  with the mode the row is being flipped TO. OPTIONAL, the same additive-optional law `EntryListOptions`
-   *  follows: absent ⇒ the row's mode control refuses its own flip (`toggle` is cancelable, toggle.md's
-   *  refused-toggle mechanism), so an opted-in section with no writer wired can never paint a mode the
-   *  store does not hold. Persistence is the CALLER's (this module owns no store access), exactly as
-   *  `onToggle` already works.
-   *
-   *  GH #848 reconciliation — this handler's missing-writer posture (render, then REFUSE the flip)
-   *  deliberately differs from `onRename`'s (render NOTHING), and the difference is the affordance's own
-   *  nature, not an inconsistency: a mode pill carries STATE the row must show whether or not anything can
-   *  change it (`pressed` + the row marker ARE the answer to "is this entry invocable?"), so it renders and
-   *  refuses; a rename TRIGGER carries no state at all, so with no writer it could only ever be a button
-   *  that fails. Both remain OPT-IN through `EntryListOptions`, and neither can write without its handler. */
-  onAvailabilityChange?(id: string, availability: EntryAvailability): void
-  /** GH #848 — commit a per-entry DISPLAY-NAME change (`entry-data.ts`'s `renameEntry` is the law; the
-   *  caller owns the store write, this module owns the affordance). OPTIONAL, the `onAdd`-second-argument
-   *  law: every existing implementation stays valid by TS structural typing, and a section whose handlers
-   *  omit it renders no rename affordance at all — byte-identical to before this member existed, even if
-   *  `options.rename` is set (a trigger with nothing to commit through is a button that can only fail; see
-   *  `onAvailabilityChange` above for why the mode pill's missing-writer posture is the other way round).
-   *  `label` arrives RAW (the field's own text): trimming and the empty-label refusal are `renameEntry`'s,
-   *  so the law has exactly one home. The entry's `id` is never affected. */
-  onRename?(id: string, label: string): void
 }
 
 export interface EntryListSection {
@@ -140,7 +118,27 @@ export interface EntryListOptions {
    *  `builtin` — ADR-0132 Fork 4 protects DELETION, not configuration (the `enabled` toggle and the mode
    *  pill a builtin row already carry are the precedent). */
   rename?: boolean
+  /** GH #917 — route this kind's per-entry CRUD through a `ui-drawer` (ADR-0188) instead of inline row
+   *  affordances. OPT-IN, the `rejectOnCollision`/`availabilityToggle`/`rename` law: absent/`false` ⇒
+   *  byte-identical rows, add-toggle and dashed add-form for every existing caller.
+   *
+   *  `true` collapses the row to `[switch | label | badges | Edit]` — the Invocable pill, the Rename trigger,
+   *  the Remove button and the per-entry content editor all move INTO the drawer's form (`entry-form.ts`),
+   *  and the permanent dashed add-form is replaced by the same drawer in add mode. Nothing about the
+   *  underlying writes changes: the drawer commits through the SAME handlers the row did, so preset
+   *  protection (delete absent for `builtin`), the rename refusal, the availability semantics and the
+   *  fail-closed add all keep their existing homes and behaviour — only the surface they live on moves.
+   *
+   *  The gate is the CALLER's (agent-admin's `hasDrawerCrud`, its own kind list): a kind whose rows carry
+   *  just a switch and a Remove has no four-affordance cluster to relieve, and a drawer holding one button
+   *  would add a click for nothing. */
+  entryDrawer?: boolean
 }
+
+/** Stable per-section id seed for the drawer's `aria-labelledby` target (the `ui-field-label-N`/text-field
+ *  message-node precedent) — a section may be mounted many times on one page, and the labelling reference
+ *  must resolve to THIS section's own drawer heading. */
+let drawerSeq = 0
 
 export function mountEntryList(kind: string, addLabel: string, handlers: EntryListHandlers, options?: EntryListOptions): EntryListSection {
   // ADR-0170 cl.8 — both default TRUE: an options bag that omits them renders exactly as before.
@@ -156,6 +154,8 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
   // second gate is this affordance's own (see `onRename`'s doc) — `withAvailability` needs no handler gate
   // because its control has state to show regardless, and refuses its flip instead.
   const withRename = options?.rename === true && handlers.onRename !== undefined
+  // GH #917 — opt-in, the same law: absent ⇒ inline rows + the dashed add-form, exactly as before.
+  const withDrawer = options?.entryDrawer === true
 
   const section = document.createElement('div')
   section.setAttribute('data-part', 'entry-section')
@@ -259,97 +259,207 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
 
   /** GH #143/#564 — rebuild the library menu from `currentLibraries`, in place: the ONE mechanism both
    *  `updateLibraries` (a caller-driven pack-list change) and `render` (GH #564 — an entries change, for a
-   *  `rejectOnCollision` kind's disabled-row refresh) drive, and the initial build below. `addForm`
-   *  (mounted after wherever a library menu lands) is the stable insertion anchor — a library menu, when
-   *  present, always sits immediately before it, so re-inserting there preserves the section's visual
+   *  `rejectOnCollision` kind's disabled-row refresh) drive, and the initial build below. The inline
+   *  add-form (mounted after wherever a library menu lands) is the stable insertion anchor — a library menu,
+   *  when present, always sits immediately before it, so re-inserting there preserves the section's visual
    *  order (heading → list → add-toggle → [library menu] → add-form) on every call, first build included.
    *  ADR-0170 cl.8: with `customAdd: false` that anchor is not mounted at all and the menu is the LAST
-   *  child, so a plain append reproduces the same order. */
+   *  child, so a plain append reproduces the same order. GH #917: a DRAWERED section has no inline form
+   *  either — its standing error note takes the anchor's place, at the same position in the order. */
   function refreshLibraryMenu(): void {
     libraryMenu?.remove()
     libraryMenu = currentLibraries.length > 0 ? buildLibraryMenu(currentLibraries) : null
     if (!libraryMenu) return
-    if (addForm.parentNode === section) section.insertBefore(libraryMenu, addForm)
+    const anchor = inlineAdd?.form ?? sectionError
+    if (anchor !== null && anchor.parentNode === section) section.insertBefore(libraryMenu, anchor)
     else section.append(libraryMenu)
   }
 
-  // TKT-0060: a plain container, not a native `<form>` — a `<ui-button>` submit control cannot become a
-  // form's default button (not form-associated the way a native `<button>` is), so the HTML implicit-
-  // submission algorithm was never actually available to this form once entry-add-submit converted; wiring
-  // submission manually below (click + an explicit Enter handler on the label field) replaces it exactly,
-  // without the native-form/native-input dependency TKT-0048 deferred converting this anatomy over.
-  const addForm = document.createElement('div')
-  addForm.setAttribute('data-part', 'entry-add-form')
-  addForm.hidden = true
+  /** The INLINE dashed add-form — a non-drawered section's authoring surface, unchanged since TKT-0060/0073.
+   *  A drawered section (GH #917) builds NONE of it: its add affordance is the same `ui-drawer` the row's
+   *  Edit opens, in add mode, so these nodes would be five permanently detached elements and a second,
+   *  divergent copy of the submit law. */
+  function buildInlineAddForm(): { form: HTMLElement; label: UITextFieldElement; open(): void } {
+    // TKT-0060: a plain container, not a native `<form>` — a `<ui-button>` submit control cannot become a
+    // form's default button (not form-associated the way a native `<button>` is), so the HTML implicit-
+    // submission algorithm was never actually available to this form once entry-add-submit converted; wiring
+    // submission manually below (click + an explicit Enter handler on the label field) replaces it exactly,
+    // without the native-form/native-input dependency TKT-0048 deferred converting this anatomy over.
+    const form = document.createElement('div')
+    form.setAttribute('data-part', 'entry-add-form')
+    form.hidden = true
 
-  // TKT-0073: wrapped in `<ui-field>` (the forms.ts/form-provider-demo.ts precedent) so the required
-  // field's validation message renders in the field's OWN error part — outside `ui-text-field`'s
-  // bordered box — instead of `ui-text-field`'s internal pre-`ui-field` fallback message, which shares
-  // that box with the placeholder and visibly collided with it.
-  const labelField = document.createElement('ui-text-field') as UITextFieldElement
-  labelField.required = true
-  labelField.setAttribute('data-part', 'entry-add-label')
-  const labelFieldWrap = document.createElement('ui-field') as UIFieldElement
-  labelFieldWrap.label = 'Name'
-  labelFieldWrap.append(labelField)
+    // TKT-0073: wrapped in `<ui-field>` (the forms.ts/form-provider-demo.ts precedent) so the required
+    // field's validation message renders in the field's OWN error part — outside `ui-text-field`'s
+    // bordered box — instead of `ui-text-field`'s internal pre-`ui-field` fallback message, which shares
+    // that box with the placeholder and visibly collided with it.
+    const labelField = document.createElement('ui-text-field') as UITextFieldElement
+    labelField.required = true
+    labelField.setAttribute('data-part', 'entry-add-label')
+    const labelFieldWrap = document.createElement('ui-field') as UIFieldElement
+    labelFieldWrap.label = 'Name'
+    labelFieldWrap.append(labelField)
 
-  const descriptionField = document.createElement('ui-text-field') as UITextFieldElement
-  descriptionField.setAttribute('data-part', 'entry-add-description')
-  const descriptionFieldWrap = document.createElement('ui-field') as UIFieldElement
-  descriptionFieldWrap.label = 'Description'
-  descriptionFieldWrap.description = 'Optional'
-  descriptionFieldWrap.append(descriptionField)
+    const descriptionField = document.createElement('ui-text-field') as UITextFieldElement
+    descriptionField.setAttribute('data-part', 'entry-add-description')
+    const descriptionFieldWrap = document.createElement('ui-field') as UIFieldElement
+    descriptionFieldWrap.label = 'Description'
+    descriptionFieldWrap.description = 'Optional'
+    descriptionFieldWrap.append(descriptionField)
 
-  const contentField = document.createElement('ui-code-editor') as UICodeEditorElement
-  contentField.language = 'markdown' // ADR-0139 — markdown-highlighted source editing (CM lazy-loaded)
-  contentField.placeholder = 'Content'
-  contentField.rows = 2 // TKT-0049: a compose/draft field — the smaller of the two content sizes
-  contentField.setAttribute('data-part', 'entry-add-content')
+    const contentField = document.createElement('ui-code-editor') as UICodeEditorElement
+    contentField.language = 'markdown' // ADR-0139 — markdown-highlighted source editing (CM lazy-loaded)
+    contentField.placeholder = 'Content'
+    contentField.rows = 2 // TKT-0049: a compose/draft field — the smaller of the two content sizes
+    contentField.setAttribute('data-part', 'entry-add-content')
 
-  // TKT-0048/TKT-0060: a real `<ui-button>`, same shape as `addToggle`/`deleteBtn` above.
-  const submitBtn = document.createElement('ui-button') as UIButtonElement
-  submitBtn.setAttribute('variant', 'soft')
-  submitBtn.setAttribute('data-part', 'entry-add-submit')
-  submitBtn.textContent = 'Add'
+    // TKT-0048/TKT-0060: a real `<ui-button>`, same shape as `addToggle`/`deleteBtn` above.
+    const submitBtn = document.createElement('ui-button') as UIButtonElement
+    submitBtn.setAttribute('variant', 'soft')
+    submitBtn.setAttribute('data-part', 'entry-add-submit')
+    submitBtn.textContent = 'Add'
 
-  const errorNote = document.createElement('p')
-  errorNote.setAttribute('data-part', 'entry-add-error')
-  errorNote.hidden = true
+    const errorNote = document.createElement('p')
+    errorNote.setAttribute('data-part', 'entry-add-error')
+    errorNote.hidden = true
 
-  addForm.append(labelFieldWrap, descriptionFieldWrap, contentField, submitBtn, errorNote)
-  if (withCustomAdd) section.append(addForm)
+    function submitAdd(): void {
+      const input: NewEntryInput = { label: labelField.value, description: descriptionField.value, content: contentField.value }
+      const succeeded = handlers.onAdd(input)
+      // Reset/hide ONLY on success (component-reviewer MAJOR fix) — a rejection keeps every typed field
+      // AND the form open, so the author sees their own input alongside `showAddError`'s message instead
+      // of having it silently discarded. `showAddError` (below) is the ONLY thing that un-hides the form
+      // on a rejection now — this function no longer fights it by re-hiding on every submit.
+      if (succeeded) {
+        labelField.value = ''
+        descriptionField.value = ''
+        contentField.value = ''
+        form.hidden = true
+      }
+    }
 
-  refreshLibraryMenu() // the initial build — see `refreshLibraryMenu`'s own doc comment below
+    submitBtn.addEventListener('click', submitAdd)
+    // Native single-line `<input>` Enter-to-submit parity for the one required field — deliberately NOT
+    // wired on `descriptionField`/`contentField` (optional field / multi-line field, matching what the old
+    // native form's implicit submission would not have keyed off). `isComposing` guards an IME candidate-
+    // confirming Enter the same way `ui-text-field`'s own internal Enter handler already does.
+    labelField.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' || event.isComposing) return
+      submitAdd()
+    })
 
-  addToggle.addEventListener('click', () => {
-    addForm.hidden = !addForm.hidden
-    if (!addForm.hidden) labelField.focus()
-  })
-
-  function submitAdd(): void {
-    const input: NewEntryInput = { label: labelField.value, description: descriptionField.value, content: contentField.value }
-    const succeeded = handlers.onAdd(input)
-    // Reset/hide ONLY on success (component-reviewer MAJOR fix) — a rejection keeps every typed field
-    // AND the form open, so the author sees their own input alongside `showAddError`'s message instead
-    // of having it silently discarded. `showAddError` (below) is the ONLY thing that un-hides the form
-    // on a rejection now — this function no longer fights it by re-hiding on every submit.
-    if (succeeded) {
-      labelField.value = ''
-      descriptionField.value = ''
-      contentField.value = ''
-      addForm.hidden = true
+    form.append(labelFieldWrap, descriptionFieldWrap, contentField, submitBtn, errorNote)
+    return {
+      form,
+      label: labelField,
+      open(): void {
+        form.hidden = !form.hidden
+        if (!form.hidden) labelField.focus()
+      },
     }
   }
 
-  submitBtn.addEventListener('click', submitAdd)
-  // Native single-line `<input>` Enter-to-submit parity for the one required field — deliberately NOT
-  // wired on `descriptionField`/`contentField` (optional field / multi-line field, matching what the old
-  // native form's implicit submission would not have keyed off). `isComposing` guards an IME candidate-
-  // confirming Enter the same way `ui-text-field`'s own internal Enter handler already does.
-  labelField.addEventListener('keydown', (event) => {
-    if (event.key !== 'Enter' || event.isComposing) return
-    submitAdd()
+  const inlineAdd = withCustomAdd && !withDrawer ? buildInlineAddForm() : null
+  if (inlineAdd) section.append(inlineAdd.form)
+
+  // GH #917 — a DRAWERED section's standing error note. The drawer's own add form carries the message beside
+  // the field it is about (`entry-form.ts`), but a rejection can also arrive with NO form on screen: the
+  // library menu commits straight through `handlers.onAdd`, and a pack's own `rejectOnCollision` duplicate
+  // (GH #783/LLD-C5) is refused there. Before the drawer, that message landed in the inline form (which
+  // `showAddError` un-hid); with no inline form to un-hide it would be a silent no-op — the fail-closed
+  // add would look like nothing happening. So the section keeps one note of its own, hidden until used.
+  const sectionError = withDrawer ? document.createElement('p') : null
+  if (sectionError) {
+    sectionError.setAttribute('data-part', 'entry-add-error')
+    sectionError.hidden = true
+    section.append(sectionError)
+  }
+
+  refreshLibraryMenu() // the initial build — see `refreshLibraryMenu`'s own doc comment below
+
+  // ── GH #917 — the section's ONE drawer, and the two things that open it ─────────────────────────────────
+  // Built HERE, while the section is still detached, because `ui-drawer` MOVES its children into the
+  // `<dialog>` part at connect, ONCE (drawer.ts's `#ensureDialog`): the three region shells must exist by
+  // then, and from that point only their CHILDREN are ever replaced — appending to the HOST after connect
+  // would land the node beside the dialog, outside the top-layer surface (agent-admin-app.ts's `rosterList`
+  // precedent, the same rule stated there).
+  //
+  // The accessible name rides `aria-labelledby` pointing at the stable HEADER shell (whose contents the form
+  // rewrites per open), not `aria-label`: the drawer forwards an author name onto the dialog part exactly
+  // once at connect, so a per-open name cannot be an attribute on the host — but a stable reference to a
+  // heading whose TEXT changes is the labelling pattern drawer.md itself names ("a labelling heading child
+  // is the common pattern").
+  const drawer = withDrawer ? (document.createElement('ui-drawer') as UIDrawerElement) : null
+  const drawerHeader = document.createElement('header')
+  const drawerContent = document.createElement('div')
+  const drawerFooter = document.createElement('footer')
+  if (drawer) {
+    drawerSeq += 1
+    const headingId = `entry-drawer-heading-${drawerSeq}`
+    drawer.setAttribute('edge', 'end') // the options-side case — the Manage-agents composition verbatim
+    drawer.setAttribute('data-part', 'entry-drawer')
+    drawer.setAttribute('aria-labelledby', headingId)
+    drawerHeader.id = headingId
+    drawerHeader.setAttribute('data-part', 'entry-drawer-header')
+    // GH #918's region model, composed as plain structural light-DOM children (no new slot grammar): the
+    // header/footer are the drawer's STICKY [data-box] regions and the content between them is the ONE
+    // scrollport, so the title and the primary stay pinned while a long content editor scrolls.
+    drawerContent.setAttribute('data-region', 'content')
+    drawerContent.setAttribute('data-part', 'entry-drawer-content')
+    drawerFooter.setAttribute('data-part', 'entry-drawer-footer')
+    drawer.append(drawerHeader, drawerContent, drawerFooter)
+    section.append(drawer)
+  }
+
+  function closeDrawer(): void {
+    if (drawer) drawer.open = false
+  }
+
+  /** Rebuild the three regions from `buildEntryForm` and show the drawer. Built ON OPEN and never on a store
+   *  notification — this drawer holds no subscription of its own, so an external re-render (a sibling toggle,
+   *  a store write) behind it can no longer eat an uncommitted content edit the way a full `render()` rebuild
+   *  could when the editor lived on the row. Every commit the form makes is an id-keyed write that no-ops
+   *  fail-closed if the entry vanished externally. */
+  function openForm(form: EntryFormMode): void {
+    if (!drawer) return
+    const regions = buildEntryForm(
+      kind,
+      form,
+      handlers,
+      { contentField: withContentField, availabilityToggle: withAvailability, rename: withRename },
+      closeDrawer,
+    )
+    drawerHeader.replaceChildren(regions.header)
+    drawerContent.replaceChildren(regions.content)
+    drawerFooter.replaceChildren(regions.footer)
+    drawer.open = true
+  }
+
+  // GH #917 — ONE affordance, two surfaces: a drawered section's "Add …" opens the SAME drawer the row's
+  // Edit does, in add mode; every other section keeps the reveal/hide of its inline dashed form.
+  addToggle.addEventListener('click', () => {
+    if (withDrawer) {
+      if (sectionError) sectionError.hidden = true // a fresh attempt starts with no stale rejection on screen
+      openForm({ mode: 'add', title: addLabel })
+      return
+    }
+    inlineAdd?.open()
   })
+
+  /** Fail-closed validation feedback (ADR-0132 cl.4), routed to the surface that can actually SHOW it — the
+   *  exported `showAddError` calls this through a private registry, so its own signature and doc are
+   *  unchanged. Three cases, in priority order:
+   *    1. a drawered section with its ADD form open — the note beside the Name field the message is about;
+   *    2. a drawered section with nothing open (a LIBRARY-menu rejection) — the section's standing note;
+   *    3. every other section — the dashed form's note, un-hiding the form, byte-identically to before. */
+  function showError(message: string): void {
+    const openNote = drawer?.open === true ? (drawerContent.querySelector('[data-part="entry-form-error"]') as HTMLElement | null) : null
+    const note = openNote ?? sectionError ?? (inlineAdd?.form.querySelector('[data-part="entry-add-error"]') as HTMLElement | null)
+    if (note === null || note === undefined) return
+    note.textContent = message
+    note.hidden = false
+    if (note !== openNote && note !== sectionError && inlineAdd) inlineAdd.form.hidden = false
+  }
 
   function render(entries: readonly Entry[]): void {
     // GH #564 — refresh the picker's live "already in the list" view BEFORE anything below reads it (a
@@ -411,7 +521,36 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
 
       header.append(toggle, entryLabel, entrySpacer)
 
-      // The trailing action cluster's ORDER, ruled once here so the next affordance knows where to land
+      // GH #917 — the DRAWERED row: `[switch | label | spacer | badges | Edit]`. The four affordances the
+      // three blocks below build inline (Invocable · Rename · Remove, plus the content editor further down)
+      // are ONE "Edit" button here; everything they did still happens, in the drawer's form. The enabled
+      // switch stays — it is STATE, not CRUD, and duplicating it into the drawer would mint a second place
+      // to answer the same question.
+      //
+      // The BADGE replaces the mode pill's second job: the pill was both a control and the row's at-a-glance
+      // "is this invocable?" read, and only the control moves. A word, not colour alone (ADR-0057), beside
+      // the `data-availability` card edge the row already carries.
+      if (withDrawer) {
+        if (withAvailability && entryAvailability(entry) === ENTRY_AVAILABILITY.invocable) {
+          const badge = document.createElement('span')
+          badge.setAttribute('data-part', 'entry-badge')
+          badge.textContent = 'Invocable'
+          badge.title = 'User-invocable — inert until invoked from the conversation.'
+          header.append(badge)
+        }
+        const editBtn = document.createElement('ui-button') as UIButtonElement
+        editBtn.setAttribute('variant', 'soft')
+        editBtn.setAttribute('data-part', 'entry-edit')
+        // The row's own `${entry.label} …` ARIA shape (the enabled switch above): a list of rows whose
+        // buttons all read "Edit" names none of them.
+        editBtn.setAttribute('aria-label', `Edit ${entry.label}`)
+        editBtn.textContent = 'Edit'
+        editBtn.addEventListener('click', () => openForm({ mode: 'edit', entry }))
+        header.append(editBtn)
+      }
+
+      // The INLINE trailing action cluster's ORDER (a section that did NOT opt into `entryDrawer` — GH #917
+      // above is the other shape), ruled once here so the next affordance knows where to land
       // (GH #848 reconciling with GH #850, which landed the mode pill first): STATE reads before ACTIONS,
       // and the destructive action stays last — `[switch | label | spacer | Invocable | Rename | Remove]`.
       // The leading `enabled` switch and the `Invocable` pill are the row's two state controls (they answer
@@ -425,7 +564,7 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
       // label stays the STABLE word "Invocable" — the state rides `aria-pressed`, never a swapped name (a
       // label that changes with state is the toggle-button AX anti-pattern); the per-row `aria-label` is
       // the same `${entry.label} …` shape the enabled switch above already carries.
-      if (withAvailability) {
+      if (withAvailability && !withDrawer) {
         const invocable = entryAvailability(entry) === ENTRY_AVAILABILITY.invocable
         const mode = document.createElement('ui-toggle') as UIToggleElement
         mode.setAttribute('data-part', 'entry-availability')
@@ -461,7 +600,7 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
       // uncommitted rename. That is the deliberate asymmetry with the content editor's mid-edit
       // preservation dance — a content field holds long-form authored prose worth rescuing; a rename holds
       // a few characters, and the label it replaces is still on screen a keystroke later.
-      if (withRename) {
+      if (withRename && !withDrawer) {
         let renameField: UITextFieldElement | null = null
 
         /** Swap the field back out for the label span — the ONE close path (commit and cancel share it).
@@ -548,7 +687,7 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
         header.append(renameBtn)
       }
 
-      if (!entry.builtin) {
+      if (!entry.builtin && !withDrawer) {
         // TKT-0048: a real `<ui-button>` — its label is a plain word ("Remove"), never a glued glyph, so
         // no leading-adornment icon is needed here; the fix this control gets is the shared state-styling
         // contract (hover/active/focus-ring) the bespoke native button opted out of entirely.
@@ -572,7 +711,10 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
       // ADR-0170 cl.8 — a kind whose entries key an EXTERNAL registry renders label + description +
       // switch only: there is no per-entry body to edit, so no editor mounts (and the preservation dance
       // above is inert by construction — `activeField` can never match a field that does not exist).
-      const contentField = withContentField ? (document.createElement('ui-code-editor') as UICodeEditorElement) : null
+      // GH #917 — a DRAWERED section is the second inert case: the body is edited in the drawer's form, so
+      // the row carries no editor and there is again nothing for the preservation dance to preserve. That
+      // asymmetry is the point of the move — a form built ON OPEN cannot be eaten by an external re-render.
+      const contentField = withContentField && !withDrawer ? (document.createElement('ui-code-editor') as UICodeEditorElement) : null
       if (contentField) {
         contentField.language = 'markdown' // ADR-0139 — markdown-highlighted source editing (CM lazy-loaded)
         contentField.rows = 4 // TKT-0049: the saved, potentially longer per-entry content — bigger than the add-form's draft field
@@ -653,16 +795,33 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
     refreshLibraryMenu()
   }
 
-  return { host: section, render, updateLibraries, showNotices }
+  const built: EntryListSection = { host: section, render, updateLibraries, showNotices }
+  errorSinks.set(built, showError)
+  return built
 }
 
-/** Show `message` in the add-form's own error note (fail-closed validation feedback, ADR-0132 cl.4) —
+/** GH #917 — each mounted section's own error ROUTER (`showError`), keyed by the section object
+ *  `mountEntryList` returned. A private registry rather than a member on `EntryListSection`: the routing is
+ *  this module's internal business (which of a section's up-to-two error surfaces is live right now), and
+ *  `showAddError` below stays the ONE exported way a caller surfaces a rejection — its signature, doc and
+ *  fail-soft posture unchanged. A `WeakMap` so a discarded section is collectable. */
+const errorSinks = new WeakMap<EntryListSection, (message: string) => void>()
+
+/** Show `message` in the add form's own error note (fail-closed validation feedback, ADR-0132 cl.4) —
  *  exported so `agent-admin.ts` can surface `validateNewEntry`'s rejection without this module owning
  *  the validation call itself (the caller decides WHEN to validate; this module only renders the result).
+ *  WHERE it lands is the section's own routing (GH #917 — beside the Name field in an open add drawer, the
+ *  section's standing note otherwise, the dashed form's note for a non-drawered section).
  *  ADR-0170 cl.8: a section built with `customAdd: false` mounts no form to show it in — a rejected
  *  LIBRARY add there is a silent no-op rather than a thrown null-deref (the add path itself already
- *  fail-closes; this is the display half having nowhere to land). */
+ *  fail-closes; this is the display half having nowhere to land). A section object this module did not
+ *  build (a hand-rolled test stub) falls back to the DOM query this function has always used. */
 export function showAddError(section: EntryListSection, message: string): void {
+  const sink = errorSinks.get(section)
+  if (sink !== undefined) {
+    sink(message)
+    return
+  }
   const note = section.host.querySelector('[data-part="entry-add-error"]') as HTMLElement | null
   const form = section.host.querySelector('[data-part="entry-add-form"]') as HTMLElement | null
   if (note === null || form === null) return

@@ -590,7 +590,7 @@ describe('ui-agent-admin cross-engine smoke — the per-entry availability affor
     return el
   }
 
-  it('the invocable row is visibly MARKED next to its ambient sibling, and its mode pill is a real hittable box', () => {
+  it('the invocable row is visibly MARKED next to its ambient sibling, and its mode pill is a real hittable box', async () => {
     const el = mountWithSeededSkills()
     const rowOf = (id: string): HTMLElement =>
       el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.skill}"] [data-entry-id="${id}"]`) as HTMLElement
@@ -603,15 +603,32 @@ describe('ui-agent-admin cross-engine smoke — the per-entry availability affor
     )
     expect(invocable.borderInlineStartColor).not.toBe(ambient.borderInlineStartColor)
 
-    // The mode control itself — a real ui-toggle with a real box, on BOTH rows (the mode is editable either
-    // way), pressed on the invocable one only.
+    // The invocable row's BADGE — GH #917 moved the CONTROL into the drawer, so the row's at-a-glance read is
+    // the marked edge above plus this word, and both must be really painted (a zero-box badge would pass a
+    // jsdom probe while showing the user nothing).
+    const badge = rowOf('menu-pdf').querySelector('[data-part="entry-badge"]') as HTMLElement
+    expect(badge.textContent).toBe('Invocable')
+    expect(badge.getBoundingClientRect().width, 'a real painted badge').toBeGreaterThan(0)
+    expect(rowOf('house-style').querySelector('[data-part="entry-badge"]'), 'an ambient row carries none').toBeNull()
+
+    // The mode control itself — a real ui-toggle with a real box, in EITHER row's Edit drawer (the mode is
+    // editable either way), pressed on the invocable one only.
+    const section = el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
     for (const id of ['house-style', 'menu-pdf']) {
-      const pill = rowOf(id).querySelector('[data-part="entry-availability"]') as HTMLElement & { pressed: boolean }
+      ;(rowOf(id).querySelector('[data-part="entry-edit"]') as HTMLElement).click()
+      // `drawer.open = true` is a reactive prop write — the `showModal()` effect it drives is a SCHEDULED
+      // rerun (graph.ts: only an effect's FIRST run is synchronous), not a synchronous one, so the dialog
+      // has not actually opened yet at the instant `.click()` returns (the drawer/browser tests' own
+      // `drawer.open = true; await drawer.updateComplete` idiom, drawer.browser.test.ts).
+      await el.updateComplete
+      const pill = section.querySelector('[data-part="entry-availability"]') as HTMLElement & { pressed: boolean }
       expect(pill.tagName.toLowerCase()).toBe('ui-toggle')
       const box = pill.getBoundingClientRect()
       expect(box.width, `${id} pill width`).toBeGreaterThan(0)
       expect(box.height, `${id} pill height`).toBeGreaterThan(0)
       expect(pill.pressed, `${id} pressed state`).toBe(id === 'menu-pdf')
+      ;(section.querySelector('[data-part="entry-form-done"]') as HTMLElement).click()
+      await el.updateComplete
     }
 
     // …and the whole row is still a full card, not squeezed by the added control.
@@ -796,10 +813,13 @@ describe('ui-agent-admin cross-engine smoke — canvas/region gutter is module-d
   })
 })
 
-describe('ui-agent-admin cross-engine smoke — the add-form is GENUINELY collapsed when hidden (component-reviewer CRITICAL fix)', () => {
+describe('ui-agent-admin cross-engine smoke — the INLINE add-form is GENUINELY collapsed when hidden (component-reviewer CRITICAL fix)', () => {
   it('a hidden add-form computes display:none; toggling reveals it as a real, visible box', () => {
-    const { el } = mountAgentAdmin('Capabilities') // GH #574 — Tools rides the Capabilities tab now
-    const section = el.querySelector(`[data-kind="${ENTRY_KINDS.tool}"]`) as HTMLElement
+    const { el } = mountAgentAdmin('Capabilities')
+    // Instructions, not Tools: GH #917 moved the four capability kinds' authoring into a drawer (which has
+    // no hidden-form state at all — the form does not exist until it opens), so the `[hidden]`-vs-`display`
+    // cascade race this test exists for lives on the three sections that still render the dashed form.
+    const section = el.querySelector(`[data-kind="${ENTRY_KINDS.promptSection}"]`) as HTMLElement
     const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
 
     // Before the CSS fix, `display: flex` beat the UA [hidden] rule — this assertion is the one the
@@ -897,7 +917,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0048: entry-list action butt
     expect(labelBox.left).toBeGreaterThan(iconBox.right)
   })
 
-  it('entry-delete is a real <ui-button> (state-styling parity — TKT-0046\'s fleet sweep gap this control sat in)', () => {
+  it('entry-delete is a real <ui-button> (state-styling parity — TKT-0046\'s fleet sweep gap this control sat in)', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     const wrapper = document.createElement('div')
     wrapper.style.width = '1200px'
@@ -912,16 +932,33 @@ describe('ui-agent-admin cross-engine smoke — TKT-0048: entry-list action butt
     // Custom entries (not built-ins) render a delete affordance — add one via the real add-form flow.
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    await el.updateComplete // the ADD drawer's own `open = true` effect is a scheduled rerun, not synchronous
     const labelField = section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement
     labelField.value = 'Web search'
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
+    await el.updateComplete // submitAdd()'s close() is the same scheduled effect, the other direction
 
-    const deleteBtn = el.querySelector('[data-kind="skill"] [data-entry-id="web-search"] [data-part="entry-delete"]') as HTMLElement
+    // GH #917 — Remove lives in the entry's Edit drawer now (the danger row at the foot of the scrolling
+    // content), so a real engine has to OPEN the drawer to measure it. That the button paints a real box
+    // inside a `showModal()` top-layer surface is exactly what only a real engine can prove.
+    ;(el.querySelector('[data-kind="skill"] [data-entry-id="web-search"] [data-part="entry-edit"]') as HTMLElement).click()
+    // `drawer.open = true` is a reactive prop write (a scheduled rerun, not a synchronous one — graph.ts) —
+    // the drawer/browser tests' own `drawer.open = true; await drawer.updateComplete` idiom.
+    await el.updateComplete
+    const deleteBtn = section.querySelector('[data-part="entry-delete"]') as HTMLElement
     expect(deleteBtn.tagName.toLowerCase()).toBe('ui-button')
     expect(deleteBtn.textContent).toBe('Remove')
     const box = deleteBtn.getBoundingClientRect()
     expect(box.width).toBeGreaterThan(0)
     expect(box.height).toBeGreaterThan(0)
+    // …and the whole drawer is a real, painted surface around it (the "test the whole shape" discipline —
+    // a real box on the button alone cannot rule out a collapsed dialog).
+    const dialog = section.querySelector('[data-part="entry-drawer"] [data-part="dialog"]') as HTMLElement
+    const dialogBox = dialog.getBoundingClientRect()
+    expect(dialogBox.width).toBeGreaterThan(200)
+    expect(dialogBox.height).toBeGreaterThan(200)
+    expect(box.left).toBeGreaterThanOrEqual(dialogBox.left)
+    expect(box.right).toBeLessThanOrEqual(dialogBox.right)
   })
 })
 
@@ -1018,14 +1055,18 @@ describe('ui-agent-admin cross-engine smoke — TKT-0049/ADR-0139: entry-content
     expect(computed).toBeCloseTo(expectedMinBlockSize(field, 4), 1)
   })
 
-  it('entry-add-content (rows=2) renders a real computed min-height matching the rows formula', () => {
-    const { el } = mountAgentAdmin()
+  // GH #917 — the draft field moved into the drawer, where the whole content region is its to fill, so its
+  // `rows` figure went 2 → 8 (the drawer's own size, shared with the Edit form's editor). The CLAIM is
+  // unchanged and is the reason this test exists: whatever `rows` says, the real computed min-height follows
+  // ui-code-editor's own formula — never a dead agent-admin.css literal.
+  it('entry-add-content (rows=8, the drawer figure) renders a real computed min-height matching the rows formula', () => {
+    const { el } = mountAgentAdmin('Capabilities')
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.tool}"]`) as HTMLElement
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
     const field = section.querySelector('[data-part="entry-add-content"]') as UICodeEditorElement
-    expect(field.rows).toBe(2)
+    expect(field.rows).toBe(8)
     const computed = Number.parseFloat(getComputedStyle(field).minHeight)
-    expect(computed).toBeCloseTo(expectedMinBlockSize(field, 2), 1)
+    expect(computed).toBeCloseTo(expectedMinBlockSize(field, 8), 1)
   })
 
   it('changing `.rows` moves entry-content\'s rendered min-height (proves the mechanism; catches a future competing CSS rule that WINS the cascade)', async () => {
@@ -1056,7 +1097,9 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entr
   }
 
   it('entry-content and entry-add-content render the SAME computed padding despite agent-admin.css declaring two different literal values for them (both dead)', () => {
-    const { el } = mountAgentAdmin()
+    // 'Capabilities' explicitly (GH #917): entry-add-content now lives in a `showModal()` drawer, and a
+    // top-layer surface opened from a `display:none` tab has nothing real to measure.
+    const { el } = mountAgentAdmin('Capabilities')
     const entryContent = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as HTMLElement
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.tool}"]`) as HTMLElement
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
@@ -1126,10 +1169,14 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entr
     expect(entryContent.matches(':focus-visible')).toBe(false) // but never on the HOST itself
   })
 
-  it('TKT-0060: entry-add-label/entry-add-description are now real <ui-text-field>s — the agent-admin.css bespoke rule is gone, and focus draws the CONTROL\'S OWN :focus-within outline ring instead (the same dead-by-different-mechanism story TKT-0050 already proved for entry-content)', () => {
+  it('TKT-0060: entry-add-label/entry-add-description are now real <ui-text-field>s — the agent-admin.css bespoke rule is gone, and focus draws the CONTROL\'S OWN :focus-within outline ring instead (the same dead-by-different-mechanism story TKT-0050 already proved for entry-content)', async () => {
     const { el } = mountAgentAdmin('Capabilities') // GH #574 — Tools rides the Capabilities tab now; .focus() needs a real, non-display:none ancestor
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.tool}"]`) as HTMLElement
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    // The drawer's `open = true` effect is a SCHEDULED rerun (graph.ts: only an effect's first run is
+    // synchronous) — without this, `showModal()` hasn't fired yet, the dialog is still UA-`display:none`,
+    // and `.focus()` on a field inside it is a no-op (the drawer/browser tests' own idiom).
+    await el.updateComplete
     const addLabel = section.querySelector('[data-part="entry-add-label"]') as HTMLElement
     expect(addLabel.tagName.toLowerCase()).toBe('ui-text-field')
     addLabel.focus()
@@ -1146,14 +1193,15 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entr
 
 describe('ui-agent-admin cross-engine smoke — TKT-0060: entry-add-form drops its native <form>/<input>/<button type="submit"> anatomy', () => {
   it('entry-add-form is a plain container (no native form-submission semantics to work around)', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Capabilities')
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
+    ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click() // GH #917 — the drawer builds it
     const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
     expect(form.tagName.toLowerCase()).toBe('div')
   })
 
   it('entry-add-label/entry-add-description are real <ui-text-field>s, entry-add-submit is a real <ui-button>', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Capabilities')
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
     expect((section.querySelector('[data-part="entry-add-label"]') as HTMLElement).tagName.toLowerCase()).toBe('ui-text-field')
@@ -1161,10 +1209,13 @@ describe('ui-agent-admin cross-engine smoke — TKT-0060: entry-add-form drops i
     expect((section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).tagName.toLowerCase()).toBe('ui-button')
   })
 
-  it('a REAL keyboard Enter keydown in entry-add-label submits the form and adds the entry (not .requestSubmit() — the actual keyboard path a user drives)', () => {
+  it('a REAL keyboard Enter keydown in entry-add-label submits the form and adds the entry (not .requestSubmit() — the actual keyboard path a user drives)', async () => {
     const { el } = mountAgentAdmin('Capabilities') // GH #574 — Skills rides the Capabilities tab now; .focus() needs a real, non-display:none ancestor
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    // The drawer's `open = true` effect is a SCHEDULED rerun (graph.ts) — without this, the dialog has not
+    // actually opened yet and `.focus()` below is a silent no-op (the drawer/browser tests' own idiom).
+    await el.updateComplete
     const labelField = section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement
     labelField.focus()
     labelField.value = 'Web search'
@@ -1179,9 +1230,16 @@ describe('ui-agent-admin cross-engine smoke — TKT-0060: entry-add-form drops i
     expect(row).not.toBeNull()
     const toggle = row.querySelector('[data-part="entry-toggle"]') as HTMLElement & { checked: boolean }
     expect(toggle.checked).toBe(true)
-    // the same reset-on-success behavior a click submit gets — proves the Enter path runs the SAME logic
-    const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
-    expect(form.hidden).toBe(true)
+    // the same reset-on-success behavior a click submit gets — proves the Enter path runs the SAME logic.
+    // GH #917: for a drawered section that reset IS the drawer CLOSING — `closeDrawer()` only flips `open`
+    // (entry-list.ts's `openForm` doc comment: regions are rebuilt ON OPEN and never torn down on close), so
+    // the form DIV itself is NEVER removed from the DOM — it is reused verbatim on the next open. Asserting
+    // it gone would assert a teardown this control deliberately does not do (parity with the click-submit
+    // path's own jsdom sibling, agent-admin.test.ts, which likewise only checks `.open`, never form-presence).
+    // `await el.updateComplete` first: `close()`'s `drawer.open = false` is a reactive prop write whose
+    // `dialog.close()` effect is a SCHEDULED rerun (graph.ts), not a synchronous one.
+    await el.updateComplete
+    expect((section.querySelector('[data-part="entry-drawer"]') as HTMLElement & { open: boolean }).open).toBe(false)
   })
 
   it('Enter in entry-add-description does NOT submit (only the required single-line label field gets Enter-to-submit, matching what a native single-line required <input> would have done)', () => {
@@ -1196,8 +1254,9 @@ describe('ui-agent-admin cross-engine smoke — TKT-0060: entry-add-form drops i
     descriptionEditor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
 
     expect(el.querySelector('[data-kind="skill"] [data-entry-id="web-search"]')).toBeNull()
-    const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
-    expect(form.hidden).toBe(false) // still open — no submission happened
+    // still open — no submission happened (GH #917: the drawer, and the form inside it, are both still up)
+    expect((section.querySelector('[data-part="entry-drawer"]') as HTMLElement & { open: boolean }).open).toBe(true)
+    expect(section.querySelector('[data-part="entry-add-form"]')).not.toBeNull()
   })
 })
 

@@ -208,6 +208,10 @@ export default defineConfig({
       // `tabs` so its `document.createElement('ui-tabs' | 'ui-tab' | 'ui-tab-panel')` calls resolve to the
       // REAL classes. Same alias-ordering necessity as `controls/split`/`controls/menu` above.
       '@agent-ui/components/controls/tabs': r('./packages/agent-ui/components/src/controls/tabs/tabs.ts'),
+      // GH #917 — `@agent-ui/app`'s `ui-agent-admin` side-effect-imports `drawer` so `entry-list.ts`'s
+      // `document.createElement('ui-drawer')` (the per-entry Edit/Add CRUD drawer, ADR-0188) resolves to the
+      // REAL class in jsdom. Same alias-ordering necessity as `controls/tabs` immediately above.
+      '@agent-ui/components/controls/drawer': r('./packages/agent-ui/components/src/controls/drawer/drawer.ts'),
       // genui-surface.spec.md SPEC-R8/PRD-G8 — `@agent-ui/app`'s `conversation.ts` is the next direct
       // `./controls/{name}` subpath consumer from OUTSIDE the components package: it side-effect-imports
       // `sandbox-frame` so its `document.createElement('ui-sandbox-frame')` (the genui parallel mount

@@ -49,7 +49,9 @@ export { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS, DEFAULT_SYSTEM_PROMPT_FALLBACK, c
 // GH #848 — `renameEntry` joins them: the display-name write (ids never rewritten), exported for the same
 // reason `validateNewEntry` is — a consumer that owns its own store writes (the site's own tests, a
 // bring-your-own-store host) applies the one shared law instead of hand-rolling a second label writer.
-export { validateNewEntry, renameEntry, entriesStoreKey } from './controls/entry-list/entry-data.ts'
+// GH #917 — and `describeEntry` beside it, for the identical reason: the Edit drawer made description an
+// editable per-entry field, so its trim/write law needs the same one home a consumer can reach.
+export { validateNewEntry, renameEntry, describeEntry, entriesStoreKey } from './controls/entry-list/entry-data.ts'
 export type { Entry, EntryLibraryPack, NewEntryInput } from './controls/entry-list/entry-data.ts'
 // GH #419 — the prompt-section modality LINT (pure, non-blocking): the vocabulary that says an enabled
 // prompt section names a modality whose Surface Option is off. Exported because the persona TEXTS that

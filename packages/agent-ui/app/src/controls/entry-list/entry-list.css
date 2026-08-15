@@ -175,8 +175,22 @@
   [data-part='entry-toggle'],
   [data-part='entry-availability'],
   [data-part='entry-rename'],
+  [data-part='entry-edit'],
+  [data-part='entry-badge'],
   [data-part='entry-delete'] {
     flex-shrink: 0;
+  }
+
+  /* GH #917 — the DRAWERED row's at-a-glance state read: the word the mode pill used to carry, now that the
+     CONTROL lives in the drawer. Text, never colour alone (ADR-0057), on the same info family the row's own
+     `data-availability` card edge already uses. */
+  [data-part='entry-badge'] {
+    padding-inline: var(--ui-entry-list-compact-gap);
+    border: 1px solid var(--ui-entry-list-invocable-border);
+    border-radius: var(--ui-entry-list-entry-radius);
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: var(--ui-entry-list-label-ink);
   }
 
   [data-part='entry-description'] {
@@ -196,8 +210,12 @@
   /* :not([hidden]) — component-reviewer CRITICAL fix: an author `display` declaration beats the UA
      `[hidden] { display: none }` rule (the combo-box.css precedent for the identical pitfall); without
      this guard the add-form renders permanently visible in a real browser regardless of its `.hidden`
-     JS property. */
-  [data-part='entry-add-form']:not([hidden]) {
+     JS property.
+     `:scope >` (GH #917) — the INLINE dashed form is a direct child of the section; a DRAWERED section's
+     add form carries the same part name (it is the same form) but lives inside the drawer's content region,
+     where this dashed card chrome would be a card inside a card. The child combinator is what keeps this
+     rule on the surface it was written for; the drawer's own column rules are below. */
+  :scope > [data-part='entry-add-form']:not([hidden]) {
     display: flex;
     flex-direction: column;
     gap: var(--ui-entry-list-compact-gap);
@@ -207,10 +225,97 @@
     border-radius: var(--ui-entry-list-entry-radius);
   }
 
-  [data-part='entry-add-error'] {
+  /* The two fail-closed validation notes, one rule: the section's standing note (where a library-menu
+     rejection lands, GH #917) and the drawer add form's own inline one, next to the Name field it names. */
+  [data-part='entry-add-error'],
+  [data-part='entry-form-error'] {
     margin: 0;
     font-size: 0.8125rem;
     color: var(--ui-entry-list-error-ink);
+  }
+
+  /* ── GH #917 — the per-entry CRUD drawer's form ──────────────────────────────────────────────────────
+     The drawer supplies the REGION chrome itself (sticky header/footer, the scroll-conditional hairline,
+     `--ui-drawer-pad-inline`/`-pad-block` padding — GH #918's region model): nothing here re-declares any of
+     it. These rules own only what lives INSIDE the regions — the form's own vertical rhythm, the danger
+     block's separation, and the content editor's claim on the leftover height. `@scope
+     ([data-part='entry-section'])` reaches them because the drawer host is a child of the section and the
+     dialog PART stays in that DOM position even while the platform paints it in the top layer. */
+  [data-part='entry-form-heading'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-entry-list-row-gap);
+  }
+
+  [data-part='entry-form-title'] {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--ui-entry-list-ink);
+  }
+
+  /* The roster drawer's "Shipped" tag shape (agent-admin-app.ts), one rule over: a builtin entry's form
+     builds no Delete block at all, and this STATES why. */
+  [data-part='entry-form-tag'] {
+    padding-inline: var(--ui-entry-list-compact-gap);
+    border: 1px solid var(--ui-entry-list-border);
+    border-radius: var(--ui-entry-list-entry-radius);
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: var(--ui-entry-list-label-ink);
+  }
+
+  /* Both modes' field column, INSIDE the drawer only (the inline dashed form keeps its own card rule
+     above). `min-block-size: 0` is what lets the content editor below actually shrink to the region's
+     height instead of forcing the whole column taller (the flex automatic-minimum-size override, the same
+     shape `entry-label`'s truncation floor uses one axis over). */
+  [data-part='entry-drawer-content'] > [data-part='entry-add-form'],
+  [data-part='entry-drawer-content'] > [data-part='entry-edit-form'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-entry-list-list-gap);
+    min-block-size: 0;
+  }
+
+  /* The content cell TAKES the region's remaining height — the editor is the form's one field with real
+     reading work in it, and the ruling gives it the content region's leftover width/height. Its 20ch
+     free-standing floor is already neutralised by this file's own `entry-content`/`entry-add-content`
+     repoint above (the form reuses those exact part names, so the TKT-0062 rule carries over unchanged —
+     nothing new to declare). */
+  [data-part='entry-edit-form'] ui-field:last-of-type:has([data-part='entry-content']),
+  [data-part='entry-add-form'] ui-field:last-of-type:has([data-part='entry-add-content']) {
+    flex: 1 1 auto;
+    min-block-size: 0;
+  }
+
+  [data-part='entry-form-tier'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-entry-list-compact-gap);
+    align-items: flex-start;
+  }
+
+  [data-part='entry-form-hint'] {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--ui-entry-list-label-ink);
+  }
+
+  /* The danger block is the LAST child of the scrolling content, never the footer — the footer holds the
+     primary alone, so the two can never sit adjacent. A hairline + top margin is the separation that says
+     "this one is different in kind", without a second surface colour. */
+  [data-part='entry-form-danger'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-entry-list-compact-gap);
+    align-items: flex-start;
+    margin-block-start: var(--ui-entry-list-list-gap);
+    padding-block-start: var(--ui-entry-list-list-gap);
+    border-block-start: 1px solid var(--ui-entry-list-border);
+  }
+
+  [data-part='entry-form-actions'] {
+    display: flex;
+    justify-content: flex-end;
   }
 
   /* forced-colors: active — every bordered surface above uses a real 1px border (not a shadow/tint),

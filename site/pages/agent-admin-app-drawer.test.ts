@@ -112,7 +112,10 @@ afterAll(() => {
 // ── page handles ─────────────────────────────────────────────────────────────────────────────────────────
 const admin = (): HTMLElement & { store?: { get(key: string): unknown } } =>
   document.querySelector('ui-agent-admin') as HTMLElement & { store?: { get(key: string): unknown } }
-const drawer = (): HTMLElement & { open: boolean } => document.querySelector('ui-drawer') as HTMLElement & { open: boolean }
+/** THIS page's roster drawer, addressed by its own class — never `document.querySelector('ui-drawer')`.
+ *  Since GH #917 the mounted `ui-agent-admin` carries its OWN per-section entry-CRUD drawers, so a bare tag
+ *  query can resolve to a component-owned surface this file knows nothing about. */
+const drawer = (): HTMLElement & { open: boolean } => document.querySelector('ui-drawer.roster-drawer') as HTMLElement & { open: boolean }
 const agentSelect = (): HTMLElement & { value: string } => admin().querySelector('[data-part="agent-select"]') as HTMLElement & { value: string }
 const pickerIds = (): string[] =>
   [...agentSelect().querySelectorAll('[role="option"]')].map((o) => o.getAttribute('value') ?? '').filter((v) => !v.startsWith('agent-admin:'))
@@ -149,8 +152,10 @@ async function closeDrawer(): Promise<void> {
 }
 
 describe('agent-admin-app — the Edit Agents drawer opens from the picker (GH #845, AC1/AC3)', () => {
-  it('mounts ONE ui-drawer, closed, with its whole page-owned shell inside the control-owned <dialog> part', () => {
-    expect(document.querySelectorAll('ui-drawer'), 'exactly one drawer on the page').toHaveLength(1)
+  it('mounts ONE roster ui-drawer, closed, with its whole page-owned shell inside the control-owned <dialog> part', () => {
+    // ONE drawer of THIS page's own (GH #917 gave the mounted component its own per-section entry drawers —
+    // component-owned surfaces, proven in packages/…/agent-admin.test.ts, deliberately not counted here).
+    expect(document.querySelectorAll('ui-drawer.roster-drawer'), 'exactly one roster drawer on the page').toHaveLength(1)
     expect(drawer().open, 'closed at boot — it is an on-demand surface').toBe(false)
     const dialog = drawer().querySelector('[data-part="dialog"]') as HTMLElement
     expect(dialog, 'the control created its dialog part').not.toBeNull()
