@@ -1,10 +1,44 @@
 // overlay.ts — the non-modal Overlay controller (overlay-controller LLD-C1..C4). Gives any host a
 // top-layer, light-dismissable, anchored popup via the native Popover API (`popup.showPopover()` /
-// `hidePopover()`) + a zero-dep JS positioning controller (measure-and-place; mechanism settled by
-// the team-lead, support-verified — see overlay-controller.lld.md).
+// `hidePopover()`) + a positioning controller with TWO paths (GH #951): the zero-dep JS path
+// (measure-and-place; mechanism settled by the team-lead, support-verified — see
+// overlay-controller.lld.md) and, feature-detected at runtime (`CSS.supports('anchor-name: --x')`),
+// a CSS Anchor Positioning enhanced path — `anchor-name`/`position-anchor`/`anchor()` + a shared,
+// lazily-injected `@position-try` stylesheet (one rule per `OverlayPlacement`, all eight) with a
+// fallback candidate LIST per preferred placement (flip-side, flip-align, flip-both — the
+// `FLIP-CANDIDATES` comment at the `overlay()` setup site has why a single side-flip, the JS path's
+// own tactic, isn't enough here) — never the browser's OWN generic `flip-block`/`flip-inline`
+// try-tactic keywords, which this file does not use at all. The enhanced path registers NO
+// scroll/resize listeners — that is its entire point, positioning becomes compositor-driven.
+// Non-supporting engines get the JS path, byte-identical to before this ticket.
 //
-// CSS anchor-positioning is a PROGRESSIVE ENHANCEMENT (`@supports (anchor-name: --x)` / feature-detect)
-// where available — NOT a v1 dual-path requirement; the JS controller is the reliable path.
+// Two recorded divergences (GH #951 Scope/Open — shipped where faithful, never silently approximated):
+// (1) `data-placement` on the enhanced path is resolved via a single SYNCHRONOUS geometry read inside
+// `open()` (matching the JS path's own synchronous `position()` write — every shipped consumer reads
+// this attribute right after `open()`), but it is NOT kept live across an in-session scroll-driven
+// re-flip the way the JS path's `schedulePosition()` re-derives it — no listener-free platform signal
+// exists for "which named `@position-try` option is active" (verified: `@position-try` rules do not
+// honor custom-property declarations, so a `transitionrun`-based observer does not apply here; see
+// `applyAnchoredPlacement()`'s doc comment for the full trace).
+//
+// (2) Shift/clamp parity. The JS path's `computePosition()` continuously clamps into the viewport
+// (`Math.max(0, Math.min(...))`) using the popup's OWN measured size. A first draft of this ticket
+// believed `max-inline-size`/`max-block-size` could reconstruct the missing (far-edge) half of that
+// clamp via `calc(100vw - anchor(left))`-shaped arithmetic — measured WRONG against this repo's real
+// engines: `anchor()` is valid ONLY inside inset properties (top/right/bottom/left and their logical
+// equivalents), never inside a SIZING property; the declaration silently fails at compute time and
+// the property falls through to whatever unrelated rule the cascade supplies next (a real trap — it
+// LOOKED like it was capping the size, because a pre-existing, unrelated `max-inline-size` rule from
+// menu.css happened to already be there). `insetDeclarationsFor()`'s `max(0px, …)` inset clamp still
+// stands (self-size-independent, derived purely from the anchor's own resolved position — it fixed
+// the real GH #134 menu-overflow regression). What plugs the remaining gap is NOT a size cap at all:
+// `position-try-fallbacks` carries the FULL 2×2 candidate set (flip-side, flip-align, flip-both), not
+// only the JS path's single side-flip, so the CSS spec's own mandated "least-overflow" selection has
+// a real chance of landing on a placement that fits within the viewport on ALL four edges (this is
+// what fixed the second live regression, `tabs.browser.test.ts`'s overflow-menu commit relay — see
+// `applyAnchoredPlacement()`'s doc comment for the full account). A popup that STILL doesn't fit any
+// of the four candidates renders at whichever one overflows least — a discrete pick between four
+// named placements, not JS's continuous edge-clamp; that residual case stays the recorded divergence.
 //
 // Boundary: a true MODAL (focus-trapped) stays on `ui-modal`'s `<dialog>` `showModal()` (ADR-0017).
 // This controller is the NON-MODAL path (select popup, menu, tooltip, popover).
@@ -12,6 +46,7 @@
 // Announce contract (ADR-0101): the trait announces every ACTUAL open-state transition — platform-,
 // component-, or model-driven — `toggle` on a real show/hide, `close` alongside every real hide, fired
 // after the host's own `open` prop has settled. Native ToggleEvent timing fidelity; see `open()`/`close()`.
+// Unchanged by GH #951 — positioning-path choice is fully orthogonal to the announce contract.
 //
 // `traits → dom` is the one allowed cross-layer direction; the host type only.
 
@@ -165,6 +200,103 @@ function matchesPopoverOpen(popup: HTMLElement): boolean {
   }
 }
 
+// ── Enhanced path: CSS Anchor Positioning (GH #951) ─────────────────────────────────────────────
+//
+// Feature-detected ONCE at module load — every `overlay()` instance in the process shares this one
+// verdict (a runtime engine doesn't change mid-session). Non-supporting engines never touch anything
+// below; `computePosition()` above stays their entire (byte-identical) positioning story.
+const supportsAnchorPositioning =
+  typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports('anchor-name: --ui-overlay-probe')
+
+let anchorNameSeq = 0
+/** A fresh `anchor-name` dashed-ident per `overlay()` instance — multiple anchored popups on one page
+ * must not collide. `anchor()` used with no explicit anchor argument inside a `@position-try` rule
+ * always resolves against whichever name the QUERYING element's OWN `position-anchor` points to, so
+ * the shared stylesheet below never needs one rule set per instance despite this per-instance name. */
+function nextAnchorName(): string {
+  anchorNameSeq += 1
+  return `--ui-overlay-anchor-${anchorNameSeq}`
+}
+
+/** The 4 physical inset declarations for a resolved side+align — the SINGLE generator shared by the
+ * static `@position-try` rule text below AND the per-instance base (preferred) placement applied
+ * inline, so the two representations can never drift apart. The 0.25rem gap is a LITERAL, not a
+ * computed value: CSS `rem` already tracks the root font-size identically to the JS path's own
+ * `parseFloat(getComputedStyle(root).fontSize)` derivation — same design token, two mechanisms.
+ *
+ * Every declared value is wrapped in `max(0px, …)` — a self-size-independent RECONSTRUCTION of the
+ * LOWER half of the JS path's continuous `Math.max(0, Math.min(...))` clamp (`computePosition`'s
+ * shift step), derived purely from the anchor's own resolved position — never the popup's own size.
+ * `top`/`left` measure directly from the SAME origin as the coordinate itself, so `max(0px, …)`
+ * reproduces JS's LOWER bound; `right`/`bottom` measure from the OPPOSITE edge, so the identical
+ * wrapper instead reproduces JS's UPPER bound on THAT far edge — but only the one the anchor itself
+ * governs. GH #134 (menu-overflow) is the concrete regression this fixes on the enhanced path: an
+ * anchor whose own right edge already sits past the viewport would otherwise carry that overflow
+ * straight onto the popup via a bare `anchor(right)`.
+ *
+ * A first draft of this file ALSO tried a `max-inline-size`/`max-block-size` cap here, to close the
+ * popup's OWN `auto`-sized far edge (the half this function cannot reach) via `calc(100vw −
+ * anchor(left))`-shaped arithmetic — measured WRONG against real engines: `anchor()` is valid ONLY
+ * inside inset properties, never a sizing property; the declaration silently fails at compute time,
+ * masked by whatever unrelated rule the cascade supplies next. `overlay.ts`'s header comment (2) has
+ * the full account, including how `position-try-fallbacks`'s FULLER candidate list — not a size cap
+ * — is what actually plugs the residual gap. */
+function insetDeclarationsFor(side: Side, align: Align): Record<'top' | 'right' | 'bottom' | 'left', string> {
+  const gap = '0.25rem'
+  const decl: Record<'top' | 'right' | 'bottom' | 'left', string> = { top: 'auto', right: 'auto', bottom: 'auto', left: 'auto' }
+  if (side === 'bottom') decl.top = `max(0px, calc(anchor(bottom) + ${gap}))`
+  else if (side === 'top') decl.bottom = `max(0px, calc(anchor(top) + ${gap}))`
+  else if (side === 'right') decl.left = `max(0px, calc(anchor(right) + ${gap}))`
+  else decl.right = `max(0px, calc(anchor(left) + ${gap}))` // side === 'left'
+
+  if (side === 'bottom' || side === 'top') {
+    if (align === 'start') decl.left = 'max(0px, anchor(left))'
+    else decl.right = 'max(0px, anchor(right))'
+  } else {
+    if (align === 'start') decl.top = 'max(0px, anchor(top))'
+    else decl.bottom = 'max(0px, anchor(bottom))'
+  }
+  return decl
+}
+
+const ALL_PLACEMENTS = [
+  'bottom-start', 'bottom-end', 'top-start', 'top-end',
+  'left-start', 'left-end', 'right-start', 'right-end',
+] as const satisfies readonly OverlayPlacement[]
+
+/** The `@position-try` rule name for a given placement — every one of the 8 possible placements is
+ * registered once, since any placement can be the FLIP TARGET of its opposite-side preferred pick. */
+function positionTryName(placement: OverlayPlacement): string {
+  return `--ui-overlay-try-${placement}`
+}
+
+function buildAnchorTryStylesheet(): string {
+  return ALL_PLACEMENTS.map((p) => {
+    const [side, align] = splitPlacement(p)
+    const d = insetDeclarationsFor(side, align)
+    return `@position-try ${positionTryName(p)} { top: ${d.top}; right: ${d.right}; bottom: ${d.bottom}; left: ${d.left}; margin: 0; }`
+  }).join('\n')
+}
+
+/** The align opposite — `start`↔`end`. Paired with `FLIP_SIDE` to build the fuller candidate set
+ * below (flip-side, flip-align, flip-both) — see the FLIP-CANDIDATES comment at the `overlay()`
+ * setup site for why a single side-flip (the JS path's own tactic) isn't enough on the enhanced
+ * path. */
+const FLIP_ALIGN = { start: 'end', end: 'start' } as const satisfies Record<Align, Align>
+
+const ANCHOR_TRY_STYLE_ID = 'ui-overlay-anchor-tries'
+
+/** Lazily inject the shared `@position-try` stylesheet into `document.head` — once per document (the
+ * `id` marker guards re-injection across multiple `overlay()` instances, or a re-run inside one test's
+ * shared DOM). No-ops outside a document (defensive; every real caller runs in a browser). */
+function ensureAnchorTryStylesheet(doc: Document): void {
+  if (doc.getElementById(ANCHOR_TRY_STYLE_ID)) return
+  const style = doc.createElement('style')
+  style.id = ANCHOR_TRY_STYLE_ID
+  style.textContent = buildAnchorTryStylesheet()
+  doc.head.appendChild(style)
+}
+
 // ── The controller ───────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -177,9 +309,40 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
   const prefPlacement = opts.placement ?? 'bottom-start'
   const auto = opts.auto ?? true
   const focusOnOpen = opts.focusOnOpen ?? true
+  const [prefSide, prefAlign] = splitPlacement(prefPlacement)
 
   // Set the popover type on the popup part (done once — the part is created once, ADR-0017 pattern).
   popup.setAttribute('popover', auto ? 'auto' : 'manual')
+
+  // ── Enhanced-path setup (GH #951) — one-time, static wiring; NOTHING here registers a listener.
+  // `anchorName` doubles as the enhanced-path flag for the rest of this closure: non-null only when
+  // `supportsAnchorPositioning` AND the host has a document to inject the shared stylesheet into.
+  const anchorName = supportsAnchorPositioning && anchor.ownerDocument ? nextAnchorName() : null
+  if (anchorName) {
+    ensureAnchorTryStylesheet(anchor.ownerDocument)
+    anchor.style.setProperty('anchor-name', anchorName)
+    popup.style.setProperty('position-anchor', anchorName)
+    // FLIP-CANDIDATES (GH #951 — a live regression, not a design preference): the JS path only ever
+    // flips the SIDE (`FLIP_SIDE`, preserving align) — a first draft mirrored exactly that ONE
+    // fallback here too. It broke `tabs.browser.test.ts`'s overflow-menu commit relay: an anchor
+    // sitting at the very edge of a wider-than-viewport strip, with `align:start`, overflows the
+    // popup's FAR (right) edge regardless of which SIDE (top/bottom) it's on — a side-only flip
+    // can never fix a same-align overflow. The full 2×2 candidate set (flip-side alone, flip-align
+    // alone, flip-both) gives the CSS spec's own mandated "least-overflow" fallback selection an
+    // actual chance at finding a placement that fits all four edges (here, flipping ALIGN to `end`
+    // pins the popup's right edge to the anchor's own right edge instead — which fits, since that
+    // edge sits within the viewport even when the anchor's LEFT-aligned start doesn't). Ordered
+    // flip-side first (closest to the JS path's own tactic), then flip-align, then flip-both.
+    // `resolveAnchoredPlacement()`'s geometry decode works identically regardless of which of the
+    // four the compositor actually lands on — it reads resolved rects, never a try-option's name.
+    const flipSidePlacement = `${FLIP_SIDE[prefSide]}-${prefAlign}` as OverlayPlacement
+    const flipAlignPlacement = `${prefSide}-${FLIP_ALIGN[prefAlign]}` as OverlayPlacement
+    const flipBothPlacement = `${FLIP_SIDE[prefSide]}-${FLIP_ALIGN[prefAlign]}` as OverlayPlacement
+    popup.style.setProperty(
+      'position-try-fallbacks',
+      [flipSidePlacement, flipAlignPlacement, flipBothPlacement].map(positionTryName).join(', '),
+    )
+  }
 
   let isOpen = false
   let opener: HTMLElement | null = null
@@ -220,7 +383,99 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
     })
   }
 
+  // ── Enhanced-path positioning (GH #951) — no scroll/resize listeners; the compositor re-resolves
+  // `anchor()`/`@position-try` on its own as the anchor moves, which is this path's entire point.
+
+  /** Decode which of the FOUR candidates [preferred, flip-side, flip-align, flip-both] the compositor
+   * actually applied, from geometry — the enhanced-path equivalent of `computePosition()`'s returned
+   * `placement` field, and independent of the fallback LIST's own length or order (a fifth or sixth
+   * candidate added later needs no change here). Comparing resolved rects is the only listener-free
+   * readback available: `@position-try` rules only accept position/sizing/self-alignment properties,
+   * not custom properties (verified empirically against the shipped implementation — a `--resolved:
+   * <ident>` declaration inside `@position-try`, paired with a `transition` on that custom property to
+   * fire `transitionrun` on activation, never fires; the rule's non-inset declarations are silently
+   * dropped), so there is no CSS-side signal to relay a `@position-try` rule's identity back into JS
+   * without the browser tightening that spec gap. */
+  function resolveAnchoredPlacement(): OverlayPlacement {
+    const a = anchor.getBoundingClientRect()
+    const p = popup.getBoundingClientRect()
+    const EPS = 1 // sub-pixel tolerance against layout rounding
+    let side: Side = prefSide
+    if (p.top >= a.bottom - EPS) side = 'bottom'
+    else if (p.bottom <= a.top + EPS) side = 'top'
+    else if (p.left >= a.right - EPS) side = 'right'
+    else if (p.right <= a.left + EPS) side = 'left'
+    let align: Align
+    if (side === 'bottom' || side === 'top') {
+      align = Math.abs(p.left - a.left) <= Math.abs(p.right - a.right) ? 'start' : 'end'
+    } else {
+      align = Math.abs(p.top - a.top) <= Math.abs(p.bottom - a.bottom) ? 'start' : 'end'
+    }
+    return `${side}-${align}` as OverlayPlacement
+  }
+
+  /** Apply the BASE (preferred) placement inline — the default state before any `@position-try`
+   * fallback activates (the fallback rules themselves live in the shared stylesheet; only the
+   * candidate NAMES are referenced via `position-try-fallbacks`, built once at setup above) — then
+   * read back the resolved placement SYNCHRONOUSLY (a forced-layout `getBoundingClientRect()` read
+   * resolves the compositor's anchor-positioning pass immediately, measured against this repo's
+   * pinned engines) to settle `data-placement`, matching the JS path's own synchronous `position()`
+   * call — every shipped consumer (menu/select/combo-box/popover/form-popover/tooltip/nav-rail/
+   * text-field popups) reads `data-placement` synchronously right after `open()` today; an
+   * rAF-deferred first draft of this function broke that contract (6 consumer-suite regressions,
+   * caught live by this ticket's own "existing suites stay green unmodified" bar) before landing here.
+   *
+   * Two recorded, deliberate divergences from the JS path (GH #951 Scope/Open — shipped where
+   * faithful, not silently approximated):
+   *
+   * (1) `data-placement` freshness ACROSS an in-session re-flip. This resolves the placement once,
+   * at open (or explicit re-open) time. It is NOT re-read on every subsequent scroll/resize the way
+   * the JS path's `schedulePosition()` re-derives it — keeping it live across a compositor-driven
+   * mid-scroll re-flip would require re-adding exactly the rAF-on-scroll/resize listener churn this
+   * whole enhancement exists to remove, and the CSS Anchor Positioning spec exposes no cheaper
+   * listener-free signal for "a named `@position-try` option just activated" (see
+   * `resolveAnchoredPlacement()`'s doc comment for what was tried and why it doesn't work).
+   *
+   * (2) Shift/clamp parity. `insetDeclarationsFor()`'s `max(0px, …)` inset clamp reconstructs the
+   * LOWER half of the JS path's continuous viewport clamp (self-size-independent — GH #134's real
+   * menu-overflow regression is what this fixes). The UPPER half — capping the popup's OWN far,
+   * `auto`-sized edge — genuinely CANNOT be reconstructed the same way: `anchor()` is invalid inside
+   * a sizing property (`max-inline-size`/`max-block-size`), measured directly against this repo's
+   * real engines after a first draft assumed otherwise (see `insetDeclarationsFor()`'s doc comment).
+   * The `position-try-fallbacks` FULL 2×2 candidate list (see the `FLIP-CANDIDATES` comment at the
+   * `overlay()` setup site) is the real stand-in — the CSS spec's own mandated "least overflow"
+   * selection across four named placements, rather than a size cap, is what fixed the second live
+   * regression (`tabs.browser.test.ts`'s overflow-menu commit relay). What remains genuinely
+   * unreproduced: a popup that overflows EVERY one of the four candidates on its own far edge,
+   * independent of where the anchor sits, still isn't clamped — a discrete four-way pick, never a
+   * continuous edge-clamp. Recorded here rather than silently approximated. */
+  function applyAnchoredPlacement(): void {
+    popup.style.position = 'fixed'
+    popup.style.margin = '0'
+    const base = insetDeclarationsFor(prefSide, prefAlign)
+    popup.style.top = base.top
+    popup.style.right = base.right
+    popup.style.bottom = base.bottom
+    popup.style.left = base.left
+    popup.setAttribute('data-placement', resolveAnchoredPlacement())
+  }
+
+  function startAnchoredPositioning(): void {
+    applyAnchoredPlacement()
+  }
+
+  // No teardown needed on the enhanced path — no listener, no scheduled frame, nothing outstanding.
+  // Kept as a named function (rather than inlined at the call site) purely for symmetry with
+  // `stopPositioning()`'s JS-path branch and readability at the call sites below.
+  function stopAnchoredPositioning(): void {
+    // intentional no-op
+  }
+
   function startPositioning(): void {
+    if (anchorName) {
+      startAnchoredPositioning()
+      return
+    }
     positionAc?.abort() // guard: re-open without a close should not stack ACs
     positionAc = new AbortController()
     position() // immediate placement on open
@@ -230,6 +485,10 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
   }
 
   function stopPositioning(): void {
+    if (anchorName) {
+      stopAnchoredPositioning()
+      return
+    }
     positionAc?.abort()
     positionAc = null
     if (rafId !== null) {
