@@ -63,6 +63,22 @@ Gate-A outcomes: E1 APPROVED → claude-plugins#252 · E2 APPROVED → claude-pl
 - Verdict: 🟢 estate — wave 1 landed gate-green; 🟡 awaiting human: PR #924 merge, then W2
   dispatches (#925–#935) and W3 rulings (#936–#938).
 
+## Close-out (2026-08-15, post-execution)
+
+- Wave 1: PR #924 MERGED (Kim, 01:26Z).
+- Wave 2: #925–#928 built by this session's seats → PRs #939–#942 MERGED. #929–#933 built by a
+  concurrent board-clear session's folded campaign → PR #943 MERGED (lane split resolved via
+  claim-race discipline, note on #930; two duplicate dispatches from this side stood
+  down/stopped pre-commit, zero divergent work). #934–#935 remain with that campaign's live
+  chore/w2-c-934-935 worktree (active uncommitted work verified at reclaim-check time;
+  deliberately NOT reclaimed).
+- Wave 3, Kim's live rulings: #936 RETIRE a2ui-meta-line-facts · #937 HOLD for routing proof
+  (open, blocked on claude-plugins#253) · #938 rename example-standards → example-authoring.
+  Executed as PR #944, MERGED; #936/#938 closed.
+- Final burn-down: naming exemptions 34 → 0; validator 33 artifacts, errors=0, warnings=0.
+- Residual open: #934, #935 (peer campaign), #937 (held by design). Upstream: claude-plugins
+  #252, #253.
+
 ## Baselines (Phase 1)
 
 - Governance: `.claude/naming.manifest.json` seeded 2026-08-14 (live-confirmed): scope=grammar,
