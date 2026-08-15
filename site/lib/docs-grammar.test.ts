@@ -253,11 +253,19 @@ describe('STRUCTURAL — S5-S9 (S5-S8 promoted at Phase 5, manifest M7-M10; S9 m
     const dangling: string[] = []
     let checked = 0
     for (const name of readdirSync(`${ROOT}/.claude/skills`)) {
-      const p = `${ROOT}/.claude/skills/${name}/SKILL.md`
-      if (!existsSync(p)) continue
-      for (const rel of skillExemplarPaths(readFileSync(p, 'utf8'))) {
-        checked++
-        if (!existsSync(`${ROOT}/${rel}`)) dangling.push(`${name}: ${rel}`)
+      const dir = `${ROOT}/.claude/skills/${name}`
+      const files = [`${dir}/SKILL.md`]
+      // The 2026-08-14 overhaul (W2, #925-#935) moved the exemplar tables into references/ —
+      // the sweep follows them there or its corpus floor reads a hollowed-out estate as green.
+      const refsDir = `${dir}/references`
+      if (existsSync(refsDir))
+        for (const f of readdirSync(refsDir)) if (f.endsWith('.md')) files.push(`${refsDir}/${f}`)
+      for (const p of files) {
+        if (!existsSync(p)) continue
+        for (const rel of skillExemplarPaths(readFileSync(p, 'utf8'))) {
+          checked++
+          if (!existsSync(`${ROOT}/${rel}`)) dangling.push(`${name}: ${rel}`)
+        }
       }
     }
     expect(dangling, dangling.join('\n')).toEqual([])
