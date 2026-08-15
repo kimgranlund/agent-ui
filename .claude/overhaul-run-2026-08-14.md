@@ -23,10 +23,25 @@ Plan: `.claude/overhaul-plan-2026-08-14.md` (fallback path; make-doc LLD route d
 not taken — campaign artifact, not a product LLD; named deviation).
 
 - Wave 0 (merge/split): EMPTY — no nomination cleared the evidence bar
-- Wave 1 (mechanical renames): EMPTY — all renames killed at kill-switch (family-consistency +
-  seat-name blast radius + #197 precedent); all 34 names grandfathered
-- Wave 2 (knowledge extraction + trim): 11 seeds W2-1…W2-11 — PENDING Gate A
-- Wave 3 (contested): 3 rows W3-1…W3-3 — PENDING Gate A
+- Wave 1 (renames): Gate A AMENDED live — "rename all, the names are kind of garbage" superseded
+  the plan's kill-all verdict. Re-rendered map (32 renames + lexicon/vocab edits) approved
+  in-round; rename-execute's touched-file confirm approved live (103 files / 531 refs).
+  EXECUTED 2026-08-14: validator errors=0, exemptions 34 → 1 (example-authoring-agent);
+  fix-old-names sweep 0 live stale (5 verified false-positive `orchestrator` prose hits left;
+  2 off-plan .github template pointers fixed — under Gate-B trigger-3's divergence bound).
+  Landed: PR #924 (draft) on worktree-overhaul-2026-08-14. Merge is the human's.
+- Wave 2 (knowledge extraction + trim): 11 seeds APPROVED at Gate A, minted as issues
+  #925–#935, each Blocked-by PR #924's merge — builds dispatch after the rename wave lands,
+  never before (wave-order edge). No build-lead dispatches this run by design.
+- Wave 3 (contested): ruled "file as tasks, decide later" → #936 (W3-1 meta-line-facts
+  retire-vs-slim), #937 (W3-2 description trim, blocked on routing proof), #938 (W3-3 —
+  substituted: the residual example-authoring-agent exemption; the plan's original W3-3
+  conforming-names question was RESOLVED by the rename-all ruling).
+
+## Gate B
+
+Not fired — none of the four triggers tripped (off-plan discovery was 2 .github pointer
+fixes; no new rename targets, no kill-switch flip, divergence 2 files < bound, no failed row).
 
 ## Emergent-item queue
 
@@ -34,6 +49,19 @@ not taken — campaign artifact, not a product LLD; named deviation).
 |---|---|---|---|---|---|
 | E1 | naming-audit `validate.py` crashes `TypeError: unhashable type: 'dict'` when author_registry holds structured entries (line 122); manifest-authoring says "populate from committers" with no format stated | tooling defect (upstream authorkit) | coerce/validate manifest shape and fail with a clean message; document the string format in MANIFEST-TEMPLATE | `gh issue create` on the authorkit plugin repo | queued → Gate A |
 | E2 | `check-routing` runs plugin trigger-eval suites only; this non-plugin estate (6/28 skills carry evals/) gets UNMEASURED routing proofs in Phase 6 | capability gap (upstream harness) | an estate-mode target (or per-skill eval discovery) so project estates get routing proofs | `gh issue create` on the harness plugin repo | queued → Gate A |
+
+Gate-A outcomes: E1 APPROVED → claude-plugins#252 · E2 APPROVED → claude-plugins#253.
+
+## Phase 6 — burn-down + verdict
+
+- Routing proof: **UNMEASURED**, named — harness check-routing has no non-plugin estate mode (E2/#253).
+- naming-audit scoreboard: baseline errors=0/exemptions=**34** → now errors=0/exemptions=**1**.
+- Degraded/deviated steps, all named: plan doc at fallback path (make-doc LLD route deliberately
+  not taken); product code + byte-pinned corpus data + frozen doc history out of rename plan by
+  design; session-memory history not rewritten (translation-map memory added instead); W2 builds
+  deferred behind PR #924's merge.
+- Verdict: 🟢 estate — wave 1 landed gate-green; 🟡 awaiting human: PR #924 merge, then W2
+  dispatches (#925–#935) and W3 rulings (#936–#938).
 
 ## Baselines (Phase 1)
 
