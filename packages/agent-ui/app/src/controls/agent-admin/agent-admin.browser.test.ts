@@ -807,10 +807,13 @@ describe('ui-agent-admin cross-engine smoke — canvas/region gutter is module-d
   })
 })
 
-describe('ui-agent-admin cross-engine smoke — the add-form is GENUINELY collapsed when hidden (component-reviewer CRITICAL fix)', () => {
+describe('ui-agent-admin cross-engine smoke — the INLINE add-form is GENUINELY collapsed when hidden (component-reviewer CRITICAL fix)', () => {
   it('a hidden add-form computes display:none; toggling reveals it as a real, visible box', () => {
-    const { el } = mountAgentAdmin('Capabilities') // GH #574 — Tools rides the Capabilities tab now
-    const section = el.querySelector(`[data-kind="${ENTRY_KINDS.tool}"]`) as HTMLElement
+    const { el } = mountAgentAdmin('Capabilities')
+    // Instructions, not Tools: GH #917 moved the four capability kinds' authoring into a drawer (which has
+    // no hidden-form state at all — the form does not exist until it opens), so the `[hidden]`-vs-`display`
+    // cascade race this test exists for lives on the three sections that still render the dashed form.
+    const section = el.querySelector(`[data-kind="${ENTRY_KINDS.promptSection}"]`) as HTMLElement
     const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
 
     // Before the CSS fix, `display: flex` beat the UA [hidden] rule — this assertion is the one the
@@ -1041,14 +1044,18 @@ describe('ui-agent-admin cross-engine smoke — TKT-0049/ADR-0139: entry-content
     expect(computed).toBeCloseTo(expectedMinBlockSize(field, 4), 1)
   })
 
-  it('entry-add-content (rows=2) renders a real computed min-height matching the rows formula', () => {
-    const { el } = mountAgentAdmin()
+  // GH #917 — the draft field moved into the drawer, where the whole content region is its to fill, so its
+  // `rows` figure went 2 → 8 (the drawer's own size, shared with the Edit form's editor). The CLAIM is
+  // unchanged and is the reason this test exists: whatever `rows` says, the real computed min-height follows
+  // ui-code-editor's own formula — never a dead agent-admin.css literal.
+  it('entry-add-content (rows=8, the drawer figure) renders a real computed min-height matching the rows formula', () => {
+    const { el } = mountAgentAdmin('Capabilities')
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.tool}"]`) as HTMLElement
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
     const field = section.querySelector('[data-part="entry-add-content"]') as UICodeEditorElement
-    expect(field.rows).toBe(2)
+    expect(field.rows).toBe(8)
     const computed = Number.parseFloat(getComputedStyle(field).minHeight)
-    expect(computed).toBeCloseTo(expectedMinBlockSize(field, 2), 1)
+    expect(computed).toBeCloseTo(expectedMinBlockSize(field, 8), 1)
   })
 
   it('changing `.rows` moves entry-content\'s rendered min-height (proves the mechanism; catches a future competing CSS rule that WINS the cascade)', async () => {
@@ -1079,7 +1086,9 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entr
   }
 
   it('entry-content and entry-add-content render the SAME computed padding despite agent-admin.css declaring two different literal values for them (both dead)', () => {
-    const { el } = mountAgentAdmin()
+    // 'Capabilities' explicitly (GH #917): entry-add-content now lives in a `showModal()` drawer, and a
+    // top-layer surface opened from a `display:none` tab has nothing real to measure.
+    const { el } = mountAgentAdmin('Capabilities')
     const entryContent = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as HTMLElement
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.tool}"]`) as HTMLElement
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
@@ -1169,14 +1178,15 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entr
 
 describe('ui-agent-admin cross-engine smoke — TKT-0060: entry-add-form drops its native <form>/<input>/<button type="submit"> anatomy', () => {
   it('entry-add-form is a plain container (no native form-submission semantics to work around)', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Capabilities')
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
+    ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click() // GH #917 — the drawer builds it
     const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
     expect(form.tagName.toLowerCase()).toBe('div')
   })
 
   it('entry-add-label/entry-add-description are real <ui-text-field>s, entry-add-submit is a real <ui-button>', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Capabilities')
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
     expect((section.querySelector('[data-part="entry-add-label"]') as HTMLElement).tagName.toLowerCase()).toBe('ui-text-field')
@@ -1202,9 +1212,10 @@ describe('ui-agent-admin cross-engine smoke — TKT-0060: entry-add-form drops i
     expect(row).not.toBeNull()
     const toggle = row.querySelector('[data-part="entry-toggle"]') as HTMLElement & { checked: boolean }
     expect(toggle.checked).toBe(true)
-    // the same reset-on-success behavior a click submit gets — proves the Enter path runs the SAME logic
-    const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
-    expect(form.hidden).toBe(true)
+    // the same reset-on-success behavior a click submit gets — proves the Enter path runs the SAME logic.
+    // GH #917: for a drawered section that reset IS the drawer closing (and the form going with it).
+    expect((section.querySelector('[data-part="entry-drawer"]') as HTMLElement & { open: boolean }).open).toBe(false)
+    expect(section.querySelector('[data-part="entry-add-form"]')).toBeNull()
   })
 
   it('Enter in entry-add-description does NOT submit (only the required single-line label field gets Enter-to-submit, matching what a native single-line required <input> would have done)', () => {
@@ -1219,8 +1230,9 @@ describe('ui-agent-admin cross-engine smoke — TKT-0060: entry-add-form drops i
     descriptionEditor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
 
     expect(el.querySelector('[data-kind="skill"] [data-entry-id="web-search"]')).toBeNull()
-    const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
-    expect(form.hidden).toBe(false) // still open — no submission happened
+    // still open — no submission happened (GH #917: the drawer, and the form inside it, are both still up)
+    expect((section.querySelector('[data-part="entry-drawer"]') as HTMLElement & { open: boolean }).open).toBe(true)
+    expect(section.querySelector('[data-part="entry-add-form"]')).not.toBeNull()
   })
 })
 

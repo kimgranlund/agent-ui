@@ -109,6 +109,15 @@ function openEntryDrawer(el: Element, kind: string, entryId: string): HTMLElemen
   return sectionEl(el, kind).querySelector('[data-part="entry-edit-form"]') as HTMLElement
 }
 
+/** GH #917 — reach a section's ADD form through its own affordance. A drawered kind BUILDS the form on open
+ *  (the add-toggle opens the same drawer the row's Edit does); an inline kind reveals its dashed form, as it
+ *  always did. Either way the `entry-add-*` fields are queried off the SECTION afterwards, unchanged. */
+function openAddForm(el: Element, kind: string): HTMLElement {
+  const section = sectionEl(el, kind)
+  ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+  return section
+}
+
 function toggleOf(row: HTMLElement): HTMLElement & { checked: boolean } {
   return row.querySelector('[data-part="entry-toggle"]') as HTMLElement & { checked: boolean }
 }
@@ -337,7 +346,7 @@ describe('mountEntryList — the rename option (GH #848)', () => {
 
 // ── GH #917 — the per-entry Edit DRAWER on the primitive itself (the ADR-0170 cl.8 discipline again: both
 // polarities, so the opt-in's own behaviour AND the byte-identical default are each proven where they live).
-describe('mountEntryList — the entryDrawer option, edit mode (GH #917)', () => {
+describe('mountEntryList — the entryDrawer option, both modes (GH #917)', () => {
   const ROW: Entry = { id: 'a', kind: 'skill', label: 'A', description: 'about A', content: 'body', order: 0, enabled: true, builtin: false }
   const BUILTIN: Entry = { ...ROW, id: 'b', label: 'B', order: 1, builtin: true }
   const OPTS = { rename: true, availabilityToggle: true, entryDrawer: true }
@@ -485,6 +494,65 @@ describe('mountEntryList — the entryDrawer option, edit mode (GH #917)', () =>
     const description = openRow(section, 'a').querySelector('[data-part="entry-form-description"]') as UITextFieldElement
     expect(description.readonly).toBe(true)
     expect((openRow(section, 'a').querySelector('[data-part="entry-form-name"]') as UITextFieldElement).readonly, 'the name is unaffected').toBe(false)
+  })
+
+  // ── the ADD arm of the same drawer (GH #917 leg 2) ─────────────────────────────────────────────────────
+  it('a drawered section builds NO inline add-form; the add-toggle opens the drawer, and Add commits + closes', () => {
+    const adds: NewEntryInput[] = []
+    const section = mountEntryList('skill', 'Add skill', { onToggle: () => {}, onContentChange: () => {}, onDelete: () => {}, onAdd: (input) => (adds.push(input), true) }, OPTS)
+    document.body.append(section.host)
+    mounted.push(section.host)
+    section.render([ROW])
+
+    expect(section.host.querySelector('[data-part="entry-add-form"]'), 'not built, not merely hidden').toBeNull()
+    ;(section.host.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    const form = section.host.querySelector('[data-part="entry-add-form"]') as HTMLElement
+    expect(drawerOf(section).open).toBe(true)
+    expect(section.host.querySelector('[data-part="entry-form-title"]')!.textContent, 'the section’s own add label titles it').toBe('Add skill')
+
+    ;(form.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = 'Web search'
+    ;(form.querySelector('[data-part="entry-add-description"]') as UITextFieldElement).value = 'Searches the web'
+    ;(form.querySelector('[data-part="entry-add-content"]') as HTMLTextAreaElement).value = 'search(query)'
+    // The primary lives in the drawer's FOOTER region, never in the scrolling content beside the fields.
+    expect(form.querySelector('[data-part="entry-add-submit"]'), 'not in the content region').toBeNull()
+    ;(section.host.querySelector('[data-part="entry-drawer-footer"] [data-part="entry-add-submit"]') as HTMLElement).click()
+    expect(adds).toEqual([{ label: 'Web search', description: 'Searches the web', content: 'search(query)' }])
+    expect(drawerOf(section).open, 'a successful Add closes the drawer').toBe(false)
+  })
+
+  it('a REJECTED add keeps the drawer open with every typed field, and showAddError lands beside the Name field', () => {
+    const section = mountEntryList('skill', 'Add skill', { onToggle: () => {}, onContentChange: () => {}, onDelete: () => {}, onAdd: () => false }, OPTS)
+    document.body.append(section.host)
+    mounted.push(section.host)
+    section.render([ROW])
+    ;(section.host.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    const form = section.host.querySelector('[data-part="entry-add-form"]') as HTMLElement
+    ;(form.querySelector('[data-part="entry-add-description"]') as UITextFieldElement).value = 'Worth keeping'
+    ;(section.host.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
+    showAddError(section, 'Already in the list.') // what the caller does on a fail-closed rejection
+
+    expect(drawerOf(section).open, 'a rejection is not a reset').toBe(true)
+    expect((form.querySelector('[data-part="entry-add-description"]') as UITextFieldElement).value).toBe('Worth keeping')
+    const note = form.querySelector('[data-part="entry-form-error"]') as HTMLElement
+    expect(note.hidden).toBe(false)
+    expect(note.textContent).toBe('Already in the list.')
+    expect(note.closest('ui-field')!.querySelector('[data-part="entry-add-label"]'), 'inside the Name field’s own column').not.toBeNull()
+  })
+
+  it('a rejection arriving with NO form on screen (the library-menu path) lands in the section’s standing note', () => {
+    const section = mountEntryList('skill', 'Add skill', { onToggle: () => {}, onContentChange: () => {}, onDelete: () => {}, onAdd: () => false }, OPTS)
+    document.body.append(section.host)
+    mounted.push(section.host)
+    section.render([ROW])
+    expect(drawerOf(section).open, 'nothing is open — this is the library-menu commit path').toBe(false)
+
+    showAddError(section, 'Already in the list.')
+    const note = section.host.querySelector('[data-part="entry-add-error"]') as HTMLElement
+    expect(note.hidden, 'a fail-closed rejection is never a silent no-op').toBe(false)
+    expect(note.textContent).toBe('Already in the list.')
+    // …and opening the add form clears it — a fresh attempt starts with no stale rejection on screen.
+    ;(section.host.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    expect(note.hidden).toBe(true)
   })
 
   it('the form is rebuilt ON OPEN, so it always shows the CURRENT entry — never a stale capture', () => {
@@ -794,22 +862,28 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
     const goToSection = (label: string): void => void tabs.find((t) => t.textContent === label)!.click()
 
     goToSection('Capabilities')
-    // (a) a COMMITTED entry — the add-form's full submit path (the section re-renders its list).
+    // (a) a COMMITTED entry — the add form's full submit path (the section re-renders its list). GH #917:
+    // Skills authors through its drawer, so the add-toggle OPENS it before the fields exist.
     const skills = (): HTMLElement => el.querySelector('[data-kind="skill"]') as HTMLElement
+    ;(skills().querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
     ;(skills().querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = 'Web search'
     ;(skills().querySelector('[data-part="entry-add-description"]') as UITextFieldElement).value = 'Searches the web'
     ;(skills().querySelector('[data-part="entry-add-content"]') as HTMLTextAreaElement).value = 'search(query)'
     ;(skills().querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
     expect(readEntries(el.store, ENTRY_KINDS.skill).map((e) => e.id)).toEqual(['web-search'])
 
-    // (b) an UNCOMMITTED dirty field — typed into the reopened add-form, never submitted. This is the
-    // state a re-mount would silently eat, and the one a `hidden` flip must not.
-    ;(skills().querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
-    const dirtyField = skills().querySelector('[data-part="entry-add-label"]') as UITextFieldElement
-    dirtyField.value = 'Half-typed skill'
-    // (c) a fold's open state — Instructions collapsed by hand (folds default open).
-    const instructions = el.querySelector('[data-part="settings-item"][data-item="prompt-section"]') as HTMLElement & { open: boolean }
-    instructions.open = false
+    // (b) an UNCOMMITTED dirty field — typed into a revealed add-form, never submitted. This is the state a
+    // re-mount would silently eat, and the one a `hidden` flip must not. Driven on INSTRUCTIONS (the same
+    // tab, an inline-form kind): a drawered section's form is rebuilt on every open by construction, so it
+    // is the wrong probe for "the node was never re-created" — the inline form is exactly that probe, and
+    // it is the shape three of this element's six sections still render.
+    const instructionsSection = (): HTMLElement => el.querySelector(`[data-kind="${ENTRY_KINDS.promptSection}"]`) as HTMLElement
+    ;(instructionsSection().querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    const dirtyField = instructionsSection().querySelector('[data-part="entry-add-label"]') as UITextFieldElement
+    dirtyField.value = 'Half-typed section'
+    // (c) a fold's open state — Skills collapsed by hand (folds default open).
+    const skillsFold = el.querySelector('[data-part="settings-item"][data-item="skill"]') as HTMLElement & { open: boolean }
+    skillsFold.open = false
 
     goToSection('Context: Dialog')
     goToSection('Agent')
@@ -817,11 +891,11 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
 
     expect(readEntries(el.store, ENTRY_KINDS.skill).map((e) => e.id), 'the committed entry survives').toEqual(['web-search'])
     expect([...skills().querySelectorAll('[data-part="entry-label"]')].map((n) => n.textContent)).toContain('Web search')
-    expect(skills().querySelector('[data-part="entry-add-label"]'), 'the SAME field node — never re-created').toBe(dirtyField)
-    expect(dirtyField.value, 'the uncommitted keystrokes survive the flip').toBe('Half-typed skill')
-    expect((skills().querySelector('[data-part="entry-add-form"]') as HTMLElement).hidden, 'the form stays open too').toBe(false)
-    expect(el.querySelector('[data-part="settings-item"][data-item="prompt-section"]'), 'the same fold node').toBe(instructions)
-    expect(instructions.open, 'the hand-collapsed fold stays collapsed').toBe(false)
+    expect(instructionsSection().querySelector('[data-part="entry-add-label"]'), 'the SAME field node — never re-created').toBe(dirtyField)
+    expect(dirtyField.value, 'the uncommitted keystrokes survive the flip').toBe('Half-typed section')
+    expect((instructionsSection().querySelector('[data-part="entry-add-form"]') as HTMLElement).hidden, 'the form stays open too').toBe(false)
+    expect(el.querySelector('[data-part="settings-item"][data-item="skill"]'), 'the same fold node').toBe(skillsFold)
+    expect(skillsFold.open, 'the hand-collapsed fold stays collapsed').toBe(false)
   })
 
   it('the settings sub-nav`s select never escapes the admin host either', () => {
@@ -1958,18 +2032,33 @@ describe('UIAgentAdminElement — the prompt-section modality lint (GH #419)', (
 })
 
 describe('UIAgentAdminElement — custom entry authoring (ADR-0132 cl.4, fail-closed)', () => {
-  it('the add-form starts hidden and reveals on the add-toggle click', () => {
+  // GH #917 — a drawered kind (Skills) authors in the drawer: no permanently-mounted dashed form to reveal,
+  // and no `hidden` flip — the form does not EXIST until the add-toggle opens it, and it is gone again after.
+  it('a drawered section mounts no inline add-form at all; the add-toggle opens the drawer and builds one', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const section = el.querySelector('[data-kind="skill"]') as HTMLElement
-    const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
-    expect(form.hidden).toBe(true)
+    const drawer = section.querySelector('[data-part="entry-drawer"]') as HTMLElement & { open: boolean }
+    expect(section.querySelector('[data-part="entry-add-form"]'), 'nothing mounted, not merely hidden').toBeNull()
+    expect(drawer.open).toBe(false)
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
-    expect(form.hidden).toBe(false)
+    expect(drawer.open).toBe(true)
+    const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
+    expect(form).not.toBeNull()
+    // The ADD form omits the tier pill (the Phase 0 D3 ruling: a new entry is born in-context, by absence)
+    // and carries no danger row — there is nothing to delete yet.
+    expect(form.querySelector('[data-part="entry-availability"]'), 'no tier control in add mode').toBeNull()
+    expect(form.querySelector('[data-part="entry-form-danger"]')).toBeNull()
+    expect([...form.querySelectorAll('[data-part^="entry-add-"], [data-part="entry-form-error"]')].map((n) => n.getAttribute('data-part'))).toEqual([
+      'entry-add-label',
+      'entry-form-error',
+      'entry-add-description',
+      'entry-add-content',
+    ])
   })
 
-  it('submitting a valid custom skill adds it, enabled, to the list — and the form resets/hides', () => {
+  it('submitting a valid custom skill adds it, enabled, to the list — and the form resets/closes', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const section = el.querySelector('[data-kind="skill"]') as HTMLElement
+    const section = openAddForm(el, ENTRY_KINDS.skill)
     ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = 'Web search'
     ;(section.querySelector('[data-part="entry-add-description"]') as UITextFieldElement).value = 'Searches the web'
     ;(section.querySelector('[data-part="entry-add-content"]') as HTMLTextAreaElement).value = 'search(query)'
@@ -1977,8 +2066,9 @@ describe('UIAgentAdminElement — custom entry authoring (ADR-0132 cl.4, fail-cl
     const stored = readEntries(el.store, ENTRY_KINDS.skill)
     expect(stored).toHaveLength(1)
     expect(stored[0]).toMatchObject({ id: 'web-search', label: 'Web search', enabled: true, builtin: false })
+    expect(stored[0], 'SPEC-R1 — a new entry is in-context BY ABSENCE, never a written value').not.toHaveProperty('availability')
     const reRenderedSection = el.querySelector('[data-kind="skill"]') as HTMLElement
-    expect((reRenderedSection.querySelector('[data-part="entry-add-form"]') as HTMLElement).hidden).toBe(true)
+    expect((reRenderedSection.querySelector('[data-part="entry-drawer"]') as HTMLElement & { open: boolean }).open).toBe(false)
   })
 
   it('TKT-0073: the required Name field, left empty and blurred, shows its validation message via the wrapping ui-field\'s OWN error part — never the internal .ui-text-field-message fallback the pre-fix bare control rendered inside its own bordered box', async () => {
@@ -2006,34 +2096,39 @@ describe('UIAgentAdminElement — custom entry authoring (ADR-0132 cl.4, fail-cl
     expect(internalMessage.textContent).toBe('')
   })
 
-  it('an empty name is rejected — fail-closed, nothing added, an error note shown', () => {
+  it('an empty name is rejected — fail-closed, nothing added, and the message renders NEXT TO the Name field', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const section = el.querySelector('[data-kind="tool"]') as HTMLElement
+    const section = openAddForm(el, ENTRY_KINDS.tool)
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
     expect(readEntries(el.store, ENTRY_KINDS.tool)).toHaveLength(0)
-    const error = section.querySelector('[data-part="entry-add-error"]') as HTMLElement
+    // GH #917 — INLINE next to the offending field: `entry-form-error` sits inside the Name field's own
+    // `ui-field` column, not at the foot of the form (the ruling's "next to the field", the one thing that
+    // makes a rejection readable in a full-height drawer). The section's standing `entry-add-error` — where
+    // a library-menu rejection lands with no form on screen — stays hidden and untouched.
+    const error = section.querySelector('[data-part="entry-form-error"]') as HTMLElement
     expect(error.hidden).toBe(false)
     expect(error.textContent).toMatch(/name/i)
+    expect(error.closest('ui-field')!.querySelector('[data-part="entry-add-label"]'), 'the Name field the message is about').not.toBeNull()
+    expect((section.querySelector('[data-part="entry-add-error"]') as HTMLElement).hidden, 'the standing note stays out of it').toBe(true)
   })
 
-  it('a REJECTED submit keeps the form open AND the typed description/content — never silently discarded (component-reviewer MAJOR fix)', () => {
+  it('a REJECTED submit keeps the drawer open AND the typed description/content — never silently discarded (component-reviewer MAJOR fix)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const section = el.querySelector('[data-kind="tool"]') as HTMLElement
+    const section = openAddForm(el, ENTRY_KINDS.tool)
     const descriptionField = section.querySelector('[data-part="entry-add-description"]') as UITextFieldElement
     const contentField = section.querySelector('[data-part="entry-add-content"]') as HTMLTextAreaElement
     descriptionField.value = 'A description worth keeping'
     contentField.value = 'Content worth keeping'
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
-    const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
-    expect(form.hidden).toBe(false) // stays open — a rejection is not a reset
+    expect((section.querySelector('[data-part="entry-drawer"]') as HTMLElement & { open: boolean }).open, 'stays open — a rejection is not a reset').toBe(true)
     expect(descriptionField.value).toBe('A description worth keeping')
     expect(contentField.value).toBe('Content worth keeping')
   })
 
   it('a duplicate label gets a suffixed id, not a rejection', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const section = el.querySelector('[data-kind="workflow"]') as HTMLElement
     const addOnce = (label: string): void => {
+      const section = openAddForm(el, ENTRY_KINDS.workflow)
       ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = label
       ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
     }
@@ -2047,7 +2142,7 @@ describe('UIAgentAdminElement — custom entry authoring (ADR-0132 cl.4, fail-cl
   // scrolling content, never the footer beside the primary).
   it('a custom entry CAN be deleted from its Edit drawer (unlike a built-in)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const section = el.querySelector('[data-kind="resource"]') as HTMLElement
+    const section = openAddForm(el, ENTRY_KINDS.resource)
     ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = 'Docs site'
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
     const form = openEntryDrawer(el, ENTRY_KINDS.resource, 'docs-site')
@@ -2069,7 +2164,7 @@ describe('UIAgentAdminElement — the default store persists across a reload (AD
     field.value = 'Survives a reload.'
     field.dispatchEvent(new Event('change', { bubbles: true }))
 
-    const skillSection = first.querySelector('[data-kind="skill"]') as HTMLElement
+    const skillSection = openAddForm(first, ENTRY_KINDS.skill)
     ;(skillSection.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = 'Persisted skill'
     ;(skillSection.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
 
@@ -2132,7 +2227,7 @@ describe('UIAgentAdminElement — the default store persists across a reload (AD
 
 describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-R2/R3)', () => {
   function addEntry(el: UIAgentAdminElement, kind: string, label: string): void {
-    const section = el.querySelector(`[data-kind="${kind}"]`) as HTMLElement
+    const section = openAddForm(el, kind) // GH #917 — the add form is built by the drawer this opens
     ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = label
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
   }
@@ -2315,7 +2410,7 @@ describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-
 
 describe('UIAgentAdminElement — the composer reach path (GH #849/SPEC-R8/R4)', () => {
   function addEntry(el: UIAgentAdminElement, kind: string, label: string): void {
-    const section = el.querySelector(`[data-kind="${kind}"]`) as HTMLElement
+    const section = openAddForm(el, kind) // GH #917 — the add form is built by the drawer this opens
     ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = label
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
   }
@@ -2530,7 +2625,7 @@ describe('UIAgentAdminElement — the composer reach path (GH #849/SPEC-R8/R4)',
 
 describe('UIAgentAdminElement — the capabilities menu (GH #891/SPEC-R13)', () => {
   function addEntry(el: UIAgentAdminElement, kind: string, label: string): void {
-    const section = el.querySelector(`[data-kind="${kind}"]`) as HTMLElement
+    const section = openAddForm(el, kind) // GH #917 — the add form is built by the drawer this opens
     ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = label
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
   }
@@ -2760,7 +2855,7 @@ describe('UIAgentAdminElement — live-apply turn loop (ADR-0132 cl.6: composed 
   }
 
   function addEntry(el: UIAgentAdminElement, kind: string, label: string): void {
-    const section = el.querySelector(`[data-kind="${kind}"]`) as HTMLElement
+    const section = openAddForm(el, kind) // GH #917 — the add form is built by the drawer this opens
     ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = label
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
   }
@@ -2823,7 +2918,7 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     return ((bubbles[bubbles.length - 1]?.querySelector('[data-part="body"]')) as HTMLElement)?.textContent ?? ''
   }
   function addEntry(el: UIAgentAdminElement, kind: string, label: string): void {
-    const section = el.querySelector(`[data-kind="${kind}"]`) as HTMLElement
+    const section = openAddForm(el, kind) // GH #917 — the add form is built by the drawer this opens
     ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = label
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
   }
@@ -3146,7 +3241,7 @@ describe('UIAgentAdminElement — a bring-your-own store with NO subscribe() sti
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = noSubscribeStore
     mount(el)
-    const section = el.querySelector('[data-kind="skill"]') as HTMLElement
+    const section = openAddForm(el, ENTRY_KINDS.skill)
     ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = 'No-subscribe skill'
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
     const row = el.querySelector('[data-kind="skill"] [data-entry-id="no-subscribe-skill"]')

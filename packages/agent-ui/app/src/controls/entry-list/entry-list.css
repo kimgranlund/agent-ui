@@ -210,8 +210,12 @@
   /* :not([hidden]) — component-reviewer CRITICAL fix: an author `display` declaration beats the UA
      `[hidden] { display: none }` rule (the combo-box.css precedent for the identical pitfall); without
      this guard the add-form renders permanently visible in a real browser regardless of its `.hidden`
-     JS property. */
-  [data-part='entry-add-form']:not([hidden]) {
+     JS property.
+     `:scope >` (GH #917) — the INLINE dashed form is a direct child of the section; a DRAWERED section's
+     add form carries the same part name (it is the same form) but lives inside the drawer's content region,
+     where this dashed card chrome would be a card inside a card. The child combinator is what keeps this
+     rule on the surface it was written for; the drawer's own column rules are below. */
+  :scope > [data-part='entry-add-form']:not([hidden]) {
     display: flex;
     flex-direction: column;
     gap: var(--ui-entry-list-compact-gap);
@@ -221,7 +225,10 @@
     border-radius: var(--ui-entry-list-entry-radius);
   }
 
-  [data-part='entry-add-error'] {
+  /* The two fail-closed validation notes, one rule: the section's standing note (where a library-menu
+     rejection lands, GH #917) and the drawer add form's own inline one, next to the Name field it names. */
+  [data-part='entry-add-error'],
+  [data-part='entry-form-error'] {
     margin: 0;
     font-size: 0.8125rem;
     color: var(--ui-entry-list-error-ink);
@@ -257,11 +264,12 @@
     color: var(--ui-entry-list-label-ink);
   }
 
-  /* Both modes' field column. `min-block-size: 0` is what lets the content editor below actually shrink to
-     the region's height instead of forcing the whole column taller (the flex automatic-minimum-size
-     override, the same shape `entry-label`'s truncation floor uses one axis over). */
-  [data-part='entry-add-form'],
-  [data-part='entry-edit-form'] {
+  /* Both modes' field column, INSIDE the drawer only (the inline dashed form keeps its own card rule
+     above). `min-block-size: 0` is what lets the content editor below actually shrink to the region's
+     height instead of forcing the whole column taller (the flex automatic-minimum-size override, the same
+     shape `entry-label`'s truncation floor uses one axis over). */
+  [data-part='entry-drawer-content'] > [data-part='entry-add-form'],
+  [data-part='entry-drawer-content'] > [data-part='entry-edit-form'] {
     display: flex;
     flex-direction: column;
     gap: var(--ui-entry-list-list-gap);

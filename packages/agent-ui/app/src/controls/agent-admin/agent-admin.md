@@ -142,19 +142,21 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: entry-form-done
     description: The Edit drawer footer's ONE primary ("Done") — it closes the drawer; every field already committed on its own change.
   - name: entry-add-toggle
-    description: A section's `<ui-button data-part="entry-add-toggle">` ("Add ...", with a leading `plus` icon adornment — TKT-0048), revealing/hiding the add-form.
+    description: A section's `<ui-button data-part="entry-add-toggle">` ("Add ...", with a leading `plus` icon adornment — TKT-0048). On an inline kind it reveals/hides the dashed add-form; on a drawered kind (GH #917) it OPENS `entry-drawer` in add mode — the same drawer the row's Edit opens.
   - name: entry-add-form
-    description: A section's custom-entry authoring form — hidden by default.
+    description: A section's custom-entry authoring form. On an inline kind it is a permanently-mounted dashed card, hidden by default; on a drawered kind it is BUILT ON OPEN inside the drawer's content region and gone again on close (never mounted, never merely hidden). Field order there is name → description → content — the ADD form carries no tier control (Phase 0 D3: a new entry is in-context by ABSENCE, SPEC-R1) and no danger row.
   - name: entry-add-label
-    description: The add-form's required name field.
+    description: The add form's required name field.
   - name: entry-add-description
-    description: The add-form's optional description field.
+    description: The add form's optional description field.
   - name: entry-add-content
-    description: The add-form's content field.
+    description: The add form's content field.
   - name: entry-add-submit
-    description: The add-form's submit button.
+    description: The add form's commit button ("Add"). Inline, it sits at the foot of the dashed card; in the drawer it is the FOOTER region's ONE primary — success closes + resets, a rejection keeps every typed field (the fail-closed law).
   - name: entry-add-error
-    description: The add-form's fail-closed validation message (ADR-0132 cl.4) — hidden until a rejected submission names why.
+    description: A section's standing fail-closed validation message (ADR-0132 cl.4) — hidden until a rejection names why. Inline kinds render it at the foot of the dashed form (and `showAddError` un-hides the form with it). A DRAWERED kind keeps it at section level for the one rejection that arrives with NO form on screen — a library-menu add refused by `validateNewEntry` (GH #783's pack-level `rejectOnCollision` among them); its drawer form's own message is `entry-form-error`.
+  - name: entry-form-error
+    description: GH #917 — the DRAWER add form's inline validation message, inside the Name field's own `ui-field` column so the message sits directly under the field it is about. A separate part name from `entry-add-error` on purpose: both can exist in one section, and a shared name would make every query positional.
   - name: surface-options
     description: The Surface Options card (vision rev.6 — the frame's node 34:1312), in the Surface tab (GH #574) — the agent's OUTPUT-MODALITY contract, five `surface-row`s (`data-surface="markdown|a2ui|genui|planner|authoring"`), each `[ surface-toggle | surface-label | surface-spacer | admin-help ]` (GH #844 added the help icon; GH #866 moved it past the spacer to the row's trailing edge, per Kim's 2026-08-14 ruling). GH #541 — a modality with CHILDREN is wrapped in a `surface-group` (`data-surface="a2ui|genui"`) carrying the card chrome, its children in an indented `surface-detail` zone under the row: A2UI's catalog picker section, GenUI's dogfood sub-option. Markdown/Planner/Authoring have no children, so they stay bare rows. Bankroll left this card in the same wave — it is its own fold now (`data-item="bankroll"`), riding the Agent tab since GH #574.
   - name: surface-group

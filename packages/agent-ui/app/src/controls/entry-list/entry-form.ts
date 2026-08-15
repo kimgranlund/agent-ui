@@ -200,17 +200,21 @@ export function buildEntryForm(
     title.textContent = form.title
 
     // TKT-0073's shape verbatim: the required field's message renders in the field's OWN column flow,
-    // outside `ui-text-field`'s bordered box. `entry-add-error` is a real note element rather than
-    // `ui-field`'s control-owned `[data-part='error']` part, because that part is rendered by a scope-owned
-    // reactive effect over the ASSOCIATED CONTROL's validity, gated on `userInvalid()` (field.ts's
-    // `#renderValidity`) — an author cannot write a `validateNewEntry` verdict into it. Placing the note
-    // INSIDE the same `ui-field` (permitted static content, field.md's slots note) lands the message in the
-    // same column position it would have had: directly under the name field it is about.
+    // outside `ui-text-field`'s bordered box. A real note element rather than `ui-field`'s control-owned
+    // `[data-part='error']` part, because that part is rendered by a scope-owned reactive effect over the
+    // ASSOCIATED CONTROL's validity, gated on `userInvalid()` (field.ts's `#renderValidity`) — an author
+    // cannot write a `validateNewEntry` verdict into it. Placing the note INSIDE the same `ui-field`
+    // (permitted static content, field.md's slots note) lands the message in the same column position it
+    // would have had: directly under the name field it is about.
+    //
+    // `entry-form-error`, NOT `entry-add-error`: a drawered section ALSO carries a standing section-level
+    // `entry-add-error` (entry-list.ts — where a library-menu rejection lands, with no form on screen), and
+    // two live nodes under one part name would make every query positional. Two nodes, two names.
     const labelField = document.createElement('ui-text-field') as UITextFieldElement
     labelField.required = true
     labelField.setAttribute('data-part', 'entry-add-label')
     const errorNote = document.createElement('p')
-    errorNote.setAttribute('data-part', 'entry-add-error')
+    errorNote.setAttribute('data-part', 'entry-form-error')
     errorNote.hidden = true
     const labelCell = fieldCell('Name', labelField)
     labelCell.append(errorNote)

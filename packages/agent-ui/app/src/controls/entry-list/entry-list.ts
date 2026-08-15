@@ -19,10 +19,11 @@
 // GH #917 — a kind may instead route its per-entry CRUD through a `ui-drawer` (`entryDrawer`, opt-in): the
 // row collapses to `[switch | label | badges | Edit]` and the Invocable pill / Rename trigger / Remove button
 // / content editor all move into ONE shared form (`entry-form.ts`), which the same drawer also renders in ADD
-// mode in place of the permanent dashed add-form. The WRITES are untouched — the form commits through the
-// same handlers this module already owned — so preset protection, the rename refusal, availability semantics
-// and the fail-closed add keep their existing homes; only the surface moves. A section that does not opt in
-// renders byte-identically to before.
+// mode — so the add-toggle opens a drawer instead of revealing the permanently-mounted dashed form, and that
+// form is not built at all. The WRITES are untouched — the form commits through the same handlers this module
+// already owned — so preset protection, the rename refusal, availability semantics and the fail-closed add
+// keep their existing homes; only the surface moves. A section that does not opt in renders byte-identically
+// to before, dashed form included.
 //
 // DOM ownership: `mountEntryList` builds the section shell (list host + add-form host — headless since GH #225) ONCE
 // and returns a `render(entries)` that rebuilds the list body from scratch on every call — acceptable
@@ -258,65 +259,121 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
 
   /** GH #143/#564 — rebuild the library menu from `currentLibraries`, in place: the ONE mechanism both
    *  `updateLibraries` (a caller-driven pack-list change) and `render` (GH #564 — an entries change, for a
-   *  `rejectOnCollision` kind's disabled-row refresh) drive, and the initial build below. `addForm`
-   *  (mounted after wherever a library menu lands) is the stable insertion anchor — a library menu, when
-   *  present, always sits immediately before it, so re-inserting there preserves the section's visual
+   *  `rejectOnCollision` kind's disabled-row refresh) drive, and the initial build below. The inline
+   *  add-form (mounted after wherever a library menu lands) is the stable insertion anchor — a library menu,
+   *  when present, always sits immediately before it, so re-inserting there preserves the section's visual
    *  order (heading → list → add-toggle → [library menu] → add-form) on every call, first build included.
    *  ADR-0170 cl.8: with `customAdd: false` that anchor is not mounted at all and the menu is the LAST
-   *  child, so a plain append reproduces the same order. */
+   *  child, so a plain append reproduces the same order. GH #917: a DRAWERED section has no inline form
+   *  either — its standing error note takes the anchor's place, at the same position in the order. */
   function refreshLibraryMenu(): void {
     libraryMenu?.remove()
     libraryMenu = currentLibraries.length > 0 ? buildLibraryMenu(currentLibraries) : null
     if (!libraryMenu) return
-    if (addForm.parentNode === section) section.insertBefore(libraryMenu, addForm)
+    const anchor = inlineAdd?.form ?? sectionError
+    if (anchor !== null && anchor.parentNode === section) section.insertBefore(libraryMenu, anchor)
     else section.append(libraryMenu)
   }
 
-  // TKT-0060: a plain container, not a native `<form>` — a `<ui-button>` submit control cannot become a
-  // form's default button (not form-associated the way a native `<button>` is), so the HTML implicit-
-  // submission algorithm was never actually available to this form once entry-add-submit converted; wiring
-  // submission manually below (click + an explicit Enter handler on the label field) replaces it exactly,
-  // without the native-form/native-input dependency TKT-0048 deferred converting this anatomy over.
-  const addForm = document.createElement('div')
-  addForm.setAttribute('data-part', 'entry-add-form')
-  addForm.hidden = true
+  /** The INLINE dashed add-form — a non-drawered section's authoring surface, unchanged since TKT-0060/0073.
+   *  A drawered section (GH #917) builds NONE of it: its add affordance is the same `ui-drawer` the row's
+   *  Edit opens, in add mode, so these nodes would be five permanently detached elements and a second,
+   *  divergent copy of the submit law. */
+  function buildInlineAddForm(): { form: HTMLElement; label: UITextFieldElement; open(): void } {
+    // TKT-0060: a plain container, not a native `<form>` — a `<ui-button>` submit control cannot become a
+    // form's default button (not form-associated the way a native `<button>` is), so the HTML implicit-
+    // submission algorithm was never actually available to this form once entry-add-submit converted; wiring
+    // submission manually below (click + an explicit Enter handler on the label field) replaces it exactly,
+    // without the native-form/native-input dependency TKT-0048 deferred converting this anatomy over.
+    const form = document.createElement('div')
+    form.setAttribute('data-part', 'entry-add-form')
+    form.hidden = true
 
-  // TKT-0073: wrapped in `<ui-field>` (the forms.ts/form-provider-demo.ts precedent) so the required
-  // field's validation message renders in the field's OWN error part — outside `ui-text-field`'s
-  // bordered box — instead of `ui-text-field`'s internal pre-`ui-field` fallback message, which shares
-  // that box with the placeholder and visibly collided with it.
-  const labelField = document.createElement('ui-text-field') as UITextFieldElement
-  labelField.required = true
-  labelField.setAttribute('data-part', 'entry-add-label')
-  const labelFieldWrap = document.createElement('ui-field') as UIFieldElement
-  labelFieldWrap.label = 'Name'
-  labelFieldWrap.append(labelField)
+    // TKT-0073: wrapped in `<ui-field>` (the forms.ts/form-provider-demo.ts precedent) so the required
+    // field's validation message renders in the field's OWN error part — outside `ui-text-field`'s
+    // bordered box — instead of `ui-text-field`'s internal pre-`ui-field` fallback message, which shares
+    // that box with the placeholder and visibly collided with it.
+    const labelField = document.createElement('ui-text-field') as UITextFieldElement
+    labelField.required = true
+    labelField.setAttribute('data-part', 'entry-add-label')
+    const labelFieldWrap = document.createElement('ui-field') as UIFieldElement
+    labelFieldWrap.label = 'Name'
+    labelFieldWrap.append(labelField)
 
-  const descriptionField = document.createElement('ui-text-field') as UITextFieldElement
-  descriptionField.setAttribute('data-part', 'entry-add-description')
-  const descriptionFieldWrap = document.createElement('ui-field') as UIFieldElement
-  descriptionFieldWrap.label = 'Description'
-  descriptionFieldWrap.description = 'Optional'
-  descriptionFieldWrap.append(descriptionField)
+    const descriptionField = document.createElement('ui-text-field') as UITextFieldElement
+    descriptionField.setAttribute('data-part', 'entry-add-description')
+    const descriptionFieldWrap = document.createElement('ui-field') as UIFieldElement
+    descriptionFieldWrap.label = 'Description'
+    descriptionFieldWrap.description = 'Optional'
+    descriptionFieldWrap.append(descriptionField)
 
-  const contentField = document.createElement('ui-code-editor') as UICodeEditorElement
-  contentField.language = 'markdown' // ADR-0139 — markdown-highlighted source editing (CM lazy-loaded)
-  contentField.placeholder = 'Content'
-  contentField.rows = 2 // TKT-0049: a compose/draft field — the smaller of the two content sizes
-  contentField.setAttribute('data-part', 'entry-add-content')
+    const contentField = document.createElement('ui-code-editor') as UICodeEditorElement
+    contentField.language = 'markdown' // ADR-0139 — markdown-highlighted source editing (CM lazy-loaded)
+    contentField.placeholder = 'Content'
+    contentField.rows = 2 // TKT-0049: a compose/draft field — the smaller of the two content sizes
+    contentField.setAttribute('data-part', 'entry-add-content')
 
-  // TKT-0048/TKT-0060: a real `<ui-button>`, same shape as `addToggle`/`deleteBtn` above.
-  const submitBtn = document.createElement('ui-button') as UIButtonElement
-  submitBtn.setAttribute('variant', 'soft')
-  submitBtn.setAttribute('data-part', 'entry-add-submit')
-  submitBtn.textContent = 'Add'
+    // TKT-0048/TKT-0060: a real `<ui-button>`, same shape as `addToggle`/`deleteBtn` above.
+    const submitBtn = document.createElement('ui-button') as UIButtonElement
+    submitBtn.setAttribute('variant', 'soft')
+    submitBtn.setAttribute('data-part', 'entry-add-submit')
+    submitBtn.textContent = 'Add'
 
-  const errorNote = document.createElement('p')
-  errorNote.setAttribute('data-part', 'entry-add-error')
-  errorNote.hidden = true
+    const errorNote = document.createElement('p')
+    errorNote.setAttribute('data-part', 'entry-add-error')
+    errorNote.hidden = true
 
-  addForm.append(labelFieldWrap, descriptionFieldWrap, contentField, submitBtn, errorNote)
-  if (withCustomAdd) section.append(addForm)
+    function submitAdd(): void {
+      const input: NewEntryInput = { label: labelField.value, description: descriptionField.value, content: contentField.value }
+      const succeeded = handlers.onAdd(input)
+      // Reset/hide ONLY on success (component-reviewer MAJOR fix) — a rejection keeps every typed field
+      // AND the form open, so the author sees their own input alongside `showAddError`'s message instead
+      // of having it silently discarded. `showAddError` (below) is the ONLY thing that un-hides the form
+      // on a rejection now — this function no longer fights it by re-hiding on every submit.
+      if (succeeded) {
+        labelField.value = ''
+        descriptionField.value = ''
+        contentField.value = ''
+        form.hidden = true
+      }
+    }
+
+    submitBtn.addEventListener('click', submitAdd)
+    // Native single-line `<input>` Enter-to-submit parity for the one required field — deliberately NOT
+    // wired on `descriptionField`/`contentField` (optional field / multi-line field, matching what the old
+    // native form's implicit submission would not have keyed off). `isComposing` guards an IME candidate-
+    // confirming Enter the same way `ui-text-field`'s own internal Enter handler already does.
+    labelField.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' || event.isComposing) return
+      submitAdd()
+    })
+
+    form.append(labelFieldWrap, descriptionFieldWrap, contentField, submitBtn, errorNote)
+    return {
+      form,
+      label: labelField,
+      open(): void {
+        form.hidden = !form.hidden
+        if (!form.hidden) labelField.focus()
+      },
+    }
+  }
+
+  const inlineAdd = withCustomAdd && !withDrawer ? buildInlineAddForm() : null
+  if (inlineAdd) section.append(inlineAdd.form)
+
+  // GH #917 — a DRAWERED section's standing error note. The drawer's own add form carries the message beside
+  // the field it is about (`entry-form.ts`), but a rejection can also arrive with NO form on screen: the
+  // library menu commits straight through `handlers.onAdd`, and a pack's own `rejectOnCollision` duplicate
+  // (GH #783/LLD-C5) is refused there. Before the drawer, that message landed in the inline form (which
+  // `showAddError` un-hid); with no inline form to un-hide it would be a silent no-op — the fail-closed
+  // add would look like nothing happening. So the section keeps one note of its own, hidden until used.
+  const sectionError = withDrawer ? document.createElement('p') : null
+  if (sectionError) {
+    sectionError.setAttribute('data-part', 'entry-add-error')
+    sectionError.hidden = true
+    section.append(sectionError)
+  }
 
   refreshLibraryMenu() // the initial build — see `refreshLibraryMenu`'s own doc comment below
 
@@ -378,35 +435,31 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
     drawer.open = true
   }
 
+  // GH #917 — ONE affordance, two surfaces: a drawered section's "Add …" opens the SAME drawer the row's
+  // Edit does, in add mode; every other section keeps the reveal/hide of its inline dashed form.
   addToggle.addEventListener('click', () => {
-    addForm.hidden = !addForm.hidden
-    if (!addForm.hidden) labelField.focus()
-  })
-
-  function submitAdd(): void {
-    const input: NewEntryInput = { label: labelField.value, description: descriptionField.value, content: contentField.value }
-    const succeeded = handlers.onAdd(input)
-    // Reset/hide ONLY on success (component-reviewer MAJOR fix) — a rejection keeps every typed field
-    // AND the form open, so the author sees their own input alongside `showAddError`'s message instead
-    // of having it silently discarded. `showAddError` (below) is the ONLY thing that un-hides the form
-    // on a rejection now — this function no longer fights it by re-hiding on every submit.
-    if (succeeded) {
-      labelField.value = ''
-      descriptionField.value = ''
-      contentField.value = ''
-      addForm.hidden = true
+    if (withDrawer) {
+      if (sectionError) sectionError.hidden = true // a fresh attempt starts with no stale rejection on screen
+      openForm({ mode: 'add', title: addLabel })
+      return
     }
-  }
-
-  submitBtn.addEventListener('click', submitAdd)
-  // Native single-line `<input>` Enter-to-submit parity for the one required field — deliberately NOT
-  // wired on `descriptionField`/`contentField` (optional field / multi-line field, matching what the old
-  // native form's implicit submission would not have keyed off). `isComposing` guards an IME candidate-
-  // confirming Enter the same way `ui-text-field`'s own internal Enter handler already does.
-  labelField.addEventListener('keydown', (event) => {
-    if (event.key !== 'Enter' || event.isComposing) return
-    submitAdd()
+    inlineAdd?.open()
   })
+
+  /** Fail-closed validation feedback (ADR-0132 cl.4), routed to the surface that can actually SHOW it — the
+   *  exported `showAddError` calls this through a private registry, so its own signature and doc are
+   *  unchanged. Three cases, in priority order:
+   *    1. a drawered section with its ADD form open — the note beside the Name field the message is about;
+   *    2. a drawered section with nothing open (a LIBRARY-menu rejection) — the section's standing note;
+   *    3. every other section — the dashed form's note, un-hiding the form, byte-identically to before. */
+  function showError(message: string): void {
+    const openNote = drawer?.open === true ? (drawerContent.querySelector('[data-part="entry-form-error"]') as HTMLElement | null) : null
+    const note = openNote ?? sectionError ?? (inlineAdd?.form.querySelector('[data-part="entry-add-error"]') as HTMLElement | null)
+    if (note === null || note === undefined) return
+    note.textContent = message
+    note.hidden = false
+    if (note !== openNote && note !== sectionError && inlineAdd) inlineAdd.form.hidden = false
+  }
 
   function render(entries: readonly Entry[]): void {
     // GH #564 — refresh the picker's live "already in the list" view BEFORE anything below reads it (a
@@ -742,16 +795,33 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
     refreshLibraryMenu()
   }
 
-  return { host: section, render, updateLibraries, showNotices }
+  const built: EntryListSection = { host: section, render, updateLibraries, showNotices }
+  errorSinks.set(built, showError)
+  return built
 }
 
-/** Show `message` in the add-form's own error note (fail-closed validation feedback, ADR-0132 cl.4) —
+/** GH #917 — each mounted section's own error ROUTER (`showError`), keyed by the section object
+ *  `mountEntryList` returned. A private registry rather than a member on `EntryListSection`: the routing is
+ *  this module's internal business (which of a section's up-to-two error surfaces is live right now), and
+ *  `showAddError` below stays the ONE exported way a caller surfaces a rejection — its signature, doc and
+ *  fail-soft posture unchanged. A `WeakMap` so a discarded section is collectable. */
+const errorSinks = new WeakMap<EntryListSection, (message: string) => void>()
+
+/** Show `message` in the add form's own error note (fail-closed validation feedback, ADR-0132 cl.4) —
  *  exported so `agent-admin.ts` can surface `validateNewEntry`'s rejection without this module owning
  *  the validation call itself (the caller decides WHEN to validate; this module only renders the result).
+ *  WHERE it lands is the section's own routing (GH #917 — beside the Name field in an open add drawer, the
+ *  section's standing note otherwise, the dashed form's note for a non-drawered section).
  *  ADR-0170 cl.8: a section built with `customAdd: false` mounts no form to show it in — a rejected
  *  LIBRARY add there is a silent no-op rather than a thrown null-deref (the add path itself already
- *  fail-closes; this is the display half having nowhere to land). */
+ *  fail-closes; this is the display half having nowhere to land). A section object this module did not
+ *  build (a hand-rolled test stub) falls back to the DOM query this function has always used. */
 export function showAddError(section: EntryListSection, message: string): void {
+  const sink = errorSinks.get(section)
+  if (sink !== undefined) {
+    sink(message)
+    return
+  }
   const note = section.host.querySelector('[data-part="entry-add-error"]') as HTMLElement | null
   const form = section.host.querySelector('[data-part="entry-add-form"]') as HTMLElement | null
   if (note === null || form === null) return
