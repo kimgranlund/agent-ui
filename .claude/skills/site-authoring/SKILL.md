@@ -99,16 +99,10 @@ NEAREST row's derivation discipline and names the mismatch, exactly as `file-*`'
 ## The drift discipline — back a page with a check where structurable
 
 Every component has its pages; the API table matches the descriptor; no dead slot/role names. These are
-**deterministic** and already enforced — extend them, don't reinvent them:
+**deterministic** and already enforced — extend them, don't reinvent them. The descriptor trip-wires
+and the dead-name guard are detailed in `references/foundations.md` §The deterministic backstops;
+the site-WIDE ones, not repeated there:
 
-- **Descriptor-derived API** — `descriptor/component-descriptor-driftwire.test.ts` asserts the
-  frontmatter `attributes[]` equals the live `finalize(Class)` table; `…-sourcewire.test.ts` asserts the
-  descriptor's `customStates`/`slots` match the control source. A T4 page consuming the same parser
-  inherits this for free.
-- **No dead names** — `descriptor/site-canon.test.ts` scans all of `site/` and fails on any `slot=`/
-  `data-role=` name absent from the canonical vocab (sourced from the descriptors + control CSS through
-  the *same* parser). This caught the `slot="icon"` left behind after the `icon`→`leading` rename.
-  Comments are stripped first — a historical note in a `//` comment is not a live usage.
 - **Coverage + TOC** — SHIPPED, not future (GH #761): `descriptor/site-coverage.test.ts` walks
   the descriptors and asserts each maps to a page (T4) + family listing (T7); `descriptor/site-toc.test.ts`
   pins every page's table-of-contents ≡ the fleet. Both extend the site-canon static-scan pattern.
@@ -132,29 +126,23 @@ errors included. Depth in `references/best-practices.md`. The failure to avoid: 
 behaviour it advertises (a mocked renderer, a screenshot, a hand-drawn state) — honesty is structural,
 achieved by running the real thing, not by careful wording.
 
-## Validation loop (finalize only when clean)
+## Validation loop → definition of done
 
-Draft → check → fix → re-check:
+Draft → check → fix → re-check, until every box below is checked. If any fails, fix the **page**
+(not the check) and re-run. A rename is a deliberate contract change the trip-wires won't flag as
+drift — run the migration (rename across `site/` until `site-canon` is green) before treating it
+as done.
 
-1. `npm run check` (tsc) and `npm test` (Vitest) both green — including the site drift gates
-   (`site-canon`, the descriptor trip-wires) and any new enumeration check you wired.
-2. The page derives every derivable fact (no hand-typed attribute row, no mocked demo); hand-authored
-   content is minimal and flagged.
-3. The page's drift gate exists and is green (or, where soft, the upstream source is cited by ID).
-
-If any fails, fix the **page** (not the check) and re-run. A rename is a deliberate contract change the
-trip-wires won't flag as drift — run the migration (rename across `site/` until `site-canon` is green)
-before treating it as done.
-
-## Definition of done (per page)
-
-- [ ] Right content type; authored to its reference; scored-ready against its rubric.
-- [ ] Every derivable fact is derived (descriptor / real renderer / enum / roles) — zero hand-maintained
-      copies; styling stays in each control's own `{name}.css`.
+- [ ] Right content type; authored to its reference (`references/content-types.md`); scored-ready
+      against `references/rubric.md`.
+- [ ] Every derivable fact is derived (descriptor / real renderer / enum / roles) — zero
+      hand-maintained copies; styling stays in each control's own `{name}.css`; hand-authored
+      content is minimal and flagged.
 - [ ] Live demos run the real renderer/control through its public surface (honest, not mocked).
 - [ ] The structurable drift gate is wired and green (`site-canon`, the contract trip-wire, the
       coverage enumeration); soft staleness cites its upstream by ID.
-- [ ] `npm run check && npm test` green.
+- [ ] `npm run check` (tsc) and `npm test` (Vitest) both green — including the site drift gates and
+      any new enumeration check you wired.
 
 ## Worked example
 

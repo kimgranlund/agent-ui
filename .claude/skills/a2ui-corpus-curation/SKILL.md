@@ -143,15 +143,6 @@ archive (no untracked verdicts file left behind), the coverage gate is green, an
 each candidate's outcome — admitted · `E_DUP` · a HALT resolved-and-re-run, or a HALT handed back to
 the owner. A halt left unresolved is a blocker reported, never a bypassed gate.
 
-## Do NOT restate (fences)
-
-Cite these; reproducing them here forks the frozen contract and rots on the next change:
-
-- the **record schema** — `src/corpus/record.ts`, `ADR-0063`/`ADR-0064`;
-- the **dedup MinHash math** — corpus LLD §5;
-- the **judge parse logic** — `src/corpus/judge.ts`, `ADR-0068` cl.2;
-- the **heal repair list** — `ADR-0061`.
-
 ## References & tools
 
 | Path | Use when |
