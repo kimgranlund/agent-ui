@@ -335,6 +335,24 @@
     color: var(--ui-code-editor-toggle-ink-disabled);
   }
 
+  /* GH #947 point 6 — the toggle stays the zero-footprint STICKY overlay (GH #164 — that ruling rejected a
+     toolbar row / float, never revisited here), but nothing previously stopped rendered TEXT from running
+     underneath its top inline-end corner: the toggle is sticky to the current SCROLL position, so the
+     overlap risk is not just the document's first line — it is whatever line sits at the top of the
+     viewport at any given scroll offset. Reserve an inline-end gutter sized to the toggle's own footprint,
+     on BOTH surfaces, gated by `:has()` to fire only while the toggle is actually mounted and visible — an
+     editor with no richtext capability (jsdom, load failure/timeout, a non-markdown language) keeps its
+     full-width text exactly as before. `.cm-content` (not `.cm-line`) carries the padding: CodeMirror's own
+     structural theme zeroes `.cm-line` padding (cm-editor.ts), and a container's padding indents every line
+     uniformly, which is what "never overlap, at any scroll position" requires — a first-line-only inset
+     would not survive a scroll. */
+  :scope:has(> [data-part='mode-toggle']:not([hidden])) > [data-part='editor'] {
+    padding-inline-end: calc(var(--ui-code-editor-toggle-size) + var(--ui-code-editor-padding-inline));
+  }
+  :scope:has(> [data-part='mode-toggle']:not([hidden])) > [data-part='cm'] .cm-content {
+    padding-inline-end: calc(var(--ui-code-editor-toggle-size) + var(--ui-code-editor-padding-inline));
+  }
+
   /* the filled/container state ladder (TKT-0062, mutual-exclusion precedence — the textarea precedent). The
      "filled" signal keys off EITHER surface carrying content: the plain editor is non-empty, or a CM mount is
      present (CM only mounts once there is an editable markdown surface, and its own content carries the text). */

@@ -1089,6 +1089,48 @@ describe('ui-code-editor — the mode-toggle is a zero-footprint corner overlay 
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #947 point 6 — the sticky toggle stays a zero-footprint overlay (GH #164 above, unrevisited), but
+//  nothing previously stopped rendered TEXT from running underneath its top inline-end corner. Reserve an
+//  inline-end gutter, on BOTH surfaces, gated on the toggle actually being mounted+visible.
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-code-editor — the mode-toggle no longer overlaps editor content (GH #947, both engines)', () => {
+  it('the CM content column ends BEFORE the toggle starts — a long line never runs underneath the glyph', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    field.value = Array.from({ length: 12 }, (_, i) => `line ${i} with prose that runs fairly wide across the column`).join('\n')
+    await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 5000 }).toBe(true)
+    await expect.poll(() => field.querySelector('.cm-line') !== null, { timeout: 5000 }).toBe(true)
+    const toggle = field.querySelector('[data-part="mode-toggle"]') as HTMLElement
+
+    // `.cm-content`'s own bounding box stretches to fill its scroller regardless of ITS OWN padding (padding
+    // narrows the box's INSIDE, never its own outer edge) — the real claim is about where rendered GLYPHS
+    // land, not the box that contains them. A `Range` over the widest line's actual text gives the true
+    // rendered extent; comparing THAT to the toggle is the geometric proof the padding earned an earlier wrap.
+    const lines = [...field.querySelectorAll('.cm-line')] as HTMLElement[]
+    const t = toggle.getBoundingClientRect()
+    for (const line of lines) {
+      const textNode = line.firstChild
+      if (textNode === null || textNode.textContent === null || textNode.textContent.length === 0) continue
+      const range = document.createRange()
+      range.selectNodeContents(line)
+      for (const rect of range.getClientRects()) {
+        expect(rect.right, 'no rendered glyph run may extend under the toggle\'s corner').toBeLessThanOrEqual(t.left + 1)
+      }
+    }
+    expect(lines.length, 'anti-vacuous — the loop above must have run against real lines').toBeGreaterThan(0)
+  })
+
+  it('the mode-toggle is DISABLED under a non-markdown language ⇒ no gutter reserved, full-width text unchanged', async () => {
+    const { field } = mount(`<ui-code-editor language="plain" ${SIZED}></ui-code-editor>`)
+    field.value = 'plain text, no CodeMirror, no toggle, no reserved gutter'
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    expect(field.querySelector('[data-part="mode-toggle"]'), 'no toggle for a non-markdown language').toBeNull()
+    const editor = field.querySelector('[data-part="editor"]') as HTMLElement
+    expect(getComputedStyle(editor).paddingInlineEnd, 'no toggle ⇒ no gutter reserved on the plain surface').toBe('0px')
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
 //  GH #867 — unobtrusive scrolling: the host's own scroller (confirmed above — "the host itself is the
 //  scroller") computes a thin, at-rest-transparent, reveal-on-hover treatment, never the platform-default
 //  chunky bar. MEASURED (both engines under test): a bare `overflow: auto` box renders a ZERO-width

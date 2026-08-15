@@ -611,8 +611,8 @@ describe('ui-agent-admin cross-engine smoke — the per-entry availability affor
     expect(badge.getBoundingClientRect().width, 'a real painted badge').toBeGreaterThan(0)
     expect(rowOf('house-style').querySelector('[data-part="entry-badge"]'), 'an ambient row carries none').toBeNull()
 
-    // The mode control itself — a real ui-toggle with a real box, in EITHER row's Edit drawer (the mode is
-    // editable either way), pressed on the invocable one only.
+    // The mode control itself — GH #947 — a real ui-segmented-control with a real box, in EITHER row's Edit
+    // drawer (the mode is editable either way), reading 'invocable' on the invocable one only.
     const section = el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
     for (const id of ['house-style', 'menu-pdf']) {
       ;(rowOf(id).querySelector('[data-part="entry-edit"]') as HTMLElement).click()
@@ -621,12 +621,18 @@ describe('ui-agent-admin cross-engine smoke — the per-entry availability affor
       // has not actually opened yet at the instant `.click()` returns (the drawer/browser tests' own
       // `drawer.open = true; await drawer.updateComplete` idiom, drawer.browser.test.ts).
       await el.updateComplete
-      const pill = section.querySelector('[data-part="entry-availability"]') as HTMLElement & { pressed: boolean }
-      expect(pill.tagName.toLowerCase()).toBe('ui-toggle')
-      const box = pill.getBoundingClientRect()
-      expect(box.width, `${id} pill width`).toBeGreaterThan(0)
-      expect(box.height, `${id} pill height`).toBeGreaterThan(0)
-      expect(pill.pressed, `${id} pressed state`).toBe(id === 'menu-pdf')
+      const tier = section.querySelector('[data-part="entry-availability"]') as HTMLElement & { value: string | null }
+      expect(tier.tagName.toLowerCase()).toBe('ui-segmented-control')
+      const box = tier.getBoundingClientRect()
+      expect(box.width, `${id} tier control width`).toBeGreaterThan(0)
+      expect(box.height, `${id} tier control height`).toBeGreaterThan(0)
+      expect(tier.value, `${id} selected state`).toBe(id === 'menu-pdf' ? 'invocable' : 'context')
+      // Both segments are individually real, hittable boxes — not one control painting as a single blob.
+      for (const value of ['context', 'invocable']) {
+        const segmentBox = (tier.querySelector(`ui-segment[value="${value}"]`) as HTMLElement).getBoundingClientRect()
+        expect(segmentBox.width, `${id} ${value} segment width`).toBeGreaterThan(0)
+        expect(segmentBox.height, `${id} ${value} segment height`).toBeGreaterThan(0)
+      }
       ;(section.querySelector('[data-part="entry-form-done"]') as HTMLElement).click()
       await el.updateComplete
     }
@@ -635,6 +641,20 @@ describe('ui-agent-admin cross-engine smoke — the per-entry availability affor
     const rowBox = rowOf('menu-pdf').getBoundingClientRect()
     expect(rowBox.height).toBeGreaterThan(20)
     expect(rowBox.width).toBeGreaterThan(200)
+  })
+
+  // GH #947 point 5 — verifying the sticky footer with Done that #917 already ruled for, in a real engine
+  // (jsdom cannot resolve `position: sticky` against a real scroll container): the drawer's `<footer>` rides
+  // the shared `[data-box]` sticky-region mechanism (container-box.css) the SAME way the Manage-agents
+  // roster drawer's footer does — no fix was needed, this closes the loop with real evidence.
+  it('the Edit drawer footer (Done) computes `position: sticky` — pinned, never scrolling away with a long form', async () => {
+    const el = mountWithSeededSkills()
+    const row = el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.skill}"] [data-entry-id="menu-pdf"]`) as HTMLElement
+    ;(row.querySelector('[data-part="entry-edit"]') as HTMLElement).click()
+    await el.updateComplete
+    const footer = el.querySelector('[data-part="entry-drawer-footer"]') as HTMLElement
+    expect(getComputedStyle(footer).position).toBe('sticky')
+    expect(footer.querySelector('[data-part="entry-form-done"]'), 'Done lives in the sticky footer').not.toBeNull()
   })
 })
 
