@@ -29,8 +29,14 @@
 - Board: 0 open issues · 0 open PRs. Overnight tally: #917–#921 built+merged (PRs #919/#922/#923),
   W2 #925–#935 merged (PRs #939–#943, #946), W3 #936/#938 executed by peers, #937 closed-parked
   (reopen when claude-plugins#253 lands or Kim rules `ruling: B` on the issue).
-- Flagged peer residue (owners to reap): worktrees `agent-a004b4beec8ffcb13`,
-  `agent-a48149f7db88727c6`, `agent-aa23ed6cf92030408` (refactor/927, merged),
-  `agent-aa7f622bfbde02144` (docs/928, merged); locked `overhaul-2026-08-14` (AUTHORKIT's, live).
+- Residue: SWEPT CLEAN (Kim-authorized reconcile, 2026-08-15 ~03:0xZ): all 5 stale worktrees
+  removed after PR-MERGED/content-equivalence verification (the overhaul worktree's ledger
+  commit proven patch-equivalent on main via `git cherry` before removal); every non-main
+  local and remote branch deleted (all PR-MERGED; feat/845 was CLOSED-superseded by PR #864).
+  Repo state: 1 worktree (main), 1 local branch, origin/main only, working tree clean.
+- Full-suite `npm test` on this host reds under fleet load (live claude sessions at 17-28% CPU
+  each — no orphans to reap); per-file isolation runs are the reliable verdict. Most
+  load-sensitive file: `a2ui/src/live-agent/produce-loop.test.ts` (2 loaded reds, 2 isolated
+  greens) — a Mode-B bounded-wait suspect if it ever reds in isolation.
 - Gate note on main: S9 exemplar sweep widened to skill references/ (commit 341fe63f) after the
   W2 extractions moved the cited tables.
