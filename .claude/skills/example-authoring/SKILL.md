@@ -1,5 +1,5 @@
 ---
-name: example-standards
+name: example-authoring
 description: >-
   The example-authoring-agent seat's canonical sources, the two standing laws (representative specimen,
   one-knob-per-prop), the inventory→propose→implement→re-probe procedure, and the validation loop
