@@ -109,9 +109,23 @@
      is redundant here — and once CodeMirror's source mode is MONOSPACE, 20ch(mono) can overflow a narrow
      host. Repoint the published token (never the host property) — the floor keeps protecting
      free-standing editors; composed rows own their width. */
+  /* GH #947 point 7 — "auto-grow with a max height": `rows` already sets a growable MINIMUM, never a fixed
+     height (ADR-0134), so the editor already grows as content is typed; `max-block-size` is the one piece
+     that did not exist — a ceiling past which `ui-code-editor`'s own `overflow-y:auto` takes over instead
+     of the drawer growing indefinitely. 20 lines (~2.5× the 8-row minimum) off the control's OWN published
+     tokens (the TKT-0066 item 5 own-chain law) — never a literal pixel figure to keep in sync by hand. */
   [data-part='entry-content'],
   [data-part='entry-add-content'] {
     --ui-code-editor-min-inline-size: 0;
+    max-block-size: calc(20 * var(--ui-code-editor-line-box) + 2 * var(--ui-code-editor-padding-block));
+  }
+
+  /* GH #947 point 7 — the live character count beside the content editor, same plane as `entry-form-hint`. */
+  [data-part='entry-content-count'] {
+    margin: 0;
+    align-self: flex-end;
+    font-size: 0.75rem;
+    color: var(--ui-entry-list-label-ink);
   }
 
   /* GH #138 (Kim's option-A ruling): [switch|label|spacer|action] — switch leads, label next, a
@@ -300,6 +314,17 @@
     color: var(--ui-entry-list-label-ink);
   }
 
+  /* GH #947 point 2 — "Optional" moves INTO the owning field's label row (never a free-floating helper
+     line below the control): a muted CSS-GENERATED suffix on the label part itself, `ui-field`'s own
+     required-marker shape (field.md's `[data-part='label']::after`) one rule over — optional beside
+     required, never colliding with it (a field this form marks `data-optional` is never also `required`).
+     `data-optional` is this FORM's own opt-in marker (`entry-form.ts`'s `fieldCell`), never a fleet-wide
+     default keyed off requiredness's absence — most fields elsewhere are optional too. */
+  ui-field[data-optional] [data-part='label']::after {
+    content: ' · optional';
+    color: var(--ui-entry-list-label-ink);
+  }
+
   /* The danger block is the LAST child of the scrolling content, never the footer — the footer holds the
      primary alone, so the two can never sit adjacent. A hairline + top margin is the separation that says
      "this one is different in kind", without a second surface colour. */
@@ -311,6 +336,25 @@
     margin-block-start: var(--ui-entry-list-list-gap);
     padding-block-start: var(--ui-entry-list-list-gap);
     border-block-start: 1px solid var(--ui-entry-list-border);
+  }
+
+  /* GH #947 point 3 — DANGER INTENT BY TOKEN REPOINT (the agent-admin.css `delete-agent-button` precedent,
+     one step lighter: an outline/text button rather than a solid fill — this is a per-row destructive
+     action inside an otherwise calm form, not the roster's single big "Delete Agent" commitment). `button.css`
+     declares `--ui-button-{bg,bg-hover,bg-active,ink,border}` at `:where(ui-button)` (specificity 0,0,0)
+     precisely so a consumer can repoint them — never a fourth `ui-button` variant for one consumer's use
+     (that file's own reasoning, unchanged here). This file's own `--ui-entry-list-error-ink` role (the
+     TOKEN block above) supplies the ink, so the button's danger colour and the section's existing error
+     text are the SAME role, never two divergent danger inks in one file. The teaching line
+     (`entry-form-hint`, unchanged) stays the non-colour explanation; the VERB ("Remove") is ADR-0057's own
+     non-colour signifier. Scoped to the FORM's danger row only — the row's own inline Remove (non-drawered
+     kinds) is untouched, outside this ticket's scope. */
+  [data-part='entry-form-danger'] [data-part='entry-delete'] {
+    --ui-button-bg: transparent;
+    --ui-button-bg-hover: var(--md-sys-color-danger-container-low);
+    --ui-button-bg-active: var(--md-sys-color-danger-container);
+    --ui-button-ink: var(--ui-entry-list-error-ink);
+    --ui-button-border: var(--md-sys-color-danger-outline);
   }
 
   [data-part='entry-form-actions'] {

@@ -418,13 +418,14 @@ describe('mountEntryList — the entryDrawer option, both modes (GH #917)', () =
     const { section, writes } = mountDrawered([ROW])
     const form = openRow(section, 'a')
     expect(drawerOf(section).open).toBe(true)
-    // Field ORDER is the ruling's: name → description → tier → content, then the danger block.
+    // Field ORDER is the ruling's: name → description → tier → content (+ its count), then the danger block.
     expect([...form.querySelectorAll('[data-part^="entry-"]')].map((n) => n.getAttribute('data-part')).filter((p) => p !== 'entry-form-hint')).toEqual([
       'entry-form-name',
       'entry-form-description',
       'entry-form-tier',
       'entry-availability',
       'entry-content',
+      'entry-content-count',
       'entry-form-danger',
       'entry-delete',
     ])
@@ -434,7 +435,8 @@ describe('mountEntryList — the entryDrawer option, both modes (GH #917)', () =
     name.value = '  Renamed  '
     name.dispatchEvent(new Event('change'))
     expect(writes.renames, 'RAW text — the trim is renameEntry\'s one home').toEqual([['a', '  Renamed  ']])
-    expect(section.host.querySelector('[data-part="entry-form-title"]')!.textContent, 'the drawer title follows the rename').toBe('Renamed')
+    // GH #947 point 4 — the header is now STATIC and kind-derived; a rename no longer touches it.
+    expect(section.host.querySelector('[data-part="entry-form-title"]')!.textContent, 'static, kind-derived — never a live name mirror').toBe('Edit skill')
 
     const description = form.querySelector('[data-part="entry-form-description"]') as UITextFieldElement
     expect(description.value).toBe('about A')
@@ -447,10 +449,18 @@ describe('mountEntryList — the entryDrawer option, both modes (GH #917)', () =
     content.value = 'new body'
     content.dispatchEvent(new Event('change'))
     expect(writes.contents).toEqual([['a', 'new body']])
+    // GH #947 point 7 — the live character count, driven by `input` (a scripted `.value` write above fires
+    // no `input`, so this reads the PRE-edit "new body" length only after a real keystroke — proven directly
+    // against the editor's own `input` event here rather than depending on the scripted write above).
+    content.value = 'four'
+    content.dispatchEvent(new Event('input'))
+    expect(form.querySelector('[data-part="entry-content-count"]')!.textContent).toBe('4 characters')
 
-    const pill = form.querySelector('[data-part="entry-availability"]') as HTMLElement & { pressed: boolean }
-    expect(pill.pressed).toBe(false)
-    pill.dispatchEvent(new CustomEvent('toggle', { cancelable: true, bubbles: true }))
+    // GH #947 point 1 — the tier is now a two-segment `ui-segmented-control` ("In context | Invocable"),
+    // not a `ui-toggle` pressed pill: flipping means selecting the OTHER segment, a real user gesture.
+    const tier = form.querySelector('[data-part="entry-availability"]') as HTMLElement & { value: string | null }
+    expect(tier.value, 'a field-less entry reads in-context').toBe('context')
+    ;(tier.querySelector('ui-segment[value="invocable"]') as HTMLElement).click()
     expect(writes.modes, 'the mode it is flipping TO').toEqual([['a', 'invocable']])
 
     ;(section.host.querySelector('[data-part="entry-form-done"]') as HTMLElement).click()
@@ -2231,14 +2241,17 @@ describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-
     ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = label
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
   }
-  const modePill = (scope: HTMLElement): (HTMLElement & { pressed: boolean }) | null =>
-    scope.querySelector('[data-part="entry-availability"]') as (HTMLElement & { pressed: boolean }) | null
-  /** GH #917 — the pill lives in the entry's Edit drawer now, not on the row; the CONTROL and its write are
-   *  unchanged (the same `ui-toggle`, the same `onAvailabilityChange`), so this helper just opens the drawer
-   *  first. The one user gesture is still a real `toggle` (ui-toggle emits it BEFORE committing `pressed`, so
-   *  this is exactly what a click/Space lands on the wired listener). */
+  const modePill = (scope: HTMLElement): (HTMLElement & { value: string | null }) | null =>
+    scope.querySelector('[data-part="entry-availability"]') as (HTMLElement & { value: string | null }) | null
+  /** GH #917 — the control lives in the entry's Edit drawer now, not on the row.
+   *  GH #947 — it is now a two-segment `ui-segmented-control` ("In context | Invocable"), not a `ui-toggle`
+   *  pressed pill: flipping means clicking the OTHER segment, a real user gesture (click → the base radio's
+   *  own toggle → the group's change delegation → its non-cancelable `#commit`, which emits the group's own
+   *  `change`) — the same write (`onAvailabilityChange`) still lands. */
   function flipMode(el: UIAgentAdminElement, kind: string, id: string): void {
-    modePill(openEntryDrawer(el, kind, id))!.dispatchEvent(new CustomEvent('toggle', { cancelable: true, bubbles: true }))
+    const control = modePill(openEntryDrawer(el, kind, id))!
+    const other = control.value === 'invocable' ? 'context' : 'invocable'
+    ;(control.querySelector(`ui-segment[value="${other}"]`) as HTMLElement).click()
   }
   function submit(el: UIAgentAdminElement, text: string): void {
     const composer = el.querySelector('[data-part="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
@@ -2282,7 +2295,7 @@ describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-
     expect(flipped.getAttribute('data-availability'), 'the row carries the at-a-glance marker').toBe('invocable')
     // GH #917 — the marker's second half, now that the CONTROL left the row: the word the pill used to carry.
     expect(flipped.querySelector('[data-part="entry-badge"]')!.textContent).toBe('Invocable')
-    expect(modePill(openEntryDrawer(first, ENTRY_KINDS.resource, 'menu-pdf'))!.pressed).toBe(true)
+    expect(modePill(openEntryDrawer(first, ENTRY_KINDS.resource, 'menu-pdf'))!.value).toBe('invocable')
 
     // …and back again: nothing is one-way, and the returning value is the explicit 'context' literal.
     flipMode(first, ENTRY_KINDS.resource, 'menu-pdf')
@@ -2296,7 +2309,7 @@ describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-
     const second = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement) // the default persisted store
     const reloaded = entryEl(second, ENTRY_KINDS.resource, 'menu-pdf')
     expect(reloaded.getAttribute('data-availability'), 'survives a reload').toBe('invocable')
-    expect(modePill(openEntryDrawer(second, ENTRY_KINDS.resource, 'menu-pdf'))!.pressed).toBe(true)
+    expect(modePill(openEntryDrawer(second, ENTRY_KINDS.resource, 'menu-pdf'))!.value).toBe('invocable')
   })
 
   it('SPEC-R3 AC1/AC2: the PROSE arm carries neither the invocable entry\'s prose nor its tool id', async () => {

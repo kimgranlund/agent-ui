@@ -34,7 +34,7 @@ import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import type { UICodeEditorElement } from '@agent-ui/code/editor'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import type { UIFieldElement } from '@agent-ui/components/controls/field'
-import type { UIToggleElement } from '@agent-ui/components/controls/toggle'
+import type { UISegmentedControlElement } from '@agent-ui/components/controls/segmented-control'
 import { ENTRY_AVAILABILITY, entryAvailability } from './entry-data.ts'
 import type { Entry, EntryAvailability, NewEntryInput } from './entry-data.ts'
 
@@ -62,16 +62,16 @@ export interface EntryFormHandlers {
   onAdd(input: NewEntryInput, context?: { rejectOnCollision?: boolean }): boolean
   /** GH #850 / capability-availability-tagging.spec.md SPEC-R2 — the per-entry AVAILABILITY write, called
    *  with the mode the entry is being flipped TO. OPTIONAL, the additive-optional law `EntryListOptions`
-   *  follows: absent ⇒ the tier pill refuses its own flip (`toggle` is cancelable, toggle.md's
-   *  refused-toggle mechanism), so an opted-in section with no writer wired can never paint a mode the
-   *  store does not hold. Persistence is the CALLER's (neither this module nor `entry-list.ts` owns store
-   *  access), exactly as `onToggle` already works.
+   *  follows: absent ⇒ an opted-in section with no writer wired can never paint a mode the store does not
+   *  hold.
    *
-   *  GH #848 reconciliation — this handler's missing-writer posture (render, then REFUSE the flip)
-   *  deliberately differs from `onRename`'s (render NOTHING), and the difference is the affordance's own
-   *  nature, not an inconsistency: a mode pill carries STATE the form must show whether or not anything can
-   *  change it (`pressed` IS the answer to "is this entry invocable?"), so it renders and refuses; a rename
-   *  FIELD with no writer could only ever be a typing target that silently discards. */
+   *  GH #947 — the DRAWER's tier control is a `ui-segmented-control` (this module), not the row's `ui-toggle`
+   *  pill (`entry-list.ts`, unchanged): a segmented control's `change` fires only AFTER the group's own
+   *  commit (radio-group.ts's non-cancelable `#commit`), so there is no pre-commit event left to refuse the
+   *  way `ui-toggle`'s cancelable `toggle` lets the row's pill refuse. The end state is the same — no
+   *  writer ⇒ the control can never paint a mode the store does not hold — enforced here by DISABLING the
+   *  control outright rather than refusing an event; the row's own pill keeps its cancelable-refusal
+   *  mechanism unchanged (GH #848's missing-writer posture: render, then refuse, is that control's own). */
   onAvailabilityChange?(id: string, availability: EntryAvailability): void
   /** GH #848 — commit a per-entry DISPLAY-NAME change (`entry-data.ts`'s `renameEntry` is the law; the
    *  caller owns the store write, this module owns the affordance). OPTIONAL, the `onAdd`-second-argument
@@ -118,20 +118,33 @@ export interface EntryFormRegions {
   footer: HTMLElement
 }
 
-/** The one hint the tier pill used to carry as a row `title` — visible prose in the drawer, where there is
- *  room for it. Byte-identical wording to the pill's shipped tooltip (GH #850). */
-const TIER_HINT = 'On: user-invocable — inert until invoked from the conversation. Off: in context — the model sees it every turn.'
+/** GH #947 — ONE dynamic hint line describing only the CURRENTLY SELECTED state, keyed by
+ *  `EntryAvailability` (replacing the old `ui-toggle` pill's single static sentence that named BOTH states
+ *  at once — "On: … Off: …" reads fine for a binary pill; a segmented control already shows both options
+ *  as its own two labels, so the helper's job narrows to explaining the one that's picked). */
+const TIER_HINT: Record<EntryAvailability, string> = {
+  [ENTRY_AVAILABILITY.context]: 'In context — the model sees this entry every turn.',
+  [ENTRY_AVAILABILITY.invocable]: 'Invocable — inert until invoked from the conversation.',
+}
 
 /** The "Built-in" tag's own sentence — the roster drawer's "Shipped" tag shape (agent-admin-app.ts:497),
  *  applied to ADR-0132 Fork 4's rule: configuration is open, deletion is not. */
 const BUILTIN_HINT = 'A built-in entry — it can be edited and toggled, but never deleted.'
 
 /** One labelled field cell: `ui-field` (the visible label/description wrapper) around ONE control, the
- *  TKT-0073 precedent this module inherits from the add form it replaces. */
-function fieldCell(label: string, control: HTMLElement, description?: string): UIFieldElement {
+ *  TKT-0073 precedent this module inherits from the add form it replaces.
+ *
+ *  GH #947 — `optional` replaces the old `description` string param (which rendered `ui-field`'s own
+ *  built-in `[data-part='description']` line — a FREE-FLOATING helper below the control, never beside the
+ *  label it was about). No field in this form needs a real description any more, only the one word
+ *  "optional" — so this now sets a marker attribute instead and lets `entry-list.css` paint it as a muted
+ *  CSS-generated suffix on the label part itself (`ui-field`'s own required-marker shape, field.md's
+ *  `[data-part='label']::after`, one rule over — optional beside required, never a fleet-wide default off
+ *  requiredness's absence: most fields elsewhere ARE optional too, so this stays this form's own opt-in). */
+function fieldCell(label: string, control: HTMLElement, opts?: { optional?: boolean }): UIFieldElement {
   const wrap = document.createElement('ui-field') as UIFieldElement
   wrap.label = label
-  if (description !== undefined) wrap.description = description
+  if (opts?.optional) wrap.toggleAttribute('data-optional', true)
   wrap.append(control)
   return wrap
 }
@@ -149,6 +162,34 @@ function contentEditor(part: string, ariaLabel: string, value: string): UICodeEd
   editor.setAttribute('aria-label', ariaLabel)
   editor.value = value
   return editor
+}
+
+/** GH #947 point 7 — the content editor's own field cell, WITH a live character count. `input` (not
+ *  `change`) drives the count: a count that only updated on commit would sit stale for the entire time the
+ *  author is typing, which is exactly when a context-budget signal is most useful (ADR-0190's index-line
+ *  law names the same "how much am I spending" concern one level up). The count is a plain, non-live
+ *  region — `aria-live="off"` — a running announcement on every keystroke would spam assistive tech far
+ *  worse than the visible count helps sighted authors; the value is still in the accessible tree for an
+ *  on-demand read. Auto-grow-with-a-max-height (the ticket's other content-editor ask) is `entry-list.css`'s
+ *  own `max-block-size` cap on `entry-content`/`entry-add-content` — `ui-code-editor`'s `rows` is already a
+ *  growable MINIMUM, never a fixed height (ADR-0134), so the editor already grows with typed content; the
+ *  cap is the one piece that did not already exist. */
+function contentEditorField(part: string, ariaLabel: string, value: string): { field: UIFieldElement; editor: UICodeEditorElement; syncCount(): void } {
+  const editor = contentEditor(part, ariaLabel, value)
+  const count = document.createElement('p')
+  count.setAttribute('data-part', 'entry-content-count')
+  count.setAttribute('aria-live', 'off')
+  const syncCount = (): void => {
+    count.textContent = `${editor.value.length} character${editor.value.length === 1 ? '' : 's'}`
+  }
+  syncCount()
+  editor.addEventListener('input', syncCount)
+  const field = fieldCell('Content', editor)
+  field.append(count)
+  // `syncCount` is also exposed for a PROGRAMMATIC `.value` write (the add form's post-submit reset below) —
+  // a scripted value assignment never fires `input` (native <textarea> parity), so the count would
+  // otherwise read stale until the next keystroke.
+  return { field, editor, syncCount }
 }
 
 /** A plain `<ui-button variant="soft">` with a wordmark label — TKT-0048's law (a real button, never a
@@ -221,22 +262,25 @@ export function buildEntryForm(
 
     const descriptionField = document.createElement('ui-text-field') as UITextFieldElement
     descriptionField.setAttribute('data-part', 'entry-add-description')
-    const descriptionCell = fieldCell('Description', descriptionField, 'Optional')
+    const descriptionCell = fieldCell('Description', descriptionField, { optional: true })
 
     content.append(labelCell, descriptionCell)
 
-    const bodyField = options.contentField ? contentEditor('entry-add-content', 'Content', '') : null
-    if (bodyField) content.append(fieldCell('Content', bodyField))
+    const bodyForm = options.contentField ? contentEditorField('entry-add-content', 'Content', '') : null
+    if (bodyForm) content.append(bodyForm.field)
 
     /** The buffered commit — `entry-list.ts`'s own `submitAdd` law, carried over unchanged: reset + close
      *  ONLY on success, so a rejection keeps every typed field on screen beside the message
      *  (`showAddError` writes it into `errorNote` above) instead of silently discarding it. */
     const submitAdd = (): void => {
-      const input: NewEntryInput = { label: labelField.value, description: descriptionField.value, content: bodyField?.value ?? '' }
+      const input: NewEntryInput = { label: labelField.value, description: descriptionField.value, content: bodyForm?.editor.value ?? '' }
       if (!handlers.onAdd(input)) return
       labelField.value = ''
       descriptionField.value = ''
-      if (bodyField) bodyField.value = ''
+      if (bodyForm) {
+        bodyForm.editor.value = ''
+        bodyForm.syncCount()
+      }
       close()
     }
 
@@ -256,7 +300,15 @@ export function buildEntryForm(
   }
 
   const { entry } = form
-  title.textContent = entry.label
+  // GH #947 point 4 — the header goes STATIC and kind-derived ("Edit skill"), never a live mirror of the
+  // entry's own name: the Name field below is the single name source now. `kind` is already this exact
+  // singular lowercase noun ('skill'/'workflow'/'resource'/'tool' — `ENTRY_KINDS`, entries.ts) and the
+  // section's own `addLabel` follows the identical "{Verb} {kind}" shape ("Add skill"), so no second
+  // per-kind display-name table is needed here. Named deviation: the dialog's OWN accessible name
+  // (`aria-labelledby` → this heading) no longer names WHICH entry is open — flagged in the ticket's
+  // Findings for the owner, since a screen-reader user now learns the entry by the Name field's value
+  // alone, one field down from the dialog's name.
+  title.textContent = `Edit ${kind}`
 
   // Structural protection, STATED: a builtin entry's form builds no delete affordance at all (below), and
   // this tag says why — the absence reads as a rule, not as a missing feature.
@@ -291,9 +343,10 @@ export function buildEntryForm(
         return
       }
       committed = typed.trim()
-      // The drawer holds no store subscription (it is rebuilt on open, never on a notification), so the
-      // title it opened with would otherwise keep the pre-rename name while the row behind it updates.
-      title.textContent = committed
+      // GH #947 point 4 — the header is now STATIC ("Edit skill"), so a rename no longer touches it; the
+      // Name field the author is looking at IS the confirmation (unlike before this point, when the title
+      // mirrored the entry's own label — the drawer holds no store subscription, so that mirror was this
+      // form's own responsibility, never the store's).
       handlers.onRename?.(entry.id, typed)
     })
   }
@@ -303,39 +356,50 @@ export function buildEntryForm(
   descriptionField.setAttribute('data-part', 'entry-form-description')
   descriptionField.value = entry.description
   descriptionField.readonly = handlers.onDescriptionChange === undefined
-  content.append(fieldCell('Description', descriptionField, 'Optional'))
+  content.append(fieldCell('Description', descriptionField, { optional: true }))
   descriptionField.addEventListener('change', () => handlers.onDescriptionChange?.(entry.id, descriptionField.value))
 
   // ── tier ────────────────────────────────────────────────────────────────────────────────────────────────
-  // GH #850/SPEC-R2's control, moved not re-invented: the `ui-toggle` pressed pill whose visible label stays
-  // the STABLE word "Invocable" (state rides `aria-pressed`, never a swapped name — the toggle-button AX
-  // anti-pattern), writing through the same `onAvailabilityChange`.
+  // GH #947 point 1 — a two-segment `ui-segmented-control` ("In context | Invocable"), reusing the fleet's
+  // existing single-select segmented control (ADR-0095) rather than minting a new one, replacing the
+  // ambiguous `ui-toggle` pressed pill (GH #850). Same writer (`onAvailabilityChange`); see that handler's
+  // own doc for why the missing-writer posture is now a DISABLED control rather than a refused event.
   if (options.availabilityToggle) {
     const tier = document.createElement('div')
     tier.setAttribute('data-part', 'entry-form-tier')
-    const mode = document.createElement('ui-toggle') as UIToggleElement
+    const mode = document.createElement('ui-segmented-control') as UISegmentedControlElement
     mode.setAttribute('data-part', 'entry-availability')
-    mode.setAttribute('aria-label', `${entry.label} user-invocable`)
-    mode.pressed = entryAvailability(entry) === ENTRY_AVAILABILITY.invocable
-    mode.append('Invocable')
+    mode.setAttribute('aria-label', `${entry.label} availability`)
+    mode.disabled = handlers.onAvailabilityChange === undefined
+    const contextSegment = document.createElement('ui-segment')
+    contextSegment.setAttribute('value', ENTRY_AVAILABILITY.context)
+    contextSegment.textContent = 'In context'
+    const invocableSegment = document.createElement('ui-segment')
+    invocableSegment.setAttribute('value', ENTRY_AVAILABILITY.invocable)
+    invocableSegment.textContent = 'Invocable'
+    mode.append(contextSegment, invocableSegment)
+    mode.value = entryAvailability(entry)
     const hint = document.createElement('p')
     hint.setAttribute('data-part', 'entry-form-hint')
-    hint.textContent = TIER_HINT
-    // toggle.md's refused-toggle contract: `toggle` fires BEFORE `pressed` commits and is cancelable. No
-    // writer wired ⇒ refuse the flip outright, so the pill can never paint a mode no store holds.
+    hint.textContent = TIER_HINT[entryAvailability(entry)]
+    // `change` fires only AFTER the group's own (non-cancelable) commit — radio-group.ts's `#commit` — so
+    // `mode.value` here already reads the NEW selection; unlike the old pill (whose `toggle` fired BEFORE
+    // `pressed` committed), there is no pre-commit value to derive the "flipping TO" mode from.
     //
-    // The mode written is derived from the pill's LIVE `pressed` (still the pre-commit value here), never
-    // from the captured `entry`: unlike the row this replaces — thrown away and rebuilt by the caller's
-    // re-render after every write — this pill outlives its own commits, so a captured value would go stale
-    // on the second flip. toggle.ts's own post-listener flip then lands on the still-attached pill, which is
-    // exactly the paint we want (the row's marker follows from the store re-render behind the drawer).
-    mode.addEventListener('toggle', (event) => {
-      const write = handlers.onAvailabilityChange
-      if (write === undefined) {
-        event.preventDefault()
-        return
-      }
-      write(entry.id, mode.pressed ? ENTRY_AVAILABILITY.context : ENTRY_AVAILABILITY.invocable)
+    // `event.target !== mode` guards against a real, ORDER-DEPENDENT double-fire: a click first flips the
+    // clicked `ui-segment`'s OWN `change` (bubbling, target = the segment), which the group's base-class
+    // delegated listener (installed inside ITS `connected()`) re-synthesizes into the group's OWN `change`
+    // (`this.emit('change')`, target = the group). Both reach a listener on `mode`; this one is added at
+    // BUILD time, before `mode` connects, so it can run BEFORE the group's internal listener has a chance
+    // to `stopImmediatePropagation()` the raw segment event — this listener would otherwise fire once on
+    // the PRE-commit segment event (reading the STALE value) and again on the real, POST-commit group
+    // event. Filtering to `target === mode` keeps only the group's own re-synthesized commit, regardless
+    // of listener registration order (found via a real double-write in this ticket's own test).
+    mode.addEventListener('change', (event) => {
+      if (event.target !== mode) return
+      const next = (mode.value ?? ENTRY_AVAILABILITY.context) as EntryAvailability
+      hint.textContent = TIER_HINT[next]
+      handlers.onAvailabilityChange?.(entry.id, next)
     })
     tier.append(mode, hint)
     content.append(fieldCell('Availability', tier))
@@ -343,9 +407,9 @@ export function buildEntryForm(
 
   // ── content ─────────────────────────────────────────────────────────────────────────────────────────────
   if (options.contentField) {
-    const bodyField = contentEditor('entry-content', `${entry.label} content`, entry.content)
-    bodyField.addEventListener('change', () => handlers.onContentChange(entry.id, bodyField.value))
-    content.append(fieldCell('Content', bodyField))
+    const bodyForm = contentEditorField('entry-content', `${entry.label} content`, entry.content)
+    bodyForm.editor.addEventListener('change', () => handlers.onContentChange(entry.id, bodyForm.editor.value))
+    content.append(bodyForm.field)
   }
 
   // ── delete ──────────────────────────────────────────────────────────────────────────────────────────────
