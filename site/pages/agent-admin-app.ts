@@ -57,10 +57,14 @@ import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-r
 import type { UIDrawerElement } from '@agent-ui/components/controls/drawer'
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
+// GH #921 — the per-card (...) actions menu and the drawer's Reorganize mode toggle.
+import type { UIMenuElement } from '@agent-ui/components/controls/menu'
+import type { UIToggleElement } from '@agent-ui/components/controls/toggle'
 import {
   ACTIVE_PRESET_KEY,
   builderStore,
   deleteImportedPersona,
+  loadModifiedAt,
   personaRoster,
   personaStore,
   renameImportedPersona,
@@ -77,7 +81,8 @@ import { librariesForCategory, setLiveIntegrations, setLiveServices } from './ag
 // when no store prop is ever set (agent-admin.ts connected()'s own `initial` object) — pure reuse, so a
 // freshly-minted blank agent renders exactly what a bare, unconfigured `<ui-agent-admin>` would.
 import { DEFAULT_MODEL_ID, defaultAgentConfigSchema, initialValuesFor } from '@agent-ui/app/agent-admin-schema'
-import { initialEntryValues } from '@agent-ui/app'
+// GH #921 — the card's Capabilities/Surface summaries read straight off the persona's OWN stored config.
+import { ENTRY_KINDS, entriesStoreKey, initialEntryValues, type Entry } from '@agent-ui/app'
 
 const root = document.querySelector('#app') ?? document.body
 
@@ -350,14 +355,57 @@ drawer.className = 'roster-drawer'
 const drawerHeader = document.createElement('header')
 drawerHeader.className = 'roster-drawer-header'
 
+// GH #921 ruling 5 — the sticky header's own X close icon button, TRAILING position, alongside the title.
+const drawerTitleRow = document.createElement('div')
+drawerTitleRow.className = 'roster-drawer-title-row'
+
 const drawerTitle = document.createElement('h2')
 drawerTitle.className = 'roster-drawer-title'
 drawerTitle.textContent = 'Manage agents'
 
+const drawerClose = document.createElement('ui-button') as UIButtonElement
+drawerClose.setAttribute('variant', 'ghost')
+drawerClose.setAttribute('icon-only', '')
+drawerClose.setAttribute('aria-label', 'Close')
+drawerClose.className = 'roster-drawer-close'
+const drawerCloseIcon = document.createElement('ui-icon')
+drawerCloseIcon.setAttribute('slot', 'leading')
+drawerCloseIcon.setAttribute('glyph', 'x')
+drawerClose.append(drawerCloseIcon)
+drawerClose.addEventListener('click', () => {
+  drawer.open = false
+})
+
+drawerTitleRow.append(drawerTitle, drawerClose)
+
 const drawerHint = document.createElement('p')
 drawerHint.className = 'roster-drawer-hint'
 drawerHint.textContent =
-  'Reorder the picker, rename or delete agents you made, and duplicate any agent — a shipped one included — into an editable copy.'
+  'Reorganize, rename or delete agents you made, and duplicate any agent — a shipped one included — into an editable copy.'
+
+// GH #921 ruling 4 — Re-organize is an explicit MODE, toggled here (a `ui-toggle` pressed-pill, the
+// fleet's own toggle-button primitive — ADR-0179 GH #686 Amendment S7-a); the always-on ^/v reorder
+// buttons are RETIRED (see `rosterRow` below) in favour of drag, with the SAME ^/v buttons surviving as
+// the keyboard fallback ONLY while this mode is active.
+const reorderToggle = document.createElement('ui-toggle') as UIToggleElement
+reorderToggle.className = 'roster-drawer-reorder-toggle'
+const reorderToggleIcon = document.createElement('ui-icon')
+reorderToggleIcon.setAttribute('slot', 'icon')
+reorderToggleIcon.setAttribute('glyph', 'list')
+reorderToggle.append(reorderToggleIcon, document.createTextNode('Reorganize'))
+reorderToggle.addEventListener('toggle', () => {
+  // `toggle` fires BEFORE `pressed` commits (ui-toggle's own cancelable-before-commit contract): the
+  // control's OWN listener (toggle.ts) computes its post-emit `this.pressed = !this.pressed` AFTER this
+  // handler returns, in the SAME synchronous call — writing `.pressed` ourselves in here (even reading the
+  // "opposite of current") would race that commit and get overwritten by it. Defer one microtask so
+  // `pressed` has already settled to its real new value by the time we read it — `applyReorderMode` never
+  // touches `.pressed` itself for exactly this reason (see its own comment).
+  queueMicrotask(() => applyReorderMode(reorderToggle.pressed))
+})
+
+const drawerToolbar = document.createElement('div')
+drawerToolbar.className = 'roster-drawer-toolbar'
+drawerToolbar.append(reorderToggle)
 
 // The drawer opens MODAL, in the platform top layer: a `ui-toast-region` living in the normal layer paints
 // UNDER the ::backdrop while it is open, so a toast alone would be invisible feedback exactly when the user
@@ -369,7 +417,7 @@ const drawerStatus = document.createElement('p')
 drawerStatus.className = 'roster-drawer-status'
 drawerStatus.setAttribute('role', 'status')
 
-drawerHeader.append(drawerTitle, drawerHint, drawerStatus)
+drawerHeader.append(drawerTitleRow, drawerHint, drawerToolbar, drawerStatus)
 
 // `rosterList` itself IS the drawer's one scrolling `[data-region='content']` region — no extra wrapper:
 // the region's own inline/block padding (the drawer's --ui-drawer-pad-inline/-block rhythm) lands directly
@@ -411,8 +459,30 @@ function refreshRoster(): void {
   if (drawer.open) renderRosterRows()
 }
 
+// GH #921 ruling 4 — Re-organize as an explicit MODE (never always-on): a page-level flag read by every
+// row build, so entering/leaving the mode is one re-render, not a per-row toggle to track separately.
+let reorderMode = false
+
+/** Apply the mode WITHOUT touching the toggle's own `pressed` — the toggle's own post-`toggle`-event
+ *  commit already owns that write on a real user press (see the `toggle` listener above); this is what a
+ *  press-driven mode change calls, one microtask after `pressed` has genuinely settled. */
+function applyReorderMode(next: boolean): void {
+  reorderMode = next
+  rosterList.toggleAttribute('data-reorder-mode', next) // CSS hook: agent-admin-app.css keys the drag-cursor affordance off this
+  if (drawer.open) renderRosterRows()
+}
+
+/** Set the mode PROGRAMMATICALLY (the drawer's own open/close) — also drives the toggle's own `pressed`,
+ *  since there is no real user press here to commit it (directly setting `pressed` is never subject to
+ *  refusal, toggle.md's own law). */
+function setReorderMode(next: boolean): void {
+  reorderToggle.pressed = next
+  applyReorderMode(next)
+}
+
 function openRosterDrawer(): void {
   drawerStatus.textContent = ''
+  setReorderMode(false) // always open on the default (non-reorder) view — a no-op render (drawer isn't open yet)
   renderRosterRows()
   drawer.open = true
 }
@@ -433,10 +503,11 @@ function rowIconButton(glyph: string, label: string, disabled: boolean, onClick:
   return button
 }
 
-/** A ghost row VERB button — the word is always present (ADR-0057: intent never travels by colour alone,
- *  which is what lets the Delete button below be danger-styled by token repoint and still read correctly).
- *  `glyph` is optional because the shipped Phosphor pack (icons.gen.ts) carries no copy/duplicate glyph —
- *  Duplicate ships wordmark-only rather than borrowing a misleading one. */
+/** A ghost row VERB button — the word is always present (ADR-0057: intent never travels by colour alone).
+ *  `glyph` is optional because the shipped Phosphor pack (icons.gen.ts) carries no copy/duplicate glyph.
+ *  The rename Save button is this function's one remaining call site (GH #921 moved Rename/Duplicate/
+ *  Delete off this shape — see `rosterRow` below — but Save, inside the still-active inline editor, keeps
+ *  it). */
 function rowVerbButton(text: string, className: string, ariaLabel: string, glyph: string | undefined, onClick: () => void): UIButtonElement {
   const button = document.createElement('ui-button') as UIButtonElement
   button.setAttribute('variant', 'ghost')
@@ -453,6 +524,99 @@ function rowVerbButton(text: string, className: string, ariaLabel: string, glyph
   return button
 }
 
+/** GH #921 — "Capabilities": a short summary of the persona's OWN stored capability entries (skills/
+ *  workflows/resources/tools), read live off its STORE — never the static preset seed alone, since a
+ *  custom edit adds/removes real entries the seed never had. Counts ENABLED entries only (a disabled entry
+ *  contributes nothing to what the agent can actually do); a kind with zero enabled entries is omitted. */
+function capabilitiesSummary(persona: Persona): string {
+  const store = personaStore(persona)
+  const kinds: ReadonlyArray<readonly [string, string]> = [
+    [ENTRY_KINDS.skill, 'skill'],
+    [ENTRY_KINDS.workflow, 'workflow'],
+    [ENTRY_KINDS.resource, 'resource'],
+    [ENTRY_KINDS.tool, 'tool'],
+  ]
+  const parts = kinds
+    .map(([kind, word]) => {
+      const list = (store.get(entriesStoreKey(kind)) as Entry[] | undefined) ?? []
+      const count = list.filter((entry) => entry.enabled).length
+      return count > 0 ? `${count} ${word}${count === 1 ? '' : 's'}` : ''
+    })
+    .filter((part) => part.length > 0)
+  return parts.length > 0 ? `Capabilities: ${parts.join(' · ')}` : 'Capabilities: none configured'
+}
+
+/** GH #921 — "Surface": a short excerpt of the persona's OWN "Surface style" prompt section (the custom
+ *  section every preset seeds — `presetSeed`'s own composition, states WHEN a surface earns its place over
+ *  prose) — read live off the store, so a custom edit shows here too. Absent (the one section a user may
+ *  delete, `presetSeed`'s own comment) falls back to a plain statement rather than an empty line. */
+function surfaceSummary(persona: Persona): string {
+  const store = personaStore(persona)
+  const sections = (store.get(entriesStoreKey(ENTRY_KINDS.promptSection)) as Entry[] | undefined) ?? []
+  const surfaceStyle = sections.find((section) => section.id === 'surface-style')
+  const text = surfaceStyle?.content.trim() ?? ''
+  if (text.length === 0) return 'Surface: no custom surface style'
+  return `Surface: ${text.length > 96 ? `${text.slice(0, 96).trimEnd()}…` : text}`
+}
+
+/** GH #921 — "Status": the one dynamic state a roster card can show today — whether this IS the agent
+ *  currently loaded onto the canvas. The shipped/custom distinction stays its OWN "Shipped" tag (unchanged
+ *  — a structural protection marker, never a lifecycle state). */
+function statusLabel(persona: Persona): string {
+  return persona.id === active.id ? 'Status: Active' : 'Status: Idle'
+}
+
+/** GH #921 — "Date" (Scope/Open ruling): created — stamped at mint/import/duplicate time
+ *  (`agent-admin-persona-file.ts`) — for a custom persona; absent that (every shipped preset, which ships
+ *  with the build and was never "created" by this user), the persistence layer's own last-write marker
+ *  (`loadModifiedAt`, agent-admin-presets.ts, bumped on every real store write). A preset NEVER touched by
+ *  the user has neither and reads as an em dash — the fallback the ticket's own Scope/Open section names. */
+function dateLabel(persona: Persona): string {
+  if (persona.createdAt !== undefined) return `Created ${new Date(persona.createdAt).toLocaleDateString()}`
+  const modified = loadModifiedAt(persona.id)
+  if (modified !== undefined) return `Modified ${new Date(modified).toLocaleDateString()}`
+  return '—'
+}
+
+/** GH #921 ruling 4 — dependency-free pointer-driven reorder: press the handle, drag over a sibling row,
+ *  and the dragged row swaps to sit before/after whichever row the pointer is currently over; releasing
+ *  commits the FULL id order (`moveAgent`'s own "persist the whole list" law, reused) and rebuilds. Pointer
+ *  events only — no HTML5 Drag-and-Drop API (its cross-browser drag-image/dataTransfer quirks are exactly
+ *  what "dependency-free pointer events" rules out). `setPointerCapture` keeps the gesture live even if the
+ *  pointer strays outside the handle's own bounds mid-drag — real capture, not a simulated one. */
+function wireDrag(handle: HTMLElement, row: HTMLElement): void {
+  handle.addEventListener('pointerdown', (downEvent) => {
+    const pointerId = downEvent.pointerId
+    handle.setPointerCapture(pointerId)
+    row.setAttribute('data-dragging', '')
+
+    const onMove = (moveEvent: PointerEvent): void => {
+      if (moveEvent.pointerId !== pointerId) return
+      const over = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY)?.closest('.roster-row')
+      if (!(over instanceof HTMLElement) || over === row || !rosterList.contains(over)) return
+      const rect = over.getBoundingClientRect()
+      if (moveEvent.clientY < rect.top + rect.height / 2) over.before(row)
+      else over.after(row)
+    }
+    const onUp = (upEvent: PointerEvent): void => {
+      if (upEvent.pointerId !== pointerId) return
+      handle.releasePointerCapture(pointerId)
+      row.removeAttribute('data-dragging')
+      handle.removeEventListener('pointermove', onMove)
+      handle.removeEventListener('pointerup', onUp)
+      handle.removeEventListener('pointercancel', onUp)
+      const ids = [...rosterList.querySelectorAll('.roster-row')]
+        .map((r) => (r as HTMLElement).dataset.agent)
+        .filter((id): id is string => id !== undefined)
+      saveRosterOrder(ids)
+      refreshRoster()
+    }
+    handle.addEventListener('pointermove', onMove)
+    handle.addEventListener('pointerup', onUp)
+    handle.addEventListener('pointercancel', onUp)
+  })
+}
+
 /** Rebuild the whole list from the CURRENT roster — rows are stateless between rebuilds (the one exception
  *  is an in-flight rename field, which a rebuild drops; a short gesture re-typed, never state corrupted). */
 function renderRosterRows(): void {
@@ -461,17 +625,18 @@ function renderRosterRows(): void {
 }
 
 /**
- * One roster row, two lines: `[ ↑ ↓ · label (or the inline rename field) · Shipped? ]` over
- * `[ Rename? · Duplicate · Delete? ]`. Two lines rather than one, because the drawer is
- * `min(92vw, 26rem)` wide (drawer.css's own inline-size token) and four verbs plus a long persona label do
- * not fit one line at that width without truncating the one thing the row exists to identify. The label
- * takes the free space (`flex: 1 1 auto`) instead of a spacer element.
+ * One roster card (GH #921 redesign): a title row (label · hover-rename icon or the "Shipped" tag), a meta
+ * line (Status · Date), a Capabilities line, and a Surface line — the five owner-ruled fields. Actions
+ * collapse into a per-card `ui-menu` (Duplicate always, Delete only for a custom row — the SAME preset
+ * protection the row always had). While `reorderMode` is active, a pointer-drag handle (leading) and the
+ * ^/v keyboard fallback (trailing) both appear; outside that mode neither renders at all.
  *
  * PRESET PROTECTION IS STRUCTURAL, not disabled-with-a-tooltip (the `entry-delete`/TKT-0048 precedent —
- * "present ONLY for a non-built-in entry"): a shipped preset's row never builds a Rename or a Delete button
- * at all, so there is no destructive affordance to mis-fire, and a "Shipped" tag STATES the protection so
- * the absence reads as a rule rather than as a missing feature. Duplicate is on every row — that is the
- * escape hatch that makes the protection free: copy the preset, then edit/rename/delete the copy.
+ * "present ONLY for a non-built-in entry"): a shipped preset's card never builds a Rename affordance or a
+ * Delete menu item at all, so there is no destructive affordance to mis-fire, and the "Shipped" tag STATES
+ * the protection so the absence reads as a rule rather than as a missing feature. Duplicate is on every
+ * card — that is the escape hatch that makes the protection free: copy the preset, then edit/rename/delete
+ * the copy.
  */
 function rosterRow(persona: Persona, index: number): HTMLElement {
   const custom = persona.imported === true
@@ -480,43 +645,101 @@ function rosterRow(persona: Persona, index: number): HTMLElement {
   row.dataset.agent = persona.id
   if (persona.id === active.id) row.setAttribute('data-active', '')
 
-  const head = document.createElement('div')
-  head.className = 'roster-row-head'
-  head.append(
-    rowIconButton('caret-up', `Move ${persona.label} up`, index === 0, () => moveAgent(persona.id, -1)),
-    rowIconButton('caret-down', `Move ${persona.label} down`, index === roster.length - 1, () => moveAgent(persona.id, 1)),
-  )
+  if (reorderMode) {
+    const handle = document.createElement('div')
+    handle.className = 'roster-row-drag-handle'
+    handle.setAttribute('aria-hidden', 'true') // pointer-only — the ^/v buttons below are the real keyboard/AT path
+    const handleIcon = document.createElement('ui-icon')
+    handleIcon.setAttribute('glyph', 'list')
+    handle.append(handleIcon)
+    row.append(handle)
+    wireDrag(handle, row)
+  }
+
+  const main = document.createElement('div')
+  main.className = 'roster-row-main'
+
+  const titleRow = document.createElement('div')
+  titleRow.className = 'roster-row-title-row'
   const label = document.createElement('span')
   label.className = 'roster-row-label'
   label.textContent = persona.label
-  head.append(label)
-  if (!custom) {
+  titleRow.append(label)
+  if (custom) {
+    // GH #921 ruling 3 — rename is a HOVER-REVEALED icon at the end of the title (CSS-gated visibility,
+    // agent-admin-app.css); the row's own existing rename validation (`beginRename`) is untouched.
+    const renameIcon = rowIconButton('pencil-simple', `Rename ${persona.label}`, false, () => beginRename(row, persona))
+    renameIcon.classList.add('roster-row-rename')
+    titleRow.append(renameIcon)
+  } else {
     const tag = document.createElement('span')
     tag.className = 'roster-row-tag'
     tag.textContent = 'Shipped'
     tag.title = 'A shipped agent — it can be duplicated, but never renamed or deleted.'
-    head.append(tag)
+    titleRow.append(tag)
   }
 
-  const actions = document.createElement('div')
-  actions.className = 'roster-row-actions'
+  const meta = document.createElement('div')
+  meta.className = 'roster-row-meta'
+  const status = document.createElement('span')
+  status.className = 'roster-row-status'
+  status.textContent = statusLabel(persona)
+  const date = document.createElement('span')
+  date.className = 'roster-row-date'
+  date.textContent = dateLabel(persona)
+  meta.append(status, date)
+
+  const capabilities = document.createElement('p')
+  capabilities.className = 'roster-row-capabilities'
+  capabilities.textContent = capabilitiesSummary(persona)
+
+  const surface = document.createElement('p')
+  surface.className = 'roster-row-surface'
+  surface.textContent = surfaceSummary(persona)
+
+  main.append(titleRow, meta, capabilities, surface)
+
+  // GH #921 ruling 2 — inline actions collapse into a per-card (...) menu.
+  const menu = document.createElement('ui-menu') as UIMenuElement
+  menu.className = 'roster-row-menu'
+  menu.setAttribute('placement', 'bottom-end')
+  const menuTrigger = rowIconButton('dots-three-vertical', `Actions for ${persona.label}`, false, () => {}) // ui-menu itself wires the trigger's click to open/close (menu.md) — no handler owed here
+  const duplicateItem = document.createElement('div')
+  duplicateItem.className = 'roster-row-duplicate'
+  duplicateItem.setAttribute('data-value', 'duplicate')
+  duplicateItem.textContent = 'Duplicate'
+  menu.append(menuTrigger, duplicateItem)
   if (custom) {
-    actions.append(
-      rowVerbButton('Rename', 'roster-row-rename', `Rename ${persona.label}`, 'pencil-simple', () => beginRename(row, persona)),
+    const deleteItem = document.createElement('div')
+    deleteItem.className = 'roster-row-delete'
+    deleteItem.setAttribute('data-value', 'delete')
+    deleteItem.textContent = 'Delete'
+    menu.append(deleteItem)
+  }
+  menu.addEventListener('select', (event) => {
+    const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
+    if (value === 'duplicate') duplicateAgent(persona)
+    else if (value === 'delete') deleteAgent(persona.id)
+  })
+
+  row.append(main, menu)
+
+  if (reorderMode) {
+    const reorderControls = document.createElement('div')
+    reorderControls.className = 'roster-row-reorder-controls'
+    reorderControls.append(
+      rowIconButton('caret-up', `Move ${persona.label} up`, index === 0, () => moveAgent(persona.id, -1)),
+      rowIconButton('caret-down', `Move ${persona.label} down`, index === roster.length - 1, () => moveAgent(persona.id, 1)),
     )
-  }
-  actions.append(rowVerbButton('Duplicate', 'roster-row-duplicate', `Duplicate ${persona.label}`, undefined, () => duplicateAgent(persona)))
-  if (custom) {
-    actions.append(rowVerbButton('Delete', 'roster-row-delete', `Delete ${persona.label}`, 'trash', () => deleteAgent(persona.id)))
+    row.append(reorderControls)
   }
 
-  row.append(head, actions)
   return row
 }
 
-/** Reorder — up/down buttons, ruled over drag-and-drop (LLD §7): keyboard-reachable with zero new
- *  primitives (the fleet has no DnD trait, and inventing one is out of this ticket's scope). The WHOLE id
- *  list is persisted, not just the swapped pair, so the stored order pins every entry from then on. */
+/** Reorder — the WHOLE id list is persisted, not just the swapped pair, so the stored order pins every
+ *  entry from then on (both the drag commit above and the reorder-mode keyboard fallback below share this
+ *  one function). */
 function moveAgent(id: string, delta: -1 | 1): void {
   const ids = roster.map((p) => p.id)
   const from = ids.indexOf(id)

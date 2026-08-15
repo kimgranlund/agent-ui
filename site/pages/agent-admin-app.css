@@ -56,16 +56,35 @@ body {
   align-items: stretch;
 }
 
+/* GH #921 ruling 5 — the title + its trailing X close button share ONE row; the hint/toolbar/status lines
+   below stay full-width, unchanged from the header's own column stack. */
+.roster-drawer-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--md-sys-space-xs);
+}
+
 .roster-drawer-title {
   margin: 0;
   font-size: var(--md-sys-typescale-title-medium-size);
   line-height: var(--md-sys-typescale-title-medium-line);
 }
 
+.roster-drawer-close {
+  flex: 0 0 auto;
+}
+
 .roster-drawer-hint {
   margin: 0;
   color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: var(--md-sys-typescale-body-small-size);
+}
+
+/* GH #921 ruling 4 — the Re-organize mode toggle lives in the header, above the list. */
+.roster-drawer-toolbar {
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* The in-drawer feedback line: the drawer sits in the platform TOP LAYER, where a page-level toast paints
@@ -90,9 +109,13 @@ body {
   gap: var(--md-sys-space-xs);
 }
 
+/* GH #921 redesign — the card is now a THREE-cell row: an optional leading drag handle (reorder mode
+   only), the main content column (title row · meta · Capabilities · Surface), and the trailing (...)
+   menu. An optional fourth cell (the ^/v keyboard fallback) appears at the trailing edge, reorder mode
+   only, matching the drag handle's own gate. */
 .roster-row {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   gap: var(--md-sys-space-xs);
   padding: var(--md-sys-space-xs) var(--md-sys-space-sm);
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
@@ -100,13 +123,29 @@ body {
   background: var(--md-sys-color-neutral-surface);
 }
 
-/* The agent currently on screen — a border-side accent, never colour alone (ADR-0057): its Move/Rename
-   labels already name it, and the picker itself carries the same selection. */
+/* The agent currently on screen — a border-side accent, never colour alone (ADR-0057): its Status field
+   already names it ("Active"), and the picker itself carries the same selection. */
 .roster-row[data-active] {
   border-color: var(--md-sys-color-primary);
 }
 
-.roster-row-head {
+/* A row genuinely mid-drag (GH #921 ruling 4) — a tonal shift + the primary outline, so the gesture reads
+   as "picked up" (no raw box-shadow value — this fleet expresses lift via the elevation×brightness ROLE
+   seam, never an ad hoc shadow; container.css's own tonal shift is the row's OWN border/background here). */
+.roster-row[data-dragging] {
+  background: var(--md-sys-color-neutral-surface-high);
+  border-color: var(--md-sys-color-primary);
+}
+
+.roster-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-xs);
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.roster-row-title-row {
   display: flex;
   align-items: center;
   gap: var(--md-sys-space-xs);
@@ -120,7 +159,25 @@ body {
   font-weight: 600;
 }
 
-/* States the protection the missing Rename/Delete buttons imply — the absence reads as a rule, not a gap. */
+/* GH #921 ruling 3 — the rename icon is HOVER-REVEALED (never always-visible): invisible + inert at rest,
+   shown on a real hover OR when it (or anything upstream in the title row) holds focus — the
+   `:focus-within` leg is what keeps it keyboard-reachable (Tab lands on it, focus reveals it) rather than
+   sighted-mouse-only. Opacity/pointer-events only (never `display`/`visibility`) — the button stays a real
+   tab stop throughout, per the accessible hover-reveal pattern. */
+.roster-row-rename {
+  opacity: 0;
+  pointer-events: none;
+  flex: 0 0 auto;
+}
+
+.roster-row-title-row:hover .roster-row-rename,
+.roster-row-title-row:focus-within .roster-row-rename {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* States the protection the missing Rename affordance/Delete menu item implies — the absence reads as a
+   rule, not a gap. */
 .roster-row-tag {
   flex: 0 0 auto;
   padding-inline: var(--md-sys-space-xs);
@@ -130,10 +187,48 @@ body {
   font-size: var(--md-sys-typescale-label-small-size);
 }
 
-.roster-row-actions {
+/* GH #921 ruling 1 — the Status/Date meta line. */
+.roster-row-meta {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  gap: var(--md-sys-space-sm);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-small-size);
+}
+
+.roster-row-capabilities,
+.roster-row-surface {
+  margin: 0;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-small-size);
+  overflow-wrap: anywhere;
+}
+
+/* GH #921 ruling 2 — the per-card (...) menu, trailing edge, never growing past its own trigger size. */
+.roster-row-menu {
+  flex: 0 0 auto;
+}
+
+/* GH #921 ruling 4 — the drag handle (leading edge, reorder mode only): a pointer-only affordance
+   (aria-hidden — the ^/v buttons are the real keyboard/AT path), `touch-action: none` so a touch-pointer
+   drag is not fought by the platform's own scroll gesture on the same axis. */
+.roster-row-drag-handle {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  touch-action: none;
+  cursor: grab;
+}
+
+.roster-row[data-dragging] .roster-row-drag-handle {
+  cursor: grabbing;
+}
+
+.roster-row-reorder-controls {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
   gap: var(--md-sys-space-xs);
 }
 
@@ -151,16 +246,22 @@ body {
 }
 
 /* DANGER INTENT BY TOKEN REPOINT (LLD §6) — the same consumer-side mapping `agent-admin.css` uses for the
-   config surface's Delete button, one family over (primary → danger), keyed here on this page's own row
-   class. `button.css` declares `--ui-button-{bg,bg-hover,bg-active,ink}` at `:where(ui-button)`
-   (specificity 0,0,0) precisely so a consumer can repoint them, so `ui-button`'s three-member variant enum
-   stays untouched. The row keeps the GHOST geometry (transparent at rest, a wash on hover); ADR-0057's
-   non-colour signifier is the verb itself — the button reads "Delete" in words. */
+   config surface's Delete button, one family over (primary → danger), keyed here on this page's own menu
+   item class. `button.css` declares `--ui-button-{bg,bg-hover,bg-active,ink}` at `:where(ui-button)`
+   (specificity 0,0,0) precisely so a consumer can repoint them — but a `ui-menu` item is a plain light-DOM
+   node (role=menuitem), not a `ui-button`, so this repoints the item's OWN paint directly rather than
+   `ui-button`'s custom properties (GH #921 moved Delete off a `ui-button` onto a menu item). ADR-0057's
+   non-colour signifier is the verb itself — the item reads "Delete" in words. */
 .roster-row-delete {
-  --ui-button-bg: transparent;
-  --ui-button-bg-hover: var(--md-sys-color-danger-container-low);
-  --ui-button-bg-active: var(--md-sys-color-danger-container);
-  --ui-button-ink: var(--md-sys-color-danger-high);
+  color: var(--md-sys-color-danger-high);
+}
+
+.roster-row-delete:hover {
+  background: var(--md-sys-color-danger-container-low);
+}
+
+.roster-row-delete:active {
+  background: var(--md-sys-color-danger-container);
 }
 
 /* GH #918 — the footer's own sticky region padding + the [data-box] inset gutter (BFC-collapsed against the

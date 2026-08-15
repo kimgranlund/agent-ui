@@ -118,6 +118,10 @@ const pickerIds = (): string[] =>
   [...agentSelect().querySelectorAll('[role="option"]')].map((o) => o.getAttribute('value') ?? '').filter((v) => !v.startsWith('agent-admin:'))
 const rows = (): HTMLElement[] => [...document.querySelectorAll('.roster-row')] as HTMLElement[]
 const rowFor = (id: string): HTMLElement => document.querySelector(`.roster-row[data-agent="${id}"]`) as HTMLElement
+// GH #921 ruling 4 — Re-organize is an explicit MODE: the ^/v keyboard fallback (and the drag handle) only
+// render while it is active. `reorderToggle` is a `ui-toggle` (role=button, aria-pressed via internals) —
+// clicking it fires the SAME press path a real user gesture would.
+const reorderToggle = (): HTMLElement => document.querySelector('.roster-drawer-reorder-toggle') as HTMLElement
 const click = (el: Element | null): void => {
   expect(el, 'the affordance under test exists').not.toBeNull()
   el!.dispatchEvent(new MouseEvent('click', { bubbles: true }))
@@ -188,11 +192,28 @@ describe('agent-admin-app — preset protection is STRUCTURAL in the drawer (GH 
     expect(custom.querySelector('.roster-row-delete')).not.toBeNull()
     expect(custom.querySelector('.roster-row-rename')).not.toBeNull()
     expect(custom.querySelector('.roster-row-tag'), 'no "Shipped" tag on a custom agent').toBeNull()
+    await closeDrawer()
+  })
 
-    // Every row's move buttons name their agent — an icon-only control's accessible name is its aria-label.
-    const labels = [...preset.querySelectorAll('[aria-label]')].map((el) => el.getAttribute('aria-label'))
-    expect(labels).toContain(`Move ${AGENT_PRESETS[0]!.label} up`)
+  it('GH #921 ruling 4 — the ^/v keyboard-fallback move buttons exist ONLY while Re-organize mode is active, named for their agent', async () => {
+    await openViaPicker()
+    const preset = rowFor(AGENT_PRESETS[0]!.id)
+    expect(preset.querySelector('[aria-label^="Move"]'), 'outside reorder mode, no move affordance at all — the retired always-on buttons').toBeNull()
+
+    click(reorderToggle())
+    await whenFlushed()
+    // `pressed` reflects (toggle.md) — `aria-pressed` itself is set via ElementInternals, never a host
+    // attribute (FACE), so the reflected `[pressed]` attribute is the jsdom-visible proxy for the ON state.
+    expect(reorderToggle().hasAttribute('pressed'), 'the mode toggle itself reflects ON').toBe(true)
+
+    const labels = [...rowFor(AGENT_PRESETS[0]!.id).querySelectorAll('[aria-label]')].map((el) => el.getAttribute('aria-label'))
+    expect(labels, 'every row — preset included — gets the keyboard fallback while the mode is active').toContain(`Move ${AGENT_PRESETS[0]!.label} up`)
     expect(labels).toContain(`Move ${AGENT_PRESETS[0]!.label} down`)
+
+    click(reorderToggle())
+    await whenFlushed()
+    expect(reorderToggle().hasAttribute('pressed')).toBe(false)
+    expect(rowFor(AGENT_PRESETS[0]!.id).querySelector('[aria-label^="Move"]'), 'leaving the mode retires the buttons again').toBeNull()
     await closeDrawer()
   })
 
@@ -218,6 +239,9 @@ describe('agent-admin-app — preset protection is STRUCTURAL in the drawer (GH 
 describe('agent-admin-app — reorder · rename · duplicate through the real row buttons (GH #845, AC6)', () => {
   it('Move up on a custom row persists an explicit order AND drives the picker’s own order', async () => {
     await openViaPicker()
+    // GH #921 ruling 4 — the ^/v buttons exist ONLY in Re-organize mode; enter it through the real toggle.
+    click(reorderToggle())
+    await whenFlushed()
     const before = pickerIds()
     expect(before.slice(-2)).toEqual([CUSTOM_A, CUSTOM_B])
 
@@ -370,12 +394,11 @@ describe('agent-admin-app.css — the drawer rules consume ROLES, never raw colo
     expect(css, 'no raw oklch/rgb/hsl literal').not.toMatch(/\b(oklch|rgba?|hsla?)\(/)
   })
 
-  it('the row Delete button is danger-styled by REPOINTING ui-button’s own custom properties — no fourth variant', () => {
-    const block = sheet().slice(sheet().indexOf('.roster-row-delete'))
-    for (const property of ['--ui-button-bg-hover', '--ui-button-bg-active', '--ui-button-ink']) {
-      expect(block.slice(0, 400), property).toContain(property)
-    }
-    expect(block.slice(0, 400), 'pointed at the DANGER family, one family over from soft’s primary ladder').toContain('--md-sys-color-danger-')
+  it('GH #921 — the Delete menu item is danger-styled directly (a ui-menu item is a plain node, not a ui-button — no custom-property repoint to make)', () => {
+    const block = sheet().slice(sheet().indexOf('.roster-row-delete'), sheet().indexOf('.roster-row-delete') + 300)
+    expect(block, 'the ink reads the danger family').toContain('color: var(--md-sys-color-danger-')
+    expect(block, 'hover state').toMatch(/:hover\s*\{\s*background:\s*var\(--md-sys-color-danger-/)
+    expect(block, 'active state').toMatch(/:active\s*\{\s*background:\s*var\(--md-sys-color-danger-/)
   })
 })
 

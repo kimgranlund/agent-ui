@@ -719,6 +719,12 @@ export interface Persona {
   seedVersion?: number
   /** True for a persona minted by an import — a library entry, not a shipped preset. */
   imported?: boolean
+  /** GH #921 — the ONE moment a custom persona is genuinely "created": an ISO timestamp stamped at mint/
+   *  import/duplicate time (`agent-admin-persona-file.ts`'s three minting functions). Absent for a shipped
+   *  preset — it ships with the build, it was never "created" by this user — the Manage-agents card falls
+   *  back to `loadModifiedAt` (below) for those, and to an em dash when NEITHER exists yet (an untouched
+   *  preset), per the ticket's own fallback ruling. */
+  createdAt?: string
 }
 
 /** A shipped preset as a roster persona. */
@@ -748,6 +754,25 @@ const storeCache = new Map<string, SettingsStore>()
  *  and the persona file's key set is enumerated (`PERSONA_STATE_KEYS`), so it never reaches an export. */
 const seedVersionKey = (id: string): string => `${persistKeyFor(id)}.seedVersion`
 
+// GH #921 — the "Date" card field's own FALLBACK (Scope/Open: "if neither [created/modified] exists yet,
+// show modified-at from persistence, note it in Findings"): a shipped preset carries no `createdAt` (it
+// ships with the build, never "created" by this user) and the store format itself carries no timestamp
+// field, so this is the persistence layer's OWN last-write marker — bumped on every real store `set()` via
+// the store's own `subscribe` seam (memory-store.ts), namespaced beside the seedVersion marker so
+// `resetPersona`'s prefix sweep drops it along with everything else on a reset.
+const modifiedAtKey = (id: string): string => `${persistKeyFor(id)}.modifiedAt`
+
+/** The persisted last-write time (epoch ms), or `undefined` when this persona's store has never been
+ *  written to since boot (a fresh preset, or a reset one) — the Manage-agents card's Date fallback reads
+ *  this when `Persona.createdAt` is absent. */
+export function loadModifiedAt(id: string): number | undefined {
+  if (typeof localStorage === 'undefined') return undefined
+  const raw = localStorage.getItem(modifiedAtKey(id))
+  if (raw === null) return undefined
+  const parsed = Number(raw)
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
 /** The persona's store — cached per id so switching away and back keeps one live instance; persisted
  *  values (this persona's OWN prior edits) win over the seed, memory-store.ts's parity law. */
 export function personaStore(persona: Persona): SettingsStore {
@@ -760,6 +785,13 @@ export function personaStore(persona: Persona): SettingsStore {
       localStorage.setItem(seedVersionKey(persona.id), String(wanted))
     }
     store = createMemoryStore({ initial: persona.seed, persistKey: persistKeyFor(persona.id) })
+    // GH #921 — bump the modified-at marker on every REAL write (never on construction itself — a fresh
+    // store's seed read is not an edit). `subscribe` is optional on `SettingsStore`; `createMemoryStore`
+    // always implements it, but the guard keeps this inert against a hypothetical future store shape that
+    // doesn't.
+    store.subscribe?.(() => {
+      if (typeof localStorage !== 'undefined') localStorage.setItem(modifiedAtKey(persona.id), String(Date.now()))
+    })
     storeCache.set(persona.id, store)
   }
   return store
