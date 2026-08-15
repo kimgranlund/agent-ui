@@ -70,6 +70,16 @@ function makeHost(opts: Partial<Omit<OverlayOptions, 'popup' | 'anchor'>> = {}):
   el.popup.textContent = 'Panel content'
   el.popup.style.width = '150px'
   el.popup.style.height = '80px'
+  // border-box + zeroed padding/border — the UA default `[popover]` stylesheet adds its OWN
+  // padding/border on top of a content-box `width`/`height` (measured: a plain 150×80 rendered at
+  // 164×94 in real engines), which silently made the popup's TRUE footprint wider than the test
+  // fixture's own clearance math assumed — a real trap the 8-placement matrix test caught (a
+  // popup that doesn't actually fit its declared box overflows, and the CSS spec's OWN correctly-
+  // functioning "least overflow" fallback then legitimately picks a DIFFERENT placement than the
+  // one under test, misreading as a positioning-logic bug when the fixture was the culprit).
+  el.popup.style.boxSizing = 'border-box'
+  el.popup.style.padding = '0'
+  el.popup.style.border = 'none'
   document.body.append(el, el.anchor, el.popup)
   mounted.push(el)
   return { el, popup: el.popup, anchor: el.anchor }
@@ -144,9 +154,77 @@ describe('overlay — enhanced path wiring (both engines)', () => {
   })
 
   it(`${server.browser}: a shared @position-try stylesheet is injected exactly once per document`, () => {
+    // Self-contained — mounts + opens TWO independent overlay() instances itself, rather than relying
+    // on residue left by an earlier test in this file (that made the assertion pass only by accident
+    // of run order; filtered to run alone, e.g. `-t`, it read count 0 and failed spuriously).
+    const first = makeHost()
+    const second = makeHost()
+    first.el.handle!.open()
+    second.el.handle!.open()
+
     const styles = document.head.querySelectorAll('#ui-overlay-anchor-tries')
     expect(styles.length, `${server.browser}: expected exactly one injected @position-try stylesheet`).toBe(1)
   })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [2b] the FULL 8-placement matrix (both engines) — code-checker MAJOR fold: the wiring test above
+//  only ever exercised bottom-start/top-start; every one of the 8 `OverlayPlacement` values gets its
+//  own behavioral proof here — the resolved geometry relation AND `data-placement`, for BOTH sides
+//  the SIDE axis can land on and BOTH ends the ALIGN axis can land on. The anchor sits centered in a
+//  generous, edge-clear rect so no flip fires for ANY of the 8 — this is a no-flip placement proof,
+//  not a flip proof (section [3] below owns flip).
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+const ALL_PLACEMENTS_UNDER_TEST = [
+  'bottom-start', 'bottom-end', 'top-start', 'top-end',
+  'left-start', 'left-end', 'right-start', 'right-end',
+] as const
+
+describe('overlay — the full 8-placement matrix, no flip (both engines)', () => {
+  for (const placement of ALL_PLACEMENTS_UNDER_TEST) {
+    const [side, align] = placement.split('-') as ['bottom' | 'top' | 'left' | 'right', 'start' | 'end']
+
+    it(`${server.browser}: ${placement} resolves data-placement and lands the popup on the correct side + edge`, async () => {
+      const { el, popup, anchor } = makeHost({ placement })
+      anchor.style.position = 'fixed'
+      // A SMALL anchor, centered in the fleet-default 414×896 viewport, with SYMMETRIC clearance on
+      // all four sides comfortably exceeding the 150×80 popup's footprint + gap (~154×84) in every
+      // direction — no side has to flip for ANY of the 8 placements checked here (flip parity is
+      // section [3]'s own job). A first draft used an off-center anchor with exactly-tight
+      // clearance on one axis (150px available vs. ~154px needed once the anchor↔panel gap counted)
+      // — the popup genuinely didn't fit, and the CSS spec's OWN correctly-functioning "least
+      // overflow" fallback selection legitimately picked a different placement, misreading as a
+      // positioning-logic bug when the fixture's own clearance math was the culprit.
+      anchor.style.top = '430px'
+      anchor.style.left = '197px'
+      anchor.style.width = '20px'
+      anchor.style.height = '20px'
+
+      el.handle!.open()
+      // Synchronous read — the same contract [2]'s wiring test already pins; repeated here per
+      // placement rather than assumed to generalize.
+      expect(popup.getAttribute('data-placement'), `${server.browser}: ${placement} did not resolve synchronously`).toBe(placement)
+      await settle()
+
+      const a = anchor.getBoundingClientRect()
+      const p = popup.getBoundingClientRect()
+      const EPS = 1
+
+      if (side === 'bottom') expect(p.top, `${server.browser}: ${placement} panel is not below the anchor`).toBeGreaterThanOrEqual(a.bottom - EPS)
+      else if (side === 'top') expect(p.bottom, `${server.browser}: ${placement} panel is not above the anchor`).toBeLessThanOrEqual(a.top + EPS)
+      else if (side === 'right') expect(p.left, `${server.browser}: ${placement} panel is not right of the anchor`).toBeGreaterThanOrEqual(a.right - EPS)
+      else expect(p.right, `${server.browser}: ${placement} panel is not left of the anchor`).toBeLessThanOrEqual(a.left + EPS)
+
+      if (side === 'bottom' || side === 'top') {
+        if (align === 'start') expect(p.left, `${server.browser}: ${placement} is not left-aligned to the anchor`).toBeCloseTo(a.left, 0)
+        else expect(p.right, `${server.browser}: ${placement} is not right-aligned to the anchor`).toBeCloseTo(a.right, 0)
+      } else {
+        if (align === 'start') expect(p.top, `${server.browser}: ${placement} is not top-aligned to the anchor`).toBeCloseTo(a.top, 0)
+        else expect(p.bottom, `${server.browser}: ${placement} is not bottom-aligned to the anchor`).toBeCloseTo(a.bottom, 0)
+      }
+    })
+  }
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
@@ -172,6 +250,31 @@ describe('overlay — enhanced path flip parity (both engines)', () => {
     const a = anchor.getBoundingClientRect()
     const p = popup.getBoundingClientRect()
     expect(p.bottom, `${server.browser}: flipped panel bottom is not above the anchor's top edge`).toBeLessThanOrEqual(a.top + 1)
+  })
+
+  it(`${server.browser}: bottom-start flips ALIGN to bottom-end when a side-flip alone can't fix a right-edge overflow (the real tabs.browser.test.ts / GH #586 regression shape)`, async () => {
+    // The exact shape that broke tabs.browser.test.ts's overflow-menu commit relay: an anchor sitting
+    // at the viewport's right edge with align:start overflows the popup's far (right) edge on EITHER
+    // side (top or bottom) — only a same-side ALIGN flip (pinning the popup's right edge to the
+    // anchor's own right edge instead) actually fits. Proven directly here at the trait level, not
+    // only indirectly via the consuming control's own suite.
+    const { el, popup, anchor } = makeHost({ placement: 'bottom-start' })
+    anchor.style.position = 'fixed'
+    anchor.style.top = '400px' // plenty of room both above and below — this is NOT a side overflow
+    anchor.style.left = '390px' // near/past the 414px fleet-default viewport's right edge
+    anchor.style.width = '36px'
+    anchor.style.height = '36px'
+
+    el.handle!.open()
+    await settle()
+
+    expect(
+      popup.getAttribute('data-placement'),
+      `${server.browser}: expected the align-flip target bottom-end, not a side-flip (there was room on both top and bottom) or bottom-start (that's what overflows)`,
+    ).toBe('bottom-end')
+
+    const p = popup.getBoundingClientRect()
+    expect(p.right, `${server.browser}: the align-flipped panel must fit within the viewport's right edge`).toBeLessThanOrEqual(window.innerWidth + 1)
   })
 })
 

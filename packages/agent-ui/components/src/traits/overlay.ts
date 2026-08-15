@@ -288,8 +288,12 @@ const ANCHOR_TRY_STYLE_ID = 'ui-overlay-anchor-tries'
 
 /** Lazily inject the shared `@position-try` stylesheet into `document.head` — once per document (the
  * `id` marker guards re-injection across multiple `overlay()` instances, or a re-run inside one test's
- * shared DOM). No-ops outside a document (defensive; every real caller runs in a browser). */
+ * shared DOM). No-ops outside a document AND outside a document that actually HAS a `<head>` (a bare
+ * `DOMImplementation` document can lack one) — the earlier `anchor.ownerDocument` guard at the call
+ * site only proves a document exists, not that it carries a head; this is the guard that makes that
+ * defensive claim actually true. */
 function ensureAnchorTryStylesheet(doc: Document): void {
+  if (!doc.head) return
   if (doc.getElementById(ANCHOR_TRY_STYLE_ID)) return
   const style = doc.createElement('style')
   style.id = ANCHOR_TRY_STYLE_ID
@@ -320,7 +324,12 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
   const anchorName = supportsAnchorPositioning && anchor.ownerDocument ? nextAnchorName() : null
   if (anchorName) {
     ensureAnchorTryStylesheet(anchor.ownerDocument)
-    anchor.style.setProperty('anchor-name', anchorName)
+    // `anchor-name` is a comma-list-valued property — APPEND rather than clobber, so a second
+    // `overlay()` instance sharing this same anchor element (a real, if rare, composition — e.g. a
+    // control that anchors both a tooltip AND a menu off the same trigger) never silently steals the
+    // first instance's name and leaves its popup un-anchored.
+    const existingAnchorNames = anchor.style.getPropertyValue('anchor-name')
+    anchor.style.setProperty('anchor-name', existingAnchorNames ? `${existingAnchorNames}, ${anchorName}` : anchorName)
     popup.style.setProperty('position-anchor', anchorName)
     // FLIP-CANDIDATES (GH #951 — a live regression, not a design preference): the JS path only ever
     // flips the SIDE (`FLIP_SIDE`, preserving align) — a first draft mirrored exactly that ONE
@@ -405,11 +414,19 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
     else if (p.bottom <= a.top + EPS) side = 'top'
     else if (p.left >= a.right - EPS) side = 'right'
     else if (p.right <= a.left + EPS) side = 'left'
+    // Align decode: a genuine geometric tie (e.g. a popup exactly as wide as its anchor) reads as
+    // equidistant from both edges — default to the PREFERRED align on a tie rather than always
+    // 'start', so a same-width `*-end` popup still reports the align it actually asked for instead
+    // of a token a consumer's caret/transform-origin styling would read as the wrong side.
     let align: Align
     if (side === 'bottom' || side === 'top') {
-      align = Math.abs(p.left - a.left) <= Math.abs(p.right - a.right) ? 'start' : 'end'
+      const dStart = Math.abs(p.left - a.left)
+      const dEnd = Math.abs(p.right - a.right)
+      align = Math.abs(dStart - dEnd) <= EPS ? prefAlign : dStart < dEnd ? 'start' : 'end'
     } else {
-      align = Math.abs(p.top - a.top) <= Math.abs(p.bottom - a.bottom) ? 'start' : 'end'
+      const dStart = Math.abs(p.top - a.top)
+      const dEnd = Math.abs(p.bottom - a.bottom)
+      align = Math.abs(dStart - dEnd) <= EPS ? prefAlign : dStart < dEnd ? 'start' : 'end'
     }
     return `${side}-${align}` as OverlayPlacement
   }
