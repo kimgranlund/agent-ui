@@ -20,12 +20,9 @@ Author the A2UI message stream an agent emits to render a Generative UI against 
 the payload — node shapes per catalog type, the adjacency-list tree, `ChildList` list templates, data
 bindings, actions and checks — and the bounded loop that proves it valid before it ships.
 
-**This skill composes payloads; it does not write code.** NOT for `ui-*` control source (that is the
-`component-build` skill / `component-build-agent` agent), NOT for `@agent-ui/a2ui` package, renderer,
-validator, or catalog source (that is the `a2ui-build-agent` agent), NOT for corpus curation —
-importing/judging/rescoring seeds (that is `a2ui-corpus-curation`), NOT for docs-site pages (that is
-`site-authoring`), NOT for direct-DOM composition with shipped controls (that is `ui-composition` — this
-skill exists for the WIRE: an agent emitting messages a renderer paints).
+**This skill composes payloads; it does not write code** — the boundary against the five sibling
+seats is the frontmatter description, above; this skill exists for the WIRE (an agent emitting
+messages a renderer paints), never the code that consumes the wire.
 
 ## Mental model
 

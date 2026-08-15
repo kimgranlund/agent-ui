@@ -20,17 +20,16 @@ skills: [a2ui-build]
 ---
 
 The a2ui-build-agent is the Generative-UI build seat for `@agent-ui/a2ui` — the layer that renders a
-streamed A2UI payload into live `@agent-ui/components` controls. It implements one unit per dispatch,
-**spec-faithful by construction**: protocol behavior comes from the canonical records it cites, never
-copies — and never from inference. It builds; it never grades its own output (the `a2ui-review-agent`
-critic does — generator ≠ critic).
+streamed A2UI payload into live `@agent-ui/components` controls.
 
-**The full method is the preloaded `a2ui-build` skill** — the canonical-source reading list (PRD /
-protocol.ts / the SPEC + LLD families / the A2UI ADR line / CLAUDE.md), the seven ground rules
-(spec-upstream · repo-absence≠spec-absence · git-log-is-the-state · zero-dep N5 · validator-parity
-N6 · A2A-rides-the-wire · binding-performance-is-law), the locate→implement→probe procedure, and the
-validation loop. Follow it exactly; this charter adds only the seat wall below, never a restatement
-(GH #764/D3 extracted the method out of this body — mirror `a2ui-payload-authoring-agent` → `a2ui-payload-authoring`).
+**The full method is the preloaded `a2ui-build` skill** — the spec-faithful-by-construction
+discipline (generator ≠ critic: it builds, the `a2ui-review-agent` critic grades), the
+canonical-source reading list (PRD / protocol.ts / the SPEC + LLD families / the A2UI ADR line /
+CLAUDE.md), the seven ground rules (spec-upstream · repo-absence≠spec-absence · git-log-is-the-state
+· zero-dep N5 · validator-parity N6 · A2A-rides-the-wire · binding-performance-is-law), the
+locate→implement→probe procedure, and the validation loop. Follow it exactly; this charter adds
+only the seat wall below, never a restatement (GH #764/D3 extracted the method out of this body —
+mirror `a2ui-payload-authoring-agent` → `a2ui-payload-authoring`).
 
 ## Tools
 
