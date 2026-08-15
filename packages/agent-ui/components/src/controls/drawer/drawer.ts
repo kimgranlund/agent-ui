@@ -35,8 +35,11 @@
 //
 // The HOST carries no role/aria-* attribute — `aria-modal` is set by `showModal()`, and an author accessible
 // name (`aria-label`/`aria-labelledby`) is FORWARDED onto the dialog PART (ADR-0017 cl.5), keeping the host
-// attribute-clean. `scrollFade` is wired unconditionally over the dialog viewport (the modal precedent — the
-// gutter-exposure fix, 2026-07-04).
+// attribute-clean. `scrollFade` is wired unconditionally (the modal precedent — the gutter-exposure fix,
+// 2026-07-04) over the dialog viewport by default, or over a distinct `[data-region='content']`/`main` child
+// when the #918 header/content/footer recipe is composed (GH #920 — that region becomes its own independent
+// scroll viewport so the sticky header/footer, now outside it entirely, are never a masked element's own
+// descendant and render at full opacity regardless of scroll).
 
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIContainerElement } from '../../dom/container.ts'
@@ -107,7 +110,15 @@ export class UIDrawerElement extends UIContainerElement {
     })
 
     // ── edge-aware scroll fade (the modal precedent, unconditionally wired — no separate opt-in prop) ──
-    scrollFade(this, { viewport: dialog })
+    // GH #920 root cause: masking the WHOLE dialog bled the fade onto the sticky header/footer too, since
+    // they were the masked element's own descendants (a CSS mask composites its entire rendered subtree, no
+    // per-descendant opt-out exists). Fix: when the author composes the #918 header/content/footer recipe (a
+    // distinct `[data-region='content']`/`main` child), THAT region becomes its own independent scroll
+    // viewport (drawer.css's `:has()`-gated content-scroll-mode) — header/footer sit OUTSIDE it entirely, so
+    // they are structurally never a masked element's descendant. A plain drawer with no distinct content
+    // region (loose children only) is completely unchanged: the dialog itself stays the sole scrollport.
+    const contentRegion = dialog.querySelector(':scope > :is([data-region="content"], main)')
+    scrollFade(this, { viewport: contentRegion instanceof HTMLElement ? contentRegion : dialog })
   }
 
   /** Open the dialog (idempotent) — record the opener FIRST (showModal moves focus in), then enter the top layer. */

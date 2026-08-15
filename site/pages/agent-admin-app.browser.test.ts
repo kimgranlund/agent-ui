@@ -569,3 +569,58 @@ describe("agent-admin-app — the Settings model-grid fold's Reset Agent button 
     expect(after!.get('name'), 'the seed value is restored').toBe(original)
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #920 — the Manage-agents drawer's scroll-fade mask no longer clips the sticky header while its real
+//  roster scrolls, proven on THIS page's OWN composition (drawer.browser.test.ts proves the generic
+//  ui-drawer control mechanism; this proves the Manage-agents consumer actually rides it — the roster list
+//  really is drawer.ts's `[data-region='content']` content-scroll-mode trigger).
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+describe('agent-admin-app — the Edit Agents drawer header/footer render at full opacity while the real roster scrolls (GH #920)', () => {
+  // scrollFade listens for the real, asynchronously-dispatched `scroll` event (drawer.browser.test.ts's own
+  // precedent, reused verbatim) — a plain `el.scrollTop = top` updates layout synchronously but does not
+  // itself resolve the trait's listener callback in the same tick.
+  const scrollTo = (el: HTMLElement, top: number): Promise<void> =>
+    new Promise((resolve) => {
+      if (el.scrollTop === top) {
+        resolve()
+        return
+      }
+      el.addEventListener('scroll', () => resolve(), { once: true })
+      el.scrollTop = top
+    })
+
+  it('the dialog itself never carries the fade flag; the roster list does — and the header/footer sit structurally OUTSIDE that scroller', async () => {
+    const select = agentSelect()
+    ;(select.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await raf()
+    ;(select.querySelector('[data-part="roster-action"][value="agent-admin:edit-agents"]') as HTMLElement).click()
+    await raf()
+
+    const dialog = (document.querySelector('ui-drawer') as HTMLElement).querySelector('[data-part="dialog"]') as HTMLDialogElement
+    const list = document.querySelector('.roster-list') as HTMLElement
+    const header = document.querySelector('.roster-drawer-header') as HTMLElement
+    const footer = document.querySelector('.roster-drawer-footer') as HTMLElement
+
+    expect(dialog.hasAttribute('open'), 'the real Manage-agents drawer opened').toBe(true)
+    expect(list.getAttribute('data-region'), 'the roster list really is the drawer’s content region').toBe('content')
+    expect(getComputedStyle(dialog).display, 'the dialog switched to content-scroll-mode (the GH #920 fix)').toBe('flex')
+    expect(getComputedStyle(list).overflowY, 'the roster list is its OWN independent scroll viewport').toBe('auto')
+    expect(header.contains(list), 'the header sits structurally OUTSIDE the scrolling list').toBe(false)
+    expect(footer.contains(list), 'so does the footer').toBe(false)
+
+    expect(dialog.hasAttribute('data-fade-top'), 'at rest, no flag anywhere yet').toBe(false)
+    expect(list.scrollHeight, 'the real shipped+custom roster is tall enough to actually scroll').toBeGreaterThan(list.clientHeight)
+
+    await scrollTo(list, 200)
+
+    expect(list.hasAttribute('data-fade-top'), 'the SCROLLING LIST carries the fade flag').toBe(true)
+    expect(
+      dialog.hasAttribute('data-fade-top'),
+      'the dialog itself never carries it — header/footer would be masked again (the #920 regression this fix closes)',
+    ).toBe(false)
+
+    ;(document.querySelector('.roster-drawer-done') as HTMLElement).click()
+    await raf()
+  })
+})

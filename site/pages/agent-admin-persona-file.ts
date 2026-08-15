@@ -268,6 +268,7 @@ export function importedPersonaFrom(file: PersonaFile, roster: readonly Persona[
     ...(file.persona.category === undefined ? {} : { category: file.persona.category }),
     seed: { ...file.state },
     imported: true,
+    createdAt: new Date().toISOString(), // GH #921 — the roster card's Date field; stamped at the ONE moment this persona is genuinely created (the import), never the source file's own exportedAt
   }
 }
 
@@ -310,6 +311,7 @@ export function duplicatePersonaFrom(source: Persona, store: PersonaStateReader 
     ...(source.category === undefined ? {} : { category: source.category }),
     seed: { ...snapshot.state },
     imported: true, // a copy is a LIBRARY record, never a shipped preset — deletable/renamable like an import
+    createdAt: new Date().toISOString(), // GH #921 — the COPY's own creation moment, never the source's
   }
 }
 
@@ -326,5 +328,6 @@ export function mintBlankPersona(seed: Readonly<Record<string, unknown>>, roster
     tagline: 'A freshly minted agent, ready to configure.',
     seed: { ...seed },
     imported: true, // roster-persisted the SAME way an imported persona is (GH #406) — never a shipped preset
+    createdAt: new Date().toISOString(), // GH #921 — the Manage-agents card's Date field
   }
 }
