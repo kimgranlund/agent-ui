@@ -448,7 +448,7 @@ strictly opt-in, dev-only path. No API key MAY appear in committed source or the
 payload by: retrieve exemplars → generate → `heal` + `validateA2ui` (the SHARED surfaces, no fork) →
 on failure feed the validator's structured failures back → bounded at `maxRounds = 3` → halt-and-report.
 The deterministic gate is the whole runtime verifier; there MUST be NO runtime rubric-grading round
-(the `a2ui-payload` rubric + `a2ui-reviewer` critic are authoring/eval-time — ADR-0070). *(→ PRD-G1,
+(the `a2ui-payload` rubric + `a2ui-review-agent` critic are authoring/eval-time — ADR-0070). *(→ PRD-G1,
 PRD-G4; realizes streaming SPEC-R2, harness SPEC-R6)*
 - **AC1** *Given* a stub `generate()` returning first-invalid-then-valid (no live model), *when* the
   driver runs, *then* it emits ONLY the validated stream within the bound, the invalid round's failures
@@ -513,7 +513,7 @@ SPEC-N1/R8)*
 > default, streaming-tolerant mode by definition — a prefix is, definitionally, not complete.
 
 **SPEC-R6 — Catalog-derived, drift-gated system prompt.** The machine system prompt MUST be DERIVED
-from `catalog.json` (the sole component authority) + the `a2ui-compose` grammar + the `retrieve()`
+from `catalog.json` (the sole component authority) + the `a2ui-payload-authoring` grammar + the `retrieve()`
 few-shot block — never hand-maintained. A standing test MUST assert the derived prompt's component/prop
 inventory equals the catalog's, so a catalog row added without regeneration fails. The hand-authored
 GRAMMAR half (distinct from the catalog-derived inventory) MUST additionally instruct two ASK behaviors

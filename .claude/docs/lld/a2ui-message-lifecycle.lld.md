@@ -19,7 +19,7 @@
 ## 1 · Intent
 
 Close TKT-0016's gap between shipped mechanics and taught decision-making. This LLD pins: (a) the exact SPEC-
-section anchor and the exact GRAMMAR insertion point the build edits, (b) the `a2ui-compose` skill's servicing
+section anchor and the exact GRAMMAR insertion point the build edits, (b) the `a2ui-payload-authoring` skill's servicing
 diff, (c) the corpus exemplar's worked shape, (d) the recorded-transcript script (turn-by-turn envelopes) the
 demo plays, and (e) the test plan proving SPEC-R1…R5.
 
@@ -29,7 +29,7 @@ demo plays, and (e) the test plan proving SPEC-R1…R5.
 |---|---|---|---|
 | LLD-C1 | GRAMMAR insertion — four-type choice bullets + `deleteSurface` wire shape, appended inside the existing "Output rules for the A2UI JSONL" section (the `OUTPUT_MARKER`-onward zone) | `packages/agent-ui/a2ui/tools/agent/system-prompt.ts` | SPEC-R1, R2 (ADR-0126 F2) |
 | LLD-C2 | `prompt-drift`/`system-prompt-grammar` test additions asserting the new bullets + `deleteSurface` mention survive in every mode | `packages/agent-ui/a2ui/src/live-agent/system-prompt-grammar.test.ts` | SPEC-R1 |
-| LLD-C3 | `a2ui-compose` mental-model widened from three kinds to four (`deleteSurface` added) + one new Common-trap entry (whole-record upsert) | `.claude/skills/a2ui-compose/SKILL.md` | SPEC-R2, R3 |
+| LLD-C3 | `a2ui-payload-authoring` mental-model widened from three kinds to four (`deleteSurface` added) + one new Common-trap entry (whole-record upsert) | `.claude/skills/a2ui-payload-authoring/SKILL.md` | SPEC-R2, R3 |
 | LLD-C4 | Corpus exemplar record — the worked four-type, one-surface arc | `packages/agent-ui/a2ui/src/examples/` (new seed) + corpus import | SPEC-R4 |
 | LLD-C5 | Recorded-transcript turns 3–5 — restructure / data-only / delete, continuing the shipped turn 1–2 script | `packages/agent-ui/a2ui/tools/agent/transcript.ts` | SPEC-R5 |
 | LLD-C6 | `round-trip.test.ts` extension — the new turns' validity + the data-only turn's message-count assertion | `packages/agent-ui/a2ui/src/live-agent/round-trip.test.ts` | SPEC-R5 AC1, AC2 |
@@ -94,7 +94,7 @@ it('the lifecycle teaching survives specific/blue-sky mode composition (OUTPUT_R
 These assert the insertion reaches every mode WITHOUT any `grammarFor` branch edit — a red result on the second
 test with `grammarFor` unchanged would mean LLD-C1's anchor choice (append after `OUTPUT_MARKER`) was violated.
 
-### LLD-C3 — `a2ui-compose` skill servicing diff
+### LLD-C3 — `a2ui-payload-authoring` skill servicing diff
 
 In `SKILL.md`'s "Mental model" section (currently: "An A2UI payload is an ordered stream of … messages … of
 **three kinds** you compose: 1. `createSurface` … 2. `updateDataModel` … 3. `updateComponents` …"):
@@ -267,7 +267,7 @@ build seat's convenience:
 |---|---|
 | LLD-C2's two new `system-prompt-grammar.test.ts` cases | SPEC-R1/R2 teaching present in every mode, reached via the OUTPUT_RULES zone with no `grammarFor` edit |
 | `prompt-drift.test.ts` (existing, re-run) | The insertion does not disturb the catalog-derived inventory's SET-EQUAL gate (additive prose only, no catalog-section edit) |
-| A new `a2ui-compose` skill-lint / doc-reviewer pass | LLD-C3's mental-model + trap-list diff reads correctly and cites this SPEC |
+| A new `a2ui-payload-authoring` skill-lint / doc-reviewer pass | LLD-C3's mental-model + trap-list diff reads correctly and cites this SPEC |
 | A new corpus fixture test (mirrors `examples.test.ts`) | LLD-C4's exemplar validates 0 errors at every prefix, one surfaceId throughout (SPEC-R4 AC1/AC2) |
 | LLD-C6's `round-trip.test.ts` additions | SPEC-R5 AC1, AC2, AC4 |
 | A manual `npm run dev` walk of `a2ui-live` with the new transcript | SPEC-R5 AC3 (visible annotation) end-to-end, human-observed |

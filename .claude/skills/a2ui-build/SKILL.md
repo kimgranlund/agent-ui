@@ -5,18 +5,18 @@ description: >-
   rules, the implement→probe procedure, and the validation loop for building or upgrading ONE unit
   of the A2UI protocol layer (the zero-dep renderer, the default catalog + conformance, protocol.ts
   wire types, the validation spine, the corpus store, A2UI/A2A conformance) to the SPEC/LLD standard.
-  Model-only knowledge preloaded by the a2ui-builder seat; not a user-facing action. NOT for A2UI
-  PAYLOAD composition (a2ui-compose), corpus curation (a2ui-corpus-curate), or ui-* control source
-  (agent-ui-component-create).
+  Model-only knowledge preloaded by the a2ui-build-agent seat; not a user-facing action. NOT for A2UI
+  PAYLOAD composition (a2ui-payload-authoring), corpus curation (a2ui-corpus-curation), or ui-* control source
+  (component-build).
 user-invocable: false
 disable-model-invocation: false
 ---
 
-# a2ui-builder method — build one @agent-ui/a2ui unit to the SPEC/LLD standard
+# a2ui-build-agent method — build one @agent-ui/a2ui unit to the SPEC/LLD standard
 
-The a2ui-builder seat implements ONE unit per dispatch, **spec-faithful by construction**: protocol
+The a2ui-build-agent seat implements ONE unit per dispatch, **spec-faithful by construction**: protocol
 behavior comes from the canonical records it CITES, never copies — and never from inference. It
-builds; it never grades its own output (the `a2ui-reviewer` critic does — generator ≠ critic).
+builds; it never grades its own output (the `a2ui-review-agent` critic does — generator ≠ critic).
 
 ## Canonical sources (read before starting; single-owner, cite by id/mechanism — never a copied line)
 
@@ -69,7 +69,7 @@ builds; it never grades its own output (the `a2ui-reviewer` critic does — gene
    probe voice).
 2. **Implement** to the frozen interfaces; catalog entries bind DIRECTLY to `ui-*` factories
    (catalog SPEC-R8, no adapter — IDs are file-scoped; qualify cross-doc references). If the unit
-   needs a component-side change — a new prop/event/two-way bind — that is component-builder
+   needs a component-side change — a new prop/event/two-way bind — that is component-build-agent
    territory: escalate the exact interface need, don't cross the package boundary.
 3. **Probe** — co-located `*.test.ts` (jsdom) with negative controls; conformance fixtures where the
    catalog/validator is touched; browser smoke when the unit drives rendered controls
@@ -81,8 +81,8 @@ builds; it never grades its own output (the `a2ui-reviewer` critic does — gene
 validator-parity leg (N6) is re-proven when the spine is touched. The reviewer seat the host names
 grades against the owning SPEC/LLD acceptance rows (the a2ui-specific rubrics have LANDED —
 `.claude/docs/rubrics/a2ui-{payload,catalog,corpus}.md` — grading a2ui ARTIFACTS: payloads ·
-catalog rows · corpus records via the `a2ui-reviewer` critic; this seat's package units still trace
-to the SPEC/LLD acceptance rows, and `a2ui-harness-wiring.lld.md` §9 keeps `a2ui-builder` out of the
+catalog rows · corpus records via the `a2ui-review-agent` critic; this seat's package units still trace
+to the SPEC/LLD acceptance rows, and `a2ui-harness-wiring.lld.md` §9 keeps `a2ui-build-agent` out of the
 maker→rubric wiring check) — fix the unit, not the check.
 
 `renderer/binding.ts` + `renderer/list.ts` are realized references — read one end-to-end before a

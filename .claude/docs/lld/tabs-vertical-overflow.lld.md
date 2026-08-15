@@ -1,6 +1,6 @@
 # LLD — `ui-tabs` vertical orientation (GH #581) + `overflow="menu"` (GH #586)
 
-> Status: proposed · v1 · 2026-08-08 · Layer: components (`controls/tabs/`) · designer (agent-ui-component-design)
+> Status: proposed · v1 · 2026-08-08 · Layer: components (`controls/tabs/`) · designer (component-design)
 >
 > Refines: GH #581 (vertical orientation) + GH #586 (overflow="menu") — one intake, one LLD, two build
 > slices. Why ONE doc: the two axes compose (the overflow fit measurement flips from inline-size to
@@ -182,7 +182,7 @@ One writer per file; the two build slices (§10) serialize on `tabs.ts`/`tabs.cs
 | fill · horizontal · menu | grid rows `auto 1fr`; panel keeps the scroll leg + seam |
 | fill · vertical · scroll/menu | shell row at `block-size:100%`; strip pinned + own scroll (scroll) or fit-managed (menu); panel scroll leg unchanged |
 
-## 8 · Test plan (the agent-ui-component-testing bar)
+## 8 · Test plan (the component-testing bar)
 
 - **jsdom (LLD-C10/C11):** enum defaults/reflection/fail-open; descriptor trip-wire; event containment
   (a synthetic menu `select` dispatched inside never surfaces on a `ui-tabs` listener; detail identity

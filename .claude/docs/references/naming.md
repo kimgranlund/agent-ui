@@ -3,7 +3,7 @@
 > Status: authored 2026-07-12 (TKT-0025) from the sized inventory
 > (`../reports/naming-inventory-2026-07-12.md` — the evidence base; counts live THERE, rules live
 > HERE). Siblings: `geometry.md` (the size/scale law) · `anatomy.md` (position slots × content
-> roles) · `tokens.md` (color roles). The doc-ID namespace is `agent-ui-doc-standards`' (§3).
+> roles) · `tokens.md` (color roles). The doc-ID namespace is `doc-standards`' (§3).
 > Migration policy for every rule here: **fix-on-touch, never big-bang** — the Recorded
 > Exceptions (§12) hold the standing deviations; gates are strict for NEW names from day one.
 
@@ -222,7 +222,7 @@ existing packages never churn their public export map for naming's sake.
   `{noun}-{verb}`/`{verb}-{noun}` compounds that read as capabilities (value-drag, pane-resize);
   bare adjectives only for predicates (tabbable).
 
-## 10 · The five-question rubric (run at every intake — folded into agent-ui-component-design)
+## 10 · The five-question rubric (run at every intake — folded into component-design)
 
 1. **Which namespace(s)** does this name enter? (A new control enters ~7 at once — derive the
    full set from the family name; §13's worked example.)

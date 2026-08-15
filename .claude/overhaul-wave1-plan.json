@@ -1,0 +1,1494 @@
+[
+ {
+  "old": "agent-ui-a2ui-review-standards",
+  "new": "a2ui-review",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-a2ui-review-standards/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/a2ui-reviewer.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-04T083458Z.md",
+    "refs": 2
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-integration-standards",
+  "new": "integration-standards",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-admin-library-kinds/intent.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-admin-library-kinds/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-admin-library-kinds/evals/audit-report.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/intent.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/evals/evals.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/evals/audit-report.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/lld/mcp-agent-config.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/spec/mcp-agent-config.spec.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-05T052245Z.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-07T213400Z.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-a2ui-meta-line-facts",
+  "new": "a2ui-meta-line-facts",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-a2ui-meta-line-facts/SKILL.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-composition-patterns",
+  "new": "composition-patterns",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-compose-app/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-ui/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-layout/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-composition-patterns/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-catalog/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/spec/card-structured-container.intake.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/spec/saas-data-workbench.spec.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/prd/saas-data-workbench.prd.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/ops/adr-queue.json",
+    "refs": 2
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-07T213400Z.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-10T120510Z.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-component-packaging",
+  "new": "component-packaging",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-component-standards/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-testing/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-design/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-app/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-patterns/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-create/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-packaging/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/component-builder.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-component-standards",
+  "new": "component-standards",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-component-standards/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-testing/SKILL.md",
+    "refs": 4
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-design/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-doc-standards/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-patterns/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-create/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/intent.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/evals/evals.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/evals/audit-report.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-composition-patterns/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-lateral-review/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-packaging/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/agents/component-builder.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/ops/rulings.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-05T052245Z.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-07T213400Z.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-component-patterns",
+  "new": "component-patterns",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-component-standards/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-design/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-doc-standards/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-patterns/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-composition-patterns/SKILL.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/skills/agent-ui-lateral-review/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-packaging/SKILL.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-component-testing",
+  "new": "component-testing",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-component-standards/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-testing/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-design/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-ui/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-patterns/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-create/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-layout/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-lateral-review/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-packaging/SKILL.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/agents/component-builder.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/button-label-alignment.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/tabs-vertical-overflow.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/follow-the-change.lld.md",
+    "refs": 1
+   },
+   {
+    "file": "CLAUDE.md",
+    "refs": 2
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-example-standards",
+  "new": "example-standards",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-example-standards/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/example-builder.md",
+    "refs": 2
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-admin-library-kinds",
+  "new": "admin-library-kinds",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-admin-library-kinds/intent.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-admin-library-kinds/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-admin-library-kinds/evals/evals.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-admin-library-kinds/evals/audit-report.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/evals/evals.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-multi-catalog/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-multi-catalog/evals/evals.json",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/lld/mcp-agent-config.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/spec/capability-availability-tagging.spec.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/spec/mcp-agent-config.spec.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/ops/adr-queue.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-07T213400Z.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-component-create",
+  "new": "component-build",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-component-standards/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-testing/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-design/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-build/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-build/evals/evals.json",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-ui/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-patterns/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-create/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-packaging/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/component-builder.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/lld/code-entry-control.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/multi-select-field.lld.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/docs/references/anatomy.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-component-design",
+  "new": "component-design",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-component-standards/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-testing/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-design/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-design/references/mint-vs-compose.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-doc-standards/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-ui/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-patterns/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-create/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-layout/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-composition-patterns/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-lateral-review/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-catalog/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/agents/component-builder.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/conversation-declarative-composition.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/command-modal.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/button-label-alignment.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/toolbar.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/tabs-vertical-overflow.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/references/naming.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/spec/card-structured-container.intake.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/spec/drawer.intake.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/ops/rulings.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-07T213400Z.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-package-release",
+  "new": "package-release",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-package-release/SKILL.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-compose-layout",
+  "new": "layout-composition",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-compose-app/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-ui/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-layout/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-composition-patterns/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-catalog/SKILL.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-lateral-review",
+  "new": "fleet-review",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-lateral-review/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-05T052245Z.md",
+    "refs": 2
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-doc-standards",
+  "new": "doc-standards",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-repo-hygiene/SKILL.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-design/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-doc-standards/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-patterns/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/intent.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/evals/evals.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/evals/audit-report.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/project-docs/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/hooks/adr-status-guard.py",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/agent-admin-picker-edit-drawer.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/references/naming.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/spec/persona-catalog-composition.spec.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/spec/capability-availability-tagging.spec.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/prd/a2ui-expert-system.prd.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-05T052245Z.md",
+    "refs": 2
+   },
+   {
+    "file": "CLAUDE.md",
+    "refs": 2
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-repo-hygiene",
+  "new": "repo-hygiene",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-repo-hygiene/SKILL.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-compose-app",
+  "new": "app-composition",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-compose-app/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-ui/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-layout/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-composition-patterns/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-catalog/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/ops/campaign-2026-07-26-backlog-clear.md",
+    "refs": 2
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-compose-ui",
+  "new": "ui-composition",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-compose-app/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-ui/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-layout/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-composition-patterns/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-catalog/SKILL.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "a2ui-corpus-curate",
+  "new": "a2ui-corpus-curation",
+  "touched": [
+   {
+    "file": ".claude/skills/a2ui-build/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-build/evals/evals.json",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/a2ui-prompt-author/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/evals/evals.json",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/scripts/routing-corpus.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-corpus-curate/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-corpus-curate/evals/evals.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-corpus-curate/scripts/routing-corpus.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-seat-map/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/a2ui-composer.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/a2ui-harness-wiring.lld.md",
+    "refs": 5
+   },
+   {
+    "file": ".claude/docs/spec/a2ui-expert-harness.spec.md",
+    "refs": 4
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-04T083458Z.md",
+    "refs": 2
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "a2ui-prompt-author",
+  "new": "a2ui-prompt-authoring",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-a2ui-meta-line-facts/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/a2ui-prompt-author/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/goals.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-05T052245Z.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-04T083458Z.md",
+    "refs": 2
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-seat-map",
+  "new": "seat-map",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-seat-map/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/orchestrator.md",
+    "refs": 2
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "component-builder",
+  "new": "component-build-agent",
+  "touched": [
+   {
+    "file": ".claude/skills/a2ui-build/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-component-create/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-seat-map/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/orchestrator.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/component-builder.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/example-builder.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/a2ui-builder.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/agents/a2ui-composer.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/process.md",
+    "refs": 7
+   },
+   {
+    "file": ".claude/docs/lld/a2ui-catalog.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/spec/a2ui-expert-harness.spec.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/spec/a2ui-catalog.spec.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "agent-ui-catalog",
+  "new": "component-catalog",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-admin-library-kinds/evals/audit-report.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-doc-standards/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-ui/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/intent.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/evals/evals.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/evals/audit-report.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-layout/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-composition-patterns/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/a2ui-multi-catalog/intent.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/skills/a2ui-multi-catalog/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/a2ui-multi-catalog/evals/audit-report.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-catalog/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-05T052245Z.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/ops/reports/2026-08-04T083458Z.md",
+    "refs": 2
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "example-builder",
+  "new": "example-authoring-agent",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-example-standards/SKILL.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/skills/agent-ui-seat-map/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/agents/example-builder.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/process.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/lld/form-popover.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/timeline-family.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/command-modal.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/toolbar.lld.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "a2ui-composer",
+  "new": "a2ui-payload-authoring-agent",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-seat-map/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/a2ui-reviewer.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/example-builder.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/a2ui-builder.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/agents/a2ui-composer.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/process.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/lld/a2ui-harness-wiring.lld.md",
+    "refs": 6
+   },
+   {
+    "file": ".claude/docs/spec/a2ui-expert-harness.spec.md",
+    "refs": 4
+   },
+   {
+    "file": ".claude/docs/rubrics/a2ui-payload.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "a2ui-reviewer",
+  "new": "a2ui-review-agent",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-a2ui-review-standards/SKILL.md",
+    "refs": 5
+   },
+   {
+    "file": ".claude/skills/a2ui-build/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/a2ui-corpus-curate/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-seat-map/SKILL.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/agents/a2ui-reviewer.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/agents/orchestrator.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/a2ui-builder.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/a2ui-composer.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/process.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/goals.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/a2ui-corpus-store.lld.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/lld/a2ui-harness-wiring.lld.md",
+    "refs": 6
+   },
+   {
+    "file": ".claude/docs/spec/a2ui-ecosystem-alignment.spec.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/spec/a2ui-expert-harness.spec.md",
+    "refs": 7
+   },
+   {
+    "file": ".claude/docs/spec/a2ui-live-agent.spec.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/rubrics/a2ui-skill-pattern.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/rubrics/a2ui-catalog.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/rubrics/a2ui-mechanism.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/rubrics/a2ui-payload.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/rubrics/a2ui-corpus.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/rubrics/fixtures/a2ui-deceptive-composition/README.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "a2ui-compose",
+  "new": "a2ui-payload-authoring",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-admin-library-kinds/evals/audit-report.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-app/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-a2ui-meta-line-facts/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/a2ui-build/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-build/evals/evals.json",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-compose-ui/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-prompt-author/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/evals/evals.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/scripts/routing-corpus.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/intent.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/evals/evals.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-integration-standards/evals/audit-report.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-corpus-curate/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/a2ui-corpus-curate/evals/evals.json",
+    "refs": 3
+   },
+   {
+    "file": ".claude/skills/a2ui-corpus-curate/scripts/routing-corpus.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-multi-catalog/intent.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/a2ui-multi-catalog/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/a2ui-multi-catalog/evals/evals.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-multi-catalog/evals/audit-report.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-catalog/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/a2ui-builder.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/a2ui-composer.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/lld/a2ui-message-lifecycle.lld.md",
+    "refs": 5
+   },
+   {
+    "file": ".claude/docs/lld/a2ui-live-agent.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/a2ui-harness-wiring.lld.md",
+    "refs": 8
+   },
+   {
+    "file": ".claude/docs/spec/a2ui-message-lifecycle.spec.md",
+    "refs": 5
+   },
+   {
+    "file": ".claude/docs/spec/a2ui-expert-harness.spec.md",
+    "refs": 5
+   },
+   {
+    "file": ".claude/docs/spec/a2ui-live-agent.spec.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "project-docs",
+  "new": "project-facts",
+  "touched": [
+   {
+    "file": ".claude/skills/project-docs/SKILL.md",
+    "refs": 2
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "a2ui-builder",
+  "new": "a2ui-build-agent",
+  "touched": [
+   {
+    "file": ".claude/skills/a2ui-build/SKILL.md",
+    "refs": 4
+   },
+   {
+    "file": ".claude/skills/a2ui-build/evals/evals.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-prompt-author/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/SKILL.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/evals/evals.json",
+    "refs": 3
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/scripts/routing-corpus.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-corpus-curate/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/a2ui-corpus-curate/evals/evals.json",
+    "refs": 4
+   },
+   {
+    "file": ".claude/skills/a2ui-corpus-curate/scripts/routing-corpus.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/agent-ui-seat-map/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-multi-catalog/intent.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/a2ui-multi-catalog/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/a2ui-reviewer.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/example-builder.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/a2ui-builder.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/agents/a2ui-composer.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/docs/process.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/lld/timeline-family.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/command-modal.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/toolbar.lld.md",
+    "refs": 3
+   },
+   {
+    "file": ".claude/docs/lld/a2ui-harness-wiring.lld.md",
+    "refs": 9
+   },
+   {
+    "file": ".claude/docs/spec/a2ui-expert-harness.spec.md",
+    "refs": 9
+   },
+   {
+    "file": ".claude/docs/spec/toolbar.spec.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/spec/timeline-family.spec.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/spec/command-modal.spec.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "orchestrator",
+  "new": "repo-orchestrator-agent",
+  "touched": [
+   {
+    "file": ".claude/skills/agent-ui-seat-map/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/orchestrator.md",
+    "refs": 3
+   }
+  ],
+  "exemption_retired": true
+ },
+ {
+  "old": "docs-author",
+  "new": "site-authoring",
+  "touched": [
+   {
+    "file": ".claude/skills/docs-author/SKILL.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/docs-author/references/best-practices.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/SKILL.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/evals/evals.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-compose/scripts/routing-corpus.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-corpus-curate/evals/evals.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/skills/a2ui-corpus-curate/scripts/routing-corpus.json",
+    "refs": 1
+   },
+   {
+    "file": ".claude/agents/a2ui-composer.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/form-popover.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/lld/a2ui-harness-wiring.lld.md",
+    "refs": 1
+   },
+   {
+    "file": ".claude/docs/references/component-packaging.md",
+    "refs": 2
+   },
+   {
+    "file": ".claude/docs/spec/a2ui-expert-harness.spec.md",
+    "refs": 1
+   }
+  ],
+  "exemption_retired": true
+ }
+]

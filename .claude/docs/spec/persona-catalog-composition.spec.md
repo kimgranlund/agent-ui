@@ -240,7 +240,7 @@ restate the table" discipline the skill already follows for `a2ui-basic`.
   §1's register-beside-default pattern (they are mechanically different: §1 has no merge
   primitive, ADR-0172 cl.2's own Context finding).
 - **AC2** the file continues to pass `site/lib/docs-grammar.test.ts`'s S9 exemplar-path sweep and
-  the dangling-relative-link check (agent-ui-doc-standards SKILL.md §5's structural gate).
+  the dangling-relative-link check (doc-standards SKILL.md §5's structural gate).
 
 **SPEC-R5 — The persona's local-pattern-set SELECTION, never its definitions, is exportable state**
 *(ADR-0172 cl.1 · Repairs item 5)*. `agent-admin-schema.ts` MUST gain a new persisted key —
@@ -486,4 +486,4 @@ further ruling; this document does not self-ratify. Document gates:
 `site/lib/docs-grammar.test.ts` (status-keyword presence + the dangling-relative-link sweep) exits
 0 inside `npm run check`'s `check:site` step; every relative link in this document resolves (§8's
 ADR/SPEC citations, manually re-verified against the live tree while authoring this revision — the
-agent-ui-doc-standards "re-derive at source" discipline).
+doc-standards "re-derive at source" discipline).

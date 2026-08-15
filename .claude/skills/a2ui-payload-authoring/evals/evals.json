@@ -1,0 +1,98 @@
+{
+  "skill": "a2ui-payload-authoring",
+  "_note": "Migrated verbatim from scripts/routing-corpus.json (GH #759 — evals/evals.json is the corpus of record /check-routing consumes; routing-corpus.json remains the lexical aid, NOT THE PROOF). h13 routing tripwire (decomp a2ui-expert-harness.decomp-v2 node h13). Positives: compose/author/extend/debug an A2UI payload (message stream) against a catalog, incl. 2 reworded paraphrases (#9,#10). Negatives drawn from SIBLING territory the description fences: make-component (ui-* control source), a2ui-build-agent agent dispatch (package/renderer/validator CODE), site-authoring (site pages), + one a2ui-corpus-curation (curation). A tripwire, not a certification — the pass condition is description-lint + a human read of the named misses/grabs (SPEC-N2 v0.2).",
+  "cases": [
+    {
+      "id": "t01",
+      "prompt": "compose an A2UI payload for a settings surface",
+      "expect": "trigger"
+    },
+    {
+      "id": "t02",
+      "prompt": "author the A2UI message stream that renders this generative UI",
+      "expect": "trigger"
+    },
+    {
+      "id": "t03",
+      "prompt": "build the updateComponents adjacency list for this component tree",
+      "expect": "trigger"
+    },
+    {
+      "id": "t04",
+      "prompt": "wire the data bindings and actions on these catalog nodes",
+      "expect": "trigger"
+    },
+    {
+      "id": "t05",
+      "prompt": "extend this A2UI payload with a ChildList list template",
+      "expect": "trigger"
+    },
+    {
+      "id": "t06",
+      "prompt": "debug why the renderer won't paint my A2UI payload against the agent-ui catalog",
+      "expect": "trigger"
+    },
+    {
+      "id": "t07",
+      "prompt": "add validity checks and gate the submit under a FormProvider in my payload",
+      "expect": "trigger"
+    },
+    {
+      "id": "t08",
+      "prompt": "run the compose validate self-correct loop on this payload",
+      "expect": "trigger"
+    },
+    {
+      "id": "t09",
+      "prompt": "I need the server to client message stream that draws a generative UI from the catalog",
+      "expect": "trigger"
+    },
+    {
+      "id": "t10",
+      "prompt": "put together the createSurface and updateDataModel messages for this screen",
+      "expect": "trigger"
+    },
+    {
+      "id": "n01",
+      "prompt": "write the ui-checkbox control source with ElementInternals",
+      "expect": "no-trigger",
+      "owner": "screens make-component (ui-* control source)"
+    },
+    {
+      "id": "n02",
+      "prompt": "my icon-only button isn't square, what padding should the control use",
+      "expect": "no-trigger",
+      "owner": "screens make-component (control geometry)"
+    },
+    {
+      "id": "n03",
+      "prompt": "implement the streaming parse in the a2ui package's TypeScript source",
+      "expect": "no-trigger",
+      "owner": "a2ui-build-agent (package/renderer CODE)"
+    },
+    {
+      "id": "n04",
+      "prompt": "fix the zero-dependency renderer code that paints the components",
+      "expect": "no-trigger",
+      "owner": "a2ui-build-agent (package/renderer CODE)"
+    },
+    {
+      "id": "n05",
+      "prompt": "write the docs-site page documenting ui-text-field",
+      "expect": "no-trigger",
+      "owner": "docs-writer (site pages)"
+    },
+    {
+      "id": "n06",
+      "prompt": "add an API doc page to the agent-ui site",
+      "expect": "no-trigger",
+      "owner": "docs-writer (site pages)"
+    },
+    {
+      "id": "n07",
+      "prompt": "import this seed into the corpus and rescore it",
+      "expect": "no-trigger",
+      "owner": "a2ui-corpus-curation (curation)"
+    }
+  ]
+}

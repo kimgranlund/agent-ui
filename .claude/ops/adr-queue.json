@@ -3,8 +3,8 @@
     {
       "adr_id": "adr-0178-amendment",
       "queued": "2026-08-13T16:37:00Z",
-      "evidence": "ADR-0178's Amendment (ratified 2026-08-13, utterance comment 5275019730 on GH #696; built as PR #826, tracker #821 closed): the AUTHORSHIP-SCOPED RE-RULING pattern \u2014 a uniform append-only protection re-scoped along the authorship axis rather than removed wholesale: host-seeded builtin prompt sections become model-updatable IN PLACE (updateTargetIndex as the whole fence, kind-derived never literal; two-field scope pinned) while user-authored entries stay append-protected and deletion stays impossible everywhere. builtin:true = NON-DELETABLE ONLY (ADR-0132 Fork 4), never immutable \u2014 the amendment exploits that distinction. Checked 2026-08-13 (decision-watcher-sweep, sweep-6): neither agent-admin-library-kinds nor agent-ui-composition-patterns carries a row for this shape.",
-      "target": "agent-ui-composition-patterns (or the sibling the harvest pass judges better)",
+      "evidence": "ADR-0178's Amendment (ratified 2026-08-13, utterance comment 5275019730 on GH #696; built as PR #826, tracker #821 closed): the AUTHORSHIP-SCOPED RE-RULING pattern \u2014 a uniform append-only protection re-scoped along the authorship axis rather than removed wholesale: host-seeded builtin prompt sections become model-updatable IN PLACE (updateTargetIndex as the whole fence, kind-derived never literal; two-field scope pinned) while user-authored entries stay append-protected and deletion stays impossible everywhere. builtin:true = NON-DELETABLE ONLY (ADR-0132 Fork 4), never immutable \u2014 the amendment exploits that distinction. Checked 2026-08-13 (decision-watcher-sweep, sweep-6): neither admin-library-kinds nor composition-patterns carries a row for this shape.",
+      "target": "composition-patterns (or the sibling the harvest pass judges better)",
       "status": "pending"
     }
   ]

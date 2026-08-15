@@ -313,7 +313,7 @@ mirroring `static props` 1:1, and the item's `keyboard`/interaction map. *(ADR-0
 `label`/`description`/`timestamp`/`icon`/`size` + a `children` item list, the `Row`/adia model);
 `StatusStream` MUST gain an `EXCLUSION_ALLOWLIST` entry with the ADR-0122 F5 reason (a consumer-owned
 imperative streaming host, not one-shot emittable markup — the `Toast`/`ToastRegion` cl.6 precedent). These are
-**a2ui-package build slices** (`a2ui-builder` seat); the SPEC fixes the dispositions, the LLD carries them as
+**a2ui-package build slices** (`a2ui-build-agent` seat); the SPEC fixes the dispositions, the LLD carries them as
 build deliverables. *(ADR-0122 F5; ADR-0087 gate; ADR-0112 cl.6)*
 - **AC1** *Given* the three descriptors ship, *then* `Timeline`/`TimelineItem`/`StatusStream` enter
   `FLEET_TYPES` and the catalog coverage gate stays green because two real catalog rows + one reasoned

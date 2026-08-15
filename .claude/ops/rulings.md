@@ -34,9 +34,9 @@ clean ship as a #613 repeat.
 
 ## ADR harvest confirm — RULED 2026-08-09: harvest all three
 
-ADR-0173 → new reference file in `agent-ui-component-standards` · ADR-0174 → new skill (a2ui
+ADR-0173 → new reference file in `component-standards` · ADR-0174 → new skill (a2ui
 producer meta-line/envelope architecture, narrow scope) · ADR-0175 → new reference file in
-`agent-ui-component-design`. Dispatched 2026-08-09; adr-queue.json rows advance on landing.
+`component-design`. Dispatched 2026-08-09; adr-queue.json rows advance on landing.
 
 ## Evidence write-backs — RULED 2026-08-09: chore-lead's landing leg owns them
 

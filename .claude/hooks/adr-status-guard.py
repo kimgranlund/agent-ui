@@ -3,7 +3,7 @@
 cell TO `accepted` when it wasn't already `accepted`. Guards a real past incident: a subagent
 fabricated a "Kim ruling" and self-flipped an ADR proposed->accepted, passing the ADR lint gate.
 Only Kim (the human) ratifies proposed->accepted — per this repo's own ADR grammar (the
-`agent-ui-doc-standards` skill §1; formerly the ADR folder's README, deleted 2026-08-13), the cell holds
+`doc-standards` skill §1; formerly the ADR folder's README, deleted 2026-08-13), the cell holds
 exactly one bare keyword in a `| **Status** | <word> |` table row (site/lib/adr.ts reads it
 literally). Every Edit/Write in a Claude Code session is agent-performed (Kim never touches the
 Edit/Write tool directly), so this denies the transition unconditionally, regardless of what the

@@ -1,5 +1,5 @@
 name: Bug
-description: A defect report — mirrors the TICKET dialect's kind:bug section contract (agent-ui-doc-standards §4)
+description: A defect report — mirrors the TICKET dialect's kind:bug section contract (doc-standards §4)
 title: "[Bug] "
 labels: ["bug"]
 body:

@@ -51,8 +51,8 @@ the markdown body below the fence is the prose `/site` page. Two consumers read 
 live `finalize(Class)` table) and the `/site` doc generator — **one parser, never a forked dialect**.
 
 **The `description:` field describes, it doesn't cite provenance.** It flows verbatim into every `/site`
-T4 API page (`docs-author`'s DERIVE-FIRST principle — one source, many consumers), so the same rule
-`docs-author`'s `best-practices.md` states for page prose applies here, at the source: say what the
+T4 API page (`site-authoring`'s DERIVE-FIRST principle — one source, many consumers), so the same rule
+`site-authoring`'s `best-practices.md` states for page prose applies here, at the source: say what the
 component *is* and *does* for a reader deciding whether to use it — never which `TKT-####`/`ADR-####`
 built or changed it. A **normative** citation is still fine if the description states a rule/contract the
 reader needs (rare for a one-line summary); a **provenance** citation (which ticket shipped this, which

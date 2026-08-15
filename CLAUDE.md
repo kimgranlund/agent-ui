@@ -14,7 +14,7 @@ Plan `.claude/docs/plan.md` · Goals + per-milestone DoD `.claude/docs/goals.md`
   (four `noEmit`/test steps; see `package.json`)
 - `npm test` — Vitest (jsdom), once · `npm run test:watch` — watch mode
 - `npm run test:browser` — the real-engine gate, six sequential shards (never re-monolith it or add
-  a heap bump — shard-splitting history + the `focus-timing` extension rule: `agent-ui-component-testing`)
+  a heap bump — shard-splitting history + the `focus-timing` extension rule: `component-testing`)
 - `npm run dev` / `npm run build` — the docs site (`site/`) is the app entry; build live since the
   ADR-0077 wave, incl. the G8 `<component-gallery>` (`gallery.html`)
 
@@ -49,7 +49,7 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   CodeMirror-free); depends only on `@agent-ui/components` + `@agent-ui/shared` (+ the CodeMirror runtime deps,
   confined to `./editor`); a sibling branch off `components` alongside `router`, catalog-invisible by
   construction (never imported by `a2ui`)
-- `.claude/docs/` — plan, goals, process, references, adr, prd, spec, lld, decompositions, tickets, rubrics, archive (agent-scoped project docs; the doc grammar + status law: `.claude/skills/agent-ui-doc-standards/`) · `*.test.ts` co-located with source. `tickets/` is a FROZEN historical archive (98 files through TKT-0096) — new work items route to GitHub Issues instead (ADR-0145; the full label/status/Findings mapping lives in `.claude/skills/agent-ui-doc-standards/`, the canonical home — GH #761 trimmed the copy that used to sit here). The decision/contract tiers (ADR/PRD/SPEC/LLD) and living-state docs (PLAN/ROADMAP) stay files on this map, always; only the TICKET tier moved.
+- `.claude/docs/` — plan, goals, process, references, adr, prd, spec, lld, decompositions, tickets, rubrics, archive (agent-scoped project docs; the doc grammar + status law: `.claude/skills/doc-standards/`) · `*.test.ts` co-located with source. `tickets/` is a FROZEN historical archive (98 files through TKT-0096) — new work items route to GitHub Issues instead (ADR-0145; the full label/status/Findings mapping lives in `.claude/skills/doc-standards/`, the canonical home — GH #761 trimmed the copy that used to sit here). The decision/contract tiers (ADR/PRD/SPEC/LLD) and living-state docs (PLAN/ROADMAP) stay files on this map, always; only the TICKET tier moved.
 
 ## Conventions (non-obvious only)
 
@@ -75,4 +75,4 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
 
 - Run `npm run check && npm test` green before treating a change as done — judge gates by EXIT CODES,
   never by grepping output (a piped grep-count masked a red `check` and an OOM'd browser run, 2026-07-19).
-- Worktree gate trap: `agent-ui-component-testing`'s Traps section.
+- Worktree gate trap: `component-testing`'s Traps section.

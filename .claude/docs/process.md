@@ -32,7 +32,7 @@ Three placement rules follow, and they decide every governance artifact below:
 | Artifact | Axis | Mode | Unit | Prevents | Authored via | Lands |
 |---|---|---|---|---|---|---|
 | **Trip-wire suite** (probes + scripts + hook) | behavioral | contract | scripts/hook | drift + bloat | hand + `update-config` (hook) | G0→G1 |
-| `component-builder` (realized as an agent, not a skill — see note) | behavioral | procedure | **subagent** | drift (by construction) | hand-authored | G5 |
+| `component-build-agent` (realized as an agent, not a skill — see note) | behavioral | procedure | **subagent** | drift (by construction) | hand-authored | G5 |
 | `family-coherence.test.ts` (realized as a trip-wire, not a skill — see note) | behavioral | contract | test suite | drift (detection) | hand-authored | G8 |
 | `component-checker` (global `ui:` plugin agent, not project-local — see note) | behavioral | — | **subagent** | drift + bloat (judgment) | plugin-authored | G5 |
 | `token-builder` (global `color:` plugin agent, not project-local — see note) | behavioral | — | **subagent** | drift (tokens) | plugin-authored | ~G6 |
@@ -46,8 +46,8 @@ Most teams build only the behavioral axis and neglect the referential one — an
 to check against can't repair anything. We treat the rubrics + contract as first-class, not afterthoughts.
 
 **Note (updated 2026-07-09) — four rows landed differently than planned.** `component-author` was never
-authored as a discoverable skill; the procedure lives directly in the `component-builder` agent
-(`.claude/agents/component-builder.md`), which cites the canonical docs rather than a skill preloading
+authored as a discoverable skill; the procedure lives directly in the `component-build-agent` agent
+(`.claude/agents/component-build-agent.md`), which cites the canonical docs rather than a skill preloading
 them. `auditing-components` was never built either — the mechanical `family-coherence.test.ts` standing
 gate (ADR-0081, landed G8) does the library-wide drift detection instead, arguably a *better* fit for
 placement rule 1 above (a true/false answer belongs in code, not agent judgment). `component-checker`
@@ -55,7 +55,7 @@ and `tokens-specialist` were realized as the global plugin agents `screens:compo
 `design:token-builder` rather than repo-local subagents authored via `agent-author`. The planned
 standalone **coherence/health rubric** doc was never written — `family-coherence.test.ts`'s 9 invariants
 absorbed that role as a mechanical gate. The current build-team roster (`.claude/agents/`) is
-`component-builder`, `a2ui-builder`, `a2ui-composer`, `a2ui-reviewer`, `example-builder`.
+`component-build-agent`, `a2ui-build-agent`, `a2ui-payload-authoring-agent`, `a2ui-review-agent`, `example-authoring-agent`.
 
 ## 1. Trip-wires — the loud contracts (determinism → code)
 
@@ -103,7 +103,7 @@ invisible to a grep for the HTML `slot="icon"` form alone — and shipped a user
 ## 2. Skills — procedures (recurring methods)
 
 *(Neither skill below was ultimately built this way — see the artifact-map note above. This section is
-kept as the original design rationale; the realized shape is `component-builder`, a project-local agent,
+kept as the original design rationale; the realized shape is `component-build-agent`, a project-local agent,
 plus the `family-coherence.test.ts` mechanical gate.)*
 
 A skill is the right unit only for a *recurring multi-step method*. Two qualify:
@@ -208,7 +208,7 @@ These are read to check, never obeyed. They are the single source of truth revie
 ```
 G0  thin CLAUDE.md · fast-gate hook · naming/layering/contract-drift probes · size script
 G1  kernel rubric
-G5  component-builder agent · frontmatter contract schema · component rubric · component-checker agent (global `ui:`)   (land WITH ui-button)
+G5  component-build-agent agent · frontmatter contract schema · component rubric · component-checker agent (global `ui:`)   (land WITH ui-button)
 G8  family-coherence.test.ts gate (ADR-0081, realized in place of a coherence rubric) · token-builder agent (global `color:`) — landed later than the original G6 target
 per-tier  council bloat red-team (occasional, justified fan-out)
 ```
@@ -219,8 +219,8 @@ per-tier  council bloat red-team (occasional, justified fan-out)
   as the fleet grew from ~7 to 37+ components across multiple families (as of 2026-07-09).
 - No bespoke *per-component* agents — reviewer + tokens work route to the global `screens:component-checker` /
   `design:token-builder` plugins, not a new agent per control. *(The roster did grow bespoke agents per
-  concern instead, as the surface area diversified: `component-builder` (ui-* build seat), `a2ui-builder`/
-  `a2ui-composer`/`a2ui-reviewer` (the A2UI layer), `example-builder` (docs-site preview content) —
+  concern instead, as the surface area diversified: `component-build-agent` (ui-* build seat), `a2ui-build-agent`/
+  `a2ui-payload-authoring-agent`/`a2ui-review-agent` (the A2UI layer), `example-authoring-agent` (docs-site preview content) —
   `.claude/agents/`, updated 2026-07-09. Still mechanical for anything a probe can own.)*
 - No rubric/agent for a check a probe already owns.
 

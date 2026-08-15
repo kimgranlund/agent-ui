@@ -1,6 +1,6 @@
 # Design intake — `ui-drawer`, the edge-docked modal container (GH #845, component arm)
 
-> Status: proposed · v0.1 · 2026-08-13 · Layer: intake record (fork sheet, `agent-ui-component-design`
+> Status: proposed · v0.1 · 2026-08-13 · Layer: intake record (fork sheet, `component-design`
 > procedure)
 > Refines: GH #845 (owner ruling, intake round 2026-08-13: the Edit-Agents drawer vehicle is a NEW
 > fleet `ui-drawer` control; the build starts at this intake). The gen-ui-kit drawer page named as
@@ -71,7 +71,7 @@ cite-the-owner escape hatch).
 
 **Verdict: MINT `ui-drawer`** — confirming GH #845's owner ruling by mechanics, not by deference.
 
-- **The aggregate-value bar** (`agent-ui-component-design/references/mint-vs-compose.md`, ADR-0175):
+- **The aggregate-value bar** (`component-design/references/mint-vs-compose.md`, ADR-0175):
   checked and NOT APPLICABLE — a drawer carries no value at all (not form-associated, nothing
   round-trips through `ui-form-provider.values()` or an A2UI value mark). Per that reference's own
   scope note, the operative test is ADR-0102's three-lane chooser:

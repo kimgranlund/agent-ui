@@ -9,7 +9,7 @@ slots below are filled from the ratified decision, not re-asked.
 
 Primitive = **skill**. Not a hook (nothing mechanically pass/fail — it's routing + patterns);
 not an entry-file fact (needed only when someone touches catalog interop, not every turn);
-not an agent (no tool walls needed — the build seat `a2ui-builder` already exists; this is
+not an agent (no tool walls needed — the build seat `a2ui-build-agent` already exists; this is
 the knowledge it consults). Knowledge needed on demand → skill.
 
 **Gate P0: PASS** (2026-08-04).
@@ -28,11 +28,11 @@ the knowledge it consults). Knowledge needed on demand → skill.
   four ratified patterns route the work.
 - **Species**: knowledge (pattern catalog citing the ADR — declarative, no procedure).
 - **Dials**: `user-invocable: false` · `disable-model-invocation: false` (model-only router,
-  the `agent-ui-catalog` sibling's posture).
+  the `component-catalog` sibling's posture).
 - **Freedom**: high — prose patterns citing the ADR; the ADR is the contract, the skill routes.
 - **Type**: encoded preference + routing (the ADR holds the detail; the skill carries the map).
-- **Fences**: NOT payload composing (`a2ui-compose`); NOT the ui-* fleet map
-  (`agent-ui-catalog`); NOT renderer/catalog build execution (`a2ui-builder` agent, which
+- **Fences**: NOT payload composing (`a2ui-payload-authoring`); NOT the ui-* fleet map
+  (`component-catalog`); NOT renderer/catalog build execution (`a2ui-build-agent` agent, which
   consults this).
 - **Done-when**: a catalog-interop ask reaches the four patterns + the ADR clauses by
   citation instead of improvisation.
@@ -88,7 +88,7 @@ contracts/fences in the head; ≤3 hard gates; examples (the citation table) in 
   with-skill re-runs were dispatched but had not returned at record close — no
   `*-with-skill.md` transcripts exist; assertions 2 and 3 are demonstrated only by the
   audit's citation sweep (every cited clause resolves), not by a live re-run.
-- Fence closure: siblings `a2ui-compose` / `agent-ui-catalog` carry no `evals/evals.json`
+- Fence closure: siblings `a2ui-payload-authoring` / `component-catalog` carry no `evals/evals.json`
   (they pre-date the eval convention; verified 2026-08-04) — reciprocal no-trigger cases
   cannot land in suites that do not exist. Accepted-with-note: this skill's own evals carry
   the boundary cases in both directions; sibling suites inherit the reciprocal case when

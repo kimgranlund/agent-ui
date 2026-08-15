@@ -28,7 +28,7 @@ glyph plus a floating centered label (the agent-admin `| + |……Add section…
 ellipsis mechanics survive: any non-`stretch` `justify-self` sizes the wrapper to fit-content,
 and the `max-inline-size: 100%` clamp + `overflow: hidden; text-overflow: ellipsis` are untouched.
 
-## 2 · Fork sheet (agent-ui-component-design — a contract-changing fork on an existing control)
+## 2 · Fork sheet (component-design — a contract-changing fork on an existing control)
 
 | Row | Decision |
 |---|---|
@@ -128,7 +128,7 @@ other CSS changes. `button.ts` is byte-untouched.
 
 Both browser probes run in the existing `button-label-overflow.browser.test.ts` /
 `button-geometry.browser.test.ts` shards — NO new shard, no re-monolith (the
-`agent-ui-component-testing` shard law).
+`component-testing` shard law).
 
 ## 5 · Build sequence (one writer per file; dispatchable as ONE slice)
 

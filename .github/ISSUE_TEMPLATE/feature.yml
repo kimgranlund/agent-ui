@@ -1,5 +1,5 @@
 name: Feature
-description: A feature or improvement — mirrors the TICKET dialect's kind:feature section contract (agent-ui-doc-standards §4)
+description: A feature or improvement — mirrors the TICKET dialect's kind:feature section contract (doc-standards §4)
 title: "[Feature] "
 labels: ["enhancement"]
 body:

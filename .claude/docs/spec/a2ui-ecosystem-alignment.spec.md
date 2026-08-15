@@ -184,7 +184,7 @@ scope, and the payload rubric MUST carry the dimension.
   **The eval lane is a NAMED MANUAL run — "the deceptive-composition eval" — and is NEVER wired into
   `npm test`/`npm run test:browser`** (the [`./genui-surface.spec.md`](./genui-surface.spec.md)
   SPEC-N3 law for judged evals; the `scripts/harness_wiring_check.py` manual-gate precedent, ADR-0040
-  §3). Operator procedure: for EACH manifest fixture, dispatch the `a2ui-reviewer` critic in a FRESH
+  §3). Operator procedure: for EACH manifest fixture, dispatch the `a2ui-review-agent` critic in a FRESH
   context — one fixture per context, no cross-fixture contamination; generator ≠ critic per the
   harness spec's SPEC-R8 — with exactly two inputs, the fixture's payload file and its
   `declaredIntent`, withholding `expectedVerdict`/`rationale` (ground truth never reaches the judge).

@@ -1,7 +1,7 @@
 # Rubric — a2ui-catalog (a catalog row)
 
 > Status: proposed · v0.2 · 2026-08-06 (v0.1 2026-07-03; v0.2 adds the Scope & siblings note ONLY — no
-> dimension or anchor moved) · Layer: rubric (the referential standard `a2ui-reviewer` grades a catalog row against).
+> dimension or anchor moved) · Layer: rubric (the referential standard `a2ui-review-agent` grades a catalog row against).
 > Implements: [`../spec/a2ui-expert-harness.spec.md`](../spec/a2ui-expert-harness.spec.md) SPEC-R3 · wired by [`../lld/a2ui-harness-wiring.lld.md`](../lld/a2ui-harness-wiring.lld.md) §4.
 
 **Scope & siblings (GH #493).** This rubric grades ONE artifact class: a catalog row — the three
@@ -52,7 +52,7 @@ the ADR-0053 form-family rows** — `Field` · `FormProvider` · `Checkbox` · `
 - **Every [review] dimension (D4, D5, D6) ≥ 4.**
 - **No compensation across dimensions** — a 5 elsewhere cannot offset a sub-4 dimension.
 
-A row is admissible/promotable when all six dimensions clear ≥ 4 **and** zero [gate] fails. The `a2ui-reviewer`
+A row is admissible/promotable when all six dimensions clear ≥ 4 **and** zero [gate] fails. The `a2ui-review-agent`
 critic scores against this rubric in a fresh context (generator ≠ critic, SPEC-R8); the `validName` /
 `validateCatalogConformance` / `loadCatalog` / `registry` probes are the deterministic half.
 

@@ -1,6 +1,6 @@
 # Rubric — a2ui-skill-pattern (a skill-doc pattern section)
 
-> Status: proposed · v0.1 · 2026-08-06 · Layer: rubric (the referential standard `a2ui-reviewer` grades a
+> Status: proposed · v0.1 · 2026-08-06 · Layer: rubric (the referential standard `a2ui-review-agent` grades a
 > skill-doc pattern section against).
 > Charter: GH #493 (PR #492's escalation) · extends [`../spec/a2ui-expert-harness.spec.md`](../spec/a2ui-expert-harness.spec.md)
 > SPEC-R3's rubric set (its v0.4 amendment). Sibling of [`a2ui-catalog.md`](./a2ui-catalog.md) — split, not
@@ -46,7 +46,7 @@ claim by claim — and whose verdict hard-gates promotion exactly as a `[gate]` 
 - **Every remaining [review] dimension (S2, S3) ≥ 4.**
 - **No compensation across dimensions** — a 5 elsewhere cannot offset a sub-4 dimension.
 
-The `a2ui-reviewer` critic scores against this rubric in a fresh context (generator ≠ critic,
+The `a2ui-review-agent` critic scores against this rubric in a fresh context (generator ≠ critic,
 a2ui-expert-harness.spec.md SPEC-R8); S1's claim-by-claim open-and-diff record in the findings is the
 evidence of record.
 

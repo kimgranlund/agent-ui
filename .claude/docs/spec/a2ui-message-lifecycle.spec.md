@@ -29,7 +29,7 @@
 
 ## 1. Purpose
 
-A producer of A2UI messages — the live-agent system prompt, a human authoring via the `a2ui-compose` skill, or
+A producer of A2UI messages — the live-agent system prompt, a human authoring via the `a2ui-payload-authoring` skill, or
 a corpus exemplar — must choose, on every turn, which of the four server→client message types to emit. All four
 are shipped, mechanically correct, end-to-end (`protocol.ts`, `renderer/dispatch.ts`, `renderer/renderer.ts`,
 `renderer/tree.ts`). What is missing is the **decision layer**: the crystal-clear when/how rule for each type,
@@ -100,7 +100,7 @@ existing or new surface MUST apply, in this order:
 changed ones) and its complete `child`/`children` reference, because the renderer replaces the stored record for
 that `id` wholesale (verified `renderer/tree.ts:85`) — there is no partial-prop-patch semantic. Adding a child to
 an existing container REQUIRES resending the parent's own record with its updated `children` list, in the same
-or an out-of-order-tolerant later message (the `Select`+`Option` "ship together" precedent, `a2ui-compose`
+or an out-of-order-tolerant later message (the `Select`+`Option` "ship together" precedent, `a2ui-payload-authoring`
 `node-idioms.md`, generalizes to every container). *(→ TKT-0016 "updateComponents partial semantics" open item —
 now settled: it is never partial.)* **Root carve-out (REV 2026-07-11, build-time repair):** the ONE id this
 resend rule can never touch is `"root"` — the shipped runtime rejects any second `id:"root"` delivery as
@@ -122,7 +122,7 @@ these rules; `a2ui-catalog.spec.md` and `a2ui-runtime.spec.md` are cited, not ed
 Three build-phase teaching surfaces conform to this SPEC without duplicating its prose verbatim:
 1. The live-agent machine system prompt (`tools/agent/system-prompt.ts`'s `GRAMMAR`) — the LLD names the exact
    insertion point (ADR-0126 F2).
-2. The `a2ui-compose` skill's mental model (`.claude/skills/a2ui-compose/SKILL.md`) — widened from three message
+2. The `a2ui-payload-authoring` skill's mental model (`.claude/skills/a2ui-payload-authoring/SKILL.md`) — widened from three message
    kinds to four, plus one new "Common trap" entry for SPEC-R2.
 3. A corpus exemplar record (§3.3) — a worked instance a retrieval-conditioned generation can imitate.
 - **AC1** *Given* a future edit to any of the three teaching surfaces above, *when* reviewed, *then* it cites
@@ -252,7 +252,7 @@ dialog's visible record.
 
 ## 7. Open items (non-normative)
 
-- Exact GRAMMAR bullet wording and the `a2ui-compose` skill diff are the LLD's (build-phase, not frozen here).
+- Exact GRAMMAR bullet wording and the `a2ui-payload-authoring` skill diff are the LLD's (build-phase, not frozen here).
 - The exemplar's exact `promptText` framing (a single literal ask vs a short narrated arc) is left to the
   corpus-curation follow-up that actually authors and admits it.
 - Whether this demo becomes the `a2ui-chat` (TKT-0013) embryo is flagged, not decided — no coupling is taken in

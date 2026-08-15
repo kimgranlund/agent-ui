@@ -128,7 +128,7 @@ node on commit (`renderer/input.ts`), so the draft's `value:{prop:'value',event:
 silently read `undefined` on every commit — a broken, lying two-way contract, not a working one. This is
 a genuine component-side gap (not a seam-design limitation like SliderMulti's): closing it needs a new
 public `value` getter/setter added to `UIRadioGroupElement` (delegating to `#selectedValue`, the
-`UICheckboxElement` precedent) — escalated as component-builder territory, not patched here. `Radio` (the
+`UICheckboxElement` precedent) — escalated as component-build-agent territory, not patched here. `Radio` (the
 Wave A reviewer correction: `ui-radio` ships its own descriptor and is NOT a gate-exempt composite
 sub-type like `Option`/`MenuItem` — it enters the fleet-derived gate's expected set directly, so it needs
 a real row) carries `value`/`checked` as 1:1 reflecting accessors (inherited from `UIIndicatorElement`)

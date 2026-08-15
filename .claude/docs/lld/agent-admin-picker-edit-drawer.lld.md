@@ -9,7 +9,7 @@
 > [`../decompositions/agent-admin-picker-edit-drawer.decomp.json`](../decompositions/agent-admin-picker-edit-drawer.decomp.json)
 > (plan mode). · proposed · 2026-08-13 · designer (design seat, GH #845)
 >
-> **ADR judgment (agent-ui-doc-standards §1c) — NO ADR, stated not skipped.** The §1c test is "a
+> **ADR judgment (doc-standards §1c) — NO ADR, stated not skipped.** The §1c test is "a
 > genuine contract fork a future reader must cite", not "we built something". Every piece here is
 > additive inside an already-frozen idiom: `ui-drawer` is composed byte-unmodified; the two new
 > registration seams follow the S7-c frozen shape verbatim (the same additive extension

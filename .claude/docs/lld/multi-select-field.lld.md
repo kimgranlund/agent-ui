@@ -178,7 +178,7 @@ the existing `mutuallyExclusive` arm's target tag/value-mark/marshal are unchang
 
 ## 11 · Build sequence
 
-The `agent-ui-component-create` procedure's own steps 2–8 + validation-loop steps 1–4 govern the
+The `component-build` procedure's own steps 2–8 + validation-loop steps 1–4 govern the
 new-control slices below; the four legs doc-checker flagged as missing are folded in explicitly
 (steps 6/9/10/11), not deferred, since none of them has a reason to slip this build:
 
@@ -188,14 +188,14 @@ new-control slices below; the four legs doc-checker flagged as missing are folde
    `multi-select.md` (descriptor, mirrors `select.md`/`checkbox.md`'s frontmatter shape),
    `multi-select.test.ts`, `multi-select.browser.test.ts`, `multi-select.visual.browser.test.ts`.
 3. Barrel export wiring (`controls/index.ts`), `component-styles.css` `@import`, and the
-   `package.json` `exports` subpath — the `agent-ui-component-create` step-8 integration trio
+   `package.json` `exports` subpath — the `component-build` step-8 integration trio
    every sibling control carries.
 4. `a2ui/src/catalog/default/{catalog.json,factories.ts}` — the new widget-type row (SPEC-R9) +
    its `factories.test.ts`/`descriptor-agreement.test.ts` additions + the renderer round-trip probe.
 5. `a2ui/src/catalog/a2ui-basic/{catalog.json,factories.ts}` — the E6 drain (SPEC-R10, OF4: same
    build, not deferred) + its regression probe for the untouched `mutuallyExclusive` arm.
 6. **Site-surface integration** — the docs-site doc/demo page for `ui-multi-select` + its
-   `<component-gallery>` preview specimen (the `agent-ui-component-create` step-8 site-surface
+   `<component-gallery>` preview specimen (the `component-build` step-8 site-surface
    leg), with the site's own standing gates (`check:site`) green.
 7. Full gate: `npm run check && npm test` (jsdom) then `npm run test:browser` (six shards) — judged
    by EXIT CODE, never grepped output (the standing CLAUDE.md law).

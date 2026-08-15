@@ -8,9 +8,9 @@ description: >-
   function implementations, or threading catalogId end-to-end (picker → proxy/worker →
   producer → authority stamp). ALSO §5's composed/derived catalogs: a "persona catalog
   fragment" (CatalogFragment) merged via composeCatalog, "derived catalog" base--persona ids,
-  "targetCatalogs" scoping, reject-loud collisions. NOT for composing payloads (a2ui-compose);
-  NOT for the ui-* fleet map (agent-ui-catalog); NOT for agent-admin's Catalogs shelf/section
-  or entry kinds (agent-admin-library-kinds).
+  "targetCatalogs" scoping, reject-loud collisions. NOT for composing payloads (a2ui-payload-authoring);
+  NOT for the ui-* fleet map (component-catalog); NOT for agent-admin's Catalogs shelf/section
+  or entry kinds (admin-library-kinds).
 user-invocable: false
 disable-model-invocation: false
 ---
@@ -23,8 +23,8 @@ the ADR itself — `.claude/docs/adr/0169-a2ui-basic-catalog-upstream-interop.md
 (upstream A2UI Basic) is the type specimen; any third catalog follows the same four patterns.
 
 **Routing boundary.** This skill answers and routes; the build lands elsewhere: renderer /
-catalog / registry code → the `a2ui-builder` agent · payload authoring → `a2ui-compose` ·
-fleet inventory → `agent-ui-catalog`. A "second catalog id" objection citing ADR-0097 is
+catalog / registry code → the `a2ui-build-agent` agent · payload authoring → `a2ui-payload-authoring` ·
+fleet inventory → `component-catalog`. A "second catalog id" objection citing ADR-0097 is
 answered by ADR-0169's own Non-collision section (its Non-collision section): 0097 rejected a policy VIEW
 of the default catalog; a genuinely distinct component set with its own wire dialect earns a
 real second catalog. A "compose a persona's local patterns onto a base catalog" ask routes to

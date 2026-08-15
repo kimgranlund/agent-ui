@@ -319,10 +319,10 @@ un-centers the marker).
 3. **`status-stream`** — the live host (§4): role=log, the imperative API, tail-follow + guard, the completion
    invariant; descriptor; the REAL-stream browser proof (§SPEC-R19, fed the in-repo arena NDJSON via
    `readNdjsonLines` as an INSTRUMENT-BRIDGE).
-4. **Catalog slices (a2ui-builder seat, after the components are green)** — the `Timeline`+`TimelineItem`
+4. **Catalog slices (a2ui-build-agent seat, after the components are green)** — the `Timeline`+`TimelineItem`
    catalog rows + the `StatusStream` `EXCLUSION_ALLOWLIST` entry (F5); an agent-activity exemplar composing a
    `Timeline`.
-5. **Site pages** — `timeline-{doc,demo}` + `status-stream-{doc,demo}` (docs-writer/example-builder concern per
+5. **Site pages** — `timeline-{doc,demo}` + `status-stream-{doc,demo}` (docs-writer/example-authoring-agent concern per
    the site skill); the status-stream demo drives a recorded stream.
 6. **Integration** — barrels/exports; `npm run size` (manual, ADR-0040 §3) measured + pinned if material;
    independent `component-reviewer` GO per host before commit.
