@@ -451,7 +451,12 @@ describe('agent-admin-app — the Edit Agents drawer: duplicate, then delete the
     localStorage.setItem(ACTIVE_PRESET_KEY, AGENT_PRESETS[0]!.id)
   })
 
-  const drawerEl = (): HTMLElement & { open: boolean } => document.querySelector('ui-drawer') as HTMLElement & { open: boolean }
+  // GH #917 — the mounted `ui-agent-admin` now carries its OWN per-section entry-CRUD drawers, so a bare
+  // `document.querySelector('ui-drawer')` can resolve to one of THOSE (document order: `admin` precedes the
+  // page's `drawer` sibling, agent-admin-app.ts's `root.append(admin, toasts, fileInput, drawer)`) instead of
+  // this page's own roster drawer — addressed by its own class instead (the agent-admin-app-drawer.test.ts
+  // precedent, minted the same slice: "THIS page's roster drawer, addressed by its own class").
+  const drawerEl = (): HTMLElement & { open: boolean } => document.querySelector('ui-drawer.roster-drawer') as HTMLElement & { open: boolean }
   const dialogEl = (): HTMLDialogElement => drawerEl().querySelector('[data-part="dialog"]') as HTMLDialogElement
   const rowFor = (id: string): HTMLElement | null => document.querySelector(`.roster-row[data-agent="${id}"]`)
   const keysUnder = (id: string): string[] => Object.keys(localStorage).filter((k) => k.startsWith(`agent-admin-app.${id}.`))
