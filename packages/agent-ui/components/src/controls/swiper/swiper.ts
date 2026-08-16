@@ -486,7 +486,14 @@ export class UISwiperElement extends UIContainerElement {
    *  event names the settled target directly, so this skips the debounce timer AND `#nearestSlide`'s geometry
    *  guess entirely — `#mapToReal`/`#teleport`/`#commit` are the same shared machinery `#onSettle` drives,
    *  so both paths converge on an identical committed result. Falls back to the geometry resolve only if the
-   *  event names no snap target on this axis (a legal empty state per spec, e.g. mid-programmatic-scroll). */
+   *  event names no snap target on this axis (a legal empty state per spec, e.g. mid-programmatic-scroll).
+   *  Teleport echo on THIS path: a clone-band settle triggers `#teleport`, whose instant jump lands the
+   *  scroll offset on the real twin — the UA's snapped target CHANGES, so the engine may fire a second
+   *  `scrollsnapchange` naming that twin. `#teleporting` swallows the one that arrives inside the jump's rAF
+   *  window, but that timing guard is SECONDARY: the LOAD-BEARING guard is `#commit`'s changed-index test —
+   *  the echo maps (via `#mapToReal`) to the SAME real index the clone already committed, so `#commit` sees
+   *  no change and emits nothing, whether or not the echo beat the rAF (LLD §5, the same primary/secondary
+   *  split `#teleport`'s own comment names for the debounce path). */
   #onSnapChange = (evt: Event): void => {
     if (this.#teleporting) return
     const e = evt as SnapChangeEvent

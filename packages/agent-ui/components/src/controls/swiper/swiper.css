@@ -16,7 +16,14 @@
  * `scroll-snap-type`/`scroll-snap-align`/`scroll-snap-stop` (declared here, consumed by swiper-item.css).
  * `ui-swiper` is `tier: pattern` (geometry.md — container + control-height rows). The surface (elevation/
  * brightness) is the shared container.css seam — this sheet does not repoint --ui-container-bg (the
- * ui-tabs precedent): a bare <ui-swiper> is transparent by default (ADR-0015 cl.1). */
+ * ui-tabs precedent): a bare <ui-swiper> is transparent by default (ADR-0015 cl.1).
+ *
+ * Block [3] (#953) is a progressive enhancement: a scroll-driven `filter: brightness()` dim on off-centre
+ * slides, reachable ONLY behind `@supports (animation-timeline: view())`, and switched off under BOTH
+ * `prefers-reduced-motion: reduce` and `forced-colors: active` (the resets share the enhancement's exact
+ * specificity — see the block's own comment). Known side-effect, documented in swiper.md too: a non-`none`
+ * `filter` creates a stacking context AND a containing block for fixed/absolute descendants on supporting
+ * engines, so a raw `position: fixed` inside a dimmed slide anchors to the slide, not the viewport. */
 
 /* ════════════════════════ [1] TOKEN BLOCK — :where() declarations (the WHOLE family's chain) ════════════════════════ */
 
@@ -172,14 +179,21 @@
  * `ready`-gated dot transition above already follows (a rule referencing a host attribute belongs in the
  * host's own file even when it styles a descendant). */
 @supports (animation-timeline: view()) {
+  /* Specificity is load-bearing here (review repair, #953): the orientation qualifier is wrapped in
+     `:where()` so BOTH enhancement selectors weigh (0,2,1) — `:scope` + `[data-part]` + the tag — exactly
+     what the reduced-motion / forced-colors overrides below weigh. Same weight + later in source = the
+     override wins; an unwrapped `:not([orientation])`/`[orientation]` would weigh (0,3,1) and silently
+     out-rank the `animation-name: none` reset (measured — swiper.browser.test.ts's reduced-motion probe).
+     `> ui-swiper-item` (child combinator): items are ALWAYS direct track children — swiper.ts reparents
+     every `ui-swiper-item` into the track via appendChild and appends the loop clones the same way. */
   @scope (ui-swiper) {
-    :scope:not([orientation='vertical']) > [data-part='track'] ui-swiper-item {
+    :scope:where(:not([orientation='vertical'])) > [data-part='track'] > ui-swiper-item {
       animation-name: ui-swiper-inactive-fx;
       animation-timeline: view(inline);
       animation-fill-mode: both;
       animation-timing-function: linear;
     }
-    :scope[orientation='vertical'] > [data-part='track'] ui-swiper-item {
+    :scope:where([orientation='vertical']) > [data-part='track'] > ui-swiper-item {
       animation-name: ui-swiper-inactive-fx;
       animation-timeline: view(block);
       animation-fill-mode: both;
@@ -187,6 +201,11 @@
     }
   }
 
+  /* `filter` is layout-inert (the teleport rect proof above), but a non-`none` filter DOES create a stacking
+     context AND a containing block for `position: fixed`/`absolute` descendants on supporting engines
+     (CSS Filter Effects §5) — a fixed-positioned descendant inside a dimmed slide is positioned against the
+     slide, not the viewport, while this animation holds a non-identity value. Slide content that needs
+     viewport-anchored overlays should route through the fleet's overlay()/portal seam, not a raw `fixed`. */
   @keyframes ui-swiper-inactive-fx {
     0%,
     100% {
@@ -199,10 +218,22 @@
   }
 
   /* Reduced motion (ticket acceptance) — the timeline itself is scroll-driven, not time-driven, so the UA's
-     own reduced-motion suppression for @keyframes does not apply here; disable the animation-name explicitly. */
+     own reduced-motion suppression for @keyframes does not apply here; disable the animation-name explicitly.
+     (0,2,1), later in source than the (0,2,1) enhancement rules above — wins by order. */
   @media (prefers-reduced-motion: reduce) {
     @scope (ui-swiper) {
-      :scope > [data-part='track'] ui-swiper-item {
+      :scope > [data-part='track'] > ui-swiper-item {
+        animation-name: none;
+      }
+    }
+  }
+
+  /* Forced colors (Windows High Contrast et al.) — a brightness dim is a colour cue the forced palette must
+     not carry (the UA already flattens author colours; a half-dim slide there reads as disabled/unavailable,
+     not "off-centre"). Same (0,2,1)-and-later mechanics as the reduced-motion reset. */
+  @media (forced-colors: active) {
+    @scope (ui-swiper) {
+      :scope > [data-part='track'] > ui-swiper-item {
         animation-name: none;
       }
     }
