@@ -1,0 +1,14 @@
+{
+  "name": "@agent-ui/data",
+  "description": "A zero-dependency, headless data layer for the fleet: a DataSource strategy interface whose CRUD verbs are optional capabilities, signal-backed resource()/mutation()/paginated(), a ./gateway consumer-side client contract (middleware onion, token flow, typed error envelope, retry/backoff, streaming pass-through), and a ./stream subpath carrying ONE Streamed<T> contract with fromFetchStream/fromEventSource/fromWebSocket adapters.",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@agent-ui/components": "*",
+    "@agent-ui/shared": "*"
+  }
+}
