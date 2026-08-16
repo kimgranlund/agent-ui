@@ -80,6 +80,148 @@ export function setPointer(doc: unknown, pointer: string, value: unknown): unkno
   return set(doc, 0)
 }
 
+/** Encode one RFC-6901 reference token (`~`→`~0`, `/`→`~1`) — the inverse of `decodeToken`. */
+const encodeToken = (token: string): string => token.replace(/~/g, '~0').replace(/\//g, '~1')
+
+/** Append one property key to an existing absolute pointer, encoding it as an RFC-6901 token. */
+const joinPointer = (base: string, key: string): string => `${base}/${encodeToken(key)}`
+
+const isDraftable = (v: unknown): v is Record<string, unknown> | unknown[] => Array.isArray(v) || isObject(v)
+
+/**
+ * Per-proxy bookkeeping for `unwrap` below: `original` is the untouched value the proxy was created
+ * from (returned verbatim — same reference — when the proxy was never itself written to, preserving
+ * structural sharing for a value the recipe only READ, e.g. `draft.items = [...draft.items, next]` must
+ * keep every untouched element's identity); `target` is the private shallow clone `set` writes land on;
+ * `dirty` flips true the moment THIS proxy's own `set` trap fires (a descendant's write does not dirty
+ * an ancestor — each write already records its own absolute pointer independently).
+ */
+interface DraftEntry {
+  readonly original: unknown
+  readonly target: Record<string, unknown> | unknown[]
+  dirty: boolean
+}
+const registry = new WeakMap<object, DraftEntry>()
+
+/**
+ * Resolve any value a recipe is about to hand to `setPointer` down to something that can never contain
+ * one of our recording proxies — GH #976 review finding: a naive record-and-replay leaks live Proxy
+ * objects into the returned data model the instant a recipe re-embeds a draft READ (`draft.b = draft.a`,
+ * `draft.copy = {...draft.user}`, the module's own recommended `draft.items = [...draft.items, next]`
+ * idiom), which both breaks `Object.is`/structural-sharing identity for untouched values and would hand
+ * a live Proxy to a consumer (e.g. `structuredClone`/postMessage) never written to at all.
+ *
+ * A registered, untouched (`dirty: false`) proxy unwraps to its `original` reference — identity-preserving,
+ * the whole point. A registered, WRITTEN (`dirty: true`) proxy unwraps to a fresh shallow copy of its
+ * current `target` (never the live `target` object itself — that object keeps receiving further writes
+ * for the rest of the recipe, so handing it out live would let an EARLIER recorded write silently observe
+ * LATER mutations through the shared reference; the copy freezes what was true at unwrap time). Any other
+ * array/object is walked structurally, reusing the same input reference when nothing inside it needed
+ * unwrapping (no needless reallocation of ordinary literal data).
+ */
+function unwrap(v: unknown): unknown {
+  if (typeof v !== 'object' || v === null) return v
+  const entry = registry.get(v)
+  if (entry !== undefined) {
+    if (!entry.dirty) return entry.original
+    return Array.isArray(entry.target) ? entry.target.slice() : { ...entry.target }
+  }
+  if (Array.isArray(v)) {
+    let changed = false
+    const out = v.map((el) => {
+      const u = unwrap(el)
+      if (u !== el) changed = true
+      return u
+    })
+    return changed ? out : v
+  }
+  if (isObject(v)) {
+    let changed = false
+    const out: Record<string, unknown> = {}
+    for (const k of Object.keys(v)) {
+      const u = unwrap(v[k])
+      if (u !== v[k]) changed = true
+      out[k] = u
+    }
+    return changed ? out : v
+  }
+  return v
+}
+
+/**
+ * A recording Proxy over `value` (renderer LLD-C5 extension, GH #976): reading an object/array-valued
+ * property returns another recording proxy (cached per key, so re-reading the SAME nested property after
+ * a write sees that write — draft read-after-write consistency, invalidated on the next write to that
+ * key); WRITING a property `unwrap`s the assigned value first (so no live proxy is ever recorded or
+ * stored), pushes `[absolute pointer, unwrapped value]` onto `writes`, and applies the unwrapped value to
+ * a private shallow clone — never to `value` itself. Only PROPERTY ASSIGNMENT is recorded — array mutator
+ * methods and `length` writes (`push`/`splice`/`length = n`/…) are not draft-aware and would otherwise
+ * silently corrupt the array (an RFC-6901 `setPointer` write to a `"length"`/`"NaN"` key is nonsense), so
+ * they THROW instead — out of this bounded helper's scope by design (reassign the whole array instead:
+ * `draft.items = [...draft.items, next]`). `delete` is likewise unsupported (`setPointer` cannot express
+ * removal) and throws rather than silently applying to the clone alone and vanishing from the write set.
+ */
+function draftProxy(value: unknown, pointer: string, writes: Array<[string, unknown]>): unknown {
+  if (!isDraftable(value)) return value
+  const target = Array.isArray(value) ? value.slice() : { ...value }
+  const entry: DraftEntry = { original: value, target, dirty: false }
+  const children = new Map<string, unknown>()
+  const proxy = new Proxy(target, {
+    get(t, prop, receiver) {
+      if (typeof prop !== 'string') return Reflect.get(t, prop, receiver)
+      const v = Reflect.get(t, prop, receiver)
+      if (!isDraftable(v)) return v
+      let child = children.get(prop)
+      if (child === undefined) {
+        child = draftProxy(v, joinPointer(pointer, prop), writes)
+        children.set(prop, child)
+      }
+      return child
+    },
+    set(t, prop, v, receiver) {
+      if (typeof prop !== 'string') return Reflect.set(t, prop, v, receiver)
+      if (Array.isArray(t) && prop === 'length') {
+        throw new TypeError(
+          'mutate(): array mutator methods (push/splice/…) and length writes are out of scope — reassign the whole array instead (draft.items = [...draft.items, next])',
+        )
+      }
+      const unwrapped = unwrap(v)
+      writes.push([joinPointer(pointer, prop), unwrapped])
+      children.delete(prop) // invalidate any cached child proxy — a re-read must reflect this write
+      entry.dirty = true
+      return Reflect.set(t, prop, unwrapped, receiver)
+    },
+    deleteProperty() {
+      throw new TypeError('mutate(): delete is not supported — setPointer cannot express removal; reassign the parent object instead')
+    },
+  })
+  registry.set(proxy, entry)
+  return proxy
+}
+
+/**
+ * `mutate(doc, path, recipe)` — draft-first authoring ergonomics over `setPointer` (GH #976, prompted by
+ * Solid 2.0 RC's draft-first stores). `recipe` receives a DRAFT of the subtree at `path` and mutates it
+ * directly (`draft.count = draft.count + 1`, `draft.user.name = 'Ana'`); `mutate` RECORDS each property
+ * assignment made on the draft as it happens — it never diffs a before/after snapshot — and replays the
+ * recordings, in the order made, as the SAME `setPointer` writes a caller would otherwise hand-write.
+ *
+ * Purely additive authoring sugar: the per-path binding mechanism (Object.is cutoff, structural sharing)
+ * is untouched underneath — every replayed write is a real `setPointer` call, so a path the recipe never
+ * touched keeps its reference identity exactly as it would from a hand-written write (SPEC-N2 stays
+ * intact). Synchronous, like the rest of this module — no scheduling of its own.
+ */
+export function mutate<T = unknown>(doc: unknown, path: string, recipe: (draft: T) => void): unknown {
+  if (path !== '' && path[0] !== '/') {
+    throw new TypeError(`mutate(): path must be '' (whole doc) or an absolute RFC-6901 pointer starting with '/', got ${JSON.stringify(path)}`)
+  }
+  const base = resolvePointer(doc, path)
+  const writes: Array<[string, unknown]> = []
+  const draft = draftProxy(isDraftable(base) ? base : {}, path, writes)
+  recipe(draft as T)
+  return writes.reduce<unknown>((acc, [pointer, value]) => setPointer(acc, pointer, value), doc)
+}
+
 // ── per-path computed memo ────────────────────────────────────────────────────────────
 
 /** Per-surface, per-pointer memo of resolution computeds. WeakMap ⇒ collected with the surface. */

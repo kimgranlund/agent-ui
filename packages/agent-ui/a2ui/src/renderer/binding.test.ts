@@ -13,7 +13,7 @@ import { describe, it, expect } from 'vitest'
 import { effect, inspect, whenFlushed } from '@agent-ui/components'
 import { createSurface, disposeSurface } from './surface.ts'
 import type { Surface } from './surface.ts'
-import { resolve, setPointer } from './binding.ts'
+import { resolve, setPointer, mutate } from './binding.ts'
 
 const init = { id: 's1', catalogId: 'demo', version: 'v1.0' }
 
@@ -211,5 +211,202 @@ describe('list-item scope resolution (renderer LLD-C6 / ADR-0024)', () => {
     s.data.value = { label: 'x' }
     expect(resolve({ path: 'label' }, s)).toBeUndefined() // no leading slash, no scope → undefined
     expect(resolve({ path: '' }, s)).toEqual({ label: 'x' }) // '' is still whole-doc when unscoped
+  })
+})
+
+describe('mutate() — draft-first authoring ergonomics over setPointer (GH #976)', () => {
+  it('a top-level assignment produces the SAME result as a hand-written setPointer', () => {
+    const doc = { count: 1, other: 'unchanged' }
+    const hand = setPointer(doc, '/count', 2)
+    const drafted = mutate(doc, '', (draft: { count: number }) => {
+      draft.count = 2
+    })
+    expect(drafted).toEqual(hand)
+  })
+
+  it('a nested assignment emits the same absolute-pointer write as hand-writing setPointer', () => {
+    const doc = { user: { name: 'Ada', age: 30 }, other: { k: 'v' } }
+    const hand = setPointer(doc, '/user/name', 'Bea')
+    const drafted = mutate(doc, '', (draft: { user: { name: string } }) => {
+      draft.user.name = 'Bea'
+    })
+    expect(drafted).toEqual(hand)
+  })
+
+  it('structural sharing holds: an untouched sibling subtree keeps its reference identity', () => {
+    const doc = { user: { name: 'Ada' }, other: { k: 'v' } }
+    const drafted = mutate(doc, '', (draft: { user: { name: string } }) => {
+      draft.user.name = 'Bea'
+    }) as typeof doc
+    expect(drafted.other).toBe(doc.other) // never touched by the recipe → same reference (Object.is holds)
+    expect(drafted.user).not.toBe(doc.user) // the written path was copied along the way
+  })
+
+  it('per-path waking still holds off a mutate()-produced write (the binding mechanism is unchanged)', async () => {
+    const s = createSurface(init)
+    s.data.value = { user: { name: 'Ada' }, other: { k: 'v' } }
+    const child = bindCounting(s, '/user/name')
+    const sibling = bindCounting(s, '/other')
+    expect(child.count).toBe(1)
+    expect(sibling.count).toBe(1)
+
+    s.data.value = mutate(s.data.peek(), '', (draft: { user: { name: string } }) => {
+      draft.user.name = 'Bea'
+    })
+    await whenFlushed()
+    expect(child.value).toBe('Bea')
+    expect(child.count).toBe(2)
+    expect(sibling.count).toBe(1) // /other's subtree kept its reference → asleep, exactly as a hand-written setPointer
+  })
+
+  it('read-after-write: the recipe sees its own prior write through the draft', () => {
+    const doc = { count: 1 }
+    const drafted = mutate(doc, '', (draft: { count: number }) => {
+      draft.count = draft.count + 1
+      draft.count = draft.count + 1
+    }) as typeof doc
+    expect(drafted.count).toBe(3)
+  })
+
+  it('multiple assignments in one recipe replay in order — last write to a path wins', () => {
+    const doc = { a: 1, b: 1 }
+    const drafted = mutate(doc, '', (draft: { a: number; b: number }) => {
+      draft.a = 2
+      draft.b = 9
+      draft.a = 3
+    }) as typeof doc
+    expect(drafted).toEqual({ a: 3, b: 9 })
+  })
+
+  it('a missing base path materializes an empty draft object, matching setPointer', () => {
+    const doc = {}
+    const hand = setPointer(doc, '/user/name', 'Ada')
+    const drafted = mutate(doc, '/user', (draft: { name: string }) => {
+      draft.name = 'Ada'
+    })
+    expect(drafted).toEqual(hand)
+  })
+
+  it('mutating a subtree path prefixes recorded writes with that base pointer', () => {
+    const doc = { user: { name: 'Ada', age: 30 }, other: 1 }
+    const drafted = mutate(doc, '/user', (draft: { age: number }) => {
+      draft.age = 31
+    }) as typeof doc
+    expect(drafted).toEqual({ user: { name: 'Ada', age: 31 }, other: 1 })
+    expect(drafted.other).toBe(doc.other)
+  })
+
+  it('a whole-subtree reassignment records one write at that path, not per-field', () => {
+    const doc = { user: { name: 'Ada' }, other: 'x' }
+    const drafted = mutate(doc, '', (draft: { user: { name: string } }) => {
+      draft.user = { name: 'Zoe' }
+    }) as typeof doc
+    expect(drafted).toEqual({ user: { name: 'Zoe' }, other: 'x' })
+  })
+
+  it('an untouched recipe (no assignments) returns the doc unchanged (no-op writes)', () => {
+    const doc = { a: 1 }
+    const drafted = mutate(doc, '', () => {})
+    expect(drafted).toBe(doc) // reduce over zero writes short-circuits to the original reference
+  })
+
+  it('an array-index assignment matches hand-written setPointer', () => {
+    const doc = { items: ['a', 'b', 'c'] }
+    const hand = setPointer(doc, '/items/1', 'B')
+    const drafted = mutate(doc, '', (draft: { items: string[] }) => {
+      draft.items[1] = 'B'
+    })
+    expect(drafted).toEqual(hand)
+  })
+
+  it('RFC-6901 tokens containing "/" and "~" round-trip through encodeToken exactly like a hand-written pointer', () => {
+    const doc: Record<string, unknown> = { 'a/b': { 'c~d': 1 } }
+    const hand = setPointer(doc, '/a~1b/c~0d', 2)
+    const drafted = mutate(doc, '', (draft: Record<string, Record<string, number>>) => {
+      draft['a/b']!['c~d'] = 2
+    })
+    expect(drafted).toEqual(hand)
+  })
+
+  describe('draft-leak prevention (review finding, GH #976) — no live Proxy or stale reference ever reaches the returned doc', () => {
+    it('the documented spread idiom keeps untouched elements reference-identical, never a leaked Proxy', () => {
+      const item0 = { id: 0 }
+      const item1 = { id: 1 }
+      const doc = { items: [item0, item1] }
+      const drafted = mutate(doc, '', (draft: { items: Array<{ id: number }> }) => {
+        draft.items = [...draft.items, { id: 2 }]
+      }) as typeof doc
+      expect(drafted.items).toEqual([{ id: 0 }, { id: 1 }, { id: 2 }])
+      expect(drafted.items[0]).toBe(item0) // untouched element keeps its ORIGINAL reference — no Proxy, no clone
+      expect(drafted.items[1]).toBe(item1)
+      expect(typeof drafted.items[0]).not.toBe('function') // sanity: a Proxy over an object still reports 'object'
+      expect(Object.getPrototypeOf(drafted.items[0])).toBe(Object.prototype) // a real plain object, not a Proxy wrapper artifact
+    })
+
+    it('aliasing an untouched draft read (`draft.b = draft.a`) records the ORIGINAL reference, not a Proxy', () => {
+      const a = { x: 1 }
+      const doc = { a, b: null as unknown }
+      const hand = setPointer(doc, '/b', a)
+      const drafted = mutate(doc, '', (draft: { a: { x: number }; b: unknown }) => {
+        draft.b = draft.a
+      }) as typeof doc
+      expect(drafted).toEqual(hand)
+      expect(drafted.b).toBe(a)
+    })
+
+    it('spreading a nested draft (`{...draft.user}`) unwraps its own nested proxy properties too', () => {
+      const addr = { city: 'Oslo' }
+      const doc = { user: { name: 'Ada', addr } }
+      const drafted = mutate(doc, '', (draft: { user: { name: string; addr: { city: string } }; copy?: unknown }) => {
+        ;(draft as { copy?: unknown }).copy = { ...draft.user }
+      }) as typeof doc & { copy: { name: string; addr: { city: string } } }
+      expect(drafted.copy).toEqual({ name: 'Ada', addr: { city: 'Oslo' } })
+      expect(drafted.copy.addr).toBe(addr) // the nested, never-written 'addr' keeps its original identity
+    })
+
+    it('embedding a DIRTIED nested draft snapshots it — a later write to that path never retroactively mutates the earlier record', () => {
+      const doc = { a: { x: 1 }, copy: null as unknown }
+      const drafted = mutate(doc, '', (draft: { a: { x: number }; copy: unknown }) => {
+        draft.a.x = 1 // dirties the 'a' proxy
+        draft.copy = draft.a // records a snapshot of 'a' as it stands right now (x: 1)
+        draft.a.x = 2 // a LATER write to 'a' — must not retroactively change the already-recorded '/copy' write
+      }) as typeof doc & { a: { x: number }; copy: { x: number } }
+      expect(drafted.a.x).toBe(2)
+      expect(drafted.copy.x).toBe(1) // the snapshot taken at record time, unaffected by the later write
+    })
+  })
+
+  describe('array mutator methods and delete are refused, never silently applied (review finding, GH #976)', () => {
+    it('push() throws instead of silently corrupting the array with a bogus numeric-string key', () => {
+      const doc = { items: ['a', 'b'] }
+      expect(() =>
+        mutate(doc, '', (draft: { items: string[] }) => {
+          draft.items.push('c')
+        }),
+      ).toThrow(TypeError)
+    })
+
+    it('a direct length write throws instead of silently truncating/corrupting', () => {
+      const doc = { items: ['a', 'b'] }
+      expect(() =>
+        mutate(doc, '', (draft: { items: string[] }) => {
+          draft.items.length = 0
+        }),
+      ).toThrow(TypeError)
+    })
+
+    it('delete throws rather than silently vanishing from the recorded write set', () => {
+      const doc: Record<string, unknown> = { a: 1, b: 2 }
+      expect(() =>
+        mutate(doc, '', (draft: Record<string, unknown>) => {
+          delete draft.a
+        }),
+      ).toThrow(TypeError)
+    })
+
+    it('a relative (non-absolute, non-empty) base path throws instead of silently resolving to a stray key', () => {
+      const doc = { user: { name: 'Ada' } }
+      expect(() => mutate(doc, 'user', (draft: { name: string }) => (draft.name = 'Bea'))).toThrow(TypeError)
+    })
   })
 })
