@@ -163,7 +163,12 @@ const A2UI_INITIAL: Record<string, Record<string, string>> = {
   Option: { label: 'Option', value: 'a' },
   // Modal is deliberately NOT seeded open: an auto-opened dialog throws a top-layer overlay over the whole
   // gallery on load. It starts closed; the `open` knob reveals it on demand (its sample content is ready).
-  // Drawer (ADR-0188) follows the SAME reasoning — also absent, also starts closed.
+  // Drawer (ADR-0188) follows the SAME reasoning — also absent, also starts closed. Popover/Menu/FormPopover/
+  // Disclosure follow suit for consistency (their SAMPLE_TREES entries below give the `open` knob real content
+  // to reveal on demand, rather than forcing every overlay open on load).
+  Toolbar: { label: 'Document actions' },
+  FormPopover: { label: 'Filter' },
+  Swiper: { pagination: 'true', paddles: 'true' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -249,6 +254,133 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
   Drawer: () => ({
     rootRef: { children: ['s_dtext'] },
     extras: [{ id: 's_dtext', component: 'Text', variant: 'body', text: 'Drawer content' }],
+  }),
+  // GH #971 — the eight generic "Sample content" fallbacks, each replaced with the type's real job
+  // (mirrors the a2ui corpus's own catalog-coverage.ts/catalog-frontier.ts idioms, trimmed to a static
+  // literal tree — no data-model bindings — matching every other entry in this table).
+  //
+  // Toolbar (toolbar.lld.md LLD-C11): a roving-focus action cluster — three ghost buttons, the
+  // doc-actions idiom (catalog-coverage.ts), without the nested Tooltip/Popover/Menu triggers a plain
+  // specimen doesn't need.
+  Toolbar: () => ({
+    rootRef: { children: ['s_tb1', 's_tb2', 's_tb3'] },
+    extras: [
+      { id: 's_tb1', component: 'Button', variant: 'ghost', label: 'Share' },
+      { id: 's_tb2', component: 'Button', variant: 'ghost', label: 'Duplicate' },
+      { id: 's_tb3', component: 'Button', variant: 'ghost', label: 'Delete' },
+    ],
+  }),
+  // Disclosure: "fold the detail, never the answer" (catalog SPEC §5.2) — a real one-line summary
+  // folding real body prose, the log_disclosure idiom (catalog-coverage.ts), minus its Code-block detail
+  // (kept to a Text body like every other static specimen here).
+  Disclosure: () => ({
+    rootRef: { children: ['s_dctext'] },
+    extras: [
+      {
+        id: 's_dctext', component: 'Text', variant: 'body',
+        text: 'The rolling restart completed successfully across all 3 replicas with zero downtime.',
+      },
+    ],
+  }),
+  // Popover: FIRST child is the disclosure trigger, remaining children move into its panel
+  // (factories.ts's popoverFactory note) — the pop_wrap idiom (catalog-coverage.ts).
+  Popover: () => ({
+    rootRef: { children: ['s_pv_trigger', 's_pv_col'] },
+    extras: [
+      { id: 's_pv_trigger', component: 'Button', variant: 'ghost', label: 'Share' },
+      { id: 's_pv_col', component: 'Column', gap: 'xs', children: ['s_pv_title', 's_pv_body'] },
+      { id: 's_pv_title', component: 'Text', variant: 'h5', text: 'Sharing tips' },
+      { id: 's_pv_body', component: 'Text', variant: 'caption', text: 'Share links expire after 7 days.' },
+    ],
+  }),
+  // FormPopover: UNLIKE Popover the trigger is control-created (form-popover.ts) — every child is panel
+  // content, a Field + TextField (the filter_pop idiom, catalog-frontier.ts's reviewInviteSeed).
+  FormPopover: () => ({
+    rootRef: { children: ['s_fp_field'] },
+    extras: [
+      { id: 's_fp_field', component: 'Field', label: 'Name contains', child: 's_fp_input' },
+      { id: 's_fp_input', component: 'TextField', name: 'query', placeholder: 'Ada Lovelace' },
+    ],
+  }),
+  // Menu: FIRST child is the trigger, remaining children are MenuItem rows moved into the panel
+  // (factories.ts's menuFactory note) — the menu_overflow idiom (catalog-coverage.ts).
+  Menu: () => ({
+    rootRef: { children: ['s_mn_trigger', 's_mi1', 's_mi2', 's_mi3'] },
+    extras: [
+      { id: 's_mn_trigger', component: 'Button', variant: 'ghost', label: 'More actions' },
+      { id: 's_mi1', component: 'MenuItem', value: 'rename', label: 'Rename' },
+      { id: 's_mi2', component: 'MenuItem', value: 'duplicate', label: 'Duplicate' },
+      { id: 's_mi3', component: 'MenuItem', value: 'delete', label: 'Delete' },
+    ],
+  }),
+  // Timeline(+Item): a status history, one TimelineItem per stage (done/active/pending) — the review-board
+  // idiom (catalog-frontier.ts's reviewSplitSeed).
+  Timeline: () => ({
+    rootRef: { children: ['s_ti1', 's_ti2', 's_ti3', 's_ti4'] },
+    extras: [
+      { id: 's_ti1', component: 'TimelineItem', status: 'done', label: 'Spec approved', description: 'Sign-off from platform + risk.', timestamp: 'Mon' },
+      { id: 's_ti2', component: 'TimelineItem', status: 'done', label: 'Staging verified', description: 'All 42 checks green.', timestamp: 'Tue' },
+      { id: 's_ti3', component: 'TimelineItem', status: 'active', label: 'Canary at 5%', description: 'Error budget steady.', timestamp: 'now' },
+      { id: 's_ti4', component: 'TimelineItem', status: 'pending', label: 'Full rollout', description: 'Gated on canary holding 24h.' },
+    ],
+  }),
+  // Swiper(+Item): three slide cards — the onboarding-tour idiom (catalog-frontier.ts's onboardingTourSeed).
+  Swiper: () => ({
+    rootRef: { children: ['s_sw1', 's_sw2', 's_sw3'] },
+    extras: [
+      { id: 's_sw1', component: 'SwiperItem', children: ['s_sw1c'] },
+      { id: 's_sw1c', component: 'Card', elevation: '1', children: ['s_sw1ct'] },
+      { id: 's_sw1ct', component: 'CardContent', children: ['s_sw1t', 's_sw1b'] },
+      { id: 's_sw1t', component: 'Text', variant: 'h5', text: 'Your inbox' },
+      { id: 's_sw1b', component: 'Text', text: 'Everything assigned to you lands here first.' },
+      { id: 's_sw2', component: 'SwiperItem', children: ['s_sw2c'] },
+      { id: 's_sw2c', component: 'Card', elevation: '1', children: ['s_sw2ct'] },
+      { id: 's_sw2ct', component: 'CardContent', children: ['s_sw2t', 's_sw2b'] },
+      { id: 's_sw2t', component: 'Text', variant: 'h5', text: 'Boards' },
+      { id: 's_sw2b', component: 'Text', text: 'Drag work between stages; the timeline updates itself.' },
+      { id: 's_sw3', component: 'SwiperItem', children: ['s_sw3c'] },
+      { id: 's_sw3c', component: 'Card', elevation: '1', children: ['s_sw3ct'] },
+      { id: 's_sw3ct', component: 'CardContent', children: ['s_sw3t', 's_sw3b'] },
+      { id: 's_sw3t', component: 'Text', variant: 'h5', text: 'Ask the agent' },
+      { id: 's_sw3b', component: 'Text', text: 'Describe what you need — it builds the view for you.' },
+    ],
+  }),
+  // Split(+Pane): a horizontal master/detail — a queue pane + a detail pane — the review-board idiom
+  // (catalog-frontier.ts's reviewSplitSeed).
+  Split: () => ({
+    rootRef: { children: ['s_sp1', 's_sp2'] },
+    extras: [
+      { id: 's_sp1', component: 'SplitPane', initial: 35, min: '12rem', children: ['s_sp1col'] },
+      { id: 's_sp1col', component: 'Column', gap: 'sm', children: ['s_sp1title', 's_sp1body'] },
+      { id: 's_sp1title', component: 'Text', variant: 'h5', text: 'Review queue' },
+      { id: 's_sp1body', component: 'Text', variant: 'body', text: 'Payments v2 rollout' },
+      { id: 's_sp2', component: 'SplitPane', children: ['s_sp2col'] },
+      { id: 's_sp2col', component: 'Column', gap: 'sm', children: ['s_sp2title', 's_sp2body'] },
+      { id: 's_sp2title', component: 'Text', variant: 'h5', text: 'Payments v2 rollout — history' },
+      { id: 's_sp2body', component: 'Text', variant: 'body', text: 'Spec approved, staging verified, canary at 5%.' },
+    ],
+  }),
+  // The "(+Item)"/"(+Pane)" halves: SwiperItem and SplitPane are ALSO independently browsable catalog
+  // entries (a2ui-catalog.ts's NESTED_ONLY set does not fold them into their owner, unlike Option/Tab/
+  // TabPanel/the Card regions), so each needs its own standalone specimen too, not only the composed one
+  // nested inside Swiper/Split above. TimelineItem/MenuItem need none — both declare no `children`
+  // (catalog.json), so sampleFor's `!def.children` branch already renders them without any fallback text.
+  SwiperItem: () => ({
+    rootRef: { children: ['s_swi_card'] },
+    extras: [
+      { id: 's_swi_card', component: 'Card', elevation: '1', children: ['s_swi_content'] },
+      { id: 's_swi_content', component: 'CardContent', children: ['s_swi_title', 's_swi_body'] },
+      { id: 's_swi_title', component: 'Text', variant: 'h5', text: 'Your inbox' },
+      { id: 's_swi_body', component: 'Text', text: 'Everything assigned to you lands here first.' },
+    ],
+  }),
+  SplitPane: () => ({
+    rootRef: { children: ['s_spp_col'] },
+    extras: [
+      { id: 's_spp_col', component: 'Column', gap: 'sm', children: ['s_spp_title', 's_spp_body'] },
+      { id: 's_spp_title', component: 'Text', variant: 'h5', text: 'Review queue' },
+      { id: 's_spp_body', component: 'Text', variant: 'body', text: 'Payments v2 rollout' },
+    ],
   }),
 }
 
