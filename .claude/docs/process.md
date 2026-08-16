@@ -4,6 +4,9 @@
 > Companion to [`plan.md`](./plan.md) (what we build) and [`goals.md`](./goals.md) (when).
 > This system is designed against the orchestration rubric; the scorecard is at the end.
 > Ratified design changes (the repair-the-owner up-loop) are logged as ADRs in [`adr/`](./adr/).
+> A different axis — the ORDER a `size:big` build passes through, not the artifact/gate
+> architecture below — is owned by the `due-process` skill (GH #969); this doc governs WHAT gets
+> built, that skill governs the sequence any big build passes through to get there.
 
 ## The governing model
 
