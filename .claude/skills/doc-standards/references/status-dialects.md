@@ -17,7 +17,7 @@ onto real GitHub primitives, not a parallel taxonomy:
 
 | Old field | Old value | GitHub mechanism | Note |
 |---|---|---|---|
-| `kind` | `bug` / `feature` | the `bug` / `enhancement` label (GitHub's own defaults) | NOT a native Issue Type — that feature is organization-level and unavailable on this personal-account repo (ADR-0145's build-time amendment); reusing the existing default labels avoids minting a parallel `kind:*` pair that would just duplicate them |
+| `kind` | `bug` / `feature` | the `bug` label (GitHub's default) / the dedicated `feature` label ("Feature intake record", the file-feature contract) | NOT a native Issue Type — that feature is organization-level and unavailable on this personal-account repo (ADR-0145's build-time amendment). Features minted through #844 (2026-08-13) carry the default `enhancement` label; the dedicated `feature` label is the live convention since |
 | `size` | `small` / `big` | the `size:small` / `size:big` label | same taxonomy, just a label instead of frontmatter |
 | `status` | `open` | Issue open, no extra label | |
 | `status` | `doing` | Issue open + the `doing` label | GitHub's own state has no "in progress" value |

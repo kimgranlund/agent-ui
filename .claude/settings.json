@@ -4,7 +4,38 @@
   },
   "permissions": {
     "allow": [
-      "Bash(python3 scripts/adr_ratify.py:*)"
+      "Bash(GIT_EDITOR=true git rebase *)",
+      "Bash(gh issue close *)",
+      "Bash(gh issue comment *)",
+      "Bash(gh issue create *)",
+      "Bash(gh issue edit *)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr merge *)",
+      "Bash(gh pr ready *)",
+      "Bash(git add *)",
+      "Bash(git branch *)",
+      "Bash(git branch -D *)",
+      "Bash(git branch -m *)",
+      "Bash(git checkout *)",
+      "Bash(git commit *)",
+      "Bash(git fetch *)",
+      "Bash(git merge-base *)",
+      "Bash(git mv *)",
+      "Bash(git pull *)",
+      "Bash(git push *)",
+      "Bash(git rebase *)",
+      "Bash(git worktree add *)",
+      "Bash(git worktree prune)",
+      "Bash(git worktree remove *)",
+      "Bash(node scripts/build-dogfood-assets.mjs)",
+      "Bash(node scripts/generate-llms-full.mjs)",
+      "Bash(node scripts/generate-sitemap.mjs)",
+      "Bash(npm ci)",
+      "Bash(npm run check)",
+      "Bash(npm test)",
+      "Bash(npx vitest run *)",
+      "Bash(python3 scripts/adr_ratify.py:*)",
+      "mcp__linear__get_issue"
     ]
   },
   "hooks": {
@@ -64,7 +95,6 @@
     "screens@nonoun-plugins": true,
     "agent-protocols@nonoun-plugins": true,
     "design@nonoun-plugins": true,
-
     "figma@claude-plugins-official": true,
     "cloudflare@claude-plugins-official": true
   }
