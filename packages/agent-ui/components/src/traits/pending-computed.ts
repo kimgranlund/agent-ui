@@ -29,9 +29,11 @@
 // scope-owned effect is disposed with the connection scope), and on an explicit `release()`. So a settle that
 // lands AFTER the host has left the DOM is a no-op too, not only one superseded by a newer query.
 //
-// Intended follow-up seam (NOT shipped here): handing `source()` an `AbortSignal` that fires when its query
-// is invalidated, so a fetch-backed source can cancel its network work instead of merely having its late
-// answer ignored. Today the trait only IGNORES late settles; it does not cancel the underlying work.
+// CANCELLATION (GH #1003): `source()` receives an `AbortSignal`, one fresh `AbortController` per generation.
+// The controller is aborted from the SAME cleanup closure that bumps `generation` — on a newer query
+// superseding it, on host disconnect, and on an explicit `release()` — so a fetch-backed source can cancel its
+// network work instead of merely having its late answer ignored. A `source()` that never reads the signal
+// keeps behaving exactly as before; the trait still only APPLIES a settle when `isCurrent()` holds.
 //
 // Fleet stale/pending STYLING convention (a shared token/state-class, TKT-0062-shaped) is deliberately NOT
 // part of this file — GH #974 requires an ADR proposal before that hook ships; this trait ships alone.
@@ -54,8 +56,12 @@ export interface PendingComputedOptions<T> {
    * Do NOT read this controller's own signals (`value`/`pending`/`error`) inside `source()`: the trait writes
    * them from inside the same tracking effect, so reading them there would subscribe the effect to its own
    * writes and re-run the query on every settle.
+   *
+   * `signal` is a fresh `AbortSignal`, one per generation (query identity) — pass it to a fetch-backed source
+   * (e.g. `fetch(url, { signal })`) to cancel the underlying work when this query is superseded, the host
+   * disconnects, or `release()` runs. A source that ignores it behaves exactly as before this signal existed.
    */
-  source: () => PendingSource<T> | null | undefined
+  source: (signal: AbortSignal) => PendingSource<T> | null | undefined
 }
 
 export interface PendingComputedController<T> {
@@ -80,7 +86,8 @@ function isAsyncIterable<T>(x: PendingSource<T>): x is AsyncIterable<T> {
 
 /**
  * Follow an async source with a last-settled `value` + query-scoped `pending` (+ `error`). Invoke from the
- * control's `connected()`, e.g. `pendingComputed(this, { source: () => fetchThing(this.queryId.value) })`.
+ * control's `connected()`, e.g.
+ * `pendingComputed(this, { source: (signal) => fetch(this.queryId.value, { signal }) })`.
  * The returned signals are read-only to consumers; the tracking effect (and any in-flight iterator) is torn
  * down on disconnect (scope-owned) or by calling the returned `release()` early.
  */
@@ -92,7 +99,8 @@ export function pendingComputed<T>(host: UIElement, opts: PendingComputedOptions
   const error = signal<unknown>(undefined)
 
   const dispose = host.effect(() => {
-    const source = opts.source()
+    const controller = new AbortController()
+    const source = opts.source(controller.signal)
     const gen = ++generation // this run's query identity — a later re-run (a newer question) bumps this
     // again, so any settle/yield/error below that still checks `gen === generation` (via `isCurrent`) knows
     // whether it belongs to the question the consumer is asking RIGHT NOW.
@@ -101,7 +109,13 @@ export function pendingComputed<T>(host: UIElement, opts: PendingComputedOptions
     if (source == null) {
       pending.value = false
       error.value = undefined
-      return
+      // No async work started for this generation — abort immediately rather than leaving a live controller
+      // whose signal never fires (a `source()` that reads `signal` before returning null/undefined still sees
+      // a consistent "this query is over" once cleanup runs, since `return` below covers this branch too).
+      return () => {
+        generation++
+        controller.abort()
+      }
     }
 
     pending.value = true
@@ -126,9 +140,12 @@ export function pendingComputed<T>(host: UIElement, opts: PendingComputedOptions
       // Cleanup (disconnect, a newer query starting, or an explicit release()): invalidate this query so a
       // late `next()` settling after teardown is ignored, and let the generator clean up its own resources
       // rather than leaving it running unobserved. `return()` may itself reject at teardown (a generator's
-      // `finally` throwing) — swallowed, since nobody is left to observe it.
+      // `finally` throwing) — swallowed, since nobody is left to observe it. Abort THIS generation's
+      // controller too, so a source that plumbed `signal` into its own fetch/subscription cancels alongside
+      // the iterator teardown.
       return () => {
         generation++
+        controller.abort()
         Promise.resolve(iterator.return?.()).catch(() => {})
       }
     }
@@ -146,9 +163,12 @@ export function pendingComputed<T>(host: UIElement, opts: PendingComputedOptions
       },
     )
     // Cleanup (disconnect / re-run / release()): invalidate this query so a settle landing after teardown —
-    // e.g. after the host has left the DOM — never writes `value`/`pending`/`error`.
+    // e.g. after the host has left the DOM — never writes `value`/`pending`/`error`. Abort THIS generation's
+    // controller too, so a `source()` that plumbed `signal` into `fetch`/etc. cancels its network work rather
+    // than merely having its late answer ignored.
     return () => {
       generation++
+      controller.abort()
     }
   })
 
