@@ -77,6 +77,13 @@
     "section": "Guides"
   },
   {
+    "href": "./card-grid-drawer.html",
+    "label": "Card grid + drawer edit",
+    "description": "The card-grid + edit-via-drawer composition recipe: ui-grid + ui-card + ui-drawer, a buffered record form, and a page-owned dirty-state/discard-confirm convention (recipe-level, not a fleet ADR) — extracted from the agent-admin entry-list/entry-form shape (GH #917/#947, PR #948; GH #965).",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
     "href": "./account-settings.html",
     "label": "Account settings",
     "description": "A generic account SettingsSchema rendered by the shipped ui-settings — view preferences, edit and save one through the SettingsStore — behind a must-be-signed-in gate reading the SAME in-memory identity-mock-transport as Registration & sign in (GH #615, ADR-0176).",
