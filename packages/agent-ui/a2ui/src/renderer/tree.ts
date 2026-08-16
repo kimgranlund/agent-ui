@@ -33,6 +33,18 @@
 // B0-pinned `CreateWidget` signature (`./types.ts`); this module is proven against a stub. The host
 // (LLD-C13) owns one `SurfaceTree` per surface, wires `createWidget` + the client-error `onError`
 // callback, and reads `surface.widgets.get('root')` to attach the rendered root into the document.
+//
+// Reveal-order policy (GH #975, ADR-0194 — proposed, never self-ratified). OPT-IN via
+// `TreeDeps.revealOrder` (default OFF — byte-identical to before this policy existed, SPEC-R4 AC1's
+// tested default is untouched). When enabled, a STATIC container's children (the ordinary
+// `child`/`children` id form — never a `children`-TEMPLATE dynamic list, LLD-C6, which is already
+// data-driven/positionally reconciled and out of this policy's reach) reveal in DECLARED order: a
+// later sibling's real content never swaps in for its `#pendingParents` anchor before every earlier
+// sibling has revealed, even when the later sibling's data already arrived. This reuses the SAME
+// anchor/`#pendingParents` mechanism SPEC-R4 already ships (`#registerPendingAnchor`/`#revealNow`
+// below) — a "held" id (data buffered, reveal deferred) is indistinguishable, mechanically, from a
+// genuinely-missing one; `#advanceReveal`'s cascade is what tells them apart, walking forward through
+// already-buffered held siblings the moment the blocking one finally reveals.
 
 import type { A2uiChildTemplate, A2uiComponent, A2uiError, A2uiServerMessage } from '../protocol.ts'
 import { MAX_RENDER_DEPTH } from '../protocol.ts'
@@ -63,6 +75,12 @@ export interface TreeDeps {
   componentDefOf: ComponentDefOf
   /** Emit a client→server error (here only `IDGRAPH`); the host wraps it in `{version, error}`. */
   onError: (error: A2uiError) => void
+  /**
+   * Reveal-order policy opt-in (GH #975, ADR-0194 — proposed). Default `false`/undefined: byte-
+   * identical to before this policy existed (SPEC-R4 AC1's tested greedy-reveal default is untouched).
+   * `true`: a STATIC container's children reveal in DECLARED order — see the module header.
+   */
+  revealOrder?: boolean
 }
 
 /**
@@ -91,6 +109,17 @@ export class SurfaceTree {
   // input/action/checks listeners, all installed during prop wiring, never during the children walk
   // (renderList threads its OWN per-item ac's internally, never this node's).
   readonly #nodeScopes = new Map<string, { propsScope: Scope; childrenScope: Scope; ac: AbortController }>()
+  // Reveal-order policy state (GH #975, ADR-0194 — opt-in, `#deps.revealOrder`). All three are keyed
+  // by CONTAINER id and are no-ops (never populated) when the policy is off.
+  readonly #siblingOrder = new Map<string, string[]>() // containerId -> its declared static child-id order
+  // childId -> the ONE container it was ordered under (last-writer-wins on the degenerate case of the
+  // same id referenced as a static child by TWO different containers — SPEC-R4's multi-parent
+  // tolerance stays fully correct there via #pendingParents's own array-of-anchors, but the reveal-
+  // order POLICY's gating applies only relative to whichever container this map last recorded; the
+  // other waiting parent's slot still fills the instant #revealNow runs, just without that container's
+  // OWN ordering enforced against it — an accepted, documented degenerate-input limitation.
+  readonly #childContainer = new Map<string, string>()
+  readonly #revealedCount = new Map<string, number>() // containerId -> count of leading (declared-order) children revealed
   #rootDelivered = false // a first `id:'root'` was accepted; a later one is an IDGRAPH (SPEC-R3 AC2).
   #rootMounted = false // the tree has been mounted from `root` (mount-once gate).
   #cycleReported = false // a cycle was found; the graph is invalid, so further batches are inert.
@@ -206,13 +235,7 @@ export class SurfaceTree {
    */
   #mountNode(id: string): Node {
     const node = this.#surface.components.get(id)
-    if (node === undefined) {
-      const anchor = document.createComment(`a2ui:pending:${id}`)
-      const waiting = this.#pendingParents.get(id)
-      if (waiting !== undefined) waiting.push(anchor)
-      else this.#pendingParents.set(id, [anchor])
-      return anchor
-    }
+    if (node === undefined) return this.#registerPendingAnchor(id)
     // A tree node is reached once; reuse defends against a degenerate multi-reference / re-entry.
     const existing = this.#surface.widgets.get(id)
     if (existing !== undefined) return existing
@@ -232,6 +255,21 @@ export class SurfaceTree {
     this.#surface.widgets.set(id, el)
     this.#mountChildrenInto(el, node, childrenScope, undefined, false, ac)
     return el
+  }
+
+  /**
+   * Create (or reuse) the position-preserving comment anchor for `id`'s not-yet-revealed slot,
+   * registered in `#pendingParents` exactly per SPEC-R4 — regardless of WHY it is not yet revealed:
+   * a genuinely-missing id (the original case) and a reveal-order-HELD id (ADR-0194 — data buffered,
+   * reveal deferred until its earlier siblings reveal) are mechanically identical here. Multiple
+   * waiting parents on the same id (a legitimate edge case) each get their own anchor in the list.
+   */
+  #registerPendingAnchor(id: string): Comment {
+    const anchor = document.createComment(`a2ui:pending:${id}`)
+    const waiting = this.#pendingParents.get(id)
+    if (waiting !== undefined) waiting.push(anchor)
+    else this.#pendingParents.set(id, [anchor])
+    return anchor
   }
 
   /**
@@ -266,15 +304,48 @@ export class SurfaceTree {
         parentScope: scope,
         parentItemScope: itemScope,
       })
+    } else if (instance) {
+      for (const childId of childRefs(node)) el.appendChild(this.#mountInstance(childId, scope, itemScope, ac))
     } else {
-      for (const childId of childRefs(node)) {
-        el.appendChild(
-          instance
-            ? this.#mountInstance(childId, scope, itemScope, ac)
-            : this.#mountNode(childId),
-        )
-      }
+      this.#mountStaticChildrenOrdered(el, node)
     }
+  }
+
+  /**
+   * Mount `node`'s static children (`child`/`children`, the string-id form) into `el` in declared
+   * order — the `instance=false` static-tree case `#mountChildrenInto` used to run inline (byte-
+   * identical when `#deps.revealOrder` is off/undefined: every child mounts via the ordinary
+   * `#mountNode`, in order, exactly as before).
+   *
+   * When `#deps.revealOrder` is on (GH #975, ADR-0194 — opt-in, default OFF), this additionally
+   * enforces TOP-DOWN sibling reveal: once a child at position `i` is not yet available, every
+   * LATER sibling this pass mounts as a held anchor too — even one whose data already arrived —
+   * via `#registerPendingAnchor` (the same SPEC-R4 mechanism a genuinely-missing id uses). Recorded
+   * in `#siblingOrder`/`#childContainer` so `#patchPending`'s cascade (`#advanceReveal`) knows which
+   * already-buffered held siblings to reveal, in order, once the blocking one finally arrives.
+   */
+  #mountStaticChildrenOrdered(el: HTMLElement, node: A2uiComponent): void {
+    const order = childRefs(node)
+    if (order.length === 0) return
+    if (this.#deps.revealOrder !== true) {
+      // Default (off) path — byte-for-byte the prior inline loop.
+      for (const childId of order) el.appendChild(this.#mountNode(childId))
+      return
+    }
+    this.#siblingOrder.set(node.id, order)
+    for (const childId of order) this.#childContainer.set(childId, node.id)
+    let revealing = true // false once a hole (missing OR merely not-yet-buffered-in-order) is hit
+    let revealed = 0
+    for (const childId of order) {
+      if (revealing && this.#surface.components.has(childId)) {
+        el.appendChild(this.#mountNode(childId))
+        revealed++
+        continue
+      }
+      revealing = false // this id opens the hold — every later sibling this pass waits too (ADR-0194)
+      el.appendChild(this.#registerPendingAnchor(childId))
+    }
+    this.#revealedCount.set(node.id, revealed)
   }
 
   /**
@@ -297,8 +368,63 @@ export class SurfaceTree {
     return el
   }
 
-  /** A previously-missing id arrived: mount its subtree and swap it in for each waiting anchor. */
+  /**
+   * A previously-pending id arrived (SPEC-R4 AC1): either genuinely missing before now, or — under
+   * the reveal-order policy (GH #975, ADR-0194) — already buffered but held for its declared turn.
+   * With the policy off (default), or for an id `#mountStaticChildrenOrdered` never assigned a
+   * container (e.g. a stray/legacy reference outside the ordered mechanism), this is unconditional —
+   * byte-for-byte the pre-ADR-0194 behavior. With the policy on and a recorded container: only
+   * reveals when `id` is next in DECLARED order (`#advanceReveal` below); otherwise the anchor and
+   * the buffered data both stand untouched, waiting for its earlier siblings.
+   */
   #patchPending(id: string): void {
+    const containerId = this.#childContainer.get(id)
+    if (containerId === undefined) {
+      this.#revealNow(id)
+      return
+    }
+    const order = this.#siblingOrder.get(containerId)
+    const cursor = this.#revealedCount.get(containerId) ?? 0
+    if (order === undefined || order[cursor] !== id) return // not this id's turn yet — stays held
+    this.#advanceReveal(containerId, order, cursor)
+  }
+
+  /**
+   * The reveal-order cascade (ADR-0194): reveal `order[cursor]`, then keep walking forward through
+   * every NEXT sibling that is already buffered AND still pending — one sibling's arrival can unlock a
+   * whole run of already-delivered-but-held later siblings in a single pass, exactly as if they had
+   * all streamed together. Stops at the first genuinely not-yet-buffered id, which becomes the new
+   * hold point.
+   *
+   * `widgets.has(id)` is checked FIRST and counts as satisfied without calling `#revealNow` again
+   * (code-checker review fix — a stranding regression): a child a structural resend freshly-added via
+   * `#reconcileChildren`'s plain `#mountNode` (RSR-C5) already has a real widget but was NEVER
+   * registered in `#pendingParents` (that registration only happens on the anchor/missing path) — the
+   * ORIGINAL condition below (`!pendingParents.has(id)`) misread that as "not ready" and broke the
+   * cascade there, permanently stranding every later sibling behind it. Treating "already has a
+   * widget" as "already revealed, advance past it" fixes the liveness bug. It does NOT retroactively
+   * fix that such a resend-added child can itself have appeared out of declared order in the first
+   * place — `#reconcileChildren`'s fresh-mount path is not reveal-order-gated (ADR-0194 Consequences
+   * names this as a scoped-out limitation of the resend-ADD case, distinct from the initial-stream
+   * case this policy targets).
+   */
+  #advanceReveal(containerId: string, order: string[], startCursor: number): void {
+    let cursor = startCursor
+    while (cursor < order.length) {
+      const id = order[cursor]!
+      if (this.#surface.widgets.has(id)) {
+        cursor++ // already revealed out-of-band (e.g. a resend-added child) — count it, keep walking
+        continue
+      }
+      if (!this.#surface.components.has(id) || !this.#pendingParents.has(id)) break
+      this.#revealNow(id)
+      cursor++
+    }
+    this.#revealedCount.set(containerId, cursor)
+  }
+
+  /** The mechanical swap: mount `id`'s subtree and replace every anchor waiting on it (SPEC-R4). */
+  #revealNow(id: string): void {
     const anchors = this.#pendingParents.get(id)
     if (anchors === undefined) return
     this.#pendingParents.delete(id)
@@ -385,6 +511,32 @@ export class SurfaceTree {
       el.insertBefore(node, anchor) // safe: `node` was never previously connected
       anchor = node
     }
+
+    // Reveal-order resync (GH #975/ADR-0194 fix, code-checker review HIGH finding): `id`'s declared
+    // child list just changed. If `id` was already being tracked for ordered reveal, the OLD
+    // `#siblingOrder`/cursor is now stale — left alone, a removed or reordered blocker would strand
+    // every already-buffered later sibling behind a cursor position that can never advance again.
+    if (this.#deps.revealOrder === true && this.#siblingOrder.has(id)) this.#resyncOrderedChildren(id, newRefs)
+  }
+
+  /**
+   * Refresh reveal-order bookkeeping for `id` (an already-tracked container) after `#reconcileChildren`
+   * applied a structural resend: re-key `#siblingOrder`/`#childContainer` to the NEW declared list, drop
+   * reverse-lookups for ids no longer declared, recompute the leading-revealed run against ids that are
+   * ALREADY mounted (survivors + the fresh mounts `#reconcileChildren` just performed), then cascade
+   * (`#advanceReveal`) in case the resend also unblocked an already-buffered-but-held later sibling.
+   */
+  #resyncOrderedChildren(id: string, newRefs: string[]): void {
+    const oldRefs = this.#siblingOrder.get(id) ?? []
+    const newSet = new Set(newRefs)
+    for (const oldId of oldRefs) if (!newSet.has(oldId) && this.#childContainer.get(oldId) === id) this.#childContainer.delete(oldId)
+    this.#siblingOrder.set(id, newRefs)
+    for (const childId of newRefs) this.#childContainer.set(childId, id)
+
+    let revealed = 0
+    while (revealed < newRefs.length && this.#surface.widgets.has(newRefs[revealed]!)) revealed++
+    this.#revealedCount.set(id, revealed)
+    this.#advanceReveal(id, newRefs, revealed)
   }
 
   /**
@@ -426,6 +578,12 @@ export class SurfaceTree {
     el?.remove()
     this.#surface.widgets.delete(id)
     this.#surface.components.delete(id)
+    // Reveal-order bookkeeping (ADR-0194): `id` may itself have been an ordered container, and/or one
+    // of its own children may still be registered under it — both stale once this subtree is gone (a
+    // later re-add re-establishes fresh state via `#mountStaticChildrenOrdered`, never reads these).
+    this.#siblingOrder.delete(id)
+    this.#revealedCount.delete(id)
+    if (node !== undefined) for (const childId of childRefs(node)) this.#childContainer.delete(childId)
   }
 
   /**
