@@ -145,6 +145,17 @@ function mountAgentAdminAt(widthPx: number): { wrapper: HTMLElement; el: UIAgent
   return { wrapper, el }
 }
 
+/** GH #949 — Instructions is a drawered kind now: its 'foundation' entry's content editor lives in the
+ *  section's Edit drawer, built and opened on demand rather than mounted on the row. Click the row's ONE
+ *  affordance and await the scheduled `showModal()` effect (`drawer.open = true` is a reactive prop write,
+ *  not a synchronous one — the drawer/browser tests' own idiom, `agent-admin.test.ts`'s jsdom leg mirrors
+ *  it with `openEntryDrawer`) before a caller queries anything inside it — otherwise the dialog is still
+ *  UA-`display:none` and every computed-style/focus assertion below would read a closed surface. */
+async function openFoundationDrawer(el: UIAgentAdminElement): Promise<void> {
+  ;(el.querySelector('[data-entry-id="foundation"] [data-part="entry-edit"]') as HTMLElement).click()
+  await el.updateComplete
+}
+
 describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (GH #686\'s Amendment: shown-set visibility, no pairing vehicle)', () => {
   // GH #686's Amendment (LLD §16.1/§16.3/§16.4, S7-c) — the pane nav retired with the visibility model it
   // drove; the unified header bar that replaces it is a real, admin-composed box now, at EVERY band —
@@ -504,9 +515,11 @@ describe('ui-agent-admin cross-engine smoke — the settings region renders (GH 
     expect(region.height).toBeGreaterThan(0)
   })
 
-  it('a seeded prompt-section entry\'s content field is visibly focusable and legible (a real element, not display:none)', () => {
+  it('a seeded prompt-section entry\'s content field is visibly focusable and legible (a real element, not display:none)', async () => {
     const { el } = mountAgentAdmin('Capabilities') // GH #574 — Instructions rides the Capabilities tab now
-    const field = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as HTMLElement
+    // GH #949 — Instructions is a drawered kind now: the content editor lives in the entry's Edit drawer.
+    await openFoundationDrawer(el)
+    const field = el.querySelector('[data-kind="prompt-section"] [data-part="entry-content"]') as HTMLElement
     field.focus()
     // ui-textarea forwards .focus() to its internal contenteditable editor part (the text-field precedent) —
     // the ACTIVE element is that editor div, not the host; :focus-within proves focus landed inside the field.
@@ -649,10 +662,14 @@ describe('ui-agent-admin cross-engine smoke — the per-entry availability affor
   // roster drawer's footer does — no fix was needed, this closes the loop with real evidence.
   it('the Edit drawer footer (Done) computes `position: sticky` — pinned, never scrolling away with a long form', async () => {
     const el = mountWithSeededSkills()
-    const row = el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.skill}"] [data-entry-id="menu-pdf"]`) as HTMLElement
+    const section = el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
+    const row = section.querySelector('[data-entry-id="menu-pdf"]') as HTMLElement
     ;(row.querySelector('[data-part="entry-edit"]') as HTMLElement).click()
     await el.updateComplete
-    const footer = el.querySelector('[data-part="entry-drawer-footer"]') as HTMLElement
+    // GH #949 — Instructions/Pattern sources are drawered too now, each carrying its OWN (unopened, empty)
+    // `entry-drawer-footer` shell earlier in DOM order — an unscoped `el.querySelector` here would match one
+    // of THOSE instead of this section's own open one, finding no Done inside it. Scope to the SKILL section.
+    const footer = section.querySelector('[data-part="entry-drawer-footer"]') as HTMLElement
     expect(getComputedStyle(footer).position).toBe('sticky')
     expect(footer.querySelector('[data-part="entry-form-done"]'), 'Done lives in the sticky footer').not.toBeNull()
   })
@@ -833,31 +850,24 @@ describe('ui-agent-admin cross-engine smoke — canvas/region gutter is module-d
   })
 })
 
-describe('ui-agent-admin cross-engine smoke — the INLINE add-form is GENUINELY collapsed when hidden (component-reviewer CRITICAL fix)', () => {
-  it('a hidden add-form computes display:none; toggling reveals it as a real, visible box', () => {
-    const { el } = mountAgentAdmin('Capabilities')
-    // Instructions, not Tools: GH #917 moved the four capability kinds' authoring into a drawer (which has
-    // no hidden-form state at all — the form does not exist until it opens), so the `[hidden]`-vs-`display`
-    // cascade race this test exists for lives on the three sections that still render the dashed form.
-    const section = el.querySelector(`[data-kind="${ENTRY_KINDS.promptSection}"]`) as HTMLElement
-    const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
-
-    // Before the CSS fix, `display: flex` beat the UA [hidden] rule — this assertion is the one the
-    // review found the shipped whole-shape suite was blind to.
-    expect(getComputedStyle(form).display).toBe('none')
-    expect(form.getBoundingClientRect().height).toBe(0)
-
-    ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
-    expect(getComputedStyle(form).display).not.toBe('none')
-    expect(form.getBoundingClientRect().height).toBeGreaterThan(0)
-  })
-})
+// component-reviewer CRITICAL fix — the INLINE add-form's `[hidden]`-vs-`display` CSS cascade race. GH #917
+// first narrowed its live agent-admin consumers to three (prompt-section/pattern-source/catalog); GH #949
+// drawered the first two of those, and `catalog` suppresses authoring entirely (`customAdd: false`) — so
+// `ui-agent-admin` now composes ZERO kinds with an inline dashed add-form at all. The regression this test
+// pinned is still real at the primitive that owns it (`entry-list.ts`'s `withCustomAdd && !withDrawer`
+// branch, `entry-list.css`'s own cascade) — moved to `entry-list.browser.test.ts`, which mounts a
+// non-drawered kind directly with zero agent-admin involvement (ADR-0164 §Acceptance), rather than kept
+// here pointed at a kind that no longer exercises it.
 
 describe('ui-agent-admin cross-engine smoke — an uncommitted edit survives a sibling toggle (component-reviewer MAJOR fix)', () => {
   it('a mid-edit content field keeps its live value AND its focus after a sibling entry re-renders the list', async () => {
     const { el } = mountAgentAdmin('Capabilities') // GH #574 — Instructions rides the Capabilities tab now
+    // GH #949 — Instructions is drawered now: the content editor lives in the entry's Edit drawer, which
+    // `entry-list.ts`'s `render()` never rebuilds (a STRONGER guarantee than the pre-drawer preservation
+    // dance this test originally proved — the drawer is a sibling of `list`, untouched by its rebuild).
+    await openFoundationDrawer(el)
     const foundationField = el.querySelector(
-      '[data-entry-id="foundation"] [data-part="entry-content"]',
+      '[data-kind="prompt-section"] [data-part="entry-content"]',
     ) as UICodeEditorElement
     foundationField.focus()
     foundationField.value = 'Half-typed, never committed'
@@ -869,18 +879,16 @@ describe('ui-agent-admin cross-engine smoke — an uncommitted edit survives a s
     personalityToggle.checked = false
     personalityToggle.dispatchEvent(new Event('change', { bubbles: true }))
 
+    // Re-query scoped to the SECTION rather than a row: the drawer (and this field inside it) is a SIBLING
+    // of `list`, never touched by the sibling toggle's re-render above — the SAME node throughout, no
+    // restore/`selectToEnd()` dance to await (that mechanism is `entry-list.ts`'s inline-row-only path,
+    // gated `!withDrawer`; Instructions no longer takes it).
     const foundationAfter = el.querySelector(
-      '[data-entry-id="foundation"] [data-part="entry-content"]',
+      '[data-kind="prompt-section"] [data-part="entry-content"]',
     ) as UICodeEditorElement
     expect(foundationAfter.value).toBe('Half-typed, never committed')
-    // component-reviewer MINOR fix: entry-list.ts's restore path awaits `updateComplete` before calling
-    // `selectToEnd()` (the model→surface sync that populates the editor's textContent is async, and
-    // collapsing a range onto a still-empty editor caret-lands at 0, not the end) — await the SAME flush
-    // here before asserting focus, matching the real timing `selectToEnd()` now runs on.
-    await foundationAfter.updateComplete
     // real browser focus semantics — the jsdom leg only asserts the value half; this leg is where the fix's
-    // focus claim is actually provable. ui-textarea's selectToEnd() (entry-list.ts's ADR-0134 migration seam)
-    // focuses the internal editor part, not the host — :focus-within proves focus survived onto the NEW row.
+    // focus claim is actually provable. Never having moved, the field's own focus was never at risk either.
     expect(foundationAfter.matches(':focus-within')).toBe(true)
   })
 })
@@ -1067,13 +1075,12 @@ describe('ui-agent-admin cross-engine smoke — TKT-0049/ADR-0139: entry-content
     return rows * lineBox + 2 * paddingBlock
   }
 
-  it('entry-content (rows=4) renders a real computed min-height matching the rows formula', () => {
-    const { el } = mountAgentAdmin()
-    const field = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as UICodeEditorElement
-    expect(field.rows).toBe(4)
-    const computed = Number.parseFloat(getComputedStyle(field).minHeight)
-    expect(computed).toBeCloseTo(expectedMinBlockSize(field, 4), 1)
-  })
+  // GH #949 — Instructions/Pattern sources drawered too: the rows=4 INLINE content field this test pinned
+  // no longer has any live consumer in `ui-agent-admin` (every kind but `catalog` — which builds no content
+  // editor at all — is now drawered, and every drawer field is the rows=8 shape below). The formula proof
+  // itself is unchanged and still real at the primitive that owns it — moved to
+  // `entry-list.browser.test.ts`'s own `mount()` helper (a non-drawered kind, ADR-0164 §Acceptance) rather
+  // than kept here pointed at a row shape that no longer exists in this element.
 
   // GH #917 — the draft field moved into the drawer, where the whole content region is its to fill, so its
   // `rows` figure went 2 → 8 (the drawer's own size, shared with the Edit form's editor). The CLAIM is
@@ -1090,14 +1097,17 @@ describe('ui-agent-admin cross-engine smoke — TKT-0049/ADR-0139: entry-content
   })
 
   it('changing `.rows` moves entry-content\'s rendered min-height (proves the mechanism; catches a future competing CSS rule that WINS the cascade)', async () => {
-    const { el } = mountAgentAdmin()
-    const field = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as UICodeEditorElement
+    // GH #949 — Instructions is drawered now (rows=8, the same drawer figure as entry-add-content above);
+    // opening it needs the Capabilities tab ACTIVE (`showModal()`'s non-`display:none`-ancestor requirement).
+    const { el } = mountAgentAdmin('Capabilities')
+    await openFoundationDrawer(el)
+    const field = el.querySelector('[data-kind="prompt-section"] [data-part="entry-content"]') as UICodeEditorElement
     const before = Number.parseFloat(getComputedStyle(field).minHeight)
-    field.rows = 8
+    field.rows = 12
     await field.updateComplete // the rows→CSS-custom-property write rides a reactive effect, not a sync write
     const after = Number.parseFloat(getComputedStyle(field).minHeight)
     expect(after).toBeGreaterThan(before)
-    expect(after).toBeCloseTo(expectedMinBlockSize(field, 8), 1)
+    expect(after).toBeCloseTo(expectedMinBlockSize(field, 12), 1)
   })
 })
 
@@ -1116,11 +1126,13 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entr
     return { block: fontSize * 0.5, inline: fontSize * 0.75 } // editor.css's formula (same factors as textarea's)
   }
 
-  it('entry-content and entry-add-content render the SAME computed padding despite agent-admin.css declaring two different literal values for them (both dead)', () => {
+  it('entry-content and entry-add-content render the SAME computed padding despite agent-admin.css declaring two different literal values for them (both dead)', async () => {
     // 'Capabilities' explicitly (GH #917): entry-add-content now lives in a `showModal()` drawer, and a
-    // top-layer surface opened from a `display:none` tab has nothing real to measure.
+    // top-layer surface opened from a `display:none` tab has nothing real to measure. GH #949 — Instructions
+    // is drawered too now, same requirement.
     const { el } = mountAgentAdmin('Capabilities')
-    const entryContent = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as HTMLElement
+    await openFoundationDrawer(el)
+    const entryContent = el.querySelector('[data-kind="prompt-section"] [data-part="entry-content"]') as HTMLElement
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.tool}"]`) as HTMLElement
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
     const entryAddContent = section.querySelector('[data-part="entry-add-content"]') as HTMLElement
@@ -1133,9 +1145,11 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entr
     }
   })
 
-  it('entry-content\'s idle border-color is ui-code-editor\'s OWN --ui-code-editor-border token, not agent-admin.css\'s --ui-agent-admin-border (a genuinely different role)', () => {
-    const { el } = mountAgentAdmin()
-    const entryContent = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as HTMLElement
+  it('entry-content\'s idle border-color is ui-code-editor\'s OWN --ui-code-editor-border token, not agent-admin.css\'s --ui-agent-admin-border (a genuinely different role)', async () => {
+    // GH #949 — Instructions is drawered now; opening it needs the Capabilities tab ACTIVE.
+    const { el } = mountAgentAdmin('Capabilities')
+    await openFoundationDrawer(el)
+    const entryContent = el.querySelector('[data-kind="prompt-section"] [data-part="entry-content"]') as HTMLElement
     // component-reviewer MINOR fix: comparing a RAW custom-property string (e.g. an unresolved
     // `light-dark(...)` expression) against `borderColor`'s resolved `rgb()`/`oklch()` serialization can
     // never match either way — vacuously true regardless of which rule actually won. Resolve BOTH
@@ -1162,8 +1176,16 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entr
   })
 
   it('TKT-0059/ADR-0139: entry-content/entry-add-content\'s ui-code-editor renders the SAME font-size/border-color/border-radius as the settings pane\'s ui-text-field (Name field) — the frame parity carries over from ui-textarea', async () => {
-    const { el } = mountAgentAdmin()
-    const entryContent = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as HTMLElement
+    // GH #949 — Instructions is drawered now: the form is built ON OPEN, so opening it (which needs the
+    // Capabilities tab ACTIVE, `showModal()`'s requirement) is required just to get `entry-content` into the
+    // DOM at all. The Agent tab's `ui-settings`/Name field is queried below regardless of which tab is
+    // active — every tab's content is composed upfront (CSS-hidden, not conditionally built), and computed
+    // style (font-size/border-color/border-radius — none layout-dependent) resolves for a connected element
+    // under a `display:none` ancestor the same way the ORIGINAL version of this test already relied on for
+    // `entryContent` (mounted on 'Agent', reading a field under the then-inactive Capabilities tab).
+    const { el } = mountAgentAdmin('Capabilities')
+    await openFoundationDrawer(el)
+    const entryContent = el.querySelector('[data-kind="prompt-section"] [data-part="entry-content"]') as HTMLElement
 
     const uiSettings = el.querySelector('[data-role="agent-content"] ui-settings') as HTMLElement & { updateComplete: Promise<void> }
     await uiSettings.updateComplete
@@ -1181,9 +1203,11 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entr
     expect(editorStyle.borderRadius).toBe(textFieldStyle.borderRadius)
   })
 
-  it('the entry-content/entry-add-content :focus-visible rule never matches (focus lands on ui-textarea\'s internal editor, not the host) — dead by a DIFFERENT mechanism than the cascade-proximity loss above', () => {
+  it('the entry-content/entry-add-content :focus-visible rule never matches (focus lands on ui-textarea\'s internal editor, not the host) — dead by a DIFFERENT mechanism than the cascade-proximity loss above', async () => {
     const { el } = mountAgentAdmin('Capabilities') // GH #574 — Instructions rides the Capabilities tab now; .focus() needs a real, non-display:none ancestor
-    const entryContent = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as HTMLElement
+    // GH #949 — Instructions is drawered now; the drawer's own `showModal()` needs that same active tab.
+    await openFoundationDrawer(el)
+    const entryContent = el.querySelector('[data-kind="prompt-section"] [data-part="entry-content"]') as HTMLElement
     entryContent.focus()
     expect(entryContent.matches(':focus-within')).toBe(true) // focus genuinely landed inside
     expect(entryContent.matches(':focus-visible')).toBe(false) // but never on the HOST itself
@@ -3149,6 +3173,13 @@ describe('ui-agent-admin Surface tab — the help icons are hidden at rest and r
 
     await userEvent.hover(summary)
     expect(await opacitySettlesTo(icon, '1'), `${server.browser}: hovering the heading row reveals it`).toBe('1')
+    // GH #949 fix — every sibling hover test in this file unhovers before ending (line ~3161/3676); this one
+    // didn't, leaving the REAL pointer parked at `summary`'s viewport position after the test's own element
+    // is torn down. A later test's own heading can drift onto that same leftover position after a layout
+    // change (Instructions collapsing to one row shifted the Capabilities tab's Skills heading up, exactly
+    // what exposed this — the Capabilities/Surface tabs' headings sit close in Y) and read a false partial
+    // opacity from a hover it never asked for. Move the pointer away, matching the established convention.
+    await userEvent.unhover(summary)
   })
 
   it('FOCUS alone reveals the icon and opens its card into the top layer, with real painted ink', async () => {

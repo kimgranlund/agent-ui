@@ -80,21 +80,31 @@ export function hasRenamableName(kind: string): boolean {
   return RENAMABLE_KINDS.includes(kind)
 }
 
-/** GH #917 — the kinds whose per-entry CRUD routes through the Edit/Add DRAWER (`entry-list.ts`'s
- *  `entryDrawer` option) instead of inline row affordances. These are the four kinds whose rows carried the
- *  FULL cluster — the Invocable pill, Rename, Remove and an always-mounted content editor, plus a permanent
- *  dashed add-form under the list — which is the crowding the drawer exists to relieve.
+/** GH #917/GH #949 — the kinds whose per-entry CRUD routes through the Edit/Add DRAWER (`entry-list.ts`'s
+ *  `entryDrawer` option) instead of inline row affordances. The original four (GH #917) were the ones whose
+ *  rows carried the FULL cluster — the Invocable pill, Rename, Remove and an always-mounted content editor,
+ *  plus a permanent dashed add-form under the list — which is the crowding the drawer exists to relieve.
+ *  GH #949 widened the set to `prompt-section` and `pattern-source`: each carries neither the pill nor the
+ *  rename pair, so they were never the crowded shape, but they DO carry a per-entry content editor and a
+ *  Remove affordance (a non-builtin prompt section, any pattern-source entry) — the same drawer shape still
+ *  applies, `entry-form.ts`'s per-kind `EntryFormOptions` simply omit the fields these two kinds lack
+ *  (`availabilityToggle`/`rename` stay gated by their own lists below, unaffected by this one).
  *
  *  A THIRD list beside `AVAILABILITY_KINDS`/`RENAMABLE_KINDS`, not a reuse of either and not their
- *  intersection — the same law those two state about each other, applied once more: the three sets coincide
- *  today, but each answers a DIFFERENT question (what may be reached ambiently · what may be renamed · whose
- *  CRUD is drawered), and folding rules that merely agree today into one expression is how the next kind
- *  silently inherits the wrong one. The excluded kinds are excluded on their own merits: a `catalog` row's
- *  only verb is Remove (no rename, no content, no availability, adds come from the library picker —
- *  ADR-0170 cl.8), so a drawer there would hold a single button and add a click; `prompt-section` and
- *  `pattern-source` rows carry neither the pill nor the rename pair, so they are not the crowded shape either
- *  — each is one line here whenever that judgment changes. */
-export const DRAWER_CRUD_KINDS: readonly string[] = [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool]
+ *  intersection — the same law those two state about each other, applied once more: the three sets answer a
+ *  DIFFERENT question (what may be reached ambiently · what may be renamed · whose CRUD is drawered), and
+ *  folding rules that merely agree today into one expression is how the next kind silently inherits the
+ *  wrong one. `catalog` alone stays excluded, on its own merits: its row's only verb is Remove (no rename,
+ *  no content, no availability, adds come from the library picker — ADR-0170 cl.8), so a drawer there would
+ *  hold a single button and add a click for nothing. */
+export const DRAWER_CRUD_KINDS: readonly string[] = [
+  ENTRY_KINDS.skill,
+  ENTRY_KINDS.workflow,
+  ENTRY_KINDS.resource,
+  ENTRY_KINDS.tool,
+  ENTRY_KINDS.promptSection,
+  ENTRY_KINDS.patternSource,
+]
 
 /** `true` iff `kind`'s per-entry CRUD routes through the drawer (`DRAWER_CRUD_KINDS`). */
 export function hasDrawerCrud(kind: string): boolean {

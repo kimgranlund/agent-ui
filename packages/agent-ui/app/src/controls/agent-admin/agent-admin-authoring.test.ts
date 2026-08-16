@@ -78,6 +78,35 @@ afterAll(() => {
   HTMLElement.prototype.attachInternals = realAttachInternals
 })
 
+// GH #949 — the SECOND jsdom-reality stub this file needs (the agent-admin.test.ts precedent, verbatim):
+// Instructions now routes its per-entry CRUD through a `ui-drawer`, and jsdom carries no native `<dialog>`
+// modal surface at all (`showModal`/`close` undefined, no `open` IDL accessor). drawer.test.ts's own
+// sanctioned stub, re-applied in shape — enough for `drawer.open = true` (this file's own Edit-drawer
+// round trip below) to actually reach the DOM here, never a claim about real top-layer/focus-trap behavior
+// (proven in the browser legs instead).
+const dialogOpen = new WeakMap<HTMLDialogElement, boolean>()
+beforeAll(() => {
+  const proto = HTMLDialogElement.prototype as unknown as { showModal?: () => void; close?: () => void }
+  if (typeof proto.showModal === 'function') return // a real engine — leave the platform alone
+  Object.defineProperty(HTMLDialogElement.prototype, 'open', {
+    configurable: true,
+    get(this: HTMLDialogElement): boolean {
+      return dialogOpen.get(this) ?? false
+    },
+    set(this: HTMLDialogElement, v: boolean): void {
+      dialogOpen.set(this, Boolean(v))
+    },
+  })
+  proto.showModal = function (this: HTMLDialogElement): void {
+    dialogOpen.set(this, true)
+  }
+  proto.close = function (this: HTMLDialogElement): void {
+    if (!(dialogOpen.get(this) ?? false)) return // already closed — a no-op, no event (platform parity)
+    dialogOpen.set(this, false)
+    this.dispatchEvent(new Event('close'))
+  }
+})
+
 const mounted: Element[] = []
 afterEach(() => {
   while (mounted.length) mounted.pop()?.remove()
@@ -394,11 +423,17 @@ describe('live pane hydration — the written values reach the real DOM (LLD-C6 
     // whole section (every row's label + editor value), not one lucky node — a per-part read here would pass
     // just as happily on a fourth section appended below three untouched placeholders, which is the exact
     // shape this amendment exists to make impossible.
+    // GH #949 — Instructions is drawered now: its rows carry no content editor of their own (the row
+    // collapses to `[switch | label | spacer | Edit]`), so reading a row's content means opening its own
+    // Edit drawer first (`entry-form.ts`'s form is built fresh from the STORE on every open — never stale).
     const instructions = el.querySelector('[data-part="entry-section"][data-kind="prompt-section"]') as HTMLElement
-    const rows = [...instructions.querySelectorAll<HTMLElement>('[data-part="entry"]')].map((row) => ({
-      label: row.querySelector('[data-part="entry-header"]')?.textContent?.trim() ?? row.textContent?.trim() ?? '',
-      content: (row.querySelector('[data-part="entry-content"]') as (HTMLElement & { value?: string }) | null)?.value ?? '',
-    }))
+    const rows = [...instructions.querySelectorAll<HTMLElement>('[data-part="entry"]')].map((row) => {
+      ;(row.querySelector('[data-part="entry-edit"]') as HTMLElement).click()
+      return {
+        label: row.querySelector('[data-part="entry-header"]')?.textContent?.trim() ?? row.textContent?.trim() ?? '',
+        content: (instructions.querySelector('[data-part="entry-content"]') as (HTMLElement & { value?: string }) | null)?.value ?? '',
+      }
+    })
     expect(rows, 'in place: three rows, never a fourth').toHaveLength(3)
     expect(rows[0]?.label).toContain('Foundation')
     expect(rows[0]?.content, 'the leading card IS the authored identity now').toBe(IDENTITY)

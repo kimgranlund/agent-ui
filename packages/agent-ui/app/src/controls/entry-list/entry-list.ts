@@ -156,6 +156,13 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
   const withRename = options?.rename === true && handlers.onRename !== undefined
   // GH #917 — opt-in, the same law: absent ⇒ inline rows + the dashed add-form, exactly as before.
   const withDrawer = options?.entryDrawer === true
+  // GH #949 — the drawer's EDIT header noun ("Edit {kindLabel}"), derived from this section's own `addLabel`
+  // rather than the raw `kind` slug: `kind` is a machine value (`entry-form.ts`'s `data-kind`), and for the
+  // original four capability kinds it happened to double as the human noun too ('skill', 'tool', …), but
+  // `prompt-section`/`pattern-source` broke that coincidence (their `addLabel`s are "Add section"/"Add
+  // pattern source" — the hyphenated raw slug is not a sentence). One strip of the "Add " prefix keeps a
+  // single per-kind source of truth (`addLabel`, already authored per section) rather than a second table.
+  const kindLabel = addLabel.replace(/^Add\s+/i, '')
 
   const section = document.createElement('div')
   section.setAttribute('data-part', 'entry-section')
@@ -424,6 +431,7 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
     if (!drawer) return
     const regions = buildEntryForm(
       kind,
+      kindLabel,
       form,
       handlers,
       { contentField: withContentField, availabilityToggle: withAvailability, rename: withRename },

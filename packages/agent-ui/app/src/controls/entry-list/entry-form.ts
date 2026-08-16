@@ -209,9 +209,18 @@ function formButton(part: string, text: string): UIButtonElement {
  * SUCCESSFUL Add (add — a rejection deliberately keeps the drawer open with every field intact), and the
  * danger row's Remove (edit — the entry it was editing no longer exists). The form never touches the drawer
  * itself; the caller owns that, the same way it owns the store.
+ *
+ * GH #949 — `kindLabel` is the EDIT header's own human noun ("Edit {kindLabel}"), separate from `kind`
+ * (which stays the machine `data-kind` value only). For the original four capability kinds the two already
+ * read identically ('skill', 'workflow', 'resource', 'tool'), so this was invisible; widening the drawer to
+ * `prompt-section`/`pattern-source` exposed the gap — interpolating the raw kind slug there would have
+ * painted "Edit prompt-section"/"Edit pattern-source". The caller (`entry-list.ts`) derives it from the
+ * section's own `addLabel` ("Add section" → "section"), so there is still exactly one place per kind that
+ * names it, never a second hand-written table here.
  */
 export function buildEntryForm(
   kind: string,
+  kindLabel: string,
   form: EntryFormMode,
   handlers: EntryFormHandlers,
   options: EntryFormOptions,
@@ -308,7 +317,7 @@ export function buildEntryForm(
   // (`aria-labelledby` → this heading) no longer names WHICH entry is open — flagged in the ticket's
   // Findings for the owner, since a screen-reader user now learns the entry by the Name field's value
   // alone, one field down from the dialog's name.
-  title.textContent = `Edit ${kind}`
+  title.textContent = `Edit ${kindLabel}`
 
   // Structural protection, STATED: a builtin entry's form builds no delete affordance at all (below), and
   // this tag says why — the absence reads as a rule, not as a missing feature.

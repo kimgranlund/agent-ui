@@ -162,6 +162,45 @@ describe('mountEntryList — standalone, ZERO ui-agent-admin/agent-admin.css inv
     expect(readEntries(store, KIND), 'the delete committed and the row is gone').toEqual([])
     expect(rows().find((r) => r.getAttribute('data-entry-id') === added.id)).toBeUndefined()
   })
+
+  // TKT-0049/ADR-0139 (originally proven through ui-agent-admin's Instructions section — GH #949 drawered
+  // it, along with every other agent-admin kind but `catalog`, which builds no content editor at all — so
+  // this fleet no longer has a LIVE composed consumer of the rows=4 INLINE content field; the formula itself
+  // is still real at the primitive that owns it, `entry-list.ts`'s `withContentField && !withDrawer` branch,
+  // rendered off `ui-code-editor`'s own `--ui-code-editor-min-block-size` formula: rows × line-box +
+  // 2×padding-block, line-box = font-size × 1.5, padding-block = font-size × 0.5 — identical to the
+  // ui-textarea it replaced, ADR-0139 cl.6). Deriving the expected px from the field's OWN real computed
+  // font-size (never a hardcoded px) proves the `rows` mechanism, not a re-asserted legacy pixel value.
+  it('a non-drawered kind\'s entry-content (rows=4) renders a real computed min-height matching the rows formula', async () => {
+    const store = createMemoryStore({ initial: { [entriesStoreKey(KIND)]: [SEED] } })
+    const section = mount(store)
+    const field = section.host.querySelector('[data-part="entry-content"]') as UICodeEditorElement
+    await field.updateComplete
+    expect(field.rows).toBe(4)
+    const fontSize = Number.parseFloat(getComputedStyle(field).fontSize)
+    const expected = 4 * (fontSize * 1.5) + 2 * (fontSize * 0.5)
+    const computed = Number.parseFloat(getComputedStyle(field).minHeight)
+    expect(computed).toBeCloseTo(expected, 1)
+  })
+
+  // component-reviewer CRITICAL fix (originally proven through ui-agent-admin's Instructions/Pattern-source
+  // sections — GH #917/#949 drawered every remaining agent-admin kind except `catalog` — which suppresses
+  // authoring entirely — so this fleet no longer has a LIVE composed consumer of the inline dashed add-form;
+  // the mechanism itself is still real (`entry-list.ts`'s `withCustomAdd && !withDrawer` branch) and still
+  // needs this CSS-cascade regression pinned at the primitive that actually owns it). Before the fix,
+  // `display: flex` beat the UA `[hidden]` rule.
+  it('a hidden add-form (a non-drawered kind, the mount() helper\'s default) computes display:none; toggling reveals it as a real, visible box', () => {
+    const store = createMemoryStore()
+    const section = mount(store)
+    const form = section.host.querySelector('[data-part="entry-add-form"]') as HTMLElement
+    expect(getComputedStyle(form).display).toBe('none')
+    expect(form.getBoundingClientRect().height).toBe(0)
+
+    const addToggle = section.host.querySelector('[data-part="entry-add-toggle"]') as HTMLElement
+    addToggle.click()
+    expect(getComputedStyle(form).display).not.toBe('none')
+    expect(form.getBoundingClientRect().height).toBeGreaterThan(0)
+  })
 })
 
 // ── GH #850 / capability-availability-tagging.spec.md SPEC-R2 — the at-a-glance row marker, for real ──────

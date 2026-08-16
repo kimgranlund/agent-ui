@@ -366,13 +366,20 @@ describe('the index teaching block (SPEC-R15)', () => {
   })
 })
 
-describe('DRAWER_CRUD_KINDS — the four kinds whose per-entry CRUD is drawered (GH #917)', () => {
-  it('exactly skill/workflow/resource/tool — prompt-section, pattern-source and catalog keep their inline rows', () => {
-    expect([...DRAWER_CRUD_KINDS].sort()).toEqual(['resource', 'skill', 'tool', 'workflow'])
-    for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool]) {
+describe('DRAWER_CRUD_KINDS — the six kinds whose per-entry CRUD is drawered (GH #917/GH #949)', () => {
+  it('skill/workflow/resource/tool/prompt-section/pattern-source — only catalog keeps its inline rows', () => {
+    expect([...DRAWER_CRUD_KINDS].sort()).toEqual(['pattern-source', 'prompt-section', 'resource', 'skill', 'tool', 'workflow'])
+    for (const kind of [
+      ENTRY_KINDS.skill,
+      ENTRY_KINDS.workflow,
+      ENTRY_KINDS.resource,
+      ENTRY_KINDS.tool,
+      ENTRY_KINDS.promptSection,
+      ENTRY_KINDS.patternSource,
+    ]) {
       expect(hasDrawerCrud(kind), `${kind} is drawered`).toBe(true)
     }
-    for (const kind of [ENTRY_KINDS.promptSection, ENTRY_KINDS.patternSource, ENTRY_KINDS.catalog, 'some-future-kind']) {
+    for (const kind of [ENTRY_KINDS.catalog, 'some-future-kind']) {
       expect(hasDrawerCrud(kind), `${kind} is not`).toBe(false)
     }
   })

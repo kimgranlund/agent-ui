@@ -2604,12 +2604,14 @@ export class UIAgentAdminElement extends UIElement {
         rejectOnCollision: isCatalog,
         availabilityToggle: hasAvailabilityMode(kind),
         rename: hasRenamableName(kind),
-        // GH #917 — `entryDrawer` is the four capability kinds' opt-in through its OWN rule
+        // GH #917/GH #949 — `entryDrawer` is the six drawered kinds' opt-in through its OWN rule
         // (`hasDrawerCrud`, entries.ts, minted beside the two above rather than folded into either — see its
-        // doc for why three rules that coincide today stay three rules): those rows carried the full
-        // Invocable/Rename/Remove cluster plus an always-mounted editor and a permanent dashed add-form,
-        // which is the crowding this drawer relieves. The other three sections keep byte-identical rows and
-        // their inline add-form.
+        // doc for why three rules that coincide today stay three rules): the original four capability kinds'
+        // rows carried the full Invocable/Rename/Remove cluster plus an always-mounted editor and a permanent
+        // dashed add-form, which is the crowding this drawer relieves; GH #949 widened it to prompt-section
+        // and pattern-source, whose rows never carried that cluster but still get the SAME drawer shape for
+        // their own content editor + Remove. Only `catalog` keeps byte-identical inline rows and its
+        // library-only add path.
         entryDrawer: hasDrawerCrud(kind),
       },
     )
