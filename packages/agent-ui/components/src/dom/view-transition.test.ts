@@ -5,7 +5,7 @@
 // startViewTransition on Chromium, the feature-detect honesty on WebKit) is the router outlet's own
 // browser probe.
 import { describe, it, expect, afterEach } from 'vitest'
-import { withViewTransition, viewTransitionAvailable } from './view-transition.ts'
+import { withViewTransition, viewTransitionAvailable, viewTransitionName, setViewTransitionName } from './view-transition.ts'
 
 // A standalone stub shape (NOT `extends Document`) — lib.dom now declares `startViewTransition` as a
 // required method, so a widening interface can't mark it optional; the `as unknown as` cast is what
@@ -73,5 +73,37 @@ describe('withViewTransition — the opt-in × availability × reduced-motion tr
     expect(viewTransitionAvailable()).toBe(true) // API present, no matchMedia ⇒ not reduced
     ;(globalThis as { matchMedia?: unknown }).matchMedia = (q: string) => ({ matches: q.includes('prefers-reduced-motion') })
     expect(viewTransitionAvailable()).toBe(false) // reduced motion wins
+  })
+})
+
+// GH #958 (ADR-0183 cl.4) — the named-morph convention's own pure-function gate.
+describe('viewTransitionName — the ui-vt-{surface}-{token} scoped-naming scheme', () => {
+  it('joins surface + token under the ui-vt- prefix', () => {
+    expect(viewTransitionName('super-shell-segment', 'options-pane')).toBe('ui-vt-super-shell-segment-options-pane')
+  })
+
+  it('sanitizes any character outside [a-zA-Z0-9-] in EITHER part to a hyphen — always a valid CSS custom-ident', () => {
+    expect(viewTransitionName('surface:weird', 'token weird!')).toBe('ui-vt-surface-weird-token-weird-')
+  })
+
+  it('two distinct tokens never collide', () => {
+    const a = viewTransitionName('super-shell-segment', 'nav-pane')
+    const b = viewTransitionName('super-shell-segment', 'options-pane')
+    expect(a).not.toBe(b)
+  })
+})
+
+describe('setViewTransitionName — the opt-in-gated applier (byte-identical-when-off law)', () => {
+  it('disabled: never touches style.viewTransitionName, not even to clear it', () => {
+    const el = document.createElement('div')
+    el.style.viewTransitionName = 'pre-existing'
+    setViewTransitionName(el, 'ui-vt-x-y', false)
+    expect(el.style.viewTransitionName).toBe('pre-existing') // untouched, per the disabled-path law
+  })
+
+  it('enabled: sets style.viewTransitionName to the given name', () => {
+    const el = document.createElement('div')
+    setViewTransitionName(el, 'ui-vt-super-shell-segment-options-pane', true)
+    expect(el.style.viewTransitionName).toBe('ui-vt-super-shell-segment-options-pane')
   })
 })
