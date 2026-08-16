@@ -51,6 +51,16 @@ export { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed, corpusGrow
 // GH #729 — the catalog-frontier family: the 2026-08-12 sweep's 13 example-less catalog components, covered.
 export { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, catalogFrontierSeeds } from './catalog-frontier.ts'
 export { structuredContainerSeed, structuredContainerSeeds } from './structured-container.ts'
+// GH #972 — the high-frequency-patterns family: the 2026-08-15 gap-map sweep's 5 missing high-frequency
+// chat-feed patterns (comparison table, receipt card, empty/error card, notification stack, media grid).
+export {
+  comparisonPricingSeed,
+  receiptOrderSummarySeed,
+  emptyErrorRetryCardSeed,
+  notificationStatusStackSeed,
+  mediaFileGridSeed,
+  highFrequencyPatternSeeds,
+} from './high-frequency-patterns.ts'
 
 import type { ExampleSeed } from './types.ts'
 import { canvasSeeds } from './canvas-button.ts'
@@ -62,6 +72,7 @@ import { messageLifecycleSeeds } from './message-lifecycle.ts'
 import { corpusGrowthSeeds } from './corpus-growth.ts'
 import { catalogFrontierSeeds } from './catalog-frontier.ts'
 import { structuredContainerSeeds } from './structured-container.ts'
+import { highFrequencyPatternSeeds } from './high-frequency-patterns.ts'
 
 /** Every seed on the shelf — the standing gate's (`examples.test.ts`) iteration surface. Composed from
  *  each module's own family array, so the total is always derived, never a separately-maintained count. */
@@ -75,4 +86,5 @@ export const allSeeds: readonly ExampleSeed[] = [
   ...corpusGrowthSeeds,
   ...catalogFrontierSeeds,
   ...structuredContainerSeeds,
+  ...highFrequencyPatternSeeds,
 ]

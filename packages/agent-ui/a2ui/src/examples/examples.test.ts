@@ -30,6 +30,7 @@ import { messageLifecycleSeeds } from './message-lifecycle.ts'
 import { corpusGrowthSeeds } from './corpus-growth.ts'
 import { catalogFrontierSeeds } from './catalog-frontier.ts'
 import { structuredContainerSeeds } from './structured-container.ts'
+import { highFrequencyPatternSeeds } from './high-frequency-patterns.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { createRenderer } from '../renderer/renderer.ts'
@@ -82,7 +83,8 @@ describe('the example seed shelf (ADR-0055) — shape', () => {
       messageLifecycleSeeds.length +
       corpusGrowthSeeds.length +
       catalogFrontierSeeds.length +
-      structuredContainerSeeds.length
+      structuredContainerSeeds.length +
+      highFrequencyPatternSeeds.length
     expect(allSeeds).toHaveLength(expectedTotal)
   })
 
