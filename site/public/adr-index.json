@@ -1349,5 +1349,12 @@
     "description": "Reveal-order policy for the A2UI streaming renderer: an opt-in, default-OFF top-down sibling hold (TreeDeps.revealOrder / RendererOptions.revealOrder), never w…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0195",
+    "url": "./adr-index.html#adr-0195",
+    "description": "ui-drill (GH #954): a NEW N-level drill-down panel container is minted in controls/, path-array state from day one, on the existing tabs/split/view-transition…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

@@ -8,7 +8,7 @@
 > | **Date** | 2026-08-16 |
 > | **Proposed by** | `build-lead`/`dispatch-ticket` (GH [#954](https://github.com/kimgranlund/agent-ui/issues/954)'s design leg — the owner's 2026-08-15 and 2026-08-16 comments already close the container-vs-trait fork itself; this ADR is the fork sheet's mint decision, not a re-litigation) — the fork sheet is [`../spec/drill.intake.md`](../spec/drill.intake.md) |
 > | **Ratified by** | *(pending — never self-ratified; Kim flips this field by explicit naming, `doc-standards` §1b)* |
-> | **Repairs** | on ratification+build: `controls/drill/drill.{ts,css,md}` + `controls/drill/drill-panel.{ts,css,md}` + barrel export + jsdom/browser tests · site doc/demo/gallery surfaces + the standing descriptor/site gates · a `component-patterns` table row for the show-one-hide-rest + controlled-array-prop-duality combination (novelty leg, §6 of the intake) — per the intake's §7 build slices |
+> | **Repairs** | on ratification+build: `controls/drill/drill.{ts,css,md}` + `controls/drill/drill-panel.ts` (the `ui-tab-panel` compound-file precedent — no separate `drill-panel.md`/`.css`; the leaf shares `drill.md`'s descriptor scope and `drill.css`'s single sheet) + barrel export + jsdom/browser tests · site doc/demo surfaces + the standing descriptor/site gates · a `component-patterns` table row for the show-one-hide-rest + controlled-array-prop-duality combination (novelty leg, §6 of the intake) — per the intake's §7 build slices |
 > | **Supersedes / Superseded by** | **Relates** ADR-0102 (the three-lane chooser applied) · ADR-0175/`mint-vs-compose.md` (checked, not applicable) · ADR-0183/GH#958 (the view-transition seam + named-morph convention this build is the first proven consumer of) · ADR-0188 (the CSS-transform base-motion + intake-doc-shape precedent) · ADR-0019 (bindable two-way state) · ADR-0087/0112 (catalog posture — TEMPORARY exclusion here, Toggle/ADR-0179 shape) · **Resolves** GH [#954](https://github.com/kimgranlund/agent-ui/issues/954)'s container-vs-trait fork (mint decision + fork sheet; the two owner comments already named the OUTCOME, this ADR supplies the MECHANICS ruling that outcome requires before build) |
 
 ## Context
@@ -82,14 +82,17 @@ this exact ticket as the natural next proof for (`interaction-enhancements.brief
 5. **Focus + a11y:** `this.internals.role = 'group'` on the host, `role = 'region'` +
    element-reflected `aria-labelledby` (the `ui-tab-panel` precedent, `tab-panel.ts:26`) on the
    active panel. `[data-part="heading"]` is a real `<h2>` (not a generic div — a drill level is a
-   navigable section), `tabindex="-1"`, receiving programmatic focus on every NON-INITIAL path
-   change (a `#primed` guard, set after the first render pass, prevents focus theft on mount).
+   navigable section), `tabindex="-1"`, receiving programmatic focus on every render whose
+   RESOLVED ACTIVE KEY actually differs from the previous render's (a `#primed` guard prevents
+   focus theft on mount; a narrower `#lastActiveKey` comparison — component-checker MAJOR fix —
+   prevents an UNRELATED re-render, e.g. a panel appended/removed elsewhere, from replaying the
+   focus move or the VT swap below).
    `[data-part="back"]`'s `aria-label` reads "Back" or "Back to {parent heading}" where resolvable.
    `Escape` is wired as a Back alias (a convenience beyond the AC's literal ask, zero cost, the
    standard drill-down UX expectation).
 6. **Motion: the CSS-transform base and the View Transitions layer are MUTUALLY EXCLUSIVE per
    swap, keyed on whether the seam will ACTUALLY run — never on the raw opt-in attribute, and
-   never stacked or both-absent.** `#commit` computes `willUseVT = this.viewTransitions &&
+   never stacked or both-absent.** `#render` computes `willUseVT = this.viewTransitions &&
    viewTransitionAvailable()` per swap (folding in `prefers-reduced-motion` via the seam's own
    gate) and sets a `data-vt-active` host marker for exactly that swap before mutating. `drill.css`
    scopes its CSS-transform base to light-DOM panel children (controls carry no shadow root, so no
@@ -114,7 +117,7 @@ this exact ticket as the natural next proof for (`interaction-enhancements.brief
 7. **Geometry + tokens.** `ui-drill` classifies `tier: pattern` (control-height header row atop a
    space-scale content viewport — the tabs/toolbar/accordion class, `geometry.md`'s existing Pattern
    row, NOT a new row); `ui-drill-panel` classifies `tier: container` (no control height of its
-   own). Minted roles — `--ui-drill-{ink,outline,header-height,padding}` — each consume an existing
+   own). Minted roles — `--ui-drill-{ink,ink-muted,outline,header-height,header-pad-inline,header-gap,padding,back-radius,motion-duration,motion-easing,slide-distance}` — each consume an existing
    `--md-sys-*` role; zero new system roles, zero new motion tokens (the header-height token derives
    from the existing `--md-sys-height-*` control-height ladder).
 8. **Catalog posture: TEMPORARY exclusion**, the `Toggle`/ADR-0179 precedent shape — shipped ahead
@@ -132,7 +135,7 @@ this exact ticket as the natural next proof for (`interaction-enhancements.brief
   its own descriptor/`.md`/CSS/tests per the standing per-component build bar — this is the ordinary
   cost of any mint, named because it is the thing a fork-vs-trait choice against `ui-nav-rail` would
   have avoided (and this ADR rules that avoidance not worth the coupling it would buy).
-- **A new `--ui-drill-{ink,outline,header-height,padding}` token family** is minted, each consuming
+- **A new `--ui-drill-{ink,ink-muted,outline,header-height,header-pad-inline,header-gap,padding,back-radius,motion-duration,motion-easing,slide-distance}` token family** is minted, each consuming
   an existing `--md-sys-*` role — zero new system roles, zero new motion tokens, so no downstream
   token-audit or theme-file update is owed beyond the ordinary per-component token wiring.
 - **A `component-patterns` table row is owed** (Repairs, above) documenting the show-one-hide-rest +

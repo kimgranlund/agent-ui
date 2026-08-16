@@ -77,7 +77,7 @@ geometry:
   padding: var(--ui-drill-padding)              # panel viewport padding, space-scale
   outline: var(--ui-drill-outline)              # the header's bottom hairline
 
-forcedColors: No dedicated `@media (forced-colors: active)` block is minted — the header hairline and back-button ink already ride system-respecting neutral color roles with no translucent wash to defeat; no scrim/backdrop exists on this control (it is not an overlay).
+forcedColors: A `@media (forced-colors: active)` block keeps the header hairline and the Back button's ink visible as system colours (CanvasText) — the tabs/modal/drawer precedent (component-checker peer-parity fix); no scrim/backdrop exists on this control (it is not an overlay).
 ---
 
 # ui-drill

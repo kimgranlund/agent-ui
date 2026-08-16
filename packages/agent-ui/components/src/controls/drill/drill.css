@@ -29,6 +29,12 @@
   --ui-drill-ink-muted: var(--md-sys-color-neutral-on-surface-variant);
   --ui-drill-outline: var(--md-sys-color-neutral-outline-variant);
 
+  /* The Back button — a SQUARE icon affordance off the sm control-height row (component-checker geometry
+     fix: a hand-rolled asymmetric pad/font previously drifted from the fleet icon-button law). */
+  --ui-drill-back-radius: var(--md-sys-shape-corner-base);
+  --ui-drill-back-font-size: var(--md-sys-font-sm);
+  --ui-drill-heading-font-size: var(--md-sys-font-md);
+
   /* Motion — the EXISTING fleet constants (zero new motion tokens, the ui-drawer precedent). */
   --ui-drill-motion-duration: var(--md-sys-motion-duration-fast);
   --ui-drill-motion-easing: var(--md-sys-motion-easing-standard);
@@ -61,19 +67,29 @@
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
+    /* SQUARE: inline-size = block-size (the fleet icon-button law) — no ad-hoc inline padding, which
+       previously drifted the glyph off-center and pulled font-size off the sm row's own ramp. */
+    inline-size: var(--md-sys-height-sm);
     block-size: var(--md-sys-height-sm);
-    padding-inline: var(--md-sys-space-sm);
-    border-radius: var(--ui-drill-back-radius, var(--md-sys-shape-corner-base));
+    border-radius: var(--ui-drill-back-radius);
     color: var(--ui-drill-ink-muted);
     cursor: pointer;
-    font: inherit;
+    font-size: var(--ui-drill-back-font-size);
+    line-height: 1;
 
     &::before {
       content: '←';
     }
 
+    /* Logical-direction glyph: the block axis never mirrors, but an inline arrow must (super-shell LLD-C4's
+       logical-naming law applied to a rendered glyph, not just a token name). */
+    &:dir(rtl)::before {
+      content: '→';
+    }
+
     &:hover {
       color: var(--ui-drill-ink);
+      background: var(--md-sys-color-neutral-surface-variant);
     }
 
     &:focus-visible {
@@ -88,7 +104,7 @@
 
   [data-part='heading'] {
     margin: 0;
-    font-size: var(--md-sys-font-md);
+    font-size: var(--ui-drill-heading-font-size);
     font-weight: 600;
     color: var(--ui-drill-ink);
     line-height: var(--ui-control-line-height);
@@ -103,7 +119,7 @@
   }
 
   /* The panel viewport — author ui-drill-panel children, shown one at a time. */
-  ui-drill-panel {
+  > ui-drill-panel {
     display: block;
     padding: var(--ui-drill-padding);
     min-inline-size: 0;
@@ -114,7 +130,7 @@
   }
 
   /* ── CSS-transform BASE motion — excluded for a swap the View Transitions layer will run ─────────────── */
-  :scope:not([data-vt-active]) ui-drill-panel:not([hidden]) {
+  :scope:not([data-vt-active]) > ui-drill-panel:not([hidden]) {
     opacity: 1;
     transform: translateX(0);
     transition:
@@ -131,18 +147,31 @@
     }
   }
 
-  :scope:not([data-vt-active])[data-direction='back'] ui-drill-panel:not([hidden]) {
+  :scope:not([data-vt-active])[data-direction='back'] > ui-drill-panel:not([hidden]) {
     --_drill-dir-sign: -1;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    :scope:not([data-vt-active]) ui-drill-panel:not([hidden]) {
+    :scope:not([data-vt-active]) > ui-drill-panel:not([hidden]) {
       transition: none;
 
       @starting-style {
         opacity: 1;
         transform: none;
       }
+    }
+  }
+
+  /* component-checker A5 fix: the header hairline + Back button stay visible as system colours under forced
+     colors — the tabs/modal/drawer precedent, closing the peer-parity gap a first pass omitted. */
+  @media (forced-colors: active) {
+    [data-part='header'] {
+      border-block-end-color: CanvasText;
+    }
+
+    [data-part='back'] {
+      color: CanvasText;
+      forced-color-adjust: none;
     }
   }
 }

@@ -72,8 +72,12 @@ export class UIDrillElement extends UIContainerElement {
   #instanceToken = ''
   #direction: 'forward' | 'back' = 'forward'
   // Set true after the FIRST render pass — gates the focus-move-to-heading behaviour so mounting a `ui-drill`
-  // never steals focus on first paint (only a later, real path change moves it).
+  // never steals focus on first paint (only a later, real ACTIVE-KEY change moves it — see #lastActiveKey).
   #primed = false
+  // The active key as of the LAST render pass — the second, narrower gate `keyChanged` needs: `#primed` alone
+  // stays true forever after the first render, so a re-render for an UNRELATED reason (a panel added/removed,
+  // an author prop unrelated to `path`) must not replay the VT swap or the focus move (component-checker fix).
+  #lastActiveKey: string | null = null
   #warnedNoRoot = false
   #warnedMultiRoot = false
 
@@ -81,6 +85,7 @@ export class UIDrillElement extends UIContainerElement {
     this.#instanceToken = this.id || `d${++drillSeq}`
     this.internals.role = 'group' // a labelled navigation region — the ui-modal internals.role precedent
     this.#primed = false
+    this.#lastActiveKey = null
 
     const { back, heading } = this.#ensureParts()
     this.#backButton = back
@@ -206,7 +211,16 @@ export class UIDrillElement extends UIContainerElement {
   }
 
   #onKeydown(event: KeyboardEvent): void {
+    // component-checker MAJOR fix: a focused native `<button>`'s own `pressActivation` already
+    // preventDefault()s BOTH Enter and Space before dispatching a synthetic click — this listener still
+    // sees the (still-bubbling) keydown, and without this guard would fire a SECOND #drillTo for the same
+    // press (measured: two `change` events, one Back stalling on the wrong level). A defaultPrevented
+    // keydown means some other handler already owns this key press.
+    if (event.defaultPrevented) return
     if (event.key === 'Escape') {
+      // component-checker MEDIUM fix: stopPropagation so an ANCESTOR ui-modal/ui-drawer never ALSO reads
+      // this same Escape as its own dismiss — Back owns this key inside the drill, full stop.
+      event.stopPropagation()
       this.#back()
       return
     }
@@ -240,8 +254,13 @@ export class UIDrillElement extends UIContainerElement {
     const panels = this.#panels()
     const { key: activeKey, path: resolvedPath } = this.#resolve(this.#rawPath())
     const activePanel = panels.find((p) => p.key === activeKey) ?? null
+    // component-checker MAJOR fix: the ONLY thing that licenses a VT swap or a focus move is the ACTIVE KEY
+    // actually changing — a re-render for an unrelated reason (a panel appended/removed elsewhere, a prop
+    // that isn't `path`) must never replay either. `#primed` alone was too broad: it stayed true across
+    // every later render, not just a real level change (ADR-0195 cl.5's own "NON-INITIAL path change" wording).
+    const keyChanged = this.#primed && activeKey !== this.#lastActiveKey
+    const willUseVT = keyChanged && this.viewTransitions && viewTransitionAvailable()
 
-    const willUseVT = this.viewTransitions && viewTransitionAvailable()
     for (const panel of panels) {
       setViewTransitionName(panel, viewTransitionName('drill', this.#instanceToken), this.viewTransitions)
     }
@@ -263,7 +282,8 @@ export class UIDrillElement extends UIContainerElement {
 
     withViewTransition(mutate, willUseVT)
 
-    if (this.#primed && activePanel) this.#heading?.focus()
+    if (keyChanged && activePanel) this.#heading?.focus()
+    this.#lastActiveKey = activeKey
     this.#primed = true
   }
 
