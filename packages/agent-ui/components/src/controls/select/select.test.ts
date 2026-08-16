@@ -37,7 +37,9 @@ declare const process: { cwd(): string }
 //   select-c10-stacking · select-c10-cleanup · select-descriptor-schema ·
 //   select-descriptor-bijection · select-descriptor-negative ·
 //   select-aria-label-seam (ADR-0085: bare aria-labelledby concatenation · no aria-label ever ·
-//   merge-not-clobber via setFieldLabelling · dissociation revert · aria-describedby wiring)
+//   merge-not-clobber via setFieldLabelling · dissociation revert · aria-describedby wiring) ·
+//   select-part-survives-replacechildren (GH #994: a consumer replaceChildren() re-attaches the
+//   detached trigger/listbox/aria-label parts instead of orphaning them)
 
 // ── Popover API stub (jsdom lacks it entirely — mirrors popover.test.ts setup) ─────────────────
 
@@ -465,6 +467,124 @@ describe('ui-select — dynamic options (select-dynamic-options)', () => {
 
     expect(late.parentElement).toBe(listbox)
     expect(listbox.querySelectorAll('[role=option]')).toHaveLength(4)
+    el.remove()
+  })
+
+  // GH #994 — a consumer `replaceChildren()` (dynamic option-list swap) wipes the host's direct
+  // children, which strips the control-created trigger/listbox/aria-label parts as a side effect
+  // (they are direct children of the host too) even though `#ensureParts()`'s private fields still
+  // reference them. `#syncOptions` (the MutationObserver callback) must re-attach the detached parts
+  // BEFORE adopting the newly-added options, or the swap permanently strips the control's own UI.
+  it('select-part-survives-replacechildren: replaceChildren() re-attaches trigger/listbox/aria-label parts and adopts the new options', async () => {
+    const { el, trigger: originalTrigger, listbox: originalListbox } = makeSelect()
+    el.label = 'Fruit'
+    await whenFlushed()
+    const originalAriaLabelSpan = el.querySelector<HTMLElement>('[data-part="aria-label"]')!
+
+    const grape = document.createElement('div')
+    grape.setAttribute('role', 'option')
+    grape.setAttribute('value', 'grape')
+    grape.textContent = 'Grape'
+    const kiwi = document.createElement('div')
+    kiwi.setAttribute('role', 'option')
+    kiwi.setAttribute('value', 'kiwi')
+    kiwi.textContent = 'Kiwi'
+
+    el.replaceChildren(grape, kiwi) // wipes trigger/listbox/aria-label as a side effect
+    await Promise.resolve() // MutationObserver callback is microtask-deferred
+    await Promise.resolve()
+    await whenFlushed()
+
+    // The SAME part nodes are re-attached (identity preserved — ids, listeners, effects all still
+    // wired), not fresh nodes minted from scratch.
+    const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    const ariaLabelSpan = el.querySelector<HTMLElement>('[data-part="aria-label"]')!
+    expect(trigger).toBe(originalTrigger)
+    expect(listbox).toBe(originalListbox)
+    expect(ariaLabelSpan).toBe(originalAriaLabelSpan)
+    expect(trigger.isConnected).toBe(true)
+    expect(listbox.isConnected).toBe(true)
+    expect(ariaLabelSpan.isConnected).toBe(true)
+
+    // Exactly ONE of each part after the heal — the heal re-attaches, it never mints a duplicate.
+    expect(el.querySelectorAll('[data-part="trigger"]')).toHaveLength(1)
+    expect(el.querySelectorAll('[data-part="aria-label"]')).toHaveLength(1)
+    expect(el.querySelectorAll('[data-part="listbox"]')).toHaveLength(1)
+
+    // The a11y label seam survives (aria-labelledby still references the (still-attached) spans).
+    expect(trigger.getAttribute('aria-labelledby')).toContain(ariaLabelSpan.id)
+
+    // The new option set replaces the old one inside the (re-attached) listbox.
+    const values = [...listbox.querySelectorAll<HTMLElement>('[role=option]')].map((o) => o.getAttribute('value'))
+    expect(values).toEqual(['grape', 'kiwi'])
+    expect(grape.parentElement).toBe(listbox)
+    expect(kiwi.parentElement).toBe(listbox)
+
+    // Selection still works against the new options.
+    listbox.querySelector<HTMLElement>('[value="kiwi"]')!.click()
+    await whenFlushed()
+    expect(el.value).toBe('kiwi')
+    expect(trigger.querySelector('[data-part="label"]')?.textContent).toBe('Kiwi')
+
+    el.remove()
+  })
+
+  // GH #994 (partial detach) — a consumer that PRESERVES the trigger (`replaceChildren(trigger,
+  // ...options)`) must not have it moved by the heal: `appendChild` on a still-attached node is a
+  // remove+insert, i.e. a blur for a focused trigger (which `trackUserInvalid` would read as the
+  // user leaving a required-empty field). Only the genuinely detached parts get re-appended.
+  it('select-part-partial-detach: replaceChildren(trigger, ...opts) keeps the (focused) trigger in place and re-appends only listbox + aria-label', async () => {
+    const { el, trigger, listbox: originalListbox } = makeSelect()
+    el.label = 'Fruit'
+    await whenFlushed()
+    const originalAriaLabelSpan = el.querySelector<HTMLElement>('[data-part="aria-label"]')!
+
+    const mango = document.createElement('div')
+    mango.setAttribute('role', 'option')
+    mango.setAttribute('value', 'mango')
+    mango.textContent = 'Mango'
+
+    // The consumer's OWN replaceChildren is a synchronous remove-all + re-insert (that is the DOM's
+    // "replace all" algorithm — the consumer's move, not ours). The heal runs later, in the
+    // MutationObserver microtask — so the watch window (focus + blur/move counters) opens AFTER the
+    // consumer's call returns and BEFORE the microtasks flush: it sees only what the heal does.
+    el.replaceChildren(trigger, mango) // trigger PRESERVED; listbox + aria-label wiped
+    trigger.focus()
+    expect(document.activeElement).toBe(trigger)
+    let blurs = 0
+    trigger.addEventListener('blur', () => blurs++)
+    let moves = 0
+    const moveWatch = new MutationObserver((records) => {
+      for (const r of records) if ([...r.removedNodes].includes(trigger)) moves++
+    })
+    moveWatch.observe(el, { childList: true })
+
+    await Promise.resolve() // the select's observer callback (#syncOptions → #ensureParts heal) runs here
+    await Promise.resolve()
+    await whenFlushed()
+    moveWatch.disconnect()
+
+    // The heal never touched the trigger: no removal record, no blur, focus intact, still first child.
+    expect(moves).toBe(0)
+    expect(blurs).toBe(0)
+    expect(document.activeElement).toBe(trigger)
+    expect(el.firstElementChild).toBe(trigger)
+
+    // The detached parts are re-attached (same nodes) and the option adopted into the listbox.
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    const ariaLabelSpan = el.querySelector<HTMLElement>('[data-part="aria-label"]')!
+    expect(listbox).toBe(originalListbox)
+    expect(ariaLabelSpan).toBe(originalAriaLabelSpan)
+    expect(el.querySelectorAll('[data-part="trigger"]')).toHaveLength(1)
+    expect(el.querySelectorAll('[data-part="aria-label"]')).toHaveLength(1)
+    expect(el.querySelectorAll('[data-part="listbox"]')).toHaveLength(1)
+    expect(mango.parentElement).toBe(listbox)
+    expect([...listbox.querySelectorAll<HTMLElement>('[role=option]')].map((o) => o.getAttribute('value'))).toEqual(['mango'])
+
+    // Canonical order still holds: trigger · aria-label · listbox as the host's direct children.
+    expect([...el.children].map((c) => c.getAttribute('data-part'))).toEqual(['trigger', 'aria-label', 'listbox'])
+
     el.remove()
   })
 })

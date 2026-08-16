@@ -1325,6 +1325,58 @@ describe('ui-select — dynamic options: a late Option adopts into the panel (TK
     await el.updateComplete
     expect(el.value, `${server.browser}: clicking the live-adopted option did not commit it`).toBe('cherry')
   })
+
+  // GH #994 — a consumer `replaceChildren()` (dynamic option-list swap) used to permanently strip
+  // the trigger/listbox/aria-label parts (jsdom-provable), but the real-engine question is whether
+  // the SURVIVING trigger stays a genuine, clickable Control-class box with its accessible name
+  // intact, and the swapped-in options are the ones that actually render/commit — none of which
+  // resolves in jsdom.
+  it('GH #994: replaceChildren() survives — trigger stays clickable + named, new options render + commit (both engines)', async () => {
+    const { el } = mount(`
+      <ui-select label="Fruit" placeholder="Choose…">
+        <div role="option" value="apple">Apple</div>
+        <div role="option" value="banana">Banana</div>
+      </ui-select>
+    `)
+    await el.updateComplete
+
+    const grape = document.createElement('div')
+    grape.setAttribute('role', 'option')
+    grape.setAttribute('value', 'grape')
+    grape.textContent = 'Grape'
+    const kiwi = document.createElement('div')
+    kiwi.setAttribute('role', 'option')
+    kiwi.setAttribute('value', 'kiwi')
+    kiwi.textContent = 'Kiwi'
+    el.replaceChildren(grape, kiwi)
+    await Promise.resolve() // MutationObserver callback is microtask-deferred
+    await Promise.resolve()
+    await el.updateComplete
+
+    const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    expect(trigger.isConnected, `${server.browser}: the trigger did not survive replaceChildren()`).toBe(true)
+    expect(listbox.isConnected, `${server.browser}: the listbox did not survive replaceChildren()`).toBe(true)
+
+    const rect = trigger.getBoundingClientRect()
+    expect(rect.width, `${server.browser}: the surviving trigger collapsed to zero width`).toBeGreaterThan(0)
+    expect(rect.height, `${server.browser}: the surviving trigger collapsed to zero height`).toBeGreaterThan(0)
+
+    // a11y label intact — the trigger still names from the `label` prop + current value/placeholder.
+    const named = page.getByRole('button', { name: 'Fruit Choose…', exact: true }).query()
+    expect(named, `${server.browser}: the trigger's accessible name did not survive the swap`).not.toBeNull()
+
+    // The swapped-in options render for real and are the ONLY options left (old apple/banana purged).
+    expect([...listbox.querySelectorAll('[role=option]')].map((o) => o.getAttribute('value'))).toEqual(['grape', 'kiwi'])
+
+    // Selection still works against the new options.
+    el.open = true
+    await el.updateComplete
+    await userEvent.click(kiwi)
+    await el.updateComplete
+    expect(el.value, `${server.browser}: clicking a post-swap option did not commit it`).toBe('kiwi')
+    expect(listbox.matches(':popover-open'), `${server.browser}: commit should close the panel`).toBe(false)
+  })
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
