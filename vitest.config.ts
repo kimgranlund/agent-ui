@@ -120,6 +120,11 @@ export default defineConfig({
       // `/components` + `/descriptor` above. (vitest.browser.config.ts needs no entry — it carries no
       // aliases at all and resolves this through the package `exports` map directly.)
       '@agent-ui/components/traits/overlay': r('./packages/agent-ui/components/src/traits/overlay.ts'),
+      // GH #952 — the reorder-mode trait's own declared subpath (`exports["./traits/list-reorder"]`), same
+      // not-on-the-root-barrel rationale as `/traits/overlay` above: `site/pages/agent-admin-app.ts` (the
+      // dogfood-migrated Edit Agents drawer) is its first consumer from OUTSIDE the components package. Same
+      // more-specific-first ordering necessity as `/components`/`/descriptor` above.
+      '@agent-ui/components/traits/list-reorder': r('./packages/agent-ui/components/src/traits/list-reorder.ts'),
       // genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — `@agent-ui/app`'s `agent-admin.ts`
       // is the dogfood asset pair's first consumer from OUTSIDE the components package: it imports
       // `DOGFOOD_CSS`/`DOGFOOD_JS` (the generated, committed pair) to pass into a mounted `ui-sandbox-

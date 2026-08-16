@@ -77,6 +77,7 @@
     "./controls/tooltip": "./src/controls/tooltip/tooltip.ts",
     "./descriptor": "./src/descriptor/index.ts",
     "./traits/overlay": "./src/traits/overlay.ts",
+    "./traits/list-reorder": "./src/traits/list-reorder.ts",
     "./component-styles.css": "./src/component-styles.css",
     "./foundation-styles.css": "./src/foundation-styles.css",
     "./base-styles.css": "./src/base-styles.css",

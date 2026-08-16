@@ -60,6 +60,10 @@ import type { UITextFieldElement } from '@agent-ui/components/controls/text-fiel
 // GH #921 — the per-card (...) actions menu and the drawer's Reorganize mode toggle.
 import type { UIMenuElement } from '@agent-ui/components/controls/menu'
 import type { UIToggleElement } from '@agent-ui/components/controls/toggle'
+// GH #952 — the pointer-drag reorder mechanics (formerly this page's own `wireDrag`) now live in the
+// reusable `list-reorder` trait; this page dogfoods it exactly like `ui-nav-rail`/`ui-conversation-composer`
+// dogfood `traits/overlay` (vitest.config.ts's own precedent comment for that subpath).
+import { listReorder } from '@agent-ui/components/traits/list-reorder'
 import {
   ACTIVE_PRESET_KEY,
   builderStore,
@@ -578,45 +582,6 @@ function dateLabel(persona: Persona): string {
   return '—'
 }
 
-/** GH #921 ruling 4 — dependency-free pointer-driven reorder: press the handle, drag over a sibling row,
- *  and the dragged row swaps to sit before/after whichever row the pointer is currently over; releasing
- *  commits the FULL id order (`moveAgent`'s own "persist the whole list" law, reused) and rebuilds. Pointer
- *  events only — no HTML5 Drag-and-Drop API (its cross-browser drag-image/dataTransfer quirks are exactly
- *  what "dependency-free pointer events" rules out). `setPointerCapture` keeps the gesture live even if the
- *  pointer strays outside the handle's own bounds mid-drag — real capture, not a simulated one. */
-function wireDrag(handle: HTMLElement, row: HTMLElement): void {
-  handle.addEventListener('pointerdown', (downEvent) => {
-    const pointerId = downEvent.pointerId
-    handle.setPointerCapture(pointerId)
-    row.setAttribute('data-dragging', '')
-
-    const onMove = (moveEvent: PointerEvent): void => {
-      if (moveEvent.pointerId !== pointerId) return
-      const over = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY)?.closest('.roster-row')
-      if (!(over instanceof HTMLElement) || over === row || !rosterList.contains(over)) return
-      const rect = over.getBoundingClientRect()
-      if (moveEvent.clientY < rect.top + rect.height / 2) over.before(row)
-      else over.after(row)
-    }
-    const onUp = (upEvent: PointerEvent): void => {
-      if (upEvent.pointerId !== pointerId) return
-      handle.releasePointerCapture(pointerId)
-      row.removeAttribute('data-dragging')
-      handle.removeEventListener('pointermove', onMove)
-      handle.removeEventListener('pointerup', onUp)
-      handle.removeEventListener('pointercancel', onUp)
-      const ids = [...rosterList.querySelectorAll('.roster-row')]
-        .map((r) => (r as HTMLElement).dataset.agent)
-        .filter((id): id is string => id !== undefined)
-      saveRosterOrder(ids)
-      refreshRoster()
-    }
-    handle.addEventListener('pointermove', onMove)
-    handle.addEventListener('pointerup', onUp)
-    handle.addEventListener('pointercancel', onUp)
-  })
-}
-
 /** Rebuild the whole list from the CURRENT roster — rows are stateless between rebuilds (the one exception
  *  is an in-flight rename field, which a rebuild drops; a short gesture re-typed, never state corrupted). */
 function renderRosterRows(): void {
@@ -653,7 +618,8 @@ function rosterRow(persona: Persona, index: number): HTMLElement {
     handleIcon.setAttribute('glyph', 'list')
     handle.append(handleIcon)
     row.append(handle)
-    wireDrag(handle, row)
+    // GH #952 — the drag GESTURE itself is wired once, globally, by the `listReorder` call below (it
+    // re-queries `.roster-row-drag-handle` live on every press); no per-row wiring call is owed here.
   }
 
   const main = document.createElement('div')
@@ -852,6 +818,28 @@ function beginRename(row: HTMLElement, persona: Persona): void {
 
 applyPersona(active) // also stages the header's own roster row (pushRoster, inside applyPersona)
 root.append(admin, toasts, fileInput, drawer)
+
+// GH #952 — the pointer-drag reorder gesture (formerly this page's own `wireDrag`), now the `list-reorder`
+// trait. `drawer` (a real `UIElement`) is the host — `rosterList` lives in its light DOM, so a `pointerdown`
+// on any row's drag handle bubbles up to it — wired ONCE here (after `drawer` connects via `root.append`
+// above, since `host.listen`/`host.effect` both require a live connection scope), not per-row: `items()`/
+// `handle()` both re-query the LIVE DOM on every gesture, so a `renderRosterRows()` rebuild between drags
+// needs no re-wiring. `onCommit` ignores its own `(from, to)` — this drawer already derives the persisted
+// order from DOM traversal post-move (`moveAgent`'s "persist the WHOLE list" law, reused verbatim), the
+// exact same one-liner `wireDrag`'s own `onUp` used to run.
+listReorder(drawer, {
+  items: () => [...rosterList.querySelectorAll<HTMLElement>('.roster-row')],
+  armed: () => reorderMode,
+  handle: (item) => item.querySelector<HTMLElement>('.roster-row-drag-handle'),
+  container: () => rosterList,
+  onCommit: () => {
+    const ids = [...rosterList.querySelectorAll('.roster-row')]
+      .map((r) => (r as HTMLElement).dataset.agent)
+      .filter((id): id is string => id !== undefined)
+    saveRosterOrder(ids)
+    refreshRoster()
+  },
+})
 
 // GH #114 (review finding): this page uses the SAME site/lib/admin-live-runner.ts backend as
 // agent-admin.ts (identical /__a2ui/agent/chat + /__a2ui/agent endpoints), but was missed when that
