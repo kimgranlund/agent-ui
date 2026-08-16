@@ -119,8 +119,26 @@
 // package DAG is `components` ← `code` (code imports components; imports point inward only, enforced by
 // layering.test.ts), so this component can never import the highlighter without inverting the DAG. Plain
 // mono `<pre>` is the v1 rendering, by law rather than by economy.
+//
+// GH #974/ADR-0191 — pending/stale-content wiring (booked repair, GH #999): this host is ADR-0191's own
+// first consumer. It wires `pendingComputed` (traits/pending-computed.ts) around an OPTIONAL async source
+// the CONSUMER attaches via `setPendingSource()` — imperative, matching every other fact this file already
+// receives (appendEntry/update/finalize/fail), since the host owns no async source of its own (entries
+// arrive PUSHED, never fetched). `pendingComputed`'s query-scoped `pending` signal drives the host's
+// `:state(pending)` custom state (ADR-0191 Decision cl.1 — the CONSUMING control applies the state, the
+// exact `trackUserInvalid`/`userInvalid()` split, since a controller cannot reach the protected
+// `internals`). `:state(pending)` COMPOSES with `:state(settled)` rather than being cleared by it (Decision
+// cl.3): a settled stream can still start a fresh follow-up query (a consumer calling `setPendingSource`
+// again after `finalize()`/`fail()`) and go pending again without ever leaving `settled` —
+// status-stream.css's own `:state(pending)` rule (an opacity dim, the `--ui-pending-*` token pair via this
+// control's own `--ui-status-stream-pending-*` chain) is this build's own answer to "how the two compose
+// visually" (Decision cl.3 leaves that choice to the first consumer). `setPendingSource(null)` clears the
+// current wait without ending the stream's OWN lifecycle (finalize/fail are unrelated calls) — the "no
+// query right now" case `pendingComputed` already documents.
 
 import { UIContainerElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
+import { signal } from '../../reactive/index.ts'
+import { pendingComputed, type PendingSource } from '../../traits/pending-computed.ts' // GH #974/ADR-0191
 import { UITimelineItemElement } from '../timeline-item/timeline-item.ts' // constructs items via its own API (F4)
 import '../timeline/timeline.ts' // registers <ui-timeline> — the nested group host (ADR-0146 F5, ADR-0143's mechanism)
 import '../button/button.ts' // registers <ui-button> — the GH #147/ADR-0153 inline retry action (Fork 2)
@@ -337,6 +355,12 @@ export class UIStatusStreamElement extends UIContainerElement {
   #plan: HTMLElement | null = null // the setPlan() block — exists only once a non-empty plan is set
   #summary: string | null = null // the consumer-supplied receipt meta (finalize/fail options) — verbatim, never parsed
 
+  // ── the pending/stale-content wiring (GH #974/ADR-0191, GH #999) ───────────────────────────────────
+  // The consumer-attached async source `setPendingSource()` writes, or null (no wait currently in flight).
+  // Read reactively inside `pendingComputed`'s own tracking effect (connected(), below) — a write here is
+  // what makes a NEW query start, the same reactive-source shape the trait's own doc comment demonstrates.
+  #pendingSource = signal<PendingSource<unknown> | null>(null)
+
   constructor() {
     super()
     this.internals.role = 'log' // a POLITE live region via internals.role (the toast role='status' precedent)
@@ -346,6 +370,15 @@ export class UIStatusStreamElement extends UIContainerElement {
     this.effect(() => {
       this.internals.ariaLabel = this.label === '' ? null : this.label
       this.#refreshLine() // the header shows the SAME label VISIBLY when opted in (F8; morphing per ADR-0159)
+    })
+    // GH #974/ADR-0191 — wire pendingComputed around the consumer-attached source; its query-scoped
+    // `pending` signal drives :state(pending) (Decision cl.1 — the consuming control applies the state,
+    // since a controller cannot reach the protected `internals`). Composes with :state(settled) rather than
+    // being cleared by it (Decision cl.3) — both may be true together, status-stream.css's own call.
+    const pendingCtl = pendingComputed(this, { source: () => this.#pendingSource.value ?? undefined })
+    this.effect(() => {
+      if (pendingCtl.pending.value) this.internals.states?.add('pending')
+      else this.internals.states?.delete('pending')
     })
     // Create/remove the header as `header` toggles — default false renders byte-identically to a headerless
     // strip (no header DOM at all, the F8 zero-regression guarantee). GH #239/ADR-0159: `oneline`/`receipt`
@@ -549,6 +582,18 @@ export class UIStatusStreamElement extends UIContainerElement {
       li.textContent = text
     })
     while (list.children.length > items.length) list.lastElementChild!.remove()
+  }
+
+  /** GH #974/ADR-0191 — attach (or, with `null`, clear) the async source this stream is CURRENTLY waiting
+   *  on: a Promise/AsyncIterable representing the next incoming answer (e.g. an A2UI streaming chunk, or
+   *  the agent Session seam's next turn). Wires `pendingComputed`'s query-scoped `pending` signal to the
+   *  host's `:state(pending)` custom state (ADR-0191 Decision cl.1). The consumer's own responsibility to
+   *  call this each time it starts (or resolves) a wait — never inferred from appendEntry/update/finalize/
+   *  fail, which are already-ARRIVED facts; `pending` is about the NEXT one, still in flight. Composes with
+   *  `:state(settled)` rather than being cleared by it (Decision cl.3): a settled stream can go pending
+   *  again on a fresh follow-up query without ever leaving `settled`. */
+  setPendingSource(source: PendingSource<unknown> | null): void {
+    this.#pendingSource.value = source
   }
 
   /** Shared settle path for finalize()/fail(): truncate the unresolved entries, flip the completion state,

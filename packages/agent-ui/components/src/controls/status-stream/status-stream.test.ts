@@ -4,6 +4,25 @@ import { UIStatusStreamElement, escalateStatus, formatElapsed, formatTotalElapse
 import { UITimelineItemElement } from '../timeline-item/timeline-item.ts'
 import { UITimelineElement } from '../timeline/timeline.ts'
 
+// GH #974/ADR-0191 — a probe subclass exposing `internals` for the :state(pending) assertions below (the
+// switch.test.ts ProbeSwitch precedent: `internals` is `protected` on UIElement).
+class ProbeStatusStream extends UIStatusStreamElement {
+  get probeInternals(): ElementInternals {
+    return this.internals
+  }
+}
+if (!customElements.get('ui-status-stream-probe')) customElements.define('ui-status-stream-probe', ProbeStatusStream)
+
+/** Deferred helper: a Promise plus externally-callable resolve, for controlling settle order (the
+ *  pending-computed.test.ts precedent). */
+function deferred<T>(): { promise: Promise<T>; resolve: (v: T) => void } {
+  let resolve!: (v: T) => void
+  const promise = new Promise<T>((res) => {
+    resolve = res
+  })
+  return { promise, resolve }
+}
+
 // jsdom has real setTimeout/clearInterval, so the Fork 1 ticking-interval mechanism is pinned directly
 // here (vi.useFakeTimers, the toast.test.ts precedent) — the REAL cross-engine, real-wall-clock proof is
 // status-stream.browser.test.ts's.
@@ -1272,5 +1291,141 @@ describe('ui-status-stream — the settled custom state (GH #722)', () => {
     const { el } = makeStream()
     el.appendEntry({ key: 's1', status: 'active', label: 'step' })
     expect(() => el.fail()).not.toThrow()
+  })
+})
+
+// ── the pending/stale-content wiring (GH #974/ADR-0191, GH #999) ───────────────────────────────────────
+
+describe('ui-status-stream — setPendingSource wires pendingComputed to :state(pending) (ADR-0191)', () => {
+  it('a Promise source flips :state(pending) true while in flight, false + cleared once it settles', async () => {
+    const el = new ProbeStatusStream()
+    document.body.append(el)
+    const states = el.probeInternals.states
+    if (!states) {
+      // jsdom may not implement CustomStateSet — the browser leg proves the paint. The wiring effect
+      // still RUNS (pendingComputed itself is fully jsdom-testable — pending-computed.test.ts).
+      el.remove()
+      return
+    }
+    expect(states.has('pending')).toBe(false) // no source attached yet
+    const d = deferred<string>()
+    el.setPendingSource(d.promise)
+    await whenFlushed()
+    expect(states.has('pending')).toBe(true)
+
+    d.resolve('chunk')
+    await d.promise
+    await Promise.resolve()
+    expect(states.has('pending')).toBe(false)
+    el.remove()
+  })
+
+  it('setPendingSource(null) clears an in-flight wait without throwing', async () => {
+    const el = new ProbeStatusStream()
+    document.body.append(el)
+    const states = el.probeInternals.states
+    if (!states) {
+      el.remove()
+      return
+    }
+    el.setPendingSource(new Promise(() => {})) // never settles on its own
+    await whenFlushed()
+    expect(states.has('pending')).toBe(true)
+    el.setPendingSource(null)
+    await whenFlushed()
+    expect(states.has('pending')).toBe(false)
+    el.remove()
+  })
+
+  it('composes with :state(settled) — a settled stream can go pending again without leaving settled (Decision cl.3)', async () => {
+    const el = new ProbeStatusStream()
+    document.body.append(el)
+    const states = el.probeInternals.states
+    if (!states) {
+      el.remove()
+      return
+    }
+    el.appendEntry({ key: 's1', status: 'done', label: 'step' })
+    el.finalize()
+    expect(states.has('settled')).toBe(true)
+
+    // A fresh follow-up query starts AFTER settle — pending goes true while settled stays true, both real.
+    el.setPendingSource(new Promise(() => {}))
+    await whenFlushed()
+    expect(states.has('pending')).toBe(true)
+    expect(states.has('settled')).toBe(true) // never cleared by the fresh pending wait
+    el.remove()
+  })
+
+  it('a fresh connect() re-arms the wiring with fresh signals (the pendingComputed re-arm-on-reconnect contract)', async () => {
+    const el = new ProbeStatusStream()
+    document.body.append(el)
+    expect(() => el.setPendingSource(Promise.resolve('a'))).not.toThrow()
+    el.remove()
+    document.body.append(el) // reconnect — connected() re-runs, wiring a fresh pendingComputed controller
+    expect(() => el.setPendingSource(Promise.resolve('b'))).not.toThrow()
+    el.remove()
+  })
+})
+
+describe('status-stream.css — the :state(pending) dim rule + its token chain (ADR-0191 pin-test)', () => {
+  // Comment-stripped first (the dimensions.test.ts precedent — a comment's own prose can hold a stray `}`,
+  // e.g. this file's own token-block comments, which would truncate a `[^}]*` block match early).
+  async function readCss(): Promise<{ bare: string }> {
+    const { readFileSync } = await import('node:fs')
+    const here = import.meta.dirname ?? new URL('.', import.meta.url).pathname
+    const css = readFileSync(`${here}/status-stream.css`, 'utf8')
+    const flat = css.replace(/\s+/g, ' ')
+    return { bare: flat.replace(/\/\*.*?\*\//g, '') }
+  }
+
+  it('mints --ui-status-stream-pending-{opacity,duration} in the :where() token block, aliasing the fleet --ui-pending-* pair', async () => {
+    const { bare } = await readCss()
+    const tokenBlock = (bare.match(/:where\(ui-status-stream\)\s*\{[^}]*\}/) ?? [''])[0]
+    expect(tokenBlock).toMatch(/--ui-status-stream-pending-opacity:\s*var\(--ui-pending-opacity\)\s*;/)
+    expect(tokenBlock).toMatch(/--ui-status-stream-pending-duration:\s*var\(--ui-pending-duration\)\s*;/)
+  })
+
+  it('the :scope:state(pending) rule reads ONLY its own --ui-status-stream-pending-* chain, never the fleet token directly', async () => {
+    const { bare } = await readCss()
+    const rule = (bare.match(/:scope:state\(pending\)\s*\{[^}]*\}/) ?? [''])[0]
+    expect(rule.length, ':scope:state(pending) rule not found').toBeGreaterThan(0)
+    expect(rule).toMatch(/opacity:\s*var\(--ui-status-stream-pending-opacity\)/)
+    expect(rule).toMatch(/transition:\s*opacity\s+var\(--ui-status-stream-pending-duration\)/)
+    expect(rule).not.toMatch(/--ui-pending-/) // the fleet token itself — only the own-chain alias reads it
+  })
+
+  /** Brace-balanced block extraction from `start` (the index of an `@media`/selector's own text) — the
+   *  naive `[^}]*\}` shape undercounts a block nesting more than one inner rule (this file's
+   *  reduced-motion block nests three). Returns the full `{...}` span, matching braces included. */
+  function extractBlock(text: string, start: number): string {
+    const open = text.indexOf('{', start)
+    let depth = 0
+    for (let i = open; i < text.length; i++) {
+      if (text[i] === '{') depth++
+      else if (text[i] === '}') {
+        depth--
+        if (depth === 0) return text.slice(start, i + 1)
+      }
+    }
+    return text.slice(start)
+  }
+
+  it('zeroes the pending transition under prefers-reduced-motion', async () => {
+    const { bare } = await readCss()
+    // TWO `@media (prefers-reduced-motion: reduce)` blocks exist in this file (the header-marker pulse,
+    // and the shimmer/caret/pending block this repair extended) — find the ONE containing the pending rule.
+    let idx = bare.indexOf('@media (prefers-reduced-motion: reduce)')
+    let ownBlock: string | undefined
+    while (idx !== -1) {
+      const block = extractBlock(bare, idx)
+      if (block.includes(':scope:state(pending)')) {
+        ownBlock = block
+        break
+      }
+      idx = bare.indexOf('@media (prefers-reduced-motion: reduce)', idx + 1)
+    }
+    expect(ownBlock, 'no reduced-motion block contains :scope:state(pending)').toBeDefined()
+    expect(ownBlock).toMatch(/:scope:state\(pending\)\s*\{\s*transition:\s*none\s*;\s*\}/)
   })
 })

@@ -10,6 +10,10 @@
 > **Amended 2026-07-15 (TKT-0062):** entry controls carry their OWN five-state law — §1b, with a **filled**
 > state and a three-channel (bg/border/ink) repoint — superseding the ADR-0014 border-only channel; and the
 > disabled contract gained the TKT-0057 accept-the-blur ruling (§3 note).
+> **Amended 2026-08-16 ([ADR-0191](../adr/0191-fleet-stale-pending-state-convention.md)):** a fourth,
+> ORTHOGONAL state axis — §5, async freshness — a `:state(pending)` host custom state + the
+> `--ui-pending-duration`/`--ui-pending-opacity` token pair, dimming stale content while a fresh answer is
+> in flight. First consumer: `ui-status-stream` (GH #999).
 
 ## The four states (the one frame)
 
@@ -324,6 +328,56 @@ constants) — a fleet token, not a per-control opinion.
 }
 ```
 
+## 5 · Pending / stale content — the async-freshness state (ADR-0191)
+
+A THIRD state axis, orthogonal to both the four base states (§1) and the entry-control filled/container
+law (§1b): whether a control's CURRENTLY-DISPLAYED content is the answer to the question it's asking right
+NOW, or a stale last-settled answer while a new one is in flight. TKT-0062's SHAPE re-applied to async
+freshness — one fleet-wide convention, not a per-component hack — proposed and ratified as ADR-0191
+because, unlike §1b's Kim-specified literal table, this was a genuine fork needing a recommendation
+weighed. First consumer: `ui-status-stream` (GH #999).
+
+**[a] One host custom state: `:state(pending)`.** Matches the fleet's existing host-boolean precedent
+(`:state(ready)`/`:state(truncated)`/`:state(dragging)`/`:state(revealed)`/`ui-status-stream`'s own
+`:state(settled)`) rather than a `data-*` attribute — this fleet reserves `data-*` for PART-level flags
+(a scroll viewport, a trigger/editor span), never the host. Because the source of pendingness is the
+[`pendingComputed`](../../../packages/agent-ui/components/src/traits/pending-computed.ts) trait — a
+CONTROLLER, `(host, opts) => …`, which cannot reach the protected `host.internals` — the CONSUMING CONTROL
+applies the state itself: read the controller's `pending` signal inside the control's own `connected()`
+effect, then `this.internals.states?.add('pending')` / `.delete('pending')` — the exact
+`trackUserInvalid`/`userInvalid()` split §3 already documents, never a mechanism the trait or this ADR
+invents.
+
+**[b] One token pair.** `--ui-pending-duration` (aliases `--md-sys-motion-duration-fast` — no new motion
+primitive) and `--ui-pending-opacity` (`0.6`, a new literal), both minted in `dimensions.css` as :root
+constants (like the focus-ring/motion geometry above) but **not** on tokens.md's sanctioned direct-read
+list — a consuming control routes both through its own `--ui-{cmp}-*` chain
+(`--ui-status-stream-pending-opacity: var(--ui-pending-opacity);` in the `:where()` token block), same as
+every other dimensional constant a control consumes.
+
+**[c] A dim, never a recolor.** Already-rendered stale content keeps its existing bg/border/ink tokens
+untouched (§1b's filled/container law is not reopened) — `:state(pending)` layers ONE additional
+`opacity: var(--ui-{cmp}-pending-opacity)` step on top, transitioned over
+`var(--ui-{cmp}-pending-duration)`. Opacity, not a role-repoint, because pending content can be arbitrary,
+unknown-depth DOM a role-repoint cannot reach in general (TKT-0047's disabled-opacity multi-layer-stacking
+exception, generalized — never the nonexistent "disabled defaults to opacity" claim; the fleet's disabled
+canon is role-repoint). `prefers-reduced-motion` suppresses the transition (an instant opacity step),
+following every other fleet motion rule (§4c).
+
+**[d] Precedence and composition.** `disabled` > `pending` > every §1b fill/hover/focus state (where a
+control has a `disabled` prop at all — many `pending`-eligible surfaces, like `ui-status-stream`, do not).
+`pending` COMPOSES with `:state(settled)` rather than being cleared by it: a settled stream can start a
+fresh follow-up query and go pending again without ever leaving `settled` (both custom states true at
+once is expected, not a bug) — the exact render when both are true is each consumer's own CSS call, not
+fixed fleet-wide.
+
+**[e] No opinion on the wiring mechanics.** A component's own `connected()` decides how it feeds
+`pendingComputed` a source and when — an imperative `setPendingSource(promise | asyncIterable | null)`
+method (`ui-status-stream`'s own shape, since it has no async source of its own — entries arrive pushed,
+not fetched) is one valid wiring, a reactive query-signal read inside `source()` (the trait's own doc
+comment) is another. This section fixes the STATE NAME and the TOKEN PAIR, not the composition logic —
+mirroring how §1b fixed the five-state table without dictating each component's own emptiness detection.
+
 ## Mechanization
 
 Each state lands with a probe (per [`process.md`](../process.md)) — a state without a probe is not enforced.
@@ -339,6 +393,14 @@ The carrier decides the harness:
   geometry, no `all`) and the reduced-motion zero are pinned by the **jsdom CSS-text probe**; that the first
   paint does NOT animate and a subsequent hover DOES is the **cross-engine smoke**'s (jsdom has no
   `CustomStateSet`, so the `:state(ready)` behaviour can't be computed there).
+- **pending** (§5) is a JS-state controller + gated CSS, the same division as motion: `pendingComputed`'s
+  `pending` signal driving `:state(pending)` is proven in **jsdom unit tests** (the controller's own
+  `pending-computed.test.ts`, plus the consuming control's own state-toggle probe — jsdom lacks
+  `CustomStateSet` in some environments, so a consuming control's probe stays `?.`-optional-chained, the
+  `:state(settled)` precedent); the CSS opacity/transition rule is a **jsdom CSS-text pin-test** per
+  consuming control (`status-stream.test.ts`'s own gate, the GH #722 header-marker drift-gate precedent) —
+  no real-engine assertion is required beyond that, since opacity/transition are computed styles a
+  cross-engine smoke would only re-confirm, not a new risk class.
 
 ## Decisions (source)
 
@@ -357,5 +419,9 @@ and open questions:
   trace behind both §1b mechanics.
 - [**TKT-0057**](../tickets/tkt-0057-text-field-disable-focus-loss-chromium.md) — the disabled-blur parity
   ruling (§3 note): root cause + the ratified accept-the-blur decision.
+- [**ADR-0191**](../adr/0191-fleet-stale-pending-state-convention.md) — the async-freshness state (§5):
+  `:state(pending)` + the `--ui-pending-duration`/`--ui-pending-opacity` token pair, composing with
+  `ui-status-stream`'s existing `:state(settled)` rather than being cleared by it; the styling companion to
+  the `pendingComputed` trait (GH #974).
 
 Colour ladders: [`tokens.md`](./tokens.md). Box law the ring must not perturb: [`geometry.md`](./geometry.md).
