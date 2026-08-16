@@ -129,6 +129,14 @@
       "section": "Components"
     },
     {
+      "name": "Drill",
+      "tag": "ui-drill",
+      "url": "./drill-doc.html",
+      "description": "A one-panel container that drills down an N-level selection tree, showing exactly one level at a time with a Back affordance and a bindable path.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Field",
       "tag": "ui-field",
       "url": "./field-doc.html",
