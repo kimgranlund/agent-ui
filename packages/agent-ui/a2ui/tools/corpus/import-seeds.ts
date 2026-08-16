@@ -124,6 +124,13 @@ import { kpiPanelLifecycleSeed } from '../../src/examples/message-lifecycle.ts'
 import { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed } from '../../src/examples/corpus-growth.ts'
 import { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed } from '../../src/examples/catalog-frontier.ts'
 import { structuredContainerSeed } from '../../src/examples/structured-container.ts'
+import {
+  comparisonPricingSeed,
+  receiptOrderSummarySeed,
+  emptyErrorRetryCardSeed,
+  notificationStatusStackSeed,
+  mediaFileGridSeed,
+} from '../../src/examples/high-frequency-patterns.ts'
 import { allSeeds } from '../../src/examples/index.ts'
 
 declare const process: { cwd(): string; argv: string[]; exit(code?: number): never }
@@ -251,6 +258,10 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
     seeds: [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed],
   },
   { module: 'structured-container.ts', seeds: [structuredContainerSeed] }, // GH #808 S5 — SPEC-R9's exemplar
+  {
+    module: 'high-frequency-patterns.ts', // GH #972 — the 2026-08-15 gap-map sweep; admission pending the judged wave
+    seeds: [comparisonPricingSeed, receiptOrderSummarySeed, emptyErrorRetryCardSeed, notificationStatusStackSeed, mediaFileGridSeed],
+  },
 ]
 
 /** Fail loudly (not silently) if the shelf's seed count/membership ever drifts from this script's

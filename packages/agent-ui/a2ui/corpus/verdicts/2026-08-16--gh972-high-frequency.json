@@ -1,0 +1,15 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.1",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-08-16",
+  "verdicts": {
+    "comparison-pricing-table": { "qualityScore": 4, "passed": true },
+    "receipt-order-summary": { "qualityScore": 4, "passed": true },
+    "empty-error-retry-card": { "qualityScore": 4, "passed": true },
+    "notification-status-stack": { "qualityScore": 4, "passed": true },
+    "media-file-grid": { "qualityScore": 4, "passed": true },
+    "agent-roster-drawer": { "qualityScore": 4, "passed": true },
+    "stats-grid-dashboard": { "qualityScore": 3, "passed": false, "failingDimensions": ["D5"] }
+  }
+}
