@@ -1,0 +1,148 @@
+/* drill.css — the SINGLE sheet for the drill compound (ADR-0003): ui-drill (the header part + panel viewport)
+ * and ui-drill-panel (the content region). Two sectioned blocks: a :where() TOKEN block (specificity 0 —
+ * declares --ui-drill-* from the colour roles + the dimensional constants) then an @scope STYLES block
+ * (consumes ONLY --ui-drill-* + the shared fleet focus-ring/motion tokens — token hygiene, styling-gates.test.ts).
+ *
+ * Geometry (geometry.md "Pattern" size-class, the ui-tabs/ui-toolbar precedent): the header row (back button +
+ * heading) is an interactive CONTROL-height row (--md-sys-height-*); the panel viewport uses the --md-sys-space
+ * layout ladder. Two distinct ledgers, never interchanged.
+ *
+ * Motion (ADR-0195 cl.6): the CSS-transform base and the View Transitions layer are MUTUALLY EXCLUSIVE per
+ * swap, keyed on the host's own `[data-vt-active]` marker (set by drill.ts's #render, present only for a swap
+ * the VT seam will actually run) — never on the raw `[view-transitions]` opt-in attribute alone, so an
+ * opted-in instance on an unsupported/reduced-motion engine still gets the CSS base. `[data-direction]` carries
+ * the swap's forward/back sign for the translateX. */
+
+/* ════════════════════════ [1] TOKEN BLOCK — :where() declarations ════════════════════════ */
+
+:where(ui-drill) {
+  /* Header row geometry — the CONTROL band (interactive: the Back button lives here). */
+  --ui-drill-header-height: var(--md-sys-height-md);
+  --ui-drill-header-pad-inline: var(--md-sys-space-md);
+  --ui-drill-header-gap: var(--md-sys-space-sm);
+
+  /* Panel viewport geometry — the --md-sys-space layout ladder (density-responsive; never a control dimension). */
+  --ui-drill-padding: var(--md-sys-space-md);
+
+  /* Ink + hairline — the container-family neutral roles (the ui-tabs strip-line precedent). */
+  --ui-drill-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-drill-ink-muted: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-drill-outline: var(--md-sys-color-neutral-outline-variant);
+
+  /* Motion — the EXISTING fleet constants (zero new motion tokens, the ui-drawer precedent). */
+  --ui-drill-motion-duration: var(--md-sys-motion-duration-fast);
+  --ui-drill-motion-easing: var(--md-sys-motion-easing-standard);
+  --ui-drill-slide-distance: 12px;
+}
+
+/* ════════════════════════ [2] STYLES BLOCK — @scope, consumes ONLY --ui-drill-* + fleet constants ═══════════ */
+
+@scope (ui-drill) {
+  :scope {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+  }
+
+  /* The control-owned header part — created once by drill.ts, never author content. */
+  [data-part='header'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-drill-header-gap);
+    block-size: var(--ui-drill-header-height);
+    padding-inline: var(--ui-drill-header-pad-inline);
+    border-block-end: 1px solid var(--ui-drill-outline);
+    flex: none;
+  }
+
+  [data-part='back'] {
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    block-size: var(--md-sys-height-sm);
+    padding-inline: var(--md-sys-space-sm);
+    border-radius: var(--ui-drill-back-radius, var(--md-sys-shape-corner-base));
+    color: var(--ui-drill-ink-muted);
+    cursor: pointer;
+    font: inherit;
+
+    &::before {
+      content: '←';
+    }
+
+    &:hover {
+      color: var(--ui-drill-ink);
+    }
+
+    &:focus-visible {
+      outline: var(--ui-focus-ring-width) solid var(--ui-focus-ring-color);
+      outline-offset: var(--ui-focus-ring-offset);
+    }
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  [data-part='heading'] {
+    margin: 0;
+    font-size: var(--md-sys-font-md);
+    font-weight: 600;
+    color: var(--ui-drill-ink);
+    line-height: var(--ui-control-line-height);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &:focus-visible {
+      outline: var(--ui-focus-ring-width) solid var(--ui-focus-ring-color);
+      outline-offset: var(--ui-focus-ring-offset);
+    }
+  }
+
+  /* The panel viewport — author ui-drill-panel children, shown one at a time. */
+  ui-drill-panel {
+    display: block;
+    padding: var(--ui-drill-padding);
+    min-inline-size: 0;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  /* ── CSS-transform BASE motion — excluded for a swap the View Transitions layer will run ─────────────── */
+  :scope:not([data-vt-active]) ui-drill-panel:not([hidden]) {
+    opacity: 1;
+    transform: translateX(0);
+    transition:
+      opacity var(--ui-drill-motion-duration) var(--ui-drill-motion-easing),
+      transform var(--ui-drill-motion-duration) var(--ui-drill-motion-easing),
+      display var(--ui-drill-motion-duration) allow-discrete,
+      overlay var(--ui-drill-motion-duration) allow-discrete;
+
+    @starting-style {
+      opacity: 0;
+      transform: translateX(
+        calc(var(--ui-drill-slide-distance) * var(--_drill-dir-sign, 1))
+      );
+    }
+  }
+
+  :scope:not([data-vt-active])[data-direction='back'] ui-drill-panel:not([hidden]) {
+    --_drill-dir-sign: -1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :scope:not([data-vt-active]) ui-drill-panel:not([hidden]) {
+      transition: none;
+
+      @starting-style {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+}

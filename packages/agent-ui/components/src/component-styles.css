@@ -59,6 +59,7 @@
 @import './controls/tabs/tabs.css';
 @import './controls/modal/modal.css';
 @import './controls/drawer/drawer.css'; /* ADR-0188 — the edge-docked modal container */
+@import './controls/drill/drill.css'; /* ADR-0195 — the N-level drill-down panel container */
 
 /* Overlay controls — Wave 4 (ADR-0043): each is self-scoped (a `:where(ui-{name})` token block + an
  * `@scope (ui-{name})` styles block); the popup panels are Container/surface, the triggers Control-class. */

@@ -188,6 +188,9 @@ The prefix IS the ownership boundary — no allowlist needed:
   mono `<pre>` inside an entry's per-step reveal, rendering the raw wire line(s) the step stands for
   (planted under a `[data-role="detail"]` child the item's own anatomy adopts into its shared
   disclosure); control-emitted, host-created like `action`/`text`, never author-composed.
+  `ui-drill` adds `drill-trigger` (ADR-0195, GH #954) — a named AUTHOR hook (the command-modal
+  `empty` precedent, not control-emitted): any descendant of the ACTIVE `ui-drill-panel` carrying
+  `data-role="drill-trigger"` + `data-drill-key="<key>"` drills into that key on click/Enter/Space.
 - **Custom states** (`internals.states` / `:state()`) are ADJECTIVES/participles, lowercase,
   kebab: ready · user-invalid · checked · dragging · revealed · disabled · collapsed · truncated
   · selected · indeterminate · pressed · settled (GH #722 — ui-status-stream's finalize()/fail()

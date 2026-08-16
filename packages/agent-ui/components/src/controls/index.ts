@@ -64,6 +64,7 @@ export * from './card/card.ts' // transitively self-defines ui-card-header / -co
 export * from './tabs/tabs.ts' // transitively self-defines ui-tab / -tab-panel
 export * from './modal/modal.ts'
 export * from './drawer/drawer.ts' // ADR-0188 — the edge-docked modal container (re-applies the ADR-0017 <dialog> machinery)
+export * from './drill/drill.ts' // ADR-0195 — the N-level drill-down panel container (transitively self-defines ui-drill-panel)
 export * from './toolbar/toolbar.ts' // Pattern-class action bar (ADR-0121) — role=toolbar + roving focus, posture via elevation/brightness
 
 // Overlay controls — Wave 4 (ADR-0043 / overlay-controller.lld): the `overlay` controller composed into five

@@ -341,6 +341,11 @@ const ALLOWED_ROLES = new Set([
   // entry's attached raw wire line(s), planted under a `[data-role="detail"]` child the item's own anatomy
   // adopts into its shared disclosure. Added in the SAME change as naming.md §6's registry line.
   'source',
+  // ui-drill's declarative drill-forward authoring hook (ADR-0195, GH #954) — any descendant of the ACTIVE
+  // ui-drill-panel carrying `data-role="drill-trigger"` + `data-drill-key="<key>"` drills into that key on
+  // click/Enter/Space. A named AUTHOR hook (the command-modal `empty` precedent), never a control-emitted
+  // content role. Added in the SAME change as naming.md §6's registry line.
+  'drill-trigger',
 ])
 
 /** Every `data-role` value used in one file's TEXT (comment-stripped): `data-role="x"` / `data-role='x'` /
