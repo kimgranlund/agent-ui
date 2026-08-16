@@ -169,6 +169,16 @@ const A2UI_INITIAL: Record<string, Record<string, string>> = {
   Toolbar: { label: 'Document actions' },
   FormPopover: { label: 'Filter' },
   Swiper: { pagination: 'true', paddles: 'true' },
+  // GH #978 — the six remaining generic-fallback types (follow-up to #971). ComboBox's `placeholder` mirrors
+  // its own rentalFilterPanelSeed idiom (catalog-coverage.ts) exactly, the SAME demonstrability gap Select's
+  // own `placeholder` seed above closes. Grid's `gap`/`min` mirror statsGridDashboardSeed's own root props (a
+  // bare Grid has no default track floor to demonstrate against, the ui-grid COMPONENT_INITIAL precedent);
+  // List's `gap` mirrors rentalFilterPanelSeed's own `results_list` props. Tooltip/RadioGroup/SegmentedControl
+  // need no seed here — their SAMPLE_TREES content (below) is visible with no root prop at all, the
+  // Popover/Menu precedent (only `open`-bearing types with a hidden default need a label seed).
+  ComboBox: { placeholder: 'Search a city…' },
+  Grid: { gap: 'md', min: '12rem' },
+  List: { gap: 'sm' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -382,10 +392,109 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
       { id: 's_spp_body', component: 'Text', variant: 'body', text: 'Payments v2 rollout' },
     ],
   }),
+
+  // GH #978 — the six remaining generic "Sample content" fallbacks (Tooltip, RadioGroup, SegmentedControl,
+  // ComboBox, List, Grid), a follow-up to #971's own eight (each replaced with the type's real job, mirroring
+  // the a2ui corpus's own catalog-coverage.ts idioms exactly, trimmed to a static literal tree — no
+  // data-model bindings, matching every other entry in this table).
+  //
+  // Tooltip: FIRST child is the anchor, remaining children move into the tooltip panel (factories.ts's
+  // tooltipFactory note, the SAME accessorFactory-driven overlay contract as Popover/Menu above) — the
+  // tip_wrap idiom (catalog-coverage.ts's documentRowToolbarSeed).
+  Tooltip: () => ({
+    rootRef: { children: ['s_tip_trigger', 's_tip_text'] },
+    extras: [
+      { id: 's_tip_trigger', component: 'Button', variant: 'ghost', label: 'Info' },
+      { id: 's_tip_text', component: 'Text', variant: 'caption', text: 'Last edited 2 hours ago by Ada Lovelace' },
+    ],
+  }),
+  // RadioGroup(+Radio): a real property-type picker, 3 Radio options — the rg_type idiom
+  // (catalog-coverage.ts's rentalFilterPanelSeed).
+  RadioGroup: () => ({
+    rootRef: { children: ['s_rg1', 's_rg2', 's_rg3'] },
+    extras: [
+      { id: 's_rg1', component: 'Radio', value: 'apartment', label: 'Apartment' },
+      { id: 's_rg2', component: 'Radio', value: 'house', label: 'House' },
+      { id: 's_rg3', component: 'Radio', value: 'studio', label: 'Studio' },
+    ],
+  }),
+  // SegmentedControl(+Segment): a real room-type picker, 3 Segment options — the room_seg idiom
+  // (catalog-coverage.ts's bookingReservationSeed).
+  SegmentedControl: () => ({
+    rootRef: { children: ['s_sc1', 's_sc2', 's_sc3'] },
+    extras: [
+      { id: 's_sc1', component: 'Segment', value: 'standard', label: 'Standard' },
+      { id: 's_sc2', component: 'Segment', value: 'deluxe', label: 'Deluxe' },
+      { id: 's_sc3', component: 'Segment', value: 'suite', label: 'Suite' },
+    ],
+  }),
+  // ComboBox: reuses the Option primitive (the Select precedent) — the cb_city idiom (catalog-coverage.ts's
+  // rentalFilterPanelSeed); `placeholder` seeded above so the trigger reads as a real search box.
+  ComboBox: () => ({
+    rootRef: { children: ['s_cb1', 's_cb2', 's_cb3'] },
+    extras: [
+      { id: 's_cb1', component: 'Option', value: 'Helsinki', label: 'Helsinki' },
+      { id: 's_cb2', component: 'Option', value: 'Stockholm', label: 'Stockholm' },
+      { id: 's_cb3', component: 'Option', value: 'Berlin', label: 'Berlin' },
+    ],
+  }),
+  // List: a populated result list, 3 Card rows — the results_list idiom (catalog-coverage.ts's
+  // rentalFilterPanelSeed), trimmed to a static tree (the seed's own `{path}`-templated cards, minus the
+  // binding).
+  List: () => ({
+    rootRef: { children: ['s_li1', 's_li2', 's_li3'] },
+    extras: [
+      { id: 's_li1', component: 'Card', elevation: '1', children: ['s_li1c'] },
+      { id: 's_li1c', component: 'CardContent', children: ['s_li1col'] },
+      { id: 's_li1col', component: 'Column', gap: 'xs', children: ['s_li1t', 's_li1m'] },
+      { id: 's_li1t', component: 'Text', variant: 'h5', text: 'Helsinki — Apartment' },
+      { id: 's_li1m', component: 'Text', variant: 'caption', text: '€1,200/mo · 2 bed' },
+      { id: 's_li2', component: 'Card', elevation: '1', children: ['s_li2c'] },
+      { id: 's_li2c', component: 'CardContent', children: ['s_li2col'] },
+      { id: 's_li2col', component: 'Column', gap: 'xs', children: ['s_li2t', 's_li2m'] },
+      { id: 's_li2t', component: 'Text', variant: 'h5', text: 'Stockholm — House' },
+      { id: 's_li2m', component: 'Text', variant: 'caption', text: '€2,100/mo · 3 bed' },
+      { id: 's_li3', component: 'Card', elevation: '1', children: ['s_li3c'] },
+      { id: 's_li3c', component: 'CardContent', children: ['s_li3col'] },
+      { id: 's_li3col', component: 'Column', gap: 'xs', children: ['s_li3t', 's_li3m'] },
+      { id: 's_li3t', component: 'Text', variant: 'h5', text: 'Berlin — Studio' },
+      { id: 's_li3m', component: 'Text', variant: 'caption', text: '€850/mo · 1 bed' },
+    ],
+  }),
+  // Grid: a metric-tile dashboard, 4 stat tiles on a track grid — the stat_tile idiom
+  // (catalog-coverage.ts's statsGridDashboardSeed), trimmed to a static tree (the seed's own `{path}`-
+  // templated tiles, minus the binding). `gap`/`min` seeded above so the auto-fit tracks are legible.
+  Grid: () => ({
+    rootRef: { children: ['s_gr1', 's_gr2', 's_gr3', 's_gr4'] },
+    extras: [
+      { id: 's_gr1', component: 'Card', elevation: '1', children: ['s_gr1c'] },
+      { id: 's_gr1c', component: 'CardContent', children: ['s_gr1col'] },
+      { id: 's_gr1col', component: 'Column', gap: 'xs', children: ['s_gr1l', 's_gr1v'] },
+      { id: 's_gr1l', component: 'Text', variant: 'caption', text: 'Sessions' },
+      { id: 's_gr1v', component: 'Text', variant: 'h3', text: '4,820' },
+      { id: 's_gr2', component: 'Card', elevation: '1', children: ['s_gr2c'] },
+      { id: 's_gr2c', component: 'CardContent', children: ['s_gr2col'] },
+      { id: 's_gr2col', component: 'Column', gap: 'xs', children: ['s_gr2l', 's_gr2v'] },
+      { id: 's_gr2l', component: 'Text', variant: 'caption', text: 'Conversion' },
+      { id: 's_gr2v', component: 'Text', variant: 'h3', text: '3.2%' },
+      { id: 's_gr3', component: 'Card', elevation: '1', children: ['s_gr3c'] },
+      { id: 's_gr3c', component: 'CardContent', children: ['s_gr3col'] },
+      { id: 's_gr3col', component: 'Column', gap: 'xs', children: ['s_gr3l', 's_gr3v'] },
+      { id: 's_gr3l', component: 'Text', variant: 'caption', text: 'Avg. order' },
+      { id: 's_gr3v', component: 'Text', variant: 'h3', text: '€54' },
+      { id: 's_gr4', component: 'Card', elevation: '1', children: ['s_gr4c'] },
+      { id: 's_gr4c', component: 'CardContent', children: ['s_gr4col'] },
+      { id: 's_gr4col', component: 'Column', gap: 'xs', children: ['s_gr4l', 's_gr4v'] },
+      { id: 's_gr4l', component: 'Text', variant: 'caption', text: 'Refunds' },
+      { id: 's_gr4v', component: 'Text', variant: 'h3', text: '12' },
+    ],
+  }),
 }
 
-/** The sample subtree for a component: an explicit tree, or a generic single Text/child fallback for any container. */
-function sampleFor(name: string, def: ComponentDef): Sample {
+/** The sample subtree for a component: an explicit tree, or a generic single Text/child fallback for any container.
+ *  Exported for component-preview-catalog.test.ts's GH #978 negative control (the fallback still bites for a
+ *  hypothetical children-bearing type with no SAMPLE_TREES entry) — no other consumer. */
+export function sampleFor(name: string, def: ComponentDef): Sample {
   const explicit = SAMPLE_TREES[name]
   if (explicit) return explicit()
   if (!def.children) return { rootRef: {}, extras: [] }
