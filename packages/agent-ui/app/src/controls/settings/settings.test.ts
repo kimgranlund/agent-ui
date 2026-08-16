@@ -264,7 +264,9 @@ describe('UISettingsElement — a real store round-trip through the generated fi
       }],
     }
     await el.updateComplete
-    const control = el.querySelector('ui-select') as unknown as HTMLElement & { value: string }
+    // GH #962 — `[data-part="panel"]` scopes past the compact-band `section-select` (also a bare
+    // `ui-select`, always present in the tree, `settings.ts` `#compose`) to the GENERATED field's own.
+    const control = el.querySelector('[data-part="panel"] ui-select') as unknown as HTMLElement & { value: string }
     expect(control).not.toBeNull()
     control.value = 'dark'
     control.dispatchEvent(new Event('select', { bubbles: true })) // ui-select's OWN commit event — never 'change'
@@ -467,6 +469,70 @@ describe('UISettingsElement — schema/store are REACTIVE (a real reassignment r
     expect(el.querySelector('ui-text-field')).toBeNull() // the old schema's field is GONE, not just hidden
     expect(el.querySelector('ui-switch')).not.toBeNull()
     expect(el.section).toBe('only') // re-resolved — the old `section` ('general') no longer exists
+  })
+})
+
+describe('UISettingsElement — the compact-band `section-select` (GH #962)', () => {
+  it('composes its OWN trigger/listbox parts and one [role=option] per section, in lock-step with the resolved default', async () => {
+    const el = mount(new UISettingsElement())
+    el.schema = SCHEMA
+    await el.updateComplete
+    const select = el.querySelector('[data-part="section-select"]') as unknown as HTMLElement & { value: string }
+    expect(select).not.toBeNull()
+    // ui-select's OWN internal composed parts (select.ts #ensureParts) — the GH #962 regression class:
+    // an earlier `#build()` implementation wiped these via a blanket `replaceChildren()`.
+    expect(select.querySelector('[data-part="trigger"]'), "select's own trigger part").not.toBeNull()
+    expect(select.querySelector('[data-part="listbox"]'), "select's own listbox part").not.toBeNull()
+    const options = [...select.querySelectorAll('[role="option"]')]
+    expect(options.map((o) => o.getAttribute('value'))).toEqual(['general', 'privacy'])
+    expect(select.value, 'starts in lock-step with the resolved default section').toBe('general')
+  })
+
+  it('a reassigned `schema` REBUILDS the options without ever destroying the trigger/listbox parts (the GH #962 regression class)', async () => {
+    const el = mount(new UISettingsElement())
+    el.schema = SCHEMA
+    await el.updateComplete
+    const select = el.querySelector('[data-part="section-select"]') as unknown as HTMLElement & { value: string }
+    const trigger = select.querySelector('[data-part="trigger"]')
+    const listbox = select.querySelector('[data-part="listbox"]')
+
+    const OTHER_SCHEMA: SettingsSchema = {
+      version: 1,
+      sections: [{ id: 'only', label: 'Only', fields: [{ key: 'flag', type: 'boolean', label: 'Flag', default: false }] }],
+    }
+    el.schema = OTHER_SCHEMA
+    await el.updateComplete
+
+    // Same PARTS (identity-preserved, never torn down and left unrebuilt — select.ts's own "parts created
+    // once, persist" idiom) — but NEW options, matching the new schema, not the stale `general`/`privacy` pair.
+    expect(select.querySelector('[data-part="trigger"]')).toBe(trigger)
+    expect(select.querySelector('[data-part="listbox"]')).toBe(listbox)
+    expect([...select.querySelectorAll('[role="option"]')].map((o) => o.getAttribute('value'))).toEqual(['only'])
+    expect(select.value).toBe('only')
+  })
+
+  it('choosing a DIFFERENT option (its own `select` commit event) switches `.section` — the same active-section state `#rail` drives', async () => {
+    const el = mount(new UISettingsElement())
+    el.schema = SCHEMA
+    await el.updateComplete
+    const select = el.querySelector('[data-part="section-select"]') as unknown as HTMLElement & { value: string }
+    select.value = 'privacy'
+    select.dispatchEvent(new Event('select', { bubbles: true })) // ui-select's OWN commit event — never 'change'
+    await el.updateComplete
+    expect(el.section).toBe('privacy')
+  })
+
+  it('the single-section posture (GH #50) hides it — nothing to navigate, matching the rail/back/separator treatment', async () => {
+    const el = mount(new UISettingsElement())
+    el.schema = {
+      version: 1,
+      sections: [{ id: 'agent', label: 'Agent', fields: [{ key: 'name', type: 'text', label: 'Name', default: '' }] }],
+    }
+    await el.updateComplete
+    expect(el.hasAttribute('data-single-section')).toBe(true)
+    const select = el.querySelector('[data-part="section-select"]') as HTMLElement
+    expect(select).not.toBeNull() // present (settings.browser.test.ts proves it stays hidden even compact)
+    expect([...select.querySelectorAll('[role="option"]')]).toHaveLength(1) // still tracks the schema
   })
 })
 

@@ -42,8 +42,10 @@ slots: []                 # no authored children at all — the rail + every sec
 parts:                     # NOT shadow-DOM ::part() (light-DOM only) — documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the split.md/master-detail.md precedent)
   - name: panel
     description: A control-rendered `<div data-part="panel">` — the mount point the active section's generated `ui-form-provider` is attached into (detached, never destroyed, when the section changes).
+  - name: section-select
+    description: (GH #962) A control-rendered `<ui-select data-part="section-select">`, pinned above the panel inside the detail pane — holds ONE `[role=option]` per section (the same set `#rail`'s `ui-nav-rail-item`s hold), kept in lock-step with the active `section`. Hidden except under `data-compact` (and never in the `data-single-section` posture).
 
-customStates: []          # no :state() hooks — the active rail item rides the composed ui-nav-rail-item's own `selected` reflected attribute, not a custom state of ui-settings' own (the ui-master-detail `data-view` precedent). One DERIVED host marker (never author-settable API, the same `data-view` class): `data-single-section` — stamped per build when the supported schema has exactly ONE section; settings.css keys the GH #50 detail-only posture off it (list pane, separator, and the narrow drill-in's Back all hide — with one section there is nothing to navigate).
+customStates: []          # no :state() hooks — the active rail item rides the composed ui-nav-rail-item's own `selected` reflected attribute, not a custom state of ui-settings' own (the ui-master-detail `data-view` precedent). Two DERIVED host markers (never author-settable API, the same `data-view` class): `data-single-section` — stamped per build when the supported schema has exactly ONE section; settings.css keys the GH #50 detail-only posture off it (list pane, separator, and the narrow drill-in's Back all hide — with one section there is nothing to navigate). `data-compact` (GH #962) — stamped by a ResizeObserver band watcher at the shell family's named COMPACT line (`SHELL_COMPACT_BREAKPOINT_REM`, shell-breakpoint.ts, the SAME constant super-shell.css's own compact band reads — the shared responsive spine, not a second breakpoint mechanism); settings.css keys the SAME detail-only posture off it PLUS shows `section-select` in the rail's place.
 
 face:
   formAssociated: false    # NOT a FACE form control — a layout composition; the GENERATED per-field controls are each their own FACE participant
@@ -59,6 +61,7 @@ geometry:
   blockSize: auto             # fills its flex parent (flex:1 1 auto on the host is the CONSUMER's job — the master-detail.md precedent)
   paddingBlock: 0             # no padding of its own — the rail/panel own their own inset
   narrowThreshold: inherited  # the drill-in threshold is entirely the composed ui-master-detail's own (40rem) — this element declares none of its own
+  compactThreshold: 52.5rem   # GH #962 — this element's OWN band (SHELL_COMPACT_BREAKPOINT_REM, shell-breakpoint.ts): below it, `data-compact` swaps the rail for `section-select` (settings.css) — wider than, and independent of, the composed ui-master-detail's own 40rem narrow drill-in above
 
 forcedColors: The active rail item's marker is entirely the composed ui-nav-rail-item's own (SPEC-R4, nav-rail.css) — a real `border-inline-start` that survives forced-colors, inherited unchanged; ui-settings contributes no forced-colors rule of its own.
 ---
@@ -133,6 +136,17 @@ reflect the raw value visibly, but their internal display↔canonical codec only
 pre-existing `ui-text-field` limitation (schema.test.ts documents it), not something this seam changes. A
 store without `subscribe` behaves byte-identically to before (no external-change reactivity, as already
 documented above). The subscription is re-armed across a relocation reconnect the same way validation is.
+
+## Mobile posture — rail → select below the compact line (GH #962)
+
+Below `52.5rem` — the shell family's named COMPACT line (`SHELL_COMPACT_BREAKPOINT_REM`,
+`shell-breakpoint.ts`; the same constant `ui-super-shell`'s own compact band reads, ADR-0150) — the rail
+steps aside for `section-select`, a `ui-select` holding the same sections, pinned above the panel. A
+ResizeObserver watching the composed `ui-master-detail`'s own container box stamps `data-compact` on the
+host; settings.css keys the rail/separator/back-affordance hide + the full-width detail pane off it, the
+same "detail-only" shape the single-section posture already uses. Selecting an option sets `section` the
+same way activating a rail item does — both are just different front ends onto the one active-section
+state.
 
 ## Accessibility
 
