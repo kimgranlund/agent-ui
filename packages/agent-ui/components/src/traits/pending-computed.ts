@@ -24,6 +24,15 @@
 // Layering: `traits → reactive` (the `signal`/`ReadonlySignal` cell) and `traits → dom` (the host type, `.effect`)
 // are both DOWNWARD imports (reactive L0 ← dom L1 ← traits L2) — the allowed direction.
 //
+// Query INVALIDATION has exactly one mechanism: the `generation` counter. It is bumped by (1) every effect
+// re-run (a newer question) AND (2) the effect's cleanup — which runs on re-run, on host disconnect (the
+// scope-owned effect is disposed with the connection scope), and on an explicit `release()`. So a settle that
+// lands AFTER the host has left the DOM is a no-op too, not only one superseded by a newer query.
+//
+// Intended follow-up seam (NOT shipped here): handing `source()` an `AbortSignal` that fires when its query
+// is invalidated, so a fetch-backed source can cancel its network work instead of merely having its late
+// answer ignored. Today the trait only IGNORES late settles; it does not cancel the underlying work.
+//
 // Fleet stale/pending STYLING convention (a shared token/state-class, TKT-0062-shaped) is deliberately NOT
 // part of this file — GH #974 requires an ADR proposal before that hook ships; this trait ships alone.
 
@@ -41,6 +50,10 @@ export interface PendingComputedOptions<T> {
    * `null`/`undefined` for "no query right now" (clears `pending`/`error`; leaves the last-settled `value`
    * untouched — there is nothing new to blank it with). Each call is a distinct query IDENTITY regardless of
    * whether it returns a referentially-equal source object.
+   *
+   * Do NOT read this controller's own signals (`value`/`pending`/`error`) inside `source()`: the trait writes
+   * them from inside the same tracking effect, so reading them there would subscribe the effect to its own
+   * writes and re-run the query on every settle.
    */
   source: () => PendingSource<T> | null | undefined
 }
@@ -110,9 +123,14 @@ export function pendingComputed<T>(host: UIElement, opts: PendingComputedOptions
           if (isCurrent()) pending.value = false
         }
       })()
-      // Early teardown (disconnect, a newer query starting, or an explicit release()) lets the generator
-      // clean up its own resources rather than leaving it running unobserved.
-      return () => void iterator.return?.()
+      // Cleanup (disconnect, a newer query starting, or an explicit release()): invalidate this query so a
+      // late `next()` settling after teardown is ignored, and let the generator clean up its own resources
+      // rather than leaving it running unobserved. `return()` may itself reject at teardown (a generator's
+      // `finally` throwing) — swallowed, since nobody is left to observe it.
+      return () => {
+        generation++
+        Promise.resolve(iterator.return?.()).catch(() => {})
+      }
     }
 
     source.then(
@@ -127,7 +145,11 @@ export function pendingComputed<T>(host: UIElement, opts: PendingComputedOptions
         pending.value = false
       },
     )
-    return undefined
+    // Cleanup (disconnect / re-run / release()): invalidate this query so a settle landing after teardown —
+    // e.g. after the host has left the DOM — never writes `value`/`pending`/`error`.
+    return () => {
+      generation++
+    }
   })
 
   return {

@@ -5,8 +5,9 @@ import { pendingComputed, type PendingComputedController } from './pending-compu
 
 // The pendingComputed controller (GH #974): last-settled `value` + query-scoped `pending` (+ `error`) around
 // a Promise or async-iterable source. Named probes: promise-settle · stale-content-stays-visible ·
-// query-scoped-pending (supersession) · rejection · async-iterable-yields · null-source-clears-pending ·
-// release-ignores-late-settle · zero-residue-on-disconnect · re-arm-on-reconnect.
+// query-scoped-pending (supersession) · rejection (+ error-clears-on-next-query) · async-iterable-yields ·
+// superseded-iterator-race · null-source-clears-pending · release-ignores-late-settle ·
+// settle-after-disconnect-is-a-no-op · zero-residue-on-disconnect · re-arm-on-reconnect.
 
 /** Deferred helper: a Promise plus externally-callable resolve/reject, for controlling settle order in tests. */
 function deferred<T>(): { promise: Promise<T>; resolve: (v: T) => void; reject: (e: unknown) => void } {
@@ -106,8 +107,9 @@ describe('pendingComputed — last-settled value + query-scoped pending (GH #974
 
   it('rejection: error is set and pending clears on a rejected promise; error clears on the next query', async () => {
     const d = deferred<string>()
+    const d2 = deferred<string>()
     const el = new PendingEl()
-    el.source = () => d.promise
+    el.queryFn = (key) => (key === 0 ? d.promise : d2.promise)
     document.body.append(el)
 
     const boom = new Error('boom')
@@ -119,11 +121,12 @@ describe('pendingComputed — last-settled value + query-scoped pending (GH #974
     expect(el.controller!.error.value).toBe(boom)
     expect(el.controller!.value.value).toBeUndefined() // never settled a value
 
-    // Next query clears the error even before it settles.
-    const d2 = deferred<string>()
-    el.controller!.release()
-    el.controller = pendingComputed(el, { source: () => d2.promise })
+    // The next query — a real reactive re-run of the SAME controller — clears the error even before it settles.
+    el.queryKey.value = 1
+    await whenFlushed()
     expect(el.controller!.error.value).toBeUndefined()
+    expect(el.controller!.pending.value).toBe(true) // the new query is in flight
+    expect(el.controller!.value.value).toBeUndefined() // still no settled value
     el.remove()
   })
 
@@ -145,22 +148,76 @@ describe('pendingComputed — last-settled value + query-scoped pending (GH #974
     el.remove()
   })
 
+  it('superseded-iterator-race: a superseded iterator source is return()ed once and its late next() never touches value/pending', async () => {
+    let resolveNext!: (r: IteratorResult<string>) => void
+    const returnSpy = vi.fn(async () => ({ value: undefined, done: true as const }))
+    const staleStream: AsyncIterable<string> = {
+      [Symbol.asyncIterator]() {
+        return {
+          next: () =>
+            new Promise<IteratorResult<string>>((res) => {
+              resolveNext = res // held open — settled by the test AFTER the source has been superseded
+            }),
+          return: returnSpy,
+        }
+      },
+    }
+    const current = deferred<string>()
+    const el = new PendingEl()
+    el.queryFn = (key) => (key === 0 ? staleStream : current.promise)
+    document.body.append(el)
+    expect(el.controller!.pending.value).toBe(true)
+
+    // A newer question starts — the SAME controller's tracking effect re-runs; its cleanup return()s the
+    // superseded iterator exactly once.
+    el.queryKey.value = 1
+    await whenFlushed()
+    expect(returnSpy).toHaveBeenCalledTimes(1)
+    expect(el.controller!.pending.value).toBe(true) // the CURRENT (promise) query is in flight
+
+    // The superseded iterator's in-flight next() resolves late — must be ignored entirely.
+    resolveNext({ value: 'stale-chunk', done: false })
+    await new Promise((resolve) => setTimeout(resolve, 0)) // macrotask hop: full microtask drain
+    expect(el.controller!.value.value).toBeUndefined() // never adopted the stale yield
+    expect(el.controller!.pending.value).toBe(true) // still pending on the current query
+    expect(returnSpy).toHaveBeenCalledTimes(1) // no second return() from the loop's own exit
+    el.remove()
+  })
+
   it('null-source-clears-pending: a null/undefined source clears pending + error, leaves value alone', async () => {
     const d = deferred<string>()
     const el = new PendingEl()
-    el.source = () => d.promise
+    el.queryFn = (key) => (key === 0 ? d.promise : null)
     document.body.append(el)
     d.resolve('kept')
     await d.promise
     await Promise.resolve()
     expect(el.controller!.value.value).toBe('kept')
 
-    el.controller!.release()
-    el.controller = pendingComputed(el, { source: () => undefined })
+    // The SAME controller's source() re-runs and now answers "no query" — pending/error clear, value is kept.
+    el.queryKey.value = 1
+    await whenFlushed()
     expect(el.controller!.pending.value).toBe(false)
     expect(el.controller!.error.value).toBeUndefined()
-    expect(el.controller!.value.value).toBeUndefined() // fresh controller instance — value starts undefined
+    expect(el.controller!.value.value).toBe('kept') // last-settled value survives a null query
     el.remove()
+  })
+
+  it('settle-after-disconnect-is-a-no-op: a resolve landing after the host left the DOM never writes value/pending', async () => {
+    const d = deferred<string>()
+    const el = new PendingEl()
+    el.source = () => d.promise
+    document.body.append(el)
+    const c = el.controller!
+    expect(c.pending.value).toBe(true)
+
+    el.remove() // disconnect — the scope-owned effect is disposed; its cleanup invalidates the in-flight query
+    d.resolve('after-disconnect')
+    await d.promise
+    await Promise.resolve()
+
+    expect(c.value.value).toBeUndefined() // never adopted the post-disconnect answer
+    expect(c.pending.value).toBe(true) // frozen at whatever it was the instant the host disconnected
   })
 
   it('release-ignores-late-settle: a released controller never mutates its signals from a late resolve', async () => {
