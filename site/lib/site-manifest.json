@@ -84,6 +84,13 @@
     "section": "Guides"
   },
   {
+    "href": "./toc-content.html",
+    "label": "Sticky TOC content layout",
+    "description": "A long-form article + a scroll-spy'd ui-nav-rail sidebar, swapped to a ui-select below the ADR-0150 compact line — the TOC-corpus composition recipe (heading-derived entries, the new scrollSpy trait), and the mint-last proof that no ui-toc control is needed (GH #964).",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
     "href": "./account-settings.html",
     "label": "Account settings",
     "description": "A generic account SettingsSchema rendered by the shipped ui-settings — view preferences, edit and save one through the SettingsStore — behind a must-be-signed-in gate reading the SAME in-memory identity-mock-transport as Registration & sign in (GH #615, ADR-0176).",

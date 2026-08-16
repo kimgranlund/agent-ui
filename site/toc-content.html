@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Sticky TOC content layout</title>
+  </head>
+  <body>
+    <!-- GH #964 — the sticky-TOC content-layout composition recipe (SaaS UX brief §5): a scroll-spy'd
+         ui-nav-rail sidebar, swapping to a ui-select below the ADR-0150 compact line, over a genuinely
+         long article (the page IS its own dogfooding — real reference prose, not lorem ipsum). An MPA
+         entry auto-discovered by vite.config.ts's site/**/*.html glob. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/toc-content.ts"></script>
+  </body>
+</html>

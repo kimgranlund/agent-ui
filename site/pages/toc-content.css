@@ -1,0 +1,61 @@
+/* toc-content.css — GH #964: the sticky-TOC content-layout recipe's page-local chrome. Never restyles a
+ * composed control's internals (site convention, nav-rail.css/settings.css's own banners) — only the
+ * page-owned layout grid, the article's own prose rhythm, and the compact-band visibility swap. */
+
+.toc-content-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 14rem;
+  gap: var(--md-sys-space-lg);
+  align-items: start;
+}
+
+/* Below the ADR-0150 compact line (`data-compact`, stamped by the page's own ResizeObserver against the
+ * SAME `SHELL_COMPACT_BREAKPOINT_REM` line `@agent-ui/app`'s shell-breakpoint.ts names — see toc-content.ts's
+ * own banner for why this page keeps a cited literal rather than importing it): one column, the rail's
+ * place taken by the pinned `ui-select` swap below. */
+.toc-content-layout[data-compact] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.toc-content-article {
+  min-inline-size: 0; /* a grid item's implicit content-based minimum would otherwise fight the TOC column */
+}
+
+.toc-content-article h2 {
+  margin-block-start: var(--md-sys-space-xl);
+  scroll-margin-block-start: 5rem; /* GH #964 — clears the sticky .page-header on an anchor jump/scrollIntoView */
+}
+
+/* The wide TOC nav — sticky within the page scroll region, offset below the ALSO-sticky `.page-header`
+ * (measured live, `--toc-sticky-top`, toc-content.ts's own ResizeObserver — the header's rendered height
+ * varies per page shape, so a guessed rem constant would drift). Hidden entirely under `data-compact`
+ * (the select swap takes over — never both visible, the settings.ts/#962 precedent). */
+.toc-content-nav {
+  position: sticky;
+  top: var(--toc-sticky-top, 4rem);
+  max-block-size: calc(100vb - var(--toc-sticky-top, 4rem) - var(--md-sys-space-lg));
+  overflow-y: auto;
+}
+
+[data-compact] > .toc-content-nav {
+  display: none;
+}
+
+/* The compact-band select swap — pinned above the article, same "select stands in for the rail" shape as
+ * ui-settings' own `section-select` (GH #962). Hidden wide; `data-compact` reveals it. */
+.toc-content-select {
+  display: none;
+  position: sticky;
+  top: var(--toc-sticky-top, 4rem);
+  z-index: 1;
+  margin-block-end: var(--md-sys-space-md);
+  background: var(--md-sys-color-neutral-surface);
+}
+
+[data-compact] .toc-content-select {
+  display: block;
+}
+
+.toc-content-lede {
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
