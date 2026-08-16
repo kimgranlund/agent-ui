@@ -18,6 +18,7 @@
     "./master-detail-pane.css": "./src/controls/master-detail/master-detail-pane.css",
     "./nav-rail": "./src/controls/nav-rail/nav-rail.ts",
     "./nav-rail.css": "./src/controls/nav-rail/nav-rail.css",
+    "./shell-breakpoint": "./src/shell-breakpoint.ts",
     "./settings": "./src/controls/settings/settings.ts",
     "./settings.css": "./src/controls/settings/settings.css",
     "./settings-schema": "./src/controls/settings/schema.ts",

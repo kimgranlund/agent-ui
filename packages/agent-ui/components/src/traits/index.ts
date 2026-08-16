@@ -37,3 +37,8 @@ export type { PendingComputedOptions, PendingComputedController, PendingSource }
 // root re-export only once a real consumer outside `traits/` needs one.
 export { listReorder } from './list-reorder.ts'
 export type { ListReorderOptions, ListReorderOrientation } from './list-reorder.ts'
+// GH #964 — the sticky-TOC scroll-spy trait (SaaS UX brief §5, first slice): IntersectionObserver-based
+// heading-activation, wired by the docs-site TOC recipe (site/pages/toc-content.ts) into its
+// ui-nav-rail/ui-select twin, mint-last (no `ui-toc` control).
+export { scrollSpy } from './scroll-spy.ts'
+export type { ScrollSpyOptions } from './scroll-spy.ts'

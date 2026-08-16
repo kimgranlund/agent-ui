@@ -186,6 +186,15 @@ const targets = [
   // review's M1/M2 shape; ~320 B headroom, deliberately tighter than overlay's since this trait's whole job
   // is DOM moves — a runtime kernel reach-back is the only way it grows fast.
   ['@agent-ui/components/traits/list-reorder (opt-in subpath)', '../packages/agent-ui/components/src/traits/list-reorder.ts', 1.25 * KB],
+  // GH #964 — the THIRD `./traits/*` subpath (`traits/scroll-spy`, package.json), routed here rather than
+  // the root barrel per ADR-0167's own measured route: landing it on the foundation row measured 7900 B gz
+  // against a 7680 B gz budget (241 B gz over, with only 21 B gz of headroom to begin with) — the row does
+  // NOT absorb it, so this trait ships as its own opt-in subpath instead, the overlay precedent immediately
+  // above. Same tree-shake shape: `scroll-spy.ts`'s only import is `import type { UIElement } from
+  // '../dom/index.ts'` — type-only, fully erased — so this entry drags no kernel either; the absolute figure
+  // is the tree-shake proof (controls/tree-shake.test.ts's structural half covers the rest of the barrel).
+  // Measured 421 B gz 2026-08-16 (GH #964); pinned at 1 KB (ADR-0080's measure-first-then-pin discipline).
+  ['@agent-ui/components/traits/scroll-spy (opt-in subpath)', '../packages/agent-ui/components/src/traits/scroll-spy.ts', 1 * KB],
 ]
 
 let over = false

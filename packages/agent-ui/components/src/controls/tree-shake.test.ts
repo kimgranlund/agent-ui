@@ -345,3 +345,35 @@ describe('traits/overlay tree-shake — the opt-in subpath is a type-only LEAF (
     )
   })
 })
+
+// ── GH #964 — the `./traits/scroll-spy` subpath's tree-shake half (the traits/overlay precedent, second
+// subpath) ───────────────────────────────────────────────────────────────────────────────────────────────
+//
+// `traits/scroll-spy` landed on the foundation row measured 7900 B gz against a 7680 B gz budget (over, with
+// only 21 B gz of headroom to start) — the row does not absorb it, so it ships as its own opt-in subpath
+// instead, same as `traits/overlay`. `scripts/measure-size.mjs` gates its ABSOLUTE size (421 B gz against a
+// 1 KB cap) rather than a marginal-over-foundation figure, honest only while the trait pulls no kernel at
+// runtime — this is the assertion that keeps it honest, same scan shape as the overlay block above (see its
+// banner for why a bare `crawl()` cannot be used here either — `import type` is invisible to it).
+const SCROLL_SPY_ENTRY = 'traits/scroll-spy.ts'
+describe('traits/scroll-spy tree-shake — the opt-in subpath is a type-only LEAF (GH #964)', () => {
+  it('the glob reached the trait source (anti-vacuous — a missing key makes the scan below trivially empty)', () => {
+    expect(sources.has(SCROLL_SPY_ENTRY), `${SCROLL_SPY_ENTRY} is not in the crawled source map`).toBe(true)
+    expect((sources.get(SCROLL_SPY_ENTRY) ?? '').length, 'the trait source is empty').toBeGreaterThan(500)
+  })
+
+  it('carries ZERO value imports — every import is erased, so its runtime graph is empty', () => {
+    const src = sources.get(SCROLL_SPY_ENTRY) as string
+    const valueFrom = [...src.matchAll(/(?:^|\n)\s*(?:import|export)(?!\s+type\b)[^;'"]*?\bfrom\s*['"]([^'"]+)['"]/g)].map((m) => m[1])
+    const bare = [...src.matchAll(/(?:^|\n)\s*import\s*['"]([^'"]+)['"]/g)].map((m) => m[1])
+    expect(
+      [...valueFrom, ...bare],
+      "traits/scroll-spy gained a RUNTIME import — the subpath now drags real modules, and measure-size.mjs's absolute framing (plus its 1 KB cap) no longer holds",
+    ).toEqual([])
+    // and the type-only import it DOES carry is still there, so the emptiness above is erasure rather than
+    // an empty file or a regex that quietly stopped matching anything at all
+    expect(src, 'the type-only dom import vanished — this suite would then be asserting nothing').toMatch(
+      /import type \{[^}]*\} from '\.\.\/dom\/index\.ts'/,
+    )
+  })
+})
