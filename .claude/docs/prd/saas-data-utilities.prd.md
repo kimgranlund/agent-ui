@@ -1,0 +1,104 @@
+# PRD — SaaS Data Utilities (`@agent-ui/data`: DataSource seam · signal-backed resource/mutation · gateway client · unified streaming)
+
+> Status: **proposed · v0.1 · 2026-08-16 · Owner: agent-ui** — authored by the planner (design seat) on Kim's 2026-08-16 ruling for GH [#955](https://github.com/kimgranlund/agent-ui/issues/955) · [#956](https://github.com/kimgranlund/agent-ui/issues/956) · [#957](https://github.com/kimgranlund/agent-ui/issues/957) (recorded in `.claude/ops/rulings.md` §"Placement forks + ADR harvest — RULED 2026-08-16"): mint **`@agent-ui/data`** as a zero-dep sibling package off `components`; **#957 folds into #956**; ONE PRD/SPEC covers all three; the package mint rides [ADR-0192](../adr/0192-agent-ui-data-package.md) (**proposed** — Kim ratifies; nothing here self-ratifies). Ratification of this PRD = doc-checker pass + Kim's flip on ADR-0192.
+> Altitude: owns **why + what-should-exist** for the data-utilities capability. The package-mint decision + rejected alternatives are ADR-0192's; behavior contracts are [`../spec/saas-data-utilities.spec.md`](../spec/saas-data-utilities.spec.md); implementation is the build wave's (an LLD is owed only if the SPEC's file map proves insufficient — see §7). Build decomposition: [`../decompositions/saas-data-utilities.decomp.json`](../decompositions/saas-data-utilities.decomp.json) (both planes, PLAN mode, `coverage_check.py --strict` exit 0).
+> **Sibling-vs-extension ruling:** a **new sibling PRD**, not an extension of [`saas-data-workbench.prd.md`](./saas-data-workbench.prd.md) (M-A) — that PRD's ratified §4 fences *"No data-fetching, transport or backend layer"* and *"Persistence is in-session only"* for the **workbench proof page**, and those fences stand verbatim: the workbench keeps its seeded fixture and zero-network probe. This PRD gives the fleet the *opt-in* data layer that fence deliberately declined to build inside a demo — the same "bring your own X now includes ours" move [`router.prd.md`](./router.prd.md) made against `agent-app-surfaces.prd.md`'s routing/store non-goal. No component-tier package acquires application-framework identity: `components`, `a2ui`, `app`, `router`, `code` never import `data`.
+> Grounding: [`../briefs/saas-utilities.brief.md`](../briefs/saas-utilities.brief.md) (the P1–P7 survey; §0 prior art; §3 forks — every fork ruled or recommended below, none re-litigated) · `packages/agent-ui/a2ui/src/agent/agent-transport.ts` — `AgentTransport.turn(): AsyncIterable<string>` + `AgentProvider`'s additive-optional capabilities ([ADR-0137](../adr/0137-a2ui-agent-producer-toolkit-export.md); the shape this PRD **cites and generalizes, never redraws**) · `site/lib/ndjson-lines.ts` `readNdjsonLines` (hoisted, not duplicated) · `packages/agent-ui/a2a/src/channel/loopback.ts` `A2aChannel` (close-drain semantics) · `packages/agent-ui/components/src/reactive/` (`signal`/`computed`/`effect`/`createScope`/`ReadonlySignal` — the substrate every result surfaces through) · corpus store single-writer `put` ([ADR-0062](../adr/0062-corpus-packaging-pure-core-subpath-data-home.md)) · a2ui structural-sharing `setPointer` + `Object.is` cutoff (the optimistic-cache mechanism) · `packages/agent-ui/app/src/controls/settings/store.ts` `SettingsStore` (SPEC-R12; the persistence-adapter shape #959 generalizes in `shared` — NOT here) · [ADR-0115](../adr/0115-spa-router-v1-scope.md) / [ADR-0119](../adr/0119-code-prose-family-v1-scope.md) (the sibling-package precedent) · [ADR-0191](../adr/0191-fleet-stale-pending-state-convention.md) (`:state(pending)` — the visual convention a resource's `pending` signal feeds; **proposed**, cited as convergence only) · a2ui-live-agent SPEC-R16–R19 (the SERVER-side gateway posture — keys server-side, fail-closed enablement — that this PRD's client half composes with and never re-rules).
+
+## 1. Problem
+
+The fleet renders SaaS screens and cannot **feed** them. After M-A the primitives exist — a sortable, selectable, paginated `ui-table`, the extracted entry-list loop, the form spine, shells, a router — and every one of them is fed by hand: pages hand-roll `fetch` + local signals, per page, with no shared lifecycle state, no stale-while-revalidate, no request dedup, no invalidation, no optimistic write, no typed error, no retry, no token flow. The research brief measured this as three MISSING and two PARTIAL patterns out of seven ([brief §2](../briefs/saas-utilities.brief.md)): the read pathway (P3), the mutation pathway (P4) and cursor pagination (P5) exist nowhere as general seams; the streaming legs (P2) exist three times in three layers (`site/lib`, a2ui internals, a2a) and none is exported; the gateway-facing client contract (P7) is ruled on the SERVER side only (SPEC-R16–R19) with no consumer half.
+
+**The house already knows the answer's shape and has not generalized it.** `AgentTransport` (ADR-0137) is a proven strategy seam — one interface method returning `AsyncIterable<string>`, three transports swapped behind it at one construction site, optional capabilities widened additively so old adapters stay byte-unchanged. It is agent-turn-specific by construction (`TurnInput` is intent-shaped). The brief's §0 verdict — *"pure zero-dep core + interface seam + injected adapters + optional-capability widening + AsyncIterable for anything streamed"* — is the grammar; this PRD extends it to general CRUD/query data. Kim's charter for the category, verbatim: *"simple customizable strategy/interface and adapter patterns that allow us to keep UI implementations simple, while the CRUD pathways are highly flexible and customizable, and support concepts like streaming and sockets natively."*
+
+**Why a package, why now.** The zero-dependency law forbids the obvious escape hatch (TanStack Query, SWR, RxJS, ky/axios adoption). Growing these seams inside `components` would ride every consumer's foundation budget and muddy the `reactive ← dom ← traits/controls` layer story (a data layer is none of those layers — the exact argument ADR-0115 made for the router). Kim ruled the fork 2026-08-16: **mint `@agent-ui/data`** — the third sibling branch off `components`, catalog-invisible by construction. That is the decision ADR-0192 records; this PRD states what the package must be for.
+
+**Who has the problem.** (1) *Consuming apps* on the stack — any surface past a seeded fixture (an admin console, a B2B tool, an agent workspace reading real records) currently improvises the whole data layer. (2) *The repo itself* — `ui-agent-admin`, the workbench's successors, and every future SaaS-UX recipe (GH #960–#965) need one place to bind a resource. (3) *Agent-facing surfaces* — a live-data card, a streaming status list — need streaming/socket sources as ordinary data pathways, not per-page SSE parsers.
+
+## 2. Users
+
+**The verified, in-repo instances (the evidence).**
+
+1. **`site/` pages that hand-roll fetch + signals** — the agent-admin presets page, the live-agent demo, the A2A arena page each carry bespoke fetch/stream/state wiring (the brief's P2/P3 findings). Each is a consumer the moment `resource()` and `fromFetchStream()` exist.
+2. **`readNdjsonLines`** — one chunk-boundary-proof streaming idiom, tested once, trapped in `site/lib` where no package can import it. It is the first hoisted unit and the first `./stream` consumer.
+3. **`AgentTransport`/`AgentProvider`** — the shape's proof, and the seam whose *consumers* (the live-agent page, `produce()`) will want the gateway half (token flow, retry) without the seam itself changing (PRD-D2).
+
+**The forward-looking audience (the growth case).** A developer evaluating `@agent-ui-kit/*` for an internal tool or B2B product who needs a table bound to a paginated API with optimistic edits and a live-updating panel — today the honest answer is "bring TanStack Query and adapt"; after this, the fleet answers with one zero-dep package that speaks its own signals.
+
+## 3. Outcomes
+
+Stable IDs; priority tiers; every metric baselined at **0 / not-possible-today** (nothing exists as a general seam). Milestones: **M1** = package + core + `./gateway` + `./stream` + gates; **M2** = teaching/dogfood (first in-repo consumer migrated). Downstream SPEC requirements trace to these IDs.
+
+| ID | Priority | Outcome |
+|---|---|---|
+| **PRD-G1** | must (flagship) | **A `DataSource<T>` strategy seam** whose CRUD verbs — `read · list · create · update · remove · subscribe` — are ALL optional capabilities; a source declares only what it has, and a new verb never touches an existing source (the `AgentProvider` additive-widening law generalized) |
+| **PRD-G2** | must | **A signal-backed read pathway** — `resource(key, source)` exposing `status · data · error · updatedAt · pending` as kernel signals, with stale-while-revalidate, request dedup by key, key/prefix invalidation → refetch, and `AbortSignal` on dispose/supersede — so a component binds with **zero data logic** |
+| **PRD-G3** | must | **A mutation pathway with declared cache effects** — `mutation(fn, { invalidate, optimistic })`: lifecycle signals, invalidate-on-settle, and optimistic snapshot → patch → rollback made cheap by structural sharing (the a2ui `setPointer`/`Object.is` mechanism, the corpus single-writer discipline) |
+| **PRD-G4** | must | **ONE streaming contract** — `Streamed<T> = AsyncIterable<T>` — with `fromFetchStream` (hoisting `readNdjsonLines`) · `fromEventSource` · `fromWebSocket` adapters, a declared backpressure policy, and teardown that closes the underlying reader/socket; a `DataSource.subscribe()` returns it, so streaming/sockets are **first-class CRUD pathways** (GH #957, folded) |
+| **PRD-G5** | must | **A gateway-facing client contract** — compose-around-fetch onion middleware, an async token decorator with single-flight 401 refresh, ONE typed error envelope `{ kind, status?, code?, retryable, cause }`, jittered exponential retry (retryable/idempotent-only, `Retry-After`-honoring, abort-interruptible), and the **streaming pass-through rule** (no middleware buffers a body) — the CLIENT half of the posture SPEC-R16–R19 rules server-side (GH #955) |
+| **PRD-G6** | should | **Cursor pagination as a thin layer** over PRD-G2 — pages under one key, `loadMore`, refetch-from-first on invalidate; no package surface of its own |
+| **PRD-G7** | must (cross-cutting) | **Every fleet pillar holds** — zero runtime deps; `shared ← components ← data` and nothing else; `components`/`a2ui`/`shared`/`router`/`code` never import it (catalog-invisible, structurally gated); headless core (no DOM global); core-only consumers pay zero bytes for `./gateway`/`./stream`; a size line-item within budget |
+| **PRD-G8** | should | **Teaching + dogfood** — CLAUDE.md Layout/DAG rows, a site doc page, and one in-repo consumer migrated (M2) so the seam is proven outside its own tests |
+
+**PRD-G1 — the seam (flagship).** *Metric*: a `{ read }`-only object type-checks as a `DataSource`; `resource()` over a source lacking `subscribe` compiles and runs; adding a new optional verb leaves every fixture source byte-unchanged (a diff gate). *Baseline*: 0 (no seam). *Target*: green. *Timeframe*: M1.
+
+**PRD-G2 — read pathway.** *Metric*: the core suite proves idle→loading→success/error, SWR (cached value served synchronously, background revalidate), dedup (two resources on one key → ONE source call), invalidation refetch, and abort on dispose — with the headless gate biting on a planted `window` reference. *Baseline*: 0. *Target*: green. *Timeframe*: M1.
+
+**PRD-G3 — mutation pathway.** *Metric*: optimistic write is visible synchronously, rollback restores a byte-equal snapshot, untouched siblings keep identity (`Object.is`). *Baseline*: 0. *Target*: green. *Timeframe*: M1.
+
+**PRD-G4 — streaming.** *Metric*: `site/lib/ndjson-lines.test.ts`'s chunk-boundary cases pass against the hoisted implementation and `site/lib/ndjson-lines.ts` is a re-export (grep: one implementation body); the three adapters' `return()`/abort each close their underlying source exactly once. *Baseline*: three legs, three layers, zero exports. *Target*: one contract, three adapters, one export surface. *Timeframe*: M1.
+
+**PRD-G5 — gateway client.** *Metric*: N concurrent 401s → exactly one `refresh()`; a non-idempotent POST retries zero times; a streaming stub `Response` exits the default chain with `bodyUsed === false`; every failure normalizes to a `DataError`. *Baseline*: no retry/backoff anywhere, no envelope, no token seam. *Target*: green. *Timeframe*: M1.
+
+**PRD-G6 — pagination.** *Metric*: pages grow by one per `loadMore`; invalidate replaces from the first cursor. *Baseline*: 0. *Timeframe*: M1 (thin; may trail).
+
+**PRD-G7 — pillars.** *Metric*: `data/src/layering.test.ts` green + RED under a planted upward/inward import; a2ui/router/code/app layering trip-wires extended with the `data` inward-scan; tree-shake probe shows no `./gateway`/`./stream` symbols in a core-only bundle; `scripts/measure-size.mjs` line-item within the SPEC's stated budget. *Timeframe*: M1.
+
+**PRD-G8 — teaching.** *Metric*: site page + nav/toc gates green; one `site/` page's hand-rolled fetch replaced by `resource()`/`fromFetchStream()` with behavior pinned. *Timeframe*: M2.
+
+## 4. Non-goals
+
+Fences with reasons — the fence a future rider will push on first is listed first.
+
+- **No UI controls.** This package ships **no `ui-*` element**, no rendering, no CSS, no tokens. Components bind the signals; the pending/stale *treatment* is [ADR-0191](../adr/0191-fleet-stale-pending-state-convention.md)'s `:state(pending)` convention, applied by the consuming control from `resource.pending`, never by this layer. — *a data layer that renders is a framework; the fleet's controls already know how to bind a signal.*
+- **No a2ui coupling.** `a2ui` never imports `data`; no A2UI catalog type (`Resource`, `Query`, `Stream`) is minted; `AgentTransport` is **not** retrofitted into a `DataSource` (PRD-D2, §5). — *catalog-invisible by construction (ADR-0115/0119); agent-driven data access is a trust surface wanting its own record, not a rider.*
+- **No server code.** No proxy, no BFF, no key handling, no CORS/cookie policy, no dev-server routes. SPEC-R16–R19's server posture (keys server-side, fail-closed enablement, dispatch-time validation) stands verbatim; this package is the client that talks to such a gateway. — *the fleet ships browser/Node-portable client code; the server is the app's.*
+- **No persistence adapter, no offline, no local-first sync.** The `StorageAdapter` seam is **`@agent-ui/shared`'s** (GH #959, ruled 2026-08-16); cache hydration onto it is a named v2 convergence (PRD-D4), and local-first sync-engine vocabulary (client store as source of truth, mutation log, reconciliation) is FUTURE vocabulary only. — *two store interfaces in one wave is exactly the fork the brief warned against; and a sync engine is its own product.*
+- **No third-party adoption in costume.** No TanStack/SWR/RxJS/ky/axios/EventSource-polyfill vendoring; native `fetch`, `ReadableStream`, `EventSource`, `WebSocket`, `AbortSignal`, async generators only. — *the zero-dep law (CLAUDE.md); [ADR-0107](../adr/0107-chart-family-v1-scope.md)'s "runtime dependency in costume" ruling.*
+- **No schema/query language, no normalized entity graph.** No GraphQL client, no entity normalization, no relationship cache. Keys are opaque strings; the cache is key → value with structural sharing. — *normalization is a large, opinionated layer; v1 proves the seam, not a data model.*
+- **No global singleton as the only mode.** The store is instance-scoped (`createStore()`); a module-level default exists for ergonomics and is flagged honestly as a soft global (the `defaultRouter` posture, ADR-0115). — *per-instance isolation is the fleet's ratified posture (ADR-0082).*
+- **No workbench (M-A) change.** [`saas-data-workbench.prd.md`](./saas-data-workbench.prd.md) §4's zero-network fence stands; the workbench does not adopt this package. — *the proof page proves composition of primitives, not the network.*
+- **No `size:big` build in this wave.** This wave authors design only; the build is dispatched after ADR-0192's ratification, sliced by the manifest. — *build from a ratified decision, not a proposed one.*
+
+## 5. Rulings and delegated forks
+
+| ID | Fork (brief §3) | Ruling / recommendation | Status |
+|---|---|---|---|
+| **PRD-D1** | 1 — mint `@agent-ui/data` vs. a `data/` layer inside `components` | **Mint `@agent-ui/data`** — zero-dep sibling off `components`, `shared ← components ← data`, catalog-invisible | **Ruled by Kim 2026-08-16**; recorded in ADR-0192 (proposed → Kim ratifies) |
+| **PRD-D2** | 2 — retrofit `AgentTransport` into a `DataSource` specialization? | **No** — cited parallel precedent, byte-unchanged; the shape is generalized, the shipped seam is not churned. Convergence named: a future `agentSource(transport)` adapter in `data` may wrap it if a consumer appears | recommendation (SPEC-N2 pins it) |
+| **PRD-D3** | 3 — gateway client in core `.` or its own subpath? | **`./gateway` subpath**; the error envelope + `normalizeError` stay in core `.` because `resource.error`/`mutation.error` ARE that envelope | recommendation (SPEC-R1 pins the surfaces) |
+| **PRD-D4** | 4 — local-first sync in v1? | **No** — vocabulary only. Persistence rides #959's `shared` seam; `resource({ persist })` hydration is a v2 convergence once #959 Slice 1 lands | recommendation (§4 fence) |
+| **PRD-D5** | (new) streaming adapters in core or a subpath? | **`./stream` subpath**; core carries only the `Streamed<T>` type alias (zero bytes) so `DataSource.subscribe()` types without pulling adapters | recommendation (SPEC-R1) |
+| **PRD-D6** | (new) default backpressure policy, retry defaults, size budget | **Delegated to the SPEC** (its §3 states each with rationale) | open → SPEC |
+
+## 6. Composition on existing seams
+
+| Need | Existing seam (build ON) | What this PRD adds |
+|---|---|---|
+| Strategy interface + additive capabilities | `AgentTransport`/`AgentProvider` (ADR-0137) | the general CRUD-verb form (PRD-G1); the agent seam stays as-is (PRD-D2) |
+| Reactive results | signals kernel (`reactive/`) | resources/mutations are signal state machines (PRD-G2/G3) — no second reactivity |
+| Streaming lines | `readNdjsonLines` (`site/lib`) | hoisted into `./stream` (PRD-G4); site keeps a re-export shim |
+| Socket-shaped channel with drain-close | `A2aChannel` (a2a) | cited as the close-semantics precedent for `fromWebSocket`; a2a untouched |
+| Single-writer mutation surface | corpus store `put` (ADR-0062) | the store's `commit` is the one writer (PRD-G3) |
+| Cheap snapshots | a2ui `setPointer` + `Object.is` cutoff | the same structural-sharing mechanism in the data store; a2ui's implementation is not imported (DAG) — re-implemented minimal in `data`, cited |
+| Persistence adapter | `SettingsStore` → #959 `shared` `StorageAdapter` | none in v1 (PRD-D4) |
+| Server-side gateway posture | SPEC-R16–R19 | the client half only (PRD-G5) |
+| Stale/pending visual | ADR-0191 `:state(pending)` | `resource.pending` is the signal a control wires; no styling here |
+
+## 7. Downstream
+
+- **SPEC** — [`../spec/saas-data-utilities.spec.md`](../spec/saas-data-utilities.spec.md): SPEC-R1…R14 + SPEC-N1…N4, every R traced to a G here, every R with Given/When/Then acceptance.
+- **ADR** — [ADR-0192](../adr/0192-agent-ui-data-package.md): the package mint, DAG position, subpath geometry, and rejected alternatives; Status `proposed` until Kim ratifies.
+- **LLD** — not owed by this wave: the SPEC's §3 clauses name each module's public shape and the manifest's leaves name each file; the build wave writes one only if a mechanism (the store's structural sharing, the push→pull bridge) proves too large for a SPEC clause + tests.
+- **Build** — from the manifest's leaves after ADR-0192 ratifies; the `size:big` → `due-process` four-phase law applies (CLAUDE.md, GH #969).
+- **Issue close-out** — #956 closes when this design is accepted and the build lands; #957 closes with #956 (folded); #955 closes on the `./gateway` slice.
