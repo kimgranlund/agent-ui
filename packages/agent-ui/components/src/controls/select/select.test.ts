@@ -507,6 +507,11 @@ describe('ui-select — dynamic options (select-dynamic-options)', () => {
     expect(listbox.isConnected).toBe(true)
     expect(ariaLabelSpan.isConnected).toBe(true)
 
+    // Exactly ONE of each part after the heal — the heal re-attaches, it never mints a duplicate.
+    expect(el.querySelectorAll('[data-part="trigger"]')).toHaveLength(1)
+    expect(el.querySelectorAll('[data-part="aria-label"]')).toHaveLength(1)
+    expect(el.querySelectorAll('[data-part="listbox"]')).toHaveLength(1)
+
     // The a11y label seam survives (aria-labelledby still references the (still-attached) spans).
     expect(trigger.getAttribute('aria-labelledby')).toContain(ariaLabelSpan.id)
 
@@ -521,6 +526,64 @@ describe('ui-select — dynamic options (select-dynamic-options)', () => {
     await whenFlushed()
     expect(el.value).toBe('kiwi')
     expect(trigger.querySelector('[data-part="label"]')?.textContent).toBe('Kiwi')
+
+    el.remove()
+  })
+
+  // GH #994 (partial detach) — a consumer that PRESERVES the trigger (`replaceChildren(trigger,
+  // ...options)`) must not have it moved by the heal: `appendChild` on a still-attached node is a
+  // remove+insert, i.e. a blur for a focused trigger (which `trackUserInvalid` would read as the
+  // user leaving a required-empty field). Only the genuinely detached parts get re-appended.
+  it('select-part-partial-detach: replaceChildren(trigger, ...opts) keeps the (focused) trigger in place and re-appends only listbox + aria-label', async () => {
+    const { el, trigger, listbox: originalListbox } = makeSelect()
+    el.label = 'Fruit'
+    await whenFlushed()
+    const originalAriaLabelSpan = el.querySelector<HTMLElement>('[data-part="aria-label"]')!
+
+    const mango = document.createElement('div')
+    mango.setAttribute('role', 'option')
+    mango.setAttribute('value', 'mango')
+    mango.textContent = 'Mango'
+
+    // The consumer's OWN replaceChildren is a synchronous remove-all + re-insert (that is the DOM's
+    // "replace all" algorithm — the consumer's move, not ours). The heal runs later, in the
+    // MutationObserver microtask — so the watch window (focus + blur/move counters) opens AFTER the
+    // consumer's call returns and BEFORE the microtasks flush: it sees only what the heal does.
+    el.replaceChildren(trigger, mango) // trigger PRESERVED; listbox + aria-label wiped
+    trigger.focus()
+    expect(document.activeElement).toBe(trigger)
+    let blurs = 0
+    trigger.addEventListener('blur', () => blurs++)
+    let moves = 0
+    const moveWatch = new MutationObserver((records) => {
+      for (const r of records) if ([...r.removedNodes].includes(trigger)) moves++
+    })
+    moveWatch.observe(el, { childList: true })
+
+    await Promise.resolve() // the select's observer callback (#syncOptions → #ensureParts heal) runs here
+    await Promise.resolve()
+    await whenFlushed()
+    moveWatch.disconnect()
+
+    // The heal never touched the trigger: no removal record, no blur, focus intact, still first child.
+    expect(moves).toBe(0)
+    expect(blurs).toBe(0)
+    expect(document.activeElement).toBe(trigger)
+    expect(el.firstElementChild).toBe(trigger)
+
+    // The detached parts are re-attached (same nodes) and the option adopted into the listbox.
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    const ariaLabelSpan = el.querySelector<HTMLElement>('[data-part="aria-label"]')!
+    expect(listbox).toBe(originalListbox)
+    expect(ariaLabelSpan).toBe(originalAriaLabelSpan)
+    expect(el.querySelectorAll('[data-part="trigger"]')).toHaveLength(1)
+    expect(el.querySelectorAll('[data-part="aria-label"]')).toHaveLength(1)
+    expect(el.querySelectorAll('[data-part="listbox"]')).toHaveLength(1)
+    expect(mango.parentElement).toBe(listbox)
+    expect([...listbox.querySelectorAll<HTMLElement>('[role=option]')].map((o) => o.getAttribute('value'))).toEqual(['mango'])
+
+    // Canonical order still holds: trigger · aria-label · listbox as the host's direct children.
+    expect([...el.children].map((c) => c.getAttribute('data-part'))).toEqual(['trigger', 'aria-label', 'listbox'])
 
     el.remove()
   })

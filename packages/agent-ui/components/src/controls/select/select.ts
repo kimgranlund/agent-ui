@@ -499,9 +499,14 @@ export class UISelectElement extends UIFormElement {
           stale.remove()
         }
       }
-      this.appendChild(this.#trigger)
-      this.appendChild(this.#ariaLabelSpan)
-      this.appendChild(this.#listbox)
+      // Re-append ONLY the detached parts. `appendChild` on a still-attached node MOVES it (remove +
+      // insert) — for a focused trigger that is a blur, which `trackUserInvalid` would read as a
+      // "user left the field" and arm the invalid state on a required-empty select. A consumer that
+      // preserved a part (`host.replaceChildren(trigger, ...options)`) keeps it exactly where it is;
+      // the detached parts land at the tail, so the order still ends canonical.
+      if (this.#trigger.parentNode !== this) this.appendChild(this.#trigger)
+      if (this.#ariaLabelSpan.parentNode !== this) this.appendChild(this.#ariaLabelSpan)
+      if (this.#listbox.parentNode !== this) this.appendChild(this.#listbox)
       return { trigger: this.#trigger, listbox: this.#listbox, labelSpan: this.#labelSpan, ariaLabelSpan: this.#ariaLabelSpan }
     }
 
