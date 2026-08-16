@@ -131,9 +131,17 @@ function normalizeSearchText(value: unknown): string {
     .toLocaleLowerCase()
 }
 
-export function computeMatchingCount(records: readonly WorkbenchRecord[], filter: readonly WorkbenchFilterEntry[], search: string): number {
+export function computeMatchingCount(
+  records: readonly WorkbenchRecord[],
+  filter: readonly WorkbenchFilterEntry[],
+  search: string,
+  // GH #963 — the columns menu can narrow `table.columns` to a SUBSET of WORKBENCH_COLUMNS (hidden
+  // columns stop being searchable, table.md's "search what you see" contract) — default to the full
+  // set so every OTHER caller (unaffected by the columns menu) is unchanged.
+  columns: readonly WorkbenchColumn[] = WORKBENCH_COLUMNS,
+): number {
   const needle = normalizeSearchText(search.trim())
-  const searchableKeys = WORKBENCH_COLUMNS.filter((c) => c.searchable !== false).map((c) => c.key)
+  const searchableKeys = columns.filter((c) => c.searchable !== false).map((c) => c.key)
   let count = 0
   for (const record of records) {
     const row = record as unknown as Record<string, unknown>

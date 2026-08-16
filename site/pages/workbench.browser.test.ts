@@ -47,6 +47,26 @@ function searchField(): UITextFieldElement {
 function resultsCount(): HTMLElement {
   return document.querySelector('.wb-results-count') as HTMLElement
 }
+function columnsPopover(): UIFormPopoverElement {
+  return document.querySelector('.wb-columns-popover') as UIFormPopoverElement
+}
+function columnsList(): HTMLElement {
+  return document.querySelector('.wb-columns-list') as HTMLElement
+}
+const COLUMN_KEY_BY_LABEL: Record<string, string> = { Account: 'name', Plan: 'plan', Status: 'status', Seats: 'seats', MRR: 'mrr', Renews: 'renewsOn' }
+function columnsRow(label: string): HTMLElement {
+  return columnsList().querySelector(`[data-column-key="${COLUMN_KEY_BY_LABEL[label]}"]`) as HTMLElement
+}
+async function openColumnsMenu(): Promise<void> {
+  const popover = columnsPopover()
+  if (!popover.open) {
+    await userEvent.click(popover.querySelector('[data-part="trigger"]') as HTMLElement)
+    await raf()
+  }
+}
+function headerLabels(): string[] {
+  return [...table().querySelectorAll('thead th')].map((th) => (th.textContent ?? '').trim()).filter((t) => t !== '')
+}
 function recordPicker(): UISelectElement {
   return document.querySelector('.wb-record-actions ui-select') as UISelectElement
 }
@@ -200,6 +220,113 @@ describe('workbench — SPEC-R1: the widened table over the workbench fixture (a
     expect(pagination.page).toBe(1)
     const nativeTable = t.querySelector('table') as HTMLTableElement
     expect(nativeTable.getAttribute('role'), 'role stays absent with pagination enabled').toBeNull()
+  })
+})
+
+describe('workbench — GH #963: the columns menu (show/hide + reorder), ZERO ui-table API change', () => {
+  const ORIGINAL_ORDER = ['Account', 'Plan', 'Status', 'Seats', 'MRR', 'Renews']
+
+  it('starts with all six columns in fixture order', () => {
+    expect(headerLabels()).toEqual(ORIGINAL_ORDER)
+  })
+
+  it('hiding a column removes its header; showing it again restores the original order', async () => {
+    await openColumnsMenu()
+    const planCheckbox = columnsRow('Plan').querySelector('ui-checkbox') as UICheckboxElement
+    await userEvent.click(planCheckbox)
+    await raf()
+    expect(headerLabels(), 'Plan must drop out of the rendered header').toEqual(['Account', 'Status', 'Seats', 'MRR', 'Renews'])
+    expect(columnsPopover().label).toBe('Columns · 1 hidden')
+
+    await userEvent.click(planCheckbox)
+    await raf()
+    expect(headerLabels(), 'Plan must return to its original position').toEqual(ORIGINAL_ORDER)
+    expect(columnsPopover().label).toBe('Columns')
+  })
+
+  it('moving a column up/down reorders the rendered header, restores focus to the SAME row after the panel rebuilds, and moving back restores the original order', async () => {
+    await openColumnsMenu()
+    const upButton = columnsRow('Status').querySelector('ui-button[aria-label="Move Status up"]') as UIButtonElement
+    await userEvent.click(upButton)
+    await raf()
+    expect(headerLabels()).toEqual(['Account', 'Status', 'Plan', 'Seats', 'MRR', 'Renews'])
+    // renderColumnsList() replaces every row node wholesale on a reorder — focus must land back on
+    // Status's OWN (fresh) up-button, not fall out to <body> (WCAG 2.4.3).
+    expect(document.activeElement?.getAttribute('aria-label'), 'focus must stay on the moved row\'s own control').toBe('Move Status up')
+
+    // the panel rebuilt again — re-query fresh (columnsRow() always re-queries by data-column-key)
+    const downButton = columnsRow('Status').querySelector('ui-button[aria-label="Move Status down"]') as UIButtonElement
+    await userEvent.click(downButton)
+    await raf()
+    expect(headerLabels(), 'must restore the original order for the tests after this one').toEqual(ORIGINAL_ORDER)
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Move Status down')
+  })
+
+  it('the last visible column cannot be hidden — the checkbox reverts rather than leaving zero columns', async () => {
+    await openColumnsMenu()
+    for (const label of ORIGINAL_ORDER.slice(1)) {
+      const checkbox = columnsRow(label).querySelector('ui-checkbox') as UICheckboxElement
+      await userEvent.click(checkbox)
+      await raf()
+    }
+    expect(headerLabels()).toEqual(['Account'])
+
+    const accountCheckbox = columnsRow('Account').querySelector('ui-checkbox') as UICheckboxElement
+    await userEvent.click(accountCheckbox) // attempt to hide the last remaining column
+    await raf()
+    expect(headerLabels(), 'the guard must keep at least one column visible').toEqual(['Account'])
+    expect(accountCheckbox.checked, 'the checkbox reverts to checked rather than actually hiding').toBe(true)
+
+    // reset — restore all six for the tests after this one
+    for (const label of ORIGINAL_ORDER.slice(1)) {
+      const checkbox = columnsRow(label).querySelector('ui-checkbox') as UICheckboxElement
+      await userEvent.click(checkbox)
+      await raf()
+    }
+    expect(headerLabels()).toEqual(ORIGINAL_ORDER)
+  })
+
+  it('hiding a column narrows what `search` scans too — the visible results count tracks the CURRENT columns, never the full fixture set', async () => {
+    // Regression: a hidden column must also stop being searchable ("search what you see", table.md) —
+    // computeMatchingCount must be driven by table.columns (the recipe's own effective set), not the
+    // page's full WORKBENCH_COLUMNS constant, or the count silently drifts from what the table renders.
+    await openColumnsMenu()
+    const planCheckbox = columnsRow('Plan').querySelector('ui-checkbox') as UICheckboxElement
+    await userEvent.click(planCheckbox) // hide Plan — Plan values ('Growth' etc.) stop being searchable
+    await raf()
+
+    const field = searchField()
+    await clearAndType(field, 'Growth') // matches ONLY the (now-hidden) plan column, no other column
+    await raf()
+    const renderedRows = table().querySelectorAll('tbody tr').length
+    expect(renderedRows, 'the table itself must render zero matching rows once Plan is hidden').toBe(0)
+    expect(resultsCount().textContent, 'the count must agree with what the table actually renders').toBe(`Showing 0 of ${FIXTURE_RECORDS.length} accounts`)
+
+    // reset — restore Plan and clear the search for the tests after this one
+    await clearAndType(field, '')
+    await userEvent.click(planCheckbox)
+    await raf()
+    expect(headerLabels()).toEqual(ORIGINAL_ORDER)
+  })
+
+  it('a table.sort naming a column that then hides is cleared, never left pointing at a column no header can un-sort', async () => {
+    await raf()
+    const t = table()
+    const seatsSortButton = [...t.querySelectorAll('[data-part="sort-button"]')].find((b) => b.closest('th')?.textContent?.includes('Seats')) as HTMLElement
+    await userEvent.click(seatsSortButton) // table.sort = {key:'seats', direction:'ascending'}
+    await raf()
+    expect((t.sort as unknown as { key: string } | null)?.key).toBe('seats')
+
+    await openColumnsMenu()
+    const seatsCheckbox = columnsRow('Seats').querySelector('ui-checkbox') as UICheckboxElement
+    await userEvent.click(seatsCheckbox) // hide the currently-sorted column
+    await raf()
+    expect(t.sort, 'hiding the sorted column must clear table.sort, not leave it pointing at a hidden key').toBeNull()
+
+    // reset
+    await userEvent.click(seatsCheckbox)
+    await raf()
+    expect(headerLabels()).toEqual(ORIGINAL_ORDER)
   })
 })
 

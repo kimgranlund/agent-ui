@@ -30,6 +30,12 @@
 // The workbench frame is never agent-emittable (SPEC-N5): the agent's payload composes catalog rows INSIDE
 // the one ui-surface-host mount and nothing outside it. No fetch layer (SPEC-N1/N10) — every import below
 // names only published `@agent-ui/*` subpaths, none of them a transport.
+//
+// ── the columns menu — a delta beyond the four SPEC parts (GH #963, first slice) ───────────────────────
+// Column show/hide + reorder via a `ui-form-popover` in the SAME toolbar, driving `table.columns` only
+// (order = render order, omission = hidden — table.md's existing seam). ZERO `ui-table` API change. See
+// the inline comment at its construction site below for the full rationale (vehicle choice, the
+// persistence cross-ref to GH #959, and the deferred drag-reorder/resize fence).
 
 import '@agent-ui/components/foundation-styles.css' // [1] foundation: tokens.css → dimensions.css (FIRST)
 import '@agent-ui/components/base-styles.css' // [1b] the DOCUMENT BASE layer: typeface/leading/ink/rendering (shell-less pages need this or they render in the UA serif)
@@ -66,8 +72,10 @@ import {
   writeWorkbenchRecords,
   type AccountPlan,
   type AccountStatus,
+  type WorkbenchColumn,
   type WorkbenchFilterEntry,
   type WorkbenchRecord,
+  type WorkbenchSort,
 } from './workbench-data.ts'
 import { summaryLines, summaryViewKey, type SummaryViewKey } from './workbench-summary.ts'
 
@@ -160,7 +168,12 @@ function refreshDerivedView(): void {
   const records = readWorkbenchRecords(store)
   const filter = table.filter as unknown as WorkbenchFilterEntry[]
   const search = table.search
-  const matching = computeMatchingCount(records, filter, search)
+  // GH #963 — search is "search what you see" (table.md): a column hidden by the columns menu stops
+  // being searchable, so the count must be computed against the table's CURRENT `columns`, never the
+  // full fixture set, or a hide+search combination reads a stale count against rows the table itself
+  // isn't scanning.
+  const visibleColumns = table.columns as unknown as WorkbenchColumn[]
+  const matching = computeMatchingCount(records, filter, search, visibleColumns)
   resultsCount.textContent = `Showing ${matching} of ${records.length} accounts`
   applySummaryKey(summaryViewKey({ filterActive: filter.length > 0, searchActive: search.trim() !== '' }))
 }
@@ -178,6 +191,136 @@ function updateStatusFilter(): void {
 }
 for (const checkbox of statusCheckboxes.values()) checkbox.addEventListener('change', updateStatusFilter)
 statusPopover.label = 'Status'
+
+// ════════════════ the columns menu — column visibility + reorder (GH #963, first slice) ══════════════
+// Delta-scoped against the shipped M-A surface above: ZERO `ui-table` API change. `columns` order = the
+// table's render order, and a key's omission = hidden — the seam `cleanColumns` (table-model.ts) already
+// preserves, ticket #963's own composition target — so a page-local `columnOrder`/`hiddenColumnKeys`
+// pair, reduced into one `table.columns` write, is the whole mechanism. `ui-form-popover` is the vehicle
+// (not `ui-menu`), same rationale PRD-D3 already ruled for the status facet above: `ui-menu` closes the
+// panel on EVERY commit, including a `menuitemcheckbox` toggle (menu.md's own contract), so toggling
+// several columns' visibility would cost one open-click-close cycle per toggle; a live-apply popover
+// panel stays open across an arbitrary run of checks and reorders. Persistence-as-a-view (a per-user
+// saved column layout, surviving reload) is OUT OF SCOPE here: GH #959 owns the persistence-seam
+// question and is still awaiting a ruling — this recipe's own state is page-local, in-memory, and resets
+// on reload, the same PRD-D2 posture as everything else on this page; the day #959 rules a seam, THIS is
+// the state that would serialize through it (one `{order, hidden}` pair, already shaped for it). In-header
+// drag-reorder and edge-drag resize are explicitly deferred to a later ADR — this ticket's own fence; the
+// up/down buttons below are the whole reorder affordance for this slice. Placed AFTER `refreshDerivedView`/
+// `resultsCount` above (both referenced by `applyColumnsState` below) rather than beside the table/toolbar
+// construction earlier in this file — a `const` reference ahead of its own declaration is a TDZ error, not
+// just a style choice.
+const columnOrder: string[] = WORKBENCH_COLUMNS.map((c) => c.key)
+const hiddenColumnKeys = new Set<string>()
+
+const columnsPopover = document.createElement('ui-form-popover') as UIFormPopoverElement
+columnsPopover.setAttribute('placement', 'bottom-start')
+columnsPopover.classList.add('wb-columns-popover')
+const columnsList = el('div', 'wb-columns-list')
+columnsList.setAttribute('role', 'group')
+columnsList.setAttribute('aria-label', 'Columns')
+columnsPopover.append(columnsList)
+
+function columnLabel(key: string): string {
+  return WORKBENCH_COLUMNS.find((c) => c.key === key)?.label ?? key
+}
+
+/** The one `table.columns` write site for this recipe — order = render order, omission = hidden; nothing
+ *  here reaches into `ui-table` internals. Also clears a stale `table.sort` naming a column this write is
+ *  about to hide (`makeRowComparator`, table-model.ts, silently returns a no-op comparator for an unknown
+ *  sort key — parking the rows in their last sorted order rather than crashing, but leaving `table.sort`
+ *  pointed at a column no header can any longer un-sort from) and always re-derives the results count/
+ *  summary key, since a hide/show changes what `search` scans (table.md: "search what you see"). */
+function applyColumnsState(): void {
+  const effective = columnOrder.filter((key) => !hiddenColumnKeys.has(key)).map((key) => WORKBENCH_COLUMNS.find((c) => c.key === key)!)
+  table.columns = effective
+  const currentSort = table.sort as unknown as WorkbenchSort | null
+  if (currentSort && !effective.some((c) => c.key === currentSort.key)) {
+    table.sort = null
+  }
+  columnsPopover.label = hiddenColumnKeys.size > 0 ? `Columns · ${hiddenColumnKeys.size} hidden` : 'Columns'
+  refreshDerivedView()
+}
+
+/** Refocuses the moved/toggled column's OWN move button after a rebuild — `renderColumnsList()` below
+ *  replaces every row node wholesale, so the button a keyboard/screen-reader user just activated is gone
+ *  from the DOM and focus would otherwise fall back to <body> (WCAG 2.4.3 focus-order regression). Prefers
+ *  the SAME direction the user just used; falls back to the opposite direction when that edge is now
+ *  `disabled` (and therefore unfocusable, button.md's native-parity contract). */
+function focusMoveButton(key: string, preferred: 'up' | 'down'): void {
+  const row = columnsList.querySelector(`[data-column-key="${key}"]`)
+  if (!row) return
+  const fallback = preferred === 'up' ? 'down' : 'up'
+  const preferredBtn = row.querySelector(`[aria-label="Move ${columnLabel(key)} ${preferred}"]`) as UIButtonElement | null
+  const fallbackBtn = row.querySelector(`[aria-label="Move ${columnLabel(key)} ${fallback}"]`) as UIButtonElement | null
+  ;(preferredBtn && !preferredBtn.disabled ? preferredBtn : fallbackBtn)?.focus()
+}
+
+/** Rebuilds the panel's row list from `columnOrder` — cheap (six rows) and keeps index-based up/down
+ *  disabling trivially correct, the same whole-rebuild posture `renderRecordPickerOptions` above uses for
+ *  a comparably small list. */
+function renderColumnsList(): void {
+  columnsList.replaceChildren()
+  columnOrder.forEach((key, index) => {
+    const row = el('div', 'wb-columns-row')
+    row.dataset.columnKey = key
+
+    const checkbox = document.createElement('ui-checkbox') as UICheckboxElement
+    checkbox.value = key
+    checkbox.checked = !hiddenColumnKeys.has(key)
+    checkbox.textContent = columnLabel(key)
+    checkbox.addEventListener('change', () => {
+      // Guard: never let the last visible column hide. `columns: []` is a real, documented ui-table state
+      // (an honest empty scroll container, table.md) — but this recipe keeps at least one column visible
+      // rather than teaching a dead-end view with no way back to a header to unhide from.
+      const wouldHideLast = !checkbox.checked && columnOrder.length - hiddenColumnKeys.size === 1
+      if (wouldHideLast) {
+        checkbox.checked = true
+        return
+      }
+      if (checkbox.checked) hiddenColumnKeys.delete(key)
+      else hiddenColumnKeys.add(key)
+      applyColumnsState()
+    })
+
+    const moveControls = el('div', 'wb-columns-move')
+    const upButton = document.createElement('ui-button') as UIButtonElement
+    upButton.textContent = '↑'
+    upButton.setAttribute('variant', 'ghost')
+    upButton.setAttribute('aria-label', `Move ${columnLabel(key)} up`)
+    upButton.disabled = index === 0
+    upButton.addEventListener('click', () => {
+      if (index === 0) return
+      ;[columnOrder[index - 1], columnOrder[index]] = [columnOrder[index]!, columnOrder[index - 1]!]
+      renderColumnsList()
+      applyColumnsState()
+      focusMoveButton(key, 'up')
+    })
+    const downButton = document.createElement('ui-button') as UIButtonElement
+    downButton.textContent = '↓'
+    downButton.setAttribute('variant', 'ghost')
+    downButton.setAttribute('aria-label', `Move ${columnLabel(key)} down`)
+    downButton.disabled = index === columnOrder.length - 1
+    downButton.addEventListener('click', () => {
+      if (index === columnOrder.length - 1) return
+      ;[columnOrder[index], columnOrder[index + 1]] = [columnOrder[index + 1]!, columnOrder[index]!]
+      renderColumnsList()
+      applyColumnsState()
+      focusMoveButton(key, 'down')
+    })
+    moveControls.append(upButton, downButton)
+
+    row.append(checkbox, moveControls)
+    columnsList.append(row)
+  })
+}
+renderColumnsList()
+// NOT applyColumnsState() here yet — it calls refreshDerivedView() -> applySummaryKey(), which reads the
+// `currentSummaryKey` `let` declared further down in the agent-summary section below (a TDZ error this
+// early). `table.columns` already holds the correct full default set (set at the table's own construction
+// above), so the visual state is already right; the label sync + derived-view call runs once at this
+// file's own tail, alongside the pre-existing initial `refreshDerivedView()`/`highlightPickedRow()` calls.
+toolbar.append(columnsPopover)
 
 // ════════════════ the record-edit flow (SPEC-R8 · PRD-D6 ruled: ui-modal) ═════════════════════════════
 const recordActions = el('div', 'wb-record-actions')
@@ -398,5 +541,8 @@ function applySummaryKey(key: SummaryViewKey): void {
 wbContent.append(toolbarRow, recordActions, tableWrap, summarySection)
 document.body.append(modal) // top-layer element — DOM position doesn't affect rendering; kept out of the scroll region
 
-refreshDerivedView() // the initial results count + the 'all' summary key, before any interaction
+// GH #963 — applyColumnsState() (not a bare refreshDerivedView()) is the initial call: it also syncs the
+// columns-menu popover's label and re-derives the results count/summary key together, the same one-write
+// discipline every other interaction path in this file uses.
+applyColumnsState() // the initial results count + the 'all' summary key, before any interaction
 highlightPickedRow() // the initial default pick's echo, now that `table` is connected and has rendered rows
