@@ -203,6 +203,12 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'the agent-admin unified header\'s pane pills; whether it earns a general A2UI catalog row is a ' +
     'separate decision for a later pass (a2ui is team-led, out of this slice\'s authorization), not a ' +
     'chrome/security exclusion like the PERMANENT entries above — drains the moment that decision lands.'],
+  ['Drill',
+    'ADR-0195 (GH #954) — TEMPORARY exclusion, shipped ahead of its catalog row: this build mints the ' +
+    'fleet N-level drill-down panel container; whether it earns a general A2UI catalog row, and what wire-' +
+    'mark shape its path/children should carry, is a separate decision for a later pass (a2ui is team-led, ' +
+    'out of this build\'s authorization, and GH #954\'s own Acceptance criteria name no catalog requirement) ' +
+    '— not a chrome/security exclusion like the PERMANENT entries above — drains the moment that decision lands.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

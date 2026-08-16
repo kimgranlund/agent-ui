@@ -994,6 +994,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-menu', // #ensureParts(): trigger (COMPONENT_SAMPLE_CHILDREN) + panel
   'ui-modal', // #ensureDialog(): the control-owned <dialog> part
   'ui-drawer', // #ensureDialog(): the control-owned <dialog> part (ADR-0188, the modal precedent re-applied)
+  'ui-drill', // #ensureParts(): the control-owned header/back/heading part (ADR-0195) — SLOT_TEXT would clobber it; the ui-drill-panel author children are its real sample content
   'ui-popover', // #ensureParts(): trigger (COMPONENT_SAMPLE_CHILDREN) + panel
   'ui-select', // #ensureParts(): a control-created trigger button + listbox
   'ui-slider', // ::before/::after track only — no text slot at all (batch C); seeded an aria-label via COMPONENT_SAMPLE_ATTRS instead
