@@ -34,9 +34,12 @@ import { UIMasterDetailPaneElement } from '../master-detail/master-detail-pane.t
 import '../nav-rail/nav-rail.ts'
 import { UINavRailItemElement } from '../nav-rail/nav-rail-item.ts'
 import type { UINavRailElement } from '../nav-rail/nav-rail.ts'
+import '@agent-ui/components/controls/select'
+import type { UISelectElement } from '@agent-ui/components/controls/select'
 import { generateSection, type GeneratedSection } from './generate.ts'
 import type { SettingsSchema } from './schema.ts'
 import type { SettingsStore } from './store.ts'
+import { SHELL_COMPACT_BREAKPOINT_REM } from '../../shell-breakpoint.ts'
 
 const settingsProps = {
   // Non-reflected properties — too structured for an attribute (the `ui-split` `sizes` precedent).
@@ -58,6 +61,12 @@ export class UISettingsElement extends UIElement {
   #masterDetail: UIMasterDetailElement | null = null
   #rail: UINavRailElement | null = null // the composed ui-nav-rail — holds one ui-nav-rail-item per section
   #panelHost: HTMLElement | null = null // the detail pane's content mount point
+  // GH #962 — the compact-band alternative to the rail: one `ui-select` holding the SAME sections as
+  // `#rail`'s items, shown only under `data-compact` (below the shell family's named COMPACT line,
+  // shell-breakpoint.ts) and hidden in the `data-single-section` posture (nothing to navigate). Pinned
+  // above `#panelHost` inside the detail pane, so it survives the narrow drill-in's list/detail toggle
+  // (which `data-compact` overrides — see settings.css).
+  #select: UISelectElement | null = null
 
   // The schema/store OBJECTS the rail/sections currently reflect — a `#build()` re-run compares against
   // these BY REFERENCE to tell "a real reassignment" from "a reconnect with nothing actually changed".
@@ -73,6 +82,38 @@ export class UISettingsElement extends UIElement {
 
   protected connected(): void {
     this.#compose() // idempotent — builds ONLY the rail/panel shell, once ever
+
+    // GH #962 — the compact band watcher: observes the SAME box `ui-master-detail`'s own narrow
+    // `@container` resolves against (it establishes `container-type: inline-size` on itself,
+    // master-detail.css) and stamps `data-compact` at the shell family's named COMPACT line
+    // (`SHELL_COMPACT_BREAKPOINT_REM`, shell-breakpoint.ts) — the same rem-off-the-live-root-font-size
+    // derivation nav-rail.ts's own band read uses (GH #170 defect 4), so a non-16px root is handled. A
+    // real host attribute (not a `@container` query in settings.css) because the compact posture must
+    // WIN the specificity fight against master-detail.css's own narrow-mode back-button reveal — the
+    // exact same reason `data-single-section` is an attribute rather than a schema-shape query (settings.css
+    // banner above the single-section block). No dependency on a reactive prop: the observed box
+    // (`#masterDetail`) never changes after the one-time `#compose()`, so this runs once per connection
+    // and its ResizeObserver is torn down on disconnect (the ONE effect-install primitive, `element.ts`).
+    this.effect(() => {
+      const box = this.#masterDetail
+      if (!box) return
+      const applyBand = (inlineSize: number): void => {
+        const rootFontPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+        const compact = inlineSize > 0 && inlineSize < SHELL_COMPACT_BREAKPOINT_REM * rootFontPx
+        this.toggleAttribute('data-compact', compact)
+      }
+      if (typeof ResizeObserver === 'undefined') {
+        applyBand(box.clientWidth) // jsdom / a pre-RO engine — one static read, the nav-rail.ts guard
+        return
+      }
+      const observer = new ResizeObserver((entries) => {
+        const entry = entries[0]
+        if (entry === undefined) return
+        applyBand(entry.contentBoxSize?.[0]?.inlineSize ?? entry.contentRect.width)
+      })
+      observer.observe(box, { box: 'content-box' })
+      return () => observer.disconnect()
+    })
 
     // schema/store → the rail buttons + every section's generated form (SPEC-R10/R11/R12). Reactive: a
     // real reassignment (different object references) rebuilds from scratch; a reconnect with the SAME
@@ -97,6 +138,7 @@ export class UISettingsElement extends UIElement {
           // it, validation silently stops reacting forever post-reconnect (the component-reviewer MAJOR
           // finding this fixes). The DOM/value state itself was never touched — only the reactive wiring.
           this.#armRailListeners()
+          this.#armSelectListener()
           this.#showPanel(this.section)
           for (const generated of this.#sections.values()) {
             this.#disposeGenerated.push(generated.reapplyValidation())
@@ -170,9 +212,21 @@ export class UISettingsElement extends UIElement {
     rail.addEventListener('change', (event) => event.stopPropagation())
     listPane.append(rail)
 
+    // GH #962 — the compact-band alternative to `rail`, pinned above the panel content. Composed the
+    // SAME way as `rail` (created + configured, appended before the pane relocates) — see `#build()`'s
+    // own banner for the ONE real hazard this composition has that `rail` doesn't (`ui-select` owns
+    // internal parts sharing the light-DOM child list with author content; `ui-nav-rail` owns none).
+    const select = document.createElement('ui-select') as UISelectElement
+    select.setAttribute('data-part', 'section-select')
+    select.label = 'Settings section'
+    // Event-boundary guard (the `md`/`rail` guard above, same rationale): ui-select's own commit event is
+    // also named `select`, and `ui-settings` must stay the sole emitter of its own `select`/`change` (the
+    // section-effect in `connected()`).
+    select.addEventListener('select', (event) => event.stopPropagation())
+
     const panelHost = document.createElement('div')
     panelHost.setAttribute('data-part', 'panel')
-    detailPane.append(panelHost)
+    detailPane.append(select, panelHost) // select pinned ABOVE the panel content
 
     md.append(listPane, detailPane)
     this.append(md)
@@ -180,6 +234,7 @@ export class UISettingsElement extends UIElement {
     this.#masterDetail = md
     this.#rail = rail
     this.#panelHost = panelHost
+    this.#select = select
   }
 
   /** (Re)populate the rail + regenerate every section's form from `schema`/`store` (SPEC-R10/R11/R12).
@@ -192,6 +247,18 @@ export class UISettingsElement extends UIElement {
     this.#disposeGenerated = []
     this.#sections.clear()
     rail.replaceChildren()
+    // GH #962 — NEVER `this.#select?.replaceChildren()`: unlike `ui-nav-rail` (a "host-as-list" element
+    // that owns no composed parts of its own — its items ARE its only children), `ui-select` builds its
+    // OWN internal parts (trigger/listbox/aria-label span, select.ts `#ensureParts`) as light-DOM
+    // siblings of the author-supplied `[role=option]` children, all on the SAME child list — a blanket
+    // `replaceChildren()` wipes those parts too. Worse: `#ensureParts()`'s own idempotent guard checks
+    // its PRIVATE FIELDS (`#trigger`/`#listbox`), not whether those nodes are still actually attached —
+    // once wiped this way, nothing ever rebuilds them (measured, GH #962: a rebuilt schema left `#select`
+    // permanently empty, no trigger/listbox ever recreated). Remove ONLY the option/group content this
+    // element itself owns — wherever it currently lives (still a direct child pre-adoption, or already
+    // relocated inside the listbox post-adoption, select.md's own adoption contract) — leaving select's
+    // own parts untouched.
+    for (const owned of this.#select?.querySelectorAll('[role="option"], [role="group"]') ?? []) owned.remove()
     this.#panelHost?.replaceChildren()
 
     // GH #50 — the single-section posture: with exactly one (supported) section there is nothing to
@@ -219,12 +286,21 @@ export class UISettingsElement extends UIElement {
       item.textContent = section.label
       rail.append(item)
 
+      // GH #962 — the SAME section, expressed as a `ui-select` [role=option] (select.md's own option
+      // shape: a `value` attribute + text content).
+      const option = document.createElement('div')
+      option.setAttribute('role', 'option')
+      option.setAttribute('value', section.id)
+      option.textContent = section.label
+      this.#select?.append(option)
+
       const generated = generateSection(section, store)
       this.#sections.set(section.id, generated)
       this.#disposeGenerated.push(generated.dispose)
     }
 
     this.#armRailListeners()
+    this.#armSelectListener()
 
     // Resolve the active section: keep an already-set `section` if it still names a real section in the
     // NEW schema (a deep link / author-set attribute, or a section that survived the reassignment), else
@@ -253,6 +329,18 @@ export class UISettingsElement extends UIElement {
     })
   }
 
+  /** (Re-)wire `#select`'s OWN `select` commit — the compact-band twin of `#armRailListeners`, same
+   *  reconnect/rebuild re-arm discipline (`this.listen` scopes to the CURRENT connection). ui-select's
+   *  commit detail IS the committed option's `value` (select.md), so no DOM scan is needed. */
+  #armSelectListener(): void {
+    const select = this.#select
+    if (!select) return
+    this.listen(select, 'select', () => {
+      const value = select.value
+      if (value) this.section = value
+    })
+  }
+
   /** Show the active section's generated form inside `#panelHost` — detaches whichever provider was
    *  shown before (never destroyed, just removed from the live tree; the shipped `ui-field`/
    *  `ui-form-provider` catch-up scan re-associates it cleanly the next time it is reattached). */
@@ -267,13 +355,16 @@ export class UISettingsElement extends UIElement {
   /** Mark the active rail item — drives the composed `ui-nav-rail-item`'s own `selected` property, which
    *  is itself responsible for its indicator + ARIA (ADR-0130 cl.4: a bare/button-shaped item stamps
    *  `role="tab"`/`aria-selected` on its own activator — an in-page selection commit, NOT the old
-   *  `aria-current="page"` page-nav verb). ui-settings sets no ARIA on the rail itself. */
+   *  `aria-current="page"` page-nav verb). ui-settings sets no ARIA on the rail itself. Also syncs `#select`
+   *  (GH #962) — its own `value` write is a silent, non-event-emitting reflect (ADR-0019), so keeping both
+   *  in lock-step here never risks a doubled `select`/`change` emission. */
   #markActiveRailItem(id: string): void {
     const rail = this.#rail
     if (!rail) return
     for (const item of rail.querySelectorAll('ui-nav-rail-item')) {
       ;(item as UINavRailItemElement).selected = (item as HTMLElement).dataset.sectionId === id
     }
+    if (this.#select && this.#select.value !== id) this.#select.value = id
   }
 }
 

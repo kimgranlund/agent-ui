@@ -63,6 +63,52 @@
     gap: var(--ui-settings-gap);
   }
 
+  /* GH #962 — the compact-band section select: hidden by default, shown only under the host's
+     `data-compact` attribute (settings.ts's own ResizeObserver band watcher, keyed to the shell family's
+     named COMPACT line, shell-breakpoint.ts) — and never in the `data-single-section` posture, where
+     there is nothing to navigate. Pinned above `[data-part='panel']` inside the detail pane (both are
+     direct children of the SAME `ui-master-detail-pane[data-role='detail']`, settings.ts `#compose`).
+     Specificity note (the `ui-form-provider` precedent right above, same shape): the `ui-select` type
+     selector is load-bearing, not decoration — `[data-part='section-select']` alone sits at (0,1,0), a
+     TIE against select.css's own `:scope { display: inline-block }` (also (0,1,0)) — a tie the CLOSER
+     scope root wins (CSS Scoping's proximity tiebreak, compared only AFTER specificity), and `ui-select`'s
+     OWN `:scope` (distance 0, the element itself) is always closer than this sheet's `@scope (ui-settings)`
+     root (distance 3+) — so the tie resolved to select's own default, measured `inline-block` visible at
+     EVERY width (GH #962). `ui-select[data-part='section-select']` sits at (0,1,1), which beats (0,1,0)
+     on specificity alone, decided BEFORE proximity is ever consulted. */
+  ui-select[data-part='section-select'] {
+    display: none;
+  }
+  :scope[data-compact]:not([data-single-section]) [data-part='section-select'] {
+    display: block;
+    box-sizing: border-box;
+    inline-size: 100%;
+    padding: var(--ui-settings-panel-pad) var(--ui-settings-panel-pad) 0;
+  }
+
+  /* GH #962 — below the compact line, the rail (`ui-master-detail`'s list pane) steps aside for
+     `#select` above: same "detail pane, full width, no back affordance" treatment the
+     `data-single-section` block below already applies, keyed here to `data-compact` instead. A real host
+     attribute (not a bare `@container` query) for the SAME specificity reason `data-single-section` is
+     one — the banner on that block covers the reach-through chain + the GH #651 specificity note this
+     rule set mirrors exactly (swap `[data-single-section]` for `[data-compact]`, same shape, same
+     winning weight against master-detail.css's own narrow-mode back-button reveal). Harmless overlap
+     with the single-section rules below when BOTH conditions hold (idempotent `display:none`). */
+  :scope[data-compact] ui-master-detail ui-split-pane[data-role='list'] {
+    display: none;
+  }
+  :scope[data-compact] ui-master-detail [data-separator] {
+    display: none;
+  }
+  :scope[data-compact] ui-master-detail > ui-split > [data-role='detail'] > [data-part='back'] {
+    display: none;
+  }
+  :scope[data-compact] ui-master-detail ui-split-pane[data-role='detail'] {
+    flex: 1 1 auto;
+    max-width: none;
+    max-height: none;
+  }
+
   [data-part='notice'] {
     color: var(--ui-settings-ink);
     padding-inline: var(--ui-settings-notice-pad-inline);

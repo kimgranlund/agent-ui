@@ -141,6 +141,108 @@ describe('ui-settings cross-engine smoke — narrow drill-in (inherited from ui-
   })
 })
 
+// ── GH #962 — the compact band: below 52.5rem (SHELL_COMPACT_BREAKPOINT, WIDER than the 40rem narrow
+// drill-in line above) the rail steps aside for a `section-select` ui-select, pinned above the panel. A
+// ResizeObserver (settings.ts) watches the SAME box master-detail.css's own narrow `@container` resolves
+// against and stamps `data-compact` — real host attribute, not a bare container query, so it wins the
+// specificity fight against master-detail.css's own back-button reveal (the `data-single-section`
+// precedent, GH #50 below). jsdom cannot resolve this (no real layout/ResizeObserver-driven reflow) — this
+// file is the only place it becomes verifiably TRUE.
+
+describe('ui-settings — compact band collapses the rail to a select (GH #962, below 52.5rem — the shell family COMPACT line)', () => {
+  it('WIDE (900px, above both lines): the rail shows, the section-select stays hidden', async () => {
+    const { wrapper, el } = mountSettings('900px')
+    await el.updateComplete
+    expect(el.hasAttribute('data-compact')).toBe(false)
+    const rail = el.querySelector('ui-nav-rail') as HTMLElement
+    const select = el.querySelector('[data-part="section-select"]') as HTMLElement
+    expect(getComputedStyle(rail).display).not.toBe('none')
+    expect(getComputedStyle(select).display).toBe('none')
+    wrapper.remove()
+  })
+
+  it('COMPACT but NOT narrow (700px — between the 40rem/640px narrow line and the 52.5rem/840px compact line): the rail hides, the select shows, the detail pane fills — proves the select swap fires on its OWN line, independent of the drill-in threshold', async () => {
+    const { wrapper, el } = mountSettings('900px')
+    await el.updateComplete
+    wrapper.style.width = '700px'
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))) // ResizeObserver + container-query reflow
+    expect(el.hasAttribute('data-compact')).toBe(true)
+    const listPane = el.querySelector('ui-split-pane[data-role="list"]') as HTMLElement
+    const select = el.querySelector('[data-part="section-select"]') as HTMLElement
+    const detailPane = el.querySelector('ui-split-pane[data-role="detail"]') as HTMLElement
+    const back = el.querySelector('[data-part="back"]') as HTMLElement
+    const separator = el.querySelector('[data-separator]') as HTMLElement
+    expect(getComputedStyle(listPane).display, 'below the compact line the rail is not the nav vehicle — it must hide').toBe('none')
+    expect(getComputedStyle(select).display, 'the section-select becomes the nav vehicle').not.toBe('none')
+    expect(getComputedStyle(detailPane).display).not.toBe('none')
+    expect(getComputedStyle(back).display, 'the select replaces drill-in navigation — no Back affordance').toBe('none')
+    expect(getComputedStyle(separator).display, 'one visible pane — nothing left to divide').toBe('none')
+    wrapper.remove()
+  })
+
+  it('the select holds one option per section, in lock-step with the active section', async () => {
+    const { wrapper, el } = mountSettings('900px')
+    await el.updateComplete
+    wrapper.style.width = '700px'
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const select = el.querySelector('[data-part="section-select"]') as unknown as HTMLElement & { value: string }
+    const options = [...select.querySelectorAll('[role="option"]')]
+    expect(options.map((o) => o.getAttribute('value'))).toEqual(['profile', 'appearance'])
+    expect(select.value, 'the select starts in lock-step with the resolved default section').toBe('profile')
+    wrapper.remove()
+  })
+
+  it("choosing a DIFFERENT option (the select's own 'select' commit event) switches the section and the panel — the compact nav vehicle actually navigates", async () => {
+    const { wrapper, el } = mountSettings('900px')
+    await el.updateComplete
+    wrapper.style.width = '700px'
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const select = el.querySelector('[data-part="section-select"]') as unknown as HTMLElement & { value: string }
+    select.value = 'appearance'
+    select.dispatchEvent(new Event('select', { bubbles: true })) // ui-select's OWN commit event — never 'change'
+    await el.updateComplete
+    expect(el.section).toBe('appearance')
+    const panel = el.querySelector('[data-part="panel"]') as HTMLElement
+    expect(panel.querySelector('ui-switch'), 'the appearance section actually mounted').not.toBeNull()
+    wrapper.remove()
+  })
+
+  it('NARROW (300px — below BOTH lines): the compact posture still holds (the compact line subsumes the narrow one)', async () => {
+    const { wrapper, el } = mountSettings('900px')
+    await el.updateComplete
+    wrapper.style.width = '300px'
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    expect(el.hasAttribute('data-compact')).toBe(true)
+    const select = el.querySelector('[data-part="section-select"]') as HTMLElement
+    const back = el.querySelector('[data-part="back"]') as HTMLElement
+    expect(getComputedStyle(select).display).not.toBe('none')
+    expect(getComputedStyle(back).display, 'the compact posture pre-empts the narrow drill-in Back reveal too').toBe('none')
+    wrapper.remove()
+  })
+
+  it('the single-section posture (GH #50) still wins — no section-select for one section, even compact', async () => {
+    const wrapper = document.createElement('div')
+    wrapper.style.containerType = 'inline-size'
+    wrapper.style.width = '700px'
+    wrapper.style.height = '500px'
+    const el = document.createElement('ui-settings') as UISettingsElement
+    el.store = createMemoryStore()
+    el.schema = {
+      version: 1,
+      sections: [{ id: 'agent', label: 'Agent', fields: [{ key: 'name', type: 'text', label: 'Name', default: '' }] }],
+    }
+    wrapper.append(el)
+    document.body.append(wrapper)
+    mounted.push(wrapper)
+    await el.updateComplete
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    expect(el.hasAttribute('data-compact')).toBe(true)
+    const select = el.querySelector('[data-part="section-select"]') as HTMLElement
+    expect(getComputedStyle(select).display, 'one section ⇒ nothing to navigate, select stays hidden even compact').toBe('none')
+    wrapper.remove()
+  })
+})
+
 // ── GH #50 — the single-section posture: detail-only, no rail, no Back, at EVERY width ──────────────────
 
 const SINGLE_SECTION_SCHEMA: SettingsSchema = {
