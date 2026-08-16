@@ -57,6 +57,22 @@ any linked worktree (local delete fails → terminal). Practice rule: reap the b
 BEFORE a --delete-branch merge, or delete the remote branch by hand after. Proven by the PR #627
 deliberate test (verbatim output on #613). repo-cleaner's sweep stays the safety net.
 
+## ADR-0040 + ADR-0008 — RULED 2026-08-16 (Kim, in-chat)
+
+**ADR-0040 (components-barrel size budget):** `npm run size` is red on main — the
+`@agent-ui/components` barrel sits 312 B over the ADR-0040 line, pre-existing before the
+2026-08-16 clear-the-boards run (+0 B from #974/#952). Ruling: re-base the budget line to the
+measured value via a PROPOSED ADR-0040 amendment — never self-ratified, Kim flips it. Routed to
+task **#1009**.
+
+**ADR-0008 (CSS-native-first exception boundary):** the #953/PR #983 scroll-driven
+`filter: brightness()` dim on inactive `ui-swiper` slides is NOT accepted as an ADR-0008
+exception. Ruling: revert it — remove the `@supports (animation-timeline: view())` dim block +
+`--ui-swiper-inactive-brightness` token + the `[6b] #953 inactive-slide dim` browser probes; keep
+the zero-JS proof section and the `scrollsnapchange` adopt-with-fallback; regenerate dogfood
+assets after `npm ci` in the worktree; update `swiper.md`. Routed to bug **#1010**; ruling comment
+posted on #953.
+
 ## Placement forks + ADR harvest — RULED 2026-08-16 (Kim, in-session, clear-the-boards run)
 
 One round settled five issues + two harvest rows: **#955/#956/#957** → mint `@agent-ui/data` as a
