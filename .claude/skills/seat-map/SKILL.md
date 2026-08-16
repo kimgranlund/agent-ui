@@ -55,3 +55,7 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   self-claim from.
 - **Work items → GitHub Issues.** New items file via `gh issue create` (ADR-0145), never new
   ticket files.
+- **Due process for size:big (GH #969).** Any dispatch brief for a `size:big` issue/PR cites the
+  `due-process` skill by name before design work starts — the four-phase Understand/Research →
+  Plan → Execute → Evaluate loop, each phase with its own checkable exit artifact.
+  `size:small` is unaffected.

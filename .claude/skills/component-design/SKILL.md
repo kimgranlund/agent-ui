@@ -9,7 +9,10 @@ description: >-
   produce the decomposition + test plan that gate the build. Use for "design a new ui-*
   control", "plan the intake for component X", "does this need an ADR", "no existing
   geometry row fits this". NOT for building to an already-frozen design
-  (component-build) or for law lookups alone (component-standards).
+  (component-build) or for law lookups alone (component-standards); NOT the size:big
+  Understand→Plan→Execute→Evaluate build-dispatch loop a component build may also owe
+  (due-process) — that governs the ORDER any big build passes through, not this skill's
+  own component-specific intake artifacts.
 user-invocable: true
 disable-model-invocation: false
 ---
