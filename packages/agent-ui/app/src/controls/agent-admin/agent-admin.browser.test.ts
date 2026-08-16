@@ -3668,6 +3668,24 @@ describe('ui-agent-admin — the help affordance admin-wide: placement geometry 
     }
   })
 
+  /** Park the REAL pointer at the viewport's top-left corner, off every hover-revealing surface.
+   *  `userEvent.unhover(el)` only moves the pointer to `<body>`'s centre — a layout-dependent spot that a
+   *  later mount can put a heading right under (GH #949's review caught exactly that: the pointer an earlier
+   *  test left behind sat over the Skills summary AT MOUNT, so a bare at-rest read saw a mid-transition
+   *  0.16 chromium / 0.83 webkit). A fixed 8×8 stand-in at (0,0) gives Playwright an actionable hover
+   *  target; it is removed right after, leaving the pointer at (4,4) where no reveal lives. */
+  async function parkPointer(): Promise<void> {
+    const pad = document.createElement('div')
+    pad.setAttribute('data-part', 'pointer-park')
+    pad.style.cssText = 'position:fixed;top:0;left:0;width:8px;height:8px;z-index:2147483647;pointer-events:auto'
+    document.body.append(pad)
+    try {
+      await userEvent.hover(pad)
+    } finally {
+      pad.remove()
+    }
+  }
+
   it('the reveal works on the Capabilities tab too — hidden at rest, revealed by hovering the section heading', async () => {
     const { el } = mountAgentAdmin('Capabilities')
     await frames()
@@ -3676,7 +3694,10 @@ describe('ui-agent-admin — the help affordance admin-wide: placement geometry 
     ) as HTMLElement
     const icon = summary.querySelector('[data-part="admin-help"] > [data-part="anchor"]') as HTMLElement
     expect(icon, `${server.browser}: the Skills section carries a help icon`).not.toBeNull()
-    expect(getComputedStyle(icon).opacity, 'hidden at rest, exactly as on the Surface tab').toBe('0')
+    // Pointer-INDEPENDENT at-rest probe: wherever an earlier test parked the real pointer, move it off-surface
+    // first, then let the reveal transition settle — the claim is "0 at rest", not "0 at this instant".
+    await parkPointer()
+    expect(await opacitySettlesTo(icon, '0'), 'hidden at rest, exactly as on the Surface tab').toBe('0')
 
     await userEvent.hover(summary)
     expect(await opacitySettlesTo(icon, '1'), `${server.browser}: hovering the section heading reveals it`).toBe('1')
