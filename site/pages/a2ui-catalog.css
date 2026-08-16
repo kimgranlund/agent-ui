@@ -1,7 +1,7 @@
-/* a2ui-catalog.css — PAGE-LOCAL layout for the A2UI Catalog gallery: the sticky filter bar + the stacked
- * per-component sections. The previews own their own two-column chrome (lib/component-preview.css); this file
- * only spaces the list and styles the filter box. Colours are `--md-sys-color-*` roles (foundation cascade via
- * _page.ts). */
+/* a2ui-catalog.css — PAGE-LOCAL layout for the A2UI Catalog gallery: the sticky filter bar, the tier tabs
+ * (GH #970), and the stacked per-component sections within each tab panel. The previews own their own
+ * two-column chrome (lib/component-preview.css); this file only spaces the list and styles the filter box +
+ * tab shell. Colours are `--md-sys-color-*` roles (foundation cascade via _page.ts). */
 
 .catalog-filter {
   position: sticky;
@@ -17,6 +17,22 @@
   inline-size: 100%;
 }
 
+/* The cross-tab match announcement (GH #970) — empty (no box) when no query is active. */
+.catalog-filter-status {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* ui-tabs ships transparent by default (ADR-0104) — this page wants no extra plane of its own, so `elevation`/
+ * `brightness` are left unset; only spacing is page-owned. */
+.catalog-tabs {
+  display: block;
+}
+.catalog-tab-panel {
+  padding-block-start: 0.5rem;
+}
+
 .catalog-item {
   margin-block: 1.5rem;
 }
@@ -28,4 +44,9 @@
   font-size: 1.05rem;
   font-weight: 650;
   color: var(--md-sys-color-neutral-on-surface);
+}
+.catalog-item-uses {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
 }

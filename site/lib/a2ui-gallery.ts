@@ -48,6 +48,13 @@ export interface SeedCard {
   readonly deletesCleanly: boolean
 }
 
+/** The stable per-seed anchor id this module stamps on every card (`buildSeedCard` below) — the single
+ *  source of truth a cross-linker (a2ui-catalog.ts, GH #970) targets via `./a2ui-gallery.html#{id}`, so the
+ *  id a link points at and the id a card actually carries can never drift apart. */
+export function seedAnchorId(seedName: string): string {
+  return `seed-${seedName}`
+}
+
 /** A seed's arc ends by deleting its OWN surface iff its LAST message is a `deleteSurface` targeting the
  *  seed's own `surfaceId` — detected structurally (never by seed name), so the next seed of this shape
  *  needs no gallery edit (TKT-0016, the fleet's first such seed: `kpi-panel-lifecycle`). */
@@ -92,6 +99,7 @@ export function buildSeedCard(seed: ExampleSeed): SeedCard {
   const card = document.createElement('div')
   card.className = 'seed-card'
   card.dataset.seed = seed.name // a stable per-seed selector (the gate + any browser probe)
+  card.id = seedAnchorId(seed.name) // the "see it in real use" cross-link target (GH #970) — a plain hash-anchor, no JS needed to land on it
 
   const closesWithDeleteSurface = closesWithOwnDeleteSurface(seed)
   // Show the arc at its FULLEST point when the seed closes itself — everything except that final message.

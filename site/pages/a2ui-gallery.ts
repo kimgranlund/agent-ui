@@ -20,5 +20,26 @@ content.append(
       'shelf itself, so a new seed appears here automatically. For the deep, hand-annotated tour of five ' +
       'representative patterns, see A2UI Patterns.',
   ),
-  buildSeedGallery().root,
 )
+
+// ── reciprocal cross-link to the type catalog (GH #970 — "the two pages link each other") ────────────────
+const catalogLink = document.createElement('p')
+catalogLink.className = 'page-lead'
+const catalogLinkAnchor = document.createElement('a')
+catalogLinkAnchor.href = './a2ui-catalog.html'
+catalogLinkAnchor.textContent = 'the A2UI Catalog'
+catalogLink.append(
+  document.createTextNode('Looking for a single component type instead of a full composition? Browse '),
+  catalogLinkAnchor,
+  document.createTextNode(' — every type each seed on this page uses links back here.'),
+)
+content.append(catalogLink, buildSeedGallery().root)
+
+// ── the cross-link hash-anchor landing (a2ui-catalog.ts's "see it in real use" links, GH #970) ────────────
+// A resolved catalog cross-link navigates here as `./a2ui-gallery.html#seed-{name}` (site/lib/a2ui-gallery.ts's
+// own `seedAnchorId`); on load, scroll that seed's card into view — a bad/absent hash is a no-op, never an
+// error (the adr-index.ts / changelog.ts hash-landing precedent).
+if (location.hash) {
+  const target = document.getElementById(location.hash.slice(1))
+  if (target) target.scrollIntoView()
+}
