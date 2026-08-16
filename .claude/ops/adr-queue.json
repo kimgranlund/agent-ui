@@ -2,18 +2,23 @@
   "candidates": [
     {
       "adr_id": "adr-0178-amendment",
+      "kind": "harvest",
       "queued": "2026-08-13T16:37:00Z",
-      "evidence": "ADR-0178's Amendment (ratified 2026-08-13, utterance comment 5275019730 on GH #696; built as PR #826, tracker #821 closed): the AUTHORSHIP-SCOPED RE-RULING pattern \u2014 a uniform append-only protection re-scoped along the authorship axis rather than removed wholesale: host-seeded builtin prompt sections become model-updatable IN PLACE (updateTargetIndex as the whole fence, kind-derived never literal; two-field scope pinned) while user-authored entries stay append-protected and deletion stays impossible everywhere. builtin:true = NON-DELETABLE ONLY (ADR-0132 Fork 4), never immutable \u2014 the amendment exploits that distinction. Checked 2026-08-13 (decision-watcher-sweep, sweep-6): neither admin-library-kinds nor composition-patterns carries a row for this shape.",
+      "evidence": "ADR-0178's Amendment (ratified 2026-08-13, utterance comment 5275019730 on GH #696; built as PR #826, tracker #821 closed): the AUTHORSHIP-SCOPED RE-RULING pattern — a uniform append-only protection re-scoped along the authorship axis rather than removed wholesale: host-seeded builtin prompt sections become model-updatable IN PLACE (updateTargetIndex as the whole fence, kind-derived never literal; two-field scope pinned) while user-authored entries stay append-protected and deletion stays impossible everywhere. builtin:true = NON-DELETABLE ONLY (ADR-0132 Fork 4), never immutable — the amendment exploits that distinction. Checked 2026-08-13 (decision-watcher-sweep, sweep-6): neither admin-library-kinds nor composition-patterns carries a row for this shape.",
       "target": "composition-patterns (or the sibling the harvest pass judges better)",
-      "status": "pending"
+      "status": "harvested",
+      "harvested_at": "2026-08-16T22:20:18Z",
+      "landed_in": ".claude/skills/admin-library-kinds/references/builtin-protection-and-patch-verbs.md"
     },
     {
       "adr_id": "adr-0187",
       "kind": "harvest",
-      "evidence": "ADR-0187 (ratified 2026-08-13, GH #829): the opt-in finalize-granularity validator signal pattern \u2014 validateA2ui(...,{atFinalize}) as a 4th-param options bag, additive/default-off so every existing caller/fixture stays byte-identical; the missing fact ('is more coming?') lives only at the call site so it must be caller-supplied, never inferred heuristically, since the two wire shapes (legitimate mid-stream prefix vs. abandoned truly-final empty surface) are byte-identical. Checked 2026-08-16 (decision-watcher sweep): no a2ui-* pack (a2ui-review, a2ui-payload-authoring checked directly) references ADR-0187 or this pattern (doc-standards/adr-log-mechanics.md's '0187-validator-finalize-signal.md' hit is a filename example only, not content harvest).",
+      "evidence": "ADR-0187 (ratified 2026-08-13, GH #829): the opt-in finalize-granularity validator signal pattern — validateA2ui(...,{atFinalize}) as a 4th-param options bag, additive/default-off so every existing caller/fixture stays byte-identical; the missing fact ('is more coming?') lives only at the call site so it must be caller-supplied, never inferred heuristically, since the two wire shapes (legitimate mid-stream prefix vs. abandoned truly-final empty surface) are byte-identical. Checked 2026-08-16 (decision-watcher sweep): no a2ui-* pack (a2ui-review, a2ui-payload-authoring checked directly) references ADR-0187 or this pattern (doc-standards/adr-log-mechanics.md's '0187-validator-finalize-signal.md' hit is a filename example only, not content harvest).",
       "target": "a2ui-review or a2ui-payload-authoring (or the sibling the harvest pass judges better)",
-      "status": "pending",
-      "queued_at": "2026-08-16T20:31:19Z"
+      "status": "harvested",
+      "queued_at": "2026-08-16T20:31:19Z",
+      "harvested_at": "2026-08-16T22:20:18Z",
+      "landed_in": ".claude/skills/a2ui-payload-authoring/references/finalize-validation.md"
     }
   ]
 }

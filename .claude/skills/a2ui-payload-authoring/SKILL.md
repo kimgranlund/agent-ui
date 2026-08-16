@@ -114,6 +114,9 @@ Draft → validate → fix → re-check → finalize only when clean:
 - [ ] `Tabs` and its `Tab`/`TabPanel` children ship in one `updateComponents` message (`Select`/`Option`
       ordering has its own rules — the Common-trap entry + `references/node-idioms.md`).
 - [ ] Required inputs sit under a `FormProvider` with a `submit:true` action to gate them.
+- [ ] Every `createSurface` delivers an `id:"root"` node for its `surfaceId` (or is `deleteSurface`d in the
+      same payload) — the CLI judges at finalize granularity and fails an abandoned surface
+      `IDGRAPH ${sid}:root-missing` (ADR-0187; `references/finalize-validation.md`).
 - [ ] The `validate-payload` CLI exits 0 (repairs, if any, reviewed) — THEN report gate-green to the host,
       which dispatches `a2ui-review-agent` for grading (you never invoke the critic yourself).
 
@@ -157,6 +160,7 @@ papered over inside the payload.
 | `references/node-idioms.md` | The idiomatic node shape, bindable props, and ordering traps for each catalog component |
 | `references/trees-and-lists.md` | Building the adjacency-list tree, `child` vs `children`, `ChildList` templates, `${…}` interpolation, nesting |
 | `references/bindings-actions-checks.md` | Data bindings, two-way inputs, Button actions, reactive `checks`, FormProvider submit-gating |
+| `references/finalize-validation.md` | A payload validates clean mid-stream but the CLI / renderer / `produce` fails it `IDGRAPH ${sid}:root-missing` — the finalize-granularity signal (ADR-0187) |
 | `catalog.json` (`src/catalog/default/`) | The authoritative component/prop/function inventory — never invent a component or prop |
 | `src/examples/` + `corpus/exemplar/v1_0/agent-ui.jsonl` | Real payloads to condition on before composing |
 | `a2ui-harness-wiring.lld.md` §6 | The full bounded-loop contract and round-orchestration rules |
