@@ -83,6 +83,24 @@ ui-workspace-shell {
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
+/* The columns menu panel (ui-form-popover, GH #963) — one row per column: a visibility checkbox + a
+ * move-up/move-down pair. Lives inside the popover's own [data-part=panel] box; no shell/frame rules. */
+.wb-columns-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-xs);
+}
+.wb-columns-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--md-sys-space-sm);
+}
+.wb-columns-move {
+  display: flex;
+  gap: var(--md-sys-space-xs);
+}
+
 .wb-record-actions {
   display: flex;
   align-items: flex-end;
