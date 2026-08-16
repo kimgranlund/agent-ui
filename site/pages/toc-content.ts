@@ -18,14 +18,15 @@
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './toc-content.css'
 import '@agent-ui/app/nav-rail' // self-defines ui-nav-rail (+ -group/-item, side-effect of the same import)
+import type { UINavRailElement } from '@agent-ui/app/nav-rail'
 import '@agent-ui/app/nav-rail.css'
+// The shell family's ONE named compact line (ADR-0150/ADR-0155's 52.5rem), imported — not re-minted — via
+// its own `./shell-breakpoint` export (added for this recipe; the #962 ui-settings swap reads the same
+// constant in-package). One source of truth, mechanically: a drift here is a type error, not a stale comment.
+import { SHELL_COMPACT_BREAKPOINT_REM } from '@agent-ui/app/shell-breakpoint'
 import '@agent-ui/components/controls/select' // self-defines ui-select
 import type { UISelectElement } from '@agent-ui/components/controls/select'
 import { scrollSpy } from '@agent-ui/components/traits/scroll-spy'
-// `UIElement` is a TYPE-ONLY import (verbatimModuleSyntax erases it) — it costs this page's bundle nothing
-// even though the root barrel it comes from is heavy; only `scrollSpy`'s own opt-in subpath (above) is a
-// real runtime import.
-import type { UIElement } from '@agent-ui/components'
 import { heading } from '../lib/doc-page.ts'
 
 const { content } = mountPage({
@@ -109,10 +110,9 @@ article.append(
       '`SHELL_COMPACT_BREAKPOINT_REM`, the SAME line ui-settings’ rail→select swap uses, GH #962) the ' +
       'rail hides and a `ui-select` holding the identical set of sections takes its place, pinned above the ' +
       'article. A `ResizeObserver` on the layout’s own box stamps `data-compact` — the exact idiom ' +
-      '#962 shipped, reused rather than re-invented (this page cannot import the constant directly: it sits ' +
-      'outside @agent-ui/app’s package.json exports map, the same cross-package situation this site’s ' +
-      'own header-chip collapse already documents — see this file’s TOC_COMPACT_BREAKPOINT_REM banner ' +
-      'below for the citation).',
+      '#962 shipped, reused rather than re-invented — against the IMPORTED constant ' +
+      '(`@agent-ui/app/shell-breakpoint`, the package’s own named export), never a re-minted literal: one ' +
+      'source of truth for the line, so it cannot drift from the shell family’s.',
   ),
   section('Wiring active-state sync'),
   p(
@@ -142,7 +142,7 @@ article.append(
   section('Mint-last verdict: no ui-toc'),
   p(
     'This recipe carries the whole pattern — heading-derived entries, sticky positioning, scroll-spy ' +
-      'sync, and the responsive swap — in about 150 lines of composition over shipped controls, with no ' +
+      'sync, and the responsive swap — in one page of composition over shipped controls, with no ' +
       'bespoke rendering, no new ARIA contract, and no new CSS component. A `ui-toc` control would duplicate ' +
       'exactly what `ui-nav-rail` + `ui-select` + `scrollSpy` already do; the mint bar (recipe too heavy to ' +
       'ask of consumers) is not met. Verdict: DO NOT MINT — recorded in the issue’s Findings, ' +
@@ -163,7 +163,7 @@ const entries: TocEntry[] = [...article.querySelectorAll('h2')].map((h) => ({
   label: h.textContent ?? '',
 }))
 
-const nav = document.createElement('ui-nav-rail')
+const nav = document.createElement('ui-nav-rail') as UINavRailElement
 nav.className = 'toc-content-nav'
 nav.setAttribute('collapse', 'none')
 nav.setAttribute('aria-label', 'Table of contents')
@@ -210,17 +210,13 @@ content.append(layout)
 
 // GH #964 — the compact-band watcher, the #962 `data-compact`/ResizeObserver idiom mirrored verbatim
 // (settings.ts's own banner: observes the SAME box the responsive swap keys off, stamps `data-compact` at
-// the shell family's named COMPACT line, root-font-size-aware so a non-16px root is handled). NOT imported
-// from `@agent-ui/app`'s shell-breakpoint.ts: the site isn't in that package's package.json exports map, and
-// `_page.ts`'s own GH #183 header-chip collapse already established the convention for this exact
-// cross-package situation — a site call site keeps its own cited literal rather than a shared import
-// (see that file's banner for the full reasoning). This is the SAME 52.5rem value, cited, not a second
-// mechanism.
-const TOC_COMPACT_BREAKPOINT_REM = 52.5 // == @agent-ui/app's shell-breakpoint.ts SHELL_COMPACT_BREAKPOINT_REM
+// the shell family's named COMPACT line, root-font-size-aware so a non-16px root is handled). The line is
+// `SHELL_COMPACT_BREAKPOINT_REM`, IMPORTED from `@agent-ui/app/shell-breakpoint` (see the import banner) —
+// no site-local literal, so this page can never drift from the shell family's own number.
 
 function applyCompactBand(inlineSize: number): void {
   const rootFontPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
-  const compact = inlineSize > 0 && inlineSize < TOC_COMPACT_BREAKPOINT_REM * rootFontPx
+  const compact = inlineSize > 0 && inlineSize < SHELL_COMPACT_BREAKPOINT_REM * rootFontPx
   layout.toggleAttribute('data-compact', compact)
 }
 
@@ -253,9 +249,13 @@ if (pageHeader instanceof HTMLElement) {
 
 // ── the scroll-spy wiring — one call drives both the rail and the compact select (see "Wiring
 // ── active-state sync" above) ─────────────────────────────────────────────────────────────────────────────
+// ORDER MATTERS: this call must FOLLOW `content.append(layout)` above — `scrollSpy` installs a
+// `host.effect(...)`, and `UIElement.effect` throws outside the host's connected lifetime (there is no
+// connection scope to own the observer before the rail is in the document). Wiring it against the
+// already-connected rail is the trait's own documented first-slice shape (scroll-spy.ts's `scrollSpy` doc).
 
 const headingEls = [...article.querySelectorAll('h2')] as HTMLElement[]
-scrollSpy(nav as unknown as UIElement, {
+scrollSpy(nav, {
   headings: headingEls,
   onActiveChange: markActive,
 })

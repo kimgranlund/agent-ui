@@ -21,8 +21,10 @@
 //
 // FALLBACK: nothing intersecting (above the first heading's band, or scrolled between two headings whose
 // bands don't overlap at that particular scroll position) never blanks the active id — it falls back to
-// the nearest heading already scrolled past (`getBoundingClientRect().top <= 0`), so a TOC never shows
-// "nothing selected" mid-article.
+// the nearest heading already scrolled past (`getBoundingClientRect().top` at or above the ROOT's own top
+// edge — the viewport's `0` by default, `opts.root`'s rect top when a scrolling ancestor is named, so the
+// fallback measures against the same frame the observer does), so a TOC never shows "nothing selected"
+// mid-article.
 //
 // `traits → dom` is the one allowed cross-layer direction (reactive ← dom ← traits); the host type only.
 
@@ -57,6 +59,7 @@ const DEFAULT_ROOT_MARGIN = '0px 0px -80% 0px'
 function pickActive(
   headings: readonly HTMLElement[],
   intersecting: ReadonlyMap<HTMLElement, boolean>,
+  root: Element | null,
 ): HTMLElement | null {
   let active: HTMLElement | null = null
   for (const heading of headings) {
@@ -64,12 +67,14 @@ function pickActive(
   }
   if (active) return active
 
-  // Fallback: nothing currently in the band — the closest heading already scrolled past (top <= 0),
-  // i.e. the smallest negative `top` (closest to 0).
+  // Fallback: nothing currently in the band — the closest heading already scrolled past the ROOT's top
+  // edge (`top <= rootTop`; the viewport's 0 when `root` is null, else the scrolling ancestor's own rect
+  // top — the same frame the observer measures in), i.e. the largest `top` not exceeding it.
+  const rootTop = root?.getBoundingClientRect().top ?? 0
   let bestTop = -Infinity
   for (const heading of headings) {
     const top = heading.getBoundingClientRect().top
-    if (top <= 0 && top > bestTop) {
+    if (top <= rootTop && top > bestTop) {
       bestTop = top
       active = heading
     }
@@ -103,9 +108,10 @@ export function scrollSpy(host: UIElement, opts: ScrollSpyOptions): () => void {
     if (headings.length === 0) return
 
     const intersecting = new Map<HTMLElement, boolean>()
+    const root = opts.root ?? null
 
     const report = (): void => {
-      const active = pickActive(headings, intersecting)
+      const active = pickActive(headings, intersecting, root)
       const id = active?.id || null
       if (id === lastReported) return
       lastReported = id
@@ -124,7 +130,7 @@ export function scrollSpy(host: UIElement, opts: ScrollSpyOptions): () => void {
         for (const entry of entries) intersecting.set(entry.target as HTMLElement, entry.isIntersecting)
         report()
       },
-      { root: opts.root ?? null, rootMargin, threshold: 0 },
+      { root, rootMargin, threshold: 0 },
     )
     for (const heading of headings) observer.observe(heading)
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { UIElement } from '../dom/index.ts'
+import { UIElement, prop } from '../dom/index.ts'
+import type { PropsSchema, ReactiveProps } from '../dom/index.ts'
 import { scrollSpy } from './scroll-spy.ts'
 
 // jsdom implements no IntersectionObserver at all (unlike ResizeObserver, which scroll-fade.ts's own test
@@ -173,6 +174,44 @@ describe('scrollSpy — heading-activation decision (jsdom, a controllable fake 
     el.remove()
   })
 
+  it('passes root / rootMargin / threshold through to the observer init (default band, then a custom one)', () => {
+    // @ts-expect-error - installing the fake for this test only.
+    globalThis.IntersectionObserver = FakeIntersectionObserver
+    const h1 = heading('one', 0)
+    const el = new ScrollSpyHost()
+    el.opts = { headings: [h1], onActiveChange: vi.fn() }
+    document.body.append(el)
+    expect(FakeIntersectionObserver.instances[0]!.init).toEqual({ root: null, rootMargin: '0px 0px -80% 0px', threshold: 0 })
+    el.remove()
+
+    const scroller = document.createElement('div')
+    const el2 = new ScrollSpyHost()
+    el2.opts = { headings: [h1], onActiveChange: vi.fn(), root: scroller, rootMargin: '-10px 0px -50% 0px' }
+    document.body.append(el2)
+    expect(FakeIntersectionObserver.instances[1]!.init).toEqual({ root: scroller, rootMargin: '-10px 0px -50% 0px', threshold: 0 })
+    el2.remove()
+  })
+
+  it('the fallback measures against opts.root\'s OWN top edge, not the viewport\'s 0 (a scrolling ancestor)', () => {
+    // @ts-expect-error - installing the fake for this test only.
+    globalThis.IntersectionObserver = FakeIntersectionObserver
+    const scroller = document.createElement('div')
+    scroller.getBoundingClientRect = () =>
+      ({ top: 100, bottom: 700, left: 0, right: 0, width: 0, height: 600, x: 0, y: 100, toJSON: () => '' }) as DOMRect
+    const h1 = heading('one', 60) // above the scroller's top (100) → already scrolled past INSIDE the root
+    const h2 = heading('two', 150) // below the scroller's top → not yet passed (viewport-relative it is > 0 too)
+    const onActiveChange = vi.fn()
+    const el = new ScrollSpyHost()
+    el.opts = { headings: [h1, h2], onActiveChange, root: scroller }
+    document.body.append(el)
+    const observer = FakeIntersectionObserver.instances[0]!
+    observer.fire(h1, false)
+    observer.fire(h2, false)
+    // Against the viewport's 0 both tops are positive → null; against the ROOT's top (100) h1 has passed.
+    expect(onActiveChange).toHaveBeenLastCalledWith('one')
+    el.remove()
+  })
+
   it('early release() is idempotent and disconnects the observer', () => {
     // @ts-expect-error - installing the fake for this test only.
     globalThis.IntersectionObserver = FakeIntersectionObserver
@@ -185,5 +224,60 @@ describe('scrollSpy — heading-activation decision (jsdom, a controllable fake 
     el.releaseFn?.() // idempotent — second call is a no-op, never throws
     expect(observer.disconnected).toBe(true)
     el.remove()
+  })
+})
+
+// ── the reactive `enabled` gate — a REAL signal-backed prop (the scroll-fade.test.ts GatedHost shape) ─────
+
+const gatedProps = { spyOn: prop.boolean(false) } satisfies PropsSchema
+
+interface GatedSpyHost extends ReactiveProps<typeof gatedProps> {}
+class GatedSpyHost extends UIElement {
+  static props = gatedProps
+  headings: HTMLElement[] = []
+  onActiveChange = vi.fn()
+  protected connected(): void {
+    scrollSpy(this, { headings: this.headings, onActiveChange: this.onActiveChange, enabled: () => this.spyOn })
+  }
+}
+customElements.define('ui-scroll-spy-gated-probe', GatedSpyHost)
+
+describe('scrollSpy — the reactive `enabled` gate re-arms LIVE (a real signal)', () => {
+  afterEach(() => {
+    FakeIntersectionObserver.instances.length = 0
+    // @ts-expect-error - test-only global cleanup, restoring the ambient (undefined-in-jsdom) binding.
+    delete globalThis.IntersectionObserver
+  })
+
+  it('off → on installs a fresh observer; on → off disconnects it and reports null once', async () => {
+    // @ts-expect-error - installing the fake for this test only.
+    globalThis.IntersectionObserver = FakeIntersectionObserver
+    const h1 = heading('one', 0)
+    const el = new GatedSpyHost()
+    el.headings = [h1]
+    document.body.append(el)
+    expect(FakeIntersectionObserver.instances.length, 'gate off at connect — no observer').toBe(0)
+    expect(el.onActiveChange).toHaveBeenLastCalledWith(null)
+
+    el.spyOn = true
+    await el.updateComplete // effect re-runs are microtask-batched — wait for the flush
+    expect(FakeIntersectionObserver.instances.length, 'turning the gate on did not arm the observer').toBe(1)
+    const observer = FakeIntersectionObserver.instances[0]!
+    expect([...observer.targets]).toEqual([h1])
+    observer.fire(h1, true)
+    expect(el.onActiveChange).toHaveBeenLastCalledWith('one')
+
+    el.spyOn = false
+    await el.updateComplete
+    expect(observer.disconnected, 'turning the gate off left the observer live').toBe(true)
+    expect(el.onActiveChange).toHaveBeenLastCalledWith(null)
+    const callsAfterOff = el.onActiveChange.mock.calls.length
+
+    el.spyOn = true
+    await el.updateComplete
+    expect(FakeIntersectionObserver.instances.length, 're-arming did not install a NEW observer').toBe(2)
+    expect(el.onActiveChange.mock.calls.length, 're-arming alone must not re-report until a crossing fires').toBe(callsAfterOff)
+    el.remove()
+    expect(FakeIntersectionObserver.instances[1]!.disconnected).toBe(true)
   })
 })

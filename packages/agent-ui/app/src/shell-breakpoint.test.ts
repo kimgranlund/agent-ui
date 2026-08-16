@@ -49,6 +49,16 @@ describe('shell family — the narrow-collapse breakpoint stays consistent acros
     expect(matches, 'super-shell.css must query BOTH the narrow and the compact line').toContain(SHELL_COMPACT_BREAKPOINT)
   })
 
+  // GH #964 — the first OUT-OF-PACKAGE consumer of the compact line: the docs-site TOC recipe's ResizeObserver
+  // swap (site/pages/toc-content.ts) reads SHELL_COMPACT_BREAKPOINT_REM through the `./shell-breakpoint`
+  // package export. It has no `@container` literal to sweep (its swap is a JS `data-compact` stamp), so this
+  // arm guards the OTHER drift shape — a re-minted site-local copy of the number — at the source level.
+  it('the site TOC recipe IMPORTS the compact line via @agent-ui/app/shell-breakpoint and mints no local copy (GH #964)', () => {
+    const src = readFileSync(`${process.cwd()}/site/pages/toc-content.ts`, 'utf8') as string
+    expect(src).toMatch(/import \{ SHELL_COMPACT_BREAKPOINT_REM \} from '@agent-ui\/app\/shell-breakpoint'/)
+    expect(src, 'a site-local `const X = 52.5` re-mints the line — import it instead').not.toMatch(/const \w+\s*=\s*52\.5\b/)
+  })
+
   it('a drifted literal FAILS (negative control)', () => {
     const css = '@container (inline-size < 41rem) { :scope { display: none; } }'
     const matches = [...css.matchAll(/@container[^{]*\(inline-size\s*<\s*([^)]+)\)/g)].map((m) => m[1].trim())

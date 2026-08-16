@@ -10,9 +10,9 @@
 }
 
 /* Below the ADR-0150 compact line (`data-compact`, stamped by the page's own ResizeObserver against the
- * SAME `SHELL_COMPACT_BREAKPOINT_REM` line `@agent-ui/app`'s shell-breakpoint.ts names — see toc-content.ts's
- * own banner for why this page keeps a cited literal rather than importing it): one column, the rail's
- * place taken by the pinned `ui-select` swap below. */
+ * IMPORTED `SHELL_COMPACT_BREAKPOINT_REM` — `@agent-ui/app/shell-breakpoint`, no site-local literal, so no
+ * `@container` line to keep in sync here): one column, the rail's place taken by the pinned `ui-select`
+ * swap below. */
 .toc-content-layout[data-compact] {
   grid-template-columns: minmax(0, 1fr);
 }
