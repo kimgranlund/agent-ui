@@ -42,6 +42,10 @@ export function viewTransitionAvailable(): boolean {
 // the SAME name (e.g. every segment in a segmented pane, only one ever visible at a time via CSS) —
 // the browser then morphs whichever one was visible before into whichever one is visible after, even
 // though they are different DOM nodes, because visibility (not presence) is what the snapshot sees.
+// The flip side of that law: the token must be unique per DOCUMENT, not per surface INSTANCE — a surface
+// that can be mounted more than once on a page (a shell, an outlet) folds an instance discriminator
+// (its authored `id`, else a per-document counter) into the token, or two instances paint the same
+// name in one snapshot and the platform aborts the whole transition (`ui-super-shell` does exactly this).
 //
 // OPT-IN, BYTE-IDENTICAL WHEN OFF (same law as `withViewTransition`): a caller applies a name ONLY when
 // its own opt-in prop is set — never unconditionally — so a build with the opt-in off never touches
@@ -51,7 +55,11 @@ export function viewTransitionAvailable(): boolean {
  *  `[a-zA-Z0-9-]` in either part replaced with `-` (CSS custom-ident is otherwise unconstrained, but
  *  callers pass slot/id strings that may carry other characters — this keeps the result always valid,
  *  never a caller-visible `DOMException` from an untrusted token). The `ui-vt-` prefix scopes every
- *  fleet-convention name into one collision-free namespace, distinct from a consumer's own names. */
+ *  fleet-convention name into one collision-free namespace, distinct from a consumer's own names.
+ *  CAVEAT — the sanitizer is lossy on purpose: `a b`, `a-b` and `a_b` all collapse to `a-b`, so two
+ *  tokens that differ only in such characters (or a `surface`/`token` pair whose boundary is ambiguous,
+ *  `foo`+`bar-x` vs `foo-bar`+`x`) yield ONE name. Callers own token distinctness at the identity grain
+ *  they care about (slot names, ids, instance counters — already `[a-zA-Z0-9-]` in the fleet). */
 export function viewTransitionName(surface: string, token: string): string {
   const clean = (s: string): string => s.replace(/[^a-zA-Z0-9-]/g, '-')
   return `ui-vt-${clean(surface)}-${clean(token)}`

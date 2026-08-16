@@ -142,6 +142,11 @@ type NarrowTab = { value: string; label: string; participant: HTMLElement; contr
 type TabsSelectDetail = { value: string; index: number }
 
 export interface UISuperShellElement extends ReactiveProps<typeof props> {}
+// GH #958 review repair (M1) — a per-DOCUMENT instance discriminator for the named-morph token. `#idSeq`
+// below is per-INSTANCE (two shells both mint `…-pane-1`), so it cannot tell shells apart; this module
+// counter can. Consumed only through `#vtInstanceToken` (the host's own `id` wins when authored).
+let shellInstanceSeq = 0
+
 export class UISuperShellElement extends UIElement {
   static props = props
 
@@ -161,6 +166,11 @@ export class UISuperShellElement extends UIElement {
   #narrowTabsHost: UITabsElement | null = null
   #narrowTabs: NarrowTab[] = []
   #idSeq = 0
+  // GH #958 (M1) — the cross-instance discriminator folded into every named-morph token this shell mints
+  // (`#applySegments`): a name must be unique per DOCUMENT, not per shell, or two opted-in shells on one
+  // page paint the same name in one snapshot and the platform aborts the transition. Minted once per
+  // instance, never re-numbered on reconnect (a stable name is what lets a morph pair old↔new).
+  readonly #vtInstanceSeq = ++shellInstanceSeq
   // LLD-C2 (SPEC-R9c/R9d) — the overlay's focus landing per side (the side's first box, tabindex=-1 at
   // compose) and the toggle that opened the current overlay (focus returns to it on close). The band
   // observer is the ONE shell-owned ResizeObserver (SPEC-R9c) — visibility-only (attributes, never a
@@ -785,6 +795,15 @@ export class UISuperShellElement extends UIElement {
     return `ui-super-shell-${prefix}-${this.#idSeq}`
   }
 
+  /** GH #958 (M1) — the per-shell half of every named-morph token: the host's authored `id` when it has
+   *  one (stable across page loads, so a consumer can target `::view-transition-group(ui-vt-…)` from its
+   *  own CSS; the DOM already demands document-unique ids), else `n{seq}` from the per-document instance
+   *  counter (unique per document lifetime, not stable across loads). Read at compose time, like the
+   *  opt-ins themselves (build-once law) — a later `id` change is not retroactive. */
+  #vtInstanceToken(): string {
+    return this.id || `n${this.#vtInstanceSeq}`
+  }
+
   // ── SPEC-R7a: pane segments (wide) ──────────────────────────────────────────────────────────────
 
   /** A no-op unless the pane's authored children carry `data-segment` (R7a). Builds the pane-local
@@ -804,12 +823,15 @@ export class UISuperShellElement extends UIElement {
     // GH #958 (ADR-0183 cl.4) — the named-morph convention's proving surface (dom/view-transition.ts's
     // header comment carries the full pairing law). ONE name per pane box, shared by every segment in
     // it: `box.dataset.slotName` is the box's own stable identity (set by `place()` just before this
-    // call), so two different panes on the same shell never collide. Gated on BOTH opt-ins plus the
-    // platform check `withViewTransition` itself applies — a build with either opt-in off, or the API/
-    // reduced-motion unavailable, never calls `setViewTransitionName` at all (this file's own
+    // call), so two different panes on the same shell never collide — and the token is PREFIXED with
+    // this shell's own discriminator (`#vtInstanceToken`: the authored `id`, else the per-document
+    // instance counter) so two opted-in SHELLS on one page never collide either (review repair M1: a
+    // duplicate name across two painted elements aborts the whole transition). Gated on BOTH opt-ins
+    // plus the platform check `withViewTransition` itself applies — a build with either opt-in off, or
+    // the API/reduced-motion unavailable, never calls `setViewTransitionName` at all (this file's own
     // byte-identical-when-off law, mirrored from the helper's).
     if (this.viewTransitions && this.viewTransitionNames && viewTransitionAvailable()) {
-      const name = viewTransitionName('super-shell-segment', box.dataset.slotName ?? 'pane')
+      const name = viewTransitionName('super-shell-segment', `${this.#vtInstanceToken()}-${box.dataset.slotName ?? 'pane'}`)
       for (const seg of segments) setViewTransitionName(seg as HTMLElement, name, true)
     }
     const strip = document.createElement('ui-tabs') as UITabsElement

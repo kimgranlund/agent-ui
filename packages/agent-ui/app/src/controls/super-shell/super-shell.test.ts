@@ -596,4 +596,41 @@ describe('ui-super-shell — viewTransitionNames named-morph opt-in on segmented
     await el.updateComplete
     for (const seg of segments) expect(seg.style.viewTransitionName).toBe('')
   })
+
+  // Review repair M1 — cross-instance exposure: the SAME slot on two opted-in shells must NOT share a name
+  // (one snapshot with a duplicate painted name aborts the whole transition). The per-instance
+  // discriminator is the host's authored `id` when present, else a per-document counter.
+  it('two opted-in shells on one page: the same slot mints DISTINCT names per shell (per-instance discriminator)', async () => {
+    doc.startViewTransition = () => {}
+    const first = mountNamed(true, true)
+    const second = mountNamed(true, true)
+    await first.el.updateComplete
+    await second.el.updateComplete
+    const a = first.segments[0]!.style.viewTransitionName
+    const b = second.segments[0]!.style.viewTransitionName
+    expect(a).toMatch(/^ui-vt-super-shell-segment-n\d+-options-pane$/)
+    expect(b).toMatch(/^ui-vt-super-shell-segment-n\d+-options-pane$/)
+    expect(a).not.toBe(b)
+    // still ONE name per pane box WITHIN each shell (the pairing law is untouched by the discriminator)
+    expect(first.segments[1]!.style.viewTransitionName).toBe(a)
+    expect(second.segments[1]!.style.viewTransitionName).toBe(b)
+  })
+
+  it('an authored host `id` is the discriminator (stable across loads), sanitized into the token', async () => {
+    doc.startViewTransition = () => {}
+    const el = document.createElement('ui-super-shell') as UISuperShellElement
+    el.id = 'admin.shell'
+    el.viewTransitions = true
+    el.viewTransitionNames = true
+    const content = document.createElement('div')
+    content.setAttribute('data-slot', 'content')
+    const seg = document.createElement('div')
+    seg.setAttribute('data-slot', 'options-pane')
+    seg.setAttribute('data-segment', 'Settings')
+    el.append(content, seg)
+    document.body.append(el)
+    mounted.push(el)
+    await el.updateComplete
+    expect(seg.style.viewTransitionName).toBe('ui-vt-super-shell-segment-admin-shell-options-pane')
+  })
 })

@@ -100,3 +100,45 @@ that is first-paint streaming, every one after is re-render.
    arriving MID-burst could run a later line synchronously past a still-queued earlier one. A
    mid-burst environment flip is not a real operating condition (bursts are sub-second); accepted
    and documented at the wrap site rather than engineered around.
+
+## Amendment (2026-08-16, **proposed** — Kim ratifies) — cl.4's "separate intake" ARRIVED: the fleet's opt-in named-morph convention (GH [#958](https://github.com/kimgranlund/agent-ui/issues/958)) — `ui-vt-{surface}-{token}` via `dom/view-transition.ts`, applied only behind a surface's own opt-in, proven on `ui-super-shell` segments; cl.4's no-DEFAULT-names law stands
+
+> Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
+> byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment
+> carries no ratification of its own until Kim gives one (`ratify ADR-0183 amendment`, executed by
+> `scripts/adr_ratify.py`'s amendment mode, GH #664). Every accepted section above — cl.1–cl.6 and the
+> 2026-08-12 amendment — is unedited. GH [#958](https://github.com/kimgranlund/agent-ui/issues/958)
+> is the durable design record; the build that carries this amendment is its PR.
+
+**What cl.4 said, and what changes.** cl.4 ruled two things: (a) named-element morphs are the
+CONSUMER's vocabulary — the fleet ships no `view-transition-name`s of its own **as defaults**; and
+(b) "a names convention, if ever, is a separate intake." GH #958 is that intake. (a) STANDS WHOLE:
+no control applies a name unless its own opt-in is set, and every default-off / no-API /
+reduced-motion path stays byte-identical (the family law, cl.1). (b) is now RESOLVED:
+
+1. **The convention** — `viewTransitionName(surface, token)` + `setViewTransitionName(el, name, enabled)`
+   in `components/dom/view-transition.ts`, beside `withViewTransition`. Names are `ui-vt-{surface}-{token}`:
+   `surface` = the owning control's slug, `token` = a PERSISTENT identity within it (a slot name, an id,
+   an instance counter — never an array index). Both halves are sanitized to `[a-zA-Z0-9-]` (lossy on
+   purpose; callers own distinctness at their identity grain). The `ui-vt-` prefix scopes fleet names
+   away from a consumer's own vocabulary, which cl.4's (a) still hands to the consumer.
+2. **The pairing law, both halves, documented at the seam:** (i) every element that can occupy ONE
+   visual role carries the SAME name (only one is painted at a time — the browser morphs the outgoing
+   into the incoming across different DOM nodes); (ii) a name is unique per DOCUMENT, not per surface
+   INSTANCE — a surface that can mount twice folds an instance discriminator (authored `id`, else a
+   per-document counter) into its token, or the transition aborts (the review-found M1 hazard, repaired
+   in the same PR).
+3. **First proving surface** — `ui-super-shell`'s `viewTransitionNames` boolean (attribute
+   `view-transition-names`, default `false`), meaningful only alongside `viewTransitions` (cl.3): each
+   segmented pane's segments share `ui-vt-super-shell-segment-{shell}-{slot}`, so a segment swap morphs
+   instead of cross-fading. Both opt-ins off, or either off, or no API/reduced-motion: no name is ever
+   written, not even cleared.
+4. **The 2026-08-12 amendment's cl.3 re-read, as it demanded.** That analysis rested on "the fleet
+   ships ZERO names"; it now rests on "the fleet ships no names on the A2UI surface" — `ui-surface-host`
+   sets none, the A2UI catalog exposes no `viewTransitionNames` opt-in, and `ui-super-shell` is not
+   inside a surface-host re-render. A re-render there is therefore still a single root cross-fade and
+   the ADR-0022 `moveBefore` interaction analysis holds unchanged. Should a NAMED opt-in ever land on
+   the A2UI surface itself, that intake owes the re-read again.
+5. **Verify tier, honestly:** the token/pairing/gating truth table is unit-pinned (jsdom, stubbed
+   API); the morph itself is browser-UNMEASURED at this amendment's date — a real-engine visual pin
+   is owed by the shell's browser suite, not claimed here.
