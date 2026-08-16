@@ -60,11 +60,9 @@ runs on, and adds ONE narrow verb for the class the rationale never covered:
 
 Reach for an authorship-scoped re-ruling when a blanket protection is protecting content the protected
 party never authored, AND the "protected" class is already mutable through some other door (here: the
-hand editor). The tell is two sound intents colliding under one uniform rule. Do NOT reach for the
-rejected alternatives: seeding drafts without placeholder content (b — the gate still cannot WRITE
-Foundation, and it forks seeding per entry path), compose-time shadowing (c — the store stops being
-WYSIWYG; the ADR-0170 cl.2 second-writer drift class), or replaceable-while-pristine (d — blocks the
-model refining its OWN earlier update and drags provenance tracking into the `Entry` schema).
+hand editor). The tell is two sound intents colliding under one uniform rule. The rejected
+alternatives (seed-without-placeholder, compose-time shadowing, replaceable-while-pristine) and why each
+fails: ADR-0178 Amendment §"Alternatives considered" — cite, never re-summarize.
 
 ## Provenance
 

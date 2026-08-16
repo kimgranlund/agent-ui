@@ -160,7 +160,7 @@ papered over inside the payload.
 | `references/node-idioms.md` | The idiomatic node shape, bindable props, and ordering traps for each catalog component |
 | `references/trees-and-lists.md` | Building the adjacency-list tree, `child` vs `children`, `ChildList` templates, `${…}` interpolation, nesting |
 | `references/bindings-actions-checks.md` | Data bindings, two-way inputs, Button actions, reactive `checks`, FormProvider submit-gating |
-| `references/finalize-validation.md` | A payload validates clean mid-stream but the CLI / renderer / `produce` fails it `IDGRAPH ${sid}:root-missing` — the finalize-granularity signal (`validateA2ui(..., { atFinalize })`, ADR-0187 / GH #829): who opts in, and why every `createSurface` must be rooted (or deleted) before the set is complete |
+| `references/finalize-validation.md` | A payload validates clean mid-stream but the CLI / renderer / `produce` fails it `IDGRAPH ${sid}:root-missing` — the finalize-granularity signal (ADR-0187) |
 | `catalog.json` (`src/catalog/default/`) | The authoritative component/prop/function inventory — never invent a component or prop |
 | `src/examples/` + `corpus/exemplar/v1_0/agent-ui.jsonl` | Real payloads to condition on before composing |
 | `a2ui-harness-wiring.lld.md` §6 | The full bounded-loop contract and round-orchestration rules |

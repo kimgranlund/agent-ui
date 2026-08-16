@@ -2,8 +2,9 @@
 
 Harvested 2026-08-16 from ADR-0187 (`.claude/docs/adr/0187-validator-finalize-signal.md`, ratified
 2026-08-13) and GH #829 (its design fork; the fix path for GH #802's empty-second-host symptom). Every
-source fact below was re-read against `packages/agent-ui/a2ui/src/renderer/validate.ts` and the four
-opt-in call sites on 2026-08-16 — the code is the canon, this file is the map. Owner of the law:
+source fact below was re-read against `packages/agent-ui/a2ui/src/renderer/validate.ts` and the six
+call sites in the table below (four unconditional opt-ins, one per-fixture flag, one that stays default)
+on 2026-08-16 — the code is the canon, this file is the map. Owner of the law:
 `a2ui-runtime.spec.md` SPEC-R11 + `a2ui-renderer.lld.md` §8 LLD-C11 (cite, never copy).
 
 ## The question this file answers
@@ -39,11 +40,11 @@ exists only at the call site. ADR-0187 therefore makes the caller SAY so:
 
 | Call site | Mode | Why |
 |---|---|---|
-| `tools/harness/validate-payload.ts` — THE compose-loop CLI (`validate-payload.ts:122`) | `{ atFinalize: true }` | a pasted/authored payload IS a complete set |
-| `corpus/admit.ts` stage 5 (`admit.ts:136`) | `{ atFinalize: true }` | an admitted record IS a complete set; the 29-record exemplar shard scanned clean 2026-08-13 |
-| `agent/produce.ts` per-round verdict (`produce.ts:1011`) | `{ atFinalize: true }` | an abandoned surface becomes a PRE-WIRE self-correct round, fed back via the trace's codes |
-| `renderer/renderer.ts` `finalizeSurface` (`renderer.ts:494`) | `{ atFinalize: true }` | the client half — the existing IDGRAPH-only filter passes the failure to the wire unmodified |
-| `tools/conformance/run.ts` (`run.ts:126`) | per-fixture `atFinalize?` flag, default off | two committed fixtures deliberately carry createSurface-only sids for single-failure isolation |
+| `tools/harness/validate-payload.ts` — THE compose-loop CLI (`main()`'s post-heal `verdict`) | `{ atFinalize: true }` | a pasted/authored payload IS a complete set |
+| `corpus/admit.ts` — `admit()` stage 5, the tier-1 deterministic gate | `{ atFinalize: true }` | an admitted record IS a complete set; the 29-record exemplar shard scanned clean 2026-08-13 |
+| `agent/produce.ts` — `produce()`'s per-round `verdict` | `{ atFinalize: true }` | an abandoned surface becomes a PRE-WIRE self-correct round, fed back via the trace's codes |
+| `renderer/renderer.ts` — `#finalizeSurface` | `{ atFinalize: true }` | the client half — the existing IDGRAPH-only filter passes the failure to the wire unmodified |
+| `tools/conformance/run.ts` — `runSuite` forwarding `Fixture.atFinalize` | per-fixture `atFinalize?` flag, default off | two committed fixtures deliberately carry createSurface-only sids for single-failure isolation |
 | `site/lib/artifact-feed.ts` · per-prefix validation (message-lifecycle SPEC-R4 AC1) | default | per-artifact chunks and mid-stream prefixes are NOT finalize boundaries — "every prefix validates 0-failure" is a ratified law that stands |
 
 ## What it means for a composed payload [inferred from the table above]
@@ -69,4 +70,5 @@ ADR-0187 (accepted 2026-08-13, ratified by kimgranlund via the `ratify ADR-0187`
 flipped by `scripts/adr_ratify.py`) · build plan `.claude/docs/lld/a2ui-validator-finalize.lld.md` ·
 GH #829 Findings 1–2 (the mechanical always-strict fix, attempted and reverted with proof: it reds the
 prefix laws + four suites). Harvested here 2026-08-16 (adr-queue row `adr-0187`); [drift-prone]: the
-call-site line numbers in the table — re-verify against the files on any validator or renderer edit.
+call-site symbols in the table (cited by symbol, never line — the #757 cite-the-owner law) — re-verify
+against the files on any validator or renderer edit.

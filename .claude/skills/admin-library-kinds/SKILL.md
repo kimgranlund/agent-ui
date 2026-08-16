@@ -24,8 +24,10 @@ Path note: ADR-0164 (accepted) re-homed the machinery to `app/src/controls/entry
 (`entry-list.ts` + a split-out `entry-data.ts`) — SHIPPED (GH #761 retired this note's earlier
 "not yet built" claim and the `L` line-alias it carried). This map cites by SYMBOL, not line
 number (the #757 cite-the-owner law): `entries.ts`'s domain exports, `entry-list.ts`'s core
-`mountEntryList`/`EntryListOptions`, and `agent-admin.ts`'s named `#`-methods — the code is the
-canon, these names survive its edits. ADR-0164 cl.2's split line decides where new code lands:
+`mountEntryList`/`EntryListOptions`, `persona-patch.ts`'s `updateTargetIndex`, and `agent-admin.ts`'s
+named `#`-methods — the code is the canon, these names survive its edits, and the ADR-0164
+frozen-interface + layering trip-wires are tests, so a red run after a change is a design regression,
+not noise. ADR-0164 cl.2's split line decides where new code lands:
 anything naming a kind constant, a seeded default, or a projection is DOMAIN (`entries.ts`);
 anything parameterized by bare `kind: string` is CORE (`entry-list.ts`).
 
@@ -36,17 +38,7 @@ anything parameterized by bare `kind: string` is CORE (`entry-list.ts`).
 | `references/roster-and-interface.md` | Adding a new entry kind (the five roster join points, ADR-0132), authoring or extending a library pack (live-derived, collision-rejecting), or touching the frozen `mountEntryList` interface + its additive `EntryListOptions` bag (ADR-0164) |
 | `references/single-select-catalog.md` | Building or modifying a SINGLE-select kind — the catalog exemplar (ADR-0170): selection-truth-outside-the-store, switch-as-radio semantics, delete-active ordering, the special (non-uniform) mount — or scoping a future association/multi-select kind (ADR-0175, the fenced gap) |
 | `references/trio-law-and-semantics.md` | Picking id/label/name semantics for a new kind or pack (ADR-0168's trio law), or choosing a new kind's shape among Multi-enable / Pattern-source / Single-select (ADR-0170) |
-| `references/builtin-protection-and-patch-verbs.md` | Asking what `builtin: true` protects (non-deletable ONLY, ADR-0132 Fork 4 — never immutable), or which verbs the persona-patch gate admits per entry class — the AUTHORSHIP-SCOPED RE-RULING (ADR-0178 Amendment, GH #696/#821, PR #826): host-seeded builtin prompt sections update in place, user-authored entries stay append-protected, deletion impossible everywhere |
-
-## Verify before you build on a row
-
-Every row above cites a symbol or an ADR clause, never a line number. Before building on one:
-open the cited file and re-check that the symbol still says what the map claims (`entries.ts`'s
-domain exports, `entry-list.ts`'s `mountEntryList`/`EntryListOptions`, `persona-patch.ts`'s
-`updateTargetIndex`); if it has moved, the map is stale — repair the reference in the same change,
-never build on the prose. After a change lands, re-run the per-package gate (`npm run check && npm
-test`, judged by exit code) — the ADR-0164 frozen-interface and layering trip-wires are tests, so
-a red run is a design regression, not noise.
+| `references/builtin-protection-and-patch-verbs.md` | Asking what `builtin: true` protects (non-deletable only, never immutable — ADR-0132 Fork 4), or which patch verbs the persona-patch gate admits per authorship class (ADR-0178 Amendment) |
 
 ## The roster law, in one line
 

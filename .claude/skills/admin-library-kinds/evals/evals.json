@@ -16,10 +16,12 @@
     { "id": "t13", "expect": "trigger", "prompt": "Toggling the Default catalog row off doesn't re-render the section — why doesn't the store notify?" },
     { "id": "t14", "expect": "trigger", "prompt": "Delete of the active row: which key do we write first, the selection key or the roster?" },
     { "id": "t15", "expect": "trigger", "prompt": "How did pattern-source do single-pick, and can my new kind reuse that shape?" },
+    { "id": "t16", "expect": "trigger", "prompt": "What does builtin protect on a prompt section — can the persona-patch gate update a built-in section, or only add new ones?" },
     { "id": "n01", "expect": "no-trigger", "prompt": "Register a second A2UI catalog on the renderer — where do the factories go?" },
     { "id": "n02", "expect": "no-trigger", "prompt": "Add a new integration tool to the dev proxy's registry with a server-side key." },
     { "id": "n03", "expect": "no-trigger", "prompt": "How do dynamic lists render in an A2UI payload?" },
     { "id": "n04", "expect": "no-trigger", "prompt": "Build a ui-select control variant with grouped options." },
-    { "id": "n05", "expect": "no-trigger", "prompt": "What sections does a bug ticket carry in this repo?" }
+    { "id": "n05", "expect": "no-trigger", "prompt": "What sections does a bug ticket carry in this repo?" },
+    { "id": "n06", "expect": "no-trigger", "prompt": "Add a mini-skill to the A2UI producer's system prompt stack — where does it slot into grammar.md and the genui pack?" }
   ]
 }
