@@ -5,7 +5,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./gateway": "./src/gateway/index.ts"
   },
   "dependencies": {
     "@agent-ui/components": "*",
