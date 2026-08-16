@@ -1337,6 +1337,13 @@
     "section": "Records"
   },
   {
+    "name": "ADR-0193",
+    "url": "./adr-index.html#adr-0193",
+    "description": "a persistence-adapter seam in @agent-ui/shared: typed async StorageAdapter (get/set/delete/keys) + a localStorage tier + an IndexedDB tier + an opt-in cross-ta…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "ADR-0194",
     "url": "./adr-index.html#adr-0194",
     "description": "Reveal-order policy for the A2UI streaming renderer: an opt-in, default-OFF top-down sibling hold (TreeDeps.revealOrder / RendererOptions.revealOrder), never w…",
