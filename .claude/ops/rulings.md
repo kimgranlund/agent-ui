@@ -56,3 +56,13 @@ PR (no cherry-pick), and the 17 stale gitignore rules get trimmed on a small PR 
 any linked worktree (local delete fails → terminal). Practice rule: reap the branch's worktree
 BEFORE a --delete-branch merge, or delete the remote branch by hand after. Proven by the PR #627
 deliberate test (verbatim output on #613). repo-cleaner's sweep stays the safety net.
+
+## Placement forks + ADR harvest — RULED 2026-08-16 (Kim, in-session, clear-the-boards run)
+
+One round settled five issues + two harvest rows: **#955/#956/#957** → mint `@agent-ui/data` as a
+zero-dep sibling off `components` (router/code precedent), #957 FOLDS into #956, one PRD/SPEC covers
+all three, the package mint rides a proposed ADR. **#959** → seam home `@agent-ui/shared` (Slice 1
+may build; layer-contract change = proposed ADR). **#954** → new `ui-drill` container (not a
+nav-rail trait); component-design intake → build. **ADR harvest**: BOTH `adr-0187` (atFinalize
+validator signal → a2ui-review / a2ui-payload-authoring) and `adr-0178-amendment` (authorship-scoped
+re-ruling → composition-patterns or sibling) confirmed for harvest. Rulings posted on each issue.
