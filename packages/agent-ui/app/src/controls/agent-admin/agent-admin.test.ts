@@ -101,9 +101,9 @@ function entryEl(el: Element, kind: string, entryId: string): HTMLElement {
   return sectionEl(el, kind).querySelector(`[data-part="entry"][data-entry-id="${entryId}"]`) as HTMLElement
 }
 
-/** GH #917 — the four capability kinds' per-entry CRUD lives in the section's drawer now: click the row's ONE
- *  affordance and hand back the form the drawer built for that entry (the Invocable pill, the name field, the
- *  content editor and the danger row all live inside it). */
+/** GH #917/GH #949 — a drawered kind's per-entry CRUD lives in the section's drawer now: click the row's ONE
+ *  affordance and hand back the form the drawer built for that entry (the name field, the content editor and
+ *  the danger row always; the Invocable pill/tier only for a kind `hasAvailabilityMode` names). */
 function openEntryDrawer(el: Element, kind: string, entryId: string): HTMLElement {
   ;(entryEl(el, kind, entryId).querySelector('[data-part="entry-edit"]') as HTMLElement).click()
   return sectionEl(el, kind).querySelector('[data-part="entry-edit-form"]') as HTMLElement
@@ -506,6 +506,50 @@ describe('mountEntryList — the entryDrawer option, both modes (GH #917)', () =
     expect((openRow(section, 'a').querySelector('[data-part="entry-form-name"]') as UITextFieldElement).readonly, 'the name is unaffected').toBe(false)
   })
 
+  // GH #949 — the drawer widened to `prompt-section`/`pattern-source`, neither renamable nor availability-
+  // gated (`hasRenamableName`/`hasAvailabilityMode` both exclude them, entries.ts) — the same `entryDrawer`
+  // mechanism, minus the two fields those kinds never had inline either. The header noun now derives from
+  // the section's own `addLabel` rather than the raw `kind` slug, which would have painted the ugly
+  // "Edit prompt-section"/"Edit pattern-source" (the hyphen is machine-shaped, not a sentence).
+  it('a kind with neither rename nor availability (Instructions) still opens the drawer, with only its own fields', () => {
+    const writes: Writes = { renames: [], descriptions: [], contents: [], modes: [], deletes: [] }
+    const handlers: EntryListHandlers = {
+      onToggle: () => {},
+      onAdd: () => true,
+      onContentChange: (id, content) => writes.contents.push([id, content]),
+      onDelete: (id) => writes.deletes.push(id),
+      onDescriptionChange: (id, description) => writes.descriptions.push([id, description]),
+    }
+    // No `rename`/`availabilityToggle` here — real wiring: `hasRenamableName`/`hasAvailabilityMode` both
+    // exclude `prompt-section` (entries.ts), so `#makeSection` never passes those flags for it.
+    const section = mountEntryList('prompt-section', 'Add section', handlers, { entryDrawer: true })
+    document.body.append(section.host)
+    mounted.push(section.host)
+    const row: Entry = { id: 'foundation', kind: 'prompt-section', label: 'Foundation', description: 'd', content: 'You are helpful.', order: 0, enabled: true, builtin: false }
+    section.render([row])
+
+    ;(section.host.querySelector('[data-part="entry-edit"]') as HTMLElement).click()
+    expect(section.host.querySelector('[data-part="entry-form-title"]')!.textContent, 'derived from addLabel, not the raw hyphenated kind').toBe('Edit section')
+    const form = section.host.querySelector('[data-part="entry-edit-form"]') as HTMLElement
+    expect(form.querySelector('[data-part="entry-form-name"]'), 'not renamable — the name is read-only, not absent').not.toBeNull()
+    expect((form.querySelector('[data-part="entry-form-name"]') as UITextFieldElement).readonly).toBe(true)
+    expect(form.querySelector('[data-part="entry-availability"]'), 'no tier semantics for this kind').toBeNull()
+    expect(form.querySelector('[data-part="entry-content"]'), 'the content editor is still there').not.toBeNull()
+    expect(form.querySelector('[data-part="entry-delete"]'), 'a non-builtin section is removable').not.toBeNull()
+  })
+
+  it('pattern-source drawers the same way, and its header reads the multi-word addLabel-derived noun', () => {
+    const handlers: EntryListHandlers = { onToggle: () => {}, onAdd: () => true, onContentChange: () => {}, onDelete: () => {} }
+    const section = mountEntryList('pattern-source', 'Add pattern source', handlers, { entryDrawer: true })
+    document.body.append(section.host)
+    mounted.push(section.host)
+    const row: Entry = { id: 'p1', kind: 'pattern-source', label: 'Pack A', description: '', content: 'patterns…', order: 0, enabled: true, builtin: false }
+    section.render([row])
+
+    ;(section.host.querySelector('[data-part="entry-edit"]') as HTMLElement).click()
+    expect(section.host.querySelector('[data-part="entry-form-title"]')!.textContent).toBe('Edit pattern source')
+  })
+
   // ── the ADD arm of the same drawer (GH #917 leg 2) ─────────────────────────────────────────────────────
   it('a drawered section builds NO inline add-form; the add-toggle opens the drawer, and Add commits + closes', () => {
     const adds: NewEntryInput[] = []
@@ -633,13 +677,15 @@ describe('UIAgentAdminElement — the rename affordance is scoped to the four ca
     expect(entryEl(second, ENTRY_KINDS.skill, 'web-search').querySelector('[data-part="entry-label"]')!.textContent).toBe('Research')
   })
 
-  // GH #848 × GH #850 × GH #917 — the composed element hands the same four sections all three opt-ins. Proven
-  // on the rendered DOM (not from the options object): each capability row is the DRAWERED shape (one Edit
-  // button, no inline rename/mode/remove cluster) whose drawer carries both the name field and the mode pill,
-  // and the three non-capability sections carry none of it. One assertion pass over all three features, so a
-  // future kind added to one list and not the others shows up here as a mismatch rather than as a silent
-  // asymmetry.
-  it('every capability row is the drawered shape, and its drawer carries BOTH the name field and the mode pill; the other three sections carry neither', async () => {
+  // GH #848 × GH #850 × GH #917/GH #949 — the composed element hands each section its own opt-ins
+  // (`hasAvailabilityMode`/`hasRenamableName`/`hasDrawerCrud`, entries.ts — three independent lists). Proven
+  // on the rendered DOM (not from the options object): a drawered row (the four capability kinds, plus
+  // Instructions/Pattern sources since GH #949) carries one Edit button and no inline rename/mode/remove
+  // cluster; ONLY the four capability kinds' drawer additionally carries the mode control (`hasAvailabilityMode`
+  // stayed its own four-kind list, untouched by GH #949's drawer widening); `catalog` alone stays fully
+  // inline. One assertion pass over all three features, so a future kind added to one list and not the
+  // others shows up here as a mismatch rather than as a silent asymmetry.
+  it('every drawered row carries one Edit button; only the four capability kinds\' drawer also carries the mode pill; catalog stays fully inline', async () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource]) {
       el.store!.set(entriesStoreKey(kind), [
@@ -675,16 +721,27 @@ describe('UIAgentAdminElement — the rename affordance is scoped to the four ca
         formMode: true,
       })
     }
-    for (const kind of [ENTRY_KINDS.promptSection, ENTRY_KINDS.patternSource, ENTRY_KINDS.catalog]) {
-      const { edit, inlineRename, inlineMode, formName, formMode } = affordances(kind)
-      expect({ edit, inlineRename, inlineMode, formName, formMode }, `${kind} rows carry neither`).toEqual({
-        edit: false,
+    // GH #949 — Instructions/Pattern sources are drawered too, but neither has availability semantics
+    // (`hasAvailabilityMode` excludes them): the drawer's name field is present (read-only — `hasRenamableName`
+    // excludes them too, unchanged), never the mode control.
+    for (const kind of [ENTRY_KINDS.promptSection, ENTRY_KINDS.patternSource]) {
+      expect(affordances(kind), `${kind} rows are drawered but carry no mode control`).toEqual({
+        edit: true,
         inlineRename: false,
         inlineMode: false,
-        formName: false,
+        inlineDelete: false,
+        formName: true,
         formMode: false,
       })
     }
+    const { edit, inlineRename, inlineMode, formName, formMode } = affordances(ENTRY_KINDS.catalog)
+    expect({ edit, inlineRename, inlineMode, formName, formMode }, 'catalog rows carry neither — the sole remaining inline kind').toEqual({
+      edit: false,
+      inlineRename: false,
+      inlineMode: false,
+      formName: false,
+      formMode: false,
+    })
   })
 })
 
@@ -1752,9 +1809,10 @@ describe('UIAgentAdminElement — real models + real seeded content (TKT-0043)',
 
   it('all three built-in prompt sections seed REAL, non-empty content (not just Foundation)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    // GH #949 — Instructions is drawered now; open each entry's own drawer to reach its content field.
     for (const id of ['foundation', 'personality', 'critical-items']) {
-      const row = entryEl(el, ENTRY_KINDS.promptSection, id)
-      expect(contentFieldOf(row).value.trim().length).toBeGreaterThan(0)
+      const form = openEntryDrawer(el, ENTRY_KINDS.promptSection, id)
+      expect(contentFieldOf(form).value.trim().length).toBeGreaterThan(0)
     }
   })
 
@@ -1921,7 +1979,10 @@ describe('UIAgentAdminElement — seeded prompt sections (ADR-0132 cl.2/Fork 4)'
 
   it('editing a section\'s content commits to the store on change (blur), not on every keystroke', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const field = contentFieldOf(entryEl(el, ENTRY_KINDS.promptSection, 'foundation'))
+    // GH #949 — Instructions is now a drawered kind (`entries.ts`'s `DRAWER_CRUD_KINDS`): the content editor
+    // lives in the section's Edit drawer, opened here the same way the four capability kinds' own drawer
+    // tests do (`openEntryDrawer`), not on the row.
+    const field = contentFieldOf(openEntryDrawer(el, ENTRY_KINDS.promptSection, 'foundation'))
     field.value = 'You are Scout, a research assistant.'
     field.dispatchEvent(new Event('input', { bubbles: true }))
     expect(readEntries(el.store, ENTRY_KINDS.promptSection).find((e) => e.id === 'foundation')?.content).toBe(
@@ -1935,18 +1996,25 @@ describe('UIAgentAdminElement — seeded prompt sections (ADR-0132 cl.2/Fork 4)'
 
   it('an UNCOMMITTED edit in one section survives a SIBLING section\'s toggle re-rendering the whole list (component-reviewer MAJOR fix — the mid-edit clobber)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const foundationField = contentFieldOf(entryEl(el, ENTRY_KINDS.promptSection, 'foundation'))
+    // GH #949 — Instructions is now drawered: the content editor lives in the section's Edit drawer, which
+    // `entry-list.ts`'s `render()` never rebuilds (only `list` is `replaceChildren()`d — the drawer is a
+    // sibling of `list` under the section host) — a STRONGER guarantee than the pre-drawer preservation
+    // dance this test originally proved, by construction rather than a captured/restored value.
+    const foundationField = contentFieldOf(openEntryDrawer(el, ENTRY_KINDS.promptSection, 'foundation'))
     foundationField.focus()
     foundationField.value = 'Half-typed, never committed'
     foundationField.dispatchEvent(new Event('input', { bubbles: true })) // input only — never 'change'
 
     // A SIBLING entry's toggle triggers a full list re-render via the store's subscribe notification —
-    // this must NOT wipe Foundation's still-focused, still-uncommitted textarea.
+    // this must NOT wipe Foundation's still-open, still-uncommitted drawer field.
     const personalityToggle = toggleOf(entryEl(el, ENTRY_KINDS.promptSection, 'personality'))
     personalityToggle.checked = false
     personalityToggle.dispatchEvent(new Event('change', { bubbles: true }))
 
-    const foundationAfter = contentFieldOf(entryEl(el, ENTRY_KINDS.promptSection, 'foundation'))
+    // Re-query scoped to the SECTION, not the row (the drawer, still open, was never touched by the list
+    // rebuild above — no need to re-click Edit, which would rebuild the form from the STORE value and lose
+    // the uncommitted edit).
+    const foundationAfter = contentFieldOf(sectionEl(el, ENTRY_KINDS.promptSection))
     expect(foundationAfter.value).toBe('Half-typed, never committed')
     // Focus itself surviving the rebuild is also asserted, in agent-admin.browser.test.ts — jsdom's own
     // focus tracking across a replaceChildren()-based DOM swap is not reliable enough to assert here
@@ -1967,7 +2035,8 @@ describe('UIAgentAdminElement — the prompt-section modality lint (GH #419)', (
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     await whenFlushed()
     // Author the conflict the way an admin (or an imported persona) would: dialect in a section's content.
-    const field = contentFieldOf(entryEl(el, ENTRY_KINDS.promptSection, 'foundation'))
+    // GH #949 — Instructions is drawered now; open it the same way the capability kinds' own tests do.
+    const field = contentFieldOf(openEntryDrawer(el, ENTRY_KINDS.promptSection, 'foundation'))
     field.value = 'Always play on ONE A2UI surface: build the table once, then updateDataModel per move.'
     field.dispatchEvent(new Event('change', { bubbles: true }))
     await whenFlushed()
@@ -2005,7 +2074,10 @@ describe('UIAgentAdminElement — the prompt-section modality lint (GH #419)', (
     a2uiToggle.dispatchEvent(new Event('change'))
     expect(noticeOf(el, 'foundation')).not.toBeNull()
 
-    const field = contentFieldOf(entryEl(el, ENTRY_KINDS.promptSection, 'foundation'))
+    // The drawer `withDialectSection` opened for 'foundation' is still open on this SAME `el` — re-query
+    // scoped to the section rather than re-clicking Edit (which would rebuild the form from the stored
+    // value, not the field a fresh Edit-open would show anyway — here it's simply already open).
+    const field = contentFieldOf(sectionEl(el, ENTRY_KINDS.promptSection))
     field.value = 'Always play on ONE persistent game surface, updated in place on every move.'
     field.dispatchEvent(new Event('change', { bubbles: true }))
     await whenFlushed()
@@ -2170,7 +2242,8 @@ describe('UIAgentAdminElement — custom entry authoring (ADR-0132 cl.4, fail-cl
 describe('UIAgentAdminElement — the default store persists across a reload (ADR-0131 cl.3 extended to entries, ADR-0132)', () => {
   it('a SECOND real element instance reads back a committed section edit AND a custom capability entry', () => {
     const first = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const field = contentFieldOf(entryEl(first, ENTRY_KINDS.promptSection, 'foundation'))
+    // GH #949 — Instructions is drawered now; open it to reach the content field.
+    const field = contentFieldOf(openEntryDrawer(first, ENTRY_KINDS.promptSection, 'foundation'))
     field.value = 'Survives a reload.'
     field.dispatchEvent(new Event('change', { bubbles: true }))
 
@@ -2182,7 +2255,7 @@ describe('UIAgentAdminElement — the default store persists across a reload (AD
     mounted.length = 0
 
     const second = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    expect(contentFieldOf(entryEl(second, ENTRY_KINDS.promptSection, 'foundation')).value).toBe('Survives a reload.')
+    expect(contentFieldOf(openEntryDrawer(second, ENTRY_KINDS.promptSection, 'foundation')).value).toBe('Survives a reload.')
     expect(readEntries(second.store, ENTRY_KINDS.skill).map((e) => e.label)).toEqual(['Persisted skill'])
   })
 
@@ -2889,7 +2962,8 @@ describe('UIAgentAdminElement — live-apply turn loop (ADR-0132 cl.6: composed 
 
   it('disabling a prompt section changes the NEXT reply\'s composed-prompt citation, without a manual reload', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const foundation = contentFieldOf(entryEl(el, ENTRY_KINDS.promptSection, 'foundation'))
+    // GH #949 — Instructions is drawered now; open it to reach the content field.
+    const foundation = contentFieldOf(openEntryDrawer(el, ENTRY_KINDS.promptSection, 'foundation'))
     foundation.value = 'Speak like a pirate.'
     foundation.dispatchEvent(new Event('change', { bubbles: true }))
     submit(el, 'one')
@@ -3152,7 +3226,8 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
 
   it('fresh-read: a store edit between two turns changes the SECOND request; history accumulates and the FIRST request object is never rewritten', async () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const foundation = contentFieldOf(entryEl(el, ENTRY_KINDS.promptSection, 'foundation'))
+    // GH #949 — Instructions is drawered now; open it to reach the content field.
+    const foundation = contentFieldOf(openEntryDrawer(el, ENTRY_KINDS.promptSection, 'foundation'))
     foundation.value = 'Speak like a pirate.'
     foundation.dispatchEvent(new Event('change', { bubbles: true }))
     const runner = recordingRunner('aye')
@@ -3279,7 +3354,8 @@ describe('UIAgentAdminElement — composition survives a RECONNECT (the master-d
     const wrapper = document.createElement('div')
     document.body.append(wrapper)
     wrapper.append(el)
-    const field = contentFieldOf(entryEl(el, ENTRY_KINDS.promptSection, 'foundation'))
+    // GH #949 — Instructions is drawered now; open it (post-reconnect) to reach the content field.
+    const field = contentFieldOf(openEntryDrawer(el, ENTRY_KINDS.promptSection, 'foundation'))
     field.value = 'Still committing after reconnect.'
     field.dispatchEvent(new Event('change', { bubbles: true }))
     expect(readEntries(el.store, ENTRY_KINDS.promptSection).find((e) => e.id === 'foundation')?.content).toBe(
@@ -3288,7 +3364,7 @@ describe('UIAgentAdminElement — composition survives a RECONNECT (the master-d
     wrapper.remove()
   })
 
-  it('an external store.set (another tab) still reflects into the rendered list after a reconnect', () => {
+  it('an external store.set (another tab) still reflects into a freshly-opened drawer after a reconnect', () => {
     const store = createMemoryStore({ initial: initialEntryValues() })
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = store
@@ -3300,7 +3376,11 @@ describe('UIAgentAdminElement — composition survives a RECONNECT (the master-d
       e.id === 'foundation' ? { ...e, content: 'Externally set.' } : e,
     )
     store.set(entriesStoreKey(ENTRY_KINDS.promptSection), externallyUpdated)
-    expect(contentFieldOf(entryEl(el, ENTRY_KINDS.promptSection, 'foundation')).value).toBe('Externally set.')
+    // GH #949 — Instructions is drawered now: the ROW itself carries no content editor to reflect an
+    // external write into (the row rebuilds to `[switch | label | spacer | Edit]` only) — the drawer's own
+    // form is built ON OPEN from whatever the store holds AT THAT MOMENT (`entry-list.ts`'s `openForm` doc),
+    // so opening it after the external write is what proves the fresh value actually reaches an author.
+    expect(contentFieldOf(openEntryDrawer(el, ENTRY_KINDS.promptSection, 'foundation')).value).toBe('Externally set.')
     wrapper.remove()
   })
 })
