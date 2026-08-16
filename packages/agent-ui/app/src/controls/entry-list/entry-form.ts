@@ -105,8 +105,22 @@ export interface EntryFormOptions {
 }
 
 /** `add` buffers until the footer's Add commits (`title` is the section's own add label — "Add skill");
- *  `edit` commits per field against the entry it carries (its label IS the form title). */
-export type EntryFormMode = { mode: 'add'; title: string } | { mode: 'edit'; entry: Entry }
+ *  `edit` commits per field against the entry it carries (its label IS the form title).
+ *
+ *  GH #950 — `draft`/`onDraftChange` are the add-mode DISMISSAL-SURVIVAL seam: the drawer that hosts this
+ *  form (`entry-list.ts`) rebuilds it from scratch every time it opens (`openForm`'s `replaceChildren`), so
+ *  an Esc/scrim dismiss followed by a reopen would otherwise hand this module a blank slate — the #917
+ *  drawer move's own regression, since the old permanent inline form never got torn down at all. `draft`
+ *  seeds the three buffered fields on build; `onDraftChange` fires on every keystroke (`input`, not
+ *  `change` — the whole point is capturing state a dismiss would otherwise discard before any `change`
+ *  ever fires) so the CALLER can hold the buffer across a rebuild it does not control the timing of. Both
+ *  optional: an `edit`-mode form never carries either (buffered-vs-per-field-commit is add's own shape),
+ *  and an existing add-mode caller that supplies neither renders byte-identically (empty fields, no
+ *  buffering) — this module owns no state of its own, so "per-kind buffer" is the caller's closure, one per
+ *  `mountEntryList` section, never a global. */
+export type EntryFormMode =
+  | { mode: 'add'; title: string; draft?: NewEntryInput; onDraftChange?: (draft: NewEntryInput) => void }
+  | { mode: 'edit'; entry: Entry }
 
 /** The three drawer REGIONS this form fills, returned as elements the caller drops into its own already-
  *  connected `<header>` / `[data-region='content']` / `<footer>` shells (`ui-drawer` MOVES its children into
@@ -260,9 +274,14 @@ export function buildEntryForm(
     // `entry-form-error`, NOT `entry-add-error`: a drawered section ALSO carries a standing section-level
     // `entry-add-error` (entry-list.ts — where a library-menu rejection lands, with no form on screen), and
     // two live nodes under one part name would make every query positional. Two nodes, two names.
+    // GH #950 — seed from the caller's buffered draft (a reopen after an Esc/scrim dismiss), never from a
+    // hardcoded blank; a fresh section (no draft yet) reads `draft` as `undefined` and falls back to '' —
+    // byte-identical first-open behaviour.
+    const draft = form.draft
     const labelField = document.createElement('ui-text-field') as UITextFieldElement
     labelField.required = true
     labelField.setAttribute('data-part', 'entry-add-label')
+    labelField.value = draft?.label ?? ''
     const errorNote = document.createElement('p')
     errorNote.setAttribute('data-part', 'entry-form-error')
     errorNote.hidden = true
@@ -271,12 +290,36 @@ export function buildEntryForm(
 
     const descriptionField = document.createElement('ui-text-field') as UITextFieldElement
     descriptionField.setAttribute('data-part', 'entry-add-description')
+    descriptionField.value = draft?.description ?? ''
     const descriptionCell = fieldCell('Description', descriptionField, { optional: true })
 
     content.append(labelCell, descriptionCell)
 
-    const bodyForm = options.contentField ? contentEditorField('entry-add-content', 'Content', '') : null
+    const bodyForm = options.contentField ? contentEditorField('entry-add-content', 'Content', draft?.content ?? '') : null
     if (bodyForm) content.append(bodyForm.field)
+
+    // GH #950 — every keystroke re-buffers the whole triple through the caller's `onDraftChange`, keyed on
+    // `input` (not `change`): an Esc/scrim dismiss can land between keystrokes with no `change` ever having
+    // fired (`ui-text-field`/`ui-code-editor` both commit `change` on blur, not per-character), so `change`
+    // alone would still lose the tail of whatever was typed since the last blur. No-op when the caller
+    // supplied no `onDraftChange` (an existing add-mode call site that opts out of buffering).
+    //
+    // code-checker finding (this ticket) — ALSO on `compositionend`: `ui-text-field`'s own inner `input`
+    // listener returns early mid-composition WITHOUT re-emitting the host `input` (text-field.ts), so an
+    // IME candidate committed via `compositionend` alone would buffer the STALE pre-composition value —
+    // the exact draft-loss shape #950 exists to close, one input method over. `compositionend` fires on the
+    // field's inner editor part and bubbles to the host (`ui-code-editor` re-dispatches; `ui-text-field`
+    // never stops it), landing here AFTER each control's own `compositionend` handler has already caught
+    // `.value` up to the composed result — so this listener always reads the fresh text, never the stale one.
+    const emitDraft = (): void => {
+      form.onDraftChange?.({ label: labelField.value, description: descriptionField.value, content: bodyForm?.editor.value ?? '' })
+    }
+    labelField.addEventListener('input', emitDraft)
+    labelField.addEventListener('compositionend', emitDraft)
+    descriptionField.addEventListener('input', emitDraft)
+    descriptionField.addEventListener('compositionend', emitDraft)
+    bodyForm?.editor.addEventListener('input', emitDraft)
+    bodyForm?.editor.addEventListener('compositionend', emitDraft)
 
     /** The buffered commit — `entry-list.ts`'s own `submitAdd` law, carried over unchanged: reset + close
      *  ONLY on success, so a rejection keeps every typed field on screen beside the message
@@ -290,6 +333,10 @@ export function buildEntryForm(
         bodyForm.editor.value = ''
         bodyForm.syncCount()
       }
+      // GH #950 — a successful Add clears the caller's buffer too: the programmatic resets three lines up
+      // fire no `input` event (native-parity, same reason `syncCount()` needs its own explicit call above),
+      // so without this the next reopen would resurrect the just-added entry's own text as a "draft".
+      form.onDraftChange?.({ label: '', description: '', content: '' })
       close()
     }
 

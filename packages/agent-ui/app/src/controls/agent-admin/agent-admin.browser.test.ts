@@ -912,6 +912,101 @@ describe('ui-agent-admin cross-engine smoke — adding a custom capability actua
   })
 })
 
+// ── GH #950 — the Add drawer preserves an unsaved draft across an Esc/scrim dismiss ────────────────────
+// The #917 drawer move rebuilds `entry-form.ts`'s add-mode fields FROM SCRATCH every time `openForm` runs
+// (`entry-list.ts`'s `drawerContent.replaceChildren(...)`), and — unlike the permanent inline dashed form
+// it replaced — the ONLY way to dismiss an open Add drawer with no explicit Cancel button is Esc or a
+// scrim click. Real keystrokes only: `labelField.value = '…'` (the plain-property-set idiom the OTHER
+// tests in this file use for a same-tick submit) never fires the `input` event the draft buffer listens
+// on, so proving the buffer needs the SAME real-typing path a user actually drives.
+describe('ui-agent-admin cross-engine smoke — GH #950: the Add drawer keeps an unsaved draft across Esc/scrim dismiss', () => {
+  it('Esc dismiss, then reopening the same kind\'s Add drawer restores every typed field; a successful Add then clears it', async () => {
+    const { el } = mountAgentAdmin('Capabilities') // GH #574 — Skills rides the Capabilities tab now
+    const section = el.querySelector(`[data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
+    ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    await el.updateComplete // the ADD drawer's own `open = true` effect is a scheduled rerun, not synchronous
+
+    const labelField = section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement
+    const descriptionField = section.querySelector('[data-part="entry-add-description"]') as UITextFieldElement
+    await userEvent.type(labelField.querySelector('[data-part="editor"]') as HTMLElement, 'Web search')
+    await userEvent.type(descriptionField.querySelector('[data-part="editor"]') as HTMLElement, 'Searches the live web')
+    expect(labelField.value, 'typed before dismiss').toBe('Web search')
+
+    // Esc — the drawer's OWN dismiss path (drawer.ts's native `<dialog>` cancel), never `closeDrawer()`
+    // (that only runs from the form's explicit Done/Add/Remove callback, none of which fire here).
+    await userEvent.keyboard('{Escape}')
+    await el.updateComplete
+    expect((section.querySelector('[data-part="entry-drawer"]') as HTMLElement & { open: boolean }).open, 'Escape dismissed it').toBe(false)
+
+    // Reopen — GH #950's own claim: the SAME kind's Add drawer, not a fresh blank one.
+    ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    await el.updateComplete
+    const reopenedLabel = section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement
+    const reopenedDescription = section.querySelector('[data-part="entry-add-description"]') as UITextFieldElement
+    expect(reopenedLabel.value, 'the draft label survived the Esc dismiss').toBe('Web search')
+    expect(reopenedDescription.value, 'the draft description survived the Esc dismiss').toBe('Searches the live web')
+
+    // A successful Add clears the buffer (the ticket's own second acceptance line) — submit, dismiss again,
+    // reopen, and the fields must come back EMPTY, not resurrect the just-added entry's own text.
+    ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
+    await el.updateComplete
+    expect(el.querySelector('[data-kind="skill"] [data-entry-id="web-search"]'), 'the add actually committed').not.toBeNull()
+    ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    await el.updateComplete
+    const clearedLabel = section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement
+    expect(clearedLabel.value, 'a successful Add cleared the per-kind draft buffer').toBe('')
+  })
+
+  it('a scrim click dismissing the Add drawer preserves the draft the same way Esc does', async () => {
+    const { el } = mountAgentAdmin('Capabilities')
+    const section = el.querySelector(`[data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
+    ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    await el.updateComplete
+
+    const labelField = section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement
+    await userEvent.type(labelField.querySelector('[data-part="editor"]') as HTMLElement, 'Draft via scrim')
+
+    // A genuine backdrop click — drawer.browser.test.ts's own primary scrim-click mechanism: a REAL
+    // engine-driven click at a viewport corner, far from the docked `edge="end"` panel (`entry-drawer`'s
+    // own attribute, entry-list.ts), which the platform hit-tests to the `<dialog>` element itself (a
+    // native top-layer backdrop click always targets the dialog, never a pseudo-element).
+    await userEvent.click(document.body, { position: { x: 2, y: 2 } })
+    await el.updateComplete
+    expect((section.querySelector('[data-part="entry-drawer"]') as HTMLElement & { open: boolean }).open, 'the scrim click dismissed it').toBe(false)
+
+    ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    await el.updateComplete
+    const reopenedLabel = section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement
+    expect(reopenedLabel.value, 'the draft survived the scrim dismiss').toBe('Draft via scrim')
+  })
+
+  it('two different drawered kinds keep their own Add drafts separate (per-kind buffer, never a shared global)', async () => {
+    const { el } = mountAgentAdmin('Capabilities')
+    const skillSection = el.querySelector(`[data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
+    const workflowSection = el.querySelector(`[data-kind="${ENTRY_KINDS.workflow}"]`) as HTMLElement
+
+    ;(skillSection.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    await el.updateComplete
+    const skillLabel = skillSection.querySelector('[data-part="entry-add-label"]') as UITextFieldElement
+    await userEvent.type(skillLabel.querySelector('[data-part="editor"]') as HTMLElement, 'Skill draft')
+    await userEvent.keyboard('{Escape}')
+    await el.updateComplete
+
+    ;(workflowSection.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    await el.updateComplete
+    const workflowLabel = workflowSection.querySelector('[data-part="entry-add-label"]') as UITextFieldElement
+    expect(workflowLabel.value, 'the Workflow kind never saw the Skill kind\'s draft').toBe('')
+    await userEvent.type(workflowLabel.querySelector('[data-part="editor"]') as HTMLElement, 'Workflow draft')
+    await userEvent.keyboard('{Escape}')
+    await el.updateComplete
+
+    ;(skillSection.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    await el.updateComplete
+    const reopenedSkillLabel = skillSection.querySelector('[data-part="entry-add-label"]') as UITextFieldElement
+    expect(reopenedSkillLabel.value, 'the Skill kind\'s own draft is still exactly what it typed').toBe('Skill draft')
+  })
+})
+
 describe('ui-agent-admin cross-engine smoke — TKT-0048: entry-list action buttons are real ui-button instances', () => {
   it('entry-add-toggle is a <ui-button> with a leading plus-icon adornment spaced from its label by a real, non-zero gap', () => {
     const { el } = mountAgentAdmin('Capabilities') // GH #574 — Skills rides the Capabilities tab now

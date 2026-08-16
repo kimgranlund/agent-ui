@@ -422,6 +422,16 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
     if (drawer) drawer.open = false
   }
 
+  // GH #950 — the ADD drawer's own per-kind draft buffer: `entry-form.ts`'s `openForm` rebuilds the form
+  // from scratch on every open (the #917 drawer move's own regression — the permanent inline form it
+  // replaced never got torn down at all), so an Esc/scrim dismiss followed by a reopen would otherwise hand
+  // the author a blank form. One closure-scoped variable per `mountEntryList` call ⇒ one buffer per SECTION
+  // (per kind) by construction — a Skill section's draft and a Workflow section's draft can never collide,
+  // since each kind gets its own `mountEntryList` invocation and therefore its own `addDraft`. Cleared on a
+  // successful Add (`entry-form.ts`'s own `onDraftChange` call after `onAdd` returns true); a rejection
+  // leaves it exactly as typed, matching the fields it stayed in sync with.
+  let addDraft: NewEntryInput | null = null
+
   /** Rebuild the three regions from `buildEntryForm` and show the drawer. Built ON OPEN and never on a store
    *  notification — this drawer holds no subscription of its own, so an external re-render (a sibling toggle,
    *  a store write) behind it can no longer eat an uncommitted content edit the way a full `render()` rebuild
@@ -448,7 +458,11 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
   addToggle.addEventListener('click', () => {
     if (withDrawer) {
       if (sectionError) sectionError.hidden = true // a fresh attempt starts with no stale rejection on screen
-      openForm({ mode: 'add', title: addLabel })
+      // GH #950 — hand the buffered draft (if any) back in, and re-arm the buffer for this open's own
+      // keystrokes. `addDraft` is `null` on a fresh section that has never buffered a keystroke; after a
+      // successful Add it holds the EMPTY triple (`entry-form.ts`'s own explicit clear), not `null` — either
+      // way `draft?.label ?? ''` etc. (`entry-form.ts`) seeds the same '' defaults the form always had.
+      openForm({ mode: 'add', title: addLabel, draft: addDraft ?? undefined, onDraftChange: (next) => { addDraft = next } })
       return
     }
     inlineAdd?.open()
