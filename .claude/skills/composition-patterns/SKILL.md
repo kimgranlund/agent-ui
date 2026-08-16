@@ -31,7 +31,7 @@ was deleted, every ADR citation and dated ruling reads word-for-word in its new 
 |---|---|
 | [`references/forms-and-identity.md`](references/forms-and-identity.md) | Wiring any labelled/validated form, or one of the six ADR-0176 auth/onboarding/account surfaces (credentials, magic link, OTP, social sign-in, onboarding, account-settings) |
 | [`references/surface-primitives.md`](references/surface-primitives.md) | A single page/panel needs container box-model spacing, a label↔value chip row, overlay open/close, page-CSS discipline, scroll ownership, theming a subtree, scale/density, scheme-divergence — or a composed surface LOOKS broken (the CSS-less-consumer law, ADR-0102) |
-| [`references/shell-and-data-surfaces.md`](references/shell-and-data-surfaces.md) | Cross-view navigation, an application-shell region, a schema-driven settings page, a resource-list manager, a data-table toolbar, or a record open/validate/save loop |
+| [`references/shell-and-data-surfaces.md`](references/shell-and-data-surfaces.md) | Cross-view navigation, an application-shell region, a schema-driven settings page, a resource-list manager, a data-table toolbar, a record open/validate/save loop, or a card-grid view with an edge-docked drawer edit flow |
 | [`references/multi-surface-composition.md`](references/multi-surface-composition.md) | Two or more composed surfaces interact — multi-composer routing, multi-pane shown-set visibility, band-driven docking, retracting a painted affordance, the mint-vs-compose test, or declarative chat composition |
 
 ## Cross-links

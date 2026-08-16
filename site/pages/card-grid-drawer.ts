@@ -10,8 +10,10 @@
 //     (which record — `null` means "Add member", the SAME drawer in a second mode, entry-form.ts's GH #917
 //     precedent) are two SEPARATE signals, never folded into one "open, editing X" union: a reader that only
 //     cares WHETHER something is open never has to also know which record, and `editingId` stays meaningful
-//     independent of `drawerOpen`'s own timing — it also drives the currently-edited card's own highlight in
-//     `renderGrid` below, the ADR-0019 two-way-binding shape (`drawer.open` REFLECTS `drawerOpen`, and the
+//     independent of `drawerOpen`'s own timing — it also drives the currently-edited card's own highlight
+//     (the `data-editing` toggle effect below, deliberately SEPARATE from `renderGrid`, which depends on
+//     `members` only — a re-stamp on `editingId` would detach the very Edit button the drawer is about to
+//     record as its focus-restore opener), the ADR-0019 two-way-binding shape (`drawer.open` REFLECTS `drawerOpen`, and the
 //     platform's own `close` event writes back into it — the SAME seam the catalog's `value:{prop:'open',
 //     event:'toggle'}` renderer binding rides). `mode` (add vs. edit) is a plain PARAMETER to `openDrawer`,
 //     not baked into persistent state — entry-list.ts's own `EntryFormMode` discriminated union, one level up.
@@ -36,7 +38,7 @@
 // rather than centred.
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './card-grid-drawer.css'
-import { signal, effect } from '@agent-ui/components'
+import { signal, effect, untracked, whenFlushed } from '@agent-ui/components'
 import type {
   UIBadgeElement,
   UIButtonElement,
@@ -113,12 +115,19 @@ grid.setAttribute('data-part', 'member-grid')
 
 content.append(addButton, grid)
 
+// `renderGrid` depends on `members` ONLY. It must NOT track `editingId`: `openDrawer` writes `editingId` before
+// `drawerOpen`, and both effects flush in the same microtask — a grid re-stamp on `editingId` would detach the
+// clicked Edit button (focus falls to `<body>`) BEFORE `ui-drawer`'s own `#openDialog` records
+// `document.activeElement` as the opener to restore on close (drawer.ts, ADR-0017 cl.4). So the highlight is
+// applied here with an UNTRACKED read (a fresh stamp mid-edit still paints the right card) and otherwise lives
+// in the small `data-editing` toggle effect below, which only touches EXISTING cards.
 function renderGrid(): void {
-  const activeId = editingId.value // reads the signal — the card being edited paints its own highlight
+  const activeId = untracked(() => editingId.value)
   grid.replaceChildren()
   for (const member of members.value) {
     const card = document.createElement('ui-card') as UICardElement
     card.setAttribute('data-part', 'member-card')
+    card.setAttribute('data-member-id', member.id) // the identity seam `focusCardEdit` + the toggle effect key on
     card.toggleAttribute('data-editing', member.id === activeId)
 
     const header = document.createElement('ui-card-header')
@@ -148,6 +157,28 @@ function renderGrid(): void {
     card.append(header, body, footer)
     grid.append(card)
   }
+}
+
+/** The card being edited paints its own highlight — toggled on the EXISTING cards, never a re-stamp. */
+function syncEditingHighlight(): void {
+  const activeId = editingId.value
+  for (const card of grid.querySelectorAll<HTMLElement>('[data-part="member-card"]')) {
+    card.toggleAttribute('data-editing', card.dataset['memberId'] === activeId)
+  }
+}
+
+// Focus-restore by IDENTITY, for the two exits that re-stamp the grid (Save/Remove write `members` ⇒
+// `renderGrid` replaces every card, so the Edit button `ui-drawer` recorded as its opener is detached by the
+// time its `close` handler runs — `#restoreFocus` requires `opener.isConnected`, so it correctly no-ops).
+// Called AFTER the flush that actually closes the dialog: focusing while the modal is still up would be inert
+// (everything outside the top layer is). Save ⇒ the same card's fresh Edit button; Remove (card gone) or Add
+// mode (no card yet) ⇒ the "Add member" button, the nearest stable affordance. Cancel/Discard never re-stamp,
+// so the drawer's own restore lands on this same element a task later — idempotent, one code path for all
+// four exits.
+function focusCardEdit(id: string | null): void {
+  const editBtn =
+    id === null ? null : grid.querySelector<HTMLElement>(`[data-part="member-card"][data-member-id="${id}"] ui-button`)
+  ;(editBtn ?? addButton).focus()
 }
 
 // ── the ONE drawer, built once, filled fresh on every open — ui-drawer MOVES its children into the dialog
@@ -236,10 +267,18 @@ function openDrawer(id: string | null): void {
     dirty.value = draftsDiffer(draft, snapshot)
   }
 
-  nameField.addEventListener('input', () => {
+  const syncName = (): void => {
     draft.name = nameField.value
     syncDirty()
-  })
+  }
+  nameField.addEventListener('input', syncName)
+  // ALSO on `compositionend` — the GH #950 gap, entry-form.ts's precedent verbatim: `ui-text-field`'s own inner
+  // `input` listener returns early mid-composition WITHOUT re-emitting the host `input` (text-field.ts), so an
+  // IME candidate committed via `compositionend` alone would leave `draft.name` (and so `dirty`) at the STALE
+  // pre-composition value — a Save could commit the wrong name, or a dismiss land with `persistent` still
+  // false. `compositionend` bubbles from the editor part to the host AFTER the control's own handler has
+  // caught `.value` up, so this always reads the composed text.
+  nameField.addEventListener('compositionend', syncName)
   // `change` fires only AFTER the segmented group's own (non-cancelable) commit, and only once, targeted at
   // the GROUP — the same `event.target !== roleControl` guard entry-form.ts's tier control uses (that file's
   // own comment explains the order-dependent double-fire this filters out).
@@ -284,7 +323,15 @@ function openDrawer(id: string | null): void {
   saveBtn.textContent = 'Save'
   saveBtn.addEventListener('click', () => {
     const typed = draft.name.trim()
-    if (typed.length === 0) return // fail-closed — the same required-name law entry-form.ts's add mode keeps
+    if (typed.length === 0) {
+      // Fail-closed — the same required-name law entry-form.ts's add mode keeps — but never SILENTLY:
+      // `reportValidity()` fires `invalid` at the control, which flips its user-invalid tracker so the wrapping
+      // `ui-field` shows the required-empty message (ADR-0014 cl.2c) and the platform focuses the anchor. A
+      // whitespace-only value passes `required` (reportValidity returns true, nothing shown), so focus the
+      // field ourselves in that residue case — the user still sees WHERE Save stopped.
+      if (nameField.reportValidity()) nameField.focus()
+      return
+    }
     if (id === null) {
       members.value = [...members.value, { id: makeId(), name: typed, role: draft.role, active: draft.active }]
     } else {
@@ -336,6 +383,9 @@ function openDrawer(id: string | null): void {
     drawerOpen.value = false
     editingId.value = null
     dirty.value = false
+    // After THIS batch flushes the dialog is really closed (the `open` effect ran `dialog.close()`), so the
+    // grid is focusable again — see `focusCardEdit` for why the drawer's own restore cannot cover Save/Remove.
+    void whenFlushed().then(() => focusCardEdit(id))
   }
 
   editingId.value = id
@@ -344,3 +394,4 @@ function openDrawer(id: string | null): void {
 }
 
 effect(renderGrid)
+effect(syncEditingHighlight)
