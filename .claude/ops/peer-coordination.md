@@ -40,3 +40,12 @@
   greens) — a Mode-B bounded-wait suspect if it ever reds in isolation.
 - Gate note on main: S9 exemplar sweep widened to skill references/ (commit 341fe63f) after the
   W2 extractions moved the cited tables.
+
+## Lane split — 2026-08-16 (two hosts on one board)
+
+- AGENT-UI (`agent-ui-team-lead`, Kim: "stop new tasks, complete the running ones") holds
+  #954 #956 #964 #999 #1004 #1009 #1010.
+- AGENT-UI-2 (`/goal` board-clear host, this note) claimed on-issue: #1000 (verify+close after
+  #956 lands) · #1002 #1003 #1005 #1006 #1007 #1008 · #959 remaining slice; #1001 closed
+  (repairs none-owed by construction). Each host ships its OWN lanes (push → PR → merge →
+  verify MERGED → reap, never chained) and re-runs `npm run check` on main between merges.
