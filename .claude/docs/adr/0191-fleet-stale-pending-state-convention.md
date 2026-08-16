@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-16 |
 > | **Proposed by** | build-lead dispatch (GH [#974](https://github.com/kimgranlund/agent-ui/issues/974)'s own Acceptance requires this proposal BEFORE the styling hook ships — a contract-changing, TKT-0062-shaped decision, explicitly deferred from the trait build in the same issue) |
-> | **Ratified by** | *(pending — kimgranlund (repo owner) ratifies via a `ratify ADR-0191` utterance, verified + flipped by `scripts/adr_ratify.py`)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-16, via the [`ratify ADR-0191` utterance](https://github.com/kimgranlund/agent-ui/pull/988#issuecomment-5310074014) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification (not authored here): `shared/src/tokens/dimensions.css` (mints `--ui-pending-opacity`/`--ui-pending-duration`) · `.claude/docs/references/interaction-states.md` (a new `§5 · Pending / stale content` section, alongside its existing `§1b` TKT-0062 section) · first consumer `controls/status-stream/status-stream.{ts,css}` (wires `pendingComputed` + `:state(pending)`, reconciling with its existing `:state(settled)`) · each wired control's own CSS pin-test |
 > | **Supersedes / Superseded by** | **Relates** [TKT-0062](../tickets/tkt-0062-entry-control-filled-state-law.md) (the precedent this convention's SHAPE re-applies — one fleet-wide state law, not per-component hacks) · **Relates** [TKT-0047](../tickets/tkt-0047-interaction-state-design-gaps-from-fleet-audit.md) (the disabled-opacity-vs-repoint ruling this convention's own opacity choice is grounded in) · **Relates** ADR-0014 cl.2c (the state-law mechanism TKT-0062 itself superseded — same mechanism family, a disjoint state axis: validity/fill vs. async freshness) · **Extends** none (no prior async-state convention exists) · **Resolves** GH #974's ADR-proposal half (the trait itself ships in the same PR as this ADR; the styling hook does not) |
 

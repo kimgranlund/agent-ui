@@ -101,7 +101,7 @@ that is first-paint streaming, every one after is re-render.
    mid-burst environment flip is not a real operating condition (bursts are sub-second); accepted
    and documented at the wrap site rather than engineered around.
 
-## Amendment (2026-08-16, **proposed** — Kim ratifies) — cl.4's "separate intake" ARRIVED: the fleet's opt-in named-morph convention (GH [#958](https://github.com/kimgranlund/agent-ui/issues/958)) — `ui-vt-{surface}-{token}` via `dom/view-transition.ts`, applied only behind a surface's own opt-in, proven on `ui-super-shell` segments; cl.4's no-DEFAULT-names law stands
+## Amendment (2026-08-16, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/pull/984#issuecomment-5310073353), verified 2026-08-16) — cl.4's "separate intake" ARRIVED: the fleet's opt-in named-morph convention (GH [#958](https://github.com/kimgranlund/agent-ui/issues/958)) — `ui-vt-{surface}-{token}` via `dom/view-transition.ts`, applied only behind a surface's own opt-in, proven on `ui-super-shell` segments; cl.4's no-DEFAULT-names law stands
 
 > Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
 > byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment
