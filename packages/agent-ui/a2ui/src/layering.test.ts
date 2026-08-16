@@ -69,6 +69,15 @@ describe('import layering — a2ui/src imports only {components, shared} or loca
     expect(specifiersOf(src).filter((s) => !isAllowedA2uiSpecifier('renderer/renderer.ts', s))).toEqual([spec('code')])
   })
 
+  // ADR-0192 clause 1 — "every existing inward layering trip-wire extends its scan by one package
+  // name": the allowlist above already excludes @agent-ui/data by construction (unlisted); this named
+  // negative control makes the fence explicit (a2ui never reaches a data-access primitive by import —
+  // agent-driven data access is a trust surface wanting its own record, ADR-0192 Context).
+  it('synthetic-violation: the matcher flags @agent-ui/data (catalog invisibility, ADR-0192)', () => {
+    const src = `import { resource } from '${spec('data')}'\n`
+    expect(specifiersOf(src).filter((s) => !isAllowedA2uiSpecifier('renderer/renderer.ts', s))).toEqual([spec('data')])
+  })
+
   it('synthetic-violation: the matcher flags @agent-ui/app (up the DAG) and @agent-ui/a2a (the bridge stays out of shipped src)', () => {
     const src = `import { x } from '${spec('app')}'\nimport { y } from '${spec('a2a')}'\n`
     expect(specifiersOf(src).filter((s) => !isAllowedA2uiSpecifier('renderer/renderer.ts', s))).toEqual([spec('app'), spec('a2a')])

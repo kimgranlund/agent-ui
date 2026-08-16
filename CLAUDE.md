@@ -49,6 +49,16 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   CodeMirror-free); depends only on `@agent-ui/components` + `@agent-ui/shared` (+ the CodeMirror runtime deps,
   confined to `./editor`); a sibling branch off `components` alongside `router`, catalog-invisible by
   construction (never imported by `a2ui`)
+- `packages/agent-ui/data/` — `@agent-ui/data`, the headless SaaS data layer (ADR-0192): a `DataSource<T>`
+  strategy seam whose CRUD verbs are optional capabilities, signal-backed `resource()`/`mutation()`/
+  `paginated()`, a structurally-sharing instance-scoped store, and `DataError`/`normalizeError`, all on
+  the `.` barrel; `./gateway` (middleware onion, token refresh, retry/backoff, the streaming pass-through
+  law) and `./stream` (ONE `Streamed<T> = AsyncIterable<T>` contract + `fromFetchStream`/`fromEventSource`/
+  `fromWebSocket`, incl. the hoisted `readNdjsonLines` — `site/lib/ndjson-lines.ts` is now a re-export)
+  are opt-in subpaths the `.` barrel never imports; depends only on `@agent-ui/components` +
+  `@agent-ui/shared`; a FOURTH sibling branch off `components` alongside `router`/`code`, catalog-invisible
+  by construction (never imported by `a2ui`); persistence is deliberately NOT this package's (`@agent-ui/shared`'s
+  `StorageAdapter` seam, GH #959)
 - `.claude/docs/` — plan, goals, process, references, adr, prd, spec, lld, decompositions, tickets, rubrics, archive (agent-scoped project docs; the doc grammar + status law: `.claude/skills/doc-standards/`) · `*.test.ts` co-located with source. `tickets/` is a FROZEN historical archive (98 files through TKT-0096) — new work items route to GitHub Issues instead (ADR-0145; the full label/status/Findings mapping lives in `.claude/skills/doc-standards/`, the canonical home — GH #761 trimmed the copy that used to sit here). The decision/contract tiers (ADR/PRD/SPEC/LLD) and living-state docs (PLAN/ROADMAP) stay files on this map, always; only the TICKET tier moved.
 
 ## Conventions (non-obvious only)
@@ -59,11 +69,13 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   the explicit `.ts` on local imports.
 - Vite 8 is Rolldown-based (not esbuild/Rollup) — bundler/plugin behaviour follows Rolldown-Vite.
 - Imports point inward only: layers `reactive` ← `dom` ← `traits`/`controls`; cross-package the DAG is
-  `shared` ← `components` ← `a2ui` ← `app`, with `router` AND `code` as sibling branches off `components`
-  (`shared` ← `components` ← {`router`, `code`}) — neither `router` nor `code` imports `a2ui`; `a2ui` never
-  imports either, and `app` may import `code` (the editor surface, ADR-0139) but never `router`
-  (catalog-invisible by construction, ADR-0115/ADR-0119) (`icons`/`a2a` import nothing). Nothing imports
-  upward. (Enforced by the per-package `layering.test.ts` trip-wires.)
+  `shared` ← `components` ← `a2ui` ← `app`, with `router`, `code` AND `data` as sibling branches off
+  `components` (`shared` ← `components` ← {`router`, `code`, `data`}) — none of `router`/`code`/`data`
+  imports `a2ui`; `a2ui` never imports any of them, and `app` may import `code` (the editor surface,
+  ADR-0139) but never `router` (catalog-invisible by construction, ADR-0115) — `data` is unconsumed by
+  `app` at v1 but, unlike `router`, not permanently fenced off from it (ADR-0192 clause 1 leaves the
+  door open) (`icons`/`a2a` import nothing). Nothing imports upward. (Enforced by the per-package
+  `layering.test.ts` trip-wires.)
 - Naming: tags `ui-{name}`, classes `UI{Name}Element`, tokens `--ui-{name}-*` / color roles
   `--md-sys-color-{family}-{role}` / type scale `--md-sys-typescale-{role}-{size}-*` (ADR-0078);
   event names ∈ `change · input · select · open · close · toggle · action` (the seventh member,

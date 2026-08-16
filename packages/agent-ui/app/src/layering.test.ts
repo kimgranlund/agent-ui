@@ -80,6 +80,16 @@ describe('import layering — app/src imports only down the DAG', () => {
     const violations = specifiersOf(src).filter((s) => !isAllowedAppSpecifier(s))
     expect(violations).toEqual(['@agent-ui/router'])
   })
+
+  // ADR-0192 clause 1 — "every existing inward layering trip-wire extends its scan by one package
+  // name": the allowlist above already excludes @agent-ui/data by construction (unlisted); this named
+  // negative control makes the edge explicit for a future reader. `app` is not YET a data consumer
+  // at v1, but unlike `router` this is not a permanent fence — ADR-0192 clause 1 leaves it open.
+  it('synthetic-violation: the matcher flags a @agent-ui/data import from app/src (the ADR-0192 named NC)', () => {
+    const src = `import { resource } from '@agent-ui/data'\n`
+    const violations = specifiersOf(src).filter((s) => !isAllowedAppSpecifier(s))
+    expect(violations).toEqual(['@agent-ui/data'])
+  })
 })
 
 describe('components/src and a2ui/src never import @agent-ui/app (apex stays un-imported)', () => {
