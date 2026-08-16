@@ -176,6 +176,16 @@ const targets = [
   // edit that reaches back into `dom`/`reactive` at RUNTIME would blow past this cap immediately, since the
   // kernel it would pull dwarfs the budget.
   ['@agent-ui/components/traits/overlay (opt-in subpath)', '../packages/agent-ui/components/src/traits/overlay.ts', 2 * KB],
+  // GH #952 review LOW — the package's SECOND `./traits/*` subpath (`traits/list-reorder`, package.json:80)
+  // gets the same budgeted row as `traits/overlay`, under the same absolute-not-marginal reasoning:
+  // `list-reorder.ts`'s ONLY import is `import type { UIElement } from '../dom/index.ts'` (type-only, fully
+  // erased), so a runtime reach-back into `dom`/`reactive` would blow this cap immediately.
+  //
+  // 1.25 KB (1280 B gz) pinned over a MEASURED 960 B gz (2100 B min) 2026-08-16 (measure-first-then-pin,
+  // ADR-0080) — the pointer-capture drag + keyboard fallback (moveBefore + re-focus, `keyboardTarget`) at the
+  // review's M1/M2 shape; ~320 B headroom, deliberately tighter than overlay's since this trait's whole job
+  // is DOM moves — a runtime kernel reach-back is the only way it grows fast.
+  ['@agent-ui/components/traits/list-reorder (opt-in subpath)', '../packages/agent-ui/components/src/traits/list-reorder.ts', 1.25 * KB],
 ]
 
 let over = false

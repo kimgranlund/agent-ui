@@ -31,3 +31,9 @@ export { areaDrag } from './area-drag.ts'
 export type { AreaDragOptions } from './area-drag.ts'
 export { pendingComputed } from './pending-computed.ts'
 export type { PendingComputedOptions, PendingComputedController, PendingSource } from './pending-computed.ts'
+// The reorder-mode trait (GH #952, extracted from GH #921's agent-admin roster mechanics): pointer-capture
+// drag + a keyboard fallback sharing one commit path. Not exported from the components root barrel — the
+// 312 B pre-existing overage (npm run size) is a standing exception, not license to grow it further; add a
+// root re-export only once a real consumer outside `traits/` needs one.
+export { listReorder } from './list-reorder.ts'
+export type { ListReorderOptions, ListReorderOrientation } from './list-reorder.ts'
