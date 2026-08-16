@@ -14,14 +14,14 @@
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './a2ui-catalog.css' // page-local: the filter bar + section spacing (after the shared shell)
 import '../lib/component-preview.ts' // registers <component-preview> (side-effect import)
-import { defaultCatalog } from '@agent-ui/a2ui'
 import type { UITextFieldElement, UITabsElement } from '@agent-ui/components/components'
-import { TIERS, TIER_LABEL, NESTED_ONLY, tierOf, seedsUsingType, seedGalleryHref } from '../lib/a2ui-catalog-tiers.ts'
+import { TIERS, TIER_LABEL, browsableNames, tierOf, seedsUsingType, seedGalleryHref } from '../lib/a2ui-catalog-tiers.ts'
 import type { Tier } from '../lib/a2ui-catalog-tiers.ts'
 
-const names = Object.keys(defaultCatalog.components)
-  .filter((name) => !NESTED_ONLY.has(name))
-  .sort((a, b) => a.localeCompare(b))
+// The browsable name list is the ONE derivation in `../lib/a2ui-catalog-tiers.ts` (`browsableNames()` — catalog
+// keys minus NESTED_ONLY, alphabetized); the page consumes it rather than re-deriving its own copy, so the tier
+// test suite and the live page can never disagree about which names are browsable (review MED, GH #970).
+const names = browsableNames()
 
 const { content } = mountPage({ title: 'A2UI Catalog' })
 content.append(
