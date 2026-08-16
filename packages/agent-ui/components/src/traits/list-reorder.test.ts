@@ -10,7 +10,10 @@ import { listReorder } from './list-reorder.ts'
 //
 // Named probes: unarmed-no-op · drag-commits-on-move-past-midpoint · drag-cancel-no-commit ·
 //               keyboard-arrow-commits · keyboard-fallback-blocked-at-ends · data-reorder-mode-reflects ·
-//               data-dragging-marks-active-row · change-event-detail · auto-cleanup · released
+//               data-dragging-marks-active-row · change-event-detail · auto-cleanup · released ·
+//               keyboard-focus-survives (jsdom = the detach+reinsert fallback + explicit re-focus; the native
+//               `moveBefore` leg is browser-proven in list-reorder.browser.test.ts) ·
+//               keyboard-modifier-chords-ignored · keyboard-target-routes-separate-buttons
 
 function rowRect(top: number, height = 40): DOMRect {
   return {
@@ -34,6 +37,7 @@ class ListReorderEl extends UIElement {
   rows: HTMLElement[] = [] // build-time identities only — NEVER read for order; `items()` re-queries the DOM
   handles = new Map<HTMLElement, HTMLElement>()
   armedFlag = true
+  keyboardTargets: Map<HTMLElement, HTMLElement> | null = null // set → routes keyboard via `keyboardTarget`
   commits: Commit[] = []
   changeEvents: Commit[] = []
   releaseFn: (() => void) | null = null
@@ -68,6 +72,9 @@ class ListReorderEl extends UIElement {
       items: () => this.liveItems(),
       armed: () => this.armedFlag,
       handle: (item) => this.handles.get(item) ?? null,
+      ...(this.keyboardTargets
+        ? { keyboardTarget: (item: HTMLElement) => this.keyboardTargets?.get(item) ?? null }
+        : {}),
       onCommit: (from, to) => this.commits.push({ from, to }),
     })
     this.listen(this, 'change', (e) => this.changeEvents.push((e as CustomEvent<Commit>).detail))
@@ -172,6 +179,76 @@ describe('listReorder — reorder-mode trait (GH #952)', () => {
     el.handleEls[0].dispatchEvent(ptr('pointerup', 50, 45))
     expect(el.commits).toHaveLength(0)
 
+    el.remove()
+  })
+
+  it('keyboard-focus-survives: two consecutive ArrowDown presses keep focus on the SAME handle (0→1→2)', () => {
+    const el = new ListReorderEl()
+    document.body.append(el)
+    el.buildRows(3)
+    const handle = el.handleEls[0]
+    handle.tabIndex = 0
+    handle.focus()
+    expect(document.activeElement).toBe(handle)
+
+    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }))
+    expect(document.activeElement).toBe(handle) // press 1: still focused after the move
+    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }))
+    expect(document.activeElement).toBe(handle) // press 2: the SAME element receives it and moves again
+
+    expect(el.commits).toEqual([{ from: 0, to: 1 }, { from: 1, to: 2 }])
+    expect([...el.children].indexOf(el.rows[0])).toBe(2)
+    // and back up — the moveBefore(neighbor) leg
+    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }))
+    expect(document.activeElement).toBe(handle)
+    expect([...el.children].indexOf(el.rows[0])).toBe(1)
+    el.remove()
+  })
+
+  it('keyboard-modifier-chords-ignored: ⌥/⌃/⌘+Arrow and an already-defaultPrevented press do nothing', () => {
+    const el = new ListReorderEl()
+    document.body.append(el)
+    el.buildRows(3)
+    const h = el.handleEls[0]
+    h.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', altKey: true, bubbles: true, cancelable: true }))
+    h.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', ctrlKey: true, bubbles: true, cancelable: true }))
+    h.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', metaKey: true, bubbles: true, cancelable: true }))
+    const handled = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true })
+    handled.preventDefault()
+    h.dispatchEvent(handled)
+    expect(el.commits).toHaveLength(0)
+    expect([...el.children].indexOf(el.rows[0])).toBe(0)
+    el.remove()
+  })
+
+  it('keyboard-target-routes-separate-buttons: keyboardTarget (≠ handle) arms the fallback; the drag handle no longer does', () => {
+    const el = new ListReorderEl()
+    el.keyboardTargets = new Map()
+    document.body.append(el)
+    el.buildRows(3)
+    // A separate Up/Down button group per row, distinct from the drag grip
+    for (const row of el.rows) {
+      const group = document.createElement('div')
+      const down = document.createElement('button')
+      group.append(down)
+      row.append(group)
+      el.keyboardTargets.set(row, group)
+    }
+    // Reconnect so `connected()` re-reads `keyboardTargets` (the trait is wired in connected())
+    el.remove()
+    document.body.append(el)
+
+    // The drag HANDLE is no longer a keyboard target
+    el.handleEls[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }))
+    expect(el.commits).toHaveLength(0)
+
+    // A press inside the row's Down button routes through the trait, and focus stays on that button
+    const down = el.keyboardTargets.get(el.rows[0])!.firstElementChild as HTMLButtonElement
+    down.focus()
+    down.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }))
+    expect(el.commits).toEqual([{ from: 0, to: 1 }])
+    expect([...el.children].indexOf(el.rows[0])).toBe(1)
+    expect(document.activeElement).toBe(down)
     el.remove()
   })
 })

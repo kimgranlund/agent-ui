@@ -4,9 +4,17 @@
 // — over an ordered set of item elements: pointer-capture drag with sibling hit-testing (the #921 ruling 4
 // mechanics) PLUS a keyboard fallback (Up/Down while a handle is armed+focused) satisfying WCAG 2.2 SC 2.5.7
 // Dragging Movements. Both paths converge on the SAME commit: `opts.onCommit(from, to)` followed by a
-// `change` CustomEvent on the host (the seventh event-vocabulary member — ADR-0153's `open`/`close`/`toggle`/
-// `action` precedent; `change` is ops plan §3.3's ruling for THIS trait's commit, recorded here since the
-// ticket's own Scope/Open section left it as an open question).
+// `change` CustomEvent on the host (`change` is the FIRST event-vocabulary member — the seven are
+// `change · input · select · open · close · toggle · action`, `action` being the seventh, ADR-0153; `change`
+// is ops plan §3.3's ruling for THIS trait's commit, recorded here since the ticket's own Scope/Open section
+// left it as an open question).
+//
+// Keyboard moves relocate the item via native `parent.moveBefore` where the engine has it (the ADR-0022
+// pattern `dom/template.ts`'s repeat directive uses) — an atomic move that never leaves the document, so
+// the focused handle KEEPS focus — falling back to detach+reinsert (`before`/`after`) plus an explicit
+// re-focus of whatever the item held as `document.activeElement` (jsdom + pre-moveBefore engines). Two
+// consecutive ArrowDown presses therefore land on the same, still-focused handle (browser-proven in
+// `list-reorder.browser.test.ts`).
 //
 // No HTML5 Drag-and-Drop API (#921's in-code ruling, repeated in this ticket's Acceptance) — pointer events
 // only. `setPointerCapture` on the HANDLE keeps the gesture live past its own bounds, mirroring `value-drag`/
@@ -53,6 +61,12 @@ export interface ListReorderOptions {
    *  Return `null` to skip wiring that item (e.g. a shipped/protected row with no handle at all — the #921
    *  preset-protection precedent). Called with the item and its current index. */
   handle: (item: HTMLElement, index: number) => HTMLElement | null
+  /** Resolve an item's KEYBOARD target — the element a `keydown` must land within (or on) to arm the
+   *  Up/Down fallback for THAT item. Default: `handle` (one grip serves both paths). A consumer whose drag
+   *  grip and its labeled Up/Down buttons are SEPARATE elements (the agent-admin caret precedent) returns
+   *  the button group (or the row itself) here so keyboard routes through the trait too. Return `null` to
+   *  skip keyboard wiring for that item. Called with the item and its current index. */
+  keyboardTarget?: (item: HTMLElement, index: number) => HTMLElement | null
   /** Called once per commit, from a drag release OR a keyboard move — `from`/`to` are indices into
    *  `opts.items()` as read at the START of the gesture (drag) or at the moment of the key press (keyboard).
    *  The caller owns persistence + re-render; this trait touches no application state and never assumes the
@@ -105,6 +119,7 @@ function isBeforeMidpoint(
  */
 export function listReorder(host: UIElement, opts: ListReorderOptions): () => void {
   const orientation = opts.orientation ?? 'vertical'
+  const keyboardTarget = opts.keyboardTarget ?? opts.handle
   let released = false
 
   // Reflect `data-reorder-mode` onto the container, live — a reactive `armed()` accessor (reading a signal)
@@ -138,7 +153,7 @@ export function listReorder(host: UIElement, opts: ListReorderOptions): () => vo
     const onMove = (moveEvent: PointerEvent): void => {
       if (moveEvent.pointerId !== pe.pointerId) return
       const over = itemAtPoint(opts.items(), moveEvent.clientX, moveEvent.clientY, orientation)
-      if (!over || over === item || !host.contains(over)) return
+      if (!over || over === item) return
       const rect = over.getBoundingClientRect()
       if (isBeforeMidpoint(moveEvent.clientX, moveEvent.clientY, rect, orientation)) over.before(item)
       else over.after(item)
@@ -168,6 +183,9 @@ export function listReorder(host: UIElement, opts: ListReorderOptions): () => vo
   host.listen(host, 'keydown', (event) => {
     if (released || !opts.armed()) return
     const e = event as KeyboardEvent
+    // Modified arrows (⌥/⌃/⌘ + arrow) are the platform's own chords, and an already-handled press belongs to
+    // whoever handled it — neither is a reorder request.
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return
     const isNextKey = orientation === 'vertical' ? e.key === 'ArrowDown' : e.key === 'ArrowRight'
     const isPrevKey = orientation === 'vertical' ? e.key === 'ArrowUp' : e.key === 'ArrowLeft'
     if (!isNextKey && !isPrevKey) return
@@ -175,20 +193,36 @@ export function listReorder(host: UIElement, opts: ListReorderOptions): () => vo
     const targetEl = e.target as Element | null
     if (!targetEl) return
     const list = opts.items()
-    const item = list.find((it) => {
-      const h = opts.handle(it, list.indexOf(it))
-      return h !== null && h.contains(targetEl)
+    const from = list.findIndex((it, i) => {
+      const t = keyboardTarget(it, i)
+      return t !== null && t.contains(targetEl)
     })
-    if (!item) return
+    if (from === -1) return
+    const item = list[from]
 
-    const from = list.indexOf(item)
     const to = isNextKey ? from + 1 : from - 1
     if (to < 0 || to >= list.length) return // already at an end — nothing to move past
 
     e.preventDefault()
     const neighbor = list[to]
-    if (isPrevKey) item.parentElement?.insertBefore(item, neighbor)
-    else neighbor.after(item)
+    const parent = item.parentNode
+    // Whatever the item currently holds as the focused element (the handle, or a keyboardTarget button) must
+    // still be focused after the move — the WHOLE point of the fallback is repeat presses without re-tabbing.
+    const active = document.activeElement
+    const hadFocus = active instanceof HTMLElement && item.contains(active)
+    // Moving "down" = before the neighbor's NEXT sibling (null → append), "up" = before the neighbor itself.
+    const ref: ChildNode | null = isNextKey ? neighbor.nextSibling : neighbor
+    if (parent && 'moveBefore' in parent) {
+      // native atomic move (ADR-0022): the item never leaves the document → focus survives on its own
+      ;(parent as ParentNode & { moveBefore(node: Node, child: Node | null): void }).moveBefore(item, ref)
+    } else if (isPrevKey) {
+      neighbor.before(item) // fallback: detach+reinsert — focus is dropped by the engine, restored below
+    } else {
+      neighbor.after(item)
+    }
+    if (hadFocus && document.activeElement !== active) {
+      (active as HTMLElement).focus()
+    }
 
     opts.onCommit(from, to)
     host.emit('change', { from, to })
