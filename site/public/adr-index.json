@@ -1330,6 +1330,13 @@
     "section": "Records"
   },
   {
+    "name": "ADR-0192",
+    "url": "./adr-index.html#adr-0192",
+    "description": "SaaS data utilities v1 scope: a new zero-dep @agent-ui/data sibling package (shared ← components ← data, catalog-invisible by construction) — a DataSource seam…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "ADR-0194",
     "url": "./adr-index.html#adr-0194",
     "description": "Reveal-order policy for the A2UI streaming renderer: an opt-in, default-OFF top-down sibling hold (TreeDeps.revealOrder / RendererOptions.revealOrder), never w…",
