@@ -133,9 +133,10 @@ geometry:
   align: var(--ui-swiper-align)         # the per-slide scroll-snap-align
   duration: var(--ui-swiper-duration)   # programmatic-advance timing
   easing: var(--ui-swiper-easing)       # programmatic-advance curve
+  inactiveBrightness: var(--ui-swiper-inactive-brightness)  # #953 candy — the off-centre slide's `filter: brightness()` floor (0.7), consumed ONLY inside the `@supports (animation-timeline: view())` block; layout-inert (never a scale/opacity), disabled under prefers-reduced-motion + forced-colors
   surface: --ui-container-bg             # the shell plane (ADR-0015 surface seam); transparent by default — a plane is asked-for via elevation/brightness
 
-forcedColors: The pagination dots keep a non-colour (size) signifier under WHCM AND map to system colours (CanvasText idle, Highlight active) so they remain visible against Canvas; ui-button (paddles) carries its own independent forced-colors treatment.
+forcedColors: The pagination dots keep a non-colour (size) signifier under WHCM AND map to system colours (CanvasText idle, Highlight active) so they remain visible against Canvas; ui-button (paddles) carries its own independent forced-colors treatment. The #953 scroll-driven brightness dim is switched OFF under `(forced-colors: active)` (`animation-name: none`, same specificity as the enhancement rule) — a brightness cue on a forced palette reads as disabled, not off-centre.
 ---
 
 # ui-swiper · ui-swiper-item · ui-swiper-pagination · ui-swiper-paddles · ui-swiper-label
@@ -199,3 +200,31 @@ Programmatic advances (paddle/dot/keyboard/`goTo`) animate over `--ui-swiper-dur
 via a JS scroll animation — native gesture snaps use the UA's own timing (F1 — `scroll-behavior: smooth`
 ignores custom properties). Under `prefers-reduced-motion`, programmatic advances are instant and the loop
 teleport is already instant.
+
+## Zero-JS consumer story
+
+The example above is the whole consumer contract — markup + boolean attributes, zero `<script>`. Gesture
+drag/trackpad/touch snap, keyboard, and the pagination-dot/paddle affordances are entirely component-owned;
+no `goTo`/`next`/`prev` call or event listener is required for a working carousel (ADR-0102's CSS-less-
+consumer law — nothing here depends on page-author CSS or JS to render/behave correctly). See the API doc
+page's "Zero-JS consumer proof" section for a literal markup-only specimen.
+
+## Progressive enhancement (#953)
+
+Two opt-in-by-support layers, both byte-identical fallback on an engine that lacks them:
+
+- **Scroll-driven inactive-slide dim** — `@supports (animation-timeline: view())` (Chromium-shipped, Safari
+  26+) dims off-center slides via `filter: brightness(--ui-swiper-inactive-brightness)` on an anonymous
+  `view()` progress timeline; disabled under `prefers-reduced-motion` AND `forced-colors: active` (both
+  resets weigh the same (0,2,1) as the enhancement selectors — the orientation qualifier is `:where()`-
+  wrapped for exactly that reason — and sit later in source, so they win; swiper.browser.test.ts probes the
+  computed `animation-name` under CDP media emulation). Unsupported engines never enter the `@supports`
+  block — nothing changes there.
+  Caveat for slide content: a non-`none` `filter` creates a stacking context AND a containing block for
+  `position: fixed`/`absolute` descendants on supporting engines (CSS Filter Effects §5) — while a slide is
+  dimmed, a raw `position: fixed` element inside it is positioned against the slide, not the viewport. Route
+  viewport-anchored overlays through the fleet's `overlay()`/portal seam rather than a raw `fixed` inside a
+  slide.
+- **`scrollsnapchange` adoption** — where the native `scrollsnapchange` event is present (Chromium 129+,
+  feature-detected per element), it replaces the settle-debounce/geometry-guess active-slide detection with
+  the event's own named snap target. Absent, the pre-existing debounce path runs unchanged.

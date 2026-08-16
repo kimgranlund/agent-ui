@@ -259,6 +259,65 @@ describe('ui-swiper — reduced motion (n8)', () => {
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [6b] #953 scroll-driven dim — the reduced-motion / forced-colors resets WIN on specificity (review repair)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+// The enhancement selectors weigh (0,2,1) — `:scope:where(<orientation>) > [data-part=track] > ui-swiper-item`
+// — and so do the `animation-name: none` resets, which sit later in source. An unwrapped orientation
+// qualifier would weigh (0,3,1) and silently OUT-RANK the resets (the review's finding); this probe reads the
+// COMPUTED animation-name on a real engine, in both orientations, so a specificity regression trips here.
+// Engine split: Chromium emulates the media features via CDP (the n8/n28 idiom); WebKit exposes no media
+// emulation, so it asserts the un-emulated baseline only (enhancement reachable ⇔ `CSS.supports` says so).
+
+const VERTICAL_THREE = `<ui-swiper orientation="vertical"><ui-swiper-item>One</ui-swiper-item><ui-swiper-item>Two</ui-swiper-item><ui-swiper-item>Three</ui-swiper-item></ui-swiper>`
+
+describe('ui-swiper — #953 inactive-slide dim: reduced-motion + forced-colors resets out-rank the enhancement', () => {
+  const supportsView = (): boolean => CSS.supports('animation-timeline: view()')
+
+  it('baseline: the enhancement is reachable exactly when the engine supports view() timelines (both orientations)', () => {
+    const h = mount(THREE)
+    const v = mount(VERTICAL_THREE)
+    const expected = supportsView() ? 'ui-swiper-inactive-fx' : 'none'
+    for (const item of [...h.items, ...v.items]) {
+      expect(getComputedStyle(item).animationName, `baseline (supports view(): ${supportsView()})`).toBe(expected)
+    }
+  })
+
+  it('under prefers-reduced-motion: reduce, every slide computes animation-name: none (Chromium)', async () => {
+    if (server.browser !== 'chromium') return // WebKit exposes no CDP media emulation (the documented engine split)
+    if (!supportsView()) return // nothing to reset on an engine that never enters the @supports block
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
+    try {
+      expect(window.matchMedia('(prefers-reduced-motion: reduce)').matches, 'CDP did not enter reduced-motion').toBe(true)
+      const h = mount(THREE)
+      const v = mount(VERTICAL_THREE)
+      for (const item of [...h.items, ...v.items]) {
+        expect(getComputedStyle(item).animationName, 'the reduced-motion reset lost on specificity').toBe('none')
+      }
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+
+  it('under forced-colors: active, every slide computes animation-name: none (Chromium)', async () => {
+    if (server.browser !== 'chromium') return
+    if (!supportsView()) return
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches, 'CDP did not enter forced-colors').toBe(true)
+      const h = mount(THREE)
+      const v = mount(VERTICAL_THREE)
+      for (const item of [...h.items, ...v.items]) {
+        expect(getComputedStyle(item).animationName, 'the forced-colors reset lost on specificity').toBe('none')
+      }
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
 //  [7] Forced-colors — the pagination dots survive WHCM (Chromium; the tabs precedent for the engine split) (n28)
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
