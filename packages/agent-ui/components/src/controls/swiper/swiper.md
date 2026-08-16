@@ -199,3 +199,23 @@ Programmatic advances (paddle/dot/keyboard/`goTo`) animate over `--ui-swiper-dur
 via a JS scroll animation — native gesture snaps use the UA's own timing (F1 — `scroll-behavior: smooth`
 ignores custom properties). Under `prefers-reduced-motion`, programmatic advances are instant and the loop
 teleport is already instant.
+
+## Zero-JS consumer story
+
+The example above is the whole consumer contract — markup + boolean attributes, zero `<script>`. Gesture
+drag/trackpad/touch snap, keyboard, and the pagination-dot/paddle affordances are entirely component-owned;
+no `goTo`/`next`/`prev` call or event listener is required for a working carousel (ADR-0102's CSS-less-
+consumer law — nothing here depends on page-author CSS or JS to render/behave correctly). See the API doc
+page's "Zero-JS consumer proof" section for a literal markup-only specimen.
+
+## Progressive enhancement (#953)
+
+Two opt-in-by-support layers, both byte-identical fallback on an engine that lacks them:
+
+- **Scroll-driven inactive-slide dim** — `@supports (animation-timeline: view())` (Chromium-shipped, Safari
+  26+) dims off-center slides via `filter: brightness(--ui-swiper-inactive-brightness)` on an anonymous
+  `view()` progress timeline; disabled under `prefers-reduced-motion`. Unsupported engines never enter the
+  `@supports` block — nothing changes there.
+- **`scrollsnapchange` adoption** — where the native `scrollsnapchange` event is present (Chromium 129+,
+  feature-detected per element), it replaces the settle-debounce/geometry-guess active-slide detection with
+  the event's own named snap target. Absent, the pre-existing debounce path runs unchanged.

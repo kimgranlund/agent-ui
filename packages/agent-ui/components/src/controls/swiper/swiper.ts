@@ -98,6 +98,22 @@ function parseCssTime(raw: string, fallbackMs: number): number {
 
 type LoopBand = 'leading' | 'trailing'
 
+// ── scrollsnapchange adoption (GH #953, ops plan §3.3 — ADOPT-WITH-FALLBACK) ────────────────────────────────
+// `scrollsnapchange` (CSS Scroll Snap Events, Chromium 129+, not cross-engine yet) fires directly on the
+// scroll container the instant its snapped target changes — a native replacement for the settle-debounce
+// geometry guess `#onScroll`/`#onSettle`/`#nearestSlide` below perform. Feature-detected per element (the
+// standard `'onhandler' in el` idiom, MDN's own recommended test for this event) rather than assumed from a
+// UA sniff; an engine without it takes the EXACT pre-existing debounce path, byte-identical (this file's only
+// change on that path is the detection call itself, which short-circuits to false and touches nothing else).
+interface SnapChangeEvent extends Event {
+  readonly snapTargetBlock: Element | null
+  readonly snapTargetInline: Element | null
+}
+
+function supportsScrollSnapChangeEvent(el: Element): boolean {
+  return 'onscrollsnapchange' in el
+}
+
 export interface UISwiperElement extends ReactiveProps<typeof props> {}
 export class UISwiperElement extends UIContainerElement {
   static props = props
@@ -172,7 +188,13 @@ export class UISwiperElement extends UIContainerElement {
     this.#labelSlides()
     this.#driveChrome()
 
-    this.listen(this.#track!, 'scroll', this.#onScroll, { passive: true })
+    // ADOPT-WITH-FALLBACK (#953): the native event replaces the debounce path only where present; an
+    // unsupported engine attaches the pre-existing `scroll` listener alone, unchanged.
+    if (supportsScrollSnapChangeEvent(this.#track!)) {
+      this.listen(this.#track!, 'scrollsnapchange', this.#onSnapChange)
+    } else {
+      this.listen(this.#track!, 'scroll', this.#onScroll, { passive: true })
+    }
     this.listen(this, 'keydown', this.#onKeydown)
 
     // duration/easing → inline custom-property overrides the JS scroll animation reads (LLD §7 Consequences).
@@ -458,6 +480,23 @@ export class UISwiperElement extends UIContainerElement {
       this.#scrollSettleTimer = null
       this.#onSettle()
     }, 120) as unknown as number
+  }
+
+  /** The `scrollsnapchange` path (#953 — only attached where `supportsScrollSnapChangeEvent` is true): the
+   *  event names the settled target directly, so this skips the debounce timer AND `#nearestSlide`'s geometry
+   *  guess entirely — `#mapToReal`/`#teleport`/`#commit` are the same shared machinery `#onSettle` drives,
+   *  so both paths converge on an identical committed result. Falls back to the geometry resolve only if the
+   *  event names no snap target on this axis (a legal empty state per spec, e.g. mid-programmatic-scroll). */
+  #onSnapChange = (evt: Event): void => {
+    if (this.#teleporting) return
+    const e = evt as SnapChangeEvent
+    const target = (this.orientation === 'horizontal' ? e.snapTargetInline : e.snapTargetBlock) ?? this.#nearestSlide()
+    if (!(target instanceof HTMLElement)) return
+    const mapped = this.#mapToReal(target)
+    if (!mapped) return
+    const { index, band } = mapped
+    if (band) this.#teleport(band)
+    this.#commit(index, false)
   }
 
   /** One settle → one #commit call, structurally (the `#teleporting` guard in `#onScroll` suppresses the

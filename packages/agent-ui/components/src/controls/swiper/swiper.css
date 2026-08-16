@@ -48,6 +48,16 @@
   --ui-swiper-pagination-gap: var(--md-sys-space-xs);
   --ui-swiper-pagination-margin-block-start: var(--md-sys-space-sm);
   --ui-swiper-pagination-fraction-font: var(--md-sys-font-sm);
+
+  /* Scroll-driven inactive-slide dim (#953 residual candy, brief §2) — consumed by the @supports block
+     below only; a bare :where() declaration costs nothing on an engine that never reaches it.
+     `filter: brightness()`, not `scale`/`opacity`: a real-engine probe (swiper.browser.test.ts n9/n10)
+     caught `scale` shifting the settled slide's OWN getBoundingClientRect() on a view()-timeline-capable
+     WebKit — the pixel-seamless teleport assertion measures that exact rect, so a transform-driven cue
+     broke a real invariant. `filter` never participates in layout, so the teleport geometry proof stays
+     exact regardless of this candy's animation phase. Not `opacity` either — components hold zero colour
+     opinion (ADR-0008; swiper-css.test.ts's own opacity trip-wire). */
+  --ui-swiper-inactive-brightness: 0.7;
 }
 
 /* [slides-in-view="n"] — pin the visible column count (a numeric string; '' stays responsive-auto below). */
@@ -148,6 +158,53 @@
   @media (prefers-reduced-motion: reduce) {
     :scope:state(ready) ui-swiper-pagination [data-part='dot'] {
       transition: none;
+    }
+  }
+}
+
+/* ══════════════════ [3] SCROLL-DRIVEN SLIDE STYLING — @supports, progressive enhancement (#953) ══════════════════
+ * Opt-in-by-support, not by attribute: `animation-timeline: view()` (Chromium-shipped, Safari 26+ — brief §2)
+ * opens an ANONYMOUS view-progress timeline scoped to the item's own nearest scroll ancestor — no
+ * `view-timeline-name` plumbing needed, so this needs no new prop and no fork (ticket's "no API change"
+ * bar). An engine that never matches the @supports test parses none of this; the shipped rendering there is
+ * BYTE-IDENTICAL to pre-#953 (nothing here is reachable, nothing there changes). Reads `orientation` — a
+ * ui-swiper-owned attribute — so this lives in the family-root file per the same file-scoping trip-wire the
+ * `ready`-gated dot transition above already follows (a rule referencing a host attribute belongs in the
+ * host's own file even when it styles a descendant). */
+@supports (animation-timeline: view()) {
+  @scope (ui-swiper) {
+    :scope:not([orientation='vertical']) > [data-part='track'] ui-swiper-item {
+      animation-name: ui-swiper-inactive-fx;
+      animation-timeline: view(inline);
+      animation-fill-mode: both;
+      animation-timing-function: linear;
+    }
+    :scope[orientation='vertical'] > [data-part='track'] ui-swiper-item {
+      animation-name: ui-swiper-inactive-fx;
+      animation-timeline: view(block);
+      animation-fill-mode: both;
+      animation-timing-function: linear;
+    }
+  }
+
+  @keyframes ui-swiper-inactive-fx {
+    0%,
+    100% {
+      filter: brightness(var(--ui-swiper-inactive-brightness));
+    }
+    35%,
+    65% {
+      filter: brightness(1);
+    }
+  }
+
+  /* Reduced motion (ticket acceptance) — the timeline itself is scroll-driven, not time-driven, so the UA's
+     own reduced-motion suppression for @keyframes does not apply here; disable the animation-name explicitly. */
+  @media (prefers-reduced-motion: reduce) {
+    @scope (ui-swiper) {
+      :scope > [data-part='track'] ui-swiper-item {
+        animation-name: none;
+      }
     }
   }
 }
