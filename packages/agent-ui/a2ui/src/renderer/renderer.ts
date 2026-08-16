@@ -121,6 +121,14 @@ export interface RendererOptions {
   warn?: (message: string) => void
   /** Fallback `version` for client messages with no surface context (e.g. a `PARSE` error). Default `v1.0`. */
   defaultVersion?: string
+  /**
+   * Reveal-order policy opt-in (GH #975, ADR-0191 — proposed, never self-ratified). Default
+   * `false`/undefined: byte-identical to before this policy existed. `true`: every surface this host
+   * renders reveals its STATIC component tree's siblings in DECLARED order rather than stream-arrival
+   * order (`SurfaceTree`/`tree.ts`'s own doc comment carries the mechanism). Applies to every surface
+   * this host creates — there is no per-`createSurface`-call override.
+   */
+  revealOrder?: boolean
 }
 
 /**
@@ -169,11 +177,13 @@ class Renderer implements RendererHost {
   readonly #emitError: (error: A2uiError) => void
   readonly #handlers: DispatchHandlers
   readonly #defaultVersion: string
+  readonly #revealOrder: boolean // GH #975/ADR-0191 opt-in (default false) — threaded into every SurfaceTree
   #mountEl: HTMLElement | undefined
   #disposed = false
 
   constructor(options: RendererOptions) {
     this.#defaultVersion = options.defaultVersion ?? 'v1.0'
+    this.#revealOrder = options.revealOrder ?? false
 
     // Per-runtime registry, default catalog pre-registered so `catalogId:'agent-ui'` resolves out of the
     // box (two-tier: a project registers more via `register`, SPEC-R6/N1).
@@ -342,6 +352,7 @@ class Renderer implements RendererHost {
         },
         componentDefOf: (node, surface) => this.#registry.get(surface.catalogId)?.catalog?.components?.[node.component],
         onError: (error) => this.#onTreeError(surface.id, error),
+        revealOrder: this.#revealOrder, // GH #975/ADR-0191 — opt-in, default false
       }),
     )
   }

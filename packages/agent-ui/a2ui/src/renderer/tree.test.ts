@@ -23,7 +23,7 @@ const inertReconcileDeps = {
 // — harness ————————————————————————————————————————————————————————————————————
 // A stub `createWidget` (renderer LLD-C7) that records calls and returns an identifiable element, so
 // the tree slice is proven decoupled from the real widget factory (B-widget).
-function harness() {
+function harness(opts: { revealOrder?: boolean } = {}) {
   const calls: A2uiComponent[] = []
   const createWidget: CreateWidget = (node) => {
     calls.push(node)
@@ -35,7 +35,7 @@ function harness() {
   const errors: A2uiError[] = []
   const onError = (e: A2uiError): void => void errors.push(e)
   const surface = createSurface({ id: 's1', catalogId: 'demo', version: 'v1.0' })
-  const tree = new SurfaceTree(surface, { createWidget, ...inertReconcileDeps, onError })
+  const tree = new SurfaceTree(surface, { createWidget, ...inertReconcileDeps, onError, revealOrder: opts.revealOrder })
   return { calls, errors, surface, tree }
 }
 
@@ -281,6 +281,141 @@ describe('out-of-order child held + patched (SPEC-R4 AC1)', () => {
     const mid = tree.rootElement!.children[0] as HTMLElement
     expect(mid.getAttribute('data-id')).toBe('mid')
     expect(childIds(mid)).toEqual(['c'])
+  })
+})
+
+describe('reveal-order policy — top-down sibling hold (GH #975, ADR-0191, opt-in)', () => {
+  it('off by default: a later sibling still reveals immediately even though an earlier one is missing (byte-identical to pre-ADR-0191)', () => {
+    const { tree } = harness() // revealOrder unset
+    tree.apply(msg([{ id: 'root', component: 'Column', children: ['a', 'b'] }, { id: 'b', component: 'Text' }]))
+    expect(childIds(tree.rootElement!)).toEqual(['b']) // unchanged greedy-reveal default (SPEC-R4 AC1)
+  })
+
+  it('holds a later sibling until every earlier declared sibling has revealed', () => {
+    const { tree } = harness({ revealOrder: true })
+    tree.apply(msg([{ id: 'root', component: 'Column', children: ['a', 'b'] }, { id: 'b', component: 'Text' }]))
+    const root = tree.rootElement!
+    expect(childIds(root)).toEqual([]) // `b` is held: `a` (declared first) has not arrived yet
+    expect(root.childNodes.length).toBe(2) // both slots are still comment anchors — position preserved
+
+    tree.apply(msg([{ id: 'a', component: 'Text' }]))
+    expect(childIds(root)).toEqual(['a', 'b']) // `a`'s arrival cascades: reveals `a` AND the held `b`
+  })
+
+  it('cascades through a longer already-buffered run in one pass once the blocker arrives', () => {
+    const { tree } = harness({ revealOrder: true })
+    tree.apply(
+      msg([
+        { id: 'root', component: 'Column', children: ['a', 'b', 'c', 'd'] },
+        { id: 'c', component: 'Text' },
+        { id: 'd', component: 'Text' },
+      ]),
+    )
+    const root = tree.rootElement!
+    expect(childIds(root)).toEqual([]) // `a` missing → `b`, `c`, `d` all held despite `c`/`d` being buffered
+
+    tree.apply(msg([{ id: 'b', component: 'Text' }])) // `b` arrives; `a` still missing
+    expect(childIds(root)).toEqual([]) // still held — `a` remains the blocker, not `b`
+
+    tree.apply(msg([{ id: 'a', component: 'Text' }])) // `a` arrives — unlocks `a`, `b`, `c`, `d` together
+    expect(childIds(root)).toEqual(['a', 'b', 'c', 'd'])
+  })
+
+  it('a container whose children all arrive together reveals in declared order — same as the default path', () => {
+    const { tree } = harness({ revealOrder: true })
+    tree.apply(
+      msg([
+        { id: 'root', component: 'Column', children: ['a', 'b'] },
+        { id: 'a', component: 'Text' },
+        { id: 'b', component: 'Text' },
+      ]),
+    )
+    expect(childIds(tree.rootElement!)).toEqual(['a', 'b'])
+  })
+
+  it('a nested container composes the policy at its own level, independently of its parent', () => {
+    const { tree } = harness({ revealOrder: true })
+    tree.apply(
+      msg([
+        { id: 'root', component: 'Column', children: ['a'] },
+        { id: 'a', component: 'Column', children: ['x', 'y'] },
+        { id: 'y', component: 'Text' }, // `x` (declared first, under `a`) still missing
+      ]),
+    )
+    const root = tree.rootElement!
+    expect(childIds(root)).toEqual(['a']) // `a` itself has no earlier sibling — reveals immediately
+    const a = root.children[0] as HTMLElement
+    expect(childIds(a)).toEqual([]) // but `a`'s OWN children hold: `y` waits on `x`
+
+    tree.apply(msg([{ id: 'x', component: 'Text' }]))
+    expect(childIds(a)).toEqual(['x', 'y'])
+  })
+
+  // code-checker review (HIGH finding): a structural resend that changes an ORDERED container's own
+  // children must resync `#siblingOrder`/cursor — otherwise a removed/reordered blocker leaves the
+  // cursor pointed at a stale position that can never advance, stranding already-buffered later
+  // siblings behind it forever (RSR-C4/C5, `#reconcileChildren`, interacting with ADR-0191).
+  describe('reveal-order resync on structural resend (RSR-C4/C5 interaction)', () => {
+    it('a resend that removes the blocking sibling reveals the remaining, already-buffered survivor', () => {
+      const { tree } = harness({ revealOrder: true })
+      tree.apply(
+        msg([
+          { id: 'root', component: 'Column', children: ['c'] },
+          { id: 'c', component: 'Column', children: ['a', 'b'] },
+        ]),
+      )
+      tree.apply(msg([{ id: 'b', component: 'Text' }])) // `b` buffered but held — `a` still missing
+      const c = tree.rootElement!.children[0] as HTMLElement
+      expect(childIds(c)).toEqual([]) // held
+
+      // Resend `c` without `a` in its children — `b` is now the LEADING (only) declared child.
+      tree.apply(msg([{ id: 'c', component: 'Column', children: ['b'] }]))
+      expect(childIds(c)).toEqual(['b']) // resync must reveal it — was stranded pre-fix
+    })
+
+    it('a resend that reorders (removes a middle sibling) still cascades once the true blocker arrives', () => {
+      const { tree } = harness({ revealOrder: true })
+      tree.apply(
+        msg([
+          { id: 'root', component: 'Column', children: ['c'] },
+          { id: 'c', component: 'Column', children: ['a', 'b', 'd'] },
+          { id: 'd', component: 'Text' }, // `d` buffered from the start; `a`/`b` still missing
+        ]),
+      )
+      const c = tree.rootElement!.children[0] as HTMLElement
+      expect(childIds(c)).toEqual([]) // `a` blocks — `d` held despite being buffered
+
+      tree.apply(msg([{ id: 'c', component: 'Column', children: ['a', 'd'] }])) // resend removes `b`
+      expect(childIds(c)).toEqual([]) // `a` still missing — still held, resync must not skip ahead
+
+      tree.apply(msg([{ id: 'a', component: 'Text' }])) // `a` finally arrives
+      expect(childIds(c)).toEqual(['a', 'd']) // cascades through the already-buffered `d` — stranded pre-fix
+    })
+
+    // code-checker review, 2nd pass (HIGH): a resend that ADDS a child whose data is already buffered
+    // mounts it via the plain (ungated) `#mountNode` path (RSR-C5's fresh-mount branch) — it reveals
+    // immediately, out of declared order, and — the actual regression — was never registered in
+    // `#pendingParents`, so `#advanceReveal`'s cascade misread "no pendingParents entry" as "not ready"
+    // and broke there, stranding every later sibling FOREVER. Fixed: `widgets.has(id)` now short-
+    // circuits the cascade as "already revealed, keep walking" instead. The out-of-declared-order
+    // pop-in itself (`d` visible before `a`/`b`) is a named, accepted limitation of the resend-ADD case
+    // (ADR-0191 Consequences) — this test proves the LIVENESS fix only: nothing is stranded.
+    it('a resend-added child with already-buffered data does not strand later siblings behind it', () => {
+      const { tree } = harness({ revealOrder: true })
+      tree.apply(msg([{ id: 'root', component: 'Column', children: ['c'] }, { id: 'c', component: 'Column', children: ['a', 'b'] }]))
+      tree.apply(msg([{ id: 'b', component: 'Text' }])) // `b` buffered, held — `a` still missing
+      tree.apply(msg([{ id: 'd', component: 'Text' }])) // `d` buffered as an orphan (not yet referenced)
+      const c = tree.rootElement!.children[0] as HTMLElement
+      expect(childIds(c)).toEqual([]) // still fully held
+
+      // Resend `c` to ADD `d` and `e` (both after `a`/`b` in declared order); `d` is already buffered.
+      tree.apply(msg([{ id: 'c', component: 'Column', children: ['a', 'b', 'd', 'e'] }]))
+      expect(childIds(c)).toContain('d') // `d` mounts immediately via the resend's fresh-mount path (named limitation)
+
+      tree.apply(msg([{ id: 'a', component: 'Text' }])) // unlocks `a` then cascades into the already-buffered `b`
+      tree.apply(msg([{ id: 'e', component: 'Text' }])) // `e` finally arrives
+      expect(childIds(c)).toContain('e') // NOT stranded — the pre-fix regression left `e` permanently held
+    })
   })
 })
 

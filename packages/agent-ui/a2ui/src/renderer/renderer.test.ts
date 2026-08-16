@@ -46,6 +46,74 @@ function harness(): { r: RendererHost; mount: HTMLElement; sent: A2uiClientMessa
   return { r, mount, sent, cleanup: () => { r.dispose(); mount.remove() } }
 }
 
+describe('renderer host — reveal-order policy end-to-end (GH #975, ADR-0191, opt-in, `RendererOptions.revealOrder`)', () => {
+  it('threads the opt-in through to the surface tree: a later-streamed child stays held until its earlier declared sibling arrives', async () => {
+    const sent: A2uiClientMessage[] = []
+    const r = createRenderer({ revealOrder: true, newId: () => 'act-1', now: () => '2026-06-27T00:00:00.000Z' })
+    r.onClientMessage((m) => void sent.push(m))
+    const mount = document.createElement('div')
+    document.body.appendChild(mount)
+    r.mount(mount)
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 's1',
+          components: [
+            { id: 'root', component: 'Column', children: ['a', 'b'] },
+            { id: 'b', component: 'Text', text: 'second' }, // `a` (declared first) not yet delivered
+          ],
+        },
+      }),
+    )
+    await whenFlushed()
+    const root = mount.querySelector('ui-column')!
+    expect(root.children.length).toBe(0) // `b` is held — `a` hasn't arrived yet
+
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 's1', components: [{ id: 'a', component: 'Text', text: 'first' }] },
+      }),
+    )
+    await whenFlushed()
+    expect(root.children.length).toBe(2) // `a`'s arrival cascades: reveals `a` AND the held `b`
+    expect(root.children[0]!.tagName.toLowerCase()).toBe('ui-text')
+
+    r.dispose()
+    mount.remove()
+  })
+
+  it('off by default: the same out-of-order fixture reveals the later child immediately (unchanged)', async () => {
+    const r = createRenderer({ newId: () => 'act-1', now: () => '2026-06-27T00:00:00.000Z' }) // revealOrder unset
+    const mount = document.createElement('div')
+    document.body.appendChild(mount)
+    r.mount(mount)
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 's1',
+          components: [
+            { id: 'root', component: 'Column', children: ['a', 'b'] },
+            { id: 'b', component: 'Text', text: 'second' },
+          ],
+        },
+      }),
+    )
+    await whenFlushed()
+    const root = mount.querySelector('ui-column')!
+    expect(root.children.length).toBe(1) // `b` reveals immediately — the pre-ADR-0191 default
+
+    r.dispose()
+    mount.remove()
+  })
+})
+
 describe('renderer host — streamed render of the default catalog (renderer LLD-C13, the A1 proof)', () => {
   it('streams createSurface + updateComponents into a real ui-button and round-trips a click action', async () => {
     const { r, mount, sent, cleanup } = harness()
