@@ -118,8 +118,10 @@
     }
   }
 
-  /* The panel viewport — author ui-drill-panel children, shown one at a time. */
-  > ui-drill-panel {
+  /* The panel viewport — author ui-drill-panel children, shown one at a time. Explicit `:scope >`, not the
+     bare `> ui-drill-panel` shorthand — lightningcss's minifier rejects an implicit-parent combinator as
+     a top-level @scope rule (measured: `build-dogfood-assets.mjs`'s real production minify pass). */
+  :scope > ui-drill-panel {
     display: block;
     padding: var(--ui-drill-padding);
     min-inline-size: 0;
