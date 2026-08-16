@@ -6,7 +6,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./gateway": "./src/gateway/index.ts"
+    "./gateway": "./src/gateway/index.ts",
+    "./stream": "./src/stream/index.ts"
   },
   "dependencies": {
     "@agent-ui/components": "*",
