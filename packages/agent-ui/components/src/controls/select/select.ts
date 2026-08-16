@@ -459,10 +459,49 @@ export class UISelectElement extends UIFormElement {
    *   - listbox: a `<div data-part="listbox" role="listbox">` panel; author's [role=option]
    *     children are moved here at first connect.
    * The overlay controller sets `popover="auto"` on the listbox. `render()` stays the inherited VOID.
+   *
+   * GH #994 — the idempotency guard is on ATTACHMENT, not merely private-field existence. A
+   * consumer that calls `host.replaceChildren(...)` (a plausible dynamic option-list swap — hit
+   * live by GH #962/PR #993 on ui-settings) strips the trigger/ariaLabelSpan/listbox as a side
+   * effect of clearing the host's children, even though the private fields still reference the
+   * (now-detached) nodes. Re-appending the SAME nodes (rather than recreating them) preserves
+   * their ids/identity — including the listbox's own stable id / trigger's aria-controls wiring —
+   * and is the only correct repair: the alternative, recreating fresh parts, would mint duplicate
+   * ids and re-wire every effect/listener that closed over the original nodes.
+   *
+   * When the LISTBOX itself was the thing detached, its cargo (whatever [role=option]/[role=group]
+   * nodes were already adopted into it) is purged before re-attaching: `replaceChildren()` is the
+   * consumer declaring "these are ALL my children now" — the previously-adopted options are no
+   * longer part of that declared set (even though, physically, they still sit nested inside the
+   * orphaned listbox subtree) — so carrying them forward would silently MERGE a stale option set
+   * into the new one instead of swapping it, defeating the whole point of the consumer's call.
+   * `#syncOptions` (the caller) re-adopts the CURRENT host children — the actual new set — right
+   * after this returns, so the panel ends up with exactly the new options, nothing stale.
    */
   #ensureParts(): { trigger: HTMLElement; listbox: HTMLElement; labelSpan: HTMLElement; ariaLabelSpan: HTMLElement } {
+    if (
+      this.#trigger?.parentNode === this &&
+      this.#listbox?.parentNode === this &&
+      this.#ariaLabelSpan?.parentNode === this &&
+      this.#labelSpan
+    ) {
+      // Parts persist through disconnect/reconnect AND remain attached — return the existing ones.
+      return { trigger: this.#trigger, listbox: this.#listbox, labelSpan: this.#labelSpan, ariaLabelSpan: this.#ariaLabelSpan }
+    }
+
     if (this.#listbox && this.#trigger && this.#labelSpan && this.#ariaLabelSpan) {
-      // Parts persist through disconnect/reconnect — return the existing ones.
+      // Parts already exist but one or more got DETACHED (e.g. a consumer replaceChildren() wipe)
+      // — re-append the same nodes rather than recreating them (see the GH #994 doc above).
+      if (this.#listbox.parentNode !== this) {
+        // The listbox itself was orphaned — purge its stale cargo (see the doc above) before it
+        // rejoins the host; #syncOptions adopts the real, current option set right after this call.
+        for (const stale of this.#listbox.querySelectorAll(':scope > [role="option"], :scope > [role="group"]')) {
+          stale.remove()
+        }
+      }
+      this.appendChild(this.#trigger)
+      this.appendChild(this.#ariaLabelSpan)
+      this.appendChild(this.#listbox)
       return { trigger: this.#trigger, listbox: this.#listbox, labelSpan: this.#labelSpan, ariaLabelSpan: this.#ariaLabelSpan }
     }
 
@@ -562,10 +601,15 @@ export class UISelectElement extends UIFormElement {
    * adopted content. Processing the host's current children in document order is therefore already the
    * fully general fix, not a narrowed one: it exactly preserves the one authored ordering an append/
    * insert into the SELECT itself can ever express.
+   *
+   * GH #994 — routes through `#ensureParts()` (rather than reading `this.#listbox` directly) so a
+   * consumer `replaceChildren()` wipe (which detaches trigger/listbox/ariaLabelSpan as a side effect
+   * of clearing the host's children) self-heals here: `#optionObserver`'s childList mutation callback
+   * IS this method, so the very mutation that strips the parts is what re-attaches them, before the
+   * newly-added [role=option] children below get adopted into the (now-reattached) listbox.
    */
   #syncOptions(): void {
-    const listbox = this.#listbox
-    if (!listbox) return
+    const { listbox } = this.#ensureParts()
     let child = this.firstElementChild
     while (child) {
       const next = child.nextElementSibling

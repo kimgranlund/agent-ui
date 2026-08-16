@@ -37,7 +37,9 @@ declare const process: { cwd(): string }
 //   select-c10-stacking · select-c10-cleanup · select-descriptor-schema ·
 //   select-descriptor-bijection · select-descriptor-negative ·
 //   select-aria-label-seam (ADR-0085: bare aria-labelledby concatenation · no aria-label ever ·
-//   merge-not-clobber via setFieldLabelling · dissociation revert · aria-describedby wiring)
+//   merge-not-clobber via setFieldLabelling · dissociation revert · aria-describedby wiring) ·
+//   select-part-survives-replacechildren (GH #994: a consumer replaceChildren() re-attaches the
+//   detached trigger/listbox/aria-label parts instead of orphaning them)
 
 // ── Popover API stub (jsdom lacks it entirely — mirrors popover.test.ts setup) ─────────────────
 
@@ -465,6 +467,61 @@ describe('ui-select — dynamic options (select-dynamic-options)', () => {
 
     expect(late.parentElement).toBe(listbox)
     expect(listbox.querySelectorAll('[role=option]')).toHaveLength(4)
+    el.remove()
+  })
+
+  // GH #994 — a consumer `replaceChildren()` (dynamic option-list swap) wipes the host's direct
+  // children, which strips the control-created trigger/listbox/aria-label parts as a side effect
+  // (they are direct children of the host too) even though `#ensureParts()`'s private fields still
+  // reference them. `#syncOptions` (the MutationObserver callback) must re-attach the detached parts
+  // BEFORE adopting the newly-added options, or the swap permanently strips the control's own UI.
+  it('select-part-survives-replacechildren: replaceChildren() re-attaches trigger/listbox/aria-label parts and adopts the new options', async () => {
+    const { el, trigger: originalTrigger, listbox: originalListbox } = makeSelect()
+    el.label = 'Fruit'
+    await whenFlushed()
+    const originalAriaLabelSpan = el.querySelector<HTMLElement>('[data-part="aria-label"]')!
+
+    const grape = document.createElement('div')
+    grape.setAttribute('role', 'option')
+    grape.setAttribute('value', 'grape')
+    grape.textContent = 'Grape'
+    const kiwi = document.createElement('div')
+    kiwi.setAttribute('role', 'option')
+    kiwi.setAttribute('value', 'kiwi')
+    kiwi.textContent = 'Kiwi'
+
+    el.replaceChildren(grape, kiwi) // wipes trigger/listbox/aria-label as a side effect
+    await Promise.resolve() // MutationObserver callback is microtask-deferred
+    await Promise.resolve()
+    await whenFlushed()
+
+    // The SAME part nodes are re-attached (identity preserved — ids, listeners, effects all still
+    // wired), not fresh nodes minted from scratch.
+    const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    const ariaLabelSpan = el.querySelector<HTMLElement>('[data-part="aria-label"]')!
+    expect(trigger).toBe(originalTrigger)
+    expect(listbox).toBe(originalListbox)
+    expect(ariaLabelSpan).toBe(originalAriaLabelSpan)
+    expect(trigger.isConnected).toBe(true)
+    expect(listbox.isConnected).toBe(true)
+    expect(ariaLabelSpan.isConnected).toBe(true)
+
+    // The a11y label seam survives (aria-labelledby still references the (still-attached) spans).
+    expect(trigger.getAttribute('aria-labelledby')).toContain(ariaLabelSpan.id)
+
+    // The new option set replaces the old one inside the (re-attached) listbox.
+    const values = [...listbox.querySelectorAll<HTMLElement>('[role=option]')].map((o) => o.getAttribute('value'))
+    expect(values).toEqual(['grape', 'kiwi'])
+    expect(grape.parentElement).toBe(listbox)
+    expect(kiwi.parentElement).toBe(listbox)
+
+    // Selection still works against the new options.
+    listbox.querySelector<HTMLElement>('[value="kiwi"]')!.click()
+    await whenFlushed()
+    expect(el.value).toBe('kiwi')
+    expect(trigger.querySelector('[data-part="label"]')?.textContent).toBe('Kiwi')
+
     el.remove()
   })
 })
