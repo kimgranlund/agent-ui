@@ -1,0 +1,53 @@
+/* card-grid-drawer.css — page-local chrome for the card-grid + drawer-edit recipe: card highlight, the grid's
+ * own top margin, and the drawer form's field/danger/confirm rhythm. Never restyles a ui-* control's own
+ * internals (card/grid/drawer/field/text-field/segmented-control/switch/button/badge all keep their own CSS)
+ * — ADR-0102, layout/rhythm only. */
+
+[data-part='member-grid'] {
+  margin-block-start: var(--md-sys-space-md);
+}
+
+[data-part='member-card'][data-editing] {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+[data-part='member-status'] {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+[data-part='member-drawer-form'] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-md);
+}
+
+[data-part='member-drawer-danger'] {
+  margin-block-start: var(--md-sys-space-lg);
+  padding-block-start: var(--md-sys-space-md);
+  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-sm);
+}
+
+[data-part='member-drawer-danger'] p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+[data-part='member-drawer-actions'],
+[data-part='member-drawer-confirm'] {
+  display: flex;
+  align-items: center;
+  gap: var(--md-sys-space-sm);
+}
+
+[data-part='member-drawer-confirm'] span {
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  flex: 1;
+}

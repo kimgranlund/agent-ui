@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Card grid + drawer edit</title>
+  </head>
+  <body>
+    <!-- GH #965 — the card-grid + edit-via-drawer composition recipe (SaaS UX brief §6): ui-grid + ui-card +
+         ui-drawer, a buffered record form, and a recipe-level dirty-state/discard-confirm convention,
+         extracted from the agent-admin entry-list/entry-form shape (GH #917/#947, PR #948). An MPA entry
+         auto-discovered by vite.config.ts's site/**/*.html glob. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/card-grid-drawer.ts"></script>
+  </body>
+</html>
