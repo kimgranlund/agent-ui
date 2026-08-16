@@ -43,10 +43,13 @@ export class UIDrillPanelElement extends UIContainerElement {
 
   protected connected(): void {
     this.internals.role = 'region' // ARIA via internals — never a host role/aria-* attribute
-    // Hidden by default until the owning ui-drill's render pass resolves the active panel — avoids a one-frame
-    // flash of every panel stacked/visible before the host's first effect run (the ui-tab-panel default-hidden
-    // posture, applied at connect rather than left to CSS since `hidden` is a real DOM attribute here).
-    if (!this.hasAttribute('hidden')) this.hidden = true
+    // NO default-hidden-at-connect here (a real bug this file once carried): the CUSTOM ELEMENT connection
+    // order is HOST-then-CHILDREN (spec: connectedCallback fires in tree/pre-order), so the owning ui-drill's
+    // `connected()` — and its first `#render()` pass, which already sets `hidden` correctly on EVERY panel,
+    // active and inactive alike — runs BEFORE this panel's own `connected()`. A default-hide-at-connect here
+    // would fire AFTER that render and silently re-hide whichever panel the host just correctly UNhid — the
+    // exact defect a jsdom probe caught (drill.test.ts). The host's render is authoritative and comprehensive;
+    // this element carries no visibility opinion of its own.
   }
 
   /** Link (or clear, `null`) this panel's accessible name to an external heading element — called by the OWNING
