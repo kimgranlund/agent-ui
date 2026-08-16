@@ -284,8 +284,8 @@ describe('out-of-order child held + patched (SPEC-R4 AC1)', () => {
   })
 })
 
-describe('reveal-order policy — top-down sibling hold (GH #975, ADR-0191, opt-in)', () => {
-  it('off by default: a later sibling still reveals immediately even though an earlier one is missing (byte-identical to pre-ADR-0191)', () => {
+describe('reveal-order policy — top-down sibling hold (GH #975, ADR-0194, opt-in)', () => {
+  it('off by default: a later sibling still reveals immediately even though an earlier one is missing (byte-identical to pre-ADR-0194)', () => {
     const { tree } = harness() // revealOrder unset
     tree.apply(msg([{ id: 'root', component: 'Column', children: ['a', 'b'] }, { id: 'b', component: 'Text' }]))
     expect(childIds(tree.rootElement!)).toEqual(['b']) // unchanged greedy-reveal default (SPEC-R4 AC1)
@@ -354,7 +354,7 @@ describe('reveal-order policy — top-down sibling hold (GH #975, ADR-0191, opt-
   // code-checker review (HIGH finding): a structural resend that changes an ORDERED container's own
   // children must resync `#siblingOrder`/cursor — otherwise a removed/reordered blocker leaves the
   // cursor pointed at a stale position that can never advance, stranding already-buffered later
-  // siblings behind it forever (RSR-C4/C5, `#reconcileChildren`, interacting with ADR-0191).
+  // siblings behind it forever (RSR-C4/C5, `#reconcileChildren`, interacting with ADR-0194).
   describe('reveal-order resync on structural resend (RSR-C4/C5 interaction)', () => {
     it('a resend that removes the blocking sibling reveals the remaining, already-buffered survivor', () => {
       const { tree } = harness({ revealOrder: true })
@@ -399,7 +399,7 @@ describe('reveal-order policy — top-down sibling hold (GH #975, ADR-0191, opt-
     // and broke there, stranding every later sibling FOREVER. Fixed: `widgets.has(id)` now short-
     // circuits the cascade as "already revealed, keep walking" instead. The out-of-declared-order
     // pop-in itself (`d` visible before `a`/`b`) is a named, accepted limitation of the resend-ADD case
-    // (ADR-0191 Consequences) — this test proves the LIVENESS fix only: nothing is stranded.
+    // (ADR-0194 Consequences) — this test proves the LIVENESS fix only: nothing is stranded.
     it('a resend-added child with already-buffered data does not strand later siblings behind it', () => {
       const { tree } = harness({ revealOrder: true })
       tree.apply(msg([{ id: 'root', component: 'Column', children: ['c'] }, { id: 'c', component: 'Column', children: ['a', 'b'] }]))

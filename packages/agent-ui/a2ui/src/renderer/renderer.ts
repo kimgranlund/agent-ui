@@ -122,7 +122,7 @@ export interface RendererOptions {
   /** Fallback `version` for client messages with no surface context (e.g. a `PARSE` error). Default `v1.0`. */
   defaultVersion?: string
   /**
-   * Reveal-order policy opt-in (GH #975, ADR-0191 — proposed, never self-ratified). Default
+   * Reveal-order policy opt-in (GH #975, ADR-0194 — proposed, never self-ratified). Default
    * `false`/undefined: byte-identical to before this policy existed. `true`: every surface this host
    * renders reveals its STATIC component tree's siblings in DECLARED order rather than stream-arrival
    * order (`SurfaceTree`/`tree.ts`'s own doc comment carries the mechanism). Applies to every surface
@@ -177,7 +177,7 @@ class Renderer implements RendererHost {
   readonly #emitError: (error: A2uiError) => void
   readonly #handlers: DispatchHandlers
   readonly #defaultVersion: string
-  readonly #revealOrder: boolean // GH #975/ADR-0191 opt-in (default false) — threaded into every SurfaceTree
+  readonly #revealOrder: boolean // GH #975/ADR-0194 opt-in (default false) — threaded into every SurfaceTree
   #mountEl: HTMLElement | undefined
   #disposed = false
 
@@ -352,7 +352,7 @@ class Renderer implements RendererHost {
         },
         componentDefOf: (node, surface) => this.#registry.get(surface.catalogId)?.catalog?.components?.[node.component],
         onError: (error) => this.#onTreeError(surface.id, error),
-        revealOrder: this.#revealOrder, // GH #975/ADR-0191 — opt-in, default false
+        revealOrder: this.#revealOrder, // GH #975/ADR-0194 — opt-in, default false
       }),
     )
   }

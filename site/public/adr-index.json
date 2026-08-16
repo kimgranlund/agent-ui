@@ -1325,6 +1325,13 @@
   {
     "name": "ADR-0191",
     "url": "./adr-index.html#adr-0191",
+    "description": "a fleet-wide stale/pending visual state convention (GH #974, seed 1): ONE :state(pending) host custom state + ONE --ui-pending-* token pair, the TKT-0062 fille…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0194",
+    "url": "./adr-index.html#adr-0194",
     "description": "Reveal-order policy for the A2UI streaming renderer: an opt-in, default-OFF top-down sibling hold (TreeDeps.revealOrder / RendererOptions.revealOrder), never w…",
     "level": "L3",
     "section": "Records"

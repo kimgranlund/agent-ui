@@ -1,4 +1,4 @@
-# ADR-0191 — Reveal-order policy for the A2UI streaming renderer: an opt-in, default-OFF top-down sibling hold (`TreeDeps.revealOrder` / `RendererOptions.revealOrder`), never widening SPEC-R4 AC1's default
+# ADR-0194 — Reveal-order policy for the A2UI streaming renderer: an opt-in, default-OFF top-down sibling hold (`TreeDeps.revealOrder` / `RendererOptions.revealOrder`), never widening SPEC-R4 AC1's default
 
 > Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-16
 >
@@ -7,7 +7,7 @@
 > | **Status** | proposed |
 > | **Date** | 2026-08-16 |
 > | **Proposed by** | dispatched build seat, GH [#975](https://github.com/kimgranlund/agent-ui/issues/975) (Kim's owner-approved seed off the Solid 2.0 RC `<Reveal>`/SuspenseList announcement) — the ticket's own Scope/Open names the exact policy shape as a builder design call; this ADR is that call, never self-ratified |
-> | **Ratified by** | — (proposed; awaiting `ratify ADR-0191` per `scripts/adr_ratify.py`) |
+> | **Ratified by** | — (proposed; awaiting `ratify ADR-0194` per `scripts/adr_ratify.py`) |
 > | **Repairs** | on ratification: none owed elsewhere by construction (default-OFF, Consequences below) · on ratification+widen (a follow-up making this the DEFAULT, or wiring the opt-in through `ui-surface-host`): `a2ui-renderer.lld.md` §4's "Patch-in (SPEC-R4 AC1)" prose, `a2ui-runtime.spec.md` SPEC-R4's own wording if the widen changes the DEFAULT contract, and `tree.test.ts`'s "preserves sibling order when an earlier sibling is patched in late" test (named in Consequences — it encodes exactly the greedy-reveal default this ADR does NOT touch) |
 > | **Supersedes / Superseded by** | **Relates** [ADR-0183](./0183-view-transitions-opt-in-family.md) (the opt-in-boolean/default-false/progressive-enhancement pattern this ADR reuses verbatim; ADR-0183's own S4 amendment explicitly scopes to POST-settle re-renders and disclaims first-paint streaming — "pre-settle streaming NEVER transitions — progressive paint is the surface's whole value" — so this ADR's pre-settle reveal-order work is orthogonal, not a duplicate) · **Cites** [GH #974](https://github.com/kimgranlund/agent-ui/issues/974) (the traits-layer pending-aware primitive, same Solid 2.0 RC provenance, independently shippable) |
 

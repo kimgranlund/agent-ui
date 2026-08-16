@@ -46,7 +46,7 @@ function harness(): { r: RendererHost; mount: HTMLElement; sent: A2uiClientMessa
   return { r, mount, sent, cleanup: () => { r.dispose(); mount.remove() } }
 }
 
-describe('renderer host — reveal-order policy end-to-end (GH #975, ADR-0191, opt-in, `RendererOptions.revealOrder`)', () => {
+describe('renderer host — reveal-order policy end-to-end (GH #975, ADR-0194, opt-in, `RendererOptions.revealOrder`)', () => {
   it('threads the opt-in through to the surface tree: a later-streamed child stays held until its earlier declared sibling arrives', async () => {
     const sent: A2uiClientMessage[] = []
     const r = createRenderer({ revealOrder: true, newId: () => 'act-1', now: () => '2026-06-27T00:00:00.000Z' })
@@ -107,7 +107,7 @@ describe('renderer host — reveal-order policy end-to-end (GH #975, ADR-0191, o
     )
     await whenFlushed()
     const root = mount.querySelector('ui-column')!
-    expect(root.children.length).toBe(1) // `b` reveals immediately — the pre-ADR-0191 default
+    expect(root.children.length).toBe(1) // `b` reveals immediately — the pre-ADR-0194 default
 
     r.dispose()
     mount.remove()
