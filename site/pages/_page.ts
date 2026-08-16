@@ -991,13 +991,16 @@ function buildCta(cta: PageCta): HTMLElement {
 /**
  * pageLead — a lead paragraph for the page BODY (the first child of the content region), NOT the sticky header.
  * Pages that keep the sticky header lean (heading only) put their descriptive copy here instead, so it scrolls
- * away with the content rather than permanently pinning a tall block above the scroll region. Plain text
- * (textContent), matching the header `page-description` it replaces.
+ * away with the content rather than permanently pinning a tall block above the scroll region. Accepts plain
+ * strings AND inline nodes (e.g. an `<a>` cross-link) via variadic args — text args become TextNodes, so a
+ * single-string call behaves exactly like the old `textContent` form. Folds in the `para()` idiom that used
+ * to be hand-duplicated per page (chat-shell.ts/super-shell.ts/conversation-doc.ts and siblings) for mixed
+ * text+link lead paragraphs (GH #1002) — ONE shared helper for every `.page-lead` paragraph, plain or mixed.
  */
-export function pageLead(text: string): HTMLElement {
+export function pageLead(...parts: (string | Node)[]): HTMLElement {
   const p = document.createElement('p')
   p.className = 'page-lead'
-  p.textContent = text
+  for (const part of parts) p.append(typeof part === 'string' ? document.createTextNode(part) : part)
   return p
 }
 
