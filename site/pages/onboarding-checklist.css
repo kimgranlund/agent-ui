@@ -1,0 +1,63 @@
+/* onboarding-checklist.css — page-local chrome for the checklist-onboarding recipe: the card rhythm, the
+ * progress+badge row, per-item layout, and the collapsed pill. Never restyles a ui-* control (card/list/
+ * checkbox/progress/badge/button all keep their own CSS) — ADR-0102, layout/rhythm only. */
+
+ui-card {
+  max-inline-size: 30rem;
+}
+
+.onboarding-checklist-progress-row {
+  display: flex;
+  align-items: center;
+  gap: var(--md-sys-space-sm);
+  margin-block: var(--md-sys-space-md);
+}
+
+.onboarding-checklist-progress-row ui-progress {
+  flex: 1;
+}
+
+.onboarding-checklist-celebration {
+  margin-block-end: var(--md-sys-space-md);
+  font-weight: 600;
+  color: var(--md-sys-color-success-on-surface);
+}
+
+.onboarding-checklist-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--md-sys-space-sm);
+  inline-size: 100%;
+}
+
+.onboarding-checklist-text {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.onboarding-checklist-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.onboarding-checklist-status {
+  margin-block-start: var(--md-sys-space-xs);
+  font-size: 0.8rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  min-block-size: 1.2em;
+}
+
+.onboarding-checklist-row ui-button {
+  flex-shrink: 0;
+}
+
+.onboarding-checklist-pill {
+  margin-block-start: var(--md-sys-space-md);
+}
+
+.onboarding-checklist-sources {
+  margin-block-start: var(--md-sys-space-lg);
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
