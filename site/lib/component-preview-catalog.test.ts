@@ -1,10 +1,30 @@
 import { describe, it, expect } from 'vitest'
 import { defaultCatalog } from '@agent-ui/a2ui'
+// Real side-effect import — registers <component-preview> (GH #978's own runtime-probe block below mounts it).
+import './component-preview.ts'
+import { sampleFor } from './component-preview.ts'
+import { browsableNames } from './a2ui-catalog-tiers.ts'
 // Raw-text fs read — the same reverse-coupling fs-read pattern the site drift
 // gates use (descriptor/site-coverage.test.ts), resolved by vitest/node at runtime.
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
+
+// jsdom reality (the gallery.test.ts precedent — see its own header comment): the ElementInternals
+// form-association surface (setFormValue/setValidity) and the native Popover API (showPopover/hidePopover)
+// are both absent in jsdom. The runtime-probe block below (GH #978) mounts EVERY browsable a2ui-catalog type
+// live (mode="a2ui"), including form-associated + overlay-owning types (TextField, Checkbox, ComboBox,
+// Select, Tooltip, Popover, Menu, …) — the same additive, guarded, prototype-level stubs gallery.test.ts
+// already established, reapplied here since this is a separate test file/module graph.
+if (typeof ElementInternals.prototype.setFormValue !== 'function') {
+  ;(ElementInternals.prototype as unknown as Record<string, unknown>).setFormValue = function (): void {}
+  ;(ElementInternals.prototype as unknown as Record<string, unknown>).setValidity = function (): void {}
+}
+if (typeof (HTMLElement.prototype as unknown as { showPopover?: () => void }).showPopover !== 'function') {
+  const proto = HTMLElement.prototype as unknown as { showPopover?: () => void; hidePopover?: () => void }
+  proto.showPopover = function (): void {}
+  proto.hidePopover = function (): void {}
+}
 
 // component-preview-catalog.test.ts — the drift gate for the <component-preview> element's TWO hand-authored maps
 // (site/lib/component-preview.ts, its sibling here). The element's knobs + variant chips + the catalog page's
@@ -74,5 +94,52 @@ describe('component-preview seed/sample maps — the orphan check BITES (synthet
   })
   it('a key present in the catalog is NOT flagged', () => {
     expect(orphans(['Card'], CATALOG_NAMES)).toEqual([])
+  })
+})
+
+// ── GH #978 — the runtime probe: no browsable a2ui-catalog type falls through sampleFor()'s generic
+// "Sample content" single-Text stub (site/lib/component-preview.ts's `sampleFor`, the fallback branch a
+// children-bearing catalog type hits when it has NO explicit SAMPLE_TREES entry). Where the orphan checks
+// above are a STATIC regex probe over the source text, this block is a REAL RUNTIME one — the same approach
+// #971's own (uncommitted) throwaway vitest probe used, now committed so the acceptance bullet "no catalog
+// type renders the generic fallback" stays enforced going forward: a future catalog type with real children
+// and no SAMPLE_TREES entry fails THIS test loudly, rather than silently degrading to lorem text on the live
+// page. Mounts every name `browsableNames()` yields (the SAME derivation the real a2ui-catalog page itself
+// renders from, ../pages/a2ui-catalog.ts) through a REAL <component-preview mode="a2ui"> — not a hand-built
+// fixture — so this exercises the actual render pipeline (createRenderer/factories), not a re-implementation
+// of it.
+describe('component-preview — no browsable catalog type renders the generic "Sample content" fallback (GH #978)', () => {
+  const names = browsableNames()
+
+  it('found real browsable catalog names (anti-vacuous — a broken derivation cannot pass silently)', () => {
+    expect(names.length).toBeGreaterThan(20)
+  })
+
+  /** Mount `<component-preview mode="a2ui" target={name}>`, read back its rendered canvas text, and clean up. */
+  function renderedText(name: string): string {
+    const preview = document.createElement('component-preview')
+    preview.setAttribute('mode', 'a2ui')
+    preview.setAttribute('target', name)
+    document.body.append(preview)
+    const text = preview.querySelector('.canvas-surface')?.textContent ?? ''
+    preview.remove()
+    return text
+  }
+
+  for (const name of names) {
+    it(`${name}: does not render the generic "Sample content" fallback text`, () => {
+      expect(renderedText(name)).not.toContain('Sample content')
+    })
+  }
+
+  // Anti-vacuous negative control: `sampleFor` (component-preview.ts's own fallback selector) called with a
+  // synthetic children-bearing def under a name that is DELIBERATELY not a SAMPLE_TREES key DOES hit the
+  // generic fallback — proving the per-name loop above actually bites rather than passing vacuously (e.g. an
+  // empty `.canvas-surface` read). Exercises `sampleFor` directly (not the full renderer/registry — a
+  // synthetic catalog name has no registered factory to render through) — see that export's own comment.
+  it('the check BITES: sampleFor() falls back to "Sample content" for a children-bearing type with no SAMPLE_TREES entry', () => {
+    const zzDef = { children: 'ChildList', properties: {} } as unknown as Parameters<typeof sampleFor>[1]
+    const sample = sampleFor('ZzNoSampleTree', zzDef)
+    expect(sample.extras.some((c) => c['text'] === 'Sample content')).toBe(true)
   })
 })
