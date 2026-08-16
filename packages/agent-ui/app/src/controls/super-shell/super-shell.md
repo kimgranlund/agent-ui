@@ -12,6 +12,11 @@ attributes:
     default: false
     reflect: true
     description: GH #740/ADR-0183 — opt-in View Transitions on the shell's SEGMENT swaps (`#setActiveSegment`'s visibility flips ride `document.startViewTransition` when the API exists and reduced motion is not set; every other path is byte-identical to before). Segment swaps only — band crossings stay pure CSS (no JS runs on a resize, the shell family's own law) and are deliberately not wrapped.
+  - name: view-transition-names
+    type: boolean
+    default: false
+    reflect: true
+    description: GH #958 (ADR-0183 cl.4) — the fleet's named-morph convention, proven on THIS surface. Meaningful only alongside `view-transitions` (a name with no transition running is inert, so it is never applied unless both are set AND the platform allows a real transition). When live, every segment in a segmented pane shares ONE `view-transition-name` (`ui-vt-super-shell-segment-{slot}`, `dom/view-transition.ts`'s `viewTransitionName`/`setViewTransitionName`) — since CSS shows only the active segment, the browser pairs the outgoing segment's box with the incoming one and MORPHS between them (size/position) instead of a flat cross-fade. Applied once at compose time (the family's build-once law) — a mid-session flip of either prop is not retroactive.
   - name: collapsed-start
     type: boolean
     default: false

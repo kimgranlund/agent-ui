@@ -42,7 +42,7 @@
 //
 // `controls → @agent-ui/components` + siblings only — never router/a2a (layering.test.ts).
 
-import { UIElement, prop, paneResize, scrollFade, withViewTransition, type PaneResizeHandle, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
+import { UIElement, prop, paneResize, scrollFade, withViewTransition, viewTransitionAvailable, viewTransitionName, setViewTransitionName, type PaneResizeHandle, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import '@agent-ui/components/controls/button'
 import '@agent-ui/components/controls/icon'
 // GH #221 — both tab strips (SPEC-R7a pane-tabs, SPEC-R7b narrow-tabs) compose the fleet ui-tabs
@@ -115,6 +115,16 @@ const props = {
   // stay pure CSS (no JS runs on a resize, the shell family's own law), so they are not wrappable and
   // not wrapped.
   viewTransitions: { ...prop.boolean(false), reflect: true, attribute: 'view-transitions' },
+  // GH #958 (ADR-0183 cl.4) — the named-morph convention's proving surface: opt-in ONLY (default `false`,
+  // byte-identical to before this prop existed), and ONLY meaningful alongside `viewTransitions` (a name
+  // with no transition ever running is inert). When both are `true` and the platform allows a real
+  // transition, every segment in a segmented pane shares ONE `view-transition-name` (dom/view-transition.ts's
+  // pairing law: only the active segment is ever painted, CSS hides the rest, so a snapshot never sees
+  // two elements sharing the name) — a segment swap MORPHS the pane's box between the outgoing and
+  // incoming segment instead of a flat cross-fade. Applied once at compose (#applySegments, the family's
+  // build-once law) — a mid-session flip of either prop is not honored retroactively, the same accepted-
+  // edge posture as ADR-0183's own mid-burst caveat.
+  viewTransitionNames: { ...prop.boolean(false), reflect: true, attribute: 'view-transition-names' },
   // SPEC-R6a — per-side opt-in for the INNERMOST pane only (rails/outer stacked panes stay fixed).
   resizableStart: { ...prop.boolean(false), reflect: true, attribute: 'resizable-start' },
   resizableEnd: { ...prop.boolean(false), reflect: true, attribute: 'resizable-end' },
@@ -791,6 +801,17 @@ export class UISuperShellElement extends UIElement {
     const segments = [...box.children].filter((c) => c.hasAttribute('data-segment'))
     if (segments.length === 0) return
     box.setAttribute('data-segmented', '')
+    // GH #958 (ADR-0183 cl.4) — the named-morph convention's proving surface (dom/view-transition.ts's
+    // header comment carries the full pairing law). ONE name per pane box, shared by every segment in
+    // it: `box.dataset.slotName` is the box's own stable identity (set by `place()` just before this
+    // call), so two different panes on the same shell never collide. Gated on BOTH opt-ins plus the
+    // platform check `withViewTransition` itself applies — a build with either opt-in off, or the API/
+    // reduced-motion unavailable, never calls `setViewTransitionName` at all (this file's own
+    // byte-identical-when-off law, mirrored from the helper's).
+    if (this.viewTransitions && this.viewTransitionNames && viewTransitionAvailable()) {
+      const name = viewTransitionName('super-shell-segment', box.dataset.slotName ?? 'pane')
+      for (const seg of segments) setViewTransitionName(seg as HTMLElement, name, true)
+    }
     const strip = document.createElement('ui-tabs') as UITabsElement
     strip.setAttribute('data-part', 'pane-tabs')
     segments.forEach((seg, i) => {

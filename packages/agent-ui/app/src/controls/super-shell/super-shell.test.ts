@@ -540,3 +540,60 @@ describe('ui-super-shell — viewTransitions opt-in on segment swaps (GH #740)',
     expect(pane.getAttribute('data-active-segment')).toBe('1')
   })
 })
+
+// ── GH #958 (ADR-0183 cl.4) — the named-morph convention's proving surface: `viewTransitionNames`
+// applies ONE shared `view-transition-name` to every segment in a segmented pane (dom/view-transition.ts's
+// pairing law), gated on BOTH opt-ins plus platform availability — byte-identical when either is off.
+describe('ui-super-shell — viewTransitionNames named-morph opt-in on segmented panes (GH #958)', () => {
+  const doc = document as unknown as { startViewTransition?: (cb: () => void) => unknown }
+  afterEach(() => {
+    delete doc.startViewTransition
+  })
+
+  function mountNamed(viewTransitions: boolean, viewTransitionNames: boolean): { el: UISuperShellElement; segments: HTMLElement[] } {
+    const el = document.createElement('ui-super-shell') as UISuperShellElement
+    if (viewTransitions) el.viewTransitions = true
+    if (viewTransitionNames) el.viewTransitionNames = true
+    const content = document.createElement('div')
+    content.setAttribute('data-slot', 'content')
+    const a = document.createElement('div')
+    a.setAttribute('data-slot', 'options-pane')
+    a.setAttribute('data-segment', 'Settings')
+    const b = document.createElement('div')
+    b.setAttribute('data-slot', 'options-pane')
+    b.setAttribute('data-segment', 'Context')
+    el.append(content, a, b)
+    document.body.append(el)
+    mounted.push(el)
+    return { el, segments: [a, b] }
+  }
+
+  it('default false (both opt-ins off): no view-transition-name is ever set, even with the API present', async () => {
+    doc.startViewTransition = () => {}
+    const { el, segments } = mountNamed(false, false)
+    await el.updateComplete
+    for (const seg of segments) expect(seg.style.viewTransitionName).toBe('')
+  })
+
+  it('viewTransitionNames alone (viewTransitions off): still byte-identical — a name with no transition is inert, so it is never applied', async () => {
+    doc.startViewTransition = () => {}
+    const { el, segments } = mountNamed(false, true)
+    await el.updateComplete
+    for (const seg of segments) expect(seg.style.viewTransitionName).toBe('')
+  })
+
+  it('both opt-ins + API present: every segment in the SAME pane shares ONE view-transition-name', async () => {
+    doc.startViewTransition = () => {}
+    const { el, segments } = mountNamed(true, true)
+    await el.updateComplete
+    const names = segments.map((s) => s.style.viewTransitionName)
+    expect(names[0]).toMatch(/^ui-vt-super-shell-segment-/)
+    expect(names[0]).toBe(names[1]) // the pairing law: one shared name per pane box
+  })
+
+  it('both opt-ins but NO API (jsdom default): no name is set — the same platform gate withViewTransition uses', async () => {
+    const { el, segments } = mountNamed(true, true)
+    await el.updateComplete
+    for (const seg of segments) expect(seg.style.viewTransitionName).toBe('')
+  })
+})

@@ -33,4 +33,6 @@ export { watch } from './watch.ts'
 export { Directive, directive, NO_COMMIT, mount } from './template.ts'
 export type { RenderContext, DirectiveResult } from './template.ts'
 // GH #740/ADR-0183 — the fleet's one View Transitions seam (opt-in, progressive-enhancement-only).
-export { withViewTransition, viewTransitionAvailable } from './view-transition.ts'
+// GH #958 (ADR-0183 cl.4) — the named-morph convention: `viewTransitionName` (the scoped-naming
+// scheme) + `setViewTransitionName` (the opt-in-gated applier).
+export { withViewTransition, viewTransitionAvailable, viewTransitionName, setViewTransitionName } from './view-transition.ts'
