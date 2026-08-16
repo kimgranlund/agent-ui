@@ -92,6 +92,22 @@
   --md-sys-motion-duration-fast: 300ms;
   --md-sys-motion-easing-standard: cubic-bezier(0.25, 0.1, 0.25, 1); /* Apple "smooth" easing */
 
+  /* Pending/stale-content convention (ADR-0191, GH #974's companion styling half; booked repair GH #999) —
+     the fleet-wide `:state(pending)` host custom state's own token pair (TKT-0062's filled-state-law SHAPE
+     re-applied to async staleness — interaction-states.md §5). `--ui-pending-duration` ALIASES
+     `--md-sys-motion-duration-fast` (no new motion token — the ui-drawer/ADR-0188 cl.5 precedent applied
+     here too) — a plain :root CONSTANT, like the motion pair above (no [scale]/[density] multiplier).
+     `--ui-pending-opacity` is a genuinely NEW literal (`0.6`) — the stale-content DIM step (never a
+     recolor: TKT-0062's bg/border/ink law stays untouched under it; pending content can be arbitrary,
+     unknown-depth DOM, which a role-repoint cannot reach in general), grounded in TKT-0047's disabled-
+     opacity multi-layer-stacking exception, NOT a nonexistent "disabled defaults to opacity" convention
+     (the fleet's disabled canon is role-repoint). Both are `--ui-*` fleet-wide constants, NOT on the
+     sanctioned direct-read list (tokens.md's Consumption invariants, TKT-0066 item 5) — a component routes
+     them through its OWN `--ui-{cmp}-*` chain, e.g.
+     `--ui-status-stream-pending-opacity: var(--ui-pending-opacity);` in the control's `:where()` block. */
+  --ui-pending-duration: var(--md-sys-motion-duration-fast);
+  --ui-pending-opacity: 0.6;
+
   /* Container radius (ADR-0015 cl.5) — ONE shared fleet radius. A CONSTANT on :root, NOT the `*` ramp:
      unlike a control's pill radius (frame family ∝ height, scaled), a container's corner radius is fixed
      regardless of [scale] (the ADR is explicit — "not subtree-derived"). A root container reads

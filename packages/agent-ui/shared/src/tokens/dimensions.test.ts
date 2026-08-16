@@ -283,6 +283,18 @@ describe('dimensions.css — the motion timing constants (interaction-states sta
   })
 })
 
+// Pending/stale-content convention (ADR-0191, GH #974's companion styling half; booked repair GH #999).
+// Like the focus-ring/motion geometry these are CONSTANTS (no var() over a subtree-repointable
+// multiplier), so they live on :root, NOT the derived `*` ramp. `--ui-pending-duration` is a pure ALIAS of
+// `--md-sys-motion-duration-fast` (no new motion primitive); `--ui-pending-opacity` is the new literal.
+describe('dimensions.css — the pending/stale-content token pair (ADR-0191)', () => {
+  it('declares --ui-pending-duration as an alias of --md-sys-motion-duration-fast, and --ui-pending-opacity: 0.6, on :root — constants, not on the `*` ramp', () => {
+    expect(rootBlock).toMatch(/--ui-pending-duration:\s*var\(--md-sys-motion-duration-fast\)\s*;/)
+    expect(rootBlock).toMatch(/--ui-pending-opacity:\s*0\.6\s*;/)
+    expect(universalBlock).not.toMatch(/--ui-pending-/) // constants stay off the derived `*` ramp
+  })
+})
+
 // tok-space (ADR-0015 cl.4) — the --md-sys-space LAYOUT-SPACING ladder. The container ledger, distinct from the
 // control-frame ramp: density rides it (it joins the derived `*` ramp so a subtree [density] re-multiplies),
 // but [scale] does NOT touch it (the base px is a literal — layout rhythm is not control-frame size). The
