@@ -7,5 +7,6 @@ preselected via the data model), multi-select (Checkboxes on distinct data-model
 Column — one option per row, commit Button its own sibling placed AFTER the Column, never inline and
 never inside it), typed-value
 (Field+TextField typed "number"/"currency"/"date"/"time", Calendar for a date, Slider/SliderMulti for a
-bounded numeric — the value rides "sendDataModel"), boundary-negotiation option cards (as above), and
+bounded numeric with a "label" naming the value (e.g. "Bet amount") and "layout":"standard" so the value
+stays visible at rest — the value rides "sendDataModel"), boundary-negotiation option cards (as above), and
 confirm/cancel (two Buttons, solid confirm first, ghost cancel second).
