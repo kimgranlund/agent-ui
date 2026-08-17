@@ -1548,6 +1548,33 @@ describe('ui-combo-box — the control\'s own effective-disabled channel (combo-
   })
 })
 
+// ── answered/settled choice state (ADR-0196, GH #1065) ───────────────────────────────────────────
+
+describe('ui-combo-box — :state(answered) (ADR-0196)', () => {
+  it('combo-answered-state: setting `answered` adds the custom state; clearing it removes it (capability-gated)', async () => {
+    const { el } = makeCombo()
+    const states = el.probeInternals.states
+    if (!states) {
+      el.remove()
+      return
+    }
+    expect(states.has('answered')).toBe(false)
+    el.answered = true
+    await whenFlushed()
+    expect(states.has('answered')).toBe(true)
+    el.answered = false
+    await whenFlushed()
+    expect(states.has('answered')).toBe(false)
+    el.remove()
+  })
+
+  it('combo-answered-default: `answered` defaults to false', () => {
+    const { el } = makeCombo()
+    expect(el.answered).toBe(false)
+    el.remove()
+  })
+})
+
 // ── ADR-0085 — the editor's accessible-name seam (text-field ADR-0014 parity) ────────────────
 //
 // jsdom cannot compute an accessible name — the read-back that the editor really names as "City"
@@ -1652,7 +1679,7 @@ const md = readFileSync(`${COMBO_DIR}/combo-box.md`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-const ATTR_NAMES = ['value', 'label', 'open', 'strict', 'placeholder', 'name', 'disabled', 'required']
+const ATTR_NAMES = ['value', 'label', 'open', 'strict', 'placeholder', 'name', 'disabled', 'required', 'answered']
 
 describe('combo-box.md descriptor — frontmatter parses + schema-valid (combo-descriptor-schema)', () => {
   it('combo-descriptor-schema: has a leading frontmatter fence and a prose body', () => {
@@ -1766,5 +1793,35 @@ describe('combo-box.css — TKT-0027 panel max-block-size dial (combo-box-max-bl
   it('combo-box-max-block-size-token-chain: the option row already sets line-height: 1 (the row-height law holds unchanged)', () => {
     const optionRule = (comboCss.match(/:scope \[role='option'\]\s*\{[^}]*\}/) ?? [''])[0]
     expect(optionRule).toMatch(/line-height:\s*1;/)
+  })
+})
+
+// ── combo-box.css — :state(answered) block (ADR-0196) ────────────────────────────────────────────
+
+describe('combo-box.css — :state(answered) block (ADR-0196)', () => {
+  it('declares --ui-combo-box-bg-answered/-ink-answered aliasing the fleet answered pair', () => {
+    expect(comboCss).toMatch(/--ui-combo-box-bg-answered:\s*var\(--ui-answered-bg\)/)
+    expect(comboCss).toMatch(/--ui-combo-box-ink-answered:\s*var\(--ui-answered-ink\)/)
+  })
+
+  it('repoints the editor to the answered pair, gated on the HOST :state(answered), excluding disabled + pending', () => {
+    const m = /:scope:state\(answered\):not\(:state\(pending\)\)([^{]*)\{([^}]*)\}/.exec(comboCss)
+    expect(m, 'no :scope:state(answered):not(:state(pending)) ... { ... } rule found').not.toBeNull()
+    const [, selector, rule] = m as unknown as [string, string, string]
+    expect(selector).toMatch(/:not\(\[aria-disabled='true'\]\)/)
+    expect(rule).toMatch(/background-color:\s*var\(--ui-combo-box-bg-answered\)/)
+    expect(rule).toMatch(/--ui-combo-box-ink:\s*var\(--ui-combo-box-ink-answered\)/)
+  })
+
+  it('the filled/hover/focus repaint rules exclude :state(answered)', () => {
+    expect(comboCss).toMatch(
+      /:scope:not\(:state\(answered\)\) > \[data-part='editor'\]:not\(:hover\):not\(:focus\):not\(\[aria-disabled='true'\]\):not\(\[data-empty\]\)/,
+    )
+    expect(comboCss).toMatch(
+      /:scope:not\(:state\(answered\)\) > \[data-part='editor'\]:not\(:focus\):not\(\[aria-disabled='true'\]\):hover/,
+    )
+    expect(comboCss).toMatch(
+      /:scope:not\(:state\(answered\)\) > \[data-part='editor'\]:not\(\[aria-disabled='true'\]\):focus/,
+    )
   })
 })

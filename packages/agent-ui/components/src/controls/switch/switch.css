@@ -75,6 +75,16 @@
   --ui-switch-thumb: var(--md-sys-color-neutral-on-surface-variant);
 }
 
+/* answered (ADR-0196, GH #1065) — the OFF track's frame steps back to the fleet answered pair; the
+   ON track (the "selected indicator") keeps its existing primary tokens untouched (interaction-
+   states.md §6[b]). Precedence `disabled > pending > answered > focus > hover > filled > default`:
+   excludes disabled + :state(pending) + :state(checked) by mutual exclusion (§6[c]). */
+:where(ui-switch:state(answered):not([disabled]):not(:state(pending)):not(:state(checked))) {
+  --ui-switch-track: var(--ui-answered-bg);
+  --ui-switch-track-hover: var(--ui-answered-bg);
+  --ui-switch-thumb: var(--ui-answered-ink);
+}
+
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-switch) consumes ONLY --ui-switch-* ════════════════ */
 
 @scope (ui-switch) {
@@ -147,7 +157,7 @@
 
   /* Hover — repoints `background` of the track from the per-state token (ADR-0008). Disabled is
      pointer-inert so :hover never matches it (the disabled token holds at the idle value, no lift possible). */
-  :scope:hover::before {
+  :scope:not(:state(answered)):hover::before {
     background: var(--ui-switch-track-hover);
   }
 

@@ -21,6 +21,19 @@ const bare = flat.replace(/\/\*.*?\*\//g, '') // comment-free, single-spaced
 // the top-level roles block — not the forced-colors `:root` nested in the @media below.
 const rootBlock = (bare.match(/:root\s*\{[^}]*\}/) ?? [''])[0]
 
+// tok-answered (ADR-0196, GH #1065) — the answered/settled choice pair. STRUCTURAL pins: both tokens
+// exist in the top-level :root block and are PURE ALIASES of existing neutral roles (zero new literals —
+// the ADR's clause 2 minted them as aliases: bg → neutral-container-low, ink → neutral-on-surface-variant).
+describe('tokens.css — the answered/settled alias pair (ADR-0196)', () => {
+  it('declares --ui-answered-bg as an ALIAS of --md-sys-color-neutral-container-low (no new literal)', () => {
+    expect(rootBlock).toMatch(/--ui-answered-bg:\s*var\(--md-sys-color-neutral-container-low\)\s*;/)
+  })
+
+  it('declares --ui-answered-ink as an ALIAS of --md-sys-color-neutral-on-surface-variant (no new literal)', () => {
+    expect(rootBlock).toMatch(/--ui-answered-ink:\s*var\(--md-sys-color-neutral-on-surface-variant\)\s*;/)
+  })
+})
+
 describe('tokens.css — the shared focus-ring role (ADR-0009)', () => {
   it('declares a DEDICATED --md-sys-color-focus-ring role resolved via light-dark() (not --md-sys-color-primary reused)', () => {
     expect(css.length).toBeGreaterThan(0) // anti-vacuous: the CSS was actually read

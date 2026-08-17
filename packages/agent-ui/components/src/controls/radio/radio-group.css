@@ -37,6 +37,13 @@
      AFTER the first interaction (the trackUserInvalid controller owns that timing; radio-group.ts
      toggles :state(user-invalid) on the group host). */
   --ui-radio-group-border-invalid: var(--md-sys-color-danger);
+
+  /* answered (ADR-0196, GH #1065) — the cross-boundary repoint reaching into each UNSELECTED
+     ui-radio child's own ::before ring (the group has no visual surface of its own). The selected
+     (checked) radio's ring/fill/dot keep their existing tokens untouched (interaction-states.md
+     §6[b] — the "selected indicator" is exactly the checked radio's own paint). */
+  --ui-radio-group-border-answered: var(--ui-answered-ink);
+  --ui-radio-group-bg-answered: var(--ui-answered-bg);
 }
 
 /* ════════════ [2] STYLES BLOCK — @scope (ui-radio-group) ════════════ */
@@ -81,4 +88,15 @@
  * `valueMissing` when NO radio is checked, so no specificity race with the checked-fill rule. */
 ui-radio-group:state(user-invalid) ui-radio::before {
   border-color: var(--ui-radio-group-border-invalid);
+}
+
+/* ════════════ answered (ADR-0196) — a cross-boundary reach into ui-radio's own paint ════════════
+ * Precedence `disabled > pending > answered > focus > hover > filled > default` (interaction-states.md
+ * §6[c]): the answered rule excludes disabled + `:state(pending)` on the GROUP, and disabled + checked
+ * (the selected indicator) on the RADIO. `(0,2,3)` clears radio.css's own `:scope::before` `(0,0,1)`
+ * and its `:hover::before` `(0,1,1)`-guarded form `(0,2,1)` without `!important` — the same specificity
+ * margin the user-invalid rule above already relies on. */
+ui-radio-group:state(answered):not([disabled]):not(:state(pending)) ui-radio:not([disabled]):not(:state(checked)):not([checked])::before {
+  border-color: var(--ui-radio-group-border-answered);
+  background: var(--ui-radio-group-bg-answered);
 }

@@ -55,3 +55,29 @@ describe('radio-group.css — structure + token hygiene (ADR-0103)', () => {
     expect(stylesBlock).toMatch(/@media \(forced-colors: active\)/)
   })
 })
+
+describe('radio-group.css — :state(answered) cross-boundary reach into ui-radio (ADR-0196)', () => {
+  it('declares --ui-radio-group-border-answered aliasing --ui-answered-ink', () => {
+    expect(tokenBlock).toMatch(/--ui-radio-group-border-answered:\s*var\(--ui-answered-ink\)/)
+  })
+
+  it('reaches into every UNSELECTED ui-radio child, repointing border + bg to the answered pair', () => {
+    const m = /ui-radio-group:state\(answered\)[^{]*\{([^}]*)\}/.exec(css)
+    expect(m, 'no ui-radio-group:state(answered) ... { ... } rule found').not.toBeNull()
+    const rule = m?.[1] ?? ''
+    expect(rule).toMatch(/border-color:\s*var\(--ui-radio-group-border-answered\)/)
+    expect(rule).toMatch(/background:\s*var\(--ui-radio-group-bg-answered\)/) // group-token indirection — ADR-0103 hygiene (the token block aliases --ui-answered-bg)
+  })
+
+  it('excludes disabled + pending on the group, and disabled + checked/selected on the radio (mutual exclusion)', () => {
+    const selector = /ui-radio-group:state\(answered\)([^{]*)\{/.exec(css)?.[1] ?? ''
+    // Split at the descendant combinator: the GROUP-side guards must sit on the group host itself —
+    // a radio-side :not([disabled]) satisfying a group-side claim was the review's blind spot (GH #1065).
+    const [groupSide = '', radioSide = ''] = selector.split(/\s+ui-radio/)
+    expect(groupSide).toMatch(/:not\(:state\(pending\)\)/)
+    expect(groupSide).toMatch(/:not\(\[disabled\]\)/)
+    expect(radioSide).toMatch(/:not\(\[disabled\]\)/)
+    expect(radioSide).toMatch(/:not\(:state\(checked\)\)/)
+    expect(radioSide).toMatch(/:not\(\[checked\]\)/)
+  })
+})

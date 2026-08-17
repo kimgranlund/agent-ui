@@ -84,6 +84,11 @@ const props = {
   // when the editor is visually empty (no text). The CSS placeholder read-back pattern (matches
   // text-field's approach so the fleet is consistent).
   placeholder: prop.string(),
+
+  // ADR-0196 (GH #1065) — the answered/settled choice state. The CONSUMING surface (e.g. an A2UI
+  // questionnaire card) sets this after submit; the effect below mirrors it into `:state(answered)`
+  // on the HOST (presentation-only — never AX-reflected, never disabled/readonly).
+  answered: prop.boolean(false),
 } satisfies PropsSchema
 
 // ── Element ──────────────────────────────────────────────────────────────────────────────────────
@@ -173,6 +178,14 @@ export class UIComboBoxElement extends UIFormElement {
         this.internals.states?.delete('user-invalid')
         editor.removeAttribute('aria-invalid')
       }
+    })
+
+    // ADR-0196 — mirror `answered` into `:state(answered)` on the HOST (optional-chained: jsdom may
+    // lack CustomStateSet). combo-box.css's answered block reaches the editor part via this host
+    // state. Presentation-only; never touches disabled/tabindex/ARIA.
+    this.effect(() => {
+      if (this.answered) this.internals.states?.add('answered')
+      else this.internals.states?.delete('answered')
     })
 
     // ── Wire the overlay controller ──────────────────────────────────────────────────────────

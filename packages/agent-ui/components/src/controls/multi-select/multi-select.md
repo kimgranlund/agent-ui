@@ -36,6 +36,10 @@ attributes:             # attributes-as-API — mirrors UIMultiSelectElement.pro
     values: [sm, md, lg]
     default: md
     reflect: true       # reflects so the [size] attribute-selector repoint in multi-select.css (the virtual row-height lever) applies to JS-set values too
+  - name: answered
+    type: boolean
+    default: false
+    reflect: false      # ADR-0196 (GH #1065) — the answered/settled choice state; mirrored into :state(answered) on the host, never AX-reflected
 
 properties:             # IDL beyond attributes-as-API
   - name: name

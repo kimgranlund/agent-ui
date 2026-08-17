@@ -196,7 +196,10 @@ The prefix IS the ownership boundary — no allowlist needed:
   · selected · indeterminate · pressed · settled (GH #722 — ui-status-stream's finalize()/fail()
   face, a consumer-keyable public state) · pending (ADR-0191, GH #999 — the fleet-wide
   async-freshness state; `ui-status-stream`'s own first-consumer wiring composes it WITH
-  `settled` rather than clearing one on the other). A verb or noun is not a state name. `pressed`
+  `settled` rather than clearing one on the other) · answered (ADR-0196, GH #1065 — the
+  answered/settled-CHOICE state on the seven choice controls; presentation-only, composes under the
+  precedence `disabled > pending > answered > focus > hover > filled > default`). A verb or noun is
+  not a state name. `pressed`
   (ADR-0179 GH #686 Amendment S7-a) — `ui-toggle`'s ARIA-pressed toggle-button state; distinct
   from `checked` (an Indicator-class boolean form value/ARIA-checked pattern) and `selected`
   (mutually-exclusive choice, e.g. radio/tab) — `ui-toggle` is neither: an independent, non-form

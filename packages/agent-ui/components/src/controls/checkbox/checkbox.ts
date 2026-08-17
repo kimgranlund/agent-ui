@@ -14,7 +14,7 @@
 // Zero-dep; controls → dom+traits inward only (✓); erasableSyntaxOnly ✓ (no enum/decorator).
 
 import { signal } from '../../reactive/index.ts'
-import { type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
+import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import type { ValidityResult } from '../../dom/index.ts'
 import { UIIndicatorElement } from '../_base/indicator-element.ts'
 import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
@@ -24,6 +24,10 @@ import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/
 // precedent; ADR-0013 — static props cannot be inherited via the prototype chain).
 const checkboxProps = {
   ...UIIndicatorElement.props,
+  // ADR-0196 (GH #1065) — the answered/settled choice state. The CONSUMING surface (e.g. an A2UI
+  // questionnaire card) sets this after submit; the control's own effect below mirrors it into
+  // `:state(answered)` (presentation-only — never AX-reflected, never disabled/readonly).
+  answered: prop.boolean(false),
 } satisfies PropsSchema
 
 export interface UICheckboxElement extends ReactiveProps<typeof checkboxProps> {}
@@ -81,6 +85,13 @@ export class UICheckboxElement extends UIIndicatorElement {
         this.internals.states?.delete('user-invalid')
         this.internals.ariaInvalid = null
       }
+    })
+
+    // ADR-0196 — mirror the `answered` prop into `:state(answered)` (optional-chained: jsdom may lack
+    // CustomStateSet). Presentation-only; never touches disabled/tabindex/ARIA.
+    this.effect(() => {
+      if (this.answered) this.internals.states?.add('answered')
+      else this.internals.states?.delete('answered')
     })
 
     // Supplemental indeterminate effect — runs AFTER the base's checked effect (registered second).

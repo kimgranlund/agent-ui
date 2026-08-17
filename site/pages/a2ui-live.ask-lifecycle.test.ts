@@ -191,8 +191,15 @@ describe('a2ui-live ask lifecycle (ADR-0097 §2, post-ship review finding 2) —
 
     await waitUntil(() => askBubble('ask-1')?.dataset.state === 'answered')
     const bubble = askBubble('ask-1')!
-    expect(bubble.inert, 'a frozen ask must be inert').toBe(true)
-    expect(bubble.querySelector('.ask-annotation')?.textContent).toBe('Answered.')
+    // ADR-0196 (supersedes the original blanket-inert leg): an ANSWERED ask SETTLES — never inert (the
+    // Edit-anchor law needs a live anchor), controls carry answered=true, and the annotation is the
+    // compact summary row + Edit affordance.
+    // NON-VACUOUS form (a2ui-mechanism review, GH #1065): jsdom's `inert` is an expando that never
+    // reflects to the attribute — assert the expando's absence, not the attribute's.
+    expect((bubble as HTMLElement & { inert?: boolean }).inert, 'an answered ask settles — it must NOT go inert (ADR-0196 cl.4)').toBeUndefined()
+    expect((bubble.querySelector('ui-radio-group') as HTMLElement & { answered?: boolean }).answered).toBe(true)
+    expect(bubble.querySelector('.ask-settle-summary')?.textContent).toBe('Answered — Plan A.')
+    expect(bubble.querySelector('button.ask-edit')?.textContent).toBe('Edit')
 
     // The round trip: turn 2 was framed as a CLIENT input carrying the ask's action + its full data model
     // (`sendDataModel`, ADR-0097 §1) — the existing action arm, zero round-trip extension.
@@ -451,5 +458,63 @@ describe('a2ui-live — a terminal transport error is VISIBLE, and the exhaustio
     await waitUntil(() => chatMessages('system').some((m) => m.textContent?.includes('The agent has no further turns in this recorded transcript. Reset to start over.')))
 
     expect(chatMessages('system').some((m) => /produced no renderable output/i.test(m.textContent ?? '')), 'the live wording never reaches the recorded backbone').toBe(false)
+  })
+})
+
+// ════════════════ ADR-0196 (GH #1065) — the questionnaire card's settle/edit-amend flow ═════════════════
+// The answered card settles (summary + Edit, options collapsed via CSS — the DOM stays, the Edit-anchor
+// law); Edit re-opens; a CHANGED re-commit appends the "Changed: X → Y" amendment turn (a plain user turn
+// the agent reconciles forward); a SAME-answer re-commit appends nothing — the card simply re-settles.
+describe('a2ui-live — ADR-0196 settle/edit-amend (GH #1065)', () => {
+  it('Edit re-opens; a changed re-commit appends the amendment turn; a same-answer re-commit appends nothing', async () => {
+    const turnInputs: TurnInput[] = []
+    __setTransportForTest(
+      scriptedTransport((turn, input) => {
+        turnInputs.push(input)
+        if (turn === 1) return [metaLine({ note: 'Plan A or Plan B?', ask: { surfaceId: 'ask-1' } }), ...askAskOneLines('ask-1')]
+        return []
+      }),
+    )
+
+    await sendIntent('help me decide')
+    await waitUntil(() => !!askBubble('ask-1')?.querySelector('ui-button'))
+    ;(askBubble('ask-1')!.querySelector('ui-button') as HTMLElement).click()
+    await waitUntil(() => askBubble('ask-1')?.dataset.state === 'answered')
+    const bubble = askBubble('ask-1')!
+    const group = bubble.querySelector('ui-radio-group') as HTMLElement & { answered?: boolean }
+    expect(group.answered, 'settling sets the ADR-0196 answered prop').toBe(true)
+    expect(bubble.querySelector('.ask-settle-summary')?.textContent).toBe('Answered — Plan A.')
+
+    // ── Edit re-opens: answered clears for the edit's duration, data-editing re-expands the options ──
+    ;(bubble.querySelector('button.ask-edit') as HTMLElement).click()
+    expect(bubble.dataset.editing, 'Edit marks the bubble as editing').toBeDefined()
+    expect(group.answered, 'Edit clears answered on the controls for the duration of the edit').toBe(false)
+
+    // ── A CHANGED answer (Plan A → Plan B), re-committed via the card's own Confirm ──────────────────
+    const optB = [...bubble.querySelectorAll<HTMLElement>('ui-radio')].find((r) => r.textContent?.includes('Plan B'))!
+    optB.click()
+    await waitUntil(() => optB.hasAttribute('checked'))
+    const turnsBeforeAmend = turnInputs.length
+    ;(bubble.querySelector('ui-button') as HTMLElement).click()
+    await waitUntil(() => chatMessages('user').some((m) => m.textContent?.includes('Changed: Plan A → Plan B')))
+    await waitUntil(() => turnInputs.length === turnsBeforeAmend + 1)
+    const amend = turnInputs[turnInputs.length - 1]!
+    expect(amend.kind, 'the amendment is a plain USER turn, reconciled forward — never an action replay').toBe('intent')
+    expect((amend as { kind: 'intent'; text: string }).text).toContain('Changed: Plan A → Plan B')
+    // …and the card RE-settled to the updated answer.
+    expect(bubble.dataset.editing).toBeUndefined()
+    expect(group.answered).toBe(true)
+    expect(bubble.querySelector('.ask-settle-summary')?.textContent).toBe('Answered — Plan B.')
+    expect(bubble.dataset.state, 'the entry stays frozen for line-routing — prior turns are never rewritten').toBe('answered')
+
+    // ── A SAME-answer re-commit appends NOTHING: no user turn, no transport turn, just a re-settle ────
+    ;(bubble.querySelector('button.ask-edit') as HTMLElement).click()
+    const userMessagesBefore = chatMessages('user').length
+    const turnsBefore = turnInputs.length
+    ;(bubble.querySelector('ui-button') as HTMLElement).click()
+    await waitUntil(() => askBubble('ask-1')?.dataset.editing === undefined)
+    expect(chatMessages('user').length, 're-confirming the same answer appends no user turn').toBe(userMessagesBefore)
+    expect(turnInputs.length, 're-confirming the same answer dispatches no transport turn').toBe(turnsBefore)
+    expect(group.answered).toBe(true)
   })
 })

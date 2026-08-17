@@ -55,6 +55,14 @@
      trackUserInvalid controller owns that timing; radio-group.ts's connected() toggles
      :state(user-invalid) on this control's own internals). */
   --ui-segmented-control-border-invalid: var(--md-sys-color-danger);
+
+  /* answered (ADR-0196, GH #1065, `answered` prop inherited unchanged from UIRadioGroupElement) —
+     the UNSELECTED segments' ink + hover/active washes step back to the fleet answered pair; the
+     checked segment's moving fill (the "selected indicator") keeps its own primary tokens untouched
+     (interaction-states.md §6[b]). This control owns its own visual surface directly (unlike
+     ui-radio-group, which reaches into ui-radio's paint) — no cross-boundary rule needed here. */
+  --ui-segmented-control-ink-answered: var(--ui-answered-ink);
+  --ui-segmented-control-bg-answered: var(--ui-answered-bg);
 }
 
 /* ═══════════ [2] STYLES — plain compound selectors (deliberately NOT :where/@scope) ═══════════ */
@@ -152,12 +160,24 @@ ui-segmented-control ui-segment:is([checked]) {
   color: var(--ui-segmented-control-ink-selected);
 }
 
+/* answered (ADR-0196) — the unselected segments' ink steps back to the fleet answered pair; the
+   checked segment's moving fill + ink (the "selected indicator") keep their existing tokens
+   untouched. Precedence `disabled > pending > answered > focus > hover > filled > default`: excludes
+   disabled + :state(pending) on the group, and checked segments (mutual exclusion, never
+   source-order/specificity — interaction-states.md §6[c]). */
+ui-segmented-control:state(answered):not(:state(pending)):not([disabled]) ui-segment:not([checked]) {
+  background: var(--ui-segmented-control-bg-answered);
+  color: var(--ui-segmented-control-ink-answered);
+}
+
 /* Interaction states — the TEXT-channel wash on UNSELECTED segments only; a checked segment cannot toggle
-   off, so the selected segment's fill holds (it never reads the hover/active tokens). */
-ui-segmented-control ui-segment:not([checked]):hover {
+   off, so the selected segment's fill holds (it never reads the hover/active tokens). Excludes
+   :state(answered) — the settle flow moves the "change this" signal off the control chrome
+   (interaction-states.md §6[c]). */
+ui-segmented-control:not(:state(answered)) ui-segment:not([checked]):hover {
   background: var(--ui-segmented-control-bg-hover);
 }
-ui-segmented-control ui-segment:not([checked]):active {
+ui-segmented-control:not(:state(answered)) ui-segment:not([checked]):active {
   background: var(--ui-segmented-control-bg-active);
 }
 

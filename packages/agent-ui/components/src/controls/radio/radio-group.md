@@ -33,6 +33,10 @@ attributes:            # attributes-as-API — mirrors radio-group.ts static pro
     values: [horizontal, vertical]
     default: vertical
     reflect: true      # the roving-focus axis (Arrow keys). RESOLVED ONCE at connect: an author-set attribute wins; otherwise the class-derived default applies (this base: vertical; ui-segmented-control overrides its own default to horizontal), reflected back so CSS and the roving trait read one source
+  - name: answered
+    type: boolean
+    default: false
+    reflect: false     # ADR-0196 (GH #1065) — the answered/settled choice state; mirrored into :state(answered) on the group host, never AX-reflected; ui-segmented-control inherits this unchanged
 
 properties:            # IDL beyond attributes-as-API (FACE form IDL, delegates to ElementInternals)
   - name: value

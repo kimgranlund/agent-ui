@@ -115,6 +115,22 @@ describe('UISwitchElement (S2 jsdom probes)', () => {
     el.remove()
   })
 
+  it('switch-state-answered: :state(answered) is set when answered=true, cleared when false (ADR-0196)', () => {
+    const el = makeProbe()
+    document.body.append(el)
+    const states = el.probeInternals.states
+    if (!states) {
+      el.remove()
+      return
+    }
+    expect(states.has('answered')).toBe(false)
+    el.answered = true
+    expect(states.has('answered')).toBe(true)
+    el.answered = false
+    expect(states.has('answered')).toBe(false)
+    el.remove()
+  })
+
   it('switch-aria-checked: ariaChecked = "true" / "false" via internals (no "mixed" — switch is boolean only)', async () => {
     const el = makeProbe()
     document.body.append(el)
@@ -210,7 +226,7 @@ const md = readFileSync(`${SW_DIR}/switch.md`, 'utf8') as string
 const { fence } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 // Attribute names in the order declared in switch.md frontmatter (used as anti-vacuous anchor).
-const ATTR_NAMES = ['checked', 'value', 'size', 'name', 'disabled', 'required']
+const ATTR_NAMES = ['checked', 'value', 'size', 'name', 'disabled', 'required', 'answered']
 
 describe('switch.md descriptor — structural validity (s10 part a)', () => {
   it('carries the ADR-0004 / plan §10 descriptor field set as top-level keys', () => {
@@ -320,5 +336,31 @@ describe('UISwitchElement — zero residue across connect/disconnect (C10)', () 
     expect(el.getAttribute('tabindex')).toBe('0') // re-enabled, tabindex restored
     expect(el.probeInternals.ariaDisabled).toBeNull() // re-enabled → omitted
     el.remove()
+  })
+})
+
+// ── switch.css — :state(answered) block (ADR-0196) ──────────────────────────────────────────────
+
+describe('switch.css — :state(answered) block (ADR-0196)', () => {
+  const css = readFileSync(`${SW_DIR}/switch.css`, 'utf8') as string
+
+  it('repoints --ui-switch-track/-track-hover/-thumb to the fleet --ui-answered-* pair', () => {
+    const m = /:where\(ui-switch:state\(answered\)[^{]*\)\s*\{([^}]*)\}/.exec(css)
+    expect(m, 'no :where(ui-switch:state(answered)...) rule found').not.toBeNull()
+    const rule = m?.[1] ?? ''
+    expect(rule).toMatch(/--ui-switch-track:\s*var\(--ui-answered-bg\)/)
+    expect(rule).toMatch(/--ui-switch-track-hover:\s*var\(--ui-answered-bg\)/)
+    expect(rule).toMatch(/--ui-switch-thumb:\s*var\(--ui-answered-ink\)/)
+  })
+
+  it('the answered rule excludes disabled + pending + checked (mutual exclusion)', () => {
+    const selector = /:where\(ui-switch:state\(answered\)([^{]*)\)/.exec(css)?.[1] ?? ''
+    expect(selector).toMatch(/:not\(\[disabled\]\)/)
+    expect(selector).toMatch(/:not\(:state\(pending\)\)/)
+    expect(selector).toMatch(/:not\(:state\(checked\)\)/)
+  })
+
+  it('the hover rule excludes :state(answered)', () => {
+    expect(css).toMatch(/:scope:not\(:state\(answered\)\):hover::before/)
   })
 })

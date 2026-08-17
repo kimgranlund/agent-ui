@@ -39,6 +39,15 @@
   --ui-checkbox-border-invalid: var(--md-sys-color-danger);
 }
 
+/* answered (ADR-0196, GH #1065) — the unchecked box's frame steps back to the fleet answered pair;
+   the checked/indeterminate fill is the "selected indicator" and keeps its existing tokens untouched
+   (interaction-states.md §6[b]). Precedence `disabled > pending > answered > focus > hover > filled >
+   default`: excludes disabled + :state(pending) by mutual exclusion (§6[c] — never source-order). */
+:where(ui-checkbox:state(answered):not([disabled]):not(:state(pending)):not(:state(checked)):not(:state(indeterminate))) {
+  --ui-checkbox-border: var(--ui-answered-ink);
+  --ui-checkbox-bg: var(--ui-answered-bg);
+}
+
 /* [size] → widget-box tier (ADR-0041 clause 2: sm/md/lg at the default ui-md scale = 14/16/18 px). */
 :where(ui-checkbox[size='sm']) {
   --ui-checkbox-box: var(--md-sys-compact-sm);
@@ -108,7 +117,7 @@
      below (component-reviewer MINOR fix) — equal specificity (0,2,1) means source order decides which
      wins on hover+user-invalid, and the danger signal must win (the text-field.css:205-208 precedent:
      idle < hover < user-invalid, source-later). Placing hover here, ahead of user-invalid, is the fix. */
-  :scope:hover::before {
+  :scope:not(:state(answered)):hover::before {
     border-color: var(--ui-checkbox-border-checked);
   }
 

@@ -1330,6 +1330,33 @@ describe('ui-select — disabled state (select-disabled)', () => {
   })
 })
 
+// ── answered/settled choice state (ADR-0196, GH #1065) ───────────────────────────────────────────
+
+describe('ui-select — :state(answered) (ADR-0196)', () => {
+  it('select-answered-state: setting `answered` adds the custom state; clearing it removes it', async () => {
+    const { el } = makeSelect()
+    const states = el.probeInternals.states
+    if (!states) {
+      el.remove()
+      return
+    }
+    expect(states.has('answered')).toBe(false)
+    el.answered = true
+    await whenFlushed()
+    expect(states.has('answered')).toBe(true)
+    el.answered = false
+    await whenFlushed()
+    expect(states.has('answered')).toBe(false)
+    el.remove()
+  })
+
+  it('select-answered-default: `answered` defaults to false', () => {
+    const { el } = makeSelect()
+    expect(el.answered).toBe(false)
+    el.remove()
+  })
+})
+
 // ── Form seams (via probe hooks — jsdom ElementInternals lacks setFormValue/setValidity) ────
 
 describe('ui-select — form seams (select-form-value · select-form-validity · select-form-reset)', () => {
@@ -1466,7 +1493,7 @@ const parsed = parseDescriptor(fence)
 // `extends: UIFormElement` is not yet in BASE_CLASSES (the integration slice s12 adds it). Tolerate
 // exactly that ONE pending structural failure (same tolerance as modal/popover descriptor probes).
 
-const ATTR_NAMES = ['name', 'disabled', 'required', 'value', 'label', 'open', 'placeholder', 'size']
+const ATTR_NAMES = ['name', 'disabled', 'required', 'value', 'label', 'open', 'placeholder', 'size', 'answered']
 
 describe('select.md descriptor — frontmatter parses + schema-valid (select-descriptor-schema)', () => {
   it('select-descriptor-schema: has a leading frontmatter fence and a prose body', () => {
@@ -1570,5 +1597,34 @@ describe('select.css — TKT-0027 listbox max-block-size dial (select-max-block-
   it('select-max-block-size-token-chain: the option row already sets line-height: 1 (the row-height law holds unchanged)', () => {
     const optionRule = (selectCss.match(/:scope > \[data-part='listbox'\] \[role='option'\]\s*\{[^}]*\}/) ?? [''])[0]
     expect(optionRule).toMatch(/line-height:\s*1;/)
+  })
+})
+
+// ── select.css — :state(answered) block (ADR-0196) ───────────────────────────────────────────────
+
+describe('select.css — :state(answered) block (ADR-0196)', () => {
+  it('declares --ui-select-bg-answered/-ink-answered aliasing the fleet answered pair', () => {
+    expect(selectCss).toMatch(/--ui-select-bg-answered:\s*var\(--ui-answered-bg\)/)
+    expect(selectCss).toMatch(/--ui-select-ink-answered:\s*var\(--ui-answered-ink\)/)
+  })
+
+  it('repoints the trigger to the answered pair, gated on the HOST :state(answered), excluding disabled + pending', () => {
+    const m = /:scope:state\(answered\)([^{]*)\{([^}]*)\}/.exec(selectCss)
+    expect(m, 'no :scope:state(answered) ... { ... } rule found').not.toBeNull()
+    const [, selector, rule] = m as unknown as [string, string, string]
+    expect(selector).toMatch(/:not\(:state\(pending\)\)/)
+    expect(selector).toMatch(/:not\(\[disabled\]\)/)
+    expect(rule).toMatch(/background:\s*var\(--ui-select-bg-answered\)/)
+    expect(rule).toMatch(/color:\s*var\(--ui-select-ink-answered\)/)
+  })
+
+  it('the filled/hover/focus repaint rules exclude :state(answered)', () => {
+    expect(selectCss).toMatch(
+      /:scope:not\(:state\(answered\)\) > \[data-part='trigger'\]:not\(:hover\):not\(:focus-visible\):not\(\[disabled\]\):not\(\[data-empty\]\)/,
+    )
+    expect(selectCss).toMatch(
+      /:scope:not\(:state\(answered\)\) > \[data-part='trigger'\]:not\(:focus-visible\):not\(\[disabled\]\):hover/,
+    )
+    expect(selectCss).toMatch(/:scope:not\(:state\(answered\)\) > \[data-part='trigger'\]:focus-visible/)
   })
 })

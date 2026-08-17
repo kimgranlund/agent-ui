@@ -250,6 +250,7 @@ describe('Gate 1 — the emit-seam event allowlist (naming.md §4, packages/**/s
 const ALLOWED_STATES = new Set([
   'ready', 'user-invalid', 'checked', 'dragging', 'revealed', 'disabled', 'collapsed', 'truncated', 'selected', 'indeterminate', 'pressed', 'settled',
   'pending', // ADR-0191, GH #999 — the fleet-wide async-freshness state; first consumer ui-status-stream
+  'answered', // ADR-0196, GH #1065 — the fleet-wide answer-settlement state; the choice-control family
 ])
 
 /** Every custom-state NAME used in one file's TEXT (comment-stripped) — `states?.add/delete/toggle/replace/has(

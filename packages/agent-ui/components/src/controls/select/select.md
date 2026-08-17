@@ -46,6 +46,10 @@ attributes:             # attributes-as-API — mirrors UISelectElement.props (f
     values: [sm, md, lg]
     default: md
     reflect: true       # reflects so the [size] attribute-selector repoint in select.css (trigger height/font/icon/gap) applies to JS-set values (T7 coherence fix, ADR-0081 doc-tail)
+  - name: answered
+    type: boolean
+    default: false
+    reflect: false      # ADR-0196 (GH #1065) — the answered/settled choice state; mirrored into :state(answered) on the host, never AX-reflected
 
 properties:             # IDL beyond attributes-as-API
   - name: name

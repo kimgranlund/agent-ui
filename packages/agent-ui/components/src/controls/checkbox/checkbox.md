@@ -36,6 +36,10 @@ attributes:            # attributes-as-API — mirrors UICheckboxElement.props (
     type: boolean
     default: false
     reflect: true      # reflects; a required unchecked checkbox → valueMissing validity flag
+  - name: answered
+    type: boolean
+    default: false
+    reflect: false     # ADR-0196 (GH #1065) — the answered/settled choice state; mirrored into :state(answered), never AX-reflected
 
 properties:            # IDL beyond attributes-as-API (no static-props row)
   - name: indeterminate

@@ -49,7 +49,7 @@ import {
   isFeedSurfaceType,
 } from '../lib/agent-runtime.ts'
 import type { AgentTransport, TurnInput, Session, TurnTrace, AskDeclaration } from '../lib/agent-runtime.ts'
-import { AskRegistry, surfaceIdOf, componentTypesOf } from '../lib/ask-registry.ts'
+import { AskRegistry, surfaceIdOf, componentTypesOf, setAnsweredOnControls, CHOICE_CONTROL_TAGS } from '../lib/ask-registry.ts'
 import type { AskEntry } from '../lib/ask-registry.ts'
 // GH #579 — wire the shipped host-side plan-runner (PR #580, ADR-0174/SPEC-R21/R22) into this page.
 import { runPlannerTurn, PLAN_SYNTHESIS_GROUP_KEY, sanitizeFailureReason } from '../lib/plan-runner.ts'
@@ -146,12 +146,109 @@ function addAskBubble(surfaceId: string): { bubble: HTMLElement; mountEl: HTMLEl
   return { bubble: item, mountEl }
 }
 
-/** Append a small, visible annotation to a just-frozen ask bubble (ADR-0097 §2: "an annotation line" —
- * truthful history, never hidden). */
+/** Annotate a just-frozen ask bubble (ADR-0097 §2: truthful history, never hidden). The BYPASSED leg keeps
+ * the original prose annotation on the now-inert bubble; the ANSWERED leg SETTLES the card instead
+ * (ADR-0196 cl.5 — summary row + Edit affordance; the registry already set `answered` on its controls). */
 function annotateAskFrozen(entry: AskEntry, state: 'answered' | 'bypassed'): void {
-  const note = el('p', 'ask-annotation')
-  note.textContent = state === 'answered' ? 'Answered.' : 'No longer pending — the conversation moved on.'
-  entry.bubble.append(note)
+  if (state === 'bypassed') {
+    const note = el('p', 'ask-annotation')
+    note.textContent = 'No longer pending — the conversation moved on.'
+    entry.bubble.append(note)
+    return
+  }
+  settleAskBubble(entry)
+}
+
+// ════════════════ ADR-0196 — the questionnaire card's settle/edit-amend flow (GH #1065) ═════════════════
+// On submit the ask card SETTLES, never disappears: options collapse to the selected answer(s) (CSS,
+// keyed off `[data-state='answered']:not([data-editing])` — collapsed via display, never removed: the
+// Edit-anchor law) plus ONE compact summary row with an Edit affordance. Edit re-opens the options and
+// clears `answered` on the controls for the edit's duration; confirming a CHANGED answer appends an
+// amendment turn ("Changed: X → Y") the agent reconciles FORWARD (prior turns are never rewritten);
+// re-confirming the SAME answer appends nothing — the card simply re-settles.
+
+/** The last-settled compact answer per ask surface — the amendment diff's "X" side. */
+const askAnswers = new Map<string, string>()
+
+/** A compact, human-readable summary of the card's CURRENT selection, read from the rendered controls
+ * themselves (DOM truth — the same controls the user just committed). */
+// The VALUE-READ projection per CHOICE_CONTROL_TAGS member (a2ui-mechanism review M4, GH #1065):
+// keyed EXHAUSTIVELY off the const's own union — a tag added to CHOICE_CONTROL_TAGS without a row here
+// is a TS2741 compile error, not silent summary drift. (The CSS collapse pair in a2ui-live.css covers
+// only the option-LIST members; its own drift note points back here.)
+const ANSWER_PROJECTIONS: Record<(typeof CHOICE_CONTROL_TAGS)[number], (bubble: HTMLElement) => string[]> = {
+  'ui-radio-group': (b) => [...b.querySelectorAll('ui-radio[checked]')].map((r) => r.textContent?.trim() ?? '').filter(Boolean),
+  'ui-segmented-control': (b) => [...b.querySelectorAll('ui-segment[checked]')].map((r) => r.textContent?.trim() ?? '').filter(Boolean),
+  'ui-checkbox': (b) => [...b.querySelectorAll('ui-checkbox[checked]')].map((r) => r.textContent?.trim() ?? '').filter(Boolean),
+  'ui-switch': (b) => [...b.querySelectorAll('ui-switch[checked]')].map((r) => r.textContent?.trim() ?? '').filter(Boolean),
+  'ui-select': (b) => [...b.querySelectorAll<HTMLElement & { value?: string | null }>('ui-select')].map((c) => (typeof c.value === 'string' ? c.value : '')).filter(Boolean),
+  'ui-combo-box': (b) => [...b.querySelectorAll<HTMLElement & { value?: string | null }>('ui-combo-box')].map((c) => (typeof c.value === 'string' ? c.value : '')).filter(Boolean),
+  'ui-multi-select': (b) => [...b.querySelectorAll<HTMLElement & { value?: readonly string[] }>('ui-multi-select')].flatMap((m) => (Array.isArray(m.value) && m.value.length > 0 ? [m.value.join(', ')] : [])),
+}
+
+function readAskAnswer(bubble: HTMLElement): string {
+  const parts: string[] = []
+  for (const tag of CHOICE_CONTROL_TAGS) parts.push(...ANSWER_PROJECTIONS[tag](bubble))
+  return parts.join(' · ')
+}
+
+/** Settle (or RE-settle, after an edit) an answered ask card: `answered` back on its controls, the summary
+ * row refreshed, the Edit affordance wired. Idempotent — one `.ask-settle` row per bubble, updated in place. */
+function settleAskBubble(entry: AskEntry): void {
+  const bubble = entry.bubble
+  delete bubble.dataset.editing
+  setAnsweredOnControls(bubble, true)
+  const answer = readAskAnswer(bubble)
+  askAnswers.set(entry.surfaceId, answer)
+  let row = bubble.querySelector<HTMLElement>('.ask-settle')
+  if (row === null) {
+    row = el('p', 'ask-annotation ask-settle')
+    const summary = el('span', 'ask-settle-summary')
+    // The Edit affordance — page chrome (a plain button, like the tabs' own shells); it emits nothing on
+    // any ui-* event channel, so the seven-member vocabulary (ADR-0153) is untouched.
+    const edit = document.createElement('button')
+    edit.type = 'button'
+    edit.className = 'ask-edit'
+    edit.textContent = 'Edit'
+    edit.addEventListener('click', () => reopenAskForEdit(entry))
+    row.append(summary, edit)
+    bubble.append(row)
+  }
+  const summaryEl = row.querySelector<HTMLElement>('.ask-settle-summary')
+  if (summaryEl) summaryEl.textContent = answer === '' ? 'Answered.' : `Answered — ${answer}.`
+}
+
+/** Edit re-opens the card: options expand again (CSS keys off `data-editing`) and `answered` clears on its
+ * controls for the duration of the edit (ADR-0196 cl.5). The entry STAYS frozen for line-routing — a later
+ * agent line targeting it is still dropped; only the user's own correction flows, through the card's own
+ * commit → `interceptAskAmendment` below. */
+function reopenAskForEdit(entry: AskEntry): void {
+  entry.bubble.dataset.editing = ''
+  setAnsweredOnControls(entry.bubble, false)
+}
+
+/** The amendment leg: a commit from an ALREADY-ANSWERED card is the edit flow, never a fresh answer turn.
+ * Returns `true` when the message was consumed here. Same answer → re-settle, append NOTHING; changed →
+ * re-settle + append the "Changed: X → Y" amendment turn (a plain user turn the agent reconciles forward). */
+function interceptAskAmendment(message: A2uiClientMessage): boolean {
+  if (!('action' in message)) return false
+  const entry = askRegistry.get(message.action.surfaceId)
+  if (entry === undefined || entry.state !== 'answered') return false
+  // Busy-window guard (a2ui-mechanism review HIGH, GH #1065): runTurn's own `if (busy) return` fires
+  // AFTER this function has already appended the visible turn and advanced the diff baseline — a
+  // re-commit while the previous reconcile is in flight would show "Changed: X → Y" in chat, dispatch
+  // nothing, and permanently swallow the amendment (ADR-0196 cl.5 says append-and-reconcile, ADR-0097 §2
+  // says the transcript stays truthful). Consume the commit but keep the card OPEN in its editing state
+  // — the user's change stays live on the controls and re-commits cleanly once the turn settles.
+  if (busy) return true
+  const prior = askAnswers.get(entry.surfaceId) ?? ''
+  settleAskBubble(entry) // re-reads the controls, clears data-editing, restores `answered`
+  const next = askAnswers.get(entry.surfaceId) ?? ''
+  if (next === prior) return true // re-confirming the same answer appends nothing (ADR-0196 cl.5)
+  const amendment = `Changed: ${prior} → ${next}`
+  addMessage('user', amendment)
+  void runTurn({ kind: 'intent', text: traceDigest() + amendment, session })
+  return true
 }
 
 // The modern composer (Figma chat-input refactor) — a standalone `<ui-conversation-composer>` instance,
@@ -591,6 +688,9 @@ function traceDigest(): string {
 }
 
 function handleClientMessage(message: A2uiClientMessage): void {
+  // ADR-0196 — a commit from an already-ANSWERED ask card is the settle/edit-amend flow (same answer:
+  // re-settle silently; changed: the "Changed: X → Y" amendment turn), never the ordinary action turn.
+  if (interceptAskAmendment(message)) return
   // ADR-0088 §3: `action.wantResponse === false` is the agent's explicit per-action opt-out — apply
   // SILENTLY (no chat entry, no turn, no LLM round-trip). Absent/`true` (and every functionResponse/error)
   // keep today's full visible-turn path, via the pure reducer's routing predicate (LLD-C5).
@@ -911,6 +1011,7 @@ resetBtn.addEventListener('click', () => {
   canvasHost = freshCanvasHost
   canvasHost.onClientMessage(handleClientMessage)
   askRegistry.disposeAll() // ADR-0097 §2 — every ask host disposed alongside the canvas host, no leak
+  askAnswers.clear() // ADR-0196 — the settle/amend diff baseline dies with the asks it described
   knownSurfaceIds.clear()
   session = { turns: [] }
   allLines.length = 0
