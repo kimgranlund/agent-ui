@@ -92,6 +92,31 @@ describe('pushToPull — SPEC-R12', () => {
     expect(result).toEqual({ value: undefined, done: true })
   })
 
+  it('two concurrent next() calls on an empty queue BOTH settle, in order — the second never strands the first', async () => {
+    const { push, end, stream } = pushToPull<number>()
+    const it = stream[Symbol.asyncIterator]()
+    const p1 = it.next()
+    const p2 = it.next()
+    push(1)
+    push(2)
+    expect(await p1).toEqual({ value: 1, done: false })
+    expect(await p2).toEqual({ value: 2, done: false })
+    const p3 = it.next()
+    const p4 = it.next()
+    end()
+    expect(await p3).toEqual({ value: undefined, done: true })
+    expect(await p4).toEqual({ value: undefined, done: true })
+  })
+
+  it('a signal that is ALREADY aborted at construction tears down immediately — not on first pull', () => {
+    const onTeardown = vi.fn()
+    const ac = new AbortController()
+    ac.abort()
+    const { push } = pushToPull<number>({ signal: ac.signal, onTeardown })
+    expect(onTeardown).toHaveBeenCalledTimes(1)
+    expect(push(1)).toBe(false)
+  })
+
   it('return() while a next() is parked settles that next() done:true (never hangs) and tears down once', async () => {
     const onTeardown = vi.fn()
     const { push, stream } = pushToPull<number>({ onTeardown })

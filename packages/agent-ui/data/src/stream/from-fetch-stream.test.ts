@@ -44,6 +44,30 @@ describe('fromFetchStream — SPEC-R13 (a)', () => {
     ])
   })
 
+  it('SSE — CRLF endings are stripped, an empty data buffer dispatches nothing, retry rides once and resets, non-digit retry ignored', async () => {
+    const body = bodyFromChunks(['retry: 1500\r\nevent: ping\r\n\r\ndata: a\r\n\r\nretry: 1e3\ndata: b\n\n'])
+    const fetchStub = vi.fn(async () => new Response(body))
+    const stream = fromFetchStream('https://example.com/x', { frame: 'sse', fetch: fetchStub })
+    const events = await collect(stream)
+    expect(events).toEqual([
+      { data: 'a', retry: 1500 }, // the `event: ping` block had no data → no dispatch; retry carried to the next dispatched event, no '\r' in payload
+      { data: 'b' }, // retry was reset after riding once; '1e3' is not ASCII digits → ignored
+    ])
+  })
+
+  it('a rejected fetch (network down) surfaces as a DataError, never a bare Error', async () => {
+    const fetchStub = vi.fn(async () => { throw new TypeError('Failed to fetch') })
+    const stream = fromFetchStream('https://example.com/x', { frame: 'lines', fetch: fetchStub })
+    let caught: unknown
+    try {
+      await collect(stream)
+    } catch (e) {
+      caught = e
+    }
+    expect(caught).toMatchObject({ kind: 'network', retryable: true })
+    expect((caught as { cause: unknown }).cause).toBeInstanceOf(TypeError)
+  })
+
   it('lines mode yields raw lines, unfiltered', async () => {
     const body = bodyFromChunks(['a\n\nb\n'])
     const fetchStub = vi.fn(async () => new Response(body))
