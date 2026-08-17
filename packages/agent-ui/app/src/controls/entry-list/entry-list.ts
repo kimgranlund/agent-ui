@@ -33,7 +33,6 @@
 
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import type { UIDisclosureElement } from '@agent-ui/components/controls/disclosure'
-import type { UITextareaElement } from '@agent-ui/components/controls/textarea'
 import type { UIIconElement } from '@agent-ui/components/controls/icon'
 import type { UICodeEditorElement } from '@agent-ui/code/editor'
 import type { UIDrawerElement } from '@agent-ui/components/controls/drawer'
@@ -506,10 +505,11 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
     // `entry-content` data-part lives on; `.closest()` walks up from any of them to the host either way.
     const activeField = active?.closest('[data-part="entry-content"]') as UICodeEditorElement | null
     const preservedValue = activeId !== undefined && activeField !== null ? activeField.value : undefined
-    // GH #1062 — the DRAWERED row's inline Content field gets the SAME mid-edit rescue: a plain
-    // `ui-textarea` inside the row's collapsed-by-default Content fold (built below), whose focused
-    // editor part `.closest()` walks up to the host exactly like the code-editor case above.
-    const activeInline = active?.closest('[data-part="entry-inline-content"]') as UITextareaElement | null
+    // GH #1062 — the DRAWERED row's inline Content field gets the SAME mid-edit rescue: a
+    // `ui-code-editor` (GH #1102 — it replaced the plain ui-textarea) inside the row's
+    // collapsed-by-default Content fold (built below), whose focused internal surface `.closest()`
+    // walks up to the host exactly like the code-editor case above.
+    const activeInline = active?.closest('[data-part="entry-inline-content"]') as UICodeEditorElement | null
     const preservedInlineValue = activeId !== undefined && activeInline !== null ? activeInline.value : undefined
     // GH #1062 — a fold the author opened must survive an external rebuild (a sibling toggle, a store
     // write): capture every row's fold state by entry id before `replaceChildren` throws the rows away.
@@ -770,11 +770,14 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
       // rebuild by the same capture/restore dance the non-drawered editor above has always run.
       //
       // Shape: a `ui-disclosure` fold, COLLAPSED by default (long Content must not dominate the pane —
-      // the pane's own `settingsItem` fold convention, one level down), holding a plain `ui-textarea`
-      // (NOT `ui-code-editor`: ADR-0139's CodeMirror exception is the ./editor subpath's own, and this
-      // default card surface stays dependency-light). Writes ride `handlers.onContentChange` — the SAME
-      // writer the drawer form commits through (`entry-form.ts` line-for-line), so persistence, preset
-      // protection and the store seam all keep their one home.
+      // the pane's own `settingsItem` fold convention, one level down), holding the SAME
+      // `<ui-code-editor language="markdown">` the drawer form (`entry-form.ts`) and the non-drawered row
+      // editor above already mount (GH #1102, Kim's ruling — the original "stays dependency-light"
+      // rationale for a plain `ui-textarea` here was falsified: ADR-0139's lazy-load cost is already paid
+      // package-wide, the tag registers CodeMirror-free and the CM runtime arrives per mount via editor.ts's
+      // own dynamic import; this module still imports only the TYPE). Writes ride `handlers.onContentChange`
+      // — the SAME writer the drawer form commits through (`entry-form.ts` line-for-line), so persistence,
+      // preset protection and the store seam all keep their one home.
       //
       // Built for BUILTIN rows too, deliberately: `builtin: true` protects DELETION only (ADR-0132
       // Fork 4 + ADR-0178 Amendment — host-seeded content is hand-editable everywhere already; the
@@ -784,12 +787,13 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
         fold.setAttribute('data-part', 'entry-content-fold')
         fold.summary = 'Content'
         fold.open = openFolds.has(entry.id) // survive an external rebuild; a fresh row starts collapsed
-        const inline = document.createElement('ui-textarea') as UITextareaElement
+        const inline = document.createElement('ui-code-editor') as UICodeEditorElement
+        inline.language = 'markdown' // ADR-0139 — markdown-highlighted source editing (CM lazy-loaded)
         inline.setAttribute('data-part', 'entry-inline-content')
-        inline.label = `${entry.label} content` // the labelling SEAM → the editor's aria-label (ADR-0134)
+        inline.setAttribute('aria-label', `${entry.label} content`) // the non-drawered row editor's own labelling shape
         inline.rows = 4 // TKT-0049's saved-content size, matching the non-drawered row editor above
         inline.value = entry.id === activeId && preservedInlineValue !== undefined ? preservedInlineValue : entry.content
-        // `change`, never `input` (ui-textarea's blur-with-change commit, ADR-0134) — the fleet's
+        // `change`, never `input` (ui-code-editor's blur-with-change commit, ADR-0139 cl.6) — the fleet's
         // per-field-on-change law, byte-identical timing to the row editor this restores.
         inline.addEventListener('change', () => handlers.onContentChange(entry.id, inline.value))
         fold.append(inline)

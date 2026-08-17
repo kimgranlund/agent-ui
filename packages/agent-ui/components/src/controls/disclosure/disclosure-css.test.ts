@@ -87,6 +87,14 @@ describe('disclosure.css — the @scope geometry law (Pattern-class split)', () 
     expect(stylesBlock).toMatch(/\[data-part='details'\]\[open\][^{]*\[data-part='chevron'\][^{]*\{\s*rotate:\s*90deg/)
   })
 
+  it("GH #1102 nesting fence: the [open] → chevron hop is DIRECT-CHILD all the way (details > summary > chevron) — a descendant hop leaks an ancestor fold's open state onto every nested fold's caret", () => {
+    expect(stylesBlock).toMatch(
+      /:scope > \[data-part='details'\]\[open\] > \[data-part='summary'\] > \[data-part='chevron'\]\s*\{\s*rotate:\s*90deg/,
+    )
+    // The leaky shape must never come back: no [open] chevron rule with a DESCENDANT hop anywhere.
+    expect(stylesBlock).not.toMatch(/\[open\][^>{]*\[data-part='chevron'\]/)
+  })
+
   it('the body padding rides --md-sys-space (density-responsive rhythm), never --md-sys-height-* (the frame ramp)', () => {
     const m = stylesBlock.match(/:scope \[data-part='body'\]\s*\{([^}]*)\}/)
     expect(m, 'the body rule is missing').not.toBeNull()

@@ -114,8 +114,12 @@
      that did not exist — a ceiling past which `ui-code-editor`'s own `overflow-y:auto` takes over instead
      of the drawer growing indefinitely. 20 lines (~2.5× the 8-row minimum) off the control's OWN published
      tokens (the TKT-0066 item 5 own-chain law) — never a literal pixel figure to keep in sync by hand. */
+  /* GH #1102 — `entry-inline-content` (the drawered card's Content-fold editor, a ui-code-editor since the
+     ui-textarea swap) joins its two siblings: same composed-row width ownership, same growth ceiling for a
+     long saved body inside the fold. */
   [data-part='entry-content'],
-  [data-part='entry-add-content'] {
+  [data-part='entry-add-content'],
+  [data-part='entry-inline-content'] {
     --ui-code-editor-min-inline-size: 0;
     max-block-size: calc(20 * var(--ui-code-editor-line-box) + 2 * var(--ui-code-editor-padding-block));
   }

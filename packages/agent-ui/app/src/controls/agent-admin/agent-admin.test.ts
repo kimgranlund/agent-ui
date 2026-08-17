@@ -398,15 +398,16 @@ describe('mountEntryList — the entryDrawer option, both modes (GH #917)', () =
   })
 
   // ── GH #1062 — the drawered card's INLINE Content fold (view + edit without opening the drawer) ─────────
-  it('GH #1062: a drawered row carries a COLLAPSED Content fold holding a plain ui-textarea seeded from the store', () => {
+  it('GH #1062/#1102: a drawered row carries a COLLAPSED Content fold holding a markdown ui-code-editor seeded from the store', () => {
     const { section } = mountDrawered([ROW])
     const row = section.host.querySelector('[data-part="entry"]') as HTMLElement
     const fold = row.querySelector('[data-part="entry-content-fold"]') as HTMLElement & { open: boolean }
     expect(fold, 'the fold mounts on the card itself').not.toBeNull()
     expect(fold.tagName.toLowerCase(), 'a ui-disclosure — the fleet fold convention').toBe('ui-disclosure')
     expect(fold.open, 'collapsed by default — long Content must not dominate the pane').toBe(false)
-    const inline = fold.querySelector('[data-part="entry-inline-content"]') as HTMLElement & { value: string }
-    expect(inline.tagName.toLowerCase(), 'a plain ui-textarea, NOT ui-code-editor (no CodeMirror on the default surface, ADR-0139)').toBe('ui-textarea')
+    const inline = fold.querySelector('[data-part="entry-inline-content"]') as HTMLElement & { value: string; language: string }
+    expect(inline.tagName.toLowerCase(), 'GH #1102 — the SAME ui-code-editor the drawer form mounts (the "dependency-light" ui-textarea rationale was falsified: the tag registers CodeMirror-free, CM lazy-loads per mount, ADR-0139)').toBe('ui-code-editor')
+    expect(inline.language, 'markdown-highlighted source, matching entry-form.ts').toBe('markdown')
     expect(inline.value, 'seeded with the entry\'s stored content').toBe('body')
   })
 
@@ -441,6 +442,27 @@ describe('mountEntryList — the entryDrawer option, both modes (GH #917)', () =
 
     const { section: plain } = mountDrawered([ROW], { entryDrawer: false })
     expect(plain.host.querySelector('[data-part="entry-content-fold"]'), 'byte-identical non-drawered row: the inline editor is the row editor, no fold').toBeNull()
+  })
+
+  it('GH #1102: an UNCOMMITTED inline edit (dirty, focused) survives an external rebuild — the same capture/restore rescue the row editor runs', () => {
+    const { section } = mountDrawered([ROW, BUILTIN])
+    const row = section.host.querySelector('[data-part="entry"][data-entry-id="a"]') as HTMLElement
+    const fold = row.querySelector('[data-part="entry-content-fold"]') as HTMLElement & { open: boolean }
+    fold.open = true
+    const inline = row.querySelector('[data-part="entry-inline-content"]') as HTMLElement & { value: string }
+    // Focus the editor's own focusable surface (the plain contenteditable part — CM never enhances in
+    // jsdom), then dirty the value WITHOUT committing (`change` never fires).
+    const editorPart = inline.querySelector('[data-part="editor"]') as HTMLElement
+    editorPart.focus()
+    expect(row.contains(document.activeElement), 'precondition: focus really sits in the row (jsdom honors contenteditable focus)').toBe(true)
+    inline.value = 'half-typed, never committed'
+
+    section.render([ROW, BUILTIN]) // an external store notification rebuilds every row
+
+    const rebuilt = section.host.querySelector('[data-part="entry"][data-entry-id="a"] [data-part="entry-inline-content"]') as HTMLElement & { value: string }
+    expect(rebuilt.value, 'the dirty value rides the preservation dance onto the fresh row, not the stale store content').toBe('half-typed, never committed')
+    const other = section.host.querySelector('[data-part="entry"][data-entry-id="b"] [data-part="entry-inline-content"]') as HTMLElement & { value: string }
+    expect(other.value, 'a row nobody edited reseeds from the store').toBe(BUILTIN.content)
   })
 
   it('the Edit drawer commits per field — name (raw), description (raw), content, tier — and Done just closes', () => {

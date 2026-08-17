@@ -114,7 +114,13 @@
     inline-size: 100%;
     block-size: 100%;
   }
-  :scope > [data-part='details'][open] [data-part='chevron'] {
+  /* GH #1102 — the hop from [open] to the chevron must be DIRECT-CHILD all the way: `@scope` has no
+     lower boundary here, so with a DESCENDANT hop this rule (evaluated with an ANCESTOR fold as the
+     scope root) also matched every NESTED fold's chevron — an inner fold sitting inside any open outer
+     fold painted rotated-down in BOTH of its own states (the agent-admin Skills cards' Content fold,
+     which always lives inside its open section fold). Direct-child hops pin the rule to the details
+     part's OWN summary chevron. */
+  :scope > [data-part='details'][open] > [data-part='summary'] > [data-part='chevron'] {
     rotate: 90deg; /* caret-right → visually caret-down; orientation IS the state, no colour/size change */
   }
 
