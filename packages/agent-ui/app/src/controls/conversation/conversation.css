@@ -235,6 +235,11 @@
      standard flex-overflow floor). */
   [data-part='mounts'] ui-surface-host {
     min-inline-size: 0;
+    /* GH 1104 refinement — the host's working-state breathing overlay follows THIS composition's real
+       card rounding: repoint the host's radius token (TKT-0062's repoint-the-token pattern) to the
+       bubble's own derived radius, so the breath reads as the rounded card breathing, never a
+       square sheen inside it. */
+    --ui-surface-host-working-radius: var(--ui-conversation-bubble-radius);
   }
 
   /* A closed surface (SPEC-R7) — dimmed as VISIBLE, non-interactive history (its rendered DOM is

@@ -1,0 +1,1 @@
+var e=`/assets/amethyst-gqs8_6fX.css`;export{e as default};

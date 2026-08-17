@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · The persona-library pattern</title>
+    <script type="module" crossorigin src="/assets/persona-library-pattern-CYR_4NwH.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/src-DZiOlOIx.js">
+    <link rel="modulepreload" crossorigin href="/assets/dom-OxgQ3tAy.js">
+    <link rel="modulepreload" crossorigin href="/assets/src-aOW07B5_.js">
+    <link rel="modulepreload" crossorigin href="/assets/super-shell-D76CLu9A.js">
+    <link rel="modulepreload" crossorigin href="/assets/nav-rail-sXDz1Xz6.js">
+    <link rel="modulepreload" crossorigin href="/assets/phosphor-2R9oNMbL.js">
+    <link rel="modulepreload" crossorigin href="/assets/_page-DIBN49D1.js">
+    <link rel="modulepreload" crossorigin href="/assets/code-block-DEt2Scp8.js">
+    <link rel="modulepreload" crossorigin href="/assets/doc-page-H_CmxYv1.js">
+    <link rel="modulepreload" crossorigin href="/assets/src-BCjsGt6c.js">
+    <link rel="modulepreload" crossorigin href="/assets/agent-admin-schema-D_4P_EJ3.js">
+    <link rel="modulepreload" crossorigin href="/assets/persona-patch-BzhT6X6G.js">
+    <link rel="modulepreload" crossorigin href="/assets/local-storage-adapter-BVVnVK1L.js">
+    <link rel="modulepreload" crossorigin href="/assets/memory-store-BOa7Z4oO.js">
+    <link rel="modulepreload" crossorigin href="/assets/surface-host-mWz7u5Lv.js">
+    <link rel="modulepreload" crossorigin href="/assets/conversation-composer-DgwLynIs.js">
+    <link rel="modulepreload" crossorigin href="/assets/conversation-B4dEK20c.js">
+    <link rel="modulepreload" crossorigin href="/assets/master-detail-88sC5suq.js">
+    <link rel="modulepreload" crossorigin href="/assets/settings-Aka6YaIs.js">
+    <link rel="modulepreload" crossorigin href="/assets/src-CfVHTjiW.js">
+    <link rel="modulepreload" crossorigin href="/assets/specimens-BSFejhGR.js">
+    <link rel="modulepreload" crossorigin href="/assets/agent-admin-persona-file-BqV56mqK.js">
+    <link rel="stylesheet" crossorigin href="/assets/super-shell-B1ZhNV61.css">
+    <link rel="stylesheet" crossorigin href="/assets/nav-rail-DrUH9afp.css">
+    <link rel="stylesheet" crossorigin href="/assets/_page-BjnpwLd8.css">
+    <link rel="stylesheet" crossorigin href="/assets/doc-page-mv2o8kS2.css">
+  </head>
+  <body>
+    <!-- The PERSONA-LIBRARY PATTERN guide (GH #406, M-B DoD box 3): export a whole authored configuration
+         as a shareable file, re-import it as a NEW library entry (never an overwrite), prove identical
+         live behaviour on re-import. The concrete shipped instance is agent-admin's persona export/import;
+         this page documents the shape as reusable beyond agent-admin. An MPA entry auto-discovered by
+         vite.config.ts's site/**/*.html glob (matches the nav link ./persona-library-pattern.html) — no
+         config edit needed. The page module imports pages/_page.ts FIRST for the foundation CSS cascade +
+         self-defining ui-* controls (ADR-0003). -->
+    <div id="app"></div>
+  </body>
+</html>

@@ -789,6 +789,8 @@ describe('surface-host.css — the :state(working) breathing block (ADR-0199 pin
     expect(css).toMatch(/--ui-surface-host-working-blur:\s*var\(--ui-working-blur\)/)
     expect(css).toMatch(/--ui-surface-host-working-color:\s*var\(--ui-working-color\)/)
     expect(css).toMatch(/--ui-surface-host-working-easing:\s*var\(--md-sys-motion-easing-standard\)/)
+    // GH 1104 refinement — the overlay's rounded-card radius rides the fleet shape chain, never a bare literal.
+    expect(css).toMatch(/--ui-surface-host-working-radius:\s*var\(--md-sys-shape-corner-base, 12px\)/)
   })
 
   it("the working rule is a ::before overlay (never ::after — ADR-0187 owns the surface ::after channel) with :not() precedence guards", () => {
@@ -799,6 +801,10 @@ describe('surface-host.css — the :state(working) breathing block (ADR-0199 pin
     expect(rule).toMatch(/pointer-events:\s*none/)
     expect(rule).toMatch(/animation:\s*ui-surface-host-breathe/)
     expect(rule).toMatch(/infinite alternate/)
+    // GH 1104 refinement — the overlay follows the ROUNDED card geometry via its own token
+    // (`inherit` resolved to 0 on the radius-less surface part — the square-sheen defect).
+    expect(rule).toMatch(/border-radius:\s*var\(--ui-surface-host-working-radius\)/)
+    expect(rule).not.toMatch(/border-radius:\s*inherit/)
   })
 
   it('the breathe keyframes animate OPACITY ONLY between the two rungs (compositor-only — no geometry, no `all`, never box-shadow itself)', () => {

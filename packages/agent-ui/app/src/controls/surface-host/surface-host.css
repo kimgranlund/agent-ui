@@ -39,6 +39,15 @@
   --ui-surface-host-working-blur: var(--ui-working-blur);
   --ui-surface-host-working-color: var(--ui-working-color);
   --ui-surface-host-working-easing: var(--md-sys-motion-easing-standard);
+  /* GH 1104 refinement (Kim's live re-look): the breathing must read as the ROUNDED CARD breathing,
+     not a square-cornered sheen inside it. The surface part itself carries no border-radius (its
+     rounding, when mounted in a chat bubble, lives on ui-conversation's bubble box), so the overlay's
+     old `border-radius: inherit` resolved to 0 — square corners. This token gives the overlay its own
+     radius on the fleet shape chain (the conversation bubble derives from the same
+     --md-sys-shape-corner-base rung), consumer-repointable (conversation.css repoints it to the exact
+     bubble radius on inline mounts — the TKT-0062 repoint pattern). Never a literal beyond the
+     standard corner-base fallback. */
+  --ui-surface-host-working-radius: var(--md-sys-shape-corner-base, 12px);
 }
 
 /* ════════════════ [ui-surface-host] STYLES — @scope (ui-surface-host) consumes ONLY --ui-surface-host-* ═══ */
@@ -207,7 +216,11 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    border-radius: inherit;
+    /* GH 1104 refinement — the overlay follows the rounded card geometry via its own token (the
+       surface part has no radius of its own, so `inherit` resolved to 0 and the glow painted square).
+       Radius-only fix: NO position/inset/overflow changes here or on the anchor boxes (GH 1137's
+       first-paint-offset lesson — the [wrap] arm's position/inset interplay is load-bearing). */
+    border-radius: var(--ui-surface-host-working-radius);
     box-shadow: inset 0 0 var(--ui-surface-host-working-blur) var(--ui-surface-host-working-color);
     opacity: var(--ui-surface-host-working-opacity-min);
     animation: ui-surface-host-breathe var(--ui-surface-host-working-duration)

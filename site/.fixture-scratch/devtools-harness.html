@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Devtools Harness</title>
+    <script type="module" crossorigin src="/assets/devtools-harness-DDDtcHcc.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/src-DZiOlOIx.js">
+    <link rel="modulepreload" crossorigin href="/assets/dom-OxgQ3tAy.js">
+    <link rel="modulepreload" crossorigin href="/assets/src-aOW07B5_.js">
+    <link rel="modulepreload" crossorigin href="/assets/super-shell-D76CLu9A.js">
+    <link rel="modulepreload" crossorigin href="/assets/nav-rail-sXDz1Xz6.js">
+    <link rel="modulepreload" crossorigin href="/assets/phosphor-2R9oNMbL.js">
+    <link rel="modulepreload" crossorigin href="/assets/_page-DIBN49D1.js">
+    <link rel="modulepreload" crossorigin href="/assets/src-BCjsGt6c.js">
+    <link rel="modulepreload" crossorigin href="/assets/examples-Bg9vqHc3.js">
+    <link rel="modulepreload" crossorigin href="/assets/conversation-composer-DgwLynIs.js">
+    <link rel="modulepreload" crossorigin href="/assets/surface-host-mWz7u5Lv.js">
+    <link rel="modulepreload" crossorigin href="/assets/conversation-B4dEK20c.js">
+    <link rel="modulepreload" crossorigin href="/assets/meta-line-BkeCLQyf.js">
+    <link rel="modulepreload" crossorigin href="/assets/agent-runtime-CXDIA2SZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/session-Dk4RmbSm.js">
+    <link rel="modulepreload" crossorigin href="/assets/src-CAyeRPtc.js">
+    <link rel="stylesheet" crossorigin href="/assets/super-shell-B1ZhNV61.css">
+    <link rel="stylesheet" crossorigin href="/assets/nav-rail-DrUH9afp.css">
+    <link rel="stylesheet" crossorigin href="/assets/_page-BjnpwLd8.css">
+    <link rel="stylesheet" crossorigin href="/assets/devtools-harness-PoSTX1e3.css">
+    <link rel="stylesheet" crossorigin href="/assets/conversation-composer-KmJ99xRH.css">
+    <link rel="stylesheet" crossorigin href="/assets/conversation-dialog-D0CVAyAy.css">
+  </head>
+  <body>
+    <!-- The chat & A2UI dev/debug harness page (GH #1122, ADR-0200 clause 5 / devtools-harness SPEC-R8/R9):
+         the reused ui-conversation chat thread (the a2ui-chat re-host idiom), a backend switcher over
+         @agent-ui/devtools' listBackends rows, the live raw DevtoolsEvent NDJSON timeline pane, the A2UI
+         canvas render-confirm view (per-surface verdicts re-emitted as `render` events — browser truth,
+         SPEC-R9), and capture export/import (SPEC-R10). An MPA entry auto-discovered by vite.config.ts's
+         site/**/*.html glob. The page module imports pages/_page.ts FIRST for the foundation CSS cascade
+         + self-defining ui-* controls. -->
+    <div id="app"></div>
+  </body>
+</html>

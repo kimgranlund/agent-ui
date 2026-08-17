@@ -1059,6 +1059,13 @@ describe('ui-conversation — a resumed turn breathes from turn start, before an
     const overlay = () => getComputedStyle(surface, '::before')
     expect(overlay().animationName, 'the breathe loop runs during the wait').toBe('ui-surface-host-breathe')
     expect(overlay().boxShadow, 'the inner vignette is painted during the wait').toContain('inset')
+    // GH #1104 refinement (Kim's live re-look) — in the CHAT composition the overlay follows the
+    // ROUNDED card geometry (conversation.css repoints --ui-surface-host-working-radius to the
+    // bubble radius): computed border-radius strictly > 0, never a square-cornered sheen.
+    expect(
+      parseFloat(overlay().borderRadius),
+      `square-cornered overlay (border-radius=${overlay().borderRadius})`,
+    ).toBeGreaterThan(0)
     const first = Number(overlay().opacity)
     await wait(300)
     const second = Number(overlay().opacity)

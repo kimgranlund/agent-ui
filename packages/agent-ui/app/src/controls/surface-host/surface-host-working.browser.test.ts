@@ -52,6 +52,14 @@ describe('ui-surface-host — :state(working) breathes for real (ADR-0199, cross
     const overlay = () => getComputedStyle(surfaceOf(el), '::before')
     expect(overlay().animationName, 'the breathe keyframes are the computed animation').toBe('ui-surface-host-breathe')
     expect(overlay().boxShadow, 'the diffused INNER shadow is painted').toContain('inset')
+    // GH #1104 refinement — the overlay carries a real rounded radius (the fleet shape chain via
+    // --ui-surface-host-working-radius), in BOTH mount modes: the plain docs-preview mount here...
+    expect(parseFloat(overlay().borderRadius), 'square overlay in the plain mount').toBeGreaterThan(0)
+    // ...and the chat-composition mount shape ([wrap][bare] — what conversation.ts sets inline).
+    el.setAttribute('wrap', '')
+    el.setAttribute('bare', '')
+    await whenFlushed()
+    expect(parseFloat(overlay().borderRadius), 'square overlay in the [wrap][bare] mount').toBeGreaterThan(0)
 
     // The animation genuinely RUNS: computed opacity moves between the rungs across real frames.
     // 1600ms/half-cycle over a 0.15→0.55 range ⇒ ~0.075 over 300ms; assert a conservative delta.
