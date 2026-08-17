@@ -224,3 +224,14 @@ payload per the #125 ops-write split; written and landed by the dispatching sess
 - 4.3 DONE — #1050 filed, built, merged (PR #1054): `npm run ops:reap-branches` + selftest in check:scripts.
 - STILL PARKED (Kim): 3.1 five-row ADR-queue confirm · 3.2 adr_checkpoint ratify-only-flip ruling ·
   3.4 adr-0193/adr-0195 ratifications + three amendment flips.
+
+## Ruling round — 2026-08-17 ~11:5xZ (Kim live, AskUserQuestion batch)
+
+- 3.1 EXECUTED — all 5 rows: 0178-amendment/0187 cleared; 0191/0192/0183-amendment harvested into
+  component-patterns (PR #1070, rows marked harvested in adr-queue.json).
+- 3.2 EXECUTED — Kim ruled widen-upstream: filed nonoun-plugins#46; interim manual pin stays.
+- 3.4 PARTIAL — ADR-0193 + 0160/0190 amendments ratified (ad132315, tracker #1069). ADR-0195 and
+  ADR-0196 still await Kim's GH `ratify` comments (in-chat selection is not an utterance, ADR-0149 F1).
+- #1063 RULED (`ruling: A`, overturns entry-form.ts:27 footer law) — build lane in flight.
+- Ratification pin FIRED for 0160/0190 amendments + 0193: decision-watcher re-judge dispatched
+  2026-08-17 ~11:5xZ.
