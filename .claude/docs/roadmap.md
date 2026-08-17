@@ -148,6 +148,12 @@ decision (dated line in §4).
 
 ## 3 · Next — concrete, near-term
 
+- **Ask-flow COMPLETION state (GH #1101, `size:big`, filed 2026-08-17).** Kim's live test-chat
+  report: a multi-step intake flow ends on a bare summary card — no closing prose turn, no
+  end-of-flow affordance (done/start-over/handoff). Two halves: producer/prompt guidance in
+  `@agent-ui/a2ui` `./agent`, plus a surface-side affordance on the summary card or page chrome.
+  Adjacent to ADR-0196 (per-card settling, not flow completion) and the #1065 shared-template
+  question — this may be where the a2ui-live/agent-admin shared-chrome lift gets forced.
 - **M-D — "Personas with their own catalogs" (first of the 2026-08-05 arc). 🟡 IN FLIGHT** — built
   from the RATIFIED [ADR-0172](adr/0172-persona-catalog-composition-intake.md) (GH #421's reopened
   intake, frozen 2026-08-05): each persona composes `shared primitives + the shared system-patterns
@@ -291,6 +297,9 @@ decision (dated line in §4).
   synchronous prefix scan (SettingsStore must answer construct→get same-tick). An optional sync
   capability on the localStorage tier alone (getSync/keysSync or a snapshot() warm cache) would
   unblock the full read-path migration; ADR-0193 amendment territory — design ruling before build.
+- **ui-menu selected-option scroll-centering + default focus on open (GH #1100, size:small).** An
+  overflowing menu panel opens at scroll offset 0 today; the selected option should open centered
+  in the viewport and focused (ARIA listbox pattern). `ui-select`/`ui-multi-select` share the panel.
 - **GenUI B3 — the judged pack-idiom eval.** Out of the GenUI SPEC's contract by its own §6 cut:
   PRD §8 m3 (judge-scored pack-idiom use) realized as a judged corpus-rubric shard plus its docs
   page (PRD-G6) — a named manual live-model run, never part of the deterministic gates (SPEC-N3).
