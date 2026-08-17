@@ -178,7 +178,7 @@ host.onClientMessage((message) => {
 
 function emitVerdict(surfaceId: string): void {
   const error = surfaceErrors.get(surfaceId)
-  const ok = error === undefined && canvasEl.childElementCount > 0
+  const ok = error === undefined && canvasEl.childElementCount > 0 /* global-canvas heuristic — a multi-surface run with one silent-empty surface reads ok; SPEC-R9 note (checker nit) */
   pushEvent({
     seq: 0, // re-stamped by pushEvent
     at: new Date().toISOString(),
@@ -321,7 +321,9 @@ async function runTurn(input: TurnInput): Promise<void> {
     }
 
     if (failure !== undefined) {
-      handle.fail(failure) // the primitive's own system bubble (a2ui-chat's GH #415 discipline)
+      // Failed turns are TIMELINE-ONLY by design: the session transcript keeps committed turns,
+    // the timeline keeps everything (S4–S6 code-checker nit, named not fixed).
+    handle.fail(failure) // the primitive's own system bubble (a2ui-chat's GH #415 discipline)
       status(`⚠ ${failure}`)
       return
     }

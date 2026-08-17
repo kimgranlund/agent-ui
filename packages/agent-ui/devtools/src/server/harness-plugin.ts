@@ -146,7 +146,10 @@ function transportFor(
 
 /**
  * The seam's scripted a2a leg (S1–S3 code-checker L1): ONE loopback pair per request, and BOTH channel
- * ends close when the turn ends — complete, failed, or abandoned mid-stream — so the detached scripted
+ * ends close when the turn ends — complete, failed, or abandoned mid-stream. Abandonment is detected at
+ * EVENT BOUNDARIES only (the `res.destroyed` check between yields): a transport parked awaiting its next
+ * value after the client disconnects stays open until that value arrives — acceptable for a dev-only
+ * seam, named here so it is never mistaken for immediate teardown (S4–S6 code-checker) — so the detached scripted
  * peer loop's `receive()` completes and the loop exits instead of leaking one parked async loop per
  * `/turn` request. The pair is injectable so the route suite can assert both ends really closed
  * (`send()` after the turn rejects `A2aChannelClosedError`). Exported for that suite; the seam itself
@@ -247,7 +250,14 @@ export function createDevtoolsMiddleware(opts?: DevtoolsHarnessOptions): (req: I
             // the socket drains. Raced against 'close' so a client that disconnects mid-wait (which
             // never emits 'drain') can't strand the turn; the next iteration's `destroyed` check exits.
             if (!res.write(serializeDevtoolsEvent(event) + '\n')) {
-              await Promise.race([once(res, 'drain'), once(res, 'close')])
+              // The losing once() must not stay attached (>10 waits => MaxListenersExceededWarning —
+              // S4–S6 code-checker): one shared AbortController tears the loser down after the race.
+              const raceDone = new AbortController()
+              await Promise.race([
+                once(res, 'drain', { signal: raceDone.signal }).catch(() => {}),
+                once(res, 'close', { signal: raceDone.signal }).catch(() => {}),
+              ])
+              raceDone.abort()
             }
           }
           res.end()

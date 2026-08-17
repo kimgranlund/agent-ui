@@ -100,6 +100,11 @@ export function buildDebugBundle(input: DebugBundleInput): { entries: ZipEntryIn
   // serialized by the devtools format module itself. No captures ⇒ no entries AND no manifest field.
   const captureFiles: string[] = []
   for (const { id, capture } of input.captures ?? []) {
+    // The id lands in a zip entry path — "../x" or "a/b" would escape the captures/ family on
+    // extraction (zip-slip; S4–S6 code-checker). Fail closed on anything but a plain filename token.
+    if (!/^[A-Za-z0-9._-]+$/.test(id) || id === '.' || id === '..') {
+      throw new Error(`debug-export: invalid capture id ${JSON.stringify(id)} — expected [A-Za-z0-9._-]+`)
+    }
     const path = `captures/${id}.json`
     entries.push({ path, data: serializeCapture(capture) })
     captureFiles.push(path)
