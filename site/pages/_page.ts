@@ -483,6 +483,14 @@ export const NAV: readonly NavGroup[] = [
     label: 'ui-swiper-label',
     links: [{ href: './swiper-label-doc.html', label: 'API' }],
   },
+  // ADR-0195 — ui-drill, the N-level drill-down panel container (tier=pattern ⇒ {doc, demo}, GH #954).
+  {
+    label: 'ui-drill',
+    links: [
+      { href: './drill-demo.html', label: 'Demo' },
+      { href: './drill-doc.html', label: 'API' },
+    ],
+  },
   {
     // ui-super-shell (@agent-ui/app, M5 — ADR-0151/shell-archetypes-m5.spec.md, GH #83/#84): the
     // application-frame archetype family's grammar ceiling. A GUIDE page, not a fleet component in

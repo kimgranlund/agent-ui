@@ -92,9 +92,11 @@
       background: var(--md-sys-color-neutral-surface-variant);
     }
 
+    /* The shared focus ring (ADR-0009), read DIRECTLY from the fleet tokens — the same documented family
+       exception the tabs/otp-field/etc. focus rings already use (token hygiene, family-coherence.test.ts). */
     &:focus-visible {
-      outline: var(--ui-focus-ring-width) solid var(--ui-focus-ring-color);
-      outline-offset: var(--ui-focus-ring-offset);
+      outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+      outline-offset: var(--md-sys-state-focus-ring-offset);
     }
 
     &[hidden] {
@@ -107,14 +109,14 @@
     font-size: var(--ui-drill-heading-font-size);
     font-weight: 600;
     color: var(--ui-drill-ink);
-    line-height: var(--ui-control-line-height);
+    line-height: var(--md-sys-control-line-height); /* single-line control standard — ADR-0036, the fleet constant read directly */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 
     &:focus-visible {
-      outline: var(--ui-focus-ring-width) solid var(--ui-focus-ring-color);
-      outline-offset: var(--ui-focus-ring-offset);
+      outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+      outline-offset: var(--md-sys-state-focus-ring-offset);
     }
   }
 
