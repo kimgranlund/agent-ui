@@ -544,6 +544,13 @@
       "section": "Guides"
     },
     {
+      "name": "Accessibility",
+      "url": "./accessibility.html",
+      "description": "Roles/state via ElementInternals, focus + roving tabindex, landmarks, live regions, reduced motion, and how a consumer labels a control.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Theming",
       "url": "./theming.html",
       "description": "One theming subtree, three live axes: scheme (light/dark), scale, and density.",

@@ -123,6 +123,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
         blurb: 'The workspace packages, the load-bearing CSS import order (ADR-0003), a minimal runnable example, and the per-control subpath imports.',
       },
       {
+        href: './accessibility.html',
+        title: 'Accessibility',
+        blurb: 'How the fleet exposes roles/state via ElementInternals, focus + roving-tabindex, landmarks in the shells, live regions, reduced motion, and how a consumer labels a control — plus one live example.',
+      },
+      {
         href: './theming.html',
         title: 'Theming',
         blurb: "ui-theme-provider's three live axes (scheme/scale/density), the --md-sys-color-{family}-{role} role system, a live subtree token override, and theme packs — swapping whole token palettes live.",

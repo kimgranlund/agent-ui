@@ -38,6 +38,13 @@ content.append(
     document.createTextNode(' for the consumer-assembly pattern map and every shipped recipe page.'),
   ]),
 )
+content.append(
+  el('p', { class: 'gs-note' }, [
+    document.createTextNode('For roles/state, focus, landmarks, live regions, and labelling conventions, see the '),
+    el('a', { href: './accessibility.html' }, [document.createTextNode('Accessibility conventions')]),
+    document.createTextNode(' guide.'),
+  ]),
+)
 
 // ── the workspace packages (hand-authored — cited to CLAUDE.md's Layout section, soft staleness) ──────────────
 content.append(heading(2, 'The workspace packages'))

@@ -174,7 +174,10 @@ content.append(
   el('p', { class: 'forms-sources' }, [
     text(
       'Full API surface: the ui-field and ui-form-provider API pages. The behaviour above is proven end-to-end ' +
-        'by the package’s own Chromium + WebKit browser test, form-e2e.browser.test.ts.',
+        'by the package’s own Chromium + WebKit browser test, form-e2e.browser.test.ts. For how ui-field wires ' +
+        'the wrapped control’s accessible name (and the fleet’s other a11y conventions), see the ',
     ),
+    el('a', { href: './accessibility.html' }, [text('Accessibility conventions')]),
+    text(' guide.'),
   ]),
 )

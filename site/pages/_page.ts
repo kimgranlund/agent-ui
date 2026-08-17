@@ -70,6 +70,7 @@ export const NAV: readonly NavGroup[] = [
     // not a fleet component's page-type set. Placed right after Home so a newcomer meets them first.
     links: [
       { href: './getting-started.html', label: 'Getting started' },
+      { href: './accessibility.html', label: 'Accessibility' },
       { href: './theming.html', label: 'Theming' },
       { href: './tokens.html', label: 'Tokens' },
       { href: './sizing.html', label: 'Sizing & density' },
