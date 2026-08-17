@@ -12,13 +12,6 @@
 import { UIFormElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import type { FormValue } from '../../dom/index.ts'
 
-// GH #1126: the live value-readout hide delay shared by both Range-class leaves (ui-slider ·
-// ui-slider-multi) — each control's own `input`-driven readout re-arms this timer on every live
-// value change (pointer drag AND keyboard step both emit `input`), so the number stays visible for
-// the whole scrub and fades ~1.2s after the LAST change (not a fixed per-keystroke flash). One
-// constant, one source of truth — both leaves import it rather than re-guessing a duration.
-export const RANGE_READOUT_HIDE_MS = 1200
-
 const rangeProps = {
   ...UIFormElement.formProps,
   // LLD-C1: numeric range params. All reflected for attribute-driven construction.
