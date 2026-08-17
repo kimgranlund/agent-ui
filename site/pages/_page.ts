@@ -71,6 +71,7 @@ export const NAV: readonly NavGroup[] = [
     links: [
       { href: './getting-started.html', label: 'Getting started' },
       { href: './accessibility.html', label: 'Accessibility' },
+      { href: './testing-guide.html', label: 'Testing guide' },
       { href: './theming.html', label: 'Theming' },
       { href: './tokens.html', label: 'Tokens' },
       { href: './sizing.html', label: 'Sizing & density' },

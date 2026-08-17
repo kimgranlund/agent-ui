@@ -551,6 +551,13 @@
       "section": "Guides"
     },
     {
+      "name": "Testing guide",
+      "url": "./testing-guide.html",
+      "description": "The jsdom/browser vitest harness, the shared @agent-ui/shared/testing/dialog-polyfill stub, when a real-engine run is required, and the ElementInternals/ARIA assertion idiom.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Theming",
       "url": "./theming.html",
       "description": "One theming subtree, three live axes: scheme (light/dark), scale, and density.",

@@ -128,6 +128,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
         blurb: 'How the fleet exposes roles/state via ElementInternals, focus + roving-tabindex, landmarks in the shells, live regions, reduced motion, and how a consumer labels a control — plus one live example.',
       },
       {
+        href: './testing-guide.html',
+        title: 'Testing guide',
+        blurb: 'The jsdom/browser vitest harness, the shared @agent-ui/shared/testing/dialog-polyfill stub, when a real-engine run is required, and the ElementInternals/ARIA assertion idiom.',
+      },
+      {
         href: './theming.html',
         title: 'Theming',
         blurb: "ui-theme-provider's three live axes (scheme/scale/density), the --md-sys-color-{family}-{role} role system, a live subtree token override, and theme packs — swapping whole token palettes live.",
