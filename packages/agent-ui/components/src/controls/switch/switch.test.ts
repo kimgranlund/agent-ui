@@ -361,6 +361,6 @@ describe('switch.css — :state(answered) block (ADR-0196)', () => {
   })
 
   it('the hover rule excludes :state(answered)', () => {
-    expect(css).toMatch(/:scope:not\(:state\(answered\)\):hover::before/)
+    expect(css).toMatch(/:scope:where\(:not\(:state\(answered\)\)\):hover::before/)
   })
 })

@@ -157,7 +157,7 @@
 
   /* Hover — repoints `background` of the track from the per-state token (ADR-0008). Disabled is
      pointer-inert so :hover never matches it (the disabled token holds at the idle value, no lift possible). */
-  :scope:not(:state(answered)):hover::before {
+  :scope:where(:not(:state(answered))):hover::before {
     background: var(--ui-switch-track-hover);
   }
 

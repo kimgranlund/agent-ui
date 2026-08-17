@@ -213,7 +213,7 @@
     clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
   }
 
-  :scope:not(:state(answered)) > [role='option']:hover {
+  :scope:where(:not(:state(answered))) > [role='option']:hover {
     background-color: var(--ui-multi-select-option-bg-hover);
   }
 
@@ -234,7 +234,7 @@
     color: var(--ui-multi-select-ink-answered);
   }
 
-  :scope:not(:state(answered)) > [role='option']:focus-visible {
+  :scope:where(:not(:state(answered))) > [role='option']:focus-visible {
     background-color: var(--ui-multi-select-option-bg-focus);
     color: var(--ui-multi-select-option-ink-focus);
     outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);

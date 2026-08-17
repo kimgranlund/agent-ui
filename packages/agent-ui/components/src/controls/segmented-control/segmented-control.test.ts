@@ -349,8 +349,8 @@ describe('segmented-control.css — :state(answered) block (ADR-0196)', () => {
     expect(rule).toMatch(/color:\s*var\(--ui-segmented-control-ink-answered\)/)
   })
 
-  it('the hover/active washes exclude :state(answered)', () => {
-    expect(css).toMatch(/ui-segmented-control:not\(:state\(answered\)\) ui-segment:not\(\[checked\]\):hover/)
-    expect(css).toMatch(/ui-segmented-control:not\(:state\(answered\)\) ui-segment:not\(\[checked\]\):active/)
+  it('the hover/active washes exclude :state(answered) at zero specificity cost (GH #1120: :where keeps them at (0,2,2) so the [disabled] suppression outranks)', () => {
+    expect(css).toMatch(/ui-segmented-control:where\(:not\(:state\(answered\)\)\) ui-segment:not\(\[checked\]\):hover/)
+    expect(css).toMatch(/ui-segmented-control:where\(:not\(:state\(answered\)\)\) ui-segment:not\(\[checked\]\):active/)
   })
 })

@@ -311,8 +311,8 @@ describe('checkbox.css — :state(answered) block (ADR-0196)', () => {
     expect(selector).toMatch(/:not\(:state\(indeterminate\)\)/)
   })
 
-  it('the hover rule excludes :state(answered)', () => {
-    expect(css).toMatch(/:scope:not\(:state\(answered\)\):hover::before/)
+  it('the hover rule excludes :state(answered) at zero specificity cost (GH #1120: :where keeps hover at (0,2,1) so user-invalid wins by source order)', () => {
+    expect(css).toMatch(/:scope:where\(:not\(:state\(answered\)\)\):hover::before/)
   })
 })
 

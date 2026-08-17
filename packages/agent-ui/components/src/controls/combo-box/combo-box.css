@@ -268,11 +268,11 @@
      later found that mechanism itself was the fleet-wide defect, and repointed
      `--ui-combo-box-placeholder` to a fixed role instead; it no longer participates in this repoint at
      all, deliberately — see the pinned declaration in the :where() token block, above.) */
-  :scope:not(:state(answered)) > [data-part='editor']:not(:hover):not(:focus):not([aria-disabled='true']):not([data-empty]) {
+  :scope:where(:not(:state(answered))) > [data-part='editor']:not(:hover):not(:focus):not([aria-disabled='true']):not([data-empty]) {
     background-color: var(--ui-combo-box-bg-filled);
     --ui-combo-box-ink: var(--ui-combo-box-ink-filled);
   }
-  :scope:not(:state(answered)) > [data-part='editor']:not(:focus):not([aria-disabled='true']):hover {
+  :scope:where(:not(:state(answered))) > [data-part='editor']:not(:focus):not([aria-disabled='true']):hover {
     background-color: var(--ui-combo-box-bg-hover);
     border-color: var(--ui-combo-box-border-hover);
     --ui-combo-box-ink: var(--ui-combo-box-ink-hover);
@@ -282,7 +282,7 @@
      border-focus approach — a coloured border-focus would double with the ring). Focus's bg/ink
      (TKT-0062) override filled/hover unconditionally — a focused-and-filled editor still shows the
      FOCUS row (container-low bg, on-surface ink), not filled's. */
-  :scope:not(:state(answered)) > [data-part='editor']:not([aria-disabled='true']):focus {
+  :scope:where(:not(:state(answered))) > [data-part='editor']:not([aria-disabled='true']):focus {
     background-color: var(--ui-combo-box-bg-focus);
     border-color: var(--ui-combo-box-border-focus);
     --ui-combo-box-ink: var(--ui-combo-box-ink-focus);

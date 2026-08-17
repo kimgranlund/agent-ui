@@ -279,11 +279,11 @@
      the TRIGGER (select.ts already collapses own-disabled OR form-disabled onto the trigger's own
      attribute — `trigger.setAttribute('disabled', ...)` in the effectiveDisabled() effect — so no
      separate `:state(disabled)` check is needed here, unlike text-field/textarea/combo-box). */
-  :scope:not(:state(answered)) > [data-part='trigger']:not(:hover):not(:focus-visible):not([disabled]):not([data-empty]) {
+  :scope:where(:not(:state(answered))) > [data-part='trigger']:not(:hover):not(:focus-visible):not([disabled]):not([data-empty]) {
     background: var(--ui-select-bg-filled);
     color: var(--ui-select-ink-filled);
   }
-  :scope:not(:state(answered)) > [data-part='trigger']:not(:focus-visible):not([disabled]):hover {
+  :scope:where(:not(:state(answered))) > [data-part='trigger']:not(:focus-visible):not([disabled]):hover {
     background: var(--ui-select-bg-hover);
     border-color: var(--ui-select-border-hover);
     color: var(--ui-select-ink-hover);
@@ -306,7 +306,7 @@
   /* Focus (keyboard-only :focus-visible, the button precedent — a trigger is an action control, not a
      text-entry surface) wins over filled/hover unconditionally; a disabled trigger cannot be focused,
      so no guard is needed here (matching the old law). */
-  :scope:not(:state(answered)) > [data-part='trigger']:focus-visible {
+  :scope:where(:not(:state(answered))) > [data-part='trigger']:focus-visible {
     background: var(--ui-select-bg-focus);
     border-color: var(--ui-select-border-focus);
     color: var(--ui-select-ink-focus);
