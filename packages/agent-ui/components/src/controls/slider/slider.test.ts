@@ -458,6 +458,58 @@ describe('UISliderElement — live value readout (GH #1126)', () => {
   })
 })
 
+// ── GH #1136: readoutHidden opt-out ──────────────────────────────────────────────────────────────────
+
+describe('UISliderElement — readoutHidden opt-out (GH #1136)', () => {
+  const valuePart = (el: Element): HTMLElement => el.querySelector('[data-part="value"]') as HTMLElement
+
+  it('default false — unchanged: keyboard step still shows the readout (byte-identical #1126 behavior)', () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.value = 50
+    document.body.append(el)
+    expect(el.readoutHidden).toBe(false)
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
+    expect(valuePart(el).hidden).toBe(false)
+    el.remove()
+    vi.useRealTimers()
+  })
+
+  it('readoutHidden=true — keyboard step never shows the readout', () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.value = 50
+    el.readoutHidden = true
+    document.body.append(el)
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
+    expect(valuePart(el).hidden).toBe(true)
+    el.remove()
+    vi.useRealTimers()
+  })
+
+  it('readoutHidden=true — pointer drag never shows the readout', () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.step = 0
+    el.readoutHidden = true
+    document.body.append(el)
+    stubPointer(el)
+    el.dispatchEvent(ptr('pointerdown', 100)) // value 0 → 50, emits input
+    expect(valuePart(el).hidden).toBe(true)
+    el.dispatchEvent(ptr('pointerup', 100))
+    el.remove()
+    vi.useRealTimers()
+  })
+
+  it('reflects to the readout-hidden attribute (kebab, multi-word prop)', () => {
+    const el = make()
+    document.body.append(el)
+    el.readoutHidden = true
+    expect(el.hasAttribute('readout-hidden')).toBe(true) // boolean reflect = presence semantics (booleanType.to)
+    el.remove()
+  })
+})
+
 // ── size prop ─────────────────────────────────────────────────────────────────────────────────────
 
 describe('UISliderElement — size prop', () => {
@@ -548,7 +600,7 @@ const md = readFileSync(`${SLIDER_DIR}/slider.md`, 'utf8') as string
 const { fence } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 // Attribute names in the order declared in slider.md frontmatter (anti-vacuous anchor).
-const ATTR_NAMES = ['value', 'min', 'max', 'step', 'size', 'name', 'disabled', 'required']
+const ATTR_NAMES = ['value', 'min', 'max', 'step', 'size', 'name', 'disabled', 'required', 'readoutHidden']
 
 describe('slider.md descriptor — structural validity (s10 part a)', () => {
   it('carries the ADR-0004 / plan §10 descriptor field set as top-level keys', () => {
