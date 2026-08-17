@@ -53,6 +53,7 @@ ADR-worthy fork, not a local choice.
 | Async-stale content dimmed while a new answer is in flight | `:state(pending)` + `--ui-pending-*`, composes under settled | ADR-0191 |
 | General-purpose functionality outside components' layers | mint a zero-dep sibling package off `components` | ADR-0115/0119/0192 |
 | A layer below `app` needs to persist something | `StorageAdapter` seam in `@agent-ui/shared`, localStorage + IndexedDB tiers | ADR-0193 |
+| An N-level show-one-hide-rest container whose position is an array (drill/stack path) | show-one-hide-rest + controlled-array-prop-duality — never-empty path, append-only forward, defined repair | ADR-0195 |
 | [incident] A content-sized flex item collapses to a fixed-floor child's min-width | `align-self: stretch; max-inline-size: none`, never re-tune the cap | ADR-0160 Amendment (GH #1032) |
 | A load-on-demand stopgap before a real model-side tool-call loop | exact-match auto-attach via the existing reference path, one per turn, no fuzzy | ADR-0190 Amendment (GH #1030) |
 
