@@ -1546,8 +1546,11 @@ describe('produce() — ADR-0187: an abandoned createSurface self-corrects PRE-W
     expect((halted as ProduceHalt).failures).toEqual([{ code: 'IDGRAPH', path: 'only:root-missing' }])
   })
 
-  it('a same-round create-then-DELETE still ships clean — the delete exclusion holds through produce()', async () => {
-    // LLD §3 mechanic 4 end-to-end: nothing mounted is nothing abandoned, so no self-correct round.
+  it('a same-round create-then-DELETE VALIDATES (the delete exclusion holds) but the pair is fed back once, then stripped from the wire (GH #1142)', async () => {
+    // LLD §3 mechanic 4 end-to-end: nothing mounted is nothing abandoned, so never a ProduceHalt — but
+    // GH #1142 rules the pair a net-no-op dodge: one targeted NET_NOOP correction round, then the group
+    // is stripped so only the content-bearing surface ships (the client never mounts a blank "Closed."
+    // card for `tmp`).
     const CREATE_THEN_DELETE =
       '{"a2uiMeta":{"note":"cleaning up"}}\n' +
       '{"version":"v1.0","createSurface":{"surfaceId":"s1","catalogId":"agent-ui"}}\n' +
@@ -1558,8 +1561,9 @@ describe('produce() — ADR-0187: an abandoned createSurface self-corrects PRE-W
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
     const lines: string[] = []
     for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
-    expect(calls()).toBe(1) // zero wasted rounds
-    expect(lines).toHaveLength(5)
+    expect(calls()).toBe(2) // one NET_NOOP correction round (the stub repeats the dodge), then the strip ships
+    expect(lines).toHaveLength(3) // meta-line + s1's two lines — tmp's pair is gone from the wire
+    expect(lines.some((l) => l.includes('"tmp"'))).toBe(false)
   })
 
   it('a data-only follow-up on a seeded session is UNAFFECTED — the seed skip composes with finalize mode', async () => {
@@ -1591,5 +1595,99 @@ describe('produce() — ADR-0187: an abandoned createSurface self-corrects PRE-W
     for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
     expect(calls()).toBe(1)
     expect(lines).toHaveLength(1)
+  })
+})
+
+// ── GH #1142 — the net-no-op dodge (createSurface+deleteSurface same turn, closing GH #1061's producer
+// strand): validate.ts's deliberate same-turn-delete exemption (ADR-0187 — nothing mounted is nothing
+// abandoned) is the hole a model under JSONL-output pressure ships a placeholder pair through instead of
+// following grammar.md's "send NO A2UI at all". produce() now gives the dodge ONE targeted correction
+// round through the existing atFinalize self-correct seam (NET_NOOP + the emit-no-A2UI-instead hint),
+// then STRIPS the whole group so the turn ships prose-only — never a ProduceHalt on an otherwise-valid
+// turn, and never a blank "Nothing was rendered / Closed." card client-side (the live blackjack repro). ─
+const NOTE_1142 = '{"a2uiMeta":{"note":"How much would you like to bet?"}}'
+const DODGE_PAIR =
+  '{"version":"v1.0","createSurface":{"surfaceId":"bet","catalogId":"agent-ui"}}\n' +
+  '{"version":"v1.0","deleteSurface":{"surfaceId":"bet"}}'
+const DODGE = `${NOTE_1142}\n${DODGE_PAIR}`
+
+describe('produce() net-no-op strip + self-correct hint (GH #1142)', () => {
+  const mkDeps = (provider: AgentProvider): ProduceDeps => ({ provider, retrieve: () => [], catalog: defaultCatalog })
+  const run = async (d: ProduceDeps, maxRounds: number, session: TurnInput['session'] = { turns: [] }): Promise<string[]> => {
+    const lines: string[] = []
+    const input: TurnInput = { kind: 'intent', text: 'play blackjack', session }
+    for await (const line of produce(input, d, { maxRounds })) lines.push(line)
+    return lines
+  }
+
+  it('feeds the dodge back ONE correction round with the emit-no-A2UI hint, then strips on recurrence (prose-only ship)', async () => {
+    const { provider, calls, reqs } = stubProvider([DODGE, DODGE])
+    const lines = await run(mkDeps(provider), 3)
+    expect(calls()).toBe(2) // exactly one correction round, then the strip ships — never a third round or a halt
+    // the correction round's feedback names NET_NOOP and teaches the honest shape
+    const feedback = reqs()[1]!.messages.at(-1)!.content
+    expect(feedback).toContain('NET_NOOP')
+    expect(feedback).toContain('send NO A2UI lines at all')
+    // the shipped turn is prose-only: the meta-line survives, ZERO A2UI content lines ship
+    expect(lines.filter(isPureContent)).toHaveLength(0)
+    const meta = readMetaLine(lines.find((l) => readMetaLine(l)?.a2uiMeta.note !== undefined)!)!
+    expect(meta.a2uiMeta.note).toBe('How much would you like to bet?')
+    expect(meta.a2uiMeta.trace!.failureCodes).toContain('NET_NOOP') // the fed-back round is on the trace
+    expect(meta.a2uiMeta.trace!.failureCodes).toContain('NET_NOOP_STRIPPED') // …and so is the strip tally
+  })
+
+  it('strips WITHOUT a correction round when no round is left to spend (maxRounds:1) — the turn still ships', async () => {
+    const { provider, calls } = stubProvider([DODGE])
+    const lines = await run(mkDeps(provider), 1)
+    expect(calls()).toBe(1)
+    expect(lines.filter(isPureContent)).toHaveLength(0)
+    const meta = readMetaLine(lines[0]!)!
+    expect(meta.a2uiMeta.trace!.failureCodes).toContain('NET_NOOP_STRIPPED')
+  })
+
+  it('the correction round can heal to a clean note-only turn (the taught shape)', async () => {
+    const { provider, calls } = stubProvider([DODGE, NOTE_1142])
+    const lines = await run(mkDeps(provider), 3)
+    expect(calls()).toBe(2)
+    expect(lines.filter(isPureContent)).toHaveLength(0)
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.note).toBe('How much would you like to bet?')
+  })
+
+  it('negative control: a REAL close (deleteSurface for a surface a PRIOR turn opened) is never flagged or stripped', async () => {
+    const close = `${NOTE_1142}\n{"version":"v1.0","deleteSurface":{"surfaceId":"main"}}`
+    const { provider, calls } = stubProvider([close])
+    const lines = await run(mkDeps(provider), 3, {
+      turns: [
+        { role: 'user', content: 'play' },
+        { role: 'assistant', content: VALID },
+      ],
+    })
+    expect(calls()).toBe(1) // no correction round manufactured
+    const content = lines.filter(isPureContent)
+    expect(content).toHaveLength(1)
+    expect(JSON.parse(content[0]!)).toEqual({ version: 'v1.0', deleteSurface: { surfaceId: 'main' } })
+  })
+
+  it('negative control: a content-bearing surface in the SAME payload ships untouched while the dodge pair is stripped', async () => {
+    const mixed = `${NOTE_1142}\n${VALID}\n${DODGE_PAIR}`
+    const { provider, calls } = stubProvider([mixed])
+    const lines = await run(mkDeps(provider), 1) // no round to spend — straight to the strip
+    expect(calls()).toBe(1)
+    const content = lines
+      .filter(isPureContent)
+      .map((l) => JSON.parse(l) as { createSurface?: { surfaceId: string }; deleteSurface?: { surfaceId: string }; updateComponents?: { surfaceId: string } })
+    expect(content).toHaveLength(2) // main's create + updateComponents survive; bet's pair is gone
+    for (const msg of content) {
+      const sid = msg.createSurface?.surfaceId ?? msg.updateComponents?.surfaceId ?? msg.deleteSurface?.surfaceId
+      expect(sid).toBe('main')
+    }
+  })
+
+  it('negative control: a plain content-bearing turn (no dodge) is untouched — no NET_NOOP anywhere on the trace', async () => {
+    const { provider, calls } = stubProvider([`${NOTE_1142}\n${VALID}`])
+    const lines = await run(mkDeps(provider), 3)
+    expect(calls()).toBe(1)
+    expect(lines.filter(isPureContent)).toHaveLength(2)
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.trace!.failureCodes).toEqual([])
   })
 })
