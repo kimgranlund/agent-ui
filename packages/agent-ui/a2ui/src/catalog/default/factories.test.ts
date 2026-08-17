@@ -479,6 +479,29 @@ describe('default catalog factories — Badge (SPEC-R11..R13)', () => {
     const bogus: A2uiComponent = { id: 'bd2', component: 'Badge', label: 'Done', slot: 'top' }
     expect(validateCatalogConformance(bogus, defaultCatalog)).toEqual([{ code: 'CATALOG', path: 'bd2.slot' }])
   })
+
+  // GH #1151: a danger Badge's ×-shaped mark is the INTENT GLYPH (a decorative status mark, SPEC-R12),
+  // NOT a close affordance — the live "× Dealer wins" report mistook it for an inert close button. Pin
+  // the mechanism: the catalog's Badge renders NO interactive affordance at all (nothing focusable, no
+  // button part, no close event to wire), and the glyph stays aria-hidden so nothing announces "×".
+  // The affordance-never-inert law is upheld by there being no affordance — if a closeable tag/chip ever
+  // enters this catalog, it must ship WITH its close wiring (self-dismiss at minimum) and retire this pin.
+  it('Badge (GH #1151): danger × is the decorative intent glyph, never a close affordance — no interactive parts', () => {
+    const el = badgeFactory.create()
+    badgeFactory.applyProp(el, 'label', 'Dealer wins')
+    badgeFactory.applyProp(el, 'intent', 'danger')
+    document.body.append(el) // connect — the one-time glyph+label build runs in connected()
+    try {
+      const glyph = el.querySelector('[data-part="glyph"]')
+      expect(glyph, 'the × mark is the constant glyph part').not.toBeNull()
+      expect(glyph!.getAttribute('aria-hidden')).toBe('true')
+      // No close affordance exists anywhere in the badge: nothing focusable, no button, no close part.
+      expect(el.querySelector('button, [role="button"], [tabindex], [data-part="close"]')).toBeNull()
+      expect((el as HTMLElement).tabIndex).toBeLessThan(0) // the host itself is not focusable either
+    } finally {
+      el.remove()
+    }
+  })
 })
 
 describe('default catalog factories — Menu / MenuItem (ADR-0087 Wave A, overlay-controller.lld)', () => {
