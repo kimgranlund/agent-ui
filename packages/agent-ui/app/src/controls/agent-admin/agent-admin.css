@@ -56,6 +56,9 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-agent-admin) declares --ui-agent-admin-* ════════════════ */
 
 :where(ui-agent-admin) {
+  /* GH #1105 receipt-list spacing — own-chain alias (TKT-0066 item 5: @scope bodies never read
+     --md-sys-space-* directly; the raw reads PR #1114 shipped tripped styling-gates on main). */
+  --ui-agent-admin-receipt-gap: var(--md-sys-space-xs);
   --ui-agent-admin-ink: var(--md-sys-color-neutral-on-surface);
   --ui-agent-admin-surface: var(--md-sys-color-neutral-surface);
   --ui-agent-admin-border: var(--md-sys-color-neutral-outline-variant, currentColor);
@@ -1047,7 +1050,7 @@
      UA bullets kept (`list-style` untouched — the point of the issue); the buttons compact down to the
      note's own text register so a line reads as a linked list item, not a toolbar button. */
   [data-part='receipt-list'] {
-    margin-block: var(--md-sys-space-xs) 0;
+    margin-block: var(--ui-agent-admin-receipt-gap) 0;
     padding-inline-start: 1.25rem;
     list-style: disc;
   }
@@ -1057,7 +1060,7 @@
   [data-part='receipt-list'] [data-part='receipt-link'] {
     min-block-size: 0;
     padding-block: 0.0625rem;
-    padding-inline: var(--md-sys-space-xs);
+    padding-inline: var(--ui-agent-admin-receipt-gap);
     font: inherit; /* the note's own text register, not the button scale */
   }
 
