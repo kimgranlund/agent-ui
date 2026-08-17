@@ -247,6 +247,30 @@
   display: none;
 }
 
+/* The Cancel bar (GH #1107) — the complementary pair to `.ask-settle`: hidden while settled, shown ONLY
+ * while `[data-editing]` (the same collapsed-via-display, never-removed discipline). */
+.ask-edit-bar {
+  display: none;
+  align-items: center;
+  gap: var(--md-sys-space-sm);
+}
+.msg[data-ask][data-editing] .ask-edit-bar {
+  display: flex;
+}
+.ask-cancel {
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: var(--md-sys-shape-corner-base);
+  background: transparent;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font: inherit;
+  font-size: 0.72rem;
+  padding: 0.1rem var(--md-sys-space-sm);
+  cursor: pointer;
+}
+.ask-cancel:hover {
+  background: var(--md-sys-color-neutral-container-low);
+}
+
 .ask-annotation {
   margin: 0.4rem 0 0;
   font-size: 0.72rem;

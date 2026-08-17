@@ -166,9 +166,91 @@ function annotateAskFrozen(entry: AskEntry, state: 'answered' | 'bypassed'): voi
 // clears `answered` on the controls for the edit's duration; confirming a CHANGED answer appends an
 // amendment turn ("Changed: X → Y") the agent reconciles FORWARD (prior turns are never rewritten);
 // re-confirming the SAME answer appends nothing — the card simply re-settles.
+//
+// GH #1107 — the CANCEL leg (ADR-0196 left no way back out of an Edit re-open — the a2ui-mechanism review's
+// improvised-by-omission LOW finding). A ✕ affordance (always) + Esc-while-focus-is-within-the-card (the
+// component-patterns overlay/dismissal row's Escape half, ADR-0043/0045 — but this card is an INLINE settled
+// bubble, never a floating/anchored panel, so click-away is deliberately NOT adopted: the chat log's own
+// scroll/click surface has no "outside" boundary a light-dismiss controller could anchor to, and a stray
+// click on an unrelated message would silently discard an in-progress correction). Cancel restores the
+// settled state EXACTLY — snapshot the controls' raw values when Edit opens, write them back verbatim via
+// each control's own SILENT programmatic setter (the fleet convention every value-bearing control already
+// follows — `UICheckboxElement.checked` / `UIRadioGroupElement.value` / `UISelectElement.value` are directly
+// settable and never self-emit on assignment, only an interaction-driven commit does), so restoring is
+// zero-emission by construction: no `change`/`select` event, no data-model write, no action dispatch.
 
 /** The last-settled compact answer per ask surface — the amendment diff's "X" side. */
 const askAnswers = new Map<string, string>()
+
+/** The Cancel restore closure per ask surface, captured by `reopenAskForEdit` when Edit opens and consumed
+ * by `cancelAskEdit`. `undefined` whenever the card isn't mid-edit (never mounted until the first Edit). */
+const askEditSnapshots = new Map<string, () => void>()
+
+/** The raw-value read/write pair per CHOICE_CONTROL_TAGS member (mirrors ANSWER_PROJECTIONS' own exhaustive-
+ * over-the-const discipline, a2ui-mechanism review M4, GH #1065): a tag added to CHOICE_CONTROL_TAGS without
+ * a row here is a TS2741 compile error, not a silently-unrestorable control on cancel. This reads/writes the
+ * control's OWN raw value (radio-group's `.value`, checkbox's `.checked`, …) — never the human-readable
+ * projection above, which is lossy for a multi-control card and unusable as a write-back target. */
+const CONTROL_SNAPSHOT_OPS: Record<(typeof CHOICE_CONTROL_TAGS)[number], { read: (el: HTMLElement) => unknown; write: (el: HTMLElement, v: unknown) => void }> = {
+  'ui-radio-group': {
+    read: (el) => (el as HTMLElement & { value: string | null }).value,
+    write: (el, v) => {
+      ;(el as HTMLElement & { value: string | null }).value = v as string | null
+    },
+  },
+  'ui-segmented-control': {
+    read: (el) => (el as HTMLElement & { value: string | null }).value,
+    write: (el, v) => {
+      ;(el as HTMLElement & { value: string | null }).value = v as string | null
+    },
+  },
+  'ui-checkbox': {
+    read: (el) => (el as HTMLElement & { checked: boolean }).checked,
+    write: (el, v) => {
+      ;(el as HTMLElement & { checked: boolean }).checked = v as boolean
+    },
+  },
+  'ui-switch': {
+    read: (el) => (el as HTMLElement & { checked: boolean }).checked,
+    write: (el, v) => {
+      ;(el as HTMLElement & { checked: boolean }).checked = v as boolean
+    },
+  },
+  'ui-select': {
+    read: (el) => (el as HTMLElement & { value: string }).value,
+    write: (el, v) => {
+      ;(el as HTMLElement & { value: string }).value = v as string
+    },
+  },
+  'ui-combo-box': {
+    read: (el) => (el as HTMLElement & { value: string }).value,
+    write: (el, v) => {
+      ;(el as HTMLElement & { value: string }).value = v as string
+    },
+  },
+  'ui-multi-select': {
+    read: (el) => [...((el as HTMLElement & { value: readonly string[] }).value ?? [])],
+    write: (el, v) => {
+      ;(el as HTMLElement & { value: string[] }).value = v as string[]
+    },
+  },
+}
+
+/** Snapshot every choice control's raw value under `bubble` right now, returning a closure that writes every
+ * one back verbatim — the exact settled state Cancel restores. */
+function snapshotAskControls(bubble: HTMLElement): () => void {
+  const restores: Array<() => void> = []
+  for (const tag of CHOICE_CONTROL_TAGS) {
+    const ops = CONTROL_SNAPSHOT_OPS[tag]
+    for (const control of bubble.querySelectorAll<HTMLElement>(tag)) {
+      const prior = ops.read(control)
+      restores.push(() => ops.write(control, prior))
+    }
+  }
+  return () => {
+    for (const restore of restores) restore()
+  }
+}
 
 /** A compact, human-readable summary of the card's CURRENT selection, read from the rendered controls
  * themselves (DOM truth — the same controls the user just committed). */
@@ -197,6 +279,7 @@ function readAskAnswer(bubble: HTMLElement): string {
 function settleAskBubble(entry: AskEntry): void {
   const bubble = entry.bubble
   delete bubble.dataset.editing
+  askEditSnapshots.delete(entry.surfaceId) // any in-progress edit is over — committed or cancelled either way
   setAnsweredOnControls(bubble, true)
   const answer = readAskAnswer(bubble)
   askAnswers.set(entry.surfaceId, answer)
@@ -221,10 +304,50 @@ function settleAskBubble(entry: AskEntry): void {
 /** Edit re-opens the card: options expand again (CSS keys off `data-editing`) and `answered` clears on its
  * controls for the duration of the edit (ADR-0196 cl.5). The entry STAYS frozen for line-routing — a later
  * agent line targeting it is still dropped; only the user's own correction flows, through the card's own
- * commit → `interceptAskAmendment` below. */
+ * commit → `interceptAskAmendment` below, or the Cancel leg (✕ / Esc, GH #1107) → `cancelAskEdit` below. */
 function reopenAskForEdit(entry: AskEntry): void {
-  entry.bubble.dataset.editing = ''
-  setAnsweredOnControls(entry.bubble, false)
+  const bubble = entry.bubble
+  askEditSnapshots.set(entry.surfaceId, snapshotAskControls(bubble))
+  bubble.dataset.editing = ''
+  setAnsweredOnControls(bubble, false)
+
+  // The Cancel bar — page chrome, idempotent (one `.ask-edit-bar` per bubble, built once, shown only while
+  // `[data-editing]` via CSS — mirrors `.ask-settle`'s own idempotent-row pattern). A ✕ button (the safe
+  // core dismissal affordance) plus a bubble-SCOPED Escape listener (never `document`-level — Esc only
+  // cancels when focus is actually within THIS card, the "platform dismissal" convention's keyboard half
+  // narrowed to an inline, non-overlay surface). Click-away is deliberately NOT wired — see the file-header
+  // note above.
+  if (bubble.querySelector('.ask-edit-bar') === null) {
+    const bar = el('p', 'ask-annotation ask-edit-bar')
+    const cancel = document.createElement('button')
+    cancel.type = 'button'
+    cancel.className = 'ask-cancel'
+    cancel.textContent = '✕ Cancel'
+    cancel.setAttribute('aria-label', 'Cancel edit — keep the previous answer')
+    cancel.addEventListener('click', () => cancelAskEdit(entry))
+    bar.append(cancel)
+    bubble.append(bar)
+    bubble.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return
+      if (bubble.dataset.editing === undefined) return // only while THIS card is actually mid-edit
+      event.stopPropagation()
+      cancelAskEdit(entry)
+    })
+  }
+}
+
+/** The Cancel leg (✕ / Esc, GH #1107): restore the settled state EXACTLY as it was before Edit — write the
+ * `reopenAskForEdit` snapshot back verbatim (zero-emission by construction, see the file-header note), clear
+ * `data-editing`, then re-settle (re-derives the summary from the just-restored controls — same answer, same
+ * text). Emits NOTHING: no `updateDataModel`, no action, no amendment turn — `entry.state`/`askAnswers` are
+ * left exactly as they were (settleAskBubble only re-reads, it never diffs against a "prior" the way
+ * `interceptAskAmendment`'s commit leg does). A no-op if the card isn't actually mid-edit (defensive; nothing
+ * wires a Cancel click/Esc without `reopenAskForEdit` having run first). */
+function cancelAskEdit(entry: AskEntry): void {
+  const restore = askEditSnapshots.get(entry.surfaceId)
+  if (restore === undefined) return
+  restore()
+  settleAskBubble(entry)
 }
 
 /** The amendment leg: a commit from an ALREADY-ANSWERED card is the edit flow, never a fresh answer turn.
@@ -245,7 +368,10 @@ function interceptAskAmendment(message: A2uiClientMessage): boolean {
   settleAskBubble(entry) // re-reads the controls, clears data-editing, restores `answered`
   const next = askAnswers.get(entry.surfaceId) ?? ''
   if (next === prior) return true // re-confirming the same answer appends nothing (ADR-0196 cl.5)
-  const amendment = `Changed: ${prior} → ${next}`
+  // An empty prior (a2ui-mechanism review cosmetic finding, GH #1065/#1107) reads as a phantom diff —
+  // "Changed:  → X" — rather than the true shape: this is the card's FIRST recorded answer, worded the
+  // same as a fresh settle.
+  const amendment = prior === '' ? `Answered: ${next}` : `Changed: ${prior} → ${next}`
   addMessage('user', amendment)
   void runTurn({ kind: 'intent', text: traceDigest() + amendment, session })
   return true
