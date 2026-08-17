@@ -1453,3 +1453,55 @@ describe('ui-select cross-engine — GH #906: the listbox scrolls with an unobtr
     ).not.toBe('rgba(0, 0, 0, 0)')
   })
 })
+
+// ── GH #1100 — open-time selection centering + focus (the ui-menu sibling wiring) ──────────────
+//
+// ui-select does NOT share ui-menu's panel code; the same open-scroll helpers are wired directly
+// into its open effect. An overflowing listbox opens with the selected option centered (clamped at
+// the extremes) and holding real focus; no selection / short list = today's behavior.
+describe('ui-select — open-time selection centering + focus (GH #1100, both engines)', () => {
+  function bigSelect(value: string): string {
+    return `
+      <ui-select value="${value}">
+        ${Array.from({ length: 40 }, (_, i) => `<div role="option" value="v${i}">Option ${i + 1}</div>`).join('\n        ')}
+      </ui-select>`
+  }
+
+  it('centers a mid-list selected option and focuses it on open', async () => {
+    const { el } = mount(bigSelect('v20'))
+    const trigger = el.querySelector('[data-part="trigger"]') as HTMLElement
+    await userEvent.click(trigger)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const listbox = el.querySelector('[data-part="listbox"]') as HTMLElement
+    expect(listbox.scrollHeight, `${server.browser}: listbox must genuinely overflow`).toBeGreaterThan(listbox.clientHeight)
+    const selected = listbox.querySelector<HTMLElement>('[role=option][aria-selected="true"]')!
+    expect(selected.getAttribute('value')).toBe('v20')
+    expect(document.activeElement, `${server.browser}: focus lands on the selected option`).toBe(selected)
+
+    const boxRect = listbox.getBoundingClientRect()
+    const optRect = selected.getBoundingClientRect()
+    const boxMid = boxRect.top + boxRect.height / 2
+    const optMid = optRect.top + optRect.height / 2
+    expect(Math.abs(optMid - boxMid), `${server.browser}: selected option centered`).toBeLessThanOrEqual(optRect.height / 2 + 1)
+  })
+
+  it('clamps at the top extreme (first option selected) and opens unscrolled with no selection', async () => {
+    const first = mount(bigSelect('v0'))
+    const trigger1 = first.el.querySelector('[data-part="trigger"]') as HTMLElement
+    await userEvent.click(trigger1)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const listbox1 = first.el.querySelector('[data-part="listbox"]') as HTMLElement
+    expect(listbox1.scrollTop, `${server.browser}: top-extreme selection clamps to 0`).toBe(0)
+    expect(document.activeElement).toBe(listbox1.querySelector('[role=option][aria-selected="true"]'))
+    first.el.open = false
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const none = mount(bigSelect(''))
+    const trigger2 = none.el.querySelector('[data-part="trigger"]') as HTMLElement
+    await userEvent.click(trigger2)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const listbox2 = none.el.querySelector('[data-part="listbox"]') as HTMLElement
+    expect(listbox2.scrollTop, `${server.browser}: no selection opens at the top`).toBe(0)
+  })
+})

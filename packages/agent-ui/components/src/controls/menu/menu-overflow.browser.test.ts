@@ -128,3 +128,70 @@ describe('ui-menu — thin, auto-hiding scrollbar seam (GH #906, superseding GH 
     expect(style.overflowY).toBe('auto')
   })
 })
+
+// GH #1100 — open-time selection centering + focus. A selectable menu (menuitemradio rows) whose
+// panel overflows opens with the checked item centered in the scroll viewport (clamped at the
+// extremes) and holding real focus; a short list or an unselected menu behaves exactly as before.
+function radioMenu(count: number, checkedIndex: number | null): string {
+  return `
+  <ui-menu>
+    <button style="padding:6px 12px">Open</button>
+    ${Array.from({ length: count }, (_, i) =>
+      `<div role="menuitemradio"${i === checkedIndex ? ' aria-checked="true"' : ''} data-value="i${i}">Item ${i + 1}</div>`,
+    ).join('\n    ')}
+  </ui-menu>`
+}
+
+async function openMenu(el: UIMenuElement): Promise<HTMLElement> {
+  const trigger = el.querySelector('[data-part="trigger"]') as HTMLElement
+  await userEvent.click(trigger)
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+  return el.querySelector('[data-part="panel"]') as HTMLElement
+}
+
+describe('ui-menu — open-time selection centering + focus (GH #1100)', () => {
+  it('centers a mid-list checked item in the scroll viewport and focuses it', async () => {
+    const { el } = mount(radioMenu(40, 20))
+    const panel = await openMenu(el)
+    expect(panel.scrollHeight).toBeGreaterThan(panel.clientHeight) // genuinely overflowing
+    const item = panel.querySelector<HTMLElement>('[aria-checked="true"]')!
+    // Focus: the checked item holds real focus (ARIA menu roving-focus idiom, not activedescendant).
+    expect(document.activeElement).toBe(item)
+    expect(item.tabIndex).toBe(0)
+    // Centered: item midpoint within half an item-height of the viewport midpoint.
+    const panelRect = panel.getBoundingClientRect()
+    const itemRect = item.getBoundingClientRect()
+    const panelMid = panelRect.top + panelRect.height / 2
+    const itemMid = itemRect.top + itemRect.height / 2
+    expect(Math.abs(itemMid - panelMid)).toBeLessThanOrEqual(itemRect.height / 2 + 1)
+  })
+
+  it('clamps to the scroll bounds when the checked item sits at an extreme (last item)', async () => {
+    const { el } = mount(radioMenu(40, 39))
+    const panel = await openMenu(el)
+    const item = panel.querySelector<HTMLElement>('[aria-checked="true"]')!
+    expect(document.activeElement).toBe(item)
+    // Clamped to the bottom bound (cannot center past the end of the list) — and visible.
+    expect(panel.scrollTop).toBeGreaterThanOrEqual(panel.scrollHeight - panel.clientHeight - 1)
+    const panelRect = panel.getBoundingClientRect()
+    const itemRect = item.getBoundingClientRect()
+    expect(itemRect.bottom).toBeLessThanOrEqual(panelRect.bottom + 1)
+    expect(itemRect.top).toBeGreaterThanOrEqual(panelRect.top - 1)
+  })
+
+  it('leaves a short (non-overflowing) menu unscrolled, still focusing the checked item', async () => {
+    const { el } = mount(radioMenu(3, 1))
+    const panel = await openMenu(el)
+    expect(panel.scrollHeight).toBeLessThanOrEqual(panel.clientHeight)
+    expect(panel.scrollTop).toBe(0)
+    expect(document.activeElement).toBe(panel.querySelector<HTMLElement>('[aria-checked="true"]'))
+  })
+
+  it('opens an unselected overflowing menu at the top with focus on the first item (unchanged)', async () => {
+    const { el } = mount(radioMenu(40, null))
+    const panel = await openMenu(el)
+    expect(panel.scrollTop).toBe(0)
+    const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitemradio"]')]
+    expect(document.activeElement).toBe(items[0])
+  })
+})
