@@ -73,6 +73,14 @@ can hold.
   conflict in the registration surfaces (`site-manifest.json` · sitemaps · `llms.txt`), run
   `node scripts/generate-sitemap.mjs` and `node scripts/generate-llms-full.mjs`, then let the
   drift gates judge — parseability proves nothing.
+- **Derived-artifact conflicts regenerate, never hand-merge** (2026-08-17, applied twice: PR #1091's
+  rebase and PR #1148's): a rebase conflict inside a DERIVED file — `site/lib/__fixtures__/
+  theme-provider-built.css` (writer: fresh `npx vite build`, join sorted `assets/*.css` with `\n`,
+  per its own test banner) or `a2ui/src/live-agent/prompt-equivalence.baseline.json` (writer:
+  `RECAPTURE_BASELINE=1` on `recapture-baseline.test.ts`) — is resolved by taking EITHER side, then
+  regenerating from the rebased tree via that gate's own sanctioned writer and letting the
+  freshness gate judge. The same law as the registration-surfaces bullet above, generalized: a
+  conflict in generated content is a prompt to re-generate, never to merge hunks.
 
 ## When an external wave lands mid-campaign
 

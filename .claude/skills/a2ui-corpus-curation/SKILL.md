@@ -96,6 +96,13 @@ contract:
    re-added. Keep it on the shelf instead (a repair pending) and it DOES owe an allowlist entry, or the
    coverage gate reds.
 
+**Catalog-ownership check before any cross-store payload edit** (2026-08-17, GH #1155's no-op
+verdict): a payload store outside this repo sharing a prop NAME with the default catalog does not
+share the CONTRACT — nano-ui/gen-ui-kit's `catalog-a2ui_0_9.json` still legitimately declares
+`size` after this repo's #1148 scrub removed it, and their `Card`/`Header` vocabulary is not this
+catalog at all. Before stripping/migrating any stored payload, verify WHICH catalog it validates
+against; a different catalog makes the migration a corruption, not a fix.
+
 ## The halts — recognize, then resolve at the owner (corpus/harness LLD §8; `ADR-0165` cl.2/4)
 
 A halt is a **stop-and-resolve**, never a bypass. The pipeline fails closed; act on the cause:
