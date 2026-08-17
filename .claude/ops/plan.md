@@ -260,3 +260,14 @@ payload per the #125 ops-write split; written and landed by the dispatching sess
 - OPEN (5, all gated): #1077 (Kim: `ratify ADR-0193 amendment` → build dispatch) · #1092 (size:big diet,
   design leg dispatched) · #1081/#1083/#1084 (live-pixel, Kim's surface).
 - Cross-repo: claude-plugins#507–#512 (agent-protocol learnings harvest, Kim's fork).
+
+## Addendum — 2026-08-17 ~13:5xZ
+
+- ADR-0193 amendment RATIFIED (Kim utterance on #1077; amendment-mode flip 11c4c86f) → build shipped
+  same hour: PR #1095 (SyncReadableStorageAdapter + memory-store hydration cutover, prefix scan deleted,
+  size gate green untouched budget). #1077 CLOSED.
+- #1092 design leg shipped: PR #1094 — ADR-0197 (proposed, awaits `ratify ADR-0197`) + the round-2
+  decomposition (S1 lazy-split → S2 budget restore 103→102 mandatory; S3/S4 contingent). S1 build
+  dispatches on ratification.
+- BOARD: #1092 (ratification-gated) · #1081/#1083/#1084 (live-pixel, Kim's surface). Repo: 1 worktree ·
+  1 branch · origin main-only · 0 PRs · check+size+test green.
