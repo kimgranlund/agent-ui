@@ -25,6 +25,28 @@ describe('withRetry — SPEC-R10', () => {
     expect(fetchStub).toHaveBeenCalledTimes(1)
   })
 
+  it('a request that can never be retried is passed through UNCLONED (non-idempotent POST; maxAttempts:1); a retryable one is cloned except on its last attempt', async () => {
+    const seen: Request[] = []
+    const next = vi.fn(async (r: Request) => {
+      seen.push(r)
+      return new Response('x', { status: 503 })
+    })
+    const post = new Request('https://x/p', { method: 'POST', body: 'b' })
+    await withRetry()(post, next)
+    expect(seen[0]).toBe(post) // identity — no clone for a retry that cannot happen
+
+    const single = new Request('https://x/g', { method: 'GET' })
+    await withRetry({ maxAttempts: 1 })(single, next)
+    expect(seen[1]).toBe(single)
+
+    const get = new Request('https://x/g2', { method: 'GET' })
+    const p = withRetry({ maxAttempts: 2 })(get, next)
+    await vi.runAllTimersAsync()
+    await p
+    expect(seen[2]).not.toBe(get) // first attempt: cloned, the original kept for the retry
+    expect(seen[3]).toBe(get) // last attempt: the original itself
+  })
+
   it('a POST with idempotent:true DOES retry a retryable 503', async () => {
     let n = 0
     const fetchStub = vi.fn(async () => (n++ < 1 ? new Response('x', { status: 503 }) : new Response('ok', { status: 200 })))

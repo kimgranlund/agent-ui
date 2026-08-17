@@ -30,8 +30,10 @@ export function pushToPull<T>(opts: PushToPullOptions = {}): PushToPull<T> {
   let ended = false
   let endError: unknown
   let tornDown = false
-  // Waiters: a pending `next()` call parked because the queue is currently empty.
-  let waiter: { resolve: (r: IteratorResult<T>) => void; reject: (e: unknown) => void } | undefined
+  // Waiters: pending `next()` calls parked because the queue is currently empty — a FIFO, so two
+  // concurrent pulls both settle (a second pull never overwrites and strands the first).
+  type Waiter = { resolve: (r: IteratorResult<T>) => void; reject: (e: unknown) => void }
+  const waiters: Waiter[] = []
 
   function teardown(): void {
     if (tornDown) return
@@ -41,9 +43,8 @@ export function pushToPull<T>(opts: PushToPullOptions = {}): PushToPull<T> {
 
   function push(v: T): boolean {
     if (ended || tornDown) return false
-    if (waiter) {
-      const w = waiter
-      waiter = undefined
+    const w = waiters.shift()
+    if (w) {
       w.resolve({ value: v, done: false })
       return queue.length < highWaterMark
     }
@@ -65,30 +66,28 @@ export function pushToPull<T>(opts: PushToPullOptions = {}): PushToPull<T> {
   /** Consumer-side finish (`return()`/`throw()`): the stream is over regardless of what the producer does next. */
   function settleWaiter(): void {
     ended = true
-    if (waiter) {
-      const w = waiter
-      waiter = undefined
-      w.resolve({ value: undefined, done: true })
-    }
+    for (const w of waiters.splice(0)) w.resolve({ value: undefined, done: true })
   }
 
   function end(err?: unknown): void {
     if (ended) return
     ended = true
     endError = err
-    if (waiter) {
-      const w = waiter
-      waiter = undefined
-      if (err !== undefined) w.reject(err)
-      else w.resolve({ value: undefined, done: true })
+    if (waiters.length > 0) {
+      for (const w of waiters.splice(0)) {
+        if (err !== undefined) w.reject(err)
+        else w.resolve({ value: undefined, done: true })
+      }
       teardown()
     }
   }
 
   if (opts.signal) {
     if (opts.signal.aborted) {
-      // aborted before the bridge is even consumed — end immediately, teardown on first pull.
+      // aborted before the bridge is even consumed — end AND tear down now, exactly as a later
+      // abort does; a consumer that never pulls must not hold the producer open until first pull.
       ended = true
+      teardown()
     } else {
       opts.signal.addEventListener(
         'abort',
@@ -116,7 +115,7 @@ export function pushToPull<T>(opts: PushToPullOptions = {}): PushToPull<T> {
             return { value: undefined, done: true }
           }
           return new Promise<IteratorResult<T>>((resolve, reject) => {
-            waiter = { resolve, reject }
+            waiters.push({ resolve, reject })
           })
         },
         async return(value?: unknown): Promise<IteratorResult<T>> {

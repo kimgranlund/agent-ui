@@ -56,10 +56,13 @@ export function createStore<T = unknown>(): Store<T> {
       return state // O(1) — the current immutable state object, not a per-key copy
     },
     restore(snap) {
+      const prev = state
       state = snap
       // a restore can silently change many keys at once (e.g. a mutation rollback); subscribers of
-      // every key present in the restored map are mirrored — never re-fetched.
+      // every key present in the restored map are mirrored — never re-fetched — AND so are the
+      // keys the rollback REMOVED (present before, absent now: an optimistic create rolled back).
       for (const key of state.map.keys()) notify(key, 'commit')
+      for (const key of prev.map.keys()) if (!state.map.has(key)) notify(key, 'commit')
     },
     invalidate(keyOrPrefix) {
       for (const key of state.map.keys()) {

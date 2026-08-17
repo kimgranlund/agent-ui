@@ -56,6 +56,19 @@ describe('createStore — SPEC-R4', () => {
     expect(cb).toHaveBeenCalledWith('commit')
   })
 
+  it('restore() also wakes subscribers of a key the restored snapshot no longer holds (an optimistic create rolled back)', () => {
+    const store = createStore<number>()
+    const snap = store.snapshot()
+    const created = vi.fn()
+    store.subscribe('users/new', created)
+    store.commit('users/new', 1) // the optimistic create
+    expect(created).toHaveBeenCalledTimes(1)
+    store.restore(snap) // rollback: the key is gone from the map
+    expect(store.get('users/new')).toBeUndefined()
+    expect(created).toHaveBeenCalledTimes(2)
+    expect(created).toHaveBeenLastCalledWith('commit')
+  })
+
   it('subscribe returns an unsubscribe function', () => {
     const store = createStore<number>()
     const cb = vi.fn()

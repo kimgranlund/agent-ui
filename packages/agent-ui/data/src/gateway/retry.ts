@@ -54,13 +54,25 @@ export function withRetry(policy: RetryPolicy = {}): Middleware {
     const methodIdempotent = DEFAULT_IDEMPOTENT_METHODS.has(req.method.toUpperCase())
     const idempotent = methodIdempotent || explicitIdempotent
 
+    // A request that can never be retried (single attempt, or non-idempotent under the default
+    // predicate) is passed straight through — no clone, no body tee'd for a retry that cannot happen.
+    const canRetry = maxAttempts > 1 && (policy.retryOn !== undefined || idempotent)
+    if (!canRetry) {
+      try {
+        return await next(req)
+      } catch (e) {
+        throw normalizeError(e)
+      }
+    }
+
     let attempt = 0
     for (;;) {
       attempt++
       let res: Response | undefined
       let err: DataError | undefined
       try {
-        res = await next(req.clone())
+        // The LAST permitted attempt hands the original over — nothing left to preserve a body for.
+        res = await next(attempt >= maxAttempts ? req : req.clone())
       } catch (e) {
         err = normalizeError(e)
       }

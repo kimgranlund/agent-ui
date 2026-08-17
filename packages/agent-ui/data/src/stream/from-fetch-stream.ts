@@ -62,18 +62,24 @@ async function* sseFramesOf(body: ReadableStream<Uint8Array>, signal?: AbortSign
   let pendingRetry: number | undefined
 
   function flush(): SseEvent | undefined {
-    if (pendingData.length === 0 && pendingEvent === undefined && pendingId === undefined) return undefined
-    const evt: SseEvent = { data: pendingData.join('\n') }
-    if (pendingEvent !== undefined) evt.event = pendingEvent
-    if (pendingId !== undefined) evt.id = pendingId
-    if (pendingRetry !== undefined) evt.retry = pendingRetry
+    // WHATWG "dispatch the event": an EMPTY data buffer dispatches nothing — the event-type buffer
+    // is still cleared. `retry` rides on the next dispatched event exactly once, then resets.
+    let evt: SseEvent | undefined
+    if (pendingData.length > 0) {
+      evt = { data: pendingData.join('\n') }
+      if (pendingEvent !== undefined) evt.event = pendingEvent
+      if (pendingId !== undefined) evt.id = pendingId
+      if (pendingRetry !== undefined) evt.retry = pendingRetry
+      pendingRetry = undefined
+    }
     pendingData = []
     pendingEvent = undefined
     pendingId = undefined
     return evt
   }
 
-  for await (const line of linesOf(body, signal)) {
+  for await (const raw of linesOf(body, signal)) {
+    const line = raw.endsWith('\r') ? raw.slice(0, -1) : raw // CRLF endings — the '\r' is not payload
     if (line === '') {
       const evt = flush()
       if (evt) yield evt
@@ -86,7 +92,7 @@ async function* sseFramesOf(body: ReadableStream<Uint8Array>, signal?: AbortSign
     if (field === 'data') pendingData.push(value)
     else if (field === 'event') pendingEvent = value
     else if (field === 'id') pendingId = value
-    else if (field === 'retry') pendingRetry = Number(value)
+    else if (field === 'retry' && /^\d+$/.test(value)) pendingRetry = Number(value) // ASCII digits only, per spec
   }
   const last = flush()
   if (last) yield last
@@ -99,7 +105,12 @@ export function fromFetchStream(input: string, init: FromFetchStreamInit): Strea
   void _fetch
 
   async function* generate(): AsyncGenerator<unknown> {
-    const res = await doFetch(new Request(input, requestInit))
+    let res: Response
+    try {
+      res = await doFetch(new Request(input, requestInit))
+    } catch (e) {
+      throw normalizeError(e) // a rejected fetch (network down, abort) is the same one envelope as a bad status
+    }
     if (!res.ok) {
       // A non-2xx is an ERROR, never a frame source (a 502 HTML page is not NDJSON): surface it as
       // the one envelope (`http`, status) and release the body we will never read.
