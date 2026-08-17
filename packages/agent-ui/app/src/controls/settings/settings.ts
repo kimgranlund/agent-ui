@@ -13,11 +13,14 @@
 // REFERENCE — a real reassignment (e.g. an async-loaded schema landing after mount) rebuilds; a bare
 // RECONNECT with the SAME schema/store objects (`#builtSchema`/`#builtStore` still match) skips the
 // rebuild entirely (an isolated-shell relocation never regenerates/loses live field VALUES it doesn't
-// need to) but STILL re-arms every per-connection reactive seam a disconnect tore down — the rail's click
-// listeners, every generated field's validation effect, AND (TKT-0021) every field's `store.subscribe`
-// external-sync listener (all three die with the connection, all three must be re-armed on reconnect,
-// never left one-time — the component-reviewer MAJOR finding on the validation case; subscribe joins it
-// on the same branch, generate.ts's `resubscribe`).
+// need to) but STILL re-arms the per-connection reactive seams a disconnect tore down — every generated
+// field's validation effect AND (TKT-0021) every field's `store.subscribe` external-sync listener (both
+// die with the connection, both must be re-armed on reconnect, never left one-time — the component-
+// reviewer MAJOR finding on the validation case; subscribe joins it on the same branch, generate.ts's
+// `resubscribe`). The rail's + the compact `section-select`'s own `select` listeners are the THIRD
+// per-connection seam, but they live on nodes `#compose()` builds ONCE and never rebuilds — so they are
+// armed ONCE per connection straight from `connected()` (GH #1004), not from the build/reconnect branch
+// (which used to stack one more listener per rebuild on the same node — `this.listen` never dedupes).
 //
 // `schema`/`store` are non-reflected PROPERTIES (the `ui-split` `sizes` precedent: `prop.json<T>()` with
 // `attribute: false` is a pure type-carrier, never actually round-tripped through JSON — `store` in
@@ -83,6 +86,14 @@ export class UISettingsElement extends UIElement {
   protected connected(): void {
     this.#compose() // idempotent — builds ONLY the rail/panel shell, once ever
 
+    // GH #1004 — the rail's + section-select's `select` listeners: armed ONCE per connection, HERE. Both
+    // targets are `#compose()`-owned nodes that persist for the element's whole life (a rebuild replaces
+    // their CHILDREN — rail items / options — never the rail or the select itself), and `this.listen`
+    // scopes to THIS connection's AbortSignal (torn down on disconnect, never deduped) — so per-connection
+    // is exactly the right cadence: once from here, never again from `#build()` or the reconnect branch.
+    this.#armRailListeners()
+    this.#armSelectListener()
+
     // GH #962 — the compact band watcher: observes the SAME box `ui-master-detail`'s own narrow
     // `@container` resolves against (it establishes `container-type: inline-size` on itself,
     // master-detail.css) and stamps `data-compact` at the shell family's named COMPACT line
@@ -118,7 +129,7 @@ export class UISettingsElement extends UIElement {
     // schema/store → the rail buttons + every section's generated form (SPEC-R10/R11/R12). Reactive: a
     // real reassignment (different object references) rebuilds from scratch; a reconnect with the SAME
     // objects (`#builtSchema`/`#builtStore` unchanged) skips the rebuild (preserving live field VALUES)
-    // but still re-arms listeners + validation + re-shows the current section (see the branch below).
+    // but still re-arms validation + subscribe and re-shows the current section (see the branch below).
     this.effect(() => {
       const schema = this.schema
       const store = this.store
@@ -134,11 +145,11 @@ export class UISettingsElement extends UIElement {
           // A reconnect with NOTHING actually reassigned (an isolated-shell relocation) — re-arm, never
           // rebuild (live field values must survive it). `disconnected()` unconditionally disposed every
           // reactive VALIDATION effect (the same "dies with the connection, must be re-armed" shape the
-          // rail buttons' `this.listen` already documents) — re-running it here is NOT optional: without
-          // it, validation silently stops reacting forever post-reconnect (the component-reviewer MAJOR
-          // finding this fixes). The DOM/value state itself was never touched — only the reactive wiring.
-          this.#armRailListeners()
-          this.#armSelectListener()
+          // rail/select `this.listen` arm in `connected()` above already documents) — re-running it here
+          // is NOT optional: without it, validation silently stops reacting forever post-reconnect (the
+          // component-reviewer MAJOR finding this fixes). The DOM/value state itself was never touched —
+          // only the reactive wiring. (The rail/select listeners are NOT re-armed here — `connected()`
+          // already did, once, GH #1004.)
           this.#showPanel(this.section)
           for (const generated of this.#sections.values()) {
             this.#disposeGenerated.push(generated.reapplyValidation())
@@ -299,8 +310,9 @@ export class UISettingsElement extends UIElement {
       this.#disposeGenerated.push(generated.dispose)
     }
 
-    this.#armRailListeners()
-    this.#armSelectListener()
+    // NB: the rail's/select's `select` listeners are NOT (re-)armed here — the rail and the select are
+    // `#compose()`-owned nodes this rebuild never replaces (only their children), and the listeners were
+    // armed once per connection in `connected()` (GH #1004). Arming here stacked one more per rebuild.
 
     // Resolve the active section: keep an already-set `section` if it still names a real section in the
     // NEW schema (a deep link / author-set attribute, or a section that survived the reassignment), else
@@ -314,10 +326,11 @@ export class UISettingsElement extends UIElement {
     this.#markActiveRailItem(this.section)
   }
 
-  /** (Re-)wire the rail's OWN `select` — ONE listener, not one per item (the rail delegates its click and
+  /** Wire the rail's OWN `select` — ONE listener, not one per item (the rail delegates its click and
    *  emits its own `select` on a genuine bare-item activation, nav-rail.ts). `this.listen` scopes to THIS
-   *  connection's AbortSignal, so it must be called again whenever either the CONNECTION is fresh
-   *  (reconnect) or the RAIL itself is fresh (a rebuild) — never left to a one-time install. */
+   *  connection's AbortSignal (torn down on disconnect, never deduped), so this is called EXACTLY ONCE per
+   *  connection, from `connected()` — never from `#build()`: the rail node itself is never rebuilt (only its
+   *  items are), so a per-rebuild arm only stacked duplicate listeners on the same node (GH #1004). */
   #armRailListeners(): void {
     const rail = this.#rail
     if (!rail) return
@@ -329,9 +342,10 @@ export class UISettingsElement extends UIElement {
     })
   }
 
-  /** (Re-)wire `#select`'s OWN `select` commit — the compact-band twin of `#armRailListeners`, same
-   *  reconnect/rebuild re-arm discipline (`this.listen` scopes to the CURRENT connection). ui-select's
-   *  commit detail IS the committed option's `value` (select.md), so no DOM scan is needed. */
+  /** Wire `#select`'s OWN `select` commit — the compact-band twin of `#armRailListeners`, same once-per-
+   *  connection discipline (`this.listen` scopes to the CURRENT connection; the select node is never
+   *  rebuilt, only its options are — GH #1004). ui-select's commit detail IS the committed option's
+   *  `value` (select.md), so no DOM scan is needed. */
   #armSelectListener(): void {
     const select = this.#select
     if (!select) return

@@ -559,6 +559,106 @@ describe('UISettingsElement — residue-free disconnect', () => {
   })
 })
 
+describe('UISettingsElement — rail/select listeners are armed ONCE per connection, never per #build() (GH #1004)', () => {
+  // Pre-fix, `#build()` called `#armRailListeners`/`#armSelectListener` on EVERY schema/store reassignment;
+  // `this.listen` binds to the connection AbortSignal and never dedupes, so N rebuilds ⇒ N+1 stacked
+  // handlers on the SAME (never-rebuilt) rail/select nodes until disconnect. The handlers are idempotent
+  // (`this.section = <same id>`), so no VISIBLE behaviour differed — this probe counts the handler's own
+  // `.section` write per dispatched event (the prototype setter, spied), which is exactly the stacking depth.
+  // Counted SYNCHRONOUSLY right after the dispatch — the section-effect (`#markActiveRailItem`, its own
+  // `.section`-adjacent writes) only runs on the microtask flush, so nothing else is in the tally.
+
+  /** Two REAL reassignments (fresh object references ⇒ two `#build()` re-runs) of the same-shape schema. */
+  async function mountAndRebuildTwice(): Promise<UISettingsElement> {
+    const el = mount(new UISettingsElement())
+    el.schema = SCHEMA
+    await el.updateComplete
+    const firstItem = el.querySelector('ui-nav-rail-item')
+    el.schema = { ...SCHEMA } // a new reference ⇒ a rebuild (the by-reference law, settings.ts header)
+    await el.updateComplete
+    el.schema = { ...SCHEMA } // and again
+    await el.updateComplete
+    expect(el.querySelector('ui-nav-rail-item'), 'the rebuilds did not actually happen').not.toBe(firstItem)
+    expect(el.querySelectorAll('ui-nav-rail-item')).toHaveLength(2)
+    return el
+  }
+
+  it('two rebuilds add ZERO further `select` registrations on the rail or the section-select (structural probe)', async () => {
+    const el = mount(new UISettingsElement())
+    el.schema = SCHEMA
+    await el.updateComplete
+    const rail = el.querySelector('ui-nav-rail') as HTMLElement
+    const select = el.querySelector('[data-part="section-select"]') as HTMLElement
+    const railAdd = vi.spyOn(rail, 'addEventListener')
+    const selectAdd = vi.spyOn(select, 'addEventListener')
+    try {
+      el.schema = { ...SCHEMA }
+      await el.updateComplete
+      el.schema = { ...SCHEMA }
+      await el.updateComplete
+      const railSelects = railAdd.mock.calls.filter(([type]) => type === 'select')
+      const selectSelects = selectAdd.mock.calls.filter(([type]) => type === 'select')
+      expect(railSelects, 'each #build() stacked another rail `select` listener').toHaveLength(0)
+      expect(selectSelects, 'each #build() stacked another section-select `select` listener').toHaveLength(0)
+    } finally {
+      railAdd.mockRestore()
+      selectAdd.mockRestore()
+    }
+  })
+
+  it('after two rebuilds, ONE rail activation writes `.section` exactly ONCE — the handler is not stacked', async () => {
+    const el = await mountAndRebuildTwice()
+    const items = el.querySelectorAll<UINavRailItemElement>('ui-nav-rail-item')
+    const privacyItem = [...items].find((i) => i.dataset.sectionId === 'privacy')!
+    const sectionSet = vi.spyOn(UISettingsElement.prototype, 'section', 'set')
+    try {
+      privacyItem.click() // nav-rail: marks the item selected + emits its own `select` SYNCHRONOUSLY (nav-rail.ts)
+      expect(sectionSet, 'stacked rail listeners — the handler fired more than once for one event').toHaveBeenCalledTimes(1)
+      expect(sectionSet.mock.calls[0]?.[0]).toBe('privacy')
+    } finally {
+      sectionSet.mockRestore()
+    }
+    await el.updateComplete
+    expect(el.section, 'the once-armed rail listener must still WORK after the rebuilds').toBe('privacy')
+  })
+
+  it('after two rebuilds, ONE section-select commit writes `.section` exactly ONCE — the handler is not stacked', async () => {
+    const el = await mountAndRebuildTwice()
+    const select = el.querySelector('[data-part="section-select"]') as unknown as HTMLElement & { value: string }
+    select.value = 'privacy' // ADR-0019: a silent reflect — no event, no `.section` write of its own
+    const sectionSet = vi.spyOn(UISettingsElement.prototype, 'section', 'set')
+    try {
+      select.dispatchEvent(new Event('select', { bubbles: true })) // ui-select's OWN commit event
+      expect(sectionSet, 'stacked section-select listeners — the handler fired more than once for one event').toHaveBeenCalledTimes(1)
+      expect(sectionSet.mock.calls[0]?.[0]).toBe('privacy')
+    } finally {
+      sectionSet.mockRestore()
+    }
+    await el.updateComplete
+    expect(el.section, 'the once-armed section-select listener must still WORK after the rebuilds').toBe('privacy')
+  })
+
+  it('a reconnect (fresh AbortSignal) re-arms each exactly once — never zero, never two', async () => {
+    const el = await mountAndRebuildTwice()
+    const newParent = document.createElement('div')
+    document.body.append(newParent)
+    newParent.append(el) // disconnect (the old listeners die with the signal) + connect (armed ONCE again)
+    await el.updateComplete
+    const items = el.querySelectorAll<UINavRailItemElement>('ui-nav-rail-item')
+    const privacyItem = [...items].find((i) => i.dataset.sectionId === 'privacy')!
+    const sectionSet = vi.spyOn(UISettingsElement.prototype, 'section', 'set')
+    try {
+      privacyItem.click()
+      expect(sectionSet).toHaveBeenCalledTimes(1)
+    } finally {
+      sectionSet.mockRestore()
+    }
+    await el.updateComplete
+    expect(el.section).toBe('privacy')
+    newParent.remove()
+  })
+})
+
 // ── descriptor — ADR-0004 (structural + contract↔props + contract↔source) ──────────────────────────────
 
 const DIR = `${process.cwd()}/packages/agent-ui/app/src/controls/settings`
