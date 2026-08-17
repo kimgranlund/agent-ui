@@ -82,3 +82,16 @@
   on a peer session — each call raises an app-level grant card to Kim regardless of bypassPermissions
   (root-caused: those were the only grant-raising calls of the day). Peer state = on-issue claims, PR list,
   `git worktree list` + branch heads, this file. `list_sessions`/`get_session` metadata is fine.
+- **2026-08-17 (Kim, direct + repeated): `teamwork@nonoun-plugins` DISABLED in `.claude/settings.json`.**
+  Root cause of the "Allow Claude to run?" prompts Kim kept seeing overnight despite bypassPermissions:
+  they were NOT permission-mode prompts — `teamwork`'s `worktree_prebash_guard.py` is a PreToolUse(Bash)
+  hook, deliberately "ask, never block" by its own doctrine, and hooks are a SEPARATE enforcement layer
+  `bypassPermissions`/`permissions.allow` does not silence. It fires on every Bash call session-wide once
+  the plugin is enabled — not just from `teamwork:*`-typed agents. `harness`/`docs` also carry hooks but
+  only `PostToolUse` (non-blocking, no dialog) — left enabled. **Impact for AGENT-UI-3 (or anyone else
+  reading this checkout's settings at spawn):** `teamwork:*` subagent_type / Skill dispatches (docs-writer,
+  code-checker, build-lead, dispatch-ticket, planner, builder…) will not resolve until this flips back to
+  `true`. Use `general-purpose` with the skill's guidance inlined in the prompt instead — this session's
+  #1042–#1046 lanes did that from the start. Already-running subagent PROCESSES are unaffected (plugin dirs
+  are fixed at process spawn). Re-enable once the overnight run is done, or if the hook's false-positive
+  (worktree-identity pin drift between unrelated sibling dispatches) gets root-caused and fixed upstream.
