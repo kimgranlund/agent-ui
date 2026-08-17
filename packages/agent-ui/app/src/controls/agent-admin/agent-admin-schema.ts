@@ -795,6 +795,12 @@ export type AdminSurfaceTurnEvent =
    *  CONSUMED is the component's decision alone (the store-identity fence AND a fresh gate read,
    *  conjunctive), and a second enforcement point in the runner could only drift from it. */
   | { kind: 'patch'; patch: PersonaPatch }
+  /** ADR-0198 cl.1 — the model's explicit ask-flow completion declaration (`flowEnd: true` on the
+   *  meta-line), peeled by the runner exactly as `note`/`patch`/`plan` are. PAGE-CHROME territory by
+   *  contract (ADR-0198 cl.3): the page's own wrapper consumes it to present the shared end-of-flow
+   *  affordance row and filters it out; the component itself ignores this kind (its chat log is not
+   *  where the affordance lives, and a model that never emits it costs nothing — the safe-degrade law). */
+  | { kind: 'flowEnd' }
   /** ADR-0182 cl.4 / SPEC-R20 — a model-declared plan, peeled off the meta-line by the runner exactly as
    *  `patch`/`note`/`progress` are. The ALREADY-SHIPPED `plan` arm, reused verbatim (no new wire shape):
    *  here it carries the Builder-mission's open-sections view, per the runner's derived `builderMission`
