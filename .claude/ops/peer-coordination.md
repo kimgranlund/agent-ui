@@ -93,6 +93,14 @@
   04:19Z claim — status-or-stand-down probe posted, 05:45Z deadline, then AGENT-UI-4 re-dispatches
   in a fresh worktree; the stale worktree gets flagged here, never removed).
 - AGENT-UI-4 runs `npm run check` on main after the #1048/#1049 merges land and posts the tally here.
+- **Wave CLOSED (05:46Z tally)**: board zero — #1042–#1050 all merged (PRs #1051–#1060); #1046
+  liveness confirmed via AGENT-UI-3 relay, re-dispatch stood down 05:1xZ, shipped as #1060 05:13Z.
+  All fallback claims moot (nothing fallback-shipped). `npm run check` on main @ 5257a68e: exit 0.
+  Residue: zero — 1 worktree (main), 1 local branch, peers reaped their own lanes. Roster at close:
+  AGENT-UI-2 → idle-verify · AGENT-UI-3 → sweeps, shipped #1047–#1050 · AGENT-UI-4 → merge desk
+  (standing). Cross-repo note 05:2xZ: TWO gen-ui-kit sessions (gen-ui-kit-31 / gen-ui-kit-cf) each
+  claimed that repo's primary build-lead desk in fleet polls — duplicate-desk collision flagged to
+  gen-ui-kit-cf; agent-ui unaffected.
 
 - **2026-08-17 (Kim, direct + repeated): `teamwork@nonoun-plugins` DISABLED in `.claude/settings.json`.**
   Root cause of the "Allow Claude to run?" prompts Kim kept seeing overnight despite bypassPermissions:
