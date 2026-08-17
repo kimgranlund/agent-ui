@@ -271,3 +271,12 @@ payload per the #125 ops-write split; written and landed by the dispatching sess
   dispatches on ratification.
 - BOARD: #1092 (ratification-gated) · #1081/#1083/#1084 (live-pixel, Kim's surface). Repo: 1 worktree ·
   1 branch · origin main-only · 0 PRs · check+size+test green.
+
+## Closing addendum — 2026-08-17 ~14:2xZ
+
+- ADR-0197 RATIFIED (Kim) → S1+S2 shipped same hour (PR #1097): agent-admin arm lazy-split, app eager
+  marginal 104714 → 89921 B gz (−14.8 KB), budget RESTORED 103→102 KB with 14.5 KB headroom; the
+  eager-closure accounting fix closed a would-be vacuous size gate. #1092 + tracker #1096 CLOSED;
+  S3/S4 dormant per the ≥2 KB trigger.
+- BOARD: only the live-pixel trio #1081/#1083/#1084 — Kim has the ADHD test crib sheet in-session.
+- Repo: 1 worktree · 1 branch · origin main-only · 0 PRs · check + size + full test green @ 94d163a6.
