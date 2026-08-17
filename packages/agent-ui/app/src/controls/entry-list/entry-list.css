@@ -217,6 +217,21 @@
     color: var(--ui-entry-list-label-ink);
   }
 
+  /* GH #1172 — the add-from-library menu's two-line row: the name line and the entry's own description
+     stack (block), the description on the SAME secondary plane as `entry-description` above (same size,
+     same label ink) — the installed-row pattern carried into the picker. NOTE: ui-menu moves its rows
+     into its own panel, but that panel stays a descendant of the ui-menu host inside this section, so
+     this @scope still reaches them. */
+  [data-part='entry-library-label'],
+  [data-part='entry-library-description'] {
+    display: block;
+  }
+
+  [data-part='entry-library-description'] {
+    font-size: 0.8125rem;
+    color: var(--ui-entry-list-label-ink);
+  }
+
   /* GH #419 — the non-blocking modality warning, on the same plane as `entry-description` (same margin +
      size, warning ink instead of label ink): a hint about the text below it, never a bordered alert box. */
   [data-part='entry-notice'] {

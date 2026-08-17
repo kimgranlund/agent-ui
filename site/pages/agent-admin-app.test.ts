@@ -175,6 +175,47 @@ describe('ADMIN_LIBRARIES — data integrity (GH #47/#48)', () => {
     }
   })
 
+  // GH #1172 — Kim's live finding: a From-library row reading only `<id> — <collection>` gives zero
+  // context about what a workflow IS or which domain it serves. Every library workflow entry must carry
+  // a one-line human description (the row's visible secondary text), and the rendered row must carry it.
+  it('GH #1172 — every workflow library entry carries a non-empty one-line description', async () => {
+    const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
+    for (const pack of ADMIN_LIBRARIES[ENTRY_KINDS.workflow]!) {
+      for (const entry of pack.entries) {
+        expect(entry.description.trim().length, `${pack.id}/${entry.label} carries a description`).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('GH #1172 — the rendered From-library workflow rows carry the description as visible secondary text', async () => {
+    const { librariesForCategory } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
+    const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
+
+    const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    admin.libraries = librariesForCategory('hospitality')
+    admin.store = createMemoryStore({})
+    document.body.append(admin)
+    mounted.push(admin)
+    await whenFlushed()
+
+    const section = admin.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.workflow}"]`) as HTMLElement
+    const menu = section.querySelector('[data-part="entry-library-menu"]') as HTMLElement
+    expect(menu, 'the workflow section carries the add-from-library menu').not.toBeNull()
+    const rows = [...menu.querySelectorAll<HTMLElement>('[data-value]')]
+    expect(rows.length, 'core + hospitality playbooks render').toBeGreaterThan(0)
+    for (const row of rows) {
+      const label = row.querySelector('[data-part="entry-library-label"]')
+      const description = row.querySelector('[data-part="entry-library-description"]')
+      expect(label?.textContent ?? '', 'the name line renders').not.toBe('')
+      expect(description?.textContent?.trim() ?? '', `${label?.textContent} carries visible secondary text`).not.toBe('')
+      // The two-line anatomy: the description is IN the row's own content (so it joins the menuitem's
+      // computed accessible name), not tooltip-only.
+      expect(row.textContent).toContain(description!.textContent!)
+    }
+  })
+
   it('the a2ui-idioms pack derives from the REAL registry files — same count as the .md glob, known ids present', async () => {
     const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
     const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
@@ -274,7 +315,9 @@ describe('the Registered catalogs pack (ADR-0170 cl.7)', () => {
     // GH #564 — the Default row is ENSURED present from the very first render (`readCatalogEntries`), so
     // the picker already disables it: adding it again would mint the exact phantom-duplicate the fix
     // closes. Every other option is untouched.
-    expect([...menu.querySelectorAll('[data-value]')].map((r) => r.textContent)).toEqual(
+    // GH #1172 — the NAME LINE is the exact-equality target (the row's whole textContent now also
+    // carries the entry's own description as visible secondary text).
+    expect([...menu.querySelectorAll('[data-value]')].map((r) => r.querySelector('[data-part="entry-library-label"]')?.textContent)).toEqual(
       A2UI_CATALOG_OPTIONS.map((o) =>
         o.id === DEFAULT_A2UI_CATALOG_ID ? `${o.label} — Registered catalogs (already added)` : `${o.label} — Registered catalogs`,
       ),
@@ -640,7 +683,7 @@ describe('Integrations pack ↔ registry parity (GH #49/#567 S6)', () => {
     // The picker-disable affordance (GH #564 pairing, S3's per-pack widening): the already-added
     // integration's row is DISABLED, not hidden.
     const row = menu.querySelector('[data-value="integrations:0"]')
-    expect(row?.textContent, 'the row shows WHY it is unreachable').toBe('Weather (Open-Meteo) — Integrations (already added)')
+    expect(row?.querySelector('[data-part="entry-library-label"]')?.textContent, 'the row shows WHY it is unreachable').toBe('Weather (Open-Meteo) — Integrations (already added)')
     expect(row?.getAttribute('aria-disabled')).toBe('true')
 
     // The reject-on-commit half: dispatch the menu's own commit for that integration anyway (the real
@@ -832,7 +875,7 @@ describe('the MCP-services pack (GH #783 S4 — SPEC-R5)', () => {
     // DISABLED, not hidden — never clickable-but-silently-rejected. It rides the PACK flag (the kind flag
     // is false for `tool`), the S3 per-pack widening.
     const row = menu.querySelector('[data-value="mcp-services:0"]')
-    expect(row?.textContent, 'the row shows WHY it is unreachable').toBe('Calc server — MCP services (already added)')
+    expect(row?.querySelector('[data-part="entry-library-label"]')?.textContent, 'the row shows WHY it is unreachable').toBe('Calc server — MCP services (already added)')
     expect(row?.getAttribute('aria-disabled')).toBe('true')
 
     // The reject-on-commit half: dispatch the menu's own commit for that service anyway (the real path

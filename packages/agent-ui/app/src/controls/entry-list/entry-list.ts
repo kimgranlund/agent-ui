@@ -230,7 +230,23 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
         // already-added rows just as the catalog KIND does.
         const wouldBeId = entry.id?.trim() ? entry.id.trim() : slugify(entry.label)
         const alreadyPresent = (rejectOnCollision || pack.rejectOnCollision === true) && currentEntries.some((e) => e.id === wouldBeId)
-        row.textContent = alreadyPresent ? `${entry.label} — ${pack.label} (already added)` : `${entry.label} — ${pack.label}`
+        // GH #1172 — the two-line row: name line first, then the entry's own description as visible
+        // secondary text (the installed-row `entry-label` + `entry-description` pattern, carried into
+        // the picker) — a bare `<label> — <pack>` line gave zero context about what a library entry IS.
+        // Accessibility rides for free: the row is a `role=menuitem` whose accessible name is computed
+        // from its contents, so the description joins the accessible name with no extra ARIA wiring;
+        // `title` keeps mirroring the description (the pre-#1172 tooltip, now a redundancy, not the
+        // only carrier).
+        const rowLabel = document.createElement('span')
+        rowLabel.setAttribute('data-part', 'entry-library-label')
+        rowLabel.textContent = alreadyPresent ? `${entry.label} — ${pack.label} (already added)` : `${entry.label} — ${pack.label}`
+        row.append(rowLabel)
+        if (entry.description.length > 0) {
+          const rowDescription = document.createElement('span')
+          rowDescription.setAttribute('data-part', 'entry-library-description')
+          rowDescription.textContent = entry.description
+          row.append(rowDescription)
+        }
         row.title = entry.description
         if (alreadyPresent) row.setAttribute('aria-disabled', 'true')
         libraryMenu.append(row)
