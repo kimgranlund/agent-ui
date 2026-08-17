@@ -375,6 +375,13 @@ content.append(
     ),
   ),
 )
+content.append(
+  el('p', {}, [
+    document.createTextNode('Caching (this page) is not persistence: a resource() store lives in memory and dies with the page. For the seam a consumer reaches for to actually survive a reload, see '),
+    el('a', { href: './persistence.html' }, [document.createTextNode('Persistence')]),
+    document.createTextNode(' — no built-in StorageAdapter hook exists in @agent-ui/data v1; wiring one is a caller-composed read/write around resource()’s own signals.'),
+  ]),
+)
 
 // A tidy shutdown when the page is torn down (bfcache/navigation): the demos hold timers and a live loop.
 window.addEventListener('pagehide', () => {

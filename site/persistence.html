@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Persistence</title>
+  </head>
+  <body>
+    <!-- The persistence guide (GH #1046): @agent-ui/shared's StorageAdapter seam (ADR-0193 — proposed, not
+         yet ratified) — the interface, a live localStorage-tier demo (a real ui-text-field pair + ui-button
+         trio), the IndexedDB tier (derived from source, not live-demoed — jsdom implements no indexedDB), a
+         "choosing a tier" table, how it relates to ui-settings' own SettingsStore (settings-store vs
+         memory-store, now on the seam per PR #1027), and how (little) @agent-ui/data relates (caching, not
+         persistence). A GUIDE page, the same ungrouped site-level posture as data-doc.html/traits-doc.html.
+         An MPA entry auto-discovered by vite.config.ts's site/**/*.html glob — no config edit needed. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/persistence.ts"></script>
+  </body>
+</html>

@@ -64,7 +64,7 @@ interface PackageRow {
 }
 const PACKAGES: readonly PackageRow[] = [
   { name: '@agent-ui/components', summary: 'The whole framework: the signals kernel (reactive/), the UIElement/UIFormElement base classes + template engine (dom/), traits, and every shipped ui-* FACE control (controls/). Depends on nothing else in the workspace.' },
-  { name: '@agent-ui/shared', summary: 'Cross-cutting tokens and utility types — the colour role system (tokens.css) and the dimensional/runtime ramp (dimensions.css) every control reads.' },
+  { name: '@agent-ui/shared', summary: 'Cross-cutting tokens and utility types — the colour role system (tokens.css), the dimensional/runtime ramp (dimensions.css), and the StorageAdapter persistence seam.' },
   { name: '@agent-ui/icons', summary: 'The swappable icon-pack adapter (registry · resolver · declarative <ui-icon> consumer) — Phosphor vendored as the default pack, zero runtime dependency.' },
   { name: '@agent-ui/a2ui', summary: 'The A2UI (Generative UI) layer — a zero-dep renderer for Google’s A2UI protocol over the default catalog. Depends on @agent-ui/components.' },
   { name: '@agent-ui/a2a', summary: 'The A2A (Agent2Agent) protocol layer — wire types, validation, and the tic-tac-toe isolation-proof arena. Zero dependencies.' },
@@ -78,6 +78,15 @@ const PACKAGES: readonly PackageRow[] = [
   for (const p of PACKAGES) tbody.append(tableRow(codeCell(p.name), textCell(p.summary)))
   table.append(tbody)
   content.append(table)
+}
+{
+  const p = document.createElement('p')
+  p.append(document.createTextNode('Wanting to persist something below @agent-ui/app? Read the '))
+  const a = document.createElement('a')
+  a.href = './persistence.html'
+  a.textContent = 'Persistence'
+  p.append(a, document.createTextNode(' guide.'))
+  content.append(p)
 }
 content.append(
   el('p', { class: 'gs-note' }, [

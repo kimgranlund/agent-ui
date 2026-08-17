@@ -198,6 +198,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
         blurb: 'The closed seven-event vocabulary, UIElement.emit’s bubbles/composed/cancelable mechanics sliced from source, a per-control event inventory derived from every descriptor’s events[], and a live ui-select + ui-switch event log.',
       },
       {
+        href: './persistence.html',
+        title: 'Persistence',
+        blurb: '@agent-ui/shared’s StorageAdapter seam (ADR-0193, proposed): the async interface, localStorage + IndexedDB tiers, cross-tab notification, a live demo, and choosing a tier vs SettingsStore / @agent-ui/data.',
+      },
+      {
         href: './changelog.html',
         title: 'Changelog',
         blurb: 'The on-site changelog, derived straight from the repo root CHANGELOG.md — the same derive-don’t-copy discipline as the Decision Records index.',
