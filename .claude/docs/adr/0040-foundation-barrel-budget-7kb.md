@@ -164,6 +164,14 @@ is its own recorded ruling when it comes (GH #468 stays the standing app-diet fo
 mints nothing for them. cl.A1 alone therefore does NOT make the gate exit 0 — the ONE row it names reads
 within budget on the carrying commit; the remaining red is exactly those two rows.
 
+> **Note (2026-08-16, GH [#1031](https://github.com/kimgranlund/agent-ui/issues/1031)) — those two rows
+> got their own recorded ruling the same day:** re-base to measured (Kim's standing precedent on the
+> family-growth drift class). `scripts/measure-size.mjs` now carries `status-stream` at **2736 B gz**
+> (was 2710; measured 2736) and the `@agent-ui/app` marginal at **102 KB = 104448 B gz** (was 100 KB;
+> measured 104175, rounded up to the next whole KB per that file's convention — 273 B headroom, a
+> checkpoint not a ratchet; GH #468 stays the app-diet follow-up). Combined with cl.A1 above, `npm run
+> size` exits 0 again. This note appends; nothing above is rewritten.
+
 **Observed, not re-based (🟡 for the next dom addition).** The `.` foundation barrel — the row this ADR
 originally re-based — measures **7659 B gz (21611 B min) against 7680 B gz**: within, with **21 B** of
 headroom. The next `dom/`/`reactive/` addition of any size trips it; that re-base is its own recorded
