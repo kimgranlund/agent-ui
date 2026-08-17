@@ -18,7 +18,9 @@
 // there would race the deferred page-mount import below and read an empty document.
 import { describe, it, expect, beforeAll } from 'vitest'
 import { AGENT_PRESETS, personaFromPreset } from './agent-admin-presets.ts'
-import { createMemoryStore, ENTRY_KINDS, entriesStoreKey } from '@agent-ui/app'
+import { createMemoryStore } from '@agent-ui/app'
+import { ENTRY_KINDS } from '@agent-ui/app/agent-admin-entries'
+import { entriesStoreKey } from '@agent-ui/app/entry-data'
 import {
   exportPersonaFile,
   personaFileText,

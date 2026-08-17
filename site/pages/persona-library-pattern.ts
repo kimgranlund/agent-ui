@@ -17,7 +17,9 @@ import { mountPage } from './_page.ts' // FIRST import — foundation CSS cascad
 import { codeBlock } from '../lib/code-block.ts'
 import { el, exampleSection } from '../lib/specimens.ts'
 import { tableHead, tableRow, textCell, codeCell, renderChangelogTable } from '../lib/doc-page.ts'
-import { ENTRY_KINDS, entriesStoreKey, createMemoryStore } from '@agent-ui/app'
+import { createMemoryStore } from '@agent-ui/app'
+import { ENTRY_KINDS } from '@agent-ui/app/agent-admin-entries'
+import { entriesStoreKey } from '@agent-ui/app/entry-data'
 import { AGENT_PRESETS, personaFromPreset } from './agent-admin-presets.ts'
 import type { Persona } from './agent-admin-presets.ts'
 import {

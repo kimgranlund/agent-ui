@@ -12,7 +12,9 @@
 // loader is `node:fs`-based, ADR-0135 cl.11 — unimportable in the browser), so a registry edit flows into
 // the pack with zero hand-copying. The frontmatter split below mirrors `prompts/frontmatter.ts` (not an
 // exported subpath; the format is three trivial lines — id/triggers + body).
-import { ENTRY_KINDS, A2UI_CATALOG_OPTIONS, type EntryLibraryPack, type NewEntryInput } from '@agent-ui/app'
+import { ENTRY_KINDS } from '@agent-ui/app/agent-admin-entries'
+import { A2UI_CATALOG_OPTIONS } from '@agent-ui/app/agent-admin-schema'
+import type { EntryLibraryPack, NewEntryInput } from '@agent-ui/app/entry-data'
 // GH #783 S4 (LLD-C6) — the live SERVICE-row shape the sibling `fetchLiveServices` degrade-law serves;
 // type-only (erased under verbatimModuleSyntax), so `setLiveServices` below takes the SAME row shape the
 // site overlay hands it, no restated inline literal. No runtime cycle: admin-live-runner.ts imports nothing

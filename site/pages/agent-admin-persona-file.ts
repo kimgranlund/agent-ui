@@ -29,7 +29,8 @@
 // verbatim (including the `name` config key): only the roster IDENTITY (id + label) is uniquified —
 // mintIdentity below mints both — so the library shows two distinguishable rows while the agent itself
 // behaves byte-identically to the one that was exported.
-import { ENTRY_KINDS, entriesStoreKey } from '@agent-ui/app'
+import { ENTRY_KINDS } from '@agent-ui/app/agent-admin-entries'
+import { entriesStoreKey } from '@agent-ui/app/entry-data'
 import {
   PERSONA_ENTRY_LIST_KEYS,
   PERSONA_STATE_KEYS,

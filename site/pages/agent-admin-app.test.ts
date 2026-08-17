@@ -12,8 +12,9 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { whenFlushed } from '@agent-ui/components'
 import '@agent-ui/app/agent-admin'
 import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
-import { ENTRY_KINDS, entriesStoreKey } from '@agent-ui/app'
-import type { Entry } from '@agent-ui/app'
+import { ENTRY_KINDS } from '@agent-ui/app/agent-admin-entries'
+import { entriesStoreKey } from '@agent-ui/app/entry-data'
+import type { Entry } from '@agent-ui/app/entry-data'
 import { AGENT_PRESETS, presetSeed } from './agent-admin-presets.ts'
 
 declare const process: { cwd(): string }
@@ -156,7 +157,7 @@ describe('the store-swap probe (TKT-0074 acceptance) — assigning a new store r
 describe('ADMIN_LIBRARIES — data integrity (GH #47/#48)', () => {
   it('skill + workflow + resource kinds each carry packs; every pack has unique non-empty entry labels', async () => {
     const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
     for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource]) {
       const packs = ADMIN_LIBRARIES[kind]!
       expect(packs.length, `${kind} has at least one pack`).toBeGreaterThan(0)
@@ -176,7 +177,7 @@ describe('ADMIN_LIBRARIES — data integrity (GH #47/#48)', () => {
 
   it('the a2ui-idioms pack derives from the REAL registry files — same count as the .md glob, known ids present', async () => {
     const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
     const files = (readdirSync('packages/agent-ui/a2ui/src/agent/prompts/mini-skills') as string[]).filter((f) => f.endsWith('.md'))
     const pack = ADMIN_LIBRARIES[ENTRY_KINDS.skill]!.find((p) => p.id === 'a2ui-idioms')!
     expect(pack.entries.length, 'one pack entry per registry .md file — drift-free derivation').toBe(files.length)
@@ -190,7 +191,7 @@ describe('ADMIN_LIBRARIES — data integrity (GH #47/#48)', () => {
   // registry .md files, the SAME drift-free glob derivation the a2ui-idioms pack proves above.
   it('the pattern-source packs derive from the REAL genui-packs registry files — one pack per .md file, each carrying exactly one ready-to-add entry', async () => {
     const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
     const files = (readdirSync('packages/agent-ui/a2ui/src/agent/prompts/genui-packs') as string[]).filter((f) => f.endsWith('.md'))
     const packs = ADMIN_LIBRARIES[ENTRY_KINDS.patternSource]!
     expect(packs.length, 'one library pack per registry .md file — drift-free derivation').toBe(files.length)
@@ -214,7 +215,8 @@ describe('ADMIN_LIBRARIES — data integrity (GH #47/#48)', () => {
 describe('the Registered catalogs pack (ADR-0170 cl.7)', () => {
   it('IS the registry, mapped: one entry per A2UI_CATALOG_OPTIONS row, id-for-id and label-for-label', async () => {
     const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS, A2UI_CATALOG_OPTIONS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
+    const { A2UI_CATALOG_OPTIONS } = await import('@agent-ui/app/agent-admin-schema')
     const packs = ADMIN_LIBRARIES[ENTRY_KINDS.catalog]!
     expect(packs).toHaveLength(1)
     expect(packs[0]!.id).toBe('registered-catalogs')
@@ -230,7 +232,9 @@ describe('the Registered catalogs pack (ADR-0170 cl.7)', () => {
 
   it('a library add mints a store entry keyed to the REGISTRY id — so sanitizeCatalog can actually match it', async () => {
     const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
-    const { validateNewEntry, ENTRY_KINDS, A2UI_CATALOG_OPTIONS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
+    const { validateNewEntry } = await import('@agent-ui/app/entry-data')
+    const { A2UI_CATALOG_OPTIONS } = await import('@agent-ui/app/agent-admin-schema')
     const { sanitizeCatalog } = await import('@agent-ui/app/agent-admin-schema')
     const pack = ADMIN_LIBRARIES[ENTRY_KINDS.catalog]![0]!
 
@@ -250,7 +254,9 @@ describe('the Registered catalogs pack (ADR-0170 cl.7)', () => {
   // ONLY add path, and a pick has to land a roster row the selection can actually key to.
   it('renders as the Catalogs section\'s only add path, and a pick lands a roster row keyed to the registry id', async () => {
     const { librariesForCategory } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS, entriesStoreKey, A2UI_CATALOG_OPTIONS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
+    const { entriesStoreKey } = await import('@agent-ui/app/entry-data')
+    const { A2UI_CATALOG_OPTIONS } = await import('@agent-ui/app/agent-admin-schema')
     const { DEFAULT_A2UI_CATALOG_ID } = await import('@agent-ui/app/agent-admin-schema')
     const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
     const second = A2UI_CATALOG_OPTIONS[1]!
@@ -292,7 +298,7 @@ describe('the Registered catalogs pack (ADR-0170 cl.7)', () => {
 
   it('is GENERIC — every preset category sees it (never a persona-flavored pack)', async () => {
     const { librariesForCategory } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
     for (const category of ['hospitality', 'games', undefined] as const) {
       const packs = librariesForCategory(category)[ENTRY_KINDS.catalog]!
       expect(packs.map((p) => p.id), `category ${String(category)}`).toEqual(['registered-catalogs'])
@@ -346,7 +352,9 @@ describe('the produce POST body across the catalog refactor (ADR-0170 acceptance
 
   it('the body keys are unchanged and catalogId still carries the sanitized selection — now written by the SECTION', async () => {
     const { createAdminSurfaceTurn } = await import('../lib/admin-live-runner.ts')
-    const { ENTRY_KINDS, entriesStoreKey, A2UI_CATALOG_OPTIONS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
+    const { entriesStoreKey } = await import('@agent-ui/app/entry-data')
+    const { A2UI_CATALOG_OPTIONS } = await import('@agent-ui/app/agent-admin-schema')
     const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
     const second = A2UI_CATALOG_OPTIONS[1]!
 
@@ -395,7 +403,8 @@ describe('the produce POST body across the catalog refactor (ADR-0170 acceptance
 
   it('a REFUSED selection never reaches the wire (an unregistered row stays unselectable end-to-end)', async () => {
     const { createAdminSurfaceTurn } = await import('../lib/admin-live-runner.ts')
-    const { ENTRY_KINDS, entriesStoreKey } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
+    const { entriesStoreKey } = await import('@agent-ui/app/entry-data')
     const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
 
     const bodies: Array<Record<string, unknown>> = []
@@ -478,7 +487,7 @@ describe('Integrations pack ↔ registry parity (GH #49/#567 S6)', () => {
 
   it('every pack entry matches the SERVED trios (no live override — the hand-authored fallback, byte-compat with today)', async () => {
     const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
     const { listIntegrations } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations/index.ts')
     const INTEGRATIONS = listIntegrations()
     const pack = ADMIN_LIBRARIES[ENTRY_KINDS.tool]!.find((p) => p.id === 'integrations')!
@@ -499,7 +508,7 @@ describe('Integrations pack ↔ registry parity (GH #49/#567 S6)', () => {
 
   it('S6: a LIVE override (a fabricated served set, incl. an mcp:* id) reaches the pack — the live-read seam, not a hand-mirrored copy', async () => {
     const { ADMIN_LIBRARIES, setLiveIntegrations } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
     const served = [
       { id: 'weather', label: 'Weather (Open-Meteo)', description: 'Current conditions. Keyless.' },
       { id: 'mcp:acme:lookup', label: 'Acme: lookup', description: 'A discovered MCP tool — never hand-mirrored here.' },
@@ -520,7 +529,7 @@ describe('Integrations pack ↔ registry parity (GH #49/#567 S6)', () => {
   // fixes it by seeding `content` from the SAME `description` field the wire already serves.
   it("GH #847: the live override's `content` is seeded from `description`, never a hardcoded '' — the Tools-panel box is never emptied by turning the live overlay on", async () => {
     const { ADMIN_LIBRARIES, setLiveIntegrations } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
     const served = [
       { id: 'weather', label: 'Weather (Open-Meteo)', description: 'Current conditions + short forecast for a named place. Keyless.' },
       { id: 'mcp:acme:lookup', label: 'Acme: lookup', description: 'A discovered MCP tool — never hand-mirrored here.' },
@@ -536,7 +545,8 @@ describe('Integrations pack ↔ registry parity (GH #49/#567 S6)', () => {
 
   it('a library add mints a store entry keyed to the REGISTRY id, not to the human label', async () => {
     const { INTEGRATION_TOOLS } = await import('./agent-admin-libraries.ts')
-    const { validateNewEntry, ENTRY_KINDS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
+    const { validateNewEntry } = await import('@agent-ui/app/entry-data')
     const { resolveIntegrations } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations/index.ts')
 
     // The REAL add-from-library path (entry-list.ts hands the pack entry to validateNewEntry verbatim).
@@ -555,7 +565,8 @@ describe('Integrations pack ↔ registry parity (GH #49/#567 S6)', () => {
 
   it('presets seed integration entries on the registry id too (the SECOND pack→entry projection)', async () => {
     const { AGENT_PRESETS, presetSeed } = await import('./agent-admin-presets.ts')
-    const { ENTRY_KINDS, entriesStoreKey } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
+    const { entriesStoreKey } = await import('@agent-ui/app/entry-data')
     const { resolveIntegrations } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations/index.ts')
 
     // The Travel Agent (`travel`) seeds a NAMED SUBSET via `pick`, the Hotel Concierge (`concierge`)
@@ -600,7 +611,8 @@ describe('Integrations pack ↔ registry parity (GH #49/#567 S6)', () => {
   // generalized to every foreign-key-keyed tool pack, per Kim's ruling).
   it('re-adding an already-registered integration is rejected VISIBLY (`Already in the list.`), the store unchanged, and its picker row disabled — end-to-end on the rendered ui-agent-admin', async () => {
     const { ADMIN_LIBRARIES, librariesForCategory } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS, entriesStoreKey } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
+    const { entriesStoreKey } = await import('@agent-ui/app/entry-data')
     const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
 
     const pack = ADMIN_LIBRARIES[ENTRY_KINDS.tool]!.find((p) => p.id === 'integrations')!
@@ -660,7 +672,8 @@ describe('Integrations pack ↔ registry parity (GH #49/#567 S6)', () => {
   // no-op `setLiveIntegrations` could not make this pass vacuously.
   it('GH #848: a renamed live tool KEEPS its custom label when setLiveIntegrations re-fires (the pack is the offer; the store is the entry)', async () => {
     const { setLiveIntegrations, librariesForCategory } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS, entriesStoreKey } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
+    const { entriesStoreKey } = await import('@agent-ui/app/entry-data')
     const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
 
     const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
@@ -730,7 +743,7 @@ describe('the MCP-services pack (GH #783 S4 — SPEC-R5)', () => {
 
   it('AC1: a set `services` payload adds one pack entry per service (ref as explicit id, real joined per-tool content — ADR-0189 cl.5); reset to `undefined` drops the pack for every category', async () => {
     const { ADMIN_LIBRARIES, setLiveServices, librariesForCategory } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
     const services = [
       {
         id: 'mcp:calc:*',
@@ -776,7 +789,8 @@ describe('the MCP-services pack (GH #783 S4 — SPEC-R5)', () => {
 
   it('AC1: a library add mints a store entry keyed to the service ref (the real validateNewEntry path, ref as id)', async () => {
     const { ADMIN_LIBRARIES, setLiveServices } = await import('./agent-admin-libraries.ts')
-    const { validateNewEntry, ENTRY_KINDS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
+    const { validateNewEntry } = await import('@agent-ui/app/entry-data')
     setLiveServices([{ id: 'mcp:calc:*', label: 'Calc server', description: '2 tools discovered at boot', tools: [{ id: 'mcp:calc:add', label: 'Calc server: add', description: 'Add two numbers.' }] }])
     const pack = ADMIN_LIBRARIES[ENTRY_KINDS.tool]!.find((p) => p.id === 'mcp-services')!
     const result = validateNewEntry([], ENTRY_KINDS.tool, pack.entries[0]!, { rejectOnCollision: pack.rejectOnCollision })
@@ -789,7 +803,8 @@ describe('the MCP-services pack (GH #783 S4 — SPEC-R5)', () => {
 
   it('AC2: re-adding a service already in the list is rejected VISIBLY (`Already in the list.`), the store unchanged, and its picker row disabled — end-to-end on the rendered ui-agent-admin', async () => {
     const { setLiveServices, librariesForCategory } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS, entriesStoreKey } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
+    const { entriesStoreKey } = await import('@agent-ui/app/entry-data')
     const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
 
     setLiveServices([{ id: 'mcp:calc:*', label: 'Calc server', description: '2 tools discovered at boot', tools: [{ id: 'mcp:calc:add', label: 'Calc server: add', description: 'Add two numbers.' }] }])
@@ -875,7 +890,8 @@ describe('the master switch gates an MCP service ref on the wire (GH #783 S5 —
 
   it('master OFF ⇒ integrations [] on the wire; master ON ⇒ the mcp:calc:* ref rides the wire opaquely', async () => {
     const { createAdminSurfaceTurn } = await import('../lib/admin-live-runner.ts')
-    const { ENTRY_KINDS, entriesStoreKey } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
+    const { entriesStoreKey } = await import('@agent-ui/app/entry-data')
     const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
 
     const bodies: Array<Record<string, unknown>> = []
@@ -962,7 +978,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
 describe('librariesForCategory — GH #143 per-preset library scoping', () => {
   it('a hospitality preset sees the Hospitality packs, never Games, plus every generic pack', async () => {
     const { librariesForCategory } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
     const scoped = librariesForCategory('hospitality')
     expect(scoped[ENTRY_KINDS.skill]!.map((p) => p.id).sort()).toEqual(['a2ui-idioms', 'hospitality'])
     expect(scoped[ENTRY_KINDS.workflow]!.map((p) => p.id).sort()).toEqual(['playbooks-core', 'playbooks-hospitality'])
@@ -972,7 +988,7 @@ describe('librariesForCategory — GH #143 per-preset library scoping', () => {
 
   it('a games preset sees the Games packs, never Hospitality, plus every generic pack', async () => {
     const { librariesForCategory } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
     const scoped = librariesForCategory('games')
     expect(scoped[ENTRY_KINDS.skill]!.map((p) => p.id).sort()).toEqual(['a2ui-idioms', 'games'])
     expect(scoped[ENTRY_KINDS.workflow]!.map((p) => p.id).sort()).toEqual(['playbooks-core', 'playbooks-games'])
@@ -982,7 +998,7 @@ describe('librariesForCategory — GH #143 per-preset library scoping', () => {
 
   it('no category (undefined) drops BOTH flavored pairs — generic packs only', async () => {
     const { librariesForCategory } = await import('./agent-admin-libraries.ts')
-    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const { ENTRY_KINDS } = await import('@agent-ui/app/agent-admin-entries')
     const scoped = librariesForCategory(undefined)
     expect(scoped[ENTRY_KINDS.skill]!.map((p) => p.id)).toEqual(['a2ui-idioms'])
     expect(scoped[ENTRY_KINDS.workflow]!.map((p) => p.id)).toEqual(['playbooks-core'])
@@ -1089,7 +1105,7 @@ describe('the Builder persona (ADR-0178 cl.4 — hidden-until-invoked)', () => {
   // Generated from `DEFAULT_PROMPT_SECTIONS`, so the same drift trip-wire the value keys get: ALL and ONLY.
   it('its GENERATED vocabulary names ALL and ONLY the seeded builtin sections as replaceable', async () => {
     const { builderStore } = await import('./agent-admin-presets.ts')
-    const { DEFAULT_PROMPT_SECTIONS } = await import('@agent-ui/app')
+    const { DEFAULT_PROMPT_SECTIONS } = await import('@agent-ui/app/agent-admin-entries')
     const sections = builderStore().get(entriesStoreKey(ENTRY_KINDS.promptSection)) as Entry[]
     const vocabulary = sections.find((s) => s.id === 'patchable-keys')!
     const block = vocabulary.content.slice(vocabulary.content.indexOf('## Built-in sections you may REPLACE'))

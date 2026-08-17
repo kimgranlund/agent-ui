@@ -41,6 +41,8 @@
     "./agent-admin": "./src/controls/agent-admin/agent-admin.ts",
     "./agent-admin.css": "./src/controls/agent-admin/agent-admin.css",
     "./agent-admin-schema": "./src/controls/agent-admin/agent-admin-schema.ts",
+    "./agent-admin-entries": "./src/controls/agent-admin/entries.ts",
+    "./agent-admin-prompt-lint": "./src/controls/agent-admin/prompt-lint.ts",
     "./agent-admin-persona-patch": "./src/controls/agent-admin/persona-patch.ts"
   },
   "dependencies": {
