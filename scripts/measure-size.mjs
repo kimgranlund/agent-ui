@@ -158,7 +158,17 @@ const targets = [
   // tonight's builds) plus #744's ADR-0184 reasoning-trace opt-ins (~218 B — note rows, setPlan, settle
   // summary), all reviewed weight flagged un-flipped on PRs #743/#744 until this ruling. Same law as
   // above: a CHECKPOINT, not a ratchet.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 55 * KB],
+  // PROPOSED 2026-08-16 (ADR-0040 Amendment cl.A1, GH #1009 — Kim ratifies via `ratify ADR-0040 amendment`;
+  // the first re-base of this row routed through the ADR log itself, not only this comment ladder):
+  // re-based 55 KB → 58 KB (59392 B gz) — measured 58485 B gz (219733 B min) on main@0a6df860, 2165 B over
+  // the 56320 line (312 B when the ruling was recorded; 398 B at f1c06fd1 when the first draft proposed
+  // 56 KB; then #1018 + #1020 merged before it landed). Attributed rung by rung in the amendment
+  // (55574 + 2911 = 58485): the movers that crossed the 55 KB and 56 KB lines are #973's overlay() CSS
+  // anchor-positioning enhancement (+723 B) and #1018's ui-drill mint (+1435 B), with card-header
+  // structured (#817), ui-drawer (ADR-0188 S1 + #919/#922), swiper candy (#983), the select fix (#1011)
+  // and #1020's status-stream pendingComputed consumer (+332 B) as the rest — all reviewed weight, no
+  // gzip artifact. 907 B (~1.5%) stated headroom. Same law as above: a CHECKPOINT, not a ratchet.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 58 * KB],
   // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
   // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
   // `./markdown`, `./editor`) is not the one exception.

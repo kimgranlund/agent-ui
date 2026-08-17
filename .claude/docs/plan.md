@@ -344,8 +344,11 @@ Three instruments, ported from rce's discipline:
 
 **Budgets** (gz; confirmed by `npm run size` / `scripts/measure-size.mjs`): reactive+dom kernel ≤ ~7 kB
 consumer (re-based 6→7 kB, **ADR-0040** — legitimate ADR-0023 public-API growth: `mount` + the
-directive-authoring trio + `repeat`/`watch`; the barrel measures ~6.2 kB gz with ~1 kB headroom); the
-self-defining `ui-*` family barrel ≤ 8 kB; per-control marginal ≤ ~1.5–2 kB; a keep-all library ratchet that
+directive-authoring trio + `repeat`/`watch`; re-based again to 7.5 kB at ADR-0155 — the barrel measures
+7659 B gz against 7680 on 2026-08-16, 21 B headroom); the self-defining `ui-*` family barrel ≤ 58 KB (the
+worst-case every-control ceiling — re-based rung by rung, each a recorded ruling, in
+`scripts/measure-size.mjs`'s own comment ladder; latest: **ADR-0040 Amendment 2026-08-16**, proposed,
+measured 58485 B gz); per-control marginal ≤ ~1.5–2 kB; a keep-all library ratchet that
 is shrink-only **above the re-based floor**. Tree-shake proof: importing one control drags only it + real deps.
 *(Recommended — ADR-0040: wire `npm run size` into the standard gate so a budget regression FAILS rather than
 going silent.)*
