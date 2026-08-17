@@ -8,7 +8,9 @@
 // worth of real authored prose must come back clean with every modality switched off. A lint that fires on
 // correct text teaches an admin to ignore it, and then the real conflict lands unread.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { DEFAULT_PROMPT_SECTIONS, ENTRY_KINDS, entriesStoreKey, lintSectionContent, type Entry } from '@agent-ui/app'
+import { DEFAULT_PROMPT_SECTIONS, ENTRY_KINDS } from '@agent-ui/app/agent-admin-entries'
+import { entriesStoreKey, type Entry } from '@agent-ui/app/entry-data'
+import { lintSectionContent } from '@agent-ui/app/agent-admin-prompt-lint'
 import {
   ACTIVE_PRESET_KEY,
   AGENT_PRESETS,

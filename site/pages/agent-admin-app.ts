@@ -86,7 +86,8 @@ import { librariesForCategory, setLiveIntegrations, setLiveServices } from './ag
 // freshly-minted blank agent renders exactly what a bare, unconfigured `<ui-agent-admin>` would.
 import { DEFAULT_MODEL_ID, defaultAgentConfigSchema, initialValuesFor } from '@agent-ui/app/agent-admin-schema'
 // GH #921 — the card's Capabilities/Surface summaries read straight off the persona's OWN stored config.
-import { ENTRY_KINDS, entriesStoreKey, initialEntryValues, type Entry } from '@agent-ui/app'
+import { ENTRY_KINDS, initialEntryValues } from '@agent-ui/app/agent-admin-entries'
+import { entriesStoreKey, type Entry } from '@agent-ui/app/entry-data'
 
 const root = document.querySelector('#app') ?? document.body
 

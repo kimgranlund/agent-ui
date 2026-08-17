@@ -29,33 +29,24 @@ export { UINavRailItemElement } from './controls/nav-rail/nav-rail-item.ts'
 export { UISurfaceHostElement } from './controls/surface-host/surface-host.ts'
 export { UIConversationElement } from './controls/conversation/conversation.ts'
 export type { AgentTurnHandle, TurnAction } from './controls/conversation/conversation.ts'
-// TKT-0039 (ADR-0131) — the Agent Admin UI: composes ui-split/ui-settings/ui-conversation into one new
-// app-tier surface. No new primitive family, no new protocol dependency.
-export { UIAgentAdminElement } from './controls/agent-admin/agent-admin.ts'
-export { defaultAgentConfigSchema, agentConfigSchema, runStubAgentTurn } from './controls/agent-admin/agent-admin-schema.ts'
-// ADR-0170 cl.7 — the registered-catalog REGISTRY, exported so a consumer's library pack can be MAPPED
-// from it rather than hand-copying a trio table (site/pages/agent-admin-libraries.ts's "Registered
-// catalogs" pack is that consumer). Browser-importable by construction, unlike the node-fenced
-// integrations registry — so a third catalog is one row here and zero pack edits, with no parity test to
-// forget. `sanitizeCatalog`/`A2UI_CATALOG_KEY` stay component-internal: a consumer offers catalogs, it
-// never re-implements the fail-closed read.
-export { A2UI_CATALOG_OPTIONS } from './controls/agent-admin/agent-admin-schema.ts'
-export type { AgentConfigSnapshot } from './controls/agent-admin/agent-admin-schema.ts'
-// ADR-0132 — the generic ordered-entry-list primitive: prompt sections (Foundation/Personality/Critical
-// Items) + Skills/Workflows/Resources/Tools, five instantiations of one shape. ADR-0164 cl.2 split the
-// generic data core out to `entry-list/entry-data.ts` — every name below stays byte-identical, re-pointed
-// to its new home rather than renamed.
-export { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS, DEFAULT_SYSTEM_PROMPT_FALLBACK, composeSystemPrompt, initialEntryValues } from './controls/agent-admin/entries.ts'
-// GH #848 — `renameEntry` joins them: the display-name write (ids never rewritten), exported for the same
-// reason `validateNewEntry` is — a consumer that owns its own store writes (the site's own tests, a
-// bring-your-own-store host) applies the one shared law instead of hand-rolling a second label writer.
-// GH #917 — and `describeEntry` beside it, for the identical reason: the Edit drawer made description an
-// editable per-entry field, so its trim/write law needs the same one home a consumer can reach.
-export { validateNewEntry, renameEntry, describeEntry, entriesStoreKey } from './controls/entry-list/entry-data.ts'
-export type { Entry, EntryLibraryPack, NewEntryInput } from './controls/entry-list/entry-data.ts'
-// GH #419 — the prompt-section modality LINT (pure, non-blocking): the vocabulary that says an enabled
-// prompt section names a modality whose Surface Option is off. Exported because the persona TEXTS that
-// feed it are authored outside this package (site/pages/agent-admin-presets.ts), so their own
-// modality-neutrality gate reads the same vocabulary the admin UI warns from — one source, no drift.
-export { lintPromptSections, lintSectionContent, MODALITY_VOCABULARY } from './controls/agent-admin/prompt-lint.ts'
-export type { ModalityStates, ModalityVocabulary } from './controls/agent-admin/prompt-lint.ts'
+// ADR-0197 (GH #1092) — the agent-admin arm LEFT this barrel. Its static exports
+// (`UIAgentAdminElement`, the schema/entries/prompt-lint/entry-data values and types) live on the
+// `./agent-admin*` + `./entry-data` subpaths only (clause 2 added `./agent-admin-entries` and
+// `./agent-admin-prompt-lint`), so barrel consumers stop paying the arm's ~22 % of the entry graph
+// (agent-admin-lazy.bundle.test.ts is the trip-wire). The one barrel affordance that remains is the
+// memoized LAZY accessor below (ADR-0197 cl.3, the dogfood-lazy shape): importing the arm's module
+// self-defines `<ui-agent-admin>` (fleet idiom), so a mount-only consumer writes
+// `await loadAgentAdmin(); html\`<ui-agent-admin>…\``. Same-origin chunk ⇒ no timeout ceiling (the
+// markdown-lazy failure/timeout precedents carry the degrade contract); a REJECTED load is dropped
+// from the memo so the next call retries instead of inheriting a poisoned promise, while a resolved
+// one is reused for the page's whole lifetime.
+let agentAdminMemo: Promise<typeof import('./controls/agent-admin/agent-admin.ts')> | undefined
+export function loadAgentAdmin(): Promise<typeof import('./controls/agent-admin/agent-admin.ts')> {
+  if (agentAdminMemo === undefined) {
+    agentAdminMemo = import('./controls/agent-admin/agent-admin.ts').catch((err: unknown) => {
+      agentAdminMemo = undefined
+      throw err
+    })
+  }
+  return agentAdminMemo
+}

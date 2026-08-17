@@ -593,14 +593,34 @@ const appCssQuerySuffixPlugin = {
 // verified). Rounded up to the next whole KB per this file's convention — 758 B headroom. This is the
 // LAST re-base of the class by its own ruling: GH #1092 (diet round 2 — lazy-split the agent-admin arm,
 // est. 20-25 KB gz) must land the marginal back UNDER 102 KB; its acceptance forbids raising this again.
-const APP_MARGINAL_BUDGET = 103 * KB
+//
+// Restored 103 KB -> 102 KB (104448 B gz) 2026-08-17 (ADR-0197 cl.5, GH #1092 S2): the promised diet
+// landed — the `.` barrel dropped its static agent-admin arm behind `loadAgentAdmin()` (S1), and the
+// eager marginal measured 89921 B gz (fresh npm ci, exit-code verified; was 104714 B gz on
+// main@2b65338b — a 14791 B gz cut, 14527 B headroom under this checkpoint). Measured through the
+// eager-closure accounting the same change introduced (entry + transitive static `imports` — the split's
+// own code-splitting made bare `isEntry` under-count). Per GH #1080's ruling and ADR-0197 cl.5, upward
+// re-bases of this row are CLOSED as a class: future growth pays with a diet or a ruled feature-weight
+// ADR, never a drift bump. Downward re-bases remain ordinary.
+const APP_MARGINAL_BUDGET = 102 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
 await appBundle.close()
 const appChunks = appOutput.filter((c) => c.type === 'chunk')
-const appEntryCode = appChunks.filter((c) => c.isEntry).map((c) => c.code).join('')
-const appLazyCode = appChunks.filter((c) => !c.isEntry).map((c) => c.code).join('')
+// ADR-0197 (GH #1092, 2026-08-17): the barrel's `loadAgentAdmin()` dynamic import makes Rolldown
+// code-split the graph — the shells land in a SHARED chunk the entry imports STATICALLY (isEntry: false,
+// but still eager: it loads with the barrel, before any dynamic import fires). Counting only `isEntry`
+// chunks here would under-count the eager cost (measured: 304 B gz "entry" the day the split landed) and
+// lump the eagerly-loaded shells into the lazy figure. The honest eager set is the STATIC-import closure
+// from the entry chunks (`chunk.imports`, never `dynamicImports`); lazy = everything else.
+const appByFile = new Map(appChunks.map((c) => [c.fileName, c]))
+const appEager = new Set(appChunks.filter((c) => c.isEntry).map((c) => c.fileName))
+for (const name of appEager) {
+  for (const dep of appByFile.get(name)?.imports ?? []) if (appByFile.has(dep)) appEager.add(dep)
+}
+const appEntryCode = appChunks.filter((c) => appEager.has(c.fileName)).map((c) => c.code).join('')
+const appLazyCode = appChunks.filter((c) => !appEager.has(c.fileName)).map((c) => c.code).join('')
 const appMin = Buffer.byteLength(appEntryCode)
 const appGz = gzipSync(appEntryCode, { level: 9 }).length
 const appLazyGz = appLazyCode ? gzipSync(appLazyCode, { level: 9 }).length : 0
@@ -613,7 +633,7 @@ console.log(
 )
 if (appLazyGz > 0) {
   console.log(
-    `@agent-ui/app — lazy chunk(s) reachable via a dynamic import (ui-agent-admin's CodeMirror editor per ADR-0139 cl.8c/8d, and its dogfood asset pair per GH #354), never in the main bundle: ${appLazyGz} B gz (informational, non-gating)`,
+    `@agent-ui/app — lazy chunk(s) reachable via a dynamic import (the whole agent-admin arm per ADR-0197's loadAgentAdmin(), its CodeMirror editor per ADR-0139 cl.8c/8d, and its dogfood asset pair per GH #354), never in the eager bundle: ${appLazyGz} B gz (informational, non-gating)`,
   )
 }
 

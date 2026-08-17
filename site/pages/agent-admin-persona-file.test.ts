@@ -14,8 +14,11 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 import '@agent-ui/app/agent-admin'
 import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
-import { ENTRY_KINDS, entriesStoreKey, createMemoryStore } from '@agent-ui/app'
-import type { Entry, SettingsStore } from '@agent-ui/app'
+import { createMemoryStore } from '@agent-ui/app'
+import type { SettingsStore } from '@agent-ui/app'
+import { ENTRY_KINDS } from '@agent-ui/app/agent-admin-entries'
+import { entriesStoreKey } from '@agent-ui/app/entry-data'
+import type { Entry } from '@agent-ui/app/entry-data'
 import {
   A2UI_CATALOG_KEY,
   A2UI_LOCAL_PATTERNS_KEY,
@@ -58,7 +61,7 @@ import {
   readPersonaState,
 } from './agent-admin-persona-file.ts'
 import { DEFAULT_MODEL_ID, defaultAgentConfigSchema, initialValuesFor } from '@agent-ui/app/agent-admin-schema'
-import { initialEntryValues } from '@agent-ui/app'
+import { initialEntryValues } from '@agent-ui/app/agent-admin-entries'
 
 // ── the jsdom ElementInternals stub (agent-admin-app.test.ts verbatim) ─────────────────────────────────
 let realAttachInternals: typeof HTMLElement.prototype.attachInternals

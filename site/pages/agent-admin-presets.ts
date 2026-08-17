@@ -31,8 +31,9 @@
 // cites the composed prompt + enabled capabilities without emitting surfaces.
 import { createMemoryStore } from '@agent-ui/app/settings-memory-store'
 import type { SettingsStore } from '@agent-ui/app/settings-store'
-import { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS, entriesStoreKey } from '@agent-ui/app'
-import type { Entry, NewEntryInput } from '@agent-ui/app'
+import { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS } from '@agent-ui/app/agent-admin-entries'
+import { entriesStoreKey } from '@agent-ui/app/entry-data'
+import type { Entry, NewEntryInput } from '@agent-ui/app/entry-data'
 // GH #46 — the hospitality/travel trio seeds from the SAME pack texts the add-from-library menu offers
 // (agent-admin-libraries.ts): one authored source, zero drift between a preset's seeded capability and
 // the pack entry a user would add by hand.
