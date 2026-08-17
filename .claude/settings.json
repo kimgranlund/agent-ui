@@ -17,7 +17,7 @@
     "llm@nonoun-plugins": true,
     "harness@nonoun-plugins": true,
     "docs@nonoun-plugins": true,
-    "teamwork@nonoun-plugins": false,
+    "teamwork@nonoun-plugins": true,
     "screens@nonoun-plugins": true,
     "agent-protocols@nonoun-plugins": true,
     "design@nonoun-plugins": true,
