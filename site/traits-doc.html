@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · @agent-ui/components — traits</title>
+  </head>
+  <body>
+    <!-- The @agent-ui/components TRAITS guide: the three published trait subpaths (./traits/overlay,
+         ./traits/list-reorder, ./traits/scroll-spy) plus the unrelated ./dogfood-frame asset pair. Every
+         OptionsX interface + function signature is sliced VERBATIM from the real trait source at build
+         time (Vite `?raw` + this page's own brace-balanced extractor) — never hand-retyped. Traits live
+         outside components/src/controls (no descriptor .md), so this is an ungrouped site-level GUIDE
+         page, the same posture as router-doc.html/data-doc.html/highlight-doc.html. An MPA entry
+         auto-discovered by vite.config.ts's site/**/*.html glob — no config edit needed. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/traits-doc.ts"></script>
+  </body>
+</html>

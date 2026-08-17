@@ -20,6 +20,10 @@ import { parseDoc } from '../lib/frontmatter.ts'
 // The shipped descriptor, pulled at build time via Vite's `?raw` (the frontmatter.ts convention) — the
 // SAME source the app package's own contract trip-wire (super-shell.test.ts) checks against.
 import shellMd from '../../packages/agent-ui/app/src/controls/super-shell/super-shell.md?raw'
+// The named breakpoint constants (LLD-C7, GH #99) — live-imported, not hand-typed, so the "40rem"/
+// "52.5rem" literals below can never drift from the ONE source super-shell.css's own @container rule
+// is gated against (shell-breakpoint.test.ts).
+import { SHELL_NARROW_BREAKPOINT, SHELL_COMPACT_BREAKPOINT } from '@agent-ui/app/shell-breakpoint'
 
 const { content } = mountPage({
   title: 'Composing a ui-super-shell',
@@ -202,24 +206,54 @@ content.append(
 content.append(sectionHeading('4 · Narrow reflow'))
 content.append(
   para(
-    'Below a 40rem container width (SPEC-R4), sides auto-collapse via the query alone — never by ' +
-      'writing the collapsed-* attributes, so a persisted wide-state choice always survives a narrow visit ' +
-      '(the no-clobber law). A header toggle at narrow re-opens its side as an OVERLAY above the canvas, ' +
-      'one side at a time, instead of squeezing it. Drag the handle below narrower than 40rem, then click a ' +
-      'toggle:',
+    `Below a ${SHELL_NARROW_BREAKPOINT} container width (SPEC-R4), sides auto-collapse via the query ` +
+      'alone — never by writing the collapsed-* attributes, so a persisted wide-state choice always ' +
+      'survives a narrow visit (the no-clobber law). A header toggle at narrow re-opens its side as an ' +
+      `OVERLAY above the canvas, one side at a time, instead of squeezing it. Drag the handle below ` +
+      `narrower than ${SHELL_NARROW_BREAKPOINT}, then click a toggle:`,
   ),
 )
 const resizeDemo = el('div', 'ss-resize')
 resizeDemo.append(
   demoShell([
     slot('header', 'header', 'Click ≡ at narrow to overlay-restore a side.'),
-    slot('nav-pane', 'nav-pane', 'Auto-hides below 40rem; toggle restores as an overlay.'),
+    slot('nav-pane', 'nav-pane', `Auto-hides below ${SHELL_NARROW_BREAKPOINT}; toggle restores as an overlay.`),
     slot('content', 'content', 'Never squeezed — the side floats above it.'),
     slot('options-pane', 'options-pane', 'Auto-hides the same way.'),
     slot('footer', 'footer', 'Stays put — permanent chrome.'),
   ]),
 )
-content.append(resizeDemo, el('p', 'ss-caption', '↑ Drag the resize handle (bottom-right) below 40rem, then click a header toggle to overlay-restore that side.'))
+content.append(
+  resizeDemo,
+  el('p', 'ss-caption', `↑ Drag the resize handle (bottom-right) below ${SHELL_NARROW_BREAKPOINT}, then click a header toggle to overlay-restore that side.`),
+)
+content.append(
+  para(
+    'This ',
+    code(SHELL_NARROW_BREAKPOINT),
+    ' NARROW line, and a second ',
+    code(SHELL_COMPACT_BREAKPOINT),
+    ' COMPACT line (the ',
+    code('collapse-band="compact"'),
+    ' arm used below), are read live from ',
+    code('@agent-ui/app/shell-breakpoint'),
+    ' — the ONE named source ',
+    code('super-shell.css'),
+    '/',
+    code('master-detail.css'),
+    '/',
+    code('nav-rail.css'),
+    ' each keep their own literal ',
+    code('@container'),
+    ' rule pinned against (LLD-C7, GH #99; ',
+    code('shell-breakpoint.test.ts'),
+    ' reds the instant any one drifts). A TS constant, not a CSS custom property, because an ',
+    code('@container'),
+    ' condition’s value must be a literal — ',
+    code('var()'),
+    ' has no substitution point there.',
+  ),
+)
 content.append(
   para(
     'A side can opt into a different narrow story via ',

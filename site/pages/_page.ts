@@ -554,6 +554,12 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './data-doc.html', label: 'Data' }],
   },
   {
+    // @agent-ui/components/traits/* (overlay/list-reorder/scroll-spy) + ./dogfood-frame — the SAME
+    // ungrouped-site-level-link posture as Router/Highlight/Data just above: a GUIDE page for traits
+    // published as their own subpath, not a fleet component in components/src/controls (no descriptor).
+    links: [{ href: './traits-doc.html', label: 'Traits' }],
+  },
+  {
     // ui-agent-admin (@agent-ui/app, TKT-0039/ADR-0131) — the SAME ungrouped-site-level-link posture as
     // Super Shell/Master Detail/Settings just above: a GUIDE page for an app-tier composition (ui-split +
     // ui-settings + ui-conversation), not a fleet component in components/src. Agent Admin App joins here
