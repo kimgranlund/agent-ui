@@ -85,6 +85,28 @@ describe('ui-disclosure — mounts + a real engine resolves the geometry (whole-
     expect(getComputedStyle(chevron).transitionDuration).toMatch(/^0s/)
   })
 
+  it("GH #1102: a NESTED fold's caret tracks its OWN state, not an open ancestor's — closed-inside-open paints 0deg (the agent-admin Content-fold bug)", async () => {
+    // The exact live shape that shipped broken: an inner fold in an OPEN outer fold's body. @scope has no
+    // lower boundary, so the old descendant-hop [open] rule (scope root = the OUTER host, whose details IS
+    // open) rotated the INNER chevron to 90deg in BOTH inner states — collapsed and expanded read identical.
+    const { host: outer } = mount(
+      '<ui-disclosure summary="Section" open><ui-disclosure summary="Content"><p>Body</p></ui-disclosure></ui-disclosure>',
+    )
+    await nextToggle() // let both hosts connect + build parts
+    const inner = outer.querySelector('ui-disclosure ui-disclosure') as HTMLElement & { open: boolean }
+    const outerChevron = outer.querySelector('[data-part="chevron"]') as HTMLElement
+    const innerChevron = inner.querySelector('[data-part="chevron"]') as HTMLElement
+
+    expect(getComputedStyle(outerChevron).rotate).toMatch(/90deg/) // the open outer fold's own caret: down
+    expect(getComputedStyle(innerChevron).rotate).toBe('0deg') // the CLOSED inner fold's caret: right — never inherited-down
+
+    const innerDetails = inner.querySelector('[data-part="details"]') as HTMLDetailsElement
+    innerDetails.open = true
+    expect(getComputedStyle(innerChevron).rotate).toMatch(/90deg/) // the inner fold's OWN open state still rotates it
+    innerDetails.open = false
+    expect(getComputedStyle(innerChevron).rotate).toBe('0deg') // and collapsing reads different again — the whole complaint
+  })
+
   it('[density] changes the body padding but leaves the summary row height/font untouched (the Pattern-class split, SPEC-R18 AC2)', () => {
     const { host, summary, body } = mount('<ui-disclosure summary="X" open><p>Y</p></ui-disclosure>')
     const heightComfortable = px(getComputedStyle(summary).blockSize)
