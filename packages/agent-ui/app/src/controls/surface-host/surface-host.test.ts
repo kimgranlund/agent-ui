@@ -665,7 +665,7 @@ describe('surface-host.md descriptor', () => {
   const md = readFileSync(`${DIR}/surface-host.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['label', 'wrap', 'bare', 'viewTransitions', 'working'] // 'working': ADR-0199 / GH #1104
+  const ATTR_NAMES = ['label', 'wrap', 'bare', 'viewTransitions', 'working', 'superseded'] // 'working': ADR-0199 / GH #1104 · 'superseded': GH #1164
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)
@@ -895,5 +895,114 @@ describe('surface-host.css — the :state(working) breathing block (ADR-0199 pin
     expect(block).toMatch(/animation:\s*none/)
     expect(block).toMatch(/opacity:\s*var\(--ui-surface-host-working-opacity-max\)/)
     expect(block).not.toMatch(/display:\s*none/)
+  })
+})
+
+// ── GH #1164 — the SUPERSEDED state: a later turn shifted the live focus to a newer surface, so this
+// card must stop reading as live — visually settled (:state(superseded) dim, the real-engine leg) AND
+// genuinely inert (a REAL disable sweep with its OWN claim set, proven here). jsdom capability gate:
+// CustomStateSet is absent (`internals.states` optional-chained), so the :state() selector + computed-
+// dim proof is the browser suites' (surface-host-working.browser.test.ts's sibling describe); HERE only
+// the prop→sweep wiring.
+
+describe('ui-surface-host — GH #1164: superseded surfaces are settled and inert, reversibly', () => {
+  const CREATE = (id: string): string => line({ version: 'v1.0', createSurface: { surfaceId: id, catalogId: 'agent-ui' } })
+  const FORM = (id: string): string =>
+    line({
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: id,
+        components: [
+          { id: 'root', component: 'Column', children: ['tf', 'btn'] },
+          { id: 'tf', component: 'TextField', name: 'bet', label: 'Bet' },
+          { id: 'btn', component: 'Button', variant: 'solid', label: 'Hit', action: { action: 'hit' } },
+        ],
+      },
+    })
+
+  it('superseded=true disables every interactive descendant (duck-typed); superseded=false reverts exactly the claimed set', async () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE('sup1'))
+    el.ingest(FORM('sup1'))
+    const btn = el.querySelector('ui-button') as HTMLElement & { disabled: boolean }
+    const tf = el.querySelector('ui-text-field') as HTMLElement & { disabled: boolean }
+    expect(btn.disabled).toBe(false)
+
+    el.superseded = true
+    await whenFlushed()
+    expect(btn.disabled, 'the action button goes genuinely inert, not merely dimmed').toBe(true)
+    expect(tf.disabled, 'the walk is duck-typed — the whole disabled-bearing set participates').toBe(true)
+
+    el.superseded = false // the reuse case — a later turn updates this surface again
+    await whenFlushed()
+    expect(btn.disabled, 'un-superseding reverts the claim').toBe(false)
+    expect(tf.disabled).toBe(false)
+  })
+
+  it('the superseded sweep never claims a payload-declared disabled literal — un-supersede leaves it disabled', async () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE('sup2'))
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'sup2',
+          components: [
+            { id: 'root', component: 'Column', children: ['cb', 'btn'] },
+            { id: 'cb', component: 'Checkbox', name: 'terms', label: 'I accept', disabled: true },
+            { id: 'btn', component: 'Button', variant: 'solid', label: 'Go', action: { action: 'go' } },
+          ],
+        },
+      }),
+    )
+    const btn = el.querySelector('ui-button') as HTMLElement & { disabled: boolean }
+    const cb = el.querySelector('ui-checkbox') as HTMLElement & { disabled: boolean }
+    el.superseded = true
+    await whenFlushed()
+    expect(btn.disabled).toBe(true)
+    expect(cb.disabled).toBe(true)
+    el.superseded = false
+    await whenFlushed()
+    expect(btn.disabled, 'the claimed element reverts').toBe(false)
+    expect(cb.disabled, 'a payload-declared literal survives supersede→un-supersede untouched').toBe(true)
+  })
+
+  it('composes with the GH #805 action sweep — un-superseding never reverts an action-claimed disable', async () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE('sup3'))
+    el.ingest(FORM('sup3'))
+    const btn = el.querySelector('ui-button') as HTMLElement & { disabled: boolean }
+    btn.click() // the #805 self-wired action disable claims it first
+    expect(btn.disabled).toBe(true)
+    el.superseded = true
+    await whenFlushed()
+    el.superseded = false
+    await whenFlushed()
+    expect(btn.disabled, 'the action sweep owns this claim — a superseded round-trip leaves it disabled').toBe(true)
+  })
+
+  it('a line ingested while STILL superseded re-claims newly mounted controls (the standalone-consumer brace)', async () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE('sup4'))
+    el.ingest(FORM('sup4'))
+    el.superseded = true
+    await whenFlushed()
+    // A resend that re-wires the button while the prop is STILL set — the re-render must not leak a
+    // live control into a settled card (ui-conversation always un-supersedes before routing; this is
+    // the standalone-consumer arm).
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'sup4',
+          components: [{ id: 'btn', component: 'Button', variant: 'solid', label: 'Hit again', action: { action: 'hit' } }],
+        },
+      }),
+    )
+    const btn = el.querySelector('ui-button') as HTMLElement & { disabled: boolean }
+    expect(btn.disabled, 'still superseded ⇒ the re-rendered control is claimed too').toBe(true)
+    el.superseded = false
+    await whenFlushed()
+    expect(btn.disabled, 'and the claim is still reversible').toBe(false)
   })
 })

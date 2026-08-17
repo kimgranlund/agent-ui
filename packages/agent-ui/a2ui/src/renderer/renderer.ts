@@ -413,7 +413,17 @@ class Renderer implements RendererHost {
   #wireNode(el: HTMLElement, node: A2uiComponent, surface: Surface, scope: Scope, itemScope: ItemScope | undefined, ac: AbortController): void {
     const actionProps = this.#actionPropsOf(node, surface)
     wireProps(el, actionProps.size === 0 ? node : withoutProps(node, actionProps), surface, scope, itemScope, ac, this.#widgetDeps)
-    for (const spec of actionProps.values()) this.#wireAction(el, node, surface, spec, ac)
+    // GH #1164 (found by its superseded/revive real-engine test): a structural resend re-enters this
+    // wire path for an ALREADY-WIRED element (`tree.ts`'s `#reconcileProps` → `rewireNode`), and each
+    // pass used to ADD another click→action listener — N resends = N dispatches per click. Retire the
+    // element's previous action listeners before wiring the new set, so re-wiring is idempotent.
+    this.#actionWiring.get(el)?.abort()
+    if (actionProps.size > 0) {
+      const rewireAc = new AbortController()
+      ac.signal.addEventListener('abort', () => rewireAc.abort(), { once: true, signal: rewireAc.signal })
+      this.#actionWiring.set(el, rewireAc)
+      for (const spec of actionProps.values()) this.#wireAction(el, node, surface, spec, rewireAc)
+    }
     // Wire the checks controller (ADR-0029): reads node.checks, installs one scope-owned effect that
     // evaluates each check via evaluate (LLD-C10) and drives setCustomValidity / el.disabled.
     // A no-op when node.checks is absent or empty (the common case — no overhead).
@@ -427,6 +437,12 @@ class Renderer implements RendererHost {
       return el
     }
   }
+
+  /** Per-element action-listener ownership (GH #1164): the AbortController holding an element's CURRENT
+   *  click→action listeners, aborted and replaced on every `#wireNode` pass so a structural resend never
+   *  stacks a second listener. WeakMap — a torn-down element is never leak-held; each controller also
+   *  chains to its wiring pass's own `ac` so surface/item teardown still kills the listeners. */
+  #actionWiring = new WeakMap<HTMLElement, AbortController>()
 
   /** The node's props whose catalog `mapsTo` is `'action'` (the click→action triggers), keyed by prop name. */
   #actionPropsOf(node: A2uiComponent, surface: Surface): Map<string, unknown> {
@@ -453,6 +469,10 @@ class Renderer implements RendererHost {
     el.addEventListener(
       'click',
       () => {
+        // GH #1164 — a DISABLED control never emits: real pointers can't reach it, but a synthetic
+        // `.click()` still fires this native listener; check synchronously at click time (emitAction is
+        // async — a callback-time guard downstream can race a later re-enable and leak the action).
+        if ((el as Partial<{ disabled: boolean }>).disabled === true) return
         if (submit === true && !this.#submitGatePermits(el)) return // gated + refused — no emit (ADR-0054)
         void this.#actions.emitAction(node, surface, { name, wantResponse, context })
       },

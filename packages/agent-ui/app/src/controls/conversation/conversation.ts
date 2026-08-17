@@ -745,6 +745,9 @@ export class UIConversationElement extends UIElement {
       const target = this.#registry.get(opts.intoSurface)
       if (target !== undefined && target.state === 'open') {
         target.host.working = true
+        // GH #1164 — a turn RESUMING this surface (the action-click game loop) is a later turn
+        // targeting it again: un-supersede at turn start, before any line, matching the working set.
+        target.host.superseded = false
         touchedIds.add(opts.intoSurface)
       }
     } else if (opts?.disabledSurfaceId === undefined) {
@@ -865,6 +868,11 @@ export class UIConversationElement extends UIElement {
         // life). Set BEFORE the ingest so the breathe is on from the first mutated frame; cleared by
         // endTurn (finalize AND fail). Never on a closed record — a torn-down card must not breathe.
         if (known.state === 'open') known.host.working = true
+        // GH #1164 — the REUSE case un-supersedes: a line routed to a KNOWN surface IS a later turn
+        // updating it again, so it stops reading as settled history and comes back live. Cleared
+        // BEFORE the ingest (the host's superseded sweep would otherwise re-claim the very controls
+        // this update is about to mount). A closed record stays as it is — torn down is not stale.
+        if (known.state === 'open') known.host.superseded = false
         known.host.ingest(line) // SPEC-R7: routes to the surface's ORIGINAL host, never this turn's own
         // GH #805 repair — the host's own ingest() just re-enabled this surface for real (surface-host.ts's
         // entry re-enable); drop any stale pending-disable bookkeeping for it so a LATER-unrelated fail()
@@ -880,6 +888,11 @@ export class UIConversationElement extends UIElement {
       mounts.append(host)
       revealBubble() // GH #313 — a fresh mount is real content
       host.onClientMessage((m) => {
+        // GH #1164 note — no superseded guard HERE, deliberately: a superseded surface's controls are
+        // really disabled (the host's sweep), and the RENDERER's click→action listener refuses a click
+        // on a disabled control at the source (renderer.ts #wireAction) — synchronously, so it can't
+        // race a later un-supersede the way a callback-time check here would. A message that still
+        // arrives is from a live control and keeps the full GH #805 bookkeeping below.
         // GH #805 — bookkeeping ONLY: `host` (ui-surface-host) already disabled its own interactive
         // descendants (self-wired, surface-host.ts) before this callback ever runs — including its OWN
         // `wantResponse:false` skip (ADR-0088 §3), which this mirrors so the bookkeeping never disagrees
@@ -889,6 +902,15 @@ export class UIConversationElement extends UIElement {
         this.#onClientMessageCb?.(m) // bubble up (LLD-C4)
       })
       this.#registry.set(id, { host, bubble, state: 'open' })
+      // GH #1164 — a NEW surface takes over the conversation's live focus: every OTHER open surface is
+      // now SUPERSEDED — visually settled (surface-host.css's :state(superseded) dim) and interactively
+      // inert (the host's own real disable sweep), so at most ONE surface ever reads as live. Fully
+      // reversible: the known-surface branch above un-supersedes any of them a LATER turn updates again
+      // (the reuse case), and `#pendingDisabledSurfaceIds`/`working` bookkeeping is untouched — the
+      // superseded sweep composes with (never reverts) the GH #805 action sweep by construction.
+      for (const [otherId, other] of this.#registry) {
+        if (otherId !== id && other.state === 'open') other.host.superseded = true
+      }
       host.working = true // ADR-0199 — a fresh surface is live from its first line too; cleared by endTurn
       host.ingest(line)
       freshHostThisTurn = host

@@ -34,6 +34,10 @@ attributes:             # attributes-as-API — mirrors surface-host.ts `props`
     type: boolean
     default: false
     reflect: true       # ADR-0199 / GH #1104 — the live-surface-mutation state; mirrored into :state(working) by a connected() effect → the breathing inner-shadow overlay (surface-host.css)
+  - name: superseded
+    type: boolean
+    default: false
+    reflect: true       # GH #1164 — the settled-history state: a LATER turn shifted the live focus to a newer surface; mirrored into :state(superseded) + a REAL disable sweep over interactive descendants (own claim set, reversible)
 
 properties:
   - name: label
@@ -47,6 +51,9 @@ properties:
 
   - name: working
     description: ADR-0199 / GH #1104 — `true` while an in-flight producer turn is mutating THIS surface in place (the fleet-wide live-surface-mutation state, interaction-states.md §7 — the INVERSE of ADR-0191's `pending` stale-content message). Mirrored into `:state(working)` by a connected() effect (presentation-only, never AX-reflected — the turn's announced face stays the narration strip, ADR-0146); the treatment is a breathing diffused inner-shadow `::before` overlay on the surface part, opacity-only/compositor-only, riding the `--ui-working-*` constants through this control's own `--ui-surface-host-working-*` chain. `prefers-reduced-motion: reduce` holds the overlay static at the max rung — never nothing. The shipped flipper is `ui-conversation`'s turn handle (set on route, cleared at the guarded endTurn — finalize() AND fail() both clear); a host app driving this element directly may set it itself.
+
+  - name: superseded
+    description: GH #1164 — `true` once a LATER turn has shifted the conversation's live focus to a NEWER surface, so this one must stop reading as live (Kim's blackjack round-2 repro — two live-looking surfaces at once). Mirrored into `:state(superseded)` by a connected() effect; the visual settle is a pure-CSS opacity dim of the surface part to the fleet's stale-content rung (`--ui-surface-host-superseded-opacity`, riding `--ui-pending-opacity`), guarded below the disabled/pending/working rungs with zero-specificity `:where(:not(:state(…)))` exclusions. UNLIKE `working`, not presentation-only — flipping it true runs a real duck-typed disable sweep (the GH #805 walk with its OWN `WeakSet` claim set, so it composes with the action sweep and never touches a payload/checks-owned disabled literal), making the stale card's controls genuinely inert to pointer AND keyboard; flipping it false reverts exactly the claimed elements (the reuse case — a later turn updating this surface again un-supersedes). Each control's own `disabled` prop chain carries the ARIA/tabbable consequences — this host writes no ARIA of its own for this state. The shipped flipper is `ui-conversation`'s registry routing (a fresh createSurface supersedes every other open surface; a line routed to a known surface — or a turn resuming it via `intoSurface` — un-supersedes it); a host app driving this element directly may set it itself.
 
 events: []              # no DOM events — the mount/stream seam is exposed as imperative public methods (ingest/finalize/dispose) plus a callback registration (onClientMessage), never a CustomEvent (SPEC-R2; the closed six-event vocabulary has no streaming/client-message kind)
 
@@ -62,6 +69,7 @@ customStates:             # ADR-0199 / GH #1104 — bare-scalar sequence (the de
   - working               # mirrors the `working` prop — the live-surface-mutation state; keys the breathing inner-shadow overlay (surface-host.css); presentation-only, never AX-reflected; precedence `disabled > pending > working > answered > …` (interaction-states.md §7)
   - disabled              # NOT set by this element — appears only inside the working rule's `:not(:state(disabled))` mutual-exclusion guard (TKT-0062's law, the ADR-0199 cl.5 precedence slot)
   - pending               # NOT set by this element — appears only inside the working rule's `:not(:state(pending))` guard (pending > working, ADR-0199 cl.5)
+  - superseded            # GH #1164 — mirrors the `superseded` prop: the settled-history state; keys the surface-part opacity dim (surface-host.css), sits BELOW working on the precedence ladder (its rule carries `:where(:not(:state(disabled/pending/working)))` guards)
 
 face:
   formAssociated: false   # NOT a FACE form control — a mount/stream seam contributes nothing to a form

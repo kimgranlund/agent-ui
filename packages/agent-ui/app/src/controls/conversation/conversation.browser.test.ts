@@ -1083,6 +1083,68 @@ describe('ui-conversation — a resumed turn breathes from turn start, before an
   })
 })
 
+// ── GH #1164 — SUPERSEDED surfaces, real-engine leg: when a turn shifts interaction to a NEWER surface,
+// the older card's action buttons go genuinely inert (real `disabled` — pointer AND keyboard, a real
+// click dispatches no client message) and the custom state is selector-visible; a LATER turn updating
+// the old surface again brings it back live for real. jsdom cannot see the :state() selector or real
+// hit-testing — this is the cross-engine proof of the whole loop.
+describe('ui-conversation GH #1164 — a newer surface supersedes the older card for real; reuse revives it', () => {
+  // The FIRST delivery carries root; a REUSE turn resends only the scene wrapper + leaf — `root` is
+  // never redelivered (SPEC-R4's carve-out; a resend including root draws a real IDGRAPH violation
+  // message that would pollute the received[] counts below).
+  const BOARD = (id: string, opts?: { first?: boolean }) =>
+    line({
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: id,
+        components: [
+          ...(opts?.first === true ? [{ id: 'root', component: 'Column', children: ['scene'] }] : []),
+          { id: 'scene', component: 'Column', children: ['btn'] },
+          { id: 'btn', component: 'Button', variant: 'solid', label: 'Hit', action: { action: 'hit' } },
+        ],
+      },
+    })
+
+  it('newer takes over → the older surface reads superseded and its button is inert; updating it again → live again', async () => {
+    const el = mountConversation()
+    const received: unknown[] = []
+    el.onClientMessage((m) => received.push(m))
+
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'sup-r1', catalogId: 'agent-ui' } }))
+    t1.ingestLine(BOARD('sup-r1', { first: true }))
+    t1.finalize()
+    await whenFlushed()
+    const hostOld = logOf(el).querySelector('ui-surface-host') as HTMLElement
+    const btn = hostOld.querySelector('ui-button') as HTMLElement & { disabled: boolean }
+    expect(hostOld.matches(':state(superseded)'), 'the only surface is the live one').toBe(false)
+    expect(btn.disabled).toBe(false)
+
+    // Round 2 arrives as a SECOND surface — the live blackjack repro.
+    const t2 = el.beginAgentTurn()
+    t2.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'sup-r2', catalogId: 'agent-ui' } }))
+    t2.ingestLine(BOARD('sup-r2', { first: true }))
+    t2.finalize()
+    await whenFlushed()
+    expect(hostOld.matches(':state(superseded)'), 'the round-1 board settles the moment round 2 takes over').toBe(true)
+    expect(btn.disabled, 'the stale action button is REALLY disabled, not just dimmed').toBe(true)
+    btn.click()
+    expect(received, 'a click on the superseded board dispatches NO client message').toHaveLength(0)
+
+    // The reuse case — a later turn transitions the OLD surface to its next scene.
+    const t3 = el.beginAgentTurn()
+    t3.ingestLine(BOARD('sup-r1'))
+    t3.finalize()
+    await whenFlushed()
+    expect(hostOld.matches(':state(superseded)'), 'updated again ⇒ un-superseded').toBe(false)
+    expect(btn.disabled === false || (hostOld.querySelector('ui-button') as HTMLElement & { disabled: boolean }).disabled === false,
+      'the (possibly re-wired) action button is live again').toBe(true)
+    const liveBtn = hostOld.querySelector('ui-button') as HTMLElement
+    liveBtn.click()
+    expect(received, 'a click on the revived board dispatches its client message').toHaveLength(1)
+  })
+})
+
 // ── GH #1124 — mid-stream first paint on the COMPOSED chat path, throttled like a real stream ─────────
 // jsdom cannot see this class (no painted flex/overflow/container-query geometry) — real-engine only.
 // The live symptom: a streaming card first-paints offset right/clipped at the bubble edge. THIS test
