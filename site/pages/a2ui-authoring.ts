@@ -13,6 +13,10 @@ import { mountPage, pageLead } from './_page.ts' // FIRST import — foundation 
 import { codeBlock } from '../lib/code-block.ts'
 import { defaultCatalog } from '@agent-ui/a2ui'
 import { allSeeds } from '@agent-ui/a2ui/examples'
+import corpusIndexRaw from '../../packages/agent-ui/a2ui/src/corpus/index.ts?raw'
+import corpusStoreRaw from '../../packages/agent-ui/a2ui/src/corpus/store.ts?raw'
+import corpusAdmitRaw from '../../packages/agent-ui/a2ui/src/corpus/admit.ts?raw'
+import corpusRetrieveRaw from '../../packages/agent-ui/a2ui/src/corpus/retrieve.ts?raw'
 
 const { content } = mountPage({ title: 'A2UI authoring guide' })
 content.append(
@@ -48,6 +52,35 @@ function steps(items: readonly string[]): HTMLElement {
 function rowJson(type: string): string {
   const row = defaultCatalog.components[type]
   return row ? JSON.stringify({ [type]: row }, null, 2) : `/* catalog row "${type}" not found */`
+}
+
+// ── source-extraction helpers for Part C (the traits-doc.ts precedent, duplicated rather than shared —
+// used on exactly two pages) — slice an interface/signature VERBATIM out of a `?raw`-imported source file
+// so a rename/field-add on the real corpus module shows up here with zero edits; each throws (a real
+// build-time drift gate) if its marker has moved. ──────────────────────────────────────────────────────
+function extractInterface(source: string, name: string): string {
+  const marker = `export interface ${name} {`
+  const start = source.indexOf(marker)
+  if (start === -1) throw new Error(`a2ui-authoring: interface "${name}" not found — renamed or removed?`)
+  let depth = 0
+  let i = start
+  for (; i < source.length; i++) {
+    if (source[i] === '{') depth++
+    else if (source[i] === '}') {
+      depth--
+      if (depth === 0) {
+        i++
+        break
+      }
+    }
+  }
+  return source.slice(start, i)
+}
+function extractSignature(source: string, marker: string): string {
+  const start = source.indexOf(marker)
+  if (start === -1) throw new Error(`a2ui-authoring: signature "${marker}" not found — renamed or removed?`)
+  const bodyStart = source.indexOf('{', start)
+  return source.slice(start, bodyStart).trim()
 }
 
 // ── PART A — authoring a catalog row ───────────────────────────────────────────────────────────────────
@@ -167,12 +200,67 @@ content.append(
       'retrieval, visible in history. If you remember one rule: the shelf is where seeds teach people; ' +
       'the shard is where judged records teach the MODEL — and nothing crosses that line unjudged.',
   ),
+)
+
+// ── PART C — the ./corpus store API ────────────────────────────────────────────────────────────────────
+content.append(
+  h(2, 'Part C — the ./corpus store API'),
+  p(
+    '`@agent-ui/a2ui/corpus` is the corpus store’s public read/admission surface (corpus LLD §12, ' +
+      'ADR-0062) — exposed ONLY via this subpath, never the root `.` barrel, so a renderer consumer never ' +
+      'pulls in admission/heal/canonicalize/retrieval code. Platform-neutral pure core: every re-export ' +
+      'resolves to a module with zero node:*/third-party imports — nothing from tools/corpus/ (the Node fs ' +
+      'shell) crosses this subpath.',
+  ),
+  h(3, 'The public surface — verbatim from src/corpus/index.ts'),
+  codeBlock(corpusIndexRaw.trimEnd(), 'ts'),
+  h(3, 'CorpusStore — derived from source'),
+  p(
+    'The single in-memory mutation surface (invariant iv, corpus LLD-C1): only the admission pipeline’s ' +
+      '`put()` writes; `all()` always excludes quarantined records (the consumption law, SPEC-R13) while ' +
+      '`get()` is the audit accessor that does not.',
+  ),
+  codeBlock(extractInterface(corpusStoreRaw, 'CorpusStore'), 'ts'),
+  codeBlock(extractSignature(corpusStoreRaw, 'export function createStore('), 'ts'),
+  h(3, 'admit() — the ONE write path'),
+  p(
+    'heal → schema/field → facet gate → pin check → tier-1 (shared validateA2ui) → pointer resolution → ' +
+      'leak gate (MinHash vs the eval corpus) → canonical+hash → dedupe → tier-2 rubric (optional judge) → ' +
+      'write (LLD §6). `admit()` takes `candidate: unknown` (the same totality stance as `validateRecord`/' +
+      '`validateA2ui`) plus a small injected `AdmitDeps` bag — a pure function of its inputs, no ambient state.',
+  ),
+  codeBlock(extractInterface(corpusAdmitRaw, 'AdmitDeps'), 'ts'),
+  codeBlock(extractSignature(corpusAdmitRaw, 'export async function admit('), 'ts'),
+  h(3, 'retrieve() — zero-dep TF-IDF cosine top-k'),
+  p(
+    'Ranks by `promptText` + `meta.componentsUsed`, scoped to a `catalogId`/`protocolVersion` pin, and ' +
+      'restricted to non-quarantined `facet:"exemplar"` records regardless of what the caller passes in — a ' +
+      'hard, defensive invariant so an eval-facet or quarantined record can never surface in a result. Never ' +
+      'throws: an empty scope, `k <= 0`, or zero shared vocabulary all resolve to `[]`, not an error.',
+  ),
+  codeBlock(extractInterface(corpusRetrieveRaw, 'RetrieveQuery'), 'ts'),
+  codeBlock(extractSignature(corpusRetrieveRaw, 'export function retrieve('), 'ts'),
+  p(
+    'The rest of the surface, one line each: `canonical.ts` — canonicalize an A2uiOutput to its stable hash ' +
+      'form; `heal.ts` — the CLOSED, form-only repair list admission runs before validation; `dedup.ts` — ' +
+      'exact-hash + MinHash near-duplicate detection (`createDedupIndex`); `record.ts` — the `CorpusRecord` ' +
+      'shape + `validateRecord`, the hand-rolled zero-dep schema/field checker; `export.ts` — ' +
+      '`exportCatalogExamples`/`exportFineTune`, the two OTHER exemplar-conditioning modes alongside ' +
+      'retrieval; `judge.ts` — `createVerdictJudge`, wiring a verdicts file into the `Judge` seam `admit()` ' +
+      'consumes; `validate.ts` — re-exports the SAME shared `validateA2ui` the renderer runs (one validator, ' +
+      'two consumers).',
+  ),
+)
+
+// ── Sources ─────────────────────────────────────────────────────────────────────────────────────────────
+content.append(
   h(3, 'Sources'),
   p(
     'The written-down laws this page teaches: a2ui-catalog.spec.md §5.2 (rows + guidance notes) · ' +
       'ADR-0087 (whole-fleet coverage) · ADR-0102 (the three-lane chooser) · ADR-0106/0109 ' +
       '(presentation-intent props) · ADR-0107 (the chart rows + array props) · ADR-0055 (the seed ' +
-      'shelf) · ADR-0060/0061/0068 (admission, the shared healer, the judge seam). The derived examples ' +
+      'shelf) · ADR-0060/0061/0062/0068 (admission, the corpus store, the shared healer, the judge seam). ' +
+      'The derived examples ' +
       'above import the live defaultCatalog and allSeeds — if this page and the code disagree, the page is ' +
       'stale and its derivation is the bug.',
   ),

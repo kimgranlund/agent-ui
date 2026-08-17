@@ -19,10 +19,36 @@ import '@agent-ui/app/settings' // self-defines ui-settings
 import './settings.css' // page-local demo chrome only (the resizable frame) — never restyles a control's internals
 import { renderApiTable, renderPropertiesTable, heading } from '../lib/doc-page.ts'
 import { parseDoc } from '../lib/frontmatter.ts'
+import { codeBlock } from '../lib/code-block.ts'
 import settingsMd from '../../packages/agent-ui/app/src/controls/settings/settings.md?raw'
 import { createMemoryStore } from '@agent-ui/app/settings-memory-store'
 import type { UISettingsElement } from '@agent-ui/app/settings'
 import type { SettingsSchema } from '@agent-ui/app/settings-schema'
+import settingsStoreRaw from '../../packages/agent-ui/app/src/controls/settings/store.ts?raw'
+import settingsMemoryStoreRaw from '../../packages/agent-ui/app/src/controls/settings/memory-store.ts?raw'
+
+// ── source-extraction helper (the traits-doc.ts precedent, duplicated rather than shared — used on
+// exactly one section of this page) — slice `export interface X { ... }` verbatim out of a
+// `?raw`-imported source file, brace-balanced from the marker; throws (a real build-time drift gate) if
+// the interface has been renamed/removed. ──────────────────────────────────────────────────────────────
+function extractInterface(source: string, name: string): string {
+  const marker = `export interface ${name} {`
+  const start = source.indexOf(marker)
+  if (start === -1) throw new Error(`settings.ts: interface "${name}" not found — renamed or removed?`)
+  let depth = 0
+  let i = start
+  for (; i < source.length; i++) {
+    if (source[i] === '{') depth++
+    else if (source[i] === '}') {
+      depth--
+      if (depth === 0) {
+        i++
+        break
+      }
+    }
+  }
+  return source.slice(start, i)
+}
 
 const { content } = mountPage({
   title: 'Composing a ui-settings surface',
@@ -140,6 +166,69 @@ el.schema = {
   ] }],
 }
 el.store = createMemoryStore({ persistKey: 'my-app-settings' })`))
+
+content.append(sectionHeading('2a · @agent-ui/app/settings-store — the seam, derived from source'))
+content.append(
+  para(
+    'A pure TypeScript interface, no implementation — ',
+    code('ui-settings'),
+    ' depends ONLY on this contract, never a concrete store (SPEC-R12 AC3, grep-guarded by the package’s own ',
+    code('store.test.ts'),
+    '). ',
+    code('get'),
+    '/',
+    code('set'),
+    ' are SYNCHRONOUS by design (fork F7, LLD §8): a remote-backed store must resolve its own async work ' +
+      'internally (an optimistic write + a background flush) — this seam models no pending/loading state. ',
+    code('subscribe'),
+    ' is the OPTIONAL external-change notification (another tab, a remote push) — absent ⇒ ',
+    code('ui-settings'),
+    ' is authoritative on read only at mount. ',
+    code('save'),
+    ' is an OPTIONAL batch write for a save-button flow — not called by ',
+    code('ui-settings'),
+    ' itself in this build (per-field-on-change is the only wired timing).',
+  ),
+)
+content.append(codeBlock(extractInterface(settingsStoreRaw, 'SettingsStore'), 'ts'))
+
+content.append(sectionHeading('2b · @agent-ui/app/settings-memory-store — the reference adapter'))
+content.append(
+  para(
+    'Not a dependency of ',
+    code('ui-settings'),
+    ' — a REFERENCE ',
+    code('SettingsStore'),
+    ' implementation for demos/tests (this page’s own live example above uses it). Two flavours, one ' +
+      'factory: a plain in-process ',
+    code('Map'),
+    ' (the default — dies with the page), or an ',
+    code('localStorage'),
+    '-backed variant (the ',
+    code('persistKey'),
+    ' option, used above) that round-trips ACROSS two separately-constructed store instances. The ' +
+      'persisted flavour writes through ',
+    code('@agent-ui/shared'),
+    '’s ',
+    code('StorageAdapter'),
+    ' seam (',
+    code('createLocalStorageAdapter'),
+    ', ADR-0193) rather than calling ',
+    code('localStorage'),
+    ' directly, fronted by a SYNCHRONOUS read-through cache — the adapter’s own seam is async (ADR-0193’s ' +
+      'ruling, since IndexedDB is irreducibly async), while ',
+    code('SettingsStore'),
+    ' is sync (fork F7 above), so the cache is what bridges the two: warmed by a synchronous prefix scan ' +
+      'of the whole ',
+    code('${persistKey}.'),
+    ' namespace at construction (persisted values WIN over the constructor’s ',
+    code('initial'),
+    ' seed), then written through on every ',
+    code('set'),
+    '.',
+  ),
+)
+content.append(codeBlock(extractInterface(settingsMemoryStoreRaw, 'MemoryStoreOptions'), 'ts'))
 
 content.append(sectionHeading('API reference'))
 content.append(
