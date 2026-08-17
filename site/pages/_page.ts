@@ -89,6 +89,7 @@ export const NAV: readonly NavGroup[] = [
       { href: './surface-host-doc.html', label: 'Surface Host' },
       { href: './conversation-doc.html', label: 'Conversation' },
       { href: './choosing.html', label: 'Which component when' },
+      { href: './events.html', label: 'Events' },
       { href: './changelog.html', label: 'Changelog' },
     ],
   },

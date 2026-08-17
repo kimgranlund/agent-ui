@@ -656,6 +656,13 @@
       "section": "Guides"
     },
     {
+      "name": "Events",
+      "url": "./events.html",
+      "description": "The closed seven-event vocabulary, UIElement.emit's bubbles/composed/cancelable mechanics, a per-control event inventory derived from every descriptor's events[], and a live ui-select + ui-switch event log.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Changelog",
       "url": "./changelog.html",
       "description": "The shipping summary of agent-ui's milestones, newest-first.",

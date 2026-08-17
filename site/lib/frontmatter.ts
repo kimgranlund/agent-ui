@@ -286,3 +286,23 @@ export function membersOfTier(tier: string): TierMember[] {
   }
   return members.sort((a, b) => a.name.localeCompare(b.name))
 }
+
+/** Every shipped control (the components/src/controls glob, the same ALL_DESCRIPTORS the tier
+ *  enumeration reads) whose descriptor declares at least one `events[]` row, sorted by tag — the DERIVED
+ *  per-control event inventory events.ts renders via doc-page.ts's `renderEventsTable` (the SAME renderer
+ *  every T4 control doc page uses for its own Events section — one code path, so this reference table
+ *  cannot drift from a control's `{name}.md` or from what a control's own doc page shows). Router/code/app
+ *  descriptors sit outside this glob (frontmatter.ts's own ALL_DESCRIPTORS comment) — the same
+ *  components-scoped boundary site-coverage.test.ts enforces. */
+export function controlsWithEvents(): TierMember[] {
+  const withEvents: TierMember[] = []
+  for (const raw of Object.values(ALL_DESCRIPTORS)) {
+    const doc = parseDoc(raw)
+    const tag = doc.descriptor.scalars.get('tag')
+    const events = doc.descriptor.sequences.get('events') ?? []
+    if (typeof tag === 'string' && tag.startsWith('ui-') && events.length > 0) {
+      withEvents.push({ name: tag.slice('ui-'.length), tag, doc })
+    }
+  }
+  return withEvents.sort((a, b) => a.name.localeCompare(b.name))
+}

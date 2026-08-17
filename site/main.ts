@@ -188,6 +188,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
         blurb: 'ui-conversation, the M2 thread + composer + per-turn narration primitive, with an opt-in declarative composition mode.',
       },
       {
+        href: './events.html',
+        title: 'Events',
+        blurb: 'The closed seven-event vocabulary, UIElement.emit’s bubbles/composed/cancelable mechanics sliced from source, a per-control event inventory derived from every descriptor’s events[], and a live ui-select + ui-switch event log.',
+      },
+      {
         href: './changelog.html',
         title: 'Changelog',
         blurb: 'The on-site changelog, derived straight from the repo root CHANGELOG.md — the same derive-don’t-copy discipline as the Decision Records index.',
