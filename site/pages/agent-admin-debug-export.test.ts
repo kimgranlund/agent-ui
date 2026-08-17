@@ -8,6 +8,8 @@ import { AGENT_PRESETS, personaFromPreset } from './agent-admin-presets.ts'
 import { PERSONA_FILE_KIND, readPersonaFile } from './agent-admin-persona-file.ts'
 import { DEBUG_BUNDLE_VERSION, buildDebugBundle, debugBundleFileName } from './agent-admin-debug-export.ts'
 import { buildZip } from '../lib/zip-writer.ts'
+import { serializeCapture, parseCapture, replayTransport } from '@agent-ui/devtools'
+import type { DevtoolsCapture } from '@agent-ui/devtools'
 
 const FIXED_NOW = new Date('2026-08-14T12:34:56.000Z')
 
@@ -124,5 +126,64 @@ describe('buildDebugBundle', () => {
 describe('debugBundleFileName', () => {
   it('is a stable, sortable, dated .zip name', () => {
     expect(debugBundleFileName(FIXED_NOW)).toBe('agent-ui-dev-debug-2026-08-14.zip')
+  })
+})
+
+// ── the ADDITIVE captures family (ADR-0200 clause 7 / devtools-harness SPEC-R10 AC1+AC2; GH #1122 S6,
+// #1129 item 5). Every pre-existing test above runs UNCHANGED with the extension in place — that green
+// run IS the additive proof's first half; the legs below prove the family itself + the omitted-when-
+// absent law + the capture round-trip THROUGH the bundle entry text. ────────────────────────────────────
+describe('the captures family (ADR-0200 clause 7 — additive, round-tripping)', () => {
+  const capture: DevtoolsCapture = {
+    kind: 'agent-ui-devtools-capture',
+    version: 1,
+    createdAt: '2026-08-17T00:00:00.000Z',
+    backend: 'replay',
+    session: { turns: [] },
+    timeline: [
+      { seq: 0, at: 't', kind: 'turn-start', input: { kind: 'intent', text: 'x', session: { turns: [] } }, backend: 'replay' },
+      { seq: 1, at: 't', kind: 'line', line: '{"version":"v1.0","createSurface":{"surfaceId":"s1","catalogId":"agent-ui"}}' },
+      { seq: 2, at: 't', kind: 'line', line: '{"version":"v1.0","updateComponents":{"surfaceId":"s1","components":[]}}' },
+      { seq: 3, at: 't', kind: 'turn-end', status: 'ok', lines: 2, ms: 0 },
+    ],
+  }
+  const base = () => {
+    const agents = personaFixtures(1)
+    return { agents, activeAgentId: agents[0]!.persona.id, testChatTranscript: [], builderInterviewTranscript: [], now: FIXED_NOW } as const
+  }
+
+  it('a bundle WITHOUT captures omits the family entirely — no entries, no manifest field (v1 byte-unchanged)', () => {
+    const { entries, manifest } = buildDebugBundle(base())
+    expect(entries.some((e) => e.path.startsWith('captures/'))).toBe(false)
+    expect('captures' in manifest.files).toBe(false)
+    // the serialized manifest text carries no trace of the family — a pre-existing reader sees v1 exactly
+    expect(entries.find((e) => e.path === 'manifest.json')!.data as string).not.toContain('captures')
+    expect(manifest.version).toBe(DEBUG_BUNDLE_VERSION) // stays 1 — the bump rule says only consumer-MUST-know bumps
+  })
+
+  it('a bundle WITH captures writes captures/<id>.json (one per capture) and the manifest names each', () => {
+    const { entries, manifest } = buildDebugBundle({ ...base(), captures: [{ id: 'cap-1', capture }] })
+    const entry = entries.find((e) => e.path === 'captures/cap-1.json')
+    expect(entry).toBeDefined()
+    expect(manifest.files.captures).toEqual(['captures/cap-1.json'])
+    // ONE format module owns serialization — the entry is serializeCapture's own bytes, nothing local
+    expect(entry!.data).toBe(serializeCapture(capture))
+    // the extended bundle still assembles into a real zip
+    const zip = buildZip(entries, FIXED_NOW)
+    expect(zip[0]).toBe(0x50)
+    expect(zip[1]).toBe(0x4b)
+  })
+
+  it('SPEC-R10 AC1 through the bundle: the entry text parses back and replays a byte-identical line sequence', async () => {
+    const { entries } = buildDebugBundle({ ...base(), captures: [{ id: 'cap-1', capture }] })
+    const reparsed = parseCapture(entries.find((e) => e.path === 'captures/cap-1.json')!.data as string)
+    expect(reparsed).toStrictEqual(capture)
+    const transport = replayTransport(reparsed)
+    const lines: string[] = []
+    for await (const line of transport.turn({ kind: 'intent', text: 'replay', session: { turns: [] } })) lines.push(line)
+    expect(lines).toEqual([
+      '{"version":"v1.0","createSurface":{"surfaceId":"s1","catalogId":"agent-ui"}}',
+      '{"version":"v1.0","updateComponents":{"surfaceId":"s1","components":[]}}',
+    ])
   })
 })

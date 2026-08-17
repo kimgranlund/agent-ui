@@ -1095,6 +1095,8 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // The Devtools Harness (GH #1122, ADR-0200 clause 5) — the @agent-ui/devtools debug surface, mirroring its ungrouped nav link.
+  { cards: [{ href: './devtools-harness.html', title: 'Devtools Harness', blurb: 'The chat & A2UI dev/debug harness: three swappable backends (replay · live dev-proxy · A2A peer), the raw DevtoolsEvent NDJSON timeline, per-surface render-confirm verdicts on a real canvas, and capture export/import.' }] },
   {
     cards: [
       {

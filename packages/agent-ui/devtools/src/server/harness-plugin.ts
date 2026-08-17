@@ -18,7 +18,8 @@
 
 import type { Plugin } from 'vite'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { TurnInput } from '@agent-ui/a2ui/agent'
+import { once } from 'node:events'
+import type { TurnInput } from '@agent-ui/a2ui/agent/agent-transport'
 import { scriptTransport, replayTransport } from '../transports/replay.ts'
 import { proxyTransport } from '../transports/proxy.ts'
 import { peerTransport } from '../transports/a2a-peer.ts'
@@ -29,12 +30,23 @@ import type { RecordTurnOptions } from '../timeline/events.ts'
 import type { DevtoolsCapture } from '../capture/format.ts'
 import { DEVTOOLS_CAPTURE_KIND, DEVTOOLS_CAPTURE_VERSION } from '../capture/format.ts'
 import { createLoopbackPair } from '@agent-ui/a2a'
-import type { AgentTransport } from '@agent-ui/a2ui/agent'
+import type { A2aChannel } from '@agent-ui/a2a'
+import type { AgentTransport } from '@agent-ui/a2ui/agent/agent-transport'
 
 export const DEVTOOLS_MOUNT = '/__devtools'
-// 8 MiB — a capture carries whole event timelines; still a hard cap so a runaway dev request can't
-// grow unbounded (the dev-proxy MAX_BODY posture, sized for this seam's larger bodies).
-const MAX_BODY = 8 << 20
+/** 8 MiB — a capture carries whole event timelines; still a hard cap so a runaway dev request can't
+ *  grow unbounded (the dev-proxy MAX_BODY posture, sized for this seam's larger bodies). Exported so
+ *  the route suite can build a provably-oversize body against the REAL limit, never a copied number. */
+export const MAX_BODY = 8 << 20
+
+/** An oversize body is the CLIENT's defect (S1–S3 code-checker L3): a typed rejection the handler maps
+ *  to 413 `{error}` + `req.destroy()` — never the generic 500 catch. */
+class BodyTooLargeError extends Error {
+  constructor() {
+    super(`request body exceeds ${MAX_BODY} bytes`)
+    this.name = 'BodyTooLargeError'
+  }
+}
 
 /** The injected fetch the seam threads to BOTH the live transport and the /status probe — ONE
  *  structural signature satisfying `ProxyFetch` and `StatusProbeFetch` alike (an intersection type
@@ -80,7 +92,7 @@ function readBody(req: IncomingMessage): Promise<string> {
     let data = ''
     req.on('data', (chunk: unknown) => {
       data += String(chunk)
-      if (data.length > MAX_BODY) reject(new Error('request body too large'))
+      if (data.length > MAX_BODY) reject(new BodyTooLargeError()) // L3 — the handler maps this to 413 + destroy
     })
     req.on('end', () => resolve(data))
     req.on('error', reject)
@@ -129,19 +141,51 @@ function transportFor(
   }
   // a2a: a loopback pair with a scripted peer answering ONE agent reply per inbound message —
   // the seam's headless a2a leg (a REAL peer agent binds `peerTransport(channel)` directly).
-  const [ours, theirs] = createLoopbackPair()
-  const peerLines = body.peerLines ?? []
+  return seamPeerTransport(body.peerLines ?? [])
+}
+
+/**
+ * The seam's scripted a2a leg (S1–S3 code-checker L1): ONE loopback pair per request, and BOTH channel
+ * ends close when the turn ends — complete, failed, or abandoned mid-stream. Abandonment is detected at
+ * EVENT BOUNDARIES only (the `res.destroyed` check between yields): a transport parked awaiting its next
+ * value after the client disconnects stays open until that value arrives — acceptable for a dev-only
+ * seam, named here so it is never mistaken for immediate teardown (S4–S6 code-checker) — so the detached scripted
+ * peer loop's `receive()` completes and the loop exits instead of leaking one parked async loop per
+ * `/turn` request. The pair is injectable so the route suite can assert both ends really closed
+ * (`send()` after the turn rejects `A2aChannelClosedError`). Exported for that suite; the seam itself
+ * constructs it only inside `transportFor`.
+ */
+export function seamPeerTransport(
+  peerLines: readonly string[],
+  pair: [ours: A2aChannel, theirs: A2aChannel] = createLoopbackPair(),
+): AgentTransport {
+  const [ours, theirs] = pair
   void (async () => {
-    for await (const _msg of theirs.receive()) {
-      await theirs.send({
-        kind: 'message',
-        role: 'agent',
-        parts: peerLines.map((text) => ({ kind: 'text' as const, text })),
-        messageId: 'seam-peer-reply',
-      })
+    try {
+      for await (const _msg of theirs.receive()) {
+        await theirs.send({
+          kind: 'message',
+          role: 'agent',
+          parts: peerLines.map((text) => ({ kind: 'text' as const, text })),
+          messageId: 'seam-peer-reply',
+        })
+      }
+    } catch {
+      // The turn ended and closed both ends while a reply was mid-send: a post-close send is moot —
+      // swallowed here so the detached loop can never surface an unhandled rejection (L1).
     }
   })()
-  return peerTransport(ours)
+  const inner = peerTransport(ours)
+  return {
+    async *turn(input: TurnInput): AsyncIterable<string> {
+      try {
+        yield* inner.turn(input)
+      } finally {
+        ours.close()
+        theirs.close()
+      }
+    },
+  }
 }
 
 /**
@@ -202,7 +246,19 @@ export function createDevtoolsMiddleware(opts?: DevtoolsHarnessOptions): (req: I
           }
           for await (const event of recordTurn(transport, body.input, recordOpts)) {
             if (res.destroyed) break // the client disconnected — no one left to read
-            res.write(serializeDevtoolsEvent(event) + '\n')
+            // L2 (S1–S3 code-checker): honor backpressure — a false `write()` parks the recorder until
+            // the socket drains. Raced against 'close' so a client that disconnects mid-wait (which
+            // never emits 'drain') can't strand the turn; the next iteration's `destroyed` check exits.
+            if (!res.write(serializeDevtoolsEvent(event) + '\n')) {
+              // The losing once() must not stay attached (>10 waits => MaxListenersExceededWarning —
+              // S4–S6 code-checker): one shared AbortController tears the loser down after the race.
+              const raceDone = new AbortController()
+              await Promise.race([
+                once(res, 'drain', { signal: raceDone.signal }).catch(() => {}),
+                once(res, 'close', { signal: raceDone.signal }).catch(() => {}),
+              ])
+              raceDone.abort()
+            }
           }
           res.end()
           return
@@ -258,6 +314,14 @@ export function createDevtoolsMiddleware(opts?: DevtoolsHarnessOptions): (req: I
         res.statusCode = 404
         res.end()
       } catch (err) {
+        // L3: an oversize body is the client's defect — a 413 `{error}` envelope, then destroy the
+        // request so the seam stops consuming the rest of the runaway stream (never the generic 500).
+        if (err instanceof BodyTooLargeError) {
+          if (!res.headersSent) sendJson(res, 413, { error: 'request-body-too-large' })
+          else res.end()
+          req.destroy()
+          return
+        }
         // Pre-stream failures only — the /turn stream's own failures are recordTurn's, in-band.
         const message = err instanceof Error ? err.message : 'devtools seam error'
         if (!res.headersSent) sendJson(res, 500, { error: message })

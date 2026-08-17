@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent'
+import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent/agent-transport'
 import { formatErrorLine } from '@agent-ui/a2ui/agent/meta-line'
 import { recordTurn, serializeDevtoolsEvent } from './events.ts'
 import type { DevtoolsEvent } from './events.ts'

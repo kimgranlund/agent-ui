@@ -288,6 +288,13 @@ export default defineConfig({
       // recordTurn's meta-vs-line routing) and must not drag in the Node-first `./agent` barrel
       // (system-prompt.ts/mini-skills.ts `readFileSync` at load).
       '@agent-ui/a2ui/agent/meta-line': r('./packages/agent-ui/a2ui/src/agent/meta-line.ts'),
+      // The a2ui `./agent/agent-transport` subpath (ADR-0137's seam file, browser-safe pure types +
+      // zero node imports) — mirrors the package's exports map, placed BEFORE the broader `./agent`
+      // entry for the same prefix-match reason as `meta-line`/`genui-line` above. `@agent-ui/devtools`
+      // (ADR-0200) type-imports the seam from HERE so a site page importing devtools (the harness page,
+      // GH #1122 S4) never drags the Node-first `./agent` barrel into the site type program
+      // (site/tsconfig.json deliberately carries no node types).
+      '@agent-ui/a2ui/agent/agent-transport': r('./packages/agent-ui/a2ui/src/agent/agent-transport.ts'),
       '@agent-ui/a2ui/agent': r('./packages/agent-ui/a2ui/src/agent/index.ts'),
       '@agent-ui/a2ui': r('./packages/agent-ui/a2ui/src/index.ts'),
       // ADR-0139 — the `./editor` subpath (ui-code-editor). `@agent-ui/app`'s entry-list.ts/agent-admin.ts are
