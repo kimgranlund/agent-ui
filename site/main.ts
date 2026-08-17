@@ -984,6 +984,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // ADR-0195 — ui-drill, the N-level drill-down panel container (GH #954).
+    label: 'ui-drill',
+    cards: [
+      {
+        href: './drill-demo.html',
+        title: 'Demo',
+        blurb: 'A one-panel container drilling down an N-level selection tree — one level visible at a time, with a Back affordance and a bindable path.',
+      },
+      {
+        href: './drill-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-drill/ui-drill-panel compound, the controlled/uncontrolled path duality, and the drill-trigger authoring convention, generated from drill.md.',
+      },
+    ],
+  },
+  {
     // ui-super-shell (@agent-ui/app, M5) — the application-frame archetype family's grammar ceiling: an
     // ungrouped site-level card (no `label:`, so not a fleet TOC group per site-toc.test.ts), mirroring its
     // ungrouped nav link in _page.ts. (The ui-app-shell card retired with its teaching page — ADR-0156.)
