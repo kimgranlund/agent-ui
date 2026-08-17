@@ -19,17 +19,28 @@ const ARM_MODULES = [
 
 interface Chunk {
   isEntry: boolean
+  eager: boolean
   code: string
   moduleIds: string[]
 }
 
+// ONE strengthening over the markdown-lazy precedent, forced by this split's own mechanics: the barrel's
+// `loadAgentAdmin()` makes Rolldown code-split, so the shells can land in a SHARED chunk the entry imports
+// STATICALLY — `isEntry: false` yet still loaded eagerly with the barrel. The gated property is therefore
+// "absent from the EAGER closure" (entry chunks + their transitive static `imports`), not merely "absent
+// from `isEntry` chunks" — the latter would pass vacuously if the arm ever leaked into a static shared
+// chunk (the same closure `scripts/measure-size.mjs`'s app row gates bytes with since ADR-0197).
 const chunksOf = async (input: string, plugins: unknown[] = []): Promise<Chunk[]> => {
   const bundle = await rolldown({ input, plugins: plugins as never, onLog() {} })
   const { output } = await bundle.generate({ format: 'esm', minify: true })
   await bundle.close()
-  return output
-    .filter((c) => c.type === 'chunk')
-    .map((c) => ({ isEntry: c.isEntry, code: c.code, moduleIds: c.moduleIds ?? [] }))
+  const chunks = output.filter((c) => c.type === 'chunk')
+  const byFile = new Map(chunks.map((c) => [c.fileName, c]))
+  const eager = new Set(chunks.filter((c) => c.isEntry).map((c) => c.fileName))
+  for (const name of eager) {
+    for (const dep of byFile.get(name)?.imports ?? []) if (byFile.has(dep)) eager.add(dep)
+  }
+  return chunks.map((c) => ({ isEntry: c.isEntry, eager: eager.has(c.fileName), code: c.code, moduleIds: c.moduleIds ?? [] }))
 }
 
 const armModulesIn = (chunk: Chunk): string[] =>
@@ -40,10 +51,10 @@ describe('@agent-ui/app public barrel — the agent-admin arm is LAZY (ADR-0197,
     'no ENTRY chunk of the app barrel contains any agent-admin arm module',
     async () => {
       const chunks = await chunksOf(APP_ENTRY)
-      const entries = chunks.filter((c) => c.isEntry)
-      expect(entries.length, 'anti-vacuous: the bundle really produced an entry chunk').toBeGreaterThan(0)
-      for (const entry of entries) {
-        expect(armModulesIn(entry), 'the app entry chunk must carry ZERO agent-admin arm bytes').toEqual([])
+      const eager = chunks.filter((c) => c.eager)
+      expect(eager.length, 'anti-vacuous: the bundle really produced an eager closure').toBeGreaterThan(0)
+      for (const chunk of eager) {
+        expect(armModulesIn(chunk), 'the app EAGER closure must carry ZERO agent-admin arm bytes').toEqual([])
       }
     },
     120_000,
@@ -53,7 +64,7 @@ describe('@agent-ui/app public barrel — the agent-admin arm is LAZY (ADR-0197,
     'the arm is STILL reachable — agent-admin.ts lands in a non-entry (lazy) chunk, so loadAgentAdmin() has a module to resolve',
     async () => {
       const chunks = await chunksOf(APP_ENTRY)
-      const lazy = chunks.filter((c) => !c.isEntry && c.moduleIds.some((id) => id.endsWith('controls/agent-admin/agent-admin.ts')))
+      const lazy = chunks.filter((c) => !c.eager && c.moduleIds.some((id) => id.endsWith('controls/agent-admin/agent-admin.ts')))
       expect(lazy.length, 'the dynamic import must still resolve the module — a deleted import would also pass leg 1').toBe(1)
     },
     120_000,
@@ -77,7 +88,7 @@ describe('@agent-ui/app public barrel — the agent-admin arm is LAZY (ADR-0197,
         },
       }
       const chunks = await chunksOf('virtual:agent-admin-static-negative-control', [plugin])
-      const entries = chunks.filter((c) => c.isEntry)
+      const entries = chunks.filter((c) => c.eager)
       expect(
         entries.some((c) => armModulesIn(c).length > 0),
         'a static import must be CAUGHT by the same moduleIds check',
