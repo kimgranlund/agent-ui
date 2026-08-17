@@ -85,7 +85,8 @@ function entryEl(el: Element, kind: string, entryId: string): HTMLElement {
 
 /** GH #917/GH #949 — a drawered kind's per-entry CRUD lives in the section's drawer now: click the row's ONE
  *  affordance and hand back the form the drawer built for that entry (the name field, the content editor and
- *  the danger row always; the Invocable pill/tier only for a kind `hasAvailabilityMode` names). */
+ *  the footer's Remove for a non-builtin entry, GH #1063; the Invocable pill/tier only for a kind
+ *  `hasAvailabilityMode` names). */
 function openEntryDrawer(el: Element, kind: string, entryId: string): HTMLElement {
   ;(entryEl(el, kind, entryId).querySelector('[data-part="entry-edit"]') as HTMLElement).click()
   return sectionEl(el, kind).querySelector('[data-part="entry-edit-form"]') as HTMLElement
@@ -446,7 +447,8 @@ describe('mountEntryList — the entryDrawer option, both modes (GH #917)', () =
     const { section, writes } = mountDrawered([ROW])
     const form = openRow(section, 'a')
     expect(drawerOf(section).open).toBe(true)
-    // Field ORDER is the ruling's: name → description → tier → content (+ its count), then the danger block.
+    // Field ORDER is the ruling's: name → description → tier → content (+ its count). Remove lives in the
+    // FOOTER beside Done now (GH #1063 ruling A), never in the content region.
     expect([...form.querySelectorAll('[data-part^="entry-"]')].map((n) => n.getAttribute('data-part')).filter((p) => p !== 'entry-form-hint')).toEqual([
       'entry-form-name',
       'entry-form-description',
@@ -454,8 +456,6 @@ describe('mountEntryList — the entryDrawer option, both modes (GH #917)', () =
       'entry-availability',
       'entry-content',
       'entry-content-count',
-      'entry-form-danger',
-      'entry-delete',
     ])
 
     const name = form.querySelector('[data-part="entry-form-name"]') as UITextFieldElement
@@ -507,8 +507,7 @@ describe('mountEntryList — the entryDrawer option, both modes (GH #917)', () =
   it('preset protection is STRUCTURAL in the drawer too: a builtin entry gets no Delete block, and a tag says why', () => {
     const { section, writes } = mountDrawered([ROW, BUILTIN])
     const form = openRow(section, 'b')
-    expect(form.querySelector('[data-part="entry-form-danger"]'), 'no danger block is built at all').toBeNull()
-    expect(form.querySelector('[data-part="entry-delete"]'), 'and no button to mis-fire').toBeNull()
+    expect(section.host.querySelector('[data-part="entry-delete"]'), 'no Remove button is built at all — footer included (GH #1063)').toBeNull()
     expect(section.host.querySelector('[data-part="entry-form-tag"]')!.textContent).toBe('Built-in')
     // …and everything Fork 4 does NOT protect stays editable (configuration, not deletion).
     const name = form.querySelector('[data-part="entry-form-name"]') as UITextFieldElement
@@ -521,10 +520,25 @@ describe('mountEntryList — the entryDrawer option, both modes (GH #917)', () =
   it('Remove commits the delete and closes the drawer — the surface never outlives its subject', () => {
     const { section, writes } = mountDrawered([ROW])
     const form = openRow(section, 'a')
-    expect(form.lastElementChild!.getAttribute('data-part'), 'the danger block is the LAST content block').toBe('entry-form-danger')
-    ;(form.querySelector('[data-part="entry-delete"]') as HTMLElement).click()
+    // GH #1063 ruling A — Remove's home is the FOOTER beside Done, never the scrolling content.
+    expect(form.querySelector('[data-part="entry-delete"]'), 'not in the content region').toBeNull()
+    const remove = section.host.querySelector('[data-part="entry-delete"]') as HTMLElement
+    remove.click()
     expect(writes.deletes).toEqual(['a'])
     expect(drawerOf(section).open).toBe(false)
+  })
+
+  // GH #1063 ruling A — the footer's shape: Remove first (the start-aligned destructive action), Done last;
+  // a builtin entry's footer holds Done ALONE (ADR-0132 Fork 4's structural absence, unchanged by the move).
+  it('the footer holds Remove beside Done for a custom entry, and Done alone for a builtin', () => {
+    const { section } = mountDrawered([ROW, BUILTIN])
+    openRow(section, 'a')
+    const actions = (section.host.querySelector('[data-part="entry-form-done"]') as HTMLElement).parentElement!
+    expect([...actions.children].map((n) => n.getAttribute('data-part')), 'Remove shares the actions row with Done').toEqual(['entry-delete', 'entry-form-done'])
+    ;(section.host.querySelector('[data-part="entry-form-done"]') as HTMLElement).click()
+    openRow(section, 'b')
+    const builtinActions = (section.host.querySelector('[data-part="entry-form-done"]') as HTMLElement).parentElement!
+    expect([...builtinActions.children].map((n) => n.getAttribute('data-part')), 'structural absence — Done alone').toEqual(['entry-form-done'])
   })
 
   it('no onDescriptionChange writer ⇒ the description renders read-only (the additive-optional law)', () => {
@@ -563,7 +577,7 @@ describe('mountEntryList — the entryDrawer option, both modes (GH #917)', () =
     expect((form.querySelector('[data-part="entry-form-name"]') as UITextFieldElement).readonly).toBe(true)
     expect(form.querySelector('[data-part="entry-availability"]'), 'no tier semantics for this kind').toBeNull()
     expect(form.querySelector('[data-part="entry-content"]'), 'the content editor is still there').not.toBeNull()
-    expect(form.querySelector('[data-part="entry-delete"]'), 'a non-builtin section is removable').not.toBeNull()
+    expect(section.host.querySelector('[data-part="entry-delete"]'), 'a non-builtin section is removable').not.toBeNull()
   })
 
   it('pattern-source drawers the same way, and its header reads the multi-word addLabel-derived noun', () => {
@@ -2155,9 +2169,9 @@ describe('UIAgentAdminElement — custom entry authoring (ADR-0132 cl.4, fail-cl
     const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
     expect(form).not.toBeNull()
     // The ADD form omits the tier pill (the Phase 0 D3 ruling: a new entry is born in-context, by absence)
-    // and carries no danger row — there is nothing to delete yet.
+    // and carries no Remove — there is nothing to delete yet (GH #1063: Remove is the EDIT footer's action).
     expect(form.querySelector('[data-part="entry-availability"]'), 'no tier control in add mode').toBeNull()
-    expect(form.querySelector('[data-part="entry-form-danger"]')).toBeNull()
+    expect(section.querySelector('[data-part="entry-delete"]')).toBeNull()
     expect([...form.querySelectorAll('[data-part^="entry-add-"], [data-part="entry-form-error"]')].map((n) => n.getAttribute('data-part'))).toEqual([
       'entry-add-label',
       'entry-form-error',
@@ -2248,18 +2262,21 @@ describe('UIAgentAdminElement — custom entry authoring (ADR-0132 cl.4, fail-cl
     expect(stored.map((e) => e.id)).toEqual(['deploy', 'deploy-2'])
   })
 
-  // GH #917 — the verb is unchanged, its home is the Edit drawer's danger row (the LAST block of the
-  // scrolling content, never the footer beside the primary).
-  it('a custom entry CAN be deleted from its Edit drawer (unlike a built-in)', () => {
+  // GH #917 — the verb is unchanged; GH #1063 (ruling A) moved its home into the drawer FOOTER beside Done,
+  // destructive-styled and start-aligned so it never reads as the primary.
+  it('a custom entry CAN be deleted from its Edit drawer (unlike a built-in) — Remove sits in the footer', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const section = openAddForm(el, ENTRY_KINDS.resource)
     ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = 'Docs site'
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
     const form = openEntryDrawer(el, ENTRY_KINDS.resource, 'docs-site')
-    const remove = form.querySelector('[data-part="entry-delete"]') as HTMLElement
-    expect(remove, 'the danger row is built for a non-builtin entry').not.toBeNull()
-    expect(form.lastElementChild!.getAttribute('data-part'), 'the LAST block of the scrolling content').toBe('entry-form-danger')
-    expect(form.parentElement!.querySelector('[data-part="entry-form-done"]'), 'never in the footer beside the primary').toBeNull()
+    expect(form.querySelector('[data-part="entry-delete"]'), 'not in the scrolling content any more').toBeNull()
+    const sectionShell = sectionEl(el, ENTRY_KINDS.resource)
+    const remove = sectionShell.querySelector('[data-part="entry-delete"]') as HTMLElement
+    expect(remove, 'built for a non-builtin entry').not.toBeNull()
+    const footer = sectionShell.querySelector('[data-part="entry-drawer-footer"]') as HTMLElement
+    expect(footer.contains(remove), 'Remove lives in the drawer footer').toBe(true)
+    expect(footer.contains(sectionShell.querySelector('[data-part="entry-form-done"]')!), 'beside Done').toBe(true)
     remove.click()
     expect(readEntries(el.store, ENTRY_KINDS.resource)).toHaveLength(0)
     // The surface editing an entry must not outlive it.

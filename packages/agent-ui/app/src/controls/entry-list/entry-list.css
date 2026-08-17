@@ -325,19 +325,6 @@
     color: var(--ui-entry-list-label-ink);
   }
 
-  /* The danger block is the LAST child of the scrolling content, never the footer — the footer holds the
-     primary alone, so the two can never sit adjacent. A hairline + top margin is the separation that says
-     "this one is different in kind", without a second surface colour. */
-  [data-part='entry-form-danger'] {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ui-entry-list-compact-gap);
-    align-items: flex-start;
-    margin-block-start: var(--ui-entry-list-list-gap);
-    padding-block-start: var(--ui-entry-list-list-gap);
-    border-block-start: 1px solid var(--ui-entry-list-border);
-  }
-
   /* GH #947 point 3 — DANGER INTENT BY TOKEN REPOINT (the agent-admin.css `delete-agent-button` precedent,
      one step lighter: an outline/text button rather than a solid fill — this is a per-row destructive
      action inside an otherwise calm form, not the roster's single big "Delete Agent" commitment). `button.css`
@@ -346,10 +333,14 @@
      (that file's own reasoning, unchanged here). This file's own `--ui-entry-list-error-ink` role (the
      TOKEN block above) supplies the ink, so the button's danger colour and the section's existing error
      text are the SAME role, never two divergent danger inks in one file. The teaching line
-     (`entry-form-hint`, unchanged) stays the non-colour explanation; the VERB ("Remove") is ADR-0057's own
-     non-colour signifier. Scoped to the FORM's danger row only — the row's own inline Remove (non-drawered
-     kinds) is untouched, outside this ticket's scope. */
-  [data-part='entry-form-danger'] [data-part='entry-delete'] {
+     rides the button's own `title` now; the VERB ("Remove") is ADR-0057's own non-colour signifier. Scoped
+     to the FORM's footer only — the row's own inline Remove (non-drawered kinds) is untouched.
+
+     GH #1063 ruling A — the destructive action lives in the drawer FOOTER beside Done (overturning #917's
+     danger-row law): the danger repoint keeps it tonally distinct, and `margin-inline-end: auto` pushes it
+     to the far START while Done keeps the far end, so the two never sit adjacent. */
+  [data-part='entry-form-actions'] [data-part='entry-delete'] {
+    margin-inline-end: auto;
     --ui-button-bg: transparent;
     --ui-button-bg-hover: var(--md-sys-color-danger-container-low);
     --ui-button-bg-active: var(--md-sys-color-danger-container);
@@ -360,6 +351,7 @@
   [data-part='entry-form-actions'] {
     display: flex;
     justify-content: flex-end;
+    gap: var(--ui-entry-list-row-gap);
   }
 
   /* forced-colors: active — every bordered surface above uses a real 1px border (not a shadow/tint),

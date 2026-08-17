@@ -1061,8 +1061,8 @@ describe('ui-agent-admin cross-engine smoke — TKT-0048: entry-list action butt
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
     await el.updateComplete // submitAdd()'s close() is the same scheduled effect, the other direction
 
-    // GH #917 — Remove lives in the entry's Edit drawer now (the danger row at the foot of the scrolling
-    // content), so a real engine has to OPEN the drawer to measure it. That the button paints a real box
+    // GH #917 — Remove lives in the entry's Edit drawer now (GH #1063 ruling A: in the drawer FOOTER beside
+    // Done, destructive-styled), so a real engine has to OPEN the drawer to measure it. That the button paints a real box
     // inside a `showModal()` top-layer surface is exactly what only a real engine can prove.
     ;(el.querySelector('[data-kind="skill"] [data-entry-id="web-search"] [data-part="entry-edit"]') as HTMLElement).click()
     // `drawer.open = true` is a reactive prop write (a scheduled rerun, not a synchronous one — graph.ts) —
