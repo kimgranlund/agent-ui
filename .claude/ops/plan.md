@@ -235,3 +235,14 @@ payload per the #125 ops-write split; written and landed by the dispatching sess
 - #1063 RULED (`ruling: A`, overturns entry-form.ts:27 footer law) — build lane in flight.
 - Ratification pin FIRED for 0160/0190 amendments + 0193: decision-watcher re-judge dispatched
   2026-08-17 ~11:5xZ.
+
+## Night tally — 2026-08-17 ~12:2xZ
+
+- Bug/feature wave from Kim's live reports: #1061 (PR #1067) · #1062 (PR #1066) · #1063 (PR #1071,
+  ruling: A executed) · #1064 (PR #1073, AGENT-UI-4) — all MERGED, issues closed, main green after each.
+- Harvests: PR #1070 (0191/0192/0183-amendment) + PR #1072 (0193/0160/0190) — queue fully harvested (6/6).
+- ADR-0196 authored + merged proposed (PR #1068); upstream tooling gap filed (nonoun-plugins#46).
+- BOARD: 1 open — #1065, blocked SOLELY on Kim's `ratify ADR-0196` GH comment (then the build lane
+  dispatches; #1064 sequencing gate cleared). ADR-0195 ratification also pending, non-blocking.
+- Morning items for Kim: the two ratify one-liners · #1063's title-tooltip deviation (the "toggling
+  it off keeps it in the list" hint is hover-only now — visible-hint follow-up if wanted).
