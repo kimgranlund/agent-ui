@@ -141,6 +141,7 @@ ui-segmented-control ui-segment {
   padding-inline: calc(var(--ui-segmented-control-segment-height) / 2); /* slotless-edge pad, geometry.md */
   font-size: var(--ui-segmented-control-segment-font);
   line-height: var(--md-sys-control-line-height); /* single-line control standard, ADR-0036 */
+  white-space: nowrap; /* a segment is a single-line control — labels never wrap (GH #1178) */
   color: var(--ui-segmented-control-ink);
 }
 
