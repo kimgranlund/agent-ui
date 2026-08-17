@@ -23,12 +23,12 @@ export function requireAttrs(doc: ComponentDoc, names: readonly string[], label:
 
 /** The four ADR-0183 opt-in surfaces this page tables, each keyed to the attribute NAME its own descriptor's
  *  `attributes[].name` actually carries (ADR-0183 cl.2/cl.3, the 2026-08-12 amendment, the 2026-08-16 named-
- *  morph amendment). NOT uniform across the four: super-shell.md's `name:` field is kebab-case (the DOM
- *  attribute itself, no separate `attribute:` override) while drill.md/router-outlet.md/surface-host.md's
- *  `name:` is the camelCase PROP name with an explicit `attribute:` override — a real per-descriptor authoring
- *  inconsistency (flagged in this page's own findings, not silently normalized here). */
+ *  morph amendment). Uniform across the four since GH #1079: every descriptor's `name:` field is the
+ *  camelCase PROP name with an explicit `attribute:` override carrying the kebab-case DOM attribute —
+ *  super-shell.md adopted the 3-of-4 majority grammar its siblings (drill.md/router-outlet.md/
+ *  surface-host.md) already used. */
 export const SURFACE_ATTR_NAMES = {
-  'ui-super-shell': ['view-transitions', 'view-transition-names'],
+  'ui-super-shell': ['viewTransitions', 'viewTransitionNames'],
   'ui-surface-host': ['viewTransitions'],
   'ui-drill': ['viewTransitions'],
   'ui-router-outlet': ['viewTransitions'],
