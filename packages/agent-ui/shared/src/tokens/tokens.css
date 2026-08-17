@@ -1093,6 +1093,15 @@
   --md-sys-color-neutral-scrollbar-thumb: var(--md-sys-color-neutral-track);
   --md-sys-color-neutral-scrollbar-thumb-hover: var(--md-sys-color-neutral-track-hover);
 
+  /* ⑤ Answered/settled choice pair (ADR-0196, GH #1065) — the fleet-wide `:state(answered)` treatment's
+        ONE token pair, both PURE ALIASES of existing neutral roles (zero new literals, the ADR's own
+        clause 2): a role-repoint (the TKT-0047/TKT-0062 canon), never an opacity dim — the settled
+        control's UNSELECTED options + frame step back to this quieter bg/ink pair while the selected
+        indicator keeps its full-contrast selected tokens. Consumed only through each choice control's
+        own --ui-{name}-* chain inside its `:state(answered)` rule (interaction-states.md §6). */
+  --ui-answered-bg: var(--md-sys-color-neutral-container-low);
+  --ui-answered-ink: var(--md-sys-color-neutral-on-surface-variant);
+
 }
 
 /* Forced-colors (WHCM) — roles carry the WHCM mapping in the token layer (tokens.md), so components survive
