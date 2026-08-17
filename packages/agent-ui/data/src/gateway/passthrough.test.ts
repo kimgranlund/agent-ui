@@ -20,7 +20,7 @@ function streamingResponse(): Response {
 
 describe('the streaming pass-through law — SPEC-R11', () => {
   it('AC1: a streaming Response through the full default chain reaches the caller untouched', async () => {
-    const g = createGateway({
+    const g = createGateway({ baseUrl: 'https://x/',
       fetch: async () => streamingResponse(),
       middleware: [withToken(() => 'tok'), withRetry()],
     })
@@ -35,7 +35,7 @@ describe('the streaming pass-through law — SPEC-R11', () => {
       await res.clone().text() // a planted body read — the violation this law forbids
       return res
     }
-    const g = createGateway({ fetch: async () => streamingResponse(), middleware: [reading] })
+    const g = createGateway({ baseUrl: 'https://x/', fetch: async () => streamingResponse(), middleware: [reading] })
     const res = await g.request('/x')
     // the ORIGINAL response object itself is untouched (clone() was read, not `res`) — proving the
     // assertion is sharp enough to catch a read on `res` directly, exercised in the next case.
@@ -46,7 +46,7 @@ describe('the streaming pass-through law — SPEC-R11', () => {
       await res.text() // reads `res` itself — THIS is what AC1's assertion must catch
       return res
     }
-    const g2 = createGateway({ fetch: async () => streamingResponse(), middleware: [readingDirect] })
+    const g2 = createGateway({ baseUrl: 'https://x/', fetch: async () => streamingResponse(), middleware: [readingDirect] })
     const res2 = await g2.request('/x')
     expect(res2.bodyUsed).toBe(true) // the negative control: AC1's own assertion would go RED here
   })

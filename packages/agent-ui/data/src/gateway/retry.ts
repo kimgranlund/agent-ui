@@ -29,25 +29,16 @@ function wait(ms: number, signal?: AbortSignal): Promise<void> {
       reject(normalizeError(new DOMException('aborted', 'AbortError')))
       return
     }
-    const timer = setTimeout(resolve, ms)
-    signal?.addEventListener(
-      'abort',
-      () => {
-        clearTimeout(timer)
-        reject(normalizeError(new DOMException('aborted', 'AbortError')))
-      },
-      { once: true },
-    )
+    const onAbort = (): void => {
+      clearTimeout(timer)
+      reject(normalizeError(new DOMException('aborted', 'AbortError')))
+    }
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort) // no listener left behind on a long-lived signal
+      resolve()
+    }, ms)
+    signal?.addEventListener('abort', onAbort, { once: true })
   })
-}
-
-/** Strips the internal `idempotent` carrier header before the request reaches the real network. */
-function withoutIdempotentHeader(req: Request): { req: Request; idempotent: boolean } {
-  const idempotent = req.headers.has(IDEMPOTENT_HEADER)
-  if (!idempotent) return { req, idempotent: false }
-  const headers = new Headers(req.headers)
-  headers.delete(IDEMPOTENT_HEADER)
-  return { req: new Request(req, { headers }), idempotent: true }
 }
 
 /** `withRetry(policy)` — SPEC-R10. */
@@ -57,8 +48,10 @@ export function withRetry(policy: RetryPolicy = {}): Middleware {
   const capMs = policy.capMs ?? 5_000
 
   return async (req, next) => {
-    const { req: cleaned, idempotent: explicitIdempotent } = withoutIdempotentHeader(req)
-    const methodIdempotent = DEFAULT_IDEMPOTENT_METHODS.has(cleaned.method.toUpperCase())
+    // The `idempotent` carrier header is READ here and stripped by the gateway's innermost fetch
+    // step (never by this middleware — a re-shaped Request would needlessly transfer the body).
+    const explicitIdempotent = req.headers.has(IDEMPOTENT_HEADER)
+    const methodIdempotent = DEFAULT_IDEMPOTENT_METHODS.has(req.method.toUpperCase())
     const idempotent = methodIdempotent || explicitIdempotent
 
     let attempt = 0
@@ -67,7 +60,7 @@ export function withRetry(policy: RetryPolicy = {}): Middleware {
       let res: Response | undefined
       let err: DataError | undefined
       try {
-        res = await next(cleaned.clone())
+        res = await next(req.clone())
       } catch (e) {
         err = normalizeError(e)
       }
@@ -84,11 +77,14 @@ export function withRetry(policy: RetryPolicy = {}): Middleware {
       }
 
       const retryAfterMs = res ? parseRetryAfter(res.headers.get('retry-after')) : undefined
+      // A response we are about to DISCARD releases its body (cancel is not a read — the caller
+      // never sees this Response; leaving the stream open would hold the connection until GC).
+      if (res?.body && !res.bodyUsed) void res.body.cancel().catch(() => {})
       const jitterCeiling = Math.min(capMs, baseMs * 2 ** attempt)
       const computedMs = Math.random() * jitterCeiling
       const delayMs = retryAfterMs !== undefined ? Math.max(computedMs, retryAfterMs) : computedMs
 
-      await wait(delayMs, cleaned.signal)
+      await wait(delayMs, req.signal)
     }
   }
 }

@@ -18,7 +18,7 @@ describe('withToken — SPEC-R9', () => {
       if (auth.includes('stale')) return new Response('nope', { status: 401 })
       return new Response('ok', { status: 200 })
     })
-    const g = createGateway({
+    const g = createGateway({ baseUrl: 'https://x/',
       fetch: fetchStub,
       middleware: [withToken(() => currentToken, { refresh })],
     })
@@ -32,7 +32,7 @@ describe('withToken — SPEC-R9', () => {
       throw new Error('refresh failed')
     })
     const fetchStub = vi.fn(async () => new Response('nope', { status: 401 }))
-    const g = createGateway({ fetch: fetchStub, middleware: [withToken(() => 'stale', { refresh })] })
+    const g = createGateway({ baseUrl: 'https://x/', fetch: fetchStub, middleware: [withToken(() => 'stale', { refresh })] })
     const settled = await Promise.allSettled([g.request('/a'), g.request('/b'), g.request('/c')])
     const reasons = settled.map((s) => (s.status === 'rejected' ? s.reason : undefined))
     expect(reasons.every((r) => r === reasons[0])).toBe(true) // Object.is across rejections
@@ -51,7 +51,7 @@ describe('withToken — SPEC-R9', () => {
       calls++
       return new Response('nope', { status: 401 })
     })
-    const g = createGateway({
+    const g = createGateway({ baseUrl: 'https://x/',
       fetch: fetchStub,
       middleware: [withToken(() => 'stale', { refresh: async () => 'still-stale' })],
     })
@@ -60,9 +60,44 @@ describe('withToken — SPEC-R9', () => {
     expect(calls).toBe(2) // one original + one replay, never more
   })
 
+  it('AC4: a JSON-bodied request (re-creatable body) IS replayed after refresh, body intact (the SPEC §5 PATCH example)', async () => {
+    const seenBodies: string[] = []
+    const seenAuth: string[] = []
+    const fetchStub = vi.fn(async (req: Request) => {
+      seenBodies.push(await req.text())
+      seenAuth.push(req.headers.get('Authorization') ?? '')
+      return seenAuth.length === 1 ? new Response('nope', { status: 401 }) : new Response('{"ok":true}', { status: 200 })
+    })
+    const g = createGateway({ baseUrl: 'https://x/', fetch: fetchStub, middleware: [withToken(() => 'stale', { refresh: async () => 'fresh' })] })
+    const out = await g.json<{ ok: boolean }>('users/1', { method: 'PATCH', json: { name: 'Kim' } })
+    expect(out).toEqual({ ok: true })
+    expect(fetchStub).toHaveBeenCalledTimes(2)
+    expect(seenBodies).toEqual(['{"name":"Kim"}', '{"name":"Kim"}'])
+    expect(seenAuth).toEqual(['Bearer stale', 'Bearer fresh']) // the replay carries the token refresh() RESOLVED
+  })
+
+  it('AC4: a one-shot ReadableStream body is NOT replayed — rejects http/401 code:unreplayable-body', async () => {
+    const fetchStub = vi.fn(async () => new Response('nope', { status: 401 }))
+    const refresh = vi.fn(async () => 'fresh')
+    const g = createGateway({ baseUrl: 'https://x/', fetch: fetchStub, middleware: [withToken(() => 'stale', { refresh })] })
+    const body = new ReadableStream<Uint8Array>({
+      start(c) {
+        c.enqueue(new TextEncoder().encode('chunk'))
+        c.close()
+      },
+    })
+    await expect(g.request('upload', { method: 'POST', body })).rejects.toMatchObject({
+      kind: 'http',
+      status: 401,
+      code: 'unreplayable-body',
+    })
+    expect(fetchStub).toHaveBeenCalledTimes(1) // never re-sent
+    expect(refresh).not.toHaveBeenCalled()
+  })
+
   it('a request with no refresh configured returns the 401 as-is, untouched', async () => {
     const fetchStub = vi.fn(async () => new Response('nope', { status: 401 }))
-    const g = createGateway({ fetch: fetchStub, middleware: [withToken(() => 'tok')] })
+    const g = createGateway({ baseUrl: 'https://x/', fetch: fetchStub, middleware: [withToken(() => 'tok')] })
     const res = await g.request('/x')
     expect(res.status).toBe(401)
   })
