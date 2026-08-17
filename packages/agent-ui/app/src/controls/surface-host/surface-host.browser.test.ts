@@ -284,6 +284,85 @@ describe('ui-surface-host [bare] — the chat mount: no artboard chrome, STRUCTU
     expect(getComputedStyle(surface).containerType).toBe('inline-size')
   })
 
+  // ── GH #1163 — a Card ROOT means the payload owns the container: the surface paints NO chrome of its own ──
+
+  const CARD_ROOT_PAYLOAD = [
+    line({ version: 'v1.0', createSurface: { surfaceId: 'cr1', catalogId: 'agent-ui' } }),
+    line({
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 'cr1',
+        components: [
+          { id: 'root', component: 'Card', children: ['cr_content'] },
+          { id: 'cr_content', component: 'CardContent', children: ['cr_text', 'cr_btn'] },
+          { id: 'cr_text', component: 'Text', variant: 'body', text: 'Place your bet' },
+          { id: 'cr_btn', component: 'Button', variant: 'solid', label: 'Bet', action: { action: 'bet' } },
+        ],
+      },
+    }),
+  ]
+
+  it('GH #1163 — Card-root payload: the surface paints NO own chrome (zero padding, no background, no border) but KEEPS the radius for the working glow', () => {
+    const { host } = mountBareHost()
+    for (const l of CARD_ROOT_PAYLOAD) host.ingest(l)
+    host.finalize()
+    expect(host.hasAttribute('data-root-card')).toBe(true)
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    const surfaceStyle = getComputedStyle(surface)
+    for (const side of ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'] as const) {
+      expect(Number.parseFloat(surfaceStyle[side]), `the surface still paints its own card ${side} around a Card root (GH #1163 doubled container)`).toBe(0)
+    }
+    expect(alphaOf(surfaceStyle.backgroundColor), 'the surface still paints its own card background behind a Card root (GH #1163)').toBe(0)
+    expect(Number.parseFloat(surfaceStyle.borderTopWidth), 'the surface still paints its own card border around a Card root (GH #1163)').toBe(0)
+    // KEPT: the radius rides --ui-surface-host-working-radius so the ADR-0199 breathing glow still
+    // coincides with the visible (payload-owned) card edge (GH #1143's token chain).
+    expect(Number.parseFloat(surfaceStyle.borderTopLeftRadius), 'the working-glow radius was lost with the chrome (GH #1163 over-suppressed)').toBeGreaterThan(0)
+  })
+
+  it('GH #1163 — single container: the Card root is NOT double-inset — its border box is flush with the surface box', () => {
+    const { host } = mountBareHost()
+    for (const l of CARD_ROOT_PAYLOAD) host.ingest(l)
+    host.finalize()
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    const root = surface.firstElementChild as HTMLElement
+    expect(root.tagName.toLowerCase()).toBe('ui-card')
+    const s = surface.getBoundingClientRect()
+    const r = root.getBoundingClientRect()
+    // ONE container: the payload card spans the whole surface — no second padded/bordered ring around it.
+    expect(Math.abs(r.left - s.left), 'the Card root sits inset from the surface (double container, GH #1163)').toBeLessThanOrEqual(1)
+    expect(Math.abs(s.right - r.right), 'the Card root sits inset from the surface (double container, GH #1163)').toBeLessThanOrEqual(1)
+    // The payload's own card chrome is the ONE visible container.
+    const rootStyle = getComputedStyle(root)
+    expect(alphaOf(rootStyle.backgroundColor), 'the payload Card lost its own chrome — nothing is painting a container now').toBeGreaterThan(0)
+  })
+
+  it('GH #1163 — a root that changes shape across updates re-evaluates: Card → Column (via re-createSurface, the renderer\'s root-replacement path) restores the #1150/#1161 structural chrome', () => {
+    const { host } = mountBareHost()
+    for (const l of CARD_ROOT_PAYLOAD) host.ingest(l)
+    host.finalize()
+    expect(host.hasAttribute('data-root-card')).toBe(true)
+    host.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'cr1', catalogId: 'agent-ui' } }))
+    host.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'cr1',
+          components: [
+            { id: 'root', component: 'Column', children: ['cr_text2'] },
+            { id: 'cr_text2', component: 'Text', variant: 'body', text: 'Bare again' },
+          ],
+        },
+      }),
+    )
+    host.finalize()
+    expect(host.hasAttribute('data-root-card')).toBe(false)
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    const surfaceStyle = getComputedStyle(surface)
+    expect(Number.parseFloat(surfaceStyle.paddingTop), 'the structural chrome did not come back for a bare root').toBeGreaterThan(0)
+    expect(Number.parseFloat(surfaceStyle.borderTopWidth), 'the structural chrome did not come back for a bare root').toBeGreaterThan(0)
+    expect(alphaOf(surfaceStyle.backgroundColor), 'the structural chrome did not come back for a bare root').toBeGreaterThan(0)
+  })
+
   it('negative control: WITHOUT [bare] the checkered docs-preview artboard is untouched', () => {
     const el = mountHost()
     const stage = el.querySelector('[data-part="stage"]') as HTMLElement

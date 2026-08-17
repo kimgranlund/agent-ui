@@ -219,6 +219,23 @@
     container-type: inline-size;
   }
 
+  /* GH 1163 — exactly ONE container owner. When the payload's ROOT is itself a Card (surface-host.ts
+     mirrors that shape into `data-root-card` at the same ingest point as the root stretch, re-evaluated
+     on every line so an updateComponents that changes the root's shape flips it back), the payload's
+     own ui-card is the container: the structural chrome above (padding/background/border) is
+     suppressed so the two never nest. The border-RADIUS is deliberately KEPT — the ADR-0199 working
+     glow's overlay reads --ui-surface-host-working-radius (GH 1118/1143 chain; conversation.css's
+     bubble-radius repoint moves both together), and the payload card derives its own radius from the
+     same --md-sys-shape-corner-base rung, so the breathing outline still coincides with the visible
+     (now payload-owned) card edge. Bare non-Card roots are untouched — the 1150/1161 chrome above
+     applies exactly as shipped. Specificity: the extra [data-root-card] attribute (0,4,0) beats the
+     base [bare] rule above (0,3,0) without !important — the data-empty-final brace's pattern. */
+  :scope[bare][data-root-card] [data-part='surface'] {
+    padding: 0;
+    background: none;
+    border: none;
+  }
+
   /* ADR-0199 / GH 1104 — :state(working): the breathing diffused INNER-shadow overlay (interaction-
      states.md §7). A pseudo-element OVERLAY whose OPACITY animates between the two rungs — never the
      box-shadow value itself (opacity on a composited overlay is compositor-only, the ADR-0095

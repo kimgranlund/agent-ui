@@ -224,6 +224,74 @@ describe('ui-surface-host — a real A2UI stream renders inside the surface + ap
   })
 })
 
+// ── GH #1163 — exactly ONE container owner: `data-root-card` mirrors the root's shape ─────────────────
+//
+// #1150/#1161 gave the [bare] chat mount structural card chrome; a payload whose ROOT is itself a Card
+// then nested two bordered/padded containers. surface-host.ts mirrors the root's shape into
+// `data-root-card` at the SAME ingest point as the root stretch (per-ingest AND per-finalize), so the
+// CSS suppression re-evaluates whenever an updateComponents changes the root's shape. The painted proof
+// (no double chrome, radius kept) is the browser leg; this pins the attribute contract in jsdom.
+
+describe('ui-surface-host — GH #1163: data-root-card tracks the rendered root shape', () => {
+  const CREATE = line({ version: 'v1.0', createSurface: { surfaceId: 'cc1', catalogId: 'agent-ui' } })
+  const CARD_ROOT = line({
+    version: 'v1.0',
+    updateComponents: {
+      surfaceId: 'cc1',
+      components: [
+        { id: 'root', component: 'Card', children: ['c_content'] },
+        { id: 'c_content', component: 'CardContent', children: ['c_text'] },
+        { id: 'c_text', component: 'Text', variant: 'body', text: 'Place your bet' },
+      ],
+    },
+  })
+  const COLUMN_ROOT = line({
+    version: 'v1.0',
+    updateComponents: {
+      surfaceId: 'cc1',
+      components: [
+        { id: 'root', component: 'Column', children: ['c_text2'] },
+        { id: 'c_text2', component: 'Text', variant: 'body', text: 'Bare again' },
+      ],
+    },
+  })
+
+  it('a Card root sets data-root-card at ingest (mid-stream, not finalize-only)', () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    expect(el.hasAttribute('data-root-card')).toBe(false)
+    el.ingest(CREATE)
+    el.ingest(CARD_ROOT)
+    const root = (el.querySelector('[data-part="surface"]') as HTMLElement).firstElementChild as HTMLElement
+    expect(root.tagName.toLowerCase()).toBe('ui-card')
+    expect(el.hasAttribute('data-root-card')).toBe(true) // same ingest point as the root stretch
+    el.finalize()
+    expect(el.hasAttribute('data-root-card')).toBe(true) // finalize re-asserts, idempotent
+  })
+
+  it('re-evaluates across updates: a re-createSurface that changes the root shape Column → Card sets the attribute, Card → Column clears it (the root id itself is never reconciled in place, SPEC-R4 — a root shape change arrives via re-createSurface)', () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE)
+    el.ingest(COLUMN_ROOT)
+    expect(el.hasAttribute('data-root-card')).toBe(false) // bare root — the #1161 chrome case, no suppression
+    el.ingest(CREATE) // re-createSurface with a live id replaces the surface (renderer.ts)
+    el.ingest(CARD_ROOT)
+    expect(el.hasAttribute('data-root-card')).toBe(true)
+    el.ingest(CREATE)
+    el.ingest(COLUMN_ROOT)
+    el.finalize()
+    expect(el.hasAttribute('data-root-card')).toBe(false)
+  })
+
+  it('disconnect clears the state — a rebuilt artboard has no root shape yet', () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE)
+    el.ingest(CARD_ROOT)
+    expect(el.hasAttribute('data-root-card')).toBe(true)
+    el.remove()
+    expect(el.hasAttribute('data-root-card')).toBe(false)
+  })
+})
+
 // ── ADR-0187 / GH #829 clause 6 — the terminal-empty presentational brace ──────────────────────────────
 //
 // The validator is the sole JUDGE (SPEC-N6). This state is a read of the host's OWN facts — finalize
