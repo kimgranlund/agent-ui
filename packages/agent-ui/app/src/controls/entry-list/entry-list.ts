@@ -32,6 +32,8 @@
 // not on `input`, matching the fleet's per-field-on-change law (settings.ts's own SPEC-R12 timing).
 
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import type { UIDisclosureElement } from '@agent-ui/components/controls/disclosure'
+import type { UITextareaElement } from '@agent-ui/components/controls/textarea'
 import type { UIIconElement } from '@agent-ui/components/controls/icon'
 import type { UICodeEditorElement } from '@agent-ui/code/editor'
 import type { UIDrawerElement } from '@agent-ui/components/controls/drawer'
@@ -504,6 +506,18 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
     // `entry-content` data-part lives on; `.closest()` walks up from any of them to the host either way.
     const activeField = active?.closest('[data-part="entry-content"]') as UICodeEditorElement | null
     const preservedValue = activeId !== undefined && activeField !== null ? activeField.value : undefined
+    // GH #1062 — the DRAWERED row's inline Content field gets the SAME mid-edit rescue: a plain
+    // `ui-textarea` inside the row's collapsed-by-default Content fold (built below), whose focused
+    // editor part `.closest()` walks up to the host exactly like the code-editor case above.
+    const activeInline = active?.closest('[data-part="entry-inline-content"]') as UITextareaElement | null
+    const preservedInlineValue = activeId !== undefined && activeInline !== null ? activeInline.value : undefined
+    // GH #1062 — a fold the author opened must survive an external rebuild (a sibling toggle, a store
+    // write): capture every row's fold state by entry id before `replaceChildren` throws the rows away.
+    const openFolds = new Set<string>()
+    for (const openRow of list.querySelectorAll<HTMLElement>('[data-part="entry"]')) {
+      const fold = openRow.querySelector('[data-part="entry-content-fold"]') as UIDisclosureElement | null
+      if (fold?.open === true) openFolds.add(openRow.getAttribute('data-entry-id') ?? '')
+    }
 
     list.replaceChildren()
     const sorted = [...entries].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
@@ -747,6 +761,44 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
         contentField.value = entry.id === activeId && preservedValue !== undefined ? preservedValue : entry.content
         contentField.addEventListener('change', () => handlers.onContentChange(entry.id, contentField.value))
         row.append(contentField)
+      }
+
+      // GH #1062 — the DRAWERED row's INLINE Content surface: the drawer move (GH #917 above) took the
+      // per-row editor with it, leaving cards that show only name + description; this puts the body back
+      // on the card without reopening the eaten-mid-edit hazard the move fixed for the drawer form —
+      // the field commits on `change` (blur), and an uncommitted edit is rescued across an external
+      // rebuild by the same capture/restore dance the non-drawered editor above has always run.
+      //
+      // Shape: a `ui-disclosure` fold, COLLAPSED by default (long Content must not dominate the pane —
+      // the pane's own `settingsItem` fold convention, one level down), holding a plain `ui-textarea`
+      // (NOT `ui-code-editor`: ADR-0139's CodeMirror exception is the ./editor subpath's own, and this
+      // default card surface stays dependency-light). Writes ride `handlers.onContentChange` — the SAME
+      // writer the drawer form commits through (`entry-form.ts` line-for-line), so persistence, preset
+      // protection and the store seam all keep their one home.
+      //
+      // Built for BUILTIN rows too, deliberately: `builtin: true` protects DELETION only (ADR-0132
+      // Fork 4 + ADR-0178 Amendment — host-seeded content is hand-editable everywhere already; the
+      // drawer's own form mounts its content editor for builtins, and this matches that gating exactly).
+      if (withContentField && withDrawer) {
+        const fold = document.createElement('ui-disclosure') as UIDisclosureElement
+        fold.setAttribute('data-part', 'entry-content-fold')
+        fold.summary = 'Content'
+        fold.open = openFolds.has(entry.id) // survive an external rebuild; a fresh row starts collapsed
+        const inline = document.createElement('ui-textarea') as UITextareaElement
+        inline.setAttribute('data-part', 'entry-inline-content')
+        inline.label = `${entry.label} content` // the labelling SEAM → the editor's aria-label (ADR-0134)
+        inline.rows = 4 // TKT-0049's saved-content size, matching the non-drawered row editor above
+        inline.value = entry.id === activeId && preservedInlineValue !== undefined ? preservedInlineValue : entry.content
+        // `change`, never `input` (ui-textarea's blur-with-change commit, ADR-0134) — the fleet's
+        // per-field-on-change law, byte-identical timing to the row editor this restores.
+        inline.addEventListener('change', () => handlers.onContentChange(entry.id, inline.value))
+        fold.append(inline)
+        row.append(fold)
+        if (entry.id === activeId && preservedInlineValue !== undefined) {
+          // The same already-flushed discipline as the code-editor restore below: the `.value =` write
+          // lands via the render effect, so the caret collapse must wait for the flush.
+          void inline.updateComplete.then(() => inline.selectToEnd())
+        }
       }
       list.append(row)
 
