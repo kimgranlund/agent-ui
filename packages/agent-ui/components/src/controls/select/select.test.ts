@@ -1644,11 +1644,11 @@ describe('select.css — :state(answered) block (ADR-0196)', () => {
 
   it('the filled/hover/focus repaint rules exclude :state(answered)', () => {
     expect(selectCss).toMatch(
-      /:scope:not\(:state\(answered\)\) > \[data-part='trigger'\]:not\(:hover\):not\(:focus-visible\):not\(\[disabled\]\):not\(\[data-empty\]\)/,
+      /:scope:where\(:not\(:state\(answered\)\)\) > \[data-part='trigger'\]:not\(:hover\):not\(:focus-visible\):not\(\[disabled\]\):not\(\[data-empty\]\)/,
     )
     expect(selectCss).toMatch(
-      /:scope:not\(:state\(answered\)\) > \[data-part='trigger'\]:not\(:focus-visible\):not\(\[disabled\]\):hover/,
+      /:scope:where\(:not\(:state\(answered\)\)\) > \[data-part='trigger'\]:not\(:focus-visible\):not\(\[disabled\]\):hover/,
     )
-    expect(selectCss).toMatch(/:scope:not\(:state\(answered\)\) > \[data-part='trigger'\]:focus-visible/)
+    expect(selectCss).toMatch(/:scope:where\(:not\(:state\(answered\)\)\) > \[data-part='trigger'\]:focus-visible/)
   })
 })

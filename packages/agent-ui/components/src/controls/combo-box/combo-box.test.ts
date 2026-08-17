@@ -1815,13 +1815,13 @@ describe('combo-box.css — :state(answered) block (ADR-0196)', () => {
 
   it('the filled/hover/focus repaint rules exclude :state(answered)', () => {
     expect(comboCss).toMatch(
-      /:scope:not\(:state\(answered\)\) > \[data-part='editor'\]:not\(:hover\):not\(:focus\):not\(\[aria-disabled='true'\]\):not\(\[data-empty\]\)/,
+      /:scope:where\(:not\(:state\(answered\)\)\) > \[data-part='editor'\]:not\(:hover\):not\(:focus\):not\(\[aria-disabled='true'\]\):not\(\[data-empty\]\)/,
     )
     expect(comboCss).toMatch(
-      /:scope:not\(:state\(answered\)\) > \[data-part='editor'\]:not\(:focus\):not\(\[aria-disabled='true'\]\):hover/,
+      /:scope:where\(:not\(:state\(answered\)\)\) > \[data-part='editor'\]:not\(:focus\):not\(\[aria-disabled='true'\]\):hover/,
     )
     expect(comboCss).toMatch(
-      /:scope:not\(:state\(answered\)\) > \[data-part='editor'\]:not\(\[aria-disabled='true'\]\):focus/,
+      /:scope:where\(:not\(:state\(answered\)\)\) > \[data-part='editor'\]:not\(\[aria-disabled='true'\]\):focus/,
     )
   })
 })

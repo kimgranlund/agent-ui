@@ -716,7 +716,7 @@ describe('multi-select.css — :state(answered) block (ADR-0196)', () => {
   })
 
   it('the hover/focus repaint rules exclude :state(answered)', () => {
-    expect(multiSelectCss).toMatch(/:scope:not\(:state\(answered\)\) > \[role='option'\]:hover/)
-    expect(multiSelectCss).toMatch(/:scope:not\(:state\(answered\)\) > \[role='option'\]:focus-visible/)
+    expect(multiSelectCss).toMatch(/:scope:where\(:not\(:state\(answered\)\)\) > \[role='option'\]:hover/)
+    expect(multiSelectCss).toMatch(/:scope:where\(:not\(:state\(answered\)\)\) > \[role='option'\]:focus-visible/)
   })
 })
