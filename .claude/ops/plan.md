@@ -246,3 +246,17 @@ payload per the #125 ops-write split; written and landed by the dispatching sess
   dispatches; #1064 sequencing gate cleared). ADR-0195 ratification also pending, non-blocking.
 - Morning items for Kim: the two ratify one-liners · #1063's title-tooltip deviation (the "toggling
   it off keeps it in the list" hint is hover-only now — visible-hint follow-up if wanted).
+
+## Final tally — 2026-08-17 ~13:3xZ (squeaky-clean directive executed)
+
+- SHIPPED tonight (both hosts): #1042–#1050 docs wave · #1061/#1062/#1063/#1064 bug wave ·
+  #1065+#1074 (ADR-0196 build, dual-review + correctives, PR #1090) · #1075/#1076 (ADR-0195 repairs) ·
+  #1078/#1079/#1082/#1086 (AGENT-UI-4) · harvests #1070/#1072 · ADR-0193 amendment (PR #1093, proposed) ·
+  #1080 closed (decision: 102→103 KB re-base to measured — the LAST of the class — + diet #1092 minted) ·
+  #1085 closed (teamwork plugin re-enabled; claude-plugins#491 fixed via hooks removal; nonoun-plugins#47
+  closed as wrong-repo dup).
+- REPO STATE: 1 worktree (main) · 1 branch · origin main-only · 0 open PRs · check + size + full test
+  green on main · ops:reap-branches dry-run clean.
+- OPEN (5, all gated): #1077 (Kim: `ratify ADR-0193 amendment` → build dispatch) · #1092 (size:big diet,
+  design leg dispatched) · #1081/#1083/#1084 (live-pixel, Kim's surface).
+- Cross-repo: claude-plugins#507–#512 (agent-protocol learnings harvest, Kim's fork).
