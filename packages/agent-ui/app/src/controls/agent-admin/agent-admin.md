@@ -492,8 +492,10 @@ the request is projected fresh from the current config every turn — the select
 system prompt, and every AMBIENT capability entry (skills/workflows/resources/tools, each as ONE INDEX LINE
 — its name and description, never its body, GH #891/SPEC-R14; the Tools kind gated by the `toolsEnabled`
 switch) — and replayed with the running multi-turn history. An entry's full text reaches the model only when
-the USER tags it (`@name`/`/name`, the reach path below), and the prompt carries a short host-owned block
-telling the model exactly that, so it asks for a name instead of inventing the missing text. Why: this whole
+the USER names it — either an explicit `@name`/`/name` tag, or (GH #1030/SPEC-R16) naming the entry's exact
+label in an ordinary message, which the client auto-attaches the same way (the reach path below) — and the
+prompt carries a short host-owned block telling the model exactly that, so it asks the user to name or tag
+it instead of inventing the missing text. Why: this whole
 string is composed client-side per request with no way for the model to pull text in later, so ambient cost
 is paid on every turn forever — the measured shipped-pack corpus fell from ~14–20 KB of capability prose to
 ~3.6–4.7 KB of index (−75/−77%). Prompt SECTIONS stay full always (they are the agent) — that is the ruled
@@ -516,6 +518,15 @@ ambiently; a user-invocable one appears ONLY here. A disabled entry, or any entr
 switch is off, is absent. Labels are read from the entries themselves per build, so a rename (GH #848)
 shows on the next menu open with nothing else to wire; the reference the user commits carries the entry's
 `id`, which is what everything downstream resolves by (GH #402).
+
+**GH #1030/SPEC-R16 — client-side auto-attach.** Before either resolution path below runs, `ui-conversation`
+checks whether the typed text names an ENABLED, reachable entry's `label` EXACTLY (case-insensitive,
+whitespace/punctuation-normalized — `"texas hold'em"` matches `texas-holdem` and `Texas Hold'em` alike); the
+first such hit, earliest in the text, is added to the turn's references exactly as if the user had committed
+the `@`/`/` chip — one per turn maximum, never a fuzzy or description match, never a duplicate of an already
+explicitly-committed reference. It rides through the SAME resolution below and renders the SAME reference
+tag on the sent bubble (no new UI). This closes the "tag @x" bounce: naming an offered capability in an
+ordinary reply now loads it, not just a formal tag.
 
 At send, `ui-agent-admin` resolves each committed reference against a fresh store read, by id, fail-closed
 (an entry deleted, disabled, or master-switched off between menu and send contributes nothing, and the turn

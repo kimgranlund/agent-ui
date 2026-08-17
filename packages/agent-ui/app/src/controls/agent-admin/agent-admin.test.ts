@@ -2602,6 +2602,39 @@ describe('UIAgentAdminElement — the composer reach path (GH #849/SPEC-R8/R4)',
     expect(calls[1]!.text, 'a turn with no reference is the bare typed text').toBe('and the wine?')
   })
 
+  it("GH #1030/SPEC-R16: an exact label hit auto-attaches — the model gets the full text in THIS turn, no '@'/`/` tag typed at all", async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store!.set(SURFACE_A2UI_KEY, false) // no structured surface ⇒ the prose arm answers
+    addEntry(el, ENTRY_KINDS.resource, "Texas Hold'em")
+    setEntry(el, ENTRY_KINDS.resource, 'texas-hold-em', { content: 'Deal two hole cards each.' })
+    // code-checker NIT (f06ff414 review) — a DISABLED entry sharing the SAME label must never be the one
+    // that resolves: a dedup-suffixed second "Texas Hold'em" row, disabled, with a sentinel body that would
+    // prove a leak if it ever framed.
+    addEntry(el, ENTRY_KINDS.resource, "Texas Hold'em")
+    const disabledDupe = readEntries(el.store, ENTRY_KINDS.resource).find((e) => e.id !== 'texas-hold-em')!
+    setEntry(el, ENTRY_KINDS.resource, disabledDupe.id, { enabled: false, content: 'DISABLED-DUPE-SENTINEL-never-shown' })
+    await whenFlushed()
+
+    const calls: import('./agent-admin-schema.ts').AdminTurnRequest[] = []
+    el.agentTurn = async (req) => {
+      calls.push(req)
+      return 'ok'
+    }
+    const composer = chatComposer(el)
+    typeInto(composer, "lets play texas hold'em") // never tagged/committed as a chip
+    send(composer)
+
+    await waitFor(() => calls.length === 1, 'prose runner called')
+    expect(calls[0]!.text).toBe(
+      "## Referenced for this message\n### Texas Hold'em (resource)\n\nDeal two hole cards each.\n\nlets play texas hold'em",
+    )
+    expect(calls[0]!.text, 'the disabled duplicate never resolves, never frames').not.toContain('DISABLED-DUPE-SENTINEL')
+    // …and the sent bubble carries the SAME reference-tag rendering SPEC-R10 already ships (never a new
+    // visual) — the user sees exactly what got auto-pulled, ONE tag, not two.
+    const bubble = el.querySelector('[data-part="bubble"][data-role="user"]') as HTMLElement
+    expect([...bubble.querySelectorAll('[data-part="reference-tag-label"]')].map((n) => n.textContent)).toEqual(["Texas Hold'em"])
+  })
+
   it('SPEC-R4 AC2: an invoked tool unions into THAT turn’s integrations; the next turn is ambient again', async () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     el.store!.set(SURFACE_A2UI_KEY, false)

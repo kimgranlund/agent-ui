@@ -427,6 +427,10 @@ conv.onContextDismiss((id) => { /* remove `id` from contextItems */ })
 // GH #849 — the composer's `@`/`/` reference typeahead, pass-through props; a committed reference rides
 // `onSubmit`'s widened SECOND argument (a single-argument consumer is unaffected). GH #891/SPEC-R9 — an
 // entry may also carry an `icon` glyph name, rendered on the chip and on the sent bubble's own tags.
+// GH #1030/SPEC-R16 — a NON-committed reference can ALSO ride that argument: an exact `label` hit in the
+// typed text (case/punctuation-normalized) auto-attaches one roster entry, at most, before either
+// `addUserMessage` or this callback sees it — indistinguishable downstream from a committed chip. Empty/
+// unset rosters (the default) match nothing, ever.
 conv.mentionables = [{ id: 'res-1', label: 'Menu PDF', kind: 'resource', icon: 'file-text' }]
 conv.invocables = [{ id: 'svc:calc:*', label: 'Calculator', kind: 'tool', icon: 'gear' }]
 conv.onSubmit((text, references) => { /* resolve `references` by id at send time */ })

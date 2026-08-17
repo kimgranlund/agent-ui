@@ -93,6 +93,84 @@ import './conversation-header.ts'
 import type { UIConversationHeaderElement } from './conversation-header.ts'
 import type { PickerOption, ProviderOption, ContextItem, ReferenceOption, TurnReference, CapabilityRow } from './composer-options.ts'
 
+// GH #1030 (client-side auto-attach, HYBRID design (b) — ADR-0190 amendment, `capability-availability-
+// tagging.spec.md` §13/SPEC-R16) — case/punctuation/whitespace-normalized SQUASH: lowercased, every
+// non-alphanumeric character (space, hyphen, apostrophe, any other punctuation) deleted outright rather
+// than treated as a token boundary. Applied to a whole LABEL this collapses it to one target string —
+// "texas-holdem" and "Texas Hold'em" both squash to `'texasholdem'` — and applied per WHITESPACE-delimited
+// WORD of the typed text, consecutive words' squashed forms concatenate the same way, so a text word split
+// differently from the label's own internal punctuation ("hold'em" as one text word vs the label's own
+// word count) still lines up: EXACT match, never fuzzy — a candidate whose squashed label never equals a
+// squashed run of consecutive text words simply never matches. `\p{L}`/`\p{N}` (Unicode property escapes,
+// the `u` flag) rather than `[a-z0-9]`: a non-ASCII LETTER is content, not punctuation — a label like
+// `Über` must squash to `'über'`, never lose its `ü` the way an ASCII-only class would.
+function squash(s: string): string {
+  return s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
+}
+
+/**
+ * The EARLIEST word index in `words` (already `squash`-ed, one per whitespace-delimited word of the typed
+ * text) where the CONCATENATION of one or more consecutive words equals `target` exactly, or `-1`. Growing
+ * the run word-by-word and bailing the moment it's longer than `target` keeps this linear per start index
+ * — no candidate ever gets an unbounded scan. */
+function indexOfSquashedRun(words: readonly string[], target: string): number {
+  for (let i = 0; i < words.length; i++) {
+    let acc = ''
+    for (let j = i; j < words.length; j++) {
+      acc += words[j]
+      if (acc.length > target.length) break
+      if (acc === target) return i
+    }
+  }
+  return -1
+}
+
+/**
+ * GH #1030 — the ONE auto-attach candidate, or `undefined`: among `options` (the caller's already-
+ * REACHABLE roster — `entries.ts`'s `buildComposerRosters` output, enabled entries of a master-on kind
+ * only, so "ENABLED" holds by construction and never needs a second filter here), the entry whose FULL
+ * `label`, squashed, equals the squashed concatenation of one or more consecutive words of `text`,
+ * EARLIEST in the text. `exclude` drops a candidate already explicitly referenced (same `kind`+`id`) — an
+ * exact mention of something the user ALSO tagged by hand is not a second attachment. Ties (two candidates'
+ * matches start at the SAME word index — always possible whenever one label is a PREFIX of another's word
+ * sequence, e.g. `Wine` vs `Wine list` both starting the match at "wine") resolve to the LONGER squashed
+ * target — the more specific label — never merely "whichever comes first in `options`": "bring the wine
+ * list" against a roster carrying both `Wine` and `Wine list` must attach `Wine list`, not the shorter
+ * prefix a naive first-wins rule would pick. No description match, no fuzzy scoring (the ruled-out
+ * false-positive-risk alternative) — an entry not literally named in full is never auto-attached. */
+function findAutoAttachOption(
+  text: string,
+  options: readonly ReferenceOption[],
+  exclude: readonly { kind: string; id: string }[],
+): ReferenceOption | undefined {
+  const words = text.split(/\s+/).filter((w) => w.length > 0).map(squash)
+  let best: { option: ReferenceOption; start: number; length: number } | undefined
+  for (const option of options) {
+    if (exclude.some((e) => e.kind === option.kind && e.id === option.id)) continue
+    const target = squash(option.label)
+    if (target === '') continue
+    const start = indexOfSquashedRun(words, target)
+    if (start === -1) continue
+    const better = best === undefined || start < best.start || (start === best.start && target.length > best.length)
+    if (!better) continue
+    best = { option, start, length: target.length }
+  }
+  return best?.option
+}
+
+/** `ReferenceOption` → `TurnReference`, the SAME icon-omission convention the composer's own explicit-
+ *  commit path uses (`conversation-composer.ts`'s `#commitReference`) — never an explicit `icon: undefined`
+ *  key, so a no-icon roster entry's auto-attached reference is byte-identical to one a user committed by
+ *  hand. */
+function turnReferenceOf(option: ReferenceOption): TurnReference {
+  return {
+    id: option.id,
+    label: option.label,
+    kind: option.kind,
+    ...(option.icon === undefined || option.icon === '' ? {} : { icon: option.icon }),
+  }
+}
+
 const props = {
   // OPT-IN raw-wire disclosure (ADR-0129 clause 3) — reflected, default false. Narration itself (below)
   // ships unconditionally; this gates only the per-turn `<details>` wire dump, a debugging/inspection
@@ -438,10 +516,23 @@ export class UIConversationElement extends UIElement {
       // vanish the instant it was sent. A PASS-THROUGH still: this element adds no semantics (it never reads
       // `kind`/`icon`), and the bubble's BODY stays the typed text — the framed text R4 puts on the wire and
       // in history never renders here.
+      //
+      // GH #1030 (HYBRID design (b) — the client-side auto-attach ADR-0190 amendment) — ONE more reference
+      // MAY join the committed set here, before either downstream call: an EXACT-label hit for a
+      // `mentionables`/`invocables` roster entry the typed text names in full (`findAutoAttachOption`),
+      // never more than one. Doing it HERE (not in the composer, not in agent-admin's own callback) is what
+      // makes it ride through BOTH downstream consumers of the SAME array identically to an explicit chip:
+      // `addUserMessage` paints it as the SAME dismiss-less bubble tag SPEC-R10 already renders (never a
+      // new chip visual), and the consumer's `#onSubmitCb` (agent-admin's `resolveTurnReferences`) resolves
+      // it exactly as it resolves a user-committed one — there is no second resolution path to drift. An
+      // undefined/empty roster (every consumer but ui-agent-admin, today) matches nothing, ever — the same
+      // gated-equivalence law `mentionables`/`invocables` already stand on.
       composer.onSubmit((text, references) => {
         if (this.disabled) return // belt to the composer's own busy-disable — no bubble, no callback
-        this.addUserMessage(text, references)
-        this.#onSubmitCb?.(text, references)
+        const autoAttach = findAutoAttachOption(text, [...(this.mentionables ?? []), ...(this.invocables ?? [])], references ?? [])
+        const resolved = autoAttach === undefined ? references : [...(references ?? []), turnReferenceOf(autoAttach)]
+        this.addUserMessage(text, resolved)
+        this.#onSubmitCb?.(text, resolved)
       })
       composer.onModelChange((id) => this.#onModelChangeCb?.(id))
       composer.onEffortChange((id) => this.#onEffortChangeCb?.(id))

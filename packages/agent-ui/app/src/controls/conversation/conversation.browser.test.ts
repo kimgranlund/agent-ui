@@ -714,6 +714,32 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
     // Dismiss-less on the real page too (the composer chip's affordance never leaked into the sent bubble).
     expect(row.querySelector('ui-button')).toBeNull()
   })
+
+  // GH #1030/SPEC-R16 — a REAL send (real contenteditable text + a real Send click, not a direct
+  // `addUserMessage` call) drives the client-side auto-attach and paints the SAME real pill the explicit-chip
+  // case above proves: the rendering path is unchanged, so this closes the loop on the SEAM (matcher →
+  // resolution array → paint) rather than re-proving geometry jsdom already can't resolve.
+  it('GH #1030: a real send whose typed text exactly names a roster entry paints a real reference-tag pill — no `@`/`/` chip committed', async () => {
+    const el = mountConversation()
+    el.mentionables = [{ id: 'texas-hold-em', label: "Texas Hold'em", kind: 'resource' }]
+    await whenFlushed()
+
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
+    const sendBtn = el.querySelector('[data-part="send"]') as HTMLElement
+    editor.textContent = "lets play texas hold'em"
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    await whenFlushed()
+    sendBtn.click()
+    await whenFlushed()
+
+    const bubble = el.querySelector('[data-part="bubble"][data-role="user"]') as HTMLElement
+    const row = bubble.querySelector('[data-part="reference-tags"]') as HTMLElement
+    expect(row, `${server.browser}: the auto-attached entry never painted a tag row`).not.toBeNull()
+    const tag = row.querySelector('[data-part="reference-tag"]') as HTMLElement
+    expect(tag.innerText.trim()).toBe("Texas Hold'em")
+    const tagBox = tag.getBoundingClientRect()
+    expect(tagBox.width, `${server.browser}: the auto-attached tag must be a real pill, never a zero box`).toBeGreaterThan(12)
+  })
 })
 
 // GH #313/ADR-0160 amendment (Kim's 2026-07-28 ruling — "no bubble unless there is content for it") —

@@ -308,26 +308,35 @@ const BANKROLL_PATH_LINE =
   "Keep your game's running chip count at the data-model path /bankroll — that exact key, never chips/stack/score; every settlement writes the new figure there."
 
 /**
- * GH #891/SPEC-R15 — the INDEX teaching block: the model is told, in the prompt itself, that the capability
- * lists are an index and that only the USER can load an entry. Host-owned and byte-pinned, living beside
- * the projection it teaches (the `BANKROLL_PATH_LINE` precedent, and for its very lesson: GH #525 proved an
- * affordance nobody is taught is an affordance that never fires — a model that cannot tell an index from
- * the real thing will either invent the missing text or silently skip the capability).
+ * GH #891/SPEC-R15, re-taught GH #1030/SPEC-R16 — the INDEX teaching block: the model is told, in the
+ * prompt itself, that the capability lists are an index and how a full item actually loads. Host-owned and
+ * byte-pinned, living beside the projection it teaches (the `BANKROLL_PATH_LINE` precedent, and for its
+ * very lesson: GH #525 proved an affordance nobody is taught is an affordance that never fires — a model
+ * that cannot tell an index from the real thing will either invent the missing text or silently skip the
+ * capability).
  *
  * Deliberately NOT in the a2ui mini-skill registry: that is producer/A2UI-side and modality-wrong for the
  * prose arm, while this string must ride EVERY arm that consumes `composeLiveSystemPrompt`.
  *
+ * GH #1030 (ADR-0190 amendment, HYBRID design (b)) re-taught the SECOND of the three facts: the model still
+ * cannot load an item itself, but naming it EXACTLY is no longer a dead end that must bounce to a formal
+ * `@`/`/` tag — the client (`ui-conversation`'s `findAutoAttachOption`) resolves an exact label hit in the
+ * USER's own next message the same way it resolves a committed chip. The `/x-holdem: tag @x` bounce GH
+ * #1030 repros (the agent naming what it just offered, then asking the user to re-type it as a formal tag)
+ * is exactly what this line now heads off — the model asks the user to NAME it, tagging stays a fallback
+ * for when the model needs to be explicit.
+ *
  * Three facts, in the ruling's own order, and nothing else (≤500 B — asserted in entries.test.ts): the
- * lists are an index (names + descriptions, no full text) · the model cannot load an entry itself, only the
- * user can, by tagging it in the composer (`@name` resources, `/name` skills/workflows/tools) · when a task
- * needs an indexed capability's full text, ASK for it by name. Zero index lines ⇒ zero teaching bytes (the
- * gated-equivalence law, SPEC-R14 AC3): a persona with no ambient capability entries composes exactly what
- * it composed before this ruling.
+ * lists are an index (names + descriptions, no full text) · the model cannot load an entry itself — the
+ * USER's own message naming it exactly auto-attaches it, tagging (`@name` resources, `/name`
+ * skills/workflows/tools) works too · when a task needs an indexed capability's full text, ASK the user to
+ * name or tag it. Zero index lines ⇒ zero teaching bytes (the gated-equivalence law, SPEC-R14 AC3): a
+ * persona with no ambient capability entries composes exactly what it composed before either ruling.
  */
 export const CAPABILITY_INDEX_TEACHING =
   'The capability lists below are an INDEX: one line per item, its name and a short description — their full text is NOT loaded. ' +
-  'You cannot load an item yourself; only the user can, by tagging it in the composer (@name for a resource, /name for a skill, workflow or tool). ' +
-  "When a task needs an indexed item's full text, ask the user to tag it by name."
+  'You cannot load an item yourself: when the user names it exactly in their own message it auto-attaches; tagging it works too (@name for a resource, /name for a skill, workflow or tool). ' +
+  'Otherwise, ask the user to name or tag it.'
 
 /** The live prompt's bankroll-teaching input (GH #525). Presence of this object (vs. `undefined`) is the
  *  whole gate: a caller hands one over only for a persona that is BOTH capable (`isBankrollCapable`) AND
