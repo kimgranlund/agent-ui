@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-17 |
 > | **Proposed by** | planner (design seat), GH [#1122](https://github.com/kimgranlund/agent-ui/issues/1122) — Kim's Rulings comment (2026-08-17, in-session find-intent round) ruled the four intake forks: both headless mechanisms day-one · a NEW workspace package · all three backends at turn 1 · persistence extends the debug-export shape. Number 0200 claimed against the file tree (0199 present at HEAD) AND `git log origin/main --oneline -20` (0198/0199 the newest mints, both ratified 2026-08-17; no higher number in flight) |
-> | **Ratified by** | *(pending — Kim flips via `ratify ADR-0200` on the shipping PR, executed by `scripts/adr_ratify.py`, ADR-0149)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-17, via the [`ratify ADR-0200` utterance](https://github.com/kimgranlund/agent-ui/pull/1128#issuecomment-5318304410) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | NEW [`../spec/devtools-harness.spec.md`](../spec/devtools-harness.spec.md) (SPEC-R1…R12, SPEC-N1…N5, v0.1 skeleton) · NEW [`../decompositions/devtools-harness.decomp.json`](../decompositions/devtools-harness.decomp.json) (both planes, PLAN, coverage-checked) · on ratification + build: NEW `packages/agent-ui/devtools/**` · NEW `site/pages/devtools-harness.{html,ts}` · CLAUDE.md Layout + import-DAG rows · every inward `layering.test.ts` extends its scan · `site/pages/agent-admin-debug-export.ts` manifest gains the additive optional `files.captures` family |
 > | **Supersedes / Superseded by** | *(none)* — **Relates** [ADR-0137](./0137-a2ui-agent-producer-toolkit-export.md) (`AgentTransport`/`Session` — THE turn seam this rides, byte-unchanged; and the portable-core-vs-site-shell placement law this obeys) · **Relates** [ADR-0192](./0192-agent-ui-data-package.md) (the package-mint-rides-an-ADR precedent + per-edge DAG justification format) · **Relates** [ADR-0115](./0115-spa-router-v1-scope.md) / [ADR-0119](./0119-code-prose-family-v1-scope.md) (sibling-branch + opt-in-subpath geometry, cited for contrast — devtools is NOT a components sibling, see clause 1) · **Relates** ADR-0073 (dev-proxy trust boundary: the key stays behind `/__a2ui/agent`; devtools reaches it over HTTP only) · **Relates** ADR-0152 (the production Worker twin of the proxy mount the live backend targets) · **Relates** GH #889 (the debug-export bundle this extends) |
 
