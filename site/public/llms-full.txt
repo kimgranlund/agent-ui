@@ -78,7 +78,7 @@ widget box that walks a fallback chain: an image, then initials, then a generic 
 
 ```html
 <ui-avatar src="/users/42/photo.jpg" name="Ada Lovelace"></ui-avatar>
-<ui-avatar identity="Grace Hopper" size="lg"></ui-avatar>
+<ui-avatar identity="Grace Hopper"></ui-avatar>
 <ui-avatar label="Ada Lovelace"></ui-avatar>
 ```
 
@@ -266,7 +266,7 @@ ADR-0006). ARIA `role="button"` is applied through `ElementInternals`, never as 
 
 ```html
 <ui-button>Save</ui-button>
-<ui-button variant="soft" size="lg">Continue</ui-button>
+<ui-button variant="soft">Continue</ui-button>
 <ui-button disabled>Unavailable</ui-button>
 ```
 
@@ -879,7 +879,7 @@ glyph entirely in CSS (no native `<input>`, no shadow DOM).
 ```html
 <ui-checkbox>Accept terms</ui-checkbox>
 <ui-checkbox checked>Enabled by default</ui-checkbox>
-<ui-checkbox size="sm" disabled>Unavailable</ui-checkbox>
+<ui-checkbox disabled>Unavailable</ui-checkbox>
 <ui-checkbox value="newsletter">Subscribe</ui-checkbox>
 ```
 
@@ -1759,8 +1759,8 @@ form-associated — the moved children each own their own value/validity individ
   </fieldset>
 </ui-form-popover>
 
-<!-- Explicit placement + size -->
-<ui-form-popover label="Filters" placement="bottom-end" size="sm">
+<!-- Explicit placement -->
+<ui-form-popover label="Filters" placement="bottom-end">
   <ui-text-field label="Search"></ui-text-field>
 </ui-form-popover>
 
@@ -2501,7 +2501,7 @@ contract (no native `<input>`, ARIA via `ElementInternals` and a light-DOM part,
 ```html
 <ui-otp-field label="One-time code"></ui-otp-field>
 <ui-otp-field label="6-digit code" length="6" required></ui-otp-field>
-<ui-otp-field label="4-digit PIN" length="4" size="lg"></ui-otp-field>
+<ui-otp-field label="4-digit PIN" length="4"></ui-otp-field>
 ```
 
 ## Value + form participation
@@ -3397,7 +3397,7 @@ in form submission through `ElementInternals`, and paints its rail and thumb ent
 ```html
 <ui-slider></ui-slider>
 <ui-slider min="0" max="100" value="50"></ui-slider>
-<ui-slider step="10" size="sm" aria-label="Volume"></ui-slider>
+<ui-slider step="10" aria-label="Volume"></ui-slider>
 <ui-slider disabled></ui-slider>
 <ui-slider label="Bet" value="25" min="5" max="500"></ui-slider>
 <ui-slider label="Volume" layout="inline" value="70"></ui-slider>
@@ -3505,7 +3505,7 @@ elements entirely in light DOM (no native `<input>`, no shadow DOM).
 ```html
 <ui-slider-multi></ui-slider-multi>
 <ui-slider-multi value-lo="20" value-hi="80"></ui-slider-multi>
-<ui-slider-multi min="0" max="200" step="10" size="lg"></ui-slider-multi>
+<ui-slider-multi min="0" max="200" step="10"></ui-slider-multi>
 <ui-slider-multi disabled></ui-slider-multi>
 <ui-slider-multi label="Price" value-lo="20" value-hi="80" min="0" max="200"></ui-slider-multi>
 <ui-slider-multi label="Range" layout="inline"></ui-slider-multi>
@@ -4295,7 +4295,7 @@ carries **no** `role`/`aria-*` attribute.
 ```html
 <ui-switch></ui-switch>
 <ui-switch checked></ui-switch>
-<ui-switch size="sm">Wi-Fi</ui-switch>
+<ui-switch>Wi-Fi</ui-switch>
 ```
 
 ## Anatomy
@@ -4696,10 +4696,10 @@ Otherwise it styles its host and lets the user's light-DOM text flow through (ho
 is the A2UI v1.0 `Text` component's live control (via a factory fan-out, ADR-0078 cl.5).
 
 ```html
-<ui-text variant="display" size="lg" as="h1">Page title</ui-text>
+<ui-text variant="display" as="h1">Page title</ui-text>
 <ui-text variant="headline" as="h3">Section</ui-text>
 <ui-text>Body copy is the default — body/md, no wrapper.</ui-text>
-<ui-text variant="label" size="sm">Secondary / meta text</ui-text>
+<ui-text variant="label">Secondary / meta text</ui-text>
 <ui-text as="a" href="https://example.com">Source: the referenced document</ui-text>
 ```
 
@@ -4888,7 +4888,7 @@ placed in the host-as-grid centre cell, created once and never re-rendered. The 
 
 ```html
 <ui-text-field label="Email" placeholder="you@example.com"></ui-text-field>
-<ui-text-field label="Name" size="lg" required></ui-text-field>
+<ui-text-field label="Name" required></ui-text-field>
 <ui-text-field label="Read only" value="fixed" readonly></ui-text-field>
 ```
 
@@ -5147,7 +5147,7 @@ is **not** form-associated, and hosts `ui-timeline-item` children the consumer a
 light-DOM markup, read back in DOM order (no auto-sort).
 
 ```html
-<ui-timeline label="Order status" size="md">
+<ui-timeline label="Order status">
   <ui-timeline-item status="done"    label="Order placed" timestamp="Apr 15, 2:30 PM"></ui-timeline-item>
   <ui-timeline-item status="done"    label="Processing"   timestamp="Apr 16, 9:00 AM"></ui-timeline-item>
   <ui-timeline-item status="active"  label="Shipped"      timestamp="Apr 17, 11:45 AM"></ui-timeline-item>

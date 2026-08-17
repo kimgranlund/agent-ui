@@ -165,7 +165,7 @@ elements entirely in light DOM (no native `<input>`, no shadow DOM).
 ```html
 <ui-slider-multi></ui-slider-multi>
 <ui-slider-multi value-lo="20" value-hi="80"></ui-slider-multi>
-<ui-slider-multi min="0" max="200" step="10" size="lg"></ui-slider-multi>
+<ui-slider-multi min="0" max="200" step="10"></ui-slider-multi>
 <ui-slider-multi disabled></ui-slider-multi>
 <ui-slider-multi label="Price" value-lo="20" value-hi="80" min="0" max="200"></ui-slider-multi>
 <ui-slider-multi label="Range" layout="inline"></ui-slider-multi>

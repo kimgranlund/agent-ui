@@ -92,7 +92,7 @@ widget box that walks a fallback chain: an image, then initials, then a generic 
 
 ```html
 <ui-avatar src="/users/42/photo.jpg" name="Ada Lovelace"></ui-avatar>
-<ui-avatar identity="Grace Hopper" size="lg"></ui-avatar>
+<ui-avatar identity="Grace Hopper"></ui-avatar>
 <ui-avatar label="Ada Lovelace"></ui-avatar>
 ```
 

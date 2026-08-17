@@ -1488,8 +1488,9 @@ describe('default catalog — Textarea via the shared validator (2026-07-28 per-
 
 // ── the GH #294 F4 FormPopover row (form-popover.spec.md SPEC-R9 / form-popover.lld.md) ───────────────
 //
-// `label` is bindable (design review BLOCKER, correctly shipped) while `placement`/`size` stay
-// structural-only enums — the RadioGroup.orientation / ColorPicker.format precedent. This block pins
+// `label` is bindable (design review BLOCKER, correctly shipped) while `placement` stays a
+// structural-only enum — the RadioGroup.orientation / ColorPicker.format precedent (`size` left the
+// catalog entirely in the 2026-08-17 size-attr scrub; binding it now fails as an unknown prop). This block pins
 // that distinction: a representative payload with BOTH bindable props bound validates 0 failures, and a
 // negative control proves the marks are load-bearing (binding a non-bindable prop fails CATALOG) — so a
 // future regression flipping `label`'s `bindable` to `false` (or `placement`'s to `true`) is caught here,
@@ -1503,7 +1504,7 @@ describe('default catalog — FormPopover via the shared validator (GH #294 F4, 
         components: [
           {
             id: 'root', component: 'FormPopover', open: { path: '/menuOpen' }, label: { path: '/menuLabel' },
-            placement: 'bottom-start', size: 'md',
+            placement: 'bottom-start',
           },
         ],
       },
@@ -1518,9 +1519,9 @@ describe('default catalog — FormPopover via the shared validator (GH #294 F4, 
     expect(fp.properties.label?.bindable).toBe(true)
   })
 
-  it('placement/size are structural, non-bindable enums (the RadioGroup.orientation / ColorPicker.format precedent)', () => {
+  it('placement is a structural, non-bindable enum (the RadioGroup.orientation / ColorPicker.format precedent); size is no longer a catalog prop at all (2026-08-17 scrub)', () => {
     expect(defaultCatalog.components.FormPopover.properties.placement?.bindable).toBeFalsy()
-    expect(defaultCatalog.components.FormPopover.properties.size?.bindable).toBeFalsy()
+    expect(defaultCatalog.components.FormPopover.properties.size).toBeUndefined()
   })
 
   it('accepts a {path} binding for open/label (bindable props)', () => {
@@ -1534,6 +1535,8 @@ describe('default catalog — FormPopover via the shared validator (GH #294 F4, 
     const byPlacement: A2uiComponent = { id: 'fp3', component: 'FormPopover', placement: { path: '/menuPlacement' } }
     expect(validateCatalogConformance(byPlacement, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 'fp3.placement' }))
 
+    // `size` left the catalog in the 2026-08-17 scrub — binding it fails CATALOG as an UNKNOWN prop now,
+    // which still guards the same seam (any size usage a producer emits is rejected).
     const bySize: A2uiComponent = { id: 'fp4', component: 'FormPopover', size: { path: '/menuSize' } }
     expect(validateCatalogConformance(bySize, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 'fp4.size' }))
   })

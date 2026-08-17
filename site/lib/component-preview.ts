@@ -1286,7 +1286,6 @@ class ComponentPreview extends HTMLElement {
       const select = document.createElement('ui-select') as UISelectElement
       select.id = id
       select.className = 'knob-select'
-      select.setAttribute('size', 'sm')
       select.setAttribute('label', knob.name)
       select.setAttribute('placeholder', '—') // the unset display → the control's own default
       // The unset choice — a non-empty sentinel value (an empty-value option is inert; see KNOB_UNSET).
@@ -1322,7 +1321,6 @@ class ComponentPreview extends HTMLElement {
       const toggle = document.createElement('ui-switch') as UISwitchElement
       toggle.id = id
       toggle.className = 'knob-switch'
-      toggle.setAttribute('size', 'sm')
       toggle.setAttribute('aria-label', knob.name)
       toggle.checked = this.#state.get(knob.name) === 'true'
       toggle.addEventListener('change', () => this.#setKnob(knob.name, toggle.checked ? 'true' : 'false'))
@@ -1340,7 +1338,6 @@ class ComponentPreview extends HTMLElement {
     const field = document.createElement('ui-text-field') as UITextFieldElement
     field.id = id
     field.className = 'knob-input'
-    field.setAttribute('size', 'sm')
     field.setAttribute('type', knob.kind === 'number' ? 'number' : 'text')
     field.setAttribute('label', knob.name === SLOT_TEXT ? 'text' : knob.name)
     field.value = this.#state.get(knob.name) ?? ''
