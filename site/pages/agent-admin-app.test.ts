@@ -985,7 +985,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
   it('a persisted OLD-version store is dropped and the new seed applies; same-version edits survive', async () => {
     const { presetStore, AGENT_PRESETS, resetPreset } = await import('./agent-admin-presets.ts')
     const concierge = AGENT_PRESETS.find((p) => p.id === 'concierge')!
-    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(5) // GH #497 — added localPatterns
+    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(6) // GH #1171 — re-seeded the rewritten booking-flow arc
 
     // Simulate a PRE-upgrade browser: old persisted content, NO seedVersion marker (=1 implicitly).
     resetPreset(concierge) // clean slate for the probe (drops cache + keys)
@@ -1002,7 +1002,11 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     // (the `concierge` local pattern set) now close that idiom structurally; a fresh/migrated concierge
     // session must never carry BOTH the structural type and the stale hand-authored duplicate.
     expect(skills.some((s) => s.id === 'hotel-booking-form'), 'the retired duplicate never re-seeds').toBe(false)
-    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('5')
+    // GH #1171 — the rewritten booking-flow ARC playbook re-seeds alongside table-reservation.
+    const workflows = migrated.get('entries:workflow') as Array<{ id: string }>
+    expect(workflows.some((w) => w.id === 'booking-flow'), 'the room-booking arc playbook seeds').toBe(true)
+    expect(workflows.some((w) => w.id === 'table-reservation'), 'table-reservation still seeds').toBe(true)
+    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('6')
 
     // Same-version edits SURVIVE a rebuild (persisted-wins is untouched at the current version).
     migrated.set('entries:skill', [...skills.map((s) => s), { id: 'my-edit', kind: 'skill', label: 'my-edit', description: '', content: 'mine', order: 99, enabled: true, builtin: false }])
