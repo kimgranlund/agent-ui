@@ -532,6 +532,7 @@ class Renderer implements RendererHost {
     if (this.#mountEl === undefined || this.#attached.has(surfaceId)) return
     const root = tree.rootElement
     if (root === undefined) return
+    root.setAttribute('data-a2ui-surface', surfaceId) // per-surface DOM marker (GH #1165) — lets a host verify THIS surface's root is present
     this.#mountEl.appendChild(root)
     this.#attached.add(surfaceId)
   }
