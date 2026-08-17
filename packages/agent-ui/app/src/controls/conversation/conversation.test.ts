@@ -1761,6 +1761,64 @@ describe('ui-conversation — ADR-0199: working set/cleared by the turn handle',
     expect(host.working).toBe(false)
   })
 
+  // ── GH #1134 — typed-intent heuristic: a turn with NEITHER intoSurface NOR disabledSurfaceId
+  // (the user typed into the composer) breathes the SOLE open surface from turn start; zero or
+  // 2+ open surfaces → no heuristic (the ruled boundary — wrong-guess risk in multi-surface
+  // chats explicitly out of scope). Cleared by the same guarded endTurn (finalize AND fail).
+
+  it('GH #1134: a typed turn with exactly ONE open surface breathes it from beginAgentTurn — zero lines ingested', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('solo'))
+    t1.finalize()
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    expect(host.working, 'settled between turns').toBe(false)
+    const t2 = el.beginAgentTurn() // typed intent — no intoSurface, no disabledSurfaceId
+    expect(host.working, 'the sole open surface breathes the moment the typed turn begins').toBe(true)
+    t2.finalize()
+    expect(host.working, 'cleared at finalize').toBe(false)
+  })
+
+  it('GH #1134: the optimistic set rides touchedIds — a typed turn routing NO line still clears at fail()', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('solo2'))
+    t1.finalize()
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    const t2 = el.beginAgentTurn()
+    expect(host.working).toBe(true)
+    t2.fail('transport died mid-wait')
+    expect(host.working, 'a dead typed turn never leaves the card breathing').toBe(false)
+  })
+
+  it('GH #1134 negative control: TWO open surfaces — the heuristic does not fire; both stay settled until the line burst', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('a'))
+    t1.ingestLine(CREATE_S('b'))
+    t1.finalize()
+    const hosts = Array.from(log(el).querySelectorAll('ui-surface-host')) as UISurfaceHostElement[]
+    expect(hosts.length).toBe(2)
+    const t2 = el.beginAgentTurn() // typed intent, ambiguous target — the ruled boundary
+    expect(hosts[0]!.working, 'no optimistic guess in a multi-surface chat').toBe(false)
+    expect(hosts[1]!.working, 'no optimistic guess in a multi-surface chat').toBe(false)
+    t2.ingestLine(UPDATE_S('b', 'the burst names the target'))
+    expect(hosts[0]!.working, 'untargeted card stays settled').toBe(false)
+    expect(hosts[1]!.working, 'line-burst breathing unchanged').toBe(true)
+    t2.finalize()
+    expect(hosts[1]!.working).toBe(false)
+  })
+
+  it('GH #1134 negative control: ZERO open surfaces — a typed turn sets nothing; a fresh mount still breathes from its first line', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t = el.beginAgentTurn() // no surface exists yet
+    t.ingestLine(CREATE_S('first'))
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    expect(host.working, 'fresh-mount breathing unchanged').toBe(true)
+    t.finalize()
+    expect(host.working).toBe(false)
+  })
+
   it('S5: an intoSurface naming no open record is inert (fresh-bubble routing untouched)', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     const t = el.beginAgentTurn({ intoSurface: 'never-created' })

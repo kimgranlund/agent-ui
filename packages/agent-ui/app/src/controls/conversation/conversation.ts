@@ -747,6 +747,29 @@ export class UIConversationElement extends UIElement {
         target.host.working = true
         touchedIds.add(opts.intoSurface)
       }
+    } else if (opts?.disabledSurfaceId === undefined) {
+      // GH #1134 (Kim-ruled 2026-08-17) — typed-intent working-state heuristic: a turn with NO
+      // `intoSurface` AND no `disabledSurfaceId` (the user typed into the composer — an ask-answer
+      // turn carries `disabledSurfaceId` and stays excluded per GH #802: the answered card is not
+      // being mutated) learns its target surfaceId only at the
+      // final validate-then-stream line burst, so the sole card in a one-surface chat sat inert
+      // for the whole turn. When EXACTLY ONE surface is open in the registry, the typed intent is
+      // near-certainly about it: optimistically set `working` at turn start and register the id in
+      // `touchedIds` so the same guarded endTurn (finalize AND fail) clears it. Zero or 2+ open
+      // surfaces → no heuristic — the wrong-guess risk in multi-surface chats is the ruled
+      // out-of-scope boundary; those keep breathing only from the line burst.
+      let sole: { id: string; host: UISurfaceHostElement } | undefined
+      let openCount = 0
+      for (const [id, record] of this.#registry) {
+        if (record.state !== 'open') continue
+        openCount += 1
+        if (openCount > 1) break
+        sole = { id, host: record.host }
+      }
+      if (openCount === 1 && sole !== undefined) {
+        sole.host.working = true
+        touchedIds.add(sole.id)
+      }
     }
     const categoriesSeen: Category[] = []
     const seenCats = new Set<Category>()
