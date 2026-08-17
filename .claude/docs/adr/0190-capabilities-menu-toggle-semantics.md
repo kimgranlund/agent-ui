@@ -120,7 +120,7 @@ the owning requirement; slice S7 builds this arm on ratification of this revised
   rides every request's system prompt forever (measured ~10–16 KB on realistic agents, unbounded
   in entry count and content size). The index-line disclosure is the poor-man's ceiling.
 
-## Amendment (2026-08-16, **proposed** — Kim ratifies) — client-side capability auto-attach on an exact text match — GH [#1030](https://github.com/kimgranlund/agent-ui/issues/1030)
+## Amendment (2026-08-16, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/pull/1041#issuecomment-5315590364), verified 2026-08-17) — client-side capability auto-attach on an exact text match — GH [#1030](https://github.com/kimgranlund/agent-ui/issues/1030)
 
 > Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
 > byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment

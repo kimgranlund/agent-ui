@@ -212,7 +212,7 @@ without the primitive itself knowing what "helpful" means.
   action-chip idiom (ADR-0153 Fork 2) — reusing it keeps one idiom, not two, for "a small labelled
   commit button inside a timeline/conversation surface."
 
-## Amendment (2026-08-16, **proposed** — Kim ratifies) — the AGENT turn's 92% width cap is SUPERSEDED: the agent turn stretches to the full conversation column (GH [#1032](https://github.com/kimgranlund/agent-ui/issues/1032), Kim's ruling "use the full width"); the USER turn's cap + `flex-end` stand unchanged
+## Amendment (2026-08-16, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/pull/1036#issuecomment-5315590188), verified 2026-08-17) — the AGENT turn's 92% width cap is SUPERSEDED: the agent turn stretches to the full conversation column (GH [#1032](https://github.com/kimgranlund/agent-ui/issues/1032), Kim's ruling "use the full width"); the USER turn's cap + `flex-end` stand unchanged
 
 > Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
 > byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment

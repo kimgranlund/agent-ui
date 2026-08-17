@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-16 |
 > | **Proposed by** | build-lead dispatch against GH [#959](https://github.com/kimgranlund/agent-ui/issues/959) Slice 1 — a layer-contract change (what `shared`, the DAG bottom, may persist through) earns an ADR before any consumer wires it, per doc-standards §1c (a genuine contract fork or ruling earns an ADR) |
-> | **Ratified by** | *(pending — kimgranlund (repo owner) ratifies via a `ratify ADR-0193` utterance, verified + flipped by `scripts/adr_ratify.py`)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-17, via the [`ratify ADR-0193` utterance](https://github.com/kimgranlund/agent-ui/pull/1012#issuecomment-5315590009) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification (not authored here): `CLAUDE.md` §Layout's `@agent-ui/shared` line (currently "cross-cutting tokens/styles/utility types" only — this ADR adds a persistence-adapter seam to that line); otherwise none — this is the FIRST persistence contract at this layer, so there is no prior `PRD-G#`/`SPEC-R#`/`LLD-C#` row to repair; a future SPEC/LLD for the settings/persistence surface would `Extend` this ADR rather than this ADR repairing an existing one |
 > | **Supersedes / Superseded by** | **Relates** [TKT-0062](../tickets/tkt-0062-entry-control-filled-state-law.md) / ADR-0191 (the "one fleet-wide convention, not per-component hacks" shape this ADR reapplies to persistence instead of visual state) · **Relates** `app/src/controls/settings/store.ts`'s `SettingsStore` seam (`app-surfaces-m4.spec.md` SPEC-R12, `app-surfaces-m4.lld.md` LLD-C15) — a DIFFERENT, higher-altitude contract (`ui-settings`' sync per-field read/write) that this ADR does not touch, supersede, or require `ui-settings` to adopt · **Extends** none (no prior persistence-adapter convention exists below `app`) · **Resolves** GH #959's Slice-1 scope note (interface + localStorage tier + IndexedDB tier + cross-tab notification seam, tests) |
 

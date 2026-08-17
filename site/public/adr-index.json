@@ -1356,5 +1356,12 @@
     "description": "ui-drill (GH #954): a NEW N-level drill-down panel container is minted in controls/, path-array state from day one, on the existing tabs/split/view-transition…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0196",
+    "url": "./adr-index.html#adr-0196",
+    "description": "a fleet-wide answered/settled state law for choice controls (GH #1065): ONE :state(answered) host custom state + ONE --ui-answered-* token pair, precedence-com…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
