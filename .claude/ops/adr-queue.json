@@ -2,23 +2,44 @@
   "candidates": [
     {
       "adr_id": "adr-0178-amendment",
-      "kind": "harvest",
-      "queued": "2026-08-13T16:37:00Z",
-      "evidence": "ADR-0178's Amendment (ratified 2026-08-13, utterance comment 5275019730 on GH #696; built as PR #826, tracker #821 closed): the AUTHORSHIP-SCOPED RE-RULING pattern — a uniform append-only protection re-scoped along the authorship axis rather than removed wholesale: host-seeded builtin prompt sections become model-updatable IN PLACE (updateTargetIndex as the whole fence, kind-derived never literal; two-field scope pinned) while user-authored entries stay append-protected and deletion stays impossible everywhere. builtin:true = NON-DELETABLE ONLY (ADR-0132 Fork 4), never immutable — the amendment exploits that distinction. Checked 2026-08-13 (decision-watcher-sweep, sweep-6): neither admin-library-kinds nor composition-patterns carries a row for this shape.",
-      "target": "composition-patterns (or the sibling the harvest pass judges better)",
-      "status": "harvested",
+      "evidence": "ADR-0178's Amendment (ratified 2026-08-13, utterance comment 5275019730 on GH #696; built as PR #826, tracker #821 closed): the AUTHORSHIP-SCOPED RE-RULING pattern \u2014 a uniform append-only protection re-scoped along the authorship axis rather than removed wholesale: host-seeded builtin prompt sections become model-updatable IN PLACE (updateTargetIndex as the whole fence, kind-derived never literal; two-field scope pinned) while user-authored entries stay append-protected and deletion stays impossible everywhere. builtin:true = NON-DELETABLE ONLY (ADR-0132 Fork 4), never immutable \u2014 the amendment exploits that distinction. Checked 2026-08-13 (decision-watcher-sweep, sweep-6): neither admin-library-kinds nor composition-patterns carries a row for this shape.",
       "harvested_at": "2026-08-16T22:20:18Z",
-      "landed_in": ".claude/skills/admin-library-kinds/references/builtin-protection-and-patch-verbs.md"
+      "kind": "harvest",
+      "landed_in": ".claude/skills/admin-library-kinds/references/builtin-protection-and-patch-verbs.md",
+      "queued": "2026-08-13T16:37:00Z",
+      "status": "harvested",
+      "target": "composition-patterns (or the sibling the harvest pass judges better)"
     },
     {
       "adr_id": "adr-0187",
-      "kind": "harvest",
-      "evidence": "ADR-0187 (ratified 2026-08-13, GH #829): the opt-in finalize-granularity validator signal pattern — validateA2ui(...,{atFinalize}) as a 4th-param options bag, additive/default-off so every existing caller/fixture stays byte-identical; the missing fact ('is more coming?') lives only at the call site so it must be caller-supplied, never inferred heuristically, since the two wire shapes (legitimate mid-stream prefix vs. abandoned truly-final empty surface) are byte-identical. Checked 2026-08-16 (decision-watcher sweep): no a2ui-* pack (a2ui-review, a2ui-payload-authoring checked directly) references ADR-0187 or this pattern (doc-standards/adr-log-mechanics.md's '0187-validator-finalize-signal.md' hit is a filename example only, not content harvest).",
-      "target": "a2ui-review or a2ui-payload-authoring (or the sibling the harvest pass judges better)",
-      "status": "harvested",
-      "queued_at": "2026-08-16T20:31:19Z",
+      "evidence": "ADR-0187 (ratified 2026-08-13, GH #829): the opt-in finalize-granularity validator signal pattern \u2014 validateA2ui(...,{atFinalize}) as a 4th-param options bag, additive/default-off so every existing caller/fixture stays byte-identical; the missing fact ('is more coming?') lives only at the call site so it must be caller-supplied, never inferred heuristically, since the two wire shapes (legitimate mid-stream prefix vs. abandoned truly-final empty surface) are byte-identical. Checked 2026-08-16 (decision-watcher sweep): no a2ui-* pack (a2ui-review, a2ui-payload-authoring checked directly) references ADR-0187 or this pattern (doc-standards/adr-log-mechanics.md's '0187-validator-finalize-signal.md' hit is a filename example only, not content harvest).",
       "harvested_at": "2026-08-16T22:20:18Z",
-      "landed_in": ".claude/skills/a2ui-payload-authoring/references/finalize-validation.md"
+      "kind": "harvest",
+      "landed_in": ".claude/skills/a2ui-payload-authoring/references/finalize-validation.md",
+      "queued_at": "2026-08-16T20:31:19Z",
+      "status": "harvested",
+      "target": "a2ui-review or a2ui-payload-authoring (or the sibling the harvest pass judges better)"
+    },
+    {
+      "adr_id": "adr-0191",
+      "evidence": "ADR-0191 (ratified 2026-08-16, GH #974, PR carrying pendingComputed+ADR): fleet-wide ONE host custom state (:state(pending)) + ONE token pair (--ui-pending-duration aliasing --md-sys-motion-duration-fast, --ui-pending-opacity=0.6) for async-stale content, the TKT-0062 filled-state-law SHAPE re-applied to a second, orthogonal state axis (async freshness vs entry-control fill); precedence rule disabled > pending > TKT-0062 states, pending composes under settled rather than replacing it. Checked 2026-08-16 (decision-watcher sweep): no skills/*/references/*.md anywhere cites adr-0191, :state(pending), or --ui-pending- (grep across the whole corpus); component-standards/component-patterns carry no pending/async-staleness row.",
+      "kind": "harvest",
+      "plan": "Likely component-patterns/references/patterns-table.md (new row, same shape as the existing TKT-0062/ADR-0181 constants-pattern rows) \u2014 or component-standards if the harvest pass judges the fleet host-state VOCABULARY itself (ready/truncated/dragging/revealed/settled/pending) is the sharper axis; final call is make-pack's own placement judgment.",
+      "queued_at": "2026-08-17T04:29:49Z"
+    },
+    {
+      "adr_id": "adr-0192",
+      "evidence": "ADR-0192 (ratified 2026-08-16, GH #955/#956/#957): the THIRD proof of the 'mint a new zero-dep sibling package off components' architecture pattern (router ADR-0115 -> code ADR-0119 -> data ADR-0192) \u2014 when general-purpose functionality doesn't fit components' reactive<-dom<-traits<-controls layering and would ride every consumer's foundation budget (ADR-0040), the answer is a new sibling package (shared <- components <- {router,code,data}), catalog-invisible by construction (a2ui never imports it), never grown inside components itself. Checked 2026-08-16 (decision-watcher sweep): composition-patterns/shell-and-data-surfaces.md's only sibling-package row (line 11) is scoped narrowly to 'navigation between views' and cites only ADR-0115 \u2014 it does not state the generalized mint-vs-grow-inside-components decision rule now proven three times; no other skill references ADR-0119 or ADR-0192 at all.",
+      "kind": "harvest",
+      "plan": "Likely component-patterns/references/patterns-table.md (new row: 'general-purpose functionality outside components' own layers' -> mint a zero-dep sibling package, cite ADR-0115/0119/0192 together) \u2014 make-pack's own placement judgment decides final home.",
+      "queued_at": "2026-08-17T04:29:49Z"
+    },
+    {
+      "adr_id": "adr-0183",
+      "evidence": "ADR-0183's 2026-08-16 amendment (ratified, GH #958, verified via the utterance on PR carrying the change): the fleet's opt-in NAMED-MORPH convention \u2014 viewTransitionName(surface, token) + setViewTransitionName(el, name, enabled) in components/dom/view-transition.ts, names shaped ui-vt-{surface}-{token}, the pairing law (one name per visual role; unique per document, not per instance) and its first proving surface (ui-super-shell's viewTransitionNames boolean). Checked 2026-08-16 (decision-watcher sweep, re-read ADR-0183's own ratified text directly): component-patterns/references/patterns-table.md row 30 already cites ADR-0183 for the base withViewTransition/viewTransitionAvailable seam and ADR-0183's settled-once amendment (GH #742), but carries nothing about viewTransitionName/setViewTransitionName, the ui-vt- naming convention, or the pairing law \u2014 the named-morph half of the ADR is genuinely uncaptured, not a duplicate of the existing row.",
+      "kind": "harvest",
+      "plan": "Extend component-patterns/references/patterns-table.md row 30 (or add a sibling row directly under it) with the named-morph convention + pairing law + ui-super-shell as first proving surface \u2014 make-pack's own placement judgment decides new-row vs extend.",
+      "queued_at": "2026-08-17T04:29:49Z"
     }
   ]
 }
