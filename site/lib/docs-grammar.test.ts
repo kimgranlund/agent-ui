@@ -188,7 +188,11 @@ describe('STRUCTURAL — S4 hook liveness, both directions', () => {
     for (const name of registered) expect(existsSync(`${ROOT}/.claude/hooks/${name}`), name).toBe(true)
   })
   it('every file in .claude/hooks/ is registered (no orphaned guards)', () => {
-    const onDisk = readdirSync(`${ROOT}/.claude/hooks`).filter((f: string) => !f.startsWith('.'))
+    // no hooks dir at all (2026-08-17: repo carries zero hooks) is vacuously orphan-free —
+    // git does not track empty directories, so its absence is not itself a defect this gate owns.
+    const onDisk = existsSync(`${ROOT}/.claude/hooks`)
+      ? readdirSync(`${ROOT}/.claude/hooks`).filter((f: string) => !f.startsWith('.'))
+      : []
     const orphans = onDisk.filter((f: string) => !registered.has(f))
     expect(orphans, `unregistered hook files: ${orphans.join(', ')}`).toEqual([])
   })
