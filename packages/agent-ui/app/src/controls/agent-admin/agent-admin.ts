@@ -675,6 +675,14 @@ export class UIAgentAdminElement extends UIElement {
   /** Per-fold wash teardown (SPEC-R5) — re-washing an already-washed fold must cancel the OLD timer/
    *  listener or the earlier deadline strips the new wash early. */
   #washCleanup: WeakMap<HTMLElement, () => void> = new WeakMap()
+  /** GH #1105 — the SPEC-R7 receipt blocks this element itself just minted, keyed by the EXACT flattened
+   *  text `#patchReceiptFor` returned, each carrying the structured deduped locations it was flattened
+   *  from. `#renderContent` matches an incoming note against these registered blocks BYTE-EXACTLY (never
+   *  prose parsing — the structure was captured at the flattening site) and renders the block as a real,
+   *  clickable list instead of the newline blob. Grows one small entry per receipt-bearing turn (bounded
+   *  by the session's own turn count); finalize()'s re-render of the same text re-resolves through the
+   *  same entry, so the map is never one-shot. */
+  #receiptBlocks: Map<string, readonly FieldLocation[]> = new Map()
   #idSeq = 0
   /** The authoring context's own store identity, so the effect can tell a real reassignment from a bare
    *  re-run (the `#lastStore` precedent, applied to the second store). */
@@ -1966,7 +1974,13 @@ export class UIAgentAdminElement extends UIElement {
    *  ratified amendment) `updated` builtin sections alike — deduped by `(section, item)`, collapsed to
    *  `Updated <sectionLabel>` when the two labels are equal (the Agent tab's own `agent` fold: never the
    *  stuttering `Updated Agent › Agent`). `undefined` when no report changed anything (a dropped-only
-   *  patch narrates nothing — dropped keys stay log-only, ADR-0178 cl.2's posture). */
+   *  patch narrates nothing — dropped keys stay log-only, ADR-0178 cl.2's posture).
+   *
+   *  GH #1105 — the receipt is no longer text-only: the deduped STRUCTURED locations are registered in
+   *  `#receiptBlocks` (keyed by the exact flattened block) before the text leaves this method, so
+   *  `#renderContent` can render the block as a real clickable list from the same structured data. The
+   *  returned string stays byte-identical to before — the `outgoing` composition and `#logTurn`'s
+   *  key-grain record are unchanged by construction (SPEC-R7 AC2 keeps holding). */
   #patchReceiptFor(reports: readonly PatchReport[]): string | undefined {
     const locations: FieldLocation[] = []
     for (const report of reports) {
@@ -1977,9 +1991,77 @@ export class UIAgentAdminElement extends UIElement {
     }
     const deduped = this.#dedupeLocations(locations)
     if (deduped.length === 0) return undefined
-    return deduped
-      .map((l) => (l.sectionLabel === l.itemLabel ? `Updated ${l.sectionLabel}` : `Updated ${l.sectionLabel} › ${l.itemLabel}`))
-      .join('\n')
+    const text = deduped.map(receiptLineFor).join('\n')
+    this.#receiptBlocks.set(text, deduped)
+    return text
+  }
+
+  /** GH #1105 — the receipt block, LOCATED inside a composed note: the registered block that appears in
+   *  `text` as a whole `\n\n`-joined segment (exactly how `#runSurfaceTurn`'s `outgoing` composition
+   *  seats it — note + receipt + warnings, `'\n\n'`-joined). Byte-exact lookup against blocks THIS
+   *  element minted — never a parse of model prose. `undefined` for every other note/system bubble. */
+  #splitReceipt(text: string): { before: string; locations: readonly FieldLocation[]; after: string } | undefined {
+    for (const [block, locations] of this.#receiptBlocks) {
+      const idx = text.indexOf(block)
+      if (idx === -1) continue
+      const before = text.slice(0, idx)
+      const after = text.slice(idx + block.length)
+      // whole-segment boundaries only: the block rides the '\n\n' join, so a mid-prose coincidence
+      // (model text merely containing the same words) never matches.
+      if ((before === '' || before.endsWith('\n\n')) && (after === '' || after.startsWith('\n\n'))) {
+        return { before: before === '' ? '' : before.slice(0, -2), locations, after: after === '' ? '' : after.slice(2) }
+      }
+    }
+    return undefined
+  }
+
+  /** GH #1105 — the receipt lines as a REAL bulleted list: one `<li>` per changed location, each a
+   *  `ui-button` (keyboard-activatable by construction — the pressActivation trait's Space/Enter →
+   *  `host.click()`; role/AX via the control's own ElementInternals, never host-attribute ARIA) whose
+   *  activation is PURE NAVIGATION (`#revealFold`) — no client message, no chat turn (the cl.4-style
+   *  purity the issue pins). `stopPropagation` keeps the click from ever reaching conversation-level
+   *  listeners (the genui-frame precedent, conversation.ts's routeGenui action handler). */
+  #buildReceiptList(locations: readonly FieldLocation[]): HTMLElement {
+    const list = document.createElement('ul')
+    list.setAttribute('data-part', 'receipt-list')
+    for (const location of locations) {
+      const item = document.createElement('li')
+      const link = document.createElement('ui-button') as UIButtonElement
+      link.setAttribute('variant', 'ghost')
+      link.setAttribute('data-part', 'receipt-link')
+      link.setAttribute('data-section', location.section)
+      link.setAttribute('data-item', location.item)
+      link.textContent = receiptLineFor(location)
+      link.addEventListener('click', (event) => {
+        event.stopPropagation()
+        this.#revealFold(location)
+      })
+      item.append(link)
+      list.append(item)
+    }
+    return list
+  }
+
+  /** GH #1105 — a receipt line's activation: USER-INITIATED navigation to the changed fold. Deliberately
+   *  NOT `#followChange`'s reaction rules — ADR-0181 cl.2's additive-only/no-focus law fences the
+   *  REACTION (an agent-driven side effect); a click is the user's own pane walk, so this repoints
+   *  primary (the narrow band paints only `data-primary`, and "take me there" is exactly what the click
+   *  asks) via the same `#setPanePrimary` mutator the header's narrow segment uses, flips the section
+   *  through the same programmatic-select pair the reaction uses (ui-tabs emits no echo, ADR-0019),
+   *  scrolls via the SAME browser-proven `#scrollToFold`, and lands real focus on the fold's own summary
+   *  (natively focusable; `tabIndex = 0` stamped first — the GH #1100 open-scroll/seedOpenFocus
+   *  discipline, and what makes jsdom honor the focus call). */
+  #revealFold(location: FieldLocation): void {
+    this.#setPanePrimary(location.pane)
+    if (this.#settingsNav !== null && this.#settingsNav.selected !== location.section) {
+      this.#settingsNav.selected = location.section
+      this.#applySettingsSection(location.section)
+    }
+    this.#scrollToFold(location)
+    const summary = this.#foldFor(location)?.querySelector<HTMLElement>('[data-part="summary"]')
+    if (summary === undefined || summary === null) return
+    summary.tabIndex = 0
+    summary.focus()
   }
 
   /** The attention wash (SPEC-R5): `data-attention` on the owning fold, removed on `animationend` for the
@@ -2205,8 +2287,25 @@ export class UIAgentAdminElement extends UIElement {
 
   /** One conversation's content-render seam, parameterized by the store whose Markdown modality governs
    *  it (extracted verbatim from the test conversation's own inline callback so the authoring context can
-   *  share it — the behaviour is identical, only the store it reads differs). */
+   *  share it — the behaviour is identical, only the store it reads differs).
+   *
+   *  GH #1105 — a note carrying a receipt block this element itself minted (`#splitReceipt`'s byte-exact
+   *  match, never prose parsing) renders as [prose · receipt LIST · prose]: the leading sentence stays
+   *  prose through `#renderProse`'s unchanged modality path, the receipt renders as `#buildReceiptList`'s
+   *  real clickable `<ul>` — in BOTH modality states (the list is structural, not a markdown feature).
+   *  Every other note/system bubble takes the plain `#renderProse` path, byte-identical to before. */
   #renderContent(text: string, store: SettingsStore | undefined): Node {
+    const receipt = this.#splitReceipt(text)
+    if (receipt === undefined) return this.#renderProse(text, store)
+    const fragment = document.createDocumentFragment()
+    if (receipt.before !== '') fragment.append(this.#renderProse(receipt.before, store))
+    fragment.append(this.#buildReceiptList(receipt.locations))
+    if (receipt.after !== '') fragment.append(this.#renderProse(receipt.after, store))
+    return fragment
+  }
+
+  /** The prose half of the seam — GH #468's lazy-`<ui-markdown>`/plain-text modality fork, verbatim. */
+  #renderProse(text: string, store: SettingsStore | undefined): Node {
     if (!isEnabledFlag(store?.get(SURFACE_MARKDOWN_KEY))) return document.createTextNode(text)
     if (customElements.get('ui-markdown') === undefined) {
       preloadMarkdownRenderer()
@@ -4220,6 +4319,14 @@ function settingsItem(key: string, summary: string, ...content: HTMLElement[]): 
   const item = foldItem('settings-item', key, summary, true)
   item.append(...content)
   return item
+}
+
+/** SPEC-R7's line copy for ONE changed location — collapsed to `Updated <section>` when the two labels
+ *  are equal (never the stuttering `Updated Agent › Agent`). Shared by the flattened receipt text
+ *  (`#patchReceiptFor`) and the rendered list items (`#buildReceiptList`) so the two renderings can
+ *  never drift (GH #1105). */
+function receiptLineFor(l: FieldLocation): string {
+  return l.sectionLabel === l.itemLabel ? `Updated ${l.sectionLabel}` : `Updated ${l.sectionLabel} › ${l.itemLabel}`
 }
 
 function clientMessageSurfaceId(message: unknown): string | undefined {

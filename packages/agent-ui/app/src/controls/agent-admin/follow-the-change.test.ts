@@ -358,3 +358,70 @@ describe('SPEC-R8 AC1 — the per-fold truth-table (sampled key per fold)', () =
     })
   }
 })
+
+describe('GH #1105 — the receipt renders as a REAL clickable list (never a newline blob)', () => {
+  const receiptListOf = (el: UIAgentAdminElement): HTMLElement | null =>
+    el.querySelector('[data-part="copilot-pane"] [data-part="log"] [data-part="receipt-list"]')
+
+  it('a two-location receipt renders a <ul> with one <li> per line; the prose sentence stays prose', async () => {
+    const { el } = mountAdmin({
+      store: personaStore(),
+      authoringStore: personaStore(BUILDER),
+      events: [
+        { kind: 'patch', patch: { values: { name: 'Coach', model: SUPPORTED_MODELS[1]!.id } } },
+        { kind: 'note', note: 'Both set.' },
+      ],
+    })
+    await whenFlushed()
+    await submitAuthoring(el, 'name and model')
+    const list = receiptListOf(el)
+    expect(list).not.toBeNull()
+    expect(list!.tagName).toBe('UL')
+    const items = Array.from(list!.querySelectorAll('li'))
+    expect(items.map((li) => li.textContent?.trim())).toEqual(['Updated Agent', 'Updated Agent › Model'])
+    // each line is a REAL activatable control (ui-button — pressActivation's Space/Enter → click), never a click-only div
+    for (const li of items) expect(li.querySelector('ui-button[data-part="receipt-link"]')).not.toBeNull()
+    // the leading prose sentence still renders as prose
+    expect(noteTextOf(el)).toContain('Both set.')
+    // and the newline-joined blob is GONE: outside the list, no `Updated …` text remains in the log
+    const log = (el.querySelector('[data-part="copilot-pane"] [data-part="log"]') as HTMLElement).cloneNode(true) as HTMLElement
+    for (const n of Array.from(log.querySelectorAll('[data-part="receipt-list"]'))) n.remove()
+    expect(log.textContent).not.toContain('Updated ')
+  })
+
+  it('BONUS: clicking a receipt line activates the settings pane + the owning section and focuses the fold — pure navigation, no turn', async () => {
+    const { el, requests } = mountAdmin({
+      store: personaStore(),
+      authoringStore: personaStore(BUILDER),
+      events: [
+        { kind: 'patch', patch: { entries: { [entriesStoreKey(ENTRY_KINDS.skill)]: [{ label: 'Log a lift' }] } } },
+        { kind: 'note', note: 'Skill added.' },
+      ],
+    })
+    await whenFlushed()
+    // NO stubWide — the narrow band: the reaction degrades to receipt + queued attention (SPEC-R4),
+    // so the click is the ONLY navigation actor this test observes.
+    await submitAuthoring(el, 'add a skill')
+    const link = el.querySelector(`[data-part="receipt-link"][data-item="${ENTRY_KINDS.skill}"]`) as HTMLElement
+    expect(link).not.toBeNull()
+    const requestsBefore = requests.length
+    const log = el.querySelector('[data-part="copilot-pane"] [data-part="log"]') as HTMLElement
+    const bubblesBefore = log.children.length
+    link.click()
+    await whenFlushed()
+    // pane activation — the settings pane is shown AND primary (the narrow band paints only data-primary)
+    const holder = holderOf(el)
+    expect(holder.getAttribute('data-show')).toContain('settings')
+    expect(holder.getAttribute('data-primary')).toBe('settings')
+    // section activation — the sub-nav flipped from its Agent default to the skill's own section
+    expect(settingsNavOf(el).selected).toBe('capabilities-content')
+    const section = el.querySelector('div[data-role="capabilities-content"]') as HTMLElement
+    expect(section.hidden).toBe(false)
+    // focus landed inside the target fold (the summary — the fold's own natively-focusable part)
+    const fold = el.querySelector(`[data-part="settings-item"][data-item="${ENTRY_KINDS.skill}"]`) as HTMLElement
+    expect(fold.contains(document.activeElement)).toBe(true)
+    // purity (the issue's cl.4-style law): NO chat turn appended, NO surface request fired
+    expect(requests.length).toBe(requestsBefore)
+    expect(log.children.length).toBe(bubblesBefore)
+  })
+})
