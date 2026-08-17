@@ -5,23 +5,24 @@
 // store instances (SPEC-R12 AC2's "write → reload" proof needs real persistence, not just object
 // identity).
 //
-// GH #959 (remaining slice, 2026-08-16) — the persisted flavour's WRITE path now goes through
-// `@agent-ui/shared`'s `StorageAdapter` seam (ADR-0193): `createLocalStorageAdapter({ namespace:
-// persistKey })`, which owns the `${persistKey}.${key}` key format and the `JSON.stringify` encoding — the
-// SAME bytes this module used to write directly (parity-pinned in `memory-store.test.ts`). The seam is
-// async by ADR-0193 ruling (IndexedDB is irreducibly async, so the seam offers no sync facade), while
-// `SettingsStore` is sync by SPEC-R12 fork F7 — so this module bridges the two with a SYNC READ-THROUGH
-// CACHE: the `values` Map answers every `get` synchronously, is warmed at construction by a synchronous
-// prefix scan of the same `${persistKey}.` namespace the adapter fronts (a construct-then-`get` MUST see the
-// persisted value in the same tick — `store.test.ts`'s persistKey suite pins it — which no async `keys()`/
-// `get()` round trip can satisfy), and is written through to the adapter on every `set`. The localStorage
+// GH #959 (remaining slice, 2026-08-16) + GH #1077 (read-path migration, 2026-08-17) — the persisted
+// flavour goes through `@agent-ui/shared`'s localStorage `StorageAdapter` tier (ADR-0193) END-TO-END:
+// `createLocalStorageAdapter({ namespace: persistKey })` owns the `${persistKey}.${key}` key format, the
+// `JSON.stringify` encoding, AND the namespace enumeration — no code in this module touches
+// `localStorage` directly (parity-pinned in `memory-store.test.ts`). The seam's BASE contract is async by
+// ADR-0193 ruling, while `SettingsStore` is sync by SPEC-R12 fork F7 — the bridge is a SYNC READ-THROUGH
+// CACHE: the `values` Map answers every `get` synchronously, is WARMED at construction by the TIER's own
+// sync read surface — `keysSync()`/`getSync()`, `SyncReadableStorageAdapter` (ADR-0193 Amendment A1/A4;
+// same-tick over the live `localStorage`, so a construct-then-`get` sees the persisted value in the same
+// tick — `store.test.ts`'s persistKey suite pins it) — and is written through to the adapter on every
+// `set`. The localStorage
 // tier's `set()` performs its `setItem` synchronously before its promise settles (an `async` body runs to
 // its first `await`, and it has none), so a second instance constructed right after a `set` still sees the
 // write — the pre-existing cross-instance test is the trip-wire for that assumption. Consequence: this
 // store is pinned to the localStorage tier — an IndexedDB-backed `SettingsStore` would need an async
 // hydration handshake `SettingsStore` does not have (a planner call, not this module's).
 
-import { createLocalStorageAdapter, type StorageAdapter } from '@agent-ui/shared'
+import { createLocalStorageAdapter, type SyncReadableStorageAdapter } from '@agent-ui/shared'
 import type { SettingsStore } from './store.ts'
 
 export interface MemoryStoreOptions {
@@ -46,15 +47,18 @@ export function createMemoryStore(options: MemoryStoreOptions = {}): SettingsSto
 
   // The write-through seam (ADR-0193). Its own `typeof localStorage` guard makes every call a safe no-op
   // where localStorage is unavailable, so no second guard is needed on the write path.
-  const adapter: StorageAdapter | undefined = persistKey ? createLocalStorageAdapter({ namespace: persistKey }) : undefined
+  const adapter: SyncReadableStorageAdapter | undefined = persistKey ? createLocalStorageAdapter({ namespace: persistKey }) : undefined
 
-  if (persistKey && typeof localStorage !== 'undefined') {
+  if (adapter) {
     // Seed from any previously-persisted values (a real reload, or a fresh store pointed at the same
     // persistKey) — persisted values WIN over the constructor's `initial` seed, native-`localStorage`-parity.
     //
-    // This is the sync read-through cache's warm-up (module banner): a SYNCHRONOUS scan of the namespace,
-    // deliberately NOT the adapter's async `keys()`/`get()` — a `SettingsStore` must answer the persisted
-    // value in the same tick it is constructed. Same key format + JSON encoding the adapter writes.
+    // This is the sync read-through cache's warm-up (module banner): the TIER's own sync read surface,
+    // `keysSync()`/`getSync()` (ADR-0193 Amendment A1/A4) — same-tick over the live `localStorage`, so a
+    // `SettingsStore` answers the persisted value in the tick it is constructed; the adapter owns key
+    // format, JSON encoding, and enumeration end-to-end (its no-localStorage guard makes this a no-op
+    // where storage is unavailable). A corrupt/foreign value reads as `undefined` (the tier's fail-open
+    // idiom) and is skipped — the constructor's seed survives, never a throw.
     //
     // GH #409 — this is a PREFIX SCAN of the whole `${persistKey}.` namespace, not a walk of the seed's
     // own keys. The old seed-key walk made the seed a hidden allowlist: a key the store had genuinely
@@ -70,17 +74,9 @@ export function createMemoryStore(options: MemoryStoreOptions = {}): SettingsSto
     // reads a `seedVersion` store key, and the persona file's exported key set is enumerated, never
     // "whatever the namespace holds"). Keys are namespaced by the trailing `.`, so two persistKeys where
     // one is a leading substring of the other (`…app.travel` vs `…app.travel-imported`) never cross.
-    const prefix = `${persistKey}.`
-    for (let index = 0; index < localStorage.length; index += 1) {
-      const stored = localStorage.key(index)
-      if (stored === null || !stored.startsWith(prefix)) continue
-      const raw = localStorage.getItem(stored)
-      if (raw === null) continue
-      try {
-        values.set(stored.slice(prefix.length), JSON.parse(raw) as unknown)
-      } catch {
-        // A corrupt/foreign value under this key — keep the constructor's seed, never throw.
-      }
+    for (const key of adapter.keysSync()) {
+      const value = adapter.getSync(key)
+      if (value !== undefined) values.set(key, value)
     }
   }
 

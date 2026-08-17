@@ -2,9 +2,9 @@
 // Mirrors `@agent-ui/app`'s `memory-store.ts` namespacing convention deliberately (trailing-dot-delimited
 // `${namespace}.${key}` prefix scan) so that store's migration onto this seam was a drop-in, not a
 // re-derivation — landed in GH #959's remaining slice (2026-08-16): `createMemoryStore({ persistKey })`
-// now WRITES through this tier (its sync hydration stays a direct scan of the same namespace — the
-// `SettingsStore` contract is sync, this seam is async by ADR-0193 ruling; parity-pinned in
-// `app/src/controls/settings/memory-store.test.ts`).
+// WRITES through this tier, and since GH #1077 (2026-08-17) HYDRATES through it too, via the tier's
+// `getSync`/`keysSync` sync read surface (ADR-0193 Amendment — the `SettingsStore` contract is sync;
+// parity-pinned in `app/src/controls/settings/memory-store.test.ts`).
 // Cross-tab notification rides the native `storage` DOM event — genuinely zero-dep, fires only in OTHER
 // tabs/windows sharing the origin, never the tab that made the write (browser-native same-tab exclusion).
 
