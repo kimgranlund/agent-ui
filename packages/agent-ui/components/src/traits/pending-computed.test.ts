@@ -29,9 +29,15 @@ class PendingEl extends UIElement {
   readonly queryKey = signal(0)
   queryFn: ((key: number) => Promise<string> | AsyncIterable<string> | null | undefined) | null = null
   source: (() => Promise<string> | AsyncIterable<string> | null | undefined) | null = null
+  /** Captured in call order, one per generation (GH #1003) — lets a test inspect a past generation's
+   * `AbortSignal` after a newer one has superseded it. */
+  signals: AbortSignal[] = []
   protected connected(): void {
     this.controller = pendingComputed(this, {
-      source: () => (this.queryFn ? this.queryFn(this.queryKey.value) : (this.source?.() ?? undefined)),
+      source: (signal) => {
+        this.signals.push(signal)
+        return this.queryFn ? this.queryFn(this.queryKey.value) : (this.source?.() ?? undefined)
+      },
     })
   }
 }
@@ -264,5 +270,56 @@ describe('pendingComputed — last-settled value + query-scoped pending (GH #974
     document.body.append(el)
     const second = el.controller
     expect(second).not.toBe(first)
+  })
+
+  // GH #1003: source() receives an AbortSignal, one AbortController per generation, aborted when that
+  // generation's cleanup runs (a newer generation superseding it, disconnect, or release()).
+  it('abort-on-supersede: a superseded generation\'s signal is aborted; the new (current) generation\'s is not', async () => {
+    const stale = deferred<string>()
+    const current = deferred<string>()
+    const el = new PendingEl()
+    el.queryFn = (key) => (key === 0 ? stale.promise : current.promise)
+    document.body.append(el)
+    expect(el.signals).toHaveLength(1)
+    expect(el.signals[0]!.aborted).toBe(false)
+
+    // A newer question starts via the real reactive mechanism — the effect re-runs, its cleanup fires for
+    // generation 0, minting a fresh controller/signal for generation 1.
+    el.queryKey.value = 1
+    await whenFlushed()
+
+    expect(el.signals).toHaveLength(2)
+    expect(el.signals[0]!.aborted).toBe(true) // superseded generation — aborted
+    expect(el.signals[1]!.aborted).toBe(false) // the CURRENT generation — still live
+
+    current.resolve('current-answer')
+    await current.promise
+    el.remove()
+  })
+
+  it('release-aborts-in-flight: calling release() aborts the current (in-flight) generation\'s signal', async () => {
+    const d = deferred<string>()
+    const el = new PendingEl()
+    el.source = () => d.promise
+    document.body.append(el)
+    expect(el.signals).toHaveLength(1)
+    expect(el.signals[0]!.aborted).toBe(false)
+
+    el.controller!.release()
+
+    expect(el.signals[0]!.aborted).toBe(true)
+    el.remove()
+  })
+
+  it('abort-on-disconnect: leaving the DOM aborts the in-flight generation\'s signal (scope-owned teardown)', async () => {
+    const d = deferred<string>()
+    const el = new PendingEl()
+    el.source = () => d.promise
+    document.body.append(el)
+    expect(el.signals[0]!.aborted).toBe(false)
+
+    el.remove()
+
+    expect(el.signals[0]!.aborted).toBe(true)
   })
 })
