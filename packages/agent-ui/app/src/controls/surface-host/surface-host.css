@@ -48,6 +48,17 @@
      bubble radius on inline mounts — the TKT-0062 repoint pattern). Never a literal beyond the
      standard corner-base fallback. */
   --ui-surface-host-working-radius: var(--md-sys-shape-corner-base, 12px);
+  /* GH 1150 — STRUCTURAL containment for the [bare] chat mount. GH 241's original "chromeless" contract
+     made containment producer-dependent: a payload rooted in a bare Column (no Card) rendered its title/
+     buttons flush against the surface edge with nothing around it, and the ADR-0199 :state(working) glow
+     (GH 1118/1143) then painted a visible rounded rect tight against that uncontained content — the live
+     "Blackjack Round 1" defect. The surface part now owns card chrome of its own in [bare] mode, so ANY
+     payload is contained regardless of its root shape. Radius rides the SAME chain the working glow uses
+     (--ui-surface-host-working-radius), so the breathing outline and the card edge always coincide —
+     conversation.css's bubble-radius repoint moves both together. */
+  --ui-surface-host-card-bg: var(--md-sys-color-neutral-surface-higher, currentColor);
+  --ui-surface-host-card-border: var(--md-sys-color-neutral-outline-variant, currentColor);
+  --ui-surface-host-card-pad: var(--md-sys-space-md);
 }
 
 /* ════════════════ [ui-surface-host] STYLES — @scope (ui-surface-host) consumes ONLY --ui-surface-host-* ═══ */
@@ -175,14 +186,20 @@
     container-type: normal;
   }
 
-  /* GH #241 — [bare]: the opt-in CHROMELESS mount (Kim's ruling: on the chat path the A2UI render
-     surface gets NO background, NO padding, and FULL available width — the rendered payload's own
-     components carry their chrome; this host wrapper is invisible). The checkered artboard stays the
-     docs-preview affordance — [bare] unset changes nothing anywhere. Composes with [wrap]
-     (conversation.ts sets BOTH on every inline bubble mount): [wrap] keeps owning the block axis
-     (content-hug + the --ui-surface-host-wrap-max-block-size cap + hidden scrollbars); [bare] owns the
-     inline axis + the chrome strip. These rules sit AFTER the [wrap] block deliberately — equal
-     specificity, source-order wins — so bare's inline-size/container-type prevail when both are set. */
+  /* GH #241 → GH #1150 — [bare]: the opt-in chat mount. #241's original ruling made it fully CHROMELESS
+     (no background, no padding — the payload's own components were to carry their chrome); GH #1150
+     (live blackjack repro) showed that leaves containment PRODUCER-DEPENDENT — a bare Column root
+     renders flush to the surface edges with no card chrome at all, while the ADR-0199 working glow
+     outlines exactly that uncontained rect. Containment is now STRUCTURAL: [bare] still strips the
+     ARTBOARD chrome (checker + stage color — the docs-preview affordance stays docs-only), but the
+     surface part itself carries card chrome (padding + background + border + radius, the
+     --ui-surface-host-card-* chain above), so ANY payload is contained. The card radius rides
+     --ui-surface-host-working-radius, keeping the breathing glow and the card edge coincident.
+     Composes with [wrap] (conversation.ts sets BOTH on every inline bubble mount): [wrap] keeps owning
+     the block axis (content-hug + the --ui-surface-host-wrap-max-block-size cap + hidden scrollbars);
+     [bare] owns the inline axis + the chrome treatment. These rules sit AFTER the [wrap] block
+     deliberately — equal specificity, source-order wins — so bare's inline-size/container-type prevail
+     when both are set. */
   :scope[bare] {
     inline-size: 100%;
   }
@@ -190,7 +207,11 @@
     background: none; /* the shorthand resets the checker gradients AND background-color to transparent */
   }
   :scope[bare] [data-part='surface'] {
-    padding: 0;
+    /* GH #1150 — the structural card: one contained chrome layer owned by the HOST, never the payload. */
+    padding: var(--ui-surface-host-card-pad);
+    background: var(--ui-surface-host-card-bg);
+    border: 1px solid var(--ui-surface-host-card-border);
+    border-radius: var(--ui-surface-host-working-radius);
     inline-size: 100%;
     /* ADR-0100 cl.2 — with an externally-supplied definite inline-size (100% of the stage, never
        content-derived), this box QUALIFIES as the mount boundary again: [bare] restores the query

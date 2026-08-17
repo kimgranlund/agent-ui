@@ -876,7 +876,7 @@ export class UIConversationElement extends UIElement {
       // A FRESH surfaceId — this turn's own createSurface line. A new ui-surface-host, inline HERE.
       const host = document.createElement('ui-surface-host') as UISurfaceHostElement
       host.wrap = true // TKT-0084: a chat bubble hugs its rendered surface's content, never clips it to an arbitrary fixed height
-      host.bare = true // GH #241 (Kim's ruling): on the chat path the render surface carries NO background, NO padding, and FULL message-column width — the payload's own components carry their chrome
+      host.bare = true // GH #241 → GH #1150: the chat mount — no checker artboard, FULL message-column width; since #1150 the host's bare surface carries STRUCTURAL card chrome (padding/bg/border), so any payload is contained even without a Card root
       mounts.append(host)
       revealBubble() // GH #313 — a fresh mount is real content
       host.onClientMessage((m) => {
