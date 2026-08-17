@@ -70,6 +70,20 @@ describe('import layering — router/src imports only down the DAG', () => {
     const violations = specifiersOf(src).filter((s) => !isAllowedRouterSpecifier(s))
     expect(violations).toEqual(['@agent-ui/app'])
   })
+
+  // ADR-0192 clause 1 — "every existing inward layering trip-wire extends its scan by one package
+  // name": the allowlist above already excludes @agent-ui/data by construction (unlisted, a sibling
+  // branch off components); this named negative control makes the edge explicit. Assembled at
+  // runtime (never a literal '@agent-ui/data' string) — this file lives under router/src, which
+  // data/src/layering.test.ts's own inward-scan reads as raw text INCLUDING test files; a literal
+  // specifier here would trip THAT gate (the exact trap a2ui/src/layering.test.ts's `spec()` helper
+  // documents and avoids).
+  it('synthetic-violation: the matcher flags an @agent-ui/data import (a sibling branch, ADR-0192)', () => {
+    const dataSpecifier = ['@agent-ui', 'data'].join('/')
+    const src = `import { resource } from '${dataSpecifier}'\n`
+    const violations = specifiersOf(src).filter((s) => !isAllowedRouterSpecifier(s))
+    expect(violations).toEqual([dataSpecifier])
+  })
 })
 
 describe('components/src, a2ui/src and shared/src never import @agent-ui/router (the catalog fence is structural)', () => {
