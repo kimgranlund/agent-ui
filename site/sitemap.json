@@ -768,6 +768,13 @@
       "section": "Guides"
     },
     {
+      "name": "Entry List",
+      "url": "./entry-list.html",
+      "description": "mountEntryList()/entry-data.ts — the headless ordered-entry-list primitive (ADR-0132/ADR-0164) reused by every agent-admin capability kind and the card-grid-drawer recipe, plus composer-options.ts and agent-admin-persona-patch.ts coverage.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Agent Admin",
       "url": "./agent-admin.html",
       "description": "ui-agent-admin is a three-pane ui-split (chat canvas, prompts, settings) over ui-conversation and ui-settings, one shared SettingsStore, live-apply with no external model dependency.",

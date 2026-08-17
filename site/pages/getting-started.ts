@@ -190,3 +190,15 @@ content.append(
   ),
 )
 content.append(el('p', {}, [document.createTextNode('Every control’s emitted events follow the fleet’s closed seven-name vocabulary — see the '), el('a', { href: './events.html' }, [document.createTextNode('Events')]), document.createTextNode(' reference.')]))
+
+// ── agent-facing docs (GH #1049 — llms.txt was generated but linked from no page) ───────────────────────
+content.append(heading(2, 'Agent-facing docs'))
+content.append(
+  el('p', {}, [
+    document.createTextNode('This site is client-rendered — a raw-fetching agent gets no content from the HTML pages themselves. '),
+    el('a', { href: './llms.txt' }, [document.createTextNode('llms.txt')]),
+    document.createTextNode(' is the index (every page, one line each); its own "Meta" section links '),
+    el('code', {}, [document.createTextNode('llms-full.txt')]),
+    document.createTextNode(', the fetch-readable markdown corpus behind it — every component descriptor’s prose plus the changelog, in one file.'),
+  ]),
+)

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · entry-list — the ordered-entry-list primitive</title>
+  </head>
+  <body>
+    <!-- The @agent-ui/app entry-list guide: mountEntryList()/entry-data.ts (ADR-0132/ADR-0164), plus two
+         shorter coverage sections for composer-options.ts and agent-admin-persona-patch.ts (GH #1049 —
+         the app-package "leftovers" sweep). No customElements.define, no tag of its own — an MPA entry
+         auto-discovered by vite.config.ts's site/**/*.html glob, no config edit. The page module imports
+         pages/_page.ts FIRST for the foundation CSS cascade + self-defining ui-* controls, then the
+         primitive's own CSS and this page's own demo chrome. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/entry-list.ts"></script>
+  </body>
+</html>
