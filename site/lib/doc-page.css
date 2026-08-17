@@ -140,8 +140,9 @@
 /* ── Attributes — a REAL table-like grid, GH #881 ────────────────────────────────────────────────────────────
  * The four sibling sequence tables (Properties/Events/Slots/Parts) keep the flowing Form-B fields above: their
  * column SET varies per table and a prose `description` needs to wrap freely, so a fixed track grid would
- * either clip it or force it into its own narrow cell. Attributes has no such prose column (ParsedAttribute
- * carries no `description`) and an EXACT 4-field shape on every row, so it earns a real shared-column-track
+ * either clip it or force it into its own narrow cell. Attributes has an EXACT 4-field shape on every row (an
+ * OPTIONAL ADR-0173 `description` spans all four tracks as a full-width fifth cell — GH #1082 — so its prose
+ * wraps freely without claiming a track of its own), so it earns a real shared-column-track
  * layout: `.api-rows--attributes` declares the four tracks ONCE (name/type/default/flags), and both the
  * `.api-header` label row and every `.api-row` opt into those SAME tracks via `grid-template-columns: subgrid`
  * — so a row's Type/Default cells align under the row above/below it down the WHOLE table, the exact "TYPE/
@@ -182,6 +183,11 @@
 }
 .api-rows--attributes .api-row-flags .api-badge {
   align-self: start;
+}
+/* an attribute's optional ADR-0173 `description` — full-width under the row's four tracks (GH #1082) */
+.api-rows--attributes .api-row-description {
+  grid-column: 1 / -1;
+  margin-block-start: 0.35rem;
 }
 
 /* narrow — the shared tracks collapse to ONE column (subgrid inherits the parent's `1fr`): the header row (a

@@ -128,8 +128,9 @@ function apiBadge(label: string, title: string): HTMLElement {
 /**
  * renderApiTable — GH #881: unlike the four sibling sequence tables (Properties/Events/Slots/Parts, which keep
  * Form-B's flowing per-row fields because their column SET and a prose `description` vary row-to-row), the
- * Attributes table has an exact, fixed 4-field shape on every row (name/type/default/reflect — ParsedAttribute
- * carries no `description`), so it renders as a REAL table-like grid instead: `.api-rows--attributes` declares
+ * Attributes table has an exact, fixed 4-field shape on every row (name/type/default/reflect; an OPTIONAL
+ * ADR-0173 `description` renders as a full-width fifth cell under those tracks — GH #1082), so it renders as
+ * a REAL table-like grid instead: `.api-rows--attributes` declares
  * the four shared column tracks ONCE, a `.api-header` row labels them, and every `.api-row` opts into those SAME
  * tracks via `grid-template-columns: subgrid` — so NAME/TYPE/DEFAULT/FLAGS align vertically down the whole page
  * (doc-page.css), rather than each row sizing its own fields independently (the ragging the issue reported).
@@ -204,6 +205,19 @@ function attributeRow(attr: ParsedAttribute): HTMLElement {
   if (attr.reflect === true) flagsCell.append(apiBadge('reflects', 'Reflects to a DOM attribute (JS-set values stay visible to CSS/attribute selectors)'))
 
   row.append(nameCell, typeCell, defaultCell, flagsCell)
+
+  // ADR-0173 OF2: an attribute MAY carry one line of teaching prose. When present it renders as a fifth,
+  // full-width cell under the four fixed tracks (`grid-column: 1 / -1`, doc-page.css) — the row's grid shape
+  // stays the exact 4-track subgrid GH #881 pinned, and an attribute WITHOUT a description adds no empty node
+  // (the same "no vacuous element" discipline as the flags cell). Previously this field was parsed and then
+  // silently dropped here — every composeDocPage page lost the prose (GH #1082, flagged by the #1043 lane).
+  if (attr.description !== undefined && attr.description !== '') {
+    const desc = document.createElement('p')
+    desc.className = 'api-row-description'
+    desc.setAttribute('role', 'cell')
+    desc.textContent = attr.description
+    row.append(desc)
+  }
   return row
 }
 
