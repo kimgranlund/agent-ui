@@ -494,7 +494,8 @@ function messagesFor(
     const hint =
       (failures.some((f) => f.code === 'PARSE') ? PARSE_HINT : '') +
       idgraphHint(failures) +
-      (failures.some((f) => f.code === 'NET_NOOP') ? NET_NOOP_HINT : '') // GH #1142 — the net-no-op correction round's guidance
+      (failures.some((f) => f.code === 'NET_NOOP') ? NET_NOOP_HINT : '') + // GH #1142 — the net-no-op correction round's guidance
+      (failures.some((f) => f.code === 'FLOW_END_MISSING') ? FLOW_END_HINT : '') // GH #1168 — the missing-flowEnd correction round's guidance
     turns.push({
       role: 'user',
       content: `That output was INVALID (${summary}).${hint} Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,
@@ -601,24 +602,32 @@ function assembleFromRaw(raw: string): { output: A2uiOutput; healedCount: number
  * `personaPatch` (ADR-0178 cl.1 / SPEC-R29) is peeled the same way and on the same terms as `plan` — no
  * integrity check, passed through unchanged — and, per SPEC-R29's gate-blind rule, WITHOUT consulting
  * `opts.authoringSurface`: the gate governs consumption and teaching, never framing.
+ * `flowEnd` (ADR-0198 cl.1 / GH #1168) is peeled on the SAME plan/personaPatch terms — no integrity
+ * check, passed through unchanged onto the outgoing meta-line (readMetaLine already shallow-validated
+ * it to `true | undefined`). Before GH #1168 this recompose DROPPED the field entirely (peel and
+ * formatMetaLine both omitted it), so even a compliant model's `flowEnd` never reached the wire —
+ * fixed here as the pass-through wiring the #1168 correction round relies on.
  */
 function peelMetaLine(raw: string): {
   note: string | undefined
   ask: AskDeclaration | undefined
   plan: PlanDeclaration | undefined
   personaPatch: PersonaPatch | undefined
+  flowEnd: true | undefined
   rest: string
 } {
+  const none = { note: undefined, ask: undefined, plan: undefined, personaPatch: undefined, flowEnd: undefined }
   const lines = raw.split('\n')
   const idx = lines.findIndex((l) => l.trim().length > 0) // first NON-EMPTY line
-  if (idx === -1) return { note: undefined, ask: undefined, plan: undefined, personaPatch: undefined, rest: raw } // all-blank raw — nothing to peel
+  if (idx === -1) return { ...none, rest: raw } // all-blank raw — nothing to peel
   const meta = readMetaLine(lines[idx]!.trim())
-  if (meta === undefined) return { note: undefined, ask: undefined, plan: undefined, personaPatch: undefined, rest: raw }
+  if (meta === undefined) return { ...none, rest: raw }
   return {
     note: meta.a2uiMeta.note,
     ask: meta.a2uiMeta.ask,
     plan: meta.a2uiMeta.plan,
     personaPatch: meta.a2uiMeta.personaPatch,
+    flowEnd: meta.a2uiMeta.flowEnd,
     rest: lines.slice(idx + 1).join('\n'),
   }
 }
@@ -692,7 +701,10 @@ function peelGenuiLines(afterMeta: string): GenuiPeelResult {
  * turn's wire shape stays byte-identical to before this field existed; no runtime rewriting, no integrity
  * check — SPEC-R20 Scope), the model's own `personaPatch` on the SAME terms as `plan` (through unchanged
  * when present, key omitted entirely when absent, and GATE-BLIND — SPEC-R29's rule: the SPEC-R30 gate
- * governs consumption and teaching, never framing), plus the `TurnTrace` `produce()` assembled for this
+ * governs consumption and teaching, never framing), the model's own `flowEnd` on the SAME plan terms
+ * (ADR-0198 cl.1 / GH #1168 — through unchanged when the model declared it, key omitted entirely when
+ * absent; NEVER synthesized by the runtime — a missing `flowEnd` after the #1168 correction round ships
+ * missing, tallied on the trace instead), plus the `TurnTrace` `produce()` assembled for this
  * turn (never the model's raw wrapper verbatim — the model never has `trace`). */
 function formatMetaLine(
   note: string | undefined,
@@ -700,8 +712,9 @@ function formatMetaLine(
   ask: AskDeclaration | undefined,
   plan: PlanDeclaration | undefined,
   personaPatch: PersonaPatch | undefined,
+  flowEnd: true | undefined,
 ): string {
-  return JSON.stringify({ a2uiMeta: { note, ask, plan, personaPatch, trace } })
+  return JSON.stringify({ a2uiMeta: { note, ask, plan, personaPatch, flowEnd, trace } })
 }
 
 /**
@@ -814,6 +827,38 @@ const NET_NOOP_HINT =
   'surface for it instead.'
 
 /**
+ * GH #1168 — the explicit-close lexicon: does THIS user turn read as an explicit "we're finished"
+ * declaration? Deliberately mechanical (a fixed regex over the raw user text), never NLP — the #1142
+ * NET_NOOP posture applied to closure detection. Signal choice, documented: `produce()` receives only
+ * `TurnInput` + `Session`, and `Session.turns` stores assistant turns with the meta-line ALREADY
+ * excluded (`appendAssistantTurn`, session.ts), so "the prior assistant turn presented a confirm ask"
+ * is NOT reconstructible here — the strongest deterministic signal available is the CURRENT user
+ * message's own text. Only the `kind: 'intent'` arm (typed chat text) is inspected: a framed client
+ * message (`kind: 'message'` — an action click, a data change) is machine-composed prose that can
+ * never carry the user's own closing words, so it conservatively never triggers. The lexicon covers
+ * the issue's quoted live shapes ("no further questions", "we are done") plus their nearest common
+ * variants; a miss degrades to today's behavior (no correction round), never to a wrong rewrite.
+ */
+const EXPLICIT_CLOSE_RE =
+  /\b(?:no (?:further|more|other) questions?|(?:we|i)(?:'re|'m| are| am)? ?(?:all )?done(?: here)?|that(?:'s| is| will be) (?:all|everything)|(?:we're|we are|i'm|i am) (?:all )?set|nothing (?:else|further|more)|that'?s it,? thanks?|goodbye)\b/i
+
+/** GH #1168 — exported for the unit tests on the detection predicate (the #1142 test-template shape). */
+export function isExplicitClose(input: TurnInput): boolean {
+  return input.kind === 'intent' && EXPLICIT_CLOSE_RE.test(input.text)
+}
+
+/** GH #1168 — the self-correct sentence for a FLOW_END_MISSING round (the NET_NOOP_HINT shape: one
+ *  appended sentence set, one message, no new round kind). The model complied with everything EXCEPT
+ *  the ADR-0198 completion signal; the repair is a byte-level re-emit of the same closing meta-line
+ *  with the one field added — never new content, never A2UI lines. */
+const FLOW_END_HINT =
+  ' FLOW_END_MISSING means this turn is the CLOSING turn of a completed flow — the user explicitly ' +
+  'confirmed there is nothing more — but your leading meta-line did not carry "flowEnd": true ' +
+  '(literally true, never a string). Re-emit the SAME closing meta-line — the same courtesy-close ' +
+  'note, addressed to the user in persona — with "flowEnd": true added on that same line, and still ' +
+  'NO A2UI lines after it.'
+
+/**
  * TKT-0081 — the cross-turn validation seed: replay the session's prior ASSISTANT turns (validated JSONL,
  * exactly what `appendAssistantTurn` stored) into a per-surface `SurfaceSeed` for `validateA2ui`. Without
  * it the per-round validator is session-blind and structurally CONTRADICTS the renderer on follow-up
@@ -914,6 +959,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   let lastCandidate: string | undefined // the previous round's peeled candidate wire text — the `retry` stage's source
   let genuiMultiplicityHit = false // genui-surface SPEC-R1: sticky across rounds — a factual "this happened at least once" tally, never reset
   let netNoopFedBack = false // GH #1142 — the ONE correction round the net-no-op dodge gets; on recurrence (or a last-round hit) the group is stripped instead, never a ProduceHalt on an otherwise-valid turn
+  let flowEndFedBack = false // GH #1168 — the ONE correction round a closing-shaped turn missing `flowEnd` gets; on refusal (or a last-round hit) the turn ships UNCHANGED — the runtime never synthesizes the field, only tallies FLOW_END_UNCORRECTED on the trace
   for (let round = 0; round < opts.maxRounds; round++) {
     const failuresFedBack = failures // what THIS round's prompt carried back — the trace's failureCodes
     // ADR-0146 F1 — the lifecycle stages, yielded AS THEY HAPPEN, strictly BEFORE any content line (content
@@ -993,7 +1039,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
     }
     lastRaw = raw
 
-    const { note, ask, plan, personaPatch, rest: afterMeta } = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 / ADR-0174 cl.2 / ADR-0178 cl.1 — peeled BEFORE heal/validate
+    const { note, ask, plan, personaPatch, flowEnd, rest: afterMeta } = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 / ADR-0174 cl.2 / ADR-0178 cl.1 / ADR-0198 cl.1 — peeled BEFORE heal/validate
     // genui-surface SPEC-R1 — peeled SECOND, still BEFORE heal/validate: a genui line (valid or not) never
     // reaches the shared A2UI healer/validator, which doesn't know this kind exists. Recomputed FRESH every
     // round (never carried over): a round's genui candidate belongs to THAT round's own raw output, never
@@ -1026,15 +1072,38 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
     // halt-and-report (empty ≠ invalid). ADR-0097 §1: a declared `ask` here is trivially integrity-invalid
     // too (no payload creates ANYTHING) — dropped, never even reaching `askIntegrityHolds`.
     if (restLines.length === 0 && (note !== undefined || genuiLine !== undefined)) {
+      // GH #1168 — the missing-flowEnd correction round (the #1142 NET_NOOP precedent, on the ADR-0187
+      // atFinalize correction seam's shape: one targeted round, then pass through unchanged). Trigger,
+      // fully mechanical: this turn is CLOSING-SHAPED — a note with NO ask, NO plan, NO genui line, and
+      // zero A2UI content lines (this very branch) — the model omitted `flowEnd`, AND the user's own
+      // message is an explicit close (`isExplicitClose`, the strongest deterministic signal produce()
+      // receives — see its doc for why the prior-turn-confirm-ask signal is unavailable here). Exactly
+      // ONE round, and only when a round is left to spend; on refusal the turn ships UNCHANGED below
+      // (never a synthesized field, never a halt) with FLOW_END_UNCORRECTED tallied on the trace.
+      if (
+        flowEnd === undefined &&
+        note !== undefined &&
+        ask === undefined &&
+        plan === undefined &&
+        genuiLine === undefined &&
+        !flowEndFedBack &&
+        round < opts.maxRounds - 1 &&
+        isExplicitClose(input)
+      ) {
+        flowEndFedBack = true
+        failures = [{ code: 'FLOW_END_MISSING', path: '' }]
+        continue
+      }
       const failureCodes = (failuresFedBack ?? []).map((f) => f.code)
       if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY') // SPEC-R1 — a factual tally, never a retry trigger
+      if (flowEndFedBack && flowEnd === undefined) failureCodes.push('FLOW_END_UNCORRECTED') // GH #1168 — the model refused the correction round; ships unchanged, tallied (the NET_NOOP_STRIPPED naming shape)
       // SPEC-N4/SPEC-R1 — a genui structural failure on THIS shipping round is dropped from the wire
       // (never blocks a clean note-only/genui-only success), but its failure code MUST still land on the
       // trace — SPEC-N4's "every drop path increments an observable counter" applies to this drop too,
       // not only to the retried case already covered by `failuresFedBack` above.
       if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
       if (emitProgress) yield formatProgressLine({ stage: 'done' }) // before the final (note-only/genui-only) yield
-      if (note !== undefined) yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined, plan, personaPatch)
+      if (note !== undefined) yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined, plan, personaPatch, flowEnd)
       if (genuiLine !== undefined) yield genuiLine // SPEC-R1 AC2 — ships intact, the model's own line verbatim
       return
     }
@@ -1128,7 +1197,8 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
         // SPEC-N4/SPEC-R1 — see the note-only branch's identical comment: a genui failure dropped on an
         // otherwise-successful round still needs to land on the trace, not just the retried case.
         if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
-        yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk, plan, personaPatch) // meta-line FIRST
+        if (flowEndFedBack && flowEnd === undefined) failureCodes.push('FLOW_END_UNCORRECTED') // GH #1168 — the correction round came back content-bearing and still without flowEnd: ships unchanged, tallied
+        yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk, plan, personaPatch, flowEnd) // meta-line FIRST
       }
       // genui-surface SPEC-R1 — a genui structural failure on an OTHERWISE-valid A2UI round is DROPPED
       // silently here (never manufactures an extra round purely to fix it: "degrade, never halt" — the
