@@ -9,7 +9,7 @@
 // input, and NO wall-clock coupling exists — lines yield on the microtask queue alone (the same
 // zero-timers posture as `createRecordedTransport`, the a2ui recorded backbone this mirrors).
 
-import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent'
+import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent/agent-transport'
 import { formatErrorLine } from '@agent-ui/a2ui/agent/meta-line'
 import type { DevtoolsCapture } from '../capture/format.ts'
 

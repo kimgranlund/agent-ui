@@ -9,7 +9,7 @@
 // the page slice by the decomposition's own n6→n4 edge (the page's export/import controls read+write
 // the capture format — the format precedes its consumer).
 
-import type { Session } from '@agent-ui/a2ui/agent'
+import type { Session } from '@agent-ui/a2ui/agent/agent-transport'
 import type { DevtoolsEvent } from '../timeline/events.ts'
 import { DEVTOOLS_EVENT_KINDS } from '../timeline/events.ts'
 import type { BackendId } from '../transports/backends.ts'

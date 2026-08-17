@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { TurnInput } from '@agent-ui/a2ui/agent'
+import type { TurnInput } from '@agent-ui/a2ui/agent/agent-transport'
 import { parseCapture, serializeCapture, CaptureParseError, DEVTOOLS_CAPTURE_KIND, DEVTOOLS_CAPTURE_VERSION } from './format.ts'
 import type { DevtoolsCapture } from './format.ts'
 import { recordTurn } from '../timeline/events.ts'

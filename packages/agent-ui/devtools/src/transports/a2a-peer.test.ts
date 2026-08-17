@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent'
+import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent/agent-transport'
 import { createLoopbackPair, A2aChannelClosedError } from '@agent-ui/a2a'
 import type { A2aMessage } from '@agent-ui/a2a'
 import { peerTransport } from './a2a-peer.ts'

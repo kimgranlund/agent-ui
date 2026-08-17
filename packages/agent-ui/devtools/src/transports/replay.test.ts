@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent'
+import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent/agent-transport'
 import { readMetaLine } from '@agent-ui/a2ui/agent/meta-line'
 import { scriptTransport, replayTransport, capturedLineTimelines, TRANSCRIPT_EXHAUSTED_MESSAGE } from './replay.ts'
 import type { DevtoolsCapture } from '../capture/format.ts'

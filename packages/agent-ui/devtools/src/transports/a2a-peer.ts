@@ -20,7 +20,7 @@
 //     iterable is unfinished (the reply-matching rule above assumes the next `role:'agent'` message
 //     answers THIS turn; interleaved turns on one channel are a future widening with its own record).
 
-import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent'
+import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent/agent-transport'
 import type { A2aChannel, A2aMessage } from '@agent-ui/a2a'
 
 /**

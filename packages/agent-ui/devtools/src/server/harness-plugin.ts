@@ -19,7 +19,7 @@
 import type { Plugin } from 'vite'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { once } from 'node:events'
-import type { TurnInput } from '@agent-ui/a2ui/agent'
+import type { TurnInput } from '@agent-ui/a2ui/agent/agent-transport'
 import { scriptTransport, replayTransport } from '../transports/replay.ts'
 import { proxyTransport } from '../transports/proxy.ts'
 import { peerTransport } from '../transports/a2a-peer.ts'
@@ -31,7 +31,7 @@ import type { DevtoolsCapture } from '../capture/format.ts'
 import { DEVTOOLS_CAPTURE_KIND, DEVTOOLS_CAPTURE_VERSION } from '../capture/format.ts'
 import { createLoopbackPair } from '@agent-ui/a2a'
 import type { A2aChannel } from '@agent-ui/a2a'
-import type { AgentTransport } from '@agent-ui/a2ui/agent'
+import type { AgentTransport } from '@agent-ui/a2ui/agent/agent-transport'
 
 export const DEVTOOLS_MOUNT = '/__devtools'
 /** 8 MiB — a capture carries whole event timelines; still a hard cap so a runaway dev request can't

@@ -13,7 +13,7 @@
 // rides the declared browser-safe `./agent/meta-line` subpath — this module stays browser-safe with
 // zero I/O at module scope.
 
-import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent'
+import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent/agent-transport'
 import type { A2uiClientMessage } from '@agent-ui/a2ui'
 import type { GenuiActionMessage } from '@agent-ui/a2ui/agent/genui-line'
 import { readMetaLine } from '@agent-ui/a2ui/agent/meta-line'

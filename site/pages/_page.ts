@@ -606,6 +606,8 @@ export const NAV: readonly NavGroup[] = [
       { href: './agent-schema.html', label: 'Agent Schema' },
     ],
   },
+  // The Devtools Harness (GH #1122, ADR-0200 clause 5) — the chat & A2UI dev/debug surface over @agent-ui/devtools.
+  { links: [{ href: './devtools-harness.html', label: 'Devtools Harness' }] },
   {
     links: [
       { href: './a2ui-canvas.html', label: 'A2UI Canvas' },

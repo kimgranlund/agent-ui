@@ -9,7 +9,7 @@
 // `fetch` is INJECTED (browser- and Node-capable, jsdom-testable); the default binds `globalThis.fetch`
 // lazily inside `turn()` — zero I/O and zero global capture at module scope.
 
-import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent'
+import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent/agent-transport'
 
 /** The structural slice of a `fetch` Response this transport reads — the real `Response` satisfies it. */
 export interface ProxyResponseLike {

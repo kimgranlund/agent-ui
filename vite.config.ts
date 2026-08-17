@@ -13,6 +13,11 @@ import { a2aDevProxyPlugin } from './packages/agent-ui/a2a/tools/arena/dev-proxy
 // mount (`/__a2a/feed`) — derives the produce() session from a posted A2A message log and streams ONE
 // agent turn back as part-frames (`frames.ts`).
 import { a2aFeedDevProxyPlugin } from './packages/agent-ui/a2a/tools/feed/dev-proxy-plugin.ts'
+// The devtools harness orchestration seam (ADR-0200 clause 4 / devtools-harness SPEC-R6): same DEV-ONLY
+// posture (`apply: 'serve'`), mount `/__devtools` — the agent-drivable headless surface (GET /status ·
+// POST /turn → DevtoolsEvent NDJSON · GET/POST /captures). Its live backend reaches the EXISTING
+// `/__a2ui/agent` mount over HTTP only — no key ever enters @agent-ui/devtools (SPEC-N3).
+import { devtoolsHarnessPlugin } from './packages/agent-ui/devtools/src/server/harness-plugin.ts'
 
 // The /site app dev/build entry (slice A1) — Vite 8 is Rolldown-based, so bundler behaviour follows
 // Rolldown-Vite. `root: 'site'` makes site/*.html the served/built HTML shells; the build emits to the
@@ -54,7 +59,7 @@ const input = Object.fromEntries(
 
 export default defineConfig({
   root: 'site',
-  plugins: [a2uiDevProxyPlugin(), a2aDevProxyPlugin(), a2aFeedDevProxyPlugin()],
+  plugins: [a2uiDevProxyPlugin(), a2aDevProxyPlugin(), a2aFeedDevProxyPlugin(), devtoolsHarnessPlugin()],
   build: {
     outDir: '../dist',
     emptyOutDir: true,

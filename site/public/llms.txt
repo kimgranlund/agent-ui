@@ -156,6 +156,7 @@
 - [Generative form](./a2ui-form.html): a full A2UI-rendered form with two-way bindings and validity checks.
 - [Dynamic list](./a2ui-list.html): the positional list reconciler over a bound array.
 - [Canvas](./a2ui-canvas.html): the A2UI render surface — translate-centered artboard with JSON/HTML inspection tabs.
+- [Devtools Harness](./devtools-harness.html): the chat & A2UI dev/debug harness (`@agent-ui/devtools`, ADR-0200) — three swappable backends behind the one AgentTransport seam (replay · live dev-proxy · A2A peer), the raw DevtoolsEvent NDJSON timeline pane, per-surface render-confirm verdicts on a real canvas, and capture export/import that round-trips with the agent-admin debug bundle.
 
 ## GenUI — sandboxed free-form generative UI
 

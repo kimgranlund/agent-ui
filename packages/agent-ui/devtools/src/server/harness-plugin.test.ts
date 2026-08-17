@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { TurnInput } from '@agent-ui/a2ui/agent'
+import type { TurnInput } from '@agent-ui/a2ui/agent/agent-transport'
 import { createDevtoolsMiddleware, devtoolsHarnessPlugin, seamPeerTransport, DEVTOOLS_MOUNT, MAX_BODY } from './harness-plugin.ts'
 import type { DevtoolsHarnessOptions, HarnessFetch } from './harness-plugin.ts'
 import type { DevtoolsEvent } from '../timeline/events.ts'

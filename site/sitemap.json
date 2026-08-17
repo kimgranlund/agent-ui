@@ -796,6 +796,13 @@
       "section": "Guides"
     },
     {
+      "name": "Devtools Harness",
+      "url": "./devtools-harness.html",
+      "description": "The chat & A2UI dev/debug harness (ADR-0200): three swappable backends behind one AgentTransport seam, the raw DevtoolsEvent NDJSON timeline, per-surface render-confirm verdicts, and capture export/import.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Persona Library Pattern",
       "url": "./persona-library-pattern.html",
       "description": "Export a whole authored configuration as a shareable file, re-import it as a NEW library entry, never an overwrite — the reusable pattern behind agent-admin's persona export/import (GH #406).",

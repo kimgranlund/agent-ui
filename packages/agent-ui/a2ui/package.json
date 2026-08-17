@@ -10,7 +10,8 @@
     "./corpus": "./src/corpus/index.ts",
     "./agent": "./src/agent/index.ts",
     "./agent/meta-line": "./src/agent/meta-line.ts",
-    "./agent/genui-line": "./src/agent/genui-line.ts"
+    "./agent/genui-line": "./src/agent/genui-line.ts",
+    "./agent/agent-transport": "./src/agent/agent-transport.ts"
   },
   "dependencies": {
     "@agent-ui/components": "*",
