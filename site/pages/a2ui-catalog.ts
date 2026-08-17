@@ -34,17 +34,16 @@ content.append(
 )
 
 // ── reciprocal cross-link to the composition gallery (GH #970 — "the two pages link each other") ─────────
-const galleryLink = document.createElement('p')
-galleryLink.className = 'page-lead'
 const galleryLinkAnchor = document.createElement('a')
 galleryLinkAnchor.href = './a2ui-gallery.html'
 galleryLinkAnchor.textContent = 'the A2UI gallery'
-galleryLink.append(
-  document.createTextNode('Looking for a full composed example instead of one type? Browse '),
-  galleryLinkAnchor,
-  document.createTextNode(' — every card there is built from the types on this page.'),
+content.append(
+  pageLead(
+    'Looking for a full composed example instead of one type? Browse ',
+    galleryLinkAnchor,
+    ' — every card there is built from the types on this page.',
+  ),
 )
-content.append(galleryLink)
 
 // ── name filter (live, case-insensitive) — hides non-matching sections in EVERY tab, not just the active
 // one (GH #970's "search stays orthogonal" acceptance bullet: the filter never resets or re-scopes on a
@@ -79,6 +78,9 @@ tabs.setAttribute('selected', TIERS[0])
 const sections: Array<{ name: string; tier: Tier; el: HTMLElement }> = []
 const tabEls: HTMLElement[] = []
 const panelEls: HTMLElement[] = []
+// Keyed so the filter listener below can rewrite each tab's own count label live (GH #1002 — the counts
+// were built once at mount and never revisited, so they went stale the instant a reader typed a query).
+const tabByTier = new Map<Tier, HTMLElement>()
 
 for (const tier of TIERS) {
   const tierNames = names.filter((name) => tierOf(name) === tier)
@@ -87,6 +89,7 @@ for (const tier of TIERS) {
   tab.setAttribute('key', tier)
   tab.textContent = `${TIER_LABEL[tier]} (${tierNames.length})`
   tabEls.push(tab)
+  tabByTier.set(tier, tab)
 
   const panel = document.createElement('ui-tab-panel')
   panel.className = 'catalog-tab-panel'
@@ -138,6 +141,13 @@ filter.addEventListener('input', () => {
     const matches = q === '' || name.toLowerCase().includes(q)
     el.hidden = !matches
     if (matches) matchesByTier.set(tier, (matchesByTier.get(tier) ?? 0) + 1)
+  }
+  // Live tab-label counts — LIVE from the same `matchesByTier` tally the status line reads below, not the
+  // build-time `tierNames.length` (GH #1002): an empty query still runs this since `matches` is unconditionally
+  // true then, so `matchesByTier` already equals the natural per-tier totals — one source, no separate branch.
+  for (const tier of TIERS) {
+    const tab = tabByTier.get(tier)
+    if (tab) tab.textContent = `${TIER_LABEL[tier]} (${matchesByTier.get(tier) ?? 0})`
   }
   if (q === '') {
     filterStatus.textContent = ''

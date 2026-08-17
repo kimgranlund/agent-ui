@@ -23,15 +23,13 @@ content.append(
 )
 
 // ── reciprocal cross-link to the type catalog (GH #970 — "the two pages link each other") ────────────────
-const catalogLink = document.createElement('p')
-catalogLink.className = 'page-lead'
 const catalogLinkAnchor = document.createElement('a')
 catalogLinkAnchor.href = './a2ui-catalog.html'
 catalogLinkAnchor.textContent = 'the A2UI Catalog'
-catalogLink.append(
-  document.createTextNode('Looking for a single component type instead of a full composition? Browse '),
+const catalogLink = pageLead(
+  'Looking for a single component type instead of a full composition? Browse ',
   catalogLinkAnchor,
-  document.createTextNode(' — every type each seed on this page uses links back here.'),
+  ' — every type each seed on this page uses links back here.',
 )
 content.append(catalogLink, buildSeedGallery().root)
 

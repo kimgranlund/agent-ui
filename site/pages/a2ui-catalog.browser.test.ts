@@ -41,3 +41,64 @@ describe('a2ui-catalog — the dogfooded ui-text-field filter narrows the sectio
     expect(sections[0].hidden, 'the typed-name section should stay visible').toBe(false)
   })
 })
+
+// GH #1002 — the tab-strip SHAPE: five tier tabs (WIDGET/PRIMITIVE/PATTERN/FEATURE/INPUT,
+// `site/lib/a2ui-catalog-tiers.ts`'s TIERS), exactly one unhidden panel at a time (ui-tabs' own
+// roving-visibility contract), and the "see it in real use" cross-links resolving to the gallery's
+// per-seed hash anchors — plus the label-count LIVE-update regression the code-checker flagged (the
+// counts used to be built once at mount from `tierNames.length` and never revisited under a filter).
+describe('a2ui-catalog — the tab-strip shape (five tier tabs, one visible panel, gallery cross-links)', () => {
+  it('renders exactly five ui-tab elements, one per tier', async () => {
+    await raf()
+    // ui-tabs REPARENTS its `ui-tab` children into a control-created `[data-part=tablist]` strip
+    // (`role=tablist`, tabs.ts). Scoped with `:scope >` at every level (NOT a bare descendant
+    // selector) because the catalog's own panels can nest a LIVE `<component-preview target="Tabs">`
+    // specimen — its own inner `ui-tab`s would otherwise be double-counted as part of the page-level strip.
+    const stripTabs = document.querySelector('ui-tabs.catalog-tabs')?.querySelector(':scope > [data-part="tablist"]')
+    expect(stripTabs, 'no tablist strip found on ui-tabs.catalog-tabs').not.toBeNull()
+    const tabs = [...stripTabs!.querySelectorAll(':scope > ui-tab')]
+    expect(tabs.length, 'expected exactly 5 tier tabs (WIDGET/PRIMITIVE/PATTERN/FEATURE/INPUT)').toBe(5)
+  })
+
+  it('exactly one ui-tab-panel is unhidden at a time', async () => {
+    await raf()
+    const panels = [...document.querySelectorAll<HTMLElement>('ui-tabs.catalog-tabs > ui-tab-panel')]
+    expect(panels.length, 'expected 5 tier panels').toBe(5)
+    const unhidden = panels.filter((p) => !p.hidden)
+    expect(unhidden.length, 'exactly one tab panel should be unhidden').toBe(1)
+  })
+
+  it('every "see it in real use" cross-link resolves to a gallery per-seed hash anchor', async () => {
+    await raf()
+    const links = [...document.querySelectorAll<HTMLAnchorElement>('.catalog-item-uses a')]
+    expect(links.length, 'expected at least one cross-link to the gallery').toBeGreaterThan(0)
+    for (const a of links) {
+      expect(a.getAttribute('href'), `cross-link should target a gallery seed anchor: ${a.getAttribute('href')}`).toMatch(
+        /^\.\/a2ui-gallery\.html#seed-/,
+      )
+    }
+  })
+
+  it('a tab label count updates LIVE from the filter, not the static build-time total', async () => {
+    await raf()
+    const filter = document.querySelector('.catalog-filter-input') as (HTMLElement & { value: string }) | null
+    expect(filter, 'no catalog filter found').not.toBeNull()
+    // Scoped the same way as the shape test above — the page-level strip's OWN first tab, not a
+    // nested `<component-preview target="Tabs">` specimen's inner tab.
+    const strip = document.querySelector('ui-tabs.catalog-tabs')?.querySelector(':scope > [data-part="tablist"]')
+    const firstTab = strip?.querySelector(':scope > ui-tab') as HTMLElement | undefined
+    expect(firstTab, 'no ui-tab found in the tablist strip').not.toBeUndefined()
+    const labelBefore = firstTab!.textContent
+
+    // Type an unmatchable query — every tier's live count should collapse toward 0, changing every label
+    // that isn't already "(0)" at mount (the WIDGET tab, first in tab order, always starts non-zero).
+    const editor = filter!.querySelector('[data-part="editor"]') as HTMLElement
+    editor.textContent = 'zzz-no-such-component-zzz'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    await raf()
+
+    const labelAfter = firstTab!.textContent
+    expect(labelAfter, 'the tab label should change once the filter narrows matches').not.toBe(labelBefore)
+    expect(labelAfter, 'the collapsed tab label should read a zero count').toMatch(/\(0\)$/)
+  })
+})
