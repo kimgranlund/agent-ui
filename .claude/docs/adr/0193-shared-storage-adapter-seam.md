@@ -170,7 +170,7 @@ LLD-C15 fork F7) is a deliberately different, higher-altitude seam this ADR does
   (this ADR's own Decision cl.5's layering proof) lets it be reviewed and ratified independent of a
   behavior-parity migration's own risk surface.
 
-## Amendment (2026-08-17, **proposed** — Kim ratifies) — a sync READ surface on the localStorage tier ONLY: `SyncReadableStorageAdapter` (`getSync`/`keysSync`), unblocking the full read-path migration of `app`'s `memory-store`/`SettingsStore` hydration (GH [#1077](https://github.com/kimgranlund/agent-ui/issues/1077), escalated from GH #959's Findings / PR #1027)
+## Amendment (2026-08-17, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/1077#issuecomment-5316447025), verified 2026-08-17) — a sync READ surface on the localStorage tier ONLY: `SyncReadableStorageAdapter` (`getSync`/`keysSync`), unblocking the full read-path migration of `app`'s `memory-store`/`SettingsStore` hydration (GH [#1077](https://github.com/kimgranlund/agent-ui/issues/1077), escalated from GH #959's Findings / PR #1027)
 
 > Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
 > byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment
