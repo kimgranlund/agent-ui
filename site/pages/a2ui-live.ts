@@ -50,6 +50,9 @@ import {
 } from '../lib/agent-runtime.ts'
 import type { AgentTransport, TurnInput, Session, TurnTrace, AskDeclaration } from '../lib/agent-runtime.ts'
 import { AskRegistry, surfaceIdOf, componentTypesOf, setAnsweredOnControls, CHOICE_CONTROL_TAGS } from '../lib/ask-registry.ts'
+// ADR-0198 (GH #1101) — the shared end-of-flow page-chrome affordance (the #1065 shared-seam lift).
+import { createFlowChrome } from '../lib/flow-chrome.ts'
+import type { A2uiMetaEnvelope } from '../lib/agent-runtime.ts'
 import type { AskEntry } from '../lib/ask-registry.ts'
 // GH #579 — wire the shipped host-side plan-runner (PR #580, ADR-0174/SPEC-R21/R22) into this page.
 import { runPlannerTurn, PLAN_SYNTHESIS_GROUP_KEY, sanitizeFailureReason } from '../lib/plan-runner.ts'
@@ -129,6 +132,12 @@ function addMessage(role: 'user' | 'agent' | 'system', text: string): void {
   chatLog.append(item)
   chatLog.scrollTop = chatLog.scrollHeight
 }
+
+// ADR-0198 cl.3/cl.4 — the end-of-flow chrome row (page chrome, appended AFTER the closing note bubble;
+// never on any card — ADR-0196's settled cards stay Edit anchors). `Start over` routes to this page's
+// EXISTING Reset (`resetBtn`, below — evaluated at click time, never a second reset implementation);
+// Reset itself dismisses any live row so a cleared conversation never keeps a stale affordance.
+const flowChrome = createFlowChrome({ onStartOver: () => resetBtn.click() })
 
 // ADR-0097 §2 — a feed-embedded ask's own message bubble: the SAME `.msg` shape `addMessage` builds (an
 // "Agent" row), but its body is a live `<div>` mount for a per-ask `createRenderer()` host (AskRegistry)
@@ -646,6 +655,7 @@ async function runTurn(input: TurnInput): Promise<void> {
     let note: string | undefined
     let ask: AskDeclaration | undefined
     let transportError: string | undefined
+    let flowEndEnvelope: A2uiMetaEnvelope | undefined
     for await (const line of transport.turn(input)) {
       // ADR-0088 §1: peel the reserved leading meta-line BEFORE it ever reaches the renderer — it must
       // never enter `allLines`/the JSON tab or `canvasHost.ingest` (the meta-line is provably not an
@@ -660,6 +670,9 @@ async function runTurn(input: TurnInput): Promise<void> {
         if (meta.a2uiMeta.progress !== undefined) routeProgress(meta.a2uiMeta.progress)
         if (meta.a2uiMeta.note !== undefined) note = meta.a2uiMeta.note
         if (meta.a2uiMeta.ask !== undefined) ask = meta.a2uiMeta.ask
+        // ADR-0198 cl.1 — the model's explicit flow-completion declaration (never a heuristic); retained
+        // so the end-of-flow chrome row can follow the closing note bubble after the turn completes.
+        if (meta.a2uiMeta.flowEnd === true) flowEndEnvelope = meta
         // GH #144/#408 — the transport-composed TERMINAL error line (`formatErrorLine`, meta-line.ts): the
         // ONLY way a proxy whose headers already committed 200 can report a `ProduceHalt`/upstream fault
         // instead of ending as a silently-empty "success". It parses cleanly and matched none of the arms
@@ -768,6 +781,10 @@ async function runTurn(input: TurnInput): Promise<void> {
     // ADR-0088 §1: show the model's OWN prose verbatim when it emitted a note; `summarize()` is only the
     // BACKWARD-COMPAT fallback for a turn that carries no note (e.g. the recorded backbone, pre-slice-6).
     addMessage('agent', note ?? summarize(turnLines))
+    // ADR-0198 cl.3 — on the model's explicit flowEnd, append the end-of-flow chrome row right after the
+    // closing note bubble (page chrome in the chat log, not the canvas, not any card). Omitted flowEnd =
+    // today's behavior — nothing fires (the safe-degrade law).
+    if (flowChrome.maybePresent(flowEndEnvelope, chatLog)) chatLog.scrollTop = chatLog.scrollHeight
     refreshJson(allLines)
     refreshHtml()
     if (!askRendered) showCanvas() // an ask turn stays on whichever tab was active — the ask IS the reply, in the chat feed
@@ -1137,6 +1154,7 @@ resetBtn.addEventListener('click', () => {
   canvasHost = freshCanvasHost
   canvasHost.onClientMessage(handleClientMessage)
   askRegistry.disposeAll() // ADR-0097 §2 — every ask host disposed alongside the canvas host, no leak
+  flowChrome.dismiss() // ADR-0198 — a cleared conversation never keeps a stale end-of-flow affordance
   askAnswers.clear() // ADR-0196 — the settle/amend diff baseline dies with the asks it described
   knownSurfaceIds.clear()
   session = { turns: [] }
