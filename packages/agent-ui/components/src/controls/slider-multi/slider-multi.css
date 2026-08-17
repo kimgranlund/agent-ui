@@ -41,6 +41,12 @@
      The fleet ring constant (--md-sys-color-focus-ring) flows through here; override only this token
      to remap the focus colour for this component (WHCM: --md-sys-color-focus-ring → Highlight). */
   --ui-slider-multi-focus-ring: var(--md-sys-color-focus-ring);
+
+  /* GH #1126 — live value readout (design + rationale: slider.md's "Value readout" section, shared by
+     both Range-class leaves). Same role pairing as ui-slider's own readout tokens. */
+  --ui-slider-multi-value-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-slider-multi-value-surface: var(--md-sys-color-neutral-surface-brightest);
+  --ui-slider-multi-value-font: var(--md-sys-font-sm);
 }
 
 /* [size] → compact widget ramp repoint (ADR-0041: the LITERAL per-[scale] table in dimensions.css
@@ -55,6 +61,10 @@
   --ui-slider-multi-fill:         var(--md-sys-color-neutral-surface-high);
   --ui-slider-multi-thumb:        var(--md-sys-color-neutral-on-surface-variant);
   --ui-slider-multi-thumb-border: var(--md-sys-color-neutral-outline-variant);
+  /* GH #1126: muted too — belt-and-suspenders; disabled is pointer-inert (below) and keyboard-gated
+     (the base's effectiveDisabled check), so `input` never fires to arm the readout. */
+  --ui-slider-multi-value-ink:      var(--md-sys-color-neutral-on-surface-variant);
+  --ui-slider-multi-value-surface:  var(--md-sys-color-neutral-surface-high);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-slider-multi) consumes ONLY --ui-slider-multi-* ════════════════ */
@@ -150,6 +160,35 @@
   .thumb[data-thumb='lo'] { left: calc(var(--value-pct-lo, 0) * 1%); }
   .thumb[data-thumb='hi'] { left: calc(var(--value-pct-hi, 100) * 1%); }
 
+  /* GH #1126 — the live value readout (`[data-part='value']`, host-level sibling of `.rail`, built in
+     #buildDOM). `position: absolute` removes it from the host's flex flow entirely — it never competes
+     with `.rail`'s `flex: 1` for width, and toggling `[hidden]` causes zero layout shift. Anchored at a
+     FIXED inline-end position (never a function of --value-pct-lo/hi) — the label-end design choice; see
+     slider.md's "Value readout" section for the shared rationale (rejecting a thumb-following bubble). */
+  [data-part='value'] {
+    position: absolute;
+    inset-inline-end: 0;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: calc(var(--md-sys-widget-inset) * 1.5);
+    border-radius: 999px;
+    background: var(--ui-slider-multi-value-surface);
+    color: var(--ui-slider-multi-value-ink);
+    font-size: var(--ui-slider-multi-value-font);
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  /* Author-origin [hidden] guard — our own `display: flex` above beats the UA `[hidden]{display:none}`
+     rule by ORIGIN (author > UA), regardless of specificity; re-declare explicitly (field.css precedent). */
+  [data-part='value'][hidden] {
+    display: none;
+  }
+
   /* Focus ring (ADR-0009) — shared fleet ring on keyboard-focused thumbs. Applied via :focus-visible
      (keyboard-only) directly on the thumb element since the thumbs ARE the focusable nodes.
      Consumes the local --ui-slider-multi-focus-ring (declared in the token block, chained from
@@ -192,6 +231,12 @@
     }
     .thumb:focus-visible {
       outline-color: Highlight;
+    }
+    [data-part='value'] {
+      background: Canvas;
+      color: CanvasText;
+      border: 1px solid ButtonText;
+      forced-color-adjust: none;
     }
   }
 }

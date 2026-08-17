@@ -70,7 +70,9 @@ events:
 
 slots: []              # light-DOM host-as-block; no child slot (slider is a bare value widget — no label slot)
 
-parts: []              # no parts — rail and thumb paint via ::before/::after on the host
+parts:                 # GH #1126: the ONE control-created light-DOM child; rail/thumb still paint via ::before/::after
+  - name: value
+    description: The live value readout (`<span data-part="value" aria-hidden="true">`) — created once, idempotently, in connected() (the field/swatch part-creation precedent). Always in the DOM; toggles `hidden` on/off — visible only while actively adjusting (pointer drag or keyboard step), hiding ~1.2s after the last live change (or immediately on blur). `aria-hidden` — a SIGHTED-ONLY convenience; `internals.ariaValueText` already carries the one AT-facing announcement (never doubled). `position: absolute`, anchored at a FIXED inline-end position (never a function of --value-pct) — the label-end design choice over a thumb-following bubble (see the "Value readout" section below).
 
 customStates: []       # ui-slider does not arm any :state() hooks (no binary checked/selected state)
 
@@ -155,6 +157,23 @@ SC 1.4.11 dimension; ADR-0094). `[disabled]` mutes all four to inactive neutral 
 The thumb's contrast contract is three-dimensional — fill, rail, and page surface, in both schemes
 (ADR-0094): a repoint of any of these tokens must clear all three; the slider browser legs are the
 standing gate.
+
+## Value readout (GH #1126)
+
+While the user is actively adjusting the value — pointer drag or a keyboard step — a live text readout
+(`[data-part='value']`) appears, formatted via the same `valueText()` hook that feeds `ariaValueText`
+(min/max/step respected, snapped/clamped). It hides ~1.2s after the last live change, or immediately on
+blur. **Design choice: a label-end STATIC overlay, not a thumb-following bubble.** `ui-slider` has no
+label/adornment slot (it is a bare value widget — anatomy.md's position-slots × content-roles law targets
+LABELED inline-grid controls, e.g. `ui-button`; it does not apply here) and no existing floating-overlay
+precedent; a bubble tracking `--value-pct` would be the fleet's first pointer-position floater, at risk of
+clipping past the host's own edge when the thumb is at min/max inside an ancestor `overflow:hidden` card
+(the exact shape of an A2UI chat-bubble surface). A FIXED anchor never depends on `--value-pct`, so it can
+never approach that edge — no clamping math needed, and it is provably "inside the host box" by
+construction rather than by probe luck. `position: absolute` also means toggling `hidden` causes zero
+layout shift to the rail/thumb or the page around it. No opt-out prop for v1 (Kim's issue framing leaned
+"visible by default" with no explicit opt-out ask; adding one grows the fork sheet for a small fix —
+tracked as an open follow-up if a real consumer needs to suppress it).
 
 ## Interaction
 

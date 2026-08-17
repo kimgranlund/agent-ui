@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { UISliderMultiElement } from './slider-multi.ts'
 import { signal, inspect } from '../../reactive/index.ts'
 import type { FormValue } from '../../dom/index.ts'
@@ -62,6 +62,8 @@ class ProbeSliderMulti extends UISliderMultiElement {
   get hiThumb(): HTMLElement | null { return this.querySelector<HTMLElement>('.thumb[data-thumb="hi"]') }
   /** The rail element (set during connected() light-DOM build). */
   get railEl(): HTMLElement | null { return this.querySelector<HTMLElement>('.rail') }
+  /** The GH #1126 value-readout element (set during connected() light-DOM build). */
+  get valueEl(): HTMLElement | null { return this.querySelector<HTMLElement>('[data-part="value"]') }
 }
 customElements.define('ui-slider-multi-probe', ProbeSliderMulti)
 
@@ -688,6 +690,107 @@ describe('UISliderMultiElement — zero residue (C10)', () => {
     document.body.append(el) // reconnect → effects reinstall + run synchronously
     expect(el.loThumb!.getAttribute('aria-valuenow')).toBe('20') // re-applied from live signal value
     el.remove()
+  })
+})
+
+// ── GH #1126: live value readout ─────────────────────────────────────────────────────────────────────
+
+describe('UISliderMultiElement — live value readout (GH #1126)', () => {
+  it('the readout part exists, aria-hidden, and starts hidden', () => {
+    const el = make()
+    document.body.append(el)
+    const part = el.valueEl!
+    expect(part).not.toBeNull()
+    expect(part.getAttribute('aria-hidden')).toBe('true')
+    expect(part.hidden).toBe(true)
+    el.remove()
+  })
+
+  it('keyboard adjust on the lo thumb shows BOTH values formatted as "lo – hi"', async () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.valueLo = 20
+    el.valueHi = 80
+    document.body.append(el)
+    dispatchKey(el.loThumb!, 'ArrowRight') // lo 20 → 21
+    const part = el.valueEl!
+    expect(part.hidden).toBe(false)
+    await el.updateComplete
+    expect(part.textContent).toBe('21 – 80')
+    el.remove()
+    vi.useRealTimers()
+  })
+
+  it('the readout hides after the delay elapses with no further change', () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.valueLo = 20
+    document.body.append(el)
+    dispatchKey(el.loThumb!, 'ArrowRight')
+    const part = el.valueEl!
+    expect(part.hidden).toBe(false)
+    vi.advanceTimersByTime(1300)
+    expect(part.hidden).toBe(true)
+    el.remove()
+    vi.useRealTimers()
+  })
+
+  it('focusout hides the readout immediately', () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.valueLo = 20
+    document.body.append(el)
+    dispatchKey(el.loThumb!, 'ArrowRight')
+    const part = el.valueEl!
+    expect(part.hidden).toBe(false)
+    el.loThumb!.dispatchEvent(new FocusEvent('focusout', { bubbles: true }))
+    expect(part.hidden).toBe(true)
+    el.remove()
+    vi.useRealTimers()
+  })
+
+  it('pointer drag on the rail shows the readout (armed via the shared `input` listener)', async () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.valueLo = 0
+    el.valueHi = 100
+    document.body.append(el)
+    const rail = el.railEl!
+    ;(rail as unknown as Record<string, unknown>)['setPointerCapture'] = (): void => {}
+    Object.defineProperty(rail, 'getBoundingClientRect', {
+      value: (): DOMRect => ({ left: 0, right: 100, width: 100, top: 0, bottom: 10, height: 10, x: 0, y: 0, toJSON: (): unknown => ({}) } as DOMRect),
+      configurable: true,
+    })
+    const part = el.valueEl!
+    expect(part.hidden).toBe(true)
+    rail.dispatchEvent(new PointerEvent('pointerdown', { clientX: 10, pointerId: 1, bubbles: true }))
+    expect(part.hidden).toBe(false)
+    await el.updateComplete
+    expect(part.textContent).toBe('10 – 100')
+    el.remove()
+    vi.useRealTimers()
+  })
+
+  it('no ARIA regression — each thumb\'s own aria-valuetext still tracks its value while the visual readout stays aria-hidden', () => {
+    const el = make()
+    el.valueLo = 20
+    el.valueHi = 80
+    document.body.append(el)
+    expect(el.loThumb!.getAttribute('aria-valuetext')).toBe('20')
+    expect(el.hiThumb!.getAttribute('aria-valuetext')).toBe('80')
+    expect(el.valueEl!.getAttribute('aria-hidden')).toBe('true')
+    el.remove()
+  })
+
+  it('disconnect clears the pending hide timer (C10 zero-residue)', () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.valueLo = 20
+    document.body.append(el)
+    dispatchKey(el.loThumb!, 'ArrowRight')
+    el.remove() // disconnected() clears the timer
+    expect(() => vi.advanceTimersByTime(5000)).not.toThrow()
+    vi.useRealTimers()
   })
 })
 
