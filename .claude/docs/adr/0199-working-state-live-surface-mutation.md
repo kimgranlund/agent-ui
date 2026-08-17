@@ -184,3 +184,12 @@ surface breathes) with zero selector conflict.
 - **`aria-busy` as the carrier** — rejected: a real platform AX semantic with announcement
   consequences this presentation-only state must not accidentally claim; the vocabulary precedent is
   `ElementInternals` custom states.
+
+## Implementation note (2026-08-17, mechanical deviation — Kim nod, find-open-questions round)
+
+The shipped overlay rides **`::before`**, not the `::after` this ADR's Decision names: the surface
+part's `::after` was already ADR-0187's empty/terminal-empty placeholder channel at build time
+(PR #1118), so the breathing overlay took the free pseudo-element instead. Behavior, tokens,
+precedence, and reduced-motion arms are exactly as ruled — the deviation is the pseudo-element
+slot only, documented in `surface-host.css` and pin-tested. Recorded here so the ADR stays
+truthful to the shipped mechanism; not a Decision change, no re-ratification implied.
