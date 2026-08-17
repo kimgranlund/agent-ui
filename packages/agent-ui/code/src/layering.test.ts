@@ -88,6 +88,17 @@ describe('import layering — code/src imports only down the DAG', () => {
     const violations = specifiersOf(src).filter((s) => !isAllowedCodeSpecifier(s))
     expect(violations).toEqual([dataSpecifier])
   })
+
+  // ADR-0200 clause 1 — the same extension law applied to the devtools mint: the harness sits at the
+  // DAG top (`a2ui ← devtools`, `a2a ← devtools`); code reaching it would be an upward import.
+  // Assembled at runtime — devtools/src/layering.test.ts's own inward-scan reads code/src raw
+  // INCLUDING test files (the same trap the @agent-ui/data control above documents).
+  it('synthetic-violation: the matcher flags an @agent-ui/devtools import (the harness sits at the DAG top, ADR-0200)', () => {
+    const devtoolsSpecifier = ['@agent-ui', 'devtools'].join('/')
+    const src = `import { recordTurn } from '${devtoolsSpecifier}'\n`
+    const violations = specifiersOf(src).filter((s) => !isAllowedCodeSpecifier(s))
+    expect(violations).toEqual([devtoolsSpecifier])
+  })
 })
 
 describe('components/src, a2ui/src and shared/src never import @agent-ui/code (the catalog fence is structural)', () => {

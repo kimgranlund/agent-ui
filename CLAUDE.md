@@ -61,6 +61,18 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   `@agent-ui/shared`; a FOURTH sibling branch off `components` alongside `router`/`code`, catalog-invisible
   by construction (never imported by `a2ui`); persistence is deliberately NOT this package's (`@agent-ui/shared`'s
   `StorageAdapter` seam, GH #959)
+- `packages/agent-ui/devtools/` — `@agent-ui/devtools`, the chat & A2UI dev/debug harness (ADR-0200): a
+  three-backend transport shelf behind the unchanged ADR-0137 `AgentTransport` seam (`replayTransport`/
+  `scriptTransport` — deterministic canned timelines, the CI backbone; `proxyTransport` — the existing
+  `/__a2ui/agent` dev-proxy mount over HTTP ONLY; `peerTransport` — an A2A peer over `A2aChannel`), backend
+  descriptor rows (`listBackends`), the `DevtoolsEvent` NDJSON timeline vocabulary + `recordTurn`, and the
+  `DevtoolsCapture` format on the `.` barrel; `./server` (the dev-only `/__devtools` Vite orchestration
+  seam, `apply:'serve'`) and `./playwright` (types-only helper — Playwright never a runtime dep) are opt-in
+  subpaths the `.` barrel never imports; dependencies exactly `{@agent-ui/a2ui, @agent-ui/a2a}`, zero
+  third-party runtime deps — a TOP-TIER consumer above the catalog (`shared ← components ← a2ui ← {app,
+  devtools}`, plus `a2a ← devtools`), never imported by anything below it; no key, provider adapter, or
+  `produce()` ever enters this package (the ADR-0073 trust boundary stays at `/__a2ui/agent`); the harness
+  PAGE itself stays site-internal (`site/pages/devtools-harness.*`, the ADR-0137 placement law)
 - `.claude/docs/` — plan, goals, process, references, adr, prd, spec, lld, decompositions, tickets, rubrics, archive (agent-scoped project docs; the doc grammar + status law: `.claude/skills/doc-standards/`) · `*.test.ts` co-located with source. `tickets/` is a FROZEN historical archive (98 files through TKT-0096) — new work items route to GitHub Issues instead (ADR-0145; the full label/status/Findings mapping lives in `.claude/skills/doc-standards/`, the canonical home — GH #761 trimmed the copy that used to sit here). The decision/contract tiers (ADR/PRD/SPEC/LLD) and living-state docs (PLAN/ROADMAP) stay files on this map, always; only the TICKET tier moved.
 
 ## Conventions (non-obvious only)
@@ -71,7 +83,10 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   the explicit `.ts` on local imports.
 - Vite 8 is Rolldown-based (not esbuild/Rollup) — bundler/plugin behaviour follows Rolldown-Vite.
 - Imports point inward only: layers `reactive` ← `dom` ← `traits`/`controls`; cross-package the DAG is
-  `shared` ← `components` ← `a2ui` ← `app`, with `router`, `code` AND `data` as sibling branches off
+  `shared` ← `components` ← `a2ui` ← {`app`, `devtools`} — `devtools` is the SECOND top-tier consumer
+  (ADR-0200), depending exactly on `a2ui` + `a2a` (`a2a` ← `devtools`); `app` and `devtools` are PEERS
+  (neither imports the other), and nothing — incl. `a2ui`, `a2a`, `components` — ever imports `devtools` —
+  with `router`, `code` AND `data` as sibling branches off
   `components` (`shared` ← `components` ← {`router`, `code`, `data`}) — none of `router`/`code`/`data`
   imports `a2ui`; `a2ui` never imports any of them, and `app` may import `code` (the editor surface,
   ADR-0139) but never `router` (catalog-invisible by construction, ADR-0115) — `data` is unconsumed by

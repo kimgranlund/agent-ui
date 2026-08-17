@@ -281,6 +281,13 @@ export default defineConfig({
       // type-only `./agent/meta-line` imports elsewhere) needs to resolve it WITHOUT dragging in the Node-first
       // `./agent` barrel (system-prompt.ts/mini-skills.ts `readFileSync` at load).
       '@agent-ui/a2ui/agent/genui-line': r('./packages/agent-ui/a2ui/src/agent/genui-line.ts'),
+      // The a2ui `./agent/meta-line` subpath (ADR-0088's envelope + guard) — mirrors the package's exports
+      // map, placed BEFORE the broader `./agent` entry for the same prefix-match reason as `genui-line`
+      // above: this is the ZERO-DEP, browser-safe module. `@agent-ui/devtools` (ADR-0200) is its first
+      // cross-package VALUE consumer (`readMetaLine`/`formatErrorLine` — the replay exhausted-idiom and
+      // recordTurn's meta-vs-line routing) and must not drag in the Node-first `./agent` barrel
+      // (system-prompt.ts/mini-skills.ts `readFileSync` at load).
+      '@agent-ui/a2ui/agent/meta-line': r('./packages/agent-ui/a2ui/src/agent/meta-line.ts'),
       '@agent-ui/a2ui/agent': r('./packages/agent-ui/a2ui/src/agent/index.ts'),
       '@agent-ui/a2ui': r('./packages/agent-ui/a2ui/src/index.ts'),
       // ADR-0139 — the `./editor` subpath (ui-code-editor). `@agent-ui/app`'s entry-list.ts/agent-admin.ts are
@@ -294,6 +301,12 @@ export default defineConfig({
       // The A2A arena's zero-dep surface (board/referee/transcript/isolation, LLD-C11) — mirrors the
       // `@agent-ui/a2ui` broad alias above; the site demo page is its first consumer.
       '@agent-ui/a2a': r('./packages/agent-ui/a2a/src/index.ts'),
+      // @agent-ui/devtools (ADR-0200) — the dev/debug harness package. Subpath entries BEFORE the broad
+      // entry (the same prefix-match ordering discipline as every subpath row above); mirrors the
+      // package's exports map (`.` · `./server` · `./playwright`).
+      '@agent-ui/devtools/server': r('./packages/agent-ui/devtools/src/server/index.ts'),
+      '@agent-ui/devtools/playwright': r('./packages/agent-ui/devtools/src/playwright/index.ts'),
+      '@agent-ui/devtools': r('./packages/agent-ui/devtools/src/index.ts'),
     },
   },
 })
