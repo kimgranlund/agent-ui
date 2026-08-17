@@ -48,6 +48,11 @@ const BESPOKE_EXEMPT = new Set([
   // tokens.css); a stock export that never produces the aliased role never produces the alias either.
   '--md-sys-color-neutral-scrollbar-thumb',
   '--md-sys-color-neutral-scrollbar-thumb-hover',
+  // ADR-0196 (GH #1065) — pure aliases of core roles (`var(--md-sys-color-neutral-container-low)` /
+  // `-on-surface-variant`, tokens.css ⑤); same class as the scrollbar aliases above: a pack that
+  // re-themes the underlying roles re-themes these for free, and a stock export never mints --ui-*.
+  '--ui-answered-bg',
+  '--ui-answered-ink',
 ])
 
 /** name -> declared value (the FIRST `:root`/`[theme=...]` block only — every pack + tokens.css is
