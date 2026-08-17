@@ -8,8 +8,7 @@ description: >-
   actions, and validity checks, plus the bounded compose→validate→self-correct loop.
   NOT for ui-* control source (component-build), a2ui package/renderer/catalog
   code (a2ui-build-agent), corpus curation (a2ui-corpus-curation), docs-site pages (site-authoring),
-  or direct-DOM feature composition with shipped controls — no wire protocol involved
-  (ui-composition).
+  or direct-DOM composition with shipped controls, no wire protocol (ui-composition).
 user-invocable: true
 disable-model-invocation: false
 ---
