@@ -14,6 +14,11 @@
 > ORTHOGONAL state axis — §5, async freshness — a `:state(pending)` host custom state + the
 > `--ui-pending-duration`/`--ui-pending-opacity` token pair, dimming stale content while a fresh answer is
 > in flight. First consumer: `ui-status-stream` (GH #999).
+> **Amended 2026-08-17 ([ADR-0196](../adr/0196-answered-state-law-questionnaire-settle-edit-amend.md)):** a
+> FIFTH, orthogonal axis — §6, answer settlement — a `:state(answered)` host custom state + the
+> `--ui-answered-bg`/`--ui-answered-ink` alias pair on the choice-control family, precedence
+> `disabled > pending > answered > focus > hover > filled > default`; consumed by the A2UI questionnaire
+> card's settle/edit-amend flow.
 
 ## The four states (the one frame)
 
@@ -378,6 +383,54 @@ not fetched) is one valid wiring, a reactive query-signal read inside `source()`
 comment) is another. This section fixes the STATE NAME and the TOKEN PAIR, not the composition logic —
 mirroring how §1b fixed the five-state table without dictating each component's own emptiness detection.
 
+## 6 · Answered / settled choice — the answer-settlement state (ADR-0196)
+
+A FOURTH state axis, orthogonal to the base states (§1), the entry-control filled law (§1b) and async
+freshness (§5): whether a CHOICE control holds a CONFIRMED answer — settled by a consuming surface (the
+A2UI questionnaire card's submit) — as opposed to being live for entry. The TKT-0062/ADR-0191 SHAPE
+re-applied a third time (fill → §1b, async freshness → §5, answer settlement → here). Scope: the choice
+controls a questionnaire answer renders through — `ui-radio-group` (its `ui-radio` children painted via
+the group's state; `ui-segmented-control` inherits the wiring) · `ui-checkbox` · `ui-switch` ·
+`ui-segmented-control` · `ui-select` · `ui-multi-select` · `ui-combo-box`. Free-text entry controls are
+OUT of scope — they settle at the card level.
+
+**[a] One host custom state: `:state(answered)`** — deliberately NOT `settled` (already taken by
+`ui-status-stream`, a different axis — one selector token must not mean two things). The CONSUMING
+SURFACE sets a public boolean prop (`answered`, in the control's `static props`); the control's own
+`connected()` effect mirrors it into `this.internals.states?.add('answered')` / `.delete('answered')` —
+the exact `trackUserInvalid`/§5[a] split. Presentation-only, never AX-reflected: an answered control is
+NOT disabled and NOT readonly at the platform level (correction stays live — the GH #805
+disable-on-submit posture is retired).
+
+**[b] One token pair: `--ui-answered-bg` + `--ui-answered-ink`** — minted in `tokens.css` as PURE
+ALIASES (`--ui-answered-bg: var(--md-sys-color-neutral-container-low)`,
+`--ui-answered-ink: var(--md-sys-color-neutral-on-surface-variant)`), zero new literals. The answered
+treatment is a ROLE-REPOINT (the TKT-0047/§1b canon — the control's parts are its OWN known chrome),
+never an opacity dim (§5's opacity exception covers arbitrary unknown-depth stale content only, and a
+whole-control dim would dim the selected answer, the one thing that must stay legible). Inside its
+`:state(answered)` rule each control repoints its own `--ui-{cmp}-{bg,ink}` chain to the
+`--ui-answered-*` pair (the §1b[b] token-repoint mechanic, never a direct `color:`); only the UNSELECTED
+options and the frame step back — the selected indicator keeps its existing selected tokens untouched.
+Any layered tint obeys the G9 14%-alpha ceiling; the default treatment needs none.
+
+**[c] Precedence, fixed: `disabled > pending > answered > focus > hover > filled > default`** —
+`disabled` terminal (fleet canon); `pending` over `answered` (an in-flight amendment reconcile must stay
+visible over the settled treatment; the two compose mechanically — opacity vs role-repoint — but where
+CSS must pick a message, pending wins); `answered` over focus/hover/filled because hover/focus repaints
+are live-entry AFFORDANCE signals and the settle flow moves the "change this" signal to the card's Edit
+affordance. `user-invalid` stays orthogonal, exactly as §1b left it. Implementation is §1b[a]'s law:
+MUTUAL EXCLUSION via `:not()` guards on every state selector, never source-order/specificity — every
+answered rule excludes disabled + pending; every hover/focus/filled rule additionally excludes
+`:state(answered)`.
+
+**[d] The consuming template contract (the A2UI questionnaire/multiple-choice card)** — on submit the
+card SETTLES, never disappears: options collapse to the selected answer(s) + one compact summary row
+(the Edit-anchor law — full removal is banned; Edit needs a durable anchor), and the still-rendered
+choice controls carry `answered`. Edit re-opens the options and clears `answered` for the edit's
+duration; a confirmed change appends an amendment turn ("Changed: X → Y") reconciled FORWARD (never a
+rewrite/rewind); re-confirming the same answer appends nothing. The Edit affordance is a plain fleet
+button within the seven-member event vocabulary (ADR-0153) — no eighth event name.
+
 ## Mechanization
 
 Each state lands with a probe (per [`process.md`](../process.md)) — a state without a probe is not enforced.
@@ -423,5 +476,10 @@ and open questions:
   `:state(pending)` + the `--ui-pending-duration`/`--ui-pending-opacity` token pair, composing with
   `ui-status-stream`'s existing `:state(settled)` rather than being cleared by it; the styling companion to
   the `pendingComputed` trait (GH #974).
+
+- [**ADR-0196**](../adr/0196-answered-state-law-questionnaire-settle-edit-amend.md) — the answer-settlement
+  state (§6): `:state(answered)` + the `--ui-answered-bg`/`--ui-answered-ink` alias pair, precedence-composed
+  under disabled/pending and over the TKT-0062 states; consumed by the A2UI questionnaire card's
+  settle/edit-amend (append-amendment) flow.
 
 Colour ladders: [`tokens.md`](./tokens.md). Box law the ring must not perturb: [`geometry.md`](./geometry.md).
