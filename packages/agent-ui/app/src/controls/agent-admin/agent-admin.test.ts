@@ -534,11 +534,14 @@ describe('mountEntryList — the entryDrawer option, both modes (GH #917)', () =
     const { section } = mountDrawered([ROW, BUILTIN])
     openRow(section, 'a')
     const actions = (section.host.querySelector('[data-part="entry-form-done"]') as HTMLElement).parentElement!
-    expect([...actions.children].map((n) => n.getAttribute('data-part')), 'Remove shares the actions row with Done').toEqual(['entry-delete', 'entry-form-done'])
+    // GH #1086 — the teaching line is VISIBLE beside Remove (no hover needed), never only a `title`.
+    expect([...actions.children].map((n) => n.getAttribute('data-part')), 'Remove + its visible teaching line share the actions row with Done').toEqual(['entry-delete', 'entry-remove-hint', 'entry-form-done'])
+    expect(actions.querySelector('[data-part="entry-remove-hint"]')!.textContent).toBe('Toggling it off keeps it in the list.')
+    expect((actions.querySelector('[data-part="entry-delete"]') as HTMLElement).title, 'no hover-only copy diverging from the visible line').toBe('')
     ;(section.host.querySelector('[data-part="entry-form-done"]') as HTMLElement).click()
     openRow(section, 'b')
     const builtinActions = (section.host.querySelector('[data-part="entry-form-done"]') as HTMLElement).parentElement!
-    expect([...builtinActions.children].map((n) => n.getAttribute('data-part')), 'structural absence — Done alone').toEqual(['entry-form-done'])
+    expect([...builtinActions.children].map((n) => n.getAttribute('data-part')), 'structural absence — Done alone, no orphaned hint').toEqual(['entry-form-done'])
   })
 
   it('no onDescriptionChange writer ⇒ the description renders read-only (the additive-optional law)', () => {

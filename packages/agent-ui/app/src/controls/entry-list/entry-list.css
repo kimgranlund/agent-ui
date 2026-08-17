@@ -332,15 +332,16 @@
      precisely so a consumer can repoint them — never a fourth `ui-button` variant for one consumer's use
      (that file's own reasoning, unchanged here). This file's own `--ui-entry-list-error-ink` role (the
      TOKEN block above) supplies the ink, so the button's danger colour and the section's existing error
-     text are the SAME role, never two divergent danger inks in one file. The teaching line
-     rides the button's own `title` now; the VERB ("Remove") is ADR-0057's own non-colour signifier. Scoped
-     to the FORM's footer only — the row's own inline Remove (non-drawered kinds) is untouched.
+     text are the SAME role, never two divergent danger inks in one file. The teaching line is a VISIBLE
+     paragraph beside the button again (GH #1086 — the #1063 move had demoted it to the button's hover
+     `title`, which teaches nobody on touch); the VERB ("Remove") is ADR-0057's own non-colour signifier.
+     Scoped to the FORM's footer only — the row's own inline Remove (non-drawered kinds) is untouched.
 
      GH #1063 ruling A — the destructive action lives in the drawer FOOTER beside Done (overturning #917's
-     danger-row law): the danger repoint keeps it tonally distinct, and `margin-inline-end: auto` pushes it
-     to the far START while Done keeps the far end, so the two never sit adjacent. */
+     danger-row law): the danger repoint keeps it tonally distinct, and `margin-inline-end: auto` (on the
+     hint, the row's LAST start-cluster member) pushes the Remove+hint pair to the far START while Done
+     keeps the far end, so destructive and primary never sit adjacent. */
   [data-part='entry-form-actions'] [data-part='entry-delete'] {
-    margin-inline-end: auto;
     --ui-button-bg: transparent;
     --ui-button-bg-hover: var(--md-sys-color-danger-container-low);
     --ui-button-bg-active: var(--md-sys-color-danger-container);
@@ -348,8 +349,20 @@
     --ui-button-border: var(--md-sys-color-danger-outline);
   }
 
+  /* GH #1086 — the visible teaching line beside Remove: `entry-form-hint`'s exact muted plane (same size,
+     same label ink — it teaches, it never alarms, so no danger ink), carrying the start-cluster's
+     `margin-inline-end: auto` so it hugs Remove while Done keeps the far end. Structurally absent for a
+     builtin (entry-form.ts's `!entry.builtin` gate, shared with the button itself). */
+  [data-part='entry-form-actions'] [data-part='entry-remove-hint'] {
+    margin: 0;
+    margin-inline-end: auto;
+    font-size: 0.8125rem;
+    color: var(--ui-entry-list-label-ink);
+  }
+
   [data-part='entry-form-actions'] {
     display: flex;
+    align-items: center;
     justify-content: flex-end;
     gap: var(--ui-entry-list-row-gap);
   }

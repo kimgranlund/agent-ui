@@ -478,17 +478,20 @@ export function buildEntryForm(
   // separated from) Done: entry-list.css pushes it to the far start (`margin-inline-end: auto`) and repoints
   // the danger tokens onto it, so it can never READ as the primary. Absent entirely for a builtin entry (the
   // `!entry.builtin` gate, ADR-0132 Fork 4 unchanged — the caller's `onDelete` keeps its defense-in-depth
-  // filter either way). The old danger row's teaching line rides the button's `title` now that there is no
-  // content block to hold a hint paragraph.
+  // filter either way). The old danger row's teaching line is a VISIBLE paragraph beside the button again
+  // (GH #1086 — a hover-only `title` teaches nobody on touch, and nobody who doesn't hover): same
+  // structural-absence gate as Remove itself, so a builtin footer never holds an orphaned hint.
   if (!entry.builtin) {
     const deleteBtn = formButton('entry-delete', 'Remove')
     deleteBtn.setAttribute('aria-label', `Remove ${entry.label}`)
-    deleteBtn.title = `Remove “${entry.label}” from this agent. Toggling it off keeps it in the list.`
     deleteBtn.addEventListener('click', () => {
       handlers.onDelete(entry.id)
       close() // the subject of this form no longer exists — the surface editing it must not outlive it
     })
-    footer.append(deleteBtn)
+    const removeHint = document.createElement('p')
+    removeHint.setAttribute('data-part', 'entry-remove-hint')
+    removeHint.textContent = 'Toggling it off keeps it in the list.'
+    footer.append(deleteBtn, removeHint)
   }
 
   const doneBtn = formButton('entry-form-done', 'Done')
