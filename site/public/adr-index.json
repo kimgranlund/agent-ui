@@ -1363,5 +1363,12 @@
     "description": "a fleet-wide answered/settled state law for choice controls (GH #1065): ONE :state(answered) host custom state + ONE --ui-answered-* token pair, precedence-com…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0197",
+    "url": "./adr-index.html#adr-0197",
+    "description": "the @agent-ui/app . barrel drops its static agent-admin arm: subpath-only static access plus a memoized loadAgentAdmin() lazy accessor; the app size budget ret…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

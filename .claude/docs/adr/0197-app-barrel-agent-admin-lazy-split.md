@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-17 |
 > | **Proposed by** | design seat (GH #1092 due-process design leg; measured hunt plan GH #1080 Findings, 2026-08-17) |
-> | **Ratified by** | *(pending — Kim)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-17, via the [`ratify ADR-0197` utterance](https://github.com/kimgranlund/agent-ui/issues/1092#issuecomment-5316618155) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build: `packages/agent-ui/app/src/index.ts` (the barrel edit) · `packages/agent-ui/app/package.json` (two new subpaths, clause 2) · `scripts/measure-size.mjs` (`APP_MARGINAL_BUDGET` 103 → 102 KB + ledger note, clause 5) · every site/app consumer importing an agent-admin symbol from the `.` barrel (repoint to subpaths, clause 3) · GH #1092 (the owning issue) |
 > | **Supersedes / Superseded by** | *(none)* — extends the lazy-split line of [ADR-0139](./0139-codemirror-editor-first-runtime-dependency.md) cl.8 (identity/lazy gates) · GH #354 (dogfood-lazy) · GH #468 pass 1 (markdown-lazy); relates [ADR-0131](./0131-agent-admin-ui-scope-and-composition.md) / [ADR-0132](./0132-agent-admin-instructions-capabilities-architecture.md) (the surface being split) |
 
