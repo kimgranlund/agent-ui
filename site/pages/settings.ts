@@ -229,6 +229,7 @@ content.append(
   ),
 )
 content.append(codeBlock(extractInterface(settingsMemoryStoreRaw, 'MemoryStoreOptions'), 'ts'))
+content.append(para('The seam itself — the async ', code('StorageAdapter'), ' interface, its localStorage/IndexedDB tiers, and how it differs from this sync ', code('SettingsStore'), ' — is its own guide: ', (() => { const a = document.createElement('a'); a.href = './persistence.html'; a.textContent = 'Persistence'; return a })(), '.'))
 
 content.append(sectionHeading('API reference'))
 content.append(

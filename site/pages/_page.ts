@@ -583,6 +583,11 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './entry-list.html', label: 'Entry List' }],
   },
   {
+    // @agent-ui/shared's StorageAdapter seam (ADR-0193, GH #1046) — the SAME ungrouped-site-level-link
+    // posture as Data/Traits just above: a GUIDE page for a seam, not a fleet component in components/src.
+    links: [{ href: './persistence.html', label: 'Persistence' }],
+  },
+  {
     // ui-agent-admin (@agent-ui/app, TKT-0039/ADR-0131) — the SAME ungrouped-site-level-link posture as
     // Super Shell/Master Detail/Settings just above: a GUIDE page for an app-tier composition (ui-split +
     // ui-settings + ui-conversation), not a fleet component in components/src. Agent Admin App joins here
