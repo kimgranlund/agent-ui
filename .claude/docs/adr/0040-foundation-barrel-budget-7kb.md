@@ -98,7 +98,7 @@ Kim ruled: **bump the foundation barrel to 7 kB.**
 - **Leave `size` a manual run** — rejected as the durable answer (kept only as the *immediate* step). A silent
   ratchet is how the overage hid; the recommendation (S3) wires it into the gate.
 
-## Amendment (2026-08-16, **proposed** — Kim ratifies) — the `components` family-barrel row re-based 55 KB → 56 KB (56320 → 57344 B gz; measured 56718 B gz on main@f1c06fd1) — GH [#1009](https://github.com/kimgranlund/agent-ui/issues/1009)
+## Amendment (2026-08-16, **proposed** — Kim ratifies) — the `components` family-barrel row re-based 55 KB → 58 KB (56320 → 59392 B gz; measured 58485 B gz on main@0a6df860) — GH [#1009](https://github.com/kimgranlund/agent-ui/issues/1009)
 
 > Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
 > byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment
@@ -106,7 +106,9 @@ Kim ruled: **bump the foundation barrel to 7 kB.**
 > `scripts/adr_ratify.py`'s amendment mode, GH #664). Every accepted section above — Context, Decision
 > cl.1–cl.3, Consequences, AC1–AC3 — is unedited. GH [#1009](https://github.com/kimgranlund/agent-ui/issues/1009)
 > is the durable record; Kim's in-chat ruling is recorded in `.claude/ops/rulings.md` ("ADR-0040 +
-> ADR-0008 — RULED 2026-08-16").
+> ADR-0008 — RULED 2026-08-16"): *re-base the budget line to the measured value via a PROPOSED
+> ADR-0040 amendment* — this ONE row, nothing else (the scope note under cl.A1 records what the same run
+> also reports and deliberately leaves alone).
 
 **Why this lands on ADR-0040.** cl.2 above named the self-defining `components` family barrel
 (`src/controls/index.ts`) at "≤ 8 kB, unchanged" and drew the law every later re-base of that row has
@@ -117,13 +119,17 @@ own comment ladder (23 KB → … → 55 KB, the last on 2026-08-12, GH #751). K
 this one through ADR-0040 itself, so the barrel-budget re-base record has a durable home in the ADR log,
 not only in a script comment.
 
-**cl.A1 — the ruling (GH #1009): family barrel 55 KB → 56 KB.** `npm run size` on main@f1c06fd1
-(2026-08-16, `npm ci` fresh, Rolldown minify + gzip level 9) reports the row at **56718 B gz (214207 B
-min) — OVER budget (56320 B gz)** by **398 B**. The line is re-based to **56 KB = 57344 B gz** — the
-measured 56718 plus **626 B (~1.1 %) stated headroom**, the same clean-KB-boundary + small-margin shape
-as the 2026-08-08 (53 → 54 KB) and 2026-08-12 (54 → 55 KB) rungs. Attributed by checking out each mover
-and re-measuring this same barrel in place (the GH #354 convention); the ladder reconciles to the byte
-(55574 + 1144 = 56718):
+**cl.A1 — the ruling (GH #1009): family barrel 55 KB → 58 KB.** `npm run size` on main@0a6df860
+(2026-08-16, `npm ci` fresh, Rolldown minify + gzip level 9) reports the row at **58485 B gz (219733 B
+min) — OVER budget (56320 B gz)** by **2165 B**. The line is re-based to **58 KB = 59392 B gz** — the
+measured 58485 plus **907 B (~1.5 %) stated headroom**, the same clean-KB-boundary + small-margin shape
+as the 2026-08-08 (53 → 54 KB) and 2026-08-12 (54 → 55 KB) rungs (57 KB = 58368 would already be under
+the measured value, so 58 KB is the lowest clean-KB line that covers it). The ruling was recorded against
+"312 B over" (56632 B gz at `f6ef3096`); the first draft of this amendment measured 398 B over (56718 at
+`f1c06fd1`) and proposed 56 KB; the 2026-08-16 board-clear then merged two more movers (#1018, #1020)
+before this amendment could land, so the "measured value" the ruling names is 58485. Attributed by
+checking out each mover and re-measuring this same barrel in place (the GH #354 convention); the ladder
+reconciles to the byte (55574 + 2911 = 58485):
 
 | commit | wave | family barrel B gz | Δ |
 |---|---|---|---|
@@ -133,38 +139,30 @@ and re-measuring this same barrel in place (the GH #354 convention); the ladder 
 | `4935ef20` | drawer content layout (#919) + the 2026-08-14 fix wave (#874 #910 #911 #915 #916, S2/S3) | 55777 | +75 |
 | `6356d4a1` | drawer scroll-fade mask fix + Manage-agents redesign (#922) | 55807 | +30 |
 | `076790d3` | `overlay()` CSS anchor-positioning progressive enhancement (#973) — **the mover that crossed the 56320 line** | 56530 | **+723** |
-| `282f0d55` | ui-swiper CSS-native candy (#983; the ADR-0008 dim revert, #1010, lands after this measurement) | 56632 | +102 |
+| `282f0d55` | ui-swiper CSS-native candy (#983) | 56632 | +102 |
 | `093e78f9` · `d2ba05a2` · `f6ef3096` | view-transition names (#984) · pendingComputed (#988, the "+0 B from #974" the ruling recorded) · rulings commit | 56632 | +0 (the ruling's "312 B over" figure = 56632 − 56320) |
 | `ab81d0bc` | ui-select internal parts survive `replaceChildren()` (#994/#1011) | 56718 | +86 |
 | `380e74c1` · `f1c06fd1` | list-reorder trait (#952/#1013 — +0 B, as the ruling recorded) · site recipe (#1014) | 56718 | +0 |
+| `ab9b360d` · `5706b7e5` | scroll-spy trait (#964/#1015 — not pulled by the barrel) · the ADR-0008 swiper dim revert (#1010/#1016 — CSS/test/doc only) | 56718 | +0 (measured at `5706b7e5`) |
+| `decbb4f7` | ui-drill N-level drill-down container mint (#954/#1018, ADR-0195 proposed) — **the mover that crossed the 57344 (56 KB) line** | 58153 | **+1435** |
+| `9be3b374` | pendingComputed AbortSignal per generation (#1003/#1019 — a trait, not pulled until consumed) | 58153 | +0 |
+| `86e80f9c` | status-stream as the first `pendingComputed` consumer + `:state(pending)` (#999/#1020, ADR-0191 booked repairs) | 58485 | +332 |
+| `830ea612` · `1773c7c6` · `0a6df860` | settings listener fix (#1004/#1023) · dialog-polyfill lift (#1006/#1024, test-only) · empty-state row / skill trim / app memory-store adapter (#1025 #1026 #1027 — none touch `components/`) | 58485 | +0 |
 
-Every rung is reviewed, merged weight (a new control, an overlay-wide progressive enhancement, fixes),
-not a gzip-dictionary artifact and nothing to shave; the per-control leg (T5, ADR-0080) stays the real
-gate and every control's marginal is unchanged by this re-base. The 86 B between the ruling's 312 B and
-today's 398 B is #1011, merged after the ruling was recorded. Same law as every rung above: a
-CHECKPOINT, not a ratchet — GH #455 remains the standing shrink follow-up.
+Every rung is reviewed, merged weight (two new controls, an overlay-wide progressive enhancement, a
+ruled ADR-0191 repair, fixes), not a gzip-dictionary artifact and nothing to shave; the per-control leg
+(T5, ADR-0080) stays the real gate and every control's marginal is unchanged by this re-base. Same law as
+every rung above: a CHECKPOINT, not a ratchet — GH #455 remains the standing shrink follow-up.
 
-**cl.A2 + cl.A3 — two sibling rows also red on the same run, offered for the SAME ratification (beyond the
-in-chat ruling's literal scope — Kim keeps or strikes each before ratifying).** The ruling was recorded
-against a run that reported only the family barrel red; on main@f1c06fd1 the same `npm run size` also
-reports:
-
-- **cl.A2 — `status-stream` per-control marginal override 2386 → 2400 B gz.** Measured **2395 B gz
-  — OVER budget 2386 B** (2394 at `f6ef3096`, already over when the ruling was recorded; 2391 after #973,
-  2395 after #1011). `controls/status-stream/` has **no commit since the 2026-08-13 bump** (`git log
-  --since=2026-08-12 -- packages/agent-ui/components/src/controls/status-stream` is empty): the fourth
-  instance of the SAME leave-one-out gzip-dictionary drift class the override's own reason string
-  records (2107 → 2176 → 2192 → 2384 → 2386), each prior rung a Kim ruling. 2400 = measured + 5 B.
-- **cl.A3 — `@agent-ui/app` marginal budget 100 KB → 104 KB (102400 → 106496 B gz).** Measured
-  **marginal 102459 B gz — OVER budget (102400 B gz)** by 59 B (solo 110118 B gz, 415508 B min).
-  Ladder: 99217 at `4935ef20` (2026-08-15) → 101633 after #973 (+2379 — the app composes the overlay
-  controls, so the anchor-positioning enhancement lands here too) → 101800 at `f6ef3096` (#984 +22 ·
-  #988 +50) → 102459 after #1011 (+99 via ui-select). 104 KB keeps the file's own ~3.7 % margin
-  discipline for this row (4037 B, ~3.9 %); a tighter 101 KB (103424 B gz, 965 B) is the alternative if
-  Kim prefers the family-barrel-style small headroom. GH #468 stays the standing app-diet follow-up.
-
-If cl.A2/cl.A3 are struck, the two constants revert in the same commit and `npm run size` stays red on
-those two rows pending their own rulings; cl.A1 alone does NOT make the gate exit 0.
+**Scope — observed on the same run, deliberately NOT re-based here (Kim's ruling is this one row).** The
+same `npm run size` on main@0a6df860 also reports two sibling rows over: the `status-stream` per-control
+marginal override (**2736 B gz vs 2710** — the row #1020 itself set from a pre-merge 2707 measurement;
+26 B) and the `@agent-ui/app` marginal (**104175 B gz vs 102400**; the ladder 102459 at `f1c06fd1` →
+103617 after #1018 → 103919 after #1020 → 103915 after #1023 → 104175 after #1027 — the app composes
+the family, so the same movers land here, plus its own). Both are pre-existing on main, outside this ruling's literal scope, and left red on purpose: each
+is its own recorded ruling when it comes (GH #468 stays the standing app-diet follow-up); this amendment
+mints nothing for them. cl.A1 alone therefore does NOT make the gate exit 0 — the ONE row it names reads
+within budget on the carrying commit; the remaining red is exactly those two rows.
 
 **Observed, not re-based (🟡 for the next dom addition).** The `.` foundation barrel — the row this ADR
 originally re-based — measures **7659 B gz (21611 B min) against 7680 B gz**: within, with **21 B** of
@@ -173,12 +171,13 @@ move when it comes (Consequences above: "the next dom addition has room and a tr
 holds — recorded here so it is not a surprise).
 
 **Repairs (shipped WITH this amendment, in the same commit — nothing owed on ratification):**
-`scripts/measure-size.mjs` (the family row `55 * KB` → `56 * KB` + a comment citing this amendment;
-cl.A2/cl.A3's two constants likewise) · `.claude/docs/plan.md §10` (the "family barrel ≤ 8 kB" line —
-stale through eleven re-bases — now points at the live ledger + this amendment). Ratification flips
-this header only; the Status cell above stays `accepted`.
+`scripts/measure-size.mjs` (the family row `55 * KB` → `58 * KB` + a comment citing this amendment;
+no other constant touched) · `.claude/docs/plan.md §10` (the "family barrel ≤ 8 kB" line — stale
+through eleven re-bases — now points at the live ledger + this amendment). Ratification flips this header
+only; the Status cell above stays `accepted`.
 
-**Acceptance (checkable at ratification):** `npm run size` exits 0 on the commit that carries this
-amendment (all three rows within); the header above reads `**ratified**` only via `adr_ratify.py`
-amendment mode on Kim's `ratify ADR-0040 amendment`; `npx vitest run site/lib/adr.test.ts
-site/lib/docs-grammar.test.ts` green.
+**Acceptance (checkable at ratification):** on the commit that carries this amendment, `npm run size`
+reports the `@agent-ui/components/components (self-defining ui-* family)` row **within budget** (58485 B
+gz against 59392), and any remaining red is ONLY the two out-of-scope rows named under Scope; the header
+above reads `**ratified**` only via `adr_ratify.py` amendment mode on Kim's `ratify ADR-0040 amendment`;
+`npx vitest run site/lib/adr.test.ts site/lib/docs-grammar.test.ts` green.
