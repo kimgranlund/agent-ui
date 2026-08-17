@@ -30,6 +30,15 @@
   --ui-surface-host-stage-gap: var(--md-sys-space-md);
   --ui-surface-host-stage-pad: var(--md-sys-space-lg);
   --ui-surface-host-inline-inset: var(--md-sys-space-2xl); /* the calc() arm subtracted from 100% below — the 32rem cap itself has no ladder rung */
+  /* ADR-0199 / GH 1104 — the :state(working) breathing treatment's chain (TKT-0066 item 5: the fleet
+     --ui-working-* constants + the easing primitive are NOT direct-readable inside @scope — this block
+     routes all of them through the control's own chain, the --ui-status-stream-pending-* precedent). */
+  --ui-surface-host-working-duration: var(--ui-working-duration);
+  --ui-surface-host-working-opacity-min: var(--ui-working-opacity-min);
+  --ui-surface-host-working-opacity-max: var(--ui-working-opacity-max);
+  --ui-surface-host-working-blur: var(--ui-working-blur);
+  --ui-surface-host-working-color: var(--ui-working-color);
+  --ui-surface-host-working-easing: var(--md-sys-motion-easing-standard);
 }
 
 /* ════════════════ [ui-surface-host] STYLES — @scope (ui-surface-host) consumes ONLY --ui-surface-host-* ═══ */
@@ -129,7 +138,10 @@
     max-block-size: var(--ui-surface-host-wrap-max-block-size);
   }
   :scope[wrap] [data-part='surface'] {
-    position: static;
+    /* `relative`, not `static` (ADR-0199): layout-identical (in-flow either way — the point of this
+       rule is only to undo the base `absolute`), but keeps this box a containing block so the
+       :state(working) overlay's `inset: 0` (below) always resolves against the surface's own box. */
+    position: relative;
     transform: none;
     margin: auto; /* centers within the stage; collapses to 0 (never negative-scroll-clipped) when content exceeds the cap */
     inline-size: fit-content;
@@ -167,6 +179,54 @@
        content-derived), this box QUALIFIES as the mount boundary again: [bare] restores the query
        container that plain [wrap] had to drop. */
     container-type: inline-size;
+  }
+
+  /* ADR-0199 / GH 1104 — :state(working): the breathing diffused INNER-shadow overlay (interaction-
+     states.md §7). A pseudo-element OVERLAY whose OPACITY animates between the two rungs — never the
+     box-shadow value itself (opacity on a composited overlay is compositor-only, the ADR-0095
+     exemption shape; box-shadow interpolation repaints every frame). No geometry, no content dim, no
+     recolor — TKT-0062's channels stay closed; the sizing ramp never animates (§4[a] intact).
+     `::before`, NOT `::after`: the surface part's `::after` is already the ADR-0187 empty/terminal-
+     empty placeholder channel — a working+empty surface must keep its placeholder while breathing.
+     Anchoring: the base `[data-part='surface']` is absolutely positioned (a containing block already);
+     the [wrap] arm sets `position: relative` below — layout-identical to its previous `static` (both
+     are in-flow), minted so this overlay's `inset: 0` always resolves against the surface's own box.
+     Precedence (ADR-0199 cl.5, TKT-0062's law — :not() mutual exclusion, never source order): the rule
+     excludes the two states ABOVE working in `disabled > pending > working > answered > …`. This host
+     sets neither itself today; the guards are the fleet-law slot, live the day a consumer composes them. */
+  :scope:state(working):not(:state(disabled)):not(:state(pending)) [data-part='surface']::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    box-shadow: inset 0 0 var(--ui-surface-host-working-blur) var(--ui-surface-host-working-color);
+    opacity: var(--ui-surface-host-working-opacity-min);
+    animation: ui-surface-host-breathe var(--ui-surface-host-working-duration)
+      var(--ui-surface-host-working-easing) infinite alternate;
+  }
+
+  /* ADR-0199 cl.3 — reduced motion ⇒ STATIC, NEVER NOTHING: animation off, overlay held at the max
+     rung (a constant visible inner vignette). An animation that CARRIES STATE degrades to a legible
+     static form — removing it entirely would make reduced-motion users the only ones who can't tell a
+     live card from a dead one (§4[c] extended, not just obeyed). */
+  @media (prefers-reduced-motion: reduce) {
+    :scope:state(working):not(:state(disabled)):not(:state(pending)) [data-part='surface']::before {
+      animation: none;
+      opacity: var(--ui-surface-host-working-opacity-max);
+    }
+  }
+}
+
+/* ADR-0199 — the breathe cycle: OPACITY ONLY between the two rungs (compositor-only; `alternate
+   infinite` in the consuming rule above makes the min→max→min loop from this single ramp). Top-level —
+   @keyframes are not scope-sensitive; kept beside the @scope block like the forced-colors block below. */
+@keyframes ui-surface-host-breathe {
+  from {
+    opacity: var(--ui-surface-host-working-opacity-min);
+  }
+  to {
+    opacity: var(--ui-surface-host-working-opacity-max);
   }
 }
 
