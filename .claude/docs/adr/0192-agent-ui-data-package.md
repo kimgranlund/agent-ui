@@ -44,6 +44,7 @@
 - **The 2026-08-15 "fold, no package" ruling on #956 is superseded** by the 2026-08-16 ruling this record carries; the issue's comment stream shows both, dated — this ADR is where a future reader finds *why* the later one stands (Context).
 - **Persistence stays split by design**: `StorageAdapter` in `shared` (#959), cache hydration onto it a named v2 item here — two waves, one interface, no fork.
 - **Stale → re-verify at the build wave:** CLAUDE.md Layout/DAG rows · `measure-size.mjs` budgets (SPEC-R14; amend this row with measured numbers, never silently raise) · site nav/toc gates · every inward `layering.test.ts` · this record's Ratified-by field.
+  - **Build-wave measurement (2026-08-16, `npm run size`, min+brotli, gz alongside):** `.` **2822 B br** (3106 B gz, 8091 B min) vs the 6 kB budget · `./gateway` **1729 B br** (1928 B gz, 4198 B min) vs 3 kB · `./stream` **2042 B br** (2281 B gz, 5541 B min) vs 4 kB — all within, no re-base. The `.` figure is ABSOLUTE (not marginal-over-foundation): the barrel pulls only the reactive kernel from `@agent-ui/components`, which Rolldown tree-shakes to the kernel — the tree-shake probe asserts zero `./gateway`/`./stream` modules and no `HTMLElement`/`customElements` bytes in it (SPEC-R1 AC3, gated). CLAUDE.md rows, the four inward trip-wires, and `site/data-doc.html` (+ manifest/sitemap/llms rows) landed the same wave.
 
 ## Alternatives considered
 
