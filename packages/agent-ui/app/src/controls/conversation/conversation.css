@@ -237,10 +237,23 @@
     min-inline-size: 0;
   }
 
-  /* A closed surface's bubble (SPEC-R7) — dimmed as VISIBLE, non-interactive history (its rendered DOM is
-     already gone; this is only the visual cue). */
-  [data-part='bubble'][data-role='agent'][data-state='closed'] {
+  /* A closed surface (SPEC-R7) — dimmed as VISIBLE, non-interactive history (its rendered DOM is
+     already gone; this is only the visual cue). GH 1061: the dim targets the closed HOST, never the
+     whole bubble — a `[data-state='closed']` stamp on the bubble used to dim the turn's own prose too,
+     misreading live narration as torn-down history (and a resumed turn's mounts can hold several hosts,
+     of which only ONE closed). The bubble-level stamp remains (identity/history marker); it just no
+     longer carries the opacity. */
+  [data-part='mounts'] ui-surface-host[data-state='closed'] {
     opacity: 0.6;
+  }
+  /* GH 1061 — a disposed host's mount is `:empty` again, so surface-host.css's ANTICIPATORY placeholder
+     ("The rendered surface appears here.") would resurrect on dead history — a promise about the future
+     on a closed surface. Suppress it once closed; the ADR-0187 terminal-empty message ("Nothing was
+     rendered for this surface.", `data-empty-final` — stamped by the pre-dispose finalize() in
+     `#closeSurface`) is TRUTHFUL history and stays visible. Specificity (0,5,1) beats both surface-host
+     rules ((0,2,1) anticipatory, (0,3,1) terminal) — scope proximity only tiebreaks EQUAL specificity. */
+  [data-part='mounts'] ui-surface-host[data-state='closed']:not([data-empty-final]) [data-part='surface']:empty::after {
+    content: none;
   }
   [data-part='annotation'] {
     margin: 0.3rem 0 0;
