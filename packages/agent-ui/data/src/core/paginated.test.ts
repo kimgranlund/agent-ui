@@ -60,6 +60,27 @@ describe('paginated() — SPEC-R7', () => {
     expect(fetchPage.mock.calls.some((c) => c[0] === undefined)).toBe(true)
   })
 
+  it('a loadMore() page that lands AFTER an invalidate reset is dropped, never appended onto the stale list (identity race guard)', async () => {
+    const store = createStore()
+    let resolveSecond!: (p: Page) => void
+    const fetchPage = vi.fn((cursor: number | undefined) => {
+      if (cursor === 1) return new Promise<Page>((res) => { resolveSecond = res }) // the slow page-2 fetch
+      return Promise.resolve(fixturePages[cursor ?? 0])
+    })
+    const p = paginated<Page, number>('feed-race', fetchPage, { store, getNextCursor: (last) => last.next })
+    await flushMicrotasks()
+    expect(p.pages.value.length).toBe(1)
+    const more = p.loadMore() // page 2 in flight...
+    store.invalidate('feed-race') // ...meanwhile the list is reset to a fresh first page
+    await flushMicrotasks()
+    expect(p.pages.value.length).toBe(1)
+    resolveSecond(fixturePages[1]) // the stale page-2 result lands late
+    await more
+    await flushMicrotasks()
+    expect(p.pages.value).toEqual([fixturePages[0]]) // dropped — the fresh first page stands alone
+    expect(p.hasMore.value).toBe(true)
+  })
+
   it('loadMore() is a no-op once exhausted', async () => {
     const store = createStore()
     const fetchPage = makeFetchPage()

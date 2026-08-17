@@ -29,7 +29,7 @@
 // marginal semantics as T5, one level up: `marginal = gz(bundle(app .)) − gz(bundle(components .))`.
 
 import { rolldown } from 'rolldown'
-import { gzipSync } from 'node:zlib'
+import { gzipSync, brotliCompressSync } from 'node:zlib'
 import { fileURLToPath } from 'node:url'
 import { readFileSync } from 'node:fs'
 import { dirname, resolve as resolvePath } from 'node:path'
@@ -725,6 +725,70 @@ console.log(
   `@agent-ui/code/editor — the lazy CodeMirror chunk(s) (dynamic import('./cm-editor.ts'), never in any main bundle): ${editorLazyGz} B gz (informational, non-gating — ADR-0139 cl.8c/8d)`,
 )
 
+// ── @agent-ui/data (ADR-0192, saas-data-utilities.spec.md SPEC-R14 c + SPEC-R1 AC3) — the headless SaaS
+// data layer, the FOURTH sibling branch off components (`shared ← components ← {a2ui, router, code, data}`).
+// Three per-surface line-items (SPEC-R14 c names all three): the `.` barrel (seam + store + resource/
+// mutation/paginated + DataError), `./gateway` (client onion + token + retry), `./stream` (bridge + adapters).
+// Measured ABSOLUTE, not marginal-over-foundation: `.` imports ONLY the reactive kernel from
+// @agent-ui/components (`signal`/`computed`), which Rolldown tree-shakes down to the kernel — the bundle
+// carries no `HTMLElement`/`customElements` (asserted below), so there is no "components foundation" inside
+// it to subtract; `./gateway` and `./stream` import no @agent-ui/components code at all. Budgets are the
+// SPEC's (PRD-D6 recommendation, sized against the router's core line-item), stated in min+BROTLI — brotli
+// is therefore the GATED unit here (gz printed alongside for comparability with the sibling rows above).
+// SPEC-R14 AC2: a breach is recorded in ADR-0192's Consequences with the measured number — never silently
+// raised here.
+//   Measured 2026-08-16 (build wave, post code-checker repairs): `.` 2822 B br (3106 B gz, 8091 B min) ·
+//   `./gateway` 1729 B br (1928 B gz, 4198 B min) · `./stream` 2042 B br (2281 B gz, 5541 B min).
+// The tree-shake probe (SPEC-R1 AC3): bundling `.` alone reaches NO module under data/src/gateway or
+// data/src/stream (module-graph shape, from Rolldown's own chunk.modules map) and the minified text carries
+// none of the four named symbols (`createGateway`/`withRetry`/`fromFetchStream`/`fromWebSocket`).
+const dataPkgDir = fileURLToPath(new URL('../packages/agent-ui/data', import.meta.url))
+const DATA_BUDGETS = {
+  '.': 6 * KB,
+  './gateway': 3 * KB,
+  './stream': 4 * KB,
+}
+/** Bundle one real entry; return min/gz/br byte sizes + the included module ids (the tree-shake shape). */
+const measureDataEntry = async (entryPath) => {
+  const bundle = await rolldown({ input: entryPath })
+  const { output } = await bundle.generate({ format: 'esm', minify: true })
+  await bundle.close()
+  const chunks = output.filter((c) => c.type === 'chunk')
+  const code = chunks.map((c) => c.code).join('')
+  const moduleIds = chunks.flatMap((c) => Object.keys(c.modules ?? {}))
+  return {
+    code,
+    moduleIds,
+    min: Buffer.byteLength(code),
+    gz: gzipSync(code, { level: 9 }).length,
+    br: brotliCompressSync(code).length,
+  }
+}
+const dataCore = await measureDataEntry(`${dataPkgDir}/src/index.ts`)
+const dataGateway = await measureDataEntry(`${dataPkgDir}/src/gateway/index.ts`)
+const dataStream = await measureDataEntry(`${dataPkgDir}/src/stream/index.ts`)
+const dataCoreOver = dataCore.br > DATA_BUDGETS['.']
+const dataGatewayOver = dataGateway.br > DATA_BUDGETS['./gateway']
+const dataStreamOver = dataStream.br > DATA_BUDGETS['./stream']
+console.log(
+  `\n@agent-ui/data . (DataSource seam + store + resource/mutation/paginated + DataError; reactive kernel only): ${dataCore.br} B br (${dataCore.gz} B gz, ${dataCore.min} B min) — ${dataCoreOver ? 'OVER' : 'within'} budget (${DATA_BUDGETS['.']} B br, SPEC-R14 c)`,
+)
+console.log(
+  `@agent-ui/data/gateway (createGateway onion + withToken + withRetry; zero components import): ${dataGateway.br} B br (${dataGateway.gz} B gz, ${dataGateway.min} B min) — ${dataGatewayOver ? 'OVER' : 'within'} budget (${DATA_BUDGETS['./gateway']} B br)`,
+)
+console.log(
+  `@agent-ui/data/stream (pushToPull bridge + fromFetchStream/fromEventSource/fromWebSocket + readNdjsonLines): ${dataStream.br} B br (${dataStream.gz} B gz, ${dataStream.min} B min) — ${dataStreamOver ? 'OVER' : 'within'} budget (${DATA_BUDGETS['./stream']} B br)`,
+)
+// The tree-shake probe (SPEC-R1 AC3) — shape AND text.
+const DATA_SUBPATH_SYMBOLS = ['createGateway', 'withRetry', 'fromFetchStream', 'fromWebSocket']
+const dataLeakedModules = dataCore.moduleIds.filter((id) => /[\\/]data[\\/]src[\\/](gateway|stream)[\\/]/.test(id))
+const dataLeakedSymbols = DATA_SUBPATH_SYMBOLS.filter((s) => dataCore.code.includes(s))
+const dataDomLeak = /\b(HTMLElement|customElements)\b/.test(dataCore.code)
+const dataTreeShakeFailed = dataLeakedModules.length > 0 || dataLeakedSymbols.length > 0 || dataDomLeak
+console.log(
+  `@agent-ui/data . tree-shake probe (SPEC-R1 AC3): ${dataTreeShakeFailed ? 'FAILED' : 'clean'} — ${dataCore.moduleIds.length} modules bundled, ${dataLeakedModules.length} from ./gateway|./stream, leaked symbols [${dataLeakedSymbols.join(', ')}], DOM foundation bytes ${dataDomLeak ? 'PRESENT' : 'absent'} (headless — kernel only)`,
+)
+
 if (
   over ||
   marginalOver ||
@@ -735,7 +799,11 @@ if (
   codeCoreOver ||
   codeHighlightOver ||
   codeMarkdownOver ||
-  codeEditorOver
+  codeEditorOver ||
+  dataCoreOver ||
+  dataGatewayOver ||
+  dataStreamOver ||
+  dataTreeShakeFailed
 ) {
   if (over) console.error('size: a barrel exceeds its budget')
   if (marginalOver) console.error('size: a control exceeds its per-control marginal budget')
@@ -747,5 +815,9 @@ if (
   if (codeHighlightOver) console.error('size: @agent-ui/code/highlight exceeds its budget')
   if (codeMarkdownOver) console.error('size: @agent-ui/code/markdown exceeds its marginal budget')
   if (codeEditorOver) console.error('size: @agent-ui/code/editor (wrapper) exceeds its marginal budget')
+  if (dataCoreOver) console.error('size: @agent-ui/data . exceeds its brotli budget (SPEC-R14 c — record the number in ADR-0192 Consequences, never raise silently)')
+  if (dataGatewayOver) console.error('size: @agent-ui/data/gateway exceeds its brotli budget (SPEC-R14 c)')
+  if (dataStreamOver) console.error('size: @agent-ui/data/stream exceeds its brotli budget (SPEC-R14 c)')
+  if (dataTreeShakeFailed) console.error('size: @agent-ui/data . tree-shake probe failed — a ./gateway or ./stream module/symbol (or DOM foundation bytes) reached the core barrel (SPEC-R1 AC3)')
   process.exit(1)
 }

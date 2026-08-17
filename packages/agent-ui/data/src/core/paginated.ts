@@ -57,15 +57,22 @@ export function paginated<P, C = unknown>(
   const hasMoreSig = computed<boolean>(() => !(inner.data.value?.exhausted ?? false))
 
   let loadingMore: Promise<void> | undefined
+  let disposed = false
+  let loadMoreController: AbortController | undefined
 
   async function loadMore(): Promise<void> {
     if (loadingMore) return loadingMore
-    const st = inner.data.value
-    if (!st || st.exhausted) return
+    const st = inner.data.peek()
+    if (!st || st.exhausted || disposed) return
     loadingMore = (async () => {
       const controller = new AbortController()
+      loadMoreController = controller
       const ctx: SourceContext = { signal: controller.signal }
       const page = await fetchPage(st.nextCursor, ctx)
+      // Race guard (identity, not equality): if the page list was REPLACED while this page was in
+      // flight — an invalidate/refetch reset it to a fresh first page, or dispose() ran — appending
+      // onto the stale `st` would resurrect the old list. The in-flight page is simply dropped.
+      if (disposed || controller.signal.aborted || inner.data.peek() !== st) return
       const nextCursor = opts.getNextCursor(page)
       const next: PageState<P, C> = { pages: [...st.pages, page], nextCursor, exhausted: nextCursor === undefined }
       store.commit(key, next) // mirrored into inner.data via the resource's own 'commit' subscription — no re-fetch
@@ -74,6 +81,7 @@ export function paginated<P, C = unknown>(
       await loadingMore
     } finally {
       loadingMore = undefined
+      loadMoreController = undefined
     }
   }
 
@@ -85,9 +93,12 @@ export function paginated<P, C = unknown>(
     hasMore: hasMoreSig,
     loadMore,
     async refetch() {
+      loadMoreController?.abort() // a page-append racing a refetch is superseded — the fresh first page wins
       await inner.refetch()
     },
     dispose() {
+      disposed = true
+      loadMoreController?.abort()
       inner.dispose()
     },
   }

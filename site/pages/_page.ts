@@ -539,6 +539,13 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './highlight-doc.html', label: 'Highlight' }],
   },
   {
+    // @agent-ui/data (ADR-0192, saas-data-utilities.spec.md SPEC-R14 e) — the FOURTH sibling branch off
+    // components (`shared ← components ← {a2ui, router, code, data}`); no tagged element at all (a headless
+    // seam + signals + gateway + stream), the SAME ungrouped-site-level-link posture as Router/Highlight:
+    // a GUIDE page for a package, not a fleet component in components/src.
+    links: [{ href: './data-doc.html', label: 'Data' }],
+  },
+  {
     // ui-agent-admin (@agent-ui/app, TKT-0039/ADR-0131) — the SAME ungrouped-site-level-link posture as
     // Super Shell/Master Detail/Settings just above: a GUIDE page for an app-tier composition (ui-split +
     // ui-settings + ui-conversation), not a fleet component in components/src. Agent Admin App joins here

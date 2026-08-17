@@ -3,6 +3,7 @@ import { effect } from '@agent-ui/components'
 import { resource } from './resource.ts'
 import { createStore } from './cache.ts'
 import type { DataSource } from './data-source.ts'
+import { pushToPull } from '../stream/bridge.ts'
 
 function flushMicrotasks(times = 5): Promise<void> {
   return new Promise((r) => {
@@ -129,6 +130,65 @@ describe('resource() — SPEC-R3', () => {
     expect(seen).toEqual([1, 2, 3])
     expect(r.status.value).toBe('success')
     dispose()
+  })
+
+  it('AC5+AC7 cross (SPEC-R3 d): dispose() during a QUIET live subscription tears it down now — signal aborted, iterator returned, no later write', async () => {
+    // The realistic shape: a pushToPull bridge (what fromWebSocket/fromEventSource hand out) whose
+    // next() is parked on an empty queue, i.e. a connection that is open but silent.
+    const store = createStore()
+    const onTeardown = vi.fn()
+    let seenSignal: AbortSignal | undefined
+    const bridge = pushToPull<number>({ onTeardown })
+    const src: DataSource<number> = {
+      subscribe: (_k, ctx) => {
+        seenSignal = ctx.signal
+        return bridge.stream
+      },
+    }
+    const r = resource('quiet-live', src, { store, live: true })
+    bridge.push(1)
+    await flushMicrotasks(10)
+    expect(r.data.value).toBe(1)
+    expect(onTeardown).not.toHaveBeenCalled()
+
+    r.dispose() // nothing has arrived since — the old code would leave the subscription open here
+    expect(seenSignal?.aborted).toBe(true)
+    expect(onTeardown).toHaveBeenCalledTimes(1) // return() reached the bridge → the socket-side teardown ran
+    await flushMicrotasks(10)
+    expect(bridge.push(2)).toBe(false) // the bridge is finished, not merely idle
+    expect(r.data.value).toBe(1)
+    expect(store.get('quiet-live')).toBe(1) // no write after dispose
+    expect(r.pending.value).toBe(false)
+
+    // A hand-rolled subscribe that only honors the SIGNAL (no return()) is torn down too, and a value
+    // it manages to yield after dispose never lands.
+    let resolveNext: ((v: IteratorResult<number>) => void) | undefined
+    let returned = 0
+    const store2 = createStore()
+    const src2: DataSource<number> = {
+      subscribe: (_k, ctx) => {
+        seenSignal = ctx.signal
+        return {
+          [Symbol.asyncIterator]: () => ({
+            next: () => new Promise<IteratorResult<number>>((res) => { resolveNext = res }),
+            return: async () => { returned++; return { value: undefined, done: true } },
+          }),
+        }
+      },
+    }
+    const r2 = resource('quiet-live-2', src2, { store: store2, live: true })
+    await flushMicrotasks()
+    resolveNext?.({ value: 10, done: false })
+    await flushMicrotasks(10)
+    expect(r2.data.value).toBe(10)
+    r2.dispose()
+    expect(seenSignal?.aborted).toBe(true)
+    expect(returned).toBe(1)
+    resolveNext?.({ value: 11, done: false }) // a straggler after dispose
+    await flushMicrotasks(10)
+    expect(r2.data.value).toBe(10)
+    expect(store2.get('quiet-live-2')).toBe(10)
+    expect(r2.status.value).toBe('success')
   })
 
   it('AC3+AC5 cross: dispose() on ONE of two deduped resources never aborts the shared read; the LAST holder out does', async () => {

@@ -77,6 +77,11 @@ export function resource<T>(key: string, src: ResourceSource<T>, opts: ResourceO
   let liveDone = false
   let unsubscribeStore: (() => void) | undefined
   const participations = new Set<Participation<T>>()
+  // The `live` leg's teardown handles, hoisted to resource scope so `dispose()` can tear the
+  // subscription down NOW (SPEC-R3 d) — not merely on the next yielded value. A quiet
+  // fromWebSocket/fromEventSource subscription would otherwise stay open until it next spoke.
+  let liveController: AbortController | undefined
+  let liveIterator: AsyncIterator<T> | undefined
 
   // SPEC-R2 AC2 fail-fast: the verbs THIS resource will use must exist. `live: true` needs
   // `subscribe`; a non-live resource needs `read`; a live resource over a subscribe-only source
@@ -170,9 +175,14 @@ export function resource<T>(key: string, src: ResourceSource<T>, opts: ResourceO
   async function startLive(): Promise<void> {
     if (!opts.live || !source.subscribe || capabilityError) return
     const controller = new AbortController()
+    liveController = controller
     const ctx: SourceContext = { signal: controller.signal }
     try {
-      for await (const value of source.subscribe(key, ctx)) {
+      // The iterator is pulled out by hand so dispose() can `return()` it mid-await; the loop
+      // still runs through `for await` (its break/throw paths call `return()` exactly as before).
+      const it = source.subscribe(key, ctx)[Symbol.asyncIterator]()
+      liveIterator = it
+      for await (const value of { [Symbol.asyncIterator]: () => it }) {
         if (disposed || liveDone) break
         store.commit(key, value)
         dataSig.value = value
@@ -183,6 +193,25 @@ export function resource<T>(key: string, src: ResourceSource<T>, opts: ResourceO
       if (!disposed && !liveDone) {
         errorSig.value = normalizeError(e)
         statusSig.value = 'error'
+      }
+    } finally {
+      liveIterator = undefined
+    }
+  }
+
+  /** Tear the `live` leg down now: abort its signal AND `return()` its iterator (a source may honor either). */
+  function stopLive(): void {
+    liveDone = true
+    liveController?.abort()
+    const it = liveIterator
+    liveIterator = undefined
+    // return() on an iterator already finished/finishing is a no-op by contract; a throwing or
+    // rejecting one is swallowed — dispose() is synchronous and never throws.
+    if (it?.return) {
+      try {
+        void Promise.resolve(it.return()).catch(() => {})
+      } catch {
+        // a synchronously-throwing return() — nothing left to tear down
       }
     }
   }
@@ -237,8 +266,8 @@ export function resource<T>(key: string, src: ResourceSource<T>, opts: ResourceO
     dispose() {
       if (disposed) return
       disposed = true
-      liveDone = true
       for (const p of [...participations]) leave(p)
+      stopLive()
       unsubscribeStore?.()
       syncPending()
     },
