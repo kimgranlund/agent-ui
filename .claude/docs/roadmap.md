@@ -286,6 +286,11 @@ decision (dated line in §4).
   here. If Linear becomes the standard elsewhere in the user's work, the open question is whether
   this repo follows (and how the ID-spine convention — ADR/SPEC/LLD citing an issue — survives a
   backend swap) — not a live fork today, just the thing that would reopen ADR-0145 if raised.
+- **Sync read surface on shared's localStorage StorageAdapter tier (GH #1077).** ADR-0193's seam is
+  async-by-ruling, so PR #1027 migrated app memory-store's write path only — hydration stays a direct
+  synchronous prefix scan (SettingsStore must answer construct→get same-tick). An optional sync
+  capability on the localStorage tier alone (getSync/keysSync or a snapshot() warm cache) would
+  unblock the full read-path migration; ADR-0193 amendment territory — design ruling before build.
 - **GenUI B3 — the judged pack-idiom eval.** Out of the GenUI SPEC's contract by its own §6 cut:
   PRD §8 m3 (judge-scored pack-idiom use) realized as a judged corpus-rubric shard plus its docs
   page (PRD-G6) — a named manual live-model run, never part of the deterministic gates (SPEC-N3).
