@@ -117,7 +117,10 @@
      below (component-reviewer MINOR fix) — equal specificity (0,2,1) means source order decides which
      wins on hover+user-invalid, and the danger signal must win (the text-field.css:205-208 precedent:
      idle < hover < user-invalid, source-later). Placing hover here, ahead of user-invalid, is the fix. */
-  :scope:not(:state(answered)):hover::before {
+  /* The answered exclusion rides inside :where() — zero specificity cost, so this rule stays at
+     (0,2,1), equal with user-invalid below, and source order keeps deciding (GH #1120: a bare
+     :not() here lifted hover to (0,3,1) and masked the danger border). */
+  :scope:where(:not(:state(answered))):hover::before {
     border-color: var(--ui-checkbox-border-checked);
   }
 

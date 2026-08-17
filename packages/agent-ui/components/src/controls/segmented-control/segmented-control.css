@@ -173,11 +173,14 @@ ui-segmented-control:state(answered):not(:state(pending)):not([disabled]) ui-seg
 /* Interaction states — the TEXT-channel wash on UNSELECTED segments only; a checked segment cannot toggle
    off, so the selected segment's fill holds (it never reads the hover/active tokens). Excludes
    :state(answered) — the settle flow moves the "change this" signal off the control chrome
-   (interaction-states.md §6[c]). */
-ui-segmented-control:not(:state(answered)) ui-segment:not([checked]):hover {
+   (interaction-states.md §6[c]).
+   The answered exclusion rides inside :where() — zero specificity cost, so these stay at (0,2,2)
+   and the [disabled] suppression below keeps outranking them (GH #1120: a bare :not() lifted hover
+   to (0,3,2) and washed disabled controls). */
+ui-segmented-control:where(:not(:state(answered))) ui-segment:not([checked]):hover {
   background: var(--ui-segmented-control-bg-hover);
 }
-ui-segmented-control:not(:state(answered)) ui-segment:not([checked]):active {
+ui-segmented-control:where(:not(:state(answered))) ui-segment:not([checked]):active {
   background: var(--ui-segmented-control-bg-active);
 }
 
