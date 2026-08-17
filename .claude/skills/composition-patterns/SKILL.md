@@ -24,7 +24,7 @@ disable-model-invocation: false
 How a page correctly *consumes* the fleet. Each pattern: the assembly problem → the fleet's
 answer → the owner (rationale) and the worked exemplar (live code). The mechanism stays in
 the owner; deviating from a pattern on a shared surface is a fork, not a local choice. The
-full pattern table (33 rows) moved to `references/` below, grouped into four axes — nothing
+full pattern table (34 rows) moved to `references/` below, grouped into four axes — nothing
 was deleted, every ADR citation and dated ruling reads word-for-word in its new home.
 
 ## Consult table
