@@ -14,6 +14,13 @@
     "section": "Guides"
   },
   {
+    "href": "./testing-guide.html",
+    "label": "Testing guide",
+    "description": "The jsdom/browser vitest harness, the shared @agent-ui/shared/testing/dialog-polyfill stub, when a real-engine run is required, and the ElementInternals/ARIA assertion idiom.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
     "href": "./theming.html",
     "label": "Theming",
     "description": "One theming subtree, three live axes: scheme (light/dark), scale, and density.",
@@ -51,56 +58,56 @@
   {
     "href": "./magic-link.html",
     "label": "Magic link sign in",
-    "description": "Request a magic link, confirm the demo's stand-in for clicking the emailed link, and reach the signed-in state — the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
+    "description": "Request a magic link, confirm the demo's stand-in for clicking the emailed link, and reach the signed-in state \u2014 the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
     "level": "L2",
     "section": "Guides"
   },
   {
     "href": "./otp-signin.html",
     "label": "One-time code sign in",
-    "description": "Request a one-time code, enter it into ui-otp-field (auto-verifying on completion, no submit button), resend with a real per-email cooldown, and reach the signed-in state — the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
+    "description": "Request a one-time code, enter it into ui-otp-field (auto-verifying on completion, no submit button), resend with a real per-email cooldown, and reach the signed-in state \u2014 the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
     "level": "L2",
     "section": "Guides"
   },
   {
     "href": "./social-signin.html",
     "label": "Social sign in",
-    "description": "Choose a provider, walk a simulated redirect + callback round trip, complete or cancel the sign-in, and reach the signed-in state — the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
+    "description": "Choose a provider, walk a simulated redirect + callback round trip, complete or cancel the sign-in, and reach the signed-in state \u2014 the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
     "level": "L2",
     "section": "Guides"
   },
   {
     "href": "./onboarding.html",
     "label": "Onboarding",
-    "description": "Advance/back/skip through a first-run step shell (Welcome / Workspace name / Choose a theme) with a discrete step-N-of-M progress readout, gated on an existing demo session — the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
+    "description": "Advance/back/skip through a first-run step shell (Welcome / Workspace name / Choose a theme) with a discrete step-N-of-M progress readout, gated on an existing demo session \u2014 the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
     "level": "L2",
     "section": "Guides"
   },
   {
     "href": "./onboarding-checklist.html",
     "label": "Onboarding checklist",
-    "description": "The checklist-onboarding composition recipe: card + list + checkbox + progress bound to a plain signals store, matched to onboarding-first-run.flow.json — the mint-last proof that no ui-stepper is needed (GH #961).",
+    "description": "The checklist-onboarding composition recipe: card + list + checkbox + progress bound to a plain signals store, matched to onboarding-first-run.flow.json \u2014 the mint-last proof that no ui-stepper is needed (GH #961).",
     "level": "L2",
     "section": "Guides"
   },
   {
     "href": "./card-grid-drawer.html",
     "label": "Card grid + drawer edit",
-    "description": "The card-grid + edit-via-drawer composition recipe: ui-grid + ui-card + ui-drawer, a buffered record form, and a page-owned dirty-state/discard-confirm convention (recipe-level, not a fleet ADR) — extracted from the agent-admin entry-list/entry-form shape (GH #917/#947, PR #948; GH #965).",
+    "description": "The card-grid + edit-via-drawer composition recipe: ui-grid + ui-card + ui-drawer, a buffered record form, and a page-owned dirty-state/discard-confirm convention (recipe-level, not a fleet ADR) \u2014 extracted from the agent-admin entry-list/entry-form shape (GH #917/#947, PR #948; GH #965).",
     "level": "L2",
     "section": "Guides"
   },
   {
     "href": "./toc-content.html",
     "label": "Sticky TOC content layout",
-    "description": "A long-form article + a scroll-spy'd ui-nav-rail sidebar, swapped to a ui-select below the ADR-0150 compact line — the TOC-corpus composition recipe (heading-derived entries, the new scrollSpy trait), and the mint-last proof that no ui-toc control is needed (GH #964).",
+    "description": "A long-form article + a scroll-spy'd ui-nav-rail sidebar, swapped to a ui-select below the ADR-0150 compact line \u2014 the TOC-corpus composition recipe (heading-derived entries, the new scrollSpy trait), and the mint-last proof that no ui-toc control is needed (GH #964).",
     "level": "L2",
     "section": "Guides"
   },
   {
     "href": "./account-settings.html",
     "label": "Account settings",
-    "description": "A generic account SettingsSchema rendered by the shipped ui-settings — view preferences, edit and save one through the SettingsStore — behind a must-be-signed-in gate reading the SAME in-memory identity-mock-transport as Registration & sign in (GH #615, ADR-0176).",
+    "description": "A generic account SettingsSchema rendered by the shipped ui-settings \u2014 view preferences, edit and save one through the SettingsStore \u2014 behind a must-be-signed-in gate reading the SAME in-memory identity-mock-transport as Registration & sign in (GH #615, ADR-0176).",
     "level": "L2",
     "section": "Guides"
   },
@@ -135,7 +142,7 @@
   {
     "href": "./chat-shell.html",
     "label": "Chat Shell",
-    "description": "ui-chat-shell is a thin ui-super-shell preset for the chat archetype: header, nav-pane, content — no options side.",
+    "description": "ui-chat-shell is a thin ui-super-shell preset for the chat archetype: header, nav-pane, content \u2014 no options side.",
     "level": "L2",
     "section": "Guides"
   },
@@ -177,7 +184,7 @@
   {
     "href": "./surface-host-doc.html",
     "label": "Surface Host",
-    "description": "ui-surface-host is the M2 mount/stream seam — wraps one @agent-ui/a2ui RendererHost, standalone-usable (SPEC-R3), with the GH #805 disable-on-action mechanics.",
+    "description": "ui-surface-host is the M2 mount/stream seam \u2014 wraps one @agent-ui/a2ui RendererHost, standalone-usable (SPEC-R3), with the GH #805 disable-on-action mechanics.",
     "level": "L2",
     "section": "Guides"
   },
@@ -212,7 +219,7 @@
   {
     "href": "./motion.html",
     "label": "View Transitions",
-    "description": "ADR-0183's shared withViewTransition seam + its four opt-in surfaces (ui-super-shell, ui-surface-host, ui-drill, ui-router-outlet) — the opt-in law, per-surface tables, and the GH #1005 named-morph proof.",
+    "description": "ADR-0183's shared withViewTransition seam + its four opt-in surfaces (ui-super-shell, ui-surface-host, ui-drill, ui-router-outlet) \u2014 the opt-in law, per-surface tables, and the GH #1005 named-morph proof.",
     "level": "L2",
     "section": "Guides"
   },
@@ -324,21 +331,21 @@
   {
     "href": "./gen-ui-live.html",
     "label": "GenUI Chat Demo",
-    "description": "A chat app rendering agent-authored HTML/CSS/JS through the sandboxed ui-sandbox-frame containment host — a recorded backbone of canned turns, one exercising the action bridge round-trip.",
+    "description": "A chat app rendering agent-authored HTML/CSS/JS through the sandboxed ui-sandbox-frame containment host \u2014 a recorded backbone of canned turns, one exercising the action bridge round-trip.",
     "level": "L2",
     "section": "GenUI"
   },
   {
     "href": "./workbench.html",
     "label": "SaaS Data Workbench",
-    "description": "A data table + filter toolbar + record-edit modal + agent-summary card composed entirely from published fleet primitives inside ui-workspace-shell — the M-A flagship composition proof (GH #461).",
+    "description": "A data table + filter toolbar + record-edit modal + agent-summary card composed entirely from published fleet primitives inside ui-workspace-shell \u2014 the M-A flagship composition proof (GH #461).",
     "level": "L2",
     "section": "Guides"
   },
   {
     "href": "./dashboard.html",
     "label": "Support Dashboard",
-    "description": "Stat cards + a bar chart + a read-only table + an agent-summary card composed entirely from published fleet primitives inside ui-workspace-shell — the fleet's second SaaS composition, proving the data-app posture generalizes (GH #499).",
+    "description": "Stat cards + a bar chart + a read-only table + an agent-summary card composed entirely from published fleet primitives inside ui-workspace-shell \u2014 the fleet's second SaaS composition, proving the data-app posture generalizes (GH #499).",
     "level": "L2",
     "section": "Guides"
   },
