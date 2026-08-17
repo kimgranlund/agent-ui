@@ -692,7 +692,7 @@ function peelGenuiLines(afterMeta: string): GenuiPeelResult {
  * governs consumption and teaching, never framing), plus the `TurnTrace` `produce()` assembled for this
  * turn (never the model's raw wrapper verbatim — the model never has `trace`). */
 function formatMetaLine(
-  note: string,
+  note: string | undefined,
   trace: TurnTrace,
   ask: AskDeclaration | undefined,
   plan: PlanDeclaration | undefined,
@@ -734,6 +734,17 @@ function sessionKnownSurfaceIds(session: Session): Set<string> {
  * already knows about (`sessionKnownSurfaceIds`, prior turns only — this round's own fresh creation is
  * exactly what the first check requires, so a same-round create is never mistaken for a collision).
  */
+/** The surfaceId a server message names, or `undefined` for the function-call RPC arm (whose id is the
+ *  top-level `functionCallId`, not a surface). Used ONLY by the GH #1064 whole-degrade suppression below. */
+function messageSurfaceId(msg: A2uiServerMessage): string | undefined {
+  if ('createSurface' in msg) return msg.createSurface.surfaceId
+  if ('updateComponents' in msg) return msg.updateComponents.surfaceId
+  if ('updateDataModel' in msg) return msg.updateDataModel.surfaceId
+  if ('deleteSurface' in msg) return msg.deleteSurface.surfaceId
+  if ('actionResponse' in msg) return msg.actionResponse.surfaceId
+  return undefined
+}
+
 function askIntegrityHolds(ask: AskDeclaration, output: A2uiOutput, session: Session): boolean {
   const created = output.some((m) => 'createSurface' in m && m.createSurface.surfaceId === ask.surfaceId)
   if (!created) return false
@@ -1022,12 +1033,25 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       // ADR-0097 §1 ask-integrity — a silent degrade (never a retry): an ask with no matching payload, or
       // colliding with a session-known surface, is dropped from the outgoing meta-line; the note stands.
       const finalAsk = ask !== undefined && askIntegrityHolds(ask, assembled.output, input.session) ? ask : undefined
-      // Post-ship review finding 4: this `if` is also the reason a note-less ask never ships — `ask`/
-      // `finalAsk` only ever ride ON the meta-line `formatMetaLine` builds, and that line is yielded ONLY
-      // when `note !== undefined`. A turn that authored `ask` but no `note` would have its ask silently
-      // discarded here, never reaching the wire — an implicit coupling worth stating explicitly.
+      // GH #1064 — the degrade must be WHOLE. ADR-0097 §1's ruling is "the turn degrades to ADR-0089's
+      // prose ask", and a prose ask has NO structured surface: shipping the dropped ask's own payload
+      // anyway (the pre-#1064 behavior) rendered a clickable card whose routing fact this very branch had
+      // just stripped — the client (agent-admin's `#resumeTargetFor`) then had no ask on record for it and
+      // could only same-bubble-resume the click, the reported "Next does nothing" strand. Worse, a REUSED
+      // ask id's lines route into the ORIGINAL bubble client-side (ADR-0129 cl.2's known-surface routing),
+      // repainting the answered card in place. So every message NAMING the dropped ask's surfaceId is
+      // suppressed with the ask (validation already ran on the FULL output above; messages for any other
+      // surface ship untouched — an ask naming an id the payload never mentions suppresses nothing).
+      const shippedOutput =
+        ask !== undefined && finalAsk === undefined
+          ? assembled.output.filter((m) => messageSurfaceId(m) !== ask.surfaceId)
+          : assembled.output
       if (emitProgress) yield formatProgressLine({ stage: 'done' }) // ADR-0146 F1 — before the final content yield; still a meta-line, never content
-      if (note !== undefined) {
+      // GH #1064 (closing ADR-0097's post-ship review finding 4): the meta-line ships whenever it has a
+      // note OR a surviving ask to carry — a note-less ask is no longer silently discarded by the note
+      // coupling (`formatMetaLine` simply omits the absent `note` key; the wire reader, `readMetaLine`,
+      // has always treated every envelope field as optional).
+      if (note !== undefined || finalAsk !== undefined) {
         const failureCodes = (failuresFedBack ?? []).map((f) => f.code)
         if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY')
         // SPEC-N4/SPEC-R1 — see the note-only branch's identical comment: a genui failure dropped on an
@@ -1039,7 +1063,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       // silently here (never manufactures an extra round purely to fix it: "degrade, never halt" — the
       // turn's note/A2UI lines still ship on schedule). `genuiLine` is `undefined` in exactly that case.
       if (genuiLine !== undefined) yield genuiLine // SPEC-R1 AC2 — ships intact, alongside the note
-      for (const msg of assembled.output) yield JSON.stringify(msg) // SPEC-R5 — validate-then-stream (nothing invalid ever painted)
+      for (const msg of shippedOutput) yield JSON.stringify(msg) // SPEC-R5 — validate-then-stream (nothing invalid ever painted)
       return
     }
     // genui-surface SPEC-R1 — a genui failure hitches a ride on the SAME retry the A2UI validator already

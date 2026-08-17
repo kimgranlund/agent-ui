@@ -4,7 +4,7 @@ import { UIAgentAdminElement } from './agent-admin.ts'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
-import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, SURFACE_PLANNER_KEY, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
+import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, SURFACE_GENUI_KEY, SURFACE_PLANNER_KEY, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
 import { ENTRY_KINDS, initialEntryValues, composeSystemPrompt, DEFAULT_SYSTEM_PROMPT_FALLBACK } from './entries.ts'
 import { entriesStoreKey, readEntries, type Entry, type EntryLibraryPack, type NewEntryInput } from '../entry-list/entry-data.ts'
 import { mountEntryList, showAddError, type EntryListHandlers } from '../entry-list/entry-list.ts'
@@ -4120,6 +4120,48 @@ describe('UIAgentAdminElement — GH #802: an answered ask opens the next dialog
     // TKT-0079's own clause: even a FRESH surfaceId in a resumed turn mounts into the SAME bubble's mounts.
     expect(firstBubble.querySelectorAll('ui-surface-host'), "round 2's card mounted into the resumed bubble").toHaveLength(2)
     expect(noteOf(firstBubble), 'the resumed bubble takes the new note').toBe('Got it — and which colour?')
+  })
+})
+
+// ── GH #1064 (candidate-B disproof) — the a2uiOn gate is ONE per-turn capture (`#runSurfaceTurn`), read
+// BEFORE the stream starts and gating the card render (`ingestLine`) and the ask record (`#askSurfaceIds`)
+// with the SAME const. There is therefore NO timing window in which a card renders but its ask routing
+// fact is refused: a toggle that flips ON mid-stream (e.g. an async capability-attach settling late,
+// ADR-0190 amendment / PR #1041) changes the NEXT turn, never this one. This test pins that invariant —
+// were the two arms ever gated on separate reads, it would catch the half-window #1064's scout suspected. ─
+describe('UIAgentAdminElement — GH #1064: no a2uiOn half-window between card render and ask record', () => {
+  it('a turn that starts with A2UI OFF refuses card AND ask together, even when the toggle flips ON mid-stream — no strandable card ever renders', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    // GenUI explicitly ON so the typed intent still runs a surface turn at all (`#runSurfaceTurn`'s
+    // "at least ONE structured modality" gate) while A2UI — the gate under test — starts OFF.
+    const store = createMemoryStore({ initial: { [SURFACE_A2UI_KEY]: false, [SURFACE_GENUI_KEY]: true } })
+    el.store = store
+    el.agentSurfaceTurn = async function* () {
+      yield { kind: 'ask' as const, ask: { surfaceId: 'ask-1' } }
+      // The async attach settles MID-STREAM: the toggle is ON before any content line arrives…
+      store.set(SURFACE_A2UI_KEY, true)
+      yield { kind: 'note' as const, note: 'Which size?' }
+      yield { kind: 'line' as const, line: JSON.stringify({ version: 'v1.0', createSurface: { surfaceId: 'ask-1', catalogId: 'agent-ui' } }) }
+      yield {
+        kind: 'line' as const,
+        line: JSON.stringify({
+          version: 'v1.0',
+          updateComponents: {
+            surfaceId: 'ask-1',
+            components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Next', action: { action: 'submit' } }],
+          },
+        }),
+      }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await gh418Submit(el, 'coach me')
+
+    // …and yet the whole stream honors the AT-TURN-START capture: no surface host mounts (so there is no
+    // clickable card whose ask fact could have been dropped — the strand #1064 reports cannot arise here).
+    expect(el.querySelectorAll('ui-surface-host'), 'the OFF-at-start turn renders NO card, mid-stream flip or not').toHaveLength(0)
+    expect(store.get(SURFACE_A2UI_KEY), 'the flip itself landed (it governs the NEXT turn)').toBe(true)
   })
 })
 
