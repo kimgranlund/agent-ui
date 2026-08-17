@@ -105,3 +105,14 @@ host.finalize()
 
 // ── API reference — DERIVED from the descriptor, then the full prose body (imperative API + GH #805) ───────
 composeDocPage(content, descriptor, body)
+
+content.append(
+  (() => {
+    const p = document.createElement('p')
+    const a = document.createElement('a')
+    a.href = './motion.html'
+    a.textContent = 'View transitions'
+    p.append('See the ', a, ' guide for viewTransitions’ opt-in law and the other three ADR-0183 surfaces.')
+    return p
+  })(),
+)

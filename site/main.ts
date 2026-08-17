@@ -1049,6 +1049,17 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // dom/view-transition.ts (ADR-0183, GH #740/#742/#958/#1005/#1043) — an ungrouped site-level card (no
+    // `label:`), mirroring its ungrouped nav link in _page.ts, the Super Shell card precedent just above.
+    cards: [
+      {
+        href: './motion.html',
+        title: 'View transitions',
+        blurb: 'The shared withViewTransition seam + its four opt-in surfaces (super-shell, surface-host, drill, router outlet) — the opt-in law, per-surface tables, and a live toggle on a real ui-drill.',
+      },
+    ],
+  },
+  {
     // ui-agent-admin (@agent-ui/app, TKT-0039/ADR-0131) — the standalone full-app demo, an ungrouped
     // site-level card (no `label:`), mirroring its ungrouped nav link in _page.ts (Kim's 2026-07-25
     // overturn of the 2026-07-19 standalone opt-out). The docs GUIDE page (agent-admin.html) stays

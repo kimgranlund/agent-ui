@@ -740,6 +740,13 @@
       "section": "Guides"
     },
     {
+      "name": "View Transitions",
+      "url": "./motion.html",
+      "description": "ADR-0183's shared withViewTransition seam + its four opt-in surfaces (ui-super-shell, ui-surface-host, ui-drill, ui-router-outlet) — the opt-in law, per-surface tables, and the GH #1005 named-morph proof.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Agent Admin",
       "url": "./agent-admin.html",
       "description": "ui-agent-admin is a three-pane ui-split (chat canvas, prompts, settings) over ui-conversation and ui-settings, one shared SettingsStore, live-apply with no external model dependency.",
