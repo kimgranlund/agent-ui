@@ -688,7 +688,24 @@ describe('buildSystemPrompt feed-ask archetype vocabulary — mode-scaled (ADR-0
     }
     const dflt = buildSystemPrompt(defaultCatalog, [])
     expect(dflt).toMatch(/RadioGroup \(or SegmentedControl/)
-    expect(dflt).toMatch(/Checkboxes bound to distinct/)
+    expect(dflt).toMatch(/wrap Checkboxes \(bound to distinct data-model paths\) in a Column/)
+  })
+
+  // GH #1125 — the checkbox multi-select archetype used to say "Checkboxes ... plus a commit Button"
+  // with no grouping container, unlike the RadioGroup archetype (RadioGroup IS itself a block-level
+  // group). A model following ONLY the old prose had no instruction to block-wrap several Checkbox
+  // siblings, so they (and the trailing Button) rendered as one inline-wrapped row ("row soup").
+  // Every mode must now teach: wrap the Checkboxes in a Column, and place the commit Button as a
+  // sibling AFTER that Column — never Row, never folded inside it.
+  it('GH #1125 — every mode teaches the checkbox multi-select archetype as Column-wrapped, Button-after', () => {
+    for (const mode of ['specific', 'blue-sky'] as const) {
+      const prompt = buildSystemPrompt(defaultCatalog, [], mode)
+      expect(prompt).toMatch(/Checkboxes on\s+distinct data-model paths, wrapped in a\s*\n?\s*Column/)
+      expect(prompt).toMatch(/commit Button its own sibling\s+placed AFTER the Column, never inline and\s+never inside it/)
+    }
+    const dflt = buildSystemPrompt(defaultCatalog, [])
+    expect(dflt).toMatch(/wrap Checkboxes \(bound to distinct data-model paths\) in a Column/)
+    expect(dflt).toMatch(/commit Button its own\s+sibling placed AFTER the Column, never inside it/)
   })
 
   it('never widens the SPEC-R9 allowlist or the feed set by mode — the honesty floor still holds in every mode', () => {

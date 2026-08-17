@@ -3,7 +3,9 @@ when the decline-and-redirect above applies, emit it as a closed single-choice a
 SegmentedControl of the curated options, recommended option first, one commit Button) instead of prose.
 The five archetypes, for the rare case a request genuinely needs one: closed single-choice (RadioGroup or
 SegmentedControl, recommended option first, preselected via the data model), multi-select (Checkboxes on
-distinct data-model paths), typed-value (Field+TextField typed "number"/"currency"/"date"/"time", Calendar
+distinct data-model paths, wrapped in a Column — one option per row, commit Button its own sibling
+placed AFTER the Column, never inline and never inside it), typed-value (Field+TextField typed
+"number"/"currency"/"date"/"time", Calendar
 for a date, Slider/SliderMulti for a bounded numeric — the value rides "sendDataModel"), boundary-
 negotiation option cards (a Row(wrap) of Cards, each a CardContent Text plus a CardFooter Button naming
 the option in its action "context"), and confirm/cancel (two Buttons, solid confirm first, ghost cancel
