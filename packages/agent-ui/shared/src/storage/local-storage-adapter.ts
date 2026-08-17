@@ -1,7 +1,10 @@
 // local-storage-adapter.ts — the localStorage `StorageAdapter` tier (ADR-0193 cl.2, GH #959 Slice 1).
 // Mirrors `@agent-ui/app`'s `memory-store.ts` namespacing convention deliberately (trailing-dot-delimited
-// `${namespace}.${key}` prefix scan) so a future migration of that store onto this seam is a drop-in, not
-// a re-derivation (ADR-0193 Consequences names that migration as explicitly out of THIS slice's scope).
+// `${namespace}.${key}` prefix scan) so that store's migration onto this seam was a drop-in, not a
+// re-derivation — landed in GH #959's remaining slice (2026-08-16): `createMemoryStore({ persistKey })`
+// now WRITES through this tier (its sync hydration stays a direct scan of the same namespace — the
+// `SettingsStore` contract is sync, this seam is async by ADR-0193 ruling; parity-pinned in
+// `app/src/controls/settings/memory-store.test.ts`).
 // Cross-tab notification rides the native `storage` DOM event — genuinely zero-dep, fires only in OTHER
 // tabs/windows sharing the origin, never the tab that made the write (browser-native same-tab exclusion).
 
