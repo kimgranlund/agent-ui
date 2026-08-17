@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-16 |
 > | **Proposed by** | `build-lead`/`dispatch-ticket` (GH [#954](https://github.com/kimgranlund/agent-ui/issues/954)'s design leg — the owner's 2026-08-15 and 2026-08-16 comments already close the container-vs-trait fork itself; this ADR is the fork sheet's mint decision, not a re-litigation) — the fork sheet is [`../spec/drill.intake.md`](../spec/drill.intake.md) |
-> | **Ratified by** | *(pending — never self-ratified; Kim flips this field by explicit naming, `doc-standards` §1b)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-17, via the [`ratify ADR-0195` utterance](https://github.com/kimgranlund/agent-ui/issues/1004#issuecomment-5315820652) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build: `controls/drill/drill.{ts,css,md}` + `controls/drill/drill-panel.ts` (the `ui-tab-panel` compound-file precedent — no separate `drill-panel.md`/`.css`; the leaf shares `drill.md`'s descriptor scope and `drill.css`'s single sheet) + barrel export + jsdom/browser tests · site doc/demo surfaces + the standing descriptor/site gates · a `component-patterns` table row for the show-one-hide-rest + controlled-array-prop-duality combination (novelty leg, §6 of the intake) — per the intake's §7 build slices |
 > | **Supersedes / Superseded by** | **Relates** ADR-0102 (the three-lane chooser applied) · ADR-0175/`mint-vs-compose.md` (checked, not applicable) · ADR-0183/GH#958 (the view-transition seam + named-morph convention this build is the first proven consumer of) · ADR-0188 (the CSS-transform base-motion + intake-doc-shape precedent) · ADR-0019 (bindable two-way state) · ADR-0087/0112 (catalog posture — TEMPORARY exclusion here, Toggle/ADR-0179 shape) · **Resolves** GH [#954](https://github.com/kimgranlund/agent-ui/issues/954)'s container-vs-trait fork (mint decision + fork sheet; the two owner comments already named the OUTCOME, this ADR supplies the MECHANICS ruling that outcome requires before build) |
 

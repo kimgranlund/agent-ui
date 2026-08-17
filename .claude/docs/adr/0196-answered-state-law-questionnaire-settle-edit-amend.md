@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-17 |
 > | **Proposed by** | dispatched design lane for GH [#1065](https://github.com/kimgranlund/agent-ui/issues/1065) — the issue's own Acceptance requires this ADR before any control or template ships; Kim's find-intent round (2026-08-17) RATIFIED the two framing decisions this ADR builds on (append-amendment edit semantics; fleet-law + template scope), and delegated exactly one open question to this record: the exact precedence ordering |
-> | **Ratified by** | *(pending — never self-ratified; Kim flips this field by explicit naming, `doc-standards` §1b)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-17, via the [`ratify ADR-0196` utterance](https://github.com/kimgranlund/agent-ui/issues/1065#issuecomment-5315818507) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build (not authored here): `shared/src/tokens/tokens.css`-adjacent role aliases (mints `--ui-answered-bg`/`--ui-answered-ink` as ALIASES, no new literals) · `.claude/docs/references/interaction-states.md` (a new `§6 · Answered / settled choice` section alongside §1b TKT-0062 and §5 pending/ADR-0191) · each choice control's `{name}.css` answered block + CSS pin-test (`radio-group` · `checkbox` · `switch` · `segmented-control` · `select` · `multi-select` · `combo-box`) · the A2UI questionnaire/multiple-choice card template's settle/edit-amend wiring (AFTER GH #1064's fix lands — Sequencing, Consequences below) |
 > | **Supersedes / Superseded by** | **Relates** ADR-0191 (the pending-state convention whose SHAPE this ADR re-applies to a third state axis — one host state + one token pair + a fixed precedence, never per-component hacks) · **Relates** [TKT-0062](../tickets/tkt-0062-entry-control-filled-state-law.md) (the filled-state law this state composes OVER, and the mutual-exclusion selector lesson its build recorded) · **Relates** [TKT-0047](../tickets/tkt-0047-interaction-state-design-gaps-from-fleet-audit.md) (role-repoint-not-opacity disabled canon, preserved) · **Relates** ADR-0153 (the seven-member event vocabulary this ADR deliberately does NOT extend) · **Relates** ADR-0183 (row-30 state-law precedents) · **Resolves** GH #1065's ADR half (the fleet-state + token contract AND the template consumption contract; the builds are follow-up slices) · **Relates** GH #805 (closed precursor — disable-on-submit; this ADR replaces that posture with answered-not-disabled) |
 
