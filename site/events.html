@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Events</title>
+  </head>
+  <body>
+    <!-- The event vocabulary + interop reference (GH #1045): the closed seven (change/input/select/open/
+         close/toggle/action), UIElement.emit's bubbles/composed/cancelable mechanics sliced verbatim from
+         dom/element.ts, the per-control event inventory DERIVED at build time from every shipped
+         descriptor's events[] via doc-page.ts's renderEventsTable (the same renderer every control's own
+         API doc page uses), the @agent-ui/components/descriptor export surface, and a live ui-select +
+         ui-switch event log. An MPA entry auto-discovered by vite.config.ts's site/**/*.html glob — no
+         config edit needed. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/events.ts"></script>
+  </body>
+</html>

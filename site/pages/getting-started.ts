@@ -189,3 +189,4 @@ content.append(
     'ts',
   ),
 )
+content.append(el('p', {}, [document.createTextNode('Every control’s emitted events follow the fleet’s closed seven-name vocabulary — see the '), el('a', { href: './events.html' }, [document.createTextNode('Events')]), document.createTextNode(' reference.')]))
