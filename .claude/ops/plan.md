@@ -207,3 +207,20 @@ Queue order: (1) gated mutations verified safe → (2) blockers → (3) human de
 
 *Composed by chore-planner (sweep-8, /sweep-chores run by AGENT-UI-3), 2026-08-17 — returned as
 payload per the #125 ops-write split; written and landed by the dispatching session.*
+
+## Resolution ledger — 2026-08-17 ~05:20Z (AGENT-UI-3, post board-zero)
+
+- 1.1 DONE — ops state landed as e8d57b57 (04:37Z).
+- 1.2 DONE — `git remote prune origin` pruned `origin/docs/subpath-coverage-gaps`.
+- 1.3 DONE — `956-data-n5-finish` deleted (tip == PR #1033 merged head).
+- 2.1 DONE — docs wave complete: #1042–#1046 shipped by AGENT-UI-2 (PRs #1051/#1053/#1055/#1057/#1060),
+  #1047–#1050 shipped by AGENT-UI-3 (PRs #1056/#1059/#1058/#1054); board 0 open issues / 0 open PRs;
+  `npm run check` green on main after every merge (exit codes).
+- 3.3 DONE — `956-agent-ui-data` deleted after AGENT-UI-2 confirmed supersession with diff evidence
+  (b1dc7cdd's four fixes re-carried as 401a1a9b → PR #1029; remaining deltas are forward work from #1033).
+- 4.1 DONE — all 8 `worktree-agent-*` markers reaped with their lanes; `npm run ops:reap-branches`
+  dry-run on main: "(no local branches beyond main)".
+- 4.2 DONE — `.claude/settings.json` committed by Kim's session as f07ab329 (teamwork plugin disable).
+- 4.3 DONE — #1050 filed, built, merged (PR #1054): `npm run ops:reap-branches` + selftest in check:scripts.
+- STILL PARKED (Kim): 3.1 five-row ADR-queue confirm · 3.2 adr_checkpoint ratify-only-flip ruling ·
+  3.4 adr-0193/adr-0195 ratifications + three amendment flips.
