@@ -6,7 +6,12 @@
 //
 // Architecture decisions:
 //   • Value model: `valueLo` / `valueHi` props replace the base's single `value` prop (base `value` is NOT
-//     re-declared here; the base's normaliser + ARIA + geometry effects are NOT invoked — no super.connected()).
+//     re-declared here — it stays in the static props spread purely for TS structural compatibility).
+//     `super.connected()` IS called (GH #1153); `ownsValueModel()` is overridden to `false` so the base's
+//     single-`value` normaliser/ARIA-value/geometry/keyboard/focus-blur effects never activate — this
+//     leaf's own equivalents for the [lo, hi] pair (below) are the only copies that run. The one piece of
+//     base wiring that DOES apply unconditionally is the `label`/`internals.ariaLabel` effect (model-
+//     agnostic — GH #1153 deleted this leaf's own duplicate of that single line).
 //   • Nearer-thumb-grabs: a `pointerdown` listener registered BEFORE both valueDrag bindings sets the
 //     `#activeThumb` gate ('lo' or 'hi'); each valueDrag binding's `track()` returns null unless it owns the
 //     current active thumb → only the correct binding captures the pointer.
@@ -27,8 +32,9 @@ import { valueDrag } from '../../traits/value-drag.ts'
 // The pair value model (LLD-C1 widened): spread UIRangeElement.props (which includes the shared min/max/step/
 // value/size/formProps) and ADD valueLo/valueHi. The base's single `value` prop is kept in the spread for
 // TypeScript static-side compatibility (the subclass's static props must structurally extend the base's);
-// we do NOT call super.connected(), so the base's normaliser/ARIA/geometry/keyboard effects on `value` are
-// never activated — `value` is an inherited prop that slider-multi does not actively use.
+// GH #1153 — `super.connected()` IS called; `ownsValueModel()` (overridden below to `false`) gates off the
+// base's normaliser/ARIA-value/geometry/keyboard/focus-blur effects on `value` — `value` stays an inert,
+// unused inherited prop.
 // Each class must redeclare all its props (no static-props prototype inheritance — UIFormElement.formProps note).
 const sliderMultiProps = {
   ...UIRangeElement.props,                                                   // min · max · step · value · size · formProps
@@ -50,9 +56,9 @@ export class UISliderMultiElement extends UIRangeElement {
   #loThumb: HTMLElement | null = null
   #hiThumb: HTMLElement | null = null
 
-  // GH #1141 — the label part: a visible DUPLICATE of `internals.ariaLabel` (own effect below, since this
-  // leaf does not call super.connected()), `aria-hidden` so it never doubles that announcement. Matches
-  // ui-slider's own label part (slider.ts) and the same shared `label` prop (range-element.ts).
+  // GH #1141 — the label part: a visible DUPLICATE of `internals.ariaLabel` (base's shared effect, GH
+  // #1153), `aria-hidden` so it never doubles that announcement. Matches ui-slider's own label part
+  // (slider.ts) and the same shared `label` prop (range-element.ts).
   #labelEl: HTMLElement | null = null
 
   // GH #1141 (supersedes GH #1126's transient label-end overlay) — the live value readout, ALWAYS
@@ -73,7 +79,8 @@ export class UISliderMultiElement extends UIRangeElement {
   #committedHi: number | null = null
 
   /** LLD-C1: normalise a raw number against min/max/step (same algorithm as the base; redeclared here since
-   *  the base's normaliser is #private and we do not call super.connected()). */
+   *  the base's normaliser is #private AND only ever operates on the single `value` prop — `ownsValueModel()`
+   *  gates it off entirely for this leaf, which needs the same algorithm applied to `valueLo`/`valueHi`). */
   #normalize(raw: number): number {
     const min = this.min ?? 0
     const max = this.max ?? 100
@@ -113,6 +120,13 @@ export class UISliderMultiElement extends UIRangeElement {
   protected override formReset(): void {
     this.valueLo = 0
     this.valueHi = 100
+  }
+
+  /** GH #1153 — this leaf widens the value model to a [lo, hi] pair; opt OUT of the base's single-`value`
+   *  normaliser/ARIA-value/geometry/keyboard/focus-blur machinery (range-element.ts's `connected()`) so it
+   *  never runs alongside this leaf's own equivalents below. */
+  protected override ownsValueModel(): boolean {
+    return false
   }
 
   /** Build the light-DOM structure on first connect (reconnect guard: no-op if already built). */
@@ -163,6 +177,13 @@ export class UISliderMultiElement extends UIRangeElement {
   }
 
   protected connected(): void {
+    // GH #1153 — base: committed-baseline reset · internals.role='slider' (immediately overwritten below
+    // to 'group' — a one-time synchronous property set, not an effect, so this ordering has no observable
+    // intermediate state) · the shared `label`/`internals.ariaLabel` effect. `ownsValueModel()` (overridden
+    // above to `false`) gates off the base's single-`value` normaliser/ARIA-value/geometry/keyboard/
+    // focus-blur machinery entirely — this leaf's own [lo, hi] equivalents below are the only copies that run.
+    super.connected()
+
     // LLD-C2: host role='group' (two-slider composite — a group element contains the two slider foci).
     // The individual thumbs each carry role='slider' via HTML attributes (light-DOM children, not the host).
     this.internals.role = 'group'
@@ -174,11 +195,9 @@ export class UISliderMultiElement extends UIRangeElement {
     // Build light DOM structure once (subsequent reconnects find it already present).
     this.#buildDOM()
 
-    // GH #1141 — label text + visibility, and the accessible name (internals.ariaLabel). This leaf does
-    // not call super.connected(), so range-element.ts's own label/ariaLabel effect never runs — redeclared
-    // here (matching this file's existing duplication-over-super() shape for every other LLD-C effect).
+    // GH #1141 — label TEXT + visibility only; the accessible name itself (`internals.ariaLabel`) is now
+    // owned solely by the base's shared effect (GH #1153 deleted this leaf's own duplicate of that line).
     this.effect(() => {
-      this.internals.ariaLabel = this.label || null
       if (!this.#labelEl) return
       this.#labelEl.textContent = this.label ?? ''
       this.#labelEl.hidden = !this.label

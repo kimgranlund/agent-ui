@@ -105,6 +105,26 @@ export class UIRangeElement extends UIFormElement {
     // LLD-C2: role is structural, not data-driven; set once here rather than inside an effect.
     this.internals.role = 'slider'
 
+    // GH #1141 — the `label` prop IS the accessible name when non-empty (the icon/progress/ramp/ladder
+    // precedent: `internals.ariaLabel = label || null`, empty ⇒ no accessible name minted, leaving the
+    // author-supplied aria-label/aria-labelledby fallback in force, byte-identical prior behavior).
+    // GH #1153 — hoisted ABOVE the `ownsValueModel()` gate below: accessible-name wiring is model-agnostic
+    // (it has nothing to do with how many values the control carries), so every Range leaf gets exactly
+    // ONE copy of this effect. Before GH #1153, UISliderMultiElement skipped `super.connected()` wholesale
+    // and re-declared this exact line itself to get it — this hoist is what let that duplicate be deleted.
+    this.effect(() => {
+      this.internals.ariaLabel = this.label || null
+    })
+
+    // GH #1153 — a leaf that WIDENS the value model (UISliderMultiElement's `valueLo`/`valueHi` pair)
+    // owns an equivalent — but not identical — copy of every effect/listener below, keyed off its own
+    // props, so the base's single-`value` versions must never run alongside them: the keyboard listener
+    // would fire a SECOND, spurious `input` on every arrow-key step (this leaf's own listener already
+    // emits one), and the ARIA effect would stamp aria-valuenow/min/max/text — single-slider semantics —
+    // onto a host whose `internals.role` such a leaf sets to 'group', not 'slider'. `ownsValueModel()` is
+    // the subclass hook that draws the line; override to `false` to opt out of everything below this point.
+    if (!this.ownsValueModel()) return
+
     // LLD-C1: normaliser effect — keeps value clamped + snapped on every change to value/min/max/step.
     // The kernel's Object.is cutoff means no signal update + no re-run when the value is already normal.
     this.effect(() => {
@@ -120,13 +140,6 @@ export class UIRangeElement extends UIFormElement {
       this.internals.ariaValueMin = String(this.min ?? 0)
       this.internals.ariaValueMax = String(this.max ?? 100)
       this.internals.ariaValueText = this.valueText(value)
-    })
-
-    // GH #1141 — the `label` prop IS the accessible name when non-empty (the icon/progress/ramp/ladder
-    // precedent: `internals.ariaLabel = label || null`, empty ⇒ no accessible name minted, leaving the
-    // author-supplied aria-label/aria-labelledby fallback in force, byte-identical prior behavior).
-    this.effect(() => {
-      this.internals.ariaLabel = this.label || null
     })
 
     // LLD-C5: geometry seam — `--value-pct` on the host style so the subclass CSS can paint the fill
@@ -193,5 +206,17 @@ export class UIRangeElement extends UIFormElement {
       }
       this.#committed = null
     })
+  }
+
+  /**
+   * GH #1153 subclass hook (LLD-C1/C2/C3/C5): `true` (default) when this leaf uses the base's single
+   * `value` prop directly — the normaliser, ARIA value* effect, `--value-pct` geometry seam, keyboard
+   * step, and focus/blur commit-on-change all key off it. A leaf that WIDENS the value model (e.g.
+   * UISliderMultiElement's `valueLo`/`valueHi` pair) overrides this to `false` and re-implements the
+   * equivalent wiring itself against its own props — the base's copy would otherwise run in parallel
+   * against the same DOM/ARIA surface and corrupt it (see the call site in `connected()` above).
+   */
+  protected ownsValueModel(): boolean {
+    return true
   }
 }
