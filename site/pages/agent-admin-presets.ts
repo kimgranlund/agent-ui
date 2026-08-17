@@ -242,15 +242,18 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'concierge', // GH #46 — upgraded IN PLACE to the Hotel Concierge (same id: persisted stores key on it)
     category: 'hospitality', // GH #143
-    seedVersion: 5, // GH #497 — added the `concierge` local pattern set (BookingForm/BookingConfirmation); migrates pre-#497 stores
+    seedVersion: 6, // GH #1171 — re-seeded the rewritten `booking-flow` room-booking arc playbook; migrates pre-#1171 stores (5: GH #497 local pattern set)
     label: 'The Hotel Concierge',
     tagline: 'The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)',
     config: { name: 'The Hotel Concierge', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: true },
-    // GH #497 — BookingForm/BookingConfirmation close the booking-flow idiom structurally: the concierge's
-    // own seed drops the now-redundant HAND-AUTHORED 'hotel-booking-form' skill + 'booking-flow' playbook
-    // below (never edits the shared library entries themselves — `restaurant` still picks
-    // 'hotel-booking-form' by hand, out of this note's scope) so a fresh concierge session teaches the
-    // idiom exactly ONCE, structurally, never a stale duplicate alongside it.
+    // GH #497 — BookingForm/BookingConfirmation close the booking FORM idiom structurally: the concierge's
+    // own seed drops the now-redundant HAND-AUTHORED 'hotel-booking-form' skill below (never edits the
+    // shared library entries themselves — `restaurant` still picks 'hotel-booking-form' by hand, out of
+    // this note's scope) so a fresh concierge session teaches the idiom exactly ONCE, structurally, never
+    // a stale duplicate alongside it. GH #1171 re-seeds 'booking-flow' (dropped by #497 as a duplicate of
+    // the form idiom): the rewritten entry is a step ARC playbook — scene-to-scene surface reuse, Calendar
+    // range dates, typed guests ask, rate pick, extras Column, confirm-then-flowEnd — which the structural
+    // patterns don't carry.
     localPatterns: 'concierge',
     foundation:
       'You are the concierge of the Grand Meridian, a fictional waterfront hotel on the clifftops of ' +
@@ -273,7 +276,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     // 'hotel-booking-form' EXCLUDED (not a `pick` list — the OTHER five entries stay unfiltered so a
     // future HOSPITALITY_SKILLS addition is picked up automatically, GH #497's own scoping).
     skills: seedFrom(HOSPITALITY_SKILLS).filter((s) => s.id !== 'hotel-booking-form'),
-    workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['table-reservation']), // 'booking-flow' dropped — see localPatterns comment above
+    workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['booking-flow', 'table-reservation']), // 'booking-flow' re-seeded by GH #1171 — see the note above
     resources: [
       {
         id: 'property-knowledge-base',

@@ -161,11 +161,21 @@ export const CORE_PLAYBOOKS: readonly NewEntryInput[] = [
 export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
   {
     label: 'booking-flow',
-    description: 'Hotel domain — a room / spa / amenity booking end to end, intake form through confirmation card.',
+    description: 'Hotel domain — a realistic room booking end to end: stay dates, guests, room and rate, extras, confirm, courtesy close.',
     content:
-      'Availability question → intake form (dates, party size, preferences) → validity-gated submit → ' +
-      'confirmation card from the submitted values → offer ONE follow-up (add breakfast, spa slot, ' +
-      'itinerary). Never collect payment details; hand off with a reference code instead.',
+      'A room booking runs on ONE surface transitioned scene to scene — create it once, then advance ' +
+      'each step via updateComponents/updateDataModel on that SAME surface (never a fresh surface per ' +
+      'step, never redeliver the root). The scenes, in order: (1) stay dates — ONE Calendar with ' +
+      'mode "range" (valueStart/valueEnd bound two-way), NEVER two side-by-side calendars; (2) guests — ' +
+      'a typed number ask (Field+TextField type "number", labeled "Guests"); (3) room & rate — a ' +
+      'RadioGroup of room types with the nightly rate in each label, the recommended room preselected ' +
+      'via the data model, plus a commit Button; (4) extras — independent Checkboxes (breakfast, spa ' +
+      'credit, late check-out) each on its own data-model path, wrapped in a Column one per row, the ' +
+      'commit Button a sibling AFTER the Column; (5) confirm before concluding — a summary reading back ' +
+      'every submitted value humanized ("12–15 Jun · 3 nights", "2 guests", "Sea-view double · ' +
+      '€240/night", chosen extras as text — never a raw true/false, and an unchosen extra simply does ' +
+      'not appear), gated by ONE commit Button. Only AFTER the user confirms: the courtesy-close turn — ' +
+      'a note with "flowEnd": true and a reference code, no new UI. Never collect payment details.',
   },
   {
     label: 'table-reservation',
