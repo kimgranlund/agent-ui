@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · A2UI agent guide</title>
+  </head>
+  <body>
+    <!-- The A2UI AGENT/PRODUCER guide (GH #1048): how a consumer app wires its own model call through
+         the exported @agent-ui/a2ui/agent producer toolkit (ADR-0137) — the transport seam, the bounded
+         produce() loop, the catalog-grounded buildSystemPrompt(), the meta-line channel, the two
+         browser-safe subpaths, and a runnable consumer example. Every derived block is sliced live out
+         of the shipped src/agent/*.ts source, package.json, and the checked-in consumer example — shown
+         ≡ shipped, it cannot drift. An MPA entry auto-discovered by vite.config.ts's site/**/*.html glob
+         (matches the nav link ./a2ui-agent.html) — no config edit needed. The page module imports
+         pages/_page.ts FIRST for the foundation CSS cascade + self-defining ui-* controls (ADR-0003). -->
+    <div id="app"></div>
+    <script type="module" src="./pages/a2ui-agent.ts"></script>
+  </body>
+</html>

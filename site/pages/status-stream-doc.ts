@@ -16,6 +16,11 @@
 // cell — see status-stream.md's own "Step-count / score group-header summaries" section for why a GROUP
 // header's step-count/score instead lands in `description` (a real DOM conflict with ADR-0143's
 // collapsed-summary auto-fill, found while building this).
+//
+// GH #974/ADR-0191 (GH #1048) — a LIVE `setPendingSource()` demo: a "Start a follow-up query" button wires
+// a real Promise into the public API, driving the host's own `:state(pending)` custom state (never
+// page-simulated — the honest-labels law) so the reader can watch the ALREADY-SETTLED content dim in
+// place and un-dim, rather than reading only the token/state names in prose.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import { loadStatusStreamDoc } from '../lib/frontmatter.ts'
 import { composeDocPage } from '../lib/doc-page.ts'
@@ -119,11 +124,45 @@ trace.setAttribute('label', 'Generating the dashboard')
 // into the plan + narration + steps.
 trace.setAttribute('receipt', '')
 
+// GH #974/ADR-0191 — the fleet-wide pending/stale-content convention's FIRST real consumer: one host
+// custom state (`:state(pending)`) + one token pair (`--ui-pending-opacity`/`--ui-pending-duration`),
+// wired here via the public `setPendingSource()` API. A settled stream (already showing its last answer)
+// starts a fresh follow-up query — the control dims its ALREADY-RENDERED content in place (never blanks
+// to a spinner) until the source resolves, then un-dims; `:state(settled)` (GH #722, unrelated axis) never
+// leaves true across the wait (ADR-0191 Decision cl.3 — the two states compose, neither clears the other).
+const pendingDemo = document.createElement('ui-status-stream') as UIStatusStreamElement
+pendingDemo.setAttribute('label', 'Follow-up query')
+pendingDemo.appendEntry({ key: 'p1', status: 'done', label: 'Searched the corpus', description: '3 matches' })
+pendingDemo.appendEntry({ key: 'p2', status: 'done', label: 'Ranked the best match' })
+pendingDemo.finalize({ summary: 'Ready' })
+const pendingButton = document.createElement('ui-button')
+pendingButton.textContent = 'Start a follow-up query (dims for ~2s)'
+pendingButton.setAttribute('variant', 'soft')
+pendingButton.setAttribute('tabindex', '0') // the control sets none itself; the press-activation trait does the rest (a2ui-stream.ts controlButton precedent)
+let pendingRunning = false
+pendingButton.addEventListener('click', () => {
+  if (pendingRunning) return
+  pendingRunning = true
+  pendingDemo.setPendingSource(
+    new Promise((resolve) => {
+      setTimeout(resolve, 2000)
+    }).then(() => {
+      pendingRunning = false
+    }),
+  )
+})
+const pendingWrap = document.createElement('div')
+pendingWrap.append(pendingDemo, pendingButton)
+
 const specimens = document.createElement('div')
 specimens.append(
   exampleSection('A seeded strip (appendEntry + update)', stream),
   exampleSection('Grouped entries — a reasoning-chain card (ADR-0146 F5/F6, GH #147/ADR-0153)', ...groupCards.map((c) => captioned(c.caption, c.el))),
   exampleSection('A reasoning trace — plan + narration notes + a metric summary (GH #737/ADR-0184)', trace),
+  exampleSection(
+    'Pending / stale content — setPendingSource() dims in place while a fresh query is in flight (GH #974/ADR-0191)',
+    pendingWrap,
+  ),
 )
 
 composeDocPage(content, descriptor, body, specimens) // connects every specimen above to the live document

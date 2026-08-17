@@ -1139,6 +1139,12 @@ const CARD_GROUPS: readonly CardGroup[] = [
         blurb:
           'Exactly how to author a catalog row (the row contract, the factory side, the ADR-0102 intake chooser, the coverage gate) and training data (shelf vs shard, seed anatomy, the quality bar, judged admission) — the worked examples derive live from the shipped catalog and seed shelf.',
       },
+      {
+        href: './a2ui-agent.html',
+        title: 'A2UI agent guide',
+        blurb:
+          'The PRODUCER half (ADR-0137): the transport seam, the bounded produce() self-correct loop, the catalog-grounded buildSystemPrompt(), the meta-line channel, and a runnable server-side consumer example — every block sliced live from the exported @agent-ui/a2ui/agent source.',
+      },
     ],
   },
   {
