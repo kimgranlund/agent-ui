@@ -1042,6 +1042,25 @@
     background: var(--ui-agent-admin-scrollbar-thumb-hover);
   }
 
+  /* GH #1105 — the SPEC-R7 receipt list (a conversation-note child, `#buildReceiptList`): a REAL
+     bulleted `<ul>` whose items are ghost ui-buttons (pure navigation — click reveals the changed fold).
+     UA bullets kept (`list-style` untouched — the point of the issue); the buttons compact down to the
+     note's own text register so a line reads as a linked list item, not a toolbar button. */
+  [data-part='receipt-list'] {
+    margin-block: 0.25rem 0;
+    padding-inline-start: 1.25rem;
+    list-style: disc;
+  }
+  [data-part='receipt-list'] > li {
+    margin-block: 0.125rem;
+  }
+  [data-part='receipt-list'] [data-part='receipt-link'] {
+    min-block-size: 0;
+    padding-block: 0.0625rem;
+    padding-inline: 0.25rem;
+    font: inherit; /* the note's own text register, not the button scale */
+  }
+
   /* forced-colors: active — every bordered surface above uses a real 1px border (not a shadow/tint),
      already legible under forced-colors; the explicit focus rings fall back to Highlight. ui-switch
      carries its own forced-colors handling, inherited unchanged. */
