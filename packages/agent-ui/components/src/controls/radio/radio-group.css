@@ -96,7 +96,7 @@ ui-radio-group:state(user-invalid) ui-radio::before {
  * (the selected indicator) on the RADIO. `(0,2,3)` clears radio.css's own `:scope::before` `(0,0,1)`
  * and its `:hover::before` `(0,1,1)`-guarded form `(0,2,1)` without `!important` — the same specificity
  * margin the user-invalid rule above already relies on. */
-ui-radio-group:state(answered):not(:state(pending)) ui-radio:not([disabled]):not(:state(checked)):not([checked])::before {
+ui-radio-group:state(answered):not([disabled]):not(:state(pending)) ui-radio:not([disabled]):not(:state(checked)):not([checked])::before {
   border-color: var(--ui-radio-group-border-answered);
   background: var(--ui-radio-group-bg-answered);
 }

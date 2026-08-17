@@ -71,9 +71,13 @@ describe('radio-group.css — :state(answered) cross-boundary reach into ui-radi
 
   it('excludes disabled + pending on the group, and disabled + checked/selected on the radio (mutual exclusion)', () => {
     const selector = /ui-radio-group:state\(answered\)([^{]*)\{/.exec(css)?.[1] ?? ''
-    expect(selector).toMatch(/:not\(:state\(pending\)\)/)
-    expect(selector).toMatch(/:not\(\[disabled\]\)/)
-    expect(selector).toMatch(/:not\(:state\(checked\)\)/)
-    expect(selector).toMatch(/:not\(\[checked\]\)/)
+    // Split at the descendant combinator: the GROUP-side guards must sit on the group host itself —
+    // a radio-side :not([disabled]) satisfying a group-side claim was the review's blind spot (GH #1065).
+    const [groupSide = '', radioSide = ''] = selector.split(/\s+ui-radio/)
+    expect(groupSide).toMatch(/:not\(:state\(pending\)\)/)
+    expect(groupSide).toMatch(/:not\(\[disabled\]\)/)
+    expect(radioSide).toMatch(/:not\(\[disabled\]\)/)
+    expect(radioSide).toMatch(/:not\(:state\(checked\)\)/)
+    expect(radioSide).toMatch(/:not\(\[checked\]\)/)
   })
 })
