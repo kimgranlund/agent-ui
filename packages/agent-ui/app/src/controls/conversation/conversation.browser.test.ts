@@ -1028,3 +1028,45 @@ describe('ui-conversation-composer — the editor rests at TWO line-boxes (2026-
     el.remove()
   })
 })
+
+// ── GH #1104 S5 repair (ADR-0199) — the REAL test-chat window, real engine. The live transport is
+// VALIDATE-THEN-STREAM (produce() emits content lines only after the whole reply validates), so a
+// resumed turn's breathing must be visible from beginAgentTurn() — the entire "Writing the
+// response…" wait — not from the first (burst-delivered) line. Proven here in a real engine: the
+// KNOWN host's :state(working) is selector-visible and its ::before overlay's breathe animation is
+// genuinely RUNNING (computed animation-name + a real opacity delta) BEFORE any line is ingested.
+describe('ui-conversation — a resumed turn breathes from turn start, before any line (GH #1104 S5)', () => {
+  it('beginAgentTurn({intoSurface}) on a known open surface animates the overlay mid-wait; finalize stops it', async () => {
+    const el = mountConversation()
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 's5-poker', catalogId: 'agent-ui' } }))
+    t1.ingestLine(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 's5-poker', components: [{ id: 'root', component: 'Text', text: 'pre-flop' }] },
+      }),
+    )
+    t1.finalize()
+    await whenFlushed()
+    const host = logOf(el).querySelector('ui-surface-host') as HTMLElement
+    expect(host.matches(':state(working)'), 'settled between turns').toBe(false)
+
+    const t2 = el.beginAgentTurn({ intoSurface: 's5-poker', disabledSurfaceId: 's5-poker' })
+    await whenFlushed()
+    // Mid-wait: ZERO lines ingested on this turn — exactly the window Kim watched.
+    expect(host.matches(':state(working)'), 'the custom state is live from turn start').toBe(true)
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    const overlay = () => getComputedStyle(surface, '::before')
+    expect(overlay().animationName, 'the breathe loop runs during the wait').toBe('ui-surface-host-breathe')
+    expect(overlay().boxShadow, 'the inner vignette is painted during the wait').toContain('inset')
+    const first = Number(overlay().opacity)
+    await wait(300)
+    const second = Number(overlay().opacity)
+    expect(Math.abs(second - first), `opacity did not move (first=${first}, second=${second})`).toBeGreaterThan(0.02)
+
+    t2.finalize()
+    await whenFlushed()
+    expect(host.matches(':state(working)'), 'cleared at finalize').toBe(false)
+    expect(overlay().animationName).toBe('none')
+  })
+})
