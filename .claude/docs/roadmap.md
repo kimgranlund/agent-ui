@@ -148,6 +148,11 @@ decision (dated line in §4).
 
 ## 3 · Next — concrete, near-term
 
+- **ui-slider label/value layout patterns (GH #1141, `size:small`, filed 2026-08-17).** The #1126
+  readout is transient-only and single-placement; agent-rendered sliders (blackjack bet) show no
+  value at rest. Add a `layout` prop — standard (label left / value right, above the track,
+  default) · inline (label/track/value on one row) · block (label above-center, value
+  below-center) — with a default-visible readout.
 - **Ask-flow COMPLETION state (GH #1101, `size:big`, filed 2026-08-17).** Kim's live test-chat
   report: a multi-step intake flow ends on a bare summary card — no closing prose turn, no
   end-of-flow affordance (done/start-over/handoff). Two halves: producer/prompt guidance in
