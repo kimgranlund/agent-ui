@@ -179,15 +179,15 @@ content.append(surfaceSection('ui-router-outlet', 'ui-router-outlet', './router-
 
 content.append(
   para(
-    'A naming note, stated plainly rather than silently normalized: super-shell.md’s ',
+    'A naming note: all four descriptors’ ',
     code('attributes[].name'),
-    ' field IS the kebab-case DOM attribute directly (',
-    code('view-transitions'),
-    '), while drill.md/router-outlet.md/surface-host.md each carry the camelCase PROP name (',
+    ' fields carry the camelCase PROP name (',
     code('viewTransitions'),
     ') plus an explicit ',
     code('attribute:'),
-    ' override — a real per-descriptor authoring inconsistency, not a rendering choice on this page.',
+    ' override with the kebab-case DOM attribute (',
+    code('view-transitions'),
+    ') — uniform since GH #1079, when super-shell.md adopted its siblings’ majority grammar.',
   ),
 )
 

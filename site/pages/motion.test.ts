@@ -16,7 +16,7 @@ const routerOutletDoc = loadRouterOutletDoc()
 describe('motion.html source — the four ADR-0183 opt-in surfaces resolve real attributes', () => {
   it('ui-super-shell carries both viewTransitions AND viewTransitionNames (cl.3, GH #958)', () => {
     const attrs = requireAttrs(shellDoc, SURFACE_ATTR_NAMES['ui-super-shell'], 'ui-super-shell')
-    expect(attrs.map((a) => a.name)).toEqual(['view-transitions', 'view-transition-names'])
+    expect(attrs.map((a) => a.name)).toEqual(['viewTransitions', 'viewTransitionNames'])
     expect(attrs.every((a) => a.default === 'false')).toBe(true) // the family's default-off law, structurally
   })
 
