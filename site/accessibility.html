@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Accessibility conventions</title>
+  </head>
+  <body>
+    <!-- The fleet a11y conventions guide: ARIA via ElementInternals (never a host attribute), focus management
+         + roving-tabindex idioms, landmarks in the app-surface shells, live regions, reduced motion, and how a
+         consumer labels a control (aria-labelledby forwarding). Cites CLAUDE.md, interaction-states.md, and the
+         real trait/control source rather than restating any of it. An MPA entry auto-discovered by
+         vite.config.ts's site/**/*.html glob. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/accessibility.ts"></script>
+  </body>
+</html>

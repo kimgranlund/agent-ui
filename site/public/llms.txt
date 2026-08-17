@@ -11,6 +11,7 @@
 ## Guides
 
 - [Getting started](./getting-started.html): the 7 workspace packages, install and the load-bearing CSS import order (foundation tokens → component styles → self-defining controls), a first control, and per-control subpath imports for tree-shaking.
+- [Accessibility](./accessibility.html): how the fleet exposes roles/state via `ElementInternals`, focus management + roving tabindex (`ui-nav-rail`/`ui-tabs`/`list-reorder`'s keyboard fallback), landmarks in the app-surface shells, live regions (`ui-status-stream`/`ui-toast`/`conversation-dialog`), reduced motion, and how a consumer labels a control (`aria-labelledby` forwarding, `ui-field`/`ui-drawer`) — with a live labelled field + status live region.
 - [Theming](./theming.html): the `<ui-theme-provider>` subtree axes (scheme light/dark · scale · density), the `--md-sys-color-{family}-{role}` role system, and subtree token overrides, with live demos.
 - [Token reference](./tokens.html): every color role (light/dark swatches) and dimensional ramp (heights, fonts, icons, compact boxes, spacing), derived live from tokens.css and dimensions.css.
 - [Sizing & density](./sizing.html): the five component size classes, the explicit `[scale]`×`[size]` lookup (no multipliers), the compact realm's pad law, and density-rides-rhythm — with a live measured matrix.
