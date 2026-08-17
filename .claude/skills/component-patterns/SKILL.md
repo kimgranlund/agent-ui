@@ -49,6 +49,9 @@ ADR-worthy fork, not a local choice.
 | A second lookup/map over an already-canonical key set | derive from canonical constants, never hand-list | ADR-0181 cl.4 |
 | An optional progressive-enhancement browser API (View Transitions) | one shared seam, default-`false` boolean prop | ADR-0183 |
 | A streaming host telling first paint from re-render | host's own settled-once boundary | ADR-0183 Amendment |
+| Cross-DOM morphs on an opted-in View Transitions surface | opt-in named-morph convention, `ui-vt-{surface}-{token}` | ADR-0183 Amendment (GH #958) |
+| Async-stale content dimmed while a new answer is in flight | `:state(pending)` + `--ui-pending-*`, composes under settled | ADR-0191 |
+| General-purpose functionality outside components' layers | mint a zero-dep sibling package off `components` | ADR-0115/0119/0192 |
 
 ## How to use a row
 
