@@ -613,6 +613,7 @@ export const NAV: readonly NavGroup[] = [
       { href: './a2ui-live.html', label: 'A2UI Live Agent' },
       { href: './a2ui-chat.html', label: 'A2UI Chat' },
       { href: './a2ui-authoring.html', label: 'A2UI Authoring Guide' },
+      { href: './a2ui-agent.html', label: 'A2UI Agent Guide' },
     ],
   },
   {

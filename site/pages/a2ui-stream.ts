@@ -4,13 +4,13 @@
 // host surface (`createRenderer`) exactly as a server transport would — nothing reaches into renderer internals.
 //
 // The single owner of the payload is the seed shelf (`@agent-ui/a2ui/examples`, ADR-0055): Demo 1 streams
-// `generativeFormSeed.messages` verbatim; Demo 2 streams a runtime PERMUTATION of the SAME objects (never a
-// second literal). Every fact on the page is derived from those messages — the `line k/N` counter (N =
+// `generativeFormSeed.messages` verbatim; Demos 2 and 3 each stream a runtime PERMUTATION of the SAME objects
+// (never a second literal). Every fact on the page is derived from those messages — the `line k/N` counter (N =
 // message count), each line's envelope-key caption, the "root arrives at line X" numbers (found in the seed),
 // and the first-paint marker (read off `surfaceEl.childElementCount` after each ingest). Nothing is hand-typed,
 // so nothing can drift from the seed.
 //
-// What the two demos prove — and where each is GATED (this page is the visible proof of tests that already
+// What the three demos prove — and where each is GATED (this page is the visible proof of tests that already
 // exist; the T5 docs-author discipline "the renderer integration test; the page is its visible proof"):
 //   • arrival-order application (SPEC-R1)         → renderer.test.ts "streams createSurface + updateComponents…"
 //   • render-on-root (SPEC-R3)                    → tree.test.ts "does not render until the root component arrives"
@@ -21,6 +21,9 @@
 //                                                    the stream continues" / parser.test.ts "fault isolation…"
 //   • validate-at-finalize (ADR-0002)             → renderer.test.ts "finalize catches a missing root … NOT
 //                                                    falsely raised in-stream" · the seed itself: examples.test.ts
+//   • reveal-order, opt-in, default OFF (ADR-0194) → renderer.test.ts "reveal-order policy end-to-end" ·
+//                                                    tree.test.ts's `revealOrder: true` describe block (sibling
+//                                                    hold + cascade-forward + resend-resync) — Demo 3 below
 // The seed's own validity + clean real-host render is the standing examples.test.ts gate (ADR-0055) — this page
 // rides it; it invents no parallel check.
 
@@ -79,6 +82,39 @@ function rootLastPermutation(messages: readonly A2uiServerMessage[]): readonly A
   return [...messages.filter((m) => m !== root), root]
 }
 
+/**
+ * siblingScramblePermutation (ADR-0194, GH #975) — Demo 3's ordering, DERIVED from the seed at runtime
+ * (never a second literal, the `rootLastPermutation` precedent). `root` (the Card/CardContent/FormProvider/
+ * Column skeleton, which declares the field ORDER via `form_col.children`) stays in place — a container's
+ * declared order has to arrive before there is anything to hold siblings against, and root itself must
+ * still paint early. The messages that each define ONE of `form_col`'s declared children (`f_name` /
+ * `f_email` / `f_budget` / `f_plan` / `row_toggles` / `actions` — found generically, by reading the FIRST
+ * component id each message defines against the declared list, never a hard-coded id set) are then
+ * REVERSED — the worst-case sibling scramble: the LAST-declared child (`actions`, the submit row) is now
+ * the FIRST of the six to arrive, the FIRST-declared (`f_name`) the LAST. `createSurface`/`updateDataModel`
+ * keep their original positions. A provable permutation of the same multiset (object-identity filter +
+ * reorder), so the finalize set is byte-identical to Demo 1's (ADR-0002) — only the VISUAL reveal differs.
+ */
+function siblingScramblePermutation(messages: readonly A2uiServerMessage[]): readonly A2uiServerMessage[] {
+  let childOrder: readonly string[] = []
+  for (const m of messages) {
+    if (!('updateComponents' in m)) continue
+    const formCol = m.updateComponents.components.find((c) => c.id === 'form_col')
+    const children = formCol && 'children' in formCol ? formCol.children : undefined
+    if (Array.isArray(children)) {
+      childOrder = children as string[]
+      break
+    }
+  }
+  if (childOrder.length === 0) return messages // defensive: a seed with no such container has nothing to scramble
+  const isSiblingMessage = (m: A2uiServerMessage): boolean =>
+    'updateComponents' in m && childOrder.includes(m.updateComponents.components[0]?.id ?? '')
+  const siblingMessages = messages.filter(isSiblingMessage)
+  const reversed = [...siblingMessages].reverse()
+  let cursor = 0
+  return messages.map((m) => (isSiblingMessage(m) ? reversed[cursor++]! : m))
+}
+
 // ── page chrome scaffold (light-DOM only — it never restyles a ui-* control) ─────────────────────────────────
 /** A dogfooded control affordance: a real ui-button with a native click listener (the canvas precedent). */
 function controlButton(label: string, variant: 'solid' | 'soft' | 'ghost', onClick: () => void): HTMLElement {
@@ -118,6 +154,7 @@ function streamDemo(opts: {
   surfaceId: string
   promptText?: string // Demo 1 shows the seed's prompt — the instruction the agent "received" (derived, not typed)
   faultInjection?: boolean // Demo 1 carries the malformed-line affordance (N4); Demo 2 is about order alone
+  revealOrder?: boolean // Demo 3 (ADR-0194) — opt in to the renderer's top-down sibling-hold policy
 }): HTMLElement {
   const N = opts.messages.length
   const lines = opts.messages.map((m) => JSON.stringify(m)) // the compact JSONL actually fed — same objects, derived
@@ -314,7 +351,7 @@ function streamDemo(opts: {
     firstPaintLine = undefined
     firstPaintEl.hidden = true
     mode = 'idle'
-    host = createRenderer()
+    host = createRenderer(opts.revealOrder ? { revealOrder: true } : undefined)
     host.onClientMessage(appendClientMessage)
     host.mount(surfaceEl)
     renderStatus()
@@ -371,5 +408,21 @@ content.append(
       `agent author: emit the root early.`,
     messages: rootLastPermutation(SEED.messages),
     surfaceId: SEED.surfaceId,
+  }),
+  streamDemo({
+    step: '3',
+    title: 'Reveal order — coherent top-down reveal on a hostile arrival order (ADR-0194)',
+    blurb:
+      `The same six form fields, root still early, but their SIX field-defining lines arrive in the WORST-CASE ` +
+      `scrambled order — the submit row first, the name field last — exactly the sibling jitter GH #975 reported: ` +
+      `by DEFAULT the renderer reveals each sibling the instant its own data lands, so fields would pop in out of ` +
+      `declared order as this feeds. This demo opts IN to \`revealOrder: true\` (RendererOptions/TreeDeps, opt-in, ` +
+      `default OFF — SPEC-R4 AC1’s own default is untouched): each field now HOLDS until every earlier-declared ` +
+      `sibling has also revealed, so despite the scrambled arrival the visible reveal still proceeds name → email → ` +
+      `budget → plan → toggles → submit, top-down, cascading forward the instant a blocking predecessor lands. Same ` +
+      `finalize set as Demo 1 (ADR-0002); only the reveal ORDER differs from arrival order.`,
+    messages: siblingScramblePermutation(SEED.messages),
+    surfaceId: SEED.surfaceId,
+    revealOrder: true,
   }),
 )
