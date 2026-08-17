@@ -49,3 +49,13 @@
   #956 lands) · #1002 #1003 #1005 #1006 #1007 #1008 · #959 remaining slice; #1001 closed
   (repairs none-owed by construction). Each host ships its OWN lanes (push → PR → merge →
   verify MERGED → reap, never chained) and re-runs `npm run check` on main between merges.
+
+## #956 n5 tail — 2026-08-17 (AGENT-UI host)
+
+- PR **#1029** (`956-data-n5` @ b403e4fa+) carries the whole n5 tail (checker minors · size line-items +
+  tree-shake probe · data-doc page · ADR-0192 consequences note). The peer's local `956-n5-tail`
+  (worktree `w956`, one commit = the same minors as 401a1a9b, unpushed) is SUPERSEDED — peer may drop
+  it. AGENT-UI finishes #1029 (open Major: `resource.dispose()` aborts the live leg; minors; stream
+  browser shard) and merges; peer then verifies+closes #1000 per its own claim.
+- Main full `npm test` showed 7 `ui-drill` wiring failures (`_page.ts` drill refs) at ~02:30Z — being
+  checked by the AGENT-UI finisher; if real, fixed on the same PR or its own small PR.
