@@ -497,8 +497,9 @@ describe('ui-conversation cross-engine smoke — the COMPOSED path renders with 
 })
 
 // GH #241 (Kim's original ruling) — the chat path's chrome laws, proven on a realistic chat mount in
-// a REAL engine: the A2UI render surface is CHROMELESS — no checker/background, zero padding —
-// UNCHANGED below. GH #291/ADR-0160 (Kim's 2026-07-27 ruling) REVERSES the other half fleet-wide: the
+// a REAL engine: the A2UI render surface carries no ARTBOARD chrome (no checker/stage color); since
+// GH #1150 it carries STRUCTURAL card chrome of its own (padding/background/border) so containment is
+// never producer-dependent. GH #291/ADR-0160 (Kim's 2026-07-27 ruling) REVERSES the other half fleet-wide: the
 // agent turn RE-BUBBLES (a painted background, real padding, the width cap now living on the owning
 // `[data-part="turn"]` wrapper) instead of #241's de-bubbled full-width bare text. GH #306/ADR-0160's
 // SAME-DAY amendment moves the sender label and the narration strip OUTSIDE the bubble entirely — free-
@@ -532,7 +533,7 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
     return handle
   }
 
-  it('the mounted A2UI surface is chromeless and spans the full width available INSIDE its bubble (rect-compared)', () => {
+  it('the mounted A2UI surface carries STRUCTURAL card containment (GH #1150) and spans the full width available INSIDE its bubble (rect-compared)', () => {
     const el = mountConversation()
     driveSurfaceTurn(el, true)
 
@@ -547,15 +548,19 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
     expect(host.hasAttribute('bare'), 'the chat mount is missing [bare]').toBe(true)
     expect(host.hasAttribute('wrap'), 'the chat mount lost [wrap] (TKT-0084)').toBe(true)
 
-    // NO chrome of its own: no checker image, no background color, zero padding.
+    // NO artboard chrome: no checker image, no stage color — but the surface itself now carries
+    // STRUCTURAL card chrome (GH #1150): padding + a painted background + a border, so any payload is
+    // contained even when the producer roots it in a bare Column instead of a Card.
     const stageStyle = getComputedStyle(stage)
     expect(stageStyle.backgroundImage, 'the checker leaked into the chat path').toBe('none')
     expect(alphaOf(stageStyle.backgroundColor), 'the stage color leaked into the chat path').toBe(0)
     // longhands, not the `padding` shorthand — cross-engine computed-shorthand serialization differs.
     const surfaceStyle = getComputedStyle(surface)
     for (const side of ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'] as const) {
-      expect(surfaceStyle[side], `the surface ${side} leaked into the chat path`).toBe('0px')
+      expect(Number.parseFloat(surfaceStyle[side]), `the surface lost its card ${side} (GH #1150 regressed)`).toBeGreaterThan(0)
     }
+    expect(alphaOf(surfaceStyle.backgroundColor), 'the surface lost its card background (GH #1150 regressed)').toBeGreaterThan(0)
+    expect(Number.parseFloat(surfaceStyle.borderTopWidth), 'the surface lost its card border (GH #1150 regressed)').toBeGreaterThan(0)
 
     // FULL width WITHIN THE BUBBLE (GH #291/ADR-0160 — the bubble itself is narrower than the column
     // again, its own padding restored; the surface still fills whatever content-box the bubble hands

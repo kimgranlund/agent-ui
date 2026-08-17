@@ -199,7 +199,7 @@ describe('ui-surface-host [wrap] — content-hugging artboard (TKT-0084)', () =>
   })
 })
 
-// ── GH #241 — [bare]: the chromeless mount, cross-engine ───────────────────────────────────────────────
+// ── GH #241 → GH #1150 — [bare]: the chat mount (no artboard chrome; structural card containment) ─────
 
 /** A definite-width column standing in for a chat message column; the host mounts inside it with
  *  BOTH `wrap` (the chat path's TKT-0084 block-axis behavior) and `bare` (GH #241) set — exactly the
@@ -231,8 +231,8 @@ const BARE_PAYLOAD = [
   }),
 ]
 
-describe('ui-surface-host [bare] — the chromeless chat mount (GH #241)', () => {
-  it('strips ALL wrapper chrome: no checker/background image, no background color, zero padding', () => {
+describe('ui-surface-host [bare] — the chat mount: no artboard chrome, STRUCTURAL card containment (GH #241 → GH #1150)', () => {
+  it('strips the ARTBOARD chrome (no checker image, no stage color) but the surface carries its own card chrome — real padding, a painted background, a real border (GH #1150)', () => {
     const { host } = mountBareHost()
     for (const l of BARE_PAYLOAD) host.ingest(l)
     host.finalize()
@@ -241,21 +241,43 @@ describe('ui-surface-host [bare] — the chromeless chat mount (GH #241)', () =>
     const stageStyle = getComputedStyle(stage)
     expect(stageStyle.backgroundImage, 'the checker gradients survived [bare]').toBe('none')
     expect(alphaOf(stageStyle.backgroundColor), 'the stage color survived [bare]').toBe(0)
+    // GH #1150 — the structural card: containment is the HOST's, never producer-dependent.
     const surfaceStyle = getComputedStyle(surface)
     // longhands, not the `padding` shorthand — cross-engine computed-shorthand serialization differs.
     for (const side of ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'] as const) {
-      expect(surfaceStyle[side], `the surface ${side} survived [bare]`).toBe('0px')
+      expect(Number.parseFloat(surfaceStyle[side]), `the bare surface lost its card ${side} (GH #1150 regressed)`).toBeGreaterThan(0)
     }
+    expect(alphaOf(surfaceStyle.backgroundColor), 'the bare surface lost its card background (GH #1150 regressed)').toBeGreaterThan(0)
+    expect(Number.parseFloat(surfaceStyle.borderTopWidth), 'the bare surface lost its card border (GH #1150 regressed)').toBeGreaterThan(0)
+    expect(Number.parseFloat(surfaceStyle.borderTopLeftRadius), 'the bare surface lost its card radius (GH #1150 regressed)').toBeGreaterThan(0)
   })
 
-  it('full available width: the host AND the surface content box span the column (rect-compared), and the mount boundary is restored', () => {
+  it('GH #1150 regression — a bare-Column-rooted payload (no Card) is still CONTAINED: content sits inset from every surface edge by at least the card padding', () => {
+    const { host } = mountBareHost()
+    for (const l of BARE_PAYLOAD) host.ingest(l)
+    host.finalize()
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    const root = surface.firstElementChild as HTMLElement
+    expect(root, 'no root mounted').not.toBeNull()
+    const s = surface.getBoundingClientRect()
+    const r = root.getBoundingClientRect()
+    const pad = Number.parseFloat(getComputedStyle(surface).paddingTop)
+    expect(pad).toBeGreaterThan(0)
+    expect(r.top - s.top, 'content flush to the top edge (GH #1150)').toBeGreaterThanOrEqual(pad)
+    expect(r.left - s.left, 'content flush to the left edge (GH #1150)').toBeGreaterThanOrEqual(pad)
+    expect(s.right - r.right, 'content flush to the right edge (GH #1150)').toBeGreaterThanOrEqual(pad)
+    expect(s.bottom - r.bottom, 'content flush to the bottom edge (GH #1150)').toBeGreaterThanOrEqual(pad)
+  })
+
+  it('full available width: the host AND the surface border box span the column (rect-compared), and the mount boundary is restored', () => {
     const { host, column } = mountBareHost()
     for (const l of BARE_PAYLOAD) host.ingest(l)
     host.finalize()
     const surface = host.querySelector('[data-part="surface"]') as HTMLElement
     const columnWidth = column.getBoundingClientRect().width
     expect(host.getBoundingClientRect().width, 'the host does not span the column').toBeCloseTo(columnWidth, 0)
-    // zero padding ⇒ the surface's border-box IS its content box — the rect compare covers both.
+    // border-box sizing (box-sizing: border-box on the surface) ⇒ the border box spans the column;
+    // the card padding lives INSIDE it (GH #1150).
     expect(surface.getBoundingClientRect().width, 'the surface does not span the column').toBeCloseTo(columnWidth, 0)
     // ADR-0100 cl.2 — an externally-definite 100% inline-size QUALIFIES as the query container again:
     // [bare] restores what plain [wrap] had to drop.
@@ -280,11 +302,18 @@ describe('ui-surface-host [bare] — the chromeless chat mount (GH #241)', () =>
 // checkered artboard (the docs-preview/canvas shape, unbare) — plus the named exception (an intrinsic
 // control root stays its own natural width in EITHER shape).
 
-/** The surface's own CONTENT-box width — subtracts its own padding so a Row/Card root's rect is compared
- *  against the box it actually has to fill, not the padding-inclusive border box. */
+/** The surface's own CONTENT-box width — subtracts its own padding AND border (GH #1150: the bare chat
+ *  surface carries structural card chrome now) so a Row/Card root's rect is compared against the box it
+ *  actually has to fill, not the padding/border-inclusive border box. */
 const contentWidth = (el: HTMLElement): number => {
   const cs = getComputedStyle(el)
-  return el.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+  return (
+    el.getBoundingClientRect().width -
+    parseFloat(cs.paddingLeft) -
+    parseFloat(cs.paddingRight) -
+    parseFloat(cs.borderLeftWidth) -
+    parseFloat(cs.borderRightWidth)
+  )
 }
 
 describe('ui-surface-host — GH #892: a Row/Card root fills the mount, an intrinsic root does not', () => {
@@ -308,8 +337,11 @@ describe('ui-surface-host — GH #892: a Row/Card root fills the mount, an intri
     const surface = host.querySelector('[data-part="surface"]') as HTMLElement
     const root = surface.firstElementChild as HTMLElement
     expect(root.tagName.toLowerCase()).toBe('ui-row')
+    // GH #1150 — the surface's border box spans the column; the root fills the surface's CONTENT box
+    // (inside the structural card padding/border), never flush to the column edge anymore.
     const columnWidth = column.getBoundingClientRect().width
-    expect(root.getBoundingClientRect().width, 'the Row root did not fill the bubble column').toBeCloseTo(columnWidth, 0)
+    expect(surface.getBoundingClientRect().width, 'the surface does not span the bubble column').toBeCloseTo(columnWidth, 0)
+    expect(root.getBoundingClientRect().width, 'the Row root did not fill the surface content box').toBeCloseTo(contentWidth(surface), 0)
   })
 
   it('chromed checkered artboard (unbare): a Card root fills the artboard content box, up to its 32rem cap', () => {
@@ -548,8 +580,9 @@ describe('ui-surface-host GH #1124 — mid-stream first paint is full-width (no 
     expect(surfaceRect.left, 'mid-stream surface is offset right of the bubble column').toBeCloseTo(columnRect.left, 0)
     expect(surfaceRect.right, 'mid-stream surface overflows the bubble column right edge').toBeLessThanOrEqual(columnRect.right + 0.5)
     expect(rootRect.left, 'mid-stream root start edge is clipped left of the surface').toBeGreaterThanOrEqual(surfaceRect.left - 0.5)
-    // ADR-0160 full-width law at first paint: the root spans the bubble column.
-    expect(rootRect.width, 'mid-stream root does not span the bubble width').toBeCloseTo(columnRect.width, 0)
+    // ADR-0160 full-width law at first paint: the root spans the surface's CONTENT box (GH #1150 — the
+    // structural card padding/border sit between the root and the column edge now).
+    expect(rootRect.width, 'mid-stream root does not span the surface content box').toBeCloseTo(contentWidth(surface), 0)
   })
 
   it(`${server.browser}: NARROW bubble (fleet 414px default → sub-24rem container): the ui-row reflows to column MID-STREAM, not only after settle`, () => {
@@ -581,7 +614,10 @@ describe('ui-surface-host GH #1124 — mid-stream first paint is full-width (no 
     const after = root.getBoundingClientRect()
     expect(after.left, 'finalize moved the root — first paint and settled state disagree').toBeCloseTo(beforeLeft, 0)
     const columnRect = column.getBoundingClientRect()
-    expect(after.left, 'settled root is offset right of the bubble column (GH #1124)').toBeCloseTo(columnRect.left, 0)
-    expect(after.width).toBeCloseTo(columnRect.width, 0)
+    // GH #1150 — the SURFACE spans the column; the root sits inset by the structural card chrome.
+    const surfaceRect = surface.getBoundingClientRect()
+    expect(surfaceRect.left, 'settled surface is offset right of the bubble column (GH #1124)').toBeCloseTo(columnRect.left, 0)
+    expect(surfaceRect.width).toBeCloseTo(columnRect.width, 0)
+    expect(after.width).toBeCloseTo(contentWidth(surface), 0)
   })
 })

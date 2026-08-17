@@ -82,10 +82,12 @@ const props = {
   // A pure CSS hook (`[wrap]`, surface-host.css) — no JS behavior beyond reflection; the anatomy switch
   // (absolute+translate centering → in-flow flex centering) lives entirely in the stylesheet.
   wrap: { ...prop.boolean(), reflect: true },
-  // GH #241: opt-in CHROMELESS mount, default false (zero behavior change for existing consumers — the
-  // docs site's preview/canvas surfaces keep the checkered artboard affordance). Kim's ruling: on the
-  // chat path the A2UI render surface gets NO background, NO padding, and FULL available width — the
-  // rendered payload's own components carry their chrome; this host wrapper is invisible. A pure CSS
+  // GH #241 → GH #1150: opt-in CHAT mount, default false (zero behavior change for existing consumers —
+  // the docs site's preview/canvas surfaces keep the checkered artboard affordance). #241 made it fully
+  // chromeless; GH #1150's live repro (a bare Column root rendering flush to the surface edges) ruled
+  // containment STRUCTURAL: [bare] strips the artboard chrome (checker/stage color) but the surface part
+  // now carries its own card chrome (padding/background/border/radius — surface-host.css), so ANY
+  // payload is contained regardless of whether the producer rooted it in a Card. A pure CSS
   // hook (`[bare]`, surface-host.css) — no JS behavior beyond reflection; composes with `wrap`
   // (ui-conversation sets BOTH on every surface it mounts inline in a bubble).
   bare: { ...prop.boolean(), reflect: true },
