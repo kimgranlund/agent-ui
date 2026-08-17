@@ -1070,3 +1070,92 @@ describe('ui-conversation — a resumed turn breathes from turn start, before an
     expect(overlay().animationName).toBe('none')
   })
 })
+
+// ── GH #1124 — mid-stream first paint on the COMPOSED chat path, throttled like a real stream ─────────
+// jsdom cannot see this class (no painted flex/overflow/container-query geometry) — real-engine only.
+// The live symptom: a streaming card first-paints offset right/clipped at the bubble edge. THIS test
+// reproduced it cross-engine and pinned the root cause: ADR-0199's [wrap]-arm `position: static→relative`
+// flip woke the base rule's dormant `top: 50%; left: 50%` offsets (transform: none had removed the
+// compensating translate), shifting the surface right+down by half the stage — fixed by `inset: auto`
+// in surface-host.css's wrap arm. It drives the REAL conversation path (narration + note + one ingest
+// per JSONL line) with a paint frame between lines (double-rAF), at the fleet's narrow 414px-class
+// width, and asserts the card geometry at the mid-stream paint — BEFORE finalize() ever runs.
+describe('ui-conversation GH #1124 — a throttled A2UI stream paints full-width, unclipped, from its FIRST mid-stream frame', () => {
+  const paint = () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+  const line = (obj: unknown): string => JSON.stringify(obj)
+
+  it(`${server.browser}: mid-stream (no finalize) the mounted surface spans the bubble and nothing overflows/clips at the right edge`, async () => {
+    const el = mountConversation('390px', '500px')
+    const handle = el.beginAgentTurn()
+    handle.progress({ stage: 'reasoning' })
+    handle.setNote('Pick one to continue:')
+    await paint()
+    const STREAM = [
+      line({ version: 'v1.0', createSurface: { surfaceId: 'fp-conv', catalogId: 'agent-ui' } }),
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'fp-conv',
+          components: [
+            { id: 'root', component: 'Column', children: ['title', 'row'] },
+            { id: 'title', component: 'Text', variant: 'title', text: 'Which option would you like to proceed with today?' },
+          ],
+        },
+      }),
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'fp-conv',
+          components: [
+            { id: 'root', component: 'Column', children: ['title', 'row'] },
+            { id: 'title', component: 'Text', variant: 'title', text: 'Which option would you like to proceed with today?' },
+            { id: 'row', component: 'Row', children: ['b1', 'b2', 'b3'] },
+            { id: 'b1', component: 'Button', variant: 'outline', label: 'Continue with the recommended option', action: { action: 'a1' } },
+            { id: 'b2', component: 'Button', variant: 'outline', label: 'Review the alternatives first', action: { action: 'a2' } },
+            { id: 'b3', component: 'Button', variant: 'outline', label: 'Ask a clarifying question', action: { action: 'a3' } },
+          ],
+        },
+      }),
+    ]
+    for (const l of STREAM) {
+      handle.ingestLine(l)
+      await paint() // a real paint between wire lines — the streaming cadence the live bug appeared under
+    }
+
+    // MID-STREAM state — finalize() has NOT run. This is the frame the live screenshots showed clipped.
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const host = bubble.querySelector('ui-surface-host') as HTMLElement
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    const root = surface.firstElementChild as HTMLElement
+    const row = surface.querySelector('ui-row') as HTMLElement
+    expect(root).not.toBeNull()
+    expect(row).not.toBeNull()
+
+    const bubbleStyle = getComputedStyle(bubble)
+    const bubbleContentRight =
+      bubble.getBoundingClientRect().right - Number.parseFloat(bubbleStyle.paddingRight)
+    const surfaceRect = surface.getBoundingClientRect()
+    const rootRect = root.getBoundingClientRect()
+    // the sub-24rem container query resolved against the LIVE surface width, not a stale/absent boundary
+    expect(getComputedStyle(row).flexDirection, 'mid-stream the row ignored its narrow container').toBe('column')
+    // no offset: the root's start edge sits at the surface's start edge (a centered over-wide box clips left)
+    expect(rootRect.left, 'mid-stream root start edge is offset/clipped').toBeGreaterThanOrEqual(surfaceRect.left - 0.5)
+    // no clip: nothing pokes past the bubble's content box right edge (the live "clipped at the bubble edge")
+    for (const [name, node] of [['surface', surface], ['root', root], ['row', row]] as const) {
+      expect(node.getBoundingClientRect().right, `${name} overflows the bubble right edge mid-stream`).toBeLessThanOrEqual(
+        bubbleContentRight + 0.5,
+      )
+    }
+    // ADR-0160 full-width law at the mid-stream paint: the surface spans the bubble content box
+    const bubbleContentWidth =
+      bubble.clientWidth - Number.parseFloat(bubbleStyle.paddingLeft) - Number.parseFloat(bubbleStyle.paddingRight)
+    expect(surfaceRect.width, 'mid-stream surface does not span the bubble').toBeCloseTo(bubbleContentWidth, 0)
+
+    // and finalize() must not MOVE anything — first paint and settled state agree (no next-turn jump)
+    const beforeLeft = rootRect.left
+    handle.finalize()
+    await paint()
+    const settled = (surface.firstElementChild as HTMLElement).getBoundingClientRect()
+    expect(settled.left, 'finalize moved the root — streaming and settled geometry disagree').toBeCloseTo(beforeLeft, 0)
+  })
+})

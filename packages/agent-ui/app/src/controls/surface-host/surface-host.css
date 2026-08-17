@@ -140,8 +140,16 @@
   :scope[wrap] [data-part='surface'] {
     /* `relative`, not `static` (ADR-0199): layout-identical (in-flow either way — the point of this
        rule is only to undo the base `absolute`), but keeps this box a containing block so the
-       :state(working) overlay's `inset: 0` (below) always resolves against the surface's own box. */
+       :state(working) overlay's `inset: 0` (below) always resolves against the surface's own box.
+       GH #1124 — `relative` is NOT layout-identical to the previous `static` on its own: the base
+       rule's `top: 50%; left: 50%` (the absolute-centering pair) were DORMANT under `static` (offsets
+       apply only to positioned boxes) and came alive with `relative`, shifting the whole surface
+       right+down by half the stage while `transform: none` removed the compensating translate — the
+       live "card offset right / clipped at the bubble edge" defect (two pixel-run reproductions,
+       reproduced cross-engine in conversation.browser.test.ts). `inset: auto` re-neutralizes the
+       offsets so `relative` really is layout-identical to the old `static`. */
     position: relative;
+    inset: auto;
     transform: none;
     margin: auto; /* centers within the stage; collapses to 0 (never negative-scroll-clipped) when content exceeds the cap */
     inline-size: fit-content;
