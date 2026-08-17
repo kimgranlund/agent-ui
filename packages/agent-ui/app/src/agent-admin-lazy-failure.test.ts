@@ -24,7 +24,10 @@ import { loadAgentAdmin } from './index.ts'
 
 describe('loadAgentAdmin() — rejection + retry (ADR-0197 cl.3, the markdown-lazy-failure precedent)', () => {
   it('a failed load rejects into the CALLER (caught error, never an unhandled rejection)', async () => {
-    await expect(loadAgentAdmin()).rejects.toThrow('simulated agent-admin chunk load failure')
+    // vitest wraps a throwing mock factory in its own "error when mocking a module" error — the exact
+    // message is the harness's, not ours; the CONTRACT under test is only that the rejection lands in the
+    // caller's catch (never an unhandled rejection escaping the memo).
+    await expect(loadAgentAdmin()).rejects.toThrow()
     expect(arm.loads).toBe(1)
   })
 
