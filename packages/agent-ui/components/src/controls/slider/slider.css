@@ -6,15 +6,23 @@
  *       ADR-0041). `[size]` repoints the box token; `[disabled]` mutes to neutral roles. No `color-mix`
  *       — colour opinions live in the token layer (ADR-0008). `--ui-slider-rail-height` is a thin fleet
  *       constant (3px), NOT widget-box derived — the rail height does NOT scale with the thumb box.
- *   [2] STYLES BLOCK — `@scope (ui-slider)` CONSUMES only `--ui-slider-*` for its OWN tokens. The host
- *       is a `block` container: its block-size = the widget box (`--md-sys-compact-{size}`). The RAIL (`::before`)
- *       is a thin horizontal bar, full-width, vertically centred, with a gradient fill from the primary
- *       colour up to `--value-pct %` and neutral beyond — one declaration paints both the fill and the
- *       remainder. The THUMB (`::after`) is a circle `box − 2×inset = box − 4px` (ADR-0041 cl.3: the
- *       two-pixel inset law) centred vertically and positioned horizontally at `calc(--value-pct * 1%)`
- *       with `transform: translate(-50%, -50%)` so the circle centre lands on that percentage of the host.
- *       `--value-pct` is a UNITLESS number (0–100) set by UIRangeElement on the host inline style.
- *       `:focus-visible` ring (keyboard-only, ADR-0009). Forced-colors safe. Density-invariant.
+ *   [2] STYLES BLOCK — `@scope (ui-slider)` CONSUMES only `--ui-slider-*` for its OWN tokens. The host is
+ *       a CSS GRID (GH #1141) whose `[layout]` attribute selects the `grid-template-areas` placing the
+ *       label part, the `.rail` (the interactive track — its OWN element as of #1141, no longer the host
+ *       itself), and the value part:
+ *         - `standard` (default): two rows — `"label value"` above `"rail rail"` (label start, value end).
+ *         - `inline`: one row — `"label rail value"` (rail's `1fr` column flexes to fill).
+ *         - `block`: three rows, one column — `"label" "rail" "value"`, label/value centred.
+ *       `.rail`'s own block-size = the widget box (`--md-sys-compact-{size}`); its RAIL fill (`::before`)
+ *       is a thin horizontal bar with a gradient from the primary colour up to `--value-pct %` and neutral
+ *       beyond — one declaration paints both the fill and the remainder. The THUMB (`::after`) is a circle
+ *       `box − 2×inset = box − 4px` (ADR-0041 cl.3: the two-pixel inset law) centred vertically and
+ *       positioned horizontally at `calc(--value-pct * 1%)` with `transform: translate(-50%, -50%)` so the
+ *       circle centre lands on that percentage of `.rail`'s own width. `--value-pct` is a UNITLESS number
+ *       (0–100) set by UIRangeElement on the HOST inline style — it cascades down to `.rail` as an
+ *       inherited custom property (no re-declaration needed). `:focus-visible` ring (keyboard-only,
+ *       ADR-0009), still painted on the HOST (the whole control is the one focusable/tabbable element —
+ *       ADR-0010). Forced-colors safe. Density-invariant.
  *
  * Standalone stylesheet — linked via the host page / component-styles barrel; NEVER injected from
  * slider.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -78,16 +86,24 @@
      widget-box sizes (12–28 px). */
   --ui-slider-rail-height: 3px;
 
-  /* GH #1126 — live value readout (design choice: label-end STATIC overlay, see slider.md "Value
-     readout" + the issue Findings — a thumb-following bubble was rejected as the fleet's first
-     pointer-position floater, with the exact clip-at-card-edge risk this design avoids by construction:
-     a FIXED anchor never approaches the host's own inline edge, so it needs no min/max clamping math).
-     Surface = the brightest neutral plane (same family as the thumb fill) so the pill reads on TOP of
-     the rail/thumb it may transiently sit over; ink = the fleet page-ink role (AA vs every surface
-     plane, tokens.test.ts — the same role the ADR-0094 thumb-ring fix uses for the identical reason). */
+  /* GH #1141 — the value part is now an ALWAYS-VISIBLE-AT-REST plain text node in its own layout row/
+     column (Ruling 2 supersedes the GH #1126 transient pill-overlay design — see the Amendment in
+     range-element.lld.md). Plain text (no pill surface/padding/border-radius): it no longer transiently
+     sits ON TOP of the rail/thumb, so it needs no surface to stay legible over them. Ink = the fleet
+     page-ink role (AA vs every surface plane, tokens.test.ts) — the more EMPHASIZED of the label/value
+     pair (the "current reading" is the more salient number). */
   --ui-slider-value-ink: var(--md-sys-color-neutral-on-surface);
-  --ui-slider-value-surface: var(--md-sys-color-neutral-surface-brightest);
   --ui-slider-value-font: var(--md-sys-font-sm);
+
+  /* GH #1141 — the label part: plain text, the SUBDUED half of the label/value pair (the on-surface-
+     variant ink role, the field.css label-vs-value emphasis precedent). */
+  --ui-slider-label-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-slider-label-font: var(--md-sys-font-sm);
+
+  /* GH #1141 — the label↔rail↔value row/column rhythm. The ONE density-bearing spacing quantity this
+     control's layouts need — off `--md-sys-space-xs`, the field.css `--ui-field-gap` precedent (the
+     label↔control↔description rhythm), not a raw `--md-sys-space-*` read (styling-gates.test.ts). */
+  --ui-slider-layout-gap: var(--md-sys-space-xs);
 }
 
 /* [size] → compact widget ramp repoint (ADR-0041: the per-[scale] table in dimensions.css re-tables
@@ -108,41 +124,117 @@
   --ui-slider-fill: var(--md-sys-color-neutral-surface-high);
   --ui-slider-thumb: var(--md-sys-color-neutral-on-surface-variant);
   --ui-slider-thumb-ring: var(--md-sys-color-neutral-on-surface-variant); /* SC 1.4.11-exempt; matches fill, no separate ring emphasis */
-  /* GH #1126: muted too — belt-and-suspenders only, the readout cannot actually show while disabled
-     (pointer-events:none below + the base's effectiveDisabled keyboard gate mean `input` never fires). */
+  /* GH #1141: label/value ink mutes too (both hold READ-ONLY meaning while disabled — SC 1.4.11-exempt,
+     matching the rail/fill/thumb mute above). */
   --ui-slider-value-ink: var(--md-sys-color-neutral-on-surface-variant);
-  --ui-slider-value-surface: var(--md-sys-color-neutral-surface-high);
+  --ui-slider-label-ink: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-slider) consumes ONLY --ui-slider-* ════════════════ */
 
 @scope (ui-slider) {
-  /* Host: a block container whose block-size equals the widget box (the interactive hit area is the
-     full height of the slider, spanning the thumb diameter). `position: relative` is the containing
-     block for both the rail and thumb absolute pseudo-elements. `touch-action: none` prevents the
-     browser from claiming pointer events for scroll/pan while a drag is in progress. */
+  /* Host: a GRID container (GH #1141) whose `[layout]` attribute selects the template placing the label
+     part, `.rail`, and the value part (below). `position: relative` remains the containing block for
+     `.rail`'s own absolute pseudo-elements (they position relative to `.rail`, which is itself a grid
+     item — an absolutely-positioned descendant's containing block is its nearest positioned ancestor,
+     which is `.rail` since IT also gets `position: relative`, not the host). `min-inline-size` is the
+     OVERALL floor (the same failure class as ui-text-field #74 — a shrink-wrapping flex/inline context
+     collapses an intrinsic-width-less control); `.rail` itself has no floor of its own — the grid gives
+     it whatever the host's own width affords. */
   :scope {
-    display: block;
-    position: relative;
-    /* A slider is a HORIZONTAL track — without an intrinsic width it collapses to the thumb (a dot) in
-       a shrink-wrapping flex/inline context (the same failure class as ui-text-field #74). A
-       min-inline-size floor prevents the collapse; above it, width is the layout's job. */
+    display: grid;
+    row-gap: var(--ui-slider-layout-gap);
+    column-gap: var(--ui-slider-layout-gap);
     min-inline-size: var(--ui-slider-min-inline-size, 12rem);
-    block-size: var(--ui-slider-box);
-    cursor: pointer;
-    touch-action: none; /* give pointer events exclusively to the slider during drag (no scroll-conflict) */
     -webkit-user-select: none; /* WebKit/Safari still requires the prefix */
     user-select: none;
   }
 
-  /* RAIL (::before) — thin horizontal bar, full-width, centred in the block dimension.
+  /* `standard` (default) — two rows: "label value" above "rail rail" (label start, value end, ABOVE
+     the rail — the mock's first pattern). No `[layout]` selector needed for this one: it's the default,
+     and an author removing the attribute must still get it (attribute-ABSENT ≠ "no template"). */
+  :scope,
+  :scope[layout='standard'] {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'label value'
+      'rail rail';
+  }
+
+  /* `inline` — one row: "label rail value" (rail's `1fr` column flexes to fill the remaining width). */
+  :scope[layout='inline'] {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: 'label rail value';
+    align-items: center;
+  }
+
+  /* `block` — three rows, one column: "label" / "rail" / "value", label and value CENTRED. */
+  :scope[layout='block'] {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'label'
+      'rail'
+      'value';
+    justify-items: center;
+  }
+
+  /* LABEL / VALUE parts — plain text, grid-area-placed. `auto`-sized rows/columns (no `1fr`) collapse to
+     zero when the only child is `[hidden]` (`display: none`, the author-origin guard below) — so an
+     empty label reserves no space in ANY layout (Ruling 3: "the label slot renders solely when a label
+     source exists"), and `readoutHidden` collapses the value row identically. */
+  [data-part='label'] {
+    grid-area: label;
+    color: var(--ui-slider-label-ink);
+    font-size: var(--ui-slider-label-font);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  [data-part='value'] {
+    grid-area: value;
+    color: var(--ui-slider-value-ink);
+    font-size: var(--ui-slider-value-font);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  /* justify-self: end/start only make sense in the two-column `standard` template (label start, value
+     end is already the grid's natural placement via `1fr auto` — no override needed there); `inline`'s
+     `auto` columns already hug their own content. `block`'s `justify-items: center` (above) centres both. */
+
+  /* Explicit [hidden] guard: neither part declares an unconditional `display` (grid auto-blockifies a
+     bare span into a grid item), so the UA `[hidden]{display:none}` rule already wins unopposed today —
+     this re-declaration is belt-and-suspenders against a FUTURE edit adding an unconditional `display` here
+     (the field.css error-part precedent is exactly that failure: an author `display` NOT gated on
+     `:not([hidden])` silently beats the UA rule by origin). Also documents the load-bearing FACT that an
+     un-collapsed (visible-but-empty) grid track still reserves space — `display:none` is what collapses it. */
+  [data-part='label'][hidden],
+  [data-part='value'][hidden] {
+    display: none;
+  }
+
+  /* .rail — the interactive track (GH #1141: its OWN element, no longer the host itself — see the file
+     header). block-size = the widget box (the interactive hit area spans the thumb diameter);
+     `position: relative` is the containing block for the rail-fill/thumb pseudo-elements below.
+     `touch-action: none` prevents the browser from claiming pointer events for scroll/pan mid-drag. */
+  .rail {
+    grid-area: rail;
+    /* `justify-self: stretch` overrides `block`'s own `justify-items: center` (set on the container so
+       the label/value TEXT centres) — .rail must always fill its grid track's full inline-size,
+       regardless of which template's default item-alignment would otherwise shrink it to content. */
+    justify-self: stretch;
+    position: relative;
+    block-size: var(--ui-slider-box);
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  /* RAIL FILL (.rail::before) — thin horizontal bar, full-width, centred in .rail's block dimension.
      A single `background: linear-gradient` paints BOTH the fill (primary, from 0 to --value-pct%)
      and the remaining rail (neutral, from --value-pct% to 100%). `--value-pct` is a unitless number
-     (0–100) so `calc(var(--value-pct, 0) * 1%)` converts it to a CSS percentage. No `color-mix` —
-     fill and rail are distinct colour roles (ADR-0008). No position transition: the fill updates in
-     real-time during drag; animating a gradient can lag. Background-color transitions (disabled↔enabled
-     state) could be added here but are omitted — the rail gradient change is instant. */
-  :scope::before {
+     (0–100, set on the HOST by UIRangeElement — inherited down to `.rail`) so
+     `calc(var(--value-pct, 0) * 1%)` converts it to a CSS percentage. No `color-mix` — fill and rail
+     are distinct colour roles (ADR-0008). No position transition: the fill updates in real-time during
+     drag; animating a gradient can lag. */
+  .rail::before {
     content: '';
     position: absolute;
     inset-block-start: 50%;
@@ -158,16 +250,16 @@
     );
   }
 
-  /* THUMB (::after) — a circle inset by --md-sys-widget-inset (2px) on all sides (ADR-0041 cl.3).
+  /* THUMB (.rail::after) — a circle inset by --md-sys-widget-inset (2px) on all sides (ADR-0041 cl.3).
    *
    * Size:     thumb = box − 2×inset = box − 4px (the two-pixel inset law, density-invariant flat fleet constant).
-   * Block:    inset-block-start: 50% places the top edge at 50% of the host height; `transform: translate(-50%,
+   * Block:    inset-block-start: 50% places the top edge at 50% of .rail's height; `transform: translate(-50%,
    *           -50%)` shifts the element back by half its own height and width, so its CENTRE lands at (50% of
-   *           host height, --value-pct% of host width) — vertically centred in the widget box.
-   * Inline:   inset-inline-start: calc(var(--value-pct, 0) * 1%) positions the left edge at N% of the host;
+   *           .rail's height, --value-pct% of .rail's width) — vertically centred in the widget box.
+   * Inline:   inset-inline-start: calc(var(--value-pct, 0) * 1%) positions the left edge at N% of .rail;
    *           the -50% X component of the same translate() centres the circle on that point. At value-pct=0
-   *           and 100 the thumb centre is exactly on the host edge (slight overhang of radius; standard slider
-   *           behaviour, no overflow clipping needed for the interaction — the hit area is the full host).
+   *           and 100 the thumb centre is exactly on .rail's own edge (slight overhang of radius; standard
+   *           slider behaviour, no overflow clipping needed for the interaction — .rail's hit area covers it).
    *
    * Motion: NO position transition (drag lag). Background-color transitions for disabled/enabled state.
    *         Transition is zeroed under prefers-reduced-motion (accessibility non-negotiable).
@@ -176,7 +268,7 @@
    * border-box keeps the OUTER diameter at the ADR-0041 cl.3 box−4px law (the border eats into the fill,
    * it never grows the box), so the size proof above is unaffected; the border simply repaints the outer
    * rim in the ink role, giving the thumb a contrast layer independent of its own interior fill. */
-  :scope::after {
+  .rail::after {
     content: '';
     position: absolute;
     box-sizing: border-box;
@@ -190,7 +282,7 @@
     background: var(--ui-slider-thumb);
     border: 2px solid var(--ui-slider-thumb-ring);
 
-    /* Centre the thumb circle on the point (--value-pct% of host width, 50% of host height). */
+    /* Centre the thumb circle on the point (--value-pct% of .rail's width, 50% of .rail's height). */
     inset-block-start: 50%;
     inset-inline-start: calc(var(--value-pct, 0) * 1%);
     transform: translate(-50%, -50%);
@@ -200,43 +292,10 @@
       border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
 
-  /* GH #1126 — the live value readout (`[data-part='value']`). `position: absolute` takes it OUT OF
-     FLOW entirely, so toggling `[hidden]` never reflows the rail/thumb (their own geometry is untouched
-     by this feature) or the surrounding page — zero layout shift on show/hide, by construction, not by
-     tuning. Anchored at a FIXED inline-end position (never a function of --value-pct): the "label-end,
-     static" design choice — it can never approach the host's own edge, so it needs no clamping to stay
-     "inside the host box" (the browser probe's min/max-position check). It may transiently sit near/over
-     the thumb when the value is near max — accepted for v1 (the pill's own background keeps the text
-     legible on top; see the issue Findings for the rejected thumb-bubble alternative). */
-  :scope [data-part='value'] {
-    position: absolute;
-    inset-inline-end: 0;
-    inset-block-start: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-inline: calc(var(--md-sys-widget-inset) * 1.5);
-    border-radius: 999px; /* pill — dialect unified with slider-multi's readout (checker nit) */
-    background: var(--ui-slider-value-surface);
-    color: var(--ui-slider-value-ink);
-    font-size: var(--ui-slider-value-font);
-    line-height: 1;
-    white-space: nowrap;
-    pointer-events: none; /* decorative overlay — never intercepts the drag/click surface beneath it */
-  }
-
-  /* The author-stylesheet [hidden] guard: our own `display: flex` above is AUTHOR origin, which beats
-     the UA stylesheet's `[hidden]{display:none}` regardless of specificity (origin, not specificity,
-     decides across UA vs author) — without this explicit re-declaration `hidden` would silently no-op
-     (the field.css error-part precedent hits the identical cascade fact). */
-  :scope [data-part='value'][hidden] {
-    display: none;
-  }
-
   /* Focus ring (ADR-0009) — the shared fleet ring: `:focus-visible` (keyboard-only). Surrounds the
-     whole control (host box), the fleet standard. Reads fleet-wide tokens directly — the one deliberate
-     exception to "consume only --ui-slider-*", matching the checkbox/switch pattern. */
+     whole control (the HOST is the one focusable/tabbable element, ADR-0010), the fleet standard. Reads
+     fleet-wide tokens directly — the one deliberate exception to "consume only --ui-slider-*", matching
+     the checkbox/switch pattern. */
   :scope:focus-visible {
     outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--md-sys-state-focus-ring-offset);
@@ -244,14 +303,14 @@
 
   /* Reduced motion — zero ALL transitions (accessibility non-negotiable). */
   @media (prefers-reduced-motion: reduce) {
-    :scope::after {
+    .rail::after {
       transition: none;
     }
   }
 
-  /* Disabled — pointer-inert + cursor reset. The [disabled] token block already muted the colours;
-     `pointer-events: none` ensures `:hover` never matches (muted tokens hold at idle forever). */
-  :scope[disabled] {
+  /* Disabled — pointer-inert + cursor reset on .rail (the [disabled] token block already muted the
+     colours; `pointer-events: none` ensures `:hover` never matches — muted tokens hold at idle forever). */
+  :scope[disabled] .rail {
     pointer-events: none;
     cursor: default;
   }
@@ -263,7 +322,7 @@
      from re-overriding them (same pattern as switch.css / checkbox.css — ADR-0009 ring is free via
      --md-sys-color-focus-ring → Highlight from the token layer). */
   @media (forced-colors: active) {
-    :scope::before {
+    .rail::before {
       background: linear-gradient(
         to right,
         Highlight calc(var(--value-pct, 0) * 1%),
@@ -271,15 +330,9 @@
       );
       forced-color-adjust: none;
     }
-    :scope::after {
+    .rail::after {
       background: Canvas;
       border: 2px solid Highlight;
-      forced-color-adjust: none;
-    }
-    :scope [data-part='value'] {
-      background: Canvas;
-      color: CanvasText;
-      border: 1px solid ButtonText;
       forced-color-adjust: none;
     }
   }

@@ -12,13 +12,6 @@
 import { UIFormElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import type { FormValue } from '../../dom/index.ts'
 
-// GH #1126: the live value-readout hide delay shared by both Range-class leaves (ui-slider ·
-// ui-slider-multi) — each control's own `input`-driven readout re-arms this timer on every live
-// value change (pointer drag AND keyboard step both emit `input`), so the number stays visible for
-// the whole scrub and fades ~1.2s after the LAST change (not a fixed per-keystroke flash). One
-// constant, one source of truth — both leaves import it rather than re-guessing a duration.
-export const RANGE_READOUT_HIDE_MS = 1200
-
 const rangeProps = {
   ...UIFormElement.formProps,
   // LLD-C1: numeric range params. All reflected for attribute-driven construction.
@@ -30,6 +23,24 @@ const rangeProps = {
   // ADR-0042 clause-2: the shared widget-box size axis (the track/thumb ride --md-sys-compact-{size}); all
   // Range controls inherit it — typed here, not per-leaf (the same lesson as UIIndicatorElement's size).
   size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
+  // GH #1141 — the accessible-name + visible-label seam. Fleet survey (cited in full on the issue's
+  // Findings): text-field/select DO own a `label` prop (TKT-0069 item 2: reflects fleet-wide) that is
+  // ElementInternals-linked — but for THOSE controls it is an aria-only stand-in, the VISIBLE label is
+  // exclusively `ui-field`'s job (a column wrapper: label / control / description / error, stacked). That
+  // composition cannot express this control's required layouts (`inline`'s single ROW, `block`'s centred-
+  // UNDER-the-rail placement) — ui-field is a fixed vertical column, never a row partner. The closer
+  // precedent is `ui-badge`'s `label` prop, which DOES render its own visible `[data-part='label']` text
+  // node from the prop (badge.ts) in addition to being the accessible name — Range-class controls follow
+  // THAT branch: `label` is both `internals.ariaLabel` (empty ⇒ no accessible name minted, the icon/progress/
+  // ramp/ladder precedent) AND the visibly-rendered, layout-positioned label part (own props, ElementInternals-
+  // linked — Ruling 3's first branch). Shared here (not per-leaf) since both Range leaves need it identically.
+  label: { ...prop.string(), reflect: true },
+  // GH #1141 — the layout enum selecting label/value placement relative to the rail: `standard` (label
+  // top-left, value top-right, one row above the rail) · `inline` (label/rail/value all one row, rail
+  // flexing) · `block` (label centred above, value centred below). Literal union, never `enum`
+  // (erasableSyntaxOnly). Shared on the base so ui-slider and ui-slider-multi get byte-identical layouts
+  // (Ruling 4).
+  layout: { ...prop.enum(['standard', 'inline', 'block'] as const, 'standard'), reflect: true },
 } satisfies PropsSchema
 
 export interface UIRangeElement extends ReactiveProps<typeof rangeProps> {}
@@ -109,6 +120,13 @@ export class UIRangeElement extends UIFormElement {
       this.internals.ariaValueMin = String(this.min ?? 0)
       this.internals.ariaValueMax = String(this.max ?? 100)
       this.internals.ariaValueText = this.valueText(value)
+    })
+
+    // GH #1141 — the `label` prop IS the accessible name when non-empty (the icon/progress/ramp/ladder
+    // precedent: `internals.ariaLabel = label || null`, empty ⇒ no accessible name minted, leaving the
+    // author-supplied aria-label/aria-labelledby fallback in force, byte-identical prior behavior).
+    this.effect(() => {
+      this.internals.ariaLabel = this.label || null
     })
 
     // LLD-C5: geometry seam — `--value-pct` on the host style so the subclass CSS can paint the fill

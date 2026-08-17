@@ -74,3 +74,23 @@ class UISliderMultiElement extends UIRangeElement {
 jsdom: value clamp/snap, keyboard step (Arrow/Page/Home/End), ARIA value props, slider-multi lo≤hi. Browser
 smoke: the track on `--ui-compact`, the thumb 2px inset, pointer-drag maps position→value (the value-drag
 controller, real pointer events), forced-colors. C10 zero-residue + gz marginal.
+
+## Amendment — GH #1141 (2026-08-17): shared `label` + `layout` props
+
+The base gained two more SHARED props (`{label, layout}`, alongside LLD-C1's `{value, min, max, step, size}`)
+so both leaves get them byte-identically (Ruling 4, GH #1141):
+
+- **`label: string`** (reflected) — `internals.ariaLabel = label || null` (LLD-C2, the icon/progress/ramp/
+  ladder precedent: empty ⇒ no accessible name minted, falling back to an author `aria-label`/`aria-labelledby`)
+  AND the source for a visibly-rendered, layout-positioned `[data-part='label']` text node each leaf paints
+  (the `ui-badge` precedent: an own prop that is BOTH the accessible name and the rendered text — chosen over
+  the text-field/select branch, where a `label` prop is an aria-only stand-in and the VISIBLE label is
+  `ui-field`'s job, because `ui-field`'s fixed vertical column composition cannot express `inline`'s one-row
+  or `block`'s centred-under-rail placement; survey + citations on the issue's Findings).
+- **`layout: enum(['standard','inline','block'], 'standard')`** (reflected) — selects the label/value/rail
+  placement; pure-CSS `[layout]` attribute selectors on each leaf's own stylesheet, no JS geometry beyond the
+  existing `--value-pct` seam.
+- **Superseded:** the GH #1126 transient value-readout (fade timer, `#armReadout`/`#hideReadoutNow`,
+  `RANGE_READOUT_HIDE_MS`) is now DEAD for both leaves — every `layout` member provides a resting value slot,
+  so Ruling 2 retires the fade mechanism outright: the value is always visible at rest and live during scrub,
+  gated only by `readoutHidden` (GH #1136), whose meaning widens to "hide the at-rest value too."

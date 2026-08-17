@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { UISliderMultiElement } from './slider-multi.ts'
 import { signal, inspect } from '../../reactive/index.ts'
 import type { FormValue } from '../../dom/index.ts'
@@ -62,8 +62,10 @@ class ProbeSliderMulti extends UISliderMultiElement {
   get hiThumb(): HTMLElement | null { return this.querySelector<HTMLElement>('.thumb[data-thumb="hi"]') }
   /** The rail element (set during connected() light-DOM build). */
   get railEl(): HTMLElement | null { return this.querySelector<HTMLElement>('.rail') }
-  /** The GH #1126 value-readout element (set during connected() light-DOM build). */
+  /** The value-readout element (GH #1141, supersedes GH #1126; set during connected() light-DOM build). */
   get valueEl(): HTMLElement | null { return this.querySelector<HTMLElement>('[data-part="value"]') }
+  /** The GH #1141 label element (set during connected() light-DOM build). */
+  get labelEl(): HTMLElement | null { return this.querySelector<HTMLElement>('[data-part="label"]') }
 }
 customElements.define('ui-slider-multi-probe', ProbeSliderMulti)
 
@@ -611,6 +613,60 @@ describe('UISliderMultiElement — disabled state', () => {
   })
 })
 
+// ── GH #1141: label prop — accessible name + visible, layout-positioned part ────────────────────────
+
+describe('UISliderMultiElement — label prop (GH #1141)', () => {
+  it('default empty — no visible label part, no internals.ariaLabel', () => {
+    const el = make()
+    document.body.append(el)
+    expect(el.label).toBe('')
+    expect(el.labelEl!.hidden).toBe(true)
+    expect(el.probeInternals.ariaLabel).toBeNull()
+    el.remove()
+  })
+
+  it('non-empty label — visible, aria-hidden part + internals.ariaLabel set', () => {
+    const el = make()
+    el.label = 'Price'
+    document.body.append(el)
+    const part = el.labelEl!
+    expect(part.hidden).toBe(false)
+    expect(part.textContent).toBe('Price')
+    expect(part.getAttribute('aria-hidden')).toBe('true')
+    expect(el.probeInternals.ariaLabel).toBe('Price')
+    el.remove()
+  })
+
+  it('reflects to the label attribute', () => {
+    const el = make()
+    document.body.append(el)
+    el.label = 'Range'
+    expect(el.getAttribute('label')).toBe('Range')
+    el.remove()
+  })
+})
+
+// ── GH #1141: layout prop — default + reflect ────────────────────────────────────────────────────────
+
+describe('UISliderMultiElement — layout prop (GH #1141)', () => {
+  it('defaults to standard', () => {
+    const el = make()
+    document.body.append(el)
+    expect(el.layout).toBe('standard')
+    el.remove()
+  })
+
+  it('reflects JS-set value to the [layout] attribute (the CSS grid-template hook)', () => {
+    const el = make()
+    document.body.append(el)
+    el.layout = 'inline'
+    expect(el.getAttribute('layout')).toBe('inline')
+    el.layout = 'block'
+    expect(el.getAttribute('layout')).toBe('block')
+    el.remove()
+  })
+})
+
 // ── zero residue (connect / disconnect) — C10 ────────────────────────────────────────────────────
 
 describe('UISliderMultiElement — zero residue (C10)', () => {
@@ -693,21 +749,21 @@ describe('UISliderMultiElement — zero residue (C10)', () => {
   })
 })
 
-// ── GH #1126: live value readout ─────────────────────────────────────────────────────────────────────
+// ── GH #1141: the value part is always visible at rest (supersedes GH #1126's transient fade) ─────────
 
-describe('UISliderMultiElement — live value readout (GH #1126)', () => {
-  it('the readout part exists, aria-hidden, and starts hidden', () => {
+describe('UISliderMultiElement — always-visible value readout (GH #1141, supersedes GH #1126)', () => {
+  it('the value part exists, aria-hidden, and is VISIBLE AT REST by default showing "lo – hi"', () => {
     const el = make()
     document.body.append(el)
     const part = el.valueEl!
     expect(part).not.toBeNull()
     expect(part.getAttribute('aria-hidden')).toBe('true')
-    expect(part.hidden).toBe(true)
+    expect(part.hidden).toBe(false) // GH #1141 Ruling 2/4 — visible at rest, not only during scrub
+    expect(part.textContent).toBe('0 – 100') // the default valueLo/valueHi pair
     el.remove()
   })
 
-  it('keyboard adjust on the lo thumb shows BOTH values formatted as "lo – hi"', async () => {
-    vi.useFakeTimers()
+  it('keyboard adjust on the lo thumb updates BOTH values live, formatted as "lo – hi"', async () => {
     const el = make()
     el.valueLo = 20
     el.valueHi = 80
@@ -718,39 +774,19 @@ describe('UISliderMultiElement — live value readout (GH #1126)', () => {
     await el.updateComplete
     expect(part.textContent).toBe('21 – 80')
     el.remove()
-    vi.useRealTimers()
   })
 
-  it('the readout hides after the delay elapses with no further change', () => {
-    vi.useFakeTimers()
+  it('focusout does NOT hide the value part (no scrub-only visibility left to end)', () => {
     const el = make()
     el.valueLo = 20
     document.body.append(el)
     dispatchKey(el.loThumb!, 'ArrowRight')
-    const part = el.valueEl!
-    expect(part.hidden).toBe(false)
-    vi.advanceTimersByTime(1300)
-    expect(part.hidden).toBe(true)
-    el.remove()
-    vi.useRealTimers()
-  })
-
-  it('focusout hides the readout immediately', () => {
-    vi.useFakeTimers()
-    const el = make()
-    el.valueLo = 20
-    document.body.append(el)
-    dispatchKey(el.loThumb!, 'ArrowRight')
-    const part = el.valueEl!
-    expect(part.hidden).toBe(false)
     el.loThumb!.dispatchEvent(new FocusEvent('focusout', { bubbles: true }))
-    expect(part.hidden).toBe(true)
+    expect(el.valueEl!.hidden).toBe(false)
     el.remove()
-    vi.useRealTimers()
   })
 
-  it('pointer drag on the rail shows the readout (armed via the shared `input` listener)', async () => {
-    vi.useFakeTimers()
+  it('pointer drag on the rail updates the already-visible value part live', async () => {
     const el = make()
     el.valueLo = 0
     el.valueHi = 100
@@ -762,16 +798,15 @@ describe('UISliderMultiElement — live value readout (GH #1126)', () => {
       configurable: true,
     })
     const part = el.valueEl!
-    expect(part.hidden).toBe(true)
+    expect(part.hidden).toBe(false)
     rail.dispatchEvent(new PointerEvent('pointerdown', { clientX: 10, pointerId: 1, bubbles: true }))
     expect(part.hidden).toBe(false)
     await el.updateComplete
     expect(part.textContent).toBe('10 – 100')
     el.remove()
-    vi.useRealTimers()
   })
 
-  it('no ARIA regression — each thumb\'s own aria-valuetext still tracks its value while the visual readout stays aria-hidden', () => {
+  it('no ARIA regression — each thumb\'s own aria-valuetext still tracks its value while the visual value part stays aria-hidden', () => {
     const el = make()
     el.valueLo = 20
     el.valueHi = 80
@@ -782,35 +817,41 @@ describe('UISliderMultiElement — live value readout (GH #1126)', () => {
     el.remove()
   })
 
-  it('disconnect clears the pending hide timer (C10 zero-residue)', () => {
-    vi.useFakeTimers()
+  it('disconnect/reconnect does not throw and leaves the part connected to the (re-appended) host', () => {
     const el = make()
     el.valueLo = 20
     document.body.append(el)
-    dispatchKey(el.loThumb!, 'ArrowRight')
-    el.remove() // disconnected() clears the timer
-    expect(() => vi.advanceTimersByTime(5000)).not.toThrow()
-    vi.useRealTimers()
+    const part = el.valueEl!
+    el.remove()
+    expect(part.isConnected).toBe(false)
+    expect(() => document.body.append(el)).not.toThrow()
+    expect(el.valueEl!.isConnected).toBe(true)
+    el.remove()
   })
 })
 
-// ── GH #1136: readoutHidden opt-out ──────────────────────────────────────────────────────────────────
+// ── GH #1136: readoutHidden opt-out (widened by GH #1141 to hide the at-rest value too) ────────────────
 
-describe('UISliderMultiElement — readoutHidden opt-out (GH #1136)', () => {
-  it('default false — unchanged: keyboard step on the lo thumb still shows the readout', () => {
-    vi.useFakeTimers()
+describe('UISliderMultiElement — readoutHidden opt-out (GH #1136, widened by GH #1141)', () => {
+  it('default false — the value part is visible at rest', () => {
     const el = make()
     el.valueLo = 20
     document.body.append(el)
     expect(el.readoutHidden).toBe(false)
-    dispatchKey(el.loThumb!, 'ArrowRight')
     expect(el.valueEl!.hidden).toBe(false)
     el.remove()
-    vi.useRealTimers()
   })
 
-  it('readoutHidden=true — keyboard step on either thumb never shows the readout', () => {
-    vi.useFakeTimers()
+  it('readoutHidden=true — the value part is hidden AT REST too (GH #1141 widened scope)', () => {
+    const el = make()
+    el.valueLo = 20
+    el.readoutHidden = true
+    document.body.append(el)
+    expect(el.valueEl!.hidden).toBe(true)
+    el.remove()
+  })
+
+  it('readoutHidden=true — keyboard step on either thumb never shows the value part', () => {
     const el = make()
     el.valueLo = 20
     el.valueHi = 80
@@ -821,11 +862,9 @@ describe('UISliderMultiElement — readoutHidden opt-out (GH #1136)', () => {
     dispatchKey(el.hiThumb!, 'ArrowLeft')
     expect(el.valueEl!.hidden).toBe(true)
     el.remove()
-    vi.useRealTimers()
   })
 
-  it('readoutHidden=true — pointer drag on the rail never shows the readout', () => {
-    vi.useFakeTimers()
+  it('readoutHidden=true — pointer drag on the rail never shows the value part', () => {
     const el = make()
     el.valueLo = 0
     el.valueHi = 100
@@ -840,7 +879,6 @@ describe('UISliderMultiElement — readoutHidden opt-out (GH #1136)', () => {
     rail.dispatchEvent(new PointerEvent('pointerdown', { clientX: 10, pointerId: 1, bubbles: true }))
     expect(el.valueEl!.hidden).toBe(true)
     el.remove()
-    vi.useRealTimers()
   })
 
   it('reflects to the readout-hidden attribute (kebab, multi-word prop)', () => {
@@ -865,7 +903,7 @@ const parsed = parseDescriptor(fence)
 // 'value' is present because sliderMultiProps spreads UIRangeElement.props (which carries the base's
 // single-value seam); slider-multi never activates that seam (no super.connected()), but the prop exists
 // in the static shape and the contract↔props bijection therefore requires a matching descriptor entry.
-const ATTR_NAMES = ['min', 'max', 'step', 'value', 'size', 'name', 'disabled', 'required', 'valueLo', 'valueHi', 'readoutHidden']
+const ATTR_NAMES = ['min', 'max', 'step', 'value', 'size', 'name', 'disabled', 'required', 'valueLo', 'valueHi', 'readoutHidden', 'label', 'layout']
 
 describe('slider-multi.md descriptor — structural validity (s10 part a)', () => {
   it('carries the ADR-0004 / plan §10 descriptor field set as top-level keys', () => {
@@ -892,7 +930,7 @@ describe('slider-multi.md descriptor — structural validity (s10 part a)', () =
 
 describe('slider-multi.md descriptor — contract↔props trip-wire (s10 part b)', () => {
   it('attributes[] is a faithful bijection with UISliderMultiElement.props (0 drift)', () => {
-    // anti-vacuous: all 9 attribute names parse before the trip-wire is consulted
+    // anti-vacuous: all 13 attribute names parse before the trip-wire is consulted
     expect(parsed.attributes.map((a) => a.name)).toEqual(ATTR_NAMES)
     expect(compareDescriptorToProps(parsed.attributes, UISliderMultiElement.props)).toEqual([])
   })

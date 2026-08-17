@@ -526,6 +526,12 @@ export const segmentFactory: WidgetFactory = {
 // commit event `change` — sliders emit `input` on every live drag/keyboard step and `change` only on
 // blur when the value has moved since focus (range-element.ts's commit-on-blur contract, slider.md
 // events table) — the committed event, not the live one, per the task's explicit instruction.
+// GH #1141 — `label` (bindable, → internals.ariaLabel + the visible label part) and `layout`
+// (`standard`/`inline`/`block`, structural — not bindable, the `Calendar.mode` precedent) are ALSO 1:1
+// reflecting accessors, added to catalog.json's manually-enumerated property list (this factory needs no
+// code change — `accessorFactory`'s `applyProp: setProp` already reflects ANY listed property 1:1; the
+// motivating GenUI consumer — an agent-rendered blackjack bet slider — needs `label`+`layout="inline"` or
+// `"standard"` so the bet amount is visible without requiring a scrub first).
 export const sliderFactory: WidgetFactory = accessorFactory('ui-slider', { prop: 'value', event: 'change' })
 
 // SliderMulti → ui-slider-multi (ADR-0053 deferral, closed; Fork C — dual value, RESOLVED two types).
@@ -535,6 +541,8 @@ export const sliderFactory: WidgetFactory = accessorFactory('ui-slider', { prop:
 // limitation ("the ADR-0019 seam permits only ONE `value:{prop,event}` mark per component, and this
 // control commits TWO values") by widening `value` to slots: `valueLo`/`valueHi` are now bindable
 // TWO-WAY, each slot installing its own commit listener (renderer/input.ts, per-slot opt-in).
+// GH #1141 — `label`/`layout` land here too (see the Slider row's identical note above; the shared
+// `UIRangeElement` base means both controls' catalog rows gain them identically).
 export const sliderMultiFactory: WidgetFactory = accessorFactory('ui-slider-multi', [
   { prop: 'valueLo', event: 'change' },
   { prop: 'valueHi', event: 'change' },

@@ -7,11 +7,17 @@
  *       `[disabled]` mutes the rail/fill/thumb colours to the neutral muted family.
  *       No `color-mix` — colour opinions live in the token layer (ADR-0008).
  *   [2] STYLES BLOCK — `@scope (ui-slider-multi)` CONSUMES only `--ui-slider-multi-*` for its OWN
- *       tokens. The host is a block-level flex column that sizes to its content; the RAIL (.rail) is a
- *       thin horizontal bar inside the interactive-box-height container; the FILL (.fill) spans lo→hi
- *       using `--value-pct-lo`/`--value-pct-hi` (set by the JS geometry seam); each THUMB (.thumb) is
- *       a circle `box − 4px` = `box − 2×--md-sys-widget-inset` (ADR-0041 cl.3: the 2px-inset law) positioned
- *       absolutely on the rail by `left: calc(var(--value-pct-{lo|hi}) * 1%)`.
+ *       tokens. The host is a CSS GRID (GH #1141) whose `[layout]` attribute selects the
+ *       `grid-template-areas` placing the label part, `.rail`, and the value part — matching ui-slider's
+ *       own `standard`/`inline`/`block` templates. The row/column holding `.rail` is sized to the FULL
+ *       interactive box height (`--ui-slider-multi-box`, `grid-template-rows`/columns, NOT `auto`) so the
+ *       thumbs — which overflow `.rail`'s own thin bar height — still have room; `.rail` itself is
+ *       `align-self: center` within that taller track (the old host-level `display:flex;align-items:center`
+ *       centering, relocated). `.rail` (the thin horizontal bar) is `justify-self: stretch` to fill the
+ *       track's full inline-size (no longer `flex:1` — its parent is grid now, not flex). The FILL (.fill)
+ *       spans lo→hi using `--value-pct-lo`/`--value-pct-hi` (set by the JS geometry seam); each THUMB
+ *       (.thumb) is a circle `box − 4px` = `box − 2×--md-sys-widget-inset` (ADR-0041 cl.3: the 2px-inset
+ *       law) positioned absolutely on the rail by `left: calc(var(--value-pct-{lo|hi}) * 1%)`.
  *       `:focus-visible` ring (keyboard-only, ADR-0009). Unconditional transitions + reduced-motion
  *       (the Indicator/Range family pattern — NO :state(ready) gate; ADR-0042 LLD-C6). Forced-colors safe.
  *       Density-invariant (box/thumb scale with `--md-sys-compact-{size}`, never a raw px override here).
@@ -42,11 +48,18 @@
      to remap the focus colour for this component (WHCM: --md-sys-color-focus-ring → Highlight). */
   --ui-slider-multi-focus-ring: var(--md-sys-color-focus-ring);
 
-  /* GH #1126 — live value readout (design + rationale: slider.md's "Value readout" section, shared by
-     both Range-class leaves). Same role pairing as ui-slider's own readout tokens. */
+  /* GH #1141 — the value part is now an ALWAYS-VISIBLE-AT-REST plain text node in its own layout row/
+     column (Ruling 2 supersedes the GH #1126 transient pill-overlay design — see slider.css's file header
+     + range-element.lld.md's Amendment). Plain text (no pill surface/padding/border-radius). */
   --ui-slider-multi-value-ink: var(--md-sys-color-neutral-on-surface);
-  --ui-slider-multi-value-surface: var(--md-sys-color-neutral-surface-brightest);
   --ui-slider-multi-value-font: var(--md-sys-font-sm);
+
+  /* GH #1141 — the label part: plain text, the SUBDUED half of the label/value pair (matches ui-slider). */
+  --ui-slider-multi-label-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-slider-multi-label-font: var(--md-sys-font-sm);
+
+  /* GH #1141 — the label↔rail↔value row/column rhythm (matches ui-slider's --ui-slider-layout-gap). */
+  --ui-slider-multi-layout-gap: var(--md-sys-space-xs);
 }
 
 /* [size] → compact widget ramp repoint (ADR-0041: the LITERAL per-[scale] table in dimensions.css
@@ -61,42 +74,96 @@
   --ui-slider-multi-fill:         var(--md-sys-color-neutral-surface-high);
   --ui-slider-multi-thumb:        var(--md-sys-color-neutral-on-surface-variant);
   --ui-slider-multi-thumb-border: var(--md-sys-color-neutral-outline-variant);
-  /* GH #1126: muted too — belt-and-suspenders; disabled is pointer-inert (below) and keyboard-gated
-     (the base's effectiveDisabled check), so `input` never fires to arm the readout. */
-  --ui-slider-multi-value-ink:      var(--md-sys-color-neutral-on-surface-variant);
-  --ui-slider-multi-value-surface:  var(--md-sys-color-neutral-surface-high);
+  /* GH #1141: label/value ink mutes too (both hold READ-ONLY meaning while disabled). */
+  --ui-slider-multi-value-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-slider-multi-label-ink: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-slider-multi) consumes ONLY --ui-slider-multi-* ════════════════ */
 
 @scope (ui-slider-multi) {
-  /* Host: block container that centres the rail vertically within the interactive box height.
-     display:flex + align-items:center means the rail aligns to the middle of the box,
-     and the absolutely-positioned thumbs extend out from the rail's midline. */
+  /* Host: a GRID container (GH #1141) whose `[layout]` attribute selects the template placing the label
+     part, `.rail`, and the value part (matches ui-slider's own three templates). `position: relative`
+     remains the containing block for the thumbs' `left: calc(var(--value-pct-*) * 1%)` positioning — this
+     works because `.rail` is ALSO `position: relative` (nearest positioned ancestor for the thumbs), so
+     the host's own `position: relative` is (as before) belt-and-suspenders, not load-bearing. */
   :scope {
-    display: flex;
-    align-items: center;
+    display: grid;
+    row-gap: var(--ui-slider-multi-layout-gap);
+    column-gap: var(--ui-slider-multi-layout-gap);
     /* A range slider is a HORIZONTAL track — without an intrinsic width it collapses to the thumbs (dots)
        in a shrink-wrapping flex/inline context (ui-text-field #74 failure class). Floor the inline-size. */
     min-inline-size: var(--ui-slider-multi-min-inline-size, 12rem);
-    block-size: var(--ui-slider-multi-box);    /* interactive box = compact widget ramp step (ADR-0041) */
     position: relative;
     -webkit-user-select: none;
     user-select: none;
-    cursor: pointer;
-    /* The host is the outer sizing container for left:X% on the thumbs (via .rail containing block). */
   }
 
-  /* RAIL (.rail) — the thin horizontal track bar. Fills the full inline width of the host. Position:
-     relative makes the rail the containing block for the fill and thumb absolute children.
-     block-size = box/4 ≈ 4px at md scale — the slot height, not the interactive area. */
+  /* `standard` (default) — two rows: "label value" above "rail rail". The RAIL row is fixed at the FULL
+     interactive box height (not `auto`) — the thumbs overflow `.rail`'s own thin bar height, so the row
+     needs the same headroom the pre-#1141 host-level `block-size: --ui-slider-multi-box` used to give. */
+  :scope,
+  :scope[layout='standard'] {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto var(--ui-slider-multi-box);
+    grid-template-areas:
+      'label value'
+      'rail rail';
+  }
+
+  /* `inline` — one row: "label rail value", that row fixed at the full interactive box height. */
+  :scope[layout='inline'] {
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: var(--ui-slider-multi-box);
+    grid-template-areas: 'label rail value';
+    align-items: center;
+  }
+
+  /* `block` — three rows, one column: "label" / "rail" / "value", label/value CENTRED. */
+  :scope[layout='block'] {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto var(--ui-slider-multi-box) auto;
+    grid-template-areas:
+      'label'
+      'rail'
+      'value';
+    justify-items: center;
+  }
+
+  /* LABEL / VALUE parts — plain text, grid-area-placed. `auto`-sized rows/columns collapse to zero when
+     the only child is `[hidden]` (the author-origin guard below) — an empty label or a `readoutHidden`
+     value each reserve no space (Ruling 3). */
+  [data-part='label'] {
+    grid-area: label;
+    color: var(--ui-slider-multi-label-ink);
+    font-size: var(--ui-slider-multi-label-font);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  [data-part='value'] {
+    grid-area: value;
+    color: var(--ui-slider-multi-value-ink);
+    font-size: var(--ui-slider-multi-value-font);
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* RAIL (.rail) — the thin horizontal track bar. `justify-self: stretch` fills the track's full
+     inline-size (its parent is grid now, not flex — no more `flex: 1`); `align-self: center` centres the
+     thin bar within its OWN row/column, which is sized to the fuller interactive box height above (the
+     relocated `display:flex;align-items:center` centering the host used to do). Position: relative makes
+     the rail the containing block for the fill and thumb absolute children. block-size = box/4 ≈ 4px at
+     md scale — the bar's own thin slot height, not the interactive area (that's the grid track's job now). */
   .rail {
+    grid-area: rail;
+    justify-self: stretch;
+    align-self: center;
     position: relative;
-    flex: 1;
     block-size: calc(var(--ui-slider-multi-box) / 4);
     border-radius: 999px;                       /* pill — fully rounded ends */
     background: var(--ui-slider-multi-rail);
     overflow: visible;                          /* thumbs extend beyond the rail's block-size */
+    cursor: pointer;
   }
 
   /* FILL (.fill) — the lo→hi active range highlight. Absolutely positioned within the rail.
@@ -160,31 +227,11 @@
   .thumb[data-thumb='lo'] { left: calc(var(--value-pct-lo, 0) * 1%); }
   .thumb[data-thumb='hi'] { left: calc(var(--value-pct-hi, 100) * 1%); }
 
-  /* GH #1126 — the live value readout (`[data-part='value']`, host-level sibling of `.rail`, built in
-     #buildDOM). `position: absolute` removes it from the host's flex flow entirely — it never competes
-     with `.rail`'s `flex: 1` for width, and toggling `[hidden]` causes zero layout shift. Anchored at a
-     FIXED inline-end position (never a function of --value-pct-lo/hi) — the label-end design choice; see
-     slider.md's "Value readout" section for the shared rationale (rejecting a thumb-following bubble). */
-  [data-part='value'] {
-    position: absolute;
-    inset-inline-end: 0;
-    inset-block-start: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-inline: calc(var(--md-sys-widget-inset) * 1.5);
-    border-radius: 999px; /* pill — dialect unified with slider's readout (checker nit) */
-    background: var(--ui-slider-multi-value-surface);
-    color: var(--ui-slider-multi-value-ink);
-    font-size: var(--ui-slider-multi-value-font);
-    line-height: 1;
-    white-space: nowrap;
-    pointer-events: none;
-  }
-
-  /* Author-origin [hidden] guard — our own `display: flex` above beats the UA `[hidden]{display:none}`
-     rule by ORIGIN (author > UA), regardless of specificity; re-declare explicitly (field.css precedent). */
+  /* Explicit [hidden] guard (matches slider.css's identical belt-and-suspenders rationale): neither part
+     declares an unconditional `display` (grid auto-blockifies a bare span), so the UA `[hidden]` rule
+     already wins unopposed — this guards against a future edit adding one, and documents that `auto`-sized
+     grid rows/columns only collapse to zero when the sole child is `display:none` (Ruling 3). */
+  [data-part='label'][hidden],
   [data-part='value'][hidden] {
     display: none;
   }
@@ -205,8 +252,9 @@
     .thumb { transition: none; }
   }
 
-  /* Disabled host — pointer-inert so :hover/:active never lift the muted neutral tokens. */
-  :scope[disabled] {
+  /* Disabled — pointer-inert on .rail (the interactive surface) so :hover/:active never lift the muted
+     neutral tokens; the thumbs are separately gated by the keyboard/tabindex effect (slider-multi.ts). */
+  :scope[disabled] .rail {
     pointer-events: none;
     cursor: default;
   }

@@ -319,7 +319,9 @@
         "step": { "type": { "type": "number" }, "mapsTo": "step" },
         "name": { "type": { "type": "string" }, "mapsTo": "name" },
         "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
-        "required": { "type": { "type": "boolean" }, "mapsTo": "required" }
+        "required": { "type": { "type": "boolean" }, "mapsTo": "required" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "layout": { "type": { "type": "string", "enum": ["standard", "inline", "block"] }, "mapsTo": "layout" }
       },
       "value": { "prop": "value", "event": "change" }
     },
@@ -332,7 +334,9 @@
         "valueLo": { "type": { "type": "number" }, "bindable": true, "mapsTo": "valueLo" },
         "valueHi": { "type": { "type": "number" }, "bindable": true, "mapsTo": "valueHi" },
         "name": { "type": { "type": "string" }, "mapsTo": "name" },
-        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" }
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "layout": { "type": { "type": "string", "enum": ["standard", "inline", "block"] }, "mapsTo": "layout" }
       },
       "value": [
         { "prop": "valueLo", "event": "change" },

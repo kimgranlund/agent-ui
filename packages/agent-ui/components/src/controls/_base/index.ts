@@ -5,5 +5,5 @@
 // Import these in leaf control files:
 //   import { UIIndicatorElement } from '../_base/index.ts'  // (from controls/{name}/)
 export { UIIndicatorElement } from './indicator-element.ts'
-export { UIRangeElement, RANGE_READOUT_HIDE_MS } from './range-element.ts'
+export { UIRangeElement } from './range-element.ts'
 export { UIListboxElement } from './listbox-element.ts'

@@ -672,6 +672,15 @@ describe('default catalog factories — Slider (ADR-0087 Wave B, closes the ADR-
     expect(target.disabled).toBe(true)
     expect(target.required).toBe(true)
   })
+
+  it('GH #1141 — label/layout are 1:1 reflecting accessors (the blackjack-bet-slider GenUI case)', () => {
+    const el = sliderFactory.create()
+    sliderFactory.applyProp(el, 'label', 'Bet')
+    sliderFactory.applyProp(el, 'layout', 'inline')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.label).toBe('Bet')
+    expect(target.layout).toBe('inline')
+  })
 })
 
 describe('default catalog factories — SliderMulti (ADR-0087 Wave B, Fork C RESOLVED two-types; ADR-0161 write-back)', () => {
@@ -701,6 +710,15 @@ describe('default catalog factories — SliderMulti (ADR-0087 Wave B, Fork C RES
       { prop: 'valueLo', event: 'change' },
       { prop: 'valueHi', event: 'change' },
     ])
+  })
+
+  it('GH #1141 — label/layout are 1:1 reflecting accessors (matches the Slider row)', () => {
+    const el = sliderMultiFactory.create()
+    sliderMultiFactory.applyProp(el, 'label', 'Price')
+    sliderMultiFactory.applyProp(el, 'layout', 'block')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.label).toBe('Price')
+    expect(target.layout).toBe('block')
   })
 })
 
