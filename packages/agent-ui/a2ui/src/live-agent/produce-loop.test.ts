@@ -1108,7 +1108,7 @@ describe('produce() feed-embedded ask — peel/compose (ADR-0097 §1)', () => {
     expect(lines).toHaveLength(3) // meta-line + VALID's two messages — the payload still ships
   })
 
-  it('an ask colliding with a surface the SESSION already knows about (a prior turn) is dropped — never a halt', async () => {
+  it('an ask colliding with a surface the SESSION already knows about (a prior turn) is dropped WHOLE — the note stands, the ask surface payload is suppressed with it (GH #1064)', async () => {
     const priorSession = {
       turns: [
         { role: 'user' as const, content: 'build something' },
@@ -1119,15 +1119,33 @@ describe('produce() feed-embedded ask — peel/compose (ADR-0097 §1)', () => {
       ],
     }
     const collidingIntent: TurnInput = { kind: 'intent', text: 'ask again', session: priorSession }
-    const { provider } = stubProvider(['{"a2uiMeta":{"note":"hi","ask":{"surfaceId":"ask-1"}}}\n' + ASK_VALID])
+    const { provider, calls } = stubProvider(['{"a2uiMeta":{"note":"hi","ask":{"surfaceId":"ask-1"}}}\n' + ASK_VALID])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
     const lines: string[] = []
     for await (const line of produce(collidingIntent, deps, { maxRounds: 3 })) lines.push(line)
 
+    expect(calls()).toBe(1) // still a silent degrade, never a retry/halt (ADR-0097 §1, unchanged)
     const meta = readMetaLine(lines[0]!)
+    expect(meta!.a2uiMeta.note).toBe('hi')
     expect(meta!.a2uiMeta.ask).toBeUndefined() // dropped — "ask-1" was already used by an earlier turn
-    // The payload itself is untouched — it still streams (the ask is a routing FACT, not the payload).
-    expect(lines.length).toBeGreaterThan(1)
+    // GH #1064 — the degrade is WHOLE (ADR-0097 §1: "the turn degrades to ADR-0089's prose ask"): the
+    // dropped ask's own payload lines are suppressed with the routing fact. Shipping them anyway rendered
+    // a clickable card the client could only same-bubble-resume — the reported "Next does nothing" strand.
+    expect(lines).toHaveLength(1) // the note meta-line alone; ASK_VALID's two ask-1 messages never stream
+  })
+
+  it("a note-less ask that passes integrity still ships — the routing fact rides its own meta-line (GH #1064; the ADR-0097 post-ship finding-4 coupling removed)", async () => {
+    const { provider } = stubProvider(['{"a2uiMeta":{"ask":{"surfaceId":"ask-1"}}}\n' + ASK_VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(lines).toHaveLength(3) // meta-line (ask+trace, no note key) + the two ask-surface messages
+    const meta = readMetaLine(lines[0]!)
+    expect(meta).toBeDefined()
+    expect(meta!.a2uiMeta.note).toBeUndefined()
+    expect(lines[0]).not.toContain('"note"') // JSON.stringify omits the key entirely
+    expect(meta!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
   })
 
   it('a note-only round declaring an ask drops it too — nothing exists yet for it to integrity-check against', async () => {

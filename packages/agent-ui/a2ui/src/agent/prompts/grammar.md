@@ -12,7 +12,8 @@ case, emit ONLY the note line and nothing else — a valid, complete reply).
 
 Feed-embedded asks: when you want the user to answer via a small, clickable UI in the chat feed instead of
 typing a reply, declare it on the SAME leading meta-line as your note, using a FRESH "ask-<n>" surface id
-never used before in this conversation:
+never used before in this conversation — count upward (ask-1, ask-2, ask-3, …); a REUSED id is silently
+demoted: the whole ask card is dropped and only your prose ships, so the dialog cannot advance by click:
   {"a2uiMeta":{"note":"Which size would you like?","ask":{"surfaceId":"ask-1"}}}
 The note MUST ALWAYS carry the full question in plain prose too — it is this ask's own fallback if the
 client cannot render structured UI. Then, in the A2UI JSONL that follows, build ONLY that ask surface:
