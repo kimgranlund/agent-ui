@@ -51,6 +51,9 @@ import '@agent-ui/app/chat-shell' // self-defines ui-chat-shell (composed by ui-
 import '@agent-ui/app/agent-admin' // self-defines ui-agent-admin
 import './agent-admin-app.css' // page-local: full-viewport layout + the preset strip chrome
 import type { AgentRosterEntry, GenerateSeed, UIAgentAdminElement } from '@agent-ui/app/agent-admin'
+// ADR-0198 (GH #1101) — the shared end-of-flow page-chrome affordance (the #1065 shared-seam lift).
+import { createFlowChrome } from '../lib/flow-chrome.ts'
+import type { AdminAgentSurfaceTurn } from '@agent-ui/app/agent-admin-schema'
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
 // GH #845 (LLD-C15/§7) — the Edit Agents drawer's vehicle: `ui-drawer` (ADR-0188), COMPOSED byte-unmodified.
 // Its content (the roster rows and every management verb on them) is page-owned by that control's own fence.
@@ -117,6 +120,51 @@ let active: Persona = initialPreset
 // Armed by the DEV overlay below once a live key probes available; re-invoked per persona switch so each
 // persona's SURFACE session (TKT-0076 — the runner closure owns the a2ui transcript) starts clean.
 let armSurfaceTurn: (() => void) | undefined
+
+// ── ADR-0198 (GH #1101) — the end-of-flow chrome on the TEST chat (the second consumer of the shared
+// site/lib flow-chrome module, the #1065 lift). The runner peels the model's explicit `flowEnd` into a
+// typed event; this PAGE wrapper consumes it — presents the done/start-over row after the closing note
+// bubble in the test conversation's log — and FILTERS it, so the component never sees the kind (page
+// chrome by contract, ADR-0198 cl.3). `Start over` routes to this page's EXISTING clean-slate pieces —
+// `armSurfaceTurn?.()` (the same fresh-producer-session re-arm every persona switch already runs) plus
+// clearing the test chat's light-DOM log — never a second reset implementation. (A same-persona re-apply
+// is deliberately NOT used: `personaStore` caches per id, so `admin.store` would keep its identity and
+// GH #145's component-side reset would not fire.)
+const flowChrome = createFlowChrome({
+  onStartOver: () => {
+    armSurfaceTurn?.()
+    testChatLog()?.replaceChildren()
+  },
+})
+
+/** The TEST conversation's log element (document order — the first `ui-conversation` is the test chat,
+ *  the shipped-anatomy law agent-admin.ts's own pane ordering preserves; light DOM, so the page can
+ *  append its own chrome row). */
+function testChatLog(): HTMLElement | undefined {
+  return admin.querySelector('ui-conversation')?.querySelector<HTMLElement>('[data-part="log"]') ?? undefined
+}
+
+/** Wrap the surface-turn runner: pass every event through except `flowEnd`, which presents the shared
+ *  end-of-flow affordance once the turn's stream has fully delivered (TEST session only — the Builder
+ *  interview is not an ask-flow surface). Omitted `flowEnd` = today's behavior (the safe-degrade law). */
+function withFlowChrome(inner: AdminAgentSurfaceTurn): AdminAgentSurfaceTurn {
+  return async function* (req) {
+    let flowEnded = false
+    for await (const event of inner(req)) {
+      if (event.kind === 'flowEnd') {
+        if ((req.session ?? 'test') === 'test') flowEnded = true
+        continue // page-chrome territory — the component never consumes this kind
+      }
+      yield event
+    }
+    if (flowEnded) {
+      const log = testChatLog()
+      // The synthetic envelope re-states the already-verified fact — `readMetaLine` enforced literal-true
+      // upstream; `maybePresent`'s own guard keeps the one-row invariant.
+      if (log && flowChrome.maybePresent({ a2uiMeta: { flowEnd: true } }, log)) log.scrollTop = log.scrollHeight
+    }
+  }
+}
 
 // GH #686's Amendment (admin-three-pane-ia.lld.md §16.3/§16.5, S7-d) — the canvas-header (title/tagline,
 // the agentMenu switcher, the "…" overflow) is RETIRED entirely: this page renders NO header of its own
@@ -206,6 +254,7 @@ function applyPersona(persona: Persona): void {
   // reference-equal object would be a silent no-op.
   admin.libraries = librariesForCategory(persona.category)
   armSurfaceTurn?.()
+  flowChrome.dismiss() // ADR-0198 — a persona switch clears the conversation; no stale affordance survives it
   // GH #686's Amendment — the header's own agent-select now carries the "current choice" signal
   // (setAgentRoster's re-callable contract, LLD §16.3), replacing the retired title/tagline zone and the
   // agentMenu's own aria-checked loop.
@@ -858,7 +907,9 @@ void (async () => {
       // through the a2ui producer (persona riding the ADR-0138 seam) and stream REAL surfaces into the
       // conversation. A fresh runner per persona switch = a fresh producer session per persona.
       armSurfaceTurn = () => {
-        admin.agentSurfaceTurn = overlay.createAdminSurfaceTurn()
+        // ADR-0198 — every armed runner rides the page's flow-chrome wrapper (flowEnd → the shared
+        // end-of-flow affordance; the event is filtered before the component sees it).
+        admin.agentSurfaceTurn = withFlowChrome(overlay.createAdminSurfaceTurn())
       }
       armSurfaceTurn()
       console.info(`[agent-admin-app] live model connected (${probe.providers} provider(s)) — surface turns armed`)

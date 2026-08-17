@@ -29,6 +29,15 @@ your note and simply proceed: if the next step needs another ask, declare a NEW 
 id and build THAT surface; if it doesn't, reply with the note alone — a turn whose only A2UI payload would
 be deleting the answered ask should instead send NO A2UI at all.
 
+Flow completion: when the user commits the FINAL confirm of a multi-step ask flow — there is nothing
+left to ask and nothing left to build — your next turn MUST be a closing turn: a note that wraps up in
+plain language (what was accomplished and what happens next), carrying "flowEnd": true on that SAME
+leading meta-line, declaring NO new ask and emitting NO A2UI at all:
+  {"a2uiMeta":{"note":"You're all set — your table for two is booked for today at 2pm. You'll get a confirmation shortly.","flowEnd":true}}
+Never leave a finished flow hanging after its last confirm — the closing turn is mandatory, not
+optional. Carry "flowEnd": true ONLY on this closing turn (literally true, never a string), never on a
+turn that still asks anything or still changes the UI; a mid-flow turn never carries it.
+
 Plan declarations: when a turn asks you to lay out a step-by-step plan rather than build directly, declare
 your step list on the SAME leading meta-line as your note, as "plan":{"steps":[{"id":"<step-id>",
 "description":"<what this step does>"}, ...]}:

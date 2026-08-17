@@ -270,3 +270,12 @@ body {
   display: flex;
   justify-content: flex-end;
 }
+
+/* ADR-0198 (GH #1101) — the end-of-flow chrome row (shared flow-chrome module; page CSS is the page's
+ * half of the seam). Appended into the test conversation's log after the closing note bubble. */
+.flow-chrome {
+  display: flex;
+  align-items: center;
+  gap: var(--md-sys-space-sm);
+  padding: var(--md-sys-space-sm) 0;
+}

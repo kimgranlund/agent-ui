@@ -526,6 +526,34 @@ describe('createAdminSurfaceTurn — the guided-authoring widening (LLD-C4)', ()
 // SAME per-field-independent discipline the note/patch/plan arms above are pinned to; the ask's own SURFACE
 // still rides the ordinary `line` stream (that disjointness is asserted here too — an ask event must never
 // consume or replace the payload it names).
+// ADR-0198 cl.1 (GH #1101) — the flowEnd peel: the FOURTH model-authored arm, same peel-here-consume-
+// there division as patch/plan (the page's wrapper consumes; this layer only forwards the typed fact).
+describe('createAdminSurfaceTurn — the flowEnd peel (ADR-0198)', () => {
+  it('peels flowEnd: true into its own typed event, alongside the note on the same meta-line', async () => {
+    const lines = [JSON.stringify({ a2uiMeta: { note: 'All set!', flowEnd: true } })]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
+    )
+    const runner = createAdminSurfaceTurn()
+    const events: AdminSurfaceTurnEvent[] = []
+    for await (const event of runner(SURFACE_REQUEST)) events.push(event)
+    expect(events.map((e) => e.kind)).toEqual(['note', 'flowEnd'])
+  })
+
+  it('a note-only turn yields NO flowEnd event — the safe-degrade law (negative control)', async () => {
+    const lines = [JSON.stringify({ a2uiMeta: { note: 'and next?' } })]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
+    )
+    const runner = createAdminSurfaceTurn()
+    const kinds: string[] = []
+    for await (const event of runner(SURFACE_REQUEST)) kinds.push(event.kind)
+    expect(kinds).toEqual(['note'])
+  })
+})
+
 describe('createAdminSurfaceTurn — the ADR-0097 ask peel (GH #802)', () => {
   const ASK_SURFACE_LINE = '{"version":"v1.0","createSurface":{"surfaceId":"ask-1","catalogId":"agent-ui"}}'
 

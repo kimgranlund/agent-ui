@@ -352,3 +352,12 @@ ui-tabs.canvas-tabs {
   padding: var(--md-sys-space-sm) var(--md-sys-space-md);
   border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
+
+/* ADR-0198 (GH #1101) — the end-of-flow chrome row (shared flow-chrome module; page CSS is the page's
+ * half of the seam). A quiet closing band after the final note bubble — page chrome, never a card. */
+.flow-chrome {
+  display: flex;
+  align-items: center;
+  gap: var(--md-sys-space-sm);
+  padding: var(--md-sys-space-sm) 0;
+}

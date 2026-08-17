@@ -293,6 +293,11 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
           // integrity check, no gate read here — this runner peels, the component decides whether/how
           // to render it.
           if (meta.a2uiMeta.plan) yield { kind: 'plan', plan: meta.a2uiMeta.plan }
+          // ADR-0198 cl.1 (GH #1101) — the model's explicit flow-completion declaration peels into its
+          // own typed event, the SAME peel-here-consume-there division as `patch`/`plan`: the PAGE's
+          // wrapper consumes it (the shared flow-chrome affordance is page chrome, ADR-0198 cl.3) and
+          // filters it before the component ever sees it. `readMetaLine` already enforced literal-true.
+          if (meta.a2uiMeta.flowEnd === true) yield { kind: 'flowEnd' }
           continue // the meta-line is never ingested (ADR-0088 §1)
         }
         // genui-surface.spec.md SPEC-R1 — a genui line is neither an A2uiServerMessage nor a meta-line

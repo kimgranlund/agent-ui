@@ -1110,6 +1110,30 @@ cl.3)*
   CONSUMPTION fact, asserted host-side at S3, and this AC pins the producer half: no gate-conditional wire
   branch exists to drift — `produce-loop.test.ts`, `npm test` green, no live model.
 
+### 3.2e The `flowEnd` meta-line arm (ADR-0198 cl.1 — ask-flow completion wire contract)
+
+**SPEC-R31 — Additive, model-authored, shallow-validated `flowEnd` field on the meta-line envelope.**
+The system MUST let the CLOSING turn of an ask-flow (the turn AFTER the user commits the flow-final
+confirm) declare completion as a NEW, additive field on the SAME leading meta-line
+`note`/`ask`/`plan`/`personaPatch`/`trace`/`progress`/`error` already ride (SPEC-R5's meta-line
+convention; ADR-0088 §1). Following the `ask`/`plan`/`personaPatch`-arm precedent EXACTLY (SPEC-R14/
+R20/R29; ADR-0198 cl.1): *(→ PRD-G1/G6; ADR-0198 cl.1)*
+- **Wire shape.** `flowEnd: true` — a bare literal-`true` boolean, deliberately payload-free in v1; if a
+  future consumer earns structure the field widens additively to `true | {...}` (ADR-0198 cl.1).
+- `flowEnd` MUST be MODEL-authored — never runtime-composed like `progress`/`trace`/`error`.
+- `flowEnd` MUST be shallow-validated by `readMetaLine`'s existing per-field-independent guard: anything
+  other than literal `true` (a string, a number, `false`, an object, an array, `null`) MUST drop ONLY
+  `flowEnd` — NEVER the whole envelope (every sibling field on the SAME line still parses normally).
+- **Safe degrade.** A model that OMITS `flowEnd` MUST yield today's behavior for that turn — no chrome
+  affordance fires; consumers MUST act only on the explicit field, never a heuristic (ADR-0198 Non-goals).
+- The envelope MUST stay versionless and provably disjoint from `A2uiServerMessage` — the SPEC-R5
+  disjointness proof (no `version` key) is UNCHANGED, and `AgentTransport.turn()`'s signature stays
+  BYTE-IDENTICAL (additive framing INSIDE the string stream, the standing precedent).
+- **AC1** *Given* `{"a2uiMeta":{"note":"...","flowEnd":true}}`, *when* `readMetaLine` parses it, *then*
+  the envelope carries `flowEnd: true` beside the note; *given* any non-literal-`true` value, *then*
+  `flowEnd` alone drops; *given* a line with NO `flowEnd`, *then* the envelope parses exactly as before
+  (the negative control) — deterministic unit tests (`meta-line.test.ts`), `npm test` green, no live model.
+
 ### 3.3 The round-trip
 
 **SPEC-R8 — Multi-turn client round-trip ("the agent continues").** A client message from
@@ -1647,7 +1671,7 @@ function runPlan(opts: {
   onStepState?: (stepId: string, state: PlanStepState) => void;
 }): Promise<Session>;
 interface A2uiMetaEnvelope {
-  a2uiMeta: { note?: string; ask?: AskDeclaration; plan?: PlanDeclaration; personaPatch?: PersonaPatch; trace?: TurnTrace };   // note: model prose; ask: SPEC-R14 routing; plan: SPEC-R20 step list; personaPatch: SPEC-R29 persona-state delta; trace: runtime-assembled, never model-authored
+  a2uiMeta: { note?: string; ask?: AskDeclaration; plan?: PlanDeclaration; personaPatch?: PersonaPatch; flowEnd?: true; trace?: TurnTrace };   // note: model prose; ask: SPEC-R14 routing; plan: SPEC-R20 step list; personaPatch: SPEC-R29 persona-state delta; flowEnd: SPEC-R31 ask-flow completion (ADR-0198); trace: runtime-assembled, never model-authored
 }
 // Provably disjoint from A2uiServerMessage (which always carries `version`); never throws.
 function readMetaLine(line: string): A2uiMetaEnvelope | undefined;
@@ -1777,6 +1801,7 @@ function buildToolDispatch(active: readonly IntegrationManifest[], env: Record<s
 | SPEC-R21, R22 | PRD-G1/G6 (the host-side sequential plan-runner — persona-gated opt-in, one ordinary `{kind:'intent'}` dispatch per declared step over one growing `Session`, closing-turn synthesis under SPEC-R5's validate-then-stream law, step lifecycle projected onto the existing status-stream grouping with `TURN_PROGRESS_STAGES` unwidened, a step cap + one `AbortSignal` bounding the run at `(K+2) × maxRounds`, tiered failure grain with fold-in acknowledgment, and the OF1 advisory law — no declaration-vs-output check; ADR-0174 cl.1/cl.3/cl.4/cl.6) |
 | SPEC-R29 | PRD-G1/G6 (the `personaPatch` meta-line arm — a model-authored, additive, shallow-validated seventh field on the ADR-0088 envelope, following the `ask`/`plan`-arm precedent exactly; parsed by `readMetaLine` and passed through `produce()`'s outgoing meta-line unchanged and gate-blind; the merge law ADR-0178 OF1 left open, pinned here (incremental per turn, per-key whole-value last-writer-wins, entries-as-contributions, no deletion semantics); the host-side three-filter apply gate, the runner event kind, and recorded-transport parity are OUT OF SCOPE — ADR-0178 cl.1) |
 | SPEC-R30 | PRD-G1/G6 (the opt-in authoring gate — one persona-scoped, inverse-default, fail-closed modality boolean joining the persona-file key set, threaded per call, gating BOTH the arm's host-owned byte-pinned mechanics teaching (composed as a `genuiBlock`-shaped conditional segment so SPEC-R6's byte-identity baselines never move) AND host consumption, with SPEC-R21's degrade law verbatim; ADR-0178 cl.3) |
+| SPEC-R31 | PRD-G1/G6 (the `flowEnd` meta-line arm — a model-authored, additive, shallow-validated fourth MODEL-authored field on the ADR-0088 envelope, following the `ask`/`plan`/`personaPatch`-arm precedent exactly; literal `true` only, payload-free in v1, additively widenable; omitted = today's behavior — the safe-degrade law; the grammar closing-turn teaching and the shared page-chrome affordance are companion slices — ADR-0198 cl.1) |
 | SPEC-R23 | PRD-G7 (MCP as a second manifest PRODUCER — a registry source through the existing `registerIntegration()`, every consumer surface byte-untouched; ADR-0137/0177 cl.1) |
 | SPEC-R24 | Constraint C2 + PRD-G7 (the server-side-only wire client — Streamable HTTP ONLY, protocol pinned `2025-06-18`, hand-rolled plain `fetch` per SPEC-N1's no-SDK law; raw frames never leave the host; the F2/F3 freeze; ADR-0177 cl.2) |
 | SPEC-R25 | PRD-G4/G6 (the three-fact additive mapping + schema passthrough into the SAME `assertSupportedSchema` gate + TEXT-only execute through the existing `is_error` path; per-server key inheritance under SPEC-R18's law unchanged; ADR-0177 cl.3, ADR-0168 §3/§4) |
