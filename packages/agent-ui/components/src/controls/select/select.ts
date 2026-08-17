@@ -70,6 +70,7 @@ import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
 import { rovingFocus } from '../../traits/roving-focus.ts'
 import { selectionCommit } from '../../traits/selection-commit.ts'
 import { scrollFade } from '../../traits/scroll-fade.ts'
+import { activeElementIndex, centerInViewport, seedOpenFocus } from '../../traits/open-scroll.ts'
 import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
 import { setIcon } from '@agent-ui/icons'
 
@@ -293,7 +294,19 @@ export class UISelectElement extends UIFormElement {
       if (isOpen) {
         const tw = trigger.getBoundingClientRect().width
         if (tw > 0) listbox.style.minInlineSize = `${tw}px`
+        // Open-time selection centering + focus (GH #1100, the ui-menu sibling wiring — ui-select
+        // does NOT share menu's panel code, so it gets the same two helpers wired directly).
+        // Seed the tab stop on the aria-selected option BEFORE handle.open() so moveFocusIn()
+        // lands on it even when the selection changed via a path that never moved roving focus
+        // (a programmatic `value` write, a click-commit); center AFTER (popover must be laid
+        // out). No selection / non-overflowing listbox → today's behavior byte-identical.
+        // Queried off the reflected `aria-selected` paint (the #syncSelectedOption effect), not
+        // `items()`/`keyOf` — those consts are declared later in connected() (TDZ on the eager
+        // first run when `open` starts true).
+        const selected = listbox.querySelector<HTMLElement>('[role=option][aria-selected="true"]')
+        seedOpenFocus([...listbox.querySelectorAll<HTMLElement>('[role=option]')], selected)
         handle.open()
+        centerInViewport(listbox, selected)
       } else {
         handle.close()
       }
@@ -424,6 +437,10 @@ export class UISelectElement extends UIFormElement {
         const idx = list.findIndex((el) => keyOf(el) === this.value && this.value !== '')
         return idx >= 0 ? idx : 0
       },
+      // GH #1100 — keep the trait's internal index true to where open-time focus seeding landed
+      // (seedOpenFocus in the open effect bypasses the trait's own moveTo), so the first Arrow
+      // key continues from the selection. -1 (focus not on an option) = "no update".
+      syncIndex: () => activeElementIndex(items()),
     })
 
     // selectionCommit — single mode. onSelect updates `value` (which drives formValue() via the

@@ -69,6 +69,7 @@ import { UIElement } from '../../dom/index.ts'
 import { overlay, type OverlayHandle, type OverlayPlacement } from '../../traits/overlay.ts'
 import { rovingFocus } from '../../traits/roving-focus.ts'
 import { scrollFade } from '../../traits/scroll-fade.ts'
+import { activeElementIndex, centerInViewport, seedOpenFocus } from '../../traits/open-scroll.ts'
 
 // ── Placement enum values (mirrors the OverlayPlacement union from overlay.ts) ─────────────────
 
@@ -177,10 +178,25 @@ export class UIMenuElement extends UIElement {
     // model→overlay: a scope-owned effect drives open/close from the prop and keeps aria-expanded
     // in sync. Runs immediately on creation (eager first run): open=false → handle.close() (no-op,
     // not yet open) + aria-expanded='false'. Re-runs whenever this.open changes.
+    // Open-time selection centering + focus (GH #1100): a selectable menu (GH #55 —
+    // menuitemradio/menuitemcheckbox rows) whose panel overflows opens with the CHECKED item
+    // centered in the scroll viewport and focused. Seed the tab stop BEFORE handle.open() so the
+    // overlay's moveFocusIn() lands on it (traits/open-scroll.ts); center AFTER (the popover must
+    // be laid out for scroll geometry to exist). No checked item, or a non-overflowing panel →
+    // today's behavior byte-identical (both helpers no-op).
+    const checkedItem = (): HTMLElement | null =>
+      panel.querySelector<HTMLElement>('[role="menuitemradio"][aria-checked="true"], [role="menuitemcheckbox"][aria-checked="true"]')
+
     this.effect(() => {
       const isOpen = this.open
-      if (isOpen) handle.open()
-      else handle.close()
+      if (isOpen) {
+        const selected = checkedItem()
+        seedOpenFocus(items(), selected)
+        handle.open()
+        centerInViewport(panel, selected)
+      } else {
+        handle.close()
+      }
       trigger.setAttribute('aria-expanded', String(isOpen))
     })
 
@@ -243,6 +259,10 @@ export class UIMenuElement extends UIElement {
       orientation: 'vertical',
       loop: true,
       typeAhead: true,
+      // GH #1100 — keep the trait's internal index true to where open-time focus seeding landed
+      // (seedOpenFocus above bypasses the trait's own moveTo), so the first Arrow key continues
+      // from the checked item. -1 (focus not on an item) = "no update" per the trait contract.
+      syncIndex: () => activeElementIndex(items()),
     })
 
     // Edge-aware scroll fade (the gutter-exposure fix, 2026-07-04) — always on, no opt-in prop. The panel
