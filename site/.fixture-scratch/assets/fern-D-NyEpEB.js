@@ -1,0 +1,1 @@
+var e=`/assets/fern-rVy6BCvn.css`;export{e as default};

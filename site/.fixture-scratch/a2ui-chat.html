@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · A2UI Chat</title>
+    <script type="module" crossorigin src="/assets/a2ui-chat-D8AWfYrY.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/src-DZiOlOIx.js">
+    <link rel="modulepreload" crossorigin href="/assets/dom-OxgQ3tAy.js">
+    <link rel="modulepreload" crossorigin href="/assets/src-aOW07B5_.js">
+    <link rel="modulepreload" crossorigin href="/assets/super-shell-D76CLu9A.js">
+    <link rel="modulepreload" crossorigin href="/assets/nav-rail-sXDz1Xz6.js">
+    <link rel="modulepreload" crossorigin href="/assets/phosphor-2R9oNMbL.js">
+    <link rel="modulepreload" crossorigin href="/assets/_page-DIBN49D1.js">
+    <link rel="modulepreload" crossorigin href="/assets/composer-options-7Qsye3Yp.js">
+    <link rel="modulepreload" crossorigin href="/assets/provider-mode-selection-CtomAe8P.js">
+    <link rel="modulepreload" crossorigin href="/assets/chat-shell-D8g2YHIe.js">
+    <link rel="modulepreload" crossorigin href="/assets/conversation-composer-DgwLynIs.js">
+    <link rel="modulepreload" crossorigin href="/assets/src-BCjsGt6c.js">
+    <link rel="modulepreload" crossorigin href="/assets/surface-host-mWz7u5Lv.js">
+    <link rel="modulepreload" crossorigin href="/assets/conversation-B4dEK20c.js">
+    <link rel="modulepreload" crossorigin href="/assets/markdown-BGzpPrJN.js">
+    <link rel="modulepreload" crossorigin href="/assets/examples-Bg9vqHc3.js">
+    <link rel="modulepreload" crossorigin href="/assets/meta-line-BkeCLQyf.js">
+    <link rel="modulepreload" crossorigin href="/assets/agent-runtime-CXDIA2SZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/session-Dk4RmbSm.js">
+    <link rel="stylesheet" crossorigin href="/assets/super-shell-B1ZhNV61.css">
+    <link rel="stylesheet" crossorigin href="/assets/nav-rail-DrUH9afp.css">
+    <link rel="stylesheet" crossorigin href="/assets/_page-BjnpwLd8.css">
+    <link rel="stylesheet" crossorigin href="/assets/chat-shell-kHmO7dsd.css">
+    <link rel="stylesheet" crossorigin href="/assets/a2ui-chat-CJsctPAo.css">
+    <link rel="stylesheet" crossorigin href="/assets/conversation-composer-KmJ99xRH.css">
+    <link rel="stylesheet" crossorigin href="/assets/conversation-dialog-D0CVAyAy.css">
+    <link rel="stylesheet" crossorigin href="/assets/markdown-Def-6EE1.css">
+  </head>
+  <body>
+    <!-- The conversational agent surface (TKT-0020, a2ui-chat.spec.md/lld.md): one scrolling chat log where
+         the agent's narration streams live (ui-status-stream) and its A2UI surfaces render inline, persisting
+         across later turns via SurfaceRegistry until closed. Recorded transcript by default; a dev-only live
+         overlay swaps in a real model (the a2ui-live.ts/a2a-artifact-feed.ts precedent). An MPA entry
+         auto-discovered by vite.config.ts's site/**/*.html glob — no config edit. The page module imports
+         pages/_page.ts FIRST for the foundation CSS cascade + self-defining ui-* controls. -->
+    <div id="app"></div>
+  </body>
+</html>

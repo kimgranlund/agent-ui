@@ -1,0 +1,1 @@
+var e=[{id:`low`,label:`Low`},{id:`medium`,label:`Medium`},{id:`high`,label:`High`},{id:`xhigh`,label:`X-High`}];export{e as t};

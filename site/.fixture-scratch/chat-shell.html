@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Composing a ui-chat-shell</title>
+    <script type="module" crossorigin src="/assets/chat-shell-C3SeZLi9.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/src-DZiOlOIx.js">
+    <link rel="modulepreload" crossorigin href="/assets/dom-OxgQ3tAy.js">
+    <link rel="modulepreload" crossorigin href="/assets/src-aOW07B5_.js">
+    <link rel="modulepreload" crossorigin href="/assets/super-shell-D76CLu9A.js">
+    <link rel="modulepreload" crossorigin href="/assets/nav-rail-sXDz1Xz6.js">
+    <link rel="modulepreload" crossorigin href="/assets/phosphor-2R9oNMbL.js">
+    <link rel="modulepreload" crossorigin href="/assets/_page-DIBN49D1.js">
+    <link rel="modulepreload" crossorigin href="/assets/code-block-DEt2Scp8.js">
+    <link rel="modulepreload" crossorigin href="/assets/doc-page-H_CmxYv1.js">
+    <link rel="modulepreload" crossorigin href="/assets/frontmatter-D6AIzGjv.js">
+    <link rel="modulepreload" crossorigin href="/assets/chat-shell-D8g2YHIe.js">
+    <link rel="stylesheet" crossorigin href="/assets/super-shell-B1ZhNV61.css">
+    <link rel="stylesheet" crossorigin href="/assets/nav-rail-DrUH9afp.css">
+    <link rel="stylesheet" crossorigin href="/assets/_page-BjnpwLd8.css">
+    <link rel="stylesheet" crossorigin href="/assets/doc-page-mv2o8kS2.css">
+    <link rel="stylesheet" crossorigin href="/assets/chat-shell-kHmO7dsd.css">
+    <link rel="stylesheet" crossorigin href="/assets/chat-shell-CXT--eq0.css">
+  </head>
+  <body>
+    <!-- The ui-chat-shell composition guide: a thin ui-super-shell preset for the chat archetype
+         (@agent-ui/app, round 4, GH #98; shell-archetypes-m5.lld.md LLD-C6) — what problem it solves, its
+         fixed header/nav-pane/content/footer slot intent on a live <ui-chat-shell>, why configuration
+         belongs to the composed ui-super-shell, and a pointer to a2ui-chat.ts's real production usage. An
+         MPA entry auto-discovered by vite.config.ts's site/**/*.html glob — no config edit. The page module
+         imports pages/_page.ts FIRST for the foundation CSS cascade + self-defining ui-* controls, then the
+         chat-shell CSS/module and its own demo chrome. -->
+    <div id="app"></div>
+  </body>
+</html>

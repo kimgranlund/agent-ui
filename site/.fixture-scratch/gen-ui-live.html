@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · GenUI chat demo</title>
+    <script type="module" crossorigin src="/assets/gen-ui-live-jz0GJ9Ab.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/src-DZiOlOIx.js">
+    <link rel="modulepreload" crossorigin href="/assets/dom-OxgQ3tAy.js">
+    <link rel="modulepreload" crossorigin href="/assets/src-aOW07B5_.js">
+    <link rel="modulepreload" crossorigin href="/assets/super-shell-D76CLu9A.js">
+    <link rel="modulepreload" crossorigin href="/assets/nav-rail-sXDz1Xz6.js">
+    <link rel="modulepreload" crossorigin href="/assets/phosphor-2R9oNMbL.js">
+    <link rel="modulepreload" crossorigin href="/assets/_page-DIBN49D1.js">
+    <link rel="modulepreload" crossorigin href="/assets/conversation-composer-DgwLynIs.js">
+    <link rel="modulepreload" crossorigin href="/assets/composer-options-7Qsye3Yp.js">
+    <link rel="modulepreload" crossorigin href="/assets/provider-mode-selection-CtomAe8P.js">
+    <link rel="modulepreload" crossorigin href="/assets/examples-Bg9vqHc3.js">
+    <link rel="modulepreload" crossorigin href="/assets/meta-line-BkeCLQyf.js">
+    <link rel="modulepreload" crossorigin href="/assets/agent-runtime-CXDIA2SZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/session-Dk4RmbSm.js">
+    <link rel="modulepreload" crossorigin href="/assets/genui-line-Crpa9Q-C.js">
+    <link rel="modulepreload" crossorigin href="/assets/dogfood-assets-BW-34qeW.js">
+    <link rel="stylesheet" crossorigin href="/assets/super-shell-B1ZhNV61.css">
+    <link rel="stylesheet" crossorigin href="/assets/nav-rail-DrUH9afp.css">
+    <link rel="stylesheet" crossorigin href="/assets/_page-BjnpwLd8.css">
+    <link rel="stylesheet" crossorigin href="/assets/gen-ui-live-CY0fOBQ6.css">
+    <link rel="stylesheet" crossorigin href="/assets/conversation-composer-KmJ99xRH.css">
+  </head>
+  <body>
+    <!-- The GenUI chat demo (genui-surface.spec.md SPEC §3.2/§3.3, D9): a chat pane driving a deterministic
+         recorded backbone of canned prompt->HTML turns, rendered through the REAL `ui-sandbox-frame`
+         containment host (never A2UI — GenUI validates the boundary, not a catalog payload). One turn
+         exercises the sandbox's ONE outward channel, `genui.action(name, payload)`, round-tripped back as
+         the next turn. No live GenUI producer exists yet (B2) — this page says so plainly, matching
+         a2ui-live's own recorded-vs-live mode signaling. An MPA entry auto-discovered by vite.config.ts's
+         site/**/*.html glob — no config edit. The page module imports pages/_page.ts FIRST for the
+         foundation CSS cascade + self-defining ui-* controls. -->
+    <div id="app"></div>
+  </body>
+</html>

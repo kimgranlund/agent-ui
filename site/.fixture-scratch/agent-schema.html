@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Agent Schema</title>
+    <script type="module" crossorigin src="/assets/agent-schema-Bwe-mBvV.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/src-DZiOlOIx.js">
+    <link rel="modulepreload" crossorigin href="/assets/dom-OxgQ3tAy.js">
+    <link rel="modulepreload" crossorigin href="/assets/src-aOW07B5_.js">
+    <link rel="modulepreload" crossorigin href="/assets/super-shell-D76CLu9A.js">
+    <link rel="modulepreload" crossorigin href="/assets/nav-rail-sXDz1Xz6.js">
+    <link rel="modulepreload" crossorigin href="/assets/phosphor-2R9oNMbL.js">
+    <link rel="modulepreload" crossorigin href="/assets/_page-DIBN49D1.js">
+    <link rel="modulepreload" crossorigin href="/assets/code-block-DEt2Scp8.js">
+    <link rel="modulepreload" crossorigin href="/assets/doc-page-H_CmxYv1.js">
+    <link rel="modulepreload" crossorigin href="/assets/src-BCjsGt6c.js">
+    <link rel="modulepreload" crossorigin href="/assets/agent-admin-schema-D_4P_EJ3.js">
+    <link rel="modulepreload" crossorigin href="/assets/specimens-BSFejhGR.js">
+    <link rel="stylesheet" crossorigin href="/assets/super-shell-B1ZhNV61.css">
+    <link rel="stylesheet" crossorigin href="/assets/nav-rail-DrUH9afp.css">
+    <link rel="stylesheet" crossorigin href="/assets/_page-BjnpwLd8.css">
+    <link rel="stylesheet" crossorigin href="/assets/doc-page-mv2o8kS2.css">
+  </head>
+  <body>
+    <!-- The AGENT SCHEMA reference (GH #781): the two data shapes ui-agent-admin reads and writes —
+         agentConfigSchema()'s SettingsSchema (the config surface ui-settings renders) and
+         AgentConfigSnapshot (the turn-time read a runner consumes) — both derived live from
+         agent-admin-schema.ts, plus pointers to the persona/entry-library/preset shapes their own
+         dedicated pages already own. An MPA entry auto-discovered by vite.config.ts's site/**/*.html
+         glob (matches the nav link ./agent-schema.html) — no config edit needed. The page module imports
+         pages/_page.ts FIRST for the foundation CSS cascade + self-defining ui-* controls (ADR-0003). -->
+    <div id="app"></div>
+  </body>
+</html>

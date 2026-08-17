@@ -1,0 +1,1 @@
+function e(e,t){let n=document.createElement(`pre`);n.className=`code-block`;let r=document.createElement(`code`);return t&&(r.dataset.lang=t),r.textContent=e,n.append(r),n}export{e as t};
