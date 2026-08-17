@@ -761,6 +761,15 @@ export class UIAgentAdminElement extends UIElement {
   // (`#rewireAuthoringContext`) — a different interviewer starts a fresh interview, but the draft's own
   // test-chat memory is untouched.
   #authoringHistory: AdminTurn[] = []
+  // GH #1154 — the EXPORT-facing transcripts, one per context, distinct from `#history`/`#authoringHistory`
+  // above on purpose: those two are MODEL MEMORY (prose-arm prior turns, replayed into requests — the
+  // surface arm keeps its own memory runner-side, so surface turns must never enter them), while these
+  // record EVERY completed turn of EVERY arm (stub, live prose, surface — failures included) so the
+  // dev-debug bundle (GH #889) exports what actually happened. Before this split, a pure surface session
+  // (the live blackjack repro) exported `[]` because only the prose arms ever appended anywhere. Cleared
+  // in lockstep with their model-memory siblings (`#resetConversationState` / `#rewireAuthoringContext`).
+  #testTranscript: AdminTurn[] = []
+  #authoringTranscript: AdminTurn[] = []
   // GH #525 (review MAJOR 1b) — the surfaceIds this admin has actually forwarded a `createSurface` for
   // (via `handle.ingestLine`, so ONLY while A2UI is on — the SAME gate that decides whether the real
   // renderer's own `SurfaceStore` would know it), minus any it has forwarded a `deleteSurface` for.
@@ -2557,6 +2566,7 @@ export class UIAgentAdminElement extends UIElement {
       if (changed) {
         this.#authoringConversation?.reset()
         this.#authoringHistory = []
+        this.#authoringTranscript = [] // GH #1154 — the export transcript leaves with the interview too
       }
       this.#authoringUnsub?.()
       this.#authoringUnsub = undefined
@@ -2569,6 +2579,7 @@ export class UIAgentAdminElement extends UIElement {
     if (changed) {
       this.#authoringConversation?.reset() // a DIFFERENT interviewer starts a fresh interview
       this.#authoringHistory = [] // GH #644 — and a fresh interview carries no prior interviewer's memory
+      this.#authoringTranscript = [] // GH #1154 — same lockstep for the export transcript
       // GH #670 — the pre-arm bridge's job ends exactly here: its model half is already SEEDED into the
       // store being wired in below, its effort half is already on `#effort`, and from this moment the store
       // is the truth. Emptying it is what stops a pick from re-applying to a LATER arm (leave the flow, come
@@ -3254,6 +3265,9 @@ export class UIAgentAdminElement extends UIElement {
     // GH #354 — the conversation generation this turn belongs to, captured BEFORE the (dogfood-only) asset
     // await below; see `#conversationEpoch`.
     const epoch = this.#conversationEpoch
+    // GH #1154 — what this turn reads as in the export transcript's user slot: the typed intent verbatim,
+    // or a structural rendering of the surface action (a click has no typed text, but it IS the turn).
+    const transcriptUserText = turn.kind === 'intent' ? turn.text : `[surface action] ${JSON.stringify(turn.message)}`
     void (async () => {
       const wireLines: string[] = []
       let note: string | undefined
@@ -3412,6 +3426,14 @@ export class UIAgentAdminElement extends UIElement {
           .join('\n\n')
         if (outgoing !== '') handle.setNote(outgoing)
         handle.finalize()
+        // GH #1154 — record the completed surface exchange into the export transcript (never into the
+        // prose arms' model memory — see #recordSurfaceTranscript). A prose-less rendering turn is still
+        // a turn: its wire-line count stands in so the transcript never silently drops it.
+        this.#recordSurfaceTranscript(
+          session,
+          transcriptUserText,
+          outgoing !== '' ? outgoing : wireLines.length > 0 ? `[${wireLines.length} A2UI wire line(s), rendered without prose]` : '[no output]',
+        )
         // GH #525 (design call 1, 2026-08-07) — "NO new tool — zero API surface, rides the existing turn
         // wiring": the mirror reads the SAME raw wire lines this turn already captured for narration/
         // disclosure (`wireLines`), never a new a2ui read (SPEC-N1's own discipline — this file declares
@@ -3443,6 +3465,7 @@ export class UIAgentAdminElement extends UIElement {
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err)
         handle.fail(message)
+        this.#recordSurfaceTranscript(session, transcriptUserText, `⚠ ${message}`) // GH #1154 — failures are transcript facts too
         this.#logTurn('surface', request, { error: message, lines: wireLines })
       }
     })()
@@ -3846,6 +3869,20 @@ export class UIAgentAdminElement extends UIElement {
       { role: 'assistant', content: reply },
     ]
     history.push(...turns)
+    // GH #1154 — every prose exchange that enters model memory is ALSO a transcript fact; the export
+    // transcript is picked by the same context identity `#contextFor` used to pick `history`.
+    const transcript = history === this.#authoringHistory ? this.#authoringTranscript : this.#testTranscript
+    transcript.push(...turns)
+  }
+
+  /** GH #1154 — append one completed SURFACE-arm exchange to the export transcript ONLY (never to
+   *  `#history`/`#authoringHistory`: those are the PROSE arm's model memory, while the surface arm's
+   *  memory lives runner-side per `session` — pushing surface turns into them would change what the
+   *  prose arm replays). Failures are recorded too (`⚠`-prefixed): the dev-debug bundle is diagnostic,
+   *  and a session of failed turns is still a session that happened. */
+  #recordSurfaceTranscript(session: 'test' | 'authoring' | undefined, text: string, reply: string): void {
+    const transcript = session === 'authoring' ? this.#authoringTranscript : this.#testTranscript
+    transcript.push({ role: 'user', content: text }, { role: 'assistant', content: reply })
   }
 
   /**
@@ -4139,7 +4176,10 @@ export class UIAgentAdminElement extends UIElement {
    * behavior reads or writes through this seam; `#resetConversationState` (GH #145) still owns clearing it.
    */
   testChatTranscript(): readonly AdminTurn[] {
-    return [...this.#history]
+    // GH #1154 — reads the EXPORT transcript (`#testTranscript`, every arm — surface turns included),
+    // no longer `#history` (prose-arm model memory only): a pure surface session (the live blackjack
+    // repro) left `#history` empty and this accessor exported `[]` while a long session was on screen.
+    return [...this.#testTranscript]
   }
 
   /**
@@ -4149,7 +4189,17 @@ export class UIAgentAdminElement extends UIElement {
    * interview finished and reset) — that is the true state, not a gap this accessor should paper over.
    */
   builderInterviewTranscript(): readonly AdminTurn[] {
-    return [...this.#authoringHistory]
+    return [...this.#authoringTranscript] // GH #1154 — the authoring EXPORT transcript, same shift as above
+  }
+
+  /**
+   * GH #1154 — how many turns (any arm, failures included) this element has actually run since the last
+   * persona switch: `#turnCounter`, the Dialog Turns ring's own monotonic count. The dev-debug export's
+   * trip-wire reads it — a bundle asked to export EMPTY transcripts while this is non-zero is a bug
+   * (exactly the silently-`[]` export this issue shipped from), and must fail loudly instead of writing.
+   */
+  liveTurnCount(): number {
+    return this.#turnCounter
   }
 
   /**
@@ -4236,6 +4286,10 @@ export class UIAgentAdminElement extends UIElement {
     // transcript above: a real persona switch must clear both, or the next persona's first authoring turn
     // would still carry the PREVIOUS persona's interview as prior context.
     this.#authoringHistory = []
+    // GH #1154 — the export transcripts are per-persona conversation state exactly like the model-memory
+    // arrays above; a real persona switch must clear both pairs together.
+    this.#testTranscript = []
+    this.#authoringTranscript = []
     this.#turnLog = []
     this.#turnCounter = 0
     this.#knownSurfaceIds.clear() // GH #525 — a new persona's surfaces are unrelated to the old ones
