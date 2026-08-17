@@ -180,6 +180,36 @@ Body.`)
   })
 })
 
+// ── renderApiTable — an attribute's ADR-0173 `description` renders (GH #1082) ──────────────────────────────
+// ParsedAttribute.description (ADR-0173 OF2) was parsed but silently dropped by attributeRow — every
+// composeDocPage page lost the per-attribute prose (flagged by the #1043 motion-guide lane, which had to
+// hand-roll its own table). Pins: a described attribute renders its prose as a `.api-row-description` cell in
+// its OWN row, and an undescribed attribute adds NO empty node (the negative control).
+
+describe('renderApiTable — ParsedAttribute.description renders as row prose (GH #1082)', () => {
+  it('a described attribute renders its description; an undescribed one adds no empty node', () => {
+    const doc = parseDoc(`---
+tag: ui-fixture-described
+attributes:
+  - name: tone
+    type: enum
+    values: [info, warn]
+    default: info
+    description: The visual register the badge speaks in.
+  - name: count
+    type: number
+    default: 0
+---
+Body.`)
+    const section = renderApiTable(doc.descriptor.attributes)
+    const rows = [...section.querySelectorAll('.api-row')]
+    const toneRow = rows.find((r) => r.querySelector('.api-row-name code')?.textContent === 'tone')
+    const countRow = rows.find((r) => r.querySelector('.api-row-name code')?.textContent === 'count')
+    expect(toneRow?.querySelector('.api-row-description')?.textContent).toBe('The visual register the badge speaks in.')
+    expect(countRow?.querySelector('.api-row-description')).toBeNull()
+  })
+})
+
 // ── renderMarkdownBody — the TKT-0036 prose reading design ─────────────────────────────────────────────────
 // The DISPLAY-plane build: the `.doc-body` wrapper class the CSS keys on (measure/typescale/chip-split/quote
 // all scoped to it, doc-page.css), and the new `>`-blockquote construct the tiny parser now supports. These
