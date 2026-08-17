@@ -65,6 +65,7 @@ import '@agent-ui/components/controls/switch'
 import '@agent-ui/components/controls/button'
 import '@agent-ui/components/controls/icon'
 import '@agent-ui/code/editor'
+import '@agent-ui/components/controls/textarea' // GH #1062 — the drawered card's inline Content field (entry-list.ts)
 import '@agent-ui/components/controls/field'
 import '@agent-ui/components/controls/text-field'
 // GH #917 — the per-entry Edit/Add drawer's vehicle (ADR-0188), created by `entry-list.ts` on this element's

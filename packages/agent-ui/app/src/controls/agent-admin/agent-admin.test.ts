@@ -396,6 +396,52 @@ describe('mountEntryList — the entryDrawer option, both modes (GH #917)', () =
     expect(drawerOf(section).open, 'nothing opens until Edit is pressed').toBe(false)
   })
 
+  // ── GH #1062 — the drawered card's INLINE Content fold (view + edit without opening the drawer) ─────────
+  it('GH #1062: a drawered row carries a COLLAPSED Content fold holding a plain ui-textarea seeded from the store', () => {
+    const { section } = mountDrawered([ROW])
+    const row = section.host.querySelector('[data-part="entry"]') as HTMLElement
+    const fold = row.querySelector('[data-part="entry-content-fold"]') as HTMLElement & { open: boolean }
+    expect(fold, 'the fold mounts on the card itself').not.toBeNull()
+    expect(fold.tagName.toLowerCase(), 'a ui-disclosure — the fleet fold convention').toBe('ui-disclosure')
+    expect(fold.open, 'collapsed by default — long Content must not dominate the pane').toBe(false)
+    const inline = fold.querySelector('[data-part="entry-inline-content"]') as HTMLElement & { value: string }
+    expect(inline.tagName.toLowerCase(), 'a plain ui-textarea, NOT ui-code-editor (no CodeMirror on the default surface, ADR-0139)').toBe('ui-textarea')
+    expect(inline.value, 'seeded with the entry\'s stored content').toBe('body')
+  })
+
+  it('GH #1062: an inline Content edit commits through onContentChange — the SAME writer the drawer form uses', () => {
+    const { section, writes } = mountDrawered([ROW])
+    const inline = section.host.querySelector('[data-part="entry-inline-content"]') as HTMLElement & { value: string }
+    inline.value = 'edited inline'
+    inline.dispatchEvent(new Event('change'))
+    expect(writes.contents).toEqual([['a', 'edited inline']])
+  })
+
+  it('GH #1062: a BUILTIN row gets the same editable inline Content (Fork 4 protects deletion, not configuration)', () => {
+    const { section, writes } = mountDrawered([ROW, BUILTIN])
+    const builtinRow = section.host.querySelector('[data-part="entry"][data-entry-id="b"]') as HTMLElement
+    const inline = builtinRow.querySelector('[data-part="entry-inline-content"]') as HTMLElement & { value: string }
+    expect(inline, 'the fold mounts for builtins too — matching the drawer form\'s own gating').not.toBeNull()
+    inline.value = 'builtin body, edited'
+    inline.dispatchEvent(new Event('change'))
+    expect(writes.contents).toEqual([['b', 'builtin body, edited']])
+    expect(builtinRow.querySelector('[data-part="entry-delete"]'), 'deletion stays impossible').toBeNull()
+  })
+
+  it('GH #1062: an OPEN fold survives an external rebuild; a non-drawered section builds no fold at all', () => {
+    const { section } = mountDrawered([ROW, BUILTIN])
+    const fold = section.host.querySelector('[data-part="entry-content-fold"]') as HTMLElement & { open: boolean }
+    fold.open = true
+    section.render([ROW, BUILTIN]) // an external store notification rebuilds every row
+    const rebuilt = section.host.querySelector('[data-part="entry"][data-entry-id="a"] [data-part="entry-content-fold"]') as HTMLElement & { open: boolean }
+    expect(rebuilt.open, 'the author\'s opened fold stays open across the rebuild').toBe(true)
+    const other = section.host.querySelector('[data-part="entry"][data-entry-id="b"] [data-part="entry-content-fold"]') as HTMLElement & { open: boolean }
+    expect(other.open, 'a fold nobody opened stays collapsed').toBe(false)
+
+    const { section: plain } = mountDrawered([ROW], { entryDrawer: false })
+    expect(plain.host.querySelector('[data-part="entry-content-fold"]'), 'byte-identical non-drawered row: the inline editor is the row editor, no fold').toBeNull()
+  })
+
   it('the Edit drawer commits per field — name (raw), description (raw), content, tier — and Done just closes', () => {
     const { section, writes } = mountDrawered([ROW])
     const form = openRow(section, 'a')
