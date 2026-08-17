@@ -169,3 +169,94 @@ LLD-C15 fork F7) is a deliberately different, higher-altitude seam this ADR does
   to a follow-up slice against GH #959's remaining Acceptance — landing the new seam standalone first
   (this ADR's own Decision cl.5's layering proof) lets it be reviewed and ratified independent of a
   behavior-parity migration's own risk surface.
+
+## Amendment (2026-08-17, **proposed** — Kim ratifies) — a sync READ surface on the localStorage tier ONLY: `SyncReadableStorageAdapter` (`getSync`/`keysSync`), unblocking the full read-path migration of `app`'s `memory-store`/`SettingsStore` hydration (GH [#1077](https://github.com/kimgranlund/agent-ui/issues/1077), escalated from GH #959's Findings / PR #1027)
+
+> Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
+> byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment
+> carries no ratification of its own until Kim gives one (`ratify ADR-0193 amendment`, executed by
+> `scripts/adr_ratify.py`'s amendment mode, GH #664). Every accepted section above — cl.1–cl.6,
+> Consequences, Alternatives — is unedited. GH
+> [#1077](https://github.com/kimgranlund/agent-ui/issues/1077) is the durable design record; the build
+> that lands the surface is its follow-on dispatch (Repairs, below).
+
+**Repairs** (booked for the ratification-triggered BUILD, not authored here):
+- `packages/agent-ui/shared/src/storage/adapter.ts` — add the `SyncReadableStorageAdapter` extension
+  interface (cl.A1 below) beside `StorageAdapter`; the base interface's "this seam does not offer
+  [a sync facade]" banner line gains a pointer to this amendment (the tier-scoped exception).
+- `packages/agent-ui/shared/src/storage/local-storage-adapter.ts` — implement `getSync`/`keysSync`;
+  the factory's return type narrows from `StorageAdapter` to `SyncReadableStorageAdapter`.
+- `packages/agent-ui/app/src/controls/settings/memory-store.ts` — hydration migrates onto
+  `keysSync()`/`getSync()`; the direct synchronous `localStorage` prefix scan is REMOVED (GH #1077
+  Acceptance line 2); the module banner's "sync read-through cache warmed by the pre-existing
+  synchronous prefix scan" paragraph (PR #1027) is rewritten to name the tier as the warm source.
+- GH #1077 — ratification files the tracker: the design Acceptance line flips, the build dispatch goes out.
+
+**Why the accepted Decision needs amending, precisely.** cl.1 ruled the seam "async throughout" and
+the Alternatives rejected "a synchronous `StorageAdapter`" — both on IndexedDB's irreducible asynchrony.
+That reasoning STANDS WHOLE for the base contract. What it never addressed is a tier whose backing
+store IS synchronous: PR #1027 migrated `memory-store.ts`'s WRITE path onto the localStorage tier, but
+hydration stayed a direct synchronous `localStorage` prefix scan, because `SettingsStore` must answer
+construct→`get` in the SAME tick (`store.test.ts:90`'s pin, SPEC-R12 fork F7) and no async
+`keys()`/`get()` round trip can do that. The builder escalated rather than improvised (GH #959
+Findings, 2026-08-16): a full read-path migration "needs a sync read surface on shared's localStorage
+tier — new public API beyond ADR-0193". This amendment is that design ruling.
+
+1. **A1 — the shape: `getSync`/`keysSync`, a per-verb mirror of the async surface — NOT `snapshot()`.**
+   A new exported interface in `storage/adapter.ts`:
+   `SyncReadableStorageAdapter extends StorageAdapter` with two REQUIRED members —
+   `getSync(key: string): unknown` (the currently-persisted value, `undefined` when absent or when
+   `localStorage` itself is absent — the same fail-open-to-`undefined` idiom as cl.2) and
+   `keysSync(): string[]` (the namespace's keys, `[]` on absence). Each sync verb is the exact
+   same-tick counterpart of its async sibling over the SAME live backing store — no second state.
+   The rejected alternative, **`snapshot(): ReadonlyMap<string, unknown>` (a warm cache)**: a snapshot
+   is a COPY with a coherence lifetime — taken at construction it is exactly the in-`app` mirror the
+   migration is trying to delete, only moved down a layer (stale the moment another tab writes, and a
+   second source of truth beside the tier's own store, the "stale in-memory mirror" this ADR's own
+   Alternatives already rejected as the failure mode of sync facades). It also over-serves the
+   consumer: `SettingsStore` hydration is a keys-scan-then-read — `keysSync()` + `getSync()` compose
+   into that directly, while `snapshot()` would force eager materialization of every value even for a
+   consumer wanting one key. Per-verb mirrors also keep the capability GRAIN identical to the data
+   package's precedent (one optional capability per verb, probed per verb — ADR-0192 SPEC-R2), so the
+   fleet carries one capability idiom, not two.
+2. **A2 — capability expression: a NAMED interface extension, not optional members on `StorageAdapter`
+   or a bare runtime probe.** The data package's `DataSource<T>` makes every CRUD verb optional ON THE
+   ONE interface because arbitrary sources legitimately implement arbitrary subsets, and its consumers
+   (`resource()`/`mutation()`) are generic over unknown sources — a runtime presence probe
+   (`missingCapabilityError`) is the only honest check there. Here the situation inverts: sync reads
+   are a property of exactly ONE known tier (localStorage — its backing store is synchronous by
+   nature), and the primary consumer (`memory-store.ts`) constructs that tier ITSELF, so the
+   capability is known statically at the construction site. `createLocalStorageAdapter`'s return type
+   narrows to `SyncReadableStorageAdapter`, and `memory-store.ts` gets compile-time access with zero
+   probe branches and zero error path. Optional `getSync?`/`keysSync?` members on `StorageAdapter`
+   itself are REJECTED: that would advertise a sync surface on the base contract every tier's
+   implementers must consider (exactly the "no general sync contract on `StorageAdapter`" non-goal,
+   A3), and would let an IndexedDB-typed value LOOK possibly-sync. A runtime probe as the PRIMARY
+   expression is rejected as strictly worse typing for a statically-known fact; a narrowing guard
+   (`hasSyncReads(a: StorageAdapter): a is SyncReadableStorageAdapter`, implemented as a
+   function-presence check) MAY ship alongside for adapter-generic call sites, but it is a
+   convenience over the typed extension, not the contract.
+3. **A3 — non-goals, ruled.** `StorageAdapter` itself gains NO sync members — cl.1's async-throughout
+   ruling and the Alternatives' sync-facade rejection stand unamended for the base contract. The
+   IndexedDB tier (cl.3) and any future async tier are untouched and remain plain `StorageAdapter` —
+   nothing may fake `getSync` over an async store (the stale-mirror failure mode stays rejected).
+   `SettingsStore`'s own sync contract (cl.6) is still not this ADR's to touch: the store stays pinned
+   to the localStorage tier, and an IndexedDB-backed `SettingsStore` still needs the async hydration
+   handshake named in PR #1027's banner — a separate planner call, not softened here.
+4. **A4 — consequences.** `app`'s `memory-store.ts` hydration migrates through the seam and the direct
+   prefix scan is deleted (Repairs) — after which NO module in `app` touches `localStorage` directly
+   for store keys; the tier owns key format, encoding, AND enumeration end-to-end, and the
+   Consequences bullet above naming the unmigrated read path is repaired by construction.
+   `SettingsStore`'s construct→`get` same-tick pin holds because `keysSync`/`getSync` read the live
+   `localStorage` synchronously — `store.test.ts`'s pre-migration suite must pass UNCHANGED (the
+   parity bar PR #1027 already established). The seam now carries a two-level contract (base async
+   everywhere; sync reads as a tier-specific typed extension) — one more concept, priced against
+   deleting the last hand-rolled scan and closing GH #959's original Slice-1 intent in full.
+5. **A5 — sequencing / blast radius.** One follow-on build dispatch, `shared`-then-`app` in one PR
+   (the extension interface + tier implementation + `memory-store` hydration cutover + tests), gated
+   on this amendment's ratification (GH #1077 Acceptance line 1). Blast radius: two `shared/storage`
+   files (additive — no existing signature changes; the factory return-type narrowing is
+   source-compatible for every existing caller), one `app` module + its parity suites, zero bytes in
+   `components`/`a2ui`/`router`/`code`/`data` (no dogfood regen), layering trip-wires unaffected
+   (`shared` still imports nothing). Gates: `npm run check && npm test` plus the settings/entry-list
+   targeted suites PR #1027 used as the parity bar.
