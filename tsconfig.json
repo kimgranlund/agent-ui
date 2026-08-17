@@ -33,7 +33,9 @@
       "@agent-ui/code": ["./packages/agent-ui/code/src/index.ts"],
       "@agent-ui/code/*": ["./packages/agent-ui/code/src/*"],
       "@agent-ui/data": ["./packages/agent-ui/data/src/index.ts"],
-      "@agent-ui/data/*": ["./packages/agent-ui/data/src/*"]
+      "@agent-ui/data/*": ["./packages/agent-ui/data/src/*"],
+      "@agent-ui/devtools": ["./packages/agent-ui/devtools/src/index.ts"],
+      "@agent-ui/devtools/*": ["./packages/agent-ui/devtools/src/*"]
     },
 
     /* Linting */

@@ -53,4 +53,14 @@ describe('import layering — a2a/src is a zero-dep leaf (local imports only)', 
     const src = `import { readFileSync } from 'node:fs'\n`
     expect(specifiersOf(src).filter((s) => !isLocalSpecifier(s))).toEqual(['node:fs'])
   })
+
+  // ADR-0200 clause 1 — devtools sits ABOVE a2a (`a2a ← devtools`); a2a reaching it would be an upward
+  // import (and a2a imports NOTHING anyway — this named negative control makes the new fence explicit,
+  // the ADR-0192 extension law applied to the ADR-0200 mint). Assembled, not literal — devtools' own
+  // inward scan reads this package raw including tests.
+  it('synthetic-violation: the matcher flags an @agent-ui/devtools import (the harness sits ABOVE a2a, ADR-0200)', () => {
+    const devtoolsSpec = ['@agent-ui', 'devtools'].join('/')
+    const src = `import { recordTurn } from '${devtoolsSpec}'\n`
+    expect(specifiersOf(src).filter((s) => !isLocalSpecifier(s))).toEqual([devtoolsSpec])
+  })
 })

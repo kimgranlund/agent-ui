@@ -52,4 +52,13 @@ describe('import layering — shared/src is the DAG bottom (local imports only)'
     const src = `import { z } from 'zod'\n`
     expect(specifiersOf(src).filter((s) => !isLocalSpecifier(s))).toEqual(['zod'])
   })
+
+  // ADR-0200 clause 1 — devtools sits at the TOP of the DAG; shared (the bottom layer) reaching it would
+  // be the maximal upward import. Assembled, not literal — devtools' own inward scan reads this package
+  // raw including tests (the same reason the components test above assembles its specifier).
+  it('synthetic-violation: the matcher flags an @agent-ui/devtools import (the harness sits at the DAG top, ADR-0200)', () => {
+    const devtoolsSpec = ['@agent-ui', 'devtools'].join('/')
+    const src = `import { recordTurn } from '${devtoolsSpec}'\n`
+    expect(specifiersOf(src).filter((s) => !isLocalSpecifier(s))).toEqual([devtoolsSpec])
+  })
 })

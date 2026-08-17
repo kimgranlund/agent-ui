@@ -78,6 +78,26 @@ describe('import layering', () => {
     expect(violations).toEqual([])
   })
 
+  // ADR-0200 clause 1 — "every existing inward layering trip-wire extends its scan by one package name"
+  // (the ADR-0192 extension law applied to the devtools mint): the allowlist in the gate above admits
+  // ONLY @agent-ui/shared, @agent-ui/icons and local paths, so @agent-ui/devtools (the harness at the
+  // DAG top) is excluded by construction — this named negative control makes the fence explicit and
+  // exercises the same allowlist shape the real gate runs. Assembled at runtime (never a literal
+  // devtools string) — devtools/src/layering.test.ts's own inward-scan reads components/src as raw text
+  // INCLUDING test files.
+  it('synthetic-violation: an @agent-ui/devtools specifier is neither local nor an allowed lower-tier sibling (ADR-0200)', () => {
+    const devtoolsSpecifier = ['@agent-ui', 'devtools'].join('/')
+    const specs = specifiersOf(`import { recordTurn } from '${devtoolsSpecifier}'\n`)
+    expect(specs).toEqual([devtoolsSpecifier])
+    const allowed = specs.filter(
+      (spec) =>
+        spec.startsWith('.') ||
+        spec === '@agent-ui/shared' || spec.startsWith('@agent-ui/shared/') ||
+        spec === '@agent-ui/icons' || spec.startsWith('@agent-ui/icons/'),
+    )
+    expect(allowed).toEqual([])
+  })
+
   it('specifiersOf still finds every real import/export shape, and no longer misfires on a string-literal VALUE or an object-literal KEY that happens to spell "import"/"export" (ADR-0173 false-positive classes)', () => {
     expect(specifiersOf(`import { x } from './y.ts'`)).toEqual(['./y.ts']) // real named import
     expect(specifiersOf(`export { x } from './y.ts'`)).toEqual(['./y.ts']) // real re-export

@@ -90,6 +90,18 @@ describe('import layering — app/src imports only down the DAG', () => {
     const violations = specifiersOf(src).filter((s) => !isAllowedAppSpecifier(s))
     expect(violations).toEqual(['@agent-ui/data'])
   })
+
+  // ADR-0200 clause 1 — app and devtools are PEER top-tier consumers (`shared ← components ← a2ui ←
+  // {app, devtools}`); neither imports the other, ever: a debug harness in app's graph would tax every
+  // production app consumer with dev tooling (the ADR's rejected fold-into-app alternative). Assembled
+  // at runtime (never a literal devtools string) — devtools/src/layering.test.ts's own inward-scan reads
+  // app/src as raw text INCLUDING test files (the a2ui `spec()` helper's documented trap).
+  it('synthetic-violation: the matcher flags an @agent-ui/devtools import from app/src (peer tiers never import each other, ADR-0200)', () => {
+    const devtoolsSpecifier = ['@agent-ui', 'devtools'].join('/')
+    const src = `import { recordTurn } from '${devtoolsSpecifier}'\n`
+    const violations = specifiersOf(src).filter((s) => !isAllowedAppSpecifier(s))
+    expect(violations).toEqual([devtoolsSpecifier])
+  })
 })
 
 describe('components/src and a2ui/src never import @agent-ui/app (apex stays un-imported)', () => {

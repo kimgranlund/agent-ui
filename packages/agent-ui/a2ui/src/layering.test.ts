@@ -78,6 +78,14 @@ describe('import layering — a2ui/src imports only {components, shared} or loca
     expect(specifiersOf(src).filter((s) => !isAllowedA2uiSpecifier('renderer/renderer.ts', s))).toEqual([spec('data')])
   })
 
+  // ADR-0200 clause 1 — the same "every existing inward layering trip-wire extends its scan by one
+  // package name" law ADR-0192 set: devtools sits ABOVE a2ui (`a2ui ← devtools`), so a2ui reaching it
+  // would be an upward import that drags a dev harness into the catalog package.
+  it('synthetic-violation: the matcher flags @agent-ui/devtools (the harness sits ABOVE the catalog, ADR-0200)', () => {
+    const src = `import { recordTurn } from '${spec('devtools')}'\n`
+    expect(specifiersOf(src).filter((s) => !isAllowedA2uiSpecifier('renderer/renderer.ts', s))).toEqual([spec('devtools')])
+  })
+
   it('synthetic-violation: the matcher flags @agent-ui/app (up the DAG) and @agent-ui/a2a (the bridge stays out of shipped src)', () => {
     const src = `import { x } from '${spec('app')}'\nimport { y } from '${spec('a2a')}'\n`
     expect(specifiersOf(src).filter((s) => !isAllowedA2uiSpecifier('renderer/renderer.ts', s))).toEqual([spec('app'), spec('a2a')])

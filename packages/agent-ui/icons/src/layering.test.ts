@@ -89,3 +89,31 @@ describe('icons ↛ components (ADR-0065 rejected-alternatives invariant)', () =
     expect(violations).toEqual(['@agent-ui/components', '@agent-ui/components/dom'])
   })
 })
+
+// ADR-0200 clause 1 — "every existing inward layering trip-wire extends its scan by one package name"
+// (the ADR-0192 extension law applied to the devtools mint): icons is a zero-import leaf, and the
+// devtools harness sits at the DAG top — icons reaching it would be the maximal upward import. This is
+// icons' first PACKAGE-named inward gate beyond components (the two describes above gate phosphor and
+// components only), so it carries its own real scan, not just a named negative control. The specifier
+// is assembled at runtime for consistency with the sibling gates' inert-raw-text idiom.
+const DEVTOOLS_SPECIFIER = ['@agent-ui', 'devtools'].join('/')
+const isDevtoolsSpecifier = (spec: string): boolean =>
+  spec === DEVTOOLS_SPECIFIER || spec.startsWith(`${DEVTOOLS_SPECIFIER}/`)
+
+describe('icons ↛ devtools (ADR-0200 — nothing below the harness imports it)', () => {
+  it('no module under icons/src/** imports @agent-ui/devtools', () => {
+    const violations: string[] = []
+    for (const [path, src] of files) {
+      for (const spec of specifiersOf(src)) {
+        if (isDevtoolsSpecifier(spec)) violations.push(`${path} -> "${spec}"`)
+      }
+    }
+    expect(violations).toEqual([])
+  })
+
+  it('synthetic-violation: the devtools-import matcher actually flags a violating import', () => {
+    const src = `import { recordTurn } from '${DEVTOOLS_SPECIFIER}'\nimport type { X } from '${DEVTOOLS_SPECIFIER}/server'\n`
+    const violations = specifiersOf(src).filter(isDevtoolsSpecifier)
+    expect(violations).toEqual([DEVTOOLS_SPECIFIER, `${DEVTOOLS_SPECIFIER}/server`])
+  })
+})

@@ -1,0 +1,16 @@
+{
+  "name": "@agent-ui/devtools",
+  "description": "The chat & A2UI dev/debug harness (ADR-0200): a three-backend AgentTransport shelf (replay/script canned timelines, the existing /__a2ui/agent dev-proxy mount over HTTP only, an A2A peer over A2aChannel), backend descriptor rows, the DevtoolsEvent NDJSON timeline vocabulary + recordTurn, the DevtoolsCapture format, a dev-only ./server HTTP orchestration seam, and a types-only ./playwright helper. Zero third-party runtime deps; no key, provider adapter, or produce() ever enters this package (the ADR-0073 trust boundary stays at /__a2ui/agent).",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server/index.ts",
+    "./playwright": "./src/playwright/index.ts"
+  },
+  "dependencies": {
+    "@agent-ui/a2ui": "*",
+    "@agent-ui/a2a": "*"
+  }
+}

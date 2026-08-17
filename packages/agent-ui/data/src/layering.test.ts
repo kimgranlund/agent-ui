@@ -63,6 +63,17 @@ describe('import layering — data/src imports only down the DAG', () => {
     const violations = specifiersOf(src).filter((s) => !isAllowedDataSpecifier(s))
     expect(violations).toEqual(['@agent-ui/app'])
   })
+
+  // ADR-0200 clause 1 — the same "every existing inward layering trip-wire extends its scan by one
+  // package name" law this file already applies to app: the devtools harness sits at the DAG top
+  // (`a2ui ← devtools`, `a2a ← devtools`); data reaching it would be an upward import. Assembled at
+  // runtime — devtools/src/layering.test.ts's own inward-scan reads data/src raw INCLUDING test files.
+  it('synthetic-violation: the matcher flags an @agent-ui/devtools import (the harness sits at the DAG top, ADR-0200)', () => {
+    const devtoolsSpecifier = ['@agent-ui', 'devtools'].join('/')
+    const src = `import { recordTurn } from '${devtoolsSpecifier}'\n`
+    const violations = specifiersOf(src).filter((s) => !isAllowedDataSpecifier(s))
+    expect(violations).toEqual([devtoolsSpecifier])
+  })
 })
 
 describe('the `.` barrel never imports ./gateway or ./stream (SPEC-R1 AC3 static half)', () => {
