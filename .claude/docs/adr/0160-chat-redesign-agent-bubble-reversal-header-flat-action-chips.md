@@ -211,3 +211,57 @@ without the primitive itself knowing what "helpful" means.
   inline retry affordance already established `ui-button size="sm" variant="soft"` as the fleet's
   action-chip idiom (ADR-0153 Fork 2) — reusing it keeps one idiom, not two, for "a small labelled
   commit button inside a timeline/conversation surface."
+
+## Amendment (2026-08-16, **proposed** — Kim ratifies) — the AGENT turn's 92% width cap is SUPERSEDED: the agent turn stretches to the full conversation column (GH [#1032](https://github.com/kimgranlund/agent-ui/issues/1032), Kim's ruling "use the full width"); the USER turn's cap + `flex-end` stand unchanged
+
+> Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
+> byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment
+> carries no ratification of its own until Kim gives one (`ratify ADR-0160 amendment`, executed by
+> `scripts/adr_ratify.py`'s amendment mode, GH #664). Every accepted section above — clauses 1–3 and
+> the GH #306 / GH #313 consequence notes — is unedited. GH
+> [#1032](https://github.com/kimgranlund/agent-ui/issues/1032) is the durable design record; PR
+> [#1035](https://github.com/kimgranlund/agent-ui/pull/1035) (merged as
+> [`95456f27`](https://github.com/kimgranlund/agent-ui/commit/95456f27da3892e0efcb1823f5a9505fe8189fd6))
+> is the build that carries it.
+
+**Which clause changes, and which does not.** Clause 2 ruled that the re-bubbled agent turn takes
+`align-self: flex-start` and "the shared base rule's own `max-inline-size: 92%` cap unmodified"; the
+GH #306 note moved BOTH of those (the log-level `align-self` and the 92% cap) from the bubble onto the
+new `[data-part='turn']` wrapper. **For the AGENT turn only, that width-cap ruling is superseded:**
+`[data-part='turn'][data-role='agent']` is now `align-self: stretch; max-inline-size: none` — the
+wrapper, the narration strip inside it, and the bubble all reach the same right edge the user bubble
+is aligned to. **The USER turn is untouched:** `[data-part='turn'][data-role='user']` keeps
+`align-self: flex-end` and the base 92% cap — a bubble that hugs its short text, right-aligned. Every
+other clause-2 fact stands: the agent bubble's neutral container tone
+(`--ui-conversation-agent-bubble`), its padding, the single padding layer around a `[bare]`
+`ui-surface-host`, streaming/settled parity in ONE container, and the GH #313 `data-empty` hiding law.
+Clauses 1 and 3 are not touched.
+
+**Why (Kim's ruling on GH #1032).** `align-self: flex-start` sizes the wrapper to its content's
+intrinsic width. Once GH #306 put `ui-status-stream`'s narration strip inside the wrapper, that
+intrinsic width was the strip's own 16rem floor — so on any real column the "Agent activity … N steps
+· Ns" header, the "Generating…" pending row, and the bubble shrank to ~16rem and hugged the left edge
+with the rest of the column empty. Kim's 2026-08-16 ruling on #1032: **"use the full width."** The
+92% cap was written in clause 2 for a bubble that sized itself to its text; on a wrapper that also
+carries a fixed-floor strip it produced the opposite of the reference mockup's settled state, so the
+cap is dropped for the agent role rather than re-tuned. The user turn never carried the strip and
+never exhibited the defect, hence its cap is deliberately kept — this is a one-role change, not a
+fleet-wide un-capping.
+
+**Evidence.** PR [#1035](https://github.com/kimgranlund/agent-ui/pull/1035) — one CSS delta in
+`packages/agent-ui/app/src/controls/conversation/conversation.css` (the agent-turn rule above, plus its
+sheet-level comment), and THREE re-pinned browser assertions in
+`packages/agent-ui/app/src/controls/conversation/conversation.browser.test.ts` (never deleted, flipped
+from `toBeLessThan(availableColumnWidth(log) - 1)` to `toBeCloseTo(availableColumnWidth(log), …)`):
+(1) the A2UI-surface probe — the agent bubble spans the full column; (2) the re-bubble chrome-law probe
+— the turn wrapper, the bubble, AND the narration strip each span the full column, the label/strip
+still sitting outside the bubble on the page background; (3) the streaming-parity probe — the mid-turn
+(pre-`finalize()`) container is chromed and full-column, matching the settled state. `npm run
+test:browser` green on the merge.
+
+**Consequences.** Every `ui-conversation` composer (`a2ui-chat`, `a2ui-live`, `gen-ui-live`,
+`agent-admin`) inherits the full-width agent turn automatically — a component-level rule, no page
+override involved (a repo-wide grep for a page-level `[data-part='turn']` override found none). No
+public API, token, or event changes; `conversation.md` carries no width-cap prose (grep-verified
+2026-08-16), so no sibling doc repair is owed. The clause-2 sentence itself is left as ratified text —
+this section, not an in-place edit, is the record that it no longer holds for the agent role.
