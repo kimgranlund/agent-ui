@@ -172,10 +172,10 @@ LLD-C15 fork F7) is a deliberately different, higher-altitude seam this ADR does
 
 ## Amendment (2026-08-17, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/1077#issuecomment-5316447025), verified 2026-08-17) — a sync READ surface on the localStorage tier ONLY: `SyncReadableStorageAdapter` (`getSync`/`keysSync`), unblocking the full read-path migration of `app`'s `memory-store`/`SettingsStore` hydration (GH [#1077](https://github.com/kimgranlund/agent-ui/issues/1077), escalated from GH #959's Findings / PR #1027)
 
-> Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
-> byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment
-> carries no ratification of its own until Kim gives one (`ratify ADR-0193 amendment`, executed by
-> `scripts/adr_ratify.py`'s amendment mode, GH #664). Every accepted section above — cl.1–cl.6,
+> Append-only, and **ratified** (2026-08-17): the Status cell reads `accepted` for the record as a whole
+> and stays byte-untouched — agents never flip status; this amendment's own ratification was Kim's
+> `ratify ADR-0193 amendment` utterance on GH #1077 (comment 5316447025), executed by
+> `scripts/adr_ratify.py`'s amendment mode (flip 11c4c86f; the booked build shipped as PR #1095). Every accepted section above — cl.1–cl.6,
 > Consequences, Alternatives — is unedited. GH
 > [#1077](https://github.com/kimgranlund/agent-ui/issues/1077) is the durable design record; the build
 > that lands the surface is its follow-on dispatch (Repairs, below).
