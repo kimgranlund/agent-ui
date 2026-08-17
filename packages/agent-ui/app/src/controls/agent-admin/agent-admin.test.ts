@@ -2607,6 +2607,12 @@ describe('UIAgentAdminElement — the composer reach path (GH #849/SPEC-R8/R4)',
     el.store!.set(SURFACE_A2UI_KEY, false) // no structured surface ⇒ the prose arm answers
     addEntry(el, ENTRY_KINDS.resource, "Texas Hold'em")
     setEntry(el, ENTRY_KINDS.resource, 'texas-hold-em', { content: 'Deal two hole cards each.' })
+    // code-checker NIT (f06ff414 review) — a DISABLED entry sharing the SAME label must never be the one
+    // that resolves: a dedup-suffixed second "Texas Hold'em" row, disabled, with a sentinel body that would
+    // prove a leak if it ever framed.
+    addEntry(el, ENTRY_KINDS.resource, "Texas Hold'em")
+    const disabledDupe = readEntries(el.store, ENTRY_KINDS.resource).find((e) => e.id !== 'texas-hold-em')!
+    setEntry(el, ENTRY_KINDS.resource, disabledDupe.id, { enabled: false, content: 'DISABLED-DUPE-SENTINEL-never-shown' })
     await whenFlushed()
 
     const calls: import('./agent-admin-schema.ts').AdminTurnRequest[] = []
@@ -2622,8 +2628,9 @@ describe('UIAgentAdminElement — the composer reach path (GH #849/SPEC-R8/R4)',
     expect(calls[0]!.text).toBe(
       "## Referenced for this message\n### Texas Hold'em (resource)\n\nDeal two hole cards each.\n\nlets play texas hold'em",
     )
+    expect(calls[0]!.text, 'the disabled duplicate never resolves, never frames').not.toContain('DISABLED-DUPE-SENTINEL')
     // …and the sent bubble carries the SAME reference-tag rendering SPEC-R10 already ships (never a new
-    // visual) — the user sees exactly what got auto-pulled.
+    // visual) — the user sees exactly what got auto-pulled, ONE tag, not two.
     const bubble = el.querySelector('[data-part="bubble"][data-role="user"]') as HTMLElement
     expect([...bubble.querySelectorAll('[data-part="reference-tag-label"]')].map((n) => n.textContent)).toEqual(["Texas Hold'em"])
   })

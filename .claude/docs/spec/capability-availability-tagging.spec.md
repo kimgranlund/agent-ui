@@ -10,6 +10,12 @@
 > renders. SPEC-R15's second taught fact is amended (§13.2): the teaching block no longer claims tagging is
 > the ONLY load path. New slice S9, code-independent of ratification (ADR-0190 gains a proposed amendment
 > recording the ruling; the mechanism itself does not gate on it).
+> v0.6 build-fold (the code-checker's f06ff414 review, same day — wording only, no clause changed): §13.1's
+> match rule reworded to the algorithm actually built (SQUASH — Unicode-letter-aware, deletes every
+> non-letter/non-number character — matched against the concatenation of consecutive squashed text words),
+> replacing a token-boundary description that never matched the shipped code or its own Hold'em worked
+> example; AC6 (the same-start tie prefers the longer, more specific label) and AC7 (a non-ASCII label
+> letter is content, not punctuation) added — both already true of the built matcher, not new behavior.
 > v0.5 changelog (the ADR-0190 fork RULED — the owner's 2026-08-14 utterance, quoted in the ADR's
 > rev.2 Context and in §12): the capabilities-menu switch is a GLOBAL enable/disable over the
 > roster's `enabled` axis, not per-turn steering — §12 added, three new requirements. SPEC-R13 —
@@ -820,21 +826,29 @@ committed the chip — before the turn sends. "Reachable" is `buildComposerRoste
 (`mentionables` ∪ `invocables`): enabled AND the entry's kind master switch on, so a disabled entry or a
 master-off kind's entry is never a candidate, by construction — no second filter is specified or needed.
 
-**The match rule (build-altitude inside this constraint, the exact tokenizer is `conversation.ts`'s):**
-case-insensitive, whitespace/punctuation-normalized EXACT match — both the typed text and a candidate's
-`label` tokenize to lowercase alnum runs (every space/hyphen/apostrophe/other punctuation is a token
-boundary), and a candidate matches when its FULL token sequence appears as a contiguous run of the text's
-own tokens. `"texas hold'em"` (text) and `texas-holdem` / `Texas Hold'em` (either could be the stored
-label) tokenize identically to `['texas','holdem']` — the SAME match either way. NO fuzzy scoring and NO
-description match (the rejected alternative — description text incidentally overlapping typed prose is a
-false-positive the ruling explicitly declined to risk); an entry not literally named in full by its LABEL
-never attaches.
+**The match rule (build-altitude inside this constraint, the exact algorithm is `conversation.ts`'s
+`squash`/`indexOfSquashedRun`/`findAutoAttachOption`):** case-insensitive, whitespace/punctuation-
+normalized EXACT match by SQUASH, not by tokenizing into a word list. `squash(s)` lowercases `s` and
+deletes every character that is not a Unicode LETTER or NUMBER (`\p{L}`/`\p{N}`, not an ASCII-only
+`[a-z0-9]` class — a non-ASCII letter is content, never punctuation: `Über` squashes to `über`, not
+`ber`) — applied to a candidate's whole `label` this collapses it to ONE target string (`texas-holdem`
+and `Texas Hold'em` both squash to `texasholdem`), and applied per WHITESPACE-delimited WORD of the typed
+text, the SAME function turns each word into its own squashed piece. A candidate matches when the
+CONCATENATION of one-or-more CONSECUTIVE squashed text words equals its squashed target exactly —
+`"texas hold'em"` (words `texas`, `hold'em` → squashed `texas`+`holdem`) equals `texasholdem` either way
+the label was stored. NO fuzzy scoring and NO description match (the rejected alternative — description
+text incidentally overlapping typed prose is a false-positive the ruling explicitly declined to risk); an
+entry not literally named in full by its LABEL never attaches.
 
-**ONE auto-attach per turn, maximum:** the first exact hit in text order (by token position) wins; a
-second exact hit elsewhere in the same text is silently dropped — noted nowhere, asserted nowhere, the
-ruling's own "keep it simple" clause. A candidate already present among the turn's EXPLICITLY committed
-references (same kind+id) is skipped — an exact mention of something the user also tagged by hand is one
-attachment, not two.
+**ONE auto-attach per turn, maximum:** the EARLIEST match (by starting word index) wins. A SAME-START tie
+— always possible whenever one candidate's squashed label is a PREFIX of another's matched word sequence,
+e.g. `Wine` vs `Wine list` both starting their match at the word "wine" — resolves to the LONGER squashed
+target, the more specific label, never an arbitrary roster-order pick: `"bring the wine list"` against a
+roster carrying both `Wine` and `Wine list` attaches `Wine list`. A second, later-starting exact hit
+elsewhere in the same text is silently dropped — noted nowhere, asserted nowhere, the ruling's own "keep
+it simple" clause. A candidate already present among the turn's EXPLICITLY committed references (same
+kind+id) is skipped — an exact mention of something the user also tagged by hand is one attachment, not
+two.
 
 **Visibility:** the resolved entry MUST surface as a visible reference tag on the sent user bubble —
 SPEC-R10's existing dismiss-less tag rendering (the SAME array reaching both `addUserMessage` and the
@@ -858,6 +872,11 @@ unchanged) · SPEC-R10 (the bubble tag rendering, reused unchanged) · ADR-0190 
 - **AC5** *Given* a reference the user ALSO explicitly committed (a chip) for the entry the text also
   names, *then* no duplicate reference is added (dedup by kind+id, the shipped `#addReference` law
   extended to this seam).
+- **AC6** *Given* two reachable entries whose labels start the SAME match (one a squashed prefix of the
+  other, e.g. `Wine` / `Wine list`), *then* the LONGER, more specific label auto-attaches, never the
+  shorter prefix.
+- **AC7** *Given* a reachable entry whose label carries a non-ASCII LETTER (e.g. `Über`), *then* the
+  ASCII-stripped remainder of that letter (`ber`) does NOT match it, and the real spelling DOES.
 
 ### 13.2 · SPEC-R15 amended — the teaching block no longer claims tagging is the ONLY load path
 

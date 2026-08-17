@@ -101,9 +101,11 @@ import type { PickerOption, ProviderOption, ContextItem, ReferenceOption, TurnRe
 // WORD of the typed text, consecutive words' squashed forms concatenate the same way, so a text word split
 // differently from the label's own internal punctuation ("hold'em" as one text word vs the label's own
 // word count) still lines up: EXACT match, never fuzzy — a candidate whose squashed label never equals a
-// squashed run of consecutive text words simply never matches.
+// squashed run of consecutive text words simply never matches. `\p{L}`/`\p{N}` (Unicode property escapes,
+// the `u` flag) rather than `[a-z0-9]`: a non-ASCII LETTER is content, not punctuation — a label like
+// `Über` must squash to `'über'`, never lose its `ü` the way an ASCII-only class would.
 function squash(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]/g, '')
+  return s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
 }
 
 /**
@@ -130,23 +132,28 @@ function indexOfSquashedRun(words: readonly string[], target: string): number {
  * `label`, squashed, equals the squashed concatenation of one or more consecutive words of `text`,
  * EARLIEST in the text. `exclude` drops a candidate already explicitly referenced (same `kind`+`id`) — an
  * exact mention of something the user ALSO tagged by hand is not a second attachment. Ties (two candidates'
- * matches start at the same word index — only possible for two entries sharing a squashed label) resolve to
- * whichever comes first in `options`, deterministically. No description match, no fuzzy scoring (the
- * ruled-out false-positive-risk alternative) — an entry not literally named in full is never auto-attached. */
+ * matches start at the SAME word index — always possible whenever one label is a PREFIX of another's word
+ * sequence, e.g. `Wine` vs `Wine list` both starting the match at "wine") resolve to the LONGER squashed
+ * target — the more specific label — never merely "whichever comes first in `options`": "bring the wine
+ * list" against a roster carrying both `Wine` and `Wine list` must attach `Wine list`, not the shorter
+ * prefix a naive first-wins rule would pick. No description match, no fuzzy scoring (the ruled-out
+ * false-positive-risk alternative) — an entry not literally named in full is never auto-attached. */
 function findAutoAttachOption(
   text: string,
   options: readonly ReferenceOption[],
   exclude: readonly { kind: string; id: string }[],
 ): ReferenceOption | undefined {
   const words = text.split(/\s+/).filter((w) => w.length > 0).map(squash)
-  let best: { option: ReferenceOption; start: number } | undefined
+  let best: { option: ReferenceOption; start: number; length: number } | undefined
   for (const option of options) {
     if (exclude.some((e) => e.kind === option.kind && e.id === option.id)) continue
     const target = squash(option.label)
     if (target === '') continue
     const start = indexOfSquashedRun(words, target)
-    if (start === -1 || (best !== undefined && start >= best.start)) continue
-    best = { option, start }
+    if (start === -1) continue
+    const better = best === undefined || start < best.start || (start === best.start && target.length > best.length)
+    if (!better) continue
+    best = { option, start, length: target.length }
   }
   return best?.option
 }

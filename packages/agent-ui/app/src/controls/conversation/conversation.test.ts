@@ -807,6 +807,21 @@ describe('ui-conversation — GH #1030/SPEC-R16: client-side capability auto-att
     expect(sent[0]![1]?.map((r) => r.id)).toEqual(['wine'])
   })
 
+  // code-checker MAJOR (f06ff414 review) — a SAME-START tie (one label a word-prefix of another's) must
+  // prefer the LONGER, more specific label — a naive first-wins rule would silently attach the shorter one.
+  it('a same-start tie between a label and a longer label it PREFIXES resolves to the longer, more specific one', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.mentionables = [
+      { id: 'wine', label: 'Wine', kind: 'resource' },
+      { id: 'wine-list', label: 'Wine list', kind: 'resource' },
+    ]
+    await whenFlushed()
+    const sent: [string, readonly { id: string }[] | undefined][] = []
+    el.onSubmit((text, references) => sent.push([text, references]))
+    send(el, 'bring the wine list please')
+    expect(sent[0]![1]?.map((r) => r.id), 'the longer label wins the tie, never the shorter prefix').toEqual(['wine-list'])
+  })
+
   it('AC5: an entry the user ALSO explicitly committed as a chip is never duplicated', async () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     el.mentionables = [{ id: 'menu', label: 'Menu PDF', kind: 'resource' }]
@@ -829,6 +844,20 @@ describe('ui-conversation — GH #1030/SPEC-R16: client-side capability auto-att
     el.onSubmit((_text, references) => sent.push(references))
     send(el, "lets play texas hold'em anyway")
     expect(sent).toEqual([[]])
+  })
+
+  // code-checker MINOR (f06ff414 review) — a non-ASCII LETTER is content, never punctuation: squash must
+  // not silently delete it the way an `[a-z0-9]`-only class would.
+  it('a non-ASCII label letter survives the squash — matched by its real spelling, never by the letter-stripped remainder', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.mentionables = [{ id: 'uber-doc', label: 'Über', kind: 'resource' }]
+    await whenFlushed()
+    const sent: unknown[] = []
+    el.onSubmit((_text, references) => sent.push(references))
+    send(el, 'ber is not the label') // the ASCII-stripped remainder — must NOT match
+    send(el, 'read Über please') // the real, accented spelling — MUST match
+    expect(sent[0], 'the stripped remainder is not the real label').toEqual([])
+    expect((sent[1] as readonly { id: string }[]).map((r) => r.id)).toEqual(['uber-doc'])
   })
 })
 
