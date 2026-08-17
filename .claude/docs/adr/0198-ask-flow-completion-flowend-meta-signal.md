@@ -141,7 +141,7 @@ for a framing concern. The meta-line is the seam built for this.
   within reach, and start-over reuses an existing reset path at near-zero cost; anything MORE than
   these two (handoff) has no consumer yet.
 
-## Amendment (2026-08-17, **proposed** — Kim ratifies) — `flowEnd` on ALL flow-terminal paths, a pre-conclusion CONFIRMATION stage where the USER takes the final action, and the courtesy-close protocol (GH [#1101](https://github.com/kimgranlund/agent-ui/issues/1101), Kim's live pixel-run #2 UX ruling)
+## Amendment (2026-08-17, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/1101#issuecomment-5318396675), verified 2026-08-17) — `flowEnd` on ALL flow-terminal paths, a pre-conclusion CONFIRMATION stage where the USER takes the final action, and the courtesy-close protocol (GH [#1101](https://github.com/kimgranlund/agent-ui/issues/1101), Kim's live pixel-run #2 UX ruling)
 
 > Append-only, and **proposed**: the Status cell above reads `accepted` for the accepted record as a
 > whole and stays byte-untouched — agents never flip status; THIS amendment awaits Kim's own
