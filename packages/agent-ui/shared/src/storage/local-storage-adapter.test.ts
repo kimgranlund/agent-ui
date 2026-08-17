@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createLocalStorageAdapter } from './local-storage-adapter.ts'
+import { hasSyncReads, type StorageAdapter } from './adapter.ts'
 
 // jsdom probes for the localStorage `StorageAdapter` tier (ADR-0193 cl.2, GH #959 Slice 1).
 
@@ -135,5 +136,66 @@ describe('createLocalStorageAdapter — no localStorage available (SSR / locked-
   it('subscribe() with no window returns a no-op unsubscribe rather than throwing', () => {
     const adapter = createLocalStorageAdapter({ namespace: 'ns-n' })
     expect(() => adapter.subscribe?.(() => {})?.()).not.toThrow()
+  })
+})
+
+describe('createLocalStorageAdapter — sync read surface (SyncReadableStorageAdapter, ADR-0193 Amendment A1)', () => {
+  it('getSync reads the same-tick live value the async verbs wrote — same key format + JSON decoding', async () => {
+    localStorage.clear()
+    const adapter = createLocalStorageAdapter({ namespace: 'ns-s' })
+    await adapter.set('theme', 'dark')
+    await adapter.set('volume', 7)
+    expect(adapter.getSync('theme')).toBe('dark')
+    expect(adapter.getSync('volume')).toBe(7)
+  })
+
+  it('getSync sees a write made in the SAME tick (no async round trip — the construct→get pin)', () => {
+    localStorage.clear()
+    const adapter = createLocalStorageAdapter({ namespace: 'ns-s2' })
+    void adapter.set('a', 1) // setItem runs synchronously before the first await
+    expect(adapter.getSync('a')).toBe(1)
+  })
+
+  it('getSync returns undefined for an absent key and for a corrupt/foreign value (fail-open, cl.2 idiom)', () => {
+    localStorage.clear()
+    localStorage.setItem('ns-s3.bad', '{not json')
+    const adapter = createLocalStorageAdapter({ namespace: 'ns-s3' })
+    expect(adapter.getSync('missing')).toBeUndefined()
+    expect(adapter.getSync('bad')).toBeUndefined()
+  })
+
+  it('keysSync enumerates only this namespace, matching async keys()', async () => {
+    localStorage.clear()
+    const adapter = createLocalStorageAdapter({ namespace: 'ns-s4' })
+    await adapter.set('a', 1)
+    await adapter.set('b', 2)
+    localStorage.setItem('ns-other.c', '3')
+    expect(adapter.keysSync().sort()).toEqual(['a', 'b'])
+    expect((await adapter.keys()).sort()).toEqual(adapter.keysSync().sort())
+  })
+
+  it('no localStorage: getSync degrades to undefined, keysSync to [] — never a throw', () => {
+    const original = globalThis.localStorage
+    // @ts-expect-error — simulating an environment with no localStorage global
+    delete globalThis.localStorage
+    try {
+      const adapter = createLocalStorageAdapter({ namespace: 'ns-s5' })
+      expect(adapter.getSync('a')).toBeUndefined()
+      expect(adapter.keysSync()).toEqual([])
+    } finally {
+      globalThis.localStorage = original
+    }
+  })
+
+  it('hasSyncReads narrows: true for this tier, false for a plain async adapter', () => {
+    const tier = createLocalStorageAdapter({ namespace: 'ns-s6' })
+    expect(hasSyncReads(tier)).toBe(true)
+    const asyncOnly: StorageAdapter = {
+      get: async () => undefined,
+      set: async () => {},
+      delete: async () => {},
+      keys: async () => [],
+    }
+    expect(hasSyncReads(asyncOnly)).toBe(false)
   })
 })

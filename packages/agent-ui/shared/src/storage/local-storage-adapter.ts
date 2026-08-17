@@ -2,13 +2,13 @@
 // Mirrors `@agent-ui/app`'s `memory-store.ts` namespacing convention deliberately (trailing-dot-delimited
 // `${namespace}.${key}` prefix scan) so that store's migration onto this seam was a drop-in, not a
 // re-derivation — landed in GH #959's remaining slice (2026-08-16): `createMemoryStore({ persistKey })`
-// now WRITES through this tier (its sync hydration stays a direct scan of the same namespace — the
-// `SettingsStore` contract is sync, this seam is async by ADR-0193 ruling; parity-pinned in
-// `app/src/controls/settings/memory-store.test.ts`).
+// WRITES through this tier, and since GH #1077 (2026-08-17) HYDRATES through it too, via the tier's
+// `getSync`/`keysSync` sync read surface (ADR-0193 Amendment — the `SettingsStore` contract is sync;
+// parity-pinned in `app/src/controls/settings/memory-store.test.ts`).
 // Cross-tab notification rides the native `storage` DOM event — genuinely zero-dep, fires only in OTHER
 // tabs/windows sharing the origin, never the tab that made the write (browser-native same-tab exclusion).
 
-import type { StorageAdapter, StorageChange } from './adapter.ts'
+import type { StorageChange, SyncReadableStorageAdapter } from './adapter.ts'
 
 export interface LocalStorageAdapterOptions {
   /** Every key this adapter reads/writes lives under `${namespace}.${key}` — the WHOLE namespace belongs
@@ -32,16 +32,37 @@ const parse = (raw: string | null): unknown => {
 
 /** A `StorageAdapter` backed by `localStorage`, namespaced so multiple adapters can share one origin
  *  without colliding (ADR-0193 cl.2). Every method degrades to a safe no-op/`undefined` — never a
- *  throw — when `localStorage` is unavailable (SSR, a locked-down embed). */
-export function createLocalStorageAdapter(options: LocalStorageAdapterOptions): StorageAdapter {
+ *  throw — when `localStorage` is unavailable (SSR, a locked-down embed).
+ *
+ *  The return type is the SYNC-READABLE extension (ADR-0193 Amendment A1/A5 — a source-compatible
+ *  narrowing): localStorage's backing store is synchronous by nature, so `getSync`/`keysSync` are the
+ *  exact same-tick counterparts of `get`/`keys` over the same live store. */
+export function createLocalStorageAdapter(options: LocalStorageAdapterOptions): SyncReadableStorageAdapter {
   const { namespace } = options
   const prefix = `${namespace}.`
   const storageKey = (key: string): string => `${prefix}${key}`
 
+  const getSync = (key: string): unknown => {
+    if (!isBrowserStorageAvailable()) return undefined
+    return parse(localStorage.getItem(storageKey(key)))
+  }
+
+  const keysSync = (): string[] => {
+    if (!isBrowserStorageAvailable()) return []
+    const out: string[] = []
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const stored = localStorage.key(index)
+      if (stored !== null && stored.startsWith(prefix)) out.push(stored.slice(prefix.length))
+    }
+    return out
+  }
+
   return {
+    getSync,
+    keysSync,
+
     async get(key) {
-      if (!isBrowserStorageAvailable()) return undefined
-      return parse(localStorage.getItem(storageKey(key)))
+      return getSync(key)
     },
 
     async set(key, value) {
@@ -55,13 +76,7 @@ export function createLocalStorageAdapter(options: LocalStorageAdapterOptions): 
     },
 
     async keys() {
-      if (!isBrowserStorageAvailable()) return []
-      const out: string[] = []
-      for (let index = 0; index < localStorage.length; index += 1) {
-        const stored = localStorage.key(index)
-        if (stored !== null && stored.startsWith(prefix)) out.push(stored.slice(prefix.length))
-      }
-      return out
+      return keysSync()
     },
 
     subscribe(listener) {

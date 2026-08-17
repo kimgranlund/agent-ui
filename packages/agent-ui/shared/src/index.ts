@@ -9,6 +9,7 @@ export { findField, initialValuesFor, sanitizeBoolean, sanitizeNumber, sanitizeS
 // the second export family from the '.' surface, at the DAG's bottom so any layer at or above `shared`
 // can persist without an upward import.
 export type * from './storage/adapter.ts'
+export { hasSyncReads } from './storage/adapter.ts'
 export { createLocalStorageAdapter } from './storage/local-storage-adapter.ts'
 export type { LocalStorageAdapterOptions } from './storage/local-storage-adapter.ts'
 export { createIndexedDbAdapter } from './storage/indexed-db-adapter.ts'
