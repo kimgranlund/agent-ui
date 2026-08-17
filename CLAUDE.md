@@ -29,9 +29,11 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   - `dom/` — `UIElement`/`UIFormElement`, props, template, directives; imports only `../reactive`
   - `traits/` — `(host, opts) => cleanup` traits + controllers, invoked directly from `connected()` (no `host.use()`)
   - `controls/` — `ui-*` FACE controls; one folder per component; self-define on import
-- `packages/agent-ui/shared/` — `@agent-ui/shared`, cross-cutting tokens/styles/utility types.
-  Color `tokens.css` + dimensional/runtime `dimensions.css` both live in `src/tokens/`, exported
-  as `@agent-ui/shared/tokens.css` (G5, done)
+- `packages/agent-ui/shared/` — `@agent-ui/shared`, cross-cutting tokens/styles/utility types,
+  plus the persistence-adapter seam (ADR-0193): a typed async `StorageAdapter` in `src/storage/`
+  with localStorage + hand-rolled IndexedDB tiers and an opt-in cross-tab notification seam —
+  the DAG-bottom home lower layers persist through. Color `tokens.css` + dimensional/runtime
+  `dimensions.css` both live in `src/tokens/`, exported as `@agent-ui/shared/tokens.css` (G5, done)
 - `packages/agent-ui/a2ui/` — `@agent-ui/a2ui`, the A2UI layer (team-led; docs on the unified map — `.claude/docs/{spec,lld,prd}/`); depends on `@agent-ui/components`. Export surfaces: `.` (renderer/validator/catalog) · `./examples` (seed shelf) · `./corpus` (pure store) · `./agent` (the NODE-FIRST producer toolkit — `buildSystemPrompt`/`produce`/the `AgentTransport`+`Session` seam/mini-skills; ADR-0137/TKT-0072, portable core in `src/agent/`, the key/dev-proxy/registry shell stays site-internal in `tools/agent/`; the root `.` barrel carries zero producer bytes)
 - `packages/agent-ui/a2a/` — `@agent-ui/a2a`, the A2A (Agent2Agent) protocol layer: wire types + validation pinned to spec v0.3.0, the tic-tac-toe arena (isolation-proven agent-vs-agent matches), and its own concept/demo corpus shards; zero deps
 - `packages/agent-ui/icons/` — `@agent-ui/icons`, swappable icon-pack adapter (pure core + `./phosphor` subpath; ADR-0065/0066); zero deps
