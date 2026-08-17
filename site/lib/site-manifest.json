@@ -182,6 +182,13 @@
     "section": "Guides"
   },
   {
+    "href": "./data-doc.html",
+    "label": "Data",
+    "description": "@agent-ui/data: a headless SaaS data layer \u2014 the DataSource seam, signal-backed resource()/mutation()/paginated(), the ./gateway client onion, and the ./stream Streamed<T> bridge.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
     "href": "./agent-admin.html",
     "label": "Agent Admin",
     "description": "ui-agent-admin is a three-pane ui-split (chat canvas, prompts, settings) over ui-conversation and ui-settings, one shared SettingsStore, live-apply with no external model dependency.",

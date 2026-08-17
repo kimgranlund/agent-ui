@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · @agent-ui/data</title>
+  </head>
+  <body>
+    <!-- The @agent-ui/data package guide (ADR-0192; saas-data-utilities.spec.md SPEC-R14 e): the DataSource
+         seam, a live resource()/mutation()/paginated() demo over an in-page fake source (status/data/pending
+         signals rendered straight from the kernel), the ./gateway middleware onion + token/retry snippets, and
+         the ./stream Streamed<T> contract with a live pushToPull bridge. A package ABOVE components on the DAG
+         (SPEC-R1) — a GUIDE page, same posture as router-doc.html, not a fleet component's {doc,demo,...} set.
+         An MPA entry auto-discovered by vite.config.ts's site/**/*.html glob — no config edit needed. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/data-doc.ts"></script>
+  </body>
+</html>
