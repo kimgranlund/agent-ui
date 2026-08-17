@@ -33,4 +33,8 @@ GH #761 retired the stale Queued section this line replaces). GH #960 (2026-08-1
 sign-in/registration recipe gap: added the four flow-card citations above making the 1:1 mapping
 traceable, plus the two doc-only sub-fork rows (passkey host seam, password-strength verdict) —
 zero new controls, zero new site pages; the composed surfaces these rows point at already shipped
-under S1–S4 above.
+under S1–S4 above. GH #1007 (2026-08-16) closed the empty-state pattern doc GH #961/PR #991 left
+open as follow-up work: the zero-data/no-results/first-run empty-state anatomy is documented as
+its own row in [`shell-and-data-surfaces.md`](shell-and-data-surfaces.md) (grouped with the
+data-surface rows it composes over, not here — neither the checklist-onboarding row above nor
+any onboarding row rides `ui-form-provider`, and the empty-state anatomy is orthogonal to both).
