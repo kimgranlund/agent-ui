@@ -107,6 +107,21 @@ const props = {
   // it itself (the ADR-0191 cl.4 restraint: the fleet law fixes the state name, tokens, and
   // treatment — not who flips it).
   working: { ...prop.boolean(), reflect: true },
+  // GH #1164 — the SUPERSEDED (visually settled, interactively inert) state: `true` once a LATER turn
+  // has shifted the conversation's live focus to a NEWER surface, so THIS surface must stop reading as
+  // live. Mirrored into `:state(superseded)` by the connected() effect below (the ADR-0199 `working`
+  // pattern); the dim treatment is pure CSS (surface-host.css, guarded below the disabled/pending/
+  // working rungs per the ADR-0191/0196/0199 precedence law). Unlike `working`, this state is NOT
+  // presentation-only: flipping it true runs a REAL disable sweep over every interactive descendant
+  // (the GH #805 duck-typed walk, with its OWN claim set — `#supersededDisabled` — so the two sweeps
+  // never revert each other's claims or a payload/checks-owned disabled literal), making the stale
+  // card's action buttons genuinely inert to pointer AND keyboard, never merely dimmed. Fully
+  // reversible: flipping it back false reverts exactly the elements this sweep claimed — the reuse
+  // case (a later turn updating this surface again) un-supersedes. The shipped flipper is
+  // `ui-conversation`'s registry routing (a fresh createSurface supersedes every OTHER open surface;
+  // a line routed to a known surface un-supersedes it); a host app driving this element directly may
+  // set it itself (the ADR-0191 cl.4 restraint).
+  superseded: { ...prop.boolean(), reflect: true },
 } satisfies PropsSchema
 
 export interface UISurfaceHostElement extends ReactiveProps<typeof props> {}
@@ -132,6 +147,14 @@ export class UISurfaceHostElement extends UIElement {
   // already-payload/checks-disabled element, which the sweep leaves untouched, below). Re-enable ever
   // only reverts membership here — a `WeakSet` so a torn-down element is never leak-held.
   #sweepDisabled = new WeakSet<Element>()
+
+  // GH #1164 — the SUPERSEDED sweep's own claim set + active flag, structurally parallel to the GH #805
+  // pair above but never shared with it: the two sweeps disable for different reasons with different
+  // lifetimes (an action-disable is retired by the next ingest()'s entry re-enable; a superseded-disable
+  // survives ingest and is retired ONLY by `superseded = false`), so each reverts exactly its own claims
+  // and neither ever touches a payload/checks-owned disabled literal.
+  #supersededActive = false
+  #supersededDisabled = new WeakSet<Element>()
 
   protected connected(): void {
     if (this.#host === undefined) {
@@ -163,6 +186,20 @@ export class UISurfaceHostElement extends UIElement {
     this.effect(() => {
       if (this.working) this.internals.states?.add('working')
       else this.internals.states?.delete('working')
+    })
+
+    // GH #1164 — mirror the `superseded` prop into `:state(superseded)` (same jsdom optional-chaining as
+    // `working` above; the real-engine proof lives in the browser suites) AND run the real disable/
+    // re-enable sweep — superseded is never opacity-only: the stale card's controls go genuinely inert
+    // (pointer + keyboard, each control's own `disabled` prop chain) and come back on un-supersede.
+    this.effect(() => {
+      if (this.superseded) {
+        this.internals.states?.add('superseded')
+        this.#applySupersededDisabled(true)
+      } else {
+        this.internals.states?.delete('superseded')
+        this.#applySupersededDisabled(false)
+      }
     })
 
     this.effect(() => {
@@ -205,6 +242,11 @@ export class UISurfaceHostElement extends UIElement {
       // artboard instead of centering at fit-content and jumping wider when finalize() lands. Cheap +
       // idempotent (attribute/style writes are no-ops when already applied); no reflow is forced here.
       this.#applyRootStretch()
+      // GH #1164 — a line ingested while STILL superseded (a standalone consumer that never flipped the
+      // prop back — ui-conversation always un-supersedes before routing) must not leak live controls in
+      // through the re-render: re-run the superseded sweep so newly-mounted enabled descendants are
+      // claimed too. Idempotent (already-claimed/already-disabled elements are skipped).
+      if (this.superseded) this.#applySupersededDisabled(true)
     }, this.viewTransitions && this.#settledOnce)
   }
 
@@ -296,6 +338,8 @@ export class UISurfaceHostElement extends UIElement {
     this.#settledOnce = false // GH #742 — a rebuilt artboard's next stream is a first paint again
     this.#interactiveDisabledActive = false // GH #805 — a rebuilt artboard's next mount starts live
     this.#sweepDisabled = new WeakSet() // GH #805 — the torn-down subtree's claims are moot
+    this.#supersededActive = false // GH #1164 — same reasoning: the torn-down subtree's claims are moot
+    this.#supersededDisabled = new WeakSet()
     delete this.dataset.emptyFinal // ADR-0187 — a rebuilt artboard has not finalized anything yet
     delete this.dataset.rootCard // GH #1163 — the torn-down subtree's root shape is moot
     this.replaceChildren()
@@ -344,6 +388,30 @@ export class UISurfaceHostElement extends UIElement {
       } else if (this.#sweepDisabled.has(el)) {
         control.disabled = false
         this.#sweepDisabled.delete(el)
+      }
+    }
+  }
+
+  /** GH #1164 — the superseded sweep: structurally the GH #805 walk (duck-typed `'disabled' in el`,
+   *  claim-scoped false→true only, revert-claims-only on the way back) with its OWN bookkeeping
+   *  (`#supersededActive`/`#supersededDisabled`), so it composes with — never corrupts — the action
+   *  sweep and any payload/checks-declared disabled literal. Driven solely by the `superseded` prop's
+   *  connected() effect (plus ingest()'s still-superseded re-claim); never public API of its own. */
+  #applySupersededDisabled(disabled: boolean): void {
+    if (this.#surface === undefined) return
+    if (disabled) this.#supersededActive = true
+    else if (!this.#supersededActive) return
+    else this.#supersededActive = false
+    for (const el of this.#surface.querySelectorAll('*')) {
+      if (!('disabled' in el)) continue
+      const control = el as unknown as { disabled: boolean }
+      if (disabled) {
+        if (control.disabled) continue // already disabled for a reason that isn't ours — not our claim
+        control.disabled = true
+        this.#supersededDisabled.add(el)
+      } else if (this.#supersededDisabled.has(el)) {
+        control.disabled = false
+        this.#supersededDisabled.delete(el)
       }
     }
   }

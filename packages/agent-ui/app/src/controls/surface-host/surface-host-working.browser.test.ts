@@ -114,3 +114,39 @@ describe('ui-surface-host — :state(working) breathes for real (ADR-0199, cross
     }
   })
 })
+
+// ── GH #1164 — :state(superseded): the settled-history dim, real-engine leg. jsdom lacks CustomStateSet
+// and computes no CSS, so BOTH halves are proven here: the prop mirrors into a selector-visible custom
+// state, the surface part's computed opacity drops to the stale-content rung (--ui-pending-opacity =
+// 0.6 via --ui-surface-host-superseded-opacity), and the precedence guard holds — working (a rung
+// ABOVE superseded) suppresses the dim.
+describe('ui-surface-host — :state(superseded) dims for real (GH #1164, cross-engine)', () => {
+  it('setting `superseded` applies the custom state and the surface part computes the stale-content opacity; clearing restores it', async () => {
+    const el = mountHost()
+    await whenFlushed()
+    expect(Number(getComputedStyle(surfaceOf(el)).opacity), 'live by default').toBe(1)
+
+    el.superseded = true
+    await whenFlushed()
+    expect(el.matches(':state(superseded)'), 'the internals custom state is selector-visible').toBe(true)
+    expect(Number(getComputedStyle(surfaceOf(el)).opacity), 'dimmed to the stale-content rung').toBeCloseTo(0.6, 2)
+
+    el.superseded = false // the reuse case — a later turn updates this surface again
+    await whenFlushed()
+    expect(el.matches(':state(superseded)')).toBe(false)
+    expect(Number(getComputedStyle(surfaceOf(el)).opacity), 'fully live again').toBe(1)
+  })
+
+  it('precedence — working sits ABOVE superseded on the ladder: with both set, the dim yields (the :where(:not()) guard)', async () => {
+    const el = mountHost()
+    el.superseded = true
+    el.working = true
+    await whenFlushed()
+    expect(el.matches(':state(superseded)')).toBe(true)
+    expect(el.matches(':state(working)')).toBe(true)
+    expect(Number(getComputedStyle(surfaceOf(el)).opacity), 'a card genuinely being mutated reads working, not settled').toBe(1)
+    el.working = false
+    await whenFlushed()
+    expect(Number(getComputedStyle(surfaceOf(el)).opacity), 'working over ⇒ the settled dim resumes').toBeCloseTo(0.6, 2)
+  })
+})

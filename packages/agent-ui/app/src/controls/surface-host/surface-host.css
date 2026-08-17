@@ -59,6 +59,12 @@
   --ui-surface-host-card-bg: var(--md-sys-color-neutral-surface-higher, currentColor);
   --ui-surface-host-card-border: var(--md-sys-color-neutral-outline-variant, currentColor);
   --ui-surface-host-card-pad: var(--md-sys-space-md);
+  /* GH 1164 — the :state(superseded) settled-history dim. Rides the fleet's ONE stale-content dim
+     constant (--ui-pending-opacity, dimensions.css — the stale/awaiting-refresh step), never a new
+     literal: a superseded surface is exactly "content that is no longer the live one". The REAL
+     inertness (disabled action buttons) is surface-host.ts's own sweep — this token only carries the
+     visual settle. Consumer-repointable (the TKT-0062 pattern). */
+  --ui-surface-host-superseded-opacity: var(--ui-pending-opacity);
 }
 
 /* ════════════════ [ui-surface-host] STYLES — @scope (ui-surface-host) consumes ONLY --ui-surface-host-* ═══ */
@@ -234,6 +240,19 @@
     padding: 0;
     background: none;
     border: none;
+  }
+
+  /* GH 1164 — :state(superseded): the settled-history dim. A LATER turn shifted the conversation's
+     live focus to a newer surface, so this one must stop reading as live: the whole surface part dims
+     to the fleet's stale-content rung (opacity only — no geometry, no recolor; TKT-0062's channels
+     stay closed). The interactive inertness is NOT this rule's (real `disabled` prop writes via the
+     host's superseded sweep, surface-host.ts). Precedence (ADR-0191/0196/0199's law — state exclusion,
+     never source order): superseded sits BELOW working on the ladder (disabled > pending > working >
+     superseded > …), so this rule yields to every rung above it via zero-specificity `:where(:not())`
+     guards — a card genuinely being mutated again reads working, not settled. */
+  :scope:state(superseded):where(:not(:state(disabled))):where(:not(:state(pending))):where(:not(:state(working)))
+    [data-part='surface'] {
+    opacity: var(--ui-surface-host-superseded-opacity);
   }
 
   /* ADR-0199 / GH 1104 — :state(working): the breathing diffused INNER-shadow overlay (interaction-

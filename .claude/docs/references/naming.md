@@ -202,7 +202,11 @@ The prefix IS the ownership boundary — no allowlist needed:
   GH #1104 — the live-surface-mutation state: this surface is the live target of an in-flight
   producer turn's in-place mutations, the INVERSE of `pending`'s stale-content message; first
   consumer `ui-surface-host`; precedence-slotted `disabled > pending > working > answered > …`,
-  interaction-states.md §7). A verb or noun is
+  interaction-states.md §7) · superseded (GH #1164 — the settled-history state: a LATER turn shifted
+  the conversation's live focus to a newer surface, so this one must stop reading as live; NOT
+  presentation-only — flipping it runs a real, reversible disable sweep over interactive
+  descendants; first consumer `ui-surface-host`, flipped by `ui-conversation`'s registry routing;
+  visually it dims BELOW the disabled/pending/working rungs). A verb or noun is
   not a state name. `pressed`
   (ADR-0179 GH #686 Amendment S7-a) — `ui-toggle`'s ARIA-pressed toggle-button state; distinct
   from `checked` (an Indicator-class boolean form value/ARIA-checked pattern) and `selected`

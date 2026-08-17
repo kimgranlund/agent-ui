@@ -1829,3 +1829,94 @@ describe('ui-conversation — ADR-0199: working set/cleared by the turn handle',
     expect(host.working).toBe(false)
   })
 })
+
+// ── GH #1164 — SUPERSEDED wiring: when a turn shifts interaction to a NEWER surface, every earlier
+// open surface stops reading as live (host.superseded = true → the host's own real disable sweep +
+// :state(superseded) dim); a LATER turn updating a superseded surface again (the reuse case) un-
+// supersedes it. The prop→state/sweep mechanism itself is surface-host.test.ts's; HERE only the
+// registry routing that flips the prop — at most ONE surface ever reads as live.
+
+describe('ui-conversation — GH #1164: a newer surface supersedes earlier ones; reuse un-supersedes', () => {
+  const CREATE_X = (id: string) => line({ version: 'v1.0', createSurface: { surfaceId: id, catalogId: 'agent-ui' } })
+  const UPDATE_X = (id: string, text: string) =>
+    line({
+      version: 'v1.0',
+      updateComponents: { surfaceId: id, components: [{ id: 'root', component: 'Text', text }] },
+    })
+
+  it('a fresh createSurface in a LATER turn supersedes every earlier open surface — the new one stays live', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_X('round1'))
+    t1.finalize()
+    const first = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    expect(first.superseded, 'the only surface is the live one').toBe(false)
+
+    const t2 = el.beginAgentTurn()
+    t2.ingestLine(CREATE_X('round2'))
+    t2.finalize()
+    const hosts = Array.from(log(el).querySelectorAll('ui-surface-host')) as UISurfaceHostElement[]
+    expect(hosts.length).toBe(2)
+    expect(hosts[0]!.superseded, 'the round-1 board settles the moment round 2 takes over').toBe(true)
+    expect(hosts[1]!.superseded, 'the newer surface is the one live card').toBe(false)
+  })
+
+  it('the reuse case — a later turn updating a superseded surface un-supersedes it', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_X('a'))
+    t1.finalize()
+    const t2 = el.beginAgentTurn()
+    t2.ingestLine(CREATE_X('b'))
+    t2.finalize()
+    const hosts = Array.from(log(el).querySelectorAll('ui-surface-host')) as UISurfaceHostElement[]
+    expect(hosts[0]!.superseded).toBe(true)
+
+    const t3 = el.beginAgentTurn()
+    t3.ingestLine(UPDATE_X('a', 'next scene'))
+    expect(hosts[0]!.superseded, 'an update to the old surface IS the model re-engaging it — live again').toBe(false)
+    t3.finalize()
+    expect(hosts[0]!.superseded).toBe(false)
+  })
+
+  it('a resumed turn (intoSurface — the action-click game loop) un-supersedes at turn start, before any line', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_X('game'))
+    t1.finalize()
+    const t2 = el.beginAgentTurn()
+    t2.ingestLine(CREATE_X('sidebar'))
+    t2.finalize()
+    const hosts = Array.from(log(el).querySelectorAll('ui-surface-host')) as UISurfaceHostElement[]
+    expect(hosts[0]!.superseded).toBe(true)
+
+    const t3 = el.beginAgentTurn({ intoSurface: 'game' })
+    expect(hosts[0]!.superseded, 'un-superseded the moment the resuming turn begins — zero lines yet').toBe(false)
+    t3.finalize()
+  })
+
+  it('two surfaces minted in the SAME turn — only the newest reads live at the end of the burst', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t = el.beginAgentTurn()
+    t.ingestLine(CREATE_X('one'))
+    t.ingestLine(CREATE_X('two'))
+    t.finalize()
+    const hosts = Array.from(log(el).querySelectorAll('ui-surface-host')) as UISurfaceHostElement[]
+    expect(hosts[0]!.superseded, 'superseded the moment its sibling mounted').toBe(true)
+    expect(hosts[1]!.superseded).toBe(false)
+  })
+
+  it('a closed record is never flipped — torn down is not stale (the deleteSurface path stays as-is)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_X('gone'))
+    t1.ingestLine(line({ version: 'v1.0', deleteSurface: { surfaceId: 'gone' } }))
+    t1.finalize()
+    const closed = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    expect(closed.superseded).toBe(false)
+    const t2 = el.beginAgentTurn()
+    t2.ingestLine(CREATE_X('next'))
+    t2.finalize()
+    expect(closed.superseded, 'a closed surface already reads as history — never marked superseded too').toBe(false)
+  })
+})
