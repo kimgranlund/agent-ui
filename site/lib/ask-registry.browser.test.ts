@@ -67,9 +67,9 @@ describe('AskRegistry — real-engine lifecycle (ADR-0097 §2)', () => {
     ingestAskSurface(entry.host, 'ask-1')
     const button = mountEl.querySelector('ui-button') as HTMLElement
 
-    registry.freeze('ask-1', 'answered')
+    registry.freeze('ask-1', 'bypassed') // ADR-0196: only the BYPASSED leg goes inert (answered settles instead)
     expect(bubble.inert).toBe(true) // the REAL IDL attribute — a genuine boolean, not an expando (unlike jsdom)
-    expect(bubble.dataset.state).toBe('answered')
+    expect(bubble.dataset.state).toBe('bypassed')
 
     await userEvent.click(button, { force: true }).catch(() => undefined) // an inert target may reject the click entirely
     expect(messages, 'a real user gesture on an inert bubble must not reach the control at all').toHaveLength(0)

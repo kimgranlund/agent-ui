@@ -205,9 +205,45 @@
   gap: var(--md-sys-space-sm);
   margin-block-start: 0.35rem;
 }
-.msg[data-ask][data-state] {
+.msg[data-ask][data-state='bypassed'] {
+  /* ADR-0196: only the BYPASSED leg keeps the whole-bubble dim (+ JS-set inert). An ANSWERED card SETTLES
+   * instead — its controls carry `:state(answered)` (the fleet quiet treatment) and stay interactive for
+   * the Edit affordance below; dimming it too would double-mute the summary the settle exists to show. */
   opacity: 0.6;
 }
+
+/* ── ADR-0196 §settle — an answered card collapses its UNSELECTED options (display, never removal: the
+ * Edit-anchor law — the DOM stays, `[data-editing]` re-expands). The selected answer(s) stay rendered at
+ * full contrast (the controls' own `:state(answered)` law keeps selected indicators untouched). */
+.msg[data-ask][data-state='answered']:not([data-editing]) ui-radio:not([checked]),
+.msg[data-ask][data-state='answered']:not([data-editing]) ui-segment:not([checked]) {
+  display: none;
+}
+
+/* The compact summary row + Edit affordance (page chrome — never a restyled ui-* control). */
+.ask-settle {
+  display: flex;
+  align-items: center;
+  gap: var(--md-sys-space-sm);
+}
+.ask-edit {
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: var(--md-sys-shape-corner-base);
+  background: transparent;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font: inherit;
+  font-size: 0.72rem;
+  padding: 0.1rem 0.5rem;
+  cursor: pointer;
+}
+.ask-edit:hover {
+  background: var(--md-sys-color-neutral-container-low);
+}
+/* While editing, the settle row's summary is stale by definition — hide the row until re-commit. */
+.msg[data-ask][data-editing] .ask-settle {
+  display: none;
+}
+
 .ask-annotation {
   margin: 0.4rem 0 0;
   font-size: 0.72rem;

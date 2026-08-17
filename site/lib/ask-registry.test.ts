@@ -5,6 +5,14 @@
 // parsing helpers, and that `freeze`/`disposeAll` mutate the DOM/registry state exactly as documented.
 
 import { describe, it, expect, afterEach } from 'vitest'
+// jsdom reality (the a2ui-live.ask-lifecycle.test.ts precedent): `ElementInternals.setFormValue`/
+// `setValidity` are ABSENT in jsdom, and the ADR-0196 settle leg below connects a REAL `ui-radio-group`
+// (form-associated). Stub ONCE at the shared prototype BEFORE the controls import — additive, a no-op
+// once a future jsdom ships the real methods.
+if (typeof ElementInternals.prototype.setFormValue !== 'function') {
+  ;(ElementInternals.prototype as unknown as Record<string, unknown>).setFormValue = function (): void {}
+  ;(ElementInternals.prototype as unknown as Record<string, unknown>).setValidity = function (): void {}
+}
 import '@agent-ui/components/components' // self-defines ui-* controls so the renderer's nodes upgrade
 import { AskRegistry, surfaceIdOf, componentTypesOf } from './ask-registry.ts'
 
@@ -71,7 +79,7 @@ describe('AskRegistry (ADR-0097 §2)', () => {
     expect(() => registry.create('ask-1', bubble2, mountEl2, () => {})).toThrow(/already known/)
   })
 
-  it('freeze() sets inert + data-state, and is idempotent (a second freeze call is a no-op)', () => {
+  it("freeze('bypassed') sets inert + data-state, and is idempotent (a second freeze call is a no-op)", () => {
     // NOTE: jsdom does not implement the `inert` IDL attribute's reflection/default (`Element.prototype`
     // has no getter, so an un-set `.inert` reads `undefined`, not the spec's `false`) — real inert
     // semantics (interaction/tab-order suppression) are proven in `ask-registry.browser.test.ts` (a real
@@ -81,15 +89,31 @@ describe('AskRegistry (ADR-0097 §2)', () => {
     registry.create('ask-1', bubble, mountEl, () => {})
     expect(bubble.dataset.state).toBeUndefined()
 
-    expect(registry.freeze('ask-1', 'answered')).toBe(true)
+    expect(registry.freeze('ask-1', 'bypassed')).toBe(true)
     expect(bubble.inert).toBe(true)
-    expect(bubble.dataset.state).toBe('answered')
+    expect(bubble.dataset.state).toBe('bypassed')
     expect(registry.isFrozen('ask-1')).toBe(true)
     expect(registry.pending()).toBeUndefined()
 
     // Idempotent: a second freeze (even with a DIFFERENT state) does nothing — the first freeze wins.
-    expect(registry.freeze('ask-1', 'bypassed')).toBe(false)
+    expect(registry.freeze('ask-1', 'answered')).toBe(false)
+    expect(bubble.dataset.state).toBe('bypassed')
+  })
+
+  it("freeze('answered') SETTLES, never inert (ADR-0196 cl.4/cl.5): data-state lands, the bubble stays interactive, and the choice controls gain answered=true", () => {
+    const registry = new AskRegistry()
+    const { bubble, mountEl } = fixture()
+    // A representative choice control inside the bubble — a bare element is enough for the prop-assignment
+    // contract (the real `:state(answered)` mirror is each control's own effect, pinned in its own tests).
+    const group = document.createElement('ui-radio-group') as HTMLElement & { answered?: boolean }
+    mountEl.append(group)
+    registry.create('ask-1', bubble, mountEl, () => {})
+
+    expect(registry.freeze('ask-1', 'answered')).toBe(true)
     expect(bubble.dataset.state).toBe('answered')
+    expect(bubble.hasAttribute('inert'), 'an ANSWERED ask settles — it must NOT go inert (the Edit-anchor law)').toBe(false)
+    expect(group.answered, 'freeze(answered) sets the ADR-0196 answered prop on the choice controls').toBe(true)
+    expect(registry.isFrozen('ask-1')).toBe(true)
   })
 
   it('freeze() on an unknown surfaceId is a no-op, not a throw', () => {

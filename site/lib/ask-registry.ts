@@ -15,6 +15,28 @@ import type { RendererHost, ClientMessageListener } from '@agent-ui/a2ui'
 
 export type AskState = 'pending' | 'answered' | 'bypassed'
 
+/** The ADR-0196 choice-control family — the controls a questionnaire answer renders through, each
+ * carrying the fleet `answered` prop (mirrored into `:state(answered)` by the control's own effect). */
+export const CHOICE_CONTROL_TAGS = [
+  'ui-radio-group',
+  'ui-checkbox',
+  'ui-switch',
+  'ui-segmented-control',
+  'ui-select',
+  'ui-multi-select',
+  'ui-combo-box',
+] as const
+
+/**
+ * Set/clear the ADR-0196 `answered` prop on every choice control under `root` (the settle/edit toggle —
+ * presentation-only; the controls stay live and focusable, answered is NOT disabled, ADR-0196 cl.4).
+ */
+export function setAnsweredOnControls(root: ParentNode, answered: boolean): void {
+  for (const control of root.querySelectorAll<HTMLElement & { answered?: boolean }>(CHOICE_CONTROL_TAGS.join(','))) {
+    control.answered = answered
+  }
+}
+
 export interface AskEntry {
   readonly surfaceId: string
   readonly host: RendererHost
@@ -117,16 +139,26 @@ export class AskRegistry {
 
   /**
    * Freeze a PENDING entry — a no-op (returns `false`) on an unknown or already-frozen `surfaceId`, so
-   * freezing is idempotent and never re-fires the `inert`/`data-state` side effects twice. `inert` kills
-   * interaction and tab order platform-wide; the bubble stays in the DOM as VISIBLE history (never
-   * `dispose()`d — ADR-0097 §2: dispose would detach the rendered root, and history must stay visible).
+   * freezing is idempotent and never re-fires the side effects twice. Either way the entry leaves the
+   * line-routing pool (`isFrozen`) — a later agent line targeting it is dropped, never ingested — and the
+   * bubble stays in the DOM as VISIBLE history (never `dispose()`d — ADR-0097 §2).
+   *
+   * The two states diverge on interactivity (ADR-0196, superseding the old blanket `inert`):
+   *   · `bypassed` — `inert` kills interaction and tab order platform-wide (the conversation moved on;
+   *     the card is closed history).
+   *   · `answered` — the card SETTLES, never goes inert: its choice controls gain the fleet `answered`
+   *     prop (→ `:state(answered)`, the quieter settled paint) but stay live and focusable, because the
+   *     settle flow's Edit affordance (the PAGE's chrome — this module owns no page markup) needs a
+   *     durable, interactive anchor (the Edit-anchor law, ADR-0196 cl.5). Answered is NOT disabled
+   *     (cl.4 — GH #805's disable-on-submit posture is retired).
    */
   freeze(surfaceId: string, state: 'answered' | 'bypassed'): boolean {
     const entry = this.#entries.get(surfaceId)
     if (entry === undefined || entry.state !== 'pending') return false
     entry.state = state
-    entry.bubble.inert = true
     entry.bubble.dataset.state = state
+    if (state === 'bypassed') entry.bubble.inert = true
+    else setAnsweredOnControls(entry.bubble, true)
     return true
   }
 
