@@ -16,6 +16,7 @@
 // (toast-region.test.ts — the page's own `notify()` toast region calls showPopover, absent in jsdom). The
 // REAL top-layer/scrim/focus-trap behaviour is the cross-engine leg in agent-admin-app.browser.test.ts.
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { installDialogPolyfill } from '@agent-ui/shared/testing/dialog-polyfill'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (the
 // agent-admin-app.test.ts precedent — the CSS token-law sweep at the bottom of this file reads real bytes)
 import { readFileSync } from 'node:fs'
@@ -50,7 +51,6 @@ function clearPageState(): void {
 
 // ── the jsdom stubs (installed BEFORE the page module boots — it mounts at import time) ───────────────────
 let realAttachInternals: typeof HTMLElement.prototype.attachInternals
-const dialogOpen = new WeakMap<HTMLDialogElement, boolean>()
 
 beforeAll(async () => {
   realAttachInternals = HTMLElement.prototype.attachInternals
@@ -61,26 +61,7 @@ beforeAll(async () => {
     return internals as unknown as ElementInternals
   }
 
-  const proto = HTMLDialogElement.prototype as unknown as { showModal?: () => void; close?: () => void }
-  if (typeof proto.showModal !== 'function') {
-    Object.defineProperty(HTMLDialogElement.prototype, 'open', {
-      configurable: true,
-      get(this: HTMLDialogElement): boolean {
-        return dialogOpen.get(this) ?? false
-      },
-      set(this: HTMLDialogElement, v: boolean): void {
-        dialogOpen.set(this, Boolean(v))
-      },
-    })
-    proto.showModal = function (this: HTMLDialogElement): void {
-      dialogOpen.set(this, true)
-    }
-    proto.close = function (this: HTMLDialogElement): void {
-      if (!(dialogOpen.get(this) ?? false)) return
-      dialogOpen.set(this, false)
-      this.dispatchEvent(new Event('close'))
-    }
-  }
+  installDialogPolyfill() // the shared jsdom <dialog> stub (@agent-ui/shared/testing/dialog-polyfill, GH #1006)
 
   // The Popover API (toast-region.test.ts's stub) — the page's `notify()` region calls showPopover on show.
   const popover = HTMLElement.prototype as unknown as { showPopover?: () => void; hidePopover?: () => void }

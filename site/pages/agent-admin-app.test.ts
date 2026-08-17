@@ -6,6 +6,7 @@
 // never assumed. jsdom needs the attachInternals stub (agent-admin.test.ts's exact pattern — composed FACE
 // form controls call setFormValue/setValidity, absent in jsdom).
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest'
+import { installDialogPolyfill } from '@agent-ui/shared/testing/dialog-polyfill'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (sitemap.test.ts precedent)
 import { readdirSync, readFileSync } from 'node:fs'
 import { whenFlushed } from '@agent-ui/components'
@@ -32,31 +33,12 @@ afterAll(() => {
   HTMLElement.prototype.attachInternals = realAttachInternals
 })
 
-// ── the jsdom native-`<dialog>` stub (drawer.test.ts verbatim, via agent-admin-app-drawer.test.ts) ────────
+// ── the jsdom native-`<dialog>` stub (the SHARED helper, `@agent-ui/shared/testing/dialog-polyfill`, GH #1006) ──
 // GH #917 — the mounted `ui-agent-admin`'s capability sections route per-entry CRUD through a `ui-drawer`,
 // and jsdom carries no modal-dialog surface at all (`showModal`/`close`/`open` all absent). The REAL
 // top-layer/focus behaviour is the cross-engine leg; this only makes `open = true` reach the DOM here.
-const dialogOpen = new WeakMap<HTMLDialogElement, boolean>()
 beforeAll(() => {
-  const proto = HTMLDialogElement.prototype as unknown as { showModal?: () => void; close?: () => void }
-  if (typeof proto.showModal === 'function') return
-  Object.defineProperty(HTMLDialogElement.prototype, 'open', {
-    configurable: true,
-    get(this: HTMLDialogElement): boolean {
-      return dialogOpen.get(this) ?? false
-    },
-    set(this: HTMLDialogElement, v: boolean): void {
-      dialogOpen.set(this, Boolean(v))
-    },
-  })
-  proto.showModal = function (this: HTMLDialogElement): void {
-    dialogOpen.set(this, true)
-  }
-  proto.close = function (this: HTMLDialogElement): void {
-    if (!(dialogOpen.get(this) ?? false)) return
-    dialogOpen.set(this, false)
-    this.dispatchEvent(new Event('close'))
-  }
+  installDialogPolyfill()
 })
 
 const mounted: Element[] = []

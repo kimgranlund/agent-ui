@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 import { UICommandModalElement } from './command-modal.ts'
 import '../modal/modal.ts' // ensures ui-modal self-defines (command-modal.ts already imports it — explicit here for clarity)
+import { installDialogPolyfill } from '@agent-ui/shared/testing/dialog-polyfill'
 
 // command-modal.test.ts — LLD-C14 jsdom behavior suite (command-modal.lld.md; command-modal.spec.md SPEC-R2,
 // R4, R5, R6, R10). jsdom reality (verified by modal.test.ts): the native <dialog> modal surface (showModal/
@@ -12,30 +13,10 @@ import '../modal/modal.ts' // ensures ui-modal self-defines (command-modal.ts al
 // filter, active-descendant navigation (structural — the FOCUS-STAYS proof is browser-only), selection, the
 // nested-modal relay, and the opt-in hotkey.
 
-// ── the native-dialog stub (jsdom lacks the whole modal surface) — copied from modal.test.ts's own stub ──────
-
-const dialogOpen = new WeakMap<HTMLDialogElement, boolean>()
+// ── the native-dialog stub (jsdom lacks the whole modal surface) — the SHARED helper (GH #1006) ─────────────
 
 beforeAll(() => {
-  const proto = HTMLDialogElement.prototype as unknown as { showModal?: () => void; close?: () => void }
-  if (typeof proto.showModal === 'function') return // a real engine (browser harness) — leave the platform alone
-  Object.defineProperty(HTMLDialogElement.prototype, 'open', {
-    configurable: true,
-    get(this: HTMLDialogElement): boolean {
-      return dialogOpen.get(this) ?? false
-    },
-    set(this: HTMLDialogElement, v: boolean): void {
-      dialogOpen.set(this, Boolean(v))
-    },
-  })
-  proto.showModal = function (this: HTMLDialogElement): void {
-    dialogOpen.set(this, true)
-  }
-  proto.close = function (this: HTMLDialogElement): void {
-    if (!(dialogOpen.get(this) ?? false)) return
-    dialogOpen.set(this, false)
-    this.dispatchEvent(new Event('close'))
-  }
+  installDialogPolyfill()
 })
 
 /** Mirror a platform-initiated close of the NESTED modal's dialog (Escape/backdrop/external). */
