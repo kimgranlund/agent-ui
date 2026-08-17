@@ -10,33 +10,14 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 import '@agent-ui/components/components' // registers ui-command-modal (+ its nested ui-modal) for real
 import type { mountCommandPalette as MountCommandPalette } from './command-palette.ts'
+import { installDialogPolyfill } from '@agent-ui/shared/testing/dialog-polyfill'
 
-// ── the native-dialog stub (jsdom lacks the whole modal surface) — copied verbatim from command-modal.test.ts's
-// own stub (packages/agent-ui/components/src/controls/command-modal/command-modal.test.ts): the SPEC-R10 AC3
+// ── the native-dialog stub (jsdom lacks the whole modal surface) — the SHARED helper
+// (`@agent-ui/shared/testing/dialog-polyfill`, GH #1006; formerly an inline copy of command-modal.test.ts's): the SPEC-R10 AC3
 // leg below actually opens the real nested ui-modal (`current.open = true`), which calls the native
 // `dialog.showModal()` jsdom does not implement.
-const dialogOpen = new WeakMap<HTMLDialogElement, boolean>()
-
 beforeAll(() => {
-  const proto = HTMLDialogElement.prototype as unknown as { showModal?: () => void; close?: () => void }
-  if (typeof proto.showModal === 'function') return // a real engine — leave the platform alone
-  Object.defineProperty(HTMLDialogElement.prototype, 'open', {
-    configurable: true,
-    get(this: HTMLDialogElement): boolean {
-      return dialogOpen.get(this) ?? false
-    },
-    set(this: HTMLDialogElement, v: boolean): void {
-      dialogOpen.set(this, Boolean(v))
-    },
-  })
-  proto.showModal = function (this: HTMLDialogElement): void {
-    dialogOpen.set(this, true)
-  }
-  proto.close = function (this: HTMLDialogElement): void {
-    if (!(dialogOpen.get(this) ?? false)) return
-    dialogOpen.set(this, false)
-    this.dispatchEvent(new Event('close'))
-  }
+  installDialogPolyfill()
 })
 
 /** Mirror a platform-initiated close of the NESTED modal's dialog (Escape/backdrop/external) — the SAME helper

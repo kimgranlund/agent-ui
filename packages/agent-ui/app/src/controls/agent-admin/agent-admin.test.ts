@@ -10,6 +10,7 @@ import { entriesStoreKey, readEntries, type Entry, type EntryLibraryPack, type N
 import { mountEntryList, showAddError, type EntryListHandlers } from '../entry-list/entry-list.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsStore } from '../settings/store.ts'
+import { installDialogPolyfill } from '@agent-ui/shared/testing/dialog-polyfill'
 import {
   splitFrontmatter,
   parseDescriptor,
@@ -51,31 +52,12 @@ beforeAll(() => {
 // GH #917 — the SECOND jsdom-reality stub this file needs, for the same reason as the one above: the four
 // capability sections route their per-entry CRUD through a `ui-drawer`, and jsdom carries no native
 // `<dialog>` modal surface at all (`showModal`/`close` undefined, no `open` IDL accessor, no auto-fired
-// `cancel`/`close`). This is drawer.test.ts's own sanctioned stub, re-applied verbatim in shape: a minimal
+// `cancel`/`close`). The SHARED stub (`@agent-ui/shared/testing/dialog-polyfill`, GH #1006) is a minimal
 // mirror of the platform contract, enough for `drawer.open = true` to actually reach the DOM here. The REAL
 // top-layer / focus-trap / Escape / backdrop behaviour is proven where it can be — drawer.browser.test.ts and
 // agent-admin.browser.test.ts, in real engines.
-const dialogOpen = new WeakMap<HTMLDialogElement, boolean>()
 beforeAll(() => {
-  const proto = HTMLDialogElement.prototype as unknown as { showModal?: () => void; close?: () => void }
-  if (typeof proto.showModal === 'function') return // a real engine — leave the platform alone
-  Object.defineProperty(HTMLDialogElement.prototype, 'open', {
-    configurable: true,
-    get(this: HTMLDialogElement): boolean {
-      return dialogOpen.get(this) ?? false
-    },
-    set(this: HTMLDialogElement, v: boolean): void {
-      dialogOpen.set(this, Boolean(v))
-    },
-  })
-  proto.showModal = function (this: HTMLDialogElement): void {
-    dialogOpen.set(this, true)
-  }
-  proto.close = function (this: HTMLDialogElement): void {
-    if (!(dialogOpen.get(this) ?? false)) return // already closed — a no-op, no event (platform parity)
-    dialogOpen.set(this, false)
-    this.dispatchEvent(new Event('close'))
-  }
+  installDialogPolyfill()
 })
 afterAll(() => {
   HTMLElement.prototype.attachInternals = realAttachInternals

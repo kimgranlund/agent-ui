@@ -13,6 +13,7 @@
 import { describe, it, expect } from 'vitest'
 import { SURFACE_AUTHORING_KEY, isAuthoringSurfaceEnabled } from './agent-admin-schema.ts'
 import { SURFACE_A2UI_KEY, SURFACE_GENUI_KEY, SURFACE_GENUI_DOGFOOD_KEY, SURFACE_MARKDOWN_KEY, SURFACE_PLANNER_KEY } from './agent-admin-schema.ts'
+import { installDialogPolyfill } from '@agent-ui/shared/testing/dialog-polyfill'
 
 describe('SURFACE_AUTHORING_KEY / isAuthoringSurfaceEnabled — fail-closed, absent/non-`true` reads as OFF', () => {
   it('the store key is a stable, distinct string (the SURFACE_A2UI_KEY/SURFACE_PLANNER_KEY precedent)', () => {
@@ -80,31 +81,12 @@ afterAll(() => {
 
 // GH #949 — the SECOND jsdom-reality stub this file needs (the agent-admin.test.ts precedent, verbatim):
 // Instructions now routes its per-entry CRUD through a `ui-drawer`, and jsdom carries no native `<dialog>`
-// modal surface at all (`showModal`/`close` undefined, no `open` IDL accessor). drawer.test.ts's own
-// sanctioned stub, re-applied in shape — enough for `drawer.open = true` (this file's own Edit-drawer
+// modal surface at all (`showModal`/`close` undefined, no `open` IDL accessor). The SHARED stub
+// (`@agent-ui/shared/testing/dialog-polyfill`, GH #1006) — enough for `drawer.open = true` (this file's own Edit-drawer
 // round trip below) to actually reach the DOM here, never a claim about real top-layer/focus-trap behavior
 // (proven in the browser legs instead).
-const dialogOpen = new WeakMap<HTMLDialogElement, boolean>()
 beforeAll(() => {
-  const proto = HTMLDialogElement.prototype as unknown as { showModal?: () => void; close?: () => void }
-  if (typeof proto.showModal === 'function') return // a real engine — leave the platform alone
-  Object.defineProperty(HTMLDialogElement.prototype, 'open', {
-    configurable: true,
-    get(this: HTMLDialogElement): boolean {
-      return dialogOpen.get(this) ?? false
-    },
-    set(this: HTMLDialogElement, v: boolean): void {
-      dialogOpen.set(this, Boolean(v))
-    },
-  })
-  proto.showModal = function (this: HTMLDialogElement): void {
-    dialogOpen.set(this, true)
-  }
-  proto.close = function (this: HTMLDialogElement): void {
-    if (!(dialogOpen.get(this) ?? false)) return // already closed — a no-op, no event (platform parity)
-    dialogOpen.set(this, false)
-    this.dispatchEvent(new Event('close'))
-  }
+  installDialogPolyfill()
 })
 
 const mounted: Element[] = []

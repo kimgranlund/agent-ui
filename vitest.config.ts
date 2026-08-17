@@ -256,6 +256,9 @@ export default defineConfig({
       // already documents, just for the one additional CSS file these two pages' own `[1b]` import step adds.
       '@agent-ui/components/base-styles.css': r('./packages/agent-ui/components/src/base-styles.css'),
       '@agent-ui/components': r('./packages/agent-ui/components/src/index.ts'),
+      // GH #1006 — the shared jsdom `<dialog>` stub (`exports['./testing/dialog-polyfill']`), test-only. Placed
+      // BEFORE the broad `@agent-ui/shared` entry for the same prefix-match reason as every subpath above.
+      '@agent-ui/shared/testing/dialog-polyfill': r('./packages/agent-ui/shared/src/testing/dialog-polyfill.ts'),
       '@agent-ui/shared': r('./packages/agent-ui/shared/src/index.ts'),
       // The a2ui `./examples` subpath (the seed shelf, ADR-0055) — mirrors the package's exports map. Placed
       // BEFORE the broad `@agent-ui/a2ui` entry: a plain-string alias prefix-matches, so without this the

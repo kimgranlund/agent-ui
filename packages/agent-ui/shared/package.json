@@ -9,6 +9,7 @@
     "./tokens.css": "./src/tokens/tokens.css",
     "./dimensions.css": "./src/tokens/dimensions.css",
     "./base.css": "./src/tokens/base.css",
-    "./themes/*": "./src/tokens/themes/*"
+    "./themes/*": "./src/tokens/themes/*",
+    "./testing/dialog-polyfill": "./src/testing/dialog-polyfill.ts"
   }
 }

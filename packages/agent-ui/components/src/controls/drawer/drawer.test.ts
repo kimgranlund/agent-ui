@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 import { UIDrawerElement } from './drawer.ts'
+import { installDialogPolyfill, dialogCallsOf } from '@agent-ui/shared/testing/dialog-polyfill'
 
 // ADR-0188 s2 — UIDrawerElement jsdom behaviour probes. jsdom reality (verified — same as modal.test.ts): the
 // native `<dialog>` modal surface is ABSENT — `showModal`/`close` are undefined, there is no `open` IDL
@@ -12,45 +13,13 @@ import { UIDrawerElement } from './drawer.ts'
 // control's own logic: the open↔platform sync, the close-event state sync + emit, the persistent cancel gate,
 // focus restore, the edge prop, and child-move idempotence across reconnect.
 
-// ── the native-dialog stub (jsdom lacks the whole modal surface) ──────────────────────────────────────────
+// ── the native-dialog stub (jsdom lacks the whole modal surface) — the SHARED helper, GH #1006 ──────────────
+// `@agent-ui/shared/testing/dialog-polyfill` is the one sanctioned stub (modal.test.ts's former inline copy, lifted).
 
-const dialogOpen = new WeakMap<HTMLDialogElement, boolean>()
-const dialogCalls = new WeakMap<HTMLDialogElement, { showModal: number; close: number }>()
-
-function callsOf(d: HTMLDialogElement): { showModal: number; close: number } {
-  let c = dialogCalls.get(d)
-  if (!c) {
-    c = { showModal: 0, close: 0 }
-    dialogCalls.set(d, c)
-  }
-  return c
-}
+const callsOf = dialogCallsOf
 
 beforeAll(() => {
-  const proto = HTMLDialogElement.prototype as unknown as {
-    showModal?: () => void
-    close?: () => void
-  }
-  if (typeof proto.showModal === 'function') return // a real engine (browser harness) — leave the platform alone
-  Object.defineProperty(HTMLDialogElement.prototype, 'open', {
-    configurable: true,
-    get(this: HTMLDialogElement): boolean {
-      return dialogOpen.get(this) ?? false
-    },
-    set(this: HTMLDialogElement, v: boolean): void {
-      dialogOpen.set(this, Boolean(v))
-    },
-  })
-  proto.showModal = function (this: HTMLDialogElement): void {
-    callsOf(this).showModal++
-    dialogOpen.set(this, true)
-  }
-  proto.close = function (this: HTMLDialogElement): void {
-    callsOf(this).close++
-    if (!(dialogOpen.get(this) ?? false)) return // already closed — a no-op, no event (platform parity)
-    dialogOpen.set(this, false)
-    this.dispatchEvent(new Event('close'))
-  }
+  installDialogPolyfill()
 })
 
 // ── helpers ──────────────────────────────────────────────────────────────────────────────────────────────
