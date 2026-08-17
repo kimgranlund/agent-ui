@@ -55,12 +55,6 @@ function sectionHeading(text: string): HTMLElement {
   return heading(2, text)
 }
 
-function para(...nodes: (string | Node)[]): HTMLElement {
-  const p = document.createElement('p')
-  p.className = 'ss-prose'
-  for (const n of nodes) p.append(typeof n === 'string' ? document.createTextNode(n) : n)
-  return p
-}
 
 function code(text: string): HTMLElement {
   return el('code', 'ss-code', text)
@@ -87,7 +81,7 @@ function demoShell(slots: readonly HTMLElement[], opts: { nested?: boolean } = {
 // ════════════════ 1 · The grammar ════════════════
 content.append(sectionHeading('1 · The grammar'))
 content.append(
-  para(
+  pageLead(
     'A shell is ',
     code('[ header? | side-L? | content | side-R? | footer? ]'),
     ', where a side is a rail + pane (mirrored on both sides — SPEC-R1a). Mark a light-DOM child ',
@@ -109,7 +103,7 @@ content.append(
   ]),
 )
 content.append(
-  para(
+  pageLead(
     'The ABSENCE law: an unfilled slot contributes no box at all — not an empty placeholder. Delete any ' +
       'slot in your own markup and its band simply disappears, no CSS override needed. A minimal shell:',
   ),
@@ -133,7 +127,7 @@ content.append(
 )
 content.append(demoShell([slot('header', 'header', 'The only bar.'), slot('nav-pane', 'nav-pane', 'The only side.'), slot('content', 'content', 'Unmarked children land here too.')]))
 content.append(
-  para(
+  pageLead(
     'Everything sits on an 18px module (SPEC-R1c, ', code('--ui-super-shell-module'), '): bars/rails are 3 ' +
       'modules, panes are 14 — realized as tokens, never literals, so a theme can re-scale the whole ' +
       'frame from one variable.',
@@ -143,7 +137,7 @@ content.append(
 // ════════════════ 2 · The collapse contract ════════════════
 content.append(sectionHeading('2 · The collapse contract'))
 content.append(
-  para(
+  pageLead(
     'Collapse is per-side, HEADER-HOSTED (SPEC-R2b): a header slot gets two toggles injected at its ends, ' +
       'each flipping its side’s reflected ',
     code('collapsed-start'),
@@ -165,7 +159,7 @@ content.append(
   ]),
 )
 content.append(
-  para(
+  pageLead(
     'Header and footer are PERMANENT chrome (SPEC-R2c) — the side toggles never touch them; the ' +
       'all-collapsed state is exactly header / full-bleed content / footer, matching the Figma extreme.',
   ),
@@ -174,7 +168,7 @@ content.append(
 // ════════════════ 3 · Recursion (depth 2) ════════════════
 content.append(sectionHeading('3 · Recursion — a shell inside a shell'))
 content.append(
-  para(
+  pageLead(
     'A shell may host another shell in its ', code('content'), ' slot (SPEC-R1b). The nested level simply ' +
       'authors no rails — the ring drops for free, zero extra code. This is the app → canvas ' +
       'relationship from the wireframe: the outer level owns global-nav/global-options; the inner ' +
@@ -205,7 +199,7 @@ content.append(
 // ════════════════ 4 · Narrow reflow ════════════════
 content.append(sectionHeading('4 · Narrow reflow'))
 content.append(
-  para(
+  pageLead(
     `Below a ${SHELL_NARROW_BREAKPOINT} container width (SPEC-R4), sides auto-collapse via the query ` +
       'alone — never by writing the collapsed-* attributes, so a persisted wide-state choice always ' +
       'survives a narrow visit (the no-clobber law). A header toggle at narrow re-opens its side as an ' +
@@ -228,7 +222,7 @@ content.append(
   el('p', 'ss-caption', `↑ Drag the resize handle (bottom-right) below ${SHELL_NARROW_BREAKPOINT}, then click a header toggle to overlay-restore that side.`),
 )
 content.append(
-  para(
+  pageLead(
     'This ',
     code(SHELL_NARROW_BREAKPOINT),
     ' NARROW line, and a second ',
@@ -255,7 +249,7 @@ content.append(
   ),
 )
 content.append(
-  para(
+  pageLead(
     'A side can opt into a different narrow story via ',
     code('narrow-start'),
     ' / ',
@@ -279,7 +273,7 @@ content.append(
 // family's own page, with the family's own live production reference.
 content.append(sectionHeading('5 · Landmarks — role decoupled from placement'))
 content.append(
-  para(
+  pageLead(
     'Every control-created wrapper part carries a REAL ARIA landmark by default, keyed by its slot: ' +
       'header → ',
     code('banner'),
@@ -295,7 +289,7 @@ content.append(
   ),
 )
 content.append(
-  para(
+  pageLead(
     'When the right SLOT for a surface is the wrong LANDMARK for it, decouple them: mark the slot’s ' +
       'first authored child ',
     code('data-landmark="…"'),
@@ -327,7 +321,7 @@ content.append(
   )
 }
 content.append(
-  para(
+  pageLead(
     'The override vocabulary is ',
     code('banner · navigation · main · complementary · contentinfo · region · form · search'),
     ' — reused verbatim from ADR-0083’s own value set. A value outside it is ignored and the slot default ' +
@@ -340,7 +334,7 @@ content.append(
 // ════════════════ API reference — DERIVED from the descriptor ════════════════
 content.append(sectionHeading('API reference'))
 content.append(
-  para(
+  pageLead(
     'Read straight from the shipped descriptor (super-shell.md) through the same parser the package’s ' +
       'contract trip-wire validates — this table cannot drift from the component.',
   ),

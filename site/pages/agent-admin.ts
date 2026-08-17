@@ -64,12 +64,6 @@ function el(tag: string, className: string, text?: string): HTMLElement {
 function sectionHeading(text: string): HTMLElement {
   return heading(2, text)
 }
-function para(...nodes: (string | Node)[]): HTMLElement {
-  const p = document.createElement('p')
-  p.className = 'as-prose'
-  for (const n of nodes) p.append(typeof n === 'string' ? document.createTextNode(n) : n)
-  return p
-}
 function code(text: string): HTMLElement {
   return el('code', 'as-code', text)
 }
@@ -111,7 +105,7 @@ function wireLiveOverlay(admin: UIAgentAdminElement, status: HTMLElement): void 
 
 content.append(sectionHeading('1 · One primitive, five instantiations'))
 content.append(
-  para(
+  pageLead(
     'Left to right: the chat canvas (', code('ui-conversation'), ') and the tabbed config region ' +
       '(vision rev.5) — the Settings tab stacks the Agent config (', code('ui-settings'),
     ') with its ACTIVE master switch, the model grid, a generic ordered-entry-list seeded with three ' +
@@ -134,7 +128,7 @@ wireLiveOverlay(adminEl, liveStatus)
 
 content.append(sectionHeading('2 · Live-apply is a fresh read, not a push'))
 content.append(
-  para(
+  pageLead(
     'No propagation channel exists because none is needed: every commit lands in the shared store ' +
       'immediately (per-field-on-change), and the stub turn loop reads every entry list fresh at the ' +
       'moment each turn begins — composing the enabled prompt sections into one string and gathering ' +
@@ -154,7 +148,7 @@ el.schema = {
 
 content.append(sectionHeading('API reference'))
 content.append(
-  para(
+  pageLead(
     'Read straight from the shipped descriptor (agent-admin.md) through the same parser the package’s ' +
       'contract trip-wire validates.',
   ),

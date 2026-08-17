@@ -46,12 +46,6 @@ function el(tag: string, className: string, text?: string): HTMLElement {
 function sectionHeading(text: string): HTMLElement {
   return heading(2, text)
 }
-function para(...nodes: (string | Node)[]): HTMLElement {
-  const p = document.createElement('p')
-  p.className = 'as-prose'
-  for (const n of nodes) p.append(typeof n === 'string' ? document.createTextNode(n) : n)
-  return p
-}
 function code(text: string): HTMLElement {
   return el('code', 'as-code', text)
 }
@@ -97,7 +91,7 @@ function demo(): HTMLElement {
 
 content.append(sectionHeading('1 · Composition'))
 content.append(
-  para(
+  pageLead(
     'Two ', code('ui-master-detail-pane'), ' children dock the list and detail content — a generic-region ' +
       'model. Resize the frame below narrower than 40rem ' +
       '(the element\'s OWN container width, never the viewport) to see the drill-in.',
@@ -109,7 +103,7 @@ content.append(resizeFrame, el('p', 'as-caption', '↑ Drag the resize handle (b
 
 content.append(sectionHeading('2 · Selection is consumer-owned'))
 content.append(
-  para(
+  pageLead(
     'ui-master-detail has no item-picking UI: the click handler above sets ', code('.selected'), ' directly — ' +
       'that write is what drives the narrow drill-in view AND fires ', code('select'), '/', code('change'), '. ' +
       'Going back (the affordance inside the detail pane, narrow only) never clears the selection — only the ' +
@@ -129,7 +123,7 @@ content.append(el('pre', 'as-snippet', `<ui-master-detail>
 
 content.append(sectionHeading('API reference'))
 content.append(
-  para(
+  pageLead(
     'Read straight from the shipped descriptors (master-detail.md · master-detail-pane.md) through the same ' +
       "parser the package's contract trip-wire validates.",
   ),

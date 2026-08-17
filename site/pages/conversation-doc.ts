@@ -55,14 +55,6 @@ function code(text: string): HTMLElement {
   return c
 }
 
-/** para — a mixed text/inline-node paragraph (the chat-shell.ts/super-shell.ts `para()` precedent), used
- *  where `pageLead` (plain-string-only) can't carry an inline `<code>` call-out. */
-function para(...nodes: (string | Node)[]): HTMLElement {
-  const p = document.createElement('p')
-  p.className = 'page-lead'
-  for (const n of nodes) p.append(typeof n === 'string' ? document.createTextNode(n) : n)
-  return p
-}
 
 /** A scripted "agent turn" — no real transport, standing in for `for await (const line of transport.turn(...))`.
  *  Streams one narration note after a short delay, then finalizes with a fallback tally. */
@@ -98,7 +90,7 @@ content.append(exampleSection('Live demo — imperative-only', frame(imperative)
 // ════════════════ 2 · ADR-0180 — the opt-in declarative composition mode ════════════════
 content.append(heading(2, '2 · The declarative composition mode (ADR-0180, GH #688)'))
 content.append(
-  para(
+  pageLead(
     'An author MAY instead compose the three recognized child tags directly; ui-conversation ADOPTS ' +
       'whichever it finds instead of creating it — never a second imperative surface, and the whole turn/' +
       'registry/narration/busy engine stays solely on ui-conversation regardless of which path seated its ' +
