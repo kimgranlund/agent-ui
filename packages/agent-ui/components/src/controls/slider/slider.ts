@@ -105,6 +105,9 @@ export class UISliderElement extends UIRangeElement {
       clearTimeout(this.#hideTimer)
       this.#hideTimer = undefined
     }
+    // …and hide the readout itself: a disconnect mid-scrub (timer cleared, hidden=false) would otherwise
+    // reconnect stuck-visible until the next input (component-checker finding, GH #1126).
+    if (this.#valueEl) this.#valueEl.hidden = true
   }
 
   /** GH #1126: show the readout and (re)arm its auto-hide timer — called on every live `input`. */

@@ -217,7 +217,7 @@
     align-items: center;
     justify-content: center;
     padding-inline: calc(var(--md-sys-widget-inset) * 1.5);
-    border-radius: calc(var(--ui-slider-rail-height) * 2);
+    border-radius: 999px; /* pill — dialect unified with slider-multi's readout (checker nit) */
     background: var(--ui-slider-value-surface);
     color: var(--ui-slider-value-ink);
     font-size: var(--ui-slider-value-font);

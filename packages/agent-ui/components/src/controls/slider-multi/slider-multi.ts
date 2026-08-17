@@ -372,7 +372,13 @@ export class UISliderMultiElement extends UIRangeElement {
     // onValue below) — one listener covers both. `focusout` hides immediately (a separate listener from
     // the change-commit one above; DOM permits multiple listeners per event type).
     this.listen(this, 'input', () => this.#armReadout())
-    this.listen(this, 'focusout', () => this.#hideReadoutNow())
+    this.listen(this, 'focusout', (event) => {
+      // Tabbing lo→hi keeps focus INSIDE the control — hiding then re-showing on the next arrow would
+      // flash the readout (checker finding). Hide only when focus truly leaves the host.
+      const to = (event as FocusEvent).relatedTarget
+      if (to instanceof Node && this.contains(to)) return
+      this.#hideReadoutNow()
+    })
   }
 
   protected override disconnected(): void {
@@ -386,11 +392,13 @@ export class UISliderMultiElement extends UIRangeElement {
     this.#releaseHiBinding = null
     this.#activeThumb = null
 
-    // GH #1126: drop any pending hide timer — zero-residue (C10), matching the bindings above.
+    // GH #1126: drop any pending hide timer — zero-residue (C10), matching the bindings above; and hide
+    // the readout itself so a disconnect mid-scrub cannot reconnect stuck-visible (checker finding).
     if (this.#hideTimer !== undefined) {
       clearTimeout(this.#hideTimer)
       this.#hideTimer = undefined
     }
+    if (this.#valueEl) this.#valueEl.hidden = true
   }
 
   /** GH #1126: show the readout and (re)arm its auto-hide timer — called on every live `input`. */
