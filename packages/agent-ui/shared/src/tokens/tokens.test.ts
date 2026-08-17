@@ -34,6 +34,15 @@ describe('tokens.css — the answered/settled alias pair (ADR-0196)', () => {
   })
 })
 
+// tok-working (ADR-0199, GH #1104) — the working/live-mutation color. STRUCTURAL pin: the token exists
+// in the top-level :root block as a PURE ALIAS of the primary role (zero new literals — the ADR's
+// clause 4: accent-family by intent; strength lives in the dimensions.css opacity rungs).
+describe('tokens.css — the working/live-mutation alias (ADR-0199)', () => {
+  it('declares --ui-working-color as an ALIAS of --md-sys-color-primary (no new literal)', () => {
+    expect(rootBlock).toMatch(/--ui-working-color:\s*var\(--md-sys-color-primary\)\s*;/)
+  })
+})
+
 describe('tokens.css — the shared focus-ring role (ADR-0009)', () => {
   it('declares a DEDICATED --md-sys-color-focus-ring role resolved via light-dark() (not --md-sys-color-primary reused)', () => {
     expect(css.length).toBeGreaterThan(0) // anti-vacuous: the CSS was actually read

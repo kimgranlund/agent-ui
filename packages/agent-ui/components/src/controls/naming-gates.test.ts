@@ -242,7 +242,7 @@ describe('Gate 1 — the emit-seam event allowlist (naming.md §4, packages/**/s
 })
 
 // ── Gate 2 — the custom-state vocabulary (naming.md §6) ─────────────────────────────────────────────────────────
-// The 12-member registry. A NEW state name is a design decision — it lands in naming.md §6 AND this set in the
+// The 15-member registry. A NEW state name is a design decision — it lands in naming.md §6 AND this set in the
 // SAME change (this comment is the "extend together" contract the dispatch specifies).
 // `pressed` (ADR-0179 GH #686 Amendment S7-a) — ui-toggle's aria-pressed toggle-button state.
 // `settled` (GH #722) — ui-status-stream's finalize()/fail() face, a consumer-keyable public state.
@@ -251,6 +251,7 @@ const ALLOWED_STATES = new Set([
   'ready', 'user-invalid', 'checked', 'dragging', 'revealed', 'disabled', 'collapsed', 'truncated', 'selected', 'indeterminate', 'pressed', 'settled',
   'pending', // ADR-0191, GH #999 — the fleet-wide async-freshness state; first consumer ui-status-stream
   'answered', // ADR-0196, GH #1065 — the fleet-wide answer-settlement state; the choice-control family
+  'working', // ADR-0199, GH #1104 — the fleet-wide live-surface-mutation state; first consumer ui-surface-host
 ])
 
 /** Every custom-state NAME used in one file's TEXT (comment-stripped) — `states?.add/delete/toggle/replace/has(

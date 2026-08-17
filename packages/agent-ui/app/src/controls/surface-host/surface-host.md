@@ -30,6 +30,10 @@ attributes:             # attributes-as-API — mirrors surface-host.ts `props`
     type: boolean
     default: false
     reflect: true       # GH #742/ADR-0183 Amendment — opt-in View Transitions on RE-RENDERS (post-first-finalize ingest/finalize wrap in withViewTransition; first-paint streaming never transitions; default false / no API / reduced motion byte-identical)
+  - name: working
+    type: boolean
+    default: false
+    reflect: true       # ADR-0199 / GH #1104 — the live-surface-mutation state; mirrored into :state(working) by a connected() effect → the breathing inner-shadow overlay (surface-host.css)
 
 properties:
   - name: label
@@ -41,6 +45,9 @@ properties:
   - name: bare
     description: GH #241 — opt-in CHROMELESS mount, default false (the checkered docs-preview artboard stands unchanged for existing consumers). Kim's ruling for the chat path — the A2UI render surface gets NO background (the checker gradients and stage color both drop), NO padding (the `[data-part='surface']` inset zeroes), and FULL available width (host and surface span 100% of the containing box) — the rendered payload's own components carry their chrome; the host wrapper is invisible. A pure CSS hook (`[bare]`, surface-host.css), composable with `wrap` — `wrap` keeps owning the block axis (content-hug + cap + hidden scrollbars), `bare` owns the inline axis + the chrome strip; with an externally-definite 100% inline-size the surface box also QUALIFIES as the ADR-0100 cl.2 query container again, so `bare` restores the `container-type: inline-size` that plain `wrap` drops. `ui-conversation` sets this (with `wrap`) on every surface it mounts inline in a turn.
 
+  - name: working
+    description: ADR-0199 / GH #1104 — `true` while an in-flight producer turn is mutating THIS surface in place (the fleet-wide live-surface-mutation state, interaction-states.md §7 — the INVERSE of ADR-0191's `pending` stale-content message). Mirrored into `:state(working)` by a connected() effect (presentation-only, never AX-reflected — the turn's announced face stays the narration strip, ADR-0146); the treatment is a breathing diffused inner-shadow `::before` overlay on the surface part, opacity-only/compositor-only, riding the `--ui-working-*` constants through this control's own `--ui-surface-host-working-*` chain. `prefers-reduced-motion: reduce` holds the overlay static at the max rung — never nothing. The shipped flipper is `ui-conversation`'s turn handle (set on route, cleared at the guarded endTurn — finalize() AND fail() both clear); a host app driving this element directly may set it itself.
+
 events: []              # no DOM events — the mount/stream seam is exposed as imperative public methods (ingest/finalize/dispose) plus a callback registration (onClientMessage), never a CustomEvent (SPEC-R2; the closed six-event vocabulary has no streaming/client-message kind)
 
 slots: []                # content model is NOT author-composed — the stage/surface artboard is built entirely by this element's own connect-time logic; no slotted children
@@ -51,7 +58,10 @@ parts:                   # NOT shadow-DOM ::part() (light-DOM only) — light-DO
   - name: surface
     description: The translate-centered mount point (`[data-part="surface"]`) the internal RendererHost mounts its rendered root into.
 
-customStates: []          # no :state() hooks — this element carries no interaction state of its own
+customStates:             # ADR-0199 / GH #1104 — bare-scalar sequence (the descriptor grammar)
+  - working               # mirrors the `working` prop — the live-surface-mutation state; keys the breathing inner-shadow overlay (surface-host.css); presentation-only, never AX-reflected; precedence `disabled > pending > working > answered > …` (interaction-states.md §7)
+  - disabled              # NOT set by this element — appears only inside the working rule's `:not(:state(disabled))` mutual-exclusion guard (TKT-0062's law, the ADR-0199 cl.5 precedence slot)
+  - pending               # NOT set by this element — appears only inside the working rule's `:not(:state(pending))` guard (pending > working, ADR-0199 cl.5)
 
 face:
   formAssociated: false   # NOT a FACE form control — a mount/stream seam contributes nothing to a form

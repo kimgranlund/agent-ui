@@ -96,6 +96,15 @@ const props = {
   // Pre-settle streaming NEVER transitions — progressive first paint is the surface's whole value.
   // Default false / no API / reduced motion: byte-identical to the pre-#742 host (the family law).
   viewTransitions: { ...prop.boolean(false), reflect: true, attribute: 'view-transitions' },
+  // ADR-0199 / GH #1104 — the fleet-wide live-surface-mutation state: `true` while an in-flight
+  // producer turn is mutating THIS surface in place. Mirrored into `:state(working)` by the
+  // connected() effect below (the ADR-0196 `answered` pattern); the breathing treatment itself is
+  // pure CSS (surface-host.css). Presentation-only — never touches ARIA/disabled/tabbable. The
+  // shipped flipper is `ui-conversation`'s turn handle (set on route, cleared at the guarded
+  // endTurn — finalize() AND fail() both clear); a host app driving this element directly may set
+  // it itself (the ADR-0191 cl.4 restraint: the fleet law fixes the state name, tokens, and
+  // treatment — not who flips it).
+  working: { ...prop.boolean(), reflect: true },
 } satisfies PropsSchema
 
 export interface UISurfaceHostElement extends ReactiveProps<typeof props> {}
@@ -147,6 +156,13 @@ export class UISurfaceHostElement extends UIElement {
     // ARIA via internals only, never a host attribute. A `region` role is meaningful only paired with a
     // real accessible name — an unlabelled artboard gets no role at all (a landmark with no name is noise
     // to assistive tech, not a courtesy).
+    // ADR-0199 — mirror the `working` prop into `:state(working)` (optional-chained: jsdom may lack
+    // CustomStateSet; the real-engine proof is the browser smoke). Presentation-only.
+    this.effect(() => {
+      if (this.working) this.internals.states?.add('working')
+      else this.internals.states?.delete('working')
+    })
+
     this.effect(() => {
       if (this.label === '') {
         this.internals.role = null

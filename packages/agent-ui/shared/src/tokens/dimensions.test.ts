@@ -295,6 +295,24 @@ describe('dimensions.css — the pending/stale-content token pair (ADR-0191)', (
   })
 })
 
+// Working/live-surface-mutation convention (ADR-0199, GH #1104) — the `:state(working)` breathing
+// treatment's constants. `--ui-working-duration` is the fleet's FIRST LOOP-motion literal (deliberately
+// NOT an alias of --md-sys-motion-duration-fast — a 300ms half-cycle is a strobe, not a breath, the
+// ADR's cl.4); the opacity pair is the overlay breath's two rungs; the blur is a paint constant like
+// the focus-ring width. All :root constants, never on the derived `*` ramp.
+describe('dimensions.css — the working/live-mutation constants (ADR-0199)', () => {
+  it('declares --ui-working-duration: 1600ms as a NEW loop-motion literal (not an alias), on :root', () => {
+    expect(rootBlock).toMatch(/--ui-working-duration:\s*1600ms\s*;/)
+  })
+
+  it('declares the opacity rungs 0.15/0.55 and the 24px diffused blur, on :root — constants, not on the `*` ramp', () => {
+    expect(rootBlock).toMatch(/--ui-working-opacity-min:\s*0\.15\s*;/)
+    expect(rootBlock).toMatch(/--ui-working-opacity-max:\s*0\.55\s*;/)
+    expect(rootBlock).toMatch(/--ui-working-blur:\s*24px\s*;/)
+    expect(universalBlock).not.toMatch(/--ui-working-/) // constants stay off the derived `*` ramp
+  })
+})
+
 // tok-space (ADR-0015 cl.4) — the --md-sys-space LAYOUT-SPACING ladder. The container ledger, distinct from the
 // control-frame ramp: density rides it (it joins the derived `*` ramp so a subtree [density] re-multiplies),
 // but [scale] does NOT touch it (the base px is a literal — layout rhythm is not control-frame size). The

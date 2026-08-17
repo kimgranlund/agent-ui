@@ -431,6 +431,63 @@ duration; a confirmed change appends an amendment turn ("Changed: X → Y") reco
 rewrite/rewind); re-confirming the same answer appends nothing. The Edit affordance is a plain fleet
 button within the seven-member event vocabulary (ADR-0153) — no eighth event name.
 
+## 7 · Working / live surface mutation — the alive-ambience state (ADR-0199)
+
+A FIFTH state axis, orthogonal to the base states (§1), the filled law (§1b), async freshness (§5) and
+answer settlement (§6): whether a SURFACE is the live target of an in-flight producer turn's in-place
+mutations (GH #1104 — the A2UI card cycling pre-flop → flop with no other sign of life). The
+TKT-0062/ADR-0191/ADR-0196 SHAPE re-applied a fourth time. **The semantics are the INVERSE of §5's
+`pending`**: pending = the displayed content is STALE (dim it); working = the displayed content is FRESH
+and mid-mutation (make the frame breathe). The two are disjoint channels (content opacity dim vs frame
+overlay glow) and compose — a surface can be both at once. First consumer: `ui-surface-host`, driven by
+`ui-conversation`'s turn handle.
+
+**[a] One host custom state: `:state(working)`.** The eighth vocabulary member (naming.md §6). Not
+`busy` (`aria-busy` is a platform AX semantic this presentation-only state must not claim), not `live`
+(ARIA live regions), not `active` (a CSS pseudo-class). The ADR-0196 cl.1 mechanics exactly: the
+consuming surface sets a public boolean `working` prop; the control's own `connected()` effect mirrors
+it into `this.internals.states?.add('working')` / `.delete('working')` (`?.`-optional-chained, the
+`:state(settled)` precedent). Presentation-only, never AX-reflected — the turn's announced face stays
+the narration strip (ADR-0146).
+
+**[b] The tokens.** Four constants in `dimensions.css` — `--ui-working-duration: 1600ms` (the fleet's
+FIRST loop-motion literal; deliberately NOT an alias of `--md-sys-motion-duration-fast` — a 300ms
+half-cycle is a strobe, not a breath), the overlay rungs `--ui-working-opacity-min: 0.15` /
+`--ui-working-opacity-max: 0.55`, and the diffused spread `--ui-working-blur: 24px` (a paint constant,
+no `[scale]` participation) — plus ONE pure color alias in `tokens.css`, `--ui-working-color:
+var(--md-sys-color-primary)` (accent-family by intent; strength lives entirely in the opacity rungs,
+which keep the effective tint under the G9 14%-alpha ceiling). None are on the sanctioned direct-read
+list — a consuming control routes all five through its own `--ui-{cmp}-working-*` chain.
+
+**[c] The treatment: a breathing diffused INNER shadow on an overlay, opacity-only.** The `:state(working)`
+rule paints an `::after` overlay on the surface part (`position: absolute; inset: 0; pointer-events:
+none; border-radius: inherit`) carrying `box-shadow: inset 0 0 var(--ui-{cmp}-working-blur)
+var(--ui-{cmp}-working-color)`, and animates the OVERLAY's `opacity` between the two rungs via one
+`@keyframes` breathe cycle (`alternate infinite`, duration per half-cycle, easing-standard). Animating
+overlay opacity — never `box-shadow` itself — keeps the loop compositor-only (the ADR-0095 exemption
+shape); §4[a] stays intact (no geometry, no ramp animation, content untouched — no dim, no recolor).
+An INNER shadow (not an outline/border pulse) so it reads under `[bare]` chromeless mounts and never
+collides with §2's focus-ring outline channel. **`prefers-reduced-motion: reduce` ⇒ STATIC, never
+NOTHING**: `animation: none`, overlay held at the max rung — an animation that CARRIES STATE must
+degrade to a legible static form (§4[c] extended), unlike pure transition polish which may degrade to
+none.
+
+**[d] Precedence, fixed: `disabled > pending > working > answered > focus > hover > filled > default`.**
+`pending` over `working` (where one channel must pick a message, "what you see is stale" — a correctness
+statement — outranks "activity is happening" — an ambience statement; mechanically they compose free);
+`working` over `answered` (an answered card being amended in place is, for that window, live again;
+again disjoint channels, message-precedence only). `disabled` stays terminal; `user-invalid` stays
+orthogonal. Implementation is §1b[a]'s law: MUTUAL EXCLUSION via `:not()` guards where selectors
+overlap, never source-order/specificity.
+
+**[e] The wiring locus (first consumer).** `ui-conversation`'s turn handle owns the exact lifecycle
+window (`beginAgentTurn` → the single guarded `endTurn` both `finalize()` and `fail()` funnel through,
+TKT-0034): when a turn routes a line to a surface host — fresh OR known id (the in-place update is the
+motivating case) — it sets that host's `working` prop; at `endTurn` it clears it on every host the turn
+touched. `fail()` clears identically — a dead turn never leaves a card breathing. A host app driving
+`ui-surface-host` directly may set the prop itself; the fleet law fixes the state name, tokens, and
+treatment — not who flips it (the ADR-0191 cl.4 restraint).
+
 ## Mechanization
 
 Each state lands with a probe (per [`process.md`](../process.md)) — a state without a probe is not enforced.
@@ -454,6 +511,14 @@ The carrier decides the harness:
   consuming control (`status-stream.test.ts`'s own gate, the GH #722 header-marker drift-gate precedent) —
   no real-engine assertion is required beyond that, since opacity/transition are computed styles a
   cross-engine smoke would only re-confirm, not a new risk class.
+
+- **working** (§7) is a prop→state mirror + gated CSS: the `working` prop driving `:state(working)` is a
+  **jsdom unit test** on the consuming control (`?.`-optional-chained and NON-VACUOUS — jsdom lacks
+  `CustomStateSet` in some environments, so a jsdom states assertion must first prove the set exists or
+  the behavioural claim moves to the browser leg); the `::after` overlay rule (keyframes present,
+  opacity-only animation, reduced-motion static arm, no geometry/`all`) is a **jsdom CSS-text pin-test**;
+  that the animation actually RUNS (computed `animation-name` + an opacity delta across rAF samples) and
+  that reduced-motion holds the overlay static at the max rung is the **cross-engine browser smoke**'s.
 
 ## Decisions (source)
 
@@ -481,5 +546,12 @@ and open questions:
   state (§6): `:state(answered)` + the `--ui-answered-bg`/`--ui-answered-ink` alias pair, precedence-composed
   under disabled/pending and over the TKT-0062 states; consumed by the A2UI questionnaire card's
   settle/edit-amend (append-amendment) flow.
+
+- [**ADR-0199**](../adr/0199-working-state-live-surface-mutation.md) — the live-surface-mutation
+  state (§7): `:state(working)` + the `--ui-working-{duration,opacity-min,opacity-max,blur}` constants
+  and the `--ui-working-color` primary alias; the breathing `::after` inner-shadow overlay
+  (opacity-only, compositor-only), reduced-motion "static, never nothing", precedence
+  `disabled > pending > working > answered > …`; first consumer `ui-surface-host` driven by
+  `ui-conversation`'s turn handle.
 
 Colour ladders: [`tokens.md`](./tokens.md). Box law the ring must not perturb: [`geometry.md`](./geometry.md).

@@ -198,7 +198,11 @@ The prefix IS the ownership boundary — no allowlist needed:
   async-freshness state; `ui-status-stream`'s own first-consumer wiring composes it WITH
   `settled` rather than clearing one on the other) · answered (ADR-0196, GH #1065 — the
   answered/settled-CHOICE state on the seven choice controls; presentation-only, composes under the
-  precedence `disabled > pending > answered > focus > hover > filled > default`). A verb or noun is
+  precedence `disabled > pending > answered > focus > hover > filled > default`) · working (ADR-0199,
+  GH #1104 — the live-surface-mutation state: this surface is the live target of an in-flight
+  producer turn's in-place mutations, the INVERSE of `pending`'s stale-content message; first
+  consumer `ui-surface-host`; precedence-slotted `disabled > pending > working > answered > …`,
+  interaction-states.md §7). A verb or noun is
   not a state name. `pressed`
   (ADR-0179 GH #686 Amendment S7-a) — `ui-toggle`'s ARIA-pressed toggle-button state; distinct
   from `checked` (an Indicator-class boolean form value/ARIA-checked pattern) and `selected`

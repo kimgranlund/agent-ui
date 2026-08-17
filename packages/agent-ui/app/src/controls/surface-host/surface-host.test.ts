@@ -594,7 +594,7 @@ describe('surface-host.md descriptor', () => {
   const md = readFileSync(`${DIR}/surface-host.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['label', 'wrap', 'bare', 'viewTransitions']
+  const ATTR_NAMES = ['label', 'wrap', 'bare', 'viewTransitions', 'working'] // 'working': ADR-0199 / GH #1104
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)
@@ -734,5 +734,89 @@ describe('ui-surface-host — viewTransitions wraps RE-RENDERS only (GH #742/ADR
     el.ingest(ROOT('vt-e2', 'fresh paint'))
     expect(transitions, 'the rebuilt host is un-settled — first paint stays sync').toBe(0)
     expect(el.textContent).toContain('fresh paint')
+  })
+})
+
+// ── ADR-0199 / GH #1104 — the working/live-mutation state ────────────────────────────────────────
+
+describe('ui-surface-host — `working` prop → :state(working) mirror (ADR-0199)', () => {
+  // The protected-internals probe subclass (the split.test.ts/drill.test.ts idiom) — jsdom may lack
+  // CustomStateSet, so the states assertion is capability-gated (`?.`); the NON-VACUOUS floor below is
+  // the reflected attribute (always assertable under jsdom), and the real :state() selector proof is
+  // surface-host-working.browser.test.ts's (the jsdom-vacuity lesson).
+  class ProbeSurfaceHost extends UISurfaceHostElement {
+    get probeInternals(): ElementInternals {
+      return this.internals
+    }
+  }
+  if (!customElements.get('zz-probe-surface-host')) customElements.define('zz-probe-surface-host', ProbeSurfaceHost)
+
+  it('`working` defaults to false and reflects to the attribute', async () => {
+    const el = mount(document.createElement('zz-probe-surface-host') as ProbeSurfaceHost)
+    expect(el.working).toBe(false)
+    expect(el.hasAttribute('working')).toBe(false)
+    el.working = true
+    await whenFlushed()
+    expect(el.hasAttribute('working'), 'non-vacuous floor: the reflected attribute').toBe(true)
+    el.working = false
+    await whenFlushed()
+    expect(el.hasAttribute('working')).toBe(false)
+  })
+
+  it('mirrors the prop into internals.states (capability-gated; browser leg carries the real-engine proof)', async () => {
+    const el = mount(document.createElement('zz-probe-surface-host') as ProbeSurfaceHost)
+    el.working = true
+    await whenFlushed()
+    if (el.probeInternals.states) {
+      expect(el.probeInternals.states.has('working')).toBe(true)
+    }
+    el.working = false
+    await whenFlushed()
+    if (el.probeInternals.states) {
+      expect(el.probeInternals.states.has('working')).toBe(false)
+    }
+  })
+})
+
+describe('surface-host.css — the :state(working) breathing block (ADR-0199 pin-tests)', () => {
+  it('routes ALL five fleet constants + the easing through the --ui-surface-host-working-* chain (TKT-0066)', () => {
+    expect(css).toMatch(/--ui-surface-host-working-duration:\s*var\(--ui-working-duration\)/)
+    expect(css).toMatch(/--ui-surface-host-working-opacity-min:\s*var\(--ui-working-opacity-min\)/)
+    expect(css).toMatch(/--ui-surface-host-working-opacity-max:\s*var\(--ui-working-opacity-max\)/)
+    expect(css).toMatch(/--ui-surface-host-working-blur:\s*var\(--ui-working-blur\)/)
+    expect(css).toMatch(/--ui-surface-host-working-color:\s*var\(--ui-working-color\)/)
+    expect(css).toMatch(/--ui-surface-host-working-easing:\s*var\(--md-sys-motion-easing-standard\)/)
+  })
+
+  it("the working rule is a ::before overlay (never ::after — ADR-0187 owns the surface ::after channel) with :not() precedence guards", () => {
+    const m = /:scope:state\(working\):not\(:state\(disabled\)\):not\(:state\(pending\)\)\s*\[data-part='surface'\]::before\s*\{([^}]*)\}/.exec(css)
+    expect(m, 'no guarded :state(working) ::before rule found').not.toBeNull()
+    const rule = m?.[1] ?? ''
+    expect(rule).toMatch(/box-shadow:\s*inset 0 0 var\(--ui-surface-host-working-blur\) var\(--ui-surface-host-working-color\)/)
+    expect(rule).toMatch(/pointer-events:\s*none/)
+    expect(rule).toMatch(/animation:\s*ui-surface-host-breathe/)
+    expect(rule).toMatch(/infinite alternate/)
+  })
+
+  it('the breathe keyframes animate OPACITY ONLY between the two rungs (compositor-only — no geometry, no `all`, never box-shadow itself)', () => {
+    const m = /@keyframes ui-surface-host-breathe\s*\{([\s\S]*?)\n\}/.exec(css)
+    expect(m, 'no ui-surface-host-breathe keyframes found').not.toBeNull()
+    const body = m?.[1] ?? ''
+    expect(body).toMatch(/opacity:\s*var\(--ui-surface-host-working-opacity-min\)/)
+    expect(body).toMatch(/opacity:\s*var\(--ui-surface-host-working-opacity-max\)/)
+    // opacity is the ONLY animated property — the §4[a]/ADR-0095 compositor-only shape.
+    const properties = [...body.matchAll(/^\s*([a-z-]+):/gm)].map((p) => p[1])
+    expect(properties.length, 'anti-vacuous: keyframes declare properties').toBeGreaterThan(0)
+    expect(properties.every((p) => p === 'opacity'), `non-opacity property in keyframes: ${properties.join(', ')}`).toBe(true)
+  })
+
+  it('reduced motion ⇒ STATIC, never nothing: animation off, overlay held at the MAX rung (ADR-0199 cl.3)', () => {
+    const media = /@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*?)\n  \}/.exec(css)
+    expect(media, 'no prefers-reduced-motion block found').not.toBeNull()
+    const block = media?.[1] ?? ''
+    expect(block).toMatch(/:scope:state\(working\)/)
+    expect(block).toMatch(/animation:\s*none/)
+    expect(block).toMatch(/opacity:\s*var\(--ui-surface-host-working-opacity-max\)/)
+    expect(block).not.toMatch(/display:\s*none/)
   })
 })
