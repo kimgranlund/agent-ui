@@ -1638,3 +1638,81 @@ describe("ui-conversation — the sources prop attaches each step's raw wire lin
     expect(strips[strips.length - 1]!.querySelector('[data-role="source"]')?.textContent).toBe(CREATE)
   })
 })
+
+// ── ADR-0199 / GH #1104 — the turn handle drives ui-surface-host.working (set on route, cleared at
+// the single guarded endTurn — finalize() AND fail() both clear; a dead turn never leaves a card
+// breathing). The prop→:state(working) mirror itself is surface-host.test.ts's; here only the WIRING.
+
+describe('ui-conversation — ADR-0199: working set/cleared by the turn handle', () => {
+  const CREATE_S = (id: string) => line({ version: 'v1.0', createSurface: { surfaceId: id, catalogId: 'agent-ui' } })
+  const UPDATE_S = (id: string, text: string) =>
+    line({
+      version: 'v1.0',
+      updateComponents: { surfaceId: id, components: [{ id: 'root', component: 'Text', text }] },
+    })
+
+  it('a fresh surface is working from its first line; finalize() clears it', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t = el.beginAgentTurn()
+    t.ingestLine(CREATE_S('w1'))
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    expect(host.working, 'working mid-turn').toBe(true)
+    t.finalize()
+    expect(host.working, 'cleared at finalize').toBe(false)
+  })
+
+  it('the motivating case — an in-place update to a KNOWN surface sets working on the ORIGINAL host; finalize clears it', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('game'))
+    t1.finalize()
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    expect(host.working, 'settled between turns').toBe(false)
+    const t2 = el.beginAgentTurn()
+    t2.ingestLine(UPDATE_S('game', 'flop'))
+    expect(host.working, 'the in-place mutation window breathes').toBe(true)
+    t2.finalize()
+    expect(host.working, 'cleared when the turn completes').toBe(false)
+  })
+
+  it('fail() clears working identically — a dead turn never leaves a card breathing', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('doomed'))
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    expect(host.working).toBe(true)
+    t1.fail('transport died')
+    expect(host.working, 'cleared at fail').toBe(false)
+  })
+
+  it('a stray double-end (finalize then fail) never wedges the state (the endTurn guard)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('dbl'))
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    t1.finalize()
+    t1.fail('late duplicate') // never legal, must be inert (TKT-0034's ONE-endTurn guard)
+    expect(host.working).toBe(false)
+    // and the NEXT turn's known-id route sets it live again — nothing wedged.
+    const t2 = el.beginAgentTurn()
+    t2.ingestLine(UPDATE_S('dbl', 'again'))
+    expect(host.working).toBe(true)
+    t2.finalize()
+    expect(host.working).toBe(false)
+  })
+
+  it('a surface closed mid-turn (deleteSurface) stops breathing immediately, not at endTurn', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('gone'))
+    t1.finalize()
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    const t2 = el.beginAgentTurn()
+    t2.ingestLine(UPDATE_S('gone', 'last words'))
+    expect(host.working).toBe(true)
+    t2.ingestLine(line({ version: 'v1.0', deleteSurface: { surfaceId: 'gone' } }))
+    expect(host.working, '#closeSurface clears working — a torn-down card must not breathe').toBe(false)
+    t2.finalize() // endTurn's open-only walk skips the closed record; no throw, no resurrect
+    expect(host.working).toBe(false)
+  })
+})

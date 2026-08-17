@@ -716,6 +716,16 @@ export class UIConversationElement extends UIElement {
       ended = true
       this.#turnsInFlight = Math.max(0, this.#turnsInFlight - 1)
       this.#reflectBusy()
+      // ADR-0199 / GH #1104 — the turn is over (finalize() AND fail() both funnel here, TKT-0034's
+      // single guard): stop every touched card breathing. Clears `working` on every OPEN A2UI host
+      // this turn routed a line to — a dead turn must never leave a card breathing forever (the
+      // honesty guard's visual twin). `touchedIds` is declared below this closure but only read at
+      // CALL time (well after), never at definition — no TDZ. A surface closed mid-turn already had
+      // its `working` cleared by #closeSurface; a genui id has no registry record here (no-op).
+      for (const id of touchedIds) {
+        const record = this.#registry.get(id)
+        if (record !== undefined && record.state === 'open') record.host.working = false
+      }
     }
     let noteText: string | undefined
     const turnLines: string[] = []
@@ -809,6 +819,11 @@ export class UIConversationElement extends UIElement {
       touchedIds.add(id)
       const known = this.#registry.get(id)
       if (known !== undefined) {
+        // ADR-0199 / GH #1104 — the motivating case: an in-place update to a KNOWN surface is exactly
+        // the window the card must read alive (the pre-flop → flop mutation with no other sign of
+        // life). Set BEFORE the ingest so the breathe is on from the first mutated frame; cleared by
+        // endTurn (finalize AND fail). Never on a closed record — a torn-down card must not breathe.
+        if (known.state === 'open') known.host.working = true
         known.host.ingest(line) // SPEC-R7: routes to the surface's ORIGINAL host, never this turn's own
         // GH #805 repair — the host's own ingest() just re-enabled this surface for real (surface-host.ts's
         // entry re-enable); drop any stale pending-disable bookkeeping for it so a LATER-unrelated fail()
@@ -833,6 +848,7 @@ export class UIConversationElement extends UIElement {
         this.#onClientMessageCb?.(m) // bubble up (LLD-C4)
       })
       this.#registry.set(id, { host, bubble, state: 'open' })
+      host.working = true // ADR-0199 — a fresh surface is live from its first line too; cleared by endTurn
       host.ingest(line)
       freshHostThisTurn = host
       for (const held of heldNoIdLines) host.ingest(held)
@@ -1213,6 +1229,7 @@ export class UIConversationElement extends UIElement {
     // harmless re-derivation of the same state.
     record.host.finalize()
     record.host.dispose()
+    record.host.working = false // ADR-0199 — a card closed mid-turn stops breathing NOW; endTurn's clear only walks still-open records
     record.state = 'closed'
     record.bubble.dataset.state = 'closed'
     // GH #1061 — per-HOST closed marker (the bubble stamp above dims/marks the whole turn, but a resumed
