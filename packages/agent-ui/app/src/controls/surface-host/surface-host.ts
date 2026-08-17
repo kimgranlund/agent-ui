@@ -209,9 +209,21 @@ export class UISurfaceHostElement extends UIElement {
   }
 
   /** GH #892 root stretch (see finalize()'s doc comment for the full law) — factored out so ingest()
-   *  can apply it mid-stream too (GH #1124). Idempotent by construction. */
+   *  can apply it mid-stream too (GH #1124). Idempotent by construction.
+   *
+   *  GH #1163 — exactly ONE container owner. #1150/#1161 gave the [bare] chat mount structural card
+   *  chrome so a bare (non-Card) root is always contained; but a payload whose ROOT is itself a Card
+   *  then paints TWO nested bordered/padded containers. This walk (the same per-ingest/per-finalize
+   *  ingest point the root stretch rides) mirrors the root's shape into `data-root-card`: set when the
+   *  rendered root element IS a ui-card (the default catalog's Card factory tag, `factories.ts`),
+   *  cleared otherwise — so a surface whose root changes shape across updateComponents re-evaluates on
+   *  every line. surface-host.css suppresses the host's own card bg/border/padding under
+   *  `[bare][data-root-card]` while KEEPING the border-radius, so the ADR-0199 working glow's
+   *  --ui-surface-host-working-radius still coincides with the visible (payload-owned) card edge. */
   #applyRootStretch(): void {
-    const root = this.#surface?.firstElementChild
+    const root = this.#surface?.firstElementChild ?? null
+    if (root !== null && root.tagName.toLowerCase() === 'ui-card') this.dataset.rootCard = ''
+    else delete this.dataset.rootCard
     if (!root) return
     if (root.tagName.toLowerCase() === 'ui-column') {
       if (!root.hasAttribute('stretch')) root.setAttribute('stretch', '')
@@ -285,6 +297,7 @@ export class UISurfaceHostElement extends UIElement {
     this.#interactiveDisabledActive = false // GH #805 — a rebuilt artboard's next mount starts live
     this.#sweepDisabled = new WeakSet() // GH #805 — the torn-down subtree's claims are moot
     delete this.dataset.emptyFinal // ADR-0187 — a rebuilt artboard has not finalized anything yet
+    delete this.dataset.rootCard // GH #1163 — the torn-down subtree's root shape is moot
     this.replaceChildren()
   }
 
