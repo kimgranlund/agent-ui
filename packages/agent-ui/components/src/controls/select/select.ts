@@ -307,24 +307,12 @@ export class UISelectElement extends UIFormElement {
     // already toggle on their own editor part (`value === '' ⇒ showing the placeholder`), added here so
     // select.css's filled/container state law can key off it identically to its siblings — select had no
     // prior emptiness hook (it always wrote SOME text into labelSpan, selection or placeholder alike).
-    this.effect(() => {
-      const val = this.value
-      const ph = this.placeholder
-      trigger.toggleAttribute('data-empty', val === '')
-      if (val !== '') {
-        const options = listbox.querySelectorAll<HTMLElement>('[role=option]')
-        let found: HTMLElement | null = null
-        for (const opt of options) {
-          if (opt.getAttribute('value') === val) {
-            found = opt
-            break
-          }
-        }
-        labelSpan.textContent = found ? (found.textContent?.trim() ?? val) : val
-      } else {
-        labelSpan.textContent = ph
-      }
-    })
+    // GH #1099 — the body is `#syncTriggerLabel()`, shared with `#syncOptions`' structural leg: an
+    // option set rebuilt under an UNCHANGED `value` (e.g. agent-admin's roster re-push after a rename
+    // — same id, new label) produces no signal change for this effect to react to, so the adoption
+    // pass repaints the label too (the identical dual-call shape #syncSelectedOption already has).
+    // Reading `this.value`/`this.placeholder` inside the method keeps this effect's reactive tracking.
+    this.effect(() => this.#syncTriggerLabel())
 
     // ADR-0085 — the trigger's accessible-name seam (bare/unfielded path). Split ownership of
     // `aria-labelledby` with applyFieldLabelling above (the F3 dual-writer discipline): this effect owns
@@ -643,6 +631,41 @@ export class UISelectElement extends UIFormElement {
     // (first-connect AND every later mutation via #optionObserver), so it is a no-op repaint on the
     // common case (nothing changed) and the load-bearing one on the two cases above.
     this.#syncSelectedOption()
+    // GH #1099 — the OPTION-ADOPTION leg of the trigger-label paint, for the same two no-signal cases
+    // named above: a wholesale option rebuild under an unchanged `value` carries a possibly-CHANGED
+    // label for the selected key (agent-admin's drawer rename), and the value-tracking effect alone
+    // can never see it.
+    this.#syncTriggerLabel()
+  }
+
+  /**
+   * Paint the trigger's visible label + `data-empty` from the CURRENT `this.value`/`this.placeholder`
+   * and the CURRENT option set — the trigger-label effect's shared body (GH #1099, the exact
+   * #syncSelectedOption dual-call shape): called reactively (connected()'s `this.effect`, on any
+   * value/placeholder write — the signal reads HERE are what that effect tracks) and structurally
+   * (`#syncOptions`, on any option-adoption pass, where a rebuilt option set may carry a new label
+   * for an unchanged value). `[data-empty]` per TKT-0062. Never emits — pure DOM writes.
+   */
+  #syncTriggerLabel(): void {
+    const trigger = this.#trigger
+    const labelSpan = this.#labelSpan
+    const listbox = this.#listbox
+    if (!trigger || !labelSpan || !listbox) return
+    const val = this.value
+    const ph = this.placeholder
+    trigger.toggleAttribute('data-empty', val === '')
+    if (val !== '') {
+      let found: HTMLElement | null = null
+      for (const opt of listbox.querySelectorAll<HTMLElement>('[role=option]')) {
+        if (opt.getAttribute('value') === val) {
+          found = opt
+          break
+        }
+      }
+      labelSpan.textContent = found ? (found.textContent?.trim() ?? val) : val
+    } else {
+      labelSpan.textContent = ph
+    }
   }
 
   /**

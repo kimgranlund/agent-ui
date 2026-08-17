@@ -856,6 +856,30 @@ describe('ui-select — value-keyed aria-selected reflect (select-aria-selected-
     el.remove()
   })
 
+  it('select-trigger-label-sync: a wholesale rebuild carrying a NEW label under an UNCHANGED value repaints the trigger label (the agent-admin rename shape, GH #1099)', async () => {
+    const { el, listbox } = makeSelect()
+    el.value = 'banana'
+    await whenFlushed()
+    const labelSpan = el.querySelector<HTMLElement>('[data-part="label"]')!
+    expect(labelSpan.textContent).toBe('Banana')
+
+    // Simulate agent-admin's `#applyAgentRoster` after a rename: wipe and re-mint every option under
+    // the SAME `value`, but the selected key now carries a NEW label — no signal change to react to.
+    for (const opt of [...listbox.querySelectorAll('[role=option]')]) opt.remove()
+    for (const [value, label] of [['apple', 'Apple'], ['banana', 'Banana (RENAMED)'], ['cherry', 'Cherry']] as const) {
+      const opt = document.createElement('div')
+      opt.setAttribute('role', 'option')
+      opt.setAttribute('value', value)
+      opt.textContent = label
+      el.append(opt)
+    }
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(labelSpan.textContent, 'a rebuild under an UNCHANGED value must repaint the trigger from the fresh option\'s label').toBe('Banana (RENAMED)')
+    el.remove()
+  })
+
   it('select-aria-selected-reflect: a user commit still marks the clicked option and clears the previous one (existing behaviour unchanged)', async () => {
     const { el, listbox } = makeSelect()
     el.open = true
