@@ -24,11 +24,15 @@
 //     so the form cannot reliably follow an add with an availability write. A new entry is born in-context;
 //     its tier is set from the row's Edit drawer, one gesture later.
 //
-// DELETE is the last block of the EDIT form's content, a separated danger row — never in the footer, where it
-// could sit adjacent to the primary. For a `builtin` entry it is not built AT ALL (structural absence, the
-// entry-list.ts:`!entry.builtin` + agent-admin.ts writer-filter pair, ADR-0132 Fork 4: toggle off, never
-// delete), and a "Built-in" tag beside the title STATES the rule rather than leaving the absence to read as a
-// missing feature (the roster drawer's "Shipped" tag precedent, agent-admin-app.ts).
+// DELETE lives in the EDIT form's FOOTER, beside Done (GH #1063 ruling A, 2026-08-17 — OVERTURNING the
+// earlier #917 danger-row law that banned it from the footer): destructive-styled by danger-token repoint
+// and pushed to the far START of the footer while Done keeps the far end (entry-list.css), so the separation
+// from the commit action is spatial + tonal rather than a separate content block. Placement only — the
+// click-to-remove-and-close semantics are unchanged. For a `builtin` entry it is not built AT ALL
+// (structural absence, the entry-list.ts:`!entry.builtin` + agent-admin.ts writer-filter pair, ADR-0132
+// Fork 4: toggle off, never delete), and a "Built-in" tag beside the title STATES the rule rather than
+// leaving the absence to read as a missing feature (the roster drawer's "Shipped" tag precedent,
+// agent-admin-app.ts).
 
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import type { UICodeEditorElement } from '@agent-ui/code/editor'
@@ -45,8 +49,9 @@ export interface EntryFormHandlers {
   /** Commit a per-entry CONTENT change (the markdown body). Not optional — every kind that mounts a form
    *  carries one, and a content editor is only built when `options.contentField` says the kind has a body. */
   onContentChange(id: string, content: string): void
-  /** Delete one entry by id. The form only ever calls this from the EDIT mode's danger row, which is built
-   *  only for a non-`builtin` entry; the caller's own writer keeps the defense-in-depth filter regardless. */
+  /** Delete one entry by id. The form only ever calls this from the EDIT mode's footer Remove (GH #1063),
+   *  which is built only for a non-`builtin` entry; the caller's own writer keeps the defense-in-depth
+   *  filter regardless. */
   onDelete(id: string): void
   /** Returns `true` on a successful add, `false` on a fail-closed rejection (component-reviewer MAJOR
    *  fix: the caller needs this to decide whether to reset/hide the form — resetting on a REJECTED
@@ -221,7 +226,7 @@ function formButton(part: string, text: string): UIButtonElement {
  *
  * `close` is called when the form is DONE with the surface it lives on: the footer's Done (edit), a
  * SUCCESSFUL Add (add — a rejection deliberately keeps the drawer open with every field intact), and the
- * danger row's Remove (edit — the entry it was editing no longer exists). The form never touches the drawer
+ * footer's Remove (edit — the entry it was editing no longer exists, GH #1063). The form never touches the drawer
  * itself; the caller owns that, the same way it owns the store.
  *
  * GH #949 — `kindLabel` is the EDIT header's own human noun ("Edit {kindLabel}"), separate from `kind`
@@ -469,23 +474,21 @@ export function buildEntryForm(
   }
 
   // ── delete ──────────────────────────────────────────────────────────────────────────────────────────────
-  // LAST block of the scrolling content, never the footer: the footer holds only the primary, so the two can
-  // never sit adjacent. Absent entirely for a builtin entry (the `!entry.builtin` gate this replaces,
-  // entry-list.ts's own — the caller's `onDelete` keeps its defense-in-depth filter either way).
+  // GH #1063 ruling A — Remove is the footer's start-aligned destructive action, beside (but visually
+  // separated from) Done: entry-list.css pushes it to the far start (`margin-inline-end: auto`) and repoints
+  // the danger tokens onto it, so it can never READ as the primary. Absent entirely for a builtin entry (the
+  // `!entry.builtin` gate, ADR-0132 Fork 4 unchanged — the caller's `onDelete` keeps its defense-in-depth
+  // filter either way). The old danger row's teaching line rides the button's `title` now that there is no
+  // content block to hold a hint paragraph.
   if (!entry.builtin) {
-    const danger = document.createElement('div')
-    danger.setAttribute('data-part', 'entry-form-danger')
-    const note = document.createElement('p')
-    note.setAttribute('data-part', 'entry-form-hint')
-    note.textContent = `Remove “${entry.label}” from this agent. Toggling it off keeps it in the list.`
     const deleteBtn = formButton('entry-delete', 'Remove')
     deleteBtn.setAttribute('aria-label', `Remove ${entry.label}`)
+    deleteBtn.title = `Remove “${entry.label}” from this agent. Toggling it off keeps it in the list.`
     deleteBtn.addEventListener('click', () => {
       handlers.onDelete(entry.id)
       close() // the subject of this form no longer exists — the surface editing it must not outlive it
     })
-    danger.append(note, deleteBtn)
-    content.append(danger)
+    footer.append(deleteBtn)
   }
 
   const doneBtn = formButton('entry-form-done', 'Done')
