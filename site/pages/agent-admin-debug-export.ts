@@ -14,9 +14,17 @@
 import type { Persona } from './agent-admin-presets.ts'
 import { exportPersonaFile, personaFileText, type PersonaStateReader } from './agent-admin-persona-file.ts'
 import type { ZipEntryInput } from '../lib/zip-writer.ts'
+// ADR-0200 clause 7 / devtools-harness SPEC-R10 (GH #1122 S6): the bundle's ADDITIVE `captures/` family
+// rides the ONE capture format module — `serializeCapture` writes each `captures/<id>.json`, never a
+// second writer of the shape (ADR-0200 Consequences' one-format-module law).
+import { serializeCapture } from '@agent-ui/devtools'
+import type { DevtoolsCapture } from '@agent-ui/devtools'
 
 /** The format this build writes. Bumped only if the manifest/layout shape changes in a way a consumer of
- *  the bundle would need to know about — the `PERSONA_FILE_VERSION` precedent, scoped to this bundle. */
+ *  the bundle would need to know about — the `PERSONA_FILE_VERSION` precedent, scoped to this bundle.
+ *  The optional `captures` family (ADR-0200 clause 7) deliberately does NOT bump it: the field is
+ *  additive-optional and every pre-existing reader parses v1 bundles byte-unchanged — an ignorable
+ *  addition is not a consumer-MUST-know change (this constant's own bump rule, applied). */
 export const DEBUG_BUNDLE_VERSION = 1
 
 /** The transcript shape both `test-chat/*.json` and `builder-interview/*.json` files carry — `AdminTurn`'s
@@ -38,6 +46,10 @@ export interface DebugBundleManifest {
     agentSettings: string[]
     testChat: string[]
     builderInterview: string[]
+    /** ADDITIVE-optional (ADR-0200 clause 7 / SPEC-R10): present ONLY when the bundle carries devtools
+     *  captures — a bundle without any is byte-identical to the pre-extension shape, so every
+     *  pre-existing reader parses unchanged (the additive proof in this module's test suite). */
+    captures?: string[]
   }
 }
 
@@ -51,6 +63,10 @@ export interface DebugBundleInput {
   testChatTranscript: readonly DebugTranscriptTurn[]
   /** The active draft's own Builder-interview transcript ("copilot" pane) — same empty-is-real rule. */
   builderInterviewTranscript: readonly DebugTranscriptTurn[]
+  /** Devtools session captures to carry (ADR-0200 clause 7 — the harness/app round-trip family), each
+   *  under a caller-named id (`captures/<id>.json`). Absent/empty ⇒ the family is omitted ENTIRELY
+   *  (no folder, no manifest field) — the additive-optional law. */
+  captures?: readonly { id: string; capture: DevtoolsCapture }[]
   now?: Date
 }
 
@@ -80,6 +96,15 @@ export function buildDebugBundle(input: DebugBundleInput): { entries: ZipEntryIn
   const builderInterviewPath = `builder-interview/${input.activeAgentId}.json`
   entries.push({ path: builderInterviewPath, data: prettyJson(input.builderInterviewTranscript) })
 
+  // The ADDITIVE captures family (ADR-0200 clause 7): one `captures/<id>.json` per supplied capture,
+  // serialized by the devtools format module itself. No captures ⇒ no entries AND no manifest field.
+  const captureFiles: string[] = []
+  for (const { id, capture } of input.captures ?? []) {
+    const path = `captures/${id}.json`
+    entries.push({ path, data: serializeCapture(capture) })
+    captureFiles.push(path)
+  }
+
   const manifest: DebugBundleManifest = {
     kind: 'agent-ui-dev-debug-bundle',
     version: DEBUG_BUNDLE_VERSION,
@@ -90,6 +115,7 @@ export function buildDebugBundle(input: DebugBundleInput): { entries: ZipEntryIn
       agentSettings: agentSettingsFiles,
       testChat: [testChatPath],
       builderInterview: [builderInterviewPath],
+      ...(captureFiles.length > 0 ? { captures: captureFiles } : {}),
     },
   }
   entries.push({ path: 'manifest.json', data: prettyJson(manifest) })
