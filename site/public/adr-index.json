@@ -1370,5 +1370,19 @@
     "description": "the @agent-ui/app . barrel drops its static agent-admin arm: subpath-only static access plus a memoized loadAgentAdmin() lazy accessor; the app size budget ret…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0198",
+    "url": "./adr-index.html#adr-0198",
+    "description": "ask-flow COMPLETION is wire-visible (GH #1101): a fourth additive meta-line field flowEnd marks the closing turn after a flow-final confirm, the producer toolk…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0199",
+    "url": "./adr-index.html#adr-0199",
+    "description": "a fleet-wide working/alive state for surfaces mid-mutation (GH #1104): ONE :state(working) host custom state + a breathing diffused inner-shadow treatment on -…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

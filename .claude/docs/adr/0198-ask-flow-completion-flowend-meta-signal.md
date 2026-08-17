@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-17 |
 > | **Proposed by** | dispatched design lane for GH [#1101](https://github.com/kimgranlund/agent-ui/issues/1101) (size:big due-process, Understand+Plan leg) — the issue's own Scope/Open explicitly forks "protocol-visible signal vs prompt+chrome convention" and routes it to a design decision |
-> | **Ratified by** | pending — ships proposed; Kim flips via `scripts/adr_ratify.py` (ADR-0149) |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-17, via the [`ratify ADR-0198` utterance](https://github.com/kimgranlund/agent-ui/issues/1101#issuecomment-5317476936) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build (not authored here): `packages/agent-ui/a2ui/src/agent/prompts/grammar.md` (the mode-invariant "Flow completion" paragraph — byte-pinned prompt, pin tests move with it) · `packages/agent-ui/a2ui/src/agent/meta-line.ts` (`flowEnd` arm, the `ask`/`plan`/`personaPatch` precedent EXACTLY) · the meta-line's owning SPEC rows (`a2ui-live-agent.spec.md` — the reserved-field table gains one row) · `site/lib/` gains the shared flow-chrome module + both page consumers (`site/pages/a2ui-live.ts`, the agent-admin conversation path) |
 > | **Supersedes / Superseded by** | **Relates** ADR-0196 (settle/edit-amend — per-CARD settling; this ADR is the adjacent per-FLOW gap its own scope line names) · **Relates** ADR-0088/0097/0174/0178 (the meta-line envelope + its three prior additive MODEL-authored fields — `ask`, `plan`, `personaPatch`; `flowEnd` is the fourth arm of the same precedent) · **Relates** ADR-0187 (atFinalize — the sibling lesson that "is this final?" is a fact only the party holding it can assert; there the call-site, here the MODEL) · **Relates** ADR-0153 (seven-member event vocabulary, deliberately NOT extended) · **Relates** GH #1065 (locus note: settle UX lives in page chrome; agent-admin is the SECOND surface — cl.5 executes the shared-seam lift that note deferred) · **Resolves** GH #1101's design fork |
 

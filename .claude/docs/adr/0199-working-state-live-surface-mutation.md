@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-17 |
 > | **Proposed by** | dispatched design lane for GH [#1104](https://github.com/kimgranlund/agent-ui/issues/1104) — the issue's own Scope names the fork ("does ADR-0191's `pending` cover this, extend to it, or is a distinct `working` fleet state warranted?") as ADR territory per the ADR-0191/0196 precedent chain, to be ratified before build |
-> | **Ratified by** | — (awaiting kimgranlund; `scripts/adr_ratify.py` per ADR-0149) |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-17, via the [`ratify ADR-0199` utterance](https://github.com/kimgranlund/agent-ui/issues/1101#issuecomment-5317478205) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build (not authored here): `shared/src/tokens/dimensions.css` (mints the `--ui-working-*` constants) · `.claude/docs/references/interaction-states.md` (a new `§7 · Working / live surface mutation` section alongside §5 pending and §6 answered) · `app/src/controls/surface-host/surface-host.{ts,css}` (the `working` prop + `:state(working)` breathing rule + CSS pin-test) · `app/src/controls/conversation/conversation.ts` (the turn-handle set/clear wiring) · the second/third consumers only if they earn it (`ui-sandbox-frame` genui in-place rebuilds; `ui-status-stream` already has its own live-narration face and needs nothing) |
 > | **Supersedes / Superseded by** | **Relates** [ADR-0191](./0191-fleet-stale-pending-state-convention.md) (the adjacent async-freshness axis this ADR deliberately does NOT extend — Decision cl.1's semantic fence) · **Relates** [ADR-0196](./0196-answered-state-law-questionnaire-settle-edit-amend.md) (the state-family SHAPE re-applied a fourth time, and the precedence chain this ADR slots into) · **Relates** [TKT-0047](../tickets/tkt-0047-interaction-state-design-gaps-from-fleet-audit.md)/[TKT-0062](../tickets/tkt-0062-entry-control-filled-state-law.md) (the role-repoint/opacity canons, both left untouched — this state adds a THIRD channel, a shadow overlay) · **Relates** ADR-0146 F8 (the narration strip's "working from t=0" law — the header-level face this ADR gives a card-level body) · **Resolves** GH #1104's design-fork half (the builds are follow-up slices) |
 
