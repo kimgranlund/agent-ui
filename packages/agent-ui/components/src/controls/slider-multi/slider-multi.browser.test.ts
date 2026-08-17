@@ -113,11 +113,15 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
     lg.remove()
   })
 
-  it('AC1 host block-size equals --md-sys-compact-md (the interactive area = the box)', () => {
+  it('AC1 rail-row track height equals --md-sys-compact-md (the interactive area = the box, GH #1141)', () => {
+    // GH #1141: the host itself is now a GRID (label/value rows add their own height), so the ratified
+    // "interactive area = the box" invariant lives on the RAIL's own grid TRACK, not the host's overall
+    // bounding-box height. `grid-template-rows`'s COMPUTED value resolves every track to a concrete px
+    // size; in the default `standard` template the rail is the LAST row.
     const el = document.createElement('ui-slider-multi')
     document.body.append(el)
-    // Host block-size = --md-sys-compact-md = 16px at ui-md scale
-    expect(Number.parseFloat(getComputedStyle(el).height)).toBe(16) // block-size: var(--ui-slider-multi-box)
+    const rows = getComputedStyle(el).gridTemplateRows.split(' ').map((v) => Number.parseFloat(v))
+    expect(rows[rows.length - 1]).toBe(16) // --md-sys-compact-md = 16px at ui-md scale
     el.remove()
   })
 
@@ -332,13 +336,10 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
   })
 })
 
-// ── GH #1126: live value readout — real-drag text + geometry containment ────────────────────────
-// Same shared design (slider.md "Value readout") and same proof shape as slider.browser.test.ts's
-// own suite: a real drag shows a live-updating readout, and the readout never escapes the HOST's own
-// bounding box at the extremes — real layout (no rect mocking) so the containment measurement is real.
+// ── GH #1141: the value is always visible at rest and live during scrub (supersedes GH #1126) ───────
 
-describe('ui-slider-multi browser smoke (GH #1126 — live value readout: real drag + geometry containment)', () => {
-  it('a real pointer drag on the rail shows the readout with BOTH values, live', async () => {
+describe('ui-slider-multi browser smoke (GH #1141 — always-visible value: real drag tracks it live)', () => {
+  it('a real pointer drag on the rail updates the ALREADY-VISIBLE value part with BOTH values, live', async () => {
     const el = document.createElement('ui-slider-multi') as UISliderMultiElement
     el.style.setProperty('position', 'fixed')
     el.style.setProperty('left', '0px')
@@ -351,50 +352,103 @@ describe('ui-slider-multi browser smoke (GH #1126 — live value readout: real d
 
     const rail = el.querySelector<HTMLElement>('.rail')!
     const part = el.querySelector<HTMLElement>('[data-part="value"]')!
-    expect(part.hidden).toBe(true)
+    expect(part.hidden).toBe(false) // visible at rest, BEFORE any interaction (Ruling 2/4)
+    expect(part.textContent).toBe('0 – 100')
 
     // Near the lo thumb (0%) — the nearer-thumb picker selects lo.
     drag(rail, 20, 20)
     expect(part.hidden).toBe(false)
-    await el.updateComplete // the readout-text effect is reactive (async flush) — hidden toggling is not
+    await el.updateComplete
     expect(part.textContent).toContain('–') // "{lo} – {hi}" — both values present
     expect(part.textContent).toContain('100')
 
     el.remove()
   })
+})
 
-  it('the readout stays fully inside the host\'s own bounding box at BOTH thumb extremes', () => {
-    const container = document.createElement('div')
-    // The same clipped-ancestor shape as ui-slider's own containment proof — a bubble tracking a
-    // thumb's --value-pct would risk escaping this; the label-end design never depends on it.
-    container.style.position = 'fixed'
-    container.style.left = '20px'
-    container.style.top = '20px'
-    container.style.width = '240px'
-    container.style.overflow = 'hidden'
-    document.body.append(container)
+// ── GH #1141: the three `layout` patterns — real geometry (label/rail/value relative positions) ─────
 
+describe('ui-slider-multi browser smoke (GH #1141 — layout geometry, all three patterns)', () => {
+  function build(layout: 'standard' | 'inline' | 'block'): { el: UISliderMultiElement; label: HTMLElement; value: HTMLElement; rail: HTMLElement } {
     const el = document.createElement('ui-slider-multi') as UISliderMultiElement
-    el.style.setProperty('width', '200px')
-    container.append(el)
-    stubRailCapture(el)
-    el.valueLo = 50 // mid start — each extreme drag below is a genuine CHANGE, so `input` fires each time
-    el.valueHi = 50
+    el.setAttribute('layout', layout)
+    el.label = 'Price'
+    el.valueLo = 20
+    el.valueHi = 80
+    el.style.setProperty('width', '220px')
+    document.body.append(el)
+    return { el, label: el.querySelector('[data-part="label"]') as HTMLElement, value: el.querySelector('[data-part="value"]') as HTMLElement, rail: el.querySelector('.rail') as HTMLElement }
+  }
 
-    const rail = el.querySelector<HTMLElement>('.rail')!
-    const part = el.querySelector<HTMLElement>('[data-part="value"]')!
+  it('standard: label top-left, value top-right ("lo – hi"), BOTH above the rail (one row)', () => {
+    const { el, label, value, rail } = build('standard')
+    const l = label.getBoundingClientRect()
+    const v = value.getBoundingClientRect()
+    const r = rail.getBoundingClientRect()
+    expect(l.left, 'label must be the LEFTMOST part').toBeLessThan(v.left)
+    expect(l.bottom, 'label must sit ABOVE the rail').toBeLessThanOrEqual(r.top + 0.5)
+    expect(v.bottom, 'value must sit ABOVE the rail').toBeLessThanOrEqual(r.top + 0.5)
+    expect(value.textContent).toBe('20 – 80')
+    el.remove()
+  })
+
+  it('inline: label left of the rail, value right of the rail, ALL ONE ROW', () => {
+    const { el, label, value, rail } = build('inline')
+    const l = label.getBoundingClientRect()
+    const v = value.getBoundingClientRect()
+    const r = rail.getBoundingClientRect()
+    expect(l.right, 'label must be LEFT of the rail').toBeLessThanOrEqual(r.left + 0.5)
+    expect(v.left, 'value must be RIGHT of the rail').toBeGreaterThanOrEqual(r.right - 0.5)
+    const centres = [l.top + l.height / 2, r.top + r.height / 2, v.top + v.height / 2]
+    expect(Math.max(...centres) - Math.min(...centres), 'label/rail/value must share one row').toBeLessThan(4)
+    el.remove()
+  })
+
+  it('block: label centred above, value centred below the rail (three rows, one column)', () => {
+    const { el, label, value, rail } = build('block')
+    const l = label.getBoundingClientRect()
+    const v = value.getBoundingClientRect()
+    const r = rail.getBoundingClientRect()
+    expect(l.bottom, 'label must be ABOVE the rail').toBeLessThanOrEqual(r.top + 0.5)
+    expect(v.top, 'value must be BELOW the rail').toBeGreaterThanOrEqual(r.bottom - 0.5)
     const hostRect = el.getBoundingClientRect()
+    const hostCentre = hostRect.left + hostRect.width / 2
+    expect(Math.abs(l.left + l.width / 2 - hostCentre), 'label must be horizontally CENTRED').toBeLessThan(2)
+    expect(Math.abs(v.left + v.width / 2 - hostCentre), 'value must be horizontally CENTRED').toBeLessThan(2)
+    el.remove()
+  })
 
-    for (const x of [1, 199]) { // near the lo extreme, then near the hi extreme
-      drag(rail, x, x)
-      expect(part.hidden).toBe(false)
-      const partRect = part.getBoundingClientRect()
-      expect(partRect.left, `readout left edge escaped the host box at x=${x}`).toBeGreaterThanOrEqual(hostRect.left - 0.5)
-      expect(partRect.right, `readout right edge escaped the host box at x=${x}`).toBeLessThanOrEqual(hostRect.right + 0.5)
-      expect(partRect.top, `readout top edge escaped the host box at x=${x}`).toBeGreaterThanOrEqual(hostRect.top - 0.5)
-      expect(partRect.bottom, `readout bottom edge escaped the host box at x=${x}`).toBeLessThanOrEqual(hostRect.bottom + 0.5)
+  it('no part clips past a bounded ancestor card at either thumb extreme, in every layout', () => {
+    for (const layout of ['standard', 'inline', 'block'] as const) {
+      const container = document.createElement('div')
+      container.style.position = 'fixed'
+      container.style.left = '20px'
+      container.style.top = '20px'
+      container.style.width = '260px'
+      container.style.overflow = 'hidden'
+      document.body.append(container)
+
+      const el = document.createElement('ui-slider-multi') as UISliderMultiElement
+      el.setAttribute('layout', layout)
+      el.label = 'Price'
+      el.style.setProperty('width', '220px')
+      container.append(el)
+      stubRailCapture(el)
+      el.valueLo = 50
+      el.valueHi = 50
+
+      const rail = el.querySelector<HTMLElement>('.rail')!
+      const containerRect = container.getBoundingClientRect()
+
+      for (const x of [1, 219]) { // near the lo extreme, then near the hi extreme
+        drag(rail, x, x)
+        for (const part of [el.querySelector('[data-part="label"]'), el.querySelector('[data-part="value"]'), rail] as HTMLElement[]) {
+          const r = part.getBoundingClientRect()
+          expect(r.left, `[${layout}] part left edge escaped the card at x=${x}`).toBeGreaterThanOrEqual(containerRect.left - 0.5)
+          expect(r.right, `[${layout}] part right edge escaped the card at x=${x}`).toBeLessThanOrEqual(containerRect.right + 0.5)
+        }
+      }
+      container.remove()
     }
-
-    container.remove()
   })
 })

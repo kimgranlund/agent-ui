@@ -3399,6 +3399,9 @@ in form submission through `ElementInternals`, and paints its rail and thumb ent
 <ui-slider min="0" max="100" value="50"></ui-slider>
 <ui-slider step="10" size="sm" aria-label="Volume"></ui-slider>
 <ui-slider disabled></ui-slider>
+<ui-slider label="Bet" value="25" min="5" max="500"></ui-slider>
+<ui-slider label="Volume" layout="inline" value="70"></ui-slider>
+<ui-slider label="Zoom" layout="block" value="1" min="0.5" max="2" step="0.1"></ui-slider>
 ```
 
 ## Value + form participation
@@ -3410,53 +3413,67 @@ HTML spec exempts from `required` entirely.
 
 ## Anatomy
 
-The host is a `block` container with `block-size = --md-sys-compact-{size}` (the widget-box ramp). The **rail**
-(`::before`) is a thin horizontal bar; its `linear-gradient` background paints the fill (primary) from the
-left up to `--value-pct%` and the neutral track beyond. The **thumb** (`::after`) is a circle `box − 4px`
-(the 2px-inset law, ADR-0041 cl.3) centred on the `--value-pct%` position along the host, painted in **two
-layers**: a 2px **ring** border (`--ui-slider-thumb-ring`, `box-sizing: border-box` — the ring eats into
-the interior fill, so the outer diameter stays `box − 4px`) around the interior **fill**
-(`--ui-slider-thumb`). The ring covers the thumb-vs-page-surface contrast dimension the fill alone can't
-(ADR-0094, extending ADR-0059).
+The host is a `grid` container (GH #1141) whose `layout` prop selects the label/rail/value template (see
+"Layout" below). The **rail** (`.rail`, its own light-DOM element as of #1141) has `block-size =
+--md-sys-compact-{size}` (the widget-box ramp). Its **fill** (`.rail::before`) is a thin horizontal bar;
+its `linear-gradient` background paints the fill (primary) from the left up to `--value-pct%` and the
+neutral track beyond. The **thumb** (`.rail::after`) is a circle `box − 4px` (the 2px-inset law, ADR-0041
+cl.3) centred on the `--value-pct%` position along `.rail`, painted in **two layers**: a 2px **ring** border
+(`--ui-slider-thumb-ring`, `box-sizing: border-box` — the ring eats into the interior fill, so the outer
+diameter stays `box − 4px`) around the interior **fill** (`--ui-slider-thumb`). The ring covers the
+thumb-vs-page-surface contrast dimension the fill alone can't (ADR-0094, extending ADR-0059).
+
+## Layout (GH #1141)
+
+`layout` selects one of three label/value placements relative to `.rail` (`standard | inline | block`,
+default `standard`), realizing Kim's three-pattern mock (the motivating case: an agent-rendered blackjack
+bet slider that must show its value at rest):
+
+- **`standard`** (default) — two rows: the label top-left and the value top-right, both ABOVE the rail.
+- **`inline`** — one row: label left of the rail, the rail flexing to fill the remaining width, value right.
+- **`block`** — three rows, one column: label centred above the rail, value centred below.
+
+Both `label` and `value` are pure CSS Grid `grid-template-areas` swaps (`[layout]` attribute selectors,
+slider.css) — no JS geometry beyond the pre-existing `--value-pct` seam. An empty `label` and a
+`readoutHidden` value each collapse their own `auto`-sized grid row/column to zero — neither reserves
+space when it has nothing to show.
 
 ## Colour
 
-Four slider-scoped colour custom properties theme the paint (declared in `slider.css`'s token block,
-overridable per subtree): `--ui-slider-rail` (→ `--md-sys-color-neutral-track`, the solid state-bearing
-track role, ADR-0059) · `--ui-slider-fill` (→ `--md-sys-color-primary`) · `--ui-slider-thumb` (the thumb's
-interior fill, → `--md-sys-color-neutral-surface-brightest`) · `--ui-slider-thumb-ring` (the thumb's 2px
-ring border, → `--md-sys-color-neutral-on-surface`, the page-ink role covering the thumb-vs-page-surface
-SC 1.4.11 dimension; ADR-0094). `[disabled]` mutes all four to inactive neutral roles (SC 1.4.11-exempt).
-The thumb's contrast contract is three-dimensional — fill, rail, and page surface, in both schemes
-(ADR-0094): a repoint of any of these tokens must clear all three; the slider browser legs are the
-standing gate.
+Slider-scoped colour custom properties theme the paint (declared in `slider.css`'s token block, overridable
+per subtree): `--ui-slider-rail` (→ `--md-sys-color-neutral-track`, the solid state-bearing track role,
+ADR-0059) · `--ui-slider-fill` (→ `--md-sys-color-primary`) · `--ui-slider-thumb` (the thumb's interior
+fill, → `--md-sys-color-neutral-surface-brightest`) · `--ui-slider-thumb-ring` (the thumb's 2px ring
+border, → `--md-sys-color-neutral-on-surface`, the page-ink role covering the thumb-vs-page-surface SC
+1.4.11 dimension; ADR-0094) · `--ui-slider-label-ink` (→ `--md-sys-color-neutral-on-surface-variant`, the
+subdued half of the label/value pair) · `--ui-slider-value-ink` (→ `--md-sys-color-neutral-on-surface`,
+the emphasized half — GH #1141 dropped the pre-#1141 pill surface; the value is now plain text like the
+label, since it no longer transiently overlaps the rail/thumb). `[disabled]` mutes all six to inactive
+neutral roles (SC 1.4.11-exempt). The thumb's contrast contract is three-dimensional — fill, rail, and
+page surface, in both schemes (ADR-0094): a repoint of any of these tokens must clear all three; the
+slider browser legs are the standing gate.
 
-## Value readout (GH #1126)
+## Value readout (GH #1126, superseded by GH #1141 Ruling 2)
 
-While the user is actively adjusting the value — pointer drag or a keyboard step — a live text readout
-(`[data-part='value']`) appears, formatted via the same `valueText()` hook that feeds `ariaValueText`
-(min/max/step respected, snapped/clamped). It hides ~1.2s after the last live change, or immediately on
-blur. **Design choice: a label-end STATIC overlay, not a thumb-following bubble.** `ui-slider` has no
-label/adornment slot (it is a bare value widget — anatomy.md's position-slots × content-roles law targets
-LABELED inline-grid controls, e.g. `ui-button`; it does not apply here) and no existing floating-overlay
-precedent; a bubble tracking `--value-pct` would be the fleet's first pointer-position floater, at risk of
-clipping past the host's own edge when the thumb is at min/max inside an ancestor `overflow:hidden` card
-(the exact shape of an A2UI chat-bubble surface). A FIXED anchor never depends on `--value-pct`, so it can
-never approach that edge — no clamping math needed, and it is provably "inside the host box" by
-construction rather than by probe luck. `position: absolute` also means toggling `hidden` causes zero
-layout shift to the rail/thumb or the page around it.
+The value part (`[data-part='value']`) is **always visible at rest** and updates live during scrub —
+formatted via the same `valueText()` hook that feeds `ariaValueText` (min/max/step respected,
+snapped/clamped). This supersedes the original GH #1126 design (a transient label-end overlay that faded
+~1.2s after the last live change): once `layout` gained a resting value slot in every one of its three
+members (GH #1141), the fade timer had nothing left to guard, and Ruling 2 retired it outright — one
+mechanism per layout, never two. (An agent-rendered slider — e.g. a blackjack bet control — now shows its
+current value without requiring an interaction first, the GH #1141 motivating case.)
 
-**Opt-out (GH #1136):** `readoutHidden` (default `false` — readout ON, byte-identical to the #1126
-shipped behavior) suppresses the readout entirely when `true`: it never arms on pointer drag or keyboard
-step (the single `#armReadout()` guard). The readout element itself still exists in the DOM (idempotent
-part creation, unchanged); it simply never leaves `hidden`. This resolves the deferred-fork note this
-section previously carried (Kim ruled 2026-08-17: mint the opt-out now).
+**Opt-out (GH #1136):** `readoutHidden` (default `false` — value visible) suppresses the value part
+entirely when `true` — at rest AND during scrub (GH #1141 widens the opt-out's scope: there is no longer a
+scrub-only readout to distinguish from an at-rest one). The value element itself still exists in the DOM
+(idempotent part creation, unchanged); it simply stays `hidden`.
 
 ## Interaction
 
-Pointer drag: `pointerdown` on the host starts a drag; `pointermove` maps the pointer's X coordinate along
-the track rect to a snapped `value`; `pointerup`/`lostpointercapture` commits. Each value change emits
-`input`; `change` fires on blur when value moved since focus (the commit-on-blur contract).
+Pointer drag: `pointerdown` on `.rail` (GH #1141 — the interactive track's own element; a press on the
+label/value parts is ignored) starts a drag; `pointermove` maps the pointer's X coordinate along the rail
+rect to a snapped `value`; `pointerup`/`lostpointercapture` commits. Each value change emits `input`;
+`change` fires on blur when value moved since focus (the commit-on-blur contract).
 
 Keyboard: Arrow ±`step`, Page ±10×`step`, Home/End → exact min/max. All keyboard steps emit `input`; blur
 after a net move emits `change`.
@@ -3470,8 +3487,9 @@ ramp for its subtree.
 ## Accessibility
 
 `role="slider"` is applied through `ElementInternals` (never a host attribute). `ariaValueNow/Min/Max`
-track the live normalised value, min, and max. No label slot — wire `aria-label` or `aria-labelledby`
-from the host page.
+track the live normalised value, min, and max. `label` (non-empty) IS the accessible name
+(`internals.ariaLabel`, GH #1141) — an empty `label` falls back to an author-supplied `aria-label` or
+`aria-labelledby` on the host (unchanged from the pre-#1141 bare-usage contract).
 
 ---
 
@@ -3489,6 +3507,9 @@ elements entirely in light DOM (no native `<input>`, no shadow DOM).
 <ui-slider-multi value-lo="20" value-hi="80"></ui-slider-multi>
 <ui-slider-multi min="0" max="200" step="10" size="lg"></ui-slider-multi>
 <ui-slider-multi disabled></ui-slider-multi>
+<ui-slider-multi label="Price" value-lo="20" value-hi="80" min="0" max="200"></ui-slider-multi>
+<ui-slider-multi label="Range" layout="inline"></ui-slider-multi>
+<ui-slider-multi label="Range" layout="block"></ui-slider-multi>
 ```
 
 ## Value + form participation
@@ -3500,22 +3521,34 @@ sibling and never swaps identity mid-drag.
 
 ## Anatomy
 
-The host is a block-level `flex` row: the `.rail` (thin horizontal bar) is the `flex:1` item. The `.fill`
-(the lo→hi active range) is absolutely positioned within the rail using `--value-pct-lo` and
-`--value-pct-hi` custom properties set by the JS geometry seam. Each `.thumb` is an absolutely-positioned
-circle (`box − 4px`) on the rail. The **nearer-thumb-grabs** rule: a pointerdown anywhere on the rail
-selects the closer thumb and focuses it.
+The host is a `grid` container (GH #1141) whose `layout` prop selects the label/rail/value template (see
+"Layout" below, matching `ui-slider`'s own three patterns). The RAIL ROW (or column, in `block`) is sized
+to the FULL interactive box height (`--ui-slider-multi-box`) — the thumbs overflow `.rail`'s own thin bar,
+so the track needs the same headroom the pre-#1141 host used to give via `flex` centering. `.rail` (the
+thin horizontal bar) is `justify-self: stretch` (fills the track's inline-size) and `align-self: center`
+(centred within the taller track). The `.fill` (the lo→hi active range) is absolutely positioned within
+the rail using `--value-pct-lo` and `--value-pct-hi` custom properties set by the JS geometry seam. Each
+`.thumb` is an absolutely-positioned circle (`box − 4px`) on the rail. The **nearer-thumb-grabs** rule: a
+pointerdown anywhere on the rail selects the closer thumb and focuses it.
 
-## Value readout (GH #1126)
+## Layout (GH #1141)
 
-Same live text readout as `ui-slider` — shows both clamped values as `"{lo} – {hi}"`, arming on any
-live change from either thumb (pointer drag or keyboard step) and hiding ~1.2s after the last change
-(or immediately on focusout leaving the host). See `slider.md`'s "Value readout" section for the full
-label-end design rationale, shared by both controls.
+`layout` selects one of three label/value placements relative to `.rail` (`standard | inline | block`,
+default `standard`) — identical semantics to `ui-slider`'s own three patterns (see slider.md's "Layout"
+section), with the value slot showing the `"{lo} – {hi}"` pair (Ruling 4) instead of a single number.
 
-**Opt-out (GH #1136):** `readoutHidden` (default `false` — readout ON, byte-identical to the #1126
-shipped behavior) matches `ui-slider`'s own opt-out — set `true` to suppress the readout entirely; it
-never arms via `#armReadout()` regardless of which thumb moves.
+## Value readout (GH #1126, superseded by GH #1141 Ruling 2/4)
+
+The value part (`[data-part='value']`) is **always visible at rest** and updates live during either
+thumb's drag/keyboard step — shows both clamped values as `"{lo} – {hi}"`. This supersedes the original
+GH #1126 design (a transient label-end overlay that faded ~1.2s after the last live change): once
+`layout` gained a resting value slot in every one of its three members, the fade timer had nothing left
+to guard, and Ruling 2 retired it outright (see `slider.md`'s "Value readout" section for the shared
+rationale).
+
+**Opt-out (GH #1136):** `readoutHidden` (default `false` — value visible) suppresses the value part
+entirely when `true` — at rest AND during scrub (GH #1141 widens the opt-out's scope, matching
+`ui-slider`'s own widened contract).
 
 ## Sizes
 
@@ -3525,12 +3558,13 @@ ADR-0041 2px-inset law). An ancestor `[scale]` attribute re-tables the ramp for 
 
 ## Accessibility
 
-The host carries `role="group"` through `ElementInternals` (never a host attribute). Each thumb div
-carries `role="slider"` with its own `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, and `aria-label`
-("Low value" / "High value"). The lo thumb's `aria-valuemax` is constrained to `valueHi`; the hi
-thumb's `aria-valuemin` is constrained to `valueLo`. Both thumbs are keyboard-focusable (tabindex=0,
-disabled removes both from the tab order). The focus ring (`:focus-visible`, ADR-0009) appears on
-the focused thumb.
+The host carries `role="group"` through `ElementInternals` (never a host attribute). `label` (non-empty)
+IS the accessible name (`internals.ariaLabel`, GH #1141) — an empty `label` falls back to an author-supplied
+`aria-label` or `aria-labelledby` on the host. Each thumb div carries `role="slider"` with its own
+`aria-valuenow`, `aria-valuemin`, `aria-valuemax`, and `aria-label` ("Low value" / "High value"). The lo
+thumb's `aria-valuemax` is constrained to `valueHi`; the hi thumb's `aria-valuemin` is constrained to
+`valueLo`. Both thumbs are keyboard-focusable (tabindex=0, disabled removes both from the tab order). The
+focus ring (`:focus-visible`, ADR-0009) appears on the focused thumb.
 
 ---
 

@@ -27,14 +27,23 @@ import type { UISliderElement } from './slider.ts'
 
 // ── helpers ──────────────────────────────────────────────────────────────────────────────────────
 
-/** Stub setPointerCapture to prevent browser throws with synthetic pointer IDs. */
-function stubCapture(el: UISliderElement): void {
-  el.setPointerCapture = (_id: number): void => {}
+/** GH #1141 — the interactive track is `.rail`, its OWN light-DOM element (no longer the host itself). */
+function rail(el: Element): HTMLElement {
+  return el.querySelector('.rail') as HTMLElement
 }
 
-/** Build a synthetic PointerEvent with clientX and an optional pointerId (default 1). */
-const ptr = (type: string, x: number, id = 1): PointerEvent =>
-  new PointerEvent(type, { clientX: x, pointerId: id, bubbles: true, cancelable: true })
+/** Stub setPointerCapture on `.rail` to prevent browser throws with synthetic pointer IDs. */
+function stubCapture(el: UISliderElement): void {
+  rail(el).setPointerCapture = (_id: number): void => {}
+}
+
+/** Build + dispatch a synthetic PointerEvent ON `.rail` (bubbles to the host, where valueDrag's
+ *  listener lives) — GH #1141: a press must originate from within `.rail`, never the label/value parts. */
+const ptr = (el: UISliderElement, type: string, x: number, id = 1): PointerEvent => {
+  const event = new PointerEvent(type, { clientX: x, pointerId: id, bubbles: true, cancelable: true })
+  rail(el).dispatchEvent(event)
+  return event
+}
 
 // ── per-scheme token resolver (the button-states.browser.test.ts RISK-1 pattern) ────────────────────
 // A throwaway probe child inherits the host's `--ui-slider-*` chain; setting `color-scheme` on the PROBE
@@ -221,7 +230,7 @@ describe('ui-slider — thumb ring "pops" in both schemes without regressing the
   it('the outer diameter of the ringed thumb is UNCHANGED — box − 4px still holds (border-box, ADR-0041 cl.3)', () => {
     const el = document.createElement('ui-slider') as UISliderElement
     document.body.append(el)
-    const cs = getComputedStyle(el, '::after')
+    const cs = getComputedStyle(rail(el), '::after')
     // default ui-md size=md: box=16px → thumb=12px, border-box means the 2px ring border does NOT grow it.
     expect(Number.parseFloat(cs.width)).toBe(12)
     expect(Number.parseFloat(cs.height)).toBe(12)
@@ -230,28 +239,35 @@ describe('ui-slider — thumb ring "pops" in both schemes without regressing the
 })
 
 // ── AC1: box = --md-sys-compact-{size} per [size]×[scale] — EXACT px (anti-vacuous) ─────────────────
+//
+// GH #1141: the ratified AC1 invariant ("the interactive box = --md-sys-compact-{size} exact px") now
+// lives on `.rail` — the host itself is a GRID whose overall block-size also includes the label/value
+// rows (the default `standard` layout ALWAYS reserves a value row, since the value is visible at rest —
+// Ruling 2), so the host's own bounding-box height is no longer the widget-box measurement. `.rail`'s
+// own block-size is unchanged (still exactly the widget-box ramp step); these probes were retargeted at
+// `.rail` rather than the host to preserve the ratified per-part contract.
 
-describe('ui-slider browser smoke (AC1 — interactive box exact px per [size]×[scale])', () => {
-  it('AC1 default: host block-size = 16px (--md-sys-compact-md at default ui-md scale)', () => {
+describe('ui-slider browser smoke (AC1 — .rail block-size exact px per [size]×[scale])', () => {
+  it('AC1 default: .rail block-size = 16px (--md-sys-compact-md at default ui-md scale)', () => {
     const el = document.createElement('ui-slider') as UISliderElement
     document.body.append(el)
-    // The host block-size = --md-sys-compact-md = 16px at ui-md scale (ADR-0041 clause 2)
-    const rect = el.getBoundingClientRect()
+    // .rail's block-size = --md-sys-compact-md = 16px at ui-md scale (ADR-0041 clause 2)
+    const rect = rail(el).getBoundingClientRect()
     expect(rect.height).toBe(16)
     el.remove()
   })
 
-  it('AC1 [size=sm] → host block-size = 14px; [size=lg] → 18px (the compact widget ramp)', () => {
+  it('AC1 [size=sm] → .rail block-size = 14px; [size=lg] → 18px (the compact widget ramp)', () => {
     const sm = document.createElement('ui-slider') as UISliderElement
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
-    expect(sm.getBoundingClientRect().height).toBe(14) // --md-sys-compact-sm at ui-md
+    expect(rail(sm).getBoundingClientRect().height).toBe(14) // --md-sys-compact-sm at ui-md
     sm.remove()
 
     const lg = document.createElement('ui-slider') as UISliderElement
     lg.setAttribute('size', 'lg')
     document.body.append(lg)
-    expect(lg.getBoundingClientRect().height).toBe(18) // --md-sys-compact-lg at ui-md
+    expect(rail(lg).getBoundingClientRect().height).toBe(18) // --md-sys-compact-lg at ui-md
     lg.remove()
   })
 
@@ -262,7 +278,7 @@ describe('ui-slider browser smoke (AC1 — interactive box exact px per [size]×
     wrapper.append(el)
     document.body.append(wrapper)
     // ui-lg × md = 18px (ADR-0041 table: [scale=ui-lg] → --md-sys-compact-md = 18px)
-    expect(el.getBoundingClientRect().height).toBe(18)
+    expect(rail(el).getBoundingClientRect().height).toBe(18)
     wrapper.remove()
   })
 
@@ -270,12 +286,12 @@ describe('ui-slider browser smoke (AC1 — interactive box exact px per [size]×
     const sm = document.createElement('ui-slider') as UISliderElement
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
-    const smH = sm.getBoundingClientRect().height
+    const smH = rail(sm).getBoundingClientRect().height
     sm.remove()
 
     const md = document.createElement('ui-slider') as UISliderElement
     document.body.append(md)
-    const mdH = md.getBoundingClientRect().height
+    const mdH = rail(md).getBoundingClientRect().height
     md.remove()
 
     expect(smH).not.toBe(mdH) // the negative control: different sizes render different px
@@ -289,7 +305,7 @@ describe('ui-slider browser smoke (AC2 — thumb = box − 4px, the ADR-0042 Ran
     const el = document.createElement('ui-slider') as UISliderElement
     document.body.append(el)
     // --md-sys-compact-md=16px → thumb = 16 − 2×2 = 12px (ADR-0041 cl.3: thumb = box − 2×inset)
-    const cs = getComputedStyle(el, '::after')
+    const cs = getComputedStyle(rail(el), '::after')
     expect(Number.parseFloat(cs.width)).toBe(12)
     expect(Number.parseFloat(cs.height)).toBe(12)
     el.remove()
@@ -300,7 +316,7 @@ describe('ui-slider browser smoke (AC2 — thumb = box − 4px, the ADR-0042 Ran
     el.setAttribute('size', 'sm')
     document.body.append(el)
     // --md-sys-compact-sm=14px → thumb = 14 − 4 = 10px
-    const cs = getComputedStyle(el, '::after')
+    const cs = getComputedStyle(rail(el), '::after')
     expect(Number.parseFloat(cs.width)).toBe(10)
     expect(Number.parseFloat(cs.height)).toBe(10)
     el.remove()
@@ -311,7 +327,7 @@ describe('ui-slider browser smoke (AC2 — thumb = box − 4px, the ADR-0042 Ran
     el.setAttribute('size', 'lg')
     document.body.append(el)
     // --md-sys-compact-lg=18px → thumb = 18 − 4 = 14px
-    const cs = getComputedStyle(el, '::after')
+    const cs = getComputedStyle(rail(el), '::after')
     expect(Number.parseFloat(cs.width)).toBe(14)
     expect(Number.parseFloat(cs.height)).toBe(14)
     el.remove()
@@ -325,7 +341,7 @@ describe('ui-slider browser smoke (AC2 — thumb = box − 4px, the ADR-0042 Ran
     wrapper.append(el)
     document.body.append(wrapper)
     // ui-lg × lg = 20px → thumb = 20 − 4 = 16px
-    const cs = getComputedStyle(el, '::after')
+    const cs = getComputedStyle(rail(el), '::after')
     expect(Number.parseFloat(cs.width)).toBe(16)
     expect(Number.parseFloat(cs.height)).toBe(16)
     wrapper.remove()
@@ -339,7 +355,7 @@ describe('ui-slider browser smoke (AC2 — thumb = box − 4px, the ADR-0042 Ran
     wrapper.append(el)
     document.body.append(wrapper)
     // content-lg × lg = 28px → thumb = 28 − 4 = 24px (the literal from the ADR-0041 table)
-    const cs = getComputedStyle(el, '::after')
+    const cs = getComputedStyle(rail(el), '::after')
     expect(Number.parseFloat(cs.width)).toBe(24)
     expect(Number.parseFloat(cs.height)).toBe(24)
     wrapper.remove()
@@ -349,13 +365,13 @@ describe('ui-slider browser smoke (AC2 — thumb = box − 4px, the ADR-0042 Ran
     const sm = document.createElement('ui-slider') as UISliderElement
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
-    const smThumb = Number.parseFloat(getComputedStyle(sm, '::after').width)
+    const smThumb = Number.parseFloat(getComputedStyle(rail(sm), '::after').width)
     sm.remove()
 
     const lg = document.createElement('ui-slider') as UISliderElement
     lg.setAttribute('size', 'lg')
     document.body.append(lg)
-    const lgThumb = Number.parseFloat(getComputedStyle(lg, '::after').width)
+    const lgThumb = Number.parseFloat(getComputedStyle(rail(lg), '::after').width)
     lg.remove()
 
     expect(smThumb).not.toBe(lgThumb) // negative control: different sizes render different thumb px
@@ -381,18 +397,18 @@ describe('ui-slider browser smoke (AC3 — real pointer-drag maps position→val
     stubCapture(el)
 
     // pointerdown at clientX=0 → left edge (ratio=0) → value=0
-    el.dispatchEvent(ptr('pointerdown', 0))
+    ptr(el, 'pointerdown', 0)
     expect(el.value).toBe(0)
 
     // pointermove to clientX=100 → 50% of 200px track (ratio=0.5) → raw=50 → snap to step=10 → 50
-    el.dispatchEvent(ptr('pointermove', 100))
+    ptr(el, 'pointermove', 100)
     expect(el.value).toBe(50)
 
     // pointermove to clientX=180 → 90% → raw=90 → snap to step=10 → 90
-    el.dispatchEvent(ptr('pointermove', 180))
+    ptr(el, 'pointermove', 180)
     expect(el.value).toBe(90)
 
-    el.dispatchEvent(ptr('pointerup', 180))
+    ptr(el, 'pointerup', 180)
     el.remove()
   })
 
@@ -412,12 +428,12 @@ describe('ui-slider browser smoke (AC3 — real pointer-drag maps position→val
     el.addEventListener('input', () => { inputCount++ })
 
     // pointerdown at 0 → value=0 (no change from default → no input)
-    el.dispatchEvent(ptr('pointerdown', 0))
+    ptr(el, 'pointerdown', 0)
     // pointermove to 100 → value=50 → input
-    el.dispatchEvent(ptr('pointermove', 100))
+    ptr(el, 'pointermove', 100)
     expect(inputCount).toBe(1)
 
-    el.dispatchEvent(ptr('pointerup', 100))
+    ptr(el, 'pointerup', 100)
     el.remove()
   })
 
@@ -435,8 +451,8 @@ describe('ui-slider browser smoke (AC3 — real pointer-drag maps position→val
     let inputCount = 0
     el.addEventListener('input', () => { inputCount++ })
 
-    el.dispatchEvent(ptr('pointerdown', 100))
-    el.dispatchEvent(ptr('pointermove', 150))
+    ptr(el, 'pointerdown', 100)
+    ptr(el, 'pointermove', 150)
     expect(inputCount).toBe(0) // degenerate range — no drag, no input
     el.remove()
   })
@@ -457,28 +473,21 @@ describe('ui-slider browser smoke (AC4 — forced-colors annotation)', () => {
     document.body.append(el)
     // Verify the element is connected and the ::after thumb has a non-zero computed size.
     // (If slider.css failed to load, the thumb would have zero dimensions.)
-    const cs = getComputedStyle(el, '::after')
+    const cs = getComputedStyle(rail(el), '::after')
     expect(Number.parseFloat(cs.width)).toBeGreaterThan(0)
     el.remove()
   })
 })
 
-// ── GH #1126: live value readout — real-drag text + geometry containment ────────────────────────
-//
-// The design choice (slider.md "Value readout"): a label-end STATIC overlay, not a thumb-following
-// bubble — rejected specifically because a bubble tracking --value-pct risks clipping past the host's
-// own edge at min/max inside an ancestor overflow:hidden container (the A2UI chat-bubble shape). This
-// suite proves BOTH halves cross-engine: (a) a REAL drag shows a live-updating readout text, and (b) the
-// readout's rendered box never escapes the host's own bounding box at either extreme — measured, not
-// asserted by construction alone.
+// ── GH #1141: the value is always visible at rest and live during scrub (supersedes GH #1126) ───────
 
-describe('ui-slider browser smoke (GH #1126 — live value readout: real drag + geometry containment)', () => {
-  it('a real pointer drag shows the readout and its text tracks the live value (min → mid → max)', async () => {
+describe('ui-slider browser smoke (GH #1141 — always-visible value: real drag tracks it live)', () => {
+  it('a real pointer drag updates the ALREADY-VISIBLE value text (min → mid → max), no arm/hide', async () => {
     const el = document.createElement('ui-slider') as UISliderElement
     el.min = 0
     el.max = 100
     el.step = 10
-    el.value = 50 // start away from the drag's first target so pointerdown itself is a real CHANGE (emits `input`)
+    el.value = 50
     el.style.setProperty('position', 'fixed')
     el.style.setProperty('left', '0px')
     el.style.setProperty('top', '0px')
@@ -487,62 +496,120 @@ describe('ui-slider browser smoke (GH #1126 — live value readout: real drag + 
     stubCapture(el)
 
     const part = el.querySelector('[data-part="value"]') as HTMLElement
-    expect(part.hidden).toBe(true)
+    expect(part.hidden).toBe(false) // visible at rest, BEFORE any interaction (Ruling 2)
+    expect(part.textContent).toBe('50')
 
-    el.dispatchEvent(ptr('pointerdown', 0)) // ratio=0 → value 50→0, a real change → `input` fires → arms the readout
-    expect(part.hidden).toBe(false)
-    await el.updateComplete // the readout-text effect is reactive (async flush) — hidden toggling is not
+    ptr(el, 'pointerdown', 0) // ratio=0 → value 50→0
+    await el.updateComplete
     expect(part.textContent).toBe('0')
+    expect(part.hidden).toBe(false)
 
-    el.dispatchEvent(ptr('pointermove', 100)) // ratio=0.5 → value=50
+    ptr(el, 'pointermove', 100) // ratio=0.5 → value=50
     await el.updateComplete
     expect(part.textContent).toBe('50')
 
-    el.dispatchEvent(ptr('pointermove', 200)) // ratio=1 → value=100 (max)
+    ptr(el, 'pointermove', 200) // ratio=1 → value=100 (max)
     await el.updateComplete
     expect(part.textContent).toBe('100')
 
-    el.dispatchEvent(ptr('pointerup', 200))
+    ptr(el, 'pointerup', 200)
+    el.remove()
+  })
+})
+
+// ── GH #1141: the three `layout` patterns — real geometry (label/rail/value relative positions) ─────
+//
+// Kim's three-pattern mock, measured (not asserted-by-construction): `standard` (label top-left, value
+// top-right, one row above the rail) · `inline` (label left / rail centre-flex / value right, one row) ·
+// `block` (label centred above, value centred below). Plus: no part clips past its ancestor card at
+// min/max (the motivating blackjack-bet-slider case sits inside a bounded card).
+
+describe('ui-slider browser smoke (GH #1141 — layout geometry, all three patterns)', () => {
+  function build(layout: 'standard' | 'inline' | 'block'): { el: UISliderElement; label: HTMLElement; value: HTMLElement; rail: HTMLElement } {
+    const el = document.createElement('ui-slider') as UISliderElement
+    el.setAttribute('layout', layout)
+    el.label = 'Bet'
+    el.min = 0
+    el.max = 100
+    el.value = 50
+    el.style.setProperty('width', '220px')
+    document.body.append(el)
+    return { el, label: el.querySelector('[data-part="label"]') as HTMLElement, value: el.querySelector('[data-part="value"]') as HTMLElement, rail: rail(el) }
+  }
+
+  it('standard: label top-left, value top-right, BOTH above the rail (one row)', () => {
+    const { el, label, value, rail: railEl } = build('standard')
+    const l = label.getBoundingClientRect()
+    const v = value.getBoundingClientRect()
+    const r = railEl.getBoundingClientRect()
+    expect(l.left, 'label must be the LEFTMOST part').toBeLessThan(v.left)
+    expect(l.bottom, 'label must sit ABOVE the rail').toBeLessThanOrEqual(r.top + 0.5)
+    expect(v.bottom, 'value must sit ABOVE the rail').toBeLessThanOrEqual(r.top + 0.5)
+    expect(Math.abs(v.right - r.right), 'value must be right-aligned to the rail\'s own right edge').toBeLessThan(2)
     el.remove()
   })
 
-  it('the readout stays fully inside the host\'s own bounding box at BOTH the min and max thumb positions', () => {
-    const container = document.createElement('div')
-    // A real A2UI-card-like ancestor: fixed size + clipped overflow — the exact shape a floating,
-    // thumb-tracking bubble would risk escaping at the extremes. The readout is asserted to stay
-    // within the HOST's own box regardless (the label-end design never depends on --value-pct at all).
-    container.style.position = 'fixed'
-    container.style.left = '20px'
-    container.style.top = '20px'
-    container.style.width = '240px'
-    container.style.overflow = 'hidden'
-    document.body.append(container)
+  it('inline: label left of the rail, value right of the rail, ALL ONE ROW', () => {
+    const { el, label, value, rail: railEl } = build('inline')
+    const l = label.getBoundingClientRect()
+    const v = value.getBoundingClientRect()
+    const r = railEl.getBoundingClientRect()
+    expect(l.right, 'label must be LEFT of the rail').toBeLessThanOrEqual(r.left + 0.5)
+    expect(v.left, 'value must be RIGHT of the rail').toBeGreaterThanOrEqual(r.right - 0.5)
+    // one row: label/rail/value vertical centres all fall within a few px of each other
+    const centres = [l.top + l.height / 2, r.top + r.height / 2, v.top + v.height / 2]
+    expect(Math.max(...centres) - Math.min(...centres), 'label/rail/value must share one row').toBeLessThan(4)
+    el.remove()
+  })
 
-    const el = document.createElement('ui-slider') as UISliderElement
-    el.style.setProperty('width', '200px')
-    container.append(el)
-    stubCapture(el)
-
-    el.min = 0
-    el.max = 100
-    el.step = 0
-    el.value = 50 // mid start — each extreme below is a genuine CHANGE from the prior value, so `input` fires
-
-    const part = el.querySelector('[data-part="value"]') as HTMLElement
+  it('block: label centred above, value centred below the rail (three rows, one column)', () => {
+    const { el, label, value, rail: railEl } = build('block')
+    const l = label.getBoundingClientRect()
+    const v = value.getBoundingClientRect()
+    const r = railEl.getBoundingClientRect()
+    expect(l.bottom, 'label must be ABOVE the rail').toBeLessThanOrEqual(r.top + 0.5)
+    expect(v.top, 'value must be BELOW the rail').toBeGreaterThanOrEqual(r.bottom - 0.5)
     const hostRect = el.getBoundingClientRect()
+    const hostCentre = hostRect.left + hostRect.width / 2
+    expect(Math.abs(l.left + l.width / 2 - hostCentre), 'label must be horizontally CENTRED').toBeLessThan(2)
+    expect(Math.abs(v.left + v.width / 2 - hostCentre), 'value must be horizontally CENTRED').toBeLessThan(2)
+    el.remove()
+  })
 
-    for (const x of [0, 200]) { // the two extremes: thumb at min (x=0) and at max (x=200, ratio=1)
-      el.dispatchEvent(ptr('pointerdown', x))
-      expect(part.hidden).toBe(false)
-      const partRect = part.getBoundingClientRect()
-      expect(partRect.left, `readout left edge escaped the host box at x=${x}`).toBeGreaterThanOrEqual(hostRect.left - 0.5)
-      expect(partRect.right, `readout right edge escaped the host box at x=${x}`).toBeLessThanOrEqual(hostRect.right + 0.5)
-      expect(partRect.top, `readout top edge escaped the host box at x=${x}`).toBeGreaterThanOrEqual(hostRect.top - 0.5)
-      expect(partRect.bottom, `readout bottom edge escaped the host box at x=${x}`).toBeLessThanOrEqual(hostRect.bottom + 0.5)
-      el.dispatchEvent(ptr('pointerup', x))
+  it('no part clips past a bounded ancestor card at MIN or MAX, in every layout', () => {
+    for (const layout of ['standard', 'inline', 'block'] as const) {
+      const container = document.createElement('div')
+      // A real A2UI-card-like ancestor: fixed size + clipped overflow (the blackjack-bet-slider shape).
+      container.style.position = 'fixed'
+      container.style.left = '20px'
+      container.style.top = '20px'
+      container.style.width = '260px'
+      container.style.overflow = 'hidden'
+      document.body.append(container)
+
+      const el = document.createElement('ui-slider') as UISliderElement
+      el.setAttribute('layout', layout)
+      el.label = 'Bet'
+      el.style.setProperty('width', '220px')
+      container.append(el)
+      stubCapture(el)
+      el.min = 0
+      el.max = 100
+      el.step = 0
+
+      const containerRect = container.getBoundingClientRect()
+      for (const x of [0, 220]) { // the two extremes: thumb at min (x=0) and at max (x=220, ratio=1)
+        el.value = x === 0 ? 100 : 0 // force a genuine change so pointerdown's onValue actually fires
+        ptr(el, 'pointerdown', x)
+        for (const part of [el.querySelector('[data-part="label"]'), el.querySelector('[data-part="value"]'), rail(el)] as HTMLElement[]) {
+          const r = part.getBoundingClientRect()
+          expect(r.left, `[${layout}] part left edge escaped the card at x=${x}`).toBeGreaterThanOrEqual(containerRect.left - 0.5)
+          expect(r.right, `[${layout}] part right edge escaped the card at x=${x}`).toBeLessThanOrEqual(containerRect.right + 0.5)
+        }
+        ptr(el, 'pointerup', x)
+      }
+      container.remove()
     }
-
-    container.remove()
   })
 })
 

@@ -170,19 +170,24 @@ describe('ui-color-picker — real pointer-drag on a channel slider (both engine
     const { el } = mount('<ui-color-picker value="#3b82f6"></ui-color-picker>')
     await el.updateComplete
     const hueSlider = el.querySelector<HTMLElement>('ui-slider[data-channel="hue"]')!
-    stubCapture(hueSlider)
-    const rect = hueSlider.getBoundingClientRect()
+    // GH #1141 — ui-slider's interactive track is now `.rail`, its OWN light-DOM element (no longer the
+    // host itself): `value-drag.ts`'s `track.contains(pe.target)` guard means a press must originate
+    // from `.rail` (or a descendant), never the host directly. Mirrors slider.browser.test.ts's own
+    // `rail()`/`stubCapture()` retarget.
+    const hueRail = hueSlider.querySelector<HTMLElement>('.rail')!
+    stubCapture(hueRail)
+    const rect = hueRail.getBoundingClientRect()
 
     const before = el.querySelector<HTMLElement>('[data-part="channel-row"][data-channel="hue"] [data-part="channel-value"]')!.textContent
 
-    hueSlider.dispatchEvent(new PointerEvent('pointerdown', { clientX: rect.left, pointerId: 1, bubbles: true, cancelable: true }))
-    hueSlider.dispatchEvent(new PointerEvent('pointermove', { clientX: rect.left + rect.width * 0.9, pointerId: 1, bubbles: true, cancelable: true }))
+    hueRail.dispatchEvent(new PointerEvent('pointerdown', { clientX: rect.left, pointerId: 1, bubbles: true, cancelable: true }))
+    hueRail.dispatchEvent(new PointerEvent('pointermove', { clientX: rect.left + rect.width * 0.9, pointerId: 1, bubbles: true, cancelable: true }))
     await el.updateComplete
 
     const after = el.querySelector<HTMLElement>('[data-part="channel-row"][data-channel="hue"] [data-part="channel-value"]')!.textContent
     expect(after, `${server.browser}: dragging the hue slider did not change the hue channel`).not.toBe(before)
 
-    hueSlider.dispatchEvent(new PointerEvent('pointerup', { clientX: rect.left + rect.width * 0.9, pointerId: 1, bubbles: true, cancelable: true }))
+    hueRail.dispatchEvent(new PointerEvent('pointerup', { clientX: rect.left + rect.width * 0.9, pointerId: 1, bubbles: true, cancelable: true }))
   })
 })
 

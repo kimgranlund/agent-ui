@@ -3,14 +3,17 @@
 // semantics (LLD-C2), keyboard step (LLD-C3), and the --value-pct geometry seam (LLD-C5). The leaf adds:
 //   • `static role = 'slider'` — confirmatory; the base sets internals.role='slider' directly in connected()
 //   • connected(): tabbable (keyboard focus) + valueDrag wiring (LLD-C4, one thumb at --value-pct)
-//   • slider.css — the rail (thin fill line) + thumb circle (box − 4px at --value-pct, ADR-0041 cl.3)
+//   • slider.css — the rail (thin fill line) + thumb circle (box − 4px at --value-pct, ADR-0041 cl.3),
+//     plus the GH #1141 `layout` grid (label / rail / value placement)
 //   • self-define as ui-slider
 //
-// All props (value / min / max / step / size / name / disabled / required) are inherited via the
-// UIRangeElement.props spread. Zero-dep; controls → dom+traits inward only (✓); erasableSyntaxOnly ✓.
+// All props (value / min / max / step / size / name / disabled / required / label / layout) are inherited
+// via the UIRangeElement.props spread — label/layout landed on the shared base in GH #1141 (range-element.
+// lld.md's amendment) so both Range leaves get them identically. Zero-dep; controls → dom+traits inward
+// only (✓); erasableSyntaxOnly ✓.
 
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
-import { UIRangeElement, RANGE_READOUT_HIDE_MS } from '../_base/range-element.ts'
+import { UIRangeElement } from '../_base/range-element.ts'
 import { tabbable } from '../../traits/tabbable.ts'
 import { valueDrag } from '../../traits/value-drag.ts'
 
@@ -19,10 +22,11 @@ import { valueDrag } from '../../traits/value-drag.ts'
 // the spread is the documented workaround, matching how UICheckboxElement spreads UIIndicatorElement.props).
 const sliderProps = {
   ...UIRangeElement.props,
-  // GH #1136 — the GH #1126 readout's opt-out. Bare participle (naming.md §3: booleans are bare
+  // GH #1136 — the value readout's opt-out. Bare participle (naming.md §3: booleans are bare
   // adjectives/participles, never a verb) describing the state when true; default false keeps the
   // #1126 default-on behaviour byte-identical. Multi-word → explicit kebab `attribute:` (naming.md §3,
-  // the iconOnly/viewTransitions precedent).
+  // the iconOnly/viewTransitions precedent). GH #1141 widens its meaning: it now hides the AT-REST value
+  // part too (the transient scrub-only overlay it originally guarded no longer exists — Ruling 2).
   readoutHidden: { ...prop.boolean(false), reflect: true, attribute: 'readout-hidden' },
 } satisfies PropsSchema
 
@@ -38,51 +42,79 @@ export class UISliderElement extends UIRangeElement {
   // Protected so test probes can call it directly to verify idempotent release (G6 DoD, decomp S1).
   protected _releaseDrag: (() => void) = () => {}
 
-  // GH #1126 — the live value readout (design choice: label-end STATIC overlay, not a thumb-following
-  // bubble; see slider.md "Value readout" + the Findings posted on the issue). A light-DOM child, built
-  // once (idempotent across reconnect — the text-field/field part-creation precedent), `position:absolute`
-  // in slider.css so toggling `[hidden]` never reflows the rail/thumb or the page around it. `aria-hidden`
-  // — purely a SIGHTED convenience; `internals.ariaValueText` (range-element.ts) already carries the one
-  // AT-facing announcement, so this never doubles it.
+  // GH #1141 — the light-DOM structure the `layout` prop positions: a label part, the interactive RAIL
+  // (its own real element now — see below), and the value part. Built once (idempotent across reconnect —
+  // the text-field/field part-creation precedent).
+  #labelEl: HTMLElement | undefined
+  #railEl: HTMLElement | undefined
   #valueEl: HTMLElement | undefined
-  #hideTimer: ReturnType<typeof setTimeout> | undefined
+
+  /** Build the light-DOM structure once (no-op on reconnect — the fields are already set). */
+  #buildDOM(): void {
+    if (this.#railEl) return
+
+    // GH #1141 — the label part: a visible DUPLICATE of `internals.ariaLabel` (range-element.ts), so
+    // `aria-hidden` (same reasoning as the value part below — never double an announcement already made
+    // via ElementInternals). `[hidden]` toggles off the label prop being empty — an `auto`-sized grid
+    // row collapses to zero when its only child is `display:none` (slider.css), so an empty label reserves
+    // no space in any layout, matching Ruling 3's "renders solely when a label source exists".
+    const label = document.createElement('span')
+    label.setAttribute('data-part', 'label')
+    label.setAttribute('aria-hidden', 'true')
+    this.#labelEl = label
+
+    // GH #1141 — the RAIL: previously the whole host WAS the rail (the pre-#1141 shape had no label/value
+    // rows to make room for). Now that `layout` can place a label row above / a value row below, the rail
+    // must be its OWN element — both because valueDrag's `track()` needs a rect scoped to the rail alone
+    // (a label/value press must NOT register as a drag; `value-drag.ts`'s `track.contains(target)` guard
+    // is what enforces this) and because the rail/thumb pseudo-elements (slider.css) now paint on `.rail`,
+    // not `:scope`. Matches `ui-slider-multi`'s existing real-`.rail`-div architecture (this control was
+    // the outlier; it now converges on the same shape).
+    const rail = document.createElement('div')
+    rail.className = 'rail'
+    this.#railEl = rail
+
+    // GH #1126 (superseded design, GH #1141 Ruling 2) — the value part. Every `layout` member provides a
+    // resting slot for it (Ruling 2), so — unlike the pre-#1141 transient overlay — it is always visible
+    // at rest; `readoutHidden` (GH #1136) now hides the AT-REST value too, not just the scrub-time one.
+    const value = document.createElement('span')
+    value.setAttribute('data-part', 'value')
+    value.setAttribute('aria-hidden', 'true')
+    this.#valueEl = value
+
+    this.append(label, rail, value)
+  }
 
   protected override connected(): void {
-    super.connected() // base: normaliser · ARIA (ariaValueNow/Min/Max) · --value-pct seam · keyboard step
+    super.connected() // base: normaliser · ARIA (ariaValueNow/Min/Max/ariaLabel) · --value-pct seam · keyboard step
+
+    this.#buildDOM()
 
     // Keyboard-focusable while enabled; removed from the tab order while disabled (ADR-0010).
     tabbable(this, { disabled: () => this.effectiveDisabled() })
 
-    // GH #1126: build the readout part lazily, then keep its text in sync with the (already-normalised —
-    // the base's own normaliser effect above ran first) value on every value/min/max/step change. Visibility
-    // is driven separately (below) by the interaction itself, not by this effect — the text stays fresh
-    // even while hidden, so it never shows a stale number the instant it reappears.
+    // GH #1141 — label text + visibility. `hidden` when the label prop is empty (no label source ⇒ the
+    // part renders nothing, and its `auto` grid row collapses — slider.css).
     this.effect(() => {
-      if (!this.#valueEl) {
-        const el = document.createElement('span')
-        el.setAttribute('data-part', 'value')
-        el.setAttribute('aria-hidden', 'true')
-        el.hidden = true
-        this.append(el)
-        this.#valueEl = el
-      }
-      this.#valueEl.textContent = this.valueText(this.value ?? 0)
+      if (!this.#labelEl) return
+      this.#labelEl.textContent = this.label ?? ''
+      this.#labelEl.hidden = !this.label
     })
 
-    // GH #1126: `input` fires on EVERY live change from BOTH sources (keyboard step — the base's own
-    // keydown listener above — and pointer drag — this leaf's valueDrag onValue below), so one listener
-    // here covers both without duplicating either interaction's detection logic. Each firing re-arms the
-    // hide timer, so the readout stays visible for the whole drag/step run and fades RANGE_READOUT_HIDE_MS
-    // after the LAST change. `blur` hides immediately (defensive — the timer would also catch it).
-    this.listen(this, 'input', () => this.#armReadout())
-    this.listen(this, 'blur', () => this.#hideReadoutNow())
+    // GH #1141 (supersedes GH #1126's transient arm/hide) — the value part's text stays in sync with the
+    // (already-normalised) value on every value/min/max/step change, and its visibility is now a PURE
+    // function of `readoutHidden` (GH #1136) — always visible at rest, live during scrub, no timer.
+    this.effect(() => {
+      if (!this.#valueEl) return
+      this.#valueEl.textContent = this.valueText(this.value ?? 0)
+      this.#valueEl.hidden = this.readoutHidden
+    })
 
-    // LLD-C4: wire the pointer→value gesture controller. The host IS the interactive track surface
-    // (light-DOM — no child track element); opts.track() is re-read on each pointerdown so reconnect
-    // always resolves the live element. Emits `input` on each stepped value change; `change` is emitted
-    // by the base on blur when value has moved since focus (the base's commit-on-blur contract).
+    // LLD-C4: wire the pointer→value gesture controller against the RAIL (not the host — GH #1141 grew
+    // real label/value siblings the drag must never trigger from; `value-drag.ts`'s own `track.contains`
+    // guard already ignores presses outside the track element it is given).
     this._releaseDrag = valueDrag(this, {
-      track: () => this,
+      track: () => this.#railEl ?? null,
       min: () => this.min ?? 0,
       max: () => this.max ?? 100,
       step: () => this.step ?? 1,
@@ -102,39 +134,6 @@ export class UISliderElement extends UIRangeElement {
     // edge case where the outer listener fires after abort). Idempotent: releasing twice is a no-op.
     this._releaseDrag()
     this._releaseDrag = () => {}
-
-    // GH #1126: drop any pending hide timer — zero-residue (C10): a live timer surviving disconnect
-    // would still fire ~1.2s later and touch a detached node; clearing here bounds its lifetime to the
-    // connection, matching every other cleanup in this method.
-    if (this.#hideTimer !== undefined) {
-      clearTimeout(this.#hideTimer)
-      this.#hideTimer = undefined
-    }
-    // …and hide the readout itself: a disconnect mid-scrub (timer cleared, hidden=false) would otherwise
-    // reconnect stuck-visible until the next input (component-checker finding, GH #1126).
-    if (this.#valueEl) this.#valueEl.hidden = true
-  }
-
-  /** GH #1126: show the readout and (re)arm its auto-hide timer — called on every live `input`.
-   *  GH #1136: `readoutHidden` guards this ONE call site — the readout never shows while set,
-   *  regardless of interaction source (keyboard step or pointer drag both funnel through here). */
-  #armReadout(): void {
-    if (!this.#valueEl || this.readoutHidden) return
-    this.#valueEl.hidden = false
-    if (this.#hideTimer !== undefined) clearTimeout(this.#hideTimer)
-    this.#hideTimer = setTimeout(() => {
-      if (this.#valueEl) this.#valueEl.hidden = true
-      this.#hideTimer = undefined
-    }, RANGE_READOUT_HIDE_MS)
-  }
-
-  /** GH #1126: hide the readout immediately (blur) and cancel any pending timer. */
-  #hideReadoutNow(): void {
-    if (this.#hideTimer !== undefined) {
-      clearTimeout(this.#hideTimer)
-      this.#hideTimer = undefined
-    }
-    if (this.#valueEl) this.#valueEl.hidden = true
   }
 }
 

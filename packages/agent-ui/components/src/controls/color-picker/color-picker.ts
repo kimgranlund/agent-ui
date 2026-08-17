@@ -410,6 +410,14 @@ export class UIColorPickerElement extends UIFormElement {
     const slider = document.createElement('ui-slider') as UISliderElement
     slider.setAttribute('data-channel', channel)
     slider.setAttribute('aria-label', label)
+    // GH #1141 — ui-slider now shows its OWN value at rest by default (Ruling 2). This row already
+    // composes its OWN external `channel-label`/`channel-value` text (ADR-0123 cl.8's non-color-signifier
+    // pair, above/below) — leaving the slider's `label` prop unset keeps its own label part hidden, but
+    // its VALUE part is unset-and-therefore-visible by default, which would DOUBLE the numeral this row
+    // already prints. `readout-hidden` opts this composed slider out of its own value display, matching
+    // the pre-#1141 bare-slider visual contract this composition was built against (GH #1136's opt-out,
+    // widened by #1141 to cover the resting value too — exactly the shape this composition needs).
+    slider.setAttribute('readout-hidden', '')
     row.appendChild(slider)
 
     const valueEl = document.createElement('span')

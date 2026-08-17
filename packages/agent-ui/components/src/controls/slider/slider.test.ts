@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { UISliderElement } from './slider.ts'
 import { signal, inspect } from '../../reactive/index.ts'
 import type { FormValue } from '../../dom/index.ts'
@@ -60,18 +60,31 @@ function make(): ProbeSlider {
   return el
 }
 
-/** Stub setPointerCapture + getBoundingClientRect on the slider for JSDOM pointer-event tests.
- *  JSDOM does not implement pointer capture; this prevents throws when valueDrag calls it.
+/** GH #1141 — the interactive track is now `.rail`, its OWN light-DOM element (no longer the host
+ *  itself); `value-drag.ts`'s `track.contains(pe.target)` guard means a pointer event must
+ *  ORIGINATE from `.rail` (or a descendant) to be recognised as a drag. */
+function rail(el: Element): HTMLElement {
+  return el.querySelector('.rail') as HTMLElement
+}
+
+/** Stub setPointerCapture + getBoundingClientRect on the slider's `.rail` for JSDOM pointer-event
+ *  tests. JSDOM does not implement pointer capture; this prevents throws when valueDrag calls it.
  *  The rect has left=0, width=200 so clientX=N maps to ratio N/200. */
 function stubPointer(el: ProbeSlider): void {
   const RECT = { left: 0, right: 200, width: 200, top: 0, bottom: 20, height: 20, x: 0, y: 0, toJSON: (): Record<string, unknown> => ({}) } as DOMRect
-  el.getBoundingClientRect = (): DOMRect => RECT
-  el.setPointerCapture = (_id: number): void => {}
-  el.releasePointerCapture = (_id: number): void => {}
+  const r = rail(el)
+  r.getBoundingClientRect = (): DOMRect => RECT
+  r.setPointerCapture = (_id: number): void => {}
+  r.releasePointerCapture = (_id: number): void => {}
 }
 
-const ptr = (type: string, x: number, id = 1): PointerEvent =>
-  new PointerEvent(type, { clientX: x, pointerId: id, bubbles: true, cancelable: true })
+/** Dispatch a pointer event ON `.rail` (bubbles to the host, where valueDrag's listener lives) —
+ *  GH #1141: a press must originate from within `.rail`, never the host/label/value parts. */
+const ptr = (el: ProbeSlider, type: string, x: number, id = 1): PointerEvent => {
+  const event = new PointerEvent(type, { clientX: x, pointerId: id, bubbles: true, cancelable: true })
+  rail(el).dispatchEvent(event)
+  return event
+}
 
 // ── upgrade + typed prop surface ──────────────────────────────────────────────────────────────────
 
@@ -282,13 +295,13 @@ describe('UISliderElement — valueDrag wiring (LLD-C4)', () => {
     document.body.append(el)
     stubPointer(el)
 
-    el.dispatchEvent(ptr('pointerdown', 0)) // clientX=0, ratio=0/200=0 → value=0
+    ptr(el, 'pointerdown', 0) // clientX=0, ratio=0/200=0 → value=0
     expect(el.value).toBe(0)
 
-    el.dispatchEvent(ptr('pointermove', 100)) // clientX=100, ratio=100/200=0.5 → value=50
+    ptr(el, 'pointermove', 100) // clientX=100, ratio=100/200=0.5 → value=50
     expect(el.value).toBe(50)
 
-    el.dispatchEvent(ptr('pointerup', 100))
+    ptr(el, 'pointerup', 100)
     el.remove()
   })
 
@@ -301,10 +314,10 @@ describe('UISliderElement — valueDrag wiring (LLD-C4)', () => {
     stubPointer(el) // rect: left=0, width=200
 
     // clientX=73: ratio=73/200=0.365, raw=36.5 → Math.round(3.65)*10=40
-    el.dispatchEvent(ptr('pointerdown', 73))
+    ptr(el, 'pointerdown', 73)
     expect(el.value).toBe(40)
 
-    el.dispatchEvent(ptr('pointerup', 73))
+    ptr(el, 'pointerup', 73)
     el.remove()
   })
 
@@ -317,11 +330,11 @@ describe('UISliderElement — valueDrag wiring (LLD-C4)', () => {
     let inputCount = 0
     el.addEventListener('input', () => { inputCount++ })
 
-    el.dispatchEvent(ptr('pointerdown', 0))   // value=0 (no change from default — no input)
-    el.dispatchEvent(ptr('pointermove', 100)) // value=50 → input
+    ptr(el, 'pointerdown', 0)   // value=0 (no change from default — no input)
+    ptr(el, 'pointermove', 100) // value=50 → input
     expect(inputCount).toBe(1)
 
-    el.dispatchEvent(ptr('pointerup', 100))
+    ptr(el, 'pointerup', 100)
     el.remove()
   })
 
@@ -334,104 +347,70 @@ describe('UISliderElement — valueDrag wiring (LLD-C4)', () => {
     el.remove() // disconnect → connection AbortSignal aborts → host.listen listener removed
 
     const before = el.value
-    el.dispatchEvent(ptr('pointerdown', 100)) // listener is gone — no-op
+    ptr(el, 'pointerdown', 100) // listener is gone — no-op
     expect(el.value).toBe(before)
   })
 })
 
-// ── GH #1126: live value readout ─────────────────────────────────────────────────────────────────────
+// ── GH #1141: the value part is always visible at rest (supersedes GH #1126's transient fade) ─────────
 
-describe('UISliderElement — live value readout (GH #1126)', () => {
+describe('UISliderElement — always-visible value readout (GH #1141, supersedes GH #1126)', () => {
   const valuePart = (el: Element): HTMLElement => el.querySelector('[data-part="value"]') as HTMLElement
 
-  it('the readout part exists, aria-hidden, and starts hidden', () => {
+  it('the value part exists, aria-hidden, and is VISIBLE AT REST by default (no interaction needed)', () => {
     const el = make()
     document.body.append(el)
     const part = valuePart(el)
     expect(part).not.toBeNull()
     expect(part.getAttribute('aria-hidden')).toBe('true')
-    expect(part.hidden).toBe(true)
+    expect(part.hidden).toBe(false) // GH #1141 Ruling 2 — visible at rest, not only during scrub
     el.remove()
   })
 
-  it('keyboard adjust (ArrowRight) shows the readout with the current formatted value', async () => {
-    vi.useFakeTimers()
+  it('the resting text reflects the current value on connect (no prior interaction)', () => {
+    const el = make()
+    el.value = 42
+    document.body.append(el)
+    expect(valuePart(el).textContent).toBe('42')
+    el.remove()
+  })
+
+  it('keyboard adjust (ArrowRight) updates the value part LIVE, staying visible', async () => {
     const el = make()
     el.value = 50
     document.body.append(el)
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
     const part = valuePart(el)
     expect(part.hidden).toBe(false)
-    await el.updateComplete // the readout-text effect is reactive (async flush) — hidden toggling is not
+    await el.updateComplete
     expect(part.textContent).toBe('51')
     el.remove()
-    vi.useRealTimers()
   })
 
-  it('the readout hides again after the hide delay elapses with no further change', () => {
-    vi.useFakeTimers()
-    const el = make()
-    el.value = 50
-    document.body.append(el)
-    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
-    const part = valuePart(el)
-    expect(part.hidden).toBe(false)
-    vi.advanceTimersByTime(1300)
-    expect(part.hidden).toBe(true)
-    el.remove()
-    vi.useRealTimers()
-  })
-
-  it('a repeated step re-arms the timer instead of hiding mid-run', () => {
-    vi.useFakeTimers()
-    const el = make()
-    el.value = 50
-    document.body.append(el)
-    const part = valuePart(el)
-    const key = (): void => { el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true })) }
-    key()
-    vi.advanceTimersByTime(900) // short of the 1200ms delay
-    key() // re-arm
-    vi.advanceTimersByTime(900) // would have expired the FIRST timer, not the re-armed one
-    expect(part.hidden).toBe(false)
-    vi.advanceTimersByTime(400) // now past the re-armed timer
-    expect(part.hidden).toBe(true)
-    el.remove()
-    vi.useRealTimers()
-  })
-
-  it('blur hides the readout immediately, without waiting for the timer', () => {
-    vi.useFakeTimers()
-    const el = make()
-    el.value = 50
-    document.body.append(el)
-    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
-    const part = valuePart(el)
-    expect(part.hidden).toBe(false)
-    el.dispatchEvent(new Event('blur'))
-    expect(part.hidden).toBe(true)
-    el.remove()
-    vi.useRealTimers()
-  })
-
-  it('pointer drag shows the readout (armed via the shared `input` listener)', async () => {
-    vi.useFakeTimers()
+  it('pointer drag updates the value part live (no timer, no arm/disarm — always on)', async () => {
     const el = make()
     el.step = 0
     document.body.append(el)
     stubPointer(el)
-    const part = valuePart(el)
-    expect(part.hidden).toBe(true)
-    el.dispatchEvent(ptr('pointerdown', 100)) // value 0 → 50, emits input
-    expect(part.hidden).toBe(false)
+    ptr(el, 'pointerdown', 100) // value 0 → 50
     await el.updateComplete
-    expect(part.textContent).toBe('50')
-    el.dispatchEvent(ptr('pointerup', 100))
+    expect(valuePart(el).textContent).toBe('50')
+    expect(valuePart(el).hidden).toBe(false)
+    ptr(el, 'pointerup', 100)
     el.remove()
-    vi.useRealTimers()
   })
 
-  it('no ARIA regression — ariaValueText still tracks the value while the visual readout stays aria-hidden', () => {
+  it('blur does NOT hide the value part (no scrub-only visibility left to end — GH #1126 arm/hide retired)', () => {
+    const el = make()
+    el.value = 50
+    document.body.append(el)
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
+    el.dispatchEvent(new Event('blur'))
+    expect(valuePart(el).hidden).toBe(false)
+    el.remove()
+  })
+
+  it('no ARIA regression — ariaValueText still tracks the value while the visual value part stays aria-hidden', () => {
     const el = make()
     el.min = 0
     el.max = 100
@@ -442,41 +421,43 @@ describe('UISliderElement — live value readout (GH #1126)', () => {
     el.remove()
   })
 
-  it('disconnect clears the pending hide timer (C10 zero-residue — no stray timer callback after teardown)', () => {
-    vi.useFakeTimers()
+  it('disconnect/reconnect does not throw and leaves the part connected to the (re-appended) host', () => {
     const el = make()
     el.value = 50
     document.body.append(el)
-    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
     const part = valuePart(el)
-    el.remove() // disconnected() clears the timer
-    expect(() => vi.advanceTimersByTime(5000)).not.toThrow()
-    // part.hidden is unobservable-safe either way; the assertion is that clearing the timer didn't throw
-    // and the element is no longer connected.
+    el.remove()
     expect(part.isConnected).toBe(false)
-    vi.useRealTimers()
+    expect(() => document.body.append(el)).not.toThrow()
+    expect(valuePart(el).isConnected).toBe(true)
+    el.remove()
   })
 })
 
-// ── GH #1136: readoutHidden opt-out ──────────────────────────────────────────────────────────────────
+// ── GH #1136: readoutHidden opt-out (widened by GH #1141 to hide the at-rest value too) ────────────────
 
-describe('UISliderElement — readoutHidden opt-out (GH #1136)', () => {
+describe('UISliderElement — readoutHidden opt-out (GH #1136, widened by GH #1141)', () => {
   const valuePart = (el: Element): HTMLElement => el.querySelector('[data-part="value"]') as HTMLElement
 
-  it('default false — unchanged: keyboard step still shows the readout (byte-identical #1126 behavior)', () => {
-    vi.useFakeTimers()
+  it('default false — the value part is visible at rest', () => {
     const el = make()
     el.value = 50
     document.body.append(el)
     expect(el.readoutHidden).toBe(false)
-    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
     expect(valuePart(el).hidden).toBe(false)
     el.remove()
-    vi.useRealTimers()
   })
 
-  it('readoutHidden=true — keyboard step never shows the readout', () => {
-    vi.useFakeTimers()
+  it('readoutHidden=true — the value part is hidden AT REST too (GH #1141 widened scope)', () => {
+    const el = make()
+    el.value = 50
+    el.readoutHidden = true
+    document.body.append(el)
+    expect(valuePart(el).hidden).toBe(true)
+    el.remove()
+  })
+
+  it('readoutHidden=true — keyboard step never shows the value part', () => {
     const el = make()
     el.value = 50
     el.readoutHidden = true
@@ -484,21 +465,18 @@ describe('UISliderElement — readoutHidden opt-out (GH #1136)', () => {
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
     expect(valuePart(el).hidden).toBe(true)
     el.remove()
-    vi.useRealTimers()
   })
 
-  it('readoutHidden=true — pointer drag never shows the readout', () => {
-    vi.useFakeTimers()
+  it('readoutHidden=true — pointer drag never shows the value part', () => {
     const el = make()
     el.step = 0
     el.readoutHidden = true
     document.body.append(el)
     stubPointer(el)
-    el.dispatchEvent(ptr('pointerdown', 100)) // value 0 → 50, emits input
+    ptr(el, 'pointerdown', 100) // value 0 → 50, emits input
     expect(valuePart(el).hidden).toBe(true)
-    el.dispatchEvent(ptr('pointerup', 100))
+    ptr(el, 'pointerup', 100)
     el.remove()
-    vi.useRealTimers()
   })
 
   it('reflects to the readout-hidden attribute (kebab, multi-word prop)', () => {
@@ -523,6 +501,89 @@ describe('UISliderElement — size prop', () => {
     el.size = 'md'
     expect(el.getAttribute('size')).toBe('md')
     el.remove()
+  })
+})
+
+// ── GH #1141: label prop — accessible name + visible, layout-positioned part ────────────────────────
+
+describe('UISliderElement — label prop (GH #1141)', () => {
+  const labelPart = (el: Element): HTMLElement => el.querySelector('[data-part="label"]') as HTMLElement
+
+  it('default empty — no visible label part, no internals.ariaLabel', () => {
+    const el = make()
+    document.body.append(el)
+    expect(el.label).toBe('')
+    expect(labelPart(el).hidden).toBe(true)
+    expect(el.probeInternals.ariaLabel).toBeNull()
+    el.remove()
+  })
+
+  it('non-empty label — visible, aria-hidden part + internals.ariaLabel set', () => {
+    const el = make()
+    el.label = 'Volume'
+    document.body.append(el)
+    const part = labelPart(el)
+    expect(part.hidden).toBe(false)
+    expect(part.textContent).toBe('Volume')
+    expect(part.getAttribute('aria-hidden')).toBe('true')
+    expect(el.probeInternals.ariaLabel).toBe('Volume')
+    el.remove()
+  })
+
+  it('reflects to the label attribute (TKT-0069 item 2 — label reflects fleet-wide)', () => {
+    const el = make()
+    document.body.append(el)
+    el.label = 'Bet'
+    expect(el.getAttribute('label')).toBe('Bet')
+    el.remove()
+  })
+
+  it('clearing label back to empty hides the part again and clears ariaLabel', async () => {
+    const el = make()
+    el.label = 'Volume'
+    document.body.append(el)
+    el.label = ''
+    await el.updateComplete // the label-text/hidden effect is reactive (async flush)
+    expect(labelPart(el).hidden).toBe(true)
+    expect(el.probeInternals.ariaLabel).toBeNull()
+    el.remove()
+  })
+})
+
+// ── GH #1141: layout prop — default + reflect ────────────────────────────────────────────────────────
+
+describe('UISliderElement — layout prop (GH #1141)', () => {
+  it('defaults to standard', () => {
+    const el = make()
+    document.body.append(el)
+    expect(el.layout).toBe('standard')
+    el.remove()
+  })
+
+  it('reflects JS-set value to the [layout] attribute (the CSS grid-template hook)', () => {
+    const el = make()
+    document.body.append(el)
+    el.layout = 'inline'
+    expect(el.getAttribute('layout')).toBe('inline')
+    el.layout = 'block'
+    expect(el.getAttribute('layout')).toBe('block')
+    el.layout = 'standard'
+    expect(el.getAttribute('layout')).toBe('standard')
+    el.remove()
+  })
+
+  it('layout is a literal union — compile-time narrowing (negative control — the biting @ts-expect-error)', () => {
+    const fn = (): void => {
+      const el = new UISliderElement()
+      el.layout = 'standard'
+      el.layout = 'inline'
+      el.layout = 'block'
+      // @ts-expect-error — 'floating' is not a valid layout member
+      el.layout = 'floating'
+      // @ts-expect-error — a bare string is wider than the literal union
+      el.layout = 'x' as string
+    }
+    expect(typeof fn).toBe('function') // never invoked; the type errors above are the assertion
   })
 })
 
@@ -568,7 +629,7 @@ describe('UISliderElement — C10 zero-residue (inspect)', () => {
     stubPointer(el)
 
     // While connected: drag changes value
-    el.dispatchEvent(ptr('pointerdown', 100)) // ratio=0.5 → value=50
+    ptr(el, 'pointerdown', 100) // ratio=0.5 → value=50
     expect(el.value).toBe(50)
     el.value = 0 // reset
 
@@ -579,7 +640,7 @@ describe('UISliderElement — C10 zero-residue (inspect)', () => {
     // ONE drag should produce ONE value update, not doubled (no stacked listeners)
     let inputCount = 0
     el.addEventListener('input', () => { inputCount++ })
-    el.dispatchEvent(ptr('pointerdown', 100)) // ratio=0.5 → value=50; exactly 1 input
+    ptr(el, 'pointerdown', 100) // ratio=0.5 → value=50; exactly 1 input
     expect(el.value).toBe(50)
     // input count: the initial pointerdown triggers onValue(50); if stacked, onValue would fire twice
     // and the value might stay 50 (Object.is blocks second write) but onValue would call twice —
@@ -600,7 +661,7 @@ const md = readFileSync(`${SLIDER_DIR}/slider.md`, 'utf8') as string
 const { fence } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 // Attribute names in the order declared in slider.md frontmatter (anti-vacuous anchor).
-const ATTR_NAMES = ['value', 'min', 'max', 'step', 'size', 'name', 'disabled', 'required', 'readoutHidden']
+const ATTR_NAMES = ['value', 'min', 'max', 'step', 'size', 'name', 'disabled', 'required', 'readoutHidden', 'label', 'layout']
 
 describe('slider.md descriptor — structural validity (s10 part a)', () => {
   it('carries the ADR-0004 / plan §10 descriptor field set as top-level keys', () => {
@@ -619,7 +680,7 @@ describe('slider.md descriptor — structural validity (s10 part a)', () => {
   })
 
   it('validateComponentDescriptor reports ZERO structural failures (schema-valid)', () => {
-    // anti-vacuous: all 8 attribute names parse before the schema is consulted
+    // anti-vacuous: all 11 attribute names parse before the schema is consulted
     expect(parsed.attributes.map((a) => a.name)).toEqual(ATTR_NAMES)
     expect(validateComponentDescriptor(parsed)).toEqual([])
   })
@@ -627,7 +688,7 @@ describe('slider.md descriptor — structural validity (s10 part a)', () => {
 
 describe('slider.md descriptor — contract↔props trip-wire (s10 part b)', () => {
   it('attributes[] is a faithful bijection with UISliderElement.props (0 drift)', () => {
-    // anti-vacuous: all 8 attribute names parse before the trip-wire is consulted
+    // anti-vacuous: all 11 attribute names parse before the trip-wire is consulted
     expect(parsed.attributes.map((a) => a.name)).toEqual(ATTR_NAMES)
     expect(compareDescriptorToProps(parsed.attributes, UISliderElement.props)).toEqual([])
   })
