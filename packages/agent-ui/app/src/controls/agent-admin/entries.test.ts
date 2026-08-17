@@ -208,11 +208,13 @@ describe('composeLiveSystemPrompt — the availability gate (SPEC-R3 AC1)', () =
   })
 })
 
-// ── the INDEX-LINE disclosure + its teaching block (GH #891/SPEC-R14/R15, slice S8) ───────────────────────
+// ── the INDEX-LINE disclosure + its teaching block (GH #891/SPEC-R14/R15, slice S8; re-taught GH #1030/
+// SPEC-R16) ─────────────────────────────────────────────────────────────────────────────────────────────
 // The owner's 2026-08-14 ruling (ADR-0190 rev.2): "ever present" has to be cheap, so an ambient capability
 // entry contributes label + description and NEVER its content; the full text rides the user's own express
 // invocation (SPEC-R4's framing, unchanged) and thereafter replayed history. The model is TOLD the list is
-// an index and that only the user can load an item.
+// an index, and (GH #1030's re-teach) that naming an item exactly in the user's own next message loads it
+// the same way tagging it does — the model itself still cannot load anything.
 
 describe('composeLiveSystemPrompt — index-line disclosure (SPEC-R14)', () => {
   const SENTINEL = 'SENTINEL-CONTENT-abcdef'
@@ -353,9 +355,16 @@ describe('the index teaching block (SPEC-R15)', () => {
     expect(CAPABILITY_INDEX_TEACHING).toContain('INDEX')
     expect(CAPABILITY_INDEX_TEACHING, 'the mention trigger, named').toContain('@name')
     expect(CAPABILITY_INDEX_TEACHING, 'the invocation trigger, named').toContain('/name')
-    expect(CAPABILITY_INDEX_TEACHING).toMatch(/only the user can/i)
+    expect(CAPABILITY_INDEX_TEACHING, 'the model still cannot self-load').toMatch(/cannot load an item yourself/i)
     expect(CAPABILITY_INDEX_TEACHING).toMatch(/ask the user/i)
     expect(CAPABILITY_INDEX_TEACHING, 'ONE line — it rides between two blank lines in the prompt').not.toContain('\n')
+  })
+
+  // GH #1030/SPEC-R16 — the re-teach: the old "only the user can, by tagging" exclusivity claim is GONE
+  // (the client can now auto-attach too), but the model is still never told IT can load anything.
+  it('GH #1030: the teaching no longer claims tagging is the ONLY load path, and still never grants the model one', () => {
+    expect(CAPABILITY_INDEX_TEACHING, 'the old tag-only exclusivity claim is retired').not.toMatch(/only the user can/i)
+    expect(CAPABILITY_INDEX_TEACHING, 'naming it exactly is now taught as a load path').toMatch(/names? it exactly|auto-attach/i)
   })
 
   it('it lands after the GH #525 bankroll teaching and before the groups (one ordering, both blocks)', () => {

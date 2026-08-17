@@ -1,6 +1,15 @@
 # SPEC — Per-entry availability mode + composer tagging grammar (GH #850 · GH #849, one joint contract)
 
-> Status: proposed · v0.5 · 2026-08-14 (v0.4, v0.3 2026-08-14 · v0.2, v0.1 2026-08-13) · Layer: SPEC (execution contract)
+> Status: proposed · v0.6 · 2026-08-16 (v0.5, v0.4, v0.3 2026-08-14 · v0.2, v0.1 2026-08-13) · Layer: SPEC (execution contract)
+> v0.6 changelog (GH #1030, the owner's 2026-08-16 "load it on demand" ruling — HYBRID design (b), client-
+> side, cited ADR-0132's real-tool-pull design (a) as the named future rather than building it): §13 added,
+> one new requirement + one amendment. SPEC-R16 — an exact label hit in the user's own typed text
+> auto-attaches the matching capability entry through the SAME `resolveTurnReferences` path a committed
+> chip resolves through, one per turn, label-only exact match (no fuzzy/description matching — the
+> rejected false-positive-risk alternative), surfaced as the SAME dismiss-less bubble tag SPEC-R10 already
+> renders. SPEC-R15's second taught fact is amended (§13.2): the teaching block no longer claims tagging is
+> the ONLY load path. New slice S9, code-independent of ratification (ADR-0190 gains a proposed amendment
+> recording the ruling; the mechanism itself does not gate on it).
 > v0.5 changelog (the ADR-0190 fork RULED — the owner's 2026-08-14 utterance, quoted in the ADR's
 > rev.2 Context and in §12): the capabilities-menu switch is a GLOBAL enable/disable over the
 > roster's `enabled` axis, not per-turn steering — §12 added, three new requirements. SPEC-R13 —
@@ -790,3 +799,91 @@ Stale records S8 falsifies — repaired IN that slice, never a follow-up:
 | `entries.ts` — `resolveTurnReferences`' framing-grammar comment | "reuses the ambient projection's own `### {label}` block shape … the model meets an attachment in the same shape it already meets a capability" — the ambient shape becomes the index line; the framing keeps the block shape | S8 |
 | `agent-admin.md` — the system-view paragraph | ambient entries compose as full labeled prose | S8 |
 | `.claude/skills/admin-library-kinds/SKILL.md` — the composition row | same whole-content claim (S1 added the availability conjunct; the SHAPE claim now drifts) | S8 |
+
+## 13 · GH #1030 extension — client-side capability auto-attach (v0.6, the owner's 2026-08-16 ruling)
+
+**Repro (Kim, dealer persona chat surface):** after "lets play texas hold'em", the agent replied "I
+don't have the full Texas Hold'em rulebook loaded yet — tag @texas-holdem in your next message" — one
+turn after offering the game itself, because SPEC-R15's teaching told it only a formal `@`/`/` tag can
+load an entry. Root cause verified NOT a defect: exactly the shipped design (§12). Kim: "this should
+probably load it on demand". Two candidate designs (GH #1030's own intake): (a) a real model-side pull
+tool (`load_capability(label)`), needing a tool-execution loop — this stays ADR-0132's own named future,
+cited not built; (b) client-side auto-attach on an exact text match, resolved through the SHIPPED
+`resolveTurnReferences` path with zero new resolution mechanism. **Ruled: (b).**
+
+### 13.1 · SPEC-R16 — Client-side auto-attach: an exact label hit in the user's own text resolves like a committed chip
+
+When the user's typed text names an ENABLED, reachable capability entry (any of the four
+`AVAILABILITY_KINDS`) by an EXACT label match, the client resolves it through the SAME
+`resolveTurnReferences` path a committed `@`/`/` chip resolves through — EXACTLY as if the user had
+committed the chip — before the turn sends. "Reachable" is `buildComposerRosters`' own filter
+(`mentionables` ∪ `invocables`): enabled AND the entry's kind master switch on, so a disabled entry or a
+master-off kind's entry is never a candidate, by construction — no second filter is specified or needed.
+
+**The match rule (build-altitude inside this constraint, the exact tokenizer is `conversation.ts`'s):**
+case-insensitive, whitespace/punctuation-normalized EXACT match — both the typed text and a candidate's
+`label` tokenize to lowercase alnum runs (every space/hyphen/apostrophe/other punctuation is a token
+boundary), and a candidate matches when its FULL token sequence appears as a contiguous run of the text's
+own tokens. `"texas hold'em"` (text) and `texas-holdem` / `Texas Hold'em` (either could be the stored
+label) tokenize identically to `['texas','holdem']` — the SAME match either way. NO fuzzy scoring and NO
+description match (the rejected alternative — description text incidentally overlapping typed prose is a
+false-positive the ruling explicitly declined to risk); an entry not literally named in full by its LABEL
+never attaches.
+
+**ONE auto-attach per turn, maximum:** the first exact hit in text order (by token position) wins; a
+second exact hit elsewhere in the same text is silently dropped — noted nowhere, asserted nowhere, the
+ruling's own "keep it simple" clause. A candidate already present among the turn's EXPLICITLY committed
+references (same kind+id) is skipped — an exact mention of something the user also tagged by hand is one
+attachment, not two.
+
+**Visibility:** the resolved entry MUST surface as a visible reference tag on the sent user bubble —
+SPEC-R10's existing dismiss-less tag rendering (the SAME array reaching both `addUserMessage` and the
+resolution callback), never a new chip visual and never a pre-send composer chip (the auto-attach is
+invisible until send — it never joins the pre-send dismissable chip row `#addReference` owns, since there
+is nothing to dismiss once it is decided at send time).
+
+*(→ GH #1030; SPEC-R4 (the resolution path, unchanged) · SPEC-R8 (the roster projection, reused
+unchanged) · SPEC-R10 (the bubble tag rendering, reused unchanged) · ADR-0190 amendment)*
+
+- **AC1** *Given* typed text that exactly names an enabled, reachable entry's label, *then* the turn
+  resolves that entry exactly as an explicit chip would (framed content for skill/workflow/resource,
+  `toolIds` for a tool — SPEC-R4's kind split, unchanged), AND the sent user bubble carries one reference
+  tag for it.
+- **AC2** *Given* typed text that merely shares a WORD with a label (e.g. "texas" alone) or draws its
+  wording from the entry's DESCRIPTION rather than its label, *then* the entry does NOT attach.
+- **AC3** *Given* a DISABLED entry (or one whose kind's master switch is off) whose label the same text
+  names exactly, *then* it does NOT attach — the roster never lists it as a candidate.
+- **AC4** *Given* text that exactly names TWO reachable entries, *then* only the FIRST (by text order)
+  auto-attaches; the second is silently absent.
+- **AC5** *Given* a reference the user ALSO explicitly committed (a chip) for the entry the text also
+  names, *then* no duplicate reference is added (dedup by kind+id, the shipped `#addReference` law
+  extended to this seam).
+
+### 13.2 · SPEC-R15 amended — the teaching block no longer claims tagging is the ONLY load path
+
+SPEC-R15's second taught fact ("the model cannot load an entry itself, only the user can, by tagging it")
+is SUPERSEDED IN PART: the model still cannot load anything itself, but naming an item exactly in the
+USER's own next message is now an equally valid load path (SPEC-R16) — the teaching block MUST say so,
+and MUST NOT claim tagging is the only way. R15's other two facts (the lists are an index; ask the user by
+name when full text is needed) and its constraints (host-owned, byte-pinned, ≤ 500 B, gated on ≥ 1 index
+line, `BANKROLL_PATH_LINE`-precedent placement) stand unchanged — this is a wording amendment to fact 2
+only, not a new requirement.
+- **AC1** *(repoints SPEC-R15 AC2)* the pinned constant still names the index, both trigger characters and
+  the ask-the-user move, within 500 B — AND no longer matches `/only the user can/i`.
+
+### 13.3 · Non-goals (SPEC-N4)
+
+- **Fuzzy or description matching** — explicitly rejected (the false-positive-risk alternative GH #1030's
+  own ruling names); label-only, exact token-run containment, forever inside this requirement.
+- **More than one auto-attach per turn** — explicitly rejected; "keep it simple" is the ruling's own
+  phrase, not a placeholder for a later widening.
+- **Real model-side pull** (`load_capability` tool call) — stays ADR-0132's own named future (design (a)),
+  cited, not built here; needs the tool-execution loop SPEC-N3 already defers.
+- **Per-turn exclusion / muting the auto-attach** — dead with SPEC-N3's own sibling non-goal; no new
+  per-turn mechanism is introduced anywhere by this requirement.
+
+### 13.4 · Slices + bookings
+
+| Slice | Scope | Gate (exit-code judged, foreground) | Depends on |
+|---|---|---|---|
+| **S9 — client-side auto-attach + re-teach** | SPEC-R16 · SPEC-R15 amendment (§13.2) | `conversation.test.ts` (R16 AC1–AC5) · `entries.test.ts` (the re-teach) · `npm run check && npm test` | none (code-independent; **ADR-0190 amendment proposed for Kim**, not a build gate — the mechanism does not depend on ratification, the amendment only records it) |

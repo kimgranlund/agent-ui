@@ -741,6 +741,97 @@ describe('ui-conversation — the composed ui-conversation-composer (TKT-0056): 
   })
 })
 
+describe('ui-conversation — GH #1030/SPEC-R16: client-side capability auto-attach', () => {
+  function send(el: UIConversationElement, text: string): void {
+    const editor = composer(el).querySelector('[data-part="editor"]') as HTMLElement
+    editor.textContent = text
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+  }
+  const tagsOf = (el: UIConversationElement): string[] =>
+    [...log(el).querySelectorAll('[data-part="reference-tag-label"]')].map((n) => n.textContent ?? '')
+
+  it('AC1: an exact label hit auto-attaches — resolved exactly like a committed chip, and rendered as the SAME bubble tag', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.mentionables = [{ id: 'texas-hold-em', label: "Texas Hold'em", kind: 'resource' }]
+    await whenFlushed()
+    const sent: [string, readonly { id: string; label: string; kind: string }[] | undefined][] = []
+    el.onSubmit((text, references) => sent.push([text, references]))
+    send(el, "lets play texas hold'em")
+    expect(sent).toEqual([["lets play texas hold'em", [{ id: 'texas-hold-em', label: "Texas Hold'em", kind: 'resource' }]]])
+    expect(tagsOf(el)).toEqual(["Texas Hold'em"])
+  })
+
+  it('AC1: the normalized match holds across label/text punctuation differences (hyphen vs space vs apostrophe)', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.invocables = [{ id: 'x', label: 'texas-holdem', kind: 'skill' }]
+    await whenFlushed()
+    const sent: unknown[] = []
+    el.onSubmit((_text, references) => sent.push(references))
+    send(el, "Let's deal some Texas Hold'em")
+    expect(sent).toEqual([[{ id: 'x', label: 'texas-holdem', kind: 'skill' }]])
+  })
+
+  it('AC2: a bare word shared with the label, or text drawn from the DESCRIPTION, never attaches', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.mentionables = [{ id: 'texas-hold-em', label: "Texas Hold'em", kind: 'resource', description: 'The full rulebook' }]
+    await whenFlushed()
+    const sent: unknown[] = []
+    el.onSubmit((_text, references) => sent.push(references))
+    send(el, 'texas is a big state') // shares the WORD "texas", never the full label
+    send(el, 'load the full rulebook please') // matches the DESCRIPTION, never the label
+    expect(sent).toEqual([[], []]) // the composer's own stable EMPTY_REFERENCES — no explicit chip, no auto-attach
+    expect(tagsOf(el)).toEqual([])
+  })
+
+  it('AC3: a DISABLED entry (absent from the reachable roster) never attaches even on an exact text hit', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.mentionables = [] // the roster IS the reachability gate — a disabled/master-off entry is never listed
+    await whenFlushed()
+    const sent: unknown[] = []
+    el.onSubmit((_text, references) => sent.push(references))
+    send(el, "lets play texas hold'em")
+    expect(sent).toEqual([[]])
+  })
+
+  it('AC4: two exact hits in one message — only the FIRST (by text order) auto-attaches', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.mentionables = [
+      { id: 'menu', label: 'Menu PDF', kind: 'resource' },
+      { id: 'wine', label: 'Wine list', kind: 'resource' },
+    ]
+    await whenFlushed()
+    const sent: [string, readonly { id: string }[] | undefined][] = []
+    el.onSubmit((text, references) => sent.push([text, references]))
+    send(el, 'bring the Wine list after the Menu PDF')
+    expect(sent[0]![1]?.map((r) => r.id)).toEqual(['wine'])
+  })
+
+  it('AC5: an entry the user ALSO explicitly committed as a chip is never duplicated', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.mentionables = [{ id: 'menu', label: 'Menu PDF', kind: 'resource' }]
+    await whenFlushed()
+    const sent: [string, readonly { id: string }[] | undefined][] = []
+    el.onSubmit((text, references) => sent.push([text, references]))
+    const editor = composer(el).querySelector('[data-part="editor"]') as HTMLElement
+    editor.textContent = '@Menu'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })) // commits the chip
+    editor.textContent += 'bring the Menu PDF please'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })) // sends
+    expect(sent[0]![1]?.map((r) => r.id)).toEqual(['menu']) // one reference, not two
+  })
+
+  it('an empty/unset roster (every consumer but ui-agent-admin today) matches nothing, ever — the gated-equivalence law', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const sent: unknown[] = []
+    el.onSubmit((_text, references) => sent.push(references))
+    send(el, "lets play texas hold'em anyway")
+    expect(sent).toEqual([[]])
+  })
+})
+
 describe('ui-conversation — busy/re-entrancy guard (TKT-0034), forwarded to the composed child\'s `busy` prop', () => {
   it('beginAgentTurn() sets the composed child\'s busy to true; finalize() clears it', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
