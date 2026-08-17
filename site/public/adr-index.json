@@ -1384,5 +1384,12 @@
     "description": "a fleet-wide working/alive state for surfaces mid-mutation (GH #1104): ONE :state(working) host custom state + a breathing diffused inner-shadow treatment on -…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0200",
+    "url": "./adr-index.html#adr-0200",
+    "description": "Chat & A2UI dev/debug harness: mint @agent-ui/devtools as a new top-tier zero-dep package (a2ui ← devtools, a2a ← devtools) — three backends behind the one Age…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
