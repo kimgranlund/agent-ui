@@ -77,6 +77,17 @@
      governs the THUMB size only; the rail is a separate cosmetic layer). 3px reads cleanly at all
      widget-box sizes (12–28 px). */
   --ui-slider-rail-height: 3px;
+
+  /* GH #1126 — live value readout (design choice: label-end STATIC overlay, see slider.md "Value
+     readout" + the issue Findings — a thumb-following bubble was rejected as the fleet's first
+     pointer-position floater, with the exact clip-at-card-edge risk this design avoids by construction:
+     a FIXED anchor never approaches the host's own inline edge, so it needs no min/max clamping math).
+     Surface = the brightest neutral plane (same family as the thumb fill) so the pill reads on TOP of
+     the rail/thumb it may transiently sit over; ink = the fleet page-ink role (AA vs every surface
+     plane, tokens.test.ts — the same role the ADR-0094 thumb-ring fix uses for the identical reason). */
+  --ui-slider-value-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-slider-value-surface: var(--md-sys-color-neutral-surface-brightest);
+  --ui-slider-value-font: var(--md-sys-font-sm);
 }
 
 /* [size] → compact widget ramp repoint (ADR-0041: the per-[scale] table in dimensions.css re-tables
@@ -97,6 +108,10 @@
   --ui-slider-fill: var(--md-sys-color-neutral-surface-high);
   --ui-slider-thumb: var(--md-sys-color-neutral-on-surface-variant);
   --ui-slider-thumb-ring: var(--md-sys-color-neutral-on-surface-variant); /* SC 1.4.11-exempt; matches fill, no separate ring emphasis */
+  /* GH #1126: muted too — belt-and-suspenders only, the readout cannot actually show while disabled
+     (pointer-events:none below + the base's effectiveDisabled keyboard gate mean `input` never fires). */
+  --ui-slider-value-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-slider-value-surface: var(--md-sys-color-neutral-surface-high);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-slider) consumes ONLY --ui-slider-* ════════════════ */
@@ -185,6 +200,40 @@
       border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
 
+  /* GH #1126 — the live value readout (`[data-part='value']`). `position: absolute` takes it OUT OF
+     FLOW entirely, so toggling `[hidden]` never reflows the rail/thumb (their own geometry is untouched
+     by this feature) or the surrounding page — zero layout shift on show/hide, by construction, not by
+     tuning. Anchored at a FIXED inline-end position (never a function of --value-pct): the "label-end,
+     static" design choice — it can never approach the host's own edge, so it needs no clamping to stay
+     "inside the host box" (the browser probe's min/max-position check). It may transiently sit near/over
+     the thumb when the value is near max — accepted for v1 (the pill's own background keeps the text
+     legible on top; see the issue Findings for the rejected thumb-bubble alternative). */
+  :scope [data-part='value'] {
+    position: absolute;
+    inset-inline-end: 0;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: calc(var(--md-sys-widget-inset) * 1.5);
+    border-radius: 999px; /* pill — dialect unified with slider-multi's readout (checker nit) */
+    background: var(--ui-slider-value-surface);
+    color: var(--ui-slider-value-ink);
+    font-size: var(--ui-slider-value-font);
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none; /* decorative overlay — never intercepts the drag/click surface beneath it */
+  }
+
+  /* The author-stylesheet [hidden] guard: our own `display: flex` above is AUTHOR origin, which beats
+     the UA stylesheet's `[hidden]{display:none}` regardless of specificity (origin, not specificity,
+     decides across UA vs author) — without this explicit re-declaration `hidden` would silently no-op
+     (the field.css error-part precedent hits the identical cascade fact). */
+  :scope [data-part='value'][hidden] {
+    display: none;
+  }
+
   /* Focus ring (ADR-0009) — the shared fleet ring: `:focus-visible` (keyboard-only). Surrounds the
      whole control (host box), the fleet standard. Reads fleet-wide tokens directly — the one deliberate
      exception to "consume only --ui-slider-*", matching the checkbox/switch pattern. */
@@ -225,6 +274,12 @@
     :scope::after {
       background: Canvas;
       border: 2px solid Highlight;
+      forced-color-adjust: none;
+    }
+    :scope [data-part='value'] {
+      background: Canvas;
+      color: CanvasText;
+      border: 1px solid ButtonText;
       forced-color-adjust: none;
     }
   }

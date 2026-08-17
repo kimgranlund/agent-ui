@@ -3431,6 +3431,23 @@ The thumb's contrast contract is three-dimensional — fill, rail, and page surf
 (ADR-0094): a repoint of any of these tokens must clear all three; the slider browser legs are the
 standing gate.
 
+## Value readout (GH #1126)
+
+While the user is actively adjusting the value — pointer drag or a keyboard step — a live text readout
+(`[data-part='value']`) appears, formatted via the same `valueText()` hook that feeds `ariaValueText`
+(min/max/step respected, snapped/clamped). It hides ~1.2s after the last live change, or immediately on
+blur. **Design choice: a label-end STATIC overlay, not a thumb-following bubble.** `ui-slider` has no
+label/adornment slot (it is a bare value widget — anatomy.md's position-slots × content-roles law targets
+LABELED inline-grid controls, e.g. `ui-button`; it does not apply here) and no existing floating-overlay
+precedent; a bubble tracking `--value-pct` would be the fleet's first pointer-position floater, at risk of
+clipping past the host's own edge when the thumb is at min/max inside an ancestor `overflow:hidden` card
+(the exact shape of an A2UI chat-bubble surface). A FIXED anchor never depends on `--value-pct`, so it can
+never approach that edge — no clamping math needed, and it is provably "inside the host box" by
+construction rather than by probe luck. `position: absolute` also means toggling `hidden` causes zero
+layout shift to the rail/thumb or the page around it. No opt-out prop for v1 (Kim's issue framing leaned
+"visible by default" with no explicit opt-out ask; adding one grows the fork sheet for a small fix —
+tracked as an open follow-up if a real consumer needs to suppress it).
+
 ## Interaction
 
 Pointer drag: `pointerdown` on the host starts a drag; `pointermove` maps the pointer's X coordinate along

@@ -463,6 +463,89 @@ describe('ui-slider browser smoke (AC4 — forced-colors annotation)', () => {
   })
 })
 
+// ── GH #1126: live value readout — real-drag text + geometry containment ────────────────────────
+//
+// The design choice (slider.md "Value readout"): a label-end STATIC overlay, not a thumb-following
+// bubble — rejected specifically because a bubble tracking --value-pct risks clipping past the host's
+// own edge at min/max inside an ancestor overflow:hidden container (the A2UI chat-bubble shape). This
+// suite proves BOTH halves cross-engine: (a) a REAL drag shows a live-updating readout text, and (b) the
+// readout's rendered box never escapes the host's own bounding box at either extreme — measured, not
+// asserted by construction alone.
+
+describe('ui-slider browser smoke (GH #1126 — live value readout: real drag + geometry containment)', () => {
+  it('a real pointer drag shows the readout and its text tracks the live value (min → mid → max)', async () => {
+    const el = document.createElement('ui-slider') as UISliderElement
+    el.min = 0
+    el.max = 100
+    el.step = 10
+    el.value = 50 // start away from the drag's first target so pointerdown itself is a real CHANGE (emits `input`)
+    el.style.setProperty('position', 'fixed')
+    el.style.setProperty('left', '0px')
+    el.style.setProperty('top', '0px')
+    el.style.setProperty('width', '200px')
+    document.body.append(el)
+    stubCapture(el)
+
+    const part = el.querySelector('[data-part="value"]') as HTMLElement
+    expect(part.hidden).toBe(true)
+
+    el.dispatchEvent(ptr('pointerdown', 0)) // ratio=0 → value 50→0, a real change → `input` fires → arms the readout
+    expect(part.hidden).toBe(false)
+    await el.updateComplete // the readout-text effect is reactive (async flush) — hidden toggling is not
+    expect(part.textContent).toBe('0')
+
+    el.dispatchEvent(ptr('pointermove', 100)) // ratio=0.5 → value=50
+    await el.updateComplete
+    expect(part.textContent).toBe('50')
+
+    el.dispatchEvent(ptr('pointermove', 200)) // ratio=1 → value=100 (max)
+    await el.updateComplete
+    expect(part.textContent).toBe('100')
+
+    el.dispatchEvent(ptr('pointerup', 200))
+    el.remove()
+  })
+
+  it('the readout stays fully inside the host\'s own bounding box at BOTH the min and max thumb positions', () => {
+    const container = document.createElement('div')
+    // A real A2UI-card-like ancestor: fixed size + clipped overflow — the exact shape a floating,
+    // thumb-tracking bubble would risk escaping at the extremes. The readout is asserted to stay
+    // within the HOST's own box regardless (the label-end design never depends on --value-pct at all).
+    container.style.position = 'fixed'
+    container.style.left = '20px'
+    container.style.top = '20px'
+    container.style.width = '240px'
+    container.style.overflow = 'hidden'
+    document.body.append(container)
+
+    const el = document.createElement('ui-slider') as UISliderElement
+    el.style.setProperty('width', '200px')
+    container.append(el)
+    stubCapture(el)
+
+    el.min = 0
+    el.max = 100
+    el.step = 0
+    el.value = 50 // mid start — each extreme below is a genuine CHANGE from the prior value, so `input` fires
+
+    const part = el.querySelector('[data-part="value"]') as HTMLElement
+    const hostRect = el.getBoundingClientRect()
+
+    for (const x of [0, 200]) { // the two extremes: thumb at min (x=0) and at max (x=200, ratio=1)
+      el.dispatchEvent(ptr('pointerdown', x))
+      expect(part.hidden).toBe(false)
+      const partRect = part.getBoundingClientRect()
+      expect(partRect.left, `readout left edge escaped the host box at x=${x}`).toBeGreaterThanOrEqual(hostRect.left - 0.5)
+      expect(partRect.right, `readout right edge escaped the host box at x=${x}`).toBeLessThanOrEqual(hostRect.right + 0.5)
+      expect(partRect.top, `readout top edge escaped the host box at x=${x}`).toBeGreaterThanOrEqual(hostRect.top - 0.5)
+      expect(partRect.bottom, `readout bottom edge escaped the host box at x=${x}`).toBeLessThanOrEqual(hostRect.bottom + 0.5)
+      el.dispatchEvent(ptr('pointerup', x))
+    }
+
+    container.remove()
+  })
+})
+
 // ── C10: connect→disconnect→reconnect — no listener stacking ─────────────────────────────────────
 
 describe('ui-slider browser smoke (C10 — zero-residue after reconnect)', () => {

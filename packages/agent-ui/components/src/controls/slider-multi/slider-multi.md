@@ -81,7 +81,10 @@ slots:
     optional: true
     description: Optional label content — slotted children after the rail in light DOM. Absent by default; the rail + thumbs are the primary visual anatomy.
 
-parts: []             # light-DOM host; the rail/fill/thumbs are JS-managed light-DOM children (not declared parts)
+parts:                # the rail/fill/thumbs stay JS-managed light-DOM children (not declared parts, unchanged);
+                      # GH #1126 adds the ONE `data-part`-tagged child, matching ui-slider's own convention
+  - name: value
+    description: The live value readout (`<span data-part="value" aria-hidden="true">`) — shows BOTH clamped values as "{lo} – {hi}" (each formatted via the inherited `valueText()` hook). Built once in #buildDOM (idempotent across reconnect); toggles `hidden` — visible only while actively adjusting (pointer drag or keyboard step on either thumb), hiding ~1.2s after the last live change (or immediately on focusout). `aria-hidden` — a SIGHTED-ONLY convenience; each thumb's own `aria-valuetext` already carries the AT-facing announcement (never doubled). `position: absolute`, anchored at a FIXED inline-end position (never a function of --value-pct-lo/hi) — the label-end design choice shared with ui-slider (see slider.md's "Value readout" section for the full rationale).
 
 customStates: []      # no custom states; disabled is a reflected attribute (CSS [disabled] covers it)
 

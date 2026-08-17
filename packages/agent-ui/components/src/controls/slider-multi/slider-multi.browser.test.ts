@@ -331,3 +331,70 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
     expect(found).toBe(true)
   })
 })
+
+// ── GH #1126: live value readout — real-drag text + geometry containment ────────────────────────
+// Same shared design (slider.md "Value readout") and same proof shape as slider.browser.test.ts's
+// own suite: a real drag shows a live-updating readout, and the readout never escapes the HOST's own
+// bounding box at the extremes — real layout (no rect mocking) so the containment measurement is real.
+
+describe('ui-slider-multi browser smoke (GH #1126 — live value readout: real drag + geometry containment)', () => {
+  it('a real pointer drag on the rail shows the readout with BOTH values, live', async () => {
+    const el = document.createElement('ui-slider-multi') as UISliderMultiElement
+    el.style.setProperty('position', 'fixed')
+    el.style.setProperty('left', '0px')
+    el.style.setProperty('top', '0px')
+    el.style.setProperty('width', '200px')
+    document.body.append(el)
+    stubRailCapture(el)
+    el.valueLo = 0
+    el.valueHi = 100
+
+    const rail = el.querySelector<HTMLElement>('.rail')!
+    const part = el.querySelector<HTMLElement>('[data-part="value"]')!
+    expect(part.hidden).toBe(true)
+
+    // Near the lo thumb (0%) — the nearer-thumb picker selects lo.
+    drag(rail, 20, 20)
+    expect(part.hidden).toBe(false)
+    await el.updateComplete // the readout-text effect is reactive (async flush) — hidden toggling is not
+    expect(part.textContent).toContain('–') // "{lo} – {hi}" — both values present
+    expect(part.textContent).toContain('100')
+
+    el.remove()
+  })
+
+  it('the readout stays fully inside the host\'s own bounding box at BOTH thumb extremes', () => {
+    const container = document.createElement('div')
+    // The same clipped-ancestor shape as ui-slider's own containment proof — a bubble tracking a
+    // thumb's --value-pct would risk escaping this; the label-end design never depends on it.
+    container.style.position = 'fixed'
+    container.style.left = '20px'
+    container.style.top = '20px'
+    container.style.width = '240px'
+    container.style.overflow = 'hidden'
+    document.body.append(container)
+
+    const el = document.createElement('ui-slider-multi') as UISliderMultiElement
+    el.style.setProperty('width', '200px')
+    container.append(el)
+    stubRailCapture(el)
+    el.valueLo = 50 // mid start — each extreme drag below is a genuine CHANGE, so `input` fires each time
+    el.valueHi = 50
+
+    const rail = el.querySelector<HTMLElement>('.rail')!
+    const part = el.querySelector<HTMLElement>('[data-part="value"]')!
+    const hostRect = el.getBoundingClientRect()
+
+    for (const x of [1, 199]) { // near the lo extreme, then near the hi extreme
+      drag(rail, x, x)
+      expect(part.hidden).toBe(false)
+      const partRect = part.getBoundingClientRect()
+      expect(partRect.left, `readout left edge escaped the host box at x=${x}`).toBeGreaterThanOrEqual(hostRect.left - 0.5)
+      expect(partRect.right, `readout right edge escaped the host box at x=${x}`).toBeLessThanOrEqual(hostRect.right + 0.5)
+      expect(partRect.top, `readout top edge escaped the host box at x=${x}`).toBeGreaterThanOrEqual(hostRect.top - 0.5)
+      expect(partRect.bottom, `readout bottom edge escaped the host box at x=${x}`).toBeLessThanOrEqual(hostRect.bottom + 0.5)
+    }
+
+    container.remove()
+  })
+})

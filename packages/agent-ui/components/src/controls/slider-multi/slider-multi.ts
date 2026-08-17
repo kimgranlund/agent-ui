@@ -21,7 +21,7 @@
 
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import type { FormValue } from '../../dom/index.ts'
-import { UIRangeElement } from '../_base/index.ts'
+import { UIRangeElement, RANGE_READOUT_HIDE_MS } from '../_base/index.ts'
 import { valueDrag } from '../../traits/value-drag.ts'
 
 // The pair value model (LLD-C1 widened): spread UIRangeElement.props (which includes the shared min/max/step/
@@ -46,6 +46,13 @@ export class UISliderMultiElement extends UIRangeElement {
   #rail: HTMLElement | null = null
   #loThumb: HTMLElement | null = null
   #hiThumb: HTMLElement | null = null
+
+  // GH #1126 — the live value readout (design choice: label-end STATIC overlay, matching ui-slider's;
+  // see slider.md's "Value readout" section, the shared rationale). A host-level child (NOT inside
+  // `.rail`, so it never competes with `.rail`'s flex:1 for width) — `position: absolute` in
+  // slider-multi.css keeps it out of the flex flow entirely.
+  #valueEl: HTMLElement | null = null
+  #hideTimer: ReturnType<typeof setTimeout> | undefined
 
   // Nearer-thumb gate: set by the pointerdown picker BEFORE both valueDrag listeners fire.
   // 'lo' / 'hi' tells the correct binding's track() to return the rail; the other returns null.
@@ -128,11 +135,21 @@ export class UISliderMultiElement extends UIRangeElement {
     hiThumb.setAttribute('aria-label', 'High value')
 
     rail.append(fill, loThumb, hiThumb)
-    this.append(rail)
+
+    // GH #1126: the value readout — a host-level sibling of `rail` (not a rail child), so `position:
+    // absolute` (slider-multi.css) removes it from the flex flow without ever touching `.rail`'s own
+    // flex:1 width math (untouched — the ADR-0041/LLD-C5 geometry this feature must not perturb).
+    const value = document.createElement('span')
+    value.setAttribute('data-part', 'value')
+    value.setAttribute('aria-hidden', 'true')
+    value.hidden = true
+
+    this.append(rail, value)
 
     this.#rail = rail
     this.#loThumb = loThumb
     this.#hiThumb = hiThumb
+    this.#valueEl = value
   }
 
   protected connected(): void {
@@ -195,6 +212,16 @@ export class UISliderMultiElement extends UIRangeElement {
       const clampedHi = Math.max(lo, hi)
       this.style.setProperty('--value-pct-lo', String(this.#valuePct(clampedLo)))
       this.style.setProperty('--value-pct-hi', String(this.#valuePct(clampedHi)))
+    })
+
+    // ── GH #1126: value readout text — kept fresh even while hidden ──────────────────────────────────
+    // Multi shows BOTH values ("lo – hi"), each formatted via the inherited `valueText()` hook (the same
+    // one the base's ARIA effect would use — default String(value); an override formats both ends
+    // identically). Visibility is driven separately (below) by the interaction, not this effect.
+    this.effect(() => {
+      const lo = Math.min(this.#normalize(this.valueLo ?? 0), this.#normalize(this.valueHi ?? 100))
+      const hi = Math.max(this.#normalize(this.valueLo ?? 0), this.#normalize(this.valueHi ?? 100))
+      if (this.#valueEl) this.#valueEl.textContent = `${this.valueText(lo)} – ${this.valueText(hi)}`
     })
 
     // ── Disabled state: thumb tabindex + aria-disabled ────────────────────────────────────────────────
@@ -339,6 +366,19 @@ export class UISliderMultiElement extends UIRangeElement {
       this.#committedLo = null
       this.#committedHi = null
     })
+
+    // ── GH #1126: value readout arm/hide ──────────────────────────────────────────────────────────────
+    // `input` fires on every live change from BOTH sources (keyboard step above and each valueDrag
+    // onValue below) — one listener covers both. `focusout` hides immediately (a separate listener from
+    // the change-commit one above; DOM permits multiple listeners per event type).
+    this.listen(this, 'input', () => this.#armReadout())
+    this.listen(this, 'focusout', (event) => {
+      // Tabbing lo→hi keeps focus INSIDE the control — hiding then re-showing on the next arrow would
+      // flash the readout (checker finding). Hide only when focus truly leaves the host.
+      const to = (event as FocusEvent).relatedTarget
+      if (to instanceof Node && this.contains(to)) return
+      this.#hideReadoutNow()
+    })
   }
 
   protected override disconnected(): void {
@@ -351,6 +391,34 @@ export class UISliderMultiElement extends UIRangeElement {
     this.#releaseLoBinding = null
     this.#releaseHiBinding = null
     this.#activeThumb = null
+
+    // GH #1126: drop any pending hide timer — zero-residue (C10), matching the bindings above; and hide
+    // the readout itself so a disconnect mid-scrub cannot reconnect stuck-visible (checker finding).
+    if (this.#hideTimer !== undefined) {
+      clearTimeout(this.#hideTimer)
+      this.#hideTimer = undefined
+    }
+    if (this.#valueEl) this.#valueEl.hidden = true
+  }
+
+  /** GH #1126: show the readout and (re)arm its auto-hide timer — called on every live `input`. */
+  #armReadout(): void {
+    if (!this.#valueEl) return
+    this.#valueEl.hidden = false
+    if (this.#hideTimer !== undefined) clearTimeout(this.#hideTimer)
+    this.#hideTimer = setTimeout(() => {
+      if (this.#valueEl) this.#valueEl.hidden = true
+      this.#hideTimer = undefined
+    }, RANGE_READOUT_HIDE_MS)
+  }
+
+  /** GH #1126: hide the readout immediately (focusout) and cancel any pending timer. */
+  #hideReadoutNow(): void {
+    if (this.#hideTimer !== undefined) {
+      clearTimeout(this.#hideTimer)
+      this.#hideTimer = undefined
+    }
+    if (this.#valueEl) this.#valueEl.hidden = true
   }
 
   // ── protected test seams ─────────────────────────────────────────────────────────────────────────────

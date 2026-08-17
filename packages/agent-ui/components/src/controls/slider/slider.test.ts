@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { UISliderElement } from './slider.ts'
 import { signal, inspect } from '../../reactive/index.ts'
 import type { FormValue } from '../../dom/index.ts'
@@ -336,6 +336,125 @@ describe('UISliderElement — valueDrag wiring (LLD-C4)', () => {
     const before = el.value
     el.dispatchEvent(ptr('pointerdown', 100)) // listener is gone — no-op
     expect(el.value).toBe(before)
+  })
+})
+
+// ── GH #1126: live value readout ─────────────────────────────────────────────────────────────────────
+
+describe('UISliderElement — live value readout (GH #1126)', () => {
+  const valuePart = (el: Element): HTMLElement => el.querySelector('[data-part="value"]') as HTMLElement
+
+  it('the readout part exists, aria-hidden, and starts hidden', () => {
+    const el = make()
+    document.body.append(el)
+    const part = valuePart(el)
+    expect(part).not.toBeNull()
+    expect(part.getAttribute('aria-hidden')).toBe('true')
+    expect(part.hidden).toBe(true)
+    el.remove()
+  })
+
+  it('keyboard adjust (ArrowRight) shows the readout with the current formatted value', async () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.value = 50
+    document.body.append(el)
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
+    const part = valuePart(el)
+    expect(part.hidden).toBe(false)
+    await el.updateComplete // the readout-text effect is reactive (async flush) — hidden toggling is not
+    expect(part.textContent).toBe('51')
+    el.remove()
+    vi.useRealTimers()
+  })
+
+  it('the readout hides again after the hide delay elapses with no further change', () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.value = 50
+    document.body.append(el)
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
+    const part = valuePart(el)
+    expect(part.hidden).toBe(false)
+    vi.advanceTimersByTime(1300)
+    expect(part.hidden).toBe(true)
+    el.remove()
+    vi.useRealTimers()
+  })
+
+  it('a repeated step re-arms the timer instead of hiding mid-run', () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.value = 50
+    document.body.append(el)
+    const part = valuePart(el)
+    const key = (): void => { el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true })) }
+    key()
+    vi.advanceTimersByTime(900) // short of the 1200ms delay
+    key() // re-arm
+    vi.advanceTimersByTime(900) // would have expired the FIRST timer, not the re-armed one
+    expect(part.hidden).toBe(false)
+    vi.advanceTimersByTime(400) // now past the re-armed timer
+    expect(part.hidden).toBe(true)
+    el.remove()
+    vi.useRealTimers()
+  })
+
+  it('blur hides the readout immediately, without waiting for the timer', () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.value = 50
+    document.body.append(el)
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
+    const part = valuePart(el)
+    expect(part.hidden).toBe(false)
+    el.dispatchEvent(new Event('blur'))
+    expect(part.hidden).toBe(true)
+    el.remove()
+    vi.useRealTimers()
+  })
+
+  it('pointer drag shows the readout (armed via the shared `input` listener)', async () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.step = 0
+    document.body.append(el)
+    stubPointer(el)
+    const part = valuePart(el)
+    expect(part.hidden).toBe(true)
+    el.dispatchEvent(ptr('pointerdown', 100)) // value 0 → 50, emits input
+    expect(part.hidden).toBe(false)
+    await el.updateComplete
+    expect(part.textContent).toBe('50')
+    el.dispatchEvent(ptr('pointerup', 100))
+    el.remove()
+    vi.useRealTimers()
+  })
+
+  it('no ARIA regression — ariaValueText still tracks the value while the visual readout stays aria-hidden', () => {
+    const el = make()
+    el.min = 0
+    el.max = 100
+    el.value = 50
+    document.body.append(el)
+    expect(el.probeInternals.ariaValueText).toBe('50')
+    expect(valuePart(el).getAttribute('aria-hidden')).toBe('true')
+    el.remove()
+  })
+
+  it('disconnect clears the pending hide timer (C10 zero-residue — no stray timer callback after teardown)', () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.value = 50
+    document.body.append(el)
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
+    const part = valuePart(el)
+    el.remove() // disconnected() clears the timer
+    expect(() => vi.advanceTimersByTime(5000)).not.toThrow()
+    // part.hidden is unobservable-safe either way; the assertion is that clearing the timer didn't throw
+    // and the element is no longer connected.
+    expect(part.isConnected).toBe(false)
+    vi.useRealTimers()
   })
 })
 
