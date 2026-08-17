@@ -116,7 +116,7 @@ glyph entirely in CSS (no native `<input>`, no shadow DOM).
 ```html
 <ui-checkbox>Accept terms</ui-checkbox>
 <ui-checkbox checked>Enabled by default</ui-checkbox>
-<ui-checkbox size="sm" disabled>Unavailable</ui-checkbox>
+<ui-checkbox disabled>Unavailable</ui-checkbox>
 <ui-checkbox value="newsletter">Subscribe</ui-checkbox>
 ```
 

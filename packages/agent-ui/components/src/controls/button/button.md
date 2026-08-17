@@ -99,7 +99,7 @@ ADR-0006). ARIA `role="button"` is applied through `ElementInternals`, never as 
 
 ```html
 <ui-button>Save</ui-button>
-<ui-button variant="soft" size="lg">Continue</ui-button>
+<ui-button variant="soft">Continue</ui-button>
 <ui-button disabled>Unavailable</ui-button>
 ```
 

@@ -143,7 +143,7 @@ in form submission through `ElementInternals`, and paints its rail and thumb ent
 ```html
 <ui-slider></ui-slider>
 <ui-slider min="0" max="100" value="50"></ui-slider>
-<ui-slider step="10" size="sm" aria-label="Volume"></ui-slider>
+<ui-slider step="10" aria-label="Volume"></ui-slider>
 <ui-slider disabled></ui-slider>
 <ui-slider label="Bet" value="25" min="5" max="500"></ui-slider>
 <ui-slider label="Volume" layout="inline" value="70"></ui-slider>

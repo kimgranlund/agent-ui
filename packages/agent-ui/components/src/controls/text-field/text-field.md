@@ -196,7 +196,7 @@ placed in the host-as-grid centre cell, created once and never re-rendered. The 
 
 ```html
 <ui-text-field label="Email" placeholder="you@example.com"></ui-text-field>
-<ui-text-field label="Name" size="lg" required></ui-text-field>
+<ui-text-field label="Name" required></ui-text-field>
 <ui-text-field label="Read only" value="fixed" readonly></ui-text-field>
 ```
 

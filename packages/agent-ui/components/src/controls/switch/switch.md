@@ -100,7 +100,7 @@ carries **no** `role`/`aria-*` attribute.
 ```html
 <ui-switch></ui-switch>
 <ui-switch checked></ui-switch>
-<ui-switch size="sm">Wi-Fi</ui-switch>
+<ui-switch>Wi-Fi</ui-switch>
 ```
 
 ## Anatomy

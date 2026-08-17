@@ -62,7 +62,7 @@ is **not** form-associated, and hosts `ui-timeline-item` children the consumer a
 light-DOM markup, read back in DOM order (no auto-sort).
 
 ```html
-<ui-timeline label="Order status" size="md">
+<ui-timeline label="Order status">
   <ui-timeline-item status="done"    label="Order placed" timestamp="Apr 15, 2:30 PM"></ui-timeline-item>
   <ui-timeline-item status="done"    label="Processing"   timestamp="Apr 16, 9:00 AM"></ui-timeline-item>
   <ui-timeline-item status="active"  label="Shipped"      timestamp="Apr 17, 11:45 AM"></ui-timeline-item>

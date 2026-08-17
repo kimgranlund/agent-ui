@@ -78,15 +78,27 @@ component-preview {
 /* The knob controls are now dogfooded ui-* controls (ui-select · ui-checkbox · ui-text-field) — each carries
  * its OWN control CSS, so the chrome here is layout-only. Keep each within the narrow knob column by lowering
  * its documented min-inline-size floor (a per-field theme override the control EXPOSES — text-field.css:64 /
- * select.css:58 — not a restyle of internals). The 1fr grid track supplies the width. */
+ * select.css:58 — not a restyle of internals). The 1fr grid track supplies the width. The compact look
+ * (formerly `size="sm"` on the knob chrome — retired by the 2026-08-17 size-attr scrub) is achieved the
+ * same exposed-token way: each class repoints the control's own documented sm-ramp tokens. */
 .knob-select {
   --ui-select-min-inline-size: 6ch;
+  --ui-select-height: var(--md-sys-height-sm);
+  --ui-select-font: var(--md-sys-font-sm);
+  --ui-select-gap: var(--md-sys-gap-sm);
+  --ui-select-icon: var(--md-sys-icon-sm);
 }
 .knob-input {
   --ui-text-field-min-inline-size: 8ch;
+  --ui-text-field-height: var(--md-sys-height-sm);
+  --ui-text-field-font: var(--md-sys-font-sm);
+  --ui-text-field-gap: var(--md-sys-gap-sm);
+  --ui-text-field-icon: var(--md-sys-icon-sm);
 }
 .knob-switch {
   justify-self: start;
+  --ui-switch-box: var(--md-sys-compact-sm);
+  --ui-switch-gap: var(--md-sys-gap-sm);
 }
 /* ADR-0095: every batch-A enum knob now dogfoods `ui-segmented-control` (superseding the retired
  * `ui-radio-group[variant="segmented"]`, ADR-0086) — the control ALWAYS owns its own real grid layout

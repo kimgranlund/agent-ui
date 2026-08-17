@@ -122,8 +122,8 @@ form-associated — the moved children each own their own value/validity individ
   </fieldset>
 </ui-form-popover>
 
-<!-- Explicit placement + size -->
-<ui-form-popover label="Filters" placement="bottom-end" size="sm">
+<!-- Explicit placement -->
+<ui-form-popover label="Filters" placement="bottom-end">
   <ui-text-field label="Search"></ui-text-field>
 </ui-form-popover>
 

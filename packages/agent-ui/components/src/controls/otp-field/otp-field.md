@@ -136,7 +136,7 @@ contract (no native `<input>`, ARIA via `ElementInternals` and a light-DOM part,
 ```html
 <ui-otp-field label="One-time code"></ui-otp-field>
 <ui-otp-field label="6-digit code" length="6" required></ui-otp-field>
-<ui-otp-field label="4-digit PIN" length="4" size="lg"></ui-otp-field>
+<ui-otp-field label="4-digit PIN" length="4"></ui-otp-field>
 ```
 
 ## Value + form participation

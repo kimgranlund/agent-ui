@@ -109,10 +109,10 @@ Otherwise it styles its host and lets the user's light-DOM text flow through (ho
 is the A2UI v1.0 `Text` component's live control (via a factory fan-out, ADR-0078 cl.5).
 
 ```html
-<ui-text variant="display" size="lg" as="h1">Page title</ui-text>
+<ui-text variant="display" as="h1">Page title</ui-text>
 <ui-text variant="headline" as="h3">Section</ui-text>
 <ui-text>Body copy is the default — body/md, no wrapper.</ui-text>
-<ui-text variant="label" size="sm">Secondary / meta text</ui-text>
+<ui-text variant="label">Secondary / meta text</ui-text>
 <ui-text as="a" href="https://example.com">Source: the referenced document</ui-text>
 ```
 
