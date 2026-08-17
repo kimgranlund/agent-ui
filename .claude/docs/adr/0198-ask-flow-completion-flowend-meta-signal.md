@@ -140,3 +140,95 @@ for a framing concern. The meta-line is the seam built for this.
 - **done-only affordance set** — rejected: the intake dead-end's live repro wants "run it again"
   within reach, and start-over reuses an existing reset path at near-zero cost; anything MORE than
   these two (handoff) has no consumer yet.
+
+## Amendment (2026-08-17, **proposed** — Kim ratifies) — `flowEnd` on ALL flow-terminal paths, a pre-conclusion CONFIRMATION stage where the USER takes the final action, and the courtesy-close protocol (GH [#1101](https://github.com/kimgranlund/agent-ui/issues/1101), Kim's live pixel-run #2 UX ruling)
+
+> Append-only, and **proposed**: the Status cell above reads `accepted` for the accepted record as a
+> whole and stays byte-untouched — agents never flip status; THIS amendment awaits Kim's own
+> `ratify ADR-0198 amendment` utterance on GH #1101, executed by `scripts/adr_ratify.py`'s amendment
+> mode. Every accepted section above — cl.1–cl.6, Non-goals, Consequences, Alternatives — is unedited.
+> GH #1101 is the durable design record (the ruling lives in its 2026-08-17 pixel-run-#2 Findings
+> comment); the build that lands these rules is its follow-on dispatch (**Repairs**, below).
+
+**Why the accepted Decision needs amending, precisely.** The accepted record designed the closing turn
+around ONE terminal shape — "after the user commits the flow-final confirm" (cl.2) — and Kim's live
+pixel run #2 hit the path that shape never named: the intake took the urgent-triage branch, the agent
+correctly stopped intake with an escalation prose turn ("call 911 or go to the nearest ER… a clinician
+will reach out"), and then NOTHING — no `flowEnd`, no done/start-over row. An escalation IS a flow end;
+the accepted grammar paragraph simply never said so, so the model legitimately treated the closing-turn
+duty as happy-path-only. The same run produced Kim's broader UX ruling: the flow's CONCLUSION itself
+was mis-shaped — the agent took the conclusive action, where gen-ui UX wants the USER to take it, off a
+final proposed-outcome artifact; and the close after that confirmation should follow a courtesy
+protocol, not a bare acknowledgment. The meta-signal (cl.1) stands whole; what grows is the PROTOCOL
+around it.
+
+### Amended decision
+
+- **A1 — `flowEnd: true` fires on ALL flow-terminal paths, not only the happy completion.** cl.2's
+  trigger ("after the user commits the flow-final confirm") is widened to a terminal TAXONOMY, named
+  in `grammar.md`'s Flow completion paragraph so models recognize every ending as an ending:
+  - **Completion** — the happy path: the flow-final confirm committed, the closing turn follows
+    (the accepted cl.2 shape, unchanged).
+  - **Escalation / early stop** — the flow terminates BEFORE its normal end because the right outcome
+    is a handoff out of the flow (the urgent-triage ending: "go to the ER, a clinician will reach
+    out"). The escalation prose turn IS the closing turn: it carries `flowEnd: true`, declares no new
+    ask, emits no A2UI — the accepted closing-turn mechanics, applied to this ending. This is the
+    observed gap, repaired.
+  - **Abandonment, where detectable** — the user explicitly walks away ("never mind", "cancel this",
+    "let's stop here"): the acknowledging turn carries `flowEnd: true`. Only MODEL-visible
+    abandonment qualifies — a silently closed tab is not a turn and no signal is possible; chrome
+    still never infers (the accepted Non-goals' heuristic ban stands).
+
+  The field itself is untouched — same bare boolean, same shallow validation, same meta-line arm
+  (cl.1); this amendment changes only WHEN the grammar tells the model to emit it.
+- **A2 — the pre-conclusion CONFIRMATION stage: the USER takes the final action.** Before any
+  conclusive action (submitting the intake, booking the slot, dispatching the escalation record), the
+  agent presents a final PROPOSED-OUTCOME artifact — the gen-ui summary card IS this artifact (the
+  existing Intake-summary card gains the confirm role; no new component, no new card template — the
+  accepted Non-goals' card-level-completion fence stands) — and the USER takes the final action:
+  confirm, or keep going (amend an answer, add detail). Mechanically this is an ORDINARY ask — a
+  confirm ask declared on the meta-line like any other, settling under ADR-0196's settle law once
+  answered (the settled summary card stays the durable Edit anchor) — NOT a new meta-line field, NOT
+  a new event name. **Ordering law: `flowEnd` comes AFTER the user's confirm, never before** — the
+  proposed-outcome turn carries the ask and NEVER carries `flowEnd`; the closing turn follows the
+  user's commit. cl.2's "flow-final confirm" is hereby made STRUCTURAL: every flow with a conclusive
+  action HAS a flow-final confirm, because the confirmation stage is mandatory before concluding. On
+  the escalation path the stage applies where a conclusive action exists to confirm (e.g. "send this
+  to the triage team?"); a pure safety directive with nothing to dispatch concludes directly per A1.
+- **A3 — the courtesy-close protocol: what the closing turn SAYS.** The accepted cl.2 shaped the
+  closing turn's mechanics (prose `note` + `flowEnd: true`, no ask, no A2UI) but left its content at
+  "what was accomplished + what happens next". Kim's ruling shapes it into the five-part courtesy
+  close, taught as prompt guidance in `grammar.md`'s Flow completion paragraph (mode-invariant
+  mechanics, NOT a mini-skill — the accepted cl.2 placement law stands): the closing turn states
+  **(a)** what we did together, **(b)** what the user made happen (their confirm was the act),
+  **(c)** confirmation it was sent/received, **(d)** appreciation, and **(e)** the offer — further
+  questions, or session complete. Prose guidance only — no structure on the wire, no new fields; a
+  model that writes four of the five parts still closes the flow (the signal, not the prose, is
+  load-bearing). The done/start-over chrome renders after THIS turn, exactly as the accepted cl.3
+  already provides.
+
+### Non-goals (amendment)
+
+- **No new meta-line fields.** The confirm stage is an ordinary ask; the courtesy close is prose; the
+  reserved vocabulary stays at four (`ask · plan · personaPatch · flowEnd`).
+- **No wire changes** — no A2UI protocol touch, no validator/corpus/conformance movement, no new
+  event name; every accepted Non-goal stands.
+- **No structured outcome taxonomy on `flowEnd`.** The terminal taxonomy is GRAMMAR guidance, not
+  wire structure; the boolean stays bare (cl.1's additive-widening door stays open, unexercised).
+- **No chrome divergence per terminal path** — one done/start-over row for every ending; the shared
+  module (cl.5) needs no per-path variants.
+
+**Repairs** (booked for the ratification-triggered BUILD, not authored here):
+- `packages/agent-ui/a2ui/src/agent/prompts/grammar.md` — the Flow completion paragraph is REWRITTEN:
+  the terminal taxonomy (A1), the mandatory pre-conclusion confirmation stage + the
+  `flowEnd`-after-confirm ordering law (A2), and the five-part courtesy close (A3); byte-pinned
+  prompt, so `prompt-equivalence.baseline.json` is re-captured in the same slice (the ADR-0137
+  discipline, via the armed `recapture-baseline.test.ts` writer).
+- `site/lib/flow-chrome.ts` — unchanged or minor: it already acts only on the explicit field with a
+  one-row invariant, which covers every terminal path by construction; at most a comment/doc touch.
+- The escalation-path fix verified end-to-end: the urgent-triage ending (the observed gap) emits
+  `flowEnd` and the chrome row renders — a targeted deterministic test where feasible, plus the live
+  run below.
+- A live pixel-truth re-run on the real agent-admin test chat (the #1081 pattern) as the CLOSING
+  acceptance: one happy-path flow through proposed-outcome → user confirm → courtesy close → chrome
+  row, and one urgent-triage flow ending in escalation + chrome row, on Kim's live surface.
