@@ -16,6 +16,9 @@
 //     each part may carry one line or several newline-joined lines; parts and lines yield in order.
 //     The request/response shape is the arena's move-per-message precedent; a streaming multi-message
 //     reply is a future widening with its own record.
+//   → concurrency: ONE in-flight turn per transport — `turn()` is not re-entered while a prior turn's
+//     iterable is unfinished (the reply-matching rule above assumes the next `role:'agent'` message
+//     answers THIS turn; interleaved turns on one channel are a future widening with its own record).
 
 import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent'
 import type { A2aChannel, A2aMessage } from '@agent-ui/a2a'

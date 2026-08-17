@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { TurnInput } from '@agent-ui/a2ui/agent'
-import { createDevtoolsMiddleware, devtoolsHarnessPlugin, DEVTOOLS_MOUNT } from './harness-plugin.ts'
+import { createDevtoolsMiddleware, devtoolsHarnessPlugin, seamPeerTransport, DEVTOOLS_MOUNT, MAX_BODY } from './harness-plugin.ts'
 import type { DevtoolsHarnessOptions, HarnessFetch } from './harness-plugin.ts'
 import type { DevtoolsEvent } from '../timeline/events.ts'
 import type { DevtoolsCapture } from '../capture/format.ts'
+import { createLoopbackPair, A2aChannelClosedError } from '@agent-ui/a2a'
+import type { A2aMessage } from '@agent-ui/a2a'
 
 // n3b's accept row (SPEC-R6): fabricated req/res (the dev-proxy route-test idiom) — POST /turn on the
 // replay backend streams a full turn-start→turn-end NDJSON timeline with content-type
@@ -19,6 +21,7 @@ class FakeReq {
   headers: Record<string, string> = { host: 'localhost:5173' }
   method: string
   url: string
+  destroyed = false // L3: the handler destroys an oversize request — observable here
   private body: string | undefined
   private dataCb: ((chunk: unknown) => void) | undefined
   constructor(method: string, url: string, body?: string) {
@@ -36,6 +39,9 @@ class FakeReq {
     }
     return this
   }
+  destroy(): void {
+    this.destroyed = true
+  }
   asReq(): IncomingMessage {
     return this as unknown as IncomingMessage
   }
@@ -44,11 +50,38 @@ class FakeReq {
 class FakeRes {
   statusCode = 200
   destroyed = false
+  writeReturns = true // L2: flip false to simulate a full socket buffer (write() reports backpressure)
+  onWrite: (() => void) | undefined // L2: test hook, runs after each write (e.g. schedule a drain)
   private headers: Record<string, string> = {}
   private chunks: string[] = []
   private endedResolvers: (() => void)[] = []
   private ended = false
   private sent = false
+  // Minimal EventEmitter surface — exactly what node:events `once(res, 'drain'|'close')` needs (it
+  // attaches via `.once(name, fn)` plus an 'error' listener it clears with `.removeListener`).
+  private listeners = new Map<string, ((...args: unknown[]) => void)[]>()
+  on(name: string, fn: (...args: unknown[]) => void): this {
+    const arr = this.listeners.get(name) ?? []
+    arr.push(fn)
+    this.listeners.set(name, arr)
+    return this
+  }
+  once(name: string, fn: (...args: unknown[]) => void): this {
+    const wrapped = (...args: unknown[]): void => {
+      this.removeListener(name, wrapped)
+      fn(...args)
+    }
+    return this.on(name, wrapped)
+  }
+  removeListener(name: string, fn: (...args: unknown[]) => void): this {
+    const arr = this.listeners.get(name) ?? []
+    const i = arr.indexOf(fn)
+    if (i !== -1) arr.splice(i, 1)
+    return this
+  }
+  emit(name: string): void {
+    for (const fn of [...(this.listeners.get(name) ?? [])]) fn()
+  }
   get headersSent(): boolean {
     return this.sent
   }
@@ -62,7 +95,8 @@ class FakeRes {
   write(chunk: unknown): boolean {
     this.sent = true
     this.chunks.push(String(chunk))
-    return true
+    this.onWrite?.()
+    return this.writeReturns
   }
   end(chunk?: unknown): void {
     if (chunk !== undefined) this.chunks.push(String(chunk))
@@ -260,6 +294,67 @@ describe('captures (SPEC-R6 AC3)', () => {
     expect(bad.statusCode).toBe(400)
     const missing = await drive(undefined, 'GET', '/captures/cap-99')
     expect(missing.statusCode).toBe(404)
+  })
+})
+
+describe('S1–S3 code-checker Lows (L1 peer-loop lifetime · L2 backpressure · L3 oversize body)', () => {
+  const probe: A2aMessage = { kind: 'message', role: 'user', parts: [{ kind: 'text', text: 'post-close probe' }], messageId: 'probe' }
+  const sendVia = (ch: { send(m: A2aMessage): Promise<void> }): Promise<void> => Promise.resolve().then(() => ch.send(probe))
+
+  it('L1: the a2a leg closes BOTH channel ends when the turn completes — the scripted peer loop exits, never a per-request leak', async () => {
+    const pair = createLoopbackPair()
+    const transport = seamPeerTransport(['l1', 'l2'], pair)
+    const lines: string[] = []
+    for await (const line of transport.turn(input)) lines.push(line)
+    expect(lines).toEqual(['l1', 'l2'])
+    await expect(sendVia(pair[0])).rejects.toBeInstanceOf(A2aChannelClosedError)
+    await expect(sendVia(pair[1])).rejects.toBeInstanceOf(A2aChannelClosedError)
+  })
+
+  it('L1: an abandoned mid-stream turn still closes both ends (the finally discipline holds on early return)', async () => {
+    const pair = createLoopbackPair()
+    const transport = seamPeerTransport(['l1', 'l2'], pair)
+    const iterator = transport.turn(input)[Symbol.asyncIterator]()
+    expect(await iterator.next()).toEqual({ value: 'l1', done: false })
+    await iterator.return?.(undefined)
+    await expect(sendVia(pair[0])).rejects.toBeInstanceOf(A2aChannelClosedError)
+    await expect(sendVia(pair[1])).rejects.toBeInstanceOf(A2aChannelClosedError)
+  })
+
+  it('L2: a false write() parks the recorder until drain — every event still arrives, in order', async () => {
+    const res = new FakeRes()
+    res.writeReturns = false // every write reports a full buffer
+    // Release each parked wait on the microtask queue. Scheduled from write() itself, which returns
+    // BEFORE the middleware attaches its drain listener in the same synchronous task — so the
+    // queued microtask always fires after the listener exists.
+    res.onWrite = () => queueMicrotask(() => res.emit('drain'))
+    const mw = createDevtoolsMiddleware({ now: fixedNow, clock: fixedClock })
+    mw(new FakeReq('POST', '/turn', JSON.stringify({ backend: 'replay', input, timelines: [['{"a":1}', '{"b":2}']] })).asReq(), res.asRes())
+    await res.whenEnded()
+    expect(res.events().map((e) => e.kind)).toEqual(['turn-start', 'line', 'line', 'turn-end'])
+  })
+
+  it('L2: without a drain the stream genuinely parks (the wait is real); a client close releases it and the turn exits', async () => {
+    const res = new FakeRes()
+    res.writeReturns = false
+    const mw = createDevtoolsMiddleware({ now: fixedNow, clock: fixedClock })
+    mw(new FakeReq('POST', '/turn', JSON.stringify({ backend: 'replay', input, timelines: [['{"a":1}']] })).asReq(), res.asRes())
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(res.events().map((e) => e.kind)).toEqual(['turn-start']) // parked after the first unflushed write
+    res.destroyed = true
+    res.emit('close') // the disconnect arm of the race — unblocks; the next iteration sees destroyed and exits
+    await res.whenEnded()
+    expect(res.events().map((e) => e.kind)).toEqual(['turn-start']) // nothing more written to a dead client
+  })
+
+  it('L3: an oversize body → 413 {error} + req.destroy() — never the generic 500 catch', async () => {
+    const req = new FakeReq('POST', '/captures', 'x'.repeat(MAX_BODY + 1))
+    const res = new FakeRes()
+    createDevtoolsMiddleware({ now: fixedNow, clock: fixedClock })(req.asReq(), res.asRes())
+    await res.whenEnded()
+    expect(res.statusCode).toBe(413)
+    expect(res.json()).toEqual({ error: 'request-body-too-large' })
+    expect(req.destroyed).toBe(true)
   })
 })
 

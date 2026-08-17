@@ -24,9 +24,10 @@ import type { A2uiMetaEnvelope } from '@agent-ui/a2ui/agent/meta-line'
 export type DevtoolsMeta = A2uiMetaEnvelope['a2uiMeta']
 
 /** A turn's terminal disposition (SPEC-R7): `ok` — the stream completed; `error` — the transport threw
- *  mid-turn (an `error` event precedes this); `halt` — the stream completed but its LAST meta-line
- *  carried a transport-composed terminal `a2uiMeta.error` (the GH #144 halt-and-report idiom: an
- *  already-200 stream reporting its own failure in-band). */
+ *  mid-turn (an `error` event precedes this); `halt` — the stream completed but a meta-line carried a
+ *  transport-composed terminal `a2uiMeta.error` (the recorder latches on ANY meta error line, wherever
+ *  it lands in the stream — the GH #144 halt-and-report idiom: an already-200 stream reporting its own
+ *  failure in-band). */
 export type TurnEndStatus = 'ok' | 'error' | 'halt'
 
 /** The closed event-kind vocabulary (SPEC-R7). */
