@@ -141,3 +141,18 @@ Queue order: (1) gated mutations verified safe → (2) blockers → (3) human de
 
 *Composed by chore-planner (sweep-9, /sweep-chores), 2026-08-17T14:07:20Z firing — returned as
 payload per the #125 ops-write split; written and landed by the dispatching session.*
+
+## Evening addendum — 2026-08-17 ~17:4xZ
+
+- Kim's live-pixel round: #1081/#1083 PASS-closed · #1084 not-repro-closed (overtaken by #1067/#1073).
+- Spawned + resolved same evening: #1100 (PR #1108, claim race resolved) · #1101/ADR-0198 (design PR
+  #1103 → ratified → build PR #1119) · #1104/ADR-0199 (design PR #1106 → ratified → build PR #1118) ·
+  #1105 (peer's PR #1114; my dup lane stood down, wash-gap finding posted) · #1107 minted (sequenced
+  after #1101) · #1120 (PR #1121: the #1090 bare-:not() specificity class, all 11 sites :where()-wrapped,
+  peer-reviewed GREEN).
+- Gate repairs on main: #1114's raw-token reads (abd8ef00) · status-stream 2736→2740 (Kim ruling, 5th
+  drift) · browser shard back to 64/64 both engines.
+- BOARD: #1101 + #1104 — both built+merged, open SOLELY on Kim's live pixel-truth (closing-turn/done-row;
+  breathing card). Repo: 1 worktree · 1 branch · origin main-only · 0 PRs · check+test+size+browser green.
+- LESSON (2nd occurrence, now hard rule): gates and ship legs run as SEPARATE commands — a compound
+  gate+push+merge chain shipped past a red twice tonight (both times luck-safe, neither time acceptable).
