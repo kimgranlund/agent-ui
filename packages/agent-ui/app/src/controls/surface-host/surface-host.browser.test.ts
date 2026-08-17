@@ -499,3 +499,89 @@ describe('ui-surface-host — terminal-empty copy actually paints (ADR-0187)', (
     expect(afterContent(el)).not.toContain('Nothing was rendered')
   })
 })
+
+// ── GH #1124 — mid-stream FIRST PAINT: the surface must be full-width BEFORE finalize() ────────────────
+// jsdom cannot see this class of defect (it computes no flex/overflow geometry) — real-engine only.
+// Live symptom (two reproductions on the chat surface): a streamed card first-paints offset RIGHT and
+// clipped at the bubble edge. Root cause (proven cross-engine in conversation.browser.test.ts's GH #1124
+// block): ADR-0199 flipped the [wrap] surface arm from `position: static` to `relative`, which brought
+// the base rule's dormant `top: 50%; left: 50%` centering offsets ALIVE while `transform: none` had
+// removed the compensating translate — the surface box shifted right+down by half the stage. Fixed by
+// `inset: auto` in the wrap arm (surface-host.css). These pins hold the aligned-geometry law at the
+// standalone-host level, mid-stream AND at finalize.
+describe('ui-surface-host GH #1124 — mid-stream first paint is full-width (no offset/clip before finalize)', () => {
+  /** A realistic radio-card-ish turn whose intrinsic (max-content) width far exceeds the 480px bubble:
+   *  a Row of wide buttons — the non-wrapping inline overflow shape from the live reproductions. */
+  const WIDE_STREAM = [
+    line({ version: 'v1.0', createSurface: { surfaceId: 'fp1', catalogId: 'agent-ui' } }),
+    line({
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 'fp1',
+        components: [
+          { id: 'root', component: 'Column', children: ['title', 'row'] },
+          { id: 'title', component: 'Text', variant: 'title', text: 'Which option would you like to proceed with today?' },
+          { id: 'row', component: 'Row', children: ['b1', 'b2', 'b3', 'b4'] },
+          { id: 'b1', component: 'Button', variant: 'outline', label: 'Continue with the recommended option', action: { action: 'a1' } },
+          { id: 'b2', component: 'Button', variant: 'outline', label: 'Review the alternatives first', action: { action: 'a2' } },
+          { id: 'b3', component: 'Button', variant: 'outline', label: 'Ask a clarifying question', action: { action: 'a3' } },
+          { id: 'b4', component: 'Button', variant: 'outline', label: 'Cancel this flow entirely', action: { action: 'a4' } },
+        ],
+      },
+    }),
+  ]
+
+  it(`${server.browser}: MID-STREAM (no finalize yet) the root is not offset/clipped left — its start edge sits at the surface's start edge`, () => {
+    const { host, column } = mountBareHost()
+    // One ingest per JSONL line, exactly like conversation.ts's streaming path — and STOP before
+    // finalize(): this is the first-paint state the live bug was photographed in.
+    for (const l of WIDE_STREAM) host.ingest(l)
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    const root = surface.firstElementChild as HTMLElement
+    expect(root).not.toBeNull()
+    const surfaceRect = surface.getBoundingClientRect()
+    const rootRect = root.getBoundingClientRect()
+    const columnRect = column.getBoundingClientRect()
+    // GH #1124's exact signature: the surface box shifted right of its column (the live `left: 50%`
+    // offset) — compare against the COLUMN's edges, not just surface-relative deltas (the surface and
+    // its content shift TOGETHER, so a surface-relative compare is blind to this defect).
+    expect(surfaceRect.left, 'mid-stream surface is offset right of the bubble column').toBeCloseTo(columnRect.left, 0)
+    expect(surfaceRect.right, 'mid-stream surface overflows the bubble column right edge').toBeLessThanOrEqual(columnRect.right + 0.5)
+    expect(rootRect.left, 'mid-stream root start edge is clipped left of the surface').toBeGreaterThanOrEqual(surfaceRect.left - 0.5)
+    // ADR-0160 full-width law at first paint: the root spans the bubble column.
+    expect(rootRect.width, 'mid-stream root does not span the bubble width').toBeCloseTo(columnRect.width, 0)
+  })
+
+  it(`${server.browser}: NARROW bubble (fleet 414px default → sub-24rem container): the ui-row reflows to column MID-STREAM, not only after settle`, () => {
+    const column = document.createElement('div')
+    column.style.width = '360px' // < 24rem (384px): row.css's @container rule must stack the row
+    document.body.append(column)
+    mounted.push(column)
+    const host = document.createElement('ui-surface-host') as UISurfaceHostElement
+    host.wrap = true
+    host.bare = true
+    column.append(host)
+    for (const l of WIDE_STREAM) host.ingest(l)
+    const row = host.querySelector('ui-row') as HTMLElement
+    expect(row).not.toBeNull()
+    expect(getComputedStyle(row).flexDirection, 'mid-stream the row did not resolve its <24rem container query').toBe('column')
+    const surfaceRect = (host.querySelector('[data-part="surface"]') as HTMLElement).getBoundingClientRect()
+    const rootRect = (host.querySelector('[data-part="surface"]')!.firstElementChild as HTMLElement).getBoundingClientRect()
+    expect(rootRect.right, 'mid-stream the root overflows the bubble right edge').toBeLessThanOrEqual(surfaceRect.right + 0.5)
+    expect(rootRect.left).toBeGreaterThanOrEqual(surfaceRect.left - 0.5)
+  })
+
+  it(`${server.browser}: finalize() keeps the same geometry (no next-turn jump)`, () => {
+    const { host, column } = mountBareHost()
+    for (const l of WIDE_STREAM) host.ingest(l)
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    const beforeLeft = (surface.firstElementChild as HTMLElement).getBoundingClientRect().left
+    host.finalize()
+    const root = surface.firstElementChild as HTMLElement
+    const after = root.getBoundingClientRect()
+    expect(after.left, 'finalize moved the root — first paint and settled state disagree').toBeCloseTo(beforeLeft, 0)
+    const columnRect = column.getBoundingClientRect()
+    expect(after.left, 'settled root is offset right of the bubble column (GH #1124)').toBeCloseTo(columnRect.left, 0)
+    expect(after.width).toBeCloseTo(columnRect.width, 0)
+  })
+})

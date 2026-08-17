@@ -159,10 +159,13 @@ describe('ui-surface-host — a real A2UI stream renders inside the surface + ap
     const surface = el.querySelector('[data-part="surface"]') as HTMLElement
     const root = surface.firstElementChild as HTMLElement
     expect(root.tagName.toLowerCase()).toBe('ui-column')
-    expect(root.hasAttribute('stretch')).toBe(false) // not yet stretched — finalize() has not run
+    // GH #1124 — ADR-0160's full-width law holds MID-STREAM: the root stretch applies at ingest, the
+    // moment the root exists, no longer only at finalize() (the old finalize-only timing left the first
+    // streaming paint centered at fit-content).
+    expect(root.hasAttribute('stretch')).toBe(true)
 
     el.finalize()
-    expect(root.hasAttribute('stretch')).toBe(true) // applyRootStretch, unchanged from canvas-surface.ts
+    expect(root.hasAttribute('stretch')).toBe(true) // applyRootStretch — finalize re-asserts, idempotent
 
     await whenFlushed()
     const btn = surface.querySelector('ui-button')
@@ -193,7 +196,7 @@ describe('ui-surface-host — a real A2UI stream renders inside the surface + ap
     const surface = el.querySelector('[data-part="surface"]') as HTMLElement
     const root = surface.firstElementChild as HTMLElement
     expect(root.tagName.toLowerCase()).toBe('ui-row')
-    expect(root.style.alignSelf).toBe('')
+    expect(root.style.alignSelf).toBe('stretch') // GH #1124 — applied at ingest, mid-stream, not finalize-only
 
     el.finalize()
     expect(root.style.alignSelf).toBe('stretch')

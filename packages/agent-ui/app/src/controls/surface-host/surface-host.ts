@@ -198,7 +198,24 @@ export class UISurfaceHostElement extends UIElement {
       // The helper's stated caveat: the transition path runs this ASYNC — a disconnect between queue
       // and run nulls #host (below), so the staleness re-check lives INSIDE the mutate (ADR-0183 cl.1).
       this.#host?.ingest(line)
+      // GH #1124 — ADR-0160's full-width law holds MID-STREAM too, not only at finalize(): apply the
+      // GH #892 root stretch the moment a root exists, so the first streaming paint already spans the
+      // artboard instead of centering at fit-content and jumping wider when finalize() lands. Cheap +
+      // idempotent (attribute/style writes are no-ops when already applied); no reflow is forced here.
+      this.#applyRootStretch()
     }, this.viewTransitions && this.#settledOnce)
+  }
+
+  /** GH #892 root stretch (see finalize()'s doc comment for the full law) — factored out so ingest()
+   *  can apply it mid-stream too (GH #1124). Idempotent by construction. */
+  #applyRootStretch(): void {
+    const root = this.#surface?.firstElementChild
+    if (!root) return
+    if (root.tagName.toLowerCase() === 'ui-column') {
+      if (!root.hasAttribute('stretch')) root.setAttribute('stretch', '')
+    } else if (root instanceof UIContainerElement && root.style.alignSelf !== 'stretch') {
+      root.style.alignSelf = 'stretch'
+    }
   }
 
   /** End of a batch: forwards to the `RendererHost`, then stretches the root to fill the artboard
@@ -231,8 +248,9 @@ export class UISurfaceHostElement extends UIElement {
       // the mounted instance is the width-fill for those without minting a `stretch` prop on each. A root
       // that is an intrinsic control (e.g. a lone Button) is untouched by either branch and keeps its own
       // natural width — the GH #892 acceptance's named exception.
-      if (root && root.tagName.toLowerCase() === 'ui-column') root.setAttribute('stretch', '')
-      else if (root instanceof UIContainerElement) root.style.alignSelf = 'stretch'
+      // (also applied per-ingest since GH #1124 — #applyRootStretch; this settle-time call stays as the
+      // authoritative pass for a root that mounts and settles in the same finalize.)
+      this.#applyRootStretch()
       // ADR-0187 — the host's OWN facts, read once the surface has settled: finalize happened, and the
       // mount point holds no element. Presentation of a state already established, never a re-judgment
       // (`root === null` here IS "no root ever attached" — the renderer appends exactly one root element
