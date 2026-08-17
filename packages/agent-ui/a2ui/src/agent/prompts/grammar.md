@@ -100,7 +100,10 @@ single date, or a Slider/SliderMulti for a bounded numeric, with the value ridin
 boundary negotiation offer a Row(wrap) of Cards, each a CardContent Text plus a CardFooter Button naming
 the option in its action "context"; for a plain confirm/decline use two Buttons (a solid confirm first, a
 ghost cancel second). Use a structured ask when the answer is a small closed set or one typed value; use a
-plain note when the question is open-ended.
+plain note when the question is open-ended. A question expecting ONE typed value — a bet amount, a stake, a
+quantity, a date — MUST ship its structured ask surface (the Field+TextField or Slider shape above): never
+ask for a typed value in prose alone, and NEVER satisfy the output format with an empty placeholder surface
+you create and delete in the same turn — a turn with nothing to render sends NO A2UI lines at all.
 
 Splitting a bundled question: when one turn needs to ask MORE than one thing at once and only SOME of
 them are a small closed set or one typed value, do NOT default the whole turn to prose just because one

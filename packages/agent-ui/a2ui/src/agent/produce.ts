@@ -491,7 +491,10 @@ function messagesFor(
     const summary = failures
       .map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}${expectedTypeNote(f, catalog, lastOutput)}`)
       .join('; ')
-    const hint = (failures.some((f) => f.code === 'PARSE') ? PARSE_HINT : '') + idgraphHint(failures)
+    const hint =
+      (failures.some((f) => f.code === 'PARSE') ? PARSE_HINT : '') +
+      idgraphHint(failures) +
+      (failures.some((f) => f.code === 'NET_NOOP') ? NET_NOOP_HINT : '') // GH #1142 — the net-no-op correction round's guidance
     turns.push({
       role: 'user',
       content: `That output was INVALID (${summary}).${hint} Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,
@@ -773,6 +776,44 @@ function feedScopeFailures(ask: AskDeclaration, output: A2uiOutput): RoundFailur
 }
 
 /**
+ * GH #1142 (closing GH #1061's producer strand) — the net-no-op dodge detector. A surface both
+ * `createSurface`d AND `deleteSurface`d in the SAME turn's payload nets to nothing: the delete tears
+ * down whatever the intervening `updateDataModel`/`updateComponents` lines delivered, so the client
+ * mounts a host that finalizes empty ("Nothing was rendered for this surface. / Closed." — the live
+ * blackjack first-turn repro). The `validate.ts` same-turn-delete exemption is deliberate (nothing was
+ * ABANDONED, ADR-0187 — a bare components-less create still fails `root-missing` pre-wire), which is
+ * exactly the hole a model under JSONL-output pressure ships a placeholder create+delete pair through
+ * instead of following grammar.md's "send NO A2UI at all".
+ *
+ * Returns the surfaceIds whose entire same-turn line set nets to nothing. A delete of a surface the
+ * SESSION already knows (a real close of a previously-open surface) is NEVER flagged: only a surface
+ * born AND buried inside this one payload qualifies — `sessionKnownSurfaceIds` is prior-turns-only,
+ * mirroring `askIntegrityHolds`'s use of the same predicate.
+ */
+function netNoOpSurfaceIds(output: A2uiOutput, session: Session): Set<string> {
+  const known = sessionKnownSurfaceIds(session)
+  const created = new Set<string>()
+  const deleted = new Set<string>()
+  for (const msg of output) {
+    if ('createSurface' in msg) created.add(msg.createSurface.surfaceId)
+    else if ('deleteSurface' in msg) deleted.add(msg.deleteSurface.surfaceId)
+  }
+  const netNoOp = new Set<string>()
+  for (const sid of created) if (deleted.has(sid) && !known.has(sid)) netNoOp.add(sid)
+  return netNoOp
+}
+
+/** GH #1142 — the self-correct sentence for a NET_NOOP round (the ADR-0187 atFinalize correction seam:
+ *  same shape as PARSE_HINT/IDGRAPH_HINTS — one appended sentence set, one message, no new round kind). */
+const NET_NOOP_HINT =
+  ' NET_NOOP means you created a surface and deleted it again in this SAME turn, leaving no surviving ' +
+  'content — a placeholder pair that renders as a blank, immediately-closed card. If you have nothing ' +
+  'to render this turn, send NO A2UI lines at all — the leading meta-line note alone is a complete, ' +
+  'valid turn. Never create-and-delete a placeholder surface to satisfy the output format. If your note ' +
+  'asks the user for one typed value or a small closed set of options, build the REAL structured ask ' +
+  'surface for it instead.'
+
+/**
  * TKT-0081 — the cross-turn validation seed: replay the session's prior ASSISTANT turns (validated JSONL,
  * exactly what `appendAssistantTurn` stored) into a per-surface `SurfaceSeed` for `validateA2ui`. Without
  * it the per-round validator is session-blind and structurally CONTRADICTS the renderer on follow-up
@@ -872,6 +913,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   let lastOutput: A2uiOutput | undefined // GH #288 — the prior round's OWN parsed output, so a self-correct round's feedback can resolve "expected type" per failing path (messagesFor/expectedTypeNote)
   let lastCandidate: string | undefined // the previous round's peeled candidate wire text — the `retry` stage's source
   let genuiMultiplicityHit = false // genui-surface SPEC-R1: sticky across rounds — a factual "this happened at least once" tally, never reset
+  let netNoopFedBack = false // GH #1142 — the ONE correction round the net-no-op dodge gets; on recurrence (or a last-round hit) the group is stripped instead, never a ProduceHalt on an otherwise-valid turn
   for (let round = 0; round < opts.maxRounds; round++) {
     const failuresFedBack = failures // what THIS round's prompt carried back — the trace's failureCodes
     // ADR-0146 F1 — the lifecycle stages, yielded AS THEY HAPPEN, strictly BEFORE any content line (content
@@ -1030,9 +1072,27 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
           continue
         }
       }
+      // GH #1142 — the net-no-op dodge (a surface created AND deleted in this same turn, closing GH
+      // #1061's producer strand). The dodge gets exactly ONE targeted correction round through the
+      // existing ADR-0187 atFinalize self-correct seam (NET_NOOP + NET_NOOP_HINT: emit no A2UI instead);
+      // if the model dodges again — or the loop has no rounds left to spend — the whole group is
+      // STRIPPED from the shipped lines below, so the turn degrades to prose-only, exactly as if the
+      // model had sent no A2UI at all (the honest shape). A deleteSurface for a PREVIOUSLY-open surface
+      // is a real close and never enters this set (netNoOpSurfaceIds excludes session-known ids).
+      const netNoop = netNoOpSurfaceIds(assembled.output, input.session)
+      if (netNoop.size > 0 && !netNoopFedBack && round < opts.maxRounds - 1) {
+        netNoopFedBack = true
+        failures = [...netNoop].map((sid) => ({ code: 'NET_NOOP', path: sid }))
+        continue
+      }
       // ADR-0097 §1 ask-integrity — a silent degrade (never a retry): an ask with no matching payload, or
       // colliding with a session-known surface, is dropped from the outgoing meta-line; the note stands.
-      const finalAsk = ask !== undefined && askIntegrityHolds(ask, assembled.output, input.session) ? ask : undefined
+      // GH #1142 — an ask riding a net-no-op surface degrades WITH its group (the #1064 whole-degrade
+      // law: never ship an ask whose own payload the strip below removes).
+      const finalAsk =
+        ask !== undefined && askIntegrityHolds(ask, assembled.output, input.session) && !netNoop.has(ask.surfaceId)
+          ? ask
+          : undefined
       // GH #1064 — the degrade must be WHOLE. ADR-0097 §1's ruling is "the turn degrades to ADR-0089's
       // prose ask", and a prose ask has NO structured surface: shipping the dropped ask's own payload
       // anyway (the pre-#1064 behavior) rendered a clickable card whose routing fact this very branch had
@@ -1042,10 +1102,20 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       // repainting the answered card in place. So every message NAMING the dropped ask's surfaceId is
       // suppressed with the ask (validation already ran on the FULL output above; messages for any other
       // surface ship untouched — an ask naming an id the payload never mentions suppresses nothing).
-      const shippedOutput =
+      // GH #1142 — the net-no-op strip composes with the #1064 ask-degrade filter: every message naming
+      // a net-no-op surfaceId is removed from the wire (create + updateDataModel/updateComponents +
+      // deleteSurface alike — the whole group, nothing survives client-side anyway).
+      const askDegraded =
         ask !== undefined && finalAsk === undefined
           ? assembled.output.filter((m) => messageSurfaceId(m) !== ask.surfaceId)
           : assembled.output
+      const shippedOutput =
+        netNoop.size > 0
+          ? askDegraded.filter((m) => {
+              const sid = messageSurfaceId(m)
+              return sid === undefined || !netNoop.has(sid)
+            })
+          : askDegraded
       if (emitProgress) yield formatProgressLine({ stage: 'done' }) // ADR-0146 F1 — before the final content yield; still a meta-line, never content
       // GH #1064 (closing ADR-0097's post-ship review finding 4): the meta-line ships whenever it has a
       // note OR a surviving ask to carry — a note-less ask is no longer silently discarded by the note
@@ -1054,6 +1124,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       if (note !== undefined || finalAsk !== undefined) {
         const failureCodes = (failuresFedBack ?? []).map((f) => f.code)
         if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY')
+        if (netNoop.size > 0) failureCodes.push('NET_NOOP_STRIPPED') // GH #1142 — a factual strip tally on the trace (SPEC-N4's observable-drop rule), never a retry trigger
         // SPEC-N4/SPEC-R1 — see the note-only branch's identical comment: a genui failure dropped on an
         // otherwise-successful round still needs to land on the trace, not just the retried case.
         if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
