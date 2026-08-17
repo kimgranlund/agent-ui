@@ -1,0 +1,18 @@
+/* entry-list.css (page-local) — PAGE-LOCAL demo chrome for the entry-list guide (the settings.css
+ * .settings-resize/.settings-demo precedent). Styles only the demo's own frame — never the primitive's
+ * own [data-part='entry-section'] internals (those come from @agent-ui/app/entry-list.css). Every colour
+ * is a --md-sys-color-* role (imported first via _page.ts), so the demo tracks light/dark. */
+
+.el-frame {
+  inline-size: min(40rem, 100%);
+  max-inline-size: 100%;
+  padding: 1rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  background: var(--md-sys-color-neutral-surface-lowest);
+}
+
+.el-note {
+  font-size: 0.875rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}

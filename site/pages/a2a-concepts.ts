@@ -12,6 +12,10 @@
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './a2a-concepts.css'
 import { buildConceptsSections } from '../lib/a2a-concepts.ts'
+import { heading, codeCell, tableHead, tableRow, textCell } from '../lib/doc-page.ts'
+import { parseA2aBarrelGroups } from '../lib/a2a-consumer-api.ts'
+import * as A2A from '@agent-ui/a2a'
+import barrelRaw from '../../packages/agent-ui/a2a/src/index.ts?raw'
 
 const { content } = mountPage({ title: 'A2A Concepts & Demos' })
 content.append(
@@ -56,3 +60,36 @@ if (parseFailures.length > 0) {
 
   content.append(conceptsHeading, conceptsGrid, demosHeading, demosGrid)
 }
+
+// ── Consumer API (GH #1049) — what a host app actually IMPORTS to build against @agent-ui/a2a, derived
+// from the package's own barrel (index.ts, LLD-C11 §S8-owned) rather than hand-listed: each group below is
+// one of the barrel's own re-export blocks, parsed straight from its comment + `export * from` lines
+// (a2a-consumer-api.ts), so a group added/renamed there updates this table with zero page edits. The
+// export COUNT is read live off the real `@agent-ui/a2a` module (never hand-counted) — the same
+// "shown ≡ freshly derived" law the corpus cards above already run through validateA2a. ──────────────────
+content.append(heading(2, 'Consumer API'))
+{
+  const p = document.createElement('p')
+  p.className = 'concepts-api-lead'
+  p.textContent =
+    `The zero-dep consumer surface a host app imports from '@agent-ui/a2a' — ${Object.keys(A2A).length} ` +
+    'runtime exports today (types are erased and don’t count), grouped exactly as the package barrel ' +
+    'groups them (tools/ — the Node dev/seat/proxy machinery — is never reachable from here, LLD §S7).'
+  content.append(p)
+}
+const apiGroups = parseA2aBarrelGroups(barrelRaw)
+const apiTable = document.createElement('table')
+apiTable.className = 'concepts-api-table'
+apiTable.append(tableHead('Group', 'What it is', 'Source files'))
+const apiBody = document.createElement('tbody')
+for (const group of apiGroups) {
+  apiBody.append(
+    tableRow(
+      codeCell(group.name || '(package header)'),
+      textCell(group.note),
+      codeCell(group.sources.join('\n')),
+    ),
+  )
+}
+apiTable.append(apiBody)
+content.append(apiTable)

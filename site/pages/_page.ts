@@ -576,6 +576,13 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './motion.html', label: 'View Transitions' }],
   },
   {
+    // @agent-ui/app entry-list/entry-data (ADR-0132/ADR-0164) — the SAME ungrouped-site-level-link posture
+    // as Router/Highlight/Data/Traits just above: a GUIDE page for a headless mount function (no
+    // customElements.define, no tag of its own — controls-coverage.test.ts's own EXEMPT row), not a fleet
+    // component in components/src (GH #1049).
+    links: [{ href: './entry-list.html', label: 'Entry List' }],
+  },
+  {
     // ui-agent-admin (@agent-ui/app, TKT-0039/ADR-0131) — the SAME ungrouped-site-level-link posture as
     // Super Shell/Master Detail/Settings just above: a GUIDE page for an app-tier composition (ui-split +
     // ui-settings + ui-conversation), not a fleet component in components/src. Agent Admin App joins here
@@ -971,10 +978,11 @@ function buildContextHeader(provider: UIThemeProviderElement): HTMLElement {
 }
 
 // buildContextFooter — the app footer (right column, row 3, fixed): the tagline + a link to the GitHub
-// repo (S3b — real footer content, not the retired "docs shell placeholder" copy). The bar itself spans
-// the column edge-to-edge (background + top divider); its CONTENT sits in an inner wrapper pinned to the
-// SAME reading column as `.page-header-inner` / `[data-page-content]`, so header, content, and footer read
-// as one column rather than the line floating at a different inset from the page body.
+// repo (S3b — real footer content, not the retired "docs shell placeholder" copy), plus a link to the
+// generated agent-facing index (GH #1049 — llms.txt was generated but linked from no page). The bar
+// itself spans the column edge-to-edge (background + top divider); its CONTENT sits in an inner wrapper
+// pinned to the SAME reading column as `.page-header-inner` / `[data-page-content]`, so header, content,
+// and footer read as one column rather than the line floating at a different inset from the page body.
 function buildContextFooter(): HTMLElement {
   const footer = document.createElement('footer')
   footer.className = 'app-context-footer'
@@ -986,7 +994,21 @@ function buildContextFooter(): HTMLElement {
   repo.className = 'app-context-footer-link'
   repo.href = 'https://github.com/kimgranlund/agent-ui'
   repo.textContent = 'GitHub'
-  inner.append(tagline, repo)
+  // GH #1049 — llms.txt (the agent-facing docs index, site/public/llms.txt) is a real, gated file
+  // (site/lib/llms.test.ts's G2 coverage gate) but was linked from no page; llms.txt's OWN "Meta" section
+  // already links llms-full.txt, so the missing direction was the human-facing site pointing AT llms.txt.
+  // Grouped with the repo link (`.app-context-footer-links`) rather than appended as a THIRD direct child
+  // of `.app-context-footer-inner` — that box's `justify-content: space-between` is pinned to exactly TWO
+  // endpoints by `_page-bar-inset.browser.test.ts`'s alignment measurement; a group keeps that two-item
+  // geometry unchanged.
+  const llms = document.createElement('a')
+  llms.className = 'app-context-footer-link'
+  llms.href = './llms.txt'
+  llms.textContent = 'llms.txt'
+  const links = document.createElement('span')
+  links.className = 'app-context-footer-links'
+  links.append(repo, llms)
+  inner.append(tagline, links)
   footer.append(inner)
   return footer
 }
