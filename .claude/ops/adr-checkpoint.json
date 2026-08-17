@@ -158,7 +158,7 @@
     "adr-0157": { "hash": "7c82e3bc45c19bd6c8b54634e9daabefbd0c1edca0d93065e25b8eb3274ae77a", "status": "accepted" },
     "adr-0158": { "hash": "bea243935dbbb9e0fce74803d1658336bd590504fc0c219b3176ca8a41d5ae0a", "status": "accepted" },
     "adr-0159": { "hash": "ee5db96786bc2666aa6e901a914ba037cec601db5b1b62f49ed9fa75c2881a2f", "status": "accepted" },
-    "adr-0160": { "hash": "cf8cb2e406bd5ddf9ded5d5af1cf02477da0f98005e107dc538adb9257320928", "status": "accepted" },
+    "adr-0160": { "hash": "2d287ed706f359940a9a873806f4014e98b7303c775946e6e5abe5064b1d0560", "status": "accepted" },
     "adr-0161": { "hash": "29b7058877b14b2a79056e22bbd7860c5a3250c0de3ff87101367d07434472be", "status": "accepted" },
     "adr-0162": { "hash": "4bf0d7f68fa2953c30777d4937396224712891c78c4c8427a1b014dafb0deb10", "status": "accepted" },
     "adr-0163": { "hash": "329f9f5754889b5786038ec94cdc55b6cd78fcd491cead395da5bf542b9706c0", "status": "accepted" },
@@ -188,11 +188,12 @@
     "adr-0187": { "hash": "d3162900a9013a59d5f983371194b105c8920df7160c88d9ba269618803bd85b", "status": "accepted" },
     "adr-0188": { "hash": "a933d5bec261216dbe502a549316e61b1bd035472b104b0575a9671d03eca1a3", "status": "accepted" },
     "adr-0189": { "hash": "571d163aa7f79fec6a3a7b4fb45bfdfd304544f0be2d1fb4048128b3fe909910", "status": "accepted" },
-    "adr-0190": { "hash": "27b19264ff0ba9658065315a7b9439fd291f9dd6eb08cad39a3e24185de0366c", "status": "accepted" },
+    "adr-0190": { "hash": "d750143836e6f8af52ff09d27d7cb52d35a12c4ce8999cde3cbc48898acbea4e", "status": "accepted" },
     "adr-0191": { "hash": "da8acbbde021ec155f273ebe7ddbbaed16570a1740db2327d197b4e097f2cd63", "status": "accepted" },
     "adr-0192": { "hash": "50abac84dc8e0caa3f2a2bb4d81a35aa94d2c97133b85d854f3e9ddcf72f8393", "status": "accepted" },
-    "adr-0193": { "hash": "4cfb304bdbf181cdb9099cae486dc24a33485ccb3357c939d39555460bcd0a1a", "status": "proposed" },
+    "adr-0193": { "hash": "2ccb99d86d17a35079d0bec556ae615cab65afe97ff1df7200029edb914658d4", "status": "accepted" },
     "adr-0194": { "hash": "fcb434fcab176b14716c7ea218874a73c63c2dbd972863a11cd1e252bdc854a9", "status": "accepted" },
-    "adr-0195": { "hash": "98ded282949d5d7fb37b152ea92562073f61b9a3b0c528afd6b32e11f8e23602", "status": "proposed" }
+    "adr-0195": { "hash": "98ded282949d5d7fb37b152ea92562073f61b9a3b0c528afd6b32e11f8e23602", "status": "proposed" },
+    "adr-0196": { "hash": "e7c5221473d409ad78cd8c61f06c6f1e846ec88102a17d92f5aece0314bfd619", "status": "proposed" }
   }
 }
