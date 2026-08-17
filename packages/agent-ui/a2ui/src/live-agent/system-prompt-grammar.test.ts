@@ -723,6 +723,25 @@ describe('buildSystemPrompt feed-ask archetype vocabulary — mode-scaled (ADR-0
     expect(dflt).toMatch(/commit Button its own\s+sibling placed AFTER the Column, never inside it/)
   })
 
+  // GH #1152 — GH #1141 landed `layout`/`label` on the DEFAULT catalog's Slider row, but the producer
+  // prompts never taught when to use them: a model following ONLY the old typed-value prose ("Slider ...
+  // for a bounded numeric") had no instruction to name the value or pick a layout that keeps it visible,
+  // so a model-emitted bet-amount slider (the blackjack bet card) rendered bare — a rail with no label and
+  // no at-rest readout. Every mode must now teach: a value-bearing Slider/SliderMulti question gets a
+  // "label" naming the value (a short noun, e.g. "Bet amount") and "layout":"standard" so the value stays
+  // visible at rest — "standard" over "inline" because a narrow feed-ask card can squeeze "inline"'s
+  // single-row rail column down to near nothing (the same single-row-in-a-narrow-card risk the GH #1125
+  // Checkbox rule above already guards against), whereas "standard" reserves the rail its own full-width
+  // row regardless of container width.
+  it('GH #1152 — every mode teaches the value-bearing Slider archetype as label+layout:"standard"', () => {
+    for (const mode of ['specific', 'blue-sky'] as const) {
+      const prompt = buildSystemPrompt(defaultCatalog, [], mode)
+      expect(prompt).toMatch(/Slider\/SliderMulti for a\s+bounded numeric with a "label" naming the value \(e\.g\. "Bet amount"\)\s+and "layout":"standard" so the value\s+stays visible at rest/)
+    }
+    const dflt = buildSystemPrompt(defaultCatalog, [])
+    expect(dflt).toMatch(/Slider\/SliderMulti for a bounded numeric — give it a "label" naming the value in a\s+short noun \(e\.g\. "Bet amount", the blackjack bet card\) and "layout":"standard"/)
+  })
+
   it('never widens the SPEC-R9 allowlist or the feed set by mode — the honesty floor still holds in every mode', () => {
     for (const mode of ['specific', 'blue-sky'] as const) {
       const prompt = buildSystemPrompt(defaultCatalog, [], mode)

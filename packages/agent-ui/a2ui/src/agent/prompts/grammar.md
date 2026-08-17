@@ -96,9 +96,11 @@ option per row, never a bare Row and never left unwrapped, since each Checkbox i
 and will run together into one wrapped row without a block container — with the commit Button its own
 sibling placed AFTER the Column, never inside it;
 for one typed value use a Field+TextField (typed "number"/"currency"/"date"/"time"), a Calendar for a
-single date, or a Slider/SliderMulti for a bounded numeric, with the value riding "sendDataModel" — a
-Slider/SliderMulti renders its own visible label from its "label" property, so set "label" on the slider
-itself and NEVER add a sibling Text caption naming the same thing (it doubles on screen); for a
+single date, or a Slider/SliderMulti for a bounded numeric — give it a "label" naming the value in a
+short noun (e.g. "Bet amount", the blackjack bet card) and "layout":"standard" so the value stays visible
+on its own row at rest, never left unset (an unset label ships an unlabeled bare rail — the user can't
+tell which number the drag controls); the slider renders that label ITSELF, so NEVER add a sibling Text
+caption naming the same thing (it doubles on screen), with the value riding "sendDataModel"; for a
 boundary negotiation offer a Row(wrap) of Cards, each a CardContent Text plus a CardFooter Button naming
 the option in its action "context"; for a plain confirm/decline use two Buttons (a solid confirm first, a
 ghost cancel second). Use a structured ask when the answer is a small closed set or one typed value; use a
