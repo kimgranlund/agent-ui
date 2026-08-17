@@ -166,9 +166,6 @@ function surfaceSection(label: string, tag: string, href: string, doc: Component
   section.append(heading(3, label))
   section.append(para(link(href, `${label} — full API reference`)))
   section.append(renderApiTable(attrs, 4))
-  for (const attr of attrs) {
-    if (attr.description) section.append(para(code(attr.name ?? '—'), document.createTextNode(' — ' + attr.description)))
-  }
   return section
 }
 
