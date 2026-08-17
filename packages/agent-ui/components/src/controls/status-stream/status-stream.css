@@ -96,6 +96,13 @@
   --ui-status-stream-plan-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-status-stream-plan-gap: var(--md-sys-space-xs);
   --ui-status-stream-plan-pad-block: var(--md-sys-space-xs);
+
+  /* GH #974/ADR-0191 (booked repair GH #999) — the pending/stale-content dim: this control's own
+     `--ui-status-stream-*` chain aliasing the fleet-wide `--ui-pending-*` pair (tokens.md's Consumption
+     invariants, TKT-0066 item 5 — neither fleet token is on the sanctioned direct-read list, so a control
+     routes both through its own chain, same as every other dimensional constant here). */
+  --ui-status-stream-pending-opacity: var(--ui-pending-opacity);
+  --ui-status-stream-pending-duration: var(--ui-pending-duration);
 }
 :where(ui-status-stream [data-part='header'][data-status='active']) {
   --ui-status-stream-header-status-ink: var(--md-sys-color-primary);
@@ -123,6 +130,27 @@
     /* GH #722 — hidden scroller, live scroll (token block, above): both shipped engines support
        scrollbar-width (the menu.css/GH #166 precedent). */
     scrollbar-width: var(--ui-status-stream-scrollbar-width);
+    /* GH #974/ADR-0191 (booked repair GH #999) — the pending dim's transition lives on the PERSISTENT
+       rule, not the pending-state rule below: declaring it only on the state rule would animate the
+       dim-IN but let the un-dim (the state's removal — arguably the more visible edge, a fresh answer
+       just landed) snap instantly, since the `transition` property disappears the same instant the state
+       does. ADR-0191 Decision cl.2 says the opacity step is "transitioned over --ui-pending-duration" with
+       no one-way carve-out, so both directions of a toggling state need the property present regardless
+       of which side of the toggle is current — unlike the fleet's `ready` custom state (interaction-
+       states.md §4b), which is set once and never cleared, so gating ITS transition on the state itself
+       carries no such asymmetry. */
+    transition: opacity var(--ui-status-stream-pending-duration) var(--md-sys-motion-easing-standard);
+  }
+
+  /* GH #974/ADR-0191 (booked repair GH #999) — the pending/stale-content dim: a single opacity step over
+     ALREADY-RENDERED content, never a recolor (ADR-0191 Decision cl.2/§5c — content keeps its existing
+     ink/bg tokens; pending content can be arbitrary, unknown-depth DOM a role-repoint cannot reach in
+     general). Applies to the WHOLE host (entries + header + plan alike) — the strip has no bg/border/ink
+     law of its own to preserve the way a §1b entry control does, so there is nothing narrower to dim.
+     Composes freely with :state(collapsed)/:state(settled) (Decision cl.3 — a settled stream can go
+     pending again without leaving `settled`; the render when both compose is this rule's own answer). */
+  :scope:state(pending) {
+    opacity: var(--ui-status-stream-pending-opacity);
   }
 
   /* GH #722 (candidate 6) — top-level entries share the header's inline-start inset so both marker
@@ -308,6 +336,11 @@
       animation: none;
     }
     :scope > [data-part='header'] [data-part='header-caret'] {
+      transition: none;
+    }
+    /* GH #974/ADR-0191 (§5c) — the pending dim steps instantly instead of transitioning, both directions
+       (the transition now lives on the persistent :scope rule, above — zero it there too). */
+    :scope {
       transition: none;
     }
   }

@@ -194,11 +194,13 @@ The prefix IS the ownership boundary — no allowlist needed:
 - **Custom states** (`internals.states` / `:state()`) are ADJECTIVES/participles, lowercase,
   kebab: ready · user-invalid · checked · dragging · revealed · disabled · collapsed · truncated
   · selected · indeterminate · pressed · settled (GH #722 — ui-status-stream's finalize()/fail()
-  face, a consumer-keyable public state). A verb or noun is not a state name. `pressed` (ADR-0179 GH
-  #686 Amendment S7-a) — `ui-toggle`'s ARIA-pressed toggle-button state; distinct from `checked`
-  (an Indicator-class boolean form value/ARIA-checked pattern) and `selected` (mutually-exclusive
-  choice, e.g. radio/tab) — `ui-toggle` is neither: an independent, non-form boolean matching the
-  native `aria-pressed` toggle-button pattern.
+  face, a consumer-keyable public state) · pending (ADR-0191, GH #999 — the fleet-wide
+  async-freshness state; `ui-status-stream`'s own first-consumer wiring composes it WITH
+  `settled` rather than clearing one on the other). A verb or noun is not a state name. `pressed`
+  (ADR-0179 GH #686 Amendment S7-a) — `ui-toggle`'s ARIA-pressed toggle-button state; distinct
+  from `checked` (an Indicator-class boolean form value/ARIA-checked pattern) and `selected`
+  (mutually-exclusive choice, e.g. radio/tab) — `ui-toggle` is neither: an independent, non-form
+  boolean matching the native `aria-pressed` toggle-button pattern.
 
 ## 7 · A2UI catalog types
 
