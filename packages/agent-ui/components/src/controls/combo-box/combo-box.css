@@ -91,6 +91,11 @@
   --ui-combo-box-bg-disabled: var(--md-sys-color-neutral-container-low);
   --ui-combo-box-ink-disabled: var(--md-sys-color-neutral-low);
 
+  /* answered (ADR-0196, GH #1065) — the editor frame steps back to the fleet answered pair once the
+     control's answer is settled. Role-repoint, not opacity (interaction-states.md §6[b]). */
+  --ui-combo-box-bg-answered: var(--ui-answered-bg);
+  --ui-combo-box-ink-answered: var(--ui-answered-ink);
+
   /* Frame shape */
   --ui-combo-box-radius: var(--md-sys-shape-corner-base);
 
@@ -263,11 +268,11 @@
      later found that mechanism itself was the fleet-wide defect, and repointed
      `--ui-combo-box-placeholder` to a fixed role instead; it no longer participates in this repoint at
      all, deliberately — see the pinned declaration in the :where() token block, above.) */
-  :scope > [data-part='editor']:not(:hover):not(:focus):not([aria-disabled='true']):not([data-empty]) {
+  :scope:not(:state(answered)) > [data-part='editor']:not(:hover):not(:focus):not([aria-disabled='true']):not([data-empty]) {
     background-color: var(--ui-combo-box-bg-filled);
     --ui-combo-box-ink: var(--ui-combo-box-ink-filled);
   }
-  :scope > [data-part='editor']:not(:focus):not([aria-disabled='true']):hover {
+  :scope:not(:state(answered)) > [data-part='editor']:not(:focus):not([aria-disabled='true']):hover {
     background-color: var(--ui-combo-box-bg-hover);
     border-color: var(--ui-combo-box-border-hover);
     --ui-combo-box-ink: var(--ui-combo-box-ink-hover);
@@ -277,12 +282,26 @@
      border-focus approach — a coloured border-focus would double with the ring). Focus's bg/ink
      (TKT-0062) override filled/hover unconditionally — a focused-and-filled editor still shows the
      FOCUS row (container-low bg, on-surface ink), not filled's. */
-  :scope > [data-part='editor']:not([aria-disabled='true']):focus {
+  :scope:not(:state(answered)) > [data-part='editor']:not([aria-disabled='true']):focus {
     background-color: var(--ui-combo-box-bg-focus);
     border-color: var(--ui-combo-box-border-focus);
     --ui-combo-box-ink: var(--ui-combo-box-ink-focus);
     outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+  /* The shared ring stays visible even while answered — only the bg/ink repaint is suppressed. */
+  :scope:state(answered) > [data-part='editor']:not([aria-disabled='true']):focus {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  /* answered (ADR-0196) — the editor's role-repoint, gated on the HOST's own :state(answered) (the
+     answered prop lives on the host, not the editor part). Precedence `disabled > pending > answered
+     > focus > hover > filled > default` (interaction-states.md §6[c]): mutual exclusion excludes
+     disabled + :state(pending) on the host. */
+  :scope:state(answered):not(:state(pending)) > [data-part='editor']:not([aria-disabled='true']) {
+    background-color: var(--ui-combo-box-bg-answered);
+    --ui-combo-box-ink: var(--ui-combo-box-ink-answered);
   }
 
   /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction. */

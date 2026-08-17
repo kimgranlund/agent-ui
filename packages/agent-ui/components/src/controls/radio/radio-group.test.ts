@@ -594,6 +594,35 @@ describe('UIRadioGroupElement — disabled-propagation (C7)', () => {
   })
 })
 
+// ── answered/settled choice state (ADR-0196, GH #1065) ───────────────────────────────────────────
+
+describe('UIRadioGroupElement — :state(answered) (ADR-0196)', () => {
+  it('group-answered-state: setting `answered` adds the custom state; clearing it removes it', async () => {
+    const group = makeGroup()
+    document.body.append(group)
+    await group.updateComplete
+    const states = group.testInternals.states
+    if (!states) {
+      // jsdom may not implement CustomStateSet — the browser smoke proves the real state.
+      group.remove()
+      return
+    }
+    expect(states.has('answered')).toBe(false)
+    group.answered = true
+    await group.updateComplete
+    expect(states.has('answered')).toBe(true)
+    group.answered = false
+    await group.updateComplete
+    expect(states.has('answered')).toBe(false)
+    group.remove()
+  })
+
+  it('group-answered-default: `answered` defaults to false', () => {
+    const group = makeGroup()
+    expect(group.answered).toBe(false)
+  })
+})
+
 // ── C10 — inspect(sig).subscribers === 0 post-disconnect (zero residue, signal proof) ───────────
 
 describe('UIRadioGroupElement — C10 signal zero-residue (inspect)', () => {
@@ -882,7 +911,7 @@ const groupMd = readFileSync(`${GROUP_DIR}/radio-group.md`, 'utf8') as string
 const { fence: groupFence } = splitFrontmatter(groupMd)
 const groupParsed = parseDescriptor(groupFence)
 // Attribute names in the order declared in radio-group.md frontmatter (anti-vacuous anchor).
-const GROUP_ATTR_NAMES = ['name', 'disabled', 'required', 'orientation']
+const GROUP_ATTR_NAMES = ['name', 'disabled', 'required', 'orientation', 'answered']
 
 describe('radio-group.md descriptor — structural validity (s10 part a)', () => {
   it('carries the ADR-0004 / plan §10 descriptor field set as top-level keys', () => {

@@ -267,6 +267,55 @@ describe('UICheckboxElement — custom states (LLD-C2, capability-gated)', () =>
   })
 })
 
+// ── answered/settled choice state (ADR-0196, GH #1065) ───────────────────────────────────────────
+
+describe('UICheckboxElement — :state(answered) (ADR-0196, capability-gated)', () => {
+  it('setting `answered` adds the custom state; clearing it removes it', async () => {
+    const el = make()
+    document.body.append(el)
+    el.answered = true
+    await el.updateComplete
+    if (el.probeInternals.states) {
+      expect(el.probeInternals.states.has('answered')).toBe(true)
+    }
+    el.answered = false
+    await el.updateComplete
+    if (el.probeInternals.states) {
+      expect(el.probeInternals.states.has('answered')).toBe(false)
+    }
+    el.remove()
+  })
+
+  it('`answered` defaults to false', () => {
+    const el = make()
+    expect(el.answered).toBe(false)
+  })
+})
+
+describe('checkbox.css — :state(answered) block (ADR-0196)', () => {
+  const css = readFileSync(`${process.cwd()}/packages/agent-ui/components/src/controls/checkbox/checkbox.css`, 'utf8') as string
+
+  it('repoints --ui-checkbox-border/-bg to the fleet --ui-answered-* pair', () => {
+    const m = /:where\(ui-checkbox:state\(answered\)[^{]*\)\s*\{([^}]*)\}/.exec(css)
+    expect(m, 'no :where(ui-checkbox:state(answered)...) rule found').not.toBeNull()
+    const rule = m?.[1] ?? ''
+    expect(rule).toMatch(/--ui-checkbox-border:\s*var\(--ui-answered-ink\)/)
+    expect(rule).toMatch(/--ui-checkbox-bg:\s*var\(--ui-answered-bg\)/)
+  })
+
+  it('the answered rule excludes disabled + pending + checked + indeterminate (mutual exclusion)', () => {
+    const selector = /:where\(ui-checkbox:state\(answered\)([^{]*)\)/.exec(css)?.[1] ?? ''
+    expect(selector).toMatch(/:not\(\[disabled\]\)/)
+    expect(selector).toMatch(/:not\(:state\(pending\)\)/)
+    expect(selector).toMatch(/:not\(:state\(checked\)\)/)
+    expect(selector).toMatch(/:not\(:state\(indeterminate\)\)/)
+  })
+
+  it('the hover rule excludes :state(answered)', () => {
+    expect(css).toMatch(/:scope:not\(:state\(answered\)\):hover::before/)
+  })
+})
+
 // ── click/Space toggle + Enter blocked (LLD-C3) ──────────────────────────────────────────────────
 
 describe('UICheckboxElement — toggle (click + Space; Enter blocked) (LLD-C3)', () => {
@@ -442,7 +491,7 @@ const md = readFileSync(`${CBX_DIR}/checkbox.md`, 'utf8') as string
 const { fence } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 // Attribute names in the order declared in checkbox.md frontmatter (used as anti-vacuous anchor).
-const ATTR_NAMES = ['checked', 'value', 'size', 'name', 'disabled', 'required']
+const ATTR_NAMES = ['checked', 'value', 'size', 'name', 'disabled', 'required', 'answered']
 
 describe('checkbox.md descriptor — structural validity (s10 part a)', () => {
   it('carries the ADR-0004 / plan §10 descriptor field set as top-level keys', () => {

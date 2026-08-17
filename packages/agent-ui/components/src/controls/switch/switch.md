@@ -38,6 +38,10 @@ attributes:              # attributes-as-API — mirrors indicator-element.ts `i
     type: boolean
     default: false
     reflect: true        # reflects to a `required` attribute; INFORMATIONAL only — the switch raises no constraint (see face.validity: '' below; required-ON semantics deliberately declined, checkbox.ts's LLD-C1 note)
+  - name: answered
+    type: boolean
+    default: false
+    reflect: false       # ADR-0196 (GH #1065) — the answered/settled choice state; mirrored into :state(answered), never AX-reflected
 
 properties: []           # no manual accessors beyond the attributes-as-API
 

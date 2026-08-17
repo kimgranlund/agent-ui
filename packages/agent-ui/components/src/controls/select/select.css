@@ -83,6 +83,11 @@
   --ui-select-bg-disabled: var(--md-sys-color-neutral-container-low);
   --ui-select-ink-disabled: var(--md-sys-color-neutral-low);
 
+  /* answered (ADR-0196, GH #1065) — the trigger frame steps back to the fleet answered pair once the
+     control's answer is settled. Role-repoint, not opacity (interaction-states.md §6[b]). */
+  --ui-select-bg-answered: var(--ui-answered-bg);
+  --ui-select-ink-answered: var(--ui-answered-ink);
+
   /* ── Listbox panel — Container/surface geometry (NOT a control height; like modal/card/popover) */
   --ui-select-listbox-bg: var(--md-sys-color-neutral-surface);
   --ui-select-listbox-ink: var(--md-sys-color-neutral-on-surface);
@@ -274,14 +279,23 @@
      the TRIGGER (select.ts already collapses own-disabled OR form-disabled onto the trigger's own
      attribute — `trigger.setAttribute('disabled', ...)` in the effectiveDisabled() effect — so no
      separate `:state(disabled)` check is needed here, unlike text-field/textarea/combo-box). */
-  :scope > [data-part='trigger']:not(:hover):not(:focus-visible):not([disabled]):not([data-empty]) {
+  :scope:not(:state(answered)) > [data-part='trigger']:not(:hover):not(:focus-visible):not([disabled]):not([data-empty]) {
     background: var(--ui-select-bg-filled);
     color: var(--ui-select-ink-filled);
   }
-  :scope > [data-part='trigger']:not(:focus-visible):not([disabled]):hover {
+  :scope:not(:state(answered)) > [data-part='trigger']:not(:focus-visible):not([disabled]):hover {
     background: var(--ui-select-bg-hover);
     border-color: var(--ui-select-border-hover);
     color: var(--ui-select-ink-hover);
+  }
+
+  /* answered (ADR-0196) — the trigger's role-repoint, gated on the HOST's own :state(answered) (the
+     answered prop lives on the host, not the trigger part). Precedence `disabled > pending > answered
+     > focus > hover > filled > default` (interaction-states.md §6[c]): mutual exclusion excludes
+     disabled + :state(pending) on the host. */
+  :scope:state(answered):not(:state(pending)) > [data-part='trigger']:not([disabled]) {
+    background: var(--ui-select-bg-answered);
+    color: var(--ui-select-ink-answered);
   }
 
   :scope > [data-part='trigger']:focus-within,
@@ -292,10 +306,16 @@
   /* Focus (keyboard-only :focus-visible, the button precedent — a trigger is an action control, not a
      text-entry surface) wins over filled/hover unconditionally; a disabled trigger cannot be focused,
      so no guard is needed here (matching the old law). */
-  :scope > [data-part='trigger']:focus-visible {
+  :scope:not(:state(answered)) > [data-part='trigger']:focus-visible {
     background: var(--ui-select-bg-focus);
     border-color: var(--ui-select-border-focus);
     color: var(--ui-select-ink-focus);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+  /* The shared focus ring itself stays visible even while answered — only the bg/border/ink repaint
+     is suppressed (the answered rule already applies); a keyboard user must still see WHERE focus is. */
+  :scope:state(answered) > [data-part='trigger']:focus-visible {
     outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--md-sys-state-focus-ring-offset);
   }

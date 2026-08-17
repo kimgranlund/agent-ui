@@ -60,6 +60,12 @@
   --ui-multi-select-bg-disabled: var(--md-sys-color-neutral-container-low);
   --ui-multi-select-ink-disabled: var(--md-sys-color-neutral-low);
 
+  /* answered (ADR-0196, GH #1065) — the frame + UNSELECTED option ink step back to the fleet answered
+     pair; a SELECTED option's own tinted background/ink (below) is the "selected indicator" and keeps
+     its existing tokens untouched (interaction-states.md §6[b]). */
+  --ui-multi-select-bg-answered: var(--ui-answered-bg);
+  --ui-multi-select-ink-answered: var(--ui-answered-ink);
+
   /* ── Option rows — legacy item-pad (§5.1/ROV-C5): padding-based row height, not a fixed widget-box.
      Numbers DERIVED off the height/font lever (the `ui-select` options-token mechanism copied, LLD-C5). ── */
   --ui-multi-select-option-block: calc((var(--ui-multi-select-height) - var(--ui-multi-select-font)) / 2); /* (h−font)/2 */
@@ -207,7 +213,7 @@
     clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
   }
 
-  :scope > [role='option']:hover {
+  :scope:not(:state(answered)) > [role='option']:hover {
     background-color: var(--ui-multi-select-option-bg-hover);
   }
 
@@ -216,9 +222,27 @@
     color: var(--ui-multi-select-option-ink-selected);
   }
 
-  :scope > [role='option']:focus-visible {
+  /* answered (ADR-0196) — the frame + unselected option rows step back to the answered pair. A
+     selected row's own tinted background/ink (above) is untouched. Precedence `disabled > pending >
+     answered > focus > hover > filled > default` (interaction-states.md §6[c]): mutual exclusion
+     excludes disabled + :state(pending) on the host. */
+  :scope:state(answered):not(:state(pending)):not(:is([disabled], :state(disabled))) {
+    background-color: var(--ui-multi-select-bg-answered);
+    color: var(--ui-multi-select-ink-answered);
+  }
+  :scope:state(answered):not(:state(pending)):not(:is([disabled], :state(disabled))) > [role='option']:not([aria-selected='true']) {
+    color: var(--ui-multi-select-ink-answered);
+  }
+
+  :scope:not(:state(answered)) > [role='option']:focus-visible {
     background-color: var(--ui-multi-select-option-bg-focus);
     color: var(--ui-multi-select-option-ink-focus);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+  /* The shared ring stays visible even while answered — only the bg/ink repaint is suppressed
+     (a keyboard user must still see WHERE focus is). */
+  :scope:state(answered) > [role='option']:focus-visible {
     outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--md-sys-state-focus-ring-offset);
   }

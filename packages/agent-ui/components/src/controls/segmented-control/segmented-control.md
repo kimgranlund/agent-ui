@@ -34,6 +34,10 @@ attributes:            # attributes-as-API — mirrors segmented-control.ts's LI
     values: [horizontal, vertical]
     default: vertical
     reflect: true      # the roving-focus axis (Arrow keys) AND the grid main axis. RESOLVED ONCE at connect: an author-set attribute wins; otherwise the CLASS-derived default applies — this control overrides UIRadioGroupElement's own 'vertical' default to 'horizontal' (defaultOrientation(), ADR-0095 clause 1) — so the declared prop default stays 'vertical' (the inherited live prop, unchanged) while the EFFECTIVE resolved-and-reflected default a bare `<ui-segmented-control>` renders with is 'horizontal'
+  - name: answered
+    type: boolean
+    default: false
+    reflect: false     # ADR-0196 (GH #1065) — inherited from UIRadioGroupElement.groupProps unchanged; mirrored into :state(answered), never AX-reflected
 
 properties:            # IDL beyond attributes-as-API (FACE form IDL, delegates to ElementInternals; inherited from UIRadioGroupElement unchanged)
   - name: value

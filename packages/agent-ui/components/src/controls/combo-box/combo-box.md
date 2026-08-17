@@ -43,6 +43,10 @@ attributes:            # attributes-as-API — mirrors UIComboBoxElement.props (
     type: boolean
     default: false
     reflect: true      # reflects; required && value==='' → valueMissing validity flag
+  - name: answered
+    type: boolean
+    default: false
+    reflect: false     # ADR-0196 (GH #1065) — the answered/settled choice state; mirrored into :state(answered) on the host, never AX-reflected
 
 properties:            # IDL beyond attributes-as-API
   - name: label

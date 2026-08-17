@@ -69,6 +69,11 @@ const groupProps = {
   // (author-set vs the class-derived default, `defaultOrientation()` below) is resolved once at connect —
   // see `connected()` below — and reflected back here so CSS and the roving trait read ONE source.
   orientation: { ...prop.enum(['horizontal', 'vertical'] as const, 'vertical'), reflect: true },
+  // ADR-0196 (GH #1065) — the answered/settled choice state. `ui-segmented-control` inherits this
+  // unchanged (it never redeclares `static props`). The CONSUMING surface (e.g. an A2UI questionnaire
+  // card) sets this after submit; the effect below mirrors it into `:state(answered)` on the group
+  // host (presentation-only — never AX-reflected, never disabled/readonly).
+  answered: prop.boolean(false),
 } satisfies PropsSchema
 
 export interface UIRadioGroupElement extends ReactiveProps<typeof groupProps> {}
@@ -106,6 +111,15 @@ export class UIRadioGroupElement extends UIFormElement {
         this.internals.states?.delete('user-invalid')
         this.internals.ariaInvalid = null
       }
+    })
+
+    // ADR-0196 — mirror `answered` into `:state(answered)` on the GROUP host (optional-chained: jsdom
+    // may lack CustomStateSet). radio.css/radio-group.css reach cross-boundary into each unselected
+    // ui-radio child's own paint (the SAME technique the user-invalid rule above already uses — the
+    // group has no visual surface of its own). Presentation-only; never touches disabled/tabindex/ARIA.
+    this.effect(() => {
+      if (this.answered) this.internals.states?.add('answered')
+      else this.internals.states?.delete('answered')
     })
 
     // Well-known data attribute marker: lets UIRadioElement.grouped() detect any UIRadioGroupElement

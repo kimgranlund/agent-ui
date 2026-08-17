@@ -103,6 +103,11 @@ const props = {
 
   // `size` — the dimensional-ramp step (LLD-C5's geometry dial: sm/md/lg → §1 rows 24/28/36).
   size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
+
+  // ADR-0196 (GH #1065) — the answered/settled choice state. The CONSUMING surface (e.g. an A2UI
+  // questionnaire card) sets this after submit; the effect below mirrors it into `:state(answered)`
+  // (presentation-only — never AX-reflected, never disabled/readonly).
+  answered: prop.boolean(false),
 } satisfies PropsSchema
 
 // ── Element ──────────────────────────────────────────────────────────────────────────────────────────
@@ -212,6 +217,13 @@ export class UIMultiSelectElement extends UIFormElement {
     this.effect(() => {
       if (this.fieldLabelling !== null) return // fielded — the base default owns naming exclusively
       this.internals.ariaLabel = this.label || null
+    })
+
+    // ADR-0196 — mirror `answered` into `:state(answered)` on the host (optional-chained: jsdom may
+    // lack CustomStateSet). Presentation-only; never touches disabled/tabindex/ARIA.
+    this.effect(() => {
+      if (this.answered) this.internals.states?.add('answered')
+      else this.internals.states?.delete('answered')
     })
 
     // Live option accessor (re-reads the DOM on each event for dynamic option sets — options are DIRECT

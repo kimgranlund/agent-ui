@@ -428,6 +428,28 @@ describe('ui-multi-select — disabled (ms-disabled)', () => {
   })
 })
 
+// ── answered/settled choice state (ADR-0196, GH #1065) ───────────────────────────────────────────
+
+describe('ui-multi-select — :state(answered) (ADR-0196)', () => {
+  it('ms-answered-state: setting `answered` adds the custom state; clearing it removes it (capability-gated)', async () => {
+    const { el } = makeMultiSelect()
+    el.answered = true
+    await whenFlushed()
+    if (el.probeInternals.states) expect(el.probeInternals.states.has('answered')).toBe(true)
+
+    el.answered = false
+    await whenFlushed()
+    if (el.probeInternals.states) expect(el.probeInternals.states.has('answered')).toBe(false)
+    el.remove()
+  })
+
+  it('ms-answered-default: `answered` defaults to false', () => {
+    const { el } = makeMultiSelect()
+    expect(el.answered).toBe(false)
+    el.remove()
+  })
+})
+
 // ── Dynamic options (§8 — late-adopted option paint sync) ─────────────────────────────────────────
 
 describe('ui-multi-select — dynamic options (ms-dynamic-options)', () => {
@@ -563,7 +585,7 @@ const md = readFileSync(`${MULTI_SELECT_DIR}/multi-select.md`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-const ATTR_NAMES = ['name', 'disabled', 'required', 'value', 'label', 'size']
+const ATTR_NAMES = ['name', 'disabled', 'required', 'value', 'label', 'size', 'answered']
 
 describe('multi-select.md descriptor — frontmatter parses + schema-valid (ms-descriptor-schema)', () => {
   it('ms-descriptor-schema: has a leading frontmatter fence and a prose body', () => {
@@ -670,5 +692,31 @@ describe('multi-select.css — geometry trip-wire (ms-geometry-tokens)', () => {
     expect(scopeBlock).not.toMatch(/var\(--ui-space-/)
     expect(scopeBlock).not.toMatch(/var\(--ui-font-/)
     expect(scopeBlock).not.toMatch(/var\(--ui-radius-base/)
+  })
+})
+
+// ── multi-select.css — :state(answered) block (ADR-0196) ────────────────────────────────────────
+
+describe('multi-select.css — :state(answered) block (ADR-0196)', () => {
+  it('declares --ui-multi-select-bg-answered/-ink-answered aliasing the fleet answered pair', () => {
+    expect(multiSelectCss).toMatch(/--ui-multi-select-bg-answered:\s*var\(--ui-answered-bg\)/)
+    expect(multiSelectCss).toMatch(/--ui-multi-select-ink-answered:\s*var\(--ui-answered-ink\)/)
+  })
+
+  it('repoints the frame + unselected rows, excluding disabled + pending (mutual exclusion)', () => {
+    const m = /:scope:state\(answered\)([^{]*)\{([^}]*)\}/.exec(multiSelectCss)
+    expect(m, 'no :scope:state(answered) ... { ... } rule found').not.toBeNull()
+    const [, selector, rule] = m as unknown as [string, string, string]
+    expect(selector).toMatch(/:not\(:state\(pending\)\)/)
+    expect(selector).toMatch(/:not\(:is\(\[disabled\], :state\(disabled\)\)\)/)
+    expect(rule).toMatch(/background-color:\s*var\(--ui-multi-select-bg-answered\)/)
+    expect(multiSelectCss).toMatch(
+      /:scope:state\(answered\):not\(:state\(pending\)\):not\(:is\(\[disabled\], :state\(disabled\)\)\) > \[role='option'\]:not\(\[aria-selected='true'\]\)/,
+    )
+  })
+
+  it('the hover/focus repaint rules exclude :state(answered)', () => {
+    expect(multiSelectCss).toMatch(/:scope:not\(:state\(answered\)\) > \[role='option'\]:hover/)
+    expect(multiSelectCss).toMatch(/:scope:not\(:state\(answered\)\) > \[role='option'\]:focus-visible/)
   })
 })

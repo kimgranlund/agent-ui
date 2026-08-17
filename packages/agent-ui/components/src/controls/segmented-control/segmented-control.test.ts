@@ -95,6 +95,27 @@ describe('UISegmentedControlElement — role (inherited from UIRadioGroupElement
   })
 })
 
+// ── answered/settled choice state (ADR-0196, GH #1065 — inherited unchanged from UIRadioGroupElement) ──
+
+describe('UISegmentedControlElement — :state(answered) (ADR-0196, inherited)', () => {
+  it('sc-answered-state: setting `answered` adds the custom state; clearing it removes it', async () => {
+    const [control] = buildControl(2)
+    const states = control.testInternals.states
+    if (!states) {
+      control.remove()
+      return
+    }
+    expect(states.has('answered')).toBe(false)
+    control.answered = true
+    await control.updateComplete
+    expect(states.has('answered')).toBe(true)
+    control.answered = false
+    await control.updateComplete
+    expect(states.has('answered')).toBe(false)
+    control.remove()
+  })
+})
+
 // ── the class-derived default orientation (ADR-0095 clause 1) ─────────────────────────────────────
 
 describe('UISegmentedControlElement — class-derived default orientation (horizontal)', () => {
@@ -253,7 +274,7 @@ const { fence: scFence } = splitFrontmatter(scMd)
 const scParsed = parseDescriptor(scFence)
 // Attribute names in the order declared in segmented-control.md frontmatter (anti-vacuous anchor) —
 // IDENTICAL shape to radio-group.md's post-ADR-0095 shape (name/disabled/required/orientation, no variant).
-const SC_ATTR_NAMES = ['name', 'disabled', 'required', 'orientation']
+const SC_ATTR_NAMES = ['name', 'disabled', 'required', 'orientation', 'answered']
 
 describe('segmented-control.md descriptor — structural validity (s10 part a)', () => {
   it('carries the ADR-0004 / plan §10 descriptor field set as top-level keys', () => {
@@ -304,5 +325,32 @@ describe('segmented-control.md descriptor — contract↔props trip-wire (s10 pa
     expect(compareDescriptorToProps(addBogus, UISegmentedControlElement.props)).toContainEqual(
       expect.objectContaining({ code: 'DRIFT_EXTRA', path: 'attributes.bogus' }),
     )
+  })
+})
+
+// ── segmented-control.css — :state(answered) block (ADR-0196) ───────────────────────────────────
+
+describe('segmented-control.css — :state(answered) block (ADR-0196)', () => {
+  const css = readFileSync(`${SC_DIR}/segmented-control.css`, 'utf8') as string
+
+  it('declares --ui-segmented-control-ink-answered/-bg-answered aliasing the fleet answered pair', () => {
+    expect(css).toMatch(/--ui-segmented-control-ink-answered:\s*var\(--ui-answered-ink\)/)
+    expect(css).toMatch(/--ui-segmented-control-bg-answered:\s*var\(--ui-answered-bg\)/)
+  })
+
+  it('repoints the unselected segments to the answered pair, excluding checked/disabled/pending', () => {
+    const m = /ui-segmented-control:state\(answered\)([^{]*)\{([^}]*)\}/.exec(css)
+    expect(m, 'no ui-segmented-control:state(answered) ... { ... } rule found').not.toBeNull()
+    const [, selector, rule] = m as unknown as [string, string, string]
+    expect(selector).toMatch(/:not\(:state\(pending\)\)/)
+    expect(selector).toMatch(/:not\(\[disabled\]\)/)
+    expect(selector).toMatch(/:not\(\[checked\]\)/)
+    expect(rule).toMatch(/background:\s*var\(--ui-segmented-control-bg-answered\)/)
+    expect(rule).toMatch(/color:\s*var\(--ui-segmented-control-ink-answered\)/)
+  })
+
+  it('the hover/active washes exclude :state(answered)', () => {
+    expect(css).toMatch(/ui-segmented-control:not\(:state\(answered\)\) ui-segment:not\(\[checked\]\):hover/)
+    expect(css).toMatch(/ui-segmented-control:not\(:state\(answered\)\) ui-segment:not\(\[checked\]\):active/)
   })
 })

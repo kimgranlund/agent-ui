@@ -108,6 +108,11 @@ const props = {
   // to JS-set values too, not only author-set attributes — the T7 coherence fix (ADR-0081 doc-tail:
   // select shipped the [size] CSS ramp with no declaring prop/attribute, an API-drift blind spot).
   size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
+
+  // ADR-0196 (GH #1065) — the answered/settled choice state. The CONSUMING surface (e.g. an A2UI
+  // questionnaire card) sets this after submit; the effect below mirrors it into `:state(answered)`
+  // on the trigger's own host (presentation-only — never AX-reflected, never disabled/readonly).
+  answered: prop.boolean(false),
 } satisfies PropsSchema
 
 // ── Element ──────────────────────────────────────────────────────────────────────────────────────
@@ -249,6 +254,14 @@ export class UISelectElement extends UIFormElement {
         this.internals.states?.delete('user-invalid')
         trigger.removeAttribute('aria-invalid')
       }
+    })
+
+    // ADR-0196 — mirror `answered` into `:state(answered)` on the HOST (optional-chained: jsdom may
+    // lack CustomStateSet). select.css's answered block reaches the trigger part via this host state.
+    // Presentation-only; never touches disabled/tabindex/ARIA.
+    this.effect(() => {
+      if (this.answered) this.internals.states?.add('answered')
+      else this.internals.states?.delete('answered')
     })
 
     // Wire the overlay controller (LLD-C1..C4) — proves overlay + listbox together (ADR-0043 S4).
