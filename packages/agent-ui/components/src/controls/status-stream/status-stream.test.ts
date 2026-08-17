@@ -1386,13 +1386,21 @@ describe('status-stream.css — the :state(pending) dim rule + its token chain (
     expect(tokenBlock).toMatch(/--ui-status-stream-pending-duration:\s*var\(--ui-pending-duration\)\s*;/)
   })
 
-  it('the :scope:state(pending) rule reads ONLY its own --ui-status-stream-pending-* chain, never the fleet token directly', async () => {
+  it('the :scope:state(pending) rule reads ONLY its own --ui-status-stream-pending-opacity, never the fleet token directly', async () => {
     const { bare } = await readCss()
     const rule = (bare.match(/:scope:state\(pending\)\s*\{[^}]*\}/) ?? [''])[0]
     expect(rule.length, ':scope:state(pending) rule not found').toBeGreaterThan(0)
     expect(rule).toMatch(/opacity:\s*var\(--ui-status-stream-pending-opacity\)/)
-    expect(rule).toMatch(/transition:\s*opacity\s+var\(--ui-status-stream-pending-duration\)/)
     expect(rule).not.toMatch(/--ui-pending-/) // the fleet token itself — only the own-chain alias reads it
+  })
+
+  it('the transition lives on the PERSISTENT :scope rule, not the :state(pending) rule — so the un-dim animates too (both edges of the state, not just the entry)', async () => {
+    const { bare } = await readCss()
+    const scopeRule = (bare.match(/:scope\s*\{[^}]*\}/) ?? [''])[0]
+    expect(scopeRule.length, 'base :scope rule not found').toBeGreaterThan(0)
+    expect(scopeRule).toMatch(/transition:\s*opacity\s+var\(--ui-status-stream-pending-duration\)/)
+    const pendingRule = (bare.match(/:scope:state\(pending\)\s*\{[^}]*\}/) ?? [''])[0]
+    expect(pendingRule).not.toMatch(/transition:/) // the state rule sets opacity only — never re-declares the transition
   })
 
   /** Brace-balanced block extraction from `start` (the index of an `@media`/selector's own text) — the
@@ -1411,21 +1419,22 @@ describe('status-stream.css — the :state(pending) dim rule + its token chain (
     return text.slice(start)
   }
 
-  it('zeroes the pending transition under prefers-reduced-motion', async () => {
+  it('zeroes the pending transition under prefers-reduced-motion (on the same persistent :scope rule the transition itself lives on)', async () => {
     const { bare } = await readCss()
     // TWO `@media (prefers-reduced-motion: reduce)` blocks exist in this file (the header-marker pulse,
-    // and the shimmer/caret/pending block this repair extended) — find the ONE containing the pending rule.
+    // and the shimmer/caret/pending block this repair extended) — find the ONE containing a bare `:scope {`
+    // rule (this repair's own addition; the OTHER reduced-motion block has no bare :scope rule at all).
+    const bareScopeRule = ':scope { transition: none; }'
     let idx = bare.indexOf('@media (prefers-reduced-motion: reduce)')
     let ownBlock: string | undefined
     while (idx !== -1) {
       const block = extractBlock(bare, idx)
-      if (block.includes(':scope:state(pending)')) {
+      if (block.includes(bareScopeRule)) {
         ownBlock = block
         break
       }
       idx = bare.indexOf('@media (prefers-reduced-motion: reduce)', idx + 1)
     }
-    expect(ownBlock, 'no reduced-motion block contains :scope:state(pending)').toBeDefined()
-    expect(ownBlock).toMatch(/:scope:state\(pending\)\s*\{\s*transition:\s*none\s*;\s*\}/)
+    expect(ownBlock, `no reduced-motion block contains "${bareScopeRule}"`).toBeDefined()
   })
 })

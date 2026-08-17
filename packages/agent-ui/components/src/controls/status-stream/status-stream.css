@@ -130,6 +130,16 @@
     /* GH #722 — hidden scroller, live scroll (token block, above): both shipped engines support
        scrollbar-width (the menu.css/GH #166 precedent). */
     scrollbar-width: var(--ui-status-stream-scrollbar-width);
+    /* GH #974/ADR-0191 (booked repair GH #999) — the pending dim's transition lives on the PERSISTENT
+       rule, not the pending-state rule below: declaring it only on the state rule would animate the
+       dim-IN but let the un-dim (the state's removal — arguably the more visible edge, a fresh answer
+       just landed) snap instantly, since the `transition` property disappears the same instant the state
+       does. ADR-0191 Decision cl.2 says the opacity step is "transitioned over --ui-pending-duration" with
+       no one-way carve-out, so both directions of a toggling state need the property present regardless
+       of which side of the toggle is current — unlike the fleet's `ready` custom state (interaction-
+       states.md §4b), which is set once and never cleared, so gating ITS transition on the state itself
+       carries no such asymmetry. */
+    transition: opacity var(--ui-status-stream-pending-duration) var(--md-sys-motion-easing-standard);
   }
 
   /* GH #974/ADR-0191 (booked repair GH #999) — the pending/stale-content dim: a single opacity step over
@@ -141,7 +151,6 @@
      pending again without leaving `settled`; the render when both compose is this rule's own answer). */
   :scope:state(pending) {
     opacity: var(--ui-status-stream-pending-opacity);
-    transition: opacity var(--ui-status-stream-pending-duration) var(--md-sys-motion-easing-standard);
   }
 
   /* GH #722 (candidate 6) — top-level entries share the header's inline-start inset so both marker
@@ -329,8 +338,9 @@
     :scope > [data-part='header'] [data-part='header-caret'] {
       transition: none;
     }
-    /* GH #974/ADR-0191 (§5c) — the pending dim steps instantly instead of transitioning. */
-    :scope:state(pending) {
+    /* GH #974/ADR-0191 (§5c) — the pending dim steps instantly instead of transitioning, both directions
+       (the transition now lives on the persistent :scope rule, above — zero it there too). */
+    :scope {
       transition: none;
     }
   }
