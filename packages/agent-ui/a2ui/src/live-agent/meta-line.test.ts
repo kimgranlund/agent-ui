@@ -455,3 +455,58 @@ describe('readMetaLine — the personaPatch field (ADR-0178 cl.1 / SPEC-R29 AC1)
     expect(readMetaLine('{"version":"v1.0","a2uiMeta":{"personaPatch":{"values":{"name":"X"}}}}')).toBeUndefined()
   })
 })
+
+// ── ADR-0198 cl.1: the additive `flowEnd` field ─────────────────────────────────────────────────────────
+// The FOURTH MODEL-authored arm (ask → plan → personaPatch → flowEnd), mirroring the sibling suites:
+// literal-true acceptance, everything else drops ONLY itself, per-field independence, disjointness.
+describe('readMetaLine — the flowEnd field (ADR-0198 cl.1)', () => {
+  it('round-trips {note, flowEnd: true} — the closing turn shape', () => {
+    const line = JSON.stringify({
+      a2uiMeta: { note: "You're all set — we'll see you today at 2pm.", flowEnd: true },
+    })
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.note).toBe("You're all set — we'll see you today at 2pm.")
+    expect(parsed!.a2uiMeta.flowEnd).toBe(true)
+  })
+
+  it('a note-only line (no flowEnd at all) parses with flowEnd undefined — the safe-degrade law (negative control)', () => {
+    const parsed = readMetaLine('{"a2uiMeta":{"note":"and next, which time works?"}}')
+    expect(parsed).toBeDefined()
+    expect(parsed!.a2uiMeta.flowEnd).toBeUndefined()
+  })
+
+  it('flowEnd: false drops ONLY itself — never coerced to a completion', () => {
+    const parsed = readMetaLine('{"a2uiMeta":{"note":"hi","flowEnd":false}}')
+    expect(parsed!.a2uiMeta.note).toBe('hi')
+    expect(parsed!.a2uiMeta.flowEnd).toBeUndefined()
+  })
+
+  it.each([['a string "true"', '"true"'], ['the number 1', '1'], ['an object', '{}'], ['an array', '[true]'], ['null', 'null']])(
+    'a malformed flowEnd (%s) drops only itself, never the whole envelope',
+    (_label, raw) => {
+      const parsed = readMetaLine(`{"a2uiMeta":{"note":"hi","flowEnd":${raw}}}`)
+      expect(parsed).toBeDefined()
+      expect(parsed!.a2uiMeta.note).toBe('hi')
+      expect(parsed!.a2uiMeta.flowEnd).toBeUndefined()
+    },
+  )
+
+  it('a well-formed flowEnd survives beside a MALFORMED ask on the same line (per-field independence)', () => {
+    const parsed = readMetaLine('{"a2uiMeta":{"note":"done","ask":"broken","flowEnd":true}}')
+    expect(parsed!.a2uiMeta.ask).toBeUndefined()
+    expect(parsed!.a2uiMeta.flowEnd).toBe(true)
+  })
+
+  it('flowEnd rides alongside every sibling field without disturbing them', () => {
+    const line = JSON.stringify({
+      a2uiMeta: { note: 'wrap', plan: { steps: [{ id: 's1', description: 'd' }] }, flowEnd: true },
+    })
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.plan).toEqual({ steps: [{ id: 's1', description: 'd' }] })
+    expect(parsed!.a2uiMeta.flowEnd).toBe(true)
+  })
+
+  it('the envelope stays disjoint from A2uiServerMessage — a `version` key still refuses the whole line', () => {
+    expect(readMetaLine('{"version":"v1.0","a2uiMeta":{"flowEnd":true}}')).toBeUndefined()
+  })
+})

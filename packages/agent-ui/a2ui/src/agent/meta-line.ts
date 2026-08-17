@@ -36,6 +36,15 @@
 // granularity; `entries` appended, never replacing; no deletion semantics) is SPEC-R29's, stated there and
 // enforced there — this file carries the wire representation ONLY.
 //
+// ADR-0198 cl.1 adds a FOURTH additive MODEL-authored field, `flowEnd`: the closing turn of an
+// ask-flow (the turn AFTER the user commits the flow-final confirm) declares completion by carrying
+// `flowEnd: true` on the SAME leading meta-line as `note`, following the `ask`/`plan`/`personaPatch`
+// arm precedent EXACTLY — shallow-validated per-field-independently (anything other than literal
+// `true` yields the envelope WITHOUT `flowEnd`, never the whole envelope dropped). A bare boolean,
+// not an object, deliberately: v1 carries no payload; if a future consumer earns structure the field
+// widens additively to `true | {...}`. A model that omits it degrades safely to today's behavior —
+// chrome only ever acts on the explicit field, never a heuristic (ADR-0198 Non-goals).
+//
 // Zero-dep, pure (SPEC-N5): no imports.
 
 /**
@@ -170,6 +179,11 @@ export interface A2uiMetaEnvelope {
      *  a declared patch is ever CONSUMED is the host's call, gated per persona (SPEC-R30); the wire layer
      *  is gate-blind. */
     personaPatch?: PersonaPatch
+    /** ADR-0198 cl.1: the model's own flow-completion declaration — the closing turn of an ask-flow
+     *  carries literal `true`, additive alongside `note`/`ask`/`plan`/`personaPatch` on the SAME
+     *  leading meta-line. MODEL-authored, shallow-validated the same per-field-independent way — a
+     *  malformed `flowEnd` (anything but literal `true`) drops only itself, never the whole envelope. */
+    flowEnd?: true
     trace?: TurnTrace
     /** ADR-0146 F1: a runtime-composed live-turn lifecycle event, INTERLEAVED during the turn (not just a
      *  single leading line). Shallow-validated the same way `ask` is — a malformed `progress` drops only
@@ -269,6 +283,13 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
     }
   }
 
+  // ADR-0198 cl.1: `flowEnd` is shallow-validated the SAME per-field-independent way as
+  // `ask`/`plan`/`personaPatch` — anything other than literal `true` (a string "true", 1, an object,
+  // `false`) drops ONLY `flowEnd`, never the whole envelope (note/ask/plan/personaPatch/trace/
+  // progress/error on the same line still parse normally). MODEL-authored; omitted = not a closing
+  // turn — the safe-degrade law.
+  const flowEnd: true | undefined = m.flowEnd === true ? true : undefined
+
   // ADR-0146 F1: `progress` is shallow-validated the SAME way — a malformed `progress` (non-object, or a
   // `stage` outside the closed vocabulary, or a non-number `round` / non-string `detail`/`source`) drops
   // only itself, never the whole envelope. The closed `stage` union is the honesty-law guard (F2): an
@@ -296,6 +317,7 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
       ask,
       plan,
       personaPatch,
+      flowEnd,
       trace: m.trace as TurnTrace | undefined,
       progress,
       error,
