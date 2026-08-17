@@ -10,8 +10,11 @@
   tier itself — nothing replaces them file-side, since an Issue body isn't a file this gate can
   read; `.github/ISSUE_TEMPLATE/*.yml` is the new authoring-time contract, enforced by GitHub's
   own required-field validation at submission, not a repo-side lint.
-- `.claude/hooks/adr-status-guard.py` (PreToolUse, registered) — blocks agent flips → `accepted`
-  (and, since GH #745, fails closed on any edit leaving ≠ 1 Status rows — the decoy defense).
+- `.claude/hooks/adr-status-guard.py` — REMOVED 2026-08-17 (Kim: "remove all hooks", repo-wide;
+  `.claude/settings.json` carries no `hooks` key). No PreToolUse guard blocks a direct agent
+  Status-flip today; discipline rests entirely on agents never editing a Status cell by hand and
+  on `scripts/adr_ratify.py` below being the only sanctioned path. If this gap bites, re-mint the
+  guard rather than assuming it still exists.
 - `scripts/adr_ratify.py` — THE sanctioned flip path, BOTH modes: whole-ADR `proposed → accepted`
   (a verified `ratify ADR-####` owner utterance) AND the GH #664 AMENDMENT mode — an in-body
   `## Amendment (DATE, **proposed** — Kim ratifies) — TITLE` header (that literal marker grammar,
