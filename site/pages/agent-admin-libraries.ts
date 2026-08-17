@@ -136,14 +136,14 @@ export const HOSPITALITY_SKILLS: readonly NewEntryInput[] = [
 export const CORE_PLAYBOOKS: readonly NewEntryInput[] = [
   {
     label: 'intake-confirm',
-    description: 'collect structured input then confirm from the submitted values',
+    description: 'Any structured-intake domain — a form collects input, validates, and confirms from the submitted values.',
     content:
       'Form → validate → submit → confirmation. The confirmation Card binds to the SAME data-model paths ' +
       'the form wrote (one source of truth), restates the key values, and offers exactly one next action.',
   },
   {
     label: 'round-loop',
-    description: 'turn-based game or task rounds on one persistent surface',
+    description: 'Turn-based games or stepped tasks — rounds play out on one persistent surface updated in place.',
     content:
       'One surface, updated in place: each user action drives ONE updateDataModel turn (never a fresh ' +
       'surface per round). Keep score/state in the data model; disable action Buttons that are invalid in ' +
@@ -151,7 +151,7 @@ export const CORE_PLAYBOOKS: readonly NewEntryInput[] = [
   },
   {
     label: 'drilldown',
-    description: 'overview first, detail on demand',
+    description: 'Data / dashboard exploration — an aggregate overview first, drill into detail on the same surface.',
     content:
       'Lead with the aggregate view (Stat row / Table / chart). Every row or tile that HAS depth gets an ' +
       'action; the drill-in updates the SAME surface with a back action, never a second parallel surface.',
@@ -161,7 +161,7 @@ export const CORE_PLAYBOOKS: readonly NewEntryInput[] = [
 export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
   {
     label: 'booking-flow',
-    description: 'hotel room / spa / amenity booking end to end',
+    description: 'Hotel domain — a room / spa / amenity booking end to end, intake form through confirmation card.',
     content:
       'Availability question → intake form (dates, party size, preferences) → validity-gated submit → ' +
       'confirmation card from the submitted values → offer ONE follow-up (add breakfast, spa slot, ' +
@@ -169,7 +169,7 @@ export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
   },
   {
     label: 'table-reservation',
-    description: 'restaurant table booking + menu enquiry in one thread',
+    description: 'Restaurant domain — table booking plus menu enquiry handled in one thread.',
     content:
       'Menu enquiry renders the menu-card idiom; a reservation ask switches to a compact form (date, time ' +
       'Select from service windows, covers). After confirm, the card restates table details AND echoes any ' +
@@ -177,7 +177,7 @@ export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
   },
   {
     label: 'trip-plan',
-    description: 'multi-leg travel planning: compare, choose, summarize',
+    description: 'Travel domain — multi-leg trip planning: compare legs, choose, accumulate an itinerary, summarize.',
     content:
       'Legs render as comparison Cards in a Row (mode, duration, price Badge). The user picks via an ' +
       'action per card; chosen legs accumulate into an itinerary-timeline surface updated in place. End ' +
@@ -247,7 +247,7 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
 export const GAMES_PLAYBOOKS: readonly NewEntryInput[] = [
   {
     label: 'twenty-questions',
-    description: 'the 20-questions interrogation loop',
+    description: 'Guessing-game domain — the 20-questions loop: one question per turn, HUD-tracked, honest reveal by 20.',
     content:
       'Think of the answer FIRST and keep it fixed (state it honestly in the final reveal). Ask ONE ' +
       'question per turn in chat; the surface only tracks state (guess-hud idiom). Guess early when ' +
@@ -255,7 +255,7 @@ export const GAMES_PLAYBOOKS: readonly NewEntryInput[] = [
   },
   {
     label: 'negotiation-loop',
-    description: 'haggling, offers and counter-offers, deal state',
+    description: 'Trading-game domain — haggling rounds of offers and counter-offers on one deal-sheet surface.',
     content:
       'Run offers on one deal-sheet surface: the player moves a Slider, commits via an Offer action; ' +
       'respond in character in chat AND update the surface — mood Stat (signed delta), price-history ' +
@@ -264,7 +264,7 @@ export const GAMES_PLAYBOOKS: readonly NewEntryInput[] = [
   },
   {
     label: 'battle-rounds',
-    description: 'alternating-fire board game rounds',
+    description: 'Board-game domain — battleship-style alternating-fire rounds on phased-in 6×6 grids.',
     content:
       // GH #144: the opening turn is ONE board only (theirs — the one the player fires on); yours joins
       // the turn after the first shot lands. Keeps the heaviest turn of the game inside a small, reliable
