@@ -144,6 +144,47 @@ describe('capture import → replay (SPEC-R10 AC1 on the page) and the failed-re
     expect(verdict.textContent).toContain('FAILED')
   })
 
+  it('two surfaces where one is SILENTLY empty verdict per-surface: one ok:true + one ok:false (GH #1165)', async () => {
+    // "twin-good" renders a real Button root; "twin-ghost" is named on the wire (an updateDataModel to a
+    // surface that was never created — the renderer silently ignores it: no DOM, no VALIDATION_FAILED).
+    // The retired global-canvas heuristic read BOTH as ok:true because twin-good's DOM filled the canvas.
+    const lines = [
+      '{"version":"v1.0","createSurface":{"surfaceId":"twin-good","catalogId":"agent-ui"}}',
+      '{"version":"v1.0","updateComponents":{"surfaceId":"twin-good","components":[{"id":"root","component":"Button","variant":"solid","label":"Twin"}]}}',
+      '{"version":"v1.0","updateDataModel":{"surfaceId":"twin-ghost","value":{"x":1}}}',
+    ]
+    const capture: DevtoolsCapture = {
+      kind: 'agent-ui-devtools-capture',
+      version: 1,
+      createdAt: '2026-08-17T00:00:00.000Z',
+      backend: 'replay',
+      session: { turns: [] },
+      timeline: [
+        { seq: 0, at: 't', kind: 'turn-start', input: { kind: 'intent', text: 'x', session: { turns: [] } }, backend: 'replay' },
+        ...lines.map((line, i) => ({ seq: i + 1, at: 't', kind: 'line' as const, line })),
+        { seq: 4, at: 't', kind: 'turn-end' as const, status: 'ok' as const, lines: 3, ms: 0 },
+      ],
+    }
+    const inputBox = document.querySelector('[data-devtools="capture-input"]') as HTMLTextAreaElement
+    inputBox.value = JSON.stringify(capture)
+    ;(document.querySelector('[data-devtools="import"]') as HTMLElement).click()
+
+    const eventsBefore = timelineEvents().length
+    await postTurn('replay the two-surface capture')
+    const fresh = timelineEvents().slice(eventsBefore)
+    const renders = fresh.filter((e): e is Extract<DevtoolsEvent, { kind: 'render' }> => e.kind === 'render')
+    expect(renders.find((r) => r.surfaceId === 'twin-good')).toMatchObject({ ok: true })
+    expect(renders.find((r) => r.surfaceId === 'twin-ghost')).toMatchObject({ ok: false })
+    // and both verdicts are VISIBLE rows, each judged against its OWN root
+    const good = document.querySelector('[data-devtools="verdict"][data-surface-id="twin-good"]') as HTMLElement
+    const ghost = document.querySelector('[data-devtools="verdict"][data-surface-id="twin-ghost"]') as HTMLElement
+    expect(good.dataset.ok).toBe('true')
+    expect(ghost.dataset.ok).toBe('false')
+    expect(ghost.textContent).toContain('no root mounted')
+    // the good surface's root carries the per-surface marker on the canvas
+    expect(document.querySelector('[data-devtools="canvas"] [data-a2ui-surface="twin-good"]')).not.toBeNull()
+  })
+
   it('a malformed capture import fails with the typed field-naming message, never arming replay', () => {
     const inputBox = document.querySelector('[data-devtools="capture-input"]') as HTMLTextAreaElement
     inputBox.value = '{"kind":"something-else"}'

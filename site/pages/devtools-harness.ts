@@ -178,7 +178,13 @@ host.onClientMessage((message) => {
 
 function emitVerdict(surfaceId: string): void {
   const error = surfaceErrors.get(surfaceId)
-  const ok = error === undefined && canvasEl.childElementCount > 0 /* global-canvas heuristic — a multi-surface run with one silent-empty surface reads ok; SPEC-R9 note (checker nit) */
+  // Per-surface root presence (GH #1165 — retired the global-canvas heuristic): the renderer stamps
+  // each attached root with `data-a2ui-surface`, so a silently-empty surface reads ok:false even when
+  // ANOTHER surface put DOM on the canvas.
+  // (Attribute EQUALITY over children, not a selector — no CSS.escape dependency; roots attach as
+  // direct children of the mount.)
+  const hasRoot = [...canvasEl.children].some((child) => child.getAttribute('data-a2ui-surface') === surfaceId)
+  const ok = error === undefined && hasRoot
   pushEvent({
     seq: 0, // re-stamped by pushEvent
     at: new Date().toISOString(),
