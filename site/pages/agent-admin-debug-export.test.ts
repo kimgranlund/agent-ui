@@ -70,6 +70,55 @@ describe('buildDebugBundle', () => {
     expect(manifest.files.builderInterview).toEqual([`builder-interview/${activeId}.json`])
   })
 
+  // GH #1154 — the trip-wire: the shipped defect was a long live surface session exporting `[]` for both
+  // transcripts because the accessor read prose-arm model memory. That state must never export silently.
+  describe('the GH #1154 empty-transcript trip-wire (liveTurnCount)', () => {
+    it('THROWS when turns ran but BOTH transcripts are empty — never silently writes []', () => {
+      const agents = personaFixtures(1)
+      expect(() =>
+        buildDebugBundle({
+          agents,
+          activeAgentId: agents[0]!.persona.id,
+          testChatTranscript: [],
+          builderInterviewTranscript: [],
+          liveTurnCount: 7,
+          now: FIXED_NOW,
+        }),
+      ).toThrow(/live turn\(s\) ran this session but both transcripts are empty/)
+    })
+
+    it('does NOT throw when turns ran and at least one transcript carries them', () => {
+      const agents = personaFixtures(1)
+      const { entries } = buildDebugBundle({
+        agents,
+        activeAgentId: agents[0]!.persona.id,
+        testChatTranscript: [
+          { role: 'user', content: 'deal me in' },
+          { role: 'assistant', content: '[3 A2UI wire line(s), rendered without prose]' },
+        ],
+        builderInterviewTranscript: [],
+        liveTurnCount: 1,
+        now: FIXED_NOW,
+      })
+      expect(entries.some((e) => e.path.startsWith('test-chat/'))).toBe(true)
+    })
+
+    it('zero turns (or the field omitted) keeps the empty-is-real rule — [] exports fine', () => {
+      const agents = personaFixtures(1)
+      for (const liveTurnCount of [0, undefined]) {
+        const { entries } = buildDebugBundle({
+          agents,
+          activeAgentId: agents[0]!.persona.id,
+          testChatTranscript: [],
+          builderInterviewTranscript: [],
+          ...(liveTurnCount === undefined ? {} : { liveTurnCount }),
+          now: FIXED_NOW,
+        })
+        expect(entries.some((e) => e.path.startsWith('test-chat/'))).toBe(true)
+      }
+    })
+  })
+
   it('writes EMPTY transcripts as real `[]` files, not omitted — no turns run yet is a real state', () => {
     const agents = personaFixtures(1)
     const activeId = agents[0]!.persona.id

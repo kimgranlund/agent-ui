@@ -63,6 +63,11 @@ export interface DebugBundleInput {
   testChatTranscript: readonly DebugTranscriptTurn[]
   /** The active draft's own Builder-interview transcript ("copilot" pane) — same empty-is-real rule. */
   builderInterviewTranscript: readonly DebugTranscriptTurn[]
+  /** GH #1154 — the trip-wire: how many turns the live element has actually run this session (any arm,
+   *  `liveTurnCount()`). When this is > 0 and BOTH transcripts above are empty, the export is provably
+   *  dropping a live session (the shipped `[]`-bundle defect) and `buildDebugBundle` THROWS instead of
+   *  silently writing empty files. Omitted/0 keeps the empty-is-real rule: no turns ⇒ `[]` is the truth. */
+  liveTurnCount?: number
   /** Devtools session captures to carry (ADR-0200 clause 7 — the harness/app round-trip family), each
    *  under a caller-named id (`captures/<id>.json`). Absent/empty ⇒ the family is omitted ENTIRELY
    *  (no folder, no manifest field) — the additive-optional law. */
@@ -80,6 +85,16 @@ function prettyJson(value: unknown): string {
  *  Blob, no download — `buildZip` (zip-writer.ts) turns the returned entries into archive bytes, and the
  *  page wraps those in a download anchor exactly like `exportActivePersona` already does for one agent. */
 export function buildDebugBundle(input: DebugBundleInput): { entries: ZipEntryInput[]; manifest: DebugBundleManifest } {
+  // GH #1154 — fail LOUDLY, never write a silently-empty session: turns ran, yet neither transcript has a
+  // single entry ⇒ the caller is reading a source the session never reached (the exact shipped defect —
+  // `#history` was prose-arm memory while the whole session ran on the surface arm). The transcript is the
+  // bundle's entire diagnostic value; an empty one here is a bug upstream, not an exportable state.
+  if ((input.liveTurnCount ?? 0) > 0 && input.testChatTranscript.length === 0 && input.builderInterviewTranscript.length === 0) {
+    throw new Error(
+      `debug-export: ${input.liveTurnCount} live turn(s) ran this session but both transcripts are empty — ` +
+        'refusing to export an empty transcript for a live session (GH #1154)',
+    )
+  }
   const now = input.now ?? new Date()
   const agentSettingsFiles: string[] = []
   const entries: ZipEntryInput[] = []

@@ -298,12 +298,22 @@ function exportActivePersona(): void {
 
 function exportDebugBundle(): void {
   const agents = roster.map((persona) => ({ persona, store: personaStore(persona) }))
-  const { entries } = buildDebugBundle({
-    agents,
-    activeAgentId: active.id,
-    testChatTranscript: admin.testChatTranscript(),
-    builderInterviewTranscript: admin.builderInterviewTranscript(),
-  })
+  let built: ReturnType<typeof buildDebugBundle>
+  try {
+    built = buildDebugBundle({
+      agents,
+      activeAgentId: active.id,
+      testChatTranscript: admin.testChatTranscript(),
+      builderInterviewTranscript: admin.builderInterviewTranscript(),
+      // GH #1154 — the trip-wire: turns ran but both transcripts read empty ⇒ buildDebugBundle throws
+      // (a silently-[] transcript export is the defect this guards), surfaced as an URGENT toast below.
+      liveTurnCount: admin.liveTurnCount(),
+    })
+  } catch (err) {
+    notify(`Debug export failed — ${err instanceof Error ? err.message : String(err)}`, true)
+    return
+  }
+  const { entries } = built
   const zip = buildZip(entries)
   const url = URL.createObjectURL(new Blob([zip], { type: 'application/zip' }))
   const link = document.createElement('a')
