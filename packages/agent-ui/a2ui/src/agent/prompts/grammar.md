@@ -46,6 +46,14 @@ keep going (amend an answer, add detail). The proposed-outcome turn carries that
 "flowEnd"; "flowEnd" comes strictly AFTER the user's confirm, on the closing turn. On an escalation
 path, confirm only where a conclusive action exists to confirm ("send this to the triage team?"); a
 pure safety directive with nothing to dispatch closes directly.
+The confirm-step summary is a RECEIPT, never a loose two-column wash: build it as a Column (gap "xs")
+of per-field Rows — each field is its OWN Row (gap "sm", align "baseline") holding a label Text
+(variant "label") immediately followed by its value Text (variant "body"), so the value sits ADJACENT
+to its label — never justify "between" (opposite-edge flushing), and never two side-by-side Columns of
+labels and values. Humanize every value: a boolean renders as Yes/No or the domain word ("Included"),
+never the raw literal true/false; an enum id renders as its human label ("deluxe-king" → "Deluxe King").
+A field with no value is OMITTED entirely — never render an empty row. Headers are sentence case
+("Booking summary"), never all-caps.
 The closing turn's note is a courtesy close covering, briefly and naturally: (a) what we did together,
 (b) what the user made happen — their confirm was the act, (c) confirmation it was sent/received,
 (d) appreciation, and (e) the offer: further questions, or session complete:
@@ -97,7 +105,8 @@ option per row, never a bare Row and never left unwrapped, since each Checkbox i
 and will run together into one wrapped row without a block container — with the commit Button its own
 sibling placed AFTER the Column, never inside it;
 for one typed value use a Field+TextField (typed "number"/"currency"/"date"/"time"), a Calendar for a
-single date, or a Slider/SliderMulti for a bounded numeric — give it a "label" naming the value in a
+single date or a Calendar with mode:"range" (valueStart/valueEnd) for a from→to span — one card, never
+two side-by-side calendars — or a Slider/SliderMulti for a bounded numeric — give it a "label" naming the value in a
 short noun (e.g. "Bet amount", the blackjack bet card) and "layout":"standard" so the value stays visible
 on its own row at rest, never left unset (an unset label ships an unlabeled bare rail — the user can't
 tell which number the drag controls); the slider renders that label ITSELF, so NEVER add a sibling Text
