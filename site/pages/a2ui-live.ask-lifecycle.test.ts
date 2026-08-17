@@ -518,3 +518,128 @@ describe('a2ui-live — ADR-0196 settle/edit-amend (GH #1065)', () => {
     expect(group.answered).toBe(true)
   })
 })
+
+// ════════════════ GH #1107 — the Edit-reopen Cancel leg (✕ / Esc) restores the settled state exactly ═════
+// ADR-0196 shipped Edit with no way back out of it (the a2ui-mechanism review's improvised-by-omission LOW
+// finding). Cancel must restore the summary/collapsed/answered state EXACTLY, touching neither the data
+// model nor the wire: zero user turns, zero transport turns, the prior answer intact on the control itself
+// (not merely in the summary TEXT — a real per-control write-back, `snapshotAskControls`/`cancelAskEdit`).
+describe('a2ui-live — ADR-0196 Edit-cancel (GH #1107): ✕ and Esc restore the settled state, emitting nothing', () => {
+  async function answerAskOne(): Promise<{ turnInputs: TurnInput[]; bubble: HTMLElement; group: HTMLElement & { answered?: boolean; value?: string | null } }> {
+    const turnInputs: TurnInput[] = []
+    __setTransportForTest(
+      scriptedTransport((turn, input) => {
+        turnInputs.push(input)
+        if (turn === 1) return [metaLine({ note: 'Plan A or Plan B?', ask: { surfaceId: 'ask-1' } }), ...askAskOneLines('ask-1')]
+        return []
+      }),
+    )
+    await sendIntent('help me decide')
+    await waitUntil(() => !!askBubble('ask-1')?.querySelector('ui-button'))
+    ;(askBubble('ask-1')!.querySelector('ui-button') as HTMLElement).click()
+    await waitUntil(() => askBubble('ask-1')?.dataset.state === 'answered')
+    const bubble = askBubble('ask-1')!
+    const group = bubble.querySelector('ui-radio-group') as HTMLElement & { answered?: boolean; value?: string | null }
+    return { turnInputs, bubble, group }
+  }
+
+  it('✕ Cancel restores the summary, re-collapses the options, re-applies :state(answered), and restores the PRIOR answer on the control itself — zero messages emitted', async () => {
+    const { turnInputs, bubble, group } = await answerAskOne()
+    expect(bubble.querySelector('.ask-settle-summary')?.textContent).toBe('Answered — Plan A.')
+
+    ;(bubble.querySelector('button.ask-edit') as HTMLElement).click()
+    expect(bubble.dataset.editing, 'Edit reopens').toBeDefined()
+    expect(group.answered, 'Edit clears answered for the duration of the edit').toBe(false)
+    expect(bubble.querySelector('button.ask-cancel'), 'the ✕ Cancel affordance is present while editing').not.toBeNull()
+
+    // Change the selection while editing, but never commit it.
+    const optB = [...bubble.querySelectorAll<HTMLElement>('ui-radio')].find((r) => r.textContent?.includes('Plan B'))!
+    optB.click()
+    await waitUntil(() => optB.hasAttribute('checked'))
+
+    const userMessagesBefore = chatMessages('user').length
+    const turnsBefore = turnInputs.length
+    ;(bubble.querySelector('button.ask-cancel') as HTMLElement).click()
+
+    expect(bubble.dataset.editing, 'Cancel re-collapses the card').toBeUndefined()
+    expect(group.answered, 'Cancel re-applies :state(answered)').toBe(true)
+    expect(group.value, 'the PRIOR answer is restored on the control itself, not just re-derived from the summary text').toBe('A')
+    expect(bubble.querySelector('.ask-settle-summary')?.textContent, 'restore = exact settled state').toBe('Answered — Plan A.')
+    expect(chatMessages('user').length, 'Cancel appends no amendment turn').toBe(userMessagesBefore)
+    expect(turnInputs.length, 'Cancel dispatches no transport turn').toBe(turnsBefore)
+    expect(bubble.dataset.state, "the entry's answered state (the data model) is untouched by Cancel").toBe('answered')
+  })
+
+  it('Esc while focus is within the card cancels the edit exactly like ✕', async () => {
+    const { turnInputs, bubble, group } = await answerAskOne()
+    ;(bubble.querySelector('button.ask-edit') as HTMLElement).click()
+    expect(bubble.dataset.editing).toBeDefined()
+
+    const optB = [...bubble.querySelectorAll<HTMLElement>('ui-radio')].find((r) => r.textContent?.includes('Plan B'))!
+    optB.click()
+    await waitUntil(() => optB.hasAttribute('checked'))
+
+    const userMessagesBefore = chatMessages('user').length
+    const turnsBefore = turnInputs.length
+    optB.focus()
+    optB.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+
+    expect(bubble.dataset.editing, 'Esc cancels the edit').toBeUndefined()
+    expect(group.answered).toBe(true)
+    expect(group.value).toBe('A')
+    expect(bubble.querySelector('.ask-settle-summary')?.textContent).toBe('Answered — Plan A.')
+    expect(chatMessages('user').length, 'Esc appends no amendment turn').toBe(userMessagesBefore)
+    expect(turnInputs.length, 'Esc dispatches no transport turn').toBe(turnsBefore)
+  })
+
+  it('Esc on a SETTLED (not editing) card is a no-op — the settle row is untouched', async () => {
+    const { bubble } = await answerAskOne()
+    bubble.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    expect(bubble.dataset.editing).toBeUndefined()
+    expect(bubble.querySelector('.ask-settle-summary')?.textContent).toBe('Answered — Plan A.')
+  })
+
+  it('an empty-prior amendment reads "Answered: X", never the phantom-diff "Changed:  → X"', async () => {
+    const surfaceId = 'ask-cb'
+    const lines = [
+      `{"version":"v1.0","createSurface":{"surfaceId":"${surfaceId}","catalogId":"agent-ui","sendDataModel":true}}`,
+      `{"version":"v1.0","updateComponents":{"surfaceId":"${surfaceId}","components":[` +
+        `{"id":"root","component":"Column","children":["q","choice","commit"]},` +
+        `{"id":"q","component":"Text","text":"Subscribe to updates?"},` +
+        `{"id":"choice","component":"Checkbox","label":"Subscribe"},` +
+        `{"id":"commit","component":"Button","label":"Confirm","action":{"action":"confirm"}}` +
+        `]}}`,
+    ]
+    const turnInputs: TurnInput[] = []
+    __setTransportForTest(
+      scriptedTransport((turn, input) => {
+        turnInputs.push(input)
+        if (turn === 1) return [metaLine({ note: 'Subscribe to updates?', ask: { surfaceId } }), ...lines]
+        return []
+      }),
+    )
+
+    await sendIntent('ask me')
+    await waitUntil(() => !!askBubble(surfaceId)?.querySelector('ui-button'))
+    // Commit UNCHECKED — the card's first recorded answer is empty ('' — nothing checked).
+    ;(askBubble(surfaceId)!.querySelector('ui-button') as HTMLElement).click()
+    await waitUntil(() => askBubble(surfaceId)?.dataset.state === 'answered')
+    const bubble = askBubble(surfaceId)!
+    expect(bubble.querySelector('.ask-settle-summary')?.textContent, 'an empty first answer settles as a plain "Answered."').toBe('Answered.')
+
+    // Edit → check the box → re-commit: the amendment diffs against an EMPTY prior.
+    ;(bubble.querySelector('button.ask-edit') as HTMLElement).click()
+    const checkbox = bubble.querySelector('ui-checkbox') as HTMLElement
+    checkbox.click()
+    await waitUntil(() => checkbox.hasAttribute('checked'))
+    const turnsBeforeAmend = turnInputs.length
+    ;(bubble.querySelector('ui-button') as HTMLElement).click()
+    await waitUntil(() => turnInputs.length === turnsBeforeAmend + 1)
+
+    expect(
+      chatMessages('user').some((m) => m.textContent?.includes('Answered: Subscribe')),
+      'the empty-prior case reads "Answered: X", never "Changed:  → X"',
+    ).toBe(true)
+    expect(chatMessages('user').some((m) => m.textContent?.includes('Changed:')), 'no phantom "Changed:" diff for a first answer').toBe(false)
+  })
+})
