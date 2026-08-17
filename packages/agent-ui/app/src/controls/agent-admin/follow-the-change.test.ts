@@ -420,6 +420,8 @@ describe('GH #1105 — the receipt renders as a REAL clickable list (never a new
     // focus landed inside the target fold (the summary — the fold's own natively-focusable part)
     const fold = el.querySelector(`[data-part="settings-item"][data-item="${ENTRY_KINDS.skill}"]`) as HTMLElement
     expect(fold.contains(document.activeElement)).toBe(true)
+    // the SPEC-R5 attention wash fires on click-nav too (GH #1105 follow-up finding, AGENT-UI-3)
+    expect(fold.hasAttribute('data-attention')).toBe(true)
     // purity (the issue's cl.4-style law): NO chat turn appended, NO surface request fired
     expect(requests.length).toBe(requestsBefore)
     expect(log.children.length).toBe(bubblesBefore)

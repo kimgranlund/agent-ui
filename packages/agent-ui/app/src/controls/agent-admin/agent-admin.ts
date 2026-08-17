@@ -2058,6 +2058,7 @@ export class UIAgentAdminElement extends UIElement {
       this.#applySettingsSection(location.section)
     }
     this.#scrollToFold(location)
+    this.#washFold(location) // the SPEC-R5 attention wash — same cue as follow-the-change (GH #1105 follow-up)
     const summary = this.#foldFor(location)?.querySelector<HTMLElement>('[data-part="summary"]')
     if (summary === undefined || summary === null) return
     summary.tabIndex = 0
