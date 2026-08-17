@@ -82,6 +82,18 @@
   on a peer session — each call raises an app-level grant card to Kim regardless of bypassPermissions
   (root-caused: those were the only grant-raising calls of the day). Peer state = on-issue claims, PR list,
   `git worktree list` + branch heads, this file. `list_sessions`/`get_session` metadata is fine.
+## Merge desk — 2026-08-17 ~05:10Z (AGENT-UI-4)
+
+- AGENT-UI-4 (Kim's interactive session, this note) takes the coordination/merge desk per Kim 05:09Z.
+  Holds no build lanes. Direct SendMessage channel to AGENT-UI-3 confirmed working 05:10Z
+  (`uds:/tmp/cc-socks/9445.sock`) — transcript-read ban unchanged.
+- Board at 05:10Z: #1042–#1045, #1047, #1050 merged (PRs #1051–#1057). Open: #1048/#1049
+  (AGENT-UI-3, built + gates green, shipping now — AGENT-UI-4 fallback-ships if no PR by 05:45Z,
+  per on-issue comments) · #1046 (AGENT-UI-2, worktree at main HEAD with ZERO commits since the
+  04:19Z claim — status-or-stand-down probe posted, 05:45Z deadline, then AGENT-UI-4 re-dispatches
+  in a fresh worktree; the stale worktree gets flagged here, never removed).
+- AGENT-UI-4 runs `npm run check` on main after the #1048/#1049 merges land and posts the tally here.
+
 - **2026-08-17 (Kim, direct + repeated): `teamwork@nonoun-plugins` DISABLED in `.claude/settings.json`.**
   Root cause of the "Allow Claude to run?" prompts Kim kept seeing overnight despite bypassPermissions:
   they were NOT permission-mode prompts — `teamwork`'s `worktree_prebash_guard.py` is a PreToolUse(Bash)
