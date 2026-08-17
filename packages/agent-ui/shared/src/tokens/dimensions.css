@@ -108,6 +108,23 @@
   --ui-pending-duration: var(--md-sys-motion-duration-fast);
   --ui-pending-opacity: 0.6;
 
+  /* Working/live-surface-mutation convention (ADR-0199, GH #1104) — the fleet-wide `:state(working)`
+     breathing treatment's constants (interaction-states.md §7). `--ui-working-duration` is the fleet's
+     FIRST LOOP-motion literal, deliberately NOT an alias of `--md-sys-motion-duration-fast` (300ms is a
+     state-TRANSITION duration; a breathing half-cycle at 300ms is a strobe, not a breath — ADR-0199
+     cl.4): ~1.6s per half-cycle (≈3.2s full breath, ≈0.3Hz, the calm-ambient band). The opacity pair is
+     the breath's two rungs on the ::after overlay (the overlay's OPACITY animates — compositor-only —
+     never the box-shadow value itself); `--ui-working-blur` is the "large diffused" inset spread, a
+     paint constant like the focus-ring width (no [scale] ramp participation — it never animates). All
+     :root CONSTANTS, and NOT on the sanctioned direct-read list (TKT-0066 item 5) — a consuming control
+     routes them through its OWN chain, e.g. `--ui-surface-host-working-duration:
+     var(--ui-working-duration);` in the control's `:where()` block. The color half of the treatment
+     (`--ui-working-color`) lives in tokens.css. */
+  --ui-working-duration: 1600ms;
+  --ui-working-opacity-min: 0.15;
+  --ui-working-opacity-max: 0.55;
+  --ui-working-blur: 24px;
+
   /* Container radius (ADR-0015 cl.5) — ONE shared fleet radius. A CONSTANT on :root, NOT the `*` ramp:
      unlike a control's pill radius (frame family ∝ height, scaled), a container's corner radius is fixed
      regardless of [scale] (the ADR is explicit — "not subtree-derived"). A root container reads

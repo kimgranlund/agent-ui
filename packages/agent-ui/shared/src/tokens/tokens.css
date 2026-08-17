@@ -1102,6 +1102,15 @@
   --ui-answered-bg: var(--md-sys-color-neutral-container-low);
   --ui-answered-ink: var(--md-sys-color-neutral-on-surface-variant);
 
+  /* ⑥ Working/live-surface-mutation color (ADR-0199, GH #1104) — the fleet-wide `:state(working)`
+        breathing inner-shadow treatment's ONE color, a PURE ALIAS of the primary role (zero new
+        literals, the ADR's own clause 4): the alive signal is accent-family by intent (activity, not
+        neutrality); rendered strength is governed entirely by the `--ui-working-opacity-*` rungs
+        (dimensions.css), which at max keep the effective surface tint under the G9 14%-alpha ceiling
+        across the diffused inset falloff. Consumed only through a consuming control's own
+        --ui-{name}-* chain inside its `:state(working)` rule (interaction-states.md §7). */
+  --ui-working-color: var(--md-sys-color-primary);
+
 }
 
 /* Forced-colors (WHCM) — roles carry the WHCM mapping in the token layer (tokens.md), so components survive

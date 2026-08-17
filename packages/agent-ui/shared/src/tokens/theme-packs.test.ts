@@ -53,6 +53,10 @@ const BESPOKE_EXEMPT = new Set([
   // re-themes the underlying roles re-themes these for free, and a stock export never mints --ui-*.
   '--ui-answered-bg',
   '--ui-answered-ink',
+  // ADR-0199 (GH #1104) — a pure alias of the primary role (`var(--md-sys-color-primary)`, tokens.css
+  // ⑥); same class as the answered aliases above: a pack that re-themes primary re-themes this for
+  // free, and a stock export never mints --ui-*.
+  '--ui-working-color',
 ])
 
 /** name -> declared value (the FIRST `:root`/`[theme=...]` block only — every pack + tokens.css is
