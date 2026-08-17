@@ -64,6 +64,15 @@ shard.
   checkout's node_modules — import-resolving tests/builds silently exercise main's sources, and
   Vite's fs-allow denies `?raw` modules. Install in the worktree and `readlink
   node_modules/@agent-ui/shared` before trusting any import-resolving gate.
+- Bundle-shape gates (the built-output-proofs bar, applied to lazy splits): assert the arm is
+  absent from the transitive **EAGER CLOSURE** — entry chunks PLUS every chunk they statically
+  import, walked to a fixed point — never merely from `isEntry` chunks. A lazy accessor's arm can
+  leak into a STATIC SHARED chunk the entry imports eagerly (`isEntry: false` yet loaded with the
+  barrel), so "absent from isEntry chunks" passes VACUOUSLY on exactly the regression it exists to
+  catch. Pattern: `chunksOf`'s eager `Set` (seeded from `isEntry`, expanded over `imports`) in
+  `packages/agent-ui/app/src/controls/agent-admin/agent-admin-lazy.bundle.test.ts` (ADR-0197,
+  refining the markdown-lazy precedent), with its anti-vacuous non-empty-closure guard and the
+  negative control (a synthetic statically-importing entry DOES land the arm eagerly).
 - **Thin ink does not police at the fleet's default visual tolerance — measure before pinning a
   hairline.** A 1px border baseline measured 1 changed pixel at `includeAA:false, threshold:0.1`
   (the harness default) — AA-edge classification and a sub-threshold colour delta both absorb it,

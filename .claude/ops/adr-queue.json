@@ -1,85 +1,34 @@
 {
   "candidates": [
     {
-      "adr_id": "adr-0191",
-      "evidence": "ADR-0191 (ratified 2026-08-16, GH #974, PR carrying pendingComputed+ADR): fleet-wide ONE host custom state (:state(pending)) + ONE token pair (--ui-pending-duration aliasing --md-sys-motion-duration-fast, --ui-pending-opacity=0.6) for async-stale content, the TKT-0062 filled-state-law SHAPE re-applied to a second, orthogonal state axis (async freshness vs entry-control fill); precedence rule disabled > pending > TKT-0062 states, pending composes under settled rather than replacing it. Checked 2026-08-16 (decision-watcher sweep): no skills/*/references/*.md anywhere cites adr-0191, :state(pending), or --ui-pending- (grep across the whole corpus); component-standards/component-patterns carry no pending/async-staleness row.",
-      "harvested_at": "2026-08-17T11:49:56Z",
-      "kind": "harvest",
-      "landed_in": ".claude/skills/component-patterns/references/patterns-table.md (PR #1070)",
-      "plan": "Likely component-patterns/references/patterns-table.md (new row, same shape as the existing TKT-0062/ADR-0181 constants-pattern rows) — or component-standards if the harvest pass judges the fleet host-state VOCABULARY itself (ready/truncated/dragging/revealed/settled/pending) is the sharper axis; final call is make-pack's own placement judgment.",
-      "queued_at": "2026-08-17T04:29:49Z",
-      "status": "harvested"
-    },
-    {
-      "adr_id": "adr-0192",
-      "evidence": "ADR-0192 (ratified 2026-08-16, GH #955/#956/#957): the THIRD proof of the 'mint a new zero-dep sibling package off components' architecture pattern (router ADR-0115 -> code ADR-0119 -> data ADR-0192) — when general-purpose functionality doesn't fit components' reactive<-dom<-traits<-controls layering and would ride every consumer's foundation budget (ADR-0040), the answer is a new sibling package (shared <- components <- {router,code,data}), catalog-invisible by construction (a2ui never imports it), never grown inside components itself. Checked 2026-08-16 (decision-watcher sweep): composition-patterns/shell-and-data-surfaces.md's only sibling-package row (line 11) is scoped narrowly to 'navigation between views' and cites only ADR-0115 — it does not state the generalized mint-vs-grow-inside-components decision rule now proven three times; no other skill references ADR-0119 or ADR-0192 at all.",
-      "harvested_at": "2026-08-17T11:49:56Z",
-      "kind": "harvest",
-      "landed_in": ".claude/skills/component-patterns/references/patterns-table.md (PR #1070)",
-      "plan": "Likely component-patterns/references/patterns-table.md (new row: 'general-purpose functionality outside components' own layers' -> mint a zero-dep sibling package, cite ADR-0115/0119/0192 together) — make-pack's own placement judgment decides final home.",
-      "queued_at": "2026-08-17T04:29:49Z",
-      "status": "harvested"
-    },
-    {
-      "adr_id": "adr-0183",
-      "evidence": "ADR-0183's 2026-08-16 amendment (ratified, GH #958, verified via the utterance on PR carrying the change): the fleet's opt-in NAMED-MORPH convention — viewTransitionName(surface, token) + setViewTransitionName(el, name, enabled) in components/dom/view-transition.ts, names shaped ui-vt-{surface}-{token}, the pairing law (one name per visual role; unique per document, not per instance) and its first proving surface (ui-super-shell's viewTransitionNames boolean). Checked 2026-08-16 (decision-watcher sweep, re-read ADR-0183's own ratified text directly): component-patterns/references/patterns-table.md row 30 already cites ADR-0183 for the base withViewTransition/viewTransitionAvailable seam and ADR-0183's settled-once amendment (GH #742), but carries nothing about viewTransitionName/setViewTransitionName, the ui-vt- naming convention, or the pairing law — the named-morph half of the ADR is genuinely uncaptured, not a duplicate of the existing row.",
-      "harvested_at": "2026-08-17T11:49:56Z",
-      "kind": "harvest",
-      "landed_in": ".claude/skills/component-patterns/references/patterns-table.md (PR #1070)",
-      "plan": "Extend component-patterns/references/patterns-table.md row 30 (or add a sibling row directly under it) with the named-morph convention + pairing law + ui-super-shell as first proving surface — make-pack's own placement judgment decides new-row vs extend.",
-      "queued_at": "2026-08-17T04:29:49Z",
-      "status": "harvested"
-    },
-    {
-      "adr_id": "adr-0193",
-      "evidence": "ADR-0193 (ratified 2026-08-17, GH #959 Slice 1): a persistence-adapter seam lands in @agent-ui/shared (the DAG bottom) — one typed async StorageAdapter interface (get/set/delete/keys, optional subscribe) + a zero-dep localStorage tier (namespaced, native 'storage' event for cross-tab) + a zero-dep IndexedDB tier (hand-wrapped IDBRequest Promises, BroadcastChannel notify) — because a layer-contract change (what shared-or-above may persist through) earns an ADR before any consumer wires it, the same test ADR-0191 applied to a new host-state convention. Re-checked 2026-08-17 (decision-watcher re-judge): no skills/*/references/*.md anywhere mentions storage/persist/indexeddb/localstorage in a fleet-architecture sense; component-patterns/patterns-table.md and composition-patterns/shell-and-data-surfaces.md (the latter's only persistence row, line 17, explicitly flags per-user persistence as 'a separate, open seam (GH #959, awaiting a ruling)' — now resolved by this ADR) carry no StorageAdapter row.",
-      "harvested_at": "2026-08-17T11:58:48Z",
-      "kind": "harvest",
-      "landed_in": ".claude/skills/component-patterns/references/patterns-table.md + SKILL.md index + composition-patterns/references/shell-and-data-surfaces.md (stale GH #959 note repaired) (branch adr-harvest-0193-0160-0190)",
-      "plan": "Likely component-patterns/references/patterns-table.md (new row: 'a layer below app needs to persist something' -> StorageAdapter seam in @agent-ui/shared, zero-dep, async, localStorage+IndexedDB tiers, opt-in cross-tab notify) — same shape as the already-harvested adr-0192 sibling-package row; could also close composition-patterns/shell-and-data-surfaces.md line 17's open per-user-persistence note. make-pack's own placement judgment decides final home(s).",
-      "queued_at": "2026-08-17T11:51:38Z",
-      "status": "harvested"
-    },
-    {
-      "adr_id": "adr-0160",
-      "evidence": "ADR-0160's 2026-08-16 amendment (ratified, GH #1032, verified 2026-08-17): a real incident where align-self:flex-start sized a turn wrapper to its content's intrinsic width, and once a fixed-floor child (ui-status-stream's 16rem-floor narration strip) rode inside that wrapper, the WHOLE composed turn (header, pending row, bubble) collapsed to ~16rem and hugged the left edge on a real column, instead of filling it — the wrapper's own width rule silently followed its narrowest child's floor, not the column. Fix: for the agent role only, the wrapper drops the 92% cap and flips to align-self:stretch; max-inline-size:none; the user turn (no fixed-floor child) is untouched. Re-checked 2026-08-17 (decision-watcher re-judge): no skills/*/references/*.md mentions this align-self/intrinsic-width-floor composition trap; component-patterns/patterns-table.md carries no general layout-composition-gotcha row for it.",
-      "harvested_at": "2026-08-17T11:58:48Z",
-      "kind": "harvest",
-      "landed_in": ".claude/skills/component-patterns/references/patterns-table.md + SKILL.md index (branch adr-harvest-0193-0160-0190)",
-      "plan": "Likely component-patterns/references/patterns-table.md (new row, [incident]-marked per pack-writing-rules: 'a flex/grid item auto-sized to content (align-self:flex-start) collapses to a fixed-floor child's own min-width instead of filling the column when a fixed-floor component is composed inside it' -> use align-self:stretch + max-inline-size:none instead of re-tuning the cap) — make-pack's own placement judgment decides final home.",
-      "queued_at": "2026-08-17T11:51:38Z",
-      "status": "harvested"
-    },
-    {
-      "adr_id": "adr-0190",
-      "evidence": "ADR-0190's 2026-08-16 amendment (ratified, GH #1030, verified 2026-08-17): a HYBRID stopgap pattern for a load-on-demand affordance when the real fix (a model-side pull tool call) is architecturally deferred (ADR-0132's own tool-execution loop, gated behind parameter schemas) — client-side auto-attach on an EXACT, normalized text match of a reachable entity's label (case-insensitive, whitespace/punctuation-normalized), resolved through the SAME reference-resolution path an explicit user tag already uses, capped at one auto-attach per turn (a second exact hit is silently dropped, never surfaced), and deliberately excluding fuzzy/description matching (the false-positive risk explicitly declined). Named as a poor-man's UX repair ON TOP of an already-shipped poor-man's context-window bridge (this ADR's own §12), not a substitute for the real tool-call design named and deferred elsewhere. Re-checked 2026-08-17 (decision-watcher re-judge): no skills/*/references/*.md mentions auto-attach/exact-match/capability-tagging as a general hybrid-stopgap pattern.",
-      "harvested_at": "2026-08-17T11:58:48Z",
-      "kind": "harvest",
-      "landed_in": ".claude/skills/component-patterns/references/patterns-table.md + SKILL.md index (branch adr-harvest-0193-0160-0190)",
-      "plan": "Likely component-patterns/references/patterns-table.md (new row: 'a load-on-demand feature needs a stopgap before a real model-side tool-call loop ships' -> client-side exact-match auto-attach through the existing explicit-reference resolution path, one-per-turn cap, no fuzzy matching) or composition-patterns if judged product-specific to the capabilities-menu/agent-admin surface rather than a fleet-general idiom — make-pack's own placement judgment decides.",
-      "queued_at": "2026-08-17T11:51:38Z",
-      "status": "harvested"
-    },
-    {
       "adr_id": "adr-0196",
       "evidence": "ADR-0196 (ratified 2026-08-17, GH #1065): fleet answered/settled-choice state law — the THIRD proof of the ADR-0191/TKT-0062 shape (one host custom state, one alias-only token pair, a fixed precedence slot) reapplied to a THIRD orthogonal state axis (fill vs async-freshness vs now settled-choice). :state(answered) (role-repoint via --ui-answered-bg/--ui-answered-ink, zero new literals), fixed precedence disabled > pending > answered > focus > hover > filled > default, scoped to the 7 choice controls (ui-radio-group/checkbox/switch/segmented-control/select/multi-select/combo-box, explicitly NOT free-text), answered-not-disabled (replaces GH #805's disable-on-submit), and the settle/Edit/append-amendment template contract (never rewind, never an 8th event name). Checked 2026-08-17 (decision-watcher re-judge): component-patterns/patterns-table.md row 33 (ADR-0191/pending) already forward-cites 'sibling: ADR-0196 extends the family (the answered state)' but that is a one-clause pointer only -- no row anywhere states the answered host-state name, its token pair, the fixed 7-step precedence order, the choice-control scope enumeration, or the answered-not-disabled/append-amendment template contract. Genuinely uncaptured, not a duplicate of row 33's forward pointer.",
+      "harvested_at": "2026-08-17T14:37:52Z",
       "kind": "harvest",
+      "landed_in": ".claude/skills/component-patterns/references/patterns-table.md (new answered-state row beneath the ADR-0191 pending row) + component-patterns/SKILL.md index row (branch adr-harvest-0196-0197-0193a)",
       "plan": "Likely component-patterns/references/patterns-table.md: either extend row 33 into a dedicated answered-state row (same shape as the pending row) or add a new row directly beneath it citing ADR-0196, covering the state/token/precedence triad and the settle-not-disabled + append-amendment template contract; make-pack's own placement judgment decides new-row vs extend.",
-      "queued_at": "2026-08-17T14:11:35Z"
+      "queued_at": "2026-08-17T14:11:35Z",
+      "status": "harvested"
     },
     {
       "adr_id": "adr-0197",
       "evidence": "ADR-0197 (ratified 2026-08-17, GH #1092, built same-day PR #1097): the THIRD proof of the barrel-lazy-split pattern (dogfood-lazy GH#354 -> markdown-lazy GH#468 -> agent-admin-lazy ADR-0197) -- a public '.' barrel's STATIC class/tag re-export drags its whole module graph into every consumer's entry chunk regardless of use; fix = move static access to subpaths + add one memoized loadX() dynamic-import accessor on the barrel, gated by a Rolldown bundle-shape test. PR #1097 also strengthens the bundle-shape gate itself over the markdown-lazy precedent: agent-admin-lazy.bundle.test.ts's own comment names the gap -- a lazy accessor can still leak its arm into a STATIC SHARED chunk the entry imports eagerly (isEntry:false yet still loaded eagerly with the barrel), so 'absent from isEntry chunks' passes vacuously; the correct gated property is 'absent from the EAGER CLOSURE' (entry chunks + their transitive static imports), which is what agent-admin-lazy.bundle.test.ts's eager-closure computation (chunksOf's eager Set, walking imports) actually asserts. Checked 2026-08-17: patterns-table.md row 17 ('a heavy sub-component only some usages need -> lazy import() at the interaction point') is a DIFFERENT shape (internal lazy-import for an interior sub-component, ADR-0048's calendar-into-text-field-overlay) and does not cover a public barrel's STATIC re-export forcing bundling, nor the eager-closure bundle-test refinement; grep of every skills/*/references/*.md for moduleIds/bundle.test/rolldown/isEntry returns nothing anywhere -- both facets genuinely uncaptured.",
+      "harvested_at": "2026-08-17T14:37:52Z",
       "kind": "harvest",
+      "landed_in": ".claude/skills/component-patterns/references/patterns-table.md (new barrel-lazy-split row) + component-patterns/SKILL.md index row + .claude/skills/component-testing/references/test-craft.md (Traps bullet: eager-closure bundle-shape gate, agent-admin-lazy.bundle.test.ts exemplar) (branch adr-harvest-0196-0197-0193a)",
       "plan": "Two candidate homes, likely both: (1) component-patterns/references/patterns-table.md -- new row for the barrel-lazy-split decision rule (public static re-export -> subpath-only + memoized loadX() accessor), citing ADR-0139 cl.8 + GH#354 + GH#468 + ADR-0197 as the 3-instance lineage; (2) component-testing/references/test-craft.md's Built-output-proofs bar -- a row/note on the eager-closure bundle-test refinement (assert absence from the transitive EAGER closure, not merely isEntry chunks, or the check passes vacuously on a leaked shared chunk). make-pack's own placement judgment decides split vs single row.",
-      "queued_at": "2026-08-17T14:11:35Z"
+      "queued_at": "2026-08-17T14:11:35Z",
+      "status": "harvested"
     },
     {
       "adr_id": "adr-0193-amendment",
       "evidence": "ADR-0193's 2026-08-17 ratified amendment (GH #1077, verified via header + utterance) adds a SYNC READ surface scoped to the localStorage tier ONLY: SyncReadableStorageAdapter extends StorageAdapter with getSync/keysSync (per-verb mirrors of the async surface, same-tick reads over the SAME live backing store) -- rejecting a snapshot()-style warm-cache alternative as reintroducing the stale-in-memory-mirror failure mode this ADR's own base Alternatives already rejected. Capability expression is a NAMED interface extension + a narrowing factory return type (createLocalStorageAdapter narrows to SyncReadableStorageAdapter), NOT optional members on the base interface and NOT a runtime probe as primary -- the deliberate INVERSE of the data package's DataSource<T> optional-capability-probe idiom (ADR-0192 SPEC-R2), reasoned explicitly because sync-reads are a property of exactly ONE known tier the primary consumer constructs itself, a statically-known fact, not an arbitrary-source generic seam. Also amends the tier's role: after this lands, NO module in app touches localStorage directly (memory-store.ts's hydration migrates off its own hand-rolled prefix scan). Checked 2026-08-17: component-patterns/patterns-table.md row 35 (adr-0193, status:harvested via PR #1070) covers ONLY the base decision (async get/set/delete/keys, two tiers, cross-tab notify) -- it has no getSync/keysSync/SyncReadableStorageAdapter content; this is genuinely new, not a duplicate of the already-harvested base row. NOTE: filed under a synthetic id (adr-0193-amendment) rather than reusing adr-0193/harvest, so the existing harvested base-decision row (with its landed_in/status audit trail) is not clobbered by this add -- both facets of ADR-0193 now have their own tracked row.",
+      "harvested_at": "2026-08-17T14:37:52Z",
       "kind": "harvest",
+      "landed_in": ".claude/skills/component-patterns/references/patterns-table.md (StorageAdapter row extended in place with the tier-scoped sync-read extension + snapshot() rejection + narrowing-factory idiom cross-referenced against ADR-0192 SPEC-R2's probe idiom) + component-patterns/SKILL.md index row updated (branch adr-harvest-0196-0197-0193a)",
       "plan": "Likely extends the SAME component-patterns/references/patterns-table.md row 35 (rather than a new row) with the tier-scoped sync-read extension + the per-verb-mirror-vs-snapshot() rejection + the narrowing-type capability idiom (as the inverse counterpoint to ADR-0192's optional-probe idiom, worth cross-referencing both) -- make-pack's own placement judgment decides extend-in-place vs sibling row.",
-      "queued_at": "2026-08-17T14:11:35Z"
+      "queued_at": "2026-08-17T14:11:35Z",
+      "status": "harvested"
     }
   ]
 }

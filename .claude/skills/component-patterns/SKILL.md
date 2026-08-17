@@ -51,11 +51,13 @@ ADR-worthy fork, not a local choice.
 | A streaming host telling first paint from re-render | host's own settled-once boundary | ADR-0183 Amendment |
 | Cross-DOM morphs on an opted-in View Transitions surface | opt-in named-morph convention, `ui-vt-{surface}-{token}` | ADR-0183 Amendment (GH #958) |
 | Async-stale content dimmed while a new answer is in flight | `:state(pending)` + `--ui-pending-*`, composes under settled | ADR-0191 |
+| A settled choice must read answered-not-disabled, correction via Edit | `:state(answered)` + `--ui-answered-*` aliases; `disabled > pending > answered > focus > hover > filled > default`; append-amendment template | ADR-0196 |
 | General-purpose functionality outside components' layers | mint a zero-dep sibling package off `components` | ADR-0115/0119/0192 |
-| A layer below `app` needs to persist something | `StorageAdapter` seam in `@agent-ui/shared`, localStorage + IndexedDB tiers | ADR-0193 |
+| A layer below `app` needs to persist something | `StorageAdapter` seam in `@agent-ui/shared`, localStorage + IndexedDB tiers; sync reads = tier-scoped `SyncReadableStorageAdapter` via narrowing factory | ADR-0193 (+ Amendment) |
 | An N-level show-one-hide-rest container whose position is an array (drill/stack path) | show-one-hide-rest + controlled-array-prop-duality — never-empty path, append-only forward, defined repair | ADR-0195 |
 | [incident] A content-sized flex item collapses to a fixed-floor child's min-width | `align-self: stretch; max-inline-size: none`, never re-tune the cap | ADR-0160 Amendment (GH #1032) |
 | A load-on-demand stopgap before a real model-side tool-call loop | exact-match auto-attach via the existing reference path, one per turn, no fuzzy | ADR-0190 Amendment (GH #1030) |
+| A public barrel's static re-export drags a heavy arm into every entry chunk | barrel-lazy-split: subpaths + memoized `loadX()` accessor, bundle-shape gated | ADR-0197 |
 
 ## How to use a row
 
