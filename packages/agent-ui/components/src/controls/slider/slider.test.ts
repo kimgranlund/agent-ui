@@ -548,6 +548,28 @@ describe('UISliderElement — label prop (GH #1141)', () => {
     expect(el.probeInternals.ariaLabel).toBeNull()
     el.remove()
   })
+
+  // GH #1162 — one visible label owner: field association (setFieldLabelling, the ADR-0051 seam a
+  // ui-field drives) hides THIS control's visible label part; the accessible name (internals.ariaLabel)
+  // is untouched. Dissociation (setFieldLabelling(null)) restores the part.
+  it('field association hides the visible label part; ariaLabel stays; dissociation restores (GH #1162)', async () => {
+    const el = make()
+    el.label = 'Bet amount'
+    document.body.append(el)
+    const part = labelPart(el)
+    expect(part.hidden).toBe(false)
+
+    el.setFieldLabelling({ label: document.createElement('div'), description: null, error: null })
+    await el.updateComplete
+    expect(part.hidden).toBe(true) // the FIELD owns the visible label now
+    expect(part.textContent).toBe('Bet amount') // only visibility flips — text effect untouched
+    expect(el.probeInternals.ariaLabel).toBe('Bet amount') // accessible name intact
+
+    el.setFieldLabelling(null)
+    await el.updateComplete
+    expect(part.hidden).toBe(false) // bare again — the control's own label part returns
+    el.remove()
+  })
 })
 
 // ── GH #1141: layout prop — default + reflect ────────────────────────────────────────────────────────

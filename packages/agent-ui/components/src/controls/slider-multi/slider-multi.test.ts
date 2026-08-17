@@ -644,6 +644,26 @@ describe('UISliderMultiElement — label prop (GH #1141)', () => {
     expect(el.getAttribute('label')).toBe('Range')
     el.remove()
   })
+
+  // GH #1162 — one visible label owner (byte-identical rule to ui-slider's, shared on UIRangeElement):
+  // field association hides the visible label part; ariaLabel stays; dissociation restores.
+  it('field association hides the visible label part; ariaLabel stays; dissociation restores (GH #1162)', async () => {
+    const el = make()
+    el.label = 'Price'
+    document.body.append(el)
+    const part = el.labelEl!
+    expect(part.hidden).toBe(false)
+
+    el.setFieldLabelling({ label: document.createElement('div'), description: null, error: null })
+    await el.updateComplete
+    expect(part.hidden).toBe(true)
+    expect(el.probeInternals.ariaLabel).toBe('Price')
+
+    el.setFieldLabelling(null)
+    await el.updateComplete
+    expect(part.hidden).toBe(false)
+    el.remove()
+  })
 })
 
 // ── GH #1141: layout prop — default + reflect ────────────────────────────────────────────────────────

@@ -650,3 +650,70 @@ describe('ui-slider browser smoke (C10 — zero-residue after reconnect)', () =>
     expect(el.value).toBe(50) // unchanged
   })
 })
+
+// ── GH #1162: one visible label owner — Field(label)+Slider must not paint the text twice ───────────
+//
+// ui-field's ADR-0051 option-A bridge writes the field's label into the slider's `label` prop (the
+// accessible-name path); post-#1141 the slider also renders `label` as a visible part, so without the
+// GH #1162 rule the same text painted twice. The rule: while field-associated (`fieldLabelling` non-null),
+// the control's own visible label part is hidden; the field's [data-part=label] is the ONE visible owner.
+
+describe('ui-slider browser smoke (GH #1162 — one visible label owner under ui-field)', () => {
+  it('Field(label) + Slider: exactly ONE visible instance of the text; label bridged intact', async () => {
+    await import('../field/field.ts') // self-defines ui-field
+    const field = document.createElement('ui-field') as HTMLElement & { label: string }
+    field.label = 'Bet amount'
+    const el = document.createElement('ui-slider') as UISliderElement
+    field.append(el)
+    document.body.append(field)
+    await el.updateComplete
+
+    const fieldLabel = field.querySelector(':scope > [data-part="label"]') as HTMLElement
+    const sliderLabel = el.querySelector('[data-part="label"]') as HTMLElement
+
+    // Exactly one VISIBLE instance: the field's part paints, the slider's own part collapses.
+    expect(fieldLabel.textContent).toBe('Bet amount')
+    expect(getComputedStyle(fieldLabel).display).not.toBe('none')
+    expect(sliderLabel.hidden).toBe(true)
+    expect(getComputedStyle(sliderLabel).display).toBe('none')
+
+    // The option-A bridge still names the control (accessibility unchanged).
+    expect(el.label).toBe('Bet amount')
+
+    field.remove()
+  })
+
+  it('bare Slider(label): still renders its own visible label part', async () => {
+    const el = document.createElement('ui-slider') as UISliderElement
+    el.label = 'Volume'
+    document.body.append(el)
+    await el.updateComplete
+    const part = el.querySelector('[data-part="label"]') as HTMLElement
+    expect(part.hidden).toBe(false)
+    expect(getComputedStyle(part).display).not.toBe('none')
+    expect(part.textContent).toBe('Volume')
+    el.remove()
+  })
+
+  it('dissociation restores the control-owned label: lifting a consumer-labelled slider out of the field', async () => {
+    await import('../field/field.ts')
+    const field = document.createElement('ui-field') as HTMLElement & { label: string }
+    field.label = 'Bet amount'
+    const el = document.createElement('ui-slider') as UISliderElement
+    el.label = 'Mine' // consumer-set — the bridge never arms (only an empty label arms it)
+    field.append(el)
+    document.body.append(field)
+    await el.updateComplete
+
+    const sliderLabel = el.querySelector('[data-part="label"]') as HTMLElement
+    expect(sliderLabel.hidden).toBe(true) // field-associated ⇒ field owns the visible label
+
+    document.body.append(el) // lift out — the connect signal aborts, the field dissociates
+    await el.updateComplete
+    expect(sliderLabel.hidden).toBe(false) // control-owned again
+    expect(sliderLabel.textContent).toBe('Mine') // consumer label untouched by the bridge undo
+
+    field.remove()
+    el.remove()
+  })
+})
