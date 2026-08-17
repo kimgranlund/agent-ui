@@ -1205,9 +1205,21 @@ export class UIConversationElement extends UIElement {
   #closeSurface(id: string): void {
     const record = this.#registry.get(id)
     if (record === undefined || record.state === 'closed') return
+    // GH #1061 — settle BEFORE disposing: `#settleTouchedHosts` only finalizes records still `open` at
+    // turn end, so a surface closed before its first finalize (create→delete, no content) would otherwise
+    // never get the host's ADR-0187 terminal-empty derivation — the anticipatory ':empty' placeholder
+    // ("appears here", a promise about the future) would freeze onto dead history. finalize() here lets
+    // the host stamp `data-empty-final` from its OWN facts; on an already-settled surface it is a
+    // harmless re-derivation of the same state.
+    record.host.finalize()
     record.host.dispose()
     record.state = 'closed'
     record.bubble.dataset.state = 'closed'
+    // GH #1061 — per-HOST closed marker (the bubble stamp above dims/marks the whole turn, but a resumed
+    // turn's mounts can hold SEVERAL hosts; CSS needs the closed ONE): conversation.css keys the closed
+    // dim + placeholder suppression off this, so the turn's own prose is never dimmed as if it too were
+    // torn down.
+    record.host.dataset.state = 'closed'
     const note = document.createElement('p')
     note.dataset.part = 'annotation'
     note.textContent = 'Closed.'

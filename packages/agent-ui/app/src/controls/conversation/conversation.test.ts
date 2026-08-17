@@ -311,6 +311,41 @@ describe('ui-conversation — per-surface registry (SPEC-R7): persistent identit
     ).not.toThrow()
     t3.finalize()
     expect(log(el).querySelectorAll('ui-surface-host')).toHaveLength(1) // still just the ONE host ever created for s2
+    // GH #1061 — the closed HOST carries its own marker (conversation.css keys the dim + placeholder
+    // suppression off it), and a content-bearing surface closed after rendering is NOT terminal-empty.
+    expect(host.dataset.state).toBe('closed')
+    expect(host.hasAttribute('data-empty-final')).toBe(false)
+  })
+
+  it('GH #1061 — close-before-finalize with NO content: the host settles terminal-empty (data-empty-final), never freezing the anticipatory placeholder', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+
+    // The reported wire shape: one turn creates a surface and deletes that SAME id with no
+    // updateComponents in between — `#settleTouchedHosts` skips closed records, so only
+    // `#closeSurface`'s own pre-dispose finalize() can stamp the ADR-0187 brace.
+    const t = el.beginAgentTurn()
+    t.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 's4', catalogId: 'agent-ui' } }))
+    t.ingestLine(line({ version: 'v1.0', deleteSurface: { surfaceId: 's4' } }))
+    t.finalize()
+
+    const bubble = log(el).querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const host = bubble.querySelector('ui-surface-host') as UISurfaceHostElement
+    // The host settled terminal-empty from its OWN facts: the mount never received a root, so the
+    // ':empty' copy is the truthful "Nothing was rendered for this surface.", not the frozen
+    // anticipatory "appears here" promise.
+    expect(host.hasAttribute('data-empty-final')).toBe(true)
+    expect(host.dataset.state).toBe('closed')
+    // The turn is closed history with the standard annotation…
+    expect(bubble.dataset.state).toBe('closed')
+    const annotation = bubble.querySelector('[data-part="annotation"]') as HTMLElement
+    expect(annotation.textContent).toBe('Closed.')
+    // …and the record stays KNOWN + closed: a later line re-targeting it never mints a second host.
+    const t2 = el.beginAgentTurn()
+    expect(() =>
+      t2.ingestLine(line({ version: 'v1.0', updateComponents: { surfaceId: 's4', components: [{ id: 'root', component: 'Column', children: [] }] } })),
+    ).not.toThrow()
+    t2.finalize()
+    expect(log(el).querySelectorAll('ui-surface-host')).toHaveLength(1)
   })
 })
 
