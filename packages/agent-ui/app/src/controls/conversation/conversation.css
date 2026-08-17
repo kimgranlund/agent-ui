@@ -18,6 +18,8 @@
  * (`conversation.ts`'s `[data-part='turn']` wrapper). The wrapper takes over the log-level alignment
  * role (`align-self`) and the base bubble's own 92% width cap; the bubble itself no longer sets
  * either. A system bubble carries neither a label nor a strip, so it gets no wrapper (unchanged).
+ * GH #1032 (2026-08-16): the AGENT wrapper stretches to the full column (no cap); only the USER wrapper
+ * keeps the 92% cap + flex-end alignment.
  *
  * Standalone sheet — linked via the package `./conversation.css` export; NEVER injected from
  * conversation.ts (behaviour-only `.ts`, no runtime style; plan §2).
@@ -108,8 +110,15 @@
   [data-part='turn'][data-role='user'] {
     align-self: flex-end;
   }
+  /* GH #1032 (Kim, 2026-08-16 — "use the full width"): the AGENT turn STRETCHES across the whole
+     conversation column — the narration strip's "Agent activity … N steps · Ns" header, its
+     "Generating…" pending row, and the bubble all reach the same right edge the user bubble is
+     aligned to. `align-self: flex-start` shrank the wrapper to its content's intrinsic width (the
+     strip's own 16rem floor), so the rows hugged the left with the rest of the column empty. The
+     user turn keeps its 92% cap + flex-end (a bubble that hugs its short text, right-aligned). */
   [data-part='turn'][data-role='agent'] {
-    align-self: flex-start;
+    align-self: stretch;
+    max-inline-size: none;
   }
 
   [data-part='bubble'] {

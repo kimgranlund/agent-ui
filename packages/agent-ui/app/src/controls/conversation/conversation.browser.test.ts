@@ -568,13 +568,14 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
       bubbleContentWidth,
       0,
     )
-    expect(
-      bubble.getBoundingClientRect().width,
-      'the bubble spans the full column (the ADR-0160 width cap regressed)',
-    ).toBeLessThan(availableColumnWidth(log) - 1)
+    // GH #1032 (Kim, 2026-08-16 — "use the full width"): the agent bubble now SPANS the column.
+    expect(bubble.getBoundingClientRect().width, 'the agent bubble does not span the full column (GH #1032)').toBeCloseTo(
+      availableColumnWidth(log),
+      0,
+    )
   })
 
-  it('the agent turn RE-BUBBLES (GH #291/ADR-0160): a painted background, real padding, capped width; GH #306 — the sender label AND the narration strip sit ABOVE the bubble, OUTSIDE it entirely, on the page background', () => {
+  it('the agent turn RE-BUBBLES (GH #291/ADR-0160): a painted background, real padding, full-column width (GH #1032); GH #306 — the sender label AND the narration strip sit ABOVE the bubble, OUTSIDE it entirely, on the page background', () => {
     const el = mountConversation()
     const handle = el.beginAgentTurn()
     handle.setNote('A bubbled agent reply')
@@ -583,21 +584,32 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
     const log = logOf(el)
     const turn = el.querySelector('[data-part="turn"][data-role="agent"]') as HTMLElement
     const bubble = turn.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const narration = turn.querySelector('[data-part="narration"]') as HTMLElement
     const bubbleStyle = getComputedStyle(bubble)
     expect(alphaOf(bubbleStyle.backgroundColor), 'the agent turn lost its bubble background (ADR-0160 regressed)').toBeGreaterThan(0)
     expect(Number.parseFloat(bubbleStyle.paddingLeft), 'the agent turn lost its bubble padding (ADR-0160 regressed)').toBeGreaterThan(
       0,
     )
-    expect(
-      bubble.getBoundingClientRect().width,
-      'the agent turn spans the full column (the ADR-0160/GH #306 width cap regressed)',
-    ).toBeLessThan(availableColumnWidth(log) - 1)
+    // GH #1032 (Kim, 2026-08-16 — "use the full width"): the agent turn (wrapper, strip, bubble) STRETCHES
+    // to the full column — the same right edge the user bubble aligns to; the ADR-0160 92% cap now
+    // applies to the USER turn only.
+    expect(turn.getBoundingClientRect().width, 'the agent turn does not span the full column (GH #1032)').toBeCloseTo(
+      availableColumnWidth(log),
+      0,
+    )
+    expect(bubble.getBoundingClientRect().width, 'the agent bubble does not span the full column (GH #1032)').toBeCloseTo(
+      availableColumnWidth(log),
+      0,
+    )
+    expect(narration.getBoundingClientRect().width, 'the narration strip does not span the full column (GH #1032)').toBeCloseTo(
+      availableColumnWidth(log),
+      0,
+    )
 
     // GH #306 — the sender label AND the narration strip: present, above the message text, and OUTSIDE
     // the bubble ENTIRELY (not merely outside the text container within it) — free-standing turn chrome
     // painted on the page background, never the bubble's own background.
     const who = turn.querySelector('[data-part="who"]') as HTMLElement
-    const narration = turn.querySelector('[data-part="narration"]') as HTMLElement
     const body = bubble.querySelector('[data-part="body"]') as HTMLElement
     expect(who).not.toBeNull()
     expect(who.textContent).toBe('Agent')
@@ -621,7 +633,7 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
     )
   })
 
-  it('the STREAMING state already carries the bubble — mid-turn (before finalize) the same container is chromed and capped, matching the settled state', () => {
+  it('the STREAMING state already carries the bubble — mid-turn (before finalize) the same container is chromed and full-column (GH #1032), matching the settled state', () => {
     const el = mountConversation()
     const handle = driveSurfaceTurn(el, false) // in flight — streaming, not settled
 
@@ -630,8 +642,9 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
     const stage = bubble.querySelector('ui-surface-host [data-part="stage"]') as HTMLElement
     expect(alphaOf(getComputedStyle(bubble).backgroundColor), 'the streaming turn lost its bubble background').toBeGreaterThan(0)
     expect(Number.parseFloat(getComputedStyle(bubble).paddingTop), 'the streaming turn lost its bubble padding').toBeGreaterThan(0)
-    expect(bubble.getBoundingClientRect().width, 'the streaming turn spans the full column').toBeLessThan(
-      availableColumnWidth(log) - 1,
+    expect(bubble.getBoundingClientRect().width, 'the streaming turn does not span the full column (GH #1032)').toBeCloseTo(
+      availableColumnWidth(log),
+      0,
     )
     expect(getComputedStyle(stage).backgroundImage, 'the streaming surface paints the checker').toBe('none')
 
