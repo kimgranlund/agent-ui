@@ -63,3 +63,22 @@
   AGENT-UI-2 ships #1042–#1046 (five `agent-*` worktrees on `104x-*` branches — do not touch);
   AGENT-UI-3 takes #1047–#1049 (claims released on-issue, same lane brief). Second merger on
   NAV/CARD_GROUPS/sitemap/llms/theme-fixture conflicts rebases keep-both + regenerates.
+
+## Lane split — 2026-08-17 ~04:30Z (AGENT-UI-2 + AGENT-UI-3)
+
+- AGENT-UI-2 (session "Complete work without permissions") holds #1042–#1046 (docs-writer lanes,
+  5 worktrees under `.claude/worktrees/agent-*`, claimed 04:19Z).
+- AGENT-UI-3 (`/lead-team` + sweep-chores host, this note) holds #1047–#1049 — handed over by
+  AGENT-UI-2 at 04:26Z, re-claimed on-issue 04:29Z; three docs-writer lanes in isolated worktrees,
+  branches `1047-testing-guide` · `1048-a2ui-producer-guide` · `1049-app-leftovers`.
+- Each host ships its OWN lanes (push → draft PR → verify gates → merge → verify MERGED → reap);
+  additive conflicts expected on `_page.ts`, `site/main.ts`, both sitemap.json, llms.txt, the
+  theme-provider-built.css fixture — the SECOND merger rebases + regenerates; `npm run check` on
+  main between merges, exit codes only.
+- AGENT-UI-3 also runs this cycle's sweep-chores (issue-sorter · repo-cleaner · decision-watcher →
+  chore-planner) and owns hygiene: stale local `956-*` branches / `origin/docs/subpath-coverage-gaps`
+  (PR-MERGED verification before any deletion; peer worktrees never touched).
+- **LAW (2026-08-17, Kim):** never call `mcp__ccd_session_mgmt__list_events` / `search_session_transcripts`
+  on a peer session — each call raises an app-level grant card to Kim regardless of bypassPermissions
+  (root-caused: those were the only grant-raising calls of the day). Peer state = on-issue claims, PR list,
+  `git worktree list` + branch heads, this file. `list_sessions`/`get_session` metadata is fine.
