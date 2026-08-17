@@ -112,9 +112,10 @@ interface CardGroup {
 const CARD_GROUPS: readonly CardGroup[] = [
   {
     // The conceptual GUIDE cluster — ungrouped site-level cards (no `label:`), mirroring the ungrouped NAV
-    // cluster in _page.ts (same posture as the A2UI/A2A/meta clusters below). Seven pages for a cold-start
-    // human consumer: how to consume the library, the theming contract, the derived token reference, the
-    // sizing/density law, an end-to-end forms walkthrough, a component chooser, and the on-site changelog.
+    // cluster in _page.ts (same posture as the A2UI/A2A/meta clusters below). A cold-start human consumer's
+    // routes: how to consume the library, the theming contract, the derived token reference, the sizing/
+    // density law, an end-to-end forms walkthrough, a component chooser, the composition-patterns hub (GH
+    // #1042) + its six recipe pages, and the on-site changelog.
     cards: [
       {
         href: './getting-started.html',
@@ -145,6 +146,41 @@ const CARD_GROUPS: readonly CardGroup[] = [
         href: './choosing.html',
         title: 'Which component when',
         blurb: 'A quick chooser between components that overlap in purpose, condensed from the A2UI catalog’s own §5.2 usage-guidance rows, with live specimens.',
+      },
+      {
+        href: './composition.html',
+        title: 'Composition patterns',
+        blurb: 'The consumer-assembly pattern map (build-time parsed from the composition-patterns skill) plus every shipped recipe page — a hub, not a restatement (GH #1042).',
+      },
+      {
+        href: './onboarding-checklist.html',
+        title: 'Onboarding checklist',
+        blurb: 'The checklist-onboarding composition recipe: card + list + checkbox + progress bound to a plain signals store (GH #961).',
+      },
+      {
+        href: './card-grid-drawer.html',
+        title: 'Card grid + drawer edit',
+        blurb: 'ui-grid + ui-card + ui-drawer, a buffered record form, and a page-owned dirty-state/discard-confirm convention (GH #965).',
+      },
+      {
+        href: './toc-content.html',
+        title: 'Sticky TOC content layout',
+        blurb: 'A scroll-spy’d ui-nav-rail sidebar swapping to a ui-select below the compact line, over a real long-form article (GH #964).',
+      },
+      {
+        href: './workspace-shell.html',
+        title: 'Workspace Shell',
+        blurb: 'ui-workspace-shell, the full outer-level workspace grammar preset over ui-super-shell.',
+      },
+      {
+        href: './surface-host-doc.html',
+        title: 'Surface Host',
+        blurb: 'ui-surface-host, the M2 mount/stream seam wrapping one @agent-ui/a2ui RendererHost, standalone-usable.',
+      },
+      {
+        href: './conversation-doc.html',
+        title: 'Conversation',
+        blurb: 'ui-conversation, the M2 thread + composer + per-turn narration primitive, with an opt-in declarative composition mode.',
       },
       {
         href: './changelog.html',

@@ -635,6 +635,13 @@
       "section": "Guides"
     },
     {
+      "name": "Composition patterns",
+      "url": "./composition.html",
+      "description": "The consumer-assembly pattern map (build-time parsed from the composition-patterns skill's references) plus every shipped recipe page and the deeper compose-procedure skills (GH #1042).",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Which component when",
       "url": "./choosing.html",
       "description": "A quick chooser between components that overlap in purpose, condensed from the A2UI catalog's own guidance.",
