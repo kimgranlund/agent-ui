@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · View transitions</title>
+  </head>
+  <body>
+    <!-- The View Transitions / motion guide (ADR-0183, GH #740): the ONE shared withViewTransition seam
+         (dom/view-transition.ts) plus the four opt-in surfaces (ui-super-shell, ui-surface-host, ui-drill,
+         ui-router-outlet). Every per-surface attribute table is sliced VERBATIM from its own {name}.md
+         descriptor at build time (motion-attrs.ts's requireAttrs — throws on a renamed/removed attribute,
+         pinned by motion.test.ts); every seam function signature is sliced VERBATIM from view-transition.ts.
+         ui-super-shell/ui-surface-host/ui-router-outlet live outside components/src/controls (no descriptor
+         glob membership), so this is an ungrouped site-level GUIDE page, the same posture as router-doc.html/
+         traits-doc.html. An MPA entry auto-discovered by vite.config.ts's site/**/*.html glob. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/motion.ts"></script>
+  </body>
+</html>

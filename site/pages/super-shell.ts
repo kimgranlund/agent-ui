@@ -383,3 +383,14 @@ const changelog = renderChangelogTable([
   },
 ])
 if (changelog) content.append(changelog)
+
+content.append(
+  (() => {
+    const p = document.createElement('p')
+    const a = document.createElement('a')
+    a.href = './motion.html'
+    a.textContent = 'View transitions'
+    p.append('See the ', a, ' guide for view-transitions/view-transition-names’ opt-in law and the other three ADR-0183 surfaces.')
+    return p
+  })(),
+)

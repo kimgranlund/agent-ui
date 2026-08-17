@@ -36,3 +36,14 @@ const drill = el('ui-drill', { 'aria-label': 'Example settings' }, [
 ])
 
 composeDocPage(content, descriptor, body, exampleSection('Example', drill))
+
+content.append(
+  (() => {
+    const p = document.createElement('p')
+    const a = document.createElement('a')
+    a.href = './motion.html'
+    a.textContent = 'View transitions'
+    p.append('See the ', a, ' guide for view-transitions’ opt-in law and the other three ADR-0183 surfaces.')
+    return p
+  })(),
+)

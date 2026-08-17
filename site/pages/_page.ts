@@ -567,6 +567,12 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './traits-doc.html', label: 'Traits' }],
   },
   {
+    // dom/view-transition.ts (ADR-0183, GH #740/#742/#958/#1005/#1043) — the SAME ungrouped-site-level-link
+    // posture as Router/Traits just above: a GUIDE page over a seam + its four opt-in surfaces, none of which
+    // is a components/src/controls fleet member with its own descriptor-driven page set.
+    links: [{ href: './motion.html', label: 'View Transitions' }],
+  },
+  {
     // ui-agent-admin (@agent-ui/app, TKT-0039/ADR-0131) — the SAME ungrouped-site-level-link posture as
     // Super Shell/Master Detail/Settings just above: a GUIDE page for an app-tier composition (ui-split +
     // ui-settings + ui-conversation), not a fleet component in components/src. Agent Admin App joins here
