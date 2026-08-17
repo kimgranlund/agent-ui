@@ -197,10 +197,12 @@ export class UISliderMultiElement extends UIRangeElement {
 
     // GH #1141 — label TEXT + visibility only; the accessible name itself (`internals.ariaLabel`) is now
     // owned solely by the base's shared effect (GH #1153 deleted this leaf's own duplicate of that line).
+    // GH #1162 — hidden while field-associated too (`labelPartVisible()`, range-element.ts): the field
+    // owns the ONE visible label then; the accessible name is unaffected.
     this.effect(() => {
       if (!this.#labelEl) return
       this.#labelEl.textContent = this.label ?? ''
-      this.#labelEl.hidden = !this.label
+      this.#labelEl.hidden = !this.labelPartVisible()
     })
 
     // ── LLD-C1: normalization effect ──────────────────────────────────────────────────────────────────

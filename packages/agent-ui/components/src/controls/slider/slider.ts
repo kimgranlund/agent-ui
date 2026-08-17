@@ -94,11 +94,13 @@ export class UISliderElement extends UIRangeElement {
     tabbable(this, { disabled: () => this.effectiveDisabled() })
 
     // GH #1141 — label text + visibility. `hidden` when the label prop is empty (no label source ⇒ the
-    // part renders nothing, and its `auto` grid row collapses — slider.css).
+    // part renders nothing, and its `auto` grid row collapses — slider.css). GH #1162 — also hidden while
+    // field-associated (`labelPartVisible()`, range-element.ts): the field owns the ONE visible label then;
+    // `internals.ariaLabel` (base effect) keeps the accessible name either way.
     this.effect(() => {
       if (!this.#labelEl) return
       this.#labelEl.textContent = this.label ?? ''
-      this.#labelEl.hidden = !this.label
+      this.#labelEl.hidden = !this.labelPartVisible()
     })
 
     // GH #1141 (supersedes GH #1126's transient arm/hide) — the value part's text stays in sync with the

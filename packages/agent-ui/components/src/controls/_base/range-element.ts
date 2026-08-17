@@ -209,6 +209,22 @@ export class UIRangeElement extends UIFormElement {
   }
 
   /**
+   * GH #1162 — the ONE-visible-label-owner rule. A Range leaf's visible `[data-part='label']` renders
+   * only when a label source exists (GH #1141) AND the control is NOT field-associated: when a `ui-field`
+   * associates (ADR-0050/0051), the FIELD owns the visible label text — its ADR-0051 option-A bridge
+   * writes the field's label into this control's `label` prop for the ACCESSIBLE name
+   * (`internals.ariaLabel`, the effect in `connected()` above, untouched by this rule), so without this
+   * gate the same text paints twice (Field part + control part). `fieldLabelling` is the base's
+   * signal-backed reactive read — set by the field's `#associate`, cleared to `null` by `#dissociate` —
+   * so a leaf effect reading this helper re-runs on association AND dissociation: a bare slider with a
+   * consumer-set label renders its own part; the same slider dropped into (or lifted out of) a field
+   * flips ownership automatically. Shared here so both Range leaves stay byte-identical (Ruling 4).
+   */
+  protected labelPartVisible(): boolean {
+    return !!this.label && this.fieldLabelling === null
+  }
+
+  /**
    * GH #1153 subclass hook (LLD-C1/C2/C3/C5): `true` (default) when this leaf uses the base's single
    * `value` prop directly — the normaliser, ARIA value* effect, `--value-pct` geometry seam, keyboard
    * step, and focus/blur commit-on-change all key off it. A leaf that WIDENS the value model (e.g.
