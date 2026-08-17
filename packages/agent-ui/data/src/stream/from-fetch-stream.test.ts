@@ -76,4 +76,50 @@ describe('fromFetchStream — SPEC-R13 (a)', () => {
     expect(onCancel).toHaveBeenCalledTimes(1)
     resolvePull()
   })
+
+  it('AC3 (ndjson): abort mid-stream cancels the underlying source too, and the stream ends cleanly (no rejection)', async () => {
+    const controller = new AbortController()
+    const onCancel = vi.fn()
+    let resolvePull!: () => void
+    const encoder = new TextEncoder()
+    const body = new ReadableStream<Uint8Array>({
+      async pull(c) {
+        c.enqueue(encoder.encode('{"a":1}\n'))
+        await new Promise<void>((r) => {
+          resolvePull = r
+        })
+      },
+      cancel: onCancel,
+    })
+    const stream = fromFetchStream('https://example.com/x', { frame: 'ndjson', fetch: async () => new Response(body), signal: controller.signal })
+    const iterator = stream[Symbol.asyncIterator]()
+    expect((await iterator.next()).value).toBe('{"a":1}')
+    const pending = iterator.next()
+    controller.abort()
+    const result = await pending
+    expect(result.done).toBe(true)
+    expect(onCancel).toHaveBeenCalledTimes(1)
+    resolvePull()
+  })
+
+  it('a consumer that breaks out early releases the connection — the source’s cancel runs (lines + ndjson)', async () => {
+    for (const frame of ['lines', 'ndjson'] as const) {
+      const onCancel = vi.fn()
+      const body = bodyFromChunks(['a\nb\nc\n', 'd\n'], onCancel)
+      const stream = fromFetchStream('https://example.com/x', { frame, fetch: async () => new Response(body) })
+      for await (const line of stream) {
+        if (line === 'b') break
+      }
+      expect(onCancel, frame).toHaveBeenCalledTimes(1)
+    }
+  })
+
+  it('a non-2xx response is an ERROR (DataError http/status), never parsed as frames', async () => {
+    const body = bodyFromChunks(['<html>Bad Gateway</html>\n'])
+    const stream = fromFetchStream('https://example.com/x', {
+      frame: 'ndjson',
+      fetch: async () => new Response(body, { status: 502, headers: { 'content-type': 'text/html' } }),
+    })
+    await expect(collect(stream)).rejects.toMatchObject({ kind: 'http', status: 502, retryable: true })
+  })
 })

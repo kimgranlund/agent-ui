@@ -1,5 +1,10 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { server, userEvent } from 'vitest/browser'
+// NOTE: the shared reader now LIVES in `@agent-ui/data/stream` (ADR-0192 clause 5) — `site/lib/
+// ndjson-lines.ts` is a one-line re-export shim, so this instrument import transitively loads that
+// subpath. It is imported THROUGH the shim on purpose: `data/src/layering.test.ts`'s inward fence
+// (SPEC-R1 AC2) scans every `.ts` under components/src, tests included, and a bare `@agent-ui/data`
+// specifier here would trip it. Run `test:browser` (packages:components shard) when `data/stream` changes.
 import { readNdjsonLines } from '../../../../../../site/lib/ndjson-lines.ts'
 import type { UIStatusStreamElement } from './status-stream.ts'
 import type { UITimelineItemElement } from '../timeline-item/timeline-item.ts'

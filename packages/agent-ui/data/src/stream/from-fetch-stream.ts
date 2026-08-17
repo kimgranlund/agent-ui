@@ -2,6 +2,7 @@
 // `fetch` + `ReadableStream` — POST- and header-capable, three frame modes.
 
 import type { Streamed } from '../core/types.ts'
+import { normalizeError } from '../core/error.ts'
 import { readNdjsonLines } from './ndjson-lines.ts'
 import type { FetchLike } from '../gateway/client.ts'
 
@@ -25,8 +26,9 @@ async function* linesOf(body: ReadableStream<Uint8Array>, signal?: AbortSignal):
   // Cancels via THIS reader (never `body.cancel()` — a locked stream's own `.cancel()` throws;
   // only the reader that holds the lock may cancel it, AC3's "reader's cancel spy" requirement).
   const reader = body.getReader()
+  let finished = false
   const onAbort = () => {
-    void reader.cancel()
+    void reader.cancel().catch(() => {})
   }
   signal?.addEventListener('abort', onAbort, { once: true })
   try {
@@ -43,9 +45,13 @@ async function* linesOf(body: ReadableStream<Uint8Array>, signal?: AbortSignal):
         nl = buffer.indexOf('\n')
       }
     }
+    finished = true
     if (buffer.length > 0) yield buffer
   } finally {
     signal?.removeEventListener('abort', onAbort)
+    // A consumer that breaks out early (`return()`) releases the connection: cancel the reader we
+    // still hold rather than leaving the fetch body open until GC.
+    if (!finished) void reader.cancel().catch(() => {})
   }
 }
 
@@ -94,6 +100,12 @@ export function fromFetchStream(input: string, init: FromFetchStreamInit): Strea
 
   async function* generate(): AsyncGenerator<unknown> {
     const res = await doFetch(new Request(input, requestInit))
+    if (!res.ok) {
+      // A non-2xx is an ERROR, never a frame source (a 502 HTML page is not NDJSON): surface it as
+      // the one envelope (`http`, status) and release the body we will never read.
+      void res.body?.cancel().catch(() => {})
+      throw normalizeError(res)
+    }
     const body = res.body
     if (!body) return
     const signal = requestInit.signal ?? undefined
@@ -101,10 +113,17 @@ export function fromFetchStream(input: string, init: FromFetchStreamInit): Strea
       yield* sseFramesOf(body, signal)
     } else if (frame === 'ndjson') {
       // `readNdjsonLines` is the HOISTED, signature-pinned function (site parity, SPEC-R13 a) — it
-      // owns its own reader internally and takes no signal, so an abort here does not force an
-      // early reader.cancel() the way 'lines'/'sse' do; it still ends once the source stream itself
-      // closes or errors (a real `fetch()`'s platform-level abort already closes the body for it).
-      yield* readNdjsonLines(body)
+      // owns its own reader and takes no signal, so abort is wired at the STREAM level: piping the
+      // body through an identity transform under `signal` cancels the source on abort (the same
+      // reader-cancel the 'lines'/'sse' paths perform) and errors the reader side, which is then
+      // swallowed into a clean end exactly as those paths end.
+      const source = signal ? body.pipeThrough(new TransformStream<Uint8Array, Uint8Array>(), { signal }) : body
+      try {
+        yield* readNdjsonLines(source)
+      } catch (e) {
+        if (signal?.aborted) return
+        throw e
+      }
     } else {
       yield* linesOf(body, signal)
     }

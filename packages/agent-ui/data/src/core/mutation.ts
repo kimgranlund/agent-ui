@@ -33,6 +33,7 @@ export function mutation<Input, R>(
   const errorSig = signal<DataError | undefined>(undefined)
   const dataSig = signal<R | undefined>(undefined)
   let disposed = false
+  const inFlight = new Set<AbortController>() // every live run's signal — dispose() aborts them all
 
   function resolveInvalidateKeys(input: Input, result: R | undefined): readonly string[] {
     if (!effects.invalidate) return []
@@ -60,6 +61,7 @@ export function mutation<Input, R>(
     }
 
     const controller = new AbortController()
+    inFlight.add(controller)
     const ctx: SourceContext = { signal: controller.signal }
     try {
       const result = await fn(input, ctx)
@@ -77,6 +79,8 @@ export function mutation<Input, R>(
       }
       for (const key of resolveInvalidateKeys(input, undefined)) store.invalidate(key)
       return undefined
+    } finally {
+      inFlight.delete(controller)
     }
   }
 
@@ -86,7 +90,10 @@ export function mutation<Input, R>(
     data: dataSig,
     run,
     dispose() {
+      if (disposed) return
       disposed = true
+      for (const c of inFlight) c.abort() // the SourceContext.signal every in-flight fn received fires (SPEC-R3 d's posture)
+      inFlight.clear()
     },
   }
 }

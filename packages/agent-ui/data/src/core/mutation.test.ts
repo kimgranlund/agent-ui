@@ -96,4 +96,22 @@ describe('mutation() — SPEC-R5', () => {
     const result = await m.run()
     expect(result).toBeUndefined()
   })
+
+  it('dispose() aborts every in-flight run’s SourceContext.signal', async () => {
+    const store = createStore()
+    const signals: AbortSignal[] = []
+    const m = mutation<number, number>(
+      (_input, ctx) => {
+        signals.push(ctx.signal)
+        return new Promise<number>(() => {}) // never settles on its own
+      },
+      { store },
+    )
+    void m.run(1)
+    void m.run(2)
+    expect(signals).toHaveLength(2)
+    expect(signals.every((s) => !s.aborted)).toBe(true)
+    m.dispose()
+    expect(signals.every((s) => s.aborted)).toBe(true)
+  })
 })
