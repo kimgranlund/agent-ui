@@ -51,12 +51,6 @@ function el(tag: string, className: string, text?: string): HTMLElement {
 function sectionHeading(text: string): HTMLElement {
   return heading(2, text)
 }
-function para(...nodes: (string | Node)[]): HTMLElement {
-  const p = document.createElement('p')
-  p.className = 'as-prose'
-  for (const n of nodes) p.append(typeof n === 'string' ? document.createTextNode(n) : n)
-  return p
-}
 function code(text: string): HTMLElement {
   return el('code', 'as-code', text)
 }
@@ -122,7 +116,7 @@ function demoRail(collapse: string, opts: { tagged?: boolean; container?: string
 
 content.append(sectionHeading('1 · Composition — three elements, no rail CSS of your own'))
 content.append(
-  para(
+  pageLead(
     'A ', code('ui-nav-rail-group'), ' carries a context-label heading; each ', code('ui-nav-rail-item'),
     ' is one row. A trailing ', code('data-role="tag"'), ' cell right-justifies a badge and truncates ' +
       'with an ellipsis rather than wrapping the row (SPEC-R6). The active item gets a real border ' +
@@ -151,7 +145,7 @@ content.append(el('pre', 'as-snippet', `<ui-nav-rail collapse="menu">
 
 content.append(sectionHeading('2 · `collapse` — the four narrow dispositions'))
 content.append(
-  para(
+  pageLead(
     'One closed enum picks what the rail does below its own container-width threshold. It is measured ' +
       'against the RAIL’S OWN box by default, never the viewport — so a rail in a narrow column behaves ' +
       'the same wherever the window is.',
@@ -178,7 +172,7 @@ const dispositions: [string, string][] = [
 
 content.append(sectionHeading('3 · collapse="menu" narrow — a top-layer flyout card'))
 content.append(
-  para(
+  pageLead(
     'Below the line the rail becomes a single button naming the current item. Activating it — click, ',
     code('Enter'), ' or ', code('Space'), ' — opens the whole grouped list as a card anchored under that ' +
       'button, in the browser’s TOP LAYER. It is the fleet’s one overlay mechanism, so dismissal is the ' +
@@ -198,7 +192,7 @@ content.append(
 
 content.append(sectionHeading('4 · Why the top layer — a clipping ancestor cannot trap it'))
 content.append(
-  para(
+  pageLead(
     'The frame below is only ', code('3.5rem'), ' tall with ', code('overflow: hidden'), ' — far too short ' +
       'to contain the open panel, and it really does clip its own content. Open the trigger anyway: the ' +
       'flyout renders in the top layer, so it escapes the clip entirely. An ', code('position: absolute'),
@@ -217,7 +211,7 @@ content.append(
 
 content.append(sectionHeading('5 · `collapse-container` — WHICH box the threshold measures'))
 content.append(
-  para(
+  pageLead(
     'A rail in a genuinely narrow sidebar (say a 15rem docs nav column) is ALWAYS below 40rem against its ' +
       'own box, so it would collapse forever. ', code('collapse-container="ancestor"'), ' relinquishes the ' +
       'rail’s own containment so the threshold resolves against the nearest ancestor that opts in:',
@@ -232,7 +226,7 @@ content.append(el('pre', 'as-snippet', `.app-shell {
   <ui-nav-rail collapse="menu" collapse-container="ancestor">…</ui-nav-rail>
 </div>`))
 content.append(
-  para(
+  pageLead(
     'If no ancestor names the container the query simply never matches and the rail never collapses — a ' +
       'safe failure, never the opposite. The JS that arms the flyout watches that SAME resolved box, so the ' +
       'CSS threshold and the overlay can never disagree about which band the rail is in.',
@@ -256,7 +250,7 @@ content.append(
 
 content.append(sectionHeading('6 · icon-popover and drill-in'))
 content.append(
-  para(
+  pageLead(
     code('collapse="icon-popover"'), ' renders items icon-only, keeping each label as the accessible name ' +
       '(visually clipped, never removed), and a group of 2+ items discloses them through an internally ' +
       'composed ', code('ui-menu'), ' — roving focus, commit-and-close and dismissal inherited wholesale, ' +
@@ -276,7 +270,7 @@ content.append(
 
 content.append(sectionHeading('API reference'))
 content.append(
-  para(
+  pageLead(
     'Read straight from the three shipped descriptors (nav-rail.md · nav-rail-group.md · nav-rail-item.md) ' +
       "through the same parser the package's contract trip-wire validates.",
   ),

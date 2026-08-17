@@ -76,12 +76,6 @@ function el(tag: string, className: string, text?: string): HTMLElement {
 function sectionHeading(text: string): HTMLElement {
   return heading(2, text)
 }
-function para(...nodes: (string | Node)[]): HTMLElement {
-  const p = document.createElement('p')
-  p.className = 'as-prose'
-  for (const n of nodes) p.append(typeof n === 'string' ? document.createTextNode(n) : n)
-  return p
-}
 function code(text: string): HTMLElement {
   return el('code', 'as-code', text)
 }
@@ -137,7 +131,7 @@ function demo(): HTMLElement {
 
 content.append(sectionHeading('1 · Schema-driven fields'))
 content.append(
-  para(
+  pageLead(
     'Each field’s ', code('type'), ' maps to a fleet control: ', code('text'), '/', code('number'), '/',
     code('date'), ' → ', code('ui-text-field'), ', ', code('boolean'), ' → ', code('ui-switch'), ', ',
     code('select'), ' → ', code('ui-select'), ', ', code('slider'), ' → ', code('ui-slider'), '. Resize the ' +
@@ -150,7 +144,7 @@ content.append(resizeFrame, el('p', 'as-caption', '↑ Reload the page after cha
 
 content.append(sectionHeading('2 · The SettingsStore seam'))
 content.append(
-  para(
+  pageLead(
     'A field reads ', code('store.get(key) ?? field.default'), ' at generation time and commits ',
     code('store.set(key, value)'), ' on its own ', code('change'), ' (per-field-on-change). No store supplied ' +
       '⇒ every field still renders from its schema ', code('default'), ', and changes are simply not ' +
@@ -169,7 +163,7 @@ el.store = createMemoryStore({ persistKey: 'my-app-settings' })`))
 
 content.append(sectionHeading('2a · @agent-ui/app/settings-store — the seam, derived from source'))
 content.append(
-  para(
+  pageLead(
     'A pure TypeScript interface, no implementation — ',
     code('ui-settings'),
     ' depends ONLY on this contract, never a concrete store (SPEC-R12 AC3, grep-guarded by the package’s own ',
@@ -194,7 +188,7 @@ content.append(codeBlock(extractInterface(settingsStoreRaw, 'SettingsStore'), 't
 
 content.append(sectionHeading('2b · @agent-ui/app/settings-memory-store — the reference adapter'))
 content.append(
-  para(
+  pageLead(
     'Not a dependency of ',
     code('ui-settings'),
     ' — a REFERENCE ',
@@ -229,11 +223,11 @@ content.append(
   ),
 )
 content.append(codeBlock(extractInterface(settingsMemoryStoreRaw, 'MemoryStoreOptions'), 'ts'))
-content.append(para('The seam itself — the async ', code('StorageAdapter'), ' interface, its localStorage/IndexedDB tiers, and how it differs from this sync ', code('SettingsStore'), ' — is its own guide: ', (() => { const a = document.createElement('a'); a.href = './persistence.html'; a.textContent = 'Persistence'; return a })(), '.'))
+content.append(pageLead('The seam itself — the async ', code('StorageAdapter'), ' interface, its localStorage/IndexedDB tiers, and how it differs from this sync ', code('SettingsStore'), ' — is its own guide: ', (() => { const a = document.createElement('a'); a.href = './persistence.html'; a.textContent = 'Persistence'; return a })(), '.'))
 
 content.append(sectionHeading('API reference'))
 content.append(
-  para(
+  pageLead(
     'Read straight from the shipped descriptor (settings.md) through the same parser the package’s ' +
       'contract trip-wire validates.',
   ),

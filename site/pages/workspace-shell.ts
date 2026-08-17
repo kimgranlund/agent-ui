@@ -62,12 +62,6 @@ function el(tag: string, className: string, text?: string): HTMLElement {
 function sectionHeading(text: string): HTMLElement {
   return heading(2, text)
 }
-function para(...nodes: (string | Node)[]): HTMLElement {
-  const p = document.createElement('p')
-  p.className = 'ws-prose'
-  for (const n of nodes) p.append(typeof n === 'string' ? document.createTextNode(n) : n)
-  return p
-}
 function code(text: string): HTMLElement {
   return el('code', 'ws-code', text)
 }
@@ -96,7 +90,7 @@ function slotCell(tag: string, name: string, label: string, className: string): 
 // ════════════════ 1 · The two Figma frames ════════════════
 content.append(sectionHeading('1 · The two Figma frames'))
 content.append(
-  para(
+  pageLead(
     'Kim’s two newest Figma frames name this preset’s shape. ', code('app-shell-layout-single-nav'),
     ' (node 39:1629) — one rail, one nav pane, no options side:',
   ),
@@ -113,7 +107,7 @@ singleNav.append(
 content.append(singleNav)
 
 content.append(
-  para(
+  pageLead(
     code('app-shell-layout-dual-sidebar'), ' (node 39:1596) — the SPEC-R5 asymmetric shape: the start side ' +
       'stacks a rail plus TWO panes (', code('nav-pane'), ' + ', code('section-nav'), '), the end side stacks ' +
       'one pane plus a rail:',
@@ -135,7 +129,7 @@ dualSidebar.append(
 content.append(dualSidebar)
 
 content.append(
-  para(
+  pageLead(
     'The two examples differ ONLY in which slots are authored, not in any workspace-shell-specific ' +
       'configuration — consumers use the EXACT SAME ', code('data-slot'), ' vocabulary ',
     link('./super-shell.html', 'ui-super-shell'), ' itself defines (SPEC-R1/R5); this element adds no new ' +
@@ -147,7 +141,7 @@ content.append(
 // ════════════════ 2 · The one default this preset adds ════════════════
 content.append(sectionHeading('2 · The one default this preset adds'))
 content.append(
-  para(
+  pageLead(
     'ui-workspace-shell has NO API of its own — its descriptor declares attributes, properties, events, and ' +
       'slots all empty (see the derived reference below), the same shape ', code('ui-chat-shell'),
     ' takes for the chat archetype. Everything you can configure — the collapse toggles, the per-side ',
@@ -177,7 +171,7 @@ content.append(resizeWrap, el('p', 'ws-caption', '↑ Drag the resize handle (bo
 // ════════════════ 3 · Configuration lives on the inner ui-super-shell ════════════════
 content.append(sectionHeading('3 · Configuration lives on the inner ui-super-shell'))
 content.append(
-  para(
+  pageLead(
     'Reach for ', link('./super-shell.html', 'ui-super-shell’s own guide'), ' for the full grammar, the ' +
       'collapse contract, recursion, the narrow reflow, and the landmarks — everything documented there ' +
       'applies unchanged to a ', code('<ui-workspace-shell>'), ' instance, minus the one default above.',
@@ -187,7 +181,7 @@ content.append(
 // ════════════════ 4 · The real thing ════════════════
 content.append(sectionHeading('4 · The real thing'))
 content.append(
-  para(
+  pageLead(
     'This page’s demos are scaffolds — realistic shapes, no live wiring. The production surfaces this ' +
       'preset hosts are the fleet’s SaaS-composition proofs: ', link('./workbench.html', 'ui-workbench'),
     ' (GH #461 — a data table + filter toolbar + record-edit modal + agent-summary card, ONE authored ' +
@@ -201,7 +195,7 @@ content.append(
 // ════════════════ API reference — DERIVED from the descriptor ════════════════
 content.append(sectionHeading('API reference'))
 content.append(
-  para(
+  pageLead(
     'Read straight from the shipped descriptor (workspace-shell.md) through the same parser the package’s ' +
       'contract trip-wire validates. Every table below is genuinely empty — attributes, properties, events, ' +
       'and slots all resolve to zero entries, because workspace-shell.md declares all five sequences ',

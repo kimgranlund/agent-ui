@@ -56,12 +56,6 @@ function el(tag: string, className: string, text?: string): HTMLElement {
 function sectionHeading(text: string): HTMLElement {
   return heading(2, text)
 }
-function para(...nodes: (string | Node)[]): HTMLElement {
-  const p = document.createElement('p')
-  p.className = 'cs-prose'
-  for (const n of nodes) p.append(typeof n === 'string' ? document.createTextNode(n) : n)
-  return p
-}
 function code(text: string): HTMLElement {
   return el('code', 'cs-code', text)
 }
@@ -77,7 +71,7 @@ const DATA_SLOT_ATTR = 'data-' + 'slot'
 // ════════════════ 1 · What this preset removes ════════════════
 content.append(sectionHeading('1 · What this preset removes'))
 content.append(
-  para(
+  pageLead(
     'Before ui-chat-shell existed, a2ui-chat.ts hand-rolled its own chrome: a plain ', code('<div class="chat-shell">'),
     ' wrapping a ', code('<header class="chat-head">'), ' and the conversation — page-owned layout CSS, no ' +
       'shared grammar, nothing reusable by the next chat surface. That page migrated onto ui-chat-shell in ' +
@@ -103,7 +97,7 @@ shell.append(header, conv) // an unmarked child folds into content, same as ui-s
   ),
 )
 content.append(
-  para(
+  pageLead(
     'The relocation happens at connect time (', code('this.children'), ' moved into the inner shell verbatim), ' +
       'so — same hazard as ui-workspace-shell/ui-master-detail — every child must be APPENDED before the ' +
       'ui-chat-shell element itself joins the live DOM, or it composes permanently empty (its own #compose() ' +
@@ -114,7 +108,7 @@ content.append(
 // ════════════════ 2 · The fixed slot intent (live demo) ════════════════
 content.append(sectionHeading('2 · The fixed slot intent'))
 content.append(
-  para(
+  pageLead(
     'The intended shape — not enforced — is ', code('header | nav-pane | content | footer'), ': a session list ' +
       'down the start side, the active thread as content, no options side. Nothing stops you authoring one ' +
       '(the grammar itself doesn’t know "chat" from any other shell), it just isn’t this archetype’s shape. A ' +
@@ -171,7 +165,7 @@ function demoShell(): HTMLElement {
 
 content.append(demoShell())
 content.append(
-  para(
+  pageLead(
     'The ABSENCE law is inherited unchanged from the composed shell (super-shell.html §1): delete nav-pane ' +
       'from your own markup and its band simply disappears, no override needed — this element enforces nothing ' +
       'about which slots you fill.',
@@ -181,7 +175,7 @@ content.append(
 // ════════════════ 3 · Configuration lives on the inner ui-super-shell ════════════════
 content.append(sectionHeading('3 · Configuration lives on the inner ui-super-shell'))
 content.append(
-  para(
+  pageLead(
     'ui-chat-shell has NO API of its own — its descriptor declares attributes, properties, events, and slots ' +
       'all empty (see the derived reference below). Everything you can configure — the collapse toggles, ' +
       'the per-side ', code('narrow-start'), '/', code('narrow-end'), ' story, the header-hosted collapse ' +
@@ -201,7 +195,7 @@ content.append(
 // ════════════════ 4 · The real thing ════════════════
 content.append(sectionHeading('4 · The real thing'))
 content.append(
-  para(
+  pageLead(
     'This page’s demo is a scaffold — realistic shapes, no live wiring. The production surface this simplifies ' +
       'from is ',
     (() => {
@@ -220,7 +214,7 @@ content.append(
 // ════════════════ API reference — DERIVED from the descriptor ════════════════
 content.append(sectionHeading('API reference'))
 content.append(
-  para(
+  pageLead(
     'Read straight from the shipped descriptor (chat-shell.md) through the same parser the package’s contract ' +
       'trip-wire validates. Every table below is genuinely empty — attributes, properties, events, and slots ' +
       'all resolve to zero entries, because chat-shell.md declares all five sequences ', code('[]'), '. This ' +
