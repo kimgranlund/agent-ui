@@ -49,7 +49,7 @@ import {
   isFeedSurfaceType,
 } from '../lib/agent-runtime.ts'
 import type { AgentTransport, TurnInput, Session, TurnTrace, AskDeclaration } from '../lib/agent-runtime.ts'
-import { AskRegistry, surfaceIdOf, componentTypesOf, setAnsweredOnControls } from '../lib/ask-registry.ts'
+import { AskRegistry, surfaceIdOf, componentTypesOf, setAnsweredOnControls, CHOICE_CONTROL_TAGS } from '../lib/ask-registry.ts'
 import type { AskEntry } from '../lib/ask-registry.ts'
 // GH #579 — wire the shipped host-side plan-runner (PR #580, ADR-0174/SPEC-R21/R22) into this page.
 import { runPlannerTurn, PLAN_SYNTHESIS_GROUP_KEY, sanitizeFailureReason } from '../lib/plan-runner.ts'
@@ -172,22 +172,23 @@ const askAnswers = new Map<string, string>()
 
 /** A compact, human-readable summary of the card's CURRENT selection, read from the rendered controls
  * themselves (DOM truth — the same controls the user just committed). */
+// The VALUE-READ projection per CHOICE_CONTROL_TAGS member (a2ui-mechanism review M4, GH #1065):
+// keyed EXHAUSTIVELY off the const's own union — a tag added to CHOICE_CONTROL_TAGS without a row here
+// is a TS2741 compile error, not silent summary drift. (The CSS collapse pair in a2ui-live.css covers
+// only the option-LIST members; its own drift note points back here.)
+const ANSWER_PROJECTIONS: Record<(typeof CHOICE_CONTROL_TAGS)[number], (bubble: HTMLElement) => string[]> = {
+  'ui-radio-group': (b) => [...b.querySelectorAll('ui-radio[checked]')].map((r) => r.textContent?.trim() ?? '').filter(Boolean),
+  'ui-segmented-control': (b) => [...b.querySelectorAll('ui-segment[checked]')].map((r) => r.textContent?.trim() ?? '').filter(Boolean),
+  'ui-checkbox': (b) => [...b.querySelectorAll('ui-checkbox[checked]')].map((r) => r.textContent?.trim() ?? '').filter(Boolean),
+  'ui-switch': (b) => [...b.querySelectorAll('ui-switch[checked]')].map((r) => r.textContent?.trim() ?? '').filter(Boolean),
+  'ui-select': (b) => [...b.querySelectorAll<HTMLElement & { value?: string | null }>('ui-select')].map((c) => (typeof c.value === 'string' ? c.value : '')).filter(Boolean),
+  'ui-combo-box': (b) => [...b.querySelectorAll<HTMLElement & { value?: string | null }>('ui-combo-box')].map((c) => (typeof c.value === 'string' ? c.value : '')).filter(Boolean),
+  'ui-multi-select': (b) => [...b.querySelectorAll<HTMLElement & { value?: readonly string[] }>('ui-multi-select')].flatMap((m) => (Array.isArray(m.value) && m.value.length > 0 ? [m.value.join(', ')] : [])),
+}
+
 function readAskAnswer(bubble: HTMLElement): string {
   const parts: string[] = []
-  for (const radio of bubble.querySelectorAll('ui-radio[checked], ui-segment[checked]')) {
-    const t = radio.textContent?.trim()
-    if (t) parts.push(t)
-  }
-  for (const c of bubble.querySelectorAll<HTMLElement & { value?: string | null }>('ui-select, ui-combo-box')) {
-    if (typeof c.value === 'string' && c.value) parts.push(c.value)
-  }
-  for (const m of bubble.querySelectorAll<HTMLElement & { value?: readonly string[] }>('ui-multi-select')) {
-    if (Array.isArray(m.value) && m.value.length > 0) parts.push(m.value.join(', '))
-  }
-  for (const b of bubble.querySelectorAll('ui-checkbox[checked], ui-switch[checked]')) {
-    const t = b.textContent?.trim()
-    if (t) parts.push(t)
-  }
+  for (const tag of CHOICE_CONTROL_TAGS) parts.push(...ANSWER_PROJECTIONS[tag](bubble))
   return parts.join(' · ')
 }
 
@@ -233,6 +234,13 @@ function interceptAskAmendment(message: A2uiClientMessage): boolean {
   if (!('action' in message)) return false
   const entry = askRegistry.get(message.action.surfaceId)
   if (entry === undefined || entry.state !== 'answered') return false
+  // Busy-window guard (a2ui-mechanism review HIGH, GH #1065): runTurn's own `if (busy) return` fires
+  // AFTER this function has already appended the visible turn and advanced the diff baseline — a
+  // re-commit while the previous reconcile is in flight would show "Changed: X → Y" in chat, dispatch
+  // nothing, and permanently swallow the amendment (ADR-0196 cl.5 says append-and-reconcile, ADR-0097 §2
+  // says the transcript stays truthful). Consume the commit but keep the card OPEN in its editing state
+  // — the user's change stays live on the controls and re-commits cleanly once the turn settles.
+  if (busy) return true
   const prior = askAnswers.get(entry.surfaceId) ?? ''
   settleAskBubble(entry) // re-reads the controls, clears data-editing, restores `answered`
   const next = askAnswers.get(entry.surfaceId) ?? ''

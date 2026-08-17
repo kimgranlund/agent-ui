@@ -194,7 +194,9 @@ describe('a2ui-live ask lifecycle (ADR-0097 §2, post-ship review finding 2) —
     // ADR-0196 (supersedes the original blanket-inert leg): an ANSWERED ask SETTLES — never inert (the
     // Edit-anchor law needs a live anchor), controls carry answered=true, and the annotation is the
     // compact summary row + Edit affordance.
-    expect(bubble.hasAttribute('inert'), 'an answered ask settles — it must NOT go inert (ADR-0196 cl.4)').toBe(false)
+    // NON-VACUOUS form (a2ui-mechanism review, GH #1065): jsdom's `inert` is an expando that never
+    // reflects to the attribute — assert the expando's absence, not the attribute's.
+    expect((bubble as HTMLElement & { inert?: boolean }).inert, 'an answered ask settles — it must NOT go inert (ADR-0196 cl.4)').toBeUndefined()
     expect((bubble.querySelector('ui-radio-group') as HTMLElement & { answered?: boolean }).answered).toBe(true)
     expect(bubble.querySelector('.ask-settle-summary')?.textContent).toBe('Answered — Plan A.')
     expect(bubble.querySelector('button.ask-edit')?.textContent).toBe('Edit')

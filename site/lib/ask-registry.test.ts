@@ -111,7 +111,10 @@ describe('AskRegistry (ADR-0097 §2)', () => {
 
     expect(registry.freeze('ask-1', 'answered')).toBe(true)
     expect(bubble.dataset.state).toBe('answered')
-    expect(bubble.hasAttribute('inert'), 'an ANSWERED ask settles — it must NOT go inert (the Edit-anchor law)').toBe(false)
+    // NON-VACUOUS form (a2ui-mechanism review, GH #1065): jsdom's `inert` is a bare expando that never
+    // reflects to the attribute, so `hasAttribute('inert')` is false even when the code wrongly sets it.
+    // Assert the EXPANDO's absence instead — the same readback the bypassed test uses positively.
+    expect((bubble as HTMLElement & { inert?: boolean }).inert, 'an ANSWERED ask settles — it must NOT go inert (the Edit-anchor law)').toBeUndefined()
     expect(group.answered, 'freeze(answered) sets the ADR-0196 answered prop on the choice controls').toBe(true)
     expect(registry.isFrozen('ask-1')).toBe(true)
   })
@@ -161,5 +164,22 @@ describe('AskRegistry (ADR-0097 §2)', () => {
     )
     entry.host.finalize()
     expect(mountEl.querySelector('ui-button')).not.toBeNull()
+  })
+})
+
+// ── GH #1065 (a2ui-mechanism review M4) — the single-source drift guard ─────────────────────────────
+// CHOICE_CONTROL_TAGS is the family's one source; a2ui-live.ts's readAskAnswer projects each tag's
+// VALUE-READ shape. A tag added to the const but not wired into the projection silently drops that
+// control's answer from the settle summary — this pin reddens instead.
+// @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (tokens-doc.test.ts precedent)
+import { readFileSync as __read } from 'node:fs'
+import { CHOICE_CONTROL_TAGS as __TAGS } from './ask-registry.ts'
+declare const process: { cwd(): string }
+
+describe('readAskAnswer stays wired to every CHOICE_CONTROL_TAGS member (drift guard)', () => {
+  it('every tag in the const appears in a2ui-live.ts', () => {
+    const live = __read(`${process.cwd()}/site/pages/a2ui-live.ts`, 'utf8')
+    const missing = __TAGS.filter((t) => !live.includes(t))
+    expect(missing, `tags in CHOICE_CONTROL_TAGS but absent from a2ui-live.ts: ${missing.join(', ')}`).toEqual([])
   })
 })

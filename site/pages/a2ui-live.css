@@ -214,7 +214,10 @@
 
 /* ── ADR-0196 §settle — an answered card collapses its UNSELECTED options (display, never removal: the
  * Edit-anchor law — the DOM stays, `[data-editing]` re-expands). The selected answer(s) stay rendered at
- * full contrast (the controls' own `:state(answered)` law keeps selected indicators untouched). */
+ * full contrast (the controls' own `:state(answered)` law keeps selected indicators untouched).
+ * DRIFT NOTE (GH #1065): only the option-LIST members of CHOICE_CONTROL_TAGS (ask-registry.ts) collapse —
+ * value-shaped controls (select/combo-box/multi-select) already read as their value; a new option-list
+ * tag added to the const needs a selector pair here too. */
 .msg[data-ask][data-state='answered']:not([data-editing]) ui-radio:not([checked]),
 .msg[data-ask][data-state='answered']:not([data-editing]) ui-segment:not([checked]) {
   display: none;

@@ -55,6 +55,29 @@ describe('AskRegistry — real-engine lifecycle (ADR-0097 §2)', () => {
     expect('action' in messages[0]! && messages[0].action.name).toBe('submit')
   })
 
+  it('freeze(answered) settles WITHOUT inert — a REAL user gesture still reaches the bubble (the Edit-anchor law, ADR-0196 cl.4)', async () => {
+    // The answered-leg real-engine proof the a2ui-mechanism review found missing (GH #1065): the
+    // bypassed leg below proves inert BITES; this proves the answered leg genuinely does NOT go
+    // inert — a real engine reflects `inert` as a true IDL boolean, so `bubble.inert === false`
+    // here is a live readback, not jsdom's inert-less expando vacuity.
+    const registry = new AskRegistry()
+    const { bubble, mountEl } = fixture()
+    const messages: A2uiClientMessage[] = []
+    const entry = registry.create('ask-1', bubble, mountEl, (m) => messages.push(m))
+    ingestAskSurface(entry.host, 'ask-1')
+    const button = mountEl.querySelector('ui-button') as HTMLElement
+
+    registry.freeze('ask-1', 'answered')
+    expect(bubble.inert).toBe(false) // the REAL IDL attribute — answered settles, never inert
+    expect(bubble.dataset.state).toBe('answered')
+
+    // A real gesture still lands (the settled card must stay a live Edit anchor). The click reaches
+    // the DOM; whether the CONSUMER re-dispatches an already-frozen ask's action is the page's own
+    // amendment-intercept policy, not the registry's — here we only prove the engine did not gate it.
+    await userEvent.click(button)
+    expect(bubble.inert).toBe(false)
+  })
+
   it('freeze() makes the bubble genuinely inert — a REAL user gesture on its button no longer reaches it (pointer events suppressed by the engine)', async () => {
     // `element.click()` (the programmatic DOM method, used everywhere else in this file) BYPASSES normal
     // hit-testing — it invokes the activation behavior directly and is NOT blocked by `inert`'s UA
