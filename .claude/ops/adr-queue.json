@@ -33,23 +33,32 @@
     {
       "adr_id": "adr-0193",
       "evidence": "ADR-0193 (ratified 2026-08-17, GH #959 Slice 1): a persistence-adapter seam lands in @agent-ui/shared (the DAG bottom) \u2014 one typed async StorageAdapter interface (get/set/delete/keys, optional subscribe) + a zero-dep localStorage tier (namespaced, native 'storage' event for cross-tab) + a zero-dep IndexedDB tier (hand-wrapped IDBRequest Promises, BroadcastChannel notify) \u2014 because a layer-contract change (what shared-or-above may persist through) earns an ADR before any consumer wires it, the same test ADR-0191 applied to a new host-state convention. Re-checked 2026-08-17 (decision-watcher re-judge): no skills/*/references/*.md anywhere mentions storage/persist/indexeddb/localstorage in a fleet-architecture sense; component-patterns/patterns-table.md and composition-patterns/shell-and-data-surfaces.md (the latter's only persistence row, line 17, explicitly flags per-user persistence as 'a separate, open seam (GH #959, awaiting a ruling)' \u2014 now resolved by this ADR) carry no StorageAdapter row.",
+      "harvested_at": "2026-08-17T11:58:48Z",
       "kind": "harvest",
+      "landed_in": ".claude/skills/component-patterns/references/patterns-table.md + SKILL.md index + composition-patterns/references/shell-and-data-surfaces.md (stale GH #959 note repaired) (branch adr-harvest-0193-0160-0190)",
       "plan": "Likely component-patterns/references/patterns-table.md (new row: 'a layer below app needs to persist something' -> StorageAdapter seam in @agent-ui/shared, zero-dep, async, localStorage+IndexedDB tiers, opt-in cross-tab notify) \u2014 same shape as the already-harvested adr-0192 sibling-package row; could also close composition-patterns/shell-and-data-surfaces.md line 17's open per-user-persistence note. make-pack's own placement judgment decides final home(s).",
-      "queued_at": "2026-08-17T11:51:38Z"
+      "queued_at": "2026-08-17T11:51:38Z",
+      "status": "harvested"
     },
     {
       "adr_id": "adr-0160",
       "evidence": "ADR-0160's 2026-08-16 amendment (ratified, GH #1032, verified 2026-08-17): a real incident where align-self:flex-start sized a turn wrapper to its content's intrinsic width, and once a fixed-floor child (ui-status-stream's 16rem-floor narration strip) rode inside that wrapper, the WHOLE composed turn (header, pending row, bubble) collapsed to ~16rem and hugged the left edge on a real column, instead of filling it \u2014 the wrapper's own width rule silently followed its narrowest child's floor, not the column. Fix: for the agent role only, the wrapper drops the 92% cap and flips to align-self:stretch; max-inline-size:none; the user turn (no fixed-floor child) is untouched. Re-checked 2026-08-17 (decision-watcher re-judge): no skills/*/references/*.md mentions this align-self/intrinsic-width-floor composition trap; component-patterns/patterns-table.md carries no general layout-composition-gotcha row for it.",
+      "harvested_at": "2026-08-17T11:58:48Z",
       "kind": "harvest",
+      "landed_in": ".claude/skills/component-patterns/references/patterns-table.md + SKILL.md index (branch adr-harvest-0193-0160-0190)",
       "plan": "Likely component-patterns/references/patterns-table.md (new row, [incident]-marked per pack-writing-rules: 'a flex/grid item auto-sized to content (align-self:flex-start) collapses to a fixed-floor child's own min-width instead of filling the column when a fixed-floor component is composed inside it' -> use align-self:stretch + max-inline-size:none instead of re-tuning the cap) \u2014 make-pack's own placement judgment decides final home.",
-      "queued_at": "2026-08-17T11:51:38Z"
+      "queued_at": "2026-08-17T11:51:38Z",
+      "status": "harvested"
     },
     {
       "adr_id": "adr-0190",
       "evidence": "ADR-0190's 2026-08-16 amendment (ratified, GH #1030, verified 2026-08-17): a HYBRID stopgap pattern for a load-on-demand affordance when the real fix (a model-side pull tool call) is architecturally deferred (ADR-0132's own tool-execution loop, gated behind parameter schemas) \u2014 client-side auto-attach on an EXACT, normalized text match of a reachable entity's label (case-insensitive, whitespace/punctuation-normalized), resolved through the SAME reference-resolution path an explicit user tag already uses, capped at one auto-attach per turn (a second exact hit is silently dropped, never surfaced), and deliberately excluding fuzzy/description matching (the false-positive risk explicitly declined). Named as a poor-man's UX repair ON TOP of an already-shipped poor-man's context-window bridge (this ADR's own \u00a712), not a substitute for the real tool-call design named and deferred elsewhere. Re-checked 2026-08-17 (decision-watcher re-judge): no skills/*/references/*.md mentions auto-attach/exact-match/capability-tagging as a general hybrid-stopgap pattern.",
+      "harvested_at": "2026-08-17T11:58:48Z",
       "kind": "harvest",
+      "landed_in": ".claude/skills/component-patterns/references/patterns-table.md + SKILL.md index (branch adr-harvest-0193-0160-0190)",
       "plan": "Likely component-patterns/references/patterns-table.md (new row: 'a load-on-demand feature needs a stopgap before a real model-side tool-call loop ships' -> client-side exact-match auto-attach through the existing explicit-reference resolution path, one-per-turn cap, no fuzzy matching) or composition-patterns if judged product-specific to the capabilities-menu/agent-admin surface rather than a fleet-general idiom \u2014 make-pack's own placement judgment decides.",
-      "queued_at": "2026-08-17T11:51:38Z"
+      "queued_at": "2026-08-17T11:51:38Z",
+      "status": "harvested"
     }
   ]
 }
