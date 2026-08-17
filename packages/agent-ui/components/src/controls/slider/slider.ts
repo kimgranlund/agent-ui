@@ -9,7 +9,7 @@
 // All props (value / min / max / step / size / name / disabled / required) are inherited via the
 // UIRangeElement.props spread. Zero-dep; controls → dom+traits inward only (✓); erasableSyntaxOnly ✓.
 
-import { type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
+import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIRangeElement, RANGE_READOUT_HIDE_MS } from '../_base/range-element.ts'
 import { tabbable } from '../../traits/tabbable.ts'
 import { valueDrag } from '../../traits/value-drag.ts'
@@ -19,6 +19,11 @@ import { valueDrag } from '../../traits/value-drag.ts'
 // the spread is the documented workaround, matching how UICheckboxElement spreads UIIndicatorElement.props).
 const sliderProps = {
   ...UIRangeElement.props,
+  // GH #1136 — the GH #1126 readout's opt-out. Bare participle (naming.md §3: booleans are bare
+  // adjectives/participles, never a verb) describing the state when true; default false keeps the
+  // #1126 default-on behaviour byte-identical. Multi-word → explicit kebab `attribute:` (naming.md §3,
+  // the iconOnly/viewTransitions precedent).
+  readoutHidden: { ...prop.boolean(false), reflect: true, attribute: 'readout-hidden' },
 } satisfies PropsSchema
 
 export interface UISliderElement extends ReactiveProps<typeof sliderProps> {}
@@ -110,9 +115,11 @@ export class UISliderElement extends UIRangeElement {
     if (this.#valueEl) this.#valueEl.hidden = true
   }
 
-  /** GH #1126: show the readout and (re)arm its auto-hide timer — called on every live `input`. */
+  /** GH #1126: show the readout and (re)arm its auto-hide timer — called on every live `input`.
+   *  GH #1136: `readoutHidden` guards this ONE call site — the readout never shows while set,
+   *  regardless of interaction source (keyboard step or pointer drag both funnel through here). */
   #armReadout(): void {
-    if (!this.#valueEl) return
+    if (!this.#valueEl || this.readoutHidden) return
     this.#valueEl.hidden = false
     if (this.#hideTimer !== undefined) clearTimeout(this.#hideTimer)
     this.#hideTimer = setTimeout(() => {

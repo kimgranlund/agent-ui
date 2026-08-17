@@ -45,6 +45,10 @@ attributes:            # attributes-as-API — mirrors UISliderElement.props (ra
     type: boolean
     default: false     # String(false) = 'false'; reflects (inherited from UIFormElement.formProps)
     reflect: true      # reflects; INFORMATIONAL ONLY — raises no constraint (see face.validity below; matches native <input type=range>, which the HTML spec exempts from `required`)
+  - name: readoutHidden
+    type: boolean
+    default: false     # String(false) = 'false'; the GH #1126 readout stays default-ON (byte-identical prior behavior)
+    reflect: true      # reflects; GH #1136 — set true to suppress the value readout entirely (never arms on input/drag/keyboard)
 
 properties:            # IDL beyond attributes-as-API (no static-props row)
   - name: form
@@ -171,9 +175,13 @@ clipping past the host's own edge when the thumb is at min/max inside an ancesto
 (the exact shape of an A2UI chat-bubble surface). A FIXED anchor never depends on `--value-pct`, so it can
 never approach that edge — no clamping math needed, and it is provably "inside the host box" by
 construction rather than by probe luck. `position: absolute` also means toggling `hidden` causes zero
-layout shift to the rail/thumb or the page around it. No opt-out prop for v1 (Kim's issue framing leaned
-"visible by default" with no explicit opt-out ask; adding one grows the fork sheet for a small fix —
-tracked as an open follow-up if a real consumer needs to suppress it).
+layout shift to the rail/thumb or the page around it.
+
+**Opt-out (GH #1136):** `readoutHidden` (default `false` — readout ON, byte-identical to the #1126
+shipped behavior) suppresses the readout entirely when `true`: it never arms on pointer drag or keyboard
+step (the single `#armReadout()` guard). The readout element itself still exists in the DOM (idempotent
+part creation, unchanged); it simply never leaves `hidden`. This resolves the deferred-fork note this
+section previously carried (Kim ruled 2026-08-17: mint the opt-out now).
 
 ## Interaction
 

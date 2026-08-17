@@ -34,6 +34,9 @@ const sliderMultiProps = {
   ...UIRangeElement.props,                                                   // min · max · step · value · size · formProps
   valueLo: { ...prop.number(0),   reflect: true, attribute: 'value-lo' },   // low bound; HTML attribute = value-lo (kebab)
   valueHi: { ...prop.number(100), reflect: true, attribute: 'value-hi' },   // high bound; HTML attribute = value-hi (kebab)
+  // GH #1136 — the GH #1126 readout's opt-out; matches ui-slider's own prop (bare participle,
+  // naming.md §3; default false keeps the #1126 default-on behaviour byte-identical).
+  readoutHidden: { ...prop.boolean(false), reflect: true, attribute: 'readout-hidden' },
 } satisfies PropsSchema
 
 export interface UISliderMultiElement extends ReactiveProps<typeof sliderMultiProps> {}
@@ -401,9 +404,11 @@ export class UISliderMultiElement extends UIRangeElement {
     if (this.#valueEl) this.#valueEl.hidden = true
   }
 
-  /** GH #1126: show the readout and (re)arm its auto-hide timer — called on every live `input`. */
+  /** GH #1126: show the readout and (re)arm its auto-hide timer — called on every live `input`.
+   *  GH #1136: `readoutHidden` guards this ONE call site — the readout never shows while set,
+   *  regardless of interaction source (keyboard step or either thumb's pointer drag). */
   #armReadout(): void {
-    if (!this.#valueEl) return
+    if (!this.#valueEl || this.readoutHidden) return
     this.#valueEl.hidden = false
     if (this.#hideTimer !== undefined) clearTimeout(this.#hideTimer)
     this.#hideTimer = setTimeout(() => {

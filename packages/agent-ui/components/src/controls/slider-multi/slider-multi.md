@@ -53,6 +53,10 @@ attributes:           # attributes-as-API — mirrors UISliderMultiElement.props
     type: number
     default: 100
     reflect: true     # reflects; attribute-driven hi round-trips; lo ≤ hi is enforced by the normalization effect
+  - name: readoutHidden
+    type: boolean
+    default: false    # String(false) = 'false'; the GH #1126 readout stays default-ON (byte-identical prior behavior)
+    reflect: true     # reflects; GH #1136 — set true to suppress the value readout entirely (never arms on either thumb's input/drag/keyboard)
 
 properties:           # IDL beyond attributes-as-API
   - name: form
@@ -166,6 +170,17 @@ The host is a block-level `flex` row: the `.rail` (thin horizontal bar) is the `
 `--value-pct-hi` custom properties set by the JS geometry seam. Each `.thumb` is an absolutely-positioned
 circle (`box − 4px`) on the rail. The **nearer-thumb-grabs** rule: a pointerdown anywhere on the rail
 selects the closer thumb and focuses it.
+
+## Value readout (GH #1126)
+
+Same live text readout as `ui-slider` — shows both clamped values as `"{lo} – {hi}"`, arming on any
+live change from either thumb (pointer drag or keyboard step) and hiding ~1.2s after the last change
+(or immediately on focusout leaving the host). See `slider.md`'s "Value readout" section for the full
+label-end design rationale, shared by both controls.
+
+**Opt-out (GH #1136):** `readoutHidden` (default `false` — readout ON, byte-identical to the #1126
+shipped behavior) matches `ui-slider`'s own opt-out — set `true` to suppress the readout entirely; it
+never arms via `#armReadout()` regardless of which thumb moves.
 
 ## Sizes
 

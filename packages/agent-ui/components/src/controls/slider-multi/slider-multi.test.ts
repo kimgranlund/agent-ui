@@ -794,6 +794,64 @@ describe('UISliderMultiElement — live value readout (GH #1126)', () => {
   })
 })
 
+// ── GH #1136: readoutHidden opt-out ──────────────────────────────────────────────────────────────────
+
+describe('UISliderMultiElement — readoutHidden opt-out (GH #1136)', () => {
+  it('default false — unchanged: keyboard step on the lo thumb still shows the readout', () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.valueLo = 20
+    document.body.append(el)
+    expect(el.readoutHidden).toBe(false)
+    dispatchKey(el.loThumb!, 'ArrowRight')
+    expect(el.valueEl!.hidden).toBe(false)
+    el.remove()
+    vi.useRealTimers()
+  })
+
+  it('readoutHidden=true — keyboard step on either thumb never shows the readout', () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.valueLo = 20
+    el.valueHi = 80
+    el.readoutHidden = true
+    document.body.append(el)
+    dispatchKey(el.loThumb!, 'ArrowRight')
+    expect(el.valueEl!.hidden).toBe(true)
+    dispatchKey(el.hiThumb!, 'ArrowLeft')
+    expect(el.valueEl!.hidden).toBe(true)
+    el.remove()
+    vi.useRealTimers()
+  })
+
+  it('readoutHidden=true — pointer drag on the rail never shows the readout', () => {
+    vi.useFakeTimers()
+    const el = make()
+    el.valueLo = 0
+    el.valueHi = 100
+    el.readoutHidden = true
+    document.body.append(el)
+    const rail = el.railEl!
+    ;(rail as unknown as Record<string, unknown>)['setPointerCapture'] = (): void => {}
+    Object.defineProperty(rail, 'getBoundingClientRect', {
+      value: (): DOMRect => ({ left: 0, right: 100, width: 100, top: 0, bottom: 10, height: 10, x: 0, y: 0, toJSON: (): unknown => ({}) } as DOMRect),
+      configurable: true,
+    })
+    rail.dispatchEvent(new PointerEvent('pointerdown', { clientX: 10, pointerId: 1, bubbles: true }))
+    expect(el.valueEl!.hidden).toBe(true)
+    el.remove()
+    vi.useRealTimers()
+  })
+
+  it('reflects to the readout-hidden attribute (kebab, multi-word prop)', () => {
+    const el = make()
+    document.body.append(el)
+    el.readoutHidden = true
+    expect(el.hasAttribute('readout-hidden')).toBe(true) // boolean reflect = presence semantics (booleanType.to)
+    el.remove()
+  })
+})
+
 // ── descriptor trip-wire (contract↔props) ────────────────────────────────────────────────────────
 //
 // Two layers: (a) STRUCTURAL — validateComponentDescriptor reports ZERO failures.
@@ -807,7 +865,7 @@ const parsed = parseDescriptor(fence)
 // 'value' is present because sliderMultiProps spreads UIRangeElement.props (which carries the base's
 // single-value seam); slider-multi never activates that seam (no super.connected()), but the prop exists
 // in the static shape and the contract↔props bijection therefore requires a matching descriptor entry.
-const ATTR_NAMES = ['min', 'max', 'step', 'value', 'size', 'name', 'disabled', 'required', 'valueLo', 'valueHi']
+const ATTR_NAMES = ['min', 'max', 'step', 'value', 'size', 'name', 'disabled', 'required', 'valueLo', 'valueHi', 'readoutHidden']
 
 describe('slider-multi.md descriptor — structural validity (s10 part a)', () => {
   it('carries the ADR-0004 / plan §10 descriptor field set as top-level keys', () => {
