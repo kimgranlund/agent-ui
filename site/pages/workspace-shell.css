@@ -6,11 +6,6 @@
  * `cs-` there — no collision when all three pages' CSS load on the same site build). */
 
 /* ── prose scaffold ─────────────────────────────────────────────────────────────────────────────────────── */
-.ws-prose {
-  max-inline-size: 60rem;
-  line-height: 1.6;
-  color: var(--md-sys-color-neutral-on-surface);
-}
 .ws-code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.9em;
