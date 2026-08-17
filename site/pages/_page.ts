@@ -66,8 +66,8 @@ export const NAV: readonly NavGroup[] = [
   { links: [{ href: './index.html', label: 'Home' }] },
   {
     // The conceptual GUIDE cluster — ungrouped site-level links (no `label:`, hence no site-toc GROUP), the same
-    // posture as the A2UI/A2A/meta clusters below: seven independent destinations for a cold-start human
-    // consumer, not a fleet component's page-type set. Placed right after Home so a newcomer meets them first.
+    // posture as the A2UI/A2A/meta clusters below: independent destinations for a cold-start human consumer,
+    // not a fleet component's page-type set. Placed right after Home so a newcomer meets them first.
     links: [
       { href: './getting-started.html', label: 'Getting started' },
       { href: './theming.html', label: 'Theming' },
@@ -80,6 +80,13 @@ export const NAV: readonly NavGroup[] = [
       { href: './social-signin.html', label: 'Social sign in' },
       { href: './onboarding.html', label: 'Onboarding' },
       { href: './account-settings.html', label: 'Account settings' },
+      { href: './composition.html', label: 'Composition patterns' },
+      { href: './onboarding-checklist.html', label: 'Onboarding checklist' },
+      { href: './card-grid-drawer.html', label: 'Card grid + drawer edit' },
+      { href: './toc-content.html', label: 'Sticky TOC content layout' },
+      { href: './workspace-shell.html', label: 'Workspace Shell' },
+      { href: './surface-host-doc.html', label: 'Surface Host' },
+      { href: './conversation-doc.html', label: 'Conversation' },
       { href: './choosing.html', label: 'Which component when' },
       { href: './changelog.html', label: 'Changelog' },
     ],

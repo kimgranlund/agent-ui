@@ -26,6 +26,18 @@ content.append(
       'wrapper. Two sentences, and the rest of this page is how that shows up in your own code.',
   ),
 )
+content.append(
+  el('p', { class: 'gs-note' }, [
+    document.createTextNode('Wiring one control is one thing; assembling a real page from several is another — see '),
+    (() => {
+      const a = document.createElement('a')
+      a.href = './composition.html'
+      a.textContent = 'Composition patterns'
+      return a
+    })(),
+    document.createTextNode(' for the consumer-assembly pattern map and every shipped recipe page.'),
+  ]),
+)
 
 // ── the workspace packages (hand-authored — cited to CLAUDE.md's Layout section, soft staleness) ──────────────
 content.append(heading(2, 'The workspace packages'))

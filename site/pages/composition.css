@@ -1,0 +1,82 @@
+/* composition.css — page-local chrome for the composition-patterns hub: the per-group pattern tables, the
+ * recipe-page link list, and the deeper-skill list. Never restyles a ui-* control — this hub links out to
+ * live recipe pages rather than mounting controls of its own. */
+
+[data-page-content] {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-block: 2rem;
+}
+
+[data-page-content] > h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+[data-page-content] > h3 {
+  margin: 0.5rem 0 0.15rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.comp-source {
+  margin: 0 0 0.6rem;
+  max-inline-size: 68ch;
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.comp-group-path {
+  margin: 0 0 0.4rem;
+  font-family: var(--md-sys-typeface-mono);
+  font-size: 0.78rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.comp-pattern-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-block-end: 0.75rem;
+}
+
+.comp-pattern-table th {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-weight: 500;
+}
+
+.comp-pattern-table td {
+  padding: 0.5rem 0.6rem;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+  vertical-align: top;
+}
+
+.comp-recipe-list,
+.comp-skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding-inline-start: 1.2rem;
+}
+
+.comp-recipe-blurb {
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.comp-skill-path {
+  font-family: var(--md-sys-typeface-mono);
+  font-size: 0.78rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.comp-skill-rule {
+  margin: 0.15rem 0 0;
+  max-inline-size: 68ch;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
