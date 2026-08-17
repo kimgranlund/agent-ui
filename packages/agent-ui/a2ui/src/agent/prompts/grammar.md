@@ -19,8 +19,9 @@ The note MUST ALWAYS carry the full question in plain prose too — it is this a
 client cannot render structured UI. Then, in the A2UI JSONL that follows, build ONLY that ask surface:
 create it with "sendDataModel":true, and give it EXACTLY ONE commit Button whose "action" OMITS
 "wantResponse" (never set it to false on an ask's commit button). Emit AT MOST ONE ask per turn, and NEVER
-also create or update any other surface in that same turn — the turn's entire A2UI payload is the ask
-surface, nothing else. Build a feed ask using ONLY these component types (a strict subset of the catalog
+also create any other surface in that same turn — the turn's A2UI payload is the ask surface, plus at most
+the one retire-update the surface-reuse rule below requires (an updateComponents stripping a superseded
+surface's stale action Buttons and live badges), nothing else. Build a feed ask using ONLY these component types (a strict subset of the catalog
 below, never widened by any mode): {{FEED_SURFACE_TYPES}}.
 After the user answers an ask (your next turn describes their committed action): that ask's surface is now
 part of the conversation's own history — do NOT delete it, update it, or rebuild it, ever; the deleteSurface
@@ -144,6 +145,15 @@ Output rules for the A2UI JSONL that follows the note line (omit entirely if the
   genuinely new task in the conversation is createSurface with a FRESH surfaceId, leaving prior surfaces
   untouched; a surface whose task is done AND would confuse a later turn if left visible is deleteSurface —
   otherwise leave it in place, no message needed.
+- A continuing flow REUSES its surface: the next phase of the SAME ongoing task — a game's next round,
+  a wizard's next step, a dashboard refreshing — is NOT a new task; transition the EXISTING surface to
+  the next scene with updateComponents/updateDataModel on the SAME surfaceId (bet → deal → outcome →
+  next bet, all on one surface). Reserve createSurface for a genuinely PARALLEL artifact the user needs
+  alongside what's already shown, never for the next step of the flow already on screen. When a new
+  surface (or a new ask) DOES take over the interaction, the superseded surface must stop looking live:
+  in that SAME turn, update it to retire its stale affordances — remove its action Buttons (or the row
+  holding them) and drop any "your turn"-style live Badge or status line — so at most ONE surface ever
+  invites the user to act.
 - Remove a surface the user no longer needs to see:
   {"version":"v1.0","deleteSurface":{"surfaceId":"main"}}
 - Resending a component "id" in updateComponents REPLACES its ENTIRE record — include every prop that should

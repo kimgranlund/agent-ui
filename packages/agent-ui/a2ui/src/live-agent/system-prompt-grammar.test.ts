@@ -484,7 +484,8 @@ describe('buildSystemPrompt feed-ask mechanics — mode-invariant (ADR-0097 §4)
     expect(prompt).toMatch(/EXACTLY ONE commit Button/)
     expect(prompt).toMatch(/OMITS\s+"wantResponse"/)
     expect(prompt).toMatch(/AT MOST ONE ask per turn/)
-    expect(prompt).toMatch(/NEVER\s+also create or update any other surface in that same turn/)
+    expect(prompt).toMatch(/NEVER\s+also create any other surface in that same turn/)
+    expect(prompt).toMatch(/at most\s+the one retire-update the surface-reuse rule below requires/)
   })
 
   it('the note-standalone rule is present — the note must ALWAYS carry the full question in prose', () => {
