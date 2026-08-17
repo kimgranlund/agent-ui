@@ -131,17 +131,113 @@ describe('resource() — SPEC-R3', () => {
     dispose()
   })
 
-  it('R2 AC2: a source without subscribe used with live:true fails fast with a missing-capability DataError', async () => {
+  it('AC3+AC5 cross: dispose() on ONE of two deduped resources never aborts the shared read; the LAST holder out does', async () => {
     const store = createStore()
-    const r = resource('nolive', { read: async () => 1 }, { store, live: true })
+    let seenSignal: AbortSignal | undefined
+    let resolveRead!: (v: string) => void
+    const readSpy = vi.fn((_k: string, ctx: { signal: AbortSignal }) => {
+      seenSignal = ctx.signal
+      return new Promise<string>((res) => {
+        resolveRead = res
+      })
+    })
+    const a = resource('shared', { read: readSpy }, { store })
+    const b = resource('shared', { read: readSpy }, { store })
     await flushMicrotasks()
-    // read still succeeds; live silently no-ops without `subscribe` (no verb, no crash) — but requesting
-    // `live` from a read-only source and calling refetch on a source lacking read after removing it errors:
+    expect(readSpy).toHaveBeenCalledTimes(1)
+    a.dispose()
+    expect(seenSignal?.aborted).toBe(false) // b still holds the shared read — not stranded
+    resolveRead('v')
+    await flushMicrotasks()
+    expect(b.data.value).toBe('v')
+    expect(b.status.value).toBe('success')
+    expect(a.data.value).toBeUndefined()
+
+    // last holder out aborts (SPEC-R3 d), and a resource disposed mid-flight reports nothing pending
+    const c = resource('shared2', { read: readSpy }, { store })
+    const d = resource('shared2', { read: readSpy }, { store })
+    await flushMicrotasks()
+    c.dispose()
+    expect(seenSignal?.aborted).toBe(false)
+    d.dispose()
+    expect(seenSignal?.aborted).toBe(true)
+    expect(d.pending.value).toBe(false)
+  })
+
+  it('AC3+AC5 cross: refetch() on ONE of two deduped resources starts a fresh read for it and leaves the sibling on the original', async () => {
+    const store = createStore()
+    let seenSignal: AbortSignal | undefined
+    let resolveFirst!: (v: string) => void
+    let calls = 0
+    const src: DataSource<string> = {
+      read: (_k, ctx) => {
+        calls++
+        if (calls === 1) {
+          seenSignal = ctx.signal
+          return new Promise<string>((res) => {
+            resolveFirst = res
+          })
+        }
+        return Promise.resolve('second')
+      },
+    }
+    const a = resource('joined', src, { store })
+    const b = resource('joined', src, { store })
+    await flushMicrotasks()
+    expect(calls).toBe(1)
+    void a.refetch()
+    expect(calls).toBe(2) // orphaned, not rejoined
+    expect(seenSignal?.aborted).toBe(false) // b still awaits the first read
+    await flushMicrotasks(10)
+    expect(a.data.value).toBe('second')
+    expect(a.pending.value).toBe(false)
+    expect(b.pending.value).toBe(true) // b is still awaiting the original (un-aborted) read
+    resolveFirst('first')
+    await flushMicrotasks(10)
+    expect(b.data.value).toBe('first') // b's own read settled normally — never stranded, never rejected
+    expect(b.status.value).toBe('success')
+    expect(b.pending.value).toBe(false)
+    expect(calls).toBe(2)
+  })
+
+  it('invalidate() refetches even inside a staleMs freshness window (staleMs is an SWR shortcut, not an invalidate shield)', async () => {
+    const store = createStore()
+    let n = 0
+    const readSpy = vi.fn(async () => ++n)
+    const r = resource('fresh', { read: readSpy }, { store, staleMs: 60_000 })
+    await flushMicrotasks()
+    expect(readSpy).toHaveBeenCalledTimes(1)
+    expect(r.data.value).toBe(1)
+    store.invalidate('fresh')
+    await flushMicrotasks()
+    expect(readSpy).toHaveBeenCalledTimes(2)
+    expect(r.data.value).toBe(2)
+  })
+
+  it('R2 AC2: live:true over a source without subscribe fails fast with a missing-capability DataError (no throw at construction)', async () => {
+    const store = createStore()
+    const readSpy = vi.fn(async () => 1)
+    const r = resource('nolive', { read: readSpy }, { store, live: true })
+    expect(r.status.value).toBe('error')
+    expect(r.error.value?.code).toBe('missing-capability')
+    await flushMicrotasks()
+    expect(r.status.value).toBe('error') // a read never runs against a misconfigured resource
+    expect(readSpy).not.toHaveBeenCalled()
+    expect(r.pending.value).toBe(false)
+
     const noRead = resource('noread', {}, { store: createStore() })
     await flushMicrotasks()
     expect(noRead.error.value?.code).toBe('missing-capability')
     expect(noRead.status.value).toBe('error')
-    void r
+
+    // a subscribe-only source with live:true (the SPEC §5 `presence` example) is NOT a capability error
+    async function* gen(): AsyncGenerator<number> {
+      yield 42
+    }
+    const liveOnly = resource('presence', { subscribe: () => gen() }, { store: createStore(), live: true })
+    await flushMicrotasks(10)
+    expect(liveOnly.error.value).toBeUndefined()
+    expect(liveOnly.data.value).toBe(42)
   })
 
   it('an external commit (not an invalidate) is mirrored into data without re-fetching', async () => {

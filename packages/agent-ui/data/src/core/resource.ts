@@ -37,6 +37,7 @@ export interface Resource<T> {
 interface InFlight<T> {
   promise: Promise<T>
   controller: AbortController
+  /** Holders still awaiting this read; the LAST one leaving aborts the shared signal (SPEC-R3 d). */
   refCount: number
 }
 const inflightByStore = new WeakMap<Store<unknown>, Map<string, InFlight<unknown>>>()
@@ -48,6 +49,12 @@ function inflightMapFor(store: Store<unknown>): Map<string, InFlight<unknown>> {
     inflightByStore.set(store, m)
   }
   return m
+}
+
+/** One resource's stake in one in-flight read; `left` once it stops caring about the result. */
+interface Participation<T> {
+  entry: InFlight<T>
+  left: boolean
 }
 
 function isEnabled(opt: ReadonlySignal<boolean> | boolean | undefined): boolean {
@@ -67,9 +74,19 @@ export function resource<T>(key: string, src: ResourceSource<T>, opts: ResourceO
   const pendingSig = signal(false)
 
   let disposed = false
-  let ownController: AbortController | undefined
   let liveDone = false
   let unsubscribeStore: (() => void) | undefined
+  const participations = new Set<Participation<T>>()
+
+  // SPEC-R2 AC2 fail-fast: the verbs THIS resource will use must exist. `live: true` needs
+  // `subscribe`; a non-live resource needs `read`; a live resource over a subscribe-only source
+  // (the SPEC §5 `presence` example) needs no `read` at all — its read leg is simply skipped.
+  const capabilityError: DataError | undefined =
+    opts.live && !source.subscribe
+      ? missingCapabilityError('subscribe')
+      : !source.read && !opts.live
+        ? missingCapabilityError('read')
+        : undefined
 
   // SWR: a value already in the store is served synchronously (SPEC-R3 a).
   const seed = store.get(key)
@@ -80,13 +97,28 @@ export function resource<T>(key: string, src: ResourceSource<T>, opts: ResourceO
 
   const seenAt = new Map<string, number>() // key -> last successful updatedAt, for staleMs
 
+  function syncPending(): void {
+    pendingSig.value = !disposed && participations.size > 0
+  }
+
+  /** This resource stops awaiting `p.entry`; the last holder out aborts the shared signal. */
+  function leave(p: Participation<T>): void {
+    if (p.left) return
+    p.left = true
+    participations.delete(p)
+    p.entry.refCount--
+    if (p.entry.refCount <= 0 && !p.entry.controller.signal.aborted) p.entry.controller.abort()
+  }
+
+  /** Detach `entry` from the dedup registry so a fresh read is started rather than rejoined. */
+  function orphan(entry: InFlight<T>): void {
+    const inflightMap = inflightMapFor(store as Store<unknown>)
+    if (inflightMap.get(key) === (entry as unknown as InFlight<unknown>)) inflightMap.delete(key)
+  }
+
   async function runRead(): Promise<void> {
+    if (disposed || capabilityError || !source.read) return
     if (!isEnabled(opts.enabled)) return
-    if (!source.read) {
-      errorSig.value = missingCapabilityError('read')
-      statusSig.value = 'error'
-      return
-    }
     const now = Date.now()
     const last = seenAt.get(key)
     if (last !== undefined && staleMs > 0 && now - last < staleMs && statusSig.value === 'success') {
@@ -95,28 +127,26 @@ export function resource<T>(key: string, src: ResourceSource<T>, opts: ResourceO
 
     const inflightMap = inflightMapFor(store as Store<unknown>)
     let entry = inflightMap.get(key) as InFlight<T> | undefined
-    let joined = true
     if (!entry) {
-      joined = false
       const controller = new AbortController()
-      ownController = controller
       const ctx: SourceContext = { signal: controller.signal }
+      let created!: InFlight<T> // assigned below, before the (always-async) `.finally` can observe it
       const promise = source.read(key, ctx).finally(() => {
-        if (inflightMap.get(key) === (entry as unknown as InFlight<unknown>)) inflightMap.delete(key)
+        if (inflightMap.get(key) === (created as unknown as InFlight<unknown>)) inflightMap.delete(key)
       })
-      entry = { promise, controller, refCount: 0 }
+      created = { promise, controller, refCount: 0 }
+      entry = created
       inflightMap.set(key, entry as unknown as InFlight<unknown>)
-    } else {
-      ownController = entry.controller
     }
+    const p: Participation<T> = { entry, left: false }
+    participations.add(p)
     entry.refCount++
 
     statusSig.value = statusSig.value === 'idle' ? 'loading' : statusSig.value
-    pendingSig.value = true
+    syncPending()
     try {
       const value = await entry.promise
-      if (disposed) return
-      if (entry.controller.signal.aborted) return // superseded — the later refetch owns the result
+      if (disposed || p.left) return // superseded — a later refetch (or dispose) owns the outcome
       store.commit(key, value)
       dataSig.value = value
       statusSig.value = 'success'
@@ -124,18 +154,21 @@ export function resource<T>(key: string, src: ResourceSource<T>, opts: ResourceO
       updatedAtSig.value = Date.now()
       seenAt.set(key, updatedAtSig.value)
     } catch (e) {
-      if (disposed || entry.controller.signal.aborted) return
+      if (disposed || p.left) return
       errorSig.value = normalizeError(e) // SWR: stale `data` is KEPT on error
       statusSig.value = 'error'
     } finally {
-      entry.refCount--
-      if (!disposed) pendingSig.value = false
-      void joined
+      if (!p.left) {
+        p.left = true
+        participations.delete(p)
+        entry.refCount--
+      }
+      syncPending()
     }
   }
 
   async function startLive(): Promise<void> {
-    if (!opts.live || !source.subscribe) return
+    if (!opts.live || !source.subscribe || capabilityError) return
     const controller = new AbortController()
     const ctx: SourceContext = { signal: controller.signal }
     try {
@@ -156,7 +189,9 @@ export function resource<T>(key: string, src: ResourceSource<T>, opts: ResourceO
 
   unsubscribeStore = store.subscribe(key, (reason) => {
     if (reason === 'invalidate') {
-      // invalidation wakes an active resource — refetch through the normal read path.
+      // invalidation wakes an active resource — refetch through the normal read path. The staleMs
+      // window is a subscribe-time SWR shortcut, never a shield against an explicit invalidate.
+      seenAt.delete(key)
       void runRead()
     } else {
       // an external commit (an optimistic write, a rollback, paginated()'s own page-list commit)
@@ -170,8 +205,13 @@ export function resource<T>(key: string, src: ResourceSource<T>, opts: ResourceO
     }
   })
 
-  void runRead()
-  if (opts.live) void startLive()
+  if (capabilityError) {
+    errorSig.value = capabilityError
+    statusSig.value = 'error'
+  } else {
+    void runRead()
+    if (opts.live) void startLive()
+  }
 
   return {
     status: statusSig,
@@ -180,23 +220,27 @@ export function resource<T>(key: string, src: ResourceSource<T>, opts: ResourceO
     updatedAt: updatedAtSig,
     pending: pendingSig,
     async refetch() {
-      if (ownController && !ownController.signal.aborted) {
-        ownController.abort() // AC5: earlier aborts, later wins
-        // Orphan the dedup entry unconditionally: a real fetch rejects on abort (its `.finally`
-        // clears the registry naturally), but a source that ignores `signal` would otherwise leave
-        // a permanently-pending entry that a fresh refetch would wrongly rejoin.
-        const inflightMap = inflightMapFor(store as Store<unknown>)
-        if (inflightMap.get(key)?.controller === ownController) inflightMap.delete(key)
+      // AC5: the earlier read is superseded, the later result wins. Leaving aborts the shared
+      // controller ONLY when this resource was its last holder (a deduped sibling still awaiting
+      // it must not be stranded); either way the entry is orphaned from the registry so this
+      // refetch starts a FRESH source call instead of rejoining the one it just walked away from
+      // (a source that ignores `signal` would otherwise leave a permanently-pending entry behind).
+      for (const p of [...participations]) {
+        leave(p)
+        orphan(p.entry)
       }
       seenAt.delete(key)
-      await runRead()
+      const run = runRead()
+      syncPending() // a read that did not start (disabled, capability error) leaves nothing pending
+      await run
     },
     dispose() {
       if (disposed) return
       disposed = true
       liveDone = true
-      if (ownController) ownController.abort()
+      for (const p of [...participations]) leave(p)
       unsubscribeStore?.()
+      syncPending()
     },
   }
 }
