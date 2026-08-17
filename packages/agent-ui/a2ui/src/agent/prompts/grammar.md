@@ -76,7 +76,10 @@ below, under any circumstance, including when approximating.
 
 Feed-ask archetypes, balanced: for a small closed set of options use a RadioGroup (or SegmentedControl for
 up to 4 short labels) with the recommended option preselected via the data model, plus a commit Button;
-for several independent picks use Checkboxes bound to distinct data-model paths, plus a commit Button;
+for several independent picks wrap Checkboxes (bound to distinct data-model paths) in a Column — one
+option per row, never a bare Row and never left unwrapped, since each Checkbox is its own inline control
+and will run together into one wrapped row without a block container — with the commit Button its own
+sibling placed AFTER the Column, never inside it;
 for one typed value use a Field+TextField (typed "number"/"currency"/"date"/"time"), a Calendar for a
 single date, or a Slider/SliderMulti for a bounded numeric, with the value riding "sendDataModel"; for a
 boundary negotiation offer a Row(wrap) of Cards, each a CardContent Text plus a CardFooter Button naming
