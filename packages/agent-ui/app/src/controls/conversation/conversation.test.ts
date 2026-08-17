@@ -1715,4 +1715,59 @@ describe('ui-conversation — ADR-0199: working set/cleared by the turn handle',
     t2.finalize() // endTurn's open-only walk skips the closed record; no throw, no resurrect
     expect(host.working).toBe(false)
   })
+
+  // ── GH #1104 S5 repair — the REAL test-chat window. The live transport is VALIDATE-THEN-STREAM:
+  // content lines land in one burst microseconds before finalize(), so a set-on-first-line wiring
+  // gives a ~0 ms breathing window. A resumed turn (intoSurface — the poker action click) must set
+  // `working` the moment beginAgentTurn() runs, BEFORE any line arrives — the whole "Writing the
+  // response…" wait — and endTurn (finalize AND fail) must clear it even if the turn routed no line.
+
+  it('S5: a resumed turn (intoSurface) breathes from beginAgentTurn — before ANY line arrives — and finalize clears it', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('poker'))
+    t1.finalize()
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    expect(host.working, 'settled between turns').toBe(false)
+    const t2 = el.beginAgentTurn({ intoSurface: 'poker', disabledSurfaceId: 'poker' })
+    expect(host.working, 'breathing the moment the turn begins — zero lines ingested yet').toBe(true)
+    t2.ingestLine(UPDATE_S('poker', 'flop')) // the burst arriving at the end changes nothing
+    expect(host.working).toBe(true)
+    t2.finalize()
+    expect(host.working, 'cleared at finalize').toBe(false)
+  })
+
+  it('S5: a resumed turn that routes NO line still clears at fail() — turn-start set rides touchedIds', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('poker2'))
+    t1.finalize()
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    const t2 = el.beginAgentTurn({ intoSurface: 'poker2' })
+    expect(host.working).toBe(true)
+    t2.fail('transport died mid-wait')
+    expect(host.working, 'a dead turn never leaves the card breathing').toBe(false)
+  })
+
+  it('S5: an ask-answer turn (disabledSurfaceId only, intoSurface undefined) sets NOTHING at start — the answered card is not being mutated', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('ask1'))
+    t1.finalize()
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    const t2 = el.beginAgentTurn({ disabledSurfaceId: 'ask1' })
+    expect(host.working, 'no breathe on the answered card').toBe(false)
+    t2.finalize()
+    expect(host.working).toBe(false)
+  })
+
+  it('S5: an intoSurface naming no open record is inert (fresh-bubble routing untouched)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t = el.beginAgentTurn({ intoSurface: 'never-created' })
+    t.ingestLine(CREATE_S('fresh'))
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    expect(host.working, 'the fresh mount still breathes from its first line').toBe(true)
+    t.finalize()
+    expect(host.working).toBe(false)
+  })
 })

@@ -730,6 +730,24 @@ export class UIConversationElement extends UIElement {
     let noteText: string | undefined
     const turnLines: string[] = []
     const touchedIds = new Set<string>()
+    // ADR-0199 / GH #1104 S5 repair — breathe from TURN START, not first ingested line: the live
+    // transport is VALIDATE-THEN-STREAM (produce() yields content lines only after the whole reply
+    // validates), so on a real turn every `routeLine` — and with it the old first-set of `working` —
+    // lands in one synchronous burst microseconds before finalize(). The card's `working` window was
+    // ~0 ms on exactly the path Kim watched ("Writing the response…" active, no breathing). A turn
+    // RESUMING a known open surface (`opts.intoSurface` — the poker action-click case, TKT-0079) knows
+    // its target the moment it begins: set `working` HERE, and register the id in `touchedIds` so the
+    // single guarded endTurn (finalize AND fail) clears it exactly like a line-touched host. An
+    // ask-answer turn (`intoSurface` deliberately undefined, GH #802) sets nothing at start — its
+    // answered card is not being mutated; a fresh-bubble turn has no target yet (routeLine's fresh
+    // mount still sets working at first line, unchanged).
+    if (opts?.intoSurface !== undefined) {
+      const target = this.#registry.get(opts.intoSurface)
+      if (target !== undefined && target.state === 'open') {
+        target.host.working = true
+        touchedIds.add(opts.intoSurface)
+      }
+    }
     const categoriesSeen: Category[] = []
     const seenCats = new Set<Category>()
     let freshHostThisTurn: UISurfaceHostElement | undefined
