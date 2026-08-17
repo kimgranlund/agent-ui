@@ -142,3 +142,31 @@ reduced-motion path stays byte-identical (the family law, cl.1). (b) is now RESO
 5. **Verify tier, honestly:** the token/pairing/gating truth table is unit-pinned (jsdom, stubbed
    API); the morph itself is browser-UNMEASURED at this amendment's date — a real-engine visual pin
    is owed by the shell's browser suite, not claimed here.
+
+## Appendix (2026-08-16, measured — GH #1005) — cl.5's "browser-UNMEASURED" line, closed
+
+> Findings-grade evidence, not a Decision edit: the ADR's Status cell and every accepted/proposed
+> section above stay byte-untouched; this appendix records what the real-engine probe cl.5 asked for
+> actually measured, per this ADR's own append-only law.
+
+`super-shell-named-morph.browser.test.ts` (new file, `packages/agent-ui/app/src/controls/super-shell/`)
+mounts a wide-mode, both-opt-ins-on `ui-super-shell` with a segmented pane, intercepts the REAL
+`document.startViewTransition` to capture the platform's own `ViewTransition`, drives a real pane-tab
+click (the segment swap), and awaits `ready`. Measured on this repo's pinned Playwright build
+(1.61.1, both `packages` project browser instances):
+
+- **Chromium: `document.startViewTransition` present.** The transition path ran genuinely (not the
+  sync fallback) — `ready` resolved with no rejection, specifically no `InvalidStateError`.
+- **WebKit: `document.startViewTransition` present.** Same result — the transition path ran
+  genuinely and `ready` resolved clean. (The amendment's cl.5 concern that WebKit's Level 1 support is
+  version-gated was a real one at ADR-0183 intake; this harness's bundled WebKit build happens to sit
+  on the supporting side of that line, so the graceful no-API sync-fallback branch this same test file
+  also carries — proven correct by construction from `withViewTransition`'s own gate, mirrored from the
+  router outlet's reduced-motion leg — went UNEXERCISED here, not unwritten.)
+- **The pairing-law invariant** (dom/view-transition.ts's header comment: at most one PAINTED element
+  may carry a given `view-transition-name` in one snapshot, or the platform throws) held both
+  immediately before and immediately after the swap — asserted directly, not merely inferred from
+  `ready` resolving.
+
+Net: the amendment's own acceptance criterion — a real-engine visual pin owed by the shell's browser
+suite — is now carried. No defect was found; no runtime behavior changed by this probe.
