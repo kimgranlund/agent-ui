@@ -587,7 +587,13 @@ const appCssQuerySuffixPlugin = {
 // 103915 after #1023 → 104175 after #1027. Measured 104175 B gz 2026-08-16 (npm ci fresh); rounded up to
 // the next whole KB per this file's convention — 273 B headroom only, so the next app change re-bases
 // again or GH #468's diet finally lands. Not a ratchet: a checkpoint.
-const APP_MARGINAL_BUDGET = 102 * KB
+// Re-based 102 KB -> 103 KB (105472 B gz) 2026-08-17 (GH #1080's decision record, the #1031 precedent —
+// re-base to measured, mint the diet): the ADR-0196 answered-state/settle wave (#1090) + the docs-wave
+// movers crossed the 102 KB checkpoint — measured 104714 B gz on main@2b65338b (fresh npm ci, exit-code
+// verified). Rounded up to the next whole KB per this file's convention — 758 B headroom. This is the
+// LAST re-base of the class by its own ruling: GH #1092 (diet round 2 — lazy-split the agent-admin arm,
+// est. 20-25 KB gz) must land the marginal back UNDER 102 KB; its acceptance forbids raising this again.
+const APP_MARGINAL_BUDGET = 103 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
