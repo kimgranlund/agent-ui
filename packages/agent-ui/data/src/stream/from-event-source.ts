@@ -7,6 +7,7 @@
 
 import { pushToPull } from './bridge.ts'
 import type { Streamed } from '../core/types.ts'
+import type { DataError } from '../core/error.ts'
 
 export interface FromEventSourceOptions {
   /** Named events to listen for, in addition to the default `message` (SPEC-R13 b). */
@@ -32,8 +33,12 @@ export function fromEventSource(url: string, opts: FromEventSourceOptions = {}):
   }
   es.addEventListener('error', () => {
     // The platform ITSELF retries a dropped connection (with Last-Event-ID) unless readyState is
-    // CLOSED — this adapter only ends the Streamed<T> if the source has actually given up.
-    if (es.readyState === ES.CLOSED) end(new Error('EventSource closed'))
+    // CLOSED — this adapter only ends the Streamed<T> if the source has actually given up, and then
+    // with a `DataError` (`network`, retryable), never a bare `Error` (SPEC-R6's one envelope).
+    if (es.readyState === ES.CLOSED) {
+      const err: DataError = { kind: 'network', retryable: true, cause: new Error('EventSource closed') }
+      end(err)
+    }
   })
 
   return stream

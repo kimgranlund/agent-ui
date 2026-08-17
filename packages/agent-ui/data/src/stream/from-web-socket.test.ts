@@ -74,21 +74,41 @@ describe('fromWebSocket — SPEC-R13 (c)', () => {
     expect(FakeSocket.instances.length).toBe(1) // no reconnect after an explicit return()
   })
 
-  it('heartbeat timeout with reconnect opted in constructs a second socket', async () => {
+  it('heartbeat timeout with reconnect opted in constructs a second socket AND closes the dead first one (no leak, no double-reconnect)', async () => {
     const ws = fromWebSocket('/ws', {
       WebSocket: FakeSocket as unknown as typeof WebSocket,
       heartbeat: { intervalMs: 10, timeoutMs: 10, ping: { type: 'ping' } },
       reconnect: { maxAttempts: 3, baseMs: 5, capMs: 20 },
     })
+    const iterator = ws[Symbol.asyncIterator]()
     await vi.advanceTimersByTimeAsync(0) // let the 'open' microtask fire, arming the heartbeat
     await vi.advanceTimersByTimeAsync(10) // heartbeat interval fires -> sends ping, arms deadline
-    await vi.advanceTimersByTimeAsync(10) // deadline fires -> onDead() -> schedules reconnect
+    await vi.advanceTimersByTimeAsync(10) // deadline fires -> onDead() -> closes the dead socket, schedules reconnect
+    const first = FakeSocket.instances[0]
+    expect(first.closeSpy).toHaveBeenCalledTimes(1) // the dead socket is closed, not left dangling
     await vi.advanceTimersByTimeAsync(20) // reconnect delay elapses -> connect() again
     expect(FakeSocket.instances.length).toBe(2)
+    await vi.advanceTimersByTimeAsync(0) // second socket opens
+
+    // the first socket's late events are inert: a stray 'close'/'message' from it never re-enters
+    // onDead() (which would schedule a THIRD socket within the <20ms back-off) or the stream
+    first.emit('close', { code: 1006 } as unknown as MessageEvent)
+    first.emit('message', { data: 'ghost' } as MessageEvent)
+    const live = FakeSocket.instances[1]
+    for (let i = 0; i < 5; i++) {
+      live.emit('message', { data: `keepalive-${i}` } as MessageEvent) // resets the live socket's own heartbeat clock
+      await vi.advanceTimersByTimeAsync(8) // 40ms total — past any ghost back-off (<20ms), never past a heartbeat
+    }
+    expect(FakeSocket.instances.length).toBe(2)
+
+    // the live (second) socket delivered every one of those, in order; the ghost never got through
+    const seen: string[] = []
+    for (let i = 0; i < 5; i++) seen.push(((await iterator.next()).value as MessageEvent).data as string)
+    expect(seen).toEqual(['keepalive-0', 'keepalive-1', 'keepalive-2', 'keepalive-3', 'keepalive-4'])
     ws.close() // stop the second socket's own heartbeat cycle so no timer leaks past this test
   })
 
-  it('heartbeat timeout with NO reconnect opted in ends the stream with a network DataError', async () => {
+  it('heartbeat timeout with NO reconnect opted in ends the stream with a DataError kind:network', async () => {
     const ws = fromWebSocket('/ws', {
       WebSocket: FakeSocket as unknown as typeof WebSocket,
       heartbeat: { intervalMs: 10, timeoutMs: 10, ping: { type: 'ping' } },
@@ -98,7 +118,40 @@ describe('fromWebSocket — SPEC-R13 (c)', () => {
     pending.catch(() => {}) // silence the transient unhandled-rejection window before the assertion below attaches
     await vi.advanceTimersByTimeAsync(0)
     await vi.advanceTimersByTimeAsync(20)
-    await expect(pending).rejects.toThrow()
+    await expect(pending).rejects.toMatchObject({ kind: 'network', retryable: true })
+    expect(FakeSocket.instances.length).toBe(1)
+    expect(FakeSocket.instances[0].closeSpy).toHaveBeenCalled() // the dead socket is released
+  })
+
+  it('close() ENDS the stream: a pending next() settles { done: true }, the socket closes with the given code, no reconnect', async () => {
+    const ws = fromWebSocket('/ws', {
+      WebSocket: FakeSocket as unknown as typeof WebSocket,
+      reconnect: { maxAttempts: 3, baseMs: 5, capMs: 20 },
+    })
+    const iterator = ws[Symbol.asyncIterator]()
+    await vi.advanceTimersByTimeAsync(0)
+    const pending = iterator.next()
+    ws.close(4000, 'bye')
+    const result = await pending
+    expect(result.done).toBe(true)
+    expect(FakeSocket.instances[0].closeSpy).toHaveBeenCalledWith(4000, 'bye')
+    expect(FakeSocket.instances[0].closeSpy).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(100)
+    expect(FakeSocket.instances.length).toBe(1) // no reconnect after an explicit close()
+    // a fresh pull on a closed stream is done, not parked
+    expect((await iterator.next()).done).toBe(true)
+  })
+
+  it('close() during a reconnect back-off wait cancels the reconnect (no zombie socket)', async () => {
+    const ws = fromWebSocket('/ws', {
+      WebSocket: FakeSocket as unknown as typeof WebSocket,
+      heartbeat: { intervalMs: 10, timeoutMs: 10, ping: { type: 'ping' } },
+      reconnect: { maxAttempts: 3, baseMs: 50, capMs: 50 },
+    })
+    await vi.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(20) // dead -> reconnect scheduled (delay in [0, 100))
+    ws.close()
+    await vi.advanceTimersByTimeAsync(500)
     expect(FakeSocket.instances.length).toBe(1)
   })
 })

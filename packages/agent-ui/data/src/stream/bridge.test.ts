@@ -91,4 +91,16 @@ describe('pushToPull — SPEC-R12', () => {
     const result = await pending
     expect(result).toEqual({ value: undefined, done: true })
   })
+
+  it('return() while a next() is parked settles that next() done:true (never hangs) and tears down once', async () => {
+    const onTeardown = vi.fn()
+    const { push, stream } = pushToPull<number>({ onTeardown })
+    const iterator = stream[Symbol.asyncIterator]()
+    const pending = iterator.next()
+    await iterator.return!()
+    expect(await pending).toEqual({ value: undefined, done: true })
+    expect(onTeardown).toHaveBeenCalledTimes(1)
+    expect(push(1)).toBe(false) // producer pushes after a consumer return are no-ops
+    expect((await iterator.next()).done).toBe(true)
+  })
 })

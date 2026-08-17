@@ -70,6 +70,30 @@ describe('fromEventSource — SPEC-R13 (b)', () => {
     expect(fake.closeSpy).toHaveBeenCalledTimes(1)
   })
 
+  it('a source that has given up (error while CLOSED) ends the stream with a DataError kind:network; a transient error does not', async () => {
+    let fake!: FakeEventSource
+    const EventSourceCtor = function (this: unknown, url: string, init?: { withCredentials?: boolean }) {
+      fake = new FakeEventSource(url, init)
+      return fake
+    } as unknown as typeof EventSource
+    ;(EventSourceCtor as unknown as { CLOSED: number }).CLOSED = 2
+
+    const stream = fromEventSource('/sse', { EventSource: EventSourceCtor })
+    const iterator = stream[Symbol.asyncIterator]()
+    const pending = iterator.next()
+    pending.catch(() => {})
+    fake.readyState = 0 // CONNECTING — the platform is retrying on its own
+    fake.emit('error', new Event('error') as unknown as MessageEvent)
+    fake.emit('message', { data: 'still-alive' } as MessageEvent)
+    expect(((await pending).value as MessageEvent).data).toBe('still-alive')
+
+    const pending2 = iterator.next()
+    pending2.catch(() => {})
+    fake.readyState = 2 // CLOSED — given up
+    fake.emit('error', new Event('error') as unknown as MessageEvent)
+    await expect(pending2).rejects.toMatchObject({ kind: 'network', retryable: true })
+  })
+
   it('the doc comment states the no-custom-headers auth constraint', () => {
     const path = `${process.cwd()}/packages/agent-ui/data/src/stream/from-event-source.ts`
     const src = readFileSync(path, 'utf8') as string

@@ -62,6 +62,16 @@ export function pushToPull<T>(opts: PushToPullOptions = {}): PushToPull<T> {
     return queue.length < highWaterMark
   }
 
+  /** Consumer-side finish (`return()`/`throw()`): the stream is over regardless of what the producer does next. */
+  function settleWaiter(): void {
+    ended = true
+    if (waiter) {
+      const w = waiter
+      waiter = undefined
+      w.resolve({ value: undefined, done: true })
+    }
+  }
+
   function end(err?: unknown): void {
     if (ended) return
     ended = true
@@ -110,10 +120,12 @@ export function pushToPull<T>(opts: PushToPullOptions = {}): PushToPull<T> {
           })
         },
         async return(value?: unknown): Promise<IteratorResult<T>> {
+          settleWaiter() // a next() parked on an empty queue resolves { done: true } — never hangs
           teardown()
           return { value, done: true }
         },
         async throw(e?: unknown): Promise<IteratorResult<T>> {
+          settleWaiter()
           teardown()
           throw e
         },
