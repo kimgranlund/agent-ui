@@ -50,6 +50,21 @@ describe('buildSystemPrompt GRAMMAR additions (ADR-0089)', () => {
     expect(prompt).toMatch(/approximation/i)
   })
 
+  it('teaches the ADR-0198 amendment flow-completion protocol: terminal taxonomy, confirm-before-conclusion, courtesy close', () => {
+    // A1 — every terminal path is named an ending (completion · escalation/early stop · abandonment).
+    expect(prompt).toMatch(/EVERY ending of a multi-step ask flow gets a closing turn/)
+    expect(prompt).toMatch(/Escalation \/ early stop/)
+    expect(prompt).toMatch(/escalation prose turn IS the closing turn/)
+    expect(prompt).toMatch(/Abandonment/)
+    // A2 — the confirm stage is an ordinary ask; flowEnd strictly AFTER the user's confirm.
+    expect(prompt).toMatch(/Confirm before concluding/)
+    expect(prompt).toMatch(/"flowEnd" comes strictly AFTER the user's confirm/)
+    // A3 — the five-part courtesy close.
+    expect(prompt).toMatch(/courtesy close/)
+    expect(prompt).toMatch(/what the user made happen/)
+    expect(prompt).toMatch(/further questions, or session complete/)
+  })
+
   it('the boundary instruction NEVER licenses an uncatalogued type — it reiterates "ONLY catalog" language', () => {
     // A load-bearing negative control (ADR-0089 Out-of-scope): the new prose must not read as permission
     // to invent a type. Assert the containment/restriction vocabulary is present around "approximat*" —
