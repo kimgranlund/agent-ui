@@ -156,3 +156,15 @@ payload per the #125 ops-write split; written and landed by the dispatching sess
   breathing card). Repo: 1 worktree · 1 branch · origin main-only · 0 PRs · check+test+size+browser green.
 - LESSON (2nd occurrence, now hard rule): gates and ship legs run as SEPARATE commands — a compound
   gate+push+merge chain shipped past a red twice tonight (both times luck-safe, neither time acceptable).
+
+## Wrap-up round — 2026-08-17 ~20:3xZ (Kim: merge anything mergeable, wrap up)
+
+- Kim's live-testing day yielded and CLOSED same-day: #1105 wave, #1120, #1124 (position-flip root
+  cause), #1125, #1126, #1130, #1132, #1134, #1136, #1142 (the net-no-op dodge — #1061's saga closed
+  at the producer), the #1104 S5+shape fixes, ADR-0198 amendment (ratified+built), devtools arc
+  (#1122/#1129, ADR-0200, AGENT-UI-2). ~20 PRs today.
+- Hygiene: origin main-only (phantom refs pruned) · 0 open PRs · reap clean except AGENT-UI-2's live
+  #1141 lane.
+- BOARD (3): #1141 (AGENT-UI-2, in flight) · #1101/#1104 (built + deployed 38930eda — close on Kim's
+  look-pass: intake flow ending; rounded breathing + bet-input honesty on blackjack).
+- Owed when #1141 ships: redeploy (either host) so the look-pass includes the slider readout.
