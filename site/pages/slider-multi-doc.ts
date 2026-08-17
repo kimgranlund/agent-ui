@@ -5,7 +5,7 @@
 // body renderers are the SHARED lib/doc-page.ts; only the slider-multi-specific specimens live here.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import { loadSliderMultiDoc } from '../lib/frontmatter.ts'
-import { findAttr, heading, renderApiTable, renderMarkdownBody, specimenRow } from '../lib/doc-page.ts'
+import { composeDocPage, findAttr, heading, specimenRow } from '../lib/doc-page.ts'
 import type { ParsedDescriptor } from '@agent-ui/components/descriptor'
 
 const { descriptor, body } = loadSliderMultiDoc()
@@ -19,7 +19,9 @@ const { content } = mountPage({
     'the same frontmatter the contract trip-wire validates, so they cannot drift.',
 })
 
-content.append(renderApiTable(descriptor.attributes), renderExamples(descriptor), renderMarkdownBody(body))
+// GH #1126: switched to the shared composeDocPage — slider-multi.md now declares a `parts:` entry (the
+// value readout), and composeDocPage is the ONE render path that also emits the Parts table.
+composeDocPage(content, descriptor, body, renderExamples(descriptor))
 
 // ── live specimens (derived from the parsed `size` enum + the real boolean attributes) ──────────────────────
 

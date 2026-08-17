@@ -388,7 +388,7 @@ describe('UISliderElement — live value readout (GH #1126)', () => {
     el.value = 50
     document.body.append(el)
     const part = valuePart(el)
-    const key = (): void => el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
+    const key = (): void => { el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true })) }
     key()
     vi.advanceTimersByTime(900) // short of the 1200ms delay
     key() // re-arm
