@@ -59,3 +59,7 @@
   browser shard) and merges; peer then verifies+closes #1000 per its own claim.
 - Main full `npm test` showed 7 `ui-drill` wiring failures (`_page.ts` drill refs) at ~02:30Z — being
   checked by the AGENT-UI finisher; if real, fixed on the same PR or its own small PR.
+- 2026-08-17 04:3xZ — AGENT-UI-3 (`/lead-team`, mobilize-chores + hygiene) joined. Docs wave split:
+  AGENT-UI-2 ships #1042–#1046 (five `agent-*` worktrees on `104x-*` branches — do not touch);
+  AGENT-UI-3 takes #1047–#1049 (claims released on-issue, same lane brief). Second merger on
+  NAV/CARD_GROUPS/sitemap/llms/theme-fixture conflicts rebases keep-both + regenerates.
