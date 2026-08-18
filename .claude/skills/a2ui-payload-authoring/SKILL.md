@@ -162,6 +162,7 @@ papered over inside the payload.
 | `references/trees-and-lists.md` | Building the adjacency-list tree, `child` vs `children`, `ChildList` templates, `${…}` interpolation, nesting |
 | `references/bindings-actions-checks.md` | Data bindings, two-way inputs, Button actions, reactive `checks`, FormProvider submit-gating |
 | `references/composition-patterns.md` | Composing one of the eight seeded whole-surface idioms (packs A + B: slideshow-gallery · confirmation-view · trend-list · card-layouts · five-day-weather · restaurant-menu · travel-itinerary · wizard-step-progress) — each section cites its seed + the catalog mechanics it proves |
+| `references/meta-line-vocabulary.md` | The `a2uiMeta` framing envelope's six MODEL-authored arms (`ask · plan · personaPatch · flowEnd · team · target`) as a growth axis — the inherited arm laws, ADR-0198's answered-ask-freeze/closing-turn amendments, and the truthful-signal-beats-heuristic lesson (ADR-0206) |
 | `references/finalize-validation.md` | A payload validates clean mid-stream but the CLI / renderer / `produce` fails it `IDGRAPH ${sid}:root-missing` — the finalize-granularity signal (ADR-0187) |
 | `catalog.json` (`src/catalog/default/`) | The authoritative component/prop/function inventory — never invent a component or prop |
 | `src/examples/` + `corpus/exemplar/v1_0/agent-ui.jsonl` | Real payloads to condition on before composing |
