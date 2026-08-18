@@ -29,10 +29,12 @@ export interface ExtractedDocument {
 }
 
 /** `'too-large'` — `file.size` exceeded `MAX_RAW_FILE_BYTES`, checked before any extractor runs.
- *  `'unsupported-type'` — no registered extractor claimed the file. Both fail VISIBLY (R1: "an
- *  unsupported type is rejected at the chip with a visible reason, never a silent drop") — a caller
- *  branches on `reason`, never re-parses `message`. */
-export type DocumentExtractionErrorReason = 'too-large' | 'unsupported-type'
+ *  `'unsupported-type'` — no registered extractor claimed the file. `'no-text-layer'` — an extractor DID
+ *  claim and successfully parse the file, but recovered no text at all (GH #1215/ADR-0202 cl.5's own
+ *  case: an image-only PDF with no embedded text layer) — extraction succeeded, there is simply nothing
+ *  to mint. All three fail VISIBLY (R1: "an unsupported type is rejected at the chip with a visible
+ *  reason, never a silent drop") — a caller branches on `reason`, never re-parses `message`. */
+export type DocumentExtractionErrorReason = 'too-large' | 'unsupported-type' | 'no-text-layer'
 
 export class DocumentExtractionError extends Error {
   readonly reason: DocumentExtractionErrorReason

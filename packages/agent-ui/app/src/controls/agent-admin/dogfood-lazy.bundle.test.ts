@@ -16,6 +16,7 @@
 // absence, never a check that can't fail.
 import { describe, it, expect } from 'vitest'
 import { rolldown } from 'rolldown'
+import { urlSuffixStubPlugin } from '../../bundle-test-url-stub.ts'
 
 const ROOT = process.cwd()
 const APP_ENTRY = `${ROOT}/packages/agent-ui/app/src/index.ts`
@@ -46,8 +47,12 @@ interface Chunk {
   moduleIds: string[]
 }
 
+// GH #1215/ADR-0202 — bundling the app barrel now traverses into the agent-admin arm's own
+// document-ingest.ts -> pdf-extractor.ts -> pdf-worker.ts chain, which carries a Vite `?url` specifier
+// (`urlSuffixStubPlugin`, shared with the sibling agent-admin-lazy/markdown-lazy/pdf-identity bundle
+// tests) — a bare `rolldown()` call has no Vite asset pipeline to resolve it on its own.
 const chunksOf = async (input: string, plugins: unknown[] = []): Promise<Chunk[]> => {
-  const bundle = await rolldown({ input, plugins: plugins as never, onLog() {} })
+  const bundle = await rolldown({ input, plugins: [urlSuffixStubPlugin, ...plugins] as never, onLog() {} })
   const { output } = await bundle.generate({ format: 'esm', minify: true })
   await bundle.close()
   return output

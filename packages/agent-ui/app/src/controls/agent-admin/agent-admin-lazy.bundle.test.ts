@@ -6,6 +6,7 @@
 // `moduleIds`, with the negative control proving the check can fail.
 import { describe, it, expect } from 'vitest'
 import { rolldown } from 'rolldown'
+import { urlSuffixStubPlugin } from '../../bundle-test-url-stub.ts'
 
 const ROOT = process.cwd()
 const APP_ENTRY = `${ROOT}/packages/agent-ui/app/src/index.ts`
@@ -30,8 +31,12 @@ interface Chunk {
 // "absent from the EAGER closure" (entry chunks + their transitive static `imports`), not merely "absent
 // from `isEntry` chunks" — the latter would pass vacuously if the arm ever leaked into a static shared
 // chunk (the same closure `scripts/measure-size.mjs`'s app row gates bytes with since ADR-0197).
+// GH #1215/ADR-0202 — bundling the app barrel now traverses into the agent-admin arm's own
+// document-ingest.ts -> pdf-extractor.ts -> pdf-worker.ts chain, which carries a Vite `?url` specifier
+// (`urlSuffixStubPlugin`, shared with the sibling dogfood-lazy/markdown-lazy/pdf-identity bundle tests) —
+// a bare `rolldown()` call has no Vite asset pipeline to resolve it on its own.
 const chunksOf = async (input: string, plugins: unknown[] = []): Promise<Chunk[]> => {
-  const bundle = await rolldown({ input, plugins: plugins as never, onLog() {} })
+  const bundle = await rolldown({ input, plugins: [urlSuffixStubPlugin, ...plugins] as never, onLog() {} })
   const { output } = await bundle.generate({ format: 'esm', minify: true })
   await bundle.close()
   const chunks = output.filter((c) => c.type === 'chunk')
