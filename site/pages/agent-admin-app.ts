@@ -559,7 +559,27 @@ let reorderMode = false
 function applyReorderMode(next: boolean): void {
   reorderMode = next
   rosterList.toggleAttribute('data-reorder-mode', next) // CSS hook: agent-admin-app.css keys the drag-cursor affordance off this
-  if (drawer.open) renderRosterRows()
+  if (drawer.open) {
+    renderRosterRows()
+    scrollActiveRosterRowIntoView() // the mode swap rebuilds every row — keep the active row on-screen (GH #1219)
+  }
+}
+
+/** GH #1219 — center the CURRENT agent's roster row in the drawer's scrollport. The drawer always opened
+ *  at default scroll position, so a mid-/late-roster active agent sat out of view. Same jsdom guard +
+ *  `prefers-reduced-motion` handling as `agent-admin.ts`'s `#scrollFoldIntoView` (scrollIntoView is absent
+ *  in jsdom; a real browser always has it), `block:'center'` because the row is the drawer's SUBJECT, not
+ *  a nearest-edge nudge. Runs one frame after `drawer.open = true` — `ui-drawer` MOVES its children into
+ *  the `<dialog>` part and `showModal()` runs via the open-effect, so layout is only trustworthy next frame. */
+function scrollActiveRosterRowIntoView(): void {
+  requestAnimationFrame(() => {
+    // Matched via dataset (not an attribute-selector interpolation): no escaping concern, and jsdom has
+    // no `CSS.escape` to lean on.
+    const row = [...rosterList.querySelectorAll<HTMLElement>('.roster-row')].find((r) => r.dataset.agent === active.id)
+    if (row === undefined || typeof row.scrollIntoView !== 'function') return
+    const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+    row.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' })
+  })
 }
 
 /** Set the mode PROGRAMMATICALLY (the drawer's own open/close) — also drives the toggle's own `pressed`,
@@ -575,6 +595,7 @@ function openRosterDrawer(): void {
   setReorderMode(false) // always open on the default (non-reorder) view — a no-op render (drawer isn't open yet)
   renderRosterRows()
   drawer.open = true
+  scrollActiveRosterRowIntoView() // GH #1219 — the drawer opens centered on the CURRENT agent's row
 }
 
 /** A ghost icon-only row button — a real `aria-label` NAMING THE AGENT is the whole accessible name here
