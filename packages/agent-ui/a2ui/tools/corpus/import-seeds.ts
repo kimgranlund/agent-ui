@@ -131,6 +131,12 @@ import {
   notificationStatusStackSeed,
   mediaFileGridSeed,
 } from '../../src/examples/high-frequency-patterns.ts'
+import {
+  slideshowGallerySeed,
+  confirmationViewSeed,
+  trendListSeed,
+  cardLayoutsSeed,
+} from '../../src/examples/composition-pack-a.ts'
 import { allSeeds } from '../../src/examples/index.ts'
 
 declare const process: { cwd(): string; argv: string[]; exit(code?: number): never }
@@ -271,6 +277,10 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
   {
     module: 'high-frequency-patterns.ts', // GH #972 — the 2026-08-15 gap-map sweep; admission pending the judged wave
     seeds: [comparisonPricingSeed, receiptOrderSummarySeed, emptyErrorRetryCardSeed, notificationStatusStackSeed, mediaFileGridSeed],
+  },
+  {
+    module: 'composition-pack-a.ts', // GH #1205 — req-a2ui-library R4 pack A; admission pending the judged wave (disposition-allowlist.ts)
+    seeds: [slideshowGallerySeed, confirmationViewSeed, trendListSeed, cardLayoutsSeed],
   },
 ]
 

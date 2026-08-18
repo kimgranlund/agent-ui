@@ -61,6 +61,15 @@ export {
   mediaFileGridSeed,
   highFrequencyPatternSeeds,
 } from './high-frequency-patterns.ts'
+// GH #1205 — composition seeds pack A (req-a2ui-library R4, now-tier): the four dispositioned
+// composition patterns — slideshow · confirmation · trend-list · card-layouts.
+export {
+  slideshowGallerySeed,
+  confirmationViewSeed,
+  trendListSeed,
+  cardLayoutsSeed,
+  compositionPackASeeds,
+} from './composition-pack-a.ts'
 
 import type { ExampleSeed } from './types.ts'
 import { canvasSeeds } from './canvas-button.ts'
@@ -73,6 +82,7 @@ import { corpusGrowthSeeds } from './corpus-growth.ts'
 import { catalogFrontierSeeds } from './catalog-frontier.ts'
 import { structuredContainerSeeds } from './structured-container.ts'
 import { highFrequencyPatternSeeds } from './high-frequency-patterns.ts'
+import { compositionPackASeeds } from './composition-pack-a.ts'
 
 /** Every seed on the shelf — the standing gate's (`examples.test.ts`) iteration surface. Composed from
  *  each module's own family array, so the total is always derived, never a separately-maintained count. */
@@ -87,4 +97,5 @@ export const allSeeds: readonly ExampleSeed[] = [
   ...catalogFrontierSeeds,
   ...structuredContainerSeeds,
   ...highFrequencyPatternSeeds,
+  ...compositionPackASeeds,
 ]
