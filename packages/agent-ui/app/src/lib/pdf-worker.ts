@@ -7,8 +7,8 @@
 // build` and the dev/test server (ADR-0202 cl.3).
 //
 // Text-only extraction (ADR-0202 cl.5): `page.getTextContent()` per page, joined; no canvas render, no
-// OCR. An image-only PDF (empty text on every page) is reported via `NO_TEXT` — the caller (
-// `pdf-extractor.ts`) turns that into the honest `DocumentExtractionError('no-text-layer')` state,
+// OCR. An image-only PDF (empty text on every page) is reported via `{ noText: true }` — the caller
+// (`pdf-extractor.ts`) turns that into the honest `DocumentExtractionError('no-text-layer')` state,
 // never a silent empty string.
 
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist'
