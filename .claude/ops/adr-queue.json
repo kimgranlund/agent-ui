@@ -22,13 +22,6 @@
       "queued_at": "2026-08-18T21:24:23Z"
     },
     {
-      "adr_id": "adr-0198",
-      "evidence": "UPDATED 2026-08-18: a SECOND ratified amendment landed since this row was last queued (2026-08-18, GH #1101/#1192, req-a2ui-patterns.md R2/R4) -- B1: mid-flow backable-wizard Next/Back commits are SCENE TRANSITIONS on one still-open ask (never an answered-ask fresh-id event), reconciling a head-on collision between the shipped surface-reuse law and the shipped answered-ask freeze; B2: the closing turn gains its ONE stated exception to 'emits no A2UI' -- a single updateComponents settling the confirmed-receipt surface (strip buttons + add a settled badge) in the SAME turn as the courtesy close. Checked 2026-08-18: grep of skills/*/references/*.md for meta-line/a2uiMeta/answered-ask/scene-transition/surface-reuse finds zero coverage anywhere -- no pack tracks the meta-line reserved-vocabulary growth axis, the answered-ask-freeze-begins-at-flow-final-confirm rule, or the closing-turn's one-exception carve-out. Genuinely uncaptured, now a two-amendment surface.",
-      "kind": "harvest",
-      "plan": "Likely a2ui-prompt-authoring (grammar.md is this skill's territory) or a2ui-payload-authoring (the meta-line envelope + answered-ask/surface-reuse laws): a reference file or extended section tracking (a) the meta-line reserved-field vocabulary growth axis (now six: ask/plan/personaPatch/flowEnd/team/target) and (b) the answered-ask-freeze-begins-at-flow-final-confirm + closing-turn-one-settle-exception carve-outs as their own pattern. make-pack's own placement judgment decides new file vs extension.",
-      "queued_at": "2026-08-18T21:24:23Z"
-    },
-    {
       "adr_id": "adr-0201",
       "evidence": "ADR-0201 (ratified 2026-08-18, GH #1185): mints ui-description-list, a Display-class DATA-DRIVEN key-value receipt primitive (rows: {label,value}[], safeJsonCodec-hardened, empty-value omission BY CONSTRUCTION), superseding the GH #1174 grammar COMPOSITION pattern (Column of per-field Rows of label/value Texts) for the confirm-step receipt case -- the reverse direction of the standard mint-vs-compose test: here a previously-composed payload GRAMMAR pattern is retired in favor of a minted primitive, because the composition could only PROMPT-enforce the omission law while the primitive enforces it structurally. Checked 2026-08-18: component-design/references/mint-vs-compose.md covers ADR-0175's aggregate-value/mint-vs-compose fork test but has no case study of a grammar-composition pattern being RETIRED by a new mint, and a2ui-payload-authoring/references/composition-patterns.md's existing Column-of-Rows receipt guidance is the exact pattern this ADR supersedes -- genuinely uncaptured, and the existing composition-patterns.md entry is now stale (still teaching the retired construction).",
       "kind": "harvest",
@@ -50,24 +43,10 @@
       "queued_at": "2026-08-18T21:24:23Z"
     },
     {
-      "adr_id": "adr-0204",
-      "evidence": "ADR-0204 (ratified 2026-08-18, GH #1196, a recording ADR): team becomes the meta-line envelope's FIFTH additive model-authored arm (name-only proposed roster, whole-arm validated the plan/personaPatch way, gate-blind through produce(), consumed only via ui-agent-admin's onTeamDeclared seam). Checked 2026-08-18: grep of skills/*/references/*.md for meta-line/a2uiMeta/team/flowEnd/personaPatch finds zero hits fleet-wide -- no pack tracks the meta-line reserved-vocabulary growth axis at all, across any of its six now-ratified members. Genuinely uncaptured.",
-      "kind": "harvest",
-      "plan": "a2ui-prompt-authoring or a2ui-payload-authoring: a reference file (or extended section) tracking the meta-line's reserved MODEL-authored field vocabulary (ask/plan/personaPatch/flowEnd/team/target) as its own axis, parallel to how patterns-table.md tracks the host-custom-state vocabulary growth. make-pack's own placement judgment decides the exact home.",
-      "queued_at": "2026-08-18T21:24:23Z"
-    },
-    {
       "adr_id": "adr-0205",
       "evidence": "ADR-0205 (ratified 2026-08-18, GH #1207): ui-line-chart v1 admits the fleet's first axis-bearing chart with the SMALLEST axis vocabulary that earns the name (baseline + textual min/max labels, single-series only, hand-rolled inline SVG) -- extending ADR-0107's 'ship the smallest floor that earns the category name, fence everything else as a later intake' pattern to a second, harder case (an axis system, not just a mark). Checked 2026-08-18: component-design/references/mint-vs-compose.md and component-patterns/references/patterns-table.md carry ADR-0107's chart-family precedent in other rows but no generalized 'smallest-floor-that-earns-the-name' pattern row citing BOTH ADR-0107 and this second instance. A worked recurrence (2nd instance) of a namable pattern, genuinely uncaptured as its own row.",
       "kind": "harvest",
       "plan": "component-design/references/mint-vs-compose.md or component-patterns/references/patterns-table.md: a new row/case naming the 'smallest floor that earns the category name' scoping test (ADR-0107 -> ADR-0205), so a third axis-bearing intake has a citable precedent instead of re-deriving the same reasoning.",
-      "queued_at": "2026-08-18T21:24:23Z"
-    },
-    {
-      "adr_id": "adr-0206",
-      "evidence": "ADR-0206 (ratified 2026-08-18, GH #1259): target becomes the meta-line envelope's SIXTH additive model-authored arm -- the model names the surfaceId it is about to mutate on the leading meta-line (the one truthful early signal under validate-then-stream), retiring the GH #1134 sole-open-surface working-state heuristic in favor of a stated fact rather than a guess. Checked 2026-08-18: same zero-coverage finding as adr-0204 -- no pack tracks the meta-line reserved-vocabulary axis (now six members: ask/plan/personaPatch/flowEnd/team/target), and no pack captures the generalizable 'a truthful model-stated early signal beats a heuristic guess, every time the model already knows the fact' lesson this ADR's own Alternatives section states explicitly (rejecting narrower heuristics in favor of the truthful signal).",
-      "kind": "harvest",
-      "plan": "Same home as adr-0204's row: a2ui-prompt-authoring or a2ui-payload-authoring's meta-line vocabulary reference file/section, gaining its sixth member plus (optionally) the truthful-signal-beats-heuristic lesson as a companion note. make-pack's own placement judgment decides.",
       "queued_at": "2026-08-18T21:24:23Z"
     }
   ]
