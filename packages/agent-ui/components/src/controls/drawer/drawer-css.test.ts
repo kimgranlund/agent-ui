@@ -190,7 +190,10 @@ describe('drawer.css — GH #918: the content layout system (region rhythm + scr
   })
 
   it('GH #920 — the content region owns its own scroll viewport once composed (content-scroll-mode), gated by :has() so a plain drawer is unaffected', () => {
-    const gate = ":scope > \\[data-part='dialog'\\]:has\\(> :is\\(\\[data-region='content'\\], main\\)\\)"
+    // GH #1223 — the dialog rule is `[open]`-gated: unconditional, its author `display: flex` beat the UA's
+    // `dialog:not([open]) { display: none }`, leaving every closed recipe-composed drawer laid out at its
+    // off-canvas resting inset — content past the viewport edge that zooms a phone's layout viewport out.
+    const gate = ":scope > \\[data-part='dialog'\\]\\[open\\]:has\\(> :is\\(\\[data-region='content'\\], main\\)\\)"
     const dialogRule = new RegExp(`${gate}\\s*\\{([^}]*)\\}`)
     const m = stylesBlock.match(dialogRule)
     expect(m, 'the content-scroll-mode dialog rule is missing').not.toBeNull()
