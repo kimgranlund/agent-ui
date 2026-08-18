@@ -832,7 +832,7 @@ describe('ui-agent-admin cross-engine smoke — the canvas/region gutter is GONE
   // regions are edge-to-edge — canvas padding 0, row gap 0 — and the seam between two painted regions is
   // ONE hairline (`agent-admin.css`'s flush-seam rule), never a gap. This probe pins the reversal
   // deliberately (the exact literals, not "anything ≤ old"): a re-appearing gutter is a regression now.
-  it('canvas carries NO padding and the pane holder NO row gap (GH #1260 — edge-to-edge by ruling); settings/copilot still carry no own inline padding', () => {
+  it('canvas carries NO padding and the pane holder NO row gap (GH #1260 — edge-to-edge by ruling); the settings pane carries its OWN inner padding (GH #1274)', () => {
     const { el } = mountAgentAdmin()
     const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
     const settings = el.querySelector('[data-part="settings-pane"]') as HTMLElement
@@ -841,25 +841,29 @@ describe('ui-agent-admin cross-engine smoke — the canvas/region gutter is GONE
     for (const side of ['paddingInlineStart', 'paddingInlineEnd', 'paddingBlockStart', 'paddingBlockEnd'] as const) {
       expect(canvasCs[side], `canvas ${side} — the GH #686 outer gutter is gone by ruling`).toBe('0px')
     }
-    for (const part of [settings, author]) {
-      expect(getComputedStyle(part).paddingInlineStart, 'no own leading inline padding').toBe('0px')
-    }
+    // GH #1274 (Kim, post-#1260): the plain-div settings pane gets the gutter-equivalent INNER padding —
+    // the chat/copilot panes' content rhythm comes from ui-conversation's own chrome; settings had none.
+    // Pane EDGES stay flush (the edge-to-edge pin file is unchanged); only content is inset.
+    expect(getComputedStyle(settings).paddingInlineStart, 'settings own inner padding (GH #1274)').toBe('12px')
+    expect(getComputedStyle(author).paddingInlineStart, 'copilot hosts ui-conversation — no own padding').toBe('0px')
     const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
     expect(getComputedStyle(holder).columnGap, 'the row gap is 0 — regions meet flush; the seam is a painted hairline, not spacing').toBe('0px')
   })
 
-  // GH #665 — author/settings carry NO OWN block padding either (GH #1260: nor does the canvas any more —
-  // all three columns share the shell's own top/bottom edges), which is what keeps the triple's top line
-  // shared rather than doubled ("ragged tops", Kim's screenshot).
-  it('author/settings carry NO OWN block padding — the three columns share one top line', () => {
+  // GH #665's shared-top-line law, updated by GH #1274: the COPILOT pane still carries no own block
+  // padding (ui-conversation's chrome is its rhythm); the SETTINGS pane now carries the gutter-equivalent
+  // inner padding on all sides (Kim, post-#1260 — its content was flush to the pane edges). The three
+  // columns' EDGES still share one top line; settings' first heading sits one gutter below it by design.
+  it('copilot carries NO OWN block padding; settings carries the GH #1274 inner padding', () => {
     const { el } = mountAgentAdmin()
     const settings = el.querySelector('[data-part="settings-pane"]') as HTMLElement
     const author = el.querySelector('[data-part="copilot-pane"]') as HTMLElement
-    for (const part of [settings, author]) {
-      const cs = getComputedStyle(part)
-      expect(cs.paddingBlockStart).toBe('0px')
-      expect(cs.paddingBlockEnd).toBe('0px')
-    }
+    const authorCs = getComputedStyle(author)
+    expect(authorCs.paddingBlockStart).toBe('0px')
+    expect(authorCs.paddingBlockEnd).toBe('0px')
+    const settingsCs = getComputedStyle(settings)
+    expect(settingsCs.paddingBlockStart, 'settings inner padding (GH #1274)').toBe('12px')
+    expect(settingsCs.paddingBlockEnd, 'settings inner padding (GH #1274)').toBe('12px')
   })
 })
 

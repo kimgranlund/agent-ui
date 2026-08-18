@@ -302,7 +302,12 @@
   [data-part='pane-holder'] > [data-part='chat-pane'],
   [data-part='pane-holder'] > [data-part='settings-pane'],
   [data-part='pane-holder'] > [data-part='copilot-pane'] {
-    flex: 1 1 0;
+    /* GH #1274 — flex-basis is the GUTTER-DOUBLE, not 0, on ALL three panes: under border-box a
+       `flex-basis: 0` item cannot resolve below its own padding, so the settings pane's new 12px inner
+       padding clamped ITS base to 24px while its unpadded siblings stayed at 0 — equal grow over unequal
+       bases = a 24px-wider settings column (caught by the equal-width density pins). Pinning every pane's
+       base to the same 24px restores equal outer widths regardless of which panes carry inner padding. */
+    flex: 1 1 calc(2 * var(--ui-agent-admin-shell-gutter));
     min-inline-size: 0;
     min-block-size: 0;
   }
@@ -488,6 +493,11 @@
     gap: var(--ui-agent-admin-section-gap);
     overflow-y: auto;
     scrollbar-width: var(--ui-agent-admin-scrollbar-width);
+    /* GH #1274 (Kim, post-#1260): the chat/builder panes carry their OWN inner padding (ui-conversation's
+       bubble/composer chrome); this plain-div pane relied on the canvas gutter #1260 removed by ruling —
+       so it gets the equivalent inner padding itself, keeping the three panes' content rhythm aligned
+       while the pane EDGES stay flush per the edge-to-edge ruling. */
+    padding: var(--ui-agent-admin-shell-gutter);
   }
   /* GH #197's own fix, re-anchored: the settings SECTIONS' `[data-role='…-content']` rule below declares
      `display: flex` (an AUTHOR rule), which — same origin, and at least as specific as the UA's own
