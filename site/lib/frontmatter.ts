@@ -90,6 +90,8 @@ import avatarMd from '../../packages/agent-ui/components/src/controls/avatar/ava
 // GH #1189 — ui-image, the URL-sourced content-image primitive (tier=display ⇒ {doc} only, a conventional
 // component admission per the host ADR ruling — no new ADR file, image.md's own frontmatter banner).
 import imageMd from '../../packages/agent-ui/components/src/controls/image/image.md?raw'
+import videoMd from '../../packages/agent-ui/components/src/controls/video/video.md?raw'
+import audioMd from '../../packages/agent-ui/components/src/controls/audio/audio.md?raw'
 import attachmentMd from '../../packages/agent-ui/components/src/controls/attachment/attachment.md?raw'
 import toastMd from '../../packages/agent-ui/components/src/controls/toast/toast.md?raw'
 import toastRegionMd from '../../packages/agent-ui/components/src/controls/toast/toast-region.md?raw'
@@ -216,6 +218,8 @@ export const loadProgressDoc     = (): ComponentDoc => parseDoc(progressMd)
 export const loadAvatarDoc       = (): ComponentDoc => parseDoc(avatarMd)
 // GH #1189 — ui-image (tier=display ⇒ {doc} only, the ui-avatar/ui-attachment precedent).
 export const loadImageDoc        = (): ComponentDoc => parseDoc(imageMd)
+export const loadVideoDoc        = (): ComponentDoc => parseDoc(videoMd)
+export const loadAudioDoc        = (): ComponentDoc => parseDoc(audioMd)
 export const loadAttachmentDoc   = (): ComponentDoc => parseDoc(attachmentMd)
 export const loadToastDoc        = (): ComponentDoc => parseDoc(toastMd)
 export const loadToastRegionDoc  = (): ComponentDoc => parseDoc(toastRegionMd)

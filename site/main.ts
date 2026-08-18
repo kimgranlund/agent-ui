@@ -943,6 +943,27 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // GH #1209 — the native media players (conventional admissions per the ui-image ruling).
+  {
+    label: 'ui-video',
+    cards: [
+      {
+        href: './video-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class native video player — the real <video controls> in a reserved aspect-ratio box (zero CLS), poster support, no custom chrome, generated from video.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-audio',
+    cards: [
+      {
+        href: './audio-doc.html',
+        title: 'API reference',
+        blurb: "The Display-class native audio player — the real <audio controls> at the UA bar's intrinsic height, no custom chrome, generated from audio.md.",
+      },
+    ],
+  },
   {
     label: 'ui-attachment',
     cards: [

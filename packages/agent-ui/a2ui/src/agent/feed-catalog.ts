@@ -245,6 +245,16 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
     reason:
       'a URL-sourced content image/photo (GH #1189), not an ask affordance — display-only, no value mark; the Attachment/Swatch/Ramp/Ladder report/artifact-content parity argument, NOT the Avatar/Icon light-identity-mark class (an image IS the content, unlike a small non-interactive identity mark that merely furnishes an ask card) — reaches the artifact feed via full-catalog rendering (a Card-with-hero payload), never a click-to-answer ask surface.',
   },
+  {
+    type: 'Video',
+    reason:
+      'a URL-sourced media player (GH #1209) — display-only, no value mark, no ask affordance; the Image reasoning verbatim (the player IS the content), reaching the artifact feed via full-catalog rendering only.',
+  },
+  {
+    type: 'AudioPlayer',
+    reason:
+      'a URL-sourced media player (GH #1209) — display-only, no value mark, no ask affordance; the Image/Video reasoning verbatim.',
+  },
 ] as const
 
 /** `Set` view for O(1) membership checks (produce()'s FEED_SCOPE gate, the page's fail-closed drop). */

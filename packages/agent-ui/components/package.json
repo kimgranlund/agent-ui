@@ -34,6 +34,8 @@
     "./controls/grid": "./src/controls/grid/grid.ts",
     "./controls/icon": "./src/controls/icon/icon.ts",
     "./controls/image": "./src/controls/image/image.ts",
+    "./controls/video": "./src/controls/video/video.ts",
+    "./controls/audio": "./src/controls/audio/audio.ts",
     "./controls/ladder": "./src/controls/ladder/ladder.ts",
     "./controls/line-chart": "./src/controls/line-chart/line-chart.ts",
     "./controls/list": "./src/controls/list/list.ts",

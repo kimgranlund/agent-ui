@@ -448,6 +448,16 @@ export const NAV: readonly NavGroup[] = [
     label: 'ui-image',
     links: [{ href: './image-doc.html', label: 'API' }],
   },
+  // GH #1209 — the native media players (tier=display ⇒ {doc} only, conventional admissions per the
+  // ui-image ruling): real <video>/<audio controls>, no custom chrome.
+  {
+    label: 'ui-video',
+    links: [{ href: './video-doc.html', label: 'API' }],
+  },
+  {
+    label: 'ui-audio',
+    links: [{ href: './audio-doc.html', label: 'API' }],
+  },
   {
     label: 'ui-attachment',
     links: [{ href: './attachment-doc.html', label: 'API' }],

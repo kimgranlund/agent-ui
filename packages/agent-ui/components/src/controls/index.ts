@@ -35,6 +35,8 @@ export * from './textarea/textarea.ts' // ui-textarea (ADR-0134) — the multi-l
 export * from './text/text.ts'
 export * from './icon/icon.ts' // ui-icon (ADR-0065/0066) — the icon-adapter's declarative consumer surface
 export * from './image/image.ts' // ui-image (GH #1189 R1/R2) — URL-sourced content image, reserved aspect-ratio box (zero CLS), native lazy-loading, bottom scrim + caption overlay
+export * from './video/video.ts' // ui-video (GH #1209) — native <video controls> in a reserved aspect box, no custom chrome
+export * from './audio/audio.ts' // ui-audio (GH #1209) — native <audio controls>, intrinsic UA bar height, no custom chrome
 
 // Indicator controls — Wave 1 (ADR-0041/0042).
 export * from './checkbox/checkbox.ts'

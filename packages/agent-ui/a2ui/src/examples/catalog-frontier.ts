@@ -638,4 +638,51 @@ export const latencyLineChartSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed]
+const MEDIA_TOUR_ID = 'frontier-media-tour'
+/** Frontier 12 — the MEDIA PLAYERS (GH #1209, the A2UI standard basic-catalog's Video/AudioPlayer realized
+ *  as native players): a guided-tour card pairing a Video (reserved 16/9 box, poster, native controls — no
+ *  custom chrome, the control's own fence) with an AudioPlayer welcome message — both label-carrying (the
+ *  Image `alt` admission discipline applied to media: `label` is required at the catalog layer). */
+export const mediaTourSeed: ExampleSeed = {
+  name: 'frontier-media-tour',
+  description: 'A guided-tour Card with a Video walkthrough (poster, reserved aspect box, native controls) and an AudioPlayer welcome message — the GH #1209 media pair, labels required.',
+  promptText: 'Show the apartment tour video with the host welcome audio under it.',
+  surfaceId: MEDIA_TOUR_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: MEDIA_TOUR_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: MEDIA_TOUR_ID,
+        value: { tour: { video: '/media/alfama-tour.mp4', poster: '/media/alfama-tour-poster.jpg', welcome: '/media/welcome-maria.mp3' } },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: MEDIA_TOUR_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['head', 'body'] },
+          { id: 'head', component: 'CardHeader', children: ['title'] },
+          { id: 'title', component: 'Text', variant: 'label', text: 'Alfama apartment — guided tour' },
+          { id: 'body', component: 'CardContent', children: ['walkthrough', 'welcome_row'] },
+          {
+            id: 'walkthrough', component: 'Video', src: { path: '/tour/video' },
+            poster: { path: '/tour/poster' }, aspect: '16/9', preload: 'metadata',
+            label: 'Video walkthrough of the Alfama apartment',
+          },
+          { id: 'welcome_row', component: 'Row', gap: 'sm', align: 'center', children: ['welcome_text', 'welcome_audio'] },
+          { id: 'welcome_text', component: 'Text', variant: 'body', text: 'A welcome message from your host, Maria:' },
+          {
+            id: 'welcome_audio', component: 'AudioPlayer', src: { path: '/tour/welcome' },
+            preload: 'metadata', label: 'Welcome message from your host, Maria',
+          },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed]

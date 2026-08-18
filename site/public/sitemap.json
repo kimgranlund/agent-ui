@@ -9,6 +9,14 @@
       "section": "Components"
     },
     {
+      "name": "Audio",
+      "tag": "ui-audio",
+      "url": "./audio-doc.html",
+      "description": "A URL-sourced audio player — the native <audio controls>, no custom chrome, intrinsic UA player height.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Avatar",
       "tag": "ui-avatar",
       "url": "./avatar-doc.html",
@@ -557,6 +565,14 @@
       "tag": "ui-tooltip",
       "url": "./tooltip-doc.html",
       "description": "ui-tooltip is a non-modal tooltip built on the Overlay controller (overlay-controller.lld.md · ADR-0043) and the native Popover API (popover=manual).",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Video",
+      "tag": "ui-video",
+      "url": "./video-doc.html",
+      "description": "A URL-sourced video player — the native <video controls> in a reserved aspect-ratio box (zero CLS), poster support, no custom chrome.",
       "level": "L1",
       "section": "Components"
     },
