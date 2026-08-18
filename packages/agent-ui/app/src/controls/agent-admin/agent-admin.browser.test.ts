@@ -2886,6 +2886,49 @@ describe('ui-agent-admin — the wide band (GH #662, re-ruled by GH #686\'s Amen
     expect(settingsPane.scrollTop, 'the region genuinely scrolls to reach the overflowing content — hiding the chrome never disabled scrolling').toBeGreaterThan(0)
   })
 
+  // GH #1297 — ONE scroll owner. Kim's live report: a tall, un-hidden scrollbar thumb "cutting through" the
+  // header/tab-strip band. Root cause (measured): `ui-select`'s visually-hidden `[data-part='aria-label']`
+  // span (`position: absolute`, no insets) resolved its containing block against super-shell's `middle`
+  // (`position: relative`) — the nearest positioned ancestor — so its static position landed ~1000px down
+  // the settings content but OUTSIDE `settings-pane`'s scroll clip, inflating `middle`'s scrollable
+  // overflow into a phantom second scroller whose chrome is NOT hidden (the narrow-stack arm's
+  // `overflow-y: auto`). Fixed by positioning the ui-select host (select.css). This pins the invariant at
+  // the report's own geometry (a phone-width narrow band, Settings primary, Capabilities tab, which holds
+  // ui-selects deep in the content) AND at the triple: no ancestor of the settings pane carries scrollable
+  // overflow — the pane is the ONLY vertical scroller between itself and the ui-agent-admin host.
+  for (const [label, width] of [
+    ['narrow (414)', 414],
+    ['triple (1200)', 1200],
+  ] as const) {
+    it(`GH #1297 — ${label}: the settings pane is the ONLY vertical scroller on its ancestor chain (no phantom outer scrollbar)`, async () => {
+      const { el } = mountAgentAdminAt(width)
+      await frames()
+      goToPlace(el, 'Settings')
+      activateTab(el, 'Capabilities')
+      await el.updateComplete
+      await frames()
+      const settingsPane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+      // Anti-vacuous: the pane really overflows (the report's precondition — a bar only paints on overflow).
+      expect(settingsPane.scrollHeight, 'the settings content overflows its pane').toBeGreaterThan(settingsPane.clientHeight)
+      const offenders: string[] = []
+      for (let node = settingsPane.parentElement; node && node !== el.parentElement; node = node.parentElement) {
+        if (node.scrollHeight > node.clientHeight + 1) {
+          offenders.push(`${node.tagName.toLowerCase()}[${node.getAttribute('data-part') ?? ''}] scrollHeight=${node.scrollHeight} clientHeight=${node.clientHeight}`)
+        }
+      }
+      expect(offenders, 'no ancestor of the settings pane carries scrollable overflow of its own').toEqual([])
+      // And every ui-select's hidden aria-label span stays INSIDE its own host's box (the mechanism itself).
+      const select = settingsPane.querySelector('ui-select') as HTMLElement | null
+      expect(select, 'anti-vacuous: the Capabilities content holds at least one ui-select').not.toBeNull()
+      const span = select!.querySelector(':scope > [data-part="aria-label"]') as HTMLElement
+      expect(getComputedStyle(select!).position, 'the ui-select host is the hidden span\'s containing block').toBe('relative')
+      const host = select!.getBoundingClientRect()
+      const box = span.getBoundingClientRect()
+      expect(box.top, 'the hidden span sits at its host, not somewhere down the scroll content').toBeGreaterThanOrEqual(host.top - 2)
+      expect(box.top).toBeLessThanOrEqual(host.bottom + 2)
+    })
+  }
+
   it('the LIVE-FILL gate at TRIPLE (PR #659’s proof, extended to three-region liveness)', async () => {
     // #659 proved the pair: a held-open Builder turn repaints the docked rail while it streams. The triple
     // owes one more thing — that the third region is not collateral. The test chat must still be PAINTED,
