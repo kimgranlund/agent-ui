@@ -37,6 +37,8 @@ import {
 } from './entries.ts'
 import { ENTRY_AVAILABILITY, entriesStoreKey, validateNewEntry, type Entry } from '../entry-list/entry-data.ts'
 import { A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID } from './agent-admin-schema.ts'
+import type { AgentTeam } from './agent-team.ts'
+import type { TeamMemberSnapshot, TeamPromptContext } from './agent-team-prompt.ts'
 
 function entry(over: Partial<Entry> & Pick<Entry, 'id'>): Entry {
   return {
@@ -979,5 +981,51 @@ describe('resolveTurnReferences (GH #849/SPEC-R4) — send-time resolution', () 
   it('a reference of an UNMAPPED kind contributes nothing (no group, nothing to resolve against)', () => {
     const out = resolveTurnReferences('hi', [ref(ENTRY_KINDS.promptSection, 'foundation')], groups())
     expect(out).toEqual({ text: 'hi', toolIds: [] })
+  })
+})
+
+// ── the ADR-0203 cl.2 team-section wiring gate (GH #1194) ────────────────────────────────────────────────
+// `composeTeamPromptSection`'s OWN pure-function contract (the pinned-team byte-stable snapshot, the
+// member-missing degrade) is agent-team-prompt.test.ts's; this block owns only the `composeSystemPrompt`
+// PIPELINE property — the optional second argument, and its ONE gate (`isTeamGm`).
+
+describe('composeSystemPrompt — the ADR-0203 cl.2 team-section wiring gate', () => {
+  const TEAM: AgentTeam = {
+    id: 'support-team',
+    label: 'Support Team',
+    gmAgentId: 'gm-agent',
+    members: [
+      { agentId: 'billing-agent', role: 'Billing specialist', routingDescription: 'Route billing questions here.' },
+    ],
+  }
+  const SNAPSHOTS: TeamMemberSnapshot[] = [{ agentId: 'billing-agent', name: 'Billie' }]
+  const context = (activeAgentId: string): TeamPromptContext => ({ team: TEAM, activeAgentId, memberSnapshots: SNAPSHOTS })
+
+  it('NO-TEAM: omitting the second argument entirely is byte-identical to pre-#1194 composeSystemPrompt(sections)', () => {
+    expect(composeSystemPrompt(SECTIONS)).toBe('## Foundation\nYou are helpful.')
+  })
+
+  it('a team context whose active agent is NOT the GM composes byte-identically to the no-team case', () => {
+    const base = composeSystemPrompt(SECTIONS)
+    expect(composeSystemPrompt(SECTIONS, context('billing-agent'))).toBe(base)
+    expect(composeSystemPrompt(SECTIONS, context('some-unrelated-agent'))).toBe(base)
+  })
+
+  it('a team context whose active agent IS the GM appends the team section after the base prompt', () => {
+    const out = composeSystemPrompt(SECTIONS, context('gm-agent'))
+    expect(out).toBe(
+      '## Foundation\nYou are helpful.\n\n' +
+        '## Your team\n' +
+        "You lead the team below. When a request matches a teammate's routing rule, you may say you are consulting " +
+        'them, but nothing here dispatches automatically — continue the conversation yourself, drawing on their role ' +
+        'and routing rule as guidance for what to say and when.\n\n' +
+        '- **Billie** (Billing specialist): Route billing questions here.',
+    )
+  })
+
+  it('a GM whose team has zero members composes byte-identically to the no-team case (empty section joins nothing)', () => {
+    const emptyTeam: AgentTeam = { id: 'empty-team', label: 'Empty Team', gmAgentId: 'gm-agent', members: [] }
+    const base = composeSystemPrompt(SECTIONS)
+    expect(composeSystemPrompt(SECTIONS, { team: emptyTeam, activeAgentId: 'gm-agent', memberSnapshots: [] })).toBe(base)
   })
 })
