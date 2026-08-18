@@ -19,7 +19,10 @@ import {
   loadImportedPersonas,
   loadRosterOrder,
   personaFromPreset,
+  personaInstantiated,
   personaRoster,
+  personaStore,
+  resetPersona,
   presetSeed,
   renameImportedPersona,
   saveImportedPersona,
@@ -224,5 +227,20 @@ describe('renameImportedPersona (GH #845, LLD-C13) — display-only, ids stable 
 
     expect(loadImportedPersonas().map((p) => p.label), 'nothing changed on any refusal').toEqual(['Padded'])
     expect(AGENT_PRESETS[0]!.label, 'the shipped preset data is a frozen constant, never rewritten').not.toBe('Hijacked')
+  })
+})
+
+// ── GH #1277 — personaInstantiated: the Team pane's From-catalog dedup probe ─────────────────────────
+describe('personaInstantiated (GH #1277 — the From-catalog dedup probe)', () => {
+  it('false for a never-touched preset; flips true the moment personaStore builds it (seed applied); false again after reset', () => {
+    const preset = personaFromPreset(AGENT_PRESETS[1]!) // not [0] — other suites may have built the first preset's store
+    resetPersona(preset) // a clean slate regardless of suite order
+    expect(personaInstantiated(preset.id), 'never instantiated').toBe(false)
+
+    personaStore(preset) // the SAME mint machinery the page's instantiate seam calls — the store now exists
+    expect(personaInstantiated(preset.id), 'instantiated — leaves the catalog read').toBe(true)
+
+    resetPersona(preset)
+    expect(personaInstantiated(preset.id), 'reset drops the marker AND the cached store').toBe(false)
   })
 })

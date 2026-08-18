@@ -261,7 +261,7 @@ import { lintPromptSections } from './prompt-lint.ts'
 // last-loaded team list (populated by `onTeamsChanged`), read SYNCHRONOUSLY by `#teamPromptContextFor`
 // so a turn's live system-prompt compose (a sync call) never has to await the pane's own async storage
 // round-trip.
-import { buildAgentTeamPane, type KnownAgent } from './agent-team-pane.ts'
+import { buildAgentTeamPane, type KnownAgent, type TeamCatalogEntry } from './agent-team-pane.ts'
 import type { AgentTeam } from './agent-team.ts'
 import type { TeamMemberSnapshot, TeamPromptContext } from './agent-team-prompt.ts'
 // ADR-0178 cl.2 — the three-filter apply gate + the canonical key set it enumerates (LLD-C1). A pure
@@ -523,6 +523,20 @@ export interface AgentRosterEntry {
   deletable?: boolean
 }
 
+/**
+ * GH #1277 — the Team pane's 'From catalog' seam: the page-owned preset catalog the pane's GM/member
+ * pickers offer for instantiate-on-pick. Data-in like `setAgentRoster` (never a component import — the
+ * DAG), both members read AT INVOKE TIME: `entries()` is a function, not a snapshot, so the page can
+ * drop an entry the moment it is instantiated (the pane's dedup law rides on that); `instantiate` runs
+ * the page's OWN existing persona mint machinery (seed applied, agent lands in the store, roster
+ * re-pushed) and returns the freshly-live roster row, or `undefined` on refusal.
+ */
+export interface AgentCatalogSource {
+  entries(): readonly TeamCatalogEntry[]
+  instantiate(entryId: string): Promise<AgentRosterEntry | undefined>
+}
+export type { TeamCatalogEntry }
+
 export interface UIAgentAdminElement extends ReactiveProps<typeof agentAdminProps> {}
 export class UIAgentAdminElement extends UIElement {
   static props = agentAdminProps
@@ -640,6 +654,9 @@ export class UIAgentAdminElement extends UIElement {
   // (LLD §16.3), so a pre-connect call is held here and applied once `#agentSelectEl` exists
   // (`#applyAgentRoster`), exactly the `#generateRequest`/`#reflectAuthorEntry` build-time-reflect shape.
   #pendingRoster: { entries: readonly AgentRosterEntry[]; activeId: string | undefined } | undefined
+  // GH #1277 — the Team pane's 'From catalog' source (`setAgentCatalog`, data-in like `#pendingRoster`).
+  // Held here and read AT INVOKE TIME by the pane's own closures — no re-render needed on registration.
+  #agentCatalog: AgentCatalogSource | undefined
   // GH #1197 (ADR-0203 cl.2) — this element's own cache of the Team pane's last-loaded team list,
   // refreshed by the pane's `onTeamsChanged` callback after every successful save/delete. Read
   // SYNCHRONOUSLY by `#teamPromptContextFor` (below): `agent-team.ts`'s own persistence is async, but
@@ -1565,6 +1582,13 @@ export class UIAgentAdminElement extends UIElement {
     // its own, unlike every other write this element makes.
     const teamPane = buildAgentTeamPane({
       getKnownAgents: (): readonly KnownAgent[] => this.#pendingRoster?.entries.map((entry) => ({ id: entry.id, label: entry.label })) ?? [],
+      // GH #1277 — the 'From catalog' section, both pickers: entries + instantiate both read
+      // `#agentCatalog` AT INVOKE TIME (registered any time via `setAgentCatalog`, never captured once).
+      getCatalog: (): readonly TeamCatalogEntry[] => this.#agentCatalog?.entries() ?? [],
+      instantiateFromCatalog: async (entryId: string): Promise<KnownAgent | undefined> => {
+        const row = await this.#agentCatalog?.instantiate(entryId)
+        return row === undefined ? undefined : { id: row.id, label: row.label }
+      },
       onTeamsChanged: (teams: readonly AgentTeam[]): void => {
         this.#teams = teams
         this.#renderContextSystem()
@@ -4277,6 +4301,15 @@ export class UIAgentAdminElement extends UIElement {
     // every push and every active switch, not only at seam registration: this funnel call is what makes a
     // bare `setAgentRoster` alone flip Delete's visibility. (`#compose`'s tail already calls both.)
     this.#applyActionAvailability()
+  }
+
+  /**
+   * GH #1277 — register (or clear, `undefined`) the Team pane's 'From catalog' source. Data-in like
+   * `setAgentRoster` and safe before or after connect: the pane reads it at every option population,
+   * never at registration, so no re-render is triggered here.
+   */
+  setAgentCatalog(catalog: AgentCatalogSource | undefined): void {
+    this.#agentCatalog = catalog
   }
 
   /**

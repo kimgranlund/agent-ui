@@ -75,6 +75,7 @@ import {
   builderStore,
   deleteImportedPersona,
   loadModifiedAt,
+  personaInstantiated,
   personaRoster,
   personaStore,
   renameImportedPersona,
@@ -191,6 +192,30 @@ function pushRoster(activeId: string): void {
   const entries: AgentRosterEntry[] = roster.map((p) => ({ id: p.id, label: p.label, deletable: p.imported === true }))
   admin.setAgentRoster(entries, activeId)
 }
+// GH #1277 — the Team pane's 'From catalog' source: the shipped preset catalog (id/label/tagline/
+// category), MINUS every preset already instantiated (`personaInstantiated` — the pane's dedup law:
+// an instantiated preset appears only under 'Your agents'). `entries` is read at every option
+// population, so the filter is live: the moment a pick instantiates a preset it leaves the catalog.
+// `instantiate` is the SAME mint machinery the persona picker's own activation path uses —
+// `personaStore(persona)` builds the persona-scoped store with the preset's seed applied (no new mint
+// path) — followed by the standard `pushRoster` re-push (the seam's own re-callable contract), WITHOUT
+// switching the active persona (adding a team member is not an activation — `applyPersona` would
+// hijack the whole workbench mid-form).
+export function instantiateCatalogPersona(id: string): { id: string; label: string } | undefined {
+  const persona = roster.find((p) => p.id === id)
+  if (persona === undefined) return undefined
+  personaStore(persona) // seed applied — the agent's store now exists (personaInstantiated flips true)
+  pushRoster(active.id)
+  return { id: persona.id, label: persona.label }
+}
+admin.setAgentCatalog({
+  entries: () =>
+    roster
+      .filter((p) => p.imported !== true && !personaInstantiated(p.id))
+      .map((p) => ({ id: p.id, label: p.label, tagline: p.tagline, ...(p.category === undefined ? {} : { category: p.category }) })),
+  instantiate: async (id) => instantiateCatalogPersona(id),
+})
+
 admin.onAgentSelect((id) => {
   const persona = roster.find((p) => p.id === id)
   if (persona) applyPersona(persona)

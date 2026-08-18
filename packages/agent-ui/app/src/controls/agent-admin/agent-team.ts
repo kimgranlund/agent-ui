@@ -22,6 +22,11 @@ export interface AgentTeamMember {
   agentId: string
   role: string
   routingDescription: string
+  /** ADR-0203 Amendment (2026-08-18, GH #1277) — OPTIONAL GM-facing guidance beyond the one-sentence
+   *  `routingDescription` ("always confirm dates before consulting"). Non-empty-if-present (the validator
+   *  rejects an empty/whitespace string, never a silent empty member note); absent parses every existing
+   *  persisted record unchanged. Consumed by `composeTeamPromptSection` ONLY — no other consumer widens. */
+  instructions?: string
 }
 
 /** The declaration-first team record (ADR-0203 clause 1). `members` is `readonly` — a caller mutates by
@@ -90,6 +95,11 @@ export function validateAgentTeam(team: AgentTeam, knownAgentIds: readonly strin
       if (!isNonEmptyString(member.routingDescription)) {
         issues.push({ path: `${base}.routingDescription`, message: 'A member routing description is required.' })
       }
+      // ADR-0203 Amendment (GH #1277): optional, but non-empty when present — an absent field passes
+      // verbatim; an empty/whitespace (or non-string) one is rejected, never silently persisted.
+      if (member.instructions !== undefined && !isNonEmptyString(member.instructions)) {
+        issues.push({ path: `${base}.instructions`, message: 'Member instructions must be non-empty when present.' })
+      }
     })
   }
 
@@ -126,7 +136,8 @@ function isAgentTeamMember(value: unknown): value is AgentTeamMember {
     value !== null &&
     typeof (value as AgentTeamMember).agentId === 'string' &&
     typeof (value as AgentTeamMember).role === 'string' &&
-    typeof (value as AgentTeamMember).routingDescription === 'string'
+    typeof (value as AgentTeamMember).routingDescription === 'string' &&
+    ((value as AgentTeamMember).instructions === undefined || typeof (value as AgentTeamMember).instructions === 'string')
   )
 }
 
