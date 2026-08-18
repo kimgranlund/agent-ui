@@ -7,6 +7,8 @@
 import { describe, it, expect } from 'vitest'
 import { MINI_SKILLS, PER_MODULE_TOKEN_BUDGET, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from '../agent/mini-skills.ts'
 import type { MiniSkill } from '../agent/mini-skills.ts'
+import { buildSystemPrompt } from '../agent/system-prompt.ts'
+import { defaultCatalog } from '../catalog/default/index.ts'
 
 // The same `chars / 4` estimate ADR-0091 itself uses to size GRAMMAR (~3857 chars ≈ ~964 tokens).
 function estimateTokens(text: string): number {
@@ -51,7 +53,14 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
   it('seeds the GH #808 S4 tenth module — `structured-container`', () => {
     const ids = MINI_SKILLS.map((m) => m.id)
     expect(ids).toContain('structured-container')
-    expect(MINI_SKILLS).toHaveLength(10)
+  })
+
+  // GH #1201 (req-a2ui-patterns R3, Kim ruling 2026-08-17) — the eleventh module: the persona-conditional
+  // greet-card teaching lane (grammar stays greeting-silent except the one reserved greet-1 sentence).
+  it('seeds the GH #1201 eleventh module — `greeting-card`', () => {
+    const ids = MINI_SKILLS.map((m) => m.id)
+    expect(ids).toContain('greeting-card')
+    expect(MINI_SKILLS).toHaveLength(11)
   })
 
   it('no registry body embeds A2UI JSONL (a pure-prose module needs only doc-review, ADR-0091 §4)', () => {
@@ -62,8 +71,8 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
 
   // SPEC-R6 AC1 (`persona-catalog-composition.spec.md`, ADR-0172 cl.3) — every shipped module's
   // frontmatter carries the catalog whose vocabulary its body hardcodes.
-  it('SPEC-R6 AC1 — every one of the ten shipped modules carries catalogId: \'agent-ui\'', () => {
-    expect(MINI_SKILLS).toHaveLength(10)
+  it('SPEC-R6 AC1 — every one of the eleven shipped modules carries catalogId: \'agent-ui\'', () => {
+    expect(MINI_SKILLS).toHaveLength(11)
     for (const skill of MINI_SKILLS) expect(skill.catalogId, skill.id).toBe('agent-ui')
   })
 })
@@ -271,5 +280,67 @@ describe('structured-container — the SPEC-R8 taught tier (a2ui-container-vocab
     expect(skill.body).toMatch(/Text\(variant:'label'\)/)
     expect(skill.body).not.toMatch(/Text\(variant:'caption'\)/)
     expect(skill.body).not.toMatch(/Wall: caption stands in/)
+  })
+})
+
+// GH #1201 (req-a2ui-patterns R3, Kim rulings 2026-08-17) — the greeting-card module: the greet-card
+// bookend's persona-conditional home is THIS mini-skill (ruling 1: grammar stays greeting-silent
+// beyond the one reserved-vocabulary sentence); feed placement rides the ask mechanism under the
+// reserved exempt id `greet-1` (ruling 2: never an ask-<n> id, never the answered-ask freeze).
+describe('greeting-card — the GH #1201 persona-conditional greet-bookend module', () => {
+  it('fires on a fresh-session greeting intent (hello / who are you)', () => {
+    const result = selectMiniSkills('hello, who are you and what can you do?', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).toContain('greeting-card')
+  })
+
+  it('does NOT fire on a task-shaped intent sharing no greeting vocabulary', () => {
+    const result = selectMiniSkills('build a checkout form with billing fields', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).not.toContain('greeting-card')
+  })
+
+  it('the "deal me in" trio selection is untouched — greeting-card never leaks into it', () => {
+    const ids = selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui').map((m) => m.id)
+    expect(ids.sort()).toEqual(['card-layout', 'game-hud', 'game-table-chrome'])
+  })
+
+  it('is persona-conditional in its own first line — first turn only, only when the persona greets', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'greeting-card')!
+    expect(skill.body).toMatch(/first turn only, when your persona opens the session with a greeting/)
+  })
+
+  it('teaches the greet-card anatomy (starter Buttons carrying concrete intents in action.context)', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'greeting-card')!
+    expect(skill.body).toMatch(/CardFooter with 2–4 Buttons/)
+    expect(skill.body).toMatch(/action\.context naming a concrete starter intent/)
+  })
+
+  it('teaches the reserved exempt id class — greet-1 rides the ask field but is NOT an ask (ruling 2)', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'greeting-card')!
+    expect(skill.body).toMatch(/reserved id "greet-1"/)
+    expect(skill.body).toMatch(/NOT an ask: no commit button, no data model/)
+    expect(skill.body).toMatch(/no ask-<n> id consumed, no answered-ask freeze/)
+  })
+
+  it('teaches the stale-affordance retirement (a task start retires the greet buttons same turn)', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'greeting-card')!
+    expect(skill.body).toMatch(/retire the greet buttons per the stale-affordance rule that same turn/)
+  })
+
+  // The composition proof for an opted-in persona: a greeting persona's first turn selects the module
+  // and buildSystemPrompt composes its body into the mini-skill block, AFTER which the persona section
+  // rides (ADR-0138 — persona governs voice, wire rules stay authoritative).
+  it('composes into buildSystemPrompt for an opted-in persona (selection → mini-skill block + persona tail)', () => {
+    const personaSystem = 'You are the concierge for Hotel Aurora. Open every fresh session with a short greeting.'
+    const selected = selectMiniSkills('hello, who are you and what can you do?', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    const prompt = buildSystemPrompt(defaultCatalog, [], undefined, selected, personaSystem)
+    const greet = MINI_SKILLS.find((m) => m.id === 'greeting-card')!
+    expect(prompt).toContain(greet.body)
+    expect(prompt).toContain(personaSystem)
+  })
+
+  it('a persona that does NOT greet composes a prompt with zero greeting-card bytes (opt-in, not default)', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [], undefined, [], 'You are a terse build assistant.')
+    const greet = MINI_SKILLS.find((m) => m.id === 'greeting-card')!
+    expect(prompt).not.toContain(greet.body)
   })
 })

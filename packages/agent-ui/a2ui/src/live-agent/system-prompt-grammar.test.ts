@@ -922,3 +922,42 @@ describe('buildSystemPrompt personaPatch teaching — the authoring gate (SPEC-R
     }
   })
 })
+
+// ── GH #1201, req-a2ui-patterns.md R3 (Kim ruling 2, 2026-08-17): the reserved greet-1 id class — the
+// greet card's ONE grammar sentence. The greet-card TEACHING itself lives in the `greeting-card`
+// mini-skill (ruling 1: grammar stays greeting-silent beyond this reserved-vocabulary sentence). ──
+
+describe('buildSystemPrompt reserved greet-1 id class (GH #1201, req-a2ui-patterns.md R3)', () => {
+  const prompt = buildSystemPrompt(defaultCatalog, [])
+
+  it('names the reserved id class riding the ask field without being an ask', () => {
+    expect(prompt).toMatch(/One reserved id class rides this same "ask" field without being an ask/)
+    expect(prompt).toMatch(/\{"ask":\{"surfaceId":"greet-1"\}\}/)
+    expect(prompt).toMatch(/starter-intent Buttons only, no commit button, no data model/)
+  })
+
+  it('exempts greet-1 from the ask-<n> counter AND the answered-ask freeze, reasoned as never-an-answered-ask (composes with B1 without widening it)', () => {
+    expect(prompt).toMatch(/because a greet is never an answered ask/)
+    expect(prompt).toMatch(/it consumes no "ask-<n>" id and the answered-ask freeze\s*\nbelow never applies to it/)
+    // B1's own flow-end scoping is untouched — the greet exemption is a separate sentence, not a rewrite.
+    expect(prompt).toMatch(/This freeze begins at FLOW END, not at every mid-flow commit/)
+  })
+
+  it('retires the greet buttons per the stale-affordance rule when a real task starts', () => {
+    expect(prompt).toMatch(/retired per the\s*\nstale-affordance rule when a real task starts/)
+  })
+
+  it('the sentence stays greeting-silent beyond the reserved vocabulary — no greet-card anatomy teaching in GRAMMAR (that is the mini-skill\'s)', () => {
+    expect(prompt).not.toMatch(/CardFooter with 2–4 Buttons/) // the mini-skill body's anatomy line
+    expect(prompt).not.toMatch(/one greet per session/) // the mini-skill body's wall
+  })
+
+  it('none of the greet prose leaks into the derived "## Available components" inventory section', () => {
+    const marker = '## Available components'
+    const start = prompt.indexOf(marker)
+    const rest = prompt.slice(start + marker.length)
+    const end = rest.indexOf('\n## ')
+    const body = end === -1 ? rest : rest.slice(0, end)
+    expect(body).not.toMatch(/greet-1|greet card/i)
+  })
+})

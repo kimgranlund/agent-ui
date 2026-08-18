@@ -374,9 +374,9 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
    *  reach the judge; the shelf seeds ABSENT from it — `stats-grid-dashboard`, plus the nine GH
    *  #729/#1184/#1185/#1189/#1199/#1192 catalog-frontier seeds pending their own judged wave, plus
    *  `agent-roster-drawer` (ADR-0188 GH #863, the same pending-judged-wave shape), plus the four GH
-   *  #1205 composition-pack-A seeds and the four GH #1206 composition-pack-B seeds (same pending
-   *  shape) — reach a wired judge, which fails closed unless the file rules on each (ADR-0068 clause
-   *  2). Refusing all nineteen keeps the run at zero admissions while still reaching `saveStore` —
+   *  #1205 composition-pack-A seeds, the four GH #1206 composition-pack-B seeds, and the GH #1201
+   *  `frontier-greet-card` (same pending shape) — reach a wired judge, which fails closed unless the file rules on each (ADR-0068 clause
+   *  2). Refusing all twenty keeps the run at zero admissions while still reaching `saveStore` —
    *  the archive's actual trigger. */
   const SHARD_LOADED_VERDICTS = {
     'stats-grid-dashboard': { passed: false, qualityScore: 2 },
@@ -389,6 +389,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     'frontier-image-hero-card': { passed: false, qualityScore: 2 },
     'frontier-card-anatomy-ask': { passed: false, qualityScore: 2 },
     'backable-wizard': { passed: false, qualityScore: 2 },
+    'frontier-greet-card': { passed: false, qualityScore: 2 },
     'agent-roster-drawer': { passed: false, qualityScore: 2 },
     'slideshow-gallery': { passed: false, qualityScore: 2 },
     'confirmation-view': { passed: false, qualityScore: 2 },
@@ -613,6 +614,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
         'frontier-image-hero-card': { passed: false, qualityScore: 2 },
         'frontier-card-anatomy-ask': { passed: false, qualityScore: 2 },
         'backable-wizard': { passed: false, qualityScore: 2 },
+        'frontier-greet-card': { passed: false, qualityScore: 2 },
         'agent-roster-drawer': { passed: false, qualityScore: 2 },
       },
     })

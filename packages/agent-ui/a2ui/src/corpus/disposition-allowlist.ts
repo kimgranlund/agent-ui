@@ -124,6 +124,19 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
       'real VerdictsFile). Delete this entry when it is judged.',
   ],
   //
+  // GH #1201 (2026-08-17) — `frontier-greet-card`: the same pending-state shape (NO VERDICT SOUGHT YET,
+  // not a refusal). Added alongside the `greeting-card` mini-skill + grammar.md's reserved greet-1
+  // sentence (req-a2ui-patterns.md R3) as its worked greet-bookend exemplar — the authoring session
+  // judging its own seed is the manufactured judgment ADR-0068's Alternatives ban. Run the judged
+  // pipeline and DELETE this entry when that wave lands.
+  [
+    'frontier-greet-card',
+    'GH #1201 (2026-08-17) — no verdict sought yet, not a refusal: shelf seed added alongside the ' +
+      'greeting-card mini-skill + the grammar.md reserved greet-1 sentence (req-a2ui-patterns.md R3) as ' +
+      'its worked greet-bookend exemplar; pending a judged import wave (import-seeds.ts with a real ' +
+      'VerdictsFile). Delete this entry when it is judged.',
+  ],
+  //
   // GH #1205 (2026-08-17) — the four COMPOSITION PACK A seeds (`slideshow-gallery` ·
   // `confirmation-view` · `trend-list` · `card-layouts`): the same pending-state shape (NO VERDICT
   // SOUGHT YET, not a refusal). Added as the req-a2ui-library R4 now-tier pattern seeds — the authoring
