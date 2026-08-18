@@ -122,7 +122,7 @@ import {
 } from '../../src/examples/catalog-coverage.ts'
 import { kpiPanelLifecycleSeed } from '../../src/examples/message-lifecycle.ts'
 import { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed } from '../../src/examples/corpus-growth.ts'
-import { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed } from '../../src/examples/catalog-frontier.ts'
+import { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed } from '../../src/examples/catalog-frontier.ts'
 import { structuredContainerSeed } from '../../src/examples/structured-container.ts'
 import {
   comparisonPricingSeed,
@@ -255,7 +255,7 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
   },
   {
     module: 'catalog-frontier.ts', // GH #729 — the coverage-gap seeds; admission pending the judged wave (disposition-allowlist.ts)
-    seeds: [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed],
+    seeds: [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed],
   },
   { module: 'structured-container.ts', seeds: [structuredContainerSeed] }, // GH #808 S5 — SPEC-R9's exemplar
   {

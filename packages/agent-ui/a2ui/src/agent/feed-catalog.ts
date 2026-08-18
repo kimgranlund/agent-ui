@@ -23,7 +23,7 @@
 // browser-side page, with no catalog-loading machinery riding along).
 
 /**
- * The 29 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
+ * The 30 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
  * affordance, and light structure — nothing that overlays, paginates, or dashboards. Widened by the
  * report/content/feed catalog wave (ADR-0111/0113/0112): `Badge` (light ask furniture, the `Text`/`Icon`
  * class), `Code` (verbatim inline content, no overlay/dashboard shape), `Avatar` (a non-interactive
@@ -75,6 +75,11 @@ export const FEED_SURFACE_TYPES = [
   'Code',
   'Avatar',
   'Toolbar',
+  // ADR-0201 (GH #1185): `DescriptionList` is IN — the confirm-step RECEIPT is the ask-card's own idiom
+  // (the proposed-outcome turn the grammar mandates before any conclusive action is a receipt + one commit
+  // Button); a static, non-interactive label/value record with no overlay/pagination/dashboard shape — the
+  // `Badge`/`Text` light-furniture parity argument, not the `Stat`/`Table` report-dashboard exclusion class.
+  'DescriptionList',
 ] as const
 
 /** The closed union of every IN type — the runtime-checkable companion to the `as const` array above. */

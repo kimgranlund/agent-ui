@@ -834,6 +834,17 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0201 (GH #1185) — the key–value receipt primitive, same Display-class {doc}-only shape.
+  {
+    label: 'ui-description-list',
+    cards: [
+      {
+        href: './description-list-doc.html',
+        title: 'API reference',
+        blurb: 'The key–value receipt primitive — rows as hardened data, label secondary + value adjacent, a valueless field omitted by construction, generated from description-list.md.',
+      },
+    ],
+  },
   {
     label: 'ui-badge',
     cards: [

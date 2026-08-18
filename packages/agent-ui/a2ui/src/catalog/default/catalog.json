@@ -510,6 +510,26 @@
       }
     },
 
+    "DescriptionList": {
+      "properties": {
+        "rows": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": { "type": "string" },
+                "value": { "type": ["string", "number"] }
+              },
+              "required": ["label", "value"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "rows"
+        }
+      }
+    },
+
     "Badge": {
       "properties": {
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },

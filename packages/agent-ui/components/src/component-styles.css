@@ -91,6 +91,7 @@
 @import './controls/table/table.css';
 @import './controls/stat/stat.css';
 @import './controls/badge/badge.css';
+@import './controls/description-list/description-list.css'; /* ADR-0201 — the key–value receipt primitive */
 
 /* ADR-0163 cl.6 — ui-pagination, the fleet's first standalone page navigator (SPEC-R3): Pattern-class,
  * composes ui-button for every stop; no [size]/[scale] geometry row of its own. */

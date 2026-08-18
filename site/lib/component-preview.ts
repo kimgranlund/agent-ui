@@ -930,6 +930,14 @@ const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
     columns: '[{"key":"region","label":"Region"},{"key":"revenue","label":"Revenue","type":"number"}]',
     rows: '[{"region":"EMEA","revenue":42000},{"region":"APAC","revenue":31000}]',
   },
+  // ADR-0201 — ui-description-list's `rows` is the same JSON-string `kind: 'skip'` codec gap as ui-table's
+  // above (no editable knob), so its LIVE default ([]) would render nothing. Seeded with a real receipt —
+  // the canonical confirm-step job (GH #1174/#1185) — so the whole-shape law has rows to measure.
+  'ui-description-list': {
+    rows:
+      '[{"label":"Room","value":"Deluxe King"},{"label":"Nights","value":3},' +
+      '{"label":"Breakfast","value":"Included"},{"label":"Total","value":"$412.00"}]',
+  },
   'ui-ramp': {
     steps:
       '[{"label":"100","value":"--md-sys-color-primary-100"},{"label":"300","value":"--md-sys-color-primary-300"},' +
@@ -1002,6 +1010,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-sparkline', // component-built inline <svg> (createElementNS + replaceChildren) — the ui-icon precedent, a name/values-driven mark, not authored text (slots: [] — sparkline.md)
   'ui-disclosure', // #ensureParts(): the details/summary/chevron chrome — host children are ADOPTED into a nested body PART, never left as direct host children (unlike a STRUCTURAL container), so a host-level SLOT_TEXT write would destroy the whole part tree
   'ui-stat', // connected() builds four spans once (replaceChildren) from label/value/delta/caption PROPS — no light-DOM content model at all (slots: [] — stat.md)
+  'ui-description-list', // connected() builds row/label/value spans (replaceChildren) from the rows PROP — no light-DOM content model at all (slots: [] — description-list.md, ADR-0201)
   'ui-table', // connected() builds the scroll/table/thead/tbody skeleton — fully columns/rows-prop-driven, no light-DOM content model at all (slots: [] — table.md)
   'ui-tabs', // the control-created tablist strip PART
   'ui-text-field', // the contenteditable editor PART (×2 parts: editor + measurer)

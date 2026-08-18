@@ -1391,5 +1391,12 @@
     "description": "Chat & A2UI dev/debug harness: mint @agent-ui/devtools as a new top-tier zero-dep package (a2ui ← devtools, a2a ← devtools) — three backends behind the one Age…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0201",
+    "url": "./adr-index.html#adr-0201",
+    "description": "ui-description-list (GH #1185): the key–value receipt primitive is minted as a Display-class data-driven control — rows as hardened data, empty-value omission…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

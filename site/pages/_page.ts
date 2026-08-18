@@ -396,6 +396,11 @@ export const NAV: readonly NavGroup[] = [
     label: 'ui-stat',
     links: [{ href: './stat-doc.html', label: 'API' }],
   },
+  // ADR-0201 (GH #1185) — the key–value receipt primitive, same Display-class {doc}-only shape.
+  {
+    label: 'ui-description-list',
+    links: [{ href: './description-list-doc.html', label: 'API' }],
+  },
   {
     label: 'ui-badge',
     links: [{ href: './badge-doc.html', label: 'API' }],

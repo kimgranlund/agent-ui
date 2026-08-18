@@ -1,0 +1,66 @@
+/* description-list.css — ui-description-list, the Display-class key–value receipt primitive (ADR-0201).
+ * Two sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-description-list)` declares the receipt rhythm as
+ *       `--ui-description-list-*`: the row gap + the label→value pair gap ride the shared
+ *       `--md-sys-space` ladder (density-responsive for free, ADR-0103 — the #1174 clause's
+ *       Column gap "xs" / Row gap "sm" made structural); the label ink is the secondary plane
+ *       (the stat label-ink precedent). Display class: no [size]/[scale] control-band lookup, no
+ *       `--md-sys-height-*`, no `h/2` law — the levers are the type matrix + the space ladder.
+ *   [2] STYLES BLOCK — `@scope (ui-description-list)` consumes ONLY `--ui-description-list-*`.
+ *
+ * The receipt rhythm (ADR-0201 cl.4, the #1174 LOOK as CSS): each row is a flex ROW, the value
+ * ADJACENT to its label at a fixed pair gap, `align-items: baseline` — never `justify-content:
+ * space-between` (the opposite-edge flushing the grammar law forbids), never a two-column
+ * label/value grid. Long values wrap under themselves, not under the label (`flex: 1` + `min-inline-
+ * size` release on the value span).
+ *
+ * Forced colors: no dedicated block needed — every part is real text (the stat lesson: only a
+ * background-drawn shape needs a forced-colors repoint); the label's secondary ink is forced to
+ * CanvasText by the UA like any other text.
+ *
+ * RTL: no dedicated mirroring rule — label→value is DOM order in a logical flex row; logical inline
+ * layout reads it correctly in both directions.
+ */
+
+/* ═══════ [1] TOKEN BLOCK — :where(ui-description-list) declares --ui-description-list-* ═══════ */
+
+:where(ui-description-list) {
+  --ui-description-list-row-gap: var(--md-sys-space-xs); /* between rows — the #1174 Column gap "xs"; rides [density] free */
+  --ui-description-list-pair-gap: var(--md-sys-space-sm); /* label → value — the #1174 Row gap "sm" */
+  --ui-description-list-label-ink: var(--md-sys-color-neutral-on-surface-variant); /* the secondary plane (stat label-ink precedent) */
+  --ui-description-list-label-min-inline-size: 0; /* opt-in label column alignment: a consumer sets e.g. 8em to align values without a grid */
+}
+
+/* ═══════ [2] STYLES BLOCK — @scope (ui-description-list) consumes ONLY --ui-description-list-* ═══════ */
+
+@scope (ui-description-list) {
+  :scope {
+    display: flex;
+    flex-direction: column; /* the receipt is a vertical stack of rows */
+    gap: var(--ui-description-list-row-gap); /* the density-bearing quantity */
+  }
+
+  :scope [data-part='row'] {
+    display: flex;
+    align-items: baseline; /* label and value share a baseline (the #1174 Row align "baseline") */
+    gap: var(--ui-description-list-pair-gap);
+    /* NO justify-content: the value sits ADJACENT to its label — the grammar law's rejected
+       "between" (opposite-edge flushing) is structurally absent here */
+  }
+
+  :scope [data-part='label'] {
+    color: var(--ui-description-list-label-ink);
+    font-size: var(--md-sys-typescale-label-medium-size);
+    line-height: var(--md-sys-typescale-label-medium-line-height);
+    min-inline-size: var(--ui-description-list-label-min-inline-size);
+    flex-shrink: 0; /* the label never crushes — a long value wraps instead */
+  }
+
+  :scope [data-part='value'] {
+    font-size: var(--md-sys-typescale-body-medium-size);
+    line-height: var(--md-sys-typescale-body-medium-line-height);
+    min-inline-size: 0; /* release the flex min-content floor so a long value wraps under itself */
+    overflow-wrap: anywhere; /* an unbroken token (a reference id) still wraps instead of overflowing */
+  }
+}

@@ -111,6 +111,7 @@
 
 - [ui-table](./table-doc.html): the data table — a real native `<table>` from `columns` + record `rows`, number columns end-aligned and Intl-formatted, scroll-preserving updates; widened in place (ADR-0163) with opt-in row selection, per-column sort, control-owned filter/search, and pagination — all default off, byte-identical to the display-only baseline at defaults.
 - [ui-stat](./stat-doc.html): the label/value/delta/caption metric tile — delta direction carried as glyph + sign + text, never color alone.
+- [ui-description-list](./description-list-doc.html): the key–value receipt primitive — rows as hardened data, label secondary + value adjacent, a valueless field omitted by construction (ADR-0201).
 - [ui-badge](./badge-doc.html): the compact status/tag pill — bindable `intent` enum with a component-drawn per-intent glyph.
 - [ui-sparkline](./sparkline-doc.html): the inline trend line over a bound numeric series.
 - [ui-bar-chart](./bar-chart-doc.html): magnitude comparison bars, including diverging negative values.
