@@ -394,3 +394,21 @@ shown-set reverts to `#pane`, the MD composition stands, and the site page keeps
 canvas-header — this amendment ships nothing until ratified, so the fallback is the shipped
 surface itself. The seam SHAPES (registration methods, SPEC-R5) should survive any partial
 adoption — they are the only DAG-legal bridge regardless of which header wins.
+
+## Addendum (2026-08-18, Kim's ruling on GH [#1260](https://github.com/kimgranlund/agent-ui/issues/1260) — [utterance](https://github.com/kimgranlund/agent-ui/issues/1260#issuecomment-5329856957)) — the GH #686/#665 12px gutters are REVERSED: edge-to-edge panel IA
+
+> Append-only, dated in place. GH #1260 was filed as "a light hairline on dark shell surfaces"; the lane's
+> real-engine pixel forensics traced it to the two DESIGNED gutters this ADR's Amendments minted —
+> `[data-part='canvas'] { padding: --ui-agent-admin-shell-gutter }` (a page-background strip on all four
+> shell edges) and `[data-part='pane-holder'] { gap: --ui-agent-admin-shell-gutter }` (a strip between
+> every two regions) — `surface` showing through around `surface-low` cards. Kim ruled the gutters OUT
+> (a deliberate reversal, by ruling, of the #686/#665 gutter design): the three regions meet the shell's
+> edges and each other FLUSH; the seam between two painted regions is ONE hairline
+> (`border-inline-start` on every painted region after the first in `PANE_ORDER`, derived from
+> `data-show`; the `ui-conversation` cards drop their own border + radius inside this composition so no
+> seam doubles and no card border stripes the shell's own edges or doubles the header's ADR-0166 seam)
+> — a narrowing of GH #662's "no painted divider between top-level regions" for THIS seam only. The
+> header band constant re-derives 54rem → 52.5rem (it was `SHELL_COMPACT_BREAKPOINT` + one gutter per
+> side; the shell's inline-size IS the holder's now). `--ui-agent-admin-shell-gutter` itself survives as
+> the header bar's own inline inset. Standing pin: `agent-admin-edge-to-edge.browser.test.ts` (both
+> engines, 414×896 + 1280×800, dark + light — card↔shell-edge and card↔card |gap| ≤ 0.5px).
