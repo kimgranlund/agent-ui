@@ -242,7 +242,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'concierge', // GH #46 — upgraded IN PLACE to the Hotel Concierge (same id: persisted stores key on it)
     category: 'hospitality', // GH #143
-    seedVersion: 6, // GH #1171 — re-seeded the rewritten `booking-flow` room-booking arc playbook; migrates pre-#1171 stores (5: GH #497 local pattern set)
+    seedVersion: 7, // GH #1203 — `booking-flow` names the Back affordance + settled receipt (ADR-0198 B1/B2); migrates pre-#1203 stores (6: GH #1171 arc rewrite; 5: GH #497 local pattern set)
     label: 'The Hotel Concierge',
     tagline: 'The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)',
     config: { name: 'The Hotel Concierge', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: true },
