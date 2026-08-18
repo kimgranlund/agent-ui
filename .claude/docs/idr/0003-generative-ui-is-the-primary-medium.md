@@ -2,7 +2,7 @@
 
 > | | |
 > |---|---|
-> | **Status** | accepted |
+> | **Status** | superseded |
 > | **Date** | 2026-08-17 |
 > | **Author** | product seat (fleet-bootstrap Phase 2), from Kim's live-session rulings 2026-08-17 |
 > | **Ratified by** | Kim — 2026-08-17, fleet-bootstrap Phase-3 hard gate (AskUserQuestion ratify round) (Kim only; vocabulary `proposed · accepted · superseded`; an accepted IDR body is append-only) |

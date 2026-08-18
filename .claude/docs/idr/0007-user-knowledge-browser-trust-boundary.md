@@ -2,10 +2,10 @@
 
 > | | |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-18 |
 > | **Author** | planning seat (doc-tier restructure; distilled from IDR-0002's platform-global core, per Kim's 2026-08-18 tier ruling) |
-> | **Ratified by** | — pending (Kim only; vocabulary `proposed · accepted · superseded`; an accepted IDR body is append-only) |
+> | **Ratified by** | Kim — 2026-08-18, in-session AskUserQuestion ratify round (the fleet-bootstrap Phase-3 precedent), executed by the marshal (Kim only; vocabulary `proposed · accepted · superseded`; an accepted IDR body is append-only) |
 > | **Tier** | IDR — PLATFORM intent (WHY/WHAT at global project level); realized by PRDs/ADRs, never by this file |
 > | **Supersedes / Superseded by** | Proposed to supersede [IDR-0002](./0002-documents-become-agent-knowledge.md) (feature-scoped; its ingestion detail relocates to PRD altitude — flip is Kim's) |
 > | **Realized by** | [agent-admin-app PRD](../prd/agent-admin-app.prd.md) (knowledge feature) · [ADR-0073](../adr/0073-a2ui-live-model-provider-seam.md) (the trust boundary) · [ADR-0202](../adr/0202-pdfjs-second-runtime-dependency-exception.md) · [ADR-0193](../adr/0193-shared-storage-adapter-seam.md) · [req-doc-ingestion](../research/req-doc-ingestion.md) |

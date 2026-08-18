@@ -2,7 +2,7 @@
 
 > | | |
 > |---|---|
-> | **Status** | accepted |
+> | **Status** | superseded |
 > | **Date** | 2026-08-17 |
 > | **Author** | product seat (fleet-bootstrap Phase 2) |
 > | **Ratified by** | Kim — 2026-08-17, fleet-bootstrap Phase-3 hard gate (AskUserQuestion ratify round) (Kim only; vocabulary `proposed · accepted · superseded`; an accepted IDR body is append-only) |
@@ -65,3 +65,7 @@ Two arms: **(a)** the successor field reads "none — intent relocated to PRD al
 cross-tier target claimed), or **(b)** §1d gains one sentence legitimizing relocation-supersession
 (an IDR may be superseded by the PRD that received its relocated intent). Neither is executed
 until Kim picks; the flip and any §1d edit follow the pick.
+
+> **Fork resolved (2026-08-18, Kim, in-session ratify round):** successor = **none — intent
+> relocated to PRD altitude** (a2ui-expert-system PRD §8). No §1d rule change; relocation is
+> recorded here, not minted as a new supersession form.

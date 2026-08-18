@@ -1,6 +1,6 @@
 # PRD — Agent-Admin App (the agent-building product)
 
-> Status: **proposed · v0.1 · 2026-08-18 · Owner: agent-ui** — authored at Kim's 2026-08-18 doc-tier
+> Status: **accepted · v0.1 · 2026-08-18 · Owner: agent-ui** — authored at Kim's 2026-08-18 doc-tier
 > ruling (*"IDR should not be made for features… PRD docs should be created for apps (like
 > agent-admin-app) and that PRD would document the teams feature (along all the other agent
 > features)"*). This PRD is the relocation target for the feature-scoped intent of

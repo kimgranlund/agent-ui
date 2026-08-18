@@ -2,10 +2,10 @@
 
 > | | |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-18 |
 > | **Author** | planning seat (doc-tier restructure, Kim's 2026-08-18 tier ruling) |
-> | **Ratified by** | — pending (Kim only; vocabulary `proposed · accepted · superseded`; an accepted IDR body is append-only) |
+> | **Ratified by** | Kim — 2026-08-18, in-session AskUserQuestion ratify round (the fleet-bootstrap Phase-3 precedent), executed by the marshal (Kim only; vocabulary `proposed · accepted · superseded`; an accepted IDR body is append-only) |
 > | **Tier** | IDR — PLATFORM intent (WHY/WHAT at global project level, per the 2026-08-18 tier ruling); realized by PRDs/ADRs/SPECs/issues, never by this file |
 > | **Supersedes / Superseded by** | — (the root of the platform IDR set; no feature IDR maps onto it alone) |
 > | **Realized by** | [product-brief](../product-brief.md) §1 (the identity sentence, ratified 2026-08-17) · [agent-admin-app PRD](../prd/agent-admin-app.prd.md) · the A2UI/A2A/producer layers ([a2ui-expert-system PRD](../prd/a2ui-expert-system.prd.md)) |
@@ -46,3 +46,7 @@ sentence now lives in both [product-brief §1](../product-brief.md) and this fil
 **this IDR is canonical** — future docs cite IDR-0005; the brief's §1 remains its narrative home
 and cites this record once ratified. Alternative: the brief stays canonical and this IDR is the
 pointer. Kim picks; citations follow the pick.
+
+> **Fork resolved (2026-08-18, Kim, in-session ratify round):** this IDR is the CANONICAL
+> citation target for the platform-identity sentence; product-brief §1 remains the narrative
+> home and cites this record.

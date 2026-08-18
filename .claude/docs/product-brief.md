@@ -137,3 +137,7 @@ above stays untouched):
   this addendum is the pointer, not a second copy.
 - §6's open fork 2 ("accept the `idr/` tier at all") is answered by these rulings: the tier
   stays, restructured to platform altitude.
+
+> **Addendum (2026-08-18, Kim's ratify round):** the identity sentence's canonical citation
+> target is [IDR-0005](idr/0005-agent-product-platform-identity.md); §1 here is the narrative
+> home and defers to it.

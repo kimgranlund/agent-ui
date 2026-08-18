@@ -2,10 +2,10 @@
 
 > | | |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-18 |
 > | **Author** | planning seat (doc-tier restructure; distilled from IDR-0003's platform-global core, per Kim's 2026-08-18 tier ruling) |
-> | **Ratified by** | — pending (Kim only; vocabulary `proposed · accepted · superseded`; an accepted IDR body is append-only) |
+> | **Ratified by** | Kim — 2026-08-18, in-session AskUserQuestion ratify round (the fleet-bootstrap Phase-3 precedent), executed by the marshal (Kim only; vocabulary `proposed · accepted · superseded`; an accepted IDR body is append-only) |
 > | **Tier** | IDR — PLATFORM intent (WHY/WHAT at global project level); realized by PRDs/grammar law/ADRs, never by this file |
 > | **Supersedes / Superseded by** | Proposed to supersede [IDR-0003](./0003-generative-ui-is-the-primary-medium.md) (feature-scoped; its conduct-law detail relocates to PRD altitude — flip is Kim's) |
 > | **Realized by** | [agent-admin-app PRD](../prd/agent-admin-app.prd.md) (conversation experience) · [a2ui-expert-system PRD](../prd/a2ui-expert-system.prd.md) (grammar/corpus/catalog) · GH #1182 (gen-UI-first ask law) · [ADR-0196](../adr/0196-answered-state-law-questionnaire-settle-edit-amend.md) · [ADR-0198](../adr/0198-ask-flow-completion-flowend-meta-signal.md) |
