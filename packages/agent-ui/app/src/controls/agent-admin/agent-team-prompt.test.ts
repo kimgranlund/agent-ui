@@ -39,6 +39,29 @@ describe('composeTeamPromptSection (ADR-0203 cl.2 / req-agent-teams.md R2)', () 
     expect(composeTeamPromptSection(PINNED_TEAM, PINNED_SNAPSHOTS)).toBe(PINNED_OUTPUT)
   })
 
+  // ── ADR-0203 Amendment (GH #1277) — optional per-member `instructions` ────────────────────────────
+  it('AMENDMENT: absent instructions ⇒ BYTE-IDENTICAL pre-amendment output (the same pinned snapshot)', () => {
+    // PINNED_TEAM carries no instructions anywhere — the amendment's absent arm IS the original snapshot.
+    expect(composeTeamPromptSection(PINNED_TEAM, PINNED_SNAPSHOTS)).toBe(PINNED_OUTPUT)
+  })
+
+  it('AMENDMENT: present instructions render as an indented sub-line under that member ONLY', () => {
+    const team: AgentTeam = {
+      ...PINNED_TEAM,
+      members: [
+        PINNED_TEAM.members[0]!,
+        { ...PINNED_TEAM.members[1]!, instructions: 'Always ask for the exact error text first.' },
+        PINNED_TEAM.members[2]!,
+      ],
+    }
+    const expected = PINNED_OUTPUT.replace(
+      '- **Techie** (Technical support): Route bug reports and how-to technical questions here.',
+      '- **Techie** (Technical support): Route bug reports and how-to technical questions here.\n' +
+        '  - Instructions: Always ask for the exact error text first.',
+    )
+    expect(composeTeamPromptSection(team, PINNED_SNAPSHOTS)).toBe(expected)
+  })
+
   it('is deterministic across repeated calls with the same input (no hidden mutable state)', () => {
     const first = composeTeamPromptSection(PINNED_TEAM, PINNED_SNAPSHOTS)
     const second = composeTeamPromptSection(PINNED_TEAM, PINNED_SNAPSHOTS)

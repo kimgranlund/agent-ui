@@ -777,6 +777,16 @@ export function loadModifiedAt(id: string): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
+/** GH #1277 — has this persona ever been INSTANTIATED (its store built at least once, seed applied)?
+ *  The probe is the seedVersion marker `personaStore` writes on first construction (persisted, so it
+ *  survives reload) plus the session's own store cache (covers a storage-less environment). The Team
+ *  pane's 'From catalog' section is exactly the presets for which this is still `false` — once
+ *  instantiated a preset leaves the catalog read (the pane's dedup law) and is picked as a live agent. */
+export function personaInstantiated(id: string): boolean {
+  if (storeCache.has(id)) return true
+  return typeof localStorage !== 'undefined' && localStorage.getItem(seedVersionKey(id)) !== null
+}
+
 /** The persona's store — cached per id so switching away and back keeps one live instance; persisted
  *  values (this persona's OWN prior edits) win over the seed, memory-store.ts's parity law. */
 export function personaStore(persona: Persona): SettingsStore {

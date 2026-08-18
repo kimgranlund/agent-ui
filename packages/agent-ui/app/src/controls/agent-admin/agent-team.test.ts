@@ -96,6 +96,30 @@ describe('validateAgentTeam — ADR-0203 clause 1 / R1: validation closed agains
     )
   })
 
+  // ── ADR-0203 Amendment (GH #1277) — optional per-member `instructions` ────────────────────────────
+  it('AMENDMENT: an absent instructions field passes verbatim (every pre-amendment record parses unchanged)', () => {
+    const result = validateAgentTeam(makeTeam(), KNOWN_AGENT_IDS)
+    expect(result.valid).toBe(true)
+  })
+
+  it('AMENDMENT: a present, non-empty instructions field passes', () => {
+    const team = makeTeam({
+      members: [{ agentId: MEMBER_ID, role: 'Researcher', routingDescription: 'Use for lookups.', instructions: 'Always confirm dates before consulting.' }],
+    })
+    expect(validateAgentTeam(team, KNOWN_AGENT_IDS).valid).toBe(true)
+  })
+
+  it('AMENDMENT: an empty/whitespace instructions field is rejected, naming the member field', () => {
+    for (const instructions of ['', '   ']) {
+      const team = makeTeam({
+        members: [{ agentId: MEMBER_ID, role: 'Researcher', routingDescription: 'Use for lookups.', instructions }],
+      })
+      const result = validateAgentTeam(team, KNOWN_AGENT_IDS)
+      expect(result.valid).toBe(false)
+      expect(result.issues.some((issue) => issue.path === 'members[0].instructions')).toBe(true)
+    }
+  })
+
   it('an empty members roster is structurally valid (a GM with no members yet)', () => {
     const result = validateAgentTeam(makeTeam({ members: [] }), KNOWN_AGENT_IDS)
     expect(result.valid).toBe(true)
@@ -123,6 +147,16 @@ describe('AgentTeam persistence — round-trip (create → persist → reload), 
     // never the local `team` variable, so this actually proves persistence rather than object identity.
     const reloaded = await loadAgentTeam(team.id)
     expect(reloaded).toEqual(team)
+  })
+
+  it('AMENDMENT (GH #1277): a member instructions field round-trips through persistence byte-for-byte', async () => {
+    const team = makeTeam({
+      members: [{ agentId: MEMBER_ID, role: 'Researcher', routingDescription: 'Use for lookups.', instructions: 'Only for on-prem dining questions.' }],
+    })
+    await saveAgentTeam(team, KNOWN_AGENT_IDS)
+    const loaded = await loadAgentTeam(team.id)
+    expect(loaded).toEqual(team)
+    expect(loaded!.members[0]!.instructions).toBe('Only for on-prem dining questions.')
   })
 
   it('loadAgentTeams lists every persisted team', async () => {

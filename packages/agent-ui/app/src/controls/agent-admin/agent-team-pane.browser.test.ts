@@ -19,7 +19,7 @@ import '@agent-ui/components/controls/text-field'
 import '@agent-ui/components/controls/field'
 import '@agent-ui/components/controls/select'
 
-import { buildAgentTeamPane, type KnownAgent } from './agent-team-pane.ts'
+import { buildAgentTeamPane, type KnownAgent, type TeamCatalogEntry } from './agent-team-pane.ts'
 import { __testSetAdapter, loadAgentTeams } from './agent-team.ts'
 import type { StorageAdapter, StorageChange } from '@agent-ui/shared'
 
@@ -85,6 +85,189 @@ async function waitFor(predicate: () => boolean, label: string): Promise<void> {
   }
   throw new Error(`waitFor timed out: ${label}`)
 }
+
+// ── GH #1277 — the 'From catalog' section + ADR-0203 Amendment (per-member instructions) ──────────────
+
+/** A page-shaped catalog harness: `instantiate` MOVES the entry from the catalog read into the live
+ *  roster (exactly what the shipped page does — `personaStore` seeds the store, `personaInstantiated`
+ *  flips, the entries() filter drops it, `pushRoster` re-pushes), so the pane's dedup law is provable
+ *  end-to-end against the supplier contract it documents. */
+function catalogHarness() {
+  const agents: KnownAgent[] = [...AGENTS]
+  const catalog: TeamCatalogEntry[] = [
+    { id: 'concierge', label: 'Hotel Concierge', tagline: 'Answers property and local-guide questions', category: 'hospitality' },
+    { id: 'croupier', label: 'Croupier', tagline: 'Runs table games with a live HUD', category: 'games' },
+  ]
+  const instantiated: string[] = []
+  __testSetAdapter(createFakeAdapter())
+  const pane = buildAgentTeamPane({
+    getKnownAgents: (): readonly KnownAgent[] => agents,
+    getCatalog: (): readonly TeamCatalogEntry[] => catalog.filter((entry) => !instantiated.includes(entry.id)),
+    instantiateFromCatalog: async (entryId: string): Promise<KnownAgent | undefined> => {
+      const entry = catalog.find((candidate) => candidate.id === entryId)
+      if (entry === undefined) return undefined
+      instantiated.push(entryId)
+      const agent: KnownAgent = { id: entry.id, label: entry.label }
+      agents.push(agent)
+      return agent
+    },
+  })
+  document.body.append(pane.host)
+  mounted.push(pane.host)
+  return { pane, agents, instantiated }
+}
+
+/** Commit a pick the way a user does — set the committed value, then fire the control's own commit
+ *  event (`select` — select.ts's ADR-0051 note: the control never emits native `change`). */
+function commitPick(select: HTMLElement & { value: string }, value: string): void {
+  select.value = value
+  select.dispatchEvent(new CustomEvent('select', { bubbles: true }))
+}
+
+describe('team pickers — the From-catalog section (GH #1277)', () => {
+  it('renders TWO labeled sections with the catalog rows carrying label + tagline description lines', async () => {
+    const { pane } = catalogHarness()
+    await pane.refresh()
+    click(pane.host, '[data-part="team-add-toggle"]')
+    click(pane.host, '[data-part="team-form-add-member"]')
+
+    const memberSelect = pane.host.querySelector('[data-part="team-form-member-agent"]') as HTMLElement
+    const groups = [...memberSelect.querySelectorAll('[role="group"]')]
+    // The `label` attribute is CONSUMED at adoption (select.ts #adoptChild) into a visible sticky
+    // `[data-part="group-label"]` header + aria-labelledby — assert the minted header, the real UI.
+    expect(groups.map((group) => group.querySelector('[data-part="group-label"]')?.textContent)).toEqual([
+      'Your agents',
+      'From catalog',
+    ])
+    // 'Your agents' carries the live roster…
+    expect([...groups[0]!.querySelectorAll('[role="option"]')].map((o) => o.getAttribute('value'))).toEqual([
+      'agent-gm',
+      'agent-researcher',
+    ])
+    // …and each catalog row is the GH #1172 two-line shape: label line + the tagline as secondary text.
+    const catalogOptions = [...groups[1]!.querySelectorAll('[role="option"]')]
+    expect(catalogOptions.map((o) => o.getAttribute('value'))).toEqual(['catalog:concierge', 'catalog:croupier'])
+    expect(catalogOptions[0]!.querySelector('[data-part="team-catalog-option-label"]')?.textContent).toBe('Hotel Concierge')
+    expect(catalogOptions[0]!.querySelector('[data-part="team-catalog-option-tagline"]')?.textContent).toBe(
+      'Answers property and local-guide questions',
+    )
+    // The GM picker gets the SAME treatment.
+    const gmSelect = pane.host.querySelector('[data-part="team-form-gm"]') as HTMLElement
+    // The GM select repopulates while CONNECTED (openForm), so its fresh groups are adopted by the
+    // control's MutationObserver pass — one async beat behind the member select's connect-time adoption.
+    await waitFor(() => gmSelect.querySelectorAll('[data-part="group-label"]').length === 2, 'GM group headers minted')
+    expect(
+      [...gmSelect.querySelectorAll('[role="group"]')].map((g) => g.querySelector('[data-part="group-label"]')?.textContent),
+    ).toEqual(['Your agents', 'From catalog'])
+  })
+
+  it('INSTANTIATE-ON-PICK: a catalog pick mints the agent, lands on its REAL id, and pre-fills role/routing (both editable)', async () => {
+    const { pane, instantiated } = catalogHarness()
+    await pane.refresh()
+    click(pane.host, '[data-part="team-add-toggle"]')
+    click(pane.host, '[data-part="team-form-add-member"]')
+
+    const memberSelect = pane.host.querySelector('[data-part="team-form-member-agent"]') as HTMLElement & { value: string }
+    commitPick(memberSelect, 'catalog:concierge')
+    await waitFor(() => memberSelect.value === 'concierge', 'the pick resolved to the instantiated agent id')
+
+    expect(instantiated).toEqual(['concierge'])
+    // Role defaults from the preset's category (capitalized), routing pre-fills from the tagline.
+    expect((pane.host.querySelector('[data-part="team-form-member-role"]') as HTMLElement & { value: string }).value).toBe('Hospitality')
+    expect((pane.host.querySelector('[data-part="team-form-member-routing"]') as HTMLElement & { value: string }).value).toBe(
+      'Answers property and local-guide questions',
+    )
+    // DEDUP: the instantiated preset now renders under 'Your agents' ONLY.
+    const groups = [...memberSelect.querySelectorAll('[role="group"]')]
+    expect([...groups[0]!.querySelectorAll('[role="option"]')].map((o) => o.getAttribute('value'))).toContain('concierge')
+    expect([...groups[1]!.querySelectorAll('[role="option"]')].map((o) => o.getAttribute('value'))).toEqual(['catalog:croupier'])
+
+    // …and the whole gesture SAVES: the member row references the freshly-minted agentId, validation-gated.
+    setValue(pane.host, '[data-part="team-form-label"]', 'Hospitality Team')
+    const gmSelect = pane.host.querySelector('[data-part="team-form-gm"]') as HTMLElement & { value: string }
+    gmSelect.value = 'agent-gm'
+    click(pane.host, '[data-part="team-form-save"]')
+    await waitFor(() => pane.host.querySelector('[data-part="team-card"]') !== null, 'the saved team rendered')
+    const teams = await loadAgentTeams()
+    expect(teams[0]!.members).toEqual([
+      { agentId: 'concierge', role: 'Hospitality', routingDescription: 'Answers property and local-guide questions' },
+    ])
+  })
+
+  it('a pick typed over BEFORE instantiating keeps the user text — defaults never overwrite a non-empty field', async () => {
+    const { pane } = catalogHarness()
+    await pane.refresh()
+    click(pane.host, '[data-part="team-add-toggle"]')
+    click(pane.host, '[data-part="team-form-add-member"]')
+    setValue(pane.host, '[data-part="team-form-member-role"]', 'Maître d’')
+    const memberSelect = pane.host.querySelector('[data-part="team-form-member-agent"]') as HTMLElement & { value: string }
+    commitPick(memberSelect, 'catalog:concierge')
+    await waitFor(() => memberSelect.value === 'concierge', 'the pick resolved')
+    expect((pane.host.querySelector('[data-part="team-form-member-role"]') as HTMLElement & { value: string }).value).toBe('Maître d’')
+  })
+
+  it('VALIDATION STILL GATES with the catalog present: a catalog-sectioned form with no GM refuses to persist', async () => {
+    const { pane } = catalogHarness()
+    await pane.refresh()
+    click(pane.host, '[data-part="team-add-toggle"]')
+    setValue(pane.host, '[data-part="team-form-label"]', 'Gateless Team')
+    click(pane.host, '[data-part="team-form-save"]')
+    const errorNote = pane.host.querySelector('[data-part="team-form-error"]') as HTMLElement
+    await waitFor(() => !errorNote.hidden, 'the rejection surfaced')
+    expect(await loadAgentTeams()).toHaveLength(0)
+  })
+
+  it('no catalog seams registered ⇒ the pre-#1277 single-section picker, byte-identical shape', async () => {
+    const pane = mountPane()
+    await pane.refresh()
+    click(pane.host, '[data-part="team-add-toggle"]')
+    click(pane.host, '[data-part="team-form-add-member"]')
+    const memberSelect = pane.host.querySelector('[data-part="team-form-member-agent"]') as HTMLElement
+    expect(memberSelect.querySelectorAll('[role="group"]')).toHaveLength(0)
+    expect([...memberSelect.querySelectorAll('[role="option"]')].map((o) => o.getAttribute('value'))).toEqual([
+      'agent-gm',
+      'agent-researcher',
+    ])
+  })
+})
+
+describe('member instructions — ADR-0203 Amendment (GH #1277)', () => {
+  it('round-trips: typed instructions persist on the record and reopen populated on edit', async () => {
+    const pane = mountPane()
+    await pane.refresh()
+    click(pane.host, '[data-part="team-add-toggle"]')
+    setValue(pane.host, '[data-part="team-form-label"]', 'Guided Team')
+    setValue(pane.host, '[data-part="team-form-gm"]', 'agent-gm')
+    click(pane.host, '[data-part="team-form-add-member"]')
+    setValue(pane.host, '[data-part="team-form-member-agent"]', 'agent-researcher')
+    setValue(pane.host, '[data-part="team-form-member-role"]', 'Researcher')
+    setValue(pane.host, '[data-part="team-form-member-routing"]', 'Use for lookups.')
+    setValue(pane.host, '[data-part="team-form-member-instructions"]', 'Always confirm dates before consulting.')
+    click(pane.host, '[data-part="team-form-save"]')
+    await waitFor(() => pane.host.querySelector('[data-part="team-card"]') !== null, 'the saved team rendered')
+
+    expect((await loadAgentTeams())[0]!.members[0]!.instructions).toBe('Always confirm dates before consulting.')
+    click(pane.host, '[data-part="team-card-edit"]')
+    expect((pane.host.querySelector('[data-part="team-form-member-instructions"]') as HTMLElement & { value: string }).value).toBe(
+      'Always confirm dates before consulting.',
+    )
+  })
+
+  it('a blank instructions field stays ABSENT on the record (the tagline trim-to-absent law)', async () => {
+    const pane = mountPane()
+    await pane.refresh()
+    click(pane.host, '[data-part="team-add-toggle"]')
+    setValue(pane.host, '[data-part="team-form-label"]', 'Plain Team')
+    setValue(pane.host, '[data-part="team-form-gm"]', 'agent-gm')
+    click(pane.host, '[data-part="team-form-add-member"]')
+    setValue(pane.host, '[data-part="team-form-member-agent"]', 'agent-researcher')
+    setValue(pane.host, '[data-part="team-form-member-role"]', 'Researcher')
+    setValue(pane.host, '[data-part="team-form-member-routing"]', 'Use for lookups.')
+    click(pane.host, '[data-part="team-form-save"]')
+    await waitFor(() => pane.host.querySelector('[data-part="team-card"]') !== null, 'the saved team rendered')
+    expect('instructions' in (await loadAgentTeams())[0]!.members[0]!).toBe(false)
+  })
+})
 
 describe('buildAgentTeamPane — CRUD (GH #1197)', () => {
   it('renders empty with zero persisted teams', async () => {

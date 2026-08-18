@@ -1118,6 +1118,19 @@
     font: inherit; /* the note's own text register, not the button scale */
   }
 
+  /* GH #1277 — the Team pane pickers' 'From catalog' rows: the two-line row (label line + the preset's
+     tagline as visible secondary text), the SAME GH #1172 library-menu pattern entry-list.css carries.
+     ui-select adopts options into its own listbox panel, but that panel stays a descendant of the
+     ui-select host inside this scope, so these rules reach them. */
+  [data-part='team-catalog-option-label'],
+  [data-part='team-catalog-option-tagline'] {
+    display: block;
+  }
+  [data-part='team-catalog-option-tagline'] {
+    font-size: 0.8125rem;
+    color: var(--ui-agent-admin-label-ink);
+  }
+
   /* forced-colors: active — every bordered surface above uses a real 1px border (not a shadow/tint),
      already legible under forced-colors; the explicit focus rings fall back to Highlight. ui-switch
      carries its own forced-colors handling, inherited unchanged. */

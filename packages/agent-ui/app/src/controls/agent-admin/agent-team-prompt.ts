@@ -15,7 +15,7 @@
 // team to itself. (Flagging a dangling reference VISIBLY is the Team pane's job, GH #1197/R5 — this module
 // only guarantees a byte-stable, always-rendering projection.)
 
-import type { AgentTeam } from './agent-team.ts'
+import type { AgentTeam, AgentTeamMember } from './agent-team.ts'
 
 /** One team member's display name, keyed by `agentId` — a caller-supplied snapshot (typically each member's
  *  `AgentConfigSnapshot.name`), never a live store read: this module stays pure, so the caller resolves names
@@ -46,8 +46,11 @@ function displayNameFor(agentId: string, memberSnapshots: readonly TeamMemberSna
  *  sentence verbatim. Member order is the team's OWN declared order (`team.members`, `AgentTeam`'s `readonly`
  *  array) — never re-sorted, since a team's roster carries no `order` field of its own to sort by (unlike
  *  `Entry`'s kind, which the rest of this pipeline sorts by `order`/`id`). */
-function teamMemberLine(agentId: string, role: string, routingDescription: string, memberSnapshots: readonly TeamMemberSnapshot[]): string {
-  return `- **${displayNameFor(agentId, memberSnapshots)}** (${role}): ${routingDescription}`
+function teamMemberLine(member: AgentTeamMember, memberSnapshots: readonly TeamMemberSnapshot[]): string {
+  const line = `- **${displayNameFor(member.agentId, memberSnapshots)}** (${member.role}): ${member.routingDescription}`
+  // ADR-0203 Amendment (GH #1277) — the OPTIONAL GM-facing instructions render as an indented sub-line
+  // UNDER the member's roster line when present; absent ⇒ the pre-amendment line, byte-identical.
+  return member.instructions === undefined ? line : `${line}\n  - Instructions: ${member.instructions}`
 }
 
 /**
@@ -60,7 +63,7 @@ function teamMemberLine(agentId: string, role: string, routingDescription: strin
  */
 export function composeTeamPromptSection(team: AgentTeam, memberSnapshots: readonly TeamMemberSnapshot[]): string {
   if (team.members.length === 0) return ''
-  const rows = team.members.map((member) => teamMemberLine(member.agentId, member.role, member.routingDescription, memberSnapshots))
+  const rows = team.members.map((member) => teamMemberLine(member, memberSnapshots))
   return `${TEAM_SECTION_HEADING}\n${TEAM_SECTION_INTRO}\n\n${rows.join('\n')}`
 }
 
