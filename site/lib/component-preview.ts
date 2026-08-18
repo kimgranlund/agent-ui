@@ -54,6 +54,56 @@ const IMAGE_SAMPLE_SRC =
   )
 const IMAGE_SAMPLE_ALT = 'A coastline at sunset'
 
+// GH #1266 — ui-video / ui-audio (the #1209 mint): both controls build their persistent `<video|audio
+// data-part="media" controls>` child ONLY once `src` goes non-empty (video.ts/audio.ts — the ui-image
+// "never a dead player shell" law), so an unseeded bare specimen renders NOTHING (zero children) and the
+// fleet gate's structure-survives probe rightly fails. Seeded the IMAGE_SAMPLE_SRC way: a self-contained
+// data: URI, offline-safe (no network fetch, no flaky live-media dependency in a browser test run). The
+// media itself is a tiny 0.3 s enveloped 440 Hz tone as an 8 kHz/8-bit mono WAV — genuinely PLAYABLE in
+// both engines' native chrome (press play, hear the beep), tiny enough to inline. The <video> specimen
+// reuses the SAME wav as its media source (a <video> element plays audio-only media natively — real,
+// working transport controls) and carries the IMAGE_SAMPLE_SRC coastline as its `poster`, so the reserved
+// aspect box shows a real frame instead of a black void (ffmpeg-free: no binary mp4 fixture to mint or
+// maintain; the poster + native controls ARE the representative visual).
+const MEDIA_SAMPLE_WAV_B64 =
+  'UklGRoQJAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YWAJAACAgICAgICAgICAf39/f39/f39/gICAgYGBgICA' +
+  'f39+fn5+fn9/gIGBgYKCgYGAf35+fX19fX5/gIGCgoOCgoGAf359fHx8fX1/gIGCg4SDg4KBf358fHt7fH1+gIGDhISEhIOB' +
+  'f358e3p6e3x9f4GDhIWFhYSCgH58enl5ent9f4GDhYaGhoWDgH58enl4eXp8foGDhYeHh4aEgX58eXh3eHl7foGDhoeIiIeE' +
+  'gn98eXd2d3h6fYCDhoiJiYiGg398eXd2dnd5fICDhomKiomHg4B8eXZ1dXZ4e3+DhomLi4qIhIF9eXZ0dHR3en6ChomLjIuJ' +
+  'hoF9eXZzc3N2eX2ChomMjYyKh4J+eXZzcnJ0eHyBhYmMjo2LiIR/enZzcXFzdnuAhYmNjo6NiYWAenZycHBydXp/hImNj4+O' +
+  'i4aBe3ZycG9xdHh+hImNkJCPjIeCfHZyb25vcnd9g4iNkJGQjYmDfXdyb21ucXZ8goiNkJKRj4qEfndybm1tcHR6gYeNkZOS' +
+  'kIuGf3hybmxsbnN5gIaMkZOTkY2HgHlzbmtrbXF3foWMkZSUk46JgXp0bmtqbHB2fYSLkZSVlJCKg3t0bmtpa250e4OKkJSW' +
+  'lZGMhH11b2ppaW1yeoKJkJWXlpONhn52b2poaGtxeICIj5WXl5SPiH93cGpnZ2pvdn+Hj5SYmJaRiYF4cWtnZmludX2GjpSY' +
+  'mZeSi4N6cmtnZWdsc3uEjZSYmpiUjYR7c2xnZWZqcXqDjJOYm5qVj4Z9dGxnZGVpb3iBipKYm5uXkYh/dW1nZGRnbnZ/iZKY' +
+  'm5yYkoqAd25nY2NmbHR+iJGYnJyalIyCeG9oY2JkanJ8ho+XnJ2blo6EenBoY2FjaHB6hI6WnJ6cmJCGfHJpY2FiZ254go2V' +
+  'nJ6emZKIfnNqZGBhZWx2gIuUm5+fm5SKf3VrZGBgZGp0fomTm5+fnJaMgnZsZWBfYmlyfIiSmp+gnpeOhHhuZWBfYWdweoaQ' +
+  'mZ+hn5mQhnpvZmBeYGVteISPmJ6hoJuTiHxxZ2FeX2NrdoKNl56hoZyVin5zaWFdXmJpdICLlp2iop6XjIF1amJdXWBocn2J' +
+  'lJ2io5+Yj4N3bGNdXF9mb3uHk5yho6GakYV5bWReXF5kbXmFkZuhpKKck4d7b2VeW11ia3aDj5mgpKOelYp9cWZfW1xhaXSB' +
+  'jZigpKSfl4x/c2hgW1tfZ3J+i5afpKShmY6CdWphW1peZXB8iZWepKWim5GEd2tiXFpcY216h5Odo6WjnZOHem1jXFlbYWt3' +
+  'hJGbo6aknpWJfG9kXVlaYGl1go+aoqaloJeLfnFmXllaXmdygI2YoaamoZmOgXRoX1pZXWVwfYqWoKWmo5uQg3ZqYFpZXGNu' +
+  'e4iUnqWnpJ2ShnhsYVtYW2FseIaSnaSnpZ+ViHtuY1tYWmBpdoOQm6OnpqCXi31wZFxYWV5nc4GOmqKnpqKZjX9yZl1ZWF1l' +
+  'cX6MmKGmp6Obj4J0aF9ZWFtjb3yJlqCmp6SdkoR3amBaWFpibHmHlJ6lp6WelId5bGJaWFpganeFkp2kp6aglol8bmNbWFle' +
+  'aHSCj5ujp6ehmIx+cWVcWFhdZnJ/jZmip6ejmo6Bc2deWFhcZHB9i5ehpqeknJGDdmlfWVhbYm16iJWfpaelnZOGeGthWlha' +
+  'YWt4hpOdpaeln5WIe21iW1hZX2l2g5CcpKemoJeLfXBkXFhZXmdzgY6aoqemopmNgHJmXVlYXWVxfoyYoaano5uPgnRoX1lY' +
+  'XGRvfImWn6WnpJyRhHdqYFpYW2JteYeTnqSnpJ6Th3ltYltYWmFrd4SRnKOmpZ+ViXxvZFxZWl9pdYKPmqKmpaCXi35xZl5Z' +
+  'WV5ncoCNmKGlpqGZjoF0aF9aWV1lcH2Klp+lpqKbkIN2amFbWVxkbnuIlJ6kpqOckoV4bGJcWlxibHiFkpyjpaOdlIh7bmRd' +
+  'WlthanaDj5qhpaSelYp9cWZeW1tgaXSBjZigpKSfl4x/c2hgW1tfZ3J+i5aeo6SgmY6CdWphXFtfZnB8iZSdoqShmpCEeGxj' +
+  'XVteZG56hpKboaOhm5KGem5lXlxeY2x4hJCZoKOinJOIfHBnYFxdYmt2go2Xn6KinZWKfnNoYV1dYml0gIuWnaGinpaMgXVq' +
+  'Y15eYWhyfYmUnKChnpiOg3dsZF9eYWdwe4eSmp+hn5mQhXlvZmBeYGZveYWPmJ6gn5qRh3txaGFfYGVtd4ONlp2gn5qTiX1z' +
+  'aWNgYGRsdoGLlZufn5uUin91a2RgYGRrdH+Jk5qen5uVjIF3bWZhYWNqcn2HkZidnpyWjYN5b2djYWNpcXuFj5ecnpyXj4V7' +
+  'cWlkYmNocHmDjZWbnZyXkId9c2tlY2NnbneBi5OZnJyYkYh/dW1nY2RnbXaAiZGYm5uYkoqAd25oZGRnbXV+h5CWmpuYk4uC' +
+  'eXBqZWRnbHN8hY6VmZqYk4yEe3JrZ2Vna3J7hIyTmJqYlI2FfHRtaGZna3F5goqRlpmYlI6HfnZuaWdna3B4gImQlZiYlY+I' +
+  'f3dwa2hoanB3f4eOlJeXlZCJgXlybGloam92fYWNkpaWlZCKgntzbmppa291fISLkZSWlJGLhHx1b2tqa250e4KJj5OVlJGL' +
+  'hX52cWxra25zeoGIjpKUlJGMhn94cm5sbG5zeYCGjJGTk5GNh4B5dG9tbG5yeH6Fi4+SkpGNiIF7dXBubW9yd32DiY6RkpCN' +
+  'iIJ8dnJvbm9yd3yCiI2QkZCNiYN9eHNwb29ydnuBh4uOkI+NiYR+eXRxcHBydnuAhYqNj4+NiYV/enZycXFydnp/hImMjo6M' +
+  'iYWAe3d0cnFzdnp+g4eLjY2MiYaBfXh1c3Jzdnl9goaJjIyMiYaCfnl2dHN0dnl9gYWIi4uLiYaCfnt3dXR0dnl8gISHiYqK' +
+  'iYaDf3x4dnV1dnl8gIOGiImJiIaDgHx5d3Z2d3l8f4KFh4iJiIaDgH17eHd3eHl8foGEhoeIh4aDgX57eXh4eHp8foGDhYaH' +
+  'hoWDgX98enl5eXp8foCChIWGhoWDgX99e3p6ent8foCCg4SFhYSDgYB+fHt7e3t8fn+BgoOEhIODgYB+fXx8e3x9fn+AgoKD' +
+  'g4OCgYB/fn19fH19fn+AgYKCgoKBgYB/fn59fX5+fn+AgIGBgYGBgIB/f39+fn5/f3+AgICAgICAgIB/f39/f39/f38='
+const MEDIA_SAMPLE_SRC = 'data:audio/wav;base64,' + MEDIA_SAMPLE_WAV_B64
+const VIDEO_SAMPLE_LABEL = 'Sample clip: a short chime'
+const AUDIO_SAMPLE_LABEL = 'Sample clip: a short chime'
+
 // ── BATCH A — one control per enum knob, routed by member count (no doubled PROPS knob + VARIANTS chip-row) ───
 // A small closed enum reads best fully exposed (every option visible, one click to pick) — `ui-segmented-control`
 // (ADR-0095; was `ui-radio-group[variant="segmented"]` under the retired ADR-0086). A larger enum would make a
@@ -950,6 +1000,14 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   // non-empty descriptor defaults (cover / 16/9 / inline) already auto-seeded by #seedState()'s own
   // descriptor-default loop above — no COMPONENT_INITIAL entry needed for those three.
   'ui-image': { src: IMAGE_SAMPLE_SRC, alt: IMAGE_SAMPLE_ALT },
+  // GH #1266 — ui-video / ui-audio (the #1209 mint): the exact ui-image gap — `src`/`label` default to ''
+  // (video.md/audio.md), and an unseeded bare specimen builds NO media child at all (the "never a dead
+  // player shell" contract in video.ts/audio.ts). Seeded with the offline-safe playable wav (constants
+  // block up top); ui-video also gets the coastline SVG as `poster` so the aspect box shows a real frame.
+  // `preload` (both) and `aspect` (video) carry non-empty descriptor defaults already auto-seeded by
+  // #seedState()'s descriptor-default loop — no entry needed (the ui-image fit/aspect note, verbatim).
+  'ui-video': { src: MEDIA_SAMPLE_SRC, poster: IMAGE_SAMPLE_SRC, label: VIDEO_SAMPLE_LABEL },
+  'ui-audio': { src: MEDIA_SAMPLE_SRC, label: AUDIO_SAMPLE_LABEL },
 }
 
 // A per-tag static HOST ATTRIBUTE seed (batch C) — distinct from COMPONENT_INITIAL (which seeds a KNOB's
