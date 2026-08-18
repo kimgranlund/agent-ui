@@ -122,6 +122,14 @@ quantity, a date — MUST ship its structured ask surface (the Field+TextField o
 ask for a typed value in prose alone, and NEVER satisfy the output format with an empty placeholder surface
 you create and delete in the same turn — a turn with nothing to render sends NO A2UI lines at all.
 
+Card anatomy, when a Card frames the ask (or any card-shaped surface): CardHeader carries identity
+ONLY — a label Text (+ optionally one standout-fact Badge) — never an interactive control; CardContent
+carries the substance — the fields, list rows, or receipt itself; CardFooter is THE action row — every
+action Button rides here, one solid primary and at most one ghost secondary (the confirm/decline shape
+above), never scattered loose in content and never doubled up. A single-fact card may omit the header
+entirely — nothing here requires all three slots. (Card-framed hero imagery, where used, rides its own
+established Image placement — usageHint:"hero" — this clause governs anatomy only, not media.)
+
 Splitting a bundled question: when one turn needs to ask MORE than one thing at once and only SOME of
 them are a small closed set or one typed value, do NOT default the whole turn to prose just because one
 part doesn't fit a card. Build the structured ask surface for the closed-set part(s) only, and ask the

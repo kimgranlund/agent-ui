@@ -1,6 +1,6 @@
 # Rubric — A2UI Payload (validity · composition · declared scope)
 
-version: 1.1
+version: 1.2
 
 > The referential standard an A2UI payload is graded against. Implements
 > [`../spec/a2ui-expert-harness.spec.md`](../spec/a2ui-expert-harness.spec.md) SPEC-R3 (the rubric-set
@@ -11,7 +11,8 @@ version: 1.1
 > [`../lld/a2ui-harness-wiring.lld.md`](../lld/a2ui-harness-wiring.lld.md) §4.
 > The `version:` marker above is the ADR-0068 pattern: a deceptive-composition eval VerdictsFile cites
 > it as its `rubricVersion`. **1.1 = P8 added (2026-08-06, GH #474); the pre-P8 document is
-> retroactively 1.0 — P1–P7 text unchanged.** Bump it whenever a dimension or anchor moves.
+> retroactively 1.0 — P1–P7 text unchanged. 1.2 = P9 added (2026-08-17, GH #1199, req-a2ui-patterns.md
+> R1) — the card-anatomy law; P1–P8 text unchanged.** Bump it whenever a dimension or anchor moves.
 
 The maker `a2ui-payload-authoring-agent` is graded by this rubric; the critic `a2ui-review-agent` scores against it in an
 independent context — the composer never self-grades (SPEC-R8). It rides the SPEC-R6 loop: the deterministic
@@ -64,6 +65,7 @@ pointer-resolution stage), so binding correctness is judged here.
 | P5 | Catalog idiom fidelity | [review] | Node shapes are idiomatic against the default catalog + seed shelf: catalog-declared spellings, enum values the catalog names, values the seeds actually use — this axis owns the enum-range check the P2 gate does not make | 1: a shape that PASSES the gate but is off-idiom — `Button variant: "primary"` (the catalog leaves `variant` an un-enumed string, so the gate accepts it, but the seeds use `solid`/`soft`), `Text variant: "title"` (the catalog `enum` is not gate-checked, so an off-level heading passes the CLI yet names no real level h1–h5/caption/body), or the wrong catalog component for the job · 3: every node matches a catalog-row shape as the seeds use it — Button `variant` `solid`/`soft` + `action: { action, submit?, wantResponse? }`, `Card elevation: "1"`, TextField `type`/`currency`/`step`/`min`, and every enum-valued prop is in range · 5: + advanced idiom used where apt and correct: `checks: [{ call, args, message }]` validators (`generative-form`), `Field.description` helper text, `Tabs.selected` bound to client state (`pattern-wizard`) — indistinguishable from a shelf seed |
 | P6 | Binding hygiene | [review] | Data binding: `{path}` binds on the right props, `${…}` DynamicString templates, positional list templates whose `componentId` resolves, two-way round-trips — against the seeded `updateDataModel` value | 1: a `{path}` names a path absent from the data model, a static value where a bind is intended (or the reverse), or a list template missing its `componentId` · 3: absolute binds (`{path: "/form/name"}`) resolve against the seeded model; `children: { path, componentId }` templates are positional (ADR-0024), their `componentId` names a declared node (the CLI's id-graph skips object `children`, so it does not resolve this), and their item nodes use RELATIVE item paths (`{path: "name"}`); `sendDataModel: true` set when an action round-trips the model · 5: + `${…}` templates compose labels from relative item paths (`"${value}${unit}"`, `pattern-dashboard-tiles`; `"${name} — ${role}"`, `list-people`), nested templates stay relative (`list-nested`: `items` → `/sections/{i}/items`), and interactive binds round-trip (`list-form` TextField `value: { path: "value" }`) — every bind's scope and direction is correct |
 | P7 | Accessibility intent | [review] | Semantic labelling and intent carried structurally, never by color alone: every control named, headings real, destructive/submit intent explicit | 1: an unlabelled control (a bare `TextField` with no wrapping `Field`/`label`), heading text left as `body`, or destructive intent left to a tone the fleet does not provide · 3: every control is labelled — a `Field` wraps it with a `label` (the ADR-0051 accessible-name seam, `generative-form`) or the control carries its own `label` (`Switch`/`Checkbox`); headings use real heading `variant`s (`h4`/`h5`, ADR-0025) · 5: + intent is carried where the fleet has no tone for it — a destructive action reads from its action NAME + wording (`confirm_delete` + "Delete workspace", `pattern-confirmation-card`), required fields are flagged (`required: true` + `checks`), and submit is gated through `FormProvider` + `action.submit: true` (`generative-form`), not left implicit |
+| P9 | Card anatomy fidelity | [review] | Where a `Card` frames the payload (`req-a2ui-patterns.md` R1, `grammar.md`'s card-anatomy clause): `CardHeader` carries identity ONLY (a label `Text`, optionally one standout-fact `Badge` — never an interactive control), `CardContent` carries the substance, and `CardFooter` is THE action row (every action `Button` rides there — one solid primary, at most one ghost secondary) | 1: a `Button` (or any other action control) sits inside `CardContent` while `CardFooter` is ALSO populated — the scattered-actions anti-pattern R1 exists to catch — OR any interactive control (not a label `Text`/`Badge`) sits inside `CardHeader` · 3: every action Button rides in `CardFooter` and nowhere else, `CardHeader` carries only identity (a label `Text`, optionally one `Badge`), and `CardContent` carries only substance nodes — the `frontier-card-anatomy-ask` shape · 5: + the footer reads as the confirm/decline shape exactly (one solid primary, at most one ghost secondary, never doubled), and a single-fact card correctly omits `CardHeader` entirely rather than shipping an empty one |
 
 ## Review axis — declared-scope fidelity (P8)
 
@@ -102,10 +104,10 @@ A payload is promotable when **both** hold:
 - **Every `[gate]` dimension (P1, P2, P3) is a hard pass** — the `validate-payload` CLI exits 0 with no code in that
   dimension's class. A `[gate]` below 4 (the CLI exits 1) blocks promotion regardless of the review scores: a
   mechanically-decided failure is not negotiable (`process.md` rule 1).
-- **Every dimension (P1–P8) scores ≥ 4.** No review strength offsets a gate failure, and no clean gate offsets a
+- **Every dimension (P1–P9) scores ≥ 4.** No review strength offsets a gate failure, and no clean gate offsets a
   weak composition. **P8 (`[review], definitional`) blocks like a gate:** a flagged composition (P8 < 4) is never
-  promotable regardless of P1–P7 — a phishing-shaped payload that validates cleanly is the exact failure mode P8
-  exists to catch (a2ui-ecosystem-alignment.spec.md SPEC-R3).
+  promotable regardless of P1–P7 or P9 — a phishing-shaped payload that validates cleanly is the exact failure mode
+  P8 exists to catch (a2ui-ecosystem-alignment.spec.md SPEC-R3).
 
 This is the SPEC-N4 maker bar: the composer's reference payload must score ≥ 4 on every dimension, produced within
 the SPEC-R6 bound.

@@ -98,4 +98,16 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
       'type-coverage gate green; pending a judged import wave (import-seeds.ts with a real VerdictsFile). ' +
       'Delete this entry when it is judged.',
   ],
+  //
+  // GH #1199 (2026-08-17) — `frontier-card-anatomy-ask`: the same pending-state shape (NO VERDICT SOUGHT
+  // YET, not a refusal). Added alongside the grammar.md card-anatomy clause (req-a2ui-patterns.md R1) as
+  // its worked corpus exemplar — the authoring session judging its own seed is the manufactured judgment
+  // ADR-0068's Alternatives ban. Run the judged pipeline and DELETE this entry when that wave lands.
+  [
+    'frontier-card-anatomy-ask',
+    'GH #1199 (2026-08-17) — no verdict sought yet, not a refusal: shelf seed added alongside the ' +
+      'grammar.md card-anatomy clause (req-a2ui-patterns.md R1) as its worked three-slot ask-card ' +
+      'exemplar; pending a judged import wave (import-seeds.ts with a real VerdictsFile). Delete this ' +
+      'entry when it is judged.',
+  ],
 ])
