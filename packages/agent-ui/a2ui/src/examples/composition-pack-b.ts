@@ -14,9 +14,13 @@
 //     types.ts) ships ZERO weather glyphs — no sun/moon/cloud/cloud-rain/cloud-snow/cloud-lightning/
 //     cloud-fog/wind/snowflake/drop/umbrella/thermometer — and an unknown name resolves to a blank
 //     `<svg data-icon-missing>` (resolve.ts), i.e. dead pixels, not a fallback. So the disposition row's
-//     Icon slot is realized as a condition TEXT label in v1; when a weather-glyph wave lands in the icon
-//     pack, swap `cond_*` Text nodes for Icon nodes (name bound to the same model paths). The hero
-//     variant (full-bleed condition Image behind today's temp) stays a follow-up per the row's own note.
+//     Icon slot was realized as a condition TEXT label in v1. GH #1258 landed the weather-glyph wave
+//     (sun · cloud · cloud-sun · cloud-rain · snowflake · lightning · wind · cloud-fog) and this seed
+//     took its own documented swap: `cond_*` is now an Icon whose `name` binds a per-day
+//     `/forecast/<day>/icon` glyph path and whose `label` binds the SAME condition text path v1
+//     displayed — the word is kept as
+//     the accessible name, never dropped. The hero variant (full-bleed condition Image behind today's
+//     temp) stays a follow-up per the row's own note.
 // (2) RESTAURANT/DRINKS MENU — a Column of sections: Text heading + List > Row{Column{name, desc} ·
 //     price}, price right-aligned via the Row's justify (NO dot leaders in v1, the disposition row's
 //     call), the long tail section behind a Disclosure. Prices arrive HUMANIZED from the producer
@@ -41,12 +45,13 @@ const WEATHER_ID = 'five-day-weather'
  *  and whose content is one Row of five day Columns, each stacking day label · condition · hi/lo (the
  *  survey convention). Every per-day value is BOUND — a morning re-forecast turn updates a day's
  *  condition and temps in place without resending the tree; day labels are static (the week's shape
- *  doesn't change mid-conversation). Condition is a Text label in v1 — the glyph audit above found the
- *  icon pack weather-glyph-less, and a blank `data-icon-missing` box is worse than a word. */
+ *  doesn't change mid-conversation). Condition is an Icon since GH #1258 (glyph `name` bound to
+ *  `/forecast/<day>/icon`, accessible `label` bound to the same `/forecast/<day>/cond` text v1
+ *  displayed). */
 export const fiveDayWeatherSeed: ExampleSeed = {
   name: 'five-day-weather',
   description:
-    'A 5-day weather card — CardHeader identity, CardContent Row of five day Columns each stacking day · bound condition label · bound hi/lo (condition as Text in v1: the icon pack ships no weather glyphs yet).',
+    'A 5-day weather card — CardHeader identity, CardContent Row of five day Columns each stacking day · bound condition Icon (glyph name + accessible condition label both bound) · bound hi/lo.',
   promptText: "What's the weather in Lisbon looking like for the rest of the week?",
   surfaceId: WEATHER_ID,
   protocolVersion: 'v1.0',
@@ -59,11 +64,11 @@ export const fiveDayWeatherSeed: ExampleSeed = {
         surfaceId: WEATHER_ID,
         value: {
           forecast: {
-            mon: { cond: 'Sunny', temps: '31° / 19°' },
-            tue: { cond: 'Sunny', temps: '32° / 20°' },
-            wed: { cond: 'Cloudy', temps: '28° / 19°' },
-            thu: { cond: 'Showers', temps: '24° / 17°' },
-            fri: { cond: 'Sunny', temps: '27° / 18°' },
+            mon: { cond: 'Sunny', icon: 'sun', temps: '31° / 19°' },
+            tue: { cond: 'Sunny', icon: 'sun', temps: '32° / 20°' },
+            wed: { cond: 'Cloudy', icon: 'cloud', temps: '28° / 19°' },
+            thu: { cond: 'Showers', icon: 'cloud-rain', temps: '24° / 17°' },
+            fri: { cond: 'Partly sunny', icon: 'cloud-sun', temps: '27° / 18°' },
           },
         },
       },
@@ -80,23 +85,23 @@ export const fiveDayWeatherSeed: ExampleSeed = {
           { id: 'days', component: 'Row', gap: 'md', justify: 'between', align: 'start', children: ['d_mon', 'd_tue', 'd_wed', 'd_thu', 'd_fri'] },
           { id: 'd_mon', component: 'Column', gap: 'xs', align: 'start', children: ['day_mon', 'cond_mon', 'temps_mon'] },
           { id: 'day_mon', component: 'Text', variant: 'label', text: 'Mon' },
-          { id: 'cond_mon', component: 'Text', variant: 'caption', text: { path: '/forecast/mon/cond' } },
+          { id: 'cond_mon', component: 'Icon', name: { path: '/forecast/mon/icon' }, label: { path: '/forecast/mon/cond' } },
           { id: 'temps_mon', component: 'Text', text: { path: '/forecast/mon/temps' } },
           { id: 'd_tue', component: 'Column', gap: 'xs', align: 'start', children: ['day_tue', 'cond_tue', 'temps_tue'] },
           { id: 'day_tue', component: 'Text', variant: 'label', text: 'Tue' },
-          { id: 'cond_tue', component: 'Text', variant: 'caption', text: { path: '/forecast/tue/cond' } },
+          { id: 'cond_tue', component: 'Icon', name: { path: '/forecast/tue/icon' }, label: { path: '/forecast/tue/cond' } },
           { id: 'temps_tue', component: 'Text', text: { path: '/forecast/tue/temps' } },
           { id: 'd_wed', component: 'Column', gap: 'xs', align: 'start', children: ['day_wed', 'cond_wed', 'temps_wed'] },
           { id: 'day_wed', component: 'Text', variant: 'label', text: 'Wed' },
-          { id: 'cond_wed', component: 'Text', variant: 'caption', text: { path: '/forecast/wed/cond' } },
+          { id: 'cond_wed', component: 'Icon', name: { path: '/forecast/wed/icon' }, label: { path: '/forecast/wed/cond' } },
           { id: 'temps_wed', component: 'Text', text: { path: '/forecast/wed/temps' } },
           { id: 'd_thu', component: 'Column', gap: 'xs', align: 'start', children: ['day_thu', 'cond_thu', 'temps_thu'] },
           { id: 'day_thu', component: 'Text', variant: 'label', text: 'Thu' },
-          { id: 'cond_thu', component: 'Text', variant: 'caption', text: { path: '/forecast/thu/cond' } },
+          { id: 'cond_thu', component: 'Icon', name: { path: '/forecast/thu/icon' }, label: { path: '/forecast/thu/cond' } },
           { id: 'temps_thu', component: 'Text', text: { path: '/forecast/thu/temps' } },
           { id: 'd_fri', component: 'Column', gap: 'xs', align: 'start', children: ['day_fri', 'cond_fri', 'temps_fri'] },
           { id: 'day_fri', component: 'Text', variant: 'label', text: 'Fri' },
-          { id: 'cond_fri', component: 'Text', variant: 'caption', text: { path: '/forecast/fri/cond' } },
+          { id: 'cond_fri', component: 'Icon', name: { path: '/forecast/fri/icon' }, label: { path: '/forecast/fri/cond' } },
           { id: 'temps_fri', component: 'Text', text: { path: '/forecast/fri/temps' } },
         ],
       },

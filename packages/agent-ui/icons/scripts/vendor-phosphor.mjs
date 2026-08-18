@@ -95,6 +95,16 @@ const NAME_MAP = {
   // GH #868 — conversation-composer's models/effort trigger glyphs (identity: Phosphor's own names match).
   sparkle: 'sparkle',
   brain: 'brain',
+  // GH #1258 — the weather glyph set (identity: Phosphor's own names match all eight, verified against
+  // @phosphor-icons/core's regular assets). Unblocks the five-day-weather seed's condition Icon swap.
+  sun: 'sun',
+  cloud: 'cloud',
+  'cloud-sun': 'cloud-sun',
+  'cloud-rain': 'cloud-rain',
+  snowflake: 'snowflake',
+  lightning: 'lightning',
+  wind: 'wind',
+  'cloud-fog': 'cloud-fog',
 }
 
 const EXPECTED_VIEW_BOX = '0 0 256 256'
