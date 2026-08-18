@@ -394,6 +394,80 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  R3 (GH #1204) — the full-bleed HERO media slot. jsdom cannot evaluate :has()/:first-child/:last-child
+//  cascade truth (card-css.test.ts pins the DECLARED rule + its token hygiene); this is the real-DOM leaf
+//  measuring the RENDERED px a real engine resolves — flush-to-edge with zero gutter, the OUTER (not
+//  decremented inner) radius on the leading corners, and content below keeping its normal region padding.
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-card — full-bleed HERO media slot (R3, GH #1204, both engines)', () => {
+  it('a [slot="hero"] leading child bleeds flush to the frame + inherits the card OUTER radius on its leading corners; content below keeps its normal region padding', () => {
+    const card = mount(
+      '<ui-card style="--ui-card-radius: 16px; inline-size: 300px">' +
+        '<div slot="hero" style="display:block; inline-size:100%; block-size:80px; background:red"></div>' +
+        '<ui-card-content>Body</ui-card-content>' +
+        '</ui-card>',
+    )
+    const hero = card.querySelector('[slot="hero"]') as HTMLElement
+    const cardRect = card.getBoundingClientRect()
+    const heroRect = hero.getBoundingClientRect()
+    const borderW = px(getComputedStyle(card).borderTopWidth)
+
+    // flush to the inside of the 1px frame border on all three non-bottom sides — zero padding gutter
+    expect(heroRect.left - cardRect.left, 'hero not flush to the left edge').toBeCloseTo(borderW, 0)
+    expect(cardRect.right - heroRect.right, 'hero not flush to the right edge').toBeCloseTo(borderW, 0)
+    expect(heroRect.top - cardRect.top, 'hero not flush to the top edge').toBeCloseTo(borderW, 0)
+
+    // inherits the card's OUTER radius (--ui-card-radius) on its leading corners — NOT the decremented
+    // --ui-card-inner-radius/--ui-card-child-radius an INSET region would read
+    expect(radiusPx(hero), 'hero did not inherit the card OUTER radius on its leading corner').toBeCloseTo(16, 0)
+    expect(px(getComputedStyle(hero).borderTopRightRadius), 'hero top-right corner did not inherit the outer radius').toBeCloseTo(16, 0)
+    // trailing corners stay square — content follows below, no double radius at the seam
+    expect(px(getComputedStyle(hero).borderBottomLeftRadius), 'hero trailing corner unexpectedly rounded (content follows)').toBe(0)
+
+    // content below is UNAFFECTED — the normal region margin + inline/block padding, untouched by the hero rule
+    const content = card.querySelector('ui-card-content') as HTMLElement
+    expect(px(getComputedStyle(content).marginTop), 'content region lost its normal 6px region margin').toBeCloseTo(6, 0)
+    expect(px(getComputedStyle(content).paddingLeft), 'content region lost its normal 12px inline padding').toBeCloseTo(12, 0)
+  })
+
+  it('a hero-only card (nothing follows it) rounds ALL FOUR corners to the outer radius, and does NOT pick up the ADR-0056 region-less fallback padding', () => {
+    const card = mount(
+      '<ui-card style="--ui-card-radius: 16px">' + '<div slot="hero" style="display:block; block-size:60px"></div>' + '</ui-card>',
+    )
+    const hero = card.querySelector('[slot="hero"]') as HTMLElement
+
+    expect(radiusPx(hero), 'hero-only leading corner did not round').toBeCloseTo(16, 0)
+    expect(px(getComputedStyle(hero).borderBottomLeftRadius), 'hero-only trailing corner did not ALSO round (nothing follows it)').toBeCloseTo(16, 0)
+    expect(px(getComputedStyle(hero).borderBottomRightRadius), 'hero-only trailing corner did not ALSO round (nothing follows it)').toBeCloseTo(16, 0)
+
+    // anti-vacuous vs ADR-0056: a hero-marked child is the same "author owns the structure" case a real
+    // region already is — the card's OWN box must NOT pick up the region-less fallback's 12px/6px padding
+    // (that would reopen exactly the gutter the hero slot exists to remove).
+    expect(px(getComputedStyle(card).paddingLeft), 'hero-only card wrongly got the ADR-0056 region-less fallback padding').toBe(0)
+  })
+
+  it('non-hero cards render BYTE-IDENTICAL — negative control, no regression from the R3 CSS addition', () => {
+    const plain = mount('<ui-card><ui-card-header>Title</ui-card-header><ui-card-content>Body</ui-card-content></ui-card>')
+    const header = plain.querySelector('ui-card-header') as HTMLElement
+    const content = plain.querySelector('ui-card-content') as HTMLElement
+    // unchanged pre-existing shape: block-flow shell, zero card-own padding, normal 6px region margins,
+    // the card's own radius reading the shared base (no --ui-card-radius reseed here).
+    expect(getComputedStyle(plain).display).toBe('flow-root')
+    expect(px(getComputedStyle(plain).paddingLeft)).toBe(0)
+    expect(px(getComputedStyle(header).marginTop)).toBeCloseTo(6, 0)
+    expect(px(getComputedStyle(content).marginTop)).toBeCloseTo(6, 0)
+    expect(px(getComputedStyle(content).paddingLeft)).toBeCloseTo(12, 0)
+
+    const bare = mount('<ui-card><div>First</div><div>Second</div></ui-card>')
+    // the ADR-0056 region-less fallback still fires exactly as before for an ordinary bare card with no
+    // [slot="hero"] child at all — the R3 exclusion only ever widens the :not(:has()) predicate, it never
+    // narrows what the fallback still catches.
+    expect(px(getComputedStyle(bare).paddingLeft), 'plain bare-card fallback regressed').toBeCloseTo(12, 0)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
 //  ADR-0186 — ui-card-header/-footer format='structured'. jsdom cannot resolve @scope/:has()/inherited
 //  computed typography honestly (card.test.ts pins the reflected-prop CONTRACT); this is the real-DOM leaf
 //  the ADR's Consequences owe (the intake's TKT-0002-class leaf 2): the RESOLVED font-family under

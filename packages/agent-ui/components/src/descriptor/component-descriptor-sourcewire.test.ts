@@ -86,7 +86,9 @@ describe('source-scan trip-wire — the REAL card family is drift-free (s12, MUL
     // anti-vacuous: the header/footer adornment cells are styled in card.css; the body/region surface declares
     // no :state() custom states — a card is a static surface (card.md customStates: []).
     expect([...collectUsedStates(cardTs, cardCss)]).toEqual([]) // no interaction states across the four files
-    expect([...collectStyledSlots(cardCss)].sort()).toEqual(['leading', 'trailing']) // `label` is the unstyled default cell
+    // REVISED (R3, GH #1204): `[slot='hero']` joins the styled set — the full-bleed hero media marker, a
+    // card-level (not header/footer-level) position; `label` stays the unstyled default cell.
+    expect([...collectStyledSlots(cardCss)].sort()).toEqual(['hero', 'leading', 'trailing'])
     expect(scalarSeq(cardDesc, 'customStates')).toEqual([]) // documented as stateless
     expect(compareDescriptorToSource(cardDesc, { ts: cardTs, css: cardCss })).toEqual([])
   })

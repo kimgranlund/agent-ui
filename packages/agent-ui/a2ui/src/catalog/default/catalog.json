@@ -585,7 +585,8 @@
         "alt": { "type": { "type": "string" }, "bindable": true, "mapsTo": "alt", "required": true },
         "fit": { "type": { "type": "string", "enum": ["cover", "contain"] }, "mapsTo": "fit" },
         "aspect": { "type": { "type": "string" }, "mapsTo": "aspect" },
-        "usageHint": { "type": { "type": "string", "enum": ["hero", "thumb", "avatar", "inline"] }, "mapsTo": "usageHint" }
+        "usageHint": { "type": { "type": "string", "enum": ["hero", "thumb", "avatar", "inline"] }, "mapsTo": "usageHint" },
+        "slot": { "type": { "type": "string", "enum": ["hero"] }, "mapsTo": "slot" }
       },
       "children": "ChildList"
     },

@@ -413,36 +413,54 @@ describe('default catalog — conformance (SPEC-R7/R9)', () => {
 })
 
 describe('default catalog — Image (GH #1189 R1/R2, SPEC-R7/R9)', () => {
-  it('declares src/alt/fit/aspect/usageHint mapped 1:1 + a ChildList child model (the optional caption slot)', () => {
+  it('declares src/alt/fit/aspect/usageHint/slot mapped 1:1 + a ChildList child model (the optional caption slot)', () => {
     const img = defaultCatalog.components.Image
     expect(img.children).toBe('ChildList')
-    for (const p of ['src', 'alt', 'fit', 'aspect', 'usageHint']) {
+    for (const p of ['src', 'alt', 'fit', 'aspect', 'usageHint', 'slot']) {
       expect(img.properties[p]?.mapsTo, p).toBe(p) // SPEC-R8 1:1 reflection — including usageHint (JS
       // accessor key IS camelCase; `usage-hint` only names the attribute, see factories.ts's doc comment)
+      // and `slot` (GH #1204, R3) — the standard native HTMLElement.slot accessor, not an image.ts prop at
+      // all; the ONE property here that genuinely does reflect to a real attribute the Card side selects on.
     }
     expect(img.properties.src?.bindable).toBe(true)
     expect(img.properties.alt?.bindable).toBe(true)
+    // `slot`'s enum is Card-scoped ("hero" only) — a card-LEVEL position, distinct from Icon/Badge's own
+    // `slot` property (enum "leading"/"trailing", a header/footer-LEVEL position).
+    expect(img.properties.slot?.type).toMatchObject({ enum: ['hero'] })
   })
 
   it('alt is PropDef.required:true — the a2ui catalog admission-time enforcement of image.md\'s "REQUIRED in spirit" contract', () => {
     expect(defaultCatalog.components.Image.properties.alt?.required).toBe(true)
-    for (const p of ['src', 'fit', 'aspect', 'usageHint']) {
+    for (const p of ['src', 'fit', 'aspect', 'usageHint', 'slot']) {
       expect(defaultCatalog.components.Image.properties[p]?.required, p).toBeFalsy()
     }
   })
 
-  it('a Card-with-hero payload — Image with alt + usageHint="hero" — validates 0 failures via validateA2ui', () => {
+  it('a Card-with-hero payload — Image with alt + usageHint="hero" + slot="hero" — validates 0 failures via validateA2ui (R3, GH #1204)', () => {
     const message = {
       version: 'v1.0',
       updateComponents: {
         surfaceId: 's1',
         components: [
           { id: 'root', component: 'Card', children: ['hero'] },
-          { id: 'hero', component: 'Image', src: '/photos/harbor.jpg', alt: 'Boats moored in the harbor at sunset', aspect: '16/9', usageHint: 'hero' },
+          {
+            id: 'hero',
+            component: 'Image',
+            src: '/photos/harbor.jpg',
+            alt: 'Boats moored in the harbor at sunset',
+            aspect: '16/9',
+            usageHint: 'hero',
+            slot: 'hero',
+          },
         ],
       },
     }
     expect(validateA2ui(message, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('NEGATIVE: an out-of-enum Image.slot literal FAILS CATALOG (only "hero" is a valid Card-level slot, R3/GH #1204)', () => {
+    const badSlot: A2uiComponent = { id: 'im5', component: 'Image', src: '/x.jpg', alt: 'A photo', slot: 'sidebar' }
+    expect(validateCatalogConformance(badSlot, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'im5.slot' })
   })
 
   it('NEGATIVE: an Image node OMITTING alt FAILS conformance with CATALOG (required-presence, GH #1189)', () => {

@@ -125,8 +125,14 @@ describe('card.css — header/footer host-as-grid anatomy (anatomy.md leading/la
     // card's outer edge, so rounding it to the outer --ui-card-radius would look oversized/mismatched. It now
     // reads the SAME concentric --ui-card-inner-radius a nested card would (uniformly, not per-side).
     expect(regionTokens).toMatch(/border-radius:\s*var\(--ui-card-inner-radius\)/)
-    // negative control: the old per-side outer-radius corner rules are gone
-    expect(css).not.toMatch(/border-start-start-radius/)
-    expect(css).not.toMatch(/border-end-start-radius/)
+    // negative control, SCOPED to the region rule only: the old per-side outer-radius corner rules on
+    // header/footer are gone. REVISED (R3, GH #1204): the whole-FILE ban this used to be is no longer true —
+    // the new full-bleed HERO slot rule (`:where(ui-card) > [slot='hero']`, a card-level leading-media
+    // child, unrelated to header/footer's own region-fill rounding) legitimately uses the SAME per-side
+    // logical properties elsewhere in this file, on purpose (it reads the OUTER --ui-card-radius directly,
+    // by design — see card-css.test.ts's own hero describe block). So this control is scoped to `regionTokens`
+    // (the header/footer :where() block) specifically, not `css` (the whole file).
+    expect(regionTokens).not.toMatch(/border-start-start-radius/)
+    expect(regionTokens).not.toMatch(/border-end-start-radius/)
   })
 })
