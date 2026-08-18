@@ -188,15 +188,22 @@
        local re-declaration — it simply inherits the host's fixed value, and the disabled row's own
        explicit repoint (below) still reaches it the same way. */
     /* Control-class height (block-size off the ramp, not a content-height).
-       line-height: 1 + padding-block: 0 = the text fills the box without double-spacing
-       (matches --md-sys-control-line-height, ADR-0036). */
+       line-height: 1 keeps the line box glyph-tight (matches --md-sys-control-line-height,
+       ADR-0036); the block padding below centers that line box in the frame. */
     min-block-size: var(--ui-combo-box-height);
     line-height: 1;
-    padding-block: 0;
+    /* GH #1269 (caret vs placeholder misalignment) — the editor MUST stay a plain block, never a
+       flex container: an EMPTY flex contenteditable has no line box, so the focused caret draws
+       content-box-tall at the top-left while the placeholder ::before (an anonymous flex item)
+       centers — the misaligned caret. The old `display: flex; align-items: center` is gone; the
+       single line is centered by the LINE BOX instead, the same row-height law the option rows use
+       ((height − font)/2 block-pad), minus the 1px border each side so the border-box still lands
+       exactly on --ui-combo-box-height (box-sizing: border-box; min-block-size is a floor).
+       Nothing else keyed on the flex — the editor has no element children (placeholder is a
+       ::before; the decorative caret glyph is a host pseudo), so no sibling needed a flex row. */
+    display: block;
+    padding-block: calc((var(--ui-combo-box-height) - var(--ui-combo-box-font)) / 2 - 1px);
     padding-inline: var(--ui-combo-box-padding-inline);
-
-    display: flex;
-    align-items: center;
 
     /* FIXED (2026-07-06, found by the option-font trip-wire): `font: var(--ui-combo-box-font)` was
        an INVALID `font` shorthand (a single value — the shorthand requires font-size AND

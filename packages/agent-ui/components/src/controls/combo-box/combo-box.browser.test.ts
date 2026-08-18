@@ -1636,3 +1636,63 @@ describe('ui-combo-box cross-engine — GH #906: the listbox scrolls with an uno
     ).not.toBe('rgba(0, 0, 0, 0)')
   })
 })
+
+describe('ui-combo-box — GH #1269: focused-empty caret aligns with the placeholder (both engines)', () => {
+  // Root cause was `display: flex` on the contenteditable editor: an EMPTY flex contenteditable
+  // has no line box, so the collapsed caret drew content-box-tall at the top-left while the
+  // placeholder ::before centered as an anonymous flex item. The fix makes the editor a plain
+  // block and centers the LINE BOX ((height − font)/2 − 1px block padding, the option-row law).
+  it('the collapsed caret rect is vertically centered on the placeholder line (within 2px) and glyph-sized, not box-tall', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Pick a fruit…">
+        <div role="option" value="a">Apple</div>
+        <div role="option" value="b">Banana</div>
+      </ui-combo-box>
+    `)
+    await el.updateComplete
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    expect(editor.hasAttribute('data-empty'), `${server.browser}: editor starts empty`).toBe(true)
+
+    // The editor must NOT be a flex container (the GH #1269 root cause).
+    expect(getComputedStyle(editor).display, `${server.browser}: editor is a plain block`).toBe('block')
+
+    editor.focus()
+    await el.updateComplete
+    expect(document.activeElement, 'editor holds focus').toBe(editor)
+
+    // Collapsed-caret geometry. Both engines return NO client rect for a collapsed range in a
+    // truly empty editable, so measure the line box the caret draws in via a zero-width-space
+    // probe text node at the insertion point: its range rect has zero-ish width but exactly the
+    // caret's height and block position (the caret paints on that same line box). The probe is
+    // removed after measuring; it never fires input, so [data-empty]/the placeholder stay put.
+    const probe = document.createTextNode('​')
+    editor.append(probe)
+    const sel = getSelection()!
+    sel.removeAllRanges()
+    const range = document.createRange()
+    range.selectNodeContents(probe)
+    sel.addRange(range)
+    const caret = range.getBoundingClientRect()
+    probe.remove()
+    expect(caret, `${server.browser}: caret rect exists`).toBeTruthy()
+    expect(caret.height, `${server.browser}: caret rect has height`).toBeGreaterThan(0)
+
+    const editorRect = editor.getBoundingClientRect()
+    // The line box (which the placeholder ::before shares — same line) is centered in the box:
+    // its center must sit within 2px of the editor box center (the placeholder's line center).
+    const caretCenter = caret.top + caret.height / 2
+    const boxCenter = editorRect.top + editorRect.height / 2
+    expect(
+      Math.abs(caretCenter - boxCenter),
+      `${server.browser}: caret center ${caretCenter} vs placeholder line center ${boxCenter}`,
+    ).toBeLessThanOrEqual(2)
+
+    // The caret is glyph-sized (≈ font-size line box), never content-box tall — the old flex
+    // defect drew it at full content-box height hugging the top.
+    const font = parseFloat(getComputedStyle(editor).fontSize)
+    expect(caret.height, `${server.browser}: caret is line-box tall, not box-tall`).toBeLessThanOrEqual(font * 1.6)
+    // And the editor frame still lands exactly on the control height (border-box law held).
+    const height = parseFloat(getComputedStyle(el).getPropertyValue('--ui-combo-box-height'))
+    expect(Math.abs(editorRect.height - height), `${server.browser}: frame height on the ramp`).toBeLessThanOrEqual(1)
+  })
+})
