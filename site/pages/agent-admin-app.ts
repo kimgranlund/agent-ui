@@ -414,8 +414,14 @@ function createGeneratedAgent(pick?: GenerateSeed): void {
 
 /** A kebab id for a freshly-minted `AgentTeam` — the SAME base-slug + numeric-suffix-on-collision
  *  shape `agent-admin-persona-file.ts`'s own `mintIdentity` uses for personas, kept as its own small
- *  copy here rather than widening that persona-shaped helper's export surface for this one caller. */
-function mintTeamId(label: string, takenIds: ReadonlySet<string>): string {
+ *  copy here rather than widening that persona-shaped helper's export surface for this one caller.
+ *
+ *  Exported (unlike this page's other mint helpers, e.g. `createGeneratedAgent`): this function and
+ *  `handleTeamDeclared` below carry real branching logic (structural pre-validation, multi-persona
+ *  mint, collision-safe id minting, validate-before-save) that earns a direct jsdom unit test — the
+ *  browser-click proof this page's OTHER handlers get would only re-prove DOM wiring already covered
+ *  by the `onTeamDeclared` registration presence check, never the logic itself. */
+export function mintTeamId(label: string, takenIds: ReadonlySet<string>): string {
   const base =
     label
       .toLowerCase()
@@ -445,7 +451,7 @@ function mintTeamId(label: string, takenIds: ReadonlySet<string>): string {
  *  nothing lands, notified as a failure, never a partial roster. `saveAgentTeam` itself re-validates
  *  (ADR-0203 clause 1's closed-validation law, never second-guessed here) as defense in depth against
  *  a shape this pre-check cannot anticipate. */
-async function handleTeamDeclared(team: TeamDeclaration): Promise<void> {
+export async function handleTeamDeclared(team: TeamDeclaration): Promise<void> {
   const label = team.label.trim()
   const structurallyValid =
     label.length > 0 &&

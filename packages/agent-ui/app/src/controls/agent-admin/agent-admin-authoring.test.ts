@@ -347,6 +347,71 @@ describe('the apply loop’s CONSUMPTION CONDITION — the fence AND the gate, b
   })
 })
 
+// ── GH #1196 (ADR-0203 clause 4) — the `team` consumption arm reuses the SAME conjunctive fence ────────
+// `patch` already applies (store-identity AND a fresh SURFACE_AUTHORING_KEY read), never a second gate —
+// proven at both polarities exactly like the `patch` suite above, plus the forwarding contract itself
+// (`onTeamDeclared` fires with the declaration, once, only when fenced+gated).
+describe('the `team` consumption arm — the SAME conjunctive fence as `patch` (GH #1196)', () => {
+  const TEAM = {
+    label: 'Support Team',
+    tagline: 'Front-line help',
+    members: [
+      { name: 'Tier 1', role: 'Front-line triage', routingDescription: 'Use for a guest’s first message.' },
+      { name: 'Billing', role: 'Billing specialist', routingDescription: 'Use for refunds and charges.' },
+    ],
+  }
+
+  it('FORWARDS a declared team on an authoring-context turn whose gate reads ON', async () => {
+    const draft = personaStore()
+    const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true, name: 'Builder' })
+    const { el } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'team', team: TEAM }] })
+    const received: unknown[] = []
+    el.onTeamDeclared((team) => received.push(team))
+    await whenFlushed()
+    await submit(el, 'I want a support team')
+
+    expect(received).toEqual([TEAM])
+    // The component itself never mints or writes anything on a `team` event — no store target exists for
+    // it the way `patch` has one; forwarding is the whole consumption.
+    expect(draft.get('name')).toBe('Untitled agent')
+  })
+
+  it('POLARITY 1 — gate OFF inside the authoring context: never forwarded', async () => {
+    const draft = personaStore()
+    const builder = personaStore({ name: 'Builder' }) // gate absent ⇒ OFF
+    const { el } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'team', team: TEAM }] })
+    const received: unknown[] = []
+    el.onTeamDeclared((team) => received.push(team))
+    await whenFlushed()
+    await submit(el, 'I want a support team')
+
+    expect(received).toEqual([])
+  })
+
+  it('POLARITY 2 — gate ON but outside the authoring context: never forwarded', async () => {
+    const draft = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    const { el } = mountAdmin({ store: draft, events: [{ kind: 'team', team: TEAM }] })
+    const received: unknown[] = []
+    el.onTeamDeclared((team) => received.push(team))
+    await whenFlushed()
+    await submit(el, 'I want a support team', 'test')
+
+    expect(received).toEqual([])
+  })
+
+  it('an unregistered onTeamDeclared drops the declaration silently — no error surface, the SAME degrade law as an unregistered patch consumer', async () => {
+    const draft = personaStore()
+    const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true, name: 'Builder' })
+    const { el } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'team', team: TEAM }, { kind: 'note', note: 'Done.' }] })
+    await whenFlushed()
+    await submit(el, 'I want a support team')
+
+    const authoring = el.querySelector('[data-part="copilot-pane"]') as HTMLElement
+    expect(authoring.textContent, 'the reply painted — an unforwarded team never fails the turn').toContain('Done.')
+    expect(authoring.querySelector('[data-role="system"]')?.textContent ?? '').not.toContain('⚠')
+  })
+})
+
 describe('live pane hydration — the written values reach the real DOM (LLD-C6 panes proof)', () => {
   it('after a patch turn the settings field and the entry section render the patched state', async () => {
     // This exercises §7's cited law end to end rather than trusting the citation: the apply loop adds no
