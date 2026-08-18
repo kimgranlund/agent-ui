@@ -116,6 +116,26 @@ describe('ui-agent-admin — GH #1211: the composer attach path → a `resource`
     expect(toast!.textContent).toContain('photo.png')
   })
 
+  it('attaching a claimed-but-unreadable .docx is rejected with the corrupt-document toast copy, never a silent drop, and mints no entry (GH #1214)', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    await settle()
+
+    // A `.docx` extension claims the docx extractor (GH #1214), but these bytes aren't a real zip archive
+    // — the extractor rejects with `reason: 'corrupt-document'`, a DIFFERENT toast copy than the
+    // unsupported-type case just above (never lumped together, per that reason's own doc comment).
+    attachFile(el, new File(['not a real docx, just garbage bytes'], 'broken.docx', {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    }))
+    await settle()
+
+    expect(readEntries(el.store, ENTRY_KINDS.resource)).toHaveLength(0)
+    expect(chipsOf(el)).toHaveLength(0)
+    const toast = el.querySelector('ui-toast-region ui-toast') as HTMLElement | null
+    expect(toast, 'a rejection toast must render — never a silent drop').not.toBeNull()
+    expect(toast!.textContent).toContain('broken.docx')
+    expect(toast!.textContent).toContain("couldn't be read")
+  })
+
   it('dismissing an attached chip discards cleanly — the chip AND its resource entry are both gone (R5 AC)', async () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     await settle()

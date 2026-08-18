@@ -1,8 +1,9 @@
 // document-extraction.ts — the extractDocumentText(file) seam (req-doc-ingestion R2, GH #1210): ONE pure,
-// async entry point over a pluggable per-TYPE extractor REGISTRY. This ticket ships the txt/md extractor
-// only — docx (GH #1214) and pdf (GH #1215, ADR-gated) register their own extractors later by calling
-// `registerDocumentExtractor` from their own modules; nothing in this file changes when they land, which
-// is the whole point of the seam being a registry rather than a hardcoded switch.
+// async entry point over a pluggable per-TYPE extractor REGISTRY. #1210 shipped the txt/md extractor;
+// docx (GH #1214) and pdf (GH #1215, ADR-gated) register their own extractors from their own modules by
+// calling `registerDocumentExtractor` — the registry itself needed no change for either to land, only a
+// widened `DocumentExtractionErrorReason` union each contributed its own member to, which is the whole
+// point of the seam being a registry rather than a hardcoded switch.
 
 import { MAX_DOCUMENT_CHARS, MAX_RAW_FILE_BYTES, truncateToBudget } from './document-budget.ts'
 
@@ -32,9 +33,12 @@ export interface ExtractedDocument {
  *  `'unsupported-type'` — no registered extractor claimed the file. `'no-text-layer'` — an extractor DID
  *  claim and successfully parse the file, but recovered no text at all (GH #1215/ADR-0202 cl.5's own
  *  case: an image-only PDF with no embedded text layer) — extraction succeeded, there is simply nothing
- *  to mint. All three fail VISIBLY (R1: "an unsupported type is rejected at the chip with a visible
- *  reason, never a silent drop") — a caller branches on `reason`, never re-parses `message`. */
-export type DocumentExtractionErrorReason = 'too-large' | 'unsupported-type' | 'no-text-layer'
+ *  to mint. `'corrupt-document'` — an extractor DID claim the file but its bytes don't deliver (GH #1214:
+ *  malformed zip/XML, encrypted, unsupported compression method, etc — format-generic on purpose so a
+ *  further extractor reuses it instead of minting a further member). All four fail VISIBLY (R1: "an
+ *  unsupported type is rejected at the chip with a visible reason, never a silent drop") — a caller
+ *  branches on `reason`, never re-parses `message`. */
+export type DocumentExtractionErrorReason = 'too-large' | 'unsupported-type' | 'no-text-layer' | 'corrupt-document'
 
 export class DocumentExtractionError extends Error {
   readonly reason: DocumentExtractionErrorReason
@@ -103,9 +107,9 @@ registerDocumentExtractor(textExtractor)
  * Extract `file`'s text, budget-checked at both ends (R6): the RAW-size cap runs BEFORE any extractor is
  * invoked (`DocumentExtractionError('too-large')`), and the EXTRACTED text is head-truncated to
  * `MAX_DOCUMENT_CHARS` with a visible marker (never silent) after extraction succeeds. No registered
- * extractor claims the file → `DocumentExtractionError('unsupported-type')` — this ticket ships txt/md
- * only; docx/pdf extractors register themselves later (#1214/#1215) and this function needs no change
- * when they do.
+ * extractor claims the file → `DocumentExtractionError('unsupported-type')` — the txt/md extractor ships
+ * on this seam directly; docx (#1214) and pdf (#1215) register their own extractors from their own
+ * modules, and this function needed no change for either.
  */
 export async function extractDocumentText(file: File): Promise<ExtractedDocument> {
   if (file.size > MAX_RAW_FILE_BYTES) {
