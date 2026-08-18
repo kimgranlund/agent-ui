@@ -30,6 +30,11 @@ export interface ProviderOption extends PickerOption {
 export interface ContextItem {
   id: string
   label: string
+  /** GH #1211 — an OPTIONAL secondary line rendered under the label (e.g. a file size, an "extracting…"
+   *  progress word, a truncation notice). Opaque free text to this element, exactly like `label` — a
+   *  consumer ingesting a document (`ui-agent-admin`) is the one that knows what belongs here; the
+   *  composer never derives it. Absent ⇒ a label-only chip, byte-identical to every pre-#1211 consumer. */
+  description?: string
 }
 
 /** GH #849 (capability-availability-tagging.spec.md SPEC-R6) — ONE selectable entry of a composer

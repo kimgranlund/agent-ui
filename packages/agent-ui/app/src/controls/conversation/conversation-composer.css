@@ -240,6 +240,22 @@
     --ui-button-height: 0.875rem;
     --ui-button-icon: 0.625rem;
   }
+  /* GH #1211 — the OPTIONAL secondary line (`ContextItem.description`, e.g. a file size or extraction
+     state). Absent on every pre-#1211 chip (`#syncContextChips` never creates this part then), so this
+     rule is dormant for those. A dimmer, smaller ink than the label reads as annotation, not identity. */
+  [data-part='context-chip-meta'] {
+    opacity: 0.75;
+    font-size: 0.66rem;
+  }
+
+  /* GH #1211 — the drop-onto-composer affordance: `[data-dragover]` is toggled by conversation-composer.ts
+     while a file is dragged over a composer that has `onAttach` wired (undefined ⇒ never toggled at all).
+     Reuses the SAME focus-ring token as the editor's own focus state (one visible "you can drop here"
+     signal, not a bespoke color), so a themed consumer never needs a second variable to repoint. */
+  :scope([data-dragover]) {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
 
   /* GH #849 — the committed-reference chips (SPEC-R6): the SAME pill geometry as the consumer context
      chips above (they cohabit one row, so one shape), retinted to the accent family so "this rides THIS

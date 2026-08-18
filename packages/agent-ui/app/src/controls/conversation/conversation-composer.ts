@@ -190,6 +190,14 @@ export class UIConversationComposerElement extends UIElement {
   #editor: HTMLElement | undefined
   #sendBtn: UIButtonElement | undefined
   #micBtn: UIButtonElement | undefined
+  // GH #1211 — the attach affordance: an icon-only `ui-button` sibling of mic/send (the OPT-IN reveal
+  // precedent `#micBtn` already establishes — hidden until a consumer registers `onAttach`, so a
+  // consumer that never wires the feature renders byte-identically to before) plus the hidden native
+  // `<input type="file">` its click opens. Neither carries any store/kind knowledge — both simply hand
+  // whatever `File`s the platform gave them up through `onAttach` (props down/callbacks up, the
+  // `onMicClick` law verbatim).
+  #attachBtn: UIButtonElement | undefined
+  #attachInput: HTMLInputElement | undefined
   #contextChips: HTMLElement | undefined
   #optionsLeading: HTMLElement | undefined
   #modelsMenu: UIMenuElement | undefined
@@ -270,6 +278,11 @@ export class UIConversationComposerElement extends UIElement {
   #onContextDismissCb: ((id: string) => void) | undefined
   #onCapabilityToggleCb: ((id: string, included: boolean) => void) | undefined
   #onMicClickCb: (() => void) | undefined
+  // GH #1211 — fires with every File the user attached (drop, paste, or the picker button), in one call
+  // per gesture (never per-file). Undefined ⇒ the attach button stays hidden and drop/paste are NOT
+  // intercepted (the platform's own default behavior runs instead) — the gated-equivalence law every
+  // other opt-in affordance here already follows.
+  #onAttachCb: ((files: readonly File[]) => void) | undefined
 
   protected connected(): void {
     this.#modelsListenerArmed = false
@@ -314,6 +327,31 @@ export class UIConversationComposerElement extends UIElement {
       const optionsTrailing = document.createElement('div')
       optionsTrailing.dataset.part = 'options-trailing'
 
+      // GH #1211 — the attach affordance, built the SAME opt-in way as mic (below): hidden until a
+      // consumer registers `onAttach`, revealing the same "was this ever wired" hazard mic's own comment
+      // names, so it follows the identical guard. Placed BEFORE mic/send — attaching material is
+      // something a user does before composing/sending the turn, not an in-flight action alongside it.
+      this.#attachBtn = document.createElement('ui-button') as UIButtonElement
+      this.#attachBtn.setAttribute('variant', 'ghost')
+      this.#attachBtn.setAttribute('icon-only', '')
+      this.#attachBtn.setAttribute('aria-label', 'Attach a file')
+      this.#attachBtn.dataset.part = 'attach'
+      this.#attachBtn.toggleAttribute('hidden', this.#onAttachCb === undefined)
+      const attachIcon = document.createElement('ui-icon')
+      attachIcon.setAttribute('slot', 'leading')
+      attachIcon.setAttribute('data-role', 'icon')
+      attachIcon.setAttribute('glyph', 'paperclip')
+      this.#attachBtn.append(attachIcon)
+      // The picker's native vehicle — never rendered (a control-created part, the overlay-panel
+      // precedent), reset after every read so the SAME file can be re-selected back to back. `multiple`:
+      // a drop/paste can carry more than one file, so the picker offers the same breadth.
+      const attachInput = document.createElement('input')
+      attachInput.type = 'file'
+      attachInput.multiple = true
+      attachInput.hidden = true
+      attachInput.dataset.part = 'attach-input'
+      this.#attachInput = attachInput
+
       this.#micBtn = document.createElement('ui-button') as UIButtonElement
       this.#micBtn.setAttribute('variant', 'ghost')
       this.#micBtn.setAttribute('icon-only', '')
@@ -341,13 +379,13 @@ export class UIConversationComposerElement extends UIElement {
       sendIcon.setAttribute('glyph', 'arrow-up')
       this.#sendBtn.append(sendIcon)
 
-      optionsTrailing.append(this.#micBtn, this.#sendBtn)
+      optionsTrailing.append(this.#attachBtn, this.#micBtn, this.#sendBtn)
       optionsRow.append(this.#optionsLeading, optionsTrailing)
 
       // The HOST is the field frame and the column (TKT-0058) — the v1 nested `<form data-part="composer">`
       // is GONE: its only job (Enter-triggers-submit plumbing) is handled directly by the editor keydown
       // below, so the ADR-0017 native-<form> carve-out dependency disappears with it.
-      this.append(this.#contextChips, editor, optionsRow)
+      this.append(this.#contextChips, editor, optionsRow, attachInput)
     }
 
     const editor = this.#editor
@@ -464,6 +502,44 @@ export class UIConversationComposerElement extends UIElement {
     })
     this.listen(this.#sendBtn!, 'click', () => this.#send())
     this.listen(this.#micBtn!, 'click', () => this.#onMicClickCb?.())
+
+    // ── GH #1211 — the attach path's three entry gestures, all converging on the SAME `#onAttachCb` call
+    // (one call per gesture, carrying every File it produced) — the composer never inspects a file's
+    // type/size/content, it only hands the platform's own `File`s up (store-blind, kind-blind). ──
+    this.listen(this.#attachBtn!, 'click', () => {
+      if (this.busy) return
+      this.#attachInput?.click()
+    })
+    this.listen(this.#attachInput!, 'change', () => {
+      const files = [...(this.#attachInput?.files ?? [])]
+      this.#attachInput!.value = '' // reset so re-picking the SAME file still fires 'change'
+      if (files.length > 0) this.#onAttachCb?.(files)
+    })
+    // Drop-onto-composer — only intercepted once a consumer actually wires `onAttach` (undefined ⇒ the
+    // platform's own default drop behavior runs, byte-identical to before this feature existed).
+    // `dragover` must call `preventDefault()` for `drop` to fire at all (the platform's own contract).
+    this.listen(this, 'dragover', (e) => {
+      if (this.#onAttachCb === undefined || this.busy) return
+      e.preventDefault()
+      this.toggleAttribute('data-dragover', true) // the CSS drop-affordance hook
+    })
+    this.listen(this, 'dragleave', () => this.toggleAttribute('data-dragover', false))
+    this.listen(this, 'drop', (e) => {
+      this.toggleAttribute('data-dragover', false)
+      if (this.#onAttachCb === undefined || this.busy) return
+      e.preventDefault()
+      const files = [...((e as DragEvent).dataTransfer?.files ?? [])]
+      if (files.length > 0) this.#onAttachCb?.(files)
+    })
+    // Paste — intercepted ONLY when the clipboard actually carries files AND a consumer wired `onAttach`;
+    // a plain text paste (the overwhelming common case) is never touched, falling through to the
+    // editor's own native paste handling exactly as before this feature existed.
+    this.listen(editor, 'paste', (e) => {
+      const files = [...((e as ClipboardEvent).clipboardData?.files ?? [])]
+      if (files.length === 0 || this.#onAttachCb === undefined || this.busy) return
+      e.preventDefault()
+      this.#onAttachCb(files)
+    })
 
     // ── GH #891 (SPEC-R11) — the capabilities panel's two remaining close paths (the others are its
     // trigger, `#send`, `#applyBusy`, and the disconnect disposer below). HOST-level, so they cover a
@@ -599,6 +675,19 @@ export class UIConversationComposerElement extends UIElement {
     this.#micBtn?.toggleAttribute('hidden', false)
   }
 
+  /** GH #1211 — fires with every `File` a drop, a paste, or the attach button's picker produced (one call
+   *  per gesture, never per-file — a multi-file drop/selection is one array). OPT-IN, the `onMicClick`
+   *  precedent verbatim: the attach button stays hidden, and drop/paste stay UNINTERCEPTED, until this is
+   *  actually called — reveals the button immediately if already connected, or on the next connect
+   *  otherwise. This element inspects NOTHING about a file (no type/size/content check, no store write,
+   *  no `Entry`/kind semantics — TKT-0056/GH #849/#891's layering law): validating, extracting, and
+   *  projecting a file into agent knowledge is entirely the consumer's job (`ui-agent-admin`). Safe to
+   *  call before or after connect. */
+  onAttach(cb: (files: readonly File[]) => void): void {
+    this.#onAttachCb = cb
+    this.#attachBtn?.toggleAttribute('hidden', false)
+  }
+
   // ── internals ────────────────────────────────────────────────────────────────────────────────────────
 
   /** The in-flight guard (TKT-0034, promoted): `if (this.busy) return` is the FIRST check, synchronously,
@@ -648,6 +737,7 @@ export class UIConversationComposerElement extends UIElement {
     }
     this.#sendBtn!.disabled = busy
     this.#micBtn!.disabled = busy
+    this.#attachBtn!.disabled = busy // GH #1211 — busy-disabled with mic/send; the click/drop/paste guards above also check `this.busy` directly
     if (this.#modelsTrigger) this.#modelsTrigger.disabled = busy
     if (this.#effortTrigger) this.#effortTrigger.disabled = busy
     if (this.#providersTrigger) this.#providersTrigger.disabled = busy
@@ -939,6 +1029,14 @@ export class UIConversationComposerElement extends UIElement {
       const label = document.createElement('span')
       label.dataset.part = 'context-chip-label'
       label.textContent = item.label
+      // GH #1211 — the OPTIONAL secondary line (`ContextItem.description`): omitted entirely when absent,
+      // so a pre-#1211 consumer's chip (label + dismiss only) renders byte-identically.
+      const meta =
+        item.description !== undefined && item.description !== '' ? document.createElement('span') : undefined
+      if (meta) {
+        meta.dataset.part = 'context-chip-meta'
+        meta.textContent = item.description!
+      }
       const dismiss = document.createElement('ui-button') as UIButtonElement
       dismiss.setAttribute('variant', 'ghost')
       dismiss.setAttribute('icon-only', '')
@@ -950,7 +1048,7 @@ export class UIConversationComposerElement extends UIElement {
       icon.setAttribute('glyph', 'x')
       dismiss.append(icon)
       this.listen(dismiss, 'click', () => this.#onContextDismissCb?.(item.id))
-      chip.append(label, dismiss)
+      chip.append(label, ...(meta ? [meta] : []), dismiss)
       row.insertBefore(chip, firstReferenceChip)
     }
     this.#syncChipRowVisibility()

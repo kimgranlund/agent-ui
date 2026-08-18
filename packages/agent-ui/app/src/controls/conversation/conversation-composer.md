@@ -92,7 +92,7 @@ properties:
   - name: mode
     description: The Mode picker's CURRENT selection. See `model` — same props-down/callbacks-up law, via `onModeChange`.
   - name: contextItems
-    description: A `readonly {id, label}[]` of dismissable chips shown above the text (e.g. "something selected elsewhere, attached to this turn's context"). Default `undefined` — no chip row. A dismiss click fires `onContextDismiss(id)`; the consumer owns actually removing it from this list.
+    description: 'A `readonly {id, label, description?}[]` of dismissable chips shown above the text (e.g. "something selected elsewhere, attached to this turn''s context"). Default `undefined` — no chip row. A dismiss click fires `onContextDismiss(id)`; the consumer owns actually removing it from this list. GH #1211 — the OPTIONAL `description` renders a secondary line under the label (e.g. a file size, an "extracting…" state, a truncation notice); opaque free text to this element exactly like `label`, omitted entirely when absent (byte-identical to every pre-#1211 chip).'
   - name: mentionables
     description: OPTIONAL `readonly ReferenceOption[]` (composer-options.ts — `{id, label, kind, description?, icon?}`) — GH #849's `@` mention roster. Typing `@` at a TOKEN START (start of text, or after whitespace) opens a typeahead over it; committing an item removes the token text and mints a reference chip. Default `undefined` ⇒ `@` is a plain character (no typeahead, no panel DOM at all). `kind` is an OPAQUE string here — this element groups and displays it, never interprets it; a consumer (e.g. `ui-agent-admin`) owns the domain projection, exactly as it already owns `PickerOption`'s. GH #891 (SPEC-R9) — `icon` is an equally opaque `ui-icon` glyph NAME the consumer supplies per entry: it renders as the chip's leading kind mark and round-trips onto the committed `TurnReference`; this element never maps a `kind` to a glyph itself, and an entry without one renders a label-only chip.
   - name: invocables
@@ -102,7 +102,7 @@ properties:
   - name: busy
     description: Whether a turn is in flight (TKT-0034) — the editor becomes non-editable + pointer-inert, send/mic/picker-triggers disable, the whole composer dims via the reflected `[busy]`, and the host carries `ariaBusy`/`ariaDisabled` through `internals`. The composer's OWN send path also checks `busy` synchronously (not only via the batched disabling effect) as a backstop against a stray Enter racing the effect's flush — the guard is load-bearing behavior, not just styling.
 
-events: []               # no DOM events — onSubmit/onModelChange/onEffortChange/onProviderChange/onModeChange/onContextDismiss/onCapabilityToggle/onMicClick are ALL callback registrations, never CustomEvents (the fleet's CLOSED event vocabulary — owned solely by the ALLOWED_EVENTS constants in family-coherence.test.ts + naming-gates.test.ts, ADR-0153, never re-enumerated here — has no submission/picker-commit kind; inherited by lineage from ui-conversation, not re-derived). GH #849's reference typeahead adds NO event either: its internal listbox is control-created and no menu event escapes the host. GH #891's capabilities panel likewise: its embedded `ui-switch`es really do emit `change`, and that event is stopped at the panel boundary (the editor-`input` suppression discipline) so nothing crosses the host.
+events: []               # no DOM events — onSubmit/onModelChange/onEffortChange/onProviderChange/onModeChange/onContextDismiss/onCapabilityToggle/onMicClick/onAttach are ALL callback registrations, never CustomEvents (the fleet's CLOSED event vocabulary — owned solely by the ALLOWED_EVENTS constants in family-coherence.test.ts + naming-gates.test.ts, ADR-0153, never re-enumerated here — has no submission/picker-commit kind; inherited by lineage from ui-conversation, not re-derived). GH #849's reference typeahead adds NO event either: its internal listbox is control-created and no menu event escapes the host. GH #891's capabilities panel likewise: its embedded `ui-switch`es really do emit `change`, and that event is stopped at the panel boundary (the editor-`input` suppression discipline) so nothing crosses the host. GH #1211's attach path adds no event either: the native `drop`/`paste`/file-input `change` are all fully handled internally, never re-emitted.
 
 slots: []                 # content model is NOT author-composed — every part is built entirely by this element's own connect-time logic; no slotted children
 
@@ -121,6 +121,10 @@ parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-D
     description: The Provider picker's trigger pill (`[data-picker="providers"]`) — see `models-trigger`, shown only when `providers` is set. Selecting a new provider narrows the Models picker to that provider's own model list.
   - name: mode-trigger
     description: The Mode picker's trigger pill (`[data-picker="mode"]`) — see `models-trigger`, shown only when `modes` is set.
+  - name: attach
+    description: 'GH #1211 — the attach button (`[data-part="attach"]`, icon-only `ui-button`, `variant="ghost"`, `paperclip` glyph), a sibling of mic/send placed BEFORE them — OPT-IN: hidden (`[hidden]`) until a consumer calls `onAttach`. Clicking it opens the native file picker (`[data-part="attach-input"]` below). Once wired, `onAttach` also fires from a drop onto the composer host or a paste (of files, never plain text) into the editor — one call per gesture, carrying every `File` it produced. This element inspects NOTHING about a file (no type/size/content check) — validating and extracting is entirely the consumer''s job.'
+  - name: attach-input
+    description: 'GH #1211 — the attach button''s native vehicle: a `hidden` `<input type="file" multiple>`, never rendered (a control-created part). Reset to `''''` after every `change` so re-picking the SAME file still fires one.'
   - name: mic
     description: The microphone button (`[data-part="mic"]`, icon-only `ui-button`, `variant="ghost"`) — OPT-IN: hidden (`[hidden]`) until a consumer calls `onMicClick`. Fires `onMicClick`; this element has no speech-to-text mechanism of its own.
   - name: send
@@ -304,13 +308,27 @@ input from a one-line minimum up to `6em`, then scrolls.
 
 Every picker/dismiss/submit affordance follows **props down, callbacks up** — this element never writes
 `model`/`effort`/`provider`/`mode`/`contextItems` itself; a consumer supplies the current value and reads
-the committed choice back through the matching callback. All seven callbacks (`onSubmit`/`onModelChange`/
-`onEffortChange`/`onProviderChange`/`onModeChange`/`onContextDismiss`/`onMicClick`) are callback
+the committed choice back through the matching callback. All eight callbacks (`onSubmit`/`onModelChange`/
+`onEffortChange`/`onProviderChange`/`onModeChange`/`onContextDismiss`/`onMicClick`/`onAttach`) are callback
 REGISTRATIONS, never `CustomEvent`s (the fleet's closed event vocabulary — owned by the `ALLOWED_EVENTS`
 constants in `family-coherence.test.ts`/`naming-gates.test.ts` per ADR-0153 — has no submission/picker-commit
 kind) — and are safe to register before or after connect. The one exception to props-down is GH #849's
 committed references: those are composer-OWNED state (there is no `references` prop), delivered up through
 `onSubmit`'s second argument and cleared by the send that delivered them.
+
+## GH #1211 — the attach path: drop, paste, or a picker button, all one callback
+
+```ts
+composer.onAttach((files) => { /* validate/extract/mint knowledge here — ALSO reveals the attach button */ })
+```
+
+`onAttach` fires with every `File` a drop onto the composer, a paste of files into the editor, or the
+attach button's native picker produced — one call per gesture, never per-file. This element is entirely
+STORE-BLIND and KIND-BLIND about what it hands up (the same TKT-0056/GH #849/#891 layering law every other
+capability here follows): no type/size/content check, no `Entry`, no toast — a consumer (`ui-agent-admin`)
+owns validating, extracting, and projecting a file into agent knowledge. A plain text paste (no files on
+the clipboard) is never intercepted, falling through to the editor's native paste exactly as before this
+feature existed; the SAME is true of drop/paste entirely when no consumer ever calls `onAttach`.
 
 ## Every capability is opt-in
 
@@ -318,7 +336,8 @@ committed references: those are composer-OWNED state (there is no `references` p
 `undefined` — no picker, no chip row, no typeahead.
 The mic button is ALSO opt-in: hidden until a consumer calls `onMicClick`, so a consumer that never wires
 voice input never renders (or exposes to a naive "first `ui-button` in the composer" selector) a dead
-button. Only the editor and the send button are always present.
+button. The attach button follows the identical law, revealed only by `onAttach`. Only the editor and the
+send button are always present.
 
 ## `busy` is load-bearing behavior, not just styling
 

@@ -442,6 +442,9 @@ export class UIConversationElement extends UIElement {
   // GH #891/SPEC-R11 — the capabilities panel's ONE callback up, forwarded verbatim (id, new state).
   #onCapabilityToggleCb: ((id: string, included: boolean) => void) | undefined
   #onMicClickCb: (() => void) | undefined
+  // GH #1211 — pass-through of the composed child's own attach callback, forwarded the SAME opt-in way
+  // as `#onMicClickCb` (below) — both reveal a hidden composer button as their visible side effect.
+  #onAttachCb: ((files: readonly File[]) => void) | undefined
   // SPEC-R12 (TKT-0071) — a consumer-supplied render hook for agent-turn note / system-bubble text.
   // `undefined` (default) ⇒ byte-identical plain `textContent`, no dependency. NEVER applied to
   // `addUserMessage` (SPEC-R4 AC1 — user text stays unescaped/unmodified, deliberately unaffected).
@@ -545,6 +548,9 @@ export class UIConversationElement extends UIElement {
       // regardless of whether they ever asked for voice input. Only forward if a real callback is ALREADY
       // registered (the pre-connect registration case) — `onMicClick` below handles the post-connect case.
       if (this.#onMicClickCb !== undefined) composer.onMicClick(() => this.#onMicClickCb?.())
+      // GH #1211 — same reasoning as `onMicClick` immediately above: forwarding unconditionally would
+      // reveal the attach button for every consumer regardless of whether it ever asked for it.
+      if (this.#onAttachCb !== undefined) composer.onAttach((files) => this.#onAttachCb?.(files))
 
       this.#composer = composer
       // Canonical band order, normalized by re-append (ADR-0180 clause 4) — `append` MOVES an existing
@@ -1184,6 +1190,15 @@ export class UIConversationElement extends UIElement {
     // Forward immediately if the composer already exists (post-connect case); the pre-connect case is
     // handled at compose time in connected() (LLD CVC-C5, code-reviewer finding F1).
     this.#composer?.onMicClick(() => this.#onMicClickCb?.())
+  }
+
+  /** GH #1211 — fires with every `File` the composer's attach button/drop/paste produced (one call per
+   *  gesture). OPT-IN, the `onMicClick` precedent verbatim: the composed child's attach button stays
+   *  hidden and its drop/paste stay unintercepted until this is actually called. Safe to call before or
+   *  after connect (the same two-case split `onMicClick` documents immediately above). */
+  onAttach(cb: (files: readonly File[]) => void): void {
+    this.#onAttachCb = cb
+    this.#composer?.onAttach((files) => this.#onAttachCb?.(files))
   }
 
   /** SPEC-R12 (TKT-0071) — registers a render hook applied to agent-turn `note` text and system-bubble
