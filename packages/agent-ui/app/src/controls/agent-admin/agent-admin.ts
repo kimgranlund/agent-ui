@@ -190,6 +190,7 @@ import {
   type AdminAgentSurfaceTurn,
   type AdminTurn,
   type AdminTurnRequest,
+  type TeamDeclaration,
 } from './agent-admin-schema.ts'
 // GH #844, widened admin-wide by GH #866 — the question-mark help affordance (a `ui-tooltip` card per
 // group header, section header and element row). The factory owns the DOM shape + the `ui-tooltip`/
@@ -621,6 +622,11 @@ export class UIAgentAdminElement extends UIElement {
   // GH #889 — the dev-debug export's OWN registration seam, the Import/Export shape verbatim (a bare
   // callback, menu-only consumer).
   #exportDebugBundleRequest: (() => void) | undefined
+  // GH #1196 (ADR-0203 clause 4) — the SAME registration shape, ONE ADDITIVE member: a model-declared
+  // team roster, consumed by the site (persona minting + `AgentTeam` validation/persistence are
+  // SITE-owned, never this package's — the DAG this file's own layering already fixes). Carries the
+  // declaration itself (not an id), read at INVOKE time exactly like `#deleteAgentRequest`'s id.
+  #teamDeclaredRequest: ((team: TeamDeclaration) => void) | undefined
   // `setAgentRoster` is data-in, not a callback — but the SAME "safe before or after connect" law applies
   // (LLD §16.3), so a pre-connect call is held here and applied once `#agentSelectEl` exists
   // (`#applyAgentRoster`), exactly the `#generateRequest`/`#reflectAuthorEntry` build-time-reflect shape.
@@ -3593,6 +3599,19 @@ export class UIAgentAdminElement extends UIElement {
             } else {
               patchIgnored = true // logged below; zero writes, no error surface (SPEC-R30's degrade law)
             }
+          } else if (event.kind === 'team') {
+            // GH #1196 (ADR-0203 clause 4) — the SAME conjunctive fence `patch` applies above (store-
+            // identity AND a fresh `SURFACE_AUTHORING_KEY` read): a team declaration is exactly as
+            // model-authored-writable-authority-sensitive as a patch, so it earns the identical gate,
+            // never a second one. Unlike `patch`, this component does not mutate anything itself — persona
+            // minting, `AgentTeam` validation, and persistence are all SITE-owned (this package's own DAG
+            // fences it from `saveImportedPersona`/`saveAgentTeam`) — it only forwards the declaration
+            // onward through `onTeamDeclared`, once, per the same degrade law (`patch`'s own else-branch):
+            // an unregistered callback, or a fence miss, drops the declaration silently, never an error
+            // surface.
+            const fenced = drivingStore !== undefined && drivingStore === this.authoringStore
+            const gateOn = isAuthoringSurfaceEnabled(drivingStore?.get(SURFACE_AUTHORING_KEY))
+            if (fenced && gateOn) this.#teamDeclaredRequest?.(event.team)
           } else if (event.kind === 'plan') {
             // ADR-0182 cl.4/cl.5 — the ALREADY-SHIPPED `plan` arm, reused verbatim; consumption here is
             // pure rendering (no store write, unlike the `patch` arm above), so no fence/gate check is
@@ -4402,6 +4421,16 @@ export class UIAgentAdminElement extends UIElement {
   onExportDebugBundleRequest(callback: () => void): void {
     this.#exportDebugBundleRequest = callback
     this.#applyActionAvailability()
+  }
+
+  /** GH #1196 (ADR-0203 clause 4) — register the Builder's team-shaped generation path. No header
+   *  affordance drives this seam (unlike Import/Export/Delete above) — it fires only from INSIDE the
+   *  authoring turn loop's own `team` consumption arm (`#runSurfaceTurn`), so there is no visibility
+   *  gate to (re)apply here, just last-registration-wins the same as every sibling in this family.
+   *  Unregistered ⇒ a declared team is silently dropped (SPEC-R30's degrade posture, the SAME law
+   *  `patch` already follows when its own fence misses). */
+  onTeamDeclared(callback: (team: TeamDeclaration) => void): void {
+    this.#teamDeclaredRequest = callback
   }
 
   /**

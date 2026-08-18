@@ -298,6 +298,10 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
           // wrapper consumes it (the shared flow-chrome affordance is page chrome, ADR-0198 cl.3) and
           // filters it before the component ever sees it. `readMetaLine` already enforced literal-true.
           if (meta.a2uiMeta.flowEnd === true) yield { kind: 'flowEnd' }
+          // GH #1196 (ADR-0203 clause 4) — a declared team roster peels into its own typed event, the
+          // SAME `personaPatch` peel precedent above: no integrity check, no gate read here — this
+          // runner peels, the component decides (fence + gate) whether it is ever consumed.
+          if (meta.a2uiMeta.team) yield { kind: 'team', team: meta.a2uiMeta.team }
           continue // the meta-line is never ingested (ADR-0088 §1)
         }
         // genui-surface.spec.md SPEC-R1 — a genui line is neither an A2uiServerMessage nor a meta-line

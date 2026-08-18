@@ -78,7 +78,7 @@ import type { AgentProvider, Effort, ExecuteTool, ProviderEvent, Session, ToolDe
 import { buildSystemPrompt } from './system-prompt.ts'
 import { frameClientMessage } from './session.ts'
 import { readMetaLine } from './meta-line.ts'
-import type { AskDeclaration, PersonaPatch, PlanDeclaration, TurnProgress, TurnTrace } from './meta-line.ts'
+import type { AskDeclaration, PersonaPatch, PlanDeclaration, TeamDeclaration, TurnProgress, TurnTrace } from './meta-line.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
 import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-skills.ts'
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
@@ -607,6 +607,9 @@ function assembleFromRaw(raw: string): { output: A2uiOutput; healedCount: number
  * it to `true | undefined`). Before GH #1168 this recompose DROPPED the field entirely (peel and
  * formatMetaLine both omitted it), so even a compliant model's `flowEnd` never reached the wire —
  * fixed here as the pass-through wiring the #1168 correction round relies on.
+ * `team` (GH #1196 / ADR-0203 clause 4) is peeled on the SAME plan/personaPatch terms — no integrity
+ * check, passed through unchanged, gate-blind: whether a declared team is ever CONSUMED is entirely
+ * the host's call, exactly like `personaPatch`.
  */
 function peelMetaLine(raw: string): {
   note: string | undefined
@@ -614,9 +617,10 @@ function peelMetaLine(raw: string): {
   plan: PlanDeclaration | undefined
   personaPatch: PersonaPatch | undefined
   flowEnd: true | undefined
+  team: TeamDeclaration | undefined
   rest: string
 } {
-  const none = { note: undefined, ask: undefined, plan: undefined, personaPatch: undefined, flowEnd: undefined }
+  const none = { note: undefined, ask: undefined, plan: undefined, personaPatch: undefined, flowEnd: undefined, team: undefined }
   const lines = raw.split('\n')
   const idx = lines.findIndex((l) => l.trim().length > 0) // first NON-EMPTY line
   if (idx === -1) return { ...none, rest: raw } // all-blank raw — nothing to peel
@@ -628,6 +632,7 @@ function peelMetaLine(raw: string): {
     plan: meta.a2uiMeta.plan,
     personaPatch: meta.a2uiMeta.personaPatch,
     flowEnd: meta.a2uiMeta.flowEnd,
+    team: meta.a2uiMeta.team,
     rest: lines.slice(idx + 1).join('\n'),
   }
 }
@@ -705,7 +710,9 @@ function peelGenuiLines(afterMeta: string): GenuiPeelResult {
  * (ADR-0198 cl.1 / GH #1168 — through unchanged when the model declared it, key omitted entirely when
  * absent; NEVER synthesized by the runtime — a missing `flowEnd` after the #1168 correction round ships
  * missing, tallied on the trace instead), plus the `TurnTrace` `produce()` assembled for this
- * turn (never the model's raw wrapper verbatim — the model never has `trace`). */
+ * turn (never the model's raw wrapper verbatim — the model never has `trace`). The model's own `team`
+ * declaration (GH #1196 / ADR-0203 clause 4) rides on the SAME `personaPatch` terms — through
+ * unchanged when present, key omitted entirely when absent, gate-blind. */
 function formatMetaLine(
   note: string | undefined,
   trace: TurnTrace,
@@ -713,8 +720,9 @@ function formatMetaLine(
   plan: PlanDeclaration | undefined,
   personaPatch: PersonaPatch | undefined,
   flowEnd: true | undefined,
+  team: TeamDeclaration | undefined,
 ): string {
-  return JSON.stringify({ a2uiMeta: { note, ask, plan, personaPatch, flowEnd, trace } })
+  return JSON.stringify({ a2uiMeta: { note, ask, plan, personaPatch, flowEnd, team, trace } })
 }
 
 /**
@@ -1039,7 +1047,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
     }
     lastRaw = raw
 
-    const { note, ask, plan, personaPatch, flowEnd, rest: afterMeta } = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 / ADR-0174 cl.2 / ADR-0178 cl.1 / ADR-0198 cl.1 — peeled BEFORE heal/validate
+    const { note, ask, plan, personaPatch, flowEnd, team, rest: afterMeta } = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 / ADR-0174 cl.2 / ADR-0178 cl.1 / ADR-0198 cl.1 / GH #1196 — peeled BEFORE heal/validate
     // genui-surface SPEC-R1 — peeled SECOND, still BEFORE heal/validate: a genui line (valid or not) never
     // reaches the shared A2UI healer/validator, which doesn't know this kind exists. Recomputed FRESH every
     // round (never carried over): a round's genui candidate belongs to THAT round's own raw output, never
@@ -1103,7 +1111,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       // not only to the retried case already covered by `failuresFedBack` above.
       if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
       if (emitProgress) yield formatProgressLine({ stage: 'done' }) // before the final (note-only/genui-only) yield
-      if (note !== undefined) yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined, plan, personaPatch, flowEnd)
+      if (note !== undefined) yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined, plan, personaPatch, flowEnd, team)
       if (genuiLine !== undefined) yield genuiLine // SPEC-R1 AC2 — ships intact, the model's own line verbatim
       return
     }
@@ -1198,7 +1206,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
         // otherwise-successful round still needs to land on the trace, not just the retried case.
         if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
         if (flowEndFedBack && flowEnd === undefined) failureCodes.push('FLOW_END_UNCORRECTED') // GH #1168 — the correction round came back content-bearing and still without flowEnd: ships unchanged, tallied
-        yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk, plan, personaPatch, flowEnd) // meta-line FIRST
+        yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk, plan, personaPatch, flowEnd, team) // meta-line FIRST
       }
       // genui-surface SPEC-R1 — a genui structural failure on an OTHERWISE-valid A2UI round is DROPPED
       // silently here (never manufactures an extra round purely to fix it: "degrade, never halt" — the
