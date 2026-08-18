@@ -1,0 +1,46 @@
+{
+  "skill": "a2ui-review",
+  "_note": "Preload-routing tripwire for the a2ui-review-agent seat's grading standards. Positives: grading a payload / catalog row / corpus record. Negative: the catalog PAGE's card demonstrations, fenced to a2ui-catalog-rendering-review (reciprocal fence, 2026-08-18).",
+  "cases": [
+    {
+      "id": "t01",
+      "prompt": "grade this A2UI payload against the payload rubric",
+      "expect": "trigger"
+    },
+    {
+      "id": "t02",
+      "prompt": "score this catalog row — catalog.json entry, factory and tests",
+      "expect": "trigger"
+    },
+    {
+      "id": "t03",
+      "prompt": "judge this corpus record for admission to the shelf",
+      "expect": "trigger"
+    },
+    {
+      "id": "t04",
+      "prompt": "grab screenshots of each example in a2ui-catalog.html and review them",
+      "expect": "no-trigger"
+    },
+    {
+      "id": "t05",
+      "prompt": "is the left side ok and does the right side render correctly on the Attachment catalog card?",
+      "expect": "no-trigger"
+    },
+    {
+      "id": "t06",
+      "prompt": "score this compose-time mechanism function against a2ui-mechanism.md",
+      "expect": "trigger"
+    },
+    {
+      "id": "t07",
+      "prompt": "emit the ADR-0068 VerdictsFile for these corpus records",
+      "expect": "trigger"
+    },
+    {
+      "id": "t08",
+      "prompt": "review the a2ui catalog examples across the tier tabs",
+      "expect": "no-trigger"
+    }
+  ]
+}

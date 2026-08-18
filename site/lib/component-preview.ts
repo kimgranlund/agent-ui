@@ -254,6 +254,13 @@ const A2UI_INITIAL: Record<string, Record<string, string>> = {
   // instant the factory leaves them unset, so seeding them here would only duplicate what the control
   // already does for free.
   Image: { src: IMAGE_SAMPLE_SRC, alt: IMAGE_SAMPLE_ALT },
+  // Attachment (a2ui-catalog-rendering-review, 2026-08-18) — the catalog carries no defaults, and an unseeded
+  // ui-attachment falls back to the bare category label ("File"): a chip that demonstrates nothing. Seed the
+  // three VISIBLE wire props (`name` → filename, `mimeType` → glyph + category, `sizeBytes` → the meta cell),
+  // mirroring documentRowToolbarSeed's own `doc_info` idiom (catalog-coverage.ts) so the card teaches what agents
+  // actually emit. `href` stays unseeded on purpose: attachment.ts renders it nowhere yet (the LLD-C6 leg is
+  // deferred), so a seed would be invisible on R — the rubric's `demonstrable` set excludes it.
+  Attachment: { name: 'Q3 roadmap.pdf', mimeType: 'application/pdf', sizeBytes: '428000' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
