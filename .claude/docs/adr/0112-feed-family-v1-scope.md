@@ -339,3 +339,20 @@ reader seeing `<ui-attachment size="...">` would reasonably expect the fleet's w
 byte count. Clause 4's substantive intent (an embedder-supplied, non-wire byte count) is unchanged —
 only the name. `attachment.ts`/`attachment.md` and their tests reflect the rename; no other file in this
 record needs updating (no other clause names this prop).
+
+## Amendment (2026-08-17, proposed) — Toast enters the catalog; ToastRegion's exclusion stands (GH [#1184](https://github.com/kimgranlund/agent-ui/issues/1184), Kim's outcomes-are-toasts ruling)
+
+Kim's 2026-08-17 ruling (GH #1184: ephemeral outcome/status announcements are toasts, not badges)
+REVERSES the Toast half of clause 6: `Toast` is now a default-catalog type (PR #1186 — bespoke
+`toastFactory`: `label` → adopt-once `textContent` (non-bindable by the control's own contract),
+`urgent`/`duration` accessors, `action` a curated omission since its `select` event carries no
+serializable value slot; an agent-emitted Toast renders INLINE where placed and self-removes on
+close/expiry). `Toast` is drained from the code `EXCLUSION_ALLOWLIST`. **`ToastRegion`'s exclusion
+is unchanged and PERMANENT** — the top-layer host and the `show()` singleton remain app chrome, for
+exactly this record's original reasons. Grammar routes ephemeral outcomes to Toast; Badge keeps
+persistent inline status. Every affected code site cites GH #1184.
+
+**Repairs**
+- [ ] none — PR #1186 landed the reversal in full (catalog row, factory, conformance, feed
+  disposition, tier map, grammar, playbooks); this amendment is the decision record catching up
+  with the ruled, shipped state.

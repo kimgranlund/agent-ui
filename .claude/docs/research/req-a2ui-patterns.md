@@ -323,3 +323,9 @@ client-side per ADR-0196).
 - Jotform, chatbot best practices + welcome examples — https://www.jotform.com/ai/agents/chatbot-best-practices/ · https://www.jotform.com/ai/agents/ai-chatbot-welcome-examples/
 - FlowHunt, 30+ chatbot welcome messages — https://www.flowhunt.io/blog/30-chatbot-welcome-messages-to-make-a-great-first-impression/
 - In-repo primaries: `packages/agent-ui/a2ui/src/agent/prompts/grammar.md` (full read) · GH #1101 (+ADR-0198 arc, Kim's live UX ruling 2026-08-17) · GH #1164 (closed) · `site/pages/agent-admin-libraries.ts` (booking-flow playbook) · `packages/agent-ui/a2ui/src/examples/generative-form.ts` (SPEC-R4 progressive delivery, root-once wrapper idiom)
+
+## Kim rulings (2026-08-17, find-open-questions round — the three forks are CLOSED)
+
+- **R3 greet home → mini-skill** (as recommended): a persona-conditional `greeting-card` mini-skill; grammar stays greeting-silent.
+- **R3 greet feed-placement → ask mechanism + exempt id class**: the greet card rides the existing meta-line `ask` field with a distinguished id class (e.g. `greet-1`) exempt from the answered-ask freeze — no new wire field.
+- **R4 settle placement → SHARE THE CLOSING TURN** (Kim overrode the client-side recommendation): the flow's closing turn carries exactly ONE settle updateComponents (strip the confirmed receipt's buttons + settled badge) alongside the courtesy-close note + flowEnd. This is a deliberate ADR-0198 amendment: cl.2's "closing turn emits NO A2UI" gains the one-settle-update carve-out. The mobilization's grammar-amendment item must bundle this carve-out with the R2 mid-flow carve-out so ADR-0198 is amended once, not twice.
