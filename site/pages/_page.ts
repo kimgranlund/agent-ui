@@ -446,21 +446,33 @@ export const NAV: readonly NavGroup[] = [
   // component admission — no new ADR). NOT a fallback chain like ui-avatar above — just the <img> mechanics.
   {
     label: 'ui-image',
-    links: [{ href: './image-doc.html', label: 'API' }],
+    links: [
+      { href: './image-demo.html', label: 'Demo' },
+      { href: './image-doc.html', label: 'API' },
+    ],
   },
   // GH #1209 — the native media players (tier=display ⇒ {doc} only, conventional admissions per the
   // ui-image ruling): real <video>/<audio controls>, no custom chrome.
   {
     label: 'ui-video',
-    links: [{ href: './video-doc.html', label: 'API' }],
+    links: [
+      { href: './video-demo.html', label: 'Demo' },
+      { href: './video-doc.html', label: 'API' },
+    ],
   },
   {
     label: 'ui-audio',
-    links: [{ href: './audio-doc.html', label: 'API' }],
+    links: [
+      { href: './audio-demo.html', label: 'Demo' },
+      { href: './audio-doc.html', label: 'API' },
+    ],
   },
   {
     label: 'ui-attachment',
-    links: [{ href: './attachment-doc.html', label: 'API' }],
+    links: [
+      { href: './attachment-demo.html', label: 'Demo' },
+      { href: './attachment-doc.html', label: 'API' },
+    ],
   },
   {
     label: 'ui-toast',
@@ -518,7 +530,10 @@ export const NAV: readonly NavGroup[] = [
   },
   {
     label: 'ui-swiper-label',
-    links: [{ href: './swiper-label-doc.html', label: 'API' }],
+    links: [
+      { href: './swiper-label-demo.html', label: 'Demo' },
+      { href: './swiper-label-doc.html', label: 'API' },
+    ],
   },
   // ADR-0195 — ui-drill, the N-level drill-down panel container (tier=pattern ⇒ {doc, demo}, GH #954).
   {
