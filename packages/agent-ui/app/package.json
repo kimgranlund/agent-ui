@@ -45,6 +45,7 @@
     "./agent-admin-prompt-lint": "./src/controls/agent-admin/prompt-lint.ts",
     "./agent-admin-persona-patch": "./src/controls/agent-admin/persona-patch.ts",
     "./agent-admin-resource-idb": "./src/controls/agent-admin/resource-idb-store.ts",
+    "./agent-admin-team": "./src/controls/agent-admin/agent-team.ts",
     "./document-extraction": "./src/lib/document-extraction.ts",
     "./document-budget": "./src/lib/document-budget.ts"
   },
