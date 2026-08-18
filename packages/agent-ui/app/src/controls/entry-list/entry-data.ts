@@ -39,6 +39,19 @@ export interface Entry {
    *  kinds only (skill/workflow/resource/tool — `entries.ts`'s `AVAILABILITY_KINDS`); on any other kind
    *  the member is inert: readable, meaningless, and never branched on. */
   availability?: EntryAvailability
+  /** GH #1212 (ADR-0193 IndexedDB tier, `agent-admin/resource-idb-store.ts`) — present ONLY on a
+   *  `resource` entry whose TEXT routed to the IndexedDB tier because it exceeded
+   *  `RESOURCE_IDB_TEXT_THRESHOLD_CHARS` at mint time: `content` then holds a short honest placeholder
+   *  (never the real text) and the real text lives in the IndexedDB tier under this opaque key. ABSENT
+   *  (every entry minted before this ticket, every entry at/under the threshold, every non-resource kind)
+   *  means `content` IS the real text — the same read-time-default law `availability` states above: a
+   *  byte-identical read for anything that predates this field. */
+  idbRef?: string
+  /** Paired with `idbRef` — the routed entry's TRUE character length, kept inline (a few bytes) so the
+   *  per-agent aggregate knowledge-budget sum (`document-ingest.ts`'s `exceedsAgentKnowledgeBudget`) stays
+   *  correct with NO IndexedDB round trip (`resource-idb-store.ts`'s `entryTextLength`). Absent whenever
+   *  `idbRef` is absent — `content.length` is already the true length in that case. */
+  contentLength?: number
 }
 
 /** SPEC-R1's read-time default, in ONE place: anything that is not exactly `'invocable'` — the member

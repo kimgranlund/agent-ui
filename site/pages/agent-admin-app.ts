@@ -91,6 +91,9 @@ import { DEFAULT_MODEL_ID, defaultAgentConfigSchema, initialValuesFor } from '@a
 // GH #921 — the card's Capabilities/Surface summaries read straight off the persona's OWN stored config.
 import { ENTRY_KINDS, initialEntryValues } from '@agent-ui/app/agent-admin-entries'
 import { entriesStoreKey, type Entry } from '@agent-ui/app/entry-data'
+// GH #1212 — the export path's own need: a routed resource entry's REAL text, materialized (never a
+// placeholder) and stripped of its browser-local `idbRef` (`resource-idb-store.ts`'s own header).
+import { resourceEntriesForExport } from '@agent-ui/app/agent-admin-resource-idb'
 
 const root = document.querySelector('#app') ?? document.body
 
@@ -274,8 +277,25 @@ function notify(message: string, urgent = false): void {
   else console.info(`[agent-admin-app] ${message}`)
 }
 
-function exportActivePersona(): void {
-  const text = personaFileText(exportPersonaFile(active, personaStore(active)))
+// GH #1212 — a `PersonaStateReader`-shaped wrapper over a live store: every OTHER key reads through
+// unchanged, but `entries:resource` answers the MATERIALIZED, export-ready projection (real content
+// inlined, `idbRef`/`contentLength` stripped — `resource-idb-store.ts`'s own `resourceEntriesForExport`).
+// `exportPersonaFile`/`buildDebugBundle` stay pure, synchronous functions unchanged — only this page's
+// own export glue awaits the one async step (a user-triggered click can afford it) before calling them.
+async function materializedReaderFor(store: ReturnType<typeof personaStore>): Promise<{ get(key: string): unknown }> {
+  const resourceKey = entriesStoreKey(ENTRY_KINDS.resource)
+  const rawResources = store.get(resourceKey)
+  const materialized = Array.isArray(rawResources) ? await resourceEntriesForExport(rawResources as Entry[]) : rawResources
+  return {
+    get(key: string): unknown {
+      return key === resourceKey ? materialized : store.get(key)
+    },
+  }
+}
+
+async function exportActivePersona(): Promise<void> {
+  const reader = await materializedReaderFor(personaStore(active))
+  const text = personaFileText(exportPersonaFile(active, reader))
   const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }))
   const link = document.createElement('a')
   link.href = url
@@ -296,8 +316,14 @@ function exportActivePersona(): void {
 // narrowing). The zip mechanism itself (`buildZip`, STORE/uncompressed) lives in the zero-dep-adjacent
 // `site/lib/zip-writer.ts`; this function is pure browser I/O, the `exportActivePersona` shape mirrored.
 
-function exportDebugBundle(): void {
-  const agents = roster.map((persona) => ({ persona, store: personaStore(persona) }))
+async function exportDebugBundle(): Promise<void> {
+  // GH #1212 — every roster agent's own resource entries materialize (real content, refs stripped)
+  // before `buildDebugBundle` ever sees them, the SAME `materializedReaderFor` wrapper
+  // `exportActivePersona` uses — a persona whose store carries no `entries:resource` key at all costs
+  // nothing extra (the wrapper's own `Array.isArray` guard skips straight to the raw `store.get`).
+  const agents = await Promise.all(
+    roster.map(async (persona) => ({ persona, store: await materializedReaderFor(personaStore(persona)) })),
+  )
   let built: ReturnType<typeof buildDebugBundle>
   try {
     built = buildDebugBundle({
