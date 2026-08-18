@@ -201,6 +201,47 @@ describe('GH #722 — the header-marker literals mirror timeline-item\'s default
   })
 })
 
+describe('GH #1222 — done/success reads neutral, not green (Kim ruling 2026-08-18: CSS content pin)', () => {
+  // A content-scan pin, cheap and engine-independent — status-stream.browser.test.ts proves the REAL
+  // computed color; this guards the literal token wiring from silently drifting back to `success` (or
+  // being "fixed" by touching timeline-item.css's own shared default, which this ticket deliberately
+  // leaves alone so a standalone ui-timeline outside the agent activity stream keeps its green done marker).
+  it('the header done-status ink maps to the neutral role, never success', async () => {
+    const { readFileSync } = await import('node:fs')
+    const here = import.meta.dirname ?? new URL('.', import.meta.url).pathname
+    const css = readFileSync(`${here}/status-stream.css`, 'utf8')
+    const doneRule = css.match(/\[data-status='done'\]\)\s*\{\s*--ui-status-stream-header-status-ink:\s*([^;]+);/)
+    expect(doneRule, 'the header done-status rule must be declared').not.toBeNull()
+    expect(doneRule![1]!.trim()).toBe('var(--md-sys-color-neutral)')
+    expect(css).not.toMatch(/--ui-status-stream-header-status-ink:\s*var\(--md-sys-color-success\)/)
+  })
+
+  it('error/warning header status ink stay semantic — only success→neutral remapped', async () => {
+    const { readFileSync } = await import('node:fs')
+    const here = import.meta.dirname ?? new URL('.', import.meta.url).pathname
+    const css = readFileSync(`${here}/status-stream.css`, 'utf8')
+    const errorRule = css.match(/\[data-status='error'\]\)\s*\{\s*--ui-status-stream-header-status-ink:\s*([^;]+);/)
+    const warningRule = css.match(/\[data-status='warning'\]\)\s*\{\s*--ui-status-stream-header-status-ink:\s*([^;]+);/)
+    expect(errorRule, 'the header error-status rule must be declared').not.toBeNull()
+    expect(warningRule, 'the header warning-status rule must be declared').not.toBeNull()
+    expect(errorRule![1]!.trim()).toBe('var(--md-sys-color-danger)')
+    expect(warningRule![1]!.trim()).toBe('var(--md-sys-color-warning)')
+  })
+
+  it('the composed entries\' own done marker is repointed to neutral via --ui-status-stream-entry-done-ink, never touching timeline-item.css\'s shared default', async () => {
+    const { readFileSync } = await import('node:fs')
+    const here = import.meta.dirname ?? new URL('.', import.meta.url).pathname
+    const streamCss = readFileSync(`${here}/status-stream.css`, 'utf8')
+    const itemCss = readFileSync(`${here}/../timeline-item/timeline-item.css`, 'utf8')
+    expect(streamCss).toMatch(/--ui-status-stream-entry-done-ink:\s*var\(--md-sys-color-neutral\)/)
+    expect(streamCss).toMatch(
+      /ui-timeline-item\[status='done'\]\s*\{\s*--ui-timeline-item-marker-ink:\s*var\(--ui-status-stream-entry-done-ink\)/,
+    )
+    // timeline-item.css's own shared default is untouched — a standalone ui-timeline still gets success green.
+    expect(itemCss).toMatch(/\[status='done'\]\)\s*\{\s*--ui-timeline-item-marker-ink:\s*var\(--md-sys-color-success\);/)
+  })
+})
+
 describe('ui-status-stream — keyed update (SPEC-R9 AC1/AC2)', () => {
   it('transitions the SAME element in place — no second element appended for the same key', () => {
     const { el } = makeStream()

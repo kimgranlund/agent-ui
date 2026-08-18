@@ -103,18 +103,41 @@
      routes both through its own chain, same as every other dimensional constant here). */
   --ui-status-stream-pending-opacity: var(--ui-pending-opacity);
   --ui-status-stream-pending-duration: var(--ui-pending-duration);
+
+  /* GH #1222 (Kim ruling 2026-08-18) — the SAME success→neutral remap, for the composed entries
+     (ui-timeline-item children this host appends) rather than the header above: a done ENTRY's own
+     glyph reads just as loud as the header did. Consumed by the override rule below, which repoints
+     each done entry's own public --ui-timeline-item-marker-ink token — timeline-item.css's shared
+     `[status='done']` default (still `--md-sys-color-success`) is deliberately left untouched, so a
+     standalone `ui-timeline` outside the agent activity stream keeps its green done marker. */
+  --ui-status-stream-entry-done-ink: var(--md-sys-color-neutral);
 }
 :where(ui-status-stream [data-part='header'][data-status='active']) {
   --ui-status-stream-header-status-ink: var(--md-sys-color-primary);
 }
+/* GH #1222 (Kim ruling 2026-08-18) — done/success reads too loud: only the success→green mapping
+   remaps to the neutral family; error/warning below stay semantic (danger/warning) so a real
+   problem still reads at a glance. `--md-sys-color-neutral` is the plain glyph-tier role — the
+   acceptance's own split (headers/steps text: on-surface, meta: on-surface-variant, glyphs:
+   neutral) already names this ink as the "glyph" tier, not the text tiers those other roles cover. */
 :where(ui-status-stream [data-part='header'][data-status='done']) {
-  --ui-status-stream-header-status-ink: var(--md-sys-color-success);
+  --ui-status-stream-header-status-ink: var(--md-sys-color-neutral);
 }
 :where(ui-status-stream [data-part='header'][data-status='error']) {
   --ui-status-stream-header-status-ink: var(--md-sys-color-danger);
 }
 :where(ui-status-stream [data-part='header'][data-status='warning']) {
   --ui-status-stream-header-status-ink: var(--md-sys-color-warning);
+}
+
+/* GH #1222 — the composed entries' own done marker, repointed via ui-timeline-item's PUBLIC
+   --ui-timeline-item-marker-ink token (its sanctioned host-override point — the same pattern a
+   consumer already uses on this host's own --ui-status-stream-max-block-size). Any depth, like the
+   action/source overrides below (SPEC-R6's grouped entries nest their own <ui-timeline>, and a
+   grouped step is still part of THIS activity trace). error/warning entries are untouched here —
+   timeline-item.css's own `[status='error'|'warning']` rules keep painting their semantic ink. */
+:where(ui-status-stream) ui-timeline-item[status='done'] {
+  --ui-timeline-item-marker-ink: var(--ui-status-stream-entry-done-ink);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-status-stream) consumes ONLY --ui-status-stream-* ════════════════ */

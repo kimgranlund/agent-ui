@@ -354,6 +354,65 @@ describe('ui-status-stream — the completion invariant, cross-engine (SPEC-R11)
   })
 })
 
+// ── GH #1222 (Kim ruling 2026-08-18) — done/success renders NEUTRAL, real-engine proof. Only the
+// success→green mapping remaps; error/warning keep painting their semantic danger/warning ink so a
+// real problem still reads at a glance. `roleColor` resolves a --md-sys-color-* role through the SAME
+// real CSS engine the marker itself paints through — never a raw string compare of the token's own
+// (possibly light-dark()-wrapped) declaration text. ──────────────────────────────────────────────────
+describe('ui-status-stream — done/success reads neutral, not green (GH #1222)', () => {
+  const roleColor = (token: string): string => {
+    const probe = document.createElement('div')
+    probe.style.color = `var(${token})`
+    document.body.append(probe)
+    const resolved = getComputedStyle(probe).color
+    probe.remove()
+    return resolved
+  }
+
+  it('a settled DONE header marker resolves to the neutral role, not success green', async () => {
+    const { stream } = mount('<ui-status-stream header label="Agent activity"></ui-status-stream>')
+    stream.appendEntry({ key: 'a', status: 'done', label: 'Validated' })
+    stream.finalize()
+    await raf2()
+    const marker = stream.querySelector('[data-part="header-marker"]') as HTMLElement
+    expect(getComputedStyle(marker).color, 'the done header marker must resolve to --md-sys-color-neutral').toBe(
+      roleColor('--md-sys-color-neutral'),
+    )
+    expect(getComputedStyle(marker).color, 'it must no longer resolve to the success role').not.toBe(roleColor('--md-sys-color-success'))
+  })
+
+  it('a DONE entry\'s own marker (the composed ui-timeline-item child) resolves to the SAME neutral role, not timeline-item.css\'s shared success default', async () => {
+    const { stream } = mount('<ui-status-stream label="Agent activity"></ui-status-stream>')
+    stream.appendEntry({ key: 'a', status: 'done', label: 'Validated' })
+    await raf2()
+    const item = stream.querySelector(':scope > ui-timeline-item') as HTMLElement
+    const marker = item.querySelector('[data-part="marker"]') as HTMLElement
+    expect(getComputedStyle(marker).color, 'a done entry composed inside the stream must read neutral').toBe(
+      roleColor('--md-sys-color-neutral'),
+    )
+  })
+
+  it('an ERROR header marker keeps the semantic danger ink (only success remaps)', async () => {
+    const { stream } = mount('<ui-status-stream header label="Agent activity"></ui-status-stream>')
+    stream.appendEntry({ key: 'a', status: 'error', label: 'Failed' })
+    stream.fail()
+    await raf2()
+    const marker = stream.querySelector('[data-part="header-marker"]') as HTMLElement
+    expect(getComputedStyle(marker).color, 'error must still read the danger role').toBe(roleColor('--md-sys-color-danger'))
+  })
+
+  it('a WARNING entry keeps the semantic warning ink on its own composed marker', async () => {
+    const { stream } = mount('<ui-status-stream label="Agent activity"></ui-status-stream>')
+    stream.appendEntry({ key: 'a', status: 'warning', label: 'Partial match' })
+    await raf2()
+    const item = stream.querySelector(':scope > ui-timeline-item') as HTMLElement
+    const marker = item.querySelector('[data-part="marker"]') as HTMLElement
+    expect(getComputedStyle(marker).color, 'warning entries are untouched by the GH #1222 remap').toBe(
+      roleColor('--md-sys-color-warning'),
+    )
+  })
+})
+
 // ── the REAL-stream proof (SPEC-R19) — the in-repo arena flagship match, fed via readNdjsonLines ─────────
 
 interface WireLine { wire: { from: string; to: string } }
