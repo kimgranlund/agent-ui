@@ -506,7 +506,9 @@
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
         "value": { "type": { "type": ["string", "number"] }, "bindable": true, "mapsTo": "figure" },
         "delta": { "type": { "type": "number" }, "bindable": true, "mapsTo": "delta" },
-        "caption": { "type": { "type": "string" }, "bindable": true, "mapsTo": "caption" }
+        "caption": { "type": { "type": "string" }, "bindable": true, "mapsTo": "caption" },
+        "variant": { "type": { "type": "string", "enum": ["tile", "ring"] }, "mapsTo": "variant" },
+        "percent": { "type": { "type": "number" }, "bindable": true, "mapsTo": "percent" }
       }
     },
 

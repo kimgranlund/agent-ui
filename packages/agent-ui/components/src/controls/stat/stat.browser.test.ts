@@ -107,6 +107,67 @@ describe('ui-stat — delta direction as text, never color (SPEC-R9 AC1/AC2)', (
   })
 })
 
+describe('ui-stat — variant="ring" (GH#1208): renders, percent maps to arc via computed background, both themes', () => {
+  it('the ring paints a non-collapsed square box at the --ui-stat-ring-size diameter', () => {
+    const el = mount('<ui-stat variant="ring" label="Storage" value="72%" percent="72"></ui-stat>')
+    const ring = el.querySelector('[data-part="ring"]') as HTMLElement
+    const size = tokenPx(el, '--ui-stat-ring-size')
+    expect(size, 'anti-vacuous: the ring-size token must resolve to a real px value').toBeGreaterThan(0)
+    const box = ring.getBoundingClientRect()
+    expect(box.width).toBeGreaterThan(0)
+    expect(box.height).toBeGreaterThan(0)
+    // roughly square (a donut, not a squashed oval) and roughly at the token's diameter
+    expect(Math.abs(box.width - box.height)).toBeLessThanOrEqual(1)
+    expect(box.width).toBeGreaterThanOrEqual(size - 1)
+  })
+
+  it('percent maps to the arc via computed background: two different percentages paint DIFFERENT gradients', () => {
+    const low = mount('<ui-stat variant="ring" percent="10"></ui-stat>')
+    const high = mount('<ui-stat variant="ring" percent="90"></ui-stat>')
+    const lowRing = low.querySelector('[data-part="ring"]') as HTMLElement
+    const highRing = high.querySelector('[data-part="ring"]') as HTMLElement
+
+    const lowBg = getComputedStyle(lowRing).backgroundImage
+    const highBg = getComputedStyle(highRing).backgroundImage
+    expect(lowBg, 'the ring must paint a real conic-gradient, not a flat fill').toContain('conic-gradient')
+    expect(lowBg, 'different percentages must paint different gradients (percent actually drives the arc)').not.toBe(highBg)
+  })
+
+  it('percent=0 and percent=100 are the honest degenerate ends — still a real conic-gradient, no NaN/undefined leaking into the paint', () => {
+    const empty = mount('<ui-stat variant="ring" percent="0"></ui-stat>')
+    const full = mount('<ui-stat variant="ring" percent="100"></ui-stat>')
+    for (const el of [empty, full]) {
+      const ring = el.querySelector('[data-part="ring"]') as HTMLElement
+      const bg = getComputedStyle(ring).backgroundImage
+      expect(bg).toContain('conic-gradient')
+      expect(bg.toLowerCase()).not.toContain('nan')
+    }
+  })
+
+  it('the progress ink and track ink resolve to distinct, non-transparent colors in BOTH color schemes ' +
+     '(read off the actual PAINTED gradient, not the raw custom-property text — a custom property\'s ' +
+     'computed value does not reliably substitute nested var()s the same way a real paint property does)', () => {
+    // tokens.css resolves color roles through oklch()/light-dark() (not rgb()) — match any CSS color
+    // FUNCTION generically rather than assuming a specific notation (the fleet's real token chain).
+    const colorTokens = (css: string): string[] =>
+      [...css.matchAll(/(?:rgba?|hsla?|oklch|oklab|lab|lch|color)\([^)]*\)/gi)].map((m) => m[0])
+
+    for (const scheme of ['light', 'dark'] as const) {
+      const wrap = document.createElement('div')
+      wrap.style.colorScheme = scheme
+      wrap.innerHTML = '<ui-stat variant="ring" percent="50"></ui-stat>'
+      document.body.append(wrap)
+      mounted.push(wrap)
+      const ring = wrap.querySelector('[data-part="ring"]') as HTMLElement
+      const bg = getComputedStyle(ring).backgroundImage
+      const tokens = colorTokens(bg)
+      expect(tokens.length, `${scheme} mode must paint at least two resolved colors (progress + track)`).toBeGreaterThanOrEqual(2)
+      expect(tokens[0], 'progress and track must be visually distinct roles').not.toBe(tokens[1])
+      for (const t of tokens) expect(t, `${scheme} mode must not paint fully-transparent ink`).not.toBe('rgba(0, 0, 0, 0)')
+    }
+  })
+})
+
 describe('ui-stat — forced colors (SPEC-R15 AC1)', () => {
   it('the delta glyph survives in a system ink under forced-colors — Chromium emulates (CDP); WebKit asserts baseline', async () => {
     const el = mount('<ui-stat label="Revenue" value="100" delta="12"></ui-stat>')
@@ -126,6 +187,33 @@ describe('ui-stat — forced colors (SPEC-R15 AC1)', () => {
       expect(window.matchMedia('(forced-colors: active)').matches, 'CDP did not enter forced-colors').toBe(true)
       const glyphColor = getComputedStyle(glyph).backgroundColor
       expect(glyphColor, 'the delta glyph vanished under forced-colors').not.toBe('rgba(0, 0, 0, 0)')
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+
+  it('the GH#1208 ring degrades to a plain solid-ink outline under forced-colors — Chromium emulates; WebKit asserts baseline', async () => {
+    const el = mount('<ui-stat variant="ring" percent="50"></ui-stat>')
+    const ring = el.querySelector('[data-part="ring"]') as HTMLElement
+
+    // Baseline (BOTH engines): the ring is a real painted gradient, not a border, outside forced-colors.
+    expect(getComputedStyle(ring).backgroundImage).toContain('conic-gradient')
+
+    if (server.browser !== 'chromium') {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches, 'CDP did not enter forced-colors').toBe(true)
+      const style = getComputedStyle(ring)
+      // the honest degrade: no attempted gradient (a two-tone shape cannot survive as one system ink) —
+      // a plain solid-CanvasText outline instead (stat.css's forced-colors block).
+      expect(style.backgroundImage, 'the ring must not attempt a gradient under forced-colors').toBe('none')
+      expect(style.borderTopWidth, 'the ring must fall back to a real bordered outline').not.toBe('0px')
+      expect(style.borderTopColor, 'the ring outline vanished under forced-colors').not.toBe('rgba(0, 0, 0, 0)')
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] })
     }

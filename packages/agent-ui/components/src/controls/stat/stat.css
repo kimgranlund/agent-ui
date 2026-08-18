@@ -24,6 +24,21 @@
  * RTL: no dedicated mirroring rule needed — the tile is a single-column block stack (`display:
  * inline-grid`, one column), so there is no inline-axis slot order to flip; the delta's glyph→word→number
  * sequence is DOM order (stat.ts), which logical inline layout already reads correctly in both directions.
+ *
+ * `variant='ring'` (GH#1208, stat.md's "Ring variant" section): a `[data-part='ring']` node — a real,
+ * `aria-hidden` sibling stat.ts inserts right before `[data-part='value']`, never a wrapper — CSS-overlays
+ * the two onto the SAME named grid area (`figure`) so the printed value sits centered on the donut with NO
+ * DOM nesting. The donut is ONE element, ONE background: a two-stop `conic-gradient` (progress ink up to
+ * the `--_ring-pct` percentage stop, track ink for the remainder — bar-chart's fill/track precedent, here
+ * as one paint rather than two elements) punched into a ring by a `radial-gradient` `mask` (the
+ * well-established CSS-only donut technique — a PERCENTAGE stop, never a `deg`/trig computation, so there
+ * is no rounding to hack around: "degrade honest" per the ticket brief). Role tokens
+ * (`--md-sys-color-primary`/`--md-sys-color-neutral-container`, the bar-chart precedent again) carry both
+ * themes for free — no per-theme rule needed. Forced colors: `conic-gradient`+`mask` is a background-drawn
+ * SHAPE (the SPEC-R15 lesson) that cannot preserve a two-tone gradient as system colors, so the honest
+ * degrade is a plain solid-ink ring OUTLINE (`border: … solid CanvasText`) — never a hacked-up
+ * forced-colors gradient substitute. The ring stays purely decorative (`aria-hidden`, stat.ts) — no new
+ * accessibility surface; the percent's meaning is real text already, wherever `figure`/`caption` carry it.
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-stat) declares --ui-stat-* ════════════════ */
@@ -34,6 +49,11 @@
   --ui-stat-label-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-stat-caption-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-stat-delta-glyph-size: 0.6em; /* density-invariant mark geometry */
+  /* GH#1208 — variant='ring' donut geometry, density-invariant like the delta glyph above */
+  --ui-stat-ring-size: 4.5em; /* the donut's diameter */
+  --ui-stat-ring-thickness: 0.5em; /* ring stroke thickness (the mask punch, below) */
+  --ui-stat-ring-progress-ink: var(--md-sys-color-primary); /* data-bearing arc — >=3:1 vs surface (WCAG 1.4.11), bar-chart precedent */
+  --ui-stat-ring-track-ink: var(--md-sys-color-neutral-container); /* the decorative rail, bar-chart precedent */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-stat) consumes ONLY --ui-stat-* ════════════════ */
@@ -93,9 +113,66 @@
     white-space: nowrap;
   }
 
+  /* GH#1208 — variant='ring': a named-area layout, CSS-keyed off the reflected [variant] host attribute
+     (badge [intent] precedent). `figure` is shared by BOTH `[data-part='ring']` and `[data-part='value']`
+     — a same-area overlay (later DOM sibling paints on top, stat.ts's insertion order), never a wrapper. */
+  :scope[variant='ring'] {
+    grid-template-areas: 'label' 'figure' 'delta' 'caption';
+    justify-items: center;
+    text-align: center;
+  }
+  :scope[variant='ring'] [data-part='label'] {
+    grid-area: label;
+  }
+  :scope[variant='ring'] [data-part='ring'],
+  :scope[variant='ring'] [data-part='value'] {
+    grid-area: figure;
+    place-self: center;
+  }
+  :scope[variant='ring'] [data-part='delta'] {
+    grid-area: delta;
+  }
+  :scope[variant='ring'] [data-part='caption'] {
+    grid-area: caption;
+  }
+
+  :scope [data-part='ring'] {
+    inline-size: var(--ui-stat-ring-size);
+    block-size: var(--ui-stat-ring-size);
+    border-radius: 50%;
+    /* percentage stops, never deg/trig math — exact, nothing to round (the ticket's "degrade honest"
+       clause); bar-chart's fill/track precedent, here as ONE background instead of two elements. */
+    background: conic-gradient(
+      var(--ui-stat-ring-progress-ink) calc(var(--_ring-pct) * 1%),
+      var(--ui-stat-ring-track-ink) 0
+    );
+    /* the donut hole — the established CSS-only ring technique (a radial-gradient mask, not a border,
+       so the two-tone conic-gradient itself stays the single source of the arc's paint). */
+    -webkit-mask: radial-gradient(
+      farthest-side,
+      #0000 calc(100% - var(--ui-stat-ring-thickness)),
+      #000 calc(100% - var(--ui-stat-ring-thickness) + 1px)
+    );
+    mask: radial-gradient(
+      farthest-side,
+      #0000 calc(100% - var(--ui-stat-ring-thickness)),
+      #000 calc(100% - var(--ui-stat-ring-thickness) + 1px)
+    );
+  }
+
   @media (forced-colors: active) {
     :scope [data-part='delta-glyph'] {
       background: CanvasText; /* SPEC-R15 — the bar-fill/badge lesson: a masked shape needs a system ink */
+    }
+
+    :scope [data-part='ring'] {
+      /* a two-tone conic-gradient CANNOT be preserved as system colors (the SPEC-R15 lesson, sharpened —
+         there is no single ink to repoint TO when the data itself is two-toned) — the honest degrade is a
+         plain solid-ink OUTLINE, never a hacked-up forced-colors gradient substitute. */
+      background: none;
+      -webkit-mask: none;
+      mask: none;
+      border: var(--ui-stat-ring-thickness) solid CanvasText;
     }
   }
 }

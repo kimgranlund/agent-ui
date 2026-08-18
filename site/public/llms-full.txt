@@ -3929,6 +3929,7 @@ form-associated: no events, no keyboard contract, no `[size]`/`[scale]` control 
 ```html
 <ui-stat label="Revenue" value="48200" delta="12" caption="vs last month"></ui-stat>
 <ui-stat label="Uptime" value="99.98%"></ui-stat>
+<ui-stat variant="ring" label="Storage used" value="72%" percent="72"></ui-stat>
 ```
 
 ## Rendering
@@ -3957,6 +3958,42 @@ churn-class metrics, so there is no automatic green/red valence: the delta's ink
 direction (up/down/flat share one color). A wrong automatic valence is a lying dashboard; a future,
 separately-argued valence prop would need to own its own ADR-0057 co-signifier.
 
+## Ring variant
+
+`variant="ring"` (GH#1208, req-a2ui-library.md item 7 — the donut/progress-ring later-tier row) swaps the
+tile's layout to a centered donut, drawn with a zero-JS CSS `conic-gradient` (no SVG engine, the repo's
+zero-dep chart floor). **API decision, against `ui-stat`'s existing grain:** TWO new props, not one —
+
+- `variant: 'tile' | 'ring'` (default `'tile'`) — the structural mode switch (the `ui-sparkline`
+  `variant="line"|"area"` precedent), **reflected** as a host attribute (unlike sparkline's own
+  non-reflecting `variant`) because ring-vs-tile swaps the tile's `grid-template-areas` in CSS, which needs
+  a `[variant]` attribute selector to key off.
+- `percent: number | null` (default `null`, clamped into `[0,100]`) — the ring's own completion, **decoupled
+  from `figure`**. Rejected alternatives: overloading `figure` itself as the ring's percent (parsing a
+  printed string like `"72%"` back into a number couples the AUTHOR-CONTROLLED printed text, SPEC-R7, with
+  the GEOMETRY a number drives — the exact string/number ambiguity `statValueProp` already exists to keep
+  apart) and a single combined shorthand prop (fails the 1:1-accessor grain every other `ui-stat` prop
+  already holds). An author sets both `figure` and `percent` to matching values when they want the printed
+  text and the ring to agree (as the example above does) — the component never derives one from the other.
+
+The ring itself (`<span data-part="ring" aria-hidden="true">`) is inserted immediately before `value` and
+CSS-overlaid onto value's SAME grid area — never a wrapper, so `value`'s own DOM position and the tile's
+reading order (label → value → delta → caption, SPEC-R8) are UNCHANGED. It is **purely decorative**: like
+the delta glyph, it is `aria-hidden` and carries no text of its own — the printed `figure`/`caption` text
+already states the percent's meaning as real text (SPEC-R7's law, unchanged). `percent` absent or
+non-finite renders an empty (0%) track, never a thrown error (the `deltaParts`/`ringPercent`
+absent-⇒-nothing-fabricated law).
+
+The arc is a single two-stop `conic-gradient` (progress ink up to the `percent` stop, track ink for the
+remainder — `--ui-stat-ring-progress-ink`/`--ui-stat-ring-track-ink`, off the `--md-sys-color-primary`/
+`--md-sys-color-neutral-container` role tokens, the `ui-bar-chart` fill/track precedent) punched into a
+ring shape by a `radial-gradient` `mask` — the established CSS-only donut technique. Every stop is a
+PERCENTAGE, never a `deg`/trig computation, so there is no rounding to hack around ("degrade honest": the
+arc is exactly as precise as the `percent` value, in both themes, for free, since the role tokens already
+carry `light-dark()` resolution). Forced colors: a two-tone `conic-gradient`+`mask` cannot be repointed to
+a single system ink without erasing the progress/track distinction, so the honest degrade is a plain
+solid-`CanvasText` ring OUTLINE (`border`), not an attempted gradient substitute.
+
 ## No composition seam
 
 `ui-stat` takes no children and has no slot. Pairing a `ui-sparkline` beside a stat (the "trend" idiom) is
@@ -3968,12 +4005,17 @@ separately-argued valence prop would need to own its own ADR-0057 co-signifier.
 The tile's whole meaning is real, selectable text — no `ElementInternals` ARIA is minted, because there is
 nothing silent to name. The delta's direction word is visually hidden (clip-path-inset, the standard
 sr-only recipe) but present in the accessibility tree as real text, immediately before the signed number.
+The `variant="ring"` donut adds no new accessibility surface: it is `aria-hidden`, exactly like the delta
+glyph — the percent's meaning is real text already, wherever `figure`/`caption` state it.
 
 ## Sizing
 
 The host floors at `--ui-stat-min-inline-size` (`8em` default) in an unstyled flex row (test-the-whole-shape)
 — override the token, or set `inline-size` directly, to size the tile to a layout. Interior gap rides
-`--ui-stat-gap` off the space ladder (density-responsive for free).
+`--ui-stat-gap` off the space ladder (density-responsive for free). `variant="ring"` adds its own
+density-invariant diameter/thickness tokens — `--ui-stat-ring-size` (`4.5em` default) and
+`--ui-stat-ring-thickness` (`0.5em` default) — sized like the delta glyph's mark geometry, never off
+`[scale]` (a Display-class control, SPEC-R17).
 
 ---
 
