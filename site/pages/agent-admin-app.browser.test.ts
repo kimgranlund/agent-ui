@@ -602,7 +602,13 @@ describe('agent-admin-app — the Edit Agents drawer header/footer render at ful
     ;(select.querySelector('[data-part="roster-action"][value="agent-admin:edit-agents"]') as HTMLElement).click()
     await raf()
 
-    const dialog = (document.querySelector('ui-drawer') as HTMLElement).querySelector('[data-part="dialog"]') as HTMLDialogElement
+    // GH #1188 — bare `document.querySelector('ui-drawer')` used to be unambiguous, but GH #917 gave the
+    // mounted `ui-agent-admin` its OWN per-section entry-CRUD drawers (document order: admin's own drawers
+    // precede this page's `.roster-drawer` sibling — agent-admin-app.ts's `root.append(admin, toasts,
+    // fileInput, drawer)`), so a bare query now resolves to one of THOSE instead — the same defect class
+    // GH #917's own `openDrawerViaPicker`/`drawerEl` precedent below (this file, GH #845 describe) already
+    // corrected via a class-scoped selector; this test predates that fix and was never updated to match.
+    const dialog = (document.querySelector('ui-drawer.roster-drawer') as HTMLElement).querySelector('[data-part="dialog"]') as HTMLDialogElement
     const list = document.querySelector('.roster-list') as HTMLElement
     const header = document.querySelector('.roster-drawer-header') as HTMLElement
     const footer = document.querySelector('.roster-drawer-footer') as HTMLElement
