@@ -5,8 +5,8 @@
 // `pdf-confinement.test.ts` is the source-text trip-wire that the ONE designated module
 // (`lib/pdf-worker.ts`) is the sole static entry point.
 import { describe, it, expect } from 'vitest'
-import { fileURLToPath } from 'node:url'
 import { rolldown } from 'rolldown'
+import { urlSuffixStubPlugin } from './bundle-test-url-stub.ts'
 
 const ROOT = process.cwd()
 const APP_ENTRY = `${ROOT}/packages/agent-ui/app/src/index.ts`
@@ -19,22 +19,10 @@ interface Chunk {
 }
 
 // A bare `rolldown()` call has no Vite asset pipeline, so it can't load pdf-worker.ts's own
-// `pdfjs-dist/build/pdf.worker.min.mjs?url` specifier — the SAME gap `scripts/measure-size.mjs`'s
-// `appCssQuerySuffixPlugin` closes for the size gate; this is that plugin's one-rule subset (bare
-// specifiers only — this test never touches a relative or `@agent-ui/*` `?url`/`?raw` import).
-const urlSuffixStubPlugin = {
-  name: 'pdf-url-suffix-stub',
-  resolveId(source: string) {
-    if (!source.endsWith('?url')) return null
-    const bare = source.slice(0, -'?url'.length)
-    return { id: `${fileURLToPath(import.meta.resolve(bare))}?url`, moduleSideEffects: false }
-  },
-  load(id: string) {
-    if (!id.endsWith('?url')) return null
-    return `export default ${JSON.stringify(`/${id.slice(0, -'?url'.length).split('/').pop()}`)}`
-  },
-}
-
+// `pdfjs-dist/build/pdf.worker.min.mjs?url` specifier on its own — `urlSuffixStubPlugin` (shared with
+// the sibling agent-admin-lazy/dogfood-lazy/markdown-lazy bundle tests, all of which now traverse this
+// same lazy chain too) closes that gap the same way `scripts/measure-size.mjs`'s own
+// `appCssQuerySuffixPlugin` does for the size gate.
 const chunksOf = async (input: string, plugins: unknown[] = []): Promise<Chunk[]> => {
   const bundle = await rolldown({ input, plugins: [urlSuffixStubPlugin, ...plugins] as never, onLog() {} })
   const { output } = await bundle.generate({ format: 'esm', minify: true })

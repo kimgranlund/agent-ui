@@ -34,12 +34,19 @@ const specifiersOf = (src: string): string[] => {
 }
 
 // Shared predicates so the synthetic-violation tests exercise the exact matcher the real gates run.
+// `pdfjs-dist` (bare, and its `?url`-suffixed worker-asset subpath) is the ADR-0202 runtime dep — app's
+// OWN first genuine third-party runtime dependency, the SECOND ruled zero-dep exception (ADR-0139's own
+// `@codemirror/`/`@lezer/` allowance in code/src/layering.test.ts is the precedent this mirrors). It is
+// ADMITTED to the app-package DAG here; WHERE it may appear is the separate, tighter job of
+// pdf-confinement.test.ts (only lib/pdf-worker.ts, reached via a dynamic import) — layering answers "may
+// app/src depend on this at all", confinement answers "which file".
 const isAllowedAppSpecifier = (spec: string): boolean =>
   spec.startsWith('.') ||
   spec === '@agent-ui/components' || spec.startsWith('@agent-ui/components/') ||
   spec === '@agent-ui/a2ui' || spec.startsWith('@agent-ui/a2ui/') ||
   spec === '@agent-ui/shared' || spec.startsWith('@agent-ui/shared/') ||
-  spec === '@agent-ui/code' || spec.startsWith('@agent-ui/code/') // ADR-0139 — the app ← code editor edge
+  spec === '@agent-ui/code' || spec.startsWith('@agent-ui/code/') || // ADR-0139 — the app ← code editor edge
+  spec === 'pdfjs-dist' || spec.startsWith('pdfjs-dist/') // ADR-0202 — app's own runtime-dep exception
 
 const isAppSpecifier = (spec: string): boolean =>
   spec === '@agent-ui/app' || spec.startsWith('@agent-ui/app/')
