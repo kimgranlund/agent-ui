@@ -1412,5 +1412,12 @@
     "description": "AgentTeam is a declared record (GM + roster of {agentId, role, routingDescription} members) on the existing agent-admin store, no runtime orchestrator in v1; t…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0204",
+    "url": "./adr-index.html#adr-0204",
+    "description": "team becomes the meta-line envelope's FIFTH additive model-authored arm (GH #1196): the Builder's team-shaped generation path declares a name-only proposed ros…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
