@@ -185,15 +185,24 @@ export const NAV: readonly NavGroup[] = [
     // The Indicator-class form controls (Wave 1, ADR-0041/0042) — per-component groups, tag-labelled (the
     // site-toc rule: control/container/pattern tiers each get ONE ui-{tag} group; only layout bundles).
     label: 'ui-checkbox',
-    links: [{ href: './checkbox-doc.html', label: 'API' }],
+    links: [
+      { href: './checkbox-demo.html', label: 'Demo' },
+      { href: './checkbox-doc.html', label: 'API' },
+    ],
   },
   {
     label: 'ui-switch',
-    links: [{ href: './switch-doc.html', label: 'API' }],
+    links: [
+      { href: './switch-demo.html', label: 'Demo' },
+      { href: './switch-doc.html', label: 'API' },
+    ],
   },
   {
     label: 'ui-radio',
-    links: [{ href: './radio-doc.html', label: 'API' }],
+    links: [
+      { href: './radio-demo.html', label: 'Demo' },
+      { href: './radio-doc.html', label: 'API' },
+    ],
   },
   {
     label: 'ui-radio-group',

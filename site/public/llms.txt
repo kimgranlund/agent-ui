@@ -67,9 +67,9 @@
 
 ## Components — indicators & ranges
 
-- [ui-checkbox](./checkbox-doc.html): the form-associated checkbox with a component-drawn tick glyph.
-- [ui-switch](./switch-doc.html): the on/off toggle — a thumbed compact-realm widget.
-- [ui-radio](./radio-doc.html): a single radio dot; exclusivity lives on the group.
+- [ui-checkbox](./checkbox-doc.html): the form-associated checkbox with a component-drawn tick glyph; [demo](./checkbox-demo.html).
+- [ui-switch](./switch-doc.html): the on/off toggle — a thumbed compact-realm widget; [demo](./switch-demo.html).
+- [ui-radio](./radio-doc.html): a single radio dot; exclusivity lives on the group; [demo](./radio-demo.html).
 - [ui-radio-group](./radio-group-doc.html): exclusivity, roving focus, and group validity for radios; [demo](./radio-group-demo.html).
 - [ui-segment](./segment-doc.html): one joined-button segment; selection lives on the control.
 - [ui-segmented-control](./segmented-control-doc.html): joined-button single-select with one shared animated indicator; [demo](./segmented-control-demo.html).
