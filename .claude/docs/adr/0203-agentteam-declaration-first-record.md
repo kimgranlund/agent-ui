@@ -218,7 +218,7 @@ criteria verbatim.
   teams" an expensive scan instead of a direct read; `req-agent-teams.md` R1 already specs
   `AgentTeam` as its own record for exactly this reason.
 
-## Amendment (2026-08-18, **proposed** — Kim ratifies) — optional per-member `instructions` (GH [#1277](https://github.com/kimgranlund/agent-ui/issues/1277), Kim's same-day ask)
+## Amendment (2026-08-18, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/1277#issuecomment-5332016731), verified 2026-08-18) — optional per-member `instructions` (GH [#1277](https://github.com/kimgranlund/agent-ui/issues/1277), Kim's same-day ask)
 
 Kim (2026-08-18, during the #1277 catalog-picking build): each team member also carries an
 OPTIONAL free-text instruction — the GM-facing guidance for how/when to use that member, beyond
