@@ -70,6 +70,16 @@ export {
   cardLayoutsSeed,
   compositionPackASeeds,
 } from './composition-pack-a.ts'
+// GH #1206 — composition seeds pack B (req-a2ui-library R4, next-tier): the four dispositioned
+// composition patterns — weather · menu · itinerary · wizard (the Ladder/Progress presentation, distinct
+// from the backable-wizard flow-protocol seed).
+export {
+  fiveDayWeatherSeed,
+  restaurantMenuSeed,
+  travelItinerarySeed,
+  wizardStepProgressSeed,
+  compositionPackBSeeds,
+} from './composition-pack-b.ts'
 
 import type { ExampleSeed } from './types.ts'
 import { canvasSeeds } from './canvas-button.ts'
@@ -83,6 +93,7 @@ import { catalogFrontierSeeds } from './catalog-frontier.ts'
 import { structuredContainerSeeds } from './structured-container.ts'
 import { highFrequencyPatternSeeds } from './high-frequency-patterns.ts'
 import { compositionPackASeeds } from './composition-pack-a.ts'
+import { compositionPackBSeeds } from './composition-pack-b.ts'
 
 /** Every seed on the shelf — the standing gate's (`examples.test.ts`) iteration surface. Composed from
  *  each module's own family array, so the total is always derived, never a separately-maintained count. */
@@ -98,4 +109,5 @@ export const allSeeds: readonly ExampleSeed[] = [
   ...structuredContainerSeeds,
   ...highFrequencyPatternSeeds,
   ...compositionPackASeeds,
+  ...compositionPackBSeeds,
 ]

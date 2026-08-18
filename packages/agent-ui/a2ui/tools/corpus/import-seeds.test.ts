@@ -374,9 +374,10 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
    *  reach the judge; the shelf seeds ABSENT from it — `stats-grid-dashboard`, plus the nine GH
    *  #729/#1184/#1185/#1189/#1199/#1192 catalog-frontier seeds pending their own judged wave, plus
    *  `agent-roster-drawer` (ADR-0188 GH #863, the same pending-judged-wave shape), plus the four GH
-   *  #1205 composition-pack-A seeds (same pending shape) — reach a wired judge, which fails closed
-   *  unless the file rules on each (ADR-0068 clause 2). Refusing all fifteen keeps the run at zero
-   *  admissions while still reaching `saveStore` — the archive's actual trigger. */
+   *  #1205 composition-pack-A seeds and the four GH #1206 composition-pack-B seeds (same pending
+   *  shape) — reach a wired judge, which fails closed unless the file rules on each (ADR-0068 clause
+   *  2). Refusing all nineteen keeps the run at zero admissions while still reaching `saveStore` —
+   *  the archive's actual trigger. */
   const SHARD_LOADED_VERDICTS = {
     'stats-grid-dashboard': { passed: false, qualityScore: 2 },
     'frontier-trip-card': { passed: false, qualityScore: 2 },
@@ -393,6 +394,10 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     'confirmation-view': { passed: false, qualityScore: 2 },
     'trend-list': { passed: false, qualityScore: 2 },
     'card-layouts': { passed: false, qualityScore: 2 },
+    'five-day-weather': { passed: false, qualityScore: 2 },
+    'restaurant-menu': { passed: false, qualityScore: 2 },
+    'travel-itinerary': { passed: false, qualityScore: 2 },
+    'wizard-step-progress': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {
@@ -586,11 +591,15 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     const verdictsPath = writeVerdicts('re-judged.json', {
       date: '2026-07-29',
       // the nine GH #729/#1184/#1185/#1189/#1199/#1192 frontier seeds + agent-roster-drawer (ADR-0188 GH
-      // #863) + the four GH #1205 composition-pack-A seeds also reach the wired judge here (absent from
-      // the shard) — refused so this test's claim stays exactly "the re-judged stats-grid name admits",
-      // nothing else moves.
+      // #863) + the four GH #1205 composition-pack-A seeds + the four GH #1206 composition-pack-B seeds
+      // also reach the wired judge here (absent from the shard) — refused so this test's claim stays
+      // exactly "the re-judged stats-grid name admits", nothing else moves.
       verdicts: {
         'stats-grid-dashboard': { passed: true, qualityScore: 5 },
+        'five-day-weather': { passed: false, qualityScore: 2 },
+        'restaurant-menu': { passed: false, qualityScore: 2 },
+        'travel-itinerary': { passed: false, qualityScore: 2 },
+        'wizard-step-progress': { passed: false, qualityScore: 2 },
         'slideshow-gallery': { passed: false, qualityScore: 2 },
         'confirmation-view': { passed: false, qualityScore: 2 },
         'trend-list': { passed: false, qualityScore: 2 },
