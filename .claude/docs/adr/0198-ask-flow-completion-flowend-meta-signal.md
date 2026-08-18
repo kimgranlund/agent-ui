@@ -240,11 +240,16 @@ around it.
 > the pre-conclusion confirmation stage, the courtesy-close protocol) is itself **ratified** and
 > stays byte-untouched — agents never flip status. THIS amendment awaits Kim's own
 > `ratify ADR-0198 amendment` utterance, executed by `scripts/adr_ratify.py`'s amendment mode.
-> Source: `.claude/docs/research/req-a2ui-patterns.md` R2 (backable multi-step) and R4 (conclude
-> bookend), both reviewed and corrected 2026-08-17, with Kim's rulings recorded in that doc's own
-> "Kim rulings" section (R3's greet-home/greet-feed-placement forks are also ruled there but touch
-> no ADR-0198 clause — they are realized instead via the mini-skill + the exempt ask-id class,
-no wire change to this ADR's territory).
+> Source, each carve-out separately (their provenance differs): **B2** (the closing-turn settle
+> carve-out) ← `req-a2ui-patterns.md` R4's recorded Kim ruling — an explicit override of the lane's
+> own client-side-only recommendation, in that doc's "Kim rulings" section. **B1** (the mid-flow
+> scene-transition carve-out) ← `req-a2ui-patterns.md` R2's review-corrected conflicts analysis
+> (the doc-checker review forced R2's initial "no conflicts" claim to be reframed as a required law
+> amendment) plus Kim's separate approval of GH #1192 ("backable-wizard answered-ask carve-out
+> grammar amendment") as the mint-all-round work item that realizes it — R2 itself carries no ruling
+> bullet in that doc's "Kim rulings" section. (R3's greet-home/greet-feed-placement forks are also
+> ruled there but touch no ADR-0198 clause — they are realized instead via the mini-skill + the
+> exempt ask-id class, no wire change to this ADR's territory.)
 
 **Why the accepted record needs amending, precisely.** `req-a2ui-patterns.md` designed two new
 grammar-level patterns that COMPOSE with ADR-0198's shipped completion law rather than replacing
