@@ -94,21 +94,22 @@ describe('component-preview — a2ui mode renders a live control through the rea
     expect(surfaceButton(preview)?.textContent, 'the canvas did not re-render on the knob change').toContain('Re-rendered')
   })
 
-  // The enum knob is DERIVED from a catalog enum — any enum prop grows a knob for free (Button.variant is now a
-  // catalog enum too, tightened alongside this wave). `TextField.size` (sm·md·lg, 3 members) routes to the
-  // ui-segmented-control knob (batch A's ≤5-member branch): clicking a segment re-renders through a fresh
-  // renderer. TextField carries no A2UI_INITIAL seed for `size`, so the segmented-control knob's own fallback
-  // pre-selects + pre-seeds `members[0]` = 'sm' (component-preview.ts). Clicking the ALREADY-checked 'sm'
-  // segment is a documented no-op (segmented-control.md: a checked segment can only be REPLACED, never
-  // toggled off — no `change` fires), so this test targets 'lg' instead — a genuinely UNCHECKED member — to
-  // prove the click really drives a commit, not merely re-observe the seed.
-  it('a segmented-control knob click re-renders with the chosen member (TextField.size, a real catalog enum)', async () => {
-    const preview = await mountPreview('a2ui', 'TextField')
-    const lg = knobSegment(preview, 'size', 'lg')
-    expect(lg, 'no `lg` segment found in the size knob (dogfooded ui-segmented-control)').toBeTruthy()
-    await userEvent.click(lg as HTMLElement)
+  // The enum knob is DERIVED from a catalog enum — any enum prop grows a knob for free. `Button.variant`
+  // (solid·soft·ghost, 3 members) routes to the ui-segmented-control knob (batch A's ≤5-member branch):
+  // clicking a segment re-renders through a fresh renderer. (This test used to drive `TextField.size` —
+  // GH #1188: the 2026-08-17 size-attr scrub, commit 6b3f90f9/#1148, deliberately removed `size` from every
+  // catalog component including TextField, per Kim's ruling; `Button.variant` is the still-real small enum
+  // this test now proves the mechanism against.) Button carries an A2UI_INITIAL seed of `variant: 'solid'`
+  // (component-preview.ts), so this test targets 'ghost' instead — a genuinely UNCHECKED member — to prove
+  // the click really drives a commit, not merely re-observe the seed (the same reasoning the component-mode
+  // `ghost` segment test below already relies on).
+  it('a segmented-control knob click re-renders with the chosen member (Button.variant, a real catalog enum)', async () => {
+    const preview = await mountPreview('a2ui', 'Button')
+    const ghost = knobSegment(preview, 'variant', 'ghost')
+    expect(ghost, 'no `ghost` segment found in the variant knob (dogfooded ui-segmented-control)').toBeTruthy()
+    await userEvent.click(ghost as HTMLElement)
     await raf()
-    expect(surfaceControl(preview, 'ui-text-field')?.getAttribute('size')).toBe('lg')
+    expect(surfaceButton(preview)?.getAttribute('variant')).toBe('ghost')
   })
 })
 
@@ -166,22 +167,29 @@ describe('component-preview — direct canvas interaction survives a knob edit (
     expect(after?.getAttribute('size')).toBe('lg') // the actual edit landed
   })
 
-  it('a2ui: text typed into the live field survives a size re-render (read-back before rebuild)', async () => {
+  it('a2ui: text typed into the live field survives a disabled re-render (read-back before rebuild)', async () => {
     const preview = await mountPreview('a2ui', 'TextField')
     const field = surfaceControl(preview, 'ui-text-field')
     expect(field, 'no ui-text-field rendered').not.toBeNull()
     ;(field as unknown as { value: string }).value = 'typed by user' // the live value the rebuild must preserve
 
-    // 'sm' is the segmented-control knob's own pre-seeded default (no A2UI_INITIAL seed for TextField.size —
-    // see the fallback note above) — clicking the ALREADY-checked segment is a documented no-op (no `change`,
-    // no rebuild), which would make this test pass VACUOUSLY (the value "survives" only because nothing
-    // re-rendered at all). 'lg' is a genuinely unchecked member, so the click drives a real commit →
-    // dispose+rebuild.
-    await userEvent.click(knobSegment(preview, 'size', 'lg') as HTMLElement) // change an unrelated knob → a2ui dispose+rebuild
+    // This test used to drive `TextField.size` as the "unrelated knob" — GH #1188: the 2026-08-17 size-attr
+    // scrub (commit 6b3f90f9/#1148) deliberately removed `size` from every catalog component, TextField
+    // included, per Kim's ruling. `disabled` (boolean, bindable, no A2UI_INITIAL seed ⇒ starts unchecked) is
+    // still a real, unrelated TextField knob whose commit forces the same a2ui dispose+rebuild — clicking its
+    // dogfooded ui-switch knob flips it from its genuine default (false), so the commit is real, not vacuous.
+    const disabledKnob = knobControl<HTMLElement>(preview, 'disabled')
+    expect(disabledKnob, 'no `disabled` knob control found (dogfooded ui-switch)').toBeTruthy()
+    await userEvent.click(disabledKnob as HTMLElement) // change an unrelated knob → a2ui dispose+rebuild
     await raf()
     const after = surfaceControl(preview, 'ui-text-field')
-    expect((after as unknown as { value: string }).value, 'typed text vanished on the size re-render').toBe('typed by user')
-    expect(after?.getAttribute('size'), 'the click did not commit — the a2ui payload never re-rendered with `lg`').toBe('lg')
+    expect((after as unknown as { value: string }).value, 'typed text vanished on the disabled re-render').toBe(
+      'typed by user',
+    )
+    expect(
+      after?.hasAttribute('disabled'),
+      'the click did not commit — the a2ui payload never re-rendered with `disabled`',
+    ).toBe(true)
   })
 })
 

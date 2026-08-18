@@ -235,7 +235,7 @@ describe('component-preview — the two flagged edge cases (named regression gua
     expect(live.querySelector('svg'), 'the <svg> did not survive a full knob build').not.toBeNull()
   })
 
-  it('ui-slider: grows no SLOT_TEXT knob and stays free of stray textContent (batch C)', async () => {
+  it('ui-slider: grows no SLOT_TEXT knob, and its only text is the GH #1141 value-readout part (batch C)', async () => {
     const live = await mountPreview('ui-slider')
     expect(live, 'no live ui-slider rendered').not.toBeNull()
     const preview = live.closest('component-preview') as HTMLElement
@@ -243,10 +243,16 @@ describe('component-preview — the two flagged edge cases (named regression gua
       (row) => row.querySelector('.knob-label')?.textContent === 'text',
     )
     expect(textKnob, 'ui-slider still grows a dead SLOT_TEXT knob').toBeUndefined()
+    // GH #1141 gave ui-slider a REAL light-DOM value-readout part (visible at rest unless `readout-hidden`
+    // is set) — its track stays ::before/::after (no text slot a generic SLOT_TEXT knob could ever write
+    // into), but the host's own textContent now legitimately carries that readout's text. Assert the host's
+    // text is EXACTLY that readout's — i.e. no STRAY text landed from a SLOT_TEXT-knob-style write.
+    const valuePart = live.querySelector('[data-part="value"]') as HTMLElement | null
+    expect(valuePart, 'ui-slider should carry its GH #1141 value-readout part').not.toBeNull()
     expect(
       live.textContent,
-      'ui-slider textContent should stay empty — its track is ::before/::after, no text slot to inject into',
-    ).toBe('')
+      'ui-slider textContent should be exactly its value-readout text — no stray text from a SLOT_TEXT knob',
+    ).toBe(valuePart!.textContent)
     expect(live.getAttribute('aria-label'), 'ui-slider should carry a seeded accessible name (COMPONENT_SAMPLE_ATTRS)').toBe(
       'Volume',
     )

@@ -36,13 +36,20 @@ ui-card {
 }
 
 /* ONE MEASURE for the section. The page's reading column is ~64rem (_page.css) but this section's widest
- * real surface is the 48rem frame below — so anything that ANNOTATES that frame is capped to the frame's own
+ * real surface is the 56rem frame below — so anything that ANNOTATES that frame is capped to the frame's own
  * measure rather than the page's. Load-bearing for the readout, not cosmetic: `.account-settings-saved-row`
  * is `justify-content: space-between`, so at the full 64rem its label and its value drift ~30rem apart and
- * stop reading as a pair. Keep this value in step with `.account-settings-frame`'s `inline-size`. */
+ * stop reading as a pair. Keep this value in step with `.account-settings-frame`'s `inline-size`.
+ *
+ * GH #1188 — widened from 48rem to 56rem: `ui-settings` (@agent-ui/app) grew its own `data-compact` band
+ * at 52.5rem (`SHELL_COMPACT_BREAKPOINT_REM`, GH #962/shell-breakpoint.ts) AFTER this page's frame was
+ * sized — 48rem sits BELOW that line, so the surface was silently rendering its compact `section-select`
+ * fallback instead of the sections RAIL this page's whole a12/a13 exemplar (and its own browser suite)
+ * documents and drives. 56rem clears 52.5rem with margin (the frame's ~2px border overhead measured, real
+ * engine) without crowding the ~64rem reading column. */
 .account-settings-caption,
 .account-settings-saved {
-  max-inline-size: min(48rem, 100%);
+  max-inline-size: min(56rem, 100%);
 }
 
 /* The surface frame. `container-type: inline-size` is load-bearing, not decoration: the composed
@@ -52,7 +59,7 @@ ui-card {
  * threshold and watch the rail|panel collapse into the drill-in. */
 .account-settings-frame {
   container-type: inline-size;
-  inline-size: min(48rem, 100%);
+  inline-size: min(56rem, 100%);
   min-inline-size: 18rem;
   max-inline-size: 100%;
   block-size: 22rem;

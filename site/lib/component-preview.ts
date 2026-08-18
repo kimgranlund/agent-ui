@@ -904,8 +904,10 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
 
 // A per-tag static HOST ATTRIBUTE seed (batch C) — distinct from COMPONENT_INITIAL (which seeds a KNOB's
 // value): this is for an attribute the descriptor does NOT expose as an editable prop at all, so no knob could
-// ever supply it. ui-slider is the one fleet member: its track is ::before/::after (no text slot — NO_SLOT_TEXT
-// below), so without an explicit seed a bare specimen carries no accessible name at all.
+// ever supply it. ui-slider is the one fleet member: its track is ::before/::after (no text KNOB — NO_SLOT_TEXT
+// below — could ever write into it), so without an explicit seed a bare specimen carries no accessible name at
+// all. (GH #1141 later gave ui-slider a real, visible-by-default value-readout PART — legitimate light-DOM
+// text driven by the `value` prop, not the generic SLOT_TEXT knob mechanism this seed is about.)
 //
 // Wave M1 (ADR-0107): ui-sparkline/ui-bar-chart's `values`/`data` are JSON-string attributes — a codec
 // `knobFromAttribute` maps to `kind: 'skip'` (no editable knob, same as any complex-typed attr), so their
@@ -1005,7 +1007,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-drill', // #ensureParts(): the control-owned header/back/heading part (ADR-0195) — SLOT_TEXT would clobber it; the ui-drill-panel author children are its real sample content
   'ui-popover', // #ensureParts(): trigger (COMPONENT_SAMPLE_CHILDREN) + panel
   'ui-select', // #ensureParts(): a control-created trigger button + listbox
-  'ui-slider', // ::before/::after track only — no text slot at all (batch C); seeded an aria-label via COMPONENT_SAMPLE_ATTRS instead
+  'ui-slider', // ::before/::after track — no text KNOB (batch C); seeded an aria-label via COMPONENT_SAMPLE_ATTRS instead. (GH #1141's own value-readout PART legitimately carries text — see COMPONENT_SAMPLE_ATTRS comment above.)
   'ui-slider-multi', // JS-managed light-DOM rail/fill/thumb children (NOT ::before/::after, unlike ui-slider)
   'ui-sparkline', // component-built inline <svg> (createElementNS + replaceChildren) — the ui-icon precedent, a name/values-driven mark, not authored text (slots: [] — sparkline.md)
   'ui-disclosure', // #ensureParts(): the details/summary/chevron chrome — host children are ADOPTED into a nested body PART, never left as direct host children (unlike a STRUCTURAL container), so a host-level SLOT_TEXT write would destroy the whole part tree
