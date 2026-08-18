@@ -86,6 +86,9 @@ import disclosureMd from '../../packages/agent-ui/components/src/controls/disclo
 // The Wave M1 feed family (ADR-0112, feed-family.lld.md): progress/avatar/attachment/toast/toast-region.
 import progressMd from '../../packages/agent-ui/components/src/controls/progress/progress.md?raw'
 import avatarMd from '../../packages/agent-ui/components/src/controls/avatar/avatar.md?raw'
+// GH #1189 — ui-image, the URL-sourced content-image primitive (tier=display ⇒ {doc} only, a conventional
+// component admission per the host ADR ruling — no new ADR file, image.md's own frontmatter banner).
+import imageMd from '../../packages/agent-ui/components/src/controls/image/image.md?raw'
 import attachmentMd from '../../packages/agent-ui/components/src/controls/attachment/attachment.md?raw'
 import toastMd from '../../packages/agent-ui/components/src/controls/toast/toast.md?raw'
 import toastRegionMd from '../../packages/agent-ui/components/src/controls/toast/toast-region.md?raw'
@@ -208,6 +211,8 @@ export const loadDisclosureDoc = (): ComponentDoc => parseDoc(disclosureMd)
 // toast-region tier=layout, toast tier=pattern ⇒ {doc, demo}).
 export const loadProgressDoc     = (): ComponentDoc => parseDoc(progressMd)
 export const loadAvatarDoc       = (): ComponentDoc => parseDoc(avatarMd)
+// GH #1189 — ui-image (tier=display ⇒ {doc} only, the ui-avatar/ui-attachment precedent).
+export const loadImageDoc        = (): ComponentDoc => parseDoc(imageMd)
 export const loadAttachmentDoc   = (): ComponentDoc => parseDoc(attachmentMd)
 export const loadToastDoc        = (): ComponentDoc => parseDoc(toastMd)
 export const loadToastRegionDoc  = (): ComponentDoc => parseDoc(toastRegionMd)

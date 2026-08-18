@@ -150,6 +150,10 @@ function deadHrefs(refs: readonly string[], htmlSet: ReadonlySet<string>): strin
 // descriptor + control ahead of its site pages/TOC rows (the same site-coverage.test.ts KNOWN_UNDOCUMENTED
 // parking, mirrored here). GH #832 (2026-08-13) landed its pages + both NAV (_page.ts)/landing (main.ts)
 // rows, draining this stopgap.
+//
+// GH #1189 R1/R2 — `ui-image` shipped its descriptor + control in the component-build seat's wave; its site
+// TOC rows (NAV in _page.ts + CARD_GROUPS in main.ts) + `image-doc.html` page landed in the following
+// docs-writer seat's slice, draining this stopgap — empty again (the `ui-toggle`/GH #832 precedent, above).
 const PENDING_TOC_GROUPS = new Set<string>()
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────

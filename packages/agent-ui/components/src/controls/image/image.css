@@ -1,0 +1,102 @@
+/* image.css — ui-image, the Display-class URL-sourced content-image primitive (GH #1189 R1/R2). Two
+ * sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-image)` declares `--ui-image-*`: the object-fit repoint (`[fit]`, the
+ *       ui-avatar `[size]` precedent), and the R2 scrim pair — `--ui-image-scrim-color` (a scheme-invariant
+ *       opaque-black wash, the `--md-sys-color-dialog-backdrop` posture: a scrim composites against PHOTO
+ *       CONTENT, not the app surface, so it does not travel with the page theme) + `--ui-image-caption-ink`
+ *       (a scheme-invariant light ink, `--md-sys-color-neutral-on-neutral` — BOTH `light-dark()` branches
+ *       route to `--md-sys-color-neutral-050`, pure white; tokens.css confirms this pairing is genuinely
+ *       theme-invariant, not an oversight — see image-model.test.ts for the load-bearing contrast math).
+ *   [2] STYLES BLOCK — `@scope (ui-image)` consumes ONLY `--ui-image-*` (+ the private, per-instance
+ *       `--_aspect` the ui-progress `--_pct` precedent: instance-computed, outside the token contract).
+ *
+ * THE SCRIM DESIGN (R2, the load-bearing decision): a naive two-stop gradient (opaque at the bottom edge
+ * fading smoothly to transparent) has NO flat plateau — the moment real caption text occupies any non-zero
+ * height above that exact bottom pixel, it sits at a LOWER alpha than the gradient's nominal "start" value,
+ * which is the worst point for contrast (lower alpha ⇒ closer to the white image ⇒ white caption ink nears
+ * white-on-white). Rather than depend on caption geometry to stay within a fade band, the caption's own
+ * background is a SEPARATE, FLAT `--ui-image-scrim-color` wash (":not([data-part='media'])" below) — a
+ * constant, deterministic floor regardless of caption height/line-count. The visible `::before` gradient is
+ * PURE DECORATION layered behind it (blending the scrim edge into the photo); it can only ADD darkness where
+ * it overlaps the flat caption band, never subtract from the guaranteed floor. This is why image-model.test.ts
+ * can pin ONE exact contrast number as the true worst case, not a range dependent on layout.
+ *
+ * Forced colors: an explicit `forced-colors` block adds a system-ink border (the ui-avatar/ui-badge
+ * box-boundary precedent) — a background-drawn media box can otherwise merge with the page under WHCM. The
+ * caption is real text; it survives via the UA's own forced-colors text handling, no repoint needed.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-image) declares --ui-image-* ════════════════ */
+
+:where(ui-image) {
+  --ui-image-fit: cover;
+  --ui-image-scrim-color: oklch(0 0 0 / 65%); /* scheme-invariant opaque-black wash — tuned so the caption's
+    flat backing clears WCAG AA (4.5:1) against a worst-case solid-white image; see image-model.test.ts */
+  --ui-image-caption-ink: var(--md-sys-color-neutral-on-neutral); /* scheme-invariant white (both light-dark
+    branches route to neutral-050) — NOT --on-surface, which flips per theme and has no relationship to the
+    photo content the scrim composites against */
+  --ui-image-caption-pad-inline: var(--md-sys-space-md);
+  --ui-image-caption-pad-block: var(--md-sys-space-sm);
+}
+
+/* [fit] → object-fit repoint (the ui-avatar [size] precedent: an attribute-selected token repoint). */
+:where(ui-image[fit='contain']) {
+  --ui-image-fit: contain;
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-image) consumes ONLY --ui-image-* ════════════════ */
+
+@scope (ui-image) {
+  :scope {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* an in-flow caption group (any non-media child) settles at the bottom */
+    position: relative; /* the containing block for the absolutely-positioned media + ::before scrim */
+    overflow: hidden; /* clip the media + gradient to the aspect-ratio box */
+    inline-size: 100%; /* the responsive-image-reset default — fills the parent's content box (Display-band
+      "intrinsic structural sizing": the lever is aspect-ratio + the layout track, not a control-height ramp) */
+    aspect-ratio: var(--_aspect, 16 / 9); /* R1 — ALWAYS a concrete ratio, zero CLS; see image.ts/image-model.ts */
+  }
+
+  :scope > img[data-part='media'] {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: var(--ui-image-fit);
+    display: block;
+  }
+
+  /* The decorative bottom-fade gradient (R2) — pure paint, no DOM node; layered BEHIND the real caption
+     content below (a pseudo-element always paints before its element's own real children). Gated on real
+     caption presence via :has() — image.md's own contract ("Absent ⇒ no scrim box is painted at all — no
+     phantom overlay on a caption-less image") is otherwise violated: an unconditional ::before painted a
+     visible darkening wash on every caption-less image, the common case (GH #1189 review finding A4). */
+  :scope:has(> :not([data-part='media']))::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    block-size: 55%;
+    background: linear-gradient(to top, var(--ui-image-scrim-color) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* The caption — any non-media child (the default/unnamed slot; button.md's "label" precedent: a documented
+     slot the CSS selects structurally, never by a literal [slot=...] name). A FLAT scrim backing (see the
+     file banner's load-bearing reasoning) + the paired ink token. */
+  :scope > :not([data-part='media']) {
+    position: relative;
+    background: var(--ui-image-scrim-color);
+    color: var(--ui-image-caption-ink);
+    padding-inline: var(--ui-image-caption-pad-inline);
+    padding-block: var(--ui-image-caption-pad-block);
+  }
+
+  @media (forced-colors: active) {
+    :scope {
+      border: 1px solid CanvasText; /* the media box boundary stays visible under WHCM */
+    }
+  }
+}

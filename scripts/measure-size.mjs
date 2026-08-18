@@ -168,7 +168,12 @@ const targets = [
   // structured (#817), ui-drawer (ADR-0188 S1 + #919/#922), swiper candy (#983), the select fix (#1011)
   // and #1020's status-stream pendingComputed consumer (+332 B) as the rest — all reviewed weight, no
   // gzip artifact. 907 B (~1.5%) stated headroom. Same law as above: a CHECKPOINT, not a ratchet.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 58 * KB],
+  // RE-BASED 2026-08-18 (Kim ruling, marshal's size round, GH #1189): 58 KB -> 58.5 KB (59904 B gz) --
+  // measured 59772 B gz on the 1189-ui-image branch; the single mover is the ui-image mint itself
+  // (+380 B over the old line: control + scrim/caption CSS + descriptor glue), dual-reviewed weight
+  // (component-checker + a2ui-review), no gzip artifact. ~132 B stated headroom. Same law: a
+  // CHECKPOINT, not a ratchet.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 58.5 * KB],
   // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
   // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
   // `./markdown`, `./editor`) is not the one exception.

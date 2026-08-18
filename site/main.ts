@@ -919,6 +919,18 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // GH #1189 — ui-image, the URL-sourced content-image primitive (tier=display ⇒ {doc} only, a conventional
+  // component admission — no new ADR). NOT a fallback chain like ui-avatar above — just the <img> mechanics.
+  {
+    label: 'ui-image',
+    cards: [
+      {
+        href: './image-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class URL-sourced content image — a reserved aspect-ratio box (zero CLS), native lazy-loading, and an optional bottom-scrim caption, generated from image.md.',
+      },
+    ],
+  },
   {
     label: 'ui-attachment',
     cards: [

@@ -33,7 +33,14 @@ export const SAFE_HREF_SCHEMES = ['https:', 'http:', 'mailto:'] as const
 // never a bindable catalog prop. Any node may legally carry `checks` without a CATALOG unknown-property failure.
 const RESERVED = new Set(['id', 'component', 'child', 'children', 'checks'])
 
-/** Validate one component against its catalog definition. Returns `[]` when conformant. */
+/**
+ * Validate one component against its catalog definition. Returns `[]` when conformant. Checks PRESENT
+ * props (unknown / type-mismatch, SPEC-R9's security allowlist scope) PLUS — GH #1189 — key PRESENCE
+ * for any `PropDef.required:true` (an opt-in extension; every property that does not declare it behaves
+ * byte-identically to before, the `Modal.open` negative control in `catalog/default/index.test.ts` among
+ * them). The two checks are independent: an omitted required key fails once here even if no OTHER prop
+ * on the node is present/type-mismatched.
+ */
 export function validateCatalogConformance(component: A2uiComponent, catalog: Catalog): Failure[] {
   const def = catalog.components[component.component]
   if (!def) return [{ code: 'CATALOG', path: component.id }] // unknown type (SPEC-R9)
@@ -47,6 +54,9 @@ export function validateCatalogConformance(component: A2uiComponent, catalog: Ca
       continue
     }
     if (!matchesType(v, pd)) out.push({ code: 'CATALOG', path: `${component.id}.${k}` }) // type mismatch
+  }
+  for (const [k, pd] of Object.entries(def.properties)) {
+    if (pd.required && !(k in component)) out.push({ code: 'CATALOG', path: `${component.id}.${k}` }) // omitted required key (GH #1189)
   }
   return out
 }

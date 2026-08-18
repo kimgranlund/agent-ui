@@ -1,7 +1,9 @@
 // site/lib/a2ui-catalog-tiers.ts — the A2UI Catalog page's TIER taxonomy (owner-approved 2026-08-15 audit,
-// GH #970): groups the 56 browsable default-catalog component types into five page-level tabs — WIDGET ·
-// PRIMITIVE · PATTERN · FEATURE · INPUT — plus the type→gallery-example cross-link derivation the page's
-// "see it in real use" links ride.
+// GH #970): groups the browsable default-catalog component types (57 as of GH #1189's `Image` addition) into
+// five page-level tabs — WIDGET · PRIMITIVE · PATTERN · FEATURE · INPUT — plus the type→gallery-example
+// cross-link derivation the page's "see it in real use" links ride. The exact count is DERIVED
+// (`browsableNames().length`, gated by a2ui-catalog-tiers.test.ts) — this comment is a rough orientation
+// figure only, not a re-asserted fact a future addition must remember to bump.
 //
 // The taxonomy itself (which type sits in which tier) is an authored editorial judgment: no wire-level
 // "tier" field exists on a catalog component to derive it from (catalog/types.ts carries no such field —
@@ -77,7 +79,7 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   Table: 'FEATURE',
   Timeline: 'FEATURE',
 
-  // WIDGET (15) — small, self-contained display/utility leaves.
+  // WIDGET (16) — small, self-contained display/utility leaves.
   Attachment: 'WIDGET',
   Avatar: 'WIDGET',
   Badge: 'WIDGET',
@@ -85,6 +87,7 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   BarChart: 'WIDGET',
   Button: 'WIDGET',
   Code: 'WIDGET',
+  Image: 'WIDGET', // GH #1189 — the URL-sourced content-image primitive, a display leaf like Avatar/Attachment (no ADR — conventional admission, host ruling)
   Ladder: 'WIDGET',
   Pagination: 'WIDGET',
   Progress: 'WIDGET',

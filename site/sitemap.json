@@ -185,6 +185,14 @@
       "section": "Components"
     },
     {
+      "name": "Image",
+      "tag": "ui-image",
+      "url": "./image-doc.html",
+      "description": "A URL-sourced image with a reserved aspect-ratio box (zero CLS), native lazy-loading, and an optional bottom scrim for overlay caption content.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Ladder",
       "tag": "ui-ladder",
       "url": "./ladder-doc.html",
