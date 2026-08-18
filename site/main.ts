@@ -355,6 +355,18 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0205/GH #1207: the fleet's first axis-bearing chart — a value-range baseline + always-shown
+  // min/max labels, single-series. Same shape as the two above — Display-class, a descriptor-derived API doc.
+  {
+    label: 'ui-line-chart',
+    cards: [
+      {
+        href: './line-chart-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class axis-bearing line/area chart — a value-range baseline + always-shown min/max labels over a live revenue trend, the baseline’s two branches, and the degenerate cases, generated from line-chart.md.',
+      },
+    ],
+  },
   // The token-surface family (ADR-0118): three Display-class show-never-edit primitives, each a
   // descriptor-derived API doc (tier=display ⇒ {doc} only, the ui-sparkline/ui-bar-chart precedent).
   {

@@ -201,6 +201,14 @@
       "section": "Components"
     },
     {
+      "name": "Line Chart",
+      "tag": "ui-line-chart",
+      "url": "./line-chart-doc.html",
+      "description": "An axis-bearing line or area chart with a value-range baseline and always-shown min/max labels, single-series, hand-rolled inline SVG.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "List",
       "tag": "ui-list",
       "url": "./list-doc.html",

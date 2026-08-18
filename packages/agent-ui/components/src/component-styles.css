@@ -89,6 +89,10 @@
 @import './controls/sparkline/sparkline.css';
 @import './controls/bar-chart/bar-chart.css';
 
+/* Chart family — ADR-0205: ui-line-chart, the fleet's first axis-bearing chart (a value-range baseline +
+ * always-shown min/max labels). Display-class, non-interactive, non-form-associated. */
+@import './controls/line-chart/line-chart.css';
+
 /* Report family — Wave M1 (ADR-0111, report-family.lld.md LLD-C10): the native table, the metric tile,
  * and the compact-realm intent badge. All Display-class, non-interactive, non-form-associated leaves. */
 @import './controls/table/table.css';

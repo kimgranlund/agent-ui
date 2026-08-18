@@ -1419,5 +1419,19 @@
     "description": "team becomes the meta-line envelope's FIFTH additive model-authored arm (GH #1196): the Builder's team-shaped generation path declares a name-only proposed ros…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0205",
+    "url": "./adr-index.html#adr-0205",
+    "description": "ui-line-chart v1 axis vocabulary (GH #1207): the honest floor for an axis-bearing chart — one value-range baseline + printed min/max labels, multi-series as ba…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0205",
+    "url": "./adr-index.html#adr-0205",
+    "description": "ui-line-chart v1 axis vocabulary: minimal baseline + min/max labels, single-series, hand-rolled inline SVG",
+    "level": "L3",
+    "section": "Records"
   }
 ]

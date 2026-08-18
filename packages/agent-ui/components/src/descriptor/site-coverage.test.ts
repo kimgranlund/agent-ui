@@ -142,6 +142,10 @@ const LAYOUT_SHOWCASE = ['layout-overview.html', 'layout-permutations.html'] as 
 // page (`image-doc.html`) landed in the following docs-writer seat's slice, draining this stopgap — empty
 // again, so a missing required page on ANY shipped component now fails the build (the ui-toggle/GH #832
 // precedent, above).
+//
+// GH #1207 / ADR-0205 — ui-line-chart's descriptor + control + its `line-chart-doc.html` site page all
+// landed in the SAME component-build seat's wave (the ui-image/GH #1189 same-wave precedent, ADR-0087
+// cl.6) — no stopgap needed; the whole fleet stays documented.
 const KNOWN_UNDOCUMENTED = new Set<string>()
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
@@ -204,7 +208,9 @@ describe('site coverage — every shipped component has its required per-tier pa
       // ui-stat/ui-table (no events, no geometry row, not form-associated); its {doc} page required below.
       // + ui-image (GH #1189 R1/R2) — the URL-sourced content-image primitive, Display class (geometry.md:
       // "intrinsic structural sizing", no [size]/[scale] control-band row); its {doc} page is required below.
-      ['attachment', 'badge', 'bar-chart', 'code', 'description-list', 'icon', 'image', 'ladder', 'progress', 'ramp', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text'],
+      // + ui-line-chart (GH #1207/ADR-0205) — the fleet's first axis-bearing chart (a value-range baseline +
+      // always-shown min/max labels, single-series); parked in KNOWN_UNDOCUMENTED above.
+      ['attachment', 'badge', 'bar-chart', 'code', 'description-list', 'icon', 'image', 'ladder', 'line-chart', 'progress', 'ramp', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text'],
     )
     // Wave 1 Indicator family (checkbox, switch, radio, radio-group) + ui-segment (ADR-0095 clause 3 —
     // the SAME real ancestor, UIIndicatorElement, as ui-radio) + the Wave M1 feed family (ADR-0112): ui-avatar
@@ -286,8 +292,8 @@ describe('site coverage — every descriptor is documented XOR a known, delibera
   it('KNOWN_UNDOCUMENTED lists exactly the real undocumented descriptors (no stale name lingers, no surprise gap)', () => {
     const undocumentedNames = COMPONENTS.filter((c) => !isDocumented(c)).map((c) => c.name).sort()
     expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(undocumentedNames)
-    // [] — GH #1189's ui-image site doc page landed (image-doc.html), draining the stopgap; every shipped
-    // component stays fully documented.
+    // [] — GH #1207/ADR-0205's ui-line-chart shipped its site doc page (`line-chart-doc.html`) in the same
+    // wave as its descriptor + control; every shipped component stays fully documented.
     expect([...KNOWN_UNDOCUMENTED].sort()).toEqual([])
   })
 })

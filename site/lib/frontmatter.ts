@@ -71,6 +71,7 @@ import themeProviderMd from '../../packages/agent-ui/components/src/controls/the
 // The Wave M1 chart family (ADR-0107, chart-family.lld.md): the two Display-class axis-free charts.
 import sparklineMd from '../../packages/agent-ui/components/src/controls/sparkline/sparkline.md?raw'
 import barChartMd from '../../packages/agent-ui/components/src/controls/bar-chart/bar-chart.md?raw'
+import lineChartMd from '../../packages/agent-ui/components/src/controls/line-chart/line-chart.md?raw'
 // The Wave M1 report family (ADR-0111, report-family.lld.md): table/stat/badge — all tier=display. `ui-table`
 // widened in place by ADR-0163 (selection/sort/filter/pagination, all default off).
 import tableMd from '../../packages/agent-ui/components/src/controls/table/table.md?raw'
@@ -198,6 +199,8 @@ export const loadThemeProviderDoc = (): ComponentDoc => parseDoc(themeProviderMd
 // The Wave M1 chart family (ADR-0107 — both tier=display ⇒ {doc} only).
 export const loadSparklineDoc = (): ComponentDoc => parseDoc(sparklineMd)
 export const loadBarChartDoc  = (): ComponentDoc => parseDoc(barChartMd)
+// ADR-0205/GH #1207 — ui-line-chart, the fleet's first axis-bearing chart (tier=display ⇒ {doc} only).
+export const loadLineChartDoc = (): ComponentDoc => parseDoc(lineChartMd)
 // The Wave M1 report family (ADR-0111 — all three tier=display ⇒ {doc} only).
 export const loadTableDoc = (): ComponentDoc => parseDoc(tableMd)
 export const loadStatDoc  = (): ComponentDoc => parseDoc(statMd)

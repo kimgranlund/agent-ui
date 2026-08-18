@@ -1,0 +1,84 @@
+/* line-chart.css — ui-line-chart, the fleet's first axis-bearing chart (ADR-0205). Two sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-line-chart)` declares the `--ui-line-chart-*` chain: the whole-shape floor
+ *       (a bare, unstyled chart in a flex row must still paint a visible, non-collapsed box — the
+ *       ui-bar-chart SPEC-R9 AC1 precedent, here on BOTH axes since this control also reserves vertical room
+ *       for the two label rows), density-invariant mark geometry (stroke width — mirrors ui-sparkline,
+ *       ADR-0107 cl.5), and the label text style reading the SAME `--md-sys-typescale-body-medium-*` row
+ *       ui-bar-chart's printed values read (density-RESPONSIVE row gap rides `--md-sys-space` for free).
+ *   [2] STYLES BLOCK — `@scope (ui-line-chart)` consumes ONLY `--ui-line-chart-*` (∪ the shared
+ *       `--md-sys-color-*`/`--md-sys-typescale-*` namespaces the token block itself reads).
+ *
+ * Layout: a 3-row CSS grid — `label-max` / the svg (1fr, fills the remaining space) / `label-min` — the
+ * EXTERNAL counterpart to line-chart-math.ts's own internal PLOT_MARGIN_Y (the viewBox reserves vertical
+ * breathing room so the plotted line/baseline never touch the svg's own edges); together the two margins
+ * give the whole tile its "room reserved for the min/max label rows above/below the plot area" shape
+ * (ADR-0205 cl.5). Labels are real DOM text — selectable, zoomable, token-typed — never SVG `<text>` (cl.1).
+ *
+ * Line/area ink is `currentColor` (the ui-sparkline precedent — resolves to whatever forced ink the
+ * consuming context already resolves to, WHCM included, with NO dedicated `forced-colors` block needed).
+ * The baseline reference line is the SAME `currentColor` stroke at a reduced `--ui-line-chart-baseline-opacity`
+ * — opacity is not a color property, so WHCM never flattens it either (the ui-sparkline area-wash rationale,
+ * reused here for the SAME reason) — this keeps the baseline visually distinct from the data line without a
+ * second ink role to route through forced-colors.
+ *
+ * RTL: NO mirroring rule (the ui-sparkline SPEC-R11 precedent) — SVG viewBox coordinates are physical by
+ * design; a series reads left-to-right in both directions (chronology is data order, not a bidi concern).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-line-chart) declares --ui-line-chart-* ════════════════ */
+
+:where(ui-line-chart) {
+  --ui-line-chart-min-inline-size: 16em; /* the whole-shape floor (mirrors --ui-bar-chart-min-inline-size) */
+  --ui-line-chart-min-block-size: 9em; /* room for both label rows + a real plot area, not a sliver */
+  --ui-line-chart-line-stroke-width: 1.5px; /* density-invariant px (ADR-0107 cl.5 precedent) */
+  --ui-line-chart-area-opacity: 0.15;
+  --ui-line-chart-baseline-opacity: 0.35; /* a visibly SUBTLER reference than the data line, same ink */
+  --ui-line-chart-text-ink: var(--md-sys-color-neutral-on-surface); /* label ink — the ONE role reference */
+  --ui-line-chart-row-gap: var(--md-sys-space-xs); /* label<->plot rhythm — rides [density] for free */
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-line-chart) consumes ONLY --ui-line-chart-* ════════════════ */
+
+@scope (ui-line-chart) {
+  :scope {
+    display: grid;
+    grid-template-rows: auto 1fr auto; /* label-max / svg / label-min — cl.5's reserved label rows */
+    row-gap: var(--ui-line-chart-row-gap);
+    min-inline-size: var(--ui-line-chart-min-inline-size);
+    min-block-size: var(--ui-line-chart-min-block-size);
+    box-sizing: border-box;
+    color: inherit;
+    /* text-bearing Display (the ui-bar-chart SPEC-R12 precedent) — the type matrix is the lever, not a
+       [size]/[scale] attribute; a chart takes neither. */
+    font-size: var(--md-sys-typescale-body-medium-size);
+    line-height: var(--md-sys-typescale-body-medium-line-height);
+  }
+
+  :scope svg {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    min-block-size: 0; /* let the grid's 1fr row size the svg row, not the svg's own intrinsic aspect */
+  }
+
+  :scope [data-part='label-max'],
+  :scope [data-part='label-min'] {
+    color: var(--ui-line-chart-text-ink);
+    text-align: end; /* the ui-bar-chart printed-value precedent — magnitudes read cleanly right-aligned */
+    font-variant-numeric: tabular-nums;
+  }
+
+  :scope svg [data-part='line'] {
+    stroke-width: var(--ui-line-chart-line-stroke-width);
+  }
+
+  :scope svg [data-part='area'] {
+    opacity: var(--ui-line-chart-area-opacity);
+  }
+
+  :scope svg [data-part='baseline'] {
+    stroke-width: 1px;
+    opacity: var(--ui-line-chart-baseline-opacity);
+  }
+}

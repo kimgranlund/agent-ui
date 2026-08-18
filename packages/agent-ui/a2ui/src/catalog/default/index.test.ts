@@ -211,6 +211,13 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'mark shape its path/children should carry, is a separate decision for a later pass (a2ui is team-led, ' +
     'out of this build\'s authorization, and GH #954\'s own Acceptance criteria name no catalog requirement) ' +
     '— not a chrome/security exclusion like the PERMANENT entries above — drains the moment that decision lands.'],
+  ['LineChart',
+    'ADR-0205 (GH #1207) — TEMPORARY exclusion, shipped ahead of its catalog row: the component-build seat\'s ' +
+    'dispatch mints the fleet\'s first axis-bearing chart control (`ui-line-chart`) but explicitly stays ' +
+    'inside packages/agent-ui/components — the LineChart catalog row/factory/conformance/tier-map/feed-' +
+    'disposition/frontier-seed/disposition-allowlist/corpus-import-seeds wiring ADR-0205 cl.8 names is a ' +
+    'separate seat\'s phase (a2ui is team-led, out of this build\'s authorization) — not a chrome/security ' +
+    'exclusion like the PERMANENT entries above — drains the moment that catalog wave lands.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

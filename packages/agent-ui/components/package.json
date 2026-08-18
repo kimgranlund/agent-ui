@@ -35,6 +35,7 @@
     "./controls/icon": "./src/controls/icon/icon.ts",
     "./controls/image": "./src/controls/image/image.ts",
     "./controls/ladder": "./src/controls/ladder/ladder.ts",
+    "./controls/line-chart": "./src/controls/line-chart/line-chart.ts",
     "./controls/list": "./src/controls/list/list.ts",
     "./controls/menu": "./src/controls/menu/menu.ts",
     "./controls/modal": "./src/controls/modal/modal.ts",
