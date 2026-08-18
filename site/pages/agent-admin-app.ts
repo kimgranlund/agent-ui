@@ -924,7 +924,12 @@ function beginRename(row: HTMLElement, persona: Persona): void {
 }
 
 applyPersona(active) // also stages the header's own roster row (pushRoster, inside applyPersona)
-root.append(admin, toasts, fileInput, drawer)
+// `fileInput` FIRST (GH #1233): since #1211 the Test-chat composer inside `admin` carries its own hidden
+// `<input type="file">` (`[data-part="attach-input"]`, the paperclip picker). The persona import's input
+// must stay the page's FIRST file input in document order so "the hidden file input" stays unambiguous —
+// appending it after `admin` routed persona-import .json picks into the composer's attach ingest path
+// (the "Can't attach — unsupported file type" toast) instead of `importPersonaText`'s own handling.
+root.append(fileInput, admin, toasts, drawer)
 
 // GH #952 — the pointer-drag reorder gesture (formerly this page's own `wireDrag`), now the `list-reorder`
 // trait. `drawer` (a real `UIElement`) is the host — `rosterList` lives in its light DOM, so a `pointerdown`
