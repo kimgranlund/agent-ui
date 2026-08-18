@@ -123,4 +123,35 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
       'worked 3-step dates→room→confirm exemplar; pending a judged import wave (import-seeds.ts with a ' +
       'real VerdictsFile). Delete this entry when it is judged.',
   ],
+  //
+  // GH #1205 (2026-08-17) — the four COMPOSITION PACK A seeds (`slideshow-gallery` ·
+  // `confirmation-view` · `trend-list` · `card-layouts`): the same pending-state shape (NO VERDICT
+  // SOUGHT YET, not a refusal). Added as the req-a2ui-library R4 now-tier pattern seeds — the authoring
+  // session judging its own seeds is the manufactured judgment ADR-0068's Alternatives ban. Run the
+  // judged pipeline (import-seeds.ts with a real VerdictsFile) and DELETE these entries when that wave
+  // lands.
+  [
+    'slideshow-gallery',
+    'GH #1205 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-A shelf seed ' +
+      '(req-a2ui-library R4 slideshow row — Swiper > SwiperItem > Image with scrim captions); pending ' +
+      'a judged import wave. Delete this entry when it is judged.',
+  ],
+  [
+    'confirmation-view',
+    'GH #1205 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-A shelf seed ' +
+      '(req-a2ui-library R4 confirmation row — the three-slot Card + DescriptionList receipt + footer ' +
+      'Button pair composition); pending a judged import wave. Delete this entry when it is judged.',
+  ],
+  [
+    'trend-list',
+    'GH #1205 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-A shelf seed ' +
+      '(req-a2ui-library R4 trend-list row — List > Row{Text · Sparkline · Stat delta}, templated); ' +
+      'pending a judged import wave. Delete this entry when it is judged.',
+  ],
+  [
+    'card-layouts',
+    'GH #1205 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-A shelf seed ' +
+      '(req-a2ui-library R4 card-layouts row — card bodies as list/columns/grid arrangements); pending ' +
+      'a judged import wave. Delete this entry when it is judged.',
+  ],
 ])
