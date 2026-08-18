@@ -1398,5 +1398,19 @@
     "description": "ui-description-list (GH #1185): the key–value receipt primitive is minted as a Display-class data-driven control — rows as hardened data, empty-value omission…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0202",
+    "url": "./adr-index.html#adr-0202",
+    "description": "pdf.js (pdfjs-dist) becomes agent-ui's SECOND ruled runtime-dependency exception: a lazy-loaded PDF-text extractor confined to one opt-in seam, gated on the AD…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0203",
+    "url": "./adr-index.html#adr-0203",
+    "description": "AgentTeam is a declared record (GM + roster of {agentId, role, routingDescription} members) on the existing agent-admin store, no runtime orchestrator in v1; t…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

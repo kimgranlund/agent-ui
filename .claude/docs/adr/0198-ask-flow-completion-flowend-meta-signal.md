@@ -232,3 +232,107 @@ around it.
 - A live pixel-truth re-run on the real agent-admin test chat (the #1081 pattern) as the CLOSING
   acceptance: one happy-path flow through proposed-outcome → user confirm → courtesy close → chrome
   row, and one urgent-triage flow ending in escalation + chrome row, on Kim's live surface.
+
+## Amendment (2026-08-18, proposed) — mid-flow backable-wizard commits are scene transitions, not answered asks; the closing turn's exactly-ONE settle `updateComponents` carve-out (`req-a2ui-patterns.md` R2/R4, Kim's rulings 2026-08-17)
+
+> Append-only, and **proposed**: the Status cell above reads `accepted` for the accepted record as a
+> whole and stays byte-untouched, and the 2026-08-17 amendment above (flowEnd on all terminal paths,
+> the pre-conclusion confirmation stage, the courtesy-close protocol) is itself **ratified** and
+> stays byte-untouched — agents never flip status. THIS amendment awaits Kim's own
+> `ratify ADR-0198 amendment` utterance, executed by `scripts/adr_ratify.py`'s amendment mode.
+> Source, each carve-out separately (their provenance differs): **B2** (the closing-turn settle
+> carve-out) ← `req-a2ui-patterns.md` R4's recorded Kim ruling — an explicit override of the lane's
+> own client-side-only recommendation, in that doc's "Kim rulings" section. **B1** (the mid-flow
+> scene-transition carve-out) ← `req-a2ui-patterns.md` R2's review-corrected conflicts analysis
+> (the doc-checker review forced R2's initial "no conflicts" claim to be reframed as a required law
+> amendment) plus Kim's separate approval of GH #1192 ("backable-wizard answered-ask carve-out
+> grammar amendment") as the mint-all-round work item that realizes it — R2 itself carries no ruling
+> bullet in that doc's "Kim rulings" section. (R3's greet-home/greet-feed-placement forks are also
+> ruled there but touch no ADR-0198 clause — they are realized instead via the mini-skill + the
+> exempt ask-id class, no wire change to this ADR's territory.)
+
+**Why the accepted record needs amending, precisely.** `req-a2ui-patterns.md` designed two new
+grammar-level patterns that COMPOSE with ADR-0198's shipped completion law rather than replacing
+it, and the lane's own review caught that both patterns silently contradict clauses of the accepted
+record as written, each requiring a named carve-out:
+
+- **R2 (backable multi-step).** The shipped answered-ask law (`grammar.md`, restated in this ADR's
+  Context) forbids updating, deleting, or rebuilding a surface once the user has answered its ask —
+  "declare a NEW ask with a FRESH `ask-<n>` id" for the next step. But the shipped surface-reuse
+  paragraph (GH #1164, cited in this ADR's own Relates) already requires a continuing flow to REUSE
+  its surface scene-to-scene, and a backable wizard's Next/Back is exactly that continuation: the
+  producer's response to a Next/Back click updates the SAME surface the user just acted on. The two
+  shipped clauses collide head-on for this one pattern, and neither side is optional (the fresh-id
+  reading breaks surface-reuse; the reuse reading breaks the answered-ask freeze). R2's finding:
+  mid-flow Next/Back is not an "answered ask" in the freeze's sense at all — it is a scene
+  transition inside one still-open ask, and only the flow-final confirm closes it.
+- **R4 (conclude bookend / settled receipt).** This ADR's own A3 (the courtesy-close protocol)
+  states the closing turn "emits no A2UI" — a clause this amendment's own accepted text repeats
+  three times (cl.2, cl.3, A2). Kim's ruling on R4's three-way fork requires the confirmed receipt
+  to visibly settle (buttons retired, a settled badge added) in the SAME turn as the courtesy close,
+  overriding the lane's own client-side-only recommendation. That is one `updateComponents` on the
+  closing turn — a direct, deliberate exception to the "emits no A2UI" sentence, named here so the
+  next envelope/closing-turn audit finds a cited decision rather than a silent contradiction.
+
+Both carve-outs are bundled into ONE amendment per Kim's explicit ruling (`req-a2ui-patterns.md`,
+"Kim rulings" section): *"the mobilization's grammar-amendment item must bundle this carve-out with
+the R2 mid-flow carve-out so ADR-0198 is amended once, not twice."*
+
+### Amended decision
+
+- **B1 — mid-flow backable-wizard commits are scene transitions, not answered asks.** The
+  answered-ask freeze (declare-a-new-ask-with-a-fresh-id) applies ONLY at flow end — the moment the
+  flow-final confirm is committed. Every Next/Back turn before that point is a scene transition on
+  the SAME still-open ask: the producer's `updateComponents` response swaps the scene container's
+  children (a stable child id under the root-once wrapper), the ask keeps its ONE `ask-<n>` id for
+  the whole wizard (posture (i), `req-a2ui-patterns.md` R2's recommendation), and the shared draft
+  state lives under a `/draft/*` data-model prefix that survives every scene swap untouched — Back
+  is free because nothing has been committed anywhere yet. Once the flow-final confirm lands, the
+  ask IS answered in the accepted sense and this ADR's existing law (A2's ordering law, ADR-0196's
+  settle law) governs from that point exactly as accepted.
+- **B2 — the closing turn's ONE exception to "emits no A2UI": the settle `updateComponents`.**
+  Immediately before (in the SAME producer turn as) the courtesy-close note + `flowEnd: true`, the
+  closing turn MAY carry exactly one `updateComponents` against the confirmed receipt's surface:
+  strip its Back/Confirm buttons and add a settled-status Badge (e.g. "Booked · #AB123"). This is
+  the one bundled carve-out to A3's "closing turn emits no A2UI" and to cl.2/cl.3's identical
+  framing — every other accepted constraint on the closing turn stands unchanged (no new ask, prose
+  `note`, `flowEnd: true`, the done/start-over chrome rendering after this turn exactly as cl.3
+  already provides). The settle update targets ONLY the already-confirmed receipt surface — never a
+  fresh surface, never any other card — and fires at most once per flow, on the escalation path
+  never (a pure safety-directive close has no receipt to settle, per the amendment above's A1).
+  `deleteSurface` is still never used on a confirmed receipt (the accepted Consequences' durability
+  guarantee stands): B2 is a strip-and-badge `updateComponents`, not a removal.
+
+### Non-goals (amendment)
+
+- **No new meta-line fields, no wire vocabulary growth** — B1/B2 are grammar-level clarifications
+  of when the existing `ask`/`flowEnd` mechanics apply, not new fields; the reserved meta-line
+  vocabulary stays at four (`ask · plan · personaPatch · flowEnd`).
+- **No change to the fresh-id rule's substance at true flow end** — B1 narrows WHEN the freeze
+  starts, it does not loosen what happens once it does; a genuinely new ask after the flow (a
+  follow-up task) still gets a fresh `ask-<n>` id exactly as before.
+- **No second settle turn, no producer turn between confirm and close** — the settle update rides
+  the closing turn itself (B2); `req-a2ui-patterns.md` R4's fork (ii), an extra standalone settle
+  turn, is explicitly the path NOT taken (it has no user message to answer and would itself violate
+  the immediately-next-turn mandate).
+- **No greet-card wire change lands here** — R3's ask-id-exempt-class mechanism (Kim's ruling)
+  realizes the greet pattern entirely within the existing `ask` meta-line field and is tracked by
+  its own mobilization item; it touches no clause of this ADR.
+
+**Repairs** (booked for the ratification-triggered BUILD, not authored here):
+- `packages/agent-ui/a2ui/src/agent/prompts/grammar.md` — the surface-reuse paragraph and the
+  answered-ask-law paragraph both gain the B1 scoping sentence (freeze begins at flow-final
+  confirm, not before); the Flow completion paragraph (already rewritten by the 2026-08-17
+  amendment) gains the B2 settle-carve-out sentence; byte-pinned prompt, so
+  `prompt-equivalence.baseline.json` is re-captured in the same slice.
+- A `backable-wizard` corpus seed (`req-a2ui-patterns.md` R2's mobilization item 2) replaying the
+  3-step dates→room→confirm sketch, validating that Back preserves `/draft/*` values across scene
+  swaps on ONE surface with ONE ask id.
+- The settled-receipt clause + settle-turn build (`req-a2ui-patterns.md` R4's mobilization item 5):
+  the closing-turn settle `updateComponents` implemented against the confirmed receipt surface,
+  composing with — never duplicating — ADR-0196's client-side answered-card treatment for
+  non-flow-final asks.
+- A live pixel-truth re-run on the real agent-admin test chat (the #1081 pattern): one backable
+  3-step flow where the user goes Back at the confirm step, amends an earlier answer, and returns
+  forward with values preserved (B1), immediately followed by a closing turn whose receipt visibly
+  settles in the same turn as the courtesy close (B2).
