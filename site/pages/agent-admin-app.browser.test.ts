@@ -635,3 +635,80 @@ describe('agent-admin-app — the Edit Agents drawer header/footer render at ful
     await raf()
   })
 })
+
+describe("agent-admin-app — opening the Edit Agents drawer centers the CURRENT agent's row (GH #1219)", () => {
+  const priorActive = (): string => agentSelect().value
+
+  async function pickAgent(id: string): Promise<void> {
+    const select = agentSelect()
+    ;(select.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await raf()
+    ;(select.querySelector(`[role="option"][value="${id}"]`) as HTMLElement).click()
+    await raf()
+  }
+
+  async function openDrawerViaPicker(): Promise<void> {
+    const select = agentSelect()
+    ;(select.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await raf()
+    ;(select.querySelector('[data-part="roster-action"][value="agent-admin:edit-agents"]') as HTMLElement).click()
+    await raf()
+  }
+
+  it('a mid-roster active agent lands inside the scrollport, roughly centered — not stranded below the fold', async () => {
+    const original = priorActive()
+    const ids = rosterOptions().map((o) => o.getAttribute('value') ?? '')
+    // The row the drawer must travel TO: past the first viewportful (the shipped roster is 14+ agents on a
+    // 414×896 fleet viewport — the #920 describe above already proves the list genuinely scrolls).
+    const target = ids[Math.floor(ids.length / 2)]!
+    await pickAgent(target)
+
+    await openDrawerViaPicker()
+
+    const list = document.querySelector('.roster-list') as HTMLElement
+    const row = list.querySelector(`.roster-row[data-agent="${target}"]`) as HTMLElement
+    expect(row, 'the active agent has a row').not.toBeNull()
+    expect(row.hasAttribute('data-active'), 'and it IS the marked-active row').toBe(true)
+    expect(list.scrollHeight, 'the roster really overflows its scrollport').toBeGreaterThan(list.clientHeight)
+
+    // `behavior:'smooth'` is a time-based animation (the status-stream FALSE-SETTLE lesson) — poll the real
+    // geometry until it settles rather than asserting one frame after open.
+    await vi.waitFor(
+      () => {
+        const port = list.getBoundingClientRect()
+        const rect = row.getBoundingClientRect()
+        expect(rect.top, 'row top inside the scrollport').toBeGreaterThanOrEqual(port.top - 1)
+        expect(rect.bottom, 'row bottom inside the scrollport').toBeLessThanOrEqual(port.bottom + 1)
+        const rowCenter = (rect.top + rect.bottom) / 2
+        const portCenter = (port.top + port.bottom) / 2
+        // "roughly centered": block:'center' aims the row's center at the port's center — allow half a
+        // row of slack for rounding + the scroller's own clamping.
+        expect(Math.abs(rowCenter - portCenter), 'row roughly centered in the scrollport').toBeLessThanOrEqual(rect.height / 2 + 2)
+      },
+      { timeout: 5_000 },
+    )
+
+    ;(document.querySelector('.roster-drawer-done') as HTMLElement).click()
+    await raf()
+    await pickAgent(original)
+  })
+
+  it('a FIRST-row active agent opens with the list clamped at the top (scrollIntoView never over-scrolls)', async () => {
+    const original = priorActive()
+    const first = rosterOptions()[0]!.getAttribute('value')!
+    await pickAgent(first)
+    await openDrawerViaPicker()
+
+    const list = document.querySelector('.roster-list') as HTMLElement
+    await vi.waitFor(
+      () => {
+        expect(list.scrollTop, 'the scroller clamps at 0 for the first row').toBeLessThanOrEqual(1)
+      },
+      { timeout: 5_000 },
+    )
+
+    ;(document.querySelector('.roster-drawer-done') as HTMLElement).click()
+    await raf()
+    await pickAgent(original)
+  })
+})

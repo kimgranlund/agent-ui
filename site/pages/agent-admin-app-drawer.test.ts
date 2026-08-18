@@ -410,3 +410,17 @@ describe('agent-admin-app — the seam registrations the picker items ride (GH #
     expect(holder.getAttribute('data-primary'), 'the Builder interview opens on Co-pilot — the Generate flow, verbatim').toBe('copilot')
   })
 })
+
+describe('agent-admin-app — the drawer-open scroll survives jsdom, where scrollIntoView is absent (GH #1219)', () => {
+  it('opening the drawer schedules the active-row scroll; a frame later nothing threw (the status-stream guard idiom)', async () => {
+    await openViaPicker()
+    const active = rowFor(agentSelect().value)
+    expect(active, 'the active agent has a row').not.toBeNull()
+    expect(active.hasAttribute('data-active'), 'marked active').toBe(true)
+    // The guard path itself: jsdom rows carry no scrollIntoView — the page's rAF callback must return, not
+    // throw (an uncaught rAF exception here fails the run as an Unhandled Error even with tests green).
+    expect(typeof (active as HTMLElement & { scrollIntoView?: unknown }).scrollIntoView, 'the jsdom premise this test rests on').toBe('undefined')
+    await new Promise((resolve) => requestAnimationFrame(resolve))
+    await closeDrawer()
+  })
+})
