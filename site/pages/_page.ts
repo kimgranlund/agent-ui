@@ -436,6 +436,12 @@ export const NAV: readonly NavGroup[] = [
     label: 'ui-avatar',
     links: [{ href: './avatar-doc.html', label: 'API' }],
   },
+  // GH #1189 — ui-image, the URL-sourced content-image primitive (tier=display ⇒ {doc} only, a conventional
+  // component admission — no new ADR). NOT a fallback chain like ui-avatar above — just the <img> mechanics.
+  {
+    label: 'ui-image',
+    links: [{ href: './image-doc.html', label: 'API' }],
+  },
   {
     label: 'ui-attachment',
     links: [{ href: './attachment-doc.html', label: 'API' }],

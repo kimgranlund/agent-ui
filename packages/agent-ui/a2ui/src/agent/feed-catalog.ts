@@ -93,7 +93,7 @@ export interface FeedExclusion {
 }
 
 /**
- * The 30 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
+ * The 31 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
  * the ADR-0097 Amendment / ADR-0107 Amendment 2 — + the report/content/feed catalog wave's five:
  * `Stat`/`Table` [ADR-0111], `Disclosure` [ADR-0113], `Progress`/`Attachment` [ADR-0112] — + the
  * token-surface family's three: `Swatch`/`Ramp`/`Ladder` [ADR-0118 cl.6] — + the M4 app-surfaces panes
@@ -103,7 +103,9 @@ export interface FeedExclusion {
  * `ColorPicker` [ADR-0123 cl.6] — + the form-popover wave's one: `FormPopover` [GH #294 F4,
  * form-popover.spec.md SPEC-R9 — the same disclosure-overlay reasoning as Popover/Menu/Tooltip] —
  * + the ui-drawer wave's one: `Drawer` [ADR-0188 cl.2 — the SAME focus-stealing top-layer class as
- * Modal, edge-docked rather than centred]).
+ * Modal, edge-docked rather than centred] + the image-content wave's one: `Image` [GH #1189 — a
+ * URL-sourced content image/photo, the Attachment/Swatch/Ramp/Ladder report-content class, NOT the
+ * Avatar/Icon light-identity-mark class]).
  * Composite-closure note: a composite's children are excluded ALONGSIDE their parent for the SAME
  * reason (Tab/TabPanel with Tabs; MenuItem with Menu) — `feed-catalog.test.ts` asserts this closure
  * holds, both here and for the IN composites (RadioGroup/Radio, SegmentedControl/Segment, Card/its
@@ -231,6 +233,11 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
     type: 'ColorPicker',
     reason:
       'an INPUT, not report/reference content (ADR-0123 cl.6) — unlike the display-only Swatch/Ramp/Ladder trio, ColorPicker DOES carry a value:{prop,event} mark, but no ask affordance admits an editor to the artifact feed; a color ask inside a chat bubble stays a TextField/ComboBox choice, not a 2-axis pad+channels composite.',
+  },
+  {
+    type: 'Image',
+    reason:
+      'a URL-sourced content image/photo (GH #1189), not an ask affordance — display-only, no value mark; the Attachment/Swatch/Ramp/Ladder report/artifact-content parity argument, NOT the Avatar/Icon light-identity-mark class (an image IS the content, unlike a small non-interactive identity mark that merely furnishes an ask card) — reaches the artifact feed via full-catalog rendering (a Card-with-hero payload), never a click-to-answer ask surface.',
   },
 ] as const
 

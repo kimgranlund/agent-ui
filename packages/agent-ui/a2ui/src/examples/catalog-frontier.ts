@@ -323,4 +323,52 @@ export const bookingReceiptSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed]
+const LISTING_ID = 'frontier-hero-listing'
+/** Frontier 7 — the IMAGE content primitive (GH #1189 R1/R2, conventional component admission): a
+ *  property-listing Card whose hero `Image` reserves its `aspect-ratio` box BEFORE any pixel loads —
+ *  zero CLS, R1, proven end-to-end through the real catalog/renderer path (the shared-validator +
+ *  render-smoke gate below, plus `usageHint="hero"` wiring the LCP-priority loading defaults,
+ *  loading=eager/fetchpriority=high) — carrying a default-slotted `Text` caption pinned over its bottom
+ *  scrim (R2). `src` is data-bound (an amend-answer turn can swap the photo in place); `alt` is a static
+ *  literal (the producer-authored accessible name — image.md's "REQUIRED in spirit" contract, now
+ *  admission-enforced by the catalog's `PropDef.required`, catalog.ts). `CardContent` below carries the
+ *  bound title + the one action, the `frontier-booking-receipt` heading/content/button shape. */
+export const heroListingCardSeed: ExampleSeed = {
+  name: 'frontier-image-hero-card',
+  description: 'A property-listing Card with a hero Image (usageHint="hero", zero-CLS aspect box, R1) carrying a default-slotted caption over its bottom scrim (R2), plus a bound title and a View-listing Button.',
+  promptText: 'Show this listing as a card with a big photo up top, its title below, and a view button.',
+  surfaceId: LISTING_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: LISTING_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: LISTING_ID,
+        value: { listing: { photo: '/photos/harbor-view-loft.jpg', title: 'Harbor View Loft — $310/night' } },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: LISTING_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['hero', 'body'] },
+          {
+            id: 'hero', component: 'Image', src: { path: '/listing/photo' },
+            alt: 'Harbor View Loft, exterior at sunset', aspect: '16/9', usageHint: 'hero',
+            children: ['hero_caption'],
+          },
+          { id: 'hero_caption', component: 'Text', text: 'Harbor View Loft — exterior at sunset' },
+          { id: 'body', component: 'CardContent', children: ['body_row'] },
+          { id: 'body_row', component: 'Row', gap: 'md', align: 'center', justify: 'between', children: ['body_title', 'btn_view'] },
+          { id: 'body_title', component: 'Text', variant: 'h5', text: { path: '/listing/title' } },
+          { id: 'btn_view', component: 'Button', variant: 'solid', label: 'View listing', action: { action: 'view_listing' } },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed]

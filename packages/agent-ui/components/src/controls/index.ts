@@ -34,6 +34,7 @@ export * from './text-field/text-field.ts'
 export * from './textarea/textarea.ts' // ui-textarea (ADR-0134) — the multi-line FACE sibling of ui-text-field
 export * from './text/text.ts'
 export * from './icon/icon.ts' // ui-icon (ADR-0065/0066) — the icon-adapter's declarative consumer surface
+export * from './image/image.ts' // ui-image (GH #1189 R1/R2) — URL-sourced content image, reserved aspect-ratio box (zero CLS), native lazy-loading, bottom scrim + caption overlay
 
 // Indicator controls — Wave 1 (ADR-0041/0042).
 export * from './checkbox/checkbox.ts'

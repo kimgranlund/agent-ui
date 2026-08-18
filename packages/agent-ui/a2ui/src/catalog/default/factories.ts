@@ -775,6 +775,31 @@ export const avatarFactory: WidgetFactory = mappedAccessorFactory('ui-avatar', {
 // header note). Display-only leaf: no `value` mark, no children.
 export const attachmentFactory: WidgetFactory = mappedAccessorFactory('ui-attachment', { name: 'filename' })
 
+// Image → ui-image (GH #1189 R1/R2, conventional component admission — the ADR ruling recorded in
+// image.md's own header, no new ADR file). `src`/`alt`/`fit`/`aspect`/`usageHint` are ALL 1:1 reflecting
+// accessor props verified against image.ts `static props` (`image.props.gen.ts`) — including `usageHint`,
+// whose real JS property key IS the camelCase `usageHint` (the props schema's `attribute: 'usage-hint'`
+// entry only names the kebab HTML ATTRIBUTE the framework's own prop→attribute reflection targets; it is
+// NOT the accessor key `setProp`'s `el[prop] = value` writes through). This is the OPPOSITE shape from
+// `Swiper.slidesInView` (bespoke, above): that component's real accessor key IS the hyphenated
+// `this['slides-in-view']` string, which `naming.ts`'s UAX-31 gate cannot spell as a wire property name,
+// forcing a non-identity `mapsTo` + a bespoke `applyProp`. `ui-image` has no such collision — `mapsTo`
+// is identity on every property (the `Attachment.mimeType`/`sizeBytes` precedent: a camelCase wire name
+// that is ALSO the real camelCase JS accessor, entirely unrelated to whatever kebab attribute name the
+// component's own `static props` schema separately declares) — so plain `accessorFactory` suffices, no
+// bespoke mapping needed. `alt` is additionally `PropDef.required:true` (catalog.ts) — the a2ui catalog's
+// own admission-time enforcement of the "REQUIRED in spirit" contract image.md documents for the
+// component's interior `<img alt>` (an accessibility gap, not a component concern: the component itself
+// never coerces or hides an empty `alt`, per its own header). Display-only leaf: no `value` mark (no
+// events — image.md `events: []`), no `submitGate`. `children: 'ChildList'` (catalog.json) — the optional
+// default-slotted caption content (image.md's one documented slot): SAFE as a plain generic ChildList
+// append (unlike `TimelineItem`'s deliberately-omitted `children` key below) because image.ts's own CSS
+// targets caption content STRUCTURALLY (`:not([data-part="media"])`) rather than by a `data-role` the
+// renderer would need to stamp — any renderer-appended child that isn't the control-built `<img
+// data-part="media">` (always kept first via `insertBefore(img, this.firstChild)`, verified against
+// image.ts) is automatically styled as caption, regardless of append order.
+export const imageFactory: WidgetFactory = accessorFactory('ui-image')
+
 // ── the ADR-0118 token-surface family (Swatch / Ramp / Ladder, catalog LLD-C13, token-surfaces.lld.md §6) ──
 //
 // Swatch → ui-swatch (SPEC-R1..R4). Wire `value` → prop `color` (TKT-0069 item 1); `value`/`label` are bindable (a model may drive the color/caption from
@@ -1007,6 +1032,7 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Progress: progressFactory,
   Avatar: avatarFactory,
   Attachment: attachmentFactory,
+  Image: imageFactory,
   Swatch: swatchFactory,
   Ramp: rampFactory,
   Ladder: ladderFactory,

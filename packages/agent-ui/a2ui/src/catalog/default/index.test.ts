@@ -60,8 +60,8 @@ describe('default catalog (catalog LLD-C4, SPEC-R1/R3/R8/N2)', () => {
     expect(defaultCatalog.components.ChoicePicker).toBeUndefined() // superseded by Select (ADR-0053)
   })
 
-  it('does NOT declare the deliberately-absent types (Image/Video — no shipped ui-image/ui-video control)', () => {
-    for (const absent of ['Image', 'Video']) {
+  it('does NOT declare the deliberately-absent types (Video — no shipped ui-video control; Image joined the catalog GH #1189)', () => {
+    for (const absent of ['Video']) {
       expect(defaultCatalog.components[absent], absent).toBeUndefined()
     }
   })
@@ -145,9 +145,10 @@ function fleetPrimaryTypes(): string[] {
  *  catalog row" shape at M1 (token-surfaces.lld.md LLD-C10) — deliberately split from M1 (controls +
  *  allowlist seed) into a separate M2 wave (rows + exemplar + guidance, LLD-C13/C14/C15, ADR-0118 fork
  *  F4); the M2 wave lands the three rows below and DRAINS that seed too, the same way the report/content/
- *  feed seeds above were drained. `Image`/`Video` are deliberately NOT here — no `ui-image`/`ui-video`
- *  descriptor exists, so they never enter the derived set to begin with (they stay a documentary-only note
- *  in SPEC §5.2.1, never code-derived). A future undispositioned control re-seeds this map with a reason +
+ *  feed seeds above were drained. `Image` shipped its control + catalog row in the SAME wave (GH #1189,
+ *  the ADR-0087 cl.6 same-wave precedent — no allowlist seed needed). `Video` is deliberately NOT here —
+ *  no `ui-video` descriptor exists, so it never enters the derived set to begin with (it stays a
+ *  documentary-only note in SPEC §5.2.1, never code-derived). A future undispositioned control re-seeds this map with a reason +
  *  citation, same as Wave 0's seed. The color-picker family (ADR-0123, `ColorPicker`) re-seeded this SAME
  *  "shipped ahead of its catalog row" shape at M1 (color-picker.lld.md, the ADR-0118 M1/M2 discipline) —
  *  this M2 wave lands the row below and DRAINS that seed too, the same way the token-surface/report/
@@ -399,14 +400,67 @@ describe('default catalog — conformance (SPEC-R7/R9)', () => {
   })
 
   it('NEGATIVE: a malformed Modal payload FAILS conformance with CATALOG (security allowlist, SPEC-R9)', () => {
-    // The conformance validator (LLD-C6) verdicts PRESENT props (unknown / type-mismatch), not
-    // required-presence — so the malformed-payload control is a type mismatch on `open` (declared boolean)
-    // plus an undeclared property; both are `CATALOG`, the renderer's not-rendered verdict.
+    // The conformance validator (LLD-C6) verdicts PRESENT props (unknown / type-mismatch) — `Modal`
+    // declares no `required` PropDef, so this control is unaffected by the GH #1189 required-presence
+    // addition below (Image.alt): the malformed-payload control is a type mismatch on `open` (declared
+    // boolean) plus an undeclared property; both are `CATALOG`, the renderer's not-rendered verdict.
     const typeMismatch: A2uiComponent = { id: 'm1', component: 'Modal', open: 'yes' }
     expect(validateCatalogConformance(typeMismatch, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'm1.open' })
 
     const unknownProp: A2uiComponent = { id: 'm2', component: 'Modal', bogus: 1 }
     expect(validateCatalogConformance(unknownProp, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'm2.bogus' })
+  })
+})
+
+describe('default catalog — Image (GH #1189 R1/R2, SPEC-R7/R9)', () => {
+  it('declares src/alt/fit/aspect/usageHint mapped 1:1 + a ChildList child model (the optional caption slot)', () => {
+    const img = defaultCatalog.components.Image
+    expect(img.children).toBe('ChildList')
+    for (const p of ['src', 'alt', 'fit', 'aspect', 'usageHint']) {
+      expect(img.properties[p]?.mapsTo, p).toBe(p) // SPEC-R8 1:1 reflection — including usageHint (JS
+      // accessor key IS camelCase; `usage-hint` only names the attribute, see factories.ts's doc comment)
+    }
+    expect(img.properties.src?.bindable).toBe(true)
+    expect(img.properties.alt?.bindable).toBe(true)
+  })
+
+  it('alt is PropDef.required:true — the a2ui catalog admission-time enforcement of image.md\'s "REQUIRED in spirit" contract', () => {
+    expect(defaultCatalog.components.Image.properties.alt?.required).toBe(true)
+    for (const p of ['src', 'fit', 'aspect', 'usageHint']) {
+      expect(defaultCatalog.components.Image.properties[p]?.required, p).toBeFalsy()
+    }
+  })
+
+  it('a Card-with-hero payload — Image with alt + usageHint="hero" — validates 0 failures via validateA2ui', () => {
+    const message = {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          { id: 'root', component: 'Card', children: ['hero'] },
+          { id: 'hero', component: 'Image', src: '/photos/harbor.jpg', alt: 'Boats moored in the harbor at sunset', aspect: '16/9', usageHint: 'hero' },
+        ],
+      },
+    }
+    expect(validateA2ui(message, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('NEGATIVE: an Image node OMITTING alt FAILS conformance with CATALOG (required-presence, GH #1189)', () => {
+    const noAlt: A2uiComponent = { id: 'im1', component: 'Image', src: '/x.jpg' }
+    expect(validateCatalogConformance(noAlt, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'im1.alt' })
+  })
+
+  it('an Image node carrying a {path} binding for alt SATISFIES required-presence (the key IS there; deferred resolution, ADR-0026)', () => {
+    const bound: A2uiComponent = { id: 'im2', component: 'Image', src: '/x.jpg', alt: { path: '/caption' } }
+    expect(validateCatalogConformance(bound, defaultCatalog)).toEqual([])
+  })
+
+  it('NEGATIVE: an unknown prop / out-of-enum literal on Image still fails CATALOG (SPEC-R9 security allowlist, unaffected by the required addition)', () => {
+    const unknownProp: A2uiComponent = { id: 'im3', component: 'Image', src: '/x.jpg', alt: 'A photo', bogus: 1 }
+    expect(validateCatalogConformance(unknownProp, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'im3.bogus' })
+
+    const badEnum: A2uiComponent = { id: 'im4', component: 'Image', src: '/x.jpg', alt: 'A photo', fit: 'zoom' }
+    expect(validateCatalogConformance(badEnum, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'im4.fit' })
   })
 })
 

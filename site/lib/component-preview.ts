@@ -36,6 +36,24 @@ import { createCanvasSurface, applyRootStretch } from './canvas-surface.ts'
 // collide with a real enum member (all lowercase identifiers).
 const KNOB_UNSET = '__cp-unset__'
 
+// GH #1189 — ui-image / a2ui `Image`: a self-contained inline-SVG data URI (the avatar-doc.ts `PORTRAIT_SRC`
+// precedent) so both preview modes demonstrate a real photo without a network fetch (offline-safe, no flaky
+// live-network dependency in a browser/jsdom test run). A simple gradient "horizon" rectangle reads legibly
+// under either `fit` value and any `aspect` ratio.
+const IMAGE_SAMPLE_SRC =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180">' +
+      '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#6ea8d8"/><stop offset="1" stop-color="#1b3a5c"/>' +
+      '</linearGradient></defs>' +
+      '<rect width="320" height="180" fill="url(#g)"/>' +
+      '<circle cx="256" cy="48" r="20" fill="#fff5d6"/>' +
+      '<rect y="128" width="320" height="52" fill="#0e2338"/>' +
+      '</svg>',
+  )
+const IMAGE_SAMPLE_ALT = 'A coastline at sunset'
+
 // ── BATCH A — one control per enum knob, routed by member count (no doubled PROPS knob + VARIANTS chip-row) ───
 // A small closed enum reads best fully exposed (every option visible, one click to pick) — `ui-segmented-control`
 // (ADR-0095; was `ui-radio-group[variant="segmented"]` under the retired ADR-0086). A larger enum would make a
@@ -179,6 +197,13 @@ const A2UI_INITIAL: Record<string, Record<string, string>> = {
   ComboBox: { placeholder: 'Search a city…' },
   Grid: { gap: 'md', min: '12rem' },
   List: { gap: 'sm' },
+  // GH #1189 — Image: the catalog carries NO per-prop defaults (this file's own comment above), and `src`/
+  // `alt` are the two REQUIRED-in-spirit props (image.md) — an unseeded bare specimen would render no <img>
+  // at all (the empty-src "never a broken-image box" contract, image.ts). `fit`/`aspect`/`usageHint` are
+  // deliberately left unseeded: the component's OWN descriptor defaults (cover / 16/9 / inline) apply the
+  // instant the factory leaves them unset, so seeding them here would only duplicate what the control
+  // already does for free.
+  Image: { src: IMAGE_SAMPLE_SRC, alt: IMAGE_SAMPLE_ALT },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -464,6 +489,14 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
   // Grid: a metric-tile dashboard, 4 stat tiles on a track grid — the stat_tile idiom
   // (catalog-coverage.ts's statsGridDashboardSeed), trimmed to a static tree (the seed's own `{path}`-
   // templated tiles, minus the binding). `gap`/`min` seeded above so the auto-fit tracks are legible.
+  // GH #1189 — Image: the catalog def's `children: "ChildList"` (catalog.json) is the ui-image `caption`
+  // slot (image.md) — real, OPTIONAL default-slotted content pinned over the bottom scrim, not a required
+  // content model. One Text caption demonstrates the scrim compositing (image.css's flat scrim wash +
+  // caption ink), the real job rather than the generic "Sample content" fallback (the GH #971/#978 idiom).
+  Image: () => ({
+    rootRef: { children: ['s_img_caption'] },
+    extras: [{ id: 's_img_caption', component: 'Text', variant: 'caption', text: 'A coastline at sunset' }],
+  }),
   Grid: () => ({
     rootRef: { children: ['s_gr1', 's_gr2', 's_gr3', 's_gr4'] },
     extras: [
@@ -801,6 +834,18 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
     body.textContent = 'Folded content, revealed on toggle.'
     return [body]
   },
+  // ui-image (GH #1189): the caption is genuine OPTIONAL default-slotted content (image.md `slots`) left
+  // EXACTLY where the author places it — connected() only ever mutates its OWN control-built <img
+  // data-part="media"> (prepended, never replacing existing children) and never touches this sibling, so
+  // seeding it as a plain pre-connect child is safe (unlike the NO_SLOT_TEXT/toast precedent above, nothing
+  // here gets ADOPTED into a part — image.css selects it structurally, `:not([data-part='media'])`). One
+  // caption span demonstrates the bottom scrim compositing (image.css's flat scrim wash + caption ink) —
+  // the real job, not a bare uncaptioned box.
+  'ui-image': () => {
+    const caption = document.createElement('span')
+    caption.textContent = IMAGE_SAMPLE_ALT
+    return [caption]
+  },
   // ui-toast (ADR-0112): the message text MUST be a light-DOM child present before connect — #ensureParts()
   // adopts it into the message part at that instant (SPEC-R15 AC2, the toast.md example markup precedent).
   'ui-toast': () => {
@@ -900,6 +945,11 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   // ellipsis markers + the active stop paint) — the ui-icon/ui-stat precedent exactly, since #seedState()
   // reads COMPONENT_INITIAL straight into #state, so the knob-apply loop reflects the seed rather than erasing it.
   'ui-pagination': { page: '5', pages: '12' },
+  // GH #1189 — ui-image: `src`/`alt` default to '' (image.md) — an unseeded bare specimen renders no <img>
+  // at all (the empty-src "never a broken-image box" contract). `fit`/`aspect`/`usageHint` all carry
+  // non-empty descriptor defaults (cover / 16/9 / inline) already auto-seeded by #seedState()'s own
+  // descriptor-default loop above — no COMPONENT_INITIAL entry needed for those three.
+  'ui-image': { src: IMAGE_SAMPLE_SRC, alt: IMAGE_SAMPLE_ALT },
 }
 
 // A per-tag static HOST ATTRIBUTE seed (batch C) — distinct from COMPONENT_INITIAL (which seeds a KNOB's
@@ -1001,6 +1051,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-field', // #ensureParts(): the label/description/error chrome (3 parts)
   'ui-form-popover', // #ensureParts(): a CONTROL-CREATED trigger (label+caret) + panel — GH #294 F4, the ui-select/ui-popover precedent
   'ui-icon', // setIcon() injects a real <svg> child whenever `name` is non-empty (icon.ts:38-41) — a name-driven slot, not authored text
+  'ui-image', // GH #1189: connected() PREPENDS a control-built <img data-part="media"> as a persistent, never-replaced child (image.ts) — a host-level `textContent =` write would wipe it (and any caption sibling) out entirely; the caption itself is real optional content (COMPONENT_SAMPLE_CHILDREN demonstrates it), just not a plain-string SLOT_TEXT knob's to own
   'ui-menu', // #ensureParts(): trigger (COMPONENT_SAMPLE_CHILDREN) + panel
   'ui-modal', // #ensureDialog(): the control-owned <dialog> part
   'ui-drawer', // #ensureDialog(): the control-owned <dialog> part (ADR-0188, the modal precedent re-applied)

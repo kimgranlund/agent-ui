@@ -137,6 +137,11 @@ const LAYOUT_SHOWCASE = ['layout-overview.html', 'layout-permutations.html'] as 
 // control shipped ahead of its site pages; GH #832 (the 2026-08-13 docs-gap sweep) landed
 // toggle-permutations/toggle-states/toggle-doc, draining this stopgap — empty again, so a missing required
 // page on ANY shipped component now fails the build.
+//
+// GH #1189 R1/R2 — ui-image's descriptor + control shipped in the component-build seat's wave; its site doc
+// page (`image-doc.html`) landed in the following docs-writer seat's slice, draining this stopgap — empty
+// again, so a missing required page on ANY shipped component now fails the build (the ui-toggle/GH #832
+// precedent, above).
 const KNOWN_UNDOCUMENTED = new Set<string>()
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
@@ -197,7 +202,9 @@ describe('site coverage — every shipped component has its required per-tier pa
     expect(COMPONENTS.filter((c) => c.tier === 'display').map((c) => c.name).sort()).toEqual(
       // + ui-description-list (ADR-0201, GH #1185) — the key–value receipt primitive, Display class like
       // ui-stat/ui-table (no events, no geometry row, not form-associated); its {doc} page required below.
-      ['attachment', 'badge', 'bar-chart', 'code', 'description-list', 'icon', 'ladder', 'progress', 'ramp', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text'],
+      // + ui-image (GH #1189 R1/R2) — the URL-sourced content-image primitive, Display class (geometry.md:
+      // "intrinsic structural sizing", no [size]/[scale] control-band row); its {doc} page is required below.
+      ['attachment', 'badge', 'bar-chart', 'code', 'description-list', 'icon', 'image', 'ladder', 'progress', 'ramp', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text'],
     )
     // Wave 1 Indicator family (checkbox, switch, radio, radio-group) + ui-segment (ADR-0095 clause 3 —
     // the SAME real ancestor, UIIndicatorElement, as ui-radio) + the Wave M1 feed family (ADR-0112): ui-avatar
@@ -279,8 +286,8 @@ describe('site coverage — every descriptor is documented XOR a known, delibera
   it('KNOWN_UNDOCUMENTED lists exactly the real undocumented descriptors (no stale name lingers, no surprise gap)', () => {
     const undocumentedNames = COMPONENTS.filter((c) => !isDocumented(c)).map((c) => c.name).sort()
     expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(undocumentedNames)
-    // empty again — ui-toggle's stopgap (ADR-0179 GH #686 Amendment S7-a) drained by GH #832: the whole
-    // fleet is documented, so a missing required page on ANY shipped component now fails the build.
+    // [] — GH #1189's ui-image site doc page landed (image-doc.html), draining the stopgap; every shipped
+    // component stays fully documented.
     expect([...KNOWN_UNDOCUMENTED].sort()).toEqual([])
   })
 })
@@ -461,7 +468,16 @@ describe('site coverage — every descriptor with parts[] renders a Parts sectio
   })
 
   for (const c of WITH_PARTS) {
-    it(`${c.tag} (${c.partCount} part${c.partCount === 1 ? '' : 's'}) — ${c.name}-doc.ts renders its Parts section`, () => {
+    const title = `${c.tag} (${c.partCount} part${c.partCount === 1 ? '' : 's'}) — ${c.name}-doc.ts renders its Parts section`
+    // KNOWN_UNDOCUMENTED (above) already records "this component's site doc page is a separate seat's
+    // slice, not yet built" — the SAME fact this parts-render check would otherwise re-discover as
+    // "no doc-page source at all". Reusing it here (rather than a second, parallel allowlist) keeps the
+    // one parking reason in one place; it drains from BOTH checks the moment the page lands.
+    if (KNOWN_UNDOCUMENTED.has(c.name)) {
+      it.skip(`${title} — SKIPPED (KNOWN_UNDOCUMENTED, its doc page is not yet built)`, () => {})
+      continue
+    }
+    it(title, () => {
       let src: string
       try {
         src = read(`${PAGES_DIR}/${c.name}-doc.ts`)

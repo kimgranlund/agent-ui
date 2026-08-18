@@ -85,6 +85,20 @@ export interface PropDef {
    * untouched).
    */
   rejectFunctionCall?: boolean
+  /**
+   * A catalog-declared extension (our schema, not A2UI wire vocabulary) — GH #1189, the FIRST consumer
+   * being `Image.alt` (a real accessibility gap, not a form-validity concern the existing `TextField.
+   * required`/`Checkbox.required` wire props already cover — those are bindable BOOLEAN props reflecting
+   * the control's own native-validity `required` attribute, a completely different axis). When `true`,
+   * `conformance.ts`'s shared validator additionally fails `CATALOG` when the property KEY is absent from
+   * the component node entirely — the ONE presence check layered on top of the existing PRESENT-props
+   * type/unknown checks (SPEC-R9's security allowlist scope, unchanged for every property that does not
+   * opt in: `matchesType`/`matchesSchemaType` behavior is byte-identical). A `{path}`/`{call}` binding
+   * satisfies presence (the key is there; its eventual resolved value is out of the static validator's
+   * reach, ADR-0026) — only a fully OMITTED key fails. Declared only where a real authoring gap needs a
+   * hard admission-time gate; absent ⇒ today's behavior, byte-identical.
+   */
+  required?: boolean
 }
 
 /**
@@ -297,11 +311,14 @@ function validatePropDef(key: string, prop: string, raw: unknown): PropDef {
   if (raw.format !== undefined && typeof raw.format !== 'string') bad(`property "${key}.${prop}".format must be a string`)
   if (raw.rejectFunctionCall !== undefined && typeof raw.rejectFunctionCall !== 'boolean')
     bad(`property "${key}.${prop}".rejectFunctionCall must be a boolean`)
+  if (raw.required !== undefined && typeof raw.required !== 'boolean')
+    bad(`property "${key}.${prop}".required must be a boolean`)
 
   const pd: PropDef = { type: raw.type as JsonSchema, mapsTo: raw.mapsTo }
   if (raw.bindable !== undefined) pd.bindable = raw.bindable
   if (raw.format !== undefined) pd.format = raw.format
   if (raw.rejectFunctionCall !== undefined) pd.rejectFunctionCall = raw.rejectFunctionCall
+  if (raw.required !== undefined) pd.required = raw.required
   return pd
 }
 

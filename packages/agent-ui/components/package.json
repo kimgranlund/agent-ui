@@ -33,6 +33,7 @@
     "./controls/form-provider": "./src/controls/form-provider/form-provider.ts",
     "./controls/grid": "./src/controls/grid/grid.ts",
     "./controls/icon": "./src/controls/icon/icon.ts",
+    "./controls/image": "./src/controls/image/image.ts",
     "./controls/ladder": "./src/controls/ladder/ladder.ts",
     "./controls/list": "./src/controls/list/list.ts",
     "./controls/menu": "./src/controls/menu/menu.ts",
