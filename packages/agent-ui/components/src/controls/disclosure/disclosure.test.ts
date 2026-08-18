@@ -32,6 +32,24 @@ describe('ui-disclosure — upgrade + typed prop surface', () => {
     expect(el).toBeInstanceOf(UIDisclosureElement)
     expect(el.open).toBe(false)
     expect(el.summary).toBe('')
+    expect(el.contained).toBe(false) // GH #1283 — the DEFAULT fold is the simple UNPADDED mode
+  })
+
+  it('contained is a reflected boolean (GH #1283) — a CSS-selected state, zero behavioural coupling', async () => {
+    const el = document.createElement('ui-disclosure') as UIDisclosureElement
+    document.body.append(el)
+    try {
+      expect(el.hasAttribute('contained')).toBe(false)
+      el.contained = true
+      await Promise.resolve()
+      expect(el.hasAttribute('contained')).toBe(true) // reflects — disclosure.css selects :scope[contained]
+      expect(el.open).toBe(false) // never perturbs the fold state
+      el.contained = false
+      await Promise.resolve()
+      expect(el.hasAttribute('contained')).toBe(false)
+    } finally {
+      el.remove()
+    }
   })
 
   it('typed: open is boolean, summary is string (compile-time negative control)', () => {

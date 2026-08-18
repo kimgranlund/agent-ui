@@ -107,8 +107,38 @@ describe('ui-disclosure — mounts + a real engine resolves the geometry (whole-
     expect(getComputedStyle(innerChevron).rotate).toBe('0deg') // and collapsing reads different again — the whole complaint
   })
 
-  it('[density] changes the body padding but leaves the summary row height/font untouched (the Pattern-class split, SPEC-R18 AC2)', () => {
-    const { host, summary, body } = mount('<ui-disclosure summary="X" open><p>Y</p></ui-disclosure>')
+  it('the DEFAULT fold is UNPADDED with no chrome (GH #1283 — the ruled inversion): zero body padding, transparent host, square corners', () => {
+    const { host, body } = mount('<ui-disclosure summary="X" open><p>Y</p></ui-disclosure>')
+    expect(px(getComputedStyle(body).paddingBlockStart)).toBe(0)
+    expect(px(getComputedStyle(body).paddingInlineStart)).toBe(0)
+    const hostStyle = getComputedStyle(host)
+    expect(hostStyle.backgroundColor).toBe('rgba(0, 0, 0, 0)') // no surface paint
+    expect(px(hostStyle.borderTopLeftRadius)).toBe(0)
+  })
+
+  it('[contained] restores the body padding and paints the surface bg + the shared fleet radius (GH #1283 / ADR-0015 cl.5)', () => {
+    const { host, body } = mount('<ui-disclosure summary="X" open contained><p>Y</p></ui-disclosure>')
+    expect(px(getComputedStyle(body).paddingBlockStart)).toBeGreaterThan(0) // --md-sys-space-sm
+    expect(px(getComputedStyle(body).paddingInlineStart)).toBeGreaterThan(0) // --md-sys-space-md
+    const hostStyle = getComputedStyle(host)
+    expect(hostStyle.backgroundColor).not.toBe('rgba(0, 0, 0, 0)') // the neutral surface paints
+    // the ONE shared radius constant (--md-sys-shape-corner-base) — non-zero, and the whole shape agrees
+    expect(px(hostStyle.borderTopLeftRadius)).toBeGreaterThan(0)
+    expect(hostStyle.borderBottomRightRadius).toBe(hostStyle.borderTopLeftRadius)
+  })
+
+  it('[contained] on an OUTER fold never pads a NESTED fold\'s body (the GH #1102 direct-child law, applied to #1283)', () => {
+    const { host } = mount(
+      '<ui-disclosure summary="Outer" open contained><ui-disclosure summary="Inner" open><p>Y</p></ui-disclosure></ui-disclosure>',
+    )
+    const innerHost = host.querySelector('ui-disclosure') as HTMLElement // adopted into the outer body part
+    const innerBody = innerHost.querySelector('[data-part="body"]') as HTMLElement
+    expect(px(getComputedStyle(innerBody).paddingBlockStart)).toBe(0) // the inner fold stays the simple mode
+    expect(getComputedStyle(innerHost).backgroundColor).toBe('rgba(0, 0, 0, 0)')
+  })
+
+  it('[density] changes the CONTAINED body padding but leaves the summary row height/font untouched (the Pattern-class split, SPEC-R18 AC2)', () => {
+    const { host, summary, body } = mount('<ui-disclosure summary="X" open contained><p>Y</p></ui-disclosure>')
     const heightComfortable = px(getComputedStyle(summary).blockSize)
     const padComfortable = px(getComputedStyle(body).paddingBlockStart)
 

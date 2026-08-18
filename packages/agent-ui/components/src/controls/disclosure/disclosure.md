@@ -20,12 +20,19 @@ attributes:            # attributes-as-API — mirrors disclosure.ts `static pro
     type: string
     default: ''
     reflect: true      # reflects so a JS-set value applies identically to an author-set attribute; the fold's one-line label (textContent-only, never markup)
+  - name: contained
+    type: boolean
+    default: false
+    reflect: true      # reflects — a CSS-selected state (GH #1283): [contained] restores the body padding AND paints a surface background on the fleet radius constant (ADR-0015 cl.5); the DEFAULT fold is UNPADDED chrome-free (the ruled inversion)
+    description: Opt-in contained chrome (GH #1283) — body padding + a surface background with corners on the shared fleet radius. Absent (the default), the fold is a simple UNPADDED component with no background or border chrome.
 
 properties:            # IDL beyond attributes-as-API — the reflected props read/write as element properties
   - name: open
     description: Whether the fold is expanded (boolean). Every ACTUAL transition — a user click on the summary, a data/model write, or a find-in-page auto-expand — settles this prop AND fires `toggle`; re-asserting the current value is a no-op (no event). Reflected + bindable (the two-way `open`, ADR-0019/ADR-0101).
   - name: summary
     description: The fold's one-line label (string, default ''). Written into the summary via textContent only — never markup. Updating it never perturbs `open`. Summary-hosted CONTROLS ride the realized `slot="summary"` position slot (ADR-0158) — the label itself stays this prop, always.
+  - name: contained
+    description: Opt-in contained chrome (boolean, default false — GH #1283). When set, the body gets its padding back (`--ui-disclosure-body-pad-*`) and the host paints a surface background with corners on the shared fleet radius constant (ADR-0015 cl.5, the ui-card lineage). The DEFAULT fold is deliberately unpadded and chrome-free — composition-first (the ruled inversion).
 
 events:
   - name: toggle
@@ -50,7 +57,7 @@ parts:                 # the native <details>/<summary> is a component-owned PAR
   - name: summary-text
     description: A `<span data-part="summary-text">` inside the summary, holding the `summary` prop's text (textContent-only, never markup). Updated by a scope-owned reactive effect; never touches `open`.
   - name: body
-    description: The control-created `<div data-part="body">` inside the details part, holding the host's adopted light-DOM children (see slots above). Padding rides the `--md-sys-space` layout ladder (density-responsive) — the Pattern-class split from the summary row's density-invariant control-height frame.
+    description: The control-created `<div data-part="body">` inside the details part, holding the host's adopted light-DOM children (see slots above). UNPADDED by default (GH #1283); under `[contained]` its padding rides the `--md-sys-space` layout ladder (density-responsive) — the Pattern-class split from the summary row's density-invariant control-height frame.
 
 customStates: []       # no :state() hooks — [open] is the native <details> attribute the platform + the model→platform effect drive; nothing here is a bespoke custom state
 
@@ -79,8 +86,11 @@ geometry:
     gap: var(--ui-disclosure-gap)         # the density-bearing chevron↔label rhythm
   body:
     shellClass: layout-shell
-    padBlock: var(--ui-disclosure-body-pad-block)     # = --md-sys-space-sm, density-RESPONSIVE
-    padInline: var(--ui-disclosure-body-pad-inline)   # = --md-sys-space-md, density-RESPONSIVE
+    padBlock: var(--ui-disclosure-body-pad-block)     # = --md-sys-space-sm, density-RESPONSIVE — applied under [contained] ONLY (GH #1283); the default body is UNPADDED
+    padInline: var(--ui-disclosure-body-pad-inline)   # = --md-sys-space-md, density-RESPONSIVE — [contained] only
+  contained:                                          # the [contained] chrome (GH #1283)
+    bg: var(--ui-disclosure-bg)                       # = --md-sys-color-neutral-surface — the contained surface paint
+    radius: var(--ui-disclosure-radius)               # = --md-sys-shape-corner-base, the ONE shared fleet radius constant (ADR-0015 cl.5)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the summary/body ink and the chevron (currentColor) visible as system inks (CanvasText); every value already resolves through a role carrying the WHCM mapping at the token layer, so this is explicit belt-and-suspenders, not new colour. The shared focus ring survives via `--md-sys-color-focus-ring → Highlight`.
 ---
@@ -184,6 +194,24 @@ class (geometry.md's own "accordion" row): the summary is an interactive **contr
 (density-invariant frame — height/font/glyph/gap all fixed at the `md` ramp step, no `[size]` axis), while
 the body's padding rides the **`--md-sys-space`** layout ladder (density-responsive) — the two ledgers never
 interchange.
+
+## `contained` — the opt-in chrome (GH #1283)
+
+By **default** a fold is a simple, **unpadded** component: no body padding, no background, no border
+chrome — composition-first (every fleet composer — agent-admin's chrome-free folds, timeline-item's
+compacted detail toggle — was already fighting the old always-on padding; the inversion is ruled, Kim
+2026-08-18). Setting the reflected boolean **`contained`** restores the contained read: the body gets its
+padding back (`--ui-disclosure-body-pad-block/-inline`, the same `--md-sys-space` values as before), and
+the host paints a surface background (`--ui-disclosure-bg` = `--md-sys-color-neutral-surface`) with corners
+on the **shared fleet radius constant** (`--ui-disclosure-radius` = `--md-sys-shape-corner-base`, ADR-0015
+cl.5 — the same constant ui-card consumes). All contained rules ride **direct-child part hops** (the
+GH #1102 law), so a contained outer fold never paints or pads a nested fold's parts.
+
+```html
+<ui-disclosure summary="Full log" contained>
+  <ui-code language="sh">…</ui-code>
+</ui-disclosure>
+```
 
 ## Accessibility
 

@@ -46,7 +46,7 @@ describe('disclosure.css — structure + sectioning', () => {
   })
 
   it('the :where() block DECLARES the --ui-disclosure-* chain from roles + the dimensional ramp', () => {
-    for (const slot of ['height', 'font', 'ink', 'glyph', 'gap', 'body-pad-block', 'body-pad-inline']) {
+    for (const slot of ['height', 'font', 'ink', 'glyph', 'gap', 'body-pad-block', 'body-pad-inline', 'bg', 'radius']) {
       expect(tokenBlock).toMatch(new RegExp(`--ui-disclosure-${slot}:`))
     }
     // Pattern-class split (geometry.md): the summary row is the CONTROL band (frame, density-invariant);
@@ -95,13 +95,41 @@ describe('disclosure.css — the @scope geometry law (Pattern-class split)', () 
     expect(stylesBlock).not.toMatch(/\[open\][^>{]*\[data-part='chevron'\]/)
   })
 
-  it('the body padding rides --md-sys-space (density-responsive rhythm), never --md-sys-height-* (the frame ramp)', () => {
-    const m = stylesBlock.match(/:scope \[data-part='body'\]\s*\{([^}]*)\}/)
-    expect(m, 'the body rule is missing').not.toBeNull()
+  it('the body is UNPADDED by default (GH #1283, the ruled inversion): no bare body padding rule remains', () => {
+    // The old always-on rule (`:scope [data-part='body'] { padding-… }`) must never come back — the ONLY
+    // body padding lives under [contained] with direct-child hops (checked below).
+    expect(stripCssComments(stylesBlock)).not.toMatch(/:scope \[data-part='body'\]/)
+  })
+
+  it('[contained] body padding rides --md-sys-space (density-responsive rhythm), never --md-sys-height-*, with DIRECT-CHILD hops (GH #1102)', () => {
+    const m = stylesBlock.match(/:scope\[contained\] > \[data-part='details'\] > \[data-part='body'\]\s*\{([^}]*)\}/)
+    expect(m, 'the [contained] body rule is missing').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
     expect(rule).toMatch(/padding-block:\s*var\(--ui-disclosure-body-pad-block\)/)
     expect(rule).toMatch(/padding-inline:\s*var\(--ui-disclosure-body-pad-inline\)/)
     expect(rule).not.toMatch(/--md-sys-height-/)
+    // No DESCENDANT-hop [contained] body/summary rule anywhere — a contained outer fold must never reach
+    // a nested fold's parts (the GH #1102 leak class).
+    expect(stripCssComments(stylesBlock)).not.toMatch(/\[contained\][^>{]*\[data-part='(?:body|summary)'\]/)
+  })
+})
+
+describe("disclosure.css — the [contained] chrome (GH #1283: surface bg + the shared fleet radius, ADR-0015 cl.5)", () => {
+  it('declares --ui-disclosure-bg (a surface role) and --ui-disclosure-radius (the ONE shared radius constant)', () => {
+    expect(tokenBlock).toMatch(/--ui-disclosure-bg:\s*var\(--md-sys-color-neutral-surface\)/)
+    expect(tokenBlock).toMatch(/--ui-disclosure-radius:\s*var\(--md-sys-shape-corner-base\)/) // the fleet radius constant, never a bespoke px
+  })
+
+  it('the host paints bg + border-radius under [contained] ONLY (the default fold has no chrome)', () => {
+    const m = stylesBlock.match(/:scope\[contained\]\s*\{([^}]*)\}/)
+    expect(m, 'the :scope[contained] rule is missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/background-color:\s*var\(--ui-disclosure-bg\)/)
+    expect(rule).toMatch(/border-radius:\s*var\(--ui-disclosure-radius\)/)
+    // The bare :scope rule stays chrome-free — no background/border-radius on the default host.
+    const bare = stylesBlock.match(/:scope\s*\{([^}]*)\}/)
+    expect(bare).not.toBeNull()
+    expect((bare as RegExpMatchArray)[1]).not.toMatch(/background|border-radius/)
   })
 })
 

@@ -30,7 +30,7 @@ function logEvent(): void {
   log.scrollTop = log.scrollHeight
 }
 
-const disclosure = el('ui-disclosure', { summary: 'Release notes' }, [
+const disclosure = el('ui-disclosure', { summary: 'Release notes', contained: '' }, [ // GH #1283: contained keeps the demo's padded, surfaced read
   el('p', { style: 'margin:0;' }, [document.createTextNode('v1.4.0 — the report/content/feed families ship.')]),
 ])
 disclosure.addEventListener('toggle', () => logEvent())
