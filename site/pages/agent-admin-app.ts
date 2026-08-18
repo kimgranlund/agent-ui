@@ -250,7 +250,9 @@ admin.onGenerateRequest((seed) => createGeneratedAgent(seed))
 // Fires from INSIDE the authoring turn loop's fenced `team` consumption arm (agent-admin.ts); this
 // page owns everything it fans out to (persona minting, roster registration, `AgentTeam` validation +
 // persistence) — the component itself never mints anything (the DAG this file's own imports honor).
-admin.onTeamDeclared((team) => void handleTeamDeclared(team))
+admin.onTeamDeclared((team) =>
+  void handleTeamDeclared(team).catch(() => notify('The team could not be created — something went wrong saving it.', true)),
+)
 
 function applyPersona(persona: Persona): void {
   active = persona

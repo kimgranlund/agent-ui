@@ -1232,8 +1232,9 @@ describe('the "New agent → Generate" IA entry (LLD-C8) / GH #686 S7-d — the 
 // applies, both polarities, the forward-once contract) lives in
 // packages/…/agent-admin-authoring.test.ts's own `team` consumption suite.
 describe('agent-admin-app — the team-shaped generation path (GH #1196, ADR-0203 cl.4)', () => {
-  it('registers onTeamDeclared, routing to handleTeamDeclared', () => {
+  it('registers onTeamDeclared, routing to handleTeamDeclared, with a rejection caught and notified', () => {
     const source = readFileSync('site/pages/agent-admin-app.ts', 'utf8')
-    expect(source).toContain('admin.onTeamDeclared((team) => void handleTeamDeclared(team))')
+    expect(source).toContain('admin.onTeamDeclared((team) =>')
+    expect(source).toContain('void handleTeamDeclared(team).catch(')
   })
 })
