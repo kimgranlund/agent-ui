@@ -115,6 +115,10 @@
   --ui-agent-admin-help-focus-ink: var(--md-sys-color-primary);
   --ui-agent-admin-help-card-max-inline-size: 22rem;
   --ui-agent-admin-help-card-gap: var(--md-sys-space-xs);
+  /* GH #1294 (Kim's ruling) — the card's BODY prose reads at the high-emphasis neutral role, not the
+     tooltip panel's muted `--ui-tooltip-ink` it would otherwise inherit (tooltip.css →
+     neutral-on-surface-variant). Title/summary keep the panel ink: the body is the explanation. */
+  --ui-agent-admin-help-body-ink: var(--md-sys-color-neutral-high);
 
   /* GH #867 — the unobtrusive-scrollbar own-chain (context-json's own two-axis scroll box): the fleet
      dimensional constant + the fleet colour role, repointed here exactly like every other dimensional/colour
@@ -838,6 +842,12 @@
   [data-part='admin-help-summary'],
   [data-part='admin-help-body'] {
     margin: 0;
+  }
+
+  /* GH #1294 — body paragraphs + the facts list are the explanation proper: high-emphasis ink. */
+  [data-part='admin-help-body'],
+  [data-part='admin-help-facts'] {
+    color: var(--ui-agent-admin-help-body-ink);
   }
 
   [data-part='admin-help-facts'] {
