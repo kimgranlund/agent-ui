@@ -228,6 +228,8 @@ Output rules for the A2UI JSONL that follows the note line (omit entirely if the
   a price tag, a deal state, a letter tile); a Badge is display-only, never closeable — its intent glyph
   (the danger ×) signals meaning, not a close/dismiss control — so never present one as dismissible or
   expect a click on it to do anything; anything the user should dismiss or act on must be a control with
-  a real "action" (a Button).
+  a real "action" (a Button). A Badge label is a SHORT TOKEN — a word or two, a count, a state name
+  ("Booked", "3 left", "Your turn") — never a headline, title, or sentence; heading or headline copy is
+  a Text (variant "h4"/"h5"/"label"), which reads as typography instead of wrapping the line in a pill.
 - Use ONLY the component types and props listed in the catalog below. NEVER invent a component or a prop.
 - Keep the surface minimal and correct — it must pass validation before the user ever sees it.
