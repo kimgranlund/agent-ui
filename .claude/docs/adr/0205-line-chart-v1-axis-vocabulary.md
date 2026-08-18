@@ -84,8 +84,17 @@ ships.**
 - **A full axis system** (ticks + gridlines + legend + tooltip in v1) — rejected: re-opens exactly
   the scope explosion ADR-0107 cl.1 fences out; the honest-floor law keeps v1 to the minimum that
   earns the axis-bearing name.
-- **Multi-series in v1** — rejected per Decision cl.2: unsafe without a legend, and a legend is
-  itself the next fenced escalation; deferred to its own later issue.
+- **Multi-series in v1** — rejected per Decision cl.2 for THIS build wave on scope/sequencing
+  grounds, not on the merits: a concurrently-drafted alternative design for this same ADR slot
+  (produced by a stray duplicate dispatch during this campaign — see the numbering-collision note
+  below) argued convincingly that multi-series can ship safely in v1 as a bare `series:
+  number[][]`, with per-series identity carried by an INDEXED token+dash-pattern ladder
+  (`--ui-line-chart-series-{i}`, cycling, paired with a dash-pattern ladder so identity never rides
+  hue alone — ADR-0057) rather than named series + a legend. That sidesteps exactly the legend
+  concern this ADR's cl.2 raises, and is the correct shape for whoever picks up multi-series next —
+  named here so the insight isn't lost, not adopted in this build because the shipped, gate-green
+  `values: number[]` single-series component already exists and a mid-flight prop-shape change
+  (`values` → `series`) was judged a larger, unbudgeted redo for this dispatch round.
 
 ## Non-goals
 
@@ -102,3 +111,14 @@ ships.**
   than re-deriving one.
 - The min/max-always-shown rule is a small, deliberate a11y-visible departure from `ui-sparkline`'s
   optional-label pattern — documented here so a future reviewer does not read it as inconsistency.
+
+## Numbering-collision note (transparency, not part of the decision)
+
+A dispatch-orchestration defect during this same build campaign (an already-nested coordinator
+seat fired an async sub-dispatch to a planner and then ended its own turn treating that dispatch
+as a pending callback — the callback structurally could not route back to it) produced a SECOND,
+independently-authored ADR also claiming the number 0205 (`0205-line-chart-axis-vocabulary.md`,
+since removed from this branch). That draft reached a stronger multi-series design than this one;
+its reasoning is folded into this ADR's "Rejected alternatives" section above rather than
+discarded. Recorded here so the collision and its resolution are auditable, not silently erased
+from history.
