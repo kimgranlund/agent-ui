@@ -549,6 +549,75 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
   padding-block: var(--md-sys-space-xl);
 }
 
+/* ── the reading column's DEFAULT prose treatment (GH #1264) ──────────────────────────────────────────────
+ * Guide pages built from `mountPage` + `heading()` + `el('p')` (highlight-doc, router-doc, markdown-doc, the
+ * demo pages' lead paragraphs, …) append prose straight into `[data-page-content]` (or into a bare
+ * `exampleSection` <section>) — NOT inside a `.doc-body` article — so doc-page.css's rhythm/measure rules
+ * never reached them, and every page that wanted readable prose re-declared ink/leading/measure in its OWN
+ * page CSS (getting-started.css, containers.css, theming.css, … all carry the same three lines). Pages with no
+ * page CSS showed the raw defect: UA <p>/<h2> margins, 1.429 leading, and — the real ink bug — HEADING ink on
+ * paragraphs. Root cause of the ink: the shell is a real `ui-theme-provider.app-shell` (TKT-0088), and
+ * theme-provider.css's ADR-0148 scheme-boundary re-root (`:where(ui-theme-provider) { color: -on-surface }`)
+ * sits BETWEEN <body> and the page, so the GH #628 `body { color: -on-surface-variant }` rule above was
+ * silently shadowed on every page (measured 2026-08-18: paragraph ink = -on-surface on highlight-doc, both
+ * engines). Re-asserting the variant ink on the content column restores #628 below the re-root; the h1-h6 pin
+ * above still restores -on-surface for headings. Every quantity is a token: leading = the body-LARGE row's
+ * line-height (1.5 — the long-form step; the shell's ambient body-medium 1.429 stays for controls), the
+ * heading scale + rhythm = the SAME title-medium/title-small + 2xl/xs + lg scale `.doc-body` uses
+ * (doc-page.css), measure 72ch (Kim's ruling there). Direct-child (`>`) shapes only, so a control's OWN
+ * <p>/<h2> (ui-text, ui-markdown, status-stream …) is never reached — a control host is always an
+ * intermediate element. Per-page CSS imports AFTER this file at equal-or-higher specificity and still wins
+ * where a page deliberately differs. Full-bleed app pages own their region and are excluded. */
+.app-page:not(.app-page--full-bleed) > [data-page-content] {
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+[data-page-content] > :is(p, ul, ol, blockquote),
+[data-page-content] > section > :is(p, ul, ol, blockquote) {
+  max-inline-size: 72ch;
+  line-height: var(--md-sys-typescale-body-large-line-height);
+  margin-block: 0 var(--md-sys-space-lg);
+}
+[data-page-content] > :is(h2, h3, h4, h5, h6),
+[data-page-content] > section > :is(h2, h3, h4, h5, h6) {
+  max-inline-size: 72ch;
+  margin-block: var(--md-sys-space-2xl) var(--md-sys-space-xs);
+}
+[data-page-content] > h2,
+[data-page-content] > section > h2 {
+  font-size: var(--md-sys-typescale-title-medium-size);
+  font-weight: var(--md-sys-typescale-title-medium-weight);
+  line-height: var(--md-sys-typescale-title-medium-line-height);
+  letter-spacing: var(--md-sys-typescale-title-medium-tracking);
+}
+[data-page-content] > :is(h3, h4, h5, h6),
+[data-page-content] > section > :is(h3, h4, h5, h6) {
+  font-size: var(--md-sys-typescale-title-small-size);
+  font-weight: var(--md-sys-typescale-title-small-weight);
+  line-height: var(--md-sys-typescale-title-small-line-height);
+  letter-spacing: var(--md-sys-typescale-title-small-tracking);
+}
+[data-page-content] > :is(h2, h3, h4, h5, h6):first-child,
+[data-page-content] > section:first-child > :is(h2, h3, h4, h5, h6):first-child {
+  margin-block-start: 0; /* no dead gap under the sticky page-header above the column's first heading */
+}
+
+/* ── read-only ui-code SAMPLES on the site (GH #1264) ─────────────────────────────────────────────────────
+ * A bare `ui-code` deliberately rides the ui-card surface SEAM (`--ui-code-surface: var(--ui-container-bg,
+ * -surface)`, code.css — ADR-0015 cl.2, so a ui-code inside a card matches its plane), which on a doc page's
+ * bare `-surface` ground means NO panel: the specimen sat flush on the page background. That default is
+ * RIGHT for the component/catalog (a boundary decision, kept in the components package untouched); the SITE
+ * wants its read-only samples to read like the `ui-code-editor` surface (editor.css) — so this rule repoints
+ * the component's OWN tokens (never its properties) to the editor's exact chrome: `-container-low` panel
+ * (a translucent tint, so it reads as a panel over any plane), the editor's 0.5em/0.75em padding, and the
+ * editor's 1.5 prose leading via the body-large row. Fenced blocks inside `ui-markdown` keep their own
+ * `--ui-markdown-code-surface` seam (excluded), and a ui-code that IS inside a ui-card keeps the card plane. */
+[data-page-content] ui-code:not(:where(ui-card, ui-markdown) ui-code) {
+  --ui-code-surface: var(--md-sys-color-neutral-container-low);
+  --ui-code-line-height: var(--md-sys-typescale-body-large-line-height);
+  --ui-code-pad-block: calc(var(--md-sys-typescale-body-medium-size) * 0.5);
+  --ui-code-pad-inline: calc(var(--md-sys-typescale-body-medium-size) * 0.75);
+}
+
 /* ── code previews (the shared codeBlock helper — site/lib/code-block.ts) ──────────────────────────────────
  * Every code sample on the site renders as `<pre class="code-block"><code>` (textContent, never innerHTML — a
  * sample is data, not markup). ONE chrome: a bordered raised-surface panel (surface-high reads as a panel over
