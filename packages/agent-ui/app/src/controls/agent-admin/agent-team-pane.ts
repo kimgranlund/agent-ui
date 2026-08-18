@@ -466,14 +466,19 @@ export function buildAgentTeamPane(options: AgentTeamPaneOptions): AgentTeamPane
     })()
   })
 
+  // GH #1293 — Save/Cancel ride ONE horizontal actions row (the `entry-form-actions` precedent in
+  // entry-list/entry-form.ts), never as direct children of the column form where each would stack full-width.
+  const actions = document.createElement('div')
+  actions.setAttribute('data-part', 'team-form-actions')
+  actions.append(saveBtn, cancelBtn)
+
   form.append(
     fieldCell('Team name', labelField),
     fieldCell('Tagline', taglineField, 'Optional'),
     fieldCell('GM (general manager)', gmSelect),
     membersHost,
     addMemberBtn,
-    saveBtn,
-    cancelBtn,
+    actions,
     errorNote,
   )
   host.append(form)
