@@ -1578,6 +1578,24 @@ class (geometry.md's own "accordion" row): the summary is an interactive **contr
 the body's padding rides the **`--md-sys-space`** layout ladder (density-responsive) — the two ledgers never
 interchange.
 
+## `contained` — the opt-in chrome (GH #1283)
+
+By **default** a fold is a simple, **unpadded** component: no body padding, no background, no border
+chrome — composition-first (every fleet composer — agent-admin's chrome-free folds, timeline-item's
+compacted detail toggle — was already fighting the old always-on padding; the inversion is ruled, Kim
+2026-08-18). Setting the reflected boolean **`contained`** restores the contained read: the body gets its
+padding back (`--ui-disclosure-body-pad-block/-inline`, the same `--md-sys-space` values as before), and
+the host paints a surface background (`--ui-disclosure-bg` = `--md-sys-color-neutral-surface`) with corners
+on the **shared fleet radius constant** (`--ui-disclosure-radius` = `--md-sys-shape-corner-base`, ADR-0015
+cl.5 — the same constant ui-card consumes). All contained rules ride **direct-child part hops** (the
+GH #1102 law), so a contained outer fold never paints or pads a nested fold's parts.
+
+```html
+<ui-disclosure summary="Full log" contained>
+  <ui-code language="sh">…</ui-code>
+</ui-disclosure>
+```
+
 ## Accessibility
 
 The component sets **no** internals role and **no** host ARIA (SPEC-R17) — the `<details>`/`<summary>`

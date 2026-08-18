@@ -20,11 +20,11 @@ const { content } = mountPage({
     'demo for the live click + model-driven toggle with an event log.',
 })
 
-const closed = el('ui-disclosure', { summary: 'Full log' }, [
+const closed = el('ui-disclosure', { summary: 'Full log', contained: '' }, [ // GH #1283: the padded/surfaced read is now opt-in — the doc specimens keep the contained chrome
   el('ui-code', { language: 'sh' }, [document.createTextNode('2026-07-08T12:00:00Z deploy started\n2026-07-08T12:00:04Z deploy finished (ok)')]),
 ])
 
-const open = el('ui-disclosure', { summary: 'Details', open: '' }, [
+const open = el('ui-disclosure', { summary: 'Details', open: '', contained: '' }, [
   el('p', { style: 'margin:0;' }, [document.createTextNode('Expanded on load — the open attribute is reflected + bindable.')]),
 ])
 

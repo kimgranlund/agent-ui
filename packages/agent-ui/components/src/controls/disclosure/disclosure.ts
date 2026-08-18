@@ -53,8 +53,13 @@
 // no-op (the part is imperative DOM, not a template commit). `controls → dom + @agent-ui/icons` — the
 // allowed import direction (icons is a zero-dep sibling package, like select.ts's own caret glyph).
 
-import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
+import { UIElement, type ReactiveProps } from '../../dom/index.ts'
 import { setIcon } from '@agent-ui/icons'
+// ADR-0173 (props generation): the descriptor (disclosure.md `attributes[]`) is the props ground truth —
+// edit the descriptor and `node scripts/generate-props.mjs disclosure` to regenerate; never hand-edit
+// disclosure.props.gen.ts. The fleet drift gate (descriptor/props-gen-driftwire.test.ts) keeps the two
+// byte-identical.
+import { props } from './disclosure.props.gen.ts'
 
 // The one authored position slot (ADR-0158): a light-DOM child marked `slot="summary"` rides the summary
 // row (adopted after the label) instead of the body — the fleet's `[slot=…]` grammar (button ADR-0006/0012),
@@ -75,16 +80,10 @@ const NATIVE_ACTIVATABLE = 'a[href], area[href], button, input, summary'
 // precedent. Minted per part CREATION (a clobber rebuild mints fresh, consistently with its fresh part).
 let labelSeq = 0
 
-const props = {
-  // The fold's two-way state (ADR-0101 + ADR-0019) — prop-as-source-of-truth. Reflected so the [open]
-  // attribute mirrors the declared state (inspectable/serializable), the ui-modal/ui-select precedent.
-  open: { ...prop.boolean(false), reflect: true },
-  // The fold's one-line label — a bindable string prop (NOT slot content, SPEC-R14): the label stays
-  // textContent-only and prop-driven; the once-foreseen `slot=summary` extension is now REALIZED (ADR-0158)
-  // as a sibling POSITION slot for summary-hosted controls, never a replacement for this label. Reflected so
-  // a JS-set value applies identically to an author-set attribute (the fleet reflect precedent).
-  summary: { ...prop.string(''), reflect: true },
-} satisfies PropsSchema
+// Props live in disclosure.props.gen.ts (imported above): `open` — the fold's two-way state (ADR-0101 +
+// ADR-0019, prop-as-source-of-truth, the ui-modal/ui-select precedent); `summary` — the one-line label
+// (NOT slot content, SPEC-R14; the ADR-0158 `slot=summary` POSITION slot hosts controls, never the label);
+// `contained` — the opt-in chrome (GH #1283): a pure CSS-selected reflected state, zero behaviour here.
 
 export interface UIDisclosureElement extends ReactiveProps<typeof props> {}
 export class UIDisclosureElement extends UIElement {

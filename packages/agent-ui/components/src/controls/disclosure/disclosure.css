@@ -53,9 +53,16 @@
   --ui-disclosure-gap: var(--md-sys-gap-md);
 
   /* Body rhythm — the `--md-sys-space-*` LAYOUT ladder (density-RESPONSIVE; the Pattern-class split,
-     geometry.md: "the shell uses the space scale"), never the control-height frame. */
+     geometry.md: "the shell uses the space scale"), never the control-height frame. CONSUMED under
+     [contained] ONLY (GH #1283 — the ruled inversion): the default fold is a simple UNPADDED component. */
   --ui-disclosure-body-pad-block: var(--md-sys-space-sm);
   --ui-disclosure-body-pad-inline: var(--md-sys-space-md);
+
+  /* The [contained] chrome (GH #1283): a surface background + corners on the ONE shared fleet radius
+     constant (ADR-0015 cl.5 — `--md-sys-shape-corner-base`, the same :root constant ui-card's default
+     radius reads). Both consumed only under [contained]. */
+  --ui-disclosure-bg: var(--md-sys-color-neutral-surface);
+  --ui-disclosure-radius: var(--md-sys-shape-corner-base);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-disclosure) consumes ONLY --ui-disclosure-* ════════════════ */
@@ -146,11 +153,35 @@
     background-color: var(--ui-disclosure-bg-hover);
   }
 
-  /* The body — rides the `--md-sys-space` layout ladder (density-responsive; the Pattern-class split). No
-     control-height law applies here (it is a content shell, not an interactive row). */
-  :scope [data-part='body'] {
+  /* The body — UNPADDED by default (GH #1283, the ruled inversion: a bare fold is a simple chrome-free
+     component; every fleet composer was already zeroing the old always-on padding). Under [contained] it
+     rides the `--md-sys-space` layout ladder (density-responsive; the Pattern-class split) — no
+     control-height law applies here (it is a content shell, not an interactive row). Direct-child hops
+     all the way (the GH #1102 law): a contained OUTER fold must never pad a NESTED fold's body. */
+  :scope[contained] > [data-part='details'] > [data-part='body'] {
     padding-block: var(--ui-disclosure-body-pad-block);
     padding-inline: var(--ui-disclosure-body-pad-inline);
+  }
+
+  /* The [contained] chrome (GH #1283) — a surface background with corners on the shared fleet radius
+     constant (ADR-0015 cl.5, the ui-card lineage: card.css reads the same `--md-sys-shape-corner-base`
+     :root constant). Painted on the HOST — the whole fold reads as one contained surface. */
+  :scope[contained] {
+    background-color: var(--ui-disclosure-bg);
+    border-radius: var(--ui-disclosure-radius);
+  }
+
+  /* Under [contained] the summary's hover wash must follow the host's corners (a square wash over a
+     rounded surface reads as an overflow defect): top corners always; bottom corners only while CLOSED
+     (open, the body squares off the summary's lower edge). Direct-child hops (GH #1102) — a nested
+     fold's summary inside a contained outer fold stays square. */
+  :scope[contained] > [data-part='details'] > [data-part='summary'] {
+    border-start-start-radius: var(--ui-disclosure-radius);
+    border-start-end-radius: var(--ui-disclosure-radius);
+  }
+  :scope[contained] > [data-part='details']:not([open]) > [data-part='summary'] {
+    border-end-start-radius: var(--ui-disclosure-radius);
+    border-end-end-radius: var(--ui-disclosure-radius);
   }
 
   /* Keyboard focus — the ONE shared fleet ring (ADR-0009), read directly (the button.css/select.css

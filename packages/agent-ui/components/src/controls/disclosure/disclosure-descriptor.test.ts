@@ -26,7 +26,7 @@ const css = readFileSync(`${DISCLOSURE}/disclosure.css`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-const ATTR_NAMES = ['open', 'summary']
+const ATTR_NAMES = ['open', 'summary', 'contained'] // contained — the opt-in chrome (GH #1283)
 
 describe('disclosure.md descriptor — frontmatter parses + schema-valid', () => {
   it('has a leading frontmatter fence and a prose body', () => {
