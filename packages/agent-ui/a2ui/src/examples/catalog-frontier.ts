@@ -558,4 +558,40 @@ export const backableWizardSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed]
+const GREET_ID = 'greet-1'
+/** Frontier 10 — the GREET CARD (GH #1201, req-a2ui-patterns R3): a persona's opening bookend. The
+ *  first turn's note introduces the persona; alongside it, ONE compact starter card — CardContent's
+ *  orientation Text plus a CardFooter of 2–4 Buttons whose `action.context` names a concrete starter
+ *  intent. NOT an ask despite riding the meta-line `ask` field for feed placement: the reserved
+ *  `greet-1` id class (grammar.md's reserved-vocabulary sentence + the `greeting-card` mini-skill) —
+ *  no commit button, no data model (`sendDataModel` omitted), no `ask-<n>` id consumed, and the
+ *  answered-ask freeze never applies (a greet is never an answered ask; its buttons are retired per
+ *  the stale-affordance rule when the first real task starts). */
+export const greetCardSeed: ExampleSeed = {
+  name: 'frontier-greet-card',
+  description: 'A persona\'s opening greet card — reserved greet-1 surface (not an ask: no commit button, no data model), an orientation Text and 2–4 starter-intent Buttons carrying concrete intents in action.context, retired when the first real task starts.',
+  promptText: 'Hi — who are you and what can you do?',
+  surfaceId: GREET_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: GREET_ID, catalogId: 'agent-ui' } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: GREET_ID,
+        components: [
+          { id: 'root', component: 'Card', children: ['ct', 'ft'] },
+          { id: 'ct', component: 'CardContent', children: ['t'] },
+          { id: 't', component: 'Text', variant: 'body', text: 'What would you like to do?' },
+          { id: 'ft', component: 'CardFooter', children: ['b1', 'b2', 'b3'] },
+          { id: 'b1', component: 'Button', variant: 'solid', label: 'Book a room', action: { action: 'start', context: { intent: 'room' } } },
+          { id: 'b2', component: 'Button', label: 'Reserve a table', action: { action: 'start', context: { intent: 'table' } } },
+          { id: 'b3', component: 'Button', variant: 'ghost', label: 'Just a question', action: { action: 'start', context: { intent: 'faq' } } },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed]

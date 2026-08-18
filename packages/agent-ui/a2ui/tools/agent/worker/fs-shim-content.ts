@@ -31,6 +31,8 @@ import cardLayout from '../../../src/agent/prompts/mini-skills/card-layout.md'
 import dashboardKpiGrid from '../../../src/agent/prompts/mini-skills/dashboard-kpi-grid.md'
 import formRhythm from '../../../src/agent/prompts/mini-skills/form-rhythm.md'
 import gameHud from '../../../src/agent/prompts/mini-skills/game-hud.md'
+// GH #1201 (req-a2ui-patterns R3) — the persona-conditional greet-bookend module.
+import greetingCard from '../../../src/agent/prompts/mini-skills/greeting-card.md'
 import gameTableChrome from '../../../src/agent/prompts/mini-skills/game-table-chrome.md'
 import loginForm from '../../../src/agent/prompts/mini-skills/login-form.md'
 import masterDetailSplit from '../../../src/agent/prompts/mini-skills/master-detail-split.md'
@@ -71,6 +73,7 @@ export const FILES: Record<string, string> = {
   [`${MINI_SKILLS_PATH}/form-rhythm.md`]: formRhythm,
   [`${MINI_SKILLS_PATH}/game-hud.md`]: gameHud,
   [`${MINI_SKILLS_PATH}/game-table-chrome.md`]: gameTableChrome,
+  [`${MINI_SKILLS_PATH}/greeting-card.md`]: greetingCard,
   [`${MINI_SKILLS_PATH}/login-form.md`]: loginForm,
   [`${MINI_SKILLS_PATH}/master-detail-split.md`]: masterDetailSplit,
   [`${MINI_SKILLS_PATH}/settings-screen.md`]: settingsScreen,
@@ -87,6 +90,7 @@ export const DIRS: Record<string, string[]> = {
     'form-rhythm.md',
     'game-hud.md',
     'game-table-chrome.md',
+    'greeting-card.md',
     'login-form.md',
     'master-detail-split.md',
     'settings-screen.md',
