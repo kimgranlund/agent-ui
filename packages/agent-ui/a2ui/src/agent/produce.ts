@@ -850,9 +850,17 @@ const NET_NOOP_HINT =
 const EXPLICIT_CLOSE_RE =
   /\b(?:no (?:further|more|other) questions?|(?:we|i)(?:'re|'m| are| am)? ?(?:all )?done(?: here)?|that(?:'s| is| will be) (?:all|everything)|(?:we're|we are|i'm|i am) (?:all )?set|nothing (?:else|further|more)|that'?s it,? thanks?|goodbye)\b/i
 
+/** GH #1202 — the SECOND deterministic close signal: a CONCLUSIVE-COMMIT phrase ("confirmed — book it",
+ *  "yes, confirm", "go ahead and order it") answering the flow-final confirm ask. Safe under the same
+ *  note-only guard as the explicit-close lexicon: a MID-flow commit ("Next", a step answer) is answered
+ *  by a content-bearing turn (scene-swap updates), which the closing-shaped predicate already excludes —
+ *  only a prose-concluding turn after a commit phrase reaches the hint. A miss degrades to no round. */
+const CONFIRM_COMMIT_RE =
+  /\b(?:confirm(?:ed)?(?:[\s,—-]+(?:please\s+)?(?:book|order|send|submit|do|place) (?:it|that|this))?|yes[,!]?\s+(?:please\s+)?(?:confirm|book(?: it)?|proceed|go ahead)|go ahead(?: and)? (?:book|confirm|order|submit|send)|book it|place (?:the|my) order|submit (?:it|the (?:form|request|booking)))\b/i
+
 /** GH #1168 — exported for the unit tests on the detection predicate (the #1142 test-template shape). */
 export function isExplicitClose(input: TurnInput): boolean {
-  return input.kind === 'intent' && EXPLICIT_CLOSE_RE.test(input.text)
+  return input.kind === 'intent' && (EXPLICIT_CLOSE_RE.test(input.text) || CONFIRM_COMMIT_RE.test(input.text))
 }
 
 /** GH #1168 — the self-correct sentence for a FLOW_END_MISSING round (the NET_NOOP_HINT shape: one
