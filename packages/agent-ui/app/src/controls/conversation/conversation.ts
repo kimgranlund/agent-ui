@@ -251,7 +251,7 @@ const props = {
   // consumer explicitly sets it, so an untouched `ui-conversation` renders byte-identical to before this
   // ticket; only an explicit `'off'` ever paints the flattened host bubble (conversation.css). Scoped to
   // the HOST/AGENT role only (Kim's ruling 1/Acceptance) — the USER bubble is never touched by this prop.
-  bubbles: { ...prop.enum(['on', 'off'] as const, 'on'), reflect: true },
+  bubbles: { ...prop.enum(['on', 'off'] as const, 'off'), reflect: true }, // GH #1221 morning ruling: default OFF = contained (padding/radius) but chrome-less (no bg, no border); 'on' paints the neutral bg
 } satisfies PropsSchema
 
 /** GH #291/ADR-0160 clause 3 (Kim's 2026-07-27 ruling) — a CONSUMER-DEFINED pre-hydrated inline-action

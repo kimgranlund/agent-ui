@@ -141,21 +141,16 @@
      carried zero chrome of its own here (GH #241's "A2UI not affected" scoping stands; its own
      structural card chrome is surface-host.css's [bare] rule, GH #1150/#1161), so this rule's own
      background/padding/radius never touched it either way, before or after that move. */
-  [data-part='bubble'][data-role='agent'] {
+  /* GH #1221 (Kim's 2026-08-18 morning ruling, resolving the label-vs-look note): the HOST/AGENT bubble
+     stays CONTAINED by default — a padded, radiused container (the base rule above) — but with NO
+     background and NO border: chrome-less containment. That is now the `bubbles` DEFAULT ("off": the
+     prop's default value flipped to match Kim's ruling; conversation.ts). `bubbles="on"` is the explicit
+     opt-in that paints the neutral container background (ADR-0160's chromed look). Scoped to
+     `[data-role='agent']` deliberately (ruling 1): the USER bubble is UNTOUCHED — its own background rule
+     above applies in either state. `[data-part='mounts']` (the Gen-UI/A2UI card sibling, below) is
+     unaffected in every mode — a card keeps its own chrome, per ruling 3. */
+  :scope[bubbles='on'] [data-part='bubble'][data-role='agent'] {
     background: var(--ui-conversation-agent-bubble);
-  }
-  /* GH #1221 (Kim's 2026-08-17 rulings) — the bubble on/off setting's OFF state: `bubbles="off"`
-     (conversation.ts's reflected `bubbles` prop, default `"on"` — absent/`"on"` is BYTE-IDENTICAL to
-     every rule above, a zero-diff default) flattens the HOST/AGENT bubble only — the neutral container
-     background, the padding, and the radius all drop to nothing, the pre-ADR-0160/GH#241 chromeless
-     shape. Scoped to `[data-role='agent']` deliberately (Kim's ruling 1/the ticket's own Acceptance
-     line): the USER bubble is UNTOUCHED by this attribute in either state. `[data-part='mounts']`
-     (the Gen-UI/A2UI card sibling, below) is UNAFFECTED by this attribute too — a card keeps its own
-     chrome in EVERY bubbles mode, per ruling 3. */
-  :scope[bubbles='off'] [data-part='bubble'][data-role='agent'] {
-    background: none;
-    padding: 0;
-    border-radius: 0;
   }
   /* GH #313/ADR-0160 amendment (Kim's 2026-07-28 ruling — "no bubble unless there is content for it") —
    * post-GH #306 the bubble holds ONLY prose content (note/disclosure/chips — GH #1221 moved the
