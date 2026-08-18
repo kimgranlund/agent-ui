@@ -1,0 +1,13 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.2",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-08-18T16:30:00Z",
+  "verdicts": {
+    "five-day-weather": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "stats-grid-dashboard": { "qualityScore": 2, "passed": false, "failingDimensions": ["D5"] },
+    "frontier-card-anatomy-ask": { "qualityScore": 2, "passed": false, "failingDimensions": ["D1", "D2"] },
+    "backable-wizard": { "qualityScore": 2, "passed": false, "failingDimensions": ["D1"] },
+    "wizard-step-progress": { "qualityScore": 3, "passed": false, "failingDimensions": ["D1"] }
+  }
+}
