@@ -38,8 +38,9 @@ const frames = async (n = 3): Promise<void> => {
 }
 
 /** Two CSS px below the 52.5rem line's own mount — exactly one place paints (the agent-admin
- *  .browser.test.ts constant, mirrored). */
-const NARROW_BAND_WIDTH = 862
+ *  .browser.test.ts constant, mirrored; GH #1260 re-derived the band 864→840 when the canvas gutter
+ *  went — this mirror was missed in that wave and sat 22px into the WIDE band, painting settings). */
+const NARROW_BAND_WIDTH = 838
 
 function mountAt(widthPx: number): { el: UIAgentAdminElement } {
   const wrapper = document.createElement('div')
