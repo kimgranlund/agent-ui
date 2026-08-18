@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "seats": {
+    "agent": {
+      "tier": "fable+low",
+      "justification_date": "2026-08-17",
+      "mode": "manual"
+    },
+    "reviewer": {
+      "tier": "fable+xhigh",
+      "justification_date": "2026-08-17",
+      "mode": "manual"
+    },
+    "planner": {
+      "tier": "fable+medium",
+      "justification_date": "2026-08-17",
+      "mode": "manual"
+    },
+    "product": {
+      "tier": "fable+high",
+      "justification_date": "2026-08-17",
+      "mode": "manual"
+    }
+  },
+  "permission_profiles": {
+    "reviewer": "deny-edit-write"
+  },
+  "live_state": {
+    "joined": [
+      {
+        "role": "agent",
+        "mode": "manual",
+        "date": "2026-08-17",
+        "action": "joined",
+        "agent_name": null
+      },
+      {
+        "role": "product",
+        "mode": "dispatched",
+        "date": "2026-08-17",
+        "action": "joined",
+        "agent_name": null
+      }
+    ],
+    "loop_position": null,
+    "gate": "ratified"
+  }
+}
