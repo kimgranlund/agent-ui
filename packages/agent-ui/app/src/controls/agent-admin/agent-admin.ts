@@ -207,6 +207,15 @@ import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-r
 // thin adapter (its own header comment); `exceedsAgentKnowledgeBudget`/`formatFileSize` are this
 // ticket's own additions (the aggregate budget check + the chip's size formatter).
 import { extractDocumentText, DocumentExtractionError, MAX_RAW_FILE_BYTES, MAX_AGENT_KNOWLEDGE_CHARS, exceedsAgentKnowledgeBudget, formatFileSize } from './document-ingest.ts'
+// GH #1212 (req-doc-ingestion.md R4/R7) — large ingested text routes to the ADR-0193 IndexedDB tier
+// instead of the sync localStorage-backed store (`resource-idb-store.ts`'s own module banner has the
+// full reasoning: the threshold, the sync/async seam, the one-shared-database key scheme).
+import {
+  routeResourceContent,
+  entryTextLength,
+  materializeResourceEntries,
+  hydrateResourceEntries,
+} from './resource-idb-store.ts'
 import {
   AVAILABILITY_KINDS,
   ENTRY_KINDS,
@@ -898,6 +907,15 @@ export class UIAgentAdminElement extends UIElement {
           this.#settingsEl.store = store
         }
         this.#rewireAllSections(store)
+        // GH #1212 — warm the IndexedDB-routed resource cache for whatever this store currently holds
+        // (a reload, or a persona switch onto a store that already carries routed entries), then
+        // re-render the resource section once every fetch has settled. Fire-and-forget by design: the
+        // section already rendered above with whatever the cache held synchronously (its own mint, or an
+        // already-warm cache) — this only upgrades a still-placeholder render to the real text once it
+        // lands, never blocks the current render on it.
+        void hydrateResourceEntries(readEntries(store, ENTRY_KINDS.resource)).then(() => {
+          this.#renders.get(ENTRY_KINDS.resource)?.()
+        })
         this.#updateLibraries(libraries)
         this.#syncConversationConfig(store)
         this.#rewireContext(store)
@@ -2667,7 +2685,19 @@ export class UIAgentAdminElement extends UIElement {
         isCatalog
           ? this.#selectCatalog(id, enabled)
           : this.#updateEntries(kind, (entries) => entries.map((e) => (e.id === id ? { ...e, enabled } : e))),
-      onContentChange: (id, content) => this.#updateEntries(kind, (entries) => entries.map((e) => (e.id === id ? { ...e, content } : e))),
+      // GH #1212 — a direct content write ALWAYS clears `idbRef`/`contentLength`: the drawer's editor
+      // shows materialized (real) text for a routed resource entry (`#rewireAllSections`'s render), so a
+      // saved edit here is genuinely the entry's new whole content — never merely the placeholder. Without
+      // this, an edited entry would keep its STALE `idbRef`, and the next materialize pass would silently
+      // overwrite the user's edit with the old cached/IndexedDB text (`materializeResourceEntry` always
+      // prefers the cache over `content` when `idbRef` is present). Clearing reverts the entry to plain
+      // inline storage — the old IndexedDB blob is simply orphaned (never read again), never a correctness
+      // risk. A future edit past the threshold re-routes on the NEXT ingest-path mint, not on a manual
+      // edit — this ticket's routing law applies at mint time (`#handleAttach`), not to hand edits.
+      onContentChange: (id, content) =>
+        this.#updateEntries(kind, (entries) =>
+          entries.map((e) => (e.id === id ? { ...e, content, idbRef: undefined, contentLength: undefined } : e)),
+        ),
       // The `|| e.builtin` guard is defensive, mirroring entry-list.ts's own choice not to render a
       // delete affordance for a builtin entry in the first place (ADR-0132 Fork 4: toggle off, never
       // delete) — a stray call still cannot remove one.
@@ -2814,8 +2844,11 @@ export class UIAgentAdminElement extends UIElement {
         // R6's THIRD budget — the aggregate cap over every ENABLED resource entry's own text, checked
         // HERE at the mint point (the only place with an "every entry" input to sum over — #1210's own
         // seam has no store access and explicitly left this to #1211, document-budget.ts's own header).
+        // GH #1212 — `entryTextLength` (not bare `e.content.length`): a prior IndexedDB-routed entry's
+        // `content` is a placeholder, so the aggregate sum reads its true length instead (no IndexedDB
+        // round trip needed — the true length rides inline on the entry, `resource-idb-store.ts`).
         const existing = readEntries(this.store, ENTRY_KINDS.resource)
-        const existingCharsTotal = existing.filter((e) => e.enabled).reduce((sum, e) => sum + e.content.length, 0)
+        const existingCharsTotal = existing.filter((e) => e.enabled).reduce((sum, e) => sum + entryTextLength(e), 0)
         if (exceedsAgentKnowledgeBudget(existingCharsTotal, extracted.text.length)) {
           this.#showToast(
             `Can't attach "${file.name}" — it would push this agent's knowledge past its ${MAX_AGENT_KNOWLEDGE_CHARS.toLocaleString()}-character budget.`,
@@ -2825,10 +2858,19 @@ export class UIAgentAdminElement extends UIElement {
           continue
         }
 
+        // GH #1212 (req-doc-ingestion R4) — route large extracted text to the IndexedDB tier BEFORE
+        // minting the entry, so what actually reaches `validateNewEntry`/`#updateEntries` (and therefore
+        // the SYNC localStorage-backed store) is already the routed placeholder for anything over
+        // threshold — never the real text for a large document. Dismissed mid-route: the same re-check
+        // as the extraction await above, so a discarded chip never mints an orphaned IndexedDB write's
+        // entry either.
+        const routed = await routeResourceContent(extracted.text)
+        if (!this.#attachedContextItems.some((item) => item.id === pendingId)) continue
+
         const result = validateNewEntry(existing, ENTRY_KINDS.resource, {
           label: file.name,
           description: formatFileSize(extracted.meta.rawBytes),
-          content: extracted.text,
+          content: routed.content,
         })
         if (!result.ok) {
           this.#showToast(`Can't attach "${file.name}" — ${result.error}`)
@@ -2836,10 +2878,12 @@ export class UIAgentAdminElement extends UIElement {
           this.#renderAttachedContextItems()
           continue
         }
+        const entry: Entry =
+          routed.idbRef === undefined ? result.entry : { ...result.entry, idbRef: routed.idbRef, contentLength: routed.contentLength }
         // R4 — the ONE store write: a plain `resource` entry through the SAME `#updateEntries` seam every
         // other add uses, so it shows in the Resources section, toggles/deletes there, survives reload,
         // and composes into `composeLiveSystemPrompt` exactly like a hand-authored resource.
-        this.#updateEntries(ENTRY_KINDS.resource, (entries) => [...entries, result.entry])
+        this.#updateEntries(ENTRY_KINDS.resource, (entries) => [...entries, entry])
         const description = extracted.meta.truncated
           ? `${formatFileSize(extracted.meta.rawBytes)} — truncated`
           : formatFileSize(extracted.meta.rawBytes)
@@ -2976,7 +3020,14 @@ export class UIAgentAdminElement extends UIElement {
       // switch derived from the persisted selection), never the bare roster; and it re-renders on EITHER
       // of its two inputs, since the selection lives outside the entries store.
       const isCatalog = kind === ENTRY_KINDS.catalog
-      const render = (): void => section.render(isCatalog ? readCatalogEntries(store) : readEntries(store, kind))
+      // GH #1212 — the `resource` section's own render materializes IndexedDB-routed entries first, so
+      // the drawer's content editor shows a document's real text rather than its placeholder (the
+      // `#handleAttach` mint itself already primed the cache; `hydrateResourceEntries` below covers the
+      // reload case, re-rendering this exact closure once its fetches land).
+      const render = (): void => {
+        const entries = isCatalog ? readCatalogEntries(store) : readEntries(store, kind)
+        section.render(kind === ENTRY_KINDS.resource ? materializeResourceEntries(entries) : entries)
+      }
       this.#renders.set(kind, render)
       render()
       const unsubscribe = store?.subscribe?.((key) => {
@@ -3736,11 +3787,19 @@ export class UIAgentAdminElement extends UIElement {
    *  to compose PROMPT prose and excludes kinds for prompt-shaped reasons (double-injection, wire-threaded
    *  selection), which are not this projection's reasons (`MENTIONABLE_KINDS`/`INVOCABLE_KINDS`, entries.ts). */
   #referenceGroups(store: SettingsStore | undefined): ReferenceGroup[] {
-    return [...MENTIONABLE_KINDS, ...INVOCABLE_KINDS].map((kind) => ({
-      kind,
-      entries: readEntries(store, kind),
-      enabled: isEnabledFlag(store?.get(kindEnabledKey(kind))),
-    }))
+    return [...MENTIONABLE_KINDS, ...INVOCABLE_KINDS].map((kind) => {
+      const entries = readEntries(store, kind)
+      // GH #1212 — `resource` is the one MENTIONABLE kind (`MENTIONABLE_KINDS`, entries.ts) whose entries
+      // may carry IndexedDB-routed content: materialize before `resolveTurnReferences` reads `.content`
+      // at send time (SPEC-R4's framing), so an `@`-referenced large document frames its REAL text, not
+      // the placeholder, whenever this session's cache already holds it (this attach's own mint, or a
+      // completed `hydrateResourceEntries` pass — `#rewireAllSections`).
+      return {
+        kind,
+        entries: kind === ENTRY_KINDS.resource ? materializeResourceEntries(entries) : entries,
+        enabled: isEnabledFlag(store?.get(kindEnabledKey(kind))),
+      }
+    })
   }
 
   /** GH #891/SPEC-R13 — the capabilities MENU's groups: the same fresh-read division of labor as
