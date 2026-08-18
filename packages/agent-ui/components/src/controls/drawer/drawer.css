@@ -282,7 +282,7 @@
     flex: 0 0 auto;
     margin-block-start: 0; /* the flex `gap` above supplies the content↔footer gap instead — avoid doubling it */
   }
-  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) > :is([data-region='content'], main) {
+  :scope > [data-part='dialog'][open]:has(> :is([data-region='content'], main)) > :is([data-region='content'], main) {
     flex: 1 1 auto;
     min-block-size: 0; /* the flex-item overflow trap — without this the item refuses to shrink below its content's intrinsic size */
     margin-block: 0; /* the flex `gap` above supplies both neighbouring gaps instead — avoid doubling them */
