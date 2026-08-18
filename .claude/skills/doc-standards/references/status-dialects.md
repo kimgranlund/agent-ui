@@ -1,4 +1,4 @@
-# Status dialects, the ADR-earns test, and the status philosophy (doc-standards §1 / §1c / §2)
+# Status dialects, the ADR-earns test, the intent-tier rule, and the status philosophy (doc-standards §1 / §1c / §1d / §2)
 
 ## 1 · Status dialects (per type — three dialects, deliberate)
 
@@ -52,6 +52,50 @@ alternatives that later work is bound by.
 on documents… **ADR only for contract-changing forks**") — cite it, don't restate it here. Both rules
 point the same way: the ADR tier is narrow on purpose, and an ADR minted to record activity rather
 than a decision is the defect this rule names.
+
+## 1d · The intent tier (IDR) and PRD granularity — Kim's 2026-08-18 tier ruling
+
+**Kim's ruling (2026-08-18), verbatim:**
+
+> IDR should not be made for features. Intent is at the global app/project level. PRD docs should
+> be created for apps (like agent-admin-app) and that PRD would document the teams feature (along
+> all the other agent features).
+
+and, same day:
+
+> Agent UI as a platform/system should have central Intent and organized structured IDR documents.
+
+> PRDs can exist at various levels of granularity.
+
+**The IDR tier is platform-global only.** An IDR (intent decision record, `.claude/docs/idr/`)
+states a product intent that holds across the whole platform — an identity claim, a medium claim,
+a trust-boundary law, a unit-of-product claim. A feature's WHY/WHAT — however strategic — lives in
+the PRD that owns its app or family, never in an IDR. The four 2026-08-17 feature-scoped IDRs
+(IDR-0001…0004) predate this ruling; each carries a dated relocation note and awaits Kim's
+supersession flip.
+
+**The central Intent record** is [`product-brief.md`](../../../docs/product-brief.md) (accepted
+2026-08-17 — the identity sentence + product principles); the platform IDR set under `idr/` is its
+decision spine. IDRs follow the ADR dialect exactly (§1): blockquote status table,
+`proposed · accepted · superseded`, **only Kim flips**, accepted bodies append-only, **no index
+file** in the folder.
+
+**The PRD tier is multi-granular, deliberately.** Platform-area PRDs (e.g. the A2UI expert
+system), app PRDs (e.g. agent-admin-app), family PRDs (chart/content/report), and finer
+feature-level PRDs are ALL legitimate. A finer PRD nests under its coarser parent by CITING it —
+never by duplicating it (one fact, one home). The existing corpus's granularity mix is valid as-is;
+nothing is force-fit to one altitude. A feature section inside an app PRD may later be promoted to
+its own child PRD when it outgrows the section — that is the normal growth path, not a defect.
+
+**The hierarchy, top to bottom:** central Intent (`product-brief.md` + platform IDRs) → PRDs at
+whatever granularity fits, coarse→fine, each citing upward → ADR / SPEC / LLD exactly as before
+(§1c's earn-the-doc test unchanged).
+
+| The thing you have | Where it goes |
+|---|---|
+| A platform-global product intent (identity, medium, trust boundary, unit of product) | an **IDR** — `proposed`, only Kim flips |
+| An app's or family's WHY/WHAT, incl. its features | the owning **PRD** (minting a new sibling PRD when no existing one owns the altitude — the content-family sibling-vs-extension precedent) |
+| A feature's WHY/WHAT inside an app | a **section of the app's PRD**, promotable to a child PRD when it outgrows the section |
 
 ## 2 · The status philosophy (why shipped specs still read `proposed`)
 

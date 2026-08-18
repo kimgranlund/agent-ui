@@ -43,3 +43,17 @@ builder capability, not a server feature.
 
 Accept "browser-only ingestion, one knowledge path, stuffing-not-retrieval at v1" as product
 intent? (pdf.js remains separately ADR-gated regardless of this flip.)
+
+## Amendment note (2026-08-18) — tier ruling: this IDR is proposed for supersession
+
+Kim's 2026-08-18 doc-tier ruling, verbatim: *"IDR should not be made for features. Intent is at
+the global app/project level. PRD docs should be created for apps (like agent-admin-app) and that
+PRD would document the teams feature (along all the other agent features)."*
+
+Accordingly: this IDR's feature-scoped intent (browser-only ingestion, the one knowledge path,
+stuffing-not-retrieval at v1, the ruled pdf.js exception) now lives in the
+[agent-admin-app PRD](../prd/agent-admin-app.prd.md) §3.5; its platform-global core ("knowledge is
+a platform capability; the browser is the trust boundary, as product law") is restated at platform
+altitude in [IDR-0007](./0007-user-knowledge-browser-trust-boundary.md) (proposed). This IDR is
+**proposed for supersession by IDR-0007** — the accepted body above is untouched (append-only),
+and the Status flip is Kim's alone.

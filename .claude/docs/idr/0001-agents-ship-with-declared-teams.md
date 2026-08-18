@@ -39,3 +39,17 @@ flow — this is a stated differentiator, not catch-up.
 
 Accept "declaration-first teams, runtime deferred" as product intent? (The v1 fence is already
 in the approved req doc; this IDR makes it durable above the arc.)
+
+## Amendment note (2026-08-18) — tier ruling: this IDR is proposed for supersession
+
+Kim's 2026-08-18 doc-tier ruling, verbatim: *"IDR should not be made for features. Intent is at
+the global app/project level. PRD docs should be created for apps (like agent-admin-app) and that
+PRD would document the teams feature (along all the other agent features)."*
+
+Accordingly: this IDR's feature-scoped intent (the `AgentTeam` record, GM prompt composition, the
+one-shot builder, the Team pane, A2A alignment, and the v1 fence) now lives in the
+[agent-admin-app PRD](../prd/agent-admin-app.prd.md) §3.4; its platform-global core ("the unit of
+product grows from agent to team, declaration-first") is restated at platform altitude in
+[IDR-0008](./0008-team-is-the-unit-of-product.md) (proposed). This IDR is **proposed for
+supersession by IDR-0008** — the accepted body above is untouched (append-only), and the Status
+flip is Kim's alone.

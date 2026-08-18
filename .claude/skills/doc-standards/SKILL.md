@@ -5,7 +5,8 @@ description: >-
   blockquote-table · ticket YAML · SPEC/LLD/PRD blockquote status lines), the exact status vocabulary
   and WHO may flip each, the ID spine (ADR-#### · SPEC-R# · LLD-C# · PRD-G#/D# · TKT-####) and
   supersession vocabulary, ticket-kind section contracts, the ADR log's own rules (NO index file in an
-  ADR folder; what earns an ADR at all), and which gates enforce what. Use for "what status vocabulary
+  ADR folder; what earns an ADR at all), the IDR intent tier (platform-global intent ONLY — feature
+  WHY/WHAT lives in the owning PRD; PRDs are multi-granular), and which gates enforce what. Use for "what status vocabulary
   does a SPEC use", "who flips an ADR to accepted", "does this earn an ADR", "should I add a README/index
   to the ADR folder", "what sections does a bug ticket carry", "why is this shipped spec still proposed",
   "how do docs cite each other" — BEFORE authoring or judging any .claude/docs record. This repo's dialect DIVERGES from scribe's doc_lint (blockquote,
@@ -41,6 +42,11 @@ which file.
 - **SPEC / LLD / PRD** — blockquote STATUS LINE; vocabulary `proposed · accepted · superseded`.
   PRDs flip at Kim's ratification; SPEC/LLD lag by design — "when it disagrees with the tree, the
   tree wins," so a `proposed` SPEC whose build shipped is normal and never sweep-flipped.
+- **IDR (intent tier, `.claude/docs/idr/`)** — follows the ADR dialect exactly (blockquote table,
+  Kim-only flips, append-only accepted bodies, no index file). **Platform-global intent ONLY**
+  (Kim's 2026-08-18 tier ruling): a feature's WHY/WHAT lives in the owning app/family PRD, never
+  in an IDR; the PRD tier itself is multi-granular (platform-area · app · family · feature, finer
+  citing coarser). Full rule + hierarchy: `references/status-dialects.md` §1d.
 
 This repo's dialect DIVERGES from scribe's doc_lint (blockquote, not YAML; proposed/accepted, not
 draft/approved) — this skill is the local authority for that divergence, not a paraphrase of it.
@@ -56,7 +62,7 @@ status IS the index.
 
 | File | Read when |
 |---|---|
-| `references/status-dialects.md` (§1 / §1c / §2) | flipping or reading an ADR · ticket · SPEC/LLD/PRD status — the per-type dialect table + the current GitHub-Issue ticket mapping; whether something earns an ADR at all; why a shipped SPEC still reads `proposed` |
+| `references/status-dialects.md` (§1 / §1c / §1d / §2) | flipping or reading an ADR · ticket · SPEC/LLD/PRD status — the per-type dialect table + the current GitHub-Issue ticket mapping; whether something earns an ADR at all; the IDR platform-intent-only rule + PRD granularity ladder (§1d, Kim 2026-08-18); why a shipped SPEC still reads `proposed` |
 | `references/adr-log-mechanics.md` (§1b) | the ADR log's no-index / numbering / amendment-vs-supersession rules — Kim's 2026-08-13 no-README ruling |
 | `references/id-spine-and-ticket-contracts.md` (§3 / §4) | citing an ID (`ADR-####` / `SPEC-R#` / `LLD-C#` / `PRD-G#`\|`D#` / `TKT-####`) or the supersession/extension vocabulary; a ticket or Issue's required sections by kind (feature vs bug) |
 | `references/gates-and-citation-law.md` (§5 / §5b / §6) | which gate enforces what (`adr.test.ts`, `docs-grammar.test.ts`, the status-guard hook, `adr_ratify.py`); the cite-by-stable-anchor law (GH #757); the archive/historical-record rule |
