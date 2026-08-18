@@ -961,3 +961,42 @@ describe('buildSystemPrompt reserved greet-1 id class (GH #1201, req-a2ui-patter
     expect(body).not.toMatch(/greet-1|greet card/i)
   })
 })
+
+// ── GH #1259 / ADR-0206 cl.3: the target-arm teaching (mode-invariant, the plan-arm pin pattern) ─────────
+
+describe('buildSystemPrompt target-arm mechanics — mode-invariant (GH #1259 / ADR-0206 cl.3)', () => {
+  it('the mechanics block is present, byte-identical, in undefined/default/specific/blue-sky', () => {
+    const marker = 'Target declarations:'
+    const mechanicsOf = (prompt: string): string => {
+      const start = prompt.indexOf(marker)
+      expect(start).toBeGreaterThan(-1)
+      const rest = prompt.slice(start)
+      const end = rest.indexOf('\n\n')
+      return end === -1 ? rest : rest.slice(0, end)
+    }
+    const dflt = mechanicsOf(buildSystemPrompt(defaultCatalog, []))
+    for (const mode of ['default', 'specific', 'blue-sky'] as const) {
+      expect(mechanicsOf(buildSystemPrompt(defaultCatalog, [], mode))).toBe(dflt)
+    }
+  })
+
+  it("teaches the target field's exact shape and its leading-meta-line placement", () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [])
+    expect(prompt).toMatch(/"target":\{"surfaceId":"<that surface's id>"\}/)
+    expect(prompt).toMatch(/"a2uiMeta":\{"note":"[^"]+","target":\{"surfaceId":"weather-1"\}\}/)
+  })
+
+  it('teaches the omission rule: fresh-surface and no-A2UI turns carry NO target — never a placeholder', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [])
+    expect(prompt).toMatch(/OMIT the\s+"target" field entirely/)
+    expect(prompt).toMatch(/never invent a placeholder or guess/)
+  })
+
+  it('none of the target-arm prose leaks into the derived "## Available components" inventory section', () => {
+    for (const mode of [undefined, 'default', 'specific', 'blue-sky'] as const) {
+      const composed = buildSystemPrompt(defaultCatalog, [], mode)
+      const body = catalogInventoryBody(composed)
+      expect(body).not.toMatch(/Target declarations|"target":\{"surfaceId"/i)
+    }
+  })
+})

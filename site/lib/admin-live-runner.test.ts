@@ -554,6 +554,37 @@ describe('createAdminSurfaceTurn — the flowEnd peel (ADR-0198)', () => {
   })
 })
 
+// GH #1259 (ADR-0206 cl.4) — the target peel: the SIXTH model-authored arm, same peel-here-consume-
+// there division as ask/patch/plan/team (the component forwards to the conversation handle's target()
+// seam; this layer only forwards the typed fact — no registry knowledge, no integrity check here).
+describe('createAdminSurfaceTurn — the target peel (GH #1259 / ADR-0206)', () => {
+  it('peels a declared target into its own typed event, alongside the note; the content line still rides the line stream', async () => {
+    const UPDATE_LINE = '{"version":"v1.0","updateComponents":{"surfaceId":"weather-1","components":[{"id":"root","component":"Text","text":"sunny"}]}}'
+    const lines = [JSON.stringify({ a2uiMeta: { note: 'Updating it.', target: { surfaceId: 'weather-1' } } }), UPDATE_LINE]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
+    )
+    const runner = createAdminSurfaceTurn()
+    const events: AdminSurfaceTurnEvent[] = []
+    for await (const event of runner(SURFACE_REQUEST)) events.push(event)
+    expect(events.map((e) => e.kind)).toEqual(['note', 'target', 'line'])
+    expect(events.find((e) => e.kind === 'target')).toEqual({ kind: 'target', target: { surfaceId: 'weather-1' } })
+  })
+
+  it('a note-only turn yields NO target event — absence is the neutral no-signal state (negative control)', async () => {
+    const lines = [JSON.stringify({ a2uiMeta: { note: 'room pics coming up' } })]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
+    )
+    const runner = createAdminSurfaceTurn()
+    const kinds: string[] = []
+    for await (const event of runner(SURFACE_REQUEST)) kinds.push(event.kind)
+    expect(kinds).toEqual(['note'])
+  })
+})
+
 describe('createAdminSurfaceTurn — the ADR-0097 ask peel (GH #802)', () => {
   const ASK_SURFACE_LINE = '{"version":"v1.0","createSurface":{"surfaceId":"ask-1","catalogId":"agent-ui"}}'
 

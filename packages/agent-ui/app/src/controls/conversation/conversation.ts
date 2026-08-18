@@ -298,6 +298,17 @@ export interface AgentTurnHandle {
    *  B: a producer-attached `ev.source` (the `progressDetail:'source'` opt-in) feeds the entry's per-step
    *  reveal — only when this element's own `sources` prop is set; dropped otherwise (fail-closed). */
   progress(ev: TurnProgress): void
+  /** GH #1259 / ADR-0206 cl.4 — routes the leading meta-line's model-declared mutation target (the
+   *  `target` arm, the SIXTH model-authored meta-line field). Under validate-then-stream the meta-line
+   *  is the ONE line that arrives ahead of the content burst, so this call lands at effective turn
+   *  start: when `surfaceId` names a currently-OPEN registry entry, that host breathes (`working`) and
+   *  un-supersedes immediately — the exact `opts.intoSurface` code shape, now MODEL-STATED for typed
+   *  turns — and rides `touchedIds` so the guarded endTurn (finalize AND fail) clears it. An unknown or
+   *  closed id is silently dropped (the registry-membership check IS the guard — never a halt, never a
+   *  console error); an ask-answer turn (`disabledSurfaceId` set, GH #802) ignores it entirely. A
+   *  consumer that never calls it is byte-behavior-unchanged (no early breathe — the pre-#1134
+   *  late-but-never-wrong line-burst set, unchanged). */
+  target(surfaceId: string): void
   /** Ends narration, renders the note (or a factual fallback tally), and settles every surface host this
    *  turn touched. GH #291/ADR-0160 clause 3 — an optional, non-empty `actions` row renders as a
    *  pre-hydrated chip row on THIS settled turn's bubble, appended after the wire disclosure (when
@@ -686,7 +697,7 @@ export class UIConversationElement extends UIElement {
    *  lookup, never a blind "claim whatever's pending" dequeue. */
   beginAgentTurn(opts?: { intoSurface?: string; disabledSurfaceId?: string }): AgentTurnHandle {
     if (!this.#guard('beginAgentTurn')) {
-      return { ingestLine: () => {}, mountGenui: () => {}, setNote: () => {}, progress: () => {}, finalize: () => {}, fail: () => {} }
+      return { ingestLine: () => {}, mountGenui: () => {}, setNote: () => {}, progress: () => {}, target: () => {}, finalize: () => {}, fail: () => {} }
     }
 
     const wasNear = this.#log!.isNearBottom()
@@ -790,30 +801,14 @@ export class UIConversationElement extends UIElement {
         target.host.superseded = false
         touchedIds.add(opts.intoSurface)
       }
-    } else if (opts?.disabledSurfaceId === undefined) {
-      // GH #1134 (Kim-ruled 2026-08-17) — typed-intent working-state heuristic: a turn with NO
-      // `intoSurface` AND no `disabledSurfaceId` (the user typed into the composer — an ask-answer
-      // turn carries `disabledSurfaceId` and stays excluded per GH #802: the answered card is not
-      // being mutated) learns its target surfaceId only at the
-      // final validate-then-stream line burst, so the sole card in a one-surface chat sat inert
-      // for the whole turn. When EXACTLY ONE surface is open in the registry, the typed intent is
-      // near-certainly about it: optimistically set `working` at turn start and register the id in
-      // `touchedIds` so the same guarded endTurn (finalize AND fail) clears it. Zero or 2+ open
-      // surfaces → no heuristic — the wrong-guess risk in multi-surface chats is the ruled
-      // out-of-scope boundary; those keep breathing only from the line burst.
-      let sole: { id: string; host: UISurfaceHostElement } | undefined
-      let openCount = 0
-      for (const [id, record] of this.#registry) {
-        if (record.state !== 'open') continue
-        openCount += 1
-        if (openCount > 1) break
-        sole = { id, host: record.host }
-      }
-      if (openCount === 1 && sole !== undefined) {
-        sole.host.working = true
-        touchedIds.add(sole.id)
-      }
     }
+    // GH #1259 / ADR-0206 cl.4 — the GH #1134 sole-open-surface heuristic that used to live here (an
+    // OPTIMISTIC guess: exactly one open surface on a typed turn ⇒ breathe it) is RETIRED, replaced by
+    // the model-STATED `target` meta-line arm (the handle's `target()` method below): #1259's live repro
+    // proved the guess fires wrongly in the ordinary one-card chat (an unrelated typed question breathed
+    // the quiet card for the whole turn), and under validate-then-stream no in-turn correction is
+    // possible once a guess is made. A typed turn with no `target` arm gets NO early breathe — the
+    // pre-#1134 late-but-never-wrong timing (routeLine's line-burst set, unchanged below).
     const categoriesSeen: Category[] = []
     const seenCats = new Set<Category>()
     let freshHostThisTurn: UISurfaceHostElement | undefined
@@ -1057,6 +1052,23 @@ export class UIConversationElement extends UIElement {
         }
       },
       progress: (ev: TurnProgress) => routeProgress(ev),
+      target: (surfaceId: string) => {
+        // GH #1259 / ADR-0206 cl.4 — the model-declared mutation target, arriving on the leading
+        // meta-line (the one line ahead of the validate-then-stream content burst — effective turn
+        // start). The exact `opts.intoSurface` code shape: breathe + un-supersede + touchedIds, so the
+        // single guarded endTurn (finalize AND fail) clears it. Guards, in order: a dead handle is
+        // inert; an ask-answer turn (`disabledSurfaceId` — which also covers a resumed `intoSurface`
+        // turn, whose target is already set above) ignores it (GH #802's exclusion, checked FIRST per
+        // ADR-0206 Non-goals); an unknown/closed id silently never matches an open registry entry —
+        // the degrade-gracefully law (no halt, no console error; the turn keeps line-burst timing).
+        if (ended) return
+        if (disabledSurfaceId !== undefined) return
+        const record = this.#registry.get(surfaceId)
+        if (record === undefined || record.state !== 'open') return
+        record.host.working = true
+        record.host.superseded = false // GH #1164 — a turn about to mutate it is a later turn targeting it again
+        touchedIds.add(surfaceId)
+      },
       finalize: (actions?: readonly TurnAction[]) => {
         endTurn() // TKT-0034 — re-enable the composer THE MOMENT finalize() runs, not after narration settles
         // Settle the LIVE entries this turn narrated (categories + the current progress stage) to `done`

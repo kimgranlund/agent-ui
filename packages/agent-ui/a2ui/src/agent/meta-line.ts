@@ -60,6 +60,18 @@
 // it) is entirely the host's call (`packages/agent-ui/app`'s agent-admin control + the site's mint
 // path) — this file carries the wire representation ONLY.
 //
+// GH #1259 (ADR-0206) adds a SIXTH additive MODEL-authored field, `target`: a turn that is about to
+// MUTATE an existing surface names its `surfaceId` on the SAME leading meta-line — the ONE truthful
+// early signal available under validate-then-stream (every content line lands in one burst just before
+// finalize; only the meta-line arrives ahead of it). Whole-arm shallow validation, the
+// `plan`/`personaPatch`/`team` law exactly: a non-object arm, or a missing/non-string/EMPTY `surfaceId`,
+// drops the ENTIRE arm — a malformed routing fact is worse than no routing fact, because a
+// wrong-but-present target would breathe the WRONG card with full apparent authority (ADR-0206 cl.2).
+// A turn creating a fresh surface, or emitting no A2UI at all, OMITS the arm (cl.3) — the consumer
+// treats absence as a neutral no-signal state. Object-wrapped (not a bare string) for the same
+// additive-widening reason `ask` is. What a stated target is CONSUMED into (`working` at turn start,
+// `ui-conversation`'s `beginAgentTurn` seam) is entirely the host's call — wire representation ONLY.
+//
 // Zero-dep, pure (SPEC-N5): no imports.
 
 /**
@@ -164,6 +176,19 @@ export interface TeamDeclaration {
 }
 
 /**
+ * A target declaration (GH #1259 / ADR-0206 cl.1): `surfaceId` names the EXISTING surface this turn is
+ * about to mutate — never a fresh surface about to be created (the omission rule, cl.3). The MODEL-STATED
+ * twin of the semantic `opts.intoSurface` already carries host-side for the action-click resume case
+ * (TKT-0079). A single-field object, deliberately not a bare string — the `ask` object-wrapping
+ * precedent (room to widen additively without a breaking wire-shape change). Routing hint ONLY: no
+ * verification that the named surface exists or is actually mutated later this turn (Non-goals) — the
+ * consumer's registry-membership check is the guard (a stale/unknown id simply never matches).
+ */
+export interface TargetDeclaration {
+  surfaceId: string
+}
+
+/**
  * The closed live-turn lifecycle stage vocabulary (ADR-0146 F1) — produce-layer-owned, provider-agnostic.
  * Each adapter maps its OWN upstream events onto these (F4); `produce()` composes them with its own loop
  * stages. A CLOSED union: an out-of-vocabulary stage is dropped at the guard (`readMetaLine`), never
@@ -237,6 +262,14 @@ export interface A2uiMetaEnvelope {
      *  entire arm, never a partial roster. Whether a declared team is ever CONSUMED (minted, validated,
      *  saved) is entirely the host's call — the wire layer is gate-blind, exactly like `personaPatch`. */
     team?: TeamDeclaration
+    /** GH #1259 / ADR-0206 cl.1: the model's own declared mutation target — the surfaceId of the
+     *  EXISTING surface this turn is about to mutate, additive alongside `note`/`ask`/`plan`/
+     *  `personaPatch`/`flowEnd`/`team` on the SAME leading meta-line. MODEL-authored, shallow-validated
+     *  the same per-field-independent way, validating as a WHOLE the same way `team` does — a malformed
+     *  `target` (non-object, or a missing/non-string/empty `surfaceId`) drops the entire arm, never a
+     *  garbage id passed through hopefully. Whether a declared target is ever CONSUMED (`working` at
+     *  turn start) is entirely the host's call — the wire layer is gate-blind, exactly like `team`. */
+    target?: TargetDeclaration
     trace?: TurnTrace
     /** ADR-0146 F1: a runtime-composed live-turn lifecycle event, INTERLEAVED during the turn (not just a
      *  single leading line). Shallow-validated the same way `ask` is — a malformed `progress` drops only
@@ -375,6 +408,17 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
     }
   }
 
+  // GH #1259 / ADR-0206 cl.2: `target` is shallow-validated the SAME per-field-independent way as
+  // `ask`/`plan`/`personaPatch`/`team` — a malformed `target` drops ONLY `target`, never the whole
+  // envelope. The arm validates as a WHOLE, the SAME `team` law: a non-object arm, or a missing/
+  // non-string/EMPTY `surfaceId`, drops the ENTIRE arm — a malformed routing fact is worse than no
+  // routing fact (a wrong-but-present target would breathe the WRONG card with full apparent authority).
+  let target: TargetDeclaration | undefined
+  if (m.target !== undefined && isPlainObject(m.target)) {
+    const surfaceId = m.target.surfaceId
+    if (typeof surfaceId === 'string' && surfaceId.length > 0) target = { surfaceId }
+  }
+
   // ADR-0146 F1: `progress` is shallow-validated the SAME way — a malformed `progress` (non-object, or a
   // `stage` outside the closed vocabulary, or a non-number `round` / non-string `detail`/`source`) drops
   // only itself, never the whole envelope. The closed `stage` union is the honesty-law guard (F2): an
@@ -404,6 +448,7 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
       personaPatch,
       flowEnd,
       team,
+      target,
       trace: m.trace as TurnTrace | undefined,
       progress,
       error,

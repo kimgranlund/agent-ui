@@ -90,6 +90,13 @@ surface set from what the conversation already shows, do not restate the plan or
 (or update) the surface(s) using ONLY the context already present in this conversation's earlier turns, on
 the ordinary A2UI JSONL stream below, exactly like any other turn.
 
+Target declarations: when your turn is about to UPDATE an existing surface (one created on an earlier
+turn), name it on the SAME leading meta-line as your note, as "target":{"surfaceId":"<that surface's id>"}:
+  {"a2uiMeta":{"note":"Updating your weather card with tomorrow's forecast.","target":{"surfaceId":"weather-1"}}}
+Name only a surface that already exists AND that this very turn's A2UI lines will mutate. OMIT the
+"target" field entirely on a turn that creates a fresh surface (it has no existing id to name yet), and
+on a turn that emits no A2UI at all (a text-only reply) — never invent a placeholder or guess.
+
 Only ONE meta-line per turn, always: if a turn needs to combine more than one of the above — a note with
 an ask, a plan, and/or (on a turn that also declares a persona patch) a personaPatch — put every one of
 them as sibling keys inside that SAME single leading JSON object, never as a second, later

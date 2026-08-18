@@ -1812,3 +1812,68 @@ describe('produce() flowEnd pass-through + FLOW_END_MISSING correction round (GH
     expect(meta.a2uiMeta.trace!.failureCodes).toEqual([]) // never fed back ⇒ never UNCORRECTED
   })
 })
+
+// ── GH #1259 / ADR-0206 cl.5: the target arm — gate-blind passthrough ────────────────────────────────
+// Peeled + re-composed on the SAME plan/personaPatch/team terms: no integrity check, no verification
+// that the named surface exists or is mutated later this turn — the CONSUMER (ui-conversation's
+// registry-membership guard) validates, never this layer.
+describe('produce() target meta-line arm — passthrough (GH #1259 / ADR-0206 cl.5)', () => {
+  const TARGET = { surfaceId: 'weather-1' }
+
+  it('meta{note,target} + an ordinary validated payload ships the outgoing meta-line with the target intact', async () => {
+    const { provider } = stubProvider([JSON.stringify({ a2uiMeta: { note: 'Updating it.', target: TARGET } }) + '\n' + VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(lines).toHaveLength(3)
+    const meta = readMetaLine(lines[0]!)
+    expect(meta!.a2uiMeta.note).toBe('Updating it.')
+    expect(meta!.a2uiMeta.target).toEqual(TARGET) // passed through UNCHANGED from the model's declaration
+    expect(validateA2ui(lines.slice(1).map((l) => JSON.parse(l)), defaultCatalog).valid).toBe(true)
+  })
+
+  it('a stub that never authors a target omits the key entirely — byte-identical to the pre-this-field wire shape', async () => {
+    const { provider } = stubProvider(['{"a2uiMeta":{"note":"hi"}}\n' + VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(lines[0]).not.toContain('"target"') // no bare `"target":undefined`
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.target).toBeUndefined()
+  })
+
+  it('the target carries NO integrity check — an UNKNOWN surfaceId ships through, no self-correct round (the consumer validates)', async () => {
+    const { provider, calls } = stubProvider([
+      JSON.stringify({ a2uiMeta: { note: 'hi', target: { surfaceId: 'never-created-anywhere' } } }) + '\n' + VALID,
+    ])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(calls()).toBe(1) // the consumer's registry-membership guard, not a producer-side check, is what makes it safe
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.target).toEqual({ surfaceId: 'never-created-anywhere' })
+  })
+
+  it('target and plan compose independently on the SAME meta-line — both survive passthrough', async () => {
+    const plan = { steps: [{ id: 'step-1', description: 'Refresh the forecast' }] }
+    const { provider } = stubProvider([JSON.stringify({ a2uiMeta: { note: 'On it.', plan, target: TARGET } }) + '\n' + VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    const meta = readMetaLine(lines[0]!)
+    expect(meta!.a2uiMeta.plan).toEqual(plan)
+    expect(meta!.a2uiMeta.target).toEqual(TARGET)
+  })
+
+  it('a zero-content turn (note+target only) still ships the target on the meta-line', async () => {
+    const { provider } = stubProvider([JSON.stringify({ a2uiMeta: { note: 'Nothing to build.', target: TARGET } })])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(lines).toHaveLength(1)
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.target).toEqual(TARGET)
+  })
+})
