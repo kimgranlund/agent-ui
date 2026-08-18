@@ -36,16 +36,19 @@ the per-artifact procedure are what makes a grading run reproducible instead of 
 
 - **Payload → `a2ui-payload.md`.** Run
   `node --experimental-strip-types packages/agent-ui/a2ui/tools/harness/validate-payload.ts <payload.json> --catalog agent-ui`.
-  Score P1–P3 from the exit code + codes + the `repairs` array; then, only if it exits 0, judge P4–P8
+  Score P1–P3 from the exit code + codes + the `repairs` array; then, only if it exits 0, judge P4–P9
   (composition · catalog idiom incl. the enum-range check the gate skips · binding hygiene ·
   accessibility intent · declared-scope fidelity — P8, the GH #474 deceptive-composition defense,
-  hard-blocks promotion regardless of the other dimensions) against the seed shelf, citing the seed the payload should read like.
+  hard-blocks promotion regardless of the other dimensions · card anatomy fidelity — P9, GH #1199:
+  where a `Card` frames the payload, header identity-only / content substance / footer THE action row)
+  against the seed shelf, citing the seed the payload should read like.
 - **Catalog row → `a2ui-catalog.md`.** Cite `naming.test.ts`/`conformance.test.ts`/`registry.test.ts`
   for D1–D3 (name conformance · load/payload conformance · factory binding & coverage), then judge
   D4–D6 (mapping fidelity to the real `ui-*` surface · PropDef typing idiom · example/doc coverage)
   against `factories.ts` + `catalog.json` + the row's tests/example/doc.
 - **Corpus record → `a2ui-corpus.md`.** D1 folds the payload rubric: run the CLI on the record's
-  `a2uiOutput` and take `MIN` across `a2ui-payload.md` P1–P8 (N/A + omitted for an eval-facet record).
+  `a2uiOutput` and take `MIN` across `a2ui-payload.md` P1–P9 (a2ui-corpus.md 1.2, GH #1262 — P9 folded
+  in; P9 is N/A + omitted when no `Card` frames the payload; D1 itself is N/A + omitted for an eval-facet record).
   D2–D5 apply each dimension's deterministic floor (non-empty `promptText`/`description`; the
   `target ?? description` ADR-0063 consumer rule — grade the *effective* target, never `target` raw;
   the closed `source` enum + a resolvable `origin`; the θ_dup neighbour), then judge above that floor.

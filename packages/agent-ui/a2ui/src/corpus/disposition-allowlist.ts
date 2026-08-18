@@ -39,6 +39,7 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
     'stats-grid-dashboard',
     'judged E_QUALITY 2026-08-18 (VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18--verdicts-2026-08-18.json, rubric a2ui-corpus 1.1, a2ui-review-agent (independent of the authoring session per ADR-0068)). Failing: D5. ' +
       'nothing new taught: the tile template is pattern-dashboard-tiles verbatim minus the delta line (wrapper Row to Grid); Grid-template-of-Cards is already admitted (comparison-pricing-table, media-file-grid). Repair: drop from the shelf, or re-author to teach a genuinely new composition (delta+sparkline tile pair, a responsive tile-count rule) and re-judge. ' +
+      'Re-judged 2026-08-18 under rubric 1.2 (GH #1262 P9 fold; VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18t15-00-00z--gh1262-p9-rejudge.json): still E_QUALITY, qualityScore 2, failing D5 — unchanged verdict, unchanged source. ' +
       'KEPT on the shelf pending that repair (a coverage-gate candidate until re-judged; drop the seed instead if the repair is abandoned).',
   ],
   // GH #729 (2026-08-12) — the four CATALOG-FRONTIER seeds: NO VERDICT SOUGHT YET, not a refusal. Added
@@ -72,7 +73,10 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // YET, not a refusal). Added with the Image catalog row to close the type-coverage gap
   // (examples.test.ts's GH #729 gate); its corpus admission is a pending judged import wave — the
   // authoring session judging its own seed is the manufactured judgment ADR-0068's Alternatives ban.
-  // Run the judged pipeline and DELETE this entry when that wave lands.
+  // Run the judged pipeline and DELETE this entry when that wave lands. — Admitted 2026-08-18 (PR #1261,
+  // rubric 1.1), then RE-ADMITTED the same day via `import-seeds --replace` under rubric 1.2 (GH #1262:
+  // the View-listing Button moved from CardContent into a CardFooter for P9; VerdictsFile
+  // `corpus/verdicts/2026-08-18t15-00-00z--gh1262-p9-rejudge.json`, qualityScore 4/PASS).
   //
   // GH #1199 (2026-08-17) — `frontier-card-anatomy-ask`: the same pending-state shape (NO VERDICT SOUGHT
   // YET, not a refusal). Added alongside the grammar.md card-anatomy clause (req-a2ui-patterns.md R1) as
@@ -82,6 +86,7 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
     'frontier-card-anatomy-ask',
     'judged E_QUALITY 2026-08-18 (VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18--verdicts-2026-08-18.json, rubric a2ui-corpus 1.1, a2ui-review-agent (independent of the authoring session per ADR-0068)). Failing: D2. ' +
       'promptText is the AGENT ask (Which room would you like? Standard or Deluxe King?), not a user-voiced request like every shard promptText; the payload itself is the clean R1 shape. Repair: reword promptText user-voiced (I need to pick a room type for my stay) and re-judge; borderline, expected to admit. ' +
+      'Re-judged 2026-08-18 under rubric 1.2 (GH #1262 P9 fold; VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18t15-00-00z--gh1262-p9-rejudge.json): E_QUALITY, qualityScore 2, failing D1 + D2 — P9=5 (it IS the reference shape) but P7=3 (bare RadioGroup in CardContent, the header Text adjacent but unassociated — the judge ESCALATED this P7-anchor-vs-card-anatomy-sketch ambiguity on GH #1262; host ruling pending), plus the unchanged D2 voice defect. ' +
       'KEPT on the shelf pending that repair (a coverage-gate candidate until re-judged; drop the seed instead if the repair is abandoned).',
   ],
   //
@@ -94,6 +99,7 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
     'backable-wizard',
     'judged E_QUALITY 2026-08-18 (VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18--verdicts-2026-08-18.json, rubric a2ui-corpus 1.1, a2ui-review-agent (independent of the authoring session per ADR-0068)). Failing: D1. ' +
       'P7=3: the range Calendar has no Field/label and the RadioGroup no group name (admitted booking-reservation Field-wraps both); redundant Card>shell>scene one-child wrapper with no CardContent (P4=4); RadioGroup shipped unbound then re-sent bound (P5=4). Repair: Field-wrap the Calendar and name the RadioGroup, collapse the shell wrapper into CardContent, ship the RadioGroup bound from turn 1; re-judge. ' +
+      'Re-judged 2026-08-18 under rubric 1.2 (GH #1262 P9 fold; VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18t15-00-00z--gh1262-p9-rejudge.json): E_QUALITY, qualityScore 2, failing D1 — now ALSO P9=2 (a Card frames the flow but every nav Button rides a loose Row in the scene Column, no CardFooter; repair: root > [CardContent > scene, CardFooter] with the footer resent per turn — root stays immutable), plus P7=2 (unlabeled Calendar/RadioGroup) and P4=3 (Card > shell > scene spine). ' +
       'KEPT on the shelf pending that repair (a coverage-gate candidate until re-judged; drop the seed instead if the repair is abandoned).',
   ],
   //
@@ -119,6 +125,7 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
     'wizard-step-progress',
     'judged E_QUALITY 2026-08-18 (VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18--verdicts-2026-08-18.json, rubric a2ui-corpus 1.1, a2ui-review-agent (independent of the authoring session per ADR-0068)). Failing: D1. ' +
       'P7=3: the RadioGroup has no Field/label wrap (the catalog RadioGroup carries no own label; rental-filter-panel wraps it in Field), h4 adjacent but unassociated, no name; P6=4: the Progress label (Setup, step 2 of 3) is static while value/max are bound. Repair: wrap plans in Field label Plan (+name), template or de-number the Progress label; re-judge. ' +
+      'Re-judged 2026-08-18 under rubric 1.2 (GH #1262 P9 fold; VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18t15-00-00z--gh1262-p9-rejudge.json): still E_QUALITY, qualityScore 3, failing D1 — P9 N/A (no Card frames it), P6=3/P7=3 as before; unchanged source. ' +
       'KEPT on the shelf pending that repair (a coverage-gate candidate until re-judged; drop the seed instead if the repair is abandoned).',
   ],
   //

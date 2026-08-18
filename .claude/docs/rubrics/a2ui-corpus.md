@@ -1,8 +1,16 @@
 # Rubric — A2UI Corpus Quality (the tier-2 admission judge standard)
 
-version: 1.1
+version: 1.2
 
 > Layer: rubric (a **runtime-consumed** judge standard, not a graded-once document) · 2026-07-03
+> **Version history (the ADR-0068 marker pattern — bump whenever a dimension or anchor moves):**
+> 1.0 = the original five-dimension standard (2026-07-03) · 1.1 = D1's fold widened P1–P7 → P1–P8 when
+> `a2ui-payload.md` 1.1 added P8 (2026-08-06, GH #474/#747) · **1.2 = D1's fold widened P1–P8 → P1–P9
+> when `a2ui-payload.md` 1.2 added P9, card anatomy (2026-08-18, GH #1262 — Kim ruling on the PR #1261
+> judges' escalation; the P9 row itself is GH #1199) — D2–D5 text unchanged; the calibration record below
+> is re-read against P9 and now shows its example FAILING D1 (see the record).** Every VerdictsFile authored
+> from 2026-08-18 on cites `1.2`; the four archived 1.0/1.1 files stay valid history under the version
+> they were judged against.
 > Grades one `CorpusRecord` for tier-2 admission (corpus SPEC-R8). It is read at runtime by
 > `admit()`'s injected judge seam (ADR-0060) through the verdict adapter (ADR-0068): the
 > `a2ui-review-agent` critic scores each record against **these exact dimensions** and authors a
@@ -20,7 +28,7 @@ version: 1.1
    admitted only when **every** applicable gated dimension is ≥ 4 — one weak dimension sinks the record.
    The critic's VerdictsFile records `{ qualityScore, passed, failingDimensions }` per record, where
    `failingDimensions` lists every gated dimension scoring < 4 (corpus SPEC-R8 AC2 · ADR-0068 cl.3).
-2. **The `version:` marker is a runtime contract.** The `version: 1.0` line above is the rubric's
+2. **The `version:` marker is a runtime contract.** The `version:` line above (currently `1.2`) is the rubric's
    identity. Every VerdictsFile MUST cite it as `rubricVersion` (ADR-0068 cl.1 · SPEC §5.3); the Node
    shell reads this marker and `parseVerdictsFile(text, expectedRubricVersion)` (build slice h11)
    **rejects** any verdicts file whose `rubricVersion` ≠ this marker — a verdict is meaningless without
@@ -46,7 +54,7 @@ version: 1.1
 
 | # | Dimension | Type | What it checks · evidence | Anchors: 1 → 3 → 5 |
 |---|---|---|---|---|
-| D1 | Ground-truth validity | [gate] | The exemplar's `a2uiOutput` is a valid, idiomatic A2UI stream. This rubric does **not** re-judge the payload internals — it **cites `a2ui-payload.md`** (the sibling payload rubric): D1's score = that rubric's verdict for this record's `a2uiOutput`, folded as **`MIN` across `a2ui-payload.md`'s dimensions P1–P8** (its `[gate]` `validate-payload` CLI dims P1–P3 + its `[review]` dims P4–P8 (P8 hard-blocks promotion on its own, the GH #474 deceptive-composition defense)) — this rubric's own MIN convention, arithmetically identical to `a2ui-payload.md`'s "every dimension ≥ 4" promote bar. It never restates those dimensions (cite, don't duplicate). *Applicability:* exemplar-facet only (records carrying `a2uiOutput`); on an eval-facet record D1 is N/A and omitted from the MIN. | 1: `a2uiOutput` absent on an exemplar, OR `MIN` across `a2ui-payload.md` P1–P8 ≤ 2 — a red `[gate]` (the `validate-payload` CLI exits 1: schema / catalog / id-graph / pointer) or a failing composition dim · 3: `MIN` across `a2ui-payload.md` P1–P8 = 3 — tier-1 green (CLI exits 0) but a review dim (P4–P8) only adequate · 5: `MIN` across `a2ui-payload.md` P1–P8 = 5 — an exemplary, fully idiomatic ground-truth stream |
+| D1 | Ground-truth validity | [gate] | The exemplar's `a2uiOutput` is a valid, idiomatic A2UI stream. This rubric does **not** re-judge the payload internals — it **cites `a2ui-payload.md`** (the sibling payload rubric): D1's score = that rubric's verdict for this record's `a2uiOutput`, folded as **`MIN` across `a2ui-payload.md`'s dimensions P1–P9** (its `[gate]` `validate-payload` CLI dims P1–P3 + its `[review]` dims P4–P9 (P8 hard-blocks promotion on its own, the GH #474 deceptive-composition defense; P9 = card anatomy fidelity, `a2ui-payload.md` 1.2 / GH #1199 — where a `Card` frames the payload, `CardHeader` identity-only, `CardContent` substance, `CardFooter` THE action row; a payload with no `Card` scores P9 as N/A, omitted from the fold)) — this rubric's own MIN convention, arithmetically identical to `a2ui-payload.md`'s "every dimension (P1–P9) ≥ 4" promote bar. It never restates those dimensions (cite, don't duplicate). *Applicability:* exemplar-facet only (records carrying `a2uiOutput`); on an eval-facet record D1 is N/A and omitted from the MIN. | **D1's score IS the folded MIN value** (a MIN of 2 reads D1 = 2, per the calibration record) — the anchors below name the bands: 1–2: `a2uiOutput` absent on an exemplar (1), OR `MIN` across `a2ui-payload.md` P1–P9 ≤ 2 — a red `[gate]` (the `validate-payload` CLI exits 1: schema / catalog / id-graph / pointer) or a failing composition dim (incl. P9's scattered-actions anti-pattern: an action `Button` loose in `CardContent`, or any control in `CardHeader`) · 3: `MIN` across `a2ui-payload.md` P1–P9 = 3 — tier-1 green (CLI exits 0) but a review dim (P4–P9) only adequate · 5: `MIN` across `a2ui-payload.md` P1–P9 = 5 — an exemplary, fully idiomatic ground-truth stream |
 | D2 | Prompt/description quality | [gate] | `promptText` reads as a realistic standalone user request a generating agent would actually receive, and `description` accurately + specifically names the UI and the technique the record teaches; the two are mutually consistent and consistent with the `a2uiOutput`. Deterministic floor: `validateRecord` requires non-empty `promptText` + `description` (blank → `E_SCHEMA`, corpus SPEC-R1 AC2 — a stripped record never reaches this judge); above that floor the realism + pedagogy is judged by reading `promptText` + `description` against the output. | 1: `promptText` is vacuous/meta ("test button") or mismatched to the output, OR `description` is blank/generic ("a form") or contradicts the output (a truly empty field is already `E_SCHEMA` at tier-1) · 3: `promptText` is a plausible request and `description` is accurate but generic — correct, low pedagogical signal · 5: `promptText` reads as a genuine, specific user intent AND `description` precisely names the UI shape + the idiom it teaches (e.g. "action names carry the intent"), fully consistent with the output |
 | D3 | Target-clarity | [gate] | The record's **effective judge target — computed as `target ?? description`, NEVER `target` raw (the ADR-0063 consumer rule)** — is a clear, gradeable criterion. A scorer that reads `target` raw ignores the fallback and grades `undefined` on every target-less record (all 11 seeds omit `target`); this dimension exists to catch exactly that. Evidence: compute `target ?? description`; confirm it is non-empty and states checkable criteria. | 1: reading `target ?? description` yields empty/undefined — the raw-`target` bug on a target-less record, or a blank description · 3: the effective target is present via the fallback but is only a **topic label** — it names *what* the UI is, not *what a correct output must contain*, so two judges could grade the same output differently · 5: the effective target states **gradeable criteria** — the specific elements/behavior a correct output must exhibit — so a judge reaches a consistent verdict (for an exemplar leaning on the description fallback, the description enumerates the concrete checkable features, not just the topic) |
 | D4 | Provenance integrity | [gate] | `meta.provenance.source` ∈ the closed enum `{authored, distilled, mined}` (SPEC-R5) and `meta.provenance.origin` is non-empty **and traceable** — a real, resolvable reference (a repo path, a session id, a mine URI), not a placeholder. Evidence: the enum is enforced deterministically by `validateRecord` (the mechanical floor); judge whether `origin` actually resolves. | 1: `source` outside the enum (rejected mechanically before scoring), OR `origin` empty/placeholder ("TODO", "unknown") · 3: `source` in-enum and `origin` non-empty but weakly traceable — a bare label with no resolvable reference · 5: `source` in-enum AND `origin` is a specific, resolvable reference (e.g. `src/examples/patterns.ts`, a session URI) an auditor can follow |
@@ -82,21 +90,35 @@ description). It was scored **twice in independent fresh reasoning** simulating 
 **Tolerance:** the two scorings must agree within **±1 on every gated dimension** (harness SPEC-R3 AC2). They do —
 see Δ below.
 
-| Gated dimension | Scoring A | Scoring B | Δ (must be ≤ 1) |
+**1.2 re-read (2026-08-18, GH #1262).** The 1.0/1.1 record scored D1 = 5 folding P1–P8. Under 1.2's P1–P9
+fold the SAME record reads **D1 = 2**: its two action Buttons ride a `Row` inside `CardContent` and the Card
+ships NO `CardFooter` — below P9's anchor 3 ("every action Button rides in `CardFooter` and nowhere else"),
+above anchor 1 (no populated footer exists for the loose buttons to be scattered AWAY from, and nothing
+interactive sits in a header). Both re-reads land on 2 (Δ 0), so `qualityScore` = MIN = **2, `passed` false** —
+the calibration example itself now FAILS admission, which is exactly what folding the card-anatomy law in
+does. The table below carries both columns per scoring (1.1 fold → 1.2 fold); D2–D5 are untouched by the bump.
+The record's admitted 1.1 verdict in the shard stands until a judged back-score/re-admission under 1.2 (a
+follow-up on GH #1262's Findings, not this document's job — a rubric never edits the corpus).
+
+| Gated dimension | Scoring A (1.1 → 1.2) | Scoring B (1.1 → 1.2) | Δ (must be ≤ 1) |
 |---|---|---|---|
-| Ground-truth validity | 5 | 5 | 0 |
+| Ground-truth validity | 5 → **2** | 5 → **2** | 0 |
 | Prompt/description quality | 5 | 5 | 0 |
 | Target-clarity | 4 | 4 | 0 |
 | Provenance integrity | 5 | 5 | 0 |
 | Dedup adjacency | 4 | 5 | 1 |
-| qualityScore (MIN of gated dims) | 4 | 4 | 0 |
-| passed (≥ 4) | true | true | — |
+| qualityScore (MIN of gated dims) | 4 → **2** | 4 → **2** | 0 |
+| passed (≥ 4) | true → **false** | true → **false** | — |
 
 **Reasoning, per scoring:**
 
-- **Ground-truth validity (A 5 · B 5).** Both reads: the stream is single-root, idiomatic (semantic
-  `soft`/`solid` variants, `justify:end` action row, `wantResponse` on the destructive action), and the
-  record ships tier-1-green (status `valid`, hash present), so `MIN` across `a2ui-payload.md` P1–P8 = 5.
+- **Ground-truth validity (A 5 · B 5 under the 1.1 fold; A 2 · B 2 under 1.2).** Both reads: the stream is
+  single-root, idiomatic (semantic `soft`/`solid` variants, `justify:end` action row, `wantResponse` on the
+  destructive action), and the record ships tier-1-green (status `valid`, hash present), so `MIN` across
+  `a2ui-payload.md` P1–P8 = 5. Folding P9 in (1.2): the Card has no `CardFooter` and both Buttons sit in
+  `CardContent` → P9 = 2 on both reads (see the 1.2 re-read note above) → D1 = 2. The repair is the
+  `frontier-card-anatomy-ask` shape — move the action `Row` into a `CardFooter` (one solid primary + one
+  ghost/soft secondary) — after which P9 reads 5 and D1 returns to 5.
 - **Prompt/description quality (A 5 · B 5).** Both reads: `promptText` is a realistic user request and
   `description` names the concrete idiom ("action names carry the intent"), consistent with the output.
 - **Target-clarity (A 4 · B 4).** No `target`, so the effective target is `target ?? description` = the

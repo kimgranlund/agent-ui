@@ -334,11 +334,17 @@ const LISTING_ID = 'frontier-hero-listing'
  *  loading=eager/fetchpriority=high) — carrying a default-slotted `Text` caption pinned over its bottom
  *  scrim (R2). `src` is data-bound (an amend-answer turn can swap the photo in place); `alt` is a static
  *  literal (the producer-authored accessible name — image.md's "REQUIRED in spirit" contract, now
- *  admission-enforced by the catalog's `PropDef.required`, catalog.ts). `CardContent` below carries the
- *  bound title + the one action, the `frontier-booking-receipt` heading/content/button shape. */
+ *  admission-enforced by the catalog's `PropDef.required`, catalog.ts). Below the hero the card follows the
+ *  card-anatomy clause (grammar.md, req-a2ui-patterns.md R1 — a2ui-payload.md P9, folded into the corpus
+ *  rubric's D1 by GH #1262): `CardContent` carries the substance (the bound title ONLY) and `CardFooter`
+ *  is THE action row (the one solid View-listing Button) — never a Button loose in content. The 1.1-era
+ *  shape (title + Button side by side in a `CardContent` Row, no footer) read P9 = 2 and was re-admitted
+ *  in this footer shape via `import-seeds --replace` (ADR-0068's judged quarantine exit). A single-fact
+ *  card, so it omits `CardHeader` entirely rather than shipping an empty one — the hero Image is media,
+ *  not identity, and rides its own placement per the clause's media carve-out. */
 export const heroListingCardSeed: ExampleSeed = {
   name: 'frontier-image-hero-card',
-  description: 'A property-listing Card with a hero Image (usageHint="hero", zero-CLS aspect box, R1) carrying a default-slotted caption over its bottom scrim (R2), plus a bound title and a View-listing Button.',
+  description: 'A property-listing Card with a hero Image (usageHint="hero", zero-CLS aspect box, R1) carrying a default-slotted caption over its bottom scrim (R2), a bound title in CardContent, and the single View-listing Button in CardFooter (card-anatomy law, R1/P9).',
   promptText: 'Show this listing as a card with a big photo up top, its title below, and a view button.',
   surfaceId: LISTING_ID,
   protocolVersion: 'v1.0',
@@ -357,16 +363,16 @@ export const heroListingCardSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: LISTING_ID,
         components: [
-          { id: 'root', component: 'Card', elevation: '1', children: ['hero', 'body'] },
+          { id: 'root', component: 'Card', elevation: '1', children: ['hero', 'body', 'foot'] },
           {
             id: 'hero', component: 'Image', src: { path: '/listing/photo' },
             alt: 'Harbor View Loft, exterior at sunset', aspect: '16/9', usageHint: 'hero',
             children: ['hero_caption'],
           },
           { id: 'hero_caption', component: 'Text', text: 'Harbor View Loft — exterior at sunset' },
-          { id: 'body', component: 'CardContent', children: ['body_row'] },
-          { id: 'body_row', component: 'Row', gap: 'md', align: 'center', justify: 'between', children: ['body_title', 'btn_view'] },
+          { id: 'body', component: 'CardContent', children: ['body_title'] },
           { id: 'body_title', component: 'Text', variant: 'h5', text: { path: '/listing/title' } },
+          { id: 'foot', component: 'CardFooter', children: ['btn_view'] },
           { id: 'btn_view', component: 'Button', variant: 'solid', label: 'View listing', action: { action: 'view_listing' } },
         ],
       },

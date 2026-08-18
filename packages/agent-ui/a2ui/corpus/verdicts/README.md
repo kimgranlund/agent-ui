@@ -17,6 +17,11 @@ nowhere (corpus LLD §6's asymmetry, deliberately left intact by ADR-0165 clause
 **A write never overwrites.** A run whose target path already exists with different bytes halts, naming
 both hashes; pass a distinct `--verdicts` filename. **An archived refusal does not expire** — a rubric
 bump does not invalidate it; clearing one means a fresh judged run, whose newer `date` takes precedence.
+**Same-day re-judge:** the merge orders `date` as a plain string and HALTS on same-`date` disagreement
+(ADR-0165 clause 3), so a re-judge landing on the SAME calendar day as the wave it revises (the GH #1262
+rubric-1.2 fold, hours after PR #1261's 1.1 wave) dates its VerdictsFile with a full ISO-8601 timestamp
+(`2026-08-18T15:00:00Z` → archived as `2026-08-18t15-00-00z--…`), which sorts after the bare day and stays
+truthful — never a borrowed tomorrow.
 
 The archive starts EMPTY, deliberately (ADR-0165 clause 8): the waves that predate it never committed
 their verdicts files, and fabricating one would be the manufactured judgment ADR-0068 bans. This file is
