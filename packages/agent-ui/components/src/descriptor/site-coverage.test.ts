@@ -195,7 +195,9 @@ describe('site coverage — every shipped component has its required per-tier pa
     // family (ADR-0112): ui-progress (a rail, not a widget box) + ui-attachment (a compact file card) + the
     // ui-swiper family's accessible-name anchor (ui-swiper-label, ADR-0124, LLD-C11).
     expect(COMPONENTS.filter((c) => c.tier === 'display').map((c) => c.name).sort()).toEqual(
-      ['attachment', 'badge', 'bar-chart', 'code', 'icon', 'ladder', 'progress', 'ramp', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text'],
+      // + ui-description-list (ADR-0201, GH #1185) — the key–value receipt primitive, Display class like
+      // ui-stat/ui-table (no events, no geometry row, not form-associated); its {doc} page required below.
+      ['attachment', 'badge', 'bar-chart', 'code', 'description-list', 'icon', 'ladder', 'progress', 'ramp', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text'],
     )
     // Wave 1 Indicator family (checkbox, switch, radio, radio-group) + ui-segment (ADR-0095 clause 3 —
     // the SAME real ancestor, UIIndicatorElement, as ui-radio) + the Wave M1 feed family (ADR-0112): ui-avatar

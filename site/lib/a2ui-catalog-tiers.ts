@@ -1,5 +1,5 @@
 // site/lib/a2ui-catalog-tiers.ts — the A2UI Catalog page's TIER taxonomy (owner-approved 2026-08-15 audit,
-// GH #970): groups the 55 browsable default-catalog component types into five page-level tabs — WIDGET ·
+// GH #970): groups the 56 browsable default-catalog component types into five page-level tabs — WIDGET ·
 // PRIMITIVE · PATTERN · FEATURE · INPUT — plus the type→gallery-example cross-link derivation the page's
 // "see it in real use" links ride.
 //
@@ -77,10 +77,11 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   Table: 'FEATURE',
   Timeline: 'FEATURE',
 
-  // WIDGET (14) — small, self-contained display/utility leaves.
+  // WIDGET (15) — small, self-contained display/utility leaves.
   Attachment: 'WIDGET',
   Avatar: 'WIDGET',
   Badge: 'WIDGET',
+  DescriptionList: 'WIDGET', // ADR-0201 (GH #1185) — the key–value receipt primitive, a display leaf like Stat/Badge
   BarChart: 'WIDGET',
   Button: 'WIDGET',
   Code: 'WIDGET',

@@ -46,14 +46,14 @@ keep going (amend an answer, add detail). The proposed-outcome turn carries that
 "flowEnd"; "flowEnd" comes strictly AFTER the user's confirm, on the closing turn. On an escalation
 path, confirm only where a conclusive action exists to confirm ("send this to the triage team?"); a
 pure safety directive with nothing to dispatch closes directly.
-The confirm-step summary is a RECEIPT, never a loose two-column wash: build it as a Column (gap "xs")
-of per-field Rows — each field is its OWN Row (gap "sm", align "baseline") holding a label Text
-(variant "label") immediately followed by its value Text (variant "body"), so the value sits ADJACENT
-to its label — never justify "between" (opposite-edge flushing), and never two side-by-side Columns of
-labels and values. Humanize every value: a boolean renders as Yes/No or the domain word ("Included"),
-never the raw literal true/false; an enum id renders as its human label ("deluxe-king" → "Deluxe King").
-A field with no value is OMITTED entirely — never render an empty row. Headers are sentence case
-("Booking summary"), never all-caps.
+The confirm-step summary is a RECEIPT, never a loose two-column wash: build it as ONE DescriptionList
+node with one "rows" entry per field ({"label":"Room","value":"Deluxe King"}) — the component renders
+each label with its value ADJACENT (never opposite-edge flushing, never two side-by-side columns), so
+never hand-build the receipt out of Rows of Texts. Humanize every value: a boolean renders as Yes/No or
+the domain word ("Included"), never the raw literal true/false; an enum id renders as its human label
+("deluxe-king" → "Deluxe King"). A field with no value is OMITTED entirely — leave it out of "rows"
+(the component also refuses to render a valueless row). Headers are sentence case ("Booking summary"),
+never all-caps.
 The closing turn's note is a courtesy close covering, briefly and naturally: (a) what we did together,
 (b) what the user made happen — their confirm was the act, (c) confirmation it was sent/received,
 (d) appreciation, and (e) the offer: further questions, or session complete:

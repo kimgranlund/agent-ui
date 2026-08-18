@@ -76,6 +76,8 @@ import barChartMd from '../../packages/agent-ui/components/src/controls/bar-char
 import tableMd from '../../packages/agent-ui/components/src/controls/table/table.md?raw'
 import statMd from '../../packages/agent-ui/components/src/controls/stat/stat.md?raw'
 import badgeMd from '../../packages/agent-ui/components/src/controls/badge/badge.md?raw'
+// ADR-0201 — ui-description-list, the key–value receipt primitive (tier=display ⇒ {doc}).
+import descriptionListMd from '../../packages/agent-ui/components/src/controls/description-list/description-list.md?raw'
 // ADR-0163 cl.6 — ui-pagination, the fleet's first standalone page navigator (tier=pattern).
 import paginationMd from '../../packages/agent-ui/components/src/controls/pagination/pagination.md?raw'
 // The Wave M1 content family (ADR-0113, content-family.lld.md): the code leaf + the disclosure fold.
@@ -197,6 +199,7 @@ export const loadBarChartDoc  = (): ComponentDoc => parseDoc(barChartMd)
 export const loadTableDoc = (): ComponentDoc => parseDoc(tableMd)
 export const loadStatDoc  = (): ComponentDoc => parseDoc(statMd)
 export const loadBadgeDoc = (): ComponentDoc => parseDoc(badgeMd)
+export const loadDescriptionListDoc = (): ComponentDoc => parseDoc(descriptionListMd)
 export const loadPaginationDoc = (): ComponentDoc => parseDoc(paginationMd)
 // The Wave M1 content family (ADR-0113 — code tier=display ⇒ {doc}; disclosure tier=pattern ⇒ {doc, demo}).
 export const loadCodeDoc       = (): ComponentDoc => parseDoc(codeMd)

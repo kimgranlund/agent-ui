@@ -272,4 +272,55 @@ export const roundOutcomeToastSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed]
+const RECEIPT_ID = 'frontier-booking-receipt'
+/** Frontier 6 — the DESCRIPTION-LIST receipt (ADR-0201, GH #1185: the key–value receipt primitive the
+ *  GH #1174 grammar composition pattern was written to be superseded by): a confirm-step booking summary
+ *  as ONE `DescriptionList` node — `rows` BOUND to the data model (an amend-answer turn updates the
+ *  receipt in place, never re-emits the tree), values arriving HUMANIZED from the producer ("Included",
+ *  never `true`; "Deluxe King", never `deluxe-king`) — plus the single commit Button the grammar's
+ *  confirm-before-concluding law mandates. Contrast `receipt-order-summary` (a List of templated line
+ *  items — an itemized COLLECTION); this is the flat label/value RECORD shape. */
+export const bookingReceiptSeed: ExampleSeed = {
+  name: 'frontier-booking-receipt',
+  description: 'A confirm-step booking receipt — one DescriptionList with data-bound humanized rows (label secondary, value adjacent; a valueless field never renders) and the single Confirm-booking commit Button.',
+  promptText: 'That all works for me — show me the booking summary so I can confirm it.',
+  surfaceId: RECEIPT_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: RECEIPT_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: RECEIPT_ID,
+        value: {
+          booking: {
+            rows: [
+              { label: 'Room', value: 'Deluxe King' },
+              { label: 'Check-in', value: 'Fri, Aug 21' },
+              { label: 'Nights', value: 3 },
+              { label: 'Guests', value: 2 },
+              { label: 'Breakfast', value: 'Included' },
+              { label: 'Total', value: '$412.00' },
+            ],
+          },
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: RECEIPT_ID,
+        components: [
+          { id: 'root', component: 'Column', gap: 'md', children: ['heading', 'receipt', 'controls'] },
+          { id: 'heading', component: 'Text', variant: 'h4', text: 'Booking summary' },
+          { id: 'receipt', component: 'DescriptionList', rows: { path: '/booking/rows' } },
+          { id: 'controls', component: 'Row', gap: 'md', justify: 'end', children: ['btn_confirm'] },
+          { id: 'btn_confirm', component: 'Button', variant: 'solid', label: 'Confirm booking', action: { action: 'confirm_booking' } },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed]

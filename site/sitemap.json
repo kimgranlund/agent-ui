@@ -113,6 +113,14 @@
       "section": "Components"
     },
     {
+      "name": "Description List",
+      "tag": "ui-description-list",
+      "url": "./description-list-doc.html",
+      "description": "ui-description-list is the key–value receipt primitive (ADR-0201, GH #1185): a Display-class leaf that renders a record — per row a label on the secondary plan…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Disclosure",
       "tag": "ui-disclosure",
       "url": "./disclosure-doc.html",

@@ -693,6 +693,17 @@ export const tableFactory: WidgetFactory = accessorFactory('ui-table', [
 // accessors, `setProp` writes either straight through). Display-only leaf.
 export const statFactory: WidgetFactory = mappedAccessorFactory('ui-stat', { value: 'figure' })
 
+// DescriptionList → ui-description-list (ADR-0201, GH #1185 — the key–value receipt primitive the GH #1174
+// grammar composition pattern was written to be superseded by). `rows` is a plain 1:1 accessor prop riding
+// the generic `accessorFactory` (`setProp` assigns the array straight onto the property; the control's own
+// hardening — `cleanDescriptionRows`, run by the render effect on every property write — drops any
+// valueless/degenerate entry, so a `{path}`-bound value the static validator's schema never sees is safe,
+// the Badge intent-snap reasoning). Bindable (an amend-answer turn updates the receipt's data in place).
+// Display-only leaf: no `value` mark (nothing two-way), no children key (rows are DATA — the Table.rows
+// analogy, not List children). Empty-value omission holds BY CONSTRUCTION in the control (ADR-0201 cl.3);
+// value HUMANIZATION stays the producer's job (the grammar law).
+export const descriptionListFactory: WidgetFactory = accessorFactory('ui-description-list')
+
 // Badge → ui-badge (SPEC-R11..R13). `label`/`intent` are 1:1 reflecting accessor props — verified against
 // badge.ts `static props`; the control's OWN effect snaps an out-of-range `intent` (bound-garbage) back to
 // 'neutral' (SPEC-R11 AC2), so `setProp`'s plain property write is safe even for a `{path}`-bound value the
@@ -989,6 +1000,7 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Table: tableFactory,
   Pagination: paginationFactory,
   Stat: statFactory,
+  DescriptionList: descriptionListFactory,
   Badge: badgeFactory,
   Code: codeFactory,
   Disclosure: disclosureFactory,
