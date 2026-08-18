@@ -1224,3 +1224,17 @@ describe('the "New agent → Generate" IA entry (LLD-C8) / GH #686 S7-d — the 
     expect(body.indexOf('admin.authoringStore = undefined')).toBeLessThan(body.indexOf('admin.store = personaStore(persona)'))
   })
 })
+
+// GH #1196 (ADR-0203 clause 4) — the Builder's team-shaped generation path's own registration seam.
+// NOTE (the SAME picker-wiring caveat as above): this is a presence smoke, not delivery proof — the
+// REAL mint+validate+save proof, on the real page module, lives in agent-admin-app-team.test.ts
+// (jsdom-safe, own file); the component-level fence proof (the SAME conjunctive gate `patch` already
+// applies, both polarities, the forward-once contract) lives in
+// packages/…/agent-admin-authoring.test.ts's own `team` consumption suite.
+describe('agent-admin-app — the team-shaped generation path (GH #1196, ADR-0203 cl.4)', () => {
+  it('registers onTeamDeclared, routing to handleTeamDeclared, with a rejection caught and notified', () => {
+    const source = readFileSync('site/pages/agent-admin-app.ts', 'utf8')
+    expect(source).toContain('admin.onTeamDeclared((team) =>')
+    expect(source).toContain('void handleTeamDeclared(team).catch(')
+  })
+})

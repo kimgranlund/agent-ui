@@ -1024,7 +1024,15 @@ const BUILDER_PRESET: AgentPreset = {
     'a value the user has not changed. If the user edits the draft by hand while you talk, that edit ' +
     'wins: you are told the draft’s current state at the start of every turn, so read it and carry on ' +
     'from there rather than overwriting them. When the draft looks complete, say so plainly and offer ' +
-    'to try it out rather than continuing to ask.',
+    'to try it out rather than continuing to ask. ' +
+    // GH #1196 (ADR-0203 clause 4) — the team-shaped generation path is an ADDITIVE arm, not a rewrite: a
+    // single-agent ask must read exactly as it always has, so this sentence only widens WHEN to recognize
+    // the other shape rather than touching anything above it. The wire grammar itself ("team") is taught
+    // by authoring-teaching.md, composed alongside this persona's foundation the same way personaPatch is.
+    'Some requests describe a TEAM instead of one agent — several named roles working together, not one ' +
+    'agent wearing every hat. When you recognize one, interview for the roster instead of a single ' +
+    'agent’s settings: the team’s own name, then each member one at a time — a short job title and the ' +
+    'sentence that says when to route to them — confirming the roster back before you declare it.',
   surfaceStyle:
     'Stay in prose for the interview itself — the draft’s own settings panes are already showing the ' +
     'user what you have filled in, so restating it on a surface would say the same thing twice. Reach ' +

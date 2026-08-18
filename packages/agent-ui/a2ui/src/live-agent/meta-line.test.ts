@@ -510,3 +510,118 @@ describe('readMetaLine — the flowEnd field (ADR-0198 cl.1)', () => {
     expect(readMetaLine('{"version":"v1.0","a2uiMeta":{"flowEnd":true}}')).toBeUndefined()
   })
 })
+
+// ── GH #1196 / ADR-0203 clause 4: the additive `team` field ─────────────────────────────────────────
+// The FIFTH MODEL-authored arm (ask → plan → personaPatch → flowEnd → team). Validates as a WHOLE the
+// same way `plan`/`personaPatch` do: any malformed member drops the entire arm, never a partial roster.
+describe('readMetaLine — the team field (GH #1196 / ADR-0203 clause 4)', () => {
+  it('round-trips {note, team:{label, members}} alongside note/ask/plan/personaPatch/trace', () => {
+    const line = JSON.stringify({
+      a2uiMeta: {
+        note: 'Here is the roster I have in mind.',
+        team: {
+          label: 'Hotel Concierge Team',
+          tagline: 'Guest-facing hospitality crew',
+          members: [
+            { name: 'Amenities', role: 'Amenities specialist', routingDescription: 'Use for questions about pool, gym, spa hours.' },
+            { name: 'Food & Drink', role: 'Dining concierge', routingDescription: 'Use for restaurant bookings and room service.' },
+          ],
+        },
+      },
+    })
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.note).toBe('Here is the roster I have in mind.')
+    expect(parsed!.a2uiMeta.team).toEqual({
+      label: 'Hotel Concierge Team',
+      tagline: 'Guest-facing hospitality crew',
+      members: [
+        { name: 'Amenities', role: 'Amenities specialist', routingDescription: 'Use for questions about pool, gym, spa hours.' },
+        { name: 'Food & Drink', role: 'Dining concierge', routingDescription: 'Use for restaurant bookings and room service.' },
+      ],
+    })
+  })
+
+  it('round-trips a team with no tagline (optional field absent)', () => {
+    const line = JSON.stringify({
+      a2uiMeta: { note: 'hi', team: { label: 'Support Team', members: [{ name: 'Tier 1', role: 'Front line', routingDescription: 'First contact.' }] } },
+    })
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.team).toEqual({ label: 'Support Team', members: [{ name: 'Tier 1', role: 'Front line', routingDescription: 'First contact.' }] })
+    expect(parsed!.a2uiMeta.team!.tagline).toBeUndefined()
+  })
+
+  it('a team with an empty members array round-trips (structurally valid, if degenerate)', () => {
+    const line = '{"a2uiMeta":{"note":"hi","team":{"label":"Solo Team","members":[]}}}'
+    expect(readMetaLine(line)!.a2uiMeta.team).toEqual({ label: 'Solo Team', members: [] })
+  })
+
+  it('a malformed team (non-object) drops ONLY itself — note/ask/plan/personaPatch still parse', () => {
+    const line = JSON.stringify({
+      a2uiMeta: {
+        note: 'hi',
+        ask: { surfaceId: 'ask-1' },
+        plan: { steps: [{ id: 's', description: 'd' }] },
+        personaPatch: { values: { name: 'X' } },
+        team: 'not-an-object',
+      },
+    })
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.note).toBe('hi')
+    expect(parsed!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
+    expect(parsed!.a2uiMeta.plan).toEqual({ steps: [{ id: 's', description: 'd' }] })
+    expect(parsed!.a2uiMeta.personaPatch).toEqual({ values: { name: 'X' } })
+    expect(parsed!.a2uiMeta.team).toBeUndefined()
+  })
+
+  it('an array team is rejected the same way (never a Record cast on an array)', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi","team":["Solo Team"]}}')!.a2uiMeta.team).toBeUndefined()
+  })
+
+  it('a team missing label drops the whole arm', () => {
+    const line = '{"a2uiMeta":{"note":"hi","team":{"members":[{"name":"A","role":"R","routingDescription":"D"}]}}}'
+    expect(readMetaLine(line)!.a2uiMeta.team).toBeUndefined()
+  })
+
+  it('a team with a non-string label drops the whole arm', () => {
+    const line = '{"a2uiMeta":{"note":"hi","team":{"label":42,"members":[]}}}'
+    expect(readMetaLine(line)!.a2uiMeta.team).toBeUndefined()
+  })
+
+  it('a team with a non-string tagline drops the whole arm', () => {
+    const line = '{"a2uiMeta":{"note":"hi","team":{"label":"X","tagline":42,"members":[]}}}'
+    expect(readMetaLine(line)!.a2uiMeta.team).toBeUndefined()
+  })
+
+  it('a team missing members drops the whole arm', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi","team":{"label":"X"}}}')!.a2uiMeta.team).toBeUndefined()
+  })
+
+  it('a team with a non-array members drops the whole arm', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi","team":{"label":"X","members":"nope"}}}')!.a2uiMeta.team).toBeUndefined()
+  })
+
+  it('a team with one member missing name/role/routingDescription drops the WHOLE arm — not a partial roster', () => {
+    const line = '{"a2uiMeta":{"note":"hi","team":{"label":"X","members":[{"name":"A","role":"R","routingDescription":"D"},{"name":"B"}]}}}'
+    expect(readMetaLine(line)!.a2uiMeta.team).toBeUndefined()
+  })
+
+  it('a team with a non-string member field drops the whole arm', () => {
+    const line = '{"a2uiMeta":{"note":"hi","team":{"label":"X","members":[{"name":"A","role":42,"routingDescription":"D"}]}}}'
+    expect(readMetaLine(line)!.a2uiMeta.team).toBeUndefined()
+  })
+
+  it('a note-only line (no team at all) still parses with team undefined — zero blast radius', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi"}}')!.a2uiMeta.team).toBeUndefined()
+  })
+
+  it('a well-formed team survives beside a MALFORMED plan on the same line (per-field independence)', () => {
+    const line = '{"a2uiMeta":{"note":"hi","plan":"broken","team":{"label":"X","members":[]}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.plan).toBeUndefined()
+    expect(parsed!.a2uiMeta.team).toEqual({ label: 'X', members: [] })
+  })
+
+  it('the envelope stays disjoint from A2uiServerMessage — a `version` key still refuses the whole line', () => {
+    expect(readMetaLine('{"version":"v1.0","a2uiMeta":{"team":{"label":"X","members":[]}}}')).toBeUndefined()
+  })
+})

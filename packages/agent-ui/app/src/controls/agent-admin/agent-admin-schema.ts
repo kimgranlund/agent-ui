@@ -16,6 +16,8 @@ import type { EffortLevel } from '../conversation/composer-options.ts'
 import type { PersonaPatch } from '@agent-ui/a2ui/agent/meta-line' // ADR-0178 cl.2 / SPEC-R29 — the declared-patch shape, type-only from the SAME pure meta-line module `TurnProgress` rides (SPEC-N1-safe: no producer bytes cross)
 import type { PlanDeclaration } from '@agent-ui/a2ui/agent/meta-line' // ADR-0182 cl.4 / SPEC-R20 — the ALREADY-SHIPPED plan-step shape, the SAME type-only import as PersonaPatch above
 import type { AskDeclaration } from '@agent-ui/a2ui/agent/meta-line' // GH #802 (ADR-0097 §1) — the declared feed-ask shape ({surfaceId}), the SAME type-only import as PersonaPatch/PlanDeclaration above
+import type { TeamDeclaration } from '@agent-ui/a2ui/agent/meta-line' // GH #1196 (ADR-0203 clause 4) — the declared team-roster shape, the SAME type-only import as PersonaPatch/PlanDeclaration/AskDeclaration above
+export type { TeamDeclaration } // re-exported so `agent-admin.ts` (which never imports @agent-ui/a2ui directly) can name the type for its own `#teamDeclaredRequest`/`onTeamDeclared` seam
 import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line' // ADR-0146 F1 — the live-turn progress vocabulary (type-only, from the PURE meta-line module, never the node-first ./agent barrel); a cross-package specifier stays extensionless (the repo's own local-.ts-only convention) — a2ui/package.json exports this as its own subpath
 // M-D (SPEC-R3/R5) — the persona catalog compose-time overlay's static id-recognition inputs (the root
 // `@agent-ui/a2ui` barrel, catalog/index.ts's own re-export of `catalog/compose.ts` + `catalog/personas/index.ts`).
@@ -838,6 +840,15 @@ export type AdminSurfaceTurnEvent =
    *  never updated (the grammar's own law), so the reply to one opens a NEW round instead of resuming its
    *  bubble — while every NON-ask surface keeps TKT-0079's stay-in-the-card resume, byte-unchanged. */
   | { kind: 'ask'; ask: AskDeclaration }
+  /** GH #1196 (ADR-0203 clause 4) — a model-declared TEAM ROSTER, peeled off the meta-line by the
+   *  runner exactly as `note`/`patch`/`plan`/`ask` are. The peel is GATE-BLIND by design (the SAME
+   *  law `patch` follows): whether this declaration is ever CONSUMED — minting N personas plus an
+   *  `AgentTeam` record — is the component's decision alone (the SAME store-identity fence AND fresh
+   *  `SURFACE_AUTHORING_KEY` read the `patch` arm already applies), surfaced onward through the
+   *  `onTeamDeclared` callback rather than mutated here: persona minting/roster registration/team
+   *  persistence are all SITE-owned (`saveImportedPersona`/`mintBlankPersona`/`saveAgentTeam` live in
+   *  `site/pages/*`, never in this package — preserving the DAG this package's own layering rules fix). */
+  | { kind: 'team'; team: TeamDeclaration }
 
 /** A surface turn's request. `turn` mirrors the producer's two arms: a typed user intent, or a surface
  *  client message (an action click / function response bubbled up via `onClientMessage`) — `message` is
