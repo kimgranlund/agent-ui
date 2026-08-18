@@ -324,6 +324,10 @@ export default defineConfig({
         test: {
           name: 'visual',
           include: ['**/*.visual.browser.test.ts'],
+          // GH #1247 side-finding (Kim-ruled 2026-08-18): a bare `**` glob leaks into live agent
+          // worktrees under .claude/worktrees/, double-reporting every visual red from a lane's copy —
+          // exclude them (node_modules is already implicit in vitest's default exclude).
+          exclude: ['**/.claude/worktrees/**', '**/node_modules/**'],
           browser: {
             enabled: true,
             provider: playwright(),
