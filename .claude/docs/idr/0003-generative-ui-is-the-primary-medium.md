@@ -45,3 +45,19 @@ prompt craft that happens to behave.
 Accept "gen-UI-first, conduct-as-law, realism-over-demos" as standing product intent? (Clauses
 1–3 largely record already-ruled law; the flip makes the WHY durable and names where future
 falsifications land.)
+
+## Amendment note (2026-08-18) — tier ruling: this IDR is proposed for supersession
+
+Kim's 2026-08-18 doc-tier ruling, verbatim: *"IDR should not be made for features. Intent is at
+the global app/project level. PRD docs should be created for apps (like agent-admin-app) and that
+PRD would document the teams feature (along all the other agent features)."*
+
+Accordingly: this IDR's feature-scoped intent (gen-UI-first asks, surface lifecycle honesty,
+bookended conversations, domain realism) now lives in the
+[agent-admin-app PRD](../prd/agent-admin-app.prd.md) §3.6, with the producer-side grammar law
+owned by the [a2ui-expert-system PRD](../prd/a2ui-expert-system.prd.md) family; its
+platform-global core ("generative UI is the platform's conversation medium; conduct is codified
+law") is restated at platform altitude in
+[IDR-0006](./0006-conversation-medium-generative-ui.md) (proposed). This IDR is **proposed for
+supersession by IDR-0006** — the accepted body above is untouched (append-only), and the Status
+flip is Kim's alone.

@@ -43,3 +43,18 @@ by **payload patterns over existing types**, not by catalog sprawl.
 
 Accept "parity composition-first; Image the sole new media primitive; zero-dep analytics floor"
 as product intent for the widget lane?
+
+## Amendment note (2026-08-18) — tier ruling: this IDR is proposed for supersession
+
+Kim's 2026-08-18 doc-tier ruling, verbatim: *"IDR should not be made for features. Intent is at
+the global app/project level. PRD docs should be created for apps (like agent-admin-app) and that
+PRD would document the teams feature (along all the other agent features)."*
+
+Accordingly: this IDR's feature-scoped intent (composition-first vocabulary growth, Image as the
+one new media primitive, the zero-dep analytics floor, semantics honesty) now lives in the
+[a2ui-expert-system PRD](../prd/a2ui-expert-system.prd.md) §8 — the catalog/corpus lane's owning
+PRD. No platform-level IDR restates this lane-scoped intent; its global echoes are
+[IDR-0006](./0006-conversation-medium-generative-ui.md) (the medium claim) and the ruled zero-dep
+law. This IDR is **proposed for supersession by the relocation** (superseded-by target:
+[a2ui-expert-system PRD](../prd/a2ui-expert-system.prd.md) §8) — the accepted body above is
+untouched (append-only), and the Status flip is Kim's alone.

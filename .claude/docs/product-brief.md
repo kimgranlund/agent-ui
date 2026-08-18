@@ -108,3 +108,32 @@ this arc; they are not duplicated into `prd/`.
 4. **Roadmap synthesis**: should `roadmap.md` §2/§3 gain the four-lane arc as its next synthesis
    pass (this brief cited as the arc's WHY), or does the roadmap wait until the first lane ships?
    This seat drafted nothing into `roadmap.md` — it is a living doc and the arc is unratified.
+
+## 7 · Addendum (2026-08-18) — central-Intent role + the doc-tier ruling
+
+Kim's 2026-08-18 rulings, verbatim: *"IDR should not be made for features. Intent is at the
+global app/project level. PRD docs should be created for apps (like agent-admin-app) and that PRD
+would document the teams feature (along all the other agent features)"* · *"Agent UI as a
+platform/system should have central Intent and organized structured IDR documents"* · *"PRDs can
+exist at various levels of granularity."*
+
+This section amends §5's tier description by dated addendum (this brief is accepted — the body
+above stays untouched):
+
+- **This brief is the platform's central Intent record.** The `idr/` tier is its decision spine,
+  now restricted to PLATFORM-global intent only — identity, medium, trust boundary, unit of
+  product. Feature-scoped intent lives in the owning app/family PRD, never in an IDR.
+- **The platform IDR set (proposed, Kim ratifies):**
+  [IDR-0005](./idr/0005-agent-product-platform-identity.md) (the §1 identity sentence's citable
+  home) · [IDR-0006](./idr/0006-conversation-medium-generative-ui.md) (the medium claim) ·
+  [IDR-0007](./idr/0007-user-knowledge-browser-trust-boundary.md) (knowledge + the trust
+  boundary) · [IDR-0008](./idr/0008-team-is-the-unit-of-product.md) (team as unit of product).
+- **The four feature IDRs (0001–0004) are proposed for supersession** — each carries its own
+  dated relocation note naming its owning PRD ([agent-admin-app](./prd/agent-admin-app.prd.md) /
+  [a2ui-expert-system](./prd/a2ui-expert-system.prd.md) §8) and, where one exists, its platform
+  restatement. Status flips are Kim's alone.
+- **PRD granularity is multi-level by rule:** platform-area, app, family, and feature PRDs are
+  all legitimate, finer citing coarser — codified in `doc-standards` §1d (the canonical home);
+  this addendum is the pointer, not a second copy.
+- §6's open fork 2 ("accept the `idr/` tier at all") is answered by these rulings: the tier
+  stays, restructured to platform altitude.

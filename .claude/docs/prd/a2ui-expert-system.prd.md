@@ -1,6 +1,6 @@
 # PRD — A2UI Expert System
 
-> Status: proposed · v0.1 · 2026-06-26 · Owner: agent-ui
+> Status: proposed · v0.2 · 2026-06-26 · Owner: agent-ui *(v0.2, 2026-08-18: §8 added — the widget-vocabulary-parity product intent relocated from [IDR-0004](../idr/0004-widget-vocabulary-parity-composition-first.md) at Kim's 2026-08-18 doc-tier ruling; additive — §1–§7 untouched)*
 > Document family: this PRD is upstream of the SPECs in [`specs/`](../spec/) and the LLDs in [`llds/`](../lld/). The family lives on the unified map (`../spec/`·`../lld/`); decisions index: the ADR log itself, [`../adr/`](../adr/) (the numbered files ARE the index — no index file, `doc-standards` §1b); the original charter is [archived](../archive/a2ui-expert-system/README.md) (frozen 2026-07-08).
 > Altitude: this document owns **why + what-should-exist**. Behavior contracts live in the SPECs; implementation in the LLDs. Lower documents reference these goal IDs; they do not restate them.
 
@@ -135,3 +135,37 @@ This PRD is refined by the following SPECs (what must be built / how it behaves)
 - `specs/a2ui-training-corpus.spec.md` — **flagship**: corpus format, sourcing, gating, consumption, maintenance, eval *(PRD-G5, PRD-D1)*
 
 Each SPEC spawns one or more LLDs in `llds/` (renderer, default-catalog mapping, catalog schema/validators, stream codec, MCP server, corpus store, harness wiring).
+
+## 8. Widget-vocabulary parity, composition-first (v0.2, 2026-08-18 — relocated from IDR-0004)
+
+Kim's 2026-08-18 tier ruling relocates the feature-scoped intent of
+[IDR-0004](../idr/0004-widget-vocabulary-parity-composition-first.md) (accepted 2026-08-17,
+proposed for supersession — the flip is Kim's) to this PRD: the catalog/corpus lane is this doc's
+charter (PRD-G1/G2/G5), so vocabulary-growth intent lives here. No platform-level IDR restates it —
+its global echoes are already [IDR-0006](../idr/0006-conversation-medium-generative-ui.md) (the
+medium claim) and the ruled zero-dep law ([ADR-0139](../adr/0139-codemirror-editor-first-runtime-dependency.md) /
+[ADR-0202](../adr/0202-pdfjs-second-runtime-dependency-exception.md) precedents).
+
+**Intent (carried verbatim in substance).** Agents built on this stack can express the widget
+vocabulary the generative-UI ecosystem treats as table stakes — slideshows, confirmations,
+itineraries, weather, menus, trend lists, wizards — so a produced agent never looks poorer than a
+Vercel/Thesys/A2UI-standard demo. The vocabulary grows by **payload patterns over existing
+types**, not by catalog sprawl.
+
+**Requirements (relocated; realized by [req-a2ui-library](../research/req-a2ui-library.md) R1–R6):**
+
+1. **Composition-first.** Candidate widgets land as corpus seeds + grammar/skill patterns over the
+   shipped catalog; new types are minted only when composition is provably impossible.
+2. **Image is the one new media primitive now.** `ui-image` + the `Image` catalog row unblock the
+   full-bleed candidates; Video/AudioPlayer wait until Image proves the media seam.
+3. **Honest analytics floor.** v1 charts = the existing zero-dep Sparkline/BarChart/Stat;
+   axes/pie/tooltip engines are later-tier, each its own ADR; no charting dependency, ever
+   (the [chart-family PRD](./chart-family.prd.md) owns that family's own WHY/WHAT).
+4. **Semantics honesty rides along** (Kim rulings, 2026-08-17): outcomes are toasts not badges;
+   glyphs never impersonate affordances; labels never wrap; library rows let a user choose without
+   insider knowledge. Parity means *well-made*, not merely present.
+
+**Falsifiers (carried).** Seed-taught compositions repeatedly failing the compose→validate loop
+where a dedicated type would trivially succeed revises the composition-first default; Image's
+full-bleed/scrim craft failing the WCAG fixture across themes re-opens the parity-without-sprawl
+bar — both here, before any per-widget workaround.
