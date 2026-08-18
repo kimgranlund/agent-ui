@@ -256,8 +256,19 @@
    * descendant, so they render at full opacity regardless of scroll position. A PLAIN drawer (loose children,
    * no distinct content region — e.g. drawer-demo.ts) is COMPLETELY unaffected: this whole block is gated off
    * by the same `:has()` selector its parent rule is, so the dialog stays the single BFC scrollport exactly
-   * as before. */
-  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) {
+   * as before.
+   *
+   * GH #1223 — `[open]`-GATED. This rule's `display: flex` is an AUTHOR declaration, so unconditional it
+   * beat the UA's `dialog:not([open]) { display: none }` — every CLOSED drawer composed with the #918
+   * header/content/footer recipe stayed laid out at its off-canvas resting inset (`inset-inline-end:
+   * -26rem`), a fixed box past the right viewport edge. Desktop engines never show it (a fixed box adds
+   * nothing to document.scrollWidth), but a phone's layout-viewport sizing still counts the rendered
+   * content and zooms the whole page out to fit it — the /agent-admin-app mobile zoom-out. Keying on
+   * `[open]` restores the UA's closed-state `display: none`; the exit slide still runs, because `display`
+   * rides the base transition's `allow-discrete` leg either way (the flip to none defers to transition
+   * end exactly as it does on the UA path). Regression gate:
+   * site/pages/agent-admin-app-mobile-overflow.browser.test.ts. */
+  :scope > [data-part='dialog'][open]:has(> :is([data-region='content'], main)) {
     display: flex;
     flex-direction: column;
     overflow: hidden; /* the content region owns scrolling now, not the dialog box itself */
@@ -271,7 +282,7 @@
     flex: 0 0 auto;
     margin-block-start: 0; /* the flex `gap` above supplies the content↔footer gap instead — avoid doubling it */
   }
-  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) > :is([data-region='content'], main) {
+  :scope > [data-part='dialog'][open]:has(> :is([data-region='content'], main)) > :is([data-region='content'], main) {
     flex: 1 1 auto;
     min-block-size: 0; /* the flex-item overflow trap — without this the item refuses to shrink below its content's intrinsic size */
     margin-block: 0; /* the flex `gap` above supplies both neighbouring gaps instead — avoid doubling them */
