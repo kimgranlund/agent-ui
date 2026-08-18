@@ -1987,8 +1987,10 @@ describe('ui-agent-admin cross-engine smoke — the guided-authoring flow (ADR-0
     const { el } = mountAgentAdmin('Surface')
     await el.updateComplete
     const rows = [...el.querySelectorAll('[data-part="surface-options"] [data-part="surface-row"]')] as HTMLElement[]
-    expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui', 'planner', 'authoring'])
-    const row = rows[rows.length - 1]!
+    // GH #1221 — the Chat bubbles row is APPENDED after Authoring, so this is no longer simply "the last
+    // row"; find it by name so this test keeps proving the AUTHORING row specifically.
+    expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui', 'planner', 'authoring', 'bubbles'])
+    const row = rows.find((r) => r.getAttribute('data-surface') === 'authoring')!
     const box = row.getBoundingClientRect()
     expect(box.width).toBeGreaterThan(0)
     expect(box.height).toBeGreaterThan(0)
@@ -3227,10 +3229,11 @@ describe('ui-agent-admin Surface tab — the help icons are hidden at rest and r
     await frames()
     // GH #866 — scoped to the VISIBLE tab's own content: the widening put icons on every other tab too,
     // and a hidden section's icons have no box to measure (that is the tab machinery working, not a
-    // defect). The Surface tab's own nine stay the anti-vacuous guard they were.
+    // defect). The Surface tab's own ten (GH #1221 widened nine to ten with the Chat bubbles row) stay
+    // the anti-vacuous guard they were.
     const surface = el.querySelector('[data-role="surface-content"]') as HTMLElement
     const icons = [...surface.querySelectorAll('[data-part="admin-help"] > [data-part="anchor"]')] as HTMLElement[]
-    expect(icons.length, `${server.browser}: the Surface tab paints one icon per group header and row`).toBe(9)
+    expect(icons.length, `${server.browser}: the Surface tab paints one icon per group header and row`).toBe(10)
     for (const icon of icons) {
       const style = getComputedStyle(icon)
       expect(style.opacity, `${server.browser}: hidden at rest`).toBe('0')
@@ -3321,7 +3324,7 @@ describe('ui-agent-admin Surface tab — the help icons are hidden at rest and r
     expect(panel.matches(':popover-open'), 'and it really left the top layer').toBe(false)
   })
 
-  it('every helped surface opens its OWN card — nine icons, nine distinct explanations', async () => {
+  it('every helped surface opens its OWN card — ten icons, ten distinct explanations (GH #1221 widened nine to ten)', async () => {
     const { el } = mountAgentAdmin('Surface')
     await frames()
     const seen = new Set<string>()
@@ -3338,7 +3341,7 @@ describe('ui-agent-admin Surface tab — the help icons are hidden at rest and r
       expect(seen.has(text), `${key}: two icons must never open the same card`).toBe(false)
       seen.add(text)
     }
-    expect(seen.size).toBe(9)
+    expect(seen.size).toBe(10)
   })
 })
 
@@ -3723,7 +3726,9 @@ describe('ui-agent-admin — the help affordance admin-wide: placement geometry 
   it('ruling 2 — on an ELEMENT row the icon is painted at the row’s TRAILING edge, not beside the label', async () => {
     const { el } = mountAgentAdmin('Surface')
     await frames()
-    for (const surface of ['markdown', 'a2ui', 'genui', 'planner', 'authoring'] as const) {
+    // GH #1221 — the Chat bubbles row joins the same list: it follows the identical `surfaceRow`
+    // construction (switch/label/spacer/icon) as every modality row above it, so it earns the same proof.
+    for (const surface of ['markdown', 'a2ui', 'genui', 'planner', 'authoring', 'bubbles'] as const) {
       const row = el.querySelector(`[data-part="surface-row"][data-surface="${surface}"]`) as HTMLElement
       const label = row.querySelector('[data-part="surface-label"]') as HTMLElement
       const icon = row.querySelector('[data-part="admin-help"] > [data-part="anchor"]') as HTMLElement

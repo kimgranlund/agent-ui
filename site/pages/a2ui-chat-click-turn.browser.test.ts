@@ -29,6 +29,11 @@ function bubbles(role: 'user' | 'agent'): HTMLElement[] {
     (b) => b.dataset.role === role,
   )
 }
+// GH #1221 — Gen-UI/A2UI cards mount into `[data-part="mounts"]`, a SIBLING of the bubble under the
+// owning `[data-part="turn"]` wrapper, never the bubble's own descendant anymore.
+function mountsOf(bubble: HTMLElement): HTMLElement {
+  return (bubble.parentElement as HTMLElement).querySelector('[data-part="mounts"]') as HTMLElement
+}
 
 describe('a2ui-chat — GH #42: a REAL canvas click drives a full visible turn', () => {
   it('click on the seed Button (wantResponse absent) → the next transcript turn renders; user rows unchanged (TKT-0094)', async () => {
@@ -58,8 +63,8 @@ describe('a2ui-chat — GH #42: a REAL canvas click drives a full visible turn',
     // A visible turn happened: a NEW agent bubble carries turn 2's confirmation surface.
     await waitUntil(() => bubbles('agent').length > agentBefore)
     const latest = bubbles('agent').at(-1)!
-    await waitUntil(() => latest.querySelector('ui-surface-host') !== null)
-    expect(latest.querySelector('ui-surface-host'), "turn 2's confirmation surface renders in its own bubble").not.toBeNull()
+    await waitUntil(() => mountsOf(latest).querySelector('ui-surface-host') !== null)
+    expect(mountsOf(latest).querySelector('ui-surface-host'), "turn 2's confirmation surface renders in its own turn's mounts").not.toBeNull()
 
     // TKT-0094: the click is the surface interaction, not a typed message — NO synthetic user echo row.
     expect(bubbles('user').length, 'a client-action click must NOT add a user echo row').toBe(userBefore)

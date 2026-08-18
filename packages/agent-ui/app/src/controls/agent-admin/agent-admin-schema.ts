@@ -274,6 +274,21 @@ export function isAuthoringSurfaceEnabled(value: unknown): boolean {
   return value === true
 }
 
+// ── Chat bubble on/off setting (GH #1221, Kim's 2026-08-17 rulings) ───────────────────────────────────
+// The Surface tab's toggle for `ui-conversation`'s own reflected `bubbles` prop — whether host/agent
+// messages render inside the ADR-0160 chromed bubble or flattened, chromeless prose. Unlike GenUI/
+// Planner/Authoring above, this is NOT an opt-in modality (nothing is taught or composed differently) —
+// it is a pure PRESENTATION toggle, so it uses `isEnabledFlag`'s ordinary default-ON law, the SAME one
+// Markdown/A2UI use: the default must render byte-identical to today's shipped chat look (the ticket's
+// own "zero visual change unset" requirement), which is the ON state.
+
+/** Chat bubbles surface — ON (the default): host/agent messages render inside `ui-conversation`'s
+ *  existing chromed bubble, byte-identical to today; OFF (an explicit stored `false`): the host/agent
+ *  bubble flattens to chromeless, full-bleed prose (never touching the user bubble, and never touching
+ *  a mounted Gen-UI/A2UI card's own chrome — GH #1221's OTHER half hoists the card out of the bubble
+ *  entirely, independent of this setting). */
+export const SURFACE_BUBBLES_KEY = 'surfaceBubbles'
+
 /** The A2UI catalog picker's persisted selection (an id from `A2UI_CATALOG_OPTIONS`). */
 export const A2UI_CATALOG_KEY = 'a2uiCatalog'
 
@@ -428,6 +443,7 @@ export const ADMIN_HELP_KEYS = [
   'genui-dogfood',
   'planner',
   'authoring',
+  'bubbles',
   'pattern-source',
   // — the Agent tab (GH #866) —
   'agent',
@@ -541,6 +557,15 @@ export const ADMIN_HELP: Readonly<Record<AdminHelpKey, AdminHelpEntry>> = {
       'This switch teaches; it never authorizes on its own. A declared patch is still filtered key by key, sanitized, and validated before anything is written, and a patch declared outside the dedicated authoring conversation is ignored outright.',
     ],
     facts: [{ term: 'Default', detail: 'Off — an explicit opt-in per agent' }],
+  },
+  bubbles: {
+    title: 'Chat bubbles',
+    summary: 'Whether host/agent replies render inside a chat bubble or as flat, chromeless prose',
+    body: [
+      'On (the default): host/agent replies render inside the same neutral container this client has always used — nothing changes unless this is switched.',
+      'Off: the container drops away and the reply renders as plain, full-width prose. Your own messages keep their bubble either way, and any card a reply renders — a form, a choice, a board — keeps its own contained look regardless of this switch.',
+    ],
+    facts: [{ term: 'Default', detail: 'On' }],
   },
   'pattern-source': {
     title: 'Pattern sources',

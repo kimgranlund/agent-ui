@@ -4108,10 +4108,15 @@ describe('UIAgentAdminElement — GH #802: an answered ask opens the next dialog
   const noteOf = (bubble: HTMLElement): string | undefined =>
     [...bubble.children].find((c) => (c as HTMLElement).dataset?.part === 'body')?.textContent ?? undefined
 
+  /** GH #1221 — cards mount into `[data-part="mounts"]`, a SIBLING of the bubble under the owning
+   *  `[data-part="turn"]` wrapper, never the bubble's own descendant anymore. */
+  const mountsOf = (bubble: HTMLElement): HTMLElement =>
+    (bubble.parentElement as HTMLElement).querySelector('[data-part="mounts"]') as HTMLElement
+
   it('answering a DECLARED ask opens a NEW round — a fresh bubble with the next card, the answered one left behind as history', async () => {
     const { el, turns } = await mountRounds(true)
     const firstBubble = agentBubbles(el)[0]!
-    const firstHost = firstBubble.querySelector('ui-surface-host') as HTMLElement
+    const firstHost = mountsOf(firstBubble).querySelector('ui-surface-host') as HTMLElement
 
     await commitRoundOne(el)
 
@@ -4120,14 +4125,14 @@ describe('UIAgentAdminElement — GH #802: an answered ask opens the next dialog
 
     const bubbles = agentBubbles(el)
     expect(bubbles, 'the ask answer advances the dialog: a SECOND agent bubble').toHaveLength(2)
-    // The new round's own card mounted in the NEW bubble…
-    const secondHost = bubbles[1]!.querySelector('ui-surface-host') as HTMLElement
-    expect(secondHost, 'round 2 mounted its own surface host in the new bubble').not.toBeNull()
+    // The new round's own card mounted in the NEW turn's mounts…
+    const secondHost = mountsOf(bubbles[1]!).querySelector('ui-surface-host') as HTMLElement
+    expect(secondHost, 'round 2 mounted its own surface host in the new turn').not.toBeNull()
     expect(secondHost.querySelector('ui-button')?.textContent?.trim()).toBe('Commit 2')
-    // …and the ANSWERED card is untouched history: same host, same bubble, its own question prose intact.
+    // …and the ANSWERED card is untouched history: same host, same turn, its own question prose intact.
     expect(firstHost.isConnected, 'the answered ask survives').toBe(true)
-    expect(firstHost.closest('[data-part="bubble"]'), 'the answered ask stays in ITS bubble').toBe(firstBubble)
-    expect(firstBubble.querySelectorAll('ui-surface-host'), 'nothing new mounted into the answered bubble').toHaveLength(1)
+    expect(firstHost.closest('[data-part="bubble"]'), 'the answered ask does not sit inside any bubble (GH #1221 sibling shape)').toBeNull()
+    expect(mountsOf(firstBubble).querySelectorAll('ui-surface-host'), 'nothing new mounted into the answered turn').toHaveLength(1)
     expect(firstHost.querySelector('ui-button')?.textContent?.trim(), 'the answered ask was never rebuilt').toBe('Commit 1')
     expect(noteOf(firstBubble), "the answered ask keeps its OWN question — the next round's prose never overwrote it").toBe(
       'Which size?',
@@ -4142,8 +4147,8 @@ describe('UIAgentAdminElement — GH #802: an answered ask opens the next dialog
 
     expect(turns).toHaveLength(2)
     expect(agentBubbles(el), 'a non-ask action reply opens NO new bubble (TKT-0079)').toHaveLength(1)
-    // TKT-0079's own clause: even a FRESH surfaceId in a resumed turn mounts into the SAME bubble's mounts.
-    expect(firstBubble.querySelectorAll('ui-surface-host'), "round 2's card mounted into the resumed bubble").toHaveLength(2)
+    // TKT-0079's own clause: even a FRESH surfaceId in a resumed turn mounts into the SAME turn's mounts.
+    expect(mountsOf(firstBubble).querySelectorAll('ui-surface-host'), "round 2's card mounted into the resumed turn's mounts").toHaveLength(2)
     expect(noteOf(firstBubble), 'the resumed bubble takes the new note').toBe('Got it — and which colour?')
   })
 })
@@ -4441,8 +4446,8 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     // agent-admin-bankroll.test.ts for its presence/absence/reset coverage). ADR-0174 cl.1/OF3 — the
     // Planner row joins beside GenUI (agent-admin-planner.test.ts covers its schema-level gate).
     // ADR-0178 cl.3 — the Authoring row is APPENDED after Planner (the LLD's placement), so every
-    // existing row keeps its index.
-    expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui', 'planner', 'authoring'])
+    // existing row keeps its index. GH #1221 — the Chat bubbles row is APPENDED last, after Authoring.
+    expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui', 'planner', 'authoring', 'bubbles'])
     // Only the modalities WITH children are grouped — Markdown has none, so it stays a bare row.
     expect([...surfaceOptions.querySelectorAll('[data-part="surface-group"]')].map((g) => g.getAttribute('data-surface'))).toEqual(['a2ui', 'genui'])
     const genui = rows[2] as HTMLElement

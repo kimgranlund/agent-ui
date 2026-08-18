@@ -128,6 +128,7 @@ describe('ADMIN_HELP — the admin’s one copy source (GH #844, widened by GH #
       'genui-dogfood',
       'planner',
       'authoring',
+      'bubbles',
       'pattern-source',
       // the Agent tab (GH #866)
       'agent',
@@ -320,11 +321,11 @@ describe('ui-agent-admin Surface tab — an icon per group header and per elemen
     }
   })
 
-  it('the Surface tab still carries exactly its own nine (GH #844’s enumeration, unchanged by the widening)', async () => {
+  it('the Surface tab still carries exactly its own ten (GH #844’s enumeration, widened by GH #1221’s bubbles row)', async () => {
     const el = await mountAdmin()
     const surface = el.querySelector('[data-role="surface-content"]') as HTMLElement
     expect([...surface.querySelectorAll('[data-part="admin-help"]')].map((n) => n.getAttribute('data-help')).sort()).toEqual(
-      ['a2ui', 'a2ui-catalog', 'authoring', 'genui', 'genui-dogfood', 'markdown', 'pattern-source', 'planner', 'surface-options'].sort(),
+      ['a2ui', 'a2ui-catalog', 'authoring', 'bubbles', 'genui', 'genui-dogfood', 'markdown', 'pattern-source', 'planner', 'surface-options'].sort(),
     )
   })
 })

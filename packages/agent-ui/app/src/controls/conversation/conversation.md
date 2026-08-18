@@ -77,6 +77,11 @@ attributes:              # attributes-as-API — mirrors conversation.ts `props`
     type: json            # readonly CapabilityRow[] (composer-options.ts — {id,label,kind,description?,icon?,included}) — GH #891/SPEC-R11, forwarded to the composed composer's capabilities panel
     default: undefined    # undefined ⇒ no trigger, no panel; byte-identical for every existing consumer
     reflect: false
+  - name: bubbles
+    type: enum
+    values: [on, off]
+    default: on
+    reflect: true         # GH #1221 (Kim's 2026-08-17 rulings) — the host/agent bubble on/off setting, driven from the Surface tab (ui-agent-admin). An ENUM, not a boolean: a reflected default-true boolean can never distinguish "never set" from "explicitly false" in CSS (both leave the attribute absent) — this ticket's own "ZERO visual change unset" requirement needs the distinction. Default 'on' ⇒ no attribute is ever written unless a consumer explicitly sets this, so an untouched element renders byte-identical to before this ticket. Scoped to the HOST/AGENT bubble only — the USER bubble is unaffected in either state.
 
 properties:
   - name: disabled
@@ -87,6 +92,8 @@ properties:
     description: OPT-IN receipt pattern (GH #239/ADR-0159, Kim's 2026-07-23 ruling) for the per-turn narration strip. When true, each agent turn's `ui-status-stream` gets BOTH stream-level opt-ins — `oneline` (one morphing line while the turn runs — current step's live label + ticking elapsed + shimmer, expandable mid-turn) and `receipt` (auto-collapse to "Agent activity · N steps · total" at finalize()/fail(), click to re-expand). Reflected boolean, default false — existing consumers keep the always-expanded narration byte-identically.
   - name: sources
     description: 'OPT-IN per-step source reveal (GH #240/ADR-0159 wave B — Kim''s receipt-pattern ruling, part 3). When true, each narrated step carries the raw wire line(s) it stands for as `StatusEntry.source`, rendered by ui-status-stream as a collapsed-by-default mono reveal (summary "Source", one deliberate developer level deep): a CATEGORY entry ("Opened a new surface") accumulates its own ingested A2UI JSONL (createSurface/updateDataModel/… — cumulative, newline-joined), and a PROGRESS entry ("Validating…"/"Self-correcting…") passes through whatever `TurnProgress.source` the producer attached under ITS `progressDetail:''source''` opt-in (the privacy gate — a default stream carries none). Sampled once per turn. Reflected boolean, default false — and fail-closed both ways: when false, no category line is ever attached AND a producer-attached progress source is DROPPED, so default narration stays byte-identical even against a source-carrying stream.'
+  - name: bubbles
+    description: 'GH #1221 (Kim''s 2026-08-17 rulings, the Surface tab''s "Chat bubbles" toggle, `ui-agent-admin`) — the host/agent bubble on/off setting: `''on''` (the default) is byte-identical to today''s shipped look (a neutral chromed container, ADR-0160); `''off''` flattens the HOST/AGENT bubble only — no background, no padding, no radius, the pre-ADR-0160 chromeless shape. The USER bubble is untouched in either state. Orthogonal to the Gen-UI/A2UI card hoist (below): a card mounted in `[data-part="mounts"]` keeps its own chrome in EVERY `bubbles` mode, since GH #1221 also moved it to be a sibling of the bubble rather than nested inside it.'
   - name: models
     description: OPTIONAL `readonly {id, label}[]` (composer-options.ts's `PickerOption`) — when set (and non-empty), the composer renders a Models picker. Default `undefined` ⇒ no picker, the original field+Send composer shape, unchanged for any consumer that never sets this (a2ui-chat, a2ui-live).
   - name: model
