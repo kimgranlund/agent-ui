@@ -1131,6 +1131,48 @@
     color: var(--ui-agent-admin-label-ink);
   }
 
+  /* GH #1289 — the Team pane shipped with NO spacing rules at all (only the team-catalog-option-* rows
+     above ever got styled), so the whole read list + add/edit form rendered as one flush zero-gap text
+     block. Spacing only — same token vocabulary as the rest of the pane: section-gap between the pane's
+     top-level regions, list-gap between stacked rows/fields (the entry-list/model-grid convention),
+     row-gap inside one row. No DOM changes; `agent-team-pane.ts` markup untouched. */
+  [data-part='team-pane'] {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* the Add-team toggle keeps its intrinsic width instead of stretching */
+    gap: var(--ui-agent-admin-section-gap);
+  }
+  [data-part='team-list'],
+  [data-part='team-form'],
+  [data-part='team-form-members'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-agent-admin-list-gap);
+    align-self: stretch;
+  }
+  /* An empty list/members host must not cost a phantom section-gap/list-gap of its own. */
+  [data-part='team-list']:empty,
+  [data-part='team-form-members']:empty {
+    display: none;
+  }
+  [data-part='team-card'],
+  [data-part='team-card-members'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-agent-admin-row-gap);
+  }
+  [data-part='team-card-header'] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--ui-agent-admin-row-gap);
+  }
+  [data-part='team-form-member-row'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-agent-admin-row-gap);
+  }
+
   /* forced-colors: active — every bordered surface above uses a real 1px border (not a shadow/tint),
      already legible under forced-colors; the explicit focus rings fall back to Highlight. ui-switch
      carries its own forced-colors handling, inherited unchanged. */
