@@ -1724,6 +1724,28 @@ describe('isExplicitClose — the GH #1168 detection predicate', () => {
       expect(isExplicitClose(closeInput(text))).toBe(false)
     },
   )
+
+  // GH #1202 — the conclusive-commit lexicon (the second deterministic signal): the flow-final
+  // confirm's commit phrase. Mid-flow commits stay safe via the note-only guard (their answering
+  // turn is content-bearing), but the predicate itself must match the commit shapes.
+  it.each([
+    'Confirmed — book it.',
+    'yes, confirm',
+    'Yes, please confirm the booking',
+    'go ahead and book it',
+    'book it',
+    'place my order',
+    'submit the booking',
+  ])('matches the conclusive-commit shape (GH #1202): %s', (text) => {
+    expect(isExplicitClose(closeInput(text))).toBe(true)
+  })
+
+  it.each(['The Garden King room looks right. Next.', 'change the dates please', 'back to the previous step'])(
+    'does NOT match wizard navigation text (GH #1202): %s',
+    (text) => {
+      expect(isExplicitClose(closeInput(text))).toBe(false)
+    },
+  )
 })
 
 describe('produce() flowEnd pass-through + FLOW_END_MISSING correction round (GH #1168)', () => {
