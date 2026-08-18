@@ -403,6 +403,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-checkbox',
     cards: [
       {
+        href: './checkbox-demo.html',
+        title: 'Demo',
+        blurb: 'A live workspace-permissions list with a tri-state (indeterminate) parent, a required consent box, and an input/change event log.',
+      },
+      {
         href: './checkbox-doc.html',
         title: 'API reference',
         blurb: 'The FACE tri-state checkbox (Indicator class) — the size + state specimens and attribute surface, generated from checkbox.md.',
@@ -413,6 +418,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-switch',
     cards: [
       {
+        href: './switch-demo.html',
+        title: 'Demo',
+        blurb: 'A live notification-preferences panel — a master switch gating topic rows, a policy-locked disabled row, and a change/input event log.',
+      },
+      {
         href: './switch-doc.html',
         title: 'API reference',
         blurb: 'The FACE switch — a pill track with a 2px-inset thumb (ADR-0041) — its size + state specimens, generated from switch.md.',
@@ -422,6 +432,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
   {
     label: 'ui-radio',
     cards: [
+      {
+        href: './radio-demo.html',
+        title: 'Demo',
+        blurb: 'Live radios inside a real ui-radio-group (a shipping-method picker) plus the standalone toggle shape, with an event log for both surfaces.',
+      },
       {
         href: './radio-doc.html',
         title: 'API reference',
