@@ -92,6 +92,13 @@
   --ui-conversation-composer-menu-item-pad-inline: var(--md-sys-space-sm);
   --ui-conversation-composer-menu-item-radius: calc(var(--md-sys-shape-corner-base) - var(--md-sys-space-xs));
   --ui-conversation-composer-menu-item-bg-active: var(--md-sys-color-neutral-surface-high);
+  /* GH #1218 — the #874 fleet unobtrusive-scrollbar idiom (own-chain off the shared dimensional
+     constant + neutral thumb roles), for both top-layer popover panels below: they scroll past
+     --ui-conversation-composer-menu-max-block-size and were untreated before (raw platform default),
+     painting the chunky always-visible scrollbar the issue reports. */
+  --ui-conversation-composer-menu-scrollbar-size: var(--md-sys-scrollbar-size);
+  --ui-conversation-composer-menu-scrollbar-thumb: var(--md-sys-color-neutral-scrollbar-thumb);
+  --ui-conversation-composer-menu-scrollbar-thumb-hover: var(--md-sys-color-neutral-scrollbar-thumb-hover);
   --ui-conversation-composer-menu-item-ink-secondary: var(--md-sys-color-neutral-on-surface-variant);
   --ui-conversation-composer-menu-group-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-conversation-composer-menu-group-font: 0.68rem;
@@ -356,6 +363,48 @@
     display: flex;
     flex-direction: column;
     gap: var(--ui-conversation-composer-menu-gap);
+  }
+
+  /* GH #1218 — thin, auto-hiding scrollbar on BOTH top-layer popover panels (token block, above):
+     transparent at rest, thumb revealed only on hover/focus-within — the #874 fleet idiom, verbatim
+     from menu.css/select.css/multi-select.css. One shared block: the panels share every other menu
+     token already (one panel look in this control, not a second vocabulary). */
+  [data-part='reference-menu'],
+  [data-part='capabilities-panel'] {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  [data-part='reference-menu']:hover,
+  [data-part='reference-menu']:focus-within,
+  [data-part='capabilities-panel']:hover,
+  [data-part='capabilities-panel']:focus-within {
+    scrollbar-color: var(--ui-conversation-composer-menu-scrollbar-thumb) transparent;
+  }
+  [data-part='reference-menu']::-webkit-scrollbar,
+  [data-part='capabilities-panel']::-webkit-scrollbar {
+    width: var(--ui-conversation-composer-menu-scrollbar-size); /* physical, not logical — the non-standard pseudo (menu.css's note) */
+    height: var(--ui-conversation-composer-menu-scrollbar-size);
+  }
+  [data-part='reference-menu']::-webkit-scrollbar-track,
+  [data-part='capabilities-panel']::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  [data-part='reference-menu']::-webkit-scrollbar-thumb,
+  [data-part='capabilities-panel']::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: calc(var(--ui-conversation-composer-menu-scrollbar-size) / 2);
+  }
+  [data-part='reference-menu']:hover::-webkit-scrollbar-thumb,
+  [data-part='reference-menu']:focus-within::-webkit-scrollbar-thumb,
+  [data-part='capabilities-panel']:hover::-webkit-scrollbar-thumb,
+  [data-part='capabilities-panel']:focus-within::-webkit-scrollbar-thumb {
+    background: var(--ui-conversation-composer-menu-scrollbar-thumb);
+  }
+  [data-part='reference-menu']:hover::-webkit-scrollbar-thumb:hover,
+  [data-part='reference-menu']:focus-within::-webkit-scrollbar-thumb:hover,
+  [data-part='capabilities-panel']:hover::-webkit-scrollbar-thumb:hover,
+  [data-part='capabilities-panel']:focus-within::-webkit-scrollbar-thumb:hover {
+    background: var(--ui-conversation-composer-menu-scrollbar-thumb-hover);
   }
   [data-part='capability-group'] {
     display: flex;
