@@ -215,6 +215,14 @@
       "children": "ChildList"
     },
 
+    "Toast": {
+      "properties": {
+        "label": { "type": { "type": "string" }, "mapsTo": "textContent" },
+        "urgent": { "type": { "type": "boolean" }, "mapsTo": "urgent" },
+        "duration": { "type": { "type": "number" }, "mapsTo": "duration" }
+      }
+    },
+
     "Icon": {
       "properties": {
         "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "glyph" },

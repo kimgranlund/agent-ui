@@ -4,7 +4,7 @@ import { allSeeds } from '@agent-ui/a2ui/examples'
 
 // a2ui-catalog-tiers.test.ts — the completeness gate for the A2UI Catalog page's tier taxonomy (GH #970).
 // TIER_OF is a hand-maintained table (no wire-level "tier" field exists to derive it from); THIS file is
-// what actually enforces the ticket's "every one of the 54 entries has exactly one tier home" acceptance
+// what actually enforces the ticket's "every one of the 55 entries has exactly one tier home" acceptance
 // bullet, plus the DERIVED half (seedsUsingType/seedGalleryHref) that must never hand-list a link.
 
 describe('a2ui-catalog-tiers — every browsable catalog type has exactly one tier home', () => {

@@ -4,9 +4,9 @@
 # prose below the fence is the /site doc. The `attributes[]` block MUST mirror toast.ts `static props`
 # (urgent/duration/action) — the contract↔props trip-wire (toast-descriptor.test.ts) and the
 # frontmatter schema (validateComponentDescriptor) both target this fence. Field set per
-# .claude/docs/plan.md §10 / ADR-0004. NOT catalogued — ADR-0112 cl.6's first reasoned EXCLUSION_ALLOWLIST
-# entry (a toast is app-surface chrome, never agent-emittable content); see "App-surface consumption
-# story" below.
+# .claude/docs/plan.md §10 / ADR-0004. Catalogued since GH #1184 (Kim ruling 2026-08-17, reversing the
+# Toast half of ADR-0112 cl.6's EXCLUSION_ALLOWLIST entry): ephemeral outcome/status announcements are
+# agent-emittable Toasts; ui-toast-region stays excluded. See "Consumption story" below.
 tag: ui-toast
 description: A self-expiring, non-interrupting notification card shown in the platform's top layer via ui-toast-region.
 tier: pattern            # geometry size-class — a fixed-width notification card (Container/surface geometry), NOT a control height
@@ -80,9 +80,9 @@ forcedColors: A forced-colors block keeps the card bordered in CanvasText once t
 
 `ui-toast` is the fleet's **first transient notification surface** — a self-expiring, non-interrupting
 announcement card, region-hosted in the platform top layer via its sibling `ui-toast-region`. It
-extends `UIElement` and is **not** form-associated. `ui-toast` is **deliberately not catalogued**
-(ADR-0112 cl.6, the ADR-0087 `EXCLUSION_ALLOWLIST`'s first reasoned entry) — see "App-surface
-consumption story" below.
+extends `UIElement` and is **not** form-associated. Since GH #1184 (Kim ruling 2026-08-17) `ui-toast`
+**is catalogued** as the default catalog's `Toast` row — reversing the Toast half of ADR-0112 cl.6's
+`EXCLUSION_ALLOWLIST` entry; `ui-toast-region` stays excluded — see "Consumption story" below.
 
 ```html
 <ui-toast-region>
@@ -95,14 +95,19 @@ Direct markup like the above works, but the sanctioned entry point is `ui-toast-
 `toast-region.md`) — it handles the announcement-correct ordering (message text set BEFORE append) a
 hand-authored `<ui-toast>` must replicate by hand.
 
-## App-surface consumption story
+## Consumption story
 
-A toast is **app-surface chrome, not agent-emittable content** (ADR-0112 cl.6): a self-expiring message
-inside an append-only feed would break the history-must-not-lie doctrine, and an agent-raised toast
-would mutate page chrome outside the payload↔DOM traceability the A2UI renderer's charter guarantees.
-`ui-toast`/`ui-toast-region` are consequently **not** in the default catalog — they are page/app-frame
-primitives, mounted and driven imperatively (`region.show({ message, action })`), never something a
-model emits directly.
+Two sanctioned paths since GH #1184 (Kim ruling 2026-08-17):
+
+- **App-surface (imperative, region-hosted)** — the original ADR-0112 cl.6 story: page/app-frame code
+  mounts a `ui-toast-region` and drives it via `region.show({ message, action })`. `ui-toast-region`
+  remains a PERMANENT catalog exclusion — the top-layer host and its imperative API are app chrome.
+- **Agent-emitted (declarative, catalogued)** — the default catalog's `Toast` row maps `label` →
+  message text (adopted at connect, non-bindable), plus `urgent`/`duration`. An agent-emitted toast is
+  an EPHEMERAL outcome/status announcement ("Dealer wins", a sent-confirmation) rendered **inline**
+  where the payload places it — never region-hosted — and it self-removes from the DOM on close/expiry
+  (the transient contract is the point; persistent inline status stays a Badge). The `action` prop is a
+  curated catalog omission — an actionable affordance in a payload is a Button with a real `action`.
 
 ## Props
 

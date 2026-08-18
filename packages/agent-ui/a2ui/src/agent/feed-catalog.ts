@@ -106,6 +106,11 @@ export interface FeedExclusion {
  */
 export const FEED_EXCLUDED: readonly FeedExclusion[] = [
   {
+    type: 'Toast',
+    reason:
+      'a self-expiring announcement that removes itself from the DOM (GH #1184) — an ask must stay fully visible and operable until answered; ephemeral outcome content belongs on the main surface, never inside an ask card.',
+  },
+  {
     type: 'Modal',
     reason: 'a focus-stealing overlay inside a chat bubble — the ask IS the interruption; nesting one defeats the point.',
   },

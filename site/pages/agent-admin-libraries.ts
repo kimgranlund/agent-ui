@@ -147,7 +147,9 @@ export const CORE_PLAYBOOKS: readonly NewEntryInput[] = [
     content:
       'One surface, updated in place: each user action drives ONE updateDataModel turn (never a fresh ' +
       'surface per round). Keep score/state in the data model; disable action Buttons that are invalid in ' +
-      'the current state rather than removing them.',
+      'the current state rather than removing them. Announce a round’s RESULT ("Dealer wins") as a ' +
+      'Toast — an ephemeral, self-expiring announcement — never a Badge; Badge is for persistent inline ' +
+      'status the player should still see next round (score, deal state).',
   },
   {
     label: 'drilldown',
@@ -282,7 +284,8 @@ export const GAMES_PLAYBOOKS: readonly NewEntryInput[] = [
       'Two 6×6 board-grid surfaces, phased in: turn one is theirs (hidden) ONLY — the player fires by ' +
       'clicking a cell (the action context carries coordinates); resolve, mark the cell, then take YOUR ' +
       'shot and narrate it in chat. Add yours (revealed) as a second board from turn two onward. Track ' +
-      'ships remaining as Stats; declare victory honestly the moment a fleet is sunk.',
+      'ships remaining as Stats; announce a round’s outcome (a ship sunk, a miss streak broken) as an ' +
+      'ephemeral Toast, and declare victory honestly the moment a fleet is sunk.',
   },
 ]
 
