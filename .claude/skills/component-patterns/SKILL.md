@@ -40,7 +40,8 @@ ADR-worthy fork, not a local choice.
 | Reordering children without losing focus | `ChildPart.moveBefore` | ADR-0022 |
 | Imperative composition into a template-rendered tree | `mount()` directive-host seam | ADR-0023 |
 | A swappable asset/provider family (icon packs) | pure core + subpath adapters | ADR-0065/0066 |
-| A component that must NEVER be agent-emittable | `EXCLUSION_ALLOWLIST` | ADR-0112 cl.6 |
+| A component that must NEVER be agent-emittable | `EXCLUSION_ALLOWLIST` (ToastRegion the permanent exemplar) | ADR-0112 cl.6 |
+| A ruled catalog exclusion reversed by an owner ruling | allowlist-drain-by-amendment (Toast entered the catalog; ToastRegion stands) | ADR-0112 Amendment (GH #1184) |
 | Nesting a shipped control that moves light-DOM children at connect | ordering constraint — compose around the move | ADR-0017 + ADR-0048 |
 | A grid whose columns populate conditionally by props | explicit `grid-column` on every fixed-role part | TKT-0014 |
 | Ambient theming context over a subtree | `ui-theme-provider` | ADR-0117 |
@@ -52,12 +53,16 @@ ADR-worthy fork, not a local choice.
 | Cross-DOM morphs on an opted-in View Transitions surface | opt-in named-morph convention, `ui-vt-{surface}-{token}` | ADR-0183 Amendment (GH #958) |
 | Async-stale content dimmed while a new answer is in flight | `:state(pending)` + `--ui-pending-*`, composes under settled | ADR-0191 |
 | A settled choice must read answered-not-disabled, correction via Edit | `:state(answered)` + `--ui-answered-*` aliases; `disabled > pending > answered > focus > hover > filled > default`; append-amendment template | ADR-0196 |
+| A live surface mid-mutation must read alive, not stale | `:state(working)` + `--ui-working-*` quartet; breathe, never dim; reduced-motion = static-never-nothing; `disabled > pending > working > answered` | ADR-0199 |
 | General-purpose functionality outside components' layers | mint a zero-dep sibling package off `components` | ADR-0115/0119/0192 |
+| Which geometry a package mint takes | sibling-off-components vs top-tier-above-catalog peer-of-app | ADR-0200 (contrast ADR-0115/0119/0192) |
+| Site glue needing types from two non-importing packages | `site/lib/` cross-package glue module — never a DAG-widening edge | ADR-0203 cl.3 (precedent ADR-0198) |
 | A layer below `app` needs to persist something | `StorageAdapter` seam in `@agent-ui/shared`, localStorage + IndexedDB tiers; sync reads = tier-scoped `SyncReadableStorageAdapter` via narrowing factory | ADR-0193 (+ Amendment) |
 | An N-level show-one-hide-rest container whose position is an array (drill/stack path) | show-one-hide-rest + controlled-array-prop-duality — never-empty path, append-only forward, defined repair | ADR-0195 |
 | [incident] A content-sized flex item collapses to a fixed-floor child's min-width | `align-self: stretch; max-inline-size: none`, never re-tune the cap | ADR-0160 Amendment (GH #1032) |
 | A load-on-demand stopgap before a real model-side tool-call loop | exact-match auto-attach via the existing reference path, one per turn, no fuzzy | ADR-0190 Amendment (GH #1030) |
 | A public barrel's static re-export drags a heavy arm into every entry chunk | barrel-lazy-split: subpaths + memoized `loadX()` accessor, bundle-shape gated | ADR-0197 |
+| A capability seems to need a third-party runtime dependency | the ruled exception test: category / inert-data / wire-shortcut / Kim's call alone; clause-8 gate set | ADR-0139 + ADR-0202 |
 
 ## How to use a row
 
