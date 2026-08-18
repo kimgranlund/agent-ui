@@ -2924,12 +2924,16 @@ export class UIAgentAdminElement extends UIElement {
         // element's own copy rather than a library's internal error text.
         let message = `Can't attach "${file.name}".`
         if (error instanceof DocumentExtractionError) {
-          message =
-            error.reason === 'too-large'
-              ? `Can't attach "${file.name}" — it's over the ${formatFileSize(MAX_RAW_FILE_BYTES)} per-file limit.`
-              : error.reason === 'no-text-layer'
-                ? `Can't attach "${file.name}" — no extractable text (an image-only PDF; text recognition isn't supported).`
-                : `Can't attach "${file.name}" — unsupported file type.`
+          // A four-way map, not a ternary — #1215's `'no-text-layer'` (an image-only PDF) and #1214's
+          // `'corrupt-document'` (a claimed-but-unreadable file, e.g. a malformed .docx) are each their
+          // own distinct reason, never lumped in with "no extractor claimed this file" (`'unsupported-type'`).
+          const reasonMessages: Record<DocumentExtractionError['reason'], string> = {
+            'too-large': `Can't attach "${file.name}" — it's over the ${formatFileSize(MAX_RAW_FILE_BYTES)} per-file limit.`,
+            'unsupported-type': `Can't attach "${file.name}" — unsupported file type.`,
+            'no-text-layer': `Can't attach "${file.name}" — no extractable text (an image-only PDF; text recognition isn't supported).`,
+            'corrupt-document': `Can't attach "${file.name}" — the file couldn't be read (corrupt or not a real .docx).`,
+          }
+          message = reasonMessages[error.reason]
         }
         this.#showToast(message)
         this.#attachedContextItems = this.#attachedContextItems.filter((item) => item.id !== pendingId)

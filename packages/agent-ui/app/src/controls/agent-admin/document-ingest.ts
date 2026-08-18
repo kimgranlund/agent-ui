@@ -26,6 +26,12 @@ export type { ExtractedDocument, ExtractedDocumentMeta, DocumentExtractionErrorR
 export { MAX_AGENT_KNOWLEDGE_CHARS, MAX_RAW_FILE_BYTES, MAX_DOCUMENT_CHARS, truncateToBudget } from '../../lib/document-budget.ts'
 export type { TruncationResult } from '../../lib/document-budget.ts'
 
+// GH #1214 — registration-only: importing this module runs its own `registerDocumentExtractor(docxExtractor)`
+// call (the `textExtractor` precedent, `document-extraction.ts`'s own header comment). This file is the
+// admin surface's ONE seam adapter, so this import guarantees the docx extractor is registered before this
+// surface's first `extractDocumentText` call — nothing else in this file changes.
+import '../../lib/document-extraction-docx.ts'
+
 import { MAX_AGENT_KNOWLEDGE_CHARS } from '../../lib/document-budget.ts'
 
 /**
