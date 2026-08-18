@@ -665,6 +665,8 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     expect(result.status).toBe(1)
     expect(result.stderr).toMatch(/HALTED/)
     expect(result.stderr).toContain('stats-grid-dashboard')
-    expect(result.stderr, 'with no archive planted, the fallback is the curated allowlist prose').toContain('strict-subset duplicate')
+    // The curated prose is the 2026-08-18 judged refusal record (stats-grid-dashboard failed D5 in the first
+    // real judged wave; its allowlist entry now carries the VerdictsFile citation + repair path).
+    expect(result.stderr, 'with no archive planted, the fallback is the curated allowlist prose').toContain('judged E_QUALITY 2026-08-18')
   })
 })

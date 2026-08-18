@@ -37,13 +37,9 @@
 export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   [
     'stats-grid-dashboard',
-    'judged E_QUALITY 2026-07-11 (VerdictsFile, rubric a2ui-corpus 1.0, D5=3 — strict-subset duplicate ' +
-      'of the admitted pattern-dashboard-tiles, container-swap-only: same Card>CardContent>Column ' +
-      'anatomy, same relative binds, same "${value}${unit}" interpolation, only Row swapped for Grid). ' +
-      'Grid coverage survives via kpi-panel-lifecycle (PASS). Repair path (not this wave, tkt-0022 ' +
-      'Findings): differentiate the tile beyond the subset, or teach a Grid-specific behavior Row ' +
-      'cannot express — then re-admit via the judged pipeline (a fresh import, not `--replace`, since ' +
-      'this record was never written).',
+    'judged E_QUALITY 2026-08-18 (VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18--verdicts-2026-08-18.json, rubric a2ui-corpus 1.1, a2ui-review-agent (independent of the authoring session per ADR-0068)). Failing: D5. ' +
+      'nothing new taught: the tile template is pattern-dashboard-tiles verbatim minus the delta line (wrapper Row to Grid); Grid-template-of-Cards is already admitted (comparison-pricing-table, media-file-grid). Repair: drop from the shelf, or re-author to teach a genuinely new composition (delta+sparkline tile pair, a responsive tile-count rule) and re-judge. ' +
+      'KEPT on the shelf pending that repair (a coverage-gate candidate until re-judged; drop the seed instead if the repair is abandoned).',
   ],
   // GH #729 (2026-08-12) — the four CATALOG-FRONTIER seeds: NO VERDICT SOUGHT YET, not a refusal. Added
   // by the example sweep to close the 13-component coverage gap (catalog-frontier.ts's own header); their
@@ -65,39 +61,18 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // (examples.test.ts's GH #729 gate); its corpus admission is a pending judged import wave — the
   // authoring session judging its own seed is the manufactured judgment ADR-0068's Alternatives ban.
   // Run the judged pipeline and DELETE this entry when that wave lands.
-  [
-    'frontier-round-outcome',
-    'GH #1184 (2026-08-17) — no verdict sought yet, not a refusal: shelf seed added alongside the Toast ' +
-      'catalog row (Kim ruling: ephemeral outcome announcements are Toasts) to keep the GH #729 ' +
-      'type-coverage gate green; pending a judged import wave (import-seeds.ts with a real VerdictsFile). ' +
-      'Delete this entry when it is judged.',
-  ],
   //
   // ADR-0201/GH #1185 (2026-08-17) — `frontier-booking-receipt`: the same pending-state shape (NO VERDICT
   // SOUGHT YET, not a refusal). Added with the DescriptionList catalog row to close the type-coverage gap
   // (examples.test.ts's GH #729 gate); its corpus admission is a pending judged import wave — the
   // authoring session judging its own seed is the manufactured judgment ADR-0068's Alternatives ban.
   // Run the judged pipeline and DELETE this entry when that wave lands.
-  [
-    'frontier-booking-receipt',
-    'ADR-0201/GH #1185 (2026-08-17) — no verdict sought yet, not a refusal: shelf seed added alongside ' +
-      'the DescriptionList catalog row (the key–value receipt primitive) to keep the GH #729 ' +
-      'type-coverage gate green; pending a judged import wave (import-seeds.ts with a real VerdictsFile). ' +
-      'Delete this entry when it is judged.',
-  ],
   //
   // GH #1189 (2026-08-17) — `frontier-image-hero-card`: the same pending-state shape (NO VERDICT SOUGHT
   // YET, not a refusal). Added with the Image catalog row to close the type-coverage gap
   // (examples.test.ts's GH #729 gate); its corpus admission is a pending judged import wave — the
   // authoring session judging its own seed is the manufactured judgment ADR-0068's Alternatives ban.
   // Run the judged pipeline and DELETE this entry when that wave lands.
-  [
-    'frontier-image-hero-card',
-    'GH #1189 (2026-08-17) — no verdict sought yet, not a refusal: shelf seed added alongside the Image ' +
-      'catalog row (the URL-sourced content-image primitive, zero-CLS hero usage) to keep the GH #729 ' +
-      'type-coverage gate green; pending a judged import wave (import-seeds.ts with a real VerdictsFile). ' +
-      'Delete this entry when it is judged.',
-  ],
   //
   // GH #1199 (2026-08-17) — `frontier-card-anatomy-ask`: the same pending-state shape (NO VERDICT SOUGHT
   // YET, not a refusal). Added alongside the grammar.md card-anatomy clause (req-a2ui-patterns.md R1) as
@@ -105,10 +80,9 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // ADR-0068's Alternatives ban. Run the judged pipeline and DELETE this entry when that wave lands.
   [
     'frontier-card-anatomy-ask',
-    'GH #1199 (2026-08-17) — no verdict sought yet, not a refusal: shelf seed added alongside the ' +
-      'grammar.md card-anatomy clause (req-a2ui-patterns.md R1) as its worked three-slot ask-card ' +
-      'exemplar; pending a judged import wave (import-seeds.ts with a real VerdictsFile). Delete this ' +
-      'entry when it is judged.',
+    'judged E_QUALITY 2026-08-18 (VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18--verdicts-2026-08-18.json, rubric a2ui-corpus 1.1, a2ui-review-agent (independent of the authoring session per ADR-0068)). Failing: D2. ' +
+      'promptText is the AGENT ask (Which room would you like? Standard or Deluxe King?), not a user-voiced request like every shard promptText; the payload itself is the clean R1 shape. Repair: reword promptText user-voiced (I need to pick a room type for my stay) and re-judge; borderline, expected to admit. ' +
+      'KEPT on the shelf pending that repair (a coverage-gate candidate until re-judged; drop the seed instead if the repair is abandoned).',
   ],
   //
   // GH #1192 (2026-08-18) — `backable-wizard`: the same pending-state shape (NO VERDICT SOUGHT YET, not
@@ -118,10 +92,9 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // this entry when that wave lands.
   [
     'backable-wizard',
-    'GH #1192 (2026-08-18) — no verdict sought yet, not a refusal: shelf seed added alongside the ' +
-      'grammar.md backable-multi-step clause (req-a2ui-patterns.md R2, ADR-0198 amendment B1) as its ' +
-      'worked 3-step dates→room→confirm exemplar; pending a judged import wave (import-seeds.ts with a ' +
-      'real VerdictsFile). Delete this entry when it is judged.',
+    'judged E_QUALITY 2026-08-18 (VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18--verdicts-2026-08-18.json, rubric a2ui-corpus 1.1, a2ui-review-agent (independent of the authoring session per ADR-0068)). Failing: D1. ' +
+      'P7=3: the range Calendar has no Field/label and the RadioGroup no group name (admitted booking-reservation Field-wraps both); redundant Card>shell>scene one-child wrapper with no CardContent (P4=4); RadioGroup shipped unbound then re-sent bound (P5=4). Repair: Field-wrap the Calendar and name the RadioGroup, collapse the shell wrapper into CardContent, ship the RadioGroup bound from turn 1; re-judge. ' +
+      'KEPT on the shelf pending that repair (a coverage-gate candidate until re-judged; drop the seed instead if the repair is abandoned).',
   ],
   //
   // GH #1201 (2026-08-17) — `frontier-greet-card`: the same pending-state shape (NO VERDICT SOUGHT YET,
@@ -129,13 +102,6 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // sentence (req-a2ui-patterns.md R3) as its worked greet-bookend exemplar — the authoring session
   // judging its own seed is the manufactured judgment ADR-0068's Alternatives ban. Run the judged
   // pipeline and DELETE this entry when that wave lands.
-  [
-    'frontier-greet-card',
-    'GH #1201 (2026-08-17) — no verdict sought yet, not a refusal: shelf seed added alongside the ' +
-      'greeting-card mini-skill + the grammar.md reserved greet-1 sentence (req-a2ui-patterns.md R3) as ' +
-      'its worked greet-bookend exemplar; pending a judged import wave (import-seeds.ts with a real ' +
-      'VerdictsFile). Delete this entry when it is judged.',
-  ],
   //
   // GH #1205 (2026-08-17) — the four COMPOSITION PACK A seeds (`slideshow-gallery` ·
   // `confirmation-view` · `trend-list` · `card-layouts`): the same pending-state shape (NO VERDICT
@@ -143,30 +109,6 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // session judging its own seeds is the manufactured judgment ADR-0068's Alternatives ban. Run the
   // judged pipeline (import-seeds.ts with a real VerdictsFile) and DELETE these entries when that wave
   // lands.
-  [
-    'slideshow-gallery',
-    'GH #1205 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-A shelf seed ' +
-      '(req-a2ui-library R4 slideshow row — Swiper > SwiperItem > Image with scrim captions); pending ' +
-      'a judged import wave. Delete this entry when it is judged.',
-  ],
-  [
-    'confirmation-view',
-    'GH #1205 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-A shelf seed ' +
-      '(req-a2ui-library R4 confirmation row — the three-slot Card + DescriptionList receipt + footer ' +
-      'Button pair composition); pending a judged import wave. Delete this entry when it is judged.',
-  ],
-  [
-    'trend-list',
-    'GH #1205 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-A shelf seed ' +
-      '(req-a2ui-library R4 trend-list row — List > Row{Text · Sparkline · Stat delta}, templated); ' +
-      'pending a judged import wave. Delete this entry when it is judged.',
-  ],
-  [
-    'card-layouts',
-    'GH #1205 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-A shelf seed ' +
-      '(req-a2ui-library R4 card-layouts row — card bodies as list/columns/grid arrangements); pending ' +
-      'a judged import wave. Delete this entry when it is judged.',
-  ],
   //
   // GH #1206 (2026-08-17) — the four COMPOSITION PACK B seeds (`five-day-weather` · `restaurant-menu` ·
   // `travel-itinerary` · `wizard-step-progress`): the same pending-state shape (NO VERDICT SOUGHT YET,
@@ -174,32 +116,10 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // judging its own seeds is the manufactured judgment ADR-0068's Alternatives ban. Run the judged
   // pipeline (import-seeds.ts with a real VerdictsFile) and DELETE these entries when that wave lands.
   [
-    'five-day-weather',
-    'GH #1206 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-B shelf seed ' +
-      '(req-a2ui-library R4 5-day-weather row — Card > Row of 5 day Columns; condition as Text in v1, ' +
-      'the icon pack ships no weather glyphs — the issue\'s audited gap); pending a judged import wave. ' +
-      'Delete this entry when it is judged.',
-  ],
-  [
-    'restaurant-menu',
-    'GH #1206 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-B shelf seed ' +
-      '(req-a2ui-library R4 menu row — sectioned Column, templated name/desc/price rows, Disclosure ' +
-      'tail, humanized right-aligned prices); pending a judged import wave. Delete this entry when it ' +
-      'is judged.',
-  ],
-  [
-    'travel-itinerary',
-    'GH #1206 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-B shelf seed ' +
-      '(req-a2ui-library R4 itinerary row — Timeline spine + typed-Badge detail Card; TimelineItem is ' +
-      'a catalog leaf, so the detail card sits beside the spine); pending a judged import wave. Delete ' +
-      'this entry when it is judged.',
-  ],
-  [
     'wizard-step-progress',
-    'GH #1206 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-B shelf seed ' +
-      '(req-a2ui-library R4 wizard row — the Ladder/Progress PRESENTATION anatomy of one step, distinct ' +
-      'from the backable-wizard flow-protocol seed); pending a judged import wave. Delete this entry ' +
-      'when it is judged.',
+    'judged E_QUALITY 2026-08-18 (VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18--verdicts-2026-08-18.json, rubric a2ui-corpus 1.1, a2ui-review-agent (independent of the authoring session per ADR-0068)). Failing: D1. ' +
+      'P7=3: the RadioGroup has no Field/label wrap (the catalog RadioGroup carries no own label; rental-filter-panel wraps it in Field), h4 adjacent but unassociated, no name; P6=4: the Progress label (Setup, step 2 of 3) is static while value/max are bound. Repair: wrap plans in Field label Plan (+name), template or de-number the Progress label; re-judge. ' +
+      'KEPT on the shelf pending that repair (a coverage-gate candidate until re-judged; drop the seed instead if the repair is abandoned).',
   ],
   //
   // ADR-0205/GH #1207 (2026-08-18) — `frontier-latency-line-chart`: the same pending-state shape (NO
@@ -207,21 +127,8 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // axis-bearing chart) to close the GH #729 type-coverage gate; its corpus admission is a pending judged
   // import wave — the authoring session judging its own seed is the manufactured judgment ADR-0068's
   // Alternatives ban. Run the judged pipeline and DELETE this entry when that wave lands.
-  [
-    'frontier-latency-line-chart',
-    'ADR-0205/GH #1207 (2026-08-18) — no verdict sought yet, not a refusal: shelf seed added alongside ' +
-      'the LineChart catalog row (the fleet\'s first axis-bearing chart) to keep the GH #729 ' +
-      'type-coverage gate green; pending a judged import wave (import-seeds.ts with a real VerdictsFile). ' +
-      'Delete this entry when it is judged.',
-  ],
   //
   // GH #1209 (2026-08-18) — `frontier-media-tour`: the same pending-state shape. Added with the
   // Video/AudioPlayer catalog rows (the native media players) to keep the GH #729 type-coverage gate
   // green; pending the same judged import wave. Delete this entry when it is judged.
-  [
-    'frontier-media-tour',
-    'GH #1209 (2026-08-18) — no verdict sought yet, not a refusal: shelf seed added alongside the ' +
-      'Video/AudioPlayer catalog rows (native media players) to keep the GH #729 type-coverage gate ' +
-      'green; pending a judged import wave. Delete this entry when it is judged.',
-  ],
 ])
