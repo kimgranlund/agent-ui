@@ -37,4 +37,14 @@ describe('the Phosphor subpath self-registers + activates on import (LLD-C4)', (
     expect(svg.getAttribute('viewBox')).toBe('0 0 256 256')
     expect(svg.children.length).toBeGreaterThan(0)
   })
+
+  it('GH #1258 — every weather glyph is registered and resolves to a real (non-missing) svg', () => {
+    const WEATHER = ['sun', 'cloud', 'cloud-sun', 'cloud-rain', 'snowflake', 'lightning', 'wind', 'cloud-fog'] as const
+    for (const name of WEATHER) {
+      expect(ICON_NAMES, `${name} missing from ICON_NAMES`).toContain(name)
+      const svg = resolveIcon(name, iconRegistry)
+      expect(svg.getAttribute('data-icon-missing'), `${name} resolved as missing`).toBeNull()
+      expect(svg.children.length, `${name} resolved to an empty svg`).toBeGreaterThan(0)
+    }
+  })
 })

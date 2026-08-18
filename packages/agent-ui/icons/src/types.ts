@@ -38,6 +38,11 @@ export const ICON_NAMES = [
   // power/speed, not "pick a model") and `brain` (effort trigger, replacing the borrowed `fast-forward` —
   // a literal reasoning-effort glyph, no runner-up needed).
   'sparkle', 'brain',
+  // GH #1258 — the weather glyph set (sun · cloud · cloud-sun · cloud-rain · snowflake · lightning ·
+  // wind · cloud-fog; identity with Phosphor's own regular-weight names, no renames). Minted so the
+  // five-day-weather seed (composition-pack-b.ts) can swap its bound condition Text for an Icon —
+  // an unknown name renders a blank `<svg data-icon-missing>` (resolve.ts), dead pixels, not a fallback.
+  'sun', 'cloud', 'cloud-sun', 'cloud-rain', 'snowflake', 'lightning', 'wind', 'cloud-fog',
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 
