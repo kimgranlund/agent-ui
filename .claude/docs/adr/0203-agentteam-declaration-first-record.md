@@ -217,3 +217,26 @@ criteria verbatim.
   as a property scattered across N agent records loses the team's own identity and makes "list all
   teams" an expensive scan instead of a direct read; `req-agent-teams.md` R1 already specs
   `AgentTeam` as its own record for exactly this reason.
+
+## Amendment (2026-08-18, **proposed** — Kim ratifies) — optional per-member `instructions` (GH [#1277](https://github.com/kimgranlund/agent-ui/issues/1277), Kim's same-day ask)
+
+Kim (2026-08-18, during the #1277 catalog-picking build): each team member also carries an
+OPTIONAL free-text instruction — the GM-facing guidance for how/when to use that member, beyond
+the one-sentence `routingDescription` ("only for on-prem dining questions", "always confirm dates
+before consulting"). Clause 1's member shape widens ADDITIVELY:
+
+`AgentTeamMember { agentId, role, routingDescription, instructions?: string }`
+
+- **Optional, non-empty-if-present** — the validator accepts an absent field verbatim and rejects
+  an empty/whitespace string (never a silent empty member note); every existing persisted record
+  parses unchanged.
+- **Consumed by `composeTeamPromptSection` only** — rendered under the member's roster line when
+  present; absent ⇒ the pre-amendment byte-identical section. No other consumer widens (the
+  AgentCard mapper deliberately does NOT carry it — an instruction is GM-internal guidance, not a
+  discovery-surface fact).
+- **Pane**: one optional textarea per member row (the #1277 build realizes it).
+
+**Repairs**
+- [ ] GH #1277's build carries the record + validator + pane + compose rendering in the same
+  wave this amendment ships proposed (the ADR-0201 built-before-flip precedent; the flip makes
+  the record durable, the code is gated by its own tests either way).
