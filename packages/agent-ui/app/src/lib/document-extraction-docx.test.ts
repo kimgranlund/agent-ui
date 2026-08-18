@@ -8,7 +8,6 @@
 
 import { describe, it, expect, afterEach } from 'vitest'
 import {
-  DocumentExtractionError,
   __testResetRegistry,
   extractDocumentText,
   registerDocumentExtractor,

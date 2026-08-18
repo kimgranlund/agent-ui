@@ -145,7 +145,11 @@ async function inflate(entry: DocumentXmlEntry, slice: Uint8Array): Promise<Uint
         controller.close()
       },
     })
-    const decompressed = source.pipeThrough(new DecompressionStream('deflate-raw'))
+    // The DOM lib's `DecompressionStream.writable` is typed `WritableStream<BufferSource>` — structurally
+    // wider than the `WritableStream<Uint8Array>` `pipeThrough` wants, so TS rejects the otherwise-valid
+    // pairing. Cast through `ReadableWritablePair` (a real spec type, not `any`) rather than widen anything
+    // load-bearing.
+    const decompressed = source.pipeThrough(new DecompressionStream('deflate-raw') as unknown as ReadableWritablePair<Uint8Array, Uint8Array>)
     return new Uint8Array(await new Response(decompressed).arrayBuffer())
   } catch {
     throw corrupt('Failed to inflate the document.xml entry (corrupt DEFLATE stream).')

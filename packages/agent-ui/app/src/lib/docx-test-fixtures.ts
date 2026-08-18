@@ -82,7 +82,7 @@ class ByteWriter {
     return this.bytes(b)
   }
 
-  build(): Uint8Array {
+  build(): Uint8Array<ArrayBuffer> {
     const out = new Uint8Array(this.#length)
     let offset = 0
     for (const chunk of this.#chunks) {
@@ -104,8 +104,11 @@ function singleChunkStream(bytes: Uint8Array): ReadableStream<Uint8Array> {
   })
 }
 
-async function deflateRawCompress(bytes: Uint8Array): Promise<Uint8Array> {
-  const compressed = singleChunkStream(bytes).pipeThrough(new CompressionStream('deflate-raw'))
+async function deflateRawCompress(bytes: Uint8Array): Promise<Uint8Array<ArrayBuffer>> {
+  // The DOM lib's `CompressionStream.writable` is typed `WritableStream<BufferSource>` — structurally
+  // wider than the `WritableStream<Uint8Array>` `pipeThrough` wants, so TS rejects the otherwise-valid
+  // pairing (the same cast `document-extraction-docx.ts` uses on the READ side).
+  const compressed = singleChunkStream(bytes).pipeThrough(new CompressionStream('deflate-raw') as unknown as ReadableWritablePair<Uint8Array, Uint8Array>)
   return new Uint8Array(await new Response(compressed).arrayBuffer())
 }
 
@@ -148,7 +151,7 @@ export interface BuildZipOptions {
 /** Build a zip archive from `entries`, mirroring `site/lib/zip-writer.ts`'s STORE writer field-for-field
  *  plus the malformation knobs above. Always returns bytes, even when a knob makes them malformed on
  *  purpose. */
-export async function buildZip(entries: readonly FixtureEntry[], options: BuildZipOptions = {}): Promise<Uint8Array> {
+export async function buildZip(entries: readonly FixtureEntry[], options: BuildZipOptions = {}): Promise<Uint8Array<ArrayBuffer>> {
   const encoder = new TextEncoder()
   const now = new Date()
   const time = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1)
@@ -302,7 +305,7 @@ export interface BuildDocxOptions extends BuildZipOptions {
 
 /** Build a REAL minimal docx archive (LLD §6): `[Content_Types].xml`, `_rels/.rels`, `word/document.xml` —
  *  a valid, Word-openable document by default, with every malformation knob threaded through. */
-export async function buildDocxZip(options: BuildDocxOptions = {}): Promise<Uint8Array> {
+export async function buildDocxZip(options: BuildDocxOptions = {}): Promise<Uint8Array<ArrayBuffer>> {
   const entries: FixtureEntry[] = [...(options.leadingEntries ?? [])]
   entries.push({ path: CONTENT_TYPES_PATH, data: MINIMAL_CONTENT_TYPES_XML })
   entries.push({ path: RELS_PATH, data: MINIMAL_RELS_XML })
