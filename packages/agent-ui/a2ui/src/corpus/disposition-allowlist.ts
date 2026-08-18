@@ -154,4 +154,38 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
       '(req-a2ui-library R4 card-layouts row — card bodies as list/columns/grid arrangements); pending ' +
       'a judged import wave. Delete this entry when it is judged.',
   ],
+  //
+  // GH #1206 (2026-08-17) — the four COMPOSITION PACK B seeds (`five-day-weather` · `restaurant-menu` ·
+  // `travel-itinerary` · `wizard-step-progress`): the same pending-state shape (NO VERDICT SOUGHT YET,
+  // not a refusal). Added as the req-a2ui-library R4 next-tier pattern seeds — the authoring session
+  // judging its own seeds is the manufactured judgment ADR-0068's Alternatives ban. Run the judged
+  // pipeline (import-seeds.ts with a real VerdictsFile) and DELETE these entries when that wave lands.
+  [
+    'five-day-weather',
+    'GH #1206 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-B shelf seed ' +
+      '(req-a2ui-library R4 5-day-weather row — Card > Row of 5 day Columns; condition as Text in v1, ' +
+      'the icon pack ships no weather glyphs — the issue\'s audited gap); pending a judged import wave. ' +
+      'Delete this entry when it is judged.',
+  ],
+  [
+    'restaurant-menu',
+    'GH #1206 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-B shelf seed ' +
+      '(req-a2ui-library R4 menu row — sectioned Column, templated name/desc/price rows, Disclosure ' +
+      'tail, humanized right-aligned prices); pending a judged import wave. Delete this entry when it ' +
+      'is judged.',
+  ],
+  [
+    'travel-itinerary',
+    'GH #1206 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-B shelf seed ' +
+      '(req-a2ui-library R4 itinerary row — Timeline spine + typed-Badge detail Card; TimelineItem is ' +
+      'a catalog leaf, so the detail card sits beside the spine); pending a judged import wave. Delete ' +
+      'this entry when it is judged.',
+  ],
+  [
+    'wizard-step-progress',
+    'GH #1206 (2026-08-17) — no verdict sought yet, not a refusal: composition-pack-B shelf seed ' +
+      '(req-a2ui-library R4 wizard row — the Ladder/Progress PRESENTATION anatomy of one step, distinct ' +
+      'from the backable-wizard flow-protocol seed); pending a judged import wave. Delete this entry ' +
+      'when it is judged.',
+  ],
 ])
