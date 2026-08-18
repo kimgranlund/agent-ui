@@ -1,9 +1,13 @@
 # Mint vs. compose — deciding when an aggregate-valued FACE field earns a new primitive
 
-Decision record: ADR-0175 (the multi-select/association field intake). Read this at fork-sheet
-step 6 (component-design's "decide what the change earns") whenever the candidate value is
-an ARRAY or aggregate, not a scalar — a plain new-control-vs-compose call is already covered by
-step 2's precedent sweep; this reference is for the narrower, recurring aggregate-value question.
+Decision records: ADR-0175 (the multi-select/association field intake — the aggregate-value
+test), ADR-0201 (the composed-pattern-retired-by-a-mint case study), ADR-0107 → ADR-0205 (the
+smallest-floor scoping test for admitting a new category). Read this at fork-sheet step 6
+(component-design's "decide what the change earns") whenever the candidate value is an ARRAY or
+aggregate, not a scalar — a plain new-control-vs-compose call is already covered by step 2's
+precedent sweep; this reference is for the narrower, recurring aggregate-value question — plus
+the two later sections whenever a SHIPPED composition pattern is a mint candidate, or a mint
+opens a whole new category whose scope must be floored.
 
 ## The bar: does the case need ONE bindable aggregate value?
 
@@ -88,3 +92,67 @@ aggregate-value bar, and fence the harder case out as its own future intake expl
 it would still need. A "seen from another angle, not a second hole" framing is true only as a
 necessary-prerequisite claim, never automatically a sufficiency claim — verify which one applies
 before treating the narrower mint as having closed the bigger question too.
+
+## Case study: when a COMPOSED grammar pattern earns a mint after all (ADR-0201)
+
+The sections above run the test in the standard direction — a candidate arrives, and composition
+is the default unless the aggregate-value bar is crossed. ADR-0201 (`ui-description-list`,
+GH #1185) is the worked REVERSE case: a composition pattern that had already shipped (the GH #1174
+confirm-step receipt — a `Column` of per-field `Row`s, each a label `Text` beside a value `Text`)
+was later RETIRED by a minted primitive. Note the aggregate-value branch did NOT apply — a receipt
+carries no form value to round-trip — yet the mint was still right. The deciding fault line was
+**enforcement locus**: the composition's core law ("a field with no value is OMITTED entirely")
+could only be PROMPT-enforced — it held exactly as long as every producer obeyed it, and nothing
+in the render path prevented an empty row. The primitive enforces the same law BY CONSTRUCTION:
+`rows` is a hardened data prop (`cleanDescriptionRows` drops valueless entries before they ever
+exist as property state), making the empty-row defect class unrepresentable, not just prohibited.
+
+ADR-0201 names two supporting signals that recur with it, either of which alone would not have
+justified the mint:
+
+- **Re-derived rhythm.** Every producer re-spelled the same gap/align/variant quartet; drift (a
+  `justify: "between"` wash, a two-column label/value split) was a payload bug the validator
+  could not see. The primitive turns that rhythm into component CSS.
+- **Payload weight + bindability.** ~19 nodes for a 6-field receipt vs. one node with a 6-entry
+  data prop — and a data prop is BINDABLE, so the surface can update the receipt in place.
+
+So when auditing a SHIPPED composition pattern as a mint candidate, ask: *does the pattern carry a
+law that only prompt discipline upholds, which a primitive would enforce structurally?* If yes,
+that is a mint signal of the same weight as the aggregate-value bar — even with no form value in
+sight. The "minting is cheap" check above applied verbatim here too: `UIElement` + one render
+effect + one hardened JSON codec (the existing `ui-table` `rows` shape), no new base class, no new
+event, no geometry row. And per the #1174 supersession, the composition's LAWS survive the retirement
+verbatim, relocated onto the primitive's clause (humanization stays producer-side, sentence-case
+headers, adjacency) — retiring a composition retires its CONSTRUCTION, never its laws.
+
+## The smallest-floor scoping test: how little earns the category name (ADR-0107 → ADR-0205)
+
+A different recurring fork: the mint decision is already made, but the new control opens a whole
+CATEGORY whose scope explodes (charts are the worked domain — ticks, gridlines, legends, label
+collision are where a "small chart" becomes a rendering framework). The test, now run twice:
+
+**Ship the SMALLEST vocabulary that honestly earns the category name; fence everything else out
+as named LATER intakes, each its own future issue — never riders on the build wave.**
+
+Two worked instances, citable as precedent for the next axis-bearing (or otherwise
+scope-explosive) intake:
+
+1. **ADR-0107 (chart family v1)** — the floor for "chart" was set at NO axis at all:
+   `ui-sparkline` + `ui-bar-chart`, both encoding by position/length, hand-rolled under the
+   zero-dep pillar. The fence named its own future: "line-with-axes, multi-series … any
+   axis-bearing type is a new intake." The Consequences even predicted the push ("'just add a
+   y-axis' is the predictable next ask") — the fence, not the family, was the deliverable.
+2. **ADR-0205 (`ui-line-chart` v1)** — the predicted intake arrived, and the same test set the
+   floor one notch up: the smallest axis vocabulary that distinguishes it from `ui-sparkline` is
+   a baseline `<line>` + textual min/max labels, always shown ("an axis-bearing chart with no
+   visible axis values would not earn the 'axis-bearing' name"). Single-series only — the honest
+   part of the test: multi-series without a legend is a silent a11y regression, multi-series WITH
+   a legend re-opens exactly the explosion ADR-0107 fenced; so it deferred "rather than pretending
+   multi-series is free." Ticks, gridlines, legends, tooltips, time axes: all named LATER, same
+   fence style.
+
+The test has two halves and both are load-bearing: the floor must be small (no borrowed scope),
+AND it must genuinely EARN the name — ADR-0205 explicitly rejected shipping "a second sparkline
+with a different name" as failing the earning half. A third axis-bearing intake (multi-series +
+legend, tick marks, a time axis) should cite both instances and set its own one-notch floor the
+same way, building on the prior vocabulary rather than re-deriving one.

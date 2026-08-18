@@ -22,13 +22,6 @@
       "queued_at": "2026-08-18T21:24:23Z"
     },
     {
-      "adr_id": "adr-0201",
-      "evidence": "ADR-0201 (ratified 2026-08-18, GH #1185): mints ui-description-list, a Display-class DATA-DRIVEN key-value receipt primitive (rows: {label,value}[], safeJsonCodec-hardened, empty-value omission BY CONSTRUCTION), superseding the GH #1174 grammar COMPOSITION pattern (Column of per-field Rows of label/value Texts) for the confirm-step receipt case -- the reverse direction of the standard mint-vs-compose test: here a previously-composed payload GRAMMAR pattern is retired in favor of a minted primitive, because the composition could only PROMPT-enforce the omission law while the primitive enforces it structurally. Checked 2026-08-18: component-design/references/mint-vs-compose.md covers ADR-0175's aggregate-value/mint-vs-compose fork test but has no case study of a grammar-composition pattern being RETIRED by a new mint, and a2ui-payload-authoring/references/composition-patterns.md's existing Column-of-Rows receipt guidance is the exact pattern this ADR supersedes -- genuinely uncaptured, and the existing composition-patterns.md entry is now stale (still teaching the retired construction).",
-      "kind": "harvest",
-      "plan": "component-design/references/mint-vs-compose.md: a new case study on 'when a composed grammar pattern earns a mint instead' (the omission-law-by-construction argument). ALSO a2ui-payload-authoring/references/composition-patterns.md needs its Column-of-Rows receipt guidance corrected/retired in favor of the DescriptionList primitive -- this second move is itself a stale-citation-shaped fix layered onto a harvest, since the existing pack entry teaches the now-superseded pattern; flag both to make-pack.",
-      "queued_at": "2026-08-18T21:24:23Z"
-    },
-    {
       "adr_id": "adr-0202",
       "evidence": "ADR-0202 (ratified 2026-08-18, GH #1190): pdfjs-dist becomes agent-ui's SECOND ruled runtime-dependency exception (after ADR-0139/CodeMirror), adopting the identical clause-8 gate set verbatim (identity byte-identity, confinement grep trip-wire, size line-item, lockfile hygiene) and the identical category/inert-data/wire-shortcut precedent-wall test. Checked 2026-08-18: component-patterns/references/patterns-table.md and integration-standards/references/dispatch-placement.md both cite ADR-0139 in other contexts but neither carries a generalized 'runtime-dependency exception' pattern row describing the REUSABLE test (category / inert-data / wire-shortcut / Kim's-call) now proven twice -- genuinely uncaptured at the recurrence threshold (2nd instance) save-lessons' own frequency detector watches for.",
       "kind": "harvest",
@@ -40,13 +33,6 @@
       "evidence": "ADR-0203 clause 3 (ratified 2026-08-18, GH #1191): rules the teamMemberToAgentCard A2A-card mapper lives site-side (site/lib/), never inside @agent-ui/app, explicitly rejecting both a duck-typed in-app re-declaration AND a permanent app<-a2a DAG-widening edge -- citing site/lib/flow-chrome.ts (ADR-0198) and site/lib/ndjson-lines.ts as the same-locus precedent. This is now the THIRD site/lib cross-package composition module resolving a 'needs types from two packages neither of which imports the other' fork the same way. Checked 2026-08-18: composition-patterns/references/surface-primitives.md and multi-surface-composition.md carry no generalized 'site/lib glue avoids DAG widening' pattern row -- component-patterns/references/patterns-table.md row 35 covers a DIFFERENT geometry (minting a whole sibling package off components) and does not fit this case. Genuinely uncaptured, now at a 3rd-occurrence recurrence threshold.",
       "kind": "harvest",
       "plan": "component-patterns/references/patterns-table.md or composition-patterns/references/surface-primitives.md: a new row naming the site/lib-glue-avoids-DAG-widening pattern (flow-chrome.ts / ndjson-lines.ts / teamMemberToAgentCard, ADR-0198/ADR-0203) as its own reusable escape valve distinct from row 35's sibling-package mint. make-pack's own placement judgment decides the home.",
-      "queued_at": "2026-08-18T21:24:23Z"
-    },
-    {
-      "adr_id": "adr-0205",
-      "evidence": "ADR-0205 (ratified 2026-08-18, GH #1207): ui-line-chart v1 admits the fleet's first axis-bearing chart with the SMALLEST axis vocabulary that earns the name (baseline + textual min/max labels, single-series only, hand-rolled inline SVG) -- extending ADR-0107's 'ship the smallest floor that earns the category name, fence everything else as a later intake' pattern to a second, harder case (an axis system, not just a mark). Checked 2026-08-18: component-design/references/mint-vs-compose.md and component-patterns/references/patterns-table.md carry ADR-0107's chart-family precedent in other rows but no generalized 'smallest-floor-that-earns-the-name' pattern row citing BOTH ADR-0107 and this second instance. A worked recurrence (2nd instance) of a namable pattern, genuinely uncaptured as its own row.",
-      "kind": "harvest",
-      "plan": "component-design/references/mint-vs-compose.md or component-patterns/references/patterns-table.md: a new row/case naming the 'smallest floor that earns the category name' scoping test (ADR-0107 -> ADR-0205), so a third axis-bearing intake has a citable precedent instead of re-deriving the same reasoning.",
       "queued_at": "2026-08-18T21:24:23Z"
     }
   ]
