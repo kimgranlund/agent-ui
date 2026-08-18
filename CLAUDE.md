@@ -1,8 +1,9 @@
 # CLAUDE.md
 
-`agent-ui` is a zero-dependency, signals-based web-component library (one ruled exception: the opt-in
-`@agent-ui/code/editor` surface adopts CodeMirror 6, lazy-loaded — ADR-0139; every default barrel stays
-dependency-free) authored in strict, modern
+`agent-ui` is a zero-dependency, signals-based web-component library (two ruled exceptions: the opt-in
+`@agent-ui/code/editor` surface adopts CodeMirror 6, lazy-loaded — ADR-0139; and the opt-in
+`@agent-ui/app` document-ingestion seam adopts pdfjs-dist, lazy-loaded — ADR-0202; every default barrel
+stays dependency-free) authored in strict, modern
 TypeScript — carrying over the `rce` architecture: signals reactivity · FACE custom elements ·
 tagged-template rendering · traits. First component family = FACE form controls.
 

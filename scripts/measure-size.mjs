@@ -442,9 +442,11 @@ console.log(
 // inlines the real file's text (a real byte cost) and `?url` returns a short placeholder path (the real Vite
 // build emits a hashed asset URL of similar length — this approximates the byte contribution, not the runtime
 // value, which the script has no need of). Its original consumer was the removed `app-shell.ts`'s
-// isolation-mode fleet-CSS injection (ADR-0156); NO file under `packages/agent-ui/app/` carries such a
-// specifier today, so the plugin is currently unexercised — retained, not removed, because removing live
-// build config is a separate deliberate change (GH #278).
+// isolation-mode fleet-CSS injection (ADR-0156) — unexercised from then until GH #1215/ADR-0202, whose
+// `lib/pdf-worker.ts` (the pdf.js confinement module) is the first LIVE consumer since: a bare third-party
+// specifier (`pdfjs-dist/build/pdf.worker.min.mjs?url`), not a relative or `@agent-ui/*` one — the else
+// branch below (added for this) resolves it via Node's own `import.meta.resolve`, the real node_modules
+// algorithm, rather than assuming a flat top-level layout.
 const APP_QUERY_RE = /^(.*)\?(url|raw)$/
 const appCssQuerySuffixPlugin = {
   name: 'app-css-query-suffix-stub',
@@ -464,7 +466,10 @@ const appCssQuerySuffixPlugin = {
       if (!mapped) throw new Error(`app-css-query-suffix-stub: no "${subpath}" export in @agent-ui/${pkgName}`)
       target = `${pkgDir}/${mapped.slice(2)}`
     } else {
-      throw new Error(`app-css-query-suffix-stub: cannot resolve "${bare}"`)
+      // Any other bare specifier — a third-party package deep import (e.g. `pdfjs-dist/build/pdf.worker.min.mjs`)
+      // — resolved through Node's own module algorithm (handles workspace hoisting correctly; a hand-rolled
+      // `node_modules/${bare}` join would not, on a nested-install layout).
+      target = fileURLToPath(import.meta.resolve(bare))
     }
     return { id: `${target}?${kind}`, moduleSideEffects: false }
   },
@@ -638,9 +643,36 @@ console.log(
 )
 if (appLazyGz > 0) {
   console.log(
-    `@agent-ui/app — lazy chunk(s) reachable via a dynamic import (the whole agent-admin arm per ADR-0197's loadAgentAdmin(), its CodeMirror editor per ADR-0139 cl.8c/8d, and its dogfood asset pair per GH #354), never in the eager bundle: ${appLazyGz} B gz (informational, non-gating)`,
+    `@agent-ui/app — lazy chunk(s) reachable via a dynamic import (the whole agent-admin arm per ADR-0197's loadAgentAdmin(), its CodeMirror editor per ADR-0139 cl.8c/8d, its dogfood asset pair per GH #354, and its pdf.js extractor per ADR-0202 cl.4c/4d), never in the eager bundle: ${appLazyGz} B gz (informational, non-gating)`,
   )
 }
+
+// lib/pdf-extractor (GH #1215, ADR-0202 cl.4c) — the pdf.js-carrying module inside @agent-ui/app, measured
+// in TWO parts, the SAME two-part shape as ./editor's own CM split above, EXCEPT this wrapper module
+// carries ZERO @agent-ui/components import (it's a plain registrar over `document-extraction.ts`'s
+// registry, not a FACE control) — so, exactly like `@agent-ui/code`'s core/highlight rows just below, its
+// entry chunk is measured ABSOLUTE, not marginal-over-foundation (there is no foundation cost to net out).
+// (1) pdf-extractor.ts's own ENTRY chunk (pdfjs-dist-FREE by the confinement gate — it reaches the library
+// only via `import('./pdf-worker.ts')`), an absolute figure, GATED; (2) the lazy pdf.js + worker-asset
+// chunk(s) that dynamic import splits off, reported INFORMATIONALLY, never gated (pdfjs-dist version bumps
+// are an ordinary dependency PR, ADR-0202 cl.4d — the same treatment ADR-0139 cl.8d gave CodeMirror).
+const PDF_EXTRACTOR_BUDGET = 1 * KB // measured 561 B gz at the ADR-0202 build wave (ADR-0080 discipline) — pinned with headroom; a thin registrar + a timeout-raced dynamic import, well under a single control's worth of code. The lazy pdf.js chunk (~125 KB gz, worker asset included) is informational, NEVER gated.
+const pdfExtractorEntry = fileURLToPath(new URL('../packages/agent-ui/app/src/lib/pdf-extractor.ts', import.meta.url))
+const pdfExtractorBundle = await rolldown({ input: pdfExtractorEntry, plugins: [appCssQuerySuffixPlugin] })
+const { output: pdfExtractorOutput } = await pdfExtractorBundle.generate({ format: 'esm', minify: true })
+await pdfExtractorBundle.close()
+const pdfExtractorChunks = pdfExtractorOutput.filter((c) => c.type === 'chunk')
+const pdfExtractorEntryCode = pdfExtractorChunks.filter((c) => c.isEntry).map((c) => c.code).join('')
+const pdfExtractorLazyCode = pdfExtractorChunks.filter((c) => !c.isEntry).map((c) => c.code).join('')
+const pdfExtractorEntryGz = gzipSync(pdfExtractorEntryCode, { level: 9 }).length
+const pdfExtractorLazyGz = pdfExtractorLazyCode ? gzipSync(pdfExtractorLazyCode, { level: 9 }).length : 0
+const pdfExtractorOver = pdfExtractorEntryGz > PDF_EXTRACTOR_BUDGET
+console.log(
+  `\n@agent-ui/app/lib/pdf-extractor (pdf DocumentExtractor registrar — the pdfjs-dist-FREE entry chunk): ${pdfExtractorEntryGz} B gz — ${pdfExtractorOver ? 'OVER' : 'within'} budget (${PDF_EXTRACTOR_BUDGET} B gz); zero @agent-ui/components import exists — this figure IS the tree-shake proof, not a marginal`,
+)
+console.log(
+  `@agent-ui/app/lib/pdf-extractor — the lazy pdf.js chunk(s) (dynamic import('./pdf-worker.ts'), the pdfjs-dist library + its worker asset, never in any main bundle): ${pdfExtractorLazyGz} B gz (informational, non-gating — ADR-0202 cl.4c/4d)`,
+)
 
 // ── @agent-ui/router (LLD-C9, SPEC-R7 AC4) — the SPA router family, ANOTHER package above components on
 // the DAG (`shared ← components ← {a2ui, router} ← app`). Same marginal semantics as the @agent-ui/app
@@ -834,6 +866,7 @@ if (
   clusterOverBudget ||
   clusterMembershipDrift ||
   appOver ||
+  pdfExtractorOver ||
   routerOver ||
   codeCoreOver ||
   codeHighlightOver ||
@@ -849,6 +882,7 @@ if (
   if (clusterOverBudget) console.error('size: the import-cycle control cluster exceeds its marginal budget')
   if (clusterMembershipDrift) console.error('size: the import-cycle cluster membership drifted from its pinned set')
   if (appOver) console.error('size: @agent-ui/app exceeds its marginal budget')
+  if (pdfExtractorOver) console.error('size: @agent-ui/app/lib/pdf-extractor exceeds its budget')
   if (routerOver) console.error('size: @agent-ui/router exceeds its marginal budget')
   if (codeCoreOver) console.error('size: @agent-ui/code . (core) exceeds its budget')
   if (codeHighlightOver) console.error('size: @agent-ui/code/highlight exceeds its budget')

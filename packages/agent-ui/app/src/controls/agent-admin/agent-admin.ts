@@ -2903,7 +2903,9 @@ export class UIAgentAdminElement extends UIElement {
           message =
             error.reason === 'too-large'
               ? `Can't attach "${file.name}" — it's over the ${formatFileSize(MAX_RAW_FILE_BYTES)} per-file limit.`
-              : `Can't attach "${file.name}" — unsupported file type.`
+              : error.reason === 'no-text-layer'
+                ? `Can't attach "${file.name}" — no extractable text (an image-only PDF; text recognition isn't supported).`
+                : `Can't attach "${file.name}" — unsupported file type.`
         }
         this.#showToast(message)
         this.#attachedContextItems = this.#attachedContextItems.filter((item) => item.id !== pendingId)

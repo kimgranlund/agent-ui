@@ -50,9 +50,10 @@
     "./document-budget": "./src/lib/document-budget.ts"
   },
   "dependencies": {
-    "@agent-ui/components": "*",
     "@agent-ui/a2ui": "*",
+    "@agent-ui/code": "*",
+    "@agent-ui/components": "*",
     "@agent-ui/shared": "*",
-    "@agent-ui/code": "*"
+    "pdfjs-dist": "6.2.108"
   }
 }

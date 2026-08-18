@@ -13,6 +13,14 @@
 // converge-at-merge instruction). #1210 landed first; this version consumes it instead of
 // duplicating it.
 
+// GH #1215/ADR-0202 — side-effect only: importing this registers the pdf extractor onto the #1210
+// registry (`registerDocumentExtractor`, LIFO precedence). This module's own graph carries ZERO static
+// `pdfjs-dist` imports (confinement.test.ts) — the library arrives only when a `.pdf` file is actually
+// attached, via `pdf-extractor.ts`'s own dynamic `import('./pdf-worker.ts')`. `agent-admin.ts` (this
+// module's one consumer) already sits behind the ADR-0197 `loadAgentAdmin()` lazy boundary, so this
+// eager-but-pdfjs-free registration never reaches the `@agent-ui/app` root barrel either.
+import '../../lib/pdf-extractor.ts'
+
 export { extractDocumentText, DocumentExtractionError } from '../../lib/document-extraction.ts'
 export type { ExtractedDocument, ExtractedDocumentMeta, DocumentExtractionErrorReason } from '../../lib/document-extraction.ts'
 export { MAX_AGENT_KNOWLEDGE_CHARS, MAX_RAW_FILE_BYTES, MAX_DOCUMENT_CHARS, truncateToBudget } from '../../lib/document-budget.ts'
