@@ -136,22 +136,38 @@
      restored to the shared `[data-part='bubble']` base rule above — this override no longer zeroes
      any of them out). GH #306 same-day amendment moved the width cap + align-self this rule used to
      set onto the OWNING `[data-part='turn']` wrapper instead (above) — the pre-#241 shape, now one
-     level up. The A2UI/GenUI render surface mounted inside (`[data-part='mounts']`,
-     `ui-surface-host[bare]`) is UNCHANGED and untouched by this rule — it still carries zero chrome
-     of its own (GH #241's "A2UI not affected" scoping stands); it now simply sits, chromeless, inside
-     a chromed bubble again — the SAME single padding layer the bubble always contributed, never a
-     second one. */
+     level up. GH #1221 moved the A2UI/GenUI render surface (`[data-part='mounts']`,
+     `ui-surface-host[bare]`) OUT of this bubble entirely (it is now a SIBLING, below) — it always
+     carried zero chrome of its own here (GH #241's "A2UI not affected" scoping stands; its own
+     structural card chrome is surface-host.css's [bare] rule, GH #1150/#1161), so this rule's own
+     background/padding/radius never touched it either way, before or after that move. */
   [data-part='bubble'][data-role='agent'] {
     background: var(--ui-conversation-agent-bubble);
   }
+  /* GH #1221 (Kim's 2026-08-17 rulings) — the bubble on/off setting's OFF state: `bubbles="off"`
+     (conversation.ts's reflected `bubbles` prop, default `"on"` — absent/`"on"` is BYTE-IDENTICAL to
+     every rule above, a zero-diff default) flattens the HOST/AGENT bubble only — the neutral container
+     background, the padding, and the radius all drop to nothing, the pre-ADR-0160/GH#241 chromeless
+     shape. Scoped to `[data-role='agent']` deliberately (Kim's ruling 1/the ticket's own Acceptance
+     line): the USER bubble is UNTOUCHED by this attribute in either state. `[data-part='mounts']`
+     (the Gen-UI/A2UI card sibling, below) is UNAFFECTED by this attribute too — a card keeps its own
+     chrome in EVERY bubbles mode, per ruling 3. */
+  :scope[bubbles='off'] [data-part='bubble'][data-role='agent'] {
+    background: none;
+    padding: 0;
+    border-radius: 0;
+  }
   /* GH #313/ADR-0160 amendment (Kim's 2026-07-28 ruling — "no bubble unless there is content for it") —
-   * post-GH #306 the bubble holds ONLY content (note/mounts/chips), so a fresh turn's bubble (created
-   * up-front, empty, `conversation.ts`'s `beginAgentTurn`) is hidden until `revealBubble()` clears
-   * `data-empty` on the FIRST real content. `:has()` over the note/mounts/actions children was NOT
-   * reachable here — the note's default render path writes a bare `textContent` string (no wrapper
-   * element `:has()` could select), so the reveal is a small state attribute instead of a pure CSS rule.
-   * A resumed bubble (TKT-0079) never carries this attribute — it can only resume because it already
-   * has content, so it stays visible throughout, unaffected by this rule. */
+   * post-GH #306 the bubble holds ONLY prose content (note/disclosure/chips — GH #1221 moved the
+   * Gen-UI/A2UI mounts OUT of the bubble, so this law is a PROSE-only concern now), so a fresh turn's
+   * bubble (created up-front, empty, `conversation.ts`'s `beginAgentTurn`) is hidden until
+   * `revealBubble()` clears `data-empty` on the FIRST real prose content. `:has()` over the
+   * note/actions children was NOT reachable here — the note's default render path writes a bare
+   * `textContent` string (no wrapper element `:has()` could select), so the reveal is a small state
+   * attribute instead of a pure CSS rule. A resumed bubble (TKT-0079) never carries this attribute — it
+   * can only resume because it already has content, so it stays visible throughout, unaffected by this
+   * rule. A card-only turn's bubble may legitimately stay hidden its whole life now — the `mounts`
+   * sibling paints independently, via its own `:empty` collapse below, never entangled with this flag. */
   [data-part='bubble'][data-role='agent'][data-empty] {
     display: none;
   }
@@ -216,8 +232,11 @@
     --ui-status-stream-max-block-size: none;
   }
 
-  /* Fresh inline ui-surface-host instances this bubble's OWN creating turn mounted (SPEC-R7) — later turns
-     route into these same hosts in place; this bubble never grows a SECOND one for a known surfaceId. */
+  /* Fresh inline ui-surface-host instances this TURN'S OWN creating call mounted (SPEC-R7) — later turns
+     route into these same hosts in place; this turn never grows a SECOND one for a known surfaceId. GH
+     #1221 — `mounts` is a SIBLING of `[data-part='bubble']` (both direct children of `[data-part='turn']`),
+     never the bubble's own child: a card-only turn collapses via THIS `:empty` rule independently of
+     whatever the neighboring prose bubble's own `data-empty` state is. */
   [data-part='mounts']:empty {
     display: none;
   }

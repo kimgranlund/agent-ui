@@ -162,6 +162,7 @@ import {
   isPlannerSurfaceEnabled,
   SURFACE_AUTHORING_KEY,
   isAuthoringSurfaceEnabled,
+  SURFACE_BUBBLES_KEY,
   defaultAgentConfigSchema,
   isEnabledFlag,
   kindEnabledKey,
@@ -748,6 +749,9 @@ export class UIAgentAdminElement extends UIElement {
   // ADR-0178 cl.3 / SPEC-R30 — the persona-authoring gate's row switch: the planner row's shape,
   // verbatim (bare, ungrouped, inverse-default OFF).
   #surfaceAuthoringSwitch: (HTMLElement & { checked: boolean }) | null = null
+  // GH #1221 (Kim's 2026-08-17 rulings) — the chat bubble on/off setting's row switch: the markdown/a2ui
+  // rows' shape (bare, ungrouped, default ON — `isEnabledFlag`'s law, not the inverse-default one).
+  #surfaceBubblesSwitch: (HTMLElement & { checked: boolean }) | null = null
   // GH #525/#541 — the bankroll Settings FOLD (its own group since #541): built once; `hidden` reflects
   // the persona's OWN opt-in (`BANKROLL_CAPABLE_KEY`), applied in `#applyMasterStates` like every other
   // row's state — never a DOM add/remove per persona switch.
@@ -1304,6 +1308,20 @@ export class UIAgentAdminElement extends UIElement {
     })
     this.#surfaceAuthoringSwitch = authoring.toggle
 
+    // GH #1221 (Kim's 2026-08-17 rulings) — the chat bubble on/off setting's own row: the markdown/a2ui
+    // rows' shape, verbatim (bare, ungrouped — no sub-options), and the SAME "default ON" law
+    // (`isEnabledFlag`, not the inverse-default one Planner/Authoring/GenUI use) since the DEFAULT here
+    // must render byte-identical to today's shipped chat look (the ticket's own "zero visual change
+    // unset" requirement). Threads into `ui-conversation`'s own reflected `bubbles` prop below
+    // (`#applyMasterStates`) — never a bare component prop on its own, per Kim's ruling 1.
+    const bubbles = surfaceRow('bubbles', 'Chat bubbles', 'bubbles')
+    bubbles.toggle.addEventListener('change', () => {
+      this.store?.set(SURFACE_BUBBLES_KEY, bubbles.toggle.checked)
+      this.#applyMasterStates(this.store)
+      if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+    })
+    this.#surfaceBubblesSwitch = bubbles.toggle
+
     // GH #525 — the bankroll RESET row (design call 3, 2026-08-07: a settings-pane affordance, never a
     // chat command): a plain label + spacer + trailing `<ui-button>` (the entry-list.ts `deleteBtn`
     // precedent), no toggle (there is no on/off here, only a stored figure to clear). GH #541 — it is its
@@ -1336,7 +1354,7 @@ export class UIAgentAdminElement extends UIElement {
     bankrollItem.append(buildAdminHelpForSummary('bankroll'))
     this.#bankrollItem = bankrollItem as HTMLElement & { hidden: boolean }
 
-    surfaceOptions.append(markdown.row, a2uiGroup.group, genuiGroup.group, planner.row, authoring.row)
+    surfaceOptions.append(markdown.row, a2uiGroup.group, genuiGroup.group, planner.row, authoring.row, bubbles.row)
 
     // GH #225/#226 — each Settings section is a heading-row fold (the GH #222 Context pattern applied to
     // the config column). The master switches (Agent + one per kind) ride their fold's heading row
@@ -3928,6 +3946,14 @@ export class UIAgentAdminElement extends UIElement {
     if (this.#surfacePlannerSwitch) this.#surfacePlannerSwitch.checked = isPlannerSurfaceEnabled(store?.get(SURFACE_PLANNER_KEY))
     // ADR-0178 cl.3 — the authoring gate reflects its own stored state the same way.
     if (this.#surfaceAuthoringSwitch) this.#surfaceAuthoringSwitch.checked = isAuthoringSurfaceEnabled(store?.get(SURFACE_AUTHORING_KEY))
+    // GH #1221 (Kim's 2026-08-17 rulings) — the chat bubble on/off setting reflects its own stored state
+    // the same way, AND drives `ui-conversation`'s own reflected `bubbles` prop (ruling 1: "the
+    // ui-conversation prop remains the mechanism the setting drives"). `isEnabledFlag`'s default-ON law
+    // (never the inverse-default one) — an unset store must map to `'on'`, `ui-conversation`'s own
+    // default, so a persona that never touched this setting renders byte-identical to today.
+    const bubblesOn = isEnabledFlag(store?.get(SURFACE_BUBBLES_KEY))
+    if (this.#surfaceBubblesSwitch) this.#surfaceBubblesSwitch.checked = bubblesOn
+    if (this.#conversation) this.#conversation.bubbles = bubblesOn ? 'on' : 'off'
     // GH #525 — the bankroll group is entirely HIDDEN for a persona that never opted in
     // (`BANKROLL_CAPABLE_KEY`) — there is no in-between "visible but nothing to do" state the way an OFF
     // modality still has, so this is `hidden`, never a `data-disabled` dim.

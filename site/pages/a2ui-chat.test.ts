@@ -67,6 +67,11 @@ function agentBubbles(): HTMLElement[] {
 function systemBubbles(): HTMLElement[] {
   return bubbles().filter((m) => m.dataset.role === 'system')
 }
+// GH #1221 — Gen-UI/A2UI cards mount into `[data-part="mounts"]`, a SIBLING of the bubble under the
+// owning `[data-part="turn"]` wrapper, never the bubble's own descendant anymore.
+function mountsOf(bubble: HTMLElement): HTMLElement {
+  return (bubble.parentElement as HTMLElement).querySelector('[data-part="mounts"]') as HTMLElement
+}
 function statusText(): string {
   return (document.querySelector('.chat-status') as HTMLElement | null)?.textContent ?? ''
 }
@@ -112,48 +117,51 @@ describe('a2ui-chat routing on ui-conversation (SPEC-R7) — the real shipped 5-
     await sendIntent('turn 1')
     await waitUntil(() => agentBubbles().length === 1)
     const bubble1 = agentBubbles()[0]!
-    await waitUntil(() => bubble1.querySelector('ui-surface-host ui-button') !== null)
+    await waitUntil(() => mountsOf(bubble1).querySelector('ui-surface-host ui-button') !== null)
 
     await sendIntent('turn 2')
     await waitUntil(() => agentBubbles().length === 2)
     const bubble2 = agentBubbles()[1]!
     await waitUntil(() => bubble2.textContent?.includes('turn 2 of the conversation') === true)
-    expect(bubble2.querySelector('ui-surface-host ui-text'), "confirmation's Text must render into turn 2's own bubble").not.toBeNull()
-    const confirmationHost = bubble2.querySelector('[data-part="mounts"] ui-surface-host')
+    // GH #1221 — the card is a SIBLING of the bubble now (never its descendant): "turn 2's own bubble"
+    // means turn 2's own TURN wrapper, so the check goes through `mountsOf`, not `bubble2` directly.
+    expect(mountsOf(bubble2).querySelector('ui-surface-host ui-text'), "confirmation's Text must render into turn 2's own mounts").not.toBeNull()
+    const confirmationHost = mountsOf(bubble2).querySelector('ui-surface-host')
     expect(confirmationHost).not.toBeNull()
 
     // Routing + persistent identity (SPEC-R7 AC1): a later turn resending against a known surfaceId routes
-    // to the SAME inline ui-surface-host at its ORIGINAL bubble — never a new mount for the same id.
+    // to the SAME inline ui-surface-host at its ORIGINAL turn — never a new mount for the same id.
     await sendIntent('turn 3') // updateComponents (+trailing updateDataModel) on "confirmation"
     await waitUntil(() => agentBubbles().length === 3)
     const bubble3 = agentBubbles()[2]!
     await waitUntilIdle()
     expect(
-      bubble3.querySelector('[data-part="mounts"]')?.children.length ?? 0,
-      "turn 3's OWN bubble must carry NO surface host — it routed into turn 2's",
+      mountsOf(bubble3)?.children.length ?? 0,
+      "turn 3's OWN mounts must carry NO surface host — it routed into turn 2's",
     ).toBe(0)
-    expect(bubble2.querySelector('[data-part="mounts"] ui-surface-host'), "confirmation's host must be the SAME node — never re-created").toBe(confirmationHost)
-    expect(bubble1.querySelector('ui-surface-host ui-button'), 'canvas (turn 1) must be untouched by turn 3').not.toBeNull()
+    expect(mountsOf(bubble2).querySelector('ui-surface-host'), "confirmation's host must be the SAME node — never re-created").toBe(confirmationHost)
+    expect(mountsOf(bubble1).querySelector('ui-surface-host ui-button'), 'canvas (turn 1) must be untouched by turn 3').not.toBeNull()
 
     await sendIntent('turn 4') // data-ONLY update on "confirmation"
     await waitUntil(() => agentBubbles().length === 4)
     const bubble4 = agentBubbles()[3]!
     await waitUntilIdle()
-    expect(bubble4.querySelector('[data-part="mounts"]')?.children.length ?? 0, "turn 4's OWN bubble must also carry NO surface host").toBe(0)
-    expect(bubble2.querySelector('[data-part="mounts"] ui-surface-host'), "confirmation's host is STILL the same node after turn 4").toBe(confirmationHost)
+    expect(mountsOf(bubble4)?.children.length ?? 0, "turn 4's OWN mounts must also carry NO surface host").toBe(0)
+    expect(mountsOf(bubble2).querySelector('ui-surface-host'), "confirmation's host is STILL the same node after turn 4").toBe(confirmationHost)
 
     await sendIntent('turn 5') // deleteSurface "confirmation"
     await waitUntil(() => agentBubbles().length === 5)
     await waitUntil(() => bubble2.dataset.state === 'closed')
-    expect(bubble2.querySelector('[data-part="annotation"]')?.textContent).toBe('Closed.')
+    // GH #1221 — the "Closed." annotation now lands in `mounts`, right after the closed host itself.
+    expect(mountsOf(bubble2).querySelector('[data-part="annotation"]')?.textContent).toBe('Closed.')
     expect(
-      bubble2.querySelector('ui-surface-host ui-column, ui-surface-host ui-text'),
+      mountsOf(bubble2).querySelector('ui-surface-host ui-column, ui-surface-host ui-text'),
       "confirmation's rendered DOM must be torn down once closed",
     ).toBeNull()
 
     // canvas (turn 1) survives the whole arc, never annotated/closed
     expect(bubble1.dataset.state).toBeUndefined()
-    expect(bubble1.querySelector('ui-surface-host ui-button')).not.toBeNull()
+    expect(mountsOf(bubble1).querySelector('ui-surface-host ui-button')).not.toBeNull()
   })
 
   it('a sixth send past the transcript end shows the "no further turns" status notice, not a crash', async () => {

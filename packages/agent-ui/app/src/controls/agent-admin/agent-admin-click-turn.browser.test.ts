@@ -194,18 +194,20 @@ describe('ui-agent-admin — GH #42: a REAL canvas click drives the next surface
     const { el } = await mountWithScript(() => [{ kind: 'line', line: VALID_FOLLOWUP_LINE }])
     const btn = await driveIntentToButton(el)
     const host = btn.closest('ui-surface-host') as HTMLElement
-    const bubble = host.closest('[data-part="bubble"]') as HTMLElement
+    // GH #1221 — the card mounts into `[data-part="mounts"]`, a SIBLING of the bubble now (never its
+    // ancestor), so "the surface's own card" is scoped via the owning `[data-part="turn"]` wrapper.
+    const turn = host.closest('[data-part="turn"]') as HTMLElement
     const bubblesBefore = el.querySelectorAll('[data-part="bubble"]').length
 
     btn.click()
-    // The update-only follow-up must land in the SAME surface host, SAME bubble — the ADR-0129/TKT-0079
+    // The update-only follow-up must land in the SAME surface host, SAME card — the ADR-0129/TKT-0079
     // same-card routing — with the Button's label re-rendered by the renderer's merge.
     await waitUntil(() => host.querySelector('ui-button')?.textContent?.trim() === 'Round 2')
 
     expect(host.isConnected, 'the original host survives the client turn').toBe(true)
-    expect(host.closest('[data-part="bubble"]'), 'the surface stays in ITS bubble').toBe(bubble)
-    expect(bubble.querySelectorAll('ui-surface-host').length, 'no second host minted in the bubble').toBe(1)
-    expect(bubble.querySelector('[data-state="closed"]'), 'the surface never closed').toBeNull()
+    expect(host.closest('[data-part="turn"]'), 'the surface stays in ITS own turn').toBe(turn)
+    expect(turn.querySelectorAll('ui-surface-host').length, 'no second host minted in the turn').toBe(1)
+    expect(turn.querySelector('[data-state="closed"]'), 'the surface never closed').toBeNull()
     expect(
       el.querySelectorAll('[data-part="bubble"]').length,
       'a resumed client turn opens NO new bubble (TKT-0079)',
@@ -244,22 +246,24 @@ describe('ui-agent-admin — GH #42: a REAL canvas click drives the next surface
     ;(el.querySelector('ui-conversation-composer [data-part="send"]') as HTMLElement).click()
     await waitUntil(() => buttonLabeled('Commit 1') !== undefined)
 
+    // GH #1221 — the card mounts into `[data-part="mounts"]`, a SIBLING of the bubble now (never its
+    // ancestor): "the card's own bubble" is the owning `[data-part="turn"]` wrapper instead.
     const firstCard = buttonLabeled('Commit 1')!
     const firstHost = firstCard.closest('ui-surface-host') as HTMLElement
-    const firstBubble = firstHost.closest('[data-part="bubble"]') as HTMLElement
+    const firstTurn = firstHost.closest('[data-part="turn"]') as HTMLElement
     expect(agentBubbles(), 'round 1 is one agent bubble').toHaveLength(1)
 
     firstCard.click() // the REAL A2uiAction through the renderer → onClientMessage → the client turn
     await waitUntil(() => requests.length === 2 && buttonLabeled('Commit 2') !== undefined)
 
     const secondHost = buttonLabeled('Commit 2')!.closest('ui-surface-host') as HTMLElement
-    const secondBubble = secondHost.closest('[data-part="bubble"]') as HTMLElement
+    const secondTurn = secondHost.closest('[data-part="turn"]') as HTMLElement
     expect(agentBubbles(), 'the answered ask advanced the dialog: a SECOND agent bubble').toHaveLength(2)
-    expect(secondBubble, 'the next round mounted in a DIFFERENT bubble').not.toBe(firstBubble)
-    // The answered card is untouched history — still there, still in its own bubble, still its own label.
+    expect(secondTurn, 'the next round mounted in a DIFFERENT turn').not.toBe(firstTurn)
+    // The answered card is untouched history — still there, still in its own turn, still its own label.
     expect(firstHost.isConnected).toBe(true)
-    expect(firstHost.closest('[data-part="bubble"]'), 'the answered ask stays in ITS bubble').toBe(firstBubble)
-    expect(firstBubble.querySelectorAll('ui-surface-host'), 'nothing new mounted into the answered bubble').toHaveLength(1)
+    expect(firstHost.closest('[data-part="turn"]'), 'the answered ask stays in ITS own turn').toBe(firstTurn)
+    expect(firstTurn.querySelectorAll('ui-surface-host'), 'nothing new mounted into the answered turn').toHaveLength(1)
     expect(buttonLabeled('Commit 1'), 'the answered ask was never rebuilt or deleted').not.toBeUndefined()
     // Whole-shape, real engine: BOTH rounds are genuinely laid out, stacked in reading order (the answered
     // card above the new one) — not one card overwritten in place.

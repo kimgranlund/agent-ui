@@ -439,14 +439,19 @@ const line = (obj: unknown): string => JSON.stringify(obj)
 
 // The composed-path proof (SPEC-R7, the component-reviewer's Blocker 2 finding): the persistent-identity
 // routing is jsdom-proven at the textContent level only, which CANNOT catch a real layout collapse — the
-// nested `log > bubble > mounts > ui-surface-host > stage > surface` chain is the EXACT shape
+// nested `log > turn > mounts > ui-surface-host > stage > surface` chain is the EXACT shape
 // canvas-surface.ts's own comments record a historical "collapse-to-1ch" trap in (an absolutely-positioned
 // flex column with only a max-width, whose align-items:center children resolve to min-content). Standalone
 // whole-shape (surface-host.browser.test.ts) and standalone whole-shape (this file's own describe above)
 // each prove ONE half of this composition; neither proves the NESTED path — a real interactive control
 // rendered all the way through every intermediate box — actually paints with real, non-zero geometry.
+//
+// GH #1221 (Kim's 2026-08-17 rulings): `mounts` is now a SIBLING of `[data-part="bubble"]`, both direct
+// children of the owning `[data-part="turn"]` wrapper — never nested inside the prose bubble anymore, so
+// this probe's own chain runs through `turn`, not `bubble`, and explicitly proves the sibling relationship
+// (the card's own real DOM position is exactly what this ticket changed).
 describe('ui-conversation cross-engine smoke — the COMPOSED path renders with real geometry (SPEC-R7)', () => {
-  it('a real A2UI stream through beginAgentTurn()/ingestLine() mounts a real ui-button nested log>bubble>mounts>ui-surface-host>stage>surface, every box non-zero', () => {
+  it('a real A2UI stream through beginAgentTurn()/ingestLine() mounts a real ui-button nested log>turn>mounts>ui-surface-host>stage>surface, every box non-zero, and mounts is a SIBLING of the bubble (GH #1221), never its descendant', () => {
     const el = mountConversation()
     const received: unknown[] = []
     el.onClientMessage((m) => received.push(m)) // registered BEFORE the turn — proves the bubble-up wiring too
@@ -463,8 +468,9 @@ describe('ui-conversation cross-engine smoke — the COMPOSED path renders with 
     )
     handle.finalize()
 
-    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
-    const mounts = bubble.querySelector('[data-part="mounts"]') as HTMLElement
+    const turn = el.querySelector('[data-part="turn"][data-role="agent"]') as HTMLElement
+    const bubble = turn.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const mounts = turn.querySelector('[data-part="mounts"]') as HTMLElement
     const host = mounts.querySelector('ui-surface-host') as HTMLElement
     const stage = host.querySelector('[data-part="stage"]') as HTMLElement
     const surface = host.querySelector('[data-part="surface"]') as HTMLElement
@@ -474,15 +480,22 @@ describe('ui-conversation cross-engine smoke — the COMPOSED path renders with 
     // below vacuously pass on `null.getBoundingClientRect` throwing, not a silent false-positive — assert
     // presence explicitly first so a broken chain fails LOUDLY, not by accident).
     for (const [name, node] of [
-      ['bubble', bubble], ['mounts', mounts], ['host', host], ['stage', stage], ['surface', surface], ['button', btn],
+      ['turn', turn], ['bubble', bubble], ['mounts', mounts], ['host', host], ['stage', stage], ['surface', surface], ['button', btn],
     ] as const) {
       expect(node, `${name} is missing from the composed chain`).not.toBeNull()
     }
 
-    // the actual value this feature exists to prove: EVERY box in the nested chain paints with real,
+    // THE ticket's own shape law: mounts is a SIBLING of bubble (both direct children of turn), never
+    // nested inside it — a card mounted while `bubbles` is ON must not share the prose bubble's chrome.
+    expect(mounts.parentElement, 'mounts is not a direct child of the turn wrapper').toBe(turn)
+    expect(bubble.parentElement, 'bubble is not a direct child of the turn wrapper').toBe(turn)
+    expect(bubble.contains(mounts), 'mounts rendered NESTED inside the prose bubble — GH #1221 regressed').toBe(false)
+    expect(mounts.contains(bubble), 'bubble rendered nested inside mounts (impossible shape)').toBe(false)
+
+    // the actual value this feature exists to prove: EVERY box in the composed chain paints with real,
     // non-zero geometry — not the historical collapse-to-1ch trap (canvas-surface.ts's own comment).
     for (const [name, node] of [
-      ['bubble', bubble], ['mounts', mounts], ['host', host], ['stage', stage], ['surface', surface], ['button', btn],
+      ['turn', turn], ['bubble', bubble], ['mounts', mounts], ['host', host], ['stage', stage], ['surface', surface], ['button', btn],
     ] as const) {
       const rect = node.getBoundingClientRect()
       expect(rect.width, `${name} collapsed to zero width`).toBeGreaterThan(1)
@@ -533,18 +546,21 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
     return handle
   }
 
-  it('the mounted A2UI surface carries STRUCTURAL card containment (GH #1150) and spans the full width available INSIDE its bubble (rect-compared)', () => {
+  it('the mounted A2UI surface carries STRUCTURAL card containment (GH #1150) and spans the full column width — GH #1221: mounts is a SIBLING of the bubble now, never inset by the bubble\'s own padding', () => {
     const el = mountConversation()
     driveSurfaceTurn(el, true)
 
     const log = logOf(el)
-    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
-    const host = bubble.querySelector('ui-surface-host') as HTMLElement
+    const turn = el.querySelector('[data-part="turn"][data-role="agent"]') as HTMLElement
+    const bubble = turn.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const mounts = turn.querySelector('[data-part="mounts"]') as HTMLElement
+    const host = mounts.querySelector('ui-surface-host') as HTMLElement
     const stage = host.querySelector('[data-part="stage"]') as HTMLElement
     const surface = host.querySelector('[data-part="surface"]') as HTMLElement
 
-    // conversation.ts sets the GH #241 pair on every inline mount — UNCHANGED by GH #291/ADR-0160:
-    // the surface itself stays chromeless even though the bubble around it is chromed again.
+    // conversation.ts sets the GH #241 pair on every inline mount — UNCHANGED by GH #291/ADR-0160 or by
+    // GH #1221's hoist: the surface itself stays chromeless regardless of where `mounts` sits, or
+    // whether the neighboring prose bubble is chromed or flat.
     expect(host.hasAttribute('bare'), 'the chat mount is missing [bare]').toBe(true)
     expect(host.hasAttribute('wrap'), 'the chat mount lost [wrap] (TKT-0084)').toBe(true)
 
@@ -562,19 +578,16 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
     expect(alphaOf(surfaceStyle.backgroundColor), 'the surface lost its card background (GH #1150 regressed)').toBeGreaterThan(0)
     expect(Number.parseFloat(surfaceStyle.borderTopWidth), 'the surface lost its card border (GH #1150 regressed)').toBeGreaterThan(0)
 
-    // FULL width WITHIN THE BUBBLE (GH #291/ADR-0160 — the bubble itself is narrower than the column
-    // again, its own padding restored; the surface still fills whatever content-box the bubble hands
-    // it — ONE padding layer, contributed by the bubble, never a second one from [bare]).
-    const bubbleStyle = getComputedStyle(bubble)
-    const bubbleContentWidth =
-      bubble.clientWidth - Number.parseFloat(bubbleStyle.paddingLeft) - Number.parseFloat(bubbleStyle.paddingRight)
-    expect(host.getBoundingClientRect().width, 'the host does not span the bubble content box').toBeCloseTo(bubbleContentWidth, 0)
-    expect(surface.getBoundingClientRect().width, 'the surface does not span the bubble content box').toBeCloseTo(
-      bubbleContentWidth,
+    // GH #1221 — `mounts` is a SIBLING of `bubble` (both direct children of `turn`), never nested inside
+    // it: the host/surface now span the FULL column, the same edge the narration strip/turn wrapper
+    // reach (GH #1032) — no longer inset by the bubble's own padding, since the bubble no longer wraps it.
+    expect(mounts.parentElement, 'mounts is not a sibling of the bubble under the turn wrapper').toBe(turn)
+    expect(bubble.contains(mounts), 'the card mounted NESTED inside the prose bubble — GH #1221 regressed').toBe(false)
+    expect(host.getBoundingClientRect().width, 'the host does not span the full column (GH #1221)').toBeCloseTo(
+      availableColumnWidth(log),
       0,
     )
-    // GH #1032 (Kim, 2026-08-16 — "use the full width"): the agent bubble now SPANS the column.
-    expect(bubble.getBoundingClientRect().width, 'the agent bubble does not span the full column (GH #1032)').toBeCloseTo(
+    expect(surface.getBoundingClientRect().width, 'the surface does not span the full column (GH #1221)').toBeCloseTo(
       availableColumnWidth(log),
       0,
     )
@@ -638,20 +651,32 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
     )
   })
 
-  it('the STREAMING state already carries the bubble — mid-turn (before finalize) the same container is chromed and full-column (GH #1032), matching the settled state', () => {
+  it('the STREAMING card already carries its structural chrome mid-turn (before finalize), full-column (GH #1032), matching the settled state — GH #1221: this is INDEPENDENT of the prose bubble, which stays hidden with no note yet', () => {
     const el = mountConversation()
-    const handle = driveSurfaceTurn(el, false) // in flight — streaming, not settled
+    const handle = driveSurfaceTurn(el, false) // in flight — streaming, not settled; no setNote() call
 
     const log = logOf(el)
-    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
-    const stage = bubble.querySelector('ui-surface-host [data-part="stage"]') as HTMLElement
-    expect(alphaOf(getComputedStyle(bubble).backgroundColor), 'the streaming turn lost its bubble background').toBeGreaterThan(0)
-    expect(Number.parseFloat(getComputedStyle(bubble).paddingTop), 'the streaming turn lost its bubble padding').toBeGreaterThan(0)
-    expect(bubble.getBoundingClientRect().width, 'the streaming turn does not span the full column (GH #1032)').toBeCloseTo(
+    const turn = el.querySelector('[data-part="turn"][data-role="agent"]') as HTMLElement
+    const bubble = turn.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const mounts = turn.querySelector('[data-part="mounts"]') as HTMLElement
+    const host = mounts.querySelector('ui-surface-host') as HTMLElement
+    const stage = host.querySelector('[data-part="stage"]') as HTMLElement
+
+    // GH #1221 — the card's own chrome is unconditional (surface-host.css's [bare] structural card,
+    // GH #1150) and mounted into `mounts`, a SIBLING of the bubble: it is already full-column and
+    // chromed mid-stream, matching what finalize() will show — no visual pop between streaming and
+    // settled, and NEVER entangled with whether the prose bubble beside it has any content yet.
+    expect(mounts.contains(bubble), 'impossible shape: bubble nested inside mounts').toBe(false)
+    expect(host.getBoundingClientRect().width, 'the streaming card does not span the full column (GH #1221)').toBeCloseTo(
       availableColumnWidth(log),
       0,
     )
     expect(getComputedStyle(stage).backgroundImage, 'the streaming surface paints the checker').toBe('none')
+
+    // The OTHER half of GH #1221: this turn never called setNote(), so the prose bubble has received no
+    // content of its own — it stays hidden (GH #313's law, now scoped to prose only) even though a real,
+    // fully-chromed card is already visible right beside it. The two are no longer one state.
+    expect(getComputedStyle(bubble).display, 'a content-free prose bubble painted visibly beside a streaming card').toBe('none')
 
     handle.finalize() // settle cleanly — no dangling turn leaks into the shared afterEach teardown
   })
@@ -747,10 +772,102 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
   })
 })
 
+// GH #1221 (Kim's 2026-08-17 rulings) — the `bubbles` on/off setting itself, cross-engine. The chrome-laws
+// describe above already pins the default (unset) shape; THIS describe is the setting's own dedicated
+// coverage: the explicit 'off' shape, that the card's own chrome is untouched by either state, and a live
+// round-trip toggle (the settings-surface's own write path, `ui-agent-admin`'s Surface tab).
+describe('ui-conversation cross-engine — the bubbles on/off setting (GH #1221)', () => {
+  const driveNoteAndCard = (el: UIConversationElement): void => {
+    const handle = el.beginAgentTurn()
+    handle.setNote('A bubbled agent reply')
+    handle.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'bubbles-1', catalogId: 'agent-ui' } }))
+    handle.ingestLine(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'bubbles-1',
+          components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Go', action: { action: 'go' } }],
+        },
+      }),
+    )
+    handle.finalize()
+  }
+
+  it('unset (the default): byte-identical to today — no `bubbles` attribute at all, and the SAME chromed prose bubble ADR-0160 already ships', () => {
+    const el = mountConversation()
+    expect(el.bubbles, 'the property default is not "on"').toBe('on')
+    expect(el.hasAttribute('bubbles'), 'a never-touched element must carry NO bubbles attribute — the zero-diff default').toBe(false)
+
+    driveNoteAndCard(el)
+    const turn = el.querySelector('[data-part="turn"][data-role="agent"]') as HTMLElement
+    const bubble = turn.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const bubbleStyle = getComputedStyle(bubble)
+    expect(alphaOf(bubbleStyle.backgroundColor), 'unset bubbles must ship the chromed prose bubble (ADR-0160)').toBeGreaterThan(0)
+    expect(Number.parseFloat(bubbleStyle.paddingLeft), 'unset bubbles must ship the bubble padding (ADR-0160)').toBeGreaterThan(0)
+  })
+
+  it("`bubbles='off'`: the HOST/AGENT bubble flattens — no background, no padding, no radius; the USER bubble and the mounted card's own chrome are BOTH untouched", () => {
+    const el = mountConversation()
+    el.bubbles = 'off'
+    expect(el.getAttribute('bubbles'), 'the reflected attribute must carry the explicit value').toBe('off')
+
+    driveNoteAndCard(el)
+    el.addUserMessage('hi')
+
+    const turn = el.querySelector('[data-part="turn"][data-role="agent"]') as HTMLElement
+    const bubble = turn.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const mounts = turn.querySelector('[data-part="mounts"]') as HTMLElement
+    const host = mounts.querySelector('ui-surface-host') as HTMLElement
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    const userBubble = el.querySelector('[data-part="bubble"][data-role="user"]') as HTMLElement
+
+    // The prose text is still legible and still present — only the CONTAINER chrome is gone.
+    const body = bubble.querySelector('[data-part="body"]') as HTMLElement
+    expect(body.textContent).toBe('A bubbled agent reply')
+
+    const bubbleStyle = getComputedStyle(bubble)
+    expect(alphaOf(bubbleStyle.backgroundColor), "bubbles='off' must drop the host bubble's background").toBe(0)
+    expect(Number.parseFloat(bubbleStyle.paddingLeft), "bubbles='off' must drop the host bubble's padding").toBe(0)
+    expect(Number.parseFloat(bubbleStyle.borderTopLeftRadius), "bubbles='off' must drop the host bubble's radius").toBe(0)
+
+    // The USER bubble is a completely different `[data-role]` — ruling 1/the Acceptance line scope this
+    // setting to the host/agent side ONLY.
+    const userStyle = getComputedStyle(userBubble)
+    expect(alphaOf(userStyle.backgroundColor), "bubbles='off' must NEVER touch the user bubble's background").toBeGreaterThan(0)
+    expect(Number.parseFloat(userStyle.paddingLeft), "bubbles='off' must NEVER touch the user bubble's padding").toBeGreaterThan(0)
+
+    // The mounted card's own structural chrome (GH #1150) is untouched in EITHER bubbles mode — ruling 3.
+    const surfaceStyle = getComputedStyle(surface)
+    expect(alphaOf(surfaceStyle.backgroundColor), "bubbles='off' must NEVER touch the card's own chrome").toBeGreaterThan(0)
+    expect(Number.parseFloat(surfaceStyle.borderTopWidth), "bubbles='off' must NEVER touch the card's own border").toBeGreaterThan(0)
+    expect(bubble.contains(mounts), 'the card must still never be nested inside the flattened bubble').toBe(false)
+  })
+
+  it('round-trips live: on → off → on again reflects the attribute and repaints the chrome each time, matching the settings-surface write path (`ui-agent-admin`)', () => {
+    const el = mountConversation()
+    driveNoteAndCard(el)
+    const turn = el.querySelector('[data-part="turn"][data-role="agent"]') as HTMLElement
+    const bubble = turn.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+
+    expect(el.hasAttribute('bubbles')).toBe(false)
+    expect(alphaOf(getComputedStyle(bubble).backgroundColor), 'precondition: starts chromed').toBeGreaterThan(0)
+
+    el.bubbles = 'off'
+    expect(el.getAttribute('bubbles')).toBe('off')
+    expect(alphaOf(getComputedStyle(bubble).backgroundColor), 'flipping to off did not flatten the bubble').toBe(0)
+
+    el.bubbles = 'on'
+    expect(el.getAttribute('bubbles'), 'flipping back to "on" must reflect a real (non-absent) attribute').toBe('on')
+    expect(alphaOf(getComputedStyle(bubble).backgroundColor), 'flipping back to on did not restore the chrome').toBeGreaterThan(0)
+  })
+})
+
 // GH #313/ADR-0160 amendment (Kim's 2026-07-28 ruling — "no bubble unless there is content for it") —
-// post-GH #306 the bubble holds ONLY content (note/mounts/chips), so a fresh turn's bubble is created
-// hidden and revealed on its first real content. Real-engine coverage (jsdom cannot paint `display`):
-// mid-turn (before ANY content) it computes hidden; the first setNote/mount/chip row reveals it; a
+// post-GH #306 the bubble holds ONLY prose content (note/disclosure/chips — GH #1221 moved the mounted
+// Gen-UI/A2UI card OUT to a sibling `mounts` container, so this law is prose-only now), so a fresh turn's
+// bubble is created hidden and revealed on its first real prose content. Real-engine coverage (jsdom
+// cannot paint `display`): mid-turn (before ANY prose) it computes hidden; the first setNote/chip row
+// reveals it (a mounted surface no longer does, GH #1221); a
 // resumed turn's bubble (TKT-0079) stays visible throughout; a failed, never-revealed turn leaves no
 // orphan pill.
 describe('ui-conversation cross-engine — the empty-bubble hiding law (GH #313/ADR-0160 amendment)', () => {
@@ -804,11 +921,19 @@ describe('ui-conversation cross-engine — the empty-bubble hiding law (GH #313/
     expect(isHidden(bubble), 'finalize() re-hid a bubble that already had content').toBe(false)
   })
 
-  it('the first mounted A2UI surface reveals the bubble mid-turn', () => {
+  it('GH #1221: a mounted A2UI surface does NOT reveal the (separate) prose bubble mid-turn — the card is visible independently, via its own mounts sibling', () => {
     const el = mountConversation()
-    const handle = mountSurfaceTurn(el) // in flight — streaming, not settled
-    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
-    expect(isHidden(bubble), 'a mounted surface did not reveal the bubble').toBe(false)
+    const handle = mountSurfaceTurn(el) // in flight — streaming, not settled; no setNote() call
+    const turn = el.querySelector('[data-part="turn"][data-role="agent"]') as HTMLElement
+    const bubble = turn.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const mounts = turn.querySelector('[data-part="mounts"]') as HTMLElement
+    // GH #313's law narrows to PROSE content only (GH #1221): a card mounting into the sibling `mounts`
+    // container is no longer "content inside the bubble" — the still-note-free bubble stays hidden…
+    expect(isHidden(bubble), 'a mounted surface revealed a still content-free prose bubble — GH #1221 regressed').toBe(true)
+    // …while the card itself is genuinely visible, via `mounts`' own `:empty` CSS collapse, never
+    // entangled with the bubble's own empty-hiding flag.
+    expect(mounts.childElementCount, 'the mounted card never actually landed in mounts').toBeGreaterThan(0)
+    expect(getComputedStyle(mounts).display, 'a non-empty mounts container painted display:none').not.toBe('none')
     handle.finalize()
   })
 
@@ -860,14 +985,23 @@ describe('ui-conversation cross-engine — the empty-bubble hiding law (GH #313/
     expect(system.textContent).toContain('boom')
   })
 
-  it('a turn that mounted content BEFORE failing keeps its bubble visible — fail() never hides real content', () => {
+  it('GH #1221: a turn that mounted a CARD (no prose) before failing keeps the card itself visible — fail() never disposes it, and the (still note-free) prose bubble stays legitimately hidden throughout', () => {
     const el = mountConversation()
-    const handle = mountSurfaceTurn(el)
-    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
-    expect(isHidden(bubble), 'precondition: the mount revealed the bubble').toBe(false)
+    const handle = mountSurfaceTurn(el) // card only — no setNote() call
+    const turn = el.querySelector('[data-part="turn"][data-role="agent"]') as HTMLElement
+    const bubble = turn.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const mounts = turn.querySelector('[data-part="mounts"]') as HTMLElement
+    // Precondition, post-GH #1221: mounting a card no longer reveals the (separate) prose bubble — see
+    // the dedicated "does NOT reveal" test above.
+    expect(isHidden(bubble), 'precondition: the prose bubble starts hidden (no note yet)').toBe(true)
+    expect(mounts.childElementCount, 'precondition: the card genuinely mounted').toBeGreaterThan(0)
 
     handle.fail('boom')
-    expect(isHidden(bubble), 'fail() hid a bubble that already had real content').toBe(false)
+    // The card survives fail() — it is not torn down, only its OWN interactive controls disable
+    // (GH #805, a separate mechanism) — and the still content-free prose bubble stays hidden, never
+    // popped open just because the turn ended in failure.
+    expect(mounts.childElementCount, "fail() must not dispose the turn's own mounted card").toBeGreaterThan(0)
+    expect(isHidden(bubble), 'fail() revealed a prose bubble that never received any note').toBe(true)
   })
 })
 
@@ -1197,33 +1331,34 @@ describe('ui-conversation GH #1124 — a throttled A2UI stream paints full-width
     }
 
     // MID-STREAM state — finalize() has NOT run. This is the frame the live screenshots showed clipped.
-    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
-    const host = bubble.querySelector('ui-surface-host') as HTMLElement
+    // GH #1221 — the surface host now mounts into `mounts`, a SIBLING of the prose bubble (never its
+    // descendant): every containment comparison below is against `mounts`' own box, not the bubble's.
+    const turn = el.querySelector('[data-part="turn"][data-role="agent"]') as HTMLElement
+    const mounts = turn.querySelector('[data-part="mounts"]') as HTMLElement
+    const host = mounts.querySelector('ui-surface-host') as HTMLElement
     const surface = host.querySelector('[data-part="surface"]') as HTMLElement
     const root = surface.firstElementChild as HTMLElement
     const row = surface.querySelector('ui-row') as HTMLElement
     expect(root).not.toBeNull()
     expect(row).not.toBeNull()
 
-    const bubbleStyle = getComputedStyle(bubble)
-    const bubbleContentRight =
-      bubble.getBoundingClientRect().right - Number.parseFloat(bubbleStyle.paddingRight)
+    const mountsRight = mounts.getBoundingClientRect().right
     const surfaceRect = surface.getBoundingClientRect()
     const rootRect = root.getBoundingClientRect()
     // the sub-24rem container query resolved against the LIVE surface width, not a stale/absent boundary
     expect(getComputedStyle(row).flexDirection, 'mid-stream the row ignored its narrow container').toBe('column')
     // no offset: the root's start edge sits at the surface's start edge (a centered over-wide box clips left)
     expect(rootRect.left, 'mid-stream root start edge is offset/clipped').toBeGreaterThanOrEqual(surfaceRect.left - 0.5)
-    // no clip: nothing pokes past the bubble's content box right edge (the live "clipped at the bubble edge")
+    // no clip: nothing pokes past mounts' own right edge (the live "clipped at the bubble edge" defect,
+    // now a `mounts` edge since GH #1221 moved the card out of the bubble)
     for (const [name, node] of [['surface', surface], ['root', root], ['row', row]] as const) {
-      expect(node.getBoundingClientRect().right, `${name} overflows the bubble right edge mid-stream`).toBeLessThanOrEqual(
-        bubbleContentRight + 0.5,
+      expect(node.getBoundingClientRect().right, `${name} overflows the mounts right edge mid-stream`).toBeLessThanOrEqual(
+        mountsRight + 0.5,
       )
     }
-    // ADR-0160 full-width law at the mid-stream paint: the surface spans the bubble content box
-    const bubbleContentWidth =
-      bubble.clientWidth - Number.parseFloat(bubbleStyle.paddingLeft) - Number.parseFloat(bubbleStyle.paddingRight)
-    expect(surfaceRect.width, 'mid-stream surface does not span the bubble').toBeCloseTo(bubbleContentWidth, 0)
+    // ADR-0160/GH #1221 full-width law at the mid-stream paint: the surface spans the full `mounts` box
+    // (edge-to-edge — `mounts` carries no padding of its own, unlike the bubble it used to sit inside).
+    expect(surfaceRect.width, 'mid-stream surface does not span mounts').toBeCloseTo(mounts.clientWidth, 0)
 
     // and finalize() must not MOVE anything — first paint and settled state agree (no next-turn jump)
     const beforeLeft = rootRect.left

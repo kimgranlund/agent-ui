@@ -57,6 +57,12 @@ function log(el: UIConversationElement): HTMLElement {
 function composer(el: UIConversationElement): UIConversationComposerElement {
   return el.querySelector('ui-conversation-composer') as UIConversationComposerElement
 }
+// GH #1221 — Gen-UI/A2UI cards mount into `[data-part="mounts"]`, a SIBLING of the prose bubble inside
+// the owning `[data-part="turn"]` wrapper, never the bubble's own descendant anymore. Every existing probe
+// that used to query a mounted host/frame FROM the bubble now goes through this helper instead.
+function mountsOf(bubble: HTMLElement): HTMLElement {
+  return (bubble.parentElement as HTMLElement).querySelector('[data-part="mounts"]') as HTMLElement
+}
 
 describe('ui-conversation — pre-connect calls are a documented no-op', () => {
   it('addUserMessage/reset never throw, beginAgentTurn returns an all-no-op stub handle, and warn ONCE total', () => {
@@ -209,7 +215,7 @@ describe('ui-conversation — per-surface registry (SPEC-R7): persistent identit
     t1.finalize()
 
     const bubble1 = log(el).querySelectorAll('[data-part="bubble"][data-role="agent"]')[0] as HTMLElement
-    const host1 = bubble1.querySelector('ui-surface-host') as UISurfaceHostElement
+    const host1 = mountsOf(bubble1).querySelector('ui-surface-host') as UISurfaceHostElement
     expect(host1).not.toBeNull()
 
     const t2 = el.beginAgentTurn()
@@ -228,9 +234,9 @@ describe('ui-conversation — per-surface registry (SPEC-R7): persistent identit
     t2.finalize()
 
     const bubble2 = log(el).querySelectorAll('[data-part="bubble"][data-role="agent"]')[1] as HTMLElement
-    // turn2's OWN bubble mounted NO new surface host — s1 is known, routed to its original bubble/host.
-    expect(bubble2.querySelector('ui-surface-host')).toBeNull()
-    expect(bubble1.querySelectorAll('ui-surface-host')).toHaveLength(1) // still exactly ONE host for s1, never a duplicate
+    // turn2's OWN mounts got NO new surface host — s1 is known, routed to its original turn/host.
+    expect(mountsOf(bubble2).querySelector('ui-surface-host')).toBeNull()
+    expect(mountsOf(bubble1).querySelectorAll('ui-surface-host')).toHaveLength(1) // still exactly ONE host for s1, never a duplicate
     expect(host1.textContent).toContain('ready') // the resend genuinely reached the SAME host
   })
 
@@ -259,7 +265,7 @@ describe('ui-conversation — per-surface registry (SPEC-R7): persistent identit
     const strips = turn1.querySelectorAll('[data-part="narration"]')
     expect(strips).toHaveLength(1) // exactly one strip — the fresh one REPLACED the finalized one
     expect(strips[0]).not.toBe(strip1)
-    expect(bubble1.querySelectorAll('ui-surface-host')).toHaveLength(2) // side-pot mounted HERE, not a new bubble
+    expect(turn1.querySelectorAll('ui-surface-host')).toHaveLength(2) // side-pot mounted into the SAME turn's mounts, not a new bubble
   })
 
   it('TKT-0079 negative control: an unknown (or closed) intoSurface falls through to the fresh-bubble path', () => {
@@ -290,7 +296,7 @@ describe('ui-conversation — per-surface registry (SPEC-R7): persistent identit
     )
     t1.finalize()
     const bubble = log(el).querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
-    const host = bubble.querySelector('ui-surface-host') as UISurfaceHostElement
+    const host = mountsOf(bubble).querySelector('ui-surface-host') as UISurfaceHostElement
     const surface = host.querySelector('[data-part="surface"]') as HTMLElement
     expect(surface.childElementCount).toBeGreaterThan(0)
 
@@ -300,7 +306,9 @@ describe('ui-conversation — per-surface registry (SPEC-R7): persistent identit
 
     expect(surface.childElementCount).toBe(0) // the host's own RendererHost was disposed
     expect(bubble.dataset.state).toBe('closed')
-    const annotation = bubble.querySelector('[data-part="annotation"]') as HTMLElement
+    // GH #1221 — the "Closed." annotation now lands in `mounts`, right after the closed host itself
+    // (never inside `bubble` anymore — see `#closeSurface`'s own comment for why).
+    const annotation = mountsOf(bubble).querySelector('[data-part="annotation"]') as HTMLElement
     expect(annotation).not.toBeNull()
     expect(annotation.textContent).toBe('Closed.')
 
@@ -329,15 +337,15 @@ describe('ui-conversation — per-surface registry (SPEC-R7): persistent identit
     t.finalize()
 
     const bubble = log(el).querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
-    const host = bubble.querySelector('ui-surface-host') as UISurfaceHostElement
+    const host = mountsOf(bubble).querySelector('ui-surface-host') as UISurfaceHostElement
     // The host settled terminal-empty from its OWN facts: the mount never received a root, so the
     // ':empty' copy is the truthful "Nothing was rendered for this surface.", not the frozen
     // anticipatory "appears here" promise.
     expect(host.hasAttribute('data-empty-final')).toBe(true)
     expect(host.dataset.state).toBe('closed')
-    // The turn is closed history with the standard annotation…
+    // The turn is closed history with the standard annotation, now living in `mounts` beside the host…
     expect(bubble.dataset.state).toBe('closed')
-    const annotation = bubble.querySelector('[data-part="annotation"]') as HTMLElement
+    const annotation = mountsOf(bubble).querySelector('[data-part="annotation"]') as HTMLElement
     expect(annotation.textContent).toBe('Closed.')
     // …and the record stays KNOWN + closed: a later line re-targeting it never mints a second host.
     const t2 = el.beginAgentTurn()
@@ -528,7 +536,7 @@ describe('ui-conversation — mountGenui (genui-surface.spec.md SPEC-R5/R8): the
     t1.finalize()
 
     const bubble1 = log(el).querySelectorAll('[data-part="bubble"][data-role="agent"]')[0] as HTMLElement
-    const host1 = bubble1.querySelector('ui-sandbox-frame') as HTMLElement & { html: string; surfaceId: string }
+    const host1 = mountsOf(bubble1).querySelector('ui-sandbox-frame') as HTMLElement & { html: string; surfaceId: string }
     expect(host1).not.toBeNull()
     expect(host1.surfaceId).toBe('q3-revenue')
     expect(host1.html).toBe('<p>first</p>')
@@ -538,9 +546,9 @@ describe('ui-conversation — mountGenui (genui-surface.spec.md SPEC-R5/R8): the
     t2.finalize()
 
     const bubble2 = log(el).querySelectorAll('[data-part="bubble"][data-role="agent"]')[1] as HTMLElement
-    // turn2's OWN bubble mounted NO new frame — q3-revenue is known, routed to its original bubble/host.
-    expect(bubble2.querySelector('ui-sandbox-frame')).toBeNull()
-    expect(bubble1.querySelectorAll('ui-sandbox-frame')).toHaveLength(1) // still exactly ONE frame, never a duplicate
+    // turn2's OWN mounts got NO new frame — q3-revenue is known, routed to its original turn/host.
+    expect(mountsOf(bubble2).querySelector('ui-sandbox-frame')).toBeNull()
+    expect(mountsOf(bubble1).querySelectorAll('ui-sandbox-frame')).toHaveLength(1) // still exactly ONE frame, never a duplicate
     expect(host1.html).toBe('<p>replaced</p>') // SPEC-R5 replace — the SAME host's html rebuilt atomically
   })
 
@@ -551,8 +559,8 @@ describe('ui-conversation — mountGenui (genui-surface.spec.md SPEC-R5/R8): the
     t1.mountGenui('shared-id', '<p>genui</p>')
     t1.finalize()
     const bubble = log(el).querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
-    expect(bubble.querySelector('ui-surface-host')).not.toBeNull()
-    expect(bubble.querySelector('ui-sandbox-frame')).not.toBeNull() // BOTH mounted — no collision
+    expect(mountsOf(bubble).querySelector('ui-surface-host')).not.toBeNull()
+    expect(mountsOf(bubble).querySelector('ui-sandbox-frame')).not.toBeNull() // BOTH mounted — no collision
   })
 
   it("a frame's `action` event bubbles through onClientMessage, framed as {genuiAction}, distinct from an A2uiClientMessage shape", () => {
@@ -1270,7 +1278,7 @@ describe('ui-conversation — SPEC-R7 AC1: persistent identity survives an ORDIN
     t1.finalize()
     expect(log(el).querySelectorAll('ui-surface-host')).toHaveLength(1)
     const bubble1 = log(el).querySelectorAll('[data-part="bubble"][data-role="agent"]')[0] as HTMLElement
-    expect(bubble1.querySelectorAll('ui-surface-host')).toHaveLength(1)
+    expect(mountsOf(bubble1).querySelectorAll('ui-surface-host')).toHaveLength(1)
 
     // An ORDINARY detach/reattach — the same element instance, removed then re-appended (a router
     // unmount/remount, e.g.), NOT a `moveBefore`-preserved move. `disconnected()` fires in between.
@@ -1295,15 +1303,15 @@ describe('ui-conversation — SPEC-R7 AC1: persistent identity survives an ORDIN
     // a SECOND bubble (a real repro the reviewer confirmed against the pre-fix code).
     expect(log(el).querySelectorAll('ui-surface-host'), 'a duplicate host was minted for an already-seen surfaceId post-reconnect').toHaveLength(1)
     const bubble2 = log(el).querySelectorAll('[data-part="bubble"][data-role="agent"]')[1] as HTMLElement
-    expect(bubble2.querySelectorAll('ui-surface-host'), 'turn2 own bubble minted its OWN surface host instead of routing to turn1s').toHaveLength(0)
-    expect(bubble1.querySelectorAll('ui-surface-host')).toHaveLength(1) // still exactly the ORIGINAL host, at the ORIGINAL bubble
+    expect(mountsOf(bubble2).querySelectorAll('ui-surface-host'), 'turn2 own mounts minted its OWN surface host instead of routing to turn1s').toHaveLength(0)
+    expect(mountsOf(bubble1).querySelectorAll('ui-surface-host')).toHaveLength(1) // still exactly the ORIGINAL host, at the ORIGINAL turn
 
     // disconnect's leak-safety dispose ALSO marked the surface `closed` (the SAME `deleteSurface`
     // transition, "Closed." annotation included) — a SEPARATE, already-covered SPEC-R7 AC2 concern (a
     // known-but-closed id is recognized, not silently dropped, but does not re-open); this test's own
     // scope is ONLY the no-duplicate-mint guarantee asserted above, not resuming a closed surface's render.
     expect(bubble1.dataset.state, 'the original surface was not marked closed by the disconnect teardown').toBe('closed')
-    expect(bubble1.querySelector('[data-part="annotation"]')?.textContent).toBe('Closed.')
+    expect(mountsOf(bubble1).querySelector('[data-part="annotation"]')?.textContent).toBe('Closed.')
   })
 })
 
@@ -1449,6 +1457,7 @@ describe('conversation.md descriptor', () => {
   const ATTR_NAMES = [
     'disclosure', 'disabled', 'receipt', 'sources', 'models', 'model', 'efforts', 'effort',
     'providers', 'provider', 'modes', 'mode', 'contextItems', 'mentionables', 'invocables', 'capabilities',
+    'bubbles', // GH #1221 — the host/agent bubble on/off setting
   ]
 
   it('has a leading frontmatter fence and a /site prose body', () => {

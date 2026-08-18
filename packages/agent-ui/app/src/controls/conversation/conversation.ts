@@ -19,10 +19,19 @@
 // imperative API (SPEC-R4/SPEC-R13). Composes `ui-surface-host` INTERNALLY, one instance per OPEN A2UI
 // surface (ADR-0129 clause 2) — generalizing `site/lib/surface-registry.ts`'s per-surface lifecycle
 // (itself a generalization of `site/lib/ask-registry.ts`, ADR-0097 §2) as this element's OWN mechanism: a
-// fresh `surfaceId` mounts a NEW `ui-surface-host` inline in that turn's own bubble; a KNOWN `surfaceId`
-// (open or closed) routes to that surface's ORIGINAL host, at its original bubble — never a new mount for
-// the same id (persistent identity across turns); a `deleteSurface` line disposes that ONE surface's host
-// and leaves a VISIBLE, non-removable "Closed." annotation — history is never silently removed (SPEC-R7).
+// fresh `surfaceId` mounts a NEW `ui-surface-host` inline in that turn's own `mounts` (GH #1221: a SIBLING
+// of the turn's prose bubble, never nested inside it — see the bubble on/off setting note below); a KNOWN
+// `surfaceId` (open or closed) routes to that surface's ORIGINAL host, at its original turn — never a new
+// mount for the same id (persistent identity across turns); a `deleteSurface` line disposes that ONE
+// surface's host and leaves a VISIBLE, non-removable "Closed." annotation — history is never silently
+// removed (SPEC-R7).
+//
+// GH #1221 (Kim's 2026-08-17 rulings) — the `bubbles` prop (on/off, default `'on'` — the Surface tab's
+// setting drives it, `ui-agent-admin`) toggles the HOST/AGENT bubble's own chrome only (background/
+// padding/radius, conversation.css); the USER bubble is untouched either way. Independently, Gen-UI/A2UI
+// cards (`mounts`) are ALWAYS a sibling of the prose bubble, in EVERY `bubbles` mode — a card's own
+// chrome (surface-host.css's `[bare]` structural card, GH #1150/#1161) is never re-nested inside the
+// prose bubble's chrome, which is the OTHER, orthogonal half of this ticket.
 // This composition is edge-to-edge sound only because the accepted ADR-0128 makes a resent, already-
 // mounted container's record reconcile correctly — a precondition this file assumes.
 //
@@ -232,6 +241,17 @@ const props = {
   // `ui-agent-admin`) — this element only carries rows down and `onCapabilityToggle` up. `undefined`
   // (default) ⇒ no trigger, no panel, byte-identical for every existing consumer.
   capabilities: { ...prop.json<readonly CapabilityRow[] | undefined>(undefined), attribute: false as const },
+
+  // GH #1221 — the host/agent bubble on/off setting (Kim's 2026-08-17 rulings: the Surface-tab toggle
+  // drives THIS prop). An ENUM, not a plain boolean, deliberately: a reflected `prop.boolean` whose
+  // DEFAULT is `true` can never distinguish "never set, default on" from "explicitly set off" in CSS —
+  // both read as attribute-absent (`booleanType.to(false)` removes the attribute, and a default value is
+  // never reflected out until the setter runs at least once) — the exact gap this ticket's own "ZERO
+  // visual change unset" requirement cannot tolerate. `'on'` (the default) writes NO attribute unless a
+  // consumer explicitly sets it, so an untouched `ui-conversation` renders byte-identical to before this
+  // ticket; only an explicit `'off'` ever paints the flattened host bubble (conversation.css). Scoped to
+  // the HOST/AGENT role only (Kim's ruling 1/Acceptance) — the USER bubble is never touched by this prop.
+  bubbles: { ...prop.enum(['on', 'off'] as const, 'on'), reflect: true },
 } satisfies PropsSchema
 
 /** GH #291/ADR-0160 clause 3 (Kim's 2026-07-27 ruling) — a CONSUMER-DEFINED pre-hydrated inline-action
@@ -250,7 +270,8 @@ export interface AgentTurnHandle {
    *  no-surface line under this turn's own category tracking. */
   ingestLine(line: string): void
   /** genui-surface.spec.md SPEC-R5/R8 (PRD-G8) — mounts one genui envelope by `surfaceId`: a FRESH id
-   *  mounts a NEW `ui-sandbox-frame` inline in THIS turn's own bubble (the `ingestLine` fresh-host
+   *  mounts a NEW `ui-sandbox-frame` inline in THIS turn's own `mounts` (GH #1221: a sibling of the
+   *  prose bubble, never nested inside it — the `ingestLine` fresh-host
    *  precedent, applied to a structurally different host); a KNOWN id rebuilds the EXISTING frame's
    *  `.html` in place (SPEC-R5's atomic "replace" lifecycle — the control's own effect rebuilds the whole
    *  srcdoc, frame-internal state lost BY DESIGN). A PARALLEL mechanism from `ingestLine`'s A2UI-shaped
@@ -639,11 +660,12 @@ export class UIConversationElement extends UIElement {
     return row
   }
 
-  /** Opens one agent turn: a fresh `[data-part='turn']` wrapper (who → narration → bubble, GH #306/
-   *  ADR-0160 — the sender label and the narration strip render OUTSIDE the bubble) whose bubble reserves
-   *  a note + mounts container, in that literal order (SPEC-R2), and the routing state the returned
-   *  handle closes over (SPEC-R6/R7). A no-op-stub handle pre-connect (never throws — the same
-   *  documented-no-op discipline as ui-surface-host).
+  /** Opens one agent turn: a fresh `[data-part='turn']` wrapper (who → narration → bubble → mounts, GH
+   *  #306/ADR-0160 — the sender label and the narration strip render OUTSIDE the bubble; GH #1221 —
+   *  `mounts` is ALSO outside the bubble, a further sibling after it) whose bubble reserves a note
+   *  container (SPEC-R2) and whose `mounts` container holds every Gen-UI/A2UI card this turn mounts, plus
+   *  the routing state the returned handle closes over (SPEC-R6/R7). A no-op-stub handle pre-connect
+   *  (never throws — the same documented-no-op discipline as ui-surface-host).
    *
    *  TKT-0079 — `opts.intoSurface`: when it names an OPEN registry record whose bubble is still connected,
    *  the turn RESUMES that bubble instead of opening a new card (Kim: "stay in the same card unless it has
@@ -690,18 +712,30 @@ export class UIConversationElement extends UIElement {
       mounts = document.createElement('div')
       mounts.dataset.part = 'mounts'
       // GH #306/ADR-0160 amendment — the sender label + narration strip render OUTSIDE the bubble now
-      // (free-standing turn chrome, `#makeBubble`'s own `[data-part='turn']` wrapper); only the content
-      // (note + mounts) lives inside the bubble. `bubble.before(narration)` plants the strip as the
-      // wrapper's own child, immediately before the bubble — after the `[data-part='who']` label
-      // `#makeBubble` already appended, giving the who → narration → bubble reading order.
-      bubble.append(note, mounts)
+      // (free-standing turn chrome, `#makeBubble`'s own `[data-part='turn']` wrapper); the bubble itself
+      // holds ONLY prose (note + the optional wire disclosure/action-chip row). `bubble.before(narration)`
+      // plants the strip as the wrapper's own child, immediately before the bubble — after the
+      // `[data-part='who']` label `#makeBubble` already appended.
+      //
+      // GH #1221 (Kim's 2026-08-17 rulings) — `mounts` (Gen-UI/A2UI cards) is now a SIBLING of the
+      // bubble, `bubble.after(mounts)`, NEVER the bubble's own child: one AGENT header per turn, prose
+      // and cards flow as siblings inside it, and a card keeps its own chrome (surface-host.css's [bare]
+      // structural card, GH #1150/#1161) in EVERY bubble mode — it is never re-nested inside the prose
+      // bubble's own chrome again. Reading order who → narration → bubble(prose) → mounts(cards), mirroring
+      // the pre-GH#1221 note-then-mounts DOM order one level up.
+      bubble.append(note)
       bubble.before(narration)
+      bubble.after(mounts)
       this.#log!.append(built.outer)
       // GH #313/ADR-0160 amendment (Kim's 2026-07-28 ruling — "no bubble unless there is content for
-      // it") — a fresh agent bubble starts CONTENT-EMPTY (the note/mounts skeleton just appended holds
-      // no text/children yet) and the narration strip now lives OUTSIDE it (GH #306), so an all-empty
-      // bubble is a real, knowable pre-content state. `data-empty` marks it hidden (conversation.css);
-      // `#revealBubble` below clears it exactly once, on the FIRST real content of any kind. `:has()`
+      // it") — a fresh agent bubble starts CONTENT-EMPTY (the note skeleton just appended holds no text
+      // yet) and the narration strip now lives OUTSIDE it (GH #306); GH #1221 narrows this further —
+      // `mounts` also lives outside the bubble now, so the bubble's own emptiness is a PROSE-only
+      // question (note/disclosure/actions), never a mount's. `data-empty` marks it hidden
+      // (conversation.css); `#revealBubble` below clears it exactly once, on the FIRST real prose content.
+      // A card-only turn's bubble may legitimately stay hidden for the turn's whole life — the mount
+      // sibling paints on its own, via its own `:empty` CSS collapse, never entangled with this flag.
+      // `:has()`
       // can't reach this — `#renderBody`'s default path writes a bare `textContent` string into `note`,
       // a text node CSS attribute-selectors cannot see — hence the small state-attribute route rather
       // than a CSS-only one.
@@ -892,7 +926,10 @@ export class UIConversationElement extends UIElement {
       host.wrap = true // TKT-0084: a chat bubble hugs its rendered surface's content, never clips it to an arbitrary fixed height
       host.bare = true // GH #241 → GH #1150: the chat mount — no checker artboard, FULL message-column width; since #1150 the host's bare surface carries STRUCTURAL card chrome (padding/bg/border), so any payload is contained even without a Card root
       mounts.append(host)
-      revealBubble() // GH #313 — a fresh mount is real content
+      // GH #1221 — NO revealBubble() here anymore: `mounts` is a sibling of the prose bubble now, not
+      // its child (GH #313's "no bubble unless there is content for it" law narrows to mean the bubble's
+      // OWN content — note/disclosure/actions). A card-only turn is visible via `mounts`' own `:empty`
+      // CSS collapse (conversation.css), never by puffing up an otherwise-empty prose bubble around it.
       host.onClientMessage((m) => {
         // GH #1164 note — no superseded guard HERE, deliberately: a superseded surface's controls are
         // really disabled (the host's sweep), and the RENDERER's click→action listener refuses a click
@@ -962,7 +999,8 @@ export class UIConversationElement extends UIElement {
         this.#onClientMessageCb?.({ genuiAction: detail } as unknown as A2uiClientMessage)
       })
       mounts.append(host)
-      revealBubble() // GH #313 — a fresh mount is real content
+      // GH #1221 — see `routeLine`'s own fresh-mount comment: `mounts` is a sibling of the bubble now, so
+      // a fresh genui frame no longer reveals the (separate) prose bubble either.
       this.#genuiRegistry.set(surfaceId, { host, bubble })
       host.html = html
     }
@@ -1105,8 +1143,9 @@ export class UIConversationElement extends UIElement {
    *
    *  GH #306/ADR-0160 amendment — the narration strip is no longer the bubble's own child (it sits
    *  outside, in the owning `[data-part='turn']` wrapper `#makeBubble` creates), so it's found via the
-   *  bubble's PARENT rather than the bubble itself; every other part (note/mounts) is still the bubble's
-   *  own direct child, unchanged. */
+   *  bubble's PARENT rather than the bubble itself; `note` is still the bubble's own direct child.
+   *  GH #1221 — `mounts` moved the SAME way as `narration`: it is now the turn wrapper's own child (a
+   *  sibling of the bubble, never nested inside it), so it is found there too, not under the bubble. */
   #resumableBubble(
     id: string,
   ): { bubble: HTMLElement; narration: UIStatusStreamElement; note: HTMLElement; mounts: HTMLElement } | undefined {
@@ -1119,7 +1158,7 @@ export class UIConversationElement extends UIElement {
     const narration =
       turn?.dataset.part === 'turn' ? turn.querySelector<UIStatusStreamElement>(':scope > [data-part="narration"]') : null
     const note = resolvedBubble.querySelector<HTMLElement>(':scope > [data-part="body"]')
-    const mounts = resolvedBubble.querySelector<HTMLElement>(':scope > [data-part="mounts"]')
+    const mounts = turn?.dataset.part === 'turn' ? turn.querySelector<HTMLElement>(':scope > [data-part="mounts"]') : null
     if (narration === null || note === null || mounts === null) return undefined
     return { bubble: resolvedBubble, narration, note, mounts }
   }
@@ -1318,7 +1357,15 @@ export class UIConversationElement extends UIElement {
     const note = document.createElement('p')
     note.dataset.part = 'annotation'
     note.textContent = 'Closed.'
-    record.bubble.append(note)
+    // GH #1221 — placed right after the closed HOST itself (`record.host.after(note)`, inside `mounts`),
+    // NEVER inside `record.bubble` anymore: since the card mount moved out to a sibling of the prose
+    // bubble, appending into `bubble` would silently HIDE this annotation behind the GH #313 empty-bubble
+    // law on any turn whose bubble never got real prose (a card-only turn's bubble may legitimately stay
+    // `data-empty` forever now) — exactly the "history is never silently removed" guarantee (SPEC-R7)
+    // this annotation exists to uphold. `record.host` is still a connected DOM node post-`dispose()`
+    // (only its rendered RendererHost children are torn down), so this is a same-parent sibling insert,
+    // never a reparent across a disposed subtree.
+    record.host.after(note)
   }
 
   #addSystemBubble(text: string): void {
@@ -1349,7 +1396,10 @@ export class UIConversationElement extends UIElement {
   /** GH #306/ADR-0160 amendment (Kim's 2026-07-27 revision) — the sender label (`[data-part='who']`) and,
    *  for an agent turn, the narration strip both move OUTSIDE the message bubble: free-standing turn
    *  chrome on the page background, above the chromed bubble. `outer` is what the caller appends to the
-   *  log; `bubble` is where content (user text / agent note + mounts) goes. For `user`/`agent`, `outer`
+   *  log; `bubble` is where content (user text / agent note) goes — GH #1221: an agent turn's `mounts`
+   *  (Gen-UI/A2UI cards) is a FURTHER sibling `beginAgentTurn` appends after the bubble, never the
+   *  bubble's own child; this method itself mints no `mounts` (that stays `beginAgentTurn`'s job). For
+   *  `user`/`agent`, `outer`
    *  is a NEW `[data-part='turn']` wrapper — the log's own alignment role (`align-self`, the base
    *  bubble's 92% width cap) moves onto IT, so the label/strip line up with their own bubble's edge; the
    *  wrapper owns the `[data-role]` a live turn carries (mirroring the bubble's own, the naming-gates.
