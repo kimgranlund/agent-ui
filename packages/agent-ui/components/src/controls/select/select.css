@@ -186,6 +186,13 @@
     display: inline-block;
     min-inline-size: var(--ui-select-min-inline-size);
     vertical-align: middle; /* align with adjacent form controls (like a native <select>) */
+    /* GH #1297 — the containing block for the visually-hidden aria-label span below. Without this the
+       span's `position: absolute` resolves against the nearest positioned ANCESTOR (measured: super-shell's
+       `middle`, in ui-agent-admin), where its static position lands wherever the select sits inside a
+       scrolled region — outside that region's overflow clip — and inflates the ancestor's scrollable
+       overflow into a phantom, un-hidden scrollbar. Same idiom otp-field.css already carries. The listbox
+       overlay is `position: fixed` (its own controller), unaffected. */
+    position: relative;
   }
 
   /* The trigger button (Control class): a [label | caret] inline-grid. The trigger ALWAYS
