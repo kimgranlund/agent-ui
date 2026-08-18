@@ -53,7 +53,10 @@ import './agent-admin-app.css' // page-local: full-viewport layout + the preset 
 import type { AgentRosterEntry, GenerateSeed, UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 // ADR-0198 (GH #1101) — the shared end-of-flow page-chrome affordance (the #1065 shared-seam lift).
 import { createFlowChrome } from '../lib/flow-chrome.ts'
-import type { AdminAgentSurfaceTurn } from '@agent-ui/app/agent-admin-schema'
+import type { AdminAgentSurfaceTurn, TeamDeclaration } from '@agent-ui/app/agent-admin-schema'
+// GH #1196 (ADR-0203 clause 4) — the team record this page's team-shaped mint path persists;
+// PR #1231's already-shipped validation-closed record + StorageAdapter persistence, reused verbatim.
+import { loadAgentTeams, saveAgentTeam, type AgentTeam } from '@agent-ui/app/agent-admin-team'
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
 // GH #845 (LLD-C15/§7) — the Edit Agents drawer's vehicle: `ui-drawer` (ADR-0188), COMPOSED byte-unmodified.
 // Its content (the roster rows and every management verb on them) is page-owned by that control's own fence.
@@ -243,6 +246,12 @@ admin.onDeleteAgentRequest((id) => deleteAgent(id))
 // straight through to the mint so the new interviewer store is SEEDED with it (never corrected afterwards).
 admin.onGenerateRequest((seed) => createGeneratedAgent(seed))
 
+// GH #1196 (ADR-0203 clause 4) — the Builder's team-shaped generation path's own registration seam.
+// Fires from INSIDE the authoring turn loop's fenced `team` consumption arm (agent-admin.ts); this
+// page owns everything it fans out to (persona minting, roster registration, `AgentTeam` validation +
+// persistence) — the component itself never mints anything (the DAG this file's own imports honor).
+admin.onTeamDeclared((team) => void handleTeamDeclared(team))
+
 function applyPersona(persona: Persona): void {
   active = persona
   localStorage.setItem(ACTIVE_PRESET_KEY, persona.id)
@@ -396,6 +405,82 @@ function createGeneratedAgent(pick?: GenerateSeed): void {
   applyPersona(persona) // pushRoster(persona.id) inside applyPersona stages the header's own roster row
   admin.authoringStore = builderStore(pick?.model) // a FRESH interviewer per flow entry (no persistKey, no cache)
   notify(`Created “${persona.label}” — describe what you want and the Builder will fill it in.`)
+}
+
+// GH #1196 (ADR-0203 clause 4) — the Builder's team-shaped generation path: mint N member personas +
+// one validated `AgentTeam` record from a single interview arc, additive to `createGeneratedAgent`
+// above (the single-agent flow is byte-unaffected — nothing here runs unless the model actually
+// declares a `team`).
+
+/** A kebab id for a freshly-minted `AgentTeam` — the SAME base-slug + numeric-suffix-on-collision
+ *  shape `agent-admin-persona-file.ts`'s own `mintIdentity` uses for personas, kept as its own small
+ *  copy here rather than widening that persona-shaped helper's export surface for this one caller. */
+function mintTeamId(label: string, takenIds: ReadonlySet<string>): string {
+  const base =
+    label
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'team'
+  let id = base
+  let n = 1
+  while (takenIds.has(id)) {
+    n += 1
+    id = `${base}-${n}`
+  }
+  return id
+}
+
+/** Mint + validate + save one team-shaped generation path's own output, registered on
+ *  `admin.onTeamDeclared`, fired from inside the authoring turn loop's fenced `team` consumption arm.
+ *
+ *  Mints one blank persona PER MEMBER, name-seeded from the declaration ONLY — no patch applied, no
+ *  interview of its own (a member's own settings are the EXISTING single-agent Builder flow's job,
+ *  reachable after the team lands, per R4's smallest-honest scope). Designates the CURRENTLY ACTIVE
+ *  persona (the one already being authored when the team-shaped ask was recognized) as the GM.
+ *
+ *  VALIDATED BEFORE SAVE, and before any mint at all: `readMetaLine`'s own wire guard only checks
+ *  field TYPES, never non-emptiness, so a structurally malformed declaration (a blank label, or any
+ *  member's name/role/routingDescription blank) is caught HERE, before a single persona is minted —
+ *  nothing lands, notified as a failure, never a partial roster. `saveAgentTeam` itself re-validates
+ *  (ADR-0203 clause 1's closed-validation law, never second-guessed here) as defense in depth against
+ *  a shape this pre-check cannot anticipate. */
+async function handleTeamDeclared(team: TeamDeclaration): Promise<void> {
+  const label = team.label.trim()
+  const structurallyValid =
+    label.length > 0 &&
+    team.members.length > 0 &&
+    team.members.every((m) => m.name.trim().length > 0 && m.role.trim().length > 0 && m.routingDescription.trim().length > 0)
+  if (!structurallyValid) {
+    notify('The Builder proposed a team, but its roster was incomplete (a blank name, role, or routing description) — nothing was created.', true)
+    return
+  }
+
+  const minted = team.members.map((member) => {
+    const seed = { model: DEFAULT_MODEL_ID, ...initialValuesFor(defaultAgentConfigSchema), ...initialEntryValues() }
+    const persona = mintBlankPersona(seed, [...personaRoster(), ...roster], member.name)
+    saveImportedPersona(persona)
+    roster.push(persona)
+    return { persona, member }
+  })
+  pushRoster(active.id) // the header's roster row list gains the new members; ACTIVE stays the GM, unchanged
+
+  const knownAgentIds = roster.map((p) => p.id)
+  const existingTeams = await loadAgentTeams()
+  const agentTeam: AgentTeam = {
+    id: mintTeamId(label, new Set(existingTeams.map((t) => t.id))),
+    label,
+    ...(team.tagline !== undefined && team.tagline.trim().length > 0 ? { tagline: team.tagline.trim() } : {}),
+    gmAgentId: active.id,
+    members: minted.map(({ persona, member }) => ({ agentId: persona.id, role: member.role, routingDescription: member.routingDescription })),
+  }
+
+  const result = await saveAgentTeam(agentTeam, knownAgentIds)
+  if (!result.valid) {
+    notify(`Team “${label}” could not be saved — ${result.issues.map((i) => i.message).join(' ')}`, true)
+    return
+  }
+  notify(`Created team “${label}” — ${minted.length} member${minted.length === 1 ? '' : 's'} + “${active.label}” as GM.`)
 }
 
 // The ONE native form element on this page, and a deliberate exception to the fleet's "no native form

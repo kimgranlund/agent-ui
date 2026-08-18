@@ -316,16 +316,20 @@ export function duplicatePersonaFrom(source: Persona, store: PersonaStateReader 
   }
 }
 
-export function mintBlankPersona(seed: Readonly<Record<string, unknown>>, roster: readonly Persona[]): Persona {
-  const { id, label } = mintIdentity(
-    'New agent',
+/** `label` (GH #1196 / ADR-0203 clause 4) — optional, defaults to `'New agent'` exactly as before this
+ *  field existed (byte-identical for every pre-existing caller). The team-shaped mint path passes a
+ *  member's own declared `name` here, so a minted teammate reads as e.g. "Amenities" rather than a
+ *  generic "New agent 3" — `mintIdentity`'s own collision suffixing still applies unchanged either way. */
+export function mintBlankPersona(seed: Readonly<Record<string, unknown>>, roster: readonly Persona[], label = 'New agent'): Persona {
+  const { id, label: mintedLabel } = mintIdentity(
+    label,
     new Set(roster.map((p) => p.id)),
     new Set(roster.map((p) => p.label)),
     'new',
   )
   return {
     id,
-    label,
+    label: mintedLabel,
     tagline: 'A freshly minted agent, ready to configure.',
     seed: { ...seed },
     imported: true, // roster-persisted the SAME way an imported persona is (GH #406) — never a shipped preset
