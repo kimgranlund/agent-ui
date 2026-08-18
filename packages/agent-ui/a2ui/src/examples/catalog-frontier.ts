@@ -371,4 +371,42 @@ export const heroListingCardSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed]
+const ASK_ID = 'ask-1'
+/** Frontier 8 — the CARD-ANATOMY law (GH #1199, req-a2ui-patterns.md R1): the canonical three-slot ask
+ *  card, header/content/footer each doing exactly one job — CardHeader carries ONLY the identity title
+ *  (a label Text, never a control), CardContent carries the RadioGroup choice, and CardFooter carries the
+ *  ONE commit Button — never a Button loose in content alongside a populated footer, and never a control
+ *  inside the header. This is the grammar.md card-anatomy clause's own worked feed-ask sketch (R1),
+ *  transcribed verbatim as a corpus exemplar so the law has a real, validated, renderable instance on the
+ *  shelf, not only prose. */
+export const cardAnatomyAskSeed: ExampleSeed = {
+  name: 'frontier-card-anatomy-ask',
+  description: 'A three-slot ask card demonstrating card-anatomy law (R1): CardHeader carries only the identity title, CardContent carries the RadioGroup choice, CardFooter carries the single commit Button.',
+  promptText: 'Which room would you like? Standard (€180) or the Deluxe King (€240)?',
+  surfaceId: ASK_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: ASK_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: ASK_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['hd', 'ct', 'ft'] },
+          { id: 'hd', component: 'CardHeader', children: ['title'] },
+          { id: 'title', component: 'Text', variant: 'label', text: 'Pick a room' },
+          { id: 'ct', component: 'CardContent', children: ['rooms'] },
+          { id: 'rooms', component: 'RadioGroup', value: { path: '/room' }, children: ['r1', 'r2'] },
+          { id: 'r1', component: 'Radio', value: 'standard', label: 'Standard · €180' },
+          { id: 'r2', component: 'Radio', value: 'deluxe', label: 'Deluxe King · €240' },
+          { id: 'ft', component: 'CardFooter', children: ['go'] },
+          { id: 'go', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'pick_room' } },
+        ],
+      },
+    },
+    { version: 'v1.0', updateDataModel: { surfaceId: ASK_ID, value: { room: 'deluxe' } } },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed]

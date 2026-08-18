@@ -371,11 +371,11 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
   })
 
   /** With the committed shard loaded, the admitted seeds short-circuit at dedup (`E_DUP`) and never
-   *  reach the judge; the shelf seeds ABSENT from it — `stats-grid-dashboard`, plus the seven GH
-   *  #729/#1184/#1185/#1189 catalog-frontier seeds pending their own judged wave, plus `agent-roster-drawer`
-   *  (ADR-0188 GH #863, the same pending-judged-wave shape) — reach a wired judge, which fails closed
-   *  unless the file rules on each (ADR-0068 clause 2). Refusing all nine keeps the run at zero admissions
-   *  while still reaching `saveStore` — the archive's actual trigger. */
+   *  reach the judge; the shelf seeds ABSENT from it — `stats-grid-dashboard`, plus the eight GH
+   *  #729/#1184/#1185/#1189/#1199 catalog-frontier seeds pending their own judged wave, plus
+   *  `agent-roster-drawer` (ADR-0188 GH #863, the same pending-judged-wave shape) — reach a wired judge,
+   *  which fails closed unless the file rules on each (ADR-0068 clause 2). Refusing all ten keeps the run
+   *  at zero admissions while still reaching `saveStore` — the archive's actual trigger. */
   const SHARD_LOADED_VERDICTS = {
     'stats-grid-dashboard': { passed: false, qualityScore: 2 },
     'frontier-trip-card': { passed: false, qualityScore: 2 },
@@ -385,6 +385,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     'frontier-round-outcome': { passed: false, qualityScore: 2 },
     'frontier-booking-receipt': { passed: false, qualityScore: 2 },
     'frontier-image-hero-card': { passed: false, qualityScore: 2 },
+    'frontier-card-anatomy-ask': { passed: false, qualityScore: 2 },
     'agent-roster-drawer': { passed: false, qualityScore: 2 },
   }
 
@@ -578,9 +579,9 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     )
     const verdictsPath = writeVerdicts('re-judged.json', {
       date: '2026-07-29',
-      // the seven GH #729/#1184/#1185/#1189 frontier seeds + agent-roster-drawer (ADR-0188 GH #863) also
-      // reach the wired judge here (absent from the shard) — refused so this test's claim stays exactly
-      // "the re-judged stats-grid name admits", nothing else moves.
+      // the eight GH #729/#1184/#1185/#1189/#1199 frontier seeds + agent-roster-drawer (ADR-0188 GH #863)
+      // also reach the wired judge here (absent from the shard) — refused so this test's claim stays
+      // exactly "the re-judged stats-grid name admits", nothing else moves.
       verdicts: {
         'stats-grid-dashboard': { passed: true, qualityScore: 5 },
         'frontier-trip-card': { passed: false, qualityScore: 2 },
@@ -590,6 +591,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
         'frontier-round-outcome': { passed: false, qualityScore: 2 },
         'frontier-booking-receipt': { passed: false, qualityScore: 2 },
         'frontier-image-hero-card': { passed: false, qualityScore: 2 },
+        'frontier-card-anatomy-ask': { passed: false, qualityScore: 2 },
         'agent-roster-drawer': { passed: false, qualityScore: 2 },
       },
     })
