@@ -173,7 +173,16 @@ const targets = [
   // (+380 B over the old line: control + scrim/caption CSS + descriptor glue), dual-reviewed weight
   // (component-checker + a2ui-review), no gzip artifact. ~132 B stated headroom. Same law: a
   // CHECKPOINT, not a ratchet.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 58.5 * KB],
+  // RE-BASED 2026-08-18 (GH #1208, the ui-stat donut/progress-ring variant — an UNATTENDED build
+  // dispatch measured this, NOT a live Kim ruling; the "RULED"/"RE-BASED" wording elsewhere on this
+  // ladder records an actual operator sign-off, and this entry does not carry one — flagged in the
+  // dispatch's own report for confirmation): 58.5 KB -> 59 KB (60416 B gz) — measured 59911 B gz on
+  // the 1208-stat-ring branch, 7 B over the 59904 line; the sole mover is the ring-variant addition
+  // itself (the `variant`/`percent` props, the render effect's ring branch, `#ringNode`, and
+  // stat-model.ts's `statPercentProp`/`ringPercent` — real reviewed logic, no gzip artifact; the
+  // control's own CSS is NOT part of this JS-only barrel). ~505 B stated headroom. Same law as
+  // above: a CHECKPOINT, not a ratchet.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 59 * KB],
   // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
   // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
   // `./markdown`, `./editor`) is not the one exception.

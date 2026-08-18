@@ -690,7 +690,10 @@ export const tableFactory: WidgetFactory = accessorFactory('ui-table', [
 
 // Stat → ui-stat (SPEC-R7..R10). Wire `value` → prop `figure` (TKT-0069 item 1); `label`/`delta`/
 // `caption` stay 1:1 (`figure`'s string|number union + `delta`'s null-defaulting numeric codec are real
-// accessors, `setProp` writes either straight through). Display-only leaf.
+// accessors, `setProp` writes either straight through). GH#1208's `variant`/`percent` (the ring-variant
+// addition) are ALSO 1:1 identity `mapsTo` (catalog.json) — no new entry needed in the mapping above;
+// `mappedAccessorFactory`'s generic `applyProp` already falls through to identity `setProp` for any prop
+// absent from the override map. Display-only leaf.
 export const statFactory: WidgetFactory = mappedAccessorFactory('ui-stat', { value: 'figure' })
 
 // DescriptionList → ui-description-list (ADR-0201, GH #1185 — the key–value receipt primitive the GH #1174

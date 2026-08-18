@@ -25,9 +25,9 @@ const css = readFileSync(`${DIR}/stat.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['label', 'figure', 'delta', 'caption']
+const ATTR_NAMES = ['label', 'figure', 'delta', 'caption', 'variant', 'percent']
 
-describe('kindOf build-verify (LLD-C9) — value classifies "string", delta classifies "number"', () => {
+describe('kindOf build-verify (LLD-C9) — value/percent classify "string"/"number"', () => {
   it('value: a null-defaulting, non-enum-snapping string-shaped codec classifies as "string"', () => {
     const drift = compareDescriptorToProps(
       parsed.attributes.map((a) => (a.name === 'figure' ? { ...a, type: 'string' } : a)),
@@ -44,6 +44,14 @@ describe('kindOf build-verify (LLD-C9) — value classifies "string", delta clas
     expect(drift.filter((d) => d.path.startsWith('attributes.delta'))).toEqual([])
   })
 
+  it('percent (GH#1208): the SAME null-defaulting numeric shape as delta classifies "number"', () => {
+    const drift = compareDescriptorToProps(
+      parsed.attributes.map((a) => (a.name === 'percent' ? { ...a, type: 'number' } : a)),
+      UIStatElement.props,
+    )
+    expect(drift.filter((d) => d.path.startsWith('attributes.percent'))).toEqual([])
+  })
+
   it('NEGATIVE: value mis-declared as "number" fails DRIFT_TYPE (kindOf does not blindly green everything)', () => {
     const flip = parsed.attributes.map((a) => (a.name === 'figure' ? { ...a, type: 'number' } : a))
     expect(compareDescriptorToProps(flip, UIStatElement.props)).toContainEqual(
@@ -55,6 +63,13 @@ describe('kindOf build-verify (LLD-C9) — value classifies "string", delta clas
     const flip = parsed.attributes.map((a) => (a.name === 'delta' ? { ...a, type: 'string' } : a))
     expect(compareDescriptorToProps(flip, UIStatElement.props)).toContainEqual(
       expect.objectContaining({ code: 'DRIFT_TYPE', path: 'attributes.delta.type' }),
+    )
+  })
+
+  it('NEGATIVE: percent mis-declared as "string" fails DRIFT_TYPE', () => {
+    const flip = parsed.attributes.map((a) => (a.name === 'percent' ? { ...a, type: 'string' } : a))
+    expect(compareDescriptorToProps(flip, UIStatElement.props)).toContainEqual(
+      expect.objectContaining({ code: 'DRIFT_TYPE', path: 'attributes.percent.type' }),
     )
   })
 })
@@ -94,7 +109,7 @@ describe('stat.md descriptor — contract↔props trip-wire', () => {
     expect(drift.filter((d) => d.code === 'DRIFT_MISSING' || d.code === 'DRIFT_EXTRA')).toEqual([])
   })
 
-  it('all four attributes are CLEAN — zero drift (type/default/reflect all agree with the live props)', () => {
+  it('all six attributes are CLEAN — zero drift (type/default/reflect/enum-values all agree with the live props)', () => {
     const drift = compareDescriptorToProps(parsed.attributes, UIStatElement.props)
     expect(drift).toEqual([])
   })
@@ -107,6 +122,17 @@ describe('stat.md descriptor — contract↔props trip-wire', () => {
     const dropCaption = parsed.attributes.filter((a) => a.name !== 'caption')
     expect(compareDescriptorToProps(dropCaption, UIStatElement.props)).toContainEqual(
       expect.objectContaining({ code: 'DRIFT_MISSING', path: 'attributes.caption' }),
+    )
+  })
+
+  it('negative control (GH#1208): variant mis-declared default fails DRIFT_DEFAULT; dropping percent fails DRIFT_MISSING', () => {
+    const flipVariant = parsed.attributes.map((a) => (a.name === 'variant' ? { ...a, default: 'ring' } : { ...a }))
+    expect(compareDescriptorToProps(flipVariant, UIStatElement.props)).toContainEqual(
+      expect.objectContaining({ code: 'DRIFT_DEFAULT', path: 'attributes.variant.default' }),
+    )
+    const dropPercent = parsed.attributes.filter((a) => a.name !== 'percent')
+    expect(compareDescriptorToProps(dropPercent, UIStatElement.props)).toContainEqual(
+      expect.objectContaining({ code: 'DRIFT_MISSING', path: 'attributes.percent' }),
     )
   })
 })

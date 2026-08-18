@@ -8,13 +8,15 @@ import { UIStatElement } from './stat.ts'
 // effect builds.
 
 describe('UIStatElement — upgrade + typed props', () => {
-  it('defaults: label="", figure="", delta=null, caption=""', () => {
+  it('defaults: label="", figure="", delta=null, caption="", variant="tile", percent=null', () => {
     const el = document.createElement('ui-stat') as UIStatElement
     expect(el).toBeInstanceOf(UIStatElement)
     expect(el.label).toBe('')
     expect(el.figure).toBe('')
     expect(el.delta).toBeNull()
     expect(el.caption).toBe('')
+    expect(el.variant).toBe('tile')
+    expect(el.percent).toBeNull()
   })
 
   it('self-defines as ui-stat, guarded against double-define', () => {
@@ -183,6 +185,82 @@ describe('UIStatElement — delta direction as text (SPEC-R9 AC1)', () => {
     const region = el.querySelector('[data-part="delta"]') as HTMLElement
     // the word span's text is immediately followed by the plain "+12" text node
     expect(region.textContent).toBe('up +12')
+    el.remove()
+  })
+})
+
+describe('UIStatElement — variant="ring" (GH#1208)', () => {
+  it('default variant="tile" never renders a ring part, even with percent set', async () => {
+    const el = document.createElement('ui-stat') as UIStatElement
+    el.label = 'Storage'
+    el.figure = '72%'
+    el.percent = 72
+    document.body.append(el)
+    await el.updateComplete
+    expect(el.querySelector('[data-part="ring"]')).toBeNull()
+    el.remove()
+  })
+
+  it('variant="ring" inserts an aria-hidden ring part immediately before value — reading order unchanged', async () => {
+    const el = document.createElement('ui-stat') as UIStatElement
+    el.label = 'Storage'
+    el.variant = 'ring'
+    el.figure = '72%'
+    el.percent = 72
+    document.body.append(el)
+    await el.updateComplete
+
+    const parts = [...el.children].map((c) => c.getAttribute('data-part'))
+    expect(parts).toEqual(['label', 'ring', 'value'])
+    const ring = el.querySelector('[data-part="ring"]') as HTMLElement
+    expect(ring.getAttribute('aria-hidden')).toBe('true')
+    expect(ring.textContent).toBe('') // purely decorative — no text of its own (SPEC-R7's law, applied)
+    expect(el.querySelector('[data-part="value"]')?.textContent).toBe('72%')
+    el.remove()
+  })
+
+  it('an unrecognized variant attribute snaps back to "tile" (enum codec, the sparkline/badge precedent)', async () => {
+    const el = document.createElement('ui-stat') as UIStatElement
+    el.setAttribute('variant', 'bogus')
+    document.body.append(el)
+    await el.updateComplete
+    expect(el.variant).toBe('tile')
+    expect(el.querySelector('[data-part="ring"]')).toBeNull()
+    el.remove()
+  })
+
+  it('percent sets --_ring-pct on the ring node, clamped into [0,100] (attribute-boundary codec)', async () => {
+    const el = document.createElement('ui-stat') as UIStatElement
+    el.variant = 'ring'
+    el.setAttribute('percent', '140')
+    document.body.append(el)
+    await el.updateComplete
+    expect(el.percent).toBe(100) // clamped at the attribute boundary (statPercentProp)
+    const ring = el.querySelector('[data-part="ring"]') as HTMLElement
+    expect(ring.style.getPropertyValue('--_ring-pct')).toBe('100')
+    el.remove()
+  })
+
+  it('a raw PROPERTY write out of range still clamps at render (ringPercent render-boundary guard)', async () => {
+    const el = document.createElement('ui-stat') as UIStatElement
+    el.variant = 'ring'
+    document.body.append(el)
+    el.percent = -30 // bypasses statPercentProp's `from` codec entirely (property write, not attribute)
+    await el.updateComplete
+    const ring = el.querySelector('[data-part="ring"]') as HTMLElement
+    expect(ring.style.getPropertyValue('--_ring-pct')).toBe('0')
+    el.remove()
+  })
+
+  it('percent absent/non-finite renders an empty (0%) track, never a thrown error', async () => {
+    const el = document.createElement('ui-stat') as UIStatElement
+    el.variant = 'ring'
+    expect(() => document.body.append(el)).not.toThrow()
+    el.percent = Number.NaN
+    expect(() => undefined).not.toThrow()
+    await el.updateComplete
+    const ring = el.querySelector('[data-part="ring"]') as HTMLElement
+    expect(ring.style.getPropertyValue('--_ring-pct')).toBe('0')
     el.remove()
   })
 })

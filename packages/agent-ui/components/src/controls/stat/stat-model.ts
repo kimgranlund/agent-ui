@@ -12,6 +12,13 @@
 // and `text` (the Intl-formatted signed number, `signDisplay: 'exceptZero'` so 0 prints bare and ±N carry
 // an explicit sign). `null` for any non-number/non-finite input — the delta region is not rendered at all
 // (never a silent throw, never a fabricated direction for garbage input).
+//
+// `ringPercent` (GH#1208, the donut/progress-ring `variant='ring'` addition, req-a2ui-library.md item 7):
+// the render-BOUNDARY clamp into [0,100] — mirrors the sparkline `cleanSeries` / bar-chart precedent of
+// re-guarding at render time, since a PROPERTY write (`el.percent = 150`) bypasses `statPercentProp`'s
+// `from` codec entirely (the codec only guards the ATTRIBUTE crossing, same asymmetry `badge`'s `intent`
+// hardening documents). Never a thrown error, never an over/under-full arc — a non-number/non-finite
+// input degrades to 0 (an empty track), same "absent ⇒ nothing fabricated" law as `deltaParts`.
 
 import type { PropConfig } from '../../dom/props.ts'
 
@@ -75,4 +82,36 @@ export const statDeltaProp: PropConfig<number | null> = {
     },
   },
   default: null,
+}
+
+/**
+ * The safe `percent` codec (GH#1208, `variant='ring'` completion, 0–100): `from(attr)`: `null` → `null`;
+ * `parseFloat`; non-finite → `null`; a finite value clamps into [0,100] at the attribute boundary too (an
+ * author-supplied `percent="140"` is not a design input to trust literally — clamp, never an over-full
+ * arc). Deliberately mirrors `statDeltaProp`'s NULL-default shape rather than a plain `prop.number(0)`:
+ * the LLD-C9 `kindOf` build-verify note (stat-descriptor.test.ts) — a non-null-defaulting number codec
+ * classifies as `'unknown'`, not `'number'` (component-descriptor.ts's `kindOf` keys the number branch off
+ * `from(null) === null`) — so `percent` stays `number | null`, `variant='ring'` with `percent` absent
+ * rendering an empty (0%) track via `ringPercent` below, never a thrown error.
+ */
+export const statPercentProp: PropConfig<number | null> = {
+  type: {
+    from(attr) {
+      if (attr === null) return null
+      const n = Number.parseFloat(attr)
+      if (!Number.isFinite(n)) return null
+      return Math.min(100, Math.max(0, n))
+    },
+    to(value) {
+      return value === null ? null : String(value)
+    },
+  },
+  default: null,
+}
+
+/** Render-boundary clamp (see the header note above): `null`/non-finite → `0` (an empty track, never a
+ *  thrown error); a finite value clamps into [0,100] (guards a raw PROPERTY write the codec never saw). */
+export function ringPercent(percent: unknown): number {
+  if (typeof percent !== 'number' || !Number.isFinite(percent)) return 0
+  return Math.min(100, Math.max(0, percent))
 }
