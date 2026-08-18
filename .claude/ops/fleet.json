@@ -9,12 +9,12 @@
     "reviewer": {
       "tier": "fable+xhigh",
       "justification_date": "2026-08-17",
-      "mode": "manual"
+      "mode": "background"
     },
     "planner": {
       "tier": "fable+medium",
       "justification_date": "2026-08-17",
-      "mode": "manual"
+      "mode": "background"
     },
     "product": {
       "tier": "fable+high",
@@ -40,6 +40,20 @@
         "date": "2026-08-17",
         "action": "joined",
         "agent_name": null
+      },
+      {
+        "role": "reviewer",
+        "mode": "background",
+        "date": "2026-08-17",
+        "action": "joined",
+        "agent_name": "agent-ui-reviewer"
+      },
+      {
+        "role": "planner",
+        "mode": "background",
+        "date": "2026-08-17",
+        "action": "joined",
+        "agent_name": "agent-ui-planner"
       }
     ],
     "loop_position": null,
