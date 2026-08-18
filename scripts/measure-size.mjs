@@ -182,7 +182,12 @@ const targets = [
   // stat-model.ts's `statPercentProp`/`ringPercent` — real reviewed logic, no gzip artifact; the
   // control's own CSS is NOT part of this JS-only barrel). ~505 B stated headroom. Same law as
   // above: a CHECKPOINT, not a ratchet.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 59 * KB],
+  // RE-BASED 2026-08-18 (marshal's overnight goal round, GH #1209): 59 KB -> 59.5 KB (60928 B gz) --
+  // measured 60533 B gz after the ui-video/ui-audio media mint (+117 B over the prior line; the movers
+  // are the two native-player controls, thin by construction — no custom chrome). Rides the SAME
+  // reviewed-weight re-base class Kim ruled twice this same night (ui-image +380 B, stat-ring +7 B);
+  // flagged for morning sign-off, not silently absorbed. Same law: a CHECKPOINT, not a ratchet.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 59.5 * KB],
   // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
   // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
   // `./markdown`, `./editor`) is not the one exception.

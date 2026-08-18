@@ -60,10 +60,9 @@ describe('default catalog (catalog LLD-C4, SPEC-R1/R3/R8/N2)', () => {
     expect(defaultCatalog.components.ChoicePicker).toBeUndefined() // superseded by Select (ADR-0053)
   })
 
-  it('does NOT declare the deliberately-absent types (Video — no shipped ui-video control; Image joined the catalog GH #1189)', () => {
-    for (const absent of ['Video']) {
-      expect(defaultCatalog.components[absent], absent).toBeUndefined()
-    }
+  it('declares the GH #1209 media players (Video/AudioPlayer joined the catalog — the prior deliberately-absent-Video pin retired the same wave ui-video shipped, the Image/GH #1189 arc repeated)', () => {
+    expect(defaultCatalog.components['Video']).toBeDefined()
+    expect(defaultCatalog.components['AudioPlayer']).toBeDefined()
   })
 
   it('every component name defaults to its declaring key (type identity payloads reference)', () => {
@@ -129,7 +128,11 @@ function fleetPrimaryTypes(): string[] {
     }
     const tag = parsed.scalars.get('tag')
     if (typeof tag !== 'string' || !tag.startsWith('ui-')) continue
-    types.push(pascal(tag))
+    // GH #1209 — the ONE tag→type rename in the fleet: ui-audio's catalog name is the A2UI standard
+    // basic-catalog's own `AudioPlayer` (upstream vocabulary), not the mechanical `Audio` (which also
+    // collides with the global HTMLAudioElement constructor name in producer-facing prose). A second
+    // rename would move this inline special case into a real alias map — one entry doesn't earn one.
+    types.push(tag === 'ui-audio' ? 'AudioPlayer' : pascal(tag))
   }
   return types
 }
@@ -146,9 +149,9 @@ function fleetPrimaryTypes(): string[] {
  *  allowlist seed) into a separate M2 wave (rows + exemplar + guidance, LLD-C13/C14/C15, ADR-0118 fork
  *  F4); the M2 wave lands the three rows below and DRAINS that seed too, the same way the report/content/
  *  feed seeds above were drained. `Image` shipped its control + catalog row in the SAME wave (GH #1189,
- *  the ADR-0087 cl.6 same-wave precedent — no allowlist seed needed). `Video` is deliberately NOT here —
- *  no `ui-video` descriptor exists, so it never enters the derived set to begin with (it stays a
- *  documentary-only note in SPEC §5.2.1, never code-derived). A future undispositioned control re-seeds this map with a reason +
+ *  the ADR-0087 cl.6 same-wave precedent — no allowlist seed needed). `Video`/`AudioPlayer` shipped their
+ *  controls + catalog rows in the SAME wave (GH #1209, the Image/GH #1189 cl.6 precedent — no seed
+ *  needed; the old "no ui-video descriptor exists" documentary note is retired with it). A future undispositioned control re-seeds this map with a reason +
  *  citation, same as Wave 0's seed. The color-picker family (ADR-0123, `ColorPicker`) re-seeded this SAME
  *  "shipped ahead of its catalog row" shape at M1 (color-picker.lld.md, the ADR-0118 M1/M2 discipline) —
  *  this M2 wave lands the row below and DRAINS that seed too, the same way the token-surface/report/

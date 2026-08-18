@@ -1055,6 +1055,8 @@ export const NO_SLOT_TEXT = new Set([
   'ui-form-popover', // #ensureParts(): a CONTROL-CREATED trigger (label+caret) + panel — GH #294 F4, the ui-select/ui-popover precedent
   'ui-icon', // setIcon() injects a real <svg> child whenever `name` is non-empty (icon.ts:38-41) — a name-driven slot, not authored text
   'ui-image', // GH #1189: connected() PREPENDS a control-built <img data-part="media"> as a persistent, never-replaced child (image.ts) — a host-level `textContent =` write would wipe it (and any caption sibling) out entirely; the caption itself is real optional content (COMPONENT_SAMPLE_CHILDREN demonstrates it), just not a plain-string SLOT_TEXT knob's to own
+  'ui-video', // GH #1209: connected() PREPENDS a control-built <video data-part="media" controls> as a persistent child (video.ts, the ui-image law) — no slotted content model at v1 (video.md slots: [])
+  'ui-audio', // GH #1209: connected() PREPENDS a control-built <audio data-part="media" controls> (audio.ts) — no slotted content model at v1 (audio.md slots: [])
   'ui-menu', // #ensureParts(): trigger (COMPONENT_SAMPLE_CHILDREN) + panel
   'ui-modal', // #ensureDialog(): the control-owned <dialog> part
   'ui-drawer', // #ensureDialog(): the control-owned <dialog> part (ADR-0188, the modal precedent re-applied)

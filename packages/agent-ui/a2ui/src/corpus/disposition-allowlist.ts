@@ -214,4 +214,14 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
       'type-coverage gate green; pending a judged import wave (import-seeds.ts with a real VerdictsFile). ' +
       'Delete this entry when it is judged.',
   ],
+  //
+  // GH #1209 (2026-08-18) — `frontier-media-tour`: the same pending-state shape. Added with the
+  // Video/AudioPlayer catalog rows (the native media players) to keep the GH #729 type-coverage gate
+  // green; pending the same judged import wave. Delete this entry when it is judged.
+  [
+    'frontier-media-tour',
+    'GH #1209 (2026-08-18) — no verdict sought yet, not a refusal: shelf seed added alongside the ' +
+      'Video/AudioPlayer catalog rows (native media players) to keep the GH #729 type-coverage gate ' +
+      'green; pending a judged import wave. Delete this entry when it is judged.',
+  ],
 ])

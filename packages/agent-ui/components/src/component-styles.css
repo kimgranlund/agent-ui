@@ -36,6 +36,10 @@
 
 /* ui-image (GH #1189 R1/R2) — URL-sourced content image, reserved aspect-ratio box, bottom scrim */
 @import './controls/image/image.css';
+/* ui-video (GH #1209) — native video player, reserved aspect box, letterbox canvas */
+@import './controls/video/video.css';
+/* ui-audio (GH #1209) — native audio player, UA bar */
+@import './controls/audio/audio.css';
 
 /* Indicator controls — Wave 1 (ADR-0041/0042: widget-box geometry + UIIndicatorElement base) */
 @import './controls/checkbox/checkbox.css';

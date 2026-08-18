@@ -825,6 +825,14 @@ export const attachmentFactory: WidgetFactory = mappedAccessorFactory('ui-attach
 // image.ts) is automatically styled as caption, regardless of append order.
 export const imageFactory: WidgetFactory = accessorFactory('ui-image')
 
+// Video → ui-video · AudioPlayer → ui-audio (GH #1209, the A2UI standard basic-catalog's media players —
+// the ui-image conventional-admission precedent): every declared property is a 1:1 reflecting accessor on
+// the control (src/label/poster/aspect/preload — video.md/audio.md), so plain `accessorFactory` suffices.
+// Neither is an input (no `value` mark) and neither takes children (no caption/track model at v1 — the
+// controls' own fences; a ChildList here would silently drop content into an undefined position).
+export const videoFactory: WidgetFactory = accessorFactory('ui-video')
+export const audioFactory: WidgetFactory = accessorFactory('ui-audio')
+
 // ── the ADR-0118 token-surface family (Swatch / Ramp / Ladder, catalog LLD-C13, token-surfaces.lld.md §6) ──
 //
 // Swatch → ui-swatch (SPEC-R1..R4). Wire `value` → prop `color` (TKT-0069 item 1); `value`/`label` are bindable (a model may drive the color/caption from
@@ -1059,6 +1067,8 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Avatar: avatarFactory,
   Attachment: attachmentFactory,
   Image: imageFactory,
+  Video: videoFactory,
+  AudioPlayer: audioFactory,
   Swatch: swatchFactory,
   Ramp: rampFactory,
   Ladder: ladderFactory,

@@ -401,6 +401,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     'travel-itinerary': { passed: false, qualityScore: 2 },
     'wizard-step-progress': { passed: false, qualityScore: 2 },
     'frontier-latency-line-chart': { passed: false, qualityScore: 2 },
+    'frontier-media-tour': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {
@@ -620,6 +621,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
         'frontier-greet-card': { passed: false, qualityScore: 2 },
         'agent-roster-drawer': { passed: false, qualityScore: 2 },
         'frontier-latency-line-chart': { passed: false, qualityScore: 2 },
+        'frontier-media-tour': { passed: false, qualityScore: 2 },
       },
     })
 

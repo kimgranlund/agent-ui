@@ -1,0 +1,22 @@
+/* audio.css — ui-audio, the Display-class URL-sourced audio-player primitive (GH #1209). Deliberately the
+ * fleet's thinnest media CSS: the UA's own audio bar IS the whole visual — no aspect box (audio reserves no
+ * visual canvas — audio.md's geometry note), no scrim/caption machinery, no custom chrome. The host is a
+ * full-width block and the native element fills its inline size; block size is the UA bar's intrinsic height.
+ *
+ * No TOKEN BLOCK: this control mints no `--ui-audio-*` roles at v1 — the UA player is not themeable from
+ * here, and inventing tokens with no consumer would be dead vocabulary (the doc-standards dead-token law).
+ * Forced colors: UA-handled (the native bar); no border minted — an audio bar is never a background-drawn
+ * void the way an unloaded video canvas is (audio.md's forcedColors note).
+ */
+
+@scope (ui-audio) {
+  :scope {
+    display: block;
+    inline-size: 100%; /* the responsive-media reset (the ui-image/ui-video Display-band posture) */
+  }
+
+  :scope > audio[data-part='media'] {
+    display: block;
+    inline-size: 100%;
+  }
+}

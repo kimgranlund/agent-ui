@@ -125,6 +125,8 @@
 - [ui-progress](./progress-doc.html): the determinate/indeterminate progress bar — thin-rail geometry, reduced-motion aware.
 - [ui-avatar](./avatar-doc.html): identity — image → initials → glyph fallback chain, decorative by default.
 - [ui-image](./image-doc.html): the URL-sourced content image — a reserved aspect-ratio box (zero CLS), native lazy-loading, an optional bottom-scrim caption.
+- [ui-video](./video-doc.html): the native video player — <video controls> in a reserved aspect-ratio box (zero CLS), poster support, no custom chrome.
+- [ui-audio](./audio-doc.html): the native audio player — <audio controls> at the UA bar's intrinsic height, no custom chrome.
 - [ui-attachment](./attachment-doc.html): the FilePart-aligned file card — mime-derived glyph, name, formatted `sizeBytes`.
 - [ui-toast](./toast-doc.html): the transient notification — status/alert roles, hover/focus-paused auto-dismiss; [demo](./toast-demo.html).
 - [ui-toast-region](./toast-region-doc.html): the top-layer toast stack — page-owned, driven by `show()`.

@@ -1,0 +1,50 @@
+/* video.css — ui-video, the Display-class URL-sourced video-player primitive (GH #1209). The ui-image
+ * layout law with the caption/scrim machinery REMOVED (this control has no slotted content model at v1 —
+ * video.md's fence): a reserved aspect-ratio box around one absolutely-positioned native <video controls>.
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-video)` declares `--ui-video-*`: today only the object-fit (a fixed
+ *       `contain` — a video letterboxes rather than crops; cropping a playing video hides real content,
+ *       unlike a decorative photo, so there is deliberately NO [fit] repoint at v1).
+ *   [2] STYLES BLOCK — `@scope (ui-video)` consumes `--ui-video-*` + the private per-instance `--_aspect`
+ *       (image-model.ts parseAspectRatio via video.ts — the ui-image/ui-progress precedent).
+ *
+ * Forced colors: the system-ink border (the ui-image precedent) — a poster-less, unloaded player canvas is
+ * a background-drawn area that can merge with the page under WHCM. The native controls handle forced-colors
+ * themselves (UA-rendered).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-video) declares --ui-video-* ════════════════ */
+
+:where(ui-video) {
+  --ui-video-fit: contain; /* letterbox, never crop — playing content is real content (no [fit] repoint at v1) */
+  --ui-video-bg: oklch(0 0 0); /* the letterbox bars' canvas — scheme-invariant black, the media-canvas
+    convention every native player shares (NOT a theme surface: the bars frame photo/video content) */
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-video) consumes ONLY --ui-video-* ════════════════ */
+
+@scope (ui-video) {
+  :scope {
+    display: block;
+    position: relative; /* the containing block for the absolutely-positioned media */
+    overflow: hidden; /* clip to the aspect-ratio box */
+    inline-size: 100%; /* the responsive-media reset (the ui-image Display-band posture) */
+    aspect-ratio: var(--_aspect, 16 / 9); /* zero CLS — ALWAYS concrete; see video.ts/image-model.ts */
+    background: var(--ui-video-bg);
+  }
+
+  :scope > video[data-part='media'] {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: var(--ui-video-fit);
+    display: block;
+  }
+
+  @media (forced-colors: active) {
+    :scope {
+      border: 1px solid CanvasText; /* the media box boundary stays visible under WHCM */
+    }
+  }
+}
