@@ -162,6 +162,12 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './bar-chart-doc.html', label: 'API' }],
   },
   {
+    // ADR-0205/GH #1207 — the fleet's first axis-bearing chart (a value-range baseline + always-shown
+    // min/max labels, single-series). Same shape as the two above — Display-class, {doc} only.
+    label: 'ui-line-chart',
+    links: [{ href: './line-chart-doc.html', label: 'API' }],
+  },
+  {
     // The token-surface family (ADR-0118) — three Display-class show-never-edit primitives, each a single
     // descriptor-derived API doc (tier=display ⇒ {doc} only, the ui-sparkline/ui-bar-chart precedent).
     label: 'ui-swatch',

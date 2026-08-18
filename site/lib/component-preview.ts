@@ -978,6 +978,9 @@ const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
   'ui-slider': { 'aria-label': 'Volume' },
   'ui-sparkline': { values: '[3,5,4,8,7]' },
   'ui-bar-chart': { data: '[{"label":"EMEA","value":42},{"label":"APAC","value":31}]' },
+  // ADR-0205 — ui-line-chart's `values` is the same JSON-string `kind: 'skip'` codec gap as ui-sparkline's
+  // above (no editable knob), so its LIVE default ([]) would mount nothing. Seeded with the same sample series.
+  'ui-line-chart': { values: '[3,5,4,8,7]' },
   'ui-table': {
     columns: '[{"key":"region","label":"Region"},{"key":"revenue","label":"Revenue","type":"number"}]',
     rows: '[{"region":"EMEA","revenue":42000},{"region":"APAC","revenue":31000}]',
@@ -1061,6 +1064,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-slider', // ::before/::after track — no text KNOB (batch C); seeded an aria-label via COMPONENT_SAMPLE_ATTRS instead. (GH #1141's own value-readout PART legitimately carries text — see COMPONENT_SAMPLE_ATTRS comment above.)
   'ui-slider-multi', // JS-managed light-DOM rail/fill/thumb children (NOT ::before/::after, unlike ui-slider)
   'ui-sparkline', // component-built inline <svg> (createElementNS + replaceChildren) — the ui-icon precedent, a name/values-driven mark, not authored text (slots: [] — sparkline.md)
+  'ui-line-chart', // ADR-0205: component-built label rows + inline <svg> (replaceChildren) — the ui-sparkline precedent, a values-driven mark, not authored text (slots: [] — line-chart.md)
   'ui-disclosure', // #ensureParts(): the details/summary/chevron chrome — host children are ADOPTED into a nested body PART, never left as direct host children (unlike a STRUCTURAL container), so a host-level SLOT_TEXT write would destroy the whole part tree
   'ui-stat', // connected() builds four spans once (replaceChildren) from label/value/delta/caption PROPS — no light-DOM content model at all (slots: [] — stat.md)
   'ui-description-list', // connected() builds row/label/value spans (replaceChildren) from the rows PROP — no light-DOM content model at all (slots: [] — description-list.md, ADR-0201)

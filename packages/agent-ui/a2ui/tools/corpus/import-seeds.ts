@@ -122,7 +122,7 @@ import {
 } from '../../src/examples/catalog-coverage.ts'
 import { kpiPanelLifecycleSeed } from '../../src/examples/message-lifecycle.ts'
 import { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed } from '../../src/examples/corpus-growth.ts'
-import { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed } from '../../src/examples/catalog-frontier.ts'
+import { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed } from '../../src/examples/catalog-frontier.ts'
 import { structuredContainerSeed } from '../../src/examples/structured-container.ts'
 import {
   comparisonPricingSeed,
@@ -278,6 +278,7 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
       cardAnatomyAskSeed, // GH #1199 — the card-anatomy law exemplar; admission pending the judged wave (disposition-allowlist.ts)
       backableWizardSeed, // GH #1192 — the backable-multi-step wizard exemplar; admission pending the judged wave (disposition-allowlist.ts)
       greetCardSeed, // GH #1201 — the greet-bookend exemplar (reserved greet-1 id class); admission pending the judged wave (disposition-allowlist.ts)
+      latencyLineChartSeed, // ADR-0205/GH #1207 — the LineChart coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
     ],
   },
   { module: 'structured-container.ts', seeds: [structuredContainerSeed] }, // GH #808 S5 — SPEC-R9's exemplar

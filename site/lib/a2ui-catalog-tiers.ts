@@ -1,5 +1,5 @@
 // site/lib/a2ui-catalog-tiers.ts — the A2UI Catalog page's TIER taxonomy (owner-approved 2026-08-15 audit,
-// GH #970): groups the browsable default-catalog component types (57 as of GH #1189's `Image` addition) into
+// GH #970): groups the browsable default-catalog component types (58 as of ADR-0205's `LineChart` addition) into
 // five page-level tabs — WIDGET · PRIMITIVE · PATTERN · FEATURE · INPUT — plus the type→gallery-example
 // cross-link derivation the page's "see it in real use" links ride. The exact count is DERIVED
 // (`browsableNames().length`, gated by a2ui-catalog-tiers.test.ts) — this comment is a rough orientation
@@ -79,7 +79,7 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   Table: 'FEATURE',
   Timeline: 'FEATURE',
 
-  // WIDGET (16) — small, self-contained display/utility leaves.
+  // WIDGET (17) — small, self-contained display/utility leaves.
   Attachment: 'WIDGET',
   Avatar: 'WIDGET',
   Badge: 'WIDGET',
@@ -89,6 +89,7 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   Code: 'WIDGET',
   Image: 'WIDGET', // GH #1189 — the URL-sourced content-image primitive, a display leaf like Avatar/Attachment (no ADR — conventional admission, host ruling)
   Ladder: 'WIDGET',
+  LineChart: 'WIDGET', // ADR-0205 (GH #1207) — the fleet's first axis-bearing chart, a display leaf riding with its Sparkline/BarChart chart-family kin
   Pagination: 'WIDGET',
   Progress: 'WIDGET',
   Ramp: 'WIDGET',

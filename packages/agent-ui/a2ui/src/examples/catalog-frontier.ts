@@ -8,6 +8,9 @@
 // (frontier 3) · Swiper · SwiperItem (frontier 4). Same idiom discipline as every sibling module: an
 // agent-realistic promptText, fine-grained data-model seeding where state is client-bindable, every prop
 // a DECLARED catalog row, and the shared validate+render-smoke gate proving each at check time.
+//
+// Frontier 11 (ADR-0205, GH #1207) — `LineChart`, the fleet's first axis-bearing chart, lands its catalog
+// row IN THE SAME WAVE it ships (cl.8), so this seed closes its coverage gap the moment that row exists.
 
 import type { ExampleSeed } from './types.ts'
 
@@ -594,4 +597,45 @@ export const greetCardSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed]
+const LATENCY_ID = 'frontier-latency-line-chart'
+/** Frontier 11 — the LINE-CHART family (ADR-0205, GH #1207): the fleet's first axis-bearing chart —
+ *  a monitoring card whose body is ONE `LineChart` bound to a p50-latency series (the baseline + always-
+ *  shown min/max labels ADR-0205 cl.1/cl.3 mandate), with a caption reading the current point count back
+ *  from the SAME bound array via `@index`/length-style prose (kept as a static caption here — the default
+ *  catalog's binding grammar has no array-length function, so the count is authored prose, not derived). */
+export const latencyLineChartSeed: ExampleSeed = {
+  name: 'frontier-latency-line-chart',
+  description: 'A latency monitoring Card — a LineChart trend bound to the data model (baseline + always-shown min/max labels, ADR-0205), with a caption and one Refresh action.',
+  promptText: 'Show p50 latency over the last few minutes as a line chart with the low and high called out.',
+  surfaceId: LATENCY_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: LATENCY_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: LATENCY_ID,
+        value: { latency: { trend: [42, 38, 55, 47, 61, 44, 39] } },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: LATENCY_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['hd', 'ct', 'ft'] },
+          { id: 'hd', component: 'CardHeader', children: ['hd_title'] },
+          { id: 'hd_title', component: 'Text', variant: 'h5', text: 'p50 latency (ms)' },
+          { id: 'ct', component: 'CardContent', children: ['chart', 'caption'] },
+          { id: 'chart', component: 'LineChart', values: { path: '/latency/trend' }, label: 'p50 latency, last 7 samples' },
+          { id: 'caption', component: 'Text', variant: 'caption', text: 'Sampled every 30s.' },
+          { id: 'ft', component: 'CardFooter', children: ['btn_refresh'] },
+          { id: 'btn_refresh', component: 'Button', variant: 'ghost', label: 'Refresh', action: { action: 'refresh_latency' } },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed]

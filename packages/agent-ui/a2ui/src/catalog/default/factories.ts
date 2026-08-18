@@ -90,6 +90,11 @@
 // color-input control (the standalone control shipped ahead of this row at M1, the ADR-0118 M1/M2
 // discipline; this wave drains that `EXCLUSION_ALLOWLIST` seed, index.test.ts). Plain `accessorFactory`,
 // two-way bound `value`/`change` — see its own factory doc comment below.
+//
+// ADR-0205 (GH #1207) adds `LineChart` — the fleet's first axis-bearing chart, entering the catalog in
+// the SAME wave it ships (cl.8, the ADR-0107 cl.6 same-wave precedent); this wave drains the `LineChart`
+// `EXCLUSION_ALLOWLIST` seed (index.test.ts). Plain `accessorFactory`, no bespoke mapping — see its own
+// factory doc comment below (the Sparkline/BarChart section).
 
 import '@agent-ui/components/components' // self-defines ui-button + the G9 container family on import
 import type { WidgetFactory } from '../types.ts'
@@ -665,6 +670,14 @@ export const sparklineFactory: WidgetFactory = accessorFactory('ui-sparkline')
 // no children, no submitGate.
 export const barChartFactory: WidgetFactory = accessorFactory('ui-bar-chart')
 
+// LineChart → ui-line-chart (ADR-0205, GH #1207 — the fleet's first axis-bearing chart; catalog wave
+// mirroring Sparkline/BarChart's own same-wave catalog entry per cl.8). `values` (number[]), `label`
+// (string), `variant` (`'line'|'area'`) are ALL 1:1 reflecting accessor props — verified against
+// line-chart.ts `static props`, the SAME shape as sparklineFactory above (whole-array `values` codec +
+// `cleanSeries` hardening re-run inside the control's own mark effect, line-chart-math.ts). A plain
+// `accessorFactory` suffices. Display-only leaf: no `value` mark, no children, no submitGate.
+export const lineChartFactory: WidgetFactory = accessorFactory('ui-line-chart')
+
 // ── the ADR-0111 report family (Table / Stat / Badge, catalog LLD-C12, report-family.lld.md §6) ───────
 // ── widened by ADR-0163 cl.9 (selection/sort/filter/search/pagination; `Pagination` newly minted) ──────
 //
@@ -1034,6 +1047,7 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   SplitPane: splitPaneFactory,
   Sparkline: sparklineFactory,
   BarChart: barChartFactory,
+  LineChart: lineChartFactory,
   Table: tableFactory,
   Pagination: paginationFactory,
   Stat: statFactory,

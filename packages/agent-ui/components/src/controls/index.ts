@@ -106,6 +106,11 @@ export * from './theme-provider/theme-provider.ts'
 export * from './sparkline/sparkline.ts'   // series-shape mark (LLD-C1/C2/C3)
 export * from './bar-chart/bar-chart.ts'   // magnitude-comparison bar list (LLD-C4/C5/C6)
 
+// Chart family — ADR-0205: the fleet's FIRST axis-bearing chart (a value-range baseline + always-shown
+// min/max labels, single-series). Same shape as the two above — Display-class, extends UIElement directly,
+// no [size]/[scale] geometry row — but NOT axis-free (the gap ADR-0107 cl.1 named as its own new intake).
+export * from './line-chart/line-chart.ts' // axis-bearing line/area mark (ADR-0205)
+
 // Report family — Wave M1 (ADR-0111, report-family.lld.md): the real native <table>, the metric tile, and
 // the compact-realm intent badge. All Display-class, non-interactive, non-form-associated leaves.
 export * from './table/table.ts'   // scroll-preserving re-render + ADR-0163 interactive widening (selection/sort/filter/page)

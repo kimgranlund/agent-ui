@@ -33,6 +33,7 @@ import {
   gridFactory,
   sparklineFactory,
   barChartFactory,
+  lineChartFactory,
   tableFactory,
   paginationFactory,
   multiSelectFactory,
@@ -878,6 +879,21 @@ describe('default catalog factories — Sparkline / BarChart (ADR-0107, chart-fa
     const target = el as unknown as Record<string, unknown>
     expect(target.data).toEqual(data)
     expect(target.label).toBe('Revenue by region')
+  })
+
+  it('LineChart → ui-line-chart maps values/label/variant onto accessors; not an input, no children (ADR-0205)', () => {
+    expect(lineChartFactory.tag).toBe('ui-line-chart')
+    expect(lineChartFactory.value).toBeUndefined() // a display leaf — no two-way binding
+    expect(lineChartFactory.submitGate).toBeUndefined()
+    const el = lineChartFactory.create()
+    expect(el.tagName.toLowerCase()).toBe('ui-line-chart')
+    lineChartFactory.applyProp(el, 'values', [3, 5, 4, 8, 7])
+    lineChartFactory.applyProp(el, 'label', 'Revenue trend')
+    lineChartFactory.applyProp(el, 'variant', 'area')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.values).toEqual([3, 5, 4, 8, 7])
+    expect(target.label).toBe('Revenue trend')
+    expect(target.variant).toBe('area')
   })
 })
 

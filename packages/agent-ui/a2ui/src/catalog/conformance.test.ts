@@ -92,6 +92,13 @@ describe('validateCatalogConformance (catalog LLD-C6, SPEC-R7/R9/N3)', () => {
     const f = validateCatalogConformance(comp({ id: 'sp', component: 'Sparkline', values: '3,5,4' }), defaultCatalog)
     expect(f).toEqual([{ code: 'CATALOG', path: 'sp.values' }])
   })
+
+  it('LineChart (ADR-0205) — same array-typed `values` shape as Sparkline: a comma-joined STRING still fails CATALOG', () => {
+    // The chart family's newest member (`LineChart`, ADR-0205) shares Sparkline's `values: number[]` row —
+    // the SAME parity proof, on the new type, so the array leg keeps biting after the catalog wave lands.
+    const f = validateCatalogConformance(comp({ id: 'lc', component: 'LineChart', values: '3,5,4' }), defaultCatalog)
+    expect(f).toEqual([{ code: 'CATALOG', path: 'lc.values' }])
+  })
 })
 
 describe('validateCatalogConformance — enum membership (ADR-0098)', () => {
