@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-17 |
 > | **Proposed by** | the GH [#1185](https://github.com/kimgranlund/agent-ui/issues/1185) build lane (Kim's mint-now ruling, find-open-questions round 2026-08-17 — the ruling closes WHETHER to mint; this ADR records the MECHANICS the build needs: anatomy, data model, omission law, tokens, catalog shape, grammar supersession) |
-> | **Ratified by** | — (ships proposed with the build; the status flip is the owner's alone, ADR-0149) |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-18, via the [`ratify ADR-0201` utterance](https://github.com/kimgranlund/agent-ui/issues/1185#issuecomment-5323431916) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build: `controls/description-list/description-list.{ts,css,md}` + `description-list-model.ts` (the DOM-free hardening/codec module, the table-model.ts shape) + barrel export + jsdom/browser tests · the `DescriptionList` catalog row + factory + conformance · site doc page + the standing descriptor/site gates · the ONE `grammar.md` edit repointing the confirm-step receipt clause from the Column-of-Rows composition to the primitive (#1174 wrote that clause to be superseded) + baseline recapture |
 > | **Supersedes / Superseded by** | **Supersedes** the GH #1174 grammar composition pattern's CONSTRUCTION half (the Column(gap xs) › per-field Row(gap sm, baseline) › label Text + value Text recipe — replaced by the primitive); the #1174 LAWS survive verbatim, relocated onto the new clause: value humanization stays the PRODUCER's job, empty-value omission (now enforced by construction, no longer prompt-only), adjacency (never `justify: between`, never two side-by-side columns), sentence-case headers. **Relates** ADR-0111 (the Display-class posture — ui-stat/ui-table precedent: no events, no geometry row, not form-associated) · ADR-0163/0173 (`safeJsonCodec` + hardening-function data props, the table `rows` precedent) · ADR-0078 (semantics/style split — type-scale registers without heading stamps) · ADR-0057 (meaning never travels by color alone — here meaning is real text throughout) |
 

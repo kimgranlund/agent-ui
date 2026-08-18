@@ -340,7 +340,7 @@ byte count. Clause 4's substantive intent (an embedder-supplied, non-wire byte c
 only the name. `attachment.ts`/`attachment.md` and their tests reflect the rename; no other file in this
 record needs updating (no other clause names this prop).
 
-## Amendment (2026-08-17, proposed) — Toast enters the catalog; ToastRegion's exclusion stands (GH [#1184](https://github.com/kimgranlund/agent-ui/issues/1184), Kim's outcomes-are-toasts ruling)
+## Amendment (2026-08-17, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/1184#issuecomment-5323432730), verified 2026-08-18) — Toast enters the catalog; ToastRegion's exclusion stands (GH [#1184](https://github.com/kimgranlund/agent-ui/issues/1184), Kim's outcomes-are-toasts ruling)
 
 Kim's 2026-08-17 ruling (GH #1184: ephemeral outcome/status announcements are toasts, not badges)
 REVERSES the Toast half of clause 6: `Toast` is now a default-catalog type (PR #1186 — bespoke

@@ -5,14 +5,13 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-17 |
 > | **Proposed by** | planner seat, from [`req-doc-ingestion.md`](../research/req-doc-ingestion.md)
 >   R3 (Lane 4 of the 2026-08-17 exploration campaign) — the req doc's own acceptance names this
 >   record as its precondition: *"the ADR exists and is Kim-ratified before the `pdfjs-dist`
 >   dependency appears in any package.json"* |
-> | **Ratified by** | — awaiting Kim's `ratify ADR-0202` utterance on the realizing GitHub issue,
->   executed by `scripts/adr_ratify.py` (ADR-0149 discipline) — agents never self-flip Status |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-18, via the [`ratify ADR-0202` utterance](https://github.com/kimgranlund/agent-ui/issues/1190#issuecomment-5323435121) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build (not authored here): a new opt-in extraction module (home
 >   TBD at build time — `@agent-ui/app` lib or a `doc-ingestion`-scoped seam; this record fixes the
 >   PACKAGING law, not the final path) exporting one lazy `extractPdfText(file)` entry point ·

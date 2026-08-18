@@ -5,13 +5,12 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-17 |
 > | **Proposed by** | planner seat, from [`req-agent-teams.md`](../research/req-agent-teams.md) R1–R3
 >   (Lane 1 of the 2026-08-17 exploration campaign) and [IDR-0001](../idr/0001-agents-ship-with-declared-teams.md)
 >   (the ratified WHY this ADR realizes) |
-> | **Ratified by** | — awaiting Kim's `ratify ADR-0203` utterance on the realizing GitHub issue,
->   executed by `scripts/adr_ratify.py` (ADR-0149 discipline) — agents never self-flip Status |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-18, via the [`ratify ADR-0203` utterance](https://github.com/kimgranlund/agent-ui/issues/1191#issuecomment-5323437399) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build (not authored here): a new `AgentTeam` typed export +
 >   validator (home: alongside `AgentConfigSnapshot`/`agentConfigSchema()` in
 >   `packages/agent-ui/app/src/controls/agent-admin/agent-admin-schema.ts`, or a sibling module in

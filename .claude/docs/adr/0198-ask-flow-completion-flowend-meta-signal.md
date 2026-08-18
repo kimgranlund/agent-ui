@@ -233,7 +233,7 @@ around it.
   acceptance: one happy-path flow through proposed-outcome → user confirm → courtesy close → chrome
   row, and one urgent-triage flow ending in escalation + chrome row, on Kim's live surface.
 
-## Amendment (2026-08-18, proposed) — mid-flow backable-wizard commits are scene transitions, not answered asks; the closing turn's exactly-ONE settle `updateComponents` carve-out (`req-a2ui-patterns.md` R2/R4, Kim's rulings 2026-08-17)
+## Amendment (2026-08-18, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/1101#issuecomment-5323434193), verified 2026-08-18) — mid-flow backable-wizard commits are scene transitions, not answered asks; the closing turn's exactly-ONE settle `updateComponents` carve-out (`req-a2ui-patterns.md` R2/R4, Kim's rulings 2026-08-17)
 
 > Append-only, and **proposed**: the Status cell above reads `accepted` for the accepted record as a
 > whole and stays byte-untouched, and the 2026-08-17 amendment above (flowEnd on all terminal paths,
