@@ -30,6 +30,9 @@ component-preview {
   max-block-size: 26rem;
   overflow-y: auto;
   border-inline-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+  /* Fill the row (a SHORT knob list — Avatar's 3 props — no longer leaves the divider stopping mid-card, GH #1298).
+   * The 26rem cap above still guards H#3: a TALL knob list scrolls within the cap and never stretches the canvas. */
+  align-self: stretch;
 }
 
 .preview-details {
