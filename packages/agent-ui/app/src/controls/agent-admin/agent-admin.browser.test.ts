@@ -1746,8 +1746,10 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
 
     await clickTab('Capabilities')
     const capabilitiesItems = itemsOf('capabilities-content')
+    // GH #1197 (ADR-0203) — the Team pane rides as a SIXTH Capabilities fold (`'team'`, the LLD-P6
+    // ranked-five tab set stays pinned; the jsdom census in agent-admin.test.ts names the same addition).
     expect(capabilitiesItems.map((i) => i.getAttribute('data-item'))).toEqual([
-      ENTRY_KINDS.promptSection, ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool,
+      ENTRY_KINDS.promptSection, ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, 'team',
     ])
     for (const item of capabilitiesItems) assertFoldChrome(item)
 
@@ -1761,6 +1763,7 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
     const OLD_FLAT_SET = [
       'agent', 'model', 'surface', 'bankroll', ENTRY_KINDS.promptSection,
       ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
+      'team', // GH #1197 — the one deliberate addition since the flat-ten era (a fold, not a tab)
     ]
     const union = [...agentItems, ...capabilitiesItems, ...surfaceItems].map((i) => i.getAttribute('data-item'))
     expect([...union].sort()).toEqual([...OLD_FLAT_SET].sort())

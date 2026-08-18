@@ -604,10 +604,16 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
     const bubble = turn.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
     const narration = turn.querySelector('[data-part="narration"]') as HTMLElement
     const bubbleStyle = getComputedStyle(bubble)
-    expect(alphaOf(bubbleStyle.backgroundColor), 'the agent turn lost its bubble background (ADR-0160 regressed)').toBeGreaterThan(0)
-    expect(Number.parseFloat(bubbleStyle.paddingLeft), 'the agent turn lost its bubble padding (ADR-0160 regressed)').toBeGreaterThan(
+    // GH #1221 morning ruling (2026-08-18): the DEFAULT agent bubble is CONTAINED (real padding + radius)
+    // but chrome-LESS — no background, no border. The chromed ADR-0160 look is now the `bubbles='on'`
+    // opt-in (pinned in the bubbles-setting suite below), so this default-look pin asserts padding and
+    // radius but ZERO background alpha.
+    expect(alphaOf(bubbleStyle.backgroundColor), 'the default agent bubble must be chrome-less (no bg — GH #1221 morning ruling)').toBe(0)
+    expect(bubbleStyle.borderStyle === 'none' || Number.parseFloat(bubbleStyle.borderWidth) === 0, 'no border on the default agent bubble').toBe(true)
+    expect(Number.parseFloat(bubbleStyle.paddingLeft), 'the agent bubble stays CONTAINED — real padding (GH #1221 ruling: contained, just no chrome)').toBeGreaterThan(
       0,
     )
+    expect(Number.parseFloat(bubbleStyle.borderTopLeftRadius), 'the agent bubble keeps its radius (contained)').toBeGreaterThan(0)
     // GH #1032 (Kim, 2026-08-16 — "use the full width"): the agent turn (wrapper, strip, bubble) STRETCHES
     // to the full column — the same right edge the user bubble aligns to; the ADR-0160 92% cap now
     // applies to the USER turn only.
@@ -793,20 +799,21 @@ describe('ui-conversation cross-engine — the bubbles on/off setting (GH #1221)
     handle.finalize()
   }
 
-  it('unset (the default): byte-identical to today — no `bubbles` attribute at all, and the SAME chromed prose bubble ADR-0160 already ships', () => {
+  it('unset (the default, GH #1221 morning ruling): no `bubbles` attribute, and the host bubble is CONTAINED (padding + radius) but chrome-less (no background)', () => {
     const el = mountConversation()
-    expect(el.bubbles, 'the property default is not "on"').toBe('on')
-    expect(el.hasAttribute('bubbles'), 'a never-touched element must carry NO bubbles attribute — the zero-diff default').toBe(false)
+    expect(el.bubbles, 'the property default is not "off"').toBe('off')
+    expect(el.hasAttribute('bubbles'), 'a never-touched element must carry NO bubbles attribute — the default is the enum default').toBe(false)
 
     driveNoteAndCard(el)
     const turn = el.querySelector('[data-part="turn"][data-role="agent"]') as HTMLElement
     const bubble = turn.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
     const bubbleStyle = getComputedStyle(bubble)
-    expect(alphaOf(bubbleStyle.backgroundColor), 'unset bubbles must ship the chromed prose bubble (ADR-0160)').toBeGreaterThan(0)
-    expect(Number.parseFloat(bubbleStyle.paddingLeft), 'unset bubbles must ship the bubble padding (ADR-0160)').toBeGreaterThan(0)
+    expect(alphaOf(bubbleStyle.backgroundColor), 'the default host bubble must be chrome-less (no bg)').toBe(0)
+    expect(Number.parseFloat(bubbleStyle.paddingLeft), 'the default host bubble stays contained (padding)').toBeGreaterThan(0)
+    expect(Number.parseFloat(bubbleStyle.borderTopLeftRadius), 'the default host bubble stays contained (radius)').toBeGreaterThan(0)
   })
 
-  it("`bubbles='off'`: the HOST/AGENT bubble flattens — no background, no padding, no radius; the USER bubble and the mounted card's own chrome are BOTH untouched", () => {
+  it("`bubbles='off'` (explicit): the HOST/AGENT bubble is chrome-less — no background — but stays contained (padding + radius); the USER bubble and the mounted card's own chrome are BOTH untouched", () => {
     const el = mountConversation()
     el.bubbles = 'off'
     expect(el.getAttribute('bubbles'), 'the reflected attribute must carry the explicit value').toBe('off')
@@ -827,8 +834,9 @@ describe('ui-conversation cross-engine — the bubbles on/off setting (GH #1221)
 
     const bubbleStyle = getComputedStyle(bubble)
     expect(alphaOf(bubbleStyle.backgroundColor), "bubbles='off' must drop the host bubble's background").toBe(0)
-    expect(Number.parseFloat(bubbleStyle.paddingLeft), "bubbles='off' must drop the host bubble's padding").toBe(0)
-    expect(Number.parseFloat(bubbleStyle.borderTopLeftRadius), "bubbles='off' must drop the host bubble's radius").toBe(0)
+    // GH #1221 morning ruling: containment stays — padding + radius are NOT dropped (only the chrome is).
+    expect(Number.parseFloat(bubbleStyle.paddingLeft), "bubbles='off' keeps the host bubble CONTAINED (padding)").toBeGreaterThan(0)
+    expect(Number.parseFloat(bubbleStyle.borderTopLeftRadius), "bubbles='off' keeps the host bubble's radius").toBeGreaterThan(0)
 
     // The USER bubble is a completely different `[data-role]` — ruling 1/the Acceptance line scope this
     // setting to the host/agent side ONLY.
@@ -850,15 +858,15 @@ describe('ui-conversation cross-engine — the bubbles on/off setting (GH #1221)
     const bubble = turn.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
 
     expect(el.hasAttribute('bubbles')).toBe(false)
-    expect(alphaOf(getComputedStyle(bubble).backgroundColor), 'precondition: starts chromed').toBeGreaterThan(0)
+    expect(alphaOf(getComputedStyle(bubble).backgroundColor), 'precondition: starts chrome-less (the GH #1221 morning-ruling default)').toBe(0)
+
+    el.bubbles = 'on'
+    expect(el.getAttribute('bubbles'), 'flipping to "on" must reflect a real attribute').toBe('on')
+    expect(alphaOf(getComputedStyle(bubble).backgroundColor), 'flipping to on did not paint the chrome').toBeGreaterThan(0)
 
     el.bubbles = 'off'
     expect(el.getAttribute('bubbles')).toBe('off')
-    expect(alphaOf(getComputedStyle(bubble).backgroundColor), 'flipping to off did not flatten the bubble').toBe(0)
-
-    el.bubbles = 'on'
-    expect(el.getAttribute('bubbles'), 'flipping back to "on" must reflect a real (non-absent) attribute').toBe('on')
-    expect(alphaOf(getComputedStyle(bubble).backgroundColor), 'flipping back to on did not restore the chrome').toBeGreaterThan(0)
+    expect(alphaOf(getComputedStyle(bubble).backgroundColor), 'flipping back to off did not drop the chrome').toBe(0)
   })
 })
 

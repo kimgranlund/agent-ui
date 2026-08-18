@@ -165,6 +165,7 @@ import {
   SURFACE_BUBBLES_KEY,
   defaultAgentConfigSchema,
   isEnabledFlag,
+  isBubblesChromeEnabled,
   kindEnabledKey,
   sanitizeCatalog,
   A2UI_LOCAL_PATTERNS_KEY,
@@ -4033,10 +4034,10 @@ export class UIAgentAdminElement extends UIElement {
     if (this.#surfaceAuthoringSwitch) this.#surfaceAuthoringSwitch.checked = isAuthoringSurfaceEnabled(store?.get(SURFACE_AUTHORING_KEY))
     // GH #1221 (Kim's 2026-08-17 rulings) — the chat bubble on/off setting reflects its own stored state
     // the same way, AND drives `ui-conversation`'s own reflected `bubbles` prop (ruling 1: "the
-    // ui-conversation prop remains the mechanism the setting drives"). `isEnabledFlag`'s default-ON law
-    // (never the inverse-default one) — an unset store must map to `'on'`, `ui-conversation`'s own
-    // default, so a persona that never touched this setting renders byte-identical to today.
-    const bubblesOn = isEnabledFlag(store?.get(SURFACE_BUBBLES_KEY))
+    // ui-conversation prop remains the mechanism the setting drives"). GH #1221 morning ruling
+    // (2026-08-18): the INVERSE default — an unset store maps to `'off'` (contained, chrome-less),
+    // `ui-conversation`'s own default; only an explicit stored `true` paints the chrome.
+    const bubblesOn = isBubblesChromeEnabled(store?.get(SURFACE_BUBBLES_KEY))
     if (this.#surfaceBubblesSwitch) this.#surfaceBubblesSwitch.checked = bubblesOn
     if (this.#conversation) this.#conversation.bubbles = bubblesOn ? 'on' : 'off'
     // GH #525 — the bankroll group is entirely HIDDEN for a persona that never opted in

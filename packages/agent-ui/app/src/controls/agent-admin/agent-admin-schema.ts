@@ -277,19 +277,24 @@ export function isAuthoringSurfaceEnabled(value: unknown): boolean {
 }
 
 // ── Chat bubble on/off setting (GH #1221, Kim's 2026-08-17 rulings) ───────────────────────────────────
-// The Surface tab's toggle for `ui-conversation`'s own reflected `bubbles` prop — whether host/agent
-// messages render inside the ADR-0160 chromed bubble or flattened, chromeless prose. Unlike GenUI/
-// Planner/Authoring above, this is NOT an opt-in modality (nothing is taught or composed differently) —
-// it is a pure PRESENTATION toggle, so it uses `isEnabledFlag`'s ordinary default-ON law, the SAME one
-// Markdown/A2UI use: the default must render byte-identical to today's shipped chat look (the ticket's
-// own "zero visual change unset" requirement), which is the ON state.
+// The Surface tab's toggle for `ui-conversation`'s own reflected `bubbles` prop — whether the host/agent
+// message container paints CHROME (the ADR-0160 neutral background) or stays chrome-less. Kim's
+// 2026-08-18 morning ruling (GH #1221, resolving the label-vs-look note): the DEFAULT is chrome-LESS —
+// contained (padding + radius) but no background/border — so this is a pure PRESENTATION toggle with the
+// INVERSE default (absent ⇒ OFF): an explicit stored `true` paints the chrome. `isBubblesChromeEnabled`
+// below is that fail-closed read (the `isGenuiSurfaceEnabled` shape).
 
-/** Chat bubbles surface — ON (the default): host/agent messages render inside `ui-conversation`'s
- *  existing chromed bubble, byte-identical to today; OFF (an explicit stored `false`): the host/agent
- *  bubble flattens to chromeless, full-bleed prose (never touching the user bubble, and never touching
- *  a mounted Gen-UI/A2UI card's own chrome — GH #1221's OTHER half hoists the card out of the bubble
- *  entirely, independent of this setting). */
+/** Chat bubbles surface — OFF (the default, per the 2026-08-18 ruling): the host/agent bubble is a padded,
+ *  radiused, chrome-less container; ON (an explicit stored `true`): the ADR-0160 neutral background paints.
+ *  Never touches the user bubble, and never a mounted Gen-UI/A2UI card's own chrome (GH #1221's OTHER half
+ *  hoists the card out of the bubble entirely, independent of this setting). */
 export const SURFACE_BUBBLES_KEY = 'surfaceBubbles'
+
+/** Fail-closed read for the bubbles toggle's INVERSE default (GH #1221 morning ruling): absent/malformed
+ *  ⇒ OFF (chrome-less); only an explicit stored `true` turns the chrome on. */
+export function isBubblesChromeEnabled(value: unknown): boolean {
+  return value === true
+}
 
 /** The A2UI catalog picker's persisted selection (an id from `A2UI_CATALOG_OPTIONS`). */
 export const A2UI_CATALOG_KEY = 'a2uiCatalog'
