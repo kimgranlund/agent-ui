@@ -202,14 +202,11 @@ import { EFFORT_LEVELS, type EffortLevel, type TurnReference, type ContextItem }
 import '@agent-ui/components/controls/toast'
 import '@agent-ui/components/controls/toast-region'
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
-// GH #1211 — the composer→entry ingest path: the minimal consuming interface over the extraction seam
-// #1210 is building in parallel (converges at merge — see document-ingest.ts's own header comment).
-import {
-  isSupportedDocument,
-  extractDocumentText,
-  formatFileSize,
-  UnsupportedDocumentError,
-} from './document-ingest.ts'
+// GH #1211 — the composer→entry ingest path: `extractDocumentText`/`DocumentExtractionError` and
+// `MAX_RAW_FILE_BYTES` are the REAL #1210 extraction seam, re-exported through document-ingest.ts's
+// thin adapter (its own header comment); `exceedsAgentKnowledgeBudget`/`formatFileSize` are this
+// ticket's own additions (the aggregate budget check + the chip's size formatter).
+import { extractDocumentText, DocumentExtractionError, MAX_RAW_FILE_BYTES, MAX_AGENT_KNOWLEDGE_CHARS, exceedsAgentKnowledgeBudget, formatFileSize } from './document-ingest.ts'
 import {
   AVAILABILITY_KINDS,
   ENTRY_KINDS,
@@ -2789,17 +2786,16 @@ export class UIAgentAdminElement extends UIElement {
   // in-flight/attached state. The composer itself never sees any of this (TKT-0056/GH #849/#891's
   // layering law) — this element owns the whole projection. ──────────────────────────────────────────
 
-  /** req-doc-ingestion.md R1/R2/R4/R6 — one file's whole ingest lifecycle: reject an unsupported type
-   *  visibly (never a silent drop), show an immediate "extracting…" chip, extract off the main
-   *  interaction path, then mint a `resource` entry and swap the chip to its final state. Each file in a
-   *  multi-file drop/paste/pick gets its OWN chip and its OWN independent outcome — one file's rejection
-   *  never blocks a sibling's success. */
+  /** req-doc-ingestion.md R1/R2/R4/R6 — one file's whole ingest lifecycle: show an immediate
+   *  "extracting…" chip, extract off the main interaction path through the REAL `@agent-ui/app`
+   *  extraction seam (GH #1210), enforce the per-agent aggregate knowledge budget (R6's third figure,
+   *  this ticket's own job per document-budget.ts's own header), then mint a `resource` entry and swap
+   *  the chip to its final state. A rejection at ANY stage (unsupported type, over-size, over-budget)
+   *  surfaces at the chip with a visible reason — never a silent drop. Each file in a multi-file
+   *  drop/paste/pick gets its OWN chip and its OWN independent outcome — one file's rejection never
+   *  blocks a sibling's success. */
   async #handleAttach(files: readonly File[]): Promise<void> {
     for (const file of files) {
-      if (!isSupportedDocument(file)) {
-        this.#showToast(`Can't attach "${file.name}" — unsupported file type.`)
-        continue
-      }
       const pendingId = `attach-${++this.#attachSeq}`
       this.#attachedContextItems = [
         ...this.#attachedContextItems,
@@ -2807,15 +2803,31 @@ export class UIAgentAdminElement extends UIElement {
       ]
       this.#renderAttachedContextItems()
       try {
+        // #1210's own seam validates the type and the raw-size cap, throwing a typed
+        // `DocumentExtractionError` (`.reason`) rather than this element pre-checking a duplicate rule.
         const extracted = await extractDocumentText(file)
         // Dismissed mid-extraction (R5 AC's "dismiss before send discards cleanly", the async case): the
         // chip is already gone from `#attachedContextItems` — drop this result rather than resurrecting
         // a row the user already discarded, and never mint the entry it would have produced.
         if (!this.#attachedContextItems.some((item) => item.id === pendingId)) continue
+
+        // R6's THIRD budget — the aggregate cap over every ENABLED resource entry's own text, checked
+        // HERE at the mint point (the only place with an "every entry" input to sum over — #1210's own
+        // seam has no store access and explicitly left this to #1211, document-budget.ts's own header).
         const existing = readEntries(this.store, ENTRY_KINDS.resource)
+        const existingCharsTotal = existing.filter((e) => e.enabled).reduce((sum, e) => sum + e.content.length, 0)
+        if (exceedsAgentKnowledgeBudget(existingCharsTotal, extracted.text.length)) {
+          this.#showToast(
+            `Can't attach "${file.name}" — it would push this agent's knowledge past its ${MAX_AGENT_KNOWLEDGE_CHARS.toLocaleString()}-character budget.`,
+          )
+          this.#attachedContextItems = this.#attachedContextItems.filter((item) => item.id !== pendingId)
+          this.#renderAttachedContextItems()
+          continue
+        }
+
         const result = validateNewEntry(existing, ENTRY_KINDS.resource, {
           label: file.name,
-          description: formatFileSize(extracted.meta.size),
+          description: formatFileSize(extracted.meta.rawBytes),
           content: extracted.text,
         })
         if (!result.ok) {
@@ -2829,8 +2841,8 @@ export class UIAgentAdminElement extends UIElement {
         // and composes into `composeLiveSystemPrompt` exactly like a hand-authored resource.
         this.#updateEntries(ENTRY_KINDS.resource, (entries) => [...entries, result.entry])
         const description = extracted.meta.truncated
-          ? `${formatFileSize(extracted.meta.size)} — truncated`
-          : formatFileSize(extracted.meta.size)
+          ? `${formatFileSize(extracted.meta.rawBytes)} — truncated`
+          : formatFileSize(extracted.meta.rawBytes)
         // Swap the chip's id from the transient placeholder to the entry's OWN id — `onContextDismiss`
         // and a future dismiss both key off it from this point on (`#dismissAttachment`).
         this.#attachedContextItems = this.#attachedContextItems.map((item) =>
@@ -2839,7 +2851,16 @@ export class UIAgentAdminElement extends UIElement {
         this.#renderAttachedContextItems()
       } catch (error) {
         if (!this.#attachedContextItems.some((item) => item.id === pendingId)) continue
-        const message = error instanceof UnsupportedDocumentError ? error.message : `Can't attach "${file.name}".`
+        // #1210's `DocumentExtractionError.reason` picks the copy — `agent-admin.ts` owns the WORDING
+        // (never re-parses the seam's own diagnostic `message`), so a toast reads like the rest of this
+        // element's own copy rather than a library's internal error text.
+        let message = `Can't attach "${file.name}".`
+        if (error instanceof DocumentExtractionError) {
+          message =
+            error.reason === 'too-large'
+              ? `Can't attach "${file.name}" — it's over the ${formatFileSize(MAX_RAW_FILE_BYTES)} per-file limit.`
+              : `Can't attach "${file.name}" — unsupported file type.`
+        }
         this.#showToast(message)
         this.#attachedContextItems = this.#attachedContextItems.filter((item) => item.id !== pendingId)
         this.#renderAttachedContextItems()

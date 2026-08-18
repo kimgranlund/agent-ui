@@ -11,8 +11,9 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 import { UIAgentAdminElement } from './agent-admin.ts'
 import { ENTRY_KINDS } from './entries.ts'
-import { readEntries } from '../entry-list/entry-data.ts'
+import { entriesStoreKey, readEntries, type Entry } from '../entry-list/entry-data.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
+import { MAX_AGENT_KNOWLEDGE_CHARS } from './document-ingest.ts'
 
 // The jsdom ElementInternals stub (agent-admin.test.ts verbatim) — the real component mounts real FACE
 // form controls (ui-switch/ui-text-field/ui-slider) that call setFormValue/setValidity on connect.
@@ -129,6 +130,36 @@ describe('ui-agent-admin — GH #1211: the composer attach path → a `resource`
 
     expect(chipsOf(el), 'the chip must be gone').toHaveLength(0)
     expect(readEntries(el.store, ENTRY_KINDS.resource), 'the entry it minted must be gone too — dismiss undoes the attach').toHaveLength(0)
+  })
+
+  it('refuses an attach that would push the aggregate resource-text total past MAX_AGENT_KNOWLEDGE_CHARS (R6\'s third budget), with a visible toast and no new entry minted', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    // Seed one ENABLED resource entry already sitting just under the aggregate cap.
+    const existing: Entry = {
+      id: 'huge-existing',
+      kind: ENTRY_KINDS.resource,
+      label: 'existing.txt',
+      description: '',
+      content: 'x'.repeat(MAX_AGENT_KNOWLEDGE_CHARS - 10),
+      order: 0,
+      enabled: true,
+      builtin: false,
+    }
+    el.store!.set(entriesStoreKey(ENTRY_KINDS.resource), [existing])
+    await settle()
+
+    // A new 20-char document pushes the aggregate 10 chars past the cap.
+    attachFile(el, new File(['y'.repeat(20)], 'new.txt', { type: 'text/plain' }))
+    await settle()
+
+    const entries = readEntries(el.store, ENTRY_KINDS.resource)
+    expect(entries, 'no new entry minted — only the pre-seeded one remains').toHaveLength(1)
+    expect(entries[0]!.id).toBe('huge-existing')
+    expect(chipsOf(el), 'the rejected attach leaves no chip behind').toHaveLength(0)
+    const toast = el.querySelector('ui-toast-region ui-toast') as HTMLElement | null
+    expect(toast, 'a rejection toast must render — never a silent drop').not.toBeNull()
+    expect(toast!.textContent).toContain('new.txt')
+    expect(toast!.textContent).toContain(MAX_AGENT_KNOWLEDGE_CHARS.toLocaleString())
   })
 
   it('with no doc ever attached, the context-chip row starts empty/hidden — the attach button itself is revealed (this consumer DOES wire onAttach)', async () => {
