@@ -1426,5 +1426,12 @@
     "description": "ui-line-chart v1 axis vocabulary: minimal baseline + min/max labels, single-series, hand-rolled inline SVG",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0206",
+    "url": "./adr-index.html#adr-0206",
+    "description": "target becomes the meta-line envelope's SIXTH additive model-authored arm (GH #1259): the model names, on the leading meta-line, the surfaceId it is about to m…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
