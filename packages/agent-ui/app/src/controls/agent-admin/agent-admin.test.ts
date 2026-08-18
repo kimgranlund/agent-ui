@@ -1103,24 +1103,32 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
 
     expect(agentItems.map((i) => i.getAttribute('data-item'))).toEqual(['agent', 'model', 'bankroll'])
     expect(agentItems.map((i) => i.getAttribute('summary'))).toEqual(['Agent', 'Model', 'Bankroll'])
+    // GH #1197 (2026-08-18) — 'team' joined as a SIXTH Capabilities fold, deliberately: a team is a
+    // distinct record (a GM pick + a nested member roster), not another `CAPABILITY_KINDS` row, so it
+    // rides alongside the original five rather than replacing or reordering any of them. This is a real,
+    // deliberate addition to the census below, not a drift the original GH #574 migration missed.
     expect(capabilitiesItems.map((i) => i.getAttribute('data-item'))).toEqual([
-      ENTRY_KINDS.promptSection, ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool,
+      ENTRY_KINDS.promptSection, ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, 'team',
     ])
-    expect(capabilitiesItems.map((i) => i.getAttribute('summary'))).toEqual(['Instructions', 'Skills', 'Workflows', 'Resources', 'Tools'])
+    expect(capabilitiesItems.map((i) => i.getAttribute('summary'))).toEqual(['Instructions', 'Skills', 'Workflows', 'Resources', 'Tools', 'Teams'])
     expect(surfaceItems.map((i) => i.getAttribute('data-item'))).toEqual(['surface', ENTRY_KINDS.patternSource])
     expect(surfaceItems.map((i) => i.getAttribute('summary'))).toEqual(['Surface Options', 'Pattern sources'])
 
-    // The census: the union of the three tabs' top-level folds is EXACTLY the old flat ten-item set —
-    // the acceptance's "no fold lost or duplicated", proven mechanically rather than eyeballed.
+    // The census: the union of the three tabs' top-level folds is EXACTLY the old flat ten-item set PLUS
+    // GH #1197's own deliberate 'team' addition — the acceptance's "no fold lost or duplicated", proven
+    // mechanically rather than eyeballed (a silently DROPPED fold, or an accidental DUPLICATE, still fails
+    // this the same way it always has; a real, intentional addition is named in the expected set instead
+    // of breaking the census outright).
     const OLD_FLAT_SET = [
       'agent', 'model', 'surface', 'bankroll', ENTRY_KINDS.promptSection,
       ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
     ]
+    const CURRENT_FLAT_SET = [...OLD_FLAT_SET, 'team']
     const allItems = [...agentItems, ...capabilitiesItems, ...surfaceItems]
     const union = allItems.map((i) => i.getAttribute('data-item'))
-    expect([...union].sort()).toEqual([...OLD_FLAT_SET].sort())
+    expect([...union].sort()).toEqual([...CURRENT_FLAT_SET].sort())
     expect(new Set(union).size, 'no fold duplicated across tabs').toBe(union.length)
-    expect(union.length, 'no fold silently dropped').toBe(OLD_FLAT_SET.length)
+    expect(union.length, 'no fold silently dropped').toBe(CURRENT_FLAT_SET.length)
 
     for (const item of allItems) expect(item.hasAttribute('open'), `${item.getAttribute('data-item')} defaults open`).toBe(true)
     // The section content is the fold's BODY (the disclosure adopted it — SPEC-R16 children=body).
@@ -2555,6 +2563,108 @@ describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-
     expect(captured[0]!.integrations).toEqual(['weather', 'currency'])
     expect(captured[1]!.system, 'absent ≡ explicit context, byte for byte').toBe(captured[0]!.system)
     expect(captured[1]!.integrations).toEqual(captured[0]!.integrations)
+  })
+})
+
+// ── GH #1197 (ADR-0203 cl.1/cl.2, req-agent-teams.md R5) — the Team pane, wired end to end ─────────────────
+// Through the REAL element: the pane's own fold renders in the Capabilities tab, and — the actual "honest
+// minimal wiring" the ticket asks for — once a persisted team's GM is the CURRENTLY ACTIVE agent, the live
+// turn's composed system prompt (both the stub-arm snapshot via Context: System, and a real submitted turn)
+// actually carries `composeTeamPromptSection`'s roster block. `composeSystemPrompt`/`composeLiveSystemPrompt`'s
+// OWN gating unit tests live in entries.test.ts; this is the integration proof that agent-admin.ts's
+// `#teamPromptContextFor` really reaches them from the pane's own persisted data plus the real header roster.
+describe('UIAgentAdminElement — the Team pane + its compose-side wiring (GH #1197)', () => {
+  async function waitFor(predicate: () => boolean, label: string): Promise<void> {
+    for (let i = 0; i < 200; i += 1) {
+      if (predicate()) return
+      await Promise.resolve()
+    }
+    throw new Error(`waitFor timed out: ${label}`)
+  }
+  function submit(el: UIAgentAdminElement, text: string): void {
+    const composer = el.querySelector('[data-part="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = text
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+  }
+  function agentJsonSystemPrompt(el: UIAgentAdminElement): string {
+    const json = JSON.parse(
+      el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',
+    ) as { systemPrompt: string }
+    return json.systemPrompt
+  }
+
+  it('the Teams fold renders in the Capabilities tab, empty by default', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const teamsFold = el.querySelector('[data-part="settings-item"][data-item="team"]') as HTMLElement
+    expect(teamsFold, 'the Teams fold mounted').not.toBeNull()
+    expect(teamsFold.getAttribute('summary')).toBe('Teams')
+    expect(teamsFold.querySelector('[data-part="team-pane"] [data-part="team-list"]')?.children.length ?? -1).toBe(0)
+  })
+
+  it('GM active: a persisted team\'s roster section reaches BOTH the Context: System snapshot and a real submitted turn', async () => {
+    // Persisted BEFORE mount, deliberately: the pane has no store-subscription/poll of its own (teams
+    // live on their own `StorageAdapter` namespace, not this element's `SettingsStore`) — its ONE load is
+    // the `refresh()` fired at compose time, so a team saved after mount would need the pane's own Save
+    // button to ever be seen. This is the realistic path anyway: the team already exists when the admin
+    // page (re)loads, the SAME "read on mount" shape every other agent-admin persistence already has.
+    const { saveAgentTeam } = await import('./agent-team.ts')
+    const result = await saveAgentTeam(
+      {
+        id: 'team-support',
+        label: 'Support Team',
+        gmAgentId: 'agent-gm',
+        members: [{ agentId: 'agent-researcher', role: 'Researcher', routingDescription: 'Use for open questions needing lookup.' }],
+      },
+      ['agent-gm', 'agent-researcher'],
+    )
+    expect(result.valid, 'the fixture team itself resolves against the roster').toBe(true)
+
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.setAgentRoster(
+      [
+        { id: 'agent-gm', label: 'GM Agent' },
+        { id: 'agent-researcher', label: 'Rosa' },
+      ],
+      'agent-gm',
+    )
+
+    // The pane's own initial `refresh()` (fired at compose time) is async — wait for its OWN rendered
+    // list to pick up the persisted team before reading the compose path, the same "observable DOM
+    // signal, not a raw timer" `waitFor` law this file already uses everywhere else.
+    await waitFor(() => el.querySelector('[data-part="team-card"][data-team-id="team-support"]') !== null, 'team pane loaded the persisted team')
+
+    // (a) the Context: System snapshot — no turn needed, `#renderContextSystem` composes fresh per render.
+    expect(agentJsonSystemPrompt(el)).toContain('## Your team')
+    expect(agentJsonSystemPrompt(el)).toContain('- **Rosa** (Researcher): Use for open questions needing lookup.')
+
+    // (b) a REAL submitted turn — the stub arm's own composed persona, proven the same way SPEC-R3(c)/(d)
+    // above proves the invocable-entry drop: submit, then read the arg the stub composer was actually given
+    // via the identical Context: System hook (both readings share ONE compose call, `#personaSystemFor`).
+    submit(el, 'hello')
+    expect(agentJsonSystemPrompt(el), 'unchanged by the turn — the same compose path both arms read').toContain('## Your team')
+  })
+
+  it('a non-GM active agent: the compose path stays byte-identical to the no-team case', async () => {
+    const { saveAgentTeam } = await import('./agent-team.ts')
+    await saveAgentTeam(
+      {
+        id: 'team-support-2',
+        label: 'Support Team 2',
+        gmAgentId: 'agent-gm',
+        members: [{ agentId: 'agent-researcher', role: 'Researcher', routingDescription: 'Use for open questions needing lookup.' }],
+      },
+      ['agent-gm', 'agent-researcher'],
+    )
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.setAgentRoster(
+      [
+        { id: 'agent-gm', label: 'GM Agent' },
+        { id: 'agent-researcher', label: 'Rosa' },
+      ],
+      'agent-researcher', // active agent is a MEMBER, not the GM
+    )
+    await waitFor(() => el.querySelector('[data-part="team-card"][data-team-id="team-support-2"]') !== null, 'team pane loaded the persisted team')
+    expect(agentJsonSystemPrompt(el)).not.toContain('## Your team')
   })
 })
 
