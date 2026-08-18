@@ -392,13 +392,21 @@ export interface LiveBankrollState {
  * right after the base prompt and ahead of the capability groups; `bankroll.stored`, when present, appends
  * a resume-figure sentence naming the exact figure. `undefined` (not capable, or A2UI is off) is the SAME
  * gated equivalence every other optional input here has — byte-identical to the pre-#525 output.
+ *
+ * GH #1197 (ADR-0203 clause 2, the honest minimal wiring `#1194` deliberately deferred) — `team`, when
+ * given, rides straight through to `composeSystemPrompt(sections, team)`: the SAME optional gate that
+ * function already applies (join `composeTeamPromptSection`'s output iff `isTeamGm(team)`), reached one
+ * layer further out so the LIVE turn's system prompt — not only the pure `composeSystemPrompt` unit —
+ * actually carries the team section when the active agent is its own team's GM. `undefined` (every
+ * pre-#1197 call site, unchanged) is the same gated equivalence every other optional input here has.
  */
 export function composeLiveSystemPrompt(
   sections: readonly Entry[],
   capabilities: readonly LiveCapabilityGroup[],
   bankroll?: LiveBankrollState,
+  team?: TeamPromptContext,
 ): string {
-  const base = composeSystemPrompt(sections)
+  const base = composeSystemPrompt(sections, team)
   const withBankroll =
     bankroll === undefined
       ? base

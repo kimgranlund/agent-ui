@@ -1029,3 +1029,53 @@ describe('composeSystemPrompt — the ADR-0203 cl.2 team-section wiring gate', (
     expect(composeSystemPrompt(SECTIONS, { team: emptyTeam, activeAgentId: 'gm-agent', memberSnapshots: [] })).toBe(base)
   })
 })
+
+// GH #1197 (ADR-0203 cl.2, the honest minimal wiring `#1194` deliberately deferred) — this is the ACTUAL
+// live-turn compose path (`agent-admin.ts`'s `#personaSystemFor`/live-arm call sites both run
+// `composeLiveSystemPrompt`, never `composeSystemPrompt` directly), so the team section reaching THIS
+// function's output — not only the pure unit above — is the real proof the GM's system prompt carries it.
+describe('composeLiveSystemPrompt — the ADR-0203 cl.2 team-section wiring, one layer further out (GH #1197)', () => {
+  const TEAM: AgentTeam = {
+    id: 'support-team',
+    label: 'Support Team',
+    gmAgentId: 'gm-agent',
+    members: [
+      { agentId: 'billing-agent', role: 'Billing specialist', routingDescription: 'Route billing questions here.' },
+      { agentId: 'research-agent', role: 'Researcher', routingDescription: 'Use for open questions needing lookup.' },
+    ],
+  }
+  const SNAPSHOTS: TeamMemberSnapshot[] = [
+    { agentId: 'billing-agent', name: 'Billie' },
+    { agentId: 'research-agent', name: 'Ryo' },
+  ]
+  const context = (activeAgentId: string): TeamPromptContext => ({ team: TEAM, activeAgentId, memberSnapshots: SNAPSHOTS })
+
+  it('omitting the fourth argument entirely is byte-identical to pre-#1197 composeLiveSystemPrompt', () => {
+    expect(composeLiveSystemPrompt(SECTIONS, [])).toBe(composeSystemPrompt(SECTIONS))
+  })
+
+  it('GM active: the composed LIVE prompt carries the roster section — name, role, and routing rule for every member', () => {
+    const out = composeLiveSystemPrompt(SECTIONS, [], undefined, context('gm-agent'))
+    expect(out).toContain('## Your team')
+    expect(out).toContain('- **Billie** (Billing specialist): Route billing questions here.')
+    expect(out).toContain('- **Ryo** (Researcher): Use for open questions needing lookup.')
+  })
+
+  it('a non-GM active agent composes byte-identically to the no-team case — the gate is isTeamGm, not team membership', () => {
+    const base = composeLiveSystemPrompt(SECTIONS, [])
+    expect(composeLiveSystemPrompt(SECTIONS, [], undefined, context('billing-agent'))).toBe(base)
+    expect(composeLiveSystemPrompt(SECTIONS, [], undefined, context('some-unrelated-agent'))).toBe(base)
+  })
+
+  it('rides ALONGSIDE the bankroll line and the capability index — every optional arg composes together', () => {
+    const skills = group(ENTRY_KINDS.skill, 'Skills available to you', [entry({ id: 'search', label: 'Web search', content: 'search(q)', order: 0 })])
+    const out = composeLiveSystemPrompt(SECTIONS, [skills], { stored: 500 }, context('gm-agent'))
+    expect(out).toContain('Your current bankroll is 500')
+    expect(out).toContain('## Your team')
+    expect(out).toContain('## Skills available to you')
+    // The team section is the LAST block appended (composeSystemPrompt runs before composeLiveSystemPrompt's
+    // own bankroll/capability appends) — order is base → team (inside composeSystemPrompt) → bankroll →
+    // capability index, so team text lands ahead of the bankroll line in the final string.
+    expect(out.indexOf('## Your team')).toBeLessThan(out.indexOf('Your current bankroll'))
+  })
+})

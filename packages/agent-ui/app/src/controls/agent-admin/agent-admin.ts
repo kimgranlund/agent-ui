@@ -255,6 +255,14 @@ import {
 } from '../entry-list/entry-data.ts'
 import { mountEntryList, showAddError, type EntryListSection } from '../entry-list/entry-list.ts'
 import { lintPromptSections } from './prompt-lint.ts'
+// GH #1197 (ADR-0203 cl.1/cl.2 / req-agent-teams.md R5) — the Team pane (list/create/edit/delete,
+// validation-closed) plus the compose-side wiring: `#teams` is this element's own cache of the pane's
+// last-loaded team list (populated by `onTeamsChanged`), read SYNCHRONOUSLY by `#teamPromptContextFor`
+// so a turn's live system-prompt compose (a sync call) never has to await the pane's own async storage
+// round-trip.
+import { buildAgentTeamPane, type KnownAgent } from './agent-team-pane.ts'
+import type { AgentTeam } from './agent-team.ts'
+import type { TeamMemberSnapshot, TeamPromptContext } from './agent-team-prompt.ts'
 // ADR-0178 cl.2 — the three-filter apply gate + the canonical key set it enumerates (LLD-C1). A pure
 // module: store in, writes out, a report back — this element owns WHEN it may run, never HOW it filters.
 import { applyPersonaPatch, draftStateBlock, type PatchReport } from './persona-patch.ts'
@@ -631,6 +639,12 @@ export class UIAgentAdminElement extends UIElement {
   // (LLD §16.3), so a pre-connect call is held here and applied once `#agentSelectEl` exists
   // (`#applyAgentRoster`), exactly the `#generateRequest`/`#reflectAuthorEntry` build-time-reflect shape.
   #pendingRoster: { entries: readonly AgentRosterEntry[]; activeId: string | undefined } | undefined
+  // GH #1197 (ADR-0203 cl.2) — this element's own cache of the Team pane's last-loaded team list,
+  // refreshed by the pane's `onTeamsChanged` callback after every successful save/delete. Read
+  // SYNCHRONOUSLY by `#teamPromptContextFor` (below): `agent-team.ts`'s own persistence is async, but
+  // `#personaSystemFor`/the live-arm compose call sites are not, so this cache is what lets a turn's
+  // compose step see a just-saved team without awaiting a fresh storage round-trip.
+  #teams: readonly AgentTeam[] = []
   #agentSelectEl: UISelectElement | null = null
   // Keyed by pane so `#applyHeaderPaneState` (`#applyPaneVisibility`'s own mirror step) can write pressed/
   // selected state onto the right control without re-querying the DOM every render.
@@ -1532,6 +1546,32 @@ export class UIAgentAdminElement extends UIElement {
         surfaceContent.append(item)
       } else capabilitiesContent.append(item)
     }
+
+    // GH #1197 (ADR-0203 cl.1 / req-agent-teams.md R5) — the Team pane: a SIXTH Capabilities-tab fold,
+    // added after the four generic capability kinds (a team is a distinct record — a GM pick + a nested
+    // member roster — not another `Entry`-shaped kind, so it is NOT one more `CAPABILITY_KINDS` row; see
+    // `agent-team-pane.ts`'s own header for why it is bespoke rather than a `mountEntryList` instantiation).
+    // `getKnownAgents` reads `#pendingRoster` AT INVOKE TIME (never captured once, the same law every other
+    // `#pendingRoster` consumer already follows) so the picker always offers the CURRENT roster; a roster
+    // push (`setAgentRoster`) does not itself re-render this pane's already-open list/form (no store
+    // subscription ties them together — teams persist on their own `StorageAdapter` namespace, not this
+    // element's `SettingsStore`), matching the same "a section's own writes re-render it; an unrelated
+    // roster change does not" boundary the rest of this element already draws. `onTeamsChanged` refreshes
+    // `#teams` (`#teamPromptContextFor`'s own synchronous cache) the moment a save/delete lands, AND
+    // re-renders Context: System unconditionally (never gated on the no-subscribe-store check every OTHER
+    // `#renderContextSystem()` call site above uses): a team write never touches `this.store` at all — it
+    // persists on its OWN `StorageAdapter` namespace — so no store subscription would ever pick it up on
+    // its own, unlike every other write this element makes.
+    const teamPane = buildAgentTeamPane({
+      getKnownAgents: (): readonly KnownAgent[] => this.#pendingRoster?.entries.map((entry) => ({ id: entry.id, label: entry.label })) ?? [],
+      onTeamsChanged: (teams: readonly AgentTeam[]): void => {
+        this.#teams = teams
+        this.#renderContextSystem()
+      },
+    })
+    void teamPane.refresh()
+    const teamItem = settingsItem('team', 'Teams', teamPane.host)
+    capabilitiesContent.append(teamItem)
 
     // GH #161 — the old single Context tab's ONE content unit split into TWO content units:
     // `#contextSystemContent` (Agent System — what the agent actually sees, derived fresh from the store
@@ -3750,7 +3790,7 @@ export class UIAgentAdminElement extends UIElement {
    *  rather than accumulated from what the model itself has patched. This is the host side of SPEC-R29's
    *  incremental merge law. */
   #personaSystemFor(store: SettingsStore | undefined, sections: readonly Entry[]): string {
-    const persona = composeLiveSystemPrompt(sections, this.#capabilityGroups(store), this.#bankrollForPrompt(store))
+    const persona = composeLiveSystemPrompt(sections, this.#capabilityGroups(store), this.#bankrollForPrompt(store), this.#teamPromptContextFor())
     const isAuthoringContext = this.authoringStore !== undefined && store === this.authoringStore
     return isAuthoringContext ? `${persona}\n\n${draftStateBlock(this.store)}` : persona
   }
@@ -3786,6 +3826,28 @@ export class UIAgentAdminElement extends UIElement {
     if (!isBankrollCapable(store?.get(BANKROLL_CAPABLE_KEY))) return undefined
     if (!isEnabledFlag(store?.get(SURFACE_A2UI_KEY))) return undefined
     return { stored: sanitizeBankroll(store?.get(BANKROLL_KEY)) }
+  }
+
+  /** GH #1197 (ADR-0203 cl.2 — the honest minimal wiring `#1194` deliberately deferred) — the team-prompt
+   *  input for EVERY `composeLiveSystemPrompt` call site, the same "one projection, never three answers"
+   *  law `#bankrollForPrompt` just above already states for its own optional input. `undefined` unless the
+   *  CURRENTLY ACTIVE agent (`#pendingRoster.activeId`, read AT INVOKE TIME — the same "never captured
+   *  once" law every other `#pendingRoster` consumer already follows) is some loaded team's own `gmAgentId`
+   *  — `composeSystemPrompt`'s own `isTeamGm` gate would reach the same answer, but finding the team here
+   *  first means a non-GM turn (the overwhelming common case) allocates nothing. Member display names come
+   *  straight off the SAME roster the header's agent-select renders (`AgentRosterEntry.id`/`.label`) —
+   *  this element already owns that projection; teams carry no separate name of their own for a member
+   *  (`agent-team.ts`'s `AgentTeamMember` is `{agentId, role, routingDescription}` only). */
+  #teamPromptContextFor(): TeamPromptContext | undefined {
+    const activeId = this.#pendingRoster?.activeId
+    if (activeId === undefined || activeId === '') return undefined
+    const team = this.#teams.find((t) => t.gmAgentId === activeId)
+    if (team === undefined) return undefined
+    const memberSnapshots: TeamMemberSnapshot[] = (this.#pendingRoster?.entries ?? []).map((entry) => ({
+      agentId: entry.id,
+      name: entry.label,
+    }))
+    return { team, activeAgentId: activeId, memberSnapshots }
   }
 
   /** ADR-0168 cl.2 / LLD-C7 — the ENABLEMENT WIRE projection, shared by BOTH live arms (`#handleSubmit`'s
@@ -4043,7 +4105,7 @@ export class UIAgentAdminElement extends UIElement {
             // ADR-0178 cl.3 — the authoring gate's own on/off state, the same introspection law.
             authoring: isAuthoringSurfaceEnabled(store?.get(SURFACE_AUTHORING_KEY)),
           },
-          systemPrompt: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), this.#bankrollForPrompt(store)),
+          systemPrompt: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), this.#bankrollForPrompt(store), this.#teamPromptContextFor()),
         },
         openStates.get('agent') ?? true,
         // GH #866 — its OWN record, not the Agent tab's: this item is the compiled, read-only projection,
