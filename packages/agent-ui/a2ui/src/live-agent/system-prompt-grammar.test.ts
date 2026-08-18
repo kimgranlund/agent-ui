@@ -96,6 +96,54 @@ describe('buildSystemPrompt GRAMMAR additions (ADR-0089)', () => {
   })
 })
 
+// ── GH #1192, req-a2ui-patterns.md R2 / ADR-0198's 2026-08-18 amendment (B1/B2): the backable-multi-step
+// carve-out on the answered-ask freeze, its worked mechanics in the surface-reuse rule, and the closing
+// turn's one settle-update carve-out. Mode-invariant — all three land in the byte-pinned GRAMMAR constant. ──
+
+describe('buildSystemPrompt backable multi-step wizard mechanics (ADR-0198 amendment B1/B2, req-a2ui-patterns.md R2)', () => {
+  const prompt = buildSystemPrompt(defaultCatalog, [])
+
+  it('B1 — the answered-ask freeze is scoped to FLOW END, not every mid-flow commit', () => {
+    expect(prompt).toMatch(/This freeze begins at FLOW END, not at every mid-flow commit/)
+    expect(prompt).toMatch(/a backable multi-step flow's Next\/Back turns\s+are scene transitions on the SAME still-open ask, not answered asks/)
+    expect(prompt).toMatch(/starts only once the flow-final confirm is committed/)
+  })
+
+  it('B1 — the surface-reuse rule teaches the worked backable-wizard shape: one ask, root-once, /draft/* staging', () => {
+    expect(prompt).toMatch(/Backable multi-step, worked:/)
+    expect(prompt).toMatch(/keeps this reuse to ONE ask for the WHOLE\s+flow \(posture \(i\)\)/)
+    expect(prompt).toMatch(/never\s+re-declare it per step/)
+    expect(prompt).toMatch(/a "scene" container\)/)
+    expect(prompt).toMatch(/"\/draft\/\*"\s+data-model prefix/)
+    expect(prompt).toMatch(/nothing is committed anywhere\s+until the flow-final confirm/)
+    expect(prompt).toMatch(/scene transitions on the one still-open ask, not answered asks/)
+  })
+
+  it('B2 — the closing turn may carry exactly ONE settle updateComponents (strip buttons + settled badge)', () => {
+    expect(prompt).toMatch(/The closing turn's ONE exception to "no UI change"/)
+    expect(prompt).toMatch(/MAY carry exactly one updateComponents against that SAME\s+confirmed receipt/)
+    expect(prompt).toMatch(/strip its Back\/Confirm buttons and add a settled-status Badge/)
+    expect(prompt).toMatch(/never on the escalation path/)
+    expect(prompt).toMatch(/It fires at most once per flow; deleteSurface is\s+still never used on a confirmed receipt/)
+  })
+
+  it('B2 never widens "closing turn emits NO A2UI at all" into a blanket exception — it stays confined to the one settle update', () => {
+    // the closing-turn mandate paragraph still states the base law; B2's carve-out is a SEPARATE,
+    // narrowly-scoped sentence immediately after it, never a rewrite of the base rule itself.
+    expect(prompt).toMatch(/declaring NO new ask and\s*\nemitting NO A2UI at all/)
+    expect(prompt).toMatch(/never a fresh surface, never any other card/)
+  })
+
+  it('none of the B1/B2 prose leaks into the derived "## Available components" inventory section', () => {
+    const marker = '## Available components'
+    const start = prompt.indexOf(marker)
+    const rest = prompt.slice(start + marker.length)
+    const end = rest.indexOf('\n## ')
+    const body = end === -1 ? rest : rest.slice(0, end)
+    expect(body).not.toMatch(/backable|scene transitions|settle update|draft\/\*/i)
+  })
+})
+
 describe('produce() with the new GRAMMAR text: note-only clarify turn still returns cleanly (Acceptance)', () => {
   const intent: TurnInput = { kind: 'intent', text: 'make it better', session: { turns: [] } }
 
