@@ -409,4 +409,153 @@ export const cardAnatomyAskSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed]
+const WIZARD_ID = 'ask-1'
+/** Frontier 9 — the BACKABLE MULTI-STEP wizard (GH #1192, req-a2ui-patterns.md R2 / ADR-0198's 2026-08-18
+ *  amendment B1): ONE ask surface for the WHOLE flow (posture (i), grammar.md's backable-multi-step
+ *  clause) — dates → room → confirm, Back always free because nothing is committed until the flow-final
+ *  confirm. Root is delivered ONCE with a single stable wrapper child ("shell"); the growing step content
+ *  sits under its own id one level down ("scene"), so every Next/Back turn resends ONLY the scene subtree,
+ *  never root (the root-immutability rule). Every answer lives under the shared "/draft/*" data-model
+ *  prefix, seeded once at scene 1 and never rewritten by a scene swap — so the bound Calendar/RadioGroup
+ *  re-render the SAME still-present draft values when Back returns to an earlier scene: the worked
+ *  round-trip below goes dates → room → BACK to dates (still showing the chosen range) → forward to room
+ *  again (still showing the chosen room) → confirm. The confirm scene's receipt rides the CURRENT law's
+ *  DescriptionList primitive (ADR-0201), not the raw Rows-of-Text the source doc's pre-ADR-0201 sketch
+ *  used. Every mid-flow Next/Back turn here is a scene transition on this ONE still-open ask, never an
+ *  answered ask (B1's carve-out) — "ask-1" is declared exactly once, on turn 1, and never re-declared.
+ *  "rooms" (RadioGroup) is built WITHOUT its value binding, wired in a SEPARATE immediately-following
+ *  resend (radioGroupFactory's documented mount-order limitation: a value bound in the SAME batch that
+ *  also creates its Radio children races ahead of them and clears the selection instead of reading it
+ *  back) — proven by the real-renderer round-trip test, `backable-wizard.test.ts`. */
+export const backableWizardSeed: ExampleSeed = {
+  name: 'backable-wizard',
+  description: 'A 3-step backable wizard (dates → room → confirm) on ONE ask surface: draft answers under /draft/*, a stable scene container swapped by updateComponents, and a BACK round-trip that leaves both prior answers untouched.',
+  promptText: 'Let\'s book a stay — start with the dates, then I\'ll pick a room, and I can always go back to change something before I confirm.',
+  surfaceId: WIZARD_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    // turn 1 — create + scene 1 (dates): root delivered ONCE with a stable wrapper child ("shell"); the
+    // whole draft is seeded up front (ADR-0126 whole-record idiom) so every path a later scene binds
+    // already exists in the data model.
+    { version: 'v1.0', createSurface: { surfaceId: WIZARD_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: WIZARD_ID, value: { draft: { from: '', to: '', room: 'deluxe' } } } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: WIZARD_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['shell'] },
+          { id: 'shell', component: 'Column', gap: 'md', children: ['scene'] },
+          { id: 'scene', component: 'Column', gap: 'md', children: ['cal', 'nav1'] },
+          { id: 'cal', component: 'Calendar', mode: 'range', valueStart: { path: '/draft/from' }, valueEnd: { path: '/draft/to' } },
+          { id: 'nav1', component: 'Row', gap: 'sm', justify: 'end', children: ['next1'] },
+          { id: 'next1', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'room' } } },
+        ],
+      },
+    },
+
+    // the user picked a range and hit Continue — the committed range lands in the draft (a real client
+    // round-trip writes this via the Calendar's own two-way bind; scripted here to prove the mechanic):
+    { version: 'v1.0', updateDataModel: { surfaceId: WIZARD_ID, path: '/draft/from', value: '2026-08-21' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: WIZARD_ID, path: '/draft/to', value: '2026-08-24' } },
+
+    // turn 2 — scene 2 (room): ONLY "scene" is resent (never root/shell); /draft/from,/draft/to stay in
+    // the data model, untouched underneath. A ghost Back joins the solid Continue (the nav-row law, R2).
+    // "rooms" mounts WITHOUT its "value" binding here, on purpose (radioGroupFactory's documented
+    // limitation: RadioGroup.value applies at MOUNT time, before its just-declared Radio children exist
+    // in the light DOM yet, so a value bound in the SAME batch that also creates those children silently
+    // clears the selection instead of reading it back) — the binding is wired in a SEPARATE resend below,
+    // once "r1"/"r2" already exist, so the reconcile-props path (not the fresh-mount path) applies it.
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: WIZARD_ID,
+        components: [
+          { id: 'scene', component: 'Column', gap: 'md', children: ['rooms', 'nav2'] },
+          { id: 'rooms', component: 'RadioGroup', children: ['r1', 'r2'] },
+          { id: 'r1', component: 'Radio', value: 'standard', label: 'Standard · €180' },
+          { id: 'r2', component: 'Radio', value: 'deluxe', label: 'Deluxe King · €240' },
+          { id: 'nav2', component: 'Row', gap: 'sm', justify: 'end', children: ['back2', 'next2'] },
+          { id: 'back2', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'step', context: { to: 'dates' } } },
+          { id: 'next2', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'confirm' } } },
+        ],
+      },
+    },
+    // wire the value binding now that "r1"/"r2" are mounted: same children list (never touched, no
+    // dispose/remount), only "rooms"'s own props differ from its previous record — a genuine prop
+    // reconcile (RSR-C6), not a fresh mount, so the read finds its Radio children already present.
+    { version: 'v1.0', updateComponents: { surfaceId: WIZARD_ID, components: [{ id: 'rooms', component: 'RadioGroup', value: { path: '/draft/room' }, children: ['r1', 'r2'] }] } },
+
+    // BACK from room to dates: "scene" swaps to the dates shape again — IDENTICAL to turn 1's tree.
+    // /draft/from and /draft/to are STILL "2026-08-21"/"2026-08-24" (this update never touches them), so
+    // the re-bound Calendar shows the range already chosen — the round-trip B1's carve-out exists for.
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: WIZARD_ID,
+        components: [
+          { id: 'scene', component: 'Column', gap: 'md', children: ['cal', 'nav1'] },
+          { id: 'cal', component: 'Calendar', mode: 'range', valueStart: { path: '/draft/from' }, valueEnd: { path: '/draft/to' } },
+          { id: 'nav1', component: 'Row', gap: 'sm', justify: 'end', children: ['next1'] },
+          { id: 'next1', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'room' } } },
+        ],
+      },
+    },
+
+    // forward again to room — the SAME scene-2 tree, built the SAME two-step way (a fresh "rooms" mount
+    // here — the earlier one was disposed by the BACK swap — races its Radio children again too);
+    // /draft/room is STILL "deluxe" (the value already committed before the detour), the second half of
+    // the round-trip proof.
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: WIZARD_ID,
+        components: [
+          { id: 'scene', component: 'Column', gap: 'md', children: ['rooms', 'nav2'] },
+          { id: 'rooms', component: 'RadioGroup', children: ['r1', 'r2'] },
+          { id: 'r1', component: 'Radio', value: 'standard', label: 'Standard · €180' },
+          { id: 'r2', component: 'Radio', value: 'deluxe', label: 'Deluxe King · €240' },
+          { id: 'nav2', component: 'Row', gap: 'sm', justify: 'end', children: ['back2', 'next2'] },
+          { id: 'back2', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'step', context: { to: 'dates' } } },
+          { id: 'next2', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'confirm' } } },
+        ],
+      },
+    },
+    { version: 'v1.0', updateComponents: { surfaceId: WIZARD_ID, components: [{ id: 'rooms', component: 'RadioGroup', value: { path: '/draft/room' }, children: ['r1', 'r2'] }] } },
+
+    // the user confirmed the room and hit Continue — the receipt rows land in the draft (humanized,
+    // adjacent label/value per the receipt clause):
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: WIZARD_ID,
+        path: '/draft/rows',
+        value: [
+          { label: 'Dates', value: '21–24 Aug · 3 nights' },
+          { label: 'Room', value: 'Deluxe King · €240/night' },
+        ],
+      },
+    },
+
+    // turn 3 — confirm scene: the RECEIPT, current law's DescriptionList primitive (ADR-0201), plus the
+    // flow-final commit Button (grammar's confirm-before-concluding law). Still the SAME ask surface — the
+    // flow-final confirm on THIS turn is what starts the answered-ask freeze (B1); every turn before it
+    // was a scene transition, never an answered ask.
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: WIZARD_ID,
+        components: [
+          { id: 'scene', component: 'Column', gap: 'md', children: ['rcpt', 'nav3'] },
+          { id: 'rcpt', component: 'DescriptionList', rows: { path: '/draft/rows' } },
+          { id: 'nav3', component: 'Row', gap: 'sm', justify: 'end', children: ['back3', 'commit'] },
+          { id: 'back3', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'step', context: { to: 'room' } } },
+          { id: 'commit', component: 'Button', variant: 'solid', label: 'Confirm booking', action: { action: 'commit' } },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed]

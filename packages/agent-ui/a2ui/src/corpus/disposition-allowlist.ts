@@ -110,4 +110,17 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
       'exemplar; pending a judged import wave (import-seeds.ts with a real VerdictsFile). Delete this ' +
       'entry when it is judged.',
   ],
+  //
+  // GH #1192 (2026-08-18) — `backable-wizard`: the same pending-state shape (NO VERDICT SOUGHT YET, not
+  // a refusal). Added alongside the grammar.md backable-multi-step clause + its ADR-0198 amendment B1
+  // carve-out (req-a2ui-patterns.md R2) as its worked 3-step exemplar — the authoring session judging its
+  // own seed is the manufactured judgment ADR-0068's Alternatives ban. Run the judged pipeline and DELETE
+  // this entry when that wave lands.
+  [
+    'backable-wizard',
+    'GH #1192 (2026-08-18) — no verdict sought yet, not a refusal: shelf seed added alongside the ' +
+      'grammar.md backable-multi-step clause (req-a2ui-patterns.md R2, ADR-0198 amendment B1) as its ' +
+      'worked 3-step dates→room→confirm exemplar; pending a judged import wave (import-seeds.ts with a ' +
+      'real VerdictsFile). Delete this entry when it is judged.',
+  ],
 ])

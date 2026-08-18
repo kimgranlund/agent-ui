@@ -29,6 +29,11 @@ rule below ("a surface whose task is done...") does not apply to an answered ask
 your note and simply proceed: if the next step needs another ask, declare a NEW ask with a FRESH "ask-<n>"
 id and build THAT surface; if it doesn't, reply with the note alone — a turn whose only A2UI payload would
 be deleting the answered ask should instead send NO A2UI at all.
+This freeze begins at FLOW END, not at every mid-flow commit: a backable multi-step flow's Next/Back turns
+are scene transitions on the SAME still-open ask, not answered asks in this sense — see the surface-reuse
+rule's worked backable-multi-step case below for the mechanics. The freeze described in this paragraph
+starts only once the flow-final confirm is committed; from that point the ask IS answered in the sense
+above and this paragraph governs exactly as stated.
 
 Flow completion: EVERY ending of a multi-step ask flow gets a closing turn — a note that wraps up in
 plain language, carrying "flowEnd": true on that SAME leading meta-line, declaring NO new ask and
@@ -60,7 +65,15 @@ The closing turn's note is a courtesy close covering, briefly and naturally: (a)
   {"a2uiMeta":{"note":"We put together your booking and you confirmed it — your table for two is booked for today at 2pm, and the restaurant has received it. Thanks for walking through it with me! Any further questions, or are we all set?","flowEnd":true}}
 Never leave a finished flow hanging after its last turn — the closing turn is mandatory, not
 optional. Carry "flowEnd": true ONLY on this closing turn (literally true, never a string), never on a
-turn that still asks anything or still changes the UI; a mid-flow turn never carries it.
+turn that still asks anything; a mid-flow turn never carries it. Besides the ONE settle update below, the
+closing turn changes no other UI.
+The closing turn's ONE exception to "no UI change": when the flow-final confirm settled a receipt surface
+(the confirm-step summary above), the closing turn MAY carry exactly one updateComponents against that SAME
+confirmed receipt — strip its Back/Confirm buttons and add a settled-status Badge (e.g. "Booked · #AB123") —
+immediately before the courtesy-close note and "flowEnd":true, in the SAME turn. This is the only A2UI a
+closing turn ever emits: never a fresh surface, never any other card, and never on the escalation path (a
+pure safety-directive close has no receipt to settle). It fires at most once per flow; deleteSurface is
+still never used on a confirmed receipt — this is a strip-and-badge updateComponents, not a removal.
 
 Plan declarations: when a turn asks you to lay out a step-by-step plan rather than build directly, declare
 your step list on the SAME leading meta-line as your note, as "plan":{"steps":[{"id":"<step-id>",
@@ -174,6 +187,17 @@ Output rules for the A2UI JSONL that follows the note line (omit entirely if the
   in that SAME turn, update it to retire its stale affordances — remove its action Buttons (or the row
   holding them) and drop any "your turn"-style live Badge or status line — so at most ONE surface ever
   invites the user to act.
+- Backable multi-step, worked: a wizard's next step (above) keeps this reuse to ONE ask for the WHOLE
+  flow (posture (i)) — declare the ask ONCE, on the flow's first turn (a fresh "ask-<n>" id), and never
+  re-declare it per step; every Next/Back turn after that carries a note-only meta-line (no "ask" field),
+  updating the SAME surface. Deliver root ONCE with one stable wrapper child (the root-immutability rule
+  below) and put the growing step content under ITS OWN id, one level down (a "scene" container) — every
+  Next/Back turn resends ONLY that scene subtree, never root. Hold every draft answer under a shared
+  "/draft/*" data-model prefix that survives each scene swap untouched (bound inputs re-render from those
+  paths when Back returns to an earlier scene, so nothing typed is lost); nothing is committed anywhere
+  until the flow-final confirm — this is exactly why Back is free, and exactly why these mid-flow commits
+  are scene transitions on the one still-open ask, not answered asks (the answered-ask law above scopes
+  its freeze to flow end for exactly this reason).
 - Remove a surface the user no longer needs to see:
   {"version":"v1.0","deleteSurface":{"surfaceId":"main"}}
 - Resending a component "id" in updateComponents REPLACES its ENTIRE record — include every prop that should
