@@ -345,6 +345,59 @@ describe('ui-conversation-composer — the opt-in composer capabilities', () => 
     expect(clicks).toBe(1)
   })
 
+  it('GH #1211 — the attach button is OPT-IN — hidden by default, revealed by onAttach, and its picker fires the callback with the picked files', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    const attach = el.querySelector('[data-part="attach"]') as HTMLElement
+    expect(attach.hasAttribute('hidden')).toBe(true)
+    const received: File[][] = []
+    el.onAttach((files) => received.push([...files]))
+    expect(attach.hasAttribute('hidden')).toBe(false)
+
+    const input = el.querySelector('[data-part="attach-input"]') as HTMLInputElement
+    const file = new File(['hello'], 'notes.txt', { type: 'text/plain' })
+    // jsdom has no real DataTransfer/FileList constructor — an array is iterable, which is all
+    // `#attachInput.files` is ever spread over (`[...(this.#attachInput?.files ?? [])]`).
+    Object.defineProperty(input, 'files', { value: [file], configurable: true })
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+
+    expect(received).toHaveLength(1)
+    expect(received[0]!.map((f) => f.name)).toEqual(['notes.txt'])
+  })
+
+  it('GH #1211 — a consumer that never calls onAttach is byte-identical to before: no attach button visible, drop/paste never intercepted', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    const attach = el.querySelector('[data-part="attach"]') as HTMLElement
+    expect(attach.hasAttribute('hidden')).toBe(true)
+    // dragover is never preventDefault'd when no onAttach is registered — the platform default runs.
+    const event = new Event('dragover', { bubbles: true, cancelable: true })
+    el.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(false)
+    expect(el.hasAttribute('data-dragover')).toBe(false)
+  })
+
+  it('GH #1211 — busy disables the attach button, same as send/mic', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.onAttach(() => {})
+    await whenFlushed()
+    const attach = el.querySelector('[data-part="attach"]') as HTMLElement & { disabled: boolean }
+    expect(attach.disabled).toBe(false)
+    el.busy = true
+    await whenFlushed()
+    expect(attach.disabled).toBe(true)
+  })
+
+  it('GH #1211 — contextItems.description renders an optional secondary chip line, omitted when absent', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.contextItems = [
+      { id: 'a', label: 'plain.md' },
+      { id: 'b', label: 'notes.txt', description: '1.2 KB — extracting…' },
+    ]
+    await whenFlushed()
+    const chips = [...el.querySelectorAll('[data-part="context-chip"]')]
+    expect(chips[0]!.querySelector('[data-part="context-chip-meta"]')).toBeNull()
+    expect((chips[1]!.querySelector('[data-part="context-chip-meta"]') as HTMLElement).textContent).toBe('1.2 KB — extracting…')
+  })
+
   it('the send button is icon-only (arrow-up), not the old text-labeled "Send"', () => {
     const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
     const send = el.querySelector('[data-part="send"]') as HTMLElement

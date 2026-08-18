@@ -195,7 +195,21 @@ import {
 // `ui-icon` tag registrations; the COPY it projects lives in `agent-admin-schema.ts` above, shared with
 // the rows' own native `title` hints.
 import { buildAdminHelp, buildAdminHelpForSummary } from './admin-help.ts'
-import { EFFORT_LEVELS, type EffortLevel, type TurnReference } from '../conversation/composer-options.ts'
+import { EFFORT_LEVELS, type EffortLevel, type TurnReference, type ContextItem } from '../conversation/composer-options.ts'
+// GH #1211 — the ingest handler's rejection toast (req-doc-ingestion.md R1's "visible reason" AC): a
+// `ui-toast-region` this element mounts and owns itself (toast-region.md's "v1 ownership is
+// consumer-mounted" law — there is no static singleton to reach for instead).
+import '@agent-ui/components/controls/toast'
+import '@agent-ui/components/controls/toast-region'
+import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
+// GH #1211 — the composer→entry ingest path: the minimal consuming interface over the extraction seam
+// #1210 is building in parallel (converges at merge — see document-ingest.ts's own header comment).
+import {
+  isSupportedDocument,
+  extractDocumentText,
+  formatFileSize,
+  UnsupportedDocumentError,
+} from './document-ingest.ts'
 import {
   AVAILABILITY_KINDS,
   ENTRY_KINDS,
@@ -508,6 +522,15 @@ export class UIAgentAdminElement extends UIElement {
   // (`#applyPaneVisibility`).
   #shell: UISuperShellElement | null = null
   #conversation: UIConversationElement | null = null
+  // GH #1211 — the Test-chat composer's attach path: a transient chip PER in-flight/attached document,
+  // never persisted itself (the persisted half is the `resource` ENTRY the ingest handler mints — this
+  // array only drives the composer's `contextItems` row). Keyed by the entry's own id once minted, or a
+  // locally-generated placeholder id while extraction is still running (`#nextAttachId`).
+  #attachedContextItems: ContextItem[] = []
+  #attachSeq = 0
+  // GH #1211 — the rejection toast's own top-layer host, lazily mounted on first use (toast-region.md's
+  // "v1 ownership is consumer-mounted" law — this element is the consumer).
+  #toastRegion: UIToastRegionElement | undefined
   // ── ADR-0178 cl.5 (LLD-C6) — the DUAL-CONTEXT chat ────────────────────────────────────────────────────
   // Two MOUNTED conversations, never one conversation with two transcripts: the test context above stays
   // byte-unchanged, and the authoring one mounts alongside it. Both keep their DOM transcripts for the
@@ -976,6 +999,16 @@ export class UIAgentAdminElement extends UIElement {
     // hands a fresh row set back down, and the entry row in the Capabilities pane shows the same state. Not
     // per-turn steering: a flip never invokes anything (that stays the `@`/`/` typeahead's job).
     conversation.onCapabilityToggle((id, included) => this.#toggleCapability(id, included))
+    // GH #1211 — the composer attach path: drop/paste/attach-button hand raw `File`s up here (the
+    // composer itself validates/knows NOTHING about them — TKT-0056/GH #849/#891's layering law). This
+    // element owns the whole ingest → `resource` entry projection (`#handleAttach`); the reveal itself
+    // (the attach button appearing at all) is `onAttach`'s own opt-in side effect (conversation.ts).
+    conversation.onAttach((files) => this.#handleAttach(files))
+    // The dismiss affordance on an attach's own context chip discards it cleanly (R5 AC): a still-
+    // extracting attachment is just dropped from the transient row, an already-minted one has its
+    // `resource` entry deleted too — "dismiss" undoes the attach, it does not merely hide the chip.
+    conversation.onContextDismiss((id) => this.#dismissAttachment(id))
+    conversation.contextItems = this.#attachedContextItems
     // Effort picker → ephemeral element state only (no persisted counterpart) — write-then-reflect
     // immediately, since nothing external can also change it the way another tab's store write could.
     conversation.onEffortChange((id) => {
@@ -2749,6 +2782,101 @@ export class UIAgentAdminElement extends UIElement {
       // clear on the edit that fixed it). A subscribing store gets this through its own notification.
       this.#applyMasterStates(store)
     }
+  }
+
+  // ── GH #1211 — the composer attach path: File(s) up from the composer → validate → extract → a
+  // `resource` Entry (ADR-0132's generic entry machinery, entries.ts) → a context chip reflecting the
+  // in-flight/attached state. The composer itself never sees any of this (TKT-0056/GH #849/#891's
+  // layering law) — this element owns the whole projection. ──────────────────────────────────────────
+
+  /** req-doc-ingestion.md R1/R2/R4/R6 — one file's whole ingest lifecycle: reject an unsupported type
+   *  visibly (never a silent drop), show an immediate "extracting…" chip, extract off the main
+   *  interaction path, then mint a `resource` entry and swap the chip to its final state. Each file in a
+   *  multi-file drop/paste/pick gets its OWN chip and its OWN independent outcome — one file's rejection
+   *  never blocks a sibling's success. */
+  async #handleAttach(files: readonly File[]): Promise<void> {
+    for (const file of files) {
+      if (!isSupportedDocument(file)) {
+        this.#showToast(`Can't attach "${file.name}" — unsupported file type.`)
+        continue
+      }
+      const pendingId = `attach-${++this.#attachSeq}`
+      this.#attachedContextItems = [
+        ...this.#attachedContextItems,
+        { id: pendingId, label: file.name, description: `${formatFileSize(file.size)} — extracting…` },
+      ]
+      this.#renderAttachedContextItems()
+      try {
+        const extracted = await extractDocumentText(file)
+        // Dismissed mid-extraction (R5 AC's "dismiss before send discards cleanly", the async case): the
+        // chip is already gone from `#attachedContextItems` — drop this result rather than resurrecting
+        // a row the user already discarded, and never mint the entry it would have produced.
+        if (!this.#attachedContextItems.some((item) => item.id === pendingId)) continue
+        const existing = readEntries(this.store, ENTRY_KINDS.resource)
+        const result = validateNewEntry(existing, ENTRY_KINDS.resource, {
+          label: file.name,
+          description: formatFileSize(extracted.meta.size),
+          content: extracted.text,
+        })
+        if (!result.ok) {
+          this.#showToast(`Can't attach "${file.name}" — ${result.error}`)
+          this.#attachedContextItems = this.#attachedContextItems.filter((item) => item.id !== pendingId)
+          this.#renderAttachedContextItems()
+          continue
+        }
+        // R4 — the ONE store write: a plain `resource` entry through the SAME `#updateEntries` seam every
+        // other add uses, so it shows in the Resources section, toggles/deletes there, survives reload,
+        // and composes into `composeLiveSystemPrompt` exactly like a hand-authored resource.
+        this.#updateEntries(ENTRY_KINDS.resource, (entries) => [...entries, result.entry])
+        const description = extracted.meta.truncated
+          ? `${formatFileSize(extracted.meta.size)} — truncated`
+          : formatFileSize(extracted.meta.size)
+        // Swap the chip's id from the transient placeholder to the entry's OWN id — `onContextDismiss`
+        // and a future dismiss both key off it from this point on (`#dismissAttachment`).
+        this.#attachedContextItems = this.#attachedContextItems.map((item) =>
+          item.id === pendingId ? { id: result.entry.id, label: result.entry.label, description } : item,
+        )
+        this.#renderAttachedContextItems()
+      } catch (error) {
+        if (!this.#attachedContextItems.some((item) => item.id === pendingId)) continue
+        const message = error instanceof UnsupportedDocumentError ? error.message : `Can't attach "${file.name}".`
+        this.#showToast(message)
+        this.#attachedContextItems = this.#attachedContextItems.filter((item) => item.id !== pendingId)
+        this.#renderAttachedContextItems()
+      }
+    }
+  }
+
+  /** R5 AC — "dismiss before send discards cleanly": dismissing an attach's chip UNDOES the attach, it
+   *  does not merely hide the row. A still-extracting id has minted no entry yet (`#handleAttach`'s own
+   *  post-await check drops that result once it resolves); an already-minted one has its `resource` entry
+   *  deleted too, so a discarded attach leaves nothing behind in the Resources section either. */
+  #dismissAttachment(id: string): void {
+    if (!this.#attachedContextItems.some((item) => item.id === id)) return
+    this.#attachedContextItems = this.#attachedContextItems.filter((item) => item.id !== id)
+    this.#renderAttachedContextItems()
+    const mintedYet = readEntries(this.store, ENTRY_KINDS.resource).some((e) => e.id === id)
+    if (mintedYet) this.#updateEntries(ENTRY_KINDS.resource, (entries) => entries.filter((e) => e.id !== id))
+  }
+
+  /** Push the CURRENT transient attach state down to the Test-chat composer's `contextItems` — a fresh
+   *  array every call (the composer's own reference-equality guard, conversation-composer.ts's
+   *  `#syncContextChips`, rebuilds the chip row only when the reference actually changes). */
+  #renderAttachedContextItems(): void {
+    if (this.#conversation) this.#conversation.contextItems = this.#attachedContextItems
+  }
+
+  /** req-doc-ingestion.md R1's visible-reason AC — an unsupported type, an over-budget file, or an
+   *  extraction failure surfaces here instead of a silent drop. Lazily mounts its own `ui-toast-region`
+   *  on first use (toast-region.md's "v1 ownership is consumer-mounted" law: there is no static singleton
+   *  to reach for instead, and this element is the natural consumer boundary for its own ingest errors). */
+  #showToast(message: string): void {
+    if (!this.#toastRegion) {
+      const region = document.createElement('ui-toast-region') as UIToastRegionElement
+      this.append(region)
+      this.#toastRegion = region
+    }
+    this.#toastRegion.show(message)
   }
 
   // ── the catalog kind's SELECTION writes (ADR-0170 cl.3/cl.4) ─────────────────────────────────────────

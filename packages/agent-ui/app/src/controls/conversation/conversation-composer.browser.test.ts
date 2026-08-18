@@ -364,3 +364,76 @@ describe('ui-conversation-composer — GH #858: placeholder ink is FROZEN across
     ).not.toBe(idleColor)
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #1211 — the attach path's drop/paste legs: jsdom has no real DataTransfer/ClipboardEvent
+//  file-carrying behavior at all (the jsdom suite's own file-input `change` case covers the picker
+//  button leg instead — real files only need a real engine for drop/paste). Both proofs construct a
+//  REAL `DataTransfer` and populate it via `items.add(file)` (the only spec-legal way to get a real
+//  `File` into one), then dispatch the real event carrying it.
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-conversation-composer — GH #1211: drop/paste hand real Files up through onAttach (both engines)', () => {
+  it('dropping a file onto the composer calls onAttach with it, and toggles [data-dragover] across the drag lifecycle', async () => {
+    const { el } = mountComposer()
+    el.onAttach(() => {})
+    await el.updateComplete
+    const file = new File(['hello'], 'notes.txt', { type: 'text/plain' })
+    const dt = new DataTransfer()
+    dt.items.add(file)
+
+    el.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: dt }))
+    expect(el.hasAttribute('data-dragover'), `${server.browser}: dragover did not set the drop-affordance state`).toBe(true)
+
+    const received: File[][] = []
+    el.onAttach((files) => received.push([...files]))
+    el.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }))
+
+    expect(el.hasAttribute('data-dragover'), 'drop clears the drop-affordance state').toBe(false)
+    expect(received).toHaveLength(1)
+    expect(received[0]!.map((f) => f.name)).toEqual(['notes.txt'])
+  })
+
+  it('a consumer that never calls onAttach never intercepts dragover — no [data-dragover], no preventDefault', async () => {
+    const { el } = mountComposer()
+    await el.updateComplete
+    const dt = new DataTransfer()
+    const event = new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: dt })
+    el.dispatchEvent(event)
+    expect(event.defaultPrevented, `${server.browser}: dragover was intercepted with no onAttach registered`).toBe(false)
+    expect(el.hasAttribute('data-dragover')).toBe(false)
+  })
+
+  it('pasting a file into the editor calls onAttach and does not insert anything into the editor surface', async () => {
+    const { el } = mountComposer()
+    const editor = editorOf(el)
+    const received: File[][] = []
+    el.onAttach((files) => received.push([...files]))
+    await el.updateComplete
+    const file = new File(['hello'], 'pasted.md', { type: 'text/markdown' })
+    const dt = new DataTransfer()
+    dt.items.add(file)
+
+    editor.dispatchEvent(new ClipboardEvent('paste', { bubbles: true, cancelable: true, clipboardData: dt }))
+
+    expect(received).toHaveLength(1)
+    expect(received[0]!.map((f) => f.name)).toEqual(['pasted.md'])
+    expect(el.value, 'a file paste must not fall through to the plain-text paste path').toBe('')
+  })
+
+  it('an ordinary text paste (no files on the clipboard) is left completely alone — onAttach never fires', async () => {
+    const { el } = mountComposer()
+    const editor = editorOf(el)
+    const received: File[][] = []
+    el.onAttach((files) => received.push([...files]))
+    await el.updateComplete
+    const dt = new DataTransfer()
+    dt.setData('text/plain', 'just some typed words')
+
+    const event = new ClipboardEvent('paste', { bubbles: true, cancelable: true, clipboardData: dt })
+    editor.dispatchEvent(event)
+
+    expect(received, `${server.browser}: a plain text paste must never reach onAttach`).toHaveLength(0)
+    expect(event.defaultPrevented, 'a plain text paste must not be intercepted — the native paste path must run').toBe(false)
+  })
+})

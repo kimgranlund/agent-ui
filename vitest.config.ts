@@ -222,6 +222,13 @@ export default defineConfig({
       // `sandbox-frame` so its `document.createElement('ui-sandbox-frame')` (the genui parallel mount
       // path, `mountGenui`) resolves to the REAL class. Same alias-ordering necessity as `controls/tabs`.
       '@agent-ui/components/controls/sandbox-frame': r('./packages/agent-ui/components/src/controls/sandbox-frame/sandbox-frame.ts'),
+      // GH #1211 — `@agent-ui/app`'s `ui-agent-admin` is the next direct `./controls/{name}` subpath
+      // consumer from OUTSIDE the components package: it side-effect-imports `toast`/`toast-region` so its
+      // ingest-rejection path's `document.createElement('ui-toast-region')` resolves to the REAL class
+      // (`show()` in turn creates a real `ui-toast`). Same alias-ordering necessity as `controls/tabs`/
+      // `controls/drawer`/`controls/sandbox-frame` immediately above.
+      '@agent-ui/components/controls/toast': r('./packages/agent-ui/components/src/controls/toast/toast.ts'),
+      '@agent-ui/components/controls/toast-region': r('./packages/agent-ui/components/src/controls/toast/toast-region.ts'),
       // EXACT (not prefix) matches, `?url`-suffixed. ORIGINAL consumer: `@agent-ui/app`'s isolated-shell
       // connect-flow (`app-shell.ts`, LLD-C5/ADR-0082) resolved these two package CSS assets to a real
       // runtime URL via Vite's `?url` suffix, to inject as `<link>` hrefs INSIDE a shadow root. That file was
