@@ -439,9 +439,14 @@
     padding-inline: var(--ui-select-option-inline);
     background-color: var(--ui-select-listbox-bg); /* the panel surface — occludes scrolled content */
     color: var(--ui-select-group-label-ink);
-    font-size: 0.85em;
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    /* The fleet's KICKER role (ADR-0078 cl.2b, GH #370 ruling): the same row ui-text[variant='kicker'],
+       ui-card's title, status-stream's eyebrow and nav-rail's context label all read — uppercase, regular
+       weight, widely tracked. A group header is a section eyebrow, not a heavier row (GH #1291). */
+    font-size: var(--md-sys-typescale-kicker-small-size);
+    font-weight: var(--md-sys-typescale-kicker-small-weight);
+    line-height: var(--md-sys-typescale-kicker-small-line-height);
+    letter-spacing: var(--md-sys-typescale-kicker-small-tracking);
+    text-transform: uppercase;
     cursor: default;
     -webkit-user-select: none;
     user-select: none;
