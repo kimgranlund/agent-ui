@@ -19,6 +19,7 @@
 import { A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
 import { entriesStoreKey, isAmbient, readEntries, type Entry } from '../entry-list/entry-data.ts'
 import type { CapabilityRow, ReferenceOption, TurnReference } from '../conversation/composer-options.ts'
+import { composeTeamPromptSection, isTeamGm, type TeamPromptContext } from './agent-team-prompt.ts'
 
 /** The known kinds this build seeds/instantiates. Not a closed enum — `Entry.kind` is a plain `string`
  *  (ADR-0132 Fork 2: extensible without a code change); these are the five known constants, not an
@@ -245,15 +246,25 @@ export function isRegisteredCatalog(id: string): boolean {
  *  of this build already follows. A labeled block per section (never bare-concatenated) keeps the
  *  composed prompt legible when more than one section carries real content. Falls back to
  *  `DEFAULT_SYSTEM_PROMPT_FALLBACK` if every section is disabled or empty (fail-closed: never an empty
- *  instruction reaching the stub reply, the `DEFAULT_SYSTEM_PROMPT` law generalized to N sections). */
+ *  instruction reaching the stub reply, the `DEFAULT_SYSTEM_PROMPT` law generalized to N sections).
+ *
+ *  ADR-0203 clause 2 (GH #1194) — the OPTIONAL second argument joins one more block, `agent-team-prompt.ts`'s
+ *  `composeTeamPromptSection`, but ONLY when `team.activeAgentId` is that team's own `gmAgentId` (`isTeamGm`)
+ *  — every non-GM member composes exactly as it did before this ticket. Omitting the argument entirely (every
+ *  existing call site, unchanged) is BYTE-IDENTICAL to pre-#1194 behavior: this is the same gated-equivalence
+ *  law `composeLiveSystemPrompt`'s own capability groups already hold, applied once more at this pipeline's
+ *  own entry point rather than only downstream of it. */
 export const DEFAULT_SYSTEM_PROMPT_FALLBACK = 'You are a helpful assistant.'
 
-export function composeSystemPrompt(sections: readonly Entry[]): string {
+export function composeSystemPrompt(sections: readonly Entry[], team?: TeamPromptContext): string {
   const blocks = [...sections]
     .filter((s) => s.enabled && s.content.trim().length > 0)
     .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
     .map((s) => `## ${s.label}\n${s.content.trim()}`)
-  return blocks.length > 0 ? blocks.join('\n\n') : DEFAULT_SYSTEM_PROMPT_FALLBACK
+  const base = blocks.length > 0 ? blocks.join('\n\n') : DEFAULT_SYSTEM_PROMPT_FALLBACK
+  if (team === undefined || !isTeamGm(team)) return base
+  const teamSection = composeTeamPromptSection(team.team, team.memberSnapshots)
+  return teamSection === '' ? base : `${base}\n\n${teamSection}`
 }
 
 // ── The live system-prompt projection (ALM-C1, TKT-0052/ADR-0136 Fork 3) ───────────────────────────────
