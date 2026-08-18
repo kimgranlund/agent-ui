@@ -50,7 +50,9 @@ Condition on real payloads FIRST, then build outside-in:
    (`packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`) and the example seed shelf
    (`packages/agent-ui/a2ui/src/examples/` — `allSeeds` in `index.ts` names the current count) for the closest
    existing payload — a settings form, a dashboard of tiles, a wizard, a dynamic list. Adapt a shipped shape
-   rather than inventing one.
+   rather than inventing one. For the eight seeded composition idioms (slideshow · confirmation · trend list ·
+   card layouts · weather · menu · itinerary · wizard presentation), read `references/composition-patterns.md`
+   — one worked section per seed, packs A + B.
 2. **Open the surface.** Emit `createSurface` with the target `catalogId` (default `agent-ui`). Add
    `sendDataModel:true` when a triggered action must carry the model back. Deciding createSurface vs.
    updateDataModel vs. updateComponents for a given turn is `a2ui-message-lifecycle.spec.md` SPEC-R1's
@@ -159,6 +161,7 @@ papered over inside the payload.
 | `references/node-idioms.md` | The idiomatic node shape, bindable props, and ordering traps for each catalog component |
 | `references/trees-and-lists.md` | Building the adjacency-list tree, `child` vs `children`, `ChildList` templates, `${…}` interpolation, nesting |
 | `references/bindings-actions-checks.md` | Data bindings, two-way inputs, Button actions, reactive `checks`, FormProvider submit-gating |
+| `references/composition-patterns.md` | Composing one of the eight seeded whole-surface idioms (packs A + B: slideshow-gallery · confirmation-view · trend-list · card-layouts · five-day-weather · restaurant-menu · travel-itinerary · wizard-step-progress) — each section cites its seed + the catalog mechanics it proves |
 | `references/finalize-validation.md` | A payload validates clean mid-stream but the CLI / renderer / `produce` fails it `IDGRAPH ${sid}:root-missing` — the finalize-granularity signal (ADR-0187) |
 | `catalog.json` (`src/catalog/default/`) | The authoritative component/prop/function inventory — never invent a component or prop |
 | `src/examples/` + `corpus/exemplar/v1_0/agent-ui.jsonl` | Real payloads to condition on before composing |
