@@ -6,6 +6,7 @@
 // tokenizer output, not a hand-colored fixture.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003) — already registers <ui-code>
 import '@agent-ui/code/highlight' // self-registers the bundled highlighter into the default singleton (SPEC-C4 AC1)
+import { projectHighlight } from '@agent-ui/code' // the core projection seam — the ONE way a token stream reaches a ui-code's light DOM
 import '@agent-ui/code/highlight.css'
 import '@agent-ui/code/markdown'
 import '@agent-ui/code/markdown.css'
@@ -18,8 +19,9 @@ const { content } = mountPage({
   intro:
     'A swappable, pack-independent syntax-highlighter registry (the core, `.` barrel) plus seven ' +
     "bundled tokenizers (this ./highlight subpath) — zero third-party dependencies, hand-rolled, self-" +
-    'registering on import. Every ui-code element on the page (and every fenced block inside ui-markdown) ' +
-    'reads from the SAME one-slot registry, so importing this pack once turns highlighting on fleet-wide.',
+    'registering on import. Every fenced block inside ui-markdown, and every ui-code the core projectHighlight ' +
+    'seam fills, reads from the SAME one-slot registry, so importing this pack once turns highlighting on ' +
+    'fleet-wide. (A bare ui-code is a zero-machinery verbatim leaf, ADR-0113 — it never tokenizes itself.)',
 })
 
 // ── activation — the one import that does the whole job ──────────────────────────────────────────────────
@@ -30,8 +32,10 @@ content.append(
     el('p', {}, [
       document.createTextNode(
         'Self-registers on import — no setup call, no registry reference needed for the common case. ' +
-          'Every ui-code element (and every fenced code block ui-markdown renders) picks up the active ' +
-          'highlighter automatically, since both read through the same core registry.',
+          'Every fenced code block ui-markdown renders (and every ui-code filled through the core ' +
+          'projectHighlight seam) picks up the active highlighter automatically, since both read through ' +
+          'the same core registry. A ui-code you write by hand stays verbatim text until projected — the ' +
+          'zero-machinery leaf never tokenizes itself (ADR-0113).',
       ),
     ]),
   ),
@@ -64,7 +68,8 @@ for (const { lang, code } of SAMPLES) {
   label.style.cssText = 'font-family:var(--md-sys-typeface-mono); font-size:0.8rem; margin:0 0 0.35rem;'
   const sample = document.createElement('ui-code')
   sample.setAttribute('language', lang)
-  sample.textContent = code
+  projectHighlight(sample, code, lang) // GH #1264 — the REAL projection: `<span data-token>` runs highlight.css tints; a bare
+  // `.textContent =` write here (the previous shape) left every specimen one-ink verbatim text, since ui-code is zero-machinery
   const cell = el('div', {}, [label, sample])
   grid.append(cell)
 }
