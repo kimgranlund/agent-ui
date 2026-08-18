@@ -153,6 +153,11 @@ decision (dated line in §4).
   value at rest. Add a `layout` prop — standard (label left / value right, above the track,
   default) · inline (label/track/value on one row) · block (label above-center, value
   below-center) — with a default-visible readout.
+- **Chat dialog formatting: bubble on/off setting + GenUI hoisted out of bubbles (GH #1221,
+  `size:big`, filed 2026-08-17).** Turn ADR-0160's hardcoded de-bubbled agent presentation into a
+  setting (bubbles on/off for host/agent messages), and formalize GenUI cards as first-class
+  siblings in the host message group — a card keeps its own contained chrome in BOTH bubble modes
+  and never re-nests inside a prose bubble. Home: `app`'s conversation controls + surface-host.
 - **Ask-flow COMPLETION state (GH #1101, `size:big`, filed 2026-08-17).** Kim's live test-chat
   report: a multi-step intake flow ends on a bare summary card — no closing prose turn, no
   end-of-flow affordance (done/start-over/handoff). Two halves: producer/prompt guidance in
