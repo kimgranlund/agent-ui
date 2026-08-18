@@ -114,7 +114,9 @@ describe('card.css — @scope token hygiene (consume only --ui-card-* / --ui-con
 describe('card.css — region-less humane default (ADR-0056)', () => {
   // jsdom cannot evaluate :has() (no cascade truth here) — these pin the DECLARED rule + its token hygiene;
   // the rendered flip (bare→padded, region→unchanged, the streaming re-evaluation) is card.browser.test.ts.
-  const fallbackMarker = ':scope:not(:has(> ui-card-header, > ui-card-content, > ui-card-footer))'
+  // REVISED (R3, GH #1204): the exclusion list also carries `> [slot='hero']` — a hero-marked leading child is
+  // the same "author owns the structure" case a real region already is (below).
+  const fallbackMarker = ":scope:not(:has(> ui-card-header, > ui-card-content, > ui-card-footer, > [slot='hero']))"
   const fallbackBlock = whereBlock(`${fallbackMarker} {`)
 
   it('the fallback leg exists inside @scope (ui-card), keyed off the same three region tags as the row legs', () => {
@@ -136,6 +138,42 @@ describe('card.css — region-less humane default (ADR-0056)', () => {
 
   it('does NOT touch grid-template-rows (the fallback is a padding/gap leg only, not a row-structure leg)', () => {
     expect(fallbackBlock).not.toMatch(/grid-template-rows/)
+  })
+})
+
+describe('card.css — full-bleed HERO media slot (R3, GH #1204)', () => {
+  // jsdom cannot evaluate :first-child/:last-child cascade truth either — these pin the DECLARED rule + its
+  // token hygiene; the rendered flush-to-edge + radius-clip proof is card.browser.test.ts.
+  const heroMarker = ":where(ui-card) > [slot='hero']:first-child {"
+  const heroOnlyMarker = ":where(ui-card) > [slot='hero']:first-child:last-child {"
+  const heroBlock = whereBlock(heroMarker)
+  const heroOnlyBlock = whereBlock(heroOnlyMarker)
+
+  it('the leading-corner rule exists as a top-level :where() rule (outside @scope), the same sectioning the child-radius publish rule above it uses', () => {
+    expect(css).toContain(heroMarker)
+    expect(heroBlock.length).toBeGreaterThan(0)
+  })
+
+  it('reads the card OUTER radius (--ui-card-radius) — NOT the decremented --ui-card-inner-radius/--ui-card-child-radius an inset region reads', () => {
+    expect(heroBlock).toMatch(/border-start-start-radius:\s*var\(--ui-card-radius\)/)
+    expect(heroBlock).toMatch(/border-start-end-radius:\s*var\(--ui-card-radius\)/)
+    expect(heroBlock).not.toMatch(/--ui-card-inner-radius/)
+    expect(heroBlock).not.toMatch(/--ui-card-child-radius/)
+  })
+
+  it('zeroes its own margin (no region rule ever targets a bare [slot="hero"] child, so this is defensive, not corrective)', () => {
+    expect(heroBlock).toMatch(/margin:\s*0/)
+  })
+
+  it('the hero-only (:last-child too) leg additionally rounds the trailing corners to the SAME outer radius', () => {
+    expect(heroOnlyBlock.length).toBeGreaterThan(0)
+    expect(heroOnlyBlock).toMatch(/border-end-start-radius:\s*var\(--ui-card-radius\)/)
+    expect(heroOnlyBlock).toMatch(/border-end-end-radius:\s*var\(--ui-card-radius\)/)
+  })
+
+  it('hygiene: neither hero rule references a foreign (--md-sys-color-* / bare ramp) token', () => {
+    expect(foreignRefs(heroBlock)).toEqual([])
+    expect(foreignRefs(heroOnlyBlock)).toEqual([])
   })
 })
 

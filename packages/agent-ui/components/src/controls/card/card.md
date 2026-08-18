@@ -37,7 +37,7 @@ properties:            # IDL beyond attributes-as-API: the two surface accessors
 
 events: []             # a card is a static surface container — it raises no events
 
-slots:                 # leading/label/trailing name the host-as-grid POSITIONS of the header/footer regions (anatomy.md); the regions themselves are ChildList sub-elements (see parts/childModel)
+slots:                 # leading/label/trailing name the host-as-grid POSITIONS of the header/footer regions (anatomy.md); the regions themselves are ChildList sub-elements (see parts/childModel). `hero` is a CARD-level (not header/footer-level) position — see parts/childModel below and the prose section.
   - name: leading
     optional: true
     description: Optional leading adornment of a ui-card-header / ui-card-footer — a light-DOM `[slot="leading"]` child in the region's start cell (presence-driven host-as-grid, anatomy.md). Commonly an icon/avatar; mark decorative glyphs aria-hidden.
@@ -47,6 +47,9 @@ slots:                 # leading/label/trailing name the host-as-grid POSITIONS 
   - name: trailing
     optional: true
     description: Optional trailing adornment of a header/footer — a light-DOM `[slot="trailing"]` child in the end cell (a status glyph, a unit, or a footer action row). Layout only; decorative glyphs aria-hidden.
+  - name: hero
+    optional: true
+    description: R3/GH #1204 — a `[slot="hero"]` DIRECT, FIRST child of `ui-card` itself (not of a region) escapes the card's zero-padding shell margin-free and inherits the card's OUTER radius on its leading corners (all four corners if it is also the card's only child). Pure structural CSS, no JS — see the prose section below. Typically a `ui-image usage-hint="hero"`, but the marker lives on the `slot` attribute, not on the child's own internal state (ui-image's `usageHint` is `reflect:false` by design and never reaches an attribute a Card-side selector could read).
 
 parts: []              # the card creates NO control-owned [data-part] nodes (render() stays void); its content model is the region SUB-ELEMENTS (childModel ChildList — ui-card-header/-content/-footer), documented in the prose
 
@@ -331,6 +334,59 @@ content, with its automatic edge fade) is a capability of the real region sub-el
 cannot give a bare card those brackets. Reach for `ui-card-header` / `ui-card-content` /
 `ui-card-footer` whenever the card needs those; the fallback exists only to keep the default humane, not to
 replace the taught idiom.
+
+## Full-bleed HERO media (R3, GH #1204)
+
+A card's **leading media child** marked `slot="hero"` escapes the card's zero-padding shell entirely —
+flush to all three non-trailing edges — and inherits the card's **outer** radius on its leading corners:
+
+```html
+<ui-card style="--ui-card-radius: 16px">
+  <ui-image slot="hero" usage-hint="hero" src="/photos/harbor.jpg" aspect="16/9" alt="Boats moored at sunset"></ui-image>
+  <ui-card-content>
+    <ui-text variant="title">Harbor tour</ui-text>
+  </ui-card-content>
+</ui-card>
+```
+
+**The convention is a plain attribute, not a real Shadow-DOM `<slot>`** — `slot="hero"` reuses the exact
+light-DOM naming pattern `ui-card-header`/`ui-card-footer` already carry for `slot="leading"`/
+`slot="trailing"` (anatomy.md): a CSS attribute selector the author (or an A2UI producer) writes directly,
+never a projected native slot (the whole family is light-DOM). It is scoped to a card's **direct, first**
+child only (`:where(ui-card) > [slot='hero']:first-child`) — a hero is a *leading* position, matching the
+composition convention research names it by ("Image as first Card child, edge-to-edge").
+
+**Deliberately does NOT key off `ui-image`'s own `usageHint`.** `usage-hint` is `reflect:false` by design
+(image.md/image.test.ts's own contract) — the A2UI renderer sets it via the JS accessor
+(`el.usageHint = 'hero'`), which never reaches an attribute a Card-side CSS selector could read at all. The
+marker lives on the **card side** instead: `slot` is the standard native `HTMLElement.slot` accessor, which
+*always* reflects to a real `slot` attribute regardless of any component's own custom prop configuration —
+`el.slot = 'hero'` (however it is set) is genuinely selectable. The A2UI `Image` catalog row carries its own
+`slot` property (enum `"hero"` only, `mapsTo: "slot"`, GH #1204) for a producer to reach this — the same
+`slot`-property pattern `Icon`/`Badge` already use for header/footer's own leading/trailing anatomy, just
+scoped to the card's hero position instead of a header/footer's.
+
+**Which radius, precisely.** The hero corner rule reads `--ui-card-radius` (the card's own OUTER radius)
+directly — **not** `--ui-card-inner-radius` / `--ui-card-child-radius` (the concentric-corner chain, ADR-0018,
+above): that chain is for an INSET region sitting behind the 6px gutter; a hero child sits flush against the
+frame instead, at the *same* corner the card's own border draws, so it reads the identical value. A hero
+child that is **also** the card's only child (nothing follows it) additionally rounds its trailing corners to
+the same outer radius — there is no "content below" left square-cornered against.
+
+**Clipping is the child's own job.** The hero rule only sets `border-radius` on the marked child's host — it
+relies on the child's *own* `overflow: hidden` to actually clip its interior content to the now-rounded
+corners (`ui-image` already carries this in `image.css`). A future non-`ui-image` hero media type owns the
+same contract.
+
+**Content below keeps its normal padding, unaffected.** Only the `[slot='hero']` child itself is touched — a
+following `ui-card-header`/`ui-card-content`/`ui-card-footer` keeps its ordinary 6px region margin + 12px/6px
+region padding exactly as documented above (the two rules are independent selectors targeting different
+elements). A loose (non-region, non-hero) sibling after the hero child, with no other real region present,
+follows the SAME "mixed composition gets no fallback" rule the ADR-0056 section above already documents for
+a region-plus-loose-sibling mix — a hero-marked child is the identical "the author owns the structure" case a
+real region already is, so it joins that same exclusion (`:not(:has(..., > [slot='hero']))`): a hero-only
+card does **not** pick up the region-less humane-default padding on the card's own box (that would reopen
+exactly the gutter the hero slot exists to remove).
 
 ## Surface — elevation × brightness
 

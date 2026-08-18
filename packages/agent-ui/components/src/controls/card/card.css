@@ -106,6 +106,40 @@
   --ui-card-child-radius: var(--ui-card-inner-radius);
 }
 
+/* ════════════════ [ui-card] full-bleed HERO media slot (R3, GH #1204) ════════════════ */
+
+/* A card's LEADING media child marked `slot="hero"` escapes the frame entirely and inherits the card's OUTER
+   radius on its leading (top) corners — deliberately the un-decremented --ui-card-radius, NOT
+   --ui-card-child-radius/--ui-card-inner-radius (that chain is for an INSET region sitting behind the 6px
+   gutter; a hero child sits FLUSH against the frame instead, so it reads the same value the card's own border
+   draws with). Structural + pure CSS, no JS observer: `slot="hero"` reuses the SAME light-DOM naming
+   convention ui-card-header/-footer already use for `slot="leading"`/`slot="trailing"` (anatomy.md) — a plain
+   attribute selector, never a real Shadow-DOM <slot> (the whole family is light-DOM).
+   Deliberately does NOT key off ui-image's own `usageHint` — that prop is `reflect:false` by design
+   (image.md/image.test.ts's own "usageHint does NOT reflect" contract): the A2UI renderer writes it via the
+   JS accessor (`el.usageHint = 'hero'`), which never reaches an attribute for CSS to select on. The marker
+   lives on the CARD side instead — exactly this ticket's own scope — so it works regardless of how (or
+   whether) the child's own internal state is set.
+   `margin: 0` is defensive documentation, not a fix for an observed collision: no region rule targets a bare
+   `[slot='hero']` child (only ui-card-header/-content/-footer get the 6px region margin), so it already
+   renders with none. The child's OWN `overflow: hidden` (ui-image already carries it, image.css) clips its
+   interior <img> to the rounded corners this rule gives the HOST — a future non-image hero media type owns
+   the same contract.
+   Scoped to a card's DIRECT, FIRST child only (`:first-child`) — a hero slot is a LEADING position, matching
+   the research doc's "Image as first Card child" convention (req-a2ui-library.md R3). */
+:where(ui-card) > [slot='hero']:first-child {
+  margin: 0;
+  border-start-start-radius: var(--ui-card-radius);
+  border-start-end-radius: var(--ui-card-radius);
+}
+
+/* A hero child that is ALSO the card's ONLY child (`:last-child` too — nothing follows it) rounds all four
+   corners: there is no "content below" left square-cornered against. */
+:where(ui-card) > [slot='hero']:first-child:last-child {
+  border-end-start-radius: var(--ui-card-radius);
+  border-end-end-radius: var(--ui-card-radius);
+}
+
 /* ════════════════ [ui-card] STYLES — @scope (ui-card) consumes ONLY --ui-card-* ════════════════ */
 
 @scope (ui-card) {
@@ -154,13 +188,17 @@
      the same pattern the row legs already use), so this leg overrides the box-model's zero padding/gap ONLY
      when it applies. The moment any region child exists, `:has()` re-evaluates false and this leg drops —
      no double padding, no phantom transition state (streaming-safe). Mixed composition (a region present PLUS
-     loose siblings) is excluded by the same :has() test — regions present means the author owns the layout. */
-  :scope:not(:has(> ui-card-header, > ui-card-content, > ui-card-footer)) {
+     loose siblings) is excluded by the same :has() test — regions present means the author owns the layout.
+     REVISED (R3, GH #1204): `> [slot='hero']` joins the same exclusion list — a hero-marked leading child is
+     the identical "the author owns the structure" case a real region already is (its own rule above gives it
+     zero margin + flush placement; padding this card's own box out from under it would reopen exactly the
+     gutter the hero slot exists to remove), whether or not any real region also happens to be present. */
+  :scope:not(:has(> ui-card-header, > ui-card-content, > ui-card-footer, > [slot='hero'])) {
     padding-inline: var(--ui-card-region-pad-inline);
     padding-block: var(--ui-card-region-pad-block);
   }
   /* loose-child rhythm = adjacent-sibling margin (the shell is block flow now, not a grid/flex `gap`). */
-  :scope:not(:has(> ui-card-header, > ui-card-content, > ui-card-footer)) > * + * {
+  :scope:not(:has(> ui-card-header, > ui-card-content, > ui-card-footer, > [slot='hero'])) > * + * {
     margin-block-start: var(--ui-card-content-gap);
   }
 

@@ -778,6 +778,15 @@ export const attachmentFactory: WidgetFactory = mappedAccessorFactory('ui-attach
 // Image → ui-image (GH #1189 R1/R2, conventional component admission — the ADR ruling recorded in
 // image.md's own header, no new ADR file). `src`/`alt`/`fit`/`aspect`/`usageHint` are ALL 1:1 reflecting
 // accessor props verified against image.ts `static props` (`image.props.gen.ts`) — including `usageHint`,
+//
+// `slot` (GH #1204, R3) joins the same 1:1 identity-`mapsTo` set, but is NOT an image.ts prop at all — it is
+// the standard native `HTMLElement.slot` accessor every element already has, which (unlike `usageHint`)
+// DOES always reflect to a real `slot` attribute — `el.slot = 'hero'` (this factory's own generic
+// `setProp`, `el[prop] = value`) writes a genuine `slot="hero"` attribute the CARD side selects on
+// (card.css's `:where(ui-card) > [slot='hero']:first-child`). This is deliberately the SAME `slot`
+// vocabulary `Icon`/`Badge` already carry for header/footer's leading/trailing anatomy (both declare their
+// own `slot` catalog property, enum `["leading","trailing"]`) — here scoped to Card's own hero position
+// (`enum: ["hero"]`), a card-level position rather than a header/footer-level one.
 // whose real JS property key IS the camelCase `usageHint` (the props schema's `attribute: 'usage-hint'`
 // entry only names the kebab HTML ATTRIBUTE the framework's own prop→attribute reflection targets; it is
 // NOT the accessor key `setProp`'s `el[prop] = value` writes through). This is the OPPOSITE shape from
