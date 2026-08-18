@@ -462,6 +462,14 @@
       }
     },
 
+    "LineChart": {
+      "properties": {
+        "values": { "type": { "type": "array", "items": { "type": "number" } }, "bindable": true, "mapsTo": "values" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "variant": { "type": { "type": "string", "enum": ["line", "area"] }, "mapsTo": "variant" }
+      }
+    },
+
     "Table": {
       "properties": {
         "columns": { "type": { "type": "array", "items": { "type": "object",

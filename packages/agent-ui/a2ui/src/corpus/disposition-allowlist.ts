@@ -201,4 +201,17 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
       'from the backable-wizard flow-protocol seed); pending a judged import wave. Delete this entry ' +
       'when it is judged.',
   ],
+  //
+  // ADR-0205/GH #1207 (2026-08-18) — `frontier-latency-line-chart`: the same pending-state shape (NO
+  // VERDICT SOUGHT YET, not a refusal). Added with the LineChart catalog row (the fleet's first
+  // axis-bearing chart) to close the GH #729 type-coverage gate; its corpus admission is a pending judged
+  // import wave — the authoring session judging its own seed is the manufactured judgment ADR-0068's
+  // Alternatives ban. Run the judged pipeline and DELETE this entry when that wave lands.
+  [
+    'frontier-latency-line-chart',
+    'ADR-0205/GH #1207 (2026-08-18) — no verdict sought yet, not a refusal: shelf seed added alongside ' +
+      'the LineChart catalog row (the fleet\'s first axis-bearing chart) to keep the GH #729 ' +
+      'type-coverage gate green; pending a judged import wave (import-seeds.ts with a real VerdictsFile). ' +
+      'Delete this entry when it is judged.',
+  ],
 ])

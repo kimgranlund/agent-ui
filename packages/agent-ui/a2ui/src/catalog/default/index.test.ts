@@ -211,13 +211,6 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'mark shape its path/children should carry, is a separate decision for a later pass (a2ui is team-led, ' +
     'out of this build\'s authorization, and GH #954\'s own Acceptance criteria name no catalog requirement) ' +
     '— not a chrome/security exclusion like the PERMANENT entries above — drains the moment that decision lands.'],
-  ['LineChart',
-    'ADR-0205 (GH #1207) — TEMPORARY exclusion, shipped ahead of its catalog row: the component-build seat\'s ' +
-    'dispatch mints the fleet\'s first axis-bearing chart control (`ui-line-chart`) but explicitly stays ' +
-    'inside packages/agent-ui/components — the LineChart catalog row/factory/conformance/tier-map/feed-' +
-    'disposition/frontier-seed/disposition-allowlist/corpus-import-seeds wiring ADR-0205 cl.8 names is a ' +
-    'separate seat\'s phase (a2ui is team-led, out of this build\'s authorization) — not a chrome/security ' +
-    'exclusion like the PERMANENT entries above — drains the moment that catalog wave lands.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists
@@ -1131,6 +1124,90 @@ describe('default catalog — Sparkline/BarChart via the shared validator (ADR-0
     const rows2 = [...el.querySelectorAll('[role="listitem"]')]
     expect(rows2).toHaveLength(3) // a genuinely different row set, not a stale re-paint
     expect(rows2.map((row) => row.querySelector('[data-part="label"]')?.textContent)).toEqual(['EMEA', 'APAC', 'Americas'])
+
+    r.dispose()
+    mount.remove()
+  })
+})
+
+// ── ADR-0205 (GH #1207) — LineChart, the fleet's first axis-bearing chart, catalog wave mirroring
+// Sparkline/BarChart's own same-wave catalog entry (cl.8) ─────────────────────────────────────────────
+//
+// SPEC-N2's fleet-derived coverage (zero allowlist residue) is proven by the two describe blocks near the
+// top of this file (the drained `EXCLUSION_ALLOWLIST` + the residue guard). This block proves the same
+// shape as the Sparkline/BarChart suite above: the ADR-0205 example payload validates 0-`CATALOG` via
+// `validateA2ui`, AND a `values` bound as `{ "path": "/trend" }` renders the series and re-renders on
+// `updateDataModel` — the live, end-to-end proof.
+describe('default catalog — LineChart via the shared validator (ADR-0205)', () => {
+  it('an ADR-0205 example payload validates 0 failures via validateA2ui', () => {
+    const message = {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [{ id: 'root', component: 'LineChart', values: [3, 5, 4, 8, 7], label: 'Latency, p50' }],
+      },
+    }
+    expect(validateA2ui(message, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('LineChart declares a display-only row: no value mark, no children (the Sparkline/BarChart precedent)', () => {
+    expect(defaultCatalog.components.LineChart.value).toBeUndefined()
+    expect(defaultCatalog.components.LineChart.children).toBeUndefined()
+  })
+
+  it('LineChart.values/label are bindable; LineChart.variant is a non-bindable structural enum', () => {
+    expect(defaultCatalog.components.LineChart.properties.values?.bindable).toBe(true)
+    expect(defaultCatalog.components.LineChart.properties.label?.bindable).toBe(true)
+    expect(defaultCatalog.components.LineChart.properties.variant?.bindable).toBeFalsy()
+  })
+
+  it('accepts a {path} binding for values (a bindable array prop)', () => {
+    const line: A2uiComponent = { id: 'lc1', component: 'LineChart', values: { path: '/trend' } }
+    expect(validateCatalogConformance(line, defaultCatalog)).toEqual([])
+  })
+
+  it('NEGATIVE: an unknown prop fails CATALOG for LineChart', () => {
+    const line: A2uiComponent = { id: 'lc2', component: 'LineChart', values: [1, 2], bogus: 1 }
+    expect(validateCatalogConformance(line, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'lc2.bogus' })
+  })
+
+  it('a {path}-bound LineChart.values renders the series (real ui-line-chart, no mocks) and re-renders on updateDataModel', async () => {
+    const r = createRenderer({ newId: () => 'act-1', now: () => '2026-08-18T00:00:00.000Z' })
+    const mount = document.createElement('div')
+    document.body.appendChild(mount)
+    r.mount(mount)
+
+    const line = (message: unknown): string => JSON.stringify(message)
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'lc', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'lc',
+          components: [{ id: 'root', component: 'LineChart', values: { path: '/trend' }, label: 'Latency, p50' }],
+        },
+      }),
+    )
+
+    const el = mount.querySelector('ui-line-chart') as HTMLElement & { values?: unknown }
+    expect(el).toBeTruthy() // the REAL upgraded control, not a placeholder
+
+    // No data yet — the bound-prop effect started on an unresolved path (still no throw).
+    expect(el.querySelector('svg')).toBeNull() // an empty rendered set clears the host (line-chart.ts's mark effect)
+
+    r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'lc', path: '/trend', value: [3, 5, 4, 8, 7] } }))
+    await whenFlushed()
+    expect(el.values).toEqual([3, 5, 4, 8, 7]) // the data→control bound prop applied
+    const line1 = el.querySelector('svg polyline[data-part="line"]')
+    expect(line1).toBeTruthy() // the mark rendered from the bound path
+
+    // A second updateDataModel re-renders the mark (whole-array swap semantics).
+    r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'lc', path: '/trend', value: [1, 2] } }))
+    await whenFlushed()
+    expect(el.values).toEqual([1, 2])
+    const line2 = el.querySelector('svg polyline[data-part="line"]')
+    expect(line2).toBeTruthy()
+    expect(line2!.getAttribute('points')).not.toBe(line1!.getAttribute('points')) // a genuinely different mark, not a stale re-paint
 
     r.dispose()
     mount.remove()
