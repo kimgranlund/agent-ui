@@ -1720,8 +1720,8 @@ export class UIAgentAdminElement extends UIElement {
    * `roleFor`) is exactly the anatomy's "no landmark override; the nav retired" note.
    *
    * Band rendering (pills⇄segments, wide-actions⇄narrow-actions) is pure CSS (agent-admin.css's own
-   * `@container` pair on the composed `ui-super-shell`, the GH #665 54rem line REPURPOSED — see that
-   * file for the full mechanics); this method only builds both renderings of the SAME state, once, and
+   * `@container` pair on the composed `ui-super-shell`, the GH #665 header line REPURPOSED and re-derived
+   * to 52.5rem by GH #1260 — see that file for the full mechanics); this method only builds both renderings of the SAME state, once, and
    * wires each to write through the shared visibility machine (`#setPanesShown`/`#setPanePrimary`) or its
    * own registered seam.
    */

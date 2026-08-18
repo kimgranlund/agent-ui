@@ -125,12 +125,13 @@ function mountAgentAdmin(tab: 'Agent' | 'Capabilities' | 'Surface' = 'Agent', wi
  *  (`mountAgentAdmin()` above fixes 1200px on a flex-item host inside a sized wrapper; this widens that
  *  to an arbitrary width so both the wide and narrow bands are reachable with a REAL browser-measured
  *  resize, not a simulated one — TKT-0085's own ResizeObserver is gone with the shell it drove). */
-/** Two CSS px below the 52.5rem triple line's own mount (840 holder + 24 gutter) — the widest frame at
- *  which exactly one place still paints (the `data-primary` region, solo), and therefore the honest home
- *  for every place-exclusivity probe written before GH #662 widened the wide band (renamed from the
- *  retired `PAIR_BAND_WIDTH` — GH #686's Amendment retires the "pair" concept along with the MD vehicle;
- *  the narrow band itself, and the 52.5rem line, are unchanged). */
-const NARROW_BAND_WIDTH = 862
+/** Two CSS px below the 52.5rem triple line's own mount (840px — GH #1260 zeroed the canvas gutter, so
+ *  the holder's width IS the outer mount's; this was `840 + 24` while the 12px gutter existed) — the widest
+ *  frame at which exactly one place still paints (the `data-primary` region, solo), and therefore the
+ *  honest home for every place-exclusivity probe written before GH #662 widened the wide band (renamed
+ *  from the retired `PAIR_BAND_WIDTH` — GH #686's Amendment retires the "pair" concept along with the MD
+ *  vehicle; the narrow band itself, and the 52.5rem line, are unchanged). */
+const NARROW_BAND_WIDTH = 838
 
 function mountAgentAdminAt(widthPx: number): { wrapper: HTMLElement; el: UIAgentAdminElement } {
   const wrapper = document.createElement('div')
@@ -164,9 +165,11 @@ describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (G
   // exactly one (LLD §16.1's `admin-header`), so the box exists unconditionally from first connect.
   it('the header bar box exists at every band, and paints the right pane-visibility/actions rendering for its own width (LLD §16.1/§16.3 — pills⇄segments, wide⇄narrow actions)', async () => {
     // The header's own band line (agent-admin.css's own comment): the composed ui-super-shell's inline-size
-    // is always the pane holder's 52.5rem line PLUS one shell-gutter on each side — 54rem (864px) here
-    // fires at the IDENTICAL real pixel moment the holder's own 52.5rem (840px) does.
-    for (const [width, band] of [[700, 'narrow'], [900, 'wide'], [1200, 'wide']] as const) {
+    // IS the pane holder's inline-size since GH #1260 zeroed the canvas gutter (it used to be the holder's
+    // 52.5rem PLUS one 12px shell-gutter per side = 54rem), so the header queries the SAME 52.5rem (840px)
+    // and fires at the IDENTICAL real pixel moment the holder's own line does — pinned here AT the line
+    // (840 → wide) and two px under it (838 → narrow), the same two mounts the holder's own band probes use.
+    for (const [width, band] of [[700, 'narrow'], [838, 'narrow'], [840, 'wide'], [900, 'wide'], [1200, 'wide']] as const) {
       const { el, wrapper } = mountAgentAdminAt(width)
       // Register the New Agent seam so its own unregistered-hide degrade cannot be confused with the
       // band's own hide — the assertions below need to isolate the BAND rule, and an unregistered button
@@ -206,11 +209,12 @@ describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (G
   // banner note: "no real affordance survives to re-target these probes onto until S7-c lands"). GH #626's
   // bar-content law says the header supplies its OWN inline inset (the bar itself is padding-less); this
   // consumer deliberately reads `--ui-agent-admin-shell-gutter` (agent-admin.css's own comment on the
-  // rule) rather than the fleet's generic `--ui-bar-inline-inset` default, so the header's zones land on
-  // the SAME screen-x column as the canvas/pane content directly beneath them — measured here, both
-  // engines, at both bands (a band crossing changes which pane-visibility control paints, never the
-  // header's own inset).
-  it('header inset rhythm: the header content lands on the SAME screen-x as the canvas/pane-holder content below it', async () => {
+  // rule) rather than the fleet's generic `--ui-bar-inline-inset` default. GH #1260 (Kim's ruling) made
+  // the pane holder FLUSH to the shell edge (canvas padding 0), so the header content no longer shares
+  // the holder's screen-x — it sits exactly ONE shell-gutter (12px, the token's own value) inside it, and
+  // the holder itself sits ON the shell's own start edge. Both halves are pinned, both engines, at both
+  // bands (a band crossing changes which pane-visibility control paints, never the header's own inset).
+  it('header inset rhythm: the header content sits exactly one shell-gutter inside the FLUSH pane holder (GH #1260)', async () => {
     for (const width of [700, 1200]) {
       const { el, wrapper } = mountAgentAdminAt(width)
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -222,10 +226,17 @@ describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (G
       const header = el.querySelector('[data-part="admin-header"]') as HTMLElement
       const agentSelect = el.querySelector('[data-part="agent-select"]') as HTMLElement
       const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
+      const shell = el.querySelector('ui-super-shell') as HTMLElement
       expect(header.getBoundingClientRect().width, `width ${width}: the header genuinely renders`).toBeGreaterThan(0)
+      const gutterPx = Number.parseFloat(getComputedStyle(header).paddingInlineStart)
+      expect(gutterPx, `width ${width}: the header still reads the 12px shell-gutter token as its own inset`).toBe(12)
       expect(
-        Math.abs(agentSelect.getBoundingClientRect().x - holder.getBoundingClientRect().x),
-        `width ${width}: the header's own inline inset matches the pane holder's, one rhythm not two`,
+        Math.abs(holder.getBoundingClientRect().x - shell.getBoundingClientRect().x),
+        `width ${width}: the pane holder is FLUSH to the shell's start edge (GH #1260 — no canvas gutter)`,
+      ).toBeLessThanOrEqual(0.5)
+      expect(
+        Math.abs(agentSelect.getBoundingClientRect().x - holder.getBoundingClientRect().x - gutterPx),
+        `width ${width}: the header's content sits exactly one shell-gutter inside the flush holder`,
       ).toBeLessThanOrEqual(1)
       wrapper.remove()
     }
@@ -814,31 +825,33 @@ describe('ui-agent-admin cross-engine smoke — the Catalogs library section (AD
   })
 })
 
-describe('ui-agent-admin cross-engine smoke — canvas/region gutter is module-derived, not a silently-defeatable literal (component-reviewer finding)', () => {
-  // GH #686's Amendment (LLD §16.1/§16.5) — the pairing vehicle's own separator track retires with it, and
-  // with it the asymmetric per-region leading padding this probe used to pin (author/settings each carried
-  // their OWN 12px leading inline padding, hand-tuned around the retired split's track). Three flat
-  // siblings need no per-region padding at all now — the pane holder's own row `gap` is the WHOLE
-  // inter-column story, uniformly, and it reuses canvas's own `--ui-agent-admin-shell-gutter` value so the
-  // outer margin and the inter-column rhythm still read as ONE consistent gutter (the ORIGINAL probe's
-  // intent, carried over by a different mechanism).
-  it('canvas carries its own 12px (0.75rem) inline padding; settings/copilot carry NONE of their own — the row gap (also 12px) is the whole inter-column story now', () => {
+describe('ui-agent-admin cross-engine smoke — the canvas/region gutter is GONE by ruling (GH #1260, reversing GH #686/#665\'s 12px gutter design)', () => {
+  // GH #686's Amendment used to pin a 12px canvas padding + a 12px pane-holder row gap here (one rhythm,
+  // module-derived). GH #1260 (Kim's 2026-08-18 ruling, after the lane's pixel forensics named those two
+  // gutters as the page-background strips the ticket was filed on) REVERSED that design: the three
+  // regions are edge-to-edge — canvas padding 0, row gap 0 — and the seam between two painted regions is
+  // ONE hairline (`agent-admin.css`'s flush-seam rule), never a gap. This probe pins the reversal
+  // deliberately (the exact literals, not "anything ≤ old"): a re-appearing gutter is a regression now.
+  it('canvas carries NO padding and the pane holder NO row gap (GH #1260 — edge-to-edge by ruling); settings/copilot still carry no own inline padding', () => {
     const { el } = mountAgentAdmin()
     const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
     const settings = el.querySelector('[data-part="settings-pane"]') as HTMLElement
     const author = el.querySelector('[data-part="copilot-pane"]') as HTMLElement
-    expect(getComputedStyle(canvas).paddingInlineStart).toBe('12px')
+    const canvasCs = getComputedStyle(canvas)
+    for (const side of ['paddingInlineStart', 'paddingInlineEnd', 'paddingBlockStart', 'paddingBlockEnd'] as const) {
+      expect(canvasCs[side], `canvas ${side} — the GH #686 outer gutter is gone by ruling`).toBe('0px')
+    }
     for (const part of [settings, author]) {
-      expect(getComputedStyle(part).paddingInlineStart, 'no own leading inline padding — the row gap supplies it').toBe('0px')
+      expect(getComputedStyle(part).paddingInlineStart, 'no own leading inline padding').toBe('0px')
     }
     const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
-    expect(getComputedStyle(holder).columnGap, 'the row gap matches canvas\'s own gutter — one consistent rhythm').toBe('12px')
+    expect(getComputedStyle(holder).columnGap, 'the row gap is 0 — regions meet flush; the seam is a painted hairline, not spacing').toBe('0px')
   })
 
-  // GH #665 — author/settings carry NO OWN block padding either: canvas alone carries the block gutter for
-  // all three columns (the chat conversation, relying on it exclusively, is unchanged), which is what keeps
-  // the triple's top line shared rather than doubled ("ragged tops", Kim's screenshot).
-  it('author/settings carry NO OWN block padding — the canvas gutter alone sets their vertical inset, matching the chat conversation', () => {
+  // GH #665 — author/settings carry NO OWN block padding either (GH #1260: nor does the canvas any more —
+  // all three columns share the shell's own top/bottom edges), which is what keeps the triple's top line
+  // shared rather than doubled ("ragged tops", Kim's screenshot).
+  it('author/settings carry NO OWN block padding — the three columns share one top line', () => {
     const { el } = mountAgentAdmin()
     const settings = el.querySelector('[data-part="settings-pane"]') as HTMLElement
     const author = el.querySelector('[data-part="copilot-pane"]') as HTMLElement
@@ -2353,13 +2366,14 @@ describe('ui-agent-admin — the wide band (GH #662, re-ruled by GH #686\'s Amen
   }
 
   /** The band line is `SHELL_COMPACT_BREAKPOINT` (52.5rem = 840px, ADR-0150/0155) measured on the pane
-   *  HOLDER's own inline-size — the shell family's own-container-width law, never the viewport. The canvas
-   *  the holder sits in adds one `--ui-agent-admin-shell-gutter` per side (12px, measured), so `line + 24`
-   *  is the honest outer mount that puts the holder exactly ON the line; each test asserts that rather
-   *  than trusting the arithmetic. `TRIPLE_BELOW` is two CSS px under it — the tightest honest "just below"
-   *  probe, which is what makes the band a LINE and not a vibe. */
+   *  HOLDER's own inline-size — the shell family's own-container-width law, never the viewport. GH #1260
+   *  (Kim's ruling) zeroed the canvas padding the holder sits in, so the outer mount that puts the holder
+   *  exactly ON the line is the line itself now (it was `line + 24` — one 12px `--ui-agent-admin-shell-
+   *  gutter` per side — while GH #686's gutter existed); each test still asserts the holder's own measured
+   *  width rather than trusting the arithmetic. `TRIPLE_BELOW` is two CSS px under it — the tightest
+   *  honest "just below" probe, which is what makes the band a LINE and not a vibe. */
   const TRIPLE_LINE = 840
-  const TRIPLE_AT = TRIPLE_LINE + 24
+  const TRIPLE_AT = TRIPLE_LINE
   const TRIPLE_BELOW = TRIPLE_AT - 2
 
   /** GH #665/#673's composer-internal `21rem` compact line lives on the COMPOSER's own inline-size
@@ -2386,6 +2400,7 @@ describe('ui-agent-admin — the wide band (GH #662, re-ruled by GH #686\'s Amen
     return used
   }
 
+  const PANE_PARTS = new Set(['chat-pane', 'settings-pane', 'copilot-pane'])
   const partsOf = (el: UIAgentAdminElement): { holder: HTMLElement; chat: HTMLElement; author: HTMLElement; settings: HTMLElement } => ({
     holder: el.querySelector('[data-part="pane-holder"]') as HTMLElement,
     chat: el.querySelector('[data-part="chat-pane"]') as HTMLElement,
@@ -2481,7 +2496,7 @@ describe('ui-agent-admin — the wide band (GH #662, re-ruled by GH #686\'s Amen
     // reads `data-primary` alone, LLD §16.2).
     expect(getComputedStyle(chat).display, 'chat (primary) paints narrow').not.toBe('none')
     expect(getComputedStyle(author).display, 'copilot (shown, not primary) has no box narrow').toBe('none')
-    expect(chat.getBoundingClientRect().width, 'and it takes the whole holder').toBeCloseTo(500 - 24, 0)
+    expect(chat.getBoundingClientRect().width, 'and it takes the whole holder (flush — GH #1260, no gutter to subtract)').toBeCloseTo(500, 0)
 
     // Back wide — restored losslessly, and still no state written.
     wrapper.style.width = `${TRIPLE_AT}px`
@@ -2498,20 +2513,21 @@ describe('ui-agent-admin — the wide band (GH #662, re-ruled by GH #686\'s Amen
   // Both bands below the line's own name (52.5rem, unchanged — the only named line available, ADR-0150/
   // 0155) and one comfortably above it, so the table reads as a real measurement, not a single data point.
   for (const outer of [TRIPLE_AT, 1200]) {
-    it(`density at holder ${outer - 24}px: all THREE columns are EQUAL width and clear the 20ch engagement floor`, async () => {
+    it(`density at holder ${outer}px (GH #1260: the holder IS the outer mount, no gutter): all THREE columns are EQUAL width and clear the 20ch engagement floor`, async () => {
       const el = await mountTripleAt(outer)
       const { chat, author, settings } = partsOf(el)
 
       const boxes = { chat: chat.getBoundingClientRect(), copilot: author.getBoundingClientRect(), settings: settings.getBoundingClientRect() }
       // The equal-thirds claim itself — the wireframe's own "three regions, one geometry" reading, and the
-      // reason a plain row `gap` replaced the old `flex: 2` pairing weight. Measured (both engines, both
-      // bands): chat/copilot land within a shared fraction of a px of each other, settings a real but tiny
-      // ~2px narrower — `flex-basis: 0` (a literal zero, not `0%`/`0px`) equalizes CONTENT-box shares among
-      // flex siblings, so the two 1px-bordered `ui-conversation` regions (chat/copilot, border-box) end up
-      // ~2px WIDER in their OUTER box than the borderless settings-pane once their content boxes match —
-      // spec behavior (confirmed empirically: forcing `box-sizing: border-box` on settings-pane and toggling
-      // its `overflow-y` both left the 2px unchanged), not a layout defect, and imperceptible against the
-      // 20ch floor's own multi-hundred-pixel margin at this band.
+      // reason a plain row `gap` replaced the old `flex: 2` pairing weight (GH #1260 then zeroed that gap —
+      // flush regions, one hairline seam; the equal-thirds claim is unchanged). Measured (both engines,
+      // both bands): the three land within a shared fraction of a px of each other — `flex-basis: 0` (a
+      // literal zero, not `0%`/`0px`) equalizes CONTENT-box shares among flex siblings, so a region's own
+      // border widens its OUTER box by that border (spec behavior, confirmed empirically): pre-#1260 the two
+      // 1px-bordered `ui-conversation` cards read ~2px wider than the borderless settings-pane; post-#1260
+      // the cards drop their border and the seam hairline (1px start border on settings + copilot) is the
+      // only per-region asymmetry left — ≤2px either way, imperceptible against the 20ch floor's own
+      // multi-hundred-pixel margin at this band.
       expect(Math.abs(boxes.chat.width - boxes.copilot.width), 'chat and copilot columns are equal width').toBeLessThanOrEqual(1)
       expect(Math.abs(boxes.copilot.width - boxes.settings.width), 'copilot and settings columns are equal width, within the flex-basis:0 content-box/border-box fraction').toBeLessThanOrEqual(2)
 
@@ -2547,18 +2563,21 @@ describe('ui-agent-admin — the wide band (GH #662, re-ruled by GH #686\'s Amen
     })
   }
 
-  it('at the top level, the three sibling regions have NO separator element at all — spacing alone, never a rule to unpaint', async () => {
+  it('at the top level, the three sibling regions have NO separator ELEMENT at all — the seam is a border on the region itself, never a rule element to unpaint', async () => {
     // GH #686's Amendment (LLD §16.5) — the top-level `ui-master-detail`/`ui-split` retires with the
-    // pairing vehicle: there is no separator DOM between chat/settings/copilot any more (a plain flex
-    // `gap`, agent-admin.css), so "no painted divider" is true at the top level by construction now, not
-    // by a token repoint. Scoped to DIRECT children of the holder: `ui-settings`' own nested rail|panel
-    // split (below) is a real, separate case this same law still has to hold for.
+    // pairing vehicle: there is no separator DOM between chat/settings/copilot. GH #1260 (Kim's ruling)
+    // then zeroed the row `gap` this probe used to pin as "spacing alone": the regions are FLUSH now and
+    // the seam is ONE hairline painted by the trailing region's own `border-inline-start` (agent-admin.css's
+    // flush-seam rule) — still no separator ELEMENT, still no `ui-split` at this level. Scoped to DIRECT
+    // children of the holder: `ui-settings`' own nested rail|panel split (below) is a real, separate case
+    // the no-painted-divider law still holds for.
     const el = await mountTripleAt(1200)
     const { holder, author, settings } = partsOf(el)
     expect([...holder.children].some((c) => c.tagName.toLowerCase() === 'ui-split'), 'no split element is a direct child of the holder').toBe(false)
+    expect([...holder.children].every((c) => c.hasAttribute('data-part') && PANE_PARTS.has(c.getAttribute('data-part')!)), 'the holder\'s direct children are exactly the three regions — no separator node between them').toBe(true)
     const a = author.getBoundingClientRect()
     const s = settings.getBoundingClientRect()
-    expect(a.left - s.right, 'the regions separate by the row gap alone (PANE_ORDER: settings before copilot)').toBeGreaterThan(0)
+    expect(Math.abs(a.left - s.right), 'flush (GH #1260): settings and copilot share their seam edge — no gap').toBeLessThanOrEqual(0.5)
   })
 
   it('Kim’s 2026-08-10 addition, still binding for `ui-settings`\' own nested rail|panel split — NO painted divider, every resize mechanic intact', async () => {
@@ -2659,19 +2678,41 @@ describe('ui-agent-admin — the wide band (GH #662, re-ruled by GH #686\'s Amen
     expect(parseFloat(getComputedStyle(bar).borderBottomWidth), 'the shell-archetype header seam paints').toBeGreaterThan(0)
   })
 
-  it('gutter equality: the chat↔settings gap and the settings↔copilot gap read as ONE rhythm, not two', async () => {
+  // GH #1260 (Kim's ruling) — this probe used to pin "a real, positive gutter — not a coincidental zero"
+  // (GH #686's 12px inter-column rhythm). REVERSED by ruling: the regions are flush, both seams are ZERO
+  // gaps, and what separates two painted regions is ONE painted hairline (`border-inline-start` on every
+  // painted region after the first — agent-admin.css's flush-seam rule), never doubled card borders.
+  it('flush seams (GH #1260): the chat↔settings and settings↔copilot gaps are both zero, one hairline paints per seam, no doubled borders, square corners', async () => {
     const el = await mountTripleAt(1200)
     const { chat, author, settings } = partsOf(el)
-    // PANE_ORDER: chat, settings, copilot — the region boxes themselves (not nested content) are the
-    // honest measurement, since `settings-pane` carries no leading/trailing padding of its own any more
-    // (the row `gap` is the WHOLE inter-column story now, LLD §16.1's three-sibling design).
     const chatBox = chat.getBoundingClientRect()
     const settingsBox = settings.getBoundingClientRect()
     const copilotBox = author.getBoundingClientRect()
-    const chatSettingsGap = settingsBox.left - chatBox.right
-    const settingsCopilotGap = copilotBox.left - settingsBox.right
-    expect(chatSettingsGap, 'a real, positive gutter — not a coincidental zero').toBeGreaterThan(0)
-    expect(Math.abs(chatSettingsGap - settingsCopilotGap), 'the two inter-column gaps equal (±1, rounding)').toBeLessThanOrEqual(1)
+    expect(Math.abs(settingsBox.left - chatBox.right), 'chat↔settings: flush').toBeLessThanOrEqual(0.5)
+    expect(Math.abs(copilotBox.left - settingsBox.right), 'settings↔copilot: flush').toBeLessThanOrEqual(0.5)
+    // Exactly ONE hairline per seam: the trailing region's start border paints, the leading region's end
+    // border does not (the ui-conversation card border is dropped inside this composition).
+    expect(Number.parseFloat(getComputedStyle(settings).borderInlineStartWidth), 'settings paints the chat↔settings seam').toBe(1)
+    expect(Number.parseFloat(getComputedStyle(author).borderInlineStartWidth), 'copilot paints the settings↔copilot seam').toBe(1)
+    expect(Number.parseFloat(getComputedStyle(chat).borderInlineEndWidth), 'chat paints no end border of its own — no doubling').toBe(0)
+    expect(Number.parseFloat(getComputedStyle(settings).borderInlineEndWidth), 'settings paints no end border of its own — no doubling').toBe(0)
+    expect(Number.parseFloat(getComputedStyle(chat).borderInlineStartWidth), 'the FIRST painted region carries no seam — the shell edge is its start').toBe(0)
+    for (const [label, region] of [['chat', chat], ['copilot', author]] as const) {
+      expect(getComputedStyle(region).borderTopLeftRadius, `${label}: square corners — the card radius is dropped flush`).toBe('0px')
+    }
+  })
+
+  // GH #1260 — the seam derives from `data-show`, not DOM position: with settings hidden, copilot is the
+  // SECOND painted region and must carry the (single) seam against chat.
+  it('flush seams follow the shown SET: chat | copilot (settings hidden) still shares exactly one hairline', async () => {
+    const el = await mountTripleAt(1200)
+    ;(el as unknown as { setPaneVisibilitySeam(s: readonly ('chat' | 'settings' | 'copilot')[], p: 'chat' | 'settings' | 'copilot'): void }).setPaneVisibilitySeam(['chat', 'copilot'], 'chat')
+    await frames()
+    const { chat, author, settings } = partsOf(el)
+    expect(getComputedStyle(settings).display, 'settings hidden').toBe('none')
+    expect(Math.abs(author.getBoundingClientRect().left - chat.getBoundingClientRect().right), 'chat↔copilot: flush').toBeLessThanOrEqual(0.5)
+    expect(Number.parseFloat(getComputedStyle(author).borderInlineStartWidth), 'copilot paints the one seam').toBe(1)
+    expect(Number.parseFloat(getComputedStyle(chat).borderInlineEndWidth), 'chat paints none').toBe(0)
   })
 
   it('each conversation region carries its own visible identity kicker — the test chat and the Builder interview no longer read as two identical empty threads', async () => {
@@ -2943,7 +2984,10 @@ describe('ui-agent-admin — the wide band (GH #662, re-ruled by GH #686\'s Amen
     // Kim's reopen was a TREATMENT complaint ("a borderless prose block beside a bordered chat card"), so
     // the probe compares the two cards against EACH OTHER rather than against literals: whatever the fleet
     // paints on a conversation card, both columns must paint the same. Cross-card parity also survives a
-    // token change, which a hard-coded 1px/12px assertion would not.
+    // token change, which a hard-coded 1px/12px assertion would not. GH #1260 (Kim's ruling) dropped the
+    // card border/radius INSIDE this composition (flush panels — one hairline seam on the trailing region
+    // instead), so the anti-vacuous half now pins the shared SURFACE (a real painted background, the
+    // treatment that survives flush) rather than a painted top border — the block edges are the shell's own.
     const el = await mountUnarmedTriple()
     const { test, author } = cardsOf(el)
     expect(author.getBoundingClientRect().width, 'the unarmed Author third has a real box in the triple').toBeGreaterThan(0)
@@ -2953,7 +2997,8 @@ describe('ui-agent-admin — the wide band (GH #662, re-ruled by GH #686\'s Amen
       return [s.borderTopWidth, s.borderTopStyle, s.borderTopColor, s.borderRadius, s.backgroundColor, s.overflow]
     }
     expect(chrome(author), 'the unarmed Author card is chromed exactly like Test chat').toEqual(chrome(test))
-    expect(getComputedStyle(author).borderTopWidth, 'anti-vacuous: the shared treatment is a REAL painted border').not.toBe('0px')
+    expect(getComputedStyle(author).backgroundColor, 'anti-vacuous: the shared treatment is a REAL painted surface').not.toBe('rgba(0, 0, 0, 0)')
+    expect(getComputedStyle(author).borderTopWidth, 'GH #1260: no card border along the shell\'s block edges (flush)').toBe('0px')
 
     const kickerOf = (card: HTMLElement): HTMLElement => card.querySelector('[data-part="region-kicker"]') as HTMLElement
     const kickerMetrics = (card: HTMLElement): (string | number)[] => {
@@ -2965,9 +3010,12 @@ describe('ui-agent-admin — the wide band (GH #662, re-ruled by GH #686\'s Amen
         s.fontSize,
         s.textTransform,
         s.color,
-        // its inset from the card's own edges — the thing Kim reads as "the same header"
-        Math.round(kicker.getBoundingClientRect().top - card.getBoundingClientRect().top),
-        Math.round(kicker.getBoundingClientRect().left - card.getBoundingClientRect().left),
+        // its inset from the card's own PADDING edges — the thing Kim reads as "the same header". Measured
+        // inside the card's border, not its border-box: GH #1260's flush-seam hairline is a 1px
+        // `border-inline-start` on the trailing (copilot) region only, a seam between panes, not part of
+        // either card's own treatment.
+        Math.round(kicker.getBoundingClientRect().top - card.getBoundingClientRect().top - parseFloat(getComputedStyle(card).borderTopWidth)),
+        Math.round(kicker.getBoundingClientRect().left - card.getBoundingClientRect().left - parseFloat(getComputedStyle(card).borderLeftWidth)),
       ]
     }
     expect(kickerMetrics(author), 'and its BUILDER INTERVIEW kicker sits exactly where Test chat`s does').toEqual(kickerMetrics(test))

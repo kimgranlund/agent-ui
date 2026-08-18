@@ -199,19 +199,27 @@
     --ui-super-shell-canvas-min-size: 16rem; /* today's ui-split canvasPane[min] value, verbatim (LLD-C4) */
     --ui-super-shell-pane-min-size: 20rem; /* today's ui-split tabsPane[min] value, verbatim (LLD-C4) */
     /* GH #665, ADR-0179 Amendment addendum (Kim's 2026-08-10 follow-on ruling) — the query subject for
-       the header bar's own band rendering (search "54rem" below for why THIS element, not the pane
-       holder the triple band already queries). Originally minted for the now-retired pane-nav bar's
+       the header bar's own band rendering (search "header-band derivation" below for why THIS element,
+       not the pane holder the triple band already queries; GH #1260 re-derived that line to 52.5rem). Originally minted for the now-retired pane-nav bar's
        wide-HIDE rule; S7-c (LLD §16.1/§16.3) repurposes the SAME container for a different purpose — the
        header never hides at either band now, only which of its two pane-visibility renderings (pills /
        segments) and which header-actions subset (labeled buttons / "+"+"•••") paints. */
     container-type: inline-size;
   }
 
-  /* The conversation fills super-shell's own `content`/canvas box; its internal scrolling is its own
-     concern — this file adds no overflow rule for it. `[data-part='pane']` below consumes the identical
-     token so canvas and pane — the shell's two content-holding siblings — render the SAME gutter. */
+  /* GH #1260 (Kim's 2026-08-18 ruling) — EDGE-TO-EDGE PANEL IA. This rule used to read `padding:
+     var(--ui-agent-admin-shell-gutter)` (GH #686/#665's outer gutter — the SAME 12px rhythm as the
+     pane-holder's inter-column gap below). Kim's ruling REVERSES that gutter design by name: the three
+     regions meet the shell's edges (and each other) flush — the page-background strips the gutter left
+     along the shell's start side + block-end (the "light hairline on dark" #1260 was filed on: `surface`
+     showing through around `surface-low` cards, real-engine pixel forensics on the ticket) are gone.
+     Padding is set to 0 explicitly rather than the declaration deleted, so the reversal is a visible,
+     grep-able decision, not an absence. `--ui-agent-admin-shell-gutter` itself STAYS minted — the header
+     bar's own inline inset (`[data-part='admin-header']` below) and the shell's `[data-part='pane']`
+     slot still read it. The conversation fills super-shell's own `content`/canvas box; its internal
+     scrolling is its own concern — this file adds no overflow rule for it. */
   [data-part='canvas'] {
-    padding: var(--ui-agent-admin-shell-gutter);
+    padding: 0;
   }
   [data-part='canvas'] > ui-conversation {
     flex: 1 1 auto;
@@ -242,14 +250,44 @@
     flex-direction: row;
     flex: 1 1 auto;
     min-block-size: 0;
-    /* No per-pane inline padding any more (below) — a plain row `gap` replaces the old asymmetric
-       leading/trailing padding the pairing vehicle's own separator track used to make necessary, giving
-       all three inter-column gutters the SAME value (the wireframe's own equal-columns reading) instead of
-       two hand-tuned near-equal ones. Reuses `--ui-agent-admin-shell-gutter` (the canvas's own outer inset)
-       rather than minting a second token: the design wants outer margin and inter-column gutter to read as
-       ONE consistent rhythm. */
-    gap: var(--ui-agent-admin-shell-gutter);
+    /* GH #1260 (Kim's 2026-08-18 ruling) — was `gap: var(--ui-agent-admin-shell-gutter)` (GH #686's
+       Amendment: one 12px inter-column gutter, the canvas's own outer inset reused so outer margin and
+       inter-column rhythm read as ONE). Ruled to ZERO together with the canvas padding above: the three
+       regions meet each other flush. The seam between two flush regions is the ONE painted hairline
+       below (`border-inline-start` on every painted region after the first), never a gap. Set to 0
+       explicitly (not deleted) for the same grep-able-decision reason as the canvas rule. */
+    gap: 0;
     container-type: inline-size; /* the band the rules below query is the HOLDER's own width */
+  }
+  /* GH #1260 — the flush-seam treatment. Chat/copilot are `ui-conversation` instances that paint their
+     OWN 1px `outline-variant` border + 12px radius (conversation.css's `:scope` rule, a real card); flush
+     against the shell edges that card border would double the header bar's own seam (ADR-0166 cl.2's
+     `border-block-end`) and stripe a stray hairline along the shell's start/end/bottom edges, and flush
+     against each other two card borders would double into a 2px seam. Chosen treatment (Kim left the
+     pick open — "one hairline between panes, or none"): the regions drop their OWN border and radius
+     inside this composition (a directly-matching (0,2,0) rule beats conversation.css's `:scope` (0,1,0)
+     regardless of scope proximity — specificity is decided before scoping proximity in the cascade),
+     and ONE shared hairline paints between adjacent painted regions — the fleet's own rail/bar seam
+     idiom (`ui-nav-rail`'s `border-inline-end`, super-shell's `--ui-super-shell-bar-seam`): a
+     `border-inline-start` in this file's OWN `--ui-agent-admin-border` role on every painted region
+     AFTER the first in `PANE_ORDER`. "Painted after the first" is derived from `data-show` at the wide
+     band (settings paints after chat when chat ∈ shown; copilot paints after either), and no seam at
+     all below the line (exactly one region paints there — nothing to separate; the query wraps the rule).
+     This supersedes GH #662's "no painted divider between top-level regions" for THIS seam only, by the
+     same ruling — the nested `ui-split` inside Settings keeps that law below. Square corners follow from
+     the radius drop; the region-kicker's start-side padding (below) still insets its text from the
+     region's own edge — the border it used to inset from is now the shell edge or the seam. */
+  [data-part='pane-holder'] > [data-part='chat-pane'],
+  [data-part='pane-holder'] > [data-part='copilot-pane'] {
+    border: 0;
+    border-radius: 0;
+  }
+  @container (inline-size >= 52.5rem) {
+    [data-part='pane-holder'][data-show~='chat'] > [data-part='settings-pane'],
+    [data-part='pane-holder'][data-show~='chat'] > [data-part='copilot-pane'],
+    [data-part='pane-holder'][data-show~='settings'] > [data-part='copilot-pane'] {
+      border-inline-start: 1px solid var(--ui-agent-admin-border);
+    }
   }
   /* Base sizing for all three sibling regions, unconditional (every band). Hidden by default —
      `display: none` (never `hidden`, S1-b's retired attribute model: a region that paints must not also
@@ -323,9 +361,9 @@
   }
 
   /* GH #662's addition, carried over verbatim by GH #686's Amendment — NO PAINTED DIVIDERS between docked
-     regions. The three sibling regions here have no separator element of their own to begin with (no more
-     `ui-split` at this level — the row `gap` above is spacing alone, never a rendered seam), so this
-     descendant reach now covers exactly ONE remaining case: `ui-settings`' OWN nested rail|panel
+     regions. GH #1260 (Kim's ruling) narrowed that law: the top-level regions are flush now and DO share
+     one painted hairline seam (the `border-inline-start` rule above, by ruling), so this descendant reach
+     now covers exactly ONE remaining case: `ui-settings`' OWN nested rail|panel
      `ui-master-detail` inside the Settings region — unrelated to and untouched by this slice, but the "no
      painted divider between docked regions" law still needs to hold there too. The selector must land on
      the `ui-split` elements THEMSELVES, not on an ancestor: split.css declares `--ui-split-divider-ink` in
@@ -352,11 +390,14 @@
        `ui-super-shell` above, a real ancestor of THIS descendant selector — no var()-resolution-order
        issue, the SAME direct-descendant-consumption shape `[data-part='canvas']`/`[data-part='pane']`
        below already use), not the fleet's generic `--ui-bar-inline-inset` default: this consumer already
-       has its OWN established rhythm (the canvas/pane content directly below the header reads this exact
-       token too), and the header's own zones want to land on that SAME column, not a second, larger inset
-       that would read as misaligned against the panes it sits above (a deliberate, named departure from
-       GH #626's generic default — the docs site's own convergence on 24px for both roles was a
-       coincidence of THAT page's rhythm, never a mandate that every consumer's two tokens must match). */
+       has its OWN established rhythm — the shell's `[data-part='pane']` slot reads this exact token too,
+       and the canvas content did until GH #1260 (Kim's ruling: the pane holder is FLUSH to the shell edge
+       now, so the header's content sits one gutter INSIDE the holder's edge — deliberately kept, the bar
+       still needs its own inline inset; `agent-admin.browser.test.ts`'s "header inset rhythm" probe pins
+       that exact offset) — not the fleet's generic `--ui-bar-inline-inset` default (a deliberate, named
+       departure from GH #626's generic default — the docs site's own convergence on 24px for both roles
+       was a coincidence of THAT page's rhythm, never a mandate that every consumer's two tokens must
+       match). */
     padding-inline: var(--ui-agent-admin-shell-gutter);
   }
 
@@ -379,14 +420,17 @@
     margin-inline-start: auto;
   }
 
-  /* GH #665's own 54rem derivation, REPURPOSED — see the `container-type: inline-size` declaration on the
-     composed `ui-super-shell` above for the shared-ancestor mechanics (identical real pixel moment the
-     pane holder's own 52.5rem line fires at, `SHELL_COMPACT_BREAKPOINT` plus one `shell-gutter` on each
-     side). The retired pane-nav bar used this line to HIDE itself entirely at wide; S7-c reuses the SAME
-     line for a different purpose — swapping which pane-visibility control paints (pills / segments) and
-     which header-actions subset paints (labeled buttons / the "+"+"•••" pair), never hiding the header
-     itself at either band. */
-  @container (inline-size < 54rem) {
+  /* GH #665's own header-band derivation, REPURPOSED — see the `container-type: inline-size` declaration on
+     the composed `ui-super-shell` above for the shared-ancestor mechanics: this line must fire at the
+     IDENTICAL real pixel moment the pane holder's own 52.5rem line does. GH #1260 (Kim's 2026-08-18
+     ruling) RE-DERIVED it from 54rem to 52.5rem: the constant was `SHELL_COMPACT_BREAKPOINT` (52.5rem)
+     PLUS one `shell-gutter` (0.75rem) per side, and the canvas padding that gutter came from is now 0 —
+     the shell's inline-size IS the holder's inline-size, so the two queries share one number again
+     (`agent-admin.browser.test.ts` measures both lines against the same mounts). The retired pane-nav bar
+     used this line to HIDE itself entirely at wide; S7-c reuses the SAME line for a different purpose —
+     swapping which pane-visibility control paints (pills / segments) and which header-actions subset
+     paints (labeled buttons / the "+"+"•••" pair), never hiding the header itself at either band. */
+  @container (inline-size < 52.5rem) {
     [data-part='pane-pills'] {
       display: none;
     }
@@ -396,7 +440,7 @@
       display: none;
     }
   }
-  @container (inline-size >= 54rem) {
+  @container (inline-size >= 52.5rem) {
     ui-segmented-control[data-part='pane-segments'] {
       display: none;
     }
@@ -427,8 +471,8 @@
 
   /* GH #686's Amendment (LLD §16.1/§16.5) — the Settings region: a plain sibling `div` now, never a
      `ui-master-detail-pane` (the MD wrapper role retires with the whole pairing vehicle). No inline padding
-     of its own — the row `gap` above supplies inter-column spacing uniformly now, so there is no more
-     asymmetric leading/trailing edge to hand-tune per seam (the old MD-era comment on this rule documented
+     of its own — the regions are flush (GH #1260; the row `gap` above is 0 now, the seam is one painted
+     hairline), so there is no more asymmetric leading/trailing edge to hand-tune per seam (the old MD-era comment on this rule documented
      exactly that hand-tuning; the flat three-sibling layout doesn't need it). SCROLLING, unlike the retired
      MD-wrapper era ("the wrapper owns the scroll"), is this region's OWN job now — no wrapping split-pane
      exists to own it any more (measured regression risk named explicitly: `scrollTop` staying 0 with

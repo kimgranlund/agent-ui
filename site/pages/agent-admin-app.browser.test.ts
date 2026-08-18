@@ -10,7 +10,7 @@
 // into the six seams (the "picker-wiring" trap — a callback registered is not evidence a real click reaches
 // it — this file clicks the REAL affordance and asserts the REAL page-side function ran).
 //
-// The fleet's default browser-project viewport (414×896, ADR-0150) sits BELOW the header's own 54rem band
+// The fleet's default browser-project viewport (414×896, ADR-0150) sits BELOW the header's own 52.5rem band (54rem until GH #1260)
 // line, so every test below drives the NARROW rendering: `new-agent-narrow` ("+") and the `overflow-menu`
 // ("•••", Import/Export) — the wide `new-agent-wide`/`import-action`/`export-action` twins are `[hidden]`
 // at this width by the component's own CSS band swap (agent-admin.browser.test.ts proves that swap

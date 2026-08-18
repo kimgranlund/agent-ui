@@ -487,7 +487,8 @@ and both conversations move as whole nodes — cl.3's singleton law, re-verified
   against the holder's own inline-size: `≥ 52.5rem` (`SHELL_COMPACT_BREAKPOINT`; the header bar
   uses the derived 54rem composed-shell query, the GH #665 rule's own derivation repurposed) shows
   the `data-show` members as equal flex columns; below it only the `data-primary` pane. A resize
-  writes nothing — band crossings are lossless by construction.
+  writes nothing — band crossings are lossless by construction. ⚠️ 2026-08-18 (GH #1260, §17): the
+  header's derived line is 52.5rem now, not 54rem — the canvas gutter it added is gone.
 - **Routing:** untouched. `#contextFor` stays ORIGIN-keyed (the first Amendment); with subsets,
   multiple visible composers are the norm and origin-keying is what already makes that sound. The
   fence conjunct, both histories, the session map, the GH #145 resets: byte-identical.
@@ -569,3 +570,29 @@ machinery) · the no-painted-dividers token law.
 
 *(OQ-E from the drafting pass — "can the set be empty" — is RULED, not open: min-one, §16.2; a
 zero-pane surface is broken by construction.)*
+
+## 17 · Addendum — edge-to-edge panel IA (GH #1260, Kim's ruling 2026-08-18, built same day)
+
+> Dated in place, append-only. Kim's ruling on GH
+> [#1260](https://github.com/kimgranlund/agent-ui/issues/1260#issuecomment-5329856957) (after the
+> lane's real-engine pixel forensics named §16.1's two 12px gutters — canvas padding + pane-holder row
+> gap — as the page-background strips the ticket was filed on) REVERSES the #686/#665 gutter design:
+>
+> - `[data-part='canvas'] { padding: 0 }` and `[data-part='pane-holder'] { gap: 0 }` — the three regions
+>   meet the shell edges and each other flush (`--ui-agent-admin-shell-gutter` survives only as the
+>   header bar's own inline inset; the header content sits one gutter inside the flush holder).
+> - Seam treatment (chosen; Kim left "one hairline or none" open): the `ui-conversation` cards drop their
+>   own 1px border + 12px radius inside this composition (`border: 0; border-radius: 0` on the two
+>   conversation regions — a (0,2,0) rule beating conversation.css's `:scope`), and ONE hairline
+>   (`border-inline-start: 1px solid --ui-agent-admin-border`) paints on every painted region AFTER the
+>   first in `PANE_ORDER`, derived from `data-show` at ≥52.5rem (settings when chat ∈ shown; copilot
+>   when chat or settings ∈ shown); no seam below the line (one region paints). No card border along the
+>   shell's own edges, no doubled header seam (ADR-0166 cl.2). This narrows §16's "no painted divider
+>   between top-level regions" for this seam only; the nested `ui-split` inside Settings keeps it.
+> - The header band constant re-derives 54rem → 52.5rem (the shell's inline-size IS the holder's now).
+> - Probes repointed deliberately (never loosened) in `agent-admin.browser.test.ts`: the header band
+>   loop (now pinned AT 840 and at 838), the header inset rhythm (holder flush + content one gutter in),
+>   the gutter describe (canvas 0 / gap 0), `NARROW_BAND_WIDTH` 862→838, `TRIPLE_AT` = the line itself,
+>   the flush-seam probes (both seams zero, one hairline each, square corners, seam follows `data-show`),
+>   the no-separator-element probe, the UNARMED card-treatment parity probe. Standing pin:
+>   `agent-admin-edge-to-edge.browser.test.ts`.
