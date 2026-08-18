@@ -5,12 +5,12 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-17 |
 > | **Proposed by** | planner seat, from the merged implementation (GH #1196, PR #1242) — the build
 >   lane flagged explicitly that the `team` meta-line arm shipped without its own decision record,
 >   unlike every one of its four sibling arms |
-> | **Ratified by** | — |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-18, via the [`ratify ADR-0204` utterance](https://github.com/kimgranlund/agent-ui/issues/1196#issuecomment-5329176020) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | none — this is a RECORDING ADR: the arm, its validation, and its consumer seam are
 >   already merged (PR #1242) exactly as this record describes; nothing here is gated on ratification
 >   except the record's own Status cell. Future callers citing the `team` arm's provenance cite this

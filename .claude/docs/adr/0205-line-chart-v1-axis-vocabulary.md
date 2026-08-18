@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-18 |
 > | **Proposed by** | planner (design seat — GH #1207, realizing `req-a2ui-library.md` mobilization item 6, dispatched from `dispatch-ticket`'s build-leader path) |
-> | **Ratified by** | — |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-18, via the [`ratify ADR-0205` utterance](https://github.com/kimgranlund/agent-ui/issues/1207#issuecomment-5329186566) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | none — new component intake, no existing doc corrected |
 > | **Supersedes / Superseded by** | (none) — relates [ADR-0107](./0107-chart-family-v1-scope.md) (names this exact gap: *"axis systems ... line-with-axes, multi-series ... Any axis-bearing type is a new intake"* — this ADR is that named intake, and leaves ADR-0107's own v1 scope for `ui-sparkline`/`ui-bar-chart` untouched) |
 
