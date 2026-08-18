@@ -230,4 +230,46 @@ export const onboardingTourSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed]
+const ROUND_ID = 'frontier-round-outcome'
+/** Frontier 5 — the TOAST family (GH #1184, Kim ruling 2026-08-17: ephemeral outcome announcements are
+ *  Toasts, not Badges): a blackjack round's settled state on one persistent surface — hand totals as
+ *  Stats, the round RESULT as a self-expiring Toast rendered inline where the payload places it (the
+ *  catalogued half of the toast family; `ToastRegion`/`show()` stay app chrome), and the one next action
+ *  as a Button. `label` is the adopted message text (connect-time, non-bindable by design); `duration`
+ *  is explicit so the transient contract is visible in the payload. */
+export const roundOutcomeToastSeed: ExampleSeed = {
+  name: 'frontier-round-outcome',
+  description: 'A settled blackjack round — hand totals as Stats, the ephemeral result announced by an inline Toast (label/urgent/duration), and one Next-round action Button.',
+  promptText: 'The dealer drew to 19 against my 17 — settle the round and let me deal the next one.',
+  surfaceId: ROUND_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: ROUND_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: ROUND_ID,
+        value: { round: { player: 17, dealer: 19, chips: 240 } },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: ROUND_ID,
+        components: [
+          { id: 'root', component: 'Column', gap: 'md', children: ['totals', 'outcome', 'controls'] },
+          { id: 'totals', component: 'Row', gap: 'md', children: ['stat_you', 'stat_dealer', 'stat_chips'] },
+          { id: 'stat_you', component: 'Stat', label: 'You', value: { path: '/round/player' } },
+          { id: 'stat_dealer', component: 'Stat', label: 'Dealer', value: { path: '/round/dealer' } },
+          { id: 'stat_chips', component: 'Stat', label: 'Chips', value: { path: '/round/chips' }, delta: -20 },
+          { id: 'outcome', component: 'Toast', label: 'Dealer wins — 19 beats 17.', duration: 6000 },
+          { id: 'controls', component: 'Row', gap: 'md', justify: 'end', children: ['btn_next'] },
+          { id: 'btn_next', component: 'Button', variant: 'solid', label: 'Deal next round', action: { action: 'next_round' } },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed]

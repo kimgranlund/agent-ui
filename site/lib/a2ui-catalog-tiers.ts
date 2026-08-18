@@ -1,5 +1,5 @@
 // site/lib/a2ui-catalog-tiers.ts — the A2UI Catalog page's TIER taxonomy (owner-approved 2026-08-15 audit,
-// GH #970): groups the 54 browsable default-catalog component types into five page-level tabs — WIDGET ·
+// GH #970): groups the 55 browsable default-catalog component types into five page-level tabs — WIDGET ·
 // PRIMITIVE · PATTERN · FEATURE · INPUT — plus the type→gallery-example cross-link derivation the page's
 // "see it in real use" links ride.
 //
@@ -77,7 +77,7 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   Table: 'FEATURE',
   Timeline: 'FEATURE',
 
-  // WIDGET (13) — small, self-contained display/utility leaves.
+  // WIDGET (14) — small, self-contained display/utility leaves.
   Attachment: 'WIDGET',
   Avatar: 'WIDGET',
   Badge: 'WIDGET',
@@ -91,6 +91,7 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   Sparkline: 'WIDGET',
   Stat: 'WIDGET',
   Swatch: 'WIDGET',
+  Toast: 'WIDGET',
 
   // PATTERN (14) — composite, multi-part interactive constructs. An *Item/*Pane companion rides with its
   // owning compound: MenuItem→Menu, SwiperItem→Swiper, SplitPane→Split, TimelineItem→Timeline's per-row

@@ -178,9 +178,12 @@ Output rules for the A2UI JSONL that follows the note line (omit entirely if the
   down, never root itself.
 - Make a control report back to you by giving it an "action", e.g. a Button:
   {"id":"go","component":"Button","label":"Submit","action":{"action":"submit"}}
-- Status/outcome tags are display-only, never closeable: a status token (e.g. a Badge announcing an
-  outcome like "Dealer wins") is a non-interactive mark — its intent glyph (the danger ×) signals meaning,
-  not a close/dismiss control — so never present one as dismissible or expect a click on it to do anything;
-  anything the user should dismiss or act on must be a control with a real "action" (a Button).
+- Route an EPHEMERAL outcome/status announcement — a round's result ("Dealer wins"), a sent/received
+  confirmation — to a Toast (a self-expiring notification; it disappears on its own and self-removes from
+  the surface). Reserve Badge for PERSISTENT inline status (a state the user should still see next turn:
+  a price tag, a deal state, a letter tile); a Badge is display-only, never closeable — its intent glyph
+  (the danger ×) signals meaning, not a close/dismiss control — so never present one as dismissible or
+  expect a click on it to do anything; anything the user should dismiss or act on must be a control with
+  a real "action" (a Button).
 - Use ONLY the component types and props listed in the catalog below. NEVER invent a component or a prop.
 - Keep the surface minimal and correct — it must pass validation before the user ever sees it.

@@ -2,9 +2,9 @@
 // LLD-C7 · SPEC-R14/R15/R16/R19 · ADR-0112 cl.5). BEHAVIOUR + props + the control-built message/
 // action/close parts + self-define ONLY. Anatomy/geometry per the LLD; styling lives in toast.css,
 // the public contract in toast.md. Region ownership + the `show()` convenience live beside it in
-// toast-region.ts (the radio/radio-group same-folder precedent — ADR-0112's Decision cl.1). NOT
-// catalogued (ADR-0112 cl.6) — the app-surface consumption story is region-hosted, never direct markup
-// an agent emits.
+// toast-region.ts (the radio/radio-group same-folder precedent — ADR-0112's Decision cl.1). Catalogued
+// since GH #1184 (Kim ruling 2026-08-17, reversing ADR-0112 cl.6's Toast half): agents emit ephemeral
+// outcome announcements as inline Toast rows; the region + show() stay uncatalogued app chrome.
 //
 // role=status is set in the CONSTRUCTOR (SPEC-R15 AC2), not connected() — the live-region semantics
 // must exist BEFORE the element is inserted (construction strictly precedes any append call — e.g.

@@ -76,7 +76,7 @@
 //
 // ADR-0122 F5 (timeline-family.lld.md, the timeline-family-ship wave) adds `Timeline`/`TimelineItem` — the
 // durable event-rail family (the live `ui-status-stream` sibling stays an `EXCLUSION_ALLOWLIST` entry, cl.6
-// same as Toast: a consumer-owned imperative streaming host is app chrome, never a one-shot serializable
+// same as ToastRegion: a consumer-owned imperative streaming host is app chrome, never a one-shot serializable
 // tree). Both ride plain `accessorFactory` (no bespoke mapping, no submitGate) — see their own factory doc
 // comments below.
 //
@@ -294,6 +294,29 @@ export const modalFactory: WidgetFactory = accessorFactory('ui-modal', { prop: '
 // `edge`/`persistent` are 1:1 reflecting accessors, riding accessorFactory generically like Modal's own
 // `persistent`. No bespoke mapping needed — the drawer's catalog surface is Modal's row shape plus one enum.
 export const drawerFactory: WidgetFactory = accessorFactory('ui-drawer', { prop: 'open', event: 'toggle' })
+
+/**
+ * Toast → `ui-toast` (GH #1184, Kim ruling 2026-08-17 — REVERSES ADR-0112 cl.6's Toast half: an ephemeral
+ * outcome/status announcement ("Dealer wins", a sent-confirmation) IS agent-emittable content; `ToastRegion`
+ * stays a PERMANENT `EXCLUSION_ALLOWLIST` entry — the top-layer host + `show()` remain app chrome). The
+ * agent-emitted toast renders INLINE where the payload places it (never region-hosted); it self-removes
+ * from the DOM on close/expiry — the honest transient contract, documented in toast.md.
+ *
+ * Bespoke, the Radio/Segment non-identity-`label` shape: `label` → textContent, which MUST land BEFORE
+ * insertion (the control adopts light-DOM children into its message part ONCE, at connect — a later
+ * textContent write would clobber the built parts), so `label` is deliberately NON-bindable in the row;
+ * `urgent`/`duration` are 1:1 reflecting accessor props (`setProp`). The `action` prop is a curated
+ * OMISSION: its `select` event has no serializable value slot (an actionable affordance is a Button with
+ * a real "action"). No `value` mark, no children key.
+ */
+export const toastFactory: WidgetFactory = {
+  tag: 'ui-toast',
+  create: () => document.createElement('ui-toast'),
+  applyProp: (el, prop, value) => {
+    if (prop === 'label') el.textContent = value == null ? '' : String(value)
+    else setProp(el, prop, value)
+  },
+}
 
 // TextField (G6) — the deferred value bind goes live through the same LLD-C8 controller (ADR-0019 cl.3):
 // `value` commits on the control's `change` event (blur / Enter), zero text-field code change. The
@@ -834,7 +857,7 @@ export const timelineItemFactory: WidgetFactory = accessorFactory('ui-timeline-i
 // fallback coerces either form). `ChildList` children — `ui-swiper-item` slides in DOM order PLUS zero or
 // more author-placed chrome anchors (an agent can never actually emit a chrome anchor node, since none of
 // the three carries a catalog row — an attempted `SwiperPagination`/`SwiperPaddles`/`SwiperLabel` child
-// fails `CATALOG` at that child's own node, the same enforcement `Toast`'s allowlisting relies on).
+// fails `CATALOG` at that child's own node, the same enforcement `ToastRegion`'s allowlisting relies on).
 export const swiperFactory: WidgetFactory = {
   tag: 'ui-swiper',
   create: () => document.createElement('ui-swiper'),
@@ -942,6 +965,7 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   TabPanel: tabPanelFactory,
   Modal: modalFactory,
   Drawer: drawerFactory,
+  Toast: toastFactory,
   Icon: iconFactory,
   Menu: menuFactory,
   MenuItem: menuItemFactory,

@@ -153,12 +153,13 @@ function fleetPrimaryTypes(): string[] {
  *  this M2 wave lands the row below and DRAINS that seed too, the same way the token-surface/report/
  *  content/feed seeds above were drained. */
 //
-// `Toast`/`ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel`/`CommandModal` are
+// `ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel`/`CommandModal` are
 // the only PERMANENT entries — NOT catalogue-bound AT ALL (app-surface/theming/live-streaming/chrome-anchor
-// content) — never drained.
+// content) — never drained. `Toast` was one of them (ADR-0112 cl.6) until GH #1184 (Kim ruling 2026-08-17)
+// reversed its half: ephemeral outcome announcements ARE agent-emittable, so Toast now has a catalog row
+// (see toastFactory) — its entry is DRAINED; ToastRegion (the top-layer host + show()) stays app chrome.
 const EXCLUSION_ALLOWLIST = new Map<string, string>([
-  ['Toast', 'ADR-0112 cl.6 — PERMANENT exclusion, never catalogue-bound: app-surface chrome driven by show(), not agent-emittable (rejected explicitly: history-must-not-lie · payload↔DOM traceability · teaching a forbidden type).'],
-  ['ToastRegion', 'ADR-0112 cl.6 — PERMANENT exclusion, same reasoning as Toast: app-surface chrome, never a catalog row.'],
+  ['ToastRegion', 'ADR-0112 cl.6 — PERMANENT exclusion, never catalogue-bound: the top-layer toast HOST driven by show() is app-surface chrome (GH #1184 catalogued Toast itself, but the region + its imperative API stay page/app-frame primitives, never a catalog row).'],
   ['ThemeProvider',
     'ADR-0117 / theme-provider.spec.md SPEC-R8 — PERMANENT exclusion, never catalogue-bound: ' +
     'page/app-owner theming chrome establishing a color-scheme subtree, not agent-emittable content ' +
@@ -224,9 +225,9 @@ function typesMissingCatalog(
 
 /** The allowlist keys that ALSO appear in `catalogKeys` — a drained-but-not-removed seed (chart-family.lld.md
  *  §4 M1-b footprint). Same predicate-extraction shape as `typesMissingCatalog` (the M1-d review follow-up:
- *  the standing residue-guard test below iterates the REAL `EXCLUSION_ALLOWLIST`, which as of the feed-family
- *  wave permanently holds Toast/ToastRegion (ADR-0112 cl.6) — the standing gate passes NON-vacuously, since
- *  neither is ever catalogued. Extracted here so a synthetic, non-empty allowlist can ALSO drive it directly
+ *  the standing residue-guard test below iterates the REAL `EXCLUSION_ALLOWLIST`, which permanently holds
+ *  ToastRegion among others (ADR-0112 cl.6; Toast's own entry drained by GH #1184) — the standing gate
+ *  passes NON-vacuously. Extracted here so a synthetic, non-empty allowlist can ALSO drive it directly
  *  with a real bite, independent of whatever the real map happens to hold at any given time). */
 function allowlistResidue(catalogKeys: ReadonlySet<string>, allowlist: ReadonlyMap<string, string>): string[] {
   return [...allowlist.keys()].filter((type) => catalogKeys.has(type))
@@ -261,7 +262,7 @@ describe('default catalog — the fleet-derived coverage gate (SPEC-N2, ADR-0087
   })
 
   it('NEGATIVE: the residue-guard assertion form actually BITES (synthetic control — M1-d review follow-up)', () => {
-    // The real `EXCLUSION_ALLOWLIST` now permanently holds Toast/ToastRegion (ADR-0112 cl.6), so the
+    // The real `EXCLUSION_ALLOWLIST` permanently holds ToastRegion among others (ADR-0112 cl.6), so the
     // standing gate above already exercises the predicate non-vacuously. This test drives the SAME
     // predicate with a SYNTHETIC allowlist that deliberately collides with a real catalog key — independent
     // proof the check catches residue when residue actually exists, not dependent on the real map's shape.
