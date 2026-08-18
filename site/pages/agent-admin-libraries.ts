@@ -163,7 +163,7 @@ export const CORE_PLAYBOOKS: readonly NewEntryInput[] = [
 export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
   {
     label: 'booking-flow',
-    description: 'Hotel domain — a realistic room booking end to end: stay dates, guests, room and rate, extras, confirm, courtesy close.',
+    description: 'Hotel domain — a realistic room booking end to end: stay dates, guests, room and rate, extras (Back at every step), confirm, settled receipt, courtesy close.',
     content:
       'A room booking runs on ONE surface transitioned scene to scene — create it once, then advance ' +
       'each step via updateComponents/updateDataModel on that SAME surface (never a fresh surface per ' +
@@ -176,8 +176,14 @@ export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
       'commit Button a sibling AFTER the Column; (5) confirm before concluding — a summary reading back ' +
       'every submitted value humanized ("12–15 Jun · 3 nights", "2 guests", "Sea-view double · ' +
       '€240/night", chosen extras as text — never a raw true/false, and an unchosen extra simply does ' +
-      'not appear), gated by ONE commit Button. Only AFTER the user confirms: the courtesy-close turn — ' +
-      'a note with "flowEnd": true and a reference code, no new UI. Never collect payment details.',
+      'not appear), gated by ONE commit Button. Every scene after the first also carries a Back Button — ' +
+      'an ordinary action beside Next/commit; Back and Next are scene transitions on the ONE still-open ' +
+      'ask (never a new ask per step), and every draft answer lives under a shared "/draft/*" data-model ' +
+      'prefix so nothing typed is lost when Back returns to an earlier scene. Only AFTER the user ' +
+      'confirms: the closing turn SETTLES the receipt — exactly one updateComponents on that SAME confirm ' +
+      'surface stripping its Back/Confirm buttons and adding a settled-status Badge ("Booked · #AB123") — ' +
+      'then the courtesy-close note with "flowEnd": true, same turn, no other UI. Never collect payment ' +
+      'details.',
   },
   {
     label: 'table-reservation',
