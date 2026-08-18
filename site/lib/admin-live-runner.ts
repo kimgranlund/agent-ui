@@ -302,6 +302,12 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
           // SAME `personaPatch` peel precedent above: no integrity check, no gate read here — this
           // runner peels, the component decides (fence + gate) whether it is ever consumed.
           if (meta.a2uiMeta.team) yield { kind: 'team', team: meta.a2uiMeta.team }
+          // GH #1259 (ADR-0206 cl.4) — a declared mutation target peels into its own typed event, the
+          // SAME peel-here-consume-there division as `ask`/`patch`/`plan`/`team`: no integrity check, no
+          // registry knowledge here — this runner peels, the component forwards to the conversation
+          // handle's `target()` seam, and the CONVERSATION's registry-membership check is the only guard
+          // (an unknown/closed id silently never matches — the degrade-gracefully law).
+          if (meta.a2uiMeta.target) yield { kind: 'target', target: meta.a2uiMeta.target }
           continue // the meta-line is never ingested (ADR-0088 §1)
         }
         // genui-surface.spec.md SPEC-R1 — a genui line is neither an A2uiServerMessage nor a meta-line

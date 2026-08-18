@@ -3657,6 +3657,16 @@ export class UIAgentAdminElement extends UIElement {
             const fenced = drivingStore !== undefined && drivingStore === this.authoringStore
             const gateOn = isAuthoringSurfaceEnabled(drivingStore?.get(SURFACE_AUTHORING_KEY))
             if (fenced && gateOn) this.#teamDeclaredRequest?.(event.team)
+          } else if (event.kind === 'target') {
+            // GH #1259 (ADR-0206 cl.4) — the model-declared mutation target: forwarded straight to the
+            // conversation handle's `target()` seam. The meta-line is the one line ahead of the
+            // validate-then-stream content burst, so this lands at effective turn start — the named
+            // OPEN card breathes for the whole "Writing the response…" wait, the truthful replacement
+            // for the retired #1134 sole-open-surface guess. No fence/gate check (pure presentation,
+            // like `plan`), no registry check HERE — the conversation's own registry-membership guard
+            // silently drops an unknown/closed id (never an error surface). Gated on `a2uiOn` for the
+            // same reason `ask` is: a client that refuses to render A2UI has no card to breathe.
+            if (a2uiOn) handle.target(event.target.surfaceId)
           } else if (event.kind === 'plan') {
             // ADR-0182 cl.4/cl.5 — the ALREADY-SHIPPED `plan` arm, reused verbatim; consumption here is
             // pure rendering (no store write, unlike the `patch` arm above), so no fence/gate check is

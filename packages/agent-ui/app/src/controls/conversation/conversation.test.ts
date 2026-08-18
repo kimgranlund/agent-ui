@@ -1770,37 +1770,110 @@ describe('ui-conversation — ADR-0199: working set/cleared by the turn handle',
     expect(host.working).toBe(false)
   })
 
-  // ── GH #1134 — typed-intent heuristic: a turn with NEITHER intoSurface NOR disabledSurfaceId
-  // (the user typed into the composer) breathes the SOLE open surface from turn start; zero or
-  // 2+ open surfaces → no heuristic (the ruled boundary — wrong-guess risk in multi-surface
-  // chats explicitly out of scope). Cleared by the same guarded endTurn (finalize AND fail).
+  // ── GH #1259 / ADR-0206 cl.4 — the `target` meta-line arm replaces the GH #1134 sole-open-surface
+  // heuristic: a typed turn breathes a card ONLY when the model STATES the target (handle.target()
+  // with a surfaceId naming an open registry entry — the intoSurface code shape: breathe +
+  // un-supersede + touchedIds); absent arm ⇒ NO early breathe (the pre-#1134 late-but-never-wrong
+  // line-burst timing). Unknown/closed ids are silently dropped.
 
-  it('GH #1134: a typed turn with exactly ONE open surface breathes it from beginAgentTurn — zero lines ingested', () => {
+  it('ADR-0206: handle.target() naming an open surface breathes it — zero lines ingested (effective turn start)', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     const t1 = el.beginAgentTurn()
-    t1.ingestLine(CREATE_S('solo'))
+    t1.ingestLine(CREATE_S('weather'))
     t1.finalize()
     const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
     expect(host.working, 'settled between turns').toBe(false)
     const t2 = el.beginAgentTurn() // typed intent — no intoSurface, no disabledSurfaceId
-    expect(host.working, 'the sole open surface breathes the moment the typed turn begins').toBe(true)
+    expect(host.working, 'no breathe before the meta-line arrives').toBe(false)
+    t2.target('weather') // the leading meta-line's declared target lands — before any content line
+    expect(host.working, 'the STATED target breathes the moment the meta-line lands').toBe(true)
     t2.finalize()
     expect(host.working, 'cleared at finalize').toBe(false)
   })
 
-  it('GH #1134: the optimistic set rides touchedIds — a typed turn routing NO line still clears at fail()', () => {
+  it('ADR-0206: the target set rides touchedIds — a turn routing NO line still clears at fail()', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     const t1 = el.beginAgentTurn()
-    t1.ingestLine(CREATE_S('solo2'))
+    t1.ingestLine(CREATE_S('weather2'))
     t1.finalize()
     const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
     const t2 = el.beginAgentTurn()
+    t2.target('weather2')
     expect(host.working).toBe(true)
     t2.fail('transport died mid-wait')
-    expect(host.working, 'a dead typed turn never leaves the card breathing').toBe(false)
+    expect(host.working, 'a dead turn never leaves the card breathing').toBe(false)
   })
 
-  it('GH #1134 negative control: TWO open surfaces — the heuristic does not fire; both stay settled until the line burst', () => {
+  it('ADR-0206: target un-supersedes the named host at effective turn start (the GH #1164 intoSurface shape)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('old'))
+    t1.finalize()
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    host.superseded = true // as a later surface would have left it
+    const t2 = el.beginAgentTurn()
+    t2.target('old')
+    expect(host.superseded, 'a turn about to mutate it is a later turn targeting it again').toBe(false)
+    t2.finalize()
+  })
+
+  it('GH #1259 pin (the #1134 wrong-guess repro): an unrelated typed turn — NO target arm — must NOT breathe the quiet sole card', () => {
+    // Kim's live repro: exactly ONE card open (the ordinary one-card chat), the user types something
+    // entirely unrelated ("got any room pics?" beside a weather card). The retired heuristic breathed
+    // that card for the WHOLE turn; with the arm absent there is NO early breathe at all.
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('weather-sole'))
+    t1.finalize()
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    expect(host.working).toBe(false)
+    const t2 = el.beginAgentTurn() // typed, unrelated — the model states no target
+    expect(host.working, 'the quiet sole card stays inert — the heuristic is retired').toBe(false)
+    t2.finalize() // a text-only reply: the card never breathed at any point of the turn
+    expect(host.working).toBe(false)
+  })
+
+  it('ADR-0206: a target naming an UNKNOWN surfaceId is silently ignored — the turn degrades to line-burst timing', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('real'))
+    t1.finalize()
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    const t2 = el.beginAgentTurn()
+    t2.target('never-created') // stale/wrong id — never matches an open entry, no throw, no console error
+    expect(host.working, 'the wrong id breathes nothing').toBe(false)
+    t2.ingestLine(UPDATE_S('real', 'the burst still names the true target'))
+    expect(host.working, 'line-burst breathing unchanged').toBe(true)
+    t2.finalize()
+    expect(host.working).toBe(false)
+  })
+
+  it('ADR-0206: a target naming a CLOSED surface is ignored — a torn-down card must not breathe', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('gone-t'))
+    t1.ingestLine(line({ version: 'v1.0', deleteSurface: { surfaceId: 'gone-t' } }))
+    t1.finalize()
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    const t2 = el.beginAgentTurn()
+    t2.target('gone-t')
+    expect(host.working).toBe(false)
+    t2.finalize()
+  })
+
+  it('ADR-0206: an ask-answer turn (disabledSurfaceId set) ignores a volunteered target — GH #802 exclusion checked first', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('ask-t'))
+    t1.finalize()
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    const t2 = el.beginAgentTurn({ disabledSurfaceId: 'ask-t' })
+    t2.target('ask-t') // the model should not emit it here (grammar cl.3), but if it does: moot
+    expect(host.working, 'the answered card is not being mutated').toBe(false)
+    t2.finalize()
+  })
+
+  it('ADR-0206: target in a MULTI-surface chat breathes exactly the named host — the case the heuristic could never cover', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     const t1 = el.beginAgentTurn()
     t1.ingestLine(CREATE_S('a'))
@@ -1808,17 +1881,15 @@ describe('ui-conversation — ADR-0199: working set/cleared by the turn handle',
     t1.finalize()
     const hosts = Array.from(log(el).querySelectorAll('ui-surface-host')) as UISurfaceHostElement[]
     expect(hosts.length).toBe(2)
-    const t2 = el.beginAgentTurn() // typed intent, ambiguous target — the ruled boundary
-    expect(hosts[0]!.working, 'no optimistic guess in a multi-surface chat').toBe(false)
-    expect(hosts[1]!.working, 'no optimistic guess in a multi-surface chat').toBe(false)
-    t2.ingestLine(UPDATE_S('b', 'the burst names the target'))
-    expect(hosts[0]!.working, 'untargeted card stays settled').toBe(false)
-    expect(hosts[1]!.working, 'line-burst breathing unchanged').toBe(true)
+    const t2 = el.beginAgentTurn()
+    t2.target('b')
+    expect(hosts[0]!.working, 'the un-named card stays settled').toBe(false)
+    expect(hosts[1]!.working, 'the NAMED card breathes regardless of how many are open').toBe(true)
     t2.finalize()
     expect(hosts[1]!.working).toBe(false)
   })
 
-  it('GH #1134 negative control: ZERO open surfaces — a typed turn sets nothing; a fresh mount still breathes from its first line', () => {
+  it('ADR-0206 negative control: ZERO open surfaces + no target — a typed turn sets nothing; a fresh mount still breathes from its first line', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     const t = el.beginAgentTurn() // no surface exists yet
     t.ingestLine(CREATE_S('first'))
@@ -1826,6 +1897,18 @@ describe('ui-conversation — ADR-0199: working set/cleared by the turn handle',
     expect(host.working, 'fresh-mount breathing unchanged').toBe(true)
     t.finalize()
     expect(host.working).toBe(false)
+  })
+
+  it('ADR-0206: target after the turn ended is inert (a stray late call must not resurrect the breathe)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(CREATE_S('late'))
+    t1.finalize()
+    const host = log(el).querySelector('ui-surface-host') as UISurfaceHostElement
+    const t2 = el.beginAgentTurn()
+    t2.finalize()
+    t2.target('late')
+    expect(host.working, 'a dead handle sets nothing').toBe(false)
   })
 
   it('S5: an intoSurface naming no open record is inert (fresh-bubble routing untouched)', () => {

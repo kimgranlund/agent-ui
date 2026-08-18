@@ -625,3 +625,81 @@ describe('readMetaLine — the team field (GH #1196 / ADR-0203 clause 4)', () =>
     expect(readMetaLine('{"version":"v1.0","a2uiMeta":{"team":{"label":"X","members":[]}}}')).toBeUndefined()
   })
 })
+
+// ── GH #1259 / ADR-0206 clause 2: the additive `target` field ───────────────────────────────────────
+// The SIXTH MODEL-authored arm (ask → plan → personaPatch → flowEnd → team → target). Validates as a
+// WHOLE the same way `team`/`plan`/`personaPatch` do: a non-object arm, or a missing/non-string/EMPTY
+// `surfaceId`, drops the entire arm — a malformed routing fact is worse than no routing fact (a
+// wrong-but-present target would breathe the WRONG card with full apparent authority).
+describe('readMetaLine — the target field (GH #1259 / ADR-0206 clause 2)', () => {
+  it('round-trips {note, target:{surfaceId}} on the leading meta-line', () => {
+    const line = JSON.stringify({
+      a2uiMeta: {
+        note: 'Updating your weather card with tomorrow.',
+        target: { surfaceId: 'weather-1' },
+      },
+    })
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.note).toBe('Updating your weather card with tomorrow.')
+    expect(parsed!.a2uiMeta.target).toEqual({ surfaceId: 'weather-1' })
+  })
+
+  it('a malformed target (non-object) drops ONLY itself — note/ask/plan/personaPatch/team still parse', () => {
+    const line = JSON.stringify({
+      a2uiMeta: {
+        note: 'hi',
+        ask: { surfaceId: 'ask-1' },
+        plan: { steps: [{ id: 's', description: 'd' }] },
+        personaPatch: { values: { name: 'X' } },
+        team: { label: 'X', members: [] },
+        target: 'weather-1',
+      },
+    })
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.note).toBe('hi')
+    expect(parsed!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
+    expect(parsed!.a2uiMeta.plan).toEqual({ steps: [{ id: 's', description: 'd' }] })
+    expect(parsed!.a2uiMeta.personaPatch).toEqual({ values: { name: 'X' } })
+    expect(parsed!.a2uiMeta.team).toEqual({ label: 'X', members: [] })
+    expect(parsed!.a2uiMeta.target).toBeUndefined()
+  })
+
+  it('an array target is rejected the same way (never a Record cast on an array)', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi","target":["weather-1"]}}')!.a2uiMeta.target).toBeUndefined()
+  })
+
+  it('a target missing surfaceId drops the whole arm', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi","target":{}}}')!.a2uiMeta.target).toBeUndefined()
+  })
+
+  it('a target with a non-string surfaceId drops the whole arm', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi","target":{"surfaceId":42}}}')!.a2uiMeta.target).toBeUndefined()
+  })
+
+  it('a target with an EMPTY surfaceId drops the whole arm — never a garbage id passed through hopefully', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi","target":{"surfaceId":""}}}')!.a2uiMeta.target).toBeUndefined()
+  })
+
+  it('a null target drops the whole arm', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi","target":null}}')!.a2uiMeta.target).toBeUndefined()
+  })
+
+  it('a note-only line (no target at all) still parses with target undefined — zero blast radius', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi"}}')!.a2uiMeta.target).toBeUndefined()
+  })
+
+  it('a well-formed target survives beside a MALFORMED team on the same line (per-field independence)', () => {
+    const line = '{"a2uiMeta":{"note":"hi","team":"broken","target":{"surfaceId":"weather-1"}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.team).toBeUndefined()
+    expect(parsed!.a2uiMeta.target).toEqual({ surfaceId: 'weather-1' })
+  })
+
+  it('extra unknown keys inside the target arm are dropped — only surfaceId survives', () => {
+    expect(readMetaLine('{"a2uiMeta":{"target":{"surfaceId":"w1","reason":"future"}}}')!.a2uiMeta.target).toEqual({ surfaceId: 'w1' })
+  })
+
+  it('the envelope stays disjoint from A2uiServerMessage — a `version` key still refuses the whole line (target form)', () => {
+    expect(readMetaLine('{"version":"v1.0","a2uiMeta":{"target":{"surfaceId":"w1"}}}')).toBeUndefined()
+  })
+})

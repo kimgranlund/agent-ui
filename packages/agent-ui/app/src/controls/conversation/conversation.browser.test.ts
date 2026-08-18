@@ -1225,6 +1225,72 @@ describe('ui-conversation — a resumed turn breathes from turn start, before an
   })
 })
 
+// ── GH #1259 / ADR-0206 cl.4 — the `target` meta-line arm, real engine: a typed turn breathes the
+// MODEL-NAMED card from the moment the leading meta-line lands (the one line ahead of the validate-
+// then-stream burst), selector-visible with the breathe animation genuinely running; and the #1259
+// wrong-guess repro stays fixed — an unrelated typed turn (no arm) never breathes the quiet sole card.
+describe('ui-conversation — the target arm breathes the named host at turn start (GH #1259 / ADR-0206)', () => {
+  it('handle.target() on a known open surface animates the overlay mid-wait; unknown ids are inert', async () => {
+    const el = mountConversation()
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'weather-1', catalogId: 'agent-ui' } }))
+    t1.ingestLine(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 'weather-1', components: [{ id: 'root', component: 'Text', text: 'sunny, 21°' }] },
+      }),
+    )
+    t1.finalize()
+    await whenFlushed()
+    const host = logOf(el).querySelector('ui-surface-host') as HTMLElement
+    expect(host.matches(':state(working)'), 'settled between turns').toBe(false)
+
+    const t2 = el.beginAgentTurn() // typed intent — no caller-supplied hint
+    t2.target('nope-never-created') // a stale/wrong id breathes NOTHING (silently dropped)
+    await whenFlushed()
+    expect(host.matches(':state(working)'), 'an unknown target id is inert').toBe(false)
+    t2.target('weather-1') // the leading meta-line's declared target lands — zero content lines yet
+    await whenFlushed()
+    expect(host.matches(':state(working)'), 'the custom state is live from the meta-line').toBe(true)
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    const overlay = () => getComputedStyle(surface, '::before')
+    expect(overlay().animationName, 'the breathe loop runs during the wait').toBe('ui-surface-host-breathe')
+
+    t2.finalize()
+    await whenFlushed()
+    expect(host.matches(':state(working)'), 'cleared at finalize').toBe(false)
+    expect(overlay().animationName).toBe('none')
+  })
+
+  it('GH #1259 pin: an unrelated typed turn (no target arm) never breathes the quiet sole card — the #1134 heuristic is retired', async () => {
+    const el = mountConversation()
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'weather-sole', catalogId: 'agent-ui' } }))
+    t1.ingestLine(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 'weather-sole', components: [{ id: 'root', component: 'Text', text: 'sunny, 21°' }] },
+      }),
+    )
+    t1.finalize()
+    await whenFlushed()
+    const host = logOf(el).querySelector('ui-surface-host') as HTMLElement
+    expect(host.matches(':state(working)')).toBe(false)
+
+    // The repro: exactly ONE card open, the user types something entirely unrelated. The reply is
+    // text-only — the model states no target — so the card must stay inert for the WHOLE turn.
+    const t2 = el.beginAgentTurn()
+    await whenFlushed()
+    expect(host.matches(':state(working)'), 'no early breathe without a stated target').toBe(false)
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    expect(getComputedStyle(surface, '::before').animationName, 'no breathe animation on the untouched card').toBe('none')
+    t2.setNote('Here are the room pictures you asked about.')
+    t2.finalize()
+    await whenFlushed()
+    expect(host.matches(':state(working)'), 'still inert after the text-only turn settles').toBe(false)
+  })
+})
+
 // ── GH #1164 — SUPERSEDED surfaces, real-engine leg: when a turn shifts interaction to a NEWER surface,
 // the older card's action buttons go genuinely inert (real `disabled` — pointer AND keyboard, a real
 // click dispatches no client message) and the custom state is selector-visible; a LATER turn updating
