@@ -45,6 +45,21 @@
 // widens additively to `true | {...}`. A model that omits it degrades safely to today's behavior —
 // chrome only ever acts on the explicit field, never a heuristic (ADR-0198 Non-goals).
 //
+// GH #1196 (ADR-0203 clause 4, realizing IDR-0001) adds a FIFTH additive MODEL-authored field,
+// `team`: the Builder interview's team-shaped generation path declares a proposed roster — a label
+// plus N member seeds (`name`/`role`/`routingDescription`) — on the SAME leading meta-line as
+// `note`/`personaPatch`, following the `plan`-arm precedent EXACTLY for its array-of-typed-members
+// shape: the arm validates as a WHOLE (any malformed member drops the entire `team` arm, never a
+// partial roster — the same law `personaPatch`/`plan` already apply, chosen for the identical
+// reason: a half-parsed roster is the one shape a host mint loop must never be handed). Deliberately
+// NOT routed through `personaPatch`'s `values`/`entries` members: those propose deltas onto ONE
+// already-existing store, whereas `team` names N-to-be-MINTED personas plus a team record — a
+// structurally different kind of proposal, so it rides its own field rather than overloading an
+// existing one. This package stays consumer-agnostic exactly as it does for `personaPatch`: what a
+// `team` declaration is CONSUMED into (minting personas, building an `AgentTeam` record, persisting
+// it) is entirely the host's call (`packages/agent-ui/app`'s agent-admin control + the site's mint
+// path) — this file carries the wire representation ONLY.
+//
 // Zero-dep, pure (SPEC-N5): no imports.
 
 /**
@@ -118,6 +133,37 @@ export interface PersonaPatch {
 }
 
 /**
+ * One proposed team-member seed (GH #1196 / ADR-0203 clause 4): a short display `name`, a short job
+ * title (`role`, CrewAI grammar), and the when-to-use sentence (`routingDescription`, Anthropic
+ * subagents grammar) — the SAME two-field shape `AgentTeamMember` (`agent-team.ts`, PR #1231) already
+ * persists, so a minted member and its declaration agree byte-for-byte on field names. Deliberately
+ * NOT a full persona seed: richly authoring a member's own prompt/skills/etc. is the EXISTING
+ * single-agent Builder flow's job, reachable after the team is minted — this declaration only carries
+ * what R4's acceptance actually requires (a non-empty `routingDescription` per member).
+ */
+export interface TeamMemberSeed {
+  name: string
+  role: string
+  routingDescription: string
+}
+
+/**
+ * A team declaration (GH #1196 / ADR-0203 clause 4): the Builder's team-shaped generation path names
+ * a proposed roster — following the `ask`/`plan`/`personaPatch`-arm precedent EXACTLY (MODEL-authored,
+ * shallow-validated the same per-field-independent way, this file's own file-header explains why it is
+ * a SEPARATE field rather than a `personaPatch` member). `label`/`tagline` seed the `AgentTeam` record's
+ * own fields 1:1; `members` seeds `AgentTeamMember[]` 1:1 (`agentId` is filled in by the host at mint
+ * time — the wire never carries an id that does not exist yet). Wire representation ONLY: which
+ * persona is the GM, how members are minted, and whether/how the resulting `AgentTeam` is validated
+ * and saved are entirely the host's call (ADR-0203 clause 1's validation-closed law, enforced host-side).
+ */
+export interface TeamDeclaration {
+  label: string
+  tagline?: string
+  members: TeamMemberSeed[]
+}
+
+/**
  * The closed live-turn lifecycle stage vocabulary (ADR-0146 F1) — produce-layer-owned, provider-agnostic.
  * Each adapter maps its OWN upstream events onto these (F4); `produce()` composes them with its own loop
  * stages. A CLOSED union: an out-of-vocabulary stage is dropped at the guard (`readMetaLine`), never
@@ -184,6 +230,13 @@ export interface A2uiMetaEnvelope {
      *  leading meta-line. MODEL-authored, shallow-validated the same per-field-independent way — a
      *  malformed `flowEnd` (anything but literal `true`) drops only itself, never the whole envelope. */
     flowEnd?: true
+    /** GH #1196 / ADR-0203 clause 4: the Builder's team-shaped generation path's own declared roster,
+     *  additive alongside `note`/`ask`/`plan`/`personaPatch`/`flowEnd` on the SAME leading meta-line.
+     *  MODEL-authored, shallow-validated the same per-field-independent way, validating as a WHOLE the
+     *  same way `plan`/`personaPatch` do — a malformed `team` (or any malformed member) drops the
+     *  entire arm, never a partial roster. Whether a declared team is ever CONSUMED (minted, validated,
+     *  saved) is entirely the host's call — the wire layer is gate-blind, exactly like `personaPatch`. */
+    team?: TeamDeclaration
     trace?: TurnTrace
     /** ADR-0146 F1: a runtime-composed live-turn lifecycle event, INTERLEAVED during the turn (not just a
      *  single leading line). Shallow-validated the same way `ask` is — a malformed `progress` drops only
@@ -290,6 +343,38 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
   // turn — the safe-degrade law.
   const flowEnd: true | undefined = m.flowEnd === true ? true : undefined
 
+  // GH #1196 / ADR-0203 clause 4: `team` is shallow-validated the SAME per-field-independent way as
+  // `ask`/`plan`/`personaPatch` — a malformed `team` drops ONLY `team`, never the whole envelope. The
+  // arm validates as a WHOLE, the SAME `plan`/`personaPatch` law: a non-object arm, a missing/non-
+  // string `label`, a present-but-non-string `tagline`, a missing/non-array `members`, or any member
+  // missing a string `name`/`role`/`routingDescription` drops the ENTIRE arm — a half-parsed roster is
+  // the one shape a host mint loop must never be handed.
+  let team: TeamDeclaration | undefined
+  if (m.team !== undefined && isPlainObject(m.team)) {
+    const t = m.team
+    const label = t.label
+    const tagline = t.tagline
+    const members = t.members
+    const labelOk = typeof label === 'string'
+    const taglineOk = tagline === undefined || typeof tagline === 'string'
+    const membersOk =
+      Array.isArray(members) &&
+      members.every(
+        (member) =>
+          isPlainObject(member) &&
+          typeof member.name === 'string' &&
+          typeof member.role === 'string' &&
+          typeof member.routingDescription === 'string',
+      )
+    if (labelOk && taglineOk && membersOk) {
+      team = {
+        label: label as string,
+        ...(tagline !== undefined ? { tagline: tagline as string } : {}),
+        members: members as TeamMemberSeed[],
+      }
+    }
+  }
+
   // ADR-0146 F1: `progress` is shallow-validated the SAME way — a malformed `progress` (non-object, or a
   // `stage` outside the closed vocabulary, or a non-number `round` / non-string `detail`/`source`) drops
   // only itself, never the whole envelope. The closed `stage` union is the honesty-law guard (F2): an
@@ -318,6 +403,7 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
       plan,
       personaPatch,
       flowEnd,
+      team,
       trace: m.trace as TurnTrace | undefined,
       progress,
       error,
