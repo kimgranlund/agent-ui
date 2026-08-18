@@ -12,10 +12,11 @@
 
 ## Intent
 
-The platform's unit of product is growing from **one agent** to **a team**: an orchestrating GM
-agent plus a declared roster, and the one-shot creation of an entire team from a single builder
-conversation. The research lane found no shipped product doing the one-shot-N-agents flow — this
-is a stated differentiator, not catch-up.
+The platform's unit of product is growing from **one agent** to **a team**, and teams enter the
+platform **declaration-first**: declared records on existing seams before any runtime engine.
+The feature-grade shape of that claim — including the one-shot builder flow and its
+differentiator evidence — is the owning PRD's business
+([agent-admin-app PRD](../prd/agent-admin-app.prd.md) §3.4), not this record's.
 
 ## Decision
 

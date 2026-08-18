@@ -53,7 +53,7 @@ open goals state checkable acceptance. **A goal states WHAT/WHY — the cited re
 | **PRD-G3** | must | A user grants an agent capabilities (instructions, skills, workflows, resources, tools/integrations) declaratively | shipped |
 | **PRD-G4** | must | A user declares a **team** — GM + roster — and one-shots it from the builder | building (the open arc) |
 | **PRD-G5** | must | A user makes an agent knowledgeable from their own documents, browser-only | building (the open arc) |
-| **PRD-G6** | must | Conversations with built agents are generative-UI experiences governed by conduct law | shipped, law still accreting |
+| **PRD-G6** | must | Conversations with built agents are generative-UI experiences governed by conduct law | shipped; **never "done" by design** — governed by accreting conduct law, and that IS the criterion: every violation observed on live pixels is filed as a product bug against the owning grammar record (§3.6) |
 | **PRD-G7** | should | A user controls the agent's output modality (Markdown · A2UI · GenUI) and app settings from first-class places | shipped |
 
 ## 3. Features (the WHAT, with the owning records)
@@ -189,10 +189,20 @@ per §3.4/§3.5); component-tier contracts (the component ADR/SPEC family).
 - **Knowledge (PRD-G5):** a user attaches md/txt/docx/pdf through the composer; extraction is
   provably client-side (no network egress of file bytes); the text lands as a `resource` entry,
   survives reload via the IndexedDB tier, composes into the live prompt under visible budgets
-  with visible truncation. (Realizing records: ADR-0202, ADR-0193, ADR-0132, req-doc-ingestion
+  with visible truncation. *Assert instrument for the no-egress claim:* the devtools harness's
+  `DevtoolsCapture` network timeline ([ADR-0200](../adr/0200-agent-ui-devtools-package.md)) — an
+  ingestion run's capture shows zero requests carrying file bytes; only prompt text on the
+  ADR-0073 dev-proxy body. (Realizing records: ADR-0202, ADR-0193, ADR-0132, req-doc-ingestion
   R1–R7.)
 
 ## 6. Open items
 
 1. Kim's supersession flips on IDR-0001…0004 and ratification of IDR-0005…0008 + this PRD.
 2. Child-PRD promotions as features outgrow sections (§ growth path) — none proposed now.
+3. **Cross-tier supersession fork** (doc-checker, 2026-08-18): IDR-0004's superseded-by target is
+   a PRD section, undefined in `doc-standards` §1d — arms (a) "none — relocated" vs (b) one §1d
+   sentence legitimizing relocation-supersession; the fork is teed up in IDR-0004's amendment
+   note. Kim picks.
+4. **Identity canonical-citation fork** (doc-checker, 2026-08-18): the identity sentence lives in
+   both product-brief §1 and IDR-0005 — recommended IDR-0005 canonical, brief cites it; the ask
+   is folded into IDR-0005's ratification question. Kim picks.

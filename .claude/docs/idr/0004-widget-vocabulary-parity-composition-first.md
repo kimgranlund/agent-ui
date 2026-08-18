@@ -58,3 +58,10 @@ PRD. No platform-level IDR restates this lane-scoped intent; its global echoes a
 law. This IDR is **proposed for supersession by the relocation** (superseded-by target:
 [a2ui-expert-system PRD](../prd/a2ui-expert-system.prd.md) §8) — the accepted body above is
 untouched (append-only), and the Status flip is Kim's alone.
+
+**Ratification fork for Kim (doc-checker finding, 2026-08-18):** this file's superseded-by target
+is a PRD section, and cross-tier relocation-supersession is undefined in `doc-standards` §1d.
+Two arms: **(a)** the successor field reads "none — intent relocated to PRD altitude" (no
+cross-tier target claimed), or **(b)** §1d gains one sentence legitimizing relocation-supersession
+(an IDR may be superseded by the PRD that received its relocated intent). Neither is executed
+until Kim picks; the flip and any §1d edit follow the pick.

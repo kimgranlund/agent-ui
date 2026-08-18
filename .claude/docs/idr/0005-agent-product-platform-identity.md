@@ -40,3 +40,9 @@ work that only grows the component catalog.
 Accept "agent-product platform, library as foundation tier" as the root platform intent, and this
 file as the identity's citable IDR home? (The sentence itself is already ratified in the brief;
 this flip makes it a first-class member of the restructured intent tier.)
+
+**And name the canonical citation target** (doc-checker finding, 2026-08-18): the identity
+sentence now lives in both [product-brief §1](../product-brief.md) and this file. Recommended:
+**this IDR is canonical** — future docs cite IDR-0005; the brief's §1 remains its narrative home
+and cites this record once ratified. Alternative: the brief stays canonical and this IDR is the
+pointer. Kim picks; citations follow the pick.
