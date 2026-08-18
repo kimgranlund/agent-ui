@@ -1182,6 +1182,17 @@
     flex-direction: column;
     gap: var(--ui-agent-admin-row-gap);
   }
+  /* GH #1293 — the form's Save/Cancel pair sits side-by-side in one actions row, inline-end aligned (the
+     entry-form-actions precedent); Add member keeps its intrinsic width instead of stretching to the column. */
+  [data-part='team-form-add-member'] {
+    align-self: flex-start;
+  }
+  [data-part='team-form-actions'] {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--ui-agent-admin-row-gap);
+  }
 
   /* forced-colors: active — every bordered surface above uses a real 1px border (not a shadow/tint),
      already legible under forced-colors; the explicit focus rings fall back to Highlight. ui-switch
