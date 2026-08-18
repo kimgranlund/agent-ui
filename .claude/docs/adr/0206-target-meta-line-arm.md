@@ -5,11 +5,11 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-18 |
 > | **Proposed by** | planner seat, from Kim's ruling on GH [#1259](https://github.com/kimgranlund/agent-ui/issues/1259)
 >   (2026-08-18) — option (c) of the issue's own four-way fork |
-> | **Ratified by** | — |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-18, via the [`ratify ADR-0206` utterance](https://github.com/kimgranlund/agent-ui/issues/1259#issuecomment-5330799325) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build (not authored here): `packages/agent-ui/a2ui/src/agent/prompts/`
 >   (one grammar clause teaching the arm — a turn that is about to mutate a known surface names its
 >   `surfaceId` on the leading meta-line; a turn creating a fresh surface, or emitting no A2UI at all,
