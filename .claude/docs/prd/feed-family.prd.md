@@ -145,7 +145,12 @@ the widened catalog.
   hash-color × scheme AA matrix).
 - **Attachment previews/thumbnails, upload affordances (progress-in-card, cancel), multi-file lists** —
   preview is a renderer per mime family (scope explosion); upload is an *input* posture (this type is
-  display); lists compose via `ui-list` (the ADR-0087 List guidance).
+  display); lists compose via `ui-list` (the ADR-0087 List guidance). **The upload-affordance half of
+  this fence is RESOLVED** — [ADR-0210](../adr/0210-filedrop-upload-affordance.md) opens it as a NEW
+  input-family type (`FileDrop`/`ui-file-drop`, the named foreseen extension this fence itself called
+  for, never a rider on `Attachment`): a host-mediated handle model, bytes never riding A2UI in either
+  direction. `Attachment` itself is untouched — display stays display, the fence's own reasoning stands.
+  Preview/thumbnail rendering and multi-file LIST composition remain open, un-resolved.
 - **Link-security design (URI scheme allowlists, `rel`/`target` policy, download semantics)** — owned
   by the content family's ADR-0114; this family only *names the dependency* (§ADR-0112 cl.4).
 - **Toast queueing/dedup/rate caps, action arrays, swipe gestures, a global static `show()` API,

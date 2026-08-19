@@ -176,4 +176,16 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // second fresh-context a2ui-review-agent (PASS, qualityScore 4, archived 2026-08-19t17-40-00z) and
   // admitted via import-seeds --verdicts — entry DRAINED per its own instruction (ADR-0068: never
   // self-judged).
+
+  // 2026-08-19 nine-ADR campaign, catalog-integration lane — six coverage-gap seeds, the same
+  // pending-state shape (NO VERDICT SOUGHT YET, not a refusal). Each closes the GH #729 type-coverage
+  // gate for the new type its own control-mint wave shipped ahead of its catalog row; the authoring
+  // session judging its own seed is the manufactured judgment ADR-0068's Alternatives ban. Run the
+  // judged pipeline (`import-seeds.ts --verdicts`) and DELETE each entry when that wave lands.
+  ['frontier-file-drop-attach', 'ADR-0210 / GH #1391 — the FileDrop coverage-gap seed; NO VERDICT SOUGHT YET.'],
+  ['frontier-suggestions-chips', 'ADR-0213 / GH #1393 — the Suggestions coverage-gap seed; NO VERDICT SOUGHT YET.'],
+  ['frontier-source-list-citations', 'ADR-0214 / GH #1394 — the SourceList coverage-gap seed; NO VERDICT SOUGHT YET.'],
+  ['frontier-rating-review', 'ADR-0216 / GH #1395 — the Rating coverage-gap seed; NO VERDICT SOUGHT YET.'],
+  ['frontier-pie-chart-budget', 'ADR-0219 / GH #1397 — the PieChart coverage-gap seed; NO VERDICT SOUGHT YET.'],
+  ['frontier-choice-group-rooms', 'ADR-0220 / GH #1368 — the ChoiceGroup/ChoiceCard coverage-gap seed; NO VERDICT SOUGHT YET.'],
 ])

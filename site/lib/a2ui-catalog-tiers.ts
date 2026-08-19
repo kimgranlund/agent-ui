@@ -68,15 +68,31 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   // Segment, NESTED_ONLY since GH #1332) because radio.css owns its own indicator chrome — a lone Radio
   // is standalone-legible.
   Checkbox: 'INPUT',
+  // ChoiceGroup/ChoiceCard (ADR-0220, GH #1368): a form-associated, value-committing selection container
+  // over rich option cards — the RadioGroup/Radio precedent exactly (ChoiceCard rides with its owning
+  // ChoiceGroup; it stays browsable, unlike Segment, because choice-card.css owns its own border/radius/
+  // padding/selected-frame chrome — a lone ChoiceCard is standalone-legible).
+  ChoiceGroup: 'INPUT',
+  ChoiceCard: 'INPUT',
   ColorPicker: 'INPUT',
   ComboBox: 'INPUT',
+  // FileDrop (ADR-0210, GH #1391): a form-associated file-input affordance under the host-mediated
+  // handle model — the TextField/Textarea value-committing precedent.
+  FileDrop: 'INPUT',
   MultiSelect: 'INPUT',
   Radio: 'INPUT',
   RadioGroup: 'INPUT',
+  // Rating (ADR-0216, GH #1395): a UIRangeElement-based value-committing input (the Slider precedent) —
+  // display use is the SAME row with readonly:true, not a separate tier.
+  Rating: 'INPUT',
   SegmentedControl: 'INPUT',
   Select: 'INPUT',
   Slider: 'INPUT',
   SliderMulti: 'INPUT',
+  // Suggestions (ADR-0213, GH #1393): not form-associated, but a real value-committing choice leaf
+  // (`value:{prop:'selected',event:'select'}`) — the choice-control INPUT class, not a Toggle-class
+  // (no-value-mark) WIDGET.
+  Suggestions: 'INPUT',
   Switch: 'INPUT',
   TextField: 'INPUT',
   Textarea: 'INPUT',
@@ -103,8 +119,10 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   Ladder: 'WIDGET',
   LineChart: 'WIDGET', // ADR-0205 (GH #1207) — the fleet's first axis-bearing chart, a display leaf riding with its Sparkline/BarChart chart-family kin
   Pagination: 'WIDGET',
+  PieChart: 'WIDGET', // ADR-0219 (GH #1397) — the part-of-whole mark, a display leaf riding with its Sparkline/BarChart/LineChart chart-family kin
   Progress: 'WIDGET',
   Ramp: 'WIDGET',
+  SourceList: 'WIDGET', // ADR-0214 (GH #1394) — source attribution, a hardened aggregate display leaf like DescriptionList/Stat/Badge
   Sparkline: 'WIDGET',
   Stat: 'WIDGET',
   Swatch: 'WIDGET',

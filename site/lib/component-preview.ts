@@ -319,6 +319,13 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   // actually emit. `href` stays unseeded on purpose: attachment.ts renders it nowhere yet (the LLD-C6 leg is
   // deferred), so a seed would be invisible on R — the rubric's `demonstrable` set excludes it.
   Attachment: { name: 'Q3 roadmap.pdf', mimeType: 'application/pdf', sizeBytes: '428000' },
+  // The 2026-08-19 nine-ADR campaign's six new types — the same "string/number/boolean props seeded HERE,
+  // array/object props ride SAMPLE_TREES rootRef below" law as every row above.
+  FileDrop: { label: 'Drop receipts here, or browse', accept: 'image/*,.pdf', maxFiles: '5' },
+  Rating: { value: '4.3', readonly: 'true', label: 'Guest rating' },
+  PieChart: { label: 'Marketing budget by channel' },
+  ChoiceGroup: { value: 'deluxe', label: 'Choose a room' },
+  ChoiceCard: { value: 'deluxe' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -588,6 +595,31 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
       { id: 's_rg3', component: 'Radio', value: 'studio', label: 'Studio' },
     ],
   }),
+  // ChoiceGroup(+ChoiceCard) (ADR-0220): the room-picker idiom (catalog-frontier.ts's
+  // frontier-choice-group-rooms) — three rich option cards, single-mode value committed.
+  ChoiceGroup: () => ({
+    rootRef: { children: ['s_cg1', 's_cg2', 's_cg3'] },
+    extras: [
+      { id: 's_cg1', component: 'ChoiceCard', value: 'standard', children: ['s_cg1_name', 's_cg1_price'] },
+      { id: 's_cg1_name', component: 'Text', variant: 'label', text: 'Standard' },
+      { id: 's_cg1_price', component: 'Text', variant: 'caption', text: '$120/night · ★4.2' },
+      { id: 's_cg2', component: 'ChoiceCard', value: 'deluxe', children: ['s_cg2_name', 's_cg2_price'] },
+      { id: 's_cg2_name', component: 'Text', variant: 'label', text: 'Deluxe' },
+      { id: 's_cg2_price', component: 'Text', variant: 'caption', text: '$185/night · ★4.8' },
+      { id: 's_cg3', component: 'ChoiceCard', value: 'suite', children: ['s_cg3_name', 's_cg3_price'] },
+      { id: 's_cg3_name', component: 'Text', variant: 'label', text: 'Suite' },
+      { id: 's_cg3_price', component: 'Text', variant: 'caption', text: '$310/night · ★4.9' },
+    ],
+  }),
+  // ChoiceCard standalone (browsable on its own, choice-card.css owns its own chrome): the deluxe room
+  // card from the ChoiceGroup demo above, on its own.
+  ChoiceCard: () => ({
+    rootRef: { children: ['s_cc_name', 's_cc_price'] },
+    extras: [
+      { id: 's_cc_name', component: 'Text', variant: 'label', text: 'Deluxe' },
+      { id: 's_cc_price', component: 'Text', variant: 'caption', text: '$185/night · ★4.8' },
+    ],
+  }),
   // SegmentedControl(+Segment): a real room-type picker, 3 Segment options — the room_seg idiom
   // (catalog-coverage.ts's bookingReservationSeed).
   SegmentedControl: () => ({
@@ -664,6 +696,39 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
   // LineChart / Sparkline: the revenue-trend idiom (catalog-coverage.ts's /trend numbers).
   LineChart: () => ({ rootRef: { values: [42000, 48000, 45000, 53000, 50000, 58000] }, extras: [] }),
   Sparkline: () => ({ rootRef: { values: [42000, 48000, 45000, 53000, 50000, 58000] }, extras: [] }),
+  // PieChart (ADR-0219): the marketing-budget-share idiom (catalog-frontier.ts's frontier-pie-chart-budget).
+  PieChart: () => ({
+    rootRef: {
+      data: [
+        { label: 'Paid search', value: 42000 },
+        { label: 'Social', value: 28000 },
+        { label: 'Content', value: 18000 },
+        { label: 'Events', value: 12000 },
+      ],
+    },
+    extras: [],
+  }),
+  // Suggestions (ADR-0213): the follow-up-chips idiom (catalog-frontier.ts's frontier-suggestions-chips).
+  Suggestions: () => ({
+    rootRef: {
+      suggestions: [
+        { label: 'What about weekends?' },
+        { label: 'Show me the address', value: 'address' },
+        { label: 'Who do I contact there?', value: 'contact' },
+      ],
+    },
+    extras: [],
+  }),
+  // SourceList (ADR-0214): the grounded-citations idiom (catalog-frontier.ts's frontier-source-list-citations).
+  SourceList: () => ({
+    rootRef: {
+      sources: [
+        { href: 'https://example.com/annual-report-2025', title: 'Annual Report 2025', snippet: 'Revenue grew 14% year over year.' },
+        { href: 'https://example.com/q4-press-release', title: 'Q4 Press Release', snippet: 'EMEA led growth at 22%.' },
+      ],
+    },
+    extras: [],
+  }),
   // MultiSelect: the invite-roles idiom (catalog-frontier.ts's in_roles options), two pre-picked.
   MultiSelect: () => ({
     rootRef: {

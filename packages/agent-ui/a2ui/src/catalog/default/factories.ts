@@ -536,6 +536,36 @@ export const radioFactory: WidgetFactory = {
   },
 }
 
+// ── ADR-0220 (GH #1368) — ChoiceGroup + ChoiceCard, the rich-card selection container ──────────────
+//
+// ChoiceGroup → ui-choice-group. `multiple`/`value`/`values`/`min`/`gap`/`disabled`/`required`/`name`/
+// `label` are ALL 1:1 reflecting accessor props — verified against choice-group.ts `static props`
+// (`...UIFormElement.formProps` spread + ADR-0220's own table); plain `accessorFactory` suffices, no
+// bespoke mapping. `value`/`values` are the ADR-0161 array-form two-way mark, MODE-GATED per-slot opt-in
+// (the `Calendar` single-vs-range precedent, cl.3): a single-mode payload binds `value`, a multi-mode
+// payload binds `values`, distinct props sharing the ONE `select` commit event (the `Table`
+// `sort`/`page` sanctioned shape). VERIFIED, not assumed — a throwaway jsdom probe against the real
+// `UIChoiceGroupElement` (a2ui-build-agent, 2026-08-19, the toggleFactory/drillFactory Fork-T1/D1
+// methodology, per ADR-0220's own Acceptance obligation): `selectionCommit`'s `publish()` (traits/
+// selection-commit.ts) calls the group's `onSelect` callback — which commits `this.value`/`this.values`
+// — BEFORE `host.emit('select', selection)`, in BOTH single and multi mode; a `select` listener reading
+// `el.value`/`el.values` observes the already-committed value, never a stale one (the SAME ordering
+// `select.ts`/`multi-select.ts` already ship a mark on, using the identical trait). `ChildList` of
+// `ChoiceCard` — discovery is nearest-group-scoped descendants from birth (ADR-0220 cl.7, the ADR-0212
+// discovery rule adopted fresh, not retrofitted).
+export const choiceGroupFactory: WidgetFactory = accessorFactory('ui-choice-group', [
+  { prop: 'value', event: 'select' },
+  { prop: 'values', event: 'select' },
+])
+
+// ChoiceCard → ui-choice-card. `value`/`disabled` are 1:1 reflecting accessor props (verified against
+// choice-card.ts `static props`) — plain `accessorFactory` suffices. No `value` mark of its own — the
+// owning `ChoiceGroup` owns the commit (the `Radio`/`RadioGroup` precedent, ADR-0220's own §5.2 note).
+// `ChildList` children — agent-composed DISPLAY content only (`Text`/`Image`/`Badge`/`Stat`/`Icon`/
+// layout, ADR-0220 cl.4); interactive descendants are non-conforming, enforced at the teaching/review
+// tier this pass (the grammar cannot type-restrict a `ChildList`), never a validator/renderer guard.
+export const choiceCardFactory: WidgetFactory = accessorFactory('ui-choice-card')
+
 // ── ADR-0095 (supersedes ADR-0086; hard cutover, no alias) — SegmentedControl+Segment ──────────────
 //
 // SegmentedControl → ui-segmented-control. VERIFIED against segmented-control.ts: `UISegmentedControlElement
@@ -575,6 +605,20 @@ export const segmentFactory: WidgetFactory = {
 // motivating GenUI consumer — an agent-rendered blackjack bet slider — needs `label`+`layout="inline"` or
 // `"standard"` so the bet amount is visible without requiring a scrub first).
 export const sliderFactory: WidgetFactory = accessorFactory('ui-slider', { prop: 'value', event: 'change' })
+
+// Rating → ui-rating (ADR-0216, GH #1395 — an owned star mark, float display / stepped input on one
+// type). `value`/`max`/`step`/`readonly`/`label`/`name`/`disabled`/`required` are ALL 1:1 reflecting
+// accessor props inherited from `UIRangeElement` (`rating.ts` spreads `UIRangeElement.props`, then
+// overrides `max`'s default and adds `readonly` as a new leaf prop) — `min`/`size`/`layout` stay
+// deliberately UNCATALOGUED here (a curated subset, the `descriptor-agreement.test.ts` "curated subset"
+// convention — ADR-0216's own drafted §5.2 row lists exactly this set, no more). Two-way bindable on
+// `value` via the control's own `change` commit event — VERIFIED, not assumed: `rating.test.ts`'s own
+// committed Fork-T1/D1 probe (`UIRatingElement — change-after-value-commit probe`, ADR-0216 cl.6) proves
+// `change` fires strictly AFTER `value` commits (a listener reading `el.value` inside `change` observes
+// the already-moved value), the SAME discipline PR #1363 established for `ui-toggle`'s rejected mark —
+// here the probe PASSES, so the mark is safe (`change` rides the base's blur-commit law, `range-
+// element.ts` — fires on blur when the value moved since focus, never per drag/keyboard tick).
+export const ratingFactory: WidgetFactory = accessorFactory('ui-rating', { prop: 'value', event: 'change' })
 
 // SliderMulti → ui-slider-multi (ADR-0053 deferral, closed; Fork C — dual value, RESOLVED two types).
 // `min`/`max`/`step`/`name`/`disabled` are 1:1 reflecting accessors; `valueLo`/`valueHi` are ALSO real
@@ -694,6 +738,15 @@ export const barChartFactory: WidgetFactory = accessorFactory('ui-bar-chart')
 // `accessorFactory` suffices. Display-only leaf: no `value` mark, no children, no submitGate.
 export const lineChartFactory: WidgetFactory = accessorFactory('ui-line-chart')
 
+// PieChart → ui-pie-chart (ADR-0219, GH #1397 — the part-of-whole mark, donut-default, lifting ADR-0107's
+// pie fence). `data`/`label` are the `BarChart` row schema verbatim (`mapsTo: data`); `variant`
+// (`donut`/`pie`, non-bindable — the Sparkline/LineChart `variant` structural-enum precedent) — ALL 1:1
+// reflecting accessor props verified against pie-chart.ts `static props`, so plain `accessorFactory`
+// suffices, the same shape as `barChartFactory`/`sparklineFactory`. Display-only leaf: no
+// `value:{prop,event}` mark, no children (the donut center caption is a SIBLING composition in the
+// consumer's own layout, ADR-0219 cl.6 — never a child of this row).
+export const pieChartFactory: WidgetFactory = accessorFactory('ui-pie-chart')
+
 // ── the ADR-0111 report family (Table / Stat / Badge, catalog LLD-C12, report-family.lld.md §6) ───────
 // ── widened by ADR-0163 cl.9 (selection/sort/filter/search/pagination; `Pagination` newly minted) ──────
 //
@@ -735,6 +788,37 @@ export const statFactory: WidgetFactory = mappedAccessorFactory('ui-stat', { val
 // analogy, not List children). Empty-value omission holds BY CONSTRUCTION in the control (ADR-0201 cl.3);
 // value HUMANIZATION stays the producer's job (the grammar law).
 export const descriptionListFactory: WidgetFactory = accessorFactory('ui-description-list')
+
+// SourceList → ui-source-list (ADR-0214, GH #1394 — source attribution as one hardened aggregate leaf,
+// the DescriptionList shape). `sources` is a plain 1:1 accessor prop riding `accessorFactory` (`setProp`
+// assigns the array straight onto the property; the control's own `cleanSources` hardening, run by the
+// render effect, drops any entry without a real title BY CONSTRUCTION — the DescriptionList/`cleanValue`
+// idiom); index markers are POSITIONAL (array order), never a producer-authored field, so marker↔row
+// drift is unrepresentable (ADR-0214 Context fact 1). Each entry's `href` crosses the component-side
+// `safeHref` gate (ADR-0114 verbatim) — the STATIC `format:'safe-href'` validator leg does not descend
+// into array items (`conformance.ts`'s top-level-string-prop-only check, ADR-0214 Context fact 2), so no
+// `format` annotation is declared on the nested schema; the component gate is the load-bearing one.
+// Display-only leaf: no `value` mark, no `action`, no children.
+export const sourceListFactory: WidgetFactory = accessorFactory('ui-source-list')
+
+// Suggestions → ui-suggestions (ADR-0213, GH #1393 — one-shot follow-up chips as one data-prop leaf).
+// `suggestions`/`selected` are 1:1 reflecting accessor props (verified against suggestions.ts `static
+// props`) — `suggestions`' own `cleanSuggestions` hardening (the ADR-0201 idiom) drops any entry without
+// a real label before it exists as state. `action` (optional, `mapsTo:'action'`) rides the SAME generic
+// host-click→action wiring every other action-carrying type uses (`renderer.ts` `#actionPropsOf`, the
+// `Button.action` precedent) — never routed through `applyProp` for its real effect; a plain property
+// write for it here is harmless (the same "the default branch stamps an inert extra" posture
+// `buttonFactory`'s own `action` case takes, just via `setProp` instead of `setAttr` — `UISuggestionsElement`
+// declares no `action` accessor of its own, so the write is a no-op own-property, never colliding with a
+// DOM attribute). Two-way bindable on `selected` via the control's own `select` commit event — VERIFIED
+// (not assumed) empirically via a throwaway jsdom probe against the real `UISuggestionsElement`
+// (a2ui-build-agent, 2026-08-19, the toggleFactory/drillFactory Fork-T1/D1 methodology): `suggestions.ts`
+// commits `this.selected = value` synchronously BEFORE `this.emit('select', value)` (verified also by
+// static read of suggestions.ts's own `#onClick`), so a `select` listener reading `el.selected` observes
+// the ALREADY-COMMITTED value, never a stale one — the mark is safe. One-shot law (ADR-0213 cl.3): a
+// non-empty `selected` renders the whole set spent (component-owned, no catalog/renderer involvement).
+// No `ChildList` — suggestions are data, never child nodes.
+export const suggestionsFactory: WidgetFactory = accessorFactory('ui-suggestions', { prop: 'selected', event: 'select' })
 
 // Badge → ui-badge (SPEC-R11..R13). `label`/`intent` are 1:1 reflecting accessor props — verified against
 // badge.ts `static props`; the control's OWN effect snaps an out-of-range `intent` (bound-garbage) back to
@@ -806,6 +890,30 @@ export const avatarFactory: WidgetFactory = mappedAccessorFactory('ui-avatar', {
 // catalog/factory wiring here is correct today and simply inert until that leg lands (attachment.ts's own
 // header note). Display-only leaf: no `value` mark, no children.
 export const attachmentFactory: WidgetFactory = mappedAccessorFactory('ui-attachment', { name: 'filename' })
+
+// ── ADR-0210 (GH #1391) — FileDrop, the fleet's file-INPUT affordance (the ADR-0112 cl.1 fence opened;
+// wire-integration lane, ui-file-drop control minted ahead of this row) ─────────────────────────────
+//
+// FileDrop → ui-file-drop. `files`/`label`/`accept`/`multiple`/`maxSizeBytes`/`maxFiles`/`disabled`/
+// `required`/`name` are ALL 1:1 reflecting accessor props — verified against file-drop.ts `static props`
+// (`...UIFormElement.formProps` spread + ADR-0210 cl.2's table verbatim); no non-identity mapping
+// anywhere, so plain `accessorFactory` suffices (no bespoke `applyProp`, same shape as `sliderFactory`).
+// Two-way bindable on `files` via the control's own `change` event (ADR-0210 cl.3 — fires per COMMITTED
+// selection mutation, never a progress tick): the renderer's generic LLD-C8 controller reads `el.files`
+// (the committed `{id,name,mimeType,sizeBytes}[]` descriptor array) synchronously inside that listener.
+// `accept`/`multiple`/`maxSizeBytes`/`maxFiles` are catalogued NOT bindable (structural literals, the
+// `Swiper` non-bindable-constraint precedent, ADR-0210 cl.2) — a live-retargeted constraint mid-selection
+// is a desync hazard, not a feature. `disabled`/`required` ride the `TextField`/`Textarea` form-
+// participation-trio bindability (both bindable — ADR-0210 cl.2's own citation, "the TextField
+// form-participation trio, verbatim"); `name` stays non-bindable, the SAME trio's own shape. No `action`
+// prop, no endpoint prop, by construction (ADR-0210 cl.4.3 — the control performs zero network I/O). The
+// renderer's own host file-intake seam (cl.4.2's `intake`/`isKnown` instance properties) is a SEPARATE,
+// not-yet-built deliverable — this factory wires the catalog↔control prop/value contract only; wiring a
+// real host registry onto every mounted `ui-file-drop`'s `intake`/`isKnown` accessors is named as a
+// follow-up (ADR-0210's own Repairs list; file-drop.ts's header calls the seam PROVISIONAL pending its
+// own SPEC/LLD leg, ADR-0210 cl.7) — absent that wiring, a mounted control renders visibly disabled with
+// its own component-owned reason (cl.4.5), never a silently dead dropzone.
+export const fileDropFactory: WidgetFactory = accessorFactory('ui-file-drop', { prop: 'files', event: 'change' })
 
 // Image → ui-image (GH #1189 R1/R2, conventional component admission — the ADR ruling recorded in
 // image.md's own header, no new ADR file). `src`/`alt`/`fit`/`aspect`/`usageHint` are ALL 1:1 reflecting
@@ -1160,9 +1268,12 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   FormPopover: formPopoverFactory,
   RadioGroup: radioGroupFactory,
   Radio: radioFactory,
+  ChoiceGroup: choiceGroupFactory,
+  ChoiceCard: choiceCardFactory,
   SegmentedControl: segmentedControlFactory,
   Segment: segmentFactory,
   Slider: sliderFactory,
+  Rating: ratingFactory,
   SliderMulti: sliderMultiFactory,
   Calendar: calendarFactory,
   ComboBox: comboBoxFactory,
@@ -1173,16 +1284,20 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Sparkline: sparklineFactory,
   BarChart: barChartFactory,
   LineChart: lineChartFactory,
+  PieChart: pieChartFactory,
   Table: tableFactory,
   Pagination: paginationFactory,
   Stat: statFactory,
   DescriptionList: descriptionListFactory,
+  SourceList: sourceListFactory,
+  Suggestions: suggestionsFactory,
   Badge: badgeFactory,
   Code: codeFactory,
   Disclosure: disclosureFactory,
   Progress: progressFactory,
   Avatar: avatarFactory,
   Attachment: attachmentFactory,
+  FileDrop: fileDropFactory,
   Image: imageFactory,
   Video: videoFactory,
   AudioPlayer: audioFactory,

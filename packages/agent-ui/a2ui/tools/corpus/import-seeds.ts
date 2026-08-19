@@ -131,7 +131,7 @@ import {
 } from '../../src/examples/catalog-coverage.ts'
 import { kpiPanelLifecycleSeed } from '../../src/examples/message-lifecycle.ts'
 import { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed } from '../../src/examples/corpus-growth.ts'
-import { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed } from '../../src/examples/catalog-frontier.ts'
+import { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed } from '../../src/examples/catalog-frontier.ts'
 import { structuredContainerSeed } from '../../src/examples/structured-container.ts'
 import {
   comparisonPricingSeed,
@@ -301,6 +301,12 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
       mediaTourSeed, // GH #1209 — the Video/AudioPlayer coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
       drillSettingsSeed, // GH #1353 — the Drill/DrillPanel coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
       paneSwitcherSeed, // GH #1352 — the Toggle coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
+      fileDropAttachSeed, // ADR-0210/GH #1391 — the FileDrop coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
+      suggestionsChipsSeed, // ADR-0213/GH #1393 — the Suggestions coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
+      sourceListCitationsSeed, // ADR-0214/GH #1394 — the SourceList coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
+      ratingReviewSeed, // ADR-0216/GH #1395 — the Rating coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
+      pieChartBudgetSeed, // ADR-0219/GH #1397 — the PieChart coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
+      choiceGroupRoomsSeed, // ADR-0220/GH #1368 — the ChoiceGroup/ChoiceCard coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
     ],
   },
   { module: 'structured-container.ts', seeds: [structuredContainerSeed] }, // GH #808 S5 — SPEC-R9's exemplar

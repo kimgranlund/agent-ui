@@ -3,6 +3,7 @@
 // The v1.0 catalog functions:
 //   `required` / `email` / `regex`  — binding-eval validators (SPEC-R5, callableFrom:clientOnly).
 //   `ping`                           — server-invocable no-op probe (ADR-0034, callableFrom:clientOrRemote).
+//   `formatCurrency`                 — locale-correct money formatting (ADR-0217, callableFrom:clientOnly).
 //
 // All are PURE — no DOM, no signals, no catalog/registry access. The shared `catalogFunctions` table
 // is the single impl source used by BOTH invocation surfaces (ADR-0034 fork 2):
@@ -77,6 +78,36 @@ export function ping(): boolean {
 }
 
 /**
+ * `formatCurrency` — locale-correct money formatting (ADR-0217). Named args `value` (number) +
+ * `currency` (ISO-4217 string), returning the RUNTIME's default-locale `Intl.NumberFormat` currency
+ * string (`Intl` is the lookup, never a hand-rolled table — the ADR-0038 geometry-font precedent).
+ * No `locale` arg in v1 (ADR-0217 cl.1) — the display law is the runtime default, the same posture
+ * `stat-model.ts`/`table-model.ts` already take for numeric figures; a test environment pins
+ * `en-US` for determinism (ADR-0047's discipline), never the shipped impl. Degradation (this
+ * catalog's OWN posture, deliberately distinct from a2ui-basic's `String(value)` — ADR-0217 cl.1):
+ * a non-finite `value` renders the `stat-model.ts` placeholder em dash (`—`); an invalid/unknown
+ * `currency` code falls back to a plain default-locale `Intl.NumberFormat` NUMBER string (money
+ * formatting degrades to a number, not to an unformatted echo). No `decimals`/`grouping` args
+ * (ADR-0217 cl.5, deliberately dropped) — per-currency fraction digits and grouping are `Intl`'s
+ * own lookup, never a re-admitted per-locale knob.
+ */
+export function formatCurrency(args: NamedArgs): string {
+  const value = args.value
+  const currency = args.currency
+  if (typeof value !== 'number' || !Number.isFinite(value)) return '—'
+  if (typeof currency !== 'string' || currency === '') {
+    return new Intl.NumberFormat(undefined).format(value)
+  }
+  try {
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(value)
+  } catch {
+    // An unrecognized ISO-4217 code throws a RangeError inside Intl.NumberFormat's constructor —
+    // degrade to a plain number, never an unformatted echo of the raw args (ADR-0217 cl.1).
+    return new Intl.NumberFormat(undefined).format(value)
+  }
+}
+
+/**
  * The shared pure-function implementation table for the default catalog (catalog LLD-C7 / ADR-0034
  * fork 2). Keyed by the same name the catalog declares in its `functions` block — BOTH invocation
  * surfaces look here: the binding-eval evaluator (`renderer/functions.ts`) and the server-invoke
@@ -89,4 +120,5 @@ export const catalogFunctions: Record<string, (args: NamedArgs) => unknown> = {
   email,
   regex,
   ping,
+  formatCurrency,
 }

@@ -84,6 +84,8 @@ describe('component-preview — STRUCTURAL targets mount a representative specim
     'ui-swiper-item': 1, // slide content (ADR-0124)
     'ui-timeline': 3, // 3 ui-timeline-item rows (ADR-0122)
     'ui-status-stream': 2, // 2 ui-timeline-item rows (ADR-0122)
+    'ui-choice-group': 3, // 3 ui-choice-card options (ADR-0220, the ui-radio-group precedent)
+    'ui-choice-card': 3, // strong + br + span — the rich display content stand-in (ADR-0220)
   }
   it('MIN_CHILDREN covers every STRUCTURAL tag (anti-vacuous)', () => {
     expect(new Set(Object.keys(MIN_CHILDREN))).toEqual(STRUCTURAL)
