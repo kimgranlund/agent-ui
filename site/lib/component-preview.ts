@@ -323,6 +323,9 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   // array/object props ride SAMPLE_TREES rootRef below" law as every row above.
   FileDrop: { label: 'Drop receipts here, or browse', accept: 'image/*,.pdf', maxFiles: '5' },
   Rating: { value: '4.3', readonly: 'true', label: 'Guest rating' },
+  PieChart: { label: 'Marketing budget by channel' },
+  ChoiceGroup: { value: 'deluxe', label: 'Choose a room' },
+  ChoiceCard: { value: 'deluxe' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -595,7 +598,7 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
   // ChoiceGroup(+ChoiceCard) (ADR-0220): the room-picker idiom (catalog-frontier.ts's
   // frontier-choice-group-rooms) — three rich option cards, single-mode value committed.
   ChoiceGroup: () => ({
-    rootRef: { value: 'deluxe', children: ['s_cg1', 's_cg2', 's_cg3'] },
+    rootRef: { children: ['s_cg1', 's_cg2', 's_cg3'] },
     extras: [
       { id: 's_cg1', component: 'ChoiceCard', value: 'standard', children: ['s_cg1_name', 's_cg1_price'] },
       { id: 's_cg1_name', component: 'Text', variant: 'label', text: 'Standard' },
@@ -611,7 +614,7 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
   // ChoiceCard standalone (browsable on its own, choice-card.css owns its own chrome): the deluxe room
   // card from the ChoiceGroup demo above, on its own.
   ChoiceCard: () => ({
-    rootRef: { value: 'deluxe', children: ['s_cc_name', 's_cc_price'] },
+    rootRef: { children: ['s_cc_name', 's_cc_price'] },
     extras: [
       { id: 's_cc_name', component: 'Text', variant: 'label', text: 'Deluxe' },
       { id: 's_cc_price', component: 'Text', variant: 'caption', text: '$185/night · ★4.8' },
@@ -702,7 +705,6 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
         { label: 'Content', value: 18000 },
         { label: 'Events', value: 12000 },
       ],
-      label: 'Marketing budget by channel',
     },
     extras: [],
   }),
