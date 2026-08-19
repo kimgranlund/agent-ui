@@ -63,7 +63,7 @@ ADR-worthy fork, not a local choice.
 | [incident] A content-sized flex item collapses to a fixed-floor child's min-width | `align-self: stretch; max-inline-size: none`, never re-tune the cap | ADR-0160 Amendment (GH #1032) |
 | A load-on-demand stopgap before a real model-side tool-call loop | exact-match auto-attach via the existing reference path, one per turn, no fuzzy | ADR-0190 Amendment (GH #1030) |
 | A public barrel's static re-export drags a heavy arm into every entry chunk | barrel-lazy-split: subpaths + memoized `loadX()` accessor, bundle-shape gated | ADR-0197 |
-| A capability seems to need a third-party runtime dependency | the ruled exception test: category / inert-data / wire-shortcut / Kim's call alone; clause-8 gate set | ADR-0139 + ADR-0202 |
+| A capability seems to need a third-party runtime dependency | the ruled exception test: category / inert-data / wire-shortcut / Kim's call alone; clause-8 gate set; can DECLINE at gate (iii) | ADR-0139 + ADR-0202 · declined: ADR-0222 |
 | Eyebrow / section-header / group-label typography | the KICKER typescale row + consumer uppercase, never ad hoc font values | ADR-0078 cl.2b (GH #370 · #1291) |
 | A sticky child inside a padded scroll container must pin to the top | padding-handoff — the container sheds its block-start gutter, the sticky child carries it | PR #1323 (GH #1318; select.css group-label precedent) |
 | A reserved overlay lane over a scroll container | transparent BORDER band, never padding — the scrollport clips at the padding box | PR #1400 (GH #1330) |
