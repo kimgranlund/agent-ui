@@ -215,8 +215,10 @@ describe('site coverage — every shipped component has its required per-tier pa
     // Wave 1 Indicator family (checkbox, switch, radio, radio-group) + ui-segment (ADR-0095 clause 3 —
     // the SAME real ancestor, UIIndicatorElement, as ui-radio) + the Wave M1 feed family (ADR-0112): ui-avatar
     // (fork F3 — the same widget-box class as checkbox/switch/tag): tier=indicator/container (not control/display)
+    // + ui-rating (ADR-0216/GH #1395) — a THIRD UIRangeElement leaf, tier=indicator matching ui-slider's own
+    // precedent (a single-value Range leaf; ui-slider-multi alone widened to tier=range, below).
     expect(COMPONENTS.filter((c) => c.tier === 'indicator').map((c) => c.name).sort()).toEqual(
-      ['avatar', 'checkbox', 'radio', 'segment', 'slider', 'switch'],
+      ['avatar', 'checkbox', 'radio', 'rating', 'segment', 'slider', 'switch'],
     )
     // Wave 2 Range family (slider, slider-multi — ADR-0042): tier=range
     expect(COMPONENTS.filter((c) => c.tier === 'range').map((c) => c.name).sort()).toEqual(['slider-multi'])

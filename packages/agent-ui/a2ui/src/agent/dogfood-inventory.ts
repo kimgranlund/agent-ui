@@ -123,13 +123,19 @@ export function readAttributes(fence: string): LocalAttribute[] {
   return attrs
 }
 
-/** SPEC-R13(b) — the derived-inventory budget: ≤ 16 500 chars (the SPEC-R9 pack-tier's double, since
+/** SPEC-R13(b) — the derived-inventory budget: ≤ 17 000 chars (the SPEC-R9 pack-tier's double, since
  *  this segment teaches the WHOLE fleet, not one exemplar pack). Evidence-revisable per SPEC §8;
  *  enforced by a standing test (`prompt-drift.test.ts`), never by runtime truncation — the derived
  *  output is the fleet's whole truth or nothing, never a silently-clipped subset.
  *  REVISED 2026-08-18 (GH #1209): 16 000 → 16 500 — measured 16 336 after the ui-video/ui-audio media
- *  mint (+2 controls); the movers are the two new descriptor role lines, evidence per SPEC §8. */
-export const DOGFOOD_INVENTORY_CHAR_BUDGET = 16_500
+ *  mint (+2 controls); the movers are the two new descriptor role lines, evidence per SPEC §8.
+ *  REVISED 2026-08-19 (ADR-0216/GH #1395, the CONTROL-MINT half of the rating build wave — an
+ *  UNATTENDED build dispatch measured this, NOT a live Kim ruling; flagged for confirmation, the
+ *  GH #1208 size-budget precedent's wording): 16 500 → 17 000 — measured 16 690 after the ui-rating
+ *  mint (+1 control); the mover is the new descriptor's role line + its attrs list (value/min/max/
+ *  step/size/name/disabled/required/readonly/label/layout — 11 attrs, one of the larger rows in the
+ *  fleet), evidence per SPEC §8. ~310 char stated headroom. */
+export const DOGFOOD_INVENTORY_CHAR_BUDGET = 17_000
 
 /** One discovered control: its tag, a one-line role summary (the descriptor's own prose body, first
  *  sentence — never hand-written, so it can never drift from what the component's own docs say), the

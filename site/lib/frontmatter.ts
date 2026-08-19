@@ -45,6 +45,8 @@ import segmentMd from '../../packages/agent-ui/components/src/controls/segment/s
 import segmentedControlMd from '../../packages/agent-ui/components/src/controls/segmented-control/segmented-control.md?raw'
 import sliderMd from '../../packages/agent-ui/components/src/controls/slider/slider.md?raw'
 import sliderMultiMd from '../../packages/agent-ui/components/src/controls/slider-multi/slider-multi.md?raw'
+// ADR-0216 / GH #1395 — ui-rating, the star-value Range control (a third UIRangeElement leaf).
+import ratingMd from '../../packages/agent-ui/components/src/controls/rating/rating.md?raw'
 import popoverMd from '../../packages/agent-ui/components/src/controls/popover/popover.md?raw'
 // GH #294 F4 — ui-form-popover, the packaged popover + form-spine composition recipe (form-popover.lld.md
 // LLD-C7): tier=pattern ⇒ {doc, demo}, the ui-popover/ui-select precedent.
@@ -176,6 +178,8 @@ export const loadSegmentDoc = (): ComponentDoc => parseDoc(segmentMd)
 export const loadSegmentedControlDoc = (): ComponentDoc => parseDoc(segmentedControlMd)
 export const loadSliderDoc = (): ComponentDoc => parseDoc(sliderMd)
 export const loadSliderMultiDoc = (): ComponentDoc => parseDoc(sliderMultiMd)
+// ADR-0216 / GH #1395 — ui-rating, the star-value Range control.
+export const loadRatingDoc = (): ComponentDoc => parseDoc(ratingMd)
 // The Wave 4 Overlay family (popover, tooltip, menu, select, combo-box — tier=pattern, ADR-0043).
 export const loadPopoverDoc = (): ComponentDoc => parseDoc(popoverMd)
 // GH #294 F4 — ui-form-popover (tier=pattern ⇒ {doc,demo}).

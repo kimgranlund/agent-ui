@@ -48,6 +48,10 @@ export * from './radio/radio-group.ts'  // self-defines ui-radio-group
 export * from './slider/slider.ts'
 export * from './slider-multi/slider-multi.ts'
 
+// ui-rating (ADR-0216, GH #1395) — the star-value Range control: a third UIRangeElement leaf, fraction-
+// accurate display + stepped input on one type, an owned inline-SVG mark (no icons-pack dependency).
+export * from './rating/rating.ts'
+
 // Pattern controls — ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover):
 // the standalone segmented control. segmented-control.ts imports segment.ts as a side effect (both tags
 // self-define together), but each still gets its own `export *` line here — the barrel↔exports-map
