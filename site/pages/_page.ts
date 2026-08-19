@@ -153,19 +153,30 @@ export const NAV: readonly NavGroup[] = [
   },
   {
     // The Wave M1 chart family (ADR-0107) — two Display-class axis-free charts, each a single descriptor-derived
-    // API doc (tier=display ⇒ {doc} only, the ui-text/ui-icon precedent; display leaves are per-component groups).
+    // API doc (tier=display ⇒ {doc} only, the ui-text/ui-icon precedent; display leaves are per-component groups),
+    // plus a rich Demo page each (Kim's 2026-08-18 "every component page gets a demo tab" ruling; Demo first,
+    // API second — the ui-disclosure precedent below).
     label: 'ui-sparkline',
-    links: [{ href: './sparkline-doc.html', label: 'API' }],
+    links: [
+      { href: './sparkline-demo.html', label: 'Demo' },
+      { href: './sparkline-doc.html', label: 'API' },
+    ],
   },
   {
     label: 'ui-bar-chart',
-    links: [{ href: './bar-chart-doc.html', label: 'API' }],
+    links: [
+      { href: './bar-chart-demo.html', label: 'Demo' },
+      { href: './bar-chart-doc.html', label: 'API' },
+    ],
   },
   {
     // ADR-0205/GH #1207 — the fleet's first axis-bearing chart (a value-range baseline + always-shown
-    // min/max labels, single-series). Same shape as the two above — Display-class, {doc} only.
+    // min/max labels, single-series). Same shape as the two above — Display-class, {doc} + demo.
     label: 'ui-line-chart',
-    links: [{ href: './line-chart-doc.html', label: 'API' }],
+    links: [
+      { href: './line-chart-demo.html', label: 'Demo' },
+      { href: './line-chart-doc.html', label: 'API' },
+    ],
   },
   {
     // The token-surface family (ADR-0118) — three Display-class show-never-edit primitives, each a single
@@ -393,14 +404,21 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   // The Wave M1 report family (ADR-0111) — three Display-class descriptor-derived API docs (tier=display ⇒
-  // {doc} only, the ui-text/ui-icon/chart precedent).
+  // {doc} only, the ui-text/ui-icon/chart precedent) — ui-table + ui-stat each also carry a rich Demo page
+  // (Demo first, API second — the ui-disclosure precedent).
   {
     label: 'ui-table',
-    links: [{ href: './table-doc.html', label: 'API' }],
+    links: [
+      { href: './table-demo.html', label: 'Demo' },
+      { href: './table-doc.html', label: 'API' },
+    ],
   },
   {
     label: 'ui-stat',
-    links: [{ href: './stat-doc.html', label: 'API' }],
+    links: [
+      { href: './stat-demo.html', label: 'Demo' },
+      { href: './stat-doc.html', label: 'API' },
+    ],
   },
   // ADR-0201 (GH #1185) — the key–value receipt primitive, same Display-class {doc}-only shape.
   {
