@@ -55,7 +55,8 @@
     {
       "id": "t11",
       "prompt": "grade the Attachment catalog card against a2ui-catalog-example.md",
-      "expect": "trigger"
+      "expect": "trigger",
+      "note": "re-judged 2026-08-19 (single-judge noise): phase-3 judge chose a2ui-review on the grade-verb; 2-of-3 vote returned it here — the rubric filename in the prompt is this skill's own"
     },
     {
       "id": "t12",
