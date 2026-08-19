@@ -58,6 +58,15 @@
 //     wired to a binding — dead data with no reader is a defect class of its own (BOARD ZERO 2026-08-13),
 //     and no existing display slot needs it (the round number is already prose in each `q*_text` heading).
 //
+//     CardHeader-title convergence (2026-08-18, Kim's ruling): `feedback-form`'s `title` ("Send feedback")
+//     moves out of `CardContent`'s `col` into its own `card_header` `CardHeader`, and `root_content`/
+//     `root_footer` are renamed to `card_content`/`card_footer` (FormProvider-as-root, ids wire-opaque) —
+//     the GH #760 nit. `trivia-round-resume`'s per-round `q1_text`/`q2_text` Text nodes are judged NOT to
+//     be an identity title in this sense — they ARE the question, the round's substance, not a label
+//     naming the card the way "Send feedback" names the feedback form — so they stay in `q_area_content`,
+//     unmoved. (The trivia seed's outer `title` ("Trivia round") already sits outside any Card, in the
+//     plain root Column, so the ruling does not reach it either.)
+//
 // Each seed's `promptText`/`description` names its own gap so the corpus-quality rubric's D2 (prompt
 // realism) and D5 (dedup adjacency / genuine diversity) can be judged against a stated intent, not
 // inferred.
@@ -85,10 +94,11 @@ export const feedbackFormSeed: ExampleSeed = {
         surfaceId: FEEDBACK_ID,
         components: [
           { id: 'root', component: 'FormProvider', children: ['card'] },
-          { id: 'card', component: 'Card', elevation: '1', children: ['root_content', 'root_footer'] },
-          { id: 'root_content', component: 'CardContent', children: ['col'] },
-          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'f_email', 'f_comments'] },
+          { id: 'card', component: 'Card', elevation: '1', children: ['card_header', 'card_content', 'card_footer'] },
+          { id: 'card_header', component: 'CardHeader', children: ['title'] },
           { id: 'title', component: 'Text', variant: 'h4', text: 'Send feedback' },
+          { id: 'card_content', component: 'CardContent', children: ['col'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['f_email', 'f_comments'] },
           { id: 'f_email', component: 'Field', label: 'Email (optional)', child: 'in_email' },
           {
             id: 'in_email', component: 'TextField', name: 'email', type: 'email', value: { path: '/feedback/email' },
@@ -100,7 +110,7 @@ export const feedbackFormSeed: ExampleSeed = {
             placeholder: 'Tell us about your experience…', value: { path: '/feedback/comments' },
             checks: [{ call: 'required', args: { value: { path: '/feedback/comments' } }, message: 'Comments are required' }],
           },
-          { id: 'root_footer', component: 'CardFooter', children: ['actions'] },
+          { id: 'card_footer', component: 'CardFooter', children: ['actions'] },
           { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_send'] },
           { id: 'btn_send', component: 'Button', variant: 'solid', label: 'Send feedback', action: { action: 'send_feedback', submit: true } },
         ],

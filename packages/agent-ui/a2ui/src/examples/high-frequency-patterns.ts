@@ -144,6 +144,12 @@ const ERROR_ID = 'empty-error-retry'
 // `CardContent` with no `CardFooter` (the scattered-actions anti-pattern). No FormProvider is involved
 // here, so the fix is the simple `frontier-card-anatomy-ask` reparent: `root` (Card) gains a `root_footer`
 // (CardFooter) sibling of `root_content`, holding the unchanged `actions` Row.
+// CardHeader-title convergence (2026-08-18, Kim's ruling): this record DOES carry an identity title (an
+// icon-led h4, "Couldn't load ${/activity/resource}") — the cardheader-title-canon lane's own sweep list
+// named this seed as "correctly headerless," which direct inspection here contradicts. Applied the ruling
+// for consistency with `frontier-trip-card`'s icon-led CardHeader idiom (catalog-frontier.ts): the whole
+// `icon_row` (Icon + title, one identity unit) reparents into a new `root_header` CardHeader, leaving
+// `col` holding only the `body` substance — flagged in this lane's hand-back, not silently skipped.
 export const emptyErrorRetryCardSeed: ExampleSeed = {
   name: 'empty-error-retry-card',
   description: 'An error-state card — a warning Icon, a data-bound failure message, and a Retry Button.',
@@ -170,13 +176,14 @@ export const emptyErrorRetryCardSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: ERROR_ID,
         components: [
-          { id: 'root', component: 'Card', elevation: '1', children: ['root_content', 'root_footer'] },
-          { id: 'root_content', component: 'CardContent', children: ['col'] },
-          { id: 'col', component: 'Column', gap: 'md', children: ['icon_row', 'body'] },
+          { id: 'root', component: 'Card', elevation: '1', children: ['root_header', 'root_content', 'root_footer'] },
+          { id: 'root_header', component: 'CardHeader', children: ['icon_row'] },
           { id: 'icon_row', component: 'Row', gap: 'sm', align: 'center', children: ['icon', 'title'] },
           { id: 'icon', component: 'Icon', name: 'warning', label: 'Error' },
           // Absolute-path ${…} interpolation names WHAT failed to load — live, not a hand-baked string.
           { id: 'title', component: 'Text', variant: 'h4', text: "Couldn't load ${/activity/resource}" },
+          { id: 'root_content', component: 'CardContent', children: ['col'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['body'] },
           { id: 'body', component: 'Text', variant: 'body', text: { path: '/activity/message' } },
           { id: 'root_footer', component: 'CardFooter', children: ['actions'] },
           { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_retry'] },
