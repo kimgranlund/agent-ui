@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-19 |
 > | **Proposed by** | planning-leader (design seat — GH #1373, the classic-widget decision lane #1372/#1373/#1375; ADR number host-assigned) |
-> | **Ratified by** | *(awaiting Kim)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-19, via the [`ratify ADR-0217` utterance](https://github.com/kimgranlund/agent-ui/issues/1373#issuecomment-5343986574) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | none — new capability intake, no existing doc corrected. On ratification the build wave applies: `a2ui-catalog.spec.md` SPEC-R5 + a §5.2 usage note (the drafted deltas below) · `catalog/default/catalog.json` `functions` block · `catalog/functions.ts` (shared impl table) · corpus/seed riders teaching the idiom |
 > | **Supersedes / Superseded by** | (none) — extends ADR-0026 (the `{call,args}` function-binding evaluator) + SPEC-R5's own "a project catalog MAY still register one" seam · relates ADR-0047 (`currencyCodecOptions` — the INPUT half of the same law) · relates ADR-0038 (lookup-not-multiplier: `Intl` IS the lookup) · relates ADR-0169 cl.11 (the a2ui-basic `formatCurrency` impl this ports) |
 

@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-19 |
 > | **Proposed by** | planning-leader (design seat — GH #1372, the classic-widget decision lane #1372/#1373/#1375; ADR number host-assigned) |
-> | **Ratified by** | *(awaiting Kim)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-19, via the [`ratify ADR-0216` utterance](https://github.com/kimgranlund/agent-ui/issues/1372#issuecomment-5343986310) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | none — new component/catalog intake, no existing doc corrected. On ratification the build wave applies: `a2ui-catalog.spec.md` §5.2 (the drafted row below) · NEW `controls/rating/rating.{ts,css,md}` · `catalog/default/{catalog.json,factories.ts}` · corpus/tier/seed riders per `a2ui-catalog-rendering-review` `catalog-pipeline.md` §5(iii) |
 > | **Supersedes / Superseded by** | (none) — composes ADR-0042 (`UIFormElement`)/the `UIRangeElement` base (`controls/_base/range-element.ts`) · relates ADR-0047/0048 (the canonical-value codec law) · relates ADR-0065/0066 (the icons seam this ADR deliberately does NOT consume for the mark) · relates ADR-0019 (the `value:{prop,event}` seam) |
 
