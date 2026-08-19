@@ -75,7 +75,7 @@ describe('split-demo — the live resizable-split page', () => {
     const sizes = host.sizes as number[]
     expect(sizes[0]).not.toBeCloseTo(0.5, 5)
     expect(sizes[0] + sizes[1]).toBeCloseTo(1, 5)
-    const readout = document.querySelector('[data-role="sizes-readout"]')
+    const readout = document.querySelector('[data-demo="sizes-readout"]')
     expect(readout?.textContent).toContain(sizes[0].toFixed(2))
   })
 })

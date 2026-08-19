@@ -120,7 +120,7 @@ const listDetail = el('ui-split', { 'data-role': 'controlled-split' }, [
   el('ui-split-pane', { min: '12rem' }, [pane('Message', detail)]),
 ]) as UISplitElement
 listDetail.sizes = [0.35, 0.65] // CONTROLLED from the first render — a JS property, never an attribute
-const sizesReadout = el('span', { 'data-role': 'sizes-readout', style: 'font-family: var(--md-sys-typeface-mono); font-size:0.85rem;' }, [text('sizes = [0.35, 0.65]')])
+const sizesReadout = el('span', { 'data-demo': 'sizes-readout', style: 'font-family: var(--md-sys-typeface-mono); font-size:0.85rem;' }, [text('sizes = [0.35, 0.65]')])
 function writeSizes(next: number[]): void {
   listDetail.sizes = next
   sizesReadout.textContent = `sizes = [${next.map((r) => r.toFixed(2)).join(', ')}]`
