@@ -163,20 +163,11 @@
     min-inline-size: 0; /* the flex-child shrink-to-fit guard (the fleet's standard row-child pattern) */
   }
 
+  /* GH #1447 — `[data-part='eyedropper']` is now a real `ui-button` (`size="sm"` `variant="ghost"`), so
+     button.css owns the box model, colour, and focus ring (ADR-0009); only the flex-row participation
+     rides here — a bespoke background/border/padding/font-size reset would fight the control it now is. */
   :scope [data-part='eyedropper'] {
     flex-shrink: 0;
-    background: transparent;
-    border: 1px solid var(--ui-color-picker-pad-outline);
-    border-radius: var(--ui-color-picker-pad-radius);
-    padding: 0.25rem 0.5rem;
-    font-size: var(--ui-color-picker-label-font);
-    cursor: pointer;
-    color: inherit;
-  }
-
-  :scope [data-part='eyedropper']:focus-visible {
-    outline: var(--md-sys-state-focus-ring-width, 2px) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--md-sys-state-focus-ring-offset, 2px);
   }
 
   /* ── Presets ([slot=presets]) — author-supplied content, ordered LAST; absent = no layout hole ──── */

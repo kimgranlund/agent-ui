@@ -11,6 +11,11 @@
 // distinguished by `aria-current="true"` (a real ARIA fact, not a decorative class) — swiper.css keys its
 // SIZE-larger treatment off that same attribute (ADR-0057: never colour alone).
 //
+// GH #1447 — deliberately NOT `ui-button`, decline documented in swiper-pagination.md ("Why a native
+// button"): the dots ride geometry.md's COMPACT realm (`--md-sys-compact-sm`, 14px), a size system
+// structurally separate from `ui-button`'s Control-tier floor (`sm` = 24px) — the cited ADR-0163/ADR-0160
+// precedents are both control-tier LABELLED affordances, not compact-realm position indicators.
+//
 // `renderInto` REBUILDS the dot list only when the slide COUNT changes (cheap incremental update otherwise —
 // re-running on every `active` change must not thrash focus/DOM identity mid-interaction). `controls → dom` is
 // the allowed import direction.

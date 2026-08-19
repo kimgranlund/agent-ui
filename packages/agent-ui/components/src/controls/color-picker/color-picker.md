@@ -76,7 +76,7 @@ parts:
   - name: readout
     description: The `<div data-part="readout">` container holding an embedded editable `<ui-text-field>` (two-way-bound to the serialized `value` through `colorCodecOptions`) and a composed `<ui-swatch>` preview (never a bespoke color div — the ADR-0118 fence). Also hosts the feature-detected EyeDropper affordance where `'EyeDropper' in window`.
   - name: eyedropper
-    description: Inside `[data-part=readout]`, present ONLY where `'EyeDropper' in window` (SPEC-R13/F7). A `<button data-part="eyedropper">` that opens the OS color picker and commits a sampled color (a `change`). No dedicated icon exists in the current icon pack — a plain text-labeled button ("Pick"), no polyfill, no layout hole where absent.
+    description: Inside `[data-part=readout]`, present ONLY where `'EyeDropper' in window` (SPEC-R13/F7). A `<ui-button data-part="eyedropper" size="sm" variant="ghost">` (GH #1447 — converted from a bare native `<button>`) that opens the OS color picker and commits a sampled color (a `change`). No dedicated icon exists in the current icon pack — a plain text-labeled button ("Pick"), no polyfill, no layout hole where absent.
 
 customStates:
   - user-invalid          # ADR-0051 — set only AFTER the first interaction (blur/change) via the trackUserInvalid controller
@@ -157,9 +157,9 @@ event allowlist, no new name.
 
 ## EyeDropper (progressive enhancement)
 
-Where the Chromium `EyeDropper` API exists (`'EyeDropper' in window`), a small affordance appears in the
-readout that opens the OS color picker and commits a sampled color. Absent elsewhere, with no polyfill and no
-layout hole.
+Where the Chromium `EyeDropper` API exists (`'EyeDropper' in window`), a small `ui-button size="sm"
+variant="ghost"` affordance appears in the readout that opens the OS color picker and commits a sampled
+color. Absent elsewhere, with no polyfill and no layout hole.
 
 ## Composition — the `ui-text-field type=color` leg
 

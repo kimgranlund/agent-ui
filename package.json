@@ -12,7 +12,7 @@
     "check": "tsc && npm run check:site && npm run check:tools && npm run check:scripts",
     "check:site": "tsc -p site/tsconfig.json",
     "check:tools": "tsc -p tsconfig.tools.json",
-    "check:scripts": "python3 scripts/adr_ratify_test.py && python3 scripts/hook_selftests.py && python3 scripts/claude_wiring_check.py && node scripts/reap-branches.mjs selftest && node scripts/e2e-devtools.mjs selftest && node scripts/import-skill-pack.mjs selftest && node scripts/eval-catalog-gate.mjs selftest",
+    "check:scripts": "python3 scripts/adr_ratify_test.py && python3 scripts/hook_selftests.py && python3 scripts/claude_wiring_check.py && node scripts/reap-branches.mjs selftest && node scripts/reap-worktrees.mjs selftest && node scripts/e2e-devtools.mjs selftest && node scripts/import-skill-pack.mjs selftest && node scripts/eval-catalog-gate.mjs selftest",
     "e2e:devtools": "node scripts/e2e-devtools.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -28,6 +28,7 @@
     "test:eval-catalog": "node scripts/eval-catalog-gate.mjs",
     "size": "node scripts/measure-size.mjs",
     "ops:reap-branches": "node scripts/reap-branches.mjs",
+    "ops:reap-worktrees": "node scripts/reap-worktrees.mjs",
     "publish:packages": "node scripts/publish/publish-packages.mjs",
     "deploy:docs": "npm run build && wrangler deploy",
     "eval:catalog": "node scripts/eval-a2ui-catalog.mjs"

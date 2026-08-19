@@ -32,6 +32,7 @@ import { areaDrag } from '../../traits/area-drag.ts'
 import { UISliderElement } from '../slider/slider.ts'
 import { UITextFieldElement } from '../text-field/text-field.ts'
 import { UISwatchElement } from '../swatch/swatch.ts'
+import { UIButtonElement } from '../button/button.ts'
 import {
   MAX_CHROMA,
   oklchToRgb,
@@ -376,11 +377,15 @@ export class UIColorPickerElement extends UIFormElement {
     // ── EyeDropper (SPEC-R13/F7) — feature-detected progressive enhancement, no polyfill, no layout
     // hole where absent. No dedicated icon asset exists in @agent-ui/icons for this glyph (the pack
     // carries a small hand-curated set) — a plain text-labeled button avoids inventing a new icon
-    // outside this control's scope (a judgment call, flagged in the handoff). ─────────────────────
+    // outside this control's scope (a judgment call, flagged in the handoff). GH #1447 converted the
+    // element identity from a bare native `<button>` to the fleet's own `ui-button` (`size="sm"` per
+    // the issue, `variant="ghost"` — the entry-list.ts import/export precedent for a small labelled
+    // secondary action riding beside a field). ─────────────────────
     if ('EyeDropper' in window) {
-      const eyedropperBtn = document.createElement('button')
-      eyedropperBtn.type = 'button'
+      const eyedropperBtn = document.createElement('ui-button') as UIButtonElement
       eyedropperBtn.setAttribute('data-part', 'eyedropper')
+      eyedropperBtn.setAttribute('size', 'sm')
+      eyedropperBtn.setAttribute('variant', 'ghost')
       eyedropperBtn.setAttribute('aria-label', 'Pick color from screen')
       eyedropperBtn.textContent = 'Pick'
       // Node-lifetime listener, deliberately NOT `this.listen` (ratified, TKT-0065 lateral review):
