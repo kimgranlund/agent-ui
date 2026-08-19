@@ -376,9 +376,11 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
    *  `agent-roster-drawer` (ADR-0188 GH #863, the same pending-judged-wave shape), plus the four GH
    *  #1205 composition-pack-A seeds, the four GH #1206 composition-pack-B seeds, the GH #1201
    *  `frontier-greet-card` (same pending shape), and the ADR-0205/GH #1207 `frontier-latency-line-chart`
-   *  (same pending shape) — reach a wired judge, which fails closed unless the file rules on each (ADR-0068 clause
-   *  2). Refusing all twenty-one keeps the run at zero admissions while still reaching `saveStore` —
-   *  the archive's actual trigger. */
+   *  (same pending shape), plus the NINE GH #1262 P9-repaired records (their sources changed under the
+   *  2026-08-18 back-score repair wave, so they no longer dedup against the shard's pre-repair rows and
+   *  reach the judge pending their own --replace wave) — reach a wired judge, which fails closed unless
+   *  the file rules on each (ADR-0068 clause 2). Refusing all keeps the run at zero admissions while
+   *  still reaching `saveStore` — the archive's actual trigger. */
   const SHARD_LOADED_VERDICTS = {
     'stats-grid-dashboard': { passed: false, qualityScore: 2 },
     'frontier-trip-card': { passed: false, qualityScore: 2 },
@@ -402,6 +404,15 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     'wizard-step-progress': { passed: false, qualityScore: 2 },
     'frontier-latency-line-chart': { passed: false, qualityScore: 2 },
     'frontier-media-tour': { passed: false, qualityScore: 2 },
+    'pattern-confirmation-card': { passed: false, qualityScore: 2 },
+    'pattern-settings-form': { passed: false, qualityScore: 2 },
+    'pattern-schedule-picker': { passed: false, qualityScore: 2 },
+    'pattern-wizard': { passed: false, qualityScore: 2 },
+    'generative-form': { passed: false, qualityScore: 2 },
+    'booking-reservation': { passed: false, qualityScore: 2 },
+    'feedback-form': { passed: false, qualityScore: 2 },
+    'trivia-round-resume': { passed: false, qualityScore: 2 },
+    'empty-error-retry-card': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {
@@ -601,6 +612,15 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
       // admits", nothing else moves.
       verdicts: {
         'stats-grid-dashboard': { passed: true, qualityScore: 5 },
+        'pattern-confirmation-card': { passed: false, qualityScore: 2 },
+        'pattern-settings-form': { passed: false, qualityScore: 2 },
+        'pattern-schedule-picker': { passed: false, qualityScore: 2 },
+        'pattern-wizard': { passed: false, qualityScore: 2 },
+        'generative-form': { passed: false, qualityScore: 2 },
+        'booking-reservation': { passed: false, qualityScore: 2 },
+        'feedback-form': { passed: false, qualityScore: 2 },
+        'trivia-round-resume': { passed: false, qualityScore: 2 },
+        'empty-error-retry-card': { passed: false, qualityScore: 2 },
         'five-day-weather': { passed: false, qualityScore: 2 },
         'restaurant-menu': { passed: false, qualityScore: 2 },
         'travel-itinerary': { passed: false, qualityScore: 2 },

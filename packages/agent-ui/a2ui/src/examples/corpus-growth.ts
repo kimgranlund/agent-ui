@@ -31,6 +31,33 @@
 //     third `q_area` resend is the summary screen; reframed honestly below as a 2-question round). Holds
 //     for re-judging before its next admission attempt (ADR-0068 clause 2/5c discipline).
 //
+//     P9 card-anatomy repair (2026-08-18, GH #1262 back-score wave): `feedback-form`'s `btn_send` and
+//     `trivia-round-resume`'s per-round answer Buttons used to ride a `Row` inside `CardContent` with no
+//     `CardFooter`. `feedback-form` is FormProvider-gated, so — same reasoning as `patterns.ts`/
+//     `generative-form.ts`/`catalog-coverage.ts`'s `booking-reservation` — `root` becomes the
+//     `FormProvider` itself, `Card` moves one level down (non-root), and `CardContent`/`CardFooter` stay
+//     `Card`'s DIRECT children (`card.css`'s region-selector law) while still sitting inside the
+//     `FormProvider`'s DOM subtree (real `closest()` submit-gating). `trivia-round-resume` carries no
+//     FormProvider, so its repair is the simpler per-scene move: each `q_area` resend now ships its own
+//     `q_area_footer` `CardFooter` sibling of `q_area_content`, holding that round's answer-choice Row —
+//     `q_area` itself is ALREADY resent whole every round (the #307 resume discipline this seed exists to
+//     teach), so the new footer id is trivially resendable alongside it, no root-immutability concern.
+//     The final (round-3) resend keeps `q_area_footer` in `q_area`'s children with EMPTY children of its
+//     own, rather than dropping the reference outright: `validate.ts`'s containment check (SPEC-R6) reads
+//     the whole MERGED id graph, and the wire has no per-id delete primitive — an id introduced once and
+//     later left unreferenced by anything (the "just stop mentioning it" instinct) becomes an ORPHANED
+//     CardFooter with no Card parent in the final graph, which the check correctly rejects. Keeping the
+//     footer referenced-but-empty is the honest way to retire a region's content: the node stays validly
+//     parented, and an empty CardFooter paints no buttons — the SAME zero-content result the "just drop
+//     it" instinct wanted, without leaving the id-graph in cursor as an orphan.
+//     Two further repairs land on `trivia-round-resume` in the SAME pass: (a) the answer-key TELL — both
+//     rounds styled the correct choice `solid` and the wrong one `soft`, a dead giveaway independent of
+//     the semantically-named `answer_*_correct`/`_wrong` actions (which stay, being semantic not visual)
+//     — restyled as PEERS, both choices `soft`, so no variant leaks the answer; (b) the consumer-less
+//     `/round` path (written twice via `updateDataModel`, read/bound nowhere) is DROPPED rather than
+//     wired to a binding — dead data with no reader is a defect class of its own (BOARD ZERO 2026-08-13),
+//     and no existing display slot needs it (the round number is already prose in each `q*_text` heading).
+//
 // Each seed's `promptText`/`description` names its own gap so the corpus-quality rubric's D2 (prompt
 // realism) and D5 (dedup adjacency / genuine diversity) can be judged against a stated intent, not
 // inferred.
@@ -57,10 +84,10 @@ export const feedbackFormSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: FEEDBACK_ID,
         components: [
-          { id: 'root', component: 'Card', elevation: '1', children: ['root_content'] },
-          { id: 'root_content', component: 'CardContent', children: ['form'] },
-          { id: 'form', component: 'FormProvider', children: ['col'] },
-          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'f_email', 'f_comments', 'actions'] },
+          { id: 'root', component: 'FormProvider', children: ['card'] },
+          { id: 'card', component: 'Card', elevation: '1', children: ['root_content', 'root_footer'] },
+          { id: 'root_content', component: 'CardContent', children: ['col'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'f_email', 'f_comments'] },
           { id: 'title', component: 'Text', variant: 'h4', text: 'Send feedback' },
           { id: 'f_email', component: 'Field', label: 'Email (optional)', child: 'in_email' },
           {
@@ -73,6 +100,7 @@ export const feedbackFormSeed: ExampleSeed = {
             placeholder: 'Tell us about your experience…', value: { path: '/feedback/comments' },
             checks: [{ call: 'required', args: { value: { path: '/feedback/comments' } }, message: 'Comments are required' }],
           },
+          { id: 'root_footer', component: 'CardFooter', children: ['actions'] },
           { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_send'] },
           { id: 'btn_send', component: 'Button', variant: 'solid', label: 'Send feedback', action: { action: 'send_feedback', submit: true } },
         ],
@@ -140,7 +168,7 @@ const TRIVIA_ID = 'trivia-round-resume'
 export const triviaRoundResumeSeed: ExampleSeed = {
   name: 'trivia-round-resume',
   description:
-    'A two-question trivia round then a final score summary — the mutable question-area container ("q_area") is resent WHOLE three times (two questions, one summary) with a completely different child set each time (never an append), the root wrapper is delivered exactly once and never resent, and the score updates via data-only reacts between rounds (the GH #307 same-surface RESUME discipline the shelf’s only other lifecycle exemplar, kpi-panel-lifecycle, never exercises — that one only ever appends).',
+    'A two-question trivia round then a final score summary — the mutable question-area container ("q_area") is resent WHOLE three times (two questions, one summary) with a completely different child set each time (never an append), the root wrapper is delivered exactly once and never resent, each round\'s answer Buttons ride their own CardFooter (never loose in CardContent), the two choices are styled as visual peers so no variant leaks which one is correct, and the score updates via data-only reacts between rounds (the GH #307 same-surface RESUME discipline the shelf’s only other lifecycle exemplar, kpi-panel-lifecycle, never exercises — that one only ever appends).',
   promptText: 'Run a 2-question trivia round: show one question with answer buttons, update the score after each pick, load the next question, then show a final score summary — without breaking anything as it moves through each step.',
   surfaceId: TRIVIA_ID,
   protocolVersion: 'v1.0',
@@ -162,47 +190,55 @@ export const triviaRoundResumeSeed: ExampleSeed = {
         ],
       },
     },
-    { version: 'v1.0', updateDataModel: { surfaceId: TRIVIA_ID, value: { score: 0, round: 1 } } },
+    // `/round` (written per-round below in the pre-repair draft) had no reader anywhere on the surface —
+    // the round number is already prose in each q*_text heading — so it is dropped here rather than
+    // seeded, never wired to a phantom binding (dead-data defect class, BOARD ZERO 2026-08-13).
+    { version: 'v1.0', updateDataModel: { surfaceId: TRIVIA_ID, value: { score: 0 } } },
 
-    // Round 1 — q_area's FIRST delivery.
+    // Round 1 — q_area's FIRST delivery. CardContent carries the question substance; the answer choices
+    // ride their OWN CardFooter (P9 card-anatomy law) — both choices `soft` (peer styling): the
+    // `answer_*_correct`/`_wrong` action names stay semantic, but the identical variant means neither
+    // Button's LOOK gives away which one is correct.
     {
       version: 'v1.0',
       updateComponents: {
         surfaceId: TRIVIA_ID,
         components: [
-          { id: 'q_area', component: 'Card', elevation: '1', children: ['q_area_content'] },
+          { id: 'q_area', component: 'Card', elevation: '1', children: ['q_area_content', 'q_area_footer'] },
           { id: 'q_area_content', component: 'CardContent', children: ['q_area_col'] },
-          { id: 'q_area_col', component: 'Column', gap: 'sm', children: ['q1_text', 'q1_choices'] },
+          { id: 'q_area_col', component: 'Column', gap: 'sm', children: ['q1_text'] },
           { id: 'q1_text', component: 'Text', variant: 'h5', text: 'Round 1 — What is the capital of Finland?' },
+          { id: 'q_area_footer', component: 'CardFooter', children: ['q1_choices'] },
           { id: 'q1_choices', component: 'Row', gap: 'sm', wrap: true, children: ['q1_helsinki', 'q1_stockholm'] },
-          { id: 'q1_helsinki', component: 'Button', variant: 'solid', label: 'Helsinki', action: { action: 'answer_capital_correct', wantResponse: true } },
+          { id: 'q1_helsinki', component: 'Button', variant: 'soft', label: 'Helsinki', action: { action: 'answer_capital_correct', wantResponse: true } },
           { id: 'q1_stockholm', component: 'Button', variant: 'soft', label: 'Stockholm', action: { action: 'answer_capital_wrong', wantResponse: true } },
         ],
       },
     },
     // React only — no updateComponents in this step (the correct answer landed).
     { version: 'v1.0', updateDataModel: { surfaceId: TRIVIA_ID, path: '/score', value: 1 } },
-    { version: 'v1.0', updateDataModel: { surfaceId: TRIVIA_ID, path: '/round', value: 2 } },
 
     // Round 2 — q_area resent WHOLE with a completely DIFFERENT child set (q2_* ids, not appended q1_*
     // survivors) — the resume shape #307's live failures are missing, not an append like the KPI seed.
+    // The new round ships its OWN q_area_footer alongside the resent q_area_content — q_area is already
+    // resent whole every round, so the footer's own id is trivially resendable with it.
     {
       version: 'v1.0',
       updateComponents: {
         surfaceId: TRIVIA_ID,
         components: [
-          { id: 'q_area', component: 'Card', elevation: '1', children: ['q_area_content'] },
+          { id: 'q_area', component: 'Card', elevation: '1', children: ['q_area_content', 'q_area_footer'] },
           { id: 'q_area_content', component: 'CardContent', children: ['q_area_col'] },
-          { id: 'q_area_col', component: 'Column', gap: 'sm', children: ['q2_text', 'q2_choices'] },
+          { id: 'q_area_col', component: 'Column', gap: 'sm', children: ['q2_text'] },
           { id: 'q2_text', component: 'Text', variant: 'h5', text: 'Round 2 — Which planet is known as the Red Planet?' },
+          { id: 'q_area_footer', component: 'CardFooter', children: ['q2_choices'] },
           { id: 'q2_choices', component: 'Row', gap: 'sm', wrap: true, children: ['q2_mars', 'q2_venus'] },
-          { id: 'q2_mars', component: 'Button', variant: 'solid', label: 'Mars', action: { action: 'answer_planet_correct', wantResponse: true } },
+          { id: 'q2_mars', component: 'Button', variant: 'soft', label: 'Mars', action: { action: 'answer_planet_correct', wantResponse: true } },
           { id: 'q2_venus', component: 'Button', variant: 'soft', label: 'Venus', action: { action: 'answer_planet_wrong', wantResponse: true } },
         ],
       },
     },
     { version: 'v1.0', updateDataModel: { surfaceId: TRIVIA_ID, path: '/score', value: 2 } },
-    { version: 'v1.0', updateDataModel: { surfaceId: TRIVIA_ID, path: '/round', value: 3 } },
 
     // Final summary — q_area resent WHOLE a third time, this time with a summary instead of choices,
     // proving the discipline holds for an arbitrary number of resends, not just a second one. `${/score}`
@@ -212,16 +248,21 @@ export const triviaRoundResumeSeed: ExampleSeed = {
     // sentinel, silently dropping the score. Every OTHER `${…}` template on this shelf sits INSIDE a
     // list-item scope, where a bare relative name is the correct, idiomatic form — this is the shelf's
     // first top-level (non-list) `${…}` use, so it is exactly the case with no prior example to imitate.
+    // No answer Buttons this round — `q_area_footer` stays referenced (EMPTY children) rather than
+    // dropped: the wire has no per-id delete primitive, so unreferencing it outright would leave an
+    // ORPHANED CardFooter with no Card parent in the merged id graph (`validate.ts`'s SPEC-R6 containment
+    // check reads the whole stream, not just this message) — module-header note.
     {
       version: 'v1.0',
       updateComponents: {
         surfaceId: TRIVIA_ID,
         components: [
-          { id: 'q_area', component: 'Card', elevation: '1', children: ['q_area_content'] },
+          { id: 'q_area', component: 'Card', elevation: '1', children: ['q_area_content', 'q_area_footer'] },
           { id: 'q_area_content', component: 'CardContent', children: ['q_area_col'] },
           { id: 'q_area_col', component: 'Column', gap: 'sm', children: ['game_over_text', 'final_score_text'] },
           { id: 'game_over_text', component: 'Text', variant: 'h5', text: 'Round complete!' },
           { id: 'final_score_text', component: 'Text', variant: 'body', text: '${/score}/2 correct' },
+          { id: 'q_area_footer', component: 'CardFooter', children: [] },
         ],
       },
     },

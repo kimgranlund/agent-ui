@@ -15,6 +15,16 @@
 //     a `SegmentedControl`/`Segment` room-type picker, and a `Slider` nightly-budget control, gated by one
 //     FormProvider (guest name + room type start empty — a live blocked-submit demo, the generative-form
 //     idiom). Covers: Calendar (range), SegmentedControl, Segment, Slider.
+//     P9 card-anatomy repair (2026-08-18, GH #1262 back-score wave): `btn_reserve` used to ride a `Row`
+//     inside `CardContent` with no `CardFooter`. `CardHeader`/`CardContent`/`CardFooter` must be `Card`'s
+//     DIRECT children (`card.css`'s `:scope > :where(...)` region selector), so a `CardFooter` sibling of
+//     `CardContent` — outside the FormProvider's CardContent substance, per the anatomy clause — can no
+//     longer sit inside a `FormProvider` nested inside `CardContent` (the old shape) without losing real
+//     submit-gating (`el.closest('ui-form-provider')`, `renderer.ts`, needs the gate to be an actual DOM
+//     ancestor of the submit Button). The fix: `root` IS the `FormProvider` itself now, `Card` sits one
+//     level down (non-root), `CardContent`/`CardFooter` are `Card`'s direct children — `FormProvider`'s
+//     registry still sees every descendant through the extra `Card` level (event-bubbling registration +
+//     `closest()` gating), so P7's real-gating law and P9's anatomy law both hold at once.
 // (2) RENTAL FILTER PANEL — a live (non-FormProvider) search panel: a `ComboBox` city picker sharing the
 //     `Option` primitive with Select, a `RadioGroup`/`Radio` property-type picker, a `SliderMulti`
 //     price-range control, and a `List` of result cards templated over `/results`. Covers: ComboBox,
@@ -90,10 +100,10 @@ export const bookingReservationSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: BOOKING_ID,
         components: [
-          { id: 'root', component: 'Card', elevation: '1', children: ['root_content'] },
-          { id: 'root_content', component: 'CardContent', children: ['form'] },
-          { id: 'form', component: 'FormProvider', children: ['col'] },
-          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'f_guest', 'f_dates', 'f_room', 'f_budget', 'actions'] },
+          { id: 'root', component: 'FormProvider', children: ['card'] },
+          { id: 'card', component: 'Card', elevation: '1', children: ['root_content', 'root_footer'] },
+          { id: 'root_content', component: 'CardContent', children: ['col'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'f_guest', 'f_dates', 'f_room', 'f_budget'] },
           { id: 'title', component: 'Text', variant: 'h4', text: 'Reserve a room' },
           { id: 'f_guest', component: 'Field', label: 'Guest name', child: 'in_guest' },
           {
@@ -121,6 +131,7 @@ export const bookingReservationSeed: ExampleSeed = {
           { id: 'seg_ste', component: 'Segment', value: 'suite', label: 'Suite' },
           { id: 'f_budget', component: 'Field', label: 'Nightly budget (€)', child: 'sl_budget' },
           { id: 'sl_budget', component: 'Slider', name: 'budget', min: 80, max: 400, step: 10, value: { path: '/booking/budget' } },
+          { id: 'root_footer', component: 'CardFooter', children: ['actions'] },
           { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_reserve'] },
           { id: 'btn_reserve', component: 'Button', variant: 'solid', label: 'Reserve room', action: { action: 'reserve_room', submit: true } },
         ],

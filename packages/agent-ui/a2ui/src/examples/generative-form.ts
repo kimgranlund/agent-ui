@@ -5,8 +5,8 @@
 // Re-sliced into a FINE-GRAINED message sequence (9 lines, `createSurface` first) rather than the
 // original 3-message shape: root arrives EARLY (line 2 of 9 — the surface paints and grows field by
 // field), and each subsequent `updateComponents` adds one Field-and-control unit at a time — exactly what
-// makes the stream *feel* progressive (the out-of-order-tolerant `children` refs on `form` resolve as
-// each field's components land, SPEC-R4).
+// makes the stream *feel* progressive (the out-of-order-tolerant `children` refs on `form_col`/`root_footer`
+// resolve as each field's components land, SPEC-R4).
 //
 // `f_plan`/`in_plan`/its three Options land in ONE message (line 7): the ship-together default
 // (ADR-0053 + its 2026-07-13 Amendment). Late APPENDED Options adopt (TKT-0026), and a mid-position
@@ -17,6 +17,17 @@
 // Every property is a declared default-catalog row (Field/FormProvider/Checkbox/Switch/Select/Option +
 // the TextField `type`/`currency`/`step`/`min` reach) — a payload only a coordinated form catalog can
 // render. The submit Button's action carries `submit:true` (ADR-0054) — the FormProvider gate.
+//
+// P9 card-anatomy repair (2026-08-18, GH #1262 back-score wave): `btn_submit` used to ride a `Row` inside
+// `CardContent` with no `CardFooter` (the scattered-actions anti-pattern). `CardHeader`/`CardContent`/
+// `CardFooter` must be `Card`'s DIRECT children (`card.css`'s `:scope > :where(...)` region selector), so
+// a `CardFooter` sibling of `CardContent` can no longer sit inside a `FormProvider` nested inside
+// `CardContent` (the old shape) without losing real submit-gating (`el.closest('ui-form-provider')`,
+// `renderer.ts`, needs the gate to be an actual DOM ancestor of the submit Button). The fix: `root` IS the
+// `FormProvider` itself now (no separate `form` id needed), `Card` sits one level down (non-root),
+// `CardContent`/`CardFooter` are `Card`'s direct children — `FormProvider`'s registry still sees every
+// descendant through the extra `Card` level (event-bubbling registration + `closest()` gating), so P7's
+// real-gating law and P9's anatomy law both hold at once.
 
 import type { ExampleSeed } from './types.ts'
 
@@ -38,21 +49,23 @@ export const generativeFormSeed: ExampleSeed = {
       createSurface: { surfaceId: SURFACE_ID, catalogId: 'agent-ui', sendDataModel: true },
     },
 
-    // Root arrives EARLY (line 2 of 9): Card > CardContent > FormProvider, whose `children` already names
-    // every field id — none have arrived yet, so each mounts as a position-preserving pending anchor
-    // (SPEC-R4) until its own line lands below.
+    // Root arrives EARLY (line 2 of 9): root IS the FormProvider (P9 repair note above) > Card >
+    // CardContent + CardFooter. `form_col`/`actions` already name every field/action id — none have
+    // arrived yet, so each mounts as a position-preserving pending anchor (SPEC-R4) until its own line
+    // lands below.
     {
       version: 'v1.0',
       updateComponents: {
         surfaceId: SURFACE_ID,
         components: [
-          { id: 'root', component: 'Card', children: ['root_content'] },
-          { id: 'root_content', component: 'CardContent', children: ['form'] },
+          { id: 'root', component: 'FormProvider', children: ['card'] },
+          { id: 'card', component: 'Card', children: ['root_content', 'root_footer'] },
+          { id: 'root_content', component: 'CardContent', children: ['form_col'] },
           // FormProvider declares zero layout props (the fleet's "page author owns layout" contract) —
           // the vertical rhythm rides an explicit Column gap, the pattern-settings-form idiom
-          // (patterns.ts:36-37). Without it the fields render crashed together (gallery bug, 2026-07-08).
-          { id: 'form', component: 'FormProvider', children: ['form_col'] },
-          { id: 'form_col', component: 'Column', gap: 'md', children: ['f_name', 'f_email', 'f_budget', 'f_plan', 'row_toggles', 'actions'] },
+          // (patterns.ts). Without it the fields render crashed together (gallery bug, 2026-07-08).
+          { id: 'form_col', component: 'Column', gap: 'md', children: ['f_name', 'f_email', 'f_budget', 'f_plan', 'row_toggles'] },
+          { id: 'root_footer', component: 'CardFooter', children: ['actions'] },
         ],
       },
     },
@@ -145,6 +158,7 @@ export const generativeFormSeed: ExampleSeed = {
 
     // The submit-flagged action (ADR-0054): `submit:true` is a CLIENT-consumed flag `#wireAction` reads to
     // gate the click — it never leaves the client (the emitted `action` wire shape is byte-identical to a plain one).
+    // `actions` lands here, resolving the pending anchor `root_footer` already named above (SPEC-R4).
     {
       version: 'v1.0',
       updateComponents: {
