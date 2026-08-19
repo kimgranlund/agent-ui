@@ -23,6 +23,14 @@
 // trait unmodified — a click position along the star ROW maps to a snapped value exactly as it does along a
 // slider rail (clicking near star *k* lands near `k·step`), so no bespoke "which star" hit-testing is needed.
 //
+// ADR-0216 Amendment 1 (2026-08-20, Kim ruling; GH #1438): commit-timing splits by INPUT MODALITY, the
+// same two-path shape native `<input type=range>` has. POINTER: a star picked by pointer commits
+// immediately — `change` fires on `pointerup` (the `input`→`value` commit already lands synchronously
+// via valueDrag's `onValue`; only the `change` NOTIFICATION moves earlier). KEYBOARD: unchanged base
+// range law — arrow-step fires `input`, `change` waits for blur. The catalog's
+// `value: { prop: 'value', event: 'change' }` mark is unaffected either way (commit still strictly
+// precedes the event on both paths — Fork-T1/D1-safe, PR #1363's discipline).
+//
 // `super.connected()` IS called (GH #1153 precedent) — it still supplies: the committed-baseline reset
 // (unused here; this leaf owns its own `#committed`), `internals.role = 'slider'`, and the model-agnostic
 // `label` → `internals.ariaLabel` effect.
@@ -64,6 +72,17 @@ export class UIRatingElement extends UIRangeElement {
   // The value at focus — committed baseline for `change` emission on blur (this leaf's own copy;
   // `ownsValueModel()` below gates off the base's identically-shaped but private `#committed` field).
   #committed: number | null = null
+
+  // Gesture-local commit baseline (ADR-0216 Amendment 1 fix, GH #1438 finding S1) — captured on
+  // POINTERDOWN by a listener registered AHEAD of valueDrag's own pointerdown wiring (connected(),
+  // below), so it always observes `value` BEFORE the trait's synchronous write. Needed because on an
+  // UNFOCUSED host the real event order is pointerdown → (mousedown default action) focus → pointerup:
+  // `onValue` (valueDrag) writes `value` inside pointerdown, so by the time `focus` lands mid-gesture
+  // it re-seeds `#committed` to the ALREADY-WRITTEN value — the pointerup compare below then saw
+  // current === #committed and swallowed the very first tap's `change`. `#committed` still exists,
+  // unchanged, for the keyboard focus/blur commit law; this is a second, gesture-scoped baseline
+  // consumed ONLY by the pointerup handler below, immune to a mid-gesture focus re-seed.
+  #gestureBaseline: number | null = null
 
   // Light-DOM parts — built once (idempotent across reconnect, the slider.ts #buildDOM precedent).
   #labelEl: HTMLElement | undefined
@@ -298,10 +317,14 @@ export class UIRatingElement extends UIRangeElement {
       }
     })
 
-    // Change on commit — track value at focus; emit `change` on blur when value has moved (unless the
-    // LLD later rules pointer-pick = commit, ADR-0216 Consequences; no LLD exists for this control today,
-    // so the base's blur-commit law stands, byte-identical to Slider — the Fork-T1/D1 probe in
-    // rating.test.ts proves `value` is already final by the time `change` fires).
+    // Change on commit — track value at focus; emit `change` on blur when value has moved. ADR-0216
+    // Amendment 1 (2026-08-20, Kim ruling): this is the KEYBOARD path's law only — arrow-step adjusts
+    // `value` + fires `input`, `change` on blur, byte-identical to the base range law (native
+    // `<input type=range>`'s own two-path split). A POINTER commit fires `change` on `pointerup`
+    // instead (below) and re-baselines `#committed` there, so this blur handler naturally no-ops for a
+    // value already reported — it only ever fires for a delta the pointer path didn't already commit
+    // (a keyboard edit made after a pointer pick, in the same focus session). The Fork-T1/D1 probe in
+    // rating.test.ts proves `value` is already final by the time `change` fires on EITHER path.
     this.listen(this, 'focus', () => {
       this.#committed = this.#clamp(this.value ?? 0)
     })
@@ -312,6 +335,41 @@ export class UIRatingElement extends UIRangeElement {
         this.emit('change')
       }
       this.#committed = null
+    })
+
+    // Gesture-local baseline capture (ADR-0216 Amendment 1 fix, GH #1438 S1) — registered AHEAD of
+    // valueDrag's own pointerdown wiring below (same target `this` + event 'pointerdown' ⇒ registration
+    // order IS invocation order), so this always runs, and reads `value`, BEFORE that trait's synchronous
+    // write. Scoped to the star track exactly as the pointerup handler below is (a pointerdown elsewhere
+    // on the host is not a pick).
+    this.listen(this, 'pointerdown', (event) => {
+      if (!this.#starsEl?.contains((event as PointerEvent).target as Node | null)) return
+      this.#gestureBaseline = this.#clamp(this.value ?? 0)
+    })
+
+    // Pointer commit (ADR-0216 Amendment 1, 2026-08-20 Kim ruling) — a star picked by POINTER commits
+    // immediately: `change` fires on `pointerup`, not blur. valueDrag's `onValue` below already lands
+    // the `input`→`value` commit synchronously (unchanged); only the `change` NOTIFICATION moves
+    // earlier, to the gesture's own end. Scoped to the star track (`#starsEl.contains`, the same test
+    // valueDrag's own pointerdown listener applies — a pointerup elsewhere on the host is not a pick).
+    // readonly/disabled both no-op naturally here: `onValue` never wrote `this.value` for them, so
+    // `current` never diverges from `#gestureBaseline` and nothing emits (the same belt-and-suspenders
+    // CSS `pointer-events: none` gate `onValue` itself already carries). The compare uses
+    // `#gestureBaseline` (captured above, at pointerdown, BEFORE any write) rather than `#committed` —
+    // `#committed` is re-seeded by the `focus` handler above whenever focus lands, including MID-gesture
+    // on an unfocused host's first tap (real order: pointerdown → focus → pointerup), which would
+    // otherwise compare the already-written value against itself. `#committed` is still re-baselined
+    // here too, so a later blur in the same focus session (no further edits) does not double-report the
+    // delta this pointerup already committed.
+    this.listen(this, 'pointerup', (event) => {
+      if (!this.#starsEl?.contains((event as PointerEvent).target as Node | null)) return
+      const current = this.#clamp(this.value ?? 0)
+      const baseline = this.#gestureBaseline
+      this.#gestureBaseline = null
+      if (baseline !== null && !Object.is(current, baseline)) {
+        this.emit('change')
+      }
+      this.#committed = current
     })
 
     // Pointer pick (ADR-0216 cl.4) — click position along `.stars` maps to a snapped value exactly as a
