@@ -116,13 +116,13 @@
 - [ui-sparkline](./sparkline-doc.html): the inline trend line over a bound numeric series; [demo](./sparkline-demo.html).
 - [ui-bar-chart](./bar-chart-doc.html): magnitude comparison bars, including diverging negative values; [demo](./bar-chart-demo.html).
 - [ui-line-chart](./line-chart-doc.html): the fleet's first axis-bearing chart — a value-range baseline (zero-line or value floor) + always-shown min/max labels, single-series line/area; [demo](./line-chart-demo.html).
-- [ui-swatch](./swatch-doc.html): one color value rendered AS color — bounded bordered box + label + printed value; the browser is the only color engine; a `--var` value resolves live in place.
-- [ui-ramp](./ramp-doc.html): an ordered color series as a strip of swatch cells — tonal progressions, physically LTR in every locale; order is the content.
-- [ui-ladder](./ladder-doc.html): labeled dimensional tiers, each magnitude drawn as a literal-length bar beside its printed value — degrade the mark, never drop the datum.
+- [ui-swatch](./swatch-doc.html): one color value rendered AS color — bounded bordered box + label + printed value; the browser is the only color engine; a `--var` value resolves live in place; [demo](./swatch-demo.html).
+- [ui-ramp](./ramp-doc.html): an ordered color series as a strip of swatch cells — tonal progressions, physically LTR in every locale; order is the content; [demo](./ramp-demo.html).
+- [ui-ladder](./ladder-doc.html): labeled dimensional tiers, each magnitude drawn as a literal-length bar beside its printed value — degrade the mark, never drop the datum; [demo](./ladder-demo.html).
 
 ## Components — feed & activity
 
-- [ui-progress](./progress-doc.html): the determinate/indeterminate progress bar — thin-rail geometry, reduced-motion aware.
+- [ui-progress](./progress-doc.html): the determinate/indeterminate progress bar — thin-rail geometry, reduced-motion aware; [demo](./progress-demo.html).
 - [ui-avatar](./avatar-doc.html): identity — image → initials → glyph fallback chain, decorative by default; [demo](./avatar-demo.html).
 - [ui-image](./image-doc.html): the URL-sourced content image — a reserved aspect-ratio box (zero CLS), native lazy-loading, an optional bottom-scrim caption; [demo](./image-demo.html).
 - [ui-video](./video-doc.html): the native video player — <video controls> in a reserved aspect-ratio box (zero CLS), poster support, no custom chrome; [demo](./video-demo.html).
