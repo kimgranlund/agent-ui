@@ -219,7 +219,9 @@ function componentKnobs(attrs: readonly ParsedAttribute[], tag: string): Knob[] 
 export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   Text: { text: 'Rollout notes shipped to the team — staging verified, canary at 5%.', variant: 'body' },
   Button: { label: 'Button', variant: 'solid' },
-  TextField: { label: 'Label', placeholder: 'Sample' },
+  // TextField: label is ARIA-ONLY by fleet law (labelSource → aria-label, text-field.md), so the VISIBLE
+  // demonstration rides value+placeholder; 'Label'/'Sample' was the rubric A3 anchor's literal counter-example.
+  TextField: { label: 'Full name', placeholder: 'e.g. Ada Lovelace', value: 'Grace Hopper' },
   Field: { label: 'Field label' },
   Checkbox: { label: 'Checkbox' },
   Switch: { label: 'Switch' },
@@ -268,7 +270,10 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   // pass found 20+ cards whose R was technically non-empty but taught nothing (A3=1/B4=1) — the mechanical
   // gates can't catch a meaningless-but-nonzero box; the review layer did. Same seeding law as above; array
   // props ride SAMPLE_TREES rootRef below. Content mirrors the corpus idioms (catalog-coverage/frontier). ──
-  Avatar: { src: IMAGE_SAMPLE_SRC, name: 'Ada Lovelace' },
+  // Avatar: NO src seed on purpose (verify round 2026-08-18): the landscape sample SVG crushed into the
+  // 16px circle taught nothing and src wins over initials — the bare `name` renders initials, which is both
+  // visible and the prop demonstrated. A portrait-shaped asset can upgrade this later.
+  Avatar: { name: 'Ada Lovelace' },
   Badge: { label: '2 failing', intent: 'danger' },
   Code: { code: 'npm run check && npm test', language: 'bash' },
   Icon: { name: 'check', label: 'Done' },

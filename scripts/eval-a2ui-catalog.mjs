@@ -397,8 +397,15 @@ for (let t = 0; t < tabCount; t++) {
           if (await openSwitch.count()) {
             await openSwitch.first().click()
             await page.waitForTimeout(350)
-            const cbox = await card.locator('.preview-canvas').first().boundingBox()
-            if (cbox) await page.screenshot({ path: path.join(dir, `${name}.open.png`), clip: cbox, animations: 'disabled' })
+            // a top-layer <dialog> centers in the VIEWPORT, not the canvas — clipping to the canvas box
+            // produced an unjudgeable corner sliver (the verify round's Modal BLOCKED). Dialog open → shoot
+            // the viewport; otherwise clip the canvas.
+            const hasDialog = await page.evaluate(() => !!document.querySelector('dialog[open]'))
+            if (hasDialog) await page.screenshot({ path: path.join(dir, `${name}.open.png`), animations: 'disabled' })
+            else {
+              const cbox = await card.locator('.preview-canvas').first().boundingBox()
+              if (cbox) await page.screenshot({ path: path.join(dir, `${name}.open.png`), clip: cbox, animations: 'disabled' })
+            }
             // a top-layer overlay (Modal's <dialog>) intercepts pointer events page-wide — force the
             // closing click through it, and Escape as the belt-and-braces fallback
             await openSwitch.first().click({ force: true })
