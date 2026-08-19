@@ -66,6 +66,8 @@ describe('swiper.css (PRIMARY) — structure + sectioning', () => {
     expect(primaryToken).toMatch(/--ui-swiper-easing:\s*var\(--md-sys-motion-easing-standard\)/)
     expect(primaryToken).toMatch(/--ui-swiper-dot-size:\s*var\(--md-sys-compact-sm\)/)
     expect(primaryToken).toMatch(/--ui-swiper-dot-color-active:\s*var\(--md-sys-color-primary\)/)
+    // GH #1330: the paddle band tracks the stamped icon-only md ui-button square (button.css --ui-button-height).
+    expect(primaryToken).toMatch(/--ui-swiper-paddle-band:\s*var\(--md-sys-height-md\)/)
   })
 
   it('never uses color-mix or opacity (components hold zero colour opinion; ADR-0008)', () => {
@@ -74,14 +76,26 @@ describe('swiper.css (PRIMARY) — structure + sectioning', () => {
   })
 
   it('@scope styles the HOST only — no leaf-tag ANATOMY (pagination/paddles/label structural rules moved out)', () => {
-    // the ONE deliberate exception: a cross-tag MOTION rule gated on THIS host's :state(ready) — ready is
+    // TWO deliberate exceptions: (1) a cross-tag MOTION rule gated on THIS host's :state(ready) — ready is
     // owned by ui-swiper alone, so the rule referencing it lives here, not in swiper-pagination.css
-    // (checked separately below). No paddles/label reference of any kind belongs in the primary.
-    expect(primaryStyles).not.toMatch(/ui-swiper-paddles/)
+    // (checked separately below); (2) the paddle-band TRACK rule's `:has(> ui-swiper-paddles[data-default])`
+    // CONDITION (GH #1330) — it styles the track, host geometry, never paddle anatomy (checked separately
+    // below). No label reference of any kind belongs in the primary.
     expect(primaryStyles).not.toMatch(/ui-swiper-label/)
+    const paddlesRefs = [...primaryStyles.matchAll(/[^\n]*ui-swiper-paddles[^{]*\{/g)]
+    expect(paddlesRefs.length, 'only the paddle-band condition may reference ui-swiper-paddles here').toBe(1)
+    expect(paddlesRefs[0][0]).toMatch(/:scope:has\(> ui-swiper-paddles\[data-default\]\) > \[data-part='track'\]/)
     const paginationRefs = [...primaryStyles.matchAll(/[^\n]*ui-swiper-pagination[^{]*\{/g)]
     expect(paginationRefs.length, 'only the ready-gated motion rule (+ its reduced-motion variant) may reference ui-swiper-pagination here').toBe(2)
     for (const ref of paginationRefs) expect(ref[0]).toMatch(/:state\(ready\)/)
+  })
+
+  it('the default-stamped paddles band is TRACK geometry: a transparent inline BORDER (content clips at the padding box — padding would let a neighbour slide peek under the carets), gated on [data-default] alone (GH #1330)', () => {
+    const m = primaryStyles.match(/:scope:has\(> ui-swiper-paddles\[data-default\]\) > \[data-part='track'\]\s*\{([^}]*)\}/)
+    expect(m, 'the paddle-band track rule is missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/border-inline:\s*var\(--ui-swiper-paddle-band\) solid transparent/)
+    expect(rule).not.toMatch(/padding/)
   })
 
   it('@scope CONSUMES only --ui-swiper-* (+ the shared fleet tokens)', () => {
