@@ -88,12 +88,21 @@ export class UIRadioGroupElement extends UIFormElement {
   // A `value` set with no matching child YET (the A2UI catalog value-before-children ordering bug: a
   // `RadioGroup`/`SegmentedControl` with `value` + item children in one `updateComponents` hop applies
   // catalog props at widget-CREATE time — before the children are appended — so the public `value`
-  // setter below finds no match and the intent would otherwise be lost). Retained here, resolved by
-  // `resolvePendingValue()` (below) the moment a matching child REGISTERS — the existing `grouped()`
-  // child-registration idiom (radio.ts), called from every `ui-radio`/`ui-segment` child's own
-  // `connected()`. Cleared the instant a match resolves; a value that never matches any child simply
-  // stays retained (harmless — the group correctly reads `null` until/unless a match ever registers,
-  // same as today's no-match-clears outcome, just not foreclosed on a not-yet-existing child).
+  // setter below finds no match and the intent would otherwise be lost). Retained here, resolved
+  // SOLELY by `resolvePendingValue()` (below) the moment a matching child REGISTERS — the existing
+  // `grouped()` child-registration idiom (radio.ts), called from every `ui-radio`/`ui-segment` child's
+  // own `connected()`, AFTER that same child's `defaultChecked` capture (indicator-element.ts) — never
+  // from the group's own `connected()` (component-checker corrective: a connect-time pre-resolution
+  // used to write `checked` on a not-yet-first-connected radio, polluting its `defaultChecked` reset
+  // baseline — P-A/P-A2/P-B). Cleared the instant a match resolves; a value that never matches any
+  // child simply stays retained (harmless — the group correctly reads `null` until/unless a match ever
+  // registers, same as today's no-match-clears outcome, just not foreclosed on a not-yet-existing child).
+  //
+  // SUBORDINATE to committed state (component-checker corrective, P-C/P-D): a real user commit
+  // (`#commit`, below) clears this outright — a later-registering radio must never override a
+  // selection the user already made (P-C), and a stale unmatched pending must never be re-applied
+  // against the group's own connect-time resolution (there is none any more — see above) on reconnect,
+  // so a committed selection survives a disconnect/reconnect cycle intact (P-D).
   #pendingValue: string | null = null
 
   // The user-invalid TIMING controller (ADR-0051), created per connection (re-arms on reconnect;
@@ -139,29 +148,24 @@ export class UIRadioGroupElement extends UIFormElement {
 
     const radios = this.#radios()
 
-    // Resolve a PENDING programmatic value (set via the `value` setter before ANY radio existed —
-    // e.g., an A2UI catalog payload applying `value` at widget-create time, before its item children
-    // are appended in the same `updateComponents` hop) FIRST, ahead of the roving-focus setup below.
-    // Radios are already present as light-DOM children the instant this method runs regardless of
-    // whether each has individually connected yet (the SAME "already present" fact the seed-from-
-    // checked-radio step next relies on) — so this is the earliest point the group can know its full
-    // child set. Resolving here, BEFORE `rovingFocus(...)` computes its `initialIndex`, means the
-    // trait's very FIRST tabindex stamp already reflects the correct selection: no later per-radio
-    // correction race against `radio.ts`'s own late-append tabindex fixup (which only corrects the ONE
-    // registering radio, not siblings already visited — resolving progressively, radio-by-radio, during
-    // THIS same connect wave would leave a stale extra tabIndex=0 on an earlier sibling). An unmatched
-    // pending value (no radio ever carries that value) stays retained — `resolvePendingValue` below
-    // still gives a genuinely LATE-appended radio (added after this group has already connected) a
-    // chance to claim it.
-    if (this.#pendingValue !== null) {
-      const index = radios.findIndex((r) => r.value === this.#pendingValue)
-      this.#applySelection(radios, index)
-      if (index >= 0) this.#pendingValue = null
-    }
+    // NO connect-time pending-value pre-resolution here (component-checker corrective, retiring the
+    // ADR-era block that used to live at this point): resolving a pending `value` by writing a radio's
+    // `checked` THIS early — before that radio's own `connected()` has run — would pollute its
+    // `defaultChecked` reset baseline (indicator-element.ts's capture is a ONE-TIME first-connect
+    // snapshot; a write that lands before it fires masquerades as the AUTHORED default, P-A/P-A2), and
+    // an unmatched pending would otherwise force an unconditional `#applySelection(radios, -1)` on
+    // EVERY (re)connect — silently unchecking an authored `checked` child before its own default
+    // capture (P-B) or wiping an already-committed selection on a reconnect with a stale pending still
+    // outstanding (P-D). Pending resolution now happens SOLELY through `resolvePendingValue()` (below),
+    // invoked from each radio's own `grouped()` hook at the tail of that radio's OWN `connected()` —
+    // strictly AFTER its `defaultChecked` capture — for both the same-wave (whole subtree connects at
+    // once; tree-order still runs each child's own `connected()`/`grouped()` after this method returns,
+    // in the SAME connect microtask) and the genuinely-later-appended-child cases alike;
+    // `resolvePendingValue`'s own tabindex restamp (its tail) covers the "exactly one tabindex=0"
+    // roving contract for both.
 
     // Seed from any initially-checked radio (HTML-parsed content: radios connect before the group's
     // connected() runs, so they are already present and may carry a `checked` attribute from markup).
-    // Skipped when the pending-value resolution above already selected something.
     if (this.#selectedValue.value === null) {
       const initial = radios.find((r) => r.checked)
       if (initial) this.#selectedValue.value = initial.value
@@ -285,15 +289,18 @@ export class UIRadioGroupElement extends UIFormElement {
     if (index === -1) return
     this.#applySelection(radios, index)
     this.#pendingValue = null
-    // This path only ever fires for a GENUINELY late-registering radio (the connect-time resolution
-    // above already claims the common "whole subtree assembled, then connected once" shape before any
-    // radio's own `connected()`/`grouped()` runs — see the comment there — so `#pendingValue` is already
-    // `null` by the time any radio in THAT wave reaches here). `rovingFocus`'s own initial tabindex stamp
-    // is therefore long past; re-derive the "exactly one tabindex=0" roving target directly (the SAME
-    // checked-or-first rule `radio.ts`'s own late-append correction uses, radio.ts:70-79) so the newly-
-    // selected radio — not whichever radio the trait originally stamped — carries the sole tab stop. The
-    // NEXT keydown resyncs the trait's own internal index via `syncIndex` regardless (radio-group.ts's
-    // `rovingFocus(...)` call below), so this direct write never fights the trait afterward.
+    // This is now the ONLY pending-resolution path (the group's own connect-time pre-resolution was
+    // retired — see the comment on `connected()` above), covering BOTH shapes uniformly: a
+    // whole-subtree-connects-at-once wave (this fires from THIS radio's own `grouped()`, at the tail of
+    // its own `connected()`, strictly after its `defaultChecked` capture) and a genuinely
+    // later-appended radio. Either way, `rovingFocus`'s own initial tabindex stamp (seeded with nothing
+    // selected, since nothing was resolved yet when the group's `connected()` ran) is already stale by
+    // the time this radio resolves the match — re-derive the "exactly one tabindex=0" roving target
+    // directly (the SAME checked-or-first rule `radio.ts`'s own late-append correction uses,
+    // radio.ts:70-79) so the newly-selected radio — not whichever radio the trait originally stamped —
+    // carries the sole tab stop. The NEXT keydown resyncs the trait's own internal index via `syncIndex`
+    // regardless (radio-group.ts's `rovingFocus(...)` call below), so this direct write never fights
+    // the trait afterward.
     const rovingTarget = radio.checked ? radio : (radios.find((r) => r.checked) ?? radios[0])
     for (const r of radios) r.tabIndex = r === rovingTarget ? 0 : -1
   }
@@ -369,11 +376,19 @@ export class UIRadioGroupElement extends UIFormElement {
    * emits `change` on the group when the selection is new. An out-of-range `index` (no radio at that
    * position) is a no-op — unlike the public `value` setter's "no match" path, this never clears an
    * existing selection (there is no user gesture that should silently blank the group).
+   *
+   * Committed state OUTRANKS any outstanding pending value (component-checker corrective, P-C): a real
+   * user selection here retires `#pendingValue` unconditionally, so a matching child that registers
+   * LATER (`resolvePendingValue`, above) can no longer jump the group's selection out from under the
+   * user — the pending request was superseded the moment a real commit landed.
    */
   #commit(index: number): void {
     const radios = this.#radios()
     if (!radios[index]) return
-    if (this.#applySelection(radios, index)) this.emit('change')
+    if (this.#applySelection(radios, index)) {
+      this.#pendingValue = null
+      this.emit('change')
+    }
   }
 
   // ── form hooks ──────────────────────────────────────────────────────────────────────────────────

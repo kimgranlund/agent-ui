@@ -962,6 +962,117 @@ describe('UIRadioGroupElement — value set before children exist (order-indepen
   })
 })
 
+// ── component-checker correctives (P-A/P-A2/P-B/P-C/P-D) ────────────────────────────────────────────
+//
+// An independent component-checker pass reproduced five defects in the original value-before-children
+// fix (1b3196fa) and this suite pins the two correctives that closed them:
+//   1. Committed state OUTRANKS a pending value: a real user commit clears `#pendingValue` outright
+//      (P-C), and the group's connect-time resolution was retired entirely so an unmatched pending can
+//      never force an `#applySelection(radios, -1)` on (re)connect (P-D).
+//   2. Pending resolution happens SOLELY via the per-radio `resolvePendingValue` seam — called from each
+//      radio's own `grouped()`, strictly AFTER that SAME radio's `defaultChecked` capture — so resolving
+//      a pending value never pollutes the reset baseline (P-A/P-A2), and an unmatched pending at connect
+//      can never uncheck an authored `checked` child before its own default capture (P-B).
+
+describe('UIRadioGroupElement — component-checker correctives', () => {
+  afterEach(() => {
+    document.body.querySelectorAll('ui-radio-group-test').forEach((el) => el.remove())
+  })
+
+  it('P-A/P-A2: resolving a value-before-children pending value does NOT pollute the resolved radio\'s defaultChecked; formReset() returns to the authored default (null)', () => {
+    const group = makeGroup()
+    group.value = 'r2' // set BEFORE any radio exists — retained as pending
+    const r1 = makeRadio('r1')
+    const r2 = makeRadio('r2')
+    const r3 = makeRadio('r3')
+    group.append(r1, r2, r3)
+    document.body.append(group) // connects the whole assembled subtree; pending resolves via r2's own grouped()
+
+    expect(group.value).toBe('r2')
+    expect(r2.checked).toBe(true)
+    // P-A: no radio was ever AUTHORED with a `checked` attribute — the resolution must not retroactively
+    // masquerade as the authored default.
+    expect(r1.defaultChecked).toBe(false)
+    expect(r2.defaultChecked).toBe(false)
+    expect(r3.defaultChecked).toBe(false)
+
+    // P-A2: formReset() must restore the AUTHORED default (nothing checked), not the pending-resolved
+    // selection. The platform resets every FACE member independently (order unspecified).
+    group.formResetCallback()
+    r1.formResetCallback()
+    r2.formResetCallback()
+    r3.formResetCallback()
+    expect(group.value).toBeNull()
+    expect(r1.checked).toBe(false)
+    expect(r2.checked).toBe(false)
+    expect(r3.checked).toBe(false)
+
+    group.remove()
+  })
+
+  it('P-B: an unmatched pending value at connect must not uncheck an authored `checked` child before its own default capture', () => {
+    const group = makeGroup()
+    group.value = 'zzz' // set BEFORE any radio exists — will NEVER match r1/r2, stays pending forever
+    const r1 = makeRadio('r1')
+    r1.setAttribute('checked', '') // authored default
+    const r2 = makeRadio('r2')
+    group.append(r1, r2)
+    document.body.append(group) // connects; the group's own connected() must not touch r1's checked state
+
+    expect(r1.checked).toBe(true) // the authored default must survive an outstanding unmatched pending
+    expect(r2.checked).toBe(false)
+    expect(group.value).toBe('r1') // seeded from the authored-checked radio
+    expect(r1.defaultChecked).toBe(true) // captured correctly — never overwritten before its own connect
+    expect(r2.defaultChecked).toBe(false)
+
+    group.remove()
+  })
+
+  it('P-C: a later user commit outranks a stale pending — a matching child appended AFTER the commit must not jump the selection', () => {
+    const group = makeGroup()
+    const r1 = makeRadio('r1', 'One')
+    group.append(r1)
+    document.body.append(group) // connects with only r1 present
+
+    group.value = 'r2' // no match yet (r2 doesn't exist) — retained as pending
+    expect(group.value).toBeNull()
+
+    click(r1) // a REAL user commit — must retire the stale pending outright
+    expect(group.value).toBe('r1')
+    expect(r1.checked).toBe(true)
+
+    const r2 = makeRadio('r2', 'Two')
+    group.append(r2) // r2 now matches the old pending value — must NOT resolve; the user's commit stands
+    expect(group.value).toBe('r1') // no jump
+    expect(r1.checked).toBe(true)
+    expect(r2.checked).toBe(false)
+
+    group.remove()
+  })
+
+  it('P-D: a committed selection survives disconnect+reconnect even with a stale unmatched pending still outstanding', () => {
+    const group = makeGroup()
+    group.value = 'never-matches' // set BEFORE any radio exists — no radio will ever carry this value
+    const r1 = makeRadio('r1', 'One')
+    const r2 = makeRadio('r2', 'Two')
+    group.append(r1, r2)
+    document.body.append(group) // connects; pending stays outstanding (unmatched)
+
+    click(r1) // a real user commit
+    expect(group.value).toBe('r1')
+    expect(r1.checked).toBe(true)
+
+    group.remove() // disconnect
+    document.body.append(group) // reconnect — must NOT re-run any -1 clear against the stale pending
+
+    expect(group.value).toBe('r1')
+    expect(r1.checked).toBe(true)
+    expect(r2.checked).toBe(false)
+
+    group.remove()
+  })
+})
+
 // ── descriptor trip-wire (contract↔props) ────────────────────────────────────────────────────────
 //
 // Two layers: (a) STRUCTURAL — validateComponentDescriptor reports ZERO failures.
