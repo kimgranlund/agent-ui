@@ -213,7 +213,10 @@ function componentKnobs(attrs: readonly ParsedAttribute[], tag: string): Knob[] 
 // a2ui mode carries NO defaults in the catalog (props are all optional), so a bare specimen would render empty.
 // These per-component seeds give each a legible starting point (a label/text so it is visible, a modal opened);
 // knobs edit the ROOT's own props only. Values are raw knob strings (a boolean is 'true'/'false').
-const A2UI_INITIAL: Record<string, Record<string, string>> = {
+// Exported for scripts/eval-a2ui-catalog.mjs (the rubric a2ui-catalog-example.md §5 runner), which derives
+// each card's expected seeds in-page — the seeds are READ from here, never guessed (same one-source rule as
+// the exported sampleFor below). No other consumer.
+export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   Text: { text: 'Sample text', variant: 'body' },
   Button: { label: 'Button', variant: 'solid' },
   TextField: { label: 'Label', placeholder: 'Sample' },
