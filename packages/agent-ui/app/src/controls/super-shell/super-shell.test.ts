@@ -255,6 +255,10 @@ describe('ui-super-shell — pane-resizer forced-colors annotation (GH #185 pari
 // forced-colors precedent just above: pin the CSS TEXT of a rule jsdom cannot render). These pins exist
 // so DELETING a rule reds without a browser — the cross-engine measurement leg lives in
 // super-shell-bar-seam.browser.test.ts. Each pin names the clause it holds.
+// GH #1328: the blanket bar rule's selector is `[data-part='bar']:where([data-bar])` — the `:where()`
+// discriminator fences the rule to the shell's OWN bars (content-side parts named "bar", e.g. ui-ladder's
+// magnitude bars, must never take shell-bar geometry) at unchanged (0,1,0) specificity. The needles below
+// pin that spelling on purpose: an edit dropping the :where() arm re-opens the leak.
 describe('ui-super-shell — the bar-seam contract, source-pinned (ADR-0166, GH #371)', () => {
   const css = readFileSync(`${process.cwd()}/packages/agent-ui/app/src/controls/super-shell/super-shell.css`, 'utf8') as string
   // The token block is everything before the @scope rule; the styles block is everything after. Pinning
@@ -297,7 +301,7 @@ describe('ui-super-shell — the bar-seam contract, source-pinned (ADR-0166, GH 
   it('cl.1 — [data-part="frame"] declares NO gap, and the three inline-axis gap owners are untouched', () => {
     expect(ruleBody("[data-part='frame'] {")).not.toMatch(/\bgap:/)
     expect(tokenBlock).toMatch(/--ui-super-shell-gap:\s*var\(--ui-super-shell-module\);/)
-    expect(ruleBody("[data-part='bar'] {")).toMatch(/gap:\s*var\(--ui-super-shell-gap\);/)
+    expect(ruleBody("[data-part='bar']:where([data-bar]) {")).toMatch(/gap:\s*var\(--ui-super-shell-gap\);/)
     expect(ruleBody("[data-part='middle'] {")).toMatch(/gap:\s*var\(--ui-super-shell-gap\);/)
   })
 
@@ -305,12 +309,12 @@ describe('ui-super-shell — the bar-seam contract, source-pinned (ADR-0166, GH 
     expect(ruleBody("[data-part='bar'][data-bar='header']")).toMatch(/border-block-end:\s*var\(--ui-super-shell-bar-seam\);/)
     expect(ruleBody("[data-part='bar'][data-bar='footer']")).toMatch(/border-block-start:\s*var\(--ui-super-shell-bar-seam\);/)
     // #253's no-radius-on-a-bar clause, re-affirmed: no bar rule declares any radius
-    expect(ruleBody("[data-part='bar'] {")).not.toMatch(/radius/)
+    expect(ruleBody("[data-part='bar']:where([data-bar]) {")).not.toMatch(/radius/)
   })
 
   it('cl.2 — the bar keeps box-sizing: border-box (what ABSORBS the seam inside the 54px instead of growing the bar)', () => {
-    expect(ruleBody("[data-part='bar'] {")).toMatch(/box-sizing:\s*border-box;/)
-    expect(ruleBody("[data-part='bar'] {")).toMatch(/min-block-size:\s*var\(--ui-super-shell-bar-size\);/)
+    expect(ruleBody("[data-part='bar']:where([data-bar]) {")).toMatch(/box-sizing:\s*border-box;/)
+    expect(ruleBody("[data-part='bar']:where([data-bar]) {")).toMatch(/min-block-size:\s*var\(--ui-super-shell-bar-size\);/)
   })
 
   it('cl.3 — BOTH frame bar-presence rules exist AND use the mandatory `> ` CHILD combinator', () => {
