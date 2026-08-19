@@ -133,6 +133,53 @@ describe('ui-rating browser smoke — pointer pick (valueDrag proof)', () => {
   })
 })
 
+describe('ui-rating browser smoke — pointer commit (ADR-0216 Amendment 1, GH #1438)', () => {
+  it('a REAL pointer tap fires `change` on pointerup — before any blur, real focus/gesture ordering', () => {
+    const el = document.createElement('ui-rating') as UIRatingElement
+    el.max = 5
+    el.step = 1
+    document.body.append(el)
+    stubCapture(el)
+
+    el.focus() // a real click transfers focus before pointerup; establish that ordering explicitly
+
+    let changeCount = 0
+    let inputCount = 0
+    el.addEventListener('input', () => { inputCount++ })
+    el.addEventListener('change', () => { changeCount++ })
+
+    const rect = stars(el).getBoundingClientRect()
+    const midX = rect.left + rect.width / 2
+    ptr(el, 'pointerdown', midX)
+    expect(inputCount).toBeGreaterThan(0) // the value already committed synchronously
+    expect(changeCount).toBe(0) // the NOTIFICATION has not fired yet — pointerup hasn't happened
+
+    ptr(el, 'pointerup', midX)
+    expect(changeCount).toBe(1) // fires on pointerup, not deferred to blur
+
+    el.remove()
+  })
+
+  it('keyboard commit is unaffected — `change` still waits for blur, not the arrow-step itself', () => {
+    const el = document.createElement('ui-rating') as UIRatingElement
+    el.value = 2
+    document.body.append(el)
+    el.focus()
+
+    let changeCount = 0
+    el.addEventListener('change', () => { changeCount++ })
+
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
+    expect(el.value).toBe(3)
+    expect(changeCount).toBe(0) // base range law — no change yet, this control still has focus
+
+    el.dispatchEvent(new FocusEvent('blur'))
+    expect(changeCount).toBe(1) // commits on blur, exactly as before this amendment
+
+    el.remove()
+  })
+})
+
 describe('ui-rating browser smoke — readonly/disabled inert the star track (ADR-0216 cl.4)', () => {
   it('readonly renders pointer-events:none on .stars (CSS-level write-path inert)', () => {
     const el = document.createElement('ui-rating') as UIRatingElement

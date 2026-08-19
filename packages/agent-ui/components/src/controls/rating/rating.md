@@ -95,7 +95,7 @@ events:
     description: Fired on each live value change — keyboard step (ArrowLeft/Right/Up/Down, PageUp/Down, Home/End) or pointer pick/drag along the star row (each pointermove that changes the snapped value). Never fires while readonly or disabled (both inert the write path, ADR-0216 cl.4).
   - name: change
     detail: 'null'
-    description: Fired on blur when value has moved since focus (the base's commit-on-blur contract, unchanged from Slider — ADR-0216 Consequences; no LLD overrides pointer-pick-as-commit for this control today). The Fork-T1/D1 probe (rating.test.ts) proves `value` is already final by the time `change` fires — the precondition ADR-0216 cl.6 sets for the catalog `value:{prop:'value',event:'change'}` mark (the catalog row itself is the integration lane's work, not this control's).
+    description: ADR-0216 Amendment 1 (2026-08-20 Kim ruling) — commit timing splits by input modality. POINTER pick commits immediately, firing on pointerup (the input→value commit already landed synchronously). KEYBOARD keeps the base range law, firing on blur when value has moved since focus (unchanged from Slider). The Fork-T1/D1 probe (rating.test.ts) proves value is already final by the time change fires on EITHER path — the precondition ADR-0216 cl.6 sets for the catalog value:{prop:'value',event:'change'} mark (the catalog row itself is the integration lane's work, not this control's).
 
 slots: []              # light-DOM host-as-grid; no author-projection <slot> — label/stars are all control-created parts
 
@@ -209,8 +209,17 @@ still focusable, still reads as "normal", just not writable).
 Pointer pick: a press on `.stars` maps the pointer's X coordinate along the track to a snapped `value`
 exactly as a slider rail does (clicking near star *k* lands near `k·step`) — the same `valueDrag` trait
 Slider uses, unmodified. Keyboard: Arrow ±`step`, Page ±10×`step`, Home/End → exact min/max. Both paths are
-inert while `readonly` or `disabled`. Each live change emits `input`; `change` fires on blur when the value
-moved since focus (the base's commit-on-blur contract, unchanged from Slider).
+inert while `readonly` or `disabled`. Each live change emits `input`.
+
+**Commit timing splits by input modality (ADR-0216 Amendment 1, 2026-08-20 Kim ruling)** — the same
+two-path split native `<input type=range>` has:
+- **Pointer** — a star picked by pointer commits immediately: `change` fires on `pointerup` (the
+  `input`→`value` commit already landed synchronously; only the `change` notification moves).
+- **Keyboard** — keeps the base range law: arrow-step fires `input`, `change` fires on blur when the
+  value has moved since focus (unchanged from Slider).
+
+The catalog's `value: { prop: 'value', event: 'change' }` mark is unaffected either way — commit still
+strictly precedes the event on both paths (Fork-T1/D1-safe, PR #1363's discipline).
 
 ## Sizes
 

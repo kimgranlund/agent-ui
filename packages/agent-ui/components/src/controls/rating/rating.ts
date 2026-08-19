@@ -23,6 +23,14 @@
 // trait unmodified — a click position along the star ROW maps to a snapped value exactly as it does along a
 // slider rail (clicking near star *k* lands near `k·step`), so no bespoke "which star" hit-testing is needed.
 //
+// ADR-0216 Amendment 1 (2026-08-20, Kim ruling; GH #1438): commit-timing splits by INPUT MODALITY, the
+// same two-path shape native `<input type=range>` has. POINTER: a star picked by pointer commits
+// immediately — `change` fires on `pointerup` (the `input`→`value` commit already lands synchronously
+// via valueDrag's `onValue`; only the `change` NOTIFICATION moves earlier). KEYBOARD: unchanged base
+// range law — arrow-step fires `input`, `change` waits for blur. The catalog's
+// `value: { prop: 'value', event: 'change' }` mark is unaffected either way (commit still strictly
+// precedes the event on both paths — Fork-T1/D1-safe, PR #1363's discipline).
+//
 // `super.connected()` IS called (GH #1153 precedent) — it still supplies: the committed-baseline reset
 // (unused here; this leaf owns its own `#committed`), `internals.role = 'slider'`, and the model-agnostic
 // `label` → `internals.ariaLabel` effect.
@@ -298,10 +306,14 @@ export class UIRatingElement extends UIRangeElement {
       }
     })
 
-    // Change on commit — track value at focus; emit `change` on blur when value has moved (unless the
-    // LLD later rules pointer-pick = commit, ADR-0216 Consequences; no LLD exists for this control today,
-    // so the base's blur-commit law stands, byte-identical to Slider — the Fork-T1/D1 probe in
-    // rating.test.ts proves `value` is already final by the time `change` fires).
+    // Change on commit — track value at focus; emit `change` on blur when value has moved. ADR-0216
+    // Amendment 1 (2026-08-20, Kim ruling): this is the KEYBOARD path's law only — arrow-step adjusts
+    // `value` + fires `input`, `change` on blur, byte-identical to the base range law (native
+    // `<input type=range>`'s own two-path split). A POINTER commit fires `change` on `pointerup`
+    // instead (below) and re-baselines `#committed` there, so this blur handler naturally no-ops for a
+    // value already reported — it only ever fires for a delta the pointer path didn't already commit
+    // (a keyboard edit made after a pointer pick, in the same focus session). The Fork-T1/D1 probe in
+    // rating.test.ts proves `value` is already final by the time `change` fires on EITHER path.
     this.listen(this, 'focus', () => {
       this.#committed = this.#clamp(this.value ?? 0)
     })
@@ -312,6 +324,25 @@ export class UIRatingElement extends UIRangeElement {
         this.emit('change')
       }
       this.#committed = null
+    })
+
+    // Pointer commit (ADR-0216 Amendment 1, 2026-08-20 Kim ruling) — a star picked by POINTER commits
+    // immediately: `change` fires on `pointerup`, not blur. valueDrag's `onValue` below already lands
+    // the `input`→`value` commit synchronously (unchanged); only the `change` NOTIFICATION moves
+    // earlier, to the gesture's own end. Scoped to the star track (`#starsEl.contains`, the same test
+    // valueDrag's own pointerdown listener applies — a pointerup elsewhere on the host is not a pick).
+    // readonly/disabled both no-op naturally here: `onValue` never wrote `this.value` for them, so
+    // `current` never diverges from `#committed` and nothing emits (the same belt-and-suspenders CSS
+    // `pointer-events: none` gate `onValue` itself already carries). After firing, `#committed` is
+    // re-baselined to the just-committed value so the blur handler above does not re-report the same
+    // delta a second time.
+    this.listen(this, 'pointerup', (event) => {
+      if (!this.#starsEl?.contains((event as PointerEvent).target as Node | null)) return
+      const current = this.#clamp(this.value ?? 0)
+      if (this.#committed !== null && !Object.is(current, this.#committed)) {
+        this.emit('change')
+      }
+      this.#committed = current
     })
 
     // Pointer pick (ADR-0216 cl.4) — click position along `.stars` maps to a snapped value exactly as a
