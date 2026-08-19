@@ -409,6 +409,14 @@
       "section": "Components"
     },
     {
+      "name": "Suggestions",
+      "tag": "ui-suggestions",
+      "url": "./suggestions-doc.html",
+      "description": "ui-suggestions is the one-shot follow-up/next-prompt chip set (ADR-0213, GH #1393) — a Pattern-class leaf that renders suggestions (a bindable array of {label,…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Swatch",
       "tag": "ui-swatch",
       "url": "./swatch-doc.html",
