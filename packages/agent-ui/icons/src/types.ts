@@ -8,6 +8,7 @@ export const ICON_NAMES = [
   'user', 'file', 'file-image', 'file-audio', 'file-video',
   'file-pdf', 'file-text', 'file-zip', 'file-code',
   'plus',
+  'minus', // GH #1406 — ui-text-field's numeric stepper pair went side-by-side − +; `plus` (above) already existed, `minus` completes the pair
   'arrow-up', 'microphone',
   'list', // ui-super-shell's header-hosted collapse toggle (M5, GH #83/#90) — the fleet's one hamburger/menu glyph
   'warning', // TKT-0083/ADR-0146 F7 — the ui-timeline-item `warning` status glyph (a triangle-exclamation, shape-coded per ADR-0057, distinct from error's `x`)

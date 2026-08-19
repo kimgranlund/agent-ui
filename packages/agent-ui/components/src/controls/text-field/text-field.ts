@@ -896,17 +896,18 @@ export class UITextFieldElement extends UIFormElement {
   }
 
   /**
-   * Create and append a control-injected TRAILING numeric adornment: steppers (Phosphor caret-up/caret-down)
+   * Create and append a control-injected TRAILING numeric adornment: a side-by-side − + stepper pair
+   * (Phosphor minus/plus, step-down LEFT of step-up — the iOS/Material stepper convention, GH #1406)
    * with an optional suffix span. Used for ALL numeric types (number · currency · unit · percent — ADR-0047: codec ≠ null
    * implies steppers). `suffixText` is non-null for unit (the localized label) and percent ('%').
    * The trailing container's data-role is 'numeric' when a suffix is present, 'stepper' otherwise —
-   * the two roles drive different CSS layout (row vs. column; inline-size auto vs. icon-sized).
+   * both are flex ROWS; 'numeric' additionally carries the suffix span before the button pair.
    */
   #createNumericAdornment(suffixText: string | null, typeAc: AbortSignal): HTMLElement {
     const container = document.createElement('span')
     container.setAttribute('slot', 'trailing')
     container.setAttribute('data-part', 'trailing-adornment')
-    // 'numeric' has suffix+steppers in a flex row; 'stepper' has steppers only in an icon-sized column.
+    // 'numeric' has suffix + the − + pair in a flex row; 'stepper' has the − + pair only (also a row).
     container.setAttribute('data-role', suffixText !== null ? 'numeric' : 'stepper')
 
     if (suffixText !== null) {
@@ -917,21 +918,21 @@ export class UITextFieldElement extends UIFormElement {
       container.append(suffix)
     }
 
-    const up = document.createElement('button')
-    up.type = 'button'
-    up.setAttribute('data-part', 'step-up')
-    up.setAttribute('aria-label', 'Increase')
-    setIcon(up, 'caret-up') // Phosphor, via @agent-ui/icons
-    up.addEventListener('click', () => { this.#step(1) }, { signal: typeAc })
-
     const down = document.createElement('button')
     down.type = 'button'
     down.setAttribute('data-part', 'step-down')
     down.setAttribute('aria-label', 'Decrease')
-    setIcon(down, 'caret-down') // Phosphor, via @agent-ui/icons
+    setIcon(down, 'minus') // Phosphor, via @agent-ui/icons
     down.addEventListener('click', () => { this.#step(-1) }, { signal: typeAc })
 
-    container.append(up, down)
+    const up = document.createElement('button')
+    up.type = 'button'
+    up.setAttribute('data-part', 'step-up')
+    up.setAttribute('aria-label', 'Increase')
+    setIcon(up, 'plus') // Phosphor, via @agent-ui/icons
+    up.addEventListener('click', () => { this.#step(1) }, { signal: typeAc })
+
+    container.append(down, up) // − before + (minus left of plus — GH #1406, Kim's 2026-08-19 ruling)
     this.append(container)
     return container
   }
