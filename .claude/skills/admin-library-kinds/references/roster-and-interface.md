@@ -17,7 +17,8 @@ points — a kind missing any of them ships a silent gap, not a build error:
 | preset seed map | `site/pages/agent-admin-presets.ts` `presetSeed` | seed-completeness: `presetSeed` enumerates EVERY kind's `entries:` key — a new kind owes a row here even when seeded `[]` (its own precedent comment says so) |
 | library pack (optional) | `site/pages/agent-admin-libraries.ts` (`ADMIN_LIBRARIES`) | ready-to-add entries; pure data through the same `entries.ts` `validateNewEntry` path |
 
-A pack need not be a fixed authored array. Two shipped patterns, both on the `tool` kind:
+A pack need not be a fixed authored array — nor page-authored at all. Three shipped patterns
+(the first two on the `tool` kind):
 
 - **Live-derived pack** — reads a runtime source through a setter, and is ABSENT (not empty, not
   errored) when that source degrades. The Integrations pack reads `setLiveIntegrations` (falling back to a
@@ -33,6 +34,19 @@ A pack need not be a fixed authored array. Two shipped patterns, both on the `to
   lets a foreign-key pack ride under an ORDINARY kind (`MCP_SERVICES_PACK`, `rejectOnCollision: true`, on the
   `tool` kind) — the same reject-on-commit + picker-disable the catalog KIND flag buys (§3), without the kind
   itself becoming registry-keyed.
+- **Imported-snapshot pack** (ADR-0208, GH #1340; the `skill` kind) — a pack whose SOURCE is an
+  external Claude-format skills repo, arriving as a provenance-stamped **`agent-ui-skillpack@1`**
+  snapshot file: an `EntryLibraryPack` (deterministic URL-slug pack id; entry ids = the repo's
+  `skills/<dir>` folder names — explicit `NewEntryInput.id`, never slugged labels) plus a
+  `provenance` block (`sourceUrl`, pinned `commitSha`, `importedAt`, counted
+  `droppedFrontmatterKeys`, listed `skipped`, the D5 `scan`) and the verbatim license. The
+  dev-time zero-dep CLI `scripts/import-skill-pack.mjs <repo-url>` (selftest-gated in
+  `check:scripts`) writes it into the gitignored `skill-imports.local/`; the pack library's
+  "Import pack…" file-picker ingests it FAIL-CLOSED into the app-level StorageAdapter shelf
+  (`skill-packs:<packId>`, IDB tier — one shelf, every persona browses it), and it projects
+  through the SAME reactive `libraries` seam with `rejectOnCollision: true`. Re-import replaces
+  the SHELF wholesale; a persona's opted-in entries are copies, never background-mutated — the
+  collision-disabled picker row is the visible "your copy is older than the shelf" state.
 
 Built-ins are toggle-off-only, never deletable (ADR-0132 Fork 4, enforced by the UI: `entry-list.ts` renders
 no delete affordance for `builtin: true`). Kind-specific field schemas stay Fork 3's explicitly

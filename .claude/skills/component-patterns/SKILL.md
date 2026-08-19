@@ -69,6 +69,7 @@ ADR-worthy fork, not a local choice.
 | A reserved overlay lane over a scroll container | transparent BORDER band, never padding — the scrollport clips at the padding box | PR #1400 (GH #1330) |
 | A reflecting stateful prop needs a declared-state reset baseline | capture through the reflect-echo lock (`isReflectEcho`), never the live prop/attribute | PR #1390 (GH #1333) |
 | CSS Anchor Positioning renders a panel detached | IACVT/stale-pin taxonomy + verify guard, demote-per-session | PR #1401 (GH #1339; supersedes #1359) |
+| Categorical identity in a data-viz mark (hue-only is the trap) | CVD-safe identity: order + label + printed value + single-family lightness ramp — fill is the fourth carrier, never the only one | ADR-0219 cl.4–5 (generalizes ADR-0057) |
 
 ## How to use a row
 

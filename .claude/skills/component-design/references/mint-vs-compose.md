@@ -2,14 +2,15 @@
 
 Decision records: ADR-0175 (the multi-select/association field intake — the aggregate-value
 test), ADR-0201 (the composed-pattern-retired-by-a-mint case study), ADR-0107 → ADR-0205 (the
-smallest-floor scoping test for admitting a new category), ADR-0220 (the TYPE arm —
-semantics+behavior inexpressible — coined there, backfilled here per GH #1430). Read this at
+smallest-floor scoping test for admitting a new category — third instance ADR-0219), ADR-0220
+(the TYPE arm — semantics+behavior inexpressible — coined there, backfilled here per GH #1430),
+ADR-0217 (the FUNCTION arm — locale-correct formatting as a default-catalog function). Read this at
 fork-sheet step 6 (component-design's "decide what the change earns") whenever the candidate
 value is an ARRAY or aggregate, not a scalar — a plain new-control-vs-compose call is already
 covered by step 2's precedent sweep; this reference is for the narrower, recurring
 aggregate-value question — plus the later sections whenever a candidate is a real TYPE vs.
-display chrome (the TYPE arm), a SHIPPED composition pattern is a mint candidate, or a mint
-opens a whole new category whose scope must be floored.
+display chrome (the TYPE arm), a formatting concern (the FUNCTION arm), a SHIPPED composition
+pattern is a mint candidate, or a mint opens a whole new category whose scope must be floored.
 
 ## The bar: does the case need ONE bindable aggregate value?
 
@@ -124,6 +125,23 @@ minting). ADR-0224 is the other worked pass (a status-tinted accent edge with no
 vehicle at all in the container family). The "minting is cheap when it is" check above applies
 to a TYPE-arm pass verbatim, as it did in ADR-0220.
 
+## The FUNCTION arm: locale-correct formatting is a catalog function, never a type or row widening (ADR-0217)
+
+A fourth placement arm, one layer BELOW both minting and widening: when the candidate is
+locale-correct FORMATTING of a value already in the data model (currency was the worked case,
+GH #1373), the answer is a default-catalog client function — a `functions`-block entry evaluated
+by the ADR-0026 `{call, args}` binding, SPEC-R5's own designed extension point — never a new type
+and never a row prop. ADR-0217's worked run: the intake predicted the widening arm
+(`format`/`currency` props on `Stat`/`Text`), but the smallest-floor test run honestly points
+lower — one `formatCurrency` registry entry covers EVERY text-bearing bound prop (`Text.text`,
+`Stat.value`, `Badge.label`, …) where widening covers exactly the rows it touches, and a `Price`
+mint fails the aggregate-value bar on its face (display-only, nothing to round-trip). The honest
+cost is discoverability: a wire prop announces itself in the row schema, a function must be
+TAUGHT (prompt + corpus seeds, priced into the build wave). The payoff is root-cause closure:
+agents emit `{value, currency}` and the client formats (`Intl` is the lookup, ADR-0038's law), so
+the data model stays numeric and the pre-formatted-string defect class — one locale baked into
+the data — is closed at the source rather than per-row.
+
 ## Case study: when a COMPOSED grammar pattern earns a mint after all (ADR-0201)
 
 The sections above run the test in the standard direction — a candidate arrives, and composition
@@ -156,16 +174,16 @@ event, no geometry row. And per the #1174 supersession, the composition's LAWS s
 verbatim, relocated onto the primitive's clause (humanization stays producer-side, sentence-case
 headers, adjacency) — retiring a composition retires its CONSTRUCTION, never its laws.
 
-## The smallest-floor scoping test: how little earns the category name (ADR-0107 → ADR-0205)
+## The smallest-floor scoping test: how little earns the category name (ADR-0107 → ADR-0205 → ADR-0219)
 
 A different recurring fork: the mint decision is already made, but the new control opens a whole
 CATEGORY whose scope explodes (charts are the worked domain — ticks, gridlines, legends, label
-collision are where a "small chart" becomes a rendering framework). The test, now run twice:
+collision are where a "small chart" becomes a rendering framework). The test, now run three times:
 
 **Ship the SMALLEST vocabulary that honestly earns the category name; fence everything else out
 as named LATER intakes, each its own future issue — never riders on the build wave.**
 
-Two worked instances, citable as precedent for the next axis-bearing (or otherwise
+Three worked instances, citable as precedent for the next axis-bearing (or otherwise
 scope-explosive) intake:
 
 1. **ADR-0107 (chart family v1)** — the floor for "chart" was set at NO axis at all:
@@ -181,9 +199,19 @@ scope-explosive) intake:
    a legend re-opens exactly the explosion ADR-0107 fenced; so it deferred "rather than pretending
    multi-series is free." Ticks, gridlines, legends, tooltips, time axes: all named LATER, same
    fence style.
+3. **ADR-0107 Amendment 3 → ADR-0219 (`ui-pie-chart`)** — the third instance, running the test's
+   FENCE half: ADR-0107's "Pie/donut in v1" rejection had named three CONDITIONS (angle's weak
+   accuracy, hue-only identity, the legend requirement), not a permanent exclusion, and ADR-0219
+   lifted the fence by answering each **by construction, not by waiver** — printed per-slice
+   percents; identity via order + label + printed percent + a single-family lightness ramp (never
+   hue alone, ADR-0057); a real-DOM key list instead of an SVG legend layer. The lift is
+   superseded-IN-PART, scoped to the one type: every other named fence (axis systems, scatter,
+   multi-series, …) stands untouched, and the original fence's reasoning stays legible as history
+   (the PRD bullet annotated admitted-under-ADR-0219, never deleted).
 
 The test has two halves and both are load-bearing: the floor must be small (no borrowed scope),
 AND it must genuinely EARN the name — ADR-0205 explicitly rejected shipping "a second sparkline
-with a different name" as failing the earning half. A third axis-bearing intake (multi-series +
-legend, tick marks, a time axis) should cite both instances and set its own one-notch floor the
-same way, building on the prior vocabulary rather than re-deriving one.
+with a different name" as failing the earning half. The next axis-bearing intake (multi-series +
+legend, tick marks, a time axis) should cite the prior instances and set its own one-notch floor
+the same way, building on the prior vocabulary rather than re-deriving one — and a fence LIFT
+must name and answer the original fence's own stated conditions, ADR-0219's discipline.
