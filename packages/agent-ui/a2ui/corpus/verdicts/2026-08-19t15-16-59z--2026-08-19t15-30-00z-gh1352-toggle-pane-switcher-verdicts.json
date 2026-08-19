@@ -1,0 +1,9 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.2",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-08-19T15:16:59Z",
+  "verdicts": {
+    "frontier-pane-switcher": { "qualityScore": 4, "passed": true, "failingDimensions": [] }
+  }
+}

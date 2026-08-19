@@ -29,8 +29,9 @@
 // ruling (the REV's drop path; their drained entries survive as the dated comments below). An empty map
 // is the healthy steady state this file's own contract predicts: refusals leave the shelf, admissions
 // delete their entries, and only a smoke seed that seeks no verdict or a kept-pending-repair refusal ever
-// puts an entry back — GH #1352's `frontier-pane-switcher` (below) is exactly that category-1 shape,
-// added 2026-08-19 alongside the Toggle catalog row. The map stays wired into both consumers regardless —
+// puts an entry back — GH #1352's `frontier-pane-switcher` was exactly that category-1 shape (added
+// 2026-08-19 with the Toggle row, judged PASS 4/5 + admitted the same day, entry drained — the dated
+// comment below is its record). The map stays wired into both consumers regardless —
 // the next entry needs a home, not a revival PR.
 //
 // Pure, zero-dep, platform-neutral (SPEC-N5/ADR-0062) so both readers share the one map: the standing
@@ -153,11 +154,8 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // Video/AudioPlayer catalog rows (the native media players) to keep the GH #729 type-coverage gate
   // green; pending the same judged import wave. Delete this entry when it is judged.
   //
-  // GH #1352 (2026-08-19) — `frontier-pane-switcher`: the same pending-state shape (NO VERDICT SOUGHT
-  // YET, not a refusal). Added with the Toggle catalog row (Kim ruling 2026-08-19: "Toggle is
-  // agent-emittable — mint the row") to keep the GH #729 type-coverage gate green; its corpus admission
-  // is a pending judged import wave — the authoring session judging its own seed is the manufactured
-  // judgment ADR-0068's Alternatives ban. Run the judged pipeline and DELETE this entry when that wave
-  // lands.
-  ['frontier-pane-switcher', 'GH #1352 (2026-08-19) — NO VERDICT SOUGHT YET, not a refusal. Added with the Toggle catalog row (Kim ruling 2026-08-19) to keep the GH #729 type-coverage gate green; pending the same judged import wave. Delete this entry when it is judged.'],
+  // GH #1352 (2026-08-19) — `frontier-pane-switcher`: was the pending-state shape (added with the Toggle
+  // row, Kim ruling 2026-08-19); judged by a fresh-context a2ui-review-agent (PASS, qualityScore 4,
+  // verdicts archived 2026-08-19t15-30-00z) and admitted via import-seeds --verdicts the same day — entry
+  // DRAINED per its own instruction (ADR-0068: never self-judged).
 ])
