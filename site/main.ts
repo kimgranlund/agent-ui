@@ -595,6 +595,26 @@ const CARD_GROUPS: readonly CardGroup[] = [
         blurb: 'Descriptor-derived API docs for ui-row, ui-column, ui-list, and ui-grid (linked from the overview).',
       },
       {
+        href: './row-demo.html',
+        title: 'ui-row demo',
+        blurb: 'A settings form row + action bar laid out by the real primitive — live gap / align / justify / wrap / reflow knobs with a knob log.',
+      },
+      {
+        href: './column-demo.html',
+        title: 'ui-column demo',
+        blurb: 'A card column (release feed) + bounded stack — live gap / align / justify / wrap / stretch / reflow knobs with a knob log.',
+      },
+      {
+        href: './list-demo.html',
+        title: 'ui-list demo',
+        blurb: 'A contact list of listitem rows + a settings list on the semantic stack — live gap / align / justify / wrap knobs with a knob log.',
+      },
+      {
+        href: './grid-demo.html',
+        title: 'ui-grid demo',
+        blurb: 'A photo grid (one tile spanning two tracks) + KPI tiles on the auto-fit track grid — live gap / min / elevation knobs, resizable frame.',
+      },
+      {
         href: './toast-region-doc.html',
         title: 'ui-toast-region',
         blurb: 'The Wave M1 feed family (ADR-0112) top-layer host — a pure inset/gap layout element (tier=layout), folded into this bundle rather than growing its own group.',
