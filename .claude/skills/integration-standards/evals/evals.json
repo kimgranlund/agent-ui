@@ -115,7 +115,8 @@
       "id": "n06",
       "prompt": "Set up a Slack MCP server integration for Claude Code",
       "expect": "no-trigger",
-      "owner": "update-config — Claude Code's OWN MCP config, a different product surface than this repo's live-agent connector"
+      "owner": "update-config — Claude Code's OWN MCP config, a different product surface than this repo's live-agent connector",
+      "note": "re-judged 2026-08-19 (single-judge noise): phase-3 leaked to this suite; 2-of-3 vote chose none — the update-config NOT-fence held"
     },
     {
       "id": "n07",
