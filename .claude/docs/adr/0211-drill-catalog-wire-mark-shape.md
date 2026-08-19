@@ -5,10 +5,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-19 |
 > | **Proposed by** | build seat (shape-(iii) mint of GH [#1353](https://github.com/kimgranlund/agent-ui/issues/1353), under Kim's mint ruling recorded on that issue 2026-08-19: "Drill is agent-emittable — mint the catalog row. The wire-mark shape … is the build's design work — an ADR for the shape rides the mint per rubric a2ui-catalog.md D6"); lane completed in-host after the dispatched seat died to host sleep (the 2026-08-18 overnight-run mitigation) |
-> | **Ratified by** | pending — `ratify ADR-0211` on #1353 or the mint PR, via `scripts/adr_ratify.py` (ADR-0149) |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-19, via the [`ratify ADR-0211` utterance](https://github.com/kimgranlund/agent-ui/issues/1353#issuecomment-5343985209) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification (this ADR ships in the SAME PR as the mint, so build repairs land together): none beyond the mint itself · on a FUTURE Layer-0 readback accessor (Alternatives B's re-entry condition): revisit clause 2 — widen the row with a real `value` mark and amend this ADR |
 > | **Supersedes / Superseded by** | **Extends** [ADR-0195](./0195-ui-drill-drill-down-panel-container.md) (the control this row binds; its TEMPORARY `EXCLUSION_ALLOWLIST` seat drains in this mint, per its own drain clause) · **Relates** the Toggle mint's Fork T1 (PR #1363 / GH #1352 — the sibling no-value-mark precedent, DIFFERENT root cause: pre-commit event ordering there, no readback accessor here) · [ADR-0161](./0161-catalog-multi-slot-two-way-value-marks.md)/[ADR-0169](./0169-a2ui-basic-catalog-upstream-interop.md) (the value-mark vocabulary this record deliberately does NOT use for `path`) · [ADR-0097](./0097-a2ui-feed-embedded-asks.md) (Drill/DrillPanel dispositioned EXCLUDE from the feed sub-catalog in this mint — a container chrome shape, not a commit-gated ask) |
 
