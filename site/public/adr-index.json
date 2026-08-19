@@ -1517,5 +1517,12 @@
     "description": "ui-choice-group + ui-choice-card: the rich-card selection container (a committed choice over agent-composed option cards, single or multi — GH #1368)",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0222",
+    "url": "./adr-index.html#adr-0222",
+    "description": "Map intake resolves at the WIRE-SHORTCUT gate: no third runtime-dependency exception; v1 map turns are static imagery through the shipped Image row (ui-image),…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

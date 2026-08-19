@@ -38,10 +38,15 @@
 // ADR-0095 (supersedes ADR-0086's `variant="segmented"`): the segmented presentation is now the standalone
 // `UISegmentedControlElement` (controls/segmented-control/), NOT a variant of this class. `variant` does not
 // exist here — the group is back to its dot-only presentation surface. ADR-0103: the group OWNS its interior
-// layout (radio-group.css's `@scope` flex column/row + `--ui-radio-group-gap`) — direct-children discovery
-// (`#radios()` below) means the layout cannot be left to page-author composition, unlike a coordination
-// wrapper. Two PROTECTED seams exist purely so that subclass can reuse this class's exclusivity/roving/value/
-// validity machinery without forking it:
+// layout (radio-group.css's `@scope` flex column/row + `--ui-radio-group-gap`) applied to its DIRECT
+// children, whatever they are — an interposed visual container becomes the layout unit; this layout law
+// stands unchanged. ADR-0212 widens CHILD DISCOVERY (`#radios()` below) from direct children to
+// nearest-group-scoped descendants: a radio may sit behind an interposed layout container (the model-grid
+// shape — provider cards as the group's flex children, radios inside rows inside them) and still register
+// with this group — the container is transparent to DISCOVERY though it remains the layout unit for
+// ADR-0103's flex rules. A nested inner `ui-radio-group` is an ownership BOUNDARY: its radios belong to it,
+// never to this outer group. Two PROTECTED seams exist purely so that subclass can reuse this class's
+// exclusivity/roving/value/validity machinery without forking it:
 //   · `defaultOrientation()` — the class-derived roving-axis default (this base returns 'vertical'; the
 //     resolve-once-and-reflect-at-connect mechanism below calls it only when no explicit `orientation`
 //     attribute is authored). ADR-0095 clause 1.
@@ -59,6 +64,24 @@ import { prop, type PropsSchema, type ReactiveProps } from '../../dom/props.ts'
 import { rovingFocus, type RovingOrientation } from '../../traits/roving-focus.ts'
 import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
 import { UIRadioElement } from './radio.ts'
+
+/**
+ * ADR-0212 — the nearest-group-scoped ownership test, walking real DOM ancestry (`parentElement`)
+ * rather than the `[data-radio-group]` marker `radio.ts` uses (that marker is written by `connected()`,
+ * so a STRUCTURAL walk is required here: `#radios()` below is called from group methods — the `value`
+ * setter chief among them — that must resolve correctly even BEFORE this group has ever connected, the
+ * GH #1333 pre-connect contract byte-pinned by radio-group.test.ts). No circular-import concern: this
+ * file already owns `UIRadioGroupElement`, unlike `radio.ts`, which avoids importing it for exactly
+ * that reason and so keeps its own marker-based `closest()` lookup.
+ */
+function nearestGroup(el: Element): UIRadioGroupElement | null {
+  let node: Element | null = el
+  while (node) {
+    if (node instanceof UIRadioGroupElement) return node
+    node = node.parentElement
+  }
+  return null
+}
 
 const groupProps = {
   // Universal form attributes (name / disabled / required) — spread so the group participates
@@ -216,6 +239,13 @@ export class UIRadioGroupElement extends UIFormElement {
     //   · Identifies the originating UIRadioElement inside this group.
     //   · Stops the radio's change event from propagating further (the group re-emits its own).
     //   · Calls #commit to enforce exclusivity and update the group's form value.
+    // ADR-0212: `#radios().indexOf(target)` below now doubles as the nearest-group OWNERSHIP check (the
+    // widened `#radios()` excludes any radio whose nearest group is a nested inner `ui-radio-group`,
+    // never this one) — an unowned radio's `change` is never committed here. In practice a nested inner
+    // group's own delegated listener already intercepts + re-emits its own `change` before the raw
+    // event could reach this far (the re-emitted event's target is the inner group host, not a
+    // UIRadioElement, so the `target instanceof UIRadioElement` guard above ignores it); this filter is
+    // the belt for that suspenders.
     this.listen(this, 'change', (event) => {
       if (this.effectiveDisabled()) {
         // A disabled group swallows child change events entirely: stopImmediatePropagation prevents
@@ -308,12 +338,27 @@ export class UIRadioGroupElement extends UIFormElement {
   // ── private helpers ─────────────────────────────────────────────────────────────────────────────
 
   /**
-   * Live ordered set of `UIRadioElement` children (direct children only; re-read on each call).
-   * Uses `instanceof UIRadioElement` so subclasses (e.g. probe subclasses in tests) are also found,
-   * rather than relying on the `ui-radio` tag name which would miss subclasses.
+   * Live ordered set of `UIRadioElement` NEAREST-GROUP-SCOPED descendants, in tree order (ADR-0212,
+   * widened from direct children — direct children are the degenerate case of this query). A
+   * descendant belongs to THIS group only when its nearest `UIRadioGroupElement` ancestor-or-self
+   * (`nearestGroup()`, above) is this exact host — the SAME logical rule `radio.ts`'s `grouped()`
+   * already applies from the child side via its `[data-radio-group]`-marker `closest()` (structurally
+   * equivalent once both sides are connected; `nearestGroup()` walks real ancestry instead of that
+   * connect-time-written marker specifically so this method ALSO resolves correctly BEFORE this group
+   * has ever connected — the `value` setter below is called pre-connect in the GH #1333 contract this
+   * suite pins byte-unchanged). A nested inner `ui-radio-group` is therefore an ownership BOUNDARY: its
+   * own descendants' nearest group is ITSELF, never this outer group, so they never join this set.
+   * Re-read on each call — the same re-read-on-each-call discipline as before; group subtrees are small
+   * (ADR-0212 Consequences). Uses `instanceof UIRadioElement` so subclasses (e.g. `ui-segment`, probe
+   * subclasses in tests) are also found, rather than relying on the `ui-radio` tag name which would miss
+   * subclasses. ALL FIVE consumers of this set (roving-focus `items`, the delegated-change commit, the
+   * `value` setter/`#applySelection`, `resolvePendingValue`, and `formReset`/validity via
+   * `#checkedIndex`) ride this ONE widened query — no second mechanism.
    */
   #radios(): UIRadioElement[] {
-    return [...this.children].filter((el): el is UIRadioElement => el instanceof UIRadioElement)
+    return [...this.querySelectorAll('*')].filter(
+      (el): el is UIRadioElement => el instanceof UIRadioElement && nearestGroup(el) === this,
+    )
   }
 
   /** Index of the currently checked radio (first match), or -1 when nothing is checked. */
