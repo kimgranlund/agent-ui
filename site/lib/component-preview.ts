@@ -235,7 +235,8 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   Swiper: { pagination: 'true', paddles: 'true' },
   // GH #978 — the six remaining generic-fallback types (follow-up to #971). ComboBox's `placeholder` mirrors
   // its own rentalFilterPanelSeed idiom (catalog-coverage.ts) exactly, the SAME demonstrability gap Select's
-  // own `placeholder` seed above closes. Grid's `gap`/`min` mirror statsGridDashboardSeed's own root props (a
+  // own `placeholder` seed above closes. Grid's `gap`/`min` mirror the stats-grid metric-tile idiom's root
+  // props (formerly statsGridDashboardSeed — dropped from the shelf 2026-08-18, the ADR-0165 drop path) (a
   // bare Grid has no default track floor to demonstrate against, the ui-grid COMPONENT_INITIAL precedent);
   // List's `gap` mirrors rentalFilterPanelSeed's own `results_list` props. Tooltip/RadioGroup/SegmentedControl
   // need no seed here — their SAMPLE_TREES content (below) is visible with no root prop at all, the
@@ -539,9 +540,10 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
       { id: 's_li3m', component: 'Text', variant: 'caption', text: '€850/mo · 1 bed' },
     ],
   }),
-  // Grid: a metric-tile dashboard, 4 stat tiles on a track grid — the stat_tile idiom
-  // (catalog-coverage.ts's statsGridDashboardSeed), trimmed to a static tree (the seed's own `{path}`-
-  // templated tiles, minus the binding). `gap`/`min` seeded above so the auto-fit tracks are legible.
+  // Grid: a metric-tile dashboard, 4 stat tiles on a track grid — the stat_tile idiom (from the
+  // stats-grid-dashboard seed, dropped from the shelf 2026-08-18 per the ADR-0165 drop path; this static
+  // tree outlives it — the seed's own `{path}`-templated tiles, minus the binding). `gap`/`min` seeded
+  // above so the auto-fit tracks are legible.
   // GH #1189 — Image: the catalog def's `children: "ChildList"` (catalog.json) is the ui-image `caption`
   // slot (image.md) — real, OPTIONAL default-slotted content pinned over the bottom scrim, not a required
   // content model. One Text caption demonstrates the scrim compositing (image.css's flat scrim wash +

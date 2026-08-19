@@ -40,11 +40,17 @@
 //     Icon+Text card" guidance — Icon now has zero exemplar coverage on this shelf, a knowingly-traded
 //     regression against this module's own D6 rubric goal, accepted because the SPEC-R22 AC is explicit
 //     and Icon's own descriptor/jsdom/browser suites remain the coverage of record for the control itself.
-// (4) STATS GRID DASHBOARD — a `Grid`-templated metric-tile dashboard (the `patternDashboardSeed` idiom,
-//     swapping the wrapping Row for a track `Grid` with a `min` floor). Covers: Grid.
+// (4) STATS GRID DASHBOARD — DROPPED from the shelf 2026-08-18 (Kim's ruling; the ADR-0165 REV
+//     2026-07-30/GH #361 reading (b) drop path — a refusal's expected disposition). Judged E_QUALITY
+//     twice (rubric 1.1 + 1.2, D5 both times — the tile template was pattern-dashboard-tiles verbatim
+//     minus the delta line, and Grid-template-of-Cards was already admitted via comparison-pricing-table
+//     and media-file-grid): not repairable by editing, so the seed left the shelf entirely. The archived
+//     VerdictsFiles (corpus/verdicts/) remain the machine record; Grid's exemplar coverage of record is
+//     media-file-grid (high-frequency-patterns.ts).
 //
 // (5) REPORT CARD DASHBOARD — chart-family.lld.md LLD-C12 (SPEC-R14 AC1, ADR-0107), upgraded in place by
-//     report-family.lld.md LLD-C15 (M2, ADR-0111 cl.6): a `stats-grid-dashboard` SIBLING, not a
+//     report-family.lld.md LLD-C15 (M2, ADR-0111 cl.6): a sibling of the since-dropped
+//     `stats-grid-dashboard` seed (see (4) above), not a
 //     Grid-of-tiles but one composed report — a `Stat` (the guidance re-base retired the hand-composed
 //     caption-Text + h3-Text tile) sits beside a `Sparkline` trend, then a `BarChart` breaks the total
 //     down by region — the seed itself teaches the catalog SPEC §5.2 Notes guidance (`Stat` for a latest
@@ -276,47 +282,6 @@ export const documentRowToolbarSeed: ExampleSeed = {
           { id: 'mi_rename', component: 'MenuItem', value: 'rename', label: 'Rename' },
           { id: 'mi_duplicate', component: 'MenuItem', value: 'duplicate', label: 'Duplicate' },
           { id: 'mi_delete', component: 'MenuItem', value: 'delete', label: 'Delete' },
-        ],
-      },
-    },
-  ],
-}
-
-const STATS_GRID_ID = 'stats-grid-dashboard'
-export const statsGridDashboardSeed: ExampleSeed = {
-  name: 'stats-grid-dashboard',
-  description: 'A metric-tile dashboard laid out on a track Grid (the patternDashboardSeed idiom, swapping the wrapping Row for a Grid with a min track floor).',
-  promptText: 'Show a dashboard grid of four metric tiles: sessions, conversion rate, average order value, and refunds.',
-  surfaceId: STATS_GRID_ID,
-  protocolVersion: 'v1.0',
-  catalogId: 'agent-ui',
-  messages: [
-    { version: 'v1.0', createSurface: { surfaceId: STATS_GRID_ID, catalogId: 'agent-ui' } },
-    {
-      version: 'v1.0',
-      updateDataModel: {
-        surfaceId: STATS_GRID_ID,
-        value: {
-          stats: [
-            { label: 'Sessions', value: '4,820', unit: '' },
-            { label: 'Conversion', value: '3.2', unit: '%' },
-            { label: 'Avg. order', value: '54', unit: '€' },
-            { label: 'Refunds', value: '12', unit: '' },
-          ],
-        },
-      },
-    },
-    {
-      version: 'v1.0',
-      updateComponents: {
-        surfaceId: STATS_GRID_ID,
-        components: [
-          { id: 'root', component: 'Grid', gap: 'md', min: '12rem', children: { path: '/stats', componentId: 'stat_tile' } },
-          { id: 'stat_tile', component: 'Card', elevation: '1', children: ['stat_content'] },
-          { id: 'stat_content', component: 'CardContent', children: ['stat_col'] },
-          { id: 'stat_col', component: 'Column', gap: 'xs', children: ['stat_label', 'stat_value'] },
-          { id: 'stat_label', component: 'Text', variant: 'caption', text: { path: 'label' } },
-          { id: 'stat_value', component: 'Text', variant: 'h3', text: '${value}${unit}' },
         ],
       },
     },
@@ -687,7 +652,6 @@ export const catalogCoverageSeeds: readonly ExampleSeed[] = [
   bookingReservationSeed,
   rentalFilterPanelSeed,
   documentRowToolbarSeed,
-  statsGridDashboardSeed,
   reportCardDashboardSeed,
   opsReportSeed,
   deploymentReportSeed,

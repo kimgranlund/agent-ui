@@ -11,7 +11,7 @@
 import { describe, expect, it } from 'vitest'
 import { createLoopbackPair } from '@agent-ui/a2a'
 import type { A2aChannel, A2aMessage } from '@agent-ui/a2a'
-import { statsGridDashboardSeed } from '../examples/index.ts'
+import { reportCardDashboardSeed } from '../examples/index.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import {
@@ -23,7 +23,10 @@ import {
 } from '../../tools/pipeline/transports/a2a.ts'
 import type { A2uiClientCapabilities } from '../../tools/pipeline/transports/a2a.ts'
 
-const baseline = statsGridDashboardSeed.messages
+// The baseline was statsGridDashboardSeed until that seed's 2026-08-18 drop from the shelf (the
+// ADR-0165 drop path); any committed validator-clean three-message seed serves — the test is
+// content-agnostic, it asserts round-trip identity + validator cleanliness, never the payload's shape.
+const baseline = reportCardDashboardSeed.messages
 
 /** Pull exactly the next message off a channel's `receive()` (the loopback's single-message smoke shape). */
 async function receiveOne(ch: A2aChannel): Promise<A2aMessage> {

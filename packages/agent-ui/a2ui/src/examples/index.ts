@@ -5,7 +5,8 @@
 //
 // 25 seeds: 1 canvas + 4 dynamic-list + 1 generative-form + 5 patterns + 10 catalog-coverage (the
 // ADR-0087/ADR-0093/ADR-0095 wave — booking-reservation, rental-filter-panel, document-row-toolbar,
-// stats-grid-dashboard — PLUS report-card-dashboard [ADR-0107 chart-family, chart-family.lld.md LLD-C12],
+// stats-grid-dashboard [DROPPED 2026-08-18 per its judged D5 refusals — the ADR-0165 drop path;
+// catalog-coverage.ts (4)] — PLUS report-card-dashboard [ADR-0107 chart-family, chart-family.lld.md LLD-C12],
 // PLUS the report/content/feed M2 teaching-wave exemplars — ops-report, deployment-report,
 // agent-task-status [ADR-0111/0113/0112, LLD-C15 each] — PLUS the token-surface M2 teaching exemplar —
 // brand-palette [ADR-0118, token-surfaces.lld.md LLD-C15] — PLUS the color-picker M2 teaching exemplar —
@@ -37,7 +38,6 @@ export {
   bookingReservationSeed,
   rentalFilterPanelSeed,
   documentRowToolbarSeed,
-  statsGridDashboardSeed,
   reportCardDashboardSeed,
   opsReportSeed,
   deploymentReportSeed,
@@ -70,14 +70,14 @@ export {
   cardLayoutsSeed,
   compositionPackASeeds,
 } from './composition-pack-a.ts'
-// GH #1206 — composition seeds pack B (req-a2ui-library R4, next-tier): the four dispositioned
-// composition patterns — weather · menu · itinerary · wizard (the Ladder/Progress presentation, distinct
-// from the backable-wizard flow-protocol seed).
+// GH #1206 — composition seeds pack B (req-a2ui-library R4, next-tier): the dispositioned composition
+// patterns — weather · menu · itinerary. The pack's fourth seed, wizard-step-progress (the
+// Ladder/Progress presentation), was DROPPED 2026-08-18 per its judged D1 refusals — the ADR-0165 drop
+// path; the wizard technique's exemplar is the backable-wizard flow-protocol seed (catalog-frontier.ts).
 export {
   fiveDayWeatherSeed,
   restaurantMenuSeed,
   travelItinerarySeed,
-  wizardStepProgressSeed,
   compositionPackBSeeds,
 } from './composition-pack-b.ts'
 

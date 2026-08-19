@@ -104,30 +104,50 @@ describe('parseArgs — GH #335 defect 2 (unrecognized argv must hard-error, not
   })
 })
 
+// The allowlist input is SYNTHETIC here (the guard's injectable `allowlist` parameter — the
+// `admission-coverage.test.ts` pure-predicate precedent): since 2026-08-18 the real
+// `DISPOSITION_ALLOWLIST` is legitimately EMPTY (every shelf seed admitted; the two standing refusals
+// — `stats-grid-dashboard`, the original GH #335 repro name, and `wizard-step-progress` — DROPPED per
+// the ADR-0165 drop path, their entries drained), so no real name can exercise the allowlist leg. The
+// leg stays load-bearing regardless — the next kept-pending-repair refusal or smoke seed re-populates
+// the map — so its coverage lives here on planted entries.
+const PLANTED_ALLOWLIST = new Map<string, string>([
+  ['planted-refused-seed', 'curated planted prose — judged E_QUALITY, KEPT on the shelf pending repair (synthetic fixture)'],
+])
+
 describe('dispositionGuard — GH #335 defect 1 (an unjudged run must not silently re-admit a disposition-allowlisted candidate)', () => {
-  it('the exact repro: an unjudged run (no --verdicts) HALTS on stats-grid-dashboard, the real disposition-allowlisted name, when it was never admitted', () => {
-    const halt = dispositionGuard('stats-grid-dashboard', undefined, false, NO_ARCHIVE)
+  it('the exact repro shape: an unjudged run (no --verdicts) HALTS on a disposition-allowlisted name that was never admitted', () => {
+    const halt = dispositionGuard('planted-refused-seed', undefined, false, NO_ARCHIVE, PLANTED_ALLOWLIST)
     expect(halt).toBeDefined()
     expect(halt).toMatch(/HALTED/)
-    expect(halt).toMatch(/stats-grid-dashboard/)
+    expect(halt).toMatch(/planted-refused-seed/)
+    expect(halt, 'the allowlist leg surfaces the curated prose itself').toContain('curated planted prose')
   })
 
   it('a --verdicts run (judge wired) is NEVER halted by this guard — createVerdictJudge already fails closed on its own (ADR-0068 clause 2)', () => {
-    expect(dispositionGuard('stats-grid-dashboard', 'some-verdicts-path.json', false, NO_ARCHIVE)).toBeUndefined()
+    expect(dispositionGuard('planted-refused-seed', 'some-verdicts-path.json', false, NO_ARCHIVE, PLANTED_ALLOWLIST)).toBeUndefined()
   })
 
   it('a name with no recorded disposition is never halted', () => {
-    expect(dispositionGuard('some-ordinary-seed-name', undefined, false, NO_ARCHIVE)).toBeUndefined()
+    expect(dispositionGuard('some-ordinary-seed-name', undefined, false, NO_ARCHIVE, PLANTED_ALLOWLIST)).toBeUndefined()
   })
 
   it('a disposition-allowlisted name that IS already admitted (alreadyAdmitted:true) is untouched — the ordinary E_DUP idempotent-rerun path, not this guard', () => {
-    expect(dispositionGuard('stats-grid-dashboard', undefined, true, NO_ARCHIVE)).toBeUndefined()
+    expect(dispositionGuard('planted-refused-seed', undefined, true, NO_ARCHIVE, PLANTED_ALLOWLIST)).toBeUndefined()
   })
 
   it('the halt message names the guard-exit path (--verdicts) so an operator knows how to proceed', () => {
-    const halt = dispositionGuard('stats-grid-dashboard', undefined, false, NO_ARCHIVE)
+    const halt = dispositionGuard('planted-refused-seed', undefined, false, NO_ARCHIVE, PLANTED_ALLOWLIST)
     expect(halt).toMatch(/--verdicts/)
     expect(halt).toMatch(/Nothing was written/)
+  })
+
+  it('the REAL allowlist is the default input, and it is legitimately EMPTY today — no shelf name halts through it (the drop-path steady state)', () => {
+    // Anti-drift: if a future entry lands in the real map, this case goes red and the fixture strategy
+    // above gets revisited with a real name — exactly the coupling note the wiring block carries.
+    for (const seed of allSeeds) {
+      expect(dispositionGuard(seed.name, undefined, false, NO_ARCHIVE), seed.name).toBeUndefined()
+    }
   })
 })
 
@@ -167,11 +187,11 @@ describe('dispositionGuard — ADR-0165 clause 4 (the ARCHIVE is the third guard
   })
 
   it('the archive is checked BEFORE the allowlist — a name in both halts with the machine-written verdict, not the curated prose', () => {
-    const both = new Map([['stats-grid-dashboard', archivedVerdict({ qualityScore: 3 })]])
-    const halt = dispositionGuard('stats-grid-dashboard', undefined, false, both)
+    const both = new Map([['planted-refused-seed', archivedVerdict({ qualityScore: 3 })]])
+    const halt = dispositionGuard('planted-refused-seed', undefined, false, both, PLANTED_ALLOWLIST)
     expect(halt).toMatch(/ARCHIVED/)
     expect(halt).toContain('qualityScore 3')
-    expect(halt, 'the allowlist prose must not be what an operator sees when a real verdict exists').not.toContain('strict-subset duplicate')
+    expect(halt, 'the allowlist prose must not be what an operator sees when a real verdict exists').not.toContain('curated planted prose')
   })
 
   it('a failing verdict with no failingDimensions still halts, reporting them as none', () => {
@@ -234,13 +254,18 @@ describe('dispositionAllowlistSnippet — a paste-ready DISPOSITION_ALLOWLIST en
 // ── end-to-end wiring smoke — the review finding that the unit tests above cover the two PURE
 // helpers, not that `main()` actually consults them: deleting either call site and every test above
 // still passes. This spawns the REAL script (a real subprocess, real `--experimental-strip-types`,
-// real fs) against the REAL committed shelf and proves the wiring itself, not just the helpers. Not a
-// mandated fix (coordinator's "not yours to fix" list) — added because it was flagged as the single
-// highest-value addition and is cheap. Coupled to the real corpus's current content (like
-// `admission-coverage.test.ts` already is) — if `stats-grid-dashboard` is ever legitimately re-admitted
-// via the sanctioned `--replace` path, this test needs a new never-admitted disposition-allowlisted
-// fixture name, same as that gate would. ──
-describe('import-seeds main() wiring — a real subprocess run proves the guard is actually consulted, not just unit-tested in isolation', () => {
+// real fs) against the REAL committed tree and proves the wiring itself, not just the helpers.
+//
+// SCOPE NARROWED 2026-08-18: this block now carries only the ARG-PARSING legs (--bogus-flag / --help),
+// which exit before any fs work. The unjudged-HALT wiring leg lived here while the committed shelf held
+// a never-admitted disposition-recorded seed to trip on (`stats-grid-dashboard` originally, per GH
+// #335's live repro). Since the 2026-08-18 judged waves + Kim's drop ruling, the shelf and the store
+// are in exact 1:1 correspondence — NO real un-admitted name remains, so a real-tree unjudged run no
+// longer halts (and, worse, would tier-1-admit any source-drifted seed and WRITE the real corpus — the
+// live corpus is not a fixture). That leg's proof moved to the sandbox block below (ADR-0165 clause 4's
+// unjudged-halt case: the REAL script, a PLANTED archive refusal, a throwaway repo root) — same
+// subprocess tier, same deleted-call-site sensitivity, no real-corpus exposure. ──
+describe('import-seeds main() wiring — a real subprocess run proves arg-parsing runs before any fs work', () => {
   const repoRoot = process.cwd()
   const shardPath = `${repoRoot}/packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`
   const indexPath = `${repoRoot}/packages/agent-ui/a2ui/corpus/index.json`
@@ -259,25 +284,17 @@ describe('import-seeds main() wiring — a real subprocess run proves the guard 
     return { status: result.status, stdout: result.stdout, stderr: result.stderr, corpusUntouched }
   }
 
-  it('a real unjudged run against the committed shelf HALTS on stats-grid-dashboard, exits non-zero, and leaves the corpus byte-identical', () => {
-    const result = runScript([])
-
-    expect(result.status).toBe(1)
-    expect(result.stderr).toMatch(/HALTED/)
-    expect(result.stderr).toMatch(/stats-grid-dashboard/)
-    expect(result.corpusUntouched, 'the halted run must leave both corpus files byte-identical').toBe(true)
-  })
-
   // GH #341's remaining half. The issue's repro ("delete the dispositionGuard call site and all tests
-  // still pass") does NOT reproduce — the leg above already reds on that, since it shipped in the same
-  // PR the issue reviewed. What the issue is right about applies to the OTHER defect: `parseArgs` was
+  // still pass") is covered by the sandbox block's clause-4 unjudged-halt leg (see the scope note
+  // above). What the issue is right about applies to the OTHER defect: `parseArgs` was
   // only ever unit-tested, so nothing proved `main()` consults it BEFORE touching the fs. The two legs
   // below close that — the exact `--bogus-flag` / `--help` probes #341 records as run by hand.
   //
   // Note on why exit code alone is NOT enough here: with the arg-error branch deleted, a `--bogus-flag`
-  // run falls through into the real pipeline, hits the disposition guard and STILL exits 1 with the
-  // corpus untouched. So the discriminating assertion is that the run stopped AT arg-parsing — the bad
-  // flag is named, help is printed, and no HALT line (which only the seed loop can emit) appears.
+  // run falls through into the real UNJUDGED pipeline — over today's fully-admitted shelf that run
+  // would tier-1-admit any source-drifted seed and WRITE the real corpus (exit 0, corpus mutated). So
+  // the discriminating assertions are that the run stopped AT arg-parsing — the bad flag is named, help
+  // is printed, no HALT line appears, no admission report prints — and the corpus stayed byte-identical.
   it('--bogus-flag hard-errors AT ARG-PARSING (names the flag, prints help, never reaches the seed loop) and leaves the corpus byte-identical', () => {
     const result = runScript(['--bogus-flag'])
 
@@ -370,19 +387,17 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     rmSync(sandbox, { recursive: true, force: true })
   })
 
-  /** With the committed shard loaded, the admitted seeds short-circuit at dedup (`E_DUP`) and never
-   *  reach the judge; the shelf seeds ABSENT from it — `stats-grid-dashboard`, plus the nine GH
-   *  #729/#1184/#1185/#1189/#1199/#1192 catalog-frontier seeds pending their own judged wave, plus
-   *  `agent-roster-drawer` (ADR-0188 GH #863, the same pending-judged-wave shape), plus the four GH
-   *  #1205 composition-pack-A seeds, the four GH #1206 composition-pack-B seeds, the GH #1201
-   *  `frontier-greet-card` (same pending shape), and the ADR-0205/GH #1207 `frontier-latency-line-chart`
-   *  (same pending shape), plus the NINE GH #1262 P9-repaired records (their sources changed under the
-   *  2026-08-18 back-score repair wave, so they no longer dedup against the shard's pre-repair rows and
-   *  reach the judge pending their own --replace wave) — reach a wired judge, which fails closed unless
-   *  the file rules on each (ADR-0068 clause 2). Refusing all keeps the run at zero admissions while
-   *  still reaching `saveStore` — the archive's actual trigger. */
+  /** With the committed shard loaded, seeds whose SOURCE still matches their shard row short-circuit at
+   *  dedup (`E_DUP`) and never reach the judge. Since the 2026-08-18 judged waves (backable-wizard
+   *  admitted post-repair, PR #1338) + the drop of the two standing refusals (`stats-grid-dashboard` ·
+   *  `wizard-step-progress` — the ADR-0165 drop path; a dropped seed is no longer a candidate, so it
+   *  holds NO row here), the shelf and the shard are in exact 1:1 NAME correspondence — but dedup is
+   *  CONTENT-based, so any seed whose source has drifted from its shard row (e.g. the GH #1262/#1342
+   *  card-anatomy repairs) still reaches a wired judge, which fails closed unless the file rules on it
+   *  (ADR-0068 clause 2). The rows below cover every historically-judged name for exactly that reason.
+   *  Refusing all keeps the run at zero admissions while still reaching `saveStore` — the archive's
+   *  actual trigger. */
   const SHARD_LOADED_VERDICTS = {
-    'stats-grid-dashboard': { passed: false, qualityScore: 2 },
     'frontier-trip-card': { passed: false, qualityScore: 2 },
     'frontier-invite-modal': { passed: false, qualityScore: 2 },
     'frontier-review-split': { passed: false, qualityScore: 2 },
@@ -401,7 +416,6 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     'five-day-weather': { passed: false, qualityScore: 2 },
     'restaurant-menu': { passed: false, qualityScore: 2 },
     'travel-itinerary': { passed: false, qualityScore: 2 },
-    'wizard-step-progress': { passed: false, qualityScore: 2 },
     'frontier-latency-line-chart': { passed: false, qualityScore: 2 },
     'frontier-media-tour': { passed: false, qualityScore: 2 },
     'pattern-confirmation-card': { passed: false, qualityScore: 2 },
@@ -564,10 +578,14 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     expect(readFileSync(planted, 'utf8'), 'still byte-unchanged — a dry run writes nothing, warning or not').toBe(before)
   })
 
-  it('clause 4 — a plain UNJUDGED run HALTS on a name carrying an archived passed:false verdict, quoting the verdict, with nothing written', () => {
-    makeSandbox({ withShard: true })
-    // `stats-grid-dashboard` is the one shelf seed absent from the committed shard — exactly the ADR's
-    // "X absent from the store" case. Its archived refusal must halt the run BEFORE the allowlist prose.
+  it('clause 4 — a plain UNJUDGED run HALTS on a name carrying an archived passed:false verdict, quoting the verdict, with nothing written (ALSO the dispositionGuard wiring proof — real script, real subprocess)', () => {
+    // Since 2026-08-18 the committed shelf holds NO never-admitted disposition-recorded name (the
+    // standing refusals were dropped; backable-wizard was admitted), so this candidate is PLANTED: an
+    // EMPTY sandbox corpus makes `canvas-button` — the first seed in SEEDS_BY_MODULE order, so the halt
+    // is deterministic — a never-admitted candidate, and the planted archive gives it the refusal.
+    // This leg doubles as the GH #341 deleted-call-site tripwire the real-tree block used to carry:
+    // with the `dispositionGuard` call gone, this run would tier-1-admit the whole shelf and exit 0.
+    makeSandbox({ withShard: false })
     plantArchive(
       '2026-07-11--m-b-wave.json',
       `${JSON.stringify({
@@ -575,7 +593,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
         rubricVersion: '1.0',
         judgedBy: 'a2ui-reviewer',
         date: '2026-07-11',
-        verdicts: { 'stats-grid-dashboard': { passed: false, qualityScore: 3, failingDimensions: ['D5'] } },
+        verdicts: { 'canvas-button': { passed: false, qualityScore: 3, failingDimensions: ['D1'] } },
       })}\n`,
     )
 
@@ -584,15 +602,20 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     expect(result.status).toBe(1)
     expect(result.stderr).toMatch(/HALTED/)
     expect(result.stderr).toMatch(/ARCHIVED quality rejection/)
-    expect(result.stderr).toContain('stats-grid-dashboard')
+    expect(result.stderr).toContain('canvas-button')
     expect(result.stderr).toContain('qualityScore 3')
-    expect(result.stderr).toContain('D5')
+    expect(result.stderr).toContain('D1')
     expect(result.stderr).toContain('2026-07-11--m-b-wave.json')
     expect(archivedFiles(), 'the halted run touched nothing').toEqual(['2026-07-11--m-b-wave.json'])
+    expect(existsSync(join(sandbox, SHARD)), 'the halt precedes saveStore — no shard was minted').toBe(false)
   })
 
   it('clause 4 — the same run WITH --verdicts supplying a fresh PASSING verdict admits the name and archives the newer file', () => {
-    makeSandbox({ withShard: true })
+    // The same PLANTED shape as the halt case above (empty corpus, archived refusal for canvas-button),
+    // now superseded by a fresh judgment: every other shelf seed is refused (derived from `allSeeds`,
+    // never a hand-counted map) so this test's claim stays exactly "the re-judged name admits", nothing
+    // else moves.
+    makeSandbox({ withShard: false })
     plantArchive(
       '2026-07-11--m-b-wave.json',
       `${JSON.stringify({
@@ -600,58 +623,23 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
         rubricVersion: '1.0',
         judgedBy: 'a2ui-reviewer',
         date: '2026-07-11',
-        verdicts: { 'stats-grid-dashboard': { passed: false, qualityScore: 3, failingDimensions: ['D5'] } },
+        verdicts: { 'canvas-button': { passed: false, qualityScore: 3, failingDimensions: ['D1'] } },
       })}\n`,
     )
-    const verdictsPath = writeVerdicts('re-judged.json', {
-      date: '2026-07-29',
-      // the nine GH #729/#1184/#1185/#1189/#1199/#1192 frontier seeds + agent-roster-drawer (ADR-0188 GH
-      // #863) + the four GH #1205 composition-pack-A seeds + the four GH #1206 composition-pack-B seeds +
-      // the ADR-0205/GH #1207 frontier-latency-line-chart seed also reach the wired judge here (absent
-      // from the shard) — refused so this test's claim stays exactly "the re-judged stats-grid name
-      // admits", nothing else moves.
-      verdicts: {
-        'stats-grid-dashboard': { passed: true, qualityScore: 5 },
-        'pattern-confirmation-card': { passed: false, qualityScore: 2 },
-        'pattern-settings-form': { passed: false, qualityScore: 2 },
-        'pattern-schedule-picker': { passed: false, qualityScore: 2 },
-        'pattern-wizard': { passed: false, qualityScore: 2 },
-        'generative-form': { passed: false, qualityScore: 2 },
-        'booking-reservation': { passed: false, qualityScore: 2 },
-        'feedback-form': { passed: false, qualityScore: 2 },
-        'trivia-round-resume': { passed: false, qualityScore: 2 },
-        'empty-error-retry-card': { passed: false, qualityScore: 2 },
-        'five-day-weather': { passed: false, qualityScore: 2 },
-        'restaurant-menu': { passed: false, qualityScore: 2 },
-        'travel-itinerary': { passed: false, qualityScore: 2 },
-        'wizard-step-progress': { passed: false, qualityScore: 2 },
-        'slideshow-gallery': { passed: false, qualityScore: 2 },
-        'confirmation-view': { passed: false, qualityScore: 2 },
-        'trend-list': { passed: false, qualityScore: 2 },
-        'card-layouts': { passed: false, qualityScore: 2 },
-        'frontier-trip-card': { passed: false, qualityScore: 2 },
-        'frontier-invite-modal': { passed: false, qualityScore: 2 },
-        'frontier-review-split': { passed: false, qualityScore: 2 },
-        'frontier-onboarding-tour': { passed: false, qualityScore: 2 },
-        'frontier-round-outcome': { passed: false, qualityScore: 2 },
-        'frontier-booking-receipt': { passed: false, qualityScore: 2 },
-        'frontier-image-hero-card': { passed: false, qualityScore: 2 },
-        'frontier-card-anatomy-ask': { passed: false, qualityScore: 2 },
-        'backable-wizard': { passed: false, qualityScore: 2 },
-        'frontier-greet-card': { passed: false, qualityScore: 2 },
-        'agent-roster-drawer': { passed: false, qualityScore: 2 },
-        'frontier-latency-line-chart': { passed: false, qualityScore: 2 },
-        'frontier-media-tour': { passed: false, qualityScore: 2 },
-      },
-    })
+    const verdicts: Record<string, unknown> = {}
+    for (const seed of allSeeds) {
+      verdicts[seed.name] =
+        seed.name === 'canvas-button' ? { passed: true, qualityScore: 5 } : { passed: false, qualityScore: 2 }
+    }
+    const verdictsPath = writeVerdicts('re-judged.json', { date: '2026-07-29', verdicts })
 
     const result = run(['--verdicts', verdictsPath])
 
     expect(result.status, result.stderr).toBe(0)
     expect(result.stdout).toMatch(/1 admitted/)
-    expect(result.stdout).toContain('stats-grid-dashboard')
+    expect(result.stdout).toContain('canvas-button')
     expect(archivedFiles()).toEqual(['2026-07-11--m-b-wave.json', '2026-07-29--re-judged.json'])
-    expect(readFileSync(join(sandbox, SHARD), 'utf8'), 'the re-admitted record landed in the shard').toContain('stats-grid-dashboard')
+    expect(readFileSync(join(sandbox, SHARD), 'utf8'), 'the re-admitted record landed in the shard').toContain('canvas-button')
   })
 
   it('clause 3 — a SELF-CONFLICTING archive (two same-date files disagreeing) halts every run before any work', () => {
@@ -662,7 +650,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
         rubricVersion: '1.0',
         judgedBy: 'a2ui-reviewer',
         date: '2026-07-28',
-        verdicts: { 'stats-grid-dashboard': { passed, qualityScore: passed ? 5 : 2 } },
+        verdicts: { 'planted-conflict-seed': { passed, qualityScore: passed ? 5 : 2 } },
       })}\n`
     plantArchive('2026-07-28--a.json', body(false))
     plantArchive('2026-07-28--b.json', body(true))
@@ -677,16 +665,19 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     expect(result.stderr).toMatch(/Nothing was written/)
   })
 
-  it('the sandbox itself is honest — an unjudged run against the shard-loaded sandbox with an EMPTY archive still halts on the allowlist, exactly as the real tree does', () => {
+  it('the sandbox itself is honest — an unjudged run over an EMPTY sandbox corpus with no dispositions anywhere admits the whole shelf and writes the shard', () => {
     // The negative control for every case above: if the sandbox were subtly wrong (a missing rubric, a
-    // catalog that would not load), these runs would fail for a reason unrelated to the clause under test.
-    makeSandbox({ withShard: true })
+    // catalog that would not load), these runs would fail for a reason unrelated to the clause under
+    // test. This control used to assert the allowlist-prose halt, but since 2026-08-18 the real
+    // `DISPOSITION_ALLOWLIST` is legitimately EMPTY (the standing refusals were dropped, the pending
+    // backlog admitted), so the honest baseline flipped: with NO planted archive and NO allowlist entry,
+    // nothing can halt an unjudged run, and every shelf seed admits at tier 1 — proving the sandbox's
+    // rubric, catalog, seed shelf, and store wiring all load, end to end. (The halting cases above are
+    // therefore attributable to exactly the disposition each one plants.)
+    makeSandbox({ withShard: false })
     const result = run([])
-    expect(result.status).toBe(1)
-    expect(result.stderr).toMatch(/HALTED/)
-    expect(result.stderr).toContain('stats-grid-dashboard')
-    // The curated prose is the 2026-08-18 judged refusal record (stats-grid-dashboard failed D5 in the first
-    // real judged wave; its allowlist entry now carries the VerdictsFile citation + repair path).
-    expect(result.stderr, 'with no archive planted, the fallback is the curated allowlist prose').toContain('judged E_QUALITY 2026-08-18')
+    expect(result.status, result.stderr).toBe(0)
+    expect(result.stdout).toMatch(new RegExp(`${allSeeds.length} admitted`))
+    expect(existsSync(join(sandbox, SHARD)), 'the run reached saveStore and minted the shard').toBe(true)
   })
 })
