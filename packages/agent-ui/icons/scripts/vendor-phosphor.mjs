@@ -31,6 +31,7 @@ const NAME_MAP = {
   'file-zip': 'file-zip',
   'file-code': 'file-code',
   plus: 'plus',
+  minus: 'minus', // GH #1406 — ui-text-field's side-by-side − + stepper pair (identity: Phosphor's own name matches)
   'arrow-up': 'arrow-up',
   microphone: 'microphone',
   list: 'list', // ui-super-shell's header-hosted collapse toggle (M5, GH #83/#90)

@@ -342,23 +342,33 @@ describe('text-field.css — Wave-5A numeric adornment rules (ADR-0047 CSS struc
     // The real rule DOES use --ui-text-field-font (asserted above), so the NC confirms the predicate bites.
   })
 
-  it('(c) numeric step-up/step-down override: block-size:auto (row layout, not 50%-column layout)', () => {
-    // In a [data-role='stepper'] column cell, step-up/step-down each take 50% of the icon cell height.
-    // Inside a [data-role='numeric'] row cell, they must override to block-size:auto (the row lays them
-    // out side-by-side at auto height — the 50% override would collapse them in the row).
-    const rule = stylesBlock.match(/\[data-role='numeric'\]\s*\[data-part='step-up'\][^}]*\{([^}]*)\}/)
-    expect(rule, 'numeric step-up/down override rule is missing from @scope').not.toBeNull()
-    const decl = (rule as RegExpMatchArray)[1]
-    expect(decl, 'numeric row: step-up/down must be block-size:auto (not 50% column height)').toContain('block-size: auto')
-    expect(decl, 'numeric row: step-up/down must be inline-size:auto (not 100% column width)').toContain('inline-size: auto')
+  it('(c) GH #1406 side-by-side steppers: stepper cell is a flex ROW; step buttons are icon-sized squares; the stacked-column 50% rule is gone', () => {
+    // The stepper pair went side-by-side (− left of +, Kim's 2026-08-19 ruling on #1406): the bare
+    // [data-role='stepper'] cell is now a flex ROW like the numeric cell, each step button an
+    // icon-sized SQUARE (--ui-text-field-icon both axes), and the retired stacked-column layout
+    // (block-size: 50% per button in an icon-sized column) must not survive anywhere in @scope.
+    const stepperRule = stylesBlock.match(/\[data-role='stepper'\]\s*\{([^}]*)\}/)
+    expect(stepperRule, "[data-role='stepper'] rule is missing from @scope").not.toBeNull()
+    const stepperDecl = (stepperRule as RegExpMatchArray)[1]
+    expect(stepperDecl, 'stepper cell must be flex-direction:row (side-by-side, not stacked)').toContain('flex-direction: row')
+    expect(stepperDecl, 'stepper cell must be inline-size:auto (two squares exceed one icon cell)').toContain('inline-size: auto')
 
-    // NC: the standard [data-role='stepper'] rule (outside numeric) uses block-size: 50% — prove it differs
-    const stepperRule = stylesBlock.match(/\[data-role='stepper'\]\s*\+?\s*\[data-part='step-up'\][^}]*\{([^}]*)/)
-      ?? stylesBlock.match(/:scope\s*\[data-part='step-up'\]\s*\{([^}]*)/)
-    // The standalone step-up/down (in stepper context) sets block-size: 50% (stacked column):
-    expect(stylesBlock).toContain('block-size: 50%') // the stepper-column 50% rule exists (anti-vacuous)
-    // and the numeric override is distinct from the 50% rule (already asserted above as block-size: auto)
-    void stepperRule // only used structurally
+    const btnRule = stylesBlock.match(/\[data-part='step-up'\],\s*:scope \[data-part='step-down'\]\s*\{([^}]*)\}/)
+    expect(btnRule, 'the shared square step-button rule is missing from @scope').not.toBeNull()
+    const btnDecl = (btnRule as RegExpMatchArray)[1]
+    expect(btnDecl, 'step buttons must be icon-sized inline (square)').toContain('inline-size: var(--ui-text-field-icon)')
+    expect(btnDecl, 'step buttons must be icon-sized block (square)').toContain('block-size: var(--ui-text-field-icon)')
+
+    // The retired stacked column: no 50%-height button rule may remain (the #1406 anti-regression pin).
+    expect(stylesBlock, 'the stacked-column block-size:50% stepper rule must be GONE (GH #1406)').not.toContain('block-size: 50%')
+
+    // The trailing-slot width override must cover BOTH numeric-family roles (the bare stepper cell
+    // widened alongside numeric — the #1406 named gap).
+    expect(stylesBlock).toMatch(/\[slot='trailing'\]:is\(\[data-role='stepper'\],\s*\[data-role='numeric'\]\)/)
+
+    // NC: a planted stacked-column rule IS caught by the row assertion (column ≠ row).
+    const planted = ":scope [data-role='stepper'] { display: inline-flex; flex-direction: column; }"
+    expect(planted).not.toContain('flex-direction: row')
   })
 
   it('@scope hygiene still passes with all Wave-5A rules (no foreign refs introduced)', () => {
