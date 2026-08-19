@@ -7,16 +7,18 @@ import type { FormValue, ValidityResult } from '../../dom/index.ts'
 // jsdom probes — ui-choice-group (ADR-0220 GH #1368). A committed choice over agent-composed
 // ui-choice-card option cards, single or multi. jsdom reality: the `ElementInternals`
 // form-association surface (setFormValue / setValidity) is absent in jsdom — stub it per-instance
-// BEFORE connect (the multi-select.test.ts / select.test.ts precedent). The REAL whole-shape
-// geometry + forced-colors + non-color signifier + keyboard-vs-pointer byte-identity proofs live in
-// choice-group.browser.test.ts (Chromium + WebKit).
+// BEFORE connect (the multi-select.test.ts / select.test.ts precedent). NAMED DEBT: the whole-shape
+// geometry + forced-colors + non-color signifier + keyboard-vs-pointer byte-identity proofs a real
+// `.browser.test.ts` shard would carry are DEFERRED, not yet written — tracked as a blocking
+// precondition of the ADR-0220 wire-integration lane (GH #1398).
 //
 // Named probes: cg-upgrade · cg-typed · cg-define-guard · cg-single-exclusive · cg-multi-toggle ·
 // cg-required-empty-single · cg-required-empty-multi · cg-required-cleared · cg-form-value-single ·
 // cg-form-value-multi · cg-form-reset · cg-value-external-write · cg-aria-listbox ·
 // cg-aria-multiselectable · cg-keyboard-space · cg-keyboard-enter · cg-roving-arrow ·
 // cg-disabled-card-skipped · cg-disabled-card-never-commits · cg-group-disabled-cascade ·
-// cg-group-disabled-blocks-commit · cg-discovery-nested-group-boundary · cg-c10-residue
+// cg-group-disabled-blocks-commit · cg-discovery-nested-group-boundary · cg-c10-residue ·
+// cg-late-card-observer · cg-declarative-initial-value
 
 // ── Form-association stub (jsdom lacks setFormValue / setValidity) ──────────────────────────────────
 
@@ -444,6 +446,75 @@ describe('ui-choice-group — nearest-group-scoped discovery (cg-discovery-neste
     expect(outer.value).toBe('')
     expect(inner.value).toBe('inner-a')
     outer.remove()
+  })
+})
+
+// ── Late-adopted card observer (MAJOR-1, the TKT-0026 pattern) ────────────────────────────────────────
+
+describe('ui-choice-group — late-adopted card observer (cg-late-card-observer)', () => {
+  it('cg-late-card-observer: a card appended AFTER commit whose value matches the ALREADY-committed selection paints selected immediately — no further value write required', async () => {
+    const { el } = makeChoiceGroup()
+    // Committed BEFORE any matching card exists in the DOM — no STD_CARDS card carries this value.
+    el.value = 'penthouse'
+    await whenFlushed()
+
+    const late = document.createElement('ui-choice-card') as UIChoiceCardElement
+    late.setAttribute('value', 'penthouse')
+    el.append(late) // late-adopted — a catalog partial rebuild / streamed-in option, the multi-select.ts precedent
+    await whenFlushed()
+
+    // No further `el.value` write follows the append — the MutationObserver alone must re-run
+    // syncCardState() and paint the newly-adopted card.
+    expect(ariaSelectedOf(late)).toBe('true')
+    el.remove()
+  })
+
+  it('cg-late-card-observer: a card appended AFTER commit whose value does NOT match stays unselected', async () => {
+    const { el } = makeChoiceGroup()
+    el.value = 'penthouse'
+    await whenFlushed()
+
+    const late = document.createElement('ui-choice-card') as UIChoiceCardElement
+    late.setAttribute('value', 'garden-view')
+    el.append(late)
+    await whenFlushed()
+
+    expect(ariaSelectedOf(late)).toBe('false')
+    el.remove()
+  })
+
+  it('cg-late-card-observer: a card appended nested inside a wrapper (any nesting depth, cl.7) still gets painted', async () => {
+    const { el } = makeChoiceGroup()
+    el.values = ['wifi'] // exercised in single mode too — cl.7 discovery has no mode dependency
+    el.multiple = true
+    await whenFlushed()
+
+    const wrapper = document.createElement('div')
+    const late = document.createElement('ui-choice-card') as UIChoiceCardElement
+    late.setAttribute('value', 'wifi')
+    wrapper.append(late)
+    el.append(wrapper) // NOT a direct child — subtree:true must still catch it
+    await whenFlushed()
+
+    expect(ariaSelectedOf(late)).toBe('true')
+    el.remove()
+  })
+})
+
+// ── Declarative initial value (NIT-7) ──────────────────────────────────────────────────────────────
+
+describe('ui-choice-group — declarative initial value (cg-declarative-initial-value)', () => {
+  it('cg-declarative-initial-value: a declarative value="…" attribute paints aria-selected at first flush', async () => {
+    const el = new ProbeChoiceGroup()
+    el.setAttribute('value', 'deluxe')
+    el.innerHTML = STD_CARDS
+    stubFormAssoc(el.probeInternals)
+    document.body.append(el)
+    await whenFlushed()
+
+    expect(ariaSelectedOf(getCard(el, 'deluxe'))).toBe('true')
+    expect(ariaSelectedOf(getCard(el, 'standard'))).toBe('false')
+    el.remove()
   })
 })
 

@@ -181,3 +181,14 @@ never accidentally commits a choice.
 Single mode: `formValue()` returns the committed key string, or `null` when empty. Multi mode:
 `formValue()` returns a `FormData` with one entry per selected value (native `<select multiple>`
 parity) — zero selections submits nothing. `required` + an empty selection raises `valueMissing`.
+
+## Residual
+
+Roving focus seeds at the currently-committed card (`initialIndex`, so a reconnecting group with a
+pre-existing `value`/`values` focuses the right card first), but arrow-key navigation stays strictly
+1D — tree-order Up/Down/Left/Right over the flat card list, matching `rovingFocus`'s existing
+orientation contract. Whether the auto-fit CARD GRID should instead get true 2D spatial arrow
+navigation (Right/Left move within a visual row, Up/Down move between rows, keyed off measured
+layout rather than tree order) is a real, open design question — deliberately NOT decided here. It is
+design territory (a new roving-focus mode, or a grid-aware companion trait) rather than a build-seat
+call, and is left for a future ADR/LLD pass rather than a local deviation.

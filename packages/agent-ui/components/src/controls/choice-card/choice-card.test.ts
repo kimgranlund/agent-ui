@@ -3,8 +3,9 @@ import { UIChoiceCardElement } from './choice-card.ts'
 
 // jsdom probes — ui-choice-card (ADR-0220 GH #1368). The option unit — the WHOLE card is the hit
 // target and a11y unit, ARIA via ElementInternals, no selection commit of its own (the owning
-// ui-choice-group drives roving + commit). The REAL whole-shape geometry + forced-colors + non-color
-// signifier proofs live in choice-card.browser.test.ts (Chromium + WebKit).
+// ui-choice-group drives roving + commit). NAMED DEBT: the whole-shape geometry + forced-colors +
+// non-color signifier proofs a real `.browser.test.ts` shard would carry are DEFERRED, not yet
+// written — tracked as a blocking precondition of the ADR-0220 wire-integration lane (GH #1398).
 //
 // Named probes: cc-upgrade · cc-typed · cc-define-guard · cc-role · cc-tabindex-default ·
 // cc-set-selected · cc-set-unselected · cc-disabled-reflects

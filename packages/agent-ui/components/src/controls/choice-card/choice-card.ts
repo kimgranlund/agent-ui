@@ -54,7 +54,9 @@ export class UIChoiceCardElement extends UIElement {
    */
   setSelected(selected: boolean): void {
     this.internals.ariaSelected = selected ? 'true' : 'false'
-    // Optional-chained: jsdom has no CustomStateSet (the real paint is choice-card.browser.test.ts).
+    // Optional-chained: jsdom has no CustomStateSet. NAMED DEBT: the real :state(selected) paint proof
+    // (a `.browser.test.ts` shard) is DEFERRED, not yet written — tracked as a blocking precondition of
+    // the ADR-0220 wire-integration lane (GH #1398).
     if (selected) this.internals.states?.add('selected')
     else this.internals.states?.delete('selected')
   }

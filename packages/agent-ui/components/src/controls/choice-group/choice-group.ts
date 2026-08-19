@@ -147,6 +147,10 @@ export class UIChoiceGroupElement extends UIFormElement {
   // `#hostDisabledOptions` precedent).
   #groupDisabledCards = new WeakSet<HTMLElement>()
 
+  // The TKT-0026-pattern observer (multi-select.ts/select.ts/combo-box.ts precedent) — re-syncs paint
+  // for a late-adopted card. See connected() for the wire-up.
+  #cardObserver: MutationObserver | null = null
+
   // ── Form seams (UIFormElement hooks) ──────────────────────────────────────────────────────────────
 
   protected override formValue(): FormValue {
@@ -170,7 +174,10 @@ export class UIChoiceGroupElement extends UIFormElement {
 
   protected override formReset(): void {
     this.value = this.#defaultValue
-    this.values = this.#defaultValues
+    // A defensive copy — `this.#defaultValues` is the ONE long-lived baseline array; handing the same
+    // reference out to `this.values` on every reset would let any downstream in-place mutation of the
+    // live `values` array corrupt the baseline itself (NIT-8).
+    this.values = [...this.#defaultValues]
     // ADR-0051 — a reset must not leave a required-empty control showing :state(user-invalid) until
     // the user re-interacts (the text-field/select/multi-select formReset() precedent).
     this.#userInvalid?.reset()
@@ -179,6 +186,8 @@ export class UIChoiceGroupElement extends UIFormElement {
   protected override disconnected(): void {
     this.#userInvalid?.release() // idempotent — the listeners already die with the connection scope
     this.#userInvalid = null
+    this.#cardObserver?.disconnect()
+    this.#cardObserver = null
   }
 
   /** Feeds `FormConnectDetail.userInvalid` (ADR-0050) — the `trackUserInvalid` tracker IS the one
@@ -296,10 +305,33 @@ export class UIChoiceGroupElement extends UIFormElement {
     }
     this.effect(syncCardState) // tracks this.value/this.values + effectiveDisabled() reactively
 
+    // MAJOR-1 fix (checker finding) — the TKT-0026-pattern observer `multi-select.ts`/`select.ts`/
+    // `combo-box.ts` each already carry: `syncCardState` is a reactive effect, so it only re-runs when
+    // `this.value`/`this.values`/`effectiveDisabled()` themselves CHANGE — a card appended AFTER connect
+    // (a catalog partial rebuild, an agent streaming in more option cards) mutates the DOM only, which
+    // fires none of those signals, so without this observer a late card whose `value` already matches
+    // the CURRENT committed selection would sit unpainted until the NEXT unrelated value write. `subtree:
+    // true` (multi-select.ts's own observer omits it — its options are flat direct children only) matches
+    // clause 7's "any nesting depth" discovery contract: a card wrapped in an agent-composed layout
+    // primitive still needs to be caught.
+    this.#cardObserver = new MutationObserver(() => syncCardState())
+    this.#cardObserver.observe(this, { childList: true, subtree: true })
+
     // rovingFocus — keyboard navigation over the owned card set. typeAhead OFF (rich-card content has
     // no single reliable label text to search — the `multi-select.ts` "small, already-loaded set"
     // rationale does not hold here; a mis-focus from a false type-ahead match is worse than none).
-    rovingFocus(this, { items, typeAhead: false })
+    // `initialIndex` seeds roving focus at the CURRENTLY committed card (MINOR-6) rather than always the
+    // first card — e.g. reconnecting a group whose `value`/`values` already hold a selection. Orientation
+    // stays 1D (arrow-key-only, in tree order): a 2D-grid arrow scheme for the auto-fit card grid is
+    // design territory, not a cheap follow-up — see choice-group.md's Residual note.
+    rovingFocus(this, {
+      items,
+      typeAhead: false,
+      initialIndex: () => {
+        const selectedKeys = this.multiple ? new Set(this.values) : new Set(this.value ? [this.value] : [])
+        return items().findIndex((card) => selectedKeys.has(keyOf(card)))
+      },
+    })
 
     // selectionCommit — clause 2's mode flip; clause 1's two seams; clause 3's onSelect → value/values.
     selectionCommit(this, {

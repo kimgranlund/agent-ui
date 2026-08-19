@@ -14,10 +14,16 @@
 // `ElementInternals` rather than a host attribute, the `ui-tab` shape) IS now a lawful consumer —
 // THROUGH the two additive, backwards-compatible seams below (`itemFromTarget`/`reflectSelected`), never
 // by growing a host `role`/`aria-*` attribute to satisfy the trait's OWN default attribute-keyed lookup.
-// Both seams default to today's exact behaviour, so every EXISTING consumer (`ui-select`/
-// `ui-multi-select`/`ui-listbox`) is byte-unaffected — the negative control this amendment is proven
-// against (their suites + `listbox-element.test.ts`, which exercises the default accessors, stay green
-// untouched).
+// Both seams default to today's behaviour — for every EXISTING consumer (`ui-select`/`ui-multi-select`/
+// `ui-listbox`) this amendment is BEHAVIOR-UNAFFECTED, not byte-identical in the strictest sense: the
+// default `itemFromTarget` (`optionFromTarget`, which already gates the CLICK path on
+// `host.contains(item)`) now ALSO gates the ENTER path the same way, where the pre-amendment Enter
+// branch resolved via a bare `active.closest('[role=option]')` with no containment check at all — a
+// strictly TIGHTER default. No shipped consumer's suite (nor `listbox-element.test.ts`, which exercises
+// the default accessors) observes the difference, because none constructs the pathological case the
+// tightening excludes (an Enter-focused option resolving to a `[role=option]` ancestor OUTSIDE the
+// host's own subtree) — that negative control is what stays green, untouched, proving the tightening is
+// harmless for every existing consumer, not that the two Enter branches are byte-for-byte identical.
 //
 // GH #908/#905 — this trait's OWN `aria-selected` reflect (below) is COMMIT-TIME ONLY: it fires from
 // a real user gesture (click/Enter), never from an external write. A host whose selection can ALSO
