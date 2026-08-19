@@ -158,24 +158,33 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
     )
   })
 
-  // ── ADR-0021: the entry-control min-inline-size floor (native <input size> parity) ──────────────────────
-  it('BARE+unsized: carries the min-inline-size typing-width floor — offsetWidth ≥ the resolved ~20ch, NOT the ~0 collapse', () => {
-    const { field } = mount(BARE) // no [size], empty — the exact case the s11 smoke caught collapsing the 1fr editor cell
+  // ── ADR-0223 (Fill by Default, slice-0 pilot) — the two-posture acceptance leg (generalizing the ADR-0021
+  //    s11 smoke): FILL — a bare host in block flow stretches to the container's inline size; [inline] — the
+  //    host hugs, held open by the relocated ~20ch typing-width floor (clause 3(b)), and sits BELOW the container.
+  it('two postures: bare host offsetWidth ≈ container inline size (fill); [inline] host offsetWidth ≥ the ~20ch floor and < container (hug)', () => {
+    const { wrap, field } = mount(BARE)
+    wrap.style.inlineSize = '640px' // a wide block container — wider than any 20ch resolution
+    // FILL (the default): block-level grid — the field stretches to the container; the container IS the floor.
+    const containerWidth = wrap.getBoundingClientRect().width
+    expect(field.offsetWidth, 'the bare field did not FILL its block container (ADR-0223 cl.1)').toBeCloseTo(containerWidth, 0)
+    expect(getComputedStyle(field).display, 'the default host is not block-level grid').toBe('grid')
+    // HUG (the ONE opt-out): [inline] flips display level AND posture; the ADR-0021 floor now lives here.
+    field.setAttribute('inline', '')
     const floorPx = px(getComputedStyle(field).minInlineSize) // 20ch resolves to an absolute px on a real engine
-    // the floor resolved to a real, substantial typing width (native <input size> parity), not a zero/symbolic value.
-    expect(floorPx, 'the --ui-text-field-min-inline-size floor did not resolve to a positive px').toBeGreaterThan(0)
-    // the bare field's box is held open to AT LEAST the floor — a real pointer can land on it.
-    const withFloor = field.offsetWidth
-    expect(withFloor, 'the bare field is narrower than its min-inline-size floor').toBeGreaterThanOrEqual(Math.floor(floorPx))
-    // NON-VACUOUS — the floor is load-bearing: REMOVE it (host min-inline-size → 0) and the unsized 1fr editor
-    // collapses the box back to just its frame chrome, far below the floor (the ~0 typing sliver this fixes). So
-    // the assertion above is not vacuously true of any field — it FAILS if the floor is gone.
+    expect(floorPx, 'the --ui-text-field-min-inline-size floor did not resolve to a positive px in [inline]').toBeGreaterThan(0)
+    const hugged = field.offsetWidth
+    expect(hugged, 'the [inline] field is narrower than its min-inline-size floor').toBeGreaterThanOrEqual(Math.floor(floorPx))
+    expect(hugged, 'the [inline] field did not HUG — it still fills the container').toBeLessThan(containerWidth)
+    expect(getComputedStyle(field).display, 'the [inline] host is not inline-level').toBe('inline-grid')
+    // NON-VACUOUS — the hug floor is load-bearing: remove it and the unsized 1fr editor collapses the box to
+    // its frame chrome, far below the floor (the ~0 typing sliver ADR-0021 measured; the degenerate hug context
+    // is exactly where that collapse lived — which is WHY the floor moved here).
     field.style.minInlineSize = '0'
     const withoutFloor = field.offsetWidth
-    expect(withoutFloor, 'removing the floor did NOT shrink the field below the floor — the floor is not load-bearing').toBeLessThan(
+    expect(withoutFloor, 'removing the [inline] floor did NOT shrink the field below it — the floor is not load-bearing').toBeLessThan(
       floorPx,
     )
-    expect(withFloor - withoutFloor, 'the floor did not meaningfully widen the bare field').toBeGreaterThan(20)
+    expect(hugged - withoutFloor, 'the floor did not meaningfully widen the hugging field').toBeGreaterThan(20)
   })
 
   // ── ADR-0006 / geometry.md: [density] rides the rhythm (the slot↔editor gap), NEVER the frame (C6 polish) ──
@@ -618,7 +627,8 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
 describe('ui-text-field Wave-5B — type=date calendar picker (s11 Wave-5B, both engines)', () => {
   it('SHAPE: type=date field in a flex row has positive bounding-box and is wider than tall (not a dot)', () => {
     // The whole-shape gestalt: a date field is a text input + calendar button, not a square widget.
-    // The min-inline-size floor (ADR-0021) keeps the field hittable even without an explicit width.
+    // Under fill-by-default (ADR-0223) the fill posture stretches the field to its flex track; the
+    // [inline] hug state carries the relocated ADR-0021 floor (the two-posture leg above proves both).
     const wrap = document.createElement('div')
     wrap.style.display = 'flex'
     wrap.style.flexDirection = 'row'

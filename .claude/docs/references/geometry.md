@@ -68,6 +68,15 @@ sensible *minimum* is for the control class:
   (The editor cell keeps `min-inline-size: 0` so long text scrolls within the field rather than widening it —
   complementary to the host floor, ADR-0021.)
 
+**Fill/hug state-split (ADR-0223, superseding ADR-0021's default-state placement):** under Fill by
+Default, a non-exempt control host is **block-level and fills** its parent's inline space in the default
+state — the container IS the floor, so the default state carries **no** content floor. The class floors
+above split by state: the **Action** squareness floor (`min-inline-size = height`) survives **all**
+states (ADR-0223 cl.3(a)); the **Entry** typing-width floor lives **only in the `[inline]` hug state**
+(cl.3(b)) — the one boolean opt-out that flips both display level and sizing posture — with token names
+and defaults unchanged. (`ui-text-field` is the flipped slice-0 pilot; the remaining entry family flips
+on the wave — ADR-0223 cl.7.)
+
 ## The slot model (no authored trailing-pad)
 
 Leading and trailing affordances each sit in the **same icon-sized square slot** that centers its
