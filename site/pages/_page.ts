@@ -187,15 +187,24 @@ export const NAV: readonly NavGroup[] = [
     // The token-surface family (ADR-0118) — three Display-class show-never-edit primitives, each a single
     // descriptor-derived API doc (tier=display ⇒ {doc} only, the ui-sparkline/ui-bar-chart precedent).
     label: 'ui-swatch',
-    links: [{ href: './swatch-doc.html', label: 'API' }],
+    links: [
+      { href: './swatch-demo.html', label: 'Demo' },
+      { href: './swatch-doc.html', label: 'API' },
+    ],
   },
   {
     label: 'ui-ramp',
-    links: [{ href: './ramp-doc.html', label: 'API' }],
+    links: [
+      { href: './ramp-demo.html', label: 'Demo' },
+      { href: './ramp-doc.html', label: 'API' },
+    ],
   },
   {
     label: 'ui-ladder',
-    links: [{ href: './ladder-doc.html', label: 'API' }],
+    links: [
+      { href: './ladder-demo.html', label: 'Demo' },
+      { href: './ladder-doc.html', label: 'API' },
+    ],
   },
   {
     // The Indicator-class form controls (Wave 1, ADR-0041/0042) — per-component groups, tag-labelled (the
@@ -477,7 +486,10 @@ export const NAV: readonly NavGroup[] = [
   // toast (pattern) gets {doc, demo}; toast-region (layout) folds into the Layout primitives bundle below.
   {
     label: 'ui-progress',
-    links: [{ href: './progress-doc.html', label: 'API' }],
+    links: [
+      { href: './progress-demo.html', label: 'Demo' },
+      { href: './progress-doc.html', label: 'API' },
+    ],
   },
   {
     label: 'ui-avatar',

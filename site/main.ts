@@ -413,6 +413,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-swatch',
     cards: [
       {
+        href: './swatch-demo.html',
+        title: 'Demo',
+        blurb: 'The palette review, live: brand key colors, semantic roles, contrast pairs, a candidate-vs-current hex/--var comparison, and a model-driven scheme pin with a review log.',
+      },
+      {
         href: './swatch-doc.html',
         title: 'API reference',
         blurb: 'The Display-class color-identity leaf — a bordered color box resolved live, the --var lane, the scheme pin, and the degenerate cases, generated from swatch.md.',
@@ -423,6 +428,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-ramp',
     cards: [
       {
+        href: './ramp-demo.html',
+        title: 'Demo',
+        blurb: 'The brand-ramp review, live: the primary 050→950 ramp, the semantic families stacked, a light/dark pinned pair, a candidate OKLCH ramp, and a model-driven family switcher with a review log.',
+      },
+      {
         href: './ramp-doc.html',
         title: 'API reference',
         blurb: 'The Display-class ordered-color-series leaf — a wrapping strip of swatch cells over a real tonal progression, generated from ramp.md.',
@@ -432,6 +442,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
   {
     label: 'ui-ladder',
     cards: [
+      {
+        href: './ladder-demo.html',
+        title: 'Demo',
+        blurb: 'The dimensional-token review, live: the spacing scale as --var tiers, control-height and icon ladders, a candidate 4-pt scale, and a model-driven density switch with a review log.',
+      },
       {
         href: './ladder-doc.html',
         title: 'API reference',
@@ -994,6 +1009,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
   {
     label: 'ui-progress',
     cards: [
+      {
+        href: './progress-demo.html',
+        title: 'Demo',
+        blurb: 'Progress doing real work, live: a button-driven attachment upload, an indeterminate-to-determinate indexing run, a segments-stepped onboarding readout, and an update log.',
+      },
       {
         href: './progress-doc.html',
         title: 'API reference',
