@@ -365,16 +365,21 @@ describe('crud-entry-list — the GH #1355 CRUD entry-list module', () => {
     expect(result.map((m) => m.id)).not.toContain('crud-entry-list')
   })
 
-  it('teaches the unbindable-Switch-label trap (the name rides the adjacent Text, not the switch)', () => {
+  // The Field-wrap teaching is the REPAIRED shape from the seed's first judged pass (qualityScore 2,
+  // failing D1 on P7): Switch.label is not bindable, and a merely-adjacent Text never programmatically
+  // NAMES the switch — Field's bindable label is the catalog-available fix (the ADR-0051 seam).
+  it('teaches the Field-wrap repair for the unbindable Switch.label (P7 — a sibling Text never names the switch)', () => {
     const skill = MINI_SKILLS.find((m) => m.id === 'crud-entry-list')!
     expect(skill.body).toMatch(/Switch's own `label` is NOT bindable/)
+    expect(skill.body).toMatch(/a sibling Text never NAMES the switch for assistive tech/)
+    expect(skill.body).toMatch(/Field's bindable label does both jobs/)
   })
 
-  it('teaches the edit-Drawer + FormProvider shape and the Button-rows-in-Menu add-from-library idiom', () => {
+  it('teaches the edit-Drawer-beside-the-Card + FormProvider shape and the Button-rows-in-Menu add-from-library idiom', () => {
     const skill = MINI_SKILLS.find((m) => m.id === 'crud-entry-list')!
-    expect(skill.body).toMatch(/Drawer\(edge 'end', open bound\)/)
+    expect(skill.body).toMatch(/Drawer\(edge 'end', open bound\) BESIDE the Card, never inside CardContent/)
     expect(skill.body).toMatch(/a Menu whose rows are BUTTONS/)
-    expect(skill.body).toMatch(/never bare MenuItem, which carries no `action` slot/)
+    expect(skill.body).toMatch(/never bare MenuItem, which has no `action` slot/)
   })
 })
 
