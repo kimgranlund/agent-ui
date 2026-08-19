@@ -1,6 +1,15 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.16 · 2026-08-13 (v0.15 2026-08-12; v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.17 · 2026-08-18 (v0.16 2026-08-13; v0.15 2026-08-12; v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.17 changelog ([ADR-0204](../adr/0204-team-meta-line-arm.md) + [ADR-0206](../adr/0206-target-meta-line-arm.md),
+> both RATIFIED by Kim 2026-08-18 — staleness repair, docs-only, no requirement/ID/AC shape added or
+> removed): the meta-line reserved MODEL-authored vocabulary this SPEC's notes sketch has since grown by
+> two additive arms, `team` (ADR-0204 — name-only proposed roster, the `onTeamDeclared` seam) and `target`
+> (ADR-0206 — the model names the surfaceId it is about to mutate; retires the GH #1134 sole-open-surface
+> heuristic), each following the `ask`/`plan`/`personaPatch`/`flowEnd` precedent EXACTLY (whole-arm shallow
+> validation, gate-blind `produce()` pass-through, envelope versionless, `AgentTransport.turn` byte-identical).
+> The authoritative arm-by-arm reference is `.claude/skills/a2ui-payload-authoring/references/meta-line-vocabulary.md`
+> (PR #1286); this note only repairs the enumeration's staleness — every existing requirement is byte-untouched.
 > v0.16 changelog ([ADR-0178](../adr/0178-agent-authoring-conversational-persona-hydration.md)'s
 > **Amendment**, RATIFIED by Kim 2026-08-13 — the [`ratify ADR-0178 amendment`
 > utterance](https://github.com/kimgranlund/agent-ui/issues/696#issuecomment-5275019730) on GH

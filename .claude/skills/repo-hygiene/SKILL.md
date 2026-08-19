@@ -82,6 +82,23 @@ can hold.
   freshness gate judge. The same law as the registration-surfaces bullet above, generalized: a
   conflict in generated content is a prompt to re-generate, never to merge hunks.
 
+## Merge-desk laws (2026-08-18)
+
+- **Generated/derived files in conflict: take MAIN's side, then RE-RUN THE OPERATION.** The
+  regenerate-never-hand-merge bullets above, sharpened by side and widened to operation-carrying
+  state files: `adr-queue.json` → main's version + re-run `adr_queue.py`'s clear;
+  `theme-provider-built.css` → the vite fixture rebuild; dogfood assets / llms-full → their regen
+  scripts. Never default to `--theirs` on generated output — a careless `--theirs` resurrected
+  3 already-cleared queue rows (2026-08-18).
+- **After ANY conflict resolution, grep the file for live markers** —
+  `grep -c '<<<<<<<\|>>>>>>>' <file>`, explicitly: gates are marker-blind (`llms.test.ts` passed
+  green with live conflict markers inside `llms.txt`, 2026-08-18).
+- **Merging and branch-deletion are ONE atomic op**: `gh pr merge --squash --delete-branch` — the
+  deletion no-ops if the merge fails — and NEVER a manual `git push origin --delete` in the same
+  block; any separate cleanup waits for `gh pr view --json state` = `MERGED`. Strike 2: PR #1306
+  was CLOSED by deleting its head branch after a silently-failed conflict merge (2026-08-18;
+  recovered via `headRefOid` → PR #1308).
+
 ## When an external wave lands mid-campaign
 
 Kim's live token rework appeared in the working tree mid-Phase-5: never stage it, stage your own

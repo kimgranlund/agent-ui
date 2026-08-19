@@ -44,7 +44,12 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
 
 - **Foreground gates.** Every build brief MANDATES running `npm run check && npm test` (plus the
   browser gate when the slice touches rendering) in the seat's own foreground context, judged by
-  EXIT CODES cited in the report — backgrounded gate runs stall seats and are forbidden.
+  EXIT CODES cited in the report — a seat never ends a turn waiting on a backgrounded gate run
+  (4/9 batch workers stalled exactly there, 2026-08-18); backgrounded gate runs are forbidden.
+- **Batch gate topology.** When N workers run concurrently on one host, each brief carries
+  REDUCED targeted gates — `npm run check` + the slice's own tests + the specific shared-file
+  gates it touches — and the DESK runs the ONE full suite on merged main; that single desk run
+  caught the one real red all nine reduced gates missed (2026-08-18).
 - **Worktree trap.** Any worktree-isolated brief mandates its own `npm install` plus a
   `readlink node_modules/@agent-ui/shared` check before trusting an import-resolving gate
   (CLAUDE.md "Always").
