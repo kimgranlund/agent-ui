@@ -1,7 +1,10 @@
 # Rubric — a2ui-catalog-example (one catalog-page card)
 
-> Status: proposed · v0.1 · 2026-08-18 · Layer: rubric (the standard ONE card on `site/a2ui-catalog.html` is
-> graded against — the eval framework the card screenshots feed).
+> Status: proposed · v0.2 · 2026-08-18 (v0.1 same day; v0.2 resolves the two escalations the first full
+> five-tier review raised — the `demonstrable` definition now encodes the fleet's ruled visibility law, B4's
+> anchors decide the bare-but-recognizable case — and repairs §5's own probe list, which omitted A3's gate) ·
+> Layer: rubric (the standard ONE card on `site/a2ui-catalog.html` is graded against — the eval framework the
+> card screenshots feed).
 > Applied by: `.claude/skills/a2ui-catalog-rendering-review` (the review procedure; runner `scripts/screenshot-a2ui-catalog.mjs`).
 > Siblings: [`a2ui-catalog.md`](./a2ui-catalog.md) grades the catalog ROW (def + factory + tests); this rubric
 > grades the ROW'S DEMONSTRATION — the live playground card a reader sees. Same component, different artifact.
@@ -27,8 +30,13 @@ Before any check, derive `expected/<T>.json`:
 { type, tier, tag,                       // catalog.json + factories.ts + a2ui-catalog-tiers.ts
   role: widget|input|container|overlay,   // from def.children / value slot / factory tag (overlay = Modal/Drawer/Popover/Menu/Tooltip/…)
   props: [{ name, kind: enum|boolean|number|string|skip, values?, bindable, mapsTo, seed? }],
-  demonstrable: [prop…],                 // props whose value VISIBLY changes R: every enum, every label/text/placeholder,
-                                          // boolean state props (disabled/open/checked), size/variant — the set L must showcase
+  demonstrable: [prop…],                 // v0.2 (resolves the v0.1 escalation): the props a LEGIBLE specimen needs —
+                                          // the fleet's ruled visibility law (GH #978, A2UI_INITIAL's own comment block),
+                                          // NOT every enum/text prop. A prop is demonstrable iff leaving it unset makes R
+                                          // empty, meaningless, or unidentifiable (content props: label/text/src/value/
+                                          // summary/data arrays); a prop whose default state is already legible (elevation,
+                                          // brightness, an align default, an invisible href) is a 5-anchor refinement, not
+                                          // a gate item. SAMPLE_TREES-visible content satisfies it without a seed.
   children: none|child|children, sample: <SAMPLE_TREES summary or 'generic-fallback'>,
   uses: [seedName…] }
 ```
@@ -70,7 +78,7 @@ Scale 1–5; 1 = failure, 3 = adequate, 5 = excellent. Gate-to-promote: **every 
 | B1 | Renders through the real renderer | in-out | gate | `.preview-canvas` has a child; its root (or first control) tag == `factories.ts` tag for `T`; zero `pageerror`/console errors and zero validator rejections during mount | 1: empty canvas, wrong tag, or an error · 3: right tag, clean console · 5: + surface passes `validate()` when re-serialized (SAMPLE tree + seeds form a valid A2UI payload) |
 | B2 | Prop reflection | in-out | gate | For each non-skip knob: set a probe value (2 members for enums, toggle for booleans, a sentinel string) → the `mapsTo` target on the control changes (attribute/prop) AND the canvas re-renders (fresh renderer, N3) | 1: a knob change leaves the control unchanged · 3: every knob reflects · 5: + bindable props verified via a data-model write, not only a static prop |
 | B3 | Fidelity to the control's own standard | in-out | gate+review | [gate]: R's control passes the SAME size/geometry assertions the control's own doc page/gallery uses (`{name}.css` `--ui-{name}-*` roles resolved, host box within the descriptor's size row, no overflow of `.preview-canvas`) · [review]: side-by-side with the component-mode preview of the same `ui-*` tag — the A2UI path must not look like a degraded copy | 1: clipped/overflowing/zero-size or visibly off from the ui-* rendering · 3: matches the ui-* rendering at the seeded state · 5: + matches in dark AND light, and at a narrow (414px) canvas |
-| B4 | Makes sense (representative specimen) | out-in | review | Given only the screenshot + expected-card record, a reader can say what `T` is and what its job is; content quantity/kind is realistic (a `Table` with rows, a `Timeline` with ≥3 items, an `Attachment` with a name+size); no lorem "Sample content" fallback for a children-bearing type | 1: unreadable/meaningless (an empty chip, one lonely cell) or the generic fallback · 3: recognizably `T`, minimal content · 5: shows the component's *pattern* — the realistic composition an agent would actually emit (mirrors the corpus's catalog-coverage idioms) |
+| B4 | Makes sense (representative specimen) | out-in | review | Given only the screenshot + expected-card record, a reader can say what `T` is and what its job is; content quantity/kind is realistic (a `Table` with rows, a `Timeline` with ≥3 items, an `Attachment` with a name+size); no lorem "Sample content" fallback for a children-bearing type | 1: unreadable/meaningless (an empty chip, one lonely cell) or the generic fallback — a blind identification that FAILS or rests on fallback/incidental cues (a resize grip, an aspect-ratio guess) is 1 by construction · 2: blind-identifiable as `T` but content-empty (bare chrome, zero content — v0.2, decides the bare-but-recognizable case) · 3: recognizably `T` with minimal real content · 5: shows the component's *pattern* — the realistic composition an agent would actually emit (mirrors the corpus's catalog-coverage idioms) |
 
 ### Axis C — L↔R coherence and the whole card
 
@@ -95,12 +103,19 @@ the screenshot(s) (dark; light when captured), `expected/<T>.json`, and this rub
 
 `scripts/eval-a2ui-catalog.mjs` — one Playwright pass over the live page, per card:
 
-1. **Derive** the expected-card record (import `catalog.json`, `defaultFactories`, tiers; export `A2UI_INITIAL`
-   from `component-preview.ts` — today module-private — so the seed set is read, not guessed).
-2. **Probe** A1/A2/A4 (DOM vs record), B1 (tag + console + validator), C1 (seed text search).
+1. **Derive** the expected-card record — ALL §1.1 fields incl. `demonstrable`, `uses`, `role`, `sample`
+   (v0.2: the first sweep's records omitted them, so reviewers re-derived by hand) — importing
+   `catalog.json`, `defaultFactories`, tiers, and `component-preview.ts`'s exported `A2UI_INITIAL`.
+2. **Probe** A1/A2/A4 (DOM vs record), **A3's gate half** (`demonstrable ∖ (seeded ∪ sample-visible) = ∅`
+   — v0.2: v0.1 omitted A3 here, which is exactly how 20+ empty-specimen cards sailed through the first
+   sweep's gates green), B1 (tag + console + validator), C1 (seed text search).
 3. **Mutate** B2/C2: for each knob, set → assert `mapsTo` change → revert → assert DOM-equal; overlays get
    `open` toggled last and closed.
-4. **Measure** B3-gate (box sizes, overflow, token resolution) and **capture** the card (dark; `--theme both`).
+4. **Measure** B3-gate (box sizes, overflow, token resolution) and **capture**: the card (clip padded a few
+   px past the section box — exact-box clips drop the uses line on pixel-parity, the v0.1 even/odd artifact),
+   the same `ui-*` tag's component-mode preview (B3-review's side-by-side is unmeasurable without it — every
+   v0.1 review returned `?`), and each overlay's REVEALED state (`open` toggled) so B4 is judgeable (dark;
+   `--theme both`).
 5. **Emit** `eval/<T>.json` (gate verdicts + measurements + screenshot paths) and `eval/summary.md`
    (one row per card: gates ✓/✗ per dim, review dims blank until judged).
 6. **Judge**: dispatch [review] dims per card to the critic (batched by tier), merge scores into the summary,
