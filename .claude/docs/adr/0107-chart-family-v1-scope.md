@@ -195,3 +195,30 @@ bookkeeping entry cl.8's wording seemed to forbid. Resolution: `Sparkline` + `Ba
 recommendation, applied by the coordinator). No ask-policy semantics changed; the alternative
 (exempting report-only types from the total partition) would have weakened the gate for every future
 type and was rejected.
+
+## Amendment 3 — the "Pie/donut in v1" rejected alternative is LIFTED by ADR-0219 (2026-08-19, GH #1375)
+
+The Alternatives-considered bullet above — *"Pie/donut in v1. Rejected on mechanics, not fashion: angle
+is a low-accuracy perceptual channel; segment identity in a pie is typically hue-only … and a pie needs
+a legend"* — named three CONDITIONS, not a permanent fence: angle's weak accuracy, hue-only identity,
+and the legend requirement. [ADR-0219](./0219-pie-donut-part-of-whole-chart.md) tested this bullet's own
+closing claim ("aligned bars answer the same proportion question") against mechanics and found it only
+half-true — `BarChart` encodes magnitude against a zero baseline; it does not make the WHOLE visible, so
+"what fraction is each" is left to the reader's arithmetic. ADR-0219 then answered each of the three
+named conditions **by construction, not by waiver**: printed per-slice percents answer condition 1
+(angle weakness); identity carried by order + label + printed percent + a single-family LIGHTNESS ramp
+(never hue alone, ADR-0057) answers condition 2 (hue-only identity); a real-DOM key list — the
+`ui-bar-chart` row pattern, never an SVG legend layer — answers condition 3 (the legend requirement)
+without the label-collision/axis-system escalation this ADR's clause 1 fences out. `ui-pie-chart`
+(`PieChart`; `variant: 'donut' | 'pie'`, default `donut`) therefore enters the chart family as ONE NEW
+type reusing `BarChart`'s `{label, value}[]` row — never a `variant` on `BarChart` itself, honoring this
+ADR's own clause 1 rejection of a generic `ui-chart type=…` component.
+
+This ADR's clause 1 sentence ("Ruled out for v1, with the fence in PRD §3: … pie/donut …") and the
+"Pie/donut in v1" Alternatives-considered bullet are both **superseded IN PART**, scoped to this one
+type — every other named fence (axis systems generally, scatter, line-with-axes beyond ADR-0205's own
+realized scope, multi-series, stacked/grouped bars, interaction/animation, time axes, streaming appends)
+stands untouched; this is not a general re-opening of the v1 boundary. `chart-family.prd.md` is repaired
+to v1.1 in the same change — its §3 "Pie/donut" ruled-out bullet is annotated admitted-under-ADR-0219,
+not deleted, so the original fence's reasoning stays legible as history (the ADR-0205 precedent: a
+named intake ADR realizing a named fence, recorded rather than silently overwritten).
