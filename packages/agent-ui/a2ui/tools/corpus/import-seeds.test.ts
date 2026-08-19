@@ -875,8 +875,11 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
       expect(result.stderr).toMatch(
         new RegExp(`${expectedCandidateCount} candidate\\(s\\) reached the judge tier with no judge wired`),
       )
+      // Mirror the pre-read's existsSync guard: with the REAL allowlist at its EMPTY steady state
+      // (post-drain), zero rows pre-admit and the shard legitimately never exists — absent-both-times
+      // is the same "no NEW admission" proof (latent hole exposed by the 2026-08-20 wave-3 drain).
       expect(
-        readFileSync(join(sandbox, SHARD), 'utf8'),
+        existsSync(join(sandbox, SHARD)) ? readFileSync(join(sandbox, SHARD), 'utf8') : '',
         'no NEW admission — the halt precedes saveStore; only the pre-admitted rows (if any) are present',
       ).toBe(preAdmittedShard)
     })
