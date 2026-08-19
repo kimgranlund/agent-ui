@@ -40,6 +40,17 @@
 // of the four candidates renders at whichever one overflows least — a discrete pick between four
 // named placements, not JS's continuous edge-clamp; that residual case stays the recorded divergence.
 //
+// IACVT guard (GH #1339 hardening — no new divergence, the enhanced path just BECOMES the JS path
+// for the affected open cycle): the anchor path can end up with EVERY `anchor()` inset invalid-at-
+// computed-value-time (all four computed insets read the literal `auto` keyword) — a
+// `position:fixed` popup with nothing pinning it then renders at its STATIC position, detached
+// from the trigger. Measured live on the a2ui-catalog page (a FormPopover whose card's tab was
+// hidden — `display:none` — at build) but NOT reproducible headless in this repo's pinned
+// Chromium 149 (it self-heals the tested repro sequences — see the issue's Findings comment); the
+// guard is a correctness backstop for engines/sequences that don't self-heal, checked once,
+// synchronously, right after the enhanced path resolves `data-placement` — see
+// `computedInsetsAllAuto()` / `startAnchoredPositioning()` below for the detector + the fallback.
+//
 // Boundary: a true MODAL (focus-trapped) stays on `ui-modal`'s `<dialog>` `showModal()` (ADR-0017).
 // This controller is the NON-MODAL path (select popup, menu, tooltip, popover).
 //
@@ -301,6 +312,30 @@ function ensureAnchorTryStylesheet(doc: Document): void {
   doc.head.appendChild(style)
 }
 
+/** IACVT guard (GH #1339): does this computed-inset shape signal that the anchor path's `anchor()`
+ * references have gone invalid-at-computed-value-time — ALL FOUR physical insets computing to the
+ * literal `auto` keyword? A real anchored resolution — the base (preferred) placement OR any of
+ * the four `@position-try` fallback candidates — always pins at least one physical edge to a real
+ * `anchor(...)`-derived value on EACH axis (`insetDeclarationsFor()` sets exactly one side of the
+ * block axis and one side of the inline axis to an `anchor(...)` expression; only the other two
+ * start life as the literal string `'auto'` and stay that way BY DESIGN, never all four at once on
+ * a resolving anchor). So "all four computed `auto`" is a clean, false-positive-free signature of
+ * total resolution failure — never a normal, successfully-resolved placement — measured live on
+ * the a2ui-catalog page (see this file's header comment).
+ *
+ * Pure + exported for a jsdom unit probe: jsdom cannot compute `anchor()` at all (this file's
+ * header comment), so `overlay.test.ts` exercises this detector directly with synthetic
+ * computed-style inputs (incl. the negative control — real inset values ⇒ `false`) rather than
+ * through a real IACVT resolution, which no jsdom probe can force. */
+export function computedInsetsAllAuto(insets: {
+  top: string
+  right: string
+  bottom: string
+  left: string
+}): boolean {
+  return insets.top === 'auto' && insets.right === 'auto' && insets.bottom === 'auto' && insets.left === 'auto'
+}
+
 // ── The controller ───────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -359,6 +394,12 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
   let positionAc: AbortController | null = null
   let rafId: ReturnType<typeof requestAnimationFrame> | null = null
   let cleaned = false
+  // IACVT guard state (GH #1339): true for the remainder of THIS open cycle only, when the enhanced
+  // path's `anchor()` insets failed to resolve and this cycle fell back to the JS path. Reset at the
+  // top of every `startPositioning()` call — the enhanced path stays the default on the NEXT open
+  // (progressive enhancement, not a permanent downgrade). `stopPositioning()` reads this flag so the
+  // fallback's scroll/resize listeners get torn down correctly even though `anchorName` is still set.
+  let usingJsFallback = false
 
   // ── Positioning (LLD-C3) ─────────────────────────────────────────────────────────────────────
 
@@ -477,8 +518,38 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
     popup.setAttribute('data-placement', resolveAnchoredPlacement())
   }
 
+  /** The JS path's positioning setup (immediate placement + scroll/resize re-derivation) — extracted
+   * so the IACVT guard below can invoke the exact same setup as the non-supporting-engine branch,
+   * never a re-approximation of it. */
+  function startJsPositioning(): void {
+    positionAc?.abort() // guard: re-open without a close should not stack ACs
+    positionAc = new AbortController()
+    position() // immediate placement on open
+    const signal = positionAc.signal
+    window.addEventListener('scroll', schedulePosition, { signal, capture: true, passive: true })
+    window.addEventListener('resize', schedulePosition, { signal, passive: true })
+  }
+
+  /** Read the popup's OWN computed insets through `computedInsetsAllAuto()` — the runtime call site
+   * for the IACVT guard (real engines only; jsdom has no `anchor()` resolution to fail in the first
+   * place, so this always reads back whatever inline styles the same synchronous call already wrote,
+   * never the failure shape — see `computedInsetsAllAuto()`'s doc comment for the jsdom unit-test
+   * seam this leaves instead). */
+  function anchorInsetsFailed(): boolean {
+    const cs = getComputedStyle(popup)
+    return computedInsetsAllAuto({ top: cs.top, right: cs.right, bottom: cs.bottom, left: cs.left })
+  }
+
   function startAnchoredPositioning(): void {
     applyAnchoredPlacement()
+    // IACVT guard (GH #1339) — checked synchronously, right after the enhanced path resolves
+    // `data-placement`, so a failed resolution never leaves the popup rendering at its static
+    // position for even one paint. Falls back to the JS path's continuous position() + scroll/
+    // resize re-derivation for THIS open cycle only (see `usingJsFallback` / `stopPositioning()`).
+    if (anchorInsetsFailed()) {
+      usingJsFallback = true
+      startJsPositioning()
+    }
   }
 
   // No teardown needed on the enhanced path — no listener, no scheduled frame, nothing outstanding.
@@ -489,20 +560,16 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
   }
 
   function startPositioning(): void {
+    usingJsFallback = false // reset every open cycle — see the flag's own doc comment
     if (anchorName) {
       startAnchoredPositioning()
       return
     }
-    positionAc?.abort() // guard: re-open without a close should not stack ACs
-    positionAc = new AbortController()
-    position() // immediate placement on open
-    const signal = positionAc.signal
-    window.addEventListener('scroll', schedulePosition, { signal, capture: true, passive: true })
-    window.addEventListener('resize', schedulePosition, { signal, passive: true })
+    startJsPositioning()
   }
 
   function stopPositioning(): void {
-    if (anchorName) {
+    if (anchorName && !usingJsFallback) {
       stopAnchoredPositioning()
       return
     }
