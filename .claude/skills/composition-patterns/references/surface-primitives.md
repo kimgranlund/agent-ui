@@ -14,7 +14,45 @@ when a single page or panel needs wiring or when a composed surface looks visual
 | "Where does the page scroll?" | ONE owned scroll region per surface — the site shell's is `.app-page` (`site/pages/_page.css`; the document never overflows); scroll-into-view code must target the real scroller, deferred past layout settle | TKT-0004's findings · `site/pages/a2a-artifact-feed.ts` (`revealScroll`) |
 | Theming a subtree (dark panel in a light app) | wrap in `ui-theme-provider` — `scheme` re-roots `color-scheme`; UNSET means inherit-ambient; remember `color` does NOT re-root with it (the ink re-root lesson: re-declare text color where a scheme boundary starts) | ADR-0117 · `packages/agent-ui/components/src/controls/theme-provider/` + `site/lib/component-gallery.css` (the ink re-root rule) |
 | Sizing a region's controls together | the `[scale]` tier attribute (ui-sm…content-lg) and `[density]` (compact/comfortable/spacious) cascade over subtrees — set them on containers, not per-control | ADR-0032/0038 (the law is [[component-standards]]'s territory) · `site/pages/sizing.ts` |
+| A full-width section header bar — kicker title + trailing actions (the Figma "Section Header", RICH and MINIMAL densities) | compose, never mint (GH #1434's design verdict — display-only chrome, no value/state/event, fails ADR-0220's TYPE arm): `ui-row[align='center'][justify='between']` as the bar; leading cluster = optional `ui-icon` (decorative → `aria-hidden`) + `ui-text[variant='kicker'][as='h2…h6']` (the kicker role carries uppercase + tracking ITSELF, text.css — never restyle it; `as` makes it a REAL heading); trailing cluster = `ui-toolbar[label='…']` holding `ui-badge` · `ui-button[size='sm']` · a `ui-text[variant='kicker'][as='a'][href]` text link · a `ui-menu` overflow. MINIMAL density = drop the icon and trailing items, keep title + overflow. Inside a card, `ui-card-header[format='structured']` already IS this treatment — don't rebuild it there | GH #1434 (verdict) + ADR-0078 cl.2b / GH #370 · #1291 (the kicker law) + ADR-0220 (the TYPE-arm bar) · `packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts` (`#makeRegionKicker`) + `controls/card/card-header.ts` (`format='structured'`) — worked markup in §Section header below |
 | Scheme-divergence expectations | some color roles are deliberately scheme-INVARIANT (`--md-sys-color-primary` identical both branches) — check the role's two `light-dark()` branches before expecting a dark/light difference | `@agent-ui/shared` tokens.css · `site/lib/theme-provider-build.browser.test.ts` (its probe comments name the invariant) |
+
+## Section header — the worked recipe (GH #1434)
+
+The Figma "Section Header" (Claude Code Gateway 112-1488) is a composition, not a control.
+RICH density:
+
+```html
+<section aria-labelledby="topic-hd">
+  <ui-row align="center" justify="between" gap="sm">
+    <ui-row align="center" gap="sm">
+      <ui-icon name="folder" aria-hidden="true"></ui-icon>
+      <ui-text id="topic-hd" variant="kicker" as="h2">Topic</ui-text>
+    </ui-row>
+    <ui-toolbar label="Topic actions" gap="sm">
+      <ui-badge intent="neutral">3 new</ui-badge>
+      <ui-button size="sm" variant="solid">Action</ui-button>
+      <ui-text variant="kicker" as="a" href="/topic">View all</ui-text>
+      <ui-menu><!-- trigger + items — the ui-menu contract --></ui-menu>
+    </ui-toolbar>
+  </ui-row>
+</section>
+```
+
+MINIMAL density is the same bar minus the icon and trailing cluster: title + `ui-menu`
+overflow only. Load-bearing points, each already law elsewhere (cited, not restated):
+
+- **The title is `variant='kicker'`, never a styled `h4`** — the exact GH #1291 defect
+  class; the kicker role itself carries uppercase + tracking (`text.css`), so the consumer
+  writes normal-case text and adds NO font CSS.
+- **`as` carries the document semantics** (a real stamped heading, ADR-0078 cl.4) — pick the
+  level from the page outline, not the visual size.
+- **The trailing cluster is a `ui-toolbar`** — role=toolbar + roving focus over the actions
+  for free; the bar itself stays a plain `ui-row` (a heading is not a toolbar item).
+- **Full-width fill is free** — `ui-row` is a block-level fill container (ADR-0223); no
+  width CSS.
+- **Inside a card, use `ui-card-header[format='structured']`** (ADR-0186) instead of this
+  recipe — the mono-kicker title + divider treatment is already shipped there.
 
 ## The one law under all of it
 
