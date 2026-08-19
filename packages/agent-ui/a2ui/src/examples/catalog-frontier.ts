@@ -24,6 +24,12 @@
 // self-judged discipline) — each carries a `DISPOSITION_ALLOWLIST` pending entry (category 1,
 // NO-VERDICT-SOUGHT-YET) until that wave lands.
 
+// Frontier 21 (ADR-0209, GH #1389) — the booked corpus seed for the Disclosure summary-row grammar:
+// a Switch riding `slot:'summary'` on a Disclosure's own summary row (the agent-admin `kind-enabled`
+// master-switch idiom, ADR-0209's own Done-when shape) with the fold opening onto detail body controls.
+// Closes GH #729 coverage for the composed `slot:'summary'` wire shape (Switch/Tooltip/Icon adopter rows,
+// ADR-0209 cl.2); corpus admission pending the judged wave (disposition-allowlist.ts).
+
 import type { ExampleSeed } from './types.ts'
 
 const TRIP_ID = 'frontier-trip-card'
@@ -1006,12 +1012,23 @@ export const pieChartBudgetSeed: ExampleSeed = {
 }
 
 const CHOICE_GROUP_ID = 'frontier-choice-group-rooms'
-/** Frontier 20 (ADR-0220, GH #1368): `ChoiceGroup` + `ChoiceCard`, the rich-card selection container —
- *  three photo+price+rating room cards, single-mode `value` committed to the data model. */
+/** Frontier 20 (ADR-0220, GH #1368; repaired GH #1398 / ADR-0220): `ChoiceGroup` + `ChoiceCard`, the
+ *  rich-card selection container — three photo+price+rating room cards under ONE FormProvider-as-root
+ *  commit gate (the product-options-quantity precedent, commerce-hospitality.ts:116-118 — a FormProvider
+ *  beside the CardFooter never gates the submit Button; it must sit as its real DOM ancestor), wrapping
+ *  the frontier-card-anatomy-ask three-slot Card (CardHeader title / CardContent choice / CardFooter
+ *  commit). `required:true` on the ChoiceGroup blocks the Book-this-room submit until a room is chosen,
+ *  and the submit action itself is what reports the committed `/booking/room` value back — the repair
+ *  over the prior shape, which judged FAIL (qualityScore 3, D1/P6): a bare root-level ChoiceGroup bound
+ *  `value` but declared no `action` of its own and sat under no FormProvider, so `sendDataModel` never
+ *  rode any turn and nothing ever read the pick back (the GH #830 "writes a path nothing reads and no
+ *  action reports" REJECT class). The ★4.2-style Text ratings inside each ChoiceCard stay bare captions,
+ *  not interactive descendants — ADR-0220 cl.4 permits exactly this, and the fresh judge confirmed it
+ *  correct as-is. */
 export const choiceGroupRoomsSeed: ExampleSeed = {
   name: 'frontier-choice-group-rooms',
-  description: 'A room picker — a ChoiceGroup of three rich ChoiceCards (photo, name, price, rating), committing the chosen room key to the data model (ADR-0220).',
-  promptText: 'Let me pick a room from three options with photos, prices, and ratings.',
+  description: 'A room picker — a FormProvider-gated Card (CardHeader title, CardContent ChoiceGroup of three rich ChoiceCards with photo/price/rating, CardFooter Book-this-room commit Button) whose required ChoiceGroup blocks submit until a room is chosen and whose submit action reports the picked room back (ADR-0220).',
+  promptText: 'Let me pick a room from three options with photos, prices, and ratings, then book it.',
   surfaceId: CHOICE_GROUP_ID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui',
@@ -1023,8 +1040,16 @@ export const choiceGroupRoomsSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: CHOICE_GROUP_ID,
         components: [
+          // FormProvider is the ROOT — the submit Button's real DOM ancestor (the renderer resolves
+          // submit gating via closest(); a FormProvider beside the CardFooter never gates it — the
+          // product-options-quantity precedent, commerce-hospitality.ts:116-118).
+          { id: 'root', component: 'FormProvider', children: ['card'] },
+          { id: 'card', component: 'Card', elevation: '1', children: ['hd', 'ct', 'ft'] },
+          { id: 'hd', component: 'CardHeader', children: ['title'] },
+          { id: 'title', component: 'Text', variant: 'label', text: 'Choose a room' },
+          { id: 'ct', component: 'CardContent', children: ['rooms'] },
           {
-            id: 'root', component: 'ChoiceGroup', min: '220px', gap: 'md', label: 'Choose a room',
+            id: 'rooms', component: 'ChoiceGroup', min: '220px', gap: 'md', label: 'Choose a room', required: true,
             value: { path: '/booking/room' }, children: ['c_standard', 'c_deluxe', 'c_suite'],
           },
           { id: 'c_standard', component: 'ChoiceCard', value: 'standard', children: ['std_img', 'std_name', 'std_price'] },
@@ -1039,10 +1064,68 @@ export const choiceGroupRoomsSeed: ExampleSeed = {
           { id: 'ste_img', component: 'Image', src: 'https://images.example.com/room-suite.jpg', alt: 'Suite', fit: 'cover', aspect: '4/3' },
           { id: 'ste_name', component: 'Text', variant: 'label', text: 'Suite' },
           { id: 'ste_price', component: 'Text', variant: 'caption', text: '$310/night · ★4.9' },
+          { id: 'ft', component: 'CardFooter', children: ['btn_book'] },
+          {
+            id: 'btn_book', component: 'Button', variant: 'solid', label: 'Book this room',
+            action: { action: 'book_room', submit: true },
+          },
         ],
       },
     },
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed]
+const NOTIFICATION_FOLD_ID = 'frontier-disclosure-summary-switch'
+/** Frontier 21 (ADR-0209, GH #1389; repaired for a fresh judge's P7 accessibility fail, qualityScore 2):
+ *  the Disclosure summary-row grammar's own booked corpus seed — a notification-settings fold whose
+ *  summary row carries the master enable Switch (`slot:'summary'`, the agent-admin `kind-enabled`
+ *  master-switch idiom this ADR names as its Done-when shape), the fold's `summary` prop staying the
+ *  load-bearing accessible name (ADR-0158 cl.4 — never emptied just because a control now shares the
+ *  row). Opening the fold reveals the detail control (a frequency Select) that only matters once
+ *  notifications are enabled. The summary-row Switch itself carries its OWN `label` ("Enabled") — the
+ *  fold's `aria-labelledby` scopes to the summary span text and does NOT name slotted children (ADR-0158
+ *  cl.4; ADR-0209 cl.1's own worked example has `label:"Active"`), and `Switch.label` (mapping to
+ *  textContent) is the only catalog-reachable naming path for the control itself — a nameless
+ *  `role="switch"` was the fail this repairs. */
+export const disclosureSummarySwitchSeed: ExampleSeed = {
+  name: 'frontier-disclosure-summary-switch',
+  description: "A notification-settings fold — a labelled Switch (\"Enabled\") on the Disclosure's own summary row (slot:'summary', ADR-0209) toggles email notifications on/off; opening the fold reveals the delivery-frequency detail control.",
+  promptText: 'Show an email-notifications setting: a toggle right on the section header, and expand it to pick how often we send them.',
+  surfaceId: NOTIFICATION_FOLD_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: NOTIFICATION_FOLD_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: NOTIFICATION_FOLD_ID,
+        value: { notifications: { email: { enabled: true, frequency: 'daily' } } },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: NOTIFICATION_FOLD_ID,
+        components: [
+          {
+            id: 'root', component: 'Disclosure', summary: 'Email notifications', open: true,
+            children: ['toggle', 'body_desc', 'body_frequency'],
+          },
+          { id: 'toggle', component: 'Switch', slot: 'summary', label: 'Enabled', checked: { path: '/notifications/email/enabled' } },
+          { id: 'body_desc', component: 'Text', variant: 'body', text: 'Choose how often we send you email updates.' },
+          { id: 'body_frequency', component: 'Field', label: 'Frequency', child: 'frequency_select' },
+          {
+            id: 'frequency_select', component: 'Select', value: { path: '/notifications/email/frequency' },
+            children: ['freq_daily', 'freq_weekly', 'freq_off'],
+          },
+          { id: 'freq_daily', component: 'Option', value: 'daily', label: 'Daily' },
+          { id: 'freq_weekly', component: 'Option', value: 'weekly', label: 'Weekly' },
+          { id: 'freq_off', component: 'Option', value: 'off', label: 'Off' },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed]

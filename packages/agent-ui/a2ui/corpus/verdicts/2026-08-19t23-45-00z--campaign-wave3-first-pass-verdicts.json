@@ -1,0 +1,47 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.2",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-08-19T23:30:00Z",
+  "verdicts": {
+    "frontier-file-drop-attach": {
+      "qualityScore": 4,
+      "passed": true,
+      "failingDimensions": []
+    },
+    "frontier-suggestions-chips": {
+      "qualityScore": 4,
+      "passed": true,
+      "failingDimensions": []
+    },
+    "frontier-source-list-citations": {
+      "qualityScore": 4,
+      "passed": true,
+      "failingDimensions": []
+    },
+    "frontier-rating-review": {
+      "qualityScore": 4,
+      "passed": true,
+      "failingDimensions": []
+    },
+    "frontier-pie-chart-budget": {
+      "qualityScore": 4,
+      "passed": true,
+      "failingDimensions": []
+    },
+    "frontier-choice-group-rooms": {
+      "qualityScore": 3,
+      "passed": false,
+      "failingDimensions": [
+        "D1"
+      ]
+    },
+    "frontier-disclosure-summary-switch": {
+      "qualityScore": 2,
+      "passed": false,
+      "failingDimensions": [
+        "D1"
+      ]
+    }
+  }
+}

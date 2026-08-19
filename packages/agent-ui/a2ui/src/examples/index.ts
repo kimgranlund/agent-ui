@@ -53,7 +53,7 @@ export {
 export { kpiPanelLifecycleSeed, messageLifecycleSeeds } from './message-lifecycle.ts'
 export { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed, corpusGrowthSeeds } from './corpus-growth.ts'
 // GH #729 — the catalog-frontier family: the 2026-08-12 sweep's 13 example-less catalog components, covered.
-export { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, catalogFrontierSeeds } from './catalog-frontier.ts'
+export { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, catalogFrontierSeeds } from './catalog-frontier.ts'
 export { structuredContainerSeed, structuredContainerSeeds } from './structured-container.ts'
 // GH #972 — the high-frequency-patterns family: the 2026-08-15 gap-map sweep's 5 missing high-frequency
 // chat-feed patterns (comparison table, receipt card, empty/error card, notification stack, media grid).

@@ -157,3 +157,23 @@ New row for `a2ui-catalog.spec.md` §5.2:
   and makes halves/fractions unrepresentable as selection state; `role='slider'` announces value
   + range exactly and is what the base already provides. (No native form elements — CLAUDE.md —
   either way.)
+
+## Amendment — two build-wave rulings owed by the Consequences section (2026-08-20, Kim rulings)
+
+Two items this record priced but deliberately left to the build wave were ruled by Kim on
+2026-08-20 (the campaign's `find-open-questions` round, host session agent-ui-86):
+
+1. **Commit timing — pointer-pick = commit.** The Consequences section named the blur-commit
+   latency as "a real latency consequence … unless the LLD rules pointer-pick = commit". Ruled:
+   a star picked by POINTER commits immediately — `ui-rating` emits `change` on `pointerup`
+   (the `input`→`value` commit already landed synchronously; only the `change` notification
+   moves); KEYBOARD entry keeps the base range law (arrow-step adjusts `value` + fires `input`,
+   `change` on blur) — the same two-path split native `<input type=range>` has. The catalog's
+   `{prop:'value', event:'change'}` mark is UNCHANGED and stays Fork-T1/D1-safe (commit still
+   strictly precedes the event on both paths). Realized as its own small build (GH follow-up
+   filed by the host) — this amendment rules, it does not apply.
+2. **Feed disposition — IN, confirmed.** The integration lane placed `Rating` in
+   `FEED_SURFACE_TYPES` as a NAMED judgment on `Slider` parity (no clause here ruled it). Kim
+   confirmed: a "rate this" ask is a legitimate feed affordance — Rating is the same
+   value-entry class as Slider, not display/indicator chrome like the chart family. The
+   partition pin stands as landed (PR #1435).
