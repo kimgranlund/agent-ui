@@ -88,19 +88,12 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // (VerdictsFile `corpus/verdicts/2026-08-18t21-00-00z--gh1262-backscore-replace.json`, qualityScore
   // 4/PASS). Entry removed per this map's own instruction above.
   //
-  // GH #1192 (2026-08-18) — `backable-wizard`: the same pending-state shape (NO VERDICT SOUGHT YET, not
-  // a refusal). Added alongside the grammar.md backable-multi-step clause + its ADR-0198 amendment B1
-  // carve-out (req-a2ui-patterns.md R2) as its worked 3-step exemplar — the authoring session judging its
-  // own seed is the manufactured judgment ADR-0068's Alternatives ban. Run the judged pipeline and DELETE
-  // this entry when that wave lands.
-  [
-    'backable-wizard',
-    'judged E_QUALITY 2026-08-18 (VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18--verdicts-2026-08-18.json, rubric a2ui-corpus 1.1, a2ui-review-agent (independent of the authoring session per ADR-0068)). Failing: D1. ' +
-      'P7=3: the range Calendar has no Field/label and the RadioGroup no group name (admitted booking-reservation Field-wraps both); redundant Card>shell>scene one-child wrapper with no CardContent (P4=4); RadioGroup shipped unbound then re-sent bound (P5=4). Repair: Field-wrap the Calendar and name the RadioGroup, collapse the shell wrapper into CardContent, ship the RadioGroup bound from turn 1; re-judge. ' +
-      'Re-judged 2026-08-18 under rubric 1.2 (GH #1262 P9 fold; VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18t15-00-00z--gh1262-p9-rejudge.json): E_QUALITY, qualityScore 2, failing D1 — now ALSO P9=2 (a Card frames the flow but every nav Button rides a loose Row in the scene Column, no CardFooter; repair: root > [CardContent > scene, CardFooter] with the footer resent per turn — root stays immutable), plus P7=2 (unlabeled Calendar/RadioGroup) and P4=3 (Card > shell > scene spine). ' +
-      'Re-judged FRESH 2026-08-18 post-repair (PR #1324 folded the nav Buttons into the per-turn CardFooter per the grammar.md clause; VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18t21-00-00z--gh1262-backscore-replace.json, rubric 1.2): SUSTAINED E_QUALITY on NEW ground, qualityScore 2, failing D1 — the P9 CardFooter defect is repaired, but P7 now anchors the refusal alone: the range Calendar still has no Field/label and the RadioGroup no programmatic group name (the catalog rows declare no label prop; only a Field wrap wires the label/group name through the ADR-0051 labelling seam — the frontier-card-anatomy-ask precedent, admitted this same wave with exactly that repair). Repair: Field-wrap the Calendar (a label for the range pick) and the RadioGroup (a label + group name), then re-judge. ' +
-      'KEPT on the shelf pending that repair (a coverage-gate candidate until re-judged; drop the seed instead if the repair is abandoned).',
-  ],
+  // GH #1192 (2026-08-18) — `backable-wizard`: refused twice (P7/P9 under 1.1, then SUSTAINED on new
+  // ground under 1.2 — P7 alone after PR #1324's CardFooter repair), then REPAIRED (PR #1337: Field wraps
+  // 'Check-in — check-out' + 'Room type' at all four scene occurrences, the ADR-0051 seam per the
+  // booking-reservation/frontier-card-anatomy-ask precedents) and ADMITTED 2026-08-18 by a fresh
+  // independent judge (VerdictsFile `corpus/verdicts/2026-08-18t22-00-00z--bw-admission-verdicts.json`,
+  // qualityScore 4/PASS — D1 floored by P7=4, D2–D5 all 5). Entry removed per this map's own instruction.
   //
   // GH #1201 (2026-08-17) — `frontier-greet-card`: the same pending-state shape (NO VERDICT SOUGHT YET,
   // not a refusal). Added alongside the `greeting-card` mini-skill + grammar.md's reserved greet-1
