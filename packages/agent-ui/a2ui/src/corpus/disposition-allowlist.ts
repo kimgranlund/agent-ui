@@ -9,8 +9,10 @@
 //
 // What survives here is exactly what a machine cannot state (clause 6 — demoted, never retired):
 //   1. a deliberately-minimal smoke seed that teaches the corpus nothing (no verdict was ever sought);
-//   2. a refusal whose verdicts file PREDATES the archive — today, `stats-grid-dashboard`. ADR-0165
-//      clause 8 rules out retro-archiving it: the M-B wave's verdicts files were never committed, and
+//   2. a refusal whose verdicts file PREDATES the archive — no member today (`stats-grid-dashboard`
+//      held this slot until the 2026-08-18 judged waves gave it real archived VerdictsFiles, and Kim's
+//      2026-08-18 drop ruling then removed the seed from the shelf entirely). ADR-0165 clause 8 still
+//      rules out retro-archiving such a case: the M-B wave's verdicts files were never committed, and
 //      fabricating one would be the manufactured judgment ADR-0068's Alternatives ban.
 // A NEW refusal needs no entry — because the refused SEED LEAVES THE SHELF. ADR-0165's REV 2026-07-30
 // (GH #361, reading (b) — the `retreat-reschedule` precedent) rules that dropping the seed from
@@ -18,7 +20,16 @@
 // `seedsMissingAdmission` can never see it. The gate did NOT stop requiring an entry for a candidate: a
 // refusal KEPT on the shelf is still un-admitted and un-allowlisted, so it still reds until an entry lands
 // here. Beyond that, an entry is optional prose, worth it only to carry what a verdict cannot — a coverage
-// argument, a repair path (the shipped entry below carries both).
+// argument, a repair path.
+//
+// **The map is EMPTY today — legitimately.** As of 2026-08-18 every seed on the shelf is admitted to the
+// store (the 2026-08-18 judged waves admitted the pending backlog and backable-wizard post-repair), and
+// the two standing refusals that were KEPT pending repair — `stats-grid-dashboard` ·
+// `wizard-step-progress` — were DROPPED from the shelf per Kim's 2026-08-18 ruling (the REV's drop path;
+// their drained entries survive as the dated comments below). An empty map is the healthy steady state
+// this file's own contract predicts: refusals leave the shelf, admissions delete their entries, and only
+// a smoke seed that seeks no verdict or a kept-pending-repair refusal ever puts an entry back. The map
+// stays wired into both consumers regardless — the next entry needs a home, not a revival PR.
 //
 // Pure, zero-dep, platform-neutral (SPEC-N5/ADR-0062) so both readers share the one map: the standing
 // coverage gate (`admission-coverage.test.ts`) and the import tool's unjudged-run guard
@@ -35,13 +46,17 @@
  *  input and the SECOND gate input, not the primary record (ADR-0165 clause 6) — the archived verdicts
  *  file is the primary one. */
 export const DISPOSITION_ALLOWLIST = new Map<string, string>([
-  [
-    'stats-grid-dashboard',
-    'judged E_QUALITY 2026-08-18 (VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18--verdicts-2026-08-18.json, rubric a2ui-corpus 1.1, a2ui-review-agent (independent of the authoring session per ADR-0068)). Failing: D5. ' +
-      'nothing new taught: the tile template is pattern-dashboard-tiles verbatim minus the delta line (wrapper Row to Grid); Grid-template-of-Cards is already admitted (comparison-pricing-table, media-file-grid). Repair: drop from the shelf, or re-author to teach a genuinely new composition (delta+sparkline tile pair, a responsive tile-count rule) and re-judge. ' +
-      'Re-judged 2026-08-18 under rubric 1.2 (GH #1262 P9 fold; VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18t15-00-00z--gh1262-p9-rejudge.json): still E_QUALITY, qualityScore 2, failing D5 — unchanged verdict, unchanged source. ' +
-      'KEPT on the shelf pending that repair (a coverage-gate candidate until re-judged; drop the seed instead if the repair is abandoned).',
-  ],
+  //
+  // `stats-grid-dashboard` — DROPPED from the shelf 2026-08-18 per ADR-0165's REV 2026-07-30 (GH #361
+  // reading (b): dropping the seed from `src/examples/` entirely is a refusal's expected disposition) —
+  // Kim's ruling, 2026-08-18. Judged E_QUALITY 2026-08-18 (rubric 1.1, failing D5 — the tile template was
+  // pattern-dashboard-tiles verbatim minus the delta line, Grid-template-of-Cards already admitted via
+  // comparison-pricing-table/media-file-grid) and re-judged under 1.2 the same day, unchanged; not
+  // repairable by editing, so the ruled repair path ("drop the seed instead if the repair is abandoned")
+  // was taken. The archived VerdictsFiles (2026-08-18--verdicts-2026-08-18.json,
+  // 2026-08-18t15-00-00z--gh1262-p9-rejudge.json) remain the machine record. Entry drained per the drop
+  // path — the seed is no longer in `allSeeds`, so `seedsMissingAdmission` can never see it.
+  //
   // GH #729 (2026-08-12) — the four CATALOG-FRONTIER seeds: NO VERDICT SOUGHT YET, not a refusal. Added
   // by the example sweep to close the 13-component coverage gap (catalog-frontier.ts's own header); their
   // corpus admission is a PENDING judged import wave the sweep could not run — the a2ui-reviewer judge
@@ -111,15 +126,20 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // GH #1206 (2026-08-17) — the four COMPOSITION PACK B seeds (`five-day-weather` · `restaurant-menu` ·
   // `travel-itinerary` · `wizard-step-progress`): the same pending-state shape (NO VERDICT SOUGHT YET,
   // not a refusal). Added as the req-a2ui-library R4 next-tier pattern seeds — the authoring session
-  // judging its own seeds is the manufactured judgment ADR-0068's Alternatives ban. Run the judged
-  // pipeline (import-seeds.ts with a real VerdictsFile) and DELETE these entries when that wave lands.
-  [
-    'wizard-step-progress',
-    'judged E_QUALITY 2026-08-18 (VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18--verdicts-2026-08-18.json, rubric a2ui-corpus 1.1, a2ui-review-agent (independent of the authoring session per ADR-0068)). Failing: D1. ' +
-      'P7=3: the RadioGroup has no Field/label wrap (the catalog RadioGroup carries no own label; rental-filter-panel wraps it in Field), h4 adjacent but unassociated, no name; P6=4: the Progress label (Setup, step 2 of 3) is static while value/max are bound. Repair: wrap plans in Field label Plan (+name), template or de-number the Progress label; re-judge. ' +
-      'Re-judged 2026-08-18 under rubric 1.2 (GH #1262 P9 fold; VerdictsFile packages/agent-ui/a2ui/corpus/verdicts/2026-08-18t15-00-00z--gh1262-p9-rejudge.json): still E_QUALITY, qualityScore 3, failing D1 — P9 N/A (no Card frames it), P6=3/P7=3 as before; unchanged source. ' +
-      'KEPT on the shelf pending that repair (a coverage-gate candidate until re-judged; drop the seed instead if the repair is abandoned).',
-  ],
+  // judging its own seeds is the manufactured judgment ADR-0068's Alternatives ban. — The 2026-08-18
+  // judged wave RESOLVED all four: `five-day-weather` · `restaurant-menu` · `travel-itinerary` were
+  // ADMITTED (entries removed per this map's own instruction above), and `wizard-step-progress` was
+  // refused, then DROPPED (below).
+  //
+  // `wizard-step-progress` — DROPPED from the shelf 2026-08-18 per ADR-0165's REV 2026-07-30 (GH #361
+  // reading (b): dropping the seed from `src/examples/` entirely is a refusal's expected disposition) —
+  // Kim's ruling, 2026-08-18. Judged E_QUALITY 2026-08-18 (rubric 1.1, failing D1 — the unlabeled
+  // RadioGroup, the static-numbered Progress label) and re-judged under 1.2 the same day, unchanged; the
+  // wizard technique's exemplar coverage is the backable-wizard seed (catalog-frontier.ts, GH #1192), so
+  // the ruled repair path ("drop the seed instead if the repair is abandoned") was taken. The archived
+  // VerdictsFiles (2026-08-18--verdicts-2026-08-18.json, 2026-08-18t15-00-00z--gh1262-p9-rejudge.json)
+  // remain the machine record. Entry drained per the drop path — the seed is no longer in `allSeeds`, so
+  // `seedsMissingAdmission` can never see it.
   //
   // ADR-0205/GH #1207 (2026-08-18) — `frontier-latency-line-chart`: the same pending-state shape (NO
   // VERDICT SOUGHT YET, not a refusal). Added with the LineChart catalog row (the fleet's first

@@ -1,5 +1,6 @@
-// composition-pack-b.ts — GH #1206's COMPOSITION SEEDS PACK B (req-a2ui-library R4, next-tier): the four
-// dispositioned **composition** patterns — weather · menu · itinerary · wizard — each a pattern seed over
+// composition-pack-b.ts — GH #1206's COMPOSITION SEEDS PACK B (req-a2ui-library R4, next-tier): the
+// dispositioned **composition** patterns — weather · menu · itinerary (the pack shipped four; see (4)
+// below for the wizard's 2026-08-18 drop) — each a pattern seed over
 // EXISTING catalog types, never a new component (the disposition table's whole point,
 // .claude/docs/research/req-a2ui-library.md), following composition-pack-a.ts's shape exactly: an
 // agent-realistic promptText, live data-model binding for everything that varies per instance (the
@@ -30,13 +31,12 @@
 //     catalog entry carries only status/label/description/timestamp/icon), so "Badge type · Card detail
 //     INSIDE the item" is not expressible; the event TYPE rides the item's own typed fields, and the
 //     active event's detail Card (with its typed Badge) sits beside the Timeline instead.
-// (4) WIZARD (Ladder/Progress PRESENTATION) — Column > Progress step meter + step body (RadioGroup) +
-//     Row{Back·Next}, state via a dataModel path per step (`/wizard/*`). DISTINCT from the
-//     `backable-wizard` seed (catalog-frontier.ts, GH #1192/PR #1239): that seed is the FLOW-PROTOCOL
-//     exemplar — one ask surface across turns, root-immutability, the scene-resend + draft-persistence
-//     mechanics of going Back. THIS seed is the single-turn PRESENTATION composition — the visual
-//     anatomy of one wizard step (meter + body + nav row) a producer emits as a snapshot; it never
-//     exercises the multi-turn scene-swap protocol.
+// (4) WIZARD (Ladder/Progress PRESENTATION) — DROPPED from the shelf 2026-08-18 (Kim's ruling; the
+//     ADR-0165 REV 2026-07-30/GH #361 reading (b) drop path — a refusal's expected disposition). Judged
+//     E_QUALITY twice (rubric 1.1 + 1.2, D1 both times — the unlabeled RadioGroup / static-numbered
+//     Progress label), and the wizard technique is covered by the backable-wizard seed
+//     (catalog-frontier.ts, GH #1192), so the presentation-only variant left the shelf rather than being
+//     repaired. The archived VerdictsFiles (corpus/verdicts/) remain the machine record.
 
 import type { ExampleSeed } from './types.ts'
 
@@ -243,61 +243,9 @@ export const travelItinerarySeed: ExampleSeed = {
   ],
 }
 
-const WIZARD_B_ID = 'wizard-step-progress'
-/** Composition 4 — the WIZARD PRESENTATION pattern (Ladder/Progress + step body + nav row): the visual
- *  anatomy of ONE wizard step as a producer emits it — a Progress meter pinning "step N of M" (value
- *  bound so advancing is a one-path data write), the step's title, its selection body (RadioGroup, value
- *  on the step's OWN dataModel path — `/wizard/plan` here; each step binds a distinct path, the
- *  disposition row's state-per-step law), and the Row{ghost Back · solid Next} nav pair.
- *  ⚠ DISTINCT from `backable-wizard` (catalog-frontier.ts, GH #1192): that seed is the FLOW-PROTOCOL
- *  exemplar — the multi-turn scene-resend mechanics of one ask surface (root-immutability, /draft/*
- *  persistence across Back). This seed is the single-turn PRESENTATION composition — what one step LOOKS
- *  like (meter + body + nav) — and deliberately never exercises the scene-swap protocol; a producer
- *  building a real flow combines THIS anatomy with THAT protocol. */
-export const wizardStepProgressSeed: ExampleSeed = {
-  name: 'wizard-step-progress',
-  description:
-    'One wizard step, presentation anatomy — a bound Progress "step 2 of 3" meter, step title, a RadioGroup body on its own /wizard/plan path, and the ghost-Back + solid-Next nav Row (the flow protocol itself lives in backable-wizard).',
-  promptText: "I'm partway through setting up the workspace — show me the plan-selection step with where I am in the flow.",
-  surfaceId: WIZARD_B_ID,
-  protocolVersion: 'v1.0',
-  catalogId: 'agent-ui',
-  messages: [
-    { version: 'v1.0', createSurface: { surfaceId: WIZARD_B_ID, catalogId: 'agent-ui', sendDataModel: true } },
-    {
-      version: 'v1.0',
-      updateDataModel: {
-        surfaceId: WIZARD_B_ID,
-        value: {
-          wizard: { step: 2, steps: 3, plan: 'team' },
-        },
-      },
-    },
-    {
-      version: 'v1.0',
-      updateComponents: {
-        surfaceId: WIZARD_B_ID,
-        components: [
-          { id: 'root', component: 'Column', gap: 'md', children: ['meter', 'step_title', 'plans', 'nav'] },
-          { id: 'meter', component: 'Progress', label: 'Setup — step 2 of 3', value: { path: '/wizard/step' }, max: { path: '/wizard/steps' } },
-          { id: 'step_title', component: 'Text', variant: 'h4', text: 'Choose your plan' },
-          { id: 'plans', component: 'RadioGroup', value: { path: '/wizard/plan' }, orientation: 'vertical', children: ['plan_solo', 'plan_team', 'plan_business'] },
-          { id: 'plan_solo', component: 'Radio', value: 'solo', label: 'Solo — €9/month, 1 seat' },
-          { id: 'plan_team', component: 'Radio', value: 'team', label: 'Team — €29/month, up to 10 seats' },
-          { id: 'plan_business', component: 'Radio', value: 'business', label: 'Business — €79/month, unlimited seats + SSO' },
-          { id: 'nav', component: 'Row', gap: 'sm', justify: 'end', children: ['btn_back', 'btn_next'] },
-          { id: 'btn_back', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'wizard_step', context: { to: 1 }, wantResponse: false } },
-          { id: 'btn_next', component: 'Button', variant: 'solid', label: 'Next', action: { action: 'wizard_step', context: { to: 3 } } },
-        ],
-      },
-    },
-  ],
-}
-
 /** The pack's family array — `allSeeds`' composition surface (never a hand-counted literal). */
 export const compositionPackBSeeds: readonly ExampleSeed[] = [
   fiveDayWeatherSeed,
   restaurantMenuSeed,
   travelItinerarySeed,
-  wizardStepProgressSeed,
 ]

@@ -65,7 +65,7 @@ function mkDeps(judge: Judge): AdmitDeps {
 
 describe('classifyRejections / shouldAbort — the pure batch-abort decision', () => {
   it('a quality-only batch does not abort', () => {
-    const rejections: SeedRejection[] = [{ name: 'stats-grid-dashboard', code: 'E_QUALITY', message: 'below the corpus-quality rubric bar', failingDimensions: ['D5'] }]
+    const rejections: SeedRejection[] = [{ name: 'below-bar-seed', code: 'E_QUALITY', message: 'below the corpus-quality rubric bar', failingDimensions: ['D5'] }]
     const report = classifyRejections(rejections)
     expect(report.qualityRejected).toHaveLength(1)
     expect(report.hardErrors).toHaveLength(0)
@@ -74,7 +74,7 @@ describe('classifyRejections / shouldAbort — the pure batch-abort decision', (
 
   it('a mixed batch (quality + a hard-error code) still aborts — the hard-error family is unchanged', () => {
     const rejections: SeedRejection[] = [
-      { name: 'stats-grid-dashboard', code: 'E_QUALITY', message: 'below the corpus-quality rubric bar' },
+      { name: 'below-bar-seed', code: 'E_QUALITY', message: 'below the corpus-quality rubric bar' },
       { name: 'broken-seed', code: 'E_SCHEMA', message: 'E_SCHEMA: 1 field(s) failed', paths: ['description'] },
     ]
     const report = classifyRejections(rejections)

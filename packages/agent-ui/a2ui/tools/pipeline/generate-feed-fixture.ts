@@ -6,7 +6,8 @@
 //
 // Composed ONLY from the existing default catalog (vocabulary honesty, LLD §5 — no Chart type exists).
 // Three exchanges, two artifact classes: (1) a Card/CardHeader/CardContent + Grid metric-tile report with
-// a Refresh Button (the stats-grid-dashboard seed idiom); (2) a List-templated report table over
+// a Refresh Button (the stats-grid metric-tile idiom — its seed was dropped from the shelf 2026-08-18,
+// the ADR-0165 drop path); (2) a List-templated report table over
 // updateDataModel rows (the dynamic-lists seed idiom); (3) one prose-only exchange (no DataPart), proving
 // the feed renders MIXED messages, not artifact-only.
 import { writeFileSync } from 'node:fs'
