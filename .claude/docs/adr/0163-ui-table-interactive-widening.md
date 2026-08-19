@@ -298,3 +298,136 @@ browser shards green.
   for lists.
 - **`ui-pager` as the tag.** Rejected — less derivable than the ARIA/industry canon
   "pagination"; the swiper-dots homonym is family-scoped and non-colliding.
+
+## Amendment (2026-08-19, **proposed** — Kim ratifies) — cl.3's own two "no native form elements" exceptions RETIRE: `ui-table` dogfoods `ui-checkbox`/`ui-radio`/`ui-button` instead of stamping real `<input>`/`<button>` elements
+
+> Append-only, and **proposed**: the Status cell above reads `accepted` for the record as a
+> whole and stays byte-untouched — agents never flip status
+> (`.claude/hooks/adr-status-guard.py`), and this amendment carries no ratification of its
+> own until Kim gives one. Every accepted clause above is unedited prose; what this
+> amendment re-rules is precisely the sentences cl.3/cl.4/cl.5 spend on "a stamped real
+> `<input type=checkbox>` / `<input type=radio>` selection column" and "a real `<button>`
+> inside a sortable `<th>`" — the fence [GH #1445](https://github.com/kimgranlund/agent-ui/issues/1445)
+> closes, Kim ruling 2026-08-19 in that issue's comments: "`ui-table` must dogfood. BOTH
+> ADR-0163 cl.3 native exceptions fall." Every OTHER clause (cl.1/2/6/7/8/9/10), every fork
+> resolution, and cl.3's OWN table-vs-grid / normal-tab-order / no-`aria-selected` reasoning
+> stand unchanged — only the TAG NAME of the stamped interactive nodes changes; the
+> accessibility rationale they were stamped to preserve is UNCHANGED, and now rides FACE
+> controls instead of raw HTML. The build that carries this amendment is GH #1445, branch
+> `1445-table-dogfood`.
+
+**Why the exception falls.** cl.3 (2026-07-28) named a real `<input type=checkbox|radio>`
+selection column and a real `<button>` sortable-header trigger as "the fleet's ONE sanctioned
+exception to 'no native form elements'" (table.ts's own file banner, byte-quoted) — necessary
+at the time because no fleet control existed above the row cell to carry the semantics the
+APG's sortable-table pattern names. That premise was already stale by ratification:
+`ui-checkbox`/`ui-radio` (Wave 1 Indicator controls, ADR-0041/0042) and `ui-button` (the
+reference control, G5) all shipped BEFORE ADR-0163 itself, and each already carries every
+property cl.3 asked a raw `<input>`/`<button>` for — `ElementInternals`-driven ARIA
+(`role=checkbox|radio|button`, `ariaChecked`), native-parity keyboard activation (Space/Enter
+via `pressActivation`), and normal tab-stop focusability (`tabbable`) — while ALSO being the
+fleet's own controls, the whole point of CLAUDE.md's "no native form elements" law. `ui-table`
+was the one control in the tree that had never dogfooded that law; GH #1445 closes it, not by
+relaxing the law, but by removing the one carve-out that predated the controls it needed.
+
+**The re-reading — cl.3.** Delete "a stamped real `<input type=checkbox>` / `<input
+type=radio>` selection column, and a real `<button>` inside a sortable `<th>` (the APG
+sortable-table example's own shape)" and its "adds exactly two sanctioned exceptions to the
+fleet's 'no native form elements' law" frame — **ZERO exceptions remain fleet-wide** after
+this build. In its place: `selectable='multi'` stamps a composed `<ui-checkbox
+data-part="select-all">` (header) / `<ui-checkbox data-part="select">` (per row);
+`selectable='single'` stamps a composed `<ui-radio data-part="select">` per row; a `sortable`
+column stamps a composed `<ui-button data-part="sort-button" variant="ghost" size="sm"
+inline>` wrapping the column label. Every OTHER sentence of cl.3 — native `<table>` role,
+`role=grid` REJECTED, normal tab order (no roving focus, no `UIListboxElement`), checked
+state as the announced selection, no `aria-selected` on rows — is UNCHANGED and, if anything,
+MORE exactly true: `ui-checkbox`/`ui-radio`'s own `ariaChecked` (via internals) is the
+identical "checked state IS the announced selection" signal a native `<input>`'s AX mapping
+produced, now sourced from a FACE control's own contract instead of platform default AX
+mapping.
+
+**The re-reading — cl.4 (the "one shared stamped `name`" mechanism retires; the invariant it
+protected does not).** A real `<input type=radio name=X>` gets two behaviors from the
+platform for free: (a) selecting one radio in the name-group native-unchecks every sibling,
+and (b) clicking an ALREADY-CHECKED radio is a no-op (native radio buttons cannot be
+unchecked by re-clicking themselves — only a DIFFERENT radio's selection deselects them).
+`ui-radio` is not a native input and carries no `name`-based grouping; (a) is already
+subsumed structurally — VIEW's whole-`<tbody>`-array-swap rebuilds every row's `checked` from
+`selectedSet.has(id)` on every `selected` commit, so mutual exclusivity is a property of the
+render, not the DOM — but (b) is NOT free: a bare `ui-radio` (no `ui-radio-group` ancestor)
+has full checkbox-style toggle semantics, so clicking an already-checked row's radio would,
+absent a fix, deselect it (`#toggleRowSelection`'s existing `checked ? [id] : []` branch,
+previously DEAD CODE under native radio semantics, would become live and wrong). The fix is
+NOT nesting a real `<ui-radio-group>` — invalid table content model, `<table>`/`<tbody>`
+accept only caption/colgroup/thead/tbody/tfoot/tr, the exact reason cl.3 rejected `role=grid`
+composite machinery in the first place — and NOT stamping the `data-radio-group` marker
+`ui-radio`'s own `grouped()` hook detects, because that hook ALSO applies roving-tabindex
+demotion to every non-checked sibling, which would violate cl.3's own "normal tab order… no
+roving tabindex" mandate. Instead: `ui-table` installs its OWN capture-phase `click` guard on
+`#table` (the same delegation node the existing `#thead` click / `#table` change listeners
+already ride) — for `selectable='single'`, a click whose target is an ALREADY-CHECKED
+`[data-part="select"]` is stopped before `ui-radio`'s own toggle runs, reproducing
+`ui-radio-group`'s own `grouped()` guard technique (radio.ts) verbatim, table-owned instead
+of group-owned, with NO tabindex side effect. The per-instance `#radioName`/`nextRadioName()`
+mint (cl.4's "one shared stamped name") is deleted — it grouped native inputs only; nothing
+in the composed anatomy consumes a shared `name`.
+
+**The re-reading — cl.5.** "A sortable header renders its label inside a stamped real
+`<button>` in the `<th>` (the APG shape)" becomes "…inside a composed `<ui-button
+data-part=\"sort-button\">`…" — the activation cycle (ascending → descending, `change`
+commit), `aria-sort` ownership (unchanged: the SORT-STATE effect still sets/clears
+`aria-sort` on the `<th>`, never on the button), and the "`role=grid` rejected, normal tab
+order" reasoning are unchanged; `ui-button` does not emit its own semantic event (button.md's
+own contract — no `action`/`change`/etc.), so the existing `#thead` delegated `click`
+listener (`.closest('[data-part="sort-button"]')`) is unchanged in shape, only in what tag
+it now closest()-matches.
+
+**ADR-0223 posture — every composed control takes `inline`.** A `<th>`/`<td>` establishes a
+plain block formatting context, not a flex/grid container; ADR-0223's Fill-by-Default
+posture (the default, un-opted-out state for `ui-checkbox`/`ui-radio`/`ui-button` alike) is
+BLOCK-level and stretches to 100% of its containing block's inline size — inside a table
+cell that means the whole cell width, not a hugging checkbox/radio/button. Every composed
+instance (`select-all`, per-row `select`, `sort-button`) therefore carries the reflected
+`inline` attribute (ADR-0223 cl.2's ONE sizing opt-out), matching this dispatch's own "the
+embedded controls take `inline` where they must hug" instruction. `ui-pagination`'s own
+composed `ui-button` stops (`pagination.ts`) are unaffected by this amendment — that footer
+region IS a flex row (`table.css`'s `[data-part="footer"]`), where Fill-by-Default's block
+"stretch" rule never engaged in the first place (flex layout supersedes it); they do not
+carry `inline` before or after this amendment, and nothing here asks them to.
+
+**Migration / cl.10 is UNCHANGED.** The byte-identity contract ("with every capability at
+its default off value, the rendered DOM is byte-identical to the pre-widening control") is
+unaffected: at `selectable=''`/no `sortable` column, NEITHER the retired native anatomy NOR
+its composed replacement is ever stamped — the frozen `table-baseline.fixture.ts` cases
+carry no selection/sort anatomy either way, so `table-byte-identity.test.ts` requires no
+re-capture (verified: it stays green, unedited, across this build).
+
+**Visual consequence, stated plainly.** This is a REAL pixel change, not a refactor: a
+native unstyled `<input type=checkbox>`/`<input type=radio>` (bare UA chrome) becomes a
+fully-themed `ui-checkbox`/`ui-radio` glyph (the checkbox/radio family's own token chain —
+`--md-sys-compact-{size}` box, accent-colored checked state); a `<button>` reset to `all:
+unset` header text becomes a real `ui-button` pill (ghost variant, `sm` size). `table.css`'s
+`[data-part='sort-button']` reset rule (the `all: unset` + manual re-application) is
+DELETED — `ui-button` owns its own full token/geometry/focus-ring chain; no `ui-table` CSS
+rule governs the composed controls' own painting. `ui-table` has no dedicated
+`*.visual.browser.test.ts` golden of its own (verified — none exists in the tree at build
+time), so this amendment carries no golden-screenshot delta of its own; the standing `npm
+run test:visual` suite (20 files, unaffected) confirms nothing ELSE regressed.
+
+**What changes in the tree** (GH #1445's build,
+`packages/agent-ui/components/src/controls/table/`): `table.ts` (`#selectAllHeaderCell`,
+`#bodyRow`, `#headerCell`, `connected()`'s new capture-phase click guard, deletion of
+`#radioName`/`nextRadioName`), `table.css` (deletion of the `[data-part='sort-button']`
+reset rule), `table.md` (parts/attributes/accessibility/forced-colors prose updated to name
+the composed controls; `keyboard`/`aria` sections re-verified against the SAME cl.3
+invariants, now sourced from FACE controls), `table.test.ts` (new jsdom structural probes:
+composed-tag assertions, the single-select guard), `table-byte-identity.test.ts` (a jsdom
+`ElementInternals.setFormValue`/`setValidity` prototype stub — jsdom's own form-association
+gap, the checkbox.test.ts `stubFormAssoc` precedent generalized one level, since this file
+now connects a composed `ui-checkbox` it does not construct directly),
+`table-descriptor.test.ts` (the delegated-listener count assertion widens from two to
+three), `table-interactive.browser.test.ts` (every DOM query re-anchored from
+`input[type=…]`/`button[data-part=…]` to the composed tags/parts, plus two NEW tests proving
+the single-select capture-phase guard by mouse AND keyboard). Nothing in cl.1/2/6/7/8/9 — the
+view pipeline, filter/search, pagination, form non-participation, or the catalog/feed
+disposition — is touched.

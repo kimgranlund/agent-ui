@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { UITableElement } from './table.ts'
 import { TABLE_BASELINE } from './table-baseline.fixture.ts'
+import '../checkbox/checkbox.ts'
 
 // table-byte-identity.test.ts — the SPEC-R2 / ADR-0163 cl.10 migration proof: "with every capability at its
 // default (off) value, the rendered DOM is byte-identical to the pre-widening control." Builds the SAME three
@@ -9,6 +10,20 @@ import { TABLE_BASELINE } from './table-baseline.fixture.ts'
 // no `sortable`/`searchable` column overrides, `page-size=0`, `search=''`, `filter=[]`. `outerHTML` equality
 // is the byte-identity assertion proper — anything the widening stamped unconditionally (a selection column,
 // a sort button, a footer) would show up here as a diff.
+//
+// jsdom reality (the checkbox.test.ts/indicator-element.test.ts precedent, `stubFormAssoc`): the
+// ElementInternals form-association surface (setFormValue/setValidity) is ABSENT in jsdom. Every existing
+// form-associated-control jsdom test stubs its OWN constructed instance's internals before connecting — but
+// the ADR-0163 amendment (GH #1445) test below connects a `ui-table` whose `selectable='multi'` INTERNALLY
+// constructs a composed `ui-checkbox` this file never gets a handle to before it connects. `ElementInternals`
+// is one shared prototype across this file's jsdom `window`, so the fix generalizes one level: patch the
+// PROTOTYPE once (guarded, same `typeof … !== 'function'` check every per-instance stub already uses) rather
+// than a per-instance object this file cannot reach in time.
+if (typeof (ElementInternals.prototype as unknown as Record<string, unknown>)['setFormValue'] !== 'function') {
+  const proto = ElementInternals.prototype as unknown as Record<string, unknown>
+  proto['setFormValue'] = (): void => {}
+  proto['setValidity'] = (): void => {}
+}
 
 const mounted: HTMLElement[] = []
 function mount(el: HTMLElement): HTMLElement {

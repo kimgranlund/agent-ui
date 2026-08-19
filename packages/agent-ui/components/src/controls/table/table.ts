@@ -7,11 +7,13 @@
 //
 // The mechanism is STILL a REAL native `<table>` stamped in light DOM (ADR-0078 cl.4; ADR-0111 cl.3): header
 // association, `th scope`, and SR table navigation come free from the platform. ADR-0163 cl.3 (the
-// correctness crux) keeps the host role NATIVE — `role=grid` is REJECTED — and adds exactly two sanctioned
-// exceptions to the fleet's "no native form elements" law: a stamped real `<input type=checkbox>` /
-// `<input type=radio>` selection column, and a real `<button>` inside a sortable `<th>` (the APG sortable-
-// table example's own shape). All interactive elements sit in the NORMAL tab order — no roving tabindex, no
-// `UIListboxElement`, no `aria-selected` on rows (checked state IS the announced selection).
+// correctness crux) keeps the host role NATIVE — `role=grid` is REJECTED. The ADR-0163 amendment (2026-08-19,
+// GH #1445, Kim-ruled — "ui-table must dogfood") RETIRES cl.3's original two "no native form elements"
+// exceptions: the selection column now composes a REAL `<ui-checkbox>` (`multi`) / `<ui-radio>` (`single`),
+// and a sortable `<th>`'s trigger composes a REAL `<ui-button>` — ZERO native-form-element exceptions remain
+// fleet-wide. All interactive elements STILL sit in the NORMAL tab order — no roving tabindex, no
+// `UIListboxElement`, no `aria-selected` on rows (a composed control's own `ariaChecked`, via internals, IS
+// the announced selection — the identical signal a native input's AX mapping produced, now FACE-sourced).
 //
 // The SPEC-R4/cl.10 re-render contract is UNCHANGED at its core — a STABLE SKELETON built ONCE in
 // `connected()`: `#scroll` › `#table` › `#thead` + `#tbody`, PLUS a new `#footer` sibling of `#scroll`
@@ -22,20 +24,24 @@
 // sort-button click is handled by ONE listener on `#thead`; the select-all checkbox toggle AND every row's
 // selection checkbox/radio toggle are handled by ONE `change` listener on `#table` (GH #455 size diet — a
 // stable skeleton node itself, wrapping BOTH `#thead` and `#tbody`, so either input's `change` bubbles to it
-// identically to delegating on each separately). Both registered ONCE in `connected()` (re-armed on
-// reconnect, the `#scroll` scroll-listener's own precedent), never per stamped node. A stamped button/input
-// dispatches by carrying a `data-key`/`data-row-id` attribute the delegated handler reads off `event.target`.
-// Without this, a PER-NODE `this.listen` (the original shape) would strand a fresh closure+listener — riding
-// the connection-lifetime AbortSignal, never released until disconnect — on every discarded rebuild; VIEW
-// alone reruns on every search keystroke, every page turn, every selection toggle, so that shape grows
-// UNBOUNDED on a long-lived, frequently-updating table. Delegation keeps the listener count fixed at two
-// regardless of rebuild count.
+// identically to delegating on each separately). A THIRD delegated listener — a capture-phase `click` guard
+// on `#table` (the ADR-0163 amendment, GH #1445) — blocks a click from un-checking an already-selected
+// `selectable='single'` radio (the "can't self-uncheck" invariant a real `name`-grouped `<input type=radio>`
+// got for free from the platform; `ui-radio` does not). All THREE registered ONCE in `connected()` (re-armed
+// on reconnect, the `#scroll` scroll-listener's own precedent), never per stamped node. A stamped
+// button/input dispatches by carrying a `data-key`/`data-row-id` attribute the delegated handler reads off
+// `event.target`. Without this, a PER-NODE `this.listen` (the original shape) would strand a fresh
+// closure+listener — riding the connection-lifetime AbortSignal, never released until disconnect — on every
+// discarded rebuild; VIEW alone reruns on every search keystroke, every page turn, every selection toggle,
+// so that shape grows UNBOUNDED on a long-lived, frequently-updating table. Delegation keeps the listener
+// count fixed at three regardless of rebuild count.
 //
 // Five independent effects, split by which signal(s) each reads (unchanged fine-grained-waking discipline,
 // widened):
 //   • HEADER-BUILD (reads `columns` + `selectable` ONLY — `sort` is read via `untracked()`, see below)
-//     rebuilds `#thead`'s one header row, incl. the leading selection column (multi ⇒ a select-all checkbox;
-//     single ⇒ a bare header cell) and a real `<button>` inside every `sortable` column's `<th>`. It applies
+//     rebuilds `#thead`'s one header row, incl. the leading selection column (multi ⇒ a composed
+//     `ui-checkbox` select-all; single ⇒ a bare header cell) and a composed `ui-button` inside every
+//     `sortable` column's `<th>` (ADR-0163 amendment, GH #1445). It applies
 //     the CURRENT `aria-sort` state to the freshly-built nodes immediately, via `this.#applyAriaSort(untracked(() =>
 //     this.sort))` — `untracked` (component-checker finding, verified: the reactive kernel tracks EVERY signal
 //     read during an effect body regardless of how deep the call stack, so a bare `this.sort` read here — even
@@ -69,9 +75,14 @@
 // `render()` stays the inherited no-op.
 //
 // Imports inward only (controls → dom): UIElement + prop + the typed-schema helpers from the dom barrel;
-// the pure math + safe codecs from the co-located table-model.ts. `UIPaginationElement` is a sibling
-// controls-family import (controls → controls is the established composition pattern — swiper-paddles.ts's
-// `UIButtonElement` import, the identical shape).
+// the pure math + safe codecs from the co-located table-model.ts. `UIPaginationElement`/`UICheckboxElement`/
+// `UIRadioElement`/`UIButtonElement` are sibling controls-family imports (controls → controls is the
+// established composition pattern — swiper-paddles.ts's `UIButtonElement` import, the identical shape). The
+// ADR-0163 amendment (GH #1445) composes all three for the first time here: `ui-checkbox`/`ui-radio` for
+// the selection column, `ui-button` for a sortable header's trigger — each a REAL runtime side-effect
+// import (not `import type`), the SAME reasoning the `ui-pagination` import below already carries: this
+// file creates these tags IMPERATIVELY (`document.createElement`), so each must be REGISTERED before that
+// call can upgrade it.
 
 import { UIElement, type ReactiveProps } from '../../dom/index.ts'
 // `untracked` — the ONE reactive-kernel import this control needs (controls MAY import `reactive` directly,
@@ -102,6 +113,14 @@ import { props } from './table.props.gen.ts'
 // import pulls in `../button/button.ts` at the family-barrel level rather than relying on a type-only import.
 import '../pagination/pagination.ts'
 import type { UIPaginationElement } from '../pagination/pagination.ts'
+// ADR-0163 amendment (GH #1445) — the selection column composes ui-checkbox (`multi`)/ui-radio (`single`);
+// a sortable header's trigger composes ui-button. Real side-effect imports (see the banner above).
+import '../checkbox/checkbox.ts'
+import type { UICheckboxElement } from '../checkbox/checkbox.ts'
+import '../radio/radio.ts'
+import type { UIRadioElement } from '../radio/radio.ts'
+import '../button/button.ts'
+import type { UIButtonElement } from '../button/button.ts'
 
 export interface UITableElement extends ReactiveProps<typeof props> {}
 export class UITableElement extends UIElement {
@@ -123,9 +142,6 @@ export class UITableElement extends UIElement {
   #caption: HTMLTableCaptionElement | null = null
   #lastScrollLeft = 0
   #lastScrollTop = 0
-  // A stable, per-instance radio `name` (ADR-0163 cl.4 — "one shared name") — minted once at construction,
-  // never re-minted across reconnects (the caption-id counter precedent, module-scoped, collision-free).
-  readonly #radioName = nextRadioName()
 
   protected connected(): void {
     if (!this.#built) {
@@ -153,16 +169,17 @@ export class UITableElement extends UIElement {
       this.#lastScrollTop = this.#scroll.scrollTop
     })
 
-    // ONE delegated listener PER EVENT TYPE, on `#table` — a STABLE skeleton node itself (SPEC-R4.1, never
-    // replaced) that wraps BOTH `#thead` and `#tbody`, so a `change` on either bubbles to it identically to
-    // delegating on each separately (component-checker retained-listener finding, kept, one node fewer than
-    // the original two-listener shape): HEADER-BUILD replaces the whole `<thead>` row on every columns/
-    // selectable change, and VIEW replaces the whole `<tbody>` content on every state-prop change (every
-    // search keystroke, every page turn, every selection toggle) — a PER-STAMPED-NODE `this.listen` (the
-    // original shape) strands a fresh closure+listener, riding the connection-lifetime AbortSignal, on every
-    // discarded rebuild: unbounded retention on a long-lived, frequently-updating table. Re-armed once per
-    // connect exactly like the `#scroll` listener above, this keeps the listener COUNT at a fixed two
-    // regardless of rebuild count.
+    // Delegated listeners on `#table` — a STABLE skeleton node itself (SPEC-R4.1, never replaced) that wraps
+    // BOTH `#thead` and `#tbody`, so a `change`/`click` on either bubbles to it identically to delegating on
+    // each separately (component-checker retained-listener finding, kept, one node fewer than the original
+    // two-listener shape): HEADER-BUILD replaces the whole `<thead>` row on every columns/selectable change,
+    // and VIEW replaces the whole `<tbody>` content on every state-prop change (every search keystroke, every
+    // page turn, every selection toggle) — a PER-STAMPED-NODE `this.listen` (the original shape) strands a
+    // fresh closure+listener, riding the connection-lifetime AbortSignal, on every discarded rebuild:
+    // unbounded retention on a long-lived, frequently-updating table. Re-armed once per connect exactly like
+    // the `#scroll` listener above, this keeps the listener COUNT fixed (two on `#table` — `change` +
+    // the ADR-0163-amendment capture-phase `click` guard below — plus `#thead`'s own `click`) regardless of
+    // rebuild count.
     this.listen(this.#thead, 'click', (event) => {
       const button = (event.target as HTMLElement).closest<HTMLElement>('[data-part="sort-button"]')
       const key = button?.getAttribute('data-key')
@@ -172,18 +189,45 @@ export class UITableElement extends UIElement {
       const target = event.target as HTMLElement
       const isSelectAll = target.matches('[data-part="select-all"]')
       if (!isSelectAll && !target.matches('[data-part="select"]')) return
-      // stopPropagation: a native <input> `change` bubbles unstopped by default, and this host's OWN
-      // `change` event is the sort/page commit channel (cl.5/cl.6) — without this, a selection toggle would
-      // ALSO arrive at any table-level `change` listener, giving the same event name two unrelated meanings
-      // on the same host (component-checker finding). Selection's own contract event stays `select` only.
+      // stopPropagation: a composed ui-checkbox/ui-radio's `change` event bubbles unstopped by default
+      // (every fleet event is `{bubbles:true, composed:true}`, element.ts), and this host's OWN `change`
+      // event is the sort/page commit channel (cl.5/cl.6) — without this, a selection toggle would ALSO
+      // arrive at any table-level `change` listener, giving the same event name two unrelated meanings on
+      // the same host (component-checker finding). Selection's own contract event stays `select` only.
       event.stopPropagation()
       if (isSelectAll) {
-        this.#toggleSelectAll((target as HTMLInputElement).checked)
+        this.#toggleSelectAll((target as UICheckboxElement).checked)
         return
       }
       const id = target.getAttribute('data-row-id')
-      if (id !== null) this.#toggleRowSelection(id, this.selectable, (target as HTMLInputElement).checked)
+      if (id !== null) this.#toggleRowSelection(id, this.selectable, (target as UICheckboxElement | UIRadioElement).checked)
     })
+    // ADR-0163 amendment (GH #1445) — the single-select "a click cannot uncheck the sole selected radio"
+    // guard. A real `<input type=radio name=X>` got this for free from the platform (a radio cannot be
+    // unchecked by re-clicking itself, only by checking a DIFFERENT radio in its name-group); `ui-radio` is
+    // not a native input and carries no `name`-based grouping, so a bare `ui-radio` (no `ui-radio-group`
+    // ancestor) has FULL checkbox-style toggle semantics — clicking an already-checked row's radio would,
+    // absent this guard, deselect it (making `#toggleRowSelection`'s `checked ? [id] : []` false-branch,
+    // previously dead code under native radio semantics, live and wrong). This reproduces `ui-radio`'s OWN
+    // `grouped()` capture-phase click guard (radio.ts) verbatim — TABLE-owned instead of
+    // `ui-radio-group`-owned, because nesting a real `<ui-radio-group>` inside `<table>`/`<tbody>` is
+    // invalid table content model (cl.3's own reason `role=grid`/composite-widget machinery was rejected),
+    // and the `data-radio-group` marker `grouped()` detects ALSO demotes every non-checked sibling to
+    // `tabIndex=-1` (roving-tabindex), which would violate cl.3's "normal tab order, no roving tabindex"
+    // mandate. Registered CAPTURE-phase on `#table` so it runs before `ui-radio`'s own bubble-phase click →
+    // toggle handler ever sees the event; a no-op for `selectable='multi'` (a checkbox's own uncheck-by-
+    // click IS the real, wanted toggle).
+    this.listen(
+      this.#table,
+      'click',
+      (event) => {
+        if (this.selectable !== 'single') return
+        const target = event.target as HTMLElement
+        const select = target.closest<UIRadioElement>('[data-part="select"]')
+        if (select?.checked) event.stopImmediatePropagation()
+      },
+      { capture: true },
+    )
 
     // HEADER-BUILD (SPEC-R4.3 identity clause, widened) — reads `columns` + `selectable`. A `rows`-only (or
     // `sort`/`selected`/`filter`/`search`/`page`) update never re-runs this, so `#table`/`#thead` node
@@ -254,7 +298,7 @@ export class UITableElement extends UIElement {
 
       // Select-all header checkbox state — computed against the MATCHING SET (cl.7).
       if (selectable === 'multi') {
-        const selectAll = this.#thead.querySelector<HTMLInputElement>('[data-part="select-all"]')
+        const selectAll = this.#thead.querySelector<UICheckboxElement>('[data-part="select-all"]')
         if (selectAll) {
           const matchingIds = view.matching.map((ir) => ir.id)
           const matchedSelected = matchingIds.filter((id) => selectedSet.has(id)).length
@@ -341,42 +385,52 @@ export class UITableElement extends UIElement {
   }
 
   /** The leading `<th scope="col" data-part="select-header">` shared by `selectable='single'` (bare) and
-   *  `selectable='multi'` (`#selectAllHeaderCell`, which adds the checkbox) — the two select-header shapes
-   *  differ ONLY in whether an `<input>` is appended. */
+   *  `selectable='multi'` (`#selectAllHeaderCell`, which adds the composed `<ui-checkbox>`) — the two
+   *  select-header shapes differ ONLY in whether a select-all control is appended. */
   #selectHeaderCell(): HTMLTableCellElement {
     const th = this.#thCol()
     th.setAttribute('data-part', 'select-header')
     return th
   }
 
-  /** The leading `<th scope="col">` for `selectable='multi'` — a real, stamped select-all checkbox
-   *  (ADR-0163 cl.4). Its checked/indeterminate state is maintained by the VIEW effect (computed against
-   *  the matching set); the click/toggle itself is handled by the ONE delegated `#thead` `change` listener
-   *  (`connected()`, the retained-listener fix) — this method only builds markup, no per-node listener. */
+  /** The leading `<th scope="col">` for `selectable='multi'` — a composed `<ui-checkbox>` select-all
+   *  (ADR-0163 cl.4, amended GH #1445 — was a real stamped `<input type=checkbox>`). `inline` (ADR-0223
+   *  cl.2) is load-bearing here: a `<th>` is a plain block formatting context, not a flex/grid container,
+   *  so `ui-checkbox`'s Fill-by-Default posture would otherwise stretch it to the whole header cell width.
+   *  Its checked/indeterminate state is maintained by the VIEW effect (computed against the matching set);
+   *  the click/toggle itself is handled by the ONE delegated `#table` `change` listener (`connected()`, the
+   *  retained-listener fix) — this method only builds markup, no per-node listener. */
   #selectAllHeaderCell(): HTMLTableCellElement {
     const th = this.#selectHeaderCell()
-    const input = document.createElement('input')
-    input.type = 'checkbox'
-    input.setAttribute('data-part', 'select-all')
-    input.setAttribute('aria-label', 'Select all rows')
-    th.append(input)
+    const checkbox = document.createElement('ui-checkbox') as UICheckboxElement
+    checkbox.setAttribute('data-part', 'select-all')
+    checkbox.setAttribute('aria-label', 'Select all rows')
+    checkbox.setAttribute('inline', '')
+    th.append(checkbox)
     return th
   }
 
   /** One `<th scope="col">` — `data-type='number'` set from the column's type (SPEC-R2/R3 row 9,
-   *  unchanged). ADR-0163 cl.5: a `sortable` column wraps its label in a real, stamped `<button>` (the APG
-   *  sortable-table shape) instead of plain text — the ONLY structural difference; a non-sortable column's
-   *  `<th>` is byte-for-byte identical to the pre-widening baseline (SPEC-R2/cl.10). `data-key` carries the
-   *  column's `key` — read by the ONE delegated `#thead` `click` listener (`connected()`, the retained-
-   *  listener fix); no per-button listener here. */
+   *  unchanged). ADR-0163 cl.5 (amended GH #1445): a `sortable` column wraps its label in a composed
+   *  `<ui-button>` (was a real, stamped `<button>`, the APG sortable-table shape) instead of plain text —
+   *  the ONLY structural difference; a non-sortable column's `<th>` is byte-for-byte identical to the
+   *  pre-widening baseline (SPEC-R2/cl.10). `variant="ghost"` + `size="sm"` read as header text rather
+   *  than a foreign control (the retired `table.css` `all: unset` reset's own intent, now structural —
+   *  `ui-button` owns its full paint/token/focus-ring chain); `inline` (ADR-0223 cl.2) hugs the label
+   *  instead of filling the `<th>`'s block formatting context. `data-key` carries the column's `key` —
+   *  read by the ONE delegated `#thead` `click` listener (`connected()`, the retained-listener fix,
+   *  unchanged in shape: `ui-button` emits no semantic event of its own, so a plain `click` still
+   *  delegates identically); no per-button listener here. */
   #headerCell(col: TableColumn): HTMLTableCellElement {
     const th = this.#thCol()
     if (col.type === 'number') th.setAttribute('data-type', 'number')
     if (col.sortable) {
-      const button = document.createElement('button')
-      button.type = 'button'
+      const button = document.createElement('ui-button') as UIButtonElement
       button.setAttribute('data-part', 'sort-button')
       button.setAttribute('data-key', col.key)
+      button.setAttribute('variant', 'ghost')
+      button.setAttribute('size', 'sm')
+      button.setAttribute('inline', '')
       button.textContent = col.label
       th.append(button)
     } else {
@@ -403,23 +457,30 @@ export class UITableElement extends UIElement {
     })
   }
 
-  /** One `<tr>` of `<td>`s for `row` (SPEC-R3 row 9, unchanged cell resolution). ADR-0163 cl.4: a leading
-   *  selection `<td>` with a real, stamped `<input type=checkbox|radio>` when `selectable` is active — the
-   *  ONLY structural difference; at `selectable=''` this is byte-for-byte identical to the pre-widening
-   *  baseline (SPEC-R2/cl.10). `data-selected` rides the `<tr>` for CSS (cl.4). The toggle itself is handled
-   *  by the ONE delegated `#tbody` `change` listener (`connected()`, the retained-listener fix) — this
-   *  method only builds markup, no per-node listener (this is the MOST frequently-rebuilt anatomy in the
-   *  control, VIEW reruns on every search keystroke/page turn/selection toggle — the fix that mattered most). */
+  /** One `<tr>` of `<td>`s for `row` (SPEC-R3 row 9, unchanged cell resolution). ADR-0163 cl.4 (amended
+   *  GH #1445): a leading selection `<td>` holding a composed `<ui-checkbox>` (`multi`) / `<ui-radio>`
+   *  (`single`) when `selectable` is active — was a real, stamped `<input type=checkbox|radio>`; the ONLY
+   *  structural difference — at `selectable=''` this is byte-for-byte identical to the pre-widening
+   *  baseline (SPEC-R2/cl.10). No shared `name` is set (the retired `#radioName` mint) — `ui-radio` carries
+   *  no native `name`-based grouping; mutual exclusivity is a property of the VIEW rebuild (every row's
+   *  `checked` is re-derived from `selectedSet.has(id)` on every `selected` commit) and the "can't
+   *  self-uncheck" invariant rides `connected()`'s own capture-phase click guard instead. `inline`
+   *  (ADR-0223 cl.2) hugs the control instead of filling the `<td>`'s block formatting context.
+   *  `data-selected` rides the `<tr>` for CSS (cl.4). The toggle itself is handled by the ONE delegated
+   *  `#table` `change` listener (`connected()`, the retained-listener fix) — this method only builds
+   *  markup, no per-node listener (this is the MOST frequently-rebuilt anatomy in the control, VIEW reruns
+   *  on every search keystroke/page turn/selection toggle — the fix that mattered most). */
   #bodyRow(cols: TableColumn[], selectable: string, row: TableRow, id: string, selectedSet: Set<string>): HTMLTableRowElement {
     const tr = document.createElement('tr')
     if (selectable === 'multi' || selectable === 'single') {
       const td = document.createElement('td')
       td.setAttribute('data-part', 'select-cell')
-      const input = document.createElement('input')
-      input.type = selectable === 'multi' ? 'checkbox' : 'radio'
+      const input = document.createElement(selectable === 'multi' ? 'ui-checkbox' : 'ui-radio') as
+        | UICheckboxElement
+        | UIRadioElement
       input.setAttribute('data-part', 'select')
       input.setAttribute('data-row-id', id)
-      if (selectable === 'single') input.name = this.#radioName
+      input.setAttribute('inline', '')
       input.checked = selectedSet.has(id)
       const firstCellText = cols.length > 0 ? resolveCell(cols[0], row) : ''
       input.setAttribute('aria-label', firstCellText !== '' ? `Select row: ${firstCellText}` : 'Select row')
@@ -519,14 +580,6 @@ let captionCounter = 0
 function nextCaptionId(): string {
   captionCounter += 1
   return `ui-table-caption-${captionCounter}`
-}
-
-// The radio-group `name` mint (ADR-0163 cl.4) — one per `selectable='single'` table instance, module-scoped,
-// collision-free (the caption-id counter's own shape).
-let radioNameCounter = 0
-function nextRadioName(): string {
-  radioNameCounter += 1
-  return `ui-table-radio-${radioNameCounter}`
 }
 
 if (!customElements.get('ui-table')) customElements.define('ui-table', UITableElement) // idempotent self-define

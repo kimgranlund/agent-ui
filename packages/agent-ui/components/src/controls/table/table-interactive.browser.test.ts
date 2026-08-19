@@ -1,7 +1,10 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { userEvent } from 'vitest/browser'
 
-// table-interactive.browser.test.ts — the ADR-0163 cross-engine interaction proof (SPEC-R1). Runs in BOTH
+// table-interactive.browser.test.ts — the ADR-0163 cross-engine interaction proof (SPEC-R1), amended by the
+// GH #1445 dogfood build: every selection/sort node is now a COMPOSED `ui-checkbox`/`ui-radio`/`ui-button`
+// (was a real native `<input>`/`<button>`) — this file's DOM queries are re-anchored to those tags/parts
+// accordingly; the commit contracts (events/props) are UNCHANGED and asserted identically. Runs in BOTH
 // Chromium and WebKit (vitest.browser.config.ts). Covers exactly the class jsdom under-proves for the
 // widened table: a real sort-button CLICK cycling `aria-sort` + reordering rows; a real KEYBOARD selection
 // commit (Tab + Space) incl. select-all indeterminate over the MATCHING SET; the filter→search→sort→page
@@ -10,11 +13,17 @@ import { userEvent } from 'vitest/browser'
 // capability enabled at once.
 import '@agent-ui/components/foundation-styles.css'
 import '../button/button.css'
+import '../checkbox/checkbox.css'
+import '../radio/radio.css'
 import '../pagination/pagination.css'
 import './table.css'
 import '../button/button.ts'
+import '../checkbox/checkbox.ts'
+import '../radio/radio.ts'
 import './table.ts'
 import type { UITableElement } from './table.ts'
+import type { UICheckboxElement } from '../checkbox/checkbox.ts'
+import type { UIRadioElement } from '../radio/radio.ts'
 
 const mounted: HTMLElement[] = []
 const mount = (markup: string): HTMLElement => {
@@ -45,7 +54,7 @@ describe('ui-table — sort click cycles aria-sort + reorders rows (SPEC-R1, ADR
     const table = mount(
       `<ui-table label="Revenue" columns='${SORTABLE_COLUMNS}' rows='${THREE_ROWS}'></ui-table>`,
     ) as UITableElement
-    const sortButtons = [...table.querySelectorAll('thead button[data-part="sort-button"]')] as HTMLElement[]
+    const sortButtons = [...table.querySelectorAll('thead ui-button[data-part="sort-button"]')] as HTMLElement[]
     expect(sortButtons, 'anti-vacuous: both sortable columns stamp a sort button').toHaveLength(2)
     const revenueButton = sortButtons[1] // columns order: region, revenue
 
@@ -74,7 +83,7 @@ describe('ui-table — sort click cycles aria-sort + reorders rows (SPEC-R1, ADR
       `<ui-table label="Revenue" columns='${SORTABLE_COLUMNS}' rows='${THREE_ROWS}'></ui-table>`,
     ) as UITableElement
     const headerRowBefore = table.querySelector('thead tr') as HTMLElement
-    const sortButtons = [...table.querySelectorAll('thead button[data-part="sort-button"]')] as HTMLElement[]
+    const sortButtons = [...table.querySelectorAll('thead ui-button[data-part="sort-button"]')] as HTMLElement[]
     const revenueButtonBefore = sortButtons[1]
 
     // KEYBOARD activation (Tab-focus + Space), not a mouse click: a real `<button>`'s native keyboard
@@ -92,7 +101,7 @@ describe('ui-table — sort click cycles aria-sort + reorders rows (SPEC-R1, ADR
     await settle()
 
     expect(table.querySelector('thead tr'), 'HEADER-BUILD must NOT have a live dependency on `sort` — the <tr> node identity must survive a sort commit').toBe(headerRowBefore)
-    const revenueButtonAfter = [...table.querySelectorAll('thead button[data-part="sort-button"]')][1]
+    const revenueButtonAfter = [...table.querySelectorAll('thead ui-button[data-part="sort-button"]')][1]
     expect(revenueButtonAfter, 'the sort <button> node identity must survive a sort commit').toBe(revenueButtonBefore)
     expect(document.activeElement, 'focus must survive a sort commit — the button was never destroyed/rebuilt').toBe(revenueButtonBefore)
     expect(table.querySelector('[aria-sort]')?.getAttribute('aria-sort')).toBe('ascending')
@@ -119,7 +128,7 @@ describe('ui-table — selection commit via KEYBOARD, select-all over the MATCHI
     await settle()
     expect(table.querySelectorAll('tbody tr')).toHaveLength(2) // the narrowed rendered set
 
-    const firstCheckboxBefore = table.querySelector('tbody input[type="checkbox"]') as HTMLInputElement
+    const firstCheckboxBefore = table.querySelector('tbody ui-checkbox[data-part="select"]') as UICheckboxElement
     firstCheckboxBefore.focus()
     expect(document.activeElement, 'the checkbox must accept real focus (normal tab order)').toBe(firstCheckboxBefore)
     let selectFired = 0
@@ -129,9 +138,9 @@ describe('ui-table — selection commit via KEYBOARD, select-all over the MATCHI
 
     expect(table.selected).toEqual(['EMEA'])
     expect(selectFired, 'a real keyboard commit fires `select`').toBe(1)
-    const emeaCheckboxAfter = [...table.querySelectorAll('tbody input[type="checkbox"]')].find(
+    const emeaCheckboxAfter = [...table.querySelectorAll('tbody ui-checkbox[data-part="select"]')].find(
       (i) => i.closest('tr')?.textContent === 'EMEA',
-    ) as HTMLInputElement
+    ) as UICheckboxElement
     expect(emeaCheckboxAfter.checked, 'the rebuilt checkbox reflects the committed selection').toBe(true)
     expect(emeaCheckboxAfter.closest('tr')?.hasAttribute('data-selected')).toBe(true)
     expect(document.activeElement, 'focus restored to the same row identity across the rebuild').toBe(emeaCheckboxAfter)
@@ -139,14 +148,14 @@ describe('ui-table — selection commit via KEYBOARD, select-all over the MATCHI
     // select-all: partial (1 of 2 matching) ⇒ indeterminate. Its own node identity persists (VIEW only
     // mutates its checked/indeterminate props — HEADER-BUILD, which owns node identity, never re-runs on a
     // selection change), so this reference stays valid across the rebuild above.
-    const selectAll = table.querySelector('[data-part="select-all"]') as HTMLInputElement
+    const selectAll = table.querySelector('[data-part="select-all"]') as UICheckboxElement
     expect(selectAll.indeterminate).toBe(true)
     expect(selectAll.checked).toBe(false)
 
     // Check the second matching row too ⇒ select-all becomes fully checked (AMER, filtered out, is irrelevant).
-    const apacCheckbox = [...table.querySelectorAll('tbody input[type="checkbox"]')].find(
+    const apacCheckbox = [...table.querySelectorAll('tbody ui-checkbox[data-part="select"]')].find(
       (i) => i.closest('tr')?.textContent === 'APAC',
-    ) as HTMLInputElement
+    ) as UICheckboxElement
     await userEvent.click(apacCheckbox)
     await settle()
     expect(selectAll.checked, 'both MATCHING rows selected ⇒ select-all checked').toBe(true)
@@ -165,7 +174,7 @@ describe('ui-table — selection commit via KEYBOARD, select-all over the MATCHI
     table.filter = [{ key: 'region', values: ['EMEA', 'APAC'] }]
     await settle()
     expect(table.querySelectorAll('tbody tr')).toHaveLength(2) // AMER is not rendered
-    const selectAll = table.querySelector('[data-part="select-all"]') as HTMLInputElement
+    const selectAll = table.querySelector('[data-part="select-all"]') as UICheckboxElement
     expect(selectAll.indeterminate, 'AMER is selected but not in the matching set — 0 of 2 matching ⇒ not indeterminate').toBe(false)
     expect(selectAll.checked).toBe(false)
 
@@ -176,7 +185,7 @@ describe('ui-table — selection commit via KEYBOARD, select-all over the MATCHI
 
     expect(selectFired, 'a real select-all commit fires `select`').toBe(1)
     expect(new Set(table.selected), 'the matching set unions in, AMER (out of view) is preserved').toEqual(new Set(['AMER', 'EMEA', 'APAC']))
-    for (const input of [...table.querySelectorAll('tbody input[type="checkbox"]')] as HTMLInputElement[]) {
+    for (const input of [...table.querySelectorAll('tbody ui-checkbox[data-part="select"]')] as UICheckboxElement[]) {
       expect(input.checked, `${input.closest('tr')?.textContent} should be checked`).toBe(true)
     }
 
@@ -188,13 +197,13 @@ describe('ui-table — selection commit via KEYBOARD, select-all over the MATCHI
     // Clear the filter — AMER reappears, still checked, proving it was never touched by either commit.
     table.filter = []
     await settle()
-    const amerCheckbox = [...table.querySelectorAll('tbody input[type="checkbox"]')].find(
+    const amerCheckbox = [...table.querySelectorAll('tbody ui-checkbox[data-part="select"]')].find(
       (i) => i.closest('tr')?.textContent === 'AMER',
-    ) as HTMLInputElement
+    ) as UICheckboxElement
     expect(amerCheckbox.checked).toBe(true)
   })
 
-  it("component-checker regression: a selection toggle's native <input> change never reaches a table-level `change` listener (the sort/page commit channel stays exclusive)", async () => {
+  it("component-checker regression: a selection toggle's composed ui-checkbox `change` never reaches a table-level `change` listener (the sort/page commit channel stays exclusive)", async () => {
     const columns = JSON.stringify([{ key: 'region', label: 'Region' }])
     const rows = JSON.stringify([{ region: 'EMEA' }])
     const table = mount(
@@ -204,17 +213,88 @@ describe('ui-table — selection commit via KEYBOARD, select-all over the MATCHI
     let selectFired = 0
     table.addEventListener('change', () => (changeFired += 1))
     table.addEventListener('select', () => (selectFired += 1))
-    const checkbox = table.querySelector('tbody input[type="checkbox"]') as HTMLInputElement
+    const checkbox = table.querySelector('tbody ui-checkbox[data-part="select"]') as UICheckboxElement
     await userEvent.click(checkbox)
     await settle()
     expect(selectFired, 'the selection commit event fires').toBe(1)
     expect(changeFired, 'a selection toggle must NEVER double-fire the sort/page commit channel').toBe(0)
 
     // The header select-all checkbox — same law.
-    const selectAll = table.querySelector('[data-part="select-all"]') as HTMLInputElement
+    const selectAll = table.querySelector('[data-part="select-all"]') as UICheckboxElement
     await userEvent.click(selectAll)
     await settle()
     expect(changeFired, 'select-all must ALSO never fire `change`').toBe(0)
+  })
+})
+
+describe("ui-table — selectable='single' composes ui-radio; a click cannot self-uncheck the sole selected radio (ADR-0163 amendment, GH #1445)", () => {
+  it('a click SELECTS a row radio, commits `select`; clicking a DIFFERENT row switches selection; clicking the ALREADY-CHECKED radio again is a no-op', async () => {
+    const columns = JSON.stringify([{ key: 'region', label: 'Region' }])
+    const rows = JSON.stringify([{ region: 'EMEA' }, { region: 'APAC' }, { region: 'AMER' }])
+    const table = mount(
+      `<ui-table label="Regions" selectable="single" row-key="region" columns='${columns}' rows='${rows}'></ui-table>`,
+    ) as UITableElement
+    const radioFor = (name: string): UIRadioElement =>
+      [...table.querySelectorAll('tbody ui-radio[data-part="select"]')].find(
+        (i) => i.closest('tr')?.textContent === name,
+      ) as UIRadioElement
+
+    expect(table.querySelectorAll('tbody ui-radio[data-part="select"]'), 'anti-vacuous: a row radio per row').toHaveLength(3)
+    expect(table.querySelector('tbody ui-checkbox'), 'single never stamps a checkbox').toBeNull()
+    expect(table.querySelector('[data-part="select-all"]'), 'single has no select-all concept').toBeNull()
+
+    let selectFired = 0
+    table.addEventListener('select', () => (selectFired += 1))
+    await userEvent.click(radioFor('EMEA'))
+    await settle()
+    expect(table.selected, 'single REPLACES selected with the one clicked identity').toEqual(['EMEA'])
+    expect(selectFired).toBe(1)
+    expect(radioFor('EMEA').checked).toBe(true)
+
+    // A DIFFERENT row's radio switches selection — the VIEW rebuild derives every row's checked from
+    // `selected`, so the previously-checked EMEA radio (a fresh node post-rebuild) reads unchecked.
+    await userEvent.click(radioFor('APAC'))
+    await settle()
+    expect(table.selected).toEqual(['APAC'])
+    expect(selectFired).toBe(2)
+    expect(radioFor('APAC').checked).toBe(true)
+    expect(radioFor('EMEA').checked).toBe(false)
+
+    // THE GUARD UNDER TEST: clicking the ALREADY-CHECKED radio again must be a no-op — native
+    // `<input type=radio name=X>` cannot be unchecked by re-clicking itself, and ui-radio (no native
+    // `name`-grouping) needs `ui-table`'s own capture-phase click guard to reproduce that invariant.
+    // Without the guard this click would fire `#toggleRowSelection('APAC','single',false)` and clear
+    // `selected` to `[]` — the previously-dead `checked ? [id] : []` false-branch going live and wrong.
+    await userEvent.click(radioFor('APAC'))
+    await settle()
+    expect(table.selected, 'a click on the sole already-selected radio must NOT deselect it').toEqual(['APAC'])
+    expect(selectFired, 'the guarded click must not commit a new `select`').toBe(2)
+    expect(radioFor('APAC').checked).toBe(true)
+  })
+
+  it('KEYBOARD (Tab + Space) activation on an already-checked radio is ALSO a no-op — the guard applies regardless of activation method', async () => {
+    const columns = JSON.stringify([{ key: 'region', label: 'Region' }])
+    const rows = JSON.stringify([{ region: 'EMEA' }, { region: 'APAC' }])
+    const table = mount(
+      `<ui-table label="Regions" selectable="single" row-key="region" columns='${columns}' rows='${rows}'></ui-table>`,
+    ) as UITableElement
+    const emeaBefore = [...table.querySelectorAll('tbody ui-radio[data-part="select"]')].find(
+      (i) => i.closest('tr')?.textContent === 'EMEA',
+    ) as UIRadioElement
+    await userEvent.click(emeaBefore)
+    await settle()
+    expect(table.selected).toEqual(['EMEA'])
+
+    const emeaAfter = [...table.querySelectorAll('tbody ui-radio[data-part="select"]')].find(
+      (i) => i.closest('tr')?.textContent === 'EMEA',
+    ) as UIRadioElement
+    emeaAfter.focus()
+    let selectFired = 0
+    table.addEventListener('select', () => (selectFired += 1))
+    await userEvent.keyboard(' ') // pressActivation → host.click() → the capture-phase guard intercepts it
+    await settle()
+    expect(table.selected, 'Space on the already-checked radio must not deselect it').toEqual(['EMEA'])
+    expect(selectFired, 'no `select` commit from the guarded keyboard activation').toBe(0)
   })
 })
 
@@ -227,7 +307,7 @@ describe('ui-table — filter → search → sort → page interplay; selection 
     ) as UITableElement
     table.selected = ['EMEA']
     await settle()
-    expect(table.querySelector('tbody input[type="checkbox"]:checked')).not.toBeNull()
+    expect(table.querySelector('tbody ui-checkbox[data-part="select"][checked]')).not.toBeNull()
 
     // Filter EMEA out entirely — it survives selected, just isn't rendered.
     table.filter = [{ key: 'region', values: ['APAC'] }]
@@ -242,7 +322,7 @@ describe('ui-table — filter → search → sort → page interplay; selection 
     await settle()
     expect(table.querySelectorAll('tbody tr')).toHaveLength(2)
     const emeaRow = [...table.querySelectorAll('tbody tr')].find((tr) => tr.textContent?.includes('EMEA'))
-    expect((emeaRow?.querySelector('input') as HTMLInputElement).checked).toBe(true)
+    expect((emeaRow?.querySelector('ui-checkbox') as UICheckboxElement).checked).toBe(true)
   })
 
   it('page-size windows the sorted, filtered, SEARCHED set — the full pipeline order, in a real engine', async () => {
@@ -258,7 +338,7 @@ describe('ui-table — filter → search → sort → page interplay; selection 
     expect(table.querySelector('[data-part="scroll"]')?.contains(pagination)).toBe(false)
 
     // Sort descending — the WINDOW must reflect the sorted order, not the pre-sort one.
-    const sortButton = table.querySelector('button[data-part="sort-button"]') as HTMLElement
+    const sortButton = table.querySelector('ui-button[data-part="sort-button"]') as HTMLElement
     await userEvent.click(sortButton) // ascending — a real user gesture
     sortButton.click() // descending — a second, same-element toggle (the disclosure.browser.test.ts precedent)
     await settle()
@@ -311,9 +391,9 @@ describe('ui-table — focus restoration across a rows update (cl.10/SPEC-R4.5)'
       `<ui-table label="Regions" selectable="multi" row-key="region" columns='${columns}' rows='${rows}'></ui-table>`,
     ) as UITableElement
     await settle()
-    const apacCheckbox = [...table.querySelectorAll('tbody input[type="checkbox"]')].find(
+    const apacCheckbox = [...table.querySelectorAll('tbody ui-checkbox[data-part="select"]')].find(
       (i) => i.closest('tr')?.textContent === 'APAC',
-    ) as HTMLInputElement
+    ) as UICheckboxElement
     apacCheckbox.focus()
     expect(document.activeElement).toBe(apacCheckbox)
 
@@ -321,9 +401,9 @@ describe('ui-table — focus restoration across a rows update (cl.10/SPEC-R4.5)'
     table.rows = [{ region: 'EMEA' }, { region: 'APAC' }, { region: 'AMER' }]
     await settle()
 
-    const restoredCheckbox = [...table.querySelectorAll('tbody input[type="checkbox"]')].find(
+    const restoredCheckbox = [...table.querySelectorAll('tbody ui-checkbox[data-part="select"]')].find(
       (i) => i.closest('tr')?.textContent === 'APAC',
-    ) as HTMLInputElement
+    ) as UICheckboxElement
     expect(document.activeElement, 'focus was not restored to the same row identity').toBe(restoredCheckbox)
   })
 })

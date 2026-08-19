@@ -5336,20 +5336,28 @@ rather than dropping the column. `columns: []`/absent/malformed-JSON ⇒ **no ta
 empty scroll container; the host box still paints via the `min-inline-size` floor); valid columns with zero
 rows render the caption + header with an honest empty `<tbody>`.
 
-## Selection (ADR-0163 cl.4)
+## Selection (ADR-0163 cl.4, amended GH #1445)
 
-`selectable='multi'` stamps a leading checkbox column plus a header select-all checkbox (indeterminate when
-the MATCHING SET — see below — is partially selected); `selectable='single'` stamps a leading radio column
-(one shared `name`). Selection identity is the `row-key`-named column's cell value (String-coerced), or —
-absent `row-key` — the row's data-order index (stable across a view transform, fragile across a `rows`
-swap). `selected: string[]` is bindable; a real checkbox/radio click commits `select` — a programmatic
-`selected` write never does (the fleet commit law). Selected rows carry `data-selected` for CSS. Selection
-is held against the **whole** rendered set: a filtered-out selected row stays selected, just not visible.
+`selectable='multi'` stamps a leading **composed `ui-checkbox`** column plus a header composed `ui-checkbox`
+select-all (indeterminate when the MATCHING SET — see below — is partially selected); `selectable='single'`
+stamps a leading **composed `ui-radio`** column. (Pre-amendment this was a real, stamped
+`<input type="checkbox"|"radio">` sharing one `name` — ADR-0163's amendment retires that, the fleet's last
+"no native form elements" exception; ZERO exceptions remain fleet-wide.) Every composed selection control
+carries the reflected `inline` attribute (ADR-0223 cl.2) so it hugs its cell instead of filling the `<th>`/
+`<td>`'s block formatting context. Selection identity is the `row-key`-named column's cell value
+(String-coerced), or — absent `row-key` — the row's data-order index (stable across a view transform,
+fragile across a `rows` swap). `selected: string[]` is bindable; a real click commits `select` — a
+programmatic `selected` write never does (the fleet commit law). For `selectable='single'`, `ui-table`
+installs its own capture-phase click guard so a click cannot un-check the sole selected radio — the
+"can't self-uncheck" invariant a native `name`-group provided for free, reproduced here because `ui-radio`
+carries no native grouping. Selected rows carry `data-selected` for CSS. Selection is held against the
+**whole** rendered set: a filtered-out selected row stays selected, just not visible.
 
-## Sort (ADR-0163 cl.5)
+## Sort (ADR-0163 cl.5, amended GH #1445)
 
-Opt in per column: `columns[].sortable: true` wraps that column's header label in a real, stamped
-`<button>` (the APG sortable-table shape). Activation cycles ascending → descending on the SAME column;
+Opt in per column: `columns[].sortable: true` wraps that column's header label in a **composed `ui-button`**
+(`variant="ghost"`, `size="sm"`, `inline`; the APG sortable-table shape — pre-amendment this was a real,
+stamped `<button>` reset via `all: unset`). Activation cycles ascending → descending on the SAME column;
 activating a DIFFERENT sortable column starts fresh at ascending. `aria-sort` rides the one currently-sorted
 `<th>` only. `sort: {key, direction} | null` is bindable; a header-button click commits `change`. The
 client-side comparator (`table-model.ts`'s `makeRowComparator`): number columns compare numerically, every
@@ -5413,13 +5421,14 @@ host mints **no** ARIA at all — no `role`, no `aria-label` — the `<caption>`
 accessible name. The interior scroll container additionally carries `role="region" tabindex="0"` (+
 `aria-labelledby` the caption when present) — the WAI-ARIA APG accessible-overflow pattern, so keyboard-only
 users can reach overflowed columns even in engines without keyboard-focusable scrollers by default. This is
-platform scroll affordance, not a component-defined keyboard contract. Every interactive part (a selection
-input, the select-all checkbox, a sort button) is a REAL native or stamped element in the **normal tab
-order** — no roving tabindex, no composite-widget keyboard contract, no `UIListboxElement`; selection state
-is conveyed ONLY by the native checkbox/radio checked state — **never `aria-selected` on rows** (rejected —
-selection-widget vocabulary ATs do not convey it on plain-table rows). An unlabeled table (`label` absent)
-yields an unnamed scroll region — an accepted residual, not a violation; provide `label` when the table
-needs an accessible name.
+platform scroll affordance, not a component-defined keyboard contract. Every interactive part (a composed
+`ui-checkbox`/`ui-radio` selection control, the composed `ui-checkbox` select-all, a composed `ui-button`
+sort trigger — ADR-0163 amendment, GH #1445; pre-amendment each was a real native `<input>`/`<button>`) is
+a real, focusable FACE control in the **normal tab order** — no roving tabindex, no composite-widget
+keyboard contract, no `UIListboxElement`; selection state is conveyed ONLY by the composed control's OWN
+`ariaChecked` (via internals) — **never `aria-selected` on rows** (rejected — selection-widget vocabulary
+ATs do not convey it on plain-table rows). An unlabeled table (`label` absent) yields an unnamed scroll
+region — an accepted residual, not a violation; provide `label` when the table needs an accessible name.
 
 ## Sizing
 
@@ -5439,11 +5448,10 @@ alignment to the physical left.
 
 No dedicated override block: every row/header separator is a real `border`, which forced-colors repaints in
 system inks and never removes (unlike a background-drawn mark); all cell/caption content is real text and
-survives untouched. The stamped native `<input>` selection cells carry their own UA forced-colors treatment.
-The stamped sort `<button>` is reset (`all: unset`, `table.css`) to read as part of the header rather than a
-raw UA control — under forced-colors it has no background/border of its own to lose, surviving as real,
-inherited header text plus a real `:focus-visible` outline on the shared focus-ring token (itself already
-`Highlight` under forced-colors).
+survives untouched. The composed `ui-checkbox`/`ui-radio` selection cells and the composed `ui-button` sort
+trigger each carry their OWN forced-colors treatment from their own stylesheet (ADR-0163 amendment, GH
+#1445) — `table.css` adds no reset of its own for any of them; the pre-amendment native `<button>`'s
+`all: unset`-then-repaint rule retired along with the native element it painted.
 
 ---
 

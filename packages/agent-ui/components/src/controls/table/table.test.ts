@@ -1,11 +1,26 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { UITableElement } from './table.ts'
+import '../checkbox/checkbox.ts'
+import '../radio/radio.ts'
+import '../button/button.ts'
+import type { UICheckboxElement } from '../checkbox/checkbox.ts'
+import type { UIRadioElement } from '../radio/radio.ts'
 
 // table.test.ts — jsdom behaviour probes (LLD-C2, report-family.lld.md §2; SPEC-R1…R6). jsdom is blind to
 // painted geometry/scroll (SPEC-N2) — the scroll-preservation/overflow/RTL/WHCM legs are
 // table.browser.test.ts's job. This file covers: prop typing/defaults, the stamped DOM shape, the
 // SPEC-R3 value-degeneracy strip, node-identity across rows-only/columns/label updates, NO host ARIA
 // (SPEC-R6 AC2), and zero residue across connect/disconnect.
+//
+// jsdom reality (the checkbox.test.ts `stubFormAssoc` precedent, generalized to the prototype — see
+// table-byte-identity.test.ts's own banner for the full reasoning): ElementInternals.setFormValue/
+// setValidity are ABSENT in jsdom, and `selectable='multi'|'single'` below connects composed `ui-checkbox`/
+// `ui-radio` children this file never constructs directly. Patched once, guarded, at the shared prototype.
+if (typeof (ElementInternals.prototype as unknown as Record<string, unknown>)['setFormValue'] !== 'function') {
+  const proto = ElementInternals.prototype as unknown as Record<string, unknown>
+  proto['setFormValue'] = (): void => {}
+  proto['setValidity'] = (): void => {}
+}
 
 // A throwaway subclass re-exposing the protected `internals` (the bar-chart/icon precedent), so a probe
 // can prove ElementInternals is NEVER touched (SPEC-R6 — native <table> semantics carry it).
@@ -342,6 +357,103 @@ describe('UITableElement — NO host ARIA at all (SPEC-R6 AC2)', () => {
     expect(el.getAttribute('role')).toBeNull()
     expect(el.hasAttribute('aria-label')).toBe(false)
     expect(el.hasAttribute('aria-labelledby')).toBe(false)
+  })
+})
+
+describe('UITableElement — selection/sort compose FACE controls, never native form elements (ADR-0163 amendment, GH #1445)', () => {
+  it("selectable='multi' stamps a ui-checkbox select-all + a ui-checkbox per row — never a native <input>", () => {
+    const el = new UITableElement()
+    el.selectable = 'multi'
+    el.rowKey = 'a'
+    el.columns = [{ key: 'a', label: 'A' }]
+    el.rows = [{ a: 'x' }, { a: 'y' }]
+    mount(el)
+    expect(el.querySelector('input'), 'zero native <input> anywhere').toBeNull()
+    const selectAll = el.querySelector('[data-part="select-all"]')
+    expect(selectAll?.tagName.toLowerCase()).toBe('ui-checkbox')
+    expect(selectAll?.getAttribute('aria-label')).toBe('Select all rows')
+    expect(selectAll?.hasAttribute('inline'), 'ADR-0223: hugs the <th> instead of filling it').toBe(true)
+    const rowChecks = [...el.querySelectorAll('[data-part="select"]')]
+    expect(rowChecks).toHaveLength(2)
+    for (const check of rowChecks) {
+      expect(check.tagName.toLowerCase()).toBe('ui-checkbox')
+      expect(check.hasAttribute('inline')).toBe(true)
+      expect(check.hasAttribute('data-row-id')).toBe(true)
+    }
+  })
+
+  it("selectable='single' stamps a ui-radio per row — never a native <input>, no select-all (a radio column has no select-all concept)", () => {
+    const el = new UITableElement()
+    el.selectable = 'single'
+    el.rowKey = 'a'
+    el.columns = [{ key: 'a', label: 'A' }]
+    el.rows = [{ a: 'x' }, { a: 'y' }]
+    mount(el)
+    expect(el.querySelector('input')).toBeNull()
+    expect(el.querySelector('[data-part="select-all"]'), 'single has no select-all').toBeNull()
+    expect(el.querySelector('ui-checkbox'), 'single never stamps a checkbox').toBeNull()
+    const rowRadios = [...el.querySelectorAll('[data-part="select"]')]
+    expect(rowRadios).toHaveLength(2)
+    for (const radio of rowRadios) {
+      expect(radio.tagName.toLowerCase()).toBe('ui-radio')
+      expect(radio.hasAttribute('inline')).toBe(true)
+    }
+  })
+
+  it("a selected row's composed checkbox reads checked=true; VIEW derives it from `selected`, not a per-node listener", () => {
+    const el = new UITableElement()
+    el.selectable = 'multi'
+    el.rowKey = 'a'
+    el.columns = [{ key: 'a', label: 'A' }]
+    el.rows = [{ a: 'x' }, { a: 'y' }]
+    el.selected = ['x']
+    mount(el)
+    const checks = [...el.querySelectorAll('[data-part="select"]')] as UICheckboxElement[]
+    const xCheck = checks.find((c) => c.closest('tr')?.textContent === 'x')
+    const yCheck = checks.find((c) => c.closest('tr')?.textContent === 'y')
+    expect(xCheck?.checked).toBe(true)
+    expect(yCheck?.checked).toBe(false)
+    expect(xCheck?.closest('tr')?.hasAttribute('data-selected')).toBe(true)
+  })
+
+  it("a sortable column composes a ui-button sort trigger (variant=ghost, size=sm, inline) — never a native <button>", () => {
+    const el = new UITableElement()
+    el.columns = [{ key: 'a', label: 'A', sortable: true }, { key: 'b', label: 'B' }]
+    el.rows = [{ a: 'x', b: 'y' }]
+    mount(el)
+    expect(el.querySelector('button'), 'zero native <button> anywhere').toBeNull()
+    const sortButton = el.querySelector('[data-part="sort-button"]')
+    expect(sortButton?.tagName.toLowerCase()).toBe('ui-button')
+    expect(sortButton?.getAttribute('variant')).toBe('ghost')
+    expect(sortButton?.getAttribute('size')).toBe('sm')
+    expect(sortButton?.hasAttribute('inline'), 'ADR-0223: hugs the <th> instead of filling it').toBe(true)
+    expect(sortButton?.getAttribute('data-key')).toBe('a')
+    expect(sortButton?.textContent).toBe('A')
+    // the non-sortable column stays plain text — byte-identical to the pre-widening baseline (cl.10)
+    const ths = [...el.querySelectorAll('thead th')]
+    expect(ths[1].querySelector('[data-part="sort-button"]')).toBeNull()
+    expect(ths[1].textContent).toBe('B')
+  })
+
+  it("selectable='single': a click on an ALREADY-CHECKED row radio does not deselect it (the capture-phase guard, jsdom click() dispatch)", () => {
+    const el = new UITableElement()
+    el.selectable = 'single'
+    el.rowKey = 'a'
+    el.columns = [{ key: 'a', label: 'A' }]
+    el.rows = [{ a: 'x' }, { a: 'y' }]
+    mount(el)
+    const radioFor = (name: string): UIRadioElement =>
+      [...el.querySelectorAll('[data-part="select"]')].find((r) => r.closest('tr')?.textContent === name) as UIRadioElement
+    let selectFired = 0
+    el.addEventListener('select', () => (selectFired += 1))
+    radioFor('x').click()
+    expect(el.selected).toEqual(['x'])
+    expect(selectFired).toBe(1)
+    // Re-click the SAME, now-checked radio — must be a no-op (native `<input type=radio name=X>` parity;
+    // `ui-radio` carries no native grouping, so `ui-table`'s own capture-phase click guard supplies it).
+    radioFor('x').click()
+    expect(el.selected, 'a click on the sole already-selected radio must not deselect it').toEqual(['x'])
+    expect(selectFired, 'the guarded click must not commit a new `select`').toBe(1)
   })
 })
 

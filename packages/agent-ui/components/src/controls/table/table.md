@@ -40,11 +40,13 @@ attributes:            # attributes-as-API — the GENERATION SOURCE for table.t
     default: ''          # off — the ''-first inherit/off canon (ADR-0163 cl.4)
     reflect: true         # CSS repoints the selection column via `[selectable]`
     description: Off by default (no selection column); multi adds a checkbox column + select-all; single adds a radio column.
-    # '' = no selection column. 'multi' stamps a leading `<input type=checkbox>` column + a header select-all
-    # checkbox (indeterminate when the MATCHING SET is partially selected, cl.7). 'single' stamps a leading
-    # `<input type=radio>` column, one shared `name` per table instance. These are the fleet's ONE sanctioned
-    # exception to "no native form elements" (ADR-0163 cl.3 — native checkbox/radio checked state IS the
-    # announced selection; no `aria-selected` on rows, rejected explicitly).
+    # '' = no selection column. 'multi' stamps a leading composed `<ui-checkbox>` column + a header composed
+    # `<ui-checkbox>` select-all (indeterminate when the MATCHING SET is partially selected, cl.7). 'single'
+    # stamps a leading composed `<ui-radio>` column (ADR-0163 amendment, GH #1445 — was a real
+    # `<input type=checkbox|radio>`/shared `name`; ZERO native-form-element exceptions remain fleet-wide now).
+    # A table-owned capture-phase click guard reproduces the "click cannot uncheck the sole selected radio"
+    # invariant a native `name`-group got for free. Checked state IS the announced selection; no
+    # `aria-selected` on rows, rejected explicitly (ADR-0163 cl.3).
   - name: rowKey
     type: string
     default: ''
@@ -128,15 +130,15 @@ parts:                  # the light-DOM anatomy this control stamps (native tabl
   - name: select-header
     description: The leading `<th scope="col" data-part="select-header">` stamped when `selectable` is active (ADR-0163 cl.4). Holds the select-all checkbox when `selectable='multi'`; an empty header cell when `selectable='single'` (a radio column has no "select all" concept).
   - name: select-all
-    description: The real `<input type="checkbox" data-part="select-all">` inside `select-header` (`selectable='multi'` only). `aria-label="Select all rows"`. Checked/indeterminate is computed against the MATCHING SET (cl.7) by the VIEW effect; a click toggles every matching identity's membership in `selected` and commits `select`.
+    description: A composed `<ui-checkbox data-part="select-all" inline>` inside `select-header` (`selectable='multi'` only; ADR-0163 amendment GH #1445 — was a real `<input type="checkbox">`). `aria-label="Select all rows"`. Checked/indeterminate is computed against the MATCHING SET (cl.7) by the VIEW effect; a click toggles every matching identity's membership in `selected` and commits `select`.
   - name: sort-button
-    description: The real `<button type="button" data-part="sort-button">` inside a `sortable` column's `<th>` (the APG sortable-table shape, ADR-0163 cl.3). Activation cycles ascending→descending on that column (a different column starts fresh at ascending) and commits `change`. A non-sortable column's `<th>` carries plain text instead — byte-identical to the pre-widening baseline.
+    description: A composed `<ui-button data-part="sort-button" variant="ghost" size="sm" inline>` inside a `sortable` column's `<th>` (the APG sortable-table shape, ADR-0163 cl.3; amended GH #1445 — was a real, stamped `<button>`). Activation cycles ascending→descending on that column (a different column starts fresh at ascending) and commits `change`. A non-sortable column's `<th>` carries plain text instead — byte-identical to the pre-widening baseline.
   - name: tbody
     description: The real `<tbody>` holding one `<tr>` of `<td>` per PAGED row × column (SPEC-R2 AC1; ADR-0163 cl.7 — the view pipeline's final stage), plus a leading selection `<td>` when `selectable` is active. Rebuilt (whole-array swap) by the VIEW effect whenever `columns`/`rows`/`selectable`/`rowKey`/`selected`/`filter`/`search`/`sort`/`pageSize`/`page` changes; `scroll`/`table`/`thead` are untouched by this rebuild (SPEC-R4.2/R4.3). Focus on a stamped `select` input is captured before and restored after the rebuild by row identity, when it still exists (cl.10/SPEC-R4.5).
   - name: select-cell
     description: The leading `<td data-part="select-cell">` stamped per row when `selectable` is active, holding the `select` input.
   - name: select
-    description: The real `<input type="checkbox">` (`selectable='multi'`) or `<input type="radio">` (`selectable='single'`, one shared `name` per table instance) per row — ADR-0163 cl.3's sanctioned "no native form elements" exception. `data-row-id` carries the row's selection identity (cl.4) — the focus-restoration anchor. `aria-label` names the row via its first column's rendered text when available. A click toggles `selected` and commits `select`.
+    description: A composed `<ui-checkbox data-part="select" inline>` (`selectable='multi'`) or `<ui-radio data-part="select" inline>` (`selectable='single'`) per row — ADR-0163 amendment (GH #1445): was a real `<input type="checkbox|radio">`, one shared `name` per table instance; ZERO native-form-element exceptions remain fleet-wide. `data-row-id` carries the row's selection identity (cl.4) — the focus-restoration anchor. `aria-label` names the row via its first column's rendered text when available. A click toggles `selected` and commits `select`; for `single`, a table-owned capture-phase click guard (`connected()`) blocks a click from un-checking an already-selected radio (the invariant a native `name`-group provided for free).
   - name: footer
     description: The `<div data-part="footer">` — a SIBLING of `scroll` (OUTSIDE the scroll container, cl.6), built once and attached to the host ONLY while `pageSize > 0`; never destroyed once created (the `table`/empty-columns attach-detach precedent, applied here). Holds the `pagination` part.
   - name: pagination
@@ -152,11 +154,11 @@ aria:
   roleSource: native-table # header association / th scope / SR table navigation come from the PLATFORM, not internals
   labelSource: caption     # the real <caption> (from `label`) is the table's accessible name — never a host aria-label
   interiorRegion: The `[data-part='scroll']` container carries `role="region" tabindex="0"` + `aria-labelledby` (the caption's id, when present) — the WAI-ARIA APG accessible-overflow pattern on an INTERIOR node (the Option/MenuItem interior-attribute sanction; only HOST aria rides internals, SPEC-R5 AC2).
-  selectionSource: The native checkbox/radio CHECKED state IS the announced selection (ADR-0163 cl.3) — no `aria-selected` on rows (rejected; selection-widget vocabulary ATs do not convey on plain-table rows).
+  selectionSource: The composed ui-checkbox/ui-radio's OWN `ariaChecked` (via internals) IS the announced selection (ADR-0163 cl.3, amended GH #1445 — the identical signal a native input's AX mapping produced, now FACE-sourced) — no `aria-selected` on rows (rejected; selection-widget vocabulary ATs do not convey on plain-table rows).
 
 keyboard:
-  - note: Every interactive part (a `select` checkbox/radio, the `select-all` checkbox, a `sort-button`) is a REAL native/stamped element in the NORMAL tab order (ADR-0163 cl.3 — the APG's own "all focusable elements contained in a table are included in the page tab sequence"). NO roving tabindex, NO composite-widget keyboard contract, NO `UIListboxElement` — this is deliberately NOT a composite widget. A 50-row selectable table has 50 checkbox tab stops, native-honest, same as a form of 50 checkboxes.
-  - note: Each `select`/`select-all` input activates via the platform's own native Space toggle; each `sort-button` activates via the platform's own native Space/Enter button activation. No component-defined key binding is added for any of these — they are real elements, not simulated widgets.
+  - note: Every interactive part (a composed `select` ui-checkbox/ui-radio, the composed `select-all` ui-checkbox, a composed `sort-button` ui-button) is a real focusable FACE control in the NORMAL tab order (ADR-0163 cl.3 — the APG's own "all focusable elements contained in a table are included in the page tab sequence"; amended GH #1445 — each part was a real native `<input>`/`<button>` pre-amendment, now a composed control carrying the SAME tab-stop/keyboard contract via its own `tabbable`/`pressActivation` traits). NO roving tabindex, NO composite-widget keyboard contract, NO `UIListboxElement` — this is deliberately NOT a composite widget. A 50-row selectable table has 50 checkbox tab stops, native-honest, same as a form of 50 checkboxes.
+  - note: Each `select`/`select-all` composed control activates via its own native-parity Space toggle (`pressActivation`, indicator-element.ts); each `sort-button` composed `ui-button` activates via its own native-parity Space/Enter activation (`pressActivation`, button.ts). No component-defined key binding is added for any of these — they are real FACE controls, not simulated widgets. For `selectable='single'`, `ui-table` additionally installs its OWN capture-phase click guard (`connected()`) so a click cannot uncheck the sole selected radio — the one keyboard/pointer-contract addition this control makes, replacing the native `name`-group's platform-provided guarantee.
   - note: the scroll region's `tabindex="0"` makes it a native tab stop + native-scrollable target (arrow keys / Page Up-Down scroll it in engines with keyboard-focusable scrollers) — this is PLATFORM behavior, not a component-defined binding.
   - note: A non-interactive table cell/row (every cell when `selectable=''`, and every non-select/non-sort cell always) is never focusable and carries no keyboard contract of its own.
 
@@ -165,9 +167,9 @@ geometry:
   minInlineSize: var(--ui-table-min-inline-size)  # 16em default — the whole-shape floor (SPEC-R14/R17 AC1); NO [size] ramp, NO --md-sys-height-*
   cellPadInline: var(--ui-table-cell-pad-inline)  # rhythm — rides [density] for free (ADR-0103)
   cellPadBlock: var(--ui-table-cell-pad-block)
-  note: The stamped selection inputs/sort buttons/footer pagination each carry their OWN geometry (native input sizing; the composed `ui-pagination`'s own §1 control-height buttons) — this control mints no new geometry row of its own for them (ADR-0163 cl.6's "the novelty is zero", applied fleet-wide to every stamped interactive part here).
+  note: The composed selection controls/sort buttons/footer pagination each carry their OWN geometry end to end (`ui-checkbox`/`ui-radio`'s widget-box sizing, `ui-button`'s control-height ramp, `ui-pagination`'s own §1 control-height buttons; ADR-0163 amendment GH #1445 — every one now a real FACE control, not a bare native element) — this control mints no new geometry row of its own for them (ADR-0163 cl.6's "the novelty is zero", applied fleet-wide to every composed interactive part here).
 
-forcedColors: No dedicated `@media (forced-colors: active)` block — every row/header separator is a real `border` (repainted in system inks, never removed under `forced-colors: active`, unlike a background-drawn mark); all content is real text. The stamped native `<input>` selection cells carry their own UA forced-colors treatment, unstyled by this file. The stamped sort `<button>` is styled DIFFERENTLY (verified, not merely intended): `table.css`'s `all: unset` reset strips its native UA button chrome, so under forced-colors it has no background/border of its own to lose — it survives as real, inherited (`color: inherit`) header text plus a real `:focus-visible` outline on the shared focus-ring token (which itself already maps to `Highlight` under forced-colors).
+forcedColors: No dedicated `@media (forced-colors: active)` block — every row/header separator is a real `border` (repainted in system inks, never removed under `forced-colors: active`, unlike a background-drawn mark); all content is real text. The composed `ui-checkbox`/`ui-radio` selection cells and `ui-button` sort trigger each carry their OWN forced-colors treatment from their own stylesheet (checkbox.css/radio.css/button.css each ship a `@media (forced-colors: active)` block) — this file adds no reset of its own (ADR-0163 amendment, GH #1445 — the pre-amendment native `<button>`'s `all: unset`-then-repaint rule is retired along with the native element it painted).
 ---
 
 # ui-table
@@ -220,20 +222,28 @@ rather than dropping the column. `columns: []`/absent/malformed-JSON ⇒ **no ta
 empty scroll container; the host box still paints via the `min-inline-size` floor); valid columns with zero
 rows render the caption + header with an honest empty `<tbody>`.
 
-## Selection (ADR-0163 cl.4)
+## Selection (ADR-0163 cl.4, amended GH #1445)
 
-`selectable='multi'` stamps a leading checkbox column plus a header select-all checkbox (indeterminate when
-the MATCHING SET — see below — is partially selected); `selectable='single'` stamps a leading radio column
-(one shared `name`). Selection identity is the `row-key`-named column's cell value (String-coerced), or —
-absent `row-key` — the row's data-order index (stable across a view transform, fragile across a `rows`
-swap). `selected: string[]` is bindable; a real checkbox/radio click commits `select` — a programmatic
-`selected` write never does (the fleet commit law). Selected rows carry `data-selected` for CSS. Selection
-is held against the **whole** rendered set: a filtered-out selected row stays selected, just not visible.
+`selectable='multi'` stamps a leading **composed `ui-checkbox`** column plus a header composed `ui-checkbox`
+select-all (indeterminate when the MATCHING SET — see below — is partially selected); `selectable='single'`
+stamps a leading **composed `ui-radio`** column. (Pre-amendment this was a real, stamped
+`<input type="checkbox"|"radio">` sharing one `name` — ADR-0163's amendment retires that, the fleet's last
+"no native form elements" exception; ZERO exceptions remain fleet-wide.) Every composed selection control
+carries the reflected `inline` attribute (ADR-0223 cl.2) so it hugs its cell instead of filling the `<th>`/
+`<td>`'s block formatting context. Selection identity is the `row-key`-named column's cell value
+(String-coerced), or — absent `row-key` — the row's data-order index (stable across a view transform,
+fragile across a `rows` swap). `selected: string[]` is bindable; a real click commits `select` — a
+programmatic `selected` write never does (the fleet commit law). For `selectable='single'`, `ui-table`
+installs its own capture-phase click guard so a click cannot un-check the sole selected radio — the
+"can't self-uncheck" invariant a native `name`-group provided for free, reproduced here because `ui-radio`
+carries no native grouping. Selected rows carry `data-selected` for CSS. Selection is held against the
+**whole** rendered set: a filtered-out selected row stays selected, just not visible.
 
-## Sort (ADR-0163 cl.5)
+## Sort (ADR-0163 cl.5, amended GH #1445)
 
-Opt in per column: `columns[].sortable: true` wraps that column's header label in a real, stamped
-`<button>` (the APG sortable-table shape). Activation cycles ascending → descending on the SAME column;
+Opt in per column: `columns[].sortable: true` wraps that column's header label in a **composed `ui-button`**
+(`variant="ghost"`, `size="sm"`, `inline`; the APG sortable-table shape — pre-amendment this was a real,
+stamped `<button>` reset via `all: unset`). Activation cycles ascending → descending on the SAME column;
 activating a DIFFERENT sortable column starts fresh at ascending. `aria-sort` rides the one currently-sorted
 `<th>` only. `sort: {key, direction} | null` is bindable; a header-button click commits `change`. The
 client-side comparator (`table-model.ts`'s `makeRowComparator`): number columns compare numerically, every
@@ -297,13 +307,14 @@ host mints **no** ARIA at all — no `role`, no `aria-label` — the `<caption>`
 accessible name. The interior scroll container additionally carries `role="region" tabindex="0"` (+
 `aria-labelledby` the caption when present) — the WAI-ARIA APG accessible-overflow pattern, so keyboard-only
 users can reach overflowed columns even in engines without keyboard-focusable scrollers by default. This is
-platform scroll affordance, not a component-defined keyboard contract. Every interactive part (a selection
-input, the select-all checkbox, a sort button) is a REAL native or stamped element in the **normal tab
-order** — no roving tabindex, no composite-widget keyboard contract, no `UIListboxElement`; selection state
-is conveyed ONLY by the native checkbox/radio checked state — **never `aria-selected` on rows** (rejected —
-selection-widget vocabulary ATs do not convey it on plain-table rows). An unlabeled table (`label` absent)
-yields an unnamed scroll region — an accepted residual, not a violation; provide `label` when the table
-needs an accessible name.
+platform scroll affordance, not a component-defined keyboard contract. Every interactive part (a composed
+`ui-checkbox`/`ui-radio` selection control, the composed `ui-checkbox` select-all, a composed `ui-button`
+sort trigger — ADR-0163 amendment, GH #1445; pre-amendment each was a real native `<input>`/`<button>`) is
+a real, focusable FACE control in the **normal tab order** — no roving tabindex, no composite-widget
+keyboard contract, no `UIListboxElement`; selection state is conveyed ONLY by the composed control's OWN
+`ariaChecked` (via internals) — **never `aria-selected` on rows** (rejected — selection-widget vocabulary
+ATs do not convey it on plain-table rows). An unlabeled table (`label` absent) yields an unnamed scroll
+region — an accepted residual, not a violation; provide `label` when the table needs an accessible name.
 
 ## Sizing
 
@@ -323,8 +334,7 @@ alignment to the physical left.
 
 No dedicated override block: every row/header separator is a real `border`, which forced-colors repaints in
 system inks and never removes (unlike a background-drawn mark); all cell/caption content is real text and
-survives untouched. The stamped native `<input>` selection cells carry their own UA forced-colors treatment.
-The stamped sort `<button>` is reset (`all: unset`, `table.css`) to read as part of the header rather than a
-raw UA control — under forced-colors it has no background/border of its own to lose, surviving as real,
-inherited header text plus a real `:focus-visible` outline on the shared focus-ring token (itself already
-`Highlight` under forced-colors).
+survives untouched. The composed `ui-checkbox`/`ui-radio` selection cells and the composed `ui-button` sort
+trigger each carry their OWN forced-colors treatment from their own stylesheet (ADR-0163 amendment, GH
+#1445) — `table.css` adds no reset of its own for any of them; the pre-amendment native `<button>`'s
+`all: unset`-then-repaint rule retired along with the native element it painted.
