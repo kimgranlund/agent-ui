@@ -92,6 +92,15 @@ export { crudEntryListDrawerSeed, crudEntryListSeeds } from './crud-entry-list.t
 // a Timeline plan snapshot beside one ADR-0097 commit-gated approve ask, per-step Checkbox opt-outs,
 // then per-turn updateDataModel progress advance.
 export { planAndExecutePlanSeed, planAndExecuteApproveAskSeed, planAndExecuteSeeds } from './plan-and-execute.ts'
+// GH #1377 — the commerce+hospitality genui-pack: product-presentation (flagship, judged+admitted),
+// variant-picker + quantity (product-options-quantity), and media-grid (listing-photo-grid) —
+// admission pending the judged wave for the latter two (disposition-allowlist.ts).
+export {
+  commerceProductCardSeed,
+  productOptionsQuantitySeed,
+  listingPhotoGridSeed,
+  commerceHospitalitySeeds,
+} from './commerce-hospitality.ts'
 
 import type { ExampleSeed } from './types.ts'
 import { canvasSeeds } from './canvas-button.ts'
@@ -108,6 +117,7 @@ import { compositionPackASeeds } from './composition-pack-a.ts'
 import { compositionPackBSeeds } from './composition-pack-b.ts'
 import { crudEntryListSeeds } from './crud-entry-list.ts'
 import { planAndExecuteSeeds } from './plan-and-execute.ts'
+import { commerceHospitalitySeeds } from './commerce-hospitality.ts'
 
 /** Every seed on the shelf — the standing gate's (`examples.test.ts`) iteration surface. Composed from
  *  each module's own family array, so the total is always derived, never a separately-maintained count. */
@@ -126,4 +136,5 @@ export const allSeeds: readonly ExampleSeed[] = [
   ...compositionPackBSeeds,
   ...crudEntryListSeeds,
   ...planAndExecuteSeeds,
+  ...commerceHospitalitySeeds,
 ]

@@ -206,6 +206,116 @@ multi-paragraph prose into one `Text` node.
 Real: `examples/catalog-coverage.ts:258` (`document-row-toolbar` seed's `tip_wrap`, the plain-caption shape);
 the structured variant mirrors `app/src/controls/agent-admin/admin-help.ts`'s DOM card (title/summary/body/facts).
 
+## Product-presentation card — Card + Image + Stat + Badge (GH #1377)
+A commerce/hospitality catalog-grid tile: hero `Image` as `Card`'s own child (media, NOT identity — it
+never nests inside `CardHeader`), `CardHeader` carrying the identity row (title `Text` + a status `Badge`,
+`slot:"trailing"`), `CardContent` carrying a `Row` of `Stat` tiles (the quantified metrics — price,
+rating), `CardFooter` carrying the ONE commit `Button` (card-anatomy law, req-a2ui-patterns.md R1).
+**A slotted Badge MUST be CardHeader's own DIRECT child** — `format:"structured"` — never nested inside
+a `Row` a level down: the header's `[slot="trailing"]` placement is a direct-child CSS grid
+(`card.css`'s `:has(> [slot='trailing'])`), so a `Row`-wrapped Badge one level deeper renders inert (the
+`commerce-product-card` seed's own first-pass defect, caught by the ADR-0068 judge and repaired at
+source — `structured-container.ts:41-45`'s `CardHeader(format:'structured') > [Icon(slot leading),
+Text, Badge(slot trailing)]` shape is the one to copy).
+**Routing — the metric-AND-flag test**: reach for this idiom ONLY when the tile ALSO carries a quantified
+metric (price/rating/stock) AND a status flag (Sale/New/Popular). A photo+title+one-button listing with
+NEITHER wants the plainer `Card > Image > CardContent > CardFooter` shape instead — no `Stat`, no
+`Badge` — the `frontier-image-hero-card` seed's shape (`catalog-frontier.ts:346-378`); adding an empty
+Stat/Badge row to a single-fact card is over-decoration, not fidelity. Badge `intent` stays `neutral`/
+`info` for a promo flag — the fleet has no danger tone (Button card, above).
+```json
+{ "id": "root", "component": "Card", "elevation": "1", "children": ["hero", "head", "content", "foot"] }
+{ "id": "hero", "component": "Image", "src": { "path": "/listing/photo" }, "alt": "…", "aspect": "16/9", "usageHint": "hero" }
+{ "id": "head", "component": "CardHeader", "format": "structured", "children": ["head_title", "head_badge"] }
+{ "id": "head_badge", "component": "Badge", "label": { "path": "/listing/badge" }, "intent": "info", "slot": "trailing" }
+{ "id": "content", "component": "CardContent", "children": ["stats_row"] }
+{ "id": "stats_row", "component": "Row", "gap": "lg", "children": ["stat_price", "stat_rating"] }
+{ "id": "stat_price", "component": "Stat", "label": "Price", "value": { "path": "/listing/price" } }
+```
+Real: `examples/commerce-hospitality.ts:66-75` (`commerce-product-card`, the flagship judged corpus seed).
+
+## Feature-collection — DescriptionList vs Table (GH #1377)
+Presenting a set of named facts. ONE entity's own spec sheet (material, dimensions, warranty) is a
+`DescriptionList` — `rows` bound to `{label,value}[]`, no per-column alignment needed. Comparing the
+SAME facts across MULTIPLE entities, scanned exact-value by row, is a `Table` — `columns`+`rows` both
+bound (the catalog SPEC §5.2 Notes guidance the `comparison-pricing-table` seed already proves,
+`high-frequency-patterns.ts:66-75`). **Boundary**: never use `DescriptionList` to compare many items (it
+has no columns to align facts across); never use a one-row `Table` for a single item's own facts (a
+`DescriptionList` teaches the same content with less chrome). This card is the bare single-purpose
+primitive choice; see "Comparison-table" below for the higher-order Stat-tiles-plus-Table composition —
+that idiom is deliberately MORE than a bare fact list.
+```json
+{ "id": "specs", "component": "DescriptionList", "rows": { "path": "/product/specs" } }
+```
+Real: `examples/catalog-frontier.ts:320` (`frontier-booking-receipt`, DescriptionList),
+`examples/high-frequency-patterns.ts:67-75` (`comparison-pricing-table`, Table).
+
+## Variant-picker — SegmentedControl vs Select (GH #1377)
+Picking one option from a closed set (size, color, plan tier). `catalog.json` — SegmentedControl:
+`value:{prop:"value",event:"change"}`, `children:"ChildList"` of `Segment` (`value` plain, `label`
+bindable → `textContent`). ≤3 members with SHORT (≤5-char) labels that fit one row → `SegmentedControl`,
+Field-wrapped, always-visible, no open/close state — `booking-reservation`'s room-type picker proves it
+(`catalog-coverage.ts:135-141`; the site's own `fitsSegmented()` knob-selection rule names the identical
+≤3/≤5-char threshold, `component-preview.ts`). More members, or labels too long for one row → `Select` +
+`Option` (node-idioms.md's own Select card, above) — ship Select and its Options in ONE message for exact
+panel order. **Boundary**: never SegmentedControl a >3-member or long-label set (it wraps or truncates);
+never Select a 2-3-member always-visible choice (it hides options behind a closed dropdown for no reason).
+```json
+{ "id": "f_size", "component": "Field", "label": "Size", "child": "seg_size" }
+{ "id": "seg_size", "component": "SegmentedControl", "name": "size", "value": { "path": "/product/size" }, "children": ["seg_s", "seg_m", "seg_l"] }
+{ "id": "seg_s", "component": "Segment", "value": "s", "label": "S" }
+```
+Real: `examples/catalog-coverage.ts:135-141` (`booking-reservation`), `examples/commerce-hospitality.ts:125-132` (`product-options-quantity`).
+
+## Quantity — number TextField (no stepper minted) (GH #1377)
+A numeric quantity input. Until/unless a dedicated Stepper control is minted (a fleet gap — this idiom's
+job is to recipe the CURRENT catalog, not to fill that gap), the shape is a Field-wrapped `TextField`:
+`type:"number"`, `min` (string), `step` (number, `mapsTo:"step"`), `value` bound to the quantity path.
+`Field`'s `label` names it — never a bare unlabeled TextField (the Field card's own ADR-0051 rule, above).
+Pair with a `FormProvider` only when the quantity BLOCKS a submit (e.g. must be ≥1 to add-to-cart); a
+display-only or always-valid quantity needs no provider. **Boundary**: do not reach for a Select/
+SegmentedControl of numbers as a stand-in stepper — `TextField type:"number"` is the catalog's only
+numeric-entry primitive today; that absence is a named, deferred fleet gap, not silently worked around.
+```json
+{ "id": "f_qty", "component": "Field", "label": "Quantity", "child": "qty_field" }
+{ "id": "qty_field", "component": "TextField", "name": "qty", "type": "number", "min": "1", "step": 1, "value": { "path": "/product/qty" } }
+```
+Real: `examples/commerce-hospitality.ts:133-137` (`product-options-quantity`).
+
+## Media-grid — Grid of Image tiles, a photo gallery (GH #1377)
+A photo/image gallery — every tile is genuinely an image meant to be viewed, not a file. `Grid` (`gap`,
+`min` sizing the track) whose `children` is a `{path,componentId}` template over the photo list; each
+tile is a bare `Image` (`usageHint:"thumb"`, `fit:"cover"`, one shared `aspect`, `alt` bound per item —
+the Image card's own required-alt rule, above). **Boundary vs `media-file-grid`** (`high-frequency-
+patterns.ts:236-274`): that idiom templates `Attachment` tiles for HETEROGENEOUS files (images+PDF+video)
+needing type-aware chrome (name/size/icon) — reach for it when content isn't guaranteed to be a viewable
+photo. Reach for THIS idiom when every item IS a photo to browse (a listing's photo set); burying a real
+photo behind `Attachment`'s file-icon chrome loses the photo. For a one-at-a-time PAGED sequence instead
+of a grid, use the `Swiper`/`SwiperItem` slideshow idiom (`composition-pack-a.ts`'s `slideshow-gallery`
+seed), not `Grid`.
+```json
+{ "id": "root", "component": "Grid", "gap": "md", "min": "10rem", "children": { "path": "/listing/photos", "componentId": "photo_tile" } }
+{ "id": "photo_tile", "component": "Image", "src": { "path": "url" }, "alt": { "path": "caption" }, "aspect": "1/1", "usageHint": "thumb", "fit": "cover" }
+```
+Real: `examples/commerce-hospitality.ts:185-188` (`listing-photo-grid`); contrast `examples/high-frequency-patterns.ts:265-269` (`media-file-grid`, Attachment tiles).
+
+## Comparison-table — Stat tiles above a shared Table (GH #1377)
+Side-by-side plan/product comparison: a `Grid` of headline `Stat` tiles (one `Card` per option, `label`+
+`value` — price or the option's own quantified pitch) ABOVE one shared `Table` whose `columns` are the
+options and whose `rows` are features, cell values the exact per-option answer — this is `comparison-
+pricing-table`'s own proven shape (`high-frequency-patterns.ts:54-75`), named here as its own idiom. This
+is Stat-tiles-PLUS-Table together as ONE composed card — never "feature-collection"'s bare single-purpose
+Table above (that card has no headline metrics row), and never "product-presentation"'s per-item
+Card+Image+Badge tile (comparison strips the photo/Badge chrome entirely; it is about scanning facts
+across options, not browsing one item). Keep the Stat row and the Table under one `Card`/`CardContent` so
+they read as one comparison, not two unrelated blocks.
+```json
+{ "id": "plans_grid", "component": "Grid", "gap": "md", "min": "10rem", "children": { "path": "/plans", "componentId": "plan_tile" } }
+{ "id": "plan_stat", "component": "Stat", "label": { "path": "name" }, "value": { "path": "price" } }
+{ "id": "features_table", "component": "Table", "columns": [{ "key": "feature", "label": "Feature" }], "rows": { "path": "/features" } }
+```
+Real: `examples/high-frequency-patterns.ts:54-75` (`comparison-pricing-table`).
+
 ---
 
 ## Catalog functions (for `checks` and `callFunction`)

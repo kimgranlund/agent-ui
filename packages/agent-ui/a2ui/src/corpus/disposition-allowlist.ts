@@ -22,20 +22,15 @@
 // here. Beyond that, an entry is optional prose, worth it only to carry what a verdict cannot — a coverage
 // argument, a repair path.
 //
-// **The map was EMPTY as of 2026-08-18 — legitimately, and returns to empty as its steady state.** Every
-// seed on the shelf that day was admitted to the store (the 2026-08-18 judged waves admitted the pending
-// backlog and backable-wizard post-repair), and the two standing refusals that were KEPT pending repair —
-// `stats-grid-dashboard` · `wizard-step-progress` — were DROPPED from the shelf per Kim's 2026-08-18
-// ruling (the REV's drop path; their drained entries survive as the dated comments below). An empty map
-// is the healthy steady state this file's own contract predicts: refusals leave the shelf, admissions
-// delete their entries, and only a smoke seed that seeks no verdict or a kept-pending-repair refusal ever
-// puts an entry back — GH #1353's `frontier-drill-settings` (below) is exactly that category-1 shape,
-// added 2026-08-19 alongside the Drill/DrillPanel catalog rows. The map stays wired into both consumers
-// regardless — the next entry needs a home, not a revival PR.
-// puts an entry back — GH #1352's `frontier-pane-switcher` was exactly that category-1 shape (added
-// 2026-08-19 with the Toggle row, judged PASS 4/5 + admitted the same day, entry drained — the dated
-// comment below is its record). The map stays wired into both consumers regardless —
-// the next entry needs a home, not a revival PR.
+// **The map held zero LIVE entries through 2026-08-18** — every seed on the shelf as of that date was
+// admitted to the store (the 2026-08-18 judged waves admitted the pending backlog and backable-wizard
+// post-repair), and the two standing refusals that were KEPT pending repair — `stats-grid-dashboard` ·
+// `wizard-step-progress` — were DROPPED from the shelf per Kim's 2026-08-18 ruling (the REV's drop path;
+// their drained entries survive as the dated comments below). GH #1377 (2026-08-19) put two live entries
+// back — `product-options-quantity` · `listing-photo-grid`, category 1's NO-VERDICT-SOUGHT-YET shape —
+// the healthy steady state still holds: refusals leave the shelf, admissions delete their entries, and
+// only a smoke seed that seeks no verdict or a kept-pending-repair refusal ever puts (or keeps) an entry.
+// The map stays wired into both consumers regardless — the next entry needs a home, not a revival PR.
 //
 // Pure, zero-dep, platform-neutral (SPEC-N5/ADR-0062) so both readers share the one map: the standing
 // coverage gate (`admission-coverage.test.ts`) and the import tool's unjudged-run guard
@@ -165,4 +160,20 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // row, Kim ruling 2026-08-19); judged by a fresh-context a2ui-review-agent (PASS, qualityScore 4,
   // verdicts archived 2026-08-19t15-30-00z) and admitted via import-seeds --verdicts the same day — entry
   // DRAINED per its own instruction (ADR-0068: never self-judged).
+  // GH #1377 (2026-08-19) — the commerce+hospitality genui-pack: `product-options-quantity` (variant-
+  // picker SegmentedControl + quantity number-TextField, Field-wrapped, FormProvider-gated) and
+  // `listing-photo-grid` (media-grid — a Grid of bare Image tiles, distinct from media-file-grid's
+  // Attachment-tile idiom). The same pending-state shape (NO VERDICT SOUGHT YET, not a refusal) —
+  // the ticket's own scope names ONE judged corpus seed this wave (the flagship
+  // `commerce-product-card`, admitted separately, no allowlist entry). Run the judged pipeline and
+  // DELETE these two entries when that wave lands.
+  // `listing-photo-grid` — judged by a fresh-context a2ui-review-agent (PASS, qualityScore 4, verdicts
+  // archived 2026-08-19t17-10-00z) and admitted via import-seeds --verdicts the same day — entry DRAINED
+  // per its own instruction (ADR-0068: never self-judged).
+  // `product-options-quantity` — judged FAIL 2/5 (D1: inert FormProvider gate beside the CardFooter;
+  // D2: description overclaim) 2026-08-19t17-10-00z, repaired at source the same day (FormProvider-as-
+  // root, the generative-form/booking-reservation shape; CardHeader title; required qty), rejudged by a
+  // second fresh-context a2ui-review-agent (PASS, qualityScore 4, archived 2026-08-19t17-40-00z) and
+  // admitted via import-seeds --verdicts — entry DRAINED per its own instruction (ADR-0068: never
+  // self-judged).
 ])

@@ -107,12 +107,13 @@ describe('parseArgs — GH #335 defect 2 (unrecognized argv must hard-error, not
 })
 
 // The allowlist input is SYNTHETIC here (the guard's injectable `allowlist` parameter — the
-// `admission-coverage.test.ts` pure-predicate precedent): since 2026-08-18 the real
-// `DISPOSITION_ALLOWLIST` is legitimately EMPTY (every shelf seed admitted; the two standing refusals
+// `admission-coverage.test.ts` pure-predicate precedent): between 2026-08-18 and GH #1377 the real
+// `DISPOSITION_ALLOWLIST` was legitimately EMPTY (every shelf seed admitted; the two standing refusals
 // — `stats-grid-dashboard`, the original GH #335 repro name, and `wizard-step-progress` — DROPPED per
-// the ADR-0165 drop path, their entries drained), so no real name can exercise the allowlist leg. The
-// leg stays load-bearing regardless — the next kept-pending-repair refusal or smoke seed re-populates
-// the map — so its coverage lives here on planted entries.
+// the ADR-0165 drop path, their entries drained). GH #1377 (2026-08-19) put two live entries back
+// (`product-options-quantity` · `listing-photo-grid`, the NO-VERDICT-SOUGHT-YET category), so the guard
+// now has REAL names to exercise too (below) — the PLANTED fixture stays the primary coverage surface
+// regardless (a synthetic name that can never collide with a real future seed).
 const PLANTED_ALLOWLIST = new Map<string, string>([
   ['planted-refused-seed', 'curated planted prose — judged E_QUALITY, KEPT on the shelf pending repair (synthetic fixture)'],
 ])
@@ -451,6 +452,13 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     // before the judge is reached): rejected here too, keeping these archive-mechanics tests at zero
     // admissions rather than needing a real quality judgment.
     'crud-entry-list-drawer': { passed: false, qualityScore: 2 },
+    // GH #1377 — the commerce+hospitality genui-pack's three new seeds; refused here for the same
+    // "keeps any such run at zero admissions while still reaching saveStore" reason as every row above
+    // (the flagship `commerce-product-card` is judged+admitted separately, via a real passing verdict —
+    // this fixture only needs it refused so this describe's zero-admission runs stay zero).
+    'commerce-product-card': { passed: false, qualityScore: 2 },
+    'product-options-quantity': { passed: false, qualityScore: 2 },
+    'listing-photo-grid': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {
@@ -715,6 +723,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     expect(result.stdout).toMatch(new RegExp(`${allSeeds.length} admitted`))
     expect(existsSync(join(sandbox, SHARD)), 'the run reached saveStore and minted the shard').toBe(true)
   })
+
 
   // ── GH #1346 — the fail-closed judge-tier guard, proven on the same sandbox harness. A bare (no
   // --verdicts) run used to tier-1-admit ANY candidate that cleared dedup and WRITE the corpus —

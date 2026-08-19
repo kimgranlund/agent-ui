@@ -1,0 +1,9 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.2",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-08-19T14:20:40Z",
+  "verdicts": {
+    "commerce-product-card": { "qualityScore": 4, "passed": true, "failingDimensions": [] }
+  }
+}

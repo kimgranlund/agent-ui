@@ -44,6 +44,14 @@ import settingsScreen from '../../../src/agent/prompts/mini-skills/settings-scre
 import tableToolbarPagination from '../../../src/agent/prompts/mini-skills/table-toolbar-pagination.md'
 // GH #808 S4 (a2ui-container-vocabulary.spec.md SPEC-R8) — the structured-container taught tier.
 import structuredContainer from '../../../src/agent/prompts/mini-skills/structured-container.md'
+// GH #1377 — the commerce+hospitality genui-pack: six composed idioms (product-presentation ·
+// feature-collection · variant-picker · quantity · media-grid · comparison-table).
+import productPresentation from '../../../src/agent/prompts/mini-skills/product-presentation.md'
+import featureCollection from '../../../src/agent/prompts/mini-skills/feature-collection.md'
+import variantPicker from '../../../src/agent/prompts/mini-skills/variant-picker.md'
+import quantity from '../../../src/agent/prompts/mini-skills/quantity.md'
+import mediaGrid from '../../../src/agent/prompts/mini-skills/media-grid.md'
+import comparisonTable from '../../../src/agent/prompts/mini-skills/comparison-table.md'
 
 // genui-surface.spec.md SPEC-R9 — the third Node-only readFileSync/readdirSync call site
 // (`prompts/genui-packs.ts`), backed the SAME way as the mini-skills registry above.
@@ -85,6 +93,12 @@ export const FILES: Record<string, string> = {
   [`${MINI_SKILLS_PATH}/nested-record-editor.md`]: nestedRecordEditor,
   [`${MINI_SKILLS_PATH}/settings-screen.md`]: settingsScreen,
   [`${MINI_SKILLS_PATH}/structured-container.md`]: structuredContainer,
+  [`${MINI_SKILLS_PATH}/product-presentation.md`]: productPresentation,
+  [`${MINI_SKILLS_PATH}/feature-collection.md`]: featureCollection,
+  [`${MINI_SKILLS_PATH}/variant-picker.md`]: variantPicker,
+  [`${MINI_SKILLS_PATH}/quantity.md`]: quantity,
+  [`${MINI_SKILLS_PATH}/media-grid.md`]: mediaGrid,
+  [`${MINI_SKILLS_PATH}/comparison-table.md`]: comparisonTable,
   [`${MINI_SKILLS_PATH}/table-toolbar-pagination.md`]: tableToolbarPagination,
 }
 
@@ -105,6 +119,12 @@ export const DIRS: Record<string, string[]> = {
     'nested-record-editor.md',
     'settings-screen.md',
     'structured-container.md',
+    'product-presentation.md',
+    'feature-collection.md',
+    'variant-picker.md',
+    'quantity.md',
+    'media-grid.md',
+    'comparison-table.md',
     'table-toolbar-pagination.md',
   ],
   // genui-surface.spec.md SPEC-R9 — `genui-packs.ts`'s own readdirSync target.

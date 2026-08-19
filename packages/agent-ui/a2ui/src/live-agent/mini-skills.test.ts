@@ -67,7 +67,6 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
   it('seeds the GH #1355 twelfth-fourteenth modules — crud-entry-list · table-toolbar-pagination · nested-record-editor', () => {
     const ids = MINI_SKILLS.map((m) => m.id)
     expect(ids).toEqual(expect.arrayContaining(['crud-entry-list', 'table-toolbar-pagination', 'nested-record-editor']))
-    expect(MINI_SKILLS).toHaveLength(14)
   })
 
   it('no registry body embeds A2UI JSONL (a pure-prose module needs only doc-review, ADR-0091 §4)', () => {
@@ -78,8 +77,28 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
 
   // SPEC-R6 AC1 (`persona-catalog-composition.spec.md`, ADR-0172 cl.3) — every shipped module's
   // frontmatter carries the catalog whose vocabulary its body hardcodes.
-  it('SPEC-R6 AC1 — every one of the fourteen shipped modules carries catalogId: \'agent-ui\'', () => {
-    expect(MINI_SKILLS).toHaveLength(14)
+  // GH #1377 (the commerce+hospitality genui-pack) — six more modules, taking the merged registry to
+  // twenty (with the GH #1355 trio): `product-presentation` (flagship), `feature-collection`, `variant-picker`, `quantity`,
+  // `media-grid`, `comparison-table`. The seventh idiom named at intake — feature-details (Drill+
+  // DescriptionList) — is BLOCKED on PR #1364 minting the Drill/DrillPanel catalog rows and is not
+  // taught here.
+  it('seeds the GH #1377 fifteenth-twentieth modules — product-presentation · feature-collection · variant-picker · quantity · media-grid · comparison-table', () => {
+    const ids = MINI_SKILLS.map((m) => m.id)
+    expect(ids).toEqual(
+      expect.arrayContaining([
+        'product-presentation',
+        'feature-collection',
+        'variant-picker',
+        'quantity',
+        'media-grid',
+        'comparison-table',
+      ]),
+    )
+    expect(MINI_SKILLS).toHaveLength(20)
+  })
+
+  it('SPEC-R6 AC1 — every one of the twenty shipped modules carries catalogId: \'agent-ui\'', () => {
+    expect(MINI_SKILLS).toHaveLength(20)
     for (const skill of MINI_SKILLS) expect(skill.catalogId, skill.id).toBe('agent-ui')
   })
 })
@@ -422,3 +441,114 @@ describe('nested-record-editor — the GH #1355 parent-record + member-sub-list 
     expect(skill.body).toMatch(/the flat CRUD entry-list/)
   })
 })
+
+// GH #1377 (the commerce+hospitality genui-pack) — six modules teaching product-presentation,
+// feature-collection, variant-picker, quantity, media-grid, and comparison-table composed idioms.
+describe('product-presentation — the GH #1377 flagship product/listing card module', () => {
+  it('fires on a product-card-with-price intent', () => {
+    const result = selectMiniSkills('show this as a product card with its price, a sale badge, and a rating', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).toContain('product-presentation')
+  })
+
+  it('does NOT fire on an unrelated intent', () => {
+    const result = selectMiniSkills('show me the weather forecast for tomorrow', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).not.toContain('product-presentation')
+  })
+
+  it('teaches the Card+Image+Stat+Badge composition and the metric-AND-flag routing rule', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'product-presentation')!
+    expect(skill.body).toMatch(/hero Image \(usageHint:'hero', alt required\) as Card's own child/)
+    expect(skill.body).toMatch(/Use ONLY when the tile ALSO carries a quantified metric AND a status flag/)
+  })
+})
+
+describe('feature-collection — the GH #1377 DescriptionList-vs-Table module', () => {
+  it('fires on a compare-specs intent', () => {
+    const result = selectMiniSkills('compare the specs and features of these three items in a table', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).toContain('feature-collection')
+  })
+
+  it('does NOT fire on an unrelated intent', () => {
+    const result = selectMiniSkills('deal me in for a hand of blackjack', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).not.toContain('feature-collection')
+  })
+
+  it('teaches the one-entity-DescriptionList vs many-entities-Table split, and routes comparison-table away', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'feature-collection')!
+    expect(skill.body).toMatch(/ONE entity's own spec sheet .* is a DescriptionList/)
+    expect(skill.body).toMatch(/Comparing the SAME facts across MULTIPLE entities is a Table/)
+    expect(skill.body).toMatch(/See comparison-table for the higher-order/)
+  })
+})
+
+describe('variant-picker — the GH #1377 SegmentedControl-vs-Select module', () => {
+  it('fires on a pick-a-variant intent', () => {
+    const result = selectMiniSkills('let me pick the size and color variant before buying', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).toContain('variant-picker')
+  })
+
+  it('does NOT fire on an unrelated intent', () => {
+    const result = selectMiniSkills('show me the weather forecast for tomorrow', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).not.toContain('variant-picker')
+  })
+
+  it('teaches the ≤3-short-label SegmentedControl vs Select routing split', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'variant-picker')!
+    expect(skill.body).toMatch(/≤3 members with short \(≤5-char\) labels in a single row → SegmentedControl/)
+    expect(skill.body).toMatch(/More members, or labels too long for one row → Select/)
+  })
+})
+
+describe('quantity — the GH #1377 number-TextField module', () => {
+  it('fires on a set-the-quantity intent', () => {
+    const result = selectMiniSkills('how many units do I want to buy — let me set the quantity', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).toContain('quantity')
+  })
+
+  it('does NOT fire on an unrelated intent', () => {
+    const result = selectMiniSkills('show me the weather forecast for tomorrow', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).not.toContain('quantity')
+  })
+
+  it('teaches the Field-wrapped TextField type:number recipe and the no-stepper-exists disclosure', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'quantity')!
+    expect(skill.body).toMatch(/until\/unless a dedicated Stepper control is minted/)
+    expect(skill.body).toMatch(/`type:'number'`, `min` \(string\), `step` \(number\)/)
+  })
+})
+
+describe('media-grid — the GH #1377 Grid-of-Image photo gallery module', () => {
+  it('fires on a photo-gallery intent', () => {
+    const result = selectMiniSkills('show a gallery of photos from the listing', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).toContain('media-grid')
+  })
+
+  it('does NOT fire on an unrelated intent', () => {
+    const result = selectMiniSkills('deal me in for a hand of blackjack', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).not.toContain('media-grid')
+  })
+
+  it('distinguishes itself from media-file-grid\'s Attachment-tile idiom in its own body', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'media-grid')!
+    expect(skill.body).toMatch(/Distinct from media-file-grid's Attachment-tile idiom/)
+  })
+})
+
+describe('comparison-table — the GH #1377 Stat-tiles-plus-Table plan-comparison module', () => {
+  it('fires on a compare-pricing-plans intent', () => {
+    const result = selectMiniSkills('compare pricing plans side by side', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).toContain('comparison-table')
+  })
+
+  it('does NOT fire on an unrelated intent', () => {
+    const result = selectMiniSkills('show me the weather forecast for tomorrow', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).not.toContain('comparison-table')
+  })
+
+  it('teaches the Stat-tiles-above-Table composition and routes feature-collection/product-presentation away', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'comparison-table')!
+    expect(skill.body).toMatch(/a Grid of headline Stat tiles .* ABOVE one shared Table/)
+    expect(skill.body).toMatch(/not feature-collection's bare single-purpose Table/)
+  })
+})
+
