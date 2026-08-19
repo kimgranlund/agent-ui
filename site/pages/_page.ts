@@ -494,6 +494,11 @@ export const NAV: readonly NavGroup[] = [
       { href: './description-list-doc.html', label: 'API' },
     ],
   },
+  // ADR-0214 (GH #1394) — the source-attribution aggregate leaf, same Display-class {doc}-only shape.
+  {
+    label: 'ui-source-list',
+    links: [{ href: './source-list-doc.html', label: 'API' }],
+  },
   {
     label: 'ui-badge',
     links: [

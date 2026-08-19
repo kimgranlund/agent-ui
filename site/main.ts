@@ -1030,6 +1030,17 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0214 (GH #1394) — the source-attribution aggregate leaf, same Display-class {doc}-only shape.
+  {
+    label: 'ui-source-list',
+    cards: [
+      {
+        href: './source-list-doc.html',
+        title: 'API reference',
+        blurb: 'Source attribution as one aggregate leaf — positional index markers, per-entry safeHref-gated titles, and the drop-malformed-entries cleaner, generated from source-list.md.',
+      },
+    ],
+  },
   {
     label: 'ui-badge',
     cards: [
