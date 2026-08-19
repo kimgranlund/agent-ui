@@ -43,14 +43,14 @@ loses every semantic the pattern is FOR:
    (`renderer.ts:447-479`). A new leaf declaring an `action` PropDef gets the click→action
    round-trip with zero renderer change.
 2. **A disabled host never emits.** `#wireAction`'s click listener checks `el.disabled === true`
-   synchronously at click time (GH #1164, `renderer.ts:471-474`) — so a control that reflects a
+   synchronously at click time (GH #1164, `renderer.ts:471-476`) — so a control that reflects a
    spent state as `disabled` gets renderer-side action suppression for free, on top of its own
    internal inertness.
 3. **The tapped-choice payload has a shipped home.** The action context read by `readActionSpec`
    is STATIC (a literal from the payload) — "which chip was tapped" cannot ride it without new
    machinery. But the value-mark machinery (`{prop, event}` input controller) commits a control's
    own state to a data-model path, and a surface created with `sendDataModel: true` folds the
-   whole model into the action turn (`action.ts:107`, `frameClientMessage` — the exact machinery
+   whole model into the action turn (`emitAction`'s `sendDataModel` fold (`action.ts:107`) feeding `frameClientMessage` (`agent/session.ts`) — the exact machinery
    ADR-0097 verified as "entirely shipped"). Bubble order makes the composition sound: the chip's
    own (deeper) listener updates `selected` and dispatches the commit event in the target phase,
    THEN the click bubbles to the host where the action listener reads a model already updated.
