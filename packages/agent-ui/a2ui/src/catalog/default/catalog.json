@@ -727,6 +727,15 @@
         "format": { "type": { "type": "string", "enum": ["hex", "oklch"] }, "mapsTo": "format" }
       },
       "value": { "prop": "value", "event": "change" }
+    },
+
+    "Toggle": {
+      "properties": {
+        "pressed": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "pressed" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "size": { "type": { "type": "string", "enum": ["sm", "md", "lg"] }, "mapsTo": "size" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" }
+      }
     }
   },
 

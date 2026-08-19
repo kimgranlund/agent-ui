@@ -32,6 +32,7 @@ import { parseArgs, dispositionGuard, dispositionAllowlistSnippet } from './impo
 import type { SeedRejection } from '../../src/corpus/import-report.ts'
 import type { ArchivedVerdict } from '../../src/corpus/verdict-archive.ts'
 import { allSeeds } from '../../src/examples/index.ts'
+import { DISPOSITION_ALLOWLIST } from '../../src/corpus/disposition-allowlist.ts'
 
 declare const process: { cwd(): string }
 
@@ -143,11 +144,19 @@ describe('dispositionGuard — GH #335 defect 1 (an unjudged run must not silent
     expect(halt).toMatch(/Nothing was written/)
   })
 
-  it('the REAL allowlist is the default input, and it is legitimately EMPTY today — no shelf name halts through it (the drop-path steady state)', () => {
-    // Anti-drift: if a future entry lands in the real map, this case goes red and the fixture strategy
-    // above gets revisited with a real name — exactly the coupling note the wiring block carries.
+  it('the REAL allowlist is the default input — every shelf name in it halts, every other shelf name passes through (GH #1352 flipped this from the prior all-empty steady state)', () => {
+    // Anti-drift, generalized rather than frozen to "empty": this reads the REAL DISPOSITION_ALLOWLIST
+    // directly rather than asserting a specific size or membership, so the NEXT entry (or drain) needs
+    // no edit here — only a genuinely new disposition SHAPE (the guard itself changing) would.
     for (const seed of allSeeds) {
-      expect(dispositionGuard(seed.name, undefined, false, NO_ARCHIVE), seed.name).toBeUndefined()
+      const halt = dispositionGuard(seed.name, undefined, false, NO_ARCHIVE)
+      if (DISPOSITION_ALLOWLIST.has(seed.name)) {
+        expect(halt, seed.name).toBeDefined()
+        expect(halt, seed.name).toMatch(/HALTED/)
+        expect(halt, seed.name).toContain(seed.name)
+      } else {
+        expect(halt, seed.name).toBeUndefined()
+      }
     }
   })
 })
@@ -427,6 +436,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     'travel-itinerary': { passed: false, qualityScore: 2 },
     'frontier-latency-line-chart': { passed: false, qualityScore: 2 },
     'frontier-media-tour': { passed: false, qualityScore: 2 },
+    'frontier-pane-switcher': { passed: false, qualityScore: 2 },
     'pattern-confirmation-card': { passed: false, qualityScore: 2 },
     'pattern-settings-form': { passed: false, qualityScore: 2 },
     'pattern-schedule-picker': { passed: false, qualityScore: 2 },

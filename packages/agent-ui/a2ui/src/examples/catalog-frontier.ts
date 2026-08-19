@@ -11,6 +11,10 @@
 //
 // Frontier 11 (ADR-0205, GH #1207) — `LineChart`, the fleet's first axis-bearing chart, lands its catalog
 // row IN THE SAME WAVE it ships (cl.8), so this seed closes its coverage gap the moment that row exists.
+//
+// Frontier 13 (GH #1352, ADR-0179 GH #686 Amendment S7-a) — `Toggle`, the admin-header pane-pill
+// primitive, mints its catalog row here (Kim ruling 2026-08-19), draining that amendment's TEMPORARY
+// allowlist seed.
 
 import type { ExampleSeed } from './types.ts'
 
@@ -720,4 +724,44 @@ export const mediaTourSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed]
+const PANE_SWITCHER_ID = 'frontier-pane-switcher'
+/** Frontier 13 (GH #1352, ADR-0179 GH #686 Amendment S7-a — Kim ruling 2026-08-19: "Toggle is
+ *  agent-emittable — mint the row"): the admin-header pane-pills idiom itself, generalized — three
+ *  `Toggle` pills in a `Row` switching between panes. `pressed` is bound one-way (data→control) on
+ *  two of the three, reflecting which pane is CURRENTLY active; the third demonstrates `disabled`. No
+ *  commit-back exists (`toggleFactory`'s own Fork T1 — `ui-toggle`'s `toggle` event fires BEFORE
+ *  `pressed` commits, so the generic two-way controller cannot safely bind it), so this seed shows
+ *  Toggle exactly as it is today: a display-and-press primitive an agent renders in a known state, not
+ *  yet a round-tripping form control. */
+export const paneSwitcherSeed: ExampleSeed = {
+  name: 'frontier-pane-switcher',
+  description: 'A pane-switcher Row of Toggle pills (Chat/Settings/Co-pilot) — the ADR-0179 admin-header idiom generalized: pressed reflects which pane is active (bound one-way; Toggle carries no two-way value mark, GH #1352 Fork T1), one pill disabled.',
+  promptText: 'Show a pane switcher with Chat, Settings, and Co-pilot toggle buttons — Chat is currently active, Co-pilot is disabled for now.',
+  surfaceId: PANE_SWITCHER_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: PANE_SWITCHER_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: PANE_SWITCHER_ID,
+        value: { panes: { chatActive: true, settingsActive: false } },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: PANE_SWITCHER_ID,
+        components: [
+          { id: 'root', component: 'Row', gap: 'sm', children: ['chat_toggle', 'settings_toggle', 'copilot_toggle'] },
+          { id: 'chat_toggle', component: 'Toggle', label: 'Chat', pressed: { path: '/panes/chatActive' } },
+          { id: 'settings_toggle', component: 'Toggle', label: 'Settings', pressed: { path: '/panes/settingsActive' } },
+          { id: 'copilot_toggle', component: 'Toggle', label: 'Co-pilot', disabled: true },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, paneSwitcherSeed]

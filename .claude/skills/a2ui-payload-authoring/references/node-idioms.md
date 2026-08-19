@@ -75,6 +75,18 @@ prop name (`checked`) — the ADR-0053 naming law, not a generic `value`.
 ```
 Real: `examples/generative-form.ts:134-135`, `examples/patterns.ts:42-44`.
 
+## Toggle — pressed-state pill BUTTON, not form-associated
+GH #1352 catalog row (ADR-0179 GH #686 Amendment S7-a). Bindable `pressed`, `disabled`, `label` (→
+`textContent`, bespoke); `size` (`sm`\|`md`\|`lg`, structural only). **No `value` mark** — `pressed` is
+bindable ONE-WAY (data→control) only; there is no commit-back event to bind on (`ui-toggle`'s own
+`toggle` fires BEFORE the press commits, by design — see the `toggleFactory` doc comment,
+`catalog/default/factories.ts`). Render it already in the state you want; don't expect a user press to
+flow back into the data model yet.
+```json
+{ "id": "chat_toggle", "component": "Toggle", "label": "Chat", "pressed": { "path": "/panes/chatActive" } }
+```
+Real: `examples/catalog-frontier.ts` (`paneSwitcherSeed`).
+
 ## Select / Option
 `catalog.json:86-103`. Select: `value: { prop:"value", event:"select" }`, `children:"ChildList"` of Option;
 bindable `value`, `disabled`, `required`; plain `placeholder`, `name`. Option: `value` (plain), `label`

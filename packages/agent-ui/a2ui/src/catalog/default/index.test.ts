@@ -202,12 +202,6 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'is host-page-only (security inversion, PRD-D2); the ADR-0112 cl.6 Toast/ToastRegion reasoning applied ' +
     'verbatim — a one-time-code entry is the credential-bearing element of the identity family\'s Codes ' +
     'mode (code-entry-control.lld.md §9, GH #490 S2-a).'],
-  ['Toggle',
-    'ADR-0179 GH #686 Amendment S7-a (admin-three-pane-ia.lld.md §16.4) — TEMPORARY exclusion, shipped ' +
-    'ahead of its catalog row: this slice mints the fleet control (a small toggle-button primitive) for ' +
-    'the agent-admin unified header\'s pane pills; whether it earns a general A2UI catalog row is a ' +
-    'separate decision for a later pass (a2ui is team-led, out of this slice\'s authorization), not a ' +
-    'chrome/security exclusion like the PERMANENT entries above — drains the moment that decision lands.'],
   ['Drill',
     'ADR-0195 (GH #954) — TEMPORARY exclusion, shipped ahead of its catalog row: this build mints the ' +
     'fleet N-level drill-down panel container; whether it earns a general A2UI catalog row, and what wire-' +
@@ -1712,5 +1706,82 @@ describe('default catalog — FormPopover via the shared validator (GH #294 F4, 
 
     const wrongLabel: A2uiComponent = { id: 'fp7', component: 'FormPopover', label: 42 }
     expect(validateCatalogConformance(wrongLabel, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 'fp7.label' }))
+  })
+})
+
+// ── the GH #1352 Toggle row (ADR-0179 GH #686 Amendment S7-a, Kim ruling 2026-08-19) ───────────────────
+//
+// Drains the EXCLUSION_ALLOWLIST's TEMPORARY 'Toggle' seed (above). No `value` mark (Fork T1,
+// builder-resolved — see the `toggleFactory` doc comment, factories.ts): `pressed` is bindable
+// FORWARD-only (data→control), deliberately no commit-back.
+describe('default catalog — Toggle via the shared validator (GH #1352, ADR-0179 GH #686 Amendment S7-a)', () => {
+  it('a representative Toggle payload validates 0 failures via validateA2ui', () => {
+    const message = {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          { id: 'root', component: 'Toggle', label: 'Chat', pressed: { path: '/panes/chatActive' }, size: 'md' },
+        ],
+      },
+    }
+    expect(validateA2ui(message, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('Toggle declares NO value mark — deliberate, not a gap (Fork T1: ui-toggle\'s own toggle event fires BEFORE pressed commits)', () => {
+    expect(defaultCatalog.components.Toggle.value).toBeUndefined()
+  })
+
+  it('pressed/disabled/label are bindable; size stays structural-only (the TextField.size/Avatar.size precedent)', () => {
+    expect(defaultCatalog.components.Toggle.properties.pressed?.bindable).toBe(true)
+    expect(defaultCatalog.components.Toggle.properties.disabled?.bindable).toBe(true)
+    expect(defaultCatalog.components.Toggle.properties.label?.bindable).toBe(true)
+    expect(defaultCatalog.components.Toggle.properties.size?.bindable).toBeFalsy()
+  })
+
+  it('Toggle declares no children (a leaf, the Button/Toast precedent)', () => {
+    expect(defaultCatalog.components.Toggle.children).toBeUndefined()
+  })
+
+  it('accepts a {path} binding for pressed/disabled/label; size stays a literal-only enum', () => {
+    const byPressed: A2uiComponent = { id: 't1', component: 'Toggle', pressed: { path: '/panes/active' } }
+    const byDisabled: A2uiComponent = { id: 't2', component: 'Toggle', disabled: { path: '/formDisabled' } }
+    const byLabel: A2uiComponent = { id: 't3', component: 'Toggle', label: { path: '/paneLabel' } }
+    expect(validateCatalogConformance(byPressed, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(byDisabled, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(byLabel, defaultCatalog)).toEqual([])
+
+    const bySize: A2uiComponent = { id: 't4', component: 'Toggle', size: { path: '/toggleSize' } }
+    expect(validateCatalogConformance(bySize, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 't4.size' }))
+  })
+
+  it('NEGATIVE: an out-of-enum size fails CATALOG', () => {
+    const t: A2uiComponent = { id: 't5', component: 'Toggle', size: 'xl' }
+    expect(validateCatalogConformance(t, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 't5.size' }))
+  })
+
+  it('NEGATIVE: an unknown prop fails CATALOG', () => {
+    const t: A2uiComponent = { id: 't6', component: 'Toggle', bogus: 1 }
+    expect(validateCatalogConformance(t, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 't6.bogus' })
+  })
+
+  it("a REAL ui-toggle's own click never writes back into surface.data — installInputBinding is a no-op with no value mark (Fork T1, GH #1352)", () => {
+    const surface = createSurface({ id: 's6', catalogId: 'agent-ui', version: 'v1.0' })
+    surface.data.value = { panes: { active: false } }
+
+    // The real ui-toggle (defaultFactories self-defines the whole family on import, factories.ts:1).
+    const toggle = defaultFactories.Toggle.create() as HTMLElement & { pressed: boolean }
+    document.body.append(toggle)
+
+    const node: A2uiComponent = { id: 'tg', component: 'Toggle', pressed: { path: '/panes/active' } }
+    installInputBinding(toggle, defaultFactories.Toggle, node, surface) // no-op: factory.value is undefined
+
+    toggle.click() // flips the control's OWN local pressed state
+    expect(toggle.pressed).toBe(true)
+    // ...but the data model is untouched — no commit-back exists (the deliberate Fork T1 resolution).
+    expect((surface.data.peek() as { panes: { active: unknown } }).panes.active).toBe(false)
+
+    toggle.remove()
+    disposeSurface(surface)
   })
 })

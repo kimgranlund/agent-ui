@@ -93,7 +93,7 @@ export interface FeedExclusion {
 }
 
 /**
- * The 32 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
+ * The 33 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
  * the ADR-0097 Amendment / ADR-0107 Amendment 2 — + the chart family's third member, `LineChart`
  * [ADR-0205 cl.8] — + the report/content/feed catalog wave's five:
  * `Stat`/`Table` [ADR-0111], `Disclosure` [ADR-0113], `Progress`/`Attachment` [ADR-0112] — + the
@@ -106,7 +106,10 @@ export interface FeedExclusion {
  * + the ui-drawer wave's one: `Drawer` [ADR-0188 cl.2 — the SAME focus-stealing top-layer class as
  * Modal, edge-docked rather than centred] + the image-content wave's one: `Image` [GH #1189 — a
  * URL-sourced content image/photo, the Attachment/Swatch/Ramp/Ladder report-content class, NOT the
- * Avatar/Icon light-identity-mark class]).
+ * Avatar/Icon light-identity-mark class] + the GH #1352 Toggle-catalog-decision pass's one: `Toggle`
+ * [ADR-0179 GH #686 Amendment S7-a — no `value` mark at all (Fork T1); worse than the already-excluded
+ * `Switch`, which at least commits `checked` back — a press inside an ask would flip the pill with no
+ * way for the agent to ever learn the outcome, the exact dishonesty this partition exists to keep out]).
  * Composite-closure note: a composite's children are excluded ALONGSIDE their parent for the SAME
  * reason (Tab/TabPanel with Tabs; MenuItem with Menu) — `feed-catalog.test.ts` asserts this closure
  * holds, both here and for the IN composites (RadioGroup/Radio, SegmentedControl/Segment, Card/its
@@ -254,6 +257,11 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
     type: 'AudioPlayer',
     reason:
       'a URL-sourced media player (GH #1209) — display-only, no value mark, no ask affordance; the Image/Video reasoning verbatim.',
+  },
+  {
+    type: 'Toggle',
+    reason:
+      'no value mark at all (GH #1352, ADR-0179 GH #686 Amendment S7-a, Fork T1 — the toggleFactory doc comment) — worse than the already-excluded Switch, which at least commits `checked` back on press. Pressing a Toggle inside an ask would flip its own local paint with no way for the agent to ever learn the outcome; an ask is commit-gated by definition, and this control has nothing to commit.',
   },
 ] as const
 

@@ -225,6 +225,9 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   Field: { label: 'Field label' },
   Checkbox: { label: 'Checkbox' },
   Switch: { label: 'Switch' },
+  // Toggle (GH #1352): label is textContent (like Button/Toast), invisible without a seed; `pressed:
+  // 'true'` shows the ON paint by default (a bare specimen would otherwise render the idle ghost state).
+  Toggle: { label: 'Toggle', pressed: 'true' },
   Select: { placeholder: 'Choose…' },
   Option: { label: 'Option', value: 'a' },
   // Modal is deliberately NOT seeded open: an auto-opened dialog throws a top-layer overlay over the whole
