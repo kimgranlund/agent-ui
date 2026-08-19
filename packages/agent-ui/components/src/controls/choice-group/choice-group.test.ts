@@ -7,10 +7,9 @@ import type { FormValue, ValidityResult } from '../../dom/index.ts'
 // jsdom probes — ui-choice-group (ADR-0220 GH #1368). A committed choice over agent-composed
 // ui-choice-card option cards, single or multi. jsdom reality: the `ElementInternals`
 // form-association surface (setFormValue / setValidity) is absent in jsdom — stub it per-instance
-// BEFORE connect (the multi-select.test.ts / select.test.ts precedent). NAMED DEBT: the whole-shape
-// geometry + forced-colors + non-color signifier + keyboard-vs-pointer byte-identity proofs a real
-// `.browser.test.ts` shard would carry are DEFERRED, not yet written — tracked as a blocking
-// precondition of the ADR-0220 wire-integration lane (GH #1398).
+// BEFORE connect (the multi-select.test.ts / select.test.ts precedent). The whole-shape geometry +
+// forced-colors + non-color signifier + keyboard-vs-pointer byte-identity proofs now live in the real
+// `choice-group.browser.test.ts` shard (the GH #1398 blocking precondition — SHIPPED, not deferred).
 //
 // Named probes: cg-upgrade · cg-typed · cg-define-guard · cg-single-exclusive · cg-multi-toggle ·
 // cg-required-empty-single · cg-required-empty-multi · cg-required-cleared · cg-form-value-single ·
@@ -483,17 +482,24 @@ describe('ui-choice-group — late-adopted card observer (cg-late-card-observer)
     el.remove()
   })
 
-  it('cg-late-card-observer: a card appended nested inside a wrapper (any nesting depth, cl.7) still gets painted', async () => {
+  it('cg-late-card-observer: a card appended into an ALREADY-CONNECTED nested wrapper still gets painted (isolates subtree:true)', async () => {
     const { el } = makeChoiceGroup()
+    // The wrapper connects FIRST, empty — a plain direct-child add on `el` itself, which even a
+    // childList-only (subtree:false) observer would already catch. The load-bearing mutation is the
+    // SECOND append below, made entirely WITHIN this already-connected wrapper — a mutation `el`'s own
+    // childList (without subtree) would never see. Only `subtree:true` (choice-group.ts's own
+    // `#cardObserver.observe(this, { childList: true, subtree: true })`) catches it.
+    const wrapper = document.createElement('div')
+    el.append(wrapper)
+    await whenFlushed()
+
     el.values = ['wifi'] // exercised in single mode too — cl.7 discovery has no mode dependency
     el.multiple = true
     await whenFlushed()
 
-    const wrapper = document.createElement('div')
     const late = document.createElement('ui-choice-card') as UIChoiceCardElement
     late.setAttribute('value', 'wifi')
-    wrapper.append(late)
-    el.append(wrapper) // NOT a direct child — subtree:true must still catch it
+    wrapper.append(late) // mutation on the ALREADY-CONNECTED wrapper, NOT a direct child of `el`
     await whenFlushed()
 
     expect(ariaSelectedOf(late)).toBe('true')

@@ -110,9 +110,19 @@ describe('textarea.css — the MULTI-LINE geometry law (ADR-0134 — the inversi
     expect(editorBlock).not.toMatch(/white-space:\s*nowrap/)
   })
 
-  it('min-inline-size reuses the ~20ch entry-control typing-width floor (ADR-0021 parity)', () => {
+  it('the ~20ch typing-width floor lives in the [inline] hug leg ONLY (ADR-0223 cl.3(b), superseding ADR-0021 default-state placement)', () => {
     expect(tokenBlock).toMatch(/--ui-textarea-min-inline-size:\s*20ch/)
-    expect(stylesBlock).toMatch(/min-inline-size:\s*var\(--ui-textarea-min-inline-size\)/)
+    // the DEFAULT host block carries NO floor — the fill posture's container is the floor (ADR-0223 cl.1)
+    const hostBlock = stylesBlock.slice(
+      stylesBlock.indexOf(':scope {'),
+      stylesBlock.indexOf('}', stylesBlock.indexOf(':scope {')),
+    )
+    expect(hostBlock).not.toMatch(/min-inline-size:\s*var\(--ui-textarea-min-inline-size\)/)
+    // the [inline] hug leg carries it (the ONE opt-out — inline-level + hug, ADR-0223 cl.2)
+    const inlineLeg = stylesBlock.match(/:scope\[inline\]\s*\{([^}]*)\}/)
+    expect(inlineLeg, 'the :scope[inline] hug leg is missing (ADR-0223 cl.2)').not.toBeNull()
+    expect((inlineLeg as RegExpMatchArray)[1]).toMatch(/display:\s*inline-block/)
+    expect((inlineLeg as RegExpMatchArray)[1]).toMatch(/min-inline-size:\s*var\(--ui-textarea-min-inline-size\)/)
   })
 
   it('radius reuses the fixed --md-sys-shape-corner-base entry-control referent (geometry.md "Corner radius")', () => {

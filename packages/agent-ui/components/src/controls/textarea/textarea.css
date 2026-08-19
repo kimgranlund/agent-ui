@@ -79,7 +79,7 @@
   /* Size-INVARIANT frame quantities — the entry-control class referents (geometry.md "Frame quantities that
      split by control class"), the SAME fleet tokens ui-text-field's #71/#21 amendments introduced. */
   --ui-textarea-radius: var(--md-sys-shape-corner-base); /* fixed rounded-rect — the container-fleet referent, not the action h/2 pill */
-  --ui-textarea-min-inline-size: 20ch; /* the entry-control typing-width floor (ADR-0021), native <textarea> parity */
+  --ui-textarea-min-inline-size: 20ch; /* the [inline] hug-state typing-width floor (ADR-0223 clause 3(b), superseding ADR-0021's default-state placement) — native <textarea> parity so a hugging textarea is hittable. The FILL default needs no floor: the container is the floor. Token name + default unchanged. */
 
   /* Visible inline-validation message tokens (ADR-0029 A1, the text-field precedent) — the .ui-textarea-message
      node (control-managed, aria-describedby target) becomes VISIBLE when non-empty under :state(user-invalid). */
@@ -116,12 +116,15 @@
 
 @scope (ui-textarea) {
   :scope {
+    /* FILL BY DEFAULT (ADR-0223 cl.1/2 — slice 1, the entry family): the host is BLOCK-level and stretches
+       to the parent's inline space; NO intrinsic width in the default state. The ADR-0021 20ch typing-width
+       floor is NOT deleted — it moves to the `[inline]` hug leg below (clause 3(b)): in fill posture the
+       container IS the floor. */
     display: block; /* no adornment slots (ADR-0134: no leading/trailing machinery) — the host IS the resizable box */
     box-sizing: border-box;
 
     /* the MULTI-LINE geometry law (ADR-0134) — a GROWABLE minimum, never a fixed §1-row height. */
     min-block-size: var(--ui-textarea-min-block-size);
-    min-inline-size: var(--ui-textarea-min-inline-size); /* the entry-control typing-width floor (ADR-0021 parity) */
     padding-block: var(--ui-textarea-padding-block); /* REAL block padding — the inversion of the single-line law's 0 */
     padding-inline: var(--ui-textarea-padding-inline);
     overflow-y: auto; /* content past min-block-size scrolls rather than growing the box unbounded */
@@ -135,6 +138,16 @@
     border: 1px solid var(--ui-textarea-border);
     border-radius: var(--ui-textarea-radius);
     cursor: text;
+  }
+
+  /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): a single reflected boolean flips BOTH display
+     level (inline-block) and sizing posture (hug, with the clause 3(b) content floor active). The ADR-0021
+     typing-width floor lives HERE now — the degenerate hug context is exactly where a ~0-width collapse
+     lives (token + default unchanged; per-instance/theme override via --ui-textarea-min-inline-size). No
+     `hug` attribute, no block-but-hugging state — an explicit inline-size is the consumer's tool for that. */
+  :scope[inline] {
+    display: inline-block;
+    min-inline-size: var(--ui-textarea-min-inline-size);
   }
 
   :scope > [data-part='editor'] {

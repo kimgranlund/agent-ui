@@ -38,6 +38,10 @@ attributes:            # attributes-as-API — mirrors textarea.ts `static props
     type: boolean
     default: false
     reflect: true      # reflects to a `readonly` attribute → CSS hook; editor contenteditable=false but still focusable + still submits (ADR-0014 dev#b, reused)
+  - name: inline
+    type: boolean
+    default: false
+    reflect: true      # ADR-0223 (Fill by Default) — the ONE sizing opt-out: flips display level (inline-block) AND sizing posture (hug, with the ~20ch typing-width floor active). Default (absent) = block-level fill. Reflects so the :scope[inline] CSS leg applies to JS-set values.
   - name: name
     type: string
     default: ''
@@ -114,7 +118,8 @@ geometry:
   inlinePad: var(--ui-textarea-padding-inline)
   gap: n/a                # no adornment slots — no slot↔editor gap
   radius: var(--md-sys-shape-corner-base)            # fixed rounded-rect — the container-fleet referent, entry-control class (geometry.md "Corner radius")
-  minInlineSize: var(--ui-textarea-min-inline-size) (~20ch — entry-control typing-width floor, native <textarea> parity; ADR-0021)
+  posture: fill (block-level, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-block + hug   # Fill by Default — slice 1 (entry family)
+  minInlineSize: var(--ui-textarea-min-inline-size) (~20ch — typing-width floor, native <textarea> parity), ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 cl.3(b), superseding ADR-0021's default-state placement)   # the fill default needs no floor — the container is the floor
 
 forcedColors: A `@media (forced-colors: active)` block keeps the idle frame border, ink, and placeholder visible (CanvasText); the :focus-within outline ring survives via --md-sys-color-focus-ring → Highlight (ADR-0014, reused verbatim).
 ---

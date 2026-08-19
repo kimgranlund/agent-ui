@@ -1679,7 +1679,8 @@ const md = readFileSync(`${COMBO_DIR}/combo-box.md`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-const ATTR_NAMES = ['value', 'label', 'open', 'strict', 'placeholder', 'name', 'disabled', 'required', 'answered']
+// ADR-0223 (Fill by Default, slice 1): `inline` added after `answered` — the ONE sizing opt-out boolean.
+const ATTR_NAMES = ['value', 'label', 'open', 'strict', 'placeholder', 'name', 'disabled', 'required', 'answered', 'inline']
 
 describe('combo-box.md descriptor — frontmatter parses + schema-valid (combo-descriptor-schema)', () => {
   it('combo-descriptor-schema: has a leading frontmatter fence and a prose body', () => {

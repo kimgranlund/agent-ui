@@ -1517,7 +1517,8 @@ const parsed = parseDescriptor(fence)
 // `extends: UIFormElement` is not yet in BASE_CLASSES (the integration slice s12 adds it). Tolerate
 // exactly that ONE pending structural failure (same tolerance as modal/popover descriptor probes).
 
-const ATTR_NAMES = ['name', 'disabled', 'required', 'value', 'label', 'open', 'placeholder', 'size', 'answered']
+// ADR-0223 (Fill by Default, slice 1): `inline` added after `answered` — the ONE sizing opt-out boolean.
+const ATTR_NAMES = ['name', 'disabled', 'required', 'value', 'label', 'open', 'placeholder', 'size', 'answered', 'inline']
 
 describe('select.md descriptor — frontmatter parses + schema-valid (select-descriptor-schema)', () => {
   it('select-descriptor-schema: has a leading frontmatter fence and a prose body', () => {

@@ -37,7 +37,7 @@
   /* panel padding = h/4 (the `ui-select` listbox-token mechanism copied, LLD-C5) — feeds the 12-row
      scroll-cap formula below too. */
   --ui-multi-select-padding: calc(var(--ui-multi-select-height) / 4);
-  --ui-multi-select-min-inline-size: 12ch; /* floor: at least as wide as a short option (select.md's listbox floor) */
+  --ui-multi-select-min-inline-size: 12ch; /* the [inline] hug-state floor (ADR-0223 cl.3(b)): at least as wide as a short option (select.md's listbox floor); the FILL default needs no floor — the container is the floor */
   /* the SAME 12-real-option-rows-or-half-viewport scroll cap `ui-select`'s listbox uses (TKT-0027), an
      option row here rendering at exactly --ui-multi-select-height (the row-height law below). */
   --ui-multi-select-max-block-size: min(50vh, calc(12 * var(--ui-multi-select-height) + 13 * var(--ui-multi-select-padding) + 2px));
@@ -109,14 +109,13 @@
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-multi-select) consumes ONLY --ui-multi-select-* ════════════════ */
 
 @scope (ui-multi-select) {
-  /* The host IS the listbox — an always-visible, scrollable Container/surface. `display: inline-block`
-     (LLD §4's "inline block-level" anatomy) with a min-inline-size floor (the ADR-0021 lesson: a control
-     that can render as a short option list still needs a floor so it is hittable). */
+  /* The host IS the listbox — an always-visible, scrollable Container/surface. FILL BY DEFAULT
+     (ADR-0223 cl.1/2 — slice 1, the entry family): block-level, stretching to the parent's inline
+     space, NO intrinsic width in the default state. The ADR-0021-class 12ch floor is NOT deleted —
+     it moves to the `[inline]` hug leg below (clause 3(b)): in fill posture the container IS the floor. */
   :scope {
-    display: inline-block;
+    display: block;
     box-sizing: border-box;
-    vertical-align: middle;
-    min-inline-size: var(--ui-multi-select-min-inline-size);
     max-block-size: var(--ui-multi-select-max-block-size); /* TKT-0027-style public dial */
     overflow-y: auto;
     /* GH #906 — thin, auto-hiding scrollbar: transparent at rest, reveals the thumb only on
@@ -136,6 +135,17 @@
       background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
       border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
       color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+  }
+
+  /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): a single reflected boolean flips BOTH
+     display level (inline-block, with the form-control vertical-align) and sizing posture (hug, with
+     the clause 3(b) content floor active — the ADR-0021 lesson: a HUGGING control that can render as
+     a short option list still needs a floor so it is hittable). Token + default unchanged; override
+     via --ui-multi-select-min-inline-size. No `hug` attribute, no block-but-hugging state. */
+  :scope[inline] {
+    display: inline-block;
+    vertical-align: middle;
+    min-inline-size: var(--ui-multi-select-min-inline-size);
   }
 
   :scope:hover,

@@ -5,10 +5,12 @@ import type { RovingOrientation } from './roving-focus.ts'
 
 // Probe host — wraps rovingFocus over its [role=option] descendants. `orientation`, `loop`, and
 // `typeAhead` are plain properties (not reactive signals) so tests set them BEFORE connect.
+// `initialIndex` (optional) is threaded straight through to the trait — undefined preserves every
+// existing test's default-seed behaviour.
 // Named probes: rov-init · rov-arrow-vertical · rov-arrow-horizontal · rov-home-end · rov-loop-wrap
 //   · rov-no-loop · rov-skip-disabled · rov-all-disabled · rov-on-move · rov-prevent-default
 //   · rov-type-ahead-match · rov-type-ahead-accumulate · rov-type-ahead-disabled
-//   · rov-cleanup · rov-auto-cleanup
+//   · rov-cleanup · rov-auto-cleanup · rov-initial-index-disabled-settle
 
 class RovingHost extends UIElement {
   releaseFn: (() => void) | null = null
@@ -16,6 +18,7 @@ class RovingHost extends UIElement {
   orientation: RovingOrientation = 'vertical'
   loop = true
   typeAhead = true
+  initialIndex: number | (() => number) | undefined = undefined
 
   protected connected(): void {
     this.moveLog = []
@@ -25,6 +28,7 @@ class RovingHost extends UIElement {
       loop: this.loop,
       typeAhead: this.typeAhead,
       onMove: (i) => this.moveLog.push(i),
+      initialIndex: this.initialIndex,
     })
   }
 }
@@ -41,12 +45,14 @@ function makeHost(
     orientation?: RovingOrientation
     loop?: boolean
     typeAhead?: boolean
+    initialIndex?: number | (() => number)
   } = {},
 ): [RovingHost, HTMLElement[]] {
   const host = new RovingHost()
   if (opts.orientation !== undefined) host.orientation = opts.orientation
   if (opts.loop !== undefined) host.loop = opts.loop
   if (opts.typeAhead !== undefined) host.typeAhead = opts.typeAhead
+  if (opts.initialIndex !== undefined) host.initialIndex = opts.initialIndex
 
   const items: HTMLElement[] = []
   for (let i = 0; i < n; i++) {
@@ -241,12 +247,50 @@ describe('rovingFocus — roving tabindex + keyboard nav (listbox-roving LLD-C1)
   })
 })
 
+// ── the initialIndex settle correction (ADR-0220/GH #1398 follow-up) ──────────────────────────────
+//
+// The ONE named exception to the "rAF-gated behavior is browser-only" convention below: `initialIndex`'s
+// own doc comment (roving-focus.ts) admits the synchronous init applies a caller-supplied seed VERBATIM,
+// with no disabled check — only the rAF SETTLE pass re-validates and falls back to `findFirst`. That
+// correction is itself a plain synchronous DOM-mutation once the frame fires (no real layout/paint
+// dependency), so it is honestly probable in jsdom via a real `requestAnimationFrame` wait (the
+// `file-drop.test.ts` precedent for awaiting one real frame under jsdom) — this is the case a
+// `ui-choice-group` reconnecting with a committed selection that has SINCE become disabled must land on.
+
+describe('rovingFocus — initialIndex settle correction (ADR-0220/GH #1398 follow-up)', () => {
+  it('rov-initial-index-disabled-settle: an initialIndex seed pointing at a since-disabled item applies verbatim at sync init, then corrects to findFirst after the rAF settle pass', async () => {
+    // layout: [0]=enabled, [1]=disabled (the stale "committed selection" seed), [2]=enabled.
+    const [, items] = makeHost(3, { disabledIndices: [1], initialIndex: 1 })
+
+    // Pre-settle: the trait's own doc admits this window exists — assert it honestly, not assumed away.
+    expect(items[1].tabIndex, 'pre-settle: the seed applies verbatim, even to a disabled item').toBe(0)
+
+    await new Promise((r) => requestAnimationFrame(() => r(undefined))) // the settle pass
+
+    expect(items[1].tabIndex, 'post-settle: a disabled seed must be corrected').toBe(-1)
+    expect(items[0].tabIndex, 'post-settle: falls back to findFirst (first non-disabled item)').toBe(0)
+    expect(items[2].tabIndex).toBe(-1)
+  })
+
+  it('rov-initial-index-disabled-settle: an initialIndex seed pointing at a STILL-enabled item is unaffected by the settle pass', async () => {
+    const [, items] = makeHost(3, { disabledIndices: [1], initialIndex: 2 })
+    expect(items[2].tabIndex).toBe(0)
+
+    await new Promise((r) => requestAnimationFrame(() => r(undefined)))
+
+    expect(items[2].tabIndex, 'a genuinely enabled seed must survive the settle pass unchanged').toBe(0)
+    expect(items[0].tabIndex).toBe(-1)
+    expect(items[1].tabIndex).toBe(-1)
+  })
+})
+
 // ── the ROVING-MARKER CONTRACT (ADR-0121 amendment) — the ownership stamp traits/tabbable.ts defers to ──
 //
-// A pure, synchronous DOM-mutation contract (stamp on init/move, strip on release) — the rAF settle pass
-// itself is deliberately NOT probed here (the fleet convention: rAF-gated behavior is browser-only, the
-// ui-tabs `:state(ready)` gate precedent — no jsdom test anywhere in this tree awaits a real animation
-// frame). The cross-engine proof that the marker actually defeats a real tabbable() consumer's own connect-
+// A pure, synchronous DOM-mutation contract (stamp on init/move, strip on release) — the rAF settle pass'
+// OWN MARKER RE-STAMP is deliberately NOT probed here (the fleet convention: rAF-gated PAINT/layout
+// behavior is browser-only, the ui-tabs `:state(ready)` gate precedent); the settle pass's tabindex-
+// CORRECTION fact (a pure DOM-mutation, no paint dependency) IS probed above as the one named exception.
+// The cross-engine proof that the marker actually defeats a real tabbable() consumer's own connect-
 // time write lives in toolbar.browser.test.ts.
 
 describe('rovingFocus — the ROVING_ITEM_ATTR ownership marker (ADR-0121 amendment)', () => {

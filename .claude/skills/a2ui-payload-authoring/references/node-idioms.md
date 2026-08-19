@@ -109,6 +109,43 @@ position-faithful.
 ```
 Real: `examples/generative-form.ts:115-121`, `examples/patterns.ts:46-52`.
 
+## RadioGroup > visual containers > Radio — depth-scoped discovery (ADR-0212)
+`catalog.json:280-298`. RadioGroup: `value:{prop:"value",event:"change"}`, bindable `value`/`disabled`,
+plain `name`/`required`/`orientation`, `children:"ChildList"`. Radio: `value` (plain), `label` (bindable
+→ `textContent`), `checked` (bindable). **Rule**: a `Radio` no longer has to sit as a DIRECT child of its
+`RadioGroup` to join the group's roving/exclusivity/value/validity machinery — the group discovers every
+`Radio` DESCENDANT whose NEAREST `RadioGroup` ancestor is itself, at any nesting depth
+([ADR-0212](../../../docs/adr/0212-radio-group-nearest-group-descendant-discovery.md)). Wrap each Radio in
+a visual container — a `Card`/`Column`/`Row` row carrying a label plus other controls beside it (the
+model-grid shape: one card per option, each with its own descriptive `Text`/`Badge` and an unrelated
+`Switch`, only the `Radio` inside every card sharing one logical selection) — and the group still commits
+a single cross-container value. Before ADR-0212 this shape was **silently broken**, not merely
+unsupported: nesting a Radio under a container inside the group let it check itself while the group's own
+`value` stayed unset and a second nested Radio could end up checked too — never compose this shape against
+an OLDER build.
+**Boundary**: an inner nested `RadioGroup` is an ownership boundary — its own `Radio` descendants belong
+to IT, never to the outer group (do not nest RadioGroups expecting one shared selection; that is two
+independent selections by design). The group's own INTERIOR FLEX LAYOUT still applies only to its DIRECT
+children (ADR-0103, unchanged) — a visual container is the layout unit the group's `gap`/`orientation`
+positions, while staying transparent to the Radio discovery above; the Radio itself does not need to be a
+direct child for either layout or selection to work correctly at the container level.
+```json
+{ "id": "rg_models", "component": "RadioGroup", "name": "default_model", "value": { "path": "/settings/defaultModel" },
+  "children": ["row_gpt", "row_claude"] }
+{ "id": "row_gpt", "component": "Card", "children": ["row_gpt_content"] }
+{ "id": "row_gpt_content", "component": "Row", "align": "center", "justify": "between", "gap": "md",
+  "children": ["gpt_label", "gpt_include", "r_gpt"] }
+{ "id": "gpt_label", "component": "Text", "text": "GPT-5" }
+{ "id": "gpt_include", "component": "Switch", "checked": { "path": "/settings/providers/gpt/enabled" } }
+{ "id": "r_gpt", "component": "Radio", "value": "gpt-5", "label": "Default" }
+```
+Real: no wire seed emits this shape yet (a fleet gap, honestly named — routed to the
+a2ui-prompt-authoring backlog, the PR #1362 family); the mechanism itself is proven live by
+`packages/agent-ui/components/src/controls/radio/radio-group.test.ts` (the nearest-group-scoped
+discovery + inner-group-boundary jsdom legs) and `radio-group.browser.test.ts`'s "ADR-0212 —
+nearest-group-scoped discovery" section (exactly-one-tabindex roving + a late-appended nested Radio,
+both engines).
+
 ## Row / Column — flex layout containers
 `catalog.json:105-127`. `children:"ChildList"`. Props: `elevation`/`brightness` (`"-3"`…`"3"` strings),
 `align` (`start center end stretch baseline`), `justify` (`start center end between around evenly`),

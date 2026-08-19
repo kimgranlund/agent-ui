@@ -38,6 +38,10 @@ attributes:            # attributes-as-API — mirrors text-field.ts `static pro
     type: boolean
     default: false
     reflect: true      # reflects to a `readonly` attribute → CSS hook; editor contenteditable=false but still focusable + still submits (ADR-0014 dev#b)
+  - name: inline
+    type: boolean
+    default: false
+    reflect: true      # ADR-0223 (Fill by Default) — the ONE sizing opt-out: flips display level (inline-grid) AND sizing posture (hug, with the ~20ch typing-width floor active). Default (absent) = block-level fill. Reflects so the :scope[inline] CSS leg applies to JS-set values.
   - name: currency
     type: string
     default: USD
@@ -177,7 +181,8 @@ geometry:
   inlinePad: h/2 (value/text edge) · ½(h−icon) (leading / trailing slot edge)   # the centering law, geometry.md
   gap: var(--ui-text-field-gap)            # adornment↔editor column-gap — the one density-bearing quantity (gap = font/2 × density)
   radius: var(--md-sys-shape-corner-base)            # fixed rounded-rect — the container-fleet referent, NOT the h/2 pill; entry-control class, geometry.md "Corner radius" / ADR-0015 cl.5 (#71 amendment)
-  minInlineSize: var(--ui-text-field-min-inline-size) (~20ch — entry-control typing-width floor, native <input size> parity; ADR-0021)   # the host floor so a bare field is hittable; size-invariant (ch is font-relative)
+  posture: fill (block-level grid, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-grid + hug   # Fill by Default — the slice-0 pilot
+  minInlineSize: var(--ui-text-field-min-inline-size) (~20ch — typing-width floor, native <input size> parity), ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 cl.3(b), superseding ADR-0021's default-state placement)   # the fill default needs no floor — the container is the floor; size-invariant (ch is font-relative)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the idle field border, ink, and placeholder visible (CanvasText); the :focus-within outline ring survives via --md-sys-color-focus-ring → Highlight (ADR-0014). Control-injected adornment glyphs (magnifier/symbol/reveal/steppers/calendar-button) use `forced-color-adjust:none` to keep their inherited ink — they are aria-hidden decorative cues, so bypassing the system palette is intentional (ADR-0044/ADR-0048).
 
@@ -218,10 +223,13 @@ the vertical lever (`padding-block` is always `0`), the value/text edge sits at 
 slot edge at the emergent `½(h − icon)`. The field frame (border + radius) is drawn **on the host** so a
 slotted adornment sits inside the box; the corner is the fixed `--md-sys-shape-corner-base` rounded-rect (the
 container-fleet referent an entry control takes, not the action family's `h/2` pill — ADR-0015 cl.5).
-A bare field carries a default minimum **typing width** (`min-inline-size: ~20ch`, native `<input size>`
-parity) so an unsized field stays hittable; **layout owns the width above that floor** (a flex/grid track
-or an explicit `inline-size`; the `--ui-text-field-min-inline-size` token is the per-field override) —
-ADR-0021.
+The field **fills by default** (ADR-0223): the host is block-level and stretches to the parent's inline
+space — a bare field in block flow is always hittable because the container is the floor. The single
+opt-out is the boolean `inline` attribute, which flips the host to inline-level **hug** posture; in that
+state the ~20ch typing-width floor (`min-inline-size`, native `<input size>` parity — ADR-0021's lesson,
+relocated per ADR-0223 cl.3(b)) holds the hugging box open, and the
+`--ui-text-field-min-inline-size` token is the per-field override. A block-but-hugging middle state is
+deliberately not offered — set an explicit `inline-size` for that.
 
 ## Slots & anatomy
 

@@ -9,8 +9,9 @@
  *       option rows are the legacy item-pad (ROV-C5 / §4.6/5.1).
  *   [2] STYLES BLOCK — `@scope (ui-combo-box)` CONSUMES only `--ui-combo-box-*` for its OWN
  *       tokens plus the shared fleet constants (`--md-sys-color-focus-ring`, `--ui-motion-*`).
- *       The host is `display: inline-grid` with a `min-inline-size` floor (ADR-0021: entry-
- *       control frame law; the same trap that collapsed ui-text-field + ui-slider). The editor
+ *       The host FILLS by default — block-level `grid`, no intrinsic width (ADR-0223 cl.1); the
+ *       ONE `[inline]` opt-out hugs at the 20ch floor (ADR-0021's lesson, relocated per cl.3(b) —
+ *       the same trap that collapsed ui-text-field + ui-slider guards the hug state). The editor
  *       part is Control-class: `block-size` off `--ui-combo-box-height`; inline text inset = h/2
  *       (the fleet Control-class value-edge standard, matching text-field/select). The listbox
  *       panel is Container/surface: `--ui-container-bg` equivalent, `--md-sys-shape-corner-base` rounding.
@@ -99,8 +100,10 @@
   /* Frame shape */
   --ui-combo-box-radius: var(--md-sys-shape-corner-base);
 
-  /* Min-inline-size floor (ADR-0021 entry-control lesson — must NOT be 0 or the editor
-     collapses to a zero-width typing target in a flex row, just like text-field #74). */
+  /* Min-inline-size floor — the [inline] hug-state typing-width floor (ADR-0223 cl.3(b),
+     superseding ADR-0021's default-state placement — must NOT be 0 in the hug state or the editor
+     collapses to a zero-width typing target, just like text-field #74). The FILL default needs no
+     floor: the container is the floor. Token name + default unchanged. */
   --ui-combo-box-min-inline-size: 20ch;
 
   /* ── Listbox panel (Container/surface-class) ────────────────────────── */
@@ -166,13 +169,24 @@
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-combo-box) ════════════════ */
 
 @scope (ui-combo-box) {
-  /* Host: inline-grid so width is the layout's job, but a min-inline-size floor prevents
-     collapse (the ADR-0021 entry-control law; same pattern as text-field + slider). */
+  /* FILL BY DEFAULT (ADR-0223 cl.1/2 — slice 1, the entry family): the host is BLOCK-level `grid`
+     and stretches to the parent's inline space; NO intrinsic width in the default state. The
+     ADR-0021 20ch typing-width floor is NOT deleted — it moves to the `[inline]` hug leg below
+     (clause 3(b)): in fill posture the container IS the floor. */
   :scope {
-    display: inline-grid;
-    min-inline-size: var(--ui-combo-box-min-inline-size);
+    display: grid;
     grid-template-columns: 1fr;
     position: relative; /* stacking context for any decorative caret pseudo */
+  }
+
+  /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): a single reflected boolean flips BOTH
+     display level (inline-grid) and sizing posture (hug, with the clause 3(b) content floor active).
+     The ADR-0021 typing-width floor lives HERE now — the degenerate hug context is exactly where the
+     zero-width collapse lived (token + default unchanged; per-instance/theme override via
+     --ui-combo-box-min-inline-size). No `hug` attribute, no block-but-hugging state. */
+  :scope[inline] {
+    display: inline-grid;
+    min-inline-size: var(--ui-combo-box-min-inline-size);
   }
 
   /* ── Editor part (Control-class) ──────────────────────────────────────── */
