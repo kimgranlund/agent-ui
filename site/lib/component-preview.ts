@@ -104,27 +104,19 @@ const MEDIA_SAMPLE_SRC = 'data:audio/wav;base64,' + MEDIA_SAMPLE_WAV_B64
 const VIDEO_SAMPLE_LABEL = 'Sample clip: a short chime'
 const AUDIO_SAMPLE_LABEL = 'Sample clip: a short chime'
 
-// ── BATCH A — one control per enum knob, routed by member count (no doubled PROPS knob + VARIANTS chip-row) ───
+// ── BATCH A — one control per enum knob, routed by fit (no doubled PROPS knob + VARIANTS chip-row) ───────────
 // A small closed enum reads best fully exposed (every option visible, one click to pick) — `ui-segmented-control`
-// (ADR-0095; was `ui-radio-group[variant="segmented"]` under the retired ADR-0086). A larger enum would make a
-// segmented control unwieldy — the existing `ui-select` dropdown stays. The boundary (≤5) is Kim's call:
-// button/checkbox/radio/switch/slider/select `size` (3), button `variant` (3), row/list `align` (5) land on the
-// segmented control; row/list `justify` (6), grid/card/tabs/modal `elevation`/`brightness`/`gap` (7), text
-// `variant`/`as` (9/10), text-field `type` (12), and the 8-member overlay `placement` land on select.
-const SEGMENTED_MAX = 5
+// (ADR-0095; was `ui-radio-group[variant="segmented"]` under the retired ADR-0086) — but ONLY while it fits the
+// knob column as a single HORIZONTAL row. The former vertical-stack fallback (4–5 members, or long labels) read
+// as a permanently-open dropdown on the catalog page (row/list `align` — flagged on the List card review,
+// 2026-08-18) and is retired: anything that cannot fit horizontally is a `ui-select` now. Kim's ruling
+// (2026-08-18, superseding the ≤5 SEGMENTED_MAX boundary of the same name): button/checkbox/radio/switch/
+// slider/select `size` (3×2ch) and button `variant` (3×5ch) stay segmented; row/list `align` (5),
+// ui-radio-group's own `orientation` (2 members but 10-char labels), and every larger enum land on select.
 
-// ── de-doubling closing step — the batch-A knobs render as a REAL ui-segmented-control ────────────────────────
-// `ui-segmented-control` (ADR-0095, superseding the retired `ui-radio-group[variant="segmented"]`) is a real
-// M3-style segmented control (a joined track + one shared sliding indicator, Control-height). Every batch-A
-// knob (above) is EXACTLY the shape it targets — a small mutually-exclusive option set — so every one of them
-// uses it; none stay plain. Orientation is the one per-knob judgment call: horizontal (the control's own
-// default) reads best when the whole row fits the narrow knob column (component-preview.css's `.knob` control
-// track, ≈150–190px in the two-column layout); a wider set — either MORE members (row/list `align`, 5) or just
-// LONGER labels at a small member count (ui-radio-group's own `orientation` knob, 2 members but
-// "horizontal"/"vertical") — goes vertical (a segmented STACK) instead, so the column never squeezes label text
-// or clips a cell. Decided generically from the member set itself (member count × longest label), not a
-// per-tag list — same derive-don't-duplicate discipline as `SEGMENTED_MAX` above; measured against the rendered
-// knob panel in component-preview.browser.test.ts (component-preview-segmented.browser.test.ts pins the whole shape).
+// The fit rule is decided generically from the member set itself (member count × longest label), never a
+// per-tag list — measured against the rendered knob panel (component-preview-segmented.browser.test.ts pins
+// the whole shape, incl. that an unfit set renders ui-select).
 const SEGMENTED_HORIZONTAL_MAX_MEMBERS = 3
 // 5, not 6: a 3-member/5-char set (button `variant` solid/soft/ghost) fills the 21rem knob column to EXACTLY 0px
 // slack (measured both engines — cells 63px, control right edge flush with the row). 5 is the empirical max
@@ -132,12 +124,13 @@ const SEGMENTED_HORIZONTAL_MAX_MEMBERS = 3
 // button-`variant` no-overflow probe in component-preview-segmented.browser.test.ts.
 const SEGMENTED_HORIZONTAL_MAX_LABEL = 5
 
-/** Segmented orientation for a knob's member set (see the note above): horizontal only for a short (≤3-member),
- *  short-label (≤5-char) set; everything wider or longer-labelled stacks vertical instead. */
-function segmentedOrientation(members: readonly string[]): 'horizontal' | 'vertical' {
-  if (members.length > SEGMENTED_HORIZONTAL_MAX_MEMBERS) return 'vertical'
+/** A member set earns a segmented control only when it fits the knob column as one horizontal row: a short
+ *  (≤3-member), short-label (≤5-char) set. Everything wider or longer-labelled renders ui-select instead
+ *  (the vertical-stack fallback is retired — Kim 2026-08-18). */
+function fitsSegmented(members: readonly string[]): boolean {
+  if (members.length === 0 || members.length > SEGMENTED_HORIZONTAL_MAX_MEMBERS) return false
   const maxLabelLength = members.reduce((max, m) => Math.max(max, m.length), 0)
-  return maxLabelLength <= SEGMENTED_HORIZONTAL_MAX_LABEL ? 'horizontal' : 'vertical'
+  return maxLabelLength <= SEGMENTED_HORIZONTAL_MAX_LABEL
 }
 
 // ── the unified knob model (one shape, both modes) ───────────────────────────────────────────────────────────
@@ -1355,7 +1348,7 @@ class ComponentPreview extends HTMLElement {
 
     if (knob.kind === 'enum') {
       const members = knob.values ?? []
-      if (members.length > 0 && members.length <= SEGMENTED_MAX) {
+      if (fitsSegmented(members)) {
         // Dogfoods ui-segmented-control (Kim's routing rule — small closed enum, every option visible at
         // once; ADR-0095's standalone tag, superseding the retired ui-radio-group[variant="segmented"]).
         // Real API (segmented-control.md / segment.md): a `ui-segment` child per member (`.value` + its
@@ -1369,11 +1362,10 @@ class ComponentPreview extends HTMLElement {
         group.id = id
         group.className = 'knob-segmented-control'
         group.setAttribute('aria-label', knob.name)
-        // de-doubling closing step: every batch-A enum knob renders as a real segmented control (the
-        // sliding indicator + roving come from the control itself — nothing here reimplements it).
-        // Horizontal is the control's own default (no attribute needed); a wider/longer-labelled set gets
-        // an explicit vertical stack instead (segmentedOrientation, above) so it fits the knob column.
-        if (segmentedOrientation(members) === 'vertical') group.setAttribute('orientation', 'vertical')
+        // de-doubling closing step: a fitting enum knob renders as a real segmented control (the sliding
+        // indicator + roving come from the control itself — nothing here reimplements it). Horizontal is
+        // the control's own default; fitsSegmented() already guaranteed the row fits, so no orientation
+        // attribute is ever set (the vertical stack is retired — an unfit set is a ui-select, below).
         // The fallback pre-selection must be a REAL #state seed, not merely a visual default: #rootProps() /
         // #applyKnob() read #state, not "whatever the segmented control widget happens to show" — an
         // unseeded knob would render 'sm' checked in the UI while the specimen itself carried no `size` at

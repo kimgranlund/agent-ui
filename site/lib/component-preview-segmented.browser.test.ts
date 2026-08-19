@@ -3,9 +3,11 @@ import { userEvent } from 'vitest/browser'
 
 // component-preview-segmented.browser.test.ts — re-keyed from the retired component-preview-radio-segmented.
 // browser.test.ts (ADR-0095 supersedes ADR-0086's ui-radio-group[variant="segmented"] with the standalone
-// ui-segmented-control/ui-segment pair). Every batch-A ≤5-member enum knob (component-preview.ts's
-// SEGMENTED_MAX branch) renders a real `<ui-segmented-control>`, not the plain dots-in-a-row ui-radio-group
-// layout. jsdom cannot prove any of this (no @scope grid layout, no `::before` geometry/transform, no
+// ui-segmented-control/ui-segment pair). An enum knob renders a real `<ui-segmented-control>` ONLY when the
+// member set fits the knob column as one horizontal row (component-preview.ts's fitsSegmented: ≤3 members,
+// ≤5-char labels); anything wider or longer-labelled renders `ui-select` — the former vertical-stack fallback
+// read as a permanently-open dropdown on the a2ui-catalog page and was retired (Kim 2026-08-18, the List card
+// review). jsdom cannot prove any of this (no @scope grid layout, no `::before` geometry/transform, no
 // computed cell widths) — this is the REAL-ENGINE proof, both engines, that:
 //   (1) the knob renders a REAL `ui-segmented-control` (+ the resolved `orientation`) — not just the tag, but
 //       the real grid layout it drives;
@@ -166,58 +168,29 @@ describe('component-preview — batch-A enum knobs render as a real ui-segmented
     }
   })
 
-  it('a wider 5-member set (ui-row `align`) renders VERTICAL: orientation=vertical, a stack that fits the panel', async () => {
+  it('a wider 5-member set (ui-row `align`) renders a ui-select, not a vertical segmented stack', async () => {
+    // The 5-member set used to stack vertical — retired: on the catalog page the stack read as a
+    // permanently-open dropdown (the 2026-08-18 List card review). An unfit set is a ui-select now.
     const preview = await mountPreview('component', 'ui-row')
     const row = knobRow(preview, 'align')!
-    const group = knobSegmentedControl(preview, 'align')!
-    expect(group.getAttribute('orientation'), 'a 5-member set should stack vertical, not squeeze into a row').toBe('vertical')
-
-    const segments = segmentsOf(group)
-    expect(segments.length).toBe(5) // start/center/end/stretch/baseline
-
-    const groupRect = group.getBoundingClientRect()
+    expect(knobSegmentedControl(preview, 'align') ?? null, 'a 5-member set must not render segmented at all').toBeNull()
+    const select = row.querySelector('ui-select') as HTMLElement | null
+    expect(select, 'the unfit enum knob renders ui-select').not.toBeNull()
+    // the knob carries every member (+ the KNOB_UNSET "—" sentinel) as [role=option] entries
+    const options = [...select!.querySelectorAll('[role=option]')].map((o) => o.getAttribute('value'))
+    for (const member of ['start', 'center', 'end', 'stretch', 'baseline']) expect(options).toContain(member)
+    // and it fits the knob row closed — no overflow past the panel
+    const selRect = select!.getBoundingClientRect()
     const rowRect = row.getBoundingClientRect()
-    expect(groupRect.right, 'the vertical stack must not overflow the knob panel width').toBeLessThanOrEqual(rowRect.right + 1)
-    expect(groupRect.width).toBeGreaterThan(0)
-    expect(groupRect.height).toBeGreaterThan(0)
-
-    const rects = segments.map((r) => r.getBoundingClientRect())
-    for (const r of rects) expect(r.height).toBeCloseTo(rects[0]!.height, 0) // equal-height cells
-    for (let i = 1; i < rects.length; i++) expect(rects[i]!.top).toBeCloseTo(rects[i - 1]!.bottom, 0) // stacked, no gap
-    for (const r of rects) {
-      expect(r.left).toBeGreaterThanOrEqual(rowRect.left - 1)
-      expect(r.right).toBeLessThanOrEqual(rowRect.right + 1) // no per-segment clipping past the panel
-    }
-
-    // Same bite-check as the horizontal case: the seeded 'start' (index 0) already makes opacity 1 before any
-    // click, so prove the indicator is sized to one cell and actually TRANSLATES to the newly-clicked member.
-    const cellHeight = rects[0]!.height
-    const seededIndex = segments.findIndex((r) => (r as unknown as { checked: boolean }).checked)
-    expect(seededIndex, 'no segment pre-checked from the seeded align default (start)').toBe(0)
-    const seededTy = translateOf(before(group).transform).ty
-    expect(seededTy, 'the indicator is not positioned over the seeded (start) segment before any click').toBeCloseTo(
-      seededIndex * cellHeight,
-      0,
-    )
-    expect(px(before(group).height), 'the indicator is not sized to one cell').toBeCloseTo(cellHeight, 0)
-
-    await userEvent.click(segments[1]!) // 'center' — a real commit AWAY from the seeded 'start' (index 0 → 1)
-    await expect
-      .poll(() => translateOf(before(group).transform).ty, { timeout: 1500 })
-      .toBeCloseTo(1 * cellHeight, 0)
-    const afterTy = translateOf(before(group).transform).ty
-    expect(afterTy, 'the indicator did not move off its seeded position — it is pinned').not.toBeCloseTo(seededTy, 0)
-    expect(px(before(group).opacity)).toBe(1)
-    expect(px(before(group).height), 'the indicator is still sized to one cell after moving').toBeCloseTo(cellHeight, 0)
+    expect(selRect.right).toBeLessThanOrEqual(rowRect.right + 1)
   })
 
-  it('a short-but-wide-labelled 2-member set (ui-radio-group’s own `orientation` knob) also goes vertical', async () => {
-    // radio-group's OWN descriptor exposes `orientation` (horizontal/vertical) as a knob when the control
-    // itself is previewed — 2 members, but a long label ("horizontal"/"vertical") that would clip a 2-cell
-    // horizontal row; segmentedOrientation's label-length branch catches this (retired `variant` knob no
-    // longer exists on ui-radio-group at all — ADR-0095).
+  it('a short-but-wide-labelled 2-member set (ui-radio-group’s own `orientation` knob) also renders ui-select', async () => {
+    // 2 members, but a long label ("horizontal"/"vertical") that would clip a 2-cell horizontal row;
+    // fitsSegmented's label-length branch routes it to ui-select (the vertical stack is retired).
     const preview = await mountPreview('component', 'ui-radio-group')
-    const group = knobSegmentedControl(preview, 'orientation')!
-    expect(group.getAttribute('orientation')).toBe('vertical')
+    expect(knobSegmentedControl(preview, 'orientation') ?? null).toBeNull()
+    const select = knobRow(preview, 'orientation')!.querySelector('ui-select')
+    expect(select).not.toBeNull()
   })
 })
