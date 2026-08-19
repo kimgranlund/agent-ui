@@ -1447,5 +1447,26 @@
     "description": "External Claude-skill repos as opt-in pack-library sources: a dev-time import CLI snapshots skills/*/SKILL.md into a provenance-stamped skill-pack file, the ad…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0216",
+    "url": "./adr-index.html#adr-0216",
+    "description": "ui-rating + the Rating catalog row: an owned star mark, float display / stepped input on one type",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0217",
+    "url": "./adr-index.html#adr-0217",
+    "description": "Price/Money: locale-correct currency lands as a default-catalog formatCurrency function, not a new type and not row widening",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0219",
+    "url": "./adr-index.html#adr-0219",
+    "description": "ui-pie-chart (PieChart, donut-default): the part-of-whole mark enters the chart family with a lightness-ramp palette and a real-DOM key list, lifting ADR-0107'…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
