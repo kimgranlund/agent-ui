@@ -1170,6 +1170,23 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // ADR-0210 (GH #1391) — the fleet's file-INPUT affordance (the ADR-0112 cl.1 fence opened): a
+    // host-mediated HANDLE model. tier=pattern ⇒ {doc, demo}, composing ui-attachment above for its chips.
+    label: 'ui-file-drop',
+    cards: [
+      {
+        href: './file-drop-demo.html',
+        title: 'Demo',
+        blurb: 'The file-drop form field, live in a <form> — drag, paste, or Browse to attach; a stub host intake seam mints handle descriptors with zero byte access, with a change event log.',
+      },
+      {
+        href: './file-drop-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-file-drop attributes (files/label/accept/multiple/maxSizeBytes/maxFiles + the form trio) and the host-mediated trust boundary, generated from its file-drop.md descriptor.',
+      },
+    ],
+  },
+  {
     label: 'ui-toast',
     cards: [
       {

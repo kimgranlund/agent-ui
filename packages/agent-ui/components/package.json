@@ -29,6 +29,7 @@
     "./controls/drawer": "./src/controls/drawer/drawer.ts",
     "./controls/drill": "./src/controls/drill/drill.ts",
     "./controls/field": "./src/controls/field/field.ts",
+    "./controls/file-drop": "./src/controls/file-drop/file-drop.ts",
     "./controls/form-popover": "./src/controls/form-popover/form-popover.ts",
     "./controls/form-provider": "./src/controls/form-provider/form-provider.ts",
     "./controls/grid": "./src/controls/grid/grid.ts",

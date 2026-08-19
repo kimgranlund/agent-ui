@@ -255,9 +255,11 @@ describe('site coverage — every shipped component has its required per-tier pa
     // {doc, demo} pages.
     // ui-drill (ADR-0195, GH #954) — the N-level drill-down panel container: tier=pattern (the header
     // row's Back button + heading take control height, the tabs/toolbar class); {doc, demo} pages required.
+    // ui-file-drop (ADR-0210, GH #1391) — the fleet's file-INPUT affordance: a dropzone/picker/chips
+    // composite (composes ui-button/ui-icon/ui-attachment, no new geometry row); {doc, demo} pages required.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
       [
-        'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'drill', 'form-popover', 'menu', 'modal',
+        'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'drill', 'file-drop', 'form-popover', 'menu', 'modal',
         'multi-select', 'pagination', 'popover', 'segmented-control', 'select', 'status-stream', 'swiper', 'swiper-paddles',
         'swiper-pagination', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
       ],

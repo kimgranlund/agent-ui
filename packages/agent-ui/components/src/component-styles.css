@@ -165,6 +165,10 @@
  * single-line (scale×size)→§1-row lookup text-field.css uses — see textarea.css's own header). */
 @import './controls/textarea/textarea.css';
 
+/* ADR-0210 (GH #1391) — ui-file-drop, the fleet's file-INPUT affordance: a Pattern-class dropzone/picker/
+ * chips composite (composes ui-button/ui-icon/ui-attachment, all already imported above). */
+@import './controls/file-drop/file-drop.css';
+
 /* genui-surface.spec.md SPEC-R3…R7 (D9) — ui-sandbox-frame, the GenUI containment host: one native
  * iframe + the fail-closed fallback affordance. Catalog-invisible by construction (SPEC-N1) — still a
  * fleet member, imported like any other control. */
