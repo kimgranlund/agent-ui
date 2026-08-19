@@ -72,6 +72,7 @@ import themeProviderMd from '../../packages/agent-ui/components/src/controls/the
 import sparklineMd from '../../packages/agent-ui/components/src/controls/sparkline/sparkline.md?raw'
 import barChartMd from '../../packages/agent-ui/components/src/controls/bar-chart/bar-chart.md?raw'
 import lineChartMd from '../../packages/agent-ui/components/src/controls/line-chart/line-chart.md?raw'
+import pieChartMd from '../../packages/agent-ui/components/src/controls/pie-chart/pie-chart.md?raw'
 // The Wave M1 report family (ADR-0111, report-family.lld.md): table/stat/badge — all tier=display. `ui-table`
 // widened in place by ADR-0163 (selection/sort/filter/pagination, all default off).
 import tableMd from '../../packages/agent-ui/components/src/controls/table/table.md?raw'
@@ -83,6 +84,8 @@ import descriptionListMd from '../../packages/agent-ui/components/src/controls/d
 import sourceListMd from '../../packages/agent-ui/components/src/controls/source-list/source-list.md?raw'
 // ADR-0163 cl.6 — ui-pagination, the fleet's first standalone page navigator (tier=pattern).
 import paginationMd from '../../packages/agent-ui/components/src/controls/pagination/pagination.md?raw'
+// ADR-0213 — ui-suggestions, the one-shot follow-up/next-prompt chip set (tier=pattern ⇒ {doc, demo}).
+import suggestionsMd from '../../packages/agent-ui/components/src/controls/suggestions/suggestions.md?raw'
 // The Wave M1 content family (ADR-0113, content-family.lld.md): the code leaf + the disclosure fold.
 import codeMd from '../../packages/agent-ui/components/src/controls/code/code.md?raw'
 import disclosureMd from '../../packages/agent-ui/components/src/controls/disclosure/disclosure.md?raw'
@@ -205,6 +208,8 @@ export const loadSparklineDoc = (): ComponentDoc => parseDoc(sparklineMd)
 export const loadBarChartDoc  = (): ComponentDoc => parseDoc(barChartMd)
 // ADR-0205/GH #1207 — ui-line-chart, the fleet's first axis-bearing chart (tier=display ⇒ {doc} only).
 export const loadLineChartDoc = (): ComponentDoc => parseDoc(lineChartMd)
+// ADR-0219 — ui-pie-chart, the part-of-whole ring/pie mark (tier=display ⇒ {doc} only).
+export const loadPieChartDoc = (): ComponentDoc => parseDoc(pieChartMd)
 // The Wave M1 report family (ADR-0111 — all three tier=display ⇒ {doc} only).
 export const loadTableDoc = (): ComponentDoc => parseDoc(tableMd)
 export const loadStatDoc  = (): ComponentDoc => parseDoc(statMd)
@@ -213,6 +218,7 @@ export const loadDescriptionListDoc = (): ComponentDoc => parseDoc(descriptionLi
 // ADR-0214/GH #1394 — ui-source-list, the source-attribution aggregate leaf (tier=display ⇒ {doc}).
 export const loadSourceListDoc = (): ComponentDoc => parseDoc(sourceListMd)
 export const loadPaginationDoc = (): ComponentDoc => parseDoc(paginationMd)
+export const loadSuggestionsDoc = (): ComponentDoc => parseDoc(suggestionsMd)
 // The Wave M1 content family (ADR-0113 — code tier=display ⇒ {doc}; disclosure tier=pattern ⇒ {doc, demo}).
 export const loadCodeDoc       = (): ComponentDoc => parseDoc(codeMd)
 export const loadDisclosureDoc = (): ComponentDoc => parseDoc(disclosureMd)

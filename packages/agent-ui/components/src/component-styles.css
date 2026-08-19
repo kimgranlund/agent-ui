@@ -97,6 +97,10 @@
  * always-shown min/max labels). Display-class, non-interactive, non-form-associated. */
 @import './controls/line-chart/line-chart.css';
 
+/* Chart family — ADR-0219: ui-pie-chart, the part-of-whole ring (donut default) or solid pie mark,
+ * lifting ADR-0107's pie fence. Display-class, non-interactive, non-form-associated. */
+@import './controls/pie-chart/pie-chart.css';
+
 /* Report family — Wave M1 (ADR-0111, report-family.lld.md LLD-C10): the native table, the metric tile,
  * and the compact-realm intent badge. All Display-class, non-interactive, non-form-associated leaves. */
 @import './controls/table/table.css';
@@ -182,3 +186,7 @@
 /* ADR-0179 GH #686 Amendment S7-a (admin-three-pane-ia.lld.md §16.4) — ui-toggle, the fleet's first
  * pressed-state pill button (Control-band ramp; idle outlined chip → pressed tonal-primary fill). */
 @import './controls/toggle/toggle.css';
+
+/* ADR-0213 (GH #1393) — ui-suggestions, the one-shot follow-up/next-prompt chip set: compact-realm
+ * chip geometry (--md-sys-compact-lg) + the spent-set inertness paint (taken tonal fill, muted siblings). */
+@import './controls/suggestions/suggestions.css';

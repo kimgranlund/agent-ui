@@ -273,6 +273,14 @@
       "section": "Components"
     },
     {
+      "name": "Pie Chart",
+      "tag": "ui-pie-chart",
+      "url": "./pie-chart-doc.html",
+      "description": "A part-of-whole ring (donut, default) or solid pie chart with a printed-percent key list, identity carried by order + label + percent, never hue alone.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Popover",
       "tag": "ui-popover",
       "url": "./popover-doc.html",
@@ -413,6 +421,14 @@
       "tag": "ui-status-stream",
       "url": "./status-stream-doc.html",
       "description": "A live status strip that streams work-in-progress entries and tail-follows the newest arrival.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Suggestions",
+      "tag": "ui-suggestions",
+      "url": "./suggestions-doc.html",
+      "description": "ui-suggestions is the one-shot follow-up/next-prompt chip set (ADR-0213, GH #1393) — a Pattern-class leaf that renders suggestions (a bindable array of {label,…",
       "level": "L1",
       "section": "Components"
     },

@@ -209,10 +209,13 @@ describe('site coverage — every shipped component has its required per-tier pa
       // + ui-image (GH #1189 R1/R2) — the URL-sourced content-image primitive, Display class (geometry.md:
       // "intrinsic structural sizing", no [size]/[scale] control-band row); its {doc} page is required below.
       // + ui-line-chart (GH #1207/ADR-0205) — the fleet's first axis-bearing chart (a value-range baseline +
-      // always-shown min/max labels, single-series); parked in KNOWN_UNDOCUMENTED above.
+      // always-shown min/max labels, single-series).
+      // + ui-pie-chart (ADR-0219) — the fourth chart-family control, the part-of-whole ring/pie mark; its
+      // {doc} page (`pie-chart-doc.html`) shipped in the SAME component-build seat's wave (the ui-line-chart/
+      // GH #1207 precedent) — no KNOWN_UNDOCUMENTED parking needed.
       // + ui-source-list (ADR-0214, GH #1394) — the source-attribution aggregate leaf, Display class like
       // ui-description-list (no events, no geometry row, not form-associated); its {doc} page required below.
-      ['attachment', 'audio', 'badge', 'bar-chart', 'code', 'description-list', 'icon', 'image', 'ladder', 'line-chart', 'progress', 'ramp', 'source-list', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text', 'video'],
+      ['attachment', 'audio', 'badge', 'bar-chart', 'code', 'description-list', 'icon', 'image', 'ladder', 'line-chart', 'pie-chart', 'progress', 'ramp', 'source-list', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text', 'video'],
     )
     // Wave 1 Indicator family (checkbox, switch, radio, radio-group) + ui-segment (ADR-0095 clause 3 —
     // the SAME real ancestor, UIIndicatorElement, as ui-radio) + the Wave M1 feed family (ADR-0112): ui-avatar
@@ -257,11 +260,13 @@ describe('site coverage — every shipped component has its required per-tier pa
     // {doc, demo} pages.
     // ui-drill (ADR-0195, GH #954) — the N-level drill-down panel container: tier=pattern (the header
     // row's Back button + heading take control height, the tabs/toolbar class); {doc, demo} pages required.
+    // ui-suggestions (ADR-0213, GH #1393) — the one-shot follow-up/next-prompt chip set: tier=pattern (a
+    // container of multiple independently-interactive chip rows); {doc, demo} pages required.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
       [
         'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'drill', 'form-popover', 'menu', 'modal',
-        'multi-select', 'pagination', 'popover', 'segmented-control', 'select', 'status-stream', 'swiper', 'swiper-paddles',
-        'swiper-pagination', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
+        'multi-select', 'pagination', 'popover', 'segmented-control', 'select', 'status-stream', 'suggestions', 'swiper',
+        'swiper-paddles', 'swiper-pagination', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
       ],
     )
   })

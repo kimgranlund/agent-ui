@@ -19,7 +19,8 @@
 //     ONE slotted form control) and ui-form-provider (the discovery/aggregation layer over UIFormElement
 //     descendants). Neither carries a form value of its own — both extend UIElement directly.
 //   • Chart family — Wave M1 (ADR-0107, chart-family.lld.md): ui-sparkline (series-shape mark) and
-//     ui-bar-chart (magnitude-comparison bar list). Both Display-class, axis-free, non-interactive,
+//     ui-bar-chart (magnitude-comparison bar list); ADR-0205 adds ui-line-chart (axis-bearing line/area);
+//     ADR-0219 adds ui-pie-chart (part-of-whole donut/pie). All Display-class, non-interactive,
 //     non-form-associated leaves — extend UIElement directly, tier=display, no [size]/[scale] geometry row.
 //   • Report family — Wave M1 (ADR-0111, report-family.lld.md): ui-table (native <table>, scroll-preserving
 //     re-render), ui-stat (metric tile, direction-as-text delta), ui-badge (compact-realm intent badge). All
@@ -113,6 +114,12 @@ export * from './bar-chart/bar-chart.ts'   // magnitude-comparison bar list (LLD
 // no [size]/[scale] geometry row — but NOT axis-free (the gap ADR-0107 cl.1 named as its own new intake).
 export * from './line-chart/line-chart.ts' // axis-bearing line/area mark (ADR-0205)
 
+// Chart family — ADR-0219: the fleet's FOURTH chart, the part-of-whole mark (donut-default ring or
+// solid pie), lifting ADR-0107's pie fence on its own three stated conditions. Same shape as the three
+// above — Display-class, extends UIElement directly, no [size]/[scale] geometry row — identity carried
+// by order + label + printed percent in a real-DOM key list (never hue alone).
+export * from './pie-chart/pie-chart.ts' // part-of-whole ring/pie mark (ADR-0219)
+
 // Report family — Wave M1 (ADR-0111, report-family.lld.md): the real native <table>, the metric tile, and
 // the compact-realm intent badge. All Display-class, non-interactive, non-form-associated leaves.
 export * from './table/table.ts'   // scroll-preserving re-render + ADR-0163 interactive widening (selection/sort/filter/page)
@@ -193,3 +200,9 @@ export * from './otp-field/otp-field.ts'
 // button (icon + label + an optional orthogonal state icon; aria-pressed via ElementInternals; the
 // cancelable-before-commit `toggle` refusal seam, toggle.md). The fleet's first toggle-button primitive.
 export * from './toggle/toggle.ts'
+
+// ADR-0213 (GH #1393) — ui-suggestions, the one-shot follow-up/next-prompt chip set: a Pattern-class leaf
+// (no ChildList — `suggestions` is DATA) carrying a `value:{prop:'selected',event:'select'}` two-way mark;
+// non-empty `selected` renders the WHOLE set spent (every chip disabled, the taken one stays visibly
+// marked) — the ADR-0097 frozen-history law relocated into the component.
+export * from './suggestions/suggestions.ts'

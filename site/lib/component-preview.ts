@@ -1232,6 +1232,16 @@ const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
       '[{"label":"Room","value":"Deluxe King"},{"label":"Nights","value":3},' +
       '{"label":"Breakfast","value":"Included"},{"label":"Total","value":"$412.00"}]',
   },
+  // ADR-0213 — ui-suggestions' `suggestions` is the same JSON-string `kind: 'skip'` codec gap as
+  // ui-table's `rows`/ui-description-list's `rows` above (no editable knob), so its LIVE default ([])
+  // would render zero chips. Seeded with a real 3-chip suggestion set, one taken (`selected` matches
+  // the second entry's `value`) so the whole-shape law has both the live AND spent-set paint to measure.
+  'ui-suggestions': {
+    suggestions:
+      '[{"label":"Book the Deluxe King"},{"label":"See more photos","value":"more-photos"},' +
+      '{"label":"Compare rooms","value":"compare"}]',
+    selected: 'more-photos',
+  },
   // ADR-0214 — ui-source-list's `sources` is the same JSON-string `kind: 'skip'` codec gap as
   // ui-description-list's `rows` above (no editable knob), so its LIVE default ([]) would render nothing.
   // Seeded with a real cited-answer source list so the whole-shape law has rows to measure.
@@ -1314,6 +1324,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-slider-multi', // JS-managed light-DOM rail/fill/thumb children (NOT ::before/::after, unlike ui-slider)
   'ui-sparkline', // component-built inline <svg> (createElementNS + replaceChildren) — the ui-icon precedent, a name/values-driven mark, not authored text (slots: [] — sparkline.md)
   'ui-line-chart', // ADR-0205: component-built label rows + inline <svg> (replaceChildren) — the ui-sparkline precedent, a values-driven mark, not authored text (slots: [] — line-chart.md)
+  'ui-pie-chart', // ADR-0219: component-built key-list rows + aria-hidden <svg> ring (replaceChildren) — the chart-family precedent, a data-driven mark, not authored text (slots: [] — pie-chart.md)
   'ui-disclosure', // #ensureParts(): the details/summary/chevron chrome — host children are ADOPTED into a nested body PART, never left as direct host children (unlike a STRUCTURAL container), so a host-level SLOT_TEXT write would destroy the whole part tree
   'ui-stat', // connected() builds four spans once (replaceChildren) from label/value/delta/caption PROPS — no light-DOM content model at all (slots: [] — stat.md)
   'ui-description-list', // connected() builds row/label/value spans (replaceChildren) from the rows PROP — no light-DOM content model at all (slots: [] — description-list.md, ADR-0201)
@@ -1357,6 +1368,10 @@ export const NO_SLOT_TEXT = new Set([
   // from page/pages/label PROPS alone — no light-DOM content model at all (slots: [] — pagination.md), the
   // ui-stat/ui-swatch precedent exactly.
   'ui-pagination',
+  // ADR-0213 — ui-suggestions builds every chip itself (replaceChildren) from the `suggestions` PROP alone
+  // — no light-DOM content model at all (slots: [] — suggestions.md), the ui-stat/ui-description-list
+  // precedent exactly.
+  'ui-suggestions',
 ])
 
 // STRUCTURAL (batch B) — the default slot IS the real content model (children ARE the grid cells / flex items /

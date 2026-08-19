@@ -29,8 +29,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import adr_ratify  # noqa: E402
 from adr_ratify import (  # noqa: E402
     AMENDMENT_HEADER_RE,
+    REENTRY_SECTION_TITLE,
     REPAIRS_ISSUE_LABEL,
     REPAIRS_ROW_RE,
+    conditions_section,
+    is_reentry_condition,
+    partition_repairs,
     amendment_body,
     amendment_booked_repairs,
     amendment_issue_body,
@@ -262,6 +266,70 @@ class TheWholeCorpusParses(unittest.TestCase):
         self.assertGreater(cells, 150, "the ADR corpus got smaller — is the glob still right?")
 
 
+class ReentryConditionPartition(unittest.TestCase):
+    """The GH #1411 partition: executable REPAIRS (checkboxes) vs FUTURE re-entry CONDITIONS
+    (non-checkbox section). Only two anchored shapes partition out; everything else stays a
+    checkbox (fail-closed). The two positive fixtures are ADR-0211's real booked items — the
+    exact two that left tracker GH #1402 un-closable.
+    """
+
+    # ADR-0211's real items, verbatim from GH #1402 (copied 2026-08-19).
+    ADR_0211_NONE = (
+        "on ratification (this ADR ships in the SAME PR as the mint, so build repairs land "
+        "together): none beyond the mint itself"
+    )
+    ADR_0211_FUTURE = (
+        "on a FUTURE Layer-0 readback accessor (Alternatives B's re-entry condition): revisit "
+        "clause 2 — widen the row with a real `value` mark and amend this ADR"
+    )
+
+    def test_the_two_real_adr_0211_items_partition_as_conditions(self) -> None:
+        self.assertTrue(is_reentry_condition(self.ADR_0211_NONE))
+        self.assertTrue(is_reentry_condition(self.ADR_0211_FUTURE))
+
+    def test_bold_emphasis_does_not_hide_a_condition(self) -> None:
+        self.assertTrue(is_reentry_condition("**On a future** fourth consumer: revisit cl.3"))
+        self.assertTrue(is_reentry_condition("**On ratification:** none owed forward"))
+
+    def test_negative_controls_stay_checkboxes(self) -> None:
+        # Fail-closed: every real executable shape in the fixture corpus stays a checkbox.
+        for item in (
+            "**On ratification:** `roadmap.md` restates",  # executable, books a real edit
+            "on ratification+build: [TKT-0072](../tickets/x.md) (the owning ticket)",
+            "`x.ts` (gated on ratification)",
+            "a future amendment may revisit this — `y.ts` gains a row",  # 'future' not at start
+            "on ratification: nonetheless a real repair of `z.md`",  # 'none' must be a word
+            "NEW `packages/agent-ui/icons/` workspace (gated on ratification)",
+        ):
+            with self.subTest(item=item):
+                self.assertFalse(is_reentry_condition(item))
+
+    def test_partition_keeps_cell_order_within_each_side(self) -> None:
+        items = ["`a.ts` repair", self.ADR_0211_FUTURE, "`b.ts` repair", self.ADR_0211_NONE]
+        repairs, conditions = partition_repairs(items)
+        self.assertEqual(repairs, ["`a.ts` repair", "`b.ts` repair"])
+        self.assertEqual(conditions, [self.ADR_0211_FUTURE, self.ADR_0211_NONE])
+
+    def test_conditions_section_is_non_checkbox_and_verbatim(self) -> None:
+        section = conditions_section([self.ADR_0211_FUTURE])
+        self.assertIn(REENTRY_SECTION_TITLE, section)
+        self.assertIn(f"- {self.ADR_0211_FUTURE}", section)
+        self.assertNotIn("- [ ]", section)
+        self.assertIn("NOT part of this issue's close condition", section)
+
+    def test_no_conditions_yields_no_section(self) -> None:
+        self.assertEqual(conditions_section([]), "")
+
+    def test_issue_body_partitions_and_scopes_the_close_condition_to_checkboxes(self) -> None:
+        items = ["`a.ts` gains a row", self.ADR_0211_FUTURE]
+        body = issue_body("0211", ".claude/docs/adr/0211-x.md", "https://u", "2026-08-19", items)
+        self.assertIn("- [ ] `a.ts` gains a row", body)
+        self.assertNotIn(f"- [ ] {self.ADR_0211_FUTURE}", body)  # never a checkbox
+        self.assertIn(f"- {self.ADR_0211_FUTURE}", body)  # still quoted verbatim, plain bullet
+        self.assertIn(REENTRY_SECTION_TITLE, body)
+        self.assertIn("the close condition covers ONLY the checkbox list", body)
+
+
 class BookedRepairsBodies(unittest.TestCase):
     """The two surfaces' text is composed, never paraphrased (ADR-0149 F2)."""
 
@@ -432,6 +500,64 @@ class WholeFlipPath(unittest.TestCase):
         comment = fake.payload("repos/OWNER/REPO/issues/38/comments --input -")
         self.assertIn("No tracking issue was filed", comment["body"])
         self.assertNotIn("Tracked in", comment["body"])
+
+    def flip_cell(self, cell: str):
+        """Run the real `main()` over FIXTURE_ADR with its Repairs cell swapped for `cell`."""
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        adr_dir = root / ".claude" / "docs" / "adr"
+        adr_dir.mkdir(parents=True)
+        original_cell = FIXTURE_ADR.split("> | **Repairs** | ")[1].split(" |\n")[0]
+        (adr_dir / "9999-fixture.md").write_text(
+            FIXTURE_ADR.replace(original_cell, cell), encoding="utf-8"
+        )
+        fake = FakeSubprocess(root)
+        real_subprocess, real_argv = adr_ratify.subprocess, sys.argv
+        adr_ratify.subprocess = fake
+        sys.argv = ["adr_ratify.py", "ADR-9999", UTTERANCE_URL]
+        out = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+                code = adr_ratify.main()
+        finally:
+            adr_ratify.subprocess, sys.argv = real_subprocess, real_argv
+        return code, fake, adr_dir, out.getvalue()
+
+    def test_a_mixed_cell_partitions_the_condition_out_of_the_checkboxes(self) -> None:
+        # One executable repair + one ADR-0211-shaped re-entry condition (the GH #1402 defect).
+        code, fake, adr_dir, stdout = self.flip_cell(
+            "**On ratification:** `roadmap.md` restates · "
+            "on a FUTURE Layer-0 readback accessor (re-entry condition): revisit clause 2"
+        )
+        self.assertEqual(code, 0, stdout)
+        issue = fake.payload("repos/OWNER/REPO/issues --input -")
+        self.assertIn("- [ ] **On ratification:** `roadmap.md` restates", issue["body"])
+        self.assertNotIn("- [ ] on a FUTURE", issue["body"])  # never a checkbox
+        self.assertIn("- on a FUTURE Layer-0 readback accessor", issue["body"])  # verbatim bullet
+        self.assertIn(REENTRY_SECTION_TITLE, issue["body"])
+        self.assertIn("the close condition covers ONLY the checkbox list", issue["body"])
+        # the comment carries the identical partition
+        comment = fake.payload("repos/OWNER/REPO/issues/38/comments --input -")
+        self.assertNotIn("- [ ] on a FUTURE", comment["body"])
+        self.assertIn(REENTRY_SECTION_TITLE, comment["body"])
+
+    def test_a_conditions_only_cell_files_no_tracker_at_all(self) -> None:
+        # Both of ADR-0211's real booked items are conditions — a tracker would be un-closable
+        # queue noise (GH #1402), so none is filed; the flip itself still lands.
+        code, fake, adr_dir, stdout = self.flip_cell(
+            "on ratification (this ADR ships in the SAME PR as the mint, so build repairs land "
+            "together): none beyond the mint itself · "
+            "on a FUTURE Layer-0 readback accessor (Alternatives B's re-entry condition): revisit "
+            "clause 2 — widen the row with a real `value` mark and amend this ADR"
+        )
+        self.assertEqual(code, 0, stdout)
+        self.assertIn(
+            "> | **Status** | accepted |",
+            (adr_dir / "9999-fixture.md").read_text(encoding="utf-8"),
+        )
+        self.assertEqual(fake.called("repos/OWNER/REPO/issues --input -"), 0)
+        self.assertEqual(fake.called("repos/OWNER/REPO/issues/38/comments --input -"), 0)
 
     def test_a_flip_owing_nothing_files_nothing(self) -> None:
         tmp = tempfile.TemporaryDirectory()
