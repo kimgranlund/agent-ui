@@ -394,6 +394,20 @@ describe('default catalog — conformance (SPEC-R7/R9)', () => {
     expect(validateCatalogConformance(modal, defaultCatalog)).toEqual([])
   })
 
+  it('ComboBox.open (GH #1331) is declared boolean + bindable + identity mapsTo, conforms as literal AND {path}, and rejects a non-boolean literal', () => {
+    // The Menu/Popover `open` shape minus their value mark: a plain bindable prop that reveals the
+    // listbox (the card/agent-visible identifying affordance). The row's ONE value mark stays the
+    // form value (value/change) — ADR-0019's one-mark law untouched.
+    expect(defaultCatalog.components.ComboBox.properties.open).toEqual({ type: { type: 'boolean' }, bindable: true, mapsTo: 'open' })
+    expect(defaultCatalog.components.ComboBox.value).toEqual({ prop: 'value', event: 'change' })
+    const literal: A2uiComponent = { id: 'cb', component: 'ComboBox', value: 'Helsinki', open: true }
+    const bound: A2uiComponent = { id: 'cb', component: 'ComboBox', open: { path: '/cityPickerOpen' } }
+    const bad: A2uiComponent = { id: 'cb', component: 'ComboBox', open: 'yes' }
+    expect(validateCatalogConformance(literal, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(bound, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(bad, defaultCatalog)).toEqual([{ code: 'CATALOG', path: 'cb.open' }])
+  })
+
   it('CardHeader.format (SPEC-R1): a declared literal member conforms, an out-of-enum literal fails CATALOG, and a {path} binding is ACCEPTED — deferred resolution, ADR-0026 (the bound arm the static ADR-0098 gate cannot see; enforced instead at render, widget.test.ts)', () => {
     const structured: A2uiComponent = { id: 'hd', component: 'CardHeader', format: 'structured' }
     const literal: A2uiComponent = { id: 'hd', component: 'CardHeader', format: 'default' }
@@ -745,9 +759,9 @@ describe('default catalog — RadioGroup/Radio, Slider, SliderMulti, Calendar, C
     expect(defaultCatalog.components.SliderMulti.properties.valueHi?.bindable).toBe(true)
   })
 
-  it('ComboBox binds value/change, not open/toggle (Fork D/combobox resolution — open carries no catalog property at all)', () => {
+  it('ComboBox binds value/change, not open/toggle (Fork D/combobox resolution; GH #1331 declares open as a plain bindable prop — never a second value slot)', () => {
     expect(defaultCatalog.components.ComboBox.value).toEqual({ prop: 'value', event: 'change' })
-    expect(defaultCatalog.components.ComboBox.properties.open).toBeUndefined()
+    expect(defaultCatalog.components.ComboBox.properties.open).toEqual({ type: { type: 'boolean' }, bindable: true, mapsTo: 'open' })
   })
 })
 

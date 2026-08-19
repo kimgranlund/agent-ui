@@ -809,11 +809,12 @@ describe('default catalog factories — Calendar (ADR-0087 Wave B, closes the AD
 })
 
 describe('default catalog factories — ComboBox (ADR-0087 Wave B, Fork D/combobox — resolves the two-way slot)', () => {
-  it('ComboBox → ui-combo-box is two-way bound on the FORM value via change — NOT open/toggle (corrects the stale combo-box.md comment); label/placeholder/strict/name/disabled are 1:1 accessors', () => {
+  it('ComboBox → ui-combo-box is two-way bound on the FORM value via change — NOT open/toggle (corrects the stale combo-box.md comment); label/placeholder/strict/open/name/disabled are 1:1 accessors', () => {
     expect(comboBoxFactory.tag).toBe('ui-combo-box')
     // Verified against combo-box.ts: `value` is the committed option key / free-text string
-    // (formValue() source); `change` fires on commit with `this.value` already updated. `open` remains
-    // a real, independently settable prop (drives the overlay) but carries no catalog value mark here.
+    // (formValue() source); `change` fires on commit with `this.value` already updated. `open` is a
+    // DECLARED plain bindable prop since GH #1331 (reveals the listbox — the identifying affordance)
+    // but still carries no catalog value mark: the ONE mark stays the form value (ADR-0019).
     expect(comboBoxFactory.value).toEqual({ prop: 'value', event: 'change' })
     const el = comboBoxFactory.create()
     comboBoxFactory.applyProp(el, 'value', 'pro')
@@ -829,7 +830,9 @@ describe('default catalog factories — ComboBox (ADR-0087 Wave B, Fork D/combob
     expect(target.strict).toBe(true)
     expect(target.name).toBe('plan')
     expect(target.disabled).toBe(true)
-    expect(defaultCatalog.components.ComboBox.properties.open).toBeUndefined() // one value mark per component
+    // GH #1331: `open` is a declared prop — but NOT a second value slot (one value mark per component).
+    expect(defaultCatalog.components.ComboBox.properties.open).toEqual({ type: { type: 'boolean' }, bindable: true, mapsTo: 'open' })
+    expect(defaultCatalog.components.ComboBox.value).toEqual({ prop: 'value', event: 'change' })
   })
 })
 
