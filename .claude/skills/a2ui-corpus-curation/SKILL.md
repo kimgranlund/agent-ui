@@ -123,6 +123,10 @@ A halt is a **stop-and-resolve**, never a bypass. The pipeline fails closed; act
    nothing written (`ADR-0165` cl.4/5 own the guard order + the stored-name early-return). Resolve by
    re-running with `--verdicts` so the name is judged FRESH; never delete the archived file — it IS the
    record.
+5. **Any candidate at the judge tier on a bare run** — a run WITHOUT `--verdicts` is legal only as the
+   all-`E_DUP` no-op; the moment ANY candidate clears dedup (a new seed, or the source-drifted content of
+   an admitted name), the run HALTS with nothing written — "N candidate(s) reached the judge tier with no
+   judge wired" (GH #1346). Resolve by re-running with `--verdicts`; a bare run can never admit anything.
 
 ## Validation loop — the pipeline is the check
 
