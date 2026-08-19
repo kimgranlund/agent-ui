@@ -168,6 +168,35 @@ describe('ui-stat — variant="ring" (GH#1208): renders, percent maps to arc via
   })
 })
 
+// -- ADR-0223 (Fill by Default, slice 3 -- display composites): the two-posture acceptance leg (the
+//    text-field slice-0 pilot's shape, generalized): FILL -- a bare host in BLOCK flow stretches to the
+//    container's inline size; [inline] -- the host hugs its content, but the role-(d) whole-shape floor
+//    (SPEC-R10, ADR-0223 cl.3(d)) survives BOTH postures, so the hugging box never collapses below it.
+describe('ui-stat -- ADR-0223 two postures (fill default / [inline] hug, both engines)', () => {
+  it('bare host offsetWidth ~= container inline size (fill); [inline] host hugs at/above the whole-shape floor, below the container', () => {
+    const wrap = document.createElement('div')
+    wrap.style.inlineSize = '640px' // a wide BLOCK container -- wider than the 8em floor
+    wrap.innerHTML = '<ui-stat label="Revenue" figure="48200" delta="12" caption="vs last month"></ui-stat>'
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const host = wrap.querySelector('ui-stat') as HTMLElement
+    const floor = tokenPx(host, '--ui-stat-min-inline-size')
+    expect(floor, 'anti-vacuous: the floor token must resolve to a real px value').toBeGreaterThan(0)
+
+    // FILL (the default): block-level `grid` -- the host stretches to the container.
+    const containerWidth = wrap.getBoundingClientRect().width
+    expect(host.offsetWidth, 'the bare host did not FILL its block container (ADR-0223 cl.1)').toBeCloseTo(containerWidth, 0)
+    expect(getComputedStyle(host).display, 'the default host is not block-level grid').toBe('grid')
+
+    // HUG (the ONE opt-out): [inline] flips display level only -- the role-(d) floor already applied above.
+    host.setAttribute('inline', '')
+    const hugged = host.offsetWidth
+    expect(hugged, 'the [inline] host is narrower than its whole-shape floor').toBeGreaterThanOrEqual(Math.floor(floor) - 1)
+    expect(hugged, 'the [inline] host did not HUG -- it still fills the container').toBeLessThan(containerWidth)
+    expect(getComputedStyle(host).display, 'the [inline] host is not inline-level').toBe('inline-grid')
+  })
+})
+
 describe('ui-stat — forced colors (SPEC-R15 AC1)', () => {
   it('the delta glyph survives in a system ink under forced-colors — Chromium emulates (CDP); WebKit asserts baseline', async () => {
     const el = mount('<ui-stat label="Revenue" value="100" delta="12"></ui-stat>')
