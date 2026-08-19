@@ -6,9 +6,9 @@
 > |---|---|
 > | **Status** | proposed |
 > | **Date** | 2026-08-19 |
-> | **Proposed by** | design-lane seat (component-design intake GH [#1429](https://github.com/kimgranlund/agent-ui/issues/1429), Kim's Figma intake — Claude Code Gateway node 112-1456) — ruled mint-earned on BOTH arms of the mint-vs-compose test (`.claude/skills/component-design/references/mint-vs-compose.md`): the TYPE arm (the status-tinted LEFT ACCENT EDGE is inexpressible — `ui-card` carries no edge-tint axis at all, only `elevation`/`brightness` surface planes) AND the ADR-0201 reverse-direction enforcement-locus arm (the availability law — one boolean flipping accent+dot+title-mute+action-swap while the overflow affordance stays live — is only prompt-enforceable in composition; the primitive enforces it by construction) |
+> | **Proposed by** | design-lane seat (component-design intake GH [#1429](https://github.com/kimgranlund/agent-ui/issues/1429), Kim's Figma intake — Claude Code Gateway node 112-1456) — ruled mint-earned on BOTH arms: the TYPE arm — ADR-0220's framing of the mint-vs-compose test, coined there, not in the reference — (the status-tinted LEFT ACCENT EDGE is inexpressible — `ui-card` carries no edge-tint axis at all, only `elevation`/`brightness` surface planes) AND the ADR-0201 reverse-direction enforcement-locus arm plus the minting-is-cheap check (`.claude/skills/component-design/references/mint-vs-compose.md`) (the availability law — one boolean flipping accent+dot+title-mute+action-swap while the overflow affordance stays live — is only prompt-enforceable in composition; the primitive enforces it by construction) |
 > | **Ratified by** | *pending — Kim flips the Status cell by explicit `ratify ADR-0224` utterance, verified by `scripts/adr_ratify.py` (ADR-0149); never self-ratified* |
-> | **Repairs** | on ratification+build (not authored here): **NEW** `controls/service-card/*` (`ui-service-card` + `service-card.css` + `service-card.md` descriptor + jsdom/browser probes incl. the forced-colors leg) · site surfaces (doc page, representative preview specimen, gallery row, `sizing-gates.test.ts` fill-posture row) · IF the wire arm is ratified (clause 8's recommendation — Kim rules): `catalog/default/catalog.json` + `factories.ts` (**NEW** `ServiceCard` row — the §5.2 delta drafted below), the full new-catalog-type coverage-machinery lanes (`.claude/skills/a2ui-catalog-rendering-review/references/catalog-pipeline.md` §"(iii)" steps 1–8), one corpus seed + prompt-inventory teaching; IF the wire arm is declined: `EXCLUSION_ALLOWLIST` entry (the ADR-0087 catalog-or-allowlist gate — one of the two lands either way, never neither) · `site/public/adr-index.json` regenerated (rider, this change) |
+> | **Repairs** | on ratification+build (not authored here): **NEW** `controls/service-card/*` (`ui-service-card` + `service-card.css` + `service-card.md` descriptor + jsdom/browser probes incl. the forced-colors leg) · site surfaces (doc page, representative preview specimen, gallery row, `sizing-gates.test.ts` passing with ZERO new DEBT/allowlist rows) · IF the wire arm is ratified (clause 8's recommendation — Kim rules): `catalog/default/catalog.json` + `factories.ts` (**NEW** `ServiceCard` row — the §5.2 delta drafted below), the full new-catalog-type coverage-machinery lanes (`.claude/skills/a2ui-catalog-rendering-review/references/catalog-pipeline.md` §"(iii)" steps 1–8), one corpus seed + prompt-inventory teaching; IF the wire arm is declined: `EXCLUSION_ALLOWLIST` entry (the ADR-0087 catalog-or-allowlist gate — one of the two lands either way, never neither) · `site/public/adr-index.json` regenerated (rider, this change) |
 > | **Supersedes / Superseded by** | None. Relates [ADR-0220](./0220-choice-group-rich-card-selection-container.md) (nearest structural kin, DIFFERENT semantics — `ui-choice-card` is a committed-selection option unit under a group; this card is a standalone LAUNCH surface with no selection, no group, no form value; also the "widen `Card`" rejection precedent adopted verbatim in Alternatives) · [ADR-0201](./0201-ui-description-list-key-value-receipt-primitive.md) (the reverse-direction enforcement-locus test this mint passes) · [ADR-0223](./0223-fill-by-default-fleet-sizing-contract.md) (the sizing posture: block-level fill, no intrinsic width, the R2 `inline` boolean — adopted at birth, clause 5) · [ADR-0057](./0057-intent-non-color-signifier-rule.md) (status never travels by color alone — the dot + the literal "Unavailable" chip text are the non-color signifiers) · [ADR-0153](./0153-status-stream-elapsed-timer-retry-action-planned-glyph.md) (`action` is the closed-set event this card's Open affordance emits — no new event name) · [ADR-0015](./0015-container-surface-space-token-model.md)/[ADR-0056](./0056-region-less-card-humane-default.md) (the `ui-card` surface prior art the interior rides) · [ADR-0087](./0087-a2ui-whole-fleet-catalog-scope-policy.md) (clause 8's obligation) · [ADR-0161](./0161-catalog-multi-slot-two-way-value-marks.md) (NOT used — this card carries no two-way value; `available` is one-way bound data, the `Badge.intent` precedent) |
 
 ## Context
@@ -31,7 +31,8 @@ single-consumer shape (the gateway).
 
 *Why compose still loses — two independent findings:*
 
-1. **The TYPE arm: the accent edge is inexpressible.** `ui-card`'s public surface is
+1. **The TYPE arm (ADR-0220's framing of the mint-vs-compose test): the accent edge is
+   inexpressible.** `ui-card`'s public surface is
    `elevation`/`brightness`/`scrollable` (`card.md`, verified) — there is NO edge/intent-tint axis
    anywhere in the container family. A producer cannot fake a status-tinted left border with any
    shipped prop; the anatomy's most identity-carrying element has no composition vehicle at all.
@@ -80,9 +81,11 @@ Eight clauses:
    ALSO conveyed textually, clause 6) · `data-part="title"` · `data-part="path"` (fleet mono
    typeface, the `format="structured"` kicker-mono precedent) · `data-part="description"` ·
    `data-part="action"` — a REAL `<button type="button">` when `available` (label =
-   `actionLabel`, leading `→` glyph), swapped by the SAME render pass to a disabled
-   `Unavailable` chip when not (a non-interactive `data-part="action"` box; `disabled` real
-   attribute — removed from tab order, `interaction-states.md` §3) · ONE optional **`menu` slot**
+   `actionLabel`, leading `→` glyph); when NOT available the SAME real
+   `<button type="button">` element carries a real `disabled` attribute and the `Unavailable`
+   chip styling — ONE element identity across both states, so tab-order removal, the inert
+   activation contract, and forced-colors `GrayText` all come free from the platform
+   (`interaction-states.md` §3) · ONE optional **`menu` slot**
    top-right for the consumer-composed overflow affordance (`ui-button` + `ui-menu`; app chrome —
    the card never fabricates a menu it cannot populate). The whole card is **NOT** a hit target:
    with two interactive descendants (action + menu) a clickable host would nest interactives —
@@ -98,7 +101,8 @@ Eight clauses:
    `inline` boolean flips display level + hug in one move; interior spacing off the
    `--md-sys-space` ladder × density; radius `var(--ui-service-card-radius,
    var(--md-sys-shape-corner-base))`; the action row takes the control height (pattern tier). The
-   `sizing-gates.test.ts` row lands CONFORM on day one.
+   control passes `sizing-gates.test.ts` with ZERO new DEBT/allowlist rows on day one (the
+   gate inventories debt; a conforming control adds no row to it).
 6. **States & a11y.** Interaction states live on the PARTS (button hover/active/focus per
    `interaction-states.md`; the host has no hover state — it is not interactive). Host ARIA: role
    `group` via `internals` with `internals.ariaLabel` mirroring `name` (never host attributes).
@@ -106,7 +110,8 @@ Eight clauses:
    signifier + a visually-hidden status text; unavailable ⇒ the literal `Unavailable` chip text.
    The action button's accessible name is `"{actionLabel} {name}"` (list context: N cards, N
    "Open" buttons must be distinguishable). Forced-colors leg: accent edge survives as a border,
-   dot gets a border, chip disablement conveyed by `GrayText`.
+   dot gets a border, chip disablement conveyed by the platform's `GrayText` on the real
+   disabled button (free by clause 3's one-element identity).
 7. **Events.** The action button's activation re-emits as **`action`** on the host (ADR-0153's
    seventh member — the `ui-status-stream` retry precedent; no detail payload needed at v1, the
    card's identity is the target). No event fires when unavailable (the chip is inert). No new
@@ -148,7 +153,8 @@ Eight clauses:
 ## Realization slices (each independently gated; S3/S4 fire only on the clause-8 arm Kim picks)
 
 - **S1 — the control.** `controls/service-card/` (ts + css + `service-card.md` descriptor + jsdom
-  probes + browser probes incl. forced-colors + the sizing-gates CONFORM row). One writer.
+  probes + browser probes incl. forced-colors; `sizing-gates.test.ts` passes with zero new
+  DEBT/allowlist rows). One writer.
 - **S2 — site surfaces.** Doc page, representative preview specimen (a 2–3 card grid, one
   unavailable — the example-authoring representativeness law), gallery row, knobs (one per prop).
 - **S3 (wire arm only) — catalog integration.** `catalog.json` + `factories.ts` `ServiceCard` row
