@@ -128,6 +128,57 @@ describe('ui-radio-group browser smoke — component-owned layout (ADR-0103)', (
   })
 })
 
+// ── ADR-0212 — nearest-group-scoped descendant discovery, real-engine roving leg ────────────────────
+//
+// jsdom cannot exercise real Tab/focus traversal; this proves the "exactly one tabindex=0" roving
+// contract holds when radios sit behind an interposed layout container (the model-grid shape) — incl.
+// the LATE-APPENDED correction (radio.ts clause 3, TKT-0068 item 3's mechanism, now nearest-group-scoped).
+
+describe('ui-radio-group browser smoke — nearest-group-scoped discovery (ADR-0212)', () => {
+  it('exactly one tabindex=0 across an interposed container; ArrowDown roves + selects the nested radio', async () => {
+    const el = mount(document.createElement('ui-radio-group') as UIRadioGroupElement)
+    const container = document.createElement('div')
+    const radios = ['a', 'b', 'c'].map((value) => {
+      const r = document.createElement('ui-radio')
+      r.setAttribute('value', value)
+      r.textContent = value.toUpperCase()
+      return r
+    })
+    container.append(...radios)
+    el.append(container)
+
+    expect(radios[0]!.tabIndex, 'the first nested radio should be the sole roving item').toBe(0)
+    expect(radios[1]!.tabIndex).toBe(-1)
+    expect(radios[2]!.tabIndex).toBe(-1)
+
+    radios[0]!.focus()
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }))
+
+    expect((radios[1] as unknown as { checked: boolean }).checked).toBe(true)
+    expect((radios[0] as unknown as { checked: boolean }).checked).toBe(false)
+    expect(radios[1]!.tabIndex).toBe(0)
+    expect(radios[0]!.tabIndex).toBe(-1)
+  })
+
+  it('late-append behind an interposed container is not a second tab stop (radio.ts clause 3, nearest-group-scoped)', () => {
+    const el = mount(document.createElement('ui-radio-group') as UIRadioGroupElement)
+    const container = document.createElement('div')
+    const first = document.createElement('ui-radio')
+    first.setAttribute('value', 'a')
+    container.append(first)
+    el.append(container) // group connects with one nested radio present
+
+    expect(first.tabIndex, 'the sole radio seeds the roving stop').toBe(0)
+
+    const late = document.createElement('ui-radio')
+    late.setAttribute('value', 'b')
+    container.append(late) // append INTO the already-connected interposed container
+
+    expect(late.tabIndex, 'a late-appended radio behind a container must not grow a second tab stop').toBe(-1)
+    expect(first.tabIndex).toBe(0)
+  })
+})
+
 // ADR-0051 — the user-invalid leg. The group carries no visual surface of its own (the file header) —
 // the danger repaint reaches into each ui-radio CHILD's own ::before ring, so this proof focuses/blurs a
 // RADIO (the group's blur listener is capture-phase, catching a descendant's blur) and reads the CHILD's

@@ -190,6 +190,16 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // ADR-0219 — the fourth chart-family control: the part-of-whole ring (donut, default) or solid pie,
+    // lifting ADR-0107's pie fence on its own three stated conditions. Same shape as the two above —
+    // Display-class, {doc} + demo.
+    label: 'ui-pie-chart',
+    links: [
+      { href: './pie-chart-demo.html', label: 'Demo' },
+      { href: './pie-chart-doc.html', label: 'API' },
+    ],
+  },
+  {
     // The token-surface family (ADR-0118) — three Display-class show-never-edit primitives, each a single
     // descriptor-derived API doc (tier=display ⇒ {doc} only, the ui-sparkline/ui-bar-chart precedent).
     label: 'ui-swatch',
@@ -493,6 +503,11 @@ export const NAV: readonly NavGroup[] = [
       { href: './description-list-doc.html', label: 'API' },
     ],
   },
+  // ADR-0214 (GH #1394) — the source-attribution aggregate leaf, same Display-class {doc}-only shape.
+  {
+    label: 'ui-source-list',
+    links: [{ href: './source-list-doc.html', label: 'API' }],
+  },
   {
     label: 'ui-badge',
     links: [
@@ -506,6 +521,14 @@ export const NAV: readonly NavGroup[] = [
     links: [
       { href: './pagination-demo.html', label: 'Demo' },
       { href: './pagination-doc.html', label: 'API' },
+    ],
+  },
+  // ADR-0213 (GH #1393) — ui-suggestions, the one-shot follow-up/next-prompt chip set (tier=pattern ⇒ {doc, demo}).
+  {
+    label: 'ui-suggestions',
+    links: [
+      { href: './suggestions-demo.html', label: 'Demo' },
+      { href: './suggestions-doc.html', label: 'API' },
     ],
   },
   // The Wave M1 content family (ADR-0113) — ui-code (tier=display ⇒ {doc} only) + ui-disclosure (tier=pattern
@@ -570,6 +593,14 @@ export const NAV: readonly NavGroup[] = [
     links: [
       { href: './attachment-demo.html', label: 'Demo' },
       { href: './attachment-doc.html', label: 'API' },
+    ],
+  },
+  {
+    // ADR-0210 (GH #1391) — the fleet's file-INPUT affordance, composing ui-attachment above for its chips.
+    label: 'ui-file-drop',
+    links: [
+      { href: './file-drop-demo.html', label: 'Demo' },
+      { href: './file-drop-doc.html', label: 'API' },
     ],
   },
   {

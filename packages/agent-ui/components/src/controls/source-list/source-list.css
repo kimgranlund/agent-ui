@@ -1,0 +1,110 @@
+/* source-list.css — ui-source-list, the source-attribution aggregate leaf (ADR-0214, GH #1394). Two
+ * sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-source-list)` declares the list rhythm as `--ui-source-list-*`: the row
+ *       gap + the index→title pair gap ride the shared `--md-sys-space` ladder (density-responsive for
+ *       free, the ui-description-list precedent); the index marker ink is the secondary plane (the same
+ *       label-ink precedent); the title link ink reuses the fleet's link-role primitive (the ui-text
+ *       ADR-0114 `--ui-text-link-ink` precedent, minted afresh in this control's own chain per the
+ *       own-chain routing law — ADR-0124); the snippet ink is the secondary plane too, one register down.
+ *       Display class: no [size]/[scale] control-band lookup, no `--md-sys-height-*`, no `h/2` law — the
+ *       levers are the type matrix + the space ladder.
+ *   [2] STYLES BLOCK — `@scope (ui-source-list)` consumes ONLY `--ui-source-list-*`.
+ *
+ * Anatomy (ADR-0214 cl.3): each row is a flex row — the index marker, then the title (a gated `<a>` or a
+ * plain `<span>`, styled identically by DATA-PART so an allowed/denied href never shifts layout), then an
+ * optional snippet that drops to its own line beneath (a receipt's supporting text, not a third inline
+ * column). The index marker never crushes (`flex-shrink:0`); the title wraps under itself.
+ *
+ * Forced colors: every part is real text (the ui-description-list/ui-text lesson: only a background-drawn
+ * shape needs a forced-colors repoint); an allowed title link additionally paints the system `LinkText`
+ * ink (the ui-text ADR-0114 SPEC-R13 AC2 precedent), underline intact.
+ *
+ * RTL: no dedicated mirroring rule — index → title is DOM order in a logical flex row; logical inline
+ * layout reads it correctly in both directions.
+ */
+
+/* ═══════ [1] TOKEN BLOCK — :where(ui-source-list) declares --ui-source-list-* ═══════ */
+
+:where(ui-source-list) {
+  --ui-source-list-row-gap: var(--md-sys-space-sm); /* between source rows — rides [density] free */
+  --ui-source-list-index-gap: var(--md-sys-space-sm); /* index marker → title */
+  --ui-source-list-index-ink: var(--md-sys-color-neutral-on-surface-variant); /* the secondary plane (ui-description-list label-ink precedent) */
+  --ui-source-list-index-min-inline-size: 1.5em; /* keeps single- and double-digit markers from shifting titles out of column */
+  --ui-source-list-link-ink: var(--md-sys-color-primary); /* the fleet link-role primitive, own-chain routed (ADR-0124) — the ui-text ADR-0114 precedent */
+  --ui-source-list-snippet-ink: var(--md-sys-color-neutral-on-surface-variant); /* the secondary plane, one register down from the title */
+}
+
+/* ═══════ [2] STYLES BLOCK — @scope (ui-source-list) consumes ONLY --ui-source-list-* ═══════ */
+
+@scope (ui-source-list) {
+  :scope {
+    display: flex;
+    flex-direction: column; /* the list is a vertical stack of rows */
+    gap: var(--ui-source-list-row-gap); /* the density-bearing quantity */
+  }
+
+  :scope [data-part='row'] {
+    display: flex;
+    flex-wrap: wrap; /* the snippet drops to its own line under the index+title pair when present */
+    align-items: baseline;
+    column-gap: var(--ui-source-list-index-gap);
+  }
+
+  :scope [data-part='index'] {
+    color: var(--ui-source-list-index-ink);
+    font-size: var(--md-sys-typescale-label-medium-size);
+    line-height: var(--md-sys-typescale-label-medium-line-height);
+    min-inline-size: var(--ui-source-list-index-min-inline-size);
+    flex-shrink: 0; /* the marker never crushes — the title wraps instead */
+    text-align: end; /* markers right-align into a tidy column as they widen (1 → 10) */
+  }
+
+  /* The title — styled IDENTICALLY whether the current DOM element is the gated `<a>` or the plain-text
+     `<span>` degrade (ADR-0214 cl.2): the a[href] leg below only ADDS the link treatment on top. */
+  :scope [data-part='title'] {
+    font-size: var(--md-sys-typescale-body-medium-size);
+    line-height: var(--md-sys-typescale-body-medium-line-height);
+    min-inline-size: 0; /* release the flex min-content floor so a long title wraps under itself */
+    overflow-wrap: anywhere;
+    color: inherit;
+  }
+
+  /* The hyperlink capability (ADR-0114 verbatim) — attribute-gated on `[href]`: a DENIED entry's `<span>`
+     never matches this selector (no href, plain prose); an ALLOWED entry's `<a>` does. Underline is ALWAYS
+     present, never hue-only (ADR-0057). */
+  :scope a[data-part='title'][href] {
+    color: var(--ui-source-list-link-ink);
+    text-decoration-line: underline;
+    text-underline-offset: 0.15em;
+    text-decoration-thickness: from-font;
+  }
+  :scope a[data-part='title'][href]:hover {
+    text-decoration-thickness: 2px;
+  }
+  :scope a[data-part='title'][href]:focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  :scope [data-part='snippet'] {
+    flex-basis: 100%; /* forces the wrap: the snippet always starts its own line, never inline with the title */
+    color: var(--ui-source-list-snippet-ink);
+    font-size: var(--md-sys-typescale-body-small-size);
+    line-height: var(--md-sys-typescale-body-small-line-height);
+    margin-inline-start: calc(var(--ui-source-list-index-min-inline-size) + var(--ui-source-list-index-gap)); /* aligns under the title, not the index */
+    overflow-wrap: anywhere;
+  }
+
+  /* forced-colors — every part is real text (the ui-description-list/ui-text lesson) */
+  @media (forced-colors: active) {
+    :scope [data-part='index'],
+    :scope [data-part='title'],
+    :scope [data-part='snippet'] {
+      color: CanvasText;
+    }
+    :scope a[data-part='title'][href] {
+      color: LinkText;
+    }
+  }
+}

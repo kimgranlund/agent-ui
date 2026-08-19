@@ -417,6 +417,24 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0219: the fourth chart-family control — the part-of-whole ring (donut, default) or solid pie,
+  // lifting ADR-0107's pie fence on its own three stated conditions. Same shape as the two above —
+  // Display-class, a descriptor-derived API doc.
+  {
+    label: 'ui-pie-chart',
+    cards: [
+      {
+        href: './pie-chart-demo.html',
+        title: 'Demo',
+        blurb: 'Live donut/pie charts over a real revenue-share dataset — the variant switch, the donut center as a sibling composition, degenerate cases, and a live data rewrite.',
+      },
+      {
+        href: './pie-chart-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class part-of-whole chart — a printed-percent key list carrying identity by order + label + percent, never hue alone, generated from pie-chart.md.',
+      },
+    ],
+  },
   // The token-surface family (ADR-0118): three Display-class show-never-edit primitives, each a
   // descriptor-derived API doc (tier=display ⇒ {doc} only, the ui-sparkline/ui-bar-chart precedent).
   {
@@ -1028,6 +1046,17 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0214 (GH #1394) — the source-attribution aggregate leaf, same Display-class {doc}-only shape.
+  {
+    label: 'ui-source-list',
+    cards: [
+      {
+        href: './source-list-doc.html',
+        title: 'API reference',
+        blurb: 'Source attribution as one aggregate leaf — positional index markers, per-entry safeHref-gated titles, and the drop-malformed-entries cleaner, generated from source-list.md.',
+      },
+    ],
+  },
   {
     label: 'ui-badge',
     cards: [
@@ -1056,6 +1085,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
         href: './pagination-doc.html',
         title: 'API reference',
         blurb: 'The ui-pagination attributes (page/pages/label) and the fixed page-window algorithm, generated from pagination.md.',
+      },
+    ],
+  },
+  // ADR-0213 (GH #1393) — ui-suggestions, the one-shot follow-up/next-prompt chip set (tier=pattern).
+  {
+    label: 'ui-suggestions',
+    cards: [
+      {
+        href: './suggestions-demo.html',
+        title: 'Demo',
+        blurb: 'A live 3-chip suggestion set — tap any chip to commit it into `selected` and watch the WHOLE set render spent, the taken chip visibly marked, a select event log.',
+      },
+      {
+        href: './suggestions-doc.html',
+        title: 'API reference',
+        blurb: 'The `suggestions`/`selected` attributes and the one-shot spent-set law, generated from suggestions.md.',
       },
     ],
   },
@@ -1182,6 +1227,23 @@ const CARD_GROUPS: readonly CardGroup[] = [
         href: './attachment-doc.html',
         title: 'API reference',
         blurb: 'The Display-class FilePart-aligned file card — one specimen per file category + SPEC-R8/R9 degenerate cases, generated from attachment.md.',
+      },
+    ],
+  },
+  {
+    // ADR-0210 (GH #1391) — the fleet's file-INPUT affordance (the ADR-0112 cl.1 fence opened): a
+    // host-mediated HANDLE model. tier=pattern ⇒ {doc, demo}, composing ui-attachment above for its chips.
+    label: 'ui-file-drop',
+    cards: [
+      {
+        href: './file-drop-demo.html',
+        title: 'Demo',
+        blurb: 'The file-drop form field, live in a <form> — drag, paste, or Browse to attach; a stub host intake seam mints handle descriptors with zero byte access, with a change event log.',
+      },
+      {
+        href: './file-drop-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-file-drop attributes (files/label/accept/multiple/maxSizeBytes/maxFiles + the form trio) and the host-mediated trust boundary, generated from its file-drop.md descriptor.',
       },
     ],
   },

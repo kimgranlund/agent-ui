@@ -74,10 +74,16 @@ export class UIRadioElement extends UIIndicatorElement {
     //
     // Which radio deserves tabIndex=0? The checked one (matches rovingFocus initialIndex), or the
     // first sibling when nothing is checked. `this === firstOrChecked` → leave at 0; else → -1.
-    const siblings = [...group.children].filter(
+    //
+    // ADR-0212: widened from a direct-`children` scan to the SAME nearest-group-scoped descendant rule
+    // `radio-group.ts`'s own `#radios()` applies (the two sides of discovery agree) — `group` may be an
+    // ancestor several layers up (an interposed visual container), so the sibling set here must be
+    // scoped by nearest-`[data-radio-group]` ownership, not raw `children`, or a radio nested behind a
+    // container would be missed and the group could grow a second tab stop.
+    const siblings = [...group.querySelectorAll('*')].filter(
       // Use the concrete class reference (UIRadioElement is in scope; this is a method body, not a
       // class decorator — no circular-reference issue at call time).
-      (el): el is UIRadioElement => el instanceof UIRadioElement,
+      (el): el is UIRadioElement => el instanceof UIRadioElement && el.closest('[data-radio-group]') === group,
     )
     const checkedSibling = siblings.find((r) => r.checked)
     const roving = checkedSibling ?? siblings[0]
