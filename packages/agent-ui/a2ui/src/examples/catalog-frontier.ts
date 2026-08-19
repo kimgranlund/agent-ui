@@ -444,10 +444,18 @@ const WIZARD_ID = 'ask-1'
  *  re-declared. "rooms" (RadioGroup) is built WITHOUT its value binding, wired in a SEPARATE immediately-
  *  following resend (radioGroupFactory's documented mount-order limitation: a value bound in the SAME
  *  batch that also creates its Radio children races ahead of them and clears the selection instead of
- *  reading it back) — proven by the real-renderer round-trip test, `backable-wizard.test.ts`. */
+ *  reading it back) — proven by the real-renderer round-trip test, `backable-wizard.test.ts`. Repaired
+ *  again for the sole ground a fresh judge sustained on this seed (GH #1262 second pass, a2ui-payload.md
+ *  P7): "cal" and "rooms" ship with NO accessible name of their own — the catalog declares no label prop
+ *  on either — so each rides an ADR-0051 Field wrap, the only naming path: "f_dates" (label "Check-in —
+ *  check-out", the booking-reservation precedent, catalog-coverage.ts) and "f_room" (label "Room type",
+ *  the frontier-card-anatomy-ask precedent, above). Both wraps are scene-local, exactly like "cal"/
+ *  "rooms" themselves — resent with "scene" on every occurrence of each control (turn 1's dates scene AND
+ *  the BACK-to-dates resend; turn 2's room scene AND the forward-again resend) — never touching root/
+ *  card/ct. */
 export const backableWizardSeed: ExampleSeed = {
   name: 'backable-wizard',
-  description: 'A 3-step backable wizard (dates → room → confirm) on ONE ask surface: draft answers under /draft/*, a stable root>Card>CardContent scene container swapped by updateComponents, per-step nav Buttons in their own CardFooter, and a BACK round-trip that leaves both prior answers untouched.',
+  description: 'A 3-step backable wizard (dates → room → confirm) on ONE ask surface: draft answers under /draft/*, a stable root>Card>CardContent scene container swapped by updateComponents, per-step nav Buttons in their own CardFooter, Field-wrapped Calendar/RadioGroup controls (ADR-0051), and a BACK round-trip that leaves both prior answers untouched.',
   promptText: 'Let\'s book a stay — start with the dates, then I\'ll pick a room, and I can always go back to change something before I confirm.',
   surfaceId: WIZARD_ID,
   protocolVersion: 'v1.0',
@@ -457,7 +465,9 @@ export const backableWizardSeed: ExampleSeed = {
     // non-root Card ("card"); CardContent ("ct") and CardFooter ("ft") are the Card's two fixed children
     // (card-anatomy) — "ct" is stable (its own children list never changes), "ft" is resent alongside
     // "scene" whenever the step's buttons change. The whole draft is seeded up front (ADR-0126 whole-record
-    // idiom) so every path a later scene binds already exists in the data model.
+    // idiom) so every path a later scene binds already exists in the data model. The Calendar rides a
+    // Field wrap ("f_dates") — its own catalog row declares no label prop, so the Field is the only
+    // accessible-name path (ADR-0051, a2ui-payload.md P7).
     { version: 'v1.0', createSurface: { surfaceId: WIZARD_ID, catalogId: 'agent-ui', sendDataModel: true } },
     { version: 'v1.0', updateDataModel: { surfaceId: WIZARD_ID, value: { draft: { from: '', to: '', room: 'deluxe' } } } },
     {
@@ -468,7 +478,8 @@ export const backableWizardSeed: ExampleSeed = {
           { id: 'root', component: 'Column', gap: 'md', children: ['card'] },
           { id: 'card', component: 'Card', elevation: '1', children: ['ct', 'ft'] },
           { id: 'ct', component: 'CardContent', children: ['scene'] },
-          { id: 'scene', component: 'Column', gap: 'md', children: ['cal'] },
+          { id: 'scene', component: 'Column', gap: 'md', children: ['f_dates'] },
+          { id: 'f_dates', component: 'Field', label: 'Check-in — check-out', child: 'cal' },
           { id: 'cal', component: 'Calendar', mode: 'range', valueStart: { path: '/draft/from' }, valueEnd: { path: '/draft/to' } },
           { id: 'ft', component: 'CardFooter', children: ['next1'] },
           { id: 'next1', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'room' } } },
@@ -483,7 +494,8 @@ export const backableWizardSeed: ExampleSeed = {
 
     // turn 2 — scene 2 (room): "scene" AND "ft" are resent TOGETHER (never root/card/ct); /draft/from,
     // /draft/to stay in the data model, untouched underneath. A ghost Back joins the solid Continue in the
-    // CardFooter (the nav-row law, R2, satisfied via CardFooter per grammar.md's CardFooter clause). "rooms"
+    // CardFooter (the nav-row law, R2, satisfied via CardFooter per grammar.md's CardFooter clause). The
+    // RadioGroup rides a Field wrap ("f_room") for the same P7 reason as "f_dates" above. "rooms"
     // mounts WITHOUT its "value" binding here, on purpose (radioGroupFactory's documented limitation:
     // RadioGroup.value applies at MOUNT time, before its just-declared Radio children exist in the light DOM
     // yet, so a value bound in the SAME batch that also creates those children silently clears the selection
@@ -494,7 +506,8 @@ export const backableWizardSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: WIZARD_ID,
         components: [
-          { id: 'scene', component: 'Column', gap: 'md', children: ['rooms'] },
+          { id: 'scene', component: 'Column', gap: 'md', children: ['f_room'] },
+          { id: 'f_room', component: 'Field', label: 'Room type', child: 'rooms' },
           { id: 'rooms', component: 'RadioGroup', children: ['r1', 'r2'] },
           { id: 'r1', component: 'Radio', value: 'standard', label: 'Standard · €180' },
           { id: 'r2', component: 'Radio', value: 'deluxe', label: 'Deluxe King · €240' },
@@ -509,15 +522,17 @@ export const backableWizardSeed: ExampleSeed = {
     // reconcile (RSR-C6), not a fresh mount, so the read finds its Radio children already present.
     { version: 'v1.0', updateComponents: { surfaceId: WIZARD_ID, components: [{ id: 'rooms', component: 'RadioGroup', value: { path: '/draft/room' }, children: ['r1', 'r2'] }] } },
 
-    // BACK from room to dates: "scene" + "ft" swap to the dates shape again — IDENTICAL to turn 1's tree.
-    // /draft/from and /draft/to are STILL "2026-08-21"/"2026-08-24" (this update never touches them), so
-    // the re-bound Calendar shows the range already chosen — the round-trip B1's carve-out exists for.
+    // BACK from room to dates: "scene" + "ft" swap to the dates shape again — IDENTICAL to turn 1's tree
+    // (the SAME "f_dates" Field wrap). /draft/from and /draft/to are STILL "2026-08-21"/"2026-08-24" (this
+    // update never touches them), so the re-bound Calendar shows the range already chosen — the round-trip
+    // B1's carve-out exists for.
     {
       version: 'v1.0',
       updateComponents: {
         surfaceId: WIZARD_ID,
         components: [
-          { id: 'scene', component: 'Column', gap: 'md', children: ['cal'] },
+          { id: 'scene', component: 'Column', gap: 'md', children: ['f_dates'] },
+          { id: 'f_dates', component: 'Field', label: 'Check-in — check-out', child: 'cal' },
           { id: 'cal', component: 'Calendar', mode: 'range', valueStart: { path: '/draft/from' }, valueEnd: { path: '/draft/to' } },
           { id: 'ft', component: 'CardFooter', children: ['next1'] },
           { id: 'next1', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'room' } } },
@@ -525,16 +540,17 @@ export const backableWizardSeed: ExampleSeed = {
       },
     },
 
-    // forward again to room — the SAME scene-2 tree, built the SAME two-step way (a fresh "rooms" mount
-    // here — the earlier one was disposed by the BACK swap — races its Radio children again too);
-    // /draft/room is STILL "deluxe" (the value already committed before the detour), the second half of
-    // the round-trip proof.
+    // forward again to room — the SAME scene-2 tree (the SAME "f_room" Field wrap), built the SAME
+    // two-step way (a fresh "rooms" mount here — the earlier one was disposed by the BACK swap — races its
+    // Radio children again too); /draft/room is STILL "deluxe" (the value already committed before the
+    // detour), the second half of the round-trip proof.
     {
       version: 'v1.0',
       updateComponents: {
         surfaceId: WIZARD_ID,
         components: [
-          { id: 'scene', component: 'Column', gap: 'md', children: ['rooms'] },
+          { id: 'scene', component: 'Column', gap: 'md', children: ['f_room'] },
+          { id: 'f_room', component: 'Field', label: 'Room type', child: 'rooms' },
           { id: 'rooms', component: 'RadioGroup', children: ['r1', 'r2'] },
           { id: 'r1', component: 'Radio', value: 'standard', label: 'Standard · €180' },
           { id: 'r2', component: 'Radio', value: 'deluxe', label: 'Deluxe King · €240' },

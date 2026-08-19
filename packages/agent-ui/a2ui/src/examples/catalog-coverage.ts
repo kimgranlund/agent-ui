@@ -15,6 +15,19 @@
 //     a `SegmentedControl`/`Segment` room-type picker, and a `Slider` nightly-budget control, gated by one
 //     FormProvider (guest name + room type start empty — a live blocked-submit demo, the generative-form
 //     idiom). Covers: Calendar (range), SegmentedControl, Segment, Slider.
+//     P9 card-anatomy repair (2026-08-18, GH #1262 back-score wave): `btn_reserve` used to ride a `Row`
+//     inside `CardContent` with no `CardFooter`. `CardHeader`/`CardContent`/`CardFooter` must be `Card`'s
+//     DIRECT children (`card.css`'s `:scope > :where(...)` region selector), so a `CardFooter` sibling of
+//     `CardContent` — outside the FormProvider's CardContent substance, per the anatomy clause — can no
+//     longer sit inside a `FormProvider` nested inside `CardContent` (the old shape) without losing real
+//     submit-gating (`el.closest('ui-form-provider')`, `renderer.ts`, needs the gate to be an actual DOM
+//     ancestor of the submit Button). The fix: `root` IS the `FormProvider` itself now, `Card` sits one
+//     level down (non-root), `CardContent`/`CardFooter` are `Card`'s direct children — `FormProvider`'s
+//     registry still sees every descendant through the extra `Card` level (event-bubbling registration +
+//     `closest()` gating), so P7's real-gating law and P9's anatomy law both hold at once.
+//     CardHeader-title convergence (2026-08-18, Kim's ruling): `title` ("Reserve a room") moves out of
+//     `CardContent`'s `col` into its own `card_header` `CardHeader`, and `root_content`/`root_footer` are
+//     renamed to `card_content`/`card_footer` (FormProvider-as-root, ids wire-opaque) — the GH #760 nit.
 // (2) RENTAL FILTER PANEL — a live (non-FormProvider) search panel: a `ComboBox` city picker sharing the
 //     `Option` primitive with Select, a `RadioGroup`/`Radio` property-type picker, a `SliderMulti`
 //     price-range control, and a `List` of result cards templated over `/results`. Covers: ComboBox,
@@ -27,11 +40,17 @@
 //     Icon+Text card" guidance — Icon now has zero exemplar coverage on this shelf, a knowingly-traded
 //     regression against this module's own D6 rubric goal, accepted because the SPEC-R22 AC is explicit
 //     and Icon's own descriptor/jsdom/browser suites remain the coverage of record for the control itself.
-// (4) STATS GRID DASHBOARD — a `Grid`-templated metric-tile dashboard (the `patternDashboardSeed` idiom,
-//     swapping the wrapping Row for a track `Grid` with a `min` floor). Covers: Grid.
+// (4) STATS GRID DASHBOARD — DROPPED from the shelf 2026-08-18 (Kim's ruling; the ADR-0165 REV
+//     2026-07-30/GH #361 reading (b) drop path — a refusal's expected disposition). Judged E_QUALITY
+//     twice (rubric 1.1 + 1.2, D5 both times — the tile template was pattern-dashboard-tiles verbatim
+//     minus the delta line, and Grid-template-of-Cards was already admitted via comparison-pricing-table
+//     and media-file-grid): not repairable by editing, so the seed left the shelf entirely. The archived
+//     VerdictsFiles (corpus/verdicts/) remain the machine record; Grid's exemplar coverage of record is
+//     media-file-grid (high-frequency-patterns.ts).
 //
 // (5) REPORT CARD DASHBOARD — chart-family.lld.md LLD-C12 (SPEC-R14 AC1, ADR-0107), upgraded in place by
-//     report-family.lld.md LLD-C15 (M2, ADR-0111 cl.6): a `stats-grid-dashboard` SIBLING, not a
+//     report-family.lld.md LLD-C15 (M2, ADR-0111 cl.6): a sibling of the since-dropped
+//     `stats-grid-dashboard` seed (see (4) above), not a
 //     Grid-of-tiles but one composed report — a `Stat` (the guidance re-base retired the hand-composed
 //     caption-Text + h3-Text tile) sits beside a `Sparkline` trend, then a `BarChart` breaks the total
 //     down by region — the seed itself teaches the catalog SPEC §5.2 Notes guidance (`Stat` for a latest
@@ -90,11 +109,12 @@ export const bookingReservationSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: BOOKING_ID,
         components: [
-          { id: 'root', component: 'Card', elevation: '1', children: ['root_content'] },
-          { id: 'root_content', component: 'CardContent', children: ['form'] },
-          { id: 'form', component: 'FormProvider', children: ['col'] },
-          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'f_guest', 'f_dates', 'f_room', 'f_budget', 'actions'] },
+          { id: 'root', component: 'FormProvider', children: ['card'] },
+          { id: 'card', component: 'Card', elevation: '1', children: ['card_header', 'card_content', 'card_footer'] },
+          { id: 'card_header', component: 'CardHeader', children: ['title'] },
           { id: 'title', component: 'Text', variant: 'h4', text: 'Reserve a room' },
+          { id: 'card_content', component: 'CardContent', children: ['col'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['f_guest', 'f_dates', 'f_room', 'f_budget'] },
           { id: 'f_guest', component: 'Field', label: 'Guest name', child: 'in_guest' },
           {
             id: 'in_guest', component: 'TextField', name: 'guest', required: true, value: { path: '/booking/guest' },
@@ -121,6 +141,7 @@ export const bookingReservationSeed: ExampleSeed = {
           { id: 'seg_ste', component: 'Segment', value: 'suite', label: 'Suite' },
           { id: 'f_budget', component: 'Field', label: 'Nightly budget (€)', child: 'sl_budget' },
           { id: 'sl_budget', component: 'Slider', name: 'budget', min: 80, max: 400, step: 10, value: { path: '/booking/budget' } },
+          { id: 'card_footer', component: 'CardFooter', children: ['actions'] },
           { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_reserve'] },
           { id: 'btn_reserve', component: 'Button', variant: 'solid', label: 'Reserve room', action: { action: 'reserve_room', submit: true } },
         ],
@@ -261,47 +282,6 @@ export const documentRowToolbarSeed: ExampleSeed = {
           { id: 'mi_rename', component: 'MenuItem', value: 'rename', label: 'Rename' },
           { id: 'mi_duplicate', component: 'MenuItem', value: 'duplicate', label: 'Duplicate' },
           { id: 'mi_delete', component: 'MenuItem', value: 'delete', label: 'Delete' },
-        ],
-      },
-    },
-  ],
-}
-
-const STATS_GRID_ID = 'stats-grid-dashboard'
-export const statsGridDashboardSeed: ExampleSeed = {
-  name: 'stats-grid-dashboard',
-  description: 'A metric-tile dashboard laid out on a track Grid (the patternDashboardSeed idiom, swapping the wrapping Row for a Grid with a min track floor).',
-  promptText: 'Show a dashboard grid of four metric tiles: sessions, conversion rate, average order value, and refunds.',
-  surfaceId: STATS_GRID_ID,
-  protocolVersion: 'v1.0',
-  catalogId: 'agent-ui',
-  messages: [
-    { version: 'v1.0', createSurface: { surfaceId: STATS_GRID_ID, catalogId: 'agent-ui' } },
-    {
-      version: 'v1.0',
-      updateDataModel: {
-        surfaceId: STATS_GRID_ID,
-        value: {
-          stats: [
-            { label: 'Sessions', value: '4,820', unit: '' },
-            { label: 'Conversion', value: '3.2', unit: '%' },
-            { label: 'Avg. order', value: '54', unit: '€' },
-            { label: 'Refunds', value: '12', unit: '' },
-          ],
-        },
-      },
-    },
-    {
-      version: 'v1.0',
-      updateComponents: {
-        surfaceId: STATS_GRID_ID,
-        components: [
-          { id: 'root', component: 'Grid', gap: 'md', min: '12rem', children: { path: '/stats', componentId: 'stat_tile' } },
-          { id: 'stat_tile', component: 'Card', elevation: '1', children: ['stat_content'] },
-          { id: 'stat_content', component: 'CardContent', children: ['stat_col'] },
-          { id: 'stat_col', component: 'Column', gap: 'xs', children: ['stat_label', 'stat_value'] },
-          { id: 'stat_label', component: 'Text', variant: 'caption', text: { path: 'label' } },
-          { id: 'stat_value', component: 'Text', variant: 'h3', text: '${value}${unit}' },
         ],
       },
     },
@@ -672,7 +652,6 @@ export const catalogCoverageSeeds: readonly ExampleSeed[] = [
   bookingReservationSeed,
   rentalFilterPanelSeed,
   documentRowToolbarSeed,
-  statsGridDashboardSeed,
   reportCardDashboardSeed,
   opsReportSeed,
   deploymentReportSeed,

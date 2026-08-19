@@ -111,7 +111,6 @@ import {
   bookingReservationSeed,
   rentalFilterPanelSeed,
   documentRowToolbarSeed,
-  statsGridDashboardSeed,
   reportCardDashboardSeed,
   opsReportSeed,
   deploymentReportSeed,
@@ -141,7 +140,6 @@ import {
   fiveDayWeatherSeed,
   restaurantMenuSeed,
   travelItinerarySeed,
-  wizardStepProgressSeed,
 } from '../../src/examples/composition-pack-b.ts'
 import { allSeeds } from '../../src/examples/index.ts'
 
@@ -250,7 +248,6 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
       bookingReservationSeed,
       rentalFilterPanelSeed,
       documentRowToolbarSeed,
-      statsGridDashboardSeed,
       reportCardDashboardSeed,
       opsReportSeed,
       deploymentReportSeed,
@@ -292,8 +289,8 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
     seeds: [slideshowGallerySeed, confirmationViewSeed, trendListSeed, cardLayoutsSeed],
   },
   {
-    module: 'composition-pack-b.ts', // GH #1206 — req-a2ui-library R4 pack B; admission pending the judged wave (disposition-allowlist.ts)
-    seeds: [fiveDayWeatherSeed, restaurantMenuSeed, travelItinerarySeed, wizardStepProgressSeed],
+    module: 'composition-pack-b.ts', // GH #1206 — req-a2ui-library R4 pack B (wizard-step-progress dropped 2026-08-18, the ADR-0165 drop path)
+    seeds: [fiveDayWeatherSeed, restaurantMenuSeed, travelItinerarySeed],
   },
 ]
 
@@ -383,12 +380,18 @@ async function warmDedupIndex(store: CorpusStore, dedupIndex: DedupIndex, exclud
  *
  * Returns the halt message to print (the caller reports it and exits non-zero, nothing written), or
  * `undefined` when the run may proceed normally.
+ *
+ * `allowlist` defaults to the real `DISPOSITION_ALLOWLIST` (what `main()` consults); it is injectable
+ * so the unit tier can drive the allowlist leg with synthetic entries (the `admission-coverage.test.ts`
+ * pure-predicate precedent) — necessary since 2026-08-18, when the real map legitimately drained to
+ * EMPTY (every shelf seed admitted; the standing refusals dropped), leaving no real name to test with.
  */
 export function dispositionGuard(
   seedName: string,
   verdictsPath: string | undefined,
   alreadyAdmitted: boolean,
   archive: ReadonlyMap<string, ArchivedVerdict>,
+  allowlist: ReadonlyMap<string, string> = DISPOSITION_ALLOWLIST,
 ): string | undefined {
   if (verdictsPath !== undefined || alreadyAdmitted) return undefined
 
@@ -407,7 +410,7 @@ export function dispositionGuard(
     )
   }
 
-  const disposition = DISPOSITION_ALLOWLIST.get(seedName)
+  const disposition = allowlist.get(seedName)
   if (disposition === undefined) return undefined
   return (
     `import-seeds: HALTED — "${seedName}" carries a recorded prior quality rejection (${disposition}). ` +

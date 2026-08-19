@@ -142,9 +142,12 @@ const AGREEMENT_EXCEPTIONS: readonly AgreementException[] = [
     prop: 'variant',
     reason:
       'DELIBERATE — mapsTo:"variant" coincides in NAME with a real live prop but is not a 1:1 value passthrough: ' +
-      "textFactory (factories.ts) fans the catalog's h1..h5/caption/body wire vocabulary through TEXT_VARIANT_TABLE " +
+      "textFactory (factories.ts) fans the catalog's 12-member wire vocabulary (h1..h5/caption/body/label + the " +
+      'four ADR-0207 editorial registers kicker/overline/quote/lead) through TEXT_VARIANT_TABLE ' +
       "onto the control's as/variant/size triple. The catalog vocabulary and the descriptor's own variant enum " +
-      '(display/headline/title/body/label/kicker/overline/quote/lead) are two intentionally different value spaces.',
+      '(display/headline/title/body/label/kicker/overline/quote/lead) are two intentionally different value ' +
+      'spaces even where members now coincide by name — the four ADR-0207 rows still transit the table ' +
+      '(quote/lead each stamp a semantic element), never a passthrough of the whole enum.',
   },
 ]
 const EXCEPTION_KEYS = new Set(AGREEMENT_EXCEPTIONS.map((e) => `${e.component}.${e.prop}`))

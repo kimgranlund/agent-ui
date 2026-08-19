@@ -37,12 +37,26 @@ disable-model-invocation: false
    an empty container is a defect: it teaches nothing. Derive the shape from the control's tier + content
    model in its descriptor.
 2. **One control per prop, right type, no redundancy.** A prop gets exactly one knob, chosen by type:
-   closed enum → `ui-segmented-control` (small, ≤5 members — ADR-0095, superseding the retired
-   `ui-radio-group[variant="segmented"]`) or `ui-select` (large); boolean → `ui-switch` / `ui-checkbox`;
+   closed enum → `ui-segmented-control` ONLY when it fits one horizontal row (≤3 members, ≤5-char labels —
+   `fitsSegmented()`, Kim 2026-08-18/#1316; the vertical-stack fallback read as a permanently-open dropdown
+   and is retired) else `ui-select`; boolean → `ui-switch` / `ui-checkbox`;
    numeric range with min/max/step → `ui-slider`; free number/string → `ui-text-field`.
    Never render the same prop twice — historical case in point: a doubled PROPS knob plus a redundant
    `#buildChipRow` VARIANTS chip-row for the same prop, fixed 2026-07-06 (`7dfdecd`) by removing the
    chip-row and letting the typed knob carry it.
+
+## Specimen mechanics (the 2026-08-18 catalog-card sweep's hard-won facts)
+
+- **Array/object props never ride knob state** (kind 'skip') — supply them via `SAMPLE_TREES[T]`'s
+  `rootRef` spread (`component-preview.ts` `#a2uiPayload` merges arbitrary root props, not just children).
+- **Entry-control labels are aria-only** (labelSource → aria-label, fleet law) — a label seed demonstrates
+  nothing visible; the visible demo rides `value`/`placeholder`/content.
+- **"Meaningless-but-nonzero" is the failure class gates can't catch**: a bare glyph dot, a 21×14 empty
+  pill, a black 16:9 box all pass geometry gates — only blind-identify review catches them. Seed until a
+  reader can name the control's JOB from the rendered half alone.
+- Unit semantics bite: `SplitPane.initial` is a relative RATIO (seed every pane); `Toast duration:'0'` =
+  never auto-dismiss (a specimen must outlive the reader's glance); a landscape asset crushed into a 16px
+  avatar circle teaches nothing — prefer the prop that renders legibly bare (initials via `name`).
 
 ## Procedure
 

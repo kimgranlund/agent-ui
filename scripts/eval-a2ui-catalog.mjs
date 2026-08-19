@@ -70,6 +70,7 @@ const expected = await page.evaluate(async () => {
     let tag = null
     if (slot && 'tag' in slot) tag = slot.tag
     else if (slot) { try { tag = a2ui.resolveFactory(slot, { id: 'probe', component: name }).tag } catch { tag = null } }
+    const sample = prev.sampleFor(name, def)
     out[name] = {
       tier: tiers.tierOf(name),
       tag,
@@ -77,6 +78,10 @@ const expected = await page.evaluate(async () => {
       props: Object.fromEntries(Object.entries(def.properties).map(([pn, pd]) => [pn, { ...kindOf(pd), mapsTo: pd.mapsTo, format: pd.format ?? null }])),
       order: Object.keys(def.properties),
       valueProps: def.value ? a2ui.valueSlots(def.value).map((s) => s.prop) : [],
+      // §1.1 fields (rubric v0.2): what the reviewers consume — computed, never hand-listed
+      uses: tiers.seedsUsingType(name),
+      children: def.children ?? null,
+      sampleVisible: Object.keys(sample.rootRef).length > 0 || sample.extras.length > 0,
     }
   }
   return out
@@ -154,6 +159,30 @@ async function probeCard(section, name, exp) {
       return !findable(String(v))
     })
     set('C1', isOverlay || seedMiss.length === 0, seedMiss.map(([p, v]) => `${p}="${v}" invisible`).join(' · ') || (isOverlay ? 'overlay-closed: judged on reveal' : ''))
+
+    // A3 (gate half, rubric v0.2 §5.2) — the card has SUBSTANCE: something is seeded or sample-supplied,
+    // AND the rendered surface shows non-trivial content (text, or replaced/graphic elements). This is the
+    // mechanization of "demonstrable ∖ (seeded ∪ sample-visible) = ∅" at the card level — the per-prop
+    // sufficiency judgment stays with A3's review half. Overlay-closed cards are exempt (judged on reveal).
+    {
+      const hasSubstance = Object.keys(exp.seeds).length > 0 || exp.sampleVisible
+      const text = (surface?.textContent ?? '').trim()
+      // content evidence: text · replaced/graphic/editable elements · or any laid-out descendant that PAINTS
+      // (computed background/border) — a Progress bar is a CSS-painted div, a TextField's placeholder is a
+      // ::before off data-placeholder, a Video shows only its poster attr; none of those carry textContent
+      const graphic = surface ? surface.querySelector('img,svg,audio,video,canvas,input,[contenteditable],[data-placeholder]') : null
+      let paints = false
+      if (surface && !graphic && text.length === 0) {
+        for (const el of [...surface.querySelectorAll('*')].slice(0, 80)) {
+          const r = el.getBoundingClientRect()
+          if (r.width < 8 || r.height < 4) continue
+          const cs = getComputedStyle(el)
+          if ((cs.backgroundColor !== 'rgba(0, 0, 0, 0)' && cs.backgroundColor !== 'transparent') || parseFloat(cs.borderTopWidth) > 0 || cs.backgroundImage !== 'none') { paints = true; break }
+        }
+      }
+      const rendersContent = text.length > 0 || !!graphic || paints
+      set('A3', isOverlay || (hasSubstance && rendersContent), isOverlay ? 'overlay-closed: judged on reveal' : `${hasSubstance ? '' : 'no seeds and no sample; '}${rendersContent ? '' : 'surface renders no text/graphic content'}`)
+    }
 
     // B3g — geometry: root box non-zero, no overflow past the canvas column / section
     if (root && !isOverlay) {
@@ -299,7 +328,7 @@ async function probeCard(section, name, exp) {
 }
 
 // ── walk the tabs ─────────────────────────────────────────────────────────────────────────────────────────────
-const GATES = ['A1', 'A2', 'A4', 'B1', 'B2', 'B3g', 'C1', 'C2']
+const GATES = ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3g', 'C1', 'C2']
 const results = []
 const tabs = page.locator('ui-tabs.catalog-tabs > [data-part=tablist] > ui-tab')
 const tabCount = await tabs.count()
@@ -332,7 +361,68 @@ for (let t = 0; t < tabCount; t++) {
       const dir = path.join(OUT, THEME, tier)
       await mkdir(dir, { recursive: true })
       shot = path.join(dir, `${name}.png`)
-      await card.screenshot({ path: shot, animations: 'disabled' })
+      // padded clip (rubric v0.2 §5.4): an exact-box element shot drops the last text line (the uses line)
+      // on pixel parity at deviceScaleFactor 2 — the v0.1 even/odd U-line artifact
+      const box = await card.boundingBox()
+      if (box) await page.screenshot({ path: shot, clip: { x: Math.max(0, box.x - 2), y: Math.max(0, box.y - 2), width: box.width + 4, height: box.height + 8 }, animations: 'disabled' })
+      else await card.screenshot({ path: shot, animations: 'disabled' })
+      // component-mode comparison shot (B3-review's side-by-side): the SAME ui-* tag through the descriptor
+      // path, mounted transiently on this page
+      if (exp.tag && !exp.tag.includes('[') && exp.tag.startsWith('ui-')) {
+        try {
+          await page.evaluate(async (tag) => {
+            const wrap = document.createElement('div')
+            wrap.id = '__cmp-shot'
+            wrap.style.cssText = 'position:fixed;inset:auto auto 0 0;width:840px;background:var(--md-sys-color-neutral-surface,canvas);padding:16px;z-index:99999'
+            const prev = document.createElement('component-preview')
+            prev.setAttribute('mode', 'component')
+            prev.setAttribute('target', tag)
+            wrap.append(prev)
+            document.body.append(wrap)
+            await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+            await new Promise((r) => setTimeout(r, 150))
+          }, exp.tag)
+          await page.locator('#__cmp-shot').screenshot({ path: path.join(dir, `${name}.component.png`), animations: 'disabled' })
+        } catch (e) {
+          console.error(`  [cmp-shot ${name}] ${String(e).slice(0, 120)}`)
+        } finally {
+          await page.evaluate(() => document.getElementById('__cmp-shot')?.remove())
+        }
+      }
+      // overlay reveal shot: toggle the open knob, capture the canvas region (top-layer content within the
+      // clip appears), close again
+      if (OVERLAY.has(name)) {
+        try {
+          const openSwitch = card.locator('.knob', { has: page.locator('.knob-label', { hasText: /^open$/ }) }).locator('ui-switch')
+          if (await openSwitch.count()) {
+            await openSwitch.first().click()
+            await page.waitForTimeout(350)
+            // a top-layer <dialog> centers in the VIEWPORT, not the canvas — clipping to the canvas box
+            // produced an unjudgeable corner sliver (the verify round's Modal BLOCKED). Dialog open → shoot
+            // the viewport; otherwise clip the canvas.
+            const hasDialog = await page.evaluate(() => !!document.querySelector('dialog[open]'))
+            if (hasDialog) await page.screenshot({ path: path.join(dir, `${name}.open.png`), animations: 'disabled' })
+            else {
+              const cbox = await card.locator('.preview-canvas').first().boundingBox()
+              if (cbox) await page.screenshot({ path: path.join(dir, `${name}.open.png`), clip: cbox, animations: 'disabled' })
+            }
+            // a top-layer overlay (Modal's <dialog>) intercepts pointer events page-wide — force the
+            // closing click through it, and Escape as the belt-and-braces fallback
+            await openSwitch.first().click({ force: true })
+            await page.waitForTimeout(150)
+          }
+        } catch (e) {
+          console.error(`  [reveal-shot ${name}] ${String(e).slice(0, 120)}`)
+        }
+        // unconditional top-layer cleanup: whatever the knob round-trip did, no open <dialog>/popover may
+        // survive into the next card (an open top layer intercepts every later click page-wide)
+        await page.keyboard.press('Escape').catch(() => {})
+        await page.evaluate(() => {
+          for (const d of document.querySelectorAll('dialog[open]')) d.close()
+          for (const p of document.querySelectorAll(':popover-open')) p.hidePopover?.()
+        }).catch(() => {})
+        await page.waitForTimeout(120)
+      }
     }
     const row = { name, tier, gates: probed.gates, knobs: probed.knobs, seeds: exp.seeds, tag: exp.tag, screenshot: shot && path.relative(OUT, shot), overlay: OVERLAY.has(name) }
     results.push(row)

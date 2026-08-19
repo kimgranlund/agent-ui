@@ -151,7 +151,7 @@ Card anatomy, when a Card frames the ask (or any card-shaped surface): CardHeade
 ONLY — a label Text (+ optionally one standout-fact Badge) — never an interactive control; CardContent
 carries the substance — the fields, list rows, or receipt itself; CardFooter is THE action row — every
 action Button rides here, one solid primary and at most one ghost secondary (the confirm/decline shape
-above), never scattered loose in content and never doubled up. A single-fact card may omit the header
+above), never scattered loose in content and never doubled up. When the card carries an identity title, that title rides CardHeader, never CardContent. A single-fact card may omit the header
 entirely — nothing here requires all three slots. (Card-framed hero imagery, where used, rides its own
 established Image placement — usageHint:"hero" — this clause governs anatomy only, not media.)
 
@@ -235,5 +235,15 @@ Output rules for the A2UI JSONL that follows the note line (omit entirely if the
   a real "action" (a Button). A Badge label is a SHORT TOKEN — a word or two, a count, a state name
   ("Booked", "3 left", "Your turn") — never a headline, title, or sentence; heading or headline copy is
   a Text (variant "h4"/"h5"/"label"), which reads as typography instead of wrapping the line in a pill.
+- Text "variant" picks the register — choose by ROLE, never by size appetite: "h1"…"h5" are section
+  headings (use the smallest that still reads as a heading — "h3"/"h4" for card/tile titles; "h1" only
+  for a screen's single top title, never for emphasis); "body" is default prose; "caption" is secondary
+  detail under a value or image; "label" is the key half of a label/value row and compact metric labels;
+  "kicker" is a 2–4 word uppercase eyebrow directly ABOVE a heading, never standalone prose; "overline"
+  is a 1–3 word uppercase category tag above the content it classifies; "quote" is verbatim quoted
+  speech or a testimonial (it renders real blockquote semantics) — one short passage, never
+  multi-paragraph narration and never your own phrasing; "lead" is ONE standout intro sentence right
+  after a heading, at most one per surface. To emphasize, set "emphasis": true — never promote text to a
+  bigger heading.
 - Use ONLY the component types and props listed in the catalog below. NEVER invent a component or a prop.
 - Keep the surface minimal and correct — it must pass validation before the user ever sees it.

@@ -164,6 +164,13 @@ decision (dated line in §4).
   `@agent-ui/a2ui` `./agent`, plus a surface-side affordance on the summary card or page chrome.
   Adjacent to ADR-0196 (per-card settling, not flow completion) and the #1065 shared-template
   question — this may be where the a2ui-live/agent-admin shared-chrome lift gets forced.
+- **A2UI Text: full register vocabulary + per-variant producer guidance (GH #1321, `size:big`,
+  filed 2026-08-18).** The wire `Text.variant` enum reaches 8 registers while `ui-text` carries
+  9 roles × 3 sizes + 11 `as` semantics — `h6`/`kicker`/`overline`/`quote`/`lead`/`display` and
+  `blockquote`/`p` are unreachable from a payload. Widen the vocabulary (via a ratified ADR-0078
+  cl.5 amendment, the #808 S1 precedent; new heading rows honor ADR-0142's compact scale) and add
+  per-register when-to-use guidance to the producer prompt path. Exact enum membership is Kim's
+  ruling at the amendment.
 - **M-D — "Personas with their own catalogs" (first of the 2026-08-05 arc). 🟡 IN FLIGHT** — built
   from the RATIFIED [ADR-0172](adr/0172-persona-catalog-composition-intake.md) (GH #421's reopened
   intake, frozen 2026-08-05): each persona composes `shared primitives + the shared system-patterns

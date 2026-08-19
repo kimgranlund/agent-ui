@@ -11,7 +11,9 @@ component-preview {
   display: grid;
   grid-template-columns: minmax(15rem, 21rem) 1fr;
   align-items: start; /* each column owns its height — a tall knob column no longer stretches the canvas (H#3) */
-  gap: 1rem;
+  gap: 0; /* the columns ABUT: the knob column's divider sits flush against the artboard edge — its own 1rem
+           * padding already spaces the knobs, so an inter-column gap only opened a strip of card background
+           * between divider and canvas (GH #1299). The stacked (narrow) branch inherits the same flush seam. */
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 12px;
   overflow: hidden;

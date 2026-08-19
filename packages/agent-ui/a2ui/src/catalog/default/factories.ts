@@ -134,7 +134,9 @@ export const buttonFactory: WidgetFactory = {
 }
 
 // The ADR-0078 cl.5 fan-out table — the wire `Text.variant` (catalog-frozen `h1…h5 | caption | body`
-// per cl.5's original ruling; widened by ONE member, `label`, under the GH #808 S1 amendment below) is
+// per cl.5's original ruling; widened by ONE member, `label`, under the GH #808 S1 amendment below, then
+// by FOUR editorial registers, `kicker | overline | quote | lead`, under ADR-0207 — ratified 2026-08-19,
+// GH #1321) is
 // not bindable, so it translates once at apply-time to the ui-text three-axis triple
 // (`as`/`variant`/`size`). An unrecognized wire value (should not occur — the catalog enum already
 // rejects it, conformance-checked upstream) falls back to the `body` triple rather than left
@@ -158,7 +160,14 @@ export const buttonFactory: WidgetFactory = {
 // above. It exists to make the fleet's label-metrics register (the label/value row idiom's `Badge`
 // caption) reachable from a payload; before this row the nearest available register was `caption`
 // (`body/sm`), which the SPEC's own §7 fork names as the graceful fallback if the enum widening this
-// row depends on (an `## Amendment` on ADR-0078 cl.5, `proposed` — Kim ratifies) is ever declined.
+// row depends on (an `## Amendment` on ADR-0078 cl.5, ratified 2026-08-13) is ever declined.
+//
+// ADR-0207 (ratified 2026-08-19, GH #1321): the four editorial-register rows. `kicker`/`overline` are
+// straight pass-throughs like `label` (the wire register name IS the `ui-text` M3-extension role name,
+// ADR-0078 cl.2b). `quote`/`lead` are the first NON-heading rows to stamp a semantic element
+// (`as: 'blockquote'`/`'p'`) — the heading rows' own precedent (`h1` the register stamps `<h1>` the
+// element): the wire register carries role AND semantics in one dial. ADR-0114's order-independence law
+// extends unchanged — a non-empty `href` still wins `as='a'` over any triple, these two included.
 const TEXT_VARIANT_TABLE: Record<string, { as: string; variant: string; size: string }> = {
   h1: { as: 'h1', variant: 'headline', size: 'md' },
   h2: { as: 'h2', variant: 'headline', size: 'sm' },
@@ -168,6 +177,10 @@ const TEXT_VARIANT_TABLE: Record<string, { as: string; variant: string; size: st
   body: { as: 'none', variant: 'body', size: 'md' },
   caption: { as: 'none', variant: 'body', size: 'sm' },
   label: { as: 'none', variant: 'label', size: 'md' },
+  kicker: { as: 'none', variant: 'kicker', size: 'md' },
+  overline: { as: 'none', variant: 'overline', size: 'md' },
+  quote: { as: 'blockquote', variant: 'quote', size: 'md' },
+  lead: { as: 'p', variant: 'lead', size: 'md' },
 }
 
 /**
@@ -175,8 +188,9 @@ const TEXT_VARIANT_TABLE: Record<string, { as: string; variant: string; size: st
  * a non-identity `mapsTo`, so this is a bespoke factory like `buttonFactory`, untouched by the ADR-0078
  * redesign — the cl.4 heal observer makes every later bound-text write safe). `variant` is the wire's
  * enum (`h1…h5 | caption | body`, catalog-frozen at ADR-0078 cl.5's original ruling; widened by ONE
- * member, `label`, under the GH #808 S1 amendment — an `## Amendment` on cl.5, `proposed`, Kim
- * ratifies) fanned out through `TEXT_VARIANT_TABLE` onto the control's three reflecting accessor props
+ * member, `label`, under the GH #808 S1 amendment — ratified 2026-08-13 — then by FOUR editorial
+ * registers, `kicker | overline | quote | lead`, under ADR-0207, ratified 2026-08-19) fanned out
+ * through `TEXT_VARIANT_TABLE` onto the control's three reflecting accessor props
  * (`as`/`variant`/`size`) — the catalog stays protocol-faithful while the control gets the real
  * semantic stamp + M3 role/size pair. Not an input ⇒ no `value`. A display leaf — no children, no
  * action. The boolean presentation intents — `truncate` (ADR-0106) and `emphasis` (ADR-0109) —
