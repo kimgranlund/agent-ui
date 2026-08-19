@@ -109,7 +109,8 @@ drafted here as the build-leg text (final bytes may be trimmed, never widened, a
 >   label/value row and compact metric labels; "kicker" is a 2–4 word uppercase eyebrow directly
 >   ABOVE a heading, never standalone prose; "overline" is a 1–3 word uppercase category tag above
 >   the content it classifies; "quote" is verbatim quoted speech or a testimonial (it renders real
->   blockquote semantics) — never your own narration; "lead" is ONE standout intro sentence right
+>   blockquote semantics) — one short passage, never multi-paragraph narration and never your own
+>   phrasing; "lead" is ONE standout intro sentence right
 >   after a heading, at most one per surface. To emphasize, set "emphasis": true — never promote
 >   text to a bigger heading.
 
@@ -136,7 +137,7 @@ amendment's own recorded mechanism); it is verified, never loosened.
 | A1 | Exact enum membership (item 1 — parked for Kim) | (a) curated registers `+h6 +display`; (b) semantic-`as` additions `blockquote`/`p` as members; (c) full role×size cross-product | **RESOLVED-BY-RECOMMENDATION: the D1 four-member curation.** (a) falls to the ADR-0142 floor (`h6`) and the TKT-0082 defect class + `Stat` ownership (`display`); (b) confuses the axes — semantics ride the triples; (c) is (ii)/(iii) of D2 at full blast: a 297-combo vocabulary no compact teaching or validation story survives. Kim overrules at ratification. |
 | A2 | Guidance home (item 3 — parked for Kim) | (a) `catalog.json` per-property description strings; (b) grammar.md clause; (c) a mini-skill module; (d) a standalone reference doc (the meta-line-vocabulary style) | **RESOLVED-BY-RECOMMENDATION: (b) grammar.md.** (a) is not composed today — `describePropType` (`catalog/catalog.ts`) emits type shape only, so it needs a derivation-code change that would push per-member prose into EVERY catalog's inventory (multi-catalog: `a2ui-basic`, personas) and into `produce.ts`'s self-correct path; heaviest option for the same tokens. (c) is TF-IDF trigger-selected on USER text, cap 3/turn — register choice is cross-cutting, not intent-shaped, so no trigger vocabulary reaches it reliably, and a firing evicts a real idiom from one of the 3 slots. (d) is unreachable from `buildSystemPrompt` — it fails #1321's own acceptance line ("reachable from the producer prompt path"). (b) is the ruled home for exactly this class (the Badge precedent, GH #1279/PR #1280) at a bounded +220 tokens. Kim overrules at ratification. |
 | A3 | Wire `as`/`size` addressability (item 4 — parked for Kim) | (a) `variant` stays the single dial; (b) add wire `as` (the seed's "in addition to `as=...`" phrasing read literally); (c) add wire `as` AND `size` | **RESOLVED-BY-RECOMMENDATION: (a), per D2.** The seed's `as` phrasing is READ as "the guidance teaches variants alongside the `as` story the component already documents," not as a wire-schema demand — the component's `as` axis stays fully reachable to library consumers, and the two semantics a producer genuinely needs (`blockquote`, `p`) arrive through `quote`/`lead`'s triples. Kim overrules at ratification. |
-| A4 | Amendment mechanics | (a) amendment-only on ADR-0078 (the #808 S1 shape); (b) this standalone ADR + on-ratification pointer repair on 0078 (the ADR-0142 shape) | **(b) taken.** #808 widened ONE member with no open forks; this record resolves three parked forks plus a teaching-home decision — a multi-fork decision earns its own number, with 0078's header gaining the mechanical pointer at ratification (the ADR-0142 REV 2026-08-13 precedent). |
+| A4 | Amendment mechanics | (a) amendment-only on ADR-0078 (the #808 S1 shape); (b) this standalone ADR + on-ratification pointer repair on 0078 (the ADR-0142 shape) | **(b) taken.** #808 widened ONE member with no open forks; this record resolves three parked forks plus a teaching-home decision — a multi-fork decision earns its own number, with 0078's header gaining the mechanical pointer at ratification (the ADR-0142 REV 2026-08-13 precedent). GH #1321's own acceptance bullet names mechanism (a) verbatim ("widens only via a ratified `## Amendment`, the GH #808 S1 `label` precedent"); this record SUPERSEDES that mechanism clause on ratification — Kim ratifying ADR-0207 plus the 0078 pointer repair satisfies the bullet's operative intent ("amended, not bypassed") through the ADR-0142 shape instead. |
 
 ## Consequences
 
@@ -180,4 +181,9 @@ amendment's own recorded mechanism); it is verified, never loosened.
 Order: S1 → S2 → S3; S4 any time after S1. Whole-wave gate: `npm run check && npm test` green by
 EXIT CODES; `npm run test:browser` is untouched (no component change). If Kim rules against any
 D1 member at ratification, the fallback is exact: drop that member's enum entry + table row +
-test case + its guidance sentence — each member is severable, nothing else moves.
+test case + its guidance sentence — each member is severable, nothing else moves. If Kim
+overrules A2 (the guidance home), S2 restructures to the chosen home — its guidance TEXT and the
+baseline-recapture discipline carry over; only the landing file and its composition seam change.
+If Kim overrules A3 (wire `as`/`size` addressability), a NEW decision record is owed for that
+schema (property additions, coherence validation, inventory cost) — this ADR's D1 register set
+and its wire-shape argument stand as recorded and are not silently reinterpreted.
