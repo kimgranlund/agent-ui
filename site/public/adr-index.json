@@ -1433,5 +1433,12 @@
     "description": "target becomes the meta-line envelope's SIXTH additive model-authored arm (GH #1259): the model names, on the leading meta-line, the surfaceId it is about to m…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0207",
+    "url": "./adr-index.html#adr-0207",
+    "description": "the A2UI wire Text.variant enum widens by FOUR editorial registers (kicker · overline · quote · lead), variant stays the single fanned-out dial, and per-regist…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
