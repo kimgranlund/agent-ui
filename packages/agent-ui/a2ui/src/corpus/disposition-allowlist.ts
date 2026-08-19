@@ -186,4 +186,12 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   //   frontier-disclosure-summary-switch — FAIL 2/5 first pass (D1/P7: a nameless summary-row Switch —
   //   ADR-0158 cl.4's exact hazard), repaired with `label`, rejudged PASS 4/5 (same archive).
   // The map is back to its EMPTY steady state.
+  //
+  // ADR-0224/GH #1429 (2026-08-19) — `frontier-service-gateway`: the same pending-state shape (NO
+  // VERDICT SOUGHT YET, not a refusal). Added with the ServiceCard catalog row (clause 8's wire arm,
+  // ratified) to close the GH #729 type-coverage gate — the authoring session judging its own seed is
+  // the manufactured judgment ADR-0068's Alternatives ban (generator ≠ critic). Run the judged pipeline
+  // (import-seeds.ts with a real VerdictsFile from a fresh-context a2ui-review-agent) and DELETE this
+  // entry when that wave lands.
+  ['frontier-service-gateway', 'ADR-0224/GH #1429 (2026-08-19): ServiceCard catalog-row type-coverage seed, NO VERDICT SOUGHT YET (not a refusal) — pending judged import wave; delete once a fresh-context a2ui-review-agent verdict admits it (ADR-0068: never self-judged).'],
 ])
