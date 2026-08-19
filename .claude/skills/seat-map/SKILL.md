@@ -80,6 +80,10 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
 - **Reap on lane-return, not campaign-end.** A lane's worktree is removed the moment its branch
   is merged (or abandoned) — `git worktree remove` + the branch delete — never parked until the
   campaign closes; every parked worktree is a full tree Spotlight/Time Machine keep re-scanning.
+  Run it after EVERY merge: `node scripts/reap-worktrees.mjs --execute && node scripts/
+  reap-branches.mjs --execute` (worktree removal first, branch deletion second — the worktree
+  gate's own Rule 3 equivalent, "never touch a locked worktree," is what makes this safe to run
+  unattended; GH #1440).
 - **Maker ≠ critic, serialized.** The building seat never grades its own slice; never send an
   author a revision directive while its reviewer is mid-read — freeze → review → consolidate →
   one revision pass.
