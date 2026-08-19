@@ -1503,6 +1503,10 @@ class ComponentPreview extends HTMLElement {
     label.textContent = 'Props'
     const list = document.createElement('div')
     list.className = 'preview-knobs'
+    // The rail's compact register comes from the CONTAINER, not per-control classes: ADR-0038's subtree
+    // scale attribute re-tables the md ramp every raw knob control reads to today's sm row (GH #1407,
+    // superseding the `.knob-select/.knob-input/.knob-switch` token-repoint classes).
+    list.setAttribute('scale', 'ui-sm')
     for (const knob of this.#knobs) list.append(this.#buildKnob(knob))
     section.append(label, list)
     return section
@@ -1541,7 +1545,6 @@ class ComponentPreview extends HTMLElement {
         // no per-prop defaults).
         const group = document.createElement('ui-segmented-control') as UISegmentedControlElement
         group.id = id
-        group.className = 'knob-segmented-control'
         group.setAttribute('aria-label', knob.name)
         // de-doubling closing step: a fitting enum knob renders as a real segmented control (the sliding
         // indicator + roving come from the control itself — nothing here reimplements it). Horizontal is
@@ -1591,7 +1594,10 @@ class ComponentPreview extends HTMLElement {
       // the read/write property (the gallery themeSelect() precedent).
       const select = document.createElement('ui-select') as UISelectElement
       select.id = id
-      select.className = 'knob-select'
+      // Narrow-column width floor — the per-field override the control EXPOSES (select.css), an inline
+      // token repoint (GH #1407: no page-authored component-styling class). Sizing rides `.preview-knobs`'
+      // scale="ui-sm".
+      select.style.setProperty('--ui-select-min-inline-size', '6ch')
       select.setAttribute('label', knob.name)
       select.setAttribute('placeholder', '—') // the unset display → the control's own default
       // The unset choice — a non-empty sentinel value (an empty-value option is inert; see KNOB_UNSET).
@@ -1626,7 +1632,6 @@ class ComponentPreview extends HTMLElement {
       // names the bare box (switch.md labelSource) and the visible <label for> above adds click-to-focus.
       const toggle = document.createElement('ui-switch') as UISwitchElement
       toggle.id = id
-      toggle.className = 'knob-switch'
       toggle.setAttribute('aria-label', knob.name)
       toggle.checked = this.#state.get(knob.name) === 'true'
       toggle.addEventListener('change', () => this.#setKnob(knob.name, toggle.checked ? 'true' : 'false'))
@@ -1643,7 +1648,9 @@ class ComponentPreview extends HTMLElement {
     // editor its aria-label; the visible <label for> above adds click-to-focus.
     const field = document.createElement('ui-text-field') as UITextFieldElement
     field.id = id
-    field.className = 'knob-input'
+    // Narrow-column typing-width floor — the per-field override the control EXPOSES (text-field.css),
+    // an inline token repoint (GH #1407). Sizing rides `.preview-knobs`' scale="ui-sm".
+    field.style.setProperty('--ui-text-field-min-inline-size', '8ch')
     field.setAttribute('type', knob.kind === 'number' ? 'number' : 'text')
     field.setAttribute('label', knob.name === SLOT_TEXT ? 'text' : knob.name)
     field.value = this.#state.get(knob.name) ?? ''
