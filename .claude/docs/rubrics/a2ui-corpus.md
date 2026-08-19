@@ -100,6 +100,20 @@ does. The table below carries both columns per scoring (1.1 fold → 1.2 fold); 
 The record's admitted 1.1 verdict in the shard stands until a judged back-score/re-admission under 1.2 (a
 follow-up on GH #1262's Findings, not this document's job — a rubric never edits the corpus).
 
+**P7 reconciliation (2026-08-18, GH #1262 — Kim's take-up of the judges' escalation 1; no anchor moved,
+so no version bump).** The judges escalated a conflict between `a2ui-payload.md` P7's Field-wrap anchor
+and the card-anatomy worked sketch (req-a2ui-patterns.md R1, realized as the `frontier-card-anatomy-ask`
+seed — P9's own anchor-3 reference shape), which put the group label in `CardHeader` and the `RadioGroup`
+bare in `CardContent`. Ruled against the SHIPPED stack, the P7 anchor is RIGHT and stands unchanged: the
+default catalog's `RadioGroup` row declares no `label` prop, and the one programmatic group-name path is
+the `Field` wrap — the ADR-0051 labelling seam (`ui-radio-group` carries `internals.role='radiogroup'`,
+so the base `applyFieldLabelling` reflects `ariaLabelledByElements` from the wrapping `ui-field`'s label
+part); a `CardHeader` `Text` is visually adjacent but never programmatically associated. The sketch side
+was the wrong document: the SEED gained the `Field` wrap (`src/examples/catalog-frontier.ts`, same-day;
+the research doc's R1 sketch stays as-written — the seed carries current law, the established
+pre-ADR-0201 convention). P7 gains no group-control clause: a bare `RadioGroup` reads 3 exactly as the
+anchor says, the read the admitted shard (25/26 Field-wrapped) already embodies.
+
 | Gated dimension | Scoring A (1.1 → 1.2) | Scoring B (1.1 → 1.2) | Δ (must be ≤ 1) |
 |---|---|---|---|
 | Ground-truth validity | 5 → **2** | 5 → **2** | 0 |

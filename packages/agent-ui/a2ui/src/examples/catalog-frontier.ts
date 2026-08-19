@@ -383,15 +383,19 @@ export const heroListingCardSeed: ExampleSeed = {
 const ASK_ID = 'ask-1'
 /** Frontier 8 — the CARD-ANATOMY law (GH #1199, req-a2ui-patterns.md R1): the canonical three-slot ask
  *  card, header/content/footer each doing exactly one job — CardHeader carries ONLY the identity title
- *  (a label Text, never a control), CardContent carries the RadioGroup choice, and CardFooter carries the
- *  ONE commit Button — never a Button loose in content alongside a populated footer, and never a control
- *  inside the header. This is the grammar.md card-anatomy clause's own worked feed-ask sketch (R1),
- *  transcribed verbatim as a corpus exemplar so the law has a real, validated, renderable instance on the
- *  shelf, not only prose. */
+ *  (a label Text, never a control), CardContent carries the Field-wrapped RadioGroup choice, and
+ *  CardFooter carries the ONE commit Button — never a Button loose in content alongside a populated
+ *  footer, and never a control inside the header. This is the grammar.md card-anatomy clause's worked
+ *  feed-ask sketch (R1), realized as a corpus exemplar so the law has a real, validated, renderable
+ *  instance on the shelf, not only prose — with two repairs over the source doc's sketch (the GH #1262
+ *  P7 reconciliation, Kim take-up 2026-08-18): the RadioGroup rides a Field wrap (a2ui-payload.md P7 —
+ *  the catalog RadioGroup declares no label prop, and only the Field wrap wires a programmatic group
+ *  name through the shipped ADR-0051 labelling seam; a CardHeader Text is adjacent, never associated),
+ *  and the promptText is user-voiced (the judged wave's recorded D2 repair). */
 export const cardAnatomyAskSeed: ExampleSeed = {
   name: 'frontier-card-anatomy-ask',
-  description: 'A three-slot ask card demonstrating card-anatomy law (R1): CardHeader carries only the identity title, CardContent carries the RadioGroup choice, CardFooter carries the single commit Button.',
-  promptText: 'Which room would you like? Standard (€180) or the Deluxe King (€240)?',
+  description: 'A three-slot ask card demonstrating card-anatomy law (R1): CardHeader carries only the identity title, CardContent carries the Field-wrapped RadioGroup choice, CardFooter carries the single commit Button.',
+  promptText: 'I need to pick a room type for my stay — Standard (€180) or the Deluxe King (€240).',
   surfaceId: ASK_ID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui',
@@ -405,7 +409,8 @@ export const cardAnatomyAskSeed: ExampleSeed = {
           { id: 'root', component: 'Card', elevation: '1', children: ['hd', 'ct', 'ft'] },
           { id: 'hd', component: 'CardHeader', children: ['title'] },
           { id: 'title', component: 'Text', variant: 'label', text: 'Pick a room' },
-          { id: 'ct', component: 'CardContent', children: ['rooms'] },
+          { id: 'ct', component: 'CardContent', children: ['f_room'] },
+          { id: 'f_room', component: 'Field', label: 'Room type', child: 'rooms' },
           { id: 'rooms', component: 'RadioGroup', value: { path: '/room' }, children: ['r1', 'r2'] },
           { id: 'r1', component: 'Radio', value: 'standard', label: 'Standard · €180' },
           { id: 'r2', component: 'Radio', value: 'deluxe', label: 'Deluxe King · €240' },
