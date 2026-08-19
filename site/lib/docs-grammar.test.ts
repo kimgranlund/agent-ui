@@ -245,10 +245,13 @@ describe('STRUCTURAL — S5-S9 (S5-S8 promoted at Phase 5, manifest M7-M10; S9 m
     // 2026-08-13, further along) — this branch's tool-description-standard ADR (GH #847) claimed
     // 0188 first in-worktree and was renumbered to 0189 on discovering the collision, leaving this
     // gap until #852 merges.
-    // 209-215 + 218: reserved in flight when this lane's ADR-0216/0217/0219 were host-assigned (GH #1372/
+    // 209-214: reserved in flight when this lane's ADR-0216/0217/0219 were host-assigned (GH #1372/
     // #1373/#1375 — the classic-widget decision lane): 209-212 held by open PRs #1357/#1360/#1364/#1367,
-    // 213-215 by a sibling lane, 218 by another lane, 220 (ChoiceGroup) and 221 (markdown) lie past this
-    // lane's top — gaps inert once each of those PRs lands.
+    // 213-214 by a sibling design lane — gaps inert once each of those PRs lands.
+    // 215 + 218: RELEASED numbers — host-assigned in the 2026-08-19 block, then retired unused; NO PR
+    // holds them and none will land them, so these two stay PERMANENT gaps (the 108/151 class), not
+    // reservations to wait on. 220 (ChoiceGroup, PR #1384 — which also edits this comment; keep both
+    // attributions on merge) lies past this lane's top; 221 is likewise released/retired, past the top.
     const KNOWN_GAPS = new Set([108, 151, 155, 173, 183, 188, 192, 193, 209, 210, 211, 212, 213, 214, 215, 218]) // 192/193 reserved in flight (@agent-ui/data planner · GH #959) when 0194 was minted (GH #975 renumber, 0191 taken by #974) — inert once they land
     const nums = readdirSync(`${DOCS}/adr`).map((f: string) => /^(\d{4})-/.exec(f)?.[1]).filter(Boolean).map(Number).sort((a: number, b: number) => a - b) as number[]
     const newGaps: number[] = []

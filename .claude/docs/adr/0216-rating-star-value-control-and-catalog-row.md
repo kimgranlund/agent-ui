@@ -71,8 +71,11 @@ Fork-T1/D1 event-vs-commit probe, and `readonly` defaulting to `false`.**
    FORESEEN LATER intake, not v1.
 4. **Input semantics ride `UIRangeElement`.** `ui-rating` extends the existing base: numeric
    model, clamp/snap, `role = 'slider'` via `ElementInternals`, ArrowUp/Down = `± step`,
-   plus pointer pick (click star *k* → `k·step`-snapped). `readonly` must be ANNOUNCED
-   (`aria-readonly`), never a silently inert slider; the exact readonly ARIA shape is the LLD's.
+   plus pointer pick (click star *k* → `k·step`-snapped). `readonly` is a NEW leaf prop — the
+   base declares none (`readonly` is per-leaf today: `text-field.ts:143`, `textarea.ts:51`) — and
+   it must INERT the write path (keyboard stepping AND the drag/pointer controller), not only
+   announce `aria-readonly`; an announced-but-still-writable readonly would be the lie the
+   attribute exists to prevent. The exact readonly ARIA shape is the LLD's.
    Form parity props: `name`/`disabled`/`required`/`label` (the `Slider` row's set).
 5. **`readonly` defaults `false`** — input-parity with every shipped form row (`Slider`,
    `Checkbox` default interactive); the corpus/seed wave teaches `readonly: true` as the
@@ -112,6 +115,12 @@ New row for `a2ui-catalog.spec.md` §5.2:
 - Fraction-accurate display + stepped input on one prop means a bound display value (4.3) that
   the user then edits commits a SNAPPED value (4.5 or 4.0) — the write path quantizes by design;
   seeds must not present an aggregate score as user-editable (that is `readonly: true`'s job).
+- **`change` rides the base's blur-commit law** (`range-element.ts:197-207`, `slider.ts:126`:
+  `input` on pointer/drag and keyboard, `change` only on blur when the value moved since focus)
+  unless the LLD rules pointer-pick = commit (emit `change` on pointerup). Left on the base law,
+  a tap-a-star rating writes the data model only when focus LEAVES the control — a real latency
+  consequence for a one-gesture input. The Fork-T1 probe (clause 6) runs against whichever
+  commit point the LLD picks; the row's `event: 'change'` mark is unchanged either way.
 - `readonly: false` default means an agent that binds `value` for display but forgets `readonly`
   gets user-writable stars mutating the data model — the same exposure `Slider` already has;
   the usage note + corpus seeds carry the mitigation. Rejected mitigation: a `true` default

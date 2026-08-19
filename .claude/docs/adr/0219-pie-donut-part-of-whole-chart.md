@@ -8,7 +8,7 @@
 > | **Date** | 2026-08-19 |
 > | **Proposed by** | planning-leader (design seat — GH #1375, the classic-widget decision lane #1372/#1373/#1375; ADR number host-assigned) |
 > | **Ratified by** | *(awaiting Kim)* |
-> | **Repairs** | `chart-family.prd.md` §3 (the pie/donut ruled-out bullet → "admitted under ADR-0219's conditions") · ADR-0107 "Pie/donut in v1" rejected-alternative (annotated as lifted, the ADR-0205 precedent of a named intake realizing a named fence) · `a2ui-catalog.spec.md` §5.2 (the drafted row below, UNAPPLIED) — all applied by the build wave on ratification |
+> | **Repairs** | `chart-family.prd.md` → **v1.1** (an accepted v1.0 versioned contract: the §3 pie/donut ruled-out bullet → "admitted under ADR-0219's conditions", header version + changelog line bumped) · ADR-0107 gains an **Amendment** section ("Pie/donut in v1" rejected-alternative lifted under ADR-0219 — 0107 already carries one Amendment; the ADR-0205 precedent of a named intake realizing a named fence) · `a2ui-catalog.spec.md` §5.2 (the drafted row below, UNAPPLIED) — all applied by the build wave on ratification |
 > | **Supersedes / Superseded by** | (none) — relates ADR-0107 (the v1 fence this intake lifts, on mechanics) · ADR-0205 (the named-intake-realizes-named-fence precedent; its cl.2 legend/color-key deferral is PARTIALLY settled here for the part-of-whole case only) · ADR-0057 (the non-color-signifier law this ADR's palette obeys) |
 
 ## Context
@@ -120,8 +120,9 @@ is met by construction, not waived.**
 ## Consequences
 
 - A new control folder + row + the chart-family size-budget re-base (ADR-0107's amendment
-  precedent) + the full §5(iii) rider set — priced into the build wave. `chart-family.prd.md` §3
-  and ADR-0107's rejected-alternative are REPAIRED (annotated), not silently contradicted.
+  precedent) + the full §5(iii) rider set — priced into the build wave. `chart-family.prd.md`
+  is REPAIRED as a version bump (v1.0 → v1.1, §3 bullet rewritten) and ADR-0107 gains an
+  Amendment section — neither is silently contradicted.
 - The lightness ramp is ordinal by construction: slice 1 is always the brightest. A consumer whose
   data order has no meaning gets an implied ranking from the ramp; the usage note names this
   (order your slices deliberately). Rejected mitigation: a hue-varied palette (below).
@@ -131,8 +132,8 @@ is met by construction, not waived.**
   (ADR-0205 cl.2) open and now sharper: its answer is a categorical token family, not this ramp.
 - A negative value in part-of-whole data is meaningless and is dropped (not clamped) — a
   documented hardening difference from `BarChart`, where negatives are legal magnitudes.
-- **Stale → re-verify on land:** `chart-family.prd.md` §3 + ADR-0107's rejected-alternative
-  annotation · `a2ui-catalog.spec.md` §5.2 (apply the drafted row) · `chart-family.spec.md`
+- **Stale → re-verify on land:** `chart-family.prd.md` v1.1 (§3) + ADR-0107's new Amendment
+  section · `a2ui-catalog.spec.md` §5.2 (apply the drafted row) · `chart-family.spec.md`
   gains R-clauses for the new control (the ADR-0205 wave's precedent) · catalog factory +
   conformance/coverage gates · size-budget test · the new `--ui-pie-chart-*` tokens in the token
   docs test.

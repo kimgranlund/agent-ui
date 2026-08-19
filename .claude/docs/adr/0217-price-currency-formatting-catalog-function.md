@@ -33,8 +33,9 @@ Testing honestly surfaced a THIRD arm already built into the tree, smaller than 
   exists (`required`/`email`/`regex`/`ping`); adding a member is the designed extension point.
 - A `formatCurrency` implementation already ships in-tree for the a2ui-basic catalog
   (`catalog/a2ui-basic/functions.ts`, ADR-0169 cl.11): `Intl.NumberFormat` with
-  `{style:'currency', currency}`, invalid-currency degradation, zero deps (`Intl` is a platform
-  global, zero-dep per SPEC-N5).
+  `{style:'currency', currency}`, zero deps (`Intl` is a platform global, zero-dep per SPEC-N5);
+  its own degradation is `String(args.value)` on BOTH a NaN value and an invalid currency code
+  (`a2ui-basic/functions.ts:97,106`), and it takes optional `decimals?`/`grouping?` args.
 - The display layer's locale precedent is the DEFAULT runtime locale, not a pin: `Stat` formats
   numeric figures via a module-memoized default-locale `Intl.NumberFormat`
   (`controls/stat/stat-model.ts`), `Table` number cells likewise (`controls/table/table-model.ts`,
@@ -55,8 +56,10 @@ locale — and widen NO row and mint NO type. Agents emit
 into any text-bearing bound prop (`Text.text`, `Stat.value`, `Badge.label`, …).**
 
 1. **Signature**: named args `value` (number — non-finite degrades to the em-dash placeholder,
-   the `Stat` discipline) and `currency` (ISO-4217 string — an invalid code degrades to plain
-   number formatting, the a2ui-basic impl's posture). No `locale` arg in v1: the runtime default
+   the `Stat` discipline) and `currency` (ISO-4217 string — an invalid code degrades to a
+   default-locale plain `Intl.NumberFormat` number string; THIS ADR's posture, deliberately NOT
+   a2ui-basic's, whose own impl returns `String(value)` on both NaN and invalid currency —
+   `a2ui-basic/functions.ts:97,106`). No `locale` arg in v1: the runtime default
    locale is the display law (the `Stat`/`Table` precedent above); per-fraction-digit correctness
    (USD 2 · JPY 0 · BHD 3) comes from `Intl` itself (ADR-0047 clause 2's mechanism, reused).
    Determinism in tests = pin `en-US` in the test env (ADR-0047's stated discipline), never in
@@ -76,6 +79,9 @@ into any text-bearing bound prop (`Text.text`, `Stat.value`, `Badge.label`, …)
    needs a column-schema decision, not a function) · a currency-formatted `Stat.delta` (delta is
    a number the control sign-formats; a currency delta needs a control-side decision) ·
    the `${fn(arg:val)}` in-string function-expression arm (SPEC-R5 already defers it).
+   a2ui-basic's `decimals?`/`grouping?` args are DELIBERATELY DROPPED, not residual: fraction
+   digits come from `Intl`'s per-currency lookup (clause 1) and grouping is the locale's own —
+   re-admitting either hands the agent back the per-locale knobs this ADR removes.
 
 ### Drafted SPEC deltas (UNAPPLIED — land with the build wave, on ratification)
 
@@ -84,8 +90,9 @@ into any text-bearing bound prop (`Text.text`, `Stat.value`, `Badge.label`, …)
 > The default catalog MUST declare its client functions (at least `required`, `email`, `regex`,
 > **and `formatCurrency` — named args `value` (number) + `currency` (ISO 4217), returning the
 > runtime-default-locale `Intl.NumberFormat` currency string; `clientOnly`; non-finite `value` →
-> the placeholder em dash, invalid `currency` → plain number formatting (ADR-0217)**) with typed
-> named-args signatures …
+> the placeholder em dash, invalid `currency` → a default-locale plain `Intl.NumberFormat` number
+> string — this catalog's own posture, distinct from a2ui-basic's `String(value)` (ADR-0217)**)
+> with typed named-args signatures …
 
 **§5.2 usage note** (appended to the `Stat`/`Text` row-adjacent guidance, prompt-facing):
 
@@ -103,8 +110,9 @@ into any text-bearing bound prop (`Text.text`, `Stat.value`, `Badge.label`, …)
 - The data model stays numeric (`/cart/total` is a number) — sorting, arithmetic, and re-binding
   keep working; the pre-formatted-string defect class (locale baked into data) is closed at the
   root rather than per-row.
-- Two catalogs now both declare `formatCurrency` with DIFFERENT locale postures (a2ui-basic's
-  pinned `en-US` dialect vs the default catalog's runtime locale) — correct per ADR-0169 cl.8's
+- Two catalogs now both declare `formatCurrency` with DIFFERENT locale AND degradation postures
+  (a2ui-basic: pinned `en-US`, `String(value)` on NaN/invalid currency, `decimals?`/`grouping?`
+  args; default catalog: runtime locale, em dash / plain number, two args) — correct per ADR-0169 cl.8's
   per-catalog override design, but worth one line in each impl's doc comment to prevent a future
   "unify them" regression.
 - Display output varies by end-user locale by DESIGN; goldens/tests pin `en-US` (ADR-0047's
