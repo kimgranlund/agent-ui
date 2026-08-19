@@ -188,4 +188,11 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   ['frontier-rating-review', 'ADR-0216 / GH #1395 — the Rating coverage-gap seed; NO VERDICT SOUGHT YET.'],
   ['frontier-pie-chart-budget', 'ADR-0219 / GH #1397 — the PieChart coverage-gap seed; NO VERDICT SOUGHT YET.'],
   ['frontier-choice-group-rooms', 'ADR-0220 / GH #1368 — the ChoiceGroup/ChoiceCard coverage-gap seed; NO VERDICT SOUGHT YET.'],
+
+  // GH #1389 (2026-08-19) — `frontier-disclosure-summary-switch`: ADR-0209's own booked corpus seed for
+  // the Disclosure summary-row `slot:'summary'` grammar (the Switch/Tooltip/Icon adopter rows). The same
+  // pending-state shape (NO VERDICT SOUGHT YET, not a refusal) — the authoring session judging its own
+  // seed is the manufactured judgment ADR-0068's Alternatives ban. Run the judged pipeline
+  // (`import-seeds.ts --verdicts`) and DELETE this entry when that wave lands.
+  ['frontier-disclosure-summary-switch', 'ADR-0209 / GH #1389 — the Disclosure summary-row Switch coverage-gap seed; NO VERDICT SOUGHT YET.'],
 ])

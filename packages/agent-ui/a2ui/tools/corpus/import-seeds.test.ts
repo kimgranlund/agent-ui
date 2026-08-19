@@ -517,6 +517,10 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     'frontier-rating-review': { passed: false, qualityScore: 2 },
     'frontier-pie-chart-budget': { passed: false, qualityScore: 2 },
     'frontier-choice-group-rooms': { passed: false, qualityScore: 2 },
+    // ADR-0209/GH #1389 — the Disclosure summary-row Switch coverage-gap seed; refused here for the
+    // same zero-admission reason as every row above; its real disposition is DISPOSITION_ALLOWLIST's
+    // pending "NO VERDICT SOUGHT YET" entry (wave 3 runs the real judged pipeline).
+    'frontier-disclosure-summary-switch': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {
