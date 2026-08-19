@@ -33,16 +33,6 @@ import type { OverlayHandle, OverlayOptions } from './overlay.ts'
 //       these same real engines by stubbing `CSS.supports` to force the fallback branch
 //   [6] the ADR-0101 announce contract is unchanged by path choice (open/close/toggle discrimination
 //       still holds on the enhanced path)
-//   [7] the GH #1339 IACVT guard — a popup with no box (its own ancestor `display:none`, the exact
-// Residual sub-case, recorded (code-review 2026-08-19): these probes keep the ANCHOR visible. In the
-// real FormPopover shape the anchor is ALSO boxless at open — the fallback's position() then reads a
-// zero rect and parks the popup at ~(0,4) until the first scroll/resize re-derivation (the trait has no
-// reveal hook). Expected-and-known, not covered by these probes; a reveal re-derivation hook is the
-// builder-optional follow-up named on GH #1339.
-//       FormPopover repro shape) makes the enhanced path fall back to the JS path for that open
-//       cycle, correctly anchored once revealed; a later reopen lands back on the enhanced path.
-//       Two other forcing mechanisms were tried first and did NOT reproduce the failure signature —
-//       see that section's own header comment for what was tried, measured, and why.
 
 class OverlayEl extends UIElement {
   handle: OverlayHandle | null = null
@@ -425,48 +415,138 @@ describe('overlay — ADR-0101 announce contract holds on the enhanced path (bot
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-//  [7] IACVT guard (GH #1339)
-//
-//  What was tried and DIDN'T reproduce the failure signature live (recorded, not silently dropped —
-//  the first mechanism this test file tried before landing on the one below):
-//    - Hiding the ANCHOR itself (`display:none`) before `open()`. Measured directly in both pinned
-//      engines: `popup.style.top` stayed the literal, unresolved `anchor(...)` CSS text — the guard
-//      never fired.
-//    - Repointing `position-anchor` at an `anchor-name` matching no element (a genuinely
-//      spec-invalid reference). Measured directly: same non-trigger.
-//    Root cause of BOTH non-reproductions, also measured directly (a throwaway diagnostic probe run
-//    once against this repo's pinned engines while deriving this section, not kept): CSSOM's
-//    `getComputedStyle()` resolved-value algorithm returns the USED value (a real pixel number, e.g.
-//    `0px`) for `top`/`right`/`bottom`/`left` on any element that HAS a box and IS positioned — even
-//    when the underlying computed value is the IACVT fallback `auto` — because the "does this
-//    property apply" special case only routes to the literal computed-value string when the element
-//    genuinely has NO BOX at all. A boxless ANCHOR or an invalid anchor reference still leaves the
-//    POPUP itself laid out (it has its own box, positioned via the static-position algorithm) — so
-//    `getComputedStyle(popup)` reads back real (if wrong) pixel numbers, never the string `'auto'`.
-//
-//  What DOES reproduce it live, in BOTH pinned engines, measured directly: giving the POPUP ITSELF no
-//  box — its own flat-tree ancestor is `display:none` — the exact FormPopover repro shape (a card's
-//  tab panel, containing both trigger and panel, hidden at build). `:popover-open` stays `true`
-//  (`showPopover()` does not throw), and `getComputedStyle(popup).{top,right,bottom,left}` read the
-//  literal string `'auto'` on ALL FOUR — this IS the guard's exact trigger condition, forced without
-//  relying on any self-healing/non-reproducible engine quirk. This also proves the "opened while
-//  hidden, then revealed" shape the ticket named — the JS fallback's `position()` call still measures
-//  the ANCHOR's real (visible) geometry even while the popup itself has no box, so the fixed top/left
-//  it writes are already correct BEFORE the reveal; no reveal-lifecycle hook is needed for THIS shape
-//  to resolve correctly once the ancestor becomes visible again (a hook the trait genuinely does not
-//  have — confirmed absent, `overlay.ts`'s own header comment — would only matter for a scroll/resize
-//  re-derivation AFTER reveal, which this guard's one-shot open-time check does not attempt either).
+//  [7] GH #1339 — the IACVT guard: an OPEN, RENDERED popup whose `anchor()` references fail to
+//  resolve must never be left at its static position (the FormPopover catalog panel rendering
+//  detached from its Filter trigger). Both moments the state can arise are proven: post-OPEN (the
+//  anchor reference is broken before open — the deterministic stand-in for an engine that missed
+//  re-resolution after an instance rewire) and post-REVEAL (opened inside a `display:none` subtree
+//  — the catalog page's hidden-tab-panel card shape — then revealed with the reference still
+//  broken; only the reveal observer can catch that one).
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-describe('overlay — IACVT guard (GH #1339): a popup with no box (hidden ancestor) falls back to the JS path', () => {
-  it(`${server.browser}: opening while the popup's own ancestor is display:none falls back to the JS path and lands correctly anchored once revealed`, async () => {
-    const { el, popup, anchor } = makeHost({ placement: 'bottom-start' })
+describe('overlay — GH #1339 IACVT guard: an unresolvable anchor() demotes the open session to the JS path (both engines)', () => {
+  const gapPx = (): number => 0.25 * (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16)
+
+  it(`${server.browser}: open() with a broken anchor reference lands the panel AT the trigger via the JS fallback, synchronously`, async () => {
+    const { el, popup, anchor } = makeHost()
+    anchor.style.position = 'fixed'
+    anchor.style.top = '200px'
+    anchor.style.left = '100px'
+    // Capture the instance's anchor-name BEFORE breaking the reference — the repair leg below needs
+    // it, and a demoted session severs the popup's own `position-anchor` copy of it.
+    const anchorNameValue = anchor.style.getPropertyValue('anchor-name')
+    // Break the enhanced path's anchor reference: `position-anchor` on the popup now names an
+    // anchor-name NO element carries → every `anchor()` inset is invalid at computed-value time →
+    // all-`auto` insets → static-position rendering (near the body's top-left here — nowhere near
+    // the fixed trigger at 200/100), exactly the detached-panel state unless the guard converts it.
+    anchor.style.removeProperty('anchor-name')
+
+    el.handle!.open()
+
+    // The guard runs SYNCHRONOUSLY inside open(): data-placement already carries the JS path's
+    // settled verdict (the sync-read contract every shipped consumer relies on), and the session's
+    // `position-try-fallbacks` is neutralized so no unresolvable @position-try candidate can
+    // override the fallback's explicit px insets.
+    expect(
+      popup.getAttribute('data-placement'),
+      `${server.browser}: the demoted session must settle data-placement synchronously inside open()`,
+    ).toBe('bottom-start')
+    expect(
+      popup.style.getPropertyValue('position-try-fallbacks'),
+      `${server.browser}: the IACVT fallback did not neutralize position-try-fallbacks — the guard never fired`,
+    ).toBe('none')
+
+    await settle()
+    const a = anchor.getBoundingClientRect()
+    const p = popup.getBoundingClientRect()
+    expect(
+      Math.abs(p.top - (a.bottom + gapPx())),
+      `${server.browser}: panel top must sit one gap below the trigger (got panel.top=${p.top}, trigger.bottom=${a.bottom})`,
+    ).toBeLessThanOrEqual(2)
+    expect(
+      Math.abs(p.left - a.left),
+      `${server.browser}: panel left must align to the trigger's left edge (got panel.left=${p.left}, trigger.left=${a.left})`,
+    ).toBeLessThanOrEqual(2)
+
+    // The demotion is SESSION-scoped: close, repair the reference, re-open → the enhanced path is
+    // retried fresh (candidate list restored, anchored geometry again — no residue from the fallback).
+    el.handle!.close()
+    anchor.style.setProperty('anchor-name', anchorNameValue)
+    el.handle!.open()
+    expect(
+      popup.style.getPropertyValue('position-try-fallbacks'),
+      `${server.browser}: a fresh open() must restore the @position-try candidate list after a prior demoted session`,
+    ).toMatch(/^--ui-overlay-try-/)
+    await settle()
+    const a2 = anchor.getBoundingClientRect()
+    const p2 = popup.getBoundingClientRect()
+    expect(p2.top, `${server.browser}: re-opened panel not anchored below the trigger`).toBeGreaterThanOrEqual(a2.bottom - 1)
+    expect(Math.abs(p2.left - a2.left), `${server.browser}: re-opened panel not start-aligned`).toBeLessThanOrEqual(2)
+  })
+
+  it(`${server.browser}: opened inside a display:none subtree then revealed with the reference still broken — the reveal observer re-anchors the panel`, async () => {
+    const { el, popup, anchor } = makeHost()
+    const wrapper = document.createElement('div')
+    wrapper.style.display = 'none'
+    document.body.append(wrapper)
+    try {
+      // Moving the trio into the wrapper disconnects + reconnects the host — connected() re-runs and
+      // re-wires a FRESH overlay handle (the scope-owned cleanup disposed the old one), the same
+      // teardown/rewire shape the catalog's knob-driven control recreation produces.
+      wrapper.append(el, anchor, popup)
+      anchor.style.position = 'fixed'
+      anchor.style.top = '200px'
+      anchor.style.left = '100px'
+      anchor.style.removeProperty('anchor-name') // break resolution PERMANENTLY — only the guard can fix this one
+
+      el.handle!.open() // open while hidden: :popover-open, but no box — nothing rendered to misplace yet
+      expect(
+        popup.getBoundingClientRect().width,
+        `${server.browser}: premise check — a popup inside a display:none subtree must have no box`,
+      ).toBe(0)
+
+      wrapper.style.display = 'block' // the reveal — the popup gains a box; anchor() still cannot resolve
+
+      // Poll for the guard's verdict (ResizeObserver delivery is async). An engine that force-closed
+      // the popover across the display transition (spec-legal) gets one re-open once visible — the
+      // post-open leg of the same guard then owns the fix; either leg must end anchored.
+      const deadline = performance.now() + 5000
+      let anchored = false
+      while (performance.now() < deadline && !anchored) {
+        await settle()
+        if (!popup.matches(':popover-open')) {
+          el.handle!.open()
+          continue
+        }
+        const a = anchor.getBoundingClientRect()
+        const p = popup.getBoundingClientRect()
+        anchored = Math.abs(p.top - (a.bottom + gapPx())) <= 2 && Math.abs(p.left - a.left) <= 2
+      }
+      expect(
+        anchored,
+        `${server.browser}: revealed panel never re-anchored to its trigger — left at its static position (GH #1339's detached render)`,
+      ).toBe(true)
+      expect(
+        popup.getAttribute('data-placement'),
+        `${server.browser}: the re-anchored session must carry a settled data-placement`,
+      ).toBe('bottom-start')
+    } finally {
+      wrapper.remove() // afterEach re-removes the trio individually — removing the wrapper first is safe
+    }
+  })
+
+  // The PR #1359 fixture shape, re-pinned under the verify guard (that PR's own guard —
+  // `computedInsetsAllAuto`, an eager open-time demotion for a boxless popup — was retired at the
+  // 2026-08-19 reconciliation; overlay.ts's Lineage header paragraph has the account). Same shape:
+  // ONLY the popup sits under a display:none ancestor, the anchor stays visible and the reference
+  // stays HEALTHY. New semantics asserted: a boxless popup is DEFERRED (anchor() insets kept, no
+  // JS-path listeners armed), the reveal resolves on the ENHANCED path, and a reopen stays there.
+  it(`${server.browser}: opened while only the popup's own ancestor is display:none (healthy reference) — deferred at open, ENHANCED-path anchored at reveal and on reopen`, async () => {
+    const { el, popup, anchor } = makeHost()
     anchor.style.position = 'fixed'
     anchor.style.top = '120px'
     anchor.style.left = '120px'
 
-    // Move the popup under a display:none ancestor — no box, matching the FormPopover repro shape
-    // (a card's tab panel hidden at build). The anchor stays visible/laid out.
     const hiddenAncestor = document.createElement('div')
     hiddenAncestor.style.display = 'none'
     document.body.append(hiddenAncestor)
@@ -481,73 +561,47 @@ describe('overlay — IACVT guard (GH #1339): a popup with no box (hidden ancest
 
     try {
       el.handle!.open()
-      await settle()
-
-      // Direct proof the guard fired: applyAnchoredPlacement() always writes the raw `anchor(...)`
-      // CSS text into style.top first; the guard overwriting it with a literal pixel value is the
-      // observable sign the JS fallback took over THIS cycle.
+      await settle() // let the reveal observer's initial delivery land — the deferral must survive it
       expect(
         popup.style.top,
-        `${server.browser}: expected the IACVT guard to overwrite the failed anchor() inset with a literal JS-computed pixel value`,
-      ).toMatch(/^-?\d+(\.\d+)?px$/)
-
-      const scrollOrResize = addCalls.filter((c) => c.type === 'scroll' || c.type === 'resize')
+        `${server.browser}: a boxless popup must keep its declared anchor() insets (deferred, not demoted — the design difference vs the retired #1359 guard)`,
+      ).toContain('anchor(')
       expect(
-        scrollOrResize.length,
-        `${server.browser}: the IACVT fallback should register the JS path's scroll+resize listeners for this cycle`,
-      ).toBe(2)
+        addCalls.filter((c) => c.type === 'scroll' || c.type === 'resize'),
+        `${server.browser}: no JS-path listeners may be armed while the popup is deferred`,
+      ).toEqual([])
 
-      // Reveal the ancestor — the popup gains a real box. No reopen, no reveal hook: the JS
-      // fallback already measured the ANCHOR's real geometry at open() time and wrote a correct
-      // fixed top/left, so revealing alone is enough to prove "anchored, not static".
-      hiddenAncestor.style.display = ''
+      hiddenAncestor.style.display = '' // the reveal — both pinned engines resolve anchor() here
+      await settle()
       await settle()
 
       const a = anchor.getBoundingClientRect()
       const p = popup.getBoundingClientRect()
-      expect(p.top, `${server.browser}: revealed panel is not below the anchor's bottom edge (still static-positioned)`).toBeGreaterThanOrEqual(a.bottom - 1)
-      expect(p.left, `${server.browser}: revealed panel is not anchor-aligned (start) — looks static-positioned`).toBeCloseTo(a.left, 0)
+      expect(p.top, `${server.browser}: revealed panel is not below the anchor's bottom edge (static-positioned)`).toBeGreaterThanOrEqual(a.bottom - 1)
+      expect(Math.abs(p.left - a.left), `${server.browser}: revealed panel not start-aligned to the anchor`).toBeLessThanOrEqual(2)
+      expect(
+        popup.style.top,
+        `${server.browser}: a healthy reveal must stay on the enhanced path — anchor() insets intact, no demotion`,
+      ).toContain('anchor(')
+
+      // #1359's reopen leg, folded: a genuine reopen with the box present lands enhanced + anchored.
+      el.handle!.close()
+      el.handle!.open()
+      expect(
+        popup.getAttribute('data-placement'),
+        `${server.browser}: reopen after reveal did not resolve a real placement`,
+      ).toBe('bottom-start')
+      await settle()
+      const a2 = anchor.getBoundingClientRect()
+      const p2 = popup.getBoundingClientRect()
+      expect(p2.top, `${server.browser}: reopened panel not anchored below the trigger`).toBeGreaterThanOrEqual(a2.bottom - 1)
+      expect(
+        popup.style.top,
+        `${server.browser}: reopen must land on the enhanced (anchor()) path, not a leftover JS fallback`,
+      ).toContain('anchor(')
     } finally {
       window.addEventListener = originalAdd
       hiddenAncestor.remove()
     }
   })
-
-  it(`${server.browser}: a REOPEN after the ancestor is already revealed lands on the enhanced path, correctly anchored`, async () => {
-    const { el, popup, anchor } = makeHost({ placement: 'bottom-start' })
-    anchor.style.position = 'fixed'
-    anchor.style.top = '200px'
-    anchor.style.left = '150px'
-
-    const hiddenAncestor = document.createElement('div')
-    hiddenAncestor.style.display = 'none'
-    document.body.append(hiddenAncestor)
-    hiddenAncestor.append(popup)
-
-    el.handle!.open() // falls back this cycle (previous test proves the mechanism directly)
-    await settle()
-    hiddenAncestor.style.display = '' // reveal
-    await settle()
-    el.handle!.close()
-
-    el.handle!.open() // a genuine reopen, now that the popup has a real box again
-    await settle()
-
-    expect(
-      popup.getAttribute('data-placement'),
-      `${server.browser}: reopen after the ancestor was revealed did not resolve a real placement`,
-    ).toBe('bottom-start')
-    expect(
-      popup.style.top,
-      `${server.browser}: reopen after reveal should have landed back on the enhanced (anchor()) path, not stayed on the JS fallback`,
-    ).toContain('anchor(')
-
-    const a = anchor.getBoundingClientRect()
-    const p = popup.getBoundingClientRect()
-    expect(p.top, `${server.browser}: reopened panel is not below the anchor's bottom edge (still static-positioned)`).toBeGreaterThanOrEqual(a.bottom - 1)
-    expect(p.left, `${server.browser}: reopened panel is not anchor-aligned (start) — still looks static-positioned`).toBeCloseTo(a.left, 0)
-
-    hiddenAncestor.remove()
-  })
 })
-
