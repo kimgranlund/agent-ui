@@ -1,6 +1,6 @@
 # PRD — A2UI Expert System
 
-> Status: proposed · v0.2 · 2026-06-26 · Owner: agent-ui *(v0.2, 2026-08-18: §8 added — the widget-vocabulary-parity product intent relocated from [IDR-0004](../idr/0004-widget-vocabulary-parity-composition-first.md) at Kim's 2026-08-18 doc-tier ruling; additive — §1–§7 untouched) (v0.3, 2026-08-19: §8.1 added — the rich-option-selection intent, GH #1368/ADR-0220; additive — §1–§8 body untouched)*
+> Status: proposed · v0.3 · 2026-08-19 · Owner: agent-ui *(v0.2, 2026-08-18: §8 added — the widget-vocabulary-parity product intent relocated from [IDR-0004](../idr/0004-widget-vocabulary-parity-composition-first.md) at Kim's 2026-08-18 doc-tier ruling; additive — §1–§7 untouched) (v0.3, 2026-08-19: §8.1 added — the rich-option-selection intent, GH #1368/ADR-0220; additive — §1–§8 body untouched)*
 > Document family: this PRD is upstream of the SPECs in [`specs/`](../spec/) and the LLDs in [`llds/`](../lld/). The family lives on the unified map (`../spec/`·`../lld/`); decisions index: the ADR log itself, [`../adr/`](../adr/) (the numbered files ARE the index — no index file, `doc-standards` §1b); the original charter is [archived](../archive/a2ui-expert-system/README.md) (frozen 2026-07-08).
 > Altitude: this document owns **why + what-should-exist**. Behavior contracts live in the SPECs; implementation in the LLDs. Lower documents reference these goal IDs; they do not restate them.
 
@@ -177,11 +177,15 @@ can COMMIT a choice (one, or several) back through the data model, with the card
 they tap. "Scan and choose from rich options" is the widest gap the 2026-08-18 preset-vs-catalog
 analysis found (GH #1368): the ecosystem's inline-carousel/commerce pattern has no expression here.
 
-**Requirement.** The catalog carries a rich-card selection container (single AND multi mode) whose
-options host agent-composed display content, feed-ask eligible (ADR-0097), value-committed under
-the ADR-0161 vocabulary. This is the first minted instance of requirement 1's own escape clause —
+**Requirement 8.1-R1.** The catalog carries a rich-card selection container (single AND multi mode)
+whose options host agent-composed display content, feed-ask eligible (ADR-0097), value-committed
+under the ADR-0161 vocabulary. This is the first minted instance of requirement 1's own escape clause —
 composition was ruled provably impossible in GH #1368's gap analysis (no selected state or value
 mark exists on `Card`/`List`/`Grid`; `RadioGroup`/`Table` are label/row-grade) — the WHY lives
 here; the mint decision, contract, and fences are
 [ADR-0220](../adr/0220-choice-group-rich-card-selection-container.md)'s (proposed, pending
 ratification).
+
+**Verification.** 8.1-R1 is met when ADR-0220's Acceptance ("On ratification+build" — jsdom +
+browser + catalog/conformance/feed-partition gates, exit codes) is green on `main`; until the
+ADR flips, the only checkable predicate is its "This pass (docs only)" arm.
