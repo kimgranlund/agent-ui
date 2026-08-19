@@ -11,9 +11,10 @@
 // partition [control/indicator/range/display/container/layout/pattern], unrelated to this page-grouping
 // taxonomy). Kept as ONE hand-maintained table, gated by a completeness check (a2ui-catalog-tiers.test.ts)
 // so a future catalog addition that forgets a tier home fails the gate loudly rather than silently falling
-// through the page. A straddler (Calendar, Menu, Segment) gets exactly ONE row — its primary home, per the
+// through the page. A straddler (Calendar, Menu) gets exactly ONE row — its primary home, per the
 // ticket's "one home each" acceptance bullet; an *Item/*Pane companion (MenuItem, SwiperItem, SplitPane,
-// TimelineItem) rides with its owning compound's tier.
+// TimelineItem) rides with its owning compound's tier. (Segment, once the third straddler, moved to
+// NESTED_ONLY 2026-08-19 — GH #1332, see the set's own comment above.)
 //
 // The gallery cross-link half (`seedsUsingType`) IS derived, never hand-listed: it walks every `allSeeds`
 // (ADR-0055) message stream for the real component TYPES it renders.
@@ -23,10 +24,18 @@ import type { ExampleSeed } from '@agent-ui/a2ui/examples'
 import { seedAnchorId } from './a2ui-gallery.ts'
 
 /** Sub-part types that only make sense INSIDE their owner (Select's Options, Tabs' Tab/TabPanel, Card's
- *  regions) — folded into the owner's sample content rather than browsable/tiered as standalone entries
+ *  regions, SegmentedControl's Segments) — folded into the owner's sample content rather than
+ *  browsable/tiered as standalone entries
  *  (a2ui-catalog.ts's pre-existing rule; kept here too so the tier table's completeness check reads the
- *  SAME excluded set the page filters by). */
-export const NESTED_ONLY: ReadonlySet<string> = new Set(['Option', 'Tab', 'TabPanel', 'CardHeader', 'CardContent', 'CardFooter'])
+ *  SAME excluded set the page filters by).
+ *  Segment joined 2026-08-19 (GH #1332): a standalone ui-segment has no visual identity BY THE CONTROL'S
+ *  OWN RULED ARCHITECTURE — segment.css deliberately owns no chrome ("every sized value a segment renders
+ *  is the HOST segmented-control's own token chain, consumed via a descendant compound selector",
+ *  ADR-0095 cl.3 / the ADR-0086 group-restyles-its-children split), so its card rendered bare text and
+ *  `checked` painted nothing (B4=1, C3=2, both modes). Radio is the deliberate CONTRAST that stays
+ *  browsable: radio.css owns its own ::before ring + ::after dot, so a lone Radio is legible. The
+ *  membership discriminator is chrome OWNERSHIP, not family membership. */
+export const NESTED_ONLY: ReadonlySet<string> = new Set(['Option', 'Tab', 'TabPanel', 'CardHeader', 'CardContent', 'CardFooter', 'Segment'])
 
 /** The five page-level tabs (owner-approved 2026-08-15 audit) — declaration order IS tab/display order. */
 export type Tier = 'WIDGET' | 'PRIMITIVE' | 'PATTERN' | 'FEATURE' | 'INPUT'
@@ -53,16 +62,17 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   Row: 'PRIMITIVE',
   Text: 'PRIMITIVE',
 
-  // INPUT (14) — form-associated / value-committing controls. Radio/Segment carry no independent A2UI
-  // `value` mark of their own (their group does) but ride with their owning family here — a reader browsing
-  // "Input" for "Radio" expects to find it beside RadioGroup, not filed under Widget.
+  // INPUT (13) — form-associated / value-committing controls. Radio carries no independent A2UI `value`
+  // mark of its own (its group does) but rides with its owning family here — a reader browsing "Input"
+  // for "Radio" expects to find it beside RadioGroup, not filed under Widget. It stays browsable (unlike
+  // Segment, NESTED_ONLY since GH #1332) because radio.css owns its own indicator chrome — a lone Radio
+  // is standalone-legible.
   Checkbox: 'INPUT',
   ColorPicker: 'INPUT',
   ComboBox: 'INPUT',
   MultiSelect: 'INPUT',
   Radio: 'INPUT',
   RadioGroup: 'INPUT',
-  Segment: 'INPUT',
   SegmentedControl: 'INPUT',
   Select: 'INPUT',
   Slider: 'INPUT',

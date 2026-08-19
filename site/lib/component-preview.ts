@@ -265,7 +265,9 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   Ramp: { label: 'Primary tonal range' },
   Pagination: { page: '2', pages: '8', label: 'Search results' },
   MenuItem: { label: 'Duplicate', value: 'duplicate' },
-  Segment: { label: 'Deluxe', value: 'deluxe', checked: 'true' },
+  // Segment: NO seed — NESTED_ONLY since GH #1332 (no standalone card exists to seed; a lone ui-segment
+  // has no chrome by ADR-0095 cl.3's ruled split). Its demonstration lives in SegmentedControl's
+  // SAMPLE_TREES fold below.
   Table: { label: 'Failing checks', selectable: 'multi' },
   // duration '0' — ≤0 means never auto-dismiss (toast.ts SPEC-R14/R16): the specimen must OUTLIVE the
   // reader's glance; the shipped default (6000ms) had the card self-dismissing into an empty canvas.
