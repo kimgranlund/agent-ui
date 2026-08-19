@@ -273,10 +273,19 @@ export const NAV: readonly NavGroup[] = [
     links: [
       { href: './layout-overview.html', label: 'Overview' },
       { href: './layout-permutations.html', label: 'Surface × layout' },
+      // Each primitive's Demo sits RIGHT AFTER its own doc link (Kim, 2026-08-18: every component page gets a
+      // demo tab). This bundle's tab strip is SHARED (Overview first — the group's editorial anchor), so the
+      // per-component "Demo first, API second" ordering of a `ui-*` group cannot apply here; `row · row demo`
+      // adjacency is the bundle-shaped equivalent, and every demo page joins the group (activeGroup matches by
+      // href) so it inherits the same strip.
       { href: './row-doc.html', label: 'row' },
+      { href: './row-demo.html', label: 'row demo' },
       { href: './column-doc.html', label: 'column' },
+      { href: './column-demo.html', label: 'column demo' },
       { href: './list-doc.html', label: 'list' },
+      { href: './list-demo.html', label: 'list demo' },
       { href: './grid-doc.html', label: 'grid' },
+      { href: './grid-demo.html', label: 'grid demo' },
       // ui-toast-region (ADR-0112, tier=layout) folds into this bundle rather than growing its own group —
       // the site-toc editorial rule (a new layout primitive joins the existing showcase, never a 5th group).
       { href: './toast-region-doc.html', label: 'toast-region' },
