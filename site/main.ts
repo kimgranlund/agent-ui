@@ -417,6 +417,24 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0219: the fourth chart-family control — the part-of-whole ring (donut, default) or solid pie,
+  // lifting ADR-0107's pie fence on its own three stated conditions. Same shape as the two above —
+  // Display-class, a descriptor-derived API doc.
+  {
+    label: 'ui-pie-chart',
+    cards: [
+      {
+        href: './pie-chart-demo.html',
+        title: 'Demo',
+        blurb: 'Live donut/pie charts over a real revenue-share dataset — the variant switch, the donut center as a sibling composition, degenerate cases, and a live data rewrite.',
+      },
+      {
+        href: './pie-chart-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class part-of-whole chart — a printed-percent key list carrying identity by order + label + percent, never hue alone, generated from pie-chart.md.',
+      },
+    ],
+  },
   // The token-surface family (ADR-0118): three Display-class show-never-edit primitives, each a
   // descriptor-derived API doc (tier=display ⇒ {doc} only, the ui-sparkline/ui-bar-chart precedent).
   {

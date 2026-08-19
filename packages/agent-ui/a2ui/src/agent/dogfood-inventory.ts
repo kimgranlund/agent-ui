@@ -123,13 +123,16 @@ export function readAttributes(fence: string): LocalAttribute[] {
   return attrs
 }
 
-/** SPEC-R13(b) — the derived-inventory budget: ≤ 16 500 chars (the SPEC-R9 pack-tier's double, since
+/** SPEC-R13(b) — the derived-inventory budget: ≤ 16 700 chars (the SPEC-R9 pack-tier's double, since
  *  this segment teaches the WHOLE fleet, not one exemplar pack). Evidence-revisable per SPEC §8;
  *  enforced by a standing test (`prompt-drift.test.ts`), never by runtime truncation — the derived
  *  output is the fleet's whole truth or nothing, never a silently-clipped subset.
  *  REVISED 2026-08-18 (GH #1209): 16 000 → 16 500 — measured 16 336 after the ui-video/ui-audio media
- *  mint (+2 controls); the movers are the two new descriptor role lines, evidence per SPEC §8. */
-export const DOGFOOD_INVENTORY_CHAR_BUDGET = 16_500
+ *  mint (+2 controls); the movers are the two new descriptor role lines, evidence per SPEC §8.
+ *  REVISED 2026-08-19 (ADR-0219/GH #1397): 16 500 → 16 700 — measured 16 537 after the ui-pie-chart
+ *  control-mint (the chart family's fourth control); the mover is the one new descriptor role line,
+ *  evidence per SPEC §8. */
+export const DOGFOOD_INVENTORY_CHAR_BUDGET = 16_700
 
 /** One discovered control: its tag, a one-line role summary (the descriptor's own prose body, first
  *  sentence — never hand-written, so it can never drift from what the component's own docs say), the
