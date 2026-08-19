@@ -1,18 +1,14 @@
 ---
 name: a2ui-build-agent
 description: >-
-  The build seat for Generative UI in @agent-ui/a2ui — implements or upgrades ONE unit of the A2UI
-  protocol layer to the SPEC/LLD standard: the zero-dep renderer (bindings, interpolation, function
-  calls, checks, lists, two-way input, streaming parse), the default catalog + conformance,
-  protocol.ts wire types, the validation spine, the corpus store, and A2UI/A2A (Agent2Agent)
-  protocol conformance. Use PROACTIVELY for any generative-UI, A2UI-payload, agent-to-agent UI,
-  catalog, or renderer task ("render this A2UI payload", "add the catalog entry", "implement
-  LLD-C6", "wire the A2A extension", "the validator rejects this message"). It builds; a reviewer
-  seat grades (generator ≠ critic). Not for A2UI PAYLOAD composition — authoring the message
-  stream / node shapes an agent emits against a catalog (a2ui-payload-authoring-agent; this seat owns the
-  package / renderer / catalog CODE those payloads render through), ui-* controls or their
-  CSS/geometry (component-build-agent), kernel/base-class work (dom/, reactive/), or spec/LLD
-  authoring (planner).
+  Build seat for Generative UI in @agent-ui/a2ui — implements/upgrades ONE unit of the A2UI
+  protocol layer: zero-dep renderer, default catalog+conformance, protocol.ts wire types,
+  validation spine, corpus store, A2A conformance. PROACTIVELY for renderer/catalog/validator/A2A
+  tasks ("render this payload", "add the catalog entry", "implement LLD-C6", "wire the A2A
+  extension", "validator rejects this"). Builds; a reviewer grades (generator ≠ critic). NOT
+  PAYLOAD composition — message stream/nodes an agent emits (a2ui-payload-authoring-agent owns
+  that; this seat owns the CODE payloads render through), ui-* controls/CSS
+  (component-build-agent), kernel/base (dom/, reactive/), spec/LLD (planner).
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: sonnet
 effort: xhigh

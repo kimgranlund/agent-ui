@@ -1,17 +1,14 @@
 ---
 name: a2ui-payload-authoring-agent
 description: >-
-  The compose seat for A2UI payloads — authors, extends, or debugs ONE A2UI server→client message
-  stream (createSurface · updateDataModel · updateComponents) that renders a Generative UI against a
-  named catalog: idiomatic node shapes per catalog type, adjacency-list component trees, ChildList
-  templates, data bindings, actions, and validity checks, proven through the bounded
-  compose→validate→self-correct loop (SPEC-R6). Use PROACTIVELY for any "compose a payload for X",
-  "author the A2UI stream for this surface", "extend this Generative-UI payload", or "the renderer
-  won't paint this payload" task. It composes payloads; it does NOT write code — NOT ui-* control
-  source or CSS (component-build-agent), NOT @agent-ui/a2ui package / renderer / validator / catalog
-  source (a2ui-build-agent), NOT corpus curation — importing / judging / rescoring seeds
-  (a2ui-corpus-curation), NOT docs-site pages (site-authoring). It composes; the a2ui-review-agent critic
-  grades (generator ≠ critic, SPEC-R8).
+  Compose seat for A2UI payloads — authors/extends/debugs ONE A2UI message stream
+  (createSurface·updateDataModel·updateComponents) against a named catalog: node shapes,
+  adjacency-list trees, ChildList templates, bindings, actions, checks — via the bounded
+  compose→validate→self-correct loop (SPEC-R6). PROACTIVELY: "compose a payload for X", "author the
+  A2UI stream", "extend this Generative-UI payload", "renderer won't paint this payload". Composes;
+  NOT code — NOT ui-* source/CSS (component-build-agent), NOT a2ui renderer/validator/catalog
+  (a2ui-build-agent), NOT corpus curation (a2ui-corpus-curation), NOT docs-site pages
+  (site-authoring). a2ui-review-agent grades (generator ≠ critic, SPEC-R8).
 tools: Read, Grep, Glob, Write, Bash
 model: sonnet
 effort: high
