@@ -50,9 +50,24 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   REDUCED targeted gates — `npm run check` + the slice's own tests + the specific shared-file
   gates it touches — and the DESK runs the ONE full suite on merged main; that single desk run
   caught the one real red all nine reduced gates missed (2026-08-18).
-- **Worktree trap.** Any worktree-isolated brief mandates its own `npm install` plus a
-  `readlink node_modules/@agent-ui/shared` check before trusting an import-resolving gate
-  (CLAUDE.md "Always").
+- **Worktree trap — SYMLINK, don't install (Kim ruling 2026-08-20, the load-108 incident).** A
+  worktree without its own `node_modules` resolves `@agent-ui/*` through the MAIN checkout and
+  lies to import-resolving gates; but per-lane `npm install` was the load-108 root cause (seven
+  lanes × install churn, Spotlight indexing every byte). The brief now mandates, in order: (1)
+  `git diff --quiet origin/main -- package-lock.json` — lockfile unchanged ⇒ (2)
+  `ln -s <repo-root>/node_modules node_modules` at the worktree root (zero churn, correct
+  resolution); lockfile CHANGED ⇒ `npm ci --prefer-offline` (the one case an install is earned);
+  then (3) the `readlink node_modules/@agent-ui/shared` check as before. Never a bare
+  `npm install` in a worktree.
+- **Concurrency ceiling (Kim ruling 2026-08-20).** At most **3 gate-running lanes** concurrent
+  on this host (10 cores: `(cores − 2) / 3`, rounded down — each lane's vitest + a checker's
+  Chromium shard is ~3 cores of real load); builders beyond the ceiling QUEUE, they don't fan
+  out. Every worktree gate command carries `--maxWorkers=4` (3 lanes × 4 = 12 ≈ cores, never
+  N×cores). A desk that sees 1-min load > 40 stops dispatching and reaps finished worktrees
+  FIRST — `flaky-gates` owns the red-under-load verdict, this law owns not getting there.
+- **Reap on lane-return, not campaign-end.** A lane's worktree is removed the moment its branch
+  is merged (or abandoned) — `git worktree remove` + the branch delete — never parked until the
+  campaign closes; every parked worktree is a full tree Spotlight/Time Machine keep re-scanning.
 - **Maker ≠ critic, serialized.** The building seat never grades its own slice; never send an
   author a revision directive while its reviewer is mid-read — freeze → review → consolidate →
   one revision pass.
