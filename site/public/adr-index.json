@@ -1440,5 +1440,12 @@
     "description": "the A2UI wire Text.variant enum widens by FOUR editorial registers (kicker · overline · quote · lead), variant stays the single fanned-out dial, and per-regist…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0208",
+    "url": "./adr-index.html#adr-0208",
+    "description": "External Claude-skill repos as opt-in pack-library sources: a dev-time import CLI snapshots skills/*/SKILL.md into a provenance-stamped skill-pack file, the ad…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
