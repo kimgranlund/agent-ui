@@ -48,10 +48,12 @@ review that scores B4 without that record scored the control, not the demonstrat
    and filters `index.json` rows by `tier`. Coverage counts DISTINCT `name` values per theme in
    `index.json` (the runner emits one row per theme × card): for `all`, distinct names == the page
    header's "(N shown)"; each missing name is a ✗ B1 row. `status: empty-canvas` rows are ✗ B1.
-3. **Probe the gates** — A1 A2 A4 B1 B2 C1 C2 per card, exit-coded. Until `scripts/eval-a2ui-catalog.mjs`
-   ships (rubric §5, designed 2026-08-18), run them by hand with a Playwright `page.evaluate` against
-   the live DOM (`section.catalog-item` → `.knob-label` texts, knob control tags, `.preview-canvas`
-   root tag, seeded text search, one set→assert→revert per knob) and mark the report `probes: manual`.
+3. **Probe the gates** — `node scripts/eval-a2ui-catalog.mjs --out <dir> [--only T]` (shipped 2026-08-18,
+   rubric §5): A1 A2 A3 A4 B1 B2 B3g C1 C2 per card, exit-coded, with the §1.1 record fields, the
+   component-mode comparison shot, and each overlay's revealed capture emitted alongside. Its header
+   comment and `references/catalog-pipeline.md` §"probe-artifact taxonomy" carry the hardening rules —
+   when a NEW probe goes red, triage against that taxonomy before filing a defect. `probes: manual` (a
+   hand Playwright pass) is the fallback only when the runner itself is broken, and the report says so.
    A gate carries ✓/✗ only; scores 1–5 belong to review dims.
 4. **Blind identify.** For each card, look at the screenshot's RIGHT half FIRST and write one line —
    *"this is a ⟨component⟩ doing ⟨job⟩"* — before reading the title or the record. A miss is B4 = 1.

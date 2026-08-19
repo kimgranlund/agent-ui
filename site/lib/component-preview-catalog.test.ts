@@ -143,3 +143,73 @@ describe('component-preview — no browsable catalog type renders the generic "S
     expect(sample.extras.some((c) => c['text'] === 'Sample content')).toBe(true)
   })
 })
+
+// ── #readBackA2ui preserves ONLY user-committed live values (the 2026-08-18 sweep's C2 finding) ─────────────
+// Without the #armLiveDirty tripwire, ANY knob edit re-read the rendered control's live value slot — its own
+// DEFAULT, or a min/max CLAMP — into knob state as if the user had chosen it: editing Slider's `min` knob
+// resurrected a `value` the user never set, permanently (scripts/eval-a2ui-catalog.mjs caught it as a C2 red;
+// the value knob then visibly showed the phantom). These probes pin both directions in jsdom with the REAL
+// renderer: an untouched slot never lands in state on unrelated knob edits; a canvas-committed one survives.
+describe('component-preview a2ui mode — readBack preserves only user-committed values (2026-08-18)', () => {
+  const mount = (target: string): HTMLElement => {
+    const el = document.createElement('component-preview')
+    el.setAttribute('mode', 'a2ui')
+    el.setAttribute('target', target)
+    document.body.append(el)
+    return el
+  }
+  const knobField = (preview: HTMLElement, name: string): HTMLElement & { value: string } => {
+    const row = [...preview.querySelectorAll('.knob')].find((r) => r.querySelector('.knob-label')?.textContent === name)
+    return row?.querySelector('ui-text-field') as HTMLElement & { value: string }
+  }
+  const canvasRoot = (preview: HTMLElement): HTMLElement => preview.querySelector('.canvas-surface')?.firstElementChild as HTMLElement
+
+  it('an unrelated knob edit does NOT bake the slider default/clamp into `value` state (negative control)', () => {
+    // NB the assertion is on STATE (the value KNOB field), not the canvas attribute: ui-slider itself
+    // legitimately reflects its clamped effective value to the attr (min=2 ⇒ value="2" by the control's own
+    // reflection). The defect this pins was the phantom landing in KNOB STATE — visible in the value knob,
+    // and re-emitted into every later rebuild.
+    const preview = mount('Slider')
+    expect(canvasRoot(preview).tagName.toLowerCase()).toBe('ui-slider')
+    // Slider seeds value:'65' (A2UI_INITIAL round 2) — the invariant is the seed SURVIVES unrelated edits
+    // unchanged; the laundering bug replaced it with the control's clamped/default live value instead.
+    const seeded = knobField(preview, 'value').value
+    const min = knobField(preview, 'min')
+    min.value = '5'
+    min.dispatchEvent(new Event('input'))
+    expect(knobField(preview, 'value').value ?? '', 'seeded `value` replaced by a min-knob edit (laundering)').toBe(seeded)
+    // and a SECOND unrelated edit (the old failure needed two: clamp → readBack) still leaves the seed intact
+    const step = knobField(preview, 'step')
+    step.value = '1'
+    step.dispatchEvent(new Event('input'))
+    expect(knobField(preview, 'value').value ?? '', 'seeded `value` replaced on the second edit').toBe(seeded)
+    preview.remove()
+  })
+
+  it('a value the user COMMITS on the canvas survives an unrelated knob edit (the preserve leg still works)', () => {
+    const preview = mount('Slider')
+    const root = canvasRoot(preview) as HTMLElement & { value: number }
+    root.value = 5
+    root.dispatchEvent(new Event('change')) // the Slider slot's own commit event, from the rendered root
+    const step = knobField(preview, 'step')
+    step.value = '1'
+    step.dispatchEvent(new Event('input'))
+    expect(canvasRoot(preview).getAttribute('value'), 'user-committed value lost across the rebuild').toBe('5')
+    preview.remove()
+  })
+
+  it('an explicit knob edit to the slot itself CLEARS the dirty mark (a knob-reverted value stays reverted)', () => {
+    const preview = mount('Slider')
+    const root = canvasRoot(preview) as HTMLElement & { value: number }
+    root.value = 5
+    root.dispatchEvent(new Event('change'))
+    const valueKnob = knobField(preview, 'value')
+    valueKnob.value = ''
+    valueKnob.dispatchEvent(new Event('input')) // the user reverts via the knob — their explicit intent
+    const min = knobField(preview, 'min')
+    min.value = '2'
+    min.dispatchEvent(new Event('input'))
+    expect(knobField(preview, 'value').value ?? '', 'knob-reverted value resurrected in state by a later edit').toBe('')
+    preview.remove()
+  })
+})

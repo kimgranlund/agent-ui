@@ -173,3 +173,21 @@ component-build-agent if the control lacks the prop)
    (`controls-coverage.test.ts`).
 7. Regen (§3), then `npm run check`, `npm test`, `npm run test:browser`.
 8. Grade: `a2ui-review-agent` vs `rubrics/a2ui-catalog.md` (D1–D3 gates ≥4 hard) + this skill for the card.
+
+## 6 · Probe-artifact taxonomy (2026-08-18 sweep hardening — triage BEFORE filing a defect)
+
+Five artifact classes cost the first sweep five iterations of false reds. When a probe goes red, check
+these before blaming the page; each names its realized fix in `scripts/eval-a2ui-catalog.mjs`:
+
+| Artifact class | Symptom | Realized fix |
+|---|---|---|
+| Minted per-instance ids | C2 byte-diff on `ui-select-listbox-13` → `-14`, `ui-cb1` → `ui-cb13` | canonical serializer: digit-normalize id-carrying attrs (`id`, `for`, `aria-*`, `style`/`anchor-name`) on BOTH sides |
+| Attribute-order churn | rebuilds re-apply attrs in state order; innerHTML order differs, DOM equal | canonical serializer: sorted attributes |
+| Measured-while-hidden | tabbed pages build every non-active tier's cards `display:none` — zero rects, stale measured state (aria bounds) until first visible rebuild | hidden canvas ⇒ unflagged + reveal re-measure; baseline = one no-op rebuild while visible, then settle |
+| Control reflection ≠ state | a clamped/derived live value reflected to an attribute (slider `min=2` ⇒ `value="2"`) looks like state contamination | assert on KNOB STATE, not the control's own reflection; value-slot re-seed is by-design (readBack) |
+| Top-layer capture | element-clipped shots miss a viewport-centered `dialog[open]`; an open top layer intercepts every later click; exact-box clips drop the last text line on pixel parity | dialog open ⇒ viewport shot; force-close + Escape + `dialog.close()` cleanup after every reveal; pad clips past the section box |
+
+Two triage rules proved out: (1) a runner that omits a check may be faithfully implementing the RUBRIC's
+own omission — check the spec before the implementation (the v0.1 §5 A3 hole); (2) "pre-existing red" is
+verified against origin/main's merge-base, never against the branch's own base (the dogfood/sitemap red
+was owed by the branch itself — control TS changes owe the §3 regens).

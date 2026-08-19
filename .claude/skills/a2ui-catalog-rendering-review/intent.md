@@ -60,7 +60,7 @@ cross-package edits — and closes with a re-graded card.
 - references/catalog-pipeline.md — the 5 layers, ~25-row gate matrix, regen table, seat map, 3 fix shapes (mapped from the tree 2026-08-18)
 - SKILL.md (procedure + output contract) · evals/evals.json · scripts: the capture/probe runner lives in the REPO at `scripts/screenshot-a2ui-catalog.mjs` (uses the repo's playwright devDep; a skill-bundled copy would not resolve `playwright`) — the skill invokes it by repo path.
 - Rubric of record: `.claude/docs/rubrics/a2ui-catalog-example.md` (proposed v0.1, 2026-08-18) — the skill references it, never restates the dimension table.
-- Gap: the mechanical probe leg (A1/A2/A4/B1/B2/C1/C2 as exit-coded checks) is DESIGNED (rubric §5) but not yet built — until `scripts/eval-a2ui-catalog.mjs` exists the skill's step 3 runs those probes by hand (Playwright evaluate) and says so in the report.
+- Gap CLOSED 2026-08-18: `scripts/eval-a2ui-catalog.mjs` shipped (#1319, upgraded on #1322 — A3 gate, §1.1 records, comparison/reveal captures); step 3 now invokes it, manual probes are the broken-runner fallback only.
 
 ## gates
 P0 route:      PASS 2026-08-18 — procedure with judgment + output contract; mechanical leg is a bundled/repo script, not a hook (review dims are not pass/fail-programmable)

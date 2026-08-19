@@ -43,6 +43,7 @@ ADR-worthy fork, not a local choice.
 | A component that must NEVER be agent-emittable | `EXCLUSION_ALLOWLIST` (ToastRegion the permanent exemplar) | ADR-0112 cl.6 |
 | A ruled catalog exclusion reversed by an owner ruling | allowlist-drain-by-amendment (Toast entered the catalog; ToastRegion stands) | ADR-0112 Amendment (GH #1184) |
 | Nesting a shipped control that moves light-DOM children at connect | ordering constraint — compose around the move | ADR-0017 + ADR-0048 |
+| Anything measured at build time on a tabbed/hidden surface | measure-on-reveal: hidden ⇒ unmeasurable not empty; one-shot ResizeObserver re-measures on the display:none→laid-out flip; baselines come from a rebuild-while-visible | no ADR yet — realized in `site/lib/component-preview.ts` `#updateEmptyHint`/`#observeReveal` (PRs #1315/#1322; one root cause, three distinct bugs) |
 | A grid whose columns populate conditionally by props | explicit `grid-column` on every fixed-role part | TKT-0014 |
 | Ambient theming context over a subtree | `ui-theme-provider` | ADR-0117 |
 | A component-owned scroll region across disconnect/reconnect | live scroll-listener shadow, restored in `connected()` | TKT-0067 |

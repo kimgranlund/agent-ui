@@ -217,9 +217,11 @@ function componentKnobs(attrs: readonly ParsedAttribute[], tag: string): Knob[] 
 // each card's expected seeds in-page — the seeds are READ from here, never guessed (same one-source rule as
 // the exported sampleFor below). No other consumer.
 export const A2UI_INITIAL: Record<string, Record<string, string>> = {
-  Text: { text: 'Sample text', variant: 'body' },
+  Text: { text: 'Rollout notes shipped to the team — staging verified, canary at 5%.', variant: 'body' },
   Button: { label: 'Button', variant: 'solid' },
-  TextField: { label: 'Label', placeholder: 'Sample' },
+  // TextField: label is ARIA-ONLY by fleet law (labelSource → aria-label, text-field.md), so the VISIBLE
+  // demonstration rides value+placeholder; 'Label'/'Sample' was the rubric A3 anchor's literal counter-example.
+  TextField: { label: 'Full name', placeholder: 'e.g. Ada Lovelace', value: 'Grace Hopper' },
   Field: { label: 'Field label' },
   Checkbox: { label: 'Checkbox' },
   Switch: { label: 'Switch' },
@@ -241,7 +243,6 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   // List's `gap` mirrors rentalFilterPanelSeed's own `results_list` props. Tooltip/RadioGroup/SegmentedControl
   // need no seed here — their SAMPLE_TREES content (below) is visible with no root prop at all, the
   // Popover/Menu precedent (only `open`-bearing types with a hidden default need a label seed).
-  ComboBox: { placeholder: 'Search a city…' },
   Grid: { gap: 'md', min: '12rem' },
   List: { gap: 'sm' },
   // GH #1189 — Image: the catalog carries NO per-prop defaults (this file's own comment above), and `src`/
@@ -251,6 +252,56 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   // instant the factory leaves them unset, so seeding them here would only duplicate what the control
   // already does for free.
   Image: { src: IMAGE_SAMPLE_SRC, alt: IMAGE_SAMPLE_ALT },
+  // The 2026-08-18 empty-specimen sweep (scripts/eval-a2ui-catalog.mjs, rubric a2ui-catalog-example.md):
+  // ten cards rendered zero-height/empty roots — nothing seeded, nothing sampled. String/number/boolean
+  // props are seeded HERE; array/object props (knob kind 'skip') can't ride knob state at all, so those
+  // land as SAMPLE_TREES rootRef props below (the root spread carries arbitrary props, not just children).
+  AudioPlayer: { src: MEDIA_SAMPLE_SRC, label: AUDIO_SAMPLE_LABEL },
+  BarChart: { label: 'Revenue by region' },
+  Ladder: { label: 'Corner radii' },
+  Ramp: { label: 'Primary tonal range' },
+  Pagination: { page: '2', pages: '8', label: 'Search results' },
+  MenuItem: { label: 'Duplicate', value: 'duplicate' },
+  Segment: { label: 'Deluxe', value: 'deluxe', checked: 'true' },
+  Table: { label: 'Failing checks', selectable: 'multi' },
+  // duration '0' — ≤0 means never auto-dismiss (toast.ts SPEC-R14/R16): the specimen must OUTLIVE the
+  // reader's glance; the shipped default (6000ms) had the card self-dismissing into an empty canvas.
+  Toast: { label: 'Draft saved — all changes synced.', duration: '0' },
+  // ── round 2 (2026-08-18 review sweep, rubric a2ui-catalog-example.md §4): the tier critics' blind-identify
+  // pass found 20+ cards whose R was technically non-empty but taught nothing (A3=1/B4=1) — the mechanical
+  // gates can't catch a meaningless-but-nonzero box; the review layer did. Same seeding law as above; array
+  // props ride SAMPLE_TREES rootRef below. Content mirrors the corpus idioms (catalog-coverage/frontier). ──
+  // Avatar: NO src seed on purpose (verify round 2026-08-18): the landscape sample SVG crushed into the
+  // 16px circle taught nothing and src wins over initials — the bare `name` renders initials, which is both
+  // visible and the prop demonstrated. A portrait-shaped asset can upgrade this later.
+  Avatar: { name: 'Ada Lovelace' },
+  Badge: { label: '2 failing', intent: 'danger' },
+  Code: { code: 'npm run check && npm test', language: 'bash' },
+  Icon: { name: 'check', label: 'Done' },
+  Progress: { value: '7', max: '10', label: 'Uploading 7 of 10' },
+  Stat: { label: 'Revenue', value: '€54,200', delta: '12', caption: 'vs. last quarter' },
+  Swatch: { value: 'oklch(0.55 0.15 250)', label: 'Primary 500' },
+  // poster carries the specimen (a legible frame + label) — no video asset ships with the site, and a
+  // featureless black box taught nothing (B4=1); aspect pinned so the box reads deliberate.
+  Video: { poster: IMAGE_SAMPLE_SRC, label: 'Product tour — 2 min', aspect: '16/9' },
+  LineChart: { label: 'Weekly signups' },
+  Sparkline: { label: 'Revenue trend' },
+  TimelineItem: { status: 'done', label: 'Staging verified', description: 'All 12 checks green', timestamp: 'Tue 14:02' },
+  // closed-Disclosure's entire visible surface IS the summary — the Popover "trigger child carries it"
+  // precedent does not transfer (Disclosure has no trigger child; its sample supplies only the revealed body).
+  Disclosure: { summary: 'Rolling restart status' },
+  Calendar: { mode: 'range', valueStart: '2026-08-21', valueEnd: '2026-08-24' },
+  Timeline: { label: 'Rollout — payments v2.31' },
+  ColorPicker: { value: '#7c5cff', name: 'accent' },
+  ComboBox: { value: 'Helsinki', label: 'City', placeholder: 'Search cities…' },
+  Radio: { label: 'Standard shipping', value: 'standard', checked: 'true' },
+  // RadioGroup/SegmentedControl: value lands once the value-before-children control fix ships (in flight
+  // 2026-08-18); the seed is correct either way and harmless before it.
+  RadioGroup: { value: 'apartment' },
+  SegmentedControl: { value: 'standard' },
+  Slider: { value: '65', min: '0', max: '100', label: 'Volume' },
+  SliderMulti: { valueLo: '200', valueHi: '750', min: '0', max: '1000', label: 'Price range (€)' },
+  Textarea: { label: 'Delivery notes', value: 'Leave the package with the concierge; code 4712.', rows: '3' },
   // Attachment (a2ui-catalog-rendering-review, 2026-08-18) — the catalog carries no defaults, and an unseeded
   // ui-attachment falls back to the bare category label ("File"): a chip that demonstrates nothing. Seed the
   // three VISIBLE wire props (`name` → filename, `mimeType` → glyph + category, `sizeBytes` → the meta cell),
@@ -319,7 +370,7 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
       { id: 's_header', component: 'CardHeader', children: ['s_htext'] },
       { id: 's_htext', component: 'Text', variant: 'h5', text: 'Account' },
       { id: 's_content', component: 'CardContent', children: ['s_ctext'] },
-      { id: 's_ctext', component: 'Text', variant: 'body', text: 'A card composes three region sub-elements as a presence-driven grid.' },
+      { id: 's_ctext', component: 'Text', variant: 'body', text: 'Your plan renews on Sep 1. Payment method: Visa ending 4242.' },
       { id: 's_footer', component: 'CardFooter', children: ['s_save'] },
       { id: 's_save', component: 'Button', variant: 'solid', label: 'Save' },
     ],
@@ -337,13 +388,21 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
       { id: 's_pt1', component: 'Text', variant: 'body', text: 'Second panel content' },
     ],
   }),
+  // Modal/Drawer revealed content: real-job copy, not a placeholder (GH #971 bar — the 2026-08-18 review
+  // sweep flagged "Modal content" as below its overlay siblings' bar).
   Modal: () => ({
-    rootRef: { children: ['s_mtext'] },
-    extras: [{ id: 's_mtext', component: 'Text', variant: 'body', text: 'Modal content' }],
+    rootRef: { children: ['s_mtitle', 's_mbody'] },
+    extras: [
+      { id: 's_mtitle', component: 'Text', variant: 'h5', text: 'Remove teammate?' },
+      { id: 's_mbody', component: 'Text', variant: 'body', text: 'Alex loses access to 3 projects. This cannot be undone.' },
+    ],
   }),
   Drawer: () => ({
-    rootRef: { children: ['s_dtext'] },
-    extras: [{ id: 's_dtext', component: 'Text', variant: 'body', text: 'Drawer content' }],
+    rootRef: { children: ['s_dtitle', 's_dbody'] },
+    extras: [
+      { id: 's_dtitle', component: 'Text', variant: 'h5', text: 'Filters' },
+      { id: 's_dbody', component: 'Text', variant: 'body', text: 'Assignees, labels, and due-date filters for the review queue.' },
+    ],
   }),
   // GH #971 — the eight generic "Sample content" fallbacks, each replaced with the type's real job
   // (mirrors the a2ui corpus's own catalog-coverage.ts/catalog-frontier.ts idioms, trimmed to a static
@@ -440,11 +499,13 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
   Split: () => ({
     rootRef: { children: ['s_sp1', 's_sp2'] },
     extras: [
+      // initial is a relative RATIO seed (split-pane.md), not a percent: 35 against pane 2's default 1
+      // rendered ~97:3 and crushed pane 2 to a sliver (2026-08-18 review sweep) — seed BOTH panes.
       { id: 's_sp1', component: 'SplitPane', initial: 35, min: '12rem', children: ['s_sp1col'] },
       { id: 's_sp1col', component: 'Column', gap: 'sm', children: ['s_sp1title', 's_sp1body'] },
       { id: 's_sp1title', component: 'Text', variant: 'h5', text: 'Review queue' },
       { id: 's_sp1body', component: 'Text', variant: 'body', text: 'Payments v2 rollout' },
-      { id: 's_sp2', component: 'SplitPane', children: ['s_sp2col'] },
+      { id: 's_sp2', component: 'SplitPane', initial: 65, children: ['s_sp2col'] },
       { id: 's_sp2col', component: 'Column', gap: 'sm', children: ['s_sp2title', 's_sp2body'] },
       { id: 's_sp2title', component: 'Text', variant: 'h5', text: 'Payments v2 rollout — history' },
       { id: 's_sp2body', component: 'Text', variant: 'body', text: 'Spec approved, staging verified, canary at 5%.' },
@@ -517,6 +578,91 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
       { id: 's_cb2', component: 'Option', value: 'Stockholm', label: 'Stockholm' },
       { id: 's_cb3', component: 'Option', value: 'Berlin', label: 'Berlin' },
     ],
+  }),
+  // ── data-driven leaves (2026-08-18 empty-specimen sweep): these types carry their content as ARRAY
+  // props, which the knob panel rightly skips ('array value — edit in code') — so the sample tree's
+  // rootRef supplies them (the #a2uiPayload root spread carries arbitrary props). Content mirrors each
+  // type's own corpus idiom, cited per entry — the card teaches what agents actually emit.
+  // BarChart: the revenue-by-region idiom (catalog-coverage.ts's opsReportSeed /regions rows).
+  BarChart: () => ({
+    rootRef: {
+      data: [
+        { label: 'EMEA', value: 21400 },
+        { label: 'APAC', value: 15800 },
+        { label: 'Americas', value: 12300 },
+        { label: 'Other', value: 4700 },
+      ],
+    },
+    extras: [],
+  }),
+  // DescriptionList: the booking-receipt idiom (catalog-frontier.ts's /booking/rows).
+  DescriptionList: () => ({
+    rootRef: {
+      rows: [
+        { label: 'Room', value: 'Deluxe King' },
+        { label: 'Check-in', value: 'Fri, Aug 21' },
+        { label: 'Nights', value: 3 },
+        { label: 'Guests', value: 2 },
+        { label: 'Total', value: '$412.00' },
+      ],
+    },
+    extras: [],
+  }),
+  // Ladder: the radii-tiers idiom (catalog-coverage.ts's /radii).
+  Ladder: () => ({
+    rootRef: {
+      tiers: [
+        { label: 'sm', value: '4px' },
+        { label: 'md', value: '8px' },
+        { label: 'lg', value: '16px' },
+      ],
+    },
+    extras: [],
+  }),
+  // Ramp: the tonal-range idiom (catalog-coverage.ts's /tonal).
+  Ramp: () => ({
+    rootRef: {
+      steps: [
+        { label: '100', value: 'oklch(0.95 0.02 250)' },
+        { label: '300', value: 'oklch(0.8 0.08 250)' },
+        { label: '500', value: 'oklch(0.55 0.15 250)' },
+        { label: '700', value: 'oklch(0.4 0.12 250)' },
+        { label: '900', value: 'oklch(0.2 0.06 250)' },
+      ],
+    },
+    extras: [],
+  }),
+  // LineChart / Sparkline: the revenue-trend idiom (catalog-coverage.ts's /trend numbers).
+  LineChart: () => ({ rootRef: { values: [42000, 48000, 45000, 53000, 50000, 58000] }, extras: [] }),
+  Sparkline: () => ({ rootRef: { values: [42000, 48000, 45000, 53000, 50000, 58000] }, extras: [] }),
+  // MultiSelect: the invite-roles idiom (catalog-frontier.ts's in_roles options), two pre-picked.
+  MultiSelect: () => ({
+    rootRef: {
+      options: [
+        { label: 'Viewer', value: 'viewer' },
+        { label: 'Editor', value: 'editor' },
+        { label: 'Admin', value: 'admin' },
+      ],
+      value: ['viewer', 'editor'],
+    },
+    extras: [],
+  }),
+  // Table: the failing-checks idiom (catalog-coverage.ts's checks_table — columns typed, a number column
+  // exercising alignment), rows as literals (the seed binds /checks; a static card needs real rows).
+  Table: () => ({
+    rootRef: {
+      columns: [
+        { key: 'name', label: 'Check', type: 'string' },
+        { key: 'env', label: 'Environment', type: 'string' },
+        { key: 'latency', label: 'Latency (ms)', type: 'number' },
+      ],
+      rows: [
+        { name: 'api-gateway', env: 'prod', latency: 812 },
+        { name: 'auth-service', env: 'prod', latency: 640 },
+        { name: 'billing-worker', env: 'staging', latency: 187 },
+      ],
+    },
+    extras: [],
   }),
   // List: a populated result list, 3 Card rows — the results_list idiom (catalog-coverage.ts's
   // rentalFilterPanelSeed), trimmed to a static tree (the seed's own `{path}`-templated cards, minus the
@@ -644,7 +790,7 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
     const header = document.createElement('ui-card-header')
     header.textContent = 'Account'
     const content = document.createElement('ui-card-content')
-    content.textContent = 'A card composes three region sub-elements as a presence-driven grid.'
+    content.textContent = 'Your plan renews on Sep 1. Payment method: Visa ending 4242.'
     const footer = document.createElement('ui-card-footer')
     const save = document.createElement('ui-button')
     save.setAttribute('variant', 'solid')
@@ -1521,25 +1667,53 @@ class ComponentPreview extends HTMLElement {
     this.#host.mount(surface)
     for (const line of this.#a2uiPayload()) this.#host.ingest(line)
     this.#host.finalize('preview')
+    this.#armLiveDirty(surface)
     applyRootStretch(surface)
     this.#updateEmptyHint()
+  }
+
+  /**
+   * The user-interaction tripwire behind #readBackA2ui (2026-08-18 sweep finding, rubric
+   * a2ui-catalog-example.md C2): a value slot is preserved across rebuilds ONLY once the user has actually
+   * committed a value on the CANVAS — each slot's own commit event, fired from the rendered root. Without
+   * this mark, every knob edit re-read the control's DEFAULT (or min/max-clamped) live value into #state as
+   * if the user had set it: editing a Slider's `min` knob resurrected a value the user never chose (the
+   * clamp laundered `0` into `min`, readBack baked it into state, and the spurious `value` stuck forever),
+   * and Pagination's own `page` default got baked in the same way. Listeners re-arm on every rebuild (the
+   * root is recreated); the dirty marks themselves persist — they are state about the USER, not the DOM.
+   */
+  #liveDirty = new Set<string>()
+  #armLiveDirty(surface: HTMLElement): void {
+    const def = defaultCatalog.components[this.#target]
+    if (!def?.value) return
+    const root = surface.firstElementChild
+    if (!root) return
+    for (const slot of valueSlots(def.value)) {
+      root.addEventListener(slot.event, () => this.#liveDirty.add(slot.prop))
+    }
   }
 
   /**
    * Read the rendered root's live two-way-bindable value(s) — the catalog `value` mark, one-or-more slots
    * per ADR-0161 (a typed field, a toggled control, a dismissed modal's `open`, or a multi-slot commit like
    * Calendar's range pair) — back into #state, so the imminent rebuild PRESERVES them rather than reverting
-   * to the seed. Skips `changed`: the knob the user just set is their explicit intent and must win.
-   * Residual limitation (documented): a rebuild recreates the root, so caret position / transient focus reset —
-   * the VALUE survives, the cursor does not; and a container root's non-knob sample children reset on its own edit.
+   * to the seed. Two guards decide WHICH slots are read: `changed` is skipped (the knob the user just set is
+   * their explicit intent and must win — and that same explicit intent CLEARS the slot's dirty mark, so a
+   * knob-reverted value stays reverted), and an untouched slot is skipped entirely (#armLiveDirty above —
+   * only a value the user actually committed on the canvas is the user's to keep; a control's own default or
+   * clamp is not). Residual limitation (documented): a rebuild recreates the root, so caret position /
+   * transient focus reset — the VALUE survives, the cursor does not; and a container root's non-knob sample
+   * children reset on its own edit.
    */
   #readBackA2ui(changed: string): void {
     const def = defaultCatalog.components[this.#target]
     if (!def?.value) return
+    this.#liveDirty.delete(changed) // the knob IS the user's intent for this slot from here on
     const root = (this.#surface as HTMLElement).firstElementChild as HTMLElement | null
     if (!root) return
     for (const slot of valueSlots(def.value)) {
       if (slot.prop === changed) continue
+      if (!this.#liveDirty.has(slot.prop)) continue
       const mapsTo = def.properties[slot.prop]?.mapsTo ?? slot.prop
       liveToState(this.#state, slot.prop, (root as unknown as Record<string, unknown>)[mapsTo])
     }
@@ -1653,7 +1827,11 @@ class ComponentPreview extends HTMLElement {
         return
       }
       const root = (this.#surface as HTMLElement | undefined)?.firstElementChild as HTMLElement | null
-      const visible = !!root && root.getClientRects().length > 0
+      // A closed overlay's ROOT is 0-height while its trigger child is absolutely positioned and fully
+      // visible (FormPopover/Menu/Popover/Tooltip) — the 2026-08-18 review sweep found the hint text
+      // z-fighting those triggers. "Visible" therefore means the root OR any descendant lays out.
+      const visible =
+        !!root && (root.getClientRects().length > 0 || [...root.querySelectorAll('*')].some((el) => el.getClientRects().length > 0))
       col.classList.toggle('is-empty-specimen', !visible)
     })
   }
