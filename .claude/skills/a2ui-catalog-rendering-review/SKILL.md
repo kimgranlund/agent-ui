@@ -117,10 +117,9 @@ captured N / expected N · empty-canvas: [...] · screenshots: <dir>
 - A fix's gate goes red on a test named in `catalog-pipeline.md §2` → the matrix row names the omitted
   layer; the fix lands in that layer (a missing regen, an un-drained allowlist seed, a stale
   `TIER_OF`), never in the test.
-- A fix needs a control-side change (`static props`, descriptor) → dispatch `component-build-agent`
-  with the exact interface need and hold the row until it lands (a2ui-build never crosses the package).
-- `catalog.json` changed → the prompt baseline recapture is owed in the same change; a diff that moves
-  anything beyond inventory lines is a defect to report, not to commit.
+- A fix needs a control-side change → dispatch `component-build-agent` and hold the row (§step 7).
+- `catalog.json` changed → the prompt-baseline recapture is owed in the same change (§step 7); a diff
+  moving anything beyond inventory lines is a defect to report, not to commit.
 
 Done when every in-scope card has a table row, every non-promoting row has at least one routed
 finding, the coverage line reconciles captured vs expected — and, when step 7 ran, every fixed card
