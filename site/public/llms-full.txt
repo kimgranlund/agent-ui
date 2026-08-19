@@ -4518,6 +4518,11 @@ wins; else a numeric index; else the first slide.
 coordinator fills and wires wherever they are written; absent an anchor, the matching `pagination`/
 `paddles` boolean stamps a default-placed one. A present anchor always wins over the boolean.
 
+A default-stamped paddles overlay reserves its own band as **track geometry** (a transparent inline
+border sized by `--ui-swiper-paddle-band`, which slide content clips at — GH #1330), so the paddles
+never occlude slide content at any scroll position; an author-placed anchor reserves nothing and keeps
+whatever layout the author gave it.
+
 ## Accessibility
 
 - `role="region"` + `aria-roledescription="carousel"` (via internals) on the host; the accessible name is

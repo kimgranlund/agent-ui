@@ -41,7 +41,7 @@ keyboard:
 
 geometry:
   sizeClass: pattern
-  note: Each composed ui-button keeps its OWN geometry (icon-only square structure, default md size) — this anchor itself contributes only the flex layout wrapping them.
+  note: Each composed ui-button keeps its OWN geometry (icon-only square structure, default md size) — this anchor itself contributes only the flex layout wrapping them. The DEFAULT-stamped overlay's band is reserved by the owning track (swiper.css's `--ui-swiper-paddle-band` transparent inline border, GH #1330), so the paddles never occlude slide content; an author-placed anchor reserves nothing.
 
 forcedColors: Each composed ui-button carries its own independent forced-colors treatment (button.css); this anchor paints nothing of its own.
 ---
