@@ -56,6 +56,7 @@
     "./controls/select": "./src/controls/select/select.ts",
     "./controls/slider": "./src/controls/slider/slider.ts",
     "./controls/slider-multi": "./src/controls/slider-multi/slider-multi.ts",
+    "./controls/source-list": "./src/controls/source-list/source-list.ts",
     "./controls/sparkline": "./src/controls/sparkline/sparkline.ts",
     "./controls/split": "./src/controls/split/split.ts",
     "./controls/split-pane": "./src/controls/split/split-pane.ts",

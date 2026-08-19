@@ -369,6 +369,14 @@
       "section": "Components"
     },
     {
+      "name": "Source List",
+      "tag": "ui-source-list",
+      "url": "./source-list-doc.html",
+      "description": "Source attribution as one aggregate leaf — a numbered list of {href, title, snippet?} sources, index markers assigned by array position, each entry's href gated by the fleet's safe-href scheme allowlist.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Sparkline",
       "tag": "ui-sparkline",
       "url": "./sparkline-doc.html",
