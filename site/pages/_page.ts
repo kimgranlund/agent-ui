@@ -280,9 +280,18 @@ export const NAV: readonly NavGroup[] = [
       // ui-toast-region (ADR-0112, tier=layout) folds into this bundle rather than growing its own group —
       // the site-toc editorial rule (a new layout primitive joins the existing showcase, never a 5th group).
       { href: './toast-region-doc.html', label: 'toast-region' },
+      // Each folded primitive's Demo tab sits right after its doc tab (the bundle's own Demo-beside-API shape;
+      // the per-component groups put Demo FIRST, but a shared strip reads best doc → demo per primitive).
+      { href: './toast-region-demo.html', label: 'toast-region demo' },
       // ui-split / ui-split-pane (ADR-0120 cl.2, app-surfaces-m4.lld.md LLD-C1) — same fold, tier=layout.
       { href: './split-doc.html', label: 'split' },
+      { href: './split-demo.html', label: 'split demo' },
       { href: './split-pane-doc.html', label: 'split-pane' },
+      { href: './split-pane-demo.html', label: 'split-pane demo' },
+      // ui-swiper-item (ADR-0124, LLD-C4, tier=layout) — the same fold (its family comment below always said
+      // so; the links themselves landed with the demo wave).
+      { href: './swiper-item-doc.html', label: 'swiper-item' },
+      { href: './swiper-item-demo.html', label: 'swiper-item demo' },
     ],
   },
   {
