@@ -209,6 +209,15 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'is host-page-only (security inversion, PRD-D2); the ADR-0112 cl.6 Toast/ToastRegion reasoning applied ' +
     'verbatim — a one-time-code entry is the credential-bearing element of the identity family\'s Codes ' +
     'mode (code-entry-control.lld.md §9, GH #490 S2-a).'],
+  // ADR-0224 (GH #1429) — ui-service-card, the availability-stated launch card. TEMPORARY seed, the
+  // FileDrop/SourceList/Suggestions/Rating/PieChart/ChoiceGroup/ChoiceCard "shipped ahead of its catalog
+  // row" precedent (above): S1 (this control) landed in this wave; the ADR's own clause 8 (the
+  // ServiceCard catalog-row-vs-permanent-exclusion question) was left RECOMMENDED-not-decided at
+  // ratification (the bare "ratify ADR-0224" utterance carries no clause-8 ruling) — S3 (the wire-arm
+  // slice) is a SEPARATE, coordinated lane the ADR itself fences off from S1. This seed drains the moment
+  // that lane lands the ServiceCard catalog row + factory (clause 8 ratified) OR is promoted to a
+  // PERMANENT entry with its own citation (clause 8 declined) — never left as silent residue.
+  ['ServiceCard', 'ADR-0224 / GH #1429 — TEMPORARY: control minted ahead of its catalog-row-vs-exclusion disposition (clause 8, unresolved at ratification); S3 drains this entry or promotes it to permanent, per Kim\'s ruling.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

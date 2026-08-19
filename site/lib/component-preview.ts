@@ -1462,6 +1462,13 @@ export const NO_SLOT_TEXT = new Set([
   // — no light-DOM content model at all (slots: [] — suggestions.md), the ui-stat/ui-description-list
   // precedent exactly.
   'ui-suggestions',
+  // ADR-0224 — ui-service-card builds its whole visible content (title/path/description/action) from
+  // PROPS alone, replaceChildren-free per-part effects — no default text/label slot at all (slots:
+  // [menu] only, service-card.md). The one optional [slot="menu"] position is app-chrome (a consumer-
+  // composed ui-button+ui-menu overflow affordance), never a text/label string — a host-level SLOT_TEXT
+  // write would land nowhere useful (the card owns no default-slot content model to overwrite in the
+  // first place, the ui-stat/ui-description-list "no light-DOM content model at all" precedent).
+  'ui-service-card',
 ])
 
 // STRUCTURAL (batch B) — the default slot IS the real content model (children ARE the grid cells / flex items /

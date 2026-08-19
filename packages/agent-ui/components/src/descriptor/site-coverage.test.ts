@@ -146,7 +146,12 @@ const LAYOUT_SHOWCASE = ['layout-overview.html', 'layout-permutations.html'] as 
 // GH #1207 / ADR-0205 — ui-line-chart's descriptor + control + its `line-chart-doc.html` site page all
 // landed in the SAME component-build seat's wave (the ui-image/GH #1189 same-wave precedent, ADR-0087
 // cl.6) — no stopgap needed; the whole fleet stays documented.
-const KNOWN_UNDOCUMENTED = new Set<string>()
+//
+// ADR-0224 / GH #1429 — ui-service-card's descriptor + control shipped in the component-build seat's S1
+// slice (the ADR's OWN "S1 — the control" vs "S2 — site surfaces: doc page, demo specimen, gallery row,
+// knobs" split); its `service-card-doc.html` + `service-card-demo.html` land in the following docs-writer
+// seat's S2 slice (the ui-image/GH #1189 precedent, above) — drain this entry then.
+const KNOWN_UNDOCUMENTED = new Set<string>(['service-card'])
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()
@@ -267,10 +272,15 @@ describe('site coverage — every shipped component has its required per-tier pa
     // row's Back button + heading take control height, the tabs/toolbar class); {doc, demo} pages required.
     // ui-file-drop (ADR-0210, GH #1391) — the fleet's file-INPUT affordance: a dropzone/picker/chips
     // composite (composes ui-button/ui-icon/ui-attachment, no new geometry row); {doc, demo} pages required.
+    // ui-service-card (ADR-0224, GH #1429) — the availability-stated service/agent launch card: tier=pattern
+    // (container spacing + one control-height action row). {doc, demo} pages are the component-build seat's
+    // S1 (this build); its site pages are a following docs-writer seat's slice — parked in
+    // KNOWN_UNDOCUMENTED above, the ui-image/GH #1189 precedent (component-build ships the control, a later
+    // wave drains the stopgap when the pages land).
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
       [
         'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'drill', 'file-drop', 'form-popover', 'menu', 'modal',
-        'multi-select', 'pagination', 'popover', 'segmented-control', 'select', 'status-stream', 'suggestions', 'swiper',
+        'multi-select', 'pagination', 'popover', 'segmented-control', 'select', 'service-card', 'status-stream', 'suggestions', 'swiper',
         'swiper-paddles', 'swiper-pagination', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
       ],
     )
@@ -304,9 +314,10 @@ describe('site coverage — every descriptor is documented XOR a known, delibera
   it('KNOWN_UNDOCUMENTED lists exactly the real undocumented descriptors (no stale name lingers, no surprise gap)', () => {
     const undocumentedNames = COMPONENTS.filter((c) => !isDocumented(c)).map((c) => c.name).sort()
     expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(undocumentedNames)
-    // [] — GH #1207/ADR-0205's ui-line-chart shipped its site doc page (`line-chart-doc.html`) in the same
-    // wave as its descriptor + control; every shipped component stays fully documented.
-    expect([...KNOWN_UNDOCUMENTED].sort()).toEqual([])
+    // ['service-card'] — ADR-0224/GH #1429's ui-service-card shipped its descriptor + control in the
+    // component-build seat's S1 slice; its site doc/demo pages are the following docs-writer seat's S2
+    // slice (the ui-image/GH #1189 precedent, above) — this snapshot updates back to [] when they land.
+    expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(['service-card'])
   })
 })
 

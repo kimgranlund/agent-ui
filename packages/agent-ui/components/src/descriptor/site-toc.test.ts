@@ -158,7 +158,12 @@ function deadHrefs(refs: readonly string[], htmlSet: ReadonlySet<string>): strin
 // GH #1207 / ADR-0205 — `ui-line-chart` shipped its descriptor + control + its NAV/CARD_GROUPS TOC rows +
 // `line-chart-doc.html` page all in the SAME component-build seat's wave (the `ui-image`/GH #1189 same-wave
 // precedent, above) — no stopgap needed.
-const PENDING_TOC_GROUPS = new Set<string>()
+//
+// ADR-0224 / GH #1429 — `ui-service-card` shipped its descriptor + control in the component-build seat's S1
+// slice (the ADR's own S1/S2 split); its NAV/CARD_GROUPS TOC rows + `service-card-doc.html`/
+// `service-card-demo.html` pages land in the following docs-writer seat's S2 slice (the `ui-image`/GH #1189
+// precedent, above) — drain this stopgap then.
+const PENDING_TOC_GROUPS = new Set<string>(['ui-service-card'])
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()
