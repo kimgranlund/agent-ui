@@ -176,23 +176,14 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // second fresh-context a2ui-review-agent (PASS, qualityScore 4, archived 2026-08-19t17-40-00z) and
   // admitted via import-seeds --verdicts — entry DRAINED per its own instruction (ADR-0068: never
   // self-judged).
-
-  // 2026-08-19 nine-ADR campaign, catalog-integration lane — six coverage-gap seeds, the same
-  // pending-state shape (NO VERDICT SOUGHT YET, not a refusal). Each closes the GH #729 type-coverage
-  // gate for the new type its own control-mint wave shipped ahead of its catalog row; the authoring
-  // session judging its own seed is the manufactured judgment ADR-0068's Alternatives ban. Run the
-  // judged pipeline (`import-seeds.ts --verdicts`) and DELETE each entry when that wave lands.
-  ['frontier-file-drop-attach', 'ADR-0210 / GH #1391 — the FileDrop coverage-gap seed; NO VERDICT SOUGHT YET.'],
-  ['frontier-suggestions-chips', 'ADR-0213 / GH #1393 — the Suggestions coverage-gap seed; NO VERDICT SOUGHT YET.'],
-  ['frontier-source-list-citations', 'ADR-0214 / GH #1394 — the SourceList coverage-gap seed; NO VERDICT SOUGHT YET.'],
-  ['frontier-rating-review', 'ADR-0216 / GH #1395 — the Rating coverage-gap seed; NO VERDICT SOUGHT YET.'],
-  ['frontier-pie-chart-budget', 'ADR-0219 / GH #1397 — the PieChart coverage-gap seed; NO VERDICT SOUGHT YET.'],
-  ['frontier-choice-group-rooms', 'ADR-0220 / GH #1368 — the ChoiceGroup/ChoiceCard coverage-gap seed; NO VERDICT SOUGHT YET.'],
-
-  // GH #1389 (2026-08-19) — `frontier-disclosure-summary-switch`: ADR-0209's own booked corpus seed for
-  // the Disclosure summary-row `slot:'summary'` grammar (the Switch/Tooltip/Icon adopter rows). The same
-  // pending-state shape (NO VERDICT SOUGHT YET, not a refusal) — the authoring session judging its own
-  // seed is the manufactured judgment ADR-0068's Alternatives ban. Run the judged pipeline
-  // (`import-seeds.ts --verdicts`) and DELETE this entry when that wave lands.
-  ['frontier-disclosure-summary-switch', 'ADR-0209 / GH #1389 — the Disclosure summary-row Switch coverage-gap seed; NO VERDICT SOUGHT YET.'],
+  // 2026-08-19/20 — the nine-ADR campaign's wave-3 judged import, ALL SEVEN entries DRAINED per their own
+  // instruction (ADR-0068: never self-judged — two fresh-context a2ui-review-agents, generator ≠ critic):
+  //   frontier-file-drop-attach · frontier-suggestions-chips · frontier-source-list-citations ·
+  //   frontier-rating-review · frontier-pie-chart-budget — PASS 4/5 each (archived 2026-08-19t23-45-00z);
+  //   frontier-choice-group-rooms — FAIL 3/5 first pass (D1/P6: bare ChoiceGroup root, a selection nothing
+  //   read back and no action reported — the GH #830 inert-ask class), repaired at source to the
+  //   FormProvider-as-root commit-gate shape, rejudged PASS 5/5 (archived 2026-08-20t00-30-00z);
+  //   frontier-disclosure-summary-switch — FAIL 2/5 first pass (D1/P7: a nameless summary-row Switch —
+  //   ADR-0158 cl.4's exact hazard), repaired with `label`, rejudged PASS 4/5 (same archive).
+  // The map is back to its EMPTY steady state.
 ])

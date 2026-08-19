@@ -1,0 +1,10 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.2",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-08-20T00:30:00Z",
+  "verdicts": {
+    "frontier-choice-group-rooms": { "qualityScore": 5, "passed": true, "failingDimensions": [] },
+    "frontier-disclosure-summary-switch": { "qualityScore": 4, "passed": true, "failingDimensions": [] }
+  }
+}
