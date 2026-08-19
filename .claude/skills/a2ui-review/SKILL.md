@@ -4,7 +4,8 @@ description: >-
   The a2ui-review-agent seat's artifact-to-rubric routing table, grading ground rules, per-artifact
   procedure, and the ADR-0068 corpus VerdictsFile contract — for A2UI payloads, catalog rows, corpus
   records, compose-time mechanism functions, and skill-doc pattern sections. Model-only knowledge
-  preloaded by the a2ui-review-agent seat; not a user-facing action.
+  preloaded by the a2ui-review-agent seat; not a user-facing action. NOT for the catalog PAGE's live
+  card demonstrations — props panel vs rendered surface (a2ui-catalog-rendering-review).
 user-invocable: false
 disable-model-invocation: false
 ---

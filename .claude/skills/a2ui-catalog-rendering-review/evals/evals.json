@@ -1,0 +1,126 @@
+{
+  "skill": "a2ui-catalog-rendering-review",
+  "_note": "Positives: reviewing/evaluating the LIVE catalog-page cards (site/a2ui-catalog.html) — the props panel (L) vs the rendered A2UI surface (R), per component or across the tier tabs, incl. the screenshot-then-judge phrasing. Since 2026-08-18 the skill also FIXES through the catalog pipeline (seeds, catalog.json/factory rows, new types) — those asks trigger. Negatives drawn from the fenced siblings: a2ui-review (catalog ROW code, payloads/gallery examples), screens:component-checker (the ui-* control itself), example-authoring-agent (fixing seeds/knobs), docs-writer (page shell), plain screenshotting with no eval.",
+  "cases": [
+    {
+      "id": "t01",
+      "prompt": "review the a2ui catalog examples",
+      "expect": "trigger"
+    },
+    {
+      "id": "t02",
+      "prompt": "grab screenshots of each example in a2ui-catalog.html and review them",
+      "expect": "trigger"
+    },
+    {
+      "id": "t03",
+      "prompt": "does the rendered A2UI surface on the catalog page make sense for Attachment?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t04",
+      "prompt": "is the left side (props) ok and does the right side render correctly on the Timeline catalog card?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t05",
+      "prompt": "eval every card across the Widgets, Primitives, Patterns, Features and Inputs tabs",
+      "expect": "trigger"
+    },
+    {
+      "id": "t06",
+      "prompt": "check the catalog playground for Table — knobs vs rendered surface",
+      "expect": "trigger"
+    },
+    {
+      "id": "t07",
+      "prompt": "the catalog page card for Select looks off — what props should it be demonstrating?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t08",
+      "prompt": "run the catalog rendering review on the INPUT tier",
+      "expect": "trigger"
+    },
+    {
+      "id": "t09",
+      "prompt": "before we ship the catalog page, judge whether each example's rendered artifact makes any sense",
+      "expect": "trigger"
+    },
+    {
+      "id": "t10",
+      "prompt": "which a2ui catalog cards render an empty canvas or a lorem 'Sample content' fallback?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t11",
+      "prompt": "grade the Attachment catalog card against a2ui-catalog-example.md",
+      "expect": "trigger"
+    },
+    {
+      "id": "t12",
+      "prompt": "grade this catalog row — catalog.json entry, factory and its tests — for the new Rating type",
+      "expect": "no-trigger"
+    },
+    {
+      "id": "t13",
+      "prompt": "review this A2UI payload for the invoice-summary gallery example",
+      "expect": "no-trigger"
+    },
+    {
+      "id": "t14",
+      "prompt": "is ui-attachment's anatomy and geometry right?",
+      "expect": "no-trigger"
+    },
+    {
+      "id": "t15",
+      "prompt": "fix the Attachment example's seeds so the catalog card shows a real file name and size",
+      "expect": "trigger"
+    },
+    {
+      "id": "t16",
+      "prompt": "screenshot the docs site pages for the README",
+      "expect": "no-trigger"
+    },
+    {
+      "id": "t17",
+      "prompt": "the catalog page nav link is broken and the filter status line is missing",
+      "expect": "no-trigger"
+    },
+    {
+      "id": "t18",
+      "prompt": "score this corpus record for admission to the a2ui shelf",
+      "expect": "no-trigger"
+    },
+    {
+      "id": "t19",
+      "prompt": "review the component-gallery (gallery.html) ui-button preview",
+      "expect": "no-trigger"
+    },
+    {
+      "id": "t20",
+      "prompt": "compose an A2UI payload that renders a Table with 5 rows",
+      "expect": "no-trigger"
+    },
+    {
+      "id": "t21",
+      "prompt": "add a `caption` prop to the Image type in the A2UI catalog and make the catalog card show it",
+      "expect": "trigger"
+    },
+    {
+      "id": "t22",
+      "prompt": "the Rating catalog card renders 'Sample content' — fix it end to end (catalog json, factory, seeds)",
+      "expect": "trigger"
+    },
+    {
+      "id": "t23",
+      "prompt": "add a new Stepper pattern to the A2UI catalog",
+      "expect": "trigger"
+    },
+    {
+      "id": "t24",
+      "prompt": "ui-attachment's chip padding is off in dark mode — fix the control css",
+      "expect": "no-trigger"
+    }
+  ]
+}
