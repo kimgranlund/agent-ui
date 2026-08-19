@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-19 *(authored)* |
 > | **Proposed by** | planning seat (design charter GH [#1422](https://github.com/kimgranlund/agent-ui/issues/1422) — gap analysis of the fleet against Kim's **"Fill by Default"** component-sizing contract, Kim's own artifact abstracted from AdiaUI; full width-opinion inventory in the Appendix, every row file:line-cited) |
-> | **Ratified by** | *(pending — Kim, via a `ratify ADR-0223` utterance on GH #1422, executed by `scripts/adr_ratify.py` — ADR-0149)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-19, via the [`ratify ADR-0223` utterance](https://github.com/kimgranlund/agent-ui/issues/1422#issuecomment-5346684594) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification (booked per the GH #544 tracking-issue law): [ADR-0021](./0021-text-field-min-inline-size-floor.md) header gains **Superseded by ADR-0223** + Status → `superseded` (owner-side flip — the Status cell is owner-only) · the R5 wave tracking issue is filed with the five slices below verbatim · slice 0 lands (`sizing-gates.test.ts` report-shape + the `ui-text-field` `inline` pilot) · `references/geometry.md`'s frame-law `min-inline-size` class-split gains the fill/hug state-split note |
 > | **Supersedes / Superseded by** | **Supersedes [ADR-0021](./0021-text-field-min-inline-size-floor.md)** (its ~20ch entry floor is PRESERVED but moves to the `[inline]` hug state — clause 3; the bare-control-hittability lesson survives, restated under the new default). Relates [ADR-0016](./0016-a2ui-faithful-flex-layout-container-queries.md) · [ADR-0030](./0030-column-default-cross-axis-stretch.md) · [ADR-0075](./0075-ui-column-canvas-root-stretch-no-center.md) (the A2UI stretch law this contract finally matches, clause 6) · [ADR-0100](./0100-query-container-boundary-establishment.md) (cl.3's measured host-unclamp disposition — amendment A2's evidence) · [ADR-0102](./0102-css-less-consumer-contract-law.md) (bare-markup honesty) · [ADR-0110](./0110-visual-regression-pixel-diff-harness.md) (the golden-regen leg of slice 4) · [ADR-0107](./0107-chart-family-v1-scope.md) (the display-class leaves whose whole-shape floors amendment A1 ratifies) |
 
