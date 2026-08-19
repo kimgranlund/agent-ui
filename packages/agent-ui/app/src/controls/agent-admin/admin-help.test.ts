@@ -213,12 +213,17 @@ describe('buildAdminHelp — the ui-tooltip + anchor + card shape', () => {
     expect(help.tagName.toLowerCase()).toBe('ui-tooltip')
     expect(help.getAttribute('data-help')).toBe('markdown')
     const icon = help.firstElementChild as HTMLElement
-    expect(icon.tagName.toLowerCase(), 'a real focusable, not a decorative span').toBe('button')
-    expect((icon as HTMLButtonElement).type, 'never a submit — this rides inside no form, but say so anyway').toBe('button')
+    // GH #1447 — the fleet's own `ui-button` (icon-only ghost), never a bare native `<button>`.
+    expect(icon.tagName.toLowerCase(), 'a real focusable ui-button, not a decorative span').toBe('ui-button')
+    expect(icon.getAttribute('variant'), 'ghost — a subtle affordance, never competes with a real action').toBe('ghost')
+    expect(icon.hasAttribute('icon-only'), 'the fifth (square) structure — no label content').toBe(true)
     // Deliberately carries NO bespoke data-part: ui-tooltip stamps `anchor` on it at connect and would
     // clobber one (the ui-menu trigger precedent). A part set here would be a silently dead selector.
     expect(icon.hasAttribute('data-part'), 'the anchor part is ui-tooltip’s to name, not ours').toBe(false)
-    expect(icon.querySelector('ui-icon')?.getAttribute('glyph')).toBe('question')
+    const glyph = icon.querySelector('ui-icon')
+    expect(glyph?.getAttribute('glyph')).toBe('question')
+    expect(glyph?.getAttribute('slot'), 'the icon-only adornment rides the leading position slot').toBe('leading')
+    expect(glyph?.getAttribute('data-role')).toBe('icon')
     // The name says WHICH thing is explained; the card itself is the description (aria-describedby).
     expect(icon.getAttribute('aria-label')).toBe('About Markdown')
   })

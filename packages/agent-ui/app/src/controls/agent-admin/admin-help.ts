@@ -35,6 +35,8 @@
 
 import '@agent-ui/components/controls/tooltip'
 import '@agent-ui/components/controls/icon'
+import '@agent-ui/components/controls/button'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import { ADMIN_HELP, type AdminHelpKey } from './agent-admin-schema.ts'
 
 /** The hover show-delay for a help icon, in ms. Shorter than `ui-tooltip`'s own 600 ms default: reaching
@@ -64,8 +66,12 @@ export function buildAdminHelp(key: AdminHelpKey): HTMLElement {
   tip.setAttribute('placement', 'bottom-end')
   tip.setAttribute('delay', String(HELP_SHOW_DELAY_MS))
 
-  const icon = document.createElement('button')
-  icon.type = 'button'
+  // GH #1447 — converted from a bare native `<button>` to the fleet's own `ui-button` (icon-only ghost,
+  // the `ui-toast` close-button idiom: `icon-only` + `variant="ghost"` + a `slot="leading"` `data-role="icon"`
+  // adornment). No sanction was ever on record for the native element here.
+  const icon = document.createElement('ui-button') as UIButtonElement
+  icon.setAttribute('variant', 'ghost')
+  icon.setAttribute('icon-only', '')
   // NO bespoke `data-part` on this button — `ui-tooltip`'s own `#ensureParts` stamps its first element
   // child `data-part="anchor"` unconditionally at connect (tooltip.ts), so any value set here is clobbered
   // the moment it lands in the document. This is the SAME platform fact `entry-list.ts` already documents
@@ -76,14 +82,18 @@ export function buildAdminHelp(key: AdminHelpKey): HTMLElement {
   // says only which thing is being explained — never a second copy of the prose.
   icon.setAttribute('aria-label', `About ${entry.title}`)
   const glyph = document.createElement('ui-icon')
+  glyph.setAttribute('slot', 'leading')
   glyph.setAttribute('data-role', 'icon')
   glyph.setAttribute('glyph', 'question')
   icon.append(glyph)
   // A click on this icon must never ACTIVATE what the icon rides. On a fold's heading row the icon is a
-  // `<summary>` descendant, and a native button there is exactly the case `ui-disclosure`'s summary-slot
-  // guard stands down for (ADR-0158 cl.3 — an activatable owns the click), which would leave the fold
-  // free to toggle. Cancelling the event here removes that: the help icon explains, it never folds.
-  // (Not a tap-to-open affordance — GH #844 rules touch out of scope; this only refuses a side effect.)
+  // `<summary>` descendant; `ui-disclosure`'s summary-slot guard (ADR-0158 cl.3) only stands down for a
+  // NATIVE activatable (`a[href]`/`button`/`input`/`summary`) — `ui-button` is a custom element, so the
+  // guard would not recognize it and the fold would still toggle on the browser's own default action.
+  // This listener is what actually prevents that, independent of the guard's own tag-name check: cancelling
+  // the event here removes the fold's default toggle AND stops it bubbling further, regardless of whether
+  // the anchor is native. The help icon explains, it never folds. (Not a tap-to-open affordance — GH #844
+  // rules touch out of scope; this only refuses a side effect.)
   icon.addEventListener('click', (event) => {
     event.preventDefault()
     event.stopPropagation()

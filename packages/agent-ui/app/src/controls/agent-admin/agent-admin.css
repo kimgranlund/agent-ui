@@ -105,14 +105,14 @@
   --ui-agent-admin-spacer-min-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the shared flex-spacer floor (surface-spacer) */
   --ui-agent-admin-detail-indent: var(--md-sys-space-md); /* GH #541 — the nested detail zone's own indent under a surface row (surface-detail) */
   /* GH #844 — the Surface tab's help affordance (admin-help-icon + the admin-help-card inside
-     ui-tooltip's panel). The icon cell routes through `--md-sys-icon-*`, the one dimensional family sized
-     for GLYPHS rather than gaps (ui-icon is a 1em×1em cell, icon.css — so this lands as the button's own
-     font-size and the glyph fills it); the card's cap is a READING MEASURE, minted as a literal for the
-     same reason `--ui-super-shell-canvas-min-size`'s 16rem is one below — no fleet primitive expresses
-     "about 50 characters of help prose", and inventing one for a single consumer would be worse. */
-  --ui-agent-admin-help-size: var(--md-sys-icon-md, 18px);
+     ui-tooltip's panel). GH #1447 converted the icon anchor to a real `ui-button` (icon-only ghost), which
+     now owns its own glyph sizing off `--ui-button-icon` (default `size` = md = 18px, byte-identical to
+     this file's old bespoke 18px) and its own focus ring (ADR-0009) — only the ink stays a per-consumer
+     repoint (below, `--ui-button-ink`), so the icon still reads as a subtle row affordance rather than an
+     accent-coloured ghost action. The card's cap is a READING MEASURE, minted as a literal for the same
+     reason `--ui-super-shell-canvas-min-size`'s 16rem is one below — no fleet primitive expresses "about 50
+     characters of help prose", and inventing one for a single consumer would be worse. */
   --ui-agent-admin-help-ink: var(--ui-agent-admin-label-ink);
-  --ui-agent-admin-help-focus-ink: var(--md-sys-color-primary);
   --ui-agent-admin-help-card-max-inline-size: 22rem;
   --ui-agent-admin-help-card-gap: var(--md-sys-space-xs);
   /* GH #1294 (Kim's ruling) — the card's BODY prose reads at the high-emphasis neutral role, not the
@@ -814,17 +814,19 @@
      with). Scoping through the HOST's own marker is what keeps these rules from reaching any OTHER
      control's anchor part inside this element. ────────────────────────────────────────────────────── */
 
+  /* GH #1447 — the anchor is now a real `ui-button` (icon-only ghost: button.ts sets `variant="ghost"` +
+     `icon-only`), so button.css owns the box model, colour, and focus ring; only the app-specific bits
+     ride here. `--ui-button-ink` is REPOINTED, never fought (TKT-0062's own law) — ghost's default ink is
+     accent-coloured, but this stays the same subtle, row-label-matching ink it always was. `flex: 0 0 auto`
+     keeps the icon-only square from shrinking/growing as a flex-row item (ui-button's own `inline-size` is
+     authored, not intrinsic — flex-shrink defaults to 1 without this). `cursor: help` survives over
+     button.css's own `cursor: pointer` (specificity: two attribute selectors beat `:scope` alone) — this is
+     an EXPLAIN affordance, not a generic action. The bespoke focus ring this file used to draw for a bare
+     native button is retired: button.css's own shared fleet ring (`:scope:focus-visible`, ADR-0009) now
+     applies unmodified, identical to every other control. */
   [data-part='admin-help'] > [data-part='anchor'] {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    --ui-button-ink: var(--ui-agent-admin-help-ink);
     flex: 0 0 auto;
-    padding: 0;
-    border: 0;
-    background: none;
-    font-size: var(--ui-agent-admin-help-size); /* ui-icon is a 1em cell — this IS the glyph's size */
-    line-height: 1;
-    color: var(--ui-agent-admin-help-ink);
     cursor: help;
     opacity: 0;
     transition: opacity 120ms ease;
@@ -850,19 +852,6 @@
   [data-part='admin-help'] > [data-part='anchor']:hover,
   [data-part='admin-help'] > [data-part='anchor']:focus {
     opacity: 1;
-  }
-
-  /* An explicit ring: the button carries no border/background of its own, so the UA default ring has
-     nothing to sit against on some engines. Forced colors keeps it as the system Highlight. */
-  [data-part='admin-help'] > [data-part='anchor']:focus-visible {
-    outline: 2px solid var(--ui-agent-admin-help-focus-ink);
-    outline-offset: 1px;
-  }
-
-  @media (forced-colors: active) {
-    [data-part='admin-help'] > [data-part='anchor']:focus-visible {
-      outline-color: Highlight;
-    }
   }
 
   /* The card itself — `ui-tooltip` moves it into its own top-layer panel at connect, so these rules
