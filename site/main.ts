@@ -515,14 +515,39 @@ const CARD_GROUPS: readonly CardGroup[] = [
         blurb: 'The Wave M1 feed family (ADR-0112) top-layer host — a pure inset/gap layout element (tier=layout), folded into this bundle rather than growing its own group.',
       },
       {
+        href: './toast-region-demo.html',
+        title: 'ui-toast-region demo',
+        blurb: 'The live toast queue: raise one, a burst, or a sticky toast; dismiss one by one or sweep the stack; two independent regions; a show/close stack log.',
+      },
+      {
         href: './split-doc.html',
         title: 'ui-split',
         blurb: 'The M4 multi-pane resizable split container (ADR-0120 cl.2) — draggable + keyboard-resizable ARIA separators, folded into this bundle (tier=layout) rather than growing its own group.',
       },
       {
+        href: './split-demo.html',
+        title: 'ui-split demo',
+        blurb: 'A live editor/preview split — drag or keyboard the divider with an input/change resize log; a controlled-sizes list/detail with presets; a vertical three-pane console.',
+      },
+      {
         href: './split-pane-doc.html',
         title: 'ui-split-pane',
         blurb: 'The generic pane child of ui-split — a structural content region, same fold as ui-split.',
+      },
+      {
+        href: './split-pane-demo.html',
+        title: 'ui-split-pane demo',
+        blurb: 'The pane props live: initial/min/max clamps, Enter-to-collapse on a collapsible pane, and panes added/removed at runtime with a re-derivation log.',
+      },
+      {
+        href: './swiper-item-doc.html',
+        title: 'ui-swiper-item',
+        blurb: 'The slide of the ui-swiper family (ADR-0124) — sized entirely by the owning track, tier=layout, same fold as ui-toast-region.',
+      },
+      {
+        href: './swiper-item-demo.html',
+        title: 'ui-swiper-item demo',
+        blurb: 'Key identity live: a keyed tour vs an unkeyed deck with active/activeIndex readouts, slides appended and re-labelled at runtime, and real-vs-clone under loop.',
       },
     ],
   },
