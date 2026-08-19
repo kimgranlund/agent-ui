@@ -1482,5 +1482,12 @@
     "description": "A2UI SourceList — source attribution as ONE hardened data-prop leaf (mint; the source-card list ships, the in-prose citation marker is structurally out of reac…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0220",
+    "url": "./adr-index.html#adr-0220",
+    "description": "ui-choice-group + ui-choice-card: the rich-card selection container (a committed choice over agent-composed option cards, single or multi — GH #1368)",
+    "level": "L3",
+    "section": "Records"
   }
 ]
