@@ -192,3 +192,9 @@ export * from './otp-field/otp-field.ts'
 // button (icon + label + an optional orthogonal state icon; aria-pressed via ElementInternals; the
 // cancelable-before-commit `toggle` refusal seam, toggle.md). The fleet's first toggle-button primitive.
 export * from './toggle/toggle.ts'
+
+// ADR-0213 (GH #1393) — ui-suggestions, the one-shot follow-up/next-prompt chip set: a Pattern-class leaf
+// (no ChildList — `suggestions` is DATA) carrying a `value:{prop:'selected',event:'select'}` two-way mark;
+// non-empty `selected` renders the WHOLE set spent (every chip disabled, the taken one stays visibly
+// marked) — the ADR-0097 frozen-history law relocated into the component.
+export * from './suggestions/suggestions.ts'

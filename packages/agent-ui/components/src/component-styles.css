@@ -181,3 +181,7 @@
 /* ADR-0179 GH #686 Amendment S7-a (admin-three-pane-ia.lld.md §16.4) — ui-toggle, the fleet's first
  * pressed-state pill button (Control-band ramp; idle outlined chip → pressed tonal-primary fill). */
 @import './controls/toggle/toggle.css';
+
+/* ADR-0213 (GH #1393) — ui-suggestions, the one-shot follow-up/next-prompt chip set: compact-realm
+ * chip geometry (--md-sys-compact-lg) + the spent-set inertness paint (taken tonal fill, muted siblings). */
+@import './controls/suggestions/suggestions.css';

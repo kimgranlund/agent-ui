@@ -80,6 +80,7 @@
     "./controls/toast-region": "./src/controls/toast/toast-region.ts",
     "./controls/toggle": "./src/controls/toggle/toggle.ts",
     "./controls/toolbar": "./src/controls/toolbar/toolbar.ts",
+    "./controls/suggestions": "./src/controls/suggestions/suggestions.ts",
     "./controls/tooltip": "./src/controls/tooltip/tooltip.ts",
     "./descriptor": "./src/descriptor/index.ts",
     "./traits/overlay": "./src/traits/overlay.ts",
