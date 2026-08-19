@@ -33,6 +33,7 @@ import { structuredContainerSeeds } from './structured-container.ts'
 import { highFrequencyPatternSeeds } from './high-frequency-patterns.ts'
 import { compositionPackASeeds } from './composition-pack-a.ts'
 import { compositionPackBSeeds } from './composition-pack-b.ts'
+import { crudEntryListSeeds } from './crud-entry-list.ts'
 import { planAndExecuteSeeds } from './plan-and-execute.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
@@ -90,6 +91,7 @@ describe('the example seed shelf (ADR-0055) — shape', () => {
       highFrequencyPatternSeeds.length +
       compositionPackASeeds.length +
       compositionPackBSeeds.length +
+      crudEntryListSeeds.length +
       planAndExecuteSeeds.length
     expect(allSeeds).toHaveLength(expectedTotal)
   })

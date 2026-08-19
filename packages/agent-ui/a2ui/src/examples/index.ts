@@ -84,6 +84,10 @@ export {
   travelItinerarySeed,
   compositionPackBSeeds,
 } from './composition-pack-b.ts'
+// GH #1355 (the 2026-08-18 preset-vs-catalog gap analysis) — the CRUD entry-list idiom's corpus seed:
+// a List of named entries, each toggleable and editable through a validated FormProvider inside a
+// Drawer, plus an add-from-library affordance.
+export { crudEntryListDrawerSeed, crudEntryListSeeds } from './crud-entry-list.ts'
 // GH #1374 — the plan-and-execute exemplar (the design ruling's closure path, comment 5343203377):
 // a Timeline plan snapshot beside one ADR-0097 commit-gated approve ask, per-step Checkbox opt-outs,
 // then per-turn updateDataModel progress advance.
@@ -102,6 +106,7 @@ import { structuredContainerSeeds } from './structured-container.ts'
 import { highFrequencyPatternSeeds } from './high-frequency-patterns.ts'
 import { compositionPackASeeds } from './composition-pack-a.ts'
 import { compositionPackBSeeds } from './composition-pack-b.ts'
+import { crudEntryListSeeds } from './crud-entry-list.ts'
 import { planAndExecuteSeeds } from './plan-and-execute.ts'
 
 /** Every seed on the shelf — the standing gate's (`examples.test.ts`) iteration surface. Composed from
@@ -119,5 +124,6 @@ export const allSeeds: readonly ExampleSeed[] = [
   ...highFrequencyPatternSeeds,
   ...compositionPackASeeds,
   ...compositionPackBSeeds,
+  ...crudEntryListSeeds,
   ...planAndExecuteSeeds,
 ]
