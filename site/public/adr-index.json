@@ -1531,5 +1531,12 @@
     "description": "Fill by Default: adopt the fleet component-sizing contract WITH TWO AMENDMENTS — block-level fill hosts, ONE boolean inline opt-out, three-plus-one min-width r…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0224",
+    "url": "./adr-index.html#adr-0224",
+    "description": "ui-service-card: the availability-stated service/agent launch card (status-tinted accent edge, ONE bindable available boolean driving the whole availability po…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
