@@ -1,8 +1,14 @@
 ---
 name: component-build
 description: >-
-  Wiring-only: preloaded by the component-build-agent seat as its ordered ui-* build
-  procedure (scaffold → props → traits → CSS → probes → review). Not a routing target.
+  The ordered BUILD procedure for one ui-* agent-ui component, from a frozen design to a
+  reviewed, gate-green control: classify → scaffold the folder → typed props → behaviour +
+  traits → the single {name}.css to the geometry law → truthful descriptor → the full probe
+  set → validation loop → independent review. Use for "build ui-x", "implement this
+  component LLD", "bring ui-y up to standard". This skill owns the procedure; the
+  component-build-agent agent preloads it as its seat's method. NOT for the design intake —
+  forks, geometry-row assignment, ADRs (component-design) — and never a substitute
+  for the independent component-checker pass (generator ≠ critic).
 user-invocable: true
 disable-model-invocation: false
 ---
