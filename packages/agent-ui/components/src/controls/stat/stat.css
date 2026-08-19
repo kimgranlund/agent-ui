@@ -8,6 +8,11 @@
  *       no `h/2` law — the lever is the type matrix (`--md-sys-typescale-*`) + the space ladder.
  *   [2] STYLES BLOCK — `@scope (ui-stat)` consumes ONLY `--ui-stat-*`.
  *
+ * Posture (ADR-0223 slice 3 — Fill by Default): BLOCK-level `grid` by default, filling its parent's inline
+ * space (no intrinsic width). The whole-shape floor (`--ui-stat-min-inline-size`, SPEC-R10) is a ratified
+ * role-(d) floor (cl.3(d)) that SURVIVES both the fill default and the `[inline]` hug state — the ONE
+ * sizing opt-out, which only restores the pre-wave `inline-grid` display level.
+ *
  * The value register is the tile the fake-`h3` idiom faked: `--md-sys-typescale-headline-small-*` gives
  * it real heading-scale typography WITHOUT a heading element (ADR-0078's semantics/style split honored —
  * stat.ts never stamps h1-h6).
@@ -44,7 +49,7 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-stat) declares --ui-stat-* ════════════════ */
 
 :where(ui-stat) {
-  --ui-stat-min-inline-size: 8em; /* the whole-shape floor (SPEC-R10) */
+  --ui-stat-min-inline-size: 8em; /* the whole-shape floor (SPEC-R10) — ADR-0223 role (d): SURVIVES both the fill default and the [inline] hug state (cl.3(d)), unlike an Entry-class hug-only content floor (role b) */
   --ui-stat-gap: var(--md-sys-space-xs); /* interior rhythm — rides [density] free (ADR-0103) */
   --ui-stat-label-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-stat-caption-ink: var(--md-sys-color-neutral-on-surface-variant);
@@ -59,10 +64,19 @@
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-stat) consumes ONLY --ui-stat-* ════════════════ */
 
 @scope (ui-stat) {
+  /* FILL BY DEFAULT (ADR-0223 cl.1/2 — slice 3, display composites): the host is BLOCK-level `grid` and
+     stretches to the parent's inline space. Unlike the entry family's hug-only content floor, the
+     whole-shape floor below is a ratified role-(d) floor (cl.3(d), SPEC-R10) that SURVIVES BOTH postures —
+     it stays on this base `:scope` rule and needs no duplicate in the `[inline]` leg. The ONE opt-out,
+     `[inline]` (leg below), only flips the display level back to the pre-wave inline-grid hug. */
   :scope {
-    display: inline-grid;
+    display: grid;
     gap: var(--ui-stat-gap);
-    min-inline-size: var(--ui-stat-min-inline-size);
+    min-inline-size: var(--ui-stat-min-inline-size); /* role (d) whole-shape floor — survives both states */
+  }
+
+  :scope[inline] {
+    display: inline-grid; /* ADR-0223 cl.2 — the ONE sizing opt-out; the role-(d) floor above still applies */
   }
 
   :scope [data-part='label'] {

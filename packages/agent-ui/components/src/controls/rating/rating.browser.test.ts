@@ -133,6 +133,61 @@ describe('ui-rating browser smoke — pointer pick (valueDrag proof)', () => {
   })
 })
 
+describe('ui-rating browser smoke — pointer commit (ADR-0216 Amendment 1, GH #1438)', () => {
+  it('a REAL pointer tap on an UNFOCUSED host fires `change` on pointerup (S1 fix, GH #1438) — real order: pointerdown → focus (the mousedown default action) → pointerup', () => {
+    const el = document.createElement('ui-rating') as UIRatingElement
+    el.max = 5
+    el.step = 1
+    document.body.append(el)
+    stubCapture(el)
+
+    let changeCount = 0
+    let inputCount = 0
+    let valueAtChange: number | null | undefined
+    el.addEventListener('input', () => { inputCount++ })
+    el.addEventListener('change', () => {
+      changeCount++
+      valueAtChange = el.value // Fork order — value already committed by the time `change` fires
+    })
+
+    const rect = stars(el).getBoundingClientRect()
+    const midX = rect.left + rect.width / 2
+
+    // The host is deliberately NOT focused before this — the real gesture order on a not-yet-focused
+    // control is pointerdown → (mousedown default action) focus → pointerup, NOT focus-then-pointerdown.
+    ptr(el, 'pointerdown', midX)
+    expect(inputCount).toBeGreaterThan(0) // valueDrag's onValue already wrote `value` synchronously
+
+    el.focus() // the mousedown default action, landing AFTER the pointerdown write — mid-gesture
+    expect(changeCount).toBe(0) // the NOTIFICATION has not fired yet — pointerup hasn't happened
+
+    ptr(el, 'pointerup', midX)
+    expect(changeCount).toBe(1) // the first tap on an unfocused host DOES report (the S1 regression)
+    expect(valueAtChange).toBe(el.value)
+
+    el.remove()
+  })
+
+  it('keyboard commit is unaffected — `change` still waits for blur, not the arrow-step itself', () => {
+    const el = document.createElement('ui-rating') as UIRatingElement
+    el.value = 2
+    document.body.append(el)
+    el.focus()
+
+    let changeCount = 0
+    el.addEventListener('change', () => { changeCount++ })
+
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
+    expect(el.value).toBe(3)
+    expect(changeCount).toBe(0) // base range law — no change yet, this control still has focus
+
+    el.dispatchEvent(new FocusEvent('blur'))
+    expect(changeCount).toBe(1) // commits on blur, exactly as before this amendment
+
+    el.remove()
+  })
+})
+
 describe('ui-rating browser smoke — readonly/disabled inert the star track (ADR-0216 cl.4)', () => {
   it('readonly renders pointer-events:none on .stars (CSS-level write-path inert)', () => {
     const el = document.createElement('ui-rating') as UIRatingElement

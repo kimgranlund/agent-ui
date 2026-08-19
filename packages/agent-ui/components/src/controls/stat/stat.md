@@ -48,6 +48,10 @@ attributes:            # attributes-as-API — mirrors stat.ts `static props` (l
     type: number        # kindOf's behavioural verdict — see the header note
     default: null       # String(null) = 'null' — the LIVE default; absent/non-finite ⇒ ring renders 0% (empty track), never a thrown error
     reflect: false      # NOT reflected — property-only render input; ignored entirely when variant!=='ring'
+  - name: inline
+    type: boolean
+    default: false
+    reflect: true       # ADR-0223 (Fill by Default, slice 3) — the ONE sizing opt-out: flips display level (inline-grid) only. Default (absent) = block-level fill. The role-(d) whole-shape floor (min-inline-size, SPEC-R10) survives BOTH states — no content floor to relocate. Reflects so the :scope[inline] CSS leg applies to JS-set values.
 
 properties: []         # no manual accessors beyond the six typed props
 
@@ -90,7 +94,8 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 
 geometry:
   sizeClass: display
-  minInlineSize: var(--ui-stat-min-inline-size)  # 8em default — the whole-shape floor (SPEC-R10)
+  posture: fill (block-level grid, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-grid   # Fill by Default — slice 3 (display composites); the role-(d) whole-shape floor survives both states, R3(d)
+  minInlineSize: var(--ui-stat-min-inline-size)  # 8em default — the whole-shape floor (SPEC-R10), ratified role (d) (ADR-0223 cl.3(d)) — SURVIVES fill AND [inline]
   # NO [size] attribute, NO [scale] geometry row, NO --md-sys-height-* consumption (SPEC-R17 AC2) — the
   # lever is the type matrix (--md-sys-typescale-*) + the space ladder (--ui-stat-gap).
 
@@ -188,9 +193,13 @@ glyph — the percent's meaning is real text already, wherever `figure`/`caption
 
 ## Sizing
 
-The host floors at `--ui-stat-min-inline-size` (`8em` default) in an unstyled flex row (test-the-whole-shape)
-— override the token, or set `inline-size` directly, to size the tile to a layout. Interior gap rides
-`--ui-stat-gap` off the space ladder (density-responsive for free). `variant="ring"` adds its own
-density-invariant diameter/thickness tokens — `--ui-stat-ring-size` (`4.5em` default) and
-`--ui-stat-ring-thickness` (`0.5em` default) — sized like the delta glyph's mark geometry, never off
-`[scale]` (a Display-class control, SPEC-R17).
+The tile **fills by default** (ADR-0223): the host is block-level `grid` and stretches to the parent's
+inline space. The single opt-out is the boolean `inline` attribute, which flips the host to inline-level
+posture — the pre-wave shrink-to-content rendering. Either way, the host floors at
+`--ui-stat-min-inline-size` (`8em` default, SPEC-R10) — a ratified whole-shape floor (ADR-0223 clause
+3(d)) that **survives both postures**, unlike an entry control's hug-only content floor: override the
+token, or set `inline-size` directly, to size the tile to a layout. Interior gap rides `--ui-stat-gap` off
+the space ladder (density-responsive for free). `variant="ring"` adds its own density-invariant
+diameter/thickness tokens — `--ui-stat-ring-size` (`4.5em` default) and `--ui-stat-ring-thickness` (`0.5em`
+default) — sized like the delta glyph's mark geometry, never off `[scale]` (a Display-class control,
+SPEC-R17).
