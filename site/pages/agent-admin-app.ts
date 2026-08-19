@@ -87,17 +87,33 @@ import {
 import { duplicatePersonaFrom, exportPersonaFile, importedPersonaFrom, mintBlankPersona, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
 import { buildDebugBundle, debugBundleFileName } from './agent-admin-debug-export.ts'
 import { buildZip } from '../lib/zip-writer.ts'
-import { librariesForCategory, setLiveIntegrations, setLiveServices } from './agent-admin-libraries.ts'
+import { librariesForCategory, setLiveIntegrations, setLiveServices, type PresetCategory } from './agent-admin-libraries.ts'
 // GH #637 S1 — the blank agent's seed: the EXACT shipped default `ui-agent-admin` itself falls back to
 // when no store prop is ever set (agent-admin.ts connected()'s own `initial` object) — pure reuse, so a
 // freshly-minted blank agent renders exactly what a bare, unconfigured `<ui-agent-admin>` would.
 import { DEFAULT_MODEL_ID, defaultAgentConfigSchema, initialValuesFor } from '@agent-ui/app/agent-admin-schema'
 // GH #921 — the card's Capabilities/Surface summaries read straight off the persona's OWN stored config.
 import { ENTRY_KINDS, initialEntryValues } from '@agent-ui/app/agent-admin-entries'
-import { entriesStoreKey, type Entry } from '@agent-ui/app/entry-data'
+import { entriesStoreKey, type Entry, type EntryLibraryPack } from '@agent-ui/app/entry-data'
 // GH #1212 — the export path's own need: a routed resource entry's REAL text, materialized (never a
 // placeholder) and stripped of its browser-local `idbRef` (`resource-idb-store.ts`'s own header).
 import { resourceEntriesForExport } from '@agent-ui/app/agent-admin-resource-idb'
+// ADR-0208 (GH #1340/#1349) — the imported skill-pack SHELF: `.skillpack.json` snapshots (the import
+// CLI's D1 format) ingested via the user's own file picker into the shared StorageAdapter store
+// (`skill-packs:<id>`, IndexedDB tier) and projected into the SAME `libraries` seam as the first-party
+// packs (D4 — per-agent opt-in IS the existing add-from-library mechanism). The format, fail-closed
+// validation, store, and projection live in @agent-ui/app's skill-pack-store.ts (pure, tested); this
+// page owns only the browser I/O (the file picker in) and the shelf SURFACE (the drawer below —
+// review-before-enable: full content + provenance + scan display, D5.2, plus remove).
+import {
+  importedSkillPackLibrary,
+  loadSkillPacks,
+  parseSkillPackText,
+  removeSkillPack,
+  saveSkillPack,
+  skillPackAttribution,
+  type SkillPackSnapshot,
+} from '@agent-ui/app/agent-admin-skill-packs'
 
 const root = document.querySelector('#app') ?? document.body
 
@@ -116,11 +132,41 @@ const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
 const roster: Persona[] = personaRoster()
 const initialPreset: Persona =
   roster.find((p) => p.id === localStorage.getItem(ACTIVE_PRESET_KEY)) ?? roster[0]!
+// ADR-0208 D3/D4 — the imported shelf's page-side cache, loaded async from the `skill-packs:` store at
+// boot (below) and refreshed by every import/remove. APP-level by design: one shelf, every persona
+// browses it; the OPT-IN is what stays per-persona (an add commits into the active persona's own
+// `entries:skill` store through the unchanged validateNewEntry path).
+let importedSkillPacks: SkillPackSnapshot[] = []
+
+/** The ONE libraries composition every assignment site uses: the first-party packs scoped to the
+ *  persona's category (GH #143) PLUS the imported shelf appended under the skill kind (ADR-0208 D4 —
+ *  the same reactive seam, no second pipeline). Fresh object every call — the `libraries` prop's
+ *  identity-change law (agent-admin.ts) is what makes a reassignment actually rebuild the menu. */
+function librariesWithShelf(category: PresetCategory | undefined): Record<string, EntryLibraryPack[]> {
+  const libraries = librariesForCategory(category)
+  if (importedSkillPacks.length > 0) {
+    libraries[ENTRY_KINDS.skill] = [...(libraries[ENTRY_KINDS.skill] ?? []), ...importedSkillPackLibrary(importedSkillPacks)]
+  }
+  return libraries
+}
+
 // GH #47/#48/#143 — the library packs, scoped to the active preset's category and set BEFORE the element
 // ever connects (the compose-time capture law the `libraries` prop documents for the section SHELL;
 // `applyPreset` below reassigns this — a fresh, re-filtered object — on every persona switch, which the
 // `libraries` prop's now-reactive add-from-library MENU picks up, agent-admin.ts's GH #143 update).
-admin.libraries = librariesForCategory(initialPreset.category)
+// The shelf cache is still empty at this first assignment (its IndexedDB read is async); the boot load
+// below reassigns once packs land — the same late-arrival law the DEV live-read overlay already rides.
+admin.libraries = librariesWithShelf(initialPreset.category)
+
+// The boot-time shelf read — fire-and-forget (the IDB tier is async by nature, ADR-0193): once packs
+// land, ONE fresh `libraries` assignment carries them into the add-from-library menu. An unavailable
+// IndexedDB (SSR, a locked-down embed) degrades to an empty shelf, never a crash.
+void loadSkillPacks()
+  .then((packs) => {
+    importedSkillPacks = packs
+    if (packs.length > 0) admin.libraries = librariesWithShelf(active.category)
+  })
+  .catch(() => {})
 
 let active: Persona = initialPreset
 
@@ -290,8 +336,9 @@ function applyPersona(persona: Persona): void {
   // GH #143 — re-scope the add-from-library menu to the NEW persona's category. A fresh object every call
   // (never a reused reference) is load-bearing: `libraries`' reactive effect (agent-admin.ts) rebuilds the
   // menu on an identity change, the same law `store`'s reassignment above relies on — handing back a
-  // reference-equal object would be a silent no-op.
-  admin.libraries = librariesForCategory(persona.category)
+  // reference-equal object would be a silent no-op. The imported shelf rides along (ADR-0208 D3 — the
+  // shelf is APP-level: every persona sees the same imported packs; only the opt-in is per-persona).
+  admin.libraries = librariesWithShelf(persona.category)
   armSurfaceTurn?.()
   flowChrome.dismiss() // ADR-0198 — a persona switch clears the conversation; no stale affordance survives it
   // GH #686's Amendment — the header's own agent-select now carries the "current choice" signal
@@ -1041,13 +1088,237 @@ function beginRename(row: HTMLElement, persona: Persona): void {
   field.focus()
 }
 
+// ── the imported skill-pack shelf (ADR-0208 D3/D5.2/D7, GH #1340/#1349) ────────────────────────────────
+// The page-owned shelf SURFACE, the Edit Agents drawer's composition idiom verbatim (`ui-drawer`
+// composed byte-unmodified; shell built before `root.append` connects it; only the LIST's children are
+// ever replaced). This drawer IS the pack library's review-before-enable step (D5.2): each imported
+// entry's FULL content, the provenance stamp (D7's attribution — source URL, short sha, import date,
+// license file name or "no license file found"), and the directive-scan report render HERE, before any
+// per-agent add. "Import pack…" (D3's affordance) reads a .skillpack.json via the user's own file
+// picker — the ADR-0202 trust shape: bytes arrive only by the user's explicit local-file choice, zero
+// egress. Remove deletes the `skill-packs:` record ONLY — a persona's opted-in entries are copies and
+// stay untouched (D4's no-background-mutation law; the hint below states it to the user).
+
+const skillPackInput = document.createElement('input')
+skillPackInput.type = 'file'
+skillPackInput.accept = 'application/json,.json'
+skillPackInput.hidden = true
+skillPackInput.addEventListener('change', () => {
+  const picked = skillPackInput.files?.[0]
+  if (!picked) return
+  void picked
+    .text()
+    .then((text) => importSkillPackText(text))
+    .catch(() => packsFeedback('Import failed — that file could not be read.', true))
+    .finally(() => {
+      skillPackInput.value = '' // same-file re-pick law (the persona input's own comment above)
+    })
+})
+
+const packsDrawer = document.createElement('ui-drawer') as UIDrawerElement
+packsDrawer.setAttribute('edge', 'end')
+packsDrawer.setAttribute('aria-label', 'Skill packs')
+packsDrawer.className = 'packs-drawer'
+
+const packsHeader = document.createElement('header')
+packsHeader.className = 'roster-drawer-header'
+
+const packsTitleRow = document.createElement('div')
+packsTitleRow.className = 'roster-drawer-title-row'
+const packsTitle = document.createElement('h2')
+packsTitle.className = 'roster-drawer-title'
+packsTitle.textContent = 'Skill packs'
+const packsClose = document.createElement('ui-button') as UIButtonElement
+packsClose.setAttribute('variant', 'ghost')
+packsClose.setAttribute('icon-only', '')
+packsClose.setAttribute('aria-label', 'Close')
+const packsCloseIcon = document.createElement('ui-icon')
+packsCloseIcon.setAttribute('slot', 'leading')
+packsCloseIcon.setAttribute('glyph', 'x')
+packsClose.append(packsCloseIcon)
+packsClose.addEventListener('click', () => {
+  packsDrawer.open = false
+})
+packsTitleRow.append(packsTitle, packsClose)
+
+const packsHint = document.createElement('p')
+packsHint.className = 'roster-drawer-hint'
+packsHint.textContent =
+  'Snapshots imported from external skill repos — one app-level shelf, browsable by every agent. ' +
+  'Review each entry’s full text and the scan report below, then enable per agent via the Skills ' +
+  'section’s “From library” menu. Removing a pack never touches entries an agent already added — ' +
+  'those are copies, and a re-import updates only this shelf, never an added copy.'
+
+// The "Import pack…" affordance (D3) — inside the shelf surface itself, where the review happens.
+const importPackButton = document.createElement('ui-button') as UIButtonElement
+importPackButton.setAttribute('variant', 'soft')
+const importPackIcon = document.createElement('ui-icon')
+importPackIcon.setAttribute('slot', 'leading')
+importPackIcon.setAttribute('glyph', 'plus')
+importPackButton.append(importPackIcon, document.createTextNode('Import pack…'))
+importPackButton.addEventListener('click', () => skillPackInput.click())
+const packsToolbar = document.createElement('div')
+packsToolbar.className = 'roster-drawer-toolbar'
+packsToolbar.append(importPackButton)
+
+// In-drawer status line (the roster drawer's own reasoning: a toast paints UNDER the modal drawer's
+// ::backdrop, so feedback for an action taken inside the surface must live inside it too).
+const packsStatus = document.createElement('p')
+packsStatus.className = 'roster-drawer-status'
+packsStatus.setAttribute('role', 'status')
+
+packsHeader.append(packsTitleRow, packsHint, packsToolbar, packsStatus)
+
+const packList = document.createElement('div')
+packList.className = 'pack-list'
+packList.setAttribute('data-region', 'content')
+
+const packsDone = document.createElement('ui-button') as UIButtonElement
+packsDone.setAttribute('variant', 'soft')
+packsDone.textContent = 'Done'
+packsDone.addEventListener('click', () => {
+  packsDrawer.open = false
+})
+const packsFooter = document.createElement('footer')
+packsFooter.className = 'roster-drawer-footer'
+packsFooter.append(packsDone)
+packsDrawer.append(packsHeader, packList, packsFooter)
+
+function packsFeedback(message: string, urgent = false): void {
+  packsStatus.textContent = message
+  notify(message, urgent) // the toast twin covers feedback landing while the drawer is closed
+}
+
+/** One pack's card in the shelf list — attribution (D7), the provenance report (skipped + dropped keys,
+ *  counted never silent), the scan findings (D5.4 — rendered WITH the entries they flag, the review
+ *  aid), and each entry's FULL content behind its own fold (D5.2's review-before-enable). */
+function renderSkillPackRow(snapshot: SkillPackSnapshot): HTMLElement {
+  const row = document.createElement('div')
+  row.className = 'pack-row'
+
+  const titleRow = document.createElement('div')
+  titleRow.className = 'roster-drawer-title-row'
+  const label = document.createElement('span')
+  label.className = 'pack-label'
+  label.textContent = snapshot.pack.label
+  const remove = document.createElement('ui-button') as UIButtonElement
+  remove.setAttribute('variant', 'ghost')
+  remove.className = 'pack-remove'
+  remove.textContent = 'Remove'
+  remove.addEventListener('click', () => {
+    void removeSkillPack(snapshot.pack.id).then(() => {
+      importedSkillPacks = importedSkillPacks.filter((s) => s.pack.id !== snapshot.pack.id)
+      admin.libraries = librariesWithShelf(active.category)
+      renderSkillPackShelf()
+      packsFeedback(`Removed “${snapshot.pack.label}” from the shelf — entries agents already added stay in place.`)
+    })
+  })
+  titleRow.append(label, remove)
+  row.append(titleRow)
+
+  const attribution = document.createElement('p')
+  attribution.className = 'pack-attribution'
+  attribution.textContent = skillPackAttribution(snapshot)
+  row.append(attribution)
+
+  const { skipped, droppedFrontmatterKeys, scan } = snapshot.provenance
+  if (skipped.length > 0 || droppedFrontmatterKeys.length > 0) {
+    const report = document.createElement('p')
+    report.className = 'pack-report'
+    const parts: string[] = []
+    if (skipped.length > 0) parts.push(`skipped at import: ${skipped.join(', ')}`)
+    if (droppedFrontmatterKeys.length > 0) parts.push(`dropped frontmatter keys: ${droppedFrontmatterKeys.join(', ')}`)
+    report.textContent = parts.join(' · ')
+    row.append(report)
+  }
+  if (scan.flagged.length > 0) {
+    const warning = document.createElement('p')
+    warning.className = 'pack-scan-warning'
+    warning.textContent = `Scan flagged ${scan.flagged.length} line(s) — review before enabling (the scan strips nothing; the verdict is yours).`
+    row.append(warning)
+  }
+
+  for (const entry of snapshot.pack.entries) {
+    const flags = scan.flagged.filter((f) => f.entryId === entry.id)
+    const fold = document.createElement('ui-disclosure') as HTMLElement & { summary: string }
+    fold.className = 'pack-entry'
+    fold.summary = flags.length > 0 ? `${entry.label} — ⚠ ${flags.length} flagged line(s)` : entry.label
+    if (entry.description.length > 0) {
+      const description = document.createElement('p')
+      description.className = 'pack-entry-description'
+      description.textContent = entry.description
+      fold.append(description)
+    }
+    for (const flag of flags) {
+      const note = document.createElement('p')
+      note.className = 'pack-scan-warning'
+      note.textContent = `line ${flag.line}: ${flag.reason}`
+      fold.append(note)
+    }
+    const content = document.createElement('pre')
+    content.className = 'pack-entry-content'
+    content.textContent = entry.content // FULL text, verbatim — the D5.2 review surface
+    fold.append(content)
+    row.append(fold)
+  }
+
+  return row
+}
+
+function renderSkillPackShelf(): void {
+  packList.replaceChildren()
+  if (importedSkillPacks.length === 0) {
+    const empty = document.createElement('p')
+    empty.className = 'roster-drawer-hint'
+    empty.textContent = 'Nothing imported yet. Run `node scripts/import-skill-pack.mjs <repo-url>` to snapshot a skills repo, then pick the .skillpack.json here.'
+    packList.append(empty)
+    return
+  }
+  for (const snapshot of importedSkillPacks) packList.append(renderSkillPackRow(snapshot))
+}
+
+/** The picker's ingest leg: fail-closed parse (named refusal, D3) → persist WHOLE via the store →
+ *  refresh the shelf cache + the ONE `libraries` seam → re-render the review surface. */
+async function importSkillPackText(text: string): Promise<void> {
+  const parsed = parseSkillPackText(text)
+  if (!parsed.ok) {
+    packsFeedback(`Import refused — ${parsed.error}`, true)
+    return
+  }
+  const snapshot = parsed.snapshot
+  const replacing = importedSkillPacks.some((s) => s.pack.id === snapshot.pack.id)
+  await saveSkillPack(snapshot)
+  importedSkillPacks = [...importedSkillPacks.filter((s) => s.pack.id !== snapshot.pack.id), snapshot].sort((a, b) =>
+    a.pack.id.localeCompare(b.pack.id),
+  )
+  admin.libraries = librariesWithShelf(active.category)
+  renderSkillPackShelf()
+  const flaggedCount = snapshot.provenance.scan.flagged.length
+  packsFeedback(
+    `${replacing ? 'Refreshed' : 'Imported'} “${snapshot.pack.label}” (${snapshot.pack.entries.length} skill(s)) — ${skillPackAttribution(snapshot)}.` +
+      (replacing ? ' Entries agents already added are unchanged — remove and re-add one to take the refreshed text.' : '') +
+      (flaggedCount > 0 ? ` ⚠ ${flaggedCount} scan-flagged line(s) — review before enabling.` : ''),
+    flaggedCount > 0,
+  )
+}
+
+// The component's overflow "Skill packs…" item (registration-gated, agent-admin.ts's ADR-0208 seam)
+// opens the shelf — rendered fresh on every open so a boot-time async shelf load is never stale here.
+admin.onSkillPacksRequest(() => {
+  renderSkillPackShelf()
+  packsStatus.textContent = ''
+  packsDrawer.open = true
+})
+
 applyPersona(active) // also stages the header's own roster row (pushRoster, inside applyPersona)
 // `fileInput` FIRST (GH #1233): since #1211 the Test-chat composer inside `admin` carries its own hidden
 // `<input type="file">` (`[data-part="attach-input"]`, the paperclip picker). The persona import's input
 // must stay the page's FIRST file input in document order so "the hidden file input" stays unambiguous —
 // appending it after `admin` routed persona-import .json picks into the composer's attach ingest path
 // (the "Can't attach — unsupported file type" toast) instead of `importPersonaText`'s own handling.
-root.append(fileInput, admin, toasts, drawer)
+// `skillPackInput` rides SECOND — after the persona import's own input (which must stay the page's
+// FIRST file input, the GH #1233 law above) and still before `admin`'s composer attach-input.
+root.append(fileInput, skillPackInput, admin, toasts, drawer, packsDrawer)
 
 // GH #952 — the pointer-drag reorder gesture (formerly this page's own `wireDrag`), now the `list-reorder`
 // trait. `drawer` (a real `UIElement`) is the host — `rosterList` lives in its light DOM, so a `pointerdown`
@@ -1116,7 +1387,7 @@ void (async () => {
       const services = await overlay.fetchLiveServices()
       if (trios) setLiveIntegrations(trios)
       setLiveServices(services)
-      if (trios || services) admin.libraries = librariesForCategory(active.category)
+      if (trios || services) admin.libraries = librariesWithShelf(active.category)
     }
   } catch {
     console.info('[agent-admin-app] stub preview — the live overlay is unavailable')

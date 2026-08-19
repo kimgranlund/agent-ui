@@ -13,8 +13,9 @@
 // pure helpers in isolation, which proves their SHAPE and nothing about whether `main()` consults them.
 // The last two blocks spawn the REAL script in REAL subprocesses, which is the only tier that can catch
 // a deleted call site. Both defects GH #335 fixed have a subprocess leg (the disposition guard on an
-// unjudged run; `parseArgs` via `--bogus-flag`/`--help`), and so does every ADR-0165 clause. A new pure
-// helper here needs its own subprocess leg too, or it is only half-covered.
+// unjudged run; `parseArgs` via `--bogus-flag`/`--help`), and so do every ADR-0165 clause and GH #1346's
+// fail-closed judge-tier guard. A new pure helper here needs its own subprocess leg too, or it is only
+// half-covered.
 //
 // The ADR-0165 block runs against a THROWAWAY SANDBOX repo root rather than the committed corpus: those
 // clauses are about runs that reach `saveStore` and WRITE, and the live corpus is not a fixture. The
@@ -270,10 +271,12 @@ describe('dispositionAllowlistSnippet — a paste-ready DISPOSITION_ALLOWLIST en
 // a never-admitted disposition-recorded seed to trip on (`stats-grid-dashboard` originally, per GH
 // #335's live repro). Since the 2026-08-18 judged waves + Kim's drop ruling, the shelf and the store
 // are in exact 1:1 correspondence — NO real un-admitted name remains, so a real-tree unjudged run no
-// longer halts (and, worse, would tier-1-admit any source-drifted seed and WRITE the real corpus — the
-// live corpus is not a fixture). That leg's proof moved to the sandbox block below (ADR-0165 clause 4's
-// unjudged-halt case: the REAL script, a PLANTED archive refusal, a throwaway repo root) — same
-// subprocess tier, same deleted-call-site sensitivity, no real-corpus exposure. ──
+// longer halts on a disposition. (It USED to then tier-1-admit any source-drifted seed and WRITE the
+// real corpus — the very hole GH #1346's fail-closed judge-tier guard closed: a bare run now halts the
+// moment any candidate clears dedup. The live corpus is still not a fixture, so that guard's legs run
+// in the sandbox block below too.) The disposition-halt proof moved to the sandbox block's ADR-0165
+// clause-4 unjudged-halt case (the REAL script, a PLANTED archive refusal, a throwaway repo root) —
+// same subprocess tier, same deleted-call-site sensitivity, no real-corpus exposure. ──
 describe('import-seeds main() wiring — a real subprocess run proves arg-parsing runs before any fs work', () => {
   const repoRoot = process.cwd()
   const shardPath = `${repoRoot}/packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`
@@ -300,10 +303,13 @@ describe('import-seeds main() wiring — a real subprocess run proves arg-parsin
   // below close that — the exact `--bogus-flag` / `--help` probes #341 records as run by hand.
   //
   // Note on why exit code alone is NOT enough here: with the arg-error branch deleted, a `--bogus-flag`
-  // run falls through into the real UNJUDGED pipeline — over today's fully-admitted shelf that run
-  // would tier-1-admit any source-drifted seed and WRITE the real corpus (exit 0, corpus mutated). So
-  // the discriminating assertions are that the run stopped AT arg-parsing — the bad flag is named, help
-  // is printed, no HALT line appears, no admission report prints — and the corpus stayed byte-identical.
+  // run falls through into the real UNJUDGED pipeline. Pre-GH #1346 that run would tier-1-admit any
+  // source-drifted seed and WRITE the real corpus (exit 0, corpus mutated); since the fail-closed
+  // judge-tier guard it instead halts on drift (exit 1, nothing written) or runs the all-E_DUP no-op
+  // (exit 0, summary printed) — either way indistinguishable by exit code + corpus bytes alone from
+  // "stopped at arg-parsing". So the discriminating assertions are that the run stopped AT arg-parsing
+  // — the bad flag is named, help is printed, no HALT line appears, no admission report prints — with
+  // the corpus byte-identity check kept as defense-in-depth.
   it('--bogus-flag hard-errors AT ARG-PARSING (names the flag, prints help, never reaches the seed loop) and leaves the corpus byte-identical', () => {
     const result = runScript(['--bogus-flag'])
 
@@ -338,7 +344,7 @@ describe('import-seeds main() wiring — a real subprocess run proves arg-parsin
 // committed corpus is live data, not a fixture. The `runScript` block above stays the leg that proves
 // behaviour against the real tree; this block proves the write behaviour the real tree must never
 // exercise in a test. ──
-describe('import-seeds main() — the verdict archive (ADR-0165), real subprocess runs against a sandbox repo root', () => {
+describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 fail-closed guard, real subprocess runs against a sandbox repo root', () => {
   const REAL_ROOT = process.cwd()
   const SCRIPT = join(REAL_ROOT, 'packages/agent-ui/a2ui/tools/corpus/import-seeds.ts')
   const RUBRIC = '.claude/docs/rubrics/a2ui-corpus.md'
@@ -440,6 +446,10 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     'feedback-form': { passed: false, qualityScore: 2 },
     'trivia-round-resume': { passed: false, qualityScore: 2 },
     'empty-error-retry-card': { passed: false, qualityScore: 2 },
+    // GH #1355 — a genuinely NEW seed (not yet in the committed shard, so dedup doesn't reject it
+    // before the judge is reached): rejected here too, keeping these archive-mechanics tests at zero
+    // admissions rather than needing a real quality judgment.
+    'crud-entry-list-drawer': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {
@@ -686,29 +696,104 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     expect(result.stderr).toMatch(/Nothing was written/)
   })
 
-  it('the sandbox itself is honest — an unjudged run over an EMPTY sandbox corpus either admits the whole shelf (an empty real allowlist) or halts on the first real disposition (GH #1352)', () => {
+  it('the sandbox itself is honest — a JUDGED all-passing run over an EMPTY sandbox corpus admits the whole shelf and writes the shard', () => {
     // The negative control for every case above: if the sandbox were subtly wrong (a missing rubric, a
     // catalog that would not load), these runs would fail for a reason unrelated to the clause under
-    // test. Between 2026-08-18 and GH #1352 the real `DISPOSITION_ALLOWLIST` was legitimately EMPTY (the
-    // standing refusals were dropped, the pending backlog admitted), so an unjudged run with no planted
-    // archive and no allowlist entry admitted the whole shelf. GH #1352 (`frontier-pane-switcher`)
-    // flipped that back to non-empty — the honest baseline now branches on the REAL map's current size
-    // rather than assuming either state, so this test stays green through the next drain too (mirroring
-    // the `dispositionGuard` unit test's own generalization above). Either branch proves the sandbox's
-    // rubric, catalog, seed shelf, and store wiring all load, end to end.
+    // test. This control was the bare-run whole-shelf admit while a bare run could still admit at all;
+    // GH #1346 closed that path (a bare run fails closed the moment any candidate reaches the judge
+    // tier — the block below), so the honest end-to-end baseline is now the JUDGED all-passing wave:
+    // rubric, catalog, seed shelf, judge and store wiring all load, every seed admits, the shard is
+    // minted. (The halting cases above are therefore attributable to exactly the condition each one
+    // plants.)
     makeSandbox({ withShard: false })
-    const result = run([])
-    if (DISPOSITION_ALLOWLIST.size === 0) {
-      expect(result.status, result.stderr).toBe(0)
-      expect(result.stdout).toMatch(new RegExp(`${allSeeds.length} admitted`))
-      expect(existsSync(join(sandbox, SHARD)), 'the run reached saveStore and minted the shard').toBe(true)
-    } else {
-      const [firstDispositioned] = DISPOSITION_ALLOWLIST.keys()
+    const verdicts: Record<string, unknown> = {}
+    for (const seed of allSeeds) verdicts[seed.name] = { passed: true, qualityScore: 5 }
+    const verdictsPath = writeVerdicts('all-passing.json', { date: '2026-07-30', verdicts })
+    const result = run(['--verdicts', verdictsPath])
+    expect(result.status, result.stderr).toBe(0)
+    expect(result.stdout).toMatch(new RegExp(`${allSeeds.length} admitted`))
+    expect(existsSync(join(sandbox, SHARD)), 'the run reached saveStore and minted the shard').toBe(true)
+  })
+
+  // ── GH #1346 — the fail-closed judge-tier guard, proven on the same sandbox harness. A bare (no
+  // --verdicts) run used to tier-1-admit ANY candidate that cleared dedup and WRITE the corpus —
+  // including the source-drifted content of an already-admitted name, which name-based
+  // `alreadyAdmitted`, content-based dedup, AND `dispositionGuard` (archived refusals only) all miss.
+  // The clause-4 unjudged-halt leg above (PR #1345) is the shape precedent these follow: the REAL
+  // script, a PLANTED condition, the halt proven to precede `saveStore`. ──
+  describe('GH #1346 — a bare run fails closed the moment any candidate reaches the judge tier', () => {
+    /** Plant the drift deterministically (the dry-run collision test's established pattern): drop ONE
+     *  row from the sandbox's shard copy. On the next bare run that seed clears dedup and reaches the
+     *  judge tier — the same guard-visible state source-drifted content of an admitted name produces
+     *  (dedup is content-based, so drifted content misses its own row exactly as a dropped row does).
+     *  Returns the doctored shard bytes, the before-image for the halt-before-saveStore assertion. */
+    const plantDrift = (): string => {
+      const shardPath = join(sandbox, SHARD)
+      const keptRows = readFileSync(shardPath, 'utf8')
+        .split('\n')
+        .filter((line) => line !== '' && !line.includes('"name":"empty-error-retry-card"'))
+      writeFileSync(shardPath, `${keptRows.join('\n')}\n`)
+      return readFileSync(shardPath, 'utf8')
+    }
+
+    it('THE ISSUE REPRO SHAPE — a planted-drift bare run HALTS before saveStore: the named fail-closed report, exit 1, shard byte-unchanged, no archive minted', () => {
+      makeSandbox({ withShard: true })
+      const doctoredShard = plantDrift()
+
+      const result = run([])
+
       expect(result.status).toBe(1)
       expect(result.stderr).toMatch(/HALTED/)
-      expect(result.stderr).toContain(firstDispositioned as string)
-      expect(result.stderr).toMatch(/Nothing was written/)
-      expect(existsSync(join(sandbox, SHARD)), 'a halted run writes nothing').toBe(false)
-    }
+      expect(result.stderr, 'the named report the issue specifies').toMatch(
+        /1 candidate\(s\) reached the judge tier with no judge wired — nothing written/,
+      )
+      expect(result.stderr).toContain('empty-error-retry-card')
+      expect(result.stderr, 'the operator is pointed at the guard exit').toMatch(/--verdicts/)
+      expect(result.stdout, 'the run summary never prints — the halt is a halt').not.toMatch(/admitted/)
+      // The halt-before-saveStore proof: had the run reached saveStore, the tier-1-admitted candidate
+      // would have been written back and the dropped row restored. The doctored shard is byte-identical
+      // instead — nothing was written.
+      expect(readFileSync(join(sandbox, SHARD), 'utf8'), 'the halt precedes saveStore').toBe(doctoredShard)
+      expect(archivedFiles(), 'no archive either — a bare run carries no verdicts file to archive').toEqual([])
+    })
+
+    it('the same planted drift under --dry-run reports the would-HALT truth and still finishes its summary — exit 0, nothing written', () => {
+      makeSandbox({ withShard: true })
+      const doctoredShard = plantDrift()
+
+      const result = run(['--dry-run'])
+
+      expect(result.status, result.stderr).toBe(0)
+      expect(result.stdout).toMatch(/a real run would HALT here/)
+      expect(result.stdout).toMatch(/1 candidate\(s\) reached the judge tier with no judge wired/)
+      // The headline stays honest: a real run admits NONE of these, so neither does the dry-run count.
+      expect(result.stdout).toMatch(/0 admitted/)
+      expect(result.stdout).toMatch(
+        /would HALT on a real run \(--dry-run only, 1 candidate\(s\) at the judge tier with no judge wired\): empty-error-retry-card/,
+      )
+      expect(readFileSync(join(sandbox, SHARD), 'utf8'), 'a dry run writes nothing, warning or not').toBe(doctoredShard)
+    })
+
+    it('the all-E_DUP bare run STAYS LEGAL — every seed an idempotent re-run of its own admitted record, exit 0 (the one verdict-less case the guard leaves open)', () => {
+      makeSandbox({ withShard: true })
+
+      const result = run([])
+
+      expect(result.status, result.stderr).toBe(0)
+      expect(result.stdout).toMatch(new RegExp(`0 admitted, ${allSeeds.length} already present`))
+      expect(result.stderr).not.toMatch(/HALTED/)
+    })
+
+    it('an EMPTY corpus makes every shelf seed an unjudged candidate — the guard counts all N and writes nothing (the full-scale N)', () => {
+      makeSandbox({ withShard: false })
+
+      const result = run([])
+
+      expect(result.status).toBe(1)
+      expect(result.stderr).toMatch(
+        new RegExp(`${allSeeds.length} candidate\\(s\\) reached the judge tier with no judge wired`),
+      )
+      expect(existsSync(join(sandbox, SHARD)), 'no shard was minted — the halt precedes saveStore').toBe(false)
+    })
   })
 })
