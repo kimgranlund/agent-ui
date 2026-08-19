@@ -73,6 +73,17 @@ export class UIRatingElement extends UIRangeElement {
   // `ownsValueModel()` below gates off the base's identically-shaped but private `#committed` field).
   #committed: number | null = null
 
+  // Gesture-local commit baseline (ADR-0216 Amendment 1 fix, GH #1438 finding S1) — captured on
+  // POINTERDOWN by a listener registered AHEAD of valueDrag's own pointerdown wiring (connected(),
+  // below), so it always observes `value` BEFORE the trait's synchronous write. Needed because on an
+  // UNFOCUSED host the real event order is pointerdown → (mousedown default action) focus → pointerup:
+  // `onValue` (valueDrag) writes `value` inside pointerdown, so by the time `focus` lands mid-gesture
+  // it re-seeds `#committed` to the ALREADY-WRITTEN value — the pointerup compare below then saw
+  // current === #committed and swallowed the very first tap's `change`. `#committed` still exists,
+  // unchanged, for the keyboard focus/blur commit law; this is a second, gesture-scoped baseline
+  // consumed ONLY by the pointerup handler below, immune to a mid-gesture focus re-seed.
+  #gestureBaseline: number | null = null
+
   // Light-DOM parts — built once (idempotent across reconnect, the slider.ts #buildDOM precedent).
   #labelEl: HTMLElement | undefined
   #starsEl: HTMLElement | undefined
@@ -326,20 +337,36 @@ export class UIRatingElement extends UIRangeElement {
       this.#committed = null
     })
 
+    // Gesture-local baseline capture (ADR-0216 Amendment 1 fix, GH #1438 S1) — registered AHEAD of
+    // valueDrag's own pointerdown wiring below (same target `this` + event 'pointerdown' ⇒ registration
+    // order IS invocation order), so this always runs, and reads `value`, BEFORE that trait's synchronous
+    // write. Scoped to the star track exactly as the pointerup handler below is (a pointerdown elsewhere
+    // on the host is not a pick).
+    this.listen(this, 'pointerdown', (event) => {
+      if (!this.#starsEl?.contains((event as PointerEvent).target as Node | null)) return
+      this.#gestureBaseline = this.#clamp(this.value ?? 0)
+    })
+
     // Pointer commit (ADR-0216 Amendment 1, 2026-08-20 Kim ruling) — a star picked by POINTER commits
     // immediately: `change` fires on `pointerup`, not blur. valueDrag's `onValue` below already lands
     // the `input`→`value` commit synchronously (unchanged); only the `change` NOTIFICATION moves
     // earlier, to the gesture's own end. Scoped to the star track (`#starsEl.contains`, the same test
     // valueDrag's own pointerdown listener applies — a pointerup elsewhere on the host is not a pick).
     // readonly/disabled both no-op naturally here: `onValue` never wrote `this.value` for them, so
-    // `current` never diverges from `#committed` and nothing emits (the same belt-and-suspenders CSS
-    // `pointer-events: none` gate `onValue` itself already carries). After firing, `#committed` is
-    // re-baselined to the just-committed value so the blur handler above does not re-report the same
-    // delta a second time.
+    // `current` never diverges from `#gestureBaseline` and nothing emits (the same belt-and-suspenders
+    // CSS `pointer-events: none` gate `onValue` itself already carries). The compare uses
+    // `#gestureBaseline` (captured above, at pointerdown, BEFORE any write) rather than `#committed` —
+    // `#committed` is re-seeded by the `focus` handler above whenever focus lands, including MID-gesture
+    // on an unfocused host's first tap (real order: pointerdown → focus → pointerup), which would
+    // otherwise compare the already-written value against itself. `#committed` is still re-baselined
+    // here too, so a later blur in the same focus session (no further edits) does not double-report the
+    // delta this pointerup already committed.
     this.listen(this, 'pointerup', (event) => {
       if (!this.#starsEl?.contains((event as PointerEvent).target as Node | null)) return
       const current = this.#clamp(this.value ?? 0)
-      if (this.#committed !== null && !Object.is(current, this.#committed)) {
+      const baseline = this.#gestureBaseline
+      this.#gestureBaseline = null
+      if (baseline !== null && !Object.is(current, baseline)) {
         this.emit('change')
       }
       this.#committed = current

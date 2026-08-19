@@ -437,8 +437,12 @@ describe('UIRatingElement — change-after-value-commit probe (Fork-T1/D1, ADR-0
 //
 // A star picked by POINTER commits immediately: `change` fires on `pointerup`, not blur. KEYBOARD keeps
 // the base range law (unchanged, proven by the Fork-T1/D1 probe above). These probes establish `focus`
-// first (the real-gesture order: pointerdown transfers focus before pointerup on a real click) so
-// `#committed` is seeded exactly as the focus/blur pair above relies on.
+// BEFORE the gesture — the ALREADY-focused case (e.g. tab-then-drag): a real click on a NOT-yet-focused
+// host actually orders pointerdown → (mousedown default action) focus → pointerup (focus lands mid-
+// gesture, AFTER the trait's write) — that first-tap case is covered by the browser probe
+// (rating.browser.test.ts, "real focus/gesture ordering"), which is also why the compare below runs off
+// `#gestureBaseline` (rating.ts), a baseline captured at pointerdown, not off `#committed` (seeded only
+// by `focus`, which may land before OR mid-gesture depending on prior focus state).
 
 describe('UIRatingElement — pointer commit (ADR-0216 Amendment 1)', () => {
   it('a pointer tap that moves the value fires `change` on pointerup — synchronously, before any blur', () => {
@@ -447,7 +451,7 @@ describe('UIRatingElement — pointer commit (ADR-0216 Amendment 1)', () => {
     document.body.append(el)
     stubPointer(el)
 
-    el.dispatchEvent(new FocusEvent('focus')) // real-gesture order: focus precedes pointerup
+    el.dispatchEvent(new FocusEvent('focus')) // already-focused case (see the describe-block note above)
 
     let changeCount = 0
     el.addEventListener('change', () => { changeCount++ })
