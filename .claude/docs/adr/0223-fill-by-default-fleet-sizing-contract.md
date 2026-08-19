@@ -59,9 +59,14 @@ inline-grid + 20ch, `ui-multi-select` inline-block + 12ch — the ADR-0021 class
 2. **The fleet has an ESTABLISHED fourth min-width role the contract doesn't name.** Eleven
    block-level display leaves carry a "whole-shape floor" (`bar-chart` 16em, `line-chart` 16em,
    `pie-chart` 16em, `ladder` 16em, `table` 16em, `progress` 8em, `ramp` 8em, `slider` 12rem,
-   `slider-multi` 12rem, `timeline` 12rem, `status-stream` 16rem — Appendix §C), each ratified by
-   its own SPEC acceptance row (SPEC-R9/R13/R14/R17/R18 AC1) against a measured defect class: the
-   slider-dot lesson — a track-shaped leaf crushed by a flex row renders as a meaningless sliver.
+   `slider-multi` 12rem, `timeline` 12rem, `status-stream` 16rem — Appendix §C). The ROLE is
+   SPEC-ratified across five families — `chart-family.spec.md` SPEC-R9, `feed-family.spec.md`
+   SPEC-R18, `report-family.spec.md` SPEC-R14/R17 (plus `ui-stat`'s own SPEC-R10),
+   `token-surfaces.spec.md` SPEC-R13, `timeline-family.spec.md` SPEC-R14 — but honestly, only ~6
+   of the 11 rows carry a citable per-row AC (Appendix §C names each); the remainder (`ladder`,
+   `slider`, `slider-multi`, and `line`/`pie`'s mirror comments) carry the same measured defect
+   class without one: the slider-dot lesson — a track-shaped leaf crushed by a flex row renders
+   as a meaningless sliver.
    These floors are not hug floors (the hosts are already block-fill) and not squareness floors.
    Strict R3 calls all eleven lint defects; deleting them re-opens eleven measured regressions.
 3. **Host-level `min-inline-size: 0` unclampers exist and are measured-correct.** `card.css:168`
@@ -114,7 +119,8 @@ clauses.
    when the host is itself the flex/grid item (the ADR-0100 cl.3 measured card disposition;
    `card.css:168` and kin stay); **(d) — amendment A1** — whole-shape floors on track/data-shaped
    display leaves (Appendix §C's eleven, plus `stat` 8em and `attachment` 12em once their posture
-   flips), token-overridable, SURVIVING the fill state, each traceable to a SPEC AC row. Role (d)
+   flips), token-overridable, SURVIVING the fill state, each traceable to its family's SPEC floor
+   law or, where no per-row AC exists, to the measured defect class (§C's per-row anchors). Role (d)
    is a closed, ratified list — this table, extended only by ADR. Any min-width outside (a)–(d)
    and the R4 table is a lint defect from slice 3 on.
 4. **R4 adopted — the exemption table, ratified once, here.** **Floating surfaces** (small rem
@@ -162,8 +168,10 @@ clauses.
      reclassify to role (d)); the five §E ambiguous rows get their rulings executed; the gate
      allowlist shrinks to the clauses 3(d)+4 tables and flips ENFORCING.
    - **Slice 4 (release):** fleet-wide golden regen + `eval:catalog` + reference-consumer
-     sign-off — the docs site and agent-admin, both swept at real breakpoints — migration guide
-     finalized, ONE breaking release cut. No slice ships its flip to a release before slice 4;
+     sign-off — the docs site and agent-admin, both swept at real breakpoints; **the sign-off is
+     KIM'S**, recorded as his comment on the wave tracking issue before the release cut (the
+     slices only prepare the evidence) — migration guide finalized, ONE breaking release cut. No
+     slice ships its flip to a release before slice 4;
      `main` carries the wave behind the gate's report-mode until the train departs.
 
 ## Non-goals
@@ -309,24 +317,27 @@ genuinely ambiguous. "Slice" = migration wave slice (— = no change).
 | ui-switch | `inline-flex` `C/switch/switch.css:93` | | V-P | 2 |
 | ui-pagination | `inline-flex` `C/pagination/pagination.css:28` | | V-P | 2 |
 | ui-calendar | `inline-block` `C/calendar/calendar.css:145` | fluid tracks (ADR-0105) make fill natural | V-P | 2 |
-| ui-stat | `inline-grid` `C/stat/stat.css:63` | 8em floor `:47,65` → role (d) on flip | V-P | 3 |
-| ui-attachment | `inline-grid` `C/attachment/attachment.css:48` | 12em floor `:32,57` → role (d); `max-inline-size:100%` `:58` drops on flip | V-P | 3 |
+| ui-stat | `inline-grid` `C/stat/stat.css:63` | 8em floor `:47,65` → role (d) on flip (`report-family.spec.md` SPEC-R10 `:249` — its own whole-shape AC) | V-P | 3 |
+| ui-attachment | `inline-grid` `C/attachment/attachment.css:48` | 12em floor `:32,57` → role (d) (`feed-family.spec.md` SPEC-R18 `:153`); `max-inline-size:100%` `:58` drops on flip | V-P | 3 |
 
 ### §C — CONTESTED whole-shape floors → ratified role (d) under amendment A1 (11)
 
-| Host | Posture | Floor (file:line) | SPEC anchor |
+SPEC anchors verified against the owning file (the corpus holds ≥4 distinct SPEC-R9s — every
+anchor below is file-qualified; "no per-row AC" rows carry the measured defect class only):
+
+| Host | Posture | Floor (file:line) | SPEC anchor (owning file, verified) |
 |---|---|---|---|
-| ui-bar-chart | `grid` `C/bar-chart/bar-chart.css:54` | 16em `:40,59` | SPEC-R9 AC1 |
-| ui-line-chart | `grid` `C/line-chart/line-chart.css:45` | 16em `:32,48` | mirrors R9 |
-| ui-pie-chart | `grid` `C/pie-chart/pie-chart.css:68` | 16em `:35,73` | R9 precedent |
-| ui-ladder | `grid` `C/ladder/ladder.css:44` | 16em `:32,49` | whole-shape |
-| ui-table | `block` `C/table/table.css:68` | 16em `:44,69` | SPEC-R14/R17 AC1 |
-| ui-progress | `block` `C/progress/progress.css:58` | 8em `:45,59` | SPEC-R18 AC1 |
-| ui-ramp | `flex` `C/ramp/ramp.css:37` | 8em `:30,45` | SPEC-R13 AC1 |
-| ui-slider | `grid` `C/slider/slider.css:145` | 12rem `:148` | the slider-dot lesson itself |
-| ui-slider-multi | `grid` `C/slider-multi/slider-multi.css:91` | 12rem `:96` | sibling |
-| ui-timeline | `flex` `C/timeline/timeline.css:27` | 12rem `:20,31` | SPEC-R14 AC1 |
-| ui-status-stream | `flex` `C/status-stream/status-stream.css:147` | 16rem `:18,149` | whole-shape |
+| ui-bar-chart | `grid` `C/bar-chart/bar-chart.css:54` | 16em `:40,59` | `chart-family.spec.md` SPEC-R9 AC1 (`:111` — box ≥ token floor, both engines) |
+| ui-line-chart | `grid` `C/line-chart/line-chart.css:45` | 16em `:32,48` | no per-row AC — mirrors `chart-family.spec.md` SPEC-R9 (the CSS comment's own lineage, `:32`) |
+| ui-pie-chart | `grid` `C/pie-chart/pie-chart.css:68` | 16em `:35,73` | no per-row AC — `chart-family.spec.md` SPEC-R9 precedent (CSS comment, `:35`) |
+| ui-ladder | `grid` `C/ladder/ladder.css:44` | 16em `:32,49` | no per-row AC — measured whole-shape class only |
+| ui-table | `block` `C/table/table.css:68` | 16em `:44,69` | `report-family.spec.md` SPEC-R14 (floors, `:312,316`) + SPEC-R17 (Display-class posture, `:352`) |
+| ui-progress | `block` `C/progress/progress.css:58` | 8em `:45,59` | `feed-family.spec.md` SPEC-R18 (`:153` — floors MANDATORY, the slider-dot shape named) |
+| ui-ramp | `flex` `C/ramp/ramp.css:37` | 8em `:30,45` | `token-surfaces.spec.md` SPEC-R13 AC1 (`:213,223` — NOT report-family's R13, which is the badge box law) |
+| ui-slider | `grid` `C/slider/slider.css:145` | 12rem `:148` | no per-row AC — the slider-dot lesson itself (the class's origin) |
+| ui-slider-multi | `grid` `C/slider-multi/slider-multi.css:91` | 12rem `:96` | no per-row AC — slider's sibling |
+| ui-timeline | `flex` `C/timeline/timeline.css:27` | 12rem `:20,31` | `timeline-family.spec.md` SPEC-R14 AC1/AC2 (`:282-289`) |
+| ui-status-stream | `flex` `C/status-stream/status-stream.css:147` | 16rem `:18,149` | `timeline-family.spec.md` SPEC-R14 (per-host family law — status-stream is a named family host, `:1`; the ACs exemplify timeline/item only) |
 
 ### §D — R4 EXEMPT (14)
 
