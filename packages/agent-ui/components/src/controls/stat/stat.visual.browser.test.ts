@@ -22,7 +22,16 @@ const mount = (attrs = ''): { wrap: HTMLElement; host: UIStatElement } => {
   wrap.style.padding = '8px'
   wrap.innerHTML = `<ui-stat label="Revenue" figure="48200" delta="12" caption="vs last month" ${attrs}></ui-stat>`
   document.body.append(wrap)
-  return { wrap, host: wrap.querySelector('ui-stat') as UIStatElement }
+  const host = wrap.querySelector('ui-stat') as UIStatElement
+  // ADR-0223 slice-3 checker follow-up (folded into slice 4, GH #1422): ui-stat ships no visible card
+  // chrome (plain text, Display class), so the fill-vs-hug posture delta was pixel-INVISIBLE in this
+  // crop — the slice-3 Findings comment named this explicitly. A test-only outline + tint on the HOST
+  // (never in component CSS — this styling exists only in the harness) makes the host's own box edge a
+  // visible pixel truth: FILL reads as the tinted box spanning the wrap; [inline] hug reads as the
+  // tinted box hugging the whole-shape floor width.
+  host.style.outline = '1px dashed magenta'
+  host.style.background = 'rgba(0, 145, 255, 0.08)'
+  return { wrap, host }
 }
 
 describe('ui-stat — visual regression (ADR-0223 slice-3 postures: fill default / [inline] hug)', () => {
