@@ -55,7 +55,7 @@ function renderSpecimens(): HTMLElement {
 
 function card(spec: AttachmentSpecimen): HTMLElement {
   const el = document.createElement('ui-attachment')
-  if (spec.name !== undefined) el.setAttribute('name', spec.name)
+  if (spec.name !== undefined) el.setAttribute('filename', spec.name)
   el.setAttribute('mime-type', spec.mimeType)
   if (spec.sizeBytes !== undefined) el.setAttribute('size-bytes', String(spec.sizeBytes))
   return el
