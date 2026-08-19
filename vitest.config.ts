@@ -12,9 +12,21 @@ const r = (p: string) => fileURLToPath(new URL(p, import.meta.url))
 // `vitest.browser.config.ts` / `npm run test:browser` (G5), itself split the same way. The `*.browser.test.ts`
 // glob is excluded from both jsdom projects so those real-engine tests never run under jsdom (where computed
 // geometry isn't true). Workspace packages resolve via the aliases below.
+// Worktree-aware worker cap (Kim ruling 2026-08-20, the load-108 postmortem): a run whose cwd sits
+// under an agent worktree (`.claude/worktrees/`) defaults to 4 workers — N parallel lanes at
+// workers-per-core is exactly the N×cores thread explosion that saturated the host — while the
+// primary checkout keeps vitest's full-speed default. An explicit VITEST_MAX_WORKERS env var wins
+// over both (set it to a number, or leave unset for the location-based default).
+const WORKER_CAP = process.env['VITEST_MAX_WORKERS']
+  ? Number(process.env['VITEST_MAX_WORKERS'])
+  : process.cwd().includes('/.claude/worktrees/')
+    ? 4
+    : undefined
+
 export default defineConfig({
   test: {
     environment: 'jsdom',
+    ...(WORKER_CAP ? { maxWorkers: WORKER_CAP, minWorkers: 1 } : {}),
     projects: [
       {
         extends: true,

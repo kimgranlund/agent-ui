@@ -211,8 +211,18 @@ const FOCUS_TIMING_FILES = [
 // var, so the two npm scripts stay the only two switches.
 const isUpdatingVisualBaselines = process.argv.includes('--update') || process.argv.includes('-u')
 
+// Worktree-aware worker cap — same mechanism and rationale as vitest.config.ts's (Kim ruling
+// 2026-08-20, the load-108 postmortem); browser shards are the heaviest per-worker cost, so the
+// lane cap matters most here.
+const WORKER_CAP = process.env['VITEST_MAX_WORKERS']
+  ? Number(process.env['VITEST_MAX_WORKERS'])
+  : process.cwd().includes('/.claude/worktrees/')
+    ? 4
+    : undefined
+
 export default defineConfig({
   test: {
+    ...(WORKER_CAP ? { maxWorkers: WORKER_CAP, minWorkers: 1 } : {}),
     // Teardown force-kill window. The default 10s manifested as a ~10s "close timed out after 10000ms /
     // something prevents the main process from exiting" hang on every standalone `test:visual` run — a
     // generic dangling node handle AFTER the browsers close, NOT the WebKit shell (measured 2026-07-08:
