@@ -1,10 +1,12 @@
 # SPEC — GenUI surface (sandboxed free-form generative UI): wire · frame · bridge · producer
 
 > Status: proposed · v0.8 · 2026-08-19 · Layer: SPEC (execution contract)
-> **v0.8 amendment (docs-only, 2026-08-19):** SPEC-R13(b)'s inventory budget revised ≤ 18 100 → ≤ 18 400
-> chars on real corpus evidence — the ruled §8 path: ADR-0223's Fill-by-Default wave (slices 0–2) adds an
-> `inline` sizing-opt-out attribute row to thirteen flipped controls' descriptors, growing the
-> descriptor-derived inventory to a measured 18 179 chars. No other clause changes.
+> **v0.8 amendment (docs-only, 2026-08-19):** SPEC-R13(b)'s inventory budget revised ≤ 18 100 → ≤ 18 600
+> chars on real corpus evidence — the ruled §8 path ("tightening or loosening on real corpus data is a
+> SPEC version bump, not silent drift"): ADR-0223's Fill-by-Default wave (slices 0–2) adds an `inline`
+> sizing-opt-out attribute row to thirteen flipped controls' descriptors (measured 18 179), and
+> ADR-0224/GH #1429's `ui-service-card` control mint adds its descriptor on top (measured 18 296
+> pre-S2; combined measured value enforced by the standing test). No other clause changes.
 > **v0.7 amendment (docs-only, 2026-08-19):** SPEC-R13(b)'s inventory budget revised ≤ 16 000 → ≤ 18 100
 > chars on real corpus evidence — the ruled §8 path ("tightening or loosening on real corpus data is a
 > SPEC version bump, not silent drift"): six control mints (ADR-0210/0213/0214/0216/0219/0220, the
@@ -633,9 +635,11 @@ shape: edit ⇒ deliberate re-capture), budget ≤ 8 000 chars (the SPEC-R9 pack
 fleet inventory (`dogfoodInventory()`) composed at call time from the fleet's `{name}.md`
 descriptors via the ONE ADR-0004 parser — tag, one-line role, key attributes/enums — drift-gated
 against the descriptors (the ADR-0071/`prompt-drift` discipline) and NEVER byte-captured (a fleet
-edit updates the composed prompt without re-capturing any baseline), budget ≤ 18 400 chars
-(v0.8: revised from ≤ 18 100 — ADR-0223's Fill-by-Default `inline` attribute rows across the
-slice-0..2 flipped controls grew the inventory to a measured 18 179; v0.7: revised from ≤ 16 000 on real corpus evidence per §8 — the 2026-08-19 nine-ADR campaign's six
+edit updates the composed prompt without re-capturing any baseline), budget ≤ 18 600 chars
+(v0.8: revised from ≤ 18 100 on real corpus evidence per §8 — ADR-0223's Fill-by-Default `inline`
+attribute rows across the slice-0..2 flipped controls [measured 18 179] plus ADR-0224/GH #1429's
+`ui-service-card` control mint [measured 18 296 pre-slice-2] grew the descriptor-derived inventory;
+v0.7 revised from ≤ 16 000 on real corpus evidence per §8 — the 2026-08-19 nine-ADR campaign's six
 control mints [ADR-0210/0213/0214/0216/0219/0220] grew the descriptor-derived inventory to a measured
 17 958; evidence-revisable per §8, enforced by a standing test). The tags the SPEC-R12 bundle self-defines
 and the tags the inventory teaches MUST be SET-EQUAL (one standing test; the derive-from-one-source

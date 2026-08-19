@@ -1,0 +1,331 @@
+/* service-card.css — ui-service-card, the single-file component stylesheet (ADR-0003; ADR-0224). Two
+ * clearly-SECTIONED blocks, mirroring button.css/text-field.css/toast.css:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-service-card)` (specificity 0,0,0) declares the `--ui-service-card-*`
+ *       chain from the colour roles (`--md-sys-color-{family}-{role}`; the available/default state reads
+ *       the SUCCESS family) + the type matrix (`--md-sys-typescale-*` for title/description, the
+ *       ui-card-header `format='structured'` kicker-mono precedent for the path line) + the space ladder
+ *       + the control ramp (the action row's height, ADR-0224 cl.5's "control height" clause — this is
+ *       the pattern tier's one control-height row, geometry.md). `:where(ui-service-card:not([available]))`
+ *       repoints the whole chain to the muted/neutral roles — the plain reflected-attribute idiom
+ *       (button.css's own `[disabled]` shape); service-card.ts's file banner explains the one twist this
+ *       control needs to make the attribute trustworthy at every connect (a self-reflect guard — the
+ *       fleet's closed custom-state vocabulary, naming.md §6, stays untouched by this build).
+ *   [2] STYLES BLOCK — `@scope (ui-service-card)` consumes ONLY `--ui-service-card-*` (∪ the three
+ *       sanctioned fleet constants: focus-ring, motion, `--md-sys-control-line-height`). Geometry per
+ *       ADR-0223 (Fill by Default, adopted at ui-service-card's birth — ADR-0224 cl.5): the host is
+ *       BLOCK-level `grid`, no intrinsic width in the default state; `[inline]` flips to `inline-grid`
+ *       (R2's one opt-out) — no hug-state floor is needed (unlike an editable control's typing-width
+ *       floor, R3(b): the card's own content — title/path/description/action — already gives `inline-grid`
+ *       a meaningful shrink-to-fit width, so adding a min-inline-size here would be an out-of-role floor,
+ *       not a legitimate one). The accent edge is a component-owned `border-inline-start` band on the HOST
+ *       itself (ADR-0224 cl.3) — no separate DOM node. Anatomy: `[data-part='body']` (a flex column —
+ *       `[data-part='heading']` [dot + title] then the optional path/description, presence-driven by
+ *       JS DOM presence, never a `:has()` combinatorial template — service-card.ts adds/removes the
+ *       optional parts directly, so an absent part contributes literally nothing to the flex column, no
+ *       phantom gap) · the real native `<button data-part='action'>` (full-width grid column, but
+ *       `justify-self: start` so the pill/chip itself hugs its own content) · the optional
+ *       `[slot='menu']` position (top-right, presence-driven via `:has()` — the ONE fleet-standard
+ *       `:has()` leg this sheet needs, since the menu is genuinely author-composed and can arrive/depart
+ *       at any time via light-DOM mutation, unlike the JS-owned optional parts).
+ *
+ * No first-paint motion gate (the button.css "ready" custom-state pattern) — an availability flap is a
+ * real state change a consumer
+ * may want to see settle smoothly, so the accent/ink/action-colour transitions run unconditionally
+ * (reduced-motion zeroed, same as every other control) rather than being gated behind a first-paint guard
+ * this display primitive has no OTHER motion to bundle with.
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel; NEVER injected from
+ * service-card.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-service-card) declares --ui-service-card-* ════════════════ */
+
+:where(ui-service-card) {
+  /* Surface — a dark, rounded launch-card plane (the Figma intake's anatomy), unrelated to the
+     UIContainerElement elevation/brightness seam (`_surface/container.css`) — this is a display
+     primitive, not a container (ADR-0224 cl.1), so it seeds its own default plane directly (the
+     ui-toast/ui-card precedent: a surface-bearing leaf that is not itself a container). */
+  --ui-service-card-bg: var(--md-sys-color-neutral-surface-high);
+  --ui-service-card-radius: var(--md-sys-shape-corner-base);
+
+  /* The accent edge + status dot — SUCCESS family, available (the default). :not([available]) below
+     repoints the whole trio to the neutral family. */
+  --ui-service-card-accent: var(--md-sys-color-success);
+  --ui-service-card-accent-width: 0.25rem; /* a fixed geometry constant (the edge's own thickness), not a colour role */
+  --ui-service-card-dot-size: 0.5rem;
+
+  /* Title / path / description ink. Title mutes under :not([available]) (cl.3); path/description stay
+     on the same secondary plane regardless of availability (only the title + accent + action move). */
+  --ui-service-card-title-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-service-card-path-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-service-card-description-ink: var(--md-sys-color-neutral-on-surface-variant);
+
+  /* Type — title reads the title-medium row; description reads body-medium; path reads the SAME
+     kicker-medium + mono-typeface row the ui-card-header `format='structured'` kicker treatment uses
+     (card.css) — the fleet's one mono-kicker precedent, applied verbatim to a service path. */
+  --ui-service-card-title-size: var(--md-sys-typescale-title-medium-size);
+  --ui-service-card-title-weight: var(--md-sys-typescale-title-medium-weight);
+  --ui-service-card-title-line-height: var(--md-sys-typescale-title-medium-line-height);
+  --ui-service-card-path-font: var(--md-sys-typeface-mono);
+  --ui-service-card-path-size: var(--md-sys-typescale-kicker-medium-size);
+  --ui-service-card-path-weight: var(--md-sys-typescale-kicker-medium-weight);
+  --ui-service-card-path-line-height: var(--md-sys-typescale-kicker-medium-line-height);
+  --ui-service-card-path-tracking: var(--md-sys-typescale-kicker-medium-tracking);
+  --ui-service-card-description-size: var(--md-sys-typescale-body-medium-size);
+  --ui-service-card-description-line-height: var(--md-sys-typescale-body-medium-line-height);
+
+  /* Interior spacing — off the --md-sys-space ladder (density-responsive by the token chain itself, the
+     badge.css/description-list.css precedent — no local `* density` multiplier needed). */
+  --ui-service-card-pad-inline: var(--md-sys-space-md);
+  --ui-service-card-pad-block: var(--md-sys-space-md);
+  --ui-service-card-row-gap: var(--md-sys-space-xs); /* heading → path → description → action */
+  --ui-service-card-dot-gap: var(--md-sys-space-xs); /* dot ↔ title, inside the heading row */
+  --ui-service-card-menu-gap: var(--md-sys-space-sm); /* body ↔ the optional menu column */
+
+  /* The action row — takes the CONTROL height (ADR-0224 cl.5's "pattern tier" clause: the one
+     control-height row a pattern-tier surface owns), the button.css `sm` ramp (a trailing pill, not the
+     card's own full-height lever). */
+  --ui-service-card-action-height: var(--md-sys-height-sm);
+  --ui-service-card-action-font: var(--md-sys-font-sm);
+  --ui-service-card-action-gap: var(--md-sys-gap-sm); /* the → glyph ↔ label gap */
+  --ui-service-card-action-bg: var(--md-sys-color-success);
+  --ui-service-card-action-bg-hover: var(--md-sys-color-success-hover);
+  --ui-service-card-action-bg-active: var(--md-sys-color-success-active);
+  --ui-service-card-action-ink: var(--md-sys-color-success-on-success);
+}
+
+/* :not([available]) — the availability law's WHOLE colour repoint, in ONE cascade step (ADR-0224 cl.4):
+   the accent edge + dot mute to neutral, the title mutes, and the action's colour channel repoints to the
+   SAME muted-chip pairing button.css's own `[disabled]` rule uses (role-purity: no colour opinion is
+   invented here, the existing disabled-role pairing is reused verbatim). Declared LAST so it wins the
+   specificity-0 cascade (button.css's own "declared last" convention for its `[disabled]` block). The
+   attribute is trustworthy at every connect via service-card.ts's self-reflect guard (file banner there). */
+:where(ui-service-card:not([available])) {
+  --ui-service-card-accent: var(--md-sys-color-neutral-outline-variant);
+  --ui-service-card-title-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-service-card-action-bg: var(--md-sys-color-neutral-surface-high);
+  --ui-service-card-action-bg-hover: var(--md-sys-color-neutral-surface-high);
+  --ui-service-card-action-bg-active: var(--md-sys-color-neutral-surface-high);
+  --ui-service-card-action-ink: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-service-card) consumes ONLY --ui-service-card-* ════════════════ */
+
+@scope (ui-service-card) {
+  :scope {
+    /* FILL BY DEFAULT (ADR-0223 cl.1/2, adopted at birth — ADR-0224 cl.5): block-level `grid`, no
+       intrinsic width in the default state. */
+    display: grid;
+    grid-template-columns: 1fr; /* body — no menu column until one is actually present, below */
+    grid-template-rows: auto auto; /* body row, then the action row */
+    row-gap: var(--ui-service-card-row-gap);
+    box-sizing: border-box;
+
+    padding-inline: var(--ui-service-card-pad-inline);
+    padding-block: var(--ui-service-card-pad-block);
+
+    background: var(--ui-service-card-bg);
+    border-radius: var(--ui-service-card-radius);
+    /* The left accent edge (cl.3) — a component-owned border band, no separate DOM node. Colour-only
+       transition below (motion) — the geometry (the edge's own width) never animates. */
+    border-inline-start: var(--ui-service-card-accent-width) solid var(--ui-service-card-accent);
+  }
+
+  /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): flips display level to the inline-level
+     counterpart. No hug-state floor — see the file banner for why none is legitimate here. */
+  :scope[inline] {
+    display: inline-grid;
+  }
+
+  /* The optional [slot='menu'] column — presence-driven (the ONE `:has()` leg this sheet needs; the menu
+     is genuinely author-composed light DOM, unlike the JS-owned body/action parts). Top-right: column 2,
+     row 1 (the heading's own row), never spanning down into the action row. */
+  :scope:has(> [slot='menu']) {
+    grid-template-columns: 1fr auto;
+    column-gap: var(--ui-service-card-menu-gap);
+  }
+  :scope > [slot='menu'] {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  /* The body — a flex COLUMN (heading, then the optional path/description, in that order — service-card.ts
+     always inserts path right after heading and appends description last, so DOM order alone gives the
+     correct visual order with zero :has() combinatorics). min-inline-size:0 is the flex-ITEM unclamp
+     (ADR-0223 R3(c) — legitimate on an interior part, unrelated to the host-level fill law above) that
+     lets the text parts below actually shrink far enough to ellipsis. */
+  :scope > [data-part='body'] {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-service-card-row-gap);
+    min-inline-size: 0;
+  }
+
+  /* The heading row — the status dot beside the title, sharing one baseline-centered row. */
+  :scope > [data-part='body'] > [data-part='heading'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-service-card-dot-gap);
+    min-inline-size: 0;
+  }
+
+  /* The status dot (cl.3) — aria-hidden; a solid tinted circle. Status is NEVER conveyed by this alone
+     (ADR-0057) — the visually-hidden status-text part (below) carries the same fact as real text. */
+  :scope [data-part='status'] {
+    inline-size: var(--ui-service-card-dot-size);
+    block-size: var(--ui-service-card-dot-size);
+    border-radius: 50%;
+    background: var(--ui-service-card-accent);
+    flex-shrink: 0;
+  }
+
+  /* Visually-hidden but ANNOUNCED (ADR-0057 — the stat.ts delta-word technique verbatim): clipped from
+     the visual box via a 1px inset-clip, never `aria-hidden` — the direction/status word is real,
+     readable text for assistive tech, not decoration. */
+  :scope [data-part='status-text'] {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  :scope [data-part='title'] {
+    display: block;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--ui-service-card-title-size);
+    font-weight: var(--ui-service-card-title-weight);
+    line-height: var(--ui-service-card-title-line-height);
+    color: var(--ui-service-card-title-ink);
+  }
+
+  /* The path — rendered VERBATIM (cl.2), the fleet mono-kicker treatment (the ui-card-header
+     `format='structured'` precedent, applied here unconditionally since a service path IS always a code
+     token, never prose). Single line, ellipsis on overflow — never wraps (a long path scrolls off the
+     end, matching the title/description's own single-line law). */
+  :scope [data-part='path'] {
+    display: block;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--ui-service-card-path-font);
+    font-size: var(--ui-service-card-path-size);
+    font-weight: var(--ui-service-card-path-weight);
+    line-height: var(--ui-service-card-path-line-height);
+    letter-spacing: var(--ui-service-card-path-tracking);
+    color: var(--ui-service-card-path-ink);
+  }
+
+  /* The description — single-clamp with ellipsis (cl.2): nowrap + ellipsis is the one-line clamp (the
+     path part's own technique), never a multi-line -webkit-line-clamp (the ADR names ONE line). */
+  :scope [data-part='description'] {
+    display: block;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--ui-service-card-description-size);
+    line-height: var(--ui-service-card-description-line-height);
+    color: var(--ui-service-card-description-ink);
+  }
+
+  /* The action — a REAL native <button> (service-card.ts's own banner explains why: only a genuine
+     native element gets tab-order removal / the inert contract / forced-colors GrayText for free when
+     `.disabled` flips). Spans the full row (grid-column 1/-1) but `justify-self: start` keeps the
+     rendered PILL itself hugging its own content — a trailing chip, never a full-width bar. */
+  :scope > [data-part='action'] {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: start;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ui-service-card-action-gap);
+    box-sizing: border-box;
+
+    block-size: var(--ui-service-card-action-height);
+    padding-inline: calc(var(--ui-service-card-action-height) / 2);
+
+    font: inherit;
+    font-size: var(--ui-service-card-action-font);
+    line-height: var(--md-sys-control-line-height); /* the fleet single-line control standard — ADR-0036, one of the three sanctioned direct reads */
+
+    background: var(--ui-service-card-action-bg);
+    color: var(--ui-service-card-action-ink);
+    border: none;
+    border-radius: calc(var(--ui-service-card-action-height) / 2); /* pill radius = h/2, the button.css action-family precedent */
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  :scope > [data-part='action']:not(:disabled):hover {
+    background: var(--ui-service-card-action-bg-hover);
+  }
+  :scope > [data-part='action']:not(:disabled):active {
+    background: var(--ui-service-card-action-bg-active);
+  }
+  :scope > [data-part='action']:focus-visible {
+    /* The shared fleet ring (ADR-0009) — read directly, the sanctioned exception every control's focus
+       ring shares verbatim (button.css/text-field.css's own comment). */
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+  :scope > [data-part='action']:disabled {
+    cursor: default;
+    /* No pointer-events/aria-disabled gymnastics — a real native disabled <button> is ALREADY inert, out
+       of the tab order, and announced disabled by the platform (interaction-states.md §3's whole point). */
+  }
+
+  /* Motion — colour-paint only (accent edge / ink / action background), enumerated (never `transition:
+     all`), unconditional (no first-paint gate — see the file banner for why). Reduced-motion zeroed. */
+  :scope {
+    transition:
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+  }
+  :scope [data-part='title'],
+  :scope [data-part='status'],
+  :scope > [data-part='action'] {
+    transition:
+      color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope,
+    :scope [data-part='title'],
+    :scope [data-part='status'],
+    :scope > [data-part='action'] {
+      transition: none;
+    }
+  }
+
+  /* forced-colors (cl.6): the accent edge survives as a border, the dot GAINS a border (a solid
+     background-only circle would otherwise flatten to Canvas and vanish — the bar-chart fill lesson);
+     the disabled chip's GrayText comes free from the platform on the real native button (no rule needed
+     here at all — cl.6's own "free by clause 3's one-element identity"). */
+  @media (forced-colors: active) {
+    :scope {
+      border-inline-start-color: CanvasText;
+    }
+    :scope:not([available]) {
+      border-inline-start-color: GrayText;
+    }
+    :scope [data-part='status'] {
+      border: 1px solid CanvasText;
+    }
+    :scope:not([available]) [data-part='status'] {
+      border: 1px solid GrayText;
+    }
+  }
+}

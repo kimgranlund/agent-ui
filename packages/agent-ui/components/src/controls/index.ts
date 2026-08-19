@@ -163,6 +163,10 @@ export * from './attachment/attachment.ts' // FilePart-aligned file card, metada
 export * from './toast/toast.ts'           // transient notification card (LLD-C7)
 export * from './toast/toast-region.ts'    // toast's top-layer host, same-folder sibling (LLD-C8)
 
+// ADR-0224 (GH #1429) — the availability-stated service/agent launch card: a status-tinted left accent
+// edge + a bindable `available` boolean driving the whole availability posture by construction.
+export * from './service-card/service-card.ts'
+
 // M4 Phase 1 — the split primitive (ADR-0120 cl.2, app-surfaces-m4.lld.md LLD-C1): a Container/layout
 // control (tier: layout, sibling to ui-row/-column/-grid) — one folder, TWO real components (the
 // radio/radio-group precedent): ui-split (the N-pane resizable container) + ui-split-pane (the generic

@@ -137,11 +137,12 @@ export function readAttributes(fence: string): LocalAttribute[] {
 // AND ui-choice-group/ui-choice-card (ADR-0220/GH #1398) descriptors — the full 2026-08-19 nine-ADR
 // campaign wave; budget 18_100 (measured 17958 + headroom; SPEC-R13(b) budget line bumped in the same
 // change per genui-surface.spec.md §8 — a SPEC version bump, not silent drift).
-// 2026-08-19 (ADR-0223 slice 2, GH #1426): measured 18179 — the seven action/selection controls'
-// `inline` descriptor attribute rows (button/toggle/checkbox/radio/switch/pagination/calendar,
-// the Fill-by-Default sizing opt-out) ride into the descriptor-derived inventory on top of slice 1's
-// six; budget 18_400 (measured + headroom, GH #1209 format; evidence per SPEC §8, never silent drift).
-export const DOGFOOD_INVENTORY_CHAR_BUDGET = 18_400
+// 2026-08-19 (ADR-0223 slice 2, GH #1426 + ADR-0224/GH #1429, merged at the desk): the seven
+// action/selection controls' `inline` descriptor attribute rows (measured 18179) AND the
+// ui-service-card control mint (measured 18296 pre-slice-2) both ride the inventory; budget 18_600
+// (combined measured + headroom, GH #1209 format; evidence per SPEC §8 — genui-surface.spec.md v0.8
+// amendment, same change — never silent drift).
+export const DOGFOOD_INVENTORY_CHAR_BUDGET = 18_600
 
 /** One discovered control: its tag, a one-line role summary (the descriptor's own prose body, first
  *  sentence — never hand-written, so it can never drift from what the component's own docs say), the
