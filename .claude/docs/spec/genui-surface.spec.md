@@ -1,6 +1,11 @@
 # SPEC — GenUI surface (sandboxed free-form generative UI): wire · frame · bridge · producer
 
-> Status: proposed · v0.6 · 2026-07-28 · Layer: SPEC (execution contract)
+> Status: proposed · v0.7 · 2026-08-19 · Layer: SPEC (execution contract)
+> **v0.7 amendment (docs-only, 2026-08-19):** SPEC-R13(b)'s inventory budget revised ≤ 16 000 → ≤ 18 100
+> chars on real corpus evidence — the ruled §8 path ("tightening or loosening on real corpus data is a
+> SPEC version bump, not silent drift"): six control mints (ADR-0210/0213/0214/0216/0219/0220, the
+> 2026-08-19 campaign) grew the descriptor-derived inventory to a measured 17 958 chars. No other clause
+> changes.
 > **v0.6 amendment (docs-only, §12 below — GH #342 + GH #346, Kim's 2026-07-28 rulings):** SPEC-R13(b)'s
 > derivation clause is corrected on two counts, as ONE slice (the #346 code change is what makes the #342
 > wording true). #342: "via the ONE ADR-0004 parser" is UNSATISFIABLE — ADR-0137/ADR-0107's zero-dep fence
@@ -624,8 +629,10 @@ shape: edit ⇒ deliberate re-capture), budget ≤ 8 000 chars (the SPEC-R9 pack
 fleet inventory (`dogfoodInventory()`) composed at call time from the fleet's `{name}.md`
 descriptors via the ONE ADR-0004 parser — tag, one-line role, key attributes/enums — drift-gated
 against the descriptors (the ADR-0071/`prompt-drift` discipline) and NEVER byte-captured (a fleet
-edit updates the composed prompt without re-capturing any baseline), budget ≤ 16 000 chars
-(evidence-revisable per §8, enforced by a standing test). The tags the SPEC-R12 bundle self-defines
+edit updates the composed prompt without re-capturing any baseline), budget ≤ 18 100 chars
+(v0.7: revised from ≤ 16 000 on real corpus evidence per §8 — the 2026-08-19 nine-ADR campaign's six
+control mints [ADR-0210/0213/0214/0216/0219/0220] grew the descriptor-derived inventory to a measured
+17 958; evidence-revisable per §8, enforced by a standing test). The tags the SPEC-R12 bundle self-defines
 and the tags the inventory teaches MUST be SET-EQUAL (one standing test; the derive-from-one-source
 law — the prompt can never teach a component the frame doesn't define, or vice versa). Existing
 byte-pinned compositions are UNTOUCHED: mode-off composes zero bytes, so the baseline's four

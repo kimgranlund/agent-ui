@@ -51,6 +51,9 @@
 @import './controls/slider/slider.css';
 @import './controls/slider-multi/slider-multi.css';
 
+/* ui-rating (ADR-0216, GH #1395) — the star-value Range control. */
+@import './controls/rating/rating.css';
+
 /* Pattern controls — ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover):
  * the standalone segmented control. segment.css FIRST (the leaf, no dot to suppress — its own base layout +
  * focus ring), segmented-control.css SECOND (the host's compound selectors consume ui-segment by tag). */
@@ -97,12 +100,17 @@
  * always-shown min/max labels). Display-class, non-interactive, non-form-associated. */
 @import './controls/line-chart/line-chart.css';
 
+/* Chart family — ADR-0219: ui-pie-chart, the part-of-whole ring (donut default) or solid pie mark,
+ * lifting ADR-0107's pie fence. Display-class, non-interactive, non-form-associated. */
+@import './controls/pie-chart/pie-chart.css';
+
 /* Report family — Wave M1 (ADR-0111, report-family.lld.md LLD-C10): the native table, the metric tile,
  * and the compact-realm intent badge. All Display-class, non-interactive, non-form-associated leaves. */
 @import './controls/table/table.css';
 @import './controls/stat/stat.css';
 @import './controls/badge/badge.css';
 @import './controls/description-list/description-list.css'; /* ADR-0201 — the key–value receipt primitive */
+@import './controls/source-list/source-list.css'; /* ADR-0214 — the source-attribution aggregate leaf (GH #1394) */
 
 /* ADR-0163 cl.6 — ui-pagination, the fleet's first standalone page navigator (SPEC-R3): Pattern-class,
  * composes ui-button for every stop; no [size]/[scale] geometry row of its own. */
@@ -165,6 +173,10 @@
  * single-line (scale×size)→§1-row lookup text-field.css uses — see textarea.css's own header). */
 @import './controls/textarea/textarea.css';
 
+/* ADR-0210 (GH #1391) — ui-file-drop, the fleet's file-INPUT affordance: a Pattern-class dropzone/picker/
+ * chips composite (composes ui-button/ui-icon/ui-attachment, all already imported above). */
+@import './controls/file-drop/file-drop.css';
+
 /* genui-surface.spec.md SPEC-R3…R7 (D9) — ui-sandbox-frame, the GenUI containment host: one native
  * iframe + the fail-closed fallback affordance. Catalog-invisible by construction (SPEC-N1) — still a
  * fleet member, imported like any other control. */
@@ -182,6 +194,9 @@
  * pressed-state pill button (Control-band ramp; idle outlined chip → pressed tonal-primary fill). */
 @import './controls/toggle/toggle.css';
 
+/* ADR-0213 (GH #1393) — ui-suggestions, the one-shot follow-up/next-prompt chip set: compact-realm
+ * chip geometry (--md-sys-compact-lg) + the spent-set inertness paint (taken tonal fill, muted siblings). */
+@import './controls/suggestions/suggestions.css';
 /* ADR-0220 (GH #1368) — the `choice` family: ui-choice-group (the auto-fit card-grid selection
  * container) + ui-choice-card (the rich option unit — frame + non-color check-badge selected paint). */
 @import './controls/choice-group/choice-group.css';

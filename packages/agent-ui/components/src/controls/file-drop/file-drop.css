@@ -1,0 +1,193 @@
+/* file-drop.css — ui-file-drop, the single-file component stylesheet (ADR-0003 · ADR-0210).
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-file-drop)` (specificity 0,0,0) DECLARES the `--ui-file-drop-*` chain
+ *       from the colour roles (`--md-sys-color-{family}-{role}`) and the dimensional constants
+ *       (`--md-sys-space-*` for the Pattern-class shell, `--md-sys-font-md`/`--md-sys-icon-md` for the
+ *       hint line + decorative glyph, `--md-sys-shape-corner-base` for the entry-surface radius —
+ *       geometry.md's Entry-corner law, the SAME fleet referent card/modal use). No `[size]` axis: this
+ *       control carries no size attribute (ADR-0210 cl.2's table has none) — the browse/remove buttons
+ *       size themselves via their OWN `<ui-button size='sm'>` geometry.
+ *   [2] STYLES BLOCK — `@scope (ui-file-drop)` CONSUMES ONLY `--ui-file-drop-*` (∪ the sanctioned fleet
+ *       constants — focus-ring, motion). TKT-0066 item 5: never a direct `--md-sys-space-*`/
+ *       `--md-sys-shape-corner-base` read inside `@scope` — every dimensional constant is minted into its
+ *       own-chain token in [1] first. The host IS the whole dropzone (host-as-content, no control-created
+ *       wrapper around it) — a dashed-outline Pattern-class shell holding an icon+hint+browse row and a
+ *       wrapped row of committed-file chips.
+ *
+ * Standalone stylesheet — NOT injected from file-drop.ts (behaviour-only `.ts`, no runtime injection per
+ * plan §2). Linked via the component-styles barrel; the barrel @imports foundation roles FIRST.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-file-drop) declares --ui-file-drop-* ════════════════ */
+
+:where(ui-file-drop) {
+  /* ── Shell geometry — Pattern-class (geometry.md): the shell rides the space scale, minted own-chain
+     (TKT-0066 item 5 — @scope never reads --md-sys-space-* directly). ── */
+  --ui-file-drop-padding: var(--md-sys-space-lg);
+  --ui-file-drop-gap: var(--md-sys-space-md);
+  --ui-file-drop-row-gap: var(--md-sys-space-sm);
+  --ui-file-drop-radius: var(--md-sys-shape-corner-base); /* entry-surface radius, the card/modal referent */
+  --ui-file-drop-font: var(--md-sys-font-md);
+  --ui-file-drop-icon: var(--md-sys-icon-md);
+
+  /* ── Idle surface — a dashed-outline Container/surface (distinct from a solid-border entry field, the
+     visual grammar a drop TARGET wants). ── */
+  --ui-file-drop-bg: var(--md-sys-color-neutral-surface);
+  --ui-file-drop-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-file-drop-ink-muted: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-file-drop-outline: var(--md-sys-color-neutral-outline-variant);
+
+  /* ── Dragging (:state(dragging), the ui-split precedent reused — a distinct DOM subtree, no name
+     collision under :state()'s per-host scoping) — the primary-tinted active-target paint. ── */
+  --ui-file-drop-bg-dragging: var(--md-sys-color-primary-container-low);
+  --ui-file-drop-outline-dragging: var(--md-sys-color-primary-high);
+
+  /* ── user-invalid (ADR-0051) — appears only after the first interaction (blur/change). ── */
+  --ui-file-drop-outline-invalid: var(--md-sys-color-danger);
+
+  /* ── Disabled — own `disabled`/ancestor fieldset OR no intake seam registered (ADR-0210 cl.4.5). ── */
+  --ui-file-drop-bg-disabled: var(--md-sys-color-neutral-container-low);
+  --ui-file-drop-ink-disabled: var(--md-sys-color-neutral-low);
+
+  /* ── Committed-file chips — a compact pill row (the compact realm, geometry.md), NOT the control-band
+     ramp: each chip wraps a composed <ui-attachment> (Display-class, its own sizing) + a remove button. ── */
+  --ui-file-drop-chip-bg: var(--md-sys-color-neutral-surface-high);
+  --ui-file-drop-chip-radius: calc(var(--ui-file-drop-radius) - var(--md-sys-space-xs)); /* nested-radius, ADR-0018 */
+  --ui-file-drop-chip-gap: var(--md-sys-space-xs);
+  --ui-file-drop-chip-padding-inline: var(--md-sys-space-sm);
+  --ui-file-drop-chip-padding-block: var(--md-sys-space-xs);
+  --ui-file-drop-unavailable-ink: var(--md-sys-color-danger);
+}
+
+/* ── disabled → muted neutral roles (own OR ancestor fieldset OR no intake seam — file-drop.ts). ──────── */
+
+:where(ui-file-drop:is([disabled], :state(disabled))) {
+  --ui-file-drop-bg: var(--ui-file-drop-bg-disabled);
+  --ui-file-drop-ink: var(--ui-file-drop-ink-disabled);
+  --ui-file-drop-ink-muted: var(--ui-file-drop-ink-disabled);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-file-drop) consumes ONLY --ui-file-drop-* ════════════════ */
+
+@scope (ui-file-drop) {
+  :scope {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ui-file-drop-gap);
+    box-sizing: border-box;
+    inline-size: 100%;
+    padding: var(--ui-file-drop-padding);
+
+    background-color: var(--ui-file-drop-bg);
+    color: var(--ui-file-drop-ink);
+    border: 2px dashed var(--ui-file-drop-outline);
+    border-radius: var(--ui-file-drop-radius);
+    font-size: var(--ui-file-drop-font);
+    text-align: center;
+
+    outline: none; /* :focus-visible below supplies the fleet ring — this is a real paste-target focus stop */
+    cursor: default;
+
+    transition:
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :scope {
+      transition: none;
+    }
+  }
+
+  :scope:focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  :scope > [data-part='icon'] {
+    inline-size: var(--ui-file-drop-icon);
+    block-size: var(--ui-file-drop-icon);
+    color: var(--ui-file-drop-ink-muted);
+  }
+
+  :scope > [data-part='hint'] {
+    color: var(--ui-file-drop-ink-muted);
+  }
+
+  /* ── Dragging — the active-target paint (:state(dragging), the ui-split precedent). ─────────────────── */
+  :scope:state(dragging) {
+    background-color: var(--ui-file-drop-bg-dragging);
+    border-color: var(--ui-file-drop-outline-dragging);
+    border-style: solid;
+  }
+
+  /* ── user-invalid (ADR-0051) — the danger outline, appearing only AFTER the first interaction. ──────── */
+  :scope:state(user-invalid) {
+    border-color: var(--ui-file-drop-outline-invalid);
+  }
+
+  /* ── Disabled — the whole control is pointer-inert (own/ancestor/unwired-seam, file-drop.ts). ───────── */
+  :scope:is([disabled], :state(disabled)) {
+    cursor: default;
+    pointer-events: none;
+  }
+
+  /* ── Committed-file chips row. ────────────────────────────────────────────────────────────────────── */
+  :scope > [data-part='chips'] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ui-file-drop-row-gap);
+    inline-size: 100%;
+  }
+
+  :scope > [data-part='chips']:empty {
+    display: none; /* no phantom gap when nothing is committed yet */
+  }
+
+  :scope [data-part='chip'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-file-drop-chip-gap);
+    padding-inline: var(--ui-file-drop-chip-padding-inline);
+    padding-block: var(--ui-file-drop-chip-padding-block);
+    background-color: var(--ui-file-drop-chip-bg);
+    border-radius: var(--ui-file-drop-chip-radius);
+    pointer-events: auto; /* chips stay interactive even while the SHELL'S OWN pointer-events are cut (n/a — disabled cuts the whole host) */
+  }
+
+  :scope [data-part='unavailable-note'] {
+    color: var(--ui-file-drop-unavailable-ink);
+    font-size: calc(var(--ui-file-drop-font) * 0.85);
+  }
+
+  :scope [data-part='chip'][data-unavailable] {
+    opacity: 0.7;
+  }
+
+  /* ── forced-colors (WHCM) — the dashed outline + text stay visible without relying on hue alone. ────── */
+
+  @media (forced-colors: active) {
+    :scope {
+      background-color: Canvas;
+      color: CanvasText;
+      border-color: CanvasText;
+      forced-color-adjust: none;
+    }
+
+    :scope:state(dragging) {
+      background-color: Canvas;
+      border-color: Highlight;
+      forced-color-adjust: none;
+    }
+
+    :scope [data-part='chip'] {
+      background-color: Canvas;
+      border: 1px solid CanvasText;
+      forced-color-adjust: none;
+    }
+  }
+}

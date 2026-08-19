@@ -187,7 +187,14 @@ const targets = [
   // are the two native-player controls, thin by construction — no custom chrome). Rides the SAME
   // reviewed-weight re-base class Kim ruled twice this same night (ui-image +380 B, stat-ring +7 B);
   // flagged for morning sign-off, not silently absorbed. Same law: a CHECKPOINT, not a ratchet.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 59.5 * KB],
+  // RE-BASED 2026-08-19 (ADR-0216/GH #1395, the CONTROL-MINT half of the rating build wave — an
+  // UNATTENDED build dispatch measured this, NOT a live Kim ruling; flagged for confirmation, the
+  // GH #1208 precedent's wording): 59.5 KB -> 61 KB (62464 B gz) -- measured 61794 B gz after the
+  // ui-rating mint (a THIRD UIRangeElement leaf: the own-reimplemented normaliser/ARIA-value/geometry/
+  // keyboard/focus-blur wiring `ownsValueModel()=false` requires, the two-row owned-SVG star mark
+  // builder, and the readonly write-path gate — 696 B gz marginal over the shared foundation per the
+  // per-control row below). ~670 B stated headroom. Same law: a CHECKPOINT, not a ratchet.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 61 * KB],
   // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
   // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
   // `./markdown`, `./editor`) is not the one exception.

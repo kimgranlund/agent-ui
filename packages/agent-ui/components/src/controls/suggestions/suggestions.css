@@ -1,0 +1,168 @@
+/* suggestions.css — ui-suggestions, the one-shot follow-up/next-prompt chip set (ADR-0213).
+ *
+ * Two sectioned blocks (ADR-0003):
+ *   [1] TOKEN BLOCK — `:where(ui-suggestions)` (specificity 0,0,0) declares every `--ui-suggestions-*`
+ *       from the colour roles (`--md-sys-color-{family}-{role}`) and the DIMENSIONAL ramp — geometry.md's
+ *       "compact realm" list names `chip` alongside checkbox/switch/radio/tag/badge (geometry.md:139):
+ *       the box uses `--md-sys-compact-lg` (never `h/2` — ADR-0213 Context fact 2's own words, "a
+ *       suggestion's visual is deliberately lighter [than Button] — the compact chip"), and the pad uses
+ *       the compact-realm law `2px + box·ratio·density` (the `badge.css` precedent, same 0.375 ratio).
+ *       The TAKEN chip's tonal fill reuses the fleet's established "primary-container ON state" pairing
+ *       (`toggle.css`'s `[pressed]` block / `segmented-control.css`'s moving-fill ink) verbatim.
+ *   [2] STYLES BLOCK — `@scope (ui-suggestions)` consumes ONLY `--ui-suggestions-*` + the sanctioned
+ *       fleet constants (focus-ring, motion, `--md-sys-control-line-height` — component-standards' own
+ *       direct-read allowlist; styling-gates.test.ts only bans `--md-sys-font-*`/`--md-sys-space-*`/
+ *       `--md-sys-shape-corner-base` directly, but every OTHER dimensional/color read here is tunneled
+ *       through `--ui-suggestions-*` regardless, per the broader `component-standards` law).
+ *
+ * Chips are real, stamped `<button type="button" data-part="chip">` (suggestions.ts) — `all: unset`
+ * strips native UA button chrome (the `table.css` sort-button reset precedent) so the compact-pill look
+ * is entirely this file's own, while keeping the platform's native focus/keyboard/`:disabled` machinery.
+ * The taken chip is marked (`[data-taken]`) but the WHOLE set turns inert together once spent — every
+ * chip carries a real `disabled` attribute (suggestions.ts), so `:disabled` styling covers both the
+ * taken chip and its untaken siblings; `[data-taken]` wins the colour repoint via source order.
+ *
+ * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from suggestions.ts
+ * (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-suggestions) declares --ui-suggestions-* ════════════════ */
+
+:where(ui-suggestions) {
+  /* Compact-realm chip box (geometry.md's compact realm names "chip" directly) — v1 ships one register,
+     no [size] attribute (the badge.css "no [size] in v1" precedent; ADR-0213 names no size axis). */
+  --ui-suggestions-chip-height: var(--md-sys-compact-lg);
+  --ui-suggestions-chip-font: var(--md-sys-font-sm);
+  --ui-suggestions-chip-pad: calc(2px + var(--ui-suggestions-chip-height) * 0.375 * var(--md-sys-density, 1));
+  --ui-suggestions-chip-radius: calc(var(--ui-suggestions-chip-height) / 2); /* full pill */
+
+  /* Row rhythm — the set wraps as a flex row; both axes ride the same density-responsive gap token. */
+  --ui-suggestions-row-gap: var(--md-sys-gap-sm);
+  --ui-suggestions-col-gap: var(--md-sys-gap-sm);
+
+  /* Live/untaken idle — a bordered neutral pill, deliberately lighter than Button's solid fill (ADR-0213
+     Context fact 2). Hover/active wash toward primary — a light hint that tapping commits the set. */
+  --ui-suggestions-chip-bg: transparent;
+  --ui-suggestions-chip-bg-hover: var(--md-sys-color-primary-container-low);
+  --ui-suggestions-chip-bg-active: var(--md-sys-color-primary-container);
+  --ui-suggestions-chip-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-suggestions-chip-border: var(--md-sys-color-neutral-outline-variant);
+
+  /* Taken (marked) — the fleet's tonal "ON state" pairing (toggle.css `[pressed]` / segmented-control.css
+     moving-fill ink), reused verbatim: primary-container fill + the -high ink role, no border. */
+  --ui-suggestions-chip-bg-taken: var(--md-sys-color-primary-container);
+  --ui-suggestions-chip-ink-taken: var(--md-sys-color-primary-high);
+}
+
+/* ═══════════ [2] STYLES BLOCK — @scope (ui-suggestions) consumes ONLY --ui-suggestions-* ═══════════ */
+
+@scope (ui-suggestions) {
+  :scope {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    box-sizing: border-box;
+    row-gap: var(--ui-suggestions-row-gap);
+    column-gap: var(--ui-suggestions-col-gap);
+  }
+
+  /* GH #665 class (button.css precedent) — an unconditional `display` repoints `[hidden]` for free. */
+  :scope:is([hidden]) {
+    display: none;
+  }
+
+  /* The one-shot law's CSS half (ADR-0213 cl.3) — the SPENT host is pointer-inert, matching the fleet
+     `[disabled]` convention (ADR-0008); each chip is ALSO natively `disabled` (belt + suspenders). */
+  :scope:is([disabled]) {
+    pointer-events: none;
+  }
+
+  [data-part='chip'] {
+    all: unset; /* strip native <button> UA chrome — the table.css sort-button reset precedent */
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    block-size: var(--ui-suggestions-chip-height);
+    padding-inline: var(--ui-suggestions-chip-pad);
+    padding-block: 0; /* the frame law — block-size is the vertical lever, never block-padding */
+    border-radius: var(--ui-suggestions-chip-radius);
+    border: 1px solid var(--ui-suggestions-chip-border);
+    background: var(--ui-suggestions-chip-bg);
+    color: var(--ui-suggestions-chip-ink);
+    font-size: var(--ui-suggestions-chip-font);
+    line-height: var(--md-sys-control-line-height); /* single-line control standard, ADR-0036 */
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  /* Motion (interaction-states standard) — gated behind :state(ready), set by suggestions.ts ONE FRAME
+     PAST first paint (button.ts precedent): the upgrade/first-paint styling snaps in, only later
+     hover/active/taken repaints animate. */
+  :scope:state(ready) [data-part='chip'] {
+    transition:
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope:state(ready) [data-part='chip'] {
+      transition: none; /* accessibility (non-negotiable) */
+    }
+  }
+
+  [data-part='chip']:not(:disabled):hover {
+    background: var(--ui-suggestions-chip-bg-hover);
+  }
+  [data-part='chip']:not(:disabled):active {
+    background: var(--ui-suggestions-chip-bg-active);
+  }
+
+  /* The shared fleet focus ring (ADR-0009) — :focus-visible only (keyboard, never a mouse click); a real
+     <button> gets this natively focusable, no tabbable trait needed. */
+  [data-part='chip']:focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  /* The taken chip — marked, stays visible even once spent (never removed; ADR-0213's own "Alternatives
+     considered": the history record must show what was offered AND taken). Wins over the plain
+     :disabled muting below via source order. */
+  [data-part='chip'][data-taken] {
+    background: var(--ui-suggestions-chip-bg-taken);
+    color: var(--ui-suggestions-chip-ink-taken);
+    border-color: transparent;
+  }
+
+  /* Untaken siblings once the set is spent — muted (ADR-0213 cl.3: "the untaken siblings render muted
+     and inert"). The taken chip is excluded (its own rule above already repainted it; muting it too
+     would fight the "stays visible and marked" law). */
+  [data-part='chip']:disabled:not([data-taken]) {
+    opacity: 0.5;
+  }
+
+  [data-part='chip']:disabled {
+    cursor: not-allowed;
+  }
+
+  /* Forced colors (WHCM) — every chip is real text on a real (bordered or filled) box; the taken chip
+     inverts to Highlight/HighlightText (the segmented-control.css moving-fill precedent), disabled
+     siblings step to GrayText (the platform's own disabled-text convention). */
+  @media (forced-colors: active) {
+    [data-part='chip'] {
+      forced-color-adjust: none;
+      background: Canvas;
+      border-color: ButtonText;
+      color: ButtonText;
+    }
+    [data-part='chip'][data-taken] {
+      background: Highlight;
+      border-color: Highlight;
+      color: HighlightText;
+    }
+    [data-part='chip']:disabled:not([data-taken]) {
+      border-color: GrayText;
+      color: GrayText;
+    }
+  }
+}

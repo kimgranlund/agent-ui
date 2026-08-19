@@ -177,6 +177,14 @@
       "section": "Components"
     },
     {
+      "name": "File Drop",
+      "tag": "ui-file-drop",
+      "url": "./file-drop-doc.html",
+      "description": "ui-file-drop is the fleet's file-input affordance (extends UIFormElement, ADR-0210 — the ADR-0112 cl.1 fence opened) — a dropzone + picker button + committed-f…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Form Popover",
       "tag": "ui-form-popover",
       "url": "./form-popover-doc.html",
@@ -289,6 +297,14 @@
       "section": "Components"
     },
     {
+      "name": "Pie Chart",
+      "tag": "ui-pie-chart",
+      "url": "./pie-chart-doc.html",
+      "description": "A part-of-whole ring (donut, default) or solid pie chart with a printed-percent key list, identity carried by order + label + percent, never hue alone.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Popover",
       "tag": "ui-popover",
       "url": "./popover-doc.html",
@@ -325,6 +341,14 @@
       "tag": "ui-ramp",
       "url": "./ramp-doc.html",
       "description": "An ordered strip of color cells, each labeled with real accessible text, showing a tonal or palette series.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Rating",
+      "tag": "ui-rating",
+      "url": "./rating-doc.html",
+      "description": "ui-rating is a FACE form-associated Indicator-class Range control (extends UIRangeElement → UIFormElement, ADR-0042/ADR-0216) that carries a numeric value with…",
       "level": "L1",
       "section": "Components"
     },
@@ -385,6 +409,14 @@
       "section": "Components"
     },
     {
+      "name": "Source List",
+      "tag": "ui-source-list",
+      "url": "./source-list-doc.html",
+      "description": "Source attribution as one aggregate leaf — a numbered list of {href, title, snippet?} sources, index markers assigned by array position, each entry's href gated by the fleet's safe-href scheme allowlist.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Sparkline",
       "tag": "ui-sparkline",
       "url": "./sparkline-doc.html",
@@ -421,6 +453,14 @@
       "tag": "ui-status-stream",
       "url": "./status-stream-doc.html",
       "description": "A live status strip that streams work-in-progress entries and tail-follows the newest arrival.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Suggestions",
+      "tag": "ui-suggestions",
+      "url": "./suggestions-doc.html",
+      "description": "ui-suggestions is the one-shot follow-up/next-prompt chip set (ADR-0213, GH #1393) — a Pattern-class leaf that renders suggestions (a bindable array of {label,…",
       "level": "L1",
       "section": "Components"
     },

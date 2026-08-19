@@ -77,6 +77,7 @@
 - [ui-segmented-control](./segmented-control-doc.html): joined-button single-select with one shared animated indicator; [demo](./segmented-control-demo.html).
 - [ui-slider](./slider-doc.html): the single-value range control on the compact-realm rail; [demo](./slider-demo.html).
 - [ui-slider-multi](./slider-multi-doc.html): the two-thumb range (valueLo/valueHi) on the shared rail; [demo](./slider-multi-demo.html).
+- [ui-rating](./rating-doc.html): the star-value range control — an owned inline-SVG mark, fraction-accurate display, clamp/snapped input; [demo](./rating-demo.html).
 
 ## Components — overlays & selection
 
@@ -114,10 +115,12 @@
 - [ui-table](./table-doc.html): the data table — a real native `<table>` from `columns` + record `rows`, number columns end-aligned and Intl-formatted, scroll-preserving updates; widened in place (ADR-0163) with opt-in row selection, per-column sort, control-owned filter/search, and pagination — all default off, byte-identical to the display-only baseline at defaults; [demo](./table-demo.html).
 - [ui-stat](./stat-doc.html): the label/value/delta/caption metric tile — delta direction carried as glyph + sign + text, never color alone; [demo](./stat-demo.html).
 - [ui-description-list](./description-list-doc.html): the key–value receipt primitive — rows as hardened data, label secondary + value adjacent, a valueless field omitted by construction (ADR-0201); [demo](./description-list-demo.html).
+- [ui-source-list](./source-list-doc.html): the source-attribution aggregate leaf — a numbered list of {href, title, snippet?} sources, positional index markers, each entry's href gated by the fleet safe-href scheme allowlist (ADR-0214).
 - [ui-badge](./badge-doc.html): the compact status/tag pill — bindable `intent` enum with a component-drawn per-intent glyph; [demo](./badge-demo.html).
 - [ui-sparkline](./sparkline-doc.html): the inline trend line over a bound numeric series; [demo](./sparkline-demo.html).
 - [ui-bar-chart](./bar-chart-doc.html): magnitude comparison bars, including diverging negative values; [demo](./bar-chart-demo.html).
 - [ui-line-chart](./line-chart-doc.html): the fleet's first axis-bearing chart — a value-range baseline (zero-line or value floor) + always-shown min/max labels, single-series line/area; [demo](./line-chart-demo.html).
+- [ui-pie-chart](./pie-chart-doc.html): the part-of-whole ring (donut, default) or solid pie — a printed-percent key list carries identity by order + label + percent, never hue alone; [demo](./pie-chart-demo.html).
 - [ui-swatch](./swatch-doc.html): one color value rendered AS color — bounded bordered box + label + printed value; the browser is the only color engine; a `--var` value resolves live in place; [demo](./swatch-demo.html).
 - [ui-ramp](./ramp-doc.html): an ordered color series as a strip of swatch cells — tonal progressions, physically LTR in every locale; order is the content; [demo](./ramp-demo.html).
 - [ui-ladder](./ladder-doc.html): labeled dimensional tiers, each magnitude drawn as a literal-length bar beside its printed value — degrade the mark, never drop the datum; [demo](./ladder-demo.html).
@@ -149,6 +152,8 @@
 - [ui-tabs](./tabs-doc.html): the tablist pattern — roving focus, panel switching; [demo](./tabs-demo.html).
 - [ui-toolbar](./toolbar-doc.html): the Pattern-class action bar — role=toolbar + roving focus decoupled from selection, posture via elevation/brightness (no posture prop); [demo](./toolbar-demo.html).
 - [ui-pagination](./pagination-doc.html): the standalone page navigator — previous/next + a fixed-window page-number list with ellipsis, composing ui-button for every stop; `pages < 2` renders nothing; consumed internally by ui-table's `page-size`; [demo](./pagination-demo.html).
+- [ui-suggestions](./suggestions-doc.html): the one-shot follow-up/next-prompt chip set — `suggestions` renders as tappable chips, a tap commits its value into `selected` and the WHOLE set renders spent (every chip inert, the taken one still visible + marked); not form-associated; [demo](./suggestions-demo.html).
+- [ui-file-drop](./file-drop-doc.html): the fleet's file-input affordance — a host-mediated HANDLE dropzone/picker/chips composite (bytes never ride the wire; the host's intake mints descriptors); disabled until a host wires intake; [demo](./file-drop-demo.html).
 - [Layout primitives overview](./layout-overview.html): row, column, list, grid — gap-driven, no control heights; individual pages: [row](./row-doc.html), [column](./column-doc.html), [list](./list-doc.html), [grid](./grid-doc.html); demos: [row demo](./row-demo.html), [column demo](./column-demo.html), [list demo](./list-demo.html), [grid demo](./grid-demo.html).
 - [Surface × layout matrix](./layout-permutations.html): every container surface crossed with every layout primitive.
 
