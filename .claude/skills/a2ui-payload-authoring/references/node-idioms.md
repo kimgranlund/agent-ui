@@ -132,6 +132,29 @@ Real: `examples/patterns.ts:119-134` (wizard).
 `catalog.json:174-183`. `value: { prop:"open", event:"toggle" }`, `open` bindable, `persistent` (boolean),
 `elevation`/`brightness`, `children:"ChildList"`. Bind `open` to a data path to drive visibility from the model.
 
+## Drill / DrillPanel — N-level drill-down, one panel visible at a time
+GH #1353 catalog row (ADR-0195, GH #954). Drill: `path` bindable (`string[]`, the FULL chain from the root
+panel's key through the current leaf), `children:"ChildList"` of `DrillPanel`. **No `value` mark** — `path`
+is bindable ONE-WAY (data→control) only; neither controlled nor uncontrolled mode ever writes the resolved
+position back onto the `path` accessor, so there is nothing a commit-back could safely read (see the
+`drillFactory` doc comment, `catalog/default/factories.ts`, for the full empirical finding). Advance the
+position by re-emitting `updateDataModel` against the bound path on your NEXT turn — do not expect a client
+click inside an emitted Drill to write anything back into the data model except via the control's own Back
+button (which needs no binding at all). DrillPanel: `key`/`parent` are structural identity (NOT bindable —
+set once, like `MenuItem.value`); `heading` is bindable display text (like `MenuItem.label`).
+**Drill-forward triggers are not catalog-reachable** — the fleet control's own `data-role="drill-trigger"`
+authoring convention has no wire equivalent this pass, so compose a Drill by setting `path` to the level you
+want shown; you cannot emit a clickable row that drills the user forward on its own.
+```json
+{ "id": "d1", "component": "Drill", "path": { "path": "/settings/path" },
+  "children": ["p_root", "p_appearance"] },
+{ "id": "p_root", "component": "DrillPanel", "key": "root", "parent": "", "heading": "Settings", "children": ["p_r1"] },
+{ "id": "p_r1", "component": "Text", "text": "Appearance" },
+{ "id": "p_appearance", "component": "DrillPanel", "key": "appearance", "parent": "root", "heading": "Appearance", "children": ["p_a1"] },
+{ "id": "p_a1", "component": "Text", "text": "Theme, density, and accent color." }
+```
+Real: `examples/catalog-frontier.ts` (`frontier-drill-settings`).
+
 ---
 
 ## Catalog functions (for `checks` and `callFunction`)

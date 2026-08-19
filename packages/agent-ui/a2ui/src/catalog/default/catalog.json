@@ -727,6 +727,22 @@
         "format": { "type": { "type": "string", "enum": ["hex", "oklch"] }, "mapsTo": "format" }
       },
       "value": { "prop": "value", "event": "change" }
+    },
+
+    "Drill": {
+      "properties": {
+        "path": { "type": { "type": "array", "items": { "type": "string" } }, "bindable": true, "mapsTo": "path" }
+      },
+      "children": "ChildList"
+    },
+
+    "DrillPanel": {
+      "properties": {
+        "key": { "type": { "type": "string" }, "mapsTo": "key" },
+        "parent": { "type": { "type": "string" }, "mapsTo": "parent" },
+        "heading": { "type": { "type": "string" }, "bindable": true, "mapsTo": "heading" }
+      },
+      "children": "ChildList"
     }
   },
 

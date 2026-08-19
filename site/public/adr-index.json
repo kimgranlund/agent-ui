@@ -1447,5 +1447,12 @@
     "description": "External Claude-skill repos as opt-in pack-library sources: a dev-time import CLI snapshots skills/*/SKILL.md into a provenance-stamped skill-pack file, the ad…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0211",
+    "url": "./adr-index.html#adr-0211",
+    "description": "Drill/DrillPanel catalog wire-mark shape: forward-only bindable path, no value mark (no readback accessor exists), panel identity via structural key/parent, dr…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

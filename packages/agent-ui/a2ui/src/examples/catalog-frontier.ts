@@ -11,6 +11,10 @@
 //
 // Frontier 11 (ADR-0205, GH #1207) — `LineChart`, the fleet's first axis-bearing chart, lands its catalog
 // row IN THE SAME WAVE it ships (cl.8), so this seed closes its coverage gap the moment that row exists.
+//
+// Frontier 14 (GH #1353, ADR-0195 GH #954) — `Drill`/`DrillPanel`, the N-level drill-down panel
+// container, mints its catalog row here (Kim ruling 2026-08-19), draining that ADR's TEMPORARY
+// allowlist seed.
 
 import type { ExampleSeed } from './types.ts'
 
@@ -720,4 +724,48 @@ export const mediaTourSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed]
+const DRILL_SETTINGS_ID = 'frontier-drill-settings'
+/** Frontier 14 (GH #1353, ADR-0195 GH #954 — Kim ruling 2026-08-19: "Drill is agent-emittable — mint the
+ *  row"): the "settings sections on a narrow surface" idiom the issue's own gap analysis names — a
+ *  Drill container with a root menu panel and one leaf panel, `path` bound one-way (data→control) to
+ *  reflect which level is showing. No commit-back exists (`drillFactory`'s own Fork D1 — neither
+ *  controlled nor uncontrolled mode ever writes the resolved position back onto `path`), and no
+ *  drill-forward trigger is catalog-reachable (Fork D2) — this seed shows Drill exactly as it is today: an
+ *  agent renders (and re-renders, turn over turn) a fixed level, it does not compose a click-driven nav
+ *  the client can advance on its own. */
+export const drillSettingsSeed: ExampleSeed = {
+  name: 'frontier-drill-settings',
+  description: 'A Settings drill-down: a root panel listing Appearance/Notifications, with the Appearance leaf currently active — path reflects the current level (bound one-way; Drill carries no two-way value mark, GH #1353 Fork D1).',
+  promptText: 'Show a settings drill-down with Appearance and Notifications sections, currently viewing Appearance.',
+  surfaceId: DRILL_SETTINGS_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: DRILL_SETTINGS_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: DRILL_SETTINGS_ID,
+        value: { settings: { path: ['root', 'appearance'] } },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: DRILL_SETTINGS_ID,
+        components: [
+          { id: 'root', component: 'Drill', path: { path: '/settings/path' }, children: ['p_root', 'p_appearance', 'p_notifications'] },
+          { id: 'p_root', component: 'DrillPanel', key: 'root', parent: '', heading: 'Settings', children: ['p_r1', 'p_r2'] },
+          { id: 'p_r1', component: 'Text', variant: 'body', text: 'Appearance' },
+          { id: 'p_r2', component: 'Text', variant: 'body', text: 'Notifications' },
+          { id: 'p_appearance', component: 'DrillPanel', key: 'appearance', parent: 'root', heading: 'Appearance', children: ['p_a1'] },
+          { id: 'p_a1', component: 'Text', variant: 'body', text: 'Theme, density, and accent color.' },
+          { id: 'p_notifications', component: 'DrillPanel', key: 'notifications', parent: 'root', heading: 'Notifications', children: ['p_n1'] },
+          { id: 'p_n1', component: 'Text', variant: 'body', text: 'Email digests and push alerts.' },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed]
