@@ -210,7 +210,9 @@ describe('site coverage — every shipped component has its required per-tier pa
       // "intrinsic structural sizing", no [size]/[scale] control-band row); its {doc} page is required below.
       // + ui-line-chart (GH #1207/ADR-0205) — the fleet's first axis-bearing chart (a value-range baseline +
       // always-shown min/max labels, single-series); parked in KNOWN_UNDOCUMENTED above.
-      ['attachment', 'audio', 'badge', 'bar-chart', 'code', 'description-list', 'icon', 'image', 'ladder', 'line-chart', 'progress', 'ramp', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text', 'video'],
+      // + ui-source-list (ADR-0214, GH #1394) — the source-attribution aggregate leaf, Display class like
+      // ui-description-list (no events, no geometry row, not form-associated); its {doc} page required below.
+      ['attachment', 'audio', 'badge', 'bar-chart', 'code', 'description-list', 'icon', 'image', 'ladder', 'line-chart', 'progress', 'ramp', 'source-list', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text', 'video'],
     )
     // Wave 1 Indicator family (checkbox, switch, radio, radio-group) + ui-segment (ADR-0095 clause 3 —
     // the SAME real ancestor, UIIndicatorElement, as ui-radio) + the Wave M1 feed family (ADR-0112): ui-avatar
