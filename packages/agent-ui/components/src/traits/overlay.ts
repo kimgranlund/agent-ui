@@ -399,6 +399,11 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
   // top of every `startPositioning()` call — the enhanced path stays the default on the NEXT open
   // (progressive enhancement, not a permanent downgrade). `stopPositioning()` reads this flag so the
   // fallback's scroll/resize listeners get torn down correctly even though `anchorName` is still set.
+  // Benign interaction, recorded (code-review 2026-08-19): during a fallback cycle the popup keeps its
+  // inline position-anchor + position-try-fallbacks; if the anchor becomes resolvable mid-cycle and the
+  // JS-placed popup momentarily overflows, a @position-try option's anchor() insets can outrank the JS
+  // path's inline px insets — the outcome is a CORRECT anchored position (self-correcting), but the two
+  // positioners can alternate ownership within that one cycle.
   let usingJsFallback = false
 
   // ── Positioning (LLD-C3) ─────────────────────────────────────────────────────────────────────

@@ -34,6 +34,11 @@ import type { OverlayHandle, OverlayOptions } from './overlay.ts'
 //   [6] the ADR-0101 announce contract is unchanged by path choice (open/close/toggle discrimination
 //       still holds on the enhanced path)
 //   [7] the GH #1339 IACVT guard — a popup with no box (its own ancestor `display:none`, the exact
+// Residual sub-case, recorded (code-review 2026-08-19): these probes keep the ANCHOR visible. In the
+// real FormPopover shape the anchor is ALSO boxless at open — the fallback's position() then reads a
+// zero rect and parks the popup at ~(0,4) until the first scroll/resize re-derivation (the trait has no
+// reveal hook). Expected-and-known, not covered by these probes; a reveal re-derivation hook is the
+// builder-optional follow-up named on GH #1339.
 //       FormPopover repro shape) makes the enhanced path fall back to the JS path for that open
 //       cycle, correctly anchored once revealed; a later reopen lands back on the enhanced path.
 //       Two other forcing mechanisms were tried first and did NOT reproduce the failure signature —
