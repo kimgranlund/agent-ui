@@ -65,8 +65,12 @@ shard.
   Vite's fs-allow denies `?raw` modules. Give the worktree its OWN `node_modules` — but by
   SYMLINK, not install (Kim ruling 2026-08-20, the load-108 incident: seven parallel lane
   installs + Spotlight indexing the churn saturated the host): lockfile unchanged vs origin/main
-  ⇒ `ln -s <repo-root>/node_modules node_modules`; lockfile changed ⇒ `npm ci --prefer-offline`;
-  then `readlink node_modules/@agent-ui/shared` before trusting any import-resolving gate. The
+  ⇒ the PER-ENTRY symlink recipe in `seat-map`'s Dispatch laws (amended 2026-08-19: a whole-root
+  symlink splits TS type identity — the root's @agent-ui/* workspace links point at MAIN's
+  packages/, yielding phantom TS2345s on a clean tree; the recipe symlinks third-party entries and
+  re-links @agent-ui/* to the worktree's own packages); lockfile changed ⇒ `npm ci
+  --prefer-offline`; then `readlink node_modules/@agent-ui/shared` MUST resolve inside the
+  worktree before trusting any import-resolving gate. The
   dispatch-side ceilings (≤3 concurrent gate-running lanes, `--maxWorkers=4` per lane, reap
   worktrees on lane-return) live in `seat-map`'s Dispatch laws.
 - Bundle-shape gates (the built-output-proofs bar, applied to lazy splits): assert the arm is
