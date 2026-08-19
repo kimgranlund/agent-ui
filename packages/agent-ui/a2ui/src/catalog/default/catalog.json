@@ -23,7 +23,8 @@
             "properties": {
               "action": { "type": "string" },
               "context": { "type": "object" },
-              "wantResponse": { "type": "boolean" }
+              "wantResponse": { "type": "boolean" },
+              "submit": { "type": "boolean" }
             },
             "required": ["action"]
           },
@@ -374,6 +375,7 @@
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
         "placeholder": { "type": { "type": "string" }, "mapsTo": "placeholder" },
         "strict": { "type": { "type": "boolean" }, "mapsTo": "strict" },
+        "open": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "open" },
         "name": { "type": { "type": "string" }, "mapsTo": "name" },
         "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" }
       },

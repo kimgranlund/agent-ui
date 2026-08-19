@@ -265,7 +265,9 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   Ramp: { label: 'Primary tonal range' },
   Pagination: { page: '2', pages: '8', label: 'Search results' },
   MenuItem: { label: 'Duplicate', value: 'duplicate' },
-  Segment: { label: 'Deluxe', value: 'deluxe', checked: 'true' },
+  // Segment: NO seed — NESTED_ONLY since GH #1332 (no standalone card exists to seed; a lone ui-segment
+  // has no chrome by ADR-0095 cl.3's ruled split). Its demonstration lives in SegmentedControl's
+  // SAMPLE_TREES fold below.
   Table: { label: 'Failing checks', selectable: 'multi' },
   // duration '0' — ≤0 means never auto-dismiss (toast.ts SPEC-R14/R16): the specimen must OUTLIVE the
   // reader's glance; the shipped default (6000ms) had the card self-dismissing into an empty canvas.
@@ -284,9 +286,14 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   Progress: { value: '7', max: '10', label: 'Uploading 7 of 10' },
   Stat: { label: 'Revenue', value: '€54,200', delta: '12', caption: 'vs. last quarter' },
   Swatch: { value: 'oklch(0.55 0.15 250)', label: 'Primary 500' },
-  // poster carries the specimen (a legible frame + label) — no video asset ships with the site, and a
-  // featureless black box taught nothing (B4=1); aspect pinned so the box reads deliberate.
-  Video: { poster: IMAGE_SAMPLE_SRC, label: 'Product tour — 2 min', aspect: '16/9' },
+  // GH #1327 root cause: poster alone can never paint — ui-video builds NO interior <video> until `src`
+  // is non-empty (video.ts's ruled "never a dead player shell" contract, the ui-image empty-src twin), so
+  // the poster/label seeds were applied to a host with no media element and the card stayed a black
+  // aspect box (B4=1). `src` now rides the SAME offline-safe playable data: wav the component-mode card
+  // already seeds (MEDIA_SAMPLE_SRC — the Image.src data-URI precedent for A2UI seeds), which builds the
+  // native player; poster then carries the visible frame + label the accessible name. aspect pinned so
+  // the box reads deliberate.
+  Video: { src: MEDIA_SAMPLE_SRC, poster: IMAGE_SAMPLE_SRC, label: 'Product tour — 2 min', aspect: '16/9' },
   LineChart: { label: 'Weekly signups' },
   Sparkline: { label: 'Revenue trend' },
   TimelineItem: { status: 'done', label: 'Staging verified', description: 'All 12 checks green', timestamp: 'Tue 14:02' },

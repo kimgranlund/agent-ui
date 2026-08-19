@@ -621,10 +621,12 @@ export const calendarFactory: WidgetFactory = accessorFactory('ui-calendar', [
  * `value:{prop:'open',event:'toggle'}`" — verified against combo-box.ts: `value` is the committed
  * option key / free-text string (`prop.string()`, `formValue()` source), and `change` fires on commit
  * with `this.value` already updated (combo-box.md events table) — `value`/`change` is the correct,
- * and now sole, two-way mark. `open` remains a real, independently settable reflecting prop on the
- * control (drives the overlay panel) but carries NO catalog `value` mark (one mark per component,
- * ADR-0019) — fixed in the same commit, see combo-box.md. `children` reuses the existing `Option`
- * primitive (the `Select` precedent).
+ * and now sole, two-way mark. `open` is DECLARED as a plain bindable prop since GH #1331 (a 1:1
+ * reflecting accessor like the rest of the row — verified against combo-box.md `open`
+ * reflect:true — the Menu/Popover `open` bindable precedent, minus their value mark): it drives the
+ * listbox panel so a card/agent can reveal the identifying affordance, but still carries NO catalog
+ * `value` mark (one mark per component, ADR-0019 — the form value keeps it). `children` reuses the
+ * existing `Option` primitive (the `Select` precedent).
  */
 export const comboBoxFactory: WidgetFactory = accessorFactory('ui-combo-box', { prop: 'value', event: 'change' })
 

@@ -35,7 +35,10 @@ const SHOTS = args['no-shots'] !== 'true'
 
 // Overlay types seeded closed BY RULE (the A2UI_INITIAL comment block) — their canvas legitimately shows the
 // empty-specimen hint; C1/B3g are judged on the closed state's own terms and B2's `open`-class probes reveal.
-const OVERLAY = new Set(['Modal', 'Drawer', 'Popover', 'Menu', 'FormPopover', 'Tooltip', 'Disclosure'])
+// ComboBox rides the set since GH #1331: not an overlay CONTROL (its closed editor is a legitimate non-empty
+// canvas), but its catalog row now declares `open`, and the revealed listbox is the identifying affordance
+// the B4 blind-identify judges — the reveal capture is what demonstrates it.
+const OVERLAY = new Set(['Modal', 'Drawer', 'Popover', 'Menu', 'FormPopover', 'Tooltip', 'Disclosure', 'ComboBox'])
 
 const { chromium } = await import('playwright')
 const browser = await chromium.launch()
