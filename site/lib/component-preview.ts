@@ -1637,15 +1637,40 @@ class ComponentPreview extends HTMLElement {
     const col = this.#canvasCol
     if (!col) return
     requestAnimationFrame(() => {
+      // GH catalog-page regression (found 2026-08-18 by a2ui-catalog-rendering-review's List card review):
+      // on a tabbed page every non-active tier's cards build inside a hidden ui-tab-panel, so EVERYTHING
+      // measured zero rects and 41/60 cards wore the "Nothing visible…" overlay on top of fully rendered
+      // specimens. A hidden CANVAS is unmeasurable, not empty — leave it unflagged and re-measure once the
+      // canvas actually gets laid out (the reveal observer below fires on the display:none → laid-out flip).
+      if (col.getClientRects().length === 0) {
+        col.classList.remove('is-empty-specimen')
+        this.#observeReveal(col)
+        return
+      }
       const root = (this.#surface as HTMLElement | undefined)?.firstElementChild as HTMLElement | null
       const visible = !!root && root.getClientRects().length > 0
       col.classList.toggle('is-empty-specimen', !visible)
     })
   }
 
+  /** One-shot reveal watcher: when a hidden canvas gains a box (its tab is selected), re-run the empty hint. */
+  #revealObserver: ResizeObserver | undefined
+  #observeReveal(col: HTMLElement): void {
+    if (this.#revealObserver || typeof ResizeObserver === 'undefined') return
+    this.#revealObserver = new ResizeObserver(() => {
+      if (col.getClientRects().length === 0) return
+      this.#revealObserver?.disconnect()
+      this.#revealObserver = undefined
+      this.#updateEmptyHint()
+    })
+    this.#revealObserver.observe(col)
+  }
+
   disconnectedCallback(): void {
     this.#host?.dispose()
     this.#host = undefined
+    this.#revealObserver?.disconnect()
+    this.#revealObserver = undefined
   }
 }
 
