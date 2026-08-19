@@ -65,6 +65,10 @@ ADR-worthy fork, not a local choice.
 | A public barrel's static re-export drags a heavy arm into every entry chunk | barrel-lazy-split: subpaths + memoized `loadX()` accessor, bundle-shape gated | ADR-0197 |
 | A capability seems to need a third-party runtime dependency | the ruled exception test: category / inert-data / wire-shortcut / Kim's call alone; clause-8 gate set | ADR-0139 + ADR-0202 |
 | Eyebrow / section-header / group-label typography | the KICKER typescale row + consumer uppercase, never ad hoc font values | ADR-0078 cl.2b (GH #370 · #1291) |
+| A sticky child inside a padded scroll container must pin to the top | padding-handoff — the container sheds its block-start gutter, the sticky child carries it | PR #1323 (GH #1318; select.css group-label precedent) |
+| A reserved overlay lane over a scroll container | transparent BORDER band, never padding — the scrollport clips at the padding box | PR #1400 (GH #1330) |
+| A reflecting stateful prop needs a declared-state reset baseline | capture through the reflect-echo lock (`isReflectEcho`), never the live prop/attribute | PR #1390 (GH #1333) |
+| CSS Anchor Positioning renders a panel detached | IACVT/stale-pin taxonomy + verify guard, demote-per-session | PR #1401 (GH #1339; supersedes #1359) |
 
 ## How to use a row
 
