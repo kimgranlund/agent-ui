@@ -34,6 +34,11 @@ describe('ui-service-card — visual regression (ADR-0224 availability postures 
     const { wrap, host } = mount(
       `<ui-service-card name="Claims Agent" path="/claims-agent-service" description="Handles first-notice-of-loss intake."></ui-service-card>`,
     )
+    // `available` defaults TRUE (the self-reflect-on-connect guard writes the attribute), so an
+    // attribute-less mount is NOT the unavailable posture — flip it via the public property, the only
+    // way to reach unavailable (caught at the desk 2026-08-19: this golden minted identical to the
+    // available one before this line existed).
+    ;(host as HTMLElement & { available: boolean }).available = false
     await (host as HTMLElement & { updateComplete: Promise<unknown> }).updateComplete
     await expect.element(page.elementLocator(wrap)).toMatchScreenshot('service-card-unavailable')
     wrap.remove()
