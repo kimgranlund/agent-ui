@@ -56,15 +56,19 @@ and size are real DOM text and are the card's whole accessible meaning. The host
 ## Truncation & composability
 
 The name cell truncates to a single line with an ellipsis in a narrow container (the fleet's shared
-CSS-only mechanism); the full name remains the accessible/selectable text. The card is `inline-grid` +
-`max-inline-size: 100%`, so several cards compose N-up in a `Row(wrap)` or as `ui-list` children with zero
-extra code — list semantics stay in `ui-list`, never baked into this type.
+CSS-only mechanism); the full name remains the accessible/selectable text. The card **fills by default**
+(ADR-0223): the host is block-level `grid` and stretches to the parent's inline space; `max-inline-size:
+100%` is unneeded there (a block host already never exceeds its container). The single opt-out is the
+boolean `inline` attribute, restoring the pre-wave `inline-grid` posture — so several cards compose N-up in
+a `Row(wrap)` or as `ui-list` children with zero extra code — list semantics stay in `ui-list`, never baked
+into this type.
 
 ## Sizing
 
-The host floors at `--ui-attachment-min-inline-size` (`12em` default) in an unstyled flex row
-(test-the-whole-shape). The glyph rides the fixed content-icon register (`--md-sys-icon-md`) — there is no
-`[size]`/`[scale]` axis on this Display-class leaf.
+Either posture floors at `--ui-attachment-min-inline-size` (`12em` default) in an unstyled flex row
+(test-the-whole-shape) — a ratified whole-shape floor (ADR-0223 clause 3(d)) that **survives both the fill
+default and the `[inline]` hug state**. The glyph rides the fixed content-icon register (`--md-sys-icon-md`)
+— there is no `[size]`/`[scale]` axis on this Display-class leaf.
 
 ---
 
@@ -4675,12 +4679,16 @@ glyph — the percent's meaning is real text already, wherever `figure`/`caption
 
 ## Sizing
 
-The host floors at `--ui-stat-min-inline-size` (`8em` default) in an unstyled flex row (test-the-whole-shape)
-— override the token, or set `inline-size` directly, to size the tile to a layout. Interior gap rides
-`--ui-stat-gap` off the space ladder (density-responsive for free). `variant="ring"` adds its own
-density-invariant diameter/thickness tokens — `--ui-stat-ring-size` (`4.5em` default) and
-`--ui-stat-ring-thickness` (`0.5em` default) — sized like the delta glyph's mark geometry, never off
-`[scale]` (a Display-class control, SPEC-R17).
+The tile **fills by default** (ADR-0223): the host is block-level `grid` and stretches to the parent's
+inline space. The single opt-out is the boolean `inline` attribute, which flips the host to inline-level
+posture — the pre-wave shrink-to-content rendering. Either way, the host floors at
+`--ui-stat-min-inline-size` (`8em` default, SPEC-R10) — a ratified whole-shape floor (ADR-0223 clause
+3(d)) that **survives both postures**, unlike an entry control's hug-only content floor: override the
+token, or set `inline-size` directly, to size the tile to a layout. Interior gap rides `--ui-stat-gap` off
+the space ladder (density-responsive for free). `variant="ring"` adds its own density-invariant
+diameter/thickness tokens — `--ui-stat-ring-size` (`4.5em` default) and `--ui-stat-ring-thickness` (`0.5em`
+default) — sized like the delta glyph's mark geometry, never off `[scale]` (a Display-class control,
+SPEC-R17).
 
 ---
 

@@ -14,13 +14,13 @@ declare const process: { cwd(): string }
 //        whole-shape-floor table + the clause 4 exemption table, mirrored as consts below with this
 //        comment pointing at the ADR (`.claude/docs/adr/0223-fill-by-default-fleet-sizing-contract.md`).
 //
-// SLICE-0 REPORT MODE (clause 5/7): the DEBT allowlist below additionally carries today's full
-// Appendix §B/§C state (minus the slice-0 pilot, ui-text-field, already flipped), so the gate is
-// GREEN while enumerating the migration debt — every §B/§C row it finds is REPORTED (console), never
-// failed. The gate BITES on anything NOT in the tables (a NEW inline-posture host or out-of-role
-// floor is a build defect from day one), and the DEBT table shrinks monotonically as slices 1–3 land
-// (a fixed row left in DEBT is caught by the exact-match test below). It flips ENFORCING in slice 3
-// (DEBT → the empty set; the R4/3(d) tables remain).
+// SLICE-3 ENFORCING (clause 5/7, the R5 flip): the DEBT allowlist below is now the EMPTY SET — every
+// migration-wave row (Appendix §B's 15) has landed across slices 0–3, so the gate no longer REPORTS
+// known debt, it ENFORCES: any width opinion outside the ratified clause 3(d)/4 tables — a NEW
+// inline-posture host or an out-of-role floor — is a build defect from day one, full stop. (The DEBT
+// table + its exact-match plumbing stay in the file, permanently empty, as the ratchet: a future ADR
+// amendment is the only way a row re-enters it — see the naming/styling-gates sibling gates for the
+// same "empty allowlist as a standing ratchet" shape.)
 
 const ROOT = process.cwd()
 const CONTROL_ROOTS = [
@@ -126,36 +126,30 @@ const R4_EXEMPT_FLOOR = new Set([
   'badge', // `var(--ui-badge-box)` empty-label box floor — clause 3(a)'s "same role on a display atom" (badge.css:89)
 ])
 
-/** Clause 3(d) — the whole-shape floor role (Appendix §C's eleven; stat/attachment join on their
- *  slice-3 posture flip). Token-overridable, surviving the fill state, each SPEC- or defect-anchored. */
+/** Clause 3(d) — the whole-shape floor role (Appendix §C's eleven, plus `stat`/`attachment` which
+ *  joined on their slice-3 posture flip — the full ratified thirteen). Token-overridable, surviving
+ *  the fill state, each SPEC- or defect-anchored. */
 const WHOLE_SHAPE_FLOORS = new Set([
   'bar-chart', 'line-chart', 'pie-chart', 'ladder', 'table', 'progress', 'ramp',
-  'slider', 'slider-multi', 'timeline', 'status-stream',
+  'slider', 'slider-multi', 'timeline', 'status-stream', 'stat', 'attachment',
 ])
 
-// ── SLICE-0 REPORT-MODE DEBT — today's Appendix §B state, minus the ui-text-field pilot. Every row
-//    here is a KNOWN violation awaiting its wave slice (1–3); the exact-match test keeps this table
-//    honest in BOTH directions (a new offender fails; a fixed-but-still-listed row fails too). ─────────
-const DEBT: Record<string, string[]> = {
-  // slice 1 — the entry family: LANDED (textarea/select/combo-box/multi-select/conversation-composer
-  // flipped to fill-by-default with [inline] hug legs; the form-popover §E trigger ruling executed —
-  // its 10ch floor was on a PART, outside this gate's host-only scan by construction).
-  // slice 2 — action/selection: LANDED (button/toggle/checkbox/radio/switch/pagination/calendar
-  // flipped to fill-by-default with [inline] hug legs; button's R3(a) squareness floor survives
-  // both states; no clause 3(b) content floors existed to relocate in this slice).
-  // slice 3 — display composites
-  stat: ['inline-display', 'min-width'],
-  attachment: ['inline-display', 'min-width'],
-}
+// ── DEBT — the migration-wave allowlist (Appendix §B's 15 rows, slices 0–3). ENFORCING as of slice 3
+//    (the R5 flip): the table is now the EMPTY SET — every row shrank out across the four slices
+//    (0: ui-text-field · 1: textarea/select/combo-box/multi-select/conversation-composer +
+//    form-popover trigger · 2: button/toggle/checkbox/radio/switch/pagination/calendar ·
+//    3: stat/attachment). The exact-match test below still keeps it honest in BOTH directions — it
+//    stays empty going forward; only a future ADR amendment may add a row back. ─────────────────────
+const DEBT: Record<string, string[]> = {}
 
-describe('sizing gates — Fill by Default (ADR-0223 cl.5, slice-0 REPORT MODE)', () => {
+describe('sizing gates — Fill by Default (ADR-0223 cl.5, slice-3 ENFORCING — DEBT table EMPTY)', () => {
   const sheets = CONTROL_ROOTS.flatMap((root) => walkCss(root))
 
   it('the walk actually finds the fleet (anti-vacuous floor)', () => {
     expect(sheets.length).toBeGreaterThan(60)
   })
 
-  it('every width opinion is in-role (R3(a)/(c)), ratified (R4 / 3(d)), or enumerated slice-1..3 debt — and the debt is REPORTED', () => {
+  it('every width opinion is in-role (R3(a)/(c)) or ratified (R4 / 3(d)) — ENFORCING, zero debt remains', () => {
     const unexpected: string[] = []
     const debtSeen: Record<string, Set<string>> = {}
     const report: string[] = []
@@ -175,13 +169,15 @@ describe('sizing gates — Fill by Default (ADR-0223 cl.5, slice-0 REPORT MODE)'
         unexpected.push(`${v.name}: ${v.kind} (${v.detail})`)
       }
     }
-    // REPORT MODE — enumerate the migration debt (ADR-0223 cl.7); green while the wave lands.
-    console.info(`[sizing-gates] ADR-0223 report mode — ${report.length} ratified/enumerated width opinions:\n${report.join('\n')}`)
+    // ENFORCING — the migration wave is complete (ADR-0223 cl.7); every width opinion left standing is
+    // a RATIFIED one (role 3(d) / R4), never a debt row.
+    console.info(`[sizing-gates] ADR-0223 slice-3 ENFORCING — ${report.length} ratified width opinions:\n${report.join('\n')}`)
 
-    // The gate BITES on anything outside the tables: a NEW inline host / out-of-role floor fails today.
-    expect(unexpected, 'width opinions outside ADR-0223’s ratified tables + enumerated debt').toEqual([])
+    // The gate BITES on anything outside the tables: a NEW inline host / out-of-role floor fails.
+    expect(unexpected, 'width opinions outside ADR-0223’s ratified tables').toEqual([])
 
-    // The DEBT table is exact in BOTH directions — a fixed row must LEAVE the table (monotonic shrink).
+    // The DEBT table is exact in BOTH directions (permanently empty as of slice 3 — the ratchet:
+    // any row a future amendment adds back must actually be found, or this fails too).
     const stale: string[] = []
     for (const [name, kinds] of Object.entries(DEBT)) {
       for (const kind of kinds) {
@@ -190,8 +186,15 @@ describe('sizing gates — Fill by Default (ADR-0223 cl.5, slice-0 REPORT MODE)'
     }
     expect(stale, 'DEBT rows no longer present in the fleet — shrink the table (ADR-0223 cl.7)').toEqual([])
 
-    // The slice-0 pilot is DONE: ui-text-field must carry no violation at all.
-    expect(report.some((r) => / text-field:/.test(r)), 'ui-text-field regressed — the slice-0 pilot flip is law').toBe(false)
+    // Every non-role-(d) wave control must carry no violation at all — a regressed inline-posture flip
+    // (or a resurrected default-state content floor) would surface in `unexpected` above, not here; this
+    // is the same "must be entirely absent from the report" pin the slice-0 pilot introduced, generalized
+    // to every wave control WITHOUT a surviving role-(d) floor (stat/attachment DO legitimately appear in
+    // `report` — their whole-shape floor is ratified role (d), not a regression).
+    const NO_SURVIVING_FLOOR = ['text-field', 'textarea', 'select', 'combo-box', 'multi-select', 'conversation-composer', 'button', 'toggle', 'checkbox', 'radio', 'switch', 'pagination', 'calendar']
+    for (const name of NO_SURVIVING_FLOOR) {
+      expect(report.some((r) => r.includes(` ${name}:`)), `${name} regressed — its ADR-0223 flip is law`).toBe(false)
+    }
   })
 
   it('negative control: the scan bites on a synthetic offender', () => {
