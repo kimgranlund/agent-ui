@@ -15,6 +15,7 @@
 
 import { UIFormElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import type { FormValue } from '../../dom/index.ts'
+import { isReflectEcho } from '../../dom/props.ts' // internal seam (GH #1333) — not on the dom barrel
 import { tabbable } from '../../traits/tabbable.ts'
 import { pressActivation } from '../../traits/press-activation.ts'
 
@@ -45,15 +46,40 @@ export class UIIndicatorElement extends UIFormElement {
   #suppressNextClick = false
 
   // The native-parity reset baseline — `defaultChecked` (LLD-C1 extended, the bug-A fix). Captured ONCE
-  // at the FIRST connect (guarded — a later reconnect must not re-snapshot an already-toggled value; the
-  // text-field `#defaultValue`/`#defaultCaptured` precedent). Reading `this.checked` here is equivalent to
-  // reading the `checked` ATTRIBUTE (native `<input type=checkbox>.defaultChecked` parity): `checked`
-  // REFLECTS (props.ts's outbound reflect fires synchronously on every property write, including the
-  // ADR-0005 property-wins upgrade replay), so `this.hasAttribute('checked') === this.checked` holds at
-  // every point `connected()` can observe it — reading the resolved prop is equivalent and avoids
-  // re-parsing the attribute string.
+  // at the FIRST connect (guarded — a later reconnect must not re-snapshot; the text-field
+  // `#defaultValue`/`#defaultCaptured` precedent), from `#declaredChecked` below — NEVER from the live
+  // `checked` prop OR the `[checked]` attribute (GH #1333). The pre-fix capture read `this.checked`,
+  // reasoning that reflection keeps prop ≡ attribute — true, but that is exactly why BOTH are polluted
+  // by a pre-connect PROGRAMMATIC write: `el.checked = true` before connect (directly, or via
+  // `ui-radio-group`'s `value` setter direct-match path, which writes `r.checked` on light-DOM children
+  // regardless of connection) reflected into the attribute and then masqueraded as the authored default.
+  // Native `<input>.defaultChecked` parity: only the DECLARED state (markup / setAttribute) is the
+  // default; a programmatic property write never touches it.
   #defaultChecked = false
   #defaultCaptured = false
+
+  // The DECLARED checked state (GH #1333) — the `checked` ATTRIBUTE channel only: genuine inbound writes
+  // (parser-applied markup during upgrade, an external setAttribute/removeAttribute) are recorded in
+  // `attributeChangedCallback` below; reflect ECHOES of programmatic prop writes are excluded via the
+  // props-layer outbound lock (`isReflectEcho`). This is text-field's `getAttribute('value')` capture
+  // translated to a REFLECTING prop, where the attribute itself can no longer serve as the declared
+  // record. Note the deliberate asymmetry it preserves (native parity): declared-then-programmatically-
+  // unchecked keeps `defaultChecked === true` — reflection REMOVES the attribute, but the removal is the
+  // programmatic write's own echo, not an authored un-declaration.
+  #declaredChecked = false
+
+  /**
+   * GH #1333 — record the declared checked state from GENUINE `checked` attribute writes only. A reflect
+   * echo (props.ts `reflectOut`'s setAttribute/removeAttribute, fired synchronously by any programmatic
+   * `checked` prop write — including the ADR-0005 property-wins upgrade replay and `formReset()`'s own
+   * restore below) arrives here with the outbound lock still held and must NOT count: native parity says
+   * a programmatic write never touches `defaultChecked`. (`checked` declares no `attribute` override, so
+   * the platform's attribute name is the prop name.)
+   */
+  override attributeChangedCallback(attr: string, _old: string | null, next: string | null): void {
+    if (attr === 'checked' && !isReflectEcho(this, 'checked')) this.#declaredChecked = next !== null
+    super.attributeChangedCallback(attr, _old, next)
+  }
 
   /**
    * LLD-C1: platform checkbox semantics — unchecked submits nothing; checked submits `this.value`.
@@ -64,7 +90,8 @@ export class UIIndicatorElement extends UIFormElement {
 
   /**
    * The reset baseline — native `HTMLInputElement.defaultChecked` parity: a PUBLIC, read-only reflection
-   * of the checked state this control was upgraded/connected with (see `#defaultChecked` above). Exposed
+   * of the DECLARED checked state this control first connected with — markup/setAttribute only, never a
+   * pre-connect programmatic write (GH #1333; see `#defaultChecked`/`#declaredChecked` above). Exposed
    * so a coordinating ancestor (`ui-radio-group`) can recompute ITS OWN post-reset state from every
    * child's default WITHOUT depending on `formResetCallback` invocation order between the group and its
    * radios (both are separate `UIFormElement` participants the platform resets independently) — reading
@@ -75,9 +102,11 @@ export class UIIndicatorElement extends UIFormElement {
   }
 
   protected connected(): void {
-    // Seed the reset baseline ONCE from the checked state at first connect (see `#defaultChecked` above).
+    // Seed the reset baseline ONCE, at first connect, from the DECLARED checked state — never the live
+    // prop or attribute, both already polluted by any pre-connect programmatic write (GH #1333; see
+    // `#defaultChecked`/`#declaredChecked` above).
     if (!this.#defaultCaptured) {
-      this.#defaultChecked = this.checked
+      this.#defaultChecked = this.#declaredChecked
       this.#defaultCaptured = true
     }
 

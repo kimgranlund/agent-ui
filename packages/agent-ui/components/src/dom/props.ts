@@ -204,6 +204,21 @@ function attrNameOf(config: PropConfig<unknown>, name: string): string | null {
 }
 
 /**
+ * TRUE while an OUTBOUND value→attribute reflect for `name` is in flight on `instance` — i.e. the
+ * `attributeChangedCallback` currently executing is that reflect's own platform echo (`reflectOut`'s
+ * setAttribute/removeAttribute below; the platform fires the callback synchronously inside it, so the
+ * lock is reliably held for the whole echo). Lets a control distinguish a DECLARED attribute write
+ * (parser-applied markup, an external setAttribute/removeAttribute) from the reflection of a
+ * PROGRAMMATIC prop write — the seam `UIIndicatorElement`'s native-parity `defaultChecked` capture
+ * consumes (GH #1333): a reflecting prop's attribute mirrors the LIVE value, so the attribute alone can
+ * no longer serve as the declared record. Internal seam like `observedAttributesFor`/`propForAttribute`
+ * — imported directly from props.ts, NOT re-exported from the dom barrel.
+ */
+export function isReflectEcho(instance: object, name: string): boolean {
+  return isCrossing(instance, 'outbound', name)
+}
+
+/**
  * Outbound seam (the second of the two boundary functions): cross a TYPED value → its attribute string
  * via the prop's `PropType.to` codec, and write it to the host attribute exactly once. Holds the
  * `outbound` directional lock across the write so the synchronous `attributeChangedCallback` echo the

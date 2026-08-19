@@ -806,6 +806,65 @@ describe('UIRadioGroupElement — formReset (bug-A fix: group-level coordination
   })
 })
 
+// ── GH #1333 — pre-connect value-setter writes must not pollute the radios' defaultChecked ────────
+//
+// The reported door: children appended, `group.value = 'r2'` set BEFORE connect — `#radios()` sees
+// light-DOM children regardless of connection, so `#applySelection` writes `r2.checked = true`
+// immediately; the radio's first-connect capture then snapshotted that programmatic write as the
+// authored default (`r2.defaultChecked === true` where native parity says false), and form reset
+// restored the wrong state. Fixed at the base (indicator-element.ts): the capture reads the DECLARED
+// (attribute-channel) state only — these probes pin the group-level repro end to end.
+
+describe('UIRadioGroupElement — GH #1333 (pre-connect value setter vs defaultChecked)', () => {
+  it('group-preconnect-value-not-default: append children → set value → connect → the matched radio\'s defaultChecked stays false; reset clears back to the authored (empty) default', () => {
+    const group = makeGroup()
+    const r1 = makeRadio('r1')
+    const r2 = makeRadio('r2')
+    const r3 = makeRadio('r3')
+    group.append(r1, r2, r3)
+    group.value = 'r2' // pre-connect programmatic direct-match write — #radios() sees light-DOM children already
+    expect(r2.checked).toBe(true) // the live write lands immediately (the reported mechanism)
+    document.body.append(group) // connect — the first-connect capture runs on every radio
+
+    expect(r2.defaultChecked).toBe(false) // the Done-when probe: not snapshotted as the authored default
+    expect(r1.defaultChecked).toBe(false)
+    expect(r3.defaultChecked).toBe(false)
+    expect(group.testFormValue).toBe('r2') // the live selection itself still seeds correctly at connect
+
+    // Platform reset — group + radios reset as independent FACE members (order-independent contract).
+    group.formResetCallback()
+    r1.formResetCallback()
+    r2.formResetCallback()
+    r3.formResetCallback()
+    expect(r2.checked).toBe(false) // restored to the DECLARED default: nothing was authored checked
+    expect(group.testFormValue).toBeNull()
+    group.remove()
+  })
+
+  it('group-preconnect-value-vs-declared: a markup-declared [checked] radio stays the reset default even when a pre-connect value write moved the live selection', () => {
+    const group = makeGroup()
+    const r1 = makeRadio('r1')
+    r1.setAttribute('checked', '') // the AUTHORED default (the markup channel)
+    const r2 = makeRadio('r2')
+    group.append(r1, r2)
+    group.value = 'r2' // pre-connect programmatic move: unchecks r1, checks r2
+    document.body.append(group)
+
+    expect(r1.checked).toBe(false) // live: the programmatic write holds
+    expect(r2.checked).toBe(true)
+    expect(r1.defaultChecked).toBe(true) // the declared record survives the programmatic uncheck
+    expect(r2.defaultChecked).toBe(false)
+
+    group.formResetCallback()
+    r1.formResetCallback()
+    r2.formResetCallback()
+    expect(r1.checked).toBe(true) // reset restores the authored default
+    expect(r2.checked).toBe(false)
+    expect(group.testFormValue).toBe('r1')
+    group.remove()
+  })
+})
+
 // ── public `value` accessor ───────────────────────────────────────────────────────────────────────
 //
 // The public getter/setter pair delegating to #selectedValue (the UICheckboxElement.indeterminate
