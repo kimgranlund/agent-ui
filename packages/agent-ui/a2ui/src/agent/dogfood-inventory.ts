@@ -133,9 +133,9 @@ export function readAttributes(fence: string): LocalAttribute[] {
  *  control-mint (the chart family's fourth control); the mover is the one new descriptor role line,
  *  evidence per SPEC §8. */
 // 2026-08-19 merge rebase: measured 17151 on the tree carrying ui-pie-chart (ADR-0219/GH #1397),
-// ui-suggestions (ADR-0213/GH #1393) AND ui-file-drop (ADR-0210/GH #1391) descriptors — budget 17_300
-// (measured + headroom, GH #1209 format).
-export const DOGFOOD_INVENTORY_CHAR_BUDGET = 17_300
+// ui-suggestions (ADR-0213/GH #1393), ui-file-drop (ADR-0210/GH #1391) AND ui-rating (ADR-0216/GH #1395)
+// descriptors — budget 17_600 (measured 17485 + headroom, GH #1209 format).
+export const DOGFOOD_INVENTORY_CHAR_BUDGET = 17_600
 
 /** One discovered control: its tag, a one-line role summary (the descriptor's own prose body, first
  *  sentence — never hand-written, so it can never drift from what the component's own docs say), the

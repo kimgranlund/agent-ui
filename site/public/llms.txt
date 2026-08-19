@@ -75,6 +75,7 @@
 - [ui-segmented-control](./segmented-control-doc.html): joined-button single-select with one shared animated indicator; [demo](./segmented-control-demo.html).
 - [ui-slider](./slider-doc.html): the single-value range control on the compact-realm rail; [demo](./slider-demo.html).
 - [ui-slider-multi](./slider-multi-doc.html): the two-thumb range (valueLo/valueHi) on the shared rail; [demo](./slider-multi-demo.html).
+- [ui-rating](./rating-doc.html): the star-value range control — an owned inline-SVG mark, fraction-accurate display, clamp/snapped input; [demo](./rating-demo.html).
 
 ## Components — overlays & selection
 

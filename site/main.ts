@@ -605,6 +605,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // ADR-0216 / GH #1395 — the star-value Range control, a THIRD UIRangeElement leaf.
+    label: 'ui-rating',
+    cards: [
+      {
+        href: './rating-demo.html',
+        title: 'Demo',
+        blurb: 'The live star-value control in both shipped modes — a readonly aggregate score (fraction-accurate) and an interactive rate-this input, with a live readout and an input/change event log.',
+      },
+      {
+        href: './rating-doc.html',
+        title: 'API reference',
+        blurb: 'The FACE star-value range control (Range class) — an owned inline-SVG mark, fraction-accurate display, clamp/snapped input. From rating.md.',
+      },
+    ],
+  },
+  {
     label: 'Layout primitives',
     cards: [
       {

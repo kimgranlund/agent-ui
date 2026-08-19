@@ -284,6 +284,15 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // ADR-0216 / GH #1395 — the star-value Range control, a THIRD UIRangeElement leaf alongside
+    // slider/slider-multi (same Wave-2 tag-labelled convention).
+    label: 'ui-rating',
+    links: [
+      { href: './rating-demo.html', label: 'Demo' },
+      { href: './rating-doc.html', label: 'API' },
+    ],
+  },
+  {
     // The layout primitives share one tier showcase (overview + surface×layout) + a per-component API doc each.
     label: 'Layout primitives',
     links: [

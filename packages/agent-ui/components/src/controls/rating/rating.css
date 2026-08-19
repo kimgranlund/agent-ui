@@ -1,0 +1,215 @@
+/* rating.css — ui-rating, the Indicator-class star-value Range control (ADR-0216; range-element.lld.md).
+ * Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-rating)` (specificity 0,0,0) DECLARES the `--ui-rating-*` chain from the
+ *       colour roles (`--md-sys-color-{family}-{role}`) and the compact widget ramp (`--md-sys-compact-{size}`,
+ *       ADR-0041 — the same Indicator-tier ramp checkbox/switch/slider use). `[size]` repoints the star box;
+ *       `[disabled]` mutes to neutral roles.
+ *   [2] STYLES BLOCK — `@scope (ui-rating)` CONSUMES only `--ui-rating-*` (plus the one ungoverned per-
+ *       instance geometry seam `--value-pct`, the slider.css precedent — family-coherence.test.ts's own
+ *       token-namespace invariant explicitly carves a non-`--ui-*`/`--md-sys-*` custom property like this
+ *       out of scope). The host is a small CSS GRID (the slider.css `[layout]` precedent, minus the value-
+ *       readout row — this control has no separate numeric readout, the stars ARE the readout):
+ *         - `standard` (default): two rows, one column — label above the star row.
+ *         - `inline`: one row — label beside the star row (the row's `1fr` column flexes to fill).
+ *         - `block`: two rows, one column, both CENTRED.
+ *       `.stars` is the interactive track (valueDrag's `track()` target, LLD-C4-equivalent) — its own
+ *       block-size = the widget box (`--md-sys-compact-{size}`). It stacks two full-width star ROWS
+ *       (`.stars-base` under `.stars-fill`, `position: relative`/`absolute`): the BASE row paints every
+ *       star at a low `currentColor` opacity (ADR-0216 cl.3, the sparkline `area` alpha precedent); the
+ *       FILL row paints the identical `max` stars at full opacity, `clip-path: inset()`-ed to the
+ *       `--value-pct` fraction of its own width — ONE glyph, fraction-accurate at any size, no `star-half`
+ *       variant. Both rows are `currentColor` — `color: var(--ui-rating-ink)` on the host lets the mark
+ *       theme with the rest of the control (the `ui-icon` `currentColor` posture).
+ *
+ * RTL: NO mirroring rule for the fill clip (documented, not fixed — the slider.css `.rail::before`
+ * `linear-gradient(to right, …)` precedent: Range-class value-fill visuals are physical-direction today
+ * across the whole family, not just here).
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel; NEVER injected from
+ * rating.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-rating) declares --ui-rating-* ════════════════ */
+
+:where(ui-rating) {
+  /* Box geometry — the compact widget-box ramp step (ADR-0041; default size = md), the checkbox/switch/
+     slider precedent. Each star glyph paints at this size; `[size]` repoints below. */
+  --ui-rating-box: var(--md-sys-compact-md);
+
+  /* Mark ink — the `currentColor` source both star rows inherit (ADR-0216 cl.3: the mark is owned SVG,
+     `currentColor` fill, NOT an icons-pack glyph). Page-ink role, AA-verified against every surface
+     plane (tokens.test.ts), the same role slider.css's value-readout text uses. */
+  --ui-rating-ink: var(--md-sys-color-neutral-on-surface);
+
+  /* The unfilled-star opacity — a low-alpha wash of the SAME ink (never a second colour role; ADR-0008:
+     colour opinions live in the token layer, not a color-mix at paint time), the sparkline `area` alpha
+     precedent (`--ui-sparkline-area-opacity`). */
+  --ui-rating-base-opacity: 0.3;
+
+  /* Star-to-star rhythm — off `--md-sys-space-xs`, the slider.css `--ui-slider-layout-gap` precedent (the
+     smallest step on the space ramp; a tight row, not a spaced-out list). */
+  --ui-rating-gap: var(--md-sys-space-xs);
+
+  /* Label — the SUBDUED half of the label/star pair (the slider.css label-vs-value emphasis precedent;
+     here there is no separate "value" text, so the star mark itself is the emphasized half). */
+  --ui-rating-label-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-rating-label-font: var(--md-sys-font-sm);
+
+  /* The label↔stars row/column rhythm (the slider.css `--ui-slider-layout-gap` precedent, reused verbatim
+     for this control's own chain). */
+  --ui-rating-layout-gap: var(--md-sys-space-xs);
+}
+
+/* [size] → compact widget ramp repoint (ADR-0041). */
+:where(ui-rating[size='sm']) {
+  --ui-rating-box: var(--md-sys-compact-sm);
+}
+:where(ui-rating[size='lg']) {
+  --ui-rating-box: var(--md-sys-compact-lg);
+}
+
+/* [disabled] → muted ink + label (SC 1.4.11-exempt — a disabled/inactive component). The state holds at
+   idle: the styles block sets `pointer-events: none` on `.stars` so `:hover` never matches. */
+:where(ui-rating[disabled]) {
+  --ui-rating-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-rating-base-opacity: 0.2;
+  --ui-rating-label-ink: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-rating) consumes ONLY --ui-rating-* ════════════════ */
+
+@scope (ui-rating) {
+  :scope {
+    display: grid;
+    row-gap: var(--ui-rating-layout-gap);
+    column-gap: var(--ui-rating-layout-gap);
+    color: var(--ui-rating-ink);
+    -webkit-user-select: none; /* WebKit/Safari still requires the prefix */
+    user-select: none;
+  }
+
+  /* `standard` (default) — two rows, one column: label above the star row. No `[layout]` selector needed
+     for this one (the default, and attribute-ABSENT must still get it). */
+  :scope,
+  :scope[layout='standard'] {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'label'
+      'stars';
+    justify-items: start;
+  }
+
+  /* `inline` — one row: label beside the star row. */
+  :scope[layout='inline'] {
+    grid-template-columns: auto 1fr;
+    grid-template-areas: 'label stars';
+    align-items: center;
+  }
+
+  /* `block` — two rows, one column, both CENTRED. */
+  :scope[layout='block'] {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'label'
+      'stars';
+    justify-items: center;
+  }
+
+  /* LABEL part — plain text, grid-area-placed (the slider.css `[data-part='label']` precedent). An
+     `auto`-sized row/column collapses to zero when the only child is `[hidden]` — an empty label
+     reserves no space in ANY layout. */
+  [data-part='label'] {
+    grid-area: label;
+    color: var(--ui-rating-label-ink);
+    font-size: var(--ui-rating-label-font);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  [data-part='label'][hidden] {
+    display: none;
+  }
+
+  /* .stars — the interactive track (valueDrag's target). block-size = the widget box; `position:
+     relative` is the containing block for the absolutely-positioned `.stars-fill` overlay row below.
+     `touch-action: none` prevents the browser claiming pointer events for scroll/pan mid-drag. */
+  [data-part='stars'] {
+    grid-area: stars;
+    position: relative;
+    display: inline-flex;
+    block-size: var(--ui-rating-box);
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  /* Both star rows share the same flex layout (identical DOM shape — the same `max` stars, same gap —
+     so `.stars-fill`'s clip lands on the SAME column positions as `.stars-base`). */
+  .stars-base,
+  .stars-fill {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-rating-gap);
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  .stars-base svg,
+  .stars-fill svg {
+    inline-size: var(--ui-rating-box);
+    block-size: var(--ui-rating-box);
+    flex-shrink: 0;
+    fill: currentColor;
+  }
+
+  /* BASE row (ADR-0216 cl.3) — every star at a low-alpha wash of the ink (the "unfilled" register). */
+  .stars-base {
+    opacity: var(--ui-rating-base-opacity);
+  }
+
+  /* FILL row (ADR-0216 cl.3) — stacked exactly on top of the base row, full-ink, clipped to the
+     `--value-pct` fraction of its OWN width (a whole-number percentage set by rating.ts on the host
+     inline style — inherited down as a plain custom property, the slider.css `--value-pct` precedent).
+     Physical `inset()` (no RTL mirroring — see the file header). */
+  .stars-fill {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    clip-path: inset(0 calc(100% - var(--value-pct, 0) * 1%) 0 0);
+  }
+
+  /* Focus ring (ADR-0009) — the shared fleet ring: `:focus-visible` (keyboard-only). The HOST is the one
+     focusable/tabbable element (ADR-0010), the fleet standard. */
+  :scope:focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  /* Disabled / readonly — both pointer-inert the star track (ADR-0216 cl.4: readonly must inert the
+     WRITE path, not only announce `aria-readonly`). The `[disabled]` token block already muted the ink;
+     `[readonly]` leaves the ink untouched (the text-field readonly precedent — still reads as "normal",
+     just not writable). */
+  :scope[disabled] [data-part='stars'],
+  :scope[readonly] [data-part='stars'] {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  /* Forced-colors — map both star rows to system colours so the mark survives high-contrast mode
+     (the chart-family SPEC-R10 class: outline in system ink, fill distinguishable). The base row uses
+     GrayText (a muted system tone) at full opacity (WHCM flattens `opacity` unreliably across browsers —
+     an explicit muted colour is the safe substitute); the fill row uses CanvasText, the full-strength
+     system ink — the same base/fill contrast relationship the token layer expresses in normal mode.
+     Both svgs keep `fill: currentColor` (styles block above) and inherit `color` from their own row, so
+     re-pointing `color` here is the whole fix. `forced-color-adjust: none` preserves these mappings. */
+  @media (forced-colors: active) {
+    .stars-base {
+      opacity: 1;
+      color: GrayText;
+      forced-color-adjust: none;
+    }
+    .stars-fill {
+      color: CanvasText;
+      forced-color-adjust: none;
+    }
+  }
+}

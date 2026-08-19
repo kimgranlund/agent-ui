@@ -51,6 +51,9 @@
 @import './controls/slider/slider.css';
 @import './controls/slider-multi/slider-multi.css';
 
+/* ui-rating (ADR-0216, GH #1395) — the star-value Range control. */
+@import './controls/rating/rating.css';
+
 /* Pattern controls — ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover):
  * the standalone segmented control. segment.css FIRST (the leaf, no dot to suppress — its own base layout +
  * focus ring), segmented-control.css SECOND (the host's compound selectors consume ui-segment by tag). */

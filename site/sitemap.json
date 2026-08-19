@@ -329,6 +329,14 @@
       "section": "Components"
     },
     {
+      "name": "Rating",
+      "tag": "ui-rating",
+      "url": "./rating-doc.html",
+      "description": "ui-rating is a FACE form-associated Indicator-class Range control (extends UIRangeElement → UIFormElement, ADR-0042/ADR-0216) that carries a numeric value with…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Row",
       "tag": "ui-row",
       "url": "./row-doc.html",

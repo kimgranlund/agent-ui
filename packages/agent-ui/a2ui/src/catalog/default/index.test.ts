@@ -174,6 +174,9 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
   // TEMPORARY (ADR-0134 pattern) — drains the moment the ADR-0213 catalog row lands (the integration
   // lane's slice): ui-suggestions shipped ahead of its Suggestions row in the same campaign wave.
   ['Suggestions', 'ADR-0213 / GH #1393 — TEMPORARY: control minted ahead of its catalog row; the integration lane adds the Suggestions row + factory and DELETES this entry.'],
+  // TEMPORARY (ADR-0134 pattern) — drains the moment the ADR-0216 catalog row lands (the integration
+  // lane's slice): ui-rating shipped ahead of its Rating row in the same campaign wave.
+  ['Rating', 'ADR-0216 / GH #1395 — TEMPORARY: control minted ahead of its catalog row; the integration lane adds the Rating row + factory and DELETES this entry.'],
   ['ToastRegion', 'ADR-0112 cl.6 — PERMANENT exclusion, never catalogue-bound: the top-layer toast HOST driven by show() is app-surface chrome (GH #1184 catalogued Toast itself, but the region + its imperative API stay page/app-frame primitives, never a catalog row).'],
   ['ThemeProvider',
     'ADR-0117 / theme-provider.spec.md SPEC-R8 — PERMANENT exclusion, never catalogue-bound: ' +
