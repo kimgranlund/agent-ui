@@ -442,3 +442,33 @@ describe('ui-form-popover — forced-colors (Chromium via CDP; WebKit asserts th
     }
   })
 })
+
+
+// -- ADR-0223 (Fill by Default, slice 1 -- the Appendix SE trigger ruling): the two-posture acceptance
+//    leg. The host generates no box (display: contents), so the TRIGGER carries the posture: FILL --
+//    block-level grid stretching to the container (only the R3(a) squareness floor survives);
+//    [inline] on the HOST -- the trigger goes inline-grid and hugs at the 10ch content floor.
+describe('ui-form-popover -- ADR-0223 two postures (trigger fill default / [inline] hug, both engines)', () => {
+  it('bare trigger offsetWidth ~= container inline size (fill); [inline] trigger >= the 10ch floor and < container (hug)', async () => {
+    const wrap = document.createElement('div')
+    wrap.style.inlineSize = '640px' // a wide BLOCK container -- wider than any 10ch resolution
+    wrap.innerHTML = `<ui-form-popover label="Options"><ui-checkbox label="A"></ui-checkbox></ui-form-popover>`
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const host = wrap.querySelector('ui-form-popover') as HTMLElement & { updateComplete: Promise<unknown> }
+    await host.updateComplete
+    const trigger = host.querySelector('[data-part="trigger"]') as HTMLElement
+    // FILL (the default): the trigger stretches to the container.
+    const containerWidth = wrap.getBoundingClientRect().width
+    expect(trigger.offsetWidth, 'the bare trigger did not FILL its block container (ADR-0223 SE)').toBeCloseTo(containerWidth, 0)
+    expect(getComputedStyle(trigger).display, 'the default trigger is not block-level grid').toBe('grid')
+    // HUG: [inline] on the HOST flips the trigger to inline-grid + the 10ch content floor.
+    host.setAttribute('inline', '')
+    const floorPx = Number.parseFloat(getComputedStyle(trigger).minInlineSize)
+    expect(floorPx, 'the [inline] trigger floor did not resolve to a positive px').toBeGreaterThan(0)
+    const hugged = trigger.offsetWidth
+    expect(hugged, 'the [inline] trigger is narrower than its floor').toBeGreaterThanOrEqual(Math.floor(floorPx))
+    expect(hugged, 'the [inline] trigger did not HUG -- it still fills the container').toBeLessThan(containerWidth)
+    expect(getComputedStyle(trigger).display, 'the [inline] trigger is not inline-level').toBe('inline-grid')
+  })
+})

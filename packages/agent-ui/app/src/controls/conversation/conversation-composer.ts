@@ -175,6 +175,9 @@ const props = {
   // set `.disabled`; this element owns disabling its OWN parts from ONE prop. Reflects — `[busy]` on the
   // host is the CSS hook for the whole-composer dim (the v1 form's `data-busy`, moved to the host).
   busy: { ...prop.boolean(false), reflect: true },
+  // ADR-0223 (Fill by Default, slice 1) — the ONE sizing opt-out, fleet-shared name: reflects so the
+  // `:scope[inline]` CSS leg (inline-flex + hug posture with the 20ch floor) applies to JS-set values.
+  inline: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
 // A STABLE empty reference for the `contextItems` default — `this.contextItems ?? []` at the read site

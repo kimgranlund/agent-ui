@@ -69,6 +69,10 @@ attributes:              # attributes-as-API — mirrors conversation-composer.t
     type: boolean
     default: false
     reflect: true          # reflects — `ui-conversation` sets this from its own turn-in-flight tracking (TKT-0034); `[busy]` on the host is the whole-composer dim hook, and the send/mic/picker-triggers disable + the editor becomes non-editable
+  - name: inline
+    type: boolean
+    default: false
+    reflect: true          # ADR-0223 (Fill by Default) — the ONE sizing opt-out: flips display level (inline-flex) AND sizing posture (hug, with the ~20ch typing-width floor active). Default (absent) = fill. Reflects so the :scope[inline] CSS leg applies to JS-set values.
 
 properties:
   - name: value
@@ -173,6 +177,7 @@ keyboard:
 
 geometry:
   sizeClass: pattern                # composed control, no §1 control-height row of its own
+  posture: fill (flex host, no intrinsic width — the container is the floor; ADR-0223 cl.1) · `[inline]` = inline-flex + hug at var(--ui-conversation-composer-min-inline-size) (~20ch, ADR-0223 cl.3(b))   # Fill by Default — slice 1 (entry family)
   blockSize: content-driven         # chips row + the growable editor (one-line minimum → 6em cap, then scrolls; the ADR-0134 growable-minimum law, bounded) + options row, inside the host's own frame padding
 
 forcedColors: The field frame + ink + placeholder stay legible under `forced-colors: active` (`conversation-composer.css` — `CanvasText`, `GrayText` while `[busy]`; the ui-textarea block adapted). The composed `ui-button`/`ui-menu` parts carry their own forced-colors handling; the focus ring survives for free via `--md-sys-color-focus-ring` → `Highlight`.

@@ -47,6 +47,10 @@ attributes:            # attributes-as-API — mirrors UIComboBoxElement.props (
     type: boolean
     default: false
     reflect: false     # ADR-0196 (GH #1065) — the answered/settled choice state; mirrored into :state(answered) on the host, never AX-reflected
+  - name: inline
+    type: boolean
+    default: false
+    reflect: true      # ADR-0223 (Fill by Default) — the ONE sizing opt-out: flips display level (inline-grid) AND sizing posture (hug, with the 20ch typing-width floor active). Default (absent) = block-level fill. Reflects so the :scope[inline] CSS leg applies to JS-set values.
 
 properties:            # IDL beyond attributes-as-API
   - name: label
@@ -129,12 +133,13 @@ keyboard:
 
 geometry:
   sizeClass: pattern     # three-class composite: editor = Control-class; panel = Container/surface; options = item-pad rows
+  posture: fill (block-level `grid` host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-grid + hug   # Fill by Default — slice 1 (entry family)
   editor:
     blockSize: var(--ui-combo-box-height)  # = var(--md-sys-height-md) — Control-class height (the trigger field)
     font: var(--ui-combo-box-font)         # = var(--md-sys-font-md) — matches the control tier font
     paddingInline: var(--ui-combo-box-padding-inline)  # = h/2 (calc(var(--ui-combo-box-height) / 2)) — the fleet Control-class value-edge standard (2026-07-06, was --md-sys-space-sm)
     radius: var(--ui-combo-box-radius)     # = var(--md-sys-shape-corner-base) — shared fleet radius
-    minInlineSize: var(--ui-combo-box-min-inline-size) # 20ch floor — ADR-0021 entry-control law
+    minInlineSize: var(--ui-combo-box-min-inline-size) # 20ch floor, ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 cl.3(b), superseding ADR-0021's default-state placement) — the fill default needs no floor
   panel:
     surface: var(--ui-combo-box-panel-bg)  # = var(--md-sys-color-neutral-surface) — opaque neutral surface
     radius: var(--ui-combo-box-panel-radius)  # = var(--md-sys-shape-corner-base)

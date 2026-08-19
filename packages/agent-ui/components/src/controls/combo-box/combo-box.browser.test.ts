@@ -657,12 +657,15 @@ describe('ui-combo-box — form round-trip (both engines)', () => {
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)', () => {
-  it('in a flex row, the editor floors to ≥20ch wide and is wider than tall (a field, not a dot)', async () => {
+  it('in a flex row, the [inline] editor floors to ≥20ch wide and is wider than tall (a field, not a dot)', async () => {
     // This is the anti-collapse regression test. A combo-box that shrinks to a dot in a flex
     // row (zero min-inline-size) passes all per-part px checks but is visually useless.
-    // The --ui-combo-box-min-inline-size: 20ch floor (ADR-0021 entry-control law) prevents it.
+    // ADR-0223 (Fill by Default, slice 1): the 20ch floor moved to the `[inline]` hug state (cl.3(b),
+    // superseding ADR-0021's default-state placement) — the degenerate hug context is exactly where
+    // this collapse lived, so THIS test now mounts `[inline]`; the fill default's own anti-collapse
+    // proof (the container is the floor) is the two-posture leg at the end of this file.
     const { el } = mount(`
-      <ui-combo-box placeholder="Search…">
+      <ui-combo-box placeholder="Search…" inline>
         <div role="option" value="apple">Apple</div>
       </ui-combo-box>
     `)
@@ -1694,5 +1697,34 @@ describe('ui-combo-box — GH #1269: focused-empty caret aligns with the placeho
     // And the editor frame still lands exactly on the control height (border-box law held).
     const height = parseFloat(getComputedStyle(el).getPropertyValue('--ui-combo-box-height'))
     expect(Math.abs(editorRect.height - height), `${server.browser}: frame height on the ramp`).toBeLessThanOrEqual(1)
+  })
+})
+
+
+// -- ADR-0223 (Fill by Default, slice 1 -- the entry family): the two-posture acceptance leg, the
+//    generalized ADR-0021 smoke (the text-field pilot's shape): FILL -- a bare host in block flow
+//    stretches to the container's inline size (the container IS the floor); [inline] -- the host hugs,
+//    held open by the relocated content floor (clause 3(b)), and sits BELOW the container.
+describe('ui-combo-box -- ADR-0223 two postures (fill default / [inline] hug, both engines)', () => {
+  it('bare host offsetWidth ~= container inline size (fill); [inline] host >= its floor and < container (hug)', async () => {
+    const wrap = document.createElement('div')
+    wrap.style.inlineSize = '640px' // a wide BLOCK container -- wider than any ch-floor resolution
+    wrap.innerHTML = `<ui-combo-box label="Fruit"><div role="option" value="a">Option A</div></ui-combo-box>`
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const host = wrap.querySelector('ui-combo-box') as HTMLElement & { updateComplete: Promise<unknown> }
+    await host.updateComplete
+    // FILL (the default): block-level -- the host stretches to the container.
+    const containerWidth = wrap.getBoundingClientRect().width
+    expect(host.offsetWidth, 'the bare host did not FILL its block container (ADR-0223 cl.1)').toBeCloseTo(containerWidth, 0)
+    expect(getComputedStyle(host).display, 'the default host is not block-level').toBe('grid')
+    // HUG (the ONE opt-out): [inline] flips display level AND posture; the relocated floor holds it open.
+    host.setAttribute('inline', '')
+    const floorPx = px(getComputedStyle(host).minInlineSize)
+    expect(floorPx, 'the hug floor did not resolve to a positive px in [inline]').toBeGreaterThan(0)
+    const hugged = host.offsetWidth
+    expect(hugged, 'the [inline] host is narrower than its floor').toBeGreaterThanOrEqual(Math.floor(floorPx))
+    expect(hugged, 'the [inline] host did not HUG -- it still fills the container').toBeLessThan(containerWidth)
+    expect(getComputedStyle(host).display, 'the [inline] host is not inline-level').toBe('inline-grid')
   })
 })

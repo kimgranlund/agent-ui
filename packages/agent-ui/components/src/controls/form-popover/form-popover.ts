@@ -74,6 +74,10 @@ const props = {
   label: { ...prop.string(), reflect: true },
   // `size` — the trigger's dimensional-ramp step (select.ts precedent, the same [size] axis).
   size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
+  // ADR-0223 (Fill by Default, slice 1 — the Appendix §E trigger ruling): the ONE sizing opt-out,
+  // fleet-shared name. The host generates no box (display: contents), so the reflected attribute drives
+  // the `:scope[inline] > [data-part='trigger']` CSS leg (inline-grid + the 10ch hug floor).
+  inline: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
 // ── Module-level stable-id counter (one per panel, never reused across instances) ──────────────

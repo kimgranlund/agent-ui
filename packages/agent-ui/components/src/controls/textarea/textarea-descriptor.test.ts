@@ -21,7 +21,8 @@ const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
 // value/label/placeholder/rows/size/readonly (control-specific) + the spread formProps (name/disabled/required).
-const ATTR_NAMES = ['value', 'label', 'placeholder', 'rows', 'size', 'readonly', 'name', 'disabled', 'required']
+// ADR-0223 (Fill by Default, slice 1): `inline` added after `readonly` — the ONE sizing opt-out boolean.
+const ATTR_NAMES = ['value', 'label', 'placeholder', 'rows', 'size', 'readonly', 'inline', 'name', 'disabled', 'required']
 
 describe('textarea.md descriptor — frontmatter parses + schema-valid', () => {
   it('has a leading frontmatter fence and a prose body', () => {

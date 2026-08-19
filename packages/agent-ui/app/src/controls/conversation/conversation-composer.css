@@ -64,7 +64,7 @@
   /* Size-invariant frame quantities — the entry-control class referents (geometry.md), the same fleet
      tokens the text-field/textarea frames ride. */
   --ui-conversation-composer-radius: var(--md-sys-shape-corner-base);
-  --ui-conversation-composer-min-inline-size: 20ch; /* the entry-control typing-width floor (ADR-0021) */
+  --ui-conversation-composer-min-inline-size: 20ch; /* the [inline] hug-state typing-width floor (ADR-0223 cl.3(b), superseding ADR-0021's default-state placement); the FILL default needs no floor — the container is the floor */
 
   /* SPEC-R11c/AC19 (spacing-drift gate): the STYLES block below never reads --md-sys-space-* directly
      inside @scope (TKT-0066 item 5) — it mints these role-named tokens here and consumes THOSE. */
@@ -137,7 +137,9 @@
     gap: var(--ui-conversation-composer-stack-gap);
     flex: 0 0 auto;
     box-sizing: border-box;
-    min-inline-size: var(--ui-conversation-composer-min-inline-size);
+    /* FILL BY DEFAULT (ADR-0223 cl.1/2 — slice 1, the entry family): the default host carries NO
+       intrinsic width — the container is the floor. The ADR-0021 20ch typing-width floor moved to
+       the `[inline]` hug leg below (clause 3(b)). */
     padding: 0.65rem var(--ui-conversation-composer-pad-inline);
     background: var(--ui-conversation-composer-bg);
     color: var(--ui-conversation-composer-ink);
@@ -150,6 +152,16 @@
        law the shell family's band ladder already uses, never a viewport media query or a ResizeObserver. */
     container-type: inline-size;
     cursor: text;
+  }
+
+  /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): a single reflected boolean flips BOTH
+     display level (inline-flex — the column anatomy survives) and sizing posture (hug, with the
+     clause 3(b) content floor active — the ADR-0021 typing-width lesson guards the hug state).
+     Token + default unchanged; override via --ui-conversation-composer-min-inline-size. No `hug`
+     attribute, no block-but-hugging state — an explicit inline-size is the consumer's tool for that. */
+  :scope[inline] {
+    display: inline-flex;
+    min-inline-size: var(--ui-conversation-composer-min-inline-size);
   }
 
   /* The editor — the ADR-0014/0134 contenteditable surface: grows with content from a one-line minimum,

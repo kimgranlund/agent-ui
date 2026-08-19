@@ -32,6 +32,10 @@ attributes:             # attributes-as-API — mirrors UIFormPopoverElement.pro
     values: [sm, md, lg]
     default: md
     reflect: true       # reflects so the [size] attribute-selector repoint in form-popover.css (trigger height/font/icon/gap) applies to JS-set values too (the select/text-field precedent)
+  - name: inline
+    type: boolean
+    default: false
+    reflect: true       # ADR-0223 (Fill by Default, §E trigger ruling) — the ONE sizing opt-out, carried by the trigger (the host generates no box): flips the trigger to inline-grid + hug with the 10ch content floor active. Default (absent) = the trigger fills. Reflects so the :scope[inline] CSS leg applies to JS-set values.
 
 properties:             # IDL beyond attributes-as-API
   - name: open
@@ -86,13 +90,14 @@ keyboard:
 
 geometry:
   sizeClass: composite
+  posture: fill (the TRIGGER is block-level `grid`, stretching to the parent's inline space — the host generates no box; ADR-0223 §E) · `[inline]` = inline-grid + hug   # Fill by Default — slice 1
   trigger:
     height: var(--ui-form-popover-height)     # Control class — off the §1-row ramp (ADR-0038)
     font: var(--ui-form-popover-font)
     icon: var(--ui-form-popover-icon)         # the caret CELL is icon-wide
     glyph: var(--ui-form-popover-glyph)       # = font, the §4.1 caret law
     radius: var(--ui-form-popover-radius)     # = --md-sys-shape-corner-base (shared fleet radius)
-    minInlineSize: var(--ui-form-popover-min-inline-size)  # the 10ch host floor (ADR-0021 lesson — an empty-label trigger needs a floor)
+    minInlineSize: var(--ui-form-popover-min-inline-size)  # the 10ch CONTENT floor, ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 §E ruling); the R3(a) squareness floor (min-inline-size: height) survives ALL states so an empty-label trigger stays hittable
   panel:
     sizeClass: Container/surface
     bg: var(--ui-form-popover-panel-bg)
