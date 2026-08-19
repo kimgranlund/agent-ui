@@ -149,12 +149,18 @@ export const NAV: readonly NavGroup[] = [
   {
     // The Display-class text primitive — a single descriptor-derived API doc (tier=display ⇒ {doc} only).
     label: 'ui-text',
-    links: [{ href: './text-doc.html', label: 'API' }],
+    links: [
+      { href: './text-demo.html', label: 'Demo' }, // GH #1279 — the article/typographic-scale demo (Demo first, API second)
+      { href: './text-doc.html', label: 'API' },
+    ],
   },
   {
     // The Display-class icon primitive (ADR-0065/0066) — a single descriptor-derived API doc + live gallery.
     label: 'ui-icon',
-    links: [{ href: './icon-doc.html', label: 'API' }],
+    links: [
+      { href: './icon-demo.html', label: 'Demo' }, // GH #1279 — icons in buttons/lists, the size ramp, meaningful icons
+      { href: './icon-doc.html', label: 'API' },
+    ],
   },
   {
     // The Wave M1 chart family (ADR-0107) — two Display-class axis-free charts, each a single descriptor-derived
@@ -473,11 +479,17 @@ export const NAV: readonly NavGroup[] = [
   // ADR-0201 (GH #1185) — the key–value receipt primitive, same Display-class {doc}-only shape.
   {
     label: 'ui-description-list',
-    links: [{ href: './description-list-doc.html', label: 'API' }],
+    links: [
+      { href: './description-list-demo.html', label: 'Demo' }, // GH #1279 — confirm-step receipts + the omission law live
+      { href: './description-list-doc.html', label: 'API' },
+    ],
   },
   {
     label: 'ui-badge',
-    links: [{ href: './badge-doc.html', label: 'API' }],
+    links: [
+      { href: './badge-demo.html', label: 'Demo' }, // GH #1279 — status/count tokens in a run list + a live bound intent write
+      { href: './badge-doc.html', label: 'API' },
+    ],
   },
   // ADR-0163 cl.6 — ui-pagination, the fleet's first standalone page navigator (tier=pattern ⇒ {doc, demo}).
   {
@@ -491,7 +503,10 @@ export const NAV: readonly NavGroup[] = [
   // ⇒ {doc, demo}, the tooltip/popover precedent).
   {
     label: 'ui-code',
-    links: [{ href: './code-doc.html', label: 'API' }],
+    links: [
+      { href: './code-demo.html', label: 'Demo' }, // GH #1279 — inline vs block, seven languages verbatim vs projected, overflow
+      { href: './code-doc.html', label: 'API' },
+    ],
   },
   {
     label: 'ui-disclosure',
