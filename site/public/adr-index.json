@@ -1447,5 +1447,12 @@
     "description": "External Claude-skill repos as opt-in pack-library sources: a dev-time import CLI snapshots skills/*/SKILL.md into a provenance-stamped skill-pack file, the ad…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0220",
+    "url": "./adr-index.html#adr-0220",
+    "description": "ui-choice-group + ui-choice-card: the rich-card selection container (a committed choice over agent-composed option cards, single or multi — GH #1368)",
+    "level": "L3",
+    "section": "Records"
   }
 ]

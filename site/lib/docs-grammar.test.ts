@@ -245,7 +245,11 @@ describe('STRUCTURAL — S5-S9 (S5-S8 promoted at Phase 5, manifest M7-M10; S9 m
     // 2026-08-13, further along) — this branch's tool-description-standard ADR (GH #847) claimed
     // 0188 first in-worktree and was renumbered to 0189 on discovering the collision, leaving this
     // gap until #852 merges.
-    const KNOWN_GAPS = new Set([108, 151, 155, 173, 183, 188, 192, 193]) // 192/193 reserved in flight (@agent-ui/data planner · GH #959) when 0194 was minted (GH #975 renumber, 0191 taken by #974) — inert once they land
+    // 209-219: reserved by the 2026-08-19 host-assigned catalog-design block — 209 (#1357 Disclosure
+    // summary slot), 210 (#1360 FileDrop), 211 (#1364 Drill), 212 (#1367 RadioGroup depth discovery),
+    // 213-219 held for the sibling design lanes (incl. 218 → #1374 Timeline plan-mode); this branch's
+    // ADR-0220 (GH #1368 ChoiceGroup) was host-assigned 0220 past the block. Gaps inert as each lands.
+    const KNOWN_GAPS = new Set([108, 151, 155, 173, 183, 188, 192, 193, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219]) // 192/193 reserved in flight (@agent-ui/data planner · GH #959) when 0194 was minted (GH #975 renumber, 0191 taken by #974) — inert once they land
     const nums = readdirSync(`${DOCS}/adr`).map((f: string) => /^(\d{4})-/.exec(f)?.[1]).filter(Boolean).map(Number).sort((a: number, b: number) => a - b) as number[]
     const newGaps: number[] = []
     for (let n = nums[0]!; n <= nums[nums.length - 1]!; n++)
