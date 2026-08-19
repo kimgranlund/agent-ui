@@ -171,15 +171,18 @@ describe('component-preview a2ui mode — readBack preserves only user-committed
     // and re-emitted into every later rebuild.
     const preview = mount('Slider')
     expect(canvasRoot(preview).tagName.toLowerCase()).toBe('ui-slider')
+    // Slider seeds value:'65' (A2UI_INITIAL round 2) — the invariant is the seed SURVIVES unrelated edits
+    // unchanged; the laundering bug replaced it with the control's clamped/default live value instead.
+    const seeded = knobField(preview, 'value').value
     const min = knobField(preview, 'min')
-    min.value = '2'
+    min.value = '5'
     min.dispatchEvent(new Event('input'))
-    expect(knobField(preview, 'value').value ?? '', 'phantom `value` baked into knob state by a min-knob edit').toBe('')
-    // and a SECOND unrelated edit (the old failure needed two: clamp → readBack) still leaves state clean
+    expect(knobField(preview, 'value').value ?? '', 'seeded `value` replaced by a min-knob edit (laundering)').toBe(seeded)
+    // and a SECOND unrelated edit (the old failure needed two: clamp → readBack) still leaves the seed intact
     const step = knobField(preview, 'step')
     step.value = '1'
     step.dispatchEvent(new Event('input'))
-    expect(knobField(preview, 'value').value ?? '', 'phantom `value` baked on the second edit').toBe('')
+    expect(knobField(preview, 'value').value ?? '', 'seeded `value` replaced on the second edit').toBe(seeded)
     preview.remove()
   })
 

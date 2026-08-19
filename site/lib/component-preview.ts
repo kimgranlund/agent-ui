@@ -217,7 +217,7 @@ function componentKnobs(attrs: readonly ParsedAttribute[], tag: string): Knob[] 
 // each card's expected seeds in-page — the seeds are READ from here, never guessed (same one-source rule as
 // the exported sampleFor below). No other consumer.
 export const A2UI_INITIAL: Record<string, Record<string, string>> = {
-  Text: { text: 'Sample text', variant: 'body' },
+  Text: { text: 'Rollout notes shipped to the team — staging verified, canary at 5%.', variant: 'body' },
   Button: { label: 'Button', variant: 'solid' },
   TextField: { label: 'Label', placeholder: 'Sample' },
   Field: { label: 'Field label' },
@@ -261,10 +261,42 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   Pagination: { page: '2', pages: '8', label: 'Search results' },
   MenuItem: { label: 'Duplicate', value: 'duplicate' },
   Segment: { label: 'Deluxe', value: 'deluxe', checked: 'true' },
-  Table: { label: 'Failing checks' },
+  Table: { label: 'Failing checks', selectable: 'multi' },
   // duration '0' — ≤0 means never auto-dismiss (toast.ts SPEC-R14/R16): the specimen must OUTLIVE the
   // reader's glance; the shipped default (6000ms) had the card self-dismissing into an empty canvas.
   Toast: { label: 'Draft saved — all changes synced.', duration: '0' },
+  // ── round 2 (2026-08-18 review sweep, rubric a2ui-catalog-example.md §4): the tier critics' blind-identify
+  // pass found 20+ cards whose R was technically non-empty but taught nothing (A3=1/B4=1) — the mechanical
+  // gates can't catch a meaningless-but-nonzero box; the review layer did. Same seeding law as above; array
+  // props ride SAMPLE_TREES rootRef below. Content mirrors the corpus idioms (catalog-coverage/frontier). ──
+  Avatar: { src: IMAGE_SAMPLE_SRC, name: 'Ada Lovelace' },
+  Badge: { label: '2 failing', intent: 'danger' },
+  Code: { code: 'npm run check && npm test', language: 'bash' },
+  Icon: { name: 'check', label: 'Done' },
+  Progress: { value: '7', max: '10', label: 'Uploading 7 of 10' },
+  Stat: { label: 'Revenue', value: '€54,200', delta: '12', caption: 'vs. last quarter' },
+  Swatch: { value: 'oklch(0.55 0.15 250)', label: 'Primary 500' },
+  // poster carries the specimen (a legible frame + label) — no video asset ships with the site, and a
+  // featureless black box taught nothing (B4=1); aspect pinned so the box reads deliberate.
+  Video: { poster: IMAGE_SAMPLE_SRC, label: 'Product tour — 2 min', aspect: '16/9' },
+  LineChart: { label: 'Weekly signups' },
+  Sparkline: { label: 'Revenue trend' },
+  TimelineItem: { status: 'done', label: 'Staging verified', description: 'All 12 checks green', timestamp: 'Tue 14:02' },
+  // closed-Disclosure's entire visible surface IS the summary — the Popover "trigger child carries it"
+  // precedent does not transfer (Disclosure has no trigger child; its sample supplies only the revealed body).
+  Disclosure: { summary: 'Rolling restart status' },
+  Calendar: { mode: 'range', valueStart: '2026-08-21', valueEnd: '2026-08-24' },
+  Timeline: { label: 'Rollout — payments v2.31' },
+  ColorPicker: { value: '#7c5cff', name: 'accent' },
+  ComboBox: { value: 'Helsinki', label: 'City', placeholder: 'Search cities…' },
+  Radio: { label: 'Standard shipping', value: 'standard', checked: 'true' },
+  // RadioGroup/SegmentedControl: value lands once the value-before-children control fix ships (in flight
+  // 2026-08-18); the seed is correct either way and harmless before it.
+  RadioGroup: { value: 'apartment' },
+  SegmentedControl: { value: 'standard' },
+  Slider: { value: '65', min: '0', max: '100', label: 'Volume' },
+  SliderMulti: { valueLo: '200', valueHi: '750', min: '0', max: '1000', label: 'Price range (€)' },
+  Textarea: { label: 'Delivery notes', value: 'Leave the package with the concierge; code 4712.', rows: '3' },
   // Attachment (a2ui-catalog-rendering-review, 2026-08-18) — the catalog carries no defaults, and an unseeded
   // ui-attachment falls back to the bare category label ("File"): a chip that demonstrates nothing. Seed the
   // three VISIBLE wire props (`name` → filename, `mimeType` → glyph + category, `sizeBytes` → the meta cell),
@@ -332,7 +364,7 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
       { id: 's_header', component: 'CardHeader', children: ['s_htext'] },
       { id: 's_htext', component: 'Text', variant: 'h5', text: 'Account' },
       { id: 's_content', component: 'CardContent', children: ['s_ctext'] },
-      { id: 's_ctext', component: 'Text', variant: 'body', text: 'A card composes three region sub-elements as a presence-driven grid.' },
+      { id: 's_ctext', component: 'Text', variant: 'body', text: 'Your plan renews on Sep 1. Payment method: Visa ending 4242.' },
       { id: 's_footer', component: 'CardFooter', children: ['s_save'] },
       { id: 's_save', component: 'Button', variant: 'solid', label: 'Save' },
     ],
@@ -350,13 +382,21 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
       { id: 's_pt1', component: 'Text', variant: 'body', text: 'Second panel content' },
     ],
   }),
+  // Modal/Drawer revealed content: real-job copy, not a placeholder (GH #971 bar — the 2026-08-18 review
+  // sweep flagged "Modal content" as below its overlay siblings' bar).
   Modal: () => ({
-    rootRef: { children: ['s_mtext'] },
-    extras: [{ id: 's_mtext', component: 'Text', variant: 'body', text: 'Modal content' }],
+    rootRef: { children: ['s_mtitle', 's_mbody'] },
+    extras: [
+      { id: 's_mtitle', component: 'Text', variant: 'h5', text: 'Remove teammate?' },
+      { id: 's_mbody', component: 'Text', variant: 'body', text: 'Alex loses access to 3 projects. This cannot be undone.' },
+    ],
   }),
   Drawer: () => ({
-    rootRef: { children: ['s_dtext'] },
-    extras: [{ id: 's_dtext', component: 'Text', variant: 'body', text: 'Drawer content' }],
+    rootRef: { children: ['s_dtitle', 's_dbody'] },
+    extras: [
+      { id: 's_dtitle', component: 'Text', variant: 'h5', text: 'Filters' },
+      { id: 's_dbody', component: 'Text', variant: 'body', text: 'Assignees, labels, and due-date filters for the review queue.' },
+    ],
   }),
   // GH #971 — the eight generic "Sample content" fallbacks, each replaced with the type's real job
   // (mirrors the a2ui corpus's own catalog-coverage.ts/catalog-frontier.ts idioms, trimmed to a static
@@ -453,11 +493,13 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
   Split: () => ({
     rootRef: { children: ['s_sp1', 's_sp2'] },
     extras: [
+      // initial is a relative RATIO seed (split-pane.md), not a percent: 35 against pane 2's default 1
+      // rendered ~97:3 and crushed pane 2 to a sliver (2026-08-18 review sweep) — seed BOTH panes.
       { id: 's_sp1', component: 'SplitPane', initial: 35, min: '12rem', children: ['s_sp1col'] },
       { id: 's_sp1col', component: 'Column', gap: 'sm', children: ['s_sp1title', 's_sp1body'] },
       { id: 's_sp1title', component: 'Text', variant: 'h5', text: 'Review queue' },
       { id: 's_sp1body', component: 'Text', variant: 'body', text: 'Payments v2 rollout' },
-      { id: 's_sp2', component: 'SplitPane', children: ['s_sp2col'] },
+      { id: 's_sp2', component: 'SplitPane', initial: 65, children: ['s_sp2col'] },
       { id: 's_sp2col', component: 'Column', gap: 'sm', children: ['s_sp2title', 's_sp2body'] },
       { id: 's_sp2title', component: 'Text', variant: 'h5', text: 'Payments v2 rollout — history' },
       { id: 's_sp2body', component: 'Text', variant: 'body', text: 'Spec approved, staging verified, canary at 5%.' },
@@ -581,6 +623,21 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
         { label: '700', value: 'oklch(0.4 0.12 250)' },
         { label: '900', value: 'oklch(0.2 0.06 250)' },
       ],
+    },
+    extras: [],
+  }),
+  // LineChart / Sparkline: the revenue-trend idiom (catalog-coverage.ts's /trend numbers).
+  LineChart: () => ({ rootRef: { values: [42000, 48000, 45000, 53000, 50000, 58000] }, extras: [] }),
+  Sparkline: () => ({ rootRef: { values: [42000, 48000, 45000, 53000, 50000, 58000] }, extras: [] }),
+  // MultiSelect: the invite-roles idiom (catalog-frontier.ts's in_roles options), two pre-picked.
+  MultiSelect: () => ({
+    rootRef: {
+      options: [
+        { label: 'Viewer', value: 'viewer' },
+        { label: 'Editor', value: 'editor' },
+        { label: 'Admin', value: 'admin' },
+      ],
+      value: ['viewer', 'editor'],
     },
     extras: [],
   }),
@@ -726,7 +783,7 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
     const header = document.createElement('ui-card-header')
     header.textContent = 'Account'
     const content = document.createElement('ui-card-content')
-    content.textContent = 'A card composes three region sub-elements as a presence-driven grid.'
+    content.textContent = 'Your plan renews on Sep 1. Payment method: Visa ending 4242.'
     const footer = document.createElement('ui-card-footer')
     const save = document.createElement('ui-button')
     save.setAttribute('variant', 'solid')
@@ -1763,7 +1820,11 @@ class ComponentPreview extends HTMLElement {
         return
       }
       const root = (this.#surface as HTMLElement | undefined)?.firstElementChild as HTMLElement | null
-      const visible = !!root && root.getClientRects().length > 0
+      // A closed overlay's ROOT is 0-height while its trigger child is absolutely positioned and fully
+      // visible (FormPopover/Menu/Popover/Tooltip) — the 2026-08-18 review sweep found the hint text
+      // z-fighting those triggers. "Visible" therefore means the root OR any descendant lays out.
+      const visible =
+        !!root && (root.getClientRects().length > 0 || [...root.querySelectorAll('*')].some((el) => el.getClientRects().length > 0))
       col.classList.toggle('is-empty-specimen', !visible)
     })
   }
