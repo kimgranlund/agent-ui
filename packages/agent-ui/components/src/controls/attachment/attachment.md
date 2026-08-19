@@ -45,8 +45,12 @@ attributes:            # attributes-as-API — mirrors attachment.ts `static pro
                          # gate, controls/text/href.ts) is DEFERRED to LLD-C6 (a later, separately-dispatched
                          # M1-c wave) — this pass reads it into no effect and renders it nowhere. Do not
                          # treat its presence here as the link leg shipping; see attachment.ts's header note.
+  - name: inline
+    type: boolean
+    default: false
+    reflect: true       # ADR-0223 (Fill by Default, slice 3) — the ONE sizing opt-out: flips display level (inline-grid) only. Default (absent) = block-level fill. The role-(d) whole-shape floor (min-inline-size, SPEC-R18 AC1) survives BOTH states — no content floor to relocate. Reflects so the :scope[inline] CSS leg applies to JS-set values.
 
-properties: []         # no manual accessors beyond the four typed props
+properties: []         # no manual accessors beyond the five typed props
 
 events: []             # display-only — emits nothing (SPEC-R8: no events, no keyboard contract)
 
@@ -80,7 +84,8 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 
 geometry:
   sizeClass: display
-  minInlineSize: var(--ui-attachment-min-inline-size)  # 12em default — the whole-shape floor (SPEC-R18 AC1)
+  posture: fill (block-level grid, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-grid   # Fill by Default — slice 3 (display composites); the role-(d) whole-shape floor survives both states, R3(d); max-inline-size:100% drops on the flip (redundant on a block host)
+  minInlineSize: var(--ui-attachment-min-inline-size)  # 12em default — the whole-shape floor (SPEC-R18 AC1), ratified role (d) (ADR-0223 cl.3(d)) — SURVIVES fill AND [inline]
   # NO [size] attribute, NO [scale] geometry row, NO --md-sys-height-* consumption (SPEC-R20 AC2) — the glyph
   # rides the fixed content-icon register (--md-sys-icon-md, geometry.md's "Affordance vs content-icon" law);
   # rhythm (gap/padding) rides the space ladder, density-responsive for free (SPEC-R18 AC3).
@@ -133,12 +138,16 @@ and size are real DOM text and are the card's whole accessible meaning. The host
 ## Truncation & composability
 
 The name cell truncates to a single line with an ellipsis in a narrow container (the fleet's shared
-CSS-only mechanism); the full name remains the accessible/selectable text. The card is `inline-grid` +
-`max-inline-size: 100%`, so several cards compose N-up in a `Row(wrap)` or as `ui-list` children with zero
-extra code — list semantics stay in `ui-list`, never baked into this type.
+CSS-only mechanism); the full name remains the accessible/selectable text. The card **fills by default**
+(ADR-0223): the host is block-level `grid` and stretches to the parent's inline space; `max-inline-size:
+100%` is unneeded there (a block host already never exceeds its container). The single opt-out is the
+boolean `inline` attribute, restoring the pre-wave `inline-grid` posture — so several cards compose N-up in
+a `Row(wrap)` or as `ui-list` children with zero extra code — list semantics stay in `ui-list`, never baked
+into this type.
 
 ## Sizing
 
-The host floors at `--ui-attachment-min-inline-size` (`12em` default) in an unstyled flex row
-(test-the-whole-shape). The glyph rides the fixed content-icon register (`--md-sys-icon-md`) — there is no
-`[size]`/`[scale]` axis on this Display-class leaf.
+Either posture floors at `--ui-attachment-min-inline-size` (`12em` default) in an unstyled flex row
+(test-the-whole-shape) — a ratified whole-shape floor (ADR-0223 clause 3(d)) that **survives both the fill
+default and the `[inline]` hug state**. The glyph rides the fixed content-icon register (`--md-sys-icon-md`)
+— there is no `[size]`/`[scale]` axis on this Display-class leaf.

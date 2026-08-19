@@ -433,6 +433,150 @@ describe('UIRatingElement — change-after-value-commit probe (Fork-T1/D1, ADR-0
   })
 })
 
+// ── ADR-0216 Amendment 1 (2026-08-20 Kim ruling, GH #1438) — pointer-pick = commit ───────────────────
+//
+// A star picked by POINTER commits immediately: `change` fires on `pointerup`, not blur. KEYBOARD keeps
+// the base range law (unchanged, proven by the Fork-T1/D1 probe above). These probes establish `focus`
+// BEFORE the gesture — the ALREADY-focused case (e.g. tab-then-drag): a real click on a NOT-yet-focused
+// host actually orders pointerdown → (mousedown default action) focus → pointerup (focus lands mid-
+// gesture, AFTER the trait's write) — that first-tap case is covered by the browser probe
+// (rating.browser.test.ts, "real focus/gesture ordering"), which is also why the compare below runs off
+// `#gestureBaseline` (rating.ts), a baseline captured at pointerdown, not off `#committed` (seeded only
+// by `focus`, which may land before OR mid-gesture depending on prior focus state).
+
+describe('UIRatingElement — pointer commit (ADR-0216 Amendment 1)', () => {
+  it('a pointer tap that moves the value fires `change` on pointerup — synchronously, before any blur', () => {
+    const el = make()
+    el.step = 0 // continuous — an exact mid-scale value for a clean before/after delta
+    document.body.append(el)
+    stubPointer(el)
+
+    el.dispatchEvent(new FocusEvent('focus')) // already-focused case (see the describe-block note above)
+
+    let changeCount = 0
+    el.addEventListener('change', () => { changeCount++ })
+
+    ptr(el, 'pointerdown', 0) // value stays 0 — no movement yet, no change owed
+    ptr(el, 'pointermove', 100) // value → 2.5 (the live `input` commit — unaffected by this amendment)
+    expect(changeCount).toBe(0) // not yet — the NOTIFICATION waits for pointerup
+
+    ptr(el, 'pointerup', 100)
+    expect(changeCount).toBe(1) // commits on pointerup, not on the later blur
+    expect(el.value).toBe(2.5)
+    el.remove()
+  })
+
+  it('`value` is already the moved value by the time `change` fires (Fork-T1/D1, pointer path)', () => {
+    const el = make()
+    el.step = 0
+    document.body.append(el)
+    stubPointer(el)
+    el.dispatchEvent(new FocusEvent('focus'))
+
+    let sawDuringChange: number | null | undefined
+    el.addEventListener('change', () => { sawDuringChange = el.value })
+
+    ptr(el, 'pointerdown', 0)
+    ptr(el, 'pointermove', 100) // value → 2.5
+    ptr(el, 'pointerup', 100)
+
+    expect(sawDuringChange).toBe(2.5) // not the stale pre-drag value (0)
+    el.remove()
+  })
+
+  it('a pointer pick that lands back on the committed value fires no `change`', () => {
+    const el = make()
+    el.value = 0
+    el.step = 0
+    document.body.append(el)
+    stubPointer(el)
+    el.dispatchEvent(new FocusEvent('focus'))
+
+    let changeCount = 0
+    el.addEventListener('change', () => { changeCount++ })
+
+    ptr(el, 'pointerdown', 0) // ratio=0 → value stays 0 — no net movement
+    ptr(el, 'pointerup', 0)
+    expect(changeCount).toBe(0)
+    el.remove()
+  })
+
+  it('after a pointer commit, blur does NOT re-fire `change` for the same value (no double-report)', () => {
+    const el = make()
+    el.step = 0
+    document.body.append(el)
+    stubPointer(el)
+    el.dispatchEvent(new FocusEvent('focus'))
+
+    let changeCount = 0
+    el.addEventListener('change', () => { changeCount++ })
+
+    ptr(el, 'pointerdown', 100) // value → 2.5
+    ptr(el, 'pointerup', 100)
+    expect(changeCount).toBe(1)
+
+    el.dispatchEvent(new FocusEvent('blur')) // no further movement since the pointer commit
+    expect(changeCount).toBe(1) // unchanged — `#committed` was re-baselined at pointerup
+    el.remove()
+  })
+
+  it('a keyboard edit AFTER a pointer commit (same focus session) still commits on blur, not sooner', () => {
+    const el = make()
+    el.step = 1
+    document.body.append(el)
+    stubPointer(el)
+    el.dispatchEvent(new FocusEvent('focus'))
+
+    let changeCount = 0
+    el.addEventListener('change', () => { changeCount++ })
+
+    ptr(el, 'pointerdown', 140) // value → 4 (see the step-snap probe above); change on pointerup
+    ptr(el, 'pointerup', 140)
+    expect(changeCount).toBe(1)
+
+    key(el, 'ArrowLeft') // value: 4 → 3 — a live `input`, no `change` yet
+    expect(changeCount).toBe(1)
+
+    el.dispatchEvent(new FocusEvent('blur')) // keyboard's own base-law commit point
+    expect(changeCount).toBe(2)
+    el.remove()
+  })
+
+  it('readonly host: a synthetic pointerup dispatched at `.stars` fires no `change` (onValue never wrote value)', () => {
+    const el = make()
+    el.value = 1
+    el.readonly = true
+    el.step = 0
+    document.body.append(el)
+    stubPointer(el)
+    el.dispatchEvent(new FocusEvent('focus'))
+
+    let changeCount = 0
+    el.addEventListener('change', () => { changeCount++ })
+
+    ptr(el, 'pointerdown', 100) // would be 2.5 if writable — onValue no-ops under readonly
+    ptr(el, 'pointerup', 100)
+    expect(changeCount).toBe(0)
+    expect(el.value).toBe(1)
+    el.remove()
+  })
+
+  it('a pointerup dispatched OUTSIDE the star track (not a pick) fires no `change`', () => {
+    const el = make()
+    el.value = 2
+    document.body.append(el)
+    el.dispatchEvent(new FocusEvent('focus'))
+
+    let changeCount = 0
+    el.addEventListener('change', () => { changeCount++ })
+
+    el.value = 4 // simulate an external write with no gesture behind it
+    el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true })) // target = el, not .stars
+    expect(changeCount).toBe(0) // scoped to the star track — this pointerup did not originate there
+    el.remove()
+  })
+})
+
 // ── label prop ────────────────────────────────────────────────────────────────────────────────────
 
 describe('UIRatingElement — label prop', () => {

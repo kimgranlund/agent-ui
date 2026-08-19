@@ -52,6 +52,10 @@ const props = {
   // NOT a plain `prop.number(0)`: a non-null-defaulting number codec misclassifies under the LLD-C9
   // `kindOf` build-verify (component-descriptor.ts), so this mirrors statDeltaProp's null-default shape.
   percent: statPercentProp,
+  // ADR-0223 (Fill by Default, slice 3) — the ONE sizing opt-out, fleet-shared name: reflects so the
+  // `:scope[inline]` CSS leg (inline-level display; the role-(d) whole-shape floor already applies in
+  // BOTH states) applies to JS-set values.
+  inline: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
 export interface UIStatElement extends ReactiveProps<typeof props> {}

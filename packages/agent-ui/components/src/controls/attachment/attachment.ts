@@ -40,6 +40,10 @@ const props = {
   sizeBytes: { ...prop.number(null), attribute: 'size-bytes' }, // bytes; NOT a wire field — embedder-supplied (SPEC-R8); null/non-finite/negative ⇒ no meta cell
   // SPEC-R8's fourth wire-mirroring prop. Rendering leg DEFERRED — see the file header note (LLD-C6).
   href: prop.string(''),
+  // ADR-0223 (Fill by Default, slice 3) — the ONE sizing opt-out, fleet-shared name: reflects so the
+  // `:scope[inline]` CSS leg (inline-level display; the role-(d) whole-shape floor already applies in
+  // BOTH states) applies to JS-set values.
+  inline: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
 export interface UIAttachmentElement extends ReactiveProps<typeof props> {}

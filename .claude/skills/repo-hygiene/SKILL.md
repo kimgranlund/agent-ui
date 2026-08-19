@@ -46,6 +46,24 @@ can hold.
   live pointer (a path kept resolving) is mechanical and allowed; changing what the record CLAIMS
   is a content edit and is not.
 
+## Gated actions (mechanized, not proposal-only)
+
+`harness:repo-cleaner`'s standing charter runs everything else as a PROPOSED plan only — but this
+repo's own gated branch-reap script is one of the named exceptions ("running a host repo's own
+gated branch-reap script where one exists"), the same tier as `campaign_close.py` verifying a PR
+`MERGED` before a remote-branch delete: a mechanized, independently-verified gate the seat may
+EXECUTE directly, not merely surface. Two scripts hold that tier here, chained in that order
+(worktree removal, then branch deletion — GH #1440):
+
+- `node scripts/reap-worktrees.mjs --execute` — removes a `.claude/worktrees/` entry only when
+  ALL of clean (`git status --porcelain` empty), branch provably disposed (PR MERGED at this tip,
+  or `git cherry origin/main` clean), and unlocked hold; a live-locked lane is never touched.
+- `node scripts/reap-branches.mjs --execute` — deletes the now-orphaned local branch under the
+  same provably-disposed gate.
+
+Both refuse loudly (dry-run table, non-zero exit) rather than guess — `repo-cleaner` trusts their
+verdict, it never re-derives disposal itself.
+
 ## Upstream tools that disagree with the house
 
 - **The accepted-divergence pattern** (harness_wiring_check.py): when a plugin's check contradicts

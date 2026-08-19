@@ -23,7 +23,8 @@ const css = readFileSync(`${DIR}/attachment.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['filename', 'mimeType', 'sizeBytes', 'href']
+// ADR-0223 (Fill by Default, slice 3): `inline` added after `href` — the ONE sizing opt-out boolean.
+const ATTR_NAMES = ['filename', 'mimeType', 'sizeBytes', 'href', 'inline']
 
 describe('attachment.md descriptor — structural validity', () => {
   it('has a leading frontmatter fence and a prose body', () => {
@@ -60,7 +61,7 @@ describe('attachment.md descriptor — contract↔props trip-wire', () => {
     expect(drift.filter((d) => d.code === 'DRIFT_MISSING' || d.code === 'DRIFT_EXTRA')).toEqual([])
   })
 
-  it('all four attributes are CLEAN — zero drift (type/default/reflect all agree with the live props)', () => {
+  it('all five attributes are CLEAN — zero drift (type/default/reflect all agree with the live props)', () => {
     const drift = compareDescriptorToProps(parsed.attributes, UIAttachmentElement.props)
     expect(drift).toEqual([])
   })

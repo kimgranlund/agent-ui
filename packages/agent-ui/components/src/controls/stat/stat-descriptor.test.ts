@@ -25,7 +25,8 @@ const css = readFileSync(`${DIR}/stat.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['label', 'figure', 'delta', 'caption', 'variant', 'percent']
+// ADR-0223 (Fill by Default, slice 3): `inline` added after `percent` — the ONE sizing opt-out boolean.
+const ATTR_NAMES = ['label', 'figure', 'delta', 'caption', 'variant', 'percent', 'inline']
 
 describe('kindOf build-verify (LLD-C9) — value/percent classify "string"/"number"', () => {
   it('value: a null-defaulting, non-enum-snapping string-shaped codec classifies as "string"', () => {
@@ -109,7 +110,7 @@ describe('stat.md descriptor — contract↔props trip-wire', () => {
     expect(drift.filter((d) => d.code === 'DRIFT_MISSING' || d.code === 'DRIFT_EXTRA')).toEqual([])
   })
 
-  it('all six attributes are CLEAN — zero drift (type/default/reflect/enum-values all agree with the live props)', () => {
+  it('all seven attributes are CLEAN — zero drift (type/default/reflect/enum-values all agree with the live props)', () => {
     const drift = compareDescriptorToProps(parsed.attributes, UIStatElement.props)
     expect(drift).toEqual([])
   })
