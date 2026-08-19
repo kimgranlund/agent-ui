@@ -342,6 +342,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-text',
     cards: [
       {
+        href: './text-demo.html',
+        title: 'Demo',
+        blurb: 'A release-notes article set entirely in ui-text — every role in its editorial job, real headings via the as stamp, a gated link, plus truncate and emphasis in context.',
+      },
+      {
         href: './text-doc.html',
         title: 'API reference',
         blurb: 'The Display-class text primitive — its single variant enum + the live type ramp, generated from text.md.',
@@ -351,6 +356,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
   {
     label: 'ui-icon',
     cards: [
+      {
+        href: './icon-demo.html',
+        title: 'Demo',
+        blurb: 'Icons where they live: leading/trailing/icon-only buttons, file-type glyphs beside list rows, the ambient font-size ramp, and meaningful (label) icons inheriting intent ink.',
+      },
       {
         href: './icon-doc.html',
         title: 'API reference',
@@ -991,6 +1001,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-description-list',
     cards: [
       {
+        href: './description-list-demo.html',
+        title: 'Demo',
+        blurb: 'Three confirm-step receipts on realistic bookings, the empty-value omission law written live (rows in vs rows rendered), Intl numbers and the aligned-values lever.',
+      },
+      {
         href: './description-list-doc.html',
         title: 'API reference',
         blurb: 'The key–value receipt primitive — rows as hardened data, label secondary + value adjacent, a valueless field omitted by construction, generated from description-list.md.',
@@ -1000,6 +1015,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
   {
     label: 'ui-badge',
     cards: [
+      {
+        href: './badge-demo.html',
+        title: 'Demo',
+        blurb: 'Status and count tokens in a CI run list (short labels, by law), a live bound intent write with the out-of-enum hardening proven in a log, and count pills / the empty-label floor.',
+      },
       {
         href: './badge-doc.html',
         title: 'API reference',
@@ -1027,6 +1047,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
   {
     label: 'ui-code',
     cards: [
+      {
+        href: './code-demo.html',
+        title: 'Demo',
+        blurb: 'Inline vs block in an agent answer, seven languages verbatim beside the same blocks projected through the opt-in highlight pack, whitespace fidelity, and the component\'s own overflow.',
+      },
       {
         href: './code-doc.html',
         title: 'API reference',
