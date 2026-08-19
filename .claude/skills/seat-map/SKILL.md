@@ -54,11 +54,23 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   worktree without its own `node_modules` resolves `@agent-ui/*` through the MAIN checkout and
   lies to import-resolving gates; but per-lane `npm install` was the load-108 root cause (seven
   lanes × install churn, Spotlight indexing every byte). The brief now mandates, in order: (1)
-  `git diff --quiet origin/main -- package-lock.json` — lockfile unchanged ⇒ (2)
-  `ln -s <repo-root>/node_modules node_modules` at the worktree root (zero churn, correct
-  resolution); lockfile CHANGED ⇒ `npm ci --prefer-offline` (the one case an install is earned);
-  then (3) the `readlink node_modules/@agent-ui/shared` check as before. Never a bare
-  `npm install` in a worktree.
+  `git diff --quiet origin/main -- package-lock.json` — lockfile unchanged ⇒ (2) the
+  PER-ENTRY symlink recipe below (amended 2026-08-19, the ADR-0224 S2 phantom-TS2345 finding: a
+  whole-root `ln -s <root>/node_modules` splits TypeScript type identity, because the root's
+  `node_modules/@agent-ui/*` workspace links point back into MAIN's packages/ — workspace imports
+  then typecheck against main's sources while relative imports use the worktree's, and `npm run
+  check` goes red on a clean tree); lockfile CHANGED ⇒ `npm ci --prefer-offline` (the one case an
+  install is earned); then (3) `readlink node_modules/@agent-ui/shared` MUST print a path inside
+  THIS worktree, never the main checkout. The recipe:
+  ```
+  mkdir node_modules && for d in <root>/node_modules/*; do ln -s "$d" node_modules/; done
+  rm node_modules/@agent-ui && mkdir node_modules/@agent-ui
+  for p in packages/agent-ui/*; do ln -s "$PWD/$p" "node_modules/@agent-ui/$(basename "$p")"; done
+  ```
+  Third-party deps share main's store (zero churn); @agent-ui/* resolves to the worktree's own
+  sources (type identity intact). A red `check` in a worktree whose readlink points at MAIN is
+  ENVIRONMENT, not regression — the desk re-gates on merged main before trusting either verdict.
+  Never a bare `npm install` in a worktree.
 - **Concurrency ceiling (Kim ruling 2026-08-20).** At most **3 gate-running lanes** concurrent
   on this host (10 cores: `(cores − 2) / 3`, rounded down — each lane's vitest + a checker's
   Chromium shard is ~3 cores of real load); builders beyond the ceiling QUEUE, they don't fan
