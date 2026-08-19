@@ -1305,6 +1305,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-badge', // connected() builds the glyph+label spans once (replaceChildren) — `label` is a PROP, not a slot at all (slots: [] — badge.md)
   'ui-bar-chart', // component-built rows (replaceChildren) — one role=listitem row per datum, never author-slotted (slots: [] — bar-chart.md)
   'ui-calendar', // #ensureShell() builds the whole nav+grid panel unconditionally
+  'ui-file-drop', // ADR-0210: connected() builds the whole dropzone/hint/browse/chips shell unconditionally (composed parts, never author-slotted text)
   'ui-color-picker', // #ensureShell() builds the whole pad+channels+readout tree unconditionally (ADR-0123); [slot=presets] is a named exception, not the default slot
   'ui-combo-box', // #ensureParts(): a control-created editor + listbox
   'ui-command-modal', // #ensureParts(): a control-created search/list/status + a nested ui-modal (ADR-0125)
