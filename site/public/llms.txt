@@ -71,10 +71,10 @@
 - [ui-switch](./switch-doc.html): the on/off toggle — a thumbed compact-realm widget; [demo](./switch-demo.html).
 - [ui-radio](./radio-doc.html): a single radio dot; exclusivity lives on the group; [demo](./radio-demo.html).
 - [ui-radio-group](./radio-group-doc.html): exclusivity, roving focus, and group validity for radios; [demo](./radio-group-demo.html).
-- [ui-segment](./segment-doc.html): one joined-button segment; selection lives on the control.
+- [ui-segment](./segment-doc.html): one joined-button segment; selection lives on the control; [demo](./segment-demo.html).
 - [ui-segmented-control](./segmented-control-doc.html): joined-button single-select with one shared animated indicator; [demo](./segmented-control-demo.html).
-- [ui-slider](./slider-doc.html): the single-value range control on the compact-realm rail.
-- [ui-slider-multi](./slider-multi-doc.html): the two-thumb range (valueLo/valueHi) on the shared rail.
+- [ui-slider](./slider-doc.html): the single-value range control on the compact-realm rail; [demo](./slider-demo.html).
+- [ui-slider-multi](./slider-multi-doc.html): the two-thumb range (valueLo/valueHi) on the shared rail; [demo](./slider-multi-demo.html).
 
 ## Components — overlays & selection
 
@@ -123,7 +123,7 @@
 ## Components — feed & activity
 
 - [ui-progress](./progress-doc.html): the determinate/indeterminate progress bar — thin-rail geometry, reduced-motion aware.
-- [ui-avatar](./avatar-doc.html): identity — image → initials → glyph fallback chain, decorative by default.
+- [ui-avatar](./avatar-doc.html): identity — image → initials → glyph fallback chain, decorative by default; [demo](./avatar-demo.html).
 - [ui-image](./image-doc.html): the URL-sourced content image — a reserved aspect-ratio box (zero CLS), native lazy-loading, an optional bottom-scrim caption; [demo](./image-demo.html).
 - [ui-video](./video-doc.html): the native video player — <video controls> in a reserved aspect-ratio box (zero CLS), poster support, no custom chrome; [demo](./video-demo.html).
 - [ui-audio](./audio-doc.html): the native audio player — <audio controls> at the UA bar's intrinsic height, no custom chrome; [demo](./audio-demo.html).
