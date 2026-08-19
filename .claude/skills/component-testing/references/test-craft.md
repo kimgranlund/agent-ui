@@ -62,8 +62,13 @@ shard.
   Pattern: `stripComments` in `controls/styling-gates.test.ts`.
 - A fresh worktree WITHOUT its own `npm install` resolves `@agent-ui/*` through the MAIN
   checkout's node_modules — import-resolving tests/builds silently exercise main's sources, and
-  Vite's fs-allow denies `?raw` modules. Install in the worktree and `readlink
-  node_modules/@agent-ui/shared` before trusting any import-resolving gate.
+  Vite's fs-allow denies `?raw` modules. Give the worktree its OWN `node_modules` — but by
+  SYMLINK, not install (Kim ruling 2026-08-20, the load-108 incident: seven parallel lane
+  installs + Spotlight indexing the churn saturated the host): lockfile unchanged vs origin/main
+  ⇒ `ln -s <repo-root>/node_modules node_modules`; lockfile changed ⇒ `npm ci --prefer-offline`;
+  then `readlink node_modules/@agent-ui/shared` before trusting any import-resolving gate. The
+  dispatch-side ceilings (≤3 concurrent gate-running lanes, `--maxWorkers=4` per lane, reap
+  worktrees on lane-return) live in `seat-map`'s Dispatch laws.
 - Bundle-shape gates (the built-output-proofs bar, applied to lazy splits): assert the arm is
   absent from the transitive **EAGER CLOSURE** — entry chunks PLUS every chunk they statically
   import, walked to a fixed point — never merely from `isEntry` chunks. A lazy accessor's arm can
