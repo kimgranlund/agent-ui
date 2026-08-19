@@ -1,6 +1,6 @@
 # Rubric — a2ui-catalog-example (one catalog-page card)
 
-> Status: proposed · v0.2 · 2026-08-18 (v0.1 same day; v0.2 resolves the two escalations the first full
+> Status: accepted · v0.2 · 2026-08-18 (ratified by Kim 2026-08-19, the ruled "after the sweep" condition met: v0.2 survived the full 60-card run + verify round) (v0.1 same day; v0.2 resolves the two escalations the first full
 > five-tier review raised — the `demonstrable` definition now encodes the fleet's ruled visibility law, B4's
 > anchors decide the bare-but-recognizable case — and repairs §5's own probe list, which omitted A3's gate) ·
 > Layer: rubric (the standard ONE card on `site/a2ui-catalog.html` is graded against — the eval framework the
