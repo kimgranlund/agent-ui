@@ -391,12 +391,15 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
    *  dedup (`E_DUP`) and never reach the judge. Since the 2026-08-18 judged waves (backable-wizard
    *  admitted post-repair, PR #1338) + the drop of the two standing refusals (`stats-grid-dashboard` ·
    *  `wizard-step-progress` — the ADR-0165 drop path; a dropped seed is no longer a candidate, so it
-   *  holds NO row here), the shelf and the shard are in exact 1:1 NAME correspondence — but dedup is
-   *  CONTENT-based, so any seed whose source has drifted from its shard row (e.g. the GH #1262/#1342
-   *  card-anatomy repairs) still reaches a wired judge, which fails closed unless the file rules on it
-   *  (ADR-0068 clause 2). The rows below cover every historically-judged name for exactly that reason.
-   *  Refusing all keeps the run at zero admissions while still reaching `saveStore` — the archive's
-   *  actual trigger. */
+   *  holds NO row here), the shelf and the shard are in exact 1:1 NAME correspondence — and since the
+   *  GH #1346 judged `--replace` leg re-aligned the 8 GH #1342 card-anatomy rows, in exact CONTENT
+   *  correspondence too, so a run against the untouched shard reaches the judge for NO seed at all.
+   *  The rows below stay anyway: dedup is CONTENT-based, so any FUTURE source↔shard drift makes that
+   *  seed reach a wired judge again, which fails closed unless the file rules on it (ADR-0068
+   *  clause 2) — these rows keep the archive tests robust to that drift instead of red on it. A test
+   *  that NEEDS a candidate to actually reach the judge must plant its own drift (see the dry-run
+   *  collision test below) rather than lean on incidental drift. Refusing all keeps any such run at
+   *  zero admissions while still reaching `saveStore` — the archive's actual trigger. */
   const SHARD_LOADED_VERDICTS = {
     'frontier-trip-card': { passed: false, qualityScore: 2 },
     'frontier-invite-modal': { passed: false, qualityScore: 2 },
@@ -557,7 +560,15 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     // deliberately differs — that case runs an EMPTY sandbox with all-passing verdicts, while this one
     // needs a pre-loaded shard AND a `passed:false` verdict so the run actually reaches the
     // `quality-rejected` / `NOT recorded durably` summary lines the hard exit used to suppress.
+    // Since the GH #1346 judged --replace leg the committed shard matches every seed's source, so no
+    // candidate reaches the judge on its own — plant the drift deterministically: drop ONE row from
+    // the sandbox's shard copy, making that seed a fresh candidate its `passed:false` row refuses.
     makeSandbox({ withShard: true })
+    const shardPath = join(sandbox, SHARD)
+    const keptRows = readFileSync(shardPath, 'utf8')
+      .split('\n')
+      .filter((line) => line !== '' && !line.includes('"name":"empty-error-retry-card"'))
+    writeFileSync(shardPath, `${keptRows.join('\n')}\n`)
     const verdictsPath = writeVerdicts('wave-b.json', { date: '2026-07-28', verdicts: SHARD_LOADED_VERDICTS })
     const planted = plantArchive(
       '2026-07-28--wave-b.json',
