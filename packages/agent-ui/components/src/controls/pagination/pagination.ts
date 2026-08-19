@@ -27,6 +27,10 @@
 // `controls → dom` only (no traits needed — no roving focus, no overlay).
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
+// Runtime side-effect import (NOT only `import type`) — pagination creates `<ui-button>` elements
+// imperatively, so it must guarantee the definition itself rather than rely on the consumer having
+// imported ui-button (the table.ts:99-103 convention, aligned per the marshal's 2026-08-19 finding).
+import '../button/button.ts'
 import type { UIButtonElement } from '../button/button.ts'
 import { computePageWindow, ELLIPSIS } from './pagination-model.ts'
 
