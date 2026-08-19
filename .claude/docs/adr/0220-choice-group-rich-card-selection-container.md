@@ -44,13 +44,13 @@ listbox-roving LLD-C2) — the latter (verified at source) commits on real user 
 Enter — explicit activation, never selection-follows-focus), emits `select` on commit, carries a
 `'multi-toggle'` mode (multi-select-field LLD-C4), and parameterizes `items()`/`keyOf()`/
 `syncSelection()`. The fleet idiom for a selection CONTROL is to compose both traits directly on
-a `UIFormElement` host — `select.ts`, `combo-box.ts`, `multi-select.ts` (whose header, lines 1–10,
+a `UIFormElement` host — `select.ts`, `multi-select.ts`, and `_base/listbox-element.ts` (whose test exercises the DEFAULT accessors — the most load-bearing negative control; `multi-select.ts`'s header, lines 1–10,
 states it: traits on the control, never via extending `UIListboxElement`).
 `controls/_base/listbox-element.ts` (`UIListboxElement`, ADR-0042) exists but has NO production
 subclass (only its own test fixture), hard-wires `querySelectorAll('[role=option]')` (lines
 61–85), holds a private `#selection`, knows only `'multi'` (not `'multi-toggle'`), and exposes no
 protected hooks — it is not an extension seam. Two verified limits in `selectionCommit` bound the
-build: its click path resolves the option via a hard-coded `closest('[role=option]')`, and its
+build: its click AND Enter paths BOTH resolve the option via a hard-coded `closest('[role=option]')` (click: `optionFromTarget`; Enter: the `document.activeElement` lookup at `selection-commit.ts:191`), and its
 commit-time reflect SETS an `aria-selected` ATTRIBUTE on each item (its header, lines 6–11:
 attribute-reflected `[role=option]` hosts ONLY; ui-tab, internals-driven, cannot consume it
 as-is). Clause 1 rules how a card family — whose option unit is a FACE host carrying ARIA through
@@ -65,7 +65,7 @@ applies verbatim.
 Eight clauses:
 
 1. **Identity & class.** `UIChoiceGroupElement extends UIFormElement`, composing `rovingFocus` +
-   `selectionCommit` directly from `connected()` — the `select`/`combo-box`/`multi-select` idiom,
+   `selectionCommit` directly from `connected()` — the `select`/`multi-select` idiom (`combo-box` is bespoke and does NOT use this trait, `combo-box.ts:27`),
    NOT a `UIListboxElement` subclass (Context: the base has no production subclass and no
    protected hooks). The group owns its own `value`/`values` props, `formValue()`/
    `formValidity()` (`required`+empty → `valueMissing`), and `internals.role = 'listbox'`.
@@ -75,11 +75,11 @@ Eight clauses:
    (decided here, not deferred):** cards do NOT grow a host `role` attribute to become visible to
    the trait's attribute-keyed defaults; instead the build's FIRST slice adds two optional,
    backwards-compatible seams to `selectionCommit` — `itemFromTarget?: (target) => HTMLElement |
-   null` (replaces the hard-coded `closest('[role=option]')` click-path resolution; the group
+   null` (replaces BOTH hard-coded `[role=option]` resolution sites — the click target (`optionFromTarget`) AND the Enter path's `document.activeElement` lookup at `selection-commit.ts:191`, else an internals-role card's Enter commit never fires; the group
    passes a `closest('ui-choice-card')` scoped by clause 7) and `reflectSelected?: (el, selected)
    => void` (replaces the per-item `setAttribute('aria-selected')` paint; the group routes it to
    the card's `internals.ariaSelected`) — both defaulting to today's behaviour, so `ui-select`/
-   `ui-combo-box`/`ui-multi-select` are byte-unaffected (their suites are the slice's negative
+   `ui-multi-select`/`ui-listbox` are byte-unaffected (their suites plus `listbox-element.test.ts`, which exercises the default accessors, are the slice's negative
    control), and the trait header's consumer contract is amended to name internals-reflected
    hosts as consumable THROUGH these seams. The group layers its own value-keyed reflect on top
    (the trait's reflect is commit-time only — GH #908/#905 header contract; the `multi-select.ts`
@@ -168,7 +168,7 @@ disjoint entries, no shared decision.
   exclusivity, multi toggle, `required`+empty → `valueMissing`, programmatic `value`/`values`
   writes reflect without self-emitting, nearest-group discovery incl. the inner-group boundary
   negative control, disabled cards skipped by roving and never committed, the `selectionCommit` seam slice's
-  negative control (shipped `select`/`combo-box`/`multi-select` suites unchanged-green); browser — selected
+  negative control (shipped `select`/`multi-select` suites + `listbox-element.test.ts` unchanged-green); browser — selected
   frame + indicator, forced-colors leg, stacked→grid reflow at `min`, exactly-one-tabindex roving;
   **the Fork-T1/D1 event-vs-commit ordering probe recorded in #1368's Findings BEFORE the value
   mark lands**; catalog/conformance/factory legs (rubric `a2ui-catalog` D1–D3 ≥ 4 hard);
