@@ -30,7 +30,12 @@ const PRODUCT_ID = 'commerce-product-card'
  *  varying field is data-bound (never a literal standing in for what a real agent would template) — the
  *  "dead data" defect class named at intake. Card-anatomy law observed: CardHeader carries identity
  *  (title+badge), CardContent carries substance (the Stat readouts), CardFooter carries the one action —
- *  never a Button loose in content (req-a2ui-patterns.md R1 / a2ui-payload.md P9). */
+ *  never a Button loose in content (req-a2ui-patterns.md R1 / a2ui-payload.md P9).
+ *  P5 repair (2026-08-19, first judged pass): the title+Badge originally rode a Row ONE LEVEL BELOW
+ *  CardHeader — the judge caught that a slotted Badge's `[slot='trailing']` placement is a direct-child
+ *  CSS grid (`card.css`'s `:has(> [slot='trailing'])`), so the Row-nested Badge rendered inert. Fixed by
+ *  making Text+Badge CardHeader's own direct children with `format:'structured'` (the
+ *  structured-container.ts:41-45 precedent) — re-judged fresh after the repair. */
 export const commerceProductCardSeed: ExampleSeed = {
   name: 'commerce-product-card',
   description:
@@ -66,16 +71,12 @@ export const commerceProductCardSeed: ExampleSeed = {
             id: 'hero', component: 'Image', src: { path: '/listing/photo' },
             alt: 'Ocean View Suite, balcony over the bay at sunset', aspect: '16/9', usageHint: 'hero',
           },
-          { id: 'head', component: 'CardHeader', children: ['head_row'] },
-          {
-            id: 'head_row', component: 'Row', gap: 'sm', align: 'center', justify: 'between',
-            children: ['head_title', 'head_badge'],
-          },
-          { id: 'head_title', component: 'Text', variant: 'h4', text: { path: '/listing/title' } },
+          { id: 'head', component: 'CardHeader', format: 'structured', children: ['head_title', 'head_badge'] },
+          { id: 'head_title', component: 'Text', variant: 'label', text: { path: '/listing/title' } },
           { id: 'head_badge', component: 'Badge', label: { path: '/listing/badge' }, intent: 'info', slot: 'trailing' },
           { id: 'content', component: 'CardContent', children: ['stats_row'] },
           { id: 'stats_row', component: 'Row', gap: 'lg', children: ['stat_price', 'stat_rating'] },
-          { id: 'stat_price', component: 'Stat', label: 'Per night', value: { path: '/listing/price' } },
+          { id: 'stat_price', component: 'Stat', label: 'Price', value: { path: '/listing/price' } },
           { id: 'stat_rating', component: 'Stat', label: 'Guest rating', value: { path: '/listing/rating' } },
           { id: 'foot', component: 'CardFooter', children: ['btn_book'] },
           { id: 'btn_book', component: 'Button', variant: 'solid', label: 'Book now', action: { action: 'book_listing' } },

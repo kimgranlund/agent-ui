@@ -137,6 +137,12 @@ A commerce/hospitality catalog-grid tile: hero `Image` as `Card`'s own child (me
 never nests inside `CardHeader`), `CardHeader` carrying the identity row (title `Text` + a status `Badge`,
 `slot:"trailing"`), `CardContent` carrying a `Row` of `Stat` tiles (the quantified metrics — price,
 rating), `CardFooter` carrying the ONE commit `Button` (card-anatomy law, req-a2ui-patterns.md R1).
+**A slotted Badge MUST be CardHeader's own DIRECT child** — `format:"structured"` — never nested inside
+a `Row` a level down: the header's `[slot="trailing"]` placement is a direct-child CSS grid
+(`card.css`'s `:has(> [slot='trailing'])`), so a `Row`-wrapped Badge one level deeper renders inert (the
+`commerce-product-card` seed's own first-pass defect, caught by the ADR-0068 judge and repaired at
+source — `structured-container.ts:41-45`'s `CardHeader(format:'structured') > [Icon(slot leading),
+Text, Badge(slot trailing)]` shape is the one to copy).
 **Routing — the metric-AND-flag test**: reach for this idiom ONLY when the tile ALSO carries a quantified
 metric (price/rating/stock) AND a status flag (Sale/New/Popular). A photo+title+one-button listing with
 NEITHER wants the plainer `Card > Image > CardContent > CardFooter` shape instead — no `Stat`, no
@@ -146,14 +152,13 @@ Stat/Badge row to a single-fact card is over-decoration, not fidelity. Badge `in
 ```json
 { "id": "root", "component": "Card", "elevation": "1", "children": ["hero", "head", "content", "foot"] }
 { "id": "hero", "component": "Image", "src": { "path": "/listing/photo" }, "alt": "…", "aspect": "16/9", "usageHint": "hero" }
-{ "id": "head", "component": "CardHeader", "children": ["head_row"] }
-{ "id": "head_row", "component": "Row", "justify": "between", "children": ["head_title", "head_badge"] }
+{ "id": "head", "component": "CardHeader", "format": "structured", "children": ["head_title", "head_badge"] }
 { "id": "head_badge", "component": "Badge", "label": { "path": "/listing/badge" }, "intent": "info", "slot": "trailing" }
 { "id": "content", "component": "CardContent", "children": ["stats_row"] }
 { "id": "stats_row", "component": "Row", "gap": "lg", "children": ["stat_price", "stat_rating"] }
-{ "id": "stat_price", "component": "Stat", "label": "Per night", "value": { "path": "/listing/price" } }
+{ "id": "stat_price", "component": "Stat", "label": "Price", "value": { "path": "/listing/price" } }
 ```
-Real: `examples/commerce-hospitality.ts:66-79` (`commerce-product-card`, the flagship judged corpus seed).
+Real: `examples/commerce-hospitality.ts:66-75` (`commerce-product-card`, the flagship judged corpus seed).
 
 ## Feature-collection — DescriptionList vs Table (GH #1377)
 Presenting a set of named facts. ONE entity's own spec sheet (material, dimensions, warranty) is a

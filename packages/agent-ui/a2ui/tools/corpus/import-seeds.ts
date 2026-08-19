@@ -300,7 +300,7 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
   {
     module: 'commerce-hospitality.ts', // GH #1377 — the commerce+hospitality genui-pack
     seeds: [
-      commerceProductCardSeed, // the flagship — judged + admitted this wave
+      commerceProductCardSeed, // the flagship — judged + admitted (corpus/verdicts/2026-08-19t14-20-40z--gh-1377-verdicts.json)
       productOptionsQuantitySeed, // admission pending the judged wave (disposition-allowlist.ts)
       listingPhotoGridSeed, // admission pending the judged wave (disposition-allowlist.ts)
     ],
