@@ -64,6 +64,11 @@ export class UISuggestionsElement extends UIElement {
   }
 
   protected override connected(): void {
+    // Upgrade guard (checker finding 1): a pre-upgrade `el.disabled = x` write mints an OWN property
+    // that would permanently shadow the derived getter — exactly the plain-property read the renderer's
+    // GH #1164 guard depends on. Deleting it re-exposes the prototype getter (the upgradeProperty idiom).
+    if (Object.hasOwn(this, 'disabled')) delete (this as { disabled?: unknown }).disabled
+
     // Delegated at the host — the render effect below REPLACES every chip on each `suggestions`/
     // `selected` change, so a per-chip listener would leak; one listener survives every rebuild.
     this.listen(this, 'click', (event) => this.#onClick(event))

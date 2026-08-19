@@ -78,7 +78,7 @@ aria:
   role: none              # the HOST mints no role at all (the table.md/description-list.md precedent) —
                            # every chip is a REAL native <button>, which already carries its own
                            # role=button + name-from-content; a host role would add nothing
-  roleSource: none
+  roleSource: native-button
   labelSource: none        # no `label`/accessible-name prop is offered by ADR-0213 — each chip's own
                             # text content IS its accessible name; an unnamed host set is an accepted
                             # residual (the table.md "unlabeled table" / card.md "headerless scrollable
@@ -86,6 +86,7 @@ aria:
   markSource: The taken chip's `aria-pressed="true"` (vs `"false"` on every other chip, live or spent) is the ONLY state a screen reader needs — a toggle-button pattern already in the ARIA vocabulary, requiring no bespoke role.
 
 keyboard:
+  - note: "ACCEPTED RESIDUAL (checker finding 2): committing a chip rebuilds the whole set as disabled buttons, so keyboard focus drops to the body after Enter — inherent to any spend-the-set control with no focusable successor inside it; a host composer wanting continuity refocuses its own input on the `select` event."
   - note: Every chip is a REAL native `<button type="button">` in the NORMAL tab order (the table.md "all focusable elements … included in the page tab sequence" precedent, applied per-chip here) — NO roving tabindex, NO composite-widget keyboard contract, NO `UIListboxElement`. A 3-chip suggestion set has 3 button tab stops, native-honest.
   - note: Each chip activates via the platform's own native Space/Enter button activation — no component-defined key binding is added (no `pressActivation` trait; none is needed for a real `<button>`).
   - note: Once the set is spent, every chip carries a real `disabled` attribute — the platform removes each one from the tab order and blocks click dispatch entirely, on every engine, with zero component-level guard needed (the `#onClick` re-check is a defensive backstop only, load-bearing under jsdom's looser disabled enforcement on a plain `<button>`).
