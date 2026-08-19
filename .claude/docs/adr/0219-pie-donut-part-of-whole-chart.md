@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-19 |
 > | **Proposed by** | planning-leader (design seat — GH #1375, the classic-widget decision lane #1372/#1373/#1375; ADR number host-assigned) |
-> | **Ratified by** | *(awaiting Kim)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-19, via the [`ratify ADR-0219` utterance](https://github.com/kimgranlund/agent-ui/issues/1375#issuecomment-5343986877) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | `chart-family.prd.md` → **v1.1** (an accepted v1.0 versioned contract: the §3 pie/donut ruled-out bullet → "admitted under ADR-0219's conditions", header version + changelog line bumped) · ADR-0107 gains an **Amendment** section ("Pie/donut in v1" rejected-alternative lifted under ADR-0219 — 0107 already carries one Amendment; the ADR-0205 precedent of a named intake realizing a named fence) · `a2ui-catalog.spec.md` §5.2 (the drafted row below, UNAPPLIED) — all applied by the build wave on ratification |
 > | **Supersedes / Superseded by** | (none) — relates ADR-0107 (the v1 fence this intake lifts, on mechanics) · ADR-0205 (the named-intake-realizes-named-fence precedent; its cl.2 legend/color-key deferral is PARTIALLY settled here for the part-of-whole case only) · ADR-0057 (the non-color-signifier law this ADR's palette obeys) |
 
