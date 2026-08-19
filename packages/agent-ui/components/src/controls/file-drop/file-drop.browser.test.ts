@@ -6,11 +6,6 @@ import { UIFileDropElement, type FileHandleDescriptor } from './file-drop.ts'
 // resolves in jsdom: [1] real DataTransfer drag/drop, [2] a real focused paste target, [3] whole-shape
 // geometry (a non-zero rendered box with a real dashed outline), [4] :state(dragging)/:state(disabled)
 // real paint, [5] forced-colors.
-//
-// NOTE (handoff): this file was NOT executed as part of this dispatch's stated gate list (`tsc` +
-// `vitest run .../file-drop`, jsdom-only by construction — `*.browser.test.ts` is excluded from that
-// project). It is scaffolded per the component-build procedure's own DoD; running it is `npm run
-// test:browser`, out of this dispatch's scope — flagged for the coordinator / component-checker.
 
 import '@agent-ui/components/foundation-styles.css'
 import './file-drop.css'
@@ -44,6 +39,17 @@ class ProbeFileDrop extends UIFileDropElement {
   }
 }
 customElements.define('ui-file-drop-bxprobe', ProbeFileDrop)
+
+// Local focus-ring measurement helpers (the button-states.browser.test.ts precedent, restated per-file —
+// browser test files do not cross-import each other's helpers).
+const px = (v: string): number => Number.parseFloat(v)
+const alphaOf = (color: string): number => {
+  if (color === 'transparent') return 0
+  const m = color.match(/rgba?\(([^)]+)\)/i)
+  if (!m) return 1
+  const parts = m[1].split(/[\s,/]+/).filter(Boolean)
+  return parts.length >= 4 ? Number(parts[3]) : 1
+}
 
 describe('ui-file-drop — whole-shape geometry (real engine)', () => {
   it('renders a non-zero, hittable dashed dropzone box', async () => {
@@ -79,8 +85,15 @@ describe('ui-file-drop — real DataTransfer drag/drop commits a file', () => {
 describe('ui-file-drop — a real focused paste target', () => {
   it('is keyboard-focusable via Tab and shows the fleet focus ring', async () => {
     const { el } = mount()
+    el.intake = oneIntake() // a wired control is the usable-state contract — an unwired one is
+    // correctly tabbable-disabled by traits/tabbable.ts (finding 1, checker fix pass).
+    await new Promise((r) => setTimeout(r, 0))
     await userEvent.tab()
     expect(document.activeElement).toBe(el)
+    const styles = getComputedStyle(el)
+    expect(styles.outlineStyle).toBe('solid') // ADR-0009 — the fleet focus ring, keyboard-drawn
+    expect(px(styles.outlineWidth)).toBeGreaterThan(0)
+    expect(alphaOf(styles.outlineColor)).toBeGreaterThan(0)
   })
 })
 
@@ -93,6 +106,34 @@ describe('ui-file-drop — :state(disabled)/:state(dragging) real paint', () => 
     el.intake = oneIntake()
     await new Promise((r) => setTimeout(r, 0))
     expect(el.probeInternals.states?.has('disabled')).toBe(false)
+  })
+})
+
+describe('ui-file-drop — composed buttons leave the tab order while unwired/disabled (finding 2)', () => {
+  it('the browse button is NOT a tab stop while unwired; becomes one once intake is wired', async () => {
+    const { el } = mount()
+    const browse = el.querySelector('[data-part="browse"]') as HTMLElement
+    await new Promise((r) => setTimeout(r, 0))
+    expect(browse.getAttribute('tabindex')).not.toBe('0')
+    el.intake = oneIntake()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(browse.getAttribute('tabindex')).toBe('0')
+  })
+
+  it('a remove chip button is NOT a tab stop once the host goes disabled', async () => {
+    const { el } = mount()
+    el.intake = oneIntake()
+    await new Promise((r) => setTimeout(r, 0))
+    const dt = new DataTransfer()
+    dt.items.add(new File(['x'], 'x.txt', { type: 'text/plain' }))
+    el.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }))
+    await new Promise((r) => setTimeout(r, 50))
+    expect((el.querySelector('[data-part="remove"]') as HTMLElement).getAttribute('tabindex')).toBe('0')
+    el.disabled = true
+    await new Promise((r) => setTimeout(r, 0))
+    // The chips row rebuilds whole-swap on every usable-state change (file-drop.ts's own posture) — a
+    // freshly re-queried node, not the pre-disable reference, is what proves the propagation (finding 2).
+    expect((el.querySelector('[data-part="remove"]') as HTMLElement).getAttribute('tabindex')).not.toBe('0')
   })
 })
 

@@ -54,6 +54,7 @@ import { UIFormElement, prop, type FormValue, type PropConfig, type PropsSchema,
 import { signal } from '../../reactive/index.ts'
 import { tabbable } from '../../traits/tabbable.ts'
 import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
+import type { UIButtonElement } from '../button/button.ts'
 import '../button/button.ts' // side-effect: defines <ui-button> — the browse/remove triggers
 import '../icon/icon.ts' // side-effect: defines <ui-icon> — the decorative glyphs (attachment.ts idiom)
 import '../attachment/attachment.ts' // side-effect: defines <ui-attachment> — the committed-file chip body (ADR-0210 Consequences: zero-mapping reuse)
@@ -196,7 +197,7 @@ export class UIFileDropElement extends UIFormElement {
   // Component-built anatomy — created ONCE (persists across a reconnect; only listeners/effects are
   // scope-owned and rebuilt per connect, the text-field.ts / table.ts idiom).
   #hint: HTMLElement | undefined
-  #browseBtn: HTMLElement | undefined
+  #browseBtn: UIButtonElement | undefined
   #pickerInput: HTMLInputElement | undefined
   #chipsHost: HTMLElement | undefined
 
@@ -247,7 +248,7 @@ export class UIFileDropElement extends UIFormElement {
     const hint = document.createElement('span')
     hint.setAttribute('data-part', 'hint')
 
-    const browse = document.createElement('ui-button')
+    const browse = document.createElement('ui-button') as UIButtonElement
     browse.setAttribute('data-part', 'browse')
     browse.setAttribute('variant', 'soft')
     browse.setAttribute('size', 'sm')
@@ -276,7 +277,7 @@ export class UIFileDropElement extends UIFormElement {
    *  a remove affordance. An id the host's registry no longer recognizes (`isKnown` returns false) renders
    *  INERT — rendered, never dropped (cl.3: "silently dropping data-model content makes the surface lie
    *  about its own state"). */
-  #buildChip(file: FileHandleDescriptor, known: boolean): HTMLElement {
+  #buildChip(file: FileHandleDescriptor, known: boolean, usable: boolean): HTMLElement {
     const chip = document.createElement('div')
     chip.setAttribute('data-part', 'chip')
     if (!known) chip.setAttribute('data-unavailable', '')
@@ -294,12 +295,16 @@ export class UIFileDropElement extends UIFormElement {
       chip.append(note)
     }
 
-    const remove = document.createElement('ui-button')
+    const remove = document.createElement('ui-button') as UIButtonElement
     remove.setAttribute('data-part', 'remove')
     remove.setAttribute('variant', 'ghost')
     remove.setAttribute('size', 'sm')
     remove.setAttribute('icon-only', '')
     remove.setAttribute('aria-label', `Remove ${file.name}`)
+    // Propagate the host's usable-state onto the composed button (finding 2, checker fix pass): a
+    // disabled/unwired host must leave ITS composed buttons out of the tab order too — matching
+    // file-drop.md's "fully inert" claim — never a stray tab stop on an inert host.
+    remove.disabled = !usable
     const removeIcon = document.createElement('ui-icon')
     removeIcon.setAttribute('slot', 'leading')
     removeIcon.setAttribute('glyph', 'x')
@@ -346,9 +351,17 @@ export class UIFileDropElement extends UIFormElement {
     this.#statusOverride.value = rejectedReasons.length > 0 ? `Not added: ${rejectedReasons.join(', ')}` : null
     if (candidates.length === 0) return
 
+    // Widened try (finding 3, checker fix pass): a host `intake` returning undefined/non-array — not
+    // just a rejection — is an equally untrusted boundary crossing (the ADR-0210 cl.4.1 "host-minted
+    // handle" wire shape is a CONTRACT, never assumed). `cleanFiles()` — the SAME hardened codec the
+    // `files` attribute path already runs through — hardens the return before it ever touches `files`/
+    // `formValue`; a non-array (or fully-malformed-array) return rides the identical visible error path
+    // a thrown/rejected intake takes, never an unhandled `minted.length` crash.
     let minted: FileHandleDescriptor[]
     try {
-      minted = await intake(candidates, { multiple: this.multiple })
+      const returned: unknown = await intake(candidates, { multiple: this.multiple })
+      if (!Array.isArray(returned)) throw new Error('intake() must resolve to an array')
+      minted = cleanFiles(returned)
     } catch {
       this.#statusOverride.value = 'File attachment failed. Try again.'
       return
@@ -369,6 +382,14 @@ export class UIFileDropElement extends UIFormElement {
   // ── Connection lifecycle ────────────────────────────────────────────────────────────────────────────
 
   protected override connected(): void {
+    // `intake`/`isKnown` are plain instance accessors, not `static props` members — `upgradeProps()`
+    // (element.ts, run just before this hook) only replays the DECLARED prop set, so a host writing
+    // `.intake =`/`.isKnown =` before this element upgraded (e.g. `document.createElement` racing the
+    // module's own `customElements.define`) would otherwise leave a dead own-property shadowing the
+    // accessor forever. Replay both by hand (finding 4, checker fix pass).
+    this.upgradeProperty('intake')
+    this.upgradeProperty('isKnown')
+
     if (!this.#defaultCaptured) {
       this.#defaultFiles = filesType.from(this.getAttribute('files'))
       this.#defaultCaptured = true
@@ -400,6 +421,11 @@ export class UIFileDropElement extends UIFormElement {
       if (usable) this.internals.states?.delete('disabled')
       else this.internals.states?.add('disabled')
       this.internals.ariaDisabled = usable ? null : 'true'
+      // Propagate onto the composed browse button (finding 2, checker fix pass) — its OWN `disabled`
+      // prop drives its own `tabbable` trait, so a disabled/unwired host correctly pulls it out of the
+      // tab order too (file-drop.md's "fully inert" claim). Chip remove buttons are propagated in the
+      // chips-rebuild effect below (they don't exist yet on first run).
+      this.#browseBtn!.disabled = !usable
     })
 
     // ADR-0085 — the bare-usage accessible-name seam (the base's guarded `applyFieldLabelling` default
@@ -436,7 +462,8 @@ export class UIFileDropElement extends UIFormElement {
     this.effect(() => {
       const chipsHost = this.#chipsHost!
       const known = this.isKnown
-      chipsHost.replaceChildren(...this.files.map((f) => this.#buildChip(f, known ? known(f.id) : true)))
+      const usable = this.#isUsable() // finding 2 — a disabled/unwired host's remove buttons stay inert too
+      chipsHost.replaceChildren(...this.files.map((f) => this.#buildChip(f, known ? known(f.id) : true, usable)))
     })
 
     // ── Gestures — dropzone (drag/drop), paste target, and the browse-button → hidden-input picker. ────

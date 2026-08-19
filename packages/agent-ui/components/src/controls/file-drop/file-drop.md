@@ -65,7 +65,7 @@ properties:             # IDL beyond attributes-as-API
   - name: required
     description: Whether at least one committed file is required (boolean). Reflects `required`. Drives formValidity() → valueMissing when files.length === 0.
   - name: files
-    description: The committed file descriptors ({id,name,mimeType,sizeBytes}[]), NEVER null/undefined — [] when nothing is committed. Bindable (two-way via the `change` event, ADR-0210 cl.3). A malformed member on external write is DROPPED, never coerced (the hardened codec, file-drop.ts). Read-direction descriptors an `isKnown` check rejects render as inert "unavailable" chips — rendered, never dropped (cl.3).
+    description: The committed file descriptors ({id,name,mimeType,sizeBytes}[]), NEVER null/undefined — [] when nothing is committed. Bindable (two-way via the `change` event, ADR-0210 cl.3). A malformed member on an external ATTRIBUTE write (`<ui-file-drop files='[...]'>`, or a later `setAttribute`) is DROPPED, never coerced (the hardened codec, file-drop.ts) — the attribute path is the ONLY boundary that runs it; a direct PROPERTY write (`el.files = [...]`) stores the value raw, fleet-consistent with the rest of the family's `valueProp`/`valueType` split. A host `intake` seam's own return also runs through the same hardened codec before landing here (cl.4.1). Read-direction descriptors an `isKnown` check rejects render as inert "unavailable" chips — rendered, never dropped (cl.3).
   - name: label
     description: The accessible name / instruction line ('' → the fallback "Drop files here, or browse", never silent-empty). Drives the bare-usage internals.ariaLabel (ADR-0085) and the idle hint-line text.
   - name: accept

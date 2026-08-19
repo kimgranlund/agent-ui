@@ -150,6 +150,15 @@ describe('ui-file-drop — the commit path (fd-intake-commit · fd-picker-commit
     el.remove()
   })
 
+  it('fd-picker-hidden: the hidden picker input is out of the accessible/tab surface by construction (finding 6)', () => {
+    const { el } = makeFileDrop()
+    const picker = el.querySelector<HTMLInputElement>('[data-part="picker"]')!
+    expect(picker.hidden).toBe(true)
+    expect(picker.tabIndex).toBe(-1)
+    expect(picker.getAttribute('aria-hidden')).toBe('true')
+    el.remove()
+  })
+
   it('fd-drop-commit: dragenter/dragleave toggle :state(dragging); drop clears it', async () => {
     const { el } = makeFileDrop()
     el.intake = oneIntake()
@@ -184,6 +193,36 @@ describe('ui-file-drop — the commit path (fd-intake-commit · fd-picker-commit
     fireWithFiles(el, 'drop', 'dataTransfer', [file('never.txt')])
     await whenFlushed()
     expect(el.files).toEqual([])
+    el.remove()
+  })
+
+  it('fd-intake-undefined-return: an intake resolving to undefined lands the visible error path, never an unhandled rejection (finding 3)', async () => {
+    const { el } = makeFileDrop()
+    el.intake = (async () => undefined) as unknown as (files: readonly File[]) => Promise<FileHandleDescriptor[]>
+    await whenFlushed()
+    fireWithFiles(el, 'drop', 'dataTransfer', [file('a.txt')])
+    await whenFlushed()
+    await whenFlushed()
+    expect(el.files).toEqual([]) // never crashed on `minted.length`, never landed raw
+    const hint = el.querySelector('[data-part="hint"]')!
+    expect(hint.textContent).toBe('File attachment failed. Try again.')
+    el.remove()
+  })
+
+  it('fd-intake-malformed-members: a malformed member in the intake return is DROPPED through `cleanFiles()`, valid ones kept (finding 3)', async () => {
+    const { el } = makeFileDrop()
+    el.multiple = true
+    el.intake = (async (files: readonly File[]) =>
+      [
+        { id: 'ok-1', name: files[0]!.name, mimeType: 'text/plain', sizeBytes: 10 },
+        { id: '', name: 'bad', mimeType: 'text/plain', sizeBytes: 1 }, // empty id — fails isFileHandleDescriptor
+        { name: 'no-id', mimeType: 'text/plain', sizeBytes: 1 }, // missing id entirely
+      ]) as unknown as (files: readonly File[]) => Promise<FileHandleDescriptor[]>
+    await whenFlushed()
+    fireWithFiles(el, 'drop', 'dataTransfer', [file('a.txt')])
+    await whenFlushed()
+    await whenFlushed()
+    expect(el.files).toEqual([{ id: 'ok-1', name: 'a.txt', mimeType: 'text/plain', sizeBytes: 10 }])
     el.remove()
   })
 })
@@ -230,6 +269,7 @@ describe('ui-file-drop — constraint rejection is UX-only, with a visible reaso
     expect(el.files).toEqual([])
     const hint = el.querySelector('[data-part="hint"]')!
     expect(hint.textContent).toContain('doc.txt')
+    el.remove()
   })
 
   it('fd-max-size-reject: an over-cap file is rejected, never committed', async () => {
@@ -240,6 +280,7 @@ describe('ui-file-drop — constraint rejection is UX-only, with a visible reaso
     fireWithFiles(el, 'drop', 'dataTransfer', [file('big.txt', 'text/plain', 100)])
     await whenFlushed()
     expect(el.files).toEqual([])
+    el.remove()
   })
 
   it('fd-max-files-reject: multiple=true respects maxFiles, truncating the overflow', async () => {
@@ -252,6 +293,7 @@ describe('ui-file-drop — constraint rejection is UX-only, with a visible reaso
     await whenFlushed()
     await whenFlushed()
     expect(el.files.map((f) => f.name)).toEqual(['a.txt'])
+    el.remove()
   })
 })
 
