@@ -727,6 +727,31 @@
         "format": { "type": { "type": "string", "enum": ["hex", "oklch"] }, "mapsTo": "format" }
       },
       "value": { "prop": "value", "event": "change" }
+    },
+
+    "Drill": {
+      "properties": {
+        "path": { "type": { "type": "array", "items": { "type": "string" } }, "bindable": true, "mapsTo": "path" }
+      },
+      "children": "ChildList"
+    },
+
+    "DrillPanel": {
+      "properties": {
+        "key": { "type": { "type": "string" }, "mapsTo": "key" },
+        "parent": { "type": { "type": "string" }, "mapsTo": "parent" },
+        "heading": { "type": { "type": "string" }, "bindable": true, "mapsTo": "heading" }
+      },
+      "children": "ChildList"
+    },
+
+    "Toggle": {
+      "properties": {
+        "pressed": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "pressed" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "size": { "type": { "type": "string", "enum": ["sm", "md", "lg"] }, "mapsTo": "size" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" }
+      }
     }
   },
 

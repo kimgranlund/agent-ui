@@ -20,6 +20,13 @@ import './swiper-item.css'
 import './swiper-pagination.css'
 import './swiper-paddles.css'
 import './swiper-label.css'
+// The composed-paddle cascade (the toast.browser.test.ts precedent — a real ui-button needs its module +
+// sheet, and the caret svg needs icon.css's sizing; without these a naked <svg> falls back to the 300×150
+// replaced-element intrinsic default and every paddle-geometry measurement below is garbage — GH #1330 §[9]).
+import '../button/button.css'
+import '../icon/icon.css'
+import '../button/button.ts'
+import '../icon/icon.ts'
 
 const mounted: HTMLElement[] = []
 
@@ -327,5 +334,75 @@ describe('ui-swiper — chrome drive is live (n17/n18/n19)', () => {
     await userEvent.click(nextBtn)
     await settle()
     expect(swiper.activeIndex).toBe(1)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [9] The default paddles band — slide content never paints under a paddle (GH #1330)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+// GH #1330: the default-stamped [data-default] overlay floated its ghost buttons directly over the track's
+// unreserved inline edges, so the left paddle sat on the first slide's first glyph. The fix is TRACK
+// geometry — a transparent inline border band (swiper.css) the scroll container CLIPS at (content clips at
+// the padding box), mirrored in JS by the snapport-aware #alignedOffset. These pin the rendered truth via
+// rect adjacency (the fleet's rect-adjacency pin precedent): the slide TEXT rect vs the real paddle rects.
+
+describe('ui-swiper — the default paddles band never occludes slide content (GH #1330)', () => {
+  const PADDLED = `<ui-swiper paddles><ui-swiper-item>Everything assigned to you lands here first.</ui-swiper-item><ui-swiper-item>Two</ui-swiper-item><ui-swiper-item>Three</ui-swiper-item></ui-swiper>`
+
+  const paint = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => r()))
+
+  function paddleRects(swiper: UISwiperElement): { prev: DOMRect; next: DOMRect } {
+    const paddles = swiper.querySelector('ui-swiper-paddles[data-default]') as UISwiperPaddlesElement
+    const prev = (paddles.querySelector('[data-part="prev"]') as HTMLElement).getBoundingClientRect()
+    const next = (paddles.querySelector('[data-part="next"]') as HTMLElement).getBoundingClientRect()
+    return { prev, next }
+  }
+
+  it('the first slide TEXT rect clears BOTH paddle rects (rect adjacency, no overlap — the reported defect)', async () => {
+    const { swiper, items } = mount(PADDLED)
+    await paint()
+    const { prev, next } = paddleRects(swiper)
+    expect(prev.width, 'the prev paddle rendered zero-size — a vacuous adjacency proof').toBeGreaterThan(0)
+    const range = document.createRange()
+    range.selectNodeContents(items[0])
+    const textRect = range.getBoundingClientRect()
+    expect(textRect.width, 'the slide text rendered zero-size — a vacuous adjacency proof').toBeGreaterThan(0)
+    expect(textRect.left, 'the first glyph starts under the left paddle').toBeGreaterThanOrEqual(prev.right - 0.5)
+    expect(textRect.right, 'the slide text runs under the right paddle').toBeLessThanOrEqual(next.left + 0.5)
+  })
+
+  it('after an advance settles, the NEW active slide still sits exactly between the paddles (the JS scroll math agrees with the band)', async () => {
+    const { swiper, items } = mount(PADDLED)
+    await paint()
+    swiper.next()
+    await settle()
+    expect(swiper.activeIndex).toBe(1)
+    const { prev, next } = paddleRects(swiper)
+    const rect = items[1].getBoundingClientRect()
+    expect(rect.left, 'the active slide slid under the left paddle after next()').toBeGreaterThanOrEqual(prev.right - 0.5)
+    expect(rect.right, 'the active slide runs under the right paddle after next()').toBeLessThanOrEqual(next.left + 0.5)
+  })
+
+  it('hit-testing inside the band never reaches a slide — the band is clipped track border, not slide surface', async () => {
+    const { track } = mount(PADDLED)
+    await paint()
+    expect(track.clientLeft, 'no band was reserved for the default-stamped overlay').toBeGreaterThan(0)
+    const trackRect = track.getBoundingClientRect()
+    const midY = trackRect.top + trackRect.height / 2
+    for (const x of [trackRect.left + 2, trackRect.right - 2]) {
+      const hit = document.elementFromPoint(x, midY)
+      expect(hit?.closest('ui-swiper-item'), `slide content is hit-testable inside the paddle band at x=${x}`).toBeNull()
+    }
+  })
+
+  it('NEGATIVE control: no band without paddles, and an AUTHOR-placed anchor (no [data-default]) reserves none either', async () => {
+    const bare = mount(THREE)
+    const authored = mount(
+      `<ui-swiper><ui-swiper-item>One</ui-swiper-item><ui-swiper-item>Two</ui-swiper-item><ui-swiper-paddles></ui-swiper-paddles></ui-swiper>`,
+    )
+    await paint()
+    expect(bare.track.clientLeft, 'a bare swiper grew a paddle band').toBe(0)
+    expect(authored.track.clientLeft, 'an author-placed anchor triggered the default band').toBe(0)
   })
 })

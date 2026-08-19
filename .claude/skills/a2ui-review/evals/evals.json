@@ -15,7 +15,8 @@
     {
       "id": "t03",
       "prompt": "judge this corpus record for admission to the shelf",
-      "expect": "trigger"
+      "expect": "no-trigger",
+      "note": "re-owned 2026-08-19 estate routing run: stolen 3-of-3 by a2ui-corpus-curation — CORRECT routing; admission-workflow phrasing belongs to curation, which dispatches this seat for verdicts"
     },
     {
       "id": "t04",
@@ -35,12 +36,23 @@
     {
       "id": "t07",
       "prompt": "emit the ADR-0068 VerdictsFile for these corpus records",
-      "expect": "trigger"
+      "expect": "no-trigger",
+      "note": "re-owned 2026-08-19 estate routing run: 2-of-3 corpus-curation — the VerdictsFile is emitted inside curation's import flow; workflow phrasing routes there, the seat is dispatched by it"
     },
     {
       "id": "t08",
       "prompt": "review the a2ui catalog examples across the tier tabs",
       "expect": "no-trigger"
+    },
+    {
+      "id": "t09",
+      "prompt": "grade this corpus record against rubrics/a2ui-corpus.md — per-dimension scores and the gate verdicts",
+      "expect": "trigger"
+    },
+    {
+      "id": "t10",
+      "prompt": "score this skill-doc pattern section against a2ui-skill-pattern.md",
+      "expect": "trigger"
     }
   ]
 }

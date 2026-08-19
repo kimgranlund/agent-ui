@@ -225,6 +225,9 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   Field: { label: 'Field label' },
   Checkbox: { label: 'Checkbox' },
   Switch: { label: 'Switch' },
+  // Toggle (GH #1352): label is textContent (like Button/Toast), invisible without a seed; `pressed:
+  // 'true'` shows the ON paint by default (a bare specimen would otherwise render the idle ghost state).
+  Toggle: { label: 'Toggle', pressed: 'true' },
   Select: { placeholder: 'Choose…' },
   Option: { label: 'Option', value: 'a' },
   // Modal is deliberately NOT seeded open: an auto-opened dialog throws a top-layer overlay over the whole
@@ -387,6 +390,25 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
       { id: 's_panel1', component: 'TabPanel', children: ['s_pt1'] },
       { id: 's_pt1', component: 'Text', variant: 'body', text: 'Second panel content' },
     ],
+  }),
+  // Drill(+Panel): a settings drill-down — a root menu panel + one leaf, `path` set to show the leaf
+  // already active (GH #1353, ADR-0195 GH #954) — the settings-drill-in idiom (catalog-frontier.ts's
+  // drillSettingsSeed). `path` here is a LITERAL specimen value (not a data-model binding — no
+  // `{path}` object), matching every other static specimen in this table.
+  Drill: () => ({
+    rootRef: { path: ['root', 'appearance'], children: ['s_dp_root', 's_dp_appearance'] },
+    extras: [
+      { id: 's_dp_root', component: 'DrillPanel', key: 'root', parent: '', heading: 'Settings', children: ['s_dp_r1', 's_dp_r2'] },
+      { id: 's_dp_r1', component: 'Text', variant: 'body', text: 'Appearance' },
+      { id: 's_dp_r2', component: 'Text', variant: 'body', text: 'Notifications' },
+      { id: 's_dp_appearance', component: 'DrillPanel', key: 'appearance', parent: 'root', heading: 'Appearance', children: ['s_dp_a1'] },
+      { id: 's_dp_a1', component: 'Text', variant: 'body', text: 'Theme, density, and accent color.' },
+    ],
+  }),
+  // DrillPanel browsed standalone (outside its owning Drill) — real body content, the SplitPane precedent.
+  DrillPanel: () => ({
+    rootRef: { children: ['s_dpp_body'] },
+    extras: [{ id: 's_dpp_body', component: 'Text', variant: 'body', text: 'Theme, density, and accent color.' }],
   }),
   // Modal/Drawer revealed content: real-job copy, not a placeholder (GH #971 bar — the 2026-08-18 review
   // sweep flagged "Modal content" as below its overlay siblings' bar).

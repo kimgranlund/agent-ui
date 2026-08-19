@@ -545,3 +545,33 @@ describe('checkbox.md descriptor — contract↔props trip-wire (s10 part b)', (
     )
   })
 })
+
+// ── GH #1333 — pre-connect programmatic writes must not pollute defaultChecked (leaf pin) ─────────
+//
+// The mechanism + full matrix live at the base (indicator-element.test.ts, GH #1333 block); this leaf
+// pin proves the REAL ui-checkbox inherits it — a pre-connect `el.checked = true` (the direct-match
+// setter door) never lands in the first-connect default capture, and reset restores the declared state.
+
+describe('ui-checkbox — GH #1333 (pre-connect programmatic write vs defaultChecked)', () => {
+  it('checkbox-preconnect-programmatic-not-default: pre-connect checked=true → connect → defaultChecked false; reset restores unchecked', () => {
+    const el = make()
+    el.checked = true // programmatic, pre-connect — reflects to [checked] but declares nothing
+    document.body.append(el)
+    expect(el.checked).toBe(true) // live state preserved
+    expect(el.defaultChecked).toBe(false) // native parity — not the authored default
+    el.formResetCallback()
+    expect(el.checked).toBe(false) // reset returns to the declared initial state
+    el.remove()
+  })
+
+  it('checkbox-preconnect-declared-still-captures: a genuine [checked] attribute set pre-connect IS the default (negative control)', () => {
+    const el = make()
+    el.setAttribute('checked', '')
+    document.body.append(el)
+    expect(el.defaultChecked).toBe(true)
+    el.checked = false
+    el.formResetCallback()
+    expect(el.checked).toBe(true)
+    el.remove()
+  })
+})

@@ -185,6 +185,11 @@ describe('computePosition — flip/shift math', () => {
   })
 })
 
+// RETIRED (reconciled 2026-08-19): PR #1359's `computedInsetsAllAuto` detector + its five
+// `overlay-iacvt-detect` probes lived here. The GH #1339 verify guard superseded that detector —
+// one guard path, not two competing ones (overlay.ts's Lineage header paragraph has the account);
+// the guard's own coverage is real-engine territory, overlay.browser.test.ts section [7].
+
 // ── Controller integration probes ─────────────────────────────────────────────────────────────
 
 describe('overlay — popover attribute (overlay-popover-attr)', () => {

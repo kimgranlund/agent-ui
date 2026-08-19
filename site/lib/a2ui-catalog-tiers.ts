@@ -79,7 +79,7 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   Table: 'FEATURE',
   Timeline: 'FEATURE',
 
-  // WIDGET (17) — small, self-contained display/utility leaves.
+  // WIDGET (18) — small, self-contained display/utility leaves.
   Attachment: 'WIDGET',
   Avatar: 'WIDGET',
   Badge: 'WIDGET',
@@ -99,11 +99,21 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   Stat: 'WIDGET',
   Swatch: 'WIDGET',
   Toast: 'WIDGET',
+  // Toggle (GH #1352, ADR-0179 GH #686 Amendment S7-a): a pressed-state pill BUTTON, not form-associated
+  // and carrying no `value` mark (Fork T1) — WIDGET, the Button precedent, not INPUT (this ticket's own
+  // tentative "presumably INPUT" guess doesn't hold once the descriptor shows it's neither form-
+  // associated nor value-committing; INPUT's own header comment above scopes to exactly those two).
+  Toggle: 'WIDGET',
 
   // PATTERN (14) — composite, multi-part interactive constructs. An *Item/*Pane companion rides with its
   // owning compound: MenuItem→Menu, SwiperItem→Swiper, SplitPane→Split, TimelineItem→Timeline's per-row
   // anatomy (Timeline itself is FEATURE-class as the whole chronology surface; its row is PATTERN-class,
   // the same composite-row shape as MenuItem/SwiperItem).
+  // Drill (GH #1353, ADR-0195 GH #954): the N-level drill-down panel container — a composite,
+  // multi-part interactive construct (header+back+heading anatomy, per-panel resolution), the
+  // Tabs/Split/Swiper class, not a display leaf.
+  Drill: 'PATTERN',
+  DrillPanel: 'PATTERN', // rides with Drill, the SplitPane/SwiperItem precedent
   Disclosure: 'PATTERN',
   FormPopover: 'PATTERN',
   Menu: 'PATTERN',

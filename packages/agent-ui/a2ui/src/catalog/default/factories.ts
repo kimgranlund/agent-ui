@@ -980,6 +980,63 @@ export const swiperItemFactory: WidgetFactory = accessorFactory('ui-swiper-item'
 // are ALL identity `mapsTo`).
 export const colorPickerFactory: WidgetFactory = accessorFactory('ui-color-picker', { prop: 'value', event: 'change' })
 
+// ── GH #1353 (ADR-0211 — the wire-mark shape record; ADR-0195, GH #954) — Drill/DrillPanel, the N-level drill-down panel container. Mints the
+// catalog row `ui-drill` shipped ahead of (ADR-0195 cl.8's TEMPORARY EXCLUSION_ALLOWLIST seed, drained
+// in this same commit); Kim ruling 2026-08-19: "Drill is agent-emittable — mint the row." ──────────────
+//
+// Drill → `ui-drill`. `path` (`string[]`, the FULL chain from the root panel's key through the current
+// leaf) is bindable FORWARD-only (data→control) — the ui-toggle `pressed`/Fork T1 precedent applied to a
+// SECOND control, for a DIFFERENT root cause (below). No non-bindable structural props are catalogued
+// (`elevation`/`brightness`/`viewTransitions` stay uncaptured this pass, a curated omission — the
+// `descriptor-agreement.test.ts` "curated subset" clause, cl.5).
+//
+// **Fork D1 — no `value` mark for `path` (builder-resolved, empirically VERIFIED via a throwaway jsdom
+// probe against the real `UIDrillElement`, 2026-08-19, mirroring the `toggleFactory` methodology).**
+// `drill.ts#commit(next, direction)` NEVER writes `next` into the `path` PROPERTY in either mode: in
+// UNCONTROLLED mode (`path === undefined`) only the PRIVATE `#internalPath` signal updates (`this.path`
+// itself stays `undefined` forever — there is no public getter mirroring the resolved position onto the
+// `path` accessor); in CONTROLLED mode `path` "never self-mutates" by design (ADR-0195 cl.3,
+// prop-as-source-of-truth) — `next` rides ONLY the `change` event's `detail`. The renderer's generic
+// two-way controller (`installInputBinding`, `renderer/input.ts`) reads `el[slot.prop]` SYNCHRONOUSLY
+// inside the commit-event listener, which is wired via `addEventListener` before the widget observes any
+// mutation — so a `{prop:'path',event:'change'}` mark would read, in BOTH modes, a value that is NEVER
+// the proposed position: `undefined` always (uncontrolled) or the STALE pre-drill array (controlled).
+// Verified: 3/3 probe assertions green, uncontrolled `el.path` reads `undefined` at commit while
+// `event.detail` carries `['root','a']`; controlled `el.path` reads the old `['root']` at commit while
+// `event.detail` carries `['root','a']`. Binding `path` two-way here would silently write `undefined` or
+// a stale position into the data model on every drill/back — the SAME class of defect Fork T1 (Toggle)
+// found, for a DIFFERENT mechanical reason (no post-commit READBACK accessor exists at all, vs. Toggle's
+// pre-commit event ordering). Resolution: `path` stays `bindable: true` FORWARD (data→control) only — an
+// agent can render a Drill already positioned at a given level, and drive further navigation by emitting
+// a fresh `updateDataModel` write to the bound `/path` pointer on its own next turn; there is no
+// commit-back this pass (a real two-way bind needs a Layer-0 change exposing the resolved position as a
+// real readback accessor, out of this ticket).
+//
+// **Fork D2 — drill-FORWARD triggers are not catalog-reachable this pass (named scope cut, not silently
+// dropped).** `ui-drill`'s own forward-navigation convention is a light-DOM AUTHORING idiom — any
+// descendant of the active panel carrying `data-role="drill-trigger"` + `data-drill-key="<key>"` (drill.md)
+// — not a dedicated custom element the way `ui-tab`'s click handling is CONTROL-OWNED. No catalog type
+// exposes a `mapsTo` target for `data-role`/`data-drill-key` on an arbitrary emitted child (widening an
+// existing type, e.g. `Button`, to carry them is a separate, later decision — a wire-mark widening this
+// small ticket is not authorized to freelance). An agent therefore composes Drill by (a) rendering the
+// active panel via a literal or bound `path`, and (b) advancing the position itself via a data-model
+// write on its own next turn — never via a client-clickable drill-forward row it emits. The control's own
+// native Back button stays the one interactive, catalog-reachable navigation affordance inside an
+// emitted Drill (its ARIA/keyboard wiring is entirely control-owned, no data-attribute convention needed).
+export const drillFactory: WidgetFactory = accessorFactory('ui-drill')
+
+// DrillPanel → `ui-drill-panel` (ADR-0195, the `ui-tab-panel`/`ui-split-pane` compound-file precedent —
+// ships no descriptor of its own, folded into `drill.md`; `descriptor-agreement.test.ts` skips it
+// cleanly, the SAME `!attrs` continue branch `SplitPane`/`TabPanel` already exercise). `key`/`parent` are
+// the panel's STRUCTURAL identity (unique key; parent chain, consulted only for the Back label) — the
+// `MenuItem.value`/`Tab`-key precedent, NOT bindable, author-set once. `heading` is DISPLAY text driving
+// the host-owned header's `[data-part="heading"]` — the `MenuItem.label` precedent, bindable. All three
+// are 1:1 reflecting accessor props (verified against `drill-panel.ts` `static props`) — a plain
+// `accessorFactory` suffices, no bespoke mapping. `ChildList` children — a panel's body is arbitrary
+// author content with no anatomy slots to misroute past (the `Card`/`CardHeader`/`SplitPane` generic-
+// children precedent), never a component's own drill-trigger vocabulary (Fork D2, above).
+export const drillPanelFactory: WidgetFactory = accessorFactory('ui-drill-panel')
+
 // ── M-F — MultiSelect → ui-multi-select (multi-select-field.lld.md §9, SPEC-R9, ADR-0175) ─────────────
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -1021,6 +1078,50 @@ export const multiSelectFactory: WidgetFactory = {
     else setProp(el, prop, value)
   },
   value: { prop: 'value', event: 'select' },
+}
+
+/**
+ * Toggle → `ui-toggle` (ADR-0179 GH #686 Amendment S7-a, admin-three-pane-ia.lld.md §16.4 — mints the
+ * fleet's toggle-BUTTON primitive; GH #1352, Kim ruling 2026-08-19: "Toggle is agent-emittable — mint
+ * the row," draining that amendment's TEMPORARY `EXCLUSION_ALLOWLIST` seed in this same commit).
+ * `pressed`/`disabled` are 1:1 reflecting accessors (`setProp`); `size` is a structural (non-bindable)
+ * enum, the `TextField.size`/`Avatar.size` widget-ramp precedent; `label` is bespoke — the light-DOM
+ * default/`label` slot's text (toggle.md), a non-identity `mapsTo` like `Button.label`/`Toast.label`,
+ * so it must NOT route through `accessorFactory` (the factories.ts INVARIANT). The `icon`/`state-icon`
+ * slots are NOT catalogued this pass — the same limitation `Button`'s own leading/trailing icon slots
+ * already accept; a composed-content wire shape for them is a separate decision, not this ticket's.
+ *
+ * **No `value` mark — Fork T1, builder-resolved, VERIFIED not assumed (GH #1352).** The obvious
+ * Checkbox/Switch (`checked`/`change`) or Menu/Popover/Tooltip (`open`/`toggle`) shape does not
+ * transfer: `ui-toggle`'s own `toggle` CustomEvent fires BEFORE `pressed` commits (toggle.md's
+ * "Refused toggle" design — cancelable, so a listener can veto the flip with zero paint to revert),
+ * unlike Checkbox/Switch's native `change` (the browser fires it only after `checked` is already set)
+ * and unlike Menu/Popover/Tooltip's `toggle` (the native HTML Popover API's own post-commit event).
+ * The renderer's generic two-way controller (`installInputBinding`, `renderer/input.ts`) reads
+ * `el[slot.prop]` SYNCHRONOUSLY inside the declared commit-event listener — and that listener is wired
+ * onto the widget while it is still DETACHED (`widget.ts`'s `create()` → `wireProps()` split runs
+ * before DOM insertion), i.e. strictly BEFORE `ui-toggle`'s own internal `click` handler (added in
+ * `connected()`) ever registers. Verified empirically (a throwaway jsdom probe against the real
+ * `UIToggleElement`, three assertions, all green, 2026-08-19): an external listener on EITHER `toggle`
+ * or raw `click`, registered in this order, always observes the STALE pre-flip value — binding
+ * `value:{prop:'pressed',event:'toggle'}` here would silently write the OPPOSITE of every user press
+ * into the data model. No event `ui-toggle` fires today observes `pressed` post-commit, so no
+ * `{prop,event}` shape is safe (the `input.ts` header's own "discovered-reality guard" — a control
+ * whose commit/value shape cannot be expressed by the existing slot mechanism is a catalog SPEC gap,
+ * not something to improvise past). Resolution: `pressed` stays `bindable: true` for the FORWARD
+ * (data→control) direction only — an agent can render a toggle already pressed — with no commit-back;
+ * a real two-way bind needs either a genuinely post-commit signal on the control (a Layer-0 change,
+ * component-build-agent's territory, out of this ticket) or a marshal-level fix (an ADR-level catalog
+ * widening). Rejected alternative: mirroring Menu/Popover's `{prop:'open',event:'toggle'}` shape
+ * uncritically — looks identical on the page, silently corrupts every bound `pressed` on first press.
+ */
+export const toggleFactory: WidgetFactory = {
+  tag: 'ui-toggle',
+  create: () => document.createElement('ui-toggle'),
+  applyProp: (el, prop, value) => {
+    if (prop === 'label') el.textContent = value == null ? '' : String(value)
+    else setProp(el, prop, value)
+  },
 }
 
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
@@ -1093,4 +1194,7 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   SwiperItem: swiperItemFactory,
   ColorPicker: colorPickerFactory,
   MultiSelect: multiSelectFactory,
+  Drill: drillFactory,
+  DrillPanel: drillPanelFactory,
+  Toggle: toggleFactory,
 }

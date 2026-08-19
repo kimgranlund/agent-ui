@@ -75,6 +75,18 @@ prop name (`checked`) — the ADR-0053 naming law, not a generic `value`.
 ```
 Real: `examples/generative-form.ts:134-135`, `examples/patterns.ts:42-44`.
 
+## Toggle — pressed-state pill BUTTON, not form-associated
+GH #1352 catalog row (ADR-0179 GH #686 Amendment S7-a). Bindable `pressed`, `disabled`, `label` (→
+`textContent`, bespoke); `size` (`sm`\|`md`\|`lg`, structural only). **No `value` mark** — `pressed` is
+bindable ONE-WAY (data→control) only; there is no commit-back event to bind on (`ui-toggle`'s own
+`toggle` fires BEFORE the press commits, by design — see the `toggleFactory` doc comment,
+`catalog/default/factories.ts`). Render it already in the state you want; don't expect a user press to
+flow back into the data model yet.
+```json
+{ "id": "chat_toggle", "component": "Toggle", "label": "Chat", "pressed": { "path": "/panes/chatActive" } }
+```
+Real: `examples/catalog-frontier.ts` (`paneSwitcherSeed`).
+
 ## Select / Option
 `catalog.json:86-103`. Select: `value: { prop:"value", event:"select" }`, `children:"ChildList"` of Option;
 bindable `value`, `disabled`, `required`; plain `placeholder`, `name`. Option: `value` (plain), `label`
@@ -131,6 +143,68 @@ Real: `examples/patterns.ts:119-134` (wizard).
 ## Modal
 `catalog.json:174-183`. `value: { prop:"open", event:"toggle" }`, `open` bindable, `persistent` (boolean),
 `elevation`/`brightness`, `children:"ChildList"`. Bind `open` to a data path to drive visibility from the model.
+
+## Drill / DrillPanel — N-level drill-down, one panel visible at a time
+GH #1353 catalog row (ADR-0195, GH #954). Drill: `path` bindable (`string[]`, the FULL chain from the root
+panel's key through the current leaf), `children:"ChildList"` of `DrillPanel`. **No `value` mark** — `path`
+is bindable ONE-WAY (data→control) only; neither controlled nor uncontrolled mode ever writes the resolved
+position back onto the `path` accessor, so there is nothing a commit-back could safely read (see the
+`drillFactory` doc comment, `catalog/default/factories.ts`, for the full empirical finding). Advance the
+position by re-emitting `updateDataModel` against the bound path on your NEXT turn — do not expect a client
+click inside an emitted Drill to write anything back into the data model except via the control's own Back
+button (which needs no binding at all). DrillPanel: `key`/`parent` are structural identity (NOT bindable —
+set once, like `MenuItem.value`); `heading` is bindable display text (like `MenuItem.label`).
+**Drill-forward triggers are not catalog-reachable** — the fleet control's own `data-role="drill-trigger"`
+authoring convention has no wire equivalent this pass, so compose a Drill by setting `path` to the level you
+want shown; you cannot emit a clickable row that drills the user forward on its own.
+```json
+{ "id": "d1", "component": "Drill", "path": { "path": "/settings/path" },
+  "children": ["p_root", "p_appearance"] },
+{ "id": "p_root", "component": "DrillPanel", "key": "root", "parent": "", "heading": "Settings", "children": ["p_r1"] },
+{ "id": "p_r1", "component": "Text", "text": "Appearance" },
+{ "id": "p_appearance", "component": "DrillPanel", "key": "appearance", "parent": "root", "heading": "Appearance", "children": ["p_a1"] },
+{ "id": "p_a1", "component": "Text", "text": "Theme, density, and accent color." }
+```
+Real: `examples/catalog-frontier.ts` (`frontier-drill-settings`).
+## Toast — transient status message
+`catalog.json:218-223`. Props: `label` (mapsTo `textContent`, NOT bindable — a Toast is a one-shot message,
+never re-targeted in place), `urgent` (boolean), `duration` (number, ms). No `children` — it is a LEAF.
+**The region is host-owned**: `ToastRegion`/`ToastStack` is NOT a catalog type (GH #1355; ADR-0112 cl.6) —
+the payload emits a bare `Toast` node into the tree and the host page's chrome positions/stacks/dismisses
+it; never invent a region component.
+
+**Emission decision — Toast vs. a status Card/Badge/Stat.** Reach for Toast for a ONE-SHOT, fire-and-forget
+outcome nobody needs to find again once it fades — a round result, a save confirmation, a background
+action's completion. Reach for a Card/Badge/Stat readout instead when the state must persist, be
+re-referenced, or drive further binding — anything the user might scroll back to, or that another node
+reads off the same data-model path.
+```json
+{ "id": "outcome", "component": "Toast", "label": "Dealer wins — 19 beats 17.", "duration": 6000 }
+```
+Real: `examples/catalog-frontier.ts:269` (`round-outcome-toast` seed).
+
+## Tooltip — anchored disclosure panel
+`catalog.json:259-266`. `value: { prop:"open", event:"toggle" }`, `open` bindable, `placement` enum, `delay`
+(ms before an unforced hover-show). `children:"ChildList"` — the FIRST child is the ANCHOR (stays in flow,
+the trigger); every remaining child relocates into the tooltip's own panel at connect (ship anchor + panel
+content together, the same first-child convention Popover/Menu share — never resend after the anchor).
+
+**Plain caption vs. a structured explainer card (GH #1355, the "what does this control do" admin-help
+shape).** A one-line hint is `children: [anchor, captionText]` — a single `Text` variant `caption`. Once the
+content needs a heading + summary + body + reference facts, structure the panel as a `Column` of a title
+`Text` (variant `label` or `h5`) + a one-line summary `Text` (variant `caption`) + one or more body `Text`
+paragraphs + an optional `DescriptionList` (`rows: {label,value}[]`) for term→detail facts — never cram
+multi-paragraph prose into one `Text` node.
+```json
+{ "id": "tip", "component": "Tooltip", "placement": "top-start", "delay": 300,
+  "open": { "path": "/ui/tipOpen" }, "children": ["btn_info", "tip_col"] }
+{ "id": "tip_col", "component": "Column", "gap": "xs", "children": ["tip_title", "tip_summary", "tip_facts"] }
+{ "id": "tip_title", "component": "Text", "variant": "label", "text": "Surface Options" }
+{ "id": "tip_summary", "component": "Text", "variant": "caption", "text": "Which output modalities this agent may use" }
+{ "id": "tip_facts", "component": "DescriptionList", "rows": [{ "label": "Applies", "value": "from the next turn" }] }
+```
+Real: `examples/catalog-coverage.ts:258` (`document-row-toolbar` seed's `tip_wrap`, the plain-caption shape);
+the structured variant mirrors `app/src/controls/agent-admin/admin-help.ts`'s DOM card (title/summary/body/facts).
 
 ## Product-presentation card — Card + Image + Stat + Badge (GH #1377)
 A commerce/hospitality catalog-grid tile: hero `Image` as `Card`'s own child (media, NOT identity — it
@@ -191,7 +265,7 @@ never Select a 2-3-member always-visible choice (it hides options behind a close
 { "id": "seg_size", "component": "SegmentedControl", "name": "size", "value": { "path": "/product/size" }, "children": ["seg_s", "seg_m", "seg_l"] }
 { "id": "seg_s", "component": "Segment", "value": "s", "label": "S" }
 ```
-Real: `examples/catalog-coverage.ts:135-141` (`booking-reservation`), `examples/commerce-hospitality.ts:123-129` (`product-options-quantity`).
+Real: `examples/catalog-coverage.ts:135-141` (`booking-reservation`), `examples/commerce-hospitality.ts:125-132` (`product-options-quantity`).
 
 ## Quantity — number TextField (no stepper minted) (GH #1377)
 A numeric quantity input. Until/unless a dedicated Stepper control is minted (a fleet gap — this idiom's
@@ -206,7 +280,7 @@ numeric-entry primitive today; that absence is a named, deferred fleet gap, not 
 { "id": "f_qty", "component": "Field", "label": "Quantity", "child": "qty_field" }
 { "id": "qty_field", "component": "TextField", "name": "qty", "type": "number", "min": "1", "step": 1, "value": { "path": "/product/qty" } }
 ```
-Real: `examples/commerce-hospitality.ts:131-134` (`product-options-quantity`).
+Real: `examples/commerce-hospitality.ts:133-137` (`product-options-quantity`).
 
 ## Media-grid — Grid of Image tiles, a photo gallery (GH #1377)
 A photo/image gallery — every tile is genuinely an image meant to be viewed, not a file. `Grid` (`gap`,
@@ -223,7 +297,7 @@ seed), not `Grid`.
 { "id": "root", "component": "Grid", "gap": "md", "min": "10rem", "children": { "path": "/listing/photos", "componentId": "photo_tile" } }
 { "id": "photo_tile", "component": "Image", "src": { "path": "url" }, "alt": { "path": "caption" }, "aspect": "1/1", "usageHint": "thumb", "fit": "cover" }
 ```
-Real: `examples/commerce-hospitality.ts:183-187` (`listing-photo-grid`); contrast `examples/high-frequency-patterns.ts:265-269` (`media-file-grid`, Attachment tiles).
+Real: `examples/commerce-hospitality.ts:185-188` (`listing-photo-grid`); contrast `examples/high-frequency-patterns.ts:265-269` (`media-file-grid`, Attachment tiles).
 
 ## Comparison-table — Stat tiles above a shared Table (GH #1377)
 Side-by-side plan/product comparison: a `Grid` of headline `Stat` tiles (one `Card` per option, `label`+

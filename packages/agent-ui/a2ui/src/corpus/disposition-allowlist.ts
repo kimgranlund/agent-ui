@@ -152,6 +152,14 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // Video/AudioPlayer catalog rows (the native media players) to keep the GH #729 type-coverage gate
   // green; pending the same judged import wave. Delete this entry when it is judged.
   //
+  // GH #1353 (2026-08-19) — `frontier-drill-settings`: was the pending-state shape (added with the
+  // Drill/DrillPanel catalog rows, Kim ruling 2026-08-19); judged by a fresh-context a2ui-review-agent
+  // (PASS, qualityScore 4, verdicts archived 2026-08-19t16-45-00z) and admitted via import-seeds
+  // --verdicts the same day — entry DRAINED per its own instruction (ADR-0068: never self-judged).
+  // GH #1352 (2026-08-19) — `frontier-pane-switcher`: was the pending-state shape (added with the Toggle
+  // row, Kim ruling 2026-08-19); judged by a fresh-context a2ui-review-agent (PASS, qualityScore 4,
+  // verdicts archived 2026-08-19t15-30-00z) and admitted via import-seeds --verdicts the same day — entry
+  // DRAINED per its own instruction (ADR-0068: never self-judged).
   // GH #1377 (2026-08-19) — the commerce+hospitality genui-pack: `product-options-quantity` (variant-
   // picker SegmentedControl + quantity number-TextField, Field-wrapped, FormProvider-gated) and
   // `listing-photo-grid` (media-grid — a Grid of bare Image tiles, distinct from media-file-grid's
@@ -159,6 +167,13 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // the ticket's own scope names ONE judged corpus seed this wave (the flagship
   // `commerce-product-card`, admitted separately, no allowlist entry). Run the judged pipeline and
   // DELETE these two entries when that wave lands.
-  ['product-options-quantity', 'GH #1377 — variant-picker + quantity composition; admission pending the judged wave'],
-  ['listing-photo-grid', 'GH #1377 — media-grid composition; admission pending the judged wave'],
+  // `listing-photo-grid` — judged by a fresh-context a2ui-review-agent (PASS, qualityScore 4, verdicts
+  // archived 2026-08-19t17-10-00z) and admitted via import-seeds --verdicts the same day — entry DRAINED
+  // per its own instruction (ADR-0068: never self-judged).
+  // `product-options-quantity` — judged FAIL 2/5 (D1: inert FormProvider gate beside the CardFooter;
+  // D2: description overclaim) 2026-08-19t17-10-00z, repaired at source the same day (FormProvider-as-
+  // root, the generative-form/booking-reservation shape; CardHeader title; required qty), rejudged by a
+  // second fresh-context a2ui-review-agent (PASS, qualityScore 4, archived 2026-08-19t17-40-00z) and
+  // admitted via import-seeds --verdicts — entry DRAINED per its own instruction (ADR-0068: never
+  // self-judged).
 ])

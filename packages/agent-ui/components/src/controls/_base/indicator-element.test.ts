@@ -369,3 +369,61 @@ describe('UIIndicatorElement — formReset (bug-A fix: defaultChecked baseline)'
     el.remove()
   })
 })
+
+// ── GH #1333 — pre-connect PROGRAMMATIC writes must not pollute the defaultChecked capture ────────
+//
+// `checked` reflects, so by connect time the live prop AND the `[checked]` attribute both carry any
+// pre-connect programmatic write — the pre-fix capture (`#defaultChecked = this.checked`) snapshotted
+// that write as the authored default (the radio-group `value`-setter direct-match path was the reported
+// door; a bare `el.checked = true` before append is the minimal repro). Native parity: only the DECLARED
+// state (markup / setAttribute) is the default; a programmatic property write never touches it. The fix
+// tracks the attribute channel (`#declaredChecked`, echo-excluded via the props-layer outbound lock) and
+// captures FROM it.
+
+describe('UIIndicatorElement — GH #1333 (pre-connect programmatic writes vs defaultChecked)', () => {
+  it('ind-preconnect-programmatic-not-default: pre-connect `el.checked = true` then connect → defaultChecked stays false; reset restores the declared (unchecked) state', () => {
+    const el = make()
+    el.checked = true // PROGRAMMATIC, pre-connect — reflects to [checked], but is NOT a declaration
+    expect(el.hasAttribute('checked')).toBe(true) // the reflected attribute is exactly why the old capture was polluted
+    document.body.append(el)
+    expect(el.checked).toBe(true) // the LIVE state is preserved — only the default capture excludes it
+    expect(el.defaultChecked).toBe(false) // native parity: a programmatic write never becomes the default
+    el.formResetCallback()
+    expect(el.checked).toBe(false) // reset returns to the DECLARED initial state, not the pre-connect write
+    el.remove()
+  })
+
+  it('ind-preconnect-declared-beats-programmatic-uncheck: a DECLARED [checked] attribute survives a pre-connect programmatic uncheck as the default', () => {
+    const el = make()
+    el.setAttribute('checked', '') // DECLARED (the markup-equivalent channel)
+    el.checked = false // programmatic uncheck — its reflect echo removes the attribute, but un-declares nothing
+    expect(el.hasAttribute('checked')).toBe(false)
+    document.body.append(el)
+    expect(el.checked).toBe(false) // live state: the programmatic write holds
+    expect(el.defaultChecked).toBe(true) // the declared record holds — native <input checked>.checked=false parity
+    el.formResetCallback()
+    expect(el.checked).toBe(true) // reset restores the DECLARED default
+    el.remove()
+  })
+
+  it('ind-preconnect-declared-after-programmatic: an explicit setAttribute AFTER a programmatic write still declares (setAttribute IS the native defaultChecked channel)', () => {
+    const el = make()
+    el.checked = true // programmatic — not a declaration
+    el.setAttribute('checked', '') // genuine external attribute write — IS a declaration (native parity)
+    document.body.append(el)
+    expect(el.defaultChecked).toBe(true)
+    el.remove()
+  })
+
+  it('ind-postconnect-programmatic-still-clean: negative control — post-connect toggles never rewrite the captured default (unchanged contract)', () => {
+    const el = make()
+    document.body.append(el) // captured: false (nothing declared)
+    el.checked = true
+    el.checked = false
+    el.checked = true
+    expect(el.defaultChecked).toBe(false)
+    el.formResetCallback()
+    expect(el.checked).toBe(false)
+    el.remove()
+  })
+})

@@ -645,6 +645,11 @@ export class UIAgentAdminElement extends UIElement {
   // GH #889 — the dev-debug export's OWN registration seam, the Import/Export shape verbatim (a bare
   // callback, menu-only consumer).
   #exportDebugBundleRequest: (() => void) | undefined
+  // ADR-0208 D3 (GH #1340/#1349) — the imported skill-pack SHELF's registration seam, the debug-export
+  // shape verbatim (a bare callback, menu-only consumer, registration-only degrade): the page owns the
+  // shelf surface itself (import file-picker, provenance/license/scan display, remove — page-owned
+  // content like the Edit Agents drawer); this element only offers the entry point while registered.
+  #skillPacksRequest: (() => void) | undefined
   // GH #1196 (ADR-0203 clause 4) — the SAME registration shape, ONE ADDITIVE member: a model-declared
   // team roster, consumed by the site (persona minting + `AgentTeam` validation/persistence are
   // SITE-owned, never this package's — the DAG this file's own layering already fixes). Carries the
@@ -684,6 +689,9 @@ export class UIAgentAdminElement extends UIElement {
   // it never earns a wide header rendering (a dev-debug affordance, not a primary action); it degrades the
   // SAME registration-only way Import/Export do, no two-axis gate.
   #overflowDebugExportItem: HTMLElement | null = null
+  // ADR-0208 D3 — the overflow's FIFTH item, "Skill packs…" (the imported-shelf entry point). Menu-only
+  // like the debug export (a management surface, not a primary action); registration-only degrade.
+  #overflowSkillPacksItem: HTMLElement | null = null
   // S7-d (LLD §16.4) — "Reset Agent"'s own consumer, at the model-grid fold's content end. GH #709 — the
   // WHOLE ROW hides (not just the button) while `onResetRequest` is unregistered: unlike the header's five
   // bare-action seams, this row also carries a label ("Agent configuration") — but that label has no
@@ -1954,7 +1962,14 @@ export class UIAgentAdminElement extends UIElement {
     overflowDebugExportItem.dataset.value = 'export-debug-bundle'
     overflowDebugExportItem.textContent = 'Export debug bundle'
     this.#overflowDebugExportItem = overflowDebugExportItem
-    overflowMenu.append(overflowTrigger, overflowImportItem, overflowExportItem, overflowDeleteItem, overflowDebugExportItem)
+    // ADR-0208 D3 — the FIFTH item, menu-only (the debug-export shape): the imported skill-pack shelf's
+    // entry point. What opens is entirely PAGE-owned (the Edit Agents drawer precedent) — import
+    // file-picker, per-entry review, provenance/license/scan display, remove.
+    const overflowSkillPacksItem = document.createElement('div')
+    overflowSkillPacksItem.dataset.value = 'skill-packs'
+    overflowSkillPacksItem.textContent = 'Skill packs…'
+    this.#overflowSkillPacksItem = overflowSkillPacksItem
+    overflowMenu.append(overflowTrigger, overflowImportItem, overflowExportItem, overflowDeleteItem, overflowDebugExportItem, overflowSkillPacksItem)
     overflowMenu.addEventListener('select', (event) => {
       event.stopPropagation()
       const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
@@ -1962,6 +1977,7 @@ export class UIAgentAdminElement extends UIElement {
       else if (value === 'export-agent') this.#exportRequest?.()
       else if (value === 'delete-agent') this.#requestDeleteActiveAgent()
       else if (value === 'export-debug-bundle') this.#exportDebugBundleRequest?.()
+      else if (value === 'skill-packs') this.#skillPacksRequest?.()
     })
 
     headerActions.append(newAgentWide, importAction, exportAction, newAgentNarrow, overflowMenu)
@@ -4533,6 +4549,17 @@ export class UIAgentAdminElement extends UIElement {
     this.#applyActionAvailability()
   }
 
+  /** ADR-0208 D3 (GH #1340/#1349) — register the page's "open the imported skill-pack shelf" path. The
+   *  debug-export seam's shape verbatim (a bare callback, menu-only consumer, last registration wins,
+   *  safe before or after connect); unregistered ⇒ the "Skill packs…" item hides on the SAME
+   *  registration-only rule. Like `onEditAgentsRequest`, what the surface IS stays entirely page-owned
+   *  (the import file-picker, the review-before-enable display — full content + provenance + scan, D5.2 —
+   *  and remove); this element only offers the entry point while the seam is registered. */
+  onSkillPacksRequest(callback: () => void): void {
+    this.#skillPacksRequest = callback
+    this.#applyActionAvailability()
+  }
+
   /** GH #1196 (ADR-0203 clause 4) — register the Builder's team-shaped generation path. No header
    *  affordance drives this seam (unlike Import/Export/Delete above) — it fires only from INSIDE the
    *  authoring turn loop's own `team` consumption arm (`#runSurfaceTurn`), so there is no visibility
@@ -4619,10 +4646,17 @@ export class UIAgentAdminElement extends UIElement {
       this.#overflowDebugExportItem.hidden = debugExportHidden
       this.#overflowDebugExportItem.setAttribute('aria-disabled', String(debugExportHidden))
     }
+    // ADR-0208 D3 — the fifth item, registration-only exactly like the debug export (no two-axis gate —
+    // the shelf is APP-level, never dependent on the active entry).
+    const skillPacksHidden = this.#skillPacksRequest === undefined
+    if (this.#overflowSkillPacksItem) {
+      this.#overflowSkillPacksItem.hidden = skillPacksHidden
+      this.#overflowSkillPacksItem.setAttribute('aria-disabled', String(skillPacksHidden))
+    }
     // The trigger's own hide rule WIDENS with each item — an openable-but-empty menu is still not a real
-    // affordance, but any ONE of the four being live is now enough to make it a real one.
+    // affordance, but any ONE of the five being live is now enough to make it a real one.
     if (this.#overflowTriggerBtn) {
-      this.#overflowTriggerBtn.hidden = importHidden && exportHidden && deleteHidden && debugExportHidden
+      this.#overflowTriggerBtn.hidden = importHidden && exportHidden && deleteHidden && debugExportHidden && skillPacksHidden
     }
     // GH #709 — the WHOLE ROW hides, not just the button (its label has no standalone value once the
     // action it names is gone). `#resetAgentBtn` itself is never toggled here anymore.

@@ -28,6 +28,14 @@
 // `../corpus/text-similarity.ts` (slice 1) — NOT the `CorpusRecord` schema or `admit.ts`'s
 // pipeline (§1's scoping line: instruction prose doesn't fit the exemplar-required schema).
 //
+// GH #1355 (the 2026-08-18 preset-vs-catalog gap analysis) — three more modules teaching compositions the
+// catalog can already express but no idiom named: `crud-entry-list` (List+Switch rows+edit Drawer+
+// FormProvider+add-from-library Menu, grounded in `app/src/controls/entry-list/` + the
+// `agent-roster-drawer` seed), `table-toolbar-pagination` (the Table/Toolbar/Pagination interplay —
+// Table owns search/sort/page/pageSize/filter itself; a standalone Pagination is for windowing something
+// ELSE), and `nested-record-editor` (a parent record owning a member sub-list — the team-pane shape,
+// distinct from both `master-detail-split`'s selection-driven split and the flat `crud-entry-list`).
+//
 // ADR-0135 cl.11: the six-entry registry is no longer an inline object-literal array — each entry is a
 // `prompts/mini-skills/<id>.md` frontmatter file (`---\nid:\ntriggers:\n---\n<body>`), loaded + parsed at
 // module load. The bodies are prose, editable/diffable as prose; `selectMiniSkills` and the token-budget

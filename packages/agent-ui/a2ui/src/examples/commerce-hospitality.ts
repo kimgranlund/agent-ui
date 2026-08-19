@@ -105,7 +105,7 @@ export const productOptionsQuantitySeed: ExampleSeed = {
       version: 'v1.0',
       updateDataModel: {
         surfaceId: OPTIONS_ID,
-        value: { product: { name: 'Trail Runner Sneaker', size: '', qty: 1 } },
+        value: { product: { name: 'Trail Runner Sneaker', size: '', qty: '1' } },
       },
     },
     {
@@ -113,14 +113,15 @@ export const productOptionsQuantitySeed: ExampleSeed = {
       updateComponents: {
         surfaceId: OPTIONS_ID,
         components: [
-          { id: 'root', component: 'Card', elevation: '1', children: ['content', 'foot'] },
-          { id: 'content', component: 'CardContent', children: ['form'] },
-          {
-            id: 'form', component: 'FormProvider',
-            children: ['col'],
-          },
-          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'f_size', 'f_qty'] },
+          // The FormProvider is the ROOT — the submit Button's actual DOM ancestor (the renderer resolves
+          // submit gating via closest(); a FormProvider nested beside the CardFooter never gates it — the
+          // generative-form.ts:24-28 / booking-reservation repair shape, re-hit here on first judging).
+          { id: 'root', component: 'FormProvider', children: ['card'] },
+          { id: 'card', component: 'Card', elevation: '1', children: ['head', 'content', 'foot'] },
+          { id: 'head', component: 'CardHeader', children: ['title'] },
           { id: 'title', component: 'Text', variant: 'h4', text: { path: '/product/name' } },
+          { id: 'content', component: 'CardContent', children: ['col'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['f_size', 'f_qty'] },
           { id: 'f_size', component: 'Field', label: 'Size', child: 'seg_size' },
           {
             id: 'seg_size', component: 'SegmentedControl', name: 'size', required: true,
@@ -131,7 +132,7 @@ export const productOptionsQuantitySeed: ExampleSeed = {
           { id: 'seg_l', component: 'Segment', value: 'l', label: 'L' },
           { id: 'f_qty', component: 'Field', label: 'Quantity', child: 'qty_field' },
           {
-            id: 'qty_field', component: 'TextField', name: 'qty', type: 'number', min: '1', step: 1,
+            id: 'qty_field', component: 'TextField', name: 'qty', type: 'number', min: '1', step: 1, required: true,
             value: { path: '/product/qty' },
           },
           { id: 'foot', component: 'CardFooter', children: ['btn_add'] },

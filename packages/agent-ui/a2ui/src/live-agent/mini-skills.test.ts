@@ -62,12 +62,27 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
     expect(ids).toContain('greeting-card')
   })
 
-  // GH #1377 (the commerce+hospitality genui-pack) — six more modules, taking the registry to
-  // seventeen: `product-presentation` (flagship), `feature-collection`, `variant-picker`, `quantity`,
+  // GH #1355 (the 2026-08-18 preset-vs-catalog gap analysis) — three more modules, taking the registry
+  // to fourteen: `crud-entry-list`, `table-toolbar-pagination`, `nested-record-editor`.
+  it('seeds the GH #1355 twelfth-fourteenth modules — crud-entry-list · table-toolbar-pagination · nested-record-editor', () => {
+    const ids = MINI_SKILLS.map((m) => m.id)
+    expect(ids).toEqual(expect.arrayContaining(['crud-entry-list', 'table-toolbar-pagination', 'nested-record-editor']))
+  })
+
+  it('no registry body embeds A2UI JSONL (a pure-prose module needs only doc-review, ADR-0091 §4)', () => {
+    for (const skill of MINI_SKILLS) {
+      expect(skill.body).not.toMatch(/"version"\s*:\s*"v1\.0"/)
+    }
+  })
+
+  // SPEC-R6 AC1 (`persona-catalog-composition.spec.md`, ADR-0172 cl.3) — every shipped module's
+  // frontmatter carries the catalog whose vocabulary its body hardcodes.
+  // GH #1377 (the commerce+hospitality genui-pack) — six more modules, taking the merged registry to
+  // twenty (with the GH #1355 trio): `product-presentation` (flagship), `feature-collection`, `variant-picker`, `quantity`,
   // `media-grid`, `comparison-table`. The seventh idiom named at intake — feature-details (Drill+
   // DescriptionList) — is BLOCKED on PR #1364 minting the Drill/DrillPanel catalog rows and is not
   // taught here.
-  it('seeds the GH #1377 twelfth-seventeenth modules — product-presentation · feature-collection · variant-picker · quantity · media-grid · comparison-table', () => {
+  it('seeds the GH #1377 fifteenth-twentieth modules — product-presentation · feature-collection · variant-picker · quantity · media-grid · comparison-table', () => {
     const ids = MINI_SKILLS.map((m) => m.id)
     expect(ids).toEqual(
       expect.arrayContaining([
@@ -79,19 +94,11 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
         'comparison-table',
       ]),
     )
-    expect(MINI_SKILLS).toHaveLength(17)
+    expect(MINI_SKILLS).toHaveLength(20)
   })
 
-  it('no registry body embeds A2UI JSONL (a pure-prose module needs only doc-review, ADR-0091 §4)', () => {
-    for (const skill of MINI_SKILLS) {
-      expect(skill.body).not.toMatch(/"version"\s*:\s*"v1\.0"/)
-    }
-  })
-
-  // SPEC-R6 AC1 (`persona-catalog-composition.spec.md`, ADR-0172 cl.3) — every shipped module's
-  // frontmatter carries the catalog whose vocabulary its body hardcodes.
-  it('SPEC-R6 AC1 — every one of the seventeen shipped modules carries catalogId: \'agent-ui\'', () => {
-    expect(MINI_SKILLS).toHaveLength(17)
+  it('SPEC-R6 AC1 — every one of the twenty shipped modules carries catalogId: \'agent-ui\'', () => {
+    expect(MINI_SKILLS).toHaveLength(20)
     for (const skill of MINI_SKILLS) expect(skill.catalogId, skill.id).toBe('agent-ui')
   })
 })
@@ -364,6 +371,77 @@ describe('greeting-card — the GH #1201 persona-conditional greet-bookend modul
   })
 })
 
+// GH #1355 (the 2026-08-18 preset-vs-catalog gap analysis) — three modules teaching compositions the
+// catalog can already express but no idiom named.
+describe('crud-entry-list — the GH #1355 CRUD entry-list module', () => {
+  it('fires on a manage-items intent', () => {
+    const result = selectMiniSkills('let me manage my skills — enable, edit, or remove each one', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).toContain('crud-entry-list')
+  })
+
+  it('does NOT fire on an unrelated intent', () => {
+    const result = selectMiniSkills('show me the weather forecast for tomorrow', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).not.toContain('crud-entry-list')
+  })
+
+  // The Field-wrap teaching is the REPAIRED shape from the seed's first judged pass (qualityScore 2,
+  // failing D1 on P7): Switch.label is not bindable, and a merely-adjacent Text never programmatically
+  // NAMES the switch — Field's bindable label is the catalog-available fix (the ADR-0051 seam).
+  it('teaches the Field-wrap repair for the unbindable Switch.label (P7 — a sibling Text never names the switch)', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'crud-entry-list')!
+    expect(skill.body).toMatch(/Switch's own `label` is NOT bindable/)
+    expect(skill.body).toMatch(/a sibling Text never NAMES the switch for assistive tech/)
+    expect(skill.body).toMatch(/Field's bindable label does both jobs/)
+  })
+
+  it('teaches the edit-Drawer-beside-the-Card + FormProvider shape and the Button-rows-in-Menu add-from-library idiom', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'crud-entry-list')!
+    expect(skill.body).toMatch(/Drawer\(edge 'end', open bound\) BESIDE the Card, never inside CardContent/)
+    expect(skill.body).toMatch(/a Menu whose rows are BUTTONS/)
+    expect(skill.body).toMatch(/never bare MenuItem, which has no `action` slot/)
+  })
+})
+
+describe('table-toolbar-pagination — the GH #1355 Table/Toolbar/Pagination interplay module', () => {
+  it('fires on a searchable/sortable table intent', () => {
+    const result = selectMiniSkills('a searchable, sortable table of results with paging', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).toContain('table-toolbar-pagination')
+  })
+
+  it('does NOT fire on an unrelated intent', () => {
+    const result = selectMiniSkills('build a checkout form with billing fields', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).not.toContain('table-toolbar-pagination')
+  })
+
+  it('teaches the no-redundant-second-pager rule for a Table already windowing itself', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'table-toolbar-pagination')!
+    expect(skill.body).toMatch(/never add a separate Pagination node bound to that same table's page/)
+  })
+
+  it('teaches Table owning search\\/sort\\/filter\\/page\\/pageSize as its own bindable props', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'table-toolbar-pagination')!
+    expect(skill.body).toMatch(/Table owns `search`\/`sort`\/`filter`\/`page`\/`pageSize` as its OWN bindable props/)
+  })
+})
+
+describe('nested-record-editor — the GH #1355 parent-record + member-sub-list module (the team-pane shape)', () => {
+  it('fires on a team-roster intent', () => {
+    const result = selectMiniSkills('manage my team — add or remove members and assign each a role', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).toContain('nested-record-editor')
+  })
+
+  it('does NOT fire on an unrelated intent', () => {
+    const result = selectMiniSkills('show me the weather forecast for tomorrow', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).not.toContain('nested-record-editor')
+  })
+
+  it('distinguishes itself from master-detail-split and crud-entry-list in its own body', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'nested-record-editor')!
+    expect(skill.body).toMatch(/Distinct from master-detail-split/)
+    expect(skill.body).toMatch(/the flat CRUD entry-list/)
+  })
+})
+
 // GH #1377 (the commerce+hospitality genui-pack) — six modules teaching product-presentation,
 // feature-collection, variant-picker, quantity, media-grid, and comparison-table composed idioms.
 describe('product-presentation — the GH #1377 flagship product/listing card module', () => {
@@ -473,3 +551,4 @@ describe('comparison-table — the GH #1377 Stat-tiles-plus-Table plan-compariso
     expect(skill.body).toMatch(/not feature-collection's bare single-purpose Table/)
   })
 })
+

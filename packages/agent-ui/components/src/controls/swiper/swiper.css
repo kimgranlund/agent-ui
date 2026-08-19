@@ -34,6 +34,12 @@
   --ui-swiper-duration: var(--md-sys-motion-duration-fast);
   --ui-swiper-easing: var(--md-sys-motion-easing-standard);
 
+  /* The default-stamped paddles band (GH #1330) — the inline gutter the track reserves on each side when
+     the [data-default] paddles overlay is stamped (band rule in the @scope block below). Sized to the box
+     the stamped paddles actually render: an icon-only md ui-button is a `--md-sys-height-md` square
+     (button.css `--ui-button-height` → `inline-size`), so the band tracks density with the button. */
+  --ui-swiper-paddle-band: var(--md-sys-height-md);
+
   /* Pagination dots — the compact widget ramp; the ACTIVE dot is size-larger (non-colour signifier, ADR-0057).
      Declared HERE (the family root) though only swiper-pagination.css consumes them — the family-root rule
      (ADR-0124 Consequences): a leaf never DECLARES another tag's private token, but MAY consume the primary's
@@ -92,6 +98,21 @@
     overflow-x: hidden;
     overflow-y: auto;
     scroll-snap-type: y mandatory;
+  }
+
+  /* The default-stamped paddles band (GH #1330) — the [data-default] overlay (swiper-paddles.css) floats
+     its two icon-only buttons over the track's inline edges, so the TRACK reserves that band as its own
+     geometry: a TRANSPARENT INLINE BORDER, not padding — a scroll container clips content at the PADDING
+     box, so a border band means slide content (the active slide's first glyph, a neighbour's peeking tail)
+     can NEVER paint under a paddle, where padding + scroll-padding would still let the adjacent slide's
+     glyphs slide under the carets (gap < band). Native snap aligns to the snapport (inside the border) with
+     zero scroll-padding bookkeeping, and the grid formula's 100% resolves against the content box, so
+     slides exactly fill the reduced viewport. `transparent` is a geometry device here, not a colour opinion
+     (ADR-0008 holds — nothing is painted). Author-placed anchors (no [data-default]) keep whatever layout
+     the author gave them — no band. The JS mirror is #alignedOffset (swiper.ts), which aligns to this same
+     snapport via clientLeft/clientWidth. */
+  :scope:has(> ui-swiper-paddles[data-default]) > [data-part='track'] {
+    border-inline: var(--ui-swiper-paddle-band) solid transparent;
   }
 
   /* [data-part=live] — visually hidden, announced (the stat.css delta-word idiom). */

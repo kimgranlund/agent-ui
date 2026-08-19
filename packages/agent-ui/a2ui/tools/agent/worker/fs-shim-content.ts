@@ -28,6 +28,9 @@ import builderMission from '../../../src/agent/prompts/builder-mission.md'
 
 import cardGameSheet from '../../../src/agent/prompts/mini-skills/card-game-sheet.md'
 import cardLayout from '../../../src/agent/prompts/mini-skills/card-layout.md'
+// GH #1355 — the preset-vs-catalog gap-analysis trio (crud-entry-list / table-toolbar-pagination /
+// nested-record-editor).
+import crudEntryList from '../../../src/agent/prompts/mini-skills/crud-entry-list.md'
 import dashboardKpiGrid from '../../../src/agent/prompts/mini-skills/dashboard-kpi-grid.md'
 import formRhythm from '../../../src/agent/prompts/mini-skills/form-rhythm.md'
 import gameHud from '../../../src/agent/prompts/mini-skills/game-hud.md'
@@ -36,7 +39,9 @@ import greetingCard from '../../../src/agent/prompts/mini-skills/greeting-card.m
 import gameTableChrome from '../../../src/agent/prompts/mini-skills/game-table-chrome.md'
 import loginForm from '../../../src/agent/prompts/mini-skills/login-form.md'
 import masterDetailSplit from '../../../src/agent/prompts/mini-skills/master-detail-split.md'
+import nestedRecordEditor from '../../../src/agent/prompts/mini-skills/nested-record-editor.md'
 import settingsScreen from '../../../src/agent/prompts/mini-skills/settings-screen.md'
+import tableToolbarPagination from '../../../src/agent/prompts/mini-skills/table-toolbar-pagination.md'
 // GH #808 S4 (a2ui-container-vocabulary.spec.md SPEC-R8) — the structured-container taught tier.
 import structuredContainer from '../../../src/agent/prompts/mini-skills/structured-container.md'
 // GH #1377 — the commerce+hospitality genui-pack: six composed idioms (product-presentation ·
@@ -77,6 +82,7 @@ export const FILES: Record<string, string> = {
   [`${GENUI_PACKS_PATH}/animated-explainers.md`]: animatedExplainers,
   [`${MINI_SKILLS_PATH}/card-game-sheet.md`]: cardGameSheet,
   [`${MINI_SKILLS_PATH}/card-layout.md`]: cardLayout,
+  [`${MINI_SKILLS_PATH}/crud-entry-list.md`]: crudEntryList,
   [`${MINI_SKILLS_PATH}/dashboard-kpi-grid.md`]: dashboardKpiGrid,
   [`${MINI_SKILLS_PATH}/form-rhythm.md`]: formRhythm,
   [`${MINI_SKILLS_PATH}/game-hud.md`]: gameHud,
@@ -84,6 +90,7 @@ export const FILES: Record<string, string> = {
   [`${MINI_SKILLS_PATH}/greeting-card.md`]: greetingCard,
   [`${MINI_SKILLS_PATH}/login-form.md`]: loginForm,
   [`${MINI_SKILLS_PATH}/master-detail-split.md`]: masterDetailSplit,
+  [`${MINI_SKILLS_PATH}/nested-record-editor.md`]: nestedRecordEditor,
   [`${MINI_SKILLS_PATH}/settings-screen.md`]: settingsScreen,
   [`${MINI_SKILLS_PATH}/structured-container.md`]: structuredContainer,
   [`${MINI_SKILLS_PATH}/product-presentation.md`]: productPresentation,
@@ -92,6 +99,7 @@ export const FILES: Record<string, string> = {
   [`${MINI_SKILLS_PATH}/quantity.md`]: quantity,
   [`${MINI_SKILLS_PATH}/media-grid.md`]: mediaGrid,
   [`${MINI_SKILLS_PATH}/comparison-table.md`]: comparisonTable,
+  [`${MINI_SKILLS_PATH}/table-toolbar-pagination.md`]: tableToolbarPagination,
 }
 
 // mini-skills.ts's `loadMiniSkills` re-`.sort()`s this list itself, so insertion order here is not
@@ -100,6 +108,7 @@ export const DIRS: Record<string, string[]> = {
   [MINI_SKILLS_PATH]: [
     'card-game-sheet.md',
     'card-layout.md',
+    'crud-entry-list.md',
     'dashboard-kpi-grid.md',
     'form-rhythm.md',
     'game-hud.md',
@@ -107,6 +116,7 @@ export const DIRS: Record<string, string[]> = {
     'greeting-card.md',
     'login-form.md',
     'master-detail-split.md',
+    'nested-record-editor.md',
     'settings-screen.md',
     'structured-container.md',
     'product-presentation.md',
@@ -115,6 +125,7 @@ export const DIRS: Record<string, string[]> = {
     'quantity.md',
     'media-grid.md',
     'comparison-table.md',
+    'table-toolbar-pagination.md',
   ],
   // genui-surface.spec.md SPEC-R9 — `genui-packs.ts`'s own readdirSync target.
   [GENUI_PACKS_PATH]: ['animated-explainers.md', 'data-viz-layouts.md', 'interactive-widgets.md'],
