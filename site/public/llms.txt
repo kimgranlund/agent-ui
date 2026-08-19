@@ -124,10 +124,10 @@
 
 - [ui-progress](./progress-doc.html): the determinate/indeterminate progress bar — thin-rail geometry, reduced-motion aware.
 - [ui-avatar](./avatar-doc.html): identity — image → initials → glyph fallback chain, decorative by default.
-- [ui-image](./image-doc.html): the URL-sourced content image — a reserved aspect-ratio box (zero CLS), native lazy-loading, an optional bottom-scrim caption.
-- [ui-video](./video-doc.html): the native video player — <video controls> in a reserved aspect-ratio box (zero CLS), poster support, no custom chrome.
-- [ui-audio](./audio-doc.html): the native audio player — <audio controls> at the UA bar's intrinsic height, no custom chrome.
-- [ui-attachment](./attachment-doc.html): the FilePart-aligned file card — mime-derived glyph, name, formatted `sizeBytes`.
+- [ui-image](./image-doc.html): the URL-sourced content image — a reserved aspect-ratio box (zero CLS), native lazy-loading, an optional bottom-scrim caption; [demo](./image-demo.html).
+- [ui-video](./video-doc.html): the native video player — <video controls> in a reserved aspect-ratio box (zero CLS), poster support, no custom chrome; [demo](./video-demo.html).
+- [ui-audio](./audio-doc.html): the native audio player — <audio controls> at the UA bar's intrinsic height, no custom chrome; [demo](./audio-demo.html).
+- [ui-attachment](./attachment-doc.html): the FilePart-aligned file card — mime-derived glyph, name, formatted `sizeBytes`; [demo](./attachment-demo.html).
 - [ui-toast](./toast-doc.html): the transient notification — status/alert roles, hover/focus-paused auto-dismiss; [demo](./toast-demo.html).
 - [ui-toast-region](./toast-region-doc.html): the top-layer toast stack — page-owned, driven by `show()`.
 - [ui-split](./split-doc.html): the multi-pane resizable split container — draggable + keyboard-resizable ARIA separators, controlled/uncontrolled `sizes`.
@@ -139,7 +139,7 @@
 - [ui-swiper-item](./swiper-item-doc.html): the slide of the ui-swiper family — sized entirely by the owning track.
 - [ui-swiper-pagination](./swiper-pagination-doc.html): the dots/fraction chrome anchor the owning ui-swiper fills; [demo](./swiper-pagination-demo.html).
 - [ui-swiper-paddles](./swiper-paddles-doc.html): the prev/next chrome anchor — two composed ui-buttons; [demo](./swiper-paddles-demo.html).
-- [ui-swiper-label](./swiper-label-doc.html): the accessible-name chrome anchor for ui-swiper.
+- [ui-swiper-label](./swiper-label-doc.html): the accessible-name chrome anchor for ui-swiper; [demo](./swiper-label-demo.html).
 
 ## Components — containers & layout
 

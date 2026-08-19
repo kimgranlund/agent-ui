@@ -952,6 +952,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-image',
     cards: [
       {
+        href: './image-demo.html',
+        title: 'Demo',
+        blurb: 'A rental-listing gallery: a hero photo with a scrim caption and a model-driven aspect switch, a 1/1 thumbnail strip, and cover vs contain on a portrait source.',
+      },
+      {
         href: './image-doc.html',
         title: 'API reference',
         blurb: 'The Display-class URL-sourced content image — a reserved aspect-ratio box (zero CLS), native lazy-loading, and an optional bottom-scrim caption, generated from image.md.',
@@ -963,6 +968,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-video',
     cards: [
       {
+        href: './video-demo.html',
+        title: 'Demo',
+        blurb: 'A course lesson page: the 16/9 lesson player with a poster, a 9/16 short, the three preload policies, and the empty-src no-dead-shell rule proven model-driven.',
+      },
+      {
         href: './video-doc.html',
         title: 'API reference',
         blurb: 'The Display-class native video player — the real <video controls> in a reserved aspect-ratio box (zero CLS), poster support, no custom chrome, generated from video.md.',
@@ -973,6 +983,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-audio',
     cards: [
       {
+        href: './audio-demo.html',
+        title: 'Demo',
+        blurb: 'A support thread with voice memos: a playable memo (a WAV synthesized in the browser), preload policies on an episode list, and the empty-src rule proven model-driven.',
+      },
+      {
         href: './audio-doc.html',
         title: 'API reference',
         blurb: "The Display-class native audio player — the real <audio controls> at the UA bar's intrinsic height, no custom chrome, generated from audio.md.",
@@ -982,6 +997,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
   {
     label: 'ui-attachment',
     cards: [
+      {
+        href: './attachment-demo.html',
+        title: 'Demo',
+        blurb: 'A support-chat composer: attach and remove real file cards from a pending strip, a received message\'s attachment list, and a composer action log.',
+      },
       {
         href: './attachment-doc.html',
         title: 'API reference',
@@ -1103,6 +1123,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
   {
     label: 'ui-swiper-label',
     cards: [
+      {
+        href: './swiper-label-demo.html',
+        title: 'Demo',
+        blurb: 'A storefront home: named carousels vs the "Carousel" fallback, a model-driven rename editing the anchor\'s text in place, and a live name probe.',
+      },
       {
         href: './swiper-label-doc.html',
         title: 'API reference',
