@@ -1260,9 +1260,9 @@ event allowlist, no new name.
 
 ## EyeDropper (progressive enhancement)
 
-Where the Chromium `EyeDropper` API exists (`'EyeDropper' in window`), a small affordance appears in the
-readout that opens the OS color picker and commits a sampled color. Absent elsewhere, with no polyfill and no
-layout hole.
+Where the Chromium `EyeDropper` API exists (`'EyeDropper' in window`), a small `ui-button size="sm"
+variant="ghost"` affordance appears in the readout that opens the OS color picker and commits a sampled
+color. Absent elsewhere, with no polyfill and no layout hole.
 
 ## Composition — the `ui-text-field type=color` leg
 
@@ -3647,8 +3647,17 @@ still focusable, still reads as "normal", just not writable).
 Pointer pick: a press on `.stars` maps the pointer's X coordinate along the track to a snapped `value`
 exactly as a slider rail does (clicking near star *k* lands near `k·step`) — the same `valueDrag` trait
 Slider uses, unmodified. Keyboard: Arrow ±`step`, Page ±10×`step`, Home/End → exact min/max. Both paths are
-inert while `readonly` or `disabled`. Each live change emits `input`; `change` fires on blur when the value
-moved since focus (the base's commit-on-blur contract, unchanged from Slider).
+inert while `readonly` or `disabled`. Each live change emits `input`.
+
+**Commit timing splits by input modality (ADR-0216 Amendment 1, 2026-08-20 Kim ruling)** — the same
+two-path split native `<input type=range>` has:
+- **Pointer** — a star picked by pointer commits immediately: `change` fires on `pointerup` (the
+  `input`→`value` commit already landed synchronously; only the `change` notification moves).
+- **Keyboard** — keeps the base range law: arrow-step fires `input`, `change` fires on blur when the
+  value has moved since focus (unchanged from Slider).
+
+The catalog's `value: { prop: 'value', event: 'change' }` mark is unaffected either way — commit still
+strictly precedes the event on both paths (Fork-T1/D1-safe, PR #1363's discipline).
 
 ## Sizes
 
@@ -5235,6 +5244,37 @@ fallback).
 The active dot is distinguished by **size**, never colour alone (ADR-0057) — `aria-current="true"` is the
 real ARIA fact the size/colour treatment keys off.
 
+## Why a native button, not `ui-button` (GH #1447 — decline documented)
+
+GH #1447 (the #1445 fleet sweep's straggler audit) asked whether the dots should align to `ui-button`,
+citing ADR-0163's `ui-pagination` (cl.6, composing `ui-button` for every page stop) and ADR-0160's
+`ui-conversation` action-chip row (cl.3, `ui-button size="sm" variant="soft"`) as the fleet's own
+stamps-`ui-button` precedent. Both cited precedents are genuinely different geometry from this control's
+dots, so the conversion is **declined**:
+
+- **Both precedents are CONTROL-tier, labelled affordances.** `ui-pagination`'s page stops carry a page
+  *number* as their label; the conversation action chip carries the action's own text label. `ui-button` is
+  `tier: control` (button.md) — one of geometry.md's five size-classes, floored at the Control band's
+  smallest step (`size="sm"` ⇒ `--md-sys-height-sm`, 24px) by its own documented squareness law
+  (`min-inline-size = height`, button.css `:scope[icon-only]`). Neither precedent renders below that floor.
+- **This control's dots are geometry.md's OTHER size system — the compact realm, not Control.** The dot ramp
+  is `--ui-swiper-dot-size: var(--md-sys-compact-sm)` (14px idle, +2px active — swiper.css) — the
+  ALWAYS-COMPACT widget family (checkbox · radio · switch · slider · tag · badge · chip · kbd; geometry.md
+  "The compact realm"), a size system geometry.md itself calls out as structurally separate from the five
+  control-band size-classes `ui-button` belongs to. A real `ui-button` cannot render a genuine 14px/16px
+  square without either overriding `--ui-button-height` below its own ramp's floor (fighting the geometry
+  law the family itself enforces) or ballooning the dot to ≥24px — well over 1.5× today's ACTIVE size and
+  nearly double the idle size, wrecking the subtle size-step-is-the-signifier design ADR-0057 already
+  establishes for this control (a 2px active/idle delta, not a control-tier jump).
+- **The keyboard-operability rationale in `swiper-pagination.ts`'s own header comment is independently true
+  but not the controlling reason.** `ui-button` provides the identical Tab-stop + Enter/Space activation via
+  its own `tabbable`/`pressActivation` traits, so a real `<button>`'s "keyboard-operable for free" is not,
+  by itself, an argument against `ui-button` — the geometry-tier mismatch above is what actually blocks the
+  conversion.
+
+A native `<button>` stays the right element here: it is the one primitive that renders honestly at the
+compact realm's 14px floor with zero fighting of either geometry law.
+
 ---
 
 <!-- source: packages/agent-ui/components/src/controls/switch/switch.md -->
@@ -5336,20 +5376,28 @@ rather than dropping the column. `columns: []`/absent/malformed-JSON ⇒ **no ta
 empty scroll container; the host box still paints via the `min-inline-size` floor); valid columns with zero
 rows render the caption + header with an honest empty `<tbody>`.
 
-## Selection (ADR-0163 cl.4)
+## Selection (ADR-0163 cl.4, amended GH #1445)
 
-`selectable='multi'` stamps a leading checkbox column plus a header select-all checkbox (indeterminate when
-the MATCHING SET — see below — is partially selected); `selectable='single'` stamps a leading radio column
-(one shared `name`). Selection identity is the `row-key`-named column's cell value (String-coerced), or —
-absent `row-key` — the row's data-order index (stable across a view transform, fragile across a `rows`
-swap). `selected: string[]` is bindable; a real checkbox/radio click commits `select` — a programmatic
-`selected` write never does (the fleet commit law). Selected rows carry `data-selected` for CSS. Selection
-is held against the **whole** rendered set: a filtered-out selected row stays selected, just not visible.
+`selectable='multi'` stamps a leading **composed `ui-checkbox`** column plus a header composed `ui-checkbox`
+select-all (indeterminate when the MATCHING SET — see below — is partially selected); `selectable='single'`
+stamps a leading **composed `ui-radio`** column. (Pre-amendment this was a real, stamped
+`<input type="checkbox"|"radio">` sharing one `name` — ADR-0163's amendment retires that, the fleet's last
+"no native form elements" exception; ZERO exceptions remain fleet-wide.) Every composed selection control
+carries the reflected `inline` attribute (ADR-0223 cl.2) so it hugs its cell instead of filling the `<th>`/
+`<td>`'s block formatting context. Selection identity is the `row-key`-named column's cell value
+(String-coerced), or — absent `row-key` — the row's data-order index (stable across a view transform,
+fragile across a `rows` swap). `selected: string[]` is bindable; a real click commits `select` — a
+programmatic `selected` write never does (the fleet commit law). For `selectable='single'`, `ui-table`
+installs its own capture-phase click guard so a click cannot un-check the sole selected radio — the
+"can't self-uncheck" invariant a native `name`-group provided for free, reproduced here because `ui-radio`
+carries no native grouping. Selected rows carry `data-selected` for CSS. Selection is held against the
+**whole** rendered set: a filtered-out selected row stays selected, just not visible.
 
-## Sort (ADR-0163 cl.5)
+## Sort (ADR-0163 cl.5, amended GH #1445)
 
-Opt in per column: `columns[].sortable: true` wraps that column's header label in a real, stamped
-`<button>` (the APG sortable-table shape). Activation cycles ascending → descending on the SAME column;
+Opt in per column: `columns[].sortable: true` wraps that column's header label in a **composed `ui-button`**
+(`variant="ghost"`, `size="sm"`, `inline`; the APG sortable-table shape — pre-amendment this was a real,
+stamped `<button>` reset via `all: unset`). Activation cycles ascending → descending on the SAME column;
 activating a DIFFERENT sortable column starts fresh at ascending. `aria-sort` rides the one currently-sorted
 `<th>` only. `sort: {key, direction} | null` is bindable; a header-button click commits `change`. The
 client-side comparator (`table-model.ts`'s `makeRowComparator`): number columns compare numerically, every
@@ -5413,13 +5461,14 @@ host mints **no** ARIA at all — no `role`, no `aria-label` — the `<caption>`
 accessible name. The interior scroll container additionally carries `role="region" tabindex="0"` (+
 `aria-labelledby` the caption when present) — the WAI-ARIA APG accessible-overflow pattern, so keyboard-only
 users can reach overflowed columns even in engines without keyboard-focusable scrollers by default. This is
-platform scroll affordance, not a component-defined keyboard contract. Every interactive part (a selection
-input, the select-all checkbox, a sort button) is a REAL native or stamped element in the **normal tab
-order** — no roving tabindex, no composite-widget keyboard contract, no `UIListboxElement`; selection state
-is conveyed ONLY by the native checkbox/radio checked state — **never `aria-selected` on rows** (rejected —
-selection-widget vocabulary ATs do not convey it on plain-table rows). An unlabeled table (`label` absent)
-yields an unnamed scroll region — an accepted residual, not a violation; provide `label` when the table
-needs an accessible name.
+platform scroll affordance, not a component-defined keyboard contract. Every interactive part (a composed
+`ui-checkbox`/`ui-radio` selection control, the composed `ui-checkbox` select-all, a composed `ui-button`
+sort trigger — ADR-0163 amendment, GH #1445; pre-amendment each was a real native `<input>`/`<button>`) is
+a real, focusable FACE control in the **normal tab order** — no roving tabindex, no composite-widget
+keyboard contract, no `UIListboxElement`; selection state is conveyed ONLY by the composed control's OWN
+`ariaChecked` (via internals) — **never `aria-selected` on rows** (rejected — selection-widget vocabulary
+ATs do not convey it on plain-table rows). An unlabeled table (`label` absent) yields an unnamed scroll
+region — an accepted residual, not a violation; provide `label` when the table needs an accessible name.
 
 ## Sizing
 
@@ -5439,11 +5488,10 @@ alignment to the physical left.
 
 No dedicated override block: every row/header separator is a real `border`, which forced-colors repaints in
 system inks and never removes (unlike a background-drawn mark); all cell/caption content is real text and
-survives untouched. The stamped native `<input>` selection cells carry their own UA forced-colors treatment.
-The stamped sort `<button>` is reset (`all: unset`, `table.css`) to read as part of the header rather than a
-raw UA control — under forced-colors it has no background/border of its own to lose, surviving as real,
-inherited header text plus a real `:focus-visible` outline on the shared focus-ring token (itself already
-`Highlight` under forced-colors).
+survives untouched. The composed `ui-checkbox`/`ui-radio` selection cells and the composed `ui-button` sort
+trigger each carry their OWN forced-colors treatment from their own stylesheet (ADR-0163 amendment, GH
+#1445) — `table.css` adds no reset of its own for any of them; the pre-amendment native `<button>`'s
+`all: unset`-then-repaint rule retired along with the native element it painted.
 
 ---
 

@@ -113,14 +113,17 @@ describe('table.ts — event DELEGATION, never a per-stamped-node listener (comp
     }
   })
 
-  it('connected() registers exactly the two delegated listeners (#thead click + #table change), each exactly once', () => {
+  it('connected() registers exactly the three delegated listeners (#thead click + #table change + #table capture-click), each exactly once', () => {
     // GH #455 (size diet): the select-all change (was on #thead) and the row-selection change (was on
     // #tbody) merged into ONE `change` listener on `#table` — a stable skeleton node itself that wraps
     // BOTH #thead and #tbody, so either input's `change` bubbles to it identically to the two-listener
-    // shape this test used to pin. Behavior unchanged (table-interactive.browser.test.ts), listener count
-    // one fewer.
+    // shape this test used to pin. GH #1445 (the ADR-0163 amendment) adds a THIRD delegated listener
+    // overall — a capture-phase `click` guard on `#table` (the single-select "can't self-uncheck"
+    // invariant `ui-radio` needs now that it is not a native `name`-grouped `<input>`) — so `#table` itself
+    // now carries TWO `this.listen(this.#table, …)` call sites (`change` + capture `click`), not one;
+    // `#thead`'s own sort-button `click` listener is unchanged.
     expect([...ts.matchAll(/this\.listen\(this\.#thead,/g)]).toHaveLength(1) // sort-button click
-    expect([...ts.matchAll(/this\.listen\(this\.#table,/g)]).toHaveLength(1) // select-all + row-selection change
+    expect([...ts.matchAll(/this\.listen\(\s*this\.#table,/g)]).toHaveLength(2) // change (selection commit) + capture-phase click (single-select guard)
   })
 })
 

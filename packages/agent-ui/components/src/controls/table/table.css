@@ -1,20 +1,23 @@
 /* table.css — ui-table, the Display-class data table (LLD-C3, report-family.lld.md §2;
- * report-family.spec.md SPEC-R2/R3/R5/R14/R15/R16/R17; ADR-0163 the interactive widening). Two clearly-
- * SECTIONED blocks (ADR-0003):
+ * report-family.spec.md SPEC-R2/R3/R5/R14/R15/R16/R17; ADR-0163 the interactive widening, amended GH #1445).
+ * Two clearly-SECTIONED blocks (ADR-0003):
  *
  *   [1] TOKEN BLOCK  — `:where(ui-table)` (specificity 0,0,0) DECLARES every `--ui-table-*` component
  *       token from the fleet `--md-sys-color-*` roles + the `--md-sys-space-*` rhythm ladder. No `[size]`/
  *       `[scale]` repoint matrix — `ui-table` is Display-class (SPEC-R17): no control height, no
- *       `--md-sys-height-*` lever, the type matrix + the space ladder are the whole lever. ADR-0163's
- *       stamped interactive parts (selection inputs, sort buttons, the footer's composed `ui-pagination`)
- *       carry their OWN geometry (cl.6's "the novelty is zero") — this file adds only the SELECTED-row
- *       color pair + the footer's own rhythm token, never a control-height lever.
+ *       `--md-sys-height-*` lever, the type matrix + the space ladder are the whole lever. The stamped
+ *       interactive parts (the composed `ui-checkbox`/`ui-radio` selection cells, `ui-button` sort
+ *       triggers, and the footer's composed `ui-pagination`) carry their OWN geometry/token chain end to
+ *       end (cl.6's "the novelty is zero", now true of every composed part, not just pagination) — this
+ *       file adds only the SELECTED-row color pair + the footer's own rhythm token, never a control-height
+ *       lever, and (since the ADR-0163 amendment) NO reset rule for a composed control's own painting.
  *   [2] STYLES BLOCK — `@scope (ui-table)` CONSUMES only `--ui-table-*` (∪ the shared `--md-sys-*`/
- *       `--md-sys-space-*` namespaces, PLUS the fleet's sanctioned direct-read constants — focus-ring/
- *       motion — the checkbox.css/tokens.md precedent). Owns the UA-default + page-cascade reset a stamped
- *       native `<table>` needs (border-collapse, cell padding, caption alignment — SPEC-R2 AC2, the
- *       ADR-0078 cl.4 `font: inherit`-reset precedent scaled up) and the overflow-in-own-container law
- *       (SPEC-R5): the component's OWN `[data-part='scroll']` container scrolls, never the page.
+ *       `--md-sys-space-*` namespaces). Owns the UA-default + page-cascade reset a stamped native `<table>`
+ *       needs (border-collapse, cell padding, caption alignment — SPEC-R2 AC2, the ADR-0078 cl.4
+ *       `font: inherit`-reset precedent scaled up) and the overflow-in-own-container law (SPEC-R5): the
+ *       component's OWN `[data-part='scroll']` container scrolls, never the page. No fleet focus-ring/
+ *       motion direct-read constant is consumed here (unlike the pre-amendment file) — every interactive
+ *       part is now a composed FACE control that draws its OWN focus ring from its OWN sheet.
  *
  * RTL (SPEC-R16): logical properties throughout (`text-align: start/end`, `border-block-end`, block/inline
  * padding pairs); the native `<table>` handles column order under `dir="rtl"` for free; `text-align: end`
@@ -22,17 +25,14 @@
  *
  * WHCM (SPEC-R15): NO dedicated `forced-colors` block — every row/header separator is a REAL `border`
  * (system-ink-repainted, never removed under `forced-colors: active`, unlike a background); all content is
- * real text; the stamped native `<input>` selection cells carry their OWN UA/forced-colors treatment
- * (unstyled by this file). The stamped sort `<button>` is DIFFERENT (verified, not merely intended): its
- * `all: unset` reset (below) deliberately strips native UA button chrome, so under `forced-colors: active`
- * it carries no background/border of its own to lose — it is real, inherited (`color: inherit`) header text
- * (repainted CanvasText like any other cell, the SAME survival path as every other real-text node in this
- * file) plus a real `:focus-visible` outline reading the shared `--md-sys-color-focus-ring` token, which
- * ITSELF already maps to `Highlight` under forced-colors (tokens.css's own forced-colors block) — nothing
- * additional needed here. The bar-chart/badge fill lesson (a background-drawn mark vanishing under WHCM)
- * does not apply anywhere in this file — nothing here ever paints a background-only mark (`data-selected`'s
- * row tint is a non-color-alone signifier — the checkbox/radio's OWN checked state is the real signifier,
- * ADR-0057 satisfied structurally, ADR-0163 cl.4).
+ * real text; the composed `ui-checkbox`/`ui-radio`/`ui-button` selection/sort parts carry their OWN
+ * forced-colors treatment (each control's own stylesheet — checkbox.css/radio.css/button.css — already
+ * ships its own forced-colors override block; this file adds no reset of its own to preserve, unlike
+ * the pre-amendment native `<button>` this file used to `all: unset` and re-paint by hand). The bar-chart/
+ * badge fill lesson (a background-drawn mark vanishing under WHCM) does not apply anywhere in this file —
+ * nothing here ever paints a background-only mark (`data-selected`'s row tint is a non-color-alone
+ * signifier — the composed checkbox/radio's OWN checked state is the real signifier, ADR-0057 satisfied
+ * structurally, ADR-0163 cl.4).
  *
  * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
  * from table.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -123,25 +123,11 @@
     color: var(--ui-table-row-selected-ink);
   }
 
-  /* ADR-0163 cl.5 — the sort-button reset (component-checker finding: an unstyled native <button> renders
-     full UA chrome — font/padding/border/background — visually discontinuous with a plain-text header
-     label right next to it). `all: unset` clears the UA button chrome; every property AFTER it in this same
-     rule re-applies exactly what a sortable header needs, so it reads as PART of the header, not a foreign
-     control dropped into it. */
-  :scope [data-part='sort-button'] {
-    all: unset;
-    display: inline-flex;
-    align-items: center;
-    font: inherit;
-    color: inherit;
-    cursor: pointer;
-  }
-  :scope [data-part='sort-button']:focus-visible {
-    /* the fleet's shared focus-ring constants — a sanctioned DIRECT read (tokens.md's own allowlist, the
-       checkbox.css precedent), never a per-control repoint. */
-    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--md-sys-state-focus-ring-offset);
-  }
+  /* ADR-0163 cl.5, amended (GH #1445) — the sort-button `<th>` slot needs NO reset rule of its own anymore:
+     a composed `ui-button` (`variant="ghost"`, `size="sm"`, `inline`) owns its full paint/token/focus-ring
+     chain end to end (button.css); this file places it (via `#headerCell`'s markup) and styles nothing
+     about its own rendering. The retired rule used to `all: unset` a real native `<button>` and hand-paint
+     it back to read as header text — that reset is now structural, not a CSS rule. */
 
   /* ADR-0163 cl.6 — the footer region: a SIBLING of [data-part='scroll'] (outside the scroll container),
      holding the composed ui-pagination. A real separator (a border, WHCM-safe — SPEC-R15's own reasoning)
