@@ -62,7 +62,7 @@ events:
 slots:
   - name: default
     optional: false
-    description: The ui-radio children (and any other light-DOM content). The group selects direct children via `[...this.children].filter(el => el instanceof UIRadioElement)` for roving-focus and selection management; non-radio children are ignored for selection but lay out as flex items in the group's own column/row stack (ADR-0103 — the group owns its interior layout, not block flow).
+    description: The ui-radio descendants (and any other light-DOM content). The group selects NEAREST-GROUP-SCOPED descendants (ADR-0212) — every UIRadioElement descendant whose nearest `[data-radio-group]` ancestor is this group — for roving-focus and selection management; direct children are the degenerate case of this query. A nested inner ui-radio-group is an ownership boundary: its own radios never join this set. Non-radio DIRECT children are ignored for selection but lay out as flex items in the group's own column/row stack (ADR-0103 — the group owns its interior layout of its direct children, not block flow); an interposed visual container becomes the layout unit while staying transparent to discovery.
 
 parts: []              # light-DOM container — no shadow parts
 
@@ -174,14 +174,20 @@ be provided by the page author via `aria-label` or `aria-labelledby` on the grou
 
 ## Layout
 
-`ui-radio-group` **owns its interior layout** (ADR-0103): a `column` flex stack by default, with the gap
-re-based to the layout ladder's `--md-sys-space-sm` (density-responsive for free) — `[orientation="horizontal"]`
-switches to a wrapping row (`flex-wrap: wrap; align-items: center`), so the visual axis never desyncs from the
-roving-focus keyboard axis the group itself resolves. This is the same structure the group cannot leave to
-composition: its child discovery is direct children only (`[...this.children].filter(el => el instanceof
-UIRadioElement)`), so a page author cannot fix a missing gap by wrapping the radios in a `ui-column` — doing
-so would sever selection/roving. Retune the gap per instance with the `--ui-radio-group-gap` custom property
-(the override freedom every component keeps).
+`ui-radio-group` **owns its interior layout of its direct children** (ADR-0103): a `column` flex stack by
+default, with the gap re-based to the layout ladder's `--md-sys-space-sm` (density-responsive for free) —
+`[orientation="horizontal"]` switches to a wrapping row (`flex-wrap: wrap; align-items: center`), so the
+visual axis never desyncs from the roving-focus keyboard axis the group itself resolves. Retune the gap per
+instance with the `--ui-radio-group-gap` custom property (the override freedom every component keeps).
+
+**Child discovery is nearest-group-scoped, not direct-children-only** (ADR-0212): a `ui-radio` may sit
+behind an interposed visual container (a `Column`/`Card`/`div`) and still register with this group — every
+`UIRadioElement` descendant whose nearest `[data-radio-group]` ancestor is this group joins the roving,
+exclusivity, value, and validity machinery; direct children are the degenerate case of this rule. Wrapping
+radios in a container is therefore a supported layout idiom (unlike the pre-ADR-0212 model, where an
+interposed wrapper severed selection/roving entirely) — the wrapping container becomes the group's flex
+LAYOUT unit (ADR-0103, above) while staying transparent to DISCOVERY. A nested inner `ui-radio-group` is the
+one exception: it is an ownership BOUNDARY, and its own radios never join the outer group's set.
 
 `orientation` is resolved **once at connect** — there is no post-connect dynamic re-resolution contract
 (the ui-select dynamic-options precedent): an imperative `group.orientation = …` after connect flips the

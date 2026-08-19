@@ -385,24 +385,30 @@
     line-height: 1;
   }
 
-  /* stepper container: stacks the two step buttons vertically in the trailing icon-sized cell.
-     Used for type=number and type=currency (no suffix — just the caret-up/caret-down steppers
-     stacked in the icon square). */
+  /* stepper container (GH #1406): the two step buttons SIDE BY SIDE in a trailing flex ROW —
+     step-down (−) left of step-up (+), the iOS/Material stepper convention (supersedes the original
+     stacked caret column). Used for type=number and type=currency (no suffix — just the − + pair).
+     inline-size is auto (two icon-sized squares exceed the fixed icon cell); block-size stays
+     icon-sized for vertical centering. */
   :scope [data-role='stepper'] {
     display: inline-flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
+    inline-size: auto;
+    block-size: var(--ui-text-field-icon);
+    gap: 0;
+  }
+  /* Each step button is a square, icon-sized cell (the md stepper convention — one square tap target
+     per glyph); the 1em minus/plus glyph centers inside via the shared reset's inline-flex centering.
+     One rule for BOTH trailing roles — the bare stepper row and the numeric (suffix + steppers) row. */
+  :scope [data-part='step-up'],
+  :scope [data-part='step-down'] {
     inline-size: var(--ui-text-field-icon);
     block-size: var(--ui-text-field-icon);
   }
-  :scope [data-part='step-up'],
-  :scope [data-part='step-down'] {
-    block-size: 50%; /* each stepper takes half the icon cell height */
-    inline-size: 100%;
-  }
 
-  /* Wave 5A (ADR-0047): numeric trailing cell — suffix span + steppers in a flex ROW.
+  /* Wave 5A (ADR-0047): numeric trailing cell — suffix span + the − + pair in a flex ROW.
      Used for type=unit (localized label) and type=percent (%).
      inline-size is auto (wider than the icon square); block-size stays icon-sized for vertical centering. */
   :scope [data-role='numeric'] {
@@ -414,16 +420,10 @@
     block-size: var(--ui-text-field-icon);
     gap: 0;
   }
-  /* Override the slot's fixed icon inline-size for numeric cells (they carry suffix + steppers). */
-  :scope > [slot='trailing'][data-role='numeric'] {
+  /* Override the slot's fixed icon inline-size for BOTH numeric-family cells — each carries a
+     side-by-side button pair (plus the suffix, for numeric), wider than one icon square (GH #1406). */
+  :scope > [slot='trailing']:is([data-role='stepper'], [data-role='numeric']) {
     inline-size: auto;
-  }
-  /* Numeric steppers inside a numeric cell: each is font-sized and shares the row (no 50%-block override). */
-  :scope [data-role='numeric'] [data-part='step-up'],
-  :scope [data-role='numeric'] [data-part='step-down'] {
-    block-size: auto;
-    inline-size: auto;
-    line-height: 1;
   }
 
   /* Wave 5B (ADR-0048): calendar popup wrapper (type=date). The `[data-part='calendar-popup']` div is
@@ -460,7 +460,7 @@
   }
 
   /* Injected Phosphor glyphs (setIcon, @agent-ui/icons): magnifier · x (clear) · eye/eye-slash (reveal) ·
-     calendar-blank · caret-up/caret-down (steppers). 1em tracks each part's own font-size — inherited
+     calendar-blank · minus/plus (steppers, GH #1406). 1em tracks each part's own font-size — inherited
      (--ui-text-field-font) on the buttons, explicit on [data-part='leading-adornment'] above — at every
      [size] tier, matching the previous inline-text glyphs' rendered size exactly. Overrides the svg's own
      width/height="100%" presentational attributes (resolve.ts); [data-part='suffix'] carries NO icon (a

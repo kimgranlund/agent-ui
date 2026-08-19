@@ -97,6 +97,10 @@
  * always-shown min/max labels). Display-class, non-interactive, non-form-associated. */
 @import './controls/line-chart/line-chart.css';
 
+/* Chart family — ADR-0219: ui-pie-chart, the part-of-whole ring (donut default) or solid pie mark,
+ * lifting ADR-0107's pie fence. Display-class, non-interactive, non-form-associated. */
+@import './controls/pie-chart/pie-chart.css';
+
 /* Report family — Wave M1 (ADR-0111, report-family.lld.md LLD-C10): the native table, the metric tile,
  * and the compact-realm intent badge. All Display-class, non-interactive, non-form-associated leaves. */
 @import './controls/table/table.css';

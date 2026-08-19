@@ -209,8 +209,11 @@ describe('site coverage — every shipped component has its required per-tier pa
       // + ui-image (GH #1189 R1/R2) — the URL-sourced content-image primitive, Display class (geometry.md:
       // "intrinsic structural sizing", no [size]/[scale] control-band row); its {doc} page is required below.
       // + ui-line-chart (GH #1207/ADR-0205) — the fleet's first axis-bearing chart (a value-range baseline +
-      // always-shown min/max labels, single-series); parked in KNOWN_UNDOCUMENTED above.
-      ['attachment', 'audio', 'badge', 'bar-chart', 'code', 'description-list', 'icon', 'image', 'ladder', 'line-chart', 'progress', 'ramp', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text', 'video'],
+      // always-shown min/max labels, single-series).
+      // + ui-pie-chart (ADR-0219) — the fourth chart-family control, the part-of-whole ring/pie mark; its
+      // {doc} page (`pie-chart-doc.html`) shipped in the SAME component-build seat's wave (the ui-line-chart/
+      // GH #1207 precedent) — no KNOWN_UNDOCUMENTED parking needed.
+      ['attachment', 'audio', 'badge', 'bar-chart', 'code', 'description-list', 'icon', 'image', 'ladder', 'line-chart', 'pie-chart', 'progress', 'ramp', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text', 'video'],
     )
     // Wave 1 Indicator family (checkbox, switch, radio, radio-group) + ui-segment (ADR-0095 clause 3 —
     // the SAME real ancestor, UIIndicatorElement, as ui-radio) + the Wave M1 feed family (ADR-0112): ui-avatar

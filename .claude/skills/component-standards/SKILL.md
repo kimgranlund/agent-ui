@@ -20,8 +20,9 @@ The normative standards for `ui-*` components live in `.claude/docs/references/`
 per question. This skill is the **routing table + reading order** — it restates nothing (a copy
 here is the drift it exists to prevent; when a doc below disagrees with this map, the doc wins
 and this map gets repaired). One exception: this skill's own `references/` folder carries
-harvested ADR knowledge too narrow/procedural for the shared `.claude/docs/references/` corpus
-(currently: descriptor-generation architecture, ADR-0173) — cited by ADR ID, never copied.
+harvested knowledge too narrow/procedural for the shared `.claude/docs/references/` corpus
+(currently: descriptor-generation architecture, ADR-0173; the PR-harvested CSS structural laws,
+`css-structural-laws.md`) — cited by ADR/PR ID, never copied.
 
 ## Reading order for a NEW component
 
@@ -39,6 +40,7 @@ harvested ADR knowledge too narrow/procedural for the shared `.claude/docs/refer
 | hover · active · focus · disabled styling; the focus-ring; first-paint motion; the ENTRY-control five-state law (§1b — text-field/textarea/select/combo-box/composer + command-modal's search, degenerately); part-level disabled focusability (`removeAttribute('tabindex')`, §3 note) | `.claude/docs/references/interaction-states.md` | ADR-0008 (per-variant states) · ADR-0009 (shared focus-ring token) · ADR-0010 (`tabbable` trait + `aria-disabled`) · TKT-0062 (§1b, ticket-ratified) · TKT-0068 (§1b census + §3 dialect rulings) |
 | Which color role to consume; token naming; `@scope` token hygiene (own-chain routing — incl. dimensional `:root` constants, TKT-0066 item 5; the sanctioned direct-read list) | `.claude/docs/references/tokens.md` (the role SYSTEM; values live in `@agent-ui/shared/src/tokens/tokens.css`) §Consumption invariants | ADR-0057 (intent never travels by color alone — every intent needs a non-color signifier) · TKT-0066 item 5 (constants route through the own chain; `controls/styling-gates.test.ts` enforces) |
 | Whether a control's `{name}.md` descriptor generates its props layer; the `{name}.props.gen.ts` sibling; the `attribute`/`tsType`/`const`/`codec`/`description` grammar; the bespoke-codec allowlist; which trip-wire retires when | `references/descriptor-generation.md` (this skill's own corpus) | ADR-0173 (the descriptor-inversion architecture + its OF1–OF4 amendment) |
+| A visually-hidden absolutely-positioned part (the clip idiom) — MUST the host be positioned; a shell/app `[data-part='…']` selector's reach — MUST it be fenced | `references/css-structural-laws.md` (this skill's own corpus; carries one flagged latent instance) | GH #1297/PR #1301 (the phantom-scroll class) · GH #1328/PR #1404 (the `:where()` zero-specificity fence) |
 
 ## Traps the docs encode (route-to hints, not the content)
 

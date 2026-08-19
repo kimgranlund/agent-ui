@@ -190,6 +190,16 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // ADR-0219 — the fourth chart-family control: the part-of-whole ring (donut, default) or solid pie,
+    // lifting ADR-0107's pie fence on its own three stated conditions. Same shape as the two above —
+    // Display-class, {doc} + demo.
+    label: 'ui-pie-chart',
+    links: [
+      { href: './pie-chart-demo.html', label: 'Demo' },
+      { href: './pie-chart-doc.html', label: 'API' },
+    ],
+  },
+  {
     // The token-surface family (ADR-0118) — three Display-class show-never-edit primitives, each a single
     // descriptor-derived API doc (tier=display ⇒ {doc} only, the ui-sparkline/ui-bar-chart precedent).
     label: 'ui-swatch',

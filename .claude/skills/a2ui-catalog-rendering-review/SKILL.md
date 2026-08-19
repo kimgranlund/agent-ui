@@ -63,6 +63,15 @@ review that scores B4 without that record scored the control, not the demonstrat
    `all`) dispatches the scoring to a fresh-context critic (`a2ui-review-agent` class), per §4.
 6. **Verdict + route.** Apply the rubric's gate-to-promote rule verbatim. Every non-promoting finding
    names its quadrant — L-only · R-only · L↔R · card — and the owner from rubric §6.
+   **Mount-context law (GH #1328/#1329):** before any finding blames the A2UI render PATH ("right
+   natively, wrong through A2UI"), EQUALIZE the two comparison sides' mount context — the runner's
+   component-mode shot mounts `#__cmp-shot` on `document.body`, OUTSIDE the shell every card lives
+   in, so a shared shell's ambient CSS manufactures exactly that illusion (#1328: super-shell's
+   then-unfenced bar rule reaching Ladder's pills; a direct-DOM ladder INSIDE the shell degraded
+   identically). Re-probe the native control in the card's own mount root (or the card outside the
+   shell) before filing. And rank child-order/projection suspicions BELOW capture artifacts:
+   renderer subtrees build DETACHED and attach whole — order-safe by construction (#1329, closed
+   not-reproducible; step 3's probe-artifact taxonomy triages the capture first).
 7. **Fix (on `--fix`, or when the ask is "fix/add/change …").** Review first (steps 1–6) so the fix
    targets a graded finding, then pick the fix shape from `references/catalog-pipeline.md §5` by
    quadrant: L-only → shape (i) seed-only (`A2UI_INITIAL`/`SAMPLE_TREES`); R-only or L↔R on a
