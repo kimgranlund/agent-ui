@@ -258,11 +258,13 @@ describe('site coverage — every shipped component has its required per-tier pa
     // {doc, demo} pages.
     // ui-drill (ADR-0195, GH #954) — the N-level drill-down panel container: tier=pattern (the header
     // row's Back button + heading take control height, the tabs/toolbar class); {doc, demo} pages required.
+    // ui-suggestions (ADR-0213, GH #1393) — the one-shot follow-up/next-prompt chip set: tier=pattern (a
+    // container of multiple independently-interactive chip rows); {doc, demo} pages required.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
       [
         'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'drill', 'form-popover', 'menu', 'modal',
-        'multi-select', 'pagination', 'popover', 'segmented-control', 'select', 'status-stream', 'swiper', 'swiper-paddles',
-        'swiper-pagination', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
+        'multi-select', 'pagination', 'popover', 'segmented-control', 'select', 'status-stream', 'suggestions', 'swiper',
+        'swiper-paddles', 'swiper-pagination', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
       ],
     )
   })

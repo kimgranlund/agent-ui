@@ -509,6 +509,14 @@ export const NAV: readonly NavGroup[] = [
       { href: './pagination-doc.html', label: 'API' },
     ],
   },
+  // ADR-0213 (GH #1393) — ui-suggestions, the one-shot follow-up/next-prompt chip set (tier=pattern ⇒ {doc, demo}).
+  {
+    label: 'ui-suggestions',
+    links: [
+      { href: './suggestions-demo.html', label: 'Demo' },
+      { href: './suggestions-doc.html', label: 'API' },
+    ],
+  },
   // The Wave M1 content family (ADR-0113) — ui-code (tier=display ⇒ {doc} only) + ui-disclosure (tier=pattern
   // ⇒ {doc, demo}, the tooltip/popover precedent).
   {

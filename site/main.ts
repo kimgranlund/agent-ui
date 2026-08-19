@@ -1061,6 +1061,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0213 (GH #1393) — ui-suggestions, the one-shot follow-up/next-prompt chip set (tier=pattern).
+  {
+    label: 'ui-suggestions',
+    cards: [
+      {
+        href: './suggestions-demo.html',
+        title: 'Demo',
+        blurb: 'A live 3-chip suggestion set — tap any chip to commit it into `selected` and watch the WHOLE set render spent, the taken chip visibly marked, a select event log.',
+      },
+      {
+        href: './suggestions-doc.html',
+        title: 'API reference',
+        blurb: 'The `suggestions`/`selected` attributes and the one-shot spent-set law, generated from suggestions.md.',
+      },
+    ],
+  },
   // The Wave M1 content family (ADR-0113): the zero-machinery code leaf + the native-<details> disclosure.
   {
     label: 'ui-code',

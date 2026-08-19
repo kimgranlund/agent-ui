@@ -148,6 +148,7 @@
 - [ui-tabs](./tabs-doc.html): the tablist pattern — roving focus, panel switching; [demo](./tabs-demo.html).
 - [ui-toolbar](./toolbar-doc.html): the Pattern-class action bar — role=toolbar + roving focus decoupled from selection, posture via elevation/brightness (no posture prop); [demo](./toolbar-demo.html).
 - [ui-pagination](./pagination-doc.html): the standalone page navigator — previous/next + a fixed-window page-number list with ellipsis, composing ui-button for every stop; `pages < 2` renders nothing; consumed internally by ui-table's `page-size`; [demo](./pagination-demo.html).
+- [ui-suggestions](./suggestions-doc.html): the one-shot follow-up/next-prompt chip set — `suggestions` renders as tappable chips, a tap commits its value into `selected` and the WHOLE set renders spent (every chip inert, the taken one still visible + marked); not form-associated; [demo](./suggestions-demo.html).
 - [Layout primitives overview](./layout-overview.html): row, column, list, grid — gap-driven, no control heights; individual pages: [row](./row-doc.html), [column](./column-doc.html), [list](./list-doc.html), [grid](./grid-doc.html); demos: [row demo](./row-demo.html), [column demo](./column-demo.html), [list demo](./list-demo.html), [grid demo](./grid-demo.html).
 - [Surface × layout matrix](./layout-permutations.html): every container surface crossed with every layout primitive.
 
