@@ -171,7 +171,8 @@
     --ui-super-shell-radius-block-end: 0;
   }
 
-  /* GH #253 — a bar (header/footer, the ONLY consumers of `[data-part='bar']`, super-shell.ts) sits
+  /* GH #253 — a bar (header/footer, the shell's own only consumers of `[data-part='bar']`,
+     super-shell.ts) sits
      EDGE-TO-EDGE across the full frame width (the #210 fix already made its border edge-to-edge) —
      unlike rail/pane/pane-resizer below, which are separate floating cards. ADR-0166 axis-qualifies that
      reading: they float with gaps between them on the INLINE axis inside `middle`, verbatim; on the BLOCK
@@ -183,8 +184,18 @@
      `box-sizing: border-box` below is now doubly load-bearing: with `min-block-size:
      var(--ui-super-shell-bar-size)`, it is what ABSORBS the seam's 1px inside the 54px (the bar's outer
      height does not change; its content box becomes 53px). Flipping it to `content-box` makes the bar
-     read 55px — the negative control the seam suite runs. */
-  [data-part='bar'] {
+     read 55px — the negative control the seam suite runs.
+     GH #1328 — the `:where([data-bar])` discriminator is LOAD-BEARING, not decoration: this @scope's
+     lower bound is only nested shells (`to (ui-super-shell)`), so an unqualified `[data-part='bar']`
+     matched every part named "bar" ANYWHERE in shell-hosted content — on the docs site (whose whole
+     page lives inside the shell) it stamped 54px min-block-size + flex onto `ui-ladder`'s magnitude
+     bars (ADR-0118), turning its 12px pills into full-row-height slabs. The shell's own two bars
+     ALWAYS carry `data-bar` (super-shell.ts:307-308/411-412 sets it in the same breath as
+     `data-part`); content-side parts never do. `:where(…)` (zero specificity) keeps this rule at its
+     historical (0,1,0) so page-side overrides that out-specified it before — `.ss-demo
+     [data-part='bar']`'s background tint (site/pages/super-shell.css), which a (0,2,0) spelling would
+     out-cascade via scope proximity on the tie — keep winning exactly as they did. */
+  [data-part='bar']:where([data-bar]) {
     display: flex;
     align-items: center;
     gap: var(--ui-super-shell-gap);
