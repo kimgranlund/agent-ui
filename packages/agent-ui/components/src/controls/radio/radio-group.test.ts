@@ -1132,6 +1132,136 @@ describe('UIRadioGroupElement — component-checker correctives', () => {
   })
 })
 
+// ── ADR-0212 — nearest-group-scoped descendant discovery ────────────────────────────────────────────
+//
+// The six failing probes from GH #1365's verification (jsdom probe against the pre-ADR-0212 source):
+// B1 nested click commits · B2 cross-container exclusivity · B3 exactly ONE group-re-emitted `change`
+// escapes per nested commit · B4 arrow roving spans nested radios in tree order · C1 programmatic
+// `value` selects a nested radio · D1 `#pendingValue` resolves for a nested late-appended child. Plus
+// the anti-vacuous ownership-boundary negative control (an inner `ui-radio-group`'s radios never join
+// the outer group's set) and a flat-children baseline living alongside (the rest of this file already
+// exercises the flat-children suite byte-unchanged — direct children are the degenerate case of the
+// widened query).
+
+/** Build a group with radios nested one level behind an interposed non-group container (a plain div —
+ *  the model-grid shape's "provider card"/"row" stand-in). Returns [group, container, ...radios]. */
+function buildNestedGroup(n: number, required = false): [ProbeGroup, HTMLDivElement, ...ProbeRadio[]] {
+  const group = makeGroup(required)
+  const container = document.createElement('div')
+  const radios = Array.from({ length: n }, (_, i) => makeRadio(`r${i + 1}`, `Option ${i + 1}`))
+  for (const r of radios) container.append(r)
+  group.append(container)
+  document.body.append(group)
+  return [group, container, ...radios] as [ProbeGroup, HTMLDivElement, ...ProbeRadio[]]
+}
+
+describe('UIRadioGroupElement — ADR-0212 nearest-group-scoped descendant discovery', () => {
+  afterEach(() => document.body.querySelectorAll('ui-radio-group-test').forEach((el) => el.remove()))
+
+  it('B1 (nested click commits): clicking a radio nested behind an interposed container commits the group value', () => {
+    const [group, , r1, r2] = buildNestedGroup(3)
+    click(r2!)
+    expect(group.testFormValue).toBe('r2')
+    expect(r1!.checked).toBe(false)
+    expect(r2!.checked).toBe(true)
+  })
+
+  it('B2 (cross-container exclusivity): selecting a second nested radio leaves exactly ONE checked, never two', () => {
+    const [group, , r1, r2, r3] = buildNestedGroup(3)
+    click(r1!)
+    expect(r1!.checked).toBe(true)
+    click(r2!)
+    expect(r1!.checked).toBe(false)
+    expect(r2!.checked).toBe(true)
+    expect(r3!.checked).toBe(false)
+    const checkedCount = [r1!, r2!, r3!].filter((r) => r.checked).length
+    expect(checkedCount).toBe(1)
+    expect(group.testFormValue).toBe('r2')
+  })
+
+  it('B3 (exactly one re-emit per nested commit): the group re-emits exactly ONE `change`; the radio\'s own change never escapes to an outside listener', () => {
+    const [group, , r1] = buildNestedGroup(3)
+    let groupChanges = 0
+    let outsideRadioChanges = 0
+    group.addEventListener('change', () => groupChanges++)
+    document.body.addEventListener('change', (e) => {
+      if (e.target !== group) outsideRadioChanges++
+    })
+    click(r1!)
+    expect(groupChanges).toBe(1)
+    expect(outsideRadioChanges, 'the nested radio\'s own change event must not escape un-swallowed').toBe(0)
+  })
+
+  it('B4 (arrow roving spans nested radios in tree order): ArrowDown moves focus + selection into/through the interposed container', () => {
+    const [group, , r1, r2] = buildNestedGroup(3)
+    key(group, 'ArrowDown')
+    expect(r2!.checked).toBe(true)
+    expect(r1!.checked).toBe(false)
+    expect(r2!.tabIndex).toBe(0)
+    expect(r1!.tabIndex).toBe(-1)
+  })
+
+  it('C1 (programmatic value selects a nested radio): setting `value` selects the matching radio even when nested behind a container', () => {
+    const [group, , r1, r2] = buildNestedGroup(3)
+    group.value = 'r2'
+    expect(r1!.checked).toBe(false)
+    expect(r2!.checked).toBe(true)
+    expect(group.value).toBe('r2')
+  })
+
+  it('D1 (#pendingValue resolves for a nested late-appended child): a value set before a matching nested radio exists resolves once that radio registers', () => {
+    const group = makeGroup()
+    const container = document.createElement('div')
+    const r1 = makeRadio('r1', 'One')
+    container.append(r1)
+    group.append(container)
+    document.body.append(group) // connects with only r1 (nested) present
+    group.value = 'r2' // no match yet — retained as pending
+    expect(group.value).toBeNull()
+
+    const r2 = makeRadio('r2', 'Two')
+    container.append(r2) // late-append INTO the interposed container, not the group directly
+    expect(group.value).toBe('r2')
+    expect(r2.checked).toBe(true)
+    expect(r1.tabIndex).toBe(-1)
+    expect(r2.tabIndex).toBe(0)
+    group.remove()
+  })
+
+  it('ownership-boundary (anti-vacuous negative control): an inner ui-radio-group\'s radios never join the outer group\'s set — value, exclusivity, and roving all respect the boundary', () => {
+    const outer = makeGroup()
+    const outerR1 = makeRadio('outer-1', 'Outer One')
+    const inner = new ProbeGroup()
+    stubFormAssoc(inner.testInternals)
+    const innerR1 = makeRadio('inner-1', 'Inner One')
+    const innerR2 = makeRadio('inner-2', 'Inner Two')
+    inner.append(innerR1, innerR2)
+    outer.append(outerR1, inner)
+    document.body.append(outer)
+
+    // Clicking an INNER radio must commit the INNER group only — the outer group's value/roving are untouched.
+    click(innerR1)
+    expect(inner.testFormValue).toBe('inner-1')
+    expect(outer.testFormValue).toBeNull()
+
+    // The outer group's roving set is [outerR1] ALONE — Arrow key on the outer group cannot reach into
+    // the inner group's radios at all (a single-item loop wraps onto itself, selecting outerR1 — never
+    // any inner radio).
+    expect(outerR1.tabIndex).toBe(0)
+    key(outer, 'ArrowDown')
+    expect(outer.testFormValue).toBe('outer-1') // the outer's OWN (only) radio, never an inner one
+    expect(innerR1.checked).toBe(true) // untouched by the outer's roving
+    expect(innerR2.checked).toBe(false)
+
+    // Programmatic value on the outer cannot select an inner radio by its value.
+    outer.value = 'inner-1'
+    expect(outer.value).toBeNull() // no match in the outer's OWN set
+    expect(innerR1.checked).toBe(true) // the inner selection is untouched
+
+    outer.remove()
+  })
+})
+
 // ── descriptor trip-wire (contract↔props) ────────────────────────────────────────────────────────
 //
 // Two layers: (a) STRUCTURAL — validateComponentDescriptor reports ZERO failures.
