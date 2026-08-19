@@ -1030,6 +1030,17 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0214 (GH #1394) — the source-attribution aggregate leaf, same Display-class {doc}-only shape.
+  {
+    label: 'ui-source-list',
+    cards: [
+      {
+        href: './source-list-doc.html',
+        title: 'API reference',
+        blurb: 'Source attribution as one aggregate leaf — positional index markers, per-entry safeHref-gated titles, and the drop-malformed-entries cleaner, generated from source-list.md.',
+      },
+    ],
+  },
   {
     label: 'ui-badge',
     cards: [
@@ -1058,6 +1069,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
         href: './pagination-doc.html',
         title: 'API reference',
         blurb: 'The ui-pagination attributes (page/pages/label) and the fixed page-window algorithm, generated from pagination.md.',
+      },
+    ],
+  },
+  // ADR-0213 (GH #1393) — ui-suggestions, the one-shot follow-up/next-prompt chip set (tier=pattern).
+  {
+    label: 'ui-suggestions',
+    cards: [
+      {
+        href: './suggestions-demo.html',
+        title: 'Demo',
+        blurb: 'A live 3-chip suggestion set — tap any chip to commit it into `selected` and watch the WHOLE set render spent, the taken chip visibly marked, a select event log.',
+      },
+      {
+        href: './suggestions-doc.html',
+        title: 'API reference',
+        blurb: 'The `suggestions`/`selected` attributes and the one-shot spent-set law, generated from suggestions.md.',
       },
     ],
   },

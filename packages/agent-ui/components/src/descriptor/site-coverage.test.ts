@@ -213,7 +213,9 @@ describe('site coverage — every shipped component has its required per-tier pa
       // + ui-pie-chart (ADR-0219) — the fourth chart-family control, the part-of-whole ring/pie mark; its
       // {doc} page (`pie-chart-doc.html`) shipped in the SAME component-build seat's wave (the ui-line-chart/
       // GH #1207 precedent) — no KNOWN_UNDOCUMENTED parking needed.
-      ['attachment', 'audio', 'badge', 'bar-chart', 'code', 'description-list', 'icon', 'image', 'ladder', 'line-chart', 'pie-chart', 'progress', 'ramp', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text', 'video'],
+      // + ui-source-list (ADR-0214, GH #1394) — the source-attribution aggregate leaf, Display class like
+      // ui-description-list (no events, no geometry row, not form-associated); its {doc} page required below.
+      ['attachment', 'audio', 'badge', 'bar-chart', 'code', 'description-list', 'icon', 'image', 'ladder', 'line-chart', 'pie-chart', 'progress', 'ramp', 'source-list', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text', 'video'],
     )
     // Wave 1 Indicator family (checkbox, switch, radio, radio-group) + ui-segment (ADR-0095 clause 3 —
     // the SAME real ancestor, UIIndicatorElement, as ui-radio) + the Wave M1 feed family (ADR-0112): ui-avatar
@@ -263,8 +265,8 @@ describe('site coverage — every shipped component has its required per-tier pa
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
       [
         'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'drill', 'file-drop', 'form-popover', 'menu', 'modal',
-        'multi-select', 'pagination', 'popover', 'segmented-control', 'select', 'status-stream', 'swiper', 'swiper-paddles',
-        'swiper-pagination', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
+        'multi-select', 'pagination', 'popover', 'segmented-control', 'select', 'status-stream', 'suggestions', 'swiper',
+        'swiper-paddles', 'swiper-pagination', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
       ],
     )
   })

@@ -165,6 +165,15 @@ function fleetPrimaryTypes(): string[] {
 // reversed its half: ephemeral outcome announcements ARE agent-emittable, so Toast now has a catalog row
 // (see toastFactory) — its entry is DRAINED; ToastRegion (the top-layer host + show()) stays app chrome.
 const EXCLUSION_ALLOWLIST = new Map<string, string>([
+  // TEMPORARY (ADR-0134 pattern) — drains the moment the ADR-0210 catalog row lands (the integration
+  // lane's slice): ui-file-drop shipped ahead of its FileDrop row in the same campaign wave.
+  ['FileDrop', 'ADR-0210 / GH #1391 — TEMPORARY: control minted ahead of its catalog row; the integration lane adds the FileDrop row + factory and DELETES this entry.'],
+  // TEMPORARY (ADR-0134 pattern) — drains the moment the ADR-0214 catalog row lands (the integration
+  // lane's slice): ui-source-list shipped ahead of its SourceList row in the same campaign wave.
+  ['SourceList', 'ADR-0214 / GH #1394 — TEMPORARY: control minted ahead of its catalog row; the integration lane adds the SourceList row + factory and DELETES this entry.'],
+  // TEMPORARY (ADR-0134 pattern) — drains the moment the ADR-0213 catalog row lands (the integration
+  // lane's slice): ui-suggestions shipped ahead of its Suggestions row in the same campaign wave.
+  ['Suggestions', 'ADR-0213 / GH #1393 — TEMPORARY: control minted ahead of its catalog row; the integration lane adds the Suggestions row + factory and DELETES this entry.'],
   ['ToastRegion', 'ADR-0112 cl.6 — PERMANENT exclusion, never catalogue-bound: the top-layer toast HOST driven by show() is app-surface chrome (GH #1184 catalogued Toast itself, but the region + its imperative API stay page/app-frame primitives, never a catalog row).'],
   ['ThemeProvider',
     'ADR-0117 / theme-provider.spec.md SPEC-R8 — PERMANENT exclusion, never catalogue-bound: ' +

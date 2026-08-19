@@ -132,6 +132,7 @@ export * from './table/table.ts'   // scroll-preserving re-render + ADR-0163 int
 export * from './stat/stat.ts'     // metric tile, direction-as-text delta (LLD-C4/C5/C6)
 export * from './badge/badge.ts'   // compact-realm intent badge (LLD-C7/C8)
 export * from './description-list/description-list.ts' // key–value receipt primitive — empty-value omission by construction (ADR-0201)
+export * from './source-list/source-list.ts' // source-attribution aggregate leaf — positional index markers + the per-entry safeHref gate (ADR-0214, GH #1394)
 
 // ADR-0163 cl.6 — ui-pagination, the fleet's first standalone page navigator (SPEC-R3): a Pattern-class
 // UIElement composing ui-button for every stop. Consumed internally by ui-table's page-size capability, and
@@ -205,3 +206,9 @@ export * from './otp-field/otp-field.ts'
 // button (icon + label + an optional orthogonal state icon; aria-pressed via ElementInternals; the
 // cancelable-before-commit `toggle` refusal seam, toggle.md). The fleet's first toggle-button primitive.
 export * from './toggle/toggle.ts'
+
+// ADR-0213 (GH #1393) — ui-suggestions, the one-shot follow-up/next-prompt chip set: a Pattern-class leaf
+// (no ChildList — `suggestions` is DATA) carrying a `value:{prop:'selected',event:'select'}` two-way mark;
+// non-empty `selected` renders the WHOLE set spent (every chip disabled, the taken one stays visibly
+// marked) — the ADR-0097 frozen-history law relocated into the component.
+export * from './suggestions/suggestions.ts'

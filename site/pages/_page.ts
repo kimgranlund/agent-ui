@@ -494,6 +494,11 @@ export const NAV: readonly NavGroup[] = [
       { href: './description-list-doc.html', label: 'API' },
     ],
   },
+  // ADR-0214 (GH #1394) — the source-attribution aggregate leaf, same Display-class {doc}-only shape.
+  {
+    label: 'ui-source-list',
+    links: [{ href: './source-list-doc.html', label: 'API' }],
+  },
   {
     label: 'ui-badge',
     links: [
@@ -507,6 +512,14 @@ export const NAV: readonly NavGroup[] = [
     links: [
       { href: './pagination-demo.html', label: 'Demo' },
       { href: './pagination-doc.html', label: 'API' },
+    ],
+  },
+  // ADR-0213 (GH #1393) — ui-suggestions, the one-shot follow-up/next-prompt chip set (tier=pattern ⇒ {doc, demo}).
+  {
+    label: 'ui-suggestions',
+    links: [
+      { href: './suggestions-demo.html', label: 'Demo' },
+      { href: './suggestions-doc.html', label: 'API' },
     ],
   },
   // The Wave M1 content family (ADR-0113) — ui-code (tier=display ⇒ {doc} only) + ui-disclosure (tier=pattern

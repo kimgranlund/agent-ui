@@ -1232,6 +1232,24 @@ const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
       '[{"label":"Room","value":"Deluxe King"},{"label":"Nights","value":3},' +
       '{"label":"Breakfast","value":"Included"},{"label":"Total","value":"$412.00"}]',
   },
+  // ADR-0213 — ui-suggestions' `suggestions` is the same JSON-string `kind: 'skip'` codec gap as
+  // ui-table's `rows`/ui-description-list's `rows` above (no editable knob), so its LIVE default ([])
+  // would render zero chips. Seeded with a real 3-chip suggestion set, one taken (`selected` matches
+  // the second entry's `value`) so the whole-shape law has both the live AND spent-set paint to measure.
+  'ui-suggestions': {
+    suggestions:
+      '[{"label":"Book the Deluxe King"},{"label":"See more photos","value":"more-photos"},' +
+      '{"label":"Compare rooms","value":"compare"}]',
+    selected: 'more-photos',
+  },
+  // ADR-0214 — ui-source-list's `sources` is the same JSON-string `kind: 'skip'` codec gap as
+  // ui-description-list's `rows` above (no editable knob), so its LIVE default ([]) would render nothing.
+  // Seeded with a real cited-answer source list so the whole-shape law has rows to measure.
+  'ui-source-list': {
+    sources:
+      '[{"href":"https://example.com/report","title":"Q3 Market Report","snippet":"Revenue grew 12% year over year."},' +
+      '{"href":"https://example.com/notes","title":"Internal analyst notes"}]',
+  },
   'ui-ramp': {
     steps:
       '[{"label":"100","value":"--md-sys-color-primary-100"},{"label":"300","value":"--md-sys-color-primary-300"},' +
@@ -1310,6 +1328,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-disclosure', // #ensureParts(): the details/summary/chevron chrome — host children are ADOPTED into a nested body PART, never left as direct host children (unlike a STRUCTURAL container), so a host-level SLOT_TEXT write would destroy the whole part tree
   'ui-stat', // connected() builds four spans once (replaceChildren) from label/value/delta/caption PROPS — no light-DOM content model at all (slots: [] — stat.md)
   'ui-description-list', // connected() builds row/label/value spans (replaceChildren) from the rows PROP — no light-DOM content model at all (slots: [] — description-list.md, ADR-0201)
+  'ui-source-list', // connected() builds row/index/title/snippet spans (replaceChildren) from the sources PROP — no light-DOM content model at all (slots: [] — source-list.md, ADR-0214)
   'ui-table', // connected() builds the scroll/table/thead/tbody skeleton — fully columns/rows-prop-driven, no light-DOM content model at all (slots: [] — table.md)
   'ui-tabs', // the control-created tablist strip PART
   'ui-text-field', // the contenteditable editor PART (×2 parts: editor + measurer)
@@ -1349,6 +1368,10 @@ export const NO_SLOT_TEXT = new Set([
   // from page/pages/label PROPS alone — no light-DOM content model at all (slots: [] — pagination.md), the
   // ui-stat/ui-swatch precedent exactly.
   'ui-pagination',
+  // ADR-0213 — ui-suggestions builds every chip itself (replaceChildren) from the `suggestions` PROP alone
+  // — no light-DOM content model at all (slots: [] — suggestions.md), the ui-stat/ui-description-list
+  // precedent exactly.
+  'ui-suggestions',
 ])
 
 // STRUCTURAL (batch B) — the default slot IS the real content model (children ARE the grid cells / flex items /
