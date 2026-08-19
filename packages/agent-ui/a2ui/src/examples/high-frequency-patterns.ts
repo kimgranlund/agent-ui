@@ -140,6 +140,10 @@ export const receiptOrderSummarySeed: ExampleSeed = {
 }
 
 const ERROR_ID = 'empty-error-retry'
+// P9 card-anatomy repair (2026-08-18, GH #1262 back-score wave): `btn_retry` used to ride a `Row` inside
+// `CardContent` with no `CardFooter` (the scattered-actions anti-pattern). No FormProvider is involved
+// here, so the fix is the simple `frontier-card-anatomy-ask` reparent: `root` (Card) gains a `root_footer`
+// (CardFooter) sibling of `root_content`, holding the unchanged `actions` Row.
 export const emptyErrorRetryCardSeed: ExampleSeed = {
   name: 'empty-error-retry-card',
   description: 'An error-state card — a warning Icon, a data-bound failure message, and a Retry Button.',
@@ -166,14 +170,15 @@ export const emptyErrorRetryCardSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: ERROR_ID,
         components: [
-          { id: 'root', component: 'Card', elevation: '1', children: ['root_content'] },
+          { id: 'root', component: 'Card', elevation: '1', children: ['root_content', 'root_footer'] },
           { id: 'root_content', component: 'CardContent', children: ['col'] },
-          { id: 'col', component: 'Column', gap: 'md', children: ['icon_row', 'body', 'actions'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['icon_row', 'body'] },
           { id: 'icon_row', component: 'Row', gap: 'sm', align: 'center', children: ['icon', 'title'] },
           { id: 'icon', component: 'Icon', name: 'warning', label: 'Error' },
           // Absolute-path ${…} interpolation names WHAT failed to load — live, not a hand-baked string.
           { id: 'title', component: 'Text', variant: 'h4', text: "Couldn't load ${/activity/resource}" },
           { id: 'body', component: 'Text', variant: 'body', text: { path: '/activity/message' } },
+          { id: 'root_footer', component: 'CardFooter', children: ['actions'] },
           { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_retry'] },
           {
             id: 'btn_retry', component: 'Button', variant: 'solid', label: 'Retry',

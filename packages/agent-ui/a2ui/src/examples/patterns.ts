@@ -6,6 +6,21 @@
 // whose `selected` is client state that rides the data model; (4) DASHBOARD TILES — a display-only list
 // template over `/metrics` with `${…}` label composition; (5) SCHEDULE PICKER — the Wave-5 date/time
 // reach through the catalog (ISO canonical values in the model).
+//
+// P9 card-anatomy repair (2026-08-18, GH #1262 back-score wave): the settings/confirm/wizard/schedule
+// seeds below used to carry their action Button(s) in a `Row` inside `CardContent` with no `CardFooter` —
+// the scattered-actions anti-pattern (`a2ui-payload.md` P9). Repaired to the `frontier-card-anatomy-ask`
+// shape (`catalog-frontier.ts`): the existing action `Row` is UNCHANGED internally, just reparented under
+// a new `CardFooter` sibling of `CardContent`. For the two FormProvider-gated seeds (settings, wizard) the
+// reparent alone is not enough — `ui-card`'s region CSS requires `CardHeader`/`CardContent`/`CardFooter`
+// to be `Card`'s DIRECT children (`card.css`'s `:scope > :where(...)` selector), so a `CardFooter` sibling
+// of `CardContent` can no longer sit INSIDE a `FormProvider` nested one level down in `CardContent` (the
+// old shape) without losing real submit-gating (`el.closest('ui-form-provider')`, `renderer.ts`, needs the
+// gate to be an actual DOM ANCESTOR of the submit Button). The fix used here is the one shape that keeps
+// BOTH laws true: `FormProvider` moves ABOVE `Card` (root becomes the `FormProvider`, `Card` one level
+// down, non-root) — `CardContent`/`CardFooter` stay `Card`'s direct children (P9 + the CSS law), and
+// `FormProvider`'s registry (event-bubbling registration, `closest()` gating) still sees every descendant
+// regardless of the extra `Card` level (P7's real-gating law, `generative-form`).
 
 import type { ExampleSeed } from './types.ts'
 
@@ -31,10 +46,10 @@ export const patternSettingsSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: SETTINGS_ID,
         components: [
-          { id: 'root', component: 'Card', elevation: '1', children: ['root_content'] },
-          { id: 'root_content', component: 'CardContent', children: ['form'] },
-          { id: 'form', component: 'FormProvider', children: ['col'] },
-          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'f_workspace', 'toggles', 'f_plan', 'actions'] },
+          { id: 'root', component: 'FormProvider', children: ['card'] },
+          { id: 'card', component: 'Card', elevation: '1', children: ['root_content', 'root_footer'] },
+          { id: 'root_content', component: 'CardContent', children: ['col'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'f_workspace', 'toggles', 'f_plan'] },
           { id: 'title', component: 'Text', variant: 'h4', text: 'Workspace settings' },
           { id: 'f_workspace', component: 'Field', label: 'Workspace name', child: 'in_workspace' },
           { id: 'in_workspace', component: 'TextField', name: 'workspace', required: true, value: { path: '/settings/workspace' } },
@@ -50,6 +65,7 @@ export const patternSettingsSeed: ExampleSeed = {
           { id: 'opt_free', component: 'Option', value: 'free', label: 'Free' },
           { id: 'opt_pro', component: 'Option', value: 'pro', label: 'Pro' },
           { id: 'opt_scale', component: 'Option', value: 'scale', label: 'Scale' },
+          { id: 'root_footer', component: 'CardFooter', children: ['actions'] },
           { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_save'] },
           { id: 'btn_save', component: 'Button', variant: 'solid', label: 'Save settings', action: { action: 'save_settings', submit: true } },
         ],
@@ -73,14 +89,15 @@ export const patternConfirmSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: CONFIRM_ID,
         components: [
-          { id: 'root', component: 'Card', elevation: '1', children: ['root_content'] },
+          { id: 'root', component: 'Card', elevation: '1', children: ['root_content', 'root_footer'] },
           { id: 'root_content', component: 'CardContent', children: ['col'] },
-          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'body', 'actions'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'body'] },
           { id: 'title', component: 'Text', variant: 'h4', text: 'Delete workspace?' },
           {
             id: 'body', component: 'Text', variant: 'body',
             text: 'This permanently deletes “Reactive Labs” and all 42 projects, boards, and files. This cannot be undone.',
           },
+          { id: 'root_footer', component: 'CardFooter', children: ['actions'] },
           { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_cancel', 'btn_delete'] },
           { id: 'btn_cancel', component: 'Button', variant: 'soft', label: 'Cancel', action: { action: 'cancel' } },
           { id: 'btn_delete', component: 'Button', variant: 'solid', label: 'Delete workspace', action: { action: 'confirm_delete', wantResponse: true } },
@@ -112,9 +129,9 @@ export const patternWizardSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: WIZARD_ID,
         components: [
-          { id: 'root', component: 'Card', elevation: '1', children: ['root_content'] },
-          { id: 'root_content', component: 'CardContent', children: ['form'] },
-          { id: 'form', component: 'FormProvider', children: ['tabs'] },
+          { id: 'root', component: 'FormProvider', children: ['card'] },
+          { id: 'card', component: 'Card', elevation: '1', children: ['root_content', 'root_footer'] },
+          { id: 'root_content', component: 'CardContent', children: ['tabs'] },
           {
             id: 'tabs', component: 'Tabs', selected: { path: '/wizard/step' },
             children: ['tab0', 'tab1', 'tab2', 'panel0', 'panel1', 'panel2'],
@@ -132,7 +149,7 @@ export const patternWizardSeed: ExampleSeed = {
           { id: 'f_ws', component: 'Field', label: 'Workspace name', child: 'in_ws' },
           { id: 'in_ws', component: 'TextField', name: 'workspace', required: true, value: { path: '/wizard/workspace' } },
           { id: 'panel2', component: 'TabPanel', children: ['review_col'] },
-          { id: 'review_col', component: 'Column', gap: 'md', children: ['f_size', 'actions'] },
+          { id: 'review_col', component: 'Column', gap: 'md', children: ['f_size'] },
           { id: 'f_size', component: 'Field', label: 'Team size', child: 'in_size' },
           {
             id: 'in_size', component: 'Select', name: 'size', value: { path: '/wizard/size' },
@@ -141,6 +158,7 @@ export const patternWizardSeed: ExampleSeed = {
           { id: 'sz1', component: 'Option', value: '1-10', label: '1–10 people' },
           { id: 'sz2', component: 'Option', value: '11-50', label: '11–50 people' },
           { id: 'sz3', component: 'Option', value: '51+', label: '51+ people' },
+          { id: 'root_footer', component: 'CardFooter', children: ['actions'] },
           { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_finish'] },
           { id: 'btn_finish', component: 'Button', variant: 'solid', label: 'Create workspace', action: { action: 'create_workspace', submit: true } },
         ],
@@ -213,9 +231,9 @@ export const patternScheduleSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: SCHEDULE_ID,
         components: [
-          { id: 'root', component: 'Card', elevation: '1', children: ['root_content'] },
+          { id: 'root', component: 'Card', elevation: '1', children: ['root_content', 'root_footer'] },
           { id: 'root_content', component: 'CardContent', children: ['col'] },
-          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'f_date', 'f_time', 'f_tz', 'actions'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'f_date', 'f_time', 'f_tz'] },
           { id: 'title', component: 'Text', variant: 'h4', text: 'Schedule a call' },
           { id: 'f_date', component: 'Field', label: 'Date', child: 'in_date' },
           { id: 'in_date', component: 'TextField', name: 'date', type: 'date', value: { path: '/schedule/date' } },
@@ -229,6 +247,7 @@ export const patternScheduleSeed: ExampleSeed = {
           { id: 'tz_hel', component: 'Option', value: 'Europe/Helsinki', label: 'Helsinki (EET)' },
           { id: 'tz_lon', component: 'Option', value: 'Europe/London', label: 'London (GMT)' },
           { id: 'tz_nyc', component: 'Option', value: 'America/New_York', label: 'New York (EST)' },
+          { id: 'root_footer', component: 'CardFooter', children: ['actions'] },
           { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_schedule'] },
           { id: 'btn_schedule', component: 'Button', variant: 'solid', label: 'Schedule', action: { action: 'schedule_call' } },
         ],

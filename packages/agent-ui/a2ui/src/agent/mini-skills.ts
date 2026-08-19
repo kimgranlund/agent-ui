@@ -22,7 +22,7 @@
 // `form-rhythm`, teaches the `FormProvider > Column gap > fields` idiom the fork settled on — FormProvider
 // stays layout-free (the coordination-wrapper pole), so the wrap is taught here rather than defaulted in
 // CSS, reinforcing the fix already landed in every shipped seed (generative-form `68d2a8d`,
-// pattern-settings-form `patterns.ts:36-37`).
+// pattern-settings-form in `patterns.ts` — the FormProvider-as-root shape post the 2026-08-18 P9 repair).
 //
 // Selection reuses `retrieve.ts`'s tokenizer/cosine primitives (ADR-0091 §2), extracted to
 // `../corpus/text-similarity.ts` (slice 1) — NOT the `CorpusRecord` schema or `admit.ts`'s
