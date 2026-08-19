@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { UIElement } from '../dom/index.ts'
-import { overlay, computePosition, computedInsetsAllAuto } from './overlay.ts'
+import { overlay, computePosition } from './overlay.ts'
 import type { OverlayHandle, OverlayOptions } from './overlay.ts'
 
 // overlay.ts — jsdom behaviour probes (overlay-controller LLD-C1..C4).
@@ -14,8 +14,7 @@ import type { OverlayHandle, OverlayOptions } from './overlay.ts'
 // Named probes:
 //   overlay-popover-attr · overlay-open · overlay-close · overlay-toggle · overlay-double-open ·
 //   overlay-light-dismiss · overlay-flip · overlay-gap · overlay-shift · overlay-focus-open ·
-//   overlay-focus-noop · overlay-cleanup · overlay-auto-cleanup · overlay-data-placement ·
-//   overlay-iacvt-detect
+//   overlay-focus-noop · overlay-cleanup · overlay-auto-cleanup · overlay-data-placement
 
 // ── Popover API stub (jsdom lacks it entirely) ────────────────────────────────────────────────
 
@@ -186,34 +185,10 @@ describe('computePosition — flip/shift math', () => {
   })
 })
 
-// ── computedInsetsAllAuto unit tests (overlay-iacvt-detect, GH #1339) ──────────────────────────
-//
-// jsdom cannot compute `anchor()` at all — supportsAnchorPositioning is always false there, so the
-// real IACVT resolution failure this guards against never occurs in this file's suite (confirmed:
-// every jsdom test in this file exercises the JS path). What IS testable here is the pure detector
-// itself against synthetic computed-style inputs, incl. the negative control the ticket names.
-
-describe('computedInsetsAllAuto — the IACVT guard detector (overlay-iacvt-detect)', () => {
-  it('returns true when all four computed insets read the literal `auto` keyword (the measured failure signature)', () => {
-    expect(computedInsetsAllAuto({ top: 'auto', right: 'auto', bottom: 'auto', left: 'auto' })).toBe(true)
-  })
-
-  it('negative control: real resolved inset values ⇒ false (a normal, successfully-anchored placement)', () => {
-    expect(computedInsetsAllAuto({ top: '104px', right: 'auto', bottom: 'auto', left: '100px' })).toBe(false)
-  })
-
-  it('negative control: the opposite pair of a normal placement (bottom/right auto) ⇒ false', () => {
-    expect(computedInsetsAllAuto({ top: 'auto', right: '20px', bottom: '40px', left: 'auto' })).toBe(false)
-  })
-
-  it('three-of-four `auto` (a partial/degenerate resolution, never produced by a real placement) still reads false', () => {
-    expect(computedInsetsAllAuto({ top: 'auto', right: 'auto', bottom: 'auto', left: '0px' })).toBe(false)
-  })
-
-  it('all-zero (a distinct, non-auto degenerate shape) is not mistaken for the IACVT signature', () => {
-    expect(computedInsetsAllAuto({ top: '0px', right: '0px', bottom: '0px', left: '0px' })).toBe(false)
-  })
-})
+// RETIRED (reconciled 2026-08-19): PR #1359's `computedInsetsAllAuto` detector + its five
+// `overlay-iacvt-detect` probes lived here. The GH #1339 verify guard superseded that detector —
+// one guard path, not two competing ones (overlay.ts's Lineage header paragraph has the account);
+// the guard's own coverage is real-engine territory, overlay.browser.test.ts section [7].
 
 // ── Controller integration probes ─────────────────────────────────────────────────────────────
 
