@@ -84,7 +84,7 @@ Action rule above); **(b)** hug-state content floors, `[inline]` only (the Entry
 itself the item (amendment A2, the ADR-0100 cl.3 card disposition); **(d)** whole-shape floors on
 track/data-shaped display leaves (charts, sliders, timeline — amendment A1, a closed ratified list
 extended only by ADR). Any min-width outside (a)–(d) and cl.4's ratified exemption table (floating
-surfaces + text-flow atoms) is a lint defect from the wave's slice 3 on — read ADR-0223 for the role
+surfaces, text-flow atoms, interaction-geometry leaves) is a lint defect from the wave's slice 3 on — read ADR-0223 for the role
 and exemption tables; cite them, never copy them.
 
 ## The slot model (no authored trailing-pad)

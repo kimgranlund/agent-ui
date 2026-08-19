@@ -37,7 +37,8 @@ control's own surface must change (a prop the catalog wants to expose does not e
   writes `undefined`/stale data into the data model on every commit. Three worked instances: Toggle's
   Fork T1 (PR #1363/GH #1352 — `toggle` fires pre-commit ⇒ NO mark), Drill (ADR-0211 — no readback
   accessor exists in either mode ⇒ forward-only bindable `path`, no mark), and the wave-2
-  Suggestions/Rating/ChoiceGroup probes (ADR-0216 cl.6 made the probe the GATE, never the prior —
+  Rating/ChoiceGroup probes (Suggestions' ordering rests on ADR-0213's bubble-order reasoning, not an
+  executed probe — cite it as reasoning, never as a probe) (ADR-0216 cl.6 made the probe the GATE, never the prior —
   `rating.test.ts`'s Fork-T1/D1 block). Commit the probe in the row's test block as the standing guard;
   a probe-failed control ships bindable-forward-only until a real readback/commit-order fix lands.
 - Persona fragments `catalog/personas/{concierge,croupier,fixture-demo}/{catalog.json,factories.ts,manifest.ts}`

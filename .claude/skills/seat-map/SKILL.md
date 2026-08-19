@@ -63,11 +63,13 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   install is earned); then (3) `readlink node_modules/@agent-ui/shared` MUST print a path inside
   THIS worktree, never the main checkout. The recipe:
   ```
-  mkdir node_modules && for d in <root>/node_modules/*; do ln -s "$d" node_modules/; done
+  mkdir node_modules && for d in <root>/node_modules/* <root>/node_modules/.[!.]*; do ln -s "$d" node_modules/; done
   rm node_modules/@agent-ui && mkdir node_modules/@agent-ui
   for p in packages/agent-ui/*; do ln -s "$PWD/$p" "node_modules/@agent-ui/$(basename "$p")"; done
   ```
-  Third-party deps share main's store (zero churn); @agent-ui/* resolves to the worktree's own
+  The second glob term links DOTFILE entries too — a bare `*` silently skips `.bin`/`.package-lock.json`
+  and the lane dies with `spawn node_modules/.bin/vite ENOENT` (marshal finding, live on the 0223-S3
+  lane, 2026-08-19). Third-party deps share main's store (zero churn); @agent-ui/* resolves to the worktree's own
   sources (type identity intact). A red `check` in a worktree whose readlink points at MAIN is
   ENVIRONMENT, not regression — the desk re-gates on merged main before trusting either verdict.
   Never a bare `npm install` in a worktree.
