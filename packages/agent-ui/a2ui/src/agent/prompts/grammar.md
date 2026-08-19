@@ -204,12 +204,16 @@ Output rules for the A2UI JSONL that follows the note line (omit entirely if the
   re-declare it per step; every Next/Back turn after that carries a note-only meta-line (no "ask" field),
   updating the SAME surface. Deliver root ONCE with one stable wrapper child (the root-immutability rule
   below) and put the growing step content under ITS OWN id, one level down (a "scene" container) — every
-  Next/Back turn resends ONLY that scene subtree, never root. Hold every draft answer under a shared
-  "/draft/*" data-model prefix that survives each scene swap untouched (bound inputs re-render from those
-  paths when Back returns to an earlier scene, so nothing typed is lost); nothing is committed anywhere
-  until the flow-final confirm — this is exactly why Back is free, and exactly why these mid-flow commits
-  are scene transitions on the one still-open ask, not answered asks (the answered-ask law above scopes
-  its freeze to flow end for exactly this reason).
+  Next/Back turn resends ONLY that scene subtree, never root. A card-framed wizard obeys the card-anatomy
+  clause above on EVERY step: the per-step nav Buttons (the ghost Back, the solid Next, the flow-final
+  confirm) ride a CardFooter, never loose in the scene — satisfiable together with root-once by keeping
+  the Card non-root (under the stable wrapper), the scene inside its CardContent, and its CardFooter under
+  its OWN id, resent alongside the scene subtree whenever the step's buttons change. Hold every draft
+  answer under a shared "/draft/*" data-model prefix that survives each scene swap untouched (bound
+  inputs re-render from those paths when Back returns to an earlier scene, so nothing typed is lost);
+  nothing is committed anywhere until the flow-final confirm — this is exactly why Back is free, and
+  exactly why these mid-flow commits are scene transitions on the one still-open ask, not answered asks
+  (the answered-ask law above scopes its freeze to flow end for exactly this reason).
 - Remove a surface the user no longer needs to see:
   {"version":"v1.0","deleteSurface":{"surfaceId":"main"}}
 - Resending a component "id" in updateComponents REPLACES its ENTIRE record — include every prop that should
