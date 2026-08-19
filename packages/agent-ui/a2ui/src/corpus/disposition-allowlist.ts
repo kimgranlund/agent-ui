@@ -22,14 +22,15 @@
 // here. Beyond that, an entry is optional prose, worth it only to carry what a verdict cannot — a coverage
 // argument, a repair path.
 //
-// **The map is EMPTY today — legitimately.** As of 2026-08-18 every seed on the shelf is admitted to the
-// store (the 2026-08-18 judged waves admitted the pending backlog and backable-wizard post-repair), and
-// the two standing refusals that were KEPT pending repair — `stats-grid-dashboard` ·
+// **The map held zero LIVE entries through 2026-08-18** — every seed on the shelf as of that date was
+// admitted to the store (the 2026-08-18 judged waves admitted the pending backlog and backable-wizard
+// post-repair), and the two standing refusals that were KEPT pending repair — `stats-grid-dashboard` ·
 // `wizard-step-progress` — were DROPPED from the shelf per Kim's 2026-08-18 ruling (the REV's drop path;
-// their drained entries survive as the dated comments below). An empty map is the healthy steady state
-// this file's own contract predicts: refusals leave the shelf, admissions delete their entries, and only
-// a smoke seed that seeks no verdict or a kept-pending-repair refusal ever puts an entry back. The map
-// stays wired into both consumers regardless — the next entry needs a home, not a revival PR.
+// their drained entries survive as the dated comments below). GH #1377 (2026-08-19) put two live entries
+// back — `product-options-quantity` · `listing-photo-grid`, category 1's NO-VERDICT-SOUGHT-YET shape —
+// the healthy steady state still holds: refusals leave the shelf, admissions delete their entries, and
+// only a smoke seed that seeks no verdict or a kept-pending-repair refusal ever puts (or keeps) an entry.
+// The map stays wired into both consumers regardless — the next entry needs a home, not a revival PR.
 //
 // Pure, zero-dep, platform-neutral (SPEC-N5/ADR-0062) so both readers share the one map: the standing
 // coverage gate (`admission-coverage.test.ts`) and the import tool's unjudged-run guard
@@ -150,4 +151,14 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // GH #1209 (2026-08-18) — `frontier-media-tour`: the same pending-state shape. Added with the
   // Video/AudioPlayer catalog rows (the native media players) to keep the GH #729 type-coverage gate
   // green; pending the same judged import wave. Delete this entry when it is judged.
+  //
+  // GH #1377 (2026-08-19) — the commerce+hospitality genui-pack: `product-options-quantity` (variant-
+  // picker SegmentedControl + quantity number-TextField, Field-wrapped, FormProvider-gated) and
+  // `listing-photo-grid` (media-grid — a Grid of bare Image tiles, distinct from media-file-grid's
+  // Attachment-tile idiom). The same pending-state shape (NO VERDICT SOUGHT YET, not a refusal) —
+  // the ticket's own scope names ONE judged corpus seed this wave (the flagship
+  // `commerce-product-card`, admitted separately, no allowlist entry). Run the judged pipeline and
+  // DELETE these two entries when that wave lands.
+  ['product-options-quantity', 'GH #1377 — variant-picker + quantity composition; admission pending the judged wave'],
+  ['listing-photo-grid', 'GH #1377 — media-grid composition; admission pending the judged wave'],
 ])

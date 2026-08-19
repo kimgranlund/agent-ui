@@ -141,6 +141,11 @@ import {
   restaurantMenuSeed,
   travelItinerarySeed,
 } from '../../src/examples/composition-pack-b.ts'
+import {
+  commerceProductCardSeed,
+  productOptionsQuantitySeed,
+  listingPhotoGridSeed,
+} from '../../src/examples/commerce-hospitality.ts'
 import { allSeeds } from '../../src/examples/index.ts'
 
 declare const process: { cwd(): string; argv: string[]; exit(code?: number): never }
@@ -291,6 +296,14 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
   {
     module: 'composition-pack-b.ts', // GH #1206 — req-a2ui-library R4 pack B (wizard-step-progress dropped 2026-08-18, the ADR-0165 drop path)
     seeds: [fiveDayWeatherSeed, restaurantMenuSeed, travelItinerarySeed],
+  },
+  {
+    module: 'commerce-hospitality.ts', // GH #1377 — the commerce+hospitality genui-pack
+    seeds: [
+      commerceProductCardSeed, // the flagship — judged + admitted this wave
+      productOptionsQuantitySeed, // admission pending the judged wave (disposition-allowlist.ts)
+      listingPhotoGridSeed, // admission pending the judged wave (disposition-allowlist.ts)
+    ],
   },
 ]
 

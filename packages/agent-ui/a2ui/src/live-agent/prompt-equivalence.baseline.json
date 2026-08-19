@@ -15,9 +15,19 @@
       "body": "Playing-card rendering. Each card tile is a PlayingCard (rank/suit enums, faceDown boolean) — the preferred authoring path, never a hand-formatted glyph string. A hand = Row (gap \"sm\", align \"center\", wrap true) of the card tiles — never loose text lines. Best: template the hand — Row \"children\":{\"path\":\"/player/hand\",\"componentId\":\"tile\"} over an array of {rank:\"K\",suit:\"spades\"} items, and INSIDE the template bind RELATIVE: {\"path\":\"rank\"} / {\"path\":\"suit\"}, never \"/rank\" (a leading slash reads the whole model and renders empty). Set the array in the same turn. Wall: face art, flip animation, and drag are not hosted — PlayingCard's glyph pair is the approximation; name gaps in the note."
     },
     {
+      "id": "comparison-table",
+      "triggers": "comparison compare plans pricing tiers versus side-by-side which plan",
+      "body": "Side-by-side plan/product comparison: a Grid of headline Stat tiles (one Card per option, `label`+`value` — price or the option's own quantified pitch) ABOVE one shared Table whose `columns` are the options and whose `rows` are features, cell values the exact per-option answer (comparison-pricing-table is the proof). This is Stat-tiles-plus-Table TOGETHER as one composed card — not feature-collection's bare single-purpose Table, and not product-presentation's per-item Card+Image+Badge tile (comparison strips the photo/Badge chrome; it is about scanning facts, not browsing items). Keep the Stat row and the Table under one Card/CardContent so they read as one comparison, not two unrelated blocks."
+    },
+    {
       "id": "dashboard-kpi-grid",
       "triggers": "dashboard summary kpi stats metrics analytics overview report numbers grid",
       "body": "A dashboard / summary. Parts: 3-7 KPI stats. Map: Grid(min) of Cards, each a Column of Text variant=\"caption\" (label) + Text variant=\"h2\" (value). Wall: real charts/sparklines are not hosted — offer the numeric grid, name the missing chart."
+    },
+    {
+      "id": "feature-collection",
+      "triggers": "spec specs specification facts details compare features table description list attributes",
+      "body": "Presenting a set of named facts. ONE entity's own spec sheet (material, dimensions, warranty) is a DescriptionList — `rows` bound to `{label,value}[]`, no columns to align. Comparing the SAME facts across MULTIPLE entities is a Table — `columns`+`rows` bound, exact values scanned row-by-row (comparison-pricing-table proves the shape). Never use DescriptionList to compare many items (no per-column alignment) and never use a Table for one item's own facts (a one-row table teaches nothing a DescriptionList doesn't). See comparison-table for the higher-order Stat-tiles+Table plan-comparison composition — that idiom is table+headline metrics together, not a bare fact list."
     },
     {
       "id": "form-rhythm",
@@ -50,6 +60,21 @@
       "body": "A master-detail / list-and-inspector split. Parts: scannable list + selection-bound detail. Map: Row split — left List of selectable rows; right Card detail bound via an updateDataModel path. Wall: true two-way selection sync is a live action→updateComponents round-trip — worth naming."
     },
     {
+      "id": "media-grid",
+      "triggers": "photo photos gallery images picture pictures album grid pics snapshots",
+      "body": "A photo/image gallery — ALL tiles are genuinely images meant to be viewed, not files. Grid(gap, min sizing the track) with `children` a `{path,componentId}` template over the photo list; each tile is a bare Image (`usageHint:'thumb'`, `fit:'cover'`, one shared `aspect`, `alt` bound per item). Distinct from media-file-grid's Attachment-tile idiom: reach for THIS when every item is a photo to browse (a listing's photo set); reach for Attachment tiles when files are heterogeneous (images+PDF+video) and need type-aware chrome (name/size/icon) — burying a real photo behind Attachment's file icon loses the photo. For a one-at-a-time paged sequence instead of a grid, use the Swiper/SwiperItem slideshow idiom, not Grid."
+    },
+    {
+      "id": "product-presentation",
+      "triggers": "product listing card price rating badge sale new commerce shop storefront catalog sku hospitality room stay",
+      "body": "A commerce/hospitality product-presentation card: Card > hero Image (usageHint:'hero', alt required) as Card's own child (media, not identity) > CardHeader(title Text + status Badge slot:'trailing' — 'Sale'/'New'/'Sold out') > CardContent(a Row of Stat tiles — price + rating, each label+value) > CardFooter(one solid Button — 'Add to cart'/'Book now'). Use ONLY when the tile ALSO carries a quantified metric AND a status flag — a catalog-grid tile. A photo+title+one-button listing with neither wants the plainer Card>Image>CardContent>CardFooter shape (no Stat, no Badge) — an empty Stat/Badge is over-decoration. Badge intent stays neutral/info for a promo, never danger."
+    },
+    {
+      "id": "quantity",
+      "triggers": "quantity qty amount count how many units number stepper increment",
+      "body": "A numeric quantity input — until/unless a dedicated Stepper control is minted (a fleet gap, not this idiom's job to fill), the recipe is a Field-wrapped TextField: `type:'number'`, `min` (string), `step` (number), `value` bound to the quantity path. Field's `label` names it ('Quantity'); never a bare unlabeled TextField. Pair with a FormProvider only when quantity blocks a submit (e.g. must be ≥1 to add-to-cart) — a display-only or always-valid quantity needs no provider. Do NOT reach for a Select/SegmentedControl of numbers as a stand-in stepper — TextField type:'number' is the catalog's only numeric-entry primitive today."
+    },
+    {
       "id": "settings-screen",
       "triggers": "settings preferences options toggle switch configuration screen save profile account",
       "body": "A settings screen. Parts: grouped preference rows + save. Map: Card › CardContent › List of Field (label+description) each wrapping a Switch/Select/TextField; CardFooter › Button. Wall: none — fully hosted."
@@ -58,6 +83,11 @@
       "id": "structured-container",
       "triggers": "summary itinerary booking status panel confirmation trip reservation structured container card",
       "body": "A structured container (not a playing card) — titled status/summary/booking panel. Types: section = Column, no chrome; plain card = Card › CardHeader(default) › CardContent; structured = Card › CardHeader(format:'structured') › CardContent › CardFooter(optional). Header: Icon(slot:'leading') + title Text + Badge(slot:'trailing', intent bound for live status). Rows: CardContent stacks Row(justify:'between', align:'center') of Text(variant:'label') + Badge(intent:'neutral', label bound) per pair. Nesting: one card level per bubble, never Card-in-Card — group with rows/sections; CardContent takes rows/sections only, no headered Card; CardHeader first, CardFooter last; page-scale containers stay out of bubbles."
+    },
+    {
+      "id": "variant-picker",
+      "triggers": "variant option choose pick size color style plan tier select segmented choice",
+      "body": "Picking one option from a closed set (size, color, plan tier). ≤3 members with short (≤5-char) labels in a single row → SegmentedControl (Field label wraps it, `value` bound, `Segment` children each `value`+`label`) — always-visible, no open/close state (booking-reservation's room-type picker proves it). More members, or labels too long for one row → Select (`value` bound, `Option` children, ship Select+Options in ONE message for exact order). Never SegmentedControl a >3-member or long-label set — it wraps or truncates; never Select a 2-3-member always-visible choice — it hides the options behind a closed dropdown for no reason."
     }
   ],
   "genuiPacks": [

@@ -105,12 +105,13 @@ describe('parseArgs — GH #335 defect 2 (unrecognized argv must hard-error, not
 })
 
 // The allowlist input is SYNTHETIC here (the guard's injectable `allowlist` parameter — the
-// `admission-coverage.test.ts` pure-predicate precedent): since 2026-08-18 the real
-// `DISPOSITION_ALLOWLIST` is legitimately EMPTY (every shelf seed admitted; the two standing refusals
+// `admission-coverage.test.ts` pure-predicate precedent): between 2026-08-18 and GH #1377 the real
+// `DISPOSITION_ALLOWLIST` was legitimately EMPTY (every shelf seed admitted; the two standing refusals
 // — `stats-grid-dashboard`, the original GH #335 repro name, and `wizard-step-progress` — DROPPED per
-// the ADR-0165 drop path, their entries drained), so no real name can exercise the allowlist leg. The
-// leg stays load-bearing regardless — the next kept-pending-repair refusal or smoke seed re-populates
-// the map — so its coverage lives here on planted entries.
+// the ADR-0165 drop path, their entries drained). GH #1377 (2026-08-19) put two live entries back
+// (`product-options-quantity` · `listing-photo-grid`, the NO-VERDICT-SOUGHT-YET category), so the guard
+// now has REAL names to exercise too (below) — the PLANTED fixture stays the primary coverage surface
+// regardless (a synthetic name that can never collide with a real future seed).
 const PLANTED_ALLOWLIST = new Map<string, string>([
   ['planted-refused-seed', 'curated planted prose — judged E_QUALITY, KEPT on the shelf pending repair (synthetic fixture)'],
 ])
@@ -142,11 +143,23 @@ describe('dispositionGuard — GH #335 defect 1 (an unjudged run must not silent
     expect(halt).toMatch(/Nothing was written/)
   })
 
-  it('the REAL allowlist is the default input, and it is legitimately EMPTY today — no shelf name halts through it (the drop-path steady state)', () => {
-    // Anti-drift: if a future entry lands in the real map, this case goes red and the fixture strategy
-    // above gets revisited with a real name — exactly the coupling note the wiring block carries.
+  // GH #1377 — the two live real-map entries. Excluded from the "every other shelf name is untouched"
+  // loop below and proven to halt HERE instead (the exact-repro shape, on the REAL default allowlist).
+  const GH_1377_PENDING = ['product-options-quantity', 'listing-photo-grid']
+
+  it('the REAL allowlist is the default input — every shelf name OUTSIDE the two GH #1377 pending entries is untouched (the drop-path steady state)', () => {
     for (const seed of allSeeds) {
+      if (GH_1377_PENDING.includes(seed.name)) continue
       expect(dispositionGuard(seed.name, undefined, false, NO_ARCHIVE), seed.name).toBeUndefined()
+    }
+  })
+
+  it('the REAL allowlist HALTS an unjudged run on the two GH #1377 pending names (product-options-quantity, listing-photo-grid)', () => {
+    for (const name of GH_1377_PENDING) {
+      const halt = dispositionGuard(name, undefined, false, NO_ARCHIVE)
+      expect(halt, name).toBeDefined()
+      expect(halt, name).toMatch(/HALTED/)
+      expect(halt, name).toMatch(new RegExp(name))
     }
   })
 })
@@ -430,6 +443,13 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     'feedback-form': { passed: false, qualityScore: 2 },
     'trivia-round-resume': { passed: false, qualityScore: 2 },
     'empty-error-retry-card': { passed: false, qualityScore: 2 },
+    // GH #1377 — the commerce+hospitality genui-pack's three new seeds; refused here for the same
+    // "keeps any such run at zero admissions while still reaching saveStore" reason as every row above
+    // (the flagship `commerce-product-card` is judged+admitted separately, via a real passing verdict —
+    // this fixture only needs it refused so this describe's zero-admission runs stay zero).
+    'commerce-product-card': { passed: false, qualityScore: 2 },
+    'product-options-quantity': { passed: false, qualityScore: 2 },
+    'listing-photo-grid': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {
@@ -676,19 +696,36 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     expect(result.stderr).toMatch(/Nothing was written/)
   })
 
-  it('the sandbox itself is honest — an unjudged run over an EMPTY sandbox corpus with no dispositions anywhere admits the whole shelf and writes the shard', () => {
+  it('the sandbox itself is honest — an unjudged run over an EMPTY sandbox corpus with no PLANTED archive collision admits every shelf seed the real allowlist does not exclude', () => {
     // The negative control for every case above: if the sandbox were subtly wrong (a missing rubric, a
     // catalog that would not load), these runs would fail for a reason unrelated to the clause under
-    // test. This control used to assert the allowlist-prose halt, but since 2026-08-18 the real
-    // `DISPOSITION_ALLOWLIST` is legitimately EMPTY (the standing refusals were dropped, the pending
-    // backlog admitted), so the honest baseline flipped: with NO planted archive and NO allowlist entry,
-    // nothing can halt an unjudged run, and every shelf seed admits at tier 1 — proving the sandbox's
-    // rubric, catalog, seed shelf, and store wiring all load, end to end. (The halting cases above are
-    // therefore attributable to exactly the disposition each one plants.)
+    // test. Between 2026-08-18 and GH #1377 the real `DISPOSITION_ALLOWLIST` was legitimately EMPTY (the
+    // standing refusals were dropped, the pending backlog admitted), so an unjudged run over a fresh
+    // sandbox admitted the WHOLE shelf. GH #1377 put two live entries back (`product-options-quantity` ·
+    // `listing-photo-grid`, NO-VERDICT-SOUGHT-YET) — an unjudged run over the real allowlist now HALTS on
+    // the first of those it reaches (dispositionGuard's own contract: an allowlisted name aborts the
+    // WHOLE run, "Nothing was written" — proven directly in the dispositionGuard unit describe above).
+    // This control keeps proving the sandbox/rubric/catalog/store wiring loads end to end by routing
+    // around that guard the sanctioned way — a real `--verdicts` file judging the WHOLE shelf passing —
+    // which also proves the full judged-admission path, a strictly stronger proof than the old bare run.
     makeSandbox({ withShard: false })
-    const result = run([])
+    const verdicts: Record<string, unknown> = {}
+    for (const seed of allSeeds) verdicts[seed.name] = { passed: true, qualityScore: 5 }
+    const verdictsPath = writeVerdicts('wave-honest.json', { date: '2026-07-28', verdicts })
+
+    const result = run(['--verdicts', verdictsPath])
     expect(result.status, result.stderr).toBe(0)
     expect(result.stdout).toMatch(new RegExp(`${allSeeds.length} admitted`))
     expect(existsSync(join(sandbox, SHARD)), 'the run reached saveStore and minted the shard').toBe(true)
+  })
+
+  it('GH #1377 — an unjudged run (no --verdicts) over the REAL allowlist HALTS on the first pending name it reaches, admitting nothing', () => {
+    makeSandbox({ withShard: false })
+    const result = run([])
+    expect(result.status).toBe(1)
+    expect(result.stderr).toMatch(/HALTED/)
+    expect(result.stderr).toMatch(/product-options-quantity|listing-photo-grid/)
+    expect(result.stderr).toMatch(/Nothing was written/)
+    expect(existsSync(join(sandbox, SHARD)), 'a disposition-guard halt writes no shard').toBe(false)
   })
 })
