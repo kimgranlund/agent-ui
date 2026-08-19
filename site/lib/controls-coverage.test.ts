@@ -42,11 +42,9 @@ const EXEMPT: ReadonlyMap<string, string> = new Map([
   ['_surface', 'shared G9 container/container-box base classes — no tag of their own, extended by ui-card and siblings'],
   ['_token-surface', "shared token-surface base class (ui-swatch/ui-ramp/ui-ladder's common ancestor) — no tag of its own"],
   ['entry-list', 'a shared entry-rendering helper (entry-list.ts/entry-data.ts) — no customElements.define, no tag of its own; consumed by ui-settings/ui-agent-admin'],
-  // TEMPORARY (not a structural exemption — service-card DOES need real docs): ADR-0224/GH #1429 — S1 (the
-  // control) shipped in the component-build seat's wave; S2 (the docs-writer seat's slice) lands
-  // service-card-doc.html and DELETES this entry (the site-coverage.test.ts KNOWN_UNDOCUMENTED / ui-image
-  // GH #1189 precedent, same wave-split reasoning, mirrored here since this gate carries no separate stopgap).
-  ['service-card', 'ADR-0224 / GH #1429 — TEMPORARY: control minted ahead of its doc page; the docs-writer S2 slice adds service-card-doc.html and removes this entry.'],
+  // ADR-0224/GH #1429 — service-card's TEMPORARY entry removed here: its docs-writer S2 slice landed
+  // service-card-doc.html + service-card-demo.html (the site-coverage.test.ts KNOWN_UNDOCUMENTED / ui-image
+  // GH #1189 precedent, same wave-split reasoning) — the folder is documented, no exemption needed.
 ])
 const EXEMPT_NAMES = new Set<string>(EXEMPT.keys())
 

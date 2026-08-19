@@ -574,6 +574,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // ADR-0224 (GH #1429) — the availability-stated service/agent launch card.
+    label: 'ui-service-card',
+    cards: [
+      {
+        href: './service-card-demo.html',
+        title: 'Demo',
+        blurb: 'A live gateway-style service list plus an availability-toggle scenario — one `available` write repaints the accent edge, status dot, title, and trailing action together — with an action event log.',
+      },
+      {
+        href: './service-card-doc.html',
+        title: 'API reference',
+        blurb: 'The availability-stated service/agent launch card — ONE bindable `available` boolean drives the accent edge, status dot, title mute, and the Open⟷Unavailable action swap by construction. From service-card.md.',
+      },
+    ],
+  },
+  {
     // ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover): the child leaf.
     label: 'ui-segment',
     cards: [

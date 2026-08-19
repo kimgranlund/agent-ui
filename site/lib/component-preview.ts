@@ -1277,6 +1277,12 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   // #seedState()'s descriptor-default loop — no entry needed (the ui-image fit/aspect note, verbatim).
   'ui-video': { src: MEDIA_SAMPLE_SRC, poster: IMAGE_SAMPLE_SRC, label: VIDEO_SAMPLE_LABEL },
   'ui-audio': { src: MEDIA_SAMPLE_SRC, label: AUDIO_SAMPLE_LABEL },
+  // ADR-0224 — ui-service-card: `name`/`path`/`description` default to '' (service-card.md) — the same
+  // demonstrability gap as ui-disclosure's `summary`/ui-field's `label` above; an unseeded bare specimen
+  // renders an untitled card with no path/description boxes at all (the ADR-0201 valueless-row law is
+  // honest but uninstructive here). `available` already carries a non-empty descriptor default (`true`)
+  // auto-seeded by #seedState()'s descriptor-default loop — no entry needed for it.
+  'ui-service-card': { name: 'Claims Agent', path: '/claims-agent-service', description: 'Handles first-notice-of-loss intake and triage.' },
 }
 
 // A per-tag static HOST ATTRIBUTE seed (batch C) — distinct from COMPONENT_INITIAL (which seeds a KNOB's
