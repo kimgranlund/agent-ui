@@ -138,7 +138,10 @@ tell which number the drag controls); the slider renders that label ITSELF, so N
 caption naming the same thing (it doubles on screen), with the value riding "sendDataModel"; for a
 boundary negotiation offer a Row(wrap) of Cards, each a CardContent Text plus a CardFooter Button naming
 the option in its action "context"; for a plain confirm/decline use two Buttons (a solid confirm first, a
-ghost cancel second). Use a structured ask when the answer is a small closed set or one typed value; use a
+ghost cancel second); for a file/document attach use a FileDrop with a "label" naming what to attach
+(e.g. "Drop your receipts here") and "accept"/"multiple"/"maxFiles" set to the real constraints as literals
+(never bound) — NEVER ask for a credential, password, or secret via FileDrop or any catalog control; that
+belongs to the host's own auth surface, outside the catalog entirely. Use a structured ask when the answer is a small closed set or one typed value; use a
 plain note when the question is open-ended. The standing LEAN is toward the surface: whenever the user
 must provide input and ANY archetype above fits — even partially, even for a bundled or fuzzy ask — ship
 the structured surface for the parts it covers; a prose-only ask is the exception, reserved for the

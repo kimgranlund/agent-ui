@@ -95,7 +95,8 @@
         "checked": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "checked" },
         "label": { "type": { "type": "string" }, "mapsTo": "textContent" },
         "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
-        "name": { "type": { "type": "string" }, "mapsTo": "name" }
+        "name": { "type": { "type": "string" }, "mapsTo": "name" },
+        "slot": { "type": { "type": "string", "enum": ["summary"] }, "mapsTo": "slot" }
       },
       "value": { "prop": "checked", "event": "change" }
     },
@@ -228,7 +229,7 @@
       "properties": {
         "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "glyph" },
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
-        "slot": { "type": { "type": "string", "enum": ["leading", "trailing"] }, "mapsTo": "slot" }
+        "slot": { "type": { "type": "string", "enum": ["leading", "trailing", "summary"] }, "mapsTo": "slot" }
       }
     },
 
@@ -261,7 +262,8 @@
       "properties": {
         "open": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "open" },
         "placement": { "type": { "type": "string", "enum": ["bottom-start", "bottom-end", "top-start", "top-end", "left-start", "left-end", "right-start", "right-end"] }, "mapsTo": "placement" },
-        "delay": { "type": { "type": "number" }, "mapsTo": "delay" }
+        "delay": { "type": { "type": "number" }, "mapsTo": "delay" },
+        "slot": { "type": { "type": "string", "enum": ["summary"] }, "mapsTo": "slot" }
       },
       "value": { "prop": "open", "event": "toggle" },
       "children": "ChildList"
@@ -297,6 +299,33 @@
       }
     },
 
+    "ChoiceGroup": {
+      "properties": {
+        "multiple": { "type": { "type": "boolean" }, "mapsTo": "multiple" },
+        "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
+        "values": { "type": { "type": "array", "items": { "type": "string" } }, "bindable": true, "mapsTo": "values" },
+        "min": { "type": { "type": "string" }, "mapsTo": "min" },
+        "gap": { "type": { "type": "string", "enum": ["none", "xs", "sm", "md", "lg", "xl", "2xl"] }, "mapsTo": "gap" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "required": { "type": { "type": "boolean" }, "mapsTo": "required" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
+      },
+      "value": [
+        { "prop": "value", "event": "select" },
+        { "prop": "values", "event": "select" }
+      ],
+      "children": "ChildList"
+    },
+
+    "ChoiceCard": {
+      "properties": {
+        "value": { "type": { "type": "string" }, "mapsTo": "value" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" }
+      },
+      "children": "ChildList"
+    },
+
     "SegmentedControl": {
       "properties": {
         "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
@@ -328,6 +357,20 @@
         "required": { "type": { "type": "boolean" }, "mapsTo": "required" },
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
         "layout": { "type": { "type": "string", "enum": ["standard", "inline", "block"] }, "mapsTo": "layout" }
+      },
+      "value": { "prop": "value", "event": "change" }
+    },
+
+    "Rating": {
+      "properties": {
+        "value": { "type": { "type": "number" }, "bindable": true, "mapsTo": "value" },
+        "max": { "type": { "type": "number" }, "mapsTo": "max" },
+        "step": { "type": { "type": "number" }, "mapsTo": "step" },
+        "readonly": { "type": { "type": "boolean" }, "mapsTo": "readonly" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "required": { "type": { "type": "boolean" }, "mapsTo": "required" }
       },
       "value": { "prop": "value", "event": "change" }
     },
@@ -472,6 +515,25 @@
       }
     },
 
+    "PieChart": {
+      "properties": {
+        "data": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": { "label": { "type": "string" }, "value": { "type": "number" } },
+              "required": ["label", "value"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "data"
+        },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "variant": { "type": { "type": "string", "enum": ["donut", "pie"] }, "mapsTo": "variant" }
+      }
+    },
+
     "Table": {
       "properties": {
         "columns": { "type": { "type": "array", "items": { "type": "object",
@@ -542,6 +604,62 @@
       }
     },
 
+    "SourceList": {
+      "properties": {
+        "sources": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "href": { "type": "string" },
+                "title": { "type": "string" },
+                "snippet": { "type": "string" }
+              },
+              "required": ["href", "title"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "sources"
+        }
+      }
+    },
+
+    "Suggestions": {
+      "properties": {
+        "suggestions": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": { "type": "string" },
+                "value": { "type": "string" }
+              },
+              "required": ["label"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "suggestions"
+        },
+        "selected": { "type": { "type": "string" }, "bindable": true, "mapsTo": "selected" },
+        "action": {
+          "type": {
+            "type": "object",
+            "properties": {
+              "action": { "type": "string" },
+              "context": { "type": "object" },
+              "wantResponse": { "type": "boolean" },
+              "submit": { "type": "boolean" }
+            },
+            "required": ["action"]
+          },
+          "mapsTo": "action"
+        }
+      },
+      "value": { "prop": "selected", "event": "select" }
+    },
+
     "Badge": {
       "properties": {
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
@@ -589,6 +707,37 @@
         "sizeBytes": { "type": { "type": "number" }, "bindable": true, "mapsTo": "sizeBytes" },
         "href": { "type": { "type": "string" }, "bindable": true, "mapsTo": "href", "format": "safe-href" }
       }
+    },
+
+    "FileDrop": {
+      "properties": {
+        "files": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "mimeType": { "type": "string" },
+                "sizeBytes": { "type": "number" }
+              },
+              "required": ["id", "name", "mimeType", "sizeBytes"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "files"
+        },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "accept": { "type": { "type": "string" }, "mapsTo": "accept" },
+        "multiple": { "type": { "type": "boolean" }, "mapsTo": "multiple" },
+        "maxSizeBytes": { "type": { "type": "number" }, "mapsTo": "maxSizeBytes" },
+        "maxFiles": { "type": { "type": "number" }, "mapsTo": "maxFiles" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "required": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "required" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" }
+      },
+      "value": { "prop": "files", "event": "change" }
     },
 
     "Image": {
@@ -777,6 +926,11 @@
       "callableFrom": "clientOrRemote",
       "args": {},
       "returns": { "type": "boolean" }
+    },
+    "formatCurrency": {
+      "callableFrom": "clientOnly",
+      "args": { "value": { "type": "number" }, "currency": { "type": "string" } },
+      "returns": { "type": "string" }
     }
   }
 }

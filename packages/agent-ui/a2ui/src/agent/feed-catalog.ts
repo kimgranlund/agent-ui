@@ -23,7 +23,7 @@
 // browser-side page, with no catalog-loading machinery riding along).
 
 /**
- * The 30 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
+ * The 36 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
  * affordance, and light structure — nothing that overlays, paginates, or dashboards. Widened by the
  * report/content/feed catalog wave (ADR-0111/0113/0112): `Badge` (light ask furniture, the `Text`/`Icon`
  * class), `Code` (verbatim inline content, no overlay/dashboard shape), `Avatar` (a non-interactive
@@ -45,6 +45,24 @@
  * control binding an array, one commit affordance (`select`), no overlay/pagination/dashboard shape (in
  * fact LESS overlay surface than `Select`, which already carries a top-layer trigger+panel and is IN).
  */
+// The 2026-08-19 nine-ADR campaign's disposition wave — six new-type dispositions, all decided against
+// the SAME parity arguments this file already states (no new reasoning class):
+//   `FileDrop` (ADR-0210 cl.6, INCLUDE by name) — the `Textarea` parity argument verbatim: commit-gated,
+//   inline, fully visible/operable, no overlay/paging; the ask a file-attach naturally belongs to.
+//   `Suggestions` (ADR-0213 cl.5, INCLUDE by name) — a choice control that IS its own single commit
+//   affordance, no overlay/pagination/dashboard shape (LESS overlay surface than `Select`, which is IN).
+//   `SourceList` (ADR-0214 cl.4, INCLUDE by name) — the `DescriptionList` parity argument verbatim: static,
+//   non-interactive attribution content with no overlay/pagination/dashboard shape; a grounded ask cites
+//   its sources the same way a receipt cites its rows.
+//   `Rating` (no explicit ADR-0216 disposition — decided here on the `Slider` parity argument): a bounded
+//   VALUE-MARKED scalar input, one row, no overlay/pagination/dashboard shape — structurally identical to
+//   `Slider`, which is already IN. Unlike `ColorPicker` (value-marked but EXCLUDED, `FEED_EXCLUDED` below)
+//   Rating's input surface is a single scalar, not a 2-axis pad+channels composite — no ask affordance is
+//   denied the way a color editor is. This is a build-wave judgment call, named honestly (the ADR is
+//   silent), not an inferred ADR ruling.
+//   `ChoiceGroup`/`ChoiceCard` (ADR-0220 Decision, INCLUDE by name, composite closure) — "a rich-option
+//   pick IS the canonical commit-gated ask" (picking one of three hotel cards); `ChoiceCard` rides in
+//   under composite closure (the `RadioGroup`/`Radio` precedent).
 export const FEED_SURFACE_TYPES = [
   'Text',
   'Icon',
@@ -80,6 +98,12 @@ export const FEED_SURFACE_TYPES = [
   // Button); a static, non-interactive label/value record with no overlay/pagination/dashboard shape — the
   // `Badge`/`Text` light-furniture parity argument, not the `Stat`/`Table` report-dashboard exclusion class.
   'DescriptionList',
+  'SourceList',
+  'Suggestions',
+  'FileDrop',
+  'Rating',
+  'ChoiceGroup',
+  'ChoiceCard',
 ] as const
 
 /** The closed union of every IN type — the runtime-checkable companion to the `as const` array above. */
@@ -93,7 +117,7 @@ export interface FeedExclusion {
 }
 
 /**
- * The 33 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
+ * The 40 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
  * the ADR-0097 Amendment / ADR-0107 Amendment 2 — + the chart family's third member, `LineChart`
  * [ADR-0205 cl.8] — + the report/content/feed catalog wave's five:
  * `Stat`/`Table` [ADR-0111], `Disclosure` [ADR-0113], `Progress`/`Attachment` [ADR-0112] — + the
@@ -108,15 +132,17 @@ export interface FeedExclusion {
  * URL-sourced content image/photo, the Attachment/Swatch/Ramp/Ladder report-content class, NOT the
  * Avatar/Icon light-identity-mark class] + the GH #1353 Drill-catalog-decision pass's two: `Drill`/
  * `DrillPanel` [ADR-0195 GH #954 — an arbitrary-depth tree hiding all-but-one panel, taken further
- * than the Tabs "hides half the ask" reasoning, and no value mark to commit even if it were IN]).
- * Avatar/Icon light-identity-mark class] + the GH #1352 Toggle-catalog-decision pass's one: `Toggle`
- * [ADR-0179 GH #686 Amendment S7-a — no `value` mark at all (Fork T1); worse than the already-excluded
- * `Switch`, which at least commits `checked` back — a press inside an ask would flip the pill with no
- * way for the agent to ever learn the outcome, the exact dishonesty this partition exists to keep out]).
+ * than the Tabs "hides half the ask" reasoning, and no value mark to commit even if it were IN] +
+ * the GH #1352 Toggle-catalog-decision pass's one: `Toggle` [ADR-0179 GH #686 Amendment S7-a — no
+ * `value` mark at all (Fork T1); worse than the already-excluded `Switch`, which at least commits
+ * `checked` back — a press inside an ask would flip the pill with no way for the agent to ever learn
+ * the outcome, the exact dishonesty this partition exists to keep out] + the 2026-08-19 nine-ADR
+ * campaign's one: `PieChart` [ADR-0219 — the chart family's fourth member, the same display-only/
+ * no-value-mark reasoning as Sparkline/BarChart/LineChart]).
  * Composite-closure note: a composite's children are excluded ALONGSIDE their parent for the SAME
  * reason (Tab/TabPanel with Tabs; MenuItem with Menu) — `feed-catalog.test.ts` asserts this closure
  * holds, both here and for the IN composites (RadioGroup/Radio, SegmentedControl/Segment, Card/its
- * three sub-types, Select+ComboBox/Option).
+ * three sub-types, Select+ComboBox/Option, ChoiceGroup/ChoiceCard).
  */
 export const FEED_EXCLUDED: readonly FeedExclusion[] = [
   {
@@ -168,6 +194,11 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
     type: 'LineChart',
     reason:
       'report content, not an ask affordance (ADR-0205 cl.8, inheriting the ADR-0107 cl.8 + Amendment 2 reasoning): the fleet\'s first axis-bearing chart is display-only, no value mark — it reaches the artifact feed via full-catalog rendering, the same as its Sparkline/BarChart chart-family kin.',
+  },
+  {
+    type: 'PieChart',
+    reason:
+      'report content, not an ask affordance (ADR-0219, inheriting the ADR-0107 cl.8 + Amendment 2 reasoning): the part-of-whole mark is display-only, no value mark — the same chart-family class as Sparkline/BarChart/LineChart, reaching the artifact feed via full-catalog rendering only.',
   },
   {
     type: 'Grid',

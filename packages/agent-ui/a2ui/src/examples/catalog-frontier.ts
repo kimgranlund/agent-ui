@@ -15,6 +15,14 @@
 // Frontier 14 (GH #1353, ADR-0195 GH #954) — `Drill`/`DrillPanel`, the N-level drill-down panel
 // container, mints its catalog row here (Kim ruling 2026-08-19), draining that ADR's TEMPORARY
 // allowlist seed.
+//
+// Frontier 15-20 (the 2026-08-19 nine-ADR campaign's catalog-integration lane) — the six new types the
+// wave's control-mint half shipped ahead of their rows: `FileDrop` (ADR-0210) · `Suggestions` (ADR-0213)
+// · `SourceList` (ADR-0214) · `Rating` (ADR-0216) · `PieChart` (ADR-0219) · `ChoiceGroup`/`ChoiceCard`
+// (ADR-0220, one seed, two types). Each closes its own GH #729 coverage gap; corpus ADMISSION is a
+// SEPARATE, later judged wave (a2ui-corpus-curation / a2ui-review-agent verdicts, ADR-0068's never-
+// self-judged discipline) — each carries a `DISPOSITION_ALLOWLIST` pending entry (category 1,
+// NO-VERDICT-SOUGHT-YET) until that wave lands.
 
 import type { ExampleSeed } from './types.ts'
 
@@ -808,4 +816,233 @@ export const paneSwitcherSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed]
+const FILE_DROP_ID = 'frontier-file-drop-attach'
+/** Frontier 15 (ADR-0210, GH #1391): `FileDrop`, the fleet's file-INPUT affordance under the host-mediated
+ *  handle model — an expense-report attach step, FormProvider-gated, `files` bound to the data model (an
+ *  unwired host renders it visibly disabled with its own reason, ADR-0210 cl.4.5 — the demo shows the
+ *  wire shape; a real host wires the `intake` seam). */
+export const fileDropAttachSeed: ExampleSeed = {
+  name: 'frontier-file-drop-attach',
+  description: 'An expense-report attach step — a FormProvider-gated FileDrop (image/PDF receipts, up to 5 files) bound to the data model, submitted via one commit Button.',
+  promptText: 'Let me attach receipts to my expense report — allow up to 5 image or PDF files.',
+  surfaceId: FILE_DROP_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: FILE_DROP_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: FILE_DROP_ID, value: { expense: { receipts: [] } } } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: FILE_DROP_ID,
+        components: [
+          { id: 'root', component: 'FormProvider', children: ['card'] },
+          { id: 'card', component: 'Card', elevation: '1', children: ['head', 'content', 'foot'] },
+          { id: 'head', component: 'CardHeader', children: ['title'] },
+          { id: 'title', component: 'Text', variant: 'h4', text: 'Attach receipts' },
+          { id: 'content', component: 'CardContent', children: ['f_receipts'] },
+          { id: 'f_receipts', component: 'Field', label: 'Receipts', description: 'Image or PDF, up to 5 files', child: 'drop' },
+          {
+            id: 'drop', component: 'FileDrop', label: 'Drop receipts here, or browse',
+            accept: 'image/*,.pdf', multiple: true, maxFiles: 5, required: true,
+            files: { path: '/expense/receipts' },
+          },
+          { id: 'foot', component: 'CardFooter', children: ['submit'] },
+          {
+            id: 'submit', component: 'Button', variant: 'solid', label: 'Submit expense',
+            action: { action: 'submit_expense', submit: true },
+          },
+        ],
+      },
+    },
+  ],
+}
+
+const SUGGESTIONS_ID = 'frontier-suggestions-chips'
+/** Frontier 16 (ADR-0213, GH #1393): `Suggestions`, one-shot follow-up chips under an agent answer —
+ *  `selected` bound to the data model so the taken chip's spent state is durable across a history
+ *  re-render (ADR-0213 cl.3); the tap's `action` rides `wantResponse: true` (the turn trigger). */
+export const suggestionsChipsSeed: ExampleSeed = {
+  name: 'frontier-suggestions-chips',
+  description: 'A follow-up-chips row under an agent answer — one-shot Suggestions bound to the data model, spending the whole set on the first tap (ADR-0213).',
+  promptText: 'After answering, offer a few natural follow-up questions I could tap.',
+  surfaceId: SUGGESTIONS_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: SUGGESTIONS_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: SUGGESTIONS_ID, value: { followUp: { selected: '' } } } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: SUGGESTIONS_ID,
+        components: [
+          { id: 'root', component: 'Column', gap: 'sm', children: ['answer', 'chips'] },
+          { id: 'answer', component: 'Text', variant: 'body', text: 'The Lisbon office is open weekdays, 9am to 6pm.' },
+          {
+            id: 'chips', component: 'Suggestions',
+            suggestions: [
+              { label: 'What about weekends?' },
+              { label: 'Show me the address', value: 'address' },
+              { label: 'Who do I contact there?', value: 'contact' },
+            ],
+            selected: { path: '/followUp/selected' },
+            action: { action: 'ask_followup', wantResponse: true },
+          },
+        ],
+      },
+    },
+  ],
+}
+
+const SOURCE_LIST_ID = 'frontier-source-list-citations'
+/** Frontier 17 (ADR-0214, GH #1394): `SourceList`, source attribution as one hardened aggregate leaf —
+ *  a grounded answer citing two sources, index markers assigned by array position (ADR-0214 cl.2). */
+export const sourceListCitationsSeed: ExampleSeed = {
+  name: 'frontier-source-list-citations',
+  description: 'A grounded answer citing its sources — one SourceList leaf (bindable sources array, positional index markers, gated hrefs, ADR-0214).',
+  promptText: 'Answer with citations to where you found each fact.',
+  surfaceId: SOURCE_LIST_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: SOURCE_LIST_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: SOURCE_LIST_ID,
+        value: {
+          research: {
+            sources: [
+              { href: 'https://example.com/annual-report-2025', title: 'Annual Report 2025', snippet: 'Revenue grew 14% year over year.' },
+              { href: 'https://example.com/q4-press-release', title: 'Q4 Press Release', snippet: 'EMEA led growth at 22%.' },
+            ],
+          },
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: SOURCE_LIST_ID,
+        components: [
+          { id: 'root', component: 'Column', gap: 'sm', children: ['answer', 'sources'] },
+          { id: 'answer', component: 'Text', variant: 'body', text: 'Revenue grew 14% year over year, led by EMEA at 22%.' },
+          { id: 'sources', component: 'SourceList', sources: { path: '/research/sources' } },
+        ],
+      },
+    },
+  ],
+}
+
+const RATING_ID = 'frontier-rating-review'
+/** Frontier 18 (ADR-0216, GH #1395): `Rating`, an owned star mark — the display-case idiom
+ *  (`readonly: true` + a bound aggregate score, ADR-0216 cl.5) showing a hotel's guest rating. */
+export const ratingReviewSeed: ExampleSeed = {
+  name: 'frontier-rating-review',
+  description: 'A hotel review line — a readonly Rating displaying the fraction-accurate aggregate score (ADR-0216) beside the review count.',
+  promptText: "Show the hotel's 4.3-out-of-5 guest rating from 312 reviews.",
+  surfaceId: RATING_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: RATING_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: RATING_ID, value: { hotel: { score: 4.3 } } } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: RATING_ID,
+        components: [
+          { id: 'root', component: 'Row', gap: 'sm', align: 'center', children: ['stars', 'count'] },
+          { id: 'stars', component: 'Rating', value: { path: '/hotel/score' }, readonly: true, label: 'Guest rating' },
+          { id: 'count', component: 'Text', variant: 'caption', text: '312 reviews' },
+        ],
+      },
+    },
+  ],
+}
+
+const PIE_CHART_ID = 'frontier-pie-chart-budget'
+/** Frontier 19 (ADR-0219, GH #1397): `PieChart`, the part-of-whole mark (donut-default) — a marketing
+ *  budget split across four channels, with a printed-percent key list (ADR-0219 cl.3) real-DOM by
+ *  construction (the ring itself is `aria-hidden`). */
+export const pieChartBudgetSeed: ExampleSeed = {
+  name: 'frontier-pie-chart-budget',
+  description: 'A budget-share donut — PieChart bound to a 4-category allocation (ADR-0219), with a caption naming the largest share.',
+  promptText: 'Show how the marketing budget splits across channels as a donut chart.',
+  surfaceId: PIE_CHART_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: PIE_CHART_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: PIE_CHART_ID,
+        value: {
+          budget: {
+            shares: [
+              { label: 'Paid search', value: 42000 },
+              { label: 'Social', value: 28000 },
+              { label: 'Content', value: 18000 },
+              { label: 'Events', value: 12000 },
+            ],
+          },
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: PIE_CHART_ID,
+        components: [
+          { id: 'root', component: 'Column', gap: 'sm', children: ['chart', 'caption'] },
+          { id: 'chart', component: 'PieChart', data: { path: '/budget/shares' }, label: 'Marketing budget by channel' },
+          { id: 'caption', component: 'Text', variant: 'caption', text: 'Paid search takes the largest share at $42,000.' },
+        ],
+      },
+    },
+  ],
+}
+
+const CHOICE_GROUP_ID = 'frontier-choice-group-rooms'
+/** Frontier 20 (ADR-0220, GH #1368): `ChoiceGroup` + `ChoiceCard`, the rich-card selection container —
+ *  three photo+price+rating room cards, single-mode `value` committed to the data model. */
+export const choiceGroupRoomsSeed: ExampleSeed = {
+  name: 'frontier-choice-group-rooms',
+  description: 'A room picker — a ChoiceGroup of three rich ChoiceCards (photo, name, price, rating), committing the chosen room key to the data model (ADR-0220).',
+  promptText: 'Let me pick a room from three options with photos, prices, and ratings.',
+  surfaceId: CHOICE_GROUP_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: CHOICE_GROUP_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: CHOICE_GROUP_ID, value: { booking: { room: '' } } } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: CHOICE_GROUP_ID,
+        components: [
+          {
+            id: 'root', component: 'ChoiceGroup', min: '220px', gap: 'md', label: 'Choose a room',
+            value: { path: '/booking/room' }, children: ['c_standard', 'c_deluxe', 'c_suite'],
+          },
+          { id: 'c_standard', component: 'ChoiceCard', value: 'standard', children: ['std_img', 'std_name', 'std_price'] },
+          { id: 'std_img', component: 'Image', src: 'https://images.example.com/room-standard.jpg', alt: 'Standard room', fit: 'cover', aspect: '4/3' },
+          { id: 'std_name', component: 'Text', variant: 'label', text: 'Standard' },
+          { id: 'std_price', component: 'Text', variant: 'caption', text: '$120/night · ★4.2' },
+          { id: 'c_deluxe', component: 'ChoiceCard', value: 'deluxe', children: ['dlx_img', 'dlx_name', 'dlx_price'] },
+          { id: 'dlx_img', component: 'Image', src: 'https://images.example.com/room-deluxe.jpg', alt: 'Deluxe room', fit: 'cover', aspect: '4/3' },
+          { id: 'dlx_name', component: 'Text', variant: 'label', text: 'Deluxe' },
+          { id: 'dlx_price', component: 'Text', variant: 'caption', text: '$185/night · ★4.8' },
+          { id: 'c_suite', component: 'ChoiceCard', value: 'suite', children: ['ste_img', 'ste_name', 'ste_price'] },
+          { id: 'ste_img', component: 'Image', src: 'https://images.example.com/room-suite.jpg', alt: 'Suite', fit: 'cover', aspect: '4/3' },
+          { id: 'ste_name', component: 'Text', variant: 'label', text: 'Suite' },
+          { id: 'ste_price', component: 'Text', variant: 'caption', text: '$310/night · ★4.9' },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed]

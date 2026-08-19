@@ -155,9 +155,14 @@ function fleetPrimaryTypes(): string[] {
  *  citation, same as Wave 0's seed. The color-picker family (ADR-0123, `ColorPicker`) re-seeded this SAME
  *  "shipped ahead of its catalog row" shape at M1 (color-picker.lld.md, the ADR-0118 M1/M2 discipline) —
  *  this M2 wave lands the row below and DRAINS that seed too, the same way the token-surface/report/
- *  content/feed seeds above were drained. `PieChart` (ADR-0219, GH #1397) re-seeds this SAME shape once
- *  more: the control-mint half of the ADR-0219 booked repairs ships the control this wave, split from its
- *  own CATALOG-half lane by an explicit scope fence — the seed below drains when that lane's row lands. */
+ *  content/feed seeds above were drained. The 2026-08-19 nine-ADR campaign re-seeded this SAME "shipped
+ *  ahead of its catalog row" shape SEVEN times over (six control-mint waves landing ahead of the
+ *  catalog-integration lane, ADR-0087 cl.6): `FileDrop` (ADR-0210) · `SourceList` (ADR-0214) ·
+ *  `Suggestions` (ADR-0213) · `Rating` (ADR-0216) · `PieChart` (ADR-0219) · `ChoiceGroup`/`ChoiceCard`
+ *  (ADR-0220, one control-mint wave, two rows). The catalog-integration lane (`adr-campaign-catalog-
+ *  integration`) DRAINED all seven — their catalog rows + factories now exist (this file's residue guard
+ *  would fail if they were left in place), the same way the report/content/feed/token-surface/color-picker
+ *  seeds above were drained. */
 //
 // `ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel`/`CommandModal` are
 // the only PERMANENT entries — NOT catalogue-bound AT ALL (app-surface/theming/live-streaming/chrome-anchor
@@ -165,18 +170,6 @@ function fleetPrimaryTypes(): string[] {
 // reversed its half: ephemeral outcome announcements ARE agent-emittable, so Toast now has a catalog row
 // (see toastFactory) — its entry is DRAINED; ToastRegion (the top-layer host + show()) stays app chrome.
 const EXCLUSION_ALLOWLIST = new Map<string, string>([
-  // TEMPORARY (ADR-0134 pattern) — drains the moment the ADR-0210 catalog row lands (the integration
-  // lane's slice): ui-file-drop shipped ahead of its FileDrop row in the same campaign wave.
-  ['FileDrop', 'ADR-0210 / GH #1391 — TEMPORARY: control minted ahead of its catalog row; the integration lane adds the FileDrop row + factory and DELETES this entry.'],
-  // TEMPORARY (ADR-0134 pattern) — drains the moment the ADR-0214 catalog row lands (the integration
-  // lane's slice): ui-source-list shipped ahead of its SourceList row in the same campaign wave.
-  ['SourceList', 'ADR-0214 / GH #1394 — TEMPORARY: control minted ahead of its catalog row; the integration lane adds the SourceList row + factory and DELETES this entry.'],
-  // TEMPORARY (ADR-0134 pattern) — drains the moment the ADR-0213 catalog row lands (the integration
-  // lane's slice): ui-suggestions shipped ahead of its Suggestions row in the same campaign wave.
-  ['Suggestions', 'ADR-0213 / GH #1393 — TEMPORARY: control minted ahead of its catalog row; the integration lane adds the Suggestions row + factory and DELETES this entry.'],
-  // TEMPORARY (ADR-0134 pattern) — drains the moment the ADR-0216 catalog row lands (the integration
-  // lane's slice): ui-rating shipped ahead of its Rating row in the same campaign wave.
-  ['Rating', 'ADR-0216 / GH #1395 — TEMPORARY: control minted ahead of its catalog row; the integration lane adds the Rating row + factory and DELETES this entry.'],
   ['ToastRegion', 'ADR-0112 cl.6 — PERMANENT exclusion, never catalogue-bound: the top-layer toast HOST driven by show() is app-surface chrome (GH #1184 catalogued Toast itself, but the region + its imperative API stay page/app-frame primitives, never a catalog row).'],
   ['ThemeProvider',
     'ADR-0117 / theme-provider.spec.md SPEC-R8 — PERMANENT exclusion, never catalogue-bound: ' +
@@ -216,22 +209,6 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'is host-page-only (security inversion, PRD-D2); the ADR-0112 cl.6 Toast/ToastRegion reasoning applied ' +
     'verbatim — a one-time-code entry is the credential-bearing element of the identity family\'s Codes ' +
     'mode (code-entry-control.lld.md §9, GH #490 S2-a).'],
-  ['PieChart',
-    'ADR-0219 / GH #1397 — TEMPORARY "shipped ahead of its catalog row" seed (the BarChart/Sparkline ' +
-    'ADR-0107/LLD-C10 precedent, above): the control-mint half of the ADR-0219 booked repairs lands the ' +
-    'control + descriptor this wave; the CATALOG half (catalog.json row + factories.ts entry + the drafted ' +
-    'a2ui-catalog.spec.md §5.2 delta + prompt-equivalence recapture) is a separate, coordinated lane\'s ' +
-    'slice — this seed DRAINS the moment that row lands, the same way the report/content/feed/token-' +
-    'surface/color-picker seeds above drained.'],
-  // ADR-0220 (GH #1368) — the `choice` family. TEMPORARY seed, the token-surface/color-picker "shipped
-  // ahead of its catalog row" precedent (above): the CONTROL-MINT half of the ADR-0220 build (traits/
-  // selection-commit.ts's additive seams + controls/choice-group/ + controls/choice-card/) landed in this
-  // wave; the wire-integration half (catalog.json rows, factories.ts, feed-catalog.ts disposition, the
-  // Fork-T1/D1 event-vs-commit probe) is a SEPARATE lane's work. Drain BOTH entries the moment that lane
-  // lands the `ChoiceGroup`/`ChoiceCard` rows — never left as residue (the allowlist-residue guard below
-  // would catch a drained-but-unremoved seed).
-  ['ChoiceGroup', 'ADR-0220 / GH #1368 — shipped ahead of its catalog row (control-mint lane); drains when the wire-integration lane lands the ChoiceGroup row + factory.'],
-  ['ChoiceCard', 'ADR-0220 / GH #1368 — shipped ahead of its catalog row (control-mint lane); drains when the wire-integration lane lands the ChoiceCard row + factory.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

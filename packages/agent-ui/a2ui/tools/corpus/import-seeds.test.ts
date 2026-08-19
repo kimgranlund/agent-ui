@@ -386,6 +386,55 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     return path
   }
 
+  /** Every shelf name the REAL `DISPOSITION_ALLOWLIST` currently disposition — derived, never hardcoded,
+   *  so this fixture stays correct as the map's live content churns (the dispositionGuard doc comment's
+   *  own warning: "the real map legitimately drained to EMPTY … leaving no real name to test with").
+   *  The GH #1346 judge-tier guard tests below want a baseline where dispositionGuard's OWN halt (which
+   *  takes priority over the judge-tier accumulation, `main()`'s per-seed loop) never fires on an
+   *  UNRELATED, deliberately-planted candidate — so any live disposition-allowlist name is pre-admitted
+   *  into the sandbox first (below), the same way the REAL corpus will hold it once wave 3's judged
+   *  pipeline runs. */
+  const LIVE_DISPOSITIONED_NAMES = allSeeds.map((s) => s.name).filter((n) => DISPOSITION_ALLOWLIST.has(n))
+
+  /** Pre-admit every currently-live disposition-allowlisted seed into the sandbox's shard via a REAL
+   *  `--verdicts` run (never a hand-rolled JSONL row — the tool's own writer is the only source of a
+   *  correctly-shaped record). A no-op when the map is empty (the steady state most of this suite's
+   *  history has held). Must run BEFORE any drift-planting so a genuinely-unrelated candidate (e.g.
+   *  `empty-error-retry-card`) is the ONLY one left for the guard under test to see. */
+  const admitLiveDispositionedSeeds = (): void => {
+    if (LIVE_DISPOSITIONED_NAMES.length === 0) return
+    const verdicts: Record<string, unknown> = {}
+    for (const name of LIVE_DISPOSITIONED_NAMES) verdicts[name] = { passed: true, qualityScore: 5 }
+    const verdictsPath = writeVerdicts('pre-admit-dispositioned.json', { date: '2026-08-19', verdicts })
+    const result = run(['--verdicts', verdictsPath])
+    if (result.status !== 0) {
+      throw new Error(`admitLiveDispositionedSeeds setup failed: ${result.stderr}`)
+    }
+  }
+
+  /** The `withShard:false` sibling of `admitLiveDispositionedSeeds` above: a TRULY empty sandbox has
+   *  every seed (not just the dispositioned ones) reach the judge tier, so a `--verdicts` run needs a
+   *  verdict for every name (`createVerdictJudge`'s own fail-closed law) — admitting the dispositioned
+   *  names ALONE isn't reachable directly. Admits the WHOLE shelf instead (the "sandbox itself is
+   *  honest" test's own precedent, above) then PRUNES the resulting shard back down to just the
+   *  currently-live disposition-allowlisted rows (the `plantDrift` doctoring technique, applied in
+   *  reverse) — restoring the "everything else still needs judging" premise this test's guard targets. */
+  const admitOnlyLiveDispositionedFromEmpty = (): void => {
+    if (LIVE_DISPOSITIONED_NAMES.length === 0) return
+    const verdicts: Record<string, unknown> = {}
+    for (const seed of allSeeds) verdicts[seed.name] = { passed: true, qualityScore: 5 }
+    const verdictsPath = writeVerdicts('pre-admit-whole-shelf.json', { date: '2026-08-19', verdicts })
+    const result = run(['--verdicts', verdictsPath])
+    if (result.status !== 0) {
+      throw new Error(`admitOnlyLiveDispositionedFromEmpty setup failed: ${result.stderr}`)
+    }
+    const shardPath = join(sandbox, SHARD)
+    const keptRows = readFileSync(shardPath, 'utf8')
+      .split('\n')
+      .filter((line) => line !== '' && LIVE_DISPOSITIONED_NAMES.some((name) => line.includes(`"name":"${name}"`)))
+    writeFileSync(shardPath, keptRows.length > 0 ? `${keptRows.join('\n')}\n` : '')
+  }
+
   const run = (args: string[]): { status: number | null; stdout: string; stderr: string } => {
     const r = spawnSync('node', ['--experimental-strip-types', SCRIPT, ...args], { cwd: sandbox, encoding: 'utf8' })
     return { status: r.status, stdout: r.stdout, stderr: r.stderr }
@@ -459,6 +508,15 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     'commerce-product-card': { passed: false, qualityScore: 2 },
     'product-options-quantity': { passed: false, qualityScore: 2 },
     'listing-photo-grid': { passed: false, qualityScore: 2 },
+    // The 2026-08-19 nine-ADR campaign's six coverage-gap seeds (catalog-frontier.ts) — refused here for
+    // the same zero-admission reason as every row above; their real disposition is DISPOSITION_ALLOWLIST's
+    // pending "NO VERDICT SOUGHT YET" entries (wave 3 runs the real judged pipeline).
+    'frontier-file-drop-attach': { passed: false, qualityScore: 2 },
+    'frontier-suggestions-chips': { passed: false, qualityScore: 2 },
+    'frontier-source-list-citations': { passed: false, qualityScore: 2 },
+    'frontier-rating-review': { passed: false, qualityScore: 2 },
+    'frontier-pie-chart-budget': { passed: false, qualityScore: 2 },
+    'frontier-choice-group-rooms': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {
@@ -748,6 +806,8 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
 
     it('THE ISSUE REPRO SHAPE — a planted-drift bare run HALTS before saveStore: the named fail-closed report, exit 1, shard byte-unchanged, no archive minted', () => {
       makeSandbox({ withShard: true })
+      admitLiveDispositionedSeeds() // any live disposition-allowlist name is a DIFFERENT candidate class than this test's target — pre-admitted so the guard under test sees only the planted drift
+      const archiveBaseline = archivedFiles() // the pre-admit step above archives its OWN verdicts file (ADR-0165) when the map is non-empty
       const doctoredShard = plantDrift()
 
       const result = run([])
@@ -764,11 +824,12 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
       // would have been written back and the dropped row restored. The doctored shard is byte-identical
       // instead — nothing was written.
       expect(readFileSync(join(sandbox, SHARD), 'utf8'), 'the halt precedes saveStore').toBe(doctoredShard)
-      expect(archivedFiles(), 'no archive either — a bare run carries no verdicts file to archive').toEqual([])
+      expect(archivedFiles(), 'no NEW archive from the bare run under test — a bare run carries no verdicts file to archive').toEqual(archiveBaseline)
     })
 
     it('the same planted drift under --dry-run reports the would-HALT truth and still finishes its summary — exit 0, nothing written', () => {
       makeSandbox({ withShard: true })
+      admitLiveDispositionedSeeds() // see THE ISSUE REPRO SHAPE's own note, above
       const doctoredShard = plantDrift()
 
       const result = run(['--dry-run'])
@@ -786,6 +847,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
 
     it('the all-E_DUP bare run STAYS LEGAL — every seed an idempotent re-run of its own admitted record, exit 0 (the one verdict-less case the guard leaves open)', () => {
       makeSandbox({ withShard: true })
+      admitLiveDispositionedSeeds() // every shelf name now genuinely admitted — the all-E_DUP premise this test needs
 
       const result = run([])
 
@@ -796,14 +858,23 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
 
     it('an EMPTY corpus makes every shelf seed an unjudged candidate — the guard counts all N and writes nothing (the full-scale N)', () => {
       makeSandbox({ withShard: false })
+      // Any LIVE disposition-allowlist name is a DIFFERENT, dispositionGuard-owned candidate class (it
+      // halts BEFORE the judge-tier count ever accumulates, main()'s per-seed loop) — pre-admit them so
+      // "every shelf seed" here means every NON-dispositioned one, the guard this test actually targets.
+      admitOnlyLiveDispositionedFromEmpty()
+      const preAdmittedShard = existsSync(join(sandbox, SHARD)) ? readFileSync(join(sandbox, SHARD), 'utf8') : ''
+      const expectedCandidateCount = allSeeds.length - LIVE_DISPOSITIONED_NAMES.length
 
       const result = run([])
 
       expect(result.status).toBe(1)
       expect(result.stderr).toMatch(
-        new RegExp(`${allSeeds.length} candidate\\(s\\) reached the judge tier with no judge wired`),
+        new RegExp(`${expectedCandidateCount} candidate\\(s\\) reached the judge tier with no judge wired`),
       )
-      expect(existsSync(join(sandbox, SHARD)), 'no shard was minted — the halt precedes saveStore').toBe(false)
+      expect(
+        readFileSync(join(sandbox, SHARD), 'utf8'),
+        'no NEW admission — the halt precedes saveStore; only the pre-admitted rows (if any) are present',
+      ).toBe(preAdmittedShard)
     })
   })
 })

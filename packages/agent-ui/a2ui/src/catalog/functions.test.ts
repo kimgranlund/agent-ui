@@ -5,7 +5,7 @@
 // exercised to confirm all four names are reachable at the shared lookup key.
 
 import { describe, it, expect } from 'vitest'
-import { required, email, regex, ping, catalogFunctions } from './functions.ts'
+import { required, email, regex, ping, formatCurrency, catalogFunctions } from './functions.ts'
 
 // ── required ─────────────────────────────────────────────────────────────────
 
@@ -100,8 +100,8 @@ describe('regex — pattern match gate', () => {
 // ── catalogFunctions registry ─────────────────────────────────────────────────
 
 describe('catalogFunctions — shared lookup table', () => {
-  it('contains exactly the four declared names (required/email/regex/ping)', () => {
-    expect(Object.keys(catalogFunctions).sort()).toEqual(['email', 'ping', 'regex', 'required'])
+  it('contains exactly the five declared names (required/email/regex/ping/formatCurrency)', () => {
+    expect(Object.keys(catalogFunctions).sort()).toEqual(['email', 'formatCurrency', 'ping', 'regex', 'required'])
   })
 
   it('each entry is the same function as the named export', () => {
@@ -109,6 +109,7 @@ describe('catalogFunctions — shared lookup table', () => {
     expect(catalogFunctions.email).toBe(email)
     expect(catalogFunctions.regex).toBe(regex)
     expect(catalogFunctions.ping).toBe(ping)
+    expect(catalogFunctions.formatCurrency).toBe(formatCurrency)
   })
 
   it('invoking via the registry produces the same result as a direct call', () => {
@@ -131,5 +132,48 @@ describe('ping', () => {
   it('returns true regardless of args passed (server-invoke path passes empty args object)', () => {
     // `call-function.ts` calls `impl(args ?? {})` — ping ignores the args object entirely.
     expect((ping as (args?: unknown) => boolean)({})).toBe(true)
+  })
+})
+
+// ── formatCurrency (ADR-0217) ───────────────────────────────────────────────────
+
+describe('formatCurrency — locale-correct money formatting, runtime-default locale', () => {
+  it('formats a whole USD amount with grouping + the currency symbol (the stat-model.test.ts en-US-runtime convention)', () => {
+    expect(formatCurrency({ value: 1299, currency: 'USD' })).toBe('$1,299.00')
+  })
+
+  it('formats a fractional EUR amount', () => {
+    expect(formatCurrency({ value: 42.5, currency: 'EUR' })).toBe('€42.50')
+  })
+
+  it('respects a currency\'s own fraction-digit lookup (JPY has none — Intl is the lookup, ADR-0038)', () => {
+    expect(formatCurrency({ value: 500, currency: 'JPY' })).toBe('¥500')
+  })
+
+  it('a non-finite value degrades to the em-dash placeholder (the stat-model.ts convention), regardless of currency', () => {
+    expect(formatCurrency({ value: Number.NaN, currency: 'USD' })).toBe('—')
+    expect(formatCurrency({ value: Number.POSITIVE_INFINITY, currency: 'USD' })).toBe('—')
+    expect(formatCurrency({ value: 'not-a-number', currency: 'USD' })).toBe('—')
+  })
+
+  it('an invalid/unknown currency code degrades to a plain default-locale number string — NOT a2ui-basic\'s String(value) posture (ADR-0217 cl.1)', () => {
+    expect(formatCurrency({ value: 1299, currency: 'NOT-A-CODE' })).toBe('1,299')
+  })
+
+  it('a missing/non-string currency degrades to a plain number string the same way', () => {
+    expect(formatCurrency({ value: 1299 })).toBe('1,299')
+    expect(formatCurrency({ value: 1299, currency: 42 })).toBe('1,299')
+    expect(formatCurrency({ value: 1299, currency: '' })).toBe('1,299')
+  })
+
+  it('carries no decimals/grouping args — Intl\'s own per-currency lookup and locale grouping are load-bearing, not re-admitted knobs', () => {
+    // BHD (Bahraini Dinar) has 3 fraction digits by ISO 4217 — proves the lookup, not a hardcoded 2.
+    expect(formatCurrency({ value: 1, currency: 'BHD' })).toContain('1.000')
+  })
+
+  it('reachable via the shared catalogFunctions registry, same result as a direct call', () => {
+    expect(catalogFunctions.formatCurrency({ value: 1299, currency: 'USD' })).toEqual(
+      formatCurrency({ value: 1299, currency: 'USD' }),
+    )
   })
 })
