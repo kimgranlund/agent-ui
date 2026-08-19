@@ -28,21 +28,43 @@ describe('pie-chart.css — structure + token hygiene', () => {
     for (const token of consumed) expect(declared, `${token} consumed in @scope but never declared in :where()`).toContain(token)
   })
 
-  it('declares the SIX-step single-family lightness ramp verbatim (ADR-0219 cl.4)', () => {
-    for (let i = 1; i <= 6; i++) {
-      expect(tokenBlock).toMatch(new RegExp(`--ui-pie-chart-slice-${i}-ink:`))
+  it('declares the SIX-step single-family lightness ramp — pairwise-distinct, strictly monotone primary TONE primitives per scheme via light-dark(), slice 1 brightest (ADR-0219 cl.4 + Amendment)', () => {
+    // The originally-named emphasis-role chain (-bright/-high/base/-dim/-low/-muted) resolves to only
+    // FOUR distinct colors and a lightness zigzag in the shipped estate (ADR-0219 Amendment) — the
+    // defaults must read tone primitives, split per scheme. Higher tone step = darker in this estate,
+    // so a strictly INCREASING step sequence = strictly monotone darker = slice 1 brightest.
+    const steps = Array.from({ length: 6 }, (_, i) => {
+      const m = tokenBlock.match(
+        new RegExp(
+          `--ui-pie-chart-slice-${i + 1}-ink:\\s*light-dark\\(var\\(--md-sys-color-primary-(\\d{3})\\),\\s*var\\(--md-sys-color-primary-(\\d{3})\\)\\)`,
+        ),
+      )
+      expect(m, `slice-${i + 1}-ink must be light-dark(primary tone primitive, primary tone primitive)`).not.toBeNull()
+      return { light: Number(m![1]), dark: Number(m![2]) }
+    })
+    for (const scheme of ['light', 'dark'] as const) {
+      const ladder = steps.map((s) => s[scheme])
+      expect(new Set(ladder).size, `${scheme}: the six steps must be pairwise distinct (${ladder.join(', ')})`).toBe(6)
+      for (let i = 1; i < ladder.length; i++) {
+        expect(ladder[i], `${scheme}: the ladder must be strictly monotone darker 1→6 (${ladder.join(', ')})`).toBeGreaterThan(ladder[i - 1])
+      }
     }
-    expect(tokenBlock).toMatch(/--ui-pie-chart-slice-1-ink:\s*var\(--md-sys-color-primary-bright\)/)
-    expect(tokenBlock).toMatch(/--ui-pie-chart-slice-2-ink:\s*var\(--md-sys-color-primary-high\)/)
-    expect(tokenBlock).toMatch(/--ui-pie-chart-slice-3-ink:\s*var\(--md-sys-color-primary\)/)
-    expect(tokenBlock).toMatch(/--ui-pie-chart-slice-4-ink:\s*var\(--md-sys-color-primary-dim\)/)
-    expect(tokenBlock).toMatch(/--ui-pie-chart-slice-5-ink:\s*var\(--md-sys-color-primary-low\)/)
-    expect(tokenBlock).toMatch(/--ui-pie-chart-slice-6-ink:\s*var\(--md-sys-color-primary-muted\)/)
+    // dark rides exactly one 100-step brighter than light (the estate's base-role convention, 550→450).
+    for (const s of steps) expect(s.light - s.dark).toBe(100)
   })
 
-  it('every --ui-pie-chart-* token declaration points at a role or a shared ramp token — no raw primitive', () => {
-    const bad = [...tokenBlock.matchAll(/--md-sys-color-[\w-]+/g)].map((m) => m[0]).filter((t) => /-\d{3}/.test(t))
-    expect(bad).toEqual([])
+  it('every --ui-pie-chart-* token declaration points at a role or a shared ramp token — the ONE ruled exception: the six slice inks read primary TONE primitives inside light-dark() (ADR-0219 cl.4 Amendment)', () => {
+    const decls = [...tokenBlock.matchAll(/(--ui-pie-chart-[\w-]+)\s*:([^;]*);/g)]
+    expect(decls.length).toBeGreaterThan(0) // anti-vacuous
+    const offenders = decls
+      .filter((m) => !/^--ui-pie-chart-slice-[1-6]-ink$/.test(m[1]) && /--md-sys-color-[\w-]*\d{3}/.test(m[2]))
+      .map((m) => m[1])
+    expect(offenders, 'raw tone primitives are legal ONLY in the six slice-ink defaults').toEqual([])
+    // and the slice inks never read a primitive OUTSIDE a light-dark() scheme split (no mode-blind default).
+    for (const m of decls) {
+      if (!/^--ui-pie-chart-slice-[1-6]-ink$/.test(m[1])) continue
+      expect(m[2].trim(), `${m[1]} must wrap its primitives in light-dark()`).toMatch(/^light-dark\(/)
+    }
   })
 
   it('the @scope styles block consumes ONLY --ui-pie-chart-* ∪ the shared --md-sys-* namespaces ∪ the row-scoped --_slice-ink hook — no cross-control reach', () => {

@@ -104,6 +104,50 @@ describe('ui-pie-chart — donut vs pie geometry (ADR-0219 cl.1/cl.6)', () => {
   })
 })
 
+describe('ui-pie-chart — the six RESOLVED slice fills are pairwise distinct AND monotone bright→dark in BOTH schemes (ADR-0219 cl.4 + Amendment)', () => {
+  // The Amendment's regression class: token NAMES can look like a ladder while two steps RESOLVE to the
+  // same color in one scheme (the original emphasis-role chain collapsed to four colors + a lightness
+  // zigzag). Only a real engine resolves light-dark() + the var() chain, so the proof lives here: mount
+  // six slices per scheme (the ui-stat wrapper colorScheme idiom) and assert on computed fills.
+
+  /** Perceived-lightness key of a computed color — oklch L directly, else cbrt(WCAG relative luminance)
+   *  from rgb()/color(srgb …). Throws on an unknown serialization: a silent skip would un-prove the ramp. */
+  const lightnessOf = (color: string): number => {
+    const ok = /^oklch\(\s*([\d.]+)(%?)/.exec(color)
+    if (ok) return ok[2] ? Number(ok[1]) / 100 : Number(ok[1])
+    const rgb = /^rgba?\(\s*([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)/.exec(color)
+    const srgb = /^color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)/.exec(color)
+    const m = rgb ?? srgb
+    if (!m) throw new Error(`unparseable computed slice fill: ${color}`)
+    const scale = rgb ? 255 : 1
+    const lin = [m[1], m[2], m[3]].map((c) => {
+      const v = Number(c) / scale
+      return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
+    })
+    return Math.cbrt(0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2])
+  }
+
+  const SIX = JSON.stringify(Array.from('abcdef', (label) => ({ label, value: 1 })))
+
+  for (const scheme of ['light', 'dark'] as const) {
+    it(`${scheme}: six slices resolve six pairwise-distinct fills, strictly darker 1→6 (slice 1 brightest)`, () => {
+      const wrap = document.createElement('div')
+      wrap.style.colorScheme = scheme // the ui-stat browser-test idiom — light-dark() re-resolves under the wrapper's scheme
+      wrap.innerHTML = `<ui-pie-chart data='${SIX}'></ui-pie-chart>`
+      document.body.append(wrap)
+      mounted.push(wrap)
+      const fills = [...wrap.querySelectorAll('[data-part="slice"]')].map((p) => getComputedStyle(p).fill)
+      expect(fills.length, `${scheme}: six data rows must render six slices`).toBe(6)
+      for (const fill of fills) expect(alphaOf(fill), `${scheme}: a slice resolved transparent (${fill})`).toBeGreaterThan(0)
+      expect(new Set(fills).size, `${scheme}: resolved fills must be pairwise distinct — got ${fills.join(' · ')}`).toBe(6)
+      const ladder = fills.map(lightnessOf)
+      for (let i = 1; i < ladder.length; i++) {
+        expect(ladder[i], `${scheme}: lightness must strictly DECREASE 1→6 (no zigzag) — got ${ladder.map((l) => l.toFixed(3)).join(' > ')}`).toBeLessThan(ladder[i - 1])
+      }
+    })
+  }
+})
+
 describe('ui-pie-chart — forced colors (ADR-0219 cl.7)', () => {
   it('forced-colors keeps slices + track visible in system inks; slice fill != track fill — Chromium emulates (CDP); WebKit asserts the baseline', async () => {
     const chart = mount('<ui-pie-chart data=\'[{"label":"a","value":10}]\'></ui-pie-chart>') as HTMLElement

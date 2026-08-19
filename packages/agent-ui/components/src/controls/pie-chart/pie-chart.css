@@ -35,13 +35,21 @@
   --ui-pie-chart-min-inline-size: 16em; /* the whole-shape floor (SPEC-R9 AC1 precedent) — never a collapsed sliver */
   --ui-pie-chart-ring-size: 8em; /* the ring's fixed box — density-invariant mark geometry (SPEC-R12) */
 
-  /* The single-family LIGHTNESS ramp (ADR-0219 cl.4) — bright -> high -> base -> dim -> low -> muted. */
-  --ui-pie-chart-slice-1-ink: var(--md-sys-color-primary-bright);
-  --ui-pie-chart-slice-2-ink: var(--md-sys-color-primary-high);
-  --ui-pie-chart-slice-3-ink: var(--md-sys-color-primary);
-  --ui-pie-chart-slice-4-ink: var(--md-sys-color-primary-dim);
-  --ui-pie-chart-slice-5-ink: var(--md-sys-color-primary-low);
-  --ui-pie-chart-slice-6-ink: var(--md-sys-color-primary-muted);
+  /* The single-family LIGHTNESS ramp (ADR-0219 cl.4 + Amendment) — six pairwise-DISTINCT, strictly
+     MONOTONE primary tone primitives per scheme, slice 1 always brightest. cl.4's originally-named
+     emphasis-role chain (-bright/-high/base/-dim/-low/-muted) resolves to only FOUR distinct colors and
+     a lightness zigzag in the shipped estate (light 350->650->550->650->350; dark 1≡2 and 4≡5 adjacent —
+     and -muted is a different HUE family), breaking cl.4's own CVD-ordering rationale. So the defaults
+     read the TONE primitives directly via light-dark() — dark rides one 100-step brighter than light,
+     the estate's base-role convention (550 light / 450 dark). The ONE ruled exception to the
+     roles-only token hygiene rule, pinned by pie-chart-css.test.ts; the six slice-{1..6}-ink NAMES stay
+     the stable consumer re-map seam. */
+  --ui-pie-chart-slice-1-ink: light-dark(var(--md-sys-color-primary-300), var(--md-sys-color-primary-200));
+  --ui-pie-chart-slice-2-ink: light-dark(var(--md-sys-color-primary-400), var(--md-sys-color-primary-300));
+  --ui-pie-chart-slice-3-ink: light-dark(var(--md-sys-color-primary-500), var(--md-sys-color-primary-400));
+  --ui-pie-chart-slice-4-ink: light-dark(var(--md-sys-color-primary-600), var(--md-sys-color-primary-500));
+  --ui-pie-chart-slice-5-ink: light-dark(var(--md-sys-color-primary-700), var(--md-sys-color-primary-600));
+  --ui-pie-chart-slice-6-ink: light-dark(var(--md-sys-color-primary-800), var(--md-sys-color-primary-700));
 
   --ui-pie-chart-separator-ink: var(--md-sys-color-neutral-surface); /* the constant-width stroke KEEPING adjacent slices distinct (cl.4) */
   --ui-pie-chart-separator-width: 1px; /* density-invariant, non-scaling-stroke */

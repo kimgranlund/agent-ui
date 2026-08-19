@@ -172,3 +172,21 @@ is met by construction, not waived.**
   "share of a budget not yet allocated" seed demands it.
 - **A new `@agent-ui/charts` package** — rejected, same reasoning as ADR-0107 clause 7: no
   vendored data mass, three small controls do not justify a layering-trip-wire widening.
+
+## Amendment — cl.4's emphasis-role chain resolves non-monotone/non-distinct; slice defaults repointed at the primary tone primitives (2026-08-19, checker corrective — GH #1397)
+
+Cl.4 named the ramp `--md-sys-color-primary-bright → -high → base → -dim → -low → -muted`. In the
+shipped token estate those are mode-RELATIVE emphasis roles, not a tone ladder: light resolves
+350→650→550→650→350 (slice 1≡5, slice 2≡4 — four distinct colors, a lightness ZIGZAG); dark resolves
+with slices 1≡2 and 4≡5 identical AND adjacent — and `-muted` is a separate cyan hue FAMILY
+(`--md-sys-color-primary-muted-*`), not a primary step at all. That breaks cl.4's own stated rationale
+("lightness order survives CVD … monotone with data order, first slice = brightest"). The build wave
+repointed the six `--ui-pie-chart-slice-{1..6}-ink` DEFAULTS at six pairwise-distinct, strictly
+monotone primary TONE primitives per scheme via `light-dark()` — light `primary-300/400/500/600/700/800`,
+dark `primary-200/300/400/500/600/700` (dark one 100-step brighter, the estate's base-role convention,
+550→450) — honoring cl.4's monotone-distinct intent by mechanics. The token NAMES (the consumer re-map
+seam), the separator/track/text roles, the forced-colors arm, and every other clause are unchanged; no
+`@agent-ui/shared` token was added (the categorical palette family stays the cl.8 LATER intake).
+Pinned by `pie-chart-css.test.ts` (the declared ladder + the ruled primitive-exception hygiene carve-out)
+and `pie-chart.browser.test.ts` (six RESOLVED fills pairwise distinct + strictly darker 1→6 in BOTH
+schemes, both engines).
