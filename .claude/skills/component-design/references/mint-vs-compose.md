@@ -2,11 +2,13 @@
 
 Decision records: ADR-0175 (the multi-select/association field intake — the aggregate-value
 test), ADR-0201 (the composed-pattern-retired-by-a-mint case study), ADR-0107 → ADR-0205 (the
-smallest-floor scoping test for admitting a new category). Read this at fork-sheet step 6
-(component-design's "decide what the change earns") whenever the candidate value is an ARRAY or
-aggregate, not a scalar — a plain new-control-vs-compose call is already covered by step 2's
-precedent sweep; this reference is for the narrower, recurring aggregate-value question — plus
-the two later sections whenever a SHIPPED composition pattern is a mint candidate, or a mint
+smallest-floor scoping test for admitting a new category), ADR-0220 (the TYPE arm —
+semantics+behavior inexpressible — coined there, backfilled here per GH #1430). Read this at
+fork-sheet step 6 (component-design's "decide what the change earns") whenever the candidate
+value is an ARRAY or aggregate, not a scalar — a plain new-control-vs-compose call is already
+covered by step 2's precedent sweep; this reference is for the narrower, recurring
+aggregate-value question — plus the later sections whenever a candidate is a real TYPE vs.
+display chrome (the TYPE arm), a SHIPPED composition pattern is a mint candidate, or a mint
 opens a whole new category whose scope must be floored.
 
 ## The bar: does the case need ONE bindable aggregate value?
@@ -92,6 +94,35 @@ aggregate-value bar, and fence the harder case out as its own future intake expl
 it would still need. A "seen from another angle, not a second hole" framing is true only as a
 necessary-prerequisite claim, never automatically a sufficiency claim — verify which one applies
 before treating the narrower mint as having closed the bigger question too.
+
+## The TYPE arm: semantics+behavior inexpressible, not a teaching gap (ADR-0220)
+
+Origin: ADR-0220 (`ui-choice-group` + `ui-choice-card`, GH #1368) — the arm was coined in that
+record's Context and Proposed-by, then cited back to this reference by ADR-0222 and ADR-0224
+before it lived here; this section backfills it (GH #1430) with ADR-0220's wording and adds no
+new rule.
+
+The TYPE arm asks whether the candidate is a real A2UI/component TYPE — carrying its own value,
+state, or event that no shipped type can carry — or merely display chrome a producer can already
+compose. A candidate is **mint-earned on the TYPE arm when semantics+behavior are
+inexpressible** with the shipped catalog — i.e. the gap is not a teaching gap (a missing corpus
+seed or prompt-inventory pattern) but an absence of any element to hang the semantics on. The
+bar is PRD §8 clause 1's own ("new types are minted only when composition is provably
+impossible"), met by an analysis of the shipped rows, not by assertion.
+
+ADR-0220's worked finding: an agent can render three beautiful `Card`s
+today; it cannot receive a committed choice from them through the data model — `Card` carries no
+selected state and no value mark, `List`/`Grid` carry no value mark, `RadioGroup`/
+`SegmentedControl` are label-grade, `Table.selectable` is row-grade over textual cells; there is
+no element to hang a committed rich-card choice on. That is semantics+behavior inexpressible, so
+the TYPE arm is met.
+
+The arm fails on its face when the candidate type would be an alias of a shipped row — ADR-0222
+declined a `Map` catalog type because a `Map` whose renderer is `ui-image` plus a URL template is
+an `Image` alias (the remedy there is teaching — a corpus seed + prompt-inventory pattern — not
+minting). ADR-0224 is the other worked pass (a status-tinted accent edge with no composition
+vehicle at all in the container family). The "minting is cheap when it is" check above applies
+to a TYPE-arm pass verbatim, as it did in ADR-0220.
 
 ## Case study: when a COMPOSED grammar pattern earns a mint after all (ADR-0201)
 

@@ -103,7 +103,8 @@ Load the map skills as you go: [[component-standards]] (law),
    never may; Kim's no-index-file rule, `doc-standards` §1b). If the fork sheet's Props row lands on an
    array/aggregate value (not a scalar), run `references/mint-vs-compose.md`'s bindable-aggregate
    bar before defaulting to composition — it names exactly when that case earns a new primitive
-   (ADR-0175).
+   (ADR-0175); for any new-catalog-TYPE candidate, run the same reference's TYPE arm
+   (semantics+behavior inexpressible vs. a teaching gap — ADR-0220).
 
 7. **Decompose + test plan.** A decomposition (break-down-problem where installed;
    `coverage_check.py --strict` clean) whose leaf accept-criteria cite the
