@@ -7,6 +7,11 @@
 // SPECIFIC mechanic the B1 carve-out exists for: a scene swap disposes the earlier scene's component
 // records, but the bound data-model paths under `/draft/*` survive untouched, so the re-mounted control
 // reads back what the user already chose).
+//
+// Shape repaired 2026-08-18 (GH #1262 rulings pass, #1320's grammar.md CardFooter clause): the seed's
+// nav Buttons moved off a loose scene Row into their own CardFooter ("ft"), and the Card moved off root
+// ("root" is now the stable wrapper Column, "card" the non-root Card) — this file's ids/assertions were
+// updated in the SAME repair to match, per the clause's card-anatomy-on-every-step requirement.
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 import { createRenderer } from '../renderer/renderer.ts'
@@ -128,11 +133,11 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
     mount.remove()
   })
 
-  it('the receipt rows land via a targeted /draft/rows write, and the confirm scene resends "scene" alone', () => {
+  it('the receipt rows land via a targeted /draft/rows write, and the confirm scene resends "scene" + "ft" together', () => {
     expect(MSG_SET_ROWS).toMatchObject({ updateDataModel: { path: '/draft/rows' } })
     expect(MSG_SCENE_CONFIRM).toMatchObject({ updateComponents: {} })
     const ids = 'updateComponents' in MSG_SCENE_CONFIRM! ? MSG_SCENE_CONFIRM.updateComponents.components.map((c) => c.id) : []
-    expect(ids).toEqual(['scene', 'rcpt', 'nav3', 'back3', 'commit'])
+    expect(ids).toEqual(['scene', 'rcpt', 'ft', 'back3', 'commit'])
   })
 
   it('confirm scene: the receipt passes the receipt-clause shape — a DescriptionList of humanized label/value rows', async () => {
@@ -157,8 +162,11 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
     expect(values).toEqual(['21–24 Aug · 3 nights', 'Deluxe King · €240/night'])
 
     // the flow-final commit Button is present, alongside a ghost Back — the confirm-before-concluding
-    // law (grammar.md) still lets the user go back and amend even at the last scene.
-    const buttons = [...mount.querySelectorAll('ui-button')].map((b) => b.textContent?.trim())
+    // law (grammar.md) still lets the user go back and amend even at the last scene. Both ride the
+    // CardFooter, never loose in the scene (the CardFooter clause this repair enforces).
+    const footer = mount.querySelector('ui-card-footer')
+    expect(footer, 'the confirm scene\'s nav Buttons must ride a CardFooter').not.toBeNull()
+    const buttons = [...footer!.querySelectorAll('ui-button')].map((b) => b.textContent?.trim())
     expect(buttons).toEqual(['Back', 'Confirm booking'])
 
     r.dispose()
@@ -178,9 +186,29 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
     }
   })
 
-  it('root is delivered exactly once — every later structural turn resends "scene" (or its receipt), never "root"', () => {
+  it('root/card/ct are delivered exactly once — every later structural turn resends "scene" and "ft" together, never root (the CardFooter clause, grammar.md)', () => {
     const componentIds = backableWizardSeed.messages.flatMap((m) => ('updateComponents' in m ? m.updateComponents.components.map((c) => c.id) : []))
     expect(componentIds.filter((id) => id === 'root')).toHaveLength(1)
-    expect(componentIds.filter((id) => id === 'shell')).toHaveLength(1)
+    expect(componentIds.filter((id) => id === 'card')).toHaveLength(1)
+    expect(componentIds.filter((id) => id === 'ct')).toHaveLength(1)
+    // "ft" (the CardFooter) is resent alongside "scene" on every structural turn whose buttons change —
+    // more than once, unlike the stable root/card/ct spine above.
+    expect(componentIds.filter((id) => id === 'ft').length).toBeGreaterThan(1)
+  })
+
+  it('a Card frames the flow (non-root, under the stable wrapper), and its nav Buttons never sit loose in the scene', () => {
+    for (const m of backableWizardSeed.messages) {
+      if (!('updateComponents' in m)) continue
+      for (const c of m.updateComponents.components) {
+        if (c.id === 'scene') {
+          // "scene"'s own children are always the substantive content ids (cal/rooms/rcpt), never a
+          // nav Button id — the loose-Row-in-scene shape this repair removes.
+          const children = 'children' in c && Array.isArray(c.children) ? c.children : []
+          expect(children).not.toContain('nav1')
+          expect(children).not.toContain('nav2')
+          expect(children).not.toContain('nav3')
+        }
+      }
+    }
   })
 })
