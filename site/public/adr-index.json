@@ -1447,5 +1447,19 @@
     "description": "External Claude-skill repos as opt-in pack-library sources: a dev-time import CLI snapshots skills/*/SKILL.md into a provenance-stamped skill-pack file, the ad…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0213",
+    "url": "./adr-index.html#adr-0213",
+    "description": "A2UI Suggestions — one-shot follow-up chips as ONE data-prop leaf (mint a new type + control; NOT a Row-of-Buttons composition, NOT a Button widening, and NO p…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0214",
+    "url": "./adr-index.html#adr-0214",
+    "description": "A2UI SourceList — source attribution as ONE hardened data-prop leaf (mint; the source-card list ships, the in-prose citation marker is structurally out of reac…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
