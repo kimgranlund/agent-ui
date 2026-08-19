@@ -371,6 +371,22 @@ describe('default catalog — conformance (SPEC-R7/R9)', () => {
     expect(validateCatalogConformance(node, defaultCatalog)).toEqual([])
   })
 
+  it('Button.action declares `submit` in the object schema (GH #1343 — the shelf + P5 idiom), and a submit-flagged action conforms', () => {
+    // The action-object schema is the wire contract of record for the P5 submit idiom (SPEC §5.1,
+    // ADR-0054): {action, context?, wantResponse?, submit?}. The validator's object check is
+    // deliberately shallow (conformance.ts — no object-shape descent), so this pins BOTH halves:
+    // the declaration exists, and a submit-flagged action stays conformant if the schema ever tightens.
+    const schema = defaultCatalog.components.Button.properties.action?.type as { properties?: Record<string, unknown> }
+    expect(schema.properties?.submit).toEqual({ type: 'boolean' })
+    const node: A2uiComponent = {
+      id: 'save',
+      component: 'Button',
+      label: 'Save',
+      action: { action: 'submit_form', context: { form: 'profile' }, wantResponse: true, submit: true },
+    }
+    expect(validateCatalogConformance(node, defaultCatalog)).toEqual([])
+  })
+
   it('accepts a {path} binding for a bindable prop (selected / open / value)', () => {
     const tabs: A2uiComponent = { id: 'tb', component: 'Tabs', selected: { path: '/active' } }
     const modal: A2uiComponent = { id: 'md', component: 'Modal', open: { path: '/shown' } }

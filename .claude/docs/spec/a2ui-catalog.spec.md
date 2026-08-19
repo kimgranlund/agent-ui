@@ -135,9 +135,12 @@ interface FunctionDef { args: Record<string, JSONSchema>; returns: JSONSchema;  
 //   // `action` = the action NAME (required); `submit` is CLIENT-consumed only (ADR-0054) — it gates
 //   // the click on the nearest `submitGate` ancestor and NEVER reaches the emitted wire `action` message.
 // PropDef.type carries this as the object schema { type: 'object', properties: { action, context,
-// wantResponse }, required: ['action'] }; the renderer's tolerant reader keeps `name`/bare-string
-// fallbacks (Postel), so the declaration stays open (no additionalProperties: false) — `submit` needs
-// no catalog.json edit, the open schema already tolerates it (ADR-0054 clause 1).
+// wantResponse, submit }, required: ['action'] }; the renderer's tolerant reader keeps `name`/bare-string
+// fallbacks (Postel), so the declaration stays open (no additionalProperties: false). `submit` is
+// DECLARED in catalog.json since GH #1343 (the shelf + a2ui-payload.md P5 both teach `action.submit`,
+// so the contract of record names it rather than riding open-schema tolerance alone); the validator's
+// deliberately shallow object check (conformance.ts `matchesSchemaType` — no object-shape descent)
+// derives nothing from it either way (ADR-0054 clause 1's tolerance is unchanged).
 
 interface WidgetFactory {                                  // consumed by renderer SPEC-R9 / LLD-C7
   tag: string;                                             // e.g. "ui-button"

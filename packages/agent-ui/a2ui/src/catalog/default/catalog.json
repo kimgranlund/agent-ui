@@ -23,7 +23,8 @@
             "properties": {
               "action": { "type": "string" },
               "context": { "type": "object" },
-              "wantResponse": { "type": "boolean" }
+              "wantResponse": { "type": "boolean" },
+              "submit": { "type": "boolean" }
             },
             "required": ["action"]
           },
