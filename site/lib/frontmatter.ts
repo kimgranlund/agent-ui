@@ -44,6 +44,8 @@ import radioGroupMd from '../../packages/agent-ui/components/src/controls/radio/
 // ui-choice-card option unit (tier=container ⇒ {doc,demo} each).
 import choiceGroupMd from '../../packages/agent-ui/components/src/controls/choice-group/choice-group.md?raw'
 import choiceCardMd from '../../packages/agent-ui/components/src/controls/choice-card/choice-card.md?raw'
+// ADR-0224 (GH #1429) — ui-service-card, the availability-stated service/agent launch card (tier=pattern ⇒ {doc,demo}).
+import serviceCardMd from '../../packages/agent-ui/components/src/controls/service-card/service-card.md?raw'
 // ADR-0095 (supersedes ADR-0086): the standalone segmented control + its child leaf.
 import segmentMd from '../../packages/agent-ui/components/src/controls/segment/segment.md?raw'
 import segmentedControlMd from '../../packages/agent-ui/components/src/controls/segmented-control/segmented-control.md?raw'
@@ -188,6 +190,8 @@ export const loadRadioGroupDoc = (): ComponentDoc => parseDoc(radioGroupMd)
 // ADR-0220 — the `choice` family.
 export const loadChoiceGroupDoc = (): ComponentDoc => parseDoc(choiceGroupMd)
 export const loadChoiceCardDoc = (): ComponentDoc => parseDoc(choiceCardMd)
+// ADR-0224 — ui-service-card, the availability-stated service/agent launch card.
+export const loadServiceCardDoc = (): ComponentDoc => parseDoc(serviceCardMd)
 // ADR-0095 (supersedes ADR-0086): the standalone segmented control + its child leaf.
 export const loadSegmentDoc = (): ComponentDoc => parseDoc(segmentMd)
 export const loadSegmentedControlDoc = (): ComponentDoc => parseDoc(segmentedControlMd)

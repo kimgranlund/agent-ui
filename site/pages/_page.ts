@@ -268,6 +268,14 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // ADR-0224 (GH #1429) — the availability-stated service/agent launch card (tier=pattern ⇒ {doc, demo}).
+    label: 'ui-service-card',
+    links: [
+      { href: './service-card-demo.html', label: 'Demo' },
+      { href: './service-card-doc.html', label: 'API' },
+    ],
+  },
+  {
     // ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover): the standalone
     // segmented control + its child leaf — tag-labelled, same as every other per-component group.
     label: 'ui-segment',
