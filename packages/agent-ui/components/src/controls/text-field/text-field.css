@@ -93,7 +93,7 @@
 
   /* Size-INVARIANT frame quantities — declared ONCE in the base block (NOT in the per-[size] blocks below): */
   --ui-text-field-radius: var(--md-sys-shape-corner-base); /* fixed --md-sys-shape-corner-base rounded-rect — the container-fleet referent an ENTRY control takes (NOT the action family's h/2 pill); overridable per-field; ADR-0015 cl.5 / #71 amendment. */
-  --ui-text-field-min-inline-size: 20ch; /* the host typing-width floor (entry-control frame-law leg, ADR-0021) — ch is font-relative so one ~20ch already scales with --ui-text-field-font across [size]; native <input size> parity so a bare field is hittable (width above the floor is the layout's job). */
+  --ui-text-field-min-inline-size: 20ch; /* the [inline] hug-state typing-width floor (ADR-0223 clause 3(b), superseding ADR-0021's default-state placement) — ch is font-relative so one ~20ch already scales with --ui-text-field-font across [size]; native <input size> parity so a hugging field is hittable. The FILL default needs no floor: the container is the floor. Token name + default unchanged (the GH #1407 overrides keep working). */
 
   /* Visible inline-validation message tokens (ADR-0029 A1 — extends ADR-0014): the .ui-text-field-message
      node (control-managed, aria-describedby target) becomes VISIBLE when non-empty under :state(user-invalid).
@@ -137,19 +137,16 @@
 
 @scope (ui-text-field) {
   :scope {
-    display: inline-grid;
+    /* FILL BY DEFAULT (ADR-0223 cl.1/2 — the slice-0 pilot): the host is BLOCK-level `grid` and stretches to
+       the parent's inline space; NO intrinsic width in the default state. The ADR-0021 20ch typing-width floor
+       is NOT deleted — it moves to the `[inline]` hug leg below (clause 3(b)): in fill posture the container
+       IS the floor, so a bare block-flow field can never collapse to the ~0 typing sliver the s11 smoke caught. */
+    display: grid;
     grid-template-columns: 1fr; /* bare editor — slotless */
     align-items: center;
     box-sizing: border-box;
 
     block-size: var(--ui-text-field-height); /* the vertical lever — geometry.md (Control class) */
-    /* the host typing-width floor (the entry-control leg of the frame-law min-inline-size, ADR-0021 — the sibling
-       of button's action-control square floor) so a BARE, unsized field is hittable instead of collapsing its 1fr
-       editor cell to a ~0-width typing target (the box keeps only its ~30px padding+border chrome). Width ABOVE the floor stays the layout's / author's job (a flex/grid
-       track or an explicit inline-size grows it; --ui-text-field-min-inline-size is the per-field / theme override).
-       COMPLEMENTARY to the editor cell's `min-inline-size: 0` below: that lets long text scroll WITHIN the field,
-       this holds the box open. */
-    min-inline-size: var(--ui-text-field-min-inline-size);
     padding-block: 0; /* NEVER block-padding */
     padding-inline: calc(var(--ui-text-field-height) / 2); /* slotless value edge = h/2 */
 
@@ -166,6 +163,18 @@
     border: 1px solid var(--ui-text-field-border);
     border-radius: var(--ui-text-field-radius);
     cursor: text;
+  }
+
+  /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): a single reflected boolean flips BOTH display
+     level (inline-grid) and sizing posture (hug, with the clause 3(b) content floor active). The ADR-0021
+     typing-width floor lives HERE now — the degenerate hug context is exactly where the ~0-width collapse
+     lived, so the floor guards the state that needs it (token + default unchanged; per-field/theme override
+     via --ui-text-field-min-inline-size as before). No `hug` attribute, no block-but-hugging state — an
+     explicit inline-size is the consumer's tool for that. COMPLEMENTARY to the editor cell's
+     `min-inline-size: 0`: that lets long text scroll WITHIN the field, this holds the hugging box open. */
+  :scope[inline] {
+    display: inline-grid;
+    min-inline-size: var(--ui-text-field-min-inline-size);
   }
 
   /* Anatomy (references/anatomy.md — ADR-0006 extended by ADR-0012): host-as-grid with three POSITION regions —

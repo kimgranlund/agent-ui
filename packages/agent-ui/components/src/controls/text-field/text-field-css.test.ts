@@ -214,7 +214,15 @@ describe('text-field.css — the :focus-within ring-only focus, transparent bord
 // ── Anatomy + placeholder + motion + forced-colors ───────────────────────────────────────────────────────
 describe('text-field.css — anatomy, placeholder, motion, forced-colors', () => {
   it('host-as-grid: a presence-driven :has() grid + the density-bearing column-gap; the editor is order-placed', () => {
-    expect(stylesBlock).toMatch(/display:\s*inline-grid/)
+    // ADR-0223 (Fill by Default, slice-0 pilot): the DEFAULT host is BLOCK-level `grid` (fill posture, no
+    // intrinsic width); `inline-grid` + the 20ch floor live ONLY in the `[inline]` hug leg.
+    expect(stylesBlock).toMatch(/:scope\s*\{[^}]*display:\s*grid/)
+    expect(stylesBlock).not.toMatch(/:scope\s*\{[^}]*display:\s*inline-grid/) // the default never goes inline-level
+    expect(stylesBlock).not.toMatch(/:scope\s*\{[^}]*min-inline-size/) // the fill default carries NO floor — the container is the floor
+    const inlineLeg = stylesBlock.match(/:scope\[inline\]\s*\{([^}]*)\}/)
+    expect(inlineLeg, 'the :scope[inline] hug leg is missing (ADR-0223 cl.2)').not.toBeNull()
+    expect((inlineLeg as RegExpMatchArray)[1]).toMatch(/display:\s*inline-grid/)
+    expect((inlineLeg as RegExpMatchArray)[1]).toMatch(/min-inline-size:\s*var\(--ui-text-field-min-inline-size\)/)
     expect(stylesBlock).toMatch(/:scope:has\(>\s*\[slot='leading'\]\)/)
     expect(stylesBlock).toMatch(/:scope:has\(>\s*\[slot='trailing'\]\)/)
     expect(stylesBlock).toMatch(/column-gap:\s*var\(--ui-text-field-gap\)/) // the gap rides --md-sys-density

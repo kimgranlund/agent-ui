@@ -23,10 +23,10 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
 import '@agent-ui/components/components'
 
-// A realistic author width. ui-text-field has NO intrinsic width — it is `inline-grid` with a `1fr` editor
-// cell, so an empty, unplaceholdered field collapses the editor to ~0px (no content to size the 1fr column).
-// Real usage sizes the field (an author width, or the G7 ui-field wrapper); a real engine's pointer hit-test
-// then has an editor to land on. (The height geometry law is width-independent — see the geometry smoke.)
+// A realistic author width. ui-text-field FILLS by default (block-level grid, ADR-0223 — the slice-0
+// pilot) and hugs only under `[inline]`; an explicit author width here keeps every state assertion
+// independent of the mount container's width. (The height geometry law is width-independent — see the
+// geometry smoke; the two-posture leg lives there too.)
 const SIZED = 'style="inline-size: 220px"'
 
 // ── mount/cleanup ──────────────────────────────────────────────────────────────────────────────────────

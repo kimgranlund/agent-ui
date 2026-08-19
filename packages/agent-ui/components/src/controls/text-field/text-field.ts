@@ -141,6 +141,9 @@ const props = {
   // to JS-set values; 'text' is the identity config (byte-identical to the pre-Wave-3 shipped control).
   type: { ...prop.enum(['text', 'email', 'url', 'tel', 'password', 'search', 'number', 'currency', 'unit', 'percent', 'date', 'time', 'color'] as const, 'text'), reflect: true },
   readonly: { ...prop.boolean(false), reflect: true },
+  // ADR-0223 (Fill by Default, slice-0 pilot) — the ONE sizing opt-out, fleet-shared name: reflects so the
+  // `:scope[inline]` CSS leg (inline-level display + hug posture with the 20ch floor) applies to JS-set values.
+  inline: { ...prop.boolean(false), reflect: true },
   // Wave 5A — the five new numeric-type props (ADR-0047). All reflected for native attribute-IDL parity.
   // Reading this.currency / this.unit inside the type-effect's currency/unit branch makes the effect reactive
   // ONLY for currency/unit types — a plain field never reads them, never re-runs (the kernel's tracking law).
