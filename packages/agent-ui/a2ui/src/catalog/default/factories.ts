@@ -1234,6 +1234,30 @@ export const toggleFactory: WidgetFactory = {
   },
 }
 
+/**
+ * `ServiceCard` → `ui-service-card` (ADR-0224, GH #1429 — clause 8's wire arm, ratified: "mint the
+ * `ServiceCard` catalog row AT v1"). `name`/`path`/`description`/`available`/`actionLabel` are ALL 1:1
+ * reflecting accessors (verified against `service-card.ts` `static props`) — a plain `accessorFactory`,
+ * no bespoke mapping. `available` is the ONE bindable prop (the §5.2 row's own emphasis: "bindable
+ * `available` — the ONE law-carrying axis" / cl.8: "one bound `available` per card is the row's whole
+ * payoff") — `name`/`path`/`description`/`actionLabel` are set-once per-card identity, not re-derived at
+ * runtime, so they carry no `bindable` mark (the `PieChart.variant` non-bindable-axis precedent). No
+ * `value` mark (not an input — nothing commits back) and no `children` key (cl.3/§5.2: the interior is
+ * component-rendered from hardened props, not an agent-composed `ChildList`; the `menu` slot is app
+ * chrome, never wire surface, the `Toggle.icon`/`state-icon` slot precedent).
+ *
+ * **The action DOM event is NOT catalog-reachable this pass — the `Drill` Fork D2 precedent, verified
+ * not assumed.** `ui-service-card` emits a real `action` CustomEvent on Open (component cl.7), but the
+ * §5.2 row's "Data props" enumeration deliberately does NOT include an `action`-shaped wire prop (unlike
+ * `Button`/`Suggestions`, whose `mapsTo:'action'` prop supplies the ADR-0011 `{action,context,
+ * wantResponse,submit}` object the renderer's `#wireAction` needs to dispatch a click as an A2UI
+ * action) — so no catalog property here maps to `'action'`, and the renderer's `#actionPropsOf` finds
+ * none for this type: an Open click fires the component event but nothing round-trips to the server
+ * (§5.2: "one-way; no value mark — nothing round-trips"), exactly as drafted. A wire action-dispatch
+ * for Open is a later intake (an additive `action` prop, the `Suggestions` shape), not this row's.
+ */
+export const serviceCardFactory: WidgetFactory = accessorFactory('ui-service-card')
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -1314,4 +1338,5 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Drill: drillFactory,
   DrillPanel: drillPanelFactory,
   Toggle: toggleFactory,
+  ServiceCard: serviceCardFactory,
 }

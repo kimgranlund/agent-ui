@@ -326,6 +326,14 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   PieChart: { label: 'Marketing budget by channel' },
   ChoiceGroup: { value: 'deluxe', label: 'Choose a room' },
   ChoiceCard: { value: 'deluxe' },
+  // ServiceCard (ADR-0224, GH #1429) — the catalog carries no per-prop defaults, and `available` defaults
+  // true only via the CONTROL's own self-reflect-on-connect guard (service-card.ts's file banner); an
+  // unseeded specimen still paints (name/path/description all render "no box" when empty, cl.2), but an
+  // eval-catalog knob edit→revert on `available` has no explicit static value to revert TO, so the round
+  // trip cannot tell "reverted" from "never set" (C2). Seeding the whole v1 prop surface explicitly —
+  // mirroring the descriptor's own worked example (service-card.md) — fixes both: a legible specimen (A3)
+  // and a stable revert target (C2).
+  ServiceCard: { name: 'Claims Agent', path: '/claims-agent-service', description: 'Handles first-notice-of-loss intake and triage.', available: 'true', actionLabel: 'Open' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */

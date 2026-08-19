@@ -148,6 +148,11 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   MenuItem: 'PATTERN',
   Modal: 'PATTERN',
   Popover: 'PATTERN',
+  // ServiceCard (ADR-0224, GH #1429): the availability-stated service/agent launch card — a composite,
+  // multi-part construct (title+path+description+status dot+action+optional menu slot), the SAME
+  // Drill/Tabs/Split "composite, multi-part" class this section names, not a WIDGET display leaf: it
+  // carries a real interactive action affordance (Open⟷Unavailable) plus an app-composed overflow slot.
+  ServiceCard: 'PATTERN',
   Split: 'PATTERN',
   SplitPane: 'PATTERN',
   Swiper: 'PATTERN',

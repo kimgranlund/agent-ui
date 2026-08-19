@@ -138,7 +138,11 @@ export interface FeedExclusion {
  * `checked` back — a press inside an ask would flip the pill with no way for the agent to ever learn
  * the outcome, the exact dishonesty this partition exists to keep out] + the 2026-08-19 nine-ADR
  * campaign's one: `PieChart` [ADR-0219 — the chart family's fourth member, the same display-only/
- * no-value-mark reasoning as Sparkline/BarChart/LineChart]).
+ * no-value-mark reasoning as Sparkline/BarChart/LineChart]) + the ADR-0224 ServiceCard wave's one:
+ * `ServiceCard` [ADR-0224, GH #1429 — a gateway service-list card is report/canvas-scale content (the
+ * Stat/Table dashboard-idiom reasoning), and its Open action does not round-trip to the server this pass
+ * (the Drill Fork D2 precedent verbatim — no catalog `action` prop maps to it, factories.ts); `available`
+ * binds forward only, so an ask embedding this card could never learn what a click resolved to].
  * Composite-closure note: a composite's children are excluded ALONGSIDE their parent for the SAME
  * reason (Tab/TabPanel with Tabs; MenuItem with Menu) — `feed-catalog.test.ts` asserts this closure
  * holds, both here and for the IN composites (RadioGroup/Radio, SegmentedControl/Segment, Card/its
@@ -302,6 +306,11 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
     type: 'Toggle',
     reason:
       'no value mark at all (GH #1352, ADR-0179 GH #686 Amendment S7-a, Fork T1 — the toggleFactory doc comment) — worse than the already-excluded Switch, which at least commits `checked` back on press. Pressing a Toggle inside an ask would flip its own local paint with no way for the agent to ever learn the outcome; an ask is commit-gated by definition, and this control has nothing to commit.',
+  },
+  {
+    type: 'ServiceCard',
+    reason:
+      'report/dashboard content, not an ask affordance (ADR-0224, GH #1429) — a gateway service-list card is canvas-scale report content, the Stat/Table/chart-family reasoning applied to an availability-stated launch card; its Open action does not round-trip to the server this pass (the Drill Fork D2 precedent verbatim — no catalog `action` prop maps to it, serviceCardFactory doc comment), and `available` binds forward only, so an ask embedding this card could never learn what a click resolved to.',
   },
 ] as const
 

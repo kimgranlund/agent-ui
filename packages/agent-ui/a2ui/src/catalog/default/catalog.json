@@ -903,6 +903,16 @@
         "size": { "type": { "type": "string", "enum": ["sm", "md", "lg"] }, "mapsTo": "size" },
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" }
       }
+    },
+
+    "ServiceCard": {
+      "properties": {
+        "name": { "type": { "type": "string" }, "mapsTo": "name" },
+        "path": { "type": { "type": "string" }, "mapsTo": "path" },
+        "description": { "type": { "type": "string" }, "mapsTo": "description" },
+        "available": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "available" },
+        "actionLabel": { "type": { "type": "string" }, "mapsTo": "actionLabel" }
+      }
     }
   },
 

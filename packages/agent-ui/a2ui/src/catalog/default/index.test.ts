@@ -162,7 +162,10 @@ function fleetPrimaryTypes(): string[] {
  *  (ADR-0220, one control-mint wave, two rows). The catalog-integration lane (`adr-campaign-catalog-
  *  integration`) DRAINED all seven — their catalog rows + factories now exist (this file's residue guard
  *  would fail if they were left in place), the same way the report/content/feed/token-surface/color-picker
- *  seeds above were drained. */
+ *  seeds above were drained. ADR-0224 (GH #1429, `ui-service-card`) re-seeded this SAME shape at S1
+ *  (control minted ahead of its clause-8 catalog-row-vs-exclusion disposition, RECOMMENDED-not-decided at
+ *  ratification) — this S3 wave lands the `ServiceCard` row + factory (clause 8 ratified) and DRAINS that
+ *  seed too, the same way every wave above was drained. */
 //
 // `ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel`/`CommandModal` are
 // the only PERMANENT entries — NOT catalogue-bound AT ALL (app-surface/theming/live-streaming/chrome-anchor
@@ -209,15 +212,6 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'is host-page-only (security inversion, PRD-D2); the ADR-0112 cl.6 Toast/ToastRegion reasoning applied ' +
     'verbatim — a one-time-code entry is the credential-bearing element of the identity family\'s Codes ' +
     'mode (code-entry-control.lld.md §9, GH #490 S2-a).'],
-  // ADR-0224 (GH #1429) — ui-service-card, the availability-stated launch card. TEMPORARY seed, the
-  // FileDrop/SourceList/Suggestions/Rating/PieChart/ChoiceGroup/ChoiceCard "shipped ahead of its catalog
-  // row" precedent (above): S1 (this control) landed in this wave; the ADR's own clause 8 (the
-  // ServiceCard catalog-row-vs-permanent-exclusion question) was left RECOMMENDED-not-decided at
-  // ratification (the bare "ratify ADR-0224" utterance carries no clause-8 ruling) — S3 (the wire-arm
-  // slice) is a SEPARATE, coordinated lane the ADR itself fences off from S1. This seed drains the moment
-  // that lane lands the ServiceCard catalog row + factory (clause 8 ratified) OR is promoted to a
-  // PERMANENT entry with its own citation (clause 8 declined) — never left as silent residue.
-  ['ServiceCard', 'ADR-0224 / GH #1429 — TEMPORARY: control minted ahead of its catalog-row-vs-exclusion disposition (clause 8, unresolved at ratification); S3 drains this entry or promotes it to permanent, per Kim\'s ruling.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists
@@ -1904,5 +1898,93 @@ describe('default catalog — Drill/DrillPanel via the shared validator (GH #135
     // No commit-back exists — nothing to assert past "installInputBinding installed no listener",
     // proven implicitly by the no-op factory.value check above (the toggleFactory precedent).
     expect(defaultFactories.Drill.value).toBeUndefined()
+  })
+})
+
+// ── ADR-0224 (GH #1429) — the ServiceCard row (clause 8's wire arm, ratified) ───────────────────────────
+//
+// Drains the EXCLUSION_ALLOWLIST's TEMPORARY 'ServiceCard' seed (above, S1's build). `name`/`path`/
+// `description`/`actionLabel` are set-once identity props (NOT bindable — see the `serviceCardFactory`
+// doc comment, factories.ts); `available` is the ONE bindable prop, the availability law's law-carrying
+// axis. No `value` mark (not an input) and no `children` key (component-rendered interior, the `menu`
+// slot is app chrome). No catalog `action` prop maps to the component's own `action` DOM event this pass
+// (the Drill Fork D2 precedent) — an Open click fires locally but nothing round-trips to the server.
+describe('default catalog — ServiceCard via the shared validator (ADR-0224, GH #1429)', () => {
+  it('a representative ServiceCard payload validates 0 failures via validateA2ui', () => {
+    const message = {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          {
+            id: 'root',
+            component: 'ServiceCard',
+            name: 'Claims Agent',
+            path: '/claims-agent-service',
+            description: 'Handles claims intake and triage.',
+            available: { path: '/services/claims/up' },
+            actionLabel: 'Open',
+          },
+        ],
+      },
+    }
+    expect(validateA2ui(message, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('ServiceCard declares NO value mark — not an input, nothing commits back', () => {
+    expect(defaultCatalog.components.ServiceCard.value).toBeUndefined()
+  })
+
+  it('available is the ONE bindable prop; name/path/description/actionLabel stay set-once (non-bindable)', () => {
+    expect(defaultCatalog.components.ServiceCard.properties.available?.bindable).toBe(true)
+    expect(defaultCatalog.components.ServiceCard.properties.name?.bindable).toBeFalsy()
+    expect(defaultCatalog.components.ServiceCard.properties.path?.bindable).toBeFalsy()
+    expect(defaultCatalog.components.ServiceCard.properties.description?.bindable).toBeFalsy()
+    expect(defaultCatalog.components.ServiceCard.properties.actionLabel?.bindable).toBeFalsy()
+  })
+
+  it('every property maps 1:1 (identity mapsTo) — the plain accessorFactory precedent', () => {
+    for (const p of ['name', 'path', 'description', 'available', 'actionLabel']) {
+      expect(defaultCatalog.components.ServiceCard.properties[p]?.mapsTo, p).toBe(p)
+    }
+  })
+
+  it('ServiceCard declares no children (component-rendered interior, the Toggle/Button leaf precedent)', () => {
+    expect(defaultCatalog.components.ServiceCard.children).toBeUndefined()
+  })
+
+  it('accepts a {path} binding for available; rejects one for a non-bindable prop', () => {
+    const byAvailable: A2uiComponent = { id: 's1', component: 'ServiceCard', available: { path: '/services/claims/up' } }
+    expect(validateCatalogConformance(byAvailable, defaultCatalog)).toEqual([])
+
+    const byName: A2uiComponent = { id: 's2', component: 'ServiceCard', name: { path: '/services/claims/name' } }
+    expect(validateCatalogConformance(byName, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 's2.name' }))
+  })
+
+  it('NEGATIVE: an unknown prop fails CATALOG', () => {
+    const s: A2uiComponent = { id: 's3', component: 'ServiceCard', bogus: 1 }
+    expect(validateCatalogConformance(s, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 's3.bogus' })
+  })
+
+  it('NEGATIVE: a wrong-primitive literal fails CATALOG (available is a boolean prop)', () => {
+    const wrongAvailable: A2uiComponent = { id: 's4', component: 'ServiceCard', available: 'yes' }
+    expect(validateCatalogConformance(wrongAvailable, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 's4.available' }))
+  })
+
+  it("a REAL ui-service-card's own Open action never writes back into surface.data — installInputBinding is a no-op with no value mark (nothing round-trips, ADR-0224 §5.2)", () => {
+    const surface = createSurface({ id: 's8', catalogId: 'agent-ui', version: 'v1.0' })
+    surface.data.value = { services: { claims: { up: true } } }
+
+    const card = defaultFactories.ServiceCard.create() as HTMLElement & { available: boolean }
+    document.body.append(card)
+
+    const node: A2uiComponent = { id: 'sc', component: 'ServiceCard', available: { path: '/services/claims/up' } }
+    installInputBinding(card, defaultFactories.ServiceCard, node, surface) // no-op: factory.value is undefined
+
+    card.remove()
+    disposeSurface(surface)
+    // No commit-back exists — nothing to assert past "installInputBinding installed no listener",
+    // proven implicitly by the no-op factory.value check above (the toggleFactory/drillFactory precedent).
+    expect(defaultFactories.ServiceCard.value).toBeUndefined()
   })
 })
