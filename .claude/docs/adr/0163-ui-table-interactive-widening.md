@@ -400,7 +400,9 @@ its default off value, the rendered DOM is byte-identical to the pre-widening co
 unaffected: at `selectable=''`/no `sortable` column, NEITHER the retired native anatomy NOR
 its composed replacement is ever stamped — the frozen `table-baseline.fixture.ts` cases
 carry no selection/sort anatomy either way, so `table-byte-identity.test.ts` requires no
-re-capture (verified: it stays green, unedited, across this build).
+re-capture (verified: the FIXTURE stays green and unedited across this build; the test file
+itself gained a scoped jsdom `ElementInternals` prototype stub + a checkbox import, per "What
+changes in the tree" below).
 
 **Visual consequence, stated plainly.** This is a REAL pixel change, not a refactor: a
 native unstyled `<input type=checkbox>`/`<input type=radio>` (bare UA chrome) becomes a
