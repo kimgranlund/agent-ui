@@ -587,6 +587,14 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // ADR-0210 (GH #1391) — the fleet's file-INPUT affordance, composing ui-attachment above for its chips.
+    label: 'ui-file-drop',
+    links: [
+      { href: './file-drop-demo.html', label: 'Demo' },
+      { href: './file-drop-doc.html', label: 'API' },
+    ],
+  },
+  {
     label: 'ui-toast',
     links: [
       { href: './toast-demo.html', label: 'Demo' },

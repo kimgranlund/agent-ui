@@ -96,6 +96,12 @@ export * from './calendar/calendar.ts'   // form-associated date picker (bespoke
 // the ADR-0048 type=date→ui-calendar seam verbatim.
 export * from './color-picker/color-picker.ts'
 
+// ADR-0210 (GH #1391) — ui-file-drop, the fleet's file-INPUT affordance (the ADR-0112 cl.1 fence opened):
+// a host-mediated HANDLE model — bytes never ride the control's own public API, only host-minted
+// {id,name,mimeType,sizeBytes} descriptors. A Pattern-class UIFormElement composite (dropzone + picker
+// button + committed-file chips + a paste target), composing ui-button/ui-icon/ui-attachment.
+export * from './file-drop/file-drop.ts'
+
 // Coordination controls — G7 (ADR-0050/ADR-0051): the labelling wrapper + the aggregation/discovery provider.
 export * from './field/field.ts'               // the label/description/error wrapper (LLD-C4)
 export * from './form-provider/form-provider.ts' // also surfaces FormSubmitDetail (LLD-C7)

@@ -161,6 +161,14 @@
       "section": "Components"
     },
     {
+      "name": "File Drop",
+      "tag": "ui-file-drop",
+      "url": "./file-drop-doc.html",
+      "description": "ui-file-drop is the fleet's file-input affordance (extends UIFormElement, ADR-0210 — the ADR-0112 cl.1 fence opened) — a dropzone + picker button + committed-f…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Form Popover",
       "tag": "ui-form-popover",
       "url": "./form-popover-doc.html",

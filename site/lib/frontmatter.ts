@@ -98,6 +98,9 @@ import imageMd from '../../packages/agent-ui/components/src/controls/image/image
 import videoMd from '../../packages/agent-ui/components/src/controls/video/video.md?raw'
 import audioMd from '../../packages/agent-ui/components/src/controls/audio/audio.md?raw'
 import attachmentMd from '../../packages/agent-ui/components/src/controls/attachment/attachment.md?raw'
+// ADR-0210 (GH #1391) — ui-file-drop, the fleet's file-INPUT affordance (tier=pattern ⇒ {doc, demo}): a
+// host-mediated HANDLE model, composing ui-attachment for its committed-file chips (see attachment.md above).
+import fileDropMd from '../../packages/agent-ui/components/src/controls/file-drop/file-drop.md?raw'
 import toastMd from '../../packages/agent-ui/components/src/controls/toast/toast.md?raw'
 import toastRegionMd from '../../packages/agent-ui/components/src/controls/toast/toast-region.md?raw'
 // ADR-0122 (timeline-family.lld.md): the shared marker-system rail row (ui-timeline-item, tier=pattern), its
@@ -231,6 +234,7 @@ export const loadImageDoc        = (): ComponentDoc => parseDoc(imageMd)
 export const loadVideoDoc        = (): ComponentDoc => parseDoc(videoMd)
 export const loadAudioDoc        = (): ComponentDoc => parseDoc(audioMd)
 export const loadAttachmentDoc   = (): ComponentDoc => parseDoc(attachmentMd)
+export const loadFileDropDoc     = (): ComponentDoc => parseDoc(fileDropMd)
 export const loadToastDoc        = (): ComponentDoc => parseDoc(toastMd)
 export const loadToastRegionDoc  = (): ComponentDoc => parseDoc(toastRegionMd)
 // ADR-0122 — the timeline family (all three tier=pattern ⇒ {doc, demo}).
