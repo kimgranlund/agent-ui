@@ -410,7 +410,8 @@ const md = readFileSync(`${FORM_POPOVER_DIR}/form-popover.md`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-const ATTR_NAMES = ['open', 'placement', 'label', 'size']
+// ADR-0223 (Fill by Default, slice 1 — the §E trigger ruling): `inline` added after `size`.
+const ATTR_NAMES = ['open', 'placement', 'label', 'size', 'inline']
 
 describe('form-popover.md descriptor — frontmatter parses + schema-valid (T2)', () => {
   it('has a leading frontmatter fence and a prose body', () => {

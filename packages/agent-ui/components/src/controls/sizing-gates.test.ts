@@ -137,14 +137,9 @@ const WHOLE_SHAPE_FLOORS = new Set([
 //    here is a KNOWN violation awaiting its wave slice (1–3); the exact-match test keeps this table
 //    honest in BOTH directions (a new offender fails; a fixed-but-still-listed row fails too). ─────────
 const DEBT: Record<string, string[]> = {
-  // slice 1 — the entry family
-  textarea: ['min-width'],
-  select: ['inline-display', 'min-width'],
-  'combo-box': ['inline-display', 'min-width'],
-  'multi-select': ['inline-display', 'min-width'],
-  'conversation-composer': ['min-width'],
-  // form-popover's 10ch TRIGGER floor (§E, slice 1) is on a PART, not the host's first :scope block —
-  // outside this gate's host-only scan by construction; its slice-1 ruling rides the entry family.
+  // slice 1 — the entry family: LANDED (textarea/select/combo-box/multi-select/conversation-composer
+  // flipped to fill-by-default with [inline] hug legs; the form-popover §E trigger ruling executed —
+  // its 10ch floor was on a PART, outside this gate's host-only scan by construction).
   // slice 2 — action/selection
   button: ['inline-display'],
   toggle: ['inline-display'],

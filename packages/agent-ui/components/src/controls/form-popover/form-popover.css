@@ -12,8 +12,9 @@
  *       inline-size floor+clamp (SPEC-R8).
  *   [2] STYLES BLOCK — `@scope (ui-form-popover)` CONSUMES only `--ui-form-popover-*` for its OWN
  *       tokens. The host is `display: contents` — a logical disclosure wrapper that generates no
- *       box (the popover precedent). The trigger is `display: inline-grid; grid-template-columns:
- *       1fr auto` — a fixed [label | caret] anatomy (select's trigger shape). The panel uses the
+ *       box (the popover precedent). The trigger is `display: grid; grid-template-columns:
+ *       1fr auto` — a fixed [label | caret] anatomy (select's trigger shape) that FILLS by default
+ *       (ADR-0223 §E; `[inline]` on the host hugs it at the 10ch floor). The panel uses the
  *       overlay controller's position:fixed + inset (we do NOT fix position here); `[data-box]`
  *       provides the inner spacing + z-scope (ADR-0046/0052) — this sheet adds no shell padding.
  *       Forced-colors keeps the trigger frame, label, caret, and panel surface visible as system
@@ -48,9 +49,11 @@
   --ui-form-popover-icon: var(--md-sys-icon-md);
   --ui-form-popover-glyph: var(--ui-form-popover-font); /* caret GLYPH = font (§4.1 caret law) */
 
-  /* ── Sizing floor (ADR-0021 lesson) — an empty-label trigger needs a floor so it stays hittable
-     and the overlay positions against a real anchor rect (LLD §3 risk: `label=''` renders an
-     empty trigger). */
+  /* ── Sizing floor — the [inline] hug-state content floor (ADR-0223 Appendix §E ruling, slice 1:
+     the 10ch is a CONTENT floor, so it moves to the `[inline]` hug context; the squareness floor —
+     min-inline-size: height, R3(a) — is retained on the trigger in ALL states so an empty-label
+     trigger stays hittable and the overlay positions against a real anchor rect (LLD §3 risk:
+     `label=''` renders an empty trigger). Token name + default unchanged. */
   --ui-form-popover-min-inline-size: 10ch;
 
   /* ── Panel — Container/surface geometry (NOT a control height; like modal/card/popover/select's
@@ -93,12 +96,17 @@
      caret is always present — unlike button.css's presence-driven anatomy). block-size is the
      Control-class ramp height. line-height: 1 (ADR-0036 single-line control standard). */
   :scope > [data-part='trigger'] {
-    display: inline-grid;
+    /* FILL BY DEFAULT (ADR-0223 cl.1 + Appendix §E, slice 1): the host generates no box (contents),
+       so the TRIGGER carries the posture — block-level `grid`, stretching to the parent's inline
+       space. The 10ch CONTENT floor moved to the `[inline]` hug leg below; only the R3(a) squareness
+       floor (min-inline-size: height, surviving all states) stays here. */
+    display: grid;
     grid-template-columns: 1fr auto;
     column-gap: var(--ui-form-popover-gap);
     align-items: center;
     box-sizing: border-box;
-    min-inline-size: var(--ui-form-popover-min-inline-size);
+    inline-size: 100%; /* a <button> shrink-to-fits even at display:grid — the explicit 100% is what realizes the fill posture */
+    min-inline-size: var(--ui-form-popover-height); /* R3(a) squareness floor — retained (§E ruling) */
 
     block-size: var(--ui-form-popover-height);
     padding-block: 0; /* NEVER block padding — geometry law */
@@ -115,6 +123,16 @@
     text-align: start;
     -webkit-user-select: none;
     user-select: none;
+  }
+
+  /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2), carried by the trigger since the host
+     generates no box: inline-level display + hug posture with the 10ch content floor active (§E
+     ruling — the CONTENT floor lives in the hug context; the squareness floor above survives here
+     too). Token + default unchanged; override via --ui-form-popover-min-inline-size. */
+  :scope[inline] > [data-part='trigger'] {
+    display: inline-grid;
+    inline-size: auto; /* release the fill-posture 100% — the hug state sizes to content above the floors */
+    min-inline-size: max(var(--ui-form-popover-min-inline-size), var(--ui-form-popover-height));
   }
 
   /* The label span: fills the 1fr column; clipped for overflow (a long summary-state string). */

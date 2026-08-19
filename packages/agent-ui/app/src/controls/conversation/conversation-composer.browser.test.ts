@@ -437,3 +437,32 @@ describe('ui-conversation-composer — GH #1211: drop/paste hand real Files up t
     expect(event.defaultPrevented, 'a plain text paste must not be intercepted — the native paste path must run').toBe(false)
   })
 })
+
+
+// -- ADR-0223 (Fill by Default, slice 1 -- the entry family): the two-posture acceptance leg, the
+//    generalized ADR-0021 smoke (the text-field pilot's shape): FILL -- a bare host in block flow
+//    stretches to the container's inline size (the container IS the floor); [inline] -- the host hugs,
+//    held open by the relocated content floor (clause 3(b)), and sits BELOW the container.
+describe('ui-conversation-composer -- ADR-0223 two postures (fill default / [inline] hug, both engines)', () => {
+  it('bare host offsetWidth ~= container inline size (fill); [inline] host >= its floor and < container (hug)', async () => {
+    const wrap = document.createElement('div')
+    wrap.style.inlineSize = '640px' // a wide BLOCK container -- wider than any ch-floor resolution
+    wrap.innerHTML = `<ui-conversation-composer></ui-conversation-composer>`
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const host = wrap.querySelector('ui-conversation-composer') as HTMLElement & { updateComplete: Promise<unknown> }
+    await host.updateComplete
+    // FILL (the default): block-level -- the host stretches to the container.
+    const containerWidth = wrap.getBoundingClientRect().width
+    expect(host.offsetWidth, 'the bare host did not FILL its block container (ADR-0223 cl.1)').toBeCloseTo(containerWidth, 0)
+    expect(getComputedStyle(host).display, 'the default host is not block-level').toBe('flex')
+    // HUG (the ONE opt-out): [inline] flips display level AND posture; the relocated floor holds it open.
+    host.setAttribute('inline', '')
+    const floorPx = px(getComputedStyle(host).minInlineSize)
+    expect(floorPx, 'the hug floor did not resolve to a positive px in [inline]').toBeGreaterThan(0)
+    const hugged = host.offsetWidth
+    expect(hugged, 'the [inline] host is narrower than its floor').toBeGreaterThanOrEqual(Math.floor(floorPx))
+    expect(hugged, 'the [inline] host did not HUG -- it still fills the container').toBeLessThan(containerWidth)
+    expect(getComputedStyle(host).display, 'the [inline] host is not inline-level').toBe('inline-flex')
+  })
+})

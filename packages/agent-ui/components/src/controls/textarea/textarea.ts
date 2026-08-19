@@ -49,6 +49,9 @@ const props = {
   // the single-line (scale×size)→§1-row lookup does not apply here, ADR-0134).
   size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
   readonly: { ...prop.boolean(false), reflect: true },
+  // ADR-0223 (Fill by Default, slice 1) — the ONE sizing opt-out, fleet-shared name: reflects so the
+  // `:scope[inline]` CSS leg (inline-level display + hug posture with the 20ch floor) applies to JS-set values.
+  inline: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
 export interface UITextareaElement extends ReactiveProps<typeof props> {}

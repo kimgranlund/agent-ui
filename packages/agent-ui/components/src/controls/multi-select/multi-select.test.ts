@@ -585,7 +585,8 @@ const md = readFileSync(`${MULTI_SELECT_DIR}/multi-select.md`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-const ATTR_NAMES = ['name', 'disabled', 'required', 'value', 'label', 'size', 'answered']
+// ADR-0223 (Fill by Default, slice 1): `inline` added after `answered` — the ONE sizing opt-out boolean.
+const ATTR_NAMES = ['name', 'disabled', 'required', 'value', 'label', 'size', 'answered', 'inline']
 
 describe('multi-select.md descriptor — frontmatter parses + schema-valid (ms-descriptor-schema)', () => {
   it('ms-descriptor-schema: has a leading frontmatter fence and a prose body', () => {

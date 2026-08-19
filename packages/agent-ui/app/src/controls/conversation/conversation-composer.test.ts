@@ -1289,7 +1289,7 @@ describe('conversation-composer.md descriptor', () => {
   const parsed = parseDescriptor(fence)
   const ATTR_NAMES = [
     'value', 'placeholder', 'models', 'model', 'efforts', 'effort', 'providers', 'provider', 'modes', 'mode',
-    'contextItems', 'mentionables', 'invocables', 'capabilities', 'busy',
+    'contextItems', 'mentionables', 'invocables', 'capabilities', 'busy', 'inline',
   ]
 
   it('has a leading frontmatter fence and a /site prose body', () => {

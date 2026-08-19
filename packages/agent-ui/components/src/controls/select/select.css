@@ -19,8 +19,9 @@
  *       `[size]` repoints the geometry (trigger AND, transitively via the shared height/font
  *       tokens, the panel/options — no separate [size] block needed for the panel).
  *   [2] STYLES BLOCK — `@scope (ui-select)` CONSUMES only `--ui-select-*` for its OWN tokens.
- *       The host is `display: inline-block` with a min-inline-size floor (the ADR-0021 lesson:
- *       a control that can be empty needs a floor; the trigger inherits full width from the host).
+ *       The host FILLS by default — block-level, no intrinsic width (ADR-0223 cl.1); the ONE
+ *       `[inline]` opt-out hugs at the 10ch floor (the ADR-0021 lesson, relocated per cl.3(b):
+ *       a HUGGING control that can be empty needs a floor; the trigger inherits full width either way).
  *       The trigger is `display: inline-grid; grid-template-columns: 1fr auto` — always a
  *       [label | caret] anatomy (the trailing caret slot is always present, so the grid is fixed
  *       at two columns). The caret span is an icon-sized cell (the CELL stays icon-sized for both
@@ -74,8 +75,10 @@
   --ui-select-icon: var(--md-sys-icon-md);        /* the icon-cell size (caret CELL is icon-wide) */
   --ui-select-glyph: var(--ui-select-font);   /* caret GLYPH = font (§4.1 caret law) */
 
-  /* ── Sizing floor (ADR-0021 lesson) — a select with no selection or an empty placeholder
-     needs a floor so it is hittable and the overlay positions against a real anchor rect. */
+  /* ── Sizing floor — the [inline] hug-state floor (ADR-0223 cl.3(b), superseding ADR-0021's
+     default-state placement): a HUGGING select with no selection or an empty placeholder needs a
+     floor so it is hittable and the overlay positions against a real anchor rect. The FILL default
+     needs no floor — the container is the floor. Token name + default unchanged. */
   --ui-select-min-inline-size: 10ch;
 
   /* ── Disabled state — TKT-0062's disabled row (bg=container-low, border=transparent, ink=neutral-low) */
@@ -180,12 +183,12 @@
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-select) consumes ONLY --ui-select-* ════════════════ */
 
 @scope (ui-select) {
-  /* The host: an inline-block with a min-inline-size floor. The trigger child fills the host
-     width (width: 100%) so the select is as wide as its container or at least 10ch. */
+  /* FILL BY DEFAULT (ADR-0223 cl.1/2 — slice 1, the entry family): the host is BLOCK-level and stretches
+     to the parent's inline space; NO intrinsic width in the default state. The ADR-0021-class 10ch floor
+     is NOT deleted — it moves to the `[inline]` hug leg below (clause 3(b)): in fill posture the container
+     IS the floor. The trigger child fills the host width (width: 100%) either way. */
   :scope {
-    display: inline-block;
-    min-inline-size: var(--ui-select-min-inline-size);
-    vertical-align: middle; /* align with adjacent form controls (like a native <select>) */
+    display: block;
     /* GH #1297 — the containing block for the visually-hidden aria-label span below. Without this the
        span's `position: absolute` resolves against the nearest positioned ANCESTOR (measured: super-shell's
        `middle`, in ui-agent-admin), where its static position lands wherever the select sits inside a
@@ -193,6 +196,17 @@
        overflow into a phantom, un-hidden scrollbar. Same idiom otp-field.css already carries. The listbox
        overlay is `position: fixed` (its own controller), unaffected. */
     position: relative;
+  }
+
+  /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): a single reflected boolean flips BOTH display
+     level (inline-block, with the native-<select>-parity vertical-align) and sizing posture (hug, with the
+     clause 3(b) content floor active). The 10ch floor lives HERE now (token + default unchanged; per-instance/
+     theme override via --ui-select-min-inline-size — the GH #1407 overrides keep working). No `hug` attribute,
+     no block-but-hugging state — an explicit inline-size is the consumer's tool for that. */
+  :scope[inline] {
+    display: inline-block;
+    min-inline-size: var(--ui-select-min-inline-size);
+    vertical-align: middle; /* align with adjacent form controls (like a native <select>) */
   }
 
   /* The trigger button (Control class): a [label | caret] inline-grid. The trigger ALWAYS

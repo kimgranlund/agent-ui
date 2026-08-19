@@ -40,6 +40,10 @@ attributes:             # attributes-as-API — mirrors UIMultiSelectElement.pro
     type: boolean
     default: false
     reflect: false      # ADR-0196 (GH #1065) — the answered/settled choice state; mirrored into :state(answered) on the host, never AX-reflected
+  - name: inline
+    type: boolean
+    default: false
+    reflect: true       # ADR-0223 (Fill by Default) — the ONE sizing opt-out: flips display level (inline-block) AND sizing posture (hug, with the 12ch floor active). Default (absent) = block-level fill. Reflects so the :scope[inline] CSS leg applies to JS-set values.
 
 properties:             # IDL beyond attributes-as-API
   - name: name
@@ -100,6 +104,7 @@ keyboard:
 
 geometry:
   sizeClass: composite   # a two-part composite (LLD-C5): no trigger — a virtual row-height lever; listbox = Container/surface; rows = legacy item-pad
+  posture: fill (block-level host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-block + hug   # Fill by Default — slice 1 (entry family)
   lever:
     height: var(--ui-multi-select-height)          # virtual — off the §1-row ramp (ADR-0038), the SAME lookup ui-select's trigger uses
     font: var(--ui-multi-select-font)
@@ -110,7 +115,7 @@ geometry:
     bg: var(--ui-multi-select-bg)
     radius: var(--ui-multi-select-radius)
     padding: var(--ui-multi-select-padding)         # = h/4 — DERIVED off the lever (ui-select's listbox-token mechanism copied)
-    minInlineSize: var(--ui-multi-select-min-inline-size)
+    minInlineSize: var(--ui-multi-select-min-inline-size)  # the 12ch floor, ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 cl.3(b)) — the fill default needs no floor
     maxBlockSize: var(--ui-multi-select-max-block-size) (scrolls)  # min(50vh, 12 real option rows + insets + the 2px border compensation) — the ui-select TKT-0027 formula copied
   options:
     sizeClass: legacy item-pad (ROV-C5 / §5.1) — numbers DERIVED off the lever (ui-select's options-token mechanism copied)

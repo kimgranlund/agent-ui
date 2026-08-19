@@ -63,3 +63,32 @@ describe('ui-multi-select — visual regression (LLD §10: unselected / selected
     },
   )
 })
+
+// -- ADR-0223 slice 1 (Fill by Default): the two-posture goldens (the text-field pilot precedent) --
+//    a bare host FILLS its block container; an [inline] host HUGS at the 12ch floor. The three paint
+//    goldens above are width-pinned (12rem) and unaffected by the posture flip.
+describe('ui-multi-select -- visual regression (ADR-0223 slice-1 postures: fill default / [inline] hug)', () => {
+  const mountPosture = (attrs = ''): { wrap: HTMLElement; host: HTMLElement } => {
+    const wrap = document.createElement('div')
+    wrap.style.inlineSize = '480px'
+    wrap.style.padding = '8px'
+    wrap.style.lineHeight = '0' // the [inline] host is an inline-level box — zero the wrap's own line box so its half-leading can never jitter the screenshot height by a rounding pixel
+    wrap.innerHTML = `<ui-multi-select label="Teams" ${attrs}>${OPTIONS}</ui-multi-select>`
+    document.body.append(wrap)
+    return { wrap, host: wrap.querySelector('ui-multi-select') as HTMLElement }
+  }
+
+  it.skipIf(server.browser !== 'chromium')('FILL (default): a bare multi-select stretches to its block container', async () => {
+    const { wrap, host } = mountPosture()
+    await (host as HTMLElement & { updateComplete: Promise<unknown> }).updateComplete
+    await expect.element(page.elementLocator(wrap)).toMatchScreenshot('multi-select-fill-default')
+    wrap.remove()
+  })
+
+  it.skipIf(server.browser !== 'chromium')('[inline] hug: the multi-select hugs at the 12ch floor', async () => {
+    const { wrap, host } = mountPosture('inline')
+    await (host as HTMLElement & { updateComplete: Promise<unknown> }).updateComplete
+    await expect.element(page.elementLocator(wrap)).toMatchScreenshot('multi-select-inline-hug')
+    wrap.remove()
+  })
+})
