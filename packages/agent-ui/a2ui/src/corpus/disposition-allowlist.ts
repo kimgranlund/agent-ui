@@ -186,4 +186,10 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   //   frontier-disclosure-summary-switch — FAIL 2/5 first pass (D1/P7: a nameless summary-row Switch —
   //   ADR-0158 cl.4's exact hazard), repaired with `label`, rejudged PASS 4/5 (same archive).
   // The map is back to its EMPTY steady state.
+  //
+  // ADR-0224/GH #1429 (2026-08-19) — `frontier-service-gateway`: was the pending-state shape (added
+  // with the ServiceCard catalog row, clause 8's wire arm, ratified 2026-08-19); judged by a
+  // fresh-context a2ui-review-agent (PASS, qualityScore 4, verdicts archived 2026-08-19t23-40-00z) and
+  // admitted via import-seeds --verdicts the same day — entry DRAINED per its own instruction
+  // (ADR-0068: never self-judged). The map is back to its EMPTY steady state.
 ])

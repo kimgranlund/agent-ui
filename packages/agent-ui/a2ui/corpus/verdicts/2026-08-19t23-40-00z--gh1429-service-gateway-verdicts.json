@@ -1,0 +1,9 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.2",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-08-19t23-40-00z",
+  "verdicts": {
+    "frontier-service-gateway": { "qualityScore": 4, "passed": true, "failingDimensions": [] }
+  }
+}

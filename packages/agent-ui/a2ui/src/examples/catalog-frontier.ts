@@ -1128,4 +1128,61 @@ export const disclosureSummarySwitchSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed]
+const SERVICE_GATEWAY_ID = 'frontier-service-gateway'
+/** Frontier 22 (ADR-0224, GH #1429; clause 8's wire arm, ratified 2026-08-19): `ServiceCard`, the
+ *  availability-stated launch card — the Claims Code Gateway's own surface, three agent services listed
+ *  as launch cards. `available` is the ONE bindable prop (the row's whole payoff, cl.8/§5.2) — ONE card
+ *  (`claims_card`) binds it to `/services/claims/up` (the catalog conformance test's own representative
+ *  shape, `catalog/default/index.test.ts`), demonstrating the one-way availability law's live-flap case;
+ *  the other two ship literal `available` booleans (mixed up/down, `billing_card` unavailable /
+ *  `support_card` available) — the seed's own "mixed availability" requirement without inventing a
+ *  binding the ADR does not ask for. No `action` prop rides any card (the `serviceCardFactory` doc
+ *  comment, factories.ts — ServiceCard's Open click is NOT catalog-reachable this pass, §5.2: "one-way;
+ *  no value mark — nothing round-trips") and no `children` key (component-rendered interior, cl.3).
+ *  Corpus admission is a SEPARATE judged wave (disposition-allowlist.ts, ADR-0068's never-self-judged
+ *  discipline — this authoring session assigns no rubric score to its own seed). */
+export const serviceGatewaySeed: ExampleSeed = {
+  name: 'frontier-service-gateway',
+  description: 'An agent-service gateway list — three ServiceCards (Claims/Billing/Support), one bound `available` flag and two static (mixed up/down), demonstrating the ADR-0224 one-way availability law.',
+  promptText: 'Show our agent service gateway: Claims, Billing, and Support — Billing is down right now, and let me open the ones that are up.',
+  surfaceId: SERVICE_GATEWAY_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: SERVICE_GATEWAY_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: SERVICE_GATEWAY_ID,
+        value: { services: { claims: { up: true } } },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: SERVICE_GATEWAY_ID,
+        components: [
+          { id: 'root', component: 'Column', gap: 'md', children: ['heading', 'claims_card', 'billing_card', 'support_card'] },
+          { id: 'heading', component: 'Text', variant: 'h4', text: 'Agent services' },
+          // The bound card — available flaps live off `/services/claims/up` (the catalog conformance
+          // test's own representative shape).
+          {
+            id: 'claims_card', component: 'ServiceCard', name: 'Claims Agent', path: '/claims-agent-service',
+            description: 'Handles claims intake and triage.', available: { path: '/services/claims/up' }, actionLabel: 'Open',
+          },
+          // Two static cards — mixed availability without inventing a binding the ADR doesn't ask for.
+          {
+            id: 'billing_card', component: 'ServiceCard', name: 'Billing Agent', path: '/billing-agent-service',
+            description: 'Manages invoices and payment disputes.', available: false, actionLabel: 'Open',
+          },
+          {
+            id: 'support_card', component: 'ServiceCard', name: 'Support Agent', path: '/support-agent-service',
+            description: 'Routes support tickets to the right queue.', available: true, actionLabel: 'Open',
+          },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed]

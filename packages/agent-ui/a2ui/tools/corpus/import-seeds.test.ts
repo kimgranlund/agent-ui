@@ -521,6 +521,11 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     // same zero-admission reason as every row above; its real disposition is DISPOSITION_ALLOWLIST's
     // pending "NO VERDICT SOUGHT YET" entry (wave 3 runs the real judged pipeline).
     'frontier-disclosure-summary-switch': { passed: false, qualityScore: 2 },
+    // ADR-0224/GH #1429 — the ServiceCard coverage-gap seed; judged+admitted for real 2026-08-19
+    // (PASS, qualityScore 4, verdicts archived 2026-08-19t23-40-00z, allowlist entry drained); refused
+    // here only so this describe's zero-admission runs stay zero (the commerce-product-card
+    // convention above).
+    'frontier-service-gateway': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {
