@@ -1,0 +1,11 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.2",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-08-18T22:00:00Z",
+  "verdicts": {
+    "backable-wizard": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "stats-grid-dashboard": { "qualityScore": 2, "passed": false, "failingDimensions": ["D5"] },
+    "wizard-step-progress": { "qualityScore": 3, "passed": false, "failingDimensions": ["D1"] }
+  }
+}
