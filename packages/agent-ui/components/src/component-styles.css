@@ -181,3 +181,8 @@
 /* ADR-0179 GH #686 Amendment S7-a (admin-three-pane-ia.lld.md §16.4) — ui-toggle, the fleet's first
  * pressed-state pill button (Control-band ramp; idle outlined chip → pressed tonal-primary fill). */
 @import './controls/toggle/toggle.css';
+
+/* ADR-0220 (GH #1368) — the `choice` family: ui-choice-group (the auto-fit card-grid selection
+ * container) + ui-choice-card (the rich option unit — frame + non-color check-badge selected paint). */
+@import './controls/choice-group/choice-group.css';
+@import './controls/choice-card/choice-card.css';

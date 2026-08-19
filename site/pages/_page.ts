@@ -243,6 +243,21 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // ADR-0220 (GH #1368) — the `choice` family: the rich-card selection container + its option unit.
+    label: 'ui-choice-group',
+    links: [
+      { href: './choice-group-demo.html', label: 'Demo' },
+      { href: './choice-group-doc.html', label: 'API' },
+    ],
+  },
+  {
+    label: 'ui-choice-card',
+    links: [
+      { href: './choice-card-demo.html', label: 'Demo' },
+      { href: './choice-card-doc.html', label: 'API' },
+    ],
+  },
+  {
     // ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover): the standalone
     // segmented control + its child leaf — tag-labelled, same as every other per-component group.
     label: 'ui-segment',

@@ -73,6 +73,22 @@
       "section": "Components"
     },
     {
+      "name": "Choice Card",
+      "tag": "ui-choice-card",
+      "url": "./choice-card-doc.html",
+      "description": "The rich option unit of the `choice` family — the WHOLE card is the hit target and the a11y unit; no selection commit of its own (the owning ui-choice-group commits).",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Choice Group",
+      "tag": "ui-choice-group",
+      "url": "./choice-group-doc.html",
+      "description": "A form-associated rich-card selection container — a committed choice over agent-composed ui-choice-card option cards, single or multi.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Code",
       "tag": "ui-code",
       "url": "./code-doc.html",

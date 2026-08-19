@@ -202,6 +202,15 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'is host-page-only (security inversion, PRD-D2); the ADR-0112 cl.6 Toast/ToastRegion reasoning applied ' +
     'verbatim — a one-time-code entry is the credential-bearing element of the identity family\'s Codes ' +
     'mode (code-entry-control.lld.md §9, GH #490 S2-a).'],
+  // ADR-0220 (GH #1368) — the `choice` family. TEMPORARY seed, the token-surface/color-picker "shipped
+  // ahead of its catalog row" precedent (above): the CONTROL-MINT half of the ADR-0220 build (traits/
+  // selection-commit.ts's additive seams + controls/choice-group/ + controls/choice-card/) landed in this
+  // wave; the wire-integration half (catalog.json rows, factories.ts, feed-catalog.ts disposition, the
+  // Fork-T1/D1 event-vs-commit probe) is a SEPARATE lane's work. Drain BOTH entries the moment that lane
+  // lands the `ChoiceGroup`/`ChoiceCard` rows — never left as residue (the allowlist-residue guard below
+  // would catch a drained-but-unremoved seed).
+  ['ChoiceGroup', 'ADR-0220 / GH #1368 — shipped ahead of its catalog row (control-mint lane); drains when the wire-integration lane lands the ChoiceGroup row + factory.'],
+  ['ChoiceCard', 'ADR-0220 / GH #1368 — shipped ahead of its catalog row (control-mint lane); drains when the wire-integration lane lands the ChoiceCard row + factory.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

@@ -226,8 +226,11 @@ describe('site coverage — every shipped component has its required per-tier pa
     // containment host (sandbox-frame — genui-surface.spec.md SPEC §3.2, D9). Each requires its {doc, demo} pages.
     // ui-drawer (ADR-0188) — the edge-docked modal container: tier=container (region-less host, [data-box]
     // sizing, NO control height), same tier as card/field/form-provider — its {doc,demo} pages required below.
+    // ADR-0220 (GH #1368) — the `choice` family: ui-choice-group (the rich-card selection container) +
+    // ui-choice-card (the option unit) — both tier=container (sized to their own content/grid track,
+    // no control height, the card/radio-group precedent). Each requires its {doc, demo} pages.
     expect(COMPONENTS.filter((c) => c.tier === 'container').map((c) => c.name).sort()).toEqual(
-      ['card', 'drawer', 'field', 'form-provider', 'radio-group', 'sandbox-frame', 'theme-provider'],
+      ['card', 'choice-card', 'choice-group', 'drawer', 'field', 'form-provider', 'radio-group', 'sandbox-frame', 'theme-provider'],
     )
     // Layout tier + the Wave M1 feed family's ui-toast-region (ADR-0112, LLD-C8 — a pure inset/gap host,
     // no surface paint of its own) + M4 Phase 1's ui-split/ui-split-pane (ADR-0120 cl.2, app-surfaces-m4

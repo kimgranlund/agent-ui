@@ -884,6 +884,29 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
       segment.textContent = label
       return segment
     }),
+  // ADR-0220 (GH #1368) — the `choice` family's gallery specimens: ui-choice-group's default slot IS its
+  // ui-choice-card options (the exact ui-radio-group STRUCTURAL shape); ui-choice-card's default slot IS
+  // agent-composed rich content (the ui-card STRUCTURAL shape) — a small text specimen stands in for it.
+  'ui-choice-group': () =>
+    (
+      [
+        ['standard', 'Standard'],
+        ['deluxe', 'Deluxe'],
+        ['suite', 'Suite'],
+      ] as const
+    ).map(([value, label]) => {
+      const card = document.createElement('ui-choice-card')
+      card.setAttribute('value', value)
+      card.textContent = label
+      return card
+    }),
+  'ui-choice-card': () => {
+    const strong = document.createElement('strong')
+    strong.textContent = 'Deluxe'
+    const price = document.createElement('span')
+    price.textContent = '$185/night'
+    return [strong, document.createElement('br'), price]
+  },
   'ui-form-provider': () => {
     const field = document.createElement('ui-field')
     field.setAttribute('label', 'Full name')
@@ -1371,7 +1394,11 @@ export const NO_SLOT_TEXT = new Set([
 // never a text/label string (the ui-toast-region precedent).
 // ui-swiper-item (ADR-0124) joins this set too: its default slot IS the slide's own arbitrary content, left
 // as direct host children (sized entirely by the owning track) — the exact STRUCTURAL shape.
-export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-multi-select', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-split', 'ui-split-pane', 'ui-swiper-item', 'ui-theme-provider', 'ui-timeline', 'ui-status-stream', 'ui-toast-region', 'ui-toolbar'])
+// ui-choice-group / ui-choice-card (ADR-0220, GH #1368) join this set too: ui-choice-group's default slot IS
+// its ui-choice-card options (the exact ui-radio-group shape — nearest-group-scoped discovery, cl.7);
+// ui-choice-card's default slot IS agent-composed rich display content (the exact ui-card shape, cl.4) —
+// neither is a plain text/label string.
+export const STRUCTURAL = new Set(['ui-card', 'ui-choice-card', 'ui-choice-group', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-multi-select', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-split', 'ui-split-pane', 'ui-swiper-item', 'ui-theme-provider', 'ui-timeline', 'ui-status-stream', 'ui-toast-region', 'ui-toolbar'])
 
 // SLOT_TEXT_OK — SLOT_TEXT is a real, safe, MEANINGFUL knob: a genuine text/label default slot, the accessible
 // label content a viewer edits to see the control's OWN typography/sizing respond (button/checkbox/radio/

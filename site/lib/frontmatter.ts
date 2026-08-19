@@ -40,6 +40,10 @@ import checkboxMd from '../../packages/agent-ui/components/src/controls/checkbox
 import switchMd from '../../packages/agent-ui/components/src/controls/switch/switch.md?raw'
 import radioMd from '../../packages/agent-ui/components/src/controls/radio/radio.md?raw'
 import radioGroupMd from '../../packages/agent-ui/components/src/controls/radio/radio-group.md?raw'
+// ADR-0220 (GH #1368) — the `choice` family: ui-choice-group (rich-card selection container) + its
+// ui-choice-card option unit (tier=container ⇒ {doc,demo} each).
+import choiceGroupMd from '../../packages/agent-ui/components/src/controls/choice-group/choice-group.md?raw'
+import choiceCardMd from '../../packages/agent-ui/components/src/controls/choice-card/choice-card.md?raw'
 // ADR-0095 (supersedes ADR-0086): the standalone segmented control + its child leaf.
 import segmentMd from '../../packages/agent-ui/components/src/controls/segment/segment.md?raw'
 import segmentedControlMd from '../../packages/agent-ui/components/src/controls/segmented-control/segmented-control.md?raw'
@@ -171,6 +175,9 @@ export const loadCheckboxDoc = (): ComponentDoc => parseDoc(checkboxMd)
 export const loadSwitchDoc = (): ComponentDoc => parseDoc(switchMd)
 export const loadRadioDoc = (): ComponentDoc => parseDoc(radioMd)
 export const loadRadioGroupDoc = (): ComponentDoc => parseDoc(radioGroupMd)
+// ADR-0220 — the `choice` family.
+export const loadChoiceGroupDoc = (): ComponentDoc => parseDoc(choiceGroupMd)
+export const loadChoiceCardDoc = (): ComponentDoc => parseDoc(choiceCardMd)
 // ADR-0095 (supersedes ADR-0086): the standalone segmented control + its child leaf.
 export const loadSegmentDoc = (): ComponentDoc => parseDoc(segmentMd)
 export const loadSegmentedControlDoc = (): ComponentDoc => parseDoc(segmentedControlMd)
