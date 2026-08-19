@@ -1447,5 +1447,12 @@
     "description": "External Claude-skill repos as opt-in pack-library sources: a dev-time import CLI snapshots skills/*/SKILL.md into a provenance-stamped skill-pack file, the ad…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0212",
+    "url": "./adr-index.html#adr-0212",
+    "description": "ui-radio-group child discovery widens from direct-children to nearest-group-scoped descendants: one logical radio system across visual groups (GH #1365)",
+    "level": "L3",
+    "section": "Records"
   }
 ]
