@@ -213,6 +213,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-button',
     cards: [
       {
+        href: './button-demo.html',
+        title: 'Demo',
+        blurb: 'The action control in a document-actions toolbar and a gated form-actions row — three variants, adornments, icon-only — with a click event log telling pointer from keyboard.',
+      },
+      {
         href: './button-permutations.html',
         title: 'Permutations',
         blurb: 'Every size × variant × disabled of ui-button, plus the [scale]/[density] subtree-geometry demo.',
@@ -234,6 +239,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-toggle',
     cards: [
       {
+        href: './toggle-demo.html',
+        title: 'Demo',
+        blurb: 'The pressed-state pill in the workspace-panes header row it was minted for, under a min-one refused-toggle rule — with a toggle/pressed event log.',
+      },
+      {
         href: './toggle-permutations.html',
         title: 'Permutations',
         blurb: 'Every size × anatomy shape × pressed/disabled of ui-toggle.',
@@ -254,6 +264,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-text-field',
     cards: [
       {
+        href: './text-field-demo.html',
+        title: 'Demo',
+        blurb: 'A "new vendor" form across the typed variants (email, tel, url, currency, number, percent, date, password) with Save-time validation and an input/change/toggle event log.',
+      },
+      {
         href: './text-field-permutations.html',
         title: 'Permutations',
         blurb: 'Every size × state of ui-text-field, the adornment anatomy, every [type] variant, and the [scale]/[density] geometry demo.',
@@ -273,6 +288,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
   {
     label: 'ui-textarea',
     cards: [
+      {
+        href: './textarea-demo.html',
+        title: 'Demo',
+        blurb: 'A support-ticket form: a required, growable description with a character budget, a template seeded via selectToEnd(), a readonly transcript — with an input/change event log.',
+      },
       {
         href: './textarea-permutations.html',
         title: 'Permutations',
@@ -296,6 +316,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     // (ADR-0176 cl.3) — still a site-documented fleet member like any other control.
     label: 'ui-otp-field',
     cards: [
+      {
+        href: './otp-field-demo.html',
+        title: 'Demo',
+        blurb: 'A sign-in verification step: a page-local fake verifier fires on the completion commit, Resend mints a fresh code after a cooldown — with an input/change event log.',
+      },
       {
         href: './otp-field-permutations.html',
         title: 'Permutations',

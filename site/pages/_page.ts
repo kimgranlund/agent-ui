@@ -97,6 +97,7 @@ export const NAV: readonly NavGroup[] = [
   {
     label: 'ui-button',
     links: [
+      { href: './button-demo.html', label: 'Demo' },
       { href: './button-permutations.html', label: 'Permutations' },
       { href: './button-states.html', label: 'States' },
       { href: './button-doc.html', label: 'API' },
@@ -107,6 +108,7 @@ export const NAV: readonly NavGroup[] = [
     // tier=control ⇒ {permutations, states, doc} — the same page-type set ui-button carries.
     label: 'ui-toggle',
     links: [
+      { href: './toggle-demo.html', label: 'Demo' },
       { href: './toggle-permutations.html', label: 'Permutations' },
       { href: './toggle-states.html', label: 'States' },
       { href: './toggle-doc.html', label: 'API' },
@@ -115,6 +117,7 @@ export const NAV: readonly NavGroup[] = [
   {
     label: 'ui-text-field',
     links: [
+      { href: './text-field-demo.html', label: 'Demo' },
       { href: './text-field-permutations.html', label: 'Permutations' },
       { href: './text-field-states.html', label: 'States' },
       { href: './text-field-doc.html', label: 'API' },
@@ -125,6 +128,7 @@ export const NAV: readonly NavGroup[] = [
     // {permutations, states, doc} set as ui-button/ui-text-field).
     label: 'ui-textarea',
     links: [
+      { href: './textarea-demo.html', label: 'Demo' },
       { href: './textarea-permutations.html', label: 'Permutations' },
       { href: './textarea-states.html', label: 'States' },
       { href: './textarea-doc.html', label: 'API' },
@@ -136,6 +140,7 @@ export const NAV: readonly NavGroup[] = [
     // catalog-excluded (ADR-0176 cl.3) — still a site-documented fleet member like any other control.
     label: 'ui-otp-field',
     links: [
+      { href: './otp-field-demo.html', label: 'Demo' },
       { href: './otp-field-permutations.html', label: 'Permutations' },
       { href: './otp-field-states.html', label: 'States' },
       { href: './otp-field-doc.html', label: 'API' },
