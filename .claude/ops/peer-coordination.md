@@ -115,3 +115,13 @@
   #1042–#1046 lanes did that from the start. Already-running subagent PROCESSES are unaffected (plugin dirs
   are fixed at process spawn). Re-enable once the overnight run is done, or if the hook's false-positive
   (worktree-identity pin drift between unrelated sibling dispatches) gets root-caused and fixed upstream.
+
+## Shared-checkout hardening — 2026-08-18
+
+- **`git branch --show-current` immediately before ANY commit or deploy in the shared checkout** — a
+  peer may have switched the branch between your read and your write.
+- **Deploys ALWAYS build from a clean throwaway worktree of origin/main**, never the shared checkout —
+  a deploy shipped a peer branch's tree (2026-08-18).
+- **Recovery when a commit lands on a peer's branch that has no own commits**:
+  `git push origin <sha>:main` (ship the commit where it belongs), then `git reset --keep HEAD~1` —
+  `--keep` preserves the peer's dirty files; `--hard` would destroy them.

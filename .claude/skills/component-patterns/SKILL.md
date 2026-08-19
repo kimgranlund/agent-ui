@@ -63,6 +63,7 @@ ADR-worthy fork, not a local choice.
 | A load-on-demand stopgap before a real model-side tool-call loop | exact-match auto-attach via the existing reference path, one per turn, no fuzzy | ADR-0190 Amendment (GH #1030) |
 | A public barrel's static re-export drags a heavy arm into every entry chunk | barrel-lazy-split: subpaths + memoized `loadX()` accessor, bundle-shape gated | ADR-0197 |
 | A capability seems to need a third-party runtime dependency | the ruled exception test: category / inert-data / wire-shortcut / Kim's call alone; clause-8 gate set | ADR-0139 + ADR-0202 |
+| Eyebrow / section-header / group-label typography | the KICKER typescale row + consumer uppercase, never ad hoc font values | ADR-0078 cl.2b (GH #370 · #1291) |
 
 ## How to use a row
 

@@ -61,6 +61,14 @@ than you meant to, and an armed run on an UNCHANGED tree is a byte-identical no-
   into `NEGOTIATE_BLUE_SKY`'s calibration bullets BY ID (`system-prompt.ts`) — never rename or remove
   these without touching that composition.
 
+## Component clauses bound BOTH axes (routing + content shape)
+
+Every component clause in grammar/pack prose bounds WHEN to use the component AND what its content
+may look like — length, casing, quantity limits. A clause that routes without shaping invites
+well-routed garbage: GH #1279 — Badge was bounded on when-persistent-status but not on label
+length, so models emitted sentence-length pill headlines; fixed by bounding the label in the
+clause itself (PR #1280).
+
 ## Trigger engineering (selection is TF-IDF cosine, cap 3/turn)
 
 `selectMiniSkills` ranks `triggers` against the USER's turn text (`topKByCosine`, zero-score never pads).

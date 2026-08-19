@@ -96,6 +96,31 @@ surfaces), and index/generated pages (the landing grid, sitemap, llms-full, gall
 gated by their generators below, never hand-authored). A page that fits none of T1–T9 authors to the
 NEAREST row's derivation discipline and names the mismatch, exactly as `file-*`'s capture rules do.
 
+## The demo-page recipe (per-component interaction demos)
+
+The proven mechanism for one control's scenario demo page — 39 pages shipped through it (PRs
+#1303–#1312, 2026-08-18). Types nearest T9 (a live composition proving real behaviour);
+`site/pages/disclosure-demo.ts` is the realized reference.
+
+- **Nav**: a Demo tab `{ href: './{name}-demo.html', label: 'Demo' }` FIRST in the component's NAV
+  group in `site/pages/_page.ts`. The tab strip renders only at ≥2 links, and it is CLIENT-rendered —
+  grepping built HTML for the tab proves nothing.
+- **Files**: `site/{name}-demo.html` shell (copy `disclosure-demo.html`) + `site/pages/{name}-demo.ts`
+  self-mounting via `mountPage`.
+- **Module shape**: the `mountPage` import FIRST (foundation CSS cascade), then
+  `import './containers.css'`; helpers from `site/lib/specimens.ts`
+  (`el`/`demoBox`/`uiButton`/`exampleSection`/`captioned`/`applyDemoWidth`); realistic scenario
+  content; the REAL control, never mocked; a `<ul class="event-log" aria-live="polite">` wherever the
+  control emits events; DOM via `el()`, never `innerHTML`; the intro closes "The API table is on the
+  ui-X API page."
+- **Registration**: a Demo card in `site/main.ts`'s CARD_GROUPS; `llms.txt` gains
+  `; [demo](./x-demo.html)` (the G2 coverage gate bites otherwise); the sitemap EXCLUDES demo pages
+  BY DESIGN (`EXCLUDED_SUFFIX` in `site/lib/sitemap.test.ts`) — their absence there is not a defect.
+- **Gates**: the coverage tier law is a MINIMUM — extra demos always pass; behaviour proof rides a
+  browser test per the `modal-demo.browser.test.ts` precedent.
+- **Trap**: `data-role` is reserved canonical role vocab enforced by `site-canon.test.ts` — demo/test
+  hooks use `data-demo` instead (the #1313-era split-demo strike).
+
 ## The drift discipline — back a page with a check where structurable
 
 Every component has its pages; the API table matches the descriptor; no dead slot/role names. These are
