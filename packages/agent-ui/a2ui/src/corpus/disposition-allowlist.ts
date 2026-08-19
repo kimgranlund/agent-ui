@@ -22,14 +22,16 @@
 // here. Beyond that, an entry is optional prose, worth it only to carry what a verdict cannot — a coverage
 // argument, a repair path.
 //
-// **The map is EMPTY today — legitimately.** As of 2026-08-18 every seed on the shelf is admitted to the
-// store (the 2026-08-18 judged waves admitted the pending backlog and backable-wizard post-repair), and
-// the two standing refusals that were KEPT pending repair — `stats-grid-dashboard` ·
-// `wizard-step-progress` — were DROPPED from the shelf per Kim's 2026-08-18 ruling (the REV's drop path;
-// their drained entries survive as the dated comments below). An empty map is the healthy steady state
-// this file's own contract predicts: refusals leave the shelf, admissions delete their entries, and only
-// a smoke seed that seeks no verdict or a kept-pending-repair refusal ever puts an entry back. The map
-// stays wired into both consumers regardless — the next entry needs a home, not a revival PR.
+// **The map was EMPTY as of 2026-08-18 — legitimately, and returns to empty as its steady state.** Every
+// seed on the shelf that day was admitted to the store (the 2026-08-18 judged waves admitted the pending
+// backlog and backable-wizard post-repair), and the two standing refusals that were KEPT pending repair —
+// `stats-grid-dashboard` · `wizard-step-progress` — were DROPPED from the shelf per Kim's 2026-08-18
+// ruling (the REV's drop path; their drained entries survive as the dated comments below). An empty map
+// is the healthy steady state this file's own contract predicts: refusals leave the shelf, admissions
+// delete their entries, and only a smoke seed that seeks no verdict or a kept-pending-repair refusal ever
+// puts an entry back — GH #1352's `frontier-pane-switcher` (below) is exactly that category-1 shape,
+// added 2026-08-19 alongside the Toggle catalog row. The map stays wired into both consumers regardless —
+// the next entry needs a home, not a revival PR.
 //
 // Pure, zero-dep, platform-neutral (SPEC-N5/ADR-0062) so both readers share the one map: the standing
 // coverage gate (`admission-coverage.test.ts`) and the import tool's unjudged-run guard
@@ -150,4 +152,12 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // GH #1209 (2026-08-18) — `frontier-media-tour`: the same pending-state shape. Added with the
   // Video/AudioPlayer catalog rows (the native media players) to keep the GH #729 type-coverage gate
   // green; pending the same judged import wave. Delete this entry when it is judged.
+  //
+  // GH #1352 (2026-08-19) — `frontier-pane-switcher`: the same pending-state shape (NO VERDICT SOUGHT
+  // YET, not a refusal). Added with the Toggle catalog row (Kim ruling 2026-08-19: "Toggle is
+  // agent-emittable — mint the row") to keep the GH #729 type-coverage gate green; its corpus admission
+  // is a pending judged import wave — the authoring session judging its own seed is the manufactured
+  // judgment ADR-0068's Alternatives ban. Run the judged pipeline and DELETE this entry when that wave
+  // lands.
+  ['frontier-pane-switcher', 'GH #1352 (2026-08-19) — NO VERDICT SOUGHT YET, not a refusal. Added with the Toggle catalog row (Kim ruling 2026-08-19) to keep the GH #729 type-coverage gate green; pending the same judged import wave. Delete this entry when it is judged.'],
 ])

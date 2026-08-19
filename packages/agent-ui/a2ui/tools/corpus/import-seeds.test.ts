@@ -31,6 +31,7 @@ import { parseArgs, dispositionGuard, dispositionAllowlistSnippet } from './impo
 import type { SeedRejection } from '../../src/corpus/import-report.ts'
 import type { ArchivedVerdict } from '../../src/corpus/verdict-archive.ts'
 import { allSeeds } from '../../src/examples/index.ts'
+import { DISPOSITION_ALLOWLIST } from '../../src/corpus/disposition-allowlist.ts'
 
 declare const process: { cwd(): string }
 
@@ -142,11 +143,19 @@ describe('dispositionGuard — GH #335 defect 1 (an unjudged run must not silent
     expect(halt).toMatch(/Nothing was written/)
   })
 
-  it('the REAL allowlist is the default input, and it is legitimately EMPTY today — no shelf name halts through it (the drop-path steady state)', () => {
-    // Anti-drift: if a future entry lands in the real map, this case goes red and the fixture strategy
-    // above gets revisited with a real name — exactly the coupling note the wiring block carries.
+  it('the REAL allowlist is the default input — every shelf name in it halts, every other shelf name passes through (GH #1352 flipped this from the prior all-empty steady state)', () => {
+    // Anti-drift, generalized rather than frozen to "empty": this reads the REAL DISPOSITION_ALLOWLIST
+    // directly rather than asserting a specific size or membership, so the NEXT entry (or drain) needs
+    // no edit here — only a genuinely new disposition SHAPE (the guard itself changing) would.
     for (const seed of allSeeds) {
-      expect(dispositionGuard(seed.name, undefined, false, NO_ARCHIVE), seed.name).toBeUndefined()
+      const halt = dispositionGuard(seed.name, undefined, false, NO_ARCHIVE)
+      if (DISPOSITION_ALLOWLIST.has(seed.name)) {
+        expect(halt, seed.name).toBeDefined()
+        expect(halt, seed.name).toMatch(/HALTED/)
+        expect(halt, seed.name).toContain(seed.name)
+      } else {
+        expect(halt, seed.name).toBeUndefined()
+      }
     }
   })
 })
@@ -421,6 +430,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     'travel-itinerary': { passed: false, qualityScore: 2 },
     'frontier-latency-line-chart': { passed: false, qualityScore: 2 },
     'frontier-media-tour': { passed: false, qualityScore: 2 },
+    'frontier-pane-switcher': { passed: false, qualityScore: 2 },
     'pattern-confirmation-card': { passed: false, qualityScore: 2 },
     'pattern-settings-form': { passed: false, qualityScore: 2 },
     'pattern-schedule-picker': { passed: false, qualityScore: 2 },
@@ -676,19 +686,29 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     expect(result.stderr).toMatch(/Nothing was written/)
   })
 
-  it('the sandbox itself is honest — an unjudged run over an EMPTY sandbox corpus with no dispositions anywhere admits the whole shelf and writes the shard', () => {
+  it('the sandbox itself is honest — an unjudged run over an EMPTY sandbox corpus either admits the whole shelf (an empty real allowlist) or halts on the first real disposition (GH #1352)', () => {
     // The negative control for every case above: if the sandbox were subtly wrong (a missing rubric, a
     // catalog that would not load), these runs would fail for a reason unrelated to the clause under
-    // test. This control used to assert the allowlist-prose halt, but since 2026-08-18 the real
-    // `DISPOSITION_ALLOWLIST` is legitimately EMPTY (the standing refusals were dropped, the pending
-    // backlog admitted), so the honest baseline flipped: with NO planted archive and NO allowlist entry,
-    // nothing can halt an unjudged run, and every shelf seed admits at tier 1 — proving the sandbox's
-    // rubric, catalog, seed shelf, and store wiring all load, end to end. (The halting cases above are
-    // therefore attributable to exactly the disposition each one plants.)
+    // test. Between 2026-08-18 and GH #1352 the real `DISPOSITION_ALLOWLIST` was legitimately EMPTY (the
+    // standing refusals were dropped, the pending backlog admitted), so an unjudged run with no planted
+    // archive and no allowlist entry admitted the whole shelf. GH #1352 (`frontier-pane-switcher`)
+    // flipped that back to non-empty — the honest baseline now branches on the REAL map's current size
+    // rather than assuming either state, so this test stays green through the next drain too (mirroring
+    // the `dispositionGuard` unit test's own generalization above). Either branch proves the sandbox's
+    // rubric, catalog, seed shelf, and store wiring all load, end to end.
     makeSandbox({ withShard: false })
     const result = run([])
-    expect(result.status, result.stderr).toBe(0)
-    expect(result.stdout).toMatch(new RegExp(`${allSeeds.length} admitted`))
-    expect(existsSync(join(sandbox, SHARD)), 'the run reached saveStore and minted the shard').toBe(true)
+    if (DISPOSITION_ALLOWLIST.size === 0) {
+      expect(result.status, result.stderr).toBe(0)
+      expect(result.stdout).toMatch(new RegExp(`${allSeeds.length} admitted`))
+      expect(existsSync(join(sandbox, SHARD)), 'the run reached saveStore and minted the shard').toBe(true)
+    } else {
+      const [firstDispositioned] = DISPOSITION_ALLOWLIST.keys()
+      expect(result.status).toBe(1)
+      expect(result.stderr).toMatch(/HALTED/)
+      expect(result.stderr).toContain(firstDispositioned as string)
+      expect(result.stderr).toMatch(/Nothing was written/)
+      expect(existsSync(join(sandbox, SHARD)), 'a halted run writes nothing').toBe(false)
+    }
   })
 })
