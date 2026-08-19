@@ -80,30 +80,17 @@ component-preview {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* The knob controls are now dogfooded ui-* controls (ui-select · ui-checkbox · ui-text-field) — each carries
- * its OWN control CSS, so the chrome here is layout-only. Keep each within the narrow knob column by lowering
- * its documented min-inline-size floor (a per-field theme override the control EXPOSES — text-field.css:64 /
- * select.css:58 — not a restyle of internals). The 1fr grid track supplies the width. The compact look
- * (formerly `size="sm"` on the knob chrome — retired by the 2026-08-17 size-attr scrub) is achieved the
- * same exposed-token way: each class repoints the control's own documented sm-ramp tokens. */
-.knob-select {
-  --ui-select-min-inline-size: 6ch;
-  --ui-select-height: var(--md-sys-height-sm);
-  --ui-select-font: var(--md-sys-font-sm);
-  --ui-select-gap: var(--md-sys-gap-sm);
-  --ui-select-icon: var(--md-sys-icon-sm);
-}
-.knob-input {
-  --ui-text-field-min-inline-size: 8ch;
-  --ui-text-field-height: var(--md-sys-height-sm);
-  --ui-text-field-font: var(--md-sys-font-sm);
-  --ui-text-field-gap: var(--md-sys-gap-sm);
-  --ui-text-field-icon: var(--md-sys-icon-sm);
-}
-.knob-switch {
-  justify-self: start;
-  --ui-switch-box: var(--md-sys-compact-sm);
-  --ui-switch-gap: var(--md-sys-gap-sm);
+/* The knob controls are dogfooded ui-* controls (ui-select · ui-segmented-control · ui-switch ·
+ * ui-text-field) rendered RAW — each carries its OWN control CSS, so the chrome here is layout-only.
+ * The compact look comes from the container: `.preview-knobs` carries `scale="ui-sm"` (ADR-0038's
+ * subtree scale register, dimensions.css), which re-tables the md ramp every control reads by default
+ * to today's sm row — superseding the per-control `.knob-select/.knob-input/.knob-switch` token-repoint
+ * classes (GH #1407; those classes were themselves the 2026-08-17 size-attr scrub's replacement for
+ * `size="sm"`, PR #1148). The narrow-column width floors (`--ui-select-min-inline-size: 6ch` /
+ * `--ui-text-field-min-inline-size: 8ch` — per-field overrides the controls EXPOSE) are inline token
+ * repoints set where each knob control is built (component-preview.ts #buildKnob). */
+.knob > ui-switch {
+  justify-self: start; /* grid-child placement in the .knob wrapper's own grid — layout, not control styling */
 }
 /* ADR-0095: every batch-A enum knob now dogfoods `ui-segmented-control` (superseding the retired
  * `ui-radio-group[variant="segmented"]`, ADR-0086) — the control ALWAYS owns its own real grid layout

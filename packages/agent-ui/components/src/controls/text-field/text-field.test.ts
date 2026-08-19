@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { signal, effect, inspect, whenFlushed, type Signal } from '@agent-ui/components'
 import { UITextFieldElement } from './text-field.ts'
 import { currencySymbol, unitLabel } from '../../traits/value-codec.ts'
+import { phosphorPack } from '@agent-ui/icons/phosphor'
 import type { FormValue, ValidityResult } from '../../dom/form.ts'
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
@@ -905,6 +906,26 @@ describe('ui-text-field type=number — inputmode + steppers + codec + validatio
     expect(trailing).not.toBeNull()
     expect(el.querySelector('[data-part="step-up"]')).not.toBeNull()
     expect(el.querySelector('[data-part="step-down"]')).not.toBeNull()
+    el.remove()
+  })
+
+  it('GH #1406: step-down (−) precedes step-up (+) in the trailing row — minus left of plus, distinct glyphs', async () => {
+    // Kim's 2026-08-19 ruling on #1406: the pair is side-by-side TRAILING, − before + (the iOS/Material
+    // stepper convention). DOM order carries the visual order (the container is a flex row, no `order`).
+    const { el } = makeTyped('number')
+    await whenFlushed()
+    const down = el.querySelector('[data-part="step-down"]') as HTMLElement
+    const up = el.querySelector('[data-part="step-up"]') as HTMLElement
+    expect(down.nextElementSibling, 'step-down must immediately precede step-up (− left of +)').toBe(up)
+    // Glyphs are minus/plus (not the retired caret-up/caret-down stack): both svgs exist and DIFFER.
+    const downPath = down.querySelector('svg path')?.getAttribute('d')
+    const upPath = up.querySelector('svg path')?.getAttribute('d')
+    expect(downPath, 'step-down must carry an injected glyph').toBeTruthy()
+    expect(upPath, 'step-up must carry an injected glyph').toBeTruthy()
+    // Pin the exact pack bodies: step-down = Phosphor `minus`, step-up = Phosphor `plus`.
+    expect(phosphorPack.icons.minus).toContain(`d="${downPath as string}"`)
+    expect(phosphorPack.icons.plus).toContain(`d="${upPath as string}"`)
+    expect(downPath).not.toBe(upPath)
     el.remove()
   })
 

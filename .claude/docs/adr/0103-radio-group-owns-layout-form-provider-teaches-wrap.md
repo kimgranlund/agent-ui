@@ -9,7 +9,7 @@
 > | **Proposed by** | system-planner — the design seat; tickets #31 (rental-filter-panel radios crash together) + #33 (form-provider spacing), ruled together as the two poles of one fork |
 > | **Ratified by** | Kim (host) · 2026-07-08 — Status flipped in Kim's own 0101–0106 ratification round (his approved→accepted sed, landed `e30ac3e`); cell was stale-pending until the 2026-07-08 housekeeping pass |
 > | **Repairs** | on ratification+build: `controls/radio/radio-group.css` (the reserved token block at `:21-25` gains `--ui-radio-group-gap`; the `@scope` block gains the flex axis + gap rules) · `controls/radio/radio-group.md` `:94-95` + `:160-161` (the "layout-neutral / page author owns stack direction" contract paragraphs — currently also *factually* wrong: `radio-group.md:94` claims "radios stack in block flow" while `ui-radio` is `display:inline-flex` (`radio.css:82`), so they flow inline) · `site/lib/component-preview.css:108-117` (the specimen-root leg is superseded by the component owning the identical layout — delete, cite here) · radio-group test re-keys named in §Consequences · `a2ui-catalog.spec.md` §5.2 RadioGroup row note (orientation now has a visual effect) · `form-provider.css`/`form-provider.md`: one clarifying sentence citing this record (contract *unchanged*) · ADR-0091 registry: one form-rhythm mini-skill module recommended at build. Decomp: [`css-less-consumer-family.decomp.json`](../decompositions/css-less-consumer-family.decomp.json) |
-> | **Supersedes / Superseded by** | Applies **ADR-0102** (lanes A and C — the chooser's two poles). Extends ADR-0095/0086 (orientation stayed on the group; this ADR finally gives it a visual referent) · relates ADR-0050 (form-provider = pure coordination, unchanged) · ADR-0091 (the teaching mechanism) · ADR-0096 (the severity vocabulary for accepting Lane C residual risk) |
+> | **Supersedes / Superseded by** | **Extended by ADR-0212** (widens `ui-radio-group`'s child discovery from direct children to nearest-group-scoped descendants — this record's layout Decision stands byte-intact; only the supporting premise "cannot be fixed by composition / the interposed wrap severs discovery" is retired, and the Alternatives' "teaching a destructive idiom" rejection becomes moot because the idiom stops being destructive). Applies **ADR-0102** (lanes A and C — the chooser's two poles). Extends ADR-0095/0086 (orientation stayed on the group; this ADR finally gives it a visual referent) · relates ADR-0050 (form-provider = pure coordination, unchanged) · ADR-0091 (the teaching mechanism) · ADR-0096 (the severity vocabulary for accepting Lane C residual risk) |
 
 ## Context
 
@@ -132,3 +132,15 @@ layout-free and the composition is taught (Lane C).** Concretely:
 - **Fix only the seeds (keep hand-wrapping every exemplar).** Rejected for radio-group (seeds cannot add
   gaps to a component that owns none reachable) and insufficient alone for form-provider (it IS the
   teaching lane's substrate, kept, but Lane C also wants the mini-skill + the stated residual).
+
+## Extended by ADR-0212 — nearest-group descendant discovery
+
+This record's layout Decision (the group owns its interior flex layout on its DIRECT children) stands
+byte-intact. What ADR-0212 retires is this record's *supporting premise* that discovery cannot span depth:
+`ui-radio-group`'s child discovery (`#radios()`) widens from direct children to nearest-group-scoped
+descendants — the same rule `ui-radio`'s own `closest()` lookup already applied from the child side. An
+interposed visual container (a `Column`/`Card`/`div`) is now transparent to DISCOVERY while remaining the
+group's flex LAYOUT unit for this record's Decision — the "teaching a destructive idiom" rejection in
+Alternatives above becomes moot, because the idiom (`RadioGroup > visual container > Radio`) stops being
+destructive. A nested inner `ui-radio-group` stays an ownership boundary: its own radios never join an
+outer group's set.
