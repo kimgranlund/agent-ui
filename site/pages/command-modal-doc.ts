@@ -6,7 +6,7 @@ import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-d
 import './containers.css' // shared demo-content chrome; never restyles a ui-* control
 import { loadCommandModalDoc } from '../lib/frontmatter.ts'
 import { composeDocPage } from '../lib/doc-page.ts'
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { descriptor, body } = loadCommandModalDoc()
 
@@ -24,7 +24,7 @@ const palette = el('ui-command-modal', { label: 'Command palette', placeholder: 
   el('div', { role: 'option', value: 'home' }, [text('Go Home')]),
   el('div', { role: 'option', value: 'settings' }, [text('Settings')]),
 ])
-const trigger = uiButton('Open command palette', 'solid')
+const trigger = inline(uiButton('Open command palette', 'solid')) // ADR-0223: bare trigger in prose — hugs
 // The palette's own `open` is bindable two-way (the ui-modal shape) — the trigger sets it; a commit clears it
 // itself (#commit sets open=false on select), so no readback wiring is needed here.
 trigger.addEventListener('click', () => palette.setAttribute('open', ''))

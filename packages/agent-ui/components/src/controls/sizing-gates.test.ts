@@ -140,14 +140,9 @@ const DEBT: Record<string, string[]> = {
   // slice 1 — the entry family: LANDED (textarea/select/combo-box/multi-select/conversation-composer
   // flipped to fill-by-default with [inline] hug legs; the form-popover §E trigger ruling executed —
   // its 10ch floor was on a PART, outside this gate's host-only scan by construction).
-  // slice 2 — action/selection
-  button: ['inline-display'],
-  toggle: ['inline-display'],
-  checkbox: ['inline-display'],
-  radio: ['inline-display'],
-  switch: ['inline-display'],
-  pagination: ['inline-display'],
-  calendar: ['inline-display'],
+  // slice 2 — action/selection: LANDED (button/toggle/checkbox/radio/switch/pagination/calendar
+  // flipped to fill-by-default with [inline] hug legs; button's R3(a) squareness floor survives
+  // both states; no clause 3(b) content floors existed to relocate in this slice).
   // slice 3 — display composites
   stat: ['inline-display', 'min-width'],
   attachment: ['inline-display', 'min-width'],

@@ -19,6 +19,10 @@ const switchProps = {
   // questionnaire card) sets this after submit; the effect below mirrors it into `:state(answered)`
   // (presentation-only — never AX-reflected, never disabled/readonly).
   answered: prop.boolean(false),
+
+  // ADR-0223 (Fill by Default, slice 2) — the ONE sizing opt-out, fleet-shared name: reflects so the
+  // `:scope[inline]` CSS leg (inline-level display + hug posture) applies to JS-set values.
+  inline: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
 export interface UISwitchElement extends ReactiveProps<typeof switchProps> {}

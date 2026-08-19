@@ -63,6 +63,10 @@ attributes:             # attributes-as-API — mirrors UICalendarElement.props 
     values: [sm, md, lg]
     default: md
     reflect: true       # reflected so [size=sm/lg] CSS rules engage on both JS-set and HTML-authored values (fleet standard)
+  - name: inline
+    type: boolean
+    default: false
+    reflect: true       # ADR-0223 (Fill by Default, slice 2) — the ONE sizing opt-out: flips display level (inline-block) AND sizing posture (hug — the pre-wave compact shrink-wrap). Default (absent) = block-level fill; ADR-0105's fluid tracks distribute the width. Reflects so the :scope[inline] CSS leg applies to JS-set values.
 
 properties:             # IDL beyond attributes-as-API
   - name: name
@@ -164,6 +168,7 @@ keyboard:
 
 geometry:
   tier: pattern                         # composite control; panel is Container/surface, cells are square targets
+  posture: fill (block-level host, ADR-0105's fluid tracks distribute the width; ADR-0223 cl.1) · `[inline]` = inline-block + hug (the pre-wave compact posture)   # Fill by Default — slice 2 (action/selection)
   cellSize: --ui-calendar-cell-size     # ADR-0105: the track FLOOR + the point-layer circle diameter (default 2rem / 32px; [size=sm/lg] repoints) — no longer a fixed track width
   gap: --ui-calendar-gap                # inter-cell gap (default 0.125rem / 2px)
   panel: Container/surface              # bg + outline + radius from --ui-calendar-panel-* tokens (NOT a control height)

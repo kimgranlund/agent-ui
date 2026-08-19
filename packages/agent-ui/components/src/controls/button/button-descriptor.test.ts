@@ -54,7 +54,7 @@ describe('button.md descriptor — frontmatter parses (s8)', () => {
   })
 
   it('parses the real four attributes (anti-vacuous — the generator/drift-gate proof below assumes this)', () => {
-    expect(parsed.attributes.map((a) => a.name)).toEqual(['variant', 'size', 'disabled', 'iconOnly'])
+    expect(parsed.attributes.map((a) => a.name)).toEqual(['variant', 'size', 'disabled', 'iconOnly', 'inline'])
   })
 })
 

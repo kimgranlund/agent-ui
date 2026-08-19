@@ -96,3 +96,31 @@ describe('ui-calendar — visual regression (ADR-0105 gestalt via the ADR-0110 p
     },
   )
 })
+
+// -- ADR-0223 slice 2 (Fill by Default -- action/selection): the DELIBERATELY minted posture goldens.
+//    A bare host in plain BLOCK flow (no flex/grid blockification chain) now FILLS the container --
+//    ADR-0105's fluid tracks distribute the width; `[inline]` restores the pre-wave compact
+//    shrink-wrap. July 2020, never-today (the DETERMINISM LAW above, GH #216).
+describe('ui-calendar -- visual regression (ADR-0223 slice-2 postures: fill default / [inline] hug)', () => {
+  const mountBlock = (attrs = ''): { wrap: HTMLElement; el: UICalendarElement } => {
+    const wrap = document.createElement('div')
+    wrap.style.inlineSize = '480px' // a fixed BLOCK container -- the posture flip's own surface
+    wrap.style.padding = '8px'
+    wrap.innerHTML = `<ui-calendar value="2020-07-15" ${attrs}></ui-calendar>`
+    document.body.append(wrap)
+    mounted.push(wrap)
+    return { wrap, el: wrap.querySelector('ui-calendar') as UICalendarElement }
+  }
+
+  it.skipIf(server.browser !== 'chromium')('FILL (default): a bare ui-calendar stretches to its block container', async () => {
+    const { wrap, el } = mountBlock()
+    await el.updateComplete
+    await expect.element(page.elementLocator(wrap)).toMatchScreenshot('calendar-fill-default')
+  })
+
+  it.skipIf(server.browser !== 'chromium')('[inline] hug: the ui-calendar shrink-wraps (the pre-wave compact posture)', async () => {
+    const { wrap, el } = mountBlock('inline')
+    await el.updateComplete
+    await expect.element(page.elementLocator(wrap)).toMatchScreenshot('calendar-inline-hug')
+  })
+})

@@ -9,7 +9,7 @@
 // narrating a real agent stream would (an INSTRUMENT-BRIDGE projection, never a mock of the component API).
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { exampleSection, uiButton } from '../lib/specimens.ts'
+import { exampleSection, inline, uiButton } from '../lib/specimens.ts'
 import { readNdjsonLines } from '../lib/ndjson-lines.ts'
 import type { UIStatusStreamElement } from '@agent-ui/components/components'
 // The committed fixture, the SAME bytes the a2a-tic-tac-toe demo page's arena-replay reads (a Vite `?raw`
@@ -97,10 +97,10 @@ async function replay(cutShort: boolean): Promise<void> {
   cutButton.removeAttribute('disabled')
 }
 
-const playButton = uiButton('▶ Replay the full match', 'solid')
+const playButton = inline(uiButton('▶ Replay the full match', 'solid')) // ADR-0223: bare demo action — hugs
 playButton.addEventListener('click', () => void replay(false))
 
-const cutButton = uiButton('Cut short + finalize (show truncation)', 'ghost')
+const cutButton = inline(uiButton('Cut short + finalize (show truncation)', 'ghost')) // ADR-0223: bare demo action — hugs
 cutButton.addEventListener('click', () => void replay(true))
 
 content.append(exampleSection('Live match replay', stream, playButton, cutButton))

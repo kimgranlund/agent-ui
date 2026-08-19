@@ -5,7 +5,7 @@
 // control owns the mechanics (timeline.ts's MutationObserver); this page only stages + appends.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-timeline — demo',
@@ -28,7 +28,7 @@ const STEPS = [
 ] as const
 let stepIdx = 0
 
-const addStep = uiButton('Append the next step', 'soft')
+const addStep = inline(uiButton('Append the next step', 'soft')) // ADR-0223: bare demo action — hugs
 addStep.addEventListener('click', () => {
   if (stepIdx >= STEPS.length) return
   const step = STEPS[stepIdx]!

@@ -491,7 +491,7 @@ const md = readFileSync(`${CBX_DIR}/checkbox.md`, 'utf8') as string
 const { fence } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 // Attribute names in the order declared in checkbox.md frontmatter (used as anti-vacuous anchor).
-const ATTR_NAMES = ['checked', 'value', 'size', 'name', 'disabled', 'required', 'answered']
+const ATTR_NAMES = ['checked', 'value', 'size', 'name', 'disabled', 'required', 'answered', 'inline']
 
 describe('checkbox.md descriptor — structural validity (s10 part a)', () => {
   it('carries the ADR-0004 / plan §10 descriptor field set as top-level keys', () => {

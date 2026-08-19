@@ -40,6 +40,10 @@ attributes:            # attributes-as-API — mirrors UICheckboxElement.props (
     type: boolean
     default: false
     reflect: false     # ADR-0196 (GH #1065) — the answered/settled choice state; mirrored into :state(answered), never AX-reflected
+  - name: inline
+    type: boolean
+    default: false
+    reflect: true      # ADR-0223 (Fill by Default, slice 2) — the ONE sizing opt-out: flips display level (inline-flex) AND sizing posture (hug). Default (absent) = block-level fill. Reflects so the :scope[inline] CSS leg applies to JS-set values.
 
 properties:            # IDL beyond attributes-as-API (no static-props row)
   - name: indeterminate
@@ -98,6 +102,7 @@ keyboard:
 
 geometry:
   sizeClass: indicator
+  posture: fill (block-level flex host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-flex + hug   # Fill by Default — slice 2 (action/selection); the widget BOX below keeps its fixed square either way
   inlineSize: var(--ui-checkbox-box)   # square widget box — the Indicator-class lever (ADR-0041)
   blockSize: var(--ui-checkbox-box)
   boxRamp: --md-sys-compact-{size}          # 14/16/18 px at ui-md scale for sm/md/lg (ADR-0041 clause 2)

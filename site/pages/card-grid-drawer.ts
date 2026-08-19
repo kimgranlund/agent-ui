@@ -106,6 +106,7 @@ const dirty = signal(false)
 const addButton = document.createElement('ui-button') as UIButtonElement
 addButton.setAttribute('variant', 'soft')
 addButton.textContent = 'Add member'
+addButton.setAttribute('inline', '') // ADR-0223: a bare action above the grid (block flow) — hugs
 addButton.addEventListener('click', () => openDrawer(null))
 
 const grid = document.createElement('ui-grid')

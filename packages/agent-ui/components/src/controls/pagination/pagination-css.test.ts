@@ -48,9 +48,9 @@ describe('pagination.css — structure + token hygiene', () => {
     expect(bad).toEqual([])
   })
 
-  it('the host lays stops out as an inline-flex row with a token-driven gap', () => {
+  it('the host lays stops out as a block-level flex row with a token-driven gap (ADR-0223 fill by default)', () => {
     const baseRule = (stylesBlock.match(/:scope\s*\{[^}]*\}/) ?? [''])[0]
-    expect(baseRule).toMatch(/display:\s*inline-flex/)
+    expect(baseRule).toMatch(/display:\s*flex/)
     expect(baseRule).toMatch(/gap:\s*var\(--ui-pagination-gap\)/)
   })
 })

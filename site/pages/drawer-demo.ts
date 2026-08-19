@@ -8,7 +8,7 @@
 // logs the user-dismissal events.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-drawer — demo',
@@ -46,7 +46,7 @@ function drawerDemo(label: string, attrs: Record<string, string>, bodyNodes: Nod
   drawer.addEventListener('toggle', () => logEvent(label, 'toggle'))
   close.addEventListener('click', () => drawer.removeAttribute('open')) // programmatic close — no event echoed
 
-  const trigger = uiButton(`Open ${label.toLowerCase()}`, 'solid')
+  const trigger = inline(uiButton(`Open ${label.toLowerCase()}`, 'solid')) // ADR-0223: bare trigger in block flow — hugs
   trigger.addEventListener('click', () => drawer.setAttribute('open', ''))
 
   return el('div', {}, [trigger, drawer])

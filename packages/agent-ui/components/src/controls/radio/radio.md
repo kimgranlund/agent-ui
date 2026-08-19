@@ -36,6 +36,10 @@ attributes:            # attributes-as-API — mirrors radio.ts static props (UI
     type: boolean
     default: false
     reflect: true      # reflects; drives valueMissing on the individual radio (group-owned validity is preferred)
+  - name: inline
+    type: boolean
+    default: false
+    reflect: true      # ADR-0223 (Fill by Default, slice 2) — the ONE sizing opt-out: flips display level (inline-flex) AND sizing posture (hug). Default (absent) = block-level fill. Reflects so the :scope[inline] CSS leg applies to JS-set values.
 
 properties:            # IDL beyond attributes-as-API
   - name: form
@@ -89,6 +93,7 @@ keyboard:
 
 geometry:
   sizeClass: indicator
+  posture: fill (block-level flex host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-flex + hug   # Fill by Default — slice 2 (action/selection); the circle box below keeps its fixed square either way
   blockSize: var(--md-sys-compact-md)   # the indicator box height = --md-sys-compact-{size} (widget ramp, ADR-0041)
   inlineSize: var(--md-sys-compact-md)  # the indicator box width = same (square circle)
   dotInset: 22% of box (::after dot diameter = box − 2×22%-of-box, same maths as the prior box-shadow annulus)

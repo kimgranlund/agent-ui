@@ -15,9 +15,21 @@
 //
 // Layer: controls/ — imports controls/_base + dom + traits (inward-only ✓).
 
+import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIIndicatorElement } from '../_base/indicator-element.ts'
 
+// The base spread brings checked/value/size/name/disabled/required (each control owns its own
+// `static props` — the checkbox.ts precedent, ADR-0013).
+const radioProps = {
+  ...UIIndicatorElement.props,
+  // ADR-0223 (Fill by Default, slice 2) — the ONE sizing opt-out, fleet-shared name: reflects so the
+  // `:scope[inline]` CSS leg (inline-level display + hug posture) applies to JS-set values.
+  inline: { ...prop.boolean(false), reflect: true },
+} satisfies PropsSchema
+
+export interface UIRadioElement extends ReactiveProps<typeof radioProps> {}
 export class UIRadioElement extends UIIndicatorElement {
+  static props = radioProps
   /**
    * LLD-C2: ARIA role for this leaf — `internals.role` is set by the UIIndicatorElement base
    * from this declaration in `connected()`.

@@ -8,7 +8,7 @@
 // stages, swaps the view, and logs.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { captioned, el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { captioned, el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-segment — demo',
@@ -68,7 +68,7 @@ switcher.addEventListener('change', () => {
 // ── model-driven selection — set a leaf's `checked` programmatically (an agent's two-way bind shape) ─────
 // A programmatic write applies silently (no `change` on leaf or host) — the log proves the binding-hygiene
 // contract by staying quiet while the highlight still moves and the view still swaps.
-const jumpToBoard = uiButton('Select "Board" (model-driven)', 'soft')
+const jumpToBoard = inline(uiButton('Select "Board" (model-driven)', 'soft')) // ADR-0223: bare demo action — hugs
 jumpToBoard.addEventListener('click', () => {
   // The group's ONE programmatic path — the host's `value` setter unchecks all others + moves the indicator;
   // a bare setAttribute('checked') on a leaf would bypass exclusivity entirely (radio-group.ts).

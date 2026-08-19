@@ -6,7 +6,7 @@ import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-d
 import './containers.css' // shared demo-content chrome; never restyles a ui-* control
 import { loadPopoverDoc } from '../lib/frontmatter.ts'
 import { composeDocPage } from '../lib/doc-page.ts'
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { descriptor, body } = loadPopoverDoc()
 
@@ -22,7 +22,7 @@ const text = (s: string): Text => document.createTextNode(s)
 // A representative live ui-popover: the first child is the trigger (positional child-move), the rest is the
 // panel content moved into the top-layer panel at connect. Click the trigger to reveal the panel.
 const popover = el('ui-popover', {}, [
-  uiButton('Open settings', 'solid'),
+  inline(uiButton('Open settings', 'solid')), // ADR-0223: the popover trigger sits in block flow — hugs
   el('section', {}, [
     el('h3', {}, [text('Settings')]),
     el('p', {}, [text('Panel content in the top layer. Escape or an outside click dismisses it.')]),

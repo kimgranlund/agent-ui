@@ -7,7 +7,7 @@
 // page stages, filters a small catalogue, and logs.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { applyDemoWidth, captioned, el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { applyDemoWidth, captioned, el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-slider-multi — demo',
@@ -69,7 +69,7 @@ price.addEventListener('change', () => record('change', price.valueLo, price.val
 
 // A model-driven preset — writes both ends programmatically (the shape an agent's two-way bind takes); the
 // page refreshes its own readout, and the log stays quiet: a programmatic write never emits.
-const preset = uiButton('Preset: under $150 (model-driven)', 'soft')
+const preset = inline(uiButton('Preset: under $150 (model-driven)', 'soft')) // ADR-0223: bare demo action — hugs
 preset.addEventListener('click', () => {
   price.valueLo = 0
   price.valueHi = 150

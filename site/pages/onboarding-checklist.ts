@@ -143,6 +143,7 @@ const dismissButton = document.createElement('ui-button') as UIButtonElement
 dismissButton.setAttribute('variant', 'ghost')
 dismissButton.setAttribute('size', 'sm')
 dismissButton.textContent = 'Hide checklist'
+dismissButton.setAttribute('inline', '') // ADR-0223: a bare footer action in the card's flow — hugs
 dismissButton.addEventListener('click', () => {
   dismissed.value = true
 })

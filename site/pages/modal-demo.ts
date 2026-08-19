@@ -5,7 +5,7 @@
 // page only stages the modals, opens them by setting the bindable `open` prop, and logs the user-dismissal events.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-modal — demo',
@@ -45,7 +45,7 @@ function modalDemo(label: string, attrs: Record<string, string>, note: string): 
   modal.addEventListener('toggle', () => logEvent(label, 'toggle'))
   close.addEventListener('click', () => modal.removeAttribute('open')) // programmatic close — no event echoed
 
-  const trigger = uiButton(`Open ${label.toLowerCase()}`, 'solid')
+  const trigger = inline(uiButton(`Open ${label.toLowerCase()}`, 'solid')) // ADR-0223: bare trigger in block flow — hugs
   trigger.addEventListener('click', () => modal.setAttribute('open', ''))
 
   return el('div', {}, [trigger, modal])

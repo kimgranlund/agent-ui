@@ -84,16 +84,20 @@ describe('checkbox multi-select ask card — real-engine geometry (GH #1125)', (
     const { mount } = harness()
     // Deliberately the OLD, under-specified shape: no grouping container at all, Checkboxes and the
     // Button as flat siblings — exactly what an ungoverned "Checkboxes ... plus a commit Button"
-    // recipe could produce.
+    // recipe could produce. ADR-0223 (Fill by Default, slice 2) flipped bare ui-checkbox to block-level
+    // fill — the pre-fix single-row shape is now only expressible via the `[inline]` hug opt-out, so this
+    // control pins it explicitly to keep proving the positive legs measure a real geometric difference.
     const parent = document.createElement('div')
     parent.style.maxWidth = '480px' // a realistic feed-card width — real inline wrap needs finite width
     mount.append(parent)
     for (const label of ['Sudden onset', 'Vision changes', 'Fever']) {
       const cb = document.createElement('ui-checkbox')
+      cb.setAttribute('inline', '')
       cb.textContent = label
       parent.append(cb)
     }
     const btn = document.createElement('ui-button')
+    btn.setAttribute('inline', '') // same ADR-0223 note as the checkboxes above — the pre-wave posture
     btn.textContent = 'Continue'
     parent.append(btn)
 

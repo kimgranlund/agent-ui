@@ -8,7 +8,7 @@
 // only stages, applies the min-one policy, and logs.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { captioned, el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { captioned, el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 import { resolveIcon, type IconName } from '@agent-ui/icons'
 import '@agent-ui/icons/phosphor' // registers + activates the Phosphor default pack (ADR-0066)
 import type { UIToggleElement } from '@agent-ui/components/components'
@@ -107,7 +107,7 @@ const restyle = (): void => {
 for (const t of [bold, italic, underline]) t.addEventListener('toggle', () => queueMicrotask(restyle))
 
 // ── [3] model-driven writes — a programmatic `pressed` write is silent (no toggle, never refusable) ─────────
-const showAll = uiButton('Show all panes (model-driven)', 'soft')
+const showAll = inline(uiButton('Show all panes (model-driven)', 'soft')) // ADR-0223: bare demo action — hugs
 showAll.addEventListener('click', () => {
   for (const pane of panes) pane.setAttribute('pressed', '')
   logLine('model    all panes   pressed → true      (programmatic write: NO toggle event)')

@@ -8,7 +8,7 @@
 // (toast-region.ts + toast.ts); this page only stages the regions, drives show(), and logs.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 import type { UIToastRegionElement, UIToastElement } from '@agent-ui/components/components'
 
 const { content } = mountPage({
@@ -124,7 +124,7 @@ const isolationNote = el('p', {}, [
 const secondControls = el('div', { style: 'display:flex; gap:0.75rem; flex-wrap:wrap;' }, [secondBtn, bothBtn])
 
 // ── the declarative path — author-authored markup, no show() call ────────────────────────────────────────────
-const declarativeBtn = uiButton('Mount a region with two authored toasts', 'soft')
+const declarativeBtn = inline(uiButton('Mount a region with two authored toasts', 'soft')) // ADR-0223: bare demo action — hugs
 let declarative: UIToastRegionElement | undefined
 declarativeBtn.addEventListener('click', () => {
   declarative?.remove()

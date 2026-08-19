@@ -6,7 +6,7 @@ import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-d
 import './containers.css' // shared demo-content chrome; never restyles a ui-* control
 import { loadMenuDoc } from '../lib/frontmatter.ts'
 import { composeDocPage } from '../lib/doc-page.ts'
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { descriptor, body } = loadMenuDoc()
 
@@ -22,7 +22,7 @@ const text = (s: string): Text => document.createTextNode(s)
 // A representative live ui-menu: the first child is the trigger (positional child-move); the remaining children
 // become menuitems (role=menuitem auto-assigned). The disabled row is skipped by roving + commit.
 const menu = el('ui-menu', {}, [
-  uiButton('Open menu', 'soft'),
+  inline(uiButton('Open menu', 'soft')), // ADR-0223: the menu trigger sits in block flow (ui-menu is display:contents) — hugs
   el('div', { 'data-value': 'new' }, [text('New file')]),
   el('div', { 'data-value': 'open' }, [text('Open file')]),
   el('div', { 'data-value': 'save', disabled: '' }, [text('Save (disabled)')]),

@@ -7,7 +7,7 @@
 // controller); this page only stages it and logs the host events.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-popover — demo',
@@ -40,7 +40,7 @@ function logEvent(name: string, openState: boolean): void {
 // the listener binds the panel button, not the trigger.
 const doneBtn = uiButton('Done', 'soft')
 const popover = el('ui-popover', {}, [
-  uiButton('Open settings', 'solid'),
+  inline(uiButton('Open settings', 'solid')), // ADR-0223: the popover trigger sits in block flow — hugs
   el('section', {}, [
     el('h3', {}, [text('Settings')]),
     el('p', {}, [text('This panel is in the Popover API top layer — above any overflow/transform ancestor.')]),

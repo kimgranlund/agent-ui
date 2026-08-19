@@ -134,14 +134,18 @@
 /* ══════════════════════ [2] STYLES BLOCK — @scope (ui-calendar) ════════════════════════════ */
 
 @scope (ui-calendar) {
-  /* Host: inline-block so ui-calendar shrink-wraps its panel by default (like a compact form
-     widget) when NOTHING gives it width. ADR-0105 — the grid's tracks are fluid (`minmax()`
-     below), so a caller that DOES grant width (a stretched flex/grid cell — blockification
-     turns this inline-block into the flex/grid item the cross-axis `stretch` default sizes,
-     ADR-0030) gets a grid that fills it, not a fixed-width grid stranded in a wide, half-empty
-     panel. The escape for a caller that wants the OLD always-compact behaviour even when
-     stretched: `max-inline-size: max-content` (one line, page-author override — ADR-0102). */
+  /* Host: FILL BY DEFAULT (ADR-0223 cl.1/2 — slice 2, action/selection): block-level, stretching to
+     the parent's inline space — ADR-0105's fluid tracks (`minmax()` below) make the fill natural
+     (the grid distributes surplus width; no fixed-width grid stranded in a wide, half-empty panel).
+     The ONE opt-out is `[inline]` (leg below) — the pre-wave compact shrink-wrap posture; a caller
+     wanting compact-even-when-stretched keeps ADR-0102's one-liner `max-inline-size: max-content`. */
   :scope {
+    display: block;
+  }
+
+  /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): inline-level display + hug posture (the
+     pre-wave compact form-widget rendering; no content floor — the 7×cell grid is its own floor). */
+  :scope[inline] {
     display: inline-block;
     vertical-align: top;
   }

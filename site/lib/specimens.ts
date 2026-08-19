@@ -60,6 +60,16 @@ export function uiButton(label: string, variant = 'soft'): HTMLElement {
   return b
 }
 
+/** inline — ADR-0223's ONE sizing opt-out, applied at a consumer site: a bare control dropped straight into
+ *  block flow (a doc/demo prose section, a trigger slot) FILLS by default since the Fill-by-Default wave;
+ *  a page-author trigger that genuinely wants to hug its label sets `inline`. Deliberately NOT folded into
+ *  uiButton() — the docs site is the reference consumer and must TEACH fill-by-default, so every hug is an
+ *  explicit, reviewable site-level choice (the migration guide's one-liner, applied where it is true). */
+export function inline<T extends HTMLElement>(el: T): T {
+  el.setAttribute('inline', '')
+  return el
+}
+
 /** exampleSection — a titled <section> wrapping one or more live specimens (the standard doc/demo block). */
 export function exampleSection(title: string, ...nodes: Node[]): HTMLElement {
   const section = document.createElement('section')

@@ -13,7 +13,7 @@ import './accessibility.css'
 import type { UIToastRegionElement } from '@agent-ui/components/components'
 import { heading } from '../lib/doc-page.ts'
 import { codeBlock } from '../lib/code-block.ts'
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'Accessibility conventions',
@@ -331,7 +331,7 @@ const field = el('ui-field', { label: 'Display name', description: 'Shown on you
 ])
 field.style.cssText = 'max-inline-size:24rem;'
 
-const saveBtn = uiButton('Save', 'solid')
+const saveBtn = inline(uiButton('Save', 'solid')) // ADR-0223: a bare action under a field — hugs
 saveBtn.addEventListener('click', () => {
   const input = field.querySelector('ui-text-field') as (HTMLElement & { value?: string }) | null
   const value = input?.value ?? ''

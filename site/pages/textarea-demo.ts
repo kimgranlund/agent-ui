@@ -9,7 +9,7 @@
 // validity, and geometry (textarea.ts) — this page only stages, wires the log, and asks for validation.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { applyDemoWidth, captioned, el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { applyDemoWidth, captioned, el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 import type { UITextareaElement } from '@agent-ui/components/components'
 
 const { content } = mountPage({
@@ -72,7 +72,7 @@ const descriptionNote = el('p', {}, [
 
 // ── [2] steps to reproduce — optional, seeded by a template button through the selectToEnd() seam ───────────
 const steps = area({ label: 'Steps to reproduce', name: 'steps', rows: '3', placeholder: '1. …' })
-const template = uiButton('Insert numbered template', 'soft')
+const template = inline(uiButton('Insert numbered template', 'soft')) // ADR-0223: bare demo action — hugs
 template.addEventListener('click', () => {
   steps.value = '1. Open the vendor record\n2. Click Save without a billing email\n3. '
   steps.selectToEnd() // focus + caret at the end — the contenteditable equivalent of setSelectionRange(len, len)

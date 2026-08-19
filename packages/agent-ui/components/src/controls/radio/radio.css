@@ -78,8 +78,10 @@
   /* Host: inline-flex row — circle (::before) + optional label slot side by side.
      position: relative is the containing block for the absolutely-positioned ::after dot (switch/slider
      precedent — the thumb/dot is centred on the ring via calc + translate, not flow layout). */
+  /* FILL BY DEFAULT (ADR-0223 cl.1/2 — slice 2, action/selection): block-level flex host, no intrinsic
+     width; the `[inline]` leg below is the ONE hug opt-out (no content floor — circle + label ARE the floor). */
   :scope {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: var(--ui-radio-gap);
     position: relative;
@@ -90,6 +92,11 @@
     cursor: pointer;
     -webkit-user-select: none; /* WebKit/Safari: prefix needed */
     user-select: none;
+  }
+
+  /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): inline-level display + hug posture. */
+  :scope[inline] {
+    display: inline-flex;
   }
 
   /* ── Circular indicator box ──────────────────────────────────────────────────────────────────── */

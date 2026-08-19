@@ -6,7 +6,7 @@ import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-d
 import './containers.css' // shared demo-content chrome; never restyles a ui-* control
 import { loadTooltipDoc } from '../lib/frontmatter.ts'
 import { composeDocPage } from '../lib/doc-page.ts'
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { descriptor, body } = loadTooltipDoc()
 
@@ -22,7 +22,7 @@ const text = (s: string): Text => document.createTextNode(s)
 // A representative live ui-tooltip: the first child is the anchor (positional child-move); the remaining text is
 // the tooltip content. Hover or focus the button to reveal the tooltip.
 const tooltip = el('ui-tooltip', {}, [
-  uiButton('Save', 'soft'),
+  inline(uiButton('Save', 'soft')), // ADR-0223: the tooltip anchor sits in block flow — hugs
   text('Save your changes (Ctrl+S)'),
 ])
 
