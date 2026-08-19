@@ -22,6 +22,8 @@
     "./controls/calendar": "./src/controls/calendar/calendar.ts",
     "./controls/card": "./src/controls/card/card.ts",
     "./controls/checkbox": "./src/controls/checkbox/checkbox.ts",
+    "./controls/choice-card": "./src/controls/choice-card/choice-card.ts",
+    "./controls/choice-group": "./src/controls/choice-group/choice-group.ts",
     "./controls/code": "./src/controls/code/code.ts",
     "./controls/color-picker": "./src/controls/color-picker/color-picker.ts",
     "./controls/column": "./src/controls/column/column.ts",

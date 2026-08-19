@@ -216,3 +216,11 @@ export * from './toggle/toggle.ts'
 // non-empty `selected` renders the WHOLE set spent (every chip disabled, the taken one stays visibly
 // marked) — the ADR-0097 frozen-history law relocated into the component.
 export * from './suggestions/suggestions.ts'
+// ADR-0220 (GH #1368) — the `choice` family: ui-choice-group (the rich-card selection container,
+// UIFormElement + rovingFocus/selectionCommit composed directly) + ui-choice-card (the option unit —
+// the WHOLE card is the hit target and a11y unit, ARIA via internals, no selection commit of its own).
+// Two sibling folders, one per real component (the segment/segmented-control precedent: "choice-card"
+// shares no folder-prefix relationship with a folder named "choice-group", the family-coherence A4
+// naming trip-wire's own documented constraint) — each folder's own name === its one descriptor's name.
+export * from './choice-group/choice-group.ts'
+export * from './choice-card/choice-card.ts'

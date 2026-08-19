@@ -1,0 +1,81 @@
+/* choice-group.css — ui-choice-group, the rich-card selection container stylesheet (ADR-0220). Two
+ * SECTIONED blocks, mirroring `grid.css` (the layout mechanism this control's clause 6 ports directly):
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-choice-group)` (specificity 0,0,0) declares the `--ui-choice-group-*`
+ *       chain: the `--ui-choice-group-min` auto-fit track floor (choice-group.ts repoints it inline for
+ *       a per-instance `min` override — the ui-grid mechanism) and `--ui-choice-group-gap` off the
+ *       `--md-sys-space-{step}` density-responsive ladder (`[gap=step]` repoints it — gap reflects).
+ *   [2] STYLES BLOCK — `@scope (ui-choice-group)` consumes ONLY `--ui-choice-group-*`: `display: grid`
+ *       with the SAME intrinsic auto-fit/minmax track model as `ui-grid` (ADR-0016 cl.3/4) — the group
+ *       owns its interior layout (ADR-0103, adopted at birth for this family, clause 6). The group has
+ *       NO visual surface of its own beyond the grid track — its `ui-choice-card` children carry every
+ *       visible affordance (the `radio-group.css` "no own visual surface" precedent) — so the
+ *       user-invalid danger cue below reaches CROSS-BOUNDARY into each unselected card's own frame
+ *       border, the exact `radio-group.css` technique.
+ *
+ * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from choice-group.ts
+ * (behaviour-only `.ts`, no runtime style injection — plan §2; the `min` token thread is the values-API,
+ * not a style rule, the grid.css precedent).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-choice-group) declares --ui-choice-group-* ════════════════ */
+
+:where(ui-choice-group) {
+  /* the auto-fit/minmax track FLOOR (clause 6) — a sensible card-gallery default; choice-group.ts
+     repoints this INLINE for a per-instance `min` override (the ui-grid `min` mechanism verbatim). */
+  --ui-choice-group-min: 14rem;
+
+  /* gap off the --md-sys-space density-responsive ladder; [gap=step] repoints below (gap reflects). */
+  --ui-choice-group-gap: var(--md-sys-space-md);
+
+  /* user-invalid (ADR-0051) — the danger border reaching into each UNSELECTED ui-choice-card child's
+     own frame (the group has no visual surface of its own, see the file header). */
+  --ui-choice-group-border-invalid: var(--md-sys-color-danger);
+}
+
+/* gap → the --md-sys-space ladder (mirrors flexProps' gap enum 1:1, grid.css precedent). */
+:where(ui-choice-group[gap='none']) { --ui-choice-group-gap: var(--md-sys-space-none); }
+:where(ui-choice-group[gap='xs']) { --ui-choice-group-gap: var(--md-sys-space-xs); }
+:where(ui-choice-group[gap='sm']) { --ui-choice-group-gap: var(--md-sys-space-sm); }
+:where(ui-choice-group[gap='lg']) { --ui-choice-group-gap: var(--md-sys-space-lg); }
+:where(ui-choice-group[gap='xl']) { --ui-choice-group-gap: var(--md-sys-space-xl); }
+:where(ui-choice-group[gap='2xl']) { --ui-choice-group-gap: var(--md-sys-space-2xl); }
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-choice-group) consumes ONLY --ui-choice-group-* ════════════════ */
+
+@scope (ui-choice-group) {
+  /* The INTRINSIC reflow (ADR-0016 cl.3/4, ported from ui-grid, clause 6): auto-fit packs as many
+     --ui-choice-group-min-floored tracks as the group's OWN rendered width allows — stacked single
+     column when narrow (the `min` ≥ container degenerate case, ADR-0220 Alternatives variant A), a
+     multi-column card grid when wide (variant B) — with NO explicit column-count prop. */
+  :scope {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--ui-choice-group-min), 1fr));
+    gap: var(--ui-choice-group-gap);
+  }
+
+  /* Forced colors (WHCM) — no group-level visual surface of its own; the ui-choice-card children carry
+     their own forced-color treatment (the `radio-group.css` fleet-discipline placeholder). */
+  @media (forced-colors: active) {
+    :scope {
+      forced-color-adjust: none;
+    }
+  }
+}
+
+/* ════════════ user-invalid (ADR-0051) — a cross-boundary reach into ui-choice-card's own paint ════════════
+ * The group carries no visual surface of its own (the [2] block above); the danger repoint must reach
+ * INTO each `ui-choice-card` child's own frame border instead — the SAME technique `radio-group.css`
+ * uses to reach `ui-radio`'s `::before` ring, deliberately OUTSIDE `@scope` so its specificity ((0,1,1)
+ * here vs `ui-choice-card`'s own `@scope (ui-choice-card) { :scope { border… } }` at (0,0,1)) clears the
+ * card's idle rule without `!important`. Excludes disabled cards (an inactive card doesn't need the
+ * danger frame — the radio.css SC 1.4.11-exempt precedent). Never co-occurs with a SELECTED card in
+ * practice (the `radio-group.css` comment's own fact, ported): `formValidity()` only reports
+ * `valueMissing` when the selection is EMPTY, so no specificity race with the selected-frame rule ever
+ * actually arises — no extra exclusion for a selected card is needed here (unlike the group's own
+ * custom state, a card's selected custom state belongs to `ui-choice-card`'s OWN descriptor, never
+ * this file's — this comment deliberately avoids the literal state-selector spelling so the
+ * descriptor↔source trip-wire's plain-text scan does not misattribute it to THIS control). */
+ui-choice-group:state(user-invalid) ui-choice-card:not([disabled]) {
+  border-color: var(--ui-choice-group-border-invalid);
+}

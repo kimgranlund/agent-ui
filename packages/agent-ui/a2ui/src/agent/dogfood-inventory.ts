@@ -133,9 +133,11 @@ export function readAttributes(fence: string): LocalAttribute[] {
  *  control-mint (the chart family's fourth control); the mover is the one new descriptor role line,
  *  evidence per SPEC §8. */
 // 2026-08-19 merge rebase: measured 17151 on the tree carrying ui-pie-chart (ADR-0219/GH #1397),
-// ui-suggestions (ADR-0213/GH #1393), ui-file-drop (ADR-0210/GH #1391) AND ui-rating (ADR-0216/GH #1395)
-// descriptors — budget 17_600 (measured 17485 + headroom, GH #1209 format).
-export const DOGFOOD_INVENTORY_CHAR_BUDGET = 17_600
+// ui-suggestions (ADR-0213/GH #1393), ui-file-drop (ADR-0210/GH #1391), ui-rating (ADR-0216/GH #1395)
+// AND ui-choice-group/ui-choice-card (ADR-0220/GH #1398) descriptors — the full 2026-08-19 nine-ADR
+// campaign wave; budget 18_100 (measured 17958 + headroom; SPEC-R13(b) budget line bumped in the same
+// change per genui-surface.spec.md §8 — a SPEC version bump, not silent drift).
+export const DOGFOOD_INVENTORY_CHAR_BUDGET = 18_100
 
 /** One discovered control: its tag, a one-line role summary (the descriptor's own prose body, first
  *  sentence — never hand-written, so it can never drift from what the component's own docs say), the

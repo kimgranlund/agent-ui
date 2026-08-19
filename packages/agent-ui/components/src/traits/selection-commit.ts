@@ -4,11 +4,26 @@
 // maps its option elements to string keys.
 //
 // Consumer contract (trued by the TKT-0065 lateral review — the original header named hosts that
-// lawfully cannot consume this trait): the selection marker is an `aria-selected` ATTRIBUTE on each
-// item, so the trait fits attribute-reflected `[role=option]` hosts ONLY (ui-select is the shipped
-// consumer). `role=menuitem` hosts (ui-menu) must not carry aria-selected (action semantics — menu.ts
-// commits via its own click + Enter/Space path, which this trait also lacks a Space leg for), and
-// ui-tab items drive selection through ElementInternals, never host attributes (the fleet ARIA law).
+// lawfully cannot consume this trait): the DEFAULT selection marker is an `aria-selected` ATTRIBUTE on
+// each item, so the DEFAULT shape fits attribute-reflected `[role=option]` hosts ONLY (ui-select is the
+// shipped consumer). `role=menuitem` hosts (ui-menu) must not carry aria-selected (action semantics —
+// menu.ts commits via its own click + Enter/Space path, which this trait also lacks a Space leg for).
+//
+// ADR-0220 clause 1 (the `ui-choice-group`/`ui-choice-card` role-carriage ruling) AMENDS this contract:
+// an internals-reflected host (one whose option unit carries `role=option`/`aria-selected` through
+// `ElementInternals` rather than a host attribute, the `ui-tab` shape) IS now a lawful consumer —
+// THROUGH the two additive, backwards-compatible seams below (`itemFromTarget`/`reflectSelected`), never
+// by growing a host `role`/`aria-*` attribute to satisfy the trait's OWN default attribute-keyed lookup.
+// Both seams default to today's behaviour — for every EXISTING consumer (`ui-select`/`ui-multi-select`/
+// `ui-listbox`) this amendment is BEHAVIOR-UNAFFECTED, not byte-identical in the strictest sense: the
+// default `itemFromTarget` (`optionFromTarget`, which already gates the CLICK path on
+// `host.contains(item)`) now ALSO gates the ENTER path the same way, where the pre-amendment Enter
+// branch resolved via a bare `active.closest('[role=option]')` with no containment check at all — a
+// strictly TIGHTER default. No shipped consumer's suite (nor `listbox-element.test.ts`, which exercises
+// the default accessors) observes the difference, because none constructs the pathological case the
+// tightening excludes (an Enter-focused option resolving to a `[role=option]` ancestor OUTSIDE the
+// host's own subtree) — that negative control is what stays green, untouched, proving the tightening is
+// harmless for every existing consumer, not that the two Enter branches are byte-for-byte identical.
 //
 // GH #908/#905 — this trait's OWN `aria-selected` reflect (below) is COMMIT-TIME ONLY: it fires from
 // a real user gesture (click/Enter), never from an external write. A host whose selection can ALSO
@@ -65,6 +80,26 @@ export interface SelectionCommitOptions {
    * immediately overwritten by a fresh commit, so a stale value never leaks into the next one).
    */
   syncSelection?: () => ReadonlySet<string>
+  /**
+   * ADR-0220 clause 1 — replaces BOTH hard-coded `closest('[role=option]')` resolution sites: the
+   * click path (the default `optionFromTarget`) AND the Enter path (`document.activeElement.closest(…)`).
+   * Given an event target (a click's `event.target`, or the Enter path's live `document.activeElement`),
+   * return the option element it resolves to, or `null` when the target is not (inside) a committable
+   * option — the SAME null-means-ignore contract the default carries. Lets a host whose option unit is a
+   * FACE custom element (never bearing a bare `role` HOST ATTRIBUTE) supply its own resolution — e.g.
+   * `ui-choice-group`'s `closest('ui-choice-card')`, additionally scoped to nearest-group ownership.
+   * Default: `optionFromTarget` — `target.closest('[role=option]')`, constrained to `host.contains(item)`.
+   */
+  itemFromTarget?: (target: EventTarget | null) => HTMLElement | null
+  /**
+   * ADR-0220 clause 1 — replaces the per-item `setAttribute('aria-selected', …)` paint `publish()` runs on
+   * every commit. Called once per live item (from `getItems()`) with its resolved selected state. Lets a
+   * host whose option unit reflects ARIA through `ElementInternals` (never a host attribute, the fleet ARIA
+   * law) route the commit-time paint there instead — e.g. `ui-choice-group` calling the card's own
+   * `internals.ariaSelected` setter. Default: `el.setAttribute('aria-selected', String(selected))` — the
+   * unchanged, byte-identical existing behaviour.
+   */
+  reflectSelected?: (el: HTMLElement, selected: boolean) => void
 }
 
 /**
@@ -92,15 +127,20 @@ export function selectionCommit(host: UIElement, opts: SelectionCommitOptions): 
   let anchorKey = ''
   let released = false
 
-  // Reflect aria-selected on every option element in the host. The attribute is set on the ITEMS
-  // (NOT on the host) — aria-selected belongs to each option, not the listbox container.
+  // ADR-0220 clause 1 — the per-item selected-state paint. Default: the unchanged `setAttribute`
+  // behaviour; a host may route this through its own ElementInternals-reflected consumer instead.
+  const applyReflect: (el: HTMLElement, selected: boolean) => void =
+    opts.reflectSelected ?? ((el, selected) => { el.setAttribute('aria-selected', String(selected)) })
+
+  // Reflect the selected paint on every option element in the host. NOT on the host itself —
+  // aria-selected (or its internals-reflected equivalent) belongs to each option, not the listbox container.
   const reflectAriaSelected = (): void => {
     for (const item of getItems()) {
       const k = keyOf(item)
       const selected = mode === 'single'
         ? (k !== '' && k === singleKey)
         : multiKeys.has(k)
-      item.setAttribute('aria-selected', String(selected))
+      applyReflect(item, selected)
     }
   }
 
@@ -113,17 +153,19 @@ export function selectionCommit(host: UIElement, opts: SelectionCommitOptions): 
     host.emit('select', selection)
   }
 
-  // Resolve the closest [role=option] ancestor of a click target, constrained within the host.
+  // Resolve the closest [role=option] ancestor of a click target, constrained within the host. The
+  // DEFAULT resolver for both commit paths (ADR-0220 clause 1 makes this overridable via `itemFromTarget`).
   const optionFromTarget = (target: EventTarget | null): HTMLElement | null => {
     if (!(target instanceof HTMLElement)) return null
     const item = target.closest('[role=option]') as HTMLElement | null
     return item && host.contains(item) ? item : null
   }
+  const resolveItem: (target: EventTarget | null) => HTMLElement | null = opts.itemFromTarget ?? optionFromTarget
 
   host.listen(host, 'click', (event) => {
     if (released) return
     const e = event as MouseEvent
-    const item = optionFromTarget(e.target)
+    const item = resolveItem(e.target)
     if (!item || isDisabled(item)) return
     const key = keyOf(item)
     if (key === '') return
@@ -186,9 +228,12 @@ export function selectionCommit(host: UIElement, opts: SelectionCommitOptions): 
     const e = event as KeyboardEvent
     if (e.key !== 'Enter') return
     // Commit the currently focused option (set by rovingFocus or any active-descendant approach).
+    // ADR-0220 clause 1 — resolved through the SAME overridable `resolveItem` the click path uses (was a
+    // second hard-coded `closest('[role=option]')` site; an internals-role card's Enter commit never fired
+    // without this, since it carries no `role` HOST ATTRIBUTE for the default resolver to match).
     const active = document.activeElement as HTMLElement | null
     if (!active || !host.contains(active)) return
-    const item = active.closest('[role=option]') as HTMLElement | null
+    const item = resolveItem(active)
     if (!item || isDisabled(item)) return
     const key = keyOf(item)
     if (key === '') return

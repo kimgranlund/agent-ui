@@ -543,6 +543,37 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // ADR-0220 (GH #1368) — the `choice` family: the rich-card selection container.
+    label: 'ui-choice-group',
+    cards: [
+      {
+        href: './choice-group-demo.html',
+        title: 'Demo',
+        blurb: 'A single-select room picker + a multi-select amenities gallery, both live — click, Arrow-rove, Enter, or Space, with a select event log proving the committed choice round-trips.',
+      },
+      {
+        href: './choice-group-doc.html',
+        title: 'API reference',
+        blurb: 'The FACE rich-card selection container — composes rovingFocus + selectionCommit directly over ui-choice-card children, owning the group form value + required → valueMissing. From choice-group.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-choice-card',
+    cards: [
+      {
+        href: './choice-card-demo.html',
+        title: 'Demo',
+        blurb: 'The rich option unit live inside a real ui-choice-group (a plan picker) plus the standalone shape, with an event log for the group’s select event.',
+      },
+      {
+        href: './choice-card-doc.html',
+        title: 'API reference',
+        blurb: 'The option unit of the choice family — the WHOLE card is the hit target and a11y unit (role=option via internals); no selection commit of its own. From choice-card.md.',
+      },
+    ],
+  },
+  {
     // ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover): the child leaf.
     label: 'ui-segment',
     cards: [

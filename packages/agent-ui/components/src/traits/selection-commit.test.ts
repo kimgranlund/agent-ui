@@ -10,6 +10,7 @@ import { selectionCommit, type SelectionMode } from './selection-commit.ts'
 //
 // Named probes: sel-single · sel-multi-add · sel-multi-remove · sel-shift-range · sel-ctrl-anchor ·
 // sel-aria-selected · sel-event · sel-event-multi · sel-enter · sel-disabled · sel-auto-cleanup · sel-release
+// · sic-itemFromTarget-null · sic-itemFromTarget-enter · sic-reflectSelected-fanout
 
 class SelectEl extends UIElement {
   releaseFn: (() => void) | null = null
@@ -388,5 +389,95 @@ describe("selectionCommit — 'multi-toggle' mode (LLD-C4)", () => {
     click(getItem(multi, 'b')) // plain click, no modifier — REPLACES, not adds
     expect(multi.lastSelection).toEqual(new Set(['b']))
     multi.remove()
+  })
+})
+
+// ADR-0220 clause 1 — the two additive seams (`itemFromTarget`/`reflectSelected`) pinned directly at
+// the trait level (MINOR-4, checker finding): until now these were only exercised TRANSITIONALLY,
+// through `ui-choice-group`'s own suite. These probes wire `selectionCommit` by hand (bypassing
+// `SelectEl`, which has no seam options) so each contract is pinned in isolation.
+describe('selectionCommit — ADR-0220 seams (itemFromTarget · reflectSelected, MINOR-4)', () => {
+  it('sic-itemFromTarget-null: a null return from itemFromTarget VETOES the click — no commit at all', () => {
+    class NullTargetHost extends UIElement {}
+    if (!customElements.get('ui-sel-null-target-host')) {
+      customElements.define('ui-sel-null-target-host', NullTargetHost)
+    }
+    const host = new NullTargetHost()
+    const li = document.createElement('li')
+    li.dataset['key'] = 'a'
+    host.append(li)
+    document.body.append(host)
+
+    let selection: unknown = 'untouched'
+    selectionCommit(host, {
+      items: () => [li],
+      keyOf: (el) => el.dataset['key'] ?? '',
+      itemFromTarget: () => null, // null-means-ignore, unconditionally
+      onSelect: (sel) => { selection = sel },
+    })
+
+    click(li)
+    // Not merely "still the old value" — onSelect must never fire, and no aria-selected paint occurs.
+    expect(selection).toBe('untouched')
+    expect(ariaSelected(li)).toBeNull()
+
+    host.remove()
+  })
+
+  it('sic-itemFromTarget-enter: the Enter path resolves through itemFromTarget too, not a hard-coded [role=option] lookup', () => {
+    // The card carries NO role=option attribute at all — the trait's OWN default resolver would never
+    // find it via either commit path. Only a host-supplied itemFromTarget can route this Enter commit,
+    // proving the Enter branch calls resolveItem (not a second hard-coded closest('[role=option]')).
+    class CardHost extends UIElement {}
+    if (!customElements.get('ui-sel-card-host')) customElements.define('ui-sel-card-host', CardHost)
+    const host = new CardHost()
+    const card = document.createElement('div')
+    card.dataset['key'] = 'x'
+    card.tabIndex = -1
+    host.append(card)
+    document.body.append(host)
+
+    let selection: unknown = null
+    selectionCommit(host, {
+      items: () => [card],
+      keyOf: (el) => el.dataset['key'] ?? '',
+      itemFromTarget: (target) => (target instanceof HTMLElement ? target.closest('[data-key]') : null),
+      onSelect: (sel) => { selection = sel },
+    })
+
+    card.focus()
+    enter(host)
+    expect(selection).toBe('x')
+
+    host.remove()
+  })
+
+  it('sic-reflectSelected-fanout: reflectSelected is called once per LIVE item on every commit, not just the committed one', () => {
+    class FanoutHost extends UIElement {}
+    if (!customElements.get('ui-sel-fanout-host')) customElements.define('ui-sel-fanout-host', FanoutHost)
+    const host = new FanoutHost()
+    const items = ['a', 'b', 'c'].map((k) => {
+      const li = document.createElement('li')
+      li.dataset['key'] = k
+      host.append(li)
+      return li
+    })
+    document.body.append(host)
+
+    const calls: Array<[string, boolean]> = []
+    selectionCommit(host, {
+      items: () => items,
+      keyOf: (el) => el.dataset['key'] ?? '',
+      itemFromTarget: (target) => (target instanceof HTMLElement ? target.closest('li') : null),
+      reflectSelected: (el, selected) => { calls.push([el.dataset['key'] ?? '', selected]) },
+    })
+
+    click(items[1]) // commit 'b'
+    // Fan-out over every live item, true/false paint in item order — not just the committed one.
+    expect(calls).toEqual([['a', false], ['b', true], ['c', false]])
+    // The custom seam fully REPLACES the default attribute paint — never a fallback double-write.
+    expect(items[1].getAttribute('aria-selected')).toBeNull()
+
+    host.remove()
   })
 })

@@ -223,6 +223,15 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'a2ui-catalog.spec.md §5.2 delta + prompt-equivalence recapture) is a separate, coordinated lane\'s ' +
     'slice — this seed DRAINS the moment that row lands, the same way the report/content/feed/token-' +
     'surface/color-picker seeds above drained.'],
+  // ADR-0220 (GH #1368) — the `choice` family. TEMPORARY seed, the token-surface/color-picker "shipped
+  // ahead of its catalog row" precedent (above): the CONTROL-MINT half of the ADR-0220 build (traits/
+  // selection-commit.ts's additive seams + controls/choice-group/ + controls/choice-card/) landed in this
+  // wave; the wire-integration half (catalog.json rows, factories.ts, feed-catalog.ts disposition, the
+  // Fork-T1/D1 event-vs-commit probe) is a SEPARATE lane's work. Drain BOTH entries the moment that lane
+  // lands the `ChoiceGroup`/`ChoiceCard` rows — never left as residue (the allowlist-residue guard below
+  // would catch a drained-but-unremoved seed).
+  ['ChoiceGroup', 'ADR-0220 / GH #1368 — shipped ahead of its catalog row (control-mint lane); drains when the wire-integration lane lands the ChoiceGroup row + factory.'],
+  ['ChoiceCard', 'ADR-0220 / GH #1368 — shipped ahead of its catalog row (control-mint lane); drains when the wire-integration lane lands the ChoiceCard row + factory.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

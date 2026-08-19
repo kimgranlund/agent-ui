@@ -1,0 +1,181 @@
+/* choice-card.css — ui-choice-card, the rich option-unit stylesheet (ADR-0220). Two SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-choice-card)` (specificity 0,0,0) declares the `--ui-choice-card-*`
+ *       chain from the colour roles (`--md-sys-color-{family}-{role}`) + a role-named own-chain radius
+ *       token (`--ui-choice-card-radius: var(--md-sys-shape-corner-base)` — the family-tunnel mint law,
+ *       ADR-0124; never a raw `--md-sys-shape-corner-base` read inside @scope, TKT-0066 item 5).
+ *   [2] STYLES BLOCK — `@scope (ui-choice-card)` consumes ONLY `--ui-choice-card-*`. The host is a
+ *       block-level card surface (border + radius + padding); `::after` paints the non-color selected
+ *       signifier (ADR-0057) — a clip-path checkmark badge in the corner, the `checkbox.css` glyph
+ *       technique ported to a standalone corner badge (a checkbox's glyph sits IN the widget box; a
+ *       card's selected frame has no such box, so the badge is its own small circle). `:state(selected)`
+ *       drives the selected frame + badge; `[disabled]` mutes to neutral + kills pointer interaction;
+ *       forced-colors maps the frame/badge to Highlight/HighlightText so the non-color signifier survives
+ *       WHCM without relying on the badge glyph's color contrast alone.
+ *
+ * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from choice-card.ts
+ * (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-choice-card) declares --ui-choice-card-* ════════════════ */
+
+:where(ui-choice-card) {
+  /* Own-chain radius mint (ADR-0124 family tunnel) — reads the shared shape constant HERE, in the
+     TOKEN block (sanctioned); @scope below never reads --md-sys-shape-corner-base directly. */
+  --ui-choice-card-radius: var(--md-sys-shape-corner-base);
+
+  /* Idle frame: a quiet outline on the neutral surface. */
+  --ui-choice-card-border: var(--md-sys-color-neutral-outline-variant);
+  --ui-choice-card-bg: var(--md-sys-color-neutral-surface);
+
+  /* Selected: the frame + wash (ADR-0057 — co-carried by the non-color check badge below, never
+     color alone). */
+  --ui-choice-card-border-selected: var(--md-sys-color-primary);
+  --ui-choice-card-bg-selected: var(--md-sys-color-primary-surface);
+  --ui-choice-card-badge-bg: var(--md-sys-color-primary);
+  --ui-choice-card-badge-ink: var(--md-sys-color-primary-on-primary);
+
+  /* Padding — the container/layout spacing law (geometry.md "Container/layout" band): off the
+     shared space ladder, minted into this control's own chain (never a raw --md-sys-space-* read
+     inside @scope). */
+  --ui-choice-card-padding: var(--md-sys-space-md);
+}
+
+/* [disabled] → mute the frame + kill the selected wash (SC 1.4.11-exempt, the `radio.css`/`checkbox.css`
+   inactive-component precedent — an inactive card doesn't need the selected badge to stay distinguishable
+   by color alone; the badge itself is still painted when selected, just in the muted ink). */
+:where(ui-choice-card[disabled]) {
+  --ui-choice-card-border: var(--md-sys-color-neutral-outline-variant);
+  --ui-choice-card-bg: var(--md-sys-color-neutral-surface-dim);
+  --ui-choice-card-border-selected: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-choice-card-bg-selected: var(--md-sys-color-neutral-surface-dim);
+  --ui-choice-card-badge-bg: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-choice-card-badge-ink: var(--md-sys-color-neutral-surface);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-choice-card) consumes ONLY --ui-choice-card-* ════════════════ */
+
+@scope (ui-choice-card) {
+  :scope {
+    display: block;
+    position: relative; /* containing block for the absolutely-positioned selected badge (::after) */
+    box-sizing: border-box;
+
+    border: 2px solid var(--ui-choice-card-border);
+    border-radius: var(--ui-choice-card-radius);
+    background-color: var(--ui-choice-card-bg);
+    padding: var(--ui-choice-card-padding);
+
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+
+    transition:
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+  }
+
+  /* Selected: the frame + wash (ADR-0057 — the badge below is the CO-CARRIED non-color signifier;
+     this rule alone never stands as the only cue). The custom-state selector is the ONLY hook here —
+     `aria-selected` rides ElementInternals only (never a host attribute, the fleet ARIA law), so there
+     is no `[aria-selected]` attribute for CSS to select on; choice-card.ts's setSelected() is what
+     drives this state. */
+  :scope:state(selected) {
+    border-color: var(--ui-choice-card-border-selected);
+    background-color: var(--ui-choice-card-bg-selected);
+  }
+
+  /* The selected badge (::after) — a small circle in the top-corner, holding the checkmark tick
+     (the checkbox.css clip-path technique). Absent (scale 0) at idle; painted on :state(selected). */
+  :scope::after {
+    content: '';
+    position: absolute;
+    inset-block-start: calc(var(--ui-choice-card-padding) / 2);
+    inset-inline-end: calc(var(--ui-choice-card-padding) / 2);
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    border-radius: 50%;
+    background-color: transparent;
+    transform: scale(0);
+    transition:
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      transform var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+  }
+
+  :scope:state(selected)::after {
+    background-color: var(--ui-choice-card-badge-bg);
+    transform: scale(1);
+  }
+
+  /* The checkmark tick itself — a clip-path polygon (checkbox.css's exact tick shape), painted with
+     ::before nested inside the badge's own box via a second absolutely-positioned layer keyed off the
+     SAME badge geometry. Kept as a background-color box (not a nested pseudo, since a single element
+     carries only ::before/::after) using a conic mask-free approach: reuse ::before for the tick,
+     positioned identically to ::after's badge circle, so the two composite (circle behind, tick in
+     front) whenever both are visible. */
+  :scope::before {
+    content: '';
+    position: absolute;
+    inset-block-start: calc(var(--ui-choice-card-padding) / 2 + 0.3125rem);
+    inset-inline-end: calc(var(--ui-choice-card-padding) / 2 + 0.25rem);
+    inline-size: 0.75rem;
+    block-size: 0.65rem;
+    background-color: transparent;
+    clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    transform: scale(0);
+    transition: transform var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+    z-index: 1;
+  }
+
+  :scope:state(selected)::before {
+    background-color: var(--ui-choice-card-badge-ink);
+    transform: scale(1);
+  }
+
+  /* Hover (idle only — the answered/disabled/selected states all take precedence via source order +
+     the :where() zero-specificity exclusion, the checkbox.css precedent). */
+  :scope:where(:not(:state(selected))):hover {
+    border-color: var(--ui-choice-card-border-selected);
+  }
+
+  /* Focus ring (ADR-0009) — the shared fleet ring on the whole card (it IS the hit target). */
+  :scope:focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :scope,
+    :scope::before,
+    :scope::after {
+      transition: none;
+    }
+  }
+
+  /* Disabled — pointer-inert + cursor reset. The [disabled] TOKEN block already muted the colours. */
+  :scope:is([disabled]) {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  /* Forced colors (WHCM) — frame survives via ButtonText/Highlight; the badge + tick map to
+     Highlight/HighlightText, the system's own guaranteed-contrast reading pair (the checkbox.css/
+     radio.css precedent). */
+  @media (forced-colors: active) {
+    :scope {
+      border-color: ButtonText;
+      forced-color-adjust: none;
+    }
+    :scope:state(selected) {
+      border-color: Highlight;
+    }
+    :scope:state(selected)::after {
+      background-color: Highlight;
+      forced-color-adjust: none;
+    }
+    :scope:state(selected)::before {
+      background-color: HighlightText;
+      forced-color-adjust: none;
+    }
+  }
+}
