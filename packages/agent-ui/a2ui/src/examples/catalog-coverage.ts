@@ -25,6 +25,9 @@
 //     level down (non-root), `CardContent`/`CardFooter` are `Card`'s direct children — `FormProvider`'s
 //     registry still sees every descendant through the extra `Card` level (event-bubbling registration +
 //     `closest()` gating), so P7's real-gating law and P9's anatomy law both hold at once.
+//     CardHeader-title convergence (2026-08-18, Kim's ruling): `title` ("Reserve a room") moves out of
+//     `CardContent`'s `col` into its own `card_header` `CardHeader`, and `root_content`/`root_footer` are
+//     renamed to `card_content`/`card_footer` (FormProvider-as-root, ids wire-opaque) — the GH #760 nit.
 // (2) RENTAL FILTER PANEL — a live (non-FormProvider) search panel: a `ComboBox` city picker sharing the
 //     `Option` primitive with Select, a `RadioGroup`/`Radio` property-type picker, a `SliderMulti`
 //     price-range control, and a `List` of result cards templated over `/results`. Covers: ComboBox,
@@ -101,10 +104,11 @@ export const bookingReservationSeed: ExampleSeed = {
         surfaceId: BOOKING_ID,
         components: [
           { id: 'root', component: 'FormProvider', children: ['card'] },
-          { id: 'card', component: 'Card', elevation: '1', children: ['root_content', 'root_footer'] },
-          { id: 'root_content', component: 'CardContent', children: ['col'] },
-          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'f_guest', 'f_dates', 'f_room', 'f_budget'] },
+          { id: 'card', component: 'Card', elevation: '1', children: ['card_header', 'card_content', 'card_footer'] },
+          { id: 'card_header', component: 'CardHeader', children: ['title'] },
           { id: 'title', component: 'Text', variant: 'h4', text: 'Reserve a room' },
+          { id: 'card_content', component: 'CardContent', children: ['col'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['f_guest', 'f_dates', 'f_room', 'f_budget'] },
           { id: 'f_guest', component: 'Field', label: 'Guest name', child: 'in_guest' },
           {
             id: 'in_guest', component: 'TextField', name: 'guest', required: true, value: { path: '/booking/guest' },
@@ -131,7 +135,7 @@ export const bookingReservationSeed: ExampleSeed = {
           { id: 'seg_ste', component: 'Segment', value: 'suite', label: 'Suite' },
           { id: 'f_budget', component: 'Field', label: 'Nightly budget (€)', child: 'sl_budget' },
           { id: 'sl_budget', component: 'Slider', name: 'budget', min: 80, max: 400, step: 10, value: { path: '/booking/budget' } },
-          { id: 'root_footer', component: 'CardFooter', children: ['actions'] },
+          { id: 'card_footer', component: 'CardFooter', children: ['actions'] },
           { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_reserve'] },
           { id: 'btn_reserve', component: 'Button', variant: 'solid', label: 'Reserve room', action: { action: 'reserve_room', submit: true } },
         ],
