@@ -430,6 +430,10 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     'feedback-form': { passed: false, qualityScore: 2 },
     'trivia-round-resume': { passed: false, qualityScore: 2 },
     'empty-error-retry-card': { passed: false, qualityScore: 2 },
+    // GH #1355 — a genuinely NEW seed (not yet in the committed shard, so dedup doesn't reject it
+    // before the judge is reached): rejected here too, keeping these archive-mechanics tests at zero
+    // admissions rather than needing a real quality judgment.
+    'crud-entry-list-drawer': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {

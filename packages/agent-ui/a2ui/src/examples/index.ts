@@ -80,6 +80,10 @@ export {
   travelItinerarySeed,
   compositionPackBSeeds,
 } from './composition-pack-b.ts'
+// GH #1355 (the 2026-08-18 preset-vs-catalog gap analysis) — the CRUD entry-list idiom's corpus seed:
+// a List of named entries, each toggleable and editable through a validated FormProvider inside a
+// Drawer, plus an add-from-library affordance.
+export { crudEntryListDrawerSeed, crudEntryListSeeds } from './crud-entry-list.ts'
 
 import type { ExampleSeed } from './types.ts'
 import { canvasSeeds } from './canvas-button.ts'
@@ -94,6 +98,7 @@ import { structuredContainerSeeds } from './structured-container.ts'
 import { highFrequencyPatternSeeds } from './high-frequency-patterns.ts'
 import { compositionPackASeeds } from './composition-pack-a.ts'
 import { compositionPackBSeeds } from './composition-pack-b.ts'
+import { crudEntryListSeeds } from './crud-entry-list.ts'
 
 /** Every seed on the shelf — the standing gate's (`examples.test.ts`) iteration surface. Composed from
  *  each module's own family array, so the total is always derived, never a separately-maintained count. */
@@ -110,4 +115,5 @@ export const allSeeds: readonly ExampleSeed[] = [
   ...highFrequencyPatternSeeds,
   ...compositionPackASeeds,
   ...compositionPackBSeeds,
+  ...crudEntryListSeeds,
 ]
