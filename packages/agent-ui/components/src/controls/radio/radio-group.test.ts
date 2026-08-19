@@ -901,6 +901,67 @@ describe('UIRadioGroupElement — public value accessor', () => {
   })
 })
 
+// ── value set before ANY child radio exists — order-independent resolution ─────────────────────────
+//
+// A2UI catalog bug class (widget resolution applies catalog props — `el.value = '…'` — at CREATE time,
+// THEN appends the item children in the same `updateComponents` hop): the setter above previously found
+// no match against an empty `#radios()` and the intent was lost. `#pendingValue` retains it; resolved
+// either at this group's own connect (children already appended, subtree connected as one) or via a
+// genuinely later-registering `ui-radio` (`resolvePendingValue`, called from `radio.ts`'s `grouped()`).
+
+describe('UIRadioGroupElement — value set before children exist (order-independent)', () => {
+  afterEach(() => {
+    document.body.querySelectorAll('ui-radio-group-test').forEach((el) => el.remove())
+  })
+
+  it('value-before-children-resolves-at-connect: retained + applied once the whole assembled subtree connects', () => {
+    const group = makeGroup()
+    group.value = 'r2' // set BEFORE any radio child exists — must not be lost
+    const r1 = makeRadio('r1', 'One')
+    const r2 = makeRadio('r2', 'Two')
+    const r3 = makeRadio('r3', 'Three')
+    group.append(r1, r2, r3)
+    document.body.append(group) // connects the whole assembled subtree in one hop
+    expect(group.value).toBe('r2')
+    expect(r1.checked).toBe(false)
+    expect(r2.checked).toBe(true)
+    expect(r3.checked).toBe(false)
+    // Exactly one roving tab stop, on the resolved radio — not whichever radio connected first.
+    expect(r1.tabIndex).toBe(-1)
+    expect(r2.tabIndex).toBe(0)
+    expect(r3.tabIndex).toBe(-1)
+    group.remove()
+  })
+
+  it('value-before-children-negative-control: a value never set leaves nothing checked', () => {
+    const group = makeGroup()
+    const r1 = makeRadio('r1', 'One')
+    const r2 = makeRadio('r2', 'Two')
+    group.append(r1, r2)
+    document.body.append(group)
+    expect(group.value).toBeNull()
+    expect(r1.checked).toBe(false)
+    expect(r2.checked).toBe(false)
+    group.remove()
+  })
+
+  it('value-before-children-late-append: an unmatched pending value resolves when a matching radio is later appended to an already-connected group', () => {
+    const group = makeGroup()
+    const r1 = makeRadio('r1', 'One')
+    group.append(r1)
+    document.body.append(group) // connects with only r1 present
+    group.value = 'r2' // no match yet (r2 doesn't exist) — retained, not lost
+    expect(group.value).toBeNull()
+    const r2 = makeRadio('r2', 'Two')
+    group.append(r2) // late-append into an ALREADY-connected group — connectedCallback fires synchronously
+    expect(group.value).toBe('r2')
+    expect(r2.checked).toBe(true)
+    expect(r1.tabIndex).toBe(-1)
+    expect(r2.tabIndex).toBe(0)
+    group.remove()
+  })
+})
+
 // ── descriptor trip-wire (contract↔props) ────────────────────────────────────────────────────────
 //
 // Two layers: (a) STRUCTURAL — validateComponentDescriptor reports ZERO failures.

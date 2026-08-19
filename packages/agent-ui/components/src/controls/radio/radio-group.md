@@ -40,7 +40,7 @@ attributes:            # attributes-as-API — mirrors radio-group.ts static pro
 
 properties:            # IDL beyond attributes-as-API (FACE form IDL, delegates to ElementInternals)
   - name: value
-    description: The checked ui-radio child's `value`, or null when none is selected. Property-only (NOT a reflected attribute — the value is derived from child radio state, not an independent attribute; the UICheckboxElement `indeterminate` precedent). Getter reads the private #selectedValue signal. Setter selects the matching child ui-radio by its `value` (unchecking all others) WITHOUT emitting change — a silent programmatic write, matching UICheckboxElement.checked / UISelectElement.value. Setting null, or a value matching no child radio, CLEARS the selection (the HTMLSelectElement.value precedent: no match resolves to unselected, not a no-op).
+    description: The checked ui-radio child's `value`, or null when none is selected. Property-only (NOT a reflected attribute — the value is derived from child radio state, not an independent attribute; the UICheckboxElement `indeterminate` precedent). Getter reads the private #selectedValue signal. Setter selects the matching child ui-radio by its `value` (unchecking all others) WITHOUT emitting change — a silent programmatic write, matching UICheckboxElement.checked / UISelectElement.value. Setting null clears the selection immediately. Setting a value with NO matching child clears the selection too, UNLESS a matching child has simply not registered YET (e.g. a value set before any ui-radio child exists at all) — that request is retained and applied order-independently the moment a matching child connects (at this group's own connect, or a later child registration), never permanently lost to append ordering.
   - name: form
     description: The owning <form>, or null (delegates to ElementInternals.form).
   - name: validity
@@ -145,9 +145,14 @@ The same selection is also exposed as a public `value` property (getter/setter, 
 mirrors `UICheckboxElement.indeterminate`). Reading it returns the checked radio's `value` (or `null`).
 Setting it programmatically selects the matching `ui-radio` child (unchecking the rest) **without** emitting
 `change` — a silent write, the same convention `UICheckboxElement.checked` / `UISelectElement.value` follow
-for programmatic sets; only a real click/keyboard commit emits `change`. Setting `null`, or a value that
-matches no child radio, clears the selection (the `HTMLSelectElement.value` precedent for an unmatched
-value).
+for programmatic sets; only a real click/keyboard commit emits `change`. Setting `null` clears the
+selection immediately. Setting a value that matches no *currently-present* child radio also clears the
+selection (the `HTMLSelectElement.value` precedent for an unmatched value) — **unless** no child has
+registered a matching `value` yet at all, in which case the request is retained and resolved
+order-independently the moment a matching `ui-radio` connects (this group's own connect, when children were
+appended before it, or a later child registration): a value set before its item children exist — e.g. an
+A2UI catalog payload applying `value` at widget-create time, ahead of appending the option children in the
+same update — is never silently lost to that ordering.
 
 ## Keyboard
 

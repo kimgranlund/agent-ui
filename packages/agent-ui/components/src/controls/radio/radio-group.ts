@@ -85,6 +85,17 @@ export class UIRadioGroupElement extends UIFormElement {
   // null = no radio selected; a string = the selected radio's `value` prop.
   #selectedValue = signal<string | null>(null)
 
+  // A `value` set with no matching child YET (the A2UI catalog value-before-children ordering bug: a
+  // `RadioGroup`/`SegmentedControl` with `value` + item children in one `updateComponents` hop applies
+  // catalog props at widget-CREATE time — before the children are appended — so the public `value`
+  // setter below finds no match and the intent would otherwise be lost). Retained here, resolved by
+  // `resolvePendingValue()` (below) the moment a matching child REGISTERS — the existing `grouped()`
+  // child-registration idiom (radio.ts), called from every `ui-radio`/`ui-segment` child's own
+  // `connected()`. Cleared the instant a match resolves; a value that never matches any child simply
+  // stays retained (harmless — the group correctly reads `null` until/unless a match ever registers,
+  // same as today's no-match-clears outcome, just not foreclosed on a not-yet-existing child).
+  #pendingValue: string | null = null
+
   // The user-invalid TIMING controller (ADR-0051), created per connection (re-arms on reconnect;
   // released on disconnect) — the text-field/select precedent.
   #userInvalid: TrackUserInvalidController | null = null
@@ -126,11 +137,35 @@ export class UIRadioGroupElement extends UIFormElement {
     // subclass (e.g. probe subclasses in tests) via a CSS attribute selector without a circular import.
     this.dataset['radioGroup'] = ''
 
+    const radios = this.#radios()
+
+    // Resolve a PENDING programmatic value (set via the `value` setter before ANY radio existed —
+    // e.g., an A2UI catalog payload applying `value` at widget-create time, before its item children
+    // are appended in the same `updateComponents` hop) FIRST, ahead of the roving-focus setup below.
+    // Radios are already present as light-DOM children the instant this method runs regardless of
+    // whether each has individually connected yet (the SAME "already present" fact the seed-from-
+    // checked-radio step next relies on) — so this is the earliest point the group can know its full
+    // child set. Resolving here, BEFORE `rovingFocus(...)` computes its `initialIndex`, means the
+    // trait's very FIRST tabindex stamp already reflects the correct selection: no later per-radio
+    // correction race against `radio.ts`'s own late-append tabindex fixup (which only corrects the ONE
+    // registering radio, not siblings already visited — resolving progressively, radio-by-radio, during
+    // THIS same connect wave would leave a stale extra tabIndex=0 on an earlier sibling). An unmatched
+    // pending value (no radio ever carries that value) stays retained — `resolvePendingValue` below
+    // still gives a genuinely LATE-appended radio (added after this group has already connected) a
+    // chance to claim it.
+    if (this.#pendingValue !== null) {
+      const index = radios.findIndex((r) => r.value === this.#pendingValue)
+      this.#applySelection(radios, index)
+      if (index >= 0) this.#pendingValue = null
+    }
+
     // Seed from any initially-checked radio (HTML-parsed content: radios connect before the group's
     // connected() runs, so they are already present and may carry a `checked` attribute from markup).
-    const radios = this.#radios()
-    const initial = radios.find((r) => r.checked)
-    if (initial) this.#selectedValue.value = initial.value
+    // Skipped when the pending-value resolution above already selected something.
+    if (this.#selectedValue.value === null) {
+      const initial = radios.find((r) => r.checked)
+      if (initial) this.#selectedValue.value = initial.value
+    }
 
     // ADR-0095 clause 1 (was ADR-0086 clause 1, variant-derived) — resolve the EFFECTIVE orientation
     // ONCE, here, BEFORE the rovingFocus call below. `rovingFocus` captures `orientation` as a static
@@ -229,6 +264,38 @@ export class UIRadioGroupElement extends UIFormElement {
     const radios = this.#radios()
     const index = v === null ? -1 : radios.findIndex((r) => r.value === v)
     this.#applySelection(radios, index)
+    // No match found for a non-null request: retain it as pending (resolved by `resolvePendingValue`
+    // when a matching child registers). A successful match, or an explicit `null` clear, has nothing
+    // left to retain — supersedes any earlier still-outstanding pending request.
+    this.#pendingValue = v !== null && index === -1 ? v : null
+  }
+
+  /**
+   * Package-internal child-registration seam — NOT a descriptor-facing API (the `data-radio-group`
+   * marker above is the same kind of internal-coordination surface). Called by a `ui-radio`/`ui-segment`
+   * child's own `grouped()` hook (radio.ts) every time IT connects, giving an outstanding pending
+   * `value` (set before this child existed) a chance to resolve against it. A no-op unless a pending
+   * value is outstanding AND this exact radio is the match — cheap to call unconditionally on every
+   * child connect.
+   */
+  resolvePendingValue(radio: UIRadioElement): void {
+    if (this.#pendingValue === null || radio.value !== this.#pendingValue) return
+    const radios = this.#radios()
+    const index = radios.indexOf(radio)
+    if (index === -1) return
+    this.#applySelection(radios, index)
+    this.#pendingValue = null
+    // This path only ever fires for a GENUINELY late-registering radio (the connect-time resolution
+    // above already claims the common "whole subtree assembled, then connected once" shape before any
+    // radio's own `connected()`/`grouped()` runs — see the comment there — so `#pendingValue` is already
+    // `null` by the time any radio in THAT wave reaches here). `rovingFocus`'s own initial tabindex stamp
+    // is therefore long past; re-derive the "exactly one tabindex=0" roving target directly (the SAME
+    // checked-or-first rule `radio.ts`'s own late-append correction uses, radio.ts:70-79) so the newly-
+    // selected radio — not whichever radio the trait originally stamped — carries the sole tab stop. The
+    // NEXT keydown resyncs the trait's own internal index via `syncIndex` regardless (radio-group.ts's
+    // `rovingFocus(...)` call below), so this direct write never fights the trait afterward.
+    const rovingTarget = radio.checked ? radio : (radios.find((r) => r.checked) ?? radios[0])
+    for (const r of radios) r.tabIndex = r === rovingTarget ? 0 : -1
   }
 
   // ── private helpers ─────────────────────────────────────────────────────────────────────────────

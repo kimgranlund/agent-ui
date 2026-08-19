@@ -10,7 +10,8 @@
 //
 // Named probes: sc-role · sc-default-orientation-horizontal · sc-orientation-author-wins ·
 // sc-no-variant-prop · sc-seam-seeded · sc-seam-click-commit · sc-seam-arrow-commit ·
-// sc-seam-value-setter · sc-seam-form-reset · sc-exclusivity · sc-value-missing.
+// sc-seam-value-setter · sc-seam-form-reset · sc-exclusivity · sc-value-missing ·
+// sc-value-before-children · sc-value-before-children-negative-control.
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { UISegmentedControlElement } from './segmented-control.ts'
@@ -262,6 +263,42 @@ describe('UISegmentedControlElement — exclusivity + validity (inherited from U
       .formValidity.call(control)
     expect(validity.valid).toBe(false)
     expect(validity.flags?.valueMissing).toBe(true)
+    control.remove()
+  })
+})
+
+// ── value set before ANY child segment exists (inherited from UIRadioGroupElement; the moving-indicator
+// seam is this subclass's OWN concern, so it gets its own spot-check here rather than relying solely on
+// radio-group.test.ts's exhaustive coverage of the underlying `#pendingValue` mechanism) ─────────────────
+
+describe('UISegmentedControlElement — value set before children exist (order-independent)', () => {
+  it('sc-value-before-children: retained + applied once the assembled subtree connects, incl. the moving-indicator seam', () => {
+    const control = makeControl()
+    control.value = 's2' // set BEFORE any segment child exists — must not be lost
+    const s1 = makeSegment('s1', 'One')
+    const s2 = makeSegment('s2', 'Two')
+    const s3 = makeSegment('s3', 'Three')
+    control.append(s1, s2, s3)
+    document.body.append(control) // connects the whole assembled subtree in one hop
+    expect(control.value).toBe('s2')
+    expect(s1.checked).toBe(false)
+    expect(s2.checked).toBe(true)
+    expect(s3.checked).toBe(false)
+    // The class-derived moving-indicator seam (selectionChanged()) fires via the SAME resolution path.
+    expect(control.style.getPropertyValue('--ui-segmented-control-index')).toBe('1')
+    expect(control.style.getPropertyValue('--ui-segmented-control-count')).toBe('3')
+    control.remove()
+  })
+
+  it('sc-value-before-children-negative-control: a value never set leaves nothing checked', () => {
+    const control = makeControl()
+    const s1 = makeSegment('s1', 'One')
+    const s2 = makeSegment('s2', 'Two')
+    control.append(s1, s2)
+    document.body.append(control)
+    expect(control.value).toBeNull()
+    expect(s1.checked).toBe(false)
+    expect(s2.checked).toBe(false)
     control.remove()
   })
 })
