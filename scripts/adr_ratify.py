@@ -122,6 +122,24 @@ BOOKED_RE = re.compile(r"on ratification", re.IGNORECASE)
 # within 9 characters of the phrase; the bound just keeps a rambling sentence from posing as a label.
 SCOPE_LABEL_RE = re.compile(r"on ratification[^:]{0,40}:", re.IGNORECASE)
 
+# ── re-entry-condition partition (GH #1411) ─────────────────────────────────────────────────────
+# A Repairs cell carries two species of booked item: executable REPAIRS (doable now, so a `- [ ]`
+# checkbox the tracker's close condition covers) and FUTURE re-entry CONDITIONS ("on a FUTURE X:
+# revisit clause N" — nothing anyone can execute; the ADR itself holds them and decision-watcher
+# catches the triggering amendment). Quoting both as checkboxes left trackers un-closable (GH #1402,
+# #1348). Two narrow, anchored shapes partition automatically; anything else stays a checkbox
+# (fail-closed — an ambiguous item must land in the queue, never silently out of it).
+#   * an item starting `on a FUTURE …` (ADR-0211's "on a FUTURE Layer-0 readback accessor (…):
+#     revisit clause 2")
+#   * an item of the shape `on ratification: none …` — an optional parenthetical tolerated before
+#     the colon (ADR-0211's "on ratification (this ADR ships in the SAME PR as the mint …): none
+#     beyond the mint itself") — a books-nothing declaration, not a repair
+REENTRY_FUTURE_RE = re.compile(r"^on a future\b", re.IGNORECASE)
+REENTRY_NONE_RE = re.compile(r"^on ratification\b(?:\s*\([^)]*\))?\s*:\s*none\b", re.IGNORECASE)
+REENTRY_SECTION_TITLE = (
+    "Re-entry conditions (live in the ADR; decision-watcher catches the triggering amendment)"
+)
+
 # The label the tracking issue carries: the repo's existing generic-work-item label (ADR-0145's
 # git-native routing — "Generic work item — chore/follow-up/debt"). No new label is minted for this.
 REPAIRS_ISSUE_LABEL = "task"
@@ -229,6 +247,37 @@ def booked_repairs(adr_text: str) -> list[str]:
     return items
 
 
+def is_reentry_condition(item: str) -> bool:
+    """Whether one verbatim booked item is a FUTURE re-entry condition, not an executable repair.
+
+    The test runs over the item with markdown emphasis markers stripped (a booking is as often
+    `**On ratification:** none …` as bare), but the item itself is never rewritten — whatever is
+    posted stays verbatim (ADR-0149 F2). Only the two anchored shapes above match; everything else
+    is False (fail-closed: ambiguous stays a checkbox).
+    """
+    plain = re.sub(r"[*_]", "", item).strip()
+    return bool(REENTRY_FUTURE_RE.match(plain) or REENTRY_NONE_RE.match(plain))
+
+
+def partition_repairs(items: list[str]) -> tuple[list[str], list[str]]:
+    """Split booked items into (executable repairs, re-entry conditions), both in cell order."""
+    repairs = [i for i in items if not is_reentry_condition(i)]
+    conditions = [i for i in items if is_reentry_condition(i)]
+    return repairs, conditions
+
+
+def conditions_section(conditions: list[str]) -> str:
+    """The non-checkbox re-entry-conditions section (GH #1411), or '' when none exist.
+
+    Plain bullets, never `- [ ]` boxes — a condition cannot be executed, so it must carry no
+    tickable state and sit outside the close condition. Items verbatim, same as the checklist.
+    """
+    if not conditions:
+        return ""
+    bullets = "\n".join(f"- {item}" for item in conditions)
+    return f"\n\n**{REENTRY_SECTION_TITLE}** — informational, NOT part of this issue's close condition:\n\n{bullets}"
+
+
 def checklist(items: list[str]) -> str:
     """The booked repairs as unticked markdown checkboxes, verbatim and in cell order.
 
@@ -247,18 +296,23 @@ def issue_body(adr_id: str, adr_rel: str, url: str, date: str, items: list[str])
     """The tracking issue's body (GH #544). Pure: strings in, one string out.
 
     Says three things and nothing else: what flipped, that this issue's OPEN state is the repairs'
-    un-doneness, and the verbatim checklist. No paraphrase of any item (ADR-0149 F2).
+    un-doneness, and the verbatim checklist. No paraphrase of any item (ADR-0149 F2). Booked items
+    that are FUTURE re-entry conditions rather than executable repairs land in a separate
+    non-checkbox section outside the close condition (GH #1411).
     """
+    repairs, conditions = partition_repairs(items)
     return (
         f"`scripts/adr_ratify.py` flipped **ADR-{adr_id}** `proposed` → `accepted` on {date} "
         f"(ADR-0149), via the owner's ratification utterance: {url}\n\n"
         f"That ADR's **Repairs** cell books the items below on ratification. **This issue is their "
-        f"tracking record — it stays OPEN until they are executed, and closing it is the record "
-        f"that they landed.** It is filed automatically because the checklist comment on the "
+        f"tracking record — it stays OPEN until the checkbox items are executed, and closing it is "
+        f"the record that they landed; the close condition covers ONLY the checkbox list.** It is "
+        f"filed automatically because the checklist comment on the "
         f"ratifying PR (GH #392) lands on a PR that is already closed, where it carries no state "
         f"and sits in no queue — two flips' repairs fell through that way (GH #544).\n\n"
         f"Each item is quoted verbatim from that ADR's own **Repairs** cell:\n\n"
-        f"{checklist(items)}\n\n"
+        f"{checklist(repairs)}"
+        f"{conditions_section(conditions)}\n\n"
         f"Source: `{adr_rel}`"
     )
 
@@ -312,17 +366,20 @@ def amendment_issue_body(
     """The amendment tracking issue's body (GH #664, mirrors `issue_body`'s GH #544 shape).
 
     Pure: strings in, one string out. No paraphrase of any item (ADR-0149 F2, extended to the
-    amendment path).
+    amendment path). Re-entry conditions land outside the close condition, same as `issue_body`
+    (GH #1411).
     """
+    repairs, conditions = partition_repairs(items)
     return (
         f"`scripts/adr_ratify.py` flipped **ADR-{adr_id}**'s Amendment — \"{amendment_title}\" — "
         f"`proposed` → `ratified` on {date} (GH #664), via the owner's ratification utterance: "
         f"{url}\n\n"
         f"That amendment's own text books the items below. **This issue is their tracking "
-        f"record — it stays OPEN until they are executed, and closing it is the record that "
-        f"they landed.**\n\n"
+        f"record — it stays OPEN until the checkbox items are executed, and closing it is the "
+        f"record that they landed; the close condition covers ONLY the checkbox list.**\n\n"
         f"Each item is quoted verbatim from the amendment's own text:\n\n"
-        f"{checklist(items)}\n\n"
+        f"{checklist(repairs)}"
+        f"{conditions_section(conditions)}\n\n"
         f"Source: `{adr_rel}`"
     )
 
@@ -335,7 +392,8 @@ def repairs_comment_body(header_line: str, items: list[str], issue_ref: str | No
         else "**No tracking issue was filed** (see the flip's stderr) — these items are in no "
              "queue until one exists."
     )
-    return f"{header_line}\n\n{checklist(items)}\n\n{tracked}\n\nSource: `{adr_rel}`"
+    repairs, conditions = partition_repairs(items)
+    return f"{header_line}\n\n{checklist(repairs)}{conditions_section(conditions)}\n\n{tracked}\n\nSource: `{adr_rel}`"
 
 
 def file_repairs_issue(api_repo: str, title: str, body: str, item_count: int) -> str | None:
@@ -482,14 +540,25 @@ def main() -> int:
             f"candidate): {title}"
         )
         repairs = amendment_booked_repairs(amendment_body(adr_text, header))
-        booked = (
-            "\n  booked: " + "\n          ".join(f"[ ] {item}" for item in repairs)
-            + f"\n  track:  would file '{amendment_issue_title(adr_id)}' "
-              f"(label '{REPAIRS_ISSUE_LABEL}', OPEN) on {api_repo}"
-            if repairs
-            else "\n  booked: (no `**Repairs**`-labelled list in the amendment's own text — "
-                 "nothing to track)"
-        )
+        executable, conditions = partition_repairs(repairs)
+        lines = [f"[ ] {item}" for item in executable] + [f"(re-entry) {item}" for item in conditions]
+        if executable:
+            booked = (
+                "\n  booked: " + "\n          ".join(lines)
+                + f"\n  track:  would file '{amendment_issue_title(adr_id)}' "
+                  f"(label '{REPAIRS_ISSUE_LABEL}', OPEN) on {api_repo}"
+            )
+        elif conditions:
+            booked = (
+                "\n  booked: " + "\n          ".join(lines)
+                + "\n  track:  (only re-entry conditions — they live in the ADR and "
+                  "decision-watcher catches the triggering amendment; nothing to track, GH #1411)"
+            )
+        else:
+            booked = (
+                "\n  booked: (no `**Repairs**`-labelled list in the amendment's own text — "
+                "nothing to track)"
+            )
         if dry_run:
             print(f"DRY-RUN — all checks pass, no writes.\n{evidence}{booked}")
             return 0
@@ -507,8 +576,9 @@ def main() -> int:
             f"  wrote:  Amendment header only (Status cell + every other byte untouched)"
         )
 
-        # Fail-OPEN from here, same contract as the whole-ADR flip below (GH #392/#544).
-        if repairs:
+        # Fail-OPEN from here, same contract as the whole-ADR flip below (GH #392/#544). Gated on
+        # EXECUTABLE items (GH #1411), same as that path.
+        if executable:
             adr_rel = str(adr_path.relative_to(root))
             issue_ref = None
             try:
@@ -554,15 +624,25 @@ def main() -> int:
         f"  token:  ratify ADR-{adr_id} (of {sorted(named)})\n"
         f"  target: {adr_path.relative_to(root)} (Status: proposed)"
     )
-    # ── the booked repairs this flip owes forward (GH #392) ─────────────────────────────────────
+    # ── the booked repairs this flip owes forward (GH #392) — partitioned into executable
+    # checkboxes vs future re-entry conditions (GH #1411); only the former gate a tracker ─────────
     repairs = booked_repairs(adr_text)
-    booked = (
-        "\n  booked: " + "\n          ".join(f"[ ] {item}" for item in repairs)
-        + f"\n  track:  would file '{issue_title(adr_id)}' "
-          f"(label '{REPAIRS_ISSUE_LABEL}', OPEN) on {api_repo}"
-        if repairs
-        else "\n  booked: (no `on ratification` items in the Repairs cell — nothing to track)"
-    )
+    executable, conditions = partition_repairs(repairs)
+    lines = [f"[ ] {item}" for item in executable] + [f"(re-entry) {item}" for item in conditions]
+    if executable:
+        booked = (
+            "\n  booked: " + "\n          ".join(lines)
+            + f"\n  track:  would file '{issue_title(adr_id)}' "
+              f"(label '{REPAIRS_ISSUE_LABEL}', OPEN) on {api_repo}"
+        )
+    elif conditions:
+        booked = (
+            "\n  booked: " + "\n          ".join(lines)
+            + "\n  track:  (only re-entry conditions — they live in the ADR and decision-watcher "
+              "catches the triggering amendment; nothing to track, GH #1411)"
+        )
+    else:
+        booked = "\n  booked: (no `on ratification` items in the Repairs cell — nothing to track)"
     if dry_run:
         print(f"DRY-RUN — all checks pass, no writes.\n{evidence}{booked}")
         return 0
@@ -582,7 +662,9 @@ def main() -> int:
     # The flip is done. Everything below is fail-OPEN — it must never turn a landed flip non-zero.
     # Order matters: the tracking issue is filed FIRST so the comment can name it (GH #544). If the
     # issue fails, the comment still posts and says so, rather than implying it is the tracker.
-    if repairs:
+    # Gated on EXECUTABLE items (GH #1411): a cell booking only re-entry conditions files nothing —
+    # a tracker with no checkbox could never close, which is the defect this partition removes.
+    if executable:
         adr_rel = str(adr_path.relative_to(root))
         issue_ref = None
         try:
