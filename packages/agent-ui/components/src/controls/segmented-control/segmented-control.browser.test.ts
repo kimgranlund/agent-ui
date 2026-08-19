@@ -95,10 +95,11 @@ describe('ui-segmented-control — grid track + segment geometry (both engines)'
     // no inter-cell gap: each cell's left edge sits at the previous cell's right edge
     for (let i = 1; i < rects.length; i++) expect(rects[i]!.left).toBeCloseTo(rects[i - 1]!.right, 0)
 
-    // one outer rounded track
-    const gcs = getComputedStyle(group)
-    expect(px(gcs.borderTopWidth)).toBeCloseTo(1, 0)
-    expect(px(gcs.borderTopLeftRadius)).toBeGreaterThan(0)
+    // one outer rounded track — painted on the host's `::after` overlay (bug #1380), not the host's
+    // own `border` (freed so the overlay can always rasterize ABOVE the moving indicator).
+    const after = getComputedStyle(group, '::after')
+    expect(px(after.borderTopWidth)).toBeCloseTo(1, 0)
+    expect(px(after.borderTopLeftRadius)).toBeGreaterThan(0)
 
     // ZERO inter-segment dividers (Kim's ruling, 2026-07-09 — the outer track + the moving fill + the
     // hover washes carry the segmentation; the original collapsed-divider borders were removed): EVERY
@@ -201,6 +202,101 @@ describe('ui-segmented-control — the shared moving indicator (both engines)', 
     expect(beforeBg(group)).toBe(resolveToken(group, '--md-sys-color-primary-selected'))
     expect(ink(segments[0]!)).toBe(resolveToken(group, '--md-sys-color-primary-on-primary'))
     expect(ink(segments[1]!)).toBe(resolveToken(group, '--md-sys-color-neutral-on-surface-variant'))
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [2b] Regression guard (bug #1380) — the indicator never escapes the rounded track: all four
+//  corners, mid-slide, both color schemes, and the RTL slide-direction flip
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+/** Mount inside a wrapper carrying its own `color-scheme` (the fleet pattern, badge.browser.test.ts) so
+ *  every `light-dark()` token in the chain resolves against a KNOWN branch, not the ambient page theme. */
+const mountThemed = (
+  markup: string,
+  scheme: 'light' | 'dark'
+): { wrap: HTMLElement; group: HTMLElement; segments: HTMLElement[] } => {
+  const wrap = document.createElement('div')
+  wrap.style.colorScheme = scheme
+  wrap.innerHTML = markup
+  document.body.append(wrap)
+  mounted.push(wrap)
+  const group = wrap.querySelector('ui-segmented-control') as HTMLElement
+  const segments = [...wrap.querySelectorAll('ui-segment')] as HTMLElement[]
+  return { wrap, group, segments }
+}
+
+/** The indicator's real rendered box (::before, a `content:''` pseudo — getBoundingClientRect is
+ *  unavailable on a pseudo-element, so derive it from the host's own rect + the pseudo's computed
+ *  geometry, which is exactly what a real engine paints: `inset-block-start`/`inset-inline-start`
+ *  anchor at 0,0 in LOGICAL space, `width`/`height` size it, and `transform` slides it. The inline
+ *  anchor flips physically under RTL (inline-start == the RIGHT edge), so the base X position must
+ *  flip with it — this is the exact distinction bug #1380's RTL leg turned on. */
+const indicatorRect = (group: Element): { left: number; top: number; right: number; bottom: number } => {
+  const hostRect = group.getBoundingClientRect()
+  const cs = before(group)
+  const { tx, ty } = translateOf(cs.transform)
+  const width = px(cs.width)
+  const rtl = getComputedStyle(group).direction === 'rtl'
+  const left = (rtl ? hostRect.right - width : hostRect.left) + tx
+  const top = hostRect.top + ty
+  return { left, top, right: left + width, bottom: top + px(cs.height) }
+}
+
+/** Containment, all four corners: the indicator's box never extends past the TRACK's own border-box
+ *  (the host's rendered rect — bug #1380's "escapes the rounded track" failure mode) on any edge. */
+const expectContained = (group: Element, epsilon = 0.75): void => {
+  const track = group.getBoundingClientRect()
+  const ind = indicatorRect(group)
+  expect(ind.left, 'indicator escaped the track on the LEFT').toBeGreaterThanOrEqual(track.left - epsilon)
+  expect(ind.top, 'indicator escaped the track on the TOP').toBeGreaterThanOrEqual(track.top - epsilon)
+  expect(ind.right, 'indicator escaped the track on the RIGHT').toBeLessThanOrEqual(track.right + epsilon)
+  expect(ind.bottom, 'indicator escaped the track on the BOTTOM').toBeLessThanOrEqual(track.bottom + epsilon)
+}
+
+describe('ui-segmented-control — indicator never escapes the rounded track (bug #1380 regression guard)', () => {
+  for (const scheme of ['light', 'dark'] as const) {
+    it(`horizontal, ${scheme}: contained at the first cell (top-left/bottom-left corners) and the last cell (top-right/bottom-right corners)`, async () => {
+      const { group, segments } = mountThemed(HORIZONTAL, scheme)
+      await userEvent.click(segments[0]!)
+      expectContained(group)
+      await userEvent.click(segments[segments.length - 1]!)
+      await expect.poll(() => translateOf(before(group).transform).tx).toBeGreaterThan(0)
+      expectContained(group)
+    })
+
+    it(`vertical, ${scheme}: contained at the first cell (top corners) and the last cell (bottom corners)`, async () => {
+      const { group, segments } = mountThemed(VERTICAL, scheme)
+      await userEvent.click(segments[0]!)
+      expectContained(group)
+      await userEvent.click(segments[segments.length - 1]!)
+      await expect.poll(() => translateOf(before(group).transform).ty).toBeGreaterThan(0)
+      expectContained(group)
+    })
+  }
+
+  it('mid-slide: the indicator stays contained at an interpolated (non-settled) transform position too', async () => {
+    const { group, segments } = mount(HORIZONTAL)
+    await userEvent.click(segments[0]!)
+    await userEvent.click(segments[2]!)
+    // sample mid-transition — deliberately BEFORE the transform settles (no poll-to-settle here).
+    await new Promise((r) => setTimeout(r, 40))
+    expectContained(group)
+    // let the transition finish so it doesn't bleed into the next test.
+    await expect.poll(() => translateOf(before(group).transform).tx, { timeout: 1500 }).toBeGreaterThan(0)
+  })
+
+  it('RTL: a positive index slides the indicator TOWARD the anchor edge, never past the track (the translateX sign must flip under :dir(rtl))', async () => {
+    const { group, segments } = mount(HORIZONTAL)
+    group.setAttribute('dir', 'rtl')
+    await userEvent.click(segments[0]!)
+    expectContained(group)
+    await userEvent.click(segments[segments.length - 1]!)
+    await expect.poll(() => translateOf(before(group).transform).tx).not.toBeCloseTo(0, 0)
+    // the RTL-flipped slide must stay negative (toward the LEFT, since inset-inline-start anchors the
+    // indicator at the RIGHT edge under :dir(rtl)) — a positive tx here is exactly bug #1380's escape.
+    expect(translateOf(before(group).transform).tx).toBeLessThan(0)
+    expectContained(group)
   })
 })
 
@@ -372,14 +468,15 @@ describe('ui-segmented-control — user-invalid leg (ADR-0051, inherited)', () =
     const { group, segments } = mount(REQUIRED_HORIZONTAL)
 
     expect(group.matches(':state(user-invalid)'), 'user-invalid must not flash before any interaction').toBe(false)
-    const idleBorder = getComputedStyle(group).borderColor
+    // the track border now paints on the host's `::after` overlay (bug #1380), not the host's own border.
+    const idleBorder = getComputedStyle(group, '::after').borderColor
 
     ;(segments[0] as HTMLElement).focus()
     ;(segments[0] as HTMLElement).blur()
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
     expect(group.matches(':state(user-invalid)'), ':state(user-invalid) was not armed on the control after a segment blur').toBe(true)
-    const invalidBorder = getComputedStyle(group).borderColor
+    const invalidBorder = getComputedStyle(group, '::after').borderColor
     expect(invalidBorder, "the control's OWN track border-color did not repaint under :state(user-invalid)").not.toBe(idleBorder)
 
     // RECOVERY: selecting a segment clears the constraint.
