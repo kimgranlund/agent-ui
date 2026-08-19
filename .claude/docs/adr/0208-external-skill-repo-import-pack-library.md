@@ -21,7 +21,7 @@ committed through the SAME `validateNewEntry` path as a hand-authored entry (GH 
 made catalogs a pack-fed kind too). Which packs exist is page-owned
 (`site/pages/agent-admin-libraries.ts` — three packs even derive LIVE from in-repo registries via
 Vite raw-globs), handed to `ui-agent-admin` through its reactive `libraries` prop
-(`agent-admin.ts:320`, GH #143's per-kind rebuild seam). Opt-in is already per-agent by
+(`agent-admin.ts`, GH #143's per-kind rebuild seam). Opt-in is already per-agent by
 construction: an add writes into the active persona's own store
 (`createMemoryStore({ persistKey: 'agent-admin-app.<id>' })`, `agent-admin-presets.ts`), under
 `entries:skill` etc., and composition follows the standing laws — index-line ambient (GH #891/
@@ -145,7 +145,7 @@ typing done, entry-data.ts) and are untouched.
 ### D4 — per-agent opt-in: the existing entries pipeline, `rejectOnCollision`, review-gated refresh
 
 Imported packs project into the skill kind's pack list beside the first-party packs, through the
-SAME reactive `libraries` seam (`agent-admin.ts:320`/GH #143 — a store change reassigns the prop;
+SAME reactive `libraries` seam (`agent-admin.ts`'s `libraries` prop/GH #143 — a store change reassigns the prop;
 no new list/toggle/author code, the ADR-0132 cl.1 law). An add commits through `validateNewEntry`
 into the ACTIVE persona's own `entries:skill` store — per-agent opt-in is therefore the existing
 mechanism, not a new one. Nothing from a merely-imported pack ever reaches prompt assembly: only
@@ -236,7 +236,7 @@ imports into their own store under the source's own terms, shown to them.
 | # | Slice | Size | Gate (exit codes, foreground) |
 |---|---|---|---|
 | S1 | D1 format + D2 CLI (`scripts/import-skill-pack.mjs` + `selftest` arm, wired into `check:scripts`) | small | `npm run check:scripts` · `npm run check` |
-| S2 | D3 ingestion + store (`skill-packs:` StorageAdapter records, format fail-closed validation, provenance/license/scan display, remove) + the no-egress negative test + the lazy-split bundle assertion | medium | `npm run check` · `npm test` (jsdom: validation negatives, store round-trip, egress trip-wire, bundle) |
+| S2 | D3 ingestion + store (`skill-packs:` StorageAdapter records, format fail-closed validation, provenance/license/scan display, remove) + the no-egress negative test + the lazy-split bundle assertion (its precedent/home: `packages/agent-ui/app/src/controls/agent-admin/agent-admin-lazy.bundle.test.ts` — the ADR-0197 Rolldown `moduleIds` trip-wire with its negative control; the assertion is bundle-level, never a weaker runtime-only check) | medium | `npm run check` · `npm test` (jsdom: validation negatives, store round-trip, egress trip-wire, bundle) |
 | S3 | D4 opt-in wiring (imported packs into the `libraries` seam, `rejectOnCollision` behavior, refresh/collision-disable) + the default-off negative assertion in prompt assembly | small | `npm run check` · `npm test` (the `genui-pack-library.test.ts` jsdom precedent; a browser shard only if the picker flow proves jsdom-unreachable) |
 
 S1 is independently shippable (the snapshot format is the contract); S2 depends on S1's format;
