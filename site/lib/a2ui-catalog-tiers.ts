@@ -109,6 +109,11 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   // owning compound: MenuItem→Menu, SwiperItem→Swiper, SplitPane→Split, TimelineItem→Timeline's per-row
   // anatomy (Timeline itself is FEATURE-class as the whole chronology surface; its row is PATTERN-class,
   // the same composite-row shape as MenuItem/SwiperItem).
+  // Drill (GH #1353, ADR-0195 GH #954): the N-level drill-down panel container — a composite,
+  // multi-part interactive construct (header+back+heading anatomy, per-panel resolution), the
+  // Tabs/Split/Swiper class, not a display leaf.
+  Drill: 'PATTERN',
+  DrillPanel: 'PATTERN', // rides with Drill, the SplitPane/SwiperItem precedent
   Disclosure: 'PATTERN',
   FormPopover: 'PATTERN',
   Menu: 'PATTERN',

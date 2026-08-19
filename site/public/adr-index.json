@@ -1463,6 +1463,13 @@
     "section": "Records"
   },
   {
+    "name": "ADR-0211",
+    "url": "./adr-index.html#adr-0211",
+    "description": "Drill/DrillPanel catalog wire-mark shape: forward-only bindable path, no value mark (no readback accessor exists), panel identity via structural key/parent, dr…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "ADR-0212",
     "url": "./adr-index.html#adr-0212",
     "description": "ui-radio-group child discovery widens from direct-children to nearest-group-scoped descendants: one logical radio system across visual groups (GH #1365)",

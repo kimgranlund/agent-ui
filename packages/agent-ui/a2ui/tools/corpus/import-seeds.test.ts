@@ -436,6 +436,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     'travel-itinerary': { passed: false, qualityScore: 2 },
     'frontier-latency-line-chart': { passed: false, qualityScore: 2 },
     'frontier-media-tour': { passed: false, qualityScore: 2 },
+    'frontier-drill-settings': { passed: false, qualityScore: 2 },
     'frontier-pane-switcher': { passed: false, qualityScore: 2 },
     'pattern-confirmation-card': { passed: false, qualityScore: 2 },
     'pattern-settings-form': { passed: false, qualityScore: 2 },

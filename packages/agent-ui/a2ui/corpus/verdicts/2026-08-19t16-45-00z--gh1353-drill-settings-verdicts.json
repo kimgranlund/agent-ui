@@ -1,0 +1,9 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.2",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-08-19T16:45:00Z",
+  "verdicts": {
+    "frontier-drill-settings": { "qualityScore": 4, "passed": true, "failingDimensions": [] }
+  }
+}

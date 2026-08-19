@@ -106,6 +106,9 @@ export interface FeedExclusion {
  * + the ui-drawer wave's one: `Drawer` [ADR-0188 cl.2 — the SAME focus-stealing top-layer class as
  * Modal, edge-docked rather than centred] + the image-content wave's one: `Image` [GH #1189 — a
  * URL-sourced content image/photo, the Attachment/Swatch/Ramp/Ladder report-content class, NOT the
+ * Avatar/Icon light-identity-mark class] + the GH #1353 Drill-catalog-decision pass's two: `Drill`/
+ * `DrillPanel` [ADR-0195 GH #954 — an arbitrary-depth tree hiding all-but-one panel, taken further
+ * than the Tabs "hides half the ask" reasoning, and no value mark to commit even if it were IN]).
  * Avatar/Icon light-identity-mark class] + the GH #1352 Toggle-catalog-decision pass's one: `Toggle`
  * [ADR-0179 GH #686 Amendment S7-a — no `value` mark at all (Fork T1); worse than the already-excluded
  * `Switch`, which at least commits `checked` back — a press inside an ask would flip the pill with no
@@ -258,6 +261,12 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
     reason:
       'a URL-sourced media player (GH #1209) — display-only, no value mark, no ask affordance; the Image/Video reasoning verbatim.',
   },
+  {
+    type: 'Drill',
+    reason:
+      'multi-view structure contradicts a single-purpose ask, taken FURTHER than Tabs (GH #1353, ADR-0195 GH #954) — an arbitrary-depth tree of which only ONE panel is ever visible; no value mark exists to commit either (Fork D1, the toggleFactory-class finding — neither controlled nor uncontrolled mode ever writes the resolved position back onto `path`).',
+  },
+  { type: 'DrillPanel', reason: 'a Drill child — excluded alongside its parent (composite closure).' },
   {
     type: 'Toggle',
     reason:
