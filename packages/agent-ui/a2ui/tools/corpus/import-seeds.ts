@@ -78,6 +78,16 @@
 // `--dry-run` runs the full pipeline (dedup, judge, quality gate) and reports exactly what a real run
 // would do, without the final `saveStore()` — a safe way to preview any invocation, including one that
 // would otherwise be a typo away from mutating the corpus.
+//
+// GH #1346 — the fail-closed judge-tier guard: with no `--verdicts`, `admit()`'s stage-10 judge seam is
+// simply SKIPPED (ADR-0060's optional seam), so any candidate that cleared stage-9 dedup used to be
+// tier-1-admitted and WRITTEN silently — including the source-drifted content of an already-admitted
+// name (name-based `alreadyAdmitted` plus content-based dedup both miss it, and `dispositionGuard`
+// only fires on ARCHIVED refusals). A bare run is now legal ONLY for the all-`E_DUP` no-op case: the
+// moment ANY candidate reaches the judge tier with no judge wired, the run HALTS before `saveStore`
+// ("N candidate(s) reached the judge tier with no judge wired — nothing written", exit 1). Under
+// `--dry-run` that halt is the usual warning line instead — a dry run writes nothing by construction
+// and still owes its summary (the GH #335 review item 3 / GH #360 review item 3 posture).
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -142,6 +152,7 @@ import {
   travelItinerarySeed,
 } from '../../src/examples/composition-pack-b.ts'
 import { crudEntryListDrawerSeed } from '../../src/examples/crud-entry-list.ts'
+import { planAndExecutePlanSeed, planAndExecuteApproveAskSeed } from '../../src/examples/plan-and-execute.ts'
 import { allSeeds } from '../../src/examples/index.ts'
 
 declare const process: { cwd(): string; argv: string[]; exit(code?: number): never }
@@ -173,6 +184,11 @@ const HELP_TEXT = `import-seeds — the ADR-0055 seed-import script (corpus LLD-
 
 Maps every seed on the example shelf (src/examples/) onto a candidate CorpusRecord and runs it
 through admit() — the corpus's single write path.
+
+A run WITHOUT --verdicts is legal only as a no-op: every seed must be an idempotent E_DUP re-run of
+its own already-admitted record. The moment ANY candidate clears dedup — a new seed, or the
+source-drifted content of an admitted name — it has reached the judge tier, and a bare run fails
+closed with nothing written (GH #1346). Wire --verdicts to admit anything.
 
 Usage:
   node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts [options]
@@ -296,6 +312,10 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
   {
     module: 'crud-entry-list.ts', // GH #1355 — the CRUD entry-list idiom's corpus seed; admission pending the judged wave
     seeds: [crudEntryListDrawerSeed],
+  },
+  {
+    module: 'plan-and-execute.ts', // GH #1374 — the plan-and-execute exemplar pair; admission pending the judged wave (disposition-allowlist.ts)
+    seeds: [planAndExecutePlanSeed, planAndExecuteApproveAskSeed],
   },
 ]
 
@@ -435,6 +455,12 @@ interface ImportReport {
    *  clause 4) — reported as a warning line instead, so a dry run finishes and still tells the truth
    *  about what a real run would do (nothing admitted, nothing written, for exactly these names). */
   dispositionWarnings: string[]
+  /** GH #1346: candidates an UNJUDGED run (`--verdicts` absent) tier-1-admitted in memory — each one
+   *  cleared stage-9 dedup and reached the skipped stage-10 judge seam, which is exactly the write this
+   *  tool must never make silently. Any entry here fails the run closed before `saveStore` (under
+   *  `--dry-run`, the usual would-HALT warning instead); on a judged run this stays empty by
+   *  construction, and the names land in `admitted`. */
+  unjudgedCandidates: string[]
 }
 
 /** The critic-authored metadata a `--verdicts` run's judge carries (ADR-0068's `VerdictsFile`) — kept
@@ -564,7 +590,7 @@ async function main(): Promise<void> {
     verdictMeta = { rubricVersion, judgedBy: parsedVerdicts.file.judgedBy, date: parsedVerdicts.file.date }
   }
 
-  const report: ImportReport = { admitted: [], alreadyPresent: [], rejections: [], dispositionWarnings: [] }
+  const report: ImportReport = { admitted: [], alreadyPresent: [], rejections: [], dispositionWarnings: [], unjudgedCandidates: [] }
   let replaced: ReplacedInfo | undefined
 
   for (const group of SEEDS_BY_MODULE) {
@@ -618,7 +644,16 @@ async function main(): Promise<void> {
       }
 
       if (result.ok) {
-        report.admitted.push(seed.name)
+        // GH #1346: with no judge wired, an `ok` result IS the defect — the candidate cleared stage-9
+        // dedup and sailed through the SKIPPED stage-10 judge seam (a new seed, or the source-drifted
+        // content of an admitted name — `dispositionGuard` above only catches ARCHIVED refusals).
+        // Collected, not halted mid-loop, so the fail-closed report below can name every such
+        // candidate at once; the in-memory admission is discarded with the process, never saved.
+        if (verdictsPath === undefined) {
+          report.unjudgedCandidates.push(seed.name)
+        } else {
+          report.admitted.push(seed.name)
+        }
         continue
       }
 
@@ -649,6 +684,27 @@ async function main(): Promise<void> {
         paths: result.paths,
         failingDimensions: result.failingDimensions,
       })
+    }
+  }
+
+  // GH #1346 — the fail-closed judge-tier guard, checked FIRST: a bare run's legality is the
+  // precondition every other verdict on this run rests on. Non-empty implies `--verdicts` was absent
+  // (the loop only collects here on an unjudged run). A real run halts BEFORE `saveStore` — the
+  // in-memory tier-1 admissions are discarded with the process, the on-disk shard is untouched (the
+  // quarantine-halt precedent above). A dry run reports the identical fact in the established
+  // would-HALT voice and still finishes with its summary.
+  if (report.unjudgedCandidates.length > 0) {
+    const haltMessage =
+      `import-seeds: HALTED — ${report.unjudgedCandidates.length} candidate(s) reached the judge tier ` +
+      `with no judge wired — nothing written. Candidates: ${report.unjudgedCandidates.join(', ')}. ` +
+      'A bare (no --verdicts) run is legal only when every seed is an idempotent E_DUP re-run of its ' +
+      'own admitted record; a candidate that clears dedup — a new seed, or the source-drifted content ' +
+      'of an admitted name — must be judged (ADR-0068 clause 2, GH #1346). Re-run with --verdicts <path>.'
+    if (dryRun) {
+      console.log(`import-seeds (--dry-run): a real run would HALT here — ${haltMessage}`)
+    } else {
+      console.error(haltMessage)
+      process.exit(1)
     }
   }
 
@@ -745,6 +801,15 @@ async function main(): Promise<void> {
     // "dispositioned" covers BOTH guard inputs since ADR-0165 clause 4 — an archived `passed:false`
     // verdict or a curated allowlist entry. The halt line printed above names which one fired.
     console.log(`  would HALT on a real run (--dry-run only, dispositioned): ${report.dispositionWarnings.join(', ')}`)
+  }
+  if (report.unjudgedCandidates.length > 0) {
+    // Only reachable under --dry-run — a real run exited at the fail-closed judge-tier guard above
+    // (GH #1346). These names are deliberately NOT counted as "admitted" in the headline: a real run
+    // admits none of them, and the dry-run summary reports what a real run would do.
+    console.log(
+      `  would HALT on a real run (--dry-run only, ${report.unjudgedCandidates.length} candidate(s) at ` +
+        `the judge tier with no judge wired): ${report.unjudgedCandidates.join(', ')}`,
+    )
   }
   if (replaced !== undefined) {
     console.log(`  replaced: "${replaced.name}" (prior status: ${replaced.priorStatus}, prior canonicalHash: ${replaced.priorCanonicalHash ?? 'none'})`)

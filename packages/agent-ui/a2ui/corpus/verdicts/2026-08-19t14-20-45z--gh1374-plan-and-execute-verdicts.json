@@ -1,0 +1,10 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.2",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-08-19T14:20:45Z",
+  "verdicts": {
+    "plan-and-execute-plan": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "plan-and-execute-approve-ask": { "qualityScore": 4, "passed": true, "failingDimensions": [] }
+  }
+}
