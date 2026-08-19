@@ -5,7 +5,7 @@
     "Text": {
       "properties": {
         "text": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" },
-        "variant": { "type": { "type": "string", "enum": ["h1", "h2", "h3", "h4", "h5", "caption", "body", "label"] }, "mapsTo": "variant" },
+        "variant": { "type": { "type": "string", "enum": ["h1", "h2", "h3", "h4", "h5", "caption", "body", "label", "kicker", "overline", "quote", "lead"] }, "mapsTo": "variant" },
         "truncate": { "type": { "type": "boolean" }, "mapsTo": "truncate" },
         "emphasis": { "type": { "type": "boolean" }, "mapsTo": "emphasis" },
         "href": { "type": { "type": "string" }, "bindable": true, "mapsTo": "href", "format": "safe-href" }

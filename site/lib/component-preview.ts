@@ -307,7 +307,8 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
   Column: layoutSample,
   // BATCH D — the region model reads: header (a real heading) · content (body) · footer (an action), mirroring
   // the card-doc.ts reference specimen (header/content/footer, a save action in the footer). Text.variant's
-  // catalog wire enum is `h1…h5 | caption | body` (catalog.json) — 'title' is NOT a member (it's the ui-text
+  // catalog wire enum is `h1…h5 | caption | body | label | kicker | overline | quote | lead` (catalog.json,
+  // widened GH #808 S1 + ADR-0207) — 'title' is NOT a member (it's the ui-text
   // TRIPLE h5 fans out to internally, TEXT_VARIANT_TABLE in factories.ts — not itself a selectable wire value);
   // an invalid member silently falls back to 'body' (factories.ts's documented unrecognized-value fallback),
   // which is exactly how this shipped broken — the header rendered as body text, losing the header/content

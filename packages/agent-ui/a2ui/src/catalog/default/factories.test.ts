@@ -117,6 +117,9 @@ describe('default catalog factories — Text (ADR-0078, catalog LLD-C5)', () => 
   // tier down from the original table, not `ui-text`'s document type scale. Strictly decreasing
   // 28/24/22/16/14px across h1-h5. `label` (GH #808 S1, catalog SPEC-R4) is a straight pass-through — the
   // wire register name IS the `ui-text` M3 role name, no translation, unlike every heading row above.
+  // The four ADR-0207 editorial registers (ratified 2026-08-19, GH #1321): `kicker`/`overline` are
+  // straight pass-throughs of `label`'s class; `quote`/`lead` are the first NON-heading rows to stamp a
+  // semantic element (`blockquote`/`p`) — the heading rows' own precedent, role AND semantics one dial.
   it.each([
     ['h1', { as: 'h1', variant: 'headline', size: 'md' }],
     ['h2', { as: 'h2', variant: 'headline', size: 'sm' }],
@@ -126,6 +129,10 @@ describe('default catalog factories — Text (ADR-0078, catalog LLD-C5)', () => 
     ['body', { as: 'none', variant: 'body', size: 'md' }],
     ['caption', { as: 'none', variant: 'body', size: 'sm' }],
     ['label', { as: 'none', variant: 'label', size: 'md' }],
+    ['kicker', { as: 'none', variant: 'kicker', size: 'md' }],
+    ['overline', { as: 'none', variant: 'overline', size: 'md' }],
+    ['quote', { as: 'blockquote', variant: 'quote', size: 'md' }],
+    ['lead', { as: 'p', variant: 'lead', size: 'md' }],
   ] as const)('wire variant %s fans out to the ui-text triple', (wire, triple) => {
     const el = textFactory.create()
     textFactory.applyProp(el, 'variant', wire)
@@ -161,10 +168,21 @@ describe('default catalog factories — Text (ADR-0078, catalog LLD-C5)', () => 
     expect(validateCatalogConformance(labelRow, defaultCatalog)).toEqual([])
   })
 
-  // SPEC-R4 AC1's negative control: an out-of-enum value still fails CATALOG — the widening added
-  // exactly one member, not an open-ended string.
-  it('NEGATIVE: an out-of-enum Text.variant value still fails CATALOG', () => {
-    const bogus: A2uiComponent = { id: 'txt6', component: 'Text', text: 'x', variant: 'subtitle' }
+  // ADR-0207's own leg of the same claim: the four editorial registers validate with ZERO validator
+  // code — the ADR-0098 generic enum gate reads the widened `catalog.json` enum directly.
+  it.each(['kicker', 'overline', 'quote', 'lead'] as const)(
+    'Text.variant "%s" (ADR-0207) validates — the widened editorial register',
+    (register) => {
+      const node: A2uiComponent = { id: 'txt7', component: 'Text', text: 'Editorial', variant: register }
+      expect(validateCatalogConformance(node, defaultCatalog)).toEqual([])
+    },
+  )
+
+  // SPEC-R4 AC1's negative control (held through ADR-0207): an out-of-enum value still fails CATALOG —
+  // the widenings appended exact members, not an open-ended string. `display`/`h6` are the ADR-0207
+  // D1 exclusions (component-only registers/semantics), `subtitle` was never a member at all.
+  it.each(['subtitle', 'display', 'h6'] as const)('NEGATIVE: out-of-enum Text.variant "%s" still fails CATALOG', (bad) => {
+    const bogus: A2uiComponent = { id: 'txt6', component: 'Text', text: 'x', variant: bad }
     expect(validateCatalogConformance(bogus, defaultCatalog)).toEqual([{ code: 'CATALOG', path: 'txt6.variant' }])
   })
 
