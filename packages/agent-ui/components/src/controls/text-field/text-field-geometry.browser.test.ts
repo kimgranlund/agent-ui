@@ -278,6 +278,37 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     }
   })
 
+  it('GH #1406: the step buttons render SIDE-BY-SIDE trailing — minus (step-down) left of plus (step-up), same row, square cells', () => {
+    // Kim's 2026-08-19 ruling on #1406: the stacked caret column became a trailing − + ROW. Pinned on
+    // BOTH numeric-family roles: the bare stepper cell (type=number) and the suffix+steppers numeric
+    // cell (type=percent). The pin: minus.x < plus.x (side by side, − left), shared row (vertical
+    // centers align), TRAILING (both sit past the editor's inline start), icon-sized square buttons.
+    for (const markup of [
+      '<ui-text-field type="number"></ui-text-field>',
+      '<ui-text-field type="percent"></ui-text-field>',
+    ] as const) {
+      const { field, editor } = mount(markup)
+      const down = (field.querySelector('[data-part="step-down"]') as HTMLElement).getBoundingClientRect()
+      const up = (field.querySelector('[data-part="step-up"]') as HTMLElement).getBoundingClientRect()
+
+      // side by side, minus LEFT of plus (no overlap)
+      expect(down.right, `[${markup}] step-down must sit fully left of step-up (− + order)`).toBeLessThanOrEqual(up.left + 0.5)
+      expect(down.left, `[${markup}] step-down must be left of step-up`).toBeLessThan(up.left)
+      // one shared row, not a stack: vertical centers within 1px
+      const downCy = down.top + down.height / 2
+      const upCy = up.top + up.height / 2
+      expect(Math.abs(downCy - upCy), `[${markup}] step buttons must share one row (not stacked)`).toBeLessThanOrEqual(1)
+      // trailing: the pair sits at the field's inline END, past the editor's start edge
+      const editorBox = editor.getBoundingClientRect()
+      expect(down.left, `[${markup}] the stepper pair must TRAIL the editor`).toBeGreaterThan(editorBox.left)
+      // square, icon-sized cells (md stepper convention): width == height, positive
+      for (const [label, r] of [['step-down', down], ['step-up', up]] as const) {
+        expect(r.width, `[${markup}] ${label} collapsed`).toBeGreaterThan(0)
+        expect(Math.abs(r.width - r.height), `[${markup}] ${label} must be square`).toBeLessThanOrEqual(1)
+      }
+    }
+  })
+
   it('[scale] content-lg: adornment font tracks the elevated §1-row — EXACT px at md size', () => {
     // ADR-0038 md×content-lg = 18px (explicit §1-row table, not a multiplier). The adornment must
     // track the editor via the shared --ui-text-field-font token at every [scale] tier.
