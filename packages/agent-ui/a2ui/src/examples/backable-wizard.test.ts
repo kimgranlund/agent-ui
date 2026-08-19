@@ -12,6 +12,11 @@
 // nav Buttons moved off a loose scene Row into their own CardFooter ("ft"), and the Card moved off root
 // ("root" is now the stable wrapper Column, "card" the non-root Card) — this file's ids/assertions were
 // updated in the SAME repair to match, per the clause's card-anatomy-on-every-step requirement.
+//
+// Repaired again 2026-08-18 (GH #1262 second pass, the P7 ground a fresh judge sustained on this seed:
+// "cal"/"rooms" ship with no accessible name and no label prop of their own): both controls now ride an
+// ADR-0051 Field wrap ("f_dates"/"f_room", per the booking-reservation/frontier-card-anatomy-ask
+// precedents) — this file's ids/assertions were updated in the SAME repair to match.
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 import { createRenderer } from '../renderer/renderer.ts'
@@ -201,7 +206,7 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
       if (!('updateComponents' in m)) continue
       for (const c of m.updateComponents.components) {
         if (c.id === 'scene') {
-          // "scene"'s own children are always the substantive content ids (cal/rooms/rcpt), never a
+          // "scene"'s own children are always the substantive content ids (f_dates/f_room/rcpt), never a
           // nav Button id — the loose-Row-in-scene shape this repair removes.
           const children = 'children' in c && Array.isArray(c.children) ? c.children : []
           expect(children).not.toContain('nav1')
@@ -210,5 +215,79 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
         }
       }
     }
+  })
+
+  // GH #1262 second pass (a2ui-payload.md P7): "cal"/"rooms" carry no label prop of their own, so each
+  // must ride a Field wrap — checked structurally (scene never names the raw control id directly) AND at
+  // the real-renderer level (the mounted control sits inside a `ui-field` whose `label` names it).
+  it('P7: "scene" always names the Field wrapper id ("f_dates"/"f_room"/"rcpt"), never the raw "cal"/"rooms" id, in every occurrence', () => {
+    for (const m of backableWizardSeed.messages) {
+      if (!('updateComponents' in m)) continue
+      for (const c of m.updateComponents.components) {
+        if (c.id !== 'scene') continue
+        const children = 'children' in c && Array.isArray(c.children) ? c.children : []
+        expect(children).not.toContain('cal')
+        expect(children).not.toContain('rooms')
+      }
+    }
+  })
+
+  it('P7: every "f_dates"/"f_room" Field record wraps exactly the expected control by id, with the precedent label', () => {
+    const byId = new Map<string, { component: string; label?: string; child?: string }>()
+    for (const m of backableWizardSeed.messages) {
+      if (!('updateComponents' in m)) continue
+      for (const c of m.updateComponents.components) {
+        if (c.component === 'Field') byId.set(c.id, c as { component: string; label?: string; child?: string })
+      }
+    }
+    expect(byId.get('f_dates')).toMatchObject({ label: 'Check-in — check-out', child: 'cal' })
+    expect(byId.get('f_room')).toMatchObject({ label: 'Room type', child: 'rooms' })
+  })
+
+  it('P7 real-renderer proof: the mounted Calendar and RadioGroup each sit inside a labelled ui-field, in both scenes they appear', async () => {
+    const r = createRenderer()
+    const mount = document.createElement('div')
+    document.body.appendChild(mount)
+    r.mount(mount)
+
+    // scene 1 (dates): the Calendar is wrapped by a ui-field labelled "Check-in — check-out".
+    r.ingest(line(MSG_CREATE!))
+    r.ingest(line(MSG_SEED_DRAFT!))
+    r.ingest(line(MSG_SCENE_DATES!))
+    await whenFlushed()
+    const datesField = mount.querySelector('ui-field') as (HTMLElement & { label: string }) | null
+    expect(datesField, 'the dates scene\'s Calendar must ride a ui-field wrap').not.toBeNull()
+    expect(datesField!.label).toBe('Check-in — check-out')
+    expect(datesField!.querySelector('ui-calendar'), 'the ui-field must directly wrap the Calendar').not.toBeNull()
+
+    // scene 2 (room): the RadioGroup is wrapped by a ui-field labelled "Room type".
+    r.ingest(line(MSG_SCENE_ROOM!))
+    r.ingest(line(MSG_WIRE_ROOM_VALUE_1!))
+    await whenFlushed()
+    const roomField = mount.querySelector('ui-field') as (HTMLElement & { label: string }) | null
+    expect(roomField, 'the room scene\'s RadioGroup must ride a ui-field wrap').not.toBeNull()
+    expect(roomField!.label).toBe('Room type')
+    expect(roomField!.querySelector('ui-radio-group'), 'the ui-field must directly wrap the RadioGroup').not.toBeNull()
+
+    // BACK to dates: the SAME wrap reappears on the fresh mount, proving every occurrence is wrapped, not
+    // just the first.
+    r.ingest(line(MSG_BACK_TO_DATES!))
+    await whenFlushed()
+    const datesFieldAgain = mount.querySelector('ui-field') as (HTMLElement & { label: string }) | null
+    expect(datesFieldAgain).not.toBeNull()
+    expect(datesFieldAgain!.label).toBe('Check-in — check-out')
+    expect(datesFieldAgain!.querySelector('ui-calendar')).not.toBeNull()
+
+    // forward again to room: same proof on the second room-scene occurrence.
+    r.ingest(line(MSG_FORWARD_TO_ROOM!))
+    r.ingest(line(MSG_WIRE_ROOM_VALUE_2!))
+    await whenFlushed()
+    const roomFieldAgain = mount.querySelector('ui-field') as (HTMLElement & { label: string }) | null
+    expect(roomFieldAgain).not.toBeNull()
+    expect(roomFieldAgain!.label).toBe('Room type')
+    expect(roomFieldAgain!.querySelector('ui-radio-group')).not.toBeNull()
+
+    r.dispose()
+    mount.remove()
   })
 })
