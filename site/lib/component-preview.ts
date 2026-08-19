@@ -240,7 +240,6 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   // List's `gap` mirrors rentalFilterPanelSeed's own `results_list` props. Tooltip/RadioGroup/SegmentedControl
   // need no seed here — their SAMPLE_TREES content (below) is visible with no root prop at all, the
   // Popover/Menu precedent (only `open`-bearing types with a hidden default need a label seed).
-  ComboBox: { placeholder: 'Search a city…' },
   Grid: { gap: 'md', min: '12rem' },
   List: { gap: 'sm' },
   // GH #1189 — Image: the catalog carries NO per-prop defaults (this file's own comment above), and `src`/
