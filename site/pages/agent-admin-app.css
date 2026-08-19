@@ -279,3 +279,65 @@ body {
   gap: var(--md-sys-space-sm);
   padding: var(--md-sys-space-sm) 0;
 }
+
+/* ── the imported skill-pack shelf (ADR-0208 D3/D5.2/D7, GH #1340/#1349) ──────────────────────────────
+   The roster drawer's shell classes are reused verbatim (header/title/hint/toolbar/status/footer);
+   these are the pack list's OWN rows: attribution + provenance report lines, the scan warning, and the
+   per-entry review fold whose <pre> carries the FULL third-party text (scrolls inside its own box —
+   a runaway body is visible at review, never clipped silently and never widening the drawer). */
+.pack-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-sm);
+}
+
+.pack-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-xs);
+  padding: var(--md-sys-space-xs) var(--md-sys-space-sm);
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: var(--md-sys-shape-corner-base);
+  background: var(--md-sys-color-neutral-surface);
+}
+
+.pack-label {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.pack-remove {
+  flex: none;
+}
+
+.pack-attribution,
+.pack-report,
+.pack-entry-description {
+  margin: 0;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-small-size);
+  overflow-wrap: anywhere;
+}
+
+/* The scan warning is INK-level attention (warning family), with the words carrying the meaning
+   (ADR-0057's non-colour signifier — the sentence names what was flagged and where). */
+.pack-scan-warning {
+  margin: 0;
+  color: var(--md-sys-color-warning-high);
+  font-size: var(--md-sys-typescale-body-small-size);
+  overflow-wrap: anywhere;
+}
+
+.pack-entry-content {
+  margin: 0;
+  padding: var(--md-sys-space-xs) var(--md-sys-space-sm);
+  border-radius: var(--md-sys-shape-corner-base);
+  background: var(--md-sys-color-neutral-surface-high);
+  font-size: var(--md-sys-typescale-body-small-size);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-block-size: 20rem;
+  overflow: auto;
+}

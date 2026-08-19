@@ -1080,6 +1080,50 @@ export const multiSelectFactory: WidgetFactory = {
   value: { prop: 'value', event: 'select' },
 }
 
+/**
+ * Toggle → `ui-toggle` (ADR-0179 GH #686 Amendment S7-a, admin-three-pane-ia.lld.md §16.4 — mints the
+ * fleet's toggle-BUTTON primitive; GH #1352, Kim ruling 2026-08-19: "Toggle is agent-emittable — mint
+ * the row," draining that amendment's TEMPORARY `EXCLUSION_ALLOWLIST` seed in this same commit).
+ * `pressed`/`disabled` are 1:1 reflecting accessors (`setProp`); `size` is a structural (non-bindable)
+ * enum, the `TextField.size`/`Avatar.size` widget-ramp precedent; `label` is bespoke — the light-DOM
+ * default/`label` slot's text (toggle.md), a non-identity `mapsTo` like `Button.label`/`Toast.label`,
+ * so it must NOT route through `accessorFactory` (the factories.ts INVARIANT). The `icon`/`state-icon`
+ * slots are NOT catalogued this pass — the same limitation `Button`'s own leading/trailing icon slots
+ * already accept; a composed-content wire shape for them is a separate decision, not this ticket's.
+ *
+ * **No `value` mark — Fork T1, builder-resolved, VERIFIED not assumed (GH #1352).** The obvious
+ * Checkbox/Switch (`checked`/`change`) or Menu/Popover/Tooltip (`open`/`toggle`) shape does not
+ * transfer: `ui-toggle`'s own `toggle` CustomEvent fires BEFORE `pressed` commits (toggle.md's
+ * "Refused toggle" design — cancelable, so a listener can veto the flip with zero paint to revert),
+ * unlike Checkbox/Switch's native `change` (the browser fires it only after `checked` is already set)
+ * and unlike Menu/Popover/Tooltip's `toggle` (the native HTML Popover API's own post-commit event).
+ * The renderer's generic two-way controller (`installInputBinding`, `renderer/input.ts`) reads
+ * `el[slot.prop]` SYNCHRONOUSLY inside the declared commit-event listener — and that listener is wired
+ * onto the widget while it is still DETACHED (`widget.ts`'s `create()` → `wireProps()` split runs
+ * before DOM insertion), i.e. strictly BEFORE `ui-toggle`'s own internal `click` handler (added in
+ * `connected()`) ever registers. Verified empirically (a throwaway jsdom probe against the real
+ * `UIToggleElement`, three assertions, all green, 2026-08-19): an external listener on EITHER `toggle`
+ * or raw `click`, registered in this order, always observes the STALE pre-flip value — binding
+ * `value:{prop:'pressed',event:'toggle'}` here would silently write the OPPOSITE of every user press
+ * into the data model. No event `ui-toggle` fires today observes `pressed` post-commit, so no
+ * `{prop,event}` shape is safe (the `input.ts` header's own "discovered-reality guard" — a control
+ * whose commit/value shape cannot be expressed by the existing slot mechanism is a catalog SPEC gap,
+ * not something to improvise past). Resolution: `pressed` stays `bindable: true` for the FORWARD
+ * (data→control) direction only — an agent can render a toggle already pressed — with no commit-back;
+ * a real two-way bind needs either a genuinely post-commit signal on the control (a Layer-0 change,
+ * component-build-agent's territory, out of this ticket) or a marshal-level fix (an ADR-level catalog
+ * widening). Rejected alternative: mirroring Menu/Popover's `{prop:'open',event:'toggle'}` shape
+ * uncritically — looks identical on the page, silently corrupts every bound `pressed` on first press.
+ */
+export const toggleFactory: WidgetFactory = {
+  tag: 'ui-toggle',
+  create: () => document.createElement('ui-toggle'),
+  applyProp: (el, prop, value) => {
+    if (prop === 'label') el.textContent = value == null ? '' : String(value)
+    else setProp(el, prop, value)
+  },
+}
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -1152,4 +1196,5 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   MultiSelect: multiSelectFactory,
   Drill: drillFactory,
   DrillPanel: drillPanelFactory,
+  Toggle: toggleFactory,
 }

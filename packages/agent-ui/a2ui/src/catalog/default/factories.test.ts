@@ -40,6 +40,7 @@ import {
   drillFactory,
   drillPanelFactory,
   badgeFactory,
+  toggleFactory,
   defaultFactories,
 } from './factories.ts'
 import { defaultCatalog } from './index.ts'
@@ -1049,5 +1050,30 @@ describe('default catalog factories — Drill/DrillPanel (GH #1353, ADR-0195 GH 
     expect(box.key).toBe('appearance')
     expect(box.parent).toBe('root')
     expect(box.heading).toBe('Appearance')
+  })
+})
+
+describe('default catalog factories — Toggle (GH #1352, ADR-0179 GH #686 Amendment S7-a)', () => {
+  it('Toggle → ui-toggle: pressed/disabled/size are 1:1 accessors; label is bespoke textContent; NO value mark (Fork T1)', () => {
+    expect(toggleFactory.tag).toBe('ui-toggle')
+    expect(toggleFactory.value).toBeUndefined() // Fork T1 — see the factory's own doc comment
+    const el = toggleFactory.create()
+    toggleFactory.applyProp(el, 'pressed', true)
+    toggleFactory.applyProp(el, 'disabled', true)
+    toggleFactory.applyProp(el, 'size', 'lg')
+    toggleFactory.applyProp(el, 'label', 'Settings')
+    const box = el as unknown as Record<string, unknown>
+    expect(box.pressed).toBe(true)
+    expect(box.disabled).toBe(true)
+    expect(box.size).toBe('lg')
+    expect(el.textContent).toBe('Settings') // bespoke — ui-toggle has no `label` prop
+  })
+
+  it('null/undefined label coerces to empty string (the buttonFactory/checkboxFactory precedent)', () => {
+    const el = toggleFactory.create()
+    toggleFactory.applyProp(el, 'label', null)
+    expect(el.textContent).toBe('')
+    toggleFactory.applyProp(el, 'label', undefined)
+    expect(el.textContent).toBe('')
   })
 })

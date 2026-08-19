@@ -1,6 +1,8 @@
 // site/pages/agent-admin-libraries.ts — the entry-library packs the agent-admin app offers per capability
 // kind (GH #47 skills · GH #48 workflows). PAGE-LOCAL data, deliberately not a package export (the
-// agent-admin-presets.ts scope law: the page owns which packs exist; the packages own only the generic
+// agent-admin-presets.ts scope law: the page owns which packs exist — plus whatever the imported shelf
+// holds (ADR-0208: `skill-packs:*` snapshots the app page projects in beside these, agent-admin-app.ts's
+// `librariesWithShelf`); the packages own only the generic
 // library seam this file feeds — `EntryLibraryPack` + entry-list's add-from-library menu).
 //
 // Three of the packs derive LIVE from a registry rather than being authored here: #1 + the GenUI packs

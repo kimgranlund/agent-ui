@@ -32,6 +32,10 @@
 // puts an entry back — GH #1353's `frontier-drill-settings` (below) is exactly that category-1 shape,
 // added 2026-08-19 alongside the Drill/DrillPanel catalog rows. The map stays wired into both consumers
 // regardless — the next entry needs a home, not a revival PR.
+// puts an entry back — GH #1352's `frontier-pane-switcher` was exactly that category-1 shape (added
+// 2026-08-19 with the Toggle row, judged PASS 4/5 + admitted the same day, entry drained — the dated
+// comment below is its record). The map stays wired into both consumers regardless —
+// the next entry needs a home, not a revival PR.
 //
 // Pure, zero-dep, platform-neutral (SPEC-N5/ADR-0062) so both readers share the one map: the standing
 // coverage gate (`admission-coverage.test.ts`) and the import tool's unjudged-run guard
@@ -153,11 +157,12 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // Video/AudioPlayer catalog rows (the native media players) to keep the GH #729 type-coverage gate
   // green; pending the same judged import wave. Delete this entry when it is judged.
   //
-  // GH #1353 (2026-08-19) — `frontier-drill-settings`: the same pending-state shape (NO VERDICT SOUGHT
-  // YET, not a refusal). Added with the Drill/DrillPanel catalog rows (Kim ruling 2026-08-19: "Drill is
-  // agent-emittable — mint the row") to keep the GH #729 type-coverage gate green; its corpus admission
-  // is a pending judged import wave — the authoring session judging its own seed is the manufactured
-  // judgment ADR-0068's Alternatives ban. Run the judged pipeline and DELETE this entry when that wave
-  // lands.
-  ['frontier-drill-settings', 'GH #1353 (2026-08-19) — NO VERDICT SOUGHT YET, not a refusal. Added with the Drill/DrillPanel catalog rows (Kim ruling 2026-08-19) to keep the GH #729 type-coverage gate green; pending the same judged import wave. Delete this entry when it is judged.'],
+  // GH #1353 (2026-08-19) — `frontier-drill-settings`: was the pending-state shape (added with the
+  // Drill/DrillPanel catalog rows, Kim ruling 2026-08-19); judged by a fresh-context a2ui-review-agent
+  // (PASS, qualityScore 4, verdicts archived 2026-08-19t16-45-00z) and admitted via import-seeds
+  // --verdicts the same day — entry DRAINED per its own instruction (ADR-0068: never self-judged).
+  // GH #1352 (2026-08-19) — `frontier-pane-switcher`: was the pending-state shape (added with the Toggle
+  // row, Kim ruling 2026-08-19); judged by a fresh-context a2ui-review-agent (PASS, qualityScore 4,
+  // verdicts archived 2026-08-19t15-30-00z) and admitted via import-seeds --verdicts the same day — entry
+  // DRAINED per its own instruction (ADR-0068: never self-judged).
 ])

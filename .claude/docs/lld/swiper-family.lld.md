@@ -284,6 +284,19 @@ var(--ui-swiper-align)`; `scroll-snap-stop: always`; `min-inline-size: 0`; `min-
 | `--ui-swiper-dot-size` / `-active` | `var(--ui-compact-sm)` / `+ 2px` flat | active dot **larger** = the non-color signifier (ADR-0057) |
 | `--ui-swiper-dot-color` / `-active` | `--md-sys-color-neutral-outline-variant` / `--md-sys-color-primary` | ROLE-level; declared in the PRIMARY sheet, consumed by `swiper-pagination.css` |
 
+> **REV 2026-08-18 (GH #1330 — the default paddles band).** The default-stamped `[data-default]` paddles
+> overlay used to float directly over an unreserved track, occluding the active slide's first glyph. The
+> track now reserves the band as its OWN geometry when (and only when) that overlay is present:
+> `:scope:has(> ui-swiper-paddles[data-default]) > [data-part=track] { border-inline:
+> var(--ui-swiper-paddle-band) solid transparent }` with `--ui-swiper-paddle-band: var(--md-sys-height-md)`
+> (the stamped icon-only md `ui-button` square) joining the family token table in the PRIMARY sheet. A
+> transparent BORDER, not padding + scroll-padding: a scroll container clips content at the padding box, so
+> the border band means no slide glyph (active or peeking neighbour) can ever paint under a paddle. Native
+> snap aligns to the snapport inside the border; `#alignedOffset` (swiper.ts) mirrors it via
+> `clientLeft/Top` + `clientWidth/Height` (byte-equivalent when no band exists). Author-placed anchors
+> reserve nothing. Pinned by swiper.browser.test.ts §[9] (rect adjacency + band hit-test + negative
+> controls) and swiper-css.test.ts.
+
 Paddles (`swiper-paddles.css`) compose `ui-button` (icon-only, `variant=ghost`), nav-icon sized to context
 (geometry.md's named carousel exception) — no new color role, no tokens of its own. Reduced-motion:
 `@media (prefers-reduced-motion: reduce) { [data-part=track] { scroll-behavior: auto } }` (the PRIMARY
@@ -314,7 +327,8 @@ and sets the scroll offset instantly.
 
 `#driveChrome()`: find a descendant `ui-swiper-pagination` / `ui-swiper-paddles` / `ui-swiper-label`. For each
 absent one whose boolean (`pagination`/`paddles`) is set, stamp a default-placed anchor (pagination below the
-track; paddles overlaid on the track). Then: `pagination.renderInto(realCount, activeIndex, i => this.goTo(i))`;
+track; paddles overlaid on the track — the track reserving the paddle band, §7's REV 2026-08-18/GH #1330).
+Then: `pagination.renderInto(realCount, activeIndex, i => this.goTo(i))`;
 `paddles.fill(() => this.prev(), () => this.next(), this.orientation)`; point the region label at the label
 anchor. Re-run on child mutation + on `active` change (to move the active dot / update the fraction). A
 present anchor is driven in place; the boolean only bootstraps a missing one (present wins).

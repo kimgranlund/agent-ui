@@ -75,6 +75,18 @@ prop name (`checked`) — the ADR-0053 naming law, not a generic `value`.
 ```
 Real: `examples/generative-form.ts:134-135`, `examples/patterns.ts:42-44`.
 
+## Toggle — pressed-state pill BUTTON, not form-associated
+GH #1352 catalog row (ADR-0179 GH #686 Amendment S7-a). Bindable `pressed`, `disabled`, `label` (→
+`textContent`, bespoke); `size` (`sm`\|`md`\|`lg`, structural only). **No `value` mark** — `pressed` is
+bindable ONE-WAY (data→control) only; there is no commit-back event to bind on (`ui-toggle`'s own
+`toggle` fires BEFORE the press commits, by design — see the `toggleFactory` doc comment,
+`catalog/default/factories.ts`). Render it already in the state you want; don't expect a user press to
+flow back into the data model yet.
+```json
+{ "id": "chat_toggle", "component": "Toggle", "label": "Chat", "pressed": { "path": "/panes/chatActive" } }
+```
+Real: `examples/catalog-frontier.ts` (`paneSwitcherSeed`).
+
 ## Select / Option
 `catalog.json:86-103`. Select: `value: { prop:"value", event:"select" }`, `children:"ChildList"` of Option;
 bindable `value`, `disabled`, `required`; plain `placeholder`, `name`. Option: `value` (plain), `label`
@@ -154,6 +166,45 @@ want shown; you cannot emit a clickable row that drills the user forward on its 
 { "id": "p_a1", "component": "Text", "text": "Theme, density, and accent color." }
 ```
 Real: `examples/catalog-frontier.ts` (`frontier-drill-settings`).
+## Toast — transient status message
+`catalog.json:218-223`. Props: `label` (mapsTo `textContent`, NOT bindable — a Toast is a one-shot message,
+never re-targeted in place), `urgent` (boolean), `duration` (number, ms). No `children` — it is a LEAF.
+**The region is host-owned**: `ToastRegion`/`ToastStack` is NOT a catalog type (GH #1355; ADR-0112 cl.6) —
+the payload emits a bare `Toast` node into the tree and the host page's chrome positions/stacks/dismisses
+it; never invent a region component.
+
+**Emission decision — Toast vs. a status Card/Badge/Stat.** Reach for Toast for a ONE-SHOT, fire-and-forget
+outcome nobody needs to find again once it fades — a round result, a save confirmation, a background
+action's completion. Reach for a Card/Badge/Stat readout instead when the state must persist, be
+re-referenced, or drive further binding — anything the user might scroll back to, or that another node
+reads off the same data-model path.
+```json
+{ "id": "outcome", "component": "Toast", "label": "Dealer wins — 19 beats 17.", "duration": 6000 }
+```
+Real: `examples/catalog-frontier.ts:269` (`round-outcome-toast` seed).
+
+## Tooltip — anchored disclosure panel
+`catalog.json:259-266`. `value: { prop:"open", event:"toggle" }`, `open` bindable, `placement` enum, `delay`
+(ms before an unforced hover-show). `children:"ChildList"` — the FIRST child is the ANCHOR (stays in flow,
+the trigger); every remaining child relocates into the tooltip's own panel at connect (ship anchor + panel
+content together, the same first-child convention Popover/Menu share — never resend after the anchor).
+
+**Plain caption vs. a structured explainer card (GH #1355, the "what does this control do" admin-help
+shape).** A one-line hint is `children: [anchor, captionText]` — a single `Text` variant `caption`. Once the
+content needs a heading + summary + body + reference facts, structure the panel as a `Column` of a title
+`Text` (variant `label` or `h5`) + a one-line summary `Text` (variant `caption`) + one or more body `Text`
+paragraphs + an optional `DescriptionList` (`rows: {label,value}[]`) for term→detail facts — never cram
+multi-paragraph prose into one `Text` node.
+```json
+{ "id": "tip", "component": "Tooltip", "placement": "top-start", "delay": 300,
+  "open": { "path": "/ui/tipOpen" }, "children": ["btn_info", "tip_col"] }
+{ "id": "tip_col", "component": "Column", "gap": "xs", "children": ["tip_title", "tip_summary", "tip_facts"] }
+{ "id": "tip_title", "component": "Text", "variant": "label", "text": "Surface Options" }
+{ "id": "tip_summary", "component": "Text", "variant": "caption", "text": "Which output modalities this agent may use" }
+{ "id": "tip_facts", "component": "DescriptionList", "rows": [{ "label": "Applies", "value": "from the next turn" }] }
+```
+Real: `examples/catalog-coverage.ts:258` (`document-row-toolbar` seed's `tip_wrap`, the plain-caption shape);
+the structured variant mirrors `app/src/controls/agent-admin/admin-help.ts`'s DOM card (title/summary/body/facts).
 
 ---
 

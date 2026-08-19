@@ -36,3 +36,8 @@ dist-*
 # here and must stay tracked — do not add a blanket `__baselines__` ignore.
 .vitest-attachments/
 **/__screenshots__/
+
+# eval-a2ui-catalog.mjs's own default --out (rubric a2ui-catalog-example.md §5) — per-card JSON +
+# summary.md, written fresh on every run of the new standing test:eval-catalog gate (GH #1356);
+# never committed, gate-verdicts-only (no baseline PNGs live here).
+/screenshots/

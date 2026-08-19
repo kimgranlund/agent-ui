@@ -3,7 +3,7 @@
 // hygiene: demo payload JSON must never enter a renderer consumer's bundle, the
 // `@agent-ui/components/components` subpath precedent).
 //
-// 25 seeds: 1 canvas + 4 dynamic-list + 1 generative-form + 5 patterns + 10 catalog-coverage (the
+// 27 seeds: 1 canvas + 4 dynamic-list + 1 generative-form + 5 patterns + 10 catalog-coverage (the
 // ADR-0087/ADR-0093/ADR-0095 wave — booking-reservation, rental-filter-panel, document-row-toolbar,
 // stats-grid-dashboard [DROPPED 2026-08-18 per its judged D5 refusals — the ADR-0165 drop path;
 // catalog-coverage.ts (4)] — PLUS report-card-dashboard [ADR-0107 chart-family, chart-family.lld.md LLD-C12],
@@ -20,6 +20,10 @@
 // the gate's (`examples.test.ts`) iteration surface, composed from each module's own family array
 // (never a hand-counted literal — the drift-gate doctrine); each named export is what a `/site` page
 // imports directly.
+// GH #1374 — the plan-and-execute exemplar: a Timeline plan snapshot (canvas) beside one ADR-0097
+// commit-gated approve ask carrying per-step Checkbox opt-outs (feed), emitted the same turn, then
+// per-turn updateDataModel advancing the approved steps' status (the design ruling's own closure path,
+// Findings comment 5343203377 — no ADR earned, a teaching-corpus gap only).
 
 export type { ExampleSeed } from './types.ts'
 
@@ -49,7 +53,7 @@ export {
 export { kpiPanelLifecycleSeed, messageLifecycleSeeds } from './message-lifecycle.ts'
 export { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed, corpusGrowthSeeds } from './corpus-growth.ts'
 // GH #729 — the catalog-frontier family: the 2026-08-12 sweep's 13 example-less catalog components, covered.
-export { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, catalogFrontierSeeds } from './catalog-frontier.ts'
+export { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, paneSwitcherSeed, catalogFrontierSeeds } from './catalog-frontier.ts'
 export { structuredContainerSeed, structuredContainerSeeds } from './structured-container.ts'
 // GH #972 — the high-frequency-patterns family: the 2026-08-15 gap-map sweep's 5 missing high-frequency
 // chat-feed patterns (comparison table, receipt card, empty/error card, notification stack, media grid).
@@ -80,6 +84,14 @@ export {
   travelItinerarySeed,
   compositionPackBSeeds,
 } from './composition-pack-b.ts'
+// GH #1355 (the 2026-08-18 preset-vs-catalog gap analysis) — the CRUD entry-list idiom's corpus seed:
+// a List of named entries, each toggleable and editable through a validated FormProvider inside a
+// Drawer, plus an add-from-library affordance.
+export { crudEntryListDrawerSeed, crudEntryListSeeds } from './crud-entry-list.ts'
+// GH #1374 — the plan-and-execute exemplar (the design ruling's closure path, comment 5343203377):
+// a Timeline plan snapshot beside one ADR-0097 commit-gated approve ask, per-step Checkbox opt-outs,
+// then per-turn updateDataModel progress advance.
+export { planAndExecutePlanSeed, planAndExecuteApproveAskSeed, planAndExecuteSeeds } from './plan-and-execute.ts'
 
 import type { ExampleSeed } from './types.ts'
 import { canvasSeeds } from './canvas-button.ts'
@@ -94,6 +106,8 @@ import { structuredContainerSeeds } from './structured-container.ts'
 import { highFrequencyPatternSeeds } from './high-frequency-patterns.ts'
 import { compositionPackASeeds } from './composition-pack-a.ts'
 import { compositionPackBSeeds } from './composition-pack-b.ts'
+import { crudEntryListSeeds } from './crud-entry-list.ts'
+import { planAndExecuteSeeds } from './plan-and-execute.ts'
 
 /** Every seed on the shelf — the standing gate's (`examples.test.ts`) iteration surface. Composed from
  *  each module's own family array, so the total is always derived, never a separately-maintained count. */
@@ -110,4 +124,6 @@ export const allSeeds: readonly ExampleSeed[] = [
   ...highFrequencyPatternSeeds,
   ...compositionPackASeeds,
   ...compositionPackBSeeds,
+  ...crudEntryListSeeds,
+  ...planAndExecuteSeeds,
 ]

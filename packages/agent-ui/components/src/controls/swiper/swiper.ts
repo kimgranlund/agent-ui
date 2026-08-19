@@ -604,22 +604,26 @@ export class UISwiperElement extends UIContainerElement {
     }
   }
 
-  /** The scrollLeft/scrollTop that aligns `target`'s start/center/end edge with the track's, per `this.align`
-   *  (the same geometry `scroll-snap-align` expresses in CSS). jsdom returns zero rects for every element, so
-   *  this resolves to 0 there — a real-engine-only proof (the browser leg's seam-jump assertion). */
+  /** The scrollLeft/scrollTop that aligns `target`'s start/center/end edge with the track's SNAPPORT, per
+   *  `this.align` (the same geometry `scroll-snap-align` expresses in CSS). The snapport, not the border
+   *  box: the default-stamped paddles band rides the track as a transparent inline border (swiper.css,
+   *  GH #1330), and native snap aligns slides to the box INSIDE it — `clientLeft/Top` + `clientWidth/Height`
+   *  (byte-equivalent to the border box when no band exists: no border, no scrollbar). jsdom returns zero
+   *  rects for every element, so this resolves to 0 there — a real-engine-only proof (the browser leg's
+   *  seam-jump + paddle-band assertions). */
   #alignedOffset(target: Element): number {
     const track = this.#track
     if (!track) return 0
     const trackRect = track.getBoundingClientRect()
     const targetRect = target.getBoundingClientRect()
     const horizontal = this.orientation === 'horizontal'
-    const trackStart = horizontal ? trackRect.left : trackRect.top
-    const trackSize = horizontal ? trackRect.width : trackRect.height
+    const snapStart = horizontal ? trackRect.left + track.clientLeft : trackRect.top + track.clientTop
+    const snapSize = horizontal ? track.clientWidth : track.clientHeight
     const targetStart = horizontal ? targetRect.left : targetRect.top
     const targetSize = horizontal ? targetRect.width : targetRect.height
-    const base = this.#scrollPos() + (targetStart - trackStart)
-    if (this.align === 'center') return base - (trackSize - targetSize) / 2
-    if (this.align === 'end') return base - (trackSize - targetSize)
+    const base = this.#scrollPos() + (targetStart - snapStart)
+    if (this.align === 'center') return base - (snapSize - targetSize) / 2
+    if (this.align === 'end') return base - (snapSize - targetSize)
     return base
   }
 
