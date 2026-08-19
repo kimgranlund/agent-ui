@@ -355,8 +355,9 @@ export class UIFileDropElement extends UIFormElement {
     // just a rejection — is an equally untrusted boundary crossing (the ADR-0210 cl.4.1 "host-minted
     // handle" wire shape is a CONTRACT, never assumed). `cleanFiles()` — the SAME hardened codec the
     // `files` attribute path already runs through — hardens the return before it ever touches `files`/
-    // `formValue`; a non-array (or fully-malformed-array) return rides the identical visible error path
-    // a thrown/rejected intake takes, never an unhandled `minted.length` crash.
+    // `formValue`; a non-array return rides the identical visible error path a thrown/rejected intake
+    // takes, never an unhandled `minted.length` crash. A fully-malformed ARRAY cleans to `[]` and
+    // no-ops silently below — indistinguishable from a legitimately-empty mint, deliberately.
     let minted: FileHandleDescriptor[]
     try {
       const returned: unknown = await intake(candidates, { multiple: this.multiple })
