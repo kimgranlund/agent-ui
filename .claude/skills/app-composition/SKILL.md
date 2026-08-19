@@ -62,8 +62,12 @@ entirely from the fleet — read them before scaffolding a new host.
 7. **The A2UI arm (optional)** — an agent-driven surface = the `@agent-ui/a2ui` renderer +
    default catalog; payload authoring routes to [[a2ui-payload-authoring]]; live transports stay
    dev-only behind server-side-key proxies (the ADR-0073 trust boundary — production keys
-   stay server-side). The seam is one mount point; the app never re-implements renderer
-   concerns.
+   stay server-side). File intake rides the same boundary via the host-mediated HANDLE model
+   (ADR-0210): bytes never ride the A2UI wire in either direction — the data model carries only
+   host-minted `{id, name, mimeType, sizeBytes}` descriptors from the renderer's intake seam,
+   byte materialization is host/transport policy, and no agent-suppliable endpoint prop exists
+   by construction (the exfiltration class is unrepresentable, not validated away). The seam is
+   one mount point; the app never re-implements renderer concerns.
 8. **Prove the spine** — `npm run check` + the app's own probes; tree-shake/size posture per
    the packaging map when the app ships as a bundle; screens and features then compose in
    via [[layout-composition]] / [[ui-composition]].

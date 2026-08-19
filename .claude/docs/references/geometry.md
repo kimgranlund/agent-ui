@@ -77,6 +77,16 @@ states (ADR-0223 cl.3(a)); the **Entry** typing-width floor lives **only in the 
 and defaults unchanged. (`ui-text-field` is the flipped slice-0 pilot; the remaining entry family flips
 on the wave — ADR-0223 cl.7.)
 
+ADR-0223 cl.3 ratifies the COMPLETE min-width role taxonomy — the only legitimate `min-inline-size`
+opinions fleet-wide: **(a)** squareness floors on interactive controls, surviving all states (the
+Action rule above); **(b)** hug-state content floors, `[inline]` only (the Entry rule above);
+**(c)** `min-inline-size: 0` unclampers on flex/grid ITEMS — including the HOST when the host is
+itself the item (amendment A2, the ADR-0100 cl.3 card disposition); **(d)** whole-shape floors on
+track/data-shaped display leaves (charts, sliders, timeline — amendment A1, a closed ratified list
+extended only by ADR). Any min-width outside (a)–(d) and cl.4's ratified exemption table (floating
+surfaces + text-flow atoms) is a lint defect from the wave's slice 3 on — read ADR-0223 for the role
+and exemption tables; cite them, never copy them.
+
 ## The slot model (no authored trailing-pad)
 
 Leading and trailing affordances each sit in the **same icon-sized square slot** that centers its
