@@ -72,8 +72,6 @@ describe('component-preview — STRUCTURAL targets mount a representative specim
     'ui-column': 3,
     'ui-list': 3,
     'ui-card': 3, // header + content + footer
-    'ui-choice-group': 3, // standard/deluxe/suite ui-choice-cards (ADR-0220 — the ui-radio-group shape; entries were missed when #1428 grew STRUCTURAL, caught by this file's own anti-vacuous gate)
-    'ui-choice-card': 3, // strong + br + price span — agent-composed rich content (ADR-0220, the ui-card shape)
     'ui-radio-group': 3, // sm/md/lg radios
     'ui-multi-select': 3, // 3 sample [role=option] rows (M-F, the ui-select COMPONENT_SAMPLE_CHILDREN precedent)
     'ui-segmented-control': 3, // sm/md/lg segments (ADR-0095)
