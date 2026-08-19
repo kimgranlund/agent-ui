@@ -489,6 +489,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-segment',
     cards: [
       {
+        href: './segment-demo.html',
+        title: 'Demo',
+        blurb: "The segment leaf live inside a real ui-segmented-control view switcher — click or Arrow-rove, with a change event log proving the leaf's own change fires and the host re-emits one change per commit.",
+      },
+      {
         href: './segment-doc.html',
         title: 'API reference',
         blurb: 'The child leaf of ui-segmented-control — a FACE radio re-tagged, adding no new prop or behavior of its own. From segment.md.',
@@ -515,6 +520,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-slider',
     cards: [
       {
+        href: './slider-demo.html',
+        title: 'Demo',
+        blurb: 'The live single-thumb range as a playback volume + brightness control — drag, click, or keyboard, with a live readout and an input/change event log proving commit-on-blur.',
+      },
+      {
         href: './slider-doc.html',
         title: 'API reference',
         blurb: 'The FACE single-thumb range slider (Range class) — rail fill + 2px-inset thumb (ADR-0041), pointer drag and keyboard step. From slider.md.',
@@ -524,6 +534,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
   {
     label: 'ui-slider-multi',
     cards: [
+      {
+        href: './slider-multi-demo.html',
+        title: 'Demo',
+        blurb: 'The live two-thumb range as a price filter over a small catalogue — a from–to readout, matching results, and an input/change event log proving the pair round-trips.',
+      },
       {
         href: './slider-multi-doc.html',
         title: 'API reference',
@@ -964,6 +979,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
   {
     label: 'ui-avatar',
     cards: [
+      {
+        href: './avatar-demo.html',
+        title: 'Demo',
+        blurb: 'The identity mark in a real team roster — portrait, broken-image → initials, initials-only, and glyph fallbacks in situ, an assignees cluster, and every [size] tier.',
+      },
       {
         href: './avatar-doc.html',
         title: 'API reference',
