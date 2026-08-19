@@ -87,13 +87,13 @@ export function buildAdminHelp(key: AdminHelpKey): HTMLElement {
   glyph.setAttribute('glyph', 'question')
   icon.append(glyph)
   // A click on this icon must never ACTIVATE what the icon rides. On a fold's heading row the icon is a
-  // `<summary>` descendant; `ui-disclosure`'s summary-slot guard (ADR-0158 cl.3) only stands down for a
-  // NATIVE activatable (`a[href]`/`button`/`input`/`summary`) — `ui-button` is a custom element, so the
-  // guard would not recognize it and the fold would still toggle on the browser's own default action.
-  // This listener is what actually prevents that, independent of the guard's own tag-name check: cancelling
-  // the event here removes the fold's default toggle AND stops it bubbling further, regardless of whether
-  // the anchor is native. The help icon explains, it never folds. (Not a tap-to-open affordance — GH #844
-  // rules touch out of scope; this only refuses a side effect.)
+  // `<summary>` descendant; `ui-disclosure`'s summary-slot guard (ADR-0158 cl.3, disclosure.ts:194-199)
+  // preventDefault()s the fold toggle precisely when NO native activatable sits between target and
+  // summary — `ui-button` is not in its NATIVE_ACTIVATABLE list, so the GUARD ITSELF already blocks the
+  // toggle for this anchor. This listener is the belt-and-braces second cancel plus the part the guard
+  // never does: stopPropagation(), and the same refusal on NON-fold rows where no guard exists at all.
+  // The help icon explains, it never folds. (Not a tap-to-open affordance — GH #844 rules touch out of
+  // scope; this only refuses a side effect.)
   icon.addEventListener('click', (event) => {
     event.preventDefault()
     event.stopPropagation()
