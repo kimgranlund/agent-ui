@@ -52,7 +52,7 @@ describe('toggle.md descriptor — frontmatter parses (s8)', () => {
   })
 
   it('parses the real three attributes (anti-vacuous — the generator/drift-gate proof assumes this)', () => {
-    expect(parsed.attributes.map((a) => a.name)).toEqual(['pressed', 'disabled', 'size'])
+    expect(parsed.attributes.map((a) => a.name)).toEqual(['pressed', 'disabled', 'size', 'inline'])
   })
 
   it('parses the ONE event: toggle', () => {

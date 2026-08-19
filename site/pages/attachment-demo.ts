@@ -7,7 +7,7 @@
 // mime types and sizes are hand-authored fixtures; nothing is uploaded (ADR-0073 trust boundary untouched).
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-attachment — demo',
@@ -86,7 +86,7 @@ function attach(file: FileFixture): void {
   logAction('attach', file, pendingCount())
 }
 
-const attachButton = uiButton('Attach next file', 'solid')
+const attachButton = inline(uiButton('Attach next file', 'solid')) // ADR-0223: bare demo action in block flow — hugs
 attachButton.addEventListener('click', () => {
   const file = QUEUE[next]
   if (!file) return

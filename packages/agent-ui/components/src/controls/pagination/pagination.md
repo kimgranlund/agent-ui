@@ -21,8 +21,12 @@ attributes:             # attributes-as-API — mirrors pagination.ts `static pr
     type: string
     default: ''
     reflect: true        # the accessible NAVIGATION-LANDMARK name → internals.ariaLabel (never a raw host aria-label)
+  - name: inline
+    type: boolean
+    default: false
+    reflect: true        # ADR-0223 (Fill by Default, slice 2) — the ONE sizing opt-out: flips display level (inline-flex) AND sizing posture (hug). Default (absent) = block-level fill. Reflects so the :scope[inline] CSS leg applies to JS-set values.
 
-properties: []          # no manual accessors beyond the three typed props
+properties: []          # no manual accessors beyond the typed props
 
 events:
   - name: change
@@ -57,6 +61,7 @@ keyboard:
 
 geometry:
   sizeClass: pattern
+  posture: fill (block-level flex host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-flex + hug   # Fill by Default — slice 2 (action/selection)
   stopHeight: the composed ui-buttons' own control height (size=sm) — ui-pagination owns no [size]/[scale] geometry row of its own (ADR-0163 cl.6 — "the novelty is zero")
   gap: var(--ui-pagination-gap)   # off --md-sys-space (density-responsive)
 

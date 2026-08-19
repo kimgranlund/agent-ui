@@ -274,7 +274,7 @@ const radioMd = readFileSync(`${RADIO_DIR}/radio.md`, 'utf8') as string
 const { fence: radioFence } = splitFrontmatter(radioMd)
 const radioParsed = parseDescriptor(radioFence)
 // Attribute names in the order declared in radio.md frontmatter (anti-vacuous anchor).
-const RADIO_ATTR_NAMES = ['checked', 'value', 'size', 'name', 'disabled', 'required']
+const RADIO_ATTR_NAMES = ['checked', 'value', 'size', 'name', 'disabled', 'required', 'inline']
 
 describe('radio.md descriptor — structural validity (s10 part a)', () => {
   it('carries the ADR-0004 / plan §10 descriptor field set as top-level keys', () => {

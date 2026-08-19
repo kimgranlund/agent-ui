@@ -83,8 +83,13 @@
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-button) consumes ONLY --ui-button-* ════════════════ */
 
 @scope (ui-button) {
+  /* FILL BY DEFAULT (ADR-0223 cl.1/2 — slice 2, action/selection): the host is BLOCK-level and stretches
+     to the parent's inline space; NO intrinsic width in the default state. The single most visible flip
+     of the whole wave — a bare button in block flow is now full-width (the ratified trade, ADR-0223
+     Consequences). The R3(a) squareness floor below survives ALL states (icon-only ≈ square). A consumer
+     that relied on hug adds the ONE opt-out: `[inline]` (leg below). */
   :scope {
-    display: inline-grid;
+    display: grid;
     grid-template-columns: 1fr; /* bare label — slotless */
     align-items: center;
     box-sizing: border-box;
@@ -107,6 +112,14 @@
     cursor: pointer;
     -webkit-user-select: none; /* WebKit/Safari still needs the prefix — the label is a control surface, not selectable text */
     user-select: none;
+  }
+
+  /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): a single reflected boolean flips BOTH display
+     level (inline-grid — the pre-wave posture) and sizing posture (hug). No content floor here (a button's
+     label is its own floor); the R3(a) squareness floor on `:scope` above survives this state too. No `hug`
+     attribute, no block-but-hugging state — an explicit inline-size is the consumer's tool for that. */
+  :scope[inline] {
+    display: inline-grid;
   }
 
   /* The label wrapper (ADR-0133) — the real element button.ts adopts the label region into, so
@@ -287,7 +300,8 @@
   /* GH #665 (found live, not a hunch: a conversation-composer mic button reflects `hidden` — TKT-0056's
      own OPT-IN pattern, "hidden until a consumer registers onMicClick" — yet kept a real, measured
      28×28px box in the row, eating space a narrow composer needed) — `:scope`'s own unconditional
-     `display: inline-grid` (base rule, top of this file) is an AUTHOR-level declaration, and author
+     `display: grid` (base rule, top of this file; `inline-grid` in the `[inline]` opt-out — same-specificity
+     ties resolve by source order, and this rule sits LAST) is an AUTHOR-level declaration, and author
      styles beat the UA stylesheet's `[hidden] { display: none }` regardless of specificity (a plain
      browser law, not a bug in the UA rule). Every custom element with its own unconditional `display`
      needs this SAME one-line repoint to keep `[hidden]` working (the `UIElement` base class doesn't

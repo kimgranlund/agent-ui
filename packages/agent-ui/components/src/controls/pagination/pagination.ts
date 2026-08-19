@@ -34,6 +34,9 @@ const props = {
   page: { ...prop.number(1), reflect: true }, // 1-based current page — bindable, commits via `change`
   pages: { ...prop.number(0), reflect: true }, // total page count — 0 (default) ⇒ renders nothing
   label: { ...prop.string(''), reflect: true }, // the accessible navigation-landmark NAME → internals.ariaLabel
+  // ADR-0223 (Fill by Default, slice 2) — the ONE sizing opt-out, fleet-shared name: reflects so the
+  // `:scope[inline]` CSS leg (inline-level display + hug posture) applies to JS-set values.
+  inline: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
 export interface UIPaginationElement extends ReactiveProps<typeof props> {}

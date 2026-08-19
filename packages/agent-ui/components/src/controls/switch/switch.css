@@ -88,15 +88,22 @@
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-switch) consumes ONLY --ui-switch-* ════════════════ */
 
 @scope (ui-switch) {
-  /* Host: inline-flex row — the pill track (::before) + optional label slot side by side. */
+  /* Host: flex row — the pill track (::before) + optional label slot side by side.
+     FILL BY DEFAULT (ADR-0223 cl.1/2 — slice 2, action/selection): block-level flex host, no intrinsic
+     width; the `[inline]` leg below is the ONE hug opt-out (no content floor — track + label ARE the floor). */
   :scope {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: var(--ui-switch-gap);
     position: relative; /* containing block for the absolutely-positioned ::after thumb */
     cursor: pointer;
     -webkit-user-select: none; /* WebKit/Safari still requires the prefix */
     user-select: none;
+  }
+
+  /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): inline-level display + hug posture. */
+  :scope[inline] {
+    display: inline-flex;
   }
 
   /* TRACK (::before) — the pill; a sized flex item.

@@ -8,7 +8,7 @@
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import { loadToastRegionDoc } from '../lib/frontmatter.ts'
 import { composeDocPage } from '../lib/doc-page.ts'
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 import type { UIToastRegionElement } from '@agent-ui/components/components'
 
 const { descriptor, body } = loadToastRegionDoc()
@@ -24,7 +24,7 @@ const { content } = mountPage({
 })
 
 const region = document.createElement('ui-toast-region') as UIToastRegionElement
-const trigger = uiButton('region.show("File uploaded.")', 'soft')
+const trigger = inline(uiButton('region.show("File uploaded.")', 'soft')) // ADR-0223: bare trigger in prose — hugs
 trigger.addEventListener('click', () => region.show('File uploaded.'))
 
 const note = el('p', {}, [

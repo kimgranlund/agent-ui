@@ -233,6 +233,10 @@ const props = {
   // `size` — presentational cell-size tier. Reflected so [size=sm/lg] CSS rules engage on
   // both JS-set and HTML-authored values (fleet standard; same pattern as UIIndicatorElement.props).
   size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
+
+  // ADR-0223 (Fill by Default, slice 2) — the ONE sizing opt-out, fleet-shared name: reflects so the
+  // `:scope[inline]` CSS leg (inline-block + hug — the pre-wave compact posture) applies to JS-set values.
+  inline: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
 // ── Element ──────────────────────────────────────────────────────────────────────────────────

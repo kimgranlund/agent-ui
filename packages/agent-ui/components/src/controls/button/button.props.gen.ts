@@ -11,4 +11,6 @@ export const props = {
   disabled: { ...prop.boolean(false), reflect: true },
   // Explicit opt-in for a real slotted adornment with NO label content; the accessible name must then come from aria-label (see Slots & roles below). — generated from button.md attributes.iconOnly — edit the descriptor, not this file.
   iconOnly: { ...prop.boolean(false), reflect: true, attribute: 'icon-only' },
+  // The ONE sizing opt-out (ADR-0223) — inline-level display + hug posture (the pre-wave shrink-to-content rendering). Absent, the button fills its block container; the R3(a) squareness floor survives both states. — generated from button.md attributes.inline — edit the descriptor, not this file.
+  inline: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema

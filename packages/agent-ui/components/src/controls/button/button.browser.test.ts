@@ -44,3 +44,34 @@ describe('ui-button browser-truth harness (s12)', () => {
     el.remove()
   })
 })
+
+
+// -- ADR-0223 (Fill by Default, slice 2 -- action/selection): the two-posture acceptance leg, the
+//    generalized ADR-0021 smoke (the text-field pilot's shape): FILL -- a bare host in block flow
+//    stretches to the container's inline size (the container IS the floor); [inline] -- the host hugs
+//    its content and sits BELOW the container. No clause 3(b) content floor exists on this control (only ui-button's R3(a) squareness floor, which survives all states).
+describe('ui-button -- ADR-0223 two postures (fill default / [inline] hug, both engines)', () => {
+  it('bare host offsetWidth ~= container inline size (fill); [inline] host hugs below the container', async () => {
+    const wrap = document.createElement('div')
+    wrap.style.inlineSize = '640px' // a wide BLOCK container -- wider than any hug resolution
+    wrap.innerHTML = `<ui-button>Save</ui-button>`
+    document.body.append(wrap)
+    const host = wrap.querySelector('ui-button') as HTMLElement & { updateComplete?: Promise<unknown> }
+    await host.updateComplete
+    // FILL (the default): block-level -- the host stretches to the container.
+    const containerWidth = wrap.getBoundingClientRect().width
+    expect(host.offsetWidth, 'the bare host did not FILL its block container (ADR-0223 cl.1)').toBeCloseTo(containerWidth, 0)
+    expect(getComputedStyle(host).display, 'the default host is not block-level').toBe('grid')
+    // HUG (the ONE opt-out): [inline] flips display level AND posture -- content-sized, below the container.
+    host.setAttribute('inline', '')
+    const hugged = host.offsetWidth
+    expect(hugged, 'the [inline] host collapsed to nothing').toBeGreaterThan(0)
+    // R3(a) -- the squareness floor (min-inline-size = height) survives BOTH states (ADR-0223 cl.3(a)).
+    const floorPx = Number.parseFloat(getComputedStyle(host).minInlineSize)
+    expect(floorPx, 'the squareness floor did not survive [inline]').toBeGreaterThan(0)
+    expect(hugged, 'the [inline] host is narrower than its squareness floor').toBeGreaterThanOrEqual(Math.floor(floorPx))
+    expect(hugged, 'the [inline] host did not HUG -- it still fills the container').toBeLessThan(containerWidth)
+    expect(getComputedStyle(host).display, 'the [inline] host is not inline-level').toBe('inline-grid')
+    wrap.remove()
+  })
+})

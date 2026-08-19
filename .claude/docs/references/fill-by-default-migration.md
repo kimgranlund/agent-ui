@@ -3,7 +3,7 @@
 > Source: [ADR-0223](../adr/0223-fill-by-default-fleet-sizing-contract.md) (accepted 2026-08-19) —
 > the fleet component-sizing contract. Opened at slice 0 (the `ui-text-field` pilot); each wave
 > slice (1–3) appends its flipped controls here; finalized at slice 4 before the ONE breaking
-> release cut. Status: **slices 0–1 landed** · slices 2–4 pending.
+> release cut. Status: **slices 0–2 landed** · slices 3–4 pending.
 
 ## The one-liner
 
@@ -23,11 +23,16 @@ attribute and no block-but-hugging state: set an explicit `inline-size` for that
 | `ui-multi-select` | 1 | `inline-block` + 12ch default floor | `block`, fills | `--ui-multi-select-min-inline-size` (12ch), unchanged name/default (`[inline]` = inline-block + vertical-align) |
 | `ui-conversation-composer` | 1 | `flex` + 20ch default floor | `flex`, fills (no floor) | `--ui-conversation-composer-min-inline-size` (~20ch), unchanged name/default (`[inline]` = inline-flex) |
 | `ui-form-popover` (trigger — the §E ruling) | 1 | trigger `inline-grid` + 10ch default floor | trigger `grid`, fills; R3(a) squareness floor (`min-inline-size: height`) survives all states | `--ui-form-popover-min-inline-size` (10ch content floor), unchanged name/default (`[inline]` on the host = inline-grid trigger) |
+| `ui-button` | 2 | `inline-grid` (hug) | block `grid`, fills — **the wave's most visible delta**: a bare button in block flow is now full-width | none (no content floor); R3(a) squareness floor (`min-inline-size: var(--ui-button-height)`) survives BOTH states (`[inline]` = inline-grid) |
+| `ui-toggle` | 2 | `inline-grid` (hug) | block `grid`, fills | none (`[inline]` = inline-grid) |
+| `ui-checkbox` | 2 | `inline-flex` (hug) | `flex`, fills (box + label pin left; the whole row is the hit target) | none (`[inline]` = inline-flex) |
+| `ui-radio` | 2 | `inline-flex` (hug) | `flex`, fills | none (`[inline]` = inline-flex) |
+| `ui-switch` | 2 | `inline-flex` (hug) | `flex`, fills | none (`[inline]` = inline-flex) |
+| `ui-pagination` | 2 | `inline-flex` (hug) | `flex`, fills (stops pin left; `flex-wrap` unchanged) | none (`[inline]` = inline-flex) |
+| `ui-calendar` | 2 | `inline-block` (compact shrink-wrap) | `block`, fills — ADR-0105's fluid tracks distribute the width | none (`[inline]` = inline-block + `vertical-align: top`, the pre-wave compact posture; ADR-0102's `max-inline-size: max-content` one-liner still works) |
 
 ## Pending (lands with its slice — see ADR-0223 clause 7)
 
-- **Slice 2:** `ui-button` · `ui-toggle` · `ui-checkbox` · `ui-radio` · `ui-switch` ·
-  `ui-pagination` · `ui-calendar` — buttons full-width in block flow is the wave's most visible delta
 - **Slice 3:** `ui-stat` · `ui-attachment`; the sizing gate flips ENFORCING
 - **Slice 4:** fleet golden regen + reference-consumer sign-off; the breaking release ships
 

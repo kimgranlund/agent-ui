@@ -204,9 +204,10 @@ describe('ui-button per-structure alignment matrix (ADR-0171, GH #442, amended G
 describe('ui-button hug-width equivalence (ADR-0171 Amendment §A1, GH #450) — the amendment\'s normative clause', () => {
   it('[leading | label] at CONTENT (hug) width: icon⟷label separation is exactly --ui-button-gap — start/end/center are pixel-indistinguishable, so the spread manifests ONLY when stretched', () => {
     const { btn } = mount(
-      '<ui-button><svg slot="leading" data-role="icon"><rect width="18" height="18"/></svg>Download</ui-button>',
+      '<ui-button inline><svg slot="leading" data-role="icon"><rect width="18" height="18"/></svg>Download</ui-button>',
     )
-    // no explicit inline-size — the button hugs its content, exactly the pre-amendment cluster's rendering.
+    // `[inline]` + no explicit inline-size — the button hugs its content, exactly the pre-amendment
+    // cluster's rendering (ADR-0223 slice 2 moved the hug posture behind the ONE `inline` opt-out).
     const iconRect = (btn.querySelector('[slot="leading"]') as HTMLElement).getBoundingClientRect()
     const btnRect = btn.getBoundingClientRect()
     const labelRect = label(btn).getBoundingClientRect()

@@ -5,7 +5,7 @@
 // and a second instance with `hotkey="mod+k"` (the opt-in convenience) — each toggles only its OWN instance.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-command-modal — demo',
@@ -84,7 +84,7 @@ hotkeyPalette.addEventListener('select', (e) => {
   const { value } = (e as CustomEvent<{ value: string }>).detail
   logEvent(`hotkey  select  value=${JSON.stringify(value)}`)
 })
-const hotkeyTrigger = uiButton('Or click here to open it', 'soft')
+const hotkeyTrigger = inline(uiButton('Or click here to open it', 'soft')) // ADR-0223: bare trigger in prose — hugs
 hotkeyTrigger.addEventListener('click', () => hotkeyPalette.setAttribute('open', ''))
 
 const keyboardNote = el('p', {}, [

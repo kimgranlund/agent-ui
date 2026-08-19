@@ -1319,7 +1319,7 @@ const md = readFileSync(`${CALENDAR_DIR}/calendar.md`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-const ATTR_NAMES = ['name', 'disabled', 'required', 'mode', 'value', 'valueStart', 'valueEnd', 'min', 'max', 'size']
+const ATTR_NAMES = ['name', 'disabled', 'required', 'mode', 'value', 'valueStart', 'valueEnd', 'min', 'max', 'size', 'inline']
 
 describe('calendar.md descriptor — frontmatter parses + schema-valid (cal-descriptor-schema)', () => {
   it('cal-descriptor-schema: has a leading frontmatter fence and a prose body', () => {

@@ -6,7 +6,7 @@ import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-d
 import './containers.css' // shared demo-content chrome; never restyles a ui-* control
 import { loadModalDoc } from '../lib/frontmatter.ts'
 import { composeDocPage } from '../lib/doc-page.ts'
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { descriptor, body } = loadModalDoc()
 
@@ -26,7 +26,7 @@ const dialog = el('ui-modal', { 'aria-label': 'Example dialog' }, [
   el('p', {}, [text('Press Escape or click the backdrop to dismiss — both are platform behaviours.')]),
   el('ui-row', { gap: 'sm', justify: 'end' }, [uiButton('Close', 'soft')]),
 ])
-const trigger = uiButton('Open dialog', 'solid')
+const trigger = inline(uiButton('Open dialog', 'solid')) // ADR-0223: bare trigger in prose — hugs
 trigger.addEventListener('click', () => dialog.setAttribute('open', ''))
 dialog.querySelector('ui-button')?.addEventListener('click', () => dialog.removeAttribute('open'))
 

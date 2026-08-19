@@ -149,7 +149,9 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
   })
 
   it('track inline-size ≈ 1.8× the box; the pill is wider than tall (density-invariant)', () => {
-    const { sw } = mount('<ui-switch></ui-switch>') // md default: box = 16px, track ≈ 28.8px
+    // ADR-0223 (Fill by Default, slice 2): the default host now FILLS the container, so the host-width-
+    // equals-track claim lives in the `[inline]` hug state (the pre-wave posture; a bare label-less switch).
+    const { sw } = mount('<ui-switch inline></ui-switch>') // md default: box = 16px, track ≈ 28.8px
     const h = trackHeight(sw)
     const w = px(getComputedStyle(sw).inlineSize)
     // The track is a pill — inline > block.
@@ -279,5 +281,32 @@ describe('ui-switch cross-engine browser smoke — C10 zero-residue', () => {
     sw.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }))
     sw.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', bubbles: true }))
     expect(changes).toBe(2) // exactly ONE more, not 2+ (no stacked old listeners)
+  })
+})
+
+
+// -- ADR-0223 (Fill by Default, slice 2 -- action/selection): the two-posture acceptance leg, the
+//    generalized ADR-0021 smoke (the text-field pilot's shape): FILL -- a bare host in block flow
+//    stretches to the container's inline size (the container IS the floor); [inline] -- the host hugs
+//    its content and sits BELOW the container. No clause 3(b) content floor exists on this control to relocate.
+describe('ui-switch -- ADR-0223 two postures (fill default / [inline] hug, both engines)', () => {
+  it('bare host offsetWidth ~= container inline size (fill); [inline] host hugs below the container', async () => {
+    const wrap = document.createElement('div')
+    wrap.style.inlineSize = '640px' // a wide BLOCK container -- wider than any hug resolution
+    wrap.innerHTML = `<ui-switch>Wi-Fi</ui-switch>`
+    document.body.append(wrap)
+    const host = wrap.querySelector('ui-switch') as HTMLElement & { updateComplete?: Promise<unknown> }
+    await host.updateComplete
+    // FILL (the default): block-level -- the host stretches to the container.
+    const containerWidth = wrap.getBoundingClientRect().width
+    expect(host.offsetWidth, 'the bare host did not FILL its block container (ADR-0223 cl.1)').toBeCloseTo(containerWidth, 0)
+    expect(getComputedStyle(host).display, 'the default host is not block-level').toBe('flex')
+    // HUG (the ONE opt-out): [inline] flips display level AND posture -- content-sized, below the container.
+    host.setAttribute('inline', '')
+    const hugged = host.offsetWidth
+    expect(hugged, 'the [inline] host collapsed to nothing').toBeGreaterThan(0)
+    expect(hugged, 'the [inline] host did not HUG -- it still fills the container').toBeLessThan(containerWidth)
+    expect(getComputedStyle(host).display, 'the [inline] host is not inline-level').toBe('inline-flex')
+    wrap.remove()
   })
 })

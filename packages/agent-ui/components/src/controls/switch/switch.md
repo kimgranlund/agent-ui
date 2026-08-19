@@ -42,6 +42,10 @@ attributes:              # attributes-as-API — mirrors indicator-element.ts `i
     type: boolean
     default: false
     reflect: false       # ADR-0196 (GH #1065) — the answered/settled choice state; mirrored into :state(answered), never AX-reflected
+  - name: inline
+    type: boolean
+    default: false
+    reflect: true        # ADR-0223 (Fill by Default, slice 2) — the ONE sizing opt-out: flips display level (inline-flex) AND sizing posture (hug). Default (absent) = block-level fill. Reflects so the :scope[inline] CSS leg applies to JS-set values.
 
 properties: []           # no manual accessors beyond the attributes-as-API
 
@@ -82,6 +86,7 @@ keyboard:
 
 geometry:
   sizeClass: indicator
+  posture: fill (block-level flex host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-flex + hug   # Fill by Default — slice 2 (action/selection); the pill track below keeps its fixed size either way
   blockSize: var(--ui-switch-box)                               # the widget box height = --md-sys-compact-{size} (ADR-0041 widget ramp)
   inlineSize: calc(var(--ui-switch-box) * 1.8)                 # the pill track ≈ 1.8× the box (density-invariant)
   radius: calc(var(--ui-switch-box) / 2)                       # pill radius = box/2 (the track border-radius)

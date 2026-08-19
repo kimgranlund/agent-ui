@@ -5,7 +5,7 @@
 // (timeline-item.ts + the composed ui-disclosure); this page only stages + logs.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 import type { UITimelineItemElement } from '@agent-ui/components/components'
 
 const { content } = mountPage({
@@ -35,12 +35,12 @@ const item = el('ui-timeline-item', { status: 'active', label: 'Deploying releas
 ]) as UITimelineItemElement
 item.addEventListener('toggle', () => logEvent(`toggle  →  detail open=${String(item.querySelector('[data-part="detail"]')?.hasAttribute('open'))}`))
 
-const modelToggle = uiButton('Toggle detail (model-driven)', 'soft')
+const modelToggle = inline(uiButton('Toggle detail (model-driven)', 'soft')) // ADR-0223: bare demo action — hugs
 modelToggle.addEventListener('click', () => item.toggleDetail())
 
 const STATUS_CYCLE = ['pending', 'active', 'done', 'error'] as const
 let statusIdx = 0
-const cycleButton = uiButton('Cycle status →', 'soft')
+const cycleButton = inline(uiButton('Cycle status →', 'soft')) // ADR-0223: bare demo action — hugs
 cycleButton.addEventListener('click', () => {
   statusIdx = (statusIdx + 1) % STATUS_CYCLE.length
   item.status = STATUS_CYCLE[statusIdx]!

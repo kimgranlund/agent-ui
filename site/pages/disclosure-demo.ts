@@ -6,7 +6,7 @@
 // mechanics (disclosure.ts + the native <details>); this page only stages + logs.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-disclosure — demo',
@@ -35,7 +35,7 @@ const disclosure = el('ui-disclosure', { summary: 'Release notes', contained: ''
 ])
 disclosure.addEventListener('toggle', () => logEvent())
 
-const modelToggle = uiButton('Toggle open (model-driven)', 'soft')
+const modelToggle = inline(uiButton('Toggle open (model-driven)', 'soft')) // ADR-0223: bare demo action — hugs
 modelToggle.addEventListener('click', () => {
   if (disclosure.hasAttribute('open')) disclosure.removeAttribute('open')
   else disclosure.setAttribute('open', '')

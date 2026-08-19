@@ -94,8 +94,10 @@
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-toggle) consumes ONLY --ui-toggle-* ════════════════ */
 
 @scope (ui-toggle) {
+  /* FILL BY DEFAULT (ADR-0223 cl.1/2 — slice 2, action/selection): block-level host, no intrinsic width;
+     the `[inline]` leg below is the ONE hug opt-out (no content floor — the label is its own floor). */
   :scope {
-    display: inline-grid;
+    display: grid;
     grid-template-columns: 1fr; /* bare label — slotless */
     align-items: center;
     box-sizing: border-box;
@@ -123,6 +125,12 @@
        `justify-self` on a real node: it applies uniformly to the bare 1fr-track case (a no-op — the sole
        item already fills its track) and to every icon/state-icon variant below alike. */
     justify-items: center;
+  }
+
+  /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): flips display level (inline-grid — the
+     pre-wave posture) and sizing posture (hug). No content floor (clause 3(b) has nothing to relocate). */
+  :scope[inline] {
+    display: inline-grid;
   }
 
   /* Both icon slots get the SAME square, icon-sized cell (border-box, so a role's inset stays within it). */
@@ -194,7 +202,7 @@
   }
 
   /* [hidden] — the same unconditional-`display` fix every host-as-grid control with its own `display` needs
-     (button.css's GH #665 precedent): author `display: inline-grid` beats the UA `[hidden]` stylesheet
+     (button.css's GH #665 precedent): author `display: grid` (or the `[inline]` leg's `inline-grid`) beats the UA `[hidden]` stylesheet
      regardless of specificity unless explicitly repointed. */
   :scope:is([hidden]) {
     display: none;

@@ -8,7 +8,7 @@
 // `select` events are logged to show the anchor never interferes with the carousel it names.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { el, exampleSection, demoBox, uiButton } from '../lib/specimens.ts'
+import { demoBox, el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-swiper-label — demo',
@@ -61,7 +61,7 @@ function readNames(): void {
 // ── model-driven rename — edit the anchor's text in place ──────────────────────────────────────────────────
 const NAMES = ['New arrivals', 'New this week', 'Just dropped'] as const
 let nameIndex = 0
-const renameButton = uiButton('Rename the first carousel', 'solid')
+const renameButton = inline(uiButton('Rename the first carousel', 'solid')) // ADR-0223: bare demo action — hugs
 renameButton.addEventListener('click', () => {
   nameIndex = (nameIndex + 1) % NAMES.length
   arrivals.label!.textContent = NAMES[nameIndex]!

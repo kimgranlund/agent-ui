@@ -8,7 +8,7 @@ import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-d
 import './containers.css' // shared demo-content chrome; never restyles a ui-* control
 import { loadDrawerDoc } from '../lib/frontmatter.ts'
 import { composeDocPage } from '../lib/doc-page.ts'
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { descriptor, body } = loadDrawerDoc()
 
@@ -32,7 +32,7 @@ const drawer = el('ui-drawer', { 'aria-label': 'Example drawer' }, [
   ]),
   el('footer', { style: 'justify-content:flex-end' }, [uiButton('Close', 'soft')]),
 ])
-const trigger = uiButton('Open drawer', 'solid')
+const trigger = inline(uiButton('Open drawer', 'solid')) // ADR-0223: bare trigger in prose — hugs
 trigger.addEventListener('click', () => drawer.setAttribute('open', ''))
 drawer.querySelector('ui-button')?.addEventListener('click', () => drawer.removeAttribute('open'))
 

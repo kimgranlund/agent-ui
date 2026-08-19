@@ -21,7 +21,15 @@
 // Layer: controls/ — imports controls/radio (inward-only ✓).
 
 import { UIRadioElement } from '../radio/radio.ts'
+import { UIIndicatorElement } from '../_base/indicator-element.ts'
 
-export class UISegmentElement extends UIRadioElement {}
+export class UISegmentElement extends UIRadioElement {
+  // ADR-0223 clause 4: ui-segment is R4-EXEMPT (a full-cell PART of segmented-control's track — its
+  // inline posture IS its nature), so it does NOT inherit ui-radio's `inline` sizing opt-out prop:
+  // its props surface stays exactly the indicator set (checked/value/size/name/disabled/required).
+  // (Typed through the parent's static shape so the class-static side still extends UIRadioElement's —
+  // the runtime object is the plain indicator set, no `inline` key.)
+  static props = UIIndicatorElement.props as typeof UIRadioElement.props
+}
 
 if (!customElements.get('ui-segment')) customElements.define('ui-segment', UISegmentElement)

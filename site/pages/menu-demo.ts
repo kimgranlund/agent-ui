@@ -5,7 +5,7 @@
 // roving / type-ahead / commit (menu.ts); this page only stages the items and logs the commit.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-menu — demo',
@@ -28,7 +28,7 @@ let seq = 0
 // The disabled item carries `disabled` — roving focus + type-ahead + commit all skip it. Each item's data-value
 // is the emitted `value`; without it, the item's textContent is used.
 const menu = el('ui-menu', {}, [
-  uiButton('Actions', 'solid'),
+  inline(uiButton('Actions', 'solid')), // ADR-0223: the menu trigger sits in block flow (ui-menu is display:contents) — hugs
   el('div', { 'data-value': 'new' }, [text('New file')]),
   el('div', { 'data-value': 'open' }, [text('Open file')]),
   el('div', { 'data-value': 'duplicate' }, [text('Duplicate')]),
