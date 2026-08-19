@@ -63,23 +63,54 @@
      ui-radio-group, which reaches into ui-radio's paint) — no cross-boundary rule needed here. */
   --ui-segmented-control-ink-answered: var(--ui-answered-ink);
   --ui-segmented-control-bg-answered: var(--ui-answered-bg);
+
+  /* Horizontal indicator slide direction (bug #1380) — physical `translateX` needs the RTL sign
+     flip the `:dir(rtl)` override below supplies; `inset-inline-start` (the anchor) already flips
+     on its own via logical properties, so only the SLIDE needed a lever. */
+  --ui-segmented-control-direction: 1;
+}
+
+/* RTL flip (bug #1380) — plain selector, overrides the :where() token block's zero specificity. */
+ui-segmented-control:dir(rtl) {
+  --ui-segmented-control-direction: -1;
 }
 
 /* ═══════════ [2] STYLES — plain compound selectors (deliberately NOT :where/@scope) ═══════════ */
 
 /* The track — display:grid, equal cells, orientation-driven main axis. `position:relative` hosts the
-   shared `::before` indicator; NO `overflow:hidden` (would clip the focus ring). */
+   shared `::before` indicator; NO `overflow:hidden` (would clip the focus ring). `isolation:isolate`
+   (bug #1380) gives the host its OWN stacking context — without it, the `::before` indicator
+   (z-index:0) and the segments (z-index:1) below escalate their z-index comparisons into whatever
+   ancestor stacking context the control is mounted inside (the ADR-0052 class: "a container is its
+   own z-depth scope"), letting surrounding page content interleave with the control's own layers. */
 ui-segmented-control {
   display: grid;
   position: relative;
+  isolation: isolate;
   box-sizing: border-box;
+}
+
+/* The track outline — a host `::after` overlay (bug #1380), NOT the host's own `border`. The moving
+   `::before` indicator is a POSITIONED descendant, so by CSS paint order it always rasterizes above a
+   plain host border regardless of source order; the host deliberately carries no `overflow:hidden`
+   (would clip the segment focus ring), so nothing was clipping the fill to the track's rounded inner
+   edge — at the corner arcs, under fractional DPR/zoom, the fill rode over/past the outline. Putting
+   the outline on its own `z-index:2` layer (above the indicator's 0 and the segments' 1, inside the
+   host's now-isolated stacking context) makes it paint on top on every engine, while `overflow` stays
+   open so focus rings keep drawing unclipped. `pointer-events:none` keeps it inert. */
+ui-segmented-control::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
   border: 1px solid var(--ui-segmented-control-track);
   border-radius: var(--ui-segmented-control-radius);
 }
 
-/* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction. Unlike
-   ui-radio-group (no visual surface of its own), this control owns its own track border directly. */
-ui-segmented-control:state(user-invalid) {
+/* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction. The track
+   outline now lives on the `::after` overlay (bug #1380), not the host's own border. */
+ui-segmented-control:state(user-invalid)::after {
   border-color: var(--ui-segmented-control-border-invalid);
 }
 
@@ -114,7 +145,10 @@ ui-segmented-control::before {
 ui-segmented-control[orientation='horizontal']::before {
   inline-size: calc(100% / var(--ui-segmented-control-count, 1));
   block-size: 100%;
-  transform: translateX(calc(var(--ui-segmented-control-index, 0) * 100%));
+  /* the anchor (inset-inline-start) already flips under RTL via logical properties; `translateX` is
+     PHYSICAL, so the direction sign must flip too (bug #1380) — otherwise a positive index slides
+     the indicator further right in RTL, off the RIGHT-anchored first cell and outside the track. */
+  transform: translateX(calc(var(--ui-segmented-control-direction, 1) * var(--ui-segmented-control-index, 0) * 100%));
 }
 ui-segmented-control[orientation='vertical']::before {
   inline-size: 100%;
@@ -196,7 +230,8 @@ ui-segmented-control[disabled] ui-segment:active {
    unselected ink hold at ButtonText. `transform` still applies under forced-colors (the indicator still
    POSITIONS on the right segment; only its fill/ink invert). */
 @media (forced-colors: active) {
-  ui-segmented-control {
+  ui-segmented-control::after {
+    forced-color-adjust: none;
     border-color: ButtonText;
   }
   ui-segmented-control::before {

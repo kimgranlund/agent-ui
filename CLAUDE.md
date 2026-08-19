@@ -14,8 +14,11 @@ Plan `.claude/docs/plan.md` · Goals + per-milestone DoD `.claude/docs/goals.md`
 - `npm run check` — the standing gate: `tsc` (packages) `&& check:site && check:tools && check:scripts`
   (four `noEmit`/test steps; see `package.json`)
 - `npm test` — Vitest (jsdom), once · `npm run test:watch` — watch mode
-- `npm run test:browser` — the real-engine gate, six sequential shards (never re-monolith it or add
-  a heap bump — shard-splitting history + the `focus-timing` extension rule: `component-testing`)
+- `npm run test:browser` — the real-engine gate, six sequential vitest shards plus the
+  `test:eval-catalog` gate appended last (never re-monolith the vitest shards or add a heap bump —
+  shard-splitting history + the `focus-timing` extension rule: `component-testing`)
+- `npm run test:eval-catalog` — standing gate wrapping `npm run eval:catalog` (boots its own vite +
+  Chromium, gate-verdicts-only, no stored PNGs); last step in the `test:browser` chain (GH #1356)
 - `npm run dev` / `npm run build` — the docs site (`site/`) is the app entry; build live since the
   ADR-0077 wave, incl. the G8 `<component-gallery>` (`gallery.html`)
 

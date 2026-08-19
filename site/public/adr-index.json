@@ -1449,6 +1449,41 @@
     "section": "Records"
   },
   {
+    "name": "ADR-0209",
+    "url": "./adr-index.html#adr-0209",
+    "description": "A2UI Disclosure summary-row children ride the child-side slot prop: summary joins the catalog's position-slot vocabulary (no new child model, no wire vocabular…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0210",
+    "url": "./adr-index.html#adr-0210",
+    "description": "FileDrop enters the A2UI catalog as the fleet's file-input affordance (opens the ADR-0112 cl.1 named fence): a host-mediated HANDLE model — bytes never ride A2…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0212",
+    "url": "./adr-index.html#adr-0212",
+    "description": "ui-radio-group child discovery widens from direct-children to nearest-group-scoped descendants: one logical radio system across visual groups (GH #1365)",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0213",
+    "url": "./adr-index.html#adr-0213",
+    "description": "A2UI Suggestions — one-shot follow-up chips as ONE data-prop leaf (mint a new type + control; NOT a Row-of-Buttons composition, NOT a Button widening, and NO p…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0214",
+    "url": "./adr-index.html#adr-0214",
+    "description": "A2UI SourceList — source attribution as ONE hardened data-prop leaf (mint; the source-card list ships, the in-prose citation marker is structurally out of reac…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "ADR-0220",
     "url": "./adr-index.html#adr-0220",
     "description": "ui-choice-group + ui-choice-card: the rich-card selection container (a committed choice over agent-composed option cards, single or multi — GH #1368)",

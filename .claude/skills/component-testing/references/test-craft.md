@@ -109,7 +109,7 @@ back, or OBSERVE an animation it does not drive? (GH #359/#364/#365/#366.)
 
 ## Browser-shard discipline
 
-`npm run test:browser` runs SIX SEQUENTIAL shards (packages:components → packages:app →
+`npm run test:browser` runs SIX SEQUENTIAL vitest shards (packages:components → packages:app →
 packages:rest → site → focus-timing → visual; GH #41) — never re-monolith it or add a heap
 bump. A single shard nearing the default ceiling splits further: the `packages` project split
 2026-07-19 (measured red on `main` pre-diff), and `:rest` split again the same day when it
@@ -118,3 +118,10 @@ focus/keyboard/scroll-timing files pulled out of `packages`/`site` and run with 
 parallelism — they flake under concurrent-page focus contention, not component defects (each
 passes solo); a future addition to that class is a one-line append to
 `vitest.browser.config.ts`'s `FOCUS_TIMING_FILES`, not a new shard.
+
+A seventh, NON-vitest step runs after these six: `test:eval-catalog`
+(`scripts/eval-catalog-gate.mjs`, GH #1356) — its own vite dev server + real playwright
+Chromium against `site/a2ui-catalog.html`, mirroring `scripts/e2e-devtools.mjs`'s
+freePort/killTree boot-a-server shape rather than a vitest project. It's appended to the
+`test:browser` chain, not the six-shard vitest count above — the two counts stay distinct
+because this step has no vitest project to split or heap-bump in the first place.
