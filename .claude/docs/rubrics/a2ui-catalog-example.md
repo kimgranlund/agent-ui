@@ -133,6 +133,7 @@ Exit codes: 0 all cards promote · 1 any gate red or any review < 3 (listed, nev
 | R-only, wrong tag / prop not applied (B1, B2) | `a2ui-build-agent` (`catalog.json`, `factories.ts` `applyProp`/`mapsTo`) | catalog row mechanics |
 | R-only, control renders wrong (B3) | `component-build-agent` (the `ui-*` control + css) | the control itself, A2UI path is just a consumer |
 | B4 specimen not representative | `example-authoring-agent`; if the catalog TYPE itself can't express a sensible specimen → `a2ui-catalog.md` review of the row | representative-specimen law |
+| R-only where the control renders RIGHT natively but wrong through A2UI (the component-mode comparison shot decides) | `a2ui-build-agent` (factory `applyProp`/child construction) — v0.2 addition: the verify round's Ladder case was unroutable without this row | path-specific degradation is catalog-side, not control-side |
 | card (C3, U line) | `docs-writer` (page/harness) | page shell + derived links |
 
 ## 7 · Non-goals
