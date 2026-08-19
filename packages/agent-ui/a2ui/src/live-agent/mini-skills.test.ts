@@ -60,7 +60,14 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
   it('seeds the GH #1201 eleventh module — `greeting-card`', () => {
     const ids = MINI_SKILLS.map((m) => m.id)
     expect(ids).toContain('greeting-card')
-    expect(MINI_SKILLS).toHaveLength(11)
+  })
+
+  // GH #1355 (the 2026-08-18 preset-vs-catalog gap analysis) — three more modules, taking the registry
+  // to fourteen: `crud-entry-list`, `table-toolbar-pagination`, `nested-record-editor`.
+  it('seeds the GH #1355 twelfth-fourteenth modules — crud-entry-list · table-toolbar-pagination · nested-record-editor', () => {
+    const ids = MINI_SKILLS.map((m) => m.id)
+    expect(ids).toEqual(expect.arrayContaining(['crud-entry-list', 'table-toolbar-pagination', 'nested-record-editor']))
+    expect(MINI_SKILLS).toHaveLength(14)
   })
 
   it('no registry body embeds A2UI JSONL (a pure-prose module needs only doc-review, ADR-0091 §4)', () => {
@@ -71,8 +78,8 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
 
   // SPEC-R6 AC1 (`persona-catalog-composition.spec.md`, ADR-0172 cl.3) — every shipped module's
   // frontmatter carries the catalog whose vocabulary its body hardcodes.
-  it('SPEC-R6 AC1 — every one of the eleven shipped modules carries catalogId: \'agent-ui\'', () => {
-    expect(MINI_SKILLS).toHaveLength(11)
+  it('SPEC-R6 AC1 — every one of the fourteen shipped modules carries catalogId: \'agent-ui\'', () => {
+    expect(MINI_SKILLS).toHaveLength(14)
     for (const skill of MINI_SKILLS) expect(skill.catalogId, skill.id).toBe('agent-ui')
   })
 })
@@ -342,5 +349,71 @@ describe('greeting-card — the GH #1201 persona-conditional greet-bookend modul
     const prompt = buildSystemPrompt(defaultCatalog, [], undefined, [], 'You are a terse build assistant.')
     const greet = MINI_SKILLS.find((m) => m.id === 'greeting-card')!
     expect(prompt).not.toContain(greet.body)
+  })
+})
+
+// GH #1355 (the 2026-08-18 preset-vs-catalog gap analysis) — three modules teaching compositions the
+// catalog can already express but no idiom named.
+describe('crud-entry-list — the GH #1355 CRUD entry-list module', () => {
+  it('fires on a manage-items intent', () => {
+    const result = selectMiniSkills('let me manage my skills — enable, edit, or remove each one', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).toContain('crud-entry-list')
+  })
+
+  it('does NOT fire on an unrelated intent', () => {
+    const result = selectMiniSkills('show me the weather forecast for tomorrow', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).not.toContain('crud-entry-list')
+  })
+
+  it('teaches the unbindable-Switch-label trap (the name rides the adjacent Text, not the switch)', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'crud-entry-list')!
+    expect(skill.body).toMatch(/Switch's own `label` is NOT bindable/)
+  })
+
+  it('teaches the edit-Drawer + FormProvider shape and the Button-rows-in-Menu add-from-library idiom', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'crud-entry-list')!
+    expect(skill.body).toMatch(/Drawer\(edge 'end', open bound\)/)
+    expect(skill.body).toMatch(/a Menu whose rows are BUTTONS/)
+    expect(skill.body).toMatch(/never bare MenuItem, which carries no `action` slot/)
+  })
+})
+
+describe('table-toolbar-pagination — the GH #1355 Table/Toolbar/Pagination interplay module', () => {
+  it('fires on a searchable/sortable table intent', () => {
+    const result = selectMiniSkills('a searchable, sortable table of results with paging', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).toContain('table-toolbar-pagination')
+  })
+
+  it('does NOT fire on an unrelated intent', () => {
+    const result = selectMiniSkills('build a checkout form with billing fields', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).not.toContain('table-toolbar-pagination')
+  })
+
+  it('teaches the no-redundant-second-pager rule for a Table already windowing itself', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'table-toolbar-pagination')!
+    expect(skill.body).toMatch(/never add a separate Pagination node bound to that same table's page/)
+  })
+
+  it('teaches Table owning search\\/sort\\/filter\\/page\\/pageSize as its own bindable props', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'table-toolbar-pagination')!
+    expect(skill.body).toMatch(/Table owns `search`\/`sort`\/`filter`\/`page`\/`pageSize` as its OWN bindable props/)
+  })
+})
+
+describe('nested-record-editor — the GH #1355 parent-record + member-sub-list module (the team-pane shape)', () => {
+  it('fires on a team-roster intent', () => {
+    const result = selectMiniSkills('manage my team — add or remove members and assign each a role', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).toContain('nested-record-editor')
+  })
+
+  it('does NOT fire on an unrelated intent', () => {
+    const result = selectMiniSkills('show me the weather forecast for tomorrow', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).not.toContain('nested-record-editor')
+  })
+
+  it('distinguishes itself from master-detail-split and crud-entry-list in its own body', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'nested-record-editor')!
+    expect(skill.body).toMatch(/Distinct from master-detail-split/)
+    expect(skill.body).toMatch(/the flat CRUD entry-list/)
   })
 })
