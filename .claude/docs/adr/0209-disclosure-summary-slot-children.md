@@ -36,8 +36,8 @@ agent-admin instance; all verified against
   kinds (the issue's own count).
 - **`admin-help`** — every group/section heading row carries a `<ui-tooltip data-part="admin-help"
   slot="summary">` (question-mark anchor + help card), adopted onto the fold's heading row by
-  `ui-disclosure` (`agent-admin.md:173`, GH #844/#866) — including every `context-item` and
-  `context-turn` fold (`agent-admin.md:183/:187`).
+  `ui-disclosure` (`agent-admin.md:172`, GH #844/#866) — including every `context-item` and
+  `context-turn` fold (`agent-admin.md:182/:187`).
 - **The composed ordering ruling** — where a heading row carries both, the order is `[?] [switch]`,
   the switch outermost (Kim, 2026-08-14) — plain DOM/append order under ADR-0158.
 
@@ -163,7 +163,7 @@ summary Switch + summary Tooltip-help + body content; GH #729 coverage) · row g
 - **B. A separate `summaryChildren` ChildList** — rejected: a NEW node-level wire field, i.e. a
   second parent→child edge kind. `ComponentDef.children` is a single `'child'|'children'|'ChildList'`
   string (`catalog.ts:25/:170`), and `children` is one of five RESERVED node keys
-  (`widget.ts:42`); a second edge would have to be learned by every graph consumer — tree
+  (`renderer/widget.ts:42`); a second edge would have to be learned by every graph consumer — tree
   build/diff, the reveal-order streaming walk (ADR-0194), list reconcile, corpus export,
   conformance's graph checks, devtools capture — and by every downstream catalog (descriptor
   agreement, a2ui-basic partition reasoning). Maximal blast radius to express what a shipped
