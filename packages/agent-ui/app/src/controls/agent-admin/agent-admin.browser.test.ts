@@ -852,9 +852,12 @@ describe('ui-agent-admin cross-engine smoke — the canvas/region gutter is GONE
 
   // GH #665's shared-top-line law, updated by GH #1274: the COPILOT pane still carries no own block
   // padding (ui-conversation's chrome is its rhythm); the SETTINGS pane now carries the gutter-equivalent
-  // inner padding on all sides (Kim, post-#1260 — its content was flush to the pane edges). The three
-  // columns' EDGES still share one top line; settings' first heading sits one gutter below it by design.
-  it('copilot carries NO OWN block padding; settings carries the GH #1274 inner padding', () => {
+  // inner padding (Kim, post-#1260 — its content was flush to the pane edges). GH #1318 (Kim's 2026-08-18
+  // sticky-strip ruling) moved the BLOCK-START share of that gutter onto the settings-nav strip's own
+  // padding (engines pin a sticky child below a scroll container's own block-start padding — the pane had
+  // to shed that one edge for the strip to reach its top); the visible #1274 content line is unchanged,
+  // which the GH #1318 sticky probe pins geometrically. The three columns' EDGES still share one top line.
+  it('copilot carries NO OWN block padding; settings carries the GH #1274 inner padding (block-start handed to the sticky strip, GH #1318)', () => {
     const { el } = mountAgentAdmin()
     const settings = el.querySelector('[data-part="settings-pane"]') as HTMLElement
     const author = el.querySelector('[data-part="copilot-pane"]') as HTMLElement
@@ -862,8 +865,10 @@ describe('ui-agent-admin cross-engine smoke — the canvas/region gutter is GONE
     expect(authorCs.paddingBlockStart).toBe('0px')
     expect(authorCs.paddingBlockEnd).toBe('0px')
     const settingsCs = getComputedStyle(settings)
-    expect(settingsCs.paddingBlockStart, 'settings inner padding (GH #1274)').toBe('12px')
+    expect(settingsCs.paddingBlockStart, 'the block-start share rides the sticky strip now (GH #1318)').toBe('0px')
     expect(settingsCs.paddingBlockEnd, 'settings inner padding (GH #1274)').toBe('12px')
+    const strip = settings.querySelector('ui-tabs[data-part="settings-nav"]') as HTMLElement
+    expect(getComputedStyle(strip).paddingBlockStart, 'the strip carries the handed-off #1274 gutter (GH #1318)').toBe('12px')
   })
 })
 
@@ -3926,6 +3931,61 @@ describe('ui-agent-admin — the help affordance admin-wide: placement geometry 
     await userEvent.keyboard('{Escape}')
     await frames()
     expect(host.open, `${server.browser}: Escape dismisses`).toBe(false)
+  })
+})
+
+// ── GH #1318 (Kim's 2026-08-18 ruling, closing the #1297 parked fork) — the settings-nav strip is STICKY
+// WITHIN THE PANE: it scrolls with the settings-pane (the scroll owner since #1297/PR #1301) and pins to
+// its top; the header band stays one unit and content scrolls under it (the hoist arm was declined).
+// jsdom cannot resolve `position: sticky` against a real scroll container (the #947 drawer-footer
+// precedent) — only this file can prove the strip actually PINS while content passes beneath it.
+describe('ui-agent-admin cross-engine smoke — the sticky settings-nav strip (GH #1318)', () => {
+  it('scrolling the settings pane pins the strip at the pane top; content passes beneath an opaque band', () => {
+    const { wrapper, el } = mountAgentAdmin()
+    // Deterministic overflow: shrink the mount instead of trusting the Agent section's incidental height
+    // to exceed the helper's 600px — the claim is about the pinning mechanism, not today's content budget.
+    wrapper.style.height = '360px'
+    const pane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+    const strip = el.querySelector('ui-tabs[data-part="settings-nav"]') as HTMLElement
+    const tablist = strip.querySelector('[data-part="tablist"]') as HTMLElement
+    expect(getComputedStyle(strip).position, `${server.browser}: the strip computes sticky`).toBe('sticky')
+    expect(pane.scrollHeight, 'the pane really overflows at this mount (the probe is live, not vacuous)').toBeGreaterThan(pane.clientHeight)
+
+    // The pane div carries no border, so its rect top IS its padding-box/scrollport top. The #1274
+    // block-start gutter rides the STRIP now (the box-model-region handoff — engines pin a sticky child
+    // below a scroll container's own block-start padding, so the pane sheds that edge and the strip
+    // carries it as its own padding): read it from the strip, and pin that the pane really shed its own.
+    const paneTop = pane.getBoundingClientRect().top
+    const gutter = Number.parseFloat(getComputedStyle(strip).paddingBlockStart)
+    expect(gutter, 'the #1274 gutter rides the strip').toBeGreaterThan(0)
+    expect(Number.parseFloat(getComputedStyle(pane).paddingBlockStart), 'the pane shed its block-start padding (the pin line is the container padding edge)').toBe(0)
+    // At rest: the strip's BOX starts at the pane's top (the gutter is its own padding now), while its
+    // TABS keep the ambient #1274 content line — the handoff is net-zero for the visible rhythm.
+    expect(Math.abs(strip.getBoundingClientRect().top - paneTop), 'at rest the strip box starts at the pane top').toBeLessThan(1)
+    expect(Math.abs(tablist.getBoundingClientRect().top - (paneTop + gutter)), 'at rest the tabs keep the #1274 content line').toBeLessThan(1)
+
+    pane.scrollTop = pane.scrollHeight // clamps to the real max
+    expect(pane.scrollTop, 'the pane actually scrolled').toBeGreaterThan(0)
+    const stuck = strip.getBoundingClientRect()
+    // Pinned: the strip's top stays at the pane's top while everything under it scrolled away, and the
+    // tabs hold the same content line as at rest — the band is one unit, no jump on pin, and its box
+    // covers the padding-box clip band scrolled cards would otherwise bleed through.
+    expect(Math.abs(stuck.top - paneTop), `${server.browser}: the stuck strip's top stays at the pane's top`).toBeLessThan(1)
+    expect(Math.abs(tablist.getBoundingClientRect().top - (paneTop + gutter)), 'the stuck tabs hold the content line — no jump on pin').toBeLessThan(1)
+
+    // Content passes BENEATH the pinned band: the active section's box overlaps the strip's band (it slid
+    // under the strip rather than pushing it off-screen), and the strip paints above it — a positioned,
+    // z-indexed, fully OPAQUE surface (rgb(), never rgba(...,<1) — scrolled content must not show through).
+    const section = el.querySelector('[data-role="agent-content"]') as HTMLElement
+    const sectionBox = section.getBoundingClientRect()
+    expect(sectionBox.top, 'the section scrolled up past the strip band').toBeLessThan(stuck.bottom)
+    expect(sectionBox.bottom, 'and still extends below it — really passing beneath').toBeGreaterThan(stuck.top)
+    expect(Number(getComputedStyle(strip).zIndex), 'the strip stacks above the in-flow cards').toBeGreaterThanOrEqual(1)
+    // Opaque: a real paint (never the initial transparent) with NO alpha channel — the tokens mint oklch,
+    // so a translucent value would serialize with `/ <alpha>` (or as rgba); an opaque one carries neither.
+    const bg = getComputedStyle(strip).backgroundColor
+    expect(bg, 'a real paint, not the initial transparent').not.toBe('rgba(0, 0, 0, 0)')
+    expect(bg, `${server.browser}: fully opaque — an alpha channel would let cards show through`).not.toMatch(/rgba|\//)
   })
 })
 

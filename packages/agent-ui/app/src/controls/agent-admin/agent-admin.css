@@ -502,6 +502,14 @@
        so it gets the equivalent inner padding itself, keeping the three panes' content rhythm aligned
        while the pane EDGES stay flush per the edge-to-edge ruling. */
     padding: var(--ui-agent-admin-shell-gutter);
+    /* GH #1318 — the BLOCK-START share of that #1274 gutter rides the sticky settings-nav strip instead
+       (its `padding-block-start` below): both engines pin a sticky child BELOW a scroll container's own
+       block-start padding (measured 2026-08-18, Chromium + WebKit — `inset-block-start: 0` stuck the strip
+       one gutter shy of the pane top, scrolled cards bleeding through the padding band, which clips at the
+       PADDING box), so the pane cannot keep this edge and still let the strip reach its top. The handoff is
+       net-zero at rest: the strip's box grows by exactly what the pane sheds, the tabs and every section
+       below hold the same #1274 content lines. */
+    padding-block-start: 0;
   }
   /* GH #197's own fix, re-anchored: the settings SECTIONS' `[data-role='…-content']` rule below declares
      `display: flex` (an AUTHOR rule), which — same origin, and at least as specific as the UA's own
@@ -516,9 +524,45 @@
 
   /* OQ2 — the Settings place's internal sub-nav. Zero own padding: the pane's own gutter above supplies
      the ambient inset, exactly the idiom `ui-tabs[data-part='pane-tabs']` follows below (an ambient
-     wrapper gutter insets the strip, never the strip itself). */
+     wrapper gutter insets the strip, never the strip itself).
+
+     GH #1318 (Kim's 2026-08-18 ruling, closing the #1297 parked fork) — STICKY WITHIN THE PANE: the strip
+     scrolls with the settings-pane (the scroll owner since #1297/PR #1301) and pins to its top; the header
+     band stays one unit and content scrolls under it (the hoist-out-of-the-scroll-region arm was declined).
+     The recipe is select.css's sticky group-label precedent (the container box-model region pattern):
+     `position: sticky` + `inset-block-start: 0` + an OPAQUE pane surface so scrolled sections never show
+     through, `z-index` above the in-flow section content.
+       · The BLOCK-START #1274 gutter is HANDED OFF from the pane to the strip (the pane's
+         `padding-block-start: 0` above + this rule's `padding-block-start` — net-zero at rest: the strip's
+         box grows by exactly what the pane sheds, the tabs and the sections below hold the same content
+         lines). This is load-bearing, not decoration: both engines pin a sticky child BELOW the scroll
+         container's own block-start padding, while scrolled content clips at the PADDING box (measured
+         2026-08-18, Chromium + WebKit — `inset-block-start: 0` against the padded pane stuck the strip one
+         gutter shy of the pane top, scrolled cards bleeding through the padding band above it; a
+         negative-margin/compensating-padding pair on the strip measured NO better — the pin line is the
+         container's, not the child's, so only the container's own padding edge can move it). With the
+         gutter as the strip's own padding, the pinned box reaches the pane's top edge and covers the clip
+         band exactly.
+       · The INLINE axis stays INSET (no full-bleed): this rule's own documented idiom above — the ambient
+         wrapper gutter insets the strip, never the strip itself — and the section cards below share that
+         same content-box start line. The inline gutters beside the stuck strip can never show scrolled
+         content (sections lay out in the same content box; the no-horizontal-overflow law keeps them
+         there), so inline full-bleed would buy no occlusion and would desync the strip's hairline from the
+         cards' rhythm.
+       · The surface is this file's OWN `--ui-agent-admin-surface` (never a cross-scope read into another
+         sheet's token chain — the #870 law): the same `neutral-surface` role the production composition's
+         ambient paints behind the pane (agent-admin-app.css's `#app`), so the band reads as pane surface,
+         not a new plane. tabs.css adds no background of its own (its header says so), so this is the one
+         paint on the strip's box.
+     Real-engine pin: agent-admin.browser.test.ts (jsdom cannot resolve sticky against a real scroll
+     container — the #947 drawer-footer precedent). */
   ui-tabs[data-part='settings-nav'] {
     flex: 0 0 auto;
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 1;
+    background: var(--ui-agent-admin-surface);
+    padding-block-start: var(--ui-agent-admin-shell-gutter);
   }
 
   /* GH #870 — `overflow="menu"` (GH #586) lays this strip's shell out as a two-column grid, "strip
