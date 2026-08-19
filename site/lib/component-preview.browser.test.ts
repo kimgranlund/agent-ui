@@ -171,7 +171,14 @@ describe('component-preview — direct canvas interaction survives a knob edit (
     const preview = await mountPreview('a2ui', 'TextField')
     const field = surfaceControl(preview, 'ui-text-field')
     expect(field, 'no ui-text-field rendered').not.toBeNull()
+    // GH #1410: since #1322's user-interaction tripwire (#armLiveDirty), a live value survives the rebuild
+    // ONLY once the user actually committed it on the canvas — the slot's own commit event fired from the
+    // rendered root (TextField's catalog value slot is { prop: 'value', event: 'change' } — blur/Enter commit,
+    // ADR-0019 cl.3). A bare programmatic `.value =` no longer counts (that path used to launder control
+    // defaults/clamps into knob state — the Slider-min/Pagination bug #1322 fixed). Simulate the commit the
+    // way a user does: set the value + fire the slot's own `change` event from the rendered control.
     ;(field as unknown as { value: string }).value = 'typed by user' // the live value the rebuild must preserve
+    field?.dispatchEvent(new Event('change', { bubbles: true })) // the user's commit — marks the slot live-dirty
 
     // This test used to drive `TextField.size` as the "unrelated knob" — GH #1188: the 2026-08-17 size-attr
     // scrub (commit 6b3f90f9/#1148) deliberately removed `size` from every catalog component, TextField

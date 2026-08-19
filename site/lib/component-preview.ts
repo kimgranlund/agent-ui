@@ -1316,6 +1316,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-slider-multi', // JS-managed light-DOM rail/fill/thumb children (NOT ::before/::after, unlike ui-slider)
   'ui-sparkline', // component-built inline <svg> (createElementNS + replaceChildren) — the ui-icon precedent, a name/values-driven mark, not authored text (slots: [] — sparkline.md)
   'ui-line-chart', // ADR-0205: component-built label rows + inline <svg> (replaceChildren) — the ui-sparkline precedent, a values-driven mark, not authored text (slots: [] — line-chart.md)
+  'ui-pie-chart', // ADR-0219: component-built key-list rows + aria-hidden <svg> ring (replaceChildren) — the chart-family precedent, a data-driven mark, not authored text (slots: [] — pie-chart.md)
   'ui-disclosure', // #ensureParts(): the details/summary/chevron chrome — host children are ADOPTED into a nested body PART, never left as direct host children (unlike a STRUCTURAL container), so a host-level SLOT_TEXT write would destroy the whole part tree
   'ui-stat', // connected() builds four spans once (replaceChildren) from label/value/delta/caption PROPS — no light-DOM content model at all (slots: [] — stat.md)
   'ui-description-list', // connected() builds row/label/value spans (replaceChildren) from the rows PROP — no light-DOM content model at all (slots: [] — description-list.md, ADR-0201)

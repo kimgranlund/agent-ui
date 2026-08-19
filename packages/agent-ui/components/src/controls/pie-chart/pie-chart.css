@@ -1,0 +1,134 @@
+/* pie-chart.css — ui-pie-chart, the Display-class part-of-whole chart (ADR-0219). Two clearly-
+ * SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-pie-chart)` (specificity 0,0,0) declares the `--ui-pie-chart-*` chain:
+ *       the whole-shape floor (a bare, unstyled chart in a flex row must still paint a visible,
+ *       non-collapsed ring — the ui-bar-chart/ui-line-chart SPEC-R9 AC1 precedent), density-INVARIANT
+ *       ring geometry (`--ui-pie-chart-ring-size`, a fixed em box — mark geometry never rides
+ *       `[scale]`, SPEC-R12), the SIX-STEP single-family LIGHTNESS RAMP (ADR-0219 cl.4 — surfaced
+ *       verbatim as `--ui-pie-chart-slice-{1..6}-ink` so a consumer re-maps the ramp without touching
+ *       this control), the constant-width surface-role separator stroke (cl.4), the empty-track ink,
+ *       and the density-RESPONSIVE key-list rhythm (rides `--md-sys-space` for free — the
+ *       ui-bar-chart precedent).
+ *   [2] STYLES BLOCK — `@scope (ui-pie-chart)` consumes ONLY `--ui-pie-chart-*` (∪ the shared
+ *       `--md-sys-color-*`/`--md-sys-typescale-*`/`--md-sys-space-*` namespaces the token block
+ *       itself reads ∪ the row/slice-scoped `--_slice-ink` hook, out of the governed namespace
+ *       entirely — the bar-chart `--_bar-start`/`--_bar-length` precedent, set imperatively by
+ *       pie-chart.ts, never declared here).
+ *
+ * Layout: a two-column grid — the ring (fixed `--ui-pie-chart-ring-size` square, spanning every row in
+ * column 1) BESIDE the key list (column 2, one row per slice) — ADR-0219 cl.5's "placed beside/below
+ * the ring by CSS," realized as beside. `variant='donut'` leaves a visible hole at the ring's geometric
+ * center (pie-math.ts's `INNER_RADIUS`) for a SIBLING composition in the CONSUMER's own layout
+ * (cl.6) — this sheet paints nothing there; the hole is a pure consequence of the annulus path.
+ *
+ * Identity (cl.4): each `[data-part='slice']`/`[data-part='key-swatch']` reads its OWN `--_slice-ink`
+ * hook (imperatively set per-node by pie-chart.ts to one of the six ramp tokens) — never a
+ * nth-child/hue rule baked into this sheet, so the SAME six-token chain lights both the ring and its
+ * matching key row. `forced-colors` (cl.7): every slice flattens to `CanvasText`, separators to
+ * `Canvas` — identity survives via the key list's real text, untouched under WHCM.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-pie-chart) declares --ui-pie-chart-* ════════════════ */
+
+:where(ui-pie-chart) {
+  --ui-pie-chart-min-inline-size: 16em; /* the whole-shape floor (SPEC-R9 AC1 precedent) — never a collapsed sliver */
+  --ui-pie-chart-ring-size: 8em; /* the ring's fixed box — density-invariant mark geometry (SPEC-R12) */
+
+  /* The single-family LIGHTNESS ramp (ADR-0219 cl.4 + Amendment) — six pairwise-DISTINCT, strictly
+     MONOTONE primary tone primitives per scheme, slice 1 always brightest. cl.4's originally-named
+     emphasis-role chain (-bright/-high/base/-dim/-low/-muted) resolves to only FOUR distinct colors and
+     a lightness zigzag in the shipped estate (light 350->650->550->650->350; dark 1≡2 and 4≡5 adjacent —
+     and -muted is a different HUE family), breaking cl.4's own CVD-ordering rationale. So the defaults
+     read the TONE primitives directly via light-dark() — dark rides one 100-step brighter than light,
+     the estate's base-role convention (550 light / 450 dark). The ONE ruled exception to the
+     roles-only token hygiene rule, pinned by pie-chart-css.test.ts; the six slice-{1..6}-ink NAMES stay
+     the stable consumer re-map seam. */
+  --ui-pie-chart-slice-1-ink: light-dark(var(--md-sys-color-primary-300), var(--md-sys-color-primary-200));
+  --ui-pie-chart-slice-2-ink: light-dark(var(--md-sys-color-primary-400), var(--md-sys-color-primary-300));
+  --ui-pie-chart-slice-3-ink: light-dark(var(--md-sys-color-primary-500), var(--md-sys-color-primary-400));
+  --ui-pie-chart-slice-4-ink: light-dark(var(--md-sys-color-primary-600), var(--md-sys-color-primary-500));
+  --ui-pie-chart-slice-5-ink: light-dark(var(--md-sys-color-primary-700), var(--md-sys-color-primary-600));
+  --ui-pie-chart-slice-6-ink: light-dark(var(--md-sys-color-primary-800), var(--md-sys-color-primary-700));
+
+  --ui-pie-chart-separator-ink: var(--md-sys-color-neutral-surface); /* the constant-width stroke KEEPING adjacent slices distinct (cl.4) */
+  --ui-pie-chart-separator-width: 1px; /* density-invariant, non-scaling-stroke */
+  --ui-pie-chart-track-ink: var(--md-sys-color-neutral-container); /* the empty/all-zero ring (mirrors --ui-bar-chart-track-ink) */
+  --ui-pie-chart-text-ink: var(--md-sys-color-neutral-on-surface); /* key-row label/percent ink — the ONE role reference */
+  --ui-pie-chart-row-gap: var(--md-sys-space-sm); /* key-row rhythm — rides [density] for free (ADR-0103) */
+  --ui-pie-chart-col-gap: var(--md-sys-space-md); /* ring<->key-list rhythm */
+  --ui-pie-chart-key-gap: var(--md-sys-space-xs); /* swatch/label/percent rhythm within one key row */
+  --ui-pie-chart-swatch-size: 0.75em; /* the key row's fill-carrying swatch (cl.4 — fill is a carrier, never the only one) */
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-pie-chart) consumes ONLY --ui-pie-chart-* ════════════════ */
+
+@scope (ui-pie-chart) {
+  :scope {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: var(--ui-pie-chart-col-gap);
+    row-gap: var(--ui-pie-chart-row-gap);
+    align-items: center;
+    min-inline-size: var(--ui-pie-chart-min-inline-size);
+    box-sizing: border-box;
+    /* text-bearing Display (the ui-bar-chart SPEC-R12 precedent) — the type matrix is the lever, not
+       a [size]/[scale] attribute; a chart takes neither. */
+    font-size: var(--md-sys-typescale-body-medium-size);
+    line-height: var(--md-sys-typescale-body-medium-line-height);
+    color: var(--ui-pie-chart-text-ink);
+  }
+
+  :scope svg[data-part='ring'] {
+    grid-column: 1;
+    grid-row: 1 / -1; /* the ring spans every key-row's row — auto-placement pushes every row into column 2 */
+    display: block;
+    inline-size: var(--ui-pie-chart-ring-size);
+    block-size: var(--ui-pie-chart-ring-size);
+  }
+
+  :scope svg [data-part='slice'] {
+    fill: var(--_slice-ink); /* row-scoped, imperatively set (pie-chart.ts) — one of the six ramp tokens */
+    stroke: var(--ui-pie-chart-separator-ink);
+    stroke-width: var(--ui-pie-chart-separator-width);
+  }
+
+  :scope svg [data-part='track'] {
+    fill: var(--ui-pie-chart-track-ink);
+  }
+
+  :scope [role='listitem'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-pie-chart-key-gap);
+  }
+
+  :scope [data-part='key-swatch'] {
+    display: inline-block;
+    inline-size: var(--ui-pie-chart-swatch-size);
+    block-size: var(--ui-pie-chart-swatch-size);
+    border-radius: 50%;
+    background: var(--_slice-ink); /* row-scoped, imperatively set (pie-chart.ts) — matches its slice's ink */
+    flex-shrink: 0;
+  }
+
+  :scope [data-part='key-percent'] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (forced-colors: active) {
+    :scope svg [data-part='slice'] {
+      fill: CanvasText; /* identity rides the key list's real text under WHCM (cl.7) */
+      stroke: Canvas;
+    }
+    :scope svg [data-part='track'] {
+      fill: Canvas;
+      stroke: CanvasText;
+      stroke-width: 1px;
+    }
+    :scope [data-part='key-swatch'] {
+      background: CanvasText;
+      border: 1px solid Canvas;
+    }
+  }
+}

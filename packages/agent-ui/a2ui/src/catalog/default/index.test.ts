@@ -155,7 +155,9 @@ function fleetPrimaryTypes(): string[] {
  *  citation, same as Wave 0's seed. The color-picker family (ADR-0123, `ColorPicker`) re-seeded this SAME
  *  "shipped ahead of its catalog row" shape at M1 (color-picker.lld.md, the ADR-0118 M1/M2 discipline) —
  *  this M2 wave lands the row below and DRAINS that seed too, the same way the token-surface/report/
- *  content/feed seeds above were drained. */
+ *  content/feed seeds above were drained. `PieChart` (ADR-0219, GH #1397) re-seeds this SAME shape once
+ *  more: the control-mint half of the ADR-0219 booked repairs ships the control this wave, split from its
+ *  own CATALOG-half lane by an explicit scope fence — the seed below drains when that lane's row lands. */
 //
 // `ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel`/`CommandModal` are
 // the only PERMANENT entries — NOT catalogue-bound AT ALL (app-surface/theming/live-streaming/chrome-anchor
@@ -208,6 +210,13 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'is host-page-only (security inversion, PRD-D2); the ADR-0112 cl.6 Toast/ToastRegion reasoning applied ' +
     'verbatim — a one-time-code entry is the credential-bearing element of the identity family\'s Codes ' +
     'mode (code-entry-control.lld.md §9, GH #490 S2-a).'],
+  ['PieChart',
+    'ADR-0219 / GH #1397 — TEMPORARY "shipped ahead of its catalog row" seed (the BarChart/Sparkline ' +
+    'ADR-0107/LLD-C10 precedent, above): the control-mint half of the ADR-0219 booked repairs lands the ' +
+    'control + descriptor this wave; the CATALOG half (catalog.json row + factories.ts entry + the drafted ' +
+    'a2ui-catalog.spec.md §5.2 delta + prompt-equivalence recapture) is a separate, coordinated lane\'s ' +
+    'slice — this seed DRAINS the moment that row lands, the same way the report/content/feed/token-' +
+    'surface/color-picker seeds above drained.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists
