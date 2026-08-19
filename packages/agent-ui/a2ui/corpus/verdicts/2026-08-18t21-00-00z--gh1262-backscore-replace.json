@@ -1,0 +1,21 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.2",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-08-18T21:00:00Z",
+  "verdicts": {
+    "pattern-confirmation-card": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "pattern-settings-form": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "pattern-schedule-picker": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "pattern-wizard": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "generative-form": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "booking-reservation": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "feedback-form": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "trivia-round-resume": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "empty-error-retry-card": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "frontier-card-anatomy-ask": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "backable-wizard": { "qualityScore": 2, "passed": false, "failingDimensions": ["D1"] },
+    "stats-grid-dashboard": { "qualityScore": 2, "passed": false, "failingDimensions": ["D5"] },
+    "wizard-step-progress": { "qualityScore": 3, "passed": false, "failingDimensions": ["D1"] }
+  }
+}
