@@ -42,6 +42,13 @@ export class UIRadioElement extends UIIndicatorElement {
     const group = this.closest('[data-radio-group]')
     if (!group) return
 
+    // The A2UI catalog value-before-children ordering fix — give an outstanding pending `value` (set on the group BEFORE this radio
+    // existed; radio-group.ts's `#pendingValue`) a chance to resolve now that this radio has registered.
+    // Duck-typed (no import of UIRadioGroupElement here — the SAME circular-import avoidance the
+    // `data-radio-group` attribute detection above already uses); a no-op for any host that doesn't
+    // implement the seam (e.g. a bare `[data-radio-group]` test double).
+    ;(group as Element & { resolvePendingValue?(radio: UIRadioElement): void }).resolvePendingValue?.(this)
+
     // Capture-phase listener: runs BEFORE the base's bubble-phase click → toggle. If the radio is
     // already checked, stopImmediatePropagation cancels all subsequent listeners for this click event
     // (base toggle, group delegation) — the radio stays checked. For unchecked radios, this is a no-op:
