@@ -82,6 +82,10 @@ export class UIRatingElement extends UIRangeElement {
   #clamp(raw: number): number {
     const min = this.min ?? 0
     const max = this.max ?? 5
+    // Non-finite guard (checker MINOR-1): NaN propagates through Math.min/max and Object.is(NaN,NaN)
+    // short-circuits the bounds effect, leaving --value-pct invalid (all stars paint full) and the
+    // keyboard stuck at NaN±step. Fall to min — the same floor an under-range write takes.
+    if (!Number.isFinite(raw)) return min
     if (min > max) return min
     return Math.max(min, Math.min(max, raw))
   }

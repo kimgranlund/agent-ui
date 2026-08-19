@@ -109,7 +109,7 @@ customStates: []       # ui-rating does not arm any :state() hooks (no binary ch
 
 face:
   formAssociated: true   # FACE form-associated control — value participates via ElementInternals (ADR-0013)
-  value: value           # submitted as String(normalised value) (formValue() in rating.ts, the base's algorithm re-implemented per-leaf — ownsValueModel()=false)
+  value: value           # submitted as String(clamped value) (formValue() in rating.ts rides #clamp ONLY — bounds, never step-snap: an assigned 4.3 submits as '4.3'; deliberately NOT the base's clamp+snap — ownsValueModel()=false)
   validity: '' # ui-rating raises no constraint (formValidity() is the UIFormElement default, always-valid); a rating's value is never "missing" — it is always a number in [min,max] (native <input type=range> parity, matching slider.md's identical ruling; UIRangeElement's own base never raises one either).
 
 aria:
