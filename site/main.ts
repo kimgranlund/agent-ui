@@ -364,6 +364,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-sparkline',
     cards: [
       {
+        href: './sparkline-demo.html',
+        title: 'Demo',
+        blurb: 'Live sparklines over a real KPI strip — revenue, sign-ups, p95 latency, error rate — line vs area, sizing, and the generated accessible summary read back from the real control.',
+      },
+      {
         href: './sparkline-doc.html',
         title: 'API reference',
         blurb: 'The Display-class series-shape mark — the line/area variants over a live revenue trend, the degenerate cases, and the generated accessible summary, generated from sparkline.md.',
@@ -373,6 +378,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
   {
     label: 'ui-bar-chart',
     cards: [
+      {
+        href: './bar-chart-demo.html',
+        title: 'Demo',
+        blurb: 'Live bar lists over a real regional revenue report — magnitudes, a mixed-sign diverging month-over-month view, all-equal and negative-only cases, and a density-scaled variant.',
+      },
       {
         href: './bar-chart-doc.html',
         title: 'API reference',
@@ -385,6 +395,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
   {
     label: 'ui-line-chart',
     cards: [
+      {
+        href: './line-chart-demo.html',
+        title: 'Demo',
+        blurb: 'Live line/area charts over real report series — the value-floor baseline vs the zero-line baseline, area fill, and the always-shown min/max labels read back from the real control.',
+      },
       {
         href: './line-chart-doc.html',
         title: 'API reference',
@@ -885,6 +900,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
     label: 'ui-table',
     cards: [
       {
+        href: './table-demo.html',
+        title: 'Demo',
+        blurb: 'The live widened table (ADR-0163): sortable columns, multi/single selection with a select/change event log, a composed search field, a facet filter, and pagination — over a real sign-ups report.',
+      },
+      {
         href: './table-doc.html',
         title: 'API reference',
         blurb: 'The Display-class static data table — typed columns + record rows as a real native <table>, the SPEC-R3 cell-resolution matrix as a live fixture, generated from table.md.',
@@ -894,6 +914,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
   {
     label: 'ui-stat',
     cards: [
+      {
+        href: './stat-demo.html',
+        title: 'Demo',
+        blurb: 'Live KPI tiles over a real dashboard header — up/down/flat deltas, captions, the ring variant with percent, and a stat-plus-sparkline composition.',
+      },
       {
         href: './stat-doc.html',
         title: 'API reference',

@@ -4061,9 +4061,9 @@ delta + optional caption as real, selectable DOM text. It is **not** interactive
 form-associated: no events, no keyboard contract, no `[size]`/`[scale]` control geometry.
 
 ```html
-<ui-stat label="Revenue" value="48200" delta="12" caption="vs last month"></ui-stat>
-<ui-stat label="Uptime" value="99.98%"></ui-stat>
-<ui-stat variant="ring" label="Storage used" value="72%" percent="72"></ui-stat>
+<ui-stat label="Revenue" figure="48200" delta="12" caption="vs last month"></ui-stat>
+<ui-stat label="Uptime" figure="99.98%"></ui-stat>
+<ui-stat variant="ring" label="Storage used" figure="72%" percent="72"></ui-stat>
 ```
 
 ## Rendering
@@ -4075,7 +4075,8 @@ heading element is ever stamped** (`h1`–`h6`) — a stat's value is not a docu
 hand-composed `caption-Text + h3-variant-Text` idiom the corpus taught before this component existed. Tile
 typography rides the `--md-sys-typescale-*` matrix via `--ui-stat-*` tokens.
 
-`value` accepts a `string | number`: a finite number formats through the platform default-locale
+`figure` (renamed from `value` — TKT-0069 item 1: `value` is the reserved FACE form value; the A2UI catalog keeps wire
+`value`, mapped in its factory) accepts a `string | number`: a finite number formats through the platform default-locale
 `Intl.NumberFormat` (`48200` → `48,200`); a non-finite number renders the placeholder `—`; a string passes
 through **verbatim** — the author controls formatting for non-numeric values (`"$1.2M"`, `"99.98%"`).
 

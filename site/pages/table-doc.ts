@@ -50,11 +50,13 @@ const { descriptor, body } = loadTableDoc()
 const { content } = mountPage({
   title: 'ui-table — API',
   intro:
-    'The Display-class static data table (ADR-0111, report family v1) — typed columns + record rows rendered ' +
-    'as a real native <table> in light DOM. Not interactive, not form-associated: no sorting, no selection, ' +
-    'no pagination, no cell renderers. Generated from table.md: the attribute and parts tables are ' +
-    'descriptor-derived (they cannot drift); the live tables below show a representative report and every ' +
-    'SPEC-R3 cell-resolution case.',
+    'The Display-class data table (ADR-0111, report family v1; widened in place by ADR-0163) — typed columns + ' +
+    'record rows rendered as a real native <table> in light DOM, with four opt-in capabilities all default OFF: ' +
+    'row selection (selectable/row-key/selected), per-column sort, control-owned search + facet filter, and ' +
+    'pagination (page-size/page). Not form-associated, no cell renderers, no role=grid. Generated from ' +
+    'table.md: the attribute and parts tables are descriptor-derived (they cannot drift); the live tables ' +
+    'below show a representative report and every SPEC-R3 cell-resolution case — the capabilities themselves ' +
+    'are exercised live on the Demo tab.',
 })
 
 composeDocPage(content, descriptor, body, renderSpecimens())
