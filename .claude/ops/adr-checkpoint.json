@@ -645,7 +645,7 @@
       "status": "accepted"
     },
     "adr-0163": {
-      "hash": "329f9f5754889b5786038ec94cdc55b6cd78fcd491cead395da5bf542b9706c0",
+      "hash": "ff279313962f83ef953cf7e8a46429f4d9d85320d8c422be56de28204a266360",
       "status": "accepted"
     },
     "adr-0164": {
@@ -879,6 +879,10 @@
     "adr-0224": {
       "hash": "27069dfc6c02956087057c70fe7531dfe3643349d71f175977955182f4f452ff",
       "status": "accepted"
+    },
+    "adr-0225": {
+      "hash": "801baf27141cc0f7cb49987acbae31cb3e41e0211d8ef1bf7a5f267f032fd6b3",
+      "status": "proposed"
     }
   }
 }

@@ -1,3 +1,11 @@
 {
-  "candidates": []
+  "candidates": [
+    {
+      "adr_id": "adr-0163",
+      "evidence": "2026-08-19/20 ratified Amendment (heading reads **ratified**, commit 2b883062 'ADR-0163 amendment RATIFIED \u2014 table dogfood (Kim, #1445)') retires BOTH cl.3 native-form-element exceptions: ui-table now dogfoods ui-checkbox/ui-radio/ui-button instead of stamping raw <input>/<button>. Carries a concrete reusable technique \u2014 a capture-phase click guard on the delegation root reproducing native radio-group mutual-exclusion/no-self-deselect semantics without ui-radio-group's roving-tabindex side effect (violates cl.3's normal-tab-order mandate) \u2014 plus the ADR-0223 'inline' opt-out rule for composed controls inside a block-formatting <td>/<th>. Grep against origin/main: adr-0163 is cited in component-design/references/mint-vs-compose.md (sequencing precedent only) and composition-patterns/references/shell-and-data-surfaces.md (cl.2/cl.7 filter/search state only) \u2014 neither covers this dogfood/native-form-retirement content or the click-guard technique; component-build/SKILL.md's own 'no native form elements' checklist line has no worked exception-retirement case to cite. Candidate: extend component-patterns/references/patterns-table.md (or component-build's references) with a dogfood-over-native-exception row + the click-guard technique.",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-20T01:41:50Z"
+    }
+  ]
 }
