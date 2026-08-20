@@ -86,6 +86,20 @@ describe('ui-drill — real painted visibility (stack default, ADR-0195 Amendmen
 describe('ui-drill — `inert` is a REAL platform block, not just a software guard (cl.A1/A6)', () => {
   it('the platform itself refuses focus into an inert ancestor — a real signature `inert` alone produces (distinct from the z-order/same-rect occlusion proven separately below)', async () => {
     const { settingsTrigger, host } = mount()
+    // GH #1519 root-cause fix: a freshly-inserted root panel is mid its OWN entrance transition
+    // (the CSS-transform base's `@starting-style` slide-in, drill.css) the instant this test's real
+    // `userEvent.click` fires — under the extra same-page scheduling load THREE sequential mount/render
+    // cycles put on this file (this test is the third; reproduced 7/10 in a tight loop, 0/10 once this
+    // line is added — measured, not guessed), Playwright's own actionability "stable across two frames"
+    // check can land on a still-in-flight frame and dispatch the real click at a stale coordinate that
+    // slides just off the small trigger button before the transform's next frame lands — a real click
+    // that resolves with no error, on no element (confirmed via a native 'click' listener directly on
+    // the button: it never fired). Settle the transition FIRST, exactly the "same-cell stacking" test
+    // below already does for its own geometry read (the ui-drawer precedent, "settled geometry, not the
+    // mid-slide frame") — the fix belongs here, in the test's own interaction setup, not in drill.ts:
+    // the component's real entrance motion is correct and intentional; only a same-tick click into it
+    // is racy.
+    ;(host.querySelector('[key="root"]') as HTMLElement).style.transition = 'none'
     await userEvent.click(settingsTrigger) // root is now a painted, inert ancestor
     const rootTrigger = host.querySelector('[key="root"] [data-drill-key="settings"]') as HTMLButtonElement
     rootTrigger.focus() // a direct, unambiguous programmatic focus attempt — no click/occlusion involved
