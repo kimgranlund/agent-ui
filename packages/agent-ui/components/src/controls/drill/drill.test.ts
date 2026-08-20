@@ -205,6 +205,142 @@ describe('UIDrillElement — uncontrolled path resolution + self-mutation', () =
     el.remove()
   })
 
+  it('a nested INNER ui-drill\'s own trigger click never gets attributed to the OUTER drill (GH #1529)', async () => {
+    // Outer: root -> settings -> appearance (makeTree's own shape). Drill the outer forward to "settings"
+    // first so the inert-ancestor guard (cl.A1/A6) is not what's suppressing the click — the inner drill
+    // lives inside the outer's now-ACTIVE "settings" pane, exactly the "inner ui-drill nested inside an
+    // outer drill's panel content" shape the bug report names.
+    const outer = makeTree()
+    // `emit()` (element.ts) dispatches `bubbles: true, composed: true` — BY DESIGN, so a consumer can
+    // delegate-listen higher up the tree. That means the INNER drill's own (correct) `change` event will
+    // ALSO reach a `change` listener on the OUTER host, purely via ordinary DOM bubbling — orthogonal to
+    // GH #1529 and not itself a bug. The regression this test targets is the OUTER's own `#onTriggerClick`
+    // MISATTRIBUTING the click and calling ITS OWN `#commit` — so only `event.target === outer` counts as
+    // an outer-OWNED commit; a bubbled descendant event must be filtered out, never conflated with it.
+    const outerOwnChanges: string[][] = []
+    outer.addEventListener('change', (event) => {
+      if (event.target === outer) outerOwnChanges.push((event as CustomEvent<string[]>).detail)
+    })
+    await click(outer.querySelector('[data-drill-key="settings"]')!)
+    expect(outer.effectivePath).toEqual(['root', 'settings'])
+    expect(outerOwnChanges).toEqual([['root', 'settings']])
+
+    // A second, independent drill nested inside the outer's active "settings" panel — its own 2-level tree.
+    const outerSettings = outer.querySelector('[key="settings"]') as UIDrillPanelElement
+    const inner = new ProbeDrill()
+    const innerRoot = panel('inner-root', { heading: 'Inner Root' })
+    innerRoot.append(trigger('inner-leaf'))
+    const innerLeaf = panel('inner-leaf', { parent: 'inner-root', heading: 'Inner Leaf' })
+    inner.append(innerRoot, innerLeaf)
+    outerSettings.append(inner)
+    await whenFlushed()
+    expect(inner.effectivePath).toEqual(['inner-root'])
+
+    // A click on the INNER drill's own trigger bubbles through BOTH hosts' delegated `click` listeners (the
+    // inner one first, then the outer). Pre-fix, the outer's `#onTriggerClick` used a bare tag-based
+    // `trigger.closest('ui-drill-panel')`, which resolved the INNER panel (the nearest match) and treated it
+    // as its own live panel — misattributing the click and appending the inner trigger's key onto the OUTER
+    // drill's own path (a SECOND entry would land in `outerOwnChanges`, with `event.target === outer`).
+    const innerChange = vi.fn()
+    inner.addEventListener('change', innerChange)
+    await click(inner.querySelector('[data-drill-key="inner-leaf"]')!)
+
+    // the INNER drill drilled forward, exactly as its own trigger names
+    expect(innerChange).toHaveBeenCalledTimes(1)
+    expect(inner.effectivePath).toEqual(['inner-root', 'inner-leaf'])
+    // the OUTER drill's own path/state is COMPLETELY untouched by the inner drill's own click — no
+    // second outer-OWNED `change` event, no path corruption
+    expect(outerOwnChanges).toEqual([['root', 'settings']])
+    expect(outer.effectivePath).toEqual(['root', 'settings'])
+
+    outer.remove()
+  })
+
+  it('a nested INNER ui-drill\'s own NON-NATIVE (keyboard-activated) trigger never gets attributed to the OUTER drill\'s #onKeydown routing either (component-checker B4 asymmetry fix)', async () => {
+    // The click-routing test above proves #onTriggerClick; #onKeydown had the identical bare tag-based
+    // `trigger.closest('ui-drill-panel')` and was only INCIDENTALLY safe for a NATIVE <button> trigger (its
+    // own `pressActivation` preventDefault()s the keydown before this listener would ever see it, and
+    // #onKeydown's own `event.defaultPrevented` guard absorbs that) — a non-native trigger (a plain
+    // `[tabindex]` row, drill.md's own documented shape for a non-button drill-trigger) gets no such free
+    // ride, so this proves the SAME `#owningPanel` fix now applies there too.
+    const outer = makeTree()
+    const outerOwnChanges: string[][] = []
+    outer.addEventListener('change', (event) => {
+      if (event.target === outer) outerOwnChanges.push((event as CustomEvent<string[]>).detail)
+    })
+    await click(outer.querySelector('[data-drill-key="settings"]')!)
+    expect(outerOwnChanges).toEqual([['root', 'settings']])
+
+    const outerSettings = outer.querySelector('[key="settings"]') as UIDrillPanelElement
+    const inner = new ProbeDrill()
+    const innerRoot = panel('inner-root', { heading: 'Inner Root' })
+    const nonNativeTrigger = document.createElement('div')
+    nonNativeTrigger.tabIndex = 0
+    nonNativeTrigger.setAttribute('data-role', 'drill-trigger')
+    nonNativeTrigger.setAttribute('data-drill-key', 'inner-leaf')
+    innerRoot.append(nonNativeTrigger)
+    const innerLeaf = panel('inner-leaf', { parent: 'inner-root', heading: 'Inner Leaf' })
+    inner.append(innerRoot, innerLeaf)
+    outerSettings.append(inner)
+    await whenFlushed()
+
+    const innerChange = vi.fn()
+    inner.addEventListener('change', innerChange)
+    nonNativeTrigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    await whenFlushed()
+
+    // the INNER drill's own #onKeydown drilled forward, exactly as its own trigger names
+    expect(innerChange).toHaveBeenCalledTimes(1)
+    expect(inner.effectivePath).toEqual(['inner-root', 'inner-leaf'])
+    // the OUTER drill's own state is untouched — no misattributed commit from its own #onKeydown
+    expect(outerOwnChanges).toEqual([['root', 'settings']])
+    expect(outer.effectivePath).toEqual(['root', 'settings'])
+
+    outer.remove()
+  })
+
+  it('#owningPanel also fences the RESOLVED PANEL\'s own ownership, not just the trigger\'s (component-checker B4 residual-hole fix)', async () => {
+    // A malformed but unpoliced shape: a drill-trigger authored DIRECTLY under a drill host (never wrapped in
+    // one of THAT drill's own `ui-drill-panel` children), with that drill itself nested inside a GRANDPARENT
+    // drill's own (non-inert, active) panel. Guarding only on the TRIGGER's owning drill (the first half of
+    // `#owningPanel`) is not enough here: `node.closest('ui-drill-panel')` from the stray trigger walks PAST
+    // the middle drill entirely (it wraps no panel of its own around this trigger) and lands on the
+    // GRANDPARENT's own active panel — which the middle drill would otherwise treat as its own live panel.
+    const grandparent = new ProbeDrill()
+    const gRoot = panel('g-root', { heading: 'G Root' })
+    grandparent.append(gRoot)
+    document.body.append(grandparent)
+
+    const middle = new ProbeDrill()
+    const mRoot = panel('m-root', { heading: 'M Root' })
+    middle.append(mRoot)
+    // the stray trigger: a direct child of `middle` itself, not inside `mRoot` (or any panel of `middle`'s own)
+    const strayTrigger = trigger('bogus')
+    middle.append(strayTrigger)
+    gRoot.append(middle) // middle nests inside the grandparent's own root (active, non-inert) panel
+    await whenFlushed()
+    expect(middle.effectivePath).toEqual(['m-root'])
+
+    const middleOwnChanges: string[][] = []
+    middle.addEventListener('change', (event) => {
+      if (event.target === middle) middleOwnChanges.push((event as CustomEvent<string[]>).detail)
+    })
+    const grandparentOwnChanges: string[][] = []
+    grandparent.addEventListener('change', (event) => {
+      if (event.target === grandparent) grandparentOwnChanges.push((event as CustomEvent<string[]>).detail)
+    })
+
+    await click(strayTrigger)
+
+    // neither drill ever committed off the stray, unowned trigger
+    expect(middleOwnChanges).toEqual([])
+    expect(grandparentOwnChanges).toEqual([])
+    expect(middle.effectivePath).toEqual(['m-root'])
+    expect(grandparent.effectivePath).toEqual(['g-root'])
+
+    grandparent.remove()
+  })
+
   it('Back pops one level; a no-op at the root', async () => {
     const el = makeTree()
     await click(el.querySelector('[data-drill-key="settings"]')!)

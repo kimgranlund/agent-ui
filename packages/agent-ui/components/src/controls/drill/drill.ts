@@ -158,6 +158,31 @@ export class UIDrillElement extends UIContainerElement {
     }
     return null
   }
+
+  /** GH #1529 fix: which `ui-drill-panel` (if any) owns `node`, scoped to THIS drill instance — composes
+   *  `#owningDrill()` with a panel-boundary check (the fix the class's own header comment on #owningDrill
+   *  anticipates: "you may need an analogous #owningPanel()"). A plain `node.closest('ui-drill-panel')` walks
+   *  by TAG NAME only and does not stop at a drill-instance boundary: when an inner `ui-drill` sits nested
+   *  inside an outer drill's panel content (cl.A8's own "a drill nested in a narrow pane" is exactly this
+   *  shape), a click on the INNER drill's own trigger bubbles to the OUTER drill's delegated `click` listener
+   *  too — and a bare tag-based `.closest()` from THAT listener resolves the INNER panel (the nearest match),
+   *  which the outer handler would then treat as its own live, non-inert panel and wrongly drill itself
+   *  forward using the inner trigger's `data-drill-key`. Guarding on `#owningDrill(node) === this` FIRST closes
+   *  that hole: a trigger whose nearest owning `ui-drill` is the inner instance is never this drill's to
+   *  resolve, full stop — `closest('ui-drill-panel')` only runs once ownership is already confirmed, so it can
+   *  never reach across the inner drill's own boundary.
+   *  component-checker B4 fix (2 findings, both closed here): the FIRST guard alone still leaves a residual
+   *  upward hole — `node.closest('ui-drill-panel')` itself is not fenced, so a trigger authored directly
+   *  inside `this` (never wrapped in one of THIS drill's own panels) would let the tag-based closest walk
+   *  escape past `this` entirely into a GRANDPARENT drill's own (non-inert) active panel, one level further
+   *  out than the first guard checks. The second `this.#owningDrill(panel) === this` closes that: the
+   *  resolved panel's own owning drill must ALSO be `this`, not merely the trigger's. */
+  #owningPanel(node: Element): UIDrillPanelElement | null {
+    if (this.#owningDrill(node) !== this) return null
+    const panel = node.closest<UIDrillPanelElement>('ui-drill-panel')
+    return panel && this.#owningDrill(panel) === this ? panel : null
+  }
+
   // Set true after the FIRST render pass — gates the focus-move-to-heading behaviour so mounting a `ui-drill`
   // never steals focus on first paint (only a later, real ACTIVE-KEY change moves it — see #lastActiveKey).
   #primed = false
@@ -366,7 +391,12 @@ export class UIDrillElement extends UIContainerElement {
     if (!(target instanceof Element)) return
     const trigger = target.closest('[data-role="drill-trigger"]')
     if (!trigger || !this.contains(trigger)) return
-    const panel = trigger.closest('ui-drill-panel')
+    // GH #1529 fix: `#owningPanel` (not a bare tag-based `trigger.closest('ui-drill-panel')`) — see its own
+    // header comment. A nested inner `ui-drill`'s own trigger click bubbles to THIS (outer) listener too; a
+    // tag-based closest would resolve the INNER panel and let the outer drill wrongly drill itself forward
+    // off the inner trigger's key. `#owningPanel` returns null the moment ownership crosses into a different
+    // drill instance, so this bails cleanly instead.
+    const panel = this.#owningPanel(trigger)
     // ADR-0195 Amendment cl.A1/A6: a painted ANCESTOR is `inert` (real browsers already block the pointer
     // event from ever reaching here) — the explicit `panel.inert` check is the same guarantee honored inside
     // jsdom's synthetic dispatch too, so only the resolved-ACTIVE panel's own triggers ever fire.
@@ -404,7 +434,12 @@ export class UIDrillElement extends UIContainerElement {
     if (target.matches('button, a[href], input, select, textarea')) return
     const trigger = target.closest('[data-role="drill-trigger"]')
     if (!trigger || !this.contains(trigger)) return
-    const panel = trigger.closest('ui-drill-panel')
+    // GH #1529 fix (component-checker B4 asymmetry finding): `#owningPanel`, the same fix `#onTriggerClick`
+    // applies — a bare tag-based `trigger.closest('ui-drill-panel')` here was only INCIDENTALLY safe (a
+    // native `<button>`'s own `pressActivation` already `preventDefault()`s the keydown before this listener
+    // ever sees a nested inner drill's own key press, so the `event.defaultPrevented` guard above happened to
+    // absorb it) — a coupling, not a guard; a non-native drill-trigger row never gets that free ride.
+    const panel = this.#owningPanel(trigger)
     if (!(panel instanceof UIDrillPanelElement) || panel.hidden || panel.inert) return
     const key = trigger.getAttribute('data-drill-key')
     if (!key) return
