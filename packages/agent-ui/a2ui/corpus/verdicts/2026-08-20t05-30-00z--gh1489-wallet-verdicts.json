@@ -1,0 +1,9 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.2",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-08-20T05:30:00Z",
+  "verdicts": {
+    "wallet-summary-card": { "qualityScore": 4, "passed": true, "failingDimensions": [] }
+  }
+}
