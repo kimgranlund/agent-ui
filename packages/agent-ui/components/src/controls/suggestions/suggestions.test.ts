@@ -195,6 +195,24 @@ describe('UISuggestionsElement — commit (the fleet commit law: select fires ON
     await whenFlushed()
     expect(el.selected).toBe('')
   })
+
+  // Fork-T1/D1 probe (the rating.test.ts "change-after-value-commit" shape, ADR-0216 cl.6) — `#onClick`
+  // writes `this.selected` BEFORE emitting `select` (suggestions.ts), so a listener reading `el.selected`
+  // INSIDE the handler must already observe the committed value, not the stale pre-click `''`.
+  it('a listener reading `el.selected` inside "select" observes the ALREADY-COMMITTED value, not a stale one', async () => {
+    const el = mount()
+    el.suggestions = SET
+    await whenFlushed()
+    let sawDuringSelect: string | undefined
+    el.addEventListener('select', () => {
+      sawDuringSelect = el.selected // must already read 'more-photos' — the commit has already happened
+    })
+    const chip = el.querySelectorAll('[data-part="chip"]')[1] as HTMLButtonElement // "See more photos" → more-photos
+    chip.click() // a real chip click — the only commit path (suggestions.ts's fleet commit law)
+    await whenFlushed()
+    expect(sawDuringSelect).toBe('more-photos') // NOT the stale pre-click value ('') — value-before-event ordering
+    expect(el.selected).toBe('more-photos')
+  })
 })
 
 describe('UISuggestionsElement — the SPENT-SET inertness law (ADR-0213 cl.3, the load-bearing probe)', () => {
