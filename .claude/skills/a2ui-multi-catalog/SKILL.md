@@ -1,15 +1,13 @@
 ---
 name: a2ui-multi-catalog
 description: >-
-  Route to the ratified multi-catalog interop patterns (ADR-0169) for @agent-ui/a2ui. Use for
-  "add another catalog", "register a catalog / a second catalog", "upstream A2UI interop",
-  "a2ui-basic", "catalog schema ground truth" — and for widening wire tolerances for an
-  upstream dialect (foreign commit/action shapes) without forking the renderer, per-catalog
-  function implementations, or threading catalogId end-to-end (picker → proxy/worker →
-  producer → authority stamp). ALSO §5's composed/derived catalogs: a "persona catalog
-  fragment" (CatalogFragment) merged via composeCatalog, "derived catalog" base--persona ids,
-  "targetCatalogs" scoping, reject-loud collisions. NOT for composing payloads (a2ui-payload-authoring);
-  NOT for the ui-* fleet map (component-catalog); NOT for agent-admin's Catalogs shelf/section
+  The multi-catalog interop patterns (ADR-0169) for @agent-ui/a2ui. Use for "add another catalog",
+  "register a catalog / a second catalog", "upstream A2UI interop", "a2ui-basic", "catalog schema
+  ground truth", widening wire tolerances for an upstream dialect, per-catalog function
+  implementations, or threading catalogId end-to-end. ALSO composed/derived catalogs: "persona
+  catalog fragment" (CatalogFragment) via composeCatalog, "derived catalog" base--persona ids,
+  "targetCatalogs" scoping, reject-loud collisions. NOT for composing payloads (a2ui-payload-
+  authoring); NOT for the ui-* fleet map (component-catalog); NOT for agent-admin's Catalogs shelf
   or entry kinds (admin-library-kinds).
 user-invocable: false
 disable-model-invocation: false

@@ -1,17 +1,13 @@
 ---
 name: doc-standards
 description: >-
-  Route to THIS repo's design-doc + harness-metadata grammar: the per-type status dialects (ADR
-  blockquote-table · ticket YAML · SPEC/LLD/PRD blockquote status lines), the exact status vocabulary
-  and WHO may flip each, the ID spine (ADR-#### · SPEC-R# · LLD-C# · PRD-G#/D# · TKT-####) and
-  supersession vocabulary, ticket-kind section contracts, the ADR log's own rules (NO index file in an
-  ADR folder; what earns an ADR at all), the IDR intent tier (platform-global intent ONLY — feature
-  WHY/WHAT lives in the owning PRD; PRDs are multi-granular), and which gates enforce what. Use for "what status vocabulary
-  does a SPEC use", "who flips an ADR to accepted", "does this earn an ADR", "should I add a README/index
-  to the ADR folder", "what sections does a bug ticket carry", "why is this shipped spec still proposed",
-  "how do docs cite each other" — BEFORE authoring or judging any .claude/docs record. This repo's dialect DIVERGES from scribe's doc_lint (blockquote,
-  not YAML; proposed/accepted, not draft/approved) — this skill is the local authority. NOT for the
-  document types' generic contracts (docs:doc-writing-rules) or component-code law
+  THIS repo's design-doc + harness-metadata grammar: per-type status dialects, the status
+  vocabulary and WHO may flip each, the ID spine, ticket-kind section contracts, the ADR log's
+  rules, the IDR intent tier, and which gates enforce what. Diverges from scribe's doc_lint —
+  local authority. Use for "what status vocabulary does a SPEC use", "who flips an ADR to
+  accepted", "does this earn an ADR", "should I add a README/index to the ADR folder", "what
+  sections does a bug ticket carry", "why is this shipped spec still proposed", "how do docs cite
+  each other". NOT for the generic type contracts (docs:doc-writing-rules) or component-code law
   (component-standards).
 disable-model-invocation: false
 user-invocable: false

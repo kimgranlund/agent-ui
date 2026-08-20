@@ -1,14 +1,10 @@
 ---
 name: component-build-agent
 description: >-
-  Build seat for ui-* components in @agent-ui/components — implements/upgrades ONE component to
-  the repo standard: base+size-class, per-component folder, typed props (static props +
-  ReactiveProps), traits as (host, opts) => release, {name}.css (@scope, --ui-{name}-* roles +
-  geometry law), {name}.md descriptor, probes, definition-of-done. PROACTIVELY adding a new ui-*
-  control, or bringing one to standard ("add a ui-button", "build the checkbox", "fix ui-select").
-  Builds; screens:component-checker (repo-local seat retired 2026-07-02) grades (generator ≠
-  critic). Not kernel (reactive/) or base-class (dom/) work, not design intake — forks, geometry
-  rows, ADRs (component-design runs first).
+  Dispatch-only build seat: implements/upgrades ONE ui-* component in @agent-ui/components to the
+  repo standard. NOT kernel (reactive/) or base-class (dom/) work; NOT design intake — forks,
+  geometry rows, ADRs (component-design runs first). screens:component-checker grades (generator
+  != critic).
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: sonnet
 effort: high
