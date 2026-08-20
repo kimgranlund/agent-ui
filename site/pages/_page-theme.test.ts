@@ -19,7 +19,7 @@ describe('mountPage — the shell is a real ui-theme-provider (ADR-0141 cl.1)', 
   })
 
   it('applies the persisted scheme/theme BEFORE first paint (no default-then-repaint flash)', () => {
-    localStorage.setItem('agent-ui.scheme', 'dark')
+    localStorage.setItem('agent-ui.scheme', '"dark"') // the StorageAdapter tier's JSON encoding (GH #1544)
     mountPage({ title: 'Probe' })
     expect(shellOf().getAttribute('scheme')).toBe('dark')
   })
@@ -74,7 +74,7 @@ describe('mountPage — the shell is a real ui-theme-provider (ADR-0141 cl.1)', 
     mountPage({ title: 'Probe' })
     const btn = document.querySelector('.app-context-theme-group ui-button') as HTMLElement
     btn.click()
-    expect(localStorage.getItem('agent-ui.scheme')).toBe('light')
+    expect(localStorage.getItem('agent-ui.scheme')).toBe('"light"') // JSON-encoded via the tier (GH #1544)
   })
 })
 

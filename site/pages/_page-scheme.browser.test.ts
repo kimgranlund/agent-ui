@@ -41,7 +41,7 @@ function resolved(el: Element, role: string): string {
 
 describe('GH #317 — the shell scheme reaches the document root, so body and app resolve in step', () => {
   it('forced dark: <html> carries the scheme, and body paints the SAME surface the app subtree resolves', () => {
-    localStorage.setItem('agent-ui.scheme', 'dark')
+    localStorage.setItem('agent-ui.scheme', '"dark"') // the StorageAdapter tier's JSON encoding (GH #1544)
     mountPage({ title: 'Probe' })
     const shell = document.querySelector('.app-shell')!
 
@@ -54,7 +54,7 @@ describe('GH #317 — the shell scheme reaches the document root, so body and ap
   })
 
   it('forced dark resolves the DARK arm specifically (not merely a matching pair) — neutral-875, never neutral-125', () => {
-    localStorage.setItem('agent-ui.scheme', 'dark')
+    localStorage.setItem('agent-ui.scheme', '"dark"') // the StorageAdapter tier's JSON encoding (GH #1544)
     mountPage({ title: 'Probe' })
     // The dark arm of --md-sys-color-neutral-surface is --md-sys-color-neutral-875 (tokens.css). Compared as
     // a resolved color, so the assertion survives any future re-authoring of the ladder's literal values.
@@ -65,7 +65,7 @@ describe('GH #317 — the shell scheme reaches the document root, so body and ap
   })
 
   it('forced light resolves the LIGHT arm at the root — the fix is a mirror, not a hard-coded dark', () => {
-    localStorage.setItem('agent-ui.scheme', 'light')
+    localStorage.setItem('agent-ui.scheme', '"light"') // the StorageAdapter tier's JSON encoding (GH #1544)
     mountPage({ title: 'Probe' })
     expect(getComputedStyle(document.documentElement).colorScheme).toBe('light')
     expect(getComputedStyle(document.body).backgroundColor).toBe(resolved(document.documentElement, '--md-sys-color-neutral-125'))

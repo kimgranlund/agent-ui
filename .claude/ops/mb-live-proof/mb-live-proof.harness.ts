@@ -55,6 +55,9 @@ afterAll(() => {
 const mounted: HTMLElement[] = []
 afterEach(() => {
   while (mounted.length) mounted.pop()?.remove()
+  // Raw storage reset, ALLOWLISTED in the state-grammar ratchet gate (GH #1544 ruling:
+  // packages/agent-ui/shared/src/storage/state-grammar-gates.test.ts) — this is an ops proof harness
+  // clearing a live page's whole origin state between runs, not app code persisting through a seam.
   localStorage.clear()
 })
 

@@ -17,7 +17,17 @@ export interface LocalStorageAdapterOptions {
   namespace: string
 }
 
-const isBrowserStorageAvailable = (): boolean => typeof localStorage !== 'undefined'
+/** `typeof localStorage` still THROWS in a browser with cookies/site-data blocked (a throwing
+ *  accessor, not merely `undefined`) — caught here so every caller's fail-open contract (this
+ *  module's own "never a throw" doc) actually holds pre-paint, not just when the store is absent
+ *  (GH #1544 review finding: a site's synchronous hydration read must never throw). */
+const isBrowserStorageAvailable = (): boolean => {
+  try {
+    return typeof localStorage !== 'undefined'
+  } catch {
+    return false
+  }
+}
 
 const parse = (raw: string | null): unknown => {
   if (raw === null) return undefined
@@ -67,12 +77,23 @@ export function createLocalStorageAdapter(options: LocalStorageAdapterOptions): 
 
     async set(key, value) {
       if (!isBrowserStorageAvailable()) return
-      localStorage.setItem(storageKey(key), JSON.stringify(value))
+      try {
+        localStorage.setItem(storageKey(key), JSON.stringify(value))
+      } catch {
+        // Quota exceeded, or a private-mode engine where `localStorage` EXISTS but every `setItem`
+        // throws (old Safari private browsing) — degrade to session-only, never a throw (GH #1544
+        // review finding: every drained call site does `void adapter.set(...)`, which turned this
+        // into an unhandled rejection before this catch existed).
+      }
     },
 
     async delete(key) {
       if (!isBrowserStorageAvailable()) return
-      localStorage.removeItem(storageKey(key))
+      try {
+        localStorage.removeItem(storageKey(key))
+      } catch {
+        /* see set() above */
+      }
     },
 
     async keys() {

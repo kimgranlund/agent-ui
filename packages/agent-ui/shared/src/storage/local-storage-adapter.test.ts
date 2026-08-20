@@ -139,6 +139,53 @@ describe('createLocalStorageAdapter — no localStorage available (SSR / locked-
   })
 })
 
+describe('createLocalStorageAdapter — a THROWING setItem/removeItem never rejects (GH #1544 review finding)', () => {
+  // `localStorage` can EXIST (unlike the SSR case above) yet still throw on write — quota exceeded,
+  // or old Safari private-browsing where the accessor is present but every mutation throws. Every
+  // drained site call site does `void adapter.set(...)` (fire-and-forget), so a throw here would
+  // become an unhandled promise rejection instead of the documented "never a throw" degrade.
+  it('set() degrades silently when setItem throws (quota / locked-down write)', async () => {
+    const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError')
+    })
+    try {
+      const adapter = createLocalStorageAdapter({ namespace: 'ns-o' })
+      await expect(adapter.set('a', 1)).resolves.toBeUndefined()
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('delete() degrades silently when removeItem throws', async () => {
+    const spy = vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+      throw new DOMException('SecurityError')
+    })
+    try {
+      const adapter = createLocalStorageAdapter({ namespace: 'ns-p' })
+      await expect(adapter.delete('a')).resolves.toBeUndefined()
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('a THROWING localStorage accessor (cookies/site-data blocked) degrades getSync to undefined, never a throw', () => {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')!
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      get() {
+        throw new DOMException('SecurityError')
+      },
+    })
+    try {
+      const adapter = createLocalStorageAdapter({ namespace: 'ns-q' })
+      expect(adapter.getSync('a')).toBeUndefined()
+      expect(adapter.keysSync()).toEqual([])
+    } finally {
+      Object.defineProperty(globalThis, 'localStorage', descriptor)
+    }
+  })
+})
+
 describe('createLocalStorageAdapter — sync read surface (SyncReadableStorageAdapter, ADR-0193 Amendment A1)', () => {
   it('getSync reads the same-tick live value the async verbs wrote — same key format + JSON decoding', async () => {
     localStorage.clear()

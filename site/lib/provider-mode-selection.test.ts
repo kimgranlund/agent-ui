@@ -16,7 +16,9 @@ import type { ProviderOption } from '../../packages/agent-ui/app/src/controls/co
 // `provider-switcher.ts`'s DOM-mounting job (that file's own jsdom coverage, provider-switcher.test.ts, is
 // retired alongside it). Pure data + localStorage only — no DOM, no ui-select.
 
-const LS_KEY = 'a2ui-live-provider-selection'
+// The StorageAdapter-tier key (GH #1544): `a2ui-live` namespace + `provider-selection` — the value
+// encoding is unchanged (JSON.stringify of the selection object), only the key gained its dot.
+const LS_KEY = 'a2ui-live.provider-selection'
 
 describe('provider-mode-selection — option lists (from the committed providers.json)', () => {
   it('derives ProviderOption[] from providers.json, marking unimplemented ("coming soon") providers disabled', () => {

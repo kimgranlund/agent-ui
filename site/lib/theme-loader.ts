@@ -11,8 +11,15 @@
 // injected, a pack's `<link>` is never removed — switching AWAY from a theme just re-points the
 // provider's `theme` attribute; switching BACK is instant (the stylesheet is already loaded).
 
-const THEME_KEY = 'agent-ui.theme'
-const SCHEME_KEY = 'agent-ui.scheme'
+import { siteStorage } from './site-storage.ts'
+
+// Persisted through the shared `agent-ui`-namespaced StorageAdapter tier (GH #1544, ADR-0227 cl.2) —
+// the stored keys stay the pre-drain `agent-ui.theme` / `agent-ui.scheme` byte-for-byte (namespace +
+// '.' + key). VALUES are now the tier's JSON encoding (`"ocean"`, not raw `ocean`): a pre-drain raw
+// value fails the adapter's fail-open JSON parse and degrades to the default once, exactly the
+// unrecognized-value path below — stated in GH #1544's PR.
+const THEME_KEY = 'theme'
+const SCHEME_KEY = 'scheme'
 
 /** The packs this build knows how to load, in picker-display order. `'default'` is pack ZERO (ADR-0141
  *  cl.2) — it needs no stylesheet at all, since `tokens.css`'s `:root` IS the default. */
@@ -102,38 +109,27 @@ export function applyScheme(provider: { scheme: string }, scheme: SchemeId): voi
   document.documentElement.style.colorScheme = scheme
 }
 
-/** Persist a choice for the next page load. `localStorage` may be unavailable (privacy mode, SSR-ish
- *  test harnesses) — persistence degrading to session-only is an acceptable fallback, never a throw. */
+/** Persist a choice for the next page load. The adapter degrades to a no-op when the backing store is
+ *  unavailable (privacy mode, SSR-ish test harnesses) — persistence degrading to session-only is an
+ *  acceptable fallback, never a throw. The write itself is same-tick (`set`'s body runs synchronously
+ *  up to the promise wrapper — persona-roster-source.ts's stated law), so `void` keeps the old
+ *  fire-and-forget timing. */
 export function persistTheme(id: ThemeId): void {
-  try {
-    localStorage.setItem(THEME_KEY, id)
-  } catch {
-    /* unavailable — the choice still applies this session, it just won't survive a reload */
-  }
+  void siteStorage.set(THEME_KEY, id)
 }
 export function persistScheme(scheme: SchemeId): void {
-  try {
-    localStorage.setItem(SCHEME_KEY, scheme)
-  } catch {
-    /* see persistTheme */
-  }
+  void siteStorage.set(SCHEME_KEY, scheme)
 }
 
 /** Read back a prior session's choice — an unrecognized/missing value degrades to the default
- *  (`'default'` theme, `''` unset scheme) rather than throwing or guessing. */
+ *  (`'default'` theme, `''` unset scheme) rather than throwing or guessing. `getSync` keeps this a
+ *  SAME-TICK read (ADR-0193 Amendment) — both are called during shell build, BEFORE first paint, so
+ *  an async read here would reintroduce the flash of the wrong scheme. */
 export function loadPersistedTheme(): ThemeId {
-  try {
-    const raw = localStorage.getItem(THEME_KEY)
-    return THEME_OPTIONS.some((o) => o.id === raw) ? (raw as ThemeId) : 'default'
-  } catch {
-    return 'default'
-  }
+  const raw = siteStorage.getSync(THEME_KEY)
+  return THEME_OPTIONS.some((o) => o.id === raw) ? (raw as ThemeId) : 'default'
 }
 export function loadPersistedScheme(): SchemeId {
-  try {
-    const raw = localStorage.getItem(SCHEME_KEY)
-    return raw === 'light' || raw === 'dark' ? raw : ''
-  } catch {
-    return ''
-  }
+  const raw = siteStorage.getSync(SCHEME_KEY)
+  return raw === 'light' || raw === 'dark' ? raw : ''
 }

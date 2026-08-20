@@ -27,6 +27,11 @@ import '@agent-ui/icons/phosphor' // [3b] activate the Phosphor default pack (AD
 import './_page.css' // [4] shared page chrome (shell + nav + header), AFTER the foundation so it reads the --md-sys-color-* roles
 import type { UIButtonElement, UIMenuElement, UIThemeProviderElement } from '@agent-ui/components/components'
 import { THEME_OPTIONS, applyTheme, applyScheme, persistTheme, persistScheme, loadPersistedTheme, loadPersistedScheme, type SchemeId } from '../lib/theme-loader.ts'
+import { siteStorage } from '../lib/site-storage.ts'
+
+// The nav-collapse flag's key under `siteStorage`'s `agent-ui` namespace — the stored localStorage key
+// is `agent-ui.site.nav-collapsed`, byte-identical to the pre-GH-#1544 hand-rolled one.
+const NAV_COLLAPSED_KEY = 'site.nav-collapsed'
 
 // The build-time site index (TKT-0018): the ONE source the browse rail derives from. 56 L1 components
 // (proper name + tag), 25 L2 guides, the 2 L3 record landings — each carrying a `section` (Components /
@@ -1475,14 +1480,14 @@ function buildThemedShell(page: HTMLElement): UIThemeProviderElement {
   footer.setAttribute('data-slot', 'footer')
   shell.append(header, nav, page, footer)
   // SPEC-R2d — the collapse choice persists across navigations (the "collapsible menus" ask): restore
-  // BEFORE first paint, persist on every flip (attribute observation — the reflected state IS the API).
-  try {
-    if (localStorage.getItem('agent-ui.site.nav-collapsed') === 'true') shell.collapsedStart = true
-  } catch { /* storage unavailable — session-only state */ }
+  // BEFORE first paint (getSync — same-tick, ADR-0193 Amendment), persist on every flip (attribute
+  // observation — the reflected state IS the API). Through the shared `agent-ui`-namespaced tier
+  // (GH #1544): the stored key stays `agent-ui.site.nav-collapsed` and the stored BYTES stay
+  // 'true'/'false' (a boolean's JSON encoding), so a pre-drain value reads back unchanged. The
+  // adapter no-ops (never throws) when storage is unavailable — session-only state.
+  if (siteStorage.getSync(NAV_COLLAPSED_KEY) === true) shell.collapsedStart = true
   new MutationObserver(() => {
-    try {
-      localStorage.setItem('agent-ui.site.nav-collapsed', String(shell.hasAttribute('collapsed-start')))
-    } catch { /* ignore */ }
+    void siteStorage.set(NAV_COLLAPSED_KEY, shell.hasAttribute('collapsed-start'))
   }).observe(shell, { attributes: true, attributeFilter: ['collapsed-start'] })
   provider.append(shell)
   return provider
