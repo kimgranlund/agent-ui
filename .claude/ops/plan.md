@@ -1,134 +1,129 @@
 <!-- target-path: .claude/ops/plan.md -->
 # Ops plan — agent-ui
 
-- **Dispatch**: 2026-08-20T05:25:20Z sweep firing (chore-planner, /sweep-chores, sweep mode —
-  three attached seat reports: decision-watcher, issue-sorter, repo-cleaner).
-- **Evidence**: exactly this firing's three seat reports and their fenced payloads
-  (`adr-checkpoint.json` advance to 222 ADRs · `adr-queue.json` rewrite, 1 harvest row ·
-  `watch-checkpoint.json` advance · `reports/2026-08-20T052629Z.md` ·
-  `reports/2026-08-20T052748Z.md`) plus the prior plan (2026-08-20T07:05:00Z compose + its
-  05:00:00Z addendum, carry-forward only). Nothing refetched.
-- **UNMEASURED seats**: none — the dispatch named zero UNMEASURED seats ([]) and all three
-  returned; issue-sorter reached both sources (both checkpoint entries advanced, status ok);
-  repo-cleaner fetched/pruned/reverified live. Inherited gap: #1282's live state remains
-  unverified — this firing's discovery window (05:00:00Z→05:26:29Z) swept only #1510/#1497/#1478
-  and two merged PRs; #1282 did not appear.
-- **Payload-fence audit (ops-write-sandbox-rules)**: CLEAN — zero violations, zero
-  narrated-but-absent claims. decision-watcher: both state files fenced at their target paths.
-  issue-sorter: `watch-checkpoint.json` + suffixed report both fenced; `friendlies.json` /
-  `held-items.md` correctly omitted as unchanged, not conditionally narrated. repo-cleaner:
-  executed nothing, so its only durable output — the report — is fenced at its named path.
-- **Corrections vs the prior plan**: prior 1.1 (land the 07:05Z/05:00Z payloads) superseded by
-  this firing's 1.1. Prior 3.1 (adr-0224/adr-0225 batched harvest confirm) RESOLVED-BY-EVIDENCE
-  — decision-watcher this firing states the queue was EMPTY going in (both rows cleared) and the
-  prior addendum already recorded the `harvest-adr-0224-0225` PR (#1507) merged; the queue now
-  holds exactly the one fresh adr-0195 row below. Prior 3.2 (#1282) and prior 4.1
-  (nonoun-plugins#46 pin) carry forward (below). Prior addendum's #1437 drop stands (verified
-  CLOSED there; not re-carried). No entry dropped as parked — no carried id shows a
+- **Dispatch**: 2026-08-20T22:01:23Z sweep firing (chore-planner, /sweep-chores, standalone-read
+  mode — all three seats returned: decision-watcher, issue-sorter, repo-cleaner; seat findings
+  read from durable state + this firing's report file, live `gh` refetched by this seat).
+- **Evidence**: durable ops state (`adr-queue.json` rewritten 22:03:27Z with 2 harvest rows,
+  already applied · `adr-checkpoint.json`/`watch-checkpoint.json` advanced ·
+  `reports/2026-08-20T220123Z-repo-cleaner.md`) + live `gh` (issues/PRs, `backlog`/`roadmap`
+  excluded at read time; #1282 and upstream #46 verified directly) + the prior plan
+  (2026-08-20T05:25:20Z compose, carry-forward only).
+- **UNMEASURED seats**: none — the dispatch named all three returned, none UNMEASURED, and this
+  seat's own live `gh` reads all succeeded.
+- **Corrections vs the prior plan**: prior 1.1 (land the 05:25Z payloads) DONE — commit
+  `993d6198` landed them; superseded by this firing's 1.1. Prior 3.1 (adr-0195 harvest confirm)
+  RESOLVED — confirmed and executed, PR #1518 merged (commit `cbc13042` drained the queue row);
+  its remote branch was among the 10 repo-cleaner closed this firing. Prior 3.2 (#1282) DROPPED
+  per its own drop condition — live-verified CLOSED this firing (`gh issue view 1282` → CLOSED,
+  `task`, assigned kimgranlund). Prior 4.1 carries forward (verified still OPEN upstream, below).
+  Prior standing note "adr-0226 stays proposed" is STALE — adr-0226 was ratified as amended this
+  window and is now a harvest row (3.1). No entry dropped as parked — no carried id shows a
   `backlog`/`roadmap` label in evidence.
 - **needs-ruling lane**: none — issue-sorter reports zero ruling-shaped items, zero holds
-  (3 issues + 2 PRs in window, all pre-classified, all sole-friendly-authored, zero mints;
-  all-time foreign-filing sanity search: zero rows).
-- **Blocked-by convention (#193)**: no literal `Blocked-by:` lines in evidence this firing. One
-  soft edge named inline: the adr-0195 harvest execution (`/make-pack`) waits on 3.1's confirm.
-- **Verdict**: the cleanest firing in the ledger — zero payload violations, zero mutations even
-  needed (no merged-branch remainders, 0 open PRs, `main` byte-identical to `origin/main`,
-  worktree/local-branch backlog at zero), intake a verified no-op; the only human work is one
-  confirm over the single fresh adr-0195 harvest row plus the long-carried #1282 ownership call.
+  (19 issues + 24 PRs since checkpoint, all pre-classified, all sole-trusted-operator-authored,
+  zero mints; checkpoint advanced).
+- **Blocked-by convention (#193)**: no queue entry this firing is issue-backed, and no literal
+  `Blocked-by:` line appears in evidence. One soft edge named inline: the two `/make-pack`
+  harvest executions wait on 3.1's confirm.
+- **Verdict**: hygiene and intake both came back fully clean this firing — repo-cleaner closed
+  all 10 undeleted merged-PR remote branches (executed + reverified gone, 0 findings remain,
+  0 open PRs, primary clean and synced) and issue-sorter needed zero actions across 19 issues +
+  24 PRs. The live queue is human-decision work only: one batched confirm over the two fresh
+  ADR-harvest rows (adr-0227, adr-0226) and one repo-shape ruling on the missing RDD tier.
 
 Queue order: (1) gated mutations verified safe → (2) blockers → (3) human decisions → (4) hygiene.
 
 ## 1. Gated mutations already verified safe
 
-### 1.1 Land this firing's fenced ops state — one commit, ops paths ONLY (dispatching host; 5 min)
-- **Action**: apply every fenced payload in this firing's three reports verbatim, then `git add`
-  exactly those ops paths — `adr-checkpoint.json`, `adr-queue.json`, `watch-checkpoint.json`,
-  `reports/2026-08-20T052629Z.md`, `reports/2026-08-20T052748Z.md`, and this plan — and commit
-  on `main`. Do NOT stage or stash `.claude/ops/sweep-in-flight.json`: it is this sweep's own
-  live marker (session `8e38eb01` matches this dispatch; repo-cleaner withheld `sync_main.py`
-  for exactly this reason) — leave it until the sweep concludes.
+### 1.1 Land this firing's remaining ops state — one commit, ops paths ONLY (dispatching host; 5 min)
+- **Action**: the seat payloads (`adr-queue.json`, `adr-checkpoint.json`,
+  `watch-checkpoint.json`, `reports/2026-08-20T220123Z-repo-cleaner.md`) are already applied on
+  disk; apply this plan's payload, then `git add` exactly those ops paths + this plan and commit
+  on `main`. Do NOT stage `.claude/ops/sweep-in-flight.json` — it is this sweep's own live
+  marker (session `aa604436` matches this dispatch; repo-cleaner withheld `sync_main.py` for
+  exactly this reason) — leave it until the sweep concludes.
 - **Owner**: dispatching host (the ops-write split's dispatching session).
 - **Evidence**: ops-write-sandbox-rules (dispatcher applies + lands payloads); repo-cleaner
-  report (Inventory: own-session marker, session-id match; `sync_main.py` withheld rationale);
-  all five payload fences present in this firing's reports.
+  report Inventory (own-session marker, `sync_main.py` withheld); applied-state mtimes 22:13Z.
 - **Size**: 5 minutes.
 
 ## 2. Blocking other work
 
-(none — no entry in evidence blocks another; the two live worktrees, #1510 drill S1 and #1515
-breadcrumb, are healthy in-flight dev lanes, both Kim-assigned, both updated within the hour,
-correctly untouched by repo-cleaner.)
+(none — 0 open PRs repo-wide, no held worktrees, no entry in evidence blocks another; the one
+locked worktree found at firing time was the dispatching session's own live build-1554 dispatch,
+since merged (#1554/#1557) and reaped.)
 
 ## 3. Human-decision items
 
-### 3.1 Batched confirm — the ONE fresh harvest row in `adr-queue.json`: adr-0195 (Kim confirms; host executes; ~5 min)
-- **Action**: one `AskUserQuestion` round over the single queued candidate (decision-watcher's
-  step-7 batched confirm, deferred to the dispatching session — queue was empty going in, holds
-  exactly this row): **adr-0195** — the ratified CONTAINED-pane amendment (2026-08-19, verified
-  2026-08-20, GH #1510) adds three durable patterns (cl.A1 one-state/three-render-mappings ·
-  cl.A7 VT shared-name pairing-law correction · cl.A8 host-container-query auto-degrade) that
-  the existing `component-patterns/references/patterns-table.md` ADR-0195 row (cites only
-  cl.2–4 on `origin/main`, verified by the seat's own grep) does not carry — and the ADR's own
-  cl.A9 names this repair as owed. Confirmed → host dispatches
-  `/make-pack .claude/skills/component-patterns` (extend the existing row / add sibling rows —
-  placement judgment stays with the doc seat); declined → the row drops with a note. Soft edge:
-  the harvest execution waits on this confirm (#193 inline naming; no literal `Blocked-by:`).
-- **Owner**: Kim (the confirm); dispatching host fans out the doc seat.
-- **Evidence**: this firing's `adr-queue.json` payload (1 `harvest` row, queued
-  2026-08-20T05:26:22Z, with origin/main-resolved absence evidence); decision-watcher report
-  (Judge §, Placement check §).
-- **Size**: ~5 minutes to confirm; doc-seat execution ~1 hour, not this queue's.
+### 3.1 Batched confirm — TWO fresh harvest rows in `adr-queue.json`: adr-0227 and adr-0226 (Kim confirms; host executes; ~5 min)
+- **Action**: one `AskUserQuestion` round over both queued candidates (decision-watcher's
+  batched confirm, deferred to the dispatching session):
+  - **adr-0227** (new, ratified 2026-08-20) — the ONE shared/app-state grammar (single-owner
+    signal-backed store, explicit injection, StorageAdapter persistence, CSS cascade for
+    presentational axes) + fact-shaped context-request re-trigger. Proposed target:
+    `/make-pack .claude/skills/component-patterns` — a new shared-state-grammar row in
+    `references/patterns-table.md` (rows 39/42 cite ADR-0192/0193 individually but carry no
+    general grammar row; placement judgment stays with the doc seat). Related context, separate
+    lane: open issue #1549 records adr-0227's clause-5 exception (resource-idb-store blob tier)
+    as dev work — the harvester should see it, this queue does not own it.
+  - **adr-0226** (amended, ratified 2026-08-20) — Button wire-level `icon`/`iconOnly` props
+    (ICON_NAMES vocabulary, label-is-accessible-name, validator `requires:` cross-prop check).
+    Proposed target: `/make-pack .claude/skills/a2ui-payload-authoring` — extend
+    `references/node-idioms.md`'s Button entry (drop the Column(Icon,Button) workaround), with
+    the queue row also noting a possible component-patterns cross-prop-validation row
+    (catalog-wide floor, not Button-scoped) for the doc seat to judge.
+  Confirmed → host dispatches the `/make-pack` runs; declined → the row drops with a note. Soft
+  edge: both harvest executions wait on this confirm (#193 inline naming; no literal
+  `Blocked-by:`).
+- **Owner**: Kim (the confirm); dispatching host fans out the doc seat(s).
+- **Evidence**: `adr-queue.json` (2 `harvest` rows, queued 2026-08-20T22:03:27Z, each with
+  origin/main-resolved absence evidence); decision-watcher findings this firing.
+- **Size**: ~5 minutes to confirm; doc-seat execution ~1 hour per row, not this queue's.
 
-### 3.2 Issue #1282 — ADR-0203 booked repairs still need an owner; state UNVERIFIED five firings running (Kim/host; minutes)
-- **Action**: carried forward (prior 3.2). Still no fresh evidence — this firing's window
-  (2026-08-20T05:00:00Z→05:26:29Z) did not touch it. Verify with one
-  `gh issue view 1282 --json state,labels` before acting: CLOSED or now `backlog`/`roadmap` →
-  drop at next compose; still open → assign + dispatch a build seat or schedule into the next
-  campaign. Only the ownership decision is queued; execution is dev work.
-- **Owner**: Kim (or host under standing autonomy) assigns; a build seat executes.
-- **Evidence**: prior plan 3.2 (carry-forward; last live read: OPEN, unassigned, `task`, no
-  `Blocked-by:` line). No fresher evidence in this firing's reports.
-- **Size**: minutes to verify + assign.
+### 3.2 RDD-tier gap — decision-watcher's Revalidation mode is blocked in this repo; rule the repo shape (Kim; minutes)
+- **Action**: decision-watcher's Revalidation mode found no `.claude/docs/rdd/` directory here
+  and blocked rather than improvised. Decide ONE of: (a) mint an RDD tier in this repo's docs
+  tree, or (b) scope Revalidation to ADR/IDR-only for agent-ui. This is a human repo-shape
+  ruling — neither this seat nor a future sweep builds the directory unprompted. Note the
+  standing 2026-08-18 ruling (IDR tier = global intent only) as adjacent precedent when ruling.
+- **Owner**: Kim (the ruling); host executes whichever shape is ruled.
+- **Evidence**: decision-watcher findings this firing (Revalidation blocked, repo-shape gap
+  flagged for a human decision).
+- **Size**: minutes to rule; implementation follows the ruling, sized then.
 
 ## 4. Hygiene debt
 
-### 4.1 nonoun-plugins#46 — ratify-only-flip hash gap, still open upstream; pin stands (upstream lane; 0 min here)
-- **Action**: carried forward (prior 4.1; no evidence it closed). INTERIM PIN unchanged: when
-  Kim ratifies an amendment on an already-`accepted` ADR with no body-byte change, the host
-  re-dispatches decision-watcher with an explicit "re-judge adr-00NN amendment" instruction.
-  This firing's one delta (the adr-0195 amendment) surfaced unprompted as a hash change — a
-  good firing, still not evidence the upstream gap closed; the pin stays until #46 does.
-- **Owner**: nonoun-plugins upstream (the script fix) · dispatching host (the pin, per
-  firing) · Kim (unparking the upstream bundle).
-- **Evidence**: prior plan 4.1 (carry-forward); this firing's decision-watcher classify delta
-  (`amended: adr-0195`, hash-detected).
+### 4.1 nonoun-plugins#46 — ratify-only-flip hash gap, verified still OPEN upstream this firing; pin stands (upstream lane; 0 min here)
+- **Action**: carried forward (prior 4.1). Live-verified this firing:
+  `kimgranlund/nonoun-plugins#46` ("adr_checkpoint.py: hash the amendment ratification marker")
+  is OPEN. INTERIM PIN unchanged: when Kim ratifies an amendment on an already-`accepted` ADR
+  with no body-byte change, the host re-dispatches decision-watcher with an explicit "re-judge
+  adr-00NN amendment" instruction. This firing's adr-0226 amendment surfaced without the pin
+  being needed — still not evidence the upstream gap closed; the pin stays until #46 does.
+- **Owner**: nonoun-plugins upstream (the script fix) · dispatching host (the pin, per firing) ·
+  Kim (unparking the upstream bundle).
+- **Evidence**: live `gh issue view 46 -R kimgranlund/nonoun-plugins` this firing → OPEN.
 - **Size**: 0 minutes here; small tooling task upstream.
 
 ## Standing notes (not queue entries)
 
-- **Zero mutations needed this firing**: no merged-PR remote branch remained
-  (`ls-remote --heads origin` → only `main`; PRs #1150–#1517 surveyed, none OPEN); 2 stale
-  `origin/*` refs pruned pre-survey; `primary_checkout_check.py` clean, `main` byte-identical
-  to `origin/main` (the prior 2-behind gap resolved); both reap scripts dry-run clean, 0 fail.
-- **Two live worktrees held**: `1195-drill-s1-stack-default` (#1510, `KEEP(dirty)`) and
-  `1515-breadcrumb-design` (#1515, `KEEP(live-branch)`, 2 pending commits — intake-complete,
-  commit 66840a1f not pushed, host ships) — both healthy, correctly untouched.
-- **adr-0226 stays `proposed`** ("catalog Button icon mechanism") — held pending ratification
-  per the proposed-marker gate; re-surfaces as `amended` for judgment once Kim ratifies or
-  returns it. This firing's checkpoint payload carries it as `proposed`.
-- **Open unassigned issues #1504/#1496**: named by repo-cleaner for visibility only — open
-  board items, not a claim, not ops debt; they route through normal dev planning, not this
-  queue.
-- **Dirty `main` is this sweep's own marker**: `.claude/ops/sweep-in-flight.json` (pid 22277,
-  session `8e38eb01`) — leave alone until the sweep concludes; `sync_main.py` correctly
+- **Hygiene fully clean this firing**: 10 merged-PR remote branches (#1518, #1520–#1528) closed
+  via `campaign_close.py`, reverified gone (`ls-remote --heads origin` → only `main`); 0 open
+  PRs repo-wide; `primary_checkout_check.py` clean; both reap scripts 0 fail.
+- **Intake fully clean this firing**: 19 issues + 24 PRs since the last checkpoint, all already
+  properly minted/kinded, all sole-trusted-operator-authored; zero mints, zero holds; checkpoint
+  advanced.
+- **Open unassigned issues #1553 (ui-card footer pin) / #1549 (adr-0227 clause-5 exception)**:
+  visibility only — open board items routed through normal dev planning, not ops debt. Neither
+  carries `backlog`/`roadmap`; #1549 is named as context inside 3.1.
+- **Dirty `main` is this sweep's own marker**: `.claude/ops/sweep-in-flight.json` (pid 79606,
+  session `aa604436`) — leave alone until the sweep concludes; `sync_main.py` correctly
   withheld.
 - **gitignore G1 noise** (6 stale rules): standing Kim-ruled keep-list, never re-proposed.
-- **Intake lane clean**: 3 issues + 2 PRs in window, all pre-classified, all
-  sole-friendly-authored; zero mints, zero holds, zero non-owner filings all-time; bootstrap
-  gates (roster 2026-08-05 / MCP offer declined 2026-08-05, GH #438) long-resolved.
 - **gen-ui-kit**: out of this board's scope (dedicated session per Kim's ruling).
 
-*Composed by chore-planner, 2026-08-20T05:25:20Z sweep firing — returned as payload per the #125
+*Composed by chore-planner, 2026-08-20T22:01:23Z sweep firing — returned as payload per the #125
 ops-write split; written and landed by the dispatching session.*
 
-Dispatch: 2026-08-20T05:25:20Z
+Dispatch: 2026-08-20T22:01:23Z
