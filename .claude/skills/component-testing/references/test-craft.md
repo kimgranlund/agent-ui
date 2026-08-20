@@ -60,6 +60,14 @@ shard.
   a banner comment quoting `@scope (ui-x)` or `var(--token)` matches a naive regex and produced
   a 44-file false census where the comment-stripped truth was 9 (TKT-0066 item 5's sweep).
   Pattern: `stripComments` in `controls/styling-gates.test.ts`.
+- Synthetic events run NO default actions — a test dispatching `new PointerEvent(...)` never gets
+  the browser's mousedown→focus transfer, so any interaction whose bookkeeping is seeded by a focus
+  handler tests DIFFERENTLY under `el.focus()`-then-dispatch than under a real gesture. Reproduce
+  the REAL order explicitly (pointerdown → focus() as the simulated default action → pointerup) and
+  never pre-focus before pointerdown. Type specimen: ui-rating's first-tap swallow (2026-08-19,
+  PR #1453) — the focus handler seeded the commit baseline AFTER pointerdown's value write, both
+  test legs had manufactured the inverted order, and only a fresh checker's event-order walkthrough
+  caught it; the fix's real-order probe was proven as a negative control (red pre-fix, both engines).
 - A fresh worktree WITHOUT its own `npm install` resolves `@agent-ui/*` through the MAIN
   checkout's node_modules — import-resolving tests/builds silently exercise main's sources, and
   Vite's fs-allow denies `?raw` modules. Give the worktree its OWN `node_modules` — but by
