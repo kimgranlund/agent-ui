@@ -17,7 +17,11 @@
 // cross-engine already; this file does not re-prove it).
 import { describe, it, expect, vi, afterAll } from 'vitest'
 import './agent-admin-app.ts' // side-effect import — mounts the real ui-agent-admin, no page-level header
-import { AGENT_PRESETS, ACTIVE_PRESET_KEY, IMPORTED_PERSONAS_KEY, ROSTER_ORDER_KEY, loadImportedPersonas, personaRoster, personaStore } from './agent-admin-presets.ts'
+import { AGENT_PRESETS, loadImportedPersonas, personaRoster, personaStore, rosterSource } from './agent-admin-presets.ts'
+// ADR-0227 wave 1 (GH #1542) — the raw record keys and the active-id read/write live in the roster
+// source now (same underlying storage keys as before; the retired active-preset key constant has no
+// consumer outside the source module, per the ADR's acceptance predicate).
+import { IMPORTED_PERSONAS_KEY, ROSTER_ORDER_KEY } from '@agent-ui/app/agent-admin-roster-source'
 import { readPersonaFile } from './agent-admin-persona-file.ts'
 
 /** The bytes the Export row handed the browser — captured by the first GH #406 leg, replayed by the
@@ -34,7 +38,7 @@ const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => 
 /** The preset the page resolved at import time (localStorage may carry a prior run's choice — resolve by
  *  the SAME rule the page uses rather than assuming the first preset). */
 function resolvedActive(): (typeof AGENT_PRESETS)[number] {
-  return AGENT_PRESETS.find((p) => p.id === localStorage.getItem(ACTIVE_PRESET_KEY)) ?? AGENT_PRESETS[0]!
+  return AGENT_PRESETS.find((p) => p.id === rosterSource.activeIdSync()) ?? AGENT_PRESETS[0]!
 }
 
 /** The subset of `SettingsStore` this file reads/writes directly — real delivery proof, never a source grep. */
@@ -140,7 +144,7 @@ describe("agent-admin-app — the header's agent-select (S7-d: setAgentRoster/on
     targetOption.click()
     await raf()
 
-    expect(localStorage.getItem(ACTIVE_PRESET_KEY), 'the committed agent persists').toBe(target.id)
+    expect(rosterSource.activeIdSync(), 'the committed agent persists').toBe(target.id)
     expect(select.value, 'the select reflects the commit (setAgentRoster re-push, LLD §16.3)').toBe(target.id)
 
     // GH #905 — and the MARKER moved with the switch: the page's own re-push (applyPersona → pushRoster)
@@ -173,7 +177,7 @@ describe('agent-admin-app — the persona library (GH #406) via onImportRequest/
       }
     }
     localStorage.removeItem(IMPORTED_PERSONAS_KEY)
-    localStorage.setItem(ACTIVE_PRESET_KEY, AGENT_PRESETS[0]!.id)
+    rosterSource.writeActiveIdSync(AGENT_PRESETS[0]!.id)
   })
 
   it('the narrow overflow carries Export/Import as real menu items, and Export hands the browser a real persona file (onExportRequest)', async () => {
@@ -234,7 +238,7 @@ describe('agent-admin-app — the persona library (GH #406) via onImportRequest/
     const minted = options[options.length - 1]!
     expect(minted.textContent).toContain('(imported)')
     expect(select.value, 'the imported persona becomes the active one (setAgentRoster re-push)').toBe(minted.getAttribute('value'))
-    expect(localStorage.getItem(ACTIVE_PRESET_KEY)).toBe(minted.getAttribute('value'))
+    expect(rosterSource.activeIdSync()).toBe(minted.getAttribute('value'))
 
     // Registered in the PERSISTED library — this is what makes it survive a reload.
     const library = loadImportedPersonas()
@@ -252,7 +256,7 @@ describe('agent-admin-app — the persona library (GH #406) via onImportRequest/
   async function expectRejected(bytes: string, name: string): Promise<void> {
     for (const stale of document.querySelectorAll('ui-toast-region ui-toast')) stale.remove()
     const before = rosterOptions().length
-    const activeBefore = localStorage.getItem(ACTIVE_PRESET_KEY)
+    const activeBefore = rosterSource.activeIdSync()
     const libraryBefore = JSON.stringify(loadImportedPersonas())
     const overflow = await openOverflow()
     ;(overflow.querySelector('[data-value="import-agent"]') as HTMLElement).click()
@@ -272,7 +276,7 @@ describe('agent-admin-app — the persona library (GH #406) via onImportRequest/
     }
     expect(lastToast(), `${name}: the failure is announced, never silent`).toContain('Import failed')
     expect(rosterOptions(), `${name}: nothing was minted`).toHaveLength(before)
-    expect(localStorage.getItem(ACTIVE_PRESET_KEY), `${name}: the active persona is untouched`).toBe(activeBefore)
+    expect(rosterSource.activeIdSync(), `${name}: the active persona is untouched`).toBe(activeBefore)
     expect(JSON.stringify(loadImportedPersonas()), `${name}: nothing was persisted`).toBe(libraryBefore)
   }
 
@@ -378,7 +382,7 @@ describe('agent-admin-app — the header\'s New Agent button routes to Generate 
       }
     }
     localStorage.removeItem(IMPORTED_PERSONAS_KEY)
-    localStorage.setItem(ACTIVE_PRESET_KEY, AGENT_PRESETS[0]!.id)
+    rosterSource.writeActiveIdSync(AGENT_PRESETS[0]!.id)
   })
 
   it('no "New agent → Blank" affordance exists anywhere on the page — the retirement is real, not a stale label', async () => {
@@ -389,7 +393,6 @@ describe('agent-admin-app — the header\'s New Agent button routes to Generate 
   })
 
   it('clicking the narrow "+" mints a fresh agent, activates it, persists it, AND arms the Builder over it (the Generate path, never a bare blank mint)', async () => {
-    const before = rosterOptions().length
     const libraryBefore = loadImportedPersonas().length
 
     const newAgentBtn = admin().querySelector('[data-part="new-agent-narrow"]') as HTMLElement
@@ -399,14 +402,22 @@ describe('agent-admin-app — the header\'s New Agent button routes to Generate 
 
     const select = agentSelect()
     const options = rosterOptions()
-    expect(options, 'one NEW roster row, no preset overwritten').toHaveLength(before + 1)
+    // ADR-0227 (GH #1542) — a roster mutation converges the live view to STORAGE truth, so a residue
+    // row an earlier describe's storage cleanup left behind in the old in-memory array no longer
+    // lingers in the picker. The intent is unchanged and asserted STRONGER: the picker mirrors the
+    // fresh storage-derived roster exactly — every shipped preset survives, plus the one new mint.
+    expect(
+      options.map((o) => o.getAttribute('value')),
+      'one NEW roster row, no preset overwritten — the picker mirrors the fresh roster exactly',
+    ).toEqual(personaRoster().map((p) => p.id))
+    expect(options.length, 'every shipped preset + the fresh mint at least').toBeGreaterThanOrEqual(AGENT_PRESETS.length + 1)
     const minted = options[options.length - 1]!
     expect(minted.textContent, 'the mint law: "New agent", numbered only on a real collision').toMatch(/^New agent( \d+)?$/)
 
     // Activated: the select's own value + the persisted active-id both follow the mint (setAgentRoster
     // re-push inside applyPersona — the same contract an imported persona gets).
     expect(select.value, 'the minted agent becomes the active one').toBe(minted.getAttribute('value'))
-    expect(localStorage.getItem(ACTIVE_PRESET_KEY)).toBe(minted.getAttribute('value'))
+    expect(rosterSource.activeIdSync()).toBe(minted.getAttribute('value'))
 
     // Persisted through the GH #406 imported-library record — what survives a reload.
     const library = loadImportedPersonas()
@@ -448,7 +459,7 @@ describe('agent-admin-app — the Edit Agents drawer: duplicate, then delete the
     }
     localStorage.removeItem(IMPORTED_PERSONAS_KEY)
     localStorage.removeItem(ROSTER_ORDER_KEY)
-    localStorage.setItem(ACTIVE_PRESET_KEY, AGENT_PRESETS[0]!.id)
+    rosterSource.writeActiveIdSync(AGENT_PRESETS[0]!.id)
   })
 
   // GH #917 — the mounted `ui-agent-admin` now carries its OWN per-section entry-CRUD drawers, so a bare
@@ -531,7 +542,7 @@ describe('agent-admin-app — the Edit Agents drawer: duplicate, then delete the
     store!.set('name', 'DIRTY-BEFORE-DELETE')
     await raf()
     expect(keysUnder(copy!.id).length, 'real persisted keys now exist under its namespace').toBeGreaterThan(0)
-    expect(localStorage.getItem(ACTIVE_PRESET_KEY)).toBe(copy!.id)
+    expect(rosterSource.activeIdSync()).toBe(copy!.id)
   })
 
   it('Delete on the ACTIVE copy sweeps EVERY key under its prefix, drops the record, and falls back to the first roster entry', async () => {
@@ -550,7 +561,7 @@ describe('agent-admin-app — the Edit Agents drawer: duplicate, then delete the
 
     const fallback = personaRoster()[0]!
     expect(fallback.id, 'the fallback is a shipped preset — presets are undeletable, so it always exists').toBe(AGENT_PRESETS[0]!.id)
-    expect(localStorage.getItem(ACTIVE_PRESET_KEY), 'the persisted active id followed the fallback').toBe(fallback.id)
+    expect(rosterSource.activeIdSync(), 'the persisted active id followed the fallback').toBe(fallback.id)
     expect(admin().store!.get('name'), 'and the surface is showing the fallback persona, not the deleted one').toBe(AGENT_PRESETS[0]!.config.name)
 
     ;(document.querySelector('.roster-drawer-done') as HTMLElement).click()
@@ -746,7 +757,7 @@ describe('agent-admin-app — the Settings Name field drives the roster label (G
     for (const key of Object.keys(localStorage).filter((k) => k.startsWith(`agent-admin-app.${AGENT_PRESETS[0]!.id}.`))) {
       localStorage.removeItem(key)
     }
-    localStorage.setItem(ACTIVE_PRESET_KEY, AGENT_PRESETS[0]!.id)
+    rosterSource.writeActiveIdSync(AGENT_PRESETS[0]!.id)
   })
 
   /** The Agent panel's Name field on the LIVE settings pane (rebuilt on every store swap — re-query,

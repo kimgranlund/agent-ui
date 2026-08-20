@@ -7,9 +7,11 @@ declare const process: { cwd(): string }
 // Trip-wire: the apex-of-the-DAG invariant @agent-ui/app rests on (SPEC-R1, LLD-C2). Two checks, one
 // file:
 //   (1) every import under app/src/** resolves ONLY to {@agent-ui/components, @agent-ui/a2ui,
-//       @agent-ui/shared, @agent-ui/code} or a local `./`/`../` path — app may depend DOWN the DAG (it sits
-//       at the top, nothing is above it) and never on itself via its own package name. The @agent-ui/code
-//       edge is ADR-0139's opened `app ← code` edge (ui-agent-admin's entry editors use @agent-ui/code/editor);
+//       @agent-ui/shared, @agent-ui/code, @agent-ui/data} or a local `./`/`../` path — app may depend DOWN
+//       the DAG (it sits at the top, nothing is above it) and never on itself via its own package name. The
+//       @agent-ui/code edge is ADR-0139's opened `app ← code` edge (ui-agent-admin's entry editors use
+//       @agent-ui/code/editor); the @agent-ui/data edge is ADR-0227 clause 4's activation of the edge
+//       ADR-0192 clause 1 reserved (persona-roster-source.ts, the package's first real consumer);
 //       app still never imports @agent-ui/router (the M4 named NC below stays intact).
 //   (2) no source under components/src or a2ui/src — the two inward packages app sits above — imports
 //       @agent-ui/app; the apex is never imported back by anything it depends on (SPEC-R1 AC2).
@@ -46,6 +48,7 @@ const isAllowedAppSpecifier = (spec: string): boolean =>
   spec === '@agent-ui/a2ui' || spec.startsWith('@agent-ui/a2ui/') ||
   spec === '@agent-ui/shared' || spec.startsWith('@agent-ui/shared/') ||
   spec === '@agent-ui/code' || spec.startsWith('@agent-ui/code/') || // ADR-0139 — the app ← code editor edge
+  spec === '@agent-ui/data' || spec.startsWith('@agent-ui/data/') || // ADR-0227 cl.4 — the app ← data edge ADR-0192 cl.1 reserved, activated by the persona-roster adoption (GH #1542)
   spec === 'pdfjs-dist' || spec.startsWith('pdfjs-dist/') // ADR-0202 — app's own runtime-dep exception
 
 const isAppSpecifier = (spec: string): boolean =>
@@ -60,7 +63,7 @@ describe('import layering — app/src imports only down the DAG', () => {
     expect(files.length).toBeGreaterThan(0) // holds even pre-C3: the barrel alone still counts
   })
 
-  it('every app/src file imports only {components,a2ui,shared,code} or a local path', () => {
+  it('every app/src file imports only {components,a2ui,shared,code,data} or a local path', () => {
     const violations: string[] = []
     for (const [path, src] of files) {
       for (const spec of specifiersOf(src)) {
@@ -88,14 +91,20 @@ describe('import layering — app/src imports only down the DAG', () => {
     expect(violations).toEqual(['@agent-ui/router'])
   })
 
-  // ADR-0192 clause 1 — "every existing inward layering trip-wire extends its scan by one package
-  // name": the allowlist above already excludes @agent-ui/data by construction (unlisted); this named
-  // negative control makes the edge explicit for a future reader. `app` is not YET a data consumer
-  // at v1, but unlike `router` this is not a permanent fence — ADR-0192 clause 1 leaves it open.
-  it('synthetic-violation: the matcher flags a @agent-ui/data import from app/src (the ADR-0192 named NC)', () => {
+  // ADR-0227 clause 4 (GH #1542) — the edge ADR-0192 clause 1 reserved as "`app` MAY, later" is now
+  // ACTIVE: the persona roster (persona-roster-source.ts) is @agent-ui/data's first real consumer, so
+  // the old ADR-0192 named NC (which asserted this exact specifier was flagged) flips to a POSITIVE
+  // control — the allowlist admits it by name, and the package.json dependency row matches.
+  it('positive control: @agent-ui/data is an ADMITTED app/src import (ADR-0227 cl.4 — the activated ADR-0192 cl.1 edge)', () => {
     const src = `import { resource } from '@agent-ui/data'\n`
     const violations = specifiersOf(src).filter((s) => !isAllowedAppSpecifier(s))
-    expect(violations).toEqual(['@agent-ui/data'])
+    expect(violations).toEqual([])
+  })
+
+  it('and the real consumer exists: persona-roster-source.ts imports @agent-ui/data (the edge is used, not just opened)', () => {
+    const src = raw['./controls/agent-admin/persona-roster-source.ts']
+    expect(src, 'the ADR-0227 wave-1 source module is in the scanned tree').toBeTruthy()
+    expect(specifiersOf(src!).some((s) => s === '@agent-ui/data' || s.startsWith('@agent-ui/data/'))).toBe(true)
   })
 
   // ADR-0200 clause 1 — app and devtools are PEER top-tier consumers (`shared ← components ← a2ui ←

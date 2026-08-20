@@ -47,6 +47,7 @@
     "./agent-admin-resource-idb": "./src/controls/agent-admin/resource-idb-store.ts",
     "./agent-admin-skill-packs": "./src/controls/agent-admin/skill-pack-store.ts",
     "./agent-admin-team": "./src/controls/agent-admin/agent-team.ts",
+    "./agent-admin-roster-source": "./src/controls/agent-admin/persona-roster-source.ts",
     "./document-extraction": "./src/lib/document-extraction.ts",
     "./document-extraction-docx": "./src/lib/document-extraction-docx.ts",
     "./document-budget": "./src/lib/document-budget.ts"
@@ -55,6 +56,7 @@
     "@agent-ui/a2ui": "*",
     "@agent-ui/code": "*",
     "@agent-ui/components": "*",
+    "@agent-ui/data": "*",
     "@agent-ui/shared": "*",
     "pdfjs-dist": "6.2.108"
   }

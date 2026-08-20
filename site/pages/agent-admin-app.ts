@@ -70,18 +70,21 @@ import type { UIToggleElement } from '@agent-ui/components/controls/toggle'
 // reusable `list-reorder` trait; this page dogfoods it exactly like `ui-nav-rail`/`ui-conversation-composer`
 // dogfood `traits/overlay` (vitest.config.ts's own precedent comment for that subpath).
 import { listReorder } from '@agent-ui/components/traits/list-reorder'
+// ADR-0227 wave 1 (GH #1542) — the roster read path is ONE resource() and every roster write is a
+// mutation() with invalidation over the PersonaRosterSource (@agent-ui/data's first real consumer).
+// `effect` drives the one derivation that feeds the component's push seam; the optimistic commits keep
+// every handler's same-tick reads honest (the source's own writes land in the calling tick too).
+import { effect } from '@agent-ui/components'
+import { createStore, mutation, resource, type Store } from '@agent-ui/data'
+import { applyRosterOrder, type PersonaRosterView } from '@agent-ui/app/agent-admin-roster-source'
 import {
-  ACTIVE_PRESET_KEY,
   builderStore,
-  deleteImportedPersona,
   loadModifiedAt,
   personaInstantiated,
   personaRoster,
   personaStore,
-  renameImportedPersona,
   resetPersona,
-  saveImportedPersona,
-  saveRosterOrder,
+  rosterSource,
   type Persona,
 } from './agent-admin-presets.ts'
 import { duplicatePersonaFrom, exportPersonaFile, importedPersonaFrom, mintBlankPersona, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
@@ -126,12 +129,119 @@ const root = document.querySelector('#app') ?? document.body
 
 const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
 
-// GH #143 — which persona is active must be known BEFORE the first `admin.libraries` assignment (the
-// add-from-library menu is scoped to the ACTIVE preset's category from the very first paint, not just on
-// a later switch) — computed here, ahead of the header/menu wiring below that also reads it.
-const roster: Persona[] = personaRoster()
-const initialPreset: Persona =
-  roster.find((p) => p.id === localStorage.getItem(ACTIVE_PRESET_KEY)) ?? roster[0]!
+// ── ADR-0227 clause 4 (GH #1542): the roster read path is ONE resource ───────────────────────────────────
+// The view (ordered roster + persisted active id) is the ONE owner; the page var / component snapshot /
+// raw storage-key triplication (the audit's F6/Q4) collapses into derivations of it. The store is seeded
+// same-tick (ADR-0193's sync-read amendment) so the first paint renders synchronously, exactly as before;
+// `live: true` rides the source's cross-tab subscribe seam — the staleness guard this wave adds.
+const ROSTER_KEY = 'agent-admin/roster'
+const rosterStore = createStore()
+rosterStore.commit(ROSTER_KEY, rosterSource.readViewSync())
+const rosterResource = resource<PersonaRosterView<Persona>>(ROSTER_KEY, rosterSource.view, {
+  store: rosterStore,
+  live: true,
+})
+
+/** The current roster — a derivation of the one resource (read at call time, never a copied array). */
+function currentRoster(): readonly Persona[] {
+  return rosterResource.data.peek()?.personas ?? []
+}
+
+/** The active persona — THE derivation of the one active-id owner (`view.activeId`), with the page's
+ *  fallback rule (first roster entry — presets are undeletable, so it always exists) applied at read
+ *  time. GH #143 — known BEFORE the first `admin.libraries` assignment below, same as ever. */
+function activeAgent(): Persona {
+  const view = rosterResource.data.peek()
+  const personas = view?.personas ?? []
+  return personas.find((p) => p.id === view?.activeId) ?? personas[0]!
+}
+
+/** Optimistic-view helper: every roster mutation commits the SAME transform its source write persists,
+ *  so the view — and every derivation on it — updates in the calling tick (mutation() rolls the commit
+ *  back per-key on error). The store is seeded at boot, so `prev` only falls back defensively. */
+function optimisticView(store: Store, up: (prev: PersonaRosterView<Persona>) => PersonaRosterView<Persona>): void {
+  store.commit(ROSTER_KEY, (prev: unknown) => up((prev as PersonaRosterView<Persona> | undefined) ?? rosterSource.readViewSync()))
+}
+
+/** ATOMIC read-back commit — each mutation fn's settle step: the post-write truth is read AND committed
+ *  in ONE microtask job, so no other write can interleave between read and commit. This page mirrors
+ *  deliberately instead of `invalidate`-refetching: an invalidation's read→commit pipeline spans jobs,
+ *  and a rapid successive mutation's optimistic commit gets REGRESSED by the earlier action's in-flight
+ *  refetch landing late (measured live — the drawer reorder round-trip caught it) — the exact clobber
+ *  class resource.ts's own mirror law names ("an external commit … is MIRRORED, never re-fetched —
+ *  re-fetching here would clobber the just-written value"). Cross-TAB freshness rides the resource's
+ *  `live` subscription instead (the source's adapter seam), which also mirrors. */
+function commitRosterView(): void {
+  rosterStore.commit(ROSTER_KEY, rosterSource.readViewSync())
+}
+
+// ── the roster mutations (ADR-0227 clause 4: saves/renames/reorders/deletes + the active-id write) ──────
+const saveAgentMutation = mutation(
+  async (persona: Persona, ctx) => {
+    const created = await rosterSource.create(persona, ctx)
+    commitRosterView()
+    return created
+  },
+  {
+    store: rosterStore,
+    optimistic: (persona, store) =>
+      optimisticView(store, (prev) => ({
+        ...prev,
+        personas: [...prev.personas.filter((p) => p.id !== persona.id), { ...persona, imported: true }],
+      })),
+  },
+)
+
+const renameAgentMutation = mutation(
+  async (input: { id: string; label: string }, ctx) => {
+    const renamed = await rosterSource.update(input.id, { label: input.label }, ctx)
+    commitRosterView()
+    return renamed
+  },
+  {
+    store: rosterStore,
+    optimistic: ({ id, label }, store) =>
+      optimisticView(store, (prev) => ({
+        ...prev,
+        personas: prev.personas.map((p) => (p.id === id ? { ...p, label: label.trim() } : p)),
+      })),
+  },
+)
+
+const deleteAgentMutation = mutation(
+  async (persona: Persona, ctx) => {
+    await rosterSource.remove(persona.id, ctx)
+    commitRosterView()
+  },
+  {
+    store: rosterStore,
+    optimistic: (persona, store) =>
+      optimisticView(store, (prev) => ({ ...prev, personas: prev.personas.filter((p) => p.id !== persona.id) })),
+  },
+)
+
+const reorderAgentsMutation = mutation(
+  async (ids: readonly string[]) => {
+    rosterSource.saveOrderSync(ids)
+    commitRosterView()
+  },
+  {
+    store: rosterStore,
+    optimistic: (ids, store) =>
+      optimisticView(store, (prev) => ({ ...prev, personas: applyRosterOrder(prev.personas, ids) })),
+  },
+)
+
+const setActiveAgentMutation = mutation(
+  async (id: string) => {
+    rosterSource.writeActiveIdSync(id)
+    commitRosterView()
+  },
+  {
+    store: rosterStore,
+    optimistic: (id, store) => optimisticView(store, (prev) => ({ ...prev, activeId: id })),
+  },
+)
 // ADR-0208 D3/D4 — the imported shelf's page-side cache, loaded async from the `skill-packs:` store at
 // boot (below) and refreshed by every import/remove. APP-level by design: one shelf, every persona
 // browses it; the OPT-IN is what stays per-persona (an add commits into the active persona's own
@@ -156,7 +266,7 @@ function librariesWithShelf(category: PresetCategory | undefined): Record<string
 // `libraries` prop's now-reactive add-from-library MENU picks up, agent-admin.ts's GH #143 update).
 // The shelf cache is still empty at this first assignment (its IndexedDB read is async); the boot load
 // below reassigns once packs land — the same late-arrival law the DEV live-read overlay already rides.
-admin.libraries = librariesWithShelf(initialPreset.category)
+admin.libraries = librariesWithShelf(activeAgent().category)
 
 // The boot-time shelf read — fire-and-forget (the IDB tier is async by nature, ADR-0193): once packs
 // land, ONE fresh `libraries` assignment carries them into the add-from-library menu. An unavailable
@@ -164,11 +274,9 @@ admin.libraries = librariesWithShelf(initialPreset.category)
 void loadSkillPacks()
   .then((packs) => {
     importedSkillPacks = packs
-    if (packs.length > 0) admin.libraries = librariesWithShelf(active.category)
+    if (packs.length > 0) admin.libraries = librariesWithShelf(activeAgent().category)
   })
   .catch(() => {})
-
-let active: Persona = initialPreset
 
 // Armed by the DEV overlay below once a live key probes available; re-invoked per persona switch so each
 // persona's SURFACE session (TKT-0076 — the runner closure owns the a2ui transcript) starts clean.
@@ -225,17 +333,19 @@ function withFlowChrome(inner: AdminAgentSurfaceTurn): AdminAgentSurfaceTurn {
 // action now reaches its page-side handler through one of the component's six registration seams
 // (admin-three-pane-ia.lld.md §16.3, frozen shapes) instead of a menu commit.
 
-/** Push the current roster into the header's agent-select (setAgentRoster — data-in, re-callable). Called
- *  on every persona switch (so the select's own "current choice" reflects it, replacing the retired
- *  title/tagline zone + the agentMenu's own aria-checked loop) AND after every mint/import (a fresh row
- *  needs a fresh push — the seam's own re-callable contract, LLD §16.3). */
-function pushRoster(activeId: string): void {
+/** Push one roster snapshot into the header's agent-select (setAgentRoster — data-in, re-callable).
+ *  ADR-0227 clause 2: the seam stays the component's public push API, and the page DERIVES what to push
+ *  from the one resource — the roster derivation effect below re-runs this on every committed view, so
+ *  a mint/import/rename/reorder/delete/switch all reach the select through one derivation instead of
+ *  hand-threaded call sites (the seam's own re-callable contract, LLD §16.3). */
+function pushRoster(view: PersonaRosterView<Persona> = rosterResource.data.peek() ?? rosterSource.readViewSync()): void {
   // GH #845 (LLD-C15) — `deletable` is the ONE new field, and its meaning is page-owned: a persona is
   // deletable exactly when it is a LIBRARY record (`imported === true` — an import, a mint, or a duplicate),
   // never when it is a shipped `AGENT_PRESETS` preset. The component reads it only as a visibility gate for
   // its two Delete affordances (the overflow item + the config-surface row); ABSENT reads protected, so this
   // one line is the whole reason a preset shows neither.
-  const entries: AgentRosterEntry[] = roster.map((p) => ({ id: p.id, label: p.label, deletable: p.imported === true }))
+  const entries: AgentRosterEntry[] = view.personas.map((p) => ({ id: p.id, label: p.label, deletable: p.imported === true }))
+  const activeId = (view.personas.find((p) => p.id === view.activeId) ?? view.personas[0])?.id ?? ''
   admin.setAgentRoster(entries, activeId)
 }
 // GH #1277 — the Team pane's 'From catalog' source: the shipped preset catalog (id/label/tagline/
@@ -248,22 +358,22 @@ function pushRoster(activeId: string): void {
 // switching the active persona (adding a team member is not an activation — `applyPersona` would
 // hijack the whole workbench mid-form).
 export function instantiateCatalogPersona(id: string): { id: string; label: string } | undefined {
-  const persona = roster.find((p) => p.id === id)
+  const persona = currentRoster().find((p) => p.id === id)
   if (persona === undefined) return undefined
   personaStore(persona) // seed applied — the agent's store now exists (personaInstantiated flips true)
-  pushRoster(active.id)
+  pushRoster() // instantiated-ness is not view data, so the derivation effect has nothing to wake on — re-push explicitly
   return { id: persona.id, label: persona.label }
 }
 admin.setAgentCatalog({
   entries: () =>
-    roster
+    currentRoster()
       .filter((p) => p.imported !== true && !personaInstantiated(p.id))
       .map((p) => ({ id: p.id, label: p.label, tagline: p.tagline, ...(p.category === undefined ? {} : { category: p.category }) })),
   instantiate: async (id) => instantiateCatalogPersona(id),
 })
 
 admin.onAgentSelect((id) => {
-  const persona = roster.find((p) => p.id === id)
+  const persona = currentRoster().find((p) => p.id === id)
   if (persona) applyPersona(persona)
 })
 
@@ -291,8 +401,9 @@ admin.onImportRequest(() => fileInput.click())
 admin.onExportRequest(() => exportActivePersona())
 admin.onExportDebugBundleRequest(() => exportDebugBundle())
 admin.onResetRequest(() => {
-  resetPersona(active)
-  applyPersona(active)
+  const persona = activeAgent()
+  resetPersona(persona)
+  applyPersona(persona)
 })
 
 // GH #845 (LLD-C4/C5, LLD-C15/§7) — the two ADDITIVE seams this ticket registers, beside the six above.
@@ -331,8 +442,9 @@ admin.onTeamDeclared((team) =>
 // turn-time identity the Settings pane's Name field writes and `AgentConfigSnapshot.name` reads). The unify
 // mechanism is this page-level subscription: the ACTIVE persona's store notifies every write
 // (`SettingsStore.subscribe`, agent-admin-presets.ts's `personaStore` seam), and a real `'name'` change
-// drives the SAME `renameImportedPersona` + `refreshRoster`/`pushRoster` path the drawer's pencil rename
-// already uses — so the select trigger, the option rows, the drawer, and the Team pane (which reads the
+// drives the SAME `renameAgentMutation` path the drawer's pencil rename already uses (ADR-0227: the
+// rename is a mutation on the one roster resource; the derivation effect repaints every surface) — so
+// the select trigger, the option rows, the drawer, and the Team pane (which reads the
 // same `#pendingRoster` snapshot at invoke time) all follow in one motion. The reverse direction (drawer
 // rename → store `'name'`) lives in `beginRename`'s commit below; BOTH directions guard on value equality,
 // so subscribe→rename→subscribe can never loop. The Settings pane's Name field is not the only intended
@@ -343,44 +455,49 @@ let unsubscribeActiveName: (() => void) | undefined
 
 /** Drive the roster label from a committed store `'name'` write (GH #1537). `personaId` is captured at
  *  subscribe time — the subscription is torn down and re-armed on every `applyPersona`, so a rename on
- *  persona A can never rename persona B. The persona is re-resolved from the LIVE roster by id (never the
- *  captured object): `refreshRoster` replaces the array's contents wholesale, so a captured reference's
- *  label goes stale after any rename/reorder. */
+ *  persona A can never rename persona B. The persona is re-resolved from the LIVE view by id (never a
+ *  captured object): the roster derivation reads fresh objects on every committed view, so a captured
+ *  reference's label goes stale after any rename/reorder. */
 function syncRosterLabelFromName(personaId: string, value: unknown): void {
   if (typeof value !== 'string') return
   const next = value.trim()
-  const persona = roster.find((p) => p.id === personaId)
+  const persona = currentRoster().find((p) => p.id === personaId)
   // A blank commit is skipped SILENTLY: the schema marks `name` required (agent-admin-schema.ts), so the
   // field's own validation is the visible feedback — and the drawer's own "an agent needs a name" law
   // already keeps a blank label out of the roster.
   if (persona === undefined || next.length === 0 || next === persona.label) return
   if (persona.imported !== true) {
-    // A shipped preset is structurally rename-fenced (renameImportedPersona's own imported-only guard +
+    // A shipped preset is structurally rename-fenced (the source's imported-only rename law +
     // the drawer's affordance gate — GH #848's rename law), so for a preset the Name field edits ONLY the
     // turn-time identity (`AgentConfigSnapshot.name` — how the agent refers to itself in generation); the
     // picker keeps the shipped label. Stated visibly, never a silent divergence.
     notify(`“${persona.label}” is a shipped agent — the picker keeps its shipped name. The new name applies only to the agent's own replies.`)
     return
   }
-  if (roster.some((p) => p.id !== persona.id && p.label === next)) {
+  if (currentRoster().some((p) => p.id !== persona.id && p.label === next)) {
     // The drawer rename's own collision law, mirrored — the store keeps what the user typed (their
     // turn-time name), but the roster label refuses the duplicate, and says so.
     notify(`Another agent is already called “${next}” — the picker still shows “${persona.label}”.`, true)
     return
   }
-  if (renameImportedPersona(persona, next)) {
-    refreshRoster()
+  // The rename rides the roster mutation (ADR-0227 cl.4): its optimistic commit updates the view's label
+  // in THIS tick — so the `next === persona.label` guard above holds against the re-notification below —
+  // the source persists the record, and the derivation effect re-pushes the select + drawer rows.
+  void (async () => {
+    const renamed = await renameAgentMutation.run({ id: persona.id, label: next })
     // The label took the TRIMMED form, so the store keeps it byte-equal too — an untrimmed commit
     // ("  Wrench  ") must not leave a residual two-identity divergence inside the unify feature itself.
     // Loop-safe: the re-notification this write fires lands on the `next === persona.label` guard above
-    // (refreshRoster already updated the label).
-    if (value !== next) personaStore(persona).set('name', next)
-  }
+    // (the optimistic commit already updated the label).
+    if (renamed !== undefined && value !== next) personaStore(persona).set('name', next)
+  })()
 }
 
 function applyPersona(persona: Persona): void {
-  active = persona
-  localStorage.setItem(ACTIVE_PRESET_KEY, persona.id)
+  // ADR-0227 (F6/Q4) — the ONE active-id write path: the mutation persists through the roster source and
+  // its optimistic commit updates the view in this same tick, so every derivation (`activeAgent()`, the
+  // roster effect's re-push, the drawer rows) follows from one owner instead of three hand-threaded copies.
+  void setActiveAgentMutation.run(persona.id)
   // ADR-0178 cl.5 (LLD-C8) — the ONE choke point that exits the guided-authoring flow: clearing it here,
   // BEFORE the store swap, makes the ordering deterministic (exit the flow → GH #145's reset → optionally
   // re-enter), so switching personas can never leave a previous draft's interview armed over a new one.
@@ -402,10 +519,8 @@ function applyPersona(persona: Persona): void {
   admin.libraries = librariesWithShelf(persona.category)
   armSurfaceTurn?.()
   flowChrome.dismiss() // ADR-0198 — a persona switch clears the conversation; no stale affordance survives it
-  // GH #686's Amendment — the header's own agent-select now carries the "current choice" signal
-  // (setAgentRoster's re-callable contract, LLD §16.3), replacing the retired title/tagline zone and the
-  // agentMenu's own aria-checked loop.
-  pushRoster(persona.id)
+  // GH #686's Amendment — the header's own agent-select "current choice" signal now rides the roster
+  // derivation effect (the setActive commit above woke it), replacing the retired hand-placed re-push.
 }
 
 // ── the persona library: export / import (GH #406, M-B DoD box 3) ──────────────────────────────────────
@@ -438,6 +553,7 @@ async function materializedReaderFor(store: ReturnType<typeof personaStore>): Pr
 }
 
 async function exportActivePersona(): Promise<void> {
+  const active = activeAgent()
   const reader = await materializedReaderFor(personaStore(active))
   const text = personaFileText(exportPersonaFile(active, reader))
   const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }))
@@ -466,13 +582,13 @@ async function exportDebugBundle(): Promise<void> {
   // `exportActivePersona` uses — a persona whose store carries no `entries:resource` key at all costs
   // nothing extra (the wrapper's own `Array.isArray` guard skips straight to the raw `store.get`).
   const agents = await Promise.all(
-    roster.map(async (persona) => ({ persona, store: await materializedReaderFor(personaStore(persona)) })),
+    currentRoster().map(async (persona) => ({ persona, store: await materializedReaderFor(personaStore(persona)) })),
   )
   let built: ReturnType<typeof buildDebugBundle>
   try {
     built = buildDebugBundle({
       agents,
-      activeAgentId: active.id,
+      activeAgentId: activeAgent().id,
       testChatTranscript: admin.testChatTranscript(),
       builderInterviewTranscript: admin.builderInterviewTranscript(),
       // GH #1154 — the trip-wire: turns ran but both transcripts read empty ⇒ buildDebugBundle throws
@@ -505,14 +621,13 @@ function importPersonaText(text: string): void {
     notify(`Import failed — ${parsed.error}`, true)
     return
   }
-  // Mint against a FRESH roster read, not this page's boot-time snapshot: a second tab that imported
-  // since boot already wrote its persona into the shared library record, and an id minted blind to it
-  // would silently SHARE that persona's persisted store (`saveImportedPersona` re-reads before it
-  // appends, so the record itself survives — only the id needs the fresh view).
-  const persona = importedPersonaFrom(parsed.file, [...personaRoster(), ...roster])
-  saveImportedPersona(persona) // survives reload: personaRoster() reads this record at boot
-  roster.push(persona)
-  applyPersona(persona) // pushRoster(persona.id) inside applyPersona stages the header's own roster row
+  // Mint against a FRESH roster read, not just the in-memory view: a second tab that imported since
+  // boot already wrote its persona into the shared library record, and an id minted blind to it would
+  // silently SHARE that persona's persisted store (the source's upsert re-reads before it appends, so
+  // the record itself survives — only the id needs the fresh view).
+  const persona = importedPersonaFrom(parsed.file, [...personaRoster(), ...currentRoster()])
+  void saveAgentMutation.run(persona) // the record persists in this tick (survives reload) and the view gains the row
+  applyPersona(persona) // the setActive commit stages the header's own roster row via the derivation effect
   notify(`Imported “${persona.label}”.`)
 }
 
@@ -534,10 +649,9 @@ function importPersonaText(text: string): void {
  *  the pick chooses the interviewer's model, never the agent-being-built's. */
 function createGeneratedAgent(pick?: GenerateSeed): void {
   const seed = { model: DEFAULT_MODEL_ID, ...initialValuesFor(defaultAgentConfigSchema), ...initialEntryValues() }
-  const persona = mintBlankPersona(seed, [...personaRoster(), ...roster])
-  saveImportedPersona(persona)
-  roster.push(persona)
-  applyPersona(persona) // pushRoster(persona.id) inside applyPersona stages the header's own roster row
+  const persona = mintBlankPersona(seed, [...personaRoster(), ...currentRoster()])
+  void saveAgentMutation.run(persona) // persists the library record in this tick; the view gains the row
+  applyPersona(persona) // the setActive commit stages the header's own roster row via the derivation effect
   admin.authoringStore = builderStore(pick?.model) // a FRESH interviewer per flow entry (no persistKey, no cache)
   notify(`Created “${persona.label}” — describe what you want and the Builder will fill it in.`)
 }
@@ -599,20 +713,20 @@ export async function handleTeamDeclared(team: TeamDeclaration): Promise<void> {
 
   const minted = team.members.map((member) => {
     const seed = { model: DEFAULT_MODEL_ID, ...initialValuesFor(defaultAgentConfigSchema), ...initialEntryValues() }
-    const persona = mintBlankPersona(seed, [...personaRoster(), ...roster], member.name)
-    saveImportedPersona(persona)
-    roster.push(persona)
+    const persona = mintBlankPersona(seed, [...personaRoster(), ...currentRoster()], member.name)
+    void saveAgentMutation.run(persona) // persists in this tick — the next loop turn's collision scan sees it
     return { persona, member }
   })
-  pushRoster(active.id) // the header's roster row list gains the new members; ACTIVE stays the GM, unchanged
+  // The header's roster row list gains the new members via the derivation effect; ACTIVE stays the GM, unchanged.
 
-  const knownAgentIds = roster.map((p) => p.id)
+  const gm = activeAgent()
+  const knownAgentIds = currentRoster().map((p) => p.id)
   const existingTeams = await loadAgentTeams()
   const agentTeam: AgentTeam = {
     id: mintTeamId(label, new Set(existingTeams.map((t) => t.id))),
     label,
     ...(team.tagline !== undefined && team.tagline.trim().length > 0 ? { tagline: team.tagline.trim() } : {}),
-    gmAgentId: active.id,
+    gmAgentId: gm.id,
     members: minted.map(({ persona, member }) => ({ agentId: persona.id, role: member.role, routingDescription: member.routingDescription })),
   }
 
@@ -621,7 +735,7 @@ export async function handleTeamDeclared(team: TeamDeclaration): Promise<void> {
     notify(`Team “${label}” could not be saved — ${result.issues.map((i) => i.message).join(' ')}`, true)
     return
   }
-  notify(`Created team “${label}” — ${minted.length} member${minted.length === 1 ? '' : 's'} + “${active.label}” as GM.`)
+  notify(`Created team “${label}” — ${minted.length} member${minted.length === 1 ? '' : 's'} + “${gm.label}” as GM.`)
 }
 
 // The ONE native form element on this page, and a deliberate exception to the fleet's "no native form
@@ -765,20 +879,17 @@ function announce(message: string, urgent = false): void {
   notify(message, urgent)
 }
 
-/** The ONE choke point after any roster mutation (LLD §7): re-read the ORDERED roster into the captured
- *  `roster` array (its CONTENTS are replaced — the binding is a `const` every closure on this page already
- *  holds), re-push it to the header (which is what makes reorder/rename/delete "drive picker order"), and
- *  rebuild the drawer list when it is open. */
-function refreshRoster(): void {
-  roster.splice(0, roster.length, ...personaRoster())
-  // GH #1537 — `active` follows the re-read: the splice above replaces every persona OBJECT, so after a
-  // rename the captured reference's `label` is stale (exportActivePersona's filename/toast and the
-  // name-sync's own equality guard all read `active.label`). Ids are stable (GH #848's rename law), so
-  // re-resolving by id is always the same persona.
-  active = roster.find((p) => p.id === active.id) ?? active
-  pushRoster(active.id)
+// ── the ONE roster derivation (ADR-0227 clause 4) — replaces the retired hand-threaded `refreshRoster` ──
+// Every roster mutation's optimistic commit (and its post-settle refetch) wakes this effect, which
+// re-derives BOTH render surfaces from the one view: the header select re-push (what makes
+// reorder/rename/delete "drive picker order" — LLD §7) and the open drawer's rows. The Team pane's
+// GM/member `nameFor` reads the same `#pendingRoster` snapshot this push feeds, so it follows too.
+effect(() => {
+  const view = rosterResource.data.value
+  if (view === undefined) return
+  pushRoster(view)
   if (drawer.open) renderRosterRows()
-}
+})
 
 // GH #921 ruling 4 — Re-organize as an explicit MODE (never always-on): a page-level flag read by every
 // row build, so entering/leaving the mode is one re-render, not a per-row toggle to track separately.
@@ -806,7 +917,7 @@ function scrollActiveRosterRowIntoView(): void {
   requestAnimationFrame(() => {
     // Matched via dataset (not an attribute-selector interpolation): no escaping concern, and jsdom has
     // no `CSS.escape` to lean on.
-    const row = [...rosterList.querySelectorAll<HTMLElement>('.roster-row')].find((r) => r.dataset.agent === active.id)
+    const row = [...rosterList.querySelectorAll<HTMLElement>('.roster-row')].find((r) => r.dataset.agent === activeAgent().id)
     if (row === undefined || typeof row.scrollIntoView !== 'function') return
     const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
     row.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' })
@@ -905,7 +1016,7 @@ function surfaceSummary(persona: Persona): string {
  *  currently loaded onto the canvas. The shipped/custom distinction stays its OWN "Shipped" tag (unchanged
  *  — a structural protection marker, never a lifecycle state). */
 function statusLabel(persona: Persona): string {
-  return persona.id === active.id ? 'Status: Active' : 'Status: Idle'
+  return persona.id === activeAgent().id ? 'Status: Active' : 'Status: Idle'
 }
 
 /** GH #921 — "Date" (Scope/Open ruling): created — stamped at mint/import/duplicate time
@@ -923,7 +1034,7 @@ function dateLabel(persona: Persona): string {
 /** Rebuild the whole list from the CURRENT roster — rows are stateless between rebuilds (the one exception
  *  is an in-flight rename field, which a rebuild drops; a short gesture re-typed, never state corrupted). */
 function renderRosterRows(): void {
-  const rows = roster.map((persona, index) => rosterRow(persona, index))
+  const rows = currentRoster().map((persona, index) => rosterRow(persona, index))
   rosterList.replaceChildren(...rows)
 }
 
@@ -946,7 +1057,7 @@ function rosterRow(persona: Persona, index: number): HTMLElement {
   const row = document.createElement('div')
   row.className = 'roster-row'
   row.dataset.agent = persona.id
-  if (persona.id === active.id) row.setAttribute('data-active', '')
+  if (persona.id === activeAgent().id) row.setAttribute('data-active', '')
 
   if (reorderMode) {
     const handle = document.createElement('div')
@@ -1033,7 +1144,7 @@ function rosterRow(persona: Persona, index: number): HTMLElement {
     reorderControls.className = 'roster-row-reorder-controls'
     reorderControls.append(
       rowIconButton('caret-up', `Move ${persona.label} up`, index === 0, () => moveAgent(persona.id, -1)),
-      rowIconButton('caret-down', `Move ${persona.label} down`, index === roster.length - 1, () => moveAgent(persona.id, 1)),
+      rowIconButton('caret-down', `Move ${persona.label} down`, index === currentRoster().length - 1, () => moveAgent(persona.id, 1)),
     )
     row.append(reorderControls)
   }
@@ -1045,50 +1156,57 @@ function rosterRow(persona: Persona, index: number): HTMLElement {
  *  entry from then on (both the drag commit above and the reorder-mode keyboard fallback below share this
  *  one function). */
 function moveAgent(id: string, delta: -1 | 1): void {
-  const ids = roster.map((p) => p.id)
+  const ids = currentRoster().map((p) => p.id)
   const from = ids.indexOf(id)
   const to = from + delta
   if (from < 0 || to < 0 || to >= ids.length) return
   const moved = ids[from]!
   ids[from] = ids[to]!
   ids[to] = moved
-  saveRosterOrder(ids)
-  refreshRoster() // the row visibly moves — no toast owed for a reorder
+  void reorderAgentsMutation.run(ids) // the row visibly moves (optimistic view + the derivation effect) — no toast owed
 }
 
 /** Duplicate ANY agent (a preset included) into a fresh editable copy of its CURRENT state — never the
  *  pristine seed, and never a mutation of the source (LLD §8d). Lands at the roster's end. */
 function duplicateAgent(persona: Persona): void {
-  const copy = duplicatePersonaFrom(persona, personaStore(persona), [...personaRoster(), ...roster])
-  saveImportedPersona(copy) // stamps imported:true ⇒ the copy is deletable/renamable by construction
-  refreshRoster()
+  const copy = duplicatePersonaFrom(persona, personaStore(persona), [...personaRoster(), ...currentRoster()])
+  void saveAgentMutation.run(copy) // stamps imported:true ⇒ the copy is deletable/renamable by construction
   announce(`Duplicated “${persona.label}” as “${copy.label}”.`)
 }
 
 /** The ONE deletion path all three affordances share (the drawer row calls it directly; the header's
  *  overflow item and the config surface's row reach it through `onDeleteAgentRequest`).
  *
- *  Order is load-bearing: sweep the records FIRST, then re-read the roster, and only then fall back — so
- *  `applyPersona`'s own `pushRoster` reads a roster the deleted agent has already left. The fallback is the
- *  fresh `personaRoster()[0]` (in the default order, the first shipped preset), which can never be the
- *  deleted agent because presets are undeletable. Deleting a NON-active agent leaves the active store and
- *  the conversation completely untouched. */
+ *  Order is load-bearing: the delete mutation FIRST (the source sweeps the records and its optimistic
+ *  commit drops the row from the view in this same tick), then the fallback read — so the fallback is
+ *  the fresh roster's first entry (in the default order, the first shipped preset), which can never be
+ *  the deleted agent because presets are undeletable. Deleting a NON-active agent leaves the active
+ *  store and the conversation completely untouched; the select/drawer re-render via the derivation
+ *  effect either way. */
 function deleteAgent(id: string): void {
-  const persona = roster.find((p) => p.id === id)
+  const persona = currentRoster().find((p) => p.id === id)
   if (persona === undefined) return
-  if (!deleteImportedPersona(persona)) {
+  if (persona.imported !== true) {
     // Defense in depth — no affordance for a preset is ever rendered, so this is a caller bug, not a path.
     announce(`“${persona.label}” is a shipped agent and can’t be deleted. Duplicate it instead.`, true)
     return
   }
   const label = persona.label
-  const wasActive = active.id === persona.id
-  roster.splice(0, roster.length, ...personaRoster())
-  const fallback = roster[0]
-  if (wasActive && fallback !== undefined) applyPersona(fallback) // rewrites ACTIVE_PRESET_KEY + re-pushes
-  else pushRoster(active.id)
-  if (drawer.open) renderRosterRows()
-  announce(`Deleted “${label}”.`)
+  const wasActive = activeAgent().id === persona.id
+  // The record + keys + order slot sweep lands in this tick (the source's remove is same-tick under its
+  // async facade), and the optimistic commit drops the row now — but the ANNOUNCEMENT waits for the
+  // settle (the beginRename shape, review finding on this wave): a raced remove (a second tab deleted
+  // the record first) throws, mutation() rolls the view back, and the status line must then report the
+  // failure — never a "Deleted" toast over a row the rollback just restored.
+  void deleteAgentMutation.run(persona).then(() => {
+    if (deleteAgentMutation.status.peek() === 'error') {
+      announce(`“${label}” could not be deleted — it changed in another tab, and the roster was restored.`, true)
+      return
+    }
+    announce(`Deleted “${label}”.`)
+  })
+  const fallback = currentRoster()[0]
+  if (wasActive && fallback !== undefined) applyPersona(fallback) // the setActive mutation rewrites the persisted active id
 }
 
 /** Inline rename (custom rows only) — the label swaps for a `ui-text-field` seeded with the current label.
@@ -1118,25 +1236,33 @@ function beginRename(row: HTMLElement, persona: Persona): void {
       announce('An agent needs a name.', true)
       return
     }
-    if (roster.some((p) => p.id !== persona.id && p.label === next)) {
+    if (currentRoster().some((p) => p.id !== persona.id && p.label === next)) {
       announce(`Another agent is already called “${next}”.`, true)
       return
     }
     settled = true
-    if (next !== persona.label && renameImportedPersona(persona, next)) {
-      refreshRoster()
-      // GH #1537 — the pencil rename round-trips into the persona's own store `'name'` key, so the
-      // Settings pane's Name field shows the new name too (generate.ts's subscribeExternalSync reflects
-      // an external write into the control). Value-equality guarded on both directions — here, and in
-      // syncRosterLabelFromName's own label check (refreshRoster above already updated the label, so the
-      // subscription this write fires sees `next === persona.label` and no-ops) — so the two writers can
-      // never chase each other.
-      const store = personaStore(persona)
-      if (store.get('name') !== next) store.set('name', next)
-      announce(`Renamed “${persona.label}” to “${next}”.`)
+    if (next !== persona.label) {
+      void (async () => {
+        // The rename rides the roster mutation (ADR-0227 cl.4): the optimistic commit renames the view's
+        // row in this tick (the derivation effect repaints select + drawer), the source rewrites the record.
+        const renamed = await renameAgentMutation.run({ id: persona.id, label: next })
+        if (renamed === undefined) {
+          renderRosterRows() // the record vanished under us — the rollback restored the view; put the row back
+          return
+        }
+        // GH #1537 — the pencil rename round-trips into the persona's own store `'name'` key, so the
+        // Settings pane's Name field shows the new name too (generate.ts's subscribeExternalSync reflects
+        // an external write into the control). Value-equality guarded on both directions — here, and in
+        // syncRosterLabelFromName's own label check (the optimistic commit already updated the label, so
+        // the subscription this write fires sees `next === persona.label` and no-ops) — so the two writers
+        // can never chase each other.
+        const store = personaStore(persona)
+        if (store.get('name') !== next) store.set('name', next)
+        announce(`Renamed “${persona.label}” to “${next}”.`)
+      })()
       return
     }
-    renderRosterRows() // unchanged (or a record that vanished under us) — just put the row back
+    renderRosterRows() // unchanged — just put the row back
   }
   const revert = (): void => {
     if (settled) return
@@ -1282,7 +1408,7 @@ function renderSkillPackRow(snapshot: SkillPackSnapshot): HTMLElement {
   remove.addEventListener('click', () => {
     void removeSkillPack(snapshot.pack.id).then(() => {
       importedSkillPacks = importedSkillPacks.filter((s) => s.pack.id !== snapshot.pack.id)
-      admin.libraries = librariesWithShelf(active.category)
+      admin.libraries = librariesWithShelf(activeAgent().category)
       renderSkillPackShelf()
       packsFeedback(`Removed “${snapshot.pack.label}” from the shelf — entries agents already added stay in place.`)
     })
@@ -1365,7 +1491,7 @@ async function importSkillPackText(text: string): Promise<void> {
   importedSkillPacks = [...importedSkillPacks.filter((s) => s.pack.id !== snapshot.pack.id), snapshot].sort((a, b) =>
     a.pack.id.localeCompare(b.pack.id),
   )
-  admin.libraries = librariesWithShelf(active.category)
+  admin.libraries = librariesWithShelf(activeAgent().category)
   renderSkillPackShelf()
   const flaggedCount = snapshot.provenance.scan.flagged.length
   packsFeedback(
@@ -1384,7 +1510,7 @@ admin.onSkillPacksRequest(() => {
   packsDrawer.open = true
 })
 
-applyPersona(active) // also stages the header's own roster row (pushRoster, inside applyPersona)
+applyPersona(activeAgent()) // also stages the header's own roster row (the derivation effect's push)
 // `fileInput` FIRST (GH #1233): since #1211 the Test-chat composer inside `admin` carries its own hidden
 // `<input type="file">` (`[data-part="attach-input"]`, the paperclip picker). The persona import's input
 // must stay the page's FIRST file input in document order so "the hidden file input" stays unambiguous —
@@ -1411,8 +1537,7 @@ listReorder(drawer, {
     const ids = [...rosterList.querySelectorAll('.roster-row')]
       .map((r) => (r as HTMLElement).dataset.agent)
       .filter((id): id is string => id !== undefined)
-    saveRosterOrder(ids)
-    refreshRoster()
+    void reorderAgentsMutation.run(ids)
   },
 })
 
@@ -1461,7 +1586,7 @@ void (async () => {
       const services = await overlay.fetchLiveServices()
       if (trios) setLiveIntegrations(trios)
       setLiveServices(services)
-      if (trios || services) admin.libraries = librariesWithShelf(active.category)
+      if (trios || services) admin.libraries = librariesWithShelf(activeAgent().category)
     }
   } catch {
     console.info('[agent-admin-app] stub preview — the live overlay is unavailable')
