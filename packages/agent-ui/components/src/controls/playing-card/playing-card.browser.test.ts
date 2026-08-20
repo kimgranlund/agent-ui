@@ -342,6 +342,7 @@ describe('ui-playing-card — forced-colors keeps both faces legible (WHCM)', ()
   it('face + back flatten to Canvas/CanvasText under forced-colors', async () => {
     const card = mount('<ui-playing-card rank="A" suit="spades"></ui-playing-card>')
     const face = card.querySelector("[data-part='face']") as HTMLElement
+    const back = card.querySelector("[data-part='back']") as HTMLElement
 
     if (server.browser !== 'chromium') {
       expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
@@ -352,8 +353,28 @@ describe('ui-playing-card — forced-colors keeps both faces legible (WHCM)', ()
     await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
     try {
       expect(window.matchMedia('(forced-colors: active)').matches).toBe(true)
-      const fcInk = getComputedStyle(face).color
-      expect(fcInk.length).toBeGreaterThan(0) // the ink resolves to a real (opaque system) color, never vanishing
+
+      // Independent reference: an element explicitly painted `color: CanvasText; background: Canvas`
+      // resolves the browser's own system-color mapping under this same emulation — comparing the
+      // component's computed colors against THIS reference (rather than a hardcoded rgb literal) is
+      // what actually proves the flatten, not merely that some color exists.
+      const ref = document.createElement('div')
+      ref.style.color = 'CanvasText'
+      ref.style.backgroundColor = 'Canvas'
+      document.body.append(ref)
+      const refInk = getComputedStyle(ref).color
+      const refPaper = getComputedStyle(ref).backgroundColor
+      ref.remove()
+
+      const faceStyle = getComputedStyle(face)
+      const backStyle = getComputedStyle(back)
+      expect(faceStyle.color).toBe(refInk)
+      expect(faceStyle.backgroundColor).toBe(refPaper)
+      expect(backStyle.color).toBe(refInk)
+      expect(backStyle.backgroundColor).toBe(refPaper)
+      // the back's lattice pattern itself flattens away under forced-colors (playing-card.css) —
+      // only the CanvasText border remains to mark it, per the component's own WHCM rule
+      expect(backStyle.backgroundImage).toBe('none')
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] })
     }

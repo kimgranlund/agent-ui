@@ -37,7 +37,7 @@ const L: PipCol = 0
 const C: PipCol = 1
 const R: PipCol = 2
 
-/** Numeric ranks the pip field renders — 'A' counts as one pip (the ace's single large center pip). */
+/** Numeric ranks the pip field renders — 'A' counts as one pip (the ace's single center pip, same size as every other pip). */
 export const PIP_RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10'] as const
 export type PipRank = (typeof PIP_RANKS)[number]
 
