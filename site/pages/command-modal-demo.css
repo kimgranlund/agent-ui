@@ -1,0 +1,66 @@
+/* command-modal-demo.css — PAGE-LOCAL chrome for the ui-command-modal demo page, exclusive to its "opened
+ * palette" STATIC illustration (GH #1555): page-authored divs that match ui-modal's/ui-command-modal's own
+ * look (modal.css / command-modal.css) via the same `--md-sys-color-*`/`--md-sys-space-*`/`--md-sys-font-*`
+ * tokens those controls consume, without reusing their `@scope`-scoped selectors (those only match real
+ * `ui-modal`/`ui-command-modal` descendants). Never a real `<dialog>` — this mock is inert on purpose, so it
+ * cannot block the rest of the page the way a genuinely live, always-open top-layer modal would. */
+
+.demo-modal-mock {
+  box-sizing: border-box;
+  inline-size: min(92vw, 36rem);
+  max-inline-size: 100%;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: var(--md-sys-shape-corner-base);
+  background: var(--md-sys-color-neutral-surface);
+  color: var(--md-sys-color-neutral-on-surface);
+  overflow: hidden;
+}
+
+.demo-modal-mock-search {
+  display: flex;
+  align-items: center;
+  min-block-size: var(--md-sys-height-md);
+  padding-inline: calc(var(--md-sys-height-md) / 2);
+  font-size: var(--md-sys-font-md);
+  background: var(--md-sys-color-neutral-container-low);
+  color: var(--md-sys-color-neutral-on-surface);
+}
+
+.demo-modal-mock-search::before {
+  content: attr(data-placeholder);
+  color: var(--md-sys-color-neutral-on-surface);
+}
+
+.demo-modal-mock-list {
+  padding: 0;
+}
+
+.demo-modal-mock-group {
+  margin-block-end: var(--md-sys-space-sm);
+}
+
+.demo-modal-mock-group:first-child {
+  margin-block-start: var(--md-sys-space-xs);
+}
+
+.demo-modal-mock-group-label {
+  padding-inline: var(--md-sys-space-sm);
+  padding-block: var(--md-sys-space-xs);
+  font-size: var(--md-sys-font-sm);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.demo-modal-mock-option {
+  display: flex;
+  align-items: center;
+  gap: var(--md-sys-space-xs);
+  padding-inline: var(--md-sys-space-sm);
+  padding-block: var(--md-sys-space-xs);
+  color: var(--md-sys-color-neutral-on-surface);
+}
+
+.demo-modal-mock-option [data-role='shortcut'] {
+  margin-inline-start: auto;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: var(--md-sys-font-sm);
+}
