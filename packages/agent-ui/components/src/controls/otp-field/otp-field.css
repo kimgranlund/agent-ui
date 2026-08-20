@@ -200,9 +200,21 @@
      ink, small type, subordinate to the cell readout, closing the bare-usage colour-only gap (WCAG 1.4.1).
      Gated by :state(user-invalid) to keep the ADR-0014 interaction-state timing (only after first blur/
      change). A `ui-field` association still yields (otp-field.ts keeps the node emptied + hidden while
-     fielded) — the field's own error part stays the ONE AT-announced error, this rule never fires there. */
+     fielded) — the field's own error part stays the ONE AT-announced error, this rule never fires there.
+
+     PLACEMENT (GH #1487, same defect class as #1474/PR #1476): the message is positioned ABSOLUTELY
+     below the host frame, never as a grid item. The host is a FIXED-block-size `inline-grid` whose cells
+     carry an explicit `grid-column-start` (otp-field.ts) but this node carries none — a visible in-flow
+     message auto-places into row 1, the ONLY row the fixed-height frame renders, displacing the cell row.
+     `position: absolute` removes it from grid placement entirely: the frame geometry (fixed block-size,
+     `:scope`'s own `position: relative` already the containing block for the editor overlay) is
+     untouched, and the message hangs below the frame's border box, start-aligned to the grid's own
+     inline-start edge (no leading affordance to offset around, unlike text-field's h/2 value edge). */
   :scope:state(user-invalid) > .ui-otp-field-message {
     display: block;
+    position: absolute;
+    inset-block-start: calc(100% + var(--ui-otp-field-gap) / 2); /* just below the frame, half-gap breathing room */
+    inset-inline-start: 0; /* the grid's own inline-start edge — no leading affordance to align under */
     font-size: var(--ui-otp-field-message-font);
     color: var(--ui-otp-field-message-ink);
   }

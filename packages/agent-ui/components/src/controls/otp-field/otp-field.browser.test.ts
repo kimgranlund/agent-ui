@@ -444,3 +444,52 @@ describe('ui-otp-field — geometry (GEO-LAW: cell inline = block = height off t
     expect(px(gap), `${server.browser}: the cell gap did not resolve to a real pixel value`).toBeGreaterThan(0)
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [8] GH #1487 regression probes — same defect class as #1474/PR #1476 (text-field): the visible
+//  validation message must never auto-place into the frame's ONE grid row and displace the cells.
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-otp-field — visible inline-validation message never displaces the cell row (GH #1487)', () => {
+  it('the visible message renders BELOW the field frame, never overlapping the cell row', async () => {
+    const { el } = mount('<ui-otp-field label="Code" required></ui-otp-field>')
+    const editor = editorOf(el)
+    const message = el.querySelector('.ui-otp-field-message') as HTMLElement
+    const heightBefore = el.getBoundingClientRect().height // baseline, message still hidden
+
+    await userEvent.click(editor)
+    await userEvent.click(document.body) // blur — arms :state(user-invalid), message becomes visible (empty + required → valueMissing)
+    await el.updateComplete
+    expect(message.hidden, 'message did not become visible').toBe(false)
+
+    const fieldRect = el.getBoundingClientRect()
+    const messageRect = message.getBoundingClientRect()
+
+    // the frame itself never grows to accommodate the message (geometry.md's Control-class block-size
+    // lever stays exactly the ramp height, whether or not a message is showing).
+    expect(fieldRect.height, 'the field frame grew to enclose the message — block-size is no longer the ramp height').toBe(heightBefore)
+    // the message sits AT OR BELOW the frame's bottom edge — never inside [0, fieldRect.bottom).
+    expect(messageRect.top, "the message renders above the field's bottom edge — it overlaps the frame").toBeGreaterThanOrEqual(fieldRect.bottom)
+    // every cell keeps the WHOLE frame row to itself — no vertical overlap with the message.
+    for (const cell of cellsOf(el)) {
+      const cellRect = cell.getBoundingClientRect()
+      expect(cellRect.bottom, 'a cell extends past the field frame (pushed into an implicit row)').toBeLessThanOrEqual(fieldRect.bottom + 0.5)
+      expect(messageRect.top, 'the message overlaps a cell vertically').toBeGreaterThanOrEqual(cellRect.bottom - 0.5)
+    }
+  })
+
+  it('the frame block-size stays pinned to the ramp height even while the message is visible', async () => {
+    const { el } = mount('<ui-otp-field label="Code" required></ui-otp-field>')
+    const editor = editorOf(el)
+    await el.updateComplete
+    const heightToken = px(getComputedStyle(el).getPropertyValue('--ui-otp-field-height'))
+
+    await userEvent.click(editor)
+    await userEvent.click(document.body) // blur — arms :state(user-invalid)
+    await el.updateComplete
+    expect(el.matches(':state(user-invalid)'), ':state(user-invalid) was not armed').toBe(true)
+
+    const fieldRect = el.getBoundingClientRect()
+    expect(fieldRect.height, 'the frame block-size is no longer the ramp height').toBeCloseTo(heightToken, 1)
+  })
+})
