@@ -299,7 +299,7 @@ browser shards green.
 - **`ui-pager` as the tag.** Rejected — less derivable than the ARIA/industry canon
   "pagination"; the swiper-dots homonym is family-scoped and non-colliding.
 
-## Amendment (2026-08-19, **proposed** — Kim ratifies) — cl.3's own two "no native form elements" exceptions RETIRE: `ui-table` dogfoods `ui-checkbox`/`ui-radio`/`ui-button` instead of stamping real `<input>`/`<button>` elements
+## Amendment (2026-08-19, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/1445#issuecomment-5349465659), verified 2026-08-20) — cl.3's own two "no native form elements" exceptions RETIRE: `ui-table` dogfoods `ui-checkbox`/`ui-radio`/`ui-button` instead of stamping real `<input>`/`<button>` elements
 
 > Append-only, and **proposed**: the Status cell above reads `accepted` for the record as a
 > whole and stays byte-untouched — agents never flip status
