@@ -508,6 +508,10 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     'commerce-product-card': { passed: false, qualityScore: 2 },
     'product-options-quantity': { passed: false, qualityScore: 2 },
     'listing-photo-grid': { passed: false, qualityScore: 2 },
+    // GH #1479 — the Amenities-style feature-list seed; refused here for the same zero-admission
+    // reason as the three GH #1377 rows above (its real disposition is DISPOSITION_ALLOWLIST's pending
+    // "NO VERDICT SOUGHT YET" entry).
+    'features-list-card': { passed: false, qualityScore: 2 },
     // GH #1480 — a sibling seed appended to the same module (commerce-hospitality.ts), NOT part of the
     // #1377 pack: the review-summary card. Refused here for the same zero-admission reason as every row
     // above; its real disposition is DISPOSITION_ALLOWLIST's pending "NO VERDICT SOUGHT YET" entry.

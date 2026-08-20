@@ -622,10 +622,14 @@ const GREET_ID = 'greet-1'
  *  `greet-1` id class (grammar.md's reserved-vocabulary sentence + the `greeting-card` mini-skill) —
  *  no commit button, no data model (`sendDataModel` omitted), no `ask-<n>` id consumed, and the
  *  answered-ask freeze never applies (a greet is never an answered ask; its buttons are retired per
- *  the stale-affordance rule when the first real task starts). */
+ *  the stale-affordance rule when the first real task starts). The 2-4 starter Buttons ride a Row
+ *  INSIDE CardFooter (GH #1475 repair, 2026-08-19): CardFooter's own side-by-side layout is
+ *  slot="trailing"-driven, so bare Button siblings stack full-width instead of sitting in a row —
+ *  the same defect class the fleet's game-card producer teaching missed until a live poker card's
+ *  Check/Bet/Fold set stacked. */
 export const greetCardSeed: ExampleSeed = {
   name: 'frontier-greet-card',
-  description: 'A persona\'s opening greet card — reserved greet-1 surface (not an ask: no commit button, no data model), an orientation Text and 2–4 starter-intent Buttons carrying concrete intents in action.context, retired when the first real task starts.',
+  description: 'A persona\'s opening greet card — reserved greet-1 surface (not an ask: no commit button, no data model), an orientation Text and a CardFooter Row of 2–4 starter-intent Buttons carrying concrete intents in action.context, retired when the first real task starts.',
   promptText: 'Hi — who are you and what can you do?',
   surfaceId: GREET_ID,
   protocolVersion: 'v1.0',
@@ -640,7 +644,8 @@ export const greetCardSeed: ExampleSeed = {
           { id: 'root', component: 'Card', children: ['ct', 'ft'] },
           { id: 'ct', component: 'CardContent', children: ['t'] },
           { id: 't', component: 'Text', variant: 'body', text: 'What would you like to do?' },
-          { id: 'ft', component: 'CardFooter', children: ['b1', 'b2', 'b3'] },
+          { id: 'ft', component: 'CardFooter', children: ['actions'] },
+          { id: 'actions', component: 'Row', gap: 'sm', wrap: true, children: ['b1', 'b2', 'b3'] },
           { id: 'b1', component: 'Button', variant: 'solid', label: 'Book a room', action: { action: 'start', context: { intent: 'room' } } },
           { id: 'b2', component: 'Button', label: 'Reserve a table', action: { action: 'start', context: { intent: 'table' } } },
           { id: 'b3', component: 'Button', variant: 'ghost', label: 'Just a question', action: { action: 'start', context: { intent: 'faq' } } },
