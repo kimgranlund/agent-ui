@@ -139,6 +139,7 @@ import {
   emptyErrorRetryCardSeed,
   notificationStatusStackSeed,
   mediaFileGridSeed,
+  walletSummaryCardSeed,
 } from '../../src/examples/high-frequency-patterns.ts'
 import {
   slideshowGallerySeed,
@@ -316,7 +317,7 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
   { module: 'structured-container.ts', seeds: [structuredContainerSeed] }, // GH #808 S5 — SPEC-R9's exemplar
   {
     module: 'high-frequency-patterns.ts', // GH #972 — the 2026-08-15 gap-map sweep; admission pending the judged wave
-    seeds: [comparisonPricingSeed, receiptOrderSummarySeed, emptyErrorRetryCardSeed, notificationStatusStackSeed, mediaFileGridSeed],
+    seeds: [comparisonPricingSeed, receiptOrderSummarySeed, emptyErrorRetryCardSeed, notificationStatusStackSeed, mediaFileGridSeed, walletSummaryCardSeed],
   },
   {
     module: 'composition-pack-a.ts', // GH #1205 — req-a2ui-library R4 pack A; admission pending the judged wave (disposition-allowlist.ts)

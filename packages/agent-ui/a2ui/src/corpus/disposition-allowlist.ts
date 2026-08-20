@@ -208,4 +208,12 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // own seed is the manufactured judgment ADR-0068's Alternatives ban. Run the judged pipeline
   // (import-seeds.ts with a real VerdictsFile) and DELETE this entry when that wave lands.
   ['customer-review-card', 'GH #1480 — pending judged import wave (NO VERDICT SOUGHT YET, not a refusal); delete this entry once import-seeds --verdicts admits it.'],
+  //
+  // GH #1489 (2026-08-19) — `wallet-summary-card`: the same pending-state shape (NO VERDICT SOUGHT YET,
+  // not a refusal). Added to `high-frequency-patterns.ts` as its own composed-pattern seed — a wallet/
+  // balance Summary Action Card (eyebrow + headline metric, CardFooter Row of four labeled icon actions)
+  // — the authoring session judging its own seed is the manufactured judgment ADR-0068's Alternatives
+  // ban. Run the judged pipeline (import-seeds.ts with a real VerdictsFile) and DELETE this entry when
+  // that wave lands.
+  ['wallet-summary-card', 'GH #1489 — pending judged import wave (NO VERDICT SOUGHT YET, not a refusal); delete this entry once import-seeds --verdicts admits it.'],
 ])
