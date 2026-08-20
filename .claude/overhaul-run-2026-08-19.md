@@ -38,14 +38,14 @@ One estate: `.claude/` (governed, naming.manifest.json; 29 skills + 3 stub dirs 
   - Tuning: (1) a2ui-catalog-rendering-review description — scope "add a prop or new type to the A2UI catalog" to the catalog PAGE cards and fence the package's catalog.json/factory code to a2ui-build (fixes t02, likely t13/t08 gravity too); (2) admin-library-kinds description — add row-toggle/selection-snap vocabulary (fixes t13/t08 from the owning side); (3) a2ui-review/evals — REWRITE or RETIRE post-demotion (owns t12's fence-target hole and all 5 structural fails); (4) integration-standards n06 — no edit, cross-estate menu artifact.
 
 ## Emergent queue (final additions)
-5. a2ui-review eval suite obsolete post-W2-2 (5 structural fails + t12 fence-target hole) — OPEN; proposed: rewrite the suite as no-trigger-only, or retire it; route: file-task
-6. Two description tunings from the routing matrix (catalog-rendering-review scope cut; admin-library-kinds vocabulary add) — OPEN; route: file-task
+5. a2ui-review eval suite obsolete post-W2-2 (5 structural fails + t12 fence-target hole) — MINTED → #1466 (bundled)
+6. Two description tunings from the routing matrix (catalog-rendering-review scope cut; admin-library-kinds vocabulary add) — MINTED → #1466 (bundled)
 
 ## Emergent queue
 1. make-doc bypass for plan doc — RESOLVED at Gate A (keep as-is)
 2. Builders #1450/#1451 edited the shared checkout, no worktree/commit — RESOLVED: host shipped via temp worktrees; #1452 mandated isolation (known class)
 3. Marshal-desk stash-drop of this WIP + recovery (c60501ec) — RESOLVED: 0-diff vs branches; ledger rebuilt; PR #1456 rev2/rev3 churn documented in its body
-4. 5 E6 coverage warns (project-facts, repo-hygiene, seat-map, site-authoring, ui-composition have no evals) — OPEN, proposed solution: seed eval suites for the routable ones (seat-map now wiring-only, needs none); route: file-task if Kim wants it
+4. 5 E6 coverage warns (project-facts, repo-hygiene, seat-map, site-authoring, ui-composition have no evals) — MINTED → #1466 (bundled)
 
 ## PRs (drafts, human merge)
 #1455 (W2-1) · #1456 (W2-2, rev 3) · #1457 (W1+records) · #1458 (W2-3, stacked on #1456)
