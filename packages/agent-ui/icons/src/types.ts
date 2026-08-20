@@ -44,6 +44,14 @@ export const ICON_NAMES = [
   // five-day-weather seed (composition-pack-b.ts) can swap its bound condition Text for an Icon —
   // an unknown name renders a blank `<svg data-icon-missing>` (resolve.ts), dead pixels, not a fallback.
   'sun', 'cloud', 'cloud-sun', 'cloud-rain', 'snowflake', 'lightning', 'wind', 'cloud-fog',
+  // GH #1485 — the amenity/hospitality glyph set, surfaced by #1479's build (mountain/tree/fire/
+  // bathtub/pool/wifi/paw grepped zero hits, forcing a nearest-available substitution for every one of
+  // its five real amenities). All seven are identity with Phosphor's own regular-weight names:
+  // `mountains`/`tree` (view amenities), `campfire` (nearest-available for "fireplace" — Phosphor has
+  // no dedicated fireplace glyph), `bathtub` (nearest-available for "hot tub" — no dedicated jacuzzi/
+  // hot-tub glyph either), `swimming-pool`, `wifi-high` (the full-signal variant chosen as the generic
+  // "has Wi-Fi" glyph, same reasoning as `dots-three` above), `paw-print` (direct fit for pet-friendly).
+  'mountains', 'tree', 'campfire', 'bathtub', 'swimming-pool', 'wifi-high', 'paw-print',
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 
