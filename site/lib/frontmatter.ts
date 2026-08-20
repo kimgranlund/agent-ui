@@ -46,6 +46,8 @@ import choiceGroupMd from '../../packages/agent-ui/components/src/controls/choic
 import choiceCardMd from '../../packages/agent-ui/components/src/controls/choice-card/choice-card.md?raw'
 // ADR-0224 (GH #1429) — ui-service-card, the availability-stated service/agent launch card (tier=pattern ⇒ {doc,demo}).
 import serviceCardMd from '../../packages/agent-ui/components/src/controls/service-card/service-card.md?raw'
+// ADR-0225 — ui-playing-card, the true card-face/back display leaf (GH #1478).
+import playingCardMd from '../../packages/agent-ui/components/src/controls/playing-card/playing-card.md?raw'
 // ADR-0095 (supersedes ADR-0086): the standalone segmented control + its child leaf.
 import segmentMd from '../../packages/agent-ui/components/src/controls/segment/segment.md?raw'
 import segmentedControlMd from '../../packages/agent-ui/components/src/controls/segmented-control/segmented-control.md?raw'
@@ -192,6 +194,8 @@ export const loadChoiceGroupDoc = (): ComponentDoc => parseDoc(choiceGroupMd)
 export const loadChoiceCardDoc = (): ComponentDoc => parseDoc(choiceCardMd)
 // ADR-0224 — ui-service-card, the availability-stated service/agent launch card.
 export const loadServiceCardDoc = (): ComponentDoc => parseDoc(serviceCardMd)
+// ADR-0225 — ui-playing-card, the true card-face/back display leaf (tier=display ⇒ {doc} only).
+export const loadPlayingCardDoc = (): ComponentDoc => parseDoc(playingCardMd)
 // ADR-0095 (supersedes ADR-0086): the standalone segmented control + its child leaf.
 export const loadSegmentDoc = (): ComponentDoc => parseDoc(segmentMd)
 export const loadSegmentedControlDoc = (): ComponentDoc => parseDoc(segmentedControlMd)

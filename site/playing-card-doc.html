@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · ui-playing-card API</title>
+  </head>
+  <body>
+    <!-- The ui-playing-card API doc page (ADR-0225): the Display-class true card-face/back leaf, its
+         API + parts tables + a live dealt-hand/rank-ladder/size-ramp specimen strip derived from
+         playing-card.md. An MPA entry auto-discovered by vite.config.ts's site/**/*.html glob — no
+         config edit needed. The page module imports pages/_page.ts FIRST for the foundation CSS
+         cascade + self-defining ui-* controls. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/playing-card-doc.ts"></script>
+  </body>
+</html>

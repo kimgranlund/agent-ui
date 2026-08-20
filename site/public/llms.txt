@@ -74,6 +74,7 @@
 - [ui-choice-group](./choice-group-doc.html): a rich-card selection container — roving focus + commit over ui-choice-card children, single or multi; [demo](./choice-group-demo.html).
 - [ui-choice-card](./choice-card-doc.html): the rich option unit — the whole card is the hit target; selection commit lives on the group; [demo](./choice-card-demo.html).
 - [ui-service-card](./service-card-doc.html): the availability-stated service/agent launch card — ONE bindable `available` boolean drives the accent edge, status dot, title mute, and the Open⟷Unavailable action swap together; [demo](./service-card-demo.html).
+- [ui-playing-card](./playing-card-doc.html): a real standard playing card — corner indices, a true suit-pip field or J/Q/K letter treatment, red/black pigment inks, a CSS-painted back, and a 3D flip on `faceDown`; [demo](./playing-card-demo.html).
 - [ui-segment](./segment-doc.html): one joined-button segment; selection lives on the control; [demo](./segment-demo.html).
 - [ui-segmented-control](./segmented-control-doc.html): joined-button single-select with one shared animated indicator; [demo](./segmented-control-demo.html).
 - [ui-slider](./slider-doc.html): the single-value range control on the compact-realm rail; [demo](./slider-demo.html).

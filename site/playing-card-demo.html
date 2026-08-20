@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · ui-playing-card demo</title>
+  </head>
+  <body>
+    <!-- The ui-playing-card demo (ADR-0225): a real dealt hand, the [size] em-box ramp, and a live
+         faceDown flip driven by a real ui-button. An MPA entry auto-discovered by vite.config.ts's
+         site/**/*.html glob — no config edit needed. The page module imports pages/_page.ts FIRST for
+         the foundation CSS cascade + self-defining ui-* controls. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/playing-card-demo.ts"></script>
+  </body>
+</html>

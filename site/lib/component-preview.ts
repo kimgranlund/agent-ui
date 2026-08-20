@@ -1291,6 +1291,12 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   // honest but uninstructive here). `available` already carries a non-empty descriptor default (`true`)
   // auto-seeded by #seedState()'s descriptor-default loop — no entry needed for it.
   'ui-service-card': { name: 'Claims Agent', path: '/claims-agent-service', description: 'Handles first-notice-of-loss intake and triage.' },
+  // ADR-0225 — ui-playing-card: `rank`/`suit` default to '' (playing-card.md, the blank-face graceful-
+  // empty state) — the same demonstrability gap as ui-badge's `label`/ui-stat's `label` above; an
+  // unseeded bare specimen still paints the card outline (a real background/border box), but with no
+  // rank/pip/index content at all — uninstructive. Seeded with the Ace of spades, the same "the simplest
+  // representative member" choice ui-icon's `glyph: 'check'` makes.
+  'ui-playing-card': { rank: 'A', suit: 'spades' },
 }
 
 // A per-tag static HOST ATTRIBUTE seed (batch C) — distinct from COMPONENT_INITIAL (which seeds a KNOB's
@@ -1483,6 +1489,10 @@ export const NO_SLOT_TEXT = new Set([
   // write would land nowhere useful (the card owns no default-slot content model to overwrite in the
   // first place, the ui-stat/ui-description-list "no light-DOM content model at all" precedent).
   'ui-service-card',
+  // ADR-0225 — ui-playing-card builds its ENTIRE visible content (flipper/face/back/index/pips) from
+  // rank/suit/faceDown PROPS alone, replaceChildren-driven — no light-DOM content model at all (slots:
+  // [] — playing-card.md), the ui-stat/ui-pie-chart "no light-DOM content model at all" precedent.
+  'ui-playing-card',
 ])
 
 // STRUCTURAL (batch B) — the default slot IS the real content model (children ARE the grid cells / flex items /
