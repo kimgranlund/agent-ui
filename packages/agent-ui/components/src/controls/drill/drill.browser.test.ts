@@ -347,6 +347,39 @@ describe('ui-drill — layout="columns" real painted visibility (ADR-0195 Amendm
     await userEvent.click(settingsTrigger)
     expect(getComputedStyle(host).overflowX).toBe('auto')
   })
+
+  it('component-checker MAJOR fix: the header SPANS every painted column, never truncates to the first track', async () => {
+    const { host, settingsTrigger } = mount({ layout: 'columns', width: '1000px' })
+    await userEvent.click(settingsTrigger)
+    const header = host.querySelector('[data-part="header"]') as HTMLElement
+    const root = host.querySelector('[key="root"]') as HTMLElement
+    // the CSS mechanism itself: header's inline grid-column must span every painted column's line range
+    // (1 to N+1), never the pre-fix hardcoded single line — verified directly on the property the fix
+    // actually sets, not via a pixel-rect comparison (real-engine horizontal-scroll/overflow rendering of
+    // implicit `1fr` tracks makes an absolute-edge comparison fragile across engines independent of whether
+    // the fix itself is correct).
+    expect(header.style.gridColumn).toBe('1 / span 2') // 2 painted columns: root + settings
+    // the rendered CONSEQUENCE: header's own box is measurably wider than a single column's worth — this
+    // part IS scroll-position-immune (a width, not an absolute edge).
+    const headerRect = header.getBoundingClientRect()
+    const rootRect = root.getBoundingClientRect()
+    expect(headerRect.width).toBeGreaterThan(rootRect.width * 1.5) // meaningfully more than one column
+  })
+
+  it('component-checker MAJOR fix: the narrow-degrade still fires with a RAISED column floor (the checker\'s repro — header box previously pinned below the host\'s true width)', async () => {
+    const { host, settingsTrigger } = mount({ layout: 'columns', width: '960px' })
+    // a raised --ui-drill-column-size reproduces the checker's non-firing window at shallow depth: with
+    // the pre-fix header pinned to ONE track's width, 2 columns × a large floor could stay below the host's
+    // real inline-size even as the host itself narrows past the compact-body line — the header's tracked
+    // box simply never reflected the change.
+    host.style.setProperty('--ui-drill-column-size', '28rem')
+    await userEvent.click(settingsTrigger)
+    await settle()
+    expect(host.getAttribute('data-drill-layout')).toBe('columns')
+    ;(host.parentElement as HTMLElement).style.inlineSize = '800px' // crosses ADR-0150's 52.5rem/840px line
+    await settle()
+    expect(host.getAttribute('data-drill-layout')).toBe('stack') // the degrade must still fire
+  })
 })
 
 describe('ui-drill — columns commit generalization: a real click on a non-rightmost column truncates+re-navigates (cl.A1)', () => {

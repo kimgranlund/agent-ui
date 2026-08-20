@@ -145,6 +145,19 @@ export class UIDrillElement extends UIContainerElement {
   #crumbsNav: HTMLElement | null = null
   #instanceToken = ''
   #direction: 'forward' | 'back' = 'forward'
+
+  /** component-checker MINOR fix: which `ui-drill` instance (nested drills are legal, cl.A8) owns `node` —
+   *  walks the ancestor chain by CLASS (`instanceof UIDrillElement`), never by literal tag name. A tag-name
+   *  `.closest('ui-drill')` breaks for any subclass registered under a different tag (the test file's own
+   *  `ProbeDrill`), and is fragile in principle even outside tests. */
+  #owningDrill(node: Element): UIDrillElement | null {
+    let el: Element | null = node
+    while (el) {
+      if (el instanceof UIDrillElement) return el
+      el = el.parentElement
+    }
+    return null
+  }
   // Set true after the FIRST render pass — gates the focus-move-to-heading behaviour so mounting a `ui-drill`
   // never steals focus on first paint (only a later, real ACTIVE-KEY change moves it — see #lastActiveKey).
   #primed = false
@@ -526,6 +539,18 @@ export class UIDrillElement extends UIContainerElement {
       // resolves to does): drill.css keys its columns-only grid tracks + the stack-only ancestor scrim off
       // THIS, never `[layout='columns']`.
       this.setAttribute('data-drill-layout', effectiveLayout)
+      // component-checker MAJOR fix (2 findings, one root cause): the header's base CSS rule pins it to
+      // `grid-column: 1`, which under 'columns' is only the FIRST of N auto-generated tracks — visually
+      // truncating the header to one column's width instead of spanning the row, AND (since #effectiveLayout
+      // reads the header's OWN box for the @container narrow-degrade) capping the box the ResizeObserver
+      // watches at that same one-column width, so the observed size can stop tracking the host's real
+      // inline-size once N × --ui-drill-column-size exceeds it — a reproducible window where cl.A8's
+      // unconditional degrade silently never fires. Span every currently-painted column inline (mirrors the
+      // panels' own inline grid-column assignment just below); reset to unset in 'stack' (one implicit
+      // column, spanning is a no-op there but stays explicit for clarity).
+      if (this.#header) {
+        this.#header.style.gridColumn = effectiveLayout === 'columns' ? `1 / span ${resolvedPath.length}` : ''
+      }
       for (const panel of panels) {
         const isPainted = paintedKeys.has(panel.key)
         const isActive = panel === activePanel
@@ -577,14 +602,24 @@ export class UIDrillElement extends UIContainerElement {
       // the ONE trigger, inside each painted ANCESTOR column, whose key names the NEXT path entry (the row
       // that was actually drilled into). Cleared first, unconditionally — an unrelated re-render, or a flip
       // back to 'stack', must never leave a stale marker behind.
-      for (const stale of this.querySelectorAll('[data-drill-active]')) stale.removeAttribute('data-drill-active')
+      //
+      // component-checker MINOR fix: both loops below are scoped to THIS drill only — a nested `ui-drill`
+      // (legal per cl.A8's own "a drill nested in a narrow pane") means a bare subtree query would let an
+      // OUTER render wipe an INNER drill's own marker, or stamp a foreign trigger on a coincidental key
+      // match. `#owningDrill(node) === this` fences every candidate to its true owner (class-based, never
+      // tag-name-based — see #owningDrill's own header comment).
+      for (const stale of this.querySelectorAll('[data-drill-active]')) {
+        if (this.#owningDrill(stale) === this) stale.removeAttribute('data-drill-active')
+      }
       if (effectiveLayout === 'columns') {
         for (const panel of panels) {
           if (panel === activePanel || !paintedKeys.has(panel.key)) continue
           const nextKey = resolvedPath[resolvedPath.indexOf(panel.key) + 1]
           if (!nextKey) continue
           for (const trigger of panel.querySelectorAll('[data-role="drill-trigger"][data-drill-key]')) {
-            if (trigger.getAttribute('data-drill-key') === nextKey) trigger.setAttribute('data-drill-active', '')
+            if (this.#owningDrill(trigger) === this && trigger.getAttribute('data-drill-key') === nextKey) {
+              trigger.setAttribute('data-drill-active', '')
+            }
           }
         }
       }
