@@ -6,8 +6,10 @@ description: >-
   multi-enable vs single-select vs pattern-source semantics for a new kind — agent-admin's
   entry-kind / library-pack architecture (ADR-0132→0164→0170→0178): how a kind joins the
   roster with zero bespoke code, the frozen mountEntryList interface + options bag,
-  SINGLE-select kinds, the id/label trio law, and built-in protection + the persona-patch
-  verbs. NOT for A2UI catalogs on the renderer
+  SINGLE-select kinds, the id/label trio law, built-in protection + the persona-patch verbs, and
+  the SINGLE-select catalog kind's own row-toggle/selection-snap semantics — "toggling the Default
+  catalog row off doesn't re-render", "toggling the active catalog row off snaps selection to
+  Default". NOT for A2UI catalogs on the renderer
   (a2ui-multi-catalog); NOT for integrations — tool registry, manifests, server keys
   (integration-standards).
 disable-model-invocation: false
