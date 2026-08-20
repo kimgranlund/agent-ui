@@ -5,7 +5,8 @@
 // A `pattern`-tier `UIContainerElement` (control-height header row atop a space-scale content viewport — the
 // `ui-tabs`/toolbar class, geometry.md's existing Pattern row, NOT a new one). Author `ui-drill-panel` children
 // stay SIBLINGS of the host-owned header part (the tabs precedent — NOT moved, unlike ui-modal's child-move).
-// Exactly one panel is visible at a time (`hidden` on the rest, the ui-tab-panel precedent).
+// Every panel whose key ∈ the resolved path paints (stack default, ADR-0195 Amendment cl.A1 below); every
+// off-path panel carries `hidden` (the pre-amendment `ui-tab-panel` precedent, now scoped to off-path only).
 //
 // Path resolution (drill.intake.md §4 / ADR-0195 cl.2): `path` is the FULL chain from the root panel's `key`
 // through the current leaf, INCLUSIVE of the root — NEVER empty. `#drillTo` APPENDS; it never recomputes a
@@ -23,8 +24,22 @@
 // never on the raw opt-in attribute alone (an opted-in instance on an unsupported/reduced-motion engine still
 // gets the CSS base). `data-vt-active` marks a swap the VT layer will run; `drill.css` excludes its CSS
 // transition rules on that marker. `data-direction` carries the swap's forward/back sign for the CSS base's
-// translateX. Every panel shares ONE `view-transition-name` per instance (the GH#958 pairing law's own worked
-// example: only one panel is ever painted) when `viewTransitions` is opted in.
+// translateX.
+//
+// ADR-0195 AMENDMENT (2026-08-19, GH #1510) — S1 slice: contained + stack becomes the DEFAULT presentation.
+// One resolved `path` (cl.2, unchanged), a new render mapping (cl.A1): panels whose key ∈ path all PAINT
+// (z-ordered active-over-ancestors), ancestors dimmed + `inert` (visible pixels, no interaction surface —
+// the swiper clone shape, ADR-0124 F2), off-path panels `hidden`. `#drillTo`/`#back`/`#commit`/`#resolve` stay
+// BYTE-UNCHANGED (S1's load-bearing invariant) — inert ancestors can never host a live drill-trigger, so the
+// plain append-only path stays correct without the intake's `#drillTo(key, fromPanel)` truncate generalization
+// (that generalization is S2/S3's job, once a non-leaf panel can host a trigger — crumbs/columns).
+// `layout`/`chrome` (cl.A2) are two new reflected closed-enum props shipped NOW (so a later slice never
+// reshapes them) — this slice implements ONLY their defaults (`layout: 'stack'`, `chrome: 'backbar'`); a
+// non-default value is accepted (no throw) but renders identically to the default until S2 (`chrome=crumbs`)
+// / S3 (`layout=columns`) land.
+// VT pairing-law correction (cl.A7): with ancestors now painted alongside the active panel, sharing ONE
+// `view-transition-name` across every panel (the pre-amendment scheme) would put more than one named element
+// in a single snapshot — illegal. The name now sits on the RESOLVED-ACTIVE panel ONLY, cleared elsewhere.
 //
 // `controls → dom + ./drill-panel.ts` — the allowed import direction (a sanctioned sibling-control import, the
 // `avatar → icon` / `command-modal → combo-box` precedent — same layer, controls → controls).
@@ -53,6 +68,12 @@ const drillProps = {
   // 'view-transitions'`). Byte-identical to the CSS-transform base when absent (progressive enhancement, never
   // a default any control applies on its own).
   viewTransitions: { ...prop.boolean(false), reflect: true, attribute: 'view-transitions' as const },
+  // ADR-0195 Amendment cl.A2 — two new reflected closed enums, orthogonal axes (a crumbs trail is legal in
+  // both layouts). Shipped now so a later slice never reshapes the prop; S1 implements ONLY the defaults
+  // ('stack'/'backbar') — a non-default value is accepted but renders identically to the default until
+  // S2 ('crumbs') / S3 ('columns') land.
+  layout: { ...prop.enum(['stack', 'columns'] as const, 'stack'), reflect: true },
+  chrome: { ...prop.enum(['backbar', 'crumbs'] as const, 'backbar'), reflect: true },
 } satisfies PropsSchema
 
 export interface UIDrillElement extends ReactiveProps<typeof drillProps> {}
@@ -205,7 +226,10 @@ export class UIDrillElement extends UIContainerElement {
     const trigger = target.closest('[data-role="drill-trigger"]')
     if (!trigger || !this.contains(trigger)) return
     const panel = trigger.closest('ui-drill-panel')
-    if (!(panel instanceof UIDrillPanelElement) || panel.hidden) return
+    // ADR-0195 Amendment cl.A1/A6: a painted ANCESTOR is `inert` (real browsers already block the pointer
+    // event from ever reaching here) — the explicit `panel.inert` check is the same guarantee honored inside
+    // jsdom's synthetic dispatch too, so only the resolved-ACTIVE panel's own triggers ever fire.
+    if (!(panel instanceof UIDrillPanelElement) || panel.hidden || panel.inert) return
     const key = trigger.getAttribute('data-drill-key')
     if (key) this.#drillTo(key)
   }
@@ -233,7 +257,7 @@ export class UIDrillElement extends UIContainerElement {
     const trigger = target.closest('[data-role="drill-trigger"]')
     if (!trigger || !this.contains(trigger)) return
     const panel = trigger.closest('ui-drill-panel')
-    if (!(panel instanceof UIDrillPanelElement) || panel.hidden) return
+    if (!(panel instanceof UIDrillPanelElement) || panel.hidden || panel.inert) return
     const key = trigger.getAttribute('data-drill-key')
     if (!key) return
     event.preventDefault()
@@ -261,16 +285,38 @@ export class UIDrillElement extends UIContainerElement {
     const keyChanged = this.#primed && activeKey !== this.#lastActiveKey
     const willUseVT = keyChanged && this.viewTransitions && viewTransitionAvailable()
 
+    // ADR-0195 Amendment cl.A1 — the stack (default) painted set is every panel whose key ∈ resolvedPath, not
+    // just the active leaf (ancestors paint too, dimmed + inert, behind the active panel — drill.css's
+    // `data-drill-pane` z-order). `layout`/`chrome` non-default values (S2/S3) are accepted but not yet
+    // implemented — this pass always renders the stack/backbar mapping.
+    const paintedKeys = new Set(resolvedPath)
+
+    // cl.A7 — the shared `view-transition-name` moves to the RESOLVED-ACTIVE panel ONLY (set per render,
+    // cleared elsewhere): with ancestors now painted too, naming every panel (the pre-amendment scheme) would
+    // put more than one named element in a single snapshot, which the pairing law forbids.
     for (const panel of panels) {
-      setViewTransitionName(panel, viewTransitionName('drill', this.#instanceToken), this.viewTransitions)
+      if (panel === activePanel) {
+        setViewTransitionName(panel, viewTransitionName('drill', this.#instanceToken), this.viewTransitions)
+      } else if (this.viewTransitions) {
+        panel.style.viewTransitionName = ''
+      }
     }
 
     const mutate = (): void => {
       this.toggleAttribute('data-vt-active', willUseVT)
       this.setAttribute('data-direction', this.#direction)
       for (const panel of panels) {
-        panel.hidden = panel !== activePanel
-        panel.linkHeading(panel === activePanel ? this.#heading : null)
+        const isPainted = paintedKeys.has(panel.key)
+        const isActive = panel === activePanel
+        panel.hidden = !isPainted
+        // ADR-0124 F2 clone shape — visible pixels, no interaction surface: a painted ancestor is dimmed
+        // (drill.css's scrim wash on `[data-drill-pane='ancestor']`) and `inert` (no focus, no clicks — the
+        // one property that also keeps an inert ancestor's own drill-triggers from ever firing, which is
+        // exactly what lets `#drillTo`/`#back` stay byte-unchanged, see file header).
+        panel.inert = isPainted && !isActive
+        if (isPainted) panel.setAttribute('data-drill-pane', isActive ? 'active' : 'ancestor')
+        else panel.removeAttribute('data-drill-pane')
+        panel.linkHeading(isActive ? this.#heading : null)
       }
       if (this.#heading) this.#heading.textContent = activePanel?.heading ?? ''
       if (this.#backButton) {

@@ -11,7 +11,19 @@
  * swap, keyed on the host's own `[data-vt-active]` marker (set by drill.ts's #render, present only for a swap
  * the VT seam will actually run) — never on the raw `[view-transitions]` opt-in attribute alone, so an
  * opted-in instance on an unsupported/reduced-motion engine still gets the CSS base. `[data-direction]` carries
- * the swap's forward/back sign for the translateX. */
+ * the swap's forward/back sign for the translateX.
+ *
+ * ADR-0195 AMENDMENT (2026-08-19, GH #1510) — S1 slice: CONTAINED + STACK becomes the default presentation.
+ * The host is a 2-row grid (header auto row; every `ui-drill-panel` — active AND painted ancestors — placed in
+ * the SAME second-row grid cell, `overflow: clip` on the host) — same-cell stacking gives free positioning +
+ * intrinsic block-size (the tallest PAINTED pane) with zero DOM move (panels stay siblings, ADR-0195 cl.1).
+ * Card chrome = a 1px `--ui-drill-outline` border + the new `--ui-drill-radius`; `isolation: isolate` scopes the
+ * host's own z-depth (ADR-0052). `[data-drill-pane]` (set by drill.ts's #render) reads 'active' | 'ancestor':
+ * an ancestor gets a `--ui-drill-scrim` dim wash (a non-blocking overlay — NOT `dialog-backdrop`, the modal's
+ * BLOCKING wash) and sits BELOW the active pane in z-order; drill.ts also sets the platform `inert` attribute on
+ * every ancestor (no CSS hook needed for that half — inert is purely behavioural). `--ui-drill-slide-distance`
+ * DEFAULT flips `12px → 100%` (cl.A5 — a full-pane sideways travel, the transform percentage resolving against
+ * the pane itself). */
 
 /* ════════════════════════ [1] TOKEN BLOCK — :where() declarations ════════════════════════ */
 
@@ -35,18 +47,40 @@
   --ui-drill-back-font-size: var(--md-sys-font-sm);
   --ui-drill-heading-font-size: var(--md-sys-font-md);
 
+  /* ADR-0195 Amendment cl.A5 — the contained card's own corner radius (consumes the SAME base role the Back
+     button's own corner already uses; a distinct token because the two surfaces — the whole card vs. the
+     square icon affordance — are independent geometry, not aliases of one another). */
+  --ui-drill-radius: var(--md-sys-shape-corner-base);
+  /* cl.A5 — the non-blocking dim wash on a painted ANCESTOR pane (`[data-drill-pane='ancestor']` below); the
+     neutral-scrim role is exactly the "page dims but stays visible" case (the ui-modal `::backdrop`'s OWN
+     starting point before its opaque `dialog-backdrop` role took over for that BLOCKING use — modal.css:37 —
+     drill's ancestor dim is the non-blocking case that role was never repointed away from). */
+  --ui-drill-scrim: var(--md-sys-color-neutral-scrim);
+
   /* Motion — the EXISTING fleet constants (zero new motion tokens, the ui-drawer precedent). */
   --ui-drill-motion-duration: var(--md-sys-motion-duration-fast);
   --ui-drill-motion-easing: var(--md-sys-motion-easing-standard);
-  --ui-drill-slide-distance: 12px;
+  /* ADR-0195 Amendment cl.A5 — DEFAULT FLIPS 12px → 100% (Kim-ruled): a full-pane sideways slide, not the
+     pre-amendment subtle nudge. A transform percentage resolves against the PANE itself, so 100% always
+     travels exactly one pane-width regardless of the host's own rendered size — still overridable. */
+  --ui-drill-slide-distance: 100%;
 }
 
 /* ════════════════════════ [2] STYLES BLOCK — @scope, consumes ONLY --ui-drill-* + fleet constants ═══════════ */
 
 @scope (ui-drill) {
+  /* ADR-0195 Amendment cl.A4 — contained geometry: a 2-row grid (header auto; every panel — active AND
+     painted ancestors — sharing the SAME second row/column, the classic same-cell overlap technique, zero
+     DOM move). `overflow: clip` bounds the 100%-travel slide to the card's own edge; `isolation: isolate`
+     scopes the internal z-order (ADR-0052) so it can never leak past the host. Card chrome = the outline
+     border + the new radius token; tier stays `pattern`, ADR-0223 posture unchanged (inline-axis fill). */
   :scope {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    border: 1px solid var(--ui-drill-outline);
+    border-radius: var(--ui-drill-radius);
+    overflow: clip;
+    isolation: isolate;
     min-inline-size: 0;
   }
 
@@ -55,10 +89,11 @@
     display: flex;
     align-items: center;
     gap: var(--ui-drill-header-gap);
+    grid-row: 1;
+    grid-column: 1;
     block-size: var(--ui-drill-header-height);
     padding-inline: var(--ui-drill-header-pad-inline);
     border-block-end: 1px solid var(--ui-drill-outline);
-    flex: none;
   }
 
   [data-part='back'] {
@@ -120,17 +155,45 @@
     }
   }
 
-  /* The panel viewport — author ui-drill-panel children, shown one at a time. Explicit `:scope >`, not the
-     bare `> ui-drill-panel` shorthand — lightningcss's minifier rejects an implicit-parent combinator as
-     a top-level @scope rule (measured: `build-dogfood-assets.mjs`'s real production minify pass). */
+  /* The panel viewport — author ui-drill-panel children. ADR-0195 Amendment cl.A1/A4: every PAINTED panel
+     (active + ancestors) shares this SAME grid cell (row 2, column 1) — the same-cell overlap technique, no
+     positioning math, no DOM move. Explicit `:scope >`, not the bare `> ui-drill-panel` shorthand —
+     lightningcss's minifier rejects an implicit-parent combinator as a top-level @scope rule (measured:
+     `build-dogfood-assets.mjs`'s real production minify pass). */
   :scope > ui-drill-panel {
     display: block;
+    position: relative; /* anchors the ancestor scrim ::after below */
+    grid-row: 2;
+    grid-column: 1;
     padding: var(--ui-drill-padding);
     min-inline-size: 0;
+    z-index: 0;
 
     &[hidden] {
       display: none;
     }
+  }
+
+  /* z-order: the resolved-ACTIVE pane always paints ABOVE any painted ancestor (cl.A1's "z-ordered by path
+     order" — since every ancestor carries the identical dim wash below, their own relative order is
+     invisible; only "active on top" is ever visually load-bearing). */
+  :scope > ui-drill-panel[data-drill-pane='ancestor'] {
+    z-index: 1;
+  }
+
+  :scope > ui-drill-panel[data-drill-pane='active'] {
+    z-index: 2;
+  }
+
+  /* cl.A6 — a painted ancestor is dimmed (a non-blocking scrim wash, drill.ts also sets the real `inert`
+     attribute so it carries no interaction surface) — visible pixels, nothing an author's own background can
+     paint over since the overlay is the LAST-painted layer within the ancestor's own stacking context. */
+  :scope > ui-drill-panel[data-drill-pane='ancestor']::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--ui-drill-scrim);
+    pointer-events: none;
   }
 
   /* ── CSS-transform BASE motion — excluded for a swap the View Transitions layer will run ─────────────── */
@@ -167,8 +230,13 @@
   }
 
   /* component-checker A5 fix: the header hairline + Back button stay visible as system colours under forced
-     colors — the tabs/modal/drawer precedent, closing the peer-parity gap a first pass omitted. */
+     colors — the tabs/modal/drawer precedent, closing the peer-parity gap a first pass omitted. The host's
+     OWN card border joins the same precedent (cl.A4's new outline, the ui-card forced-colors shape). */
   @media (forced-colors: active) {
+    :scope {
+      border-color: CanvasText;
+    }
+
     [data-part='header'] {
       border-block-end-color: CanvasText;
     }
