@@ -311,9 +311,20 @@ const WALLET_ID = 'wallet-summary-card'
  *  failing `validate-payload` — but that is undocumented validator leniency, not a sanctioned composition;
  *  exploiting it here would be exactly the "invent a capability the catalog doesn't declare" move this
  *  skill rules out.) Composed instead as the closest catalog-real equivalent: `Column(Icon, Button)` — a
- *  decorative `Icon` (the visual glyph + its own accessible `label`) sits above a `ghost`-variant `Button`
- *  whose OWN `label` carries the visible action word, serving as both the tap target and the "label
- *  beneath" the record asks for (never a third, duplicate Text node repeating the same word).
+ *  purely decorative `Icon` (glyph only, no `label` prop — an empty label IS the decorative contract,
+ *  `icon.ts:29`; a non-empty label would double-announce the action to assistive tech alongside the
+ *  Button's own name, the GH #1489 judge PASS-4/5 finding this rider repairs) sits above a `ghost`-variant
+ *  `Button` whose OWN `label` carries the visible action word AND the sole accessible name, serving as
+ *  both the tap target and the "label beneath" the record asks for (never a third, duplicate Text node
+ *  repeating the same word).
+ *
+ *  GH #1483's second rider — `align:'center'` on the four quad Columns — is NOT applied: `ui-column`'s
+ *  `align` prop is deliberately narrowed to `[stretch, start, end, baseline]` (`column.ts:34`, "narrowed:
+ *  center removed (Kim); stretch-first = default + snap target"), and the catalog's own `Column.align`
+ *  enum mirrors that narrowing — `align:'center'` fails `validate-payload` (`CATALOG` verdict, unknown
+ *  enum member) exactly as a real producer's malformed output would. Left at the catalog default
+ *  (`stretch`), which the fill-by-default sizing law (ADR-0223) already makes read as centered for these
+ *  single-child-per-row Icon/Button pairs.
  *
  *  Icon coverage (verified against `packages/agent-ui/icons/src/types.ts`'s `ICON_NAMES` — REAL,
  *  already-registered glyphs only, never an invented name that would silently resolve to a blank
@@ -360,25 +371,25 @@ export const walletSummaryCardSeed: ExampleSeed = {
             children: ['action_add', 'action_send', 'action_cards', 'action_txns'],
           },
           { id: 'action_add', component: 'Column', gap: 'xs', children: ['icon_add', 'btn_add'] },
-          { id: 'icon_add', component: 'Icon', name: 'plus', label: 'Add Money' },
+          { id: 'icon_add', component: 'Icon', name: 'plus' },
           {
             id: 'btn_add', component: 'Button', variant: 'ghost', label: 'Add Money',
             action: { action: 'wallet_action', context: { action: 'add_money' } },
           },
           { id: 'action_send', component: 'Column', gap: 'xs', children: ['icon_send', 'btn_send'] },
-          { id: 'icon_send', component: 'Icon', name: 'paper-plane-right', label: 'Send' },
+          { id: 'icon_send', component: 'Icon', name: 'paper-plane-right' },
           {
             id: 'btn_send', component: 'Button', variant: 'ghost', label: 'Send',
             action: { action: 'wallet_action', context: { action: 'send_money' } },
           },
           { id: 'action_cards', component: 'Column', gap: 'xs', children: ['icon_cards', 'btn_cards'] },
-          { id: 'icon_cards', component: 'Icon', name: 'credit-card', label: 'Cards' },
+          { id: 'icon_cards', component: 'Icon', name: 'credit-card' },
           {
             id: 'btn_cards', component: 'Button', variant: 'ghost', label: 'Cards',
             action: { action: 'wallet_action', context: { action: 'view_cards' } },
           },
           { id: 'action_txns', component: 'Column', gap: 'xs', children: ['icon_txns', 'btn_txns'] },
-          { id: 'icon_txns', component: 'Icon', name: 'arrow-clockwise', label: 'Transactions' },
+          { id: 'icon_txns', component: 'Icon', name: 'arrow-clockwise' },
           {
             id: 'btn_txns', component: 'Button', variant: 'ghost', label: 'Transactions',
             action: { action: 'wallet_action', context: { action: 'view_transactions' } },
