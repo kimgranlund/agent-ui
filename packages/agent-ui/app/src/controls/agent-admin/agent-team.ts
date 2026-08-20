@@ -15,6 +15,7 @@
 // this module only guarantees the record it returns is STRUCTURALLY well-formed.
 
 import { createLocalStorageAdapter, type StorageAdapter } from '@agent-ui/shared'
+import type { DataSource, SourceContext } from '@agent-ui/data'
 
 /** One roster member — a short job title (CrewAI grammar) plus the when-to-use sentence (Anthropic
  *  subagents grammar). Declared prose only; see this module's own header for the IDR-0001 fence. */
@@ -195,4 +196,72 @@ export async function saveAgentTeam(team: AgentTeam, knownAgentIds: readonly str
  *  `StorageAdapter.delete`'s own contract. */
 export async function deleteAgentTeam(id: string): Promise<void> {
   await getAdapter().delete(id)
+}
+
+// ── the DataSource face (ADR-0227 wave 2, GH #1545 — the persona-roster-source pattern applied) ────────
+// The team records' CRUD verbs as a `DataSource<AgentTeam>` over the SAME adapter + keys the module
+// functions above use (`agent-ui-agent-teams.<teamId>`, localStorage tier — persisted data survives
+// byte-for-byte), so a page's team read collapses to ONE `resource()` and `handleTeamDeclared`'s write
+// rides a `mutation()`. The Team pane's own read-after-write calls on the module functions are the SAME
+// one owner — the source and the functions share every byte of persistence logic.
+
+/** `create`'s input — validation is CLOSED (clause 1's law), so the write verb must carry the live
+ *  agent-id roster the record must resolve against, not just the record. */
+export interface AgentTeamWriteInput {
+  team: AgentTeam
+  knownAgentIds: readonly string[]
+}
+
+/** The typed refusal `create` throws when validation fails — carries `validateAgentTeam`'s full issue
+ *  set, so a `mutation()` consumer reads the SAME issues `saveAgentTeam`'s result shape reports
+ *  (`DataError.cause` preserves the thrown error verbatim, error.ts's normalize law). */
+export class AgentTeamValidationError extends Error {
+  readonly issues: readonly AgentTeamValidationIssue[]
+  constructor(issues: readonly AgentTeamValidationIssue[]) {
+    super(`agent-team-source: the team failed validation — ${issues.map((i) => `${i.path}: ${i.message}`).join(' ')}`)
+    this.name = 'AgentTeamValidationError'
+    this.issues = issues
+  }
+}
+
+/** The whole-list view a page's ONE teams `resource()` reads — `read` present by contract (the
+ *  persona source's `view` sub-source shape, list-as-one-value). */
+export interface AgentTeamListSource extends DataSource<readonly AgentTeam[]> {
+  read(key: string, ctx: SourceContext): Promise<readonly AgentTeam[]>
+}
+
+/** The team records as a `DataSource<AgentTeam>` (ADR-0227's verb set; no `subscribe` — no consumer
+ *  needs the cross-tab leg yet, and a non-live `resource()` never asks for it) plus the `view`
+ *  sub-source. `create` is the validation-closed upsert (same-id last-write-wins, `saveAgentTeam`'s
+ *  own law) and THROWS `AgentTeamValidationError` on an invalid record — nothing lands. */
+export interface AgentTeamSource extends DataSource<AgentTeam, undefined, AgentTeamWriteInput> {
+  read(key: string, ctx: SourceContext): Promise<AgentTeam>
+  list(query: undefined, ctx: SourceContext): Promise<readonly AgentTeam[]>
+  create(input: AgentTeamWriteInput, ctx: SourceContext): Promise<AgentTeam>
+  remove(key: string, ctx: SourceContext): Promise<void>
+  readonly view: AgentTeamListSource
+}
+
+export function createAgentTeamSource(): AgentTeamSource {
+  return {
+    async read(key) {
+      const team = await loadAgentTeam(key)
+      if (team === undefined) throw new Error(`agent-team-source: no persisted team with id "${key}"`)
+      return team
+    },
+    async list() {
+      return loadAgentTeams()
+    },
+    async create(input) {
+      const result = await saveAgentTeam(input.team, input.knownAgentIds)
+      if (!result.valid) throw new AgentTeamValidationError(result.issues)
+      return input.team
+    },
+    async remove(key) {
+      await deleteAgentTeam(key)
+    },
+    view: {
+      read: async () => loadAgentTeams(),
+    },
+  }
 }

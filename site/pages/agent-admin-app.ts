@@ -54,9 +54,10 @@ import type { AgentRosterEntry, GenerateSeed, UIAgentAdminElement } from '@agent
 // ADR-0198 (GH #1101) — the shared end-of-flow page-chrome affordance (the #1065 shared-seam lift).
 import { createFlowChrome } from '../lib/flow-chrome.ts'
 import type { AdminAgentSurfaceTurn, TeamDeclaration } from '@agent-ui/app/agent-admin-schema'
-// GH #1196 (ADR-0203 clause 4) — the team record this page's team-shaped mint path persists;
-// PR #1231's already-shipped validation-closed record + StorageAdapter persistence, reused verbatim.
-import { loadAgentTeams, saveAgentTeam, type AgentTeam } from '@agent-ui/app/agent-admin-team'
+// GH #1196 (ADR-0203 clause 4) — the team record this page's team-shaped mint path persists; ADR-0227
+// wave 2 (GH #1545): the records now reach this page as a DataSource — the read is ONE `resource()`
+// and `handleTeamDeclared` writes through a `mutation()` (same keys, same validation-closed law).
+import { AgentTeamValidationError, createAgentTeamSource, type AgentTeam } from '@agent-ui/app/agent-admin-team'
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
 // GH #845 (LLD-C15/§7) — the Edit Agents drawer's vehicle: `ui-drawer` (ADR-0188), COMPOSED byte-unmodified.
 // Its content (the roster rows and every management verb on them) is page-owned by that control's own fence.
@@ -317,6 +318,28 @@ effect(() => {
   lastLibrariesInputs = { category, shelf, revision }
   admin.libraries = librariesWithShelf(category, shelf)
 })
+
+// ── ADR-0227 wave 2 (GH #1545): the AgentTeam records read through ONE resource ────────────────────────
+// `createAgentTeamSource` wraps the SAME `agent-ui-agent-teams` localStorage records (keys unchanged);
+// `handleTeamDeclared` writes through the mutation below. No `live` leg — the one page-side consumer is
+// the mint path's collision scan, which refetches explicitly for cross-tab freshness at the moment it
+// actually mints (the old fresh `loadAgentTeams()` read, now riding the resource's own read path).
+const teamSource = createAgentTeamSource()
+const TEAMS_KEY = 'agent-admin/teams'
+const teamsStore = createStore()
+const teamsResource = resource<readonly AgentTeam[]>(TEAMS_KEY, teamSource.view, { store: teamsStore })
+
+// The team write: validation-closed create (the source THROWS AgentTeamValidationError — nothing lands
+// on an invalid record) settling with the same atomic read-back mirror commit the roster and shelf
+// mutations document (resource.ts's mirror doctrine, the wave-1 deviation precedent).
+const saveTeamMutation = mutation(
+  async (input: { team: AgentTeam; knownAgentIds: readonly string[] }, ctx) => {
+    const created = await teamSource.create(input, ctx)
+    teamsStore.commit(TEAMS_KEY, await teamSource.view.read(TEAMS_KEY, ctx))
+    return created
+  },
+  { store: teamsStore },
+)
 
 // Armed by the DEV overlay below once a live key probes available; re-invoked per persona switch so each
 // persona's SURFACE session (TKT-0076 — the runner closure owns the a2ui transcript) starts clean.
@@ -758,7 +781,10 @@ export async function handleTeamDeclared(team: TeamDeclaration): Promise<void> {
 
   const gm = activeAgent()
   const knownAgentIds = currentRoster().map((p) => p.id)
-  const existingTeams = await loadAgentTeams()
+  // The collision scan reads the one teams resource — refetched HERE (not trusted from boot) so a team
+  // another tab minted since is seen, the exact freshness the retired direct `loadAgentTeams()` bought.
+  await teamsResource.refetch()
+  const existingTeams = teamsResource.data.peek() ?? []
   const agentTeam: AgentTeam = {
     id: mintTeamId(label, new Set(existingTeams.map((t) => t.id))),
     label,
@@ -767,9 +793,14 @@ export async function handleTeamDeclared(team: TeamDeclaration): Promise<void> {
     members: minted.map(({ persona, member }) => ({ agentId: persona.id, role: member.role, routingDescription: member.routingDescription })),
   }
 
-  const result = await saveAgentTeam(agentTeam, knownAgentIds)
-  if (!result.valid) {
-    notify(`Team “${label}” could not be saved — ${result.issues.map((i) => i.message).join(' ')}`, true)
+  // ADR-0227 wave 2: the write rides the mutation; a validation refusal surfaces as the mutation's
+  // error whose CAUSE is the source's typed AgentTeamValidationError — the same issue set
+  // `saveAgentTeam`'s result shape used to hand back directly.
+  const saved = await saveTeamMutation.run({ team: agentTeam, knownAgentIds })
+  if (saved === undefined) {
+    const cause = saveTeamMutation.error.peek()?.cause
+    const detail = cause instanceof AgentTeamValidationError ? cause.issues.map((i) => i.message).join(' ') : 'something went wrong saving it.'
+    notify(`Team “${label}” could not be saved — ${detail}`, true)
     return
   }
   notify(`Created team “${label}” — ${minted.length} member${minted.length === 1 ? '' : 's'} + “${gm.label}” as GM.`)
