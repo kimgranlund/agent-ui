@@ -226,6 +226,35 @@ describe('UIBreadcrumbElement — current-page auto-stamping (defer-if-already-m
     expect(first.hasAttribute('aria-current')).toBe(false)
     expect(newLast.getAttribute('aria-current')).toBe('page')
   })
+
+  it('component-checker fix: an UNCHANGED-last rebuild followed by a LAST-CHANGING rebuild never double-marks', async () => {
+    const el = mount(new UIBreadcrumbElement()) as UIBreadcrumbElement
+    el.innerHTML = '<a href="/">A</a><span>B</span>'
+    await settle()
+    const b = el.querySelector('span:not([data-part])') as HTMLElement
+    expect(b.getAttribute('aria-current')).toBe('page')
+
+    // UNCHANGED-last rebuild (prepend an ancestor before B) — B stays last; the control's OWN prior stamp
+    // must not be misread as "already marked by the author, defer" (which would abandon #autoStamped
+    // tracking and leave nothing to un-stamp on the NEXT rebuild below).
+    const root = document.createElement('a')
+    root.href = '/root'
+    root.textContent = 'root'
+    el.prepend(root)
+    await settle()
+    expect(b.getAttribute('aria-current')).toBe('page') // still correctly marked, tracking intact
+
+    // LAST-CHANGING rebuild (append C) — if tracking was abandoned above, B's mark would survive
+    // un-removed while C also gets marked: two crumbs current at once.
+    const c = document.createElement('span')
+    c.textContent = 'C'
+    el.appendChild(c)
+    await settle()
+    const marked = el.querySelectorAll('[aria-current]')
+    expect(marked).toHaveLength(1)
+    expect(marked[0]).toBe(c)
+    expect(b.hasAttribute('aria-current')).toBe(false)
+  })
 })
 
 describe('UIBreadcrumbElement — zero residue across connect/disconnect', () => {

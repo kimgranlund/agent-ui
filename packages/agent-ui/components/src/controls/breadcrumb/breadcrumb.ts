@@ -163,10 +163,16 @@ export class UIBreadcrumbElement extends UIElement {
       this.#autoStamped = null
     }
     if (!last) return
-    if (last.hasAttribute('aria-current') || last.querySelector('[aria-current]')) {
+    // component-checker fix: `last` already carrying `aria-current` is ONLY an author mark when it isn't
+    // the control's OWN prior stamp — an unchanged-last rebuild sees its own mark here and must not read
+    // that as "already marked, defer" (which abandoned #autoStamped tracking and could double-mark on a
+    // LATER rebuild that changes which crumb is last, since nothing was left to un-stamp).
+    const isOwnStamp = last === this.#autoStamped && last.getAttribute('aria-current') === 'page'
+    if (!isOwnStamp && (last.hasAttribute('aria-current') || last.querySelector('[aria-current]'))) {
       this.#autoStamped = null
       return
     }
+    if (isOwnStamp) return // already correctly stamped, nothing to do
     last.setAttribute('aria-current', 'page')
     this.#autoStamped = last
   }
