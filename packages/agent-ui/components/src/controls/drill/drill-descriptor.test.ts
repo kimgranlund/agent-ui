@@ -21,7 +21,7 @@ const md = readFileSync(`${DRILL}/drill.md`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-const ATTR_NAMES = ['elevation', 'brightness', 'path', 'viewTransitions']
+const ATTR_NAMES = ['elevation', 'brightness', 'path', 'viewTransitions', 'layout', 'chrome']
 
 describe('drill.md descriptor — frontmatter parses + schema-valid', () => {
   it('has a leading frontmatter fence and a prose body', () => {
@@ -75,6 +75,24 @@ describe('drill.md descriptor — the bindable path (controlled/uncontrolled) + 
     expect(vt?.type).toBe('boolean')
     expect(vt?.default).toBe('false')
     expect(vt?.reflect).toBe(true)
+  })
+})
+
+describe('drill.md descriptor — ADR-0195 Amendment (GH #1510): layout/chrome, reflected closed enums', () => {
+  it('declares `layout` — reflected enum [stack, columns], default stack', () => {
+    const layout = parsed.attributes.find((a) => a.name === 'layout')
+    expect(layout?.type).toBe('enum')
+    expect(layout?.values).toEqual(['stack', 'columns'])
+    expect(layout?.default).toBe('stack')
+    expect(layout?.reflect).toBe(true)
+  })
+
+  it('declares `chrome` — reflected enum [backbar, crumbs], default backbar', () => {
+    const chrome = parsed.attributes.find((a) => a.name === 'chrome')
+    expect(chrome?.type).toBe('enum')
+    expect(chrome?.values).toEqual(['backbar', 'crumbs'])
+    expect(chrome?.default).toBe('backbar')
+    expect(chrome?.reflect).toBe(true)
   })
 })
 

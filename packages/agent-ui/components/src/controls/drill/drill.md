@@ -4,12 +4,13 @@
 # the /site doc and documents BOTH elements (ui-drill · ui-drill-panel — one folder, one writer, the ui-tabs/
 # ui-tab-panel compound precedent — ui-drill-panel ships no descriptor of its own). The `attributes[]` block
 # MUST mirror drill.ts `static props` (the ...UIContainerElement.surfaceProps spread — elevation/brightness —
-# plus the bindable `path`, plus `view-transitions`) — the contract↔props trip-wire (drill-descriptor.test.ts)
-# targets this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; the surface axes per ADR-0015; the
-# controlled/uncontrolled `path` duality per ADR-0102 (the ui-split.sizes precedent); the ADR-0183/GH#958
-# view-transition opt-in.
+# plus the bindable `path`, plus `view-transitions`, plus the ADR-0195 Amendment's `layout`/`chrome`) — the
+# contract↔props trip-wire (drill-descriptor.test.ts) targets this fence. Field set per .claude/docs/plan.md
+# §10 / ADR-0004; the surface axes per ADR-0015; the controlled/uncontrolled `path` duality per ADR-0102 (the
+# ui-split.sizes precedent); the ADR-0183/GH#958 view-transition opt-in; `layout`/`chrome` per the ADR-0195
+# Amendment (GH #1510) — S1 (this build) implements only their defaults ('stack'/'backbar').
 tag: ui-drill
-description: A one-panel container that drills down an N-level selection tree, showing exactly one level at a time with a Back affordance and a bindable path.
+description: A contained, card-like container that drills down an N-level selection tree — the active level slides in over its dimmed, inert ancestor by default (stack presentation), with a Back affordance and a bindable path.
 tier: pattern          # geometry size-class — geometry.md "Pattern" (container + control-height rows): the header row (Back + heading) takes the CONTROL height, the panel viewport uses the --md-sys-space ladder
 extends: UIContainerElement  # the FIRST non-form family — surface axes + reused internals (ARIA); NOT form-associated (face below)
 # marginal: measured by `npm run size`'s components-barrel LEAVE-ONE-OUT delta (manual by Kim's ruling) — within the per-control ≤ ~2 kB tier budget (plan §10)
@@ -32,6 +33,16 @@ attributes:               # attributes-as-API — mirrors drill.ts `static props
   - name: viewTransitions
     type: boolean
     default: false        # ADR-0183 opt-in — the ui-super-shell naming precedent. HTML attribute is `view-transitions` (an explicit `attribute:` override in drill.ts — the nav-rail `collapse-container`/`collapseContainer` precedent). Off ⇒ byte-identical CSS-transform-only motion (progressive enhancement)
+    reflect: true
+  - name: layout
+    type: enum
+    values: [stack, columns]
+    default: stack        # ADR-0195 Amendment cl.A2. S1 (this build) implements ONLY the 'stack' render mapping; 'columns' (Miller columns, S3) is accepted but renders identically to 'stack' until that slice lands
+    reflect: true
+  - name: chrome
+    type: enum
+    values: [backbar, crumbs]
+    default: backbar       # ADR-0195 Amendment cl.A2. S1 (this build) implements ONLY the 'backbar' header anatomy; 'crumbs' (breadcrumb trail, S2) is accepted but renders identically to 'backbar' until that slice lands
     reflect: true
 
 properties:               # IDL beyond attributes-as-API
@@ -75,18 +86,21 @@ geometry:
   sizeClass: pattern       # container + control-height header row (geometry.md Pattern class, the ui-tabs/ui-toolbar example); the panel viewport uses the space-scale ladder, no control height
   headerHeight: var(--ui-drill-header-height)   # = var(--md-sys-height-md) — the interactive back+heading row
   padding: var(--ui-drill-padding)              # panel viewport padding, space-scale
-  outline: var(--ui-drill-outline)              # the header's bottom hairline
+  outline: var(--ui-drill-outline)              # the card border + the header's bottom hairline
+  radius: var(--ui-drill-radius)                # ADR-0195 Amendment cl.A5 — the contained card's own corner radius
+  scrim: var(--ui-drill-scrim)                  # ADR-0195 Amendment cl.A5 — the non-blocking dim wash on a painted ancestor pane
 
-forcedColors: A `@media (forced-colors: active)` block keeps the header hairline and the Back button's ink visible as system colours (CanvasText) — the tabs/modal/drawer precedent (component-checker peer-parity fix); no scrim/backdrop exists on this control (it is not an overlay).
+forcedColors: A `@media (forced-colors: active)` block keeps the card border, the header hairline, and the Back button's ink visible as system colours (CanvasText) — the tabs/modal/drawer precedent (component-checker peer-parity fix); the ancestor scrim is not a blocking backdrop (no `::backdrop`/top-layer involved — a plain in-flow overlay), so it carries no forced-colors override of its own.
 ---
 
 # ui-drill
 
-`ui-drill` is a **one-panel container that drills down an N-level selection tree** — exactly one level's
-content is visible at a time, sliding the next level in on a forward selection and the previous level back on
-Back (ADR-0195, GH #954). It extends `UIContainerElement` and is **not** form-associated. The fleet's only
-prior drill-down shape, `ui-nav-rail collapse="drill-in"` (SPEC-R7), is a 2-pane master↔detail flip with no
-path-array state — `ui-drill` is the generic N-level primitive that shape lacked.
+`ui-drill` is a **contained, card-like container that drills down an N-level selection tree** — by default
+(the `stack` presentation) the active level slides in over its dimmed, inert ancestor inside a single clipped
+card surface, with a Back affordance and a bindable path (ADR-0195, GH #954; contained/stack default per the
+ADR-0195 Amendment, GH #1510). It extends `UIContainerElement` and is **not** form-associated. The fleet's
+only prior drill-down shape, `ui-nav-rail collapse="drill-in"` (SPEC-R7), is a 2-pane master↔detail flip with
+no path-array state — `ui-drill` is the generic N-level primitive that shape lacked.
 
 ```html
 <ui-drill aria-label="Settings">
@@ -109,8 +123,21 @@ path-array state — `ui-drill` is the generic N-level primitive that shape lack
 
 The control creates ONE header part at connect (`[data-part="header"]`, holding `[data-part="back"]` +
 `[data-part="heading"]`) and prepends it to the host. Author `ui-drill-panel` children stay SIBLINGS of that
-header — they are never moved (the `ui-tabs` precedent, not the `ui-modal` child-move precedent). Exactly one
-panel is visible at a time (`hidden` on the rest, staying in the DOM).
+header — they are never moved (the `ui-tabs` precedent, not the `ui-modal` child-move precedent). The host is
+a 2-row grid: the header takes the auto first row; every panel whose key is in the resolved path — the active
+panel AND its painted ancestors — shares the SAME second-row grid cell (same-cell stacking, no DOM move),
+clipped to the card's own rounded, bordered edge (`overflow: clip`). Every off-path panel carries `hidden`
+(staying in the DOM).
+
+## Presentation: stack (default) — painted ancestors, dimmed + inert
+
+`layout="stack"` (the default) paints every panel in the resolved path, z-ordered so the active panel — always
+`path.at(-1)` — sits on top. Painted ancestors are visible but dimmed under a non-blocking `--ui-drill-scrim`
+wash and carry the real `inert` attribute (visible pixels, no interaction surface — the swiper clone shape):
+no focus, no clicks, and no drill-trigger inside an ancestor panel can ever fire. Two more presentations —
+`chrome="crumbs"` (a clickable breadcrumb trail) and `layout="columns"` (Miller columns) — are reflected,
+closed-enum host props already, but their render mappings are NOT yet implemented; setting either renders
+identically to the `stack`/`backbar` default until those slices ship (ADR-0195 Amendment, GH #1510).
 
 ## Panels — the flat parent-chain
 
@@ -147,11 +174,14 @@ AFTER the initial mount — a primed guard prevents focus theft on first paint.
 
 ## Motion
 
-The CSS-transform base (`@starting-style` + `allow-discrete`) and the ADR-0183 View Transitions layer are
+The CSS-transform base (`@starting-style` + `allow-discrete`, sliding a FULL pane-width — `--ui-drill-
+slide-distance` defaults to `100%`, ADR-0195 Amendment cl.A5) and the ADR-0183 View Transitions layer are
 mutually exclusive per swap: `viewTransitions` (opt-in, default off) enables the VT layer for a swap only when
-the platform actually supports it (`viewTransitionAvailable()`); every panel shares one `view-transition-name`
-per instance (the GH#958 named-morph pairing law — only one panel is ever painted). `prefers-reduced-motion`
-suppresses both layers.
+the platform actually supports it (`viewTransitionAvailable()`). The shared `view-transition-name` sits on the
+RESOLVED-ACTIVE panel only, cleared elsewhere (the GH#958 named-morph pairing law corrected for the contained
+presentation, cl.A7 — with ancestors now painted alongside the active panel, naming every panel would put more
+than one named element in a single snapshot). `prefers-reduced-motion` suppresses the sliding transition; the
+ancestor dim wash is static state, never motion, and is unaffected either way.
 
 ## Catalog posture
 
