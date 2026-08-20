@@ -218,5 +218,8 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // — the authoring session judging its own seed is the manufactured judgment ADR-0068's Alternatives
   // ban. Run the judged pipeline (import-seeds.ts with a real VerdictsFile) and DELETE this entry when
   // that wave lands.
-  ['wallet-summary-card', 'GH #1489 — pending judged import wave (NO VERDICT SOUGHT YET, not a refusal); delete this entry once import-seeds --verdicts admits it.'],
+  // 2026-08-20 — GH #1489 (`wallet-summary-card`) judged PASS 4/5 (archived 2026-08-20t05-30-00z)
+  // and admitted — entry DRAINED. Judge's hand-back findings (folded into the #1483 seed lane): the four
+  // Icon labels duplicate the Button labels (double-announce to AT — drop them so the icons are truly
+  // decorative per icon.ts's empty-label contract), and the quad Columns should state align:'center'.
 ])
