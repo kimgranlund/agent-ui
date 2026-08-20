@@ -212,6 +212,13 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'is host-page-only (security inversion, PRD-D2); the ADR-0112 cl.6 Toast/ToastRegion reasoning applied ' +
     'verbatim — a one-time-code entry is the credential-bearing element of the identity family\'s Codes ' +
     'mode (code-entry-control.lld.md §9, GH #490 S2-a).'],
+  ['PlayingCard',
+    'ADR-0225 cl.2 — PERMANENT exclusion from the DEFAULT catalog, the persona-scoped content-type ' +
+    'category (a NEW exclusion reason beside ADR-0112 cl.6\'s chrome family): the type IS agent-' +
+    'emittable, but only through the croupier persona catalog (personas/croupier/catalog.json), whose ' +
+    'fragment + mini-skills teach it; a default-catalog row would hand every generic agent a casino-' +
+    'domain object with no teaching context. Widening to the default catalog is a separate, later ' +
+    'intake (the mint-vs-compose TYPE arm), never a drive-by row.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

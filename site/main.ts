@@ -590,6 +590,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // ADR-0225 (GH #1478) — the true card-face/back display leaf.
+    label: 'ui-playing-card',
+    cards: [
+      {
+        href: './playing-card-demo.html',
+        title: 'Demo',
+        blurb: 'A real dealt hand across every suit, the `size` em-box ramp holding the bridge aspect, and a live `faceDown` flip driven by a real button — watch the flipper rotor transition under `:state(ready)`.',
+      },
+      {
+        href: './playing-card-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class true card-face/back leaf — real corner indices, a true suit-pip field or J/Q/K letter treatment, red/black pigment inks, and a CSS-painted back. From playing-card.md.',
+      },
+    ],
+  },
+  {
     // ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover): the child leaf.
     label: 'ui-segment',
     cards: [

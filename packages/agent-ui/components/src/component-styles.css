@@ -204,3 +204,8 @@
  * container) + ui-choice-card (the rich option unit — frame + non-color check-badge selected paint). */
 @import './controls/choice-group/choice-group.css';
 @import './controls/choice-card/choice-card.css';
+
+/* ADR-0225 (GH #1478) — ui-playing-card, the true card-face/back display leaf: em-keyed [size] box,
+ * the depicted-object pinned-light face + pigment suit inks, the CSS-painted back lattice, the fleet's
+ * first 3D-transform flip (rotateY, :state(ready)-gated) + the @starting-style deal entrance. */
+@import './controls/playing-card/playing-card.css';

@@ -305,6 +305,14 @@
       "section": "Components"
     },
     {
+      "name": "Playing Card",
+      "tag": "ui-playing-card",
+      "url": "./playing-card-doc.html",
+      "description": "A true standard playing card — corner indices + a real suit-pip field or letter treatment, red/black inks, a CSS-painted back — as a fixed-bridge-aspect display leaf that flips on faceDown and deals in on insertion.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Popover",
       "tag": "ui-popover",
       "url": "./popover-doc.html",

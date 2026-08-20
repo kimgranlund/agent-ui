@@ -142,7 +142,10 @@ export function readAttributes(fence: string): LocalAttribute[] {
 // ui-service-card control mint (measured 18296 pre-slice-2) both ride the inventory; budget 18_600
 // (combined measured + headroom, GH #1209 format; evidence per SPEC §8 — genui-surface.spec.md v0.8
 // amendment, same change — never silent drift).
-export const DOGFOOD_INVENTORY_CHAR_BUDGET = 18_600
+// 2026-08-19 (ADR-0225/GH #1478, ui-playing-card mint): the new descriptor (rank/suit/faceDown/size,
+// four attributes) rides the inventory; measured 18706, budget 19_000 (measured + headroom; evidence
+// per SPEC §8 — genui-surface.spec.md v0.9 amendment, same change — never silent drift).
+export const DOGFOOD_INVENTORY_CHAR_BUDGET = 19_000
 
 /** One discovered control: its tag, a one-line role summary (the descriptor's own prose body, first
  *  sentence — never hand-written, so it can never drift from what the component's own docs say), the

@@ -276,6 +276,14 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // ADR-0225 (GH #1478) — the true card-face/back display leaf (tier=display).
+    label: 'ui-playing-card',
+    links: [
+      { href: './playing-card-demo.html', label: 'Demo' },
+      { href: './playing-card-doc.html', label: 'API' },
+    ],
+  },
+  {
     // ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover): the standalone
     // segmented control + its child leaf — tag-labelled, same as every other per-component group.
     label: 'ui-segment',
