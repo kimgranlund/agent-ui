@@ -9,6 +9,7 @@ import {
   SKILL_PACK_FORMAT,
   SKILL_PACK_KEY_PREFIX,
   __testSetAdapter,
+  createSkillPackSource,
   importedSkillPackLibrary,
   loadSkillPacks,
   parseSkillPackSnapshot,
@@ -225,5 +226,37 @@ describe('skillPackAttribution — D7 displayed, not just stored', () => {
 
   it('states "no license file found" for license: null — never a guessed license', () => {
     expect(skillPackAttribution(fixture({ license: null }))).toContain('no license file found')
+  })
+})
+
+describe('createSkillPackSource — the DataSource face over the SAME store (ADR-0227 wave 2, GH #1545)', () => {
+  const ctx = { signal: new AbortController().signal }
+
+  it('create persists under the UNCHANGED skill-packs:<id> key — the module functions and the source are one owner', async () => {
+    const source = createSkillPackSource()
+    const snapshot = fixture()
+    await source.create(snapshot, ctx)
+    expect(adapter.values.has(`${SKILL_PACK_KEY_PREFIX}${snapshot.pack.id}`), 'the pre-wave raw key survives byte-for-byte').toBe(true)
+    expect(await loadSkillPacks(), 'the module read path sees the source write').toHaveLength(1)
+  })
+
+  it('list/shelf.read return the sorted shelf; read resolves one pack by id and throws a NAMED not-found', async () => {
+    const source = createSkillPackSource()
+    const snapshot = fixture()
+    await saveSkillPack(snapshot) // seeded through the MODULE function — the source reads the same records
+    expect((await source.list(undefined, ctx)).map((s) => s.pack.id)).toEqual([snapshot.pack.id])
+    expect((await source.shelf.read('any-key', ctx)).map((s) => s.pack.id)).toEqual([snapshot.pack.id])
+    expect((await source.read(snapshot.pack.id, ctx)).pack.label).toBe(snapshot.pack.label)
+    await expect(source.read('never-imported', ctx)).rejects.toThrow('no imported pack with id "never-imported"')
+  })
+
+  it('remove deletes the shelf record ONLY — the D3 law rides through the source verb unchanged', async () => {
+    const source = createSkillPackSource()
+    const snapshot = fixture()
+    await source.create(snapshot, ctx)
+    adapter.values.set('unrelated-record', { keep: true })
+    await source.remove(snapshot.pack.id, ctx)
+    expect(await source.list(undefined, ctx)).toEqual([])
+    expect(adapter.values.get('unrelated-record'), 'nothing beyond the pack record is touched').toEqual({ keep: true })
   })
 })
