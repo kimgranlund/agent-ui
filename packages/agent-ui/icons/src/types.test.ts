@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest'
 import { ICON_NAMES, type IconName, type IconPack } from './types.ts'
 
 describe('ICON_NAMES', () => {
-  it('has exactly ninety-seven names (32 pre-ADR-0169 + 44 ADR-0169 cl.9b Icon-table members + 3 ADR-0179 GH #686 Amendment S7-a members + 2 GH #868 composer-trigger glyphs + 8 GH #1258 weather glyphs + 1 GH #1406 minus stepper glyph + 7 GH #1485 amenity/hospitality glyphs)', () => {
-    expect(ICON_NAMES.length).toBe(97)
+  it('has exactly ninety-nine names (32 pre-ADR-0169 + 44 ADR-0169 cl.9b Icon-table members + 3 ADR-0179 GH #686 Amendment S7-a members + 2 GH #868 composer-trigger glyphs + 8 GH #1258 weather glyphs + 1 GH #1406 minus stepper glyph + 7 GH #1485 amenity/hospitality glyphs + 2 GH #1508 command-modal Actions glyphs)', () => {
+    expect(ICON_NAMES.length).toBe(99)
   })
 
   it('is all distinct strings', () => {
@@ -14,7 +14,7 @@ describe('ICON_NAMES', () => {
     for (const name of ICON_NAMES) expect(typeof name).toBe('string')
   })
 
-  it('contains the curated audit set (ADR-0066 clause 2 + the feed-family LLD-C9 addition + the TKT-0048 plus glyph + the Figma chat-input refactor\'s arrow-up/microphone + the TKT-0083/ADR-0146 F7 warning glyph + the Claude Code Gateway reasoning-chain card\'s circle-notch/check-circle/x-circle group markers + ui-super-shell\'s list/hamburger glyph, M5 GH #83/#90 + the GH #147/ADR-0153 clock "Planned"/all-pending group marker + the GH #168 dots-three overflow/more-actions glyph + the GH #170/ADR-0155 narrow-header rework\'s circle-half/palette glyphs + ADR-0169 cl.9b\'s a2ui-basic Icon-table regeneration, 44 new glyphs + ADR-0179 GH #686 Amendment S7-a\'s chats-circle/gear-six/robot + GH #868\'s sparkle/brain composer-trigger glyphs + GH #1258\'s eight weather glyphs + GH #1406\'s minus stepper glyph + GH #1485\'s seven amenity/hospitality glyphs)', () => {
+  it('contains the curated audit set (ADR-0066 clause 2 + the feed-family LLD-C9 addition + the TKT-0048 plus glyph + the Figma chat-input refactor\'s arrow-up/microphone + the TKT-0083/ADR-0146 F7 warning glyph + the Claude Code Gateway reasoning-chain card\'s circle-notch/check-circle/x-circle group markers + ui-super-shell\'s list/hamburger glyph, M5 GH #83/#90 + the GH #147/ADR-0153 clock "Planned"/all-pending group marker + the GH #168 dots-three overflow/more-actions glyph + the GH #170/ADR-0155 narrow-header rework\'s circle-half/palette glyphs + ADR-0169 cl.9b\'s a2ui-basic Icon-table regeneration, 44 new glyphs + ADR-0179 GH #686 Amendment S7-a\'s chats-circle/gear-six/robot + GH #868\'s sparkle/brain composer-trigger glyphs + GH #1258\'s eight weather glyphs + GH #1406\'s minus stepper glyph + GH #1485\'s seven amenity/hospitality glyphs + GH #1508\'s sign-out/share command-modal glyphs)', () => {
     expect([...ICON_NAMES].sort()).toEqual(
       [
         'caret-down', 'caret-up', 'caret-left', 'caret-right',
@@ -43,6 +43,8 @@ describe('ICON_NAMES', () => {
         'minus',
         // GH #1485 — the amenity/hospitality glyph set (identity with Phosphor's own names).
         'mountains', 'tree', 'campfire', 'bathtub', 'swimming-pool', 'wifi-high', 'paw-print',
+        // GH #1508 — /command-modal-demo's Actions group (identity with Phosphor's own names).
+        'sign-out', 'share',
       ].sort(),
     )
   })

@@ -117,6 +117,13 @@ const NAME_MAP = {
   'swimming-pool': 'swimming-pool',
   'wifi-high': 'wifi-high',
   'paw-print': 'paw-print',
+  // GH #1508 — /command-modal-demo's Actions group (Log out / Share file); identity with Phosphor's
+  // own regular-weight names (both verified present against @phosphor-icons/core 2.1.1's regular
+  // assets). `share` is the plain arrow-out-of-box glyph, distinct from the already-vendored
+  // `share-network` (a2ui's node-graph share glyph, ADR-0169 cl.9b) — kept as two separate names since
+  // consumers reach for them by different intent (a single recipient action vs. a network/broadcast one).
+  'sign-out': 'sign-out',
+  share: 'share',
 }
 
 const EXPECTED_VIEW_BOX = '0 0 256 256'

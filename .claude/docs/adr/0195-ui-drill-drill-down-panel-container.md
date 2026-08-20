@@ -175,3 +175,107 @@ this exact ticket as the natural next proof for (`interaction-enhancements.brief
   DOM child)** instead of the flat parent-chain — rejected for recursive custom-element depth with
   no corresponding benefit: the flat model expresses the same arbitrary tree depth via `path` alone,
   with simpler single-level DOM queries at render time.
+
+## Amendment (2026-08-19, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/1510#issuecomment-5351342913), verified 2026-08-20) — the CONTAINED pane presentation: stack slide-over becomes the DEFAULT render (child pane slides sideways over the dimmed parent inside a clipped card surface), plus two opt-in modes — `chrome="crumbs"` (clickable breadcrumb trail) and `layout="columns"` (Miller columns); the zoom paradigm is dropped; the N-level `path` API survives every mode byte-unchanged (GH [#1510](https://github.com/kimgranlund/agent-ui/issues/1510))
+
+**Evidence:** Kim-ruled outcome of the two-round make-variants exploration (artifact:
+<https://claude.ai/code/artifact/61911208-7efc-41ea-bf48-4e1dda4a2554>, feedback blocks on record
+2026-08-20). Round-2 verdicts: stack slide-over = default; crumbs and columns = "nice potential
+variant modes"; zoom = downvoted, dropped. Round-1 signal carried: sideways/slide transitions
+liked. The worksheet is [`../spec/drill-contained.intake.md`](../spec/drill-contained.intake.md);
+this amendment records only the contract-changing clauses. **The Decision above is UNCHANGED
+except where a clause below explicitly narrows it** — in particular cl.2/cl.3/cl.4 (path grammar,
+controlled/uncontrolled duality, `change`-only events) are re-affirmed verbatim: "zero new
+mechanism" stays this record's law, and ADR-0211's forward-only wire row is untouched (no readback
+accessor is added; its cl.2 probe claim still holds).
+
+- **cl.A1 — One state, three render mappings (the load-bearing clause).** The resolved `path`
+  (never-empty, root-inclusive, defined repair — cl.2 verbatim) remains the ONLY position state.
+  Modes differ purely in the render mapping over it: **stack** (default) paints the panels whose
+  keys ∈ path, z-ordered by path order — active = `path.at(-1)`, painted ancestors dimmed +
+  `inert`, off-path panels `hidden`; **crumbs** renders the resolved path's headings as the trail,
+  a click on crumb *i* committing `path.slice(0, i+1)` (direction `back`); **columns** paints the
+  path's panels side-by-side in path order, all interactive — a `drill-trigger` inside the panel
+  at path index *i* commits `path.slice(0, i+1).concat(key)`. The one implementation
+  generalization: `#drillTo(key, fromPanel)` truncates the resolved path AT the trigger's hosting
+  panel, then appends — in stack mode the hosting panel is always the leaf, so it degenerates to
+  cl.2's plain append exactly. All commits ride the existing `#commit`/`change`; no new event, no
+  new state, no wire change.
+- **cl.A2 — Two new host props (both reflected closed enums, neither catalogued):**
+  `layout: 'stack' | 'columns'` (default `'stack'`) and `chrome: 'backbar' | 'crumbs'` (default
+  `'backbar'`). Orthogonal axes — a crumbs trail is legal in both layouts. `layout` extends the
+  recorded part-placement-axis concept (`_base/range-element.ts`'s `layout`, which ADR-0223's
+  Context already confronted as a distinct axis from the sizing boolean `inline`); **`chrome` is a
+  NEW fleet prop name** — the naming fork this amendment carries (recommendation: adopt; the
+  swiper intake's rejection of a `chrome` enum was about chrome-as-stamped-sub-parts composition,
+  not the name; here it selects which host-owned header anatomy renders — no collision with §3's
+  reserved words). Neither prop joins the ADR-0211 catalog row this pass (the cl.1
+  curated-subset precedent — a later widening is one PropDef each).
+- **cl.A3 — Anatomy: the header part stays host-owned; crumbs swap its interior.** Under
+  `chrome="crumbs"` the Back button hides and a `[data-part="crumbs"]` trail renders inside a real
+  `<nav aria-label="Breadcrumb">` list — one real `<button data-part="crumb">` per ancestor path
+  entry, the LEAF rendered as the SAME `<h2 data-part="heading" tabindex="-1">` element (last in
+  the trail). Leaf-crumb-as-heading is what preserves cl.5's focus target, the panel
+  `aria-labelledby` reflection, and the heading semantics with zero mechanism change. Panels stay
+  author SIBLINGS (cl.1 verbatim — no wrapper part, no child move).
+- **cl.A4 — Contained geometry, no new geometry row.** The host becomes a 2-row grid (header auto
+  row; ALL panels placed in the same second-row grid cell — same-cell stacking gives a positioning
+  context and intrinsic block-size without moving a single node), `overflow: clip` on the host,
+  card chrome = 1px `--ui-drill-outline` border + new `--ui-drill-radius`
+  (consumes `--md-sys-shape-corner-base`), own z-depth scope (`isolation: isolate`, the ADR-0052
+  container law). Block-size defaults to the tallest PAINTED pane; a consumer pins `block-size`
+  for the fixed-height case — no new sizing token. `columns` swaps the second row to side-by-side
+  tracks (`--ui-drill-column-size` floor) with the host owning the one horizontal scroll region.
+  Tier stays `pattern`; ADR-0223 posture unchanged (inline-axis fill, host `min-inline-size: 0`).
+- **cl.A5 — Tokens: three minted, one default flip.** `+ --ui-drill-radius`
+  (`--md-sys-shape-corner-base`) · `+ --ui-drill-scrim` (`--md-sys-color-neutral-scrim` — the
+  non-blocking dim wash on painted ancestors; NOT `dialog-backdrop`, which is the modal-class
+  BLOCKING wash) · `+ --ui-drill-column-size`. **`--ui-drill-slide-distance` default flips
+  `12px → 100%`** (a transform percentage resolves against the pane itself — full-pane sideways
+  travel is the ruled read; the token remains overridable). Zero new system roles;
+  duration/easing tokens unchanged and honored by construction (CSS transitions consume them —
+  the ADR-0124 mechanism-honors-every-attribute check).
+- **cl.A6 — A11y per mode; cl.5's focus law is SCOPED, not silently narrowed.** Stack: cl.5
+  verbatim (heading focus on real active-key change), painted ancestors `inert` (the ADR-0124
+  clone shape — visible pixels, no interaction surface); Escape/Back unchanged. Crumbs: ancestor
+  crumbs are real `<button>`s; the leaf carries `aria-current` — recommended value **`location`**
+  (a drill level is a position within a UI, not a page; `page` is the named alternative for Kim's
+  call). Columns: every painted column keeps `role=region`; the active column keeps the
+  `aria-labelledby` heading reflection, painted ancestors take `internals.ariaLabel = heading`
+  (never a host attribute); the active-row highlight is a host-toggled `data-drill-active` on the
+  trigger whose key is the next path entry (a styling hook — stamping ARIA onto author content is
+  declined); **columns does not move focus on drill-forward** (the trigger keeps focus; the child
+  opens beside — the one deliberate narrowing of cl.5, scoped to `layout="columns"` only).
+- **cl.A7 — VT pairing-law correction (forced by multiple painted panes).** cl.6 set the shared
+  `view-transition-name` on EVERY panel — legal only while exactly one was ever painted. Under the
+  contained presentation ancestors paint too, so the name moves to the RESOLVED-ACTIVE pane only
+  (set per render, cleared elsewhere): exactly one named element per snapshot, the name moving
+  across a swap IS the morph. The `willUseVT`/`data-vt-active` exclusivity keying and the
+  reduced-motion folding are unchanged; the dim itself is static state, never motion, and survives
+  reduced-motion.
+- **cl.A8 — Columns at narrow widths: AUTO-DEGRADE to `stack` below a breakpoint (Kim ruling,
+  2026-08-20 — overrides the intake's own no-auto-degrade recommendation).** `layout="columns"`
+  resolves to the `stack` render mapping (cl.A1) whenever the host's inline size falls below
+  ADR-0150's compact-body breakpoint (52.5rem/840px — the existing fleet threshold, no new value
+  minted); the `layout` attribute itself is unchanged, only which render mapping it resolves to.
+  Implemented via the nav-rail `@container` threshold shape (component-patterns' own precedent)
+  scoped to the host, not the viewport — a drill nested in a narrow pane degrades independently
+  of window width. S3 owns this switch; its acceptance gains a narrow-host browser leg proving
+  the degrade.
+- **cl.A9 — The shipped unbounded in-place swap presentation is REPLACED, not flagged.** No legacy
+  attribute (the ADR-0223 no-`hug` reasoning: a second boolean doubling the state matrix for a
+  presentation nobody defended). This is a deliberate breaking visual change to a shipped control:
+  the S4 slice re-verifies the eval-catalog Drill card (the default render under it changes) and
+  updates the `component-patterns` ADR-0195 row's description (show-PATH-hide-rest); no
+  ADR-0110 visual goldens exist for drill today (verified — no `controls/drill/__baselines__`),
+  so none regenerate.
+- **Build slices (the intake §7, summarized):** S1 contained + stack default (the breaking
+  slice) · S2 `chrome="crumbs"` · S3 `layout="columns"` (S2/S3 independent, both after S1) ·
+  S4 site/demo + eval-catalog recapture + record repairs. Each slice lands gate-green
+  (`npm run check && npm test` + the browser shard for its legs).
+- **Forks ruled (Kim, 2026-08-20, in-session):** ① the amendment — ratified, see below · ② the
+  `chrome` prop name — kept as drafted (cl.A2) · ③ `aria-current="location"` — kept as drafted
+  (cl.A6) · ④ columns narrow-width — **overridden**: auto-degrade to `stack` below ADR-0150's
+  compact-body breakpoint, see cl.A8 above · ⑤ no legacy presentation flag — kept as drafted
+  (cl.A9) · ⑥ `--ui-drill-slide-distance` default flip to 100% — kept as drafted (cl.A5). All six
+  ruled in one round; no fork remains open.

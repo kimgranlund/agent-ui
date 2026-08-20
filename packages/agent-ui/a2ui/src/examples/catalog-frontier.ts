@@ -616,20 +616,27 @@ export const backableWizardSeed: ExampleSeed = {
 
 const GREET_ID = 'greet-1'
 /** Frontier 10 — the GREET CARD (GH #1201, req-a2ui-patterns R3): a persona's opening bookend. The
- *  first turn's note introduces the persona; alongside it, ONE compact starter card — CardContent's
- *  orientation Text plus a CardFooter of 2–4 Buttons whose `action.context` names a concrete starter
- *  intent. NOT an ask despite riding the meta-line `ask` field for feed placement: the reserved
- *  `greet-1` id class (grammar.md's reserved-vocabulary sentence + the `greeting-card` mini-skill) —
- *  no commit button, no data model (`sendDataModel` omitted), no `ask-<n>` id consumed, and the
- *  answered-ask freeze never applies (a greet is never an answered ask; its buttons are retired per
- *  the stale-affordance rule when the first real task starts). The 2-4 starter Buttons ride a Row
- *  INSIDE CardFooter (GH #1475 repair, 2026-08-19): CardFooter's own side-by-side layout is
- *  slot="trailing"-driven, so bare Button siblings stack full-width instead of sitting in a row —
- *  the same defect class the fleet's game-card producer teaching missed until a live poker card's
- *  Check/Bet/Fold set stacked. */
+ *  first turn's note introduces the persona; alongside it, a short orientation Text plus a Row
+ *  (gap "sm") of 2–4 small option Cards side by side, never stacked — each Card › CardContent(Text,
+ *  short label) › CardFooter with ONE Button, each Button's `action.context` naming a concrete
+ *  starter intent (the `greeting-card` mini-skill's own card-row teaching, GH #1483 — the seed now
+ *  follows the teaching rather than diverging from it, per Kim's 2026-08-20 ruling). NOT an ask
+ *  despite riding the meta-line `ask` field for feed placement: the reserved `greet-1` id class
+ *  (grammar.md's reserved-vocabulary sentence) — no commit button, no data model (`sendDataModel`
+ *  omitted), no `ask-<n>` id consumed, and the answered-ask freeze never applies (a greet is never
+ *  an answered ask; its buttons are retired per the stale-affordance rule when the first real task
+ *  starts). Supersedes the CardFooter>Row>Buttons form the GH #1475 footer-stacking repair
+ *  introduced (2026-08-19) — that form still stands as a valid non-ask greet shape for a leaner
+ *  2-4-quick-intent case, just not as this seed's own demonstrated form. All three option Buttons
+ *  ride `variant:'soft'` DELIBERATELY, not left to default — three equal-standing starter intents,
+ *  no ranked/primary option among them, so a uniform variant is the honest signal (the
+ *  `corpus-growth.ts` quiz-answer idiom for peer choices, e.g. `q1_helsinki`/`q1_stockholm`); an
+ *  earlier revision left one Button variant-less (neither `solid` nor `ghost` nor `soft`),
+ *  fabricating an unintended hierarchy across peer options — a GH #1483 rescore-judge finding
+ *  (D1/P5), repaired here. */
 export const greetCardSeed: ExampleSeed = {
   name: 'frontier-greet-card',
-  description: 'A persona\'s opening greet card — reserved greet-1 surface (not an ask: no commit button, no data model), an orientation Text and a CardFooter Row of 2–4 starter-intent Buttons carrying concrete intents in action.context, retired when the first real task starts.',
+  description: 'A persona\'s opening greet — reserved greet-1 surface (not an ask: no commit button, no data model), a short orientation Text plus a Row of 2–4 small option Cards (each CardContent short label + CardFooter with ONE starter Button carrying its intent in action.context), retired when the first real task starts.',
   promptText: 'Hi — who are you and what can you do?',
   surfaceId: GREET_ID,
   protocolVersion: 'v1.0',
@@ -641,14 +648,24 @@ export const greetCardSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: GREET_ID,
         components: [
-          { id: 'root', component: 'Card', children: ['ct', 'ft'] },
-          { id: 'ct', component: 'CardContent', children: ['t'] },
-          { id: 't', component: 'Text', variant: 'body', text: 'What would you like to do?' },
-          { id: 'ft', component: 'CardFooter', children: ['actions'] },
-          { id: 'actions', component: 'Row', gap: 'sm', wrap: true, children: ['b1', 'b2', 'b3'] },
-          { id: 'b1', component: 'Button', variant: 'solid', label: 'Book a room', action: { action: 'start', context: { intent: 'room' } } },
-          { id: 'b2', component: 'Button', label: 'Reserve a table', action: { action: 'start', context: { intent: 'table' } } },
-          { id: 'b3', component: 'Button', variant: 'ghost', label: 'Just a question', action: { action: 'start', context: { intent: 'faq' } } },
+          { id: 'root', component: 'Column', gap: 'md', children: ['prompt', 'options'] },
+          { id: 'prompt', component: 'Text', variant: 'body', text: 'What would you like to do?' },
+          { id: 'options', component: 'Row', gap: 'sm', wrap: true, children: ['opt_room', 'opt_table', 'opt_faq'] },
+          { id: 'opt_room', component: 'Card', children: ['opt_room_ct', 'opt_room_ft'] },
+          { id: 'opt_room_ct', component: 'CardContent', children: ['opt_room_label'] },
+          { id: 'opt_room_label', component: 'Text', variant: 'label', text: 'Book a room' },
+          { id: 'opt_room_ft', component: 'CardFooter', children: ['opt_room_btn'] },
+          { id: 'opt_room_btn', component: 'Button', variant: 'soft', label: 'Book a room', action: { action: 'start', context: { intent: 'room' } } },
+          { id: 'opt_table', component: 'Card', children: ['opt_table_ct', 'opt_table_ft'] },
+          { id: 'opt_table_ct', component: 'CardContent', children: ['opt_table_label'] },
+          { id: 'opt_table_label', component: 'Text', variant: 'label', text: 'Reserve a table' },
+          { id: 'opt_table_ft', component: 'CardFooter', children: ['opt_table_btn'] },
+          { id: 'opt_table_btn', component: 'Button', variant: 'soft', label: 'Reserve a table', action: { action: 'start', context: { intent: 'table' } } },
+          { id: 'opt_faq', component: 'Card', children: ['opt_faq_ct', 'opt_faq_ft'] },
+          { id: 'opt_faq_ct', component: 'CardContent', children: ['opt_faq_label'] },
+          { id: 'opt_faq_label', component: 'Text', variant: 'label', text: 'Just a question' },
+          { id: 'opt_faq_ft', component: 'CardFooter', children: ['opt_faq_btn'] },
+          { id: 'opt_faq_btn', component: 'Button', variant: 'soft', label: 'Just a question', action: { action: 'start', context: { intent: 'faq' } } },
         ],
       },
     },
