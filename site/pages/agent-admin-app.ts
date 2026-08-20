@@ -54,9 +54,10 @@ import type { AgentRosterEntry, GenerateSeed, UIAgentAdminElement } from '@agent
 // ADR-0198 (GH #1101) — the shared end-of-flow page-chrome affordance (the #1065 shared-seam lift).
 import { createFlowChrome } from '../lib/flow-chrome.ts'
 import type { AdminAgentSurfaceTurn, TeamDeclaration } from '@agent-ui/app/agent-admin-schema'
-// GH #1196 (ADR-0203 clause 4) — the team record this page's team-shaped mint path persists;
-// PR #1231's already-shipped validation-closed record + StorageAdapter persistence, reused verbatim.
-import { loadAgentTeams, saveAgentTeam, type AgentTeam } from '@agent-ui/app/agent-admin-team'
+// GH #1196 (ADR-0203 clause 4) — the team record this page's team-shaped mint path persists; ADR-0227
+// wave 2 (GH #1545): the records now reach this page as a DataSource — the read is ONE `resource()`
+// and `handleTeamDeclared` writes through a `mutation()` (same keys, same validation-closed law).
+import { AgentTeamValidationError, createAgentTeamSource, type AgentTeam } from '@agent-ui/app/agent-admin-team'
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
 // GH #845 (LLD-C15/§7) — the Edit Agents drawer's vehicle: `ui-drawer` (ADR-0188), COMPOSED byte-unmodified.
 // Its content (the roster rows and every management verb on them) is page-owned by that control's own fence.
@@ -74,8 +75,8 @@ import { listReorder } from '@agent-ui/components/traits/list-reorder'
 // mutation() with invalidation over the PersonaRosterSource (@agent-ui/data's first real consumer).
 // `effect` drives the one derivation that feeds the component's push seam; the optimistic commits keep
 // every handler's same-tick reads honest (the source's own writes land in the calling tick too).
-import { effect } from '@agent-ui/components'
-import { createStore, mutation, resource, type Store } from '@agent-ui/data'
+import { effect, signal } from '@agent-ui/components'
+import { createStore, mutation, resource, type SourceContext, type Store } from '@agent-ui/data'
 import { applyRosterOrder, type PersonaRosterView } from '@agent-ui/app/agent-admin-roster-source'
 import {
   builderStore,
@@ -109,11 +110,9 @@ import { resourceEntriesForExport } from '@agent-ui/app/agent-admin-resource-idb
 // page owns only the browser I/O (the file picker in) and the shelf SURFACE (the drawer below —
 // review-before-enable: full content + provenance + scan display, D5.2, plus remove).
 import {
+  createSkillPackSource,
   importedSkillPackLibrary,
-  loadSkillPacks,
   parseSkillPackText,
-  removeSkillPack,
-  saveSkillPack,
   skillPackAttribution,
   type SkillPackSnapshot,
 } from '@agent-ui/app/agent-admin-skill-packs'
@@ -242,41 +241,123 @@ const setActiveAgentMutation = mutation(
     optimistic: (id, store) => optimisticView(store, (prev) => ({ ...prev, activeId: id })),
   },
 )
-// ADR-0208 D3/D4 — the imported shelf's page-side cache, loaded async from the `skill-packs:` store at
-// boot (below) and refreshed by every import/remove. APP-level by design: one shelf, every persona
-// browses it; the OPT-IN is what stays per-persona (an add commits into the active persona's own
-// `entries:skill` store through the unchanged validateNewEntry path).
-let importedSkillPacks: SkillPackSnapshot[] = []
+// ── ADR-0227 wave 2 (GH #1545): the imported skill-pack shelf is ONE resource ───────────────────────────
+// The `skill-packs:` IDB store (ADR-0208 D3, keys unchanged) reads through a `DataSource`; the page's
+// old `importedSkillPacks` module cache and its hand-called refresh sites become DERIVATIONS of this
+// resource. No sync seed (the IDB tier is async by nature, ADR-0193) — boot renders the empty shelf
+// exactly as before, and the libraries derivation effect below re-runs once the read lands. An
+// unavailable IndexedDB (SSR, a locked-down embed) parks the resource in `error` with `data` undefined —
+// the same empty-shelf degrade the old `.catch(() => {})` bought, never a crash.
+const skillPackSource = createSkillPackSource()
+const SKILL_PACKS_KEY = 'agent-admin/skill-packs'
+const skillPacksStore = createStore()
+const skillPacksResource = resource<readonly SkillPackSnapshot[]>(SKILL_PACKS_KEY, skillPackSource.shelf, {
+  store: skillPacksStore,
+})
 
-/** The ONE libraries composition every assignment site uses: the first-party packs scoped to the
- *  persona's category (GH #143) PLUS the imported shelf appended under the skill kind (ADR-0208 D4 —
- *  the same reactive seam, no second pipeline). Fresh object every call — the `libraries` prop's
- *  identity-change law (agent-admin.ts) is what makes a reassignment actually rebuild the menu. */
-function librariesWithShelf(category: PresetCategory | undefined): Record<string, EntryLibraryPack[]> {
+/** The current shelf — a derivation of the one resource (read at call time, never a copied array). */
+function currentSkillPacks(): readonly SkillPackSnapshot[] {
+  return skillPacksResource.data.peek() ?? []
+}
+
+// The shelf mutations: import (create — D2's idempotent re-import IS the upsert) and remove, each
+// settling with an ATOMIC read-back mirror commit — the SAME deviation the roster mutations above
+// document (resource.ts's mirror doctrine): an `invalidate` refetch spans jobs, and a rapid successive
+// import/remove's commit would be regressed by the earlier action's in-flight read landing late.
+// The mirror READ-BACK is best-effort, deliberately isolated from the write's own success/failure
+// (review finding): the create/remove already committed by the time this runs, so a read-back that
+// throws (a transient IDB hiccup) must never turn an already-successful write into a reported failure
+// — it only leaves the view stale until the NEXT successful read (boot, or another mutation's own
+// read-back) refreshes it. Swallowed, never re-thrown.
+async function mirrorSkillPackShelf(ctx: SourceContext): Promise<void> {
+  await skillPackSource.shelf
+    .read(SKILL_PACKS_KEY, ctx)
+    .then((shelf) => skillPacksStore.commit(SKILL_PACKS_KEY, shelf))
+    .catch(() => {})
+}
+
+const importSkillPackMutation = mutation(
+  async (snapshot: SkillPackSnapshot, ctx) => {
+    const created = await skillPackSource.create(snapshot, ctx)
+    await mirrorSkillPackShelf(ctx)
+    return created
+  },
+  { store: skillPacksStore },
+)
+
+// Returns `true` (never `undefined`) on success — review finding: `run()` resolves `undefined` on
+// BOTH a genuine error and a void success, so a caller peeking the shared `.status` signal after the
+// await can misclassify THIS call's outcome if a second remove races in and settles first. Returning a
+// sentinel makes `run()`'s own resolved value the per-call truth, no shared-state peek needed.
+const removeSkillPackMutation = mutation(
+  async (packId: string, ctx): Promise<true> => {
+    await skillPackSource.remove(packId, ctx)
+    await mirrorSkillPackShelf(ctx)
+    return true
+  },
+  { store: skillPacksStore },
+)
+
+/** The ONE libraries composition (now called from exactly ONE place, the derivation effect below): the
+ *  first-party packs scoped to the persona's category (GH #143) PLUS the imported shelf appended under
+ *  the skill kind (ADR-0208 D4 — the same reactive seam, no second pipeline). Fresh object every call —
+ *  the `libraries` prop's identity-change law (agent-admin.ts), now also COMPILE-enforced (the prop is
+ *  readonly-typed, the folded Q5): reassignment is the only write that even typechecks. */
+function librariesWithShelf(category: PresetCategory | undefined, shelf: readonly SkillPackSnapshot[]): Record<string, EntryLibraryPack[]> {
   const libraries = librariesForCategory(category)
-  if (importedSkillPacks.length > 0) {
-    libraries[ENTRY_KINDS.skill] = [...(libraries[ENTRY_KINDS.skill] ?? []), ...importedSkillPackLibrary(importedSkillPacks)]
+  if (shelf.length > 0) {
+    libraries[ENTRY_KINDS.skill] = [...(libraries[ENTRY_KINDS.skill] ?? []), ...importedSkillPackLibrary(shelf)]
   }
   return libraries
 }
 
-// GH #47/#48/#143 — the library packs, scoped to the active preset's category and set BEFORE the element
-// ever connects (the compose-time capture law the `libraries` prop documents for the section SHELL;
-// `applyPreset` below reassigns this — a fresh, re-filtered object — on every persona switch, which the
-// `libraries` prop's now-reactive add-from-library MENU picks up, agent-admin.ts's GH #143 update).
-// The shelf cache is still empty at this first assignment (its IndexedDB read is async); the boot load
-// below reassigns once packs land — the same late-arrival law the DEV live-read overlay already rides.
-admin.libraries = librariesWithShelf(activeAgent().category)
+// The one NON-signal input to the libraries composition: `setLiveIntegrations`/`setLiveServices`
+// (agent-admin-libraries.ts) mutate module state the effect below cannot see — the DEV live-read
+// overlay bumps this signal after landing them, which is the whole reason it exists.
+const librariesRevision = signal(0)
 
-// The boot-time shelf read — fire-and-forget (the IDB tier is async by nature, ADR-0193): once packs
-// land, ONE fresh `libraries` assignment carries them into the add-from-library menu. An unavailable
-// IndexedDB (SSR, a locked-down embed) degrades to an empty shelf, never a crash.
-void loadSkillPacks()
-  .then((packs) => {
-    importedSkillPacks = packs
-    if (packs.length > 0) admin.libraries = librariesWithShelf(activeAgent().category)
-  })
-  .catch(() => {})
+// ── the ONE `admin.libraries` derivation (ADR-0227 clause 2 — replaces SIX hand-called assignment sites:
+// boot, the async shelf-load re-push, applyPersona, pack import, pack remove, and the DEV live-read
+// overlay). Runs synchronously once at creation (the reactive kernel's effect contract), so the FIRST
+// assignment still lands before `root.append(admin)` connects the element — the compose-time capture law
+// the `libraries` prop documents for the section SHELL is preserved. Re-runs (microtask-batched) whenever
+// the active persona's CATEGORY, the shelf, or the live-read revision actually changes — the identity
+// guard below keeps a mere rename/reorder (which commits a fresh roster view) from rebuilding the
+// add-from-library menus for nothing.
+const EMPTY_SHELF: readonly SkillPackSnapshot[] = [] // a stable reference — keeps the guard's identity check meaningful while the shelf read is still in flight (undefined every re-run otherwise)
+let lastLibrariesInputs: { category: PresetCategory | undefined; shelf: readonly SkillPackSnapshot[]; revision: number } | undefined
+effect(() => {
+  const revision = librariesRevision.value
+  const view = rosterResource.data.value
+  const shelf = skillPacksResource.data.value ?? EMPTY_SHELF
+  const active = view === undefined ? undefined : (view.personas.find((p) => p.id === view.activeId) ?? view.personas[0])
+  const category = active?.category
+  if (lastLibrariesInputs !== undefined && lastLibrariesInputs.category === category && lastLibrariesInputs.shelf === shelf && lastLibrariesInputs.revision === revision) return
+  lastLibrariesInputs = { category, shelf, revision }
+  admin.libraries = librariesWithShelf(category, shelf)
+})
+
+// ── ADR-0227 wave 2 (GH #1545): the AgentTeam records read through ONE resource ────────────────────────
+// `createAgentTeamSource` wraps the SAME `agent-ui-agent-teams` localStorage records (keys unchanged);
+// `handleTeamDeclared` writes through the mutation below. No `live` leg — the one page-side consumer is
+// the mint path's collision scan, which refetches explicitly for cross-tab freshness at the moment it
+// actually mints (the old fresh `loadAgentTeams()` read, now riding the resource's own read path).
+const teamSource = createAgentTeamSource()
+const TEAMS_KEY = 'agent-admin/teams'
+const teamsStore = createStore()
+const teamsResource = resource<readonly AgentTeam[]>(TEAMS_KEY, teamSource.view, { store: teamsStore })
+
+// The team write: validation-closed create (the source THROWS AgentTeamValidationError — nothing lands
+// on an invalid record) settling with the same atomic read-back mirror commit the roster and shelf
+// mutations document (resource.ts's mirror doctrine, the wave-1 deviation precedent).
+const saveTeamMutation = mutation(
+  async (input: { team: AgentTeam; knownAgentIds: readonly string[] }, ctx) => {
+    const created = await teamSource.create(input, ctx)
+    teamsStore.commit(TEAMS_KEY, await teamSource.view.read(TEAMS_KEY, ctx))
+    return created
+  },
+  { store: teamsStore },
+)
 
 // Armed by the DEV overlay below once a live key probes available; re-invoked per persona switch so each
 // persona's SURFACE session (TKT-0076 — the runner closure owns the a2ui transcript) starts clean.
@@ -511,12 +592,9 @@ function applyPersona(persona: Persona): void {
   unsubscribeActiveName = personaStore(persona).subscribe?.((key, value) => {
     if (key === 'name') syncRosterLabelFromName(persona.id, value)
   })
-  // GH #143 — re-scope the add-from-library menu to the NEW persona's category. A fresh object every call
-  // (never a reused reference) is load-bearing: `libraries`' reactive effect (agent-admin.ts) rebuilds the
-  // menu on an identity change, the same law `store`'s reassignment above relies on — handing back a
-  // reference-equal object would be a silent no-op. The imported shelf rides along (ADR-0208 D3 — the
-  // shelf is APP-level: every persona sees the same imported packs; only the opt-in is per-persona).
-  admin.libraries = librariesWithShelf(persona.category)
+  // GH #143 — the add-from-library menu re-scopes to the NEW persona's category via the ONE libraries
+  // derivation effect (ADR-0227 wave 2): the setActive commit above already changed the view's activeId,
+  // which is exactly the input that effect derives the category from — no hand-placed assignment here.
   armSurfaceTurn?.()
   flowChrome.dismiss() // ADR-0198 — a persona switch clears the conversation; no stale affordance survives it
   // GH #686's Amendment — the header's own agent-select "current choice" signal now rides the roster
@@ -721,7 +799,20 @@ export async function handleTeamDeclared(team: TeamDeclaration): Promise<void> {
 
   const gm = activeAgent()
   const knownAgentIds = currentRoster().map((p) => p.id)
-  const existingTeams = await loadAgentTeams()
+  // The collision scan reads the one teams resource — refetched HERE (not trusted from boot) so a team
+  // another tab minted since is seen, the exact freshness the retired direct `loadAgentTeams()` bought.
+  // FAIL-CLOSED on the refetch itself (review finding): `resource()`'s own contract swallows a failed
+  // read into `error`, keeping `data` whatever it was before (SWR) — undefined at first call, since this
+  // resource is never seeded. Reading `data.peek() ?? []` on a failed refetch would silently treat "the
+  // read failed" as "no teams exist", letting `mintTeamId` hand back a COLLIDING id that `create`'s
+  // last-write-wins upsert (agent-team.ts) then silently overwrites. The retired direct `loadAgentTeams()`
+  // call THREW on failure; this mirrors that by checking status explicitly rather than trusting `data`.
+  await teamsResource.refetch()
+  if (teamsResource.status.peek() === 'error') {
+    notify(`Team “${label}” could not be created — the existing team list could not be read.`, true)
+    return
+  }
+  const existingTeams = teamsResource.data.peek() ?? []
   const agentTeam: AgentTeam = {
     id: mintTeamId(label, new Set(existingTeams.map((t) => t.id))),
     label,
@@ -730,9 +821,14 @@ export async function handleTeamDeclared(team: TeamDeclaration): Promise<void> {
     members: minted.map(({ persona, member }) => ({ agentId: persona.id, role: member.role, routingDescription: member.routingDescription })),
   }
 
-  const result = await saveAgentTeam(agentTeam, knownAgentIds)
-  if (!result.valid) {
-    notify(`Team “${label}” could not be saved — ${result.issues.map((i) => i.message).join(' ')}`, true)
+  // ADR-0227 wave 2: the write rides the mutation; a validation refusal surfaces as the mutation's
+  // error whose CAUSE is the source's typed AgentTeamValidationError — the same issue set
+  // `saveAgentTeam`'s result shape used to hand back directly.
+  const saved = await saveTeamMutation.run({ team: agentTeam, knownAgentIds })
+  if (saved === undefined) {
+    const cause = saveTeamMutation.error.peek()?.cause
+    const detail = cause instanceof AgentTeamValidationError ? cause.issues.map((i) => i.message).join(' ') : 'something went wrong saving it.'
+    notify(`Team “${label}” could not be saved — ${detail}`, true)
     return
   }
   notify(`Created team “${label}” — ${minted.length} member${minted.length === 1 ? '' : 's'} + “${gm.label}” as GM.`)
@@ -1406,10 +1502,15 @@ function renderSkillPackRow(snapshot: SkillPackSnapshot): HTMLElement {
   remove.className = 'pack-remove'
   remove.textContent = 'Remove'
   remove.addEventListener('click', () => {
-    void removeSkillPack(snapshot.pack.id).then(() => {
-      importedSkillPacks = importedSkillPacks.filter((s) => s.pack.id !== snapshot.pack.id)
-      admin.libraries = librariesWithShelf(activeAgent().category)
+    // The remove rides the shelf mutation (ADR-0227 wave 2): its read-back commit updates the one
+    // resource, the libraries derivation effect re-scopes the add-from-library menu — this handler
+    // only re-renders the drawer list (its own surface) and reports.
+    void removeSkillPackMutation.run(snapshot.pack.id).then((ok) => {
       renderSkillPackShelf()
+      if (ok === undefined) {
+        packsFeedback(`“${snapshot.pack.label}” could not be removed — the shelf store refused the delete.`, true)
+        return
+      }
       packsFeedback(`Removed “${snapshot.pack.label}” from the shelf — entries agents already added stay in place.`)
     })
   })
@@ -1466,19 +1567,21 @@ function renderSkillPackRow(snapshot: SkillPackSnapshot): HTMLElement {
 }
 
 function renderSkillPackShelf(): void {
+  const shelf = currentSkillPacks()
   packList.replaceChildren()
-  if (importedSkillPacks.length === 0) {
+  if (shelf.length === 0) {
     const empty = document.createElement('p')
     empty.className = 'roster-drawer-hint'
     empty.textContent = 'Nothing imported yet. Run `node scripts/import-skill-pack.mjs <repo-url>` to snapshot a skills repo, then pick the .skillpack.json here.'
     packList.append(empty)
     return
   }
-  for (const snapshot of importedSkillPacks) packList.append(renderSkillPackRow(snapshot))
+  for (const snapshot of shelf) packList.append(renderSkillPackRow(snapshot))
 }
 
-/** The picker's ingest leg: fail-closed parse (named refusal, D3) → persist WHOLE via the store →
- *  refresh the shelf cache + the ONE `libraries` seam → re-render the review surface. */
+/** The picker's ingest leg: fail-closed parse (named refusal, D3) → the import MUTATION (persist whole
+ *  + read-back commit onto the one shelf resource; the libraries derivation effect re-scopes the menu)
+ *  → re-render the review surface from the resource. */
 async function importSkillPackText(text: string): Promise<void> {
   const parsed = parseSkillPackText(text)
   if (!parsed.ok) {
@@ -1486,12 +1589,14 @@ async function importSkillPackText(text: string): Promise<void> {
     return
   }
   const snapshot = parsed.snapshot
-  const replacing = importedSkillPacks.some((s) => s.pack.id === snapshot.pack.id)
-  await saveSkillPack(snapshot)
-  importedSkillPacks = [...importedSkillPacks.filter((s) => s.pack.id !== snapshot.pack.id), snapshot].sort((a, b) =>
-    a.pack.id.localeCompare(b.pack.id),
-  )
-  admin.libraries = librariesWithShelf(activeAgent().category)
+  const replacing = currentSkillPacks().some((s) => s.pack.id === snapshot.pack.id)
+  const saved = await importSkillPackMutation.run(snapshot)
+  if (saved === undefined) {
+    // The store refused the write (quota, an unavailable IDB) — named here rather than riding the
+    // picker's own generic could-not-read catch, which this rejection previously fell through to.
+    packsFeedback(`Import failed — “${snapshot.pack.label}” could not be persisted to the shelf store.`, true)
+    return
+  }
   renderSkillPackShelf()
   const flaggedCount = snapshot.provenance.scan.flagged.length
   packsFeedback(
@@ -1571,22 +1676,25 @@ void (async () => {
     // GH #567 S6 (LLD-C6/SPEC-R28, Kim's F1 ruling) — DEV only: the dev proxy's `GET /integrations`
     // exists only under `vite dev` (worker/index.ts stays frozen, no production twin — ADR-0177
     // §0/Non-goals); production keeps the hand-authored INTEGRATION_TOOLS pack, untouched. A
-    // discovered `mcp:*` trio joins the Integrations pack without a page reload: `setLiveIntegrations`
-    // plus a fresh `admin.libraries` assignment — the SAME identity-change law `applyPersona`'s own
-    // reassignment above relies on (agent-admin-libraries.ts's `librariesForCategory` doc comment).
+    // discovered `mcp:*` trio joins the Integrations pack without a page reload via `setLiveIntegrations`
+    // (module state the libraries derivation effect cannot observe on its own — the revision bump below
+    // is what wakes it, ADR-0227 wave 2's `librariesRevision` signal).
     // GH #783 S4 (LLD-C6/SPEC-R5, ADR-0185) — the sibling live-read for MCP SERVICES rides the SAME
     // DEV-only block: `GET /integrations` now carries a second `services` array (S2), read by
-    // `fetchLiveServices` under the SAME degrade-to-`undefined` law. Both fetches BEFORE the one
-    // `admin.libraries` reassignment, so a single identity-change re-render carries both live reads into
-    // the add-from-library menu. `undefined` passes straight through `setLiveServices` (production/degrade
-    // keeps the MCP-services pack absent, the getter's own law). Reassign when EITHER landed; both undefined
-    // ⇒ nothing to re-render (the boot-time `librariesForCategory` getters already have it right).
+    // `fetchLiveServices` under the SAME degrade-to-`undefined` law. Both fetches BEFORE the one revision
+    // bump, so a single derivation re-run carries both live reads into the add-from-library menu.
+    // `undefined` passes straight through `setLiveServices` (production/degrade keeps the MCP-services
+    // pack absent, the getter's own law). Bump when EITHER landed; both undefined ⇒ nothing to re-render
+    // (the boot-time `librariesForCategory` getters already have it right).
     if (import.meta.env.DEV) {
       const trios = await overlay.fetchLiveIntegrations()
       const services = await overlay.fetchLiveServices()
       if (trios) setLiveIntegrations(trios)
       setLiveServices(services)
-      if (trios || services) admin.libraries = librariesWithShelf(activeAgent().category)
+      // ADR-0227 wave 2: the live rows are module state the libraries derivation effect cannot observe —
+      // the revision bump is the ONE signal-shaped input standing in for them; the effect recomposes and
+      // reassigns (`librariesForCategory`'s getters read the freshly-set live rows at that point).
+      if (trios || services) librariesRevision.value += 1
     }
   } catch {
     console.info('[agent-admin-app] stub preview — the live overlay is unavailable')

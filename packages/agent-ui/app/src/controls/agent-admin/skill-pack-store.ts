@@ -23,6 +23,7 @@
 // mechanics are already proven by `indexed-db-adapter.browser.test.ts`, not re-proven here).
 
 import { createIndexedDbAdapter, type StorageAdapter } from '@agent-ui/shared'
+import type { DataSource, SourceContext } from '@agent-ui/data'
 import type { EntryLibraryPack, NewEntryInput } from '../entry-list/entry-data.ts'
 
 /** The D1 format marker — ingestion fail-closes on anything else (never a best-effort parse). */
@@ -214,6 +215,55 @@ export async function loadSkillPacks(): Promise<SkillPackSnapshot[]> {
  *  reach a persona store). */
 export async function removeSkillPack(packId: string): Promise<void> {
   await getAdapter().delete(skillPackStoreKey(packId))
+}
+
+// ── the DataSource face (ADR-0227 wave 2, GH #1545 — the persona-roster-source pattern applied) ─────
+// The shelf's CRUD verbs as a `DataSource<SkillPackSnapshot>` over the SAME adapter + keys the module
+// functions above use (`skill-packs:<packId>`, IndexedDB db `agent-ui-skill-packs` — persisted data
+// survives byte-for-byte), so a page's shelf read collapses to ONE `resource()` and every import/remove
+// rides a `mutation()` (ADR-0227 clause 2: one fact, one owner; every render surface derives). No
+// `subscribe` verb: the IndexedDB adapter carries no cross-tab seam (unlike the localStorage tier's
+// `storage`-event pump the roster source rides) — a second tab's import lands on the next read.
+
+/** The whole-shelf view the page's ONE skill-pack `resource()` reads — `read` present by contract
+ *  (the persona source's `view` sub-source shape, list-as-one-value). */
+export interface SkillPackShelfSource extends DataSource<readonly SkillPackSnapshot[]> {
+  read(key: string, ctx: SourceContext): Promise<readonly SkillPackSnapshot[]>
+}
+
+/** The shelf as a `DataSource<SkillPackSnapshot>` (ADR-0227's verb set, minus `subscribe` — banner
+ *  above) plus the `shelf` sub-source. Keys are pack ids (`create` is keyed by the snapshot's OWN
+ *  `pack.id` — D2's idempotent re-import IS `create`'s last-write-wins upsert). */
+export interface SkillPackSource extends DataSource<SkillPackSnapshot, undefined, SkillPackSnapshot> {
+  read(key: string, ctx: SourceContext): Promise<SkillPackSnapshot>
+  list(query: undefined, ctx: SourceContext): Promise<readonly SkillPackSnapshot[]>
+  create(input: SkillPackSnapshot, ctx: SourceContext): Promise<SkillPackSnapshot>
+  remove(key: string, ctx: SourceContext): Promise<void>
+  readonly shelf: SkillPackShelfSource
+}
+
+export function createSkillPackSource(): SkillPackSource {
+  const listAll = async (): Promise<SkillPackSnapshot[]> => loadSkillPacks()
+  return {
+    async read(key) {
+      const snapshot = (await listAll()).find((s) => s.pack.id === key)
+      if (snapshot === undefined) throw new Error(`skill-pack-source: no imported pack with id "${key}"`)
+      return snapshot
+    },
+    async list() {
+      return listAll()
+    },
+    async create(input) {
+      await saveSkillPack(input) // whole-snapshot overwrite under the pack's own key (D2/D3)
+      return input
+    },
+    async remove(key) {
+      await removeSkillPack(key)
+    },
+    shelf: {
+      read: async () => listAll(),
+    },
+  }
 }
 
 // ── the libraries-seam projection (D4) ───────────────────────────────────────────────────────────────

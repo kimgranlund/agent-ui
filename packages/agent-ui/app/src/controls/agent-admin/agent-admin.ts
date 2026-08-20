@@ -325,7 +325,12 @@ const agentAdminProps = {
   // `EntryListSection.updateLibraries` — e.g. a caller re-scoping which packs apply on a persona/preset
   // switch. Only the menu updates; a section's rendered ENTRIES are unaffected (those already re-render
   // off `store`, a separate signal).
-  libraries: { ...prop.json<Record<string, readonly EntryLibraryPack[]> | undefined>(undefined), attribute: false as const },
+  //
+  // READONLY-TYPED (ADR-0227 wave 2, the folded Q5 — GH #1545): the identity-change law above means a
+  // mutate-in-place (`admin.libraries[kind] = …`, `.push(…)`) is a silent no-op the effect never sees.
+  // `Readonly<Record<…>>` + the readonly pack arrays turn that call-site-discipline law into a COMPILE
+  // error — the only sanctioned write is reassigning a FRESH object, exactly what every caller must do.
+  libraries: { ...prop.json<Readonly<Record<string, readonly EntryLibraryPack[]>> | undefined>(undefined), attribute: false as const },
   // ADR-0178 cl.5 (LLD-C6) — the guided-authoring flow's second composition source. SET ⇒ the flow is
   // ACTIVE: a second conversation mounts beside the test one, its turns compose from THIS store (the
   // host-authored Builder persona's own config), and any patch they declare applies to `store` — the
@@ -3153,7 +3158,7 @@ export class UIAgentAdminElement extends UIElement {
    *  cheap (a handful of menu rows per kind) and idempotent, the `#rewireAllSections` precedent. Prompt
    *  sections never carry a library pack (only the four capability kinds do — `#makeSection`'s own
    *  `{ libraries: this.libraries?.[kind] }` wiring), so this loop is scoped to `CAPABILITY_KINDS`. */
-  #updateLibraries(libraries: Record<string, readonly EntryLibraryPack[]> | undefined): void {
+  #updateLibraries(libraries: Readonly<Record<string, readonly EntryLibraryPack[]>> | undefined): void {
     for (const { kind } of CAPABILITY_KINDS) {
       this.#capabilitySections.get(kind)?.updateLibraries(libraries?.[kind] ?? [])
     }

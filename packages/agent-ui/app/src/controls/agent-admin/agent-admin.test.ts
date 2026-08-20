@@ -4354,6 +4354,19 @@ describe('UIAgentAdminElement — entry libraries (GH #47/#48)', () => {
     expect(after).toHaveLength(2)
     expect(after[1]!.id).toBe('grid-idiom-2')
   })
+
+  it('Q5 (ADR-0227 wave 2, GH #1545): `libraries` is readonly-typed — a mutate-in-place is a COMPILE error, never a silent no-op', () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.libraries = PACKS // a fresh object assigns fine — the one sanctioned write
+    const attemptMutateInPlace = (): void => {
+      // @ts-expect-error — the Record is Readonly: repointing a kind in place would silently skip the identity-change effect
+      el.libraries!.skill = []
+      // @ts-expect-error — the pack arrays are readonly: an in-place push never wakes the menu rebuild
+      el.libraries!.skill!.push(PACKS.skill[0]!)
+    }
+    void attemptMutateInPlace // type-checked, deliberately never CALLED — the law lives at the type tier, not runtime
+    expect(el.libraries!.skill).toHaveLength(1)
+  })
 })
 
 describe('UIAgentAdminElement — libraries is reactive post-connect (GH #143 — per-preset library scoping)', () => {

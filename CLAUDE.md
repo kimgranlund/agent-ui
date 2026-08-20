@@ -43,8 +43,9 @@ npm-workspaces monorepo; ten packages under `packages/agent-ui/*`.
 - `code/` — code+prose family (ADR-0119): zero-dep core + `./highlight` · `./markdown` · `./editor`
   (the CodeMirror exception, ADR-0139).
 - `data/` — headless SaaS data layer (ADR-0192): `DataSource<T>` seam, signal-backed
-  `resource()/mutation()/paginated()`, + `./gateway` and `./stream` opt-in subpaths; first real
-  consumer: agent-admin's persona roster via `app`'s `PersonaRosterSource` (ADR-0227 wave 1).
+  `resource()/mutation()/paginated()`, + `./gateway` and `./stream` opt-in subpaths; real consumers:
+  agent-admin's persona roster, skill-pack shelf, and AgentTeam records via `app`'s source modules
+  (ADR-0227 waves 1–2).
 - `devtools/` — chat & A2UI dev/debug harness (ADR-0200): the three-backend transport shelf behind
   the ADR-0137 `AgentTransport` seam, `DevtoolsEvent`/`recordTurn`, + `./server` and `./playwright`
   subpaths; no key/provider/`produce()` ever enters it (the ADR-0073 trust boundary stays at

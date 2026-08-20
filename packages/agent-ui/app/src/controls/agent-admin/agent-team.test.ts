@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import type { StorageAdapter, StorageChange } from '@agent-ui/shared'
 import {
   __testSetAdapter,
+  AgentTeamValidationError,
+  createAgentTeamSource,
   deleteAgentTeam,
   loadAgentTeam,
   loadAgentTeams,
@@ -203,5 +205,45 @@ describe('AgentTeam persistence — round-trip (create → persist → reload), 
     const teams = await loadAgentTeams()
     expect(teams).toHaveLength(1)
     expect(teams[0]?.id).toBe('team-support')
+  })
+})
+
+describe('createAgentTeamSource — the DataSource face over the SAME records (ADR-0227 wave 2, GH #1545)', () => {
+  const ctx = { signal: new AbortController().signal }
+
+  beforeEach(() => {
+    __testSetAdapter(createFakeAdapter()) // a FRESH in-memory tier per test — never the real localStorage
+  })
+
+  afterEach(() => {
+    __testSetAdapter(undefined)
+  })
+
+  it('create persists a VALID team under its own id — the module read path sees the source write (one owner)', async () => {
+    const source = createAgentTeamSource()
+    const team = makeTeam()
+    expect(await source.create({ team, knownAgentIds: KNOWN_AGENT_IDS }, ctx)).toEqual(team)
+    expect(await loadAgentTeams()).toEqual([team])
+    expect((await source.view.read('any-key', ctx)).map((t) => t.id)).toEqual([team.id])
+  })
+
+  it('create THROWS AgentTeamValidationError on an invalid record — validation stays CLOSED, nothing lands, the full issue set rides the error', async () => {
+    const source = createAgentTeamSource()
+    const dangling = makeTeam({ gmAgentId: 'agent-never-existed' })
+    let thrown: unknown
+    await source.create({ team: dangling, knownAgentIds: KNOWN_AGENT_IDS }, ctx).catch((e: unknown) => (thrown = e))
+    expect(thrown).toBeInstanceOf(AgentTeamValidationError)
+    expect((thrown as AgentTeamValidationError).issues.some((i) => i.path === 'gmAgentId')).toBe(true)
+    expect(await loadAgentTeams(), 'nothing persisted').toEqual([])
+  })
+
+  it('read resolves one team by id and throws a NAMED not-found; remove deletes through the same keys', async () => {
+    const source = createAgentTeamSource()
+    const team = makeTeam()
+    await saveAgentTeam(team, KNOWN_AGENT_IDS) // seeded through the MODULE function — the source reads the same records
+    expect((await source.read(team.id, ctx)).label).toBe(team.label)
+    await expect(source.read('never-persisted', ctx)).rejects.toThrow('no persisted team with id "never-persisted"')
+    await source.remove(team.id, ctx)
+    expect(await source.list(undefined, ctx)).toEqual([])
   })
 })
