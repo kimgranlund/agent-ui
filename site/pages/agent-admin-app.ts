@@ -76,7 +76,7 @@ import { listReorder } from '@agent-ui/components/traits/list-reorder'
 // `effect` drives the one derivation that feeds the component's push seam; the optimistic commits keep
 // every handler's same-tick reads honest (the source's own writes land in the calling tick too).
 import { effect, signal } from '@agent-ui/components'
-import { createStore, mutation, resource, type Store } from '@agent-ui/data'
+import { createStore, mutation, resource, type SourceContext, type Store } from '@agent-ui/data'
 import { applyRosterOrder, type PersonaRosterView } from '@agent-ui/app/agent-admin-roster-source'
 import {
   builderStore,
@@ -264,19 +264,36 @@ function currentSkillPacks(): readonly SkillPackSnapshot[] {
 // settling with an ATOMIC read-back mirror commit — the SAME deviation the roster mutations above
 // document (resource.ts's mirror doctrine): an `invalidate` refetch spans jobs, and a rapid successive
 // import/remove's commit would be regressed by the earlier action's in-flight read landing late.
+// The mirror READ-BACK is best-effort, deliberately isolated from the write's own success/failure
+// (review finding): the create/remove already committed by the time this runs, so a read-back that
+// throws (a transient IDB hiccup) must never turn an already-successful write into a reported failure
+// — it only leaves the view stale until the NEXT successful read (boot, or another mutation's own
+// read-back) refreshes it. Swallowed, never re-thrown.
+async function mirrorSkillPackShelf(ctx: SourceContext): Promise<void> {
+  await skillPackSource.shelf
+    .read(SKILL_PACKS_KEY, ctx)
+    .then((shelf) => skillPacksStore.commit(SKILL_PACKS_KEY, shelf))
+    .catch(() => {})
+}
+
 const importSkillPackMutation = mutation(
   async (snapshot: SkillPackSnapshot, ctx) => {
     const created = await skillPackSource.create(snapshot, ctx)
-    skillPacksStore.commit(SKILL_PACKS_KEY, await skillPackSource.shelf.read(SKILL_PACKS_KEY, ctx))
+    await mirrorSkillPackShelf(ctx)
     return created
   },
   { store: skillPacksStore },
 )
 
+// Returns `true` (never `undefined`) on success — review finding: `run()` resolves `undefined` on
+// BOTH a genuine error and a void success, so a caller peeking the shared `.status` signal after the
+// await can misclassify THIS call's outcome if a second remove races in and settles first. Returning a
+// sentinel makes `run()`'s own resolved value the per-call truth, no shared-state peek needed.
 const removeSkillPackMutation = mutation(
-  async (packId: string, ctx) => {
+  async (packId: string, ctx): Promise<true> => {
     await skillPackSource.remove(packId, ctx)
-    skillPacksStore.commit(SKILL_PACKS_KEY, await skillPackSource.shelf.read(SKILL_PACKS_KEY, ctx))
+    await mirrorSkillPackShelf(ctx)
+    return true
   },
   { store: skillPacksStore },
 )
@@ -307,11 +324,12 @@ const librariesRevision = signal(0)
 // the active persona's CATEGORY, the shelf, or the live-read revision actually changes — the identity
 // guard below keeps a mere rename/reorder (which commits a fresh roster view) from rebuilding the
 // add-from-library menus for nothing.
+const EMPTY_SHELF: readonly SkillPackSnapshot[] = [] // a stable reference — keeps the guard's identity check meaningful while the shelf read is still in flight (undefined every re-run otherwise)
 let lastLibrariesInputs: { category: PresetCategory | undefined; shelf: readonly SkillPackSnapshot[]; revision: number } | undefined
 effect(() => {
   const revision = librariesRevision.value
   const view = rosterResource.data.value
-  const shelf = skillPacksResource.data.value ?? []
+  const shelf = skillPacksResource.data.value ?? EMPTY_SHELF
   const active = view === undefined ? undefined : (view.personas.find((p) => p.id === view.activeId) ?? view.personas[0])
   const category = active?.category
   if (lastLibrariesInputs !== undefined && lastLibrariesInputs.category === category && lastLibrariesInputs.shelf === shelf && lastLibrariesInputs.revision === revision) return
@@ -783,7 +801,17 @@ export async function handleTeamDeclared(team: TeamDeclaration): Promise<void> {
   const knownAgentIds = currentRoster().map((p) => p.id)
   // The collision scan reads the one teams resource — refetched HERE (not trusted from boot) so a team
   // another tab minted since is seen, the exact freshness the retired direct `loadAgentTeams()` bought.
+  // FAIL-CLOSED on the refetch itself (review finding): `resource()`'s own contract swallows a failed
+  // read into `error`, keeping `data` whatever it was before (SWR) — undefined at first call, since this
+  // resource is never seeded. Reading `data.peek() ?? []` on a failed refetch would silently treat "the
+  // read failed" as "no teams exist", letting `mintTeamId` hand back a COLLIDING id that `create`'s
+  // last-write-wins upsert (agent-team.ts) then silently overwrites. The retired direct `loadAgentTeams()`
+  // call THREW on failure; this mirrors that by checking status explicitly rather than trusting `data`.
   await teamsResource.refetch()
+  if (teamsResource.status.peek() === 'error') {
+    notify(`Team “${label}” could not be created — the existing team list could not be read.`, true)
+    return
+  }
   const existingTeams = teamsResource.data.peek() ?? []
   const agentTeam: AgentTeam = {
     id: mintTeamId(label, new Set(existingTeams.map((t) => t.id))),
@@ -1477,9 +1505,9 @@ function renderSkillPackRow(snapshot: SkillPackSnapshot): HTMLElement {
     // The remove rides the shelf mutation (ADR-0227 wave 2): its read-back commit updates the one
     // resource, the libraries derivation effect re-scopes the add-from-library menu — this handler
     // only re-renders the drawer list (its own surface) and reports.
-    void removeSkillPackMutation.run(snapshot.pack.id).then(() => {
+    void removeSkillPackMutation.run(snapshot.pack.id).then((ok) => {
       renderSkillPackShelf()
-      if (removeSkillPackMutation.status.peek() === 'error') {
+      if (ok === undefined) {
         packsFeedback(`“${snapshot.pack.label}” could not be removed — the shelf store refused the delete.`, true)
         return
       }
@@ -1648,16 +1676,16 @@ void (async () => {
     // GH #567 S6 (LLD-C6/SPEC-R28, Kim's F1 ruling) — DEV only: the dev proxy's `GET /integrations`
     // exists only under `vite dev` (worker/index.ts stays frozen, no production twin — ADR-0177
     // §0/Non-goals); production keeps the hand-authored INTEGRATION_TOOLS pack, untouched. A
-    // discovered `mcp:*` trio joins the Integrations pack without a page reload: `setLiveIntegrations`
-    // plus a fresh `admin.libraries` assignment — the SAME identity-change law `applyPersona`'s own
-    // reassignment above relies on (agent-admin-libraries.ts's `librariesForCategory` doc comment).
+    // discovered `mcp:*` trio joins the Integrations pack without a page reload via `setLiveIntegrations`
+    // (module state the libraries derivation effect cannot observe on its own — the revision bump below
+    // is what wakes it, ADR-0227 wave 2's `librariesRevision` signal).
     // GH #783 S4 (LLD-C6/SPEC-R5, ADR-0185) — the sibling live-read for MCP SERVICES rides the SAME
     // DEV-only block: `GET /integrations` now carries a second `services` array (S2), read by
-    // `fetchLiveServices` under the SAME degrade-to-`undefined` law. Both fetches BEFORE the one
-    // `admin.libraries` reassignment, so a single identity-change re-render carries both live reads into
-    // the add-from-library menu. `undefined` passes straight through `setLiveServices` (production/degrade
-    // keeps the MCP-services pack absent, the getter's own law). Reassign when EITHER landed; both undefined
-    // ⇒ nothing to re-render (the boot-time `librariesForCategory` getters already have it right).
+    // `fetchLiveServices` under the SAME degrade-to-`undefined` law. Both fetches BEFORE the one revision
+    // bump, so a single derivation re-run carries both live reads into the add-from-library menu.
+    // `undefined` passes straight through `setLiveServices` (production/degrade keeps the MCP-services
+    // pack absent, the getter's own law). Bump when EITHER landed; both undefined ⇒ nothing to re-render
+    // (the boot-time `librariesForCategory` getters already have it right).
     if (import.meta.env.DEV) {
       const trios = await overlay.fetchLiveIntegrations()
       const services = await overlay.fetchLiveServices()
