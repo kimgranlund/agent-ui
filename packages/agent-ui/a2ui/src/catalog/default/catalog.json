@@ -913,6 +913,13 @@
         "available": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "available" },
         "actionLabel": { "type": { "type": "string" }, "mapsTo": "actionLabel" }
       }
+    },
+
+    "Breadcrumb": {
+      "properties": {
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
+      },
+      "children": "ChildList"
     }
   },
 

@@ -154,9 +154,10 @@ const LAYOUT_SHOWCASE = ['layout-overview.html', 'layout-permutations.html'] as 
 //
 // GH #1515 — ui-breadcrumb's descriptor + control shipped in the component-build seat's S1 slice (the
 // frozen design intake's OWN 3-slice split, `.claude/docs/spec/breadcrumb.intake.md` §7: "S1 — core
-// anatomy" vs "S3 — site + catalog": doc/demo pages, gallery/preview specimen); its `breadcrumb-doc.html`
-// (+ demo) lands in the S3 slice (the ui-service-card/GH #1429 precedent, above) — parked here until then.
-const KNOWN_UNDOCUMENTED = new Set<string>(['breadcrumb'])
+// anatomy" vs "S3 — site + catalog": doc/demo pages, gallery/preview specimen); its `breadcrumb-doc.html` +
+// `breadcrumb-demo.html` landed in the docs-writer seat's S3 slice (the ui-service-card/GH #1429 precedent,
+// above) — stopgap drained, empty again.
+const KNOWN_UNDOCUMENTED = new Set<string>()
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()
@@ -285,7 +286,8 @@ describe('site coverage — every shipped component has its required per-tier pa
     // docs-writer seat's S2 slice (the ui-image/GH #1189 precedent) — no longer parked in KNOWN_UNDOCUMENTED.
     // ui-breadcrumb (GH #1515, the frozen design intake) — the wayfinding trail: tier=pattern (composed/
     // authored crumb stops carry their own geometry, no new geometry row — the ADR-0163 cl.6 reasoning
-    // verbatim). Parked in KNOWN_UNDOCUMENTED above until its S3 slice lands {doc, demo} site pages.
+    // verbatim). Its {doc, demo} site pages landed in the docs-writer seat's S3 slice — no longer parked
+    // in KNOWN_UNDOCUMENTED.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
       [
         'breadcrumb', 'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'drill', 'file-drop', 'form-popover', 'menu', 'modal',
@@ -323,9 +325,9 @@ describe('site coverage — every descriptor is documented XOR a known, delibera
   it('KNOWN_UNDOCUMENTED lists exactly the real undocumented descriptors (no stale name lingers, no surprise gap)', () => {
     const undocumentedNames = COMPONENTS.filter((c) => !isDocumented(c)).map((c) => c.name).sort()
     expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(undocumentedNames)
-    // ['breadcrumb'] — GH #1515's ui-breadcrumb re-seeded the gap at its S1 slice (the ADR-0224/GH #1429
-    // ui-service-card precedent, above); it drains back to [] when the S3 slice lands its site pages.
-    expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(['breadcrumb'])
+    // [] — GH #1515's ui-breadcrumb S3 slice landed its {doc, demo} site pages, draining the gap the S1
+    // slice re-seeded (the ADR-0224/GH #1429 ui-service-card precedent, above) back to empty.
+    expect([...KNOWN_UNDOCUMENTED].sort()).toEqual([])
   })
 })
 

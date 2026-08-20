@@ -1167,6 +1167,23 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // GH #1515 (no ADR — routine mint) — ui-breadcrumb, the wayfinding trail with an optional
+  // `collapse="menu"` overflow fold (tier=pattern).
+  {
+    label: 'ui-breadcrumb',
+    cards: [
+      {
+        href: './breadcrumb-demo.html',
+        title: 'Demo',
+        blurb: 'A real multi-level path, a slotted-separator variant, and a collapse="menu" fold over a deep trail — the composed overflow ui-menu relaying activation to the real hidden crumb.',
+      },
+      {
+        href: './breadcrumb-doc.html',
+        title: 'API reference',
+        blurb: 'The `label`/`inline`/`collapse`/`collapse-keep-trailing` attributes, the slotted separator template, and the auto-stamped current-page crumb, generated from breadcrumb.md.',
+      },
+    ],
+  },
   // The Wave M1 content family (ADR-0113): the zero-machinery code leaf + the native-<details> disclosure.
   {
     label: 'ui-code',
