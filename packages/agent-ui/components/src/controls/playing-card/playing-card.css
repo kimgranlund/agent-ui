@@ -1,0 +1,253 @@
+/* playing-card.css — ui-playing-card, the Display-class true card-face/back leaf (ADR-0225, GH #1478).
+ * Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-playing-card)` (specificity 0,0,0) declares the `--ui-playing-card-*`
+ *       chain: the em-keyed owned mark box (`--ui-playing-card-inline-size`, the pie-chart ring / avatar
+ *       F3 posture — density-invariant, `[size]` repoints the tier, the compact ramp is explicitly NOT
+ *       reused — ADR-0225 cl.5), the DEPICTED-OBJECT color exception (`--ui-playing-card-face-surface`
+ *       pinned light in BOTH schemes; `--ui-playing-card-ink`/`-ink-red` PIGMENT tokens, never an intent
+ *       role — ADR-0225 cl.3/cl.4), the themed back plane/ink (flips with the scheme — the side that IS
+ *       table furniture), the existing outline role, and the box-relative radius.
+ *   [2] STYLES BLOCK — `@scope (ui-playing-card)` consumes ONLY `--ui-playing-card-*` (∪ the sanctioned
+ *       fleet-constant direct reads: motion, the shared outline role is ALREADY routed through the
+ *       component's own `--ui-playing-card-outline` token, so no exception is needed there). The host is
+ *       a fixed-aspect box (`aspect-ratio: 9 / 14`, bridge 2¼×3½in) holding the flipper rotor (both faces
+ *       always painted, `backface-visibility: hidden`, ADR-0225 cl.6 — the fleet's FIRST 3D transform).
+ *
+ * Geometry is density-invariant mark geometry (ADR-0225 cl.5) — radius + every interior type/pip size is
+ * a `calc()` fraction of the owned box (the avatar calc idiom); a ramp change SNAPS, never transitions.
+ *
+ * Identity (ADR-0225 cl.3): rank text + shape-distinct suit glyphs carry identity by construction — the
+ * red/black ink is a REDUNDANT carrier (ADR-0057/ADR-0219 cl.4), never the only one. `--ui-playing-card-
+ * ink-red` reads the danger LADDER's flat mode-independent primitives directly (never `light-dark()`,
+ * never the `danger` intent role) — ≥4.5:1 against the pinned-light face surface holds in BOTH schemes
+ * by construction (neither token depends on `color-scheme`), proven pixel-true by playing-card.browser.test.ts.
+ *
+ * Motion (ADR-0225 cl.6): the flip is `rotateY` on the flipper, transitioning ONLY under `:state(ready)`
+ * (a card first-painting face-down never animates); `prefers-reduced-motion` ⇒ instant swap (the
+ * transition drops, the transform still applies — static, never nothing). The deal entrance is an
+ * UNCONDITIONAL `@starting-style` fade/settle on the host (the drawer mechanism verbatim), automatic on
+ * insertion; reduced-motion ⇒ none. Zero new motion tokens, zero timing/easing/distance props — nothing
+ * is configurable, so the greenfield mechanism-honors-every-attribute check passes trivially.
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel; NEVER injected from
+ * playing-card.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-playing-card) declares --ui-playing-card-* ════════════════ */
+
+:where(ui-playing-card) {
+  /* The owned mark box (ADR-0225 cl.5) — em-keyed, density-invariant; defaults to the `md` tier. The
+     compact widget ramp (--md-sys-compact-*) is explicitly NOT reused here (its 28px ceiling cannot hold
+     a card) — this is a fresh, card-local em chain, the pie-chart-ring/avatar-F3 REPOINT pattern only. */
+  --ui-playing-card-inline-size: 5em;
+
+  /* The DEPICTED-OBJECT color exception (ADR-0225 cl.4): a card face is a depicted physical object, not
+     a themed UI surface — it stays LIGHT in both color schemes. `--md-sys-color-neutral-050` is already
+     a flat, mode-independent primitive (not `light-dark()`-wrapped), so "pinned light both schemes" holds
+     by construction, not by convention. */
+  --ui-playing-card-face-surface: var(--md-sys-color-neutral-050);
+
+  /* PIGMENT tokens (ADR-0225 cl.3) — spades/clubs + rank text read a near-black FLAT primitive;
+     hearts/diamonds read a mid-dark step off the danger LADDER's flat mode-independent primitives —
+     explicitly the PIGMENT hue source, never the `danger` intent role (which would claim a semantic that
+     is not there) and never `on-surface` (which flips with the scheme, collapsing the face-pinned-light
+     posture above). Both ≥4.5:1 against `--ui-playing-card-face-surface` in BOTH schemes (structurally —
+     neither side of either pair depends on `color-scheme`), pinned by playing-card.browser.test.ts. */
+  --ui-playing-card-ink: var(--md-sys-color-neutral-950);
+  --ui-playing-card-ink-red: var(--md-sys-color-danger-600);
+
+  /* The hairline frame — the existing outline role (flips with the scheme like any other chrome line). */
+  --ui-playing-card-outline: var(--md-sys-color-neutral-outline);
+
+  /* The back — the side that IS themed table furniture (ADR-0225 cl.4): aliases the accent/primary
+     semantic-role ramp, so it follows the scheme like every other themed surface in the fleet. */
+  --ui-playing-card-back-surface: var(--md-sys-color-primary);
+  --ui-playing-card-back-ink: var(--md-sys-color-primary-on-primary);
+
+  /* Radius + interior type/pip sizes are box-relative calc() fractions (below, in @scope) — the avatar
+     calc idiom; the physical card's corner-radius ratio (≈0.055 × the short edge). */
+  --ui-playing-card-radius: calc(var(--ui-playing-card-inline-size) * 0.055);
+}
+
+/* [size] → the em-keyed box ramp (ADR-0225 cl.5 — sm/md/lg, the avatar F3 REPOINT, a fresh chain). */
+:where(ui-playing-card[size='sm']) {
+  --ui-playing-card-inline-size: 3.5em;
+}
+:where(ui-playing-card[size='lg']) {
+  --ui-playing-card-inline-size: 7em;
+}
+
+/* [suit] → the red-ink repoint (ADR-0225 cl.3) — hearts/diamonds read the PIGMENT red; spades/clubs (and
+   the absent-suit blank face) hold the near-black default declared above. */
+:where(ui-playing-card[suit='hearts']),
+:where(ui-playing-card[suit='diamonds']) {
+  --ui-playing-card-ink: var(--ui-playing-card-ink-red);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-playing-card) consumes ONLY --ui-playing-card-* ════════════════ */
+
+@scope (ui-playing-card) {
+  :scope {
+    display: grid;
+    inline-size: var(--ui-playing-card-inline-size);
+    aspect-ratio: 9 / 14; /* bridge size, 2¼ × 3½ in (ADR-0225 cl.5) */
+    perspective: calc(var(--ui-playing-card-inline-size) * 3); /* the flipper rotor's 3D depth (ADR-0225 cl.6) */
+
+    /* Deal entrance (ADR-0225 cl.6) — UNCONDITIONAL @starting-style fade/settle on insertion (the
+       ui-drawer mechanism verbatim); no :state(ready) gate — the entrance IS what plays at first paint. */
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+      opacity var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      transform var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+  }
+
+  @starting-style {
+    :scope {
+      opacity: 0;
+      transform: translateY(calc(var(--ui-playing-card-inline-size) * 0.12));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :scope {
+      transition: none; /* deal entrance suppressed — the card just appears (accessibility, non-negotiable) */
+    }
+  }
+
+  /* The flipper rotor — both faces always painted (ADR-0225 cl.6); rotates 180deg when [face-down]. */
+  [data-part='flipper'] {
+    position: relative;
+    inline-size: 100%;
+    block-size: 100%;
+    transform-style: preserve-3d;
+    transform: rotateY(0deg);
+  }
+
+  :scope[face-down] [data-part='flipper'] {
+    transform: rotateY(180deg);
+  }
+
+  /* The flip transition — gated behind :state(ready) (ADR-0008 §4a-c / ADR-0225 cl.6): a card
+     first-painting face-down snaps to its resting rotation; only a SUBSEQUENT faceDown change animates. */
+  :scope:state(ready) [data-part='flipper'] {
+    transition: transform var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :scope:state(ready) [data-part='flipper'] {
+      transition: none; /* instant swap — STATIC, never nothing: the rotateY value still applies */
+    }
+  }
+
+  /* Face + back — both siblings inside the rotor, each hidden when facing away (ADR-0225 cl.6). The back
+     carries its OWN static 180deg so the rotor's 180deg flip brings it upright (the classic flip-card
+     technique). */
+  [data-part='face'],
+  [data-part='back'] {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: var(--ui-playing-card-radius);
+    border: 1px solid var(--ui-playing-card-outline);
+    overflow: hidden;
+  }
+
+  [data-part='face'] {
+    background: var(--ui-playing-card-face-surface);
+    color: var(--ui-playing-card-ink);
+  }
+
+  [data-part='back'] {
+    transform: rotateY(180deg);
+    background: var(--ui-playing-card-back-surface);
+    /* A pure-CSS cross-hatch lattice — no image asset, no glyph (ADR-0225 cl.4). An inset box-shadow of
+       the back's own surface colour paints a solid frame margin around the pattern (the "inset frame"). */
+    background-image:
+      repeating-linear-gradient(
+        45deg,
+        var(--ui-playing-card-back-ink) 0,
+        var(--ui-playing-card-back-ink) 1px,
+        transparent 1px,
+        transparent calc(var(--ui-playing-card-inline-size) * 0.09)
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        var(--ui-playing-card-back-ink) 0,
+        var(--ui-playing-card-back-ink) 1px,
+        transparent 1px,
+        transparent calc(var(--ui-playing-card-inline-size) * 0.09)
+      );
+    box-shadow: inset 0 0 0 calc(var(--ui-playing-card-inline-size) * 0.06) var(--ui-playing-card-back-surface);
+  }
+
+  /* The corner indices — rank text + suit glyph, real text (ADR-0225 §4 identity row). Top-left upright;
+     the [data-inverted] twin sits bottom-right, rotated 180deg (the physical-card convention). */
+  [data-part='index'] {
+    position: absolute;
+    inset-block-start: calc(var(--ui-playing-card-inline-size) * 0.05);
+    inset-inline-start: calc(var(--ui-playing-card-inline-size) * 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.05;
+    font-size: calc(var(--ui-playing-card-inline-size) * 0.15);
+    font-weight: bold;
+  }
+
+  [data-part='index'][data-inverted] {
+    inset-block-start: auto;
+    inset-inline-start: auto;
+    inset-block-end: calc(var(--ui-playing-card-inline-size) * 0.05);
+    inset-inline-end: calc(var(--ui-playing-card-inline-size) * 0.05);
+    transform: rotate(180deg);
+  }
+
+  [data-part='index-suit'] {
+    font-size: 0.9em;
+  }
+
+  /* The center content region — the rank's pip grid (A, 2–10) OR the large letter (J/Q/K); empty for the
+     '' blank face. A 3-column × 9-row-unit grid (double resolution so rank-10's off-center pair — grid
+     rows 0.5/3.5 — lands on real integer lines); each pip's exact cell is set imperatively by
+     playing-card.ts (the pie-chart `--_slice-ink` precedent — per-node placement, never a CSS rule). */
+  [data-part='pips'] {
+    position: absolute;
+    inset: calc(var(--ui-playing-card-inline-size) * 0.26) calc(var(--ui-playing-card-inline-size) * 0.16);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+    place-items: center;
+  }
+
+  [data-part='pip'] {
+    font-size: calc(var(--ui-playing-card-inline-size) * 0.16);
+    line-height: 1;
+  }
+
+  [data-part='pip'][data-rotated] {
+    transform: rotate(180deg);
+  }
+
+  [data-part='letter'] {
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+    font-size: calc(var(--ui-playing-card-inline-size) * 0.42);
+    font-weight: bold;
+    line-height: 1;
+  }
+
+  @media (forced-colors: active) {
+    [data-part='face'],
+    [data-part='back'] {
+      border-color: CanvasText;
+      forced-color-adjust: none;
+      background: Canvas;
+      color: CanvasText;
+    }
+    [data-part='back'] {
+      background-image: none; /* the lattice pattern flattens — the CanvasText border alone marks the back under WHCM */
+    }
+  }
+}
