@@ -37,7 +37,7 @@ attributes:               # attributes-as-API — mirrors drill.ts `static props
   - name: layout
     type: enum
     values: [stack, columns]
-    default: stack        # ADR-0195 Amendment cl.A2. S1 (this build) implements ONLY the 'stack' render mapping; 'columns' (Miller columns, S3) is accepted but renders identically to 'stack' until that slice lands
+    default: stack        # ADR-0195 Amendment cl.A2. 'columns' (Miller columns, S3, GH #1510) auto-degrades to the 'stack' render mapping whenever the HOST's own inline size falls below ADR-0150's compact-body line (52.5rem/840px, cl.A8) — the attribute value itself never changes, only which render mapping it resolves to
     reflect: true
   - name: chrome
     type: enum
@@ -92,9 +92,10 @@ geometry:
   padding: var(--ui-drill-padding)              # panel viewport padding, space-scale
   outline: var(--ui-drill-outline)              # the card border + the header's bottom hairline
   radius: var(--ui-drill-radius)                # ADR-0195 Amendment cl.A5 — the contained card's own corner radius
-  scrim: var(--ui-drill-scrim)                  # ADR-0195 Amendment cl.A5 — the non-blocking dim wash on a painted ancestor pane
+  scrim: var(--ui-drill-scrim)                  # ADR-0195 Amendment cl.A5 — the non-blocking dim wash on a painted ancestor pane, STACK mapping only
+  columnSize: var(--ui-drill-column-size)       # ADR-0195 Amendment cl.A5 (S3) — the layout="columns" per-column track floor
 
-forcedColors: A `@media (forced-colors: active)` block keeps the card border, the header hairline, and the Back button's ink visible as system colours (CanvasText) — the tabs/modal/drawer precedent (component-checker peer-parity fix); the ancestor scrim is not a blocking backdrop (no `::backdrop`/top-layer involved — a plain in-flow overlay), so it carries no forced-colors override of its own.
+forcedColors: A `@media (forced-colors: active)` block keeps the card border, the header hairline, and the Back button's ink visible as system colours (CanvasText) — the tabs/modal/drawer precedent (component-checker peer-parity fix); the ancestor scrim is not a blocking backdrop (no `::backdrop`/top-layer involved — a plain in-flow overlay), so it carries no forced-colors override of its own. Under `layout="columns"` the column divider (`border-inline-end`) joins the same precedent (ADR-0195 Amendment S3, GH #1510).
 ---
 
 # ui-drill
@@ -138,9 +139,31 @@ clipped to the card's own rounded, bordered edge (`overflow: clip`). Every off-p
 `layout="stack"` (the default) paints every panel in the resolved path, z-ordered so the active panel — always
 `path.at(-1)` — sits on top. Painted ancestors are visible but dimmed under a non-blocking `--ui-drill-scrim`
 wash and carry the real `inert` attribute (visible pixels, no interaction surface — the swiper clone shape):
-no focus, no clicks, and no drill-trigger inside an ancestor panel can ever fire. `layout="columns"` (Miller
-columns) is a reflected, closed-enum host prop already, but its render mapping is NOT yet implemented; setting
-it renders identically to the `stack` default until that slice ships (ADR-0195 Amendment, GH #1510).
+no focus, no clicks, and no drill-trigger inside an ancestor panel can ever fire.
+
+## Presentation: columns (Miller columns)
+
+`layout="columns"` (ADR-0195 Amendment cl.A1/A4, GH #1510) paints every panel in the resolved path
+**side by side**, in path order, sharing the host's ONE horizontal scroll region (`overflow-x: auto`) — every
+column stays **fully interactive**: no `inert`, no dim wash. A `data-role="drill-trigger"` inside a
+non-rightmost (ancestor) column still drills forward — it **truncates the resolved path at its own hosting
+column, then appends** (`path.slice(0, i+1).concat(key)`), reusing the same `change`-emitting commit every
+other mode uses (a new sibling method, `#drillTo`/`#back`/`#commit`/`#resolve` stay untouched). The row the
+reader actually drilled into carries a bare `data-drill-active` attribute (a styling hook only — no default
+paint ships; an author's own trigger markup owns the selected-row look) on the ONE trigger inside its column
+whose key names the next path entry. The active (rightmost) column keeps the `aria-labelledby` reflection onto
+the shared `[data-part="heading"]`; every ancestor column instead gets a plain `internals.ariaLabel` (its own
+`heading` prop value — no shared node to point at). **Columns never moves focus on drill-forward** — the
+clicked trigger keeps it, the child column opens beside it (the one deliberate narrowing of the Focus section
+below, scoped to this layout only).
+
+### Narrow-host auto-degrade (cl.A8)
+
+`layout="columns"` silently resolves to the `stack` render mapping above whenever the **host's own inline
+size** — not the viewport — falls below ADR-0150's compact-body line (52.5rem/840px), via a real
+`@container (inline-size < 52.5rem)` query scoped to the host itself (the nav-rail `@container` threshold
+shape). The `layout` attribute value itself never changes; only which render mapping it resolves to does. A
+`ui-drill` nested inside a narrow pane degrades independently of window width.
 
 ## Chrome: backbar (default) vs. crumbs
 
@@ -190,7 +213,9 @@ agent's two-way bind) owns writing it back.
 ## Focus
 
 `[data-part="heading"]` (a real `<h2>`, `tabindex="-1"`) receives programmatic focus on every path change
-AFTER the initial mount — a primed guard prevents focus theft on first paint.
+AFTER the initial mount — a primed guard prevents focus theft on first paint. **Exception:** under
+`layout="columns"` (ADR-0195 Amendment cl.A6, GH #1510) drilling forward never moves focus — the clicked
+trigger keeps it, the child column opens beside it.
 
 ## Motion
 

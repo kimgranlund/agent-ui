@@ -21,6 +21,25 @@
  * so it never paints before the FIRST trail entry. No new tokens — reuses `--ui-drill-ink-muted`/
  * `--ui-drill-back-font-size`/`--ui-drill-header-gap` (cl.A5 names no crumbs-specific token).
  *
+ * ADR-0195 AMENDMENT S3 slice (2026-08-20, GH #1510) — `layout="columns"` (Miller columns). `data-drill-layout`
+ * is the RESOLVED render mapping drill.ts sets every render pass ('stack'|'columns') — distinct from the
+ * AUTHORED `[layout]` attribute, which never changes under cl.A8's narrow auto-degrade (only what it resolves
+ * to does); every selector below keys off the resolved marker, never the raw attribute. Under `columns`, every
+ * painted panel (ancestor AND active) shares the SAME second grid row but gets its OWN explicit `grid-column`
+ * (drill.ts's own inline style, path-order index — the z-index precedent this file already carries), so the
+ * base `:where() { --ui-drill-column-size }` floor + `grid-auto-columns` gives side-by-side tracks inside the
+ * host's own ONE horizontal scroll region (`overflow-x: auto`, cl.A4) — no DOM move, same as stack. The
+ * cl.A6 ancestor scrim (below) is scoped to `[data-drill-layout='stack']` ONLY: a columns ancestor is fully
+ * interactive, never dimmed. The narrow-degrade line itself (cl.A8) is a REAL `@container (inline-size <
+ * 52.5rem)` query (ADR-0150's compact-body number, self-scoped — `:scope` already establishes
+ * `container-type: inline-size`) that flips a PRIVATE `--_drill-columns-narrow` custom property drill.ts reads
+ * via `getComputedStyle` (the `--ui-swiper-columns`/swiper.css precedent) — never a public `--ui-drill-*`
+ * token (it carries no color/dimension role of its own, purely a JS↔CSS boolean bridge, the `--_drill-dir-sign`
+ * precedent already in this file). No default paint ships for the `data-drill-active` row-highlight hook
+ * (cl.A6) — ADR-0195 Amendment cl.A5's own token list names exactly three (`radius`/`scrim`/`column-size`); an
+ * author's own trigger markup owns that look, the same restraint cl.A6 applies to declining to stamp ARIA onto
+ * author content.
+ *
  * ADR-0195 AMENDMENT (2026-08-19, GH #1510) — S1 slice: CONTAINED + STACK becomes the default presentation.
  * The host is a 2-row grid (header auto row; every `ui-drill-panel` — active AND painted ancestors — placed in
  * the SAME second-row grid cell, `overflow: clip` on the host) — same-cell stacking gives free positioning +
@@ -64,6 +83,11 @@
      starting point before its opaque `dialog-backdrop` role took over for that BLOCKING use — modal.css:37 —
      drill's ancestor dim is the non-blocking case that role was never repointed away from). */
   --ui-drill-scrim: var(--md-sys-color-neutral-scrim);
+  /* ADR-0195 Amendment cl.A5 — the `layout="columns"` track floor (S3): each side-by-side column shrinks no
+     further than this before the host's own horizontal scroll region (cl.A4) takes over. The nav-rail
+     flyout's own `12rem` floor precedent (`--ui-nav-rail-flyout-min-inline-size`) — a legible content column,
+     not a sliver. */
+  --ui-drill-column-size: 12rem;
 
   /* Motion — the EXISTING fleet constants (zero new motion tokens, the ui-drawer precedent). */
   --ui-drill-motion-duration: var(--md-sys-motion-duration-fast);
@@ -90,6 +114,32 @@
     overflow: clip;
     isolation: isolate;
     min-inline-size: 0;
+    /* S3 (cl.A8) — the self-scoped basis for the narrow-degrade @container query below (a drill's own box,
+       never a consumer-opted ancestor — nav-rail's `collapse-container="ancestor"` seam has no analogue
+       here). --_drill-columns-narrow is a PRIVATE JS↔CSS bridge (the --_drill-dir-sign precedent, this
+       file), never a public --ui-drill-* token — it carries no color/dimension role, drill.ts only ever
+       reads its resolved boolean (#effectiveLayout, the swiper.ts `--ui-swiper-columns` precedent). */
+    container-type: inline-size;
+    --_drill-columns-narrow: 0;
+  }
+
+  /* cl.A8 (Kim-ruled override) — `layout="columns"` auto-degrades to the `stack` render mapping whenever the
+     HOST's own inline size falls below ADR-0150's compact-body line (52.5rem/840px — the existing fleet
+     threshold, no new value minted; the nav-rail/swiper `@container` threshold shape, self-scoped rather than
+     named/ancestor-relative). drill.ts's #effectiveLayout() reads this flag; #render() re-derives the whole
+     painted-set mapping (inert/scrim/grid-column/focus/aria) from it every pass — this rule's only job is
+     publishing the boolean CSS itself already knows, never performing the collapse alone.
+     Targets `[data-part='header']` (a DESCENDANT), never `:scope` itself: the CSS Containment Queries spec
+     excludes the container-establishing element from matching its OWN query (self-containment exclusion —
+     the nav-rail/swiper precedent both target a descendant part for exactly this reason,
+     `[data-part='trigger']`/`[data-part='track']` respectively) — a `:scope` selector inside this block would
+     silently never match, which is what a first pass here measured (both engines stuck at 'columns'). The
+     custom property still reaches `getComputedStyle(this.#header)` in drill.ts; `:scope`'s own `0` default
+     (above) inherits down to it when the query does NOT match. */
+  @container (inline-size < 52.5rem) {
+    [data-part='header'] {
+      --_drill-columns-narrow: 1;
+    }
   }
 
   /* The control-owned header part — created once by drill.ts, never author content. */
@@ -237,13 +287,31 @@
 
   /* cl.A6 — a painted ancestor is dimmed (a non-blocking scrim wash, drill.ts also sets the real `inert`
      attribute so it carries no interaction surface) — visible pixels, nothing an author's own background can
-     paint over since the overlay is the LAST-painted layer within the ancestor's own stacking context. */
-  :scope > ui-drill-panel[data-drill-pane='ancestor']::after {
+     paint over since the overlay is the LAST-painted layer within the ancestor's own stacking context. S3:
+     scoped to the RESOLVED 'stack' mapping ONLY — a `layout="columns"` ancestor is fully interactive, never
+     dimmed (cl.A1's "all interactive"), even though it carries the SAME `data-drill-pane='ancestor'` marker
+     (drill.ts sets that value for both mappings — it also drives the columns a11y/active-row logic). */
+  :scope[data-drill-layout='stack'] > ui-drill-panel[data-drill-pane='ancestor']::after {
     content: '';
     position: absolute;
     inset: 0;
     background: var(--ui-drill-scrim);
     pointer-events: none;
+  }
+
+  /* S3 (cl.A1/A4) — `layout="columns"`: side-by-side tracks in PATH order (drill.ts sets each painted
+     panel's own `grid-column` inline, overriding the same-cell `grid-column: 1` base rule above), the host
+     owning the ONE horizontal scroll region. `data-drill-layout` is the RESOLVED mapping (never the raw
+     `[layout]` attribute — see this file's own header comment). */
+  :scope[data-drill-layout='columns'] {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(var(--ui-drill-column-size), 1fr);
+    overflow-x: auto;
+    overflow-y: clip;
+  }
+
+  :scope[data-drill-layout='columns'] > ui-drill-panel {
+    border-inline-end: 1px solid var(--ui-drill-outline);
   }
 
   /* ── CSS-transform BASE motion — excluded for a swap the View Transitions layer will run ─────────────── */
@@ -303,6 +371,12 @@
     [data-part='crumb'] + [data-part='heading']::before {
       color: CanvasText;
       forced-color-adjust: none;
+    }
+
+    /* S3 (cl.A1/A4) — the columns divider stays a real, visible stroke under forced-colors, the same
+       peer-parity fix applied to the card border/header hairline/back button above. */
+    :scope[data-drill-layout='columns'] > ui-drill-panel {
+      border-inline-end-color: CanvasText;
     }
   }
 }
