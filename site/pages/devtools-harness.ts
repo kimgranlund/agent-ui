@@ -19,7 +19,7 @@
 // list, drift-gated by the harness smoke specs. Hooks: `backend` (+`data-backend-id`/`data-active`/
 // `data-available`) · `status` (+`data-turn-state`/`data-turn-count`) · `conversation` · `timeline`
 // (+ per-row `data-devtools-event`) · `copy-timeline` · `canvas` · `verdict` (+`data-surface-id`/
-// `data-ok`) · `export` · `capture-output` · `capture-input` · `import`.
+// `data-ok`) · `export` · `download` · `capture-output` · `capture-input` · `import`.
 import { mountFullBleedPage } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './devtools-harness.css'
 import '@agent-ui/app/conversation.css' // ui-conversation's own thread/narration layout (LLD-C6)
@@ -119,13 +119,19 @@ exportBtn.setAttribute('size', 'small')
 exportBtn.setAttribute('tabindex', '0')
 exportBtn.textContent = 'Export capture'
 exportBtn.dataset.devtools = 'export'
+const downloadBtn = document.createElement('ui-button')
+downloadBtn.setAttribute('variant', 'soft')
+downloadBtn.setAttribute('size', 'small')
+downloadBtn.setAttribute('tabindex', '0')
+downloadBtn.textContent = 'Download capture'
+downloadBtn.dataset.devtools = 'download'
 const importBtn = document.createElement('ui-button')
 importBtn.setAttribute('variant', 'soft')
 importBtn.setAttribute('size', 'small')
 importBtn.setAttribute('tabindex', '0')
 importBtn.textContent = 'Import capture'
 importBtn.dataset.devtools = 'import'
-captureActions.append(exportBtn, importBtn)
+captureActions.append(exportBtn, downloadBtn, importBtn)
 captureBox.append(captureActions, captureOutput, captureInput)
 canvasPane.append(canvasHead, canvasEl, verdictList, captureBox)
 
@@ -357,8 +363,8 @@ conv.onClientMessage((message: A2uiClientMessage) => {
 })
 
 // ── capture export/import (SPEC-R10) — parseCapture/serializeCapture, the ONE format module ───────────
-exportBtn.addEventListener('click', () => {
-  const capture: DevtoolsCapture = {
+function buildCapture(): DevtoolsCapture {
+  return {
     kind: DEVTOOLS_CAPTURE_KIND,
     version: DEVTOOLS_CAPTURE_VERSION,
     createdAt: new Date().toISOString(),
@@ -366,8 +372,31 @@ exportBtn.addEventListener('click', () => {
     session,
     timeline: [...pageTimeline],
   }
-  captureOutput.value = serializeCapture(capture)
+}
+
+function captureFileName(capture: DevtoolsCapture): string {
+  return `devtools-capture-${capture.backend}-${capture.createdAt.replace(/[:.]/g, '-')}.json`
+}
+
+exportBtn.addEventListener('click', () => {
+  captureOutput.value = serializeCapture(buildCapture())
   status(`Exported ${pageTimeline.length} event(s) — copy the JSON from the output box.`)
+})
+
+downloadBtn.addEventListener('click', () => {
+  const capture = buildCapture()
+  const text = serializeCapture(capture)
+  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }))
+  const link = document.createElement('a')
+  link.href = url
+  link.download = captureFileName(capture)
+  // In the document for the click: a detached anchor's download is ignored by some engines.
+  document.body.append(link)
+  link.click()
+  link.remove()
+  // Revoke on the next task — revoking synchronously can cancel the download the click just started.
+  setTimeout(() => URL.revokeObjectURL(url), 0)
+  status(`Downloaded ${pageTimeline.length} event(s) as ${link.download}.`)
 })
 
 importBtn.addEventListener('click', () => {
