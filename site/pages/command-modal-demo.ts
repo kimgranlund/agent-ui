@@ -1,10 +1,14 @@
-// site/pages/command-modal-demo.ts — the ui-command-modal interaction demo (LLD-C17 / SPEC-R14 AC2). Mounts
-// the REAL palette OPENED over a realistic app backdrop, with two [role=group] sections (Navigation, Actions),
-// real command items (a leading ui-icon + label + a [data-role=shortcut] display), the author [slot=empty]
-// affordance, and a keyboard-flow callout. Shows BOTH hotkey modes: a consumer-wired open button (the F2 floor)
-// and a second instance with `hotkey="mod+k"` (the opt-in convenience) — each toggles only its OWN instance.
+// site/pages/command-modal-demo.ts — the ui-command-modal interaction demo (LLD-C17 / SPEC-R14 AC2). Illustrates
+// the opened look as a STATIC, INERT visual mock over a realistic app backdrop (GH #1555 — a genuinely live,
+// always-open ui-command-modal is a real top-layer `<dialog>` that correctly blocks pointer events across the
+// WHOLE page, not just its own card, so a docs page with several independent examples cannot leave one pinned
+// open); the mock reproduces the same grouped commands (Navigation, Actions), a leading ui-icon + label + a
+// decorative shortcut display, matching paletteChildren() below. The only LIVE, interactive instance is the
+// opt-in `hotkey="mod+k"` palette further down the page — press ⌘K/Ctrl+K or click its trigger to open it for
+// real, with the author [slot=empty] affordance and a keyboard-flow callout.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
+import './command-modal-demo.css' // page-local: the "opened palette" static-mock chrome (GH #1555)
 import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({
@@ -71,12 +75,35 @@ function paletteChildren(): HTMLElement[] {
   ]
 }
 
-// ── instance A — consumer-wired open (the F2 floor: a plain trigger, no document listener) ─────────────────
-const openedPalette = el('ui-command-modal', { label: 'Command palette', placeholder: 'Type a command…', open: '' }, paletteChildren())
-openedPalette.addEventListener('select', (e) => {
-  const { value, label, group } = (e as CustomEvent<{ value: string; label: string; group: string }>).detail
-  logEvent(`opened  select  value=${JSON.stringify(value)} label=${JSON.stringify(label)} group=${JSON.stringify(group)}`)
-})
+// ── "opened palette" illustration — GH #1555: a genuinely live ui-command-modal with `open` pre-set builds a
+// real top-layer `<dialog>` (showModal()), which correctly (per platform modal semantics) intercepts pointer
+// events across the ENTIRE page, not just its own example card — a visitor could not reach any OTHER section
+// on this page without dismissing it first. `ui-modal`/`ui-command-modal` (modal.ts / command-modal.ts) have
+// no non-modal/inert rendering mode to opt into, so this illustration is now a STATIC, INERT visual mock: the
+// same real content (icons/labels/shortcuts, matching paletteChildren() below) laid out to match the live
+// control's look via plain divs (styled once in containers.css, `.demo-modal-mock*`), never a real `<dialog>`
+// — so it cannot block anything. `aria-hidden` because it is decorative (not a real listbox).
+function mockOption(icon: string, label: string, shortcut: string): HTMLElement {
+  const children: Node[] = [el('ui-icon', { glyph: icon, 'data-role': 'icon' }), text(label)]
+  if (shortcut) children.push(el('span', { 'data-role': 'shortcut' }, [text(shortcut)]))
+  return el('div', { class: 'demo-modal-mock-option' }, children)
+}
+function mockGroup(label: string, ...options: HTMLElement[]): HTMLElement {
+  return el('div', { class: 'demo-modal-mock-group' }, [el('div', { class: 'demo-modal-mock-group-label' }, [text(label)]), ...options])
+}
+const openedPaletteMock = el('div', { class: 'demo-modal-mock', 'aria-hidden': 'true' }, [
+  el('div', { class: 'demo-modal-mock-search', 'data-placeholder': 'Type a command…' }),
+  el('div', { class: 'demo-modal-mock-list' }, [
+    mockGroup('Navigation', mockOption('house', 'Go Home', '⌘H'), mockOption('gear', 'Settings', '⌘,')),
+    mockGroup('Actions', mockOption('sign-out', 'Log out', ''), mockOption('share', 'Share file', '')),
+  ]),
+])
+const openedPaletteNote = el('p', {}, [
+  text('Static illustration, not a live control — a real opened '), code('ui-command-modal'), text(' is a genuine '),
+  text('top-layer '), code('<dialog>'), text(' that (correctly) blocks the rest of the page until dismissed, so a '),
+  text('page showing several independent examples cannot leave one pinned open. Try the fully live, fully '),
+  text('interactive palette in the '), el('strong', {}, [text('opt-in hotkey')]), text(' section below.'),
+])
 
 // ── instance B — the opt-in hotkey convenience (mod+k), closed by default ───────────────────────────────────
 const hotkeyPalette = el('ui-command-modal', { label: 'Command palette (hotkey)', placeholder: 'Type a command…', hotkey: 'mod+k' }, paletteChildren())
@@ -103,7 +130,7 @@ const hotkeyNote = el('p', {}, [
 ])
 
 content.append(
-  exampleSection('Opened palette — grouped commands, an empty-state affordance, consumer-wired open', backdrop, openedPalette),
+  exampleSection('Opened palette (static illustration) — grouped commands', backdrop, openedPaletteNote, openedPaletteMock),
   exampleSection('Keyboard flow', keyboardNote),
   exampleSection('The opt-in hotkey (⌘K / Ctrl+K)', hotkeyTrigger, hotkeyPalette, hotkeyNote),
   exampleSection('select event log', log),

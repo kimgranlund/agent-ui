@@ -247,14 +247,27 @@ LLD carries it as a build deliverable.**
 
 **SPEC-R14 — Required site pages + representative specimen.** The `tier: pattern` classification REQUIRES a
 `{doc, demo}` page pair under `site-coverage.test.ts` (the `ui-combo-box`/`ui-tabs` parity set).
-`command-modal-doc.ts` MUST be the descriptor-derived API page; `command-modal-demo.ts` MUST show the palette
-opened over a realistic app backdrop with grouped commands (icons + shortcut displays), the empty state, and a
-keyboard-flow callout (type-to-filter, arrow to move the highlight, Enter to select+close, Escape to dismiss). A
-representative `<component-gallery>`/preview specimen MUST show the palette's real job (a populated, grouped
-command list — not a one-child stub). *(ADR-0125; the whole-shape + representative-specimen laws)*
+`command-modal-doc.ts` MUST be the descriptor-derived API page; `command-modal-demo.ts` MUST show the opened
+look over a realistic app backdrop with grouped commands (icons + shortcut displays) and a keyboard-flow
+callout (type-to-filter, arrow to move the highlight, Enter to select+close, Escape to dismiss). A representative
+`<component-gallery>`/preview specimen MUST show the palette's real job (a populated, grouped command list — not
+a one-child stub). *(ADR-0125; the whole-shape + representative-specimen laws)*
 - **AC1** *Given* `site-coverage.test.ts`, *then* the required-page-set check for `ui-command-modal` passes.
-- **AC2** *Given* the demo page, *then* it renders an opened palette with at least two groups and multiple real
-  command items, and the empty-state affordance.
+- **AC2** *Given* the demo page, *then* it renders an illustration of the opened palette with at least two groups
+  and multiple real command items; every OTHER example section on the page (keyboard-flow prose, the live
+  opt-in-hotkey instance, the event log) MUST stay reachable/interactable without dismissing that illustration
+  first.
+
+**GH #1555 rider (2026-08-20).** AC2 no longer requires the opened-palette illustration to be a genuinely live,
+always-open `ui-command-modal`, and drops the empty-state clause from that ONE illustration: a real `open`-set
+instance builds an actual top-layer `<dialog>` (`showModal()`), which — correct platform `:modal` semantics —
+intercepts pointer events across the WHOLE page, not just its own card, so a demo page with several independent
+example sections could not leave one permanently open without blocking every other section (reproduced via a
+real Playwright click timing out on an unrelated trigger further down the page). Kim ruled: fix the demo page.
+`command-modal-demo.ts` now renders that ONE illustration as a static, inert visual mock (real content, no live
+`<dialog>`); the empty-state affordance is demonstrated by the page's remaining LIVE instance (the opt-in
+`hotkey="mod+k"` palette) instead. `ui-modal`/`ui-command-modal` themselves are unchanged — no non-modal
+rendering mode was added; this is a site-content-only amendment.
 
 ## 4. Non-goals (explicit fences)
 
