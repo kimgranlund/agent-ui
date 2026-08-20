@@ -35,6 +35,14 @@
   --ui-modal-radius: var(--md-sys-shape-corner-base); /* the shared fleet radius (ADR-0015 cl.5) */
   --ui-modal-padding: var(--md-sys-space-lg); /* the shell pad off the density-responsive ladder (NOT a control height) */
   --ui-modal-scrim: var(--md-sys-color-dialog-backdrop); /* the ::backdrop blocking wash — black 80% opacity (TKT-0019; was --md-sys-color-neutral-scrim, too light) */
+  /* GH #1554 — opacity alone cannot defeat arbitrarily high-contrast page content: a near-black source pixel
+     blended toward black stays near-black regardless of how high the scrim's opacity climbs (0 * (1 - a) is
+     always ~0), so raising --ui-modal-scrim's alpha further has NO effect on the reported case (near-black text
+     on a near-white page) and was deliberately NOT done here. A spatial blur instead SMEARS the sharp text/page
+     edges into their surroundings before the scrim wash composites over them, so legibility fails independent of
+     the page's own contrast ratio. This is a NEW visual-language element for the fleet (no prior --ui-*-blur
+     token or backdrop-filter use in components/src) — flagged in the PR rather than silently introduced. */
+  --ui-modal-scrim-blur: 6px;
   /* GH #913 (#906's flagged adjacent gap) — the #874/#911 fleet unobtrusive-scrollbar idiom (own-chain
      tokens off the shared dimensional constant + colour roles, TKT-0066 item 5 law): the dialog part IS
      the modal's scroll viewport (`overflow: auto` below, capped at 85svh) and was fully untreated before
@@ -119,14 +127,35 @@
   }
 
   /* the ::backdrop scrim — the platform-painted blocking layer behind the modal (top layer). A translucent
-     neutral scrim role, so the page dims but is not fully hidden. */
+     neutral scrim role, so the page dims but is not fully hidden. GH #1554 — the wash + blur TOGETHER (not
+     opacity alone) genuinely obscure the page's own content regardless of its contrast: the blur smears sharp
+     text/background edges together, then the wash dims the result. `-webkit-` carries the WebKit legacy prefix
+     (Safari has shipped unprefixed backdrop-filter since 18, but the prefixed form is harmless there and is
+     still load-bearing on some still-supported WebKit releases). */
   :scope > [data-part='dialog']::backdrop {
     background-color: var(--ui-modal-scrim);
+    -webkit-backdrop-filter: blur(var(--ui-modal-scrim-blur));
+    backdrop-filter: blur(var(--ui-modal-scrim-blur));
+  }
+
+  /* GH #1554 review finding — the blur stance under forced-colors and prefers-reduced-transparency is a
+     DECIDED choice, not an oversight: forced-colors (below) intentionally leaves the blur ALONE (spatial
+     blur touches no colour channel, so it cannot defeat the forced Canvas base the way a translucent wash
+     would — the blocking layer stays perceivable, arguably MORE so). `prefers-reduced-transparency: reduce`
+     is the one case that DOES drop it: a user who has asked the OS to suppress blur/vibrancy effects gets
+     the pre-fix, opacity-only wash back (the exact TKT-0019 behaviour) rather than a smeared backdrop they
+     specifically opted out of. */
+  @media (prefers-reduced-transparency: reduce) {
+    :scope > [data-part='dialog']::backdrop {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
   }
 
   /* forced-colors (WHCM) — keep the dialog surface + frame + ink visible as system colours (the wash drops; a
      translucent overlay would paint over the forced Canvas base and defeat it). The ::backdrop is left to the
-     scrim role / UA so the blocking layer still paints (it must not vanish — the modal stays distinguishable). */
+     scrim role / UA so the blocking layer still paints (it must not vanish — the modal stays distinguishable);
+     the blur is DELIBERATELY left in effect too (GH #1554 — see the comment above the ::backdrop rule). */
   @media (forced-colors: active) {
     :scope > [data-part='dialog'] {
       background-color: Canvas;

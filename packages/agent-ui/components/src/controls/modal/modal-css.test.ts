@@ -46,6 +46,8 @@ describe('modal.css — structure + sectioning (s9)', () => {
     // TKT-0019 — black 80% opacity (Kim-specified), NOT the generated --md-sys-color-neutral-scrim (too light);
     // the dedicated --md-sys-color-dialog-backdrop role is fleet-wide (every ui-modal dialog).
     expect(tokenBlock).toMatch(/--ui-modal-scrim:\s*var\(--md-sys-color-dialog-backdrop\)/)
+    // GH #1554 — the own-chain blur dial (opacity alone cannot defeat arbitrarily high-contrast page content).
+    expect(tokenBlock).toMatch(/--ui-modal-scrim-blur:\s*\d/)
     expect(tokenBlock).toMatch(/--ui-modal-radius:\s*var\(--md-sys-shape-corner-base\)/) // the shared fleet radius
     expect(tokenBlock).toMatch(/--ui-modal-padding:\s*var\(--md-sys-space-/) // the density-responsive layout spacing
   })
@@ -77,6 +79,25 @@ describe('modal.css — the @scope dialog surface + ::backdrop (s9)', () => {
 
   it('the ::backdrop reads the scrim from the own chain (the blocking layer)', () => {
     expect(stylesBlock).toMatch(/\[data-part='dialog'\]::backdrop\s*\{\s*background-color:\s*var\(--ui-modal-scrim\)/)
+  })
+
+  it('GH #1554 — the ::backdrop ALSO blurs (both prefixed + standard), reading the own-chain blur dial', () => {
+    const m = stylesBlock.match(/\[data-part='dialog'\]::backdrop\s*\{([^}]*)\}/)
+    expect(m, 'the ::backdrop rule is missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/-webkit-backdrop-filter:\s*blur\(var\(--ui-modal-scrim-blur\)\)/)
+    expect(rule).toMatch(/(?<!-webkit-)backdrop-filter:\s*blur\(var\(--ui-modal-scrim-blur\)\)/)
+  })
+
+  it('GH #1554 review finding — prefers-reduced-transparency:reduce drops the blur back to the pre-fix wash', () => {
+    expect(stylesBlock).toMatch(/@media \(prefers-reduced-transparency:\s*reduce\)/)
+    const rpt = stylesBlock.slice(
+      stylesBlock.indexOf('@media (prefers-reduced-transparency: reduce)'),
+      stylesBlock.indexOf('@media (forced-colors: active)'),
+    )
+    expect(rpt).toMatch(/\[data-part='dialog'\]::backdrop/)
+    expect(rpt).toMatch(/-webkit-backdrop-filter:\s*none/)
+    expect(rpt).toMatch(/(?<!-webkit-)backdrop-filter:\s*none/)
   })
 })
 
