@@ -186,6 +186,93 @@ describe('validateCatalogConformance — PropDef.rejectFunctionCall (ADR-0169 E7
   })
 })
 
+// ── PropDef.requires — the ADR-0226 cl.3 cross-prop presence check ─────────────────────────────────────
+describe('validateCatalogConformance — PropDef.requires (ADR-0226 cl.3)', () => {
+  // A stub catalog mirroring the real Button.icon/Button.iconOnly shape (icon requires label; iconOnly
+  // requires icon) without depending on the default catalog's exact wording — the enumCatalog/actionCatalog
+  // precedent above, applied to the new opt-in mechanism.
+  const requiresCatalog = loadCatalog({
+    catalogId: 'requires-demo',
+    protocolVersion: 'v1.0',
+    components: {
+      Widget: {
+        properties: {
+          icon: { type: { type: 'string' }, bindable: true, mapsTo: 'icon', requires: ['label'] },
+          iconOnly: { type: { type: 'boolean' }, mapsTo: 'iconOnly', requires: ['icon'] },
+          label: { type: { type: 'string' }, bindable: true, mapsTo: 'label' },
+        },
+      },
+    },
+    functions: {},
+  })
+
+  it("a declaring key present without its required sibling fails CATALOG at the missing sibling's own path", () => {
+    const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', icon: 'plus' }), requiresCatalog)
+    expect(f).toEqual([{ code: 'CATALOG', path: 'w.label' }])
+  })
+
+  it('both the declaring key and its required sibling present conforms (no failure)', () => {
+    const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', icon: 'plus', label: 'Add' }), requiresCatalog)
+    expect(f).toEqual([])
+  })
+
+  it('a {path} binding on the required sibling satisfies presence (ADR-0026 — presence, never the eventual value)', () => {
+    const f = validateCatalogConformance(
+      comp({ id: 'w', component: 'Widget', icon: 'plus', label: { path: '/labelText' } }),
+      requiresCatalog,
+    )
+    expect(f).toEqual([])
+  })
+
+  it('a {path}-bound declaring key still enforces its requires (presence of the KEY, not a literal-only check)', () => {
+    const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', icon: { path: '/iconName' } }), requiresCatalog)
+    expect(f).toEqual([{ code: 'CATALOG', path: 'w.label' }])
+  })
+
+  it("iconOnly without icon fails CATALOG at icon's own path (the reverse pair)", () => {
+    const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', iconOnly: true, label: 'Dismiss' }), requiresCatalog)
+    expect(f).toEqual([{ code: 'CATALOG', path: 'w.icon' }])
+  })
+
+  it('a requires declaration on a key the node never carries never fires (scoped to keys actually present)', () => {
+    const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', label: 'Just a label' }), requiresCatalog)
+    expect(f).toEqual([])
+  })
+
+  it('a property that does not declare requires is unaffected (byte-identical negative control — every non-opted-in prop)', () => {
+    const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', label: 'Solo label' }), requiresCatalog)
+    expect(f).toEqual([])
+  })
+})
+
+// ── the children-model check — the ADR-0226 cl.4 leniency close ────────────────────────────────────────
+describe('validateCatalogConformance — the children-model check (ADR-0226 cl.4, closes the RESERVED leniency)', () => {
+  it('a node carrying `children` whose def declares NO children model fails CATALOG (the Icon-under-Button exploit this closes, high-frequency-patterns.ts\'s own former jsdoc)', () => {
+    const f = validateCatalogConformance(comp({ id: 'b', component: 'Button', label: 'Save', children: ['icon1'] }), demoCatalog)
+    expect(f).toContainEqual({ code: 'CATALOG', path: 'b.children' })
+  })
+
+  it('a node carrying `child` whose def declares NO children model ALSO fails CATALOG (both structural keys covered)', () => {
+    const f = validateCatalogConformance(comp({ id: 'b', component: 'Button', label: 'Save', child: 'icon1' }), demoCatalog)
+    expect(f).toContainEqual({ code: 'CATALOG', path: 'b.child' })
+  })
+
+  it('negative control: a Column carrying `children` still passes — its def DECLARES a children model', () => {
+    const f = validateCatalogConformance(comp({ id: 'col', component: 'Column', children: ['a', 'b'] }), demoCatalog)
+    expect(f).toEqual([])
+  })
+
+  it('negative control: a Card carrying `child` still passes — the singular-key declaring-def case', () => {
+    const f = validateCatalogConformance(comp({ id: 'c', component: 'Card', child: 'a' }), demoCatalog)
+    expect(f).toEqual([])
+  })
+
+  it("presence-vs-none only — a Card (children:'child') carrying `children` (the OTHER structural key) is NOT judged a kind mismatch (cl.4's deliberately minimal floor)", () => {
+    const f = validateCatalogConformance(comp({ id: 'c', component: 'Card', children: ['a', 'b'] }), demoCatalog)
+    expect(f).toEqual([])
+  })
+})
+
 // ── SAFE_HREF_SCHEMES sync — the two-literal duplication stays honest ────────────────────────────────────
 //
 // conformance.ts keeps a LOCAL copy of this constant rather than importing `@agent-ui/components`'s real

@@ -17,6 +17,8 @@
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" },
         "variant": { "type": { "type": "string", "enum": ["solid", "soft", "ghost"] }, "mapsTo": "variant" },
         "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "icon": { "type": { "type": "string" }, "bindable": true, "mapsTo": "glyph", "requires": ["label"] },
+        "iconOnly": { "type": { "type": "boolean" }, "mapsTo": "iconOnly", "requires": ["icon"] },
         "action": {
           "type": {
             "type": "object",

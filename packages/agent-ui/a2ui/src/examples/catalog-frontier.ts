@@ -34,6 +34,14 @@
 // trail, mints its catalog row in the docs-writer S3 wire arm; this seed closes its GH #729 coverage gap
 // the moment that row exists. Corpus admission is a SEPARATE, later judged wave (disposition-allowlist.ts
 // carries the pending entry) — not this slice's job.
+//
+// Frontier 24 (ADR-0226, GH #1504) — `Button.icon`/`Button.iconOnly`, the new wire-exposed icon
+// mechanism (no Icon-child contract). NOT a GH #729 zero-example gap-closer — `Button` already has
+// examples throughout the shelf — this is the fork-resolution's own worked exemplar (ADR-0226's
+// Repairs cell): one payload exercising BOTH forms, icon+label and icon-only, so the new props/
+// `PropDef.requires` cross-prop conformance and the `buttonFactory` bespoke arms all render for real,
+// not merely unit-probed. Corpus admission is a SEPARATE, later judged wave (disposition-allowlist.ts
+// carries the pending entry) — not this slice's job.
 
 import type { ExampleSeed } from './types.ts'
 
@@ -1249,4 +1257,46 @@ export const breadcrumbTrailSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed]
+const BUTTON_ICON_ACTIONS_ID = 'frontier-button-icon-actions'
+/** Frontier 24 (ADR-0226, GH #1504): an "export ready" notification row exercising BOTH new `Button`
+ *  icon forms in one payload — `btn_download` (icon+label: a leading `download-simple` glyph beside
+ *  the visible "Download" label, the label still the accessible name) and `btn_dismiss` (icon-only:
+ *  `x` glyph, NO visible label, `iconOnly:true` routes `label` to `aria-label` instead — button.md's
+ *  `labelSource` contract). No Icon-child workaround (the wallet-summary-card's now-superseded
+ *  `Column(Icon, Button)` composition, high-frequency-patterns.ts) — both actions are ONE node each. */
+export const buttonIconActionsSeed: ExampleSeed = {
+  name: 'frontier-button-icon-actions',
+  description: 'An export-ready notification: a labeled icon Button (Download) beside an icon-only Dismiss Button — Button.icon/iconOnly (ADR-0226), no Icon-child workaround.',
+  promptText: 'My export is ready — let me download it or dismiss this notice.',
+  surfaceId: BUTTON_ICON_ACTIONS_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: BUTTON_ICON_ACTIONS_ID, catalogId: 'agent-ui' } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: BUTTON_ICON_ACTIONS_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['content'] },
+          { id: 'content', component: 'CardContent', children: ['row'] },
+          { id: 'row', component: 'Row', justify: 'between', align: 'center', gap: 'md', children: ['message', 'actions'] },
+          { id: 'message', component: 'Text', text: 'Your export is ready.' },
+          { id: 'actions', component: 'Row', gap: 'sm', children: ['btn_download', 'btn_dismiss'] },
+          {
+            id: 'btn_download', component: 'Button', variant: 'soft',
+            icon: 'download-simple', label: 'Download',
+            action: { action: 'download_export' },
+          },
+          {
+            id: 'btn_dismiss', component: 'Button', variant: 'ghost',
+            icon: 'x', iconOnly: true, label: 'Dismiss',
+            action: { action: 'dismiss_export_notice' },
+          },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed]

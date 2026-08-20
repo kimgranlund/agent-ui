@@ -99,6 +99,19 @@ export interface PropDef {
    * hard admission-time gate; absent ⇒ today's behavior, byte-identical.
    */
   required?: boolean
+  /**
+   * A catalog-declared extension (ADR-0226 cl.3) — cross-prop conformance: "this key's PRESENCE
+   * requires those keys' PRESENCE" on the SAME component node. When declared, `conformance.ts`'s
+   * shared validator fails `CATALOG` for each named key absent from the node WHENEVER the
+   * declaring key is itself present (a `{path}`/`{call}` binding satisfies the declaring key's own
+   * presence, same as GH #1189's `required`, ADR-0026). PRESENCE-based only — like `required`, it
+   * never judges the eventual VALUE a bound key resolves to (an `icon` bound to a path that
+   * resolves empty still satisfies `icon.requires:["label"]`'s presence check; that residual gap is
+   * an owned limit, not a defect — ADR-0226 cl.3). Declared only where a real cross-prop contract
+   * needs a hard admission-time gate (`Button.icon.requires:["label"]`, `Button.iconOnly.
+   * requires:["icon"]`); absent ⇒ today's behavior, byte-identical for every prop that doesn't opt in.
+   */
+  requires?: readonly string[]
 }
 
 /**
@@ -313,12 +326,15 @@ function validatePropDef(key: string, prop: string, raw: unknown): PropDef {
     bad(`property "${key}.${prop}".rejectFunctionCall must be a boolean`)
   if (raw.required !== undefined && typeof raw.required !== 'boolean')
     bad(`property "${key}.${prop}".required must be a boolean`)
+  if (raw.requires !== undefined && (!Array.isArray(raw.requires) || raw.requires.some((r) => typeof r !== 'string')))
+    bad(`property "${key}.${prop}".requires must be a string array`)
 
   const pd: PropDef = { type: raw.type as JsonSchema, mapsTo: raw.mapsTo }
   if (raw.bindable !== undefined) pd.bindable = raw.bindable
   if (raw.format !== undefined) pd.format = raw.format
   if (raw.rejectFunctionCall !== undefined) pd.rejectFunctionCall = raw.rejectFunctionCall
   if (raw.required !== undefined) pd.required = raw.required
+  if (raw.requires !== undefined) pd.requires = raw.requires as readonly string[]
   return pd
 }
 
