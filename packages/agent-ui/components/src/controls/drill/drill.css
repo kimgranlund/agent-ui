@@ -83,6 +83,15 @@
      starting point before its opaque `dialog-backdrop` role took over for that BLOCKING use — modal.css:37 —
      drill's ancestor dim is the non-blocking case that role was never repointed away from). */
   --ui-drill-scrim: var(--md-sys-color-neutral-scrim);
+  /* component-checker fix (GH #1550) — every PAINTED panel (active + ancestors) needs its OWN opaque plane:
+     same-cell stacking (cl.A1/A4 above) puts an ancestor's real content directly behind the active panel at
+     the SAME screen coordinates, so an active panel with no background of its own lets the ancestor's text
+     bleed/interleave through it (a `ui-drill-panel` is not one of container.css's 8 surface-bearing tags, so
+     it never gets a background at all otherwise). The `ui-code`/`--ui-code-surface` seam-with-fallback
+     precedent (code.css) verbatim: repoints the cross-family `--ui-container-bg` seam (so an author who DOES
+     set `elevation`/`brightness` on a panel still composes normally) with the card/drawer own-default
+     fallback (`--md-sys-color-neutral-surface`) for the (typical) bare panel that sets neither. */
+  --ui-drill-panel-bg: var(--ui-container-bg, var(--md-sys-color-neutral-surface));
   /* ADR-0195 Amendment cl.A5 — the `layout="columns"` track floor (S3): each side-by-side column shrinks no
      further than this before the host's own horizontal scroll region (cl.A4) takes over. The nav-rail
      flyout's own `12rem` floor precedent (`--ui-nav-rail-flyout-min-inline-size`) — a legible content column,
@@ -273,6 +282,9 @@
     padding: var(--ui-drill-padding);
     min-inline-size: 0;
     z-index: 0;
+    /* GH #1550 fix — an opaque plane so the same-cell-stacked ancestor's content never bleeds through the
+       panel painted above it (see --ui-drill-panel-bg's own comment, TOKEN BLOCK). */
+    background: var(--ui-drill-panel-bg);
 
     &[hidden] {
       display: none;
