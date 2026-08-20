@@ -2,7 +2,7 @@
 // gateway-style service list (the intake's own reference habitat) — each card composes a `[slot="menu"]`
 // overflow affordance (ui-button + ui-menu, app chrome the card never fabricates itself) — plus a live
 // availability-toggle scenario that flips ONE card's `available` boolean at runtime and shows the four
-// coordinated consequences (accent edge, status dot, title mute, action swap) repaint together from that ONE
+// coordinated consequences (status dot, title mute, action swap) repaint together from that ONE
 // write. A live `action` event log proves the Open button's activation contract: it fires while available,
 // and never while unavailable (a real disabled native <button> cannot dispatch click at all). The control owns
 // every mechanic (service-card.ts); this page only stages, toggles, and logs.
@@ -16,7 +16,7 @@ const { content } = mountPage({
   title: 'ui-service-card — demo',
   intro:
     'The availability-stated launch card, live, in a gateway-style service list. Toggle a service to see the ' +
-    'accent edge, status dot, title, and trailing action repaint together from ONE `available` write; click ' +
+    'status dot, title, and trailing action repaint together from ONE `available` write; click ' +
     '"Open" to see the `action` event log. The API table is on the ui-service-card API page.',
 })
 
@@ -104,7 +104,7 @@ function paintToggle(): void {
 }
 toggle.addEventListener('click', () => {
   const next = !toggleTarget.available
-  toggleTarget.available = next // the property write — ADR-0224 cl.4: accent edge, dot, title mute, and the
+  toggleTarget.available = next // the property write — ADR-0224 cl.4: dot, title mute, and the
   // Open⟷Unavailable action swap all repaint from this ONE assignment, no coordinated follow-up writes.
   paintToggle()
   record('Search Index', 'available ←', String(next))
@@ -113,7 +113,7 @@ paintToggle()
 
 const toggleNote = el('p', {}, [
   text('Click the button to flip '), code('available'), text(' on the '), strong('Search Index'), text(' card. ' +
-    'Watch the accent edge, status dot, title mute, and the trailing action swap ('), code('→ Open'),
+    'Watch the status dot, title mute, and the trailing action swap ('), code('→ Open'),
   text(' ⟷ the disabled '), code('Unavailable'), text(' chip) all repaint together — from the ONE write, never ' +
     'four independent edits. The '), code('menu'), text(' slot and the host itself stay live throughout.'),
 ])

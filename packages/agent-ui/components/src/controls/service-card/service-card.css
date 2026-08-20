@@ -47,25 +47,25 @@
      primitive, not a container (ADR-0224 cl.1), so it seeds its own default plane directly (the
      ui-toast/ui-card precedent: a surface-bearing leaf that is not itself a container). */
   --ui-service-card-bg: var(--md-sys-color-neutral-surface-high);
+  --ui-service-card-outline: var(--md-sys-color-neutral-outline-variant); /* the 1px full-perimeter outline (Amendment cl.A2) */
   --ui-service-card-radius: var(--md-sys-shape-corner-base);
 
   /* The accent edge + status dot — SUCCESS family, available (the default). :not([available]) below
      repoints the whole trio to the neutral family. */
   --ui-service-card-accent: var(--md-sys-color-success);
-  --ui-service-card-accent-width: 0.25rem; /* a fixed geometry constant (the edge's own thickness), not a colour role */
-  --ui-service-card-dot-size: 0.5rem;
+  --ui-service-card-dot-size: var(--md-sys-space-md); /* 12px on the space ladder (density-responsive) — the dot IS the status carrier now that the edge is retired (Amendment cl.A1) */
 
   /* Title / path / description ink. Title mutes under :not([available]) (cl.3); path/description stay
      on the same secondary plane regardless of availability (only the title + accent + action move). */
   --ui-service-card-title-ink: var(--md-sys-color-neutral-on-surface);
-  --ui-service-card-path-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-service-card-path-ink: var(--md-sys-color-primary); /* the PRIMARY-role code-accent path (Kim, 2026-08-20); mutes under :not([available]) */
   --ui-service-card-description-ink: var(--md-sys-color-neutral-on-surface-variant);
 
   /* Type — title reads the title-medium row; description reads body-medium; path reads the SAME
      kicker-medium + mono-typeface row the ui-card-header `format='structured'` kicker treatment uses
      (card.css) — the fleet's one mono-kicker precedent, applied verbatim to a service path. */
-  --ui-service-card-title-size: var(--md-sys-typescale-title-medium-size);
-  --ui-service-card-title-weight: var(--md-sys-typescale-title-medium-weight);
+  --ui-service-card-title-size: var(--md-sys-typescale-title-medium-size); /* the regular card-header title row (Kim, 2026-08-20) */
+  --ui-service-card-title-weight: 700; /* the reference's bold display title — a deliberate local weight (Amendment cl.A2) */
   --ui-service-card-title-line-height: var(--md-sys-typescale-title-medium-line-height);
   --ui-service-card-path-font: var(--md-sys-typeface-mono);
   --ui-service-card-path-size: var(--md-sys-typescale-kicker-medium-size);
@@ -80,7 +80,7 @@
   --ui-service-card-pad-inline: var(--md-sys-space-md);
   --ui-service-card-pad-block: var(--md-sys-space-md);
   --ui-service-card-row-gap: var(--md-sys-space-xs); /* heading → path → description → action */
-  --ui-service-card-dot-gap: var(--md-sys-space-xs); /* dot ↔ title, inside the heading row */
+  --ui-service-card-dot-gap: var(--md-sys-space-sm); /* dot ↔ title, inside the heading row */
   --ui-service-card-menu-gap: var(--md-sys-space-sm); /* body ↔ the optional menu column */
 
   /* The action row — takes the CONTROL height (ADR-0224 cl.5's "pattern tier" clause: the one
@@ -89,10 +89,10 @@
   --ui-service-card-action-height: var(--md-sys-height-sm);
   --ui-service-card-action-font: var(--md-sys-font-sm);
   --ui-service-card-action-gap: var(--md-sys-gap-sm); /* the → glyph ↔ label gap */
-  --ui-service-card-action-bg: var(--md-sys-color-success);
-  --ui-service-card-action-bg-hover: var(--md-sys-color-success-hover);
-  --ui-service-card-action-bg-active: var(--md-sys-color-success-active);
-  --ui-service-card-action-ink: var(--md-sys-color-success-on-success);
+  --ui-service-card-action-bg: var(--md-sys-color-neutral-surface-higher); /* neutral TONAL chip (Amendment cl.A3) — status colour stays on the dot alone */
+  --ui-service-card-action-bg-hover: var(--md-sys-color-neutral-surface-highest);
+  --ui-service-card-action-bg-active: var(--md-sys-color-neutral-surface-highest);
+  --ui-service-card-action-ink: var(--md-sys-color-neutral-on-surface);
 }
 
 /* :not([available]) — the availability law's WHOLE colour repoint, in ONE cascade step (ADR-0224 cl.4):
@@ -104,6 +104,7 @@
 :where(ui-service-card:not([available])) {
   --ui-service-card-accent: var(--md-sys-color-neutral-outline-variant);
   --ui-service-card-title-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-service-card-path-ink: var(--md-sys-color-neutral-on-surface-variant); /* the info accent mutes with the rest (Amendment cl.A2) */
   --ui-service-card-action-bg: var(--md-sys-color-neutral-surface-high);
   --ui-service-card-action-bg-hover: var(--md-sys-color-neutral-surface-high);
   --ui-service-card-action-bg-active: var(--md-sys-color-neutral-surface-high);
@@ -127,9 +128,10 @@
 
     background: var(--ui-service-card-bg);
     border-radius: var(--ui-service-card-radius);
-    /* The left accent edge (cl.3) — a component-owned border band, no separate DOM node. Colour-only
-       transition below (motion) — the geometry (the edge's own width) never animates. */
-    border-inline-start: var(--ui-service-card-accent-width) solid var(--ui-service-card-accent);
+    /* The full-perimeter 1px outline (Amendment cl.A1/A2) — the cl.3 accent EDGE is retired; the
+       enlarged status dot is the sole colour-status carrier (still never colour-alone: ADR-0057's
+       visually-hidden status-text part carries the same fact as real text). */
+    border: 1px solid var(--ui-service-card-outline);
   }
 
   /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): flips display level to the inline-level
@@ -228,11 +230,14 @@
   /* The description — single-clamp with ellipsis (cl.2): nowrap + ellipsis is the one-line clamp (the
      path part's own technique), never a multi-line -webkit-line-clamp (the ADR names ONE line). */
   :scope [data-part='description'] {
-    display: block;
+    /* TWO-line clamp (Amendment cl.A2 — supersedes cl.2's one-line law): the reference wraps a short
+       sentence; -webkit-line-clamp is the fleet-sanctioned multi-line clamp (universally shipped). */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     min-inline-size: 0;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
     font-size: var(--ui-service-card-description-size);
     line-height: var(--ui-service-card-description-line-height);
     color: var(--ui-service-card-description-ink);
@@ -245,7 +250,7 @@
   :scope > [data-part='action'] {
     grid-column: 1 / -1;
     grid-row: 2;
-    justify-self: start;
+    justify-self: end; /* bottom-RIGHT trailing chip (Amendment cl.A3) */
 
     display: inline-flex;
     align-items: center;
@@ -310,16 +315,16 @@
     }
   }
 
-  /* forced-colors (cl.6): the accent edge survives as a border, the dot GAINS a border (a solid
-     background-only circle would otherwise flatten to Canvas and vanish — the bar-chart fill lesson);
-     the disabled chip's GrayText comes free from the platform on the real native button (no rule needed
-     here at all — cl.6's own "free by clause 3's one-element identity"). */
+  /* forced-colors (cl.6, re-read for Amendment cl.A1): the perimeter outline survives as a border, the
+     dot GAINS a border (a solid background-only circle would otherwise flatten to Canvas and vanish —
+     the bar-chart fill lesson); the disabled chip's GrayText comes free from the platform on the real
+     native button (no rule needed here at all — cl.6's own "free by clause 3's one-element identity"). */
   @media (forced-colors: active) {
     :scope {
-      border-inline-start-color: CanvasText;
+      border-color: CanvasText;
     }
     :scope:not([available]) {
-      border-inline-start-color: GrayText;
+      border-color: GrayText;
     }
     :scope [data-part='status'] {
       border: 1px solid CanvasText;

@@ -7,7 +7,7 @@
 # override in service-card.ts, the attachment.ts `mimeType`/`mime-type` kebab-discipline precedent) — the
 # descriptor row name stays the JS prop name (`actionLabel`), matching every other descriptor's convention.
 tag: ui-service-card
-description: The availability-stated service/agent launch card — ONE bindable boolean (available) drives the accent edge, status dot, title mute, and the Open⟷Unavailable action swap together.
+description: The availability-stated service/agent launch card — ONE bindable boolean (available) drives the status dot, title mute, and the Open⟷Unavailable action swap together.
 tier: pattern           # geometry size-class (container spacing + ONE control-height action row, ADR-0224 cl.1)
 extends: UIElement      # a display primitive with data-props — NOT UIContainerElement (the interior is component-rendered from hardened props, not an agent-composed ChildList) and NOT form-associated (no value)
 # marginal: not yet measured (S1 build, folder-local) — measured at the fleet size gate (npm run size) once wired into the shared barrel
@@ -91,13 +91,13 @@ geometry:
   radius: var(--ui-service-card-radius)                # = --md-sys-shape-corner-base, the shared fleet radius (ui-card/ui-toast/ui-menu precedent)
   note: Block-level FILL by default, no intrinsic width (ADR-0223 cl.1, adopted at birth — ADR-0224 cl.5); the `inline` boolean (R2) flips to inline-grid with no hug-state floor — the card's own content already gives it a meaningful shrink-to-fit width, so a floor here would be an out-of-role min-width (sizing-gates.test.ts).
 
-forcedColors: The accent edge survives as a border (`border-inline-start-color`); the status dot GAINS an explicit 1px border (a solid background-only circle would otherwise flatten to Canvas and vanish — the bar-chart fill lesson); the disabled chip's GrayText comes free from the platform on the real native `<button>` (no rule needed — ADR-0224 cl.6's own "free by clause 3's one-element identity"). The `[slot='menu']` affordance carries its own independent forced-colors treatment.
+forcedColors: The perimeter outline survives as a border (`border-color`); the status dot GAINS an explicit 1px border (a solid background-only circle would otherwise flatten to Canvas and vanish — the bar-chart fill lesson); the disabled chip's GrayText comes free from the platform on the real native `<button>` (no rule needed — ADR-0224 cl.6's own "free by clause 3's one-element identity"). The `[slot='menu']` affordance carries its own independent forced-colors treatment.
 ---
 
 # ui-service-card
 
 `ui-service-card` is the **availability-stated service/agent launch card** (ADR-0224, GH #1429): a
-display primitive whose whole availability posture — the status-tinted **left accent edge**, the status
+display primitive whose whole availability posture — the status-tinted **status dot** (1.5rem — the sole colour-status carrier since the 0224 Amendment retired the edge), the
 **dot**, the **title** mute, and the trailing action's **Open ⟷ Unavailable** swap — is driven by ONE
 bindable boolean, `available`. It extends `UIElement` (not a container, not form-associated) and is
 `pattern`-tier: container spacing plus one control-height action row.
@@ -120,7 +120,7 @@ bindable boolean, `available`. It extends `UIElement` (not a container, not form
 
 `available=false` flips FOUR things simultaneously, from ONE write:
 
-1. The accent edge + status dot repoint to the muted/neutral roles.
+1. The status dot repoints to the muted/neutral role (the perimeter outline is non-status-bearing).
 2. The title mutes to the secondary ink.
 3. The trailing action swaps from an enabled `→ {actionLabel}` button to the disabled, literal
    `Unavailable` chip — the **same native `<button>` element** across both states (never two different
@@ -138,7 +138,7 @@ to a disabled chip, or a muted title next to a live Open button) is unrepresenta
 - **`name`** (string) — the title.
 - **`path`** (string) — the monospace service path line, rendered **verbatim** (never parsed). Empty
   renders no box.
-- **`description`** (string) — one line, single-clamp with ellipsis. Empty renders no box.
+- **`description`** (string) — clamps at TWO lines with ellipsis (0224 Amendment cl.A2). Empty renders no box.
 - **`available`** (boolean, default `true`, reflected, **bindable**) — the one law-carrying axis.
 - **`actionLabel`** (string, default `'Open'`, HTML attribute `action-label`) — the label of the
   available-state action; the unavailable state always reads the literal `"Unavailable"` regardless of
@@ -167,6 +167,6 @@ descendants (the action and the menu), activation is button-only.
   "Available" status text; unavailable renders the literal "Unavailable" chip text.
 - The action's accessible name is `"{visible label} {name}"` in both states, so a list of N cards has N
   distinguishable action buttons.
-- Forced-colors: the accent edge survives as a border; the status dot gains an explicit border (a
+- Forced-colors: the perimeter outline survives as a border; the status dot gains an explicit border (a
   background-only fill would otherwise vanish); the disabled chip's `GrayText` comes free from the
   platform.

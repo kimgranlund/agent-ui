@@ -16,7 +16,7 @@ const { content } = mountPage({
   title: 'ui-service-card — API',
   intro:
     'The availability-stated service/agent launch card (ADR-0224, GH #1429) — ONE bindable `available` ' +
-    'boolean drives the status-tinted accent edge, the status dot, the title mute, and the trailing ' +
+    'boolean drives the status dot, the title mute, and the trailing ' +
     'Open ⟷ Unavailable action swap together, by construction. Generated from service-card.md: the ' +
     'attribute/events/slots/parts tables are descriptor-derived. See the ui-service-card demo for the live ' +
     'availability toggle + an `action` event log.',
