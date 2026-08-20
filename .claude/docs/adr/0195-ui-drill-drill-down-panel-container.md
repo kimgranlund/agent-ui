@@ -176,7 +176,7 @@ this exact ticket as the natural next proof for (`interaction-enhancements.brief
   no corresponding benefit: the flat model expresses the same arbitrary tree depth via `path` alone,
   with simpler single-level DOM queries at render time.
 
-## Amendment (2026-08-19, **proposed** — Kim ratifies) — the CONTAINED pane presentation: stack slide-over becomes the DEFAULT render (child pane slides sideways over the dimmed parent inside a clipped card surface), plus two opt-in modes — `chrome="crumbs"` (clickable breadcrumb trail) and `layout="columns"` (Miller columns); the zoom paradigm is dropped; the N-level `path` API survives every mode byte-unchanged (GH [#1510](https://github.com/kimgranlund/agent-ui/issues/1510))
+## Amendment (2026-08-19, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/1510#issuecomment-5351342913), verified 2026-08-20) — the CONTAINED pane presentation: stack slide-over becomes the DEFAULT render (child pane slides sideways over the dimmed parent inside a clipped card surface), plus two opt-in modes — `chrome="crumbs"` (clickable breadcrumb trail) and `layout="columns"` (Miller columns); the zoom paradigm is dropped; the N-level `path` API survives every mode byte-unchanged (GH [#1510](https://github.com/kimgranlund/agent-ui/issues/1510))
 
 **Evidence:** Kim-ruled outcome of the two-round make-variants exploration (artifact:
 <https://claude.ai/code/artifact/61911208-7efc-41ea-bf48-4e1dda4a2554>, feedback blocks on record
@@ -253,10 +253,15 @@ accessor is added; its cl.2 probe claim still holds).
   across a swap IS the morph. The `willUseVT`/`data-vt-active` exclusivity keying and the
   reduced-motion folding are unchanged; the dim itself is static state, never motion, and survives
   reduced-motion.
-- **cl.A8 — Columns at narrow widths: NO auto-degrade at v1** (the author opted in; speculative
-  responsive machinery is declined). A future container-query degrade (the nav-rail `@container`
-  threshold shape) is a NAMED extension requiring its own ruling — ADR-0150's "any future
-  width-responsive lever routes through its own ADR" applies.
+- **cl.A8 — Columns at narrow widths: AUTO-DEGRADE to `stack` below a breakpoint (Kim ruling,
+  2026-08-20 — overrides the intake's own no-auto-degrade recommendation).** `layout="columns"`
+  resolves to the `stack` render mapping (cl.A1) whenever the host's inline size falls below
+  ADR-0150's compact-body breakpoint (52.5rem/840px — the existing fleet threshold, no new value
+  minted); the `layout` attribute itself is unchanged, only which render mapping it resolves to.
+  Implemented via the nav-rail `@container` threshold shape (component-patterns' own precedent)
+  scoped to the host, not the viewport — a drill nested in a narrow pane degrades independently
+  of window width. S3 owns this switch; its acceptance gains a narrow-host browser leg proving
+  the degrade.
 - **cl.A9 — The shipped unbounded in-place swap presentation is REPLACED, not flagged.** No legacy
   attribute (the ADR-0223 no-`hug` reasoning: a second boolean doubling the state matrix for a
   presentation nobody defended). This is a deliberate breaking visual change to a shipped control:
@@ -268,9 +273,9 @@ accessor is added; its cl.2 probe claim still holds).
   slice) · S2 `chrome="crumbs"` · S3 `layout="columns"` (S2/S3 independent, both after S1) ·
   S4 site/demo + eval-catalog recapture + record repairs. Each slice lands gate-green
   (`npm run check && npm test` + the browser shard for its legs).
-- **Open forks riding this amendment for ratification** (each with the firm recommendation
-  above): ① the amendment itself · ② the `chrome` prop-name mint (cl.A2) · ③ `aria-current`
-  value `location` vs `page` (cl.A6) · ④ columns narrow-width no-auto-degrade (cl.A8) ·
-  ⑤ no legacy presentation flag (cl.A9) · ⑥ the `--ui-drill-slide-distance` default flip
-  (cl.A5). This amendment carries no ratification of its own until Kim flips it by explicit
-  naming; the Status cell above stays `accepted` for the base record.
+- **Forks ruled (Kim, 2026-08-20, in-session):** ① the amendment — ratified, see below · ② the
+  `chrome` prop name — kept as drafted (cl.A2) · ③ `aria-current="location"` — kept as drafted
+  (cl.A6) · ④ columns narrow-width — **overridden**: auto-degrade to `stack` below ADR-0150's
+  compact-body breakpoint, see cl.A8 above · ⑤ no legacy presentation flag — kept as drafted
+  (cl.A9) · ⑥ `--ui-drill-slide-distance` default flip to 100% — kept as drafted (cl.A5). All six
+  ruled in one round; no fork remains open.
