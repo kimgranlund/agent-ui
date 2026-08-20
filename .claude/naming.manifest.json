@@ -182,6 +182,11 @@
       "canonical": "rendering",
       "plural": null,
       "banned_aliases": []
+    },
+    {
+      "canonical": "due-process",
+      "plural": null,
+      "banned_aliases": []
     }
   ],
   "brand_tokens": [
@@ -193,7 +198,5 @@
     "Kim Granlund"
   ],
   "mutating_no_confirm_allowlist": [],
-  "exemptions": [
-    "due-process"
-  ]
+  "exemptions": []
 }
