@@ -1,11 +1,3 @@
 {
-  "candidates": [
-    {
-      "adr_id": "adr-0195",
-      "evidence": "Ratified Amendment (2026-08-19/20, GH#1510) adds the CONTAINED pane presentation to ui-drill: three novel reusable patterns not yet in component-patterns/patterns-table.md's existing ADR-0195 row (which cites only cl.2-4, the original path/duality decision) \u2014 cl.A1 one-state/three-render-mappings, cl.A7 VT pairing-law correction for multiple simultaneously-painted panes, cl.A8 host-container-query auto-degrade-to-stack below a breakpoint. The ADR's own cl.A9 build-slices text names 'updates the component-patterns ADR-0195 row's description' as an owed S4 repair -- confirmed still outstanding on origin/main.",
-      "kind": "harvest",
-      "plan": "extend .claude/skills/component-patterns/references/patterns-table.md's existing ADR-0195 row (or add sibling rows) with cl.A1/cl.A7/cl.A8 -- route via /make-pack once confirmed",
-      "queued_at": "2026-08-20T05:26:22Z"
-    }
-  ]
+  "candidates": []
 }
