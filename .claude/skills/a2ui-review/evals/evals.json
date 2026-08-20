@@ -1,58 +1,66 @@
 {
   "skill": "a2ui-review",
-  "_note": "Preload-routing tripwire for the a2ui-review-agent seat's grading standards. Positives: grading a payload / catalog row / corpus record. Negative: the catalog PAGE's card demonstrations, fenced to a2ui-catalog-rendering-review (reciprocal fence, 2026-08-18).",
+  "_note": "Rewritten 2026-08-19 (routing follow-up, GH #1466) after the W2-2 demotion made a2ui-review's description a wiring stub ('not a routing target'). No skill description can win a blind-router vote it explicitly refuses, so every case here expects no-trigger — the suite proves the demotion holds, not that the skill still has triggers. Each prompt's true owner is a neighboring skill or a dispatched agent seat; for a blind-router simulation a no-trigger case passes when anything but a2ui-review wins, so no owner assertion is encoded in `expect` itself — the owner is recorded in each note for a human reading the matrix.",
   "cases": [
     {
-      "id": "t01",
+      "id": "n01",
       "prompt": "grade this A2UI payload against the payload rubric",
-      "expect": "trigger"
+      "expect": "no-trigger",
+      "note": "true owner: the a2ui-review-agent seat (dispatch), which preloads this skill as its grading method — the skill itself is never the routing target"
     },
     {
-      "id": "t02",
+      "id": "n02",
       "prompt": "score this catalog row — catalog.json entry, factory and tests",
-      "expect": "trigger"
+      "expect": "no-trigger",
+      "note": "true owner: a2ui-build (the package's catalog.json/factory CODE) or a2ui-catalog-rendering-review's card review, per the t02/t12 fence tuning in this same routing follow-up"
     },
     {
-      "id": "t03",
+      "id": "n03",
       "prompt": "judge this corpus record for admission to the shelf",
       "expect": "no-trigger",
-      "note": "re-owned 2026-08-19 estate routing run: stolen 3-of-3 by a2ui-corpus-curation — CORRECT routing; admission-workflow phrasing belongs to curation, which dispatches this seat for verdicts"
+      "note": "true owner: a2ui-corpus-curation, which dispatches the a2ui-review-agent seat for the per-record verdict"
     },
     {
-      "id": "t04",
+      "id": "n04",
       "prompt": "grab screenshots of each example in a2ui-catalog.html and review them",
-      "expect": "no-trigger"
+      "expect": "no-trigger",
+      "note": "true owner: a2ui-catalog-rendering-review"
     },
     {
-      "id": "t05",
+      "id": "n05",
       "prompt": "is the left side ok and does the right side render correctly on the Attachment catalog card?",
-      "expect": "no-trigger"
+      "expect": "no-trigger",
+      "note": "true owner: a2ui-catalog-rendering-review"
     },
     {
-      "id": "t06",
+      "id": "n06",
       "prompt": "score this compose-time mechanism function against a2ui-mechanism.md",
-      "expect": "trigger"
+      "expect": "no-trigger",
+      "note": "true owner: the a2ui-review-agent seat (dispatch) — mechanism-function grading is one of its named rubric routes, never this skill directly"
     },
     {
-      "id": "t07",
+      "id": "n07",
       "prompt": "emit the ADR-0068 VerdictsFile for these corpus records",
       "expect": "no-trigger",
-      "note": "re-owned 2026-08-19 estate routing run: 2-of-3 corpus-curation — the VerdictsFile is emitted inside curation's import flow; workflow phrasing routes there, the seat is dispatched by it"
+      "note": "true owner: a2ui-corpus-curation's import flow, which emits the VerdictsFile as part of admission and dispatches the review seat for it"
     },
     {
-      "id": "t08",
+      "id": "n08",
       "prompt": "review the a2ui catalog examples across the tier tabs",
-      "expect": "no-trigger"
+      "expect": "no-trigger",
+      "note": "true owner: a2ui-catalog-rendering-review"
     },
     {
-      "id": "t09",
+      "id": "n09",
       "prompt": "grade this corpus record against rubrics/a2ui-corpus.md — per-dimension scores and the gate verdicts",
-      "expect": "trigger"
+      "expect": "no-trigger",
+      "note": "true owner: the a2ui-review-agent seat (dispatch), preloading this skill as its grading method"
     },
     {
-      "id": "t10",
+      "id": "n10",
       "prompt": "score this skill-doc pattern section against a2ui-skill-pattern.md",
-      "expect": "trigger"
+      "expect": "no-trigger",
+      "note": "true owner: the a2ui-review-agent seat (dispatch) — the skill-doc-pattern rubric route lives in this skill's table but the dispatch is never routed to the skill itself"
     }
   ]
 }

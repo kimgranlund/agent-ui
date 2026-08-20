@@ -1,0 +1,65 @@
+{
+  "skill": "project-facts",
+  "_note": "Seeded 2026-08-19 (routing follow-up, GH #1466 — E6 coverage warn). Positives: read-only lookups against agent-ui's own decision/plan/queue record (.claude/docs/ + GitHub Issues). Negatives drawn from neighboring territory this skill explicitly disclaims: authoring/editing a document (docs:make-doc), capturing a new feature/bug (docs:file-feature/file-bug), a live git/worktree work-state report (harness:check-state), and building from a record (dispatch, not this skill).",
+  "cases": [
+    {
+      "id": "t01",
+      "prompt": "what are the requirements for the ui-service-card component?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t02",
+      "prompt": "is there a spec for the A2UI catalog layer?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t03",
+      "prompt": "what did we decide about the shared-checkout worktree protocol?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t04",
+      "prompt": "what's on the roadmap for the router package right now?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t05",
+      "prompt": "what's the status of TKT-0072?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t06",
+      "prompt": "which issues are open against the a2ui package?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t07",
+      "prompt": "has ADR-0139 already been ratified and what does it say?",
+      "expect": "trigger"
+    },
+    {
+      "id": "n01",
+      "prompt": "write the SPEC for the new drawer family",
+      "expect": "no-trigger",
+      "note": "true owner: docs:make-doc — authoring a document, not reading the existing record"
+    },
+    {
+      "id": "n02",
+      "prompt": "file a feature request for CSV export on the data table",
+      "expect": "no-trigger",
+      "note": "true owner: docs:file-feature — capturing a new idea, not answering from an existing record"
+    },
+    {
+      "id": "n03",
+      "prompt": "what's the current state of the repo — branches, worktrees, stashes, anything blocked on me",
+      "expect": "no-trigger",
+      "note": "true owner: harness:check-state — live git/PR work-state, not the docs/board decision record"
+    },
+    {
+      "id": "n04",
+      "prompt": "someone reported the theme toggle crashes on Safari, file a bug for it",
+      "expect": "no-trigger",
+      "note": "true owner: docs:file-bug"
+    }
+  ]
+}

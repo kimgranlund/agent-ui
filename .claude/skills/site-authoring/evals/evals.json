@@ -1,0 +1,65 @@
+{
+  "skill": "site-authoring",
+  "_note": "Seeded 2026-08-19 (routing follow-up, GH #1466 — E6 coverage warn). Positives: adding/updating a docs-site (site/) page — landing, permutation matrix, states showcase, API doc, conceptual guide, playground, recipe — or auditing the site for drift. Negatives drawn from neighboring territory: composing a feature from shipped controls (ui-composition), building a new control (component-build), the A2UI catalog PAGE's card review (a2ui-catalog-rendering-review), and authoring a design/decision document (docs:make-doc).",
+  "cases": [
+    {
+      "id": "t01",
+      "prompt": "add an API doc page for ui-text-field to the site",
+      "expect": "trigger"
+    },
+    {
+      "id": "t02",
+      "prompt": "write the theming guide page for the docs site",
+      "expect": "trigger"
+    },
+    {
+      "id": "t03",
+      "prompt": "is the ui-select doc page going to drift out of sync with its descriptor?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t04",
+      "prompt": "add a states showcase page for ui-checkbox",
+      "expect": "trigger"
+    },
+    {
+      "id": "t05",
+      "prompt": "the live A2UI demo page on the site needs a new recipe walkthrough",
+      "expect": "trigger"
+    },
+    {
+      "id": "t06",
+      "prompt": "audit the whole site for pages that no longer match their canonical source",
+      "expect": "trigger"
+    },
+    {
+      "id": "t07",
+      "prompt": "build a permutation matrix page for the button family",
+      "expect": "trigger"
+    },
+    {
+      "id": "n01",
+      "prompt": "compose a signup form using shipped agent-ui controls",
+      "expect": "no-trigger",
+      "note": "true owner: ui-composition — assembling a feature, not authoring a site page"
+    },
+    {
+      "id": "n02",
+      "prompt": "build a new ui-rating component from scratch",
+      "expect": "no-trigger",
+      "note": "true owner: component-build"
+    },
+    {
+      "id": "n03",
+      "prompt": "review the a2ui-catalog.html cards — props panel vs the rendered surface",
+      "expect": "no-trigger",
+      "note": "true owner: a2ui-catalog-rendering-review"
+    },
+    {
+      "id": "n04",
+      "prompt": "write the ADR for the new drawer family's shell decision",
+      "expect": "no-trigger",
+      "note": "true owner: docs:make-doc"
+    }
+  ]
+}

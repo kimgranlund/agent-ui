@@ -1,0 +1,65 @@
+{
+  "skill": "repo-hygiene",
+  "_note": "Seeded 2026-08-19 (routing follow-up, GH #1466 — E6 coverage warn). Positives: judgment calls about whether a .claude doc/skill/hook/script is rot or convention, how a relocation should be verified, whether a status mismatch is normal. Negatives drawn from neighboring territory: the grammar rules themselves (doc-standards), executing the actual cleanup (harness:repo-cleaner), plain git state hygiene (harness:clean-git), and a work-state report (harness:check-state).",
+  "cases": [
+    {
+      "id": "t01",
+      "prompt": "this skill's status says proposed but the tree already ships it — is that rot or is that normal here?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t02",
+      "prompt": "we moved a skill's references folder last month — how do we verify nothing still points at the old path?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t03",
+      "prompt": "is this old hook still load-bearing or is it dead weight we can retire?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t04",
+      "prompt": "our lint tool disagrees with the repo's own convention on this doc — which one wins?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t05",
+      "prompt": "before we relocate this reference doc, what evidence do we need that nothing still cites the old location?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t06",
+      "prompt": "is it safe to judge this script as unused, or do we need consumer evidence first?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t07",
+      "prompt": "walk me through how the 2026-07-12 clean-repo campaign decided what counted as convention vs rot",
+      "expect": "trigger"
+    },
+    {
+      "id": "n01",
+      "prompt": "what's the required frontmatter shape for a new ADR document?",
+      "expect": "no-trigger",
+      "note": "true owner: doc-standards — the grammar rules themselves"
+    },
+    {
+      "id": "n02",
+      "prompt": "delete the remote branch for PR #1450 now that it's merged",
+      "expect": "no-trigger",
+      "note": "true owner: harness:repo-cleaner — the gated execution, not the judgment call"
+    },
+    {
+      "id": "n03",
+      "prompt": "clean up my local git state — dangling worktrees, stale branches",
+      "expect": "no-trigger",
+      "note": "true owner: harness:clean-git"
+    },
+    {
+      "id": "n04",
+      "prompt": "give me the current repo work-state report — what's blocked on me, what's ready to close",
+      "expect": "no-trigger",
+      "note": "true owner: harness:check-state"
+    }
+  ]
+}
