@@ -160,6 +160,13 @@ export class UIBreadcrumbElement extends UIElement {
     // would NOT keep the raw menu payload from also reaching a consumer's own listener on `this`. Ordering
     // is safe: this listener is registered at connect time, before any consumer script gets a chance to
     // attach its own afterward.
+    //
+    // component-checker LOW finding investigated and DECLINED: `{capture:true}` would close the theoretical
+    // gap against a consumer's OWN capture-phase listener, but breaks a REAL contract instead — capture runs
+    // top-down and stopImmediatePropagation on `this` (an ANCESTOR of the live `<ui-menu>`) would halt the
+    // event before it ever reaches the menu's own internal close-handling (proven: it breaks Escape-closes-
+    // the-menu in both real engines). Bubble-phase containment stays; the residual capture-listener gap is
+    // accepted, matching this control's own registration-order argument.
     this.listen(this, 'select', (event) => {
       if (!this.#isOverflowTarget(event.target)) return
       event.stopImmediatePropagation() // C8 containment — ui-breadcrumb emits none of its own
