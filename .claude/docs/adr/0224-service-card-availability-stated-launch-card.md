@@ -176,7 +176,11 @@ Eight clauses:
 - **Stale → re-verify on build:** the §5.2 draft row · `EXCLUSION_ALLOWLIST` vs catalog-row
   disposition (clause 8, Kim's ruling) · this ADR's Repairs cell.
 
-## Amendment — reference-alignment restyle (proposed 2026-08-20; awaiting ratification)
+## Amendment — reference-alignment restyle (RATIFIED 2026-08-20)
+
+> Ratified by Kim — "ratify ADR-0224 amendment",
+> https://github.com/kimgranlund/agent-ui/issues/1489#issuecomment-5351040413 (2026-08-20).
+> Built + merged as PR #1505.
 
 Kim's 2026-08-20 design-mode intake (the dark launch-card reference: outlined rounded surface,
 enlarged status dot, bold display title, code-accent path, wrapping description, trailing tonal
