@@ -122,7 +122,11 @@ The arm fails on its face when the candidate type would be an alias of a shipped
 declined a `Map` catalog type because a `Map` whose renderer is `ui-image` plus a URL template is
 an `Image` alias (the remedy there is teaching — a corpus seed + prompt-inventory pattern — not
 minting). ADR-0224 is the other worked pass (a status-tinted accent edge with no composition
-vehicle at all in the container family). The "minting is cheap when it is" check above applies
+vehicle at all in the container family). Note the anatomy has since been restyled: ADR-0224's
+ratified 2026-08-20 Amendment (GH #1489, PR #1505) retired the accent edge for a full-perimeter
+neutral outline + an enlarged status dot — the dot is now the sole colour-status carrier. The
+TYPE-arm reasoning is unchanged (at mint time no shipped composition vehicle existed for the
+status-bearing anatomy); only where the status ink lives moved. The "minting is cheap when it is" check above applies
 to a TYPE-arm pass verbatim, as it did in ADR-0220.
 
 ## The FUNCTION arm: locale-correct formatting is a catalog function, never a type or row widening (ADR-0217)
