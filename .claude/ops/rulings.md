@@ -1,5 +1,16 @@
 # Standing ops rulings (Kim, via host AskUserQuestion rounds)
 
+## Revalidation-mode scope — RULED 2026-08-20: ADR/IDR-only, no RDD tier in this repo
+
+`decision-watcher`'s Revalidation mode blocked at the 2026-08-20T22:01:23Z sweep firing: it
+requires all three sources (ADR/IDR/RDD) to exist and agent-ui carries no `.claude/docs/rdd/`
+directory. Kim ruled: **scope Revalidation to ADR/IDR-only here — no RDD tier minted**, matching
+the standing 2026-08-18 ruling that this repo's IDR tier is global-intent-only (no feature-scoped
+IDRs either). Future firings should not re-surface this as a blocked/gap finding; treat the
+two-source scope as this repo's own shape until a real RDD-shaped need appears.
+
+
+
 ## Seat-payload landing leg — RULED 2026-08-09: chore-lead lands all
 
 Ops seats (decision-watcher, issue-sorter, repo-cleaner, chore-planner) RETURN their state
