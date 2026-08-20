@@ -106,6 +106,17 @@ const NAME_MAP = {
   lightning: 'lightning',
   wind: 'wind',
   'cloud-fog': 'cloud-fog',
+  // GH #1485 — the amenity/hospitality glyph set (identity: all seven verified present against
+  // @phosphor-icons/core 2.1.1's regular assets). `campfire` and `bathtub` are nearest-available
+  // substitutes (Phosphor has no dedicated "fireplace" or "hot tub" glyph); `wifi-high` is the
+  // full-signal variant chosen as the generic "has Wi-Fi" glyph.
+  mountains: 'mountains',
+  tree: 'tree',
+  campfire: 'campfire',
+  bathtub: 'bathtub',
+  'swimming-pool': 'swimming-pool',
+  'wifi-high': 'wifi-high',
+  'paw-print': 'paw-print',
 }
 
 const EXPECTED_VIEW_BOX = '0 0 256 256'

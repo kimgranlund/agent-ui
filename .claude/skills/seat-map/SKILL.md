@@ -78,6 +78,13 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   out. Every worktree gate command carries `--maxWorkers=4` (3 lanes × 4 = 12 ≈ cores, never
   N×cores). A desk that sees 1-min load > 40 stops dispatching and reaps finished worktrees
   FIRST — `flaky-gates` owns the red-under-load verdict, this law owns not getting there.
+- **Stacked PRs: retarget children BEFORE deleting the base (GH #1494, 2 kills 2026-08-20).**
+  Merging a stack-bottom PR with `--delete-branch` makes GitHub auto-CLOSE every child PR based
+  on that branch, and a closed-by-base-deletion PR refuses `gh pr reopen`. Landing a stack:
+  merge the bottom WITHOUT `--delete-branch`, `gh pr edit <child> --base main` (or the next
+  base), THEN delete the branch. Recovery when hit: rebase the child's head
+  `--onto origin/main <old-base-tip>`, push a fresh branch, re-land as a new PR (the #1472/#1473
+  precedent).
 - **Reap on lane-return, not campaign-end.** A lane's worktree is removed the moment its branch
   is merged (or abandoned) — `git worktree remove` + the branch delete — never parked until the
   campaign closes; every parked worktree is a full tree Spotlight/Time Machine keep re-scanning.
