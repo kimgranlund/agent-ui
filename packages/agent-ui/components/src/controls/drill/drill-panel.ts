@@ -12,6 +12,10 @@
 // `key`/`parent`/`heading` are plain reflected strings the OWNING `ui-drill` reads to resolve the flat
 // parent-chain (drill.intake.md §4's Path resolution row) and drive the host-owned header's heading text — this
 // element does no resolution of its own, it only carries the data + the labelled `role=region` semantics.
+//
+// ADR-0195 Amendment S3 (GH #1510) — `layout="columns"`: a painted ANCESTOR column carries no shared
+// heading node of its own (that node belongs to the active pane only), so it gets `labelDirect` (a plain
+// `internals.ariaLabel` string) instead of `linkHeading`'s element reflection — see that method, below.
 
 import { UIContainerElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 
@@ -58,6 +62,16 @@ export class UIDrillPanelElement extends UIContainerElement {
    *  from outside this class — this is the one sanctioned cross-element write the host needs. */
   linkHeading(heading: Element | null): void {
     reflectAriaElements(this.internals, 'ariaLabelledByElements', heading ? [heading] : [])
+  }
+
+  /** Set (or clear, `null`) this panel's accessible name DIRECTLY as a plain string — the `layout="columns"`
+   *  ancestor case (ADR-0195 Amendment cl.A6, GH #1510): unlike the active panel's `aria-labelledby`
+   *  ELEMENT reflection above (it points at the ONE shared, moving heading node), a painted ancestor
+   *  COLUMN has no heading node of its own to point at, so it gets `internals.ariaLabel` (the plain
+   *  ARIAMixin string property — the `ui-pagination`/`ui-swatch`/`ui-progress` precedent) instead. Called
+   *  by the owning `ui-drill` only, once per render pass. */
+  labelDirect(text: string | null): void {
+    this.internals.ariaLabel = text
   }
 }
 

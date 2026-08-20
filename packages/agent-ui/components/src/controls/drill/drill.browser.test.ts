@@ -20,7 +20,7 @@ interface CdpSession {
 
 const mounted: HTMLElement[] = []
 
-function mount(opts: { chrome?: 'backbar' | 'crumbs' } = {}): {
+function mount(opts: { chrome?: 'backbar' | 'crumbs'; layout?: 'stack' | 'columns'; width?: string } = {}): {
   wrap: HTMLElement
   host: HTMLElement
   settingsTrigger: HTMLElement
@@ -28,11 +28,17 @@ function mount(opts: { chrome?: 'backbar' | 'crumbs' } = {}): {
   heading: HTMLElement
 } {
   const wrap = document.createElement('div')
-  wrap.style.inlineSize = '400px' // a realistic, deterministic container for the whole-shape assertions below
+  // A realistic, deterministic container for the whole-shape assertions below. S3 (cl.A8): the DEFAULT
+  // 400px is already BELOW ADR-0150's 52.5rem/840px compact-body line — any test proving a genuine
+  // `layout="columns"` render MUST pass a `width` wide enough to clear that line, or the narrow-degrade
+  // would fire immediately and silently fall back to stack (drill.browser.test.ts's own narrow-degrade
+  // describe block does exactly that, deliberately).
+  wrap.style.inlineSize = opts.width ?? '400px'
   wrap.innerHTML = `
-    <ui-drill aria-label="Settings"${opts.chrome ? ` chrome="${opts.chrome}"` : ''}>
+    <ui-drill aria-label="Settings"${opts.chrome ? ` chrome="${opts.chrome}"` : ''}${opts.layout ? ` layout="${opts.layout}"` : ''}>
       <ui-drill-panel key="root" heading="Root">
         <button data-role="drill-trigger" data-drill-key="settings">Settings</button>
+        <button data-role="drill-trigger" data-drill-key="notifications">Notifications</button>
       </ui-drill-panel>
       <ui-drill-panel key="settings" parent="root" heading="Settings">
         <p>Settings content, a little taller than the root panel to prove intrinsic block-sizing.</p>
@@ -40,6 +46,9 @@ function mount(opts: { chrome?: 'backbar' | 'crumbs' } = {}): {
       </ui-drill-panel>
       <ui-drill-panel key="appearance" parent="settings" heading="Appearance">
         <p>Appearance content.</p>
+      </ui-drill-panel>
+      <ui-drill-panel key="notifications" parent="root" heading="Notifications">
+        <p>Notifications content.</p>
       </ui-drill-panel>
     </ui-drill>
   `
@@ -49,7 +58,7 @@ function mount(opts: { chrome?: 'backbar' | 'crumbs' } = {}): {
   return {
     wrap,
     host,
-    settingsTrigger: host.querySelector('[data-drill-key="settings"]') as HTMLElement,
+    settingsTrigger: host.querySelector('[key="root"] [data-drill-key="settings"]') as HTMLElement,
     back: host.querySelector('[data-part="back"]') as HTMLElement,
     heading: host.querySelector('[data-part="heading"]') as HTMLElement,
   }
@@ -58,6 +67,15 @@ function mount(opts: { chrome?: 'backbar' | 'crumbs' } = {}): {
 afterEach(() => {
   for (const el of mounted.splice(0)) el.remove()
 })
+
+/** Settle a resize/render cycle: two rAFs cover the ResizeObserver callback (fires at the end of a layout
+ *  step) and the frame that runs drill.ts's own effect off the #version bump it makes (the nav-rail
+ *  `settle()` precedent, nav-rail.browser.test.ts). */
+async function settle(): Promise<void> {
+  await new Promise((r) => requestAnimationFrame(() => r(undefined)))
+  await new Promise((r) => setTimeout(r, 0))
+  await new Promise((r) => requestAnimationFrame(() => r(undefined)))
+}
 
 describe('ui-drill — real painted visibility (stack default, ADR-0195 Amendment cl.A1)', () => {
   it('at mount: the root panel is painted, the settings panel (off-path) is not', () => {
@@ -287,5 +305,169 @@ describe('ui-drill — chrome="crumbs" real-engine navigation (ADR-0195 Amendmen
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] })
     }
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  ADR-0195 Amendment S3 (GH #1510) — layout="columns": real painted visibility, click routing, keyboard,
+//  focus law, forced-colors, and the narrow-host auto-degrade (cl.A8) via a REAL container resize.
+//  Every mount below passes `width: '1000px'` — well above ADR-0150's 52.5rem/840px compact-body line — so
+//  `layout="columns"` genuinely renders as columns; the default 400px mount (this file's own default) is
+//  already BELOW that line, which the narrow-degrade block exploits deliberately.
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-drill — layout="columns" real painted visibility (ADR-0195 Amendment cl.A1/A4, S3)', () => {
+  it('a painted ancestor column is visible (not display:none), not inert, and carries NO scrim wash', async () => {
+    const { host, settingsTrigger } = mount({ layout: 'columns', width: '1000px' })
+    await userEvent.click(settingsTrigger)
+    const root = host.querySelector('[key="root"]') as HTMLElement & { inert: boolean }
+    const settings = host.querySelector('[key="settings"]') as HTMLElement
+    expect(host.getAttribute('data-drill-layout')).toBe('columns')
+    expect(getComputedStyle(root).display).not.toBe('none')
+    expect(getComputedStyle(settings).display).not.toBe('none')
+    expect(root.inert).toBe(false) // the contract change from stack — "all interactive"
+    expect(root.getAttribute('data-drill-pane')).toBe('ancestor')
+    // NO dim wash under columns (contrast the stack describe block above, same assertion, opposite result)
+    const scrim = getComputedStyle(root, '::after').backgroundColor
+    expect(scrim === 'rgba(0, 0, 0, 0)' || scrim === 'transparent').toBe(true)
+  })
+
+  it('ancestor and active columns occupy DIFFERENT rects, side by side (not stack\'s same-cell overlap)', async () => {
+    const { host, settingsTrigger } = mount({ layout: 'columns', width: '1000px' })
+    await userEvent.click(settingsTrigger)
+    const root = host.querySelector('[key="root"]') as HTMLElement
+    const settings = host.querySelector('[key="settings"]') as HTMLElement
+    const rootRect = root.getBoundingClientRect()
+    const settingsRect = settings.getBoundingClientRect()
+    expect(settingsRect.left).toBeGreaterThanOrEqual(rootRect.right) // side by side, never overlapping
+  })
+
+  it('the host owns ONE horizontal scroll region (overflow-x: auto) once columns are painted', async () => {
+    const { host, settingsTrigger } = mount({ layout: 'columns', width: '1000px' })
+    await userEvent.click(settingsTrigger)
+    expect(getComputedStyle(host).overflowX).toBe('auto')
+  })
+})
+
+describe('ui-drill — columns commit generalization: a real click on a non-rightmost column truncates+re-navigates (cl.A1)', () => {
+  it('clicking the ROOT column\'s own "Notifications" trigger truncates the 3-level path and re-navigates, reusing #commit', async () => {
+    const { host, settingsTrigger } = mount({ layout: 'columns', width: '1000px' })
+    await userEvent.click(settingsTrigger)
+    const appearanceTrigger = host.querySelector('[key="settings"] [data-drill-key="appearance"]') as HTMLElement
+    await userEvent.click(appearanceTrigger)
+    const appearance = host.querySelector('[key="appearance"]') as HTMLElement
+    expect(appearance.getAttribute('data-drill-pane')).toBe('active') // 3-level path confirmed
+    const rootNotifications = host.querySelector('[key="root"] [data-drill-key="notifications"]') as HTMLElement
+    await userEvent.click(rootNotifications) // root is a non-rightmost, fully-interactive column under columns
+    const notifications = host.querySelector('[key="notifications"]') as HTMLElement
+    expect(notifications.getAttribute('data-drill-pane')).toBe('active')
+    expect(getComputedStyle(appearance).display).toBe('none') // truncated OFF the path — not merely reordered
+    expect(getComputedStyle(host.querySelector('[key="settings"]') as HTMLElement).display).toBe('none')
+  })
+})
+
+describe('ui-drill — columns keyboard reachability across every painted column (real Tab + Enter)', () => {
+  it('Tab reaches BOTH the ancestor column\'s trigger and the active column\'s own trigger; Enter activates the ancestor one', async () => {
+    const { host, settingsTrigger } = mount({ layout: 'columns', width: '1000px' })
+    await userEvent.click(settingsTrigger)
+    const rootNotifications = host.querySelector('[key="root"] [data-drill-key="notifications"]') as HTMLButtonElement
+    rootNotifications.focus() // a direct, unambiguous focus attempt — the ancestor column is NOT inert here
+    expect(document.activeElement).toBe(rootNotifications)
+    await userEvent.keyboard('{Enter}')
+    const notifications = host.querySelector('[key="notifications"]') as HTMLElement
+    expect(notifications.getAttribute('data-drill-pane')).toBe('active')
+  })
+})
+
+describe('ui-drill — columns scoped focus law: drill-forward keeps focus on the clicked trigger (cl.A6)', () => {
+  it('a real click on an ancestor column\'s trigger does NOT move focus to the incoming heading (contrast: stack DOES move it, see above)', async () => {
+    const { host, heading, settingsTrigger } = mount({ layout: 'columns', width: '1000px' })
+    await userEvent.click(settingsTrigger)
+    const rootNotifications = host.querySelector('[key="root"] [data-drill-key="notifications"]') as HTMLElement
+    await userEvent.click(rootNotifications)
+    // Never asserts focus LANDS on the trigger — WebKit does not put a plain `<button>` in its default
+    // click-focusable set (a real, documented engine policy difference: a WebKit click can even BLUR the
+    // previously-focused element rather than leave it, measured here), so "focus stays on the trigger" is
+    // not a portable cross-engine claim. The actual code contract (cl.A6) is narrower and IS portable: this
+    // component's own `#render()` never calls `.focus()` on the incoming heading under columns — contrast
+    // the stack-mode test elsewhere in this file, which explicitly asserts the heading DOES receive it.
+    expect(document.activeElement).not.toBe(heading)
+  })
+})
+
+describe('ui-drill — columns forced-colors: the divider stays a real, visible stroke (Chromium CDP; WebKit asserts baseline)', () => {
+  it('the ancestor/active column divider (border-inline-end) survives forced-colors', async () => {
+    const { host, settingsTrigger } = mount({ layout: 'columns', width: '1000px' })
+    await userEvent.click(settingsTrigger)
+    const root = host.querySelector('[key="root"]') as HTMLElement
+    if (server.browser !== 'chromium') {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(true)
+      const borderColor = getComputedStyle(root).borderInlineEndColor
+      expect(borderColor).not.toBe('rgba(0, 0, 0, 0)')
+      expect(borderColor).not.toBe('transparent')
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+})
+
+describe('ui-drill — narrow-host auto-degrade to stack (ADR-0195 Amendment cl.A8, a REAL container resize)', () => {
+  it('starts WIDE (>52.5rem) rendering columns; shrinking the host below the line degrades to stack, ancestors dim+inert again', async () => {
+    const { wrap, host, settingsTrigger } = mount({ layout: 'columns', width: '1000px' })
+    await userEvent.click(settingsTrigger)
+    const root = host.querySelector('[key="root"]') as HTMLElement & { inert: boolean }
+    const settings = host.querySelector('[key="settings"]') as HTMLElement
+    // WIDE arm — confirmed columns (this describe block's own precondition, not a re-test of the above)
+    expect(host.getAttribute('data-drill-layout')).toBe('columns')
+    expect(root.inert).toBe(false)
+    // Settled geometry, not the mid-slide frame (the ui-drawer/GH#1519 precedent, this file's own): the
+    // drill-forward click above still has its OWN entrance transition in flight the instant this test
+    // continues — neutralize it before the resize measurement below, which otherwise catches root/settings
+    // mid-transition (measured: a stale non-zero `translateX` on `settings`, not a geometry bug).
+    root.style.transition = 'none'
+    settings.style.transition = 'none'
+
+    // The host itself narrows — independent of window width — below ADR-0150's 52.5rem/840px line.
+    wrap.style.inlineSize = '500px'
+    await settle()
+
+    expect(host.getAttribute('data-drill-layout')).toBe('stack') // the layout ATTRIBUTE stays 'columns' (cl.A8)
+    expect(host.getAttribute('layout')).toBe('columns')
+    expect(root.inert).toBe(true) // the ancestor is dimmed + inert again, exactly stack's own contract
+    expect(root.getAttribute('data-drill-pane')).toBe('ancestor')
+    // same-cell stacking is back — the active pane and the ancestor pane occupy the SAME rect (not columns'
+    // side-by-side tracks)
+    const rootRect = root.getBoundingClientRect()
+    const settingsRect = settings.getBoundingClientRect()
+    expect(rootRect.left).toBeCloseTo(settingsRect.left, 0)
+    expect(rootRect.width).toBeCloseTo(settingsRect.width, 0)
+    const scrim = getComputedStyle(root, '::after').backgroundColor
+    expect(scrim).not.toBe('rgba(0, 0, 0, 0)')
+    expect(scrim).not.toBe('transparent')
+  })
+
+  it('growing the host back above the line restores columns (bidirectional, no stale degrade state)', async () => {
+    const { wrap, host, settingsTrigger } = mount({ layout: 'columns', width: '500px' }) // starts NARROW
+    await userEvent.click(settingsTrigger)
+    const root = host.querySelector('[key="root"]') as HTMLElement & { inert: boolean }
+    expect(host.getAttribute('data-drill-layout')).toBe('stack') // degraded from the start (starts narrow)
+    const settings = host.querySelector('[key="settings"]') as HTMLElement
+    root.style.transition = 'none' // settled geometry, not the mid-slide frame (see the test above)
+    settings.style.transition = 'none'
+
+    wrap.style.inlineSize = '1000px'
+    await settle()
+
+    expect(host.getAttribute('data-drill-layout')).toBe('columns')
+    expect(root.inert).toBe(false)
+    const rootRect = root.getBoundingClientRect()
+    const settingsRect = settings.getBoundingClientRect()
+    expect(settingsRect.left).toBeGreaterThanOrEqual(rootRect.right) // side by side again
   })
 })

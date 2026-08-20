@@ -22,8 +22,24 @@ class ProbeDrill extends UIDrillElement {
   get probeInternals(): ElementInternals {
     return this.internals
   }
+  // S3 (cl.A1/A8) — the RESOLVED render mapping ('stack'|'columns'); jsdom has no `@container` support, so
+  // this always reads the WIDE arm — see #effectiveLayout's own comment (drill.ts).
+  get effectiveLayout(): 'stack' | 'columns' {
+    return this.effectiveLayoutSeam
+  }
 }
 customElements.define('ui-drill-probe', ProbeDrill)
+
+// S3 — read `internals.ariaLabel` off a REAL `ui-drill-panel` (the pagination.test.ts `probeInternals`
+// precedent, applied via a cast rather than a probe SUBCLASS: a differently-tagged panel subclass would
+// break drill.ts's own tag-based `trigger.closest('ui-drill-panel')` lookup used for click routing — the
+// `UIDrillElement`/`ProbeDrill` probe-subclass shape above is safe only because nothing does a
+// `closest('ui-drill')` tag lookup on the HOST). `linkHeading`'s element reflection
+// (`ariaLabelledByElements`) is feature-detected absent in jsdom, but the PLAIN string property
+// `labelDirect` sets (`internals.ariaLabel`) is real and testable here.
+function ariaLabelOf(p: UIDrillPanelElement): string | null {
+  return (p as unknown as { internals: ElementInternals }).internals.ariaLabel
+}
 
 function panel(key: string, opts: { parent?: string; heading?: string } = {}): UIDrillPanelElement {
   const p = new UIDrillPanelElement()
@@ -50,6 +66,23 @@ function makeTree(): ProbeDrill {
   settings.append(trigger('appearance'))
   const appearance = panel('appearance', { parent: 'settings', heading: 'Appearance' })
   el.append(root, settings, appearance)
+  document.body.append(el)
+  return el
+}
+
+/** S3 — a BRANCHING tree: root → {settings → {appearance, privacy}, notifications}. Both root and settings
+ *  carry TWO triggers so a columns-mode ancestor-column click can be proven to truncate to a DIFFERENT
+ *  branch, not merely re-click the key already on the path (ADR-0195 Amendment cl.A1). */
+function makeBranchingTree(panelFactory: typeof panel = panel): ProbeDrill {
+  const el = new ProbeDrill()
+  const root = panelFactory('root', { heading: 'Root' })
+  root.append(trigger('settings'), trigger('notifications'))
+  const settings = panelFactory('settings', { parent: 'root', heading: 'Settings' })
+  settings.append(trigger('appearance'), trigger('privacy'))
+  const appearance = panelFactory('appearance', { parent: 'settings', heading: 'Appearance' })
+  const privacy = panelFactory('privacy', { parent: 'settings', heading: 'Privacy' })
+  const notifications = panelFactory('notifications', { parent: 'root', heading: 'Notifications' })
+  el.append(root, settings, appearance, privacy, notifications)
   document.body.append(el)
   return el
 }
@@ -510,6 +543,224 @@ describe('UIDrillElement — view-transition-name sits on the resolved-ACTIVE pa
     const settings = el.querySelector('[key="settings"]') as UIDrillPanelElement
     expect(root.style.viewTransitionName).toBe('')
     expect(settings.style.viewTransitionName).toBe('')
+    el.remove()
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  ADR-0195 Amendment S3 slice (GH #1510) — layout="columns" (Miller columns)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+// jsdom has no `@container` support, so #effectiveLayout() always reads the WIDE arm here (its own comment,
+// drill.ts) — every test below proves the COLUMNS render-mapping mechanics at that arm. The narrow-degrade
+// itself is real-engine-only territory (drill.browser.test.ts's container-resize leg).
+
+describe('UIDrillElement — #effectiveLayoutSeam resolves the render mapping (cl.A1/A8)', () => {
+  it('defaults to "stack"; "columns" resolves to "columns" absent any stylesheet (jsdom = the WIDE arm)', () => {
+    const el = makeTree()
+    expect(el.effectiveLayout).toBe('stack')
+    el.layout = 'columns'
+    expect(el.effectiveLayout).toBe('columns')
+    el.remove()
+  })
+})
+
+describe('UIDrillElement — layout="columns" paints every panel side-by-side, all interactive (cl.A1)', () => {
+  it('every panel in the resolved path is visible, NONE inert, data-drill-layout="columns" on the host', async () => {
+    const el = makeTree()
+    el.layout = 'columns'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    await click(el.querySelector('[key="settings"] [data-drill-key="appearance"]')!)
+    expect(el.getAttribute('data-drill-layout')).toBe('columns')
+    const root = el.querySelector('[key="root"]') as UIDrillPanelElement
+    const settings = el.querySelector('[key="settings"]') as UIDrillPanelElement
+    const appearance = el.querySelector('[key="appearance"]') as UIDrillPanelElement
+    for (const p of [root, settings, appearance]) {
+      expect(p.hasAttribute('hidden')).toBe(false)
+      expect(p.inert).toBe(false) // the whole point of columns — "all interactive", unlike stack's ancestors
+    }
+    expect(root.getAttribute('data-drill-pane')).toBe('ancestor')
+    expect(settings.getAttribute('data-drill-pane')).toBe('ancestor')
+    expect(appearance.getAttribute('data-drill-pane')).toBe('active')
+    // side-by-side tracks in PATH order (cl.A4), not stack's shared same-cell z-index
+    expect(root.style.gridColumn).toBe('1')
+    expect(settings.style.gridColumn).toBe('2')
+    expect(appearance.style.gridColumn).toBe('3')
+    el.remove()
+  })
+
+  it('switching a resolved-stack instance to columns clears every z-index (columns needs none — no overlap)', async () => {
+    const el = makeTree()
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    const root = el.querySelector('[key="root"]') as UIDrillPanelElement
+    expect(root.style.zIndex).not.toBe('')
+    el.layout = 'columns'
+    await whenFlushed()
+    expect(root.style.zIndex).toBe('')
+    expect(root.style.gridColumn).toBe('1')
+    el.remove()
+  })
+})
+
+describe('UIDrillElement — columns commit generalization: a non-rightmost column truncates+re-navigates (cl.A1, reuses #commit)', () => {
+  it('clicking an ANCESTOR column\'s own trigger to a DIFFERENT branch truncates at that panel, then appends — one change event', async () => {
+    const el = makeBranchingTree()
+    el.layout = 'columns'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    await click(el.querySelector('[key="settings"] [data-drill-key="appearance"]')!)
+    expect(el.effectivePath).toEqual(['root', 'settings', 'appearance'])
+    const onChange = vi.fn()
+    el.addEventListener('change', onChange)
+    // root is now an ANCESTOR column (non-rightmost) but fully interactive under columns — its OWN
+    // "notifications" trigger names a branch that shares nothing with the current leaf.
+    await click(el.querySelector('[key="root"] [data-drill-key="notifications"]')!)
+    expect(el.effectivePath).toEqual(['root', 'notifications']) // truncated at root, NOT appended to the full path
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect((onChange.mock.calls[0]![0] as CustomEvent<string[]>).detail).toEqual(['root', 'notifications'])
+    el.remove()
+  })
+
+  it('clicking the MIDDLE column\'s own trigger to a SIBLING branch truncates to exactly that ancestor, then appends', async () => {
+    const el = makeBranchingTree()
+    el.layout = 'columns'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    await click(el.querySelector('[key="settings"] [data-drill-key="appearance"]')!)
+    expect(el.effectivePath).toEqual(['root', 'settings', 'appearance'])
+    // "settings" is now the MIDDLE column (root/settings/appearance); its own "privacy" trigger (a SIBLING
+    // of "appearance", never yet on the path) truncates at settings then appends — not the root, not a
+    // no-op re-click of the already-active leaf.
+    await click(el.querySelector('[key="settings"] [data-drill-key="privacy"]')!)
+    expect(el.effectivePath).toEqual(['root', 'settings', 'privacy'])
+    el.remove()
+  })
+
+  it('clicking the ACTIVE (rightmost) column\'s own trigger degenerates to a plain append, same as stack', async () => {
+    const el = makeBranchingTree()
+    el.layout = 'columns'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    expect(el.effectivePath).toEqual(['root', 'settings'])
+    await click(el.querySelector('[key="settings"] [data-drill-key="appearance"]')!)
+    expect(el.effectivePath).toEqual(['root', 'settings', 'appearance'])
+    el.remove()
+  })
+
+  it('an ancestor trigger that was BLOCKED under stack (inert) fires once switched to columns (contrast)', async () => {
+    const el = makeBranchingTree()
+    await click(el.querySelector('[data-drill-key="settings"]')!) // stack default — root is now inert
+    await click(el.querySelector('[key="root"] [data-drill-key="notifications"]')!) // blocked, inert ancestor
+    expect(el.effectivePath).toEqual(['root', 'settings']) // unchanged
+    el.layout = 'columns'
+    await whenFlushed()
+    await click(el.querySelector('[key="root"] [data-drill-key="notifications"]')!) // now interactive
+    expect(el.effectivePath).toEqual(['root', 'notifications'])
+    el.remove()
+  })
+})
+
+describe('UIDrillElement — columns active-row highlight: data-drill-active (cl.A6)', () => {
+  it('the ancestor\'s own trigger naming the NEXT path entry carries data-drill-active; every other trigger does not', async () => {
+    const el = makeBranchingTree()
+    el.layout = 'columns'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    await click(el.querySelector('[key="settings"] [data-drill-key="appearance"]')!)
+    const rootSettingsTrigger = el.querySelector('[key="root"] [data-drill-key="settings"]')!
+    const rootNotificationsTrigger = el.querySelector('[key="root"] [data-drill-key="notifications"]')!
+    const settingsAppearanceTrigger = el.querySelector('[key="settings"] [data-drill-key="appearance"]')!
+    expect(rootSettingsTrigger.hasAttribute('data-drill-active')).toBe(true)
+    expect(rootNotificationsTrigger.hasAttribute('data-drill-active')).toBe(false)
+    expect(settingsAppearanceTrigger.hasAttribute('data-drill-active')).toBe(true)
+    el.remove()
+  })
+
+  it('clears the marker when the path changes to a different branch', async () => {
+    const el = makeBranchingTree()
+    el.layout = 'columns'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    const rootSettingsTrigger = el.querySelector('[key="root"] [data-drill-key="settings"]')!
+    expect(rootSettingsTrigger.hasAttribute('data-drill-active')).toBe(true)
+    await click(el.querySelector('[key="root"] [data-drill-key="notifications"]')!)
+    expect(rootSettingsTrigger.hasAttribute('data-drill-active')).toBe(false)
+    const rootNotificationsTrigger = el.querySelector('[key="root"] [data-drill-key="notifications"]')!
+    expect(rootNotificationsTrigger.hasAttribute('data-drill-active')).toBe(true)
+    el.remove()
+  })
+
+  it('never sets the marker under the resolved "stack" mapping', async () => {
+    const el = makeBranchingTree()
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    const rootSettingsTrigger = el.querySelector('[key="root"] [data-drill-key="settings"]')!
+    expect(rootSettingsTrigger.hasAttribute('data-drill-active')).toBe(false)
+    el.remove()
+  })
+})
+
+describe('UIDrillElement — columns a11y labelling (cl.A6): active keeps aria-labelledby, ancestors get a plain internals.ariaLabel', () => {
+  it('an ancestor column gets internals.ariaLabel = its own heading; the active column keeps NO ariaLabel of its own (it uses aria-labelledby instead)', async () => {
+    const el = makeBranchingTree()
+    el.layout = 'columns'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    const root = el.querySelector('[key="root"]') as UIDrillPanelElement
+    const settings = el.querySelector('[key="settings"]') as UIDrillPanelElement
+    expect(ariaLabelOf(root)).toBe('Root')
+    expect(ariaLabelOf(settings)).toBeNull() // the ACTIVE column — aria-labelledby (linkHeading), not ariaLabel
+    el.remove()
+  })
+
+  it('switching back to stack clears the ancestor internals.ariaLabel (no stale name left behind)', async () => {
+    const el = makeBranchingTree()
+    el.layout = 'columns'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    const root = el.querySelector('[key="root"]') as UIDrillPanelElement
+    expect(ariaLabelOf(root)).toBe('Root')
+    el.layout = 'stack'
+    await whenFlushed()
+    expect(ariaLabelOf(root)).toBeNull()
+    el.remove()
+  })
+})
+
+describe('UIDrillElement — columns scoped focus law (cl.A6, the one deliberate narrowing of cl.5)', () => {
+  it('does NOT move focus to the heading on drill-forward under columns (contrast: stack DOES move it)', async () => {
+    const el = makeTree()
+    el.layout = 'columns'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    expect(document.activeElement).not.toBe(el.parts.heading)
+    el.remove()
+  })
+
+  it('stack (default) still moves focus to the heading — the contrast case, cl.5 unaffected outside columns', async () => {
+    const el = makeTree()
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    expect(document.activeElement).toBe(el.parts.heading)
+    el.remove()
+  })
+})
+
+// ── S3's own load-bearing invariant re-anchor: #drillTo/#back/#commit/#resolve stay byte-unchanged ─────────
+describe('UIDrillElement — columns never touches the byte-unchanged path API (ADR-0195 cl.2, re-anchored for S3)', () => {
+  it('Back still pops exactly one level under columns, through the SAME untouched #back/#commit', async () => {
+    const el = makeBranchingTree()
+    el.layout = 'columns'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    await click(el.querySelector('[key="settings"] [data-drill-key="appearance"]')!)
+    expect(el.effectivePath).toEqual(['root', 'settings', 'appearance'])
+    await click(el.parts.back!)
+    expect(el.effectivePath).toEqual(['root', 'settings'])
+    el.remove()
+  })
+
+  it('a controlled path under columns still only EMITS the proposed value, never self-mutates (ADR-0102 parity)', async () => {
+    const el = makeBranchingTree()
+    el.layout = 'columns'
+    el.path = ['root', 'settings']
+    await whenFlushed()
+    const onChange = vi.fn()
+    el.addEventListener('change', onChange)
+    await click(el.querySelector('[key="root"] [data-drill-key="notifications"]')!)
+    expect(el.effectivePath).toEqual(['root', 'settings']) // unchanged — controlled, no write-back yet
+    expect((onChange.mock.calls[0]![0] as CustomEvent<string[]>).detail).toEqual(['root', 'notifications'])
+    el.path = ['root', 'notifications']
+    await whenFlushed()
+    expect(el.effectivePath).toEqual(['root', 'notifications'])
     el.remove()
   })
 })
