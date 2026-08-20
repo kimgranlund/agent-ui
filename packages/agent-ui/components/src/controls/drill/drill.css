@@ -13,6 +13,14 @@
  * opted-in instance on an unsupported/reduced-motion engine still gets the CSS base. `[data-direction]` carries
  * the swap's forward/back sign for the translateX.
  *
+ * ADR-0195 AMENDMENT S2 slice (2026-08-19/20, GH #1510) — `chrome="crumbs"`. The header's back+heading pair is
+ * REPLACED by `[data-part="crumbs"]` (a real `<nav aria-label="Breadcrumb">`, host-owned, created once): one
+ * real `[data-part="crumb"]` `<button>` per ancestor path entry, then the SAME `[data-part="heading"]` node
+ * (moved by drill.ts, never a distinct element) as the trail's non-interactive last entry, `aria-current=
+ * "location"` (cl.A6, Forks ruled ③). A `/`-glyph separator (`::before`) rides the adjacent-sibling combinator
+ * so it never paints before the FIRST trail entry. No new tokens — reuses `--ui-drill-ink-muted`/
+ * `--ui-drill-back-font-size`/`--ui-drill-header-gap` (cl.A5 names no crumbs-specific token).
+ *
  * ADR-0195 AMENDMENT (2026-08-19, GH #1510) — S1 slice: CONTAINED + STACK becomes the default presentation.
  * The host is a 2-row grid (header auto row; every `ui-drill-panel` — active AND painted ancestors — placed in
  * the SAME second-row grid cell, `overflow: clip` on the host) — same-cell stacking gives free positioning +
@@ -139,6 +147,53 @@
     }
   }
 
+  /* S2 (cl.A3) — the crumbs trail, a real <nav>: a flat row of [data-part='crumb'] buttons then the (moved,
+     never recreated) [data-part='heading'] as the trail's last entry. Hidden whenever chrome !== 'crumbs'
+     (drill.ts toggles the `hidden` attribute; never removed from the DOM, the header/back idempotent-part
+     precedent). */
+  [data-part='crumbs'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-drill-header-gap);
+    min-inline-size: 0;
+    overflow: hidden;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  [data-part='crumb'] {
+    all: unset;
+    cursor: pointer;
+    color: var(--ui-drill-ink-muted);
+    font-size: var(--ui-drill-back-font-size);
+    max-inline-size: 12em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--ui-drill-ink);
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+      outline-offset: var(--md-sys-state-focus-ring-offset);
+    }
+  }
+
+  /* A `/` separator before every trail entry EXCEPT the first — the adjacent-sibling combinator keys off a
+     PRECEDING [data-part='crumb'], so it never paints ahead of the trail's own first item (which may be an
+     ancestor crumb, or — at the root, zero ancestors — the heading itself). */
+  [data-part='crumb'] + [data-part='crumb']::before,
+  [data-part='crumb'] + [data-part='heading']::before {
+    content: '/';
+    margin-inline-end: var(--ui-drill-header-gap);
+    color: var(--ui-drill-ink-muted);
+  }
+
   [data-part='heading'] {
     margin: 0;
     font-size: var(--ui-drill-heading-font-size);
@@ -237,6 +292,15 @@
     }
 
     [data-part='back'] {
+      color: CanvasText;
+      forced-color-adjust: none;
+    }
+
+    /* S2 (cl.A3) — the crumbs trail's own links + separators + current-entry heading stay real system-colour
+       text/ink under forced-colors, the same peer-parity fix applied to the back button above. */
+    [data-part='crumb'],
+    [data-part='crumb']::before,
+    [data-part='crumb'] + [data-part='heading']::before {
       color: CanvasText;
       forced-color-adjust: none;
     }

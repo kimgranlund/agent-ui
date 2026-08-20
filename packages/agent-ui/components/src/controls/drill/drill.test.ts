@@ -16,7 +16,7 @@ class ProbeDrill extends UIDrillElement {
   get effectivePath(): string[] {
     return this.effectivePathSeam
   }
-  get parts(): { back: HTMLButtonElement | null; heading: HTMLHeadingElement | null } {
+  get parts(): { back: HTMLButtonElement | null; heading: HTMLHeadingElement | null; crumbsNav: HTMLElement | null } {
     return this.headerPartsSeam
   }
   get probeInternals(): ElementInternals {
@@ -330,6 +330,131 @@ describe('UIDrillElement — layout/chrome (ADR-0195 Amendment cl.A2, GH #1510)'
     // S2/S3 not implemented yet — the render mapping is unaffected (still painted-path stack + backbar header)
     expect(el.querySelector(':scope > [data-part="header"] > [data-part="back"]')).not.toBeNull()
     expect(el.effectivePath).toEqual(['root'])
+    el.remove()
+  })
+})
+
+// ── ADR-0195 Amendment S2 slice (GH #1510) — chrome="crumbs": the breadcrumb trail ─────────────────────────
+describe('UIDrillElement — chrome="crumbs" (ADR-0195 Amendment cl.A2/A3/A6, S2)', () => {
+  it('at the root (depth 1): no ancestor crumb buttons, the heading is the trail\'s sole entry, aria-current="location"', async () => {
+    const el = makeTree()
+    el.chrome = 'crumbs'
+    await whenFlushed()
+    expect(el.parts.back?.hidden).toBe(true)
+    expect(el.parts.crumbsNav?.hidden).toBe(false)
+    expect(el.parts.crumbsNav?.querySelectorAll('[data-part="crumb"]')).toHaveLength(0)
+    expect(el.parts.crumbsNav?.contains(el.parts.heading!)).toBe(true)
+    expect(el.parts.heading?.getAttribute('aria-current')).toBe('location')
+    el.remove()
+  })
+
+  it('one level deep: exactly one ancestor crumb button (root), labelled by its heading, no aria-current of its own', async () => {
+    const el = makeTree()
+    el.chrome = 'crumbs'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    const crumbs = [...el.parts.crumbsNav!.querySelectorAll('[data-part="crumb"]')]
+    expect(crumbs).toHaveLength(1)
+    expect(crumbs[0]!.textContent).toBe('Root')
+    expect(crumbs[0]!.hasAttribute('aria-current')).toBe(false)
+    expect(crumbs[0]!.tagName).toBe('BUTTON')
+    // the leaf (heading) is last in the trail, carrying aria-current — the value is "location" (ADR-0195
+    // Amendment cl.A6, Forks ruled ③ — NOT "page": a drill level is a UI position, not a page)
+    expect(el.parts.heading?.getAttribute('aria-current')).toBe('location')
+    expect(el.parts.heading?.textContent).toBe('Settings')
+    el.remove()
+  })
+
+  it('two levels deep: TWO ancestor crumbs (root, settings), z-ordered path order, neither carrying aria-current', async () => {
+    const el = makeTree()
+    el.chrome = 'crumbs'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    await click(el.querySelector('[key="settings"] [data-drill-key="appearance"]')!)
+    const crumbs = [...el.parts.crumbsNav!.querySelectorAll('[data-part="crumb"]')]
+    expect(crumbs.map((c) => c.textContent)).toEqual(['Root', 'Settings'])
+    for (const crumb of crumbs) expect(crumb.hasAttribute('aria-current')).toBe(false)
+    expect(el.parts.heading?.textContent).toBe('Appearance')
+    expect(el.parts.heading?.getAttribute('aria-current')).toBe('location')
+    el.remove()
+  })
+
+  it('clicking an ancestor crumb navigates: truncates path to that ancestor (direction back), fires ONE change', async () => {
+    const el = makeTree()
+    el.chrome = 'crumbs'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    await click(el.querySelector('[key="settings"] [data-drill-key="appearance"]')!)
+    expect(el.effectivePath).toEqual(['root', 'settings', 'appearance'])
+    const onChange = vi.fn()
+    el.addEventListener('change', onChange)
+    const rootCrumb = el.parts.crumbsNav!.querySelector('[data-part="crumb"]') as HTMLButtonElement
+    expect(rootCrumb.textContent).toBe('Root')
+    await click(rootCrumb)
+    expect(el.effectivePath).toEqual(['root']) // truncated to the clicked ancestor, same as the fleet Back shape
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect((onChange.mock.calls[0]![0] as CustomEvent<string[]>).detail).toEqual(['root'])
+    el.remove()
+  })
+
+  it('clicking the MIDDLE crumb of a 3-level path truncates to exactly that ancestor (not the leaf, not the root)', async () => {
+    const el = makeTree()
+    el.chrome = 'crumbs'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    await click(el.querySelector('[key="settings"] [data-drill-key="appearance"]')!)
+    const crumbs = [...el.parts.crumbsNav!.querySelectorAll('[data-part="crumb"]')] as HTMLButtonElement[]
+    await click(crumbs[1]!) // "Settings"
+    expect(el.effectivePath).toEqual(['root', 'settings'])
+    el.remove()
+  })
+
+  it('keyboard-reachable: crumb buttons are real <button>s in native Tab order (no bespoke keyboard wiring needed)', async () => {
+    const el = makeTree()
+    el.chrome = 'crumbs'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    const rootCrumb = el.parts.crumbsNav!.querySelector('[data-part="crumb"]') as HTMLButtonElement
+    expect(rootCrumb.tagName).toBe('BUTTON')
+    expect(rootCrumb.hasAttribute('tabindex')).toBe(false) // native focusability, no explicit tabindex needed
+    rootCrumb.focus()
+    expect(document.activeElement).toBe(rootCrumb)
+  })
+
+  it('controlled mode: a crumb click EMITS the truncated path but does not self-mutate (ADR-0102 parity with Back)', async () => {
+    const el = makeTree()
+    el.chrome = 'crumbs'
+    el.path = ['root', 'settings', 'appearance']
+    await whenFlushed()
+    const onChange = vi.fn()
+    el.addEventListener('change', onChange)
+    const rootCrumb = el.parts.crumbsNav!.querySelector('[data-part="crumb"]') as HTMLButtonElement
+    await click(rootCrumb)
+    expect(el.effectivePath).toEqual(['root', 'settings', 'appearance']) // unchanged — controlled, no write-back yet
+    expect((onChange.mock.calls[0]![0] as CustomEvent<string[]>).detail).toEqual(['root'])
+    el.path = ['root']
+    await whenFlushed()
+    expect(el.effectivePath).toEqual(['root'])
+    el.remove()
+  })
+
+  it('switching chrome back to "backbar" restores the Back button + heading pair, clears aria-current and the crumbs nav', async () => {
+    const el = makeTree()
+    el.chrome = 'crumbs'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    expect(el.parts.heading?.getAttribute('aria-current')).toBe('location')
+
+    el.chrome = 'backbar'
+    await whenFlushed()
+    expect(el.parts.crumbsNav?.hidden).toBe(true)
+    expect(el.parts.crumbsNav?.querySelectorAll('[data-part="crumb"]')).toHaveLength(0)
+    expect(el.parts.heading?.getAttribute('aria-current')).toBeNull()
+    expect(el.parts.back?.hidden).toBe(false) // one level deep — Back is visible again, S1's exact shape
+    expect(el.parts.back?.getAttribute('aria-label')).toBe('Back to Root')
+    el.remove()
+  })
+
+  it('an INERT ancestor pane\'s own drill-trigger still cannot fire under chrome="crumbs" (cl.A1/A6 unchanged — chrome never affects PANEL painting)', async () => {
+    const el = makeTree()
+    el.chrome = 'crumbs'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    const root = el.querySelector('[key="root"]') as UIDrillPanelElement
+    expect(root.inert).toBe(true) // the stack layout's painted-ancestor rule is untouched by `chrome`
     el.remove()
   })
 })

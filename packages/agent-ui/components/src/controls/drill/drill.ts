@@ -41,6 +41,18 @@
 // `view-transition-name` across every panel (the pre-amendment scheme) would put more than one named element
 // in a single snapshot — illegal. The name now sits on the RESOLVED-ACTIVE panel ONLY, cleared elsewhere.
 //
+// ADR-0195 AMENDMENT S2 slice (2026-08-19/20, GH #1510) — `chrome="crumbs"`. cl.A3: under crumbs the Back
+// button hides and a `[data-part="crumbs"]` `<nav aria-label="Breadcrumb">` renders instead, holding one real
+// `<button data-part="crumb">` per ANCESTOR path entry plus the SAME `[data-part="heading"]` node (moved, never
+// recreated) as the trail's last, non-interactive entry — reusing the one node is what keeps cl.5's focus
+// target/`aria-labelledby` reflection/heading semantics unchanged. cl.A6: the leaf carries `aria-current`,
+// value **`location`** (Forks ruled ③, kept as drafted) — a drill level is a UI position, not a page; ancestor
+// crumbs carry NO `aria-current` (real `<button>`s, not links, and not "current" themselves — the APG
+// current-item semantic applies to exactly one entry, the trail's last). `#drillTo`/`#back`/`#commit`/
+// `#resolve` stay BYTE-UNCHANGED (S1's load-bearing invariant, still true here): a crumb click reuses `#commit`
+// through a new sibling method, `#crumbTo` — the cl.A1 "truncate then commit, direction back" mapping, not a
+// rewritten append.
+//
 // `controls → dom + ./drill-panel.ts` — the allowed import direction (a sanctioned sibling-control import, the
 // `avatar → icon` / `command-modal → combo-box` precedent — same layer, controls → controls).
 
@@ -88,8 +100,12 @@ export class UIDrillElement extends UIContainerElement {
   readonly #version = signal(0)
 
   #observer: MutationObserver | null = null
+  #header: HTMLElement | null = null
   #backButton: HTMLButtonElement | null = null
   #heading: HTMLHeadingElement | null = null
+  // S2 (cl.A3) — the crumbs trail's own control-created part, created once alongside back/heading (idempotent
+  // guard, #ensureParts). Hidden whenever `chrome !== 'crumbs'`.
+  #crumbsNav: HTMLElement | null = null
   #instanceToken = ''
   #direction: 'forward' | 'back' = 'forward'
   // Set true after the FIRST render pass — gates the focus-move-to-heading behaviour so mounting a `ui-drill`
@@ -108,11 +124,17 @@ export class UIDrillElement extends UIContainerElement {
     this.#primed = false
     this.#lastActiveKey = null
 
-    const { back, heading } = this.#ensureParts()
+    const { header, back, heading, crumbsNav } = this.#ensureParts()
+    this.#header = header
     this.#backButton = back
     this.#heading = heading
+    this.#crumbsNav = crumbsNav
 
     this.listen(back, 'click', () => this.#back())
+    // S2 (cl.A3) — ONE delegated listener on the nav itself (the pagination.ts `#rebuild` precedent): crumb
+    // buttons are rebuilt wholesale every render (`#renderCrumbs`), so a per-button listener would strand a
+    // fresh closure on every discarded rebuild. Native `<button>` semantics give Enter/Space/Tab for free.
+    this.listen(crumbsNav, 'click', (event) => this.#onCrumbClick(event as MouseEvent))
     this.listen(this, 'click', (event) => this.#onTriggerClick(event as MouseEvent))
     this.listen(this, 'keydown', (event) => this.#onKeydown(event as KeyboardEvent))
 
@@ -130,13 +152,21 @@ export class UIDrillElement extends UIContainerElement {
 
   // ── parts (created ONCE — idempotent guard, the disclosure.ts/tabs.ts precedent) ──────────────────────────
 
-  #ensureParts(): { header: HTMLElement; back: HTMLButtonElement; heading: HTMLHeadingElement } {
+  #ensureParts(): {
+    header: HTMLElement
+    back: HTMLButtonElement
+    heading: HTMLHeadingElement
+    crumbsNav: HTMLElement
+  } {
     let header = this.querySelector<HTMLElement>(':scope > [data-part="header"]')
     if (header) {
       return {
         header,
         back: header.querySelector<HTMLButtonElement>('[data-part="back"]')!,
+        // `querySelector` finds `heading` wherever it currently sits (a direct header child in `backbar`
+        // chrome, or moved inside `crumbsNav` — see #renderCrumbs) — the SAME node either way (S2, cl.A3).
         heading: header.querySelector<HTMLHeadingElement>('[data-part="heading"]')!,
+        crumbsNav: header.querySelector<HTMLElement>('[data-part="crumbs"]')!,
       }
     }
     header = document.createElement('div')
@@ -148,13 +178,22 @@ export class UIDrillElement extends UIContainerElement {
     back.setAttribute('data-part', 'back')
     back.hidden = true
 
+    // S2 (cl.A3) — the crumbs trail: a real `<nav aria-label="Breadcrumb">`, created once, hidden whenever
+    // `chrome !== 'crumbs'`. Its children are rebuilt wholesale every render (#renderCrumbs, the pagination.ts
+    // `#rebuild` whole-array-swap precedent) — one `<button data-part="crumb">` per ancestor path entry, plus
+    // the SAME `heading` node (below) moved in as the trail's last entry.
+    const crumbsNav = document.createElement('nav')
+    crumbsNav.setAttribute('data-part', 'crumbs')
+    crumbsNav.setAttribute('aria-label', 'Breadcrumb')
+    crumbsNav.hidden = true
+
     const heading = document.createElement('h2')
     heading.setAttribute('data-part', 'heading')
     heading.tabIndex = -1
 
-    header.append(back, heading)
+    header.append(back, crumbsNav, heading)
     this.prepend(header)
-    return { header, back, heading }
+    return { header, back, heading, crumbsNav }
   }
 
   // ── panel discovery + resolution (drill.intake.md §4) ───────────────────────────────────────────────────
@@ -264,6 +303,51 @@ export class UIDrillElement extends UIContainerElement {
     this.#drillTo(key)
   }
 
+  // ── S2 (cl.A3/cl.A1) — crumbs trail navigation: a NEW sibling to #drillTo/#back, never touching them ───────
+
+  #onCrumbClick(event: MouseEvent): void {
+    const target = event.target
+    if (!(target instanceof Element)) return
+    const crumb = target.closest('[data-part="crumb"]')
+    if (!crumb || !this.#crumbsNav?.contains(crumb)) return
+    const index = Number(crumb.getAttribute('data-drill-index'))
+    if (!Number.isInteger(index)) return
+    this.#crumbTo(index)
+  }
+
+  /** cl.A1's crumbs render mapping: "a click on crumb i committing path.slice(0, i+1) (direction back)" — the
+   *  SAME `#commit` the Back button uses, called with a truncated (not appended) path. `#drillTo`/`#back`/
+   *  `#commit`/`#resolve` stay byte-unchanged; this is a new method that reuses `#commit`, not a rewrite of it. */
+  #crumbTo(index: number): void {
+    const { path } = this.#resolve(this.#rawPath())
+    if (index < 0 || index >= path.length - 1) return // only an ANCESTOR entry is clickable, never the leaf
+    this.#commit(path.slice(0, index + 1), 'back')
+  }
+
+  /** Rebuild the crumbs trail wholesale (the pagination.ts `#rebuild` whole-array-swap precedent): one real
+   *  `<button data-part="crumb">` per ancestor `resolvedPath` entry (label = that panel's `heading`, falling
+   *  back to its `key`), then the SAME `heading` node — never recreated — moved in as the trail's last,
+   *  non-interactive entry (cl.A3). cl.A6: the leaf carries `aria-current="location"` (Forks ruled ③, kept as
+   *  drafted — a drill level is a position within a UI, not a page); ancestor crumbs carry NO `aria-current` —
+   *  real buttons, not the trail's current entry (the APG current-item semantic names exactly one entry). */
+  #renderCrumbs(resolvedPath: string[], panels: UIDrillPanelElement[]): void {
+    const nav = this.#crumbsNav
+    const heading = this.#heading
+    if (!nav || !heading) return
+    nav.hidden = false
+    const ancestorButtons = resolvedPath.slice(0, -1).map((key, index) => {
+      const ancestorPanel = panels.find((p) => p.key === key)
+      const button = document.createElement('button')
+      button.type = 'button'
+      button.setAttribute('data-part', 'crumb')
+      button.setAttribute('data-drill-index', String(index))
+      button.textContent = ancestorPanel?.heading || key
+      return button
+    })
+    heading.setAttribute('aria-current', 'location')
+    nav.replaceChildren(...ancestorButtons, heading)
+  }
+
   // ── render: the one geometry+ARIA+motion effect ─────────────────────────────────────────────────────────
 
   #backLabel(activePanel: UIDrillPanelElement | null): string {
@@ -277,6 +361,9 @@ export class UIDrillElement extends UIContainerElement {
     void this.#version.value // tracked unconditionally — the ui-split `#version` precedent
     const panels = this.#panels()
     const { key: activeKey, path: resolvedPath } = this.#resolve(this.#rawPath())
+    // S2 (cl.A2/A3) — read `chrome` so THIS effect re-runs on a chrome flip (S1 shipped the prop but never
+    // read it in #render, since no render mapping existed yet for a non-default value).
+    const chrome = this.chrome
     const activePanel = panels.find((p) => p.key === activeKey) ?? null
     // component-checker MAJOR fix: the ONLY thing that licenses a VT swap or a focus move is the ACTIVE KEY
     // actually changing — a re-render for an unrelated reason (a panel appended/removed elsewhere, a prop
@@ -285,10 +372,11 @@ export class UIDrillElement extends UIContainerElement {
     const keyChanged = this.#primed && activeKey !== this.#lastActiveKey
     const willUseVT = keyChanged && this.viewTransitions && viewTransitionAvailable()
 
-    // ADR-0195 Amendment cl.A1 — the stack (default) painted set is every panel whose key ∈ resolvedPath, not
-    // just the active leaf (ancestors paint too, dimmed + inert, behind the active panel — drill.css's
-    // `data-drill-pane` z-order). `layout`/`chrome` non-default values (S2/S3) are accepted but not yet
-    // implemented — this pass always renders the stack/backbar mapping.
+    // ADR-0195 Amendment cl.A1 — the painted set (which panels get `hidden`/`inert`/z-order) is the `layout`
+    // render mapping, and is STILL always `stack` (every panel whose key ∈ resolvedPath, ancestors dimmed +
+    // inert behind the active panel) — `layout="columns"` (S3) remains accepted but not yet implemented.
+    // `chrome` (this slice, S2) is an ORTHOGONAL axis: it selects the HEADER anatomy only (back+heading vs. the
+    // crumbs trail, below) and never changes which panels paint.
     const paintedKeys = new Set(resolvedPath)
 
     // cl.A7 — the shared `view-transition-name` moves to the RESOLVED-ACTIVE panel ONLY (set per render,
@@ -328,10 +416,27 @@ export class UIDrillElement extends UIContainerElement {
         panel.linkHeading(isActive ? this.#heading : null)
       }
       if (this.#heading) this.#heading.textContent = activePanel?.heading ?? ''
-      if (this.#backButton) {
-        const canGoBack = resolvedPath.length > 1
-        this.#backButton.hidden = !canGoBack
-        this.#backButton.setAttribute('aria-label', this.#backLabel(activePanel))
+      // S2 (cl.A3) — chrome="crumbs" REPLACES the back+heading pair with the breadcrumb trail; this ADDS a
+      // branch, it never edits the backbar branch below (byte-identical to what S1 shipped).
+      if (chrome === 'crumbs') {
+        if (this.#backButton) this.#backButton.hidden = true
+        this.#renderCrumbs(resolvedPath, panels)
+      } else {
+        // backbar (default) — S1's shipped branch, untouched. Restore the heading to the header directly (a
+        // no-op unless a PRIOR render moved it into the crumbs nav) and hide/clear that nav.
+        if (this.#crumbsNav) {
+          this.#crumbsNav.hidden = true
+          this.#crumbsNav.replaceChildren()
+        }
+        if (this.#heading && this.#header && this.#heading.parentElement !== this.#header) {
+          this.#header.append(this.#heading)
+        }
+        this.#heading?.removeAttribute('aria-current')
+        if (this.#backButton) {
+          const canGoBack = resolvedPath.length > 1
+          this.#backButton.hidden = !canGoBack
+          this.#backButton.setAttribute('aria-label', this.#backLabel(activePanel))
+        }
       }
     }
 
@@ -350,8 +455,12 @@ export class UIDrillElement extends UIContainerElement {
   }
 
   /** Expose the live header parts for test probes (focus/aria assertions). */
-  protected get headerPartsSeam(): { back: HTMLButtonElement | null; heading: HTMLHeadingElement | null } {
-    return { back: this.#backButton, heading: this.#heading }
+  protected get headerPartsSeam(): {
+    back: HTMLButtonElement | null
+    heading: HTMLHeadingElement | null
+    crumbsNav: HTMLElement | null
+  } {
+    return { back: this.#backButton, heading: this.#heading, crumbsNav: this.#crumbsNav }
   }
 }
 

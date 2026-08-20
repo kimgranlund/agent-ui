@@ -65,9 +65,9 @@ describe('drill.md descriptor — the bindable path (controlled/uncontrolled) + 
     expect(events).toEqual(['change'])
   })
 
-  it('declares the header/back/heading PARTS (not user slots)', () => {
+  it('declares the header/back/heading/crumbs/crumb PARTS (not user slots)', () => {
     const parts = (parsed.sequences.get('parts') ?? []).map((i) => i.get('name'))
-    expect(parts).toEqual(['header', 'back', 'heading'])
+    expect(parts).toEqual(['header', 'back', 'heading', 'crumbs', 'crumb'])
   })
 
   it('declares `view-transitions` as a reflected boolean, default false', () => {
