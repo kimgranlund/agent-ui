@@ -199,7 +199,6 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // pending judged import wave — the authoring session judging its own seed is the manufactured
   // judgment ADR-0068's Alternatives ban. Run the judged pipeline (`import-seeds.ts` with a real
   // VerdictsFile) and DELETE this entry when that wave lands.
-  ['features-list-card', 'GH #1479 — no verdict sought yet; a future judged wave should admit or drop this seed and delete this entry.'],
   // (ADR-0068: never self-judged). The map was back to its EMPTY steady state until the row below.
   //
   // GH #1480 (2026-08-19) — `customer-review-card`: the same pending-state shape (NO VERDICT SOUGHT
@@ -207,5 +206,9 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // bold rating + muted review-count Text, then a highlights line) — the authoring session judging its
   // own seed is the manufactured judgment ADR-0068's Alternatives ban. Run the judged pipeline
   // (import-seeds.ts with a real VerdictsFile) and DELETE this entry when that wave lands.
-  ['customer-review-card', 'GH #1480 — pending judged import wave (NO VERDICT SOUGHT YET, not a refusal); delete this entry once import-seeds --verdicts admits it.'],
+  // 2026-08-20 — GH #1479 (`features-list-card`) + GH #1480 (`customer-review-card`) both judged by a
+  // fresh-context a2ui-review-agent (PASS 4/5 each, archived 2026-08-20t04-00-00z) and admitted via
+  // import-seeds --verdicts — entries DRAINED per their own instruction (ADR-0068: never self-judged).
+  // Judge's recorded at-4 findings (non-blocking): features-list's icon label duplicates the adjacent
+  // Text (P7); review-card's plain Card>[Row,Text] spine is precedented-but-below-dominant (P4).
 ])
