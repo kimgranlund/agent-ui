@@ -62,17 +62,8 @@ Queue order: (1) gated mutations verified safe → (2) blockers → (3) human de
 
 ## 2. Blocking other work
 
-### 2.1 #1437 — visual golden gate; carried watch, evidence now three firings stale (marshal; watch, 0 min here)
-- **Action**: carried forward (prior 2.2). No fresh evidence this firing — #1437 was not in
-  issue-sorter's update window and no seat touched it; last live evidence is the
-  2026-08-19T21:56Z dispatch context (marshal verifying). A red golden gate blocks
-  pixel-verified merges on every visual lane. One `gh issue view 1437 --json state` (or the
-  marshal's own word) at next host touch: green/closed → drop at next compose; still red →
-  escalate to Kim with the marshal's findings rather than re-dispatching cold.
-- **Owner**: marshal (engaged as of last evidence); dispatching host verifies/escalates.
-- **Evidence**: prior plan 2.2 (carry-forward; original source was dispatch standing context,
-  not seat reports — named as such then and now). No fresher evidence this firing.
-- **Size**: 0 minutes here; minutes to verify at next host touch.
+(none — #1437, the sole carried blocker entry, verified CLOSED below and dropped; see the
+2026-08-20T05:00:00Z addendum at the end of this file.)
 
 ## 3. Human-decision items
 
@@ -154,3 +145,40 @@ Queue order: (1) gated mutations verified safe → (2) blockers → (3) human de
 ops-write split; written and landed by the dispatching session.*
 
 Dispatch: 2026-08-20T07:05:00Z
+
+---
+
+## Addendum — 2026-08-20T05:00:00Z firing (a separate, concurrent three-seat sweep dispatched
+before this compose's e2bd3074 commit was discovered; merged here rather than overwriting)
+
+- **#1437 dropped**: verified `gh issue view 1437 --json state,closedAt` → **CLOSED
+  2026-08-20T00:19:07Z**, well before either firing's own window opened. Both this plan's 2.1
+  and its own prior-plan ancestors carried it forward unverified for several firings; the
+  marshal's same-session Findings on the issue (docs-chrome-narrow-open golden reproduced
+  green on current main, full `test:browser` chain ran clean) are the real closing evidence.
+  Dropped, not carried a sixth time.
+- **Executed hygiene this firing** (additive to 07:05Z's own): 3 further merged-PR remote
+  branches closed via `campaign_close.py` — #1513 (`1508-command-modal-icons`), #1514
+  (`1510-drill-contained-design`), #1507 (`harvest-adr-0224-0225`) — each clean/exit 0,
+  reverified gone. Note: closing #1507's branch is what makes 3.1's adr-0224/adr-0225 harvest
+  question below moot on the MERGE side — the harvest PR is landed; only Kim's confirm-or-not
+  on the reference-content questions in 3.1 remains outstanding, unaffected by this branch
+  close.
+- **Two live worktrees held throughout, confirmed KEPT by this firing's own repo-cleaner
+  dry-run too**: `1195-drill-s1-stack-default` (locked, drill S1 build) and
+  `1515-breadcrumb-design` (the #1515 breadcrumb design lane, mid-fix at this addendum's write
+  time) — never flagged, never touched.
+- **decision-watcher delta**: one further new ADR since this plan's own 221-count baseline —
+  **adr-0226** ("catalog Button icon mechanism," `status: proposed`) — held pending
+  ratification, not yet judgeable (the proposed-marker gate); re-surfaces as `amended` for
+  judgment once Kim ratifies or returns it. `adr-checkpoint.json`'s `adr-0226` entry reflects
+  this.
+- **issue-sorter delta**: window 2026-08-20T03:36:59Z→05:00:00Z — 6 issues (#1478/#1483/#1495/
+  #1508/#1510/#1515) + 8 PRs (#1492/#1501/#1507/#1509/#1511/#1512/#1513/#1514), all
+  sole-friendly-authored and already correctly kind-labeled at filing; nothing minted, nothing
+  held.
+- **3.1's harvest confirm (adr-0224/adr-0225) is STILL LIVE and STILL NEEDS KIM** — nothing in
+  this addendum resolves it; surfacing again here so it isn't lost under the newer addendum
+  text: the reference-content questions (mint-vs-compose.md's stale TYPE-arm example; the two
+  new patterns-table/pigment-exception rows) await the batched confirm this plan's own §3.1
+  describes.
