@@ -1,3 +1,18 @@
 {
-  "candidates": []
+  "candidates": [
+    {
+      "adr_id": "adr-0224",
+      "evidence": "Amendment (2026-08-20, proposed/awaiting ratification per header, GH #1505) retires cl.3's status-tinted accent edge in favor of a full-perimeter outline + enlarged status dot. mint-vs-compose.md's TYPE-arm worked example (line ~124: \"ADR-0224 is the other worked pass (a status-tinted accent edge with no composition vehicle at all)\") now cites the pre-amendment anatomy verbatim — extend that reference to note the restyle so the worked example stays accurate to the shipped component.",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-20T03:37:37Z"
+    },
+    {
+      "adr_id": "adr-0225",
+      "evidence": "Decision cl.2 mints a SECOND EXCLUSION_ALLOWLIST justification category — persona-scoped content type (agent-emittable only through a persona catalog, never the default catalog) — beside ADR-0112 cl.6's chrome family; component-patterns/patterns-table.md's existing allowlist row (line ~23) only names the chrome-family reason. Consequences also names a reusable 'depicted-object color' pigment-token exception (face pinned light in both schemes, suit ink off the danger ladder's flat primitives not the intent role) with no existing citation anywhere in skills/*/references. Neither pattern found in origin/main's skill corpus (grepped: EXCLUSION_ALLOWLIST/persona-scoped/depicted-object/pigment token).",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-20T03:37:37Z"
+    }
+  ]
 }
