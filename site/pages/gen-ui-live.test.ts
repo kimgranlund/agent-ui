@@ -245,9 +245,9 @@ describe('gen-ui-live — the dogfood options-strip toggle (GH #316/ADR-0162)', 
   it('toggling ON persists to localStorage (the provider-mode-selection.ts precedent — a reload restores it)', async () => {
     dogfoodToggle().checked = true
     dogfoodToggle().dispatchEvent(new Event('change'))
-    expect(localStorage.getItem('gen-ui-live-dogfood')).toBe('true')
+    expect(localStorage.getItem('gen-ui-live.dogfood')).toBe('true')
     dogfoodToggle().checked = false
     dogfoodToggle().dispatchEvent(new Event('change'))
-    expect(localStorage.getItem('gen-ui-live-dogfood')).toBe('false')
+    expect(localStorage.getItem('gen-ui-live.dogfood')).toBe('false')
   })
 })

@@ -86,6 +86,7 @@ import type { EffortLevel } from '../lib/provider-mode-selection.ts'
 // `@agent-ui/components` subpath (`site` already imports `components`; catalog-invisible by construction).
 import { DOGFOOD_CSS, DOGFOOD_JS } from '@agent-ui/components/dogfood-frame'
 import type { SandboxFrameAssets } from '@agent-ui/components/components'
+import { createLocalStorageAdapter } from '@agent-ui/shared'
 
 // Computed ONCE at module scope — `PROVIDER_OPTIONS` is static (built from the committed `providers.json`
 // at import time), so the grouped reshape never needs to re-run per turn/reset (`#syncModelsPicker`'s own
@@ -102,20 +103,21 @@ const DOGFOOD_ASSETS: SandboxFrameAssets = { css: DOGFOOD_CSS, js: DOGFOOD_JS }
 // page-local key (not `provider-mode-selection.ts`'s shared `StoredSelection`): this is a GenUI-only
 // concept with no counterpart on a2ui-live.ts, the OTHER consumer of that shared module — a dedicated key
 // keeps the dogfood toggle from becoming a third page's reason to touch a module two OTHER pages share.
-const DOGFOOD_LS_KEY = 'gen-ui-live-dogfood'
+// Persisted through the StorageAdapter localStorage tier (GH #1544, ADR-0227 cl.2). The stored key is
+// `gen-ui-live.dogfood` — the pre-drain `gen-ui-live-dogfood` was DOTLESS, which the tier's
+// `${namespace}.${key}` grammar cannot express, so the key moved (one-time reset to the default OFF
+// state; stated in GH #1544's PR). The stored BYTES stay 'true'/'false' — a boolean's JSON encoding.
+const DOGFOOD_STORE = createLocalStorageAdapter({ namespace: 'gen-ui-live' })
+const DOGFOOD_KEY = 'dogfood'
 function loadDogfoodPersisted(): boolean {
-  try {
-    return localStorage.getItem(DOGFOOD_LS_KEY) === 'true'
-  } catch {
-    return false // storage unavailable — the default OFF state (byte-identical to before this toggle existed)
-  }
+  // `getSync` reads `undefined` when storage is unavailable or the value is corrupt/foreign — the
+  // default OFF state, byte-identical behavior to before this toggle existed.
+  return DOGFOOD_STORE.getSync(DOGFOOD_KEY) === true
 }
 function persistDogfood(on: boolean): void {
-  try {
-    localStorage.setItem(DOGFOOD_LS_KEY, on ? 'true' : 'false')
-  } catch {
-    /* storage unavailable — the in-memory toggle still works this session */
-  }
+  // The adapter no-ops (never throws) when storage is unavailable — the in-memory toggle still works
+  // this session. Same-tick write; `void` keeps the fire-and-forget shape.
+  void DOGFOOD_STORE.set(DOGFOOD_KEY, on)
 }
 
 // The ONE shared, MUTABLE genui config object both `wireLiveOverlay()` (constructs the live transport) and

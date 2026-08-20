@@ -66,8 +66,15 @@ describe('theme/scheme persistence', () => {
   })
 
   it('degrades an unrecognized persisted theme value to "default" (never throws, never trusts garbage)', () => {
-    localStorage.setItem('agent-ui.theme', 'not-a-real-pack')
+    localStorage.setItem('agent-ui.theme', '"not-a-real-pack"') // the tier's JSON encoding (GH #1544)
     expect(loadPersistedTheme()).toBe('default')
+  })
+
+  it('degrades a pre-drain RAW (non-JSON) persisted value to the default — the stated one-time GH #1544 migration cost', () => {
+    localStorage.setItem('agent-ui.theme', 'ocean') // pre-drain writes stored the id raw, not JSON-encoded
+    expect(loadPersistedTheme()).toBe('default') // fail-open parse -> undefined -> default, never a throw
+    localStorage.setItem('agent-ui.scheme', 'dark')
+    expect(loadPersistedScheme()).toBe('')
   })
 
   it('round-trips a persisted scheme choice', () => {
@@ -79,7 +86,7 @@ describe('theme/scheme persistence', () => {
   })
 
   it('degrades an unrecognized persisted scheme value to \'\' (unset, never a guessed light/dark)', () => {
-    localStorage.setItem('agent-ui.scheme', 'sepia')
+    localStorage.setItem('agent-ui.scheme', '"sepia"') // the tier's JSON encoding (GH #1544)
     expect(loadPersistedScheme()).toBe('')
   })
 

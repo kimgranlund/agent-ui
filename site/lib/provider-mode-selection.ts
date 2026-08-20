@@ -30,6 +30,7 @@ import type { ProviderOption, PickerOption } from '../../packages/agent-ui/app/s
 // (this file's own header) intact, and avoids a needless second module-graph entry point into
 // `composer-options.ts` purely for a re-exportable constant.
 import { EFFORT_LEVELS, type EffortLevel } from '../../packages/agent-ui/app/src/controls/conversation/composer-options.ts'
+import { createLocalStorageAdapter } from '@agent-ui/shared'
 export { EFFORT_LEVELS }
 export type { EffortLevel }
 
@@ -113,7 +114,13 @@ export const MODE_OPTIONS: readonly PickerOption[] = GEN_UI_MODES.map((value) =>
 }))
 export const DEFAULT_MODE: GenUiMode = DEFAULT_GEN_UI_MODE
 
-const LS_KEY = 'a2ui-live-provider-selection'
+// Persisted through the StorageAdapter localStorage tier (GH #1544, ADR-0227 cl.2). The stored key is
+// `a2ui-live.provider-selection` — the pre-drain `a2ui-live-provider-selection` was DOTLESS, which the
+// tier's `${namespace}.${key}` grammar cannot express, so this is the ONE drain target whose key moved
+// (one-time restore-to-defaults for a pre-drain selection; stated in GH #1544's PR). The VALUE encoding
+// is unchanged: the tier stores `JSON.stringify(sel)`, byte-identical to the old hand-rolled write.
+const SELECTION_STORE = createLocalStorageAdapter({ namespace: 'a2ui-live' })
+const SELECTION_KEY = 'provider-selection'
 
 export interface StoredSelection {
   provider: string
@@ -141,27 +148,25 @@ export function loadPersistedSelection(): StoredSelection {
   let model = DEFAULT_MODEL
   let mode = DEFAULT_MODE
   let effort = DEFAULT_EFFORT
-  try {
-    const saved = JSON.parse(localStorage.getItem(LS_KEY) ?? 'null') as Partial<StoredSelection> | null
-    const entry = saved?.provider ? CONFIG.providers[saved.provider] : undefined
-    if (entry && entry.implemented) {
-      provider = saved!.provider!
-      model = saved?.model && entry.models.some((m) => m.id === saved.model) ? saved.model : entry.defaultModel
-    }
-    if (saved?.mode && MODE_OPTIONS.some((m) => m.id === saved.mode)) mode = saved.mode
-    if (saved?.effort && EFFORT_LEVELS.some((e) => e.id === saved.effort)) effort = saved.effort as EffortLevel
-  } catch {
-    /* corrupt storage — fall back to the defaults */
+  // A corrupt/foreign stored value reads as `undefined` (the adapter's fail-open JSON parse) and a
+  // non-object JSON value fails every field check below — both land on the defaults, never a throw,
+  // exactly the semantics the old hand-rolled try/catch carried.
+  const saved = (SELECTION_STORE.getSync(SELECTION_KEY) ?? null) as Partial<StoredSelection> | null
+  const entry = saved?.provider ? CONFIG.providers[saved.provider] : undefined
+  if (entry && entry.implemented) {
+    provider = saved!.provider!
+    model = saved?.model && entry.models.some((m) => m.id === saved.model) ? saved.model : entry.defaultModel
   }
+  if (saved?.mode && MODE_OPTIONS.some((m) => m.id === saved.mode)) mode = saved.mode
+  if (saved?.effort && EFFORT_LEVELS.some((e) => e.id === saved.effort)) effort = saved.effort as EffortLevel
   return { provider, model, mode, effort }
 }
 
 /** Persist the current selection — a no-op (never throws) when storage is unavailable, the same
  *  best-effort discipline `provider-switcher.ts` carried. */
 export function persistSelection(sel: StoredSelection): void {
-  try {
-    localStorage.setItem(LS_KEY, JSON.stringify(sel))
-  } catch {
-    /* storage unavailable — the in-memory selection still works this session */
-  }
+  // The adapter no-ops (never throws) when storage is unavailable — the in-memory selection still
+  // works this session, the same best-effort discipline `provider-switcher.ts` carried. Same-tick
+  // write; `void` keeps the fire-and-forget shape.
+  void SELECTION_STORE.set(SELECTION_KEY, sel)
 }
