@@ -1538,5 +1538,12 @@
     "description": "ui-service-card: the availability-stated service/agent launch card (status-tinted accent edge, ONE bindable available boolean driving the whole availability po…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0225",
+    "url": "./adr-index.html#adr-0225",
+    "description": "mint ui-playing-card: a true card-face display leaf, persona-scoped in the catalog",
+    "level": "L3",
+    "section": "Records"
   }
 ]
