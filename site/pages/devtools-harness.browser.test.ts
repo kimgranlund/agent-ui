@@ -78,4 +78,34 @@ describe('devtools-harness — real-engine smoke (SPEC-R8 AC1 / SPEC-R9 AC1)', (
     expect(capture.version).toBe(1)
     expect(capture.timeline.length).toBeGreaterThanOrEqual(5)
   })
+
+  it('download hands the browser a real file — a Blob-backed .json download, not just the copy box (GH debug-export-missing)', async () => {
+    // Capture the downloaded bytes the same way agent-admin-app.browser.test.ts proves its own
+    // Blob-backed persona export: intercept URL.createObjectURL around the click.
+    const realCreate = URL.createObjectURL.bind(URL)
+    const blobs: Blob[] = []
+    URL.createObjectURL = (obj: Blob | MediaSource): string => {
+      if (obj instanceof Blob) blobs.push(obj)
+      return realCreate(obj)
+    }
+    let downloadName = ''
+    const realClick = HTMLAnchorElement.prototype.click
+    HTMLAnchorElement.prototype.click = function (this: HTMLAnchorElement): void {
+      downloadName = this.download
+    }
+    try {
+      ;(document.querySelector(HARNESS_SELECTORS.downloadButton) as HTMLElement).click()
+      await raf()
+    } finally {
+      URL.createObjectURL = realCreate
+      HTMLAnchorElement.prototype.click = realClick
+    }
+    expect(blobs, 'the click reached the download handler — exactly one Blob').toHaveLength(1)
+    expect(blobs[0]!.type).toBe('application/json')
+    expect(downloadName, 'a real filename, not an empty download attribute').toMatch(/^devtools-capture-.*\.json$/)
+    const capture = JSON.parse(await blobs[0]!.text()) as DevtoolsCapture
+    expect(capture.kind).toBe('agent-ui-devtools-capture')
+    expect(capture.version).toBe(1)
+    expect(capture.timeline.length).toBeGreaterThanOrEqual(5)
+  })
 })

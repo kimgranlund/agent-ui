@@ -43,6 +43,7 @@ export const HARNESS_SELECTORS = {
   timelineEvents: '[data-devtools="timeline"] [data-devtools-event]',
   verdictOk: (surfaceId: string): string => `[data-devtools="verdict"][data-surface-id="${surfaceId}"][data-ok="true"]`,
   exportButton: '[data-devtools="export"]',
+  downloadButton: '[data-devtools="download"]',
   captureOutput: '[data-devtools="capture-output"]',
 } as const
 

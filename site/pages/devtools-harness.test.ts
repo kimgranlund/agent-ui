@@ -57,7 +57,7 @@ describe('devtools-harness — the page mounts with every helper hook (SPEC-R8 A
     const backendIds = [...document.querySelectorAll('[data-devtools="backend"]')].map((b) => (b as HTMLElement).dataset.backendId)
     expect(backendIds).toEqual(['replay', 'proxy', 'a2a'])
     expect(document.querySelector('[data-devtools="backend"][data-backend-id="replay"][data-active="true"]')).not.toBeNull()
-    for (const hook of ['status', 'conversation', 'timeline', 'copy-timeline', 'canvas', 'export', 'capture-output', 'capture-input', 'import']) {
+    for (const hook of ['status', 'conversation', 'timeline', 'copy-timeline', 'canvas', 'export', 'download', 'capture-output', 'capture-input', 'import']) {
       expect(document.querySelector(`[data-devtools="${hook}"]`), `missing hook: ${hook}`).not.toBeNull()
     }
     expect(statusEl().dataset.turnState).toBe('idle')
