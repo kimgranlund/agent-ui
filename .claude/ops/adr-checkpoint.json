@@ -220,6 +220,7 @@
     "adr-0222": {"hash": "3d3d68ad3d89107b05cb55e0f69ea5c0838d765452d3fbb7d534a030aeb113a9", "status": "accepted"},
     "adr-0223": {"hash": "356c0ba8286fd47ffc347db928ef07c953e2a63ad716140c3190d2a09b67818c", "status": "accepted"},
     "adr-0224": {"hash": "106bb7c073445d4442f78716675b63224a652b0cc9be9aa4378596dcbfcefe1b", "status": "accepted"},
-    "adr-0225": {"hash": "6e0f1bc2132d93441e518769129aa278805fc7c72993b414e977eda85fbb8593", "status": "accepted"}
+    "adr-0225": {"hash": "6e0f1bc2132d93441e518769129aa278805fc7c72993b414e977eda85fbb8593", "status": "accepted"},
+    "adr-0226": {"hash": "111fad37b55144120ba10a81476ccdb42cceb85c2f28696d2af55fe62ec86dae", "status": "proposed"}
   }
 }
