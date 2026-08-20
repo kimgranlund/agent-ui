@@ -106,6 +106,16 @@ margin (the margins *collapse* in the BFC to a clean 6px gutter). Presence is ha
 absent region simply contributes **no box** (no grid track to null out, no `:has()` row template). All three
 (and the card) are `UIContainerElement` subclasses that self-define on import.
 
+> **Footer bottom-pin constraint (GH #1553, dormant — no code change today).** Nothing pins a footer to
+> the bottom of an equal-height card yet. Whoever adds that must NOT just add `margin-top: auto` to
+> `ui-card-footer` inside this block-flow shell — it wouldn't even work under plain block flow, and
+> naively flipping the shell to `flex-direction: column` while keeping these region margins would
+> silently DOUBLE the visible gutter (flex containers don't collapse adjacent margins the way block
+> flow does). Either flip to `flex-direction: column` AND convert the region gutters from `margin` to
+> `gap` on that flex container (immune to margin-collapse), or follow scroll mode's own precedent below
+> and pull header/footer out of flow via `position: absolute` instead. See `card.css`'s region-margin
+> comment for the full writeup.
+
 `ui-card-header` and `ui-card-footer` reuse the family **leading / label / trailing** host-as-grid anatomy
 (`anatomy.md`) — this is the one place grid remains, *inside* a region, because end-alignment of the
 trailing cell genuinely needs it (the rule stops at the shell): a `slot="leading"` adornment in the start
