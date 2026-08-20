@@ -1552,5 +1552,12 @@
     "description": "catalog Button icon mechanism: icon/iconOnly wire props (no Icon-child contract), ICON_NAMES vocabulary verbatim, the label IS the accessible name, structural-…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0227",
+    "url": "./adr-index.html#adr-0227",
+    "description": "the sanctioned context/shared-state grammar: single-owner signal-backed stores, explicitly injected; CSS cascade for presentational axes; the three point solut…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
