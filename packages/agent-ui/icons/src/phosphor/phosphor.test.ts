@@ -57,4 +57,14 @@ describe('the Phosphor subpath self-registers + activates on import (LLD-C4)', (
       expect(svg.children.length, `${name} resolved to an empty svg`).toBeGreaterThan(0)
     }
   })
+
+  it('GH #1508 — /command-modal-demo\'s Actions glyphs (sign-out, share) are registered and resolve to a real (non-missing) svg', () => {
+    const COMMAND_MODAL_ACTIONS = ['sign-out', 'share'] as const
+    for (const name of COMMAND_MODAL_ACTIONS) {
+      expect(ICON_NAMES, `${name} missing from ICON_NAMES`).toContain(name)
+      const svg = resolveIcon(name, iconRegistry)
+      expect(svg.getAttribute('data-icon-missing'), `${name} resolved as missing`).toBeNull()
+      expect(svg.children.length, `${name} resolved to an empty svg`).toBeGreaterThan(0)
+    }
+  })
 })
