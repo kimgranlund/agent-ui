@@ -1,15 +1,14 @@
 ---
 name: repo-hygiene
 description: >-
-  The judgment layer for keeping THIS repo's context substrate true — distilled from the 2026-07-12
-  clean-repo campaign: how to read status-vs-reality (the tree-wins convention makes shipped-but-
-  proposed NORMAL), when a suspicion needs consumer evidence before verdicting, what historical records
-  may never be rewritten, how relocations are verified (sweep-gates beat replacement lists), the
-  accepted-divergence pattern for upstream-tool disagreements, and the campaign's own two failure
-  modes (command-composition, not judgment). Use when auditing/moving/retiring any .claude doc, skill,
-  hook, or script; judging whether something is rot or convention; or planning any doc relocation.
-  NOT for the grammar rules themselves (doc-standards) or the deterministic checks
-  (site/lib/docs-grammar.test.ts · adr.test.ts · scripts/harness_wiring_check.py — cite, never restate).
+  The judgment layer for keeping THIS repo's context substrate true: reading status-vs-reality
+  (tree-wins makes shipped-but-proposed NORMAL), when a suspicion needs consumer evidence before
+  verdicting, what historical records may never be rewritten, how relocations are verified, and
+  the accepted-divergence pattern for upstream-tool disagreements. Use when
+  auditing/moving/retiring any .claude doc, skill, hook, or script; judging whether something is
+  rot or convention; or planning any doc relocation. NOT for the grammar rules themselves (doc-
+  standards) or the deterministic checks (site/lib/docs-grammar.test.ts | adr.test.ts |
+  scripts/harness_wiring_check.py).
 disable-model-invocation: false
 user-invocable: false
 ---

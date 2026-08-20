@@ -2,14 +2,13 @@
 name: project-facts
 description: >-
   Answers what THIS project (agent-ui) has decided, planned, queued, and specified — from the
-  `.claude/docs/` corpus AND the GitHub Issues board (the live work-item tier since ADR-0145).
-  Use for "what are the requirements for X", "which issues/tickets are open" (→ `gh issue list`,
-  never the frozen tickets/ archive), "what's on the plan / the roadmap / the goals", "what did we
-  decide about Y", "is there a spec for Z", "what's the status of TKT-####" (the frozen archive),
-  "what's already been queued or shipped". Consult table → the sources; Grep/`gh` first, read the
-  matching section. ANSWERS from the records only. NOT for authoring or editing a document (the
-  docs plugin's authoring skills); NOT for capturing a new feature idea (/docs:file-feature) or
-  bug (/docs:file-bug); NOT for building from a record.
+  .claude/docs/ corpus AND the GitHub Issues board (ADR-0145). Use for "what are the requirements
+  for X", "which issues/tickets are open" (gh issue list, never the frozen tickets/ archive),
+  "what's on the plan / the roadmap / the goals", "what did we decide about Y", "is there a spec
+  for Z", "what's the status of TKT-####", "what's already been queued or shipped". ANSWERS from
+  the records only. NOT for authoring or editing a document (the docs plugin's authoring skills);
+  NOT for capturing a new feature idea (/docs:file-feature) or bug (/docs:file-bug); NOT for
+  building from a record.
 user-invocable: false
 disable-model-invocation: false
 ---

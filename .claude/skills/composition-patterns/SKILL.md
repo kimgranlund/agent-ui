@@ -1,20 +1,14 @@
 ---
 name: composition-patterns
 description: >-
-  Route to the CONSUMER-side assembly patterns for agent-ui surfaces: form rhythm on the
-  field/form-provider spine, container box-model consumption, driving overlays from a page,
-  scroll-region ownership, theming subtrees, scale/density axes, multi-pane visibility
-  (shown-set + band-driven docking), origin-keyed multi-composer routing, the
-  retract-don't-delete affordance unpaint, the mint-vs-compose test, declarative chat
-  composition, the zero-data/no-results/first-run empty-state anatomy, and the CSS-less-consumer
-  law. Use when assembling a page/feature and asking
-  "how do I wire a form", "why is my container double-padded", "how do I open this menu
-  programmatically", "why doesn't my page scroll", "how do I theme one section dark",
-  "which panes show at this width", "two composers route to the wrong store",
-  "what goes in an empty list/grid/no-results state". One routing
-  sentence + the owning
-  ADR/exemplar per pattern (cite, never copy). NOT for the producer-side mechanisms inside
-  controls (component-patterns) or which control to pick (component-catalog).
+  CONSUMER-side assembly patterns for agent-ui surfaces: form rhythm, container box-model,
+  overlays, scroll ownership, theming, scale/density, pane visibility, composer routing, retract-
+  don't-delete, mint-vs-compose, chat, empty states, CSS-less-consumer law. Use when assembling a
+  page/feature: "how do I wire a form", "why is my container double-padded", "how do I open this
+  menu programmatically", "why doesn't my page scroll", "how do I theme one section dark", "which
+  panes show at this width", "two composers route to the wrong store", "what goes in an empty
+  list/grid/no-results state". NOT producer-side mechanisms in controls (component-patterns) or
+  which control to pick (component-catalog).
 user-invocable: false
 disable-model-invocation: false
 ---

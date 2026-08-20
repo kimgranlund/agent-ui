@@ -1,18 +1,14 @@
 ---
 name: component-design
 description: >-
-  The design INTAKE for a new or novel ui-* agent-ui component — everything before code:
-  classify (base class × size-class/tier × catalog posture), run the precedent sweep, fill
-  the standard fork sheet (tag, anatomy, props/events, geometry row, token roles, a11y, form
-  participation, site surfaces), take the novelty leg when no precedent fits, decide what the
-  change earns (ADR only for a contract-changing fork — proposed, never self-ratified), and
-  produce the decomposition + test plan that gate the build. Use for "design a new ui-*
-  control", "plan the intake for component X", "does this need an ADR", "no existing
-  geometry row fits this". NOT for building to an already-frozen design
-  (component-build) or for law lookups alone (component-standards); NOT the size:big
-  Understand→Plan→Execute→Evaluate build-dispatch loop a component build may also owe
-  (due-process) — that governs the ORDER any big build passes through, not this skill's
-  own component-specific intake artifacts.
+  The design INTAKE for a new or novel ui-* component — everything before code: classify, run the
+  precedent sweep, fill the standard fork sheet, take the novelty leg, decide what the change
+  earns (ADR only for a contract-changing fork — proposed, never self-ratified), and produce the
+  decomposition + test plan that gate the build. Use for "design a new ui-* control", "plan the
+  intake for component X", "does this need an ADR", "no existing geometry row fits this". NOT for
+  building to an already-frozen design (component-build) or law lookups alone (component-
+  standards); NOT the size:big build-dispatch loop a big component build may also owe (due-
+  process).
 user-invocable: true
 disable-model-invocation: false
 ---

@@ -1,16 +1,14 @@
 ---
 name: a2ui-prompt-authoring
 description: >-
-  Author or edit the A2UI producer's PROMPT STACK — grammar.md, the mode files, the
-  prompts/mini-skills/*.md registry, AND the rest of the byte-pinned prompt surface under
-  packages/agent-ui/a2ui/src/agent/prompts/ (genui-packs/, genui-dogfood-teaching.md,
-  honesty-floor.md, builder-mission.md — all ride the SAME golden baseline/gates) — without breaking
-  those gates. Use when adding/editing a mini-skill idiom module or a genui pack, changing
-  grammar/mode/teaching prose, engineering trigger vocabularies, or when a red prompt-equivalence
-  gate needs the deliberate-change recapture flow. Carries the token budget, the TF-IDF trigger-set
-  mechanics, the restart-vite rule, and the teaching-lane triage for recurring model misbehavior.
-  NOT for composing payloads (a2ui-payload-authoring), producer/renderer CODE (a2ui-build-agent), the composed
-  persona/admin prompts (component-owned, agent-admin), or corpus exemplars (a2ui-corpus-curation).
+  Author or edit the A2UI producer's PROMPT STACK — grammar.md, the mode files, the prompts/mini-
+  skills/*.md registry, and the rest of the byte-pinned surface under packages/agent-
+  ui/a2ui/src/agent/prompts/ — without breaking the golden baseline/gates. Use when adding/editing
+  a mini-skill idiom module or a genui pack, changing grammar/mode/teaching prose, engineering
+  trigger vocabularies, or when a red prompt-equivalence gate needs the deliberate-change
+  recapture flow. NOT for composing payloads (a2ui-payload-authoring), producer/renderer CODE
+  (a2ui-build-agent), the composed persona/admin prompts (component-owned, agent-admin), or corpus
+  exemplars (a2ui-corpus-curation).
 user-invocable: true
 disable-model-invocation: false
 ---

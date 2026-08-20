@@ -1,15 +1,14 @@
 ---
 name: a2ui-catalog-rendering-review
 description: >-
-  Screenshots, reviews AND fixes the a2ui catalog examples — each card on site/a2ui-catalog.html
-  (props panel left, rendered A2UI surface right) — graded against rubrics/a2ui-catalog-example.md,
-  then fixed through the catalog pipeline (catalog.json → factories.ts → ui-* control → preview
-  seeds → tests/regen). Use for "review the a2ui catalog examples", "screenshot each example and
-  review them", "does the rendered surface make sense for X", "fix the X catalog card / seeds",
-  "add a prop or new type to a catalog PAGE demonstration". NOT for GRADING a row, payload, or
-  corpus record — dispatch the a2ui-review-agent seat; NOT for the package's catalog.json entry or
-  factory CODE (a2ui-build owns catalog.json/factories.ts as source, not as a page demonstration);
-  NOT for ui-* control source (component-build-agent); NOT for the page shell (docs-writer).
+  Screenshots, reviews AND fixes the a2ui catalog examples on site/a2ui-catalog.html, graded
+  against rubrics/a2ui-catalog-example.md, then fixed through the catalog pipeline. Use for
+  "review the a2ui catalog examples", "screenshot each example and review them", "does the
+  rendered surface make sense for X", "fix the X catalog card / seeds", "add a prop or new type to
+  a catalog PAGE demonstration". NOT for GRADING a row, payload, or corpus record (a2ui-review-
+  agent); NOT for the package's catalog.json entry or factory CODE (a2ui-build owns those as
+  source); NOT for ui-* control source (component-build-agent); NOT for the page shell (docs-
+  writer).
 disable-model-invocation: false
 user-invocable: true
 argument-hint: "[Component | TIER | all] [--base URL] [--theme dark|light|both] [--fix]"

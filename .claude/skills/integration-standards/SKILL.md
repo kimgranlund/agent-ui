@@ -1,15 +1,14 @@
 ---
 name: integration-standards
 description: >-
-  THIS repo's tool/integration enablement laws (ADR-0168 / SPEC-R16–R19): adding an integration,
-  a new tool for the agent, integration keys/auth (serverKey/envKey, why a keyed tool isn't
-  offered), tool input validation (input_schema, malformed model input, is_error tool_result),
-  the id ≠ tool.name ≠ label split, the shared buildToolDispatch on both live arms, and where
-  registry code lives (tools/agent/, never src/agent/). Use for "add an integration", "new tool
-  for the agent", "how do integration keys work", "validate tool input", "why isn't my tool
-  offered". NOT for catalog entries (component-catalog); NOT for A2UI payloads (a2ui-payload-authoring).
-  MCP servers ARE in scope (ADR-0177): adding one, its allowlist roster, serverKey/envKey, the
-  namespaced mcp:server-id:tool id law; NOT Claude Code's own MCP config (update-config).
+  THIS repo's tool/integration enablement laws (ADR-0168 / SPEC-R16-R19): adding an integration or
+  a new tool for the agent, integration keys/auth (serverKey/envKey), tool input validation, the
+  id vs tool.name vs label split, the shared buildToolDispatch, and where registry code lives. MCP
+  servers ARE in scope (ADR-0177): adding one, its allowlist roster, the namespaced mcp:server-
+  id:tool id law. Use for "add an integration", "new tool for the agent", "how do integration keys
+  work", "validate tool input", "why isn't my tool offered". NOT for catalog entries (component-
+  catalog); NOT for A2UI payloads (a2ui-payload-authoring); NOT Claude Code's own MCP config
+  (update-config).
 disable-model-invocation: false
 user-invocable: false
 ---

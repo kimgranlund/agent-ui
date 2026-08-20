@@ -1,17 +1,13 @@
 ---
 name: package-release
 description: >-
-  Route to THIS repo's npm-package release/versioning law for the 8 @agent-ui/* packages (published
-  SCOPED as @agent-ui-kit/* under the agent-ui-kit npm org — Kim's 2026-07-19 ruling, prefix dropped):
-  lockstep versioning (all 8 always
-  publish at the SAME number, every release), a patch-only 0.0.1-0.0.99 phase for routine releases,
-  and a judgment-gated 0.#.0 bump reserved for a more significant release — plus the actual cut-a-
-  release procedure (decide the version per the law, tag vX.Y.Z, push — the tag itself triggers
-  .github/workflows/publish.yml, no manual npm publish). Use for "release a package update", "cut a
-  release", "bump the package version", "publish a new agent-ui version", "what version should this
-  be", or before pushing any vX.Y.Z tag. NOT for building or modifying the publish pipeline itself
-  (scripts/publish/publish-packages.mjs · tsconfig.build.json · the workflow YAML — already-built
-  infra, edit directly, no routing needed) or general third-party dependency management.
+  THIS repo's npm release/versioning law for the 8 @agent-ui/* packages (published as @agent-ui-
+  kit/*): lockstep versioning, the patch-only 0.0.1-0.0.99 phase, the judgment-gated 0.#.0 bump,
+  and the cut-a-release procedure (tag vX.Y.Z, push — the tag triggers publish.yml, no manual npm
+  publish). Use for "release a package update", "cut a release", "bump the package version",
+  "publish a new agent-ui version", "what version should this be", or before pushing any vX.Y.Z
+  tag. NOT for the publish pipeline itself (already-built infra, edit directly) or general third-
+  party dependency management.
 disable-model-invocation: false
 user-invocable: false
 ---
