@@ -26,6 +26,7 @@
 | hand one element a reference it labels/owns | ADR-0051's direct signal push — same fence | §3 |
 | feed a subtree whose composer does NOT control its ancestry | the ONE reopening condition — see §5 before building anything | §5 |
 | add a new provider-shaped mechanism | you probably don't — cite ADR-0227 clause 5, conform or record the exception | §7 |
+| why doesn't `resource-idb-store.ts` use `resource()`/`mutation()` | recorded named exception — content-addressed, mint-a-ref-on-write, no signal-backed consumer | §7 |
 
 ## 1 · The grammar — four rules (ADR-0227 clause 2)
 
@@ -167,3 +168,15 @@ Every PR introducing a **provider-shaped control**, an **app-tier shared-state m
 §1's four rules or recording a named exception with its constraint-derived case (the bar §3's three
 solutions met). Reviewable by grep, enforced at review. This doc is the how; the ADR is the authority
 the citation names.
+
+**Recorded named exceptions** (clause 5's "or record a named exception" branch, realized — the next
+reader shouldn't have to re-derive why a touch-point sits outside the grammar):
+
+| Module | What it is | Why it's exempt | Revisit when |
+|---|---|---|---|
+| `packages/agent-ui/app/src/controls/agent-admin/resource-idb-store.ts` | A content-addressed blob tier: every routed resource text mints a fresh, globally-unique `idbRef` at write time (`mintResourceIdbRef`) rather than reading/writing a stable owned key — write-once, ref-out, never re-fetched by id through a shared store | Not CRUD-shaped (no `list`/`read`/`update` against one owned record set) and has no signal-backed consumer to hang `resource()`/`mutation()` on — §1's grammar targets shared, derivable, multi-reader state; this tier is a one-shot persistence detail behind `materializeResourceEntry(Entries)`'s own sync/async accessors, not a fact any second surface observes | If a signal-backed consumer of this tier ever appears — something that reads or subscribes to routed resource text as live, shared state rather than one-shot `materialize*` calls — re-evaluate against §1's four rules rather than extending the exception |
+
+(Wave 2 build report, GH [#1545](https://github.com/kimgranlund/agent-ui/issues/1545)/PR
+[#1548](https://github.com/kimgranlund/agent-ui/pull/1548): deliberately left off the `DataSource`
+migration on exactly this basis; GH [#1549](https://github.com/kimgranlund/agent-ui/issues/1549)
+recorded it here rather than leaving the call undocumented.)
