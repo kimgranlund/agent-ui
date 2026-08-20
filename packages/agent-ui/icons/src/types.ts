@@ -52,6 +52,9 @@ export const ICON_NAMES = [
   // hot-tub glyph either), `swimming-pool`, `wifi-high` (the full-signal variant chosen as the generic
   // "has Wi-Fi" glyph, same reasoning as `dots-three` above), `paw-print` (direct fit for pet-friendly).
   'mountains', 'tree', 'campfire', 'bathtub', 'swimming-pool', 'wifi-high', 'paw-print',
+  // GH #1508 — /command-modal-demo's Actions group (Log out / Share file). Identity with Phosphor's
+  // own regular-weight names; `share` is distinct from the pre-existing `share-network` (above).
+  'sign-out', 'share',
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 

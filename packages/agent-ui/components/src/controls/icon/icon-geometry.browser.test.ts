@@ -98,3 +98,68 @@ describe('ui-icon cell-fit geometry (s-ui-icon-tests, LLD §3) — cross-engine'
     expect(caretW).toBeCloseTo(tokenPx(btn, '--ui-button-glyph'), 0)
   })
 })
+
+// ── GH #1508 — missing-glyph HONESTY: the host box is intrinsic (icon.css §1), NOT content-derived ────
+// Kim's /command-modal-demo screenshot read as "icon-less rows with drifted indentation". The desk
+// root-cause was the missing sign-out/share vendoring (fixed above this file, in the icons package) —
+// but the dispatch also asks: does an UNRESOLVABLE glyph collapse ui-icon's OWN box, which would be a
+// SEPARATE bug (a `data-icon-missing` empty <svg> carries no width/height of its own — icon.ts/
+// resolve.ts). icon.css's token block fixes `--md-sys-icon-size: 1em` on `:where(ui-icon)` and the
+// styles block sizes `:scope` (the host) to it UNCONDITIONALLY — the box comes from the HOST's own CSS,
+// never from the injected child's intrinsic size. This is the "reserve its geometry" law already, by
+// construction; this is the MEASURED proof (jsdom cannot compute real layout/getBoundingClientRect).
+describe('ui-icon missing-glyph HONESTY (GH #1508) — the host box is intrinsic, never content-collapsed', () => {
+  it('a resolved and an unresolvable glyph render the EXACT SAME host box size (same --md-sys-icon-size)', () => {
+    const wrap = document.createElement('div')
+    wrap.innerHTML =
+      '<ui-icon glyph="caret-down"></ui-icon><ui-icon glyph="not-a-real-icon-gh-1508"></ui-icon>'
+    document.body.append(wrap)
+    mounted.push(wrap)
+
+    const [resolved, missing] = [...wrap.querySelectorAll('ui-icon')] as HTMLElement[]
+    // anti-vacuous: prove the two really did resolve differently (one real svg, one data-icon-missing)
+    expect(resolved.querySelector('svg')?.getAttribute('data-icon-missing')).toBeNull()
+    expect(missing.querySelector('svg')?.getAttribute('data-icon-missing')).toBe('not-a-real-icon-gh-1508')
+
+    const resolvedBox = resolved.getBoundingClientRect()
+    const missingBox = missing.getBoundingClientRect()
+    // --md-sys-icon-size is `1em` (a relative token, icon.css §1) — getComputedStyle's custom-property
+    // read returns the literal string "1em", not a resolved px value; the resolved host's own computed
+    // `font-size` IS that resolved px (1em == font-size), the anti-vacuous real-px anchor.
+    const emPx = px(getComputedStyle(resolved).fontSize)
+    expect(emPx, 'anti-vacuous: the 1em icon size must resolve to a real px value').toBeGreaterThan(0)
+    expect(resolvedBox.width).toBeCloseTo(emPx, 0)
+    expect(missingBox.width, 'an unresolvable glyph must NOT collapse the ui-icon host box').toBeCloseTo(resolvedBox.width, 0)
+    expect(missingBox.height, 'an unresolvable glyph must NOT collapse the ui-icon host box').toBeCloseTo(resolvedBox.height, 0)
+  })
+
+  it('in a realistic flex row (the command-modal option-row shape), a missing icon does NOT shift the label — same left offset as a resolved sibling row', () => {
+    const row = (glyph: string): HTMLElement =>
+      el(
+        `<div style="display:flex;align-items:center;gap:8px;inline-size:12rem">
+           <ui-icon data-role="icon" glyph="${glyph}"></ui-icon>
+           <span data-role="label">Log out</span>
+         </div>`,
+      )
+    const okRow = mount2(row('caret-down'))
+    const missingRow = mount2(row('sign-out-was-never-vendored-gh-1508'))
+
+    const okLabel = okRow.querySelector('[data-role="label"]') as HTMLElement
+    const missingLabel = missingRow.querySelector('[data-role="label"]') as HTMLElement
+    expect(missingLabel.getBoundingClientRect().left, 'the row-authored label must not drift when its leading icon fails to resolve').toBeCloseTo(
+      okLabel.getBoundingClientRect().left,
+      0,
+    )
+  })
+})
+
+function el(markup: string): HTMLElement {
+  const wrap = document.createElement('div')
+  wrap.innerHTML = markup
+  return wrap.firstElementChild as HTMLElement
+}
+function mount2(node: HTMLElement): HTMLElement {
+  document.body.append(node)
+  mounted.push(node)
+  return node
+}
