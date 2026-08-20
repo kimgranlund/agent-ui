@@ -636,13 +636,16 @@ describe('mintBlankPersona — the roster "New agent → Blank" mint (GH #637 S1
     ...initialEntryValues(),
   })
 
-  it('mints "New agent" / "new-agent" against an empty roster, carrying the seed verbatim', () => {
+  it('mints "New agent" / "new-agent" against an empty roster, carrying the seed verbatim except `name`, which converges with the label (GH #1537)', () => {
     const seed = blankDefaultSeed()
     const persona = mintBlankPersona(seed, [])
     expect(persona.id).toBe('new-agent')
     expect(persona.label).toBe('New agent')
     expect(persona.imported).toBe(true) // the SAME roster-persistence lane an import uses (GH #406)
-    expect(persona.seed).toEqual(seed)
+    // GH #1537 mint convergence: the store's `name` and the roster label start EQUAL — the two agent-name
+    // identities can no longer be born divergent ('Untitled agent' vs "New agent N").
+    expect(persona.seed.name).toBe(persona.label)
+    expect(persona.seed).toEqual({ ...seed, name: 'New agent' })
     expect(persona.seed).not.toBe(seed) // copied, never aliased — importedPersonaFrom's own law
   })
 
@@ -668,7 +671,9 @@ describe('mintBlankPersona — the roster "New agent → Blank" mint (GH #637 S1
 
     const persona = mintBlankPersona(blankDefaultSeed(), [])
     const mintedSubset = Object.fromEntries(PERSONA_STATE_KEYS.map((k) => [k, persona.seed[k]]).filter(([, v]) => v !== undefined))
-    expect(mintedSubset).toEqual(bareDefault)
+    // `name` is the ONE ruled divergence from the bare default (GH #1537): a mint seeds it from the
+    // roster label so the two agent-name identities start equal; everything else stays the component's own.
+    expect(mintedSubset).toEqual({ ...bareDefault, name: persona.label })
   })
 })
 
