@@ -1,9 +1,8 @@
 ---
 name: seat-map
 description: >-
-  The agent-ui repo's seat-ownership map and standing dispatch laws — which agent seat owns which
-  artifact class, and the law pointers every dispatch brief must carry. Model-only knowledge preloaded
-  by the repo-local repo-orchestrator-agent seat; not a user-facing action.
+  Wiring-only: preloaded by the repo-orchestrator-agent seat as its seat-ownership map and
+  standing dispatch laws. Not user-invocable, not a routing target.
 user-invocable: false
 disable-model-invocation: false
 ---
