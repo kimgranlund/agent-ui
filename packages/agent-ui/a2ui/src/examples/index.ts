@@ -57,12 +57,17 @@ export { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, rou
 export { structuredContainerSeed, structuredContainerSeeds } from './structured-container.ts'
 // GH #972 — the high-frequency-patterns family: the 2026-08-15 gap-map sweep's 5 missing high-frequency
 // chat-feed patterns (comparison table, receipt card, empty/error card, notification stack, media grid).
+// GH #1489 (2026-08-19) adds a sixth, dashboard/receipt-family sibling — wallet-summary-card (a wallet
+// balance Summary Action Card: eyebrow + headline metric, CardFooter Row of four labeled icon actions) —
+// homed here rather than commerce-hospitality.ts (that module's own product/booking/hospitality domain),
+// the same pending-state disposition as every other un-judged seed (disposition-allowlist.ts).
 export {
   comparisonPricingSeed,
   receiptOrderSummarySeed,
   emptyErrorRetryCardSeed,
   notificationStatusStackSeed,
   mediaFileGridSeed,
+  walletSummaryCardSeed,
   highFrequencyPatternSeeds,
 } from './high-frequency-patterns.ts'
 // GH #1205 — composition seeds pack A (req-a2ui-library R4, now-tier): the four dispositioned

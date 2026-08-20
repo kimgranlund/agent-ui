@@ -534,6 +534,10 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     // here only so this describe's zero-admission runs stay zero (the commerce-product-card
     // convention above).
     'frontier-service-gateway': { passed: false, qualityScore: 2 },
+    // GH #1489 — the wallet/balance Summary Action Card seed (high-frequency-patterns.ts); refused here
+    // for the same zero-admission reason as every row above; its real disposition is
+    // DISPOSITION_ALLOWLIST's pending "NO VERDICT SOUGHT YET" entry.
+    'wallet-summary-card': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {

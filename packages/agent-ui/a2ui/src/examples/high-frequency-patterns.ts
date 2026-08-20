@@ -14,6 +14,17 @@
 //     distinct from `agentTaskStatusSeed`'s persistent single-card panel (catalog-coverage.ts).
 // (5) MULTI-FILE/IMAGE MEDIA GRID — `Attachment` cards templated over `/files` on a track `Grid` (the
 //     same Grid-of-tile templating idiom again, applied to files instead of metrics or plans).
+//
+// (6) WALLET SUMMARY CARD (GH #1489) — a wallet/balance dashboard summary: a muted eyebrow Text
+//     ("Total balance"), one bold headline metric (a Text `h1`, not a Stat — see the seed's own doc for
+//     why), then a CardFooter Row of FOUR labeled icon actions (Add Money / Send / Cards / Transactions),
+//     each a Column of a decorative Icon over a ghost-variant Button carrying the actual tap target +
+//     visible label (the catalog-real stand-in for an "icon-only Button" — Button is a pure action leaf
+//     in this catalog, no Icon-child/icon-glyph mechanism, the seed's own doc names the deviation).
+//     Homed here (the dashboard/receipt family) rather than commerce-hospitality.ts: a wallet balance
+//     summary is a generic financial-dashboard widget, not a product/booking/hospitality listing — its
+//     nearest sibling is THIS module's own receipt-order-summary card (a financial-summary card + a
+//     data-bound headline value), not commerce-hospitality.ts's product/room/amenity/review domain.
 
 import type { ExampleSeed } from './types.ts'
 
@@ -273,6 +284,111 @@ export const mediaFileGridSeed: ExampleSeed = {
   ],
 }
 
+const WALLET_ID = 'wallet-summary-card'
+/** GH #1489 — the wallet/balance "Summary Action Card": a muted eyebrow Text ("Total balance"), one bold
+ *  headline metric, then a CardFooter Row of FOUR labeled icon actions (Add Money / Send / Cards /
+ *  Transactions). Card-anatomy law observed (req-a2ui-patterns.md R1 / a2ui-payload.md P9): CardContent
+ *  carries the substance (eyebrow + metric), CardFooter carries the one action row — never a Button loose
+ *  in content. Every varying field is data-bound — `/wallet/balance` — never a literal standing in for
+ *  what a real agent would template (the "dead data" defect class); the eyebrow and the four action labels
+ *  are the pattern's own FIXED vocabulary (never data), the same standing this shelf's other seeds give a
+ *  Card's own identity text (e.g. `features-list-card`'s literal "Amenities" title).
+ *
+ *  Stat vs. Text for the headline metric (the ticket's own question): `Stat` (catalog.json) is a
+ *  label+value PAIR — every existing seed that reaches for it shows MULTIPLE tiles side by side
+ *  (`commerce-product-card`'s price+rating Row, `comparison-pricing-table`'s plan-price Grid,
+ *  `kpi-panel-lifecycle`'s Grid of two), each tile supplying its OWN label. A single hero number already
+ *  has its label — the eyebrow Text above it — so a Stat here would duplicate that pairing (a redundant
+ *  second "Balance" label baked into the Stat itself) rather than carry anything Stat's delta/percent/
+ *  caption arms actually need. A plain `Text` (`variant:'h1'`, `emphasis:true`) reads as the single bold
+ *  headline the reference image shows, with no redundant label — the more honest fit.
+ *
+ *  The "icon-only Button" the record asks for is NOT literally expressible in this catalog: `Button`
+ *  (catalog.json) declares no `children` key and no `icon` prop — it is a pure action leaf (`
+ *  references/node-idioms.md`'s own "Button — action leaf" characterization), and no seed on this whole
+ *  shelf pairs an Icon INSIDE a Button. (The validator's structural `RESERVED` set happens to skip
+ *  `child`/`children` for ANY component, so a Button node could mechanically carry an Icon child without
+ *  failing `validate-payload` — but that is undocumented validator leniency, not a sanctioned composition;
+ *  exploiting it here would be exactly the "invent a capability the catalog doesn't declare" move this
+ *  skill rules out.) Composed instead as the closest catalog-real equivalent: `Column(Icon, Button)` — a
+ *  decorative `Icon` (the visual glyph + its own accessible `label`) sits above a `ghost`-variant `Button`
+ *  whose OWN `label` carries the visible action word, serving as both the tap target and the "label
+ *  beneath" the record asks for (never a third, duplicate Text node repeating the same word).
+ *
+ *  Icon coverage (verified against `packages/agent-ui/icons/src/types.ts`'s `ICON_NAMES` — REAL,
+ *  already-registered glyphs only, never an invented name that would silently resolve to a blank
+ *  `<svg data-icon-missing>`, `resolve.ts`):
+ *    - "Add Money" → `plus` — a genuine direct fit, no substitution needed.
+ *    - "Send" → `paper-plane-right` — a genuine direct fit (the fleet's one send/paper-plane glyph).
+ *    - "Cards" → `credit-card` — a genuine direct fit, no substitution needed.
+ *    - "Transactions" → `arrow-clockwise` — nearest-available; the pack has no receipt/transaction-list
+ *      glyph, so the rotating-arrows "history/refresh" glyph stands in for "recent activity," named
+ *      honestly here rather than claimed as a purpose-built match (the `features-list-card` precedent).
+ *  Every action shares one action name (`wallet_action`) differentiated by `action.context.action` (the
+ *  record's own "via per-Button `action.context`" instruction) — the `empty-error-retry-card` seed's
+ *  `context:{resource:'activity'}` shape, one field wide, applied to four sibling instances of one verb. */
+export const walletSummaryCardSeed: ExampleSeed = {
+  name: 'wallet-summary-card',
+  description:
+    'A wallet/balance Summary Action Card — a muted eyebrow Text, one bold headline balance metric, then a CardFooter Row of four labeled icon actions (Add Money / Send / Cards / Transactions), each a decorative Icon over a ghost Button carrying the tap target + visible label.',
+  promptText: 'Show my wallet: the total balance, and quick actions to add money, send money, view my cards, and see transactions.',
+  surfaceId: WALLET_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: WALLET_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: WALLET_ID,
+        value: { wallet: { balance: '$942.83' } },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: WALLET_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['content', 'footer'] },
+          { id: 'content', component: 'CardContent', children: ['col'] },
+          { id: 'col', component: 'Column', gap: 'xs', children: ['eyebrow', 'metric'] },
+          { id: 'eyebrow', component: 'Text', variant: 'kicker', text: 'Total balance' },
+          { id: 'metric', component: 'Text', variant: 'h1', emphasis: true, text: { path: '/wallet/balance' } },
+          { id: 'footer', component: 'CardFooter', children: ['actions_row'] },
+          {
+            id: 'actions_row', component: 'Row', justify: 'between', gap: 'md',
+            children: ['action_add', 'action_send', 'action_cards', 'action_txns'],
+          },
+          { id: 'action_add', component: 'Column', gap: 'xs', children: ['icon_add', 'btn_add'] },
+          { id: 'icon_add', component: 'Icon', name: 'plus', label: 'Add Money' },
+          {
+            id: 'btn_add', component: 'Button', variant: 'ghost', label: 'Add Money',
+            action: { action: 'wallet_action', context: { action: 'add_money' } },
+          },
+          { id: 'action_send', component: 'Column', gap: 'xs', children: ['icon_send', 'btn_send'] },
+          { id: 'icon_send', component: 'Icon', name: 'paper-plane-right', label: 'Send' },
+          {
+            id: 'btn_send', component: 'Button', variant: 'ghost', label: 'Send',
+            action: { action: 'wallet_action', context: { action: 'send_money' } },
+          },
+          { id: 'action_cards', component: 'Column', gap: 'xs', children: ['icon_cards', 'btn_cards'] },
+          { id: 'icon_cards', component: 'Icon', name: 'credit-card', label: 'Cards' },
+          {
+            id: 'btn_cards', component: 'Button', variant: 'ghost', label: 'Cards',
+            action: { action: 'wallet_action', context: { action: 'view_cards' } },
+          },
+          { id: 'action_txns', component: 'Column', gap: 'xs', children: ['icon_txns', 'btn_txns'] },
+          { id: 'icon_txns', component: 'Icon', name: 'arrow-clockwise', label: 'Transactions' },
+          {
+            id: 'btn_txns', component: 'Button', variant: 'ghost', label: 'Transactions',
+            action: { action: 'wallet_action', context: { action: 'view_transactions' } },
+          },
+        ],
+      },
+    },
+  ],
+}
+
 /** Every seed this module defines — the barrel's family-array precedent (index.ts derives `allSeeds`
  *  length from these, never a hand-counted literal). */
 export const highFrequencyPatternSeeds: readonly ExampleSeed[] = [
@@ -281,4 +397,5 @@ export const highFrequencyPatternSeeds: readonly ExampleSeed[] = [
   emptyErrorRetryCardSeed,
   notificationStatusStackSeed,
   mediaFileGridSeed,
+  walletSummaryCardSeed,
 ]
