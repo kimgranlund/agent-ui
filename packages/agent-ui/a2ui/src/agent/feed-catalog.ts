@@ -23,7 +23,7 @@
 // browser-side page, with no catalog-loading machinery riding along).
 
 /**
- * The 36 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
+ * The 37 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
  * affordance, and light structure — nothing that overlays, paginates, or dashboards. Widened by the
  * report/content/feed catalog wave (ADR-0111/0113/0112): `Badge` (light ask furniture, the `Text`/`Icon`
  * class), `Code` (verbatim inline content, no overlay/dashboard shape), `Avatar` (a non-interactive
@@ -63,6 +63,11 @@
 //   `ChoiceGroup`/`ChoiceCard` (ADR-0220 Decision, INCLUDE by name, composite closure) — "a rich-option
 //   pick IS the canonical commit-gated ask" (picking one of three hotel cards); `ChoiceCard` rides in
 //   under composite closure (the `RadioGroup`/`Radio` precedent).
+//
+// The GH #1515 wave (`ui-breadcrumb`, the frozen design intake) — `Breadcrumb` (INCLUDE by build-wave
+// judgment, the DescriptionList/SourceList parity argument): static, non-interactive wayfinding content
+// with no overlay/pagination/dashboard shape and no value mark (a receipt-like ask can cite "where this
+// lives" the same way a receipt cites its rows); its children reuse the already-IN `Text` type verbatim.
 export const FEED_SURFACE_TYPES = [
   'Text',
   'Icon',
@@ -104,6 +109,12 @@ export const FEED_SURFACE_TYPES = [
   'Rating',
   'ChoiceGroup',
   'ChoiceCard',
+  // GH #1515 — `Breadcrumb` is IN: the `DescriptionList`/`SourceList` static-informational-furniture
+  // parity argument, not the `ServiceCard`/`Table` report/canvas-scale exclusion class. No overlay, no
+  // pagination, no dashboard shape; no value mark (it commits nothing, the DescriptionList precedent);
+  // its children reuse the already-IN `Text` type verbatim (a linked crumb is just `Text` + `href`). A
+  // receipt-like ask can legitimately cite "where this lives" the same way a receipt cites its rows.
+  'Breadcrumb',
 ] as const
 
 /** The closed union of every IN type — the runtime-checkable companion to the `as const` array above. */

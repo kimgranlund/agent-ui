@@ -562,6 +562,15 @@ export const NAV: readonly NavGroup[] = [
       { href: './suggestions-doc.html', label: 'API' },
     ],
   },
+  // GH #1515 (no ADR — routine mint) — ui-breadcrumb, the wayfinding trail with an optional
+  // `collapse="menu"` overflow fold (tier=pattern ⇒ {doc, demo}).
+  {
+    label: 'ui-breadcrumb',
+    links: [
+      { href: './breadcrumb-demo.html', label: 'Demo' },
+      { href: './breadcrumb-doc.html', label: 'API' },
+    ],
+  },
   // The Wave M1 content family (ADR-0113) — ui-code (tier=display ⇒ {doc} only) + ui-disclosure (tier=pattern
   // ⇒ {doc, demo}, the tooltip/popover precedent).
   {

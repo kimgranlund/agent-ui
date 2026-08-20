@@ -166,10 +166,10 @@ function fleetPrimaryTypes(): string[] {
  *  (control minted ahead of its clause-8 catalog-row-vs-exclusion disposition, RECOMMENDED-not-decided at
  *  ratification) — this S3 wave lands the `ServiceCard` row + factory (clause 8 ratified) and DRAINS that
  *  seed too, the same way every wave above was drained. GH #1515 (`ui-breadcrumb`, the frozen design
- *  intake `.claude/docs/spec/breadcrumb.intake.md`) re-seeds this SAME shape at S1 (core anatomy only,
- *  §4 Catalog posture row: A2UI-EMITTABLE, "row-or-allowlist at ship time" — the row itself is the S3
- *  slice's job, by the intake's own 3-slice build plan) — a future S3 wave lands the `Breadcrumb` row +
- *  factory and DRAINS this seed too, the same way every wave above was drained. */
+ *  intake `.claude/docs/spec/breadcrumb.intake.md`) re-seeded this SAME shape at S1 (core anatomy only,
+ *  §4 Catalog posture row: A2UI-EMITTABLE, "row-or-allowlist at ship time" — the row itself was the S3
+ *  slice's job, by the intake's own 3-slice build plan) — this S3 wave lands the `Breadcrumb` row +
+ *  factory and DRAINS that seed too, the same way every wave above was drained. */
 //
 // `ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel`/`CommandModal` are
 // the only PERMANENT entries — NOT catalogue-bound AT ALL (app-surface/theming/live-streaming/chrome-anchor
@@ -223,12 +223,6 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'fragment + mini-skills teach it; a default-catalog row would hand every generic agent a casino-' +
     'domain object with no teaching context. Widening to the default catalog is a separate, later ' +
     'intake (the mint-vs-compose TYPE arm), never a drive-by row.'],
-  ['Breadcrumb',
-    'GH #1515 S1 — TEMPORARY, shipped-ahead-of-its-catalog-row seed (the ServiceCard/FileDrop/Rating/ ' +
-    'PieChart/ChoiceGroup class, ADR-0087 cl.6): the frozen design intake ' +
-    '(.claude/docs/spec/breadcrumb.intake.md §4 Catalog posture row) rules `ui-breadcrumb` A2UI-EMITTABLE ' +
-    'and plans a 3-slice build (S1 core anatomy · S2 collapse="menu" · S3 site + catalog row/factory) — ' +
-    'this seed is drained when the S3 slice lands the `Breadcrumb` catalog row + factory.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists
@@ -2003,5 +1997,82 @@ describe('default catalog — ServiceCard via the shared validator (ADR-0224, GH
     // No commit-back exists — nothing to assert past "installInputBinding installed no listener",
     // proven implicitly by the no-op factory.value check above (the toggleFactory/drillFactory precedent).
     expect(defaultFactories.ServiceCard.value).toBeUndefined()
+  })
+})
+
+// ── GH #1515 — the Breadcrumb row (the frozen design intake's §4 Catalog posture row, S3 wire arm) ─────
+//
+// Drains the EXCLUSION_ALLOWLIST's TEMPORARY 'Breadcrumb' seed (above, S1's build). `label` is the ONE
+// 1:1 reflecting accessor prop (bindable — the `Toolbar.label` precedent, verified against
+// breadcrumb.ts). No `value` mark (not an input — a wayfinding trail commits nothing back). A real
+// `ChildList`: crumbs reuse the EXISTING `Text` catalog type (its `href` property already stamps a real
+// `<a>` per ADR-0114) — no bespoke crumb/link sub-type minted. `collapse`/`collapseKeepTrailing`/`inline`
+// are deliberately NOT wire-exposed (the `Tabs.overflow`/`ServiceCard.inline` precedents — fold/sizing
+// posture stay a rendering/layout concern, not agent-authored content).
+describe('default catalog — Breadcrumb via the shared validator (GH #1515)', () => {
+  it('a representative Breadcrumb payload (linked crumbs + a plain current-page leaf, both via Text) validates 0 failures via validateA2ui', () => {
+    const message = {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          { id: 'root', component: 'Breadcrumb', label: 'Breadcrumb', children: ['home', 'docs', 'current'] },
+          // `href` alone stamps a real `<a>` (ADR-0114 / SPEC-R21 AC3 order-independence: href wins `as`
+          // over any variant triple) — no separate `as` wire prop exists on Text at all.
+          { id: 'home', component: 'Text', text: 'Home', href: '/' },
+          { id: 'docs', component: 'Text', text: 'Docs', href: '/docs' },
+          { id: 'current', component: 'Text', text: 'Breadcrumb' },
+        ],
+      },
+    }
+    expect(validateA2ui(message, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('Breadcrumb declares NO value mark — not an input, nothing commits back', () => {
+    expect(defaultCatalog.components.Breadcrumb.value).toBeUndefined()
+  })
+
+  it('label is bindable and maps 1:1 (the Toolbar.label precedent)', () => {
+    expect(defaultCatalog.components.Breadcrumb.properties.label).toEqual({ type: { type: 'string' }, bindable: true, mapsTo: 'label' })
+  })
+
+  it('declares a ChildList child model (crumbs are ordinary child nodes, tag-agnostic in the shipped control)', () => {
+    expect(defaultCatalog.components.Breadcrumb.children).toBe('ChildList')
+  })
+
+  it('does NOT wire-expose collapse/collapseKeepTrailing/inline (the Tabs.overflow/ServiceCard.inline precedents)', () => {
+    for (const p of ['collapse', 'collapseKeepTrailing', 'inline']) {
+      expect(defaultCatalog.components.Breadcrumb.properties[p], p).toBeUndefined()
+    }
+  })
+
+  it('accepts a {path} binding for label; rejects one for an unknown prop', () => {
+    const bound: A2uiComponent = { id: 'b1', component: 'Breadcrumb', label: { path: '/nav/label' } }
+    expect(validateCatalogConformance(bound, defaultCatalog)).toEqual([])
+
+    const bogus: A2uiComponent = { id: 'b2', component: 'Breadcrumb', bogus: 1 }
+    expect(validateCatalogConformance(bogus, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 'b2.bogus' }))
+  })
+
+  it('NEGATIVE: a wrong-primitive literal fails CATALOG (label is a string prop)', () => {
+    const wrongLabel: A2uiComponent = { id: 'b3', component: 'Breadcrumb', label: 42 }
+    expect(validateCatalogConformance(wrongLabel, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 'b3.label' }))
+  })
+
+  it("a REAL ui-breadcrumb's label binding installs a live prop write, no round-trip (not an input, no value mark)", () => {
+    const surface = createSurface({ id: 's9', catalogId: 'agent-ui', version: 'v1.0' })
+    surface.data.value = { nav: { label: 'Docs trail' } }
+
+    const crumb = defaultFactories.Breadcrumb.create() as HTMLElement & { label: string }
+    document.body.append(crumb)
+
+    const node: A2uiComponent = { id: 'bc', component: 'Breadcrumb', label: { path: '/nav/label' } }
+    installInputBinding(crumb, defaultFactories.Breadcrumb, node, surface) // no-op: factory.value is undefined
+
+    crumb.remove()
+    disposeSurface(surface)
+    // No commit-back exists — nothing to assert past "installInputBinding installed no listener",
+    // proven implicitly by the no-op factory.value check above (the ServiceCard/Toggle/Drill precedent).
+    expect(defaultFactories.Breadcrumb.value).toBeUndefined()
   })
 })

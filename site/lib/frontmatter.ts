@@ -96,6 +96,9 @@ import sourceListMd from '../../packages/agent-ui/components/src/controls/source
 import paginationMd from '../../packages/agent-ui/components/src/controls/pagination/pagination.md?raw'
 // ADR-0213 — ui-suggestions, the one-shot follow-up/next-prompt chip set (tier=pattern ⇒ {doc, demo}).
 import suggestionsMd from '../../packages/agent-ui/components/src/controls/suggestions/suggestions.md?raw'
+// GH #1515 (no ADR — routine mint, breadcrumb.intake.md §6) — ui-breadcrumb, the wayfinding trail with an
+// optional `collapse="menu"` overflow fold (tier=pattern ⇒ {doc, demo}).
+import breadcrumbMd from '../../packages/agent-ui/components/src/controls/breadcrumb/breadcrumb.md?raw'
 // The Wave M1 content family (ADR-0113, content-family.lld.md): the code leaf + the disclosure fold.
 import codeMd from '../../packages/agent-ui/components/src/controls/code/code.md?raw'
 import disclosureMd from '../../packages/agent-ui/components/src/controls/disclosure/disclosure.md?raw'
@@ -241,6 +244,7 @@ export const loadDescriptionListDoc = (): ComponentDoc => parseDoc(descriptionLi
 export const loadSourceListDoc = (): ComponentDoc => parseDoc(sourceListMd)
 export const loadPaginationDoc = (): ComponentDoc => parseDoc(paginationMd)
 export const loadSuggestionsDoc = (): ComponentDoc => parseDoc(suggestionsMd)
+export const loadBreadcrumbDoc = (): ComponentDoc => parseDoc(breadcrumbMd)
 // The Wave M1 content family (ADR-0113 — code tier=display ⇒ {doc}; disclosure tier=pattern ⇒ {doc, demo}).
 export const loadCodeDoc       = (): ComponentDoc => parseDoc(codeMd)
 export const loadDisclosureDoc = (): ComponentDoc => parseDoc(disclosureMd)

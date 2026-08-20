@@ -166,9 +166,9 @@ function deadHrefs(refs: readonly string[], htmlSet: ReadonlySet<string>): strin
 //
 // GH #1515 — `ui-breadcrumb` shipped its descriptor + control in the component-build seat's S1 slice (the
 // frozen design intake's own S1/S2/S3 split, `.claude/docs/spec/breadcrumb.intake.md` §7); its NAV/
-// CARD_GROUPS TOC rows + `breadcrumb-doc.html`/`breadcrumb-demo.html` pages land in the S3 slice (the
-// `ui-service-card`/GH #1429 precedent, above) — parked here until then.
-const PENDING_TOC_GROUPS = new Set<string>(['ui-breadcrumb'])
+// CARD_GROUPS TOC rows + `breadcrumb-doc.html`/`breadcrumb-demo.html` pages landed in the docs-writer
+// seat's S3 slice (the `ui-service-card`/GH #1429 precedent, above) — stopgap drained, empty again.
+const PENDING_TOC_GROUPS = new Set<string>()
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()

@@ -334,6 +334,10 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   // mirroring the descriptor's own worked example (service-card.md) — fixes both: a legible specimen (A3)
   // and a stable revert target (C2).
   ServiceCard: { name: 'Claims Agent', path: '/claims-agent-service', description: 'Handles first-notice-of-loss intake and triage.', available: 'true', actionLabel: 'Open' },
+  // Breadcrumb (GH #1515) — the descriptor's own literal-default landmark name (breadcrumb.md), the
+  // Toolbar.label precedent: seeded explicitly so an eval-catalog knob edit→revert on `label` has a
+  // stable static value to revert TO (C2), not just the component's own empty-string default.
+  Breadcrumb: { label: 'Breadcrumb' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -826,6 +830,18 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
       { id: 's_gr4v', component: 'Text', variant: 'h3', text: '12' },
     ],
   }),
+  // Breadcrumb (GH #1515): a realistic 4-level path (the site doc/demo pages' own reference shape) — three
+  // linked crumbs (Text.href, ADR-0114) + a plain current-page leaf (no href) — the real job, not the
+  // generic "Sample content" fallback (the GH #971/#978 idiom).
+  Breadcrumb: () => ({
+    rootRef: { children: ['s_bc1', 's_bc2', 's_bc3', 's_bc4'] },
+    extras: [
+      { id: 's_bc1', component: 'Text', text: 'Home', href: '/' },
+      { id: 's_bc2', component: 'Text', text: 'Docs', href: '/docs' },
+      { id: 's_bc3', component: 'Text', text: 'Components', href: '/docs/components' },
+      { id: 's_bc4', component: 'Text', text: 'Breadcrumb' },
+    ],
+  }),
 }
 
 /** The sample subtree for a component: an explicit tree, or a generic single Text/child fallback for any container.
@@ -1231,6 +1247,20 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
       item.setAttribute('label', label)
       return item
     })
+  },
+  // ui-breadcrumb (GH #1515, the frozen design intake) — a STRUCTURAL target: real author crumb children,
+  // three real <a href> links + a plain non-interactive leaf (the reference DOM breadcrumb.md itself
+  // documents), NOT a single stub — the representative-specimen law.
+  'ui-breadcrumb': () => {
+    const link = (href: string, label: string): HTMLElement => {
+      const a = document.createElement('a')
+      a.setAttribute('href', href)
+      a.textContent = label
+      return a
+    }
+    const leaf = document.createElement('span')
+    leaf.textContent = 'Breadcrumb'
+    return [link('/', 'Home'), link('/docs', 'Docs'), link('/docs/components', 'Components'), leaf]
   },
 }
 

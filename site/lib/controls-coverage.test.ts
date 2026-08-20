@@ -45,11 +45,9 @@ const EXEMPT: ReadonlyMap<string, string> = new Map([
   // ADR-0224/GH #1429 — service-card's TEMPORARY entry removed here: its docs-writer S2 slice landed
   // service-card-doc.html + service-card-demo.html (the site-coverage.test.ts KNOWN_UNDOCUMENTED / ui-image
   // GH #1189 precedent, same wave-split reasoning) — the folder is documented, no exemption needed.
-  ['breadcrumb',
-    'GH #1515 S1 — TEMPORARY, shipped-ahead-of-its-site-page entry (the ui-service-card/ADR-0224 precedent, ' +
-    'above): the frozen design intake (.claude/docs/spec/breadcrumb.intake.md §7) plans a 3-slice build ' +
-    '(S1 core anatomy · S2 collapse="menu" · S3 site + catalog); this entry is removed when the S3 slice ' +
-    'lands breadcrumb-doc.html/breadcrumb-demo.html.'],
+  // GH #1515 — breadcrumb's TEMPORARY entry removed here too: its docs-writer S3 slice landed
+  // breadcrumb-doc.html + breadcrumb-demo.html (the same ui-service-card/ADR-0224 precedent) — the folder
+  // is documented, no exemption needed.
 ])
 const EXEMPT_NAMES = new Set<string>(EXEMPT.keys())
 

@@ -1258,6 +1258,26 @@ export const toggleFactory: WidgetFactory = {
  */
 export const serviceCardFactory: WidgetFactory = accessorFactory('ui-service-card')
 
+/**
+ * `Breadcrumb` → `ui-breadcrumb` (GH #1515, the frozen design intake `.claude/docs/spec/
+ * breadcrumb.intake.md` §4 Catalog posture row: A2UI-EMITTABLE). `label` is the ONE 1:1 reflecting
+ * accessor prop (verified against `breadcrumb.ts` `static props`) — a plain `accessorFactory`, no
+ * bespoke mapping. No `value` mark (not an input — a wayfinding trail commits nothing back, the same
+ * transient-view-state reasoning `ServiceCard`/`Toolbar` already carry). A real `ChildList` (catalog.json):
+ * crumbs are ordinary child nodes, tag-agnostic in the shipped control (an `<a>`, a plain leaf) — the
+ * wire shape reuses the EXISTING `Text` catalog type verbatim (its `href` property already stamps a real
+ * `<a>` per ADR-0114 — `href` alone wins `as='a'` over any variant triple, SPEC-R21 AC3 order-
+ * independence; no separate `as` wire prop exists on `Text` at all) rather than minting a bespoke
+ * crumb/link sub-type: an agent authors a linked crumb as `{component:'Text', text:'Docs',
+ * href:'/docs'}` and the current-page leaf as a plain `{component:'Text', text:'Breadcrumb'}` (no
+ * `href`) — zero new catalog surface beyond this one row. `collapse`/`collapseKeepTrailing` are
+ * deliberately NOT wire-exposed (the `Tabs.overflow` precedent, verified: the §5.2 `Tabs` row omits its
+ * own `overflow="menu"` fold knob the same way) — the fold is a rendering/viewport concern the PAGE
+ * chooses, not agent-authored content; `inline` (the ADR-0223 sizing opt-out) is likewise omitted (the
+ * `ServiceCard` row's own precedent: sizing posture stays a layout/page concern, never a wire prop).
+ */
+export const breadcrumbFactory: WidgetFactory = accessorFactory('ui-breadcrumb')
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -1339,4 +1359,5 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   DrillPanel: drillPanelFactory,
   Toggle: toggleFactory,
   ServiceCard: serviceCardFactory,
+  Breadcrumb: breadcrumbFactory,
 }

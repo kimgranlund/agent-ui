@@ -153,6 +153,10 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   // Drill/Tabs/Split "composite, multi-part" class this section names, not a WIDGET display leaf: it
   // carries a real interactive action affordance (Open⟷Unavailable) plus an app-composed overflow slot.
   ServiceCard: 'PATTERN',
+  // Breadcrumb (GH #1515, the frozen design intake): a composite, multi-part construct (ordered crumb
+  // children + an injected separator + an optional composed overflow ui-menu fold) — the same
+  // Drill/Tabs/ServiceCard "composite, multi-part" class, not a WIDGET display leaf.
+  Breadcrumb: 'PATTERN',
   Split: 'PATTERN',
   SplitPane: 'PATTERN',
   Swiper: 'PATTERN',

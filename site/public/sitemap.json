@@ -41,6 +41,14 @@
       "section": "Components"
     },
     {
+      "name": "Breadcrumb",
+      "tag": "ui-breadcrumb",
+      "url": "./breadcrumb-doc.html",
+      "description": "A wayfinding trail of ordered crumb links ending in the current page — tag-agnostic author children, an optional slotted separator template, an auto-stamped current-page leaf, and an optional `collapse=\"menu\"` fold of the middle behind a composed overflow menu.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Button",
       "tag": "ui-button",
       "url": "./button-doc.html",

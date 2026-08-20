@@ -222,4 +222,16 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // and admitted — entry DRAINED. Judge's hand-back findings (folded into the #1483 seed lane): the four
   // Icon labels duplicate the Button labels (double-announce to AT — drop them so the icons are truly
   // decorative per icon.ts's empty-label contract), and the quad Columns should state align:'center'.
+  //
+  // GH #1515 (2026-08-20) — `frontier-breadcrumb-trail`: the same pending-state shape (NO VERDICT SOUGHT
+  // YET, not a refusal). Added to `catalog-frontier.ts` with the `Breadcrumb` catalog row (the frozen
+  // design intake `.claude/docs/spec/breadcrumb.intake.md` §4 Catalog posture row, the docs-writer S3
+  // wire arm) to close its GH #729 coverage gap — the authoring session judging its own seed is the
+  // manufactured judgment ADR-0068's Alternatives ban. Corpus admission is a SEPARATE, later judged wave
+  // (per the S3 dispatch's own instruction: a corpus seed is a follow-up, not this slice's job). Run the
+  // judged pipeline (`import-seeds.ts` with a real VerdictsFile) and DELETE this entry when that wave lands.
+  ['frontier-breadcrumb-trail',
+    'GH #1515 — NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the ' +
+    'new `Breadcrumb` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
+    'self-judged discipline — this authoring session assigns no rubric score to its own seed).'],
 ])

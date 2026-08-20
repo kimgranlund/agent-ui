@@ -29,6 +29,11 @@
 // master-switch idiom, ADR-0209's own Done-when shape) with the fold opening onto detail body controls.
 // Closes GH #729 coverage for the composed `slot:'summary'` wire shape (Switch/Tooltip/Icon adopter rows,
 // ADR-0209 cl.2); corpus admission pending the judged wave (disposition-allowlist.ts).
+//
+// Frontier 23 (GH #1515, the frozen design intake §4 Catalog posture row) — `Breadcrumb`, the wayfinding
+// trail, mints its catalog row in the docs-writer S3 wire arm; this seed closes its GH #729 coverage gap
+// the moment that row exists. Corpus admission is a SEPARATE, later judged wave (disposition-allowlist.ts
+// carries the pending entry) — not this slice's job.
 
 import type { ExampleSeed } from './types.ts'
 
@@ -1207,4 +1212,41 @@ export const serviceGatewaySeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed]
+const BREADCRUMB_TRAIL_ID = 'frontier-breadcrumb-trail'
+/** Frontier 23 (GH #1515, the frozen design intake `.claude/docs/spec/breadcrumb.intake.md` §4 Catalog
+ *  posture row): `Breadcrumb`, the wayfinding trail — pinpointing where a setting lives inside a support
+ *  answer. Three linked crumbs (`Text.href`, ADR-0114 — `href` alone stamps a real `<a>`, no separate `as`
+ *  wire prop) plus a plain current-page leaf (no `href`) — the catalog row's OWN wire shape verbatim
+ *  (factories.ts's `breadcrumbFactory` doc comment): no bespoke crumb/link sub-type minted. No `collapse`/
+ *  `collapseKeepTrailing` (deliberately not wire-exposed, the `Tabs.overflow` precedent) and no data-model
+ *  binding on `label` (a static landmark name, the common case). Corpus admission is a SEPARATE judged wave
+ *  (disposition-allowlist.ts, ADR-0068's never-self-judged discipline — this authoring session assigns no
+ *  rubric score to its own seed). */
+export const breadcrumbTrailSeed: ExampleSeed = {
+  name: 'frontier-breadcrumb-trail',
+  description: 'A support answer pinpointing where a setting lives — one Breadcrumb trail, three linked crumbs (Text.href, ADR-0114) ending in the current page.',
+  promptText: 'Where do I turn off email notifications?',
+  surfaceId: BREADCRUMB_TRAIL_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: BREADCRUMB_TRAIL_ID, catalogId: 'agent-ui' } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: BREADCRUMB_TRAIL_ID,
+        components: [
+          { id: 'root', component: 'Column', gap: 'sm', children: ['trail', 'answer'] },
+          { id: 'trail', component: 'Breadcrumb', label: 'Settings trail', children: ['home', 'settings', 'notifications', 'email'] },
+          { id: 'home', component: 'Text', text: 'Home', href: '/' },
+          { id: 'settings', component: 'Text', text: 'Settings', href: '/settings' },
+          { id: 'notifications', component: 'Text', text: 'Notifications', href: '/settings/notifications' },
+          { id: 'email', component: 'Text', text: 'Email' },
+          { id: 'answer', component: 'Text', variant: 'body', text: 'Open Settings → Notifications → Email, then toggle it off there.' },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed]
