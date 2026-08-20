@@ -57,7 +57,7 @@ both schemes, and animate flip/deal on fleet motion tokens with zero configurabl
    props, geometry, a11y per the intake fork sheet — props `rank`/`suit`/`faceDown` mirror the
    wire 1:1, plus the `''` graceful-empty members). The croupier factory becomes a direct
    pass-through; `catalog.json` stays byte-identical (the enum contract, `mapsTo`, bindability
-   all stand). Drafted `factories.ts` shape (VERBATIM — the whole replacement body):
+   all stand). Drafted `factories.ts` shape (VERBATIM — the whole replacement body of `playingCardFactory`; the barrel import and the `croupierFactories` table survive unchanged):
 
    ```ts
    export const playingCardFactory: WidgetFactory = {
@@ -86,7 +86,9 @@ both schemes, and animate flip/deal on fleet motion tokens with zero configurabl
    type.** The `PlayingCard` type's ONLY emission path is the croupier persona catalog; the
    default catalog stays closed. This extends ADR-0087's exclusion arm beyond the ADR-0112
    cl.6 chrome family with a second legitimate reason: *catalogued elsewhere, on the persona
-   surface that teaches it*. Drafted `EXCLUSION_ALLOWLIST` entry (VERBATIM):
+   surface that teaches it*. A type qualifies for this category iff, at claim time, it ALREADY
+   carries a shipped persona-catalog row plus a teaching surface (fragment + mini-skills entry) —
+   the gate is checked against the claimant's shipped artifacts, never argued by analogy. Drafted `EXCLUSION_ALLOWLIST` entry (VERBATIM):
 
    ```ts
    ['PlayingCard',
