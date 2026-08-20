@@ -1,6 +1,12 @@
 # SPEC — GenUI surface (sandboxed free-form generative UI): wire · frame · bridge · producer
 
-> Status: proposed · v0.8 · 2026-08-19 · Layer: SPEC (execution contract)
+> Status: proposed · v0.9 · 2026-08-19 · Layer: SPEC (execution contract)
+> **v0.9 amendment (docs-only, 2026-08-19):** SPEC-R13(b)'s inventory budget revised ≤ 18 600 → ≤ 19 000
+> chars on real corpus evidence — the ruled §8 path ("tightening or loosening on real corpus data is a
+> SPEC version bump, not silent drift"): ADR-0225/GH #1478's `ui-playing-card` control mint (rank/suit/
+> faceDown/size, four attributes) adds its descriptor to the fleet, growing the descriptor-derived
+> inventory to a measured 18 706 chars (combined measured value enforced by the standing test). No
+> other clause changes.
 > **v0.8 amendment (docs-only, 2026-08-19):** SPEC-R13(b)'s inventory budget revised ≤ 18 100 → ≤ 18 600
 > chars on real corpus evidence — the ruled §8 path ("tightening or loosening on real corpus data is a
 > SPEC version bump, not silent drift"): ADR-0223's Fill-by-Default wave (slices 0–2) adds an `inline`
@@ -635,8 +641,10 @@ shape: edit ⇒ deliberate re-capture), budget ≤ 8 000 chars (the SPEC-R9 pack
 fleet inventory (`dogfoodInventory()`) composed at call time from the fleet's `{name}.md`
 descriptors via the ONE ADR-0004 parser — tag, one-line role, key attributes/enums — drift-gated
 against the descriptors (the ADR-0071/`prompt-drift` discipline) and NEVER byte-captured (a fleet
-edit updates the composed prompt without re-capturing any baseline), budget ≤ 18 600 chars
-(v0.8: revised from ≤ 18 100 on real corpus evidence per §8 — ADR-0223's Fill-by-Default `inline`
+edit updates the composed prompt without re-capturing any baseline), budget ≤ 19 000 chars
+(v0.9: revised from ≤ 18 600 on real corpus evidence per §8 — ADR-0225/GH #1478's `ui-playing-card`
+control mint grew the descriptor-derived inventory to a measured 18 706;
+v0.8: revised from ≤ 18 100 on real corpus evidence per §8 — ADR-0223's Fill-by-Default `inline`
 attribute rows across the slice-0..2 flipped controls [measured 18 179] plus ADR-0224/GH #1429's
 `ui-service-card` control mint [measured 18 296 pre-slice-2] grew the descriptor-derived inventory;
 v0.7 revised from ≤ 16 000 on real corpus evidence per §8 — the 2026-08-19 nine-ADR campaign's six
