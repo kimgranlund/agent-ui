@@ -148,7 +148,7 @@ describe('createRenderer — GH #497 concierge/croupier content personas (SPEC-R
     cleanup()
   })
 
-  it('agent-ui--croupier resolves PlayingCard as a real, fully-connected ui-card + ui-text glyph pair', () => {
+  it('agent-ui--croupier resolves PlayingCard as a real, fully-connected ui-playing-card (ADR-0225 retarget)', () => {
     const { r, mount, sent, cleanup } = harness()
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's8', catalogId: 'agent-ui--croupier' } }))
     r.ingest(
@@ -158,9 +158,10 @@ describe('createRenderer — GH #497 concierge/croupier content personas (SPEC-R
       }),
     )
     expect(sent.filter(isError)).toEqual([])
-    const card = mount.querySelector('ui-card')
+    const card = mount.querySelector('ui-playing-card')
     expect(card).not.toBeNull()
-    expect(card!.querySelector('ui-text')?.textContent).toBe('K♠')
+    expect((card as unknown as { rank: string }).rank).toBe('K')
+    expect((card as unknown as { suit: string }).suit).toBe('spades')
     cleanup()
   })
 
@@ -174,7 +175,11 @@ describe('createRenderer — GH #497 concierge/croupier content personas (SPEC-R
       }),
     )
     expect(sent.filter(isError)).toEqual([])
-    expect(mount.querySelector('ui-card')?.querySelector('ui-text')?.textContent).toBe('A♥')
+    const card = mount.querySelector('ui-playing-card')
+    expect(card).not.toBeNull()
+    expect((card as unknown as { rank: string }).rank).toBe('A')
+    expect((card as unknown as { suit: string }).suit).toBe('hearts')
+    expect((card as unknown as { faceDown: boolean }).faceDown).toBe(false)
     cleanup()
   })
 

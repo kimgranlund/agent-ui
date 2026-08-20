@@ -1,6 +1,6 @@
-// factories.test.ts — the `croupier` persona's factory table (SPEC-R1, GH #497), mirroring
-// `fixture-demo/factories.test.ts`. `ui-card`/`ui-text` carry no form association (not `UIFormElement`
-// subclasses) — no jsdom ElementInternals gap here, so these probes are unrestricted (detached OR
+// factories.test.ts — the `croupier` persona's factory table (SPEC-R1, GH #497; ADR-0225 retarget, GH
+// #1478), mirroring `fixture-demo/factories.test.ts`. `ui-playing-card` extends UIElement directly (not
+// form-associated) — no jsdom ElementInternals gap here, so these probes are unrestricted (detached OR
 // connected would both be safe); kept detached anyway for parity with the fixture-demo precedent.
 
 import { describe, it, expect } from 'vitest'
@@ -13,56 +13,45 @@ describe('croupier factories — table parity (mirrors fixture-demo/factories.te
   })
 })
 
-describe('playingCardFactory — create()', () => {
-  it('mints a real, unparented ui-card holding one ui-text', () => {
+describe('playingCardFactory — create() (ADR-0225 retarget — a direct ui-playing-card pass-through)', () => {
+  it('mints a real, unparented ui-playing-card', () => {
     const el = playingCardFactory.create()
-    expect(el.tagName.toLowerCase()).toBe('ui-card')
+    expect(el.tagName.toLowerCase()).toBe('ui-playing-card')
     expect(el.parentNode).toBeNull()
-    const text = el.querySelector('ui-text')
-    expect(text).not.toBeNull()
-    expect((text as unknown as { emphasis: boolean }).emphasis).toBe(true)
   })
 })
 
-describe('playingCardFactory — applyProp', () => {
-  it('rank + suit compose into the rank+glyph pair — never a bare rank letter', () => {
+describe('playingCardFactory — applyProp (direct prop pass-through, ADR-0225)', () => {
+  it('rank lands on the element\'s rank property unchanged', () => {
     const el = playingCardFactory.create()
     playingCardFactory.applyProp(el, 'rank', 'K')
-    playingCardFactory.applyProp(el, 'suit', 'spades')
-    expect(el.querySelector('ui-text')?.textContent).toBe('K♠')
+    expect((el as unknown as { rank: string }).rank).toBe('K')
   })
 
-  it('every suit maps to its own glyph', () => {
+  it('suit lands on the element\'s suit property unchanged', () => {
     const el = playingCardFactory.create()
-    playingCardFactory.applyProp(el, 'rank', '10')
-    for (const [suit, glyph] of [
-      ['hearts', '♥'],
-      ['diamonds', '♦'],
-      ['clubs', '♣'],
-      ['spades', '♠'],
-    ] as const) {
+    for (const suit of ['spades', 'hearts', 'diamonds', 'clubs']) {
       playingCardFactory.applyProp(el, 'suit', suit)
-      expect(el.querySelector('ui-text')?.textContent).toBe(`10${glyph}`)
+      expect((el as unknown as { suit: string }).suit).toBe(suit)
     }
   })
 
-  it('faceDown shows the hole-card glyph and dims the card, regardless of rank/suit', () => {
+  it('faceDown lands on the element\'s faceDown property, coerced to a real boolean', () => {
     const el = playingCardFactory.create()
-    playingCardFactory.applyProp(el, 'rank', 'A')
-    playingCardFactory.applyProp(el, 'suit', 'diamonds')
     playingCardFactory.applyProp(el, 'faceDown', true)
-    expect(el.querySelector('ui-text')?.textContent).toBe('🂠')
-    expect((el as unknown as { brightness: string }).brightness).toBe('-1')
+    expect((el as unknown as { faceDown: boolean }).faceDown).toBe(true)
+    playingCardFactory.applyProp(el, 'faceDown', false)
+    expect((el as unknown as { faceDown: boolean }).faceDown).toBe(false)
   })
 
-  it('un-flipping (faceDown → false) restores the rank+suit glyph and neutral brightness', () => {
+  it('a null value coerces rank/suit back to the component\'s own "" graceful-empty default', () => {
     const el = playingCardFactory.create()
-    playingCardFactory.applyProp(el, 'rank', 'Q')
+    playingCardFactory.applyProp(el, 'rank', 'A')
+    playingCardFactory.applyProp(el, 'rank', null)
+    expect((el as unknown as { rank: string }).rank).toBe('')
     playingCardFactory.applyProp(el, 'suit', 'hearts')
-    playingCardFactory.applyProp(el, 'faceDown', true)
-    playingCardFactory.applyProp(el, 'faceDown', false)
-    expect(el.querySelector('ui-text')?.textContent).toBe('Q♥')
-    expect((el as unknown as { brightness: string }).brightness).toBe('0')
+    playingCardFactory.applyProp(el, 'suit', null)
+    expect((el as unknown as { suit: string }).suit).toBe('')
   })
 
   it('an unrecognized prop is a no-op — never throws', () => {
