@@ -163,6 +163,7 @@
     border: 1px solid var(--ui-text-field-border);
     border-radius: var(--ui-text-field-radius);
     cursor: text;
+    position: relative; /* containing block for the abs-positioned .ui-text-field-message (GH #1474) */
   }
 
   /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): a single reflected boolean flips BOTH display
@@ -319,9 +320,21 @@
      a message text (text-field.ts toggles `hidden` false only when non-empty), it becomes visible:
      danger ink, small type — subordinate to the field, consistent with the danger border. Gated by
      :state(user-invalid) to keep the ADR-0014 interaction-state timing (only after first blur/change).
-     `ui-field` (G7), when it lands, will relayout/host this node rather than re-introduce it. */
+     `ui-field` (G7), when it lands, will relayout/host this node rather than re-introduce it.
+
+     PLACEMENT (GH #1474): the message is positioned ABSOLUTELY below the host frame, never as a grid
+     item. The host is a FIXED-block-size grid whose cells are placed by `order` (leading 0 · editor 1 ·
+     trailing 2); a visible in-flow message (default `order: 0`) enters order-modified auto-placement
+     FIRST, landing in the editor's cell and shoving the trailing adornment onto a crushed implicit
+     second row — the live GH #1474 defect (message inside the editor area + clipped calendar glyph on
+     type=date). `position: absolute` removes it from grid placement entirely: the frame geometry law
+     (fixed block-size, border-on-host) is untouched, and the message hangs below the frame's border
+     box, start-aligned to the h/2 value edge. */
   :scope:state(user-invalid) > .ui-text-field-message {
     display: block;
+    position: absolute;
+    inset-block-start: calc(100% + 1px + var(--ui-text-field-gap) / 2); /* just below the frame's 1px border, half-gap breathing room */
+    inset-inline-start: calc(var(--ui-text-field-height) / 2); /* the slotless h/2 value edge — MD3 supporting-text alignment */
     font-size: var(--ui-text-field-message-font);
     color: var(--ui-text-field-message-ink);
   }
