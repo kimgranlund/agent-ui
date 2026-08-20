@@ -174,16 +174,11 @@
     }
   }
 
-  /* z-order: the resolved-ACTIVE pane always paints ABOVE any painted ancestor (cl.A1's "z-ordered by path
-     order" — since every ancestor carries the identical dim wash below, their own relative order is
-     invisible; only "active on top" is ever visually load-bearing). */
-  :scope > ui-drill-panel[data-drill-pane='ancestor'] {
-    z-index: 1;
-  }
-
-  :scope > ui-drill-panel[data-drill-pane='active'] {
-    z-index: 2;
-  }
+  /* z-order: JS sets an inline `z-index` on every painted panel from its real position in the
+     resolved path (cl.A1's "z-ordered by path order", exact — not DOM order, which need not match
+     tree depth for a flat, `parent`-keyed panel list); the base rule above already gives every
+     painted panel (`grid-row/grid-column: 2/1`, this file's own same-cell-stacking rule) a
+     positioned ancestor to place that index into, so no extra selector is needed here. */
 
   /* cl.A6 — a painted ancestor is dimmed (a non-blocking scrim wash, drill.ts also sets the real `inert`
      attribute so it carries no interaction surface) — visible pixels, nothing an author's own background can

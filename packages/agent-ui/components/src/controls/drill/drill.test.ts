@@ -145,6 +145,12 @@ describe('UIDrillElement — uncontrolled path resolution + self-mutation', () =
     expect(appearance.hasAttribute('hidden')).toBe(false)
     expect(appearance.inert).toBe(false)
     expect(appearance.getAttribute('data-drill-pane')).toBe('active')
+    // cl.A1's "z-ordered by PATH order" (component-checker MINOR, 2026-08-20): z-index must follow
+    // resolvedPath's own index, not DOM/sibling order — root(0) < settings(1) < appearance(2), the
+    // active leaf always highest regardless of where its markup sits among the author's siblings.
+    expect(Number(root.style.zIndex)).toBe(1)
+    expect(Number(settings.style.zIndex)).toBe(2)
+    expect(Number(appearance.style.zIndex)).toBe(3)
     el.remove()
   })
 

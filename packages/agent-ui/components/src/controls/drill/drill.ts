@@ -314,8 +314,17 @@ export class UIDrillElement extends UIContainerElement {
         // one property that also keeps an inert ancestor's own drill-triggers from ever firing, which is
         // exactly what lets `#drillTo`/`#back` stay byte-unchanged, see file header).
         panel.inert = isPainted && !isActive
-        if (isPainted) panel.setAttribute('data-drill-pane', isActive ? 'active' : 'ancestor')
-        else panel.removeAttribute('data-drill-pane')
+        if (isPainted) {
+          panel.setAttribute('data-drill-pane', isActive ? 'active' : 'ancestor')
+          // z-order by PATH INDEX (cl.A1's own "z-ordered by path order"), not DOM order — a panel's
+          // sibling position need not match its tree depth (panels are flat, keyed by `parent`), so
+          // deriving z-index from resolvedPath directly is the only mapping that's always correct,
+          // even though ancestor-vs-ancestor order is normally invisible under the identical scrim.
+          panel.style.zIndex = String(resolvedPath.indexOf(panel.key) + 1)
+        } else {
+          panel.removeAttribute('data-drill-pane')
+          panel.style.zIndex = ''
+        }
         panel.linkHeading(isActive ? this.#heading : null)
       }
       if (this.#heading) this.#heading.textContent = activePanel?.heading ?? ''
