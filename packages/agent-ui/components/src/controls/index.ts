@@ -234,3 +234,10 @@ export * from './choice-card/choice-card.ts'
 // first 3D-transform flip. Persona-scoped in the catalog (the croupier persona factory retarget) — a
 // fleet member like any other control, still exported here.
 export * from './playing-card/playing-card.ts'
+
+// GH #1515 (the frozen design intake, .claude/docs/spec/breadcrumb.intake.md — NO ADR, a routine mint)
+// — ui-breadcrumb, the Pattern-class wayfinding trail: flat light-DOM crumb children (tag-agnostic — a
+// real <a>, a ui-router-link, a plain leaf span), an optional slotted separator template cloned per gap
+// (SNAPSHOT semantics), and an auto-stamped current-page leaf. THIS SLICE (S1) is core anatomy only —
+// `collapse="menu"`'s composed-ui-menu overflow fold is a later slice (S2, same ticket).
+export * from './breadcrumb/breadcrumb.ts'

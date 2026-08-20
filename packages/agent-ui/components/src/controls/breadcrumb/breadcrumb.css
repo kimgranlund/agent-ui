@@ -1,0 +1,77 @@
+/* breadcrumb.css — ui-breadcrumb, the Pattern-class wayfinding trail (GH #1515, the frozen design intake
+ * `.claude/docs/spec/breadcrumb.intake.md` §4/§7 slice S1). Two clearly-SECTIONED blocks (ADR-0003):
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-breadcrumb)` (specificity 0,0,0) declares every `--ui-breadcrumb-*`
+ *       component token: the inter-crumb/-separator gap (off the `--md-sys-space` ladder — the ONLY
+ *       dimensional constant this file needs, per the intake's Tokens row) and the current-page/separator
+ *       ink (a passive, on-surface-variant role — neither is an intent signal). NO control-height /
+ *       `[size]`/`[scale]` row of its own (the intake's Geometry row, citing ADR-0163 cl.6 verbatim: the
+ *       novelty here is zero, exactly pagination's own reasoning).
+ *   [2] STYLES BLOCK — `@scope (ui-breadcrumb)` CONSUMES ONLY `--ui-breadcrumb-*` (+ the fleet's own
+ *       sanctioned direct reads: the MD3 label typescale row and the shared focus-ring tokens — the
+ *       stat.css / text.css precedent: typescale/color-role reads are not banned by styling-gates.test.ts,
+ *       only `--md-sys-font-*`/`--md-sys-space-*`/`--md-sys-shape-corner-base` are). The host lays its
+ *       crumbs out as a simple wrapping flex row; crumb TEXT (every child, inherited) reads the label
+ *       typescale row (the intake's Geometry row) — no new geometry row, exactly the gap-only lever
+ *       pagination.css uses.
+ *
+ * Forced-colors (the intake's own row): NO dedicated `@media (forced-colors: active)` block — every
+ * visible affordance here is REAL TEXT (an author crumb's own content, the auto-stamped current-page span,
+ * a slotted-or-default separator glyph), never a background-image / alpha-only wash / color-only `::before`
+ * decoration, so nothing here is at risk of vanishing under `forced-colors` (breadcrumb.browser.test.ts
+ * proves the separator survives CDP forced-colors emulation, both engines).
+ *
+ * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from breadcrumb.ts
+ * (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-breadcrumb) declares --ui-breadcrumb-* ════════════════ */
+
+:where(ui-breadcrumb) {
+  --ui-breadcrumb-gap: var(--md-sys-space-xs); /* the inter-crumb/-separator rhythm — rides [density] free (ADR-0103) */
+  --ui-breadcrumb-current-ink: var(--md-sys-color-neutral-on-surface-variant); /* the auto-stamped current-page crumb — a passive marker, not an intent */
+  --ui-breadcrumb-separator-ink: var(--md-sys-color-neutral-on-surface-variant); /* the slotted-or-default separator glyph */
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-breadcrumb) consumes ONLY --ui-breadcrumb-* ════════════════ */
+
+@scope (ui-breadcrumb) {
+  /* FILL BY DEFAULT (ADR-0223 cl.1/2 — pagination.ts:43 shape): block-level flex host, no intrinsic width;
+     the `[inline]` leg below is the ONE hug opt-out (no content floor — the crumbs ARE the floor). Crumb
+     text (inherited by every light-DOM child, tag-agnostic) reads the label typescale row — the intake's
+     Geometry row, no new geometry row of its own. */
+  :scope {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--ui-breadcrumb-gap);
+    font-size: var(--md-sys-typescale-label-medium-size);
+    line-height: var(--md-sys-typescale-label-medium-line-height);
+  }
+
+  /* [inline] — the ONE sizing opt-out (ADR-0223 cl.2, R2): inline-level display + hug posture. */
+  :scope[inline] {
+    display: inline-flex;
+  }
+
+  /* The auto-stamped (or author-marked) current page — a direct-child crumb carrying its OWN
+     aria-current="page" (a router-exact-active ui-router-link marks its inner <a> instead, and styles
+     itself; this rule is scoped to a direct child on purpose). */
+  :scope > [aria-current='page'] {
+    color: var(--ui-breadcrumb-current-ink);
+  }
+
+  :scope [data-part='separator'] {
+    color: var(--ui-breadcrumb-separator-ink);
+    user-select: none;
+  }
+
+  /* Real, independently-focusable crumb links (normal tab order, no roving — the intake's Keyboard/focus
+     row): the fleet's shared focus-ring treatment (ADR-0009), read directly (the text.css precedent — the
+     ring/motion/control-line-height fleet constants are the sanctioned direct-read exceptions). Scoped to
+     a real `<a>` — a slotted `ui-router-link` or other custom-element crumb owns its own focus ring. */
+  :scope > a:focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+}

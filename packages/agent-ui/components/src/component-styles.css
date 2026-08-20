@@ -209,3 +209,8 @@
  * the depicted-object pinned-light face + pigment suit inks, the CSS-painted back lattice, the fleet's
  * first 3D-transform flip (rotateY, :state(ready)-gated) + the @starting-style deal entrance. */
 @import './controls/playing-card/playing-card.css';
+
+/* GH #1515 (the frozen design intake, .claude/docs/spec/breadcrumb.intake.md) — ui-breadcrumb, the
+ * Pattern-class wayfinding trail: the wrapping crumb/separator flex row + the label-typescale crumb
+ * text. THIS SLICE (S1) is core anatomy only — the collapse="menu" overflow-menu chrome is S2. */
+@import './controls/breadcrumb/breadcrumb.css';

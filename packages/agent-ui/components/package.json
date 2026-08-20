@@ -18,6 +18,7 @@
     "./controls/avatar": "./src/controls/avatar/avatar.ts",
     "./controls/badge": "./src/controls/badge/badge.ts",
     "./controls/bar-chart": "./src/controls/bar-chart/bar-chart.ts",
+    "./controls/breadcrumb": "./src/controls/breadcrumb/breadcrumb.ts",
     "./controls/button": "./src/controls/button/button.ts",
     "./controls/calendar": "./src/controls/calendar/calendar.ts",
     "./controls/card": "./src/controls/card/card.ts",
