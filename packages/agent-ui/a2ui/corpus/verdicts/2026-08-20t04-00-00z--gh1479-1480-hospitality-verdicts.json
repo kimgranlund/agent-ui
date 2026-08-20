@@ -1,0 +1,10 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.2",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-08-20T04:00:00Z",
+  "verdicts": {
+    "features-list-card": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "customer-review-card": { "qualityScore": 4, "passed": true, "failingDimensions": [] }
+  }
+}
