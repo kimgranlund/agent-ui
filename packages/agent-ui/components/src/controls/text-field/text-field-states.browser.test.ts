@@ -482,4 +482,51 @@ describe('ui-text-field — visible inline-validation message (ADR-0029 A1, exte
     expect(field.matches(':state(user-invalid)'), ':state(user-invalid) persists after the field is filled').toBe(false)
     expect(message.hidden, 'message node is still visible after user-invalid cleared').toBe(true)
   })
+
+  // GH #1474 (root cause): `.ui-text-field-message` carries no explicit grid placement, so the moment its
+  // `hidden` gate lifts it becomes a REAL grid item and joins the editor/adornment auto-placement track — its
+  // default `order: 0` (lower than the editor's `order: 1`) stole row 1 (the ONLY row the fixed-`block-size`
+  // frame renders), pushing the editor + trailing calendar-button cell into an implicit row 2 that falls
+  // below the frame's visible bounds. Fixed by taking the message OUT of grid flow entirely (`position:
+  // absolute`, anchored below the frame) — these two probes pin the geometry so the class cannot return.
+  it('the visible message renders BELOW the field frame, never overlapping the editor value (GH #1474)', async () => {
+    const { field, editor } = mount(`<ui-text-field required ${SIZED}></ui-text-field>`)
+    const message = field.querySelector('.ui-text-field-message') as HTMLElement
+    const heightBefore = field.getBoundingClientRect().height // baseline, message still hidden
+
+    await userEvent.click(editor)
+    await userEvent.click(document.body) // blur — arms :state(user-invalid), message becomes visible
+    await field.updateComplete
+    expect(message.hidden, 'message did not become visible').toBe(false)
+
+    const fieldRect = field.getBoundingClientRect()
+    const editorRect = editor.getBoundingClientRect()
+    const messageRect = message.getBoundingClientRect()
+
+    // the frame itself never grows to accommodate the message (geometry.md's Control-class block-size lever
+    // stays exactly the ramp height, whether or not a message is showing).
+    expect(fieldRect.height, 'the field frame grew to enclose the message — block-size is no longer the ramp height').toBe(heightBefore)
+    // the message sits AT OR BELOW the frame's bottom edge — never inside [0, fieldRect.bottom).
+    expect(messageRect.top, 'the message renders above the field\'s bottom edge — it overlaps the frame').toBeGreaterThanOrEqual(fieldRect.bottom)
+    // the editor keeps the WHOLE frame row to itself — no vertical overlap with the message.
+    expect(editorRect.bottom, 'the editor extends past the field frame (pushed into an implicit row)').toBeLessThanOrEqual(fieldRect.bottom + 0.5)
+    expect(messageRect.top, 'the message overlaps the editor vertically').toBeGreaterThanOrEqual(editorRect.bottom)
+  })
+
+  it('type=date: the calendar-button glyph stays fully within the field frame even while the message is visible (GH #1474)', async () => {
+    const { field, editor } = mount(`<ui-text-field type="date" required ${SIZED}></ui-text-field>`)
+    const button = field.querySelector('[data-part="calendar-button"]') as HTMLElement
+
+    await userEvent.click(editor)
+    await userEvent.click(document.body) // blur — arms :state(user-invalid) (empty + required → valueMissing)
+    await field.updateComplete
+    expect(field.matches(':state(user-invalid)'), ':state(user-invalid) was not armed').toBe(true)
+
+    const fieldRect = field.getBoundingClientRect()
+    const buttonRect = button.getBoundingClientRect()
+
+    // the calendar glyph's cell sits entirely inside the frame's own box — no bottom-edge clipping.
+    expect(buttonRect.top, 'the calendar button starts above the field frame').toBeGreaterThanOrEqual(fieldRect.top - 0.5)
+    expect(buttonRect.bottom, 'the calendar button is clipped at the field\'s bottom edge').toBeLessThanOrEqual(fieldRect.bottom + 0.5)
+  })
 })
