@@ -342,12 +342,37 @@ already-slotted template's own subtree never retroactively touches already-rende
 (the common case) renders a control-created `/` glyph instead. Per-gap customization (a different separator
 between different crumb pairs) is not supported — a consumer needing that authors their own composition.
 
+## Collapsing a long trail (`collapse="menu"`)
+
+```html
+<ui-breadcrumb label="Breadcrumb" collapse="menu" collapse-keep-trailing="2">
+  <a href="/">Home</a>
+  <a href="/a">Section A</a>
+  <a href="/a/b">Subsection B</a>
+  <a href="/a/b/c">Subsection C</a>
+  <span>Current page</span>
+</ui-breadcrumb>
+```
+
+`collapse="menu"` pins the FIRST crumb and the LAST `collapse-keep-trailing` crumbs (default 2, clamped ≥1
+— inclusive of the auto-stamped current/last crumb); a non-empty middle folds behind a composed overflow
+`ui-menu`, a `dots-three`-glyph trigger placed at the fold's position. The folded crumbs never leave the
+DOM (`display:none` only) — selecting a proxy row in the opened menu relays activation to the real hidden
+crumb (a real `<a>`, or a composed `<ui-router-link>`'s own inner anchor once upgraded) rather than
+reparenting it. The overflow menu's own `select`/`toggle`/`close` never surface as `ui-breadcrumb` events —
+`ui-breadcrumb` emits none of its own, same as `collapse="none"`.
+
+The fold is COUNT-driven, not fit-measured (no `ResizeObserver`) — author-driven and viewport-independent;
+a narrow-viewport layout is simply a matter of the author choosing `collapse="menu"` up front. `collapse`
+absent (or `"none"`) renders every crumb, byte-identical to the base anatomy.
+
 ## Accessibility
 
 The host is a labelled `navigation` landmark (`role="navigation"` via `ElementInternals`, named by the
 `label` prop through `internals.ariaLabel` — an empty label falls back to the literal `'Breadcrumb'`, the
 APG-named-pattern default). Every crumb rides the NORMAL tab order — no roving tabindex, no composite-widget
-keyboard contract; `ui-breadcrumb` wires no keyboard machinery of its own.
+keyboard contract; `ui-breadcrumb` wires no keyboard machinery of its own beyond the overflow menu's commit
+relay.
 
 ## Sizing
 
@@ -355,11 +380,6 @@ Fill by default (ADR-0223): a bare host is block-level and stretches to its cont
 `inline` (hug, inline-flex). Crumb text reads the label typescale row (`--md-sys-typescale-label-medium-*`)
 — no `[size]`/`[scale]` attribute and no geometry row of its own; `ui-breadcrumb` contributes only the
 inter-crumb `gap` (off the `--md-sys-space` ladder, responding to an ancestor `[density]` for free).
-
-## Not in this slice
-
-`collapse="menu"` (folding the middle crumbs behind a composed `ui-menu` overflow trigger, keeping a
-configurable trailing count) ships in a later slice (S2, GH #1515) — not built or documented here.
 
 ---
 
