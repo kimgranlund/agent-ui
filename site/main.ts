@@ -1460,12 +1460,12 @@ const CARD_GROUPS: readonly CardGroup[] = [
       {
         href: './drill-demo.html',
         title: 'Demo',
-        blurb: 'A one-panel container drilling down an N-level selection tree — one level visible at a time, with a Back affordance and a bindable path.',
+        blurb: 'A contained container drilling down an N-level selection tree — stack (default), chrome="crumbs", and layout="columns" (Miller columns, with a narrow-host auto-degrade back to stack).',
       },
       {
         href: './drill-doc.html',
         title: 'API reference',
-        blurb: 'The ui-drill/ui-drill-panel compound, the controlled/uncontrolled path duality, and the drill-trigger authoring convention, generated from drill.md.',
+        blurb: 'The ui-drill/ui-drill-panel compound, the controlled/uncontrolled path duality, layout/chrome, and the drill-trigger authoring convention, generated from drill.md.',
       },
     ],
   },
