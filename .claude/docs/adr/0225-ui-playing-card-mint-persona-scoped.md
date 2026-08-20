@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-19 *(authored)* |
 > | **Proposed by** | planner (design seat — GH #1478 component-design intake; ADR number host-assigned, next free after 0224 per the file tree + `adr-checkpoint.json`) |
-> | **Ratified by** | *(pending — Kim, by explicit `ratify ADR-0225`)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-20, via the [`ratify ADR-0225` utterance](https://github.com/kimgranlund/agent-ui/issues/1478#issuecomment-5350410620) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | none — new component intake, no existing doc corrected. On ratification the build wave applies: NEW `controls/playing-card/playing-card.{ts,css,md}` + `playing-card-pips.ts` · `personas/croupier/factories.ts` retarget (drafted verbatim below; `catalog.json` byte-identical) · `catalog/default/index.test.ts` `EXCLUSION_ALLOWLIST` entry (drafted verbatim below) · site doc/demo/gallery surfaces |
 > | **Supersedes / Superseded by** | (none) — retires the croupier factory's `ui-card`+`ui-text`+🂠 composition (GH #497 catalog LLD-C5's rendering half; the WIRE contract it minted stands untouched) · composes ADR-0041 F3 (the `[size]` repoint pattern) · ADR-0219 cl.4–5 + ADR-0057 (identity never color-alone) · ADR-0188 cl.5 (`@starting-style` entry motion) · ADR-0087/ADR-0112 cl.6 (the catalog-or-allowlist gate this extends) |
 
