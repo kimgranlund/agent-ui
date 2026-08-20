@@ -9,6 +9,13 @@ Fork 2 = **planning lane** · Fork 3 = **fold the data-layer question into the F
 lane dispatched — the lane rules adopt-vs-shelve, which then decides Q3/Q4's fate per the
 ordering note below). Q5/Q7 remain unminted proposals; Q8 stays a watch-item.
 
+**Second ruling round (Kim, 2026-08-20, later the same day — after #1537/#1540, ADR-0227
+ratification, and wave 1 #1543 all landed):** all four proposed sweeps approved. Minted:
+ratchet gate + Q7 drain → GH #1544 · ADR-0227 wave 2 (skill-packs/teams/resources onto
+DataSource, Q5 folded in as slice 1 — dissolves F7 structurally) → GH #1545 · grammar
+reference doc (new scope, stale-context repair for the ratified ADR-0227) → GH #1546.
+Every queue row is now minted, folded, executed, or an explicit watch-item (Q8/F9).
+
 | # | Proposed item | Kind | Blocked on | Size |
 |---|---|---|---|---|
 | Q1 | Fix the agent-name identity split (F1) + the Team-pane instance (F2) + regression test (F10) — one wave, mechanism per the ruling (unify via `store.subscribe`→`renameImportedPersona`→`pushRoster`, or relabel the schema field) | bug | Fork 1 ruling | small |
