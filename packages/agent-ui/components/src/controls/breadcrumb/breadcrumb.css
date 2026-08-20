@@ -1,25 +1,32 @@
 /* breadcrumb.css — ui-breadcrumb, the Pattern-class wayfinding trail (GH #1515, the frozen design intake
- * `.claude/docs/spec/breadcrumb.intake.md` §4/§7 slice S1). Two clearly-SECTIONED blocks (ADR-0003):
+ * `.claude/docs/spec/breadcrumb.intake.md` §4/§7 slices S1+S2). Two clearly-SECTIONED blocks (ADR-0003):
  *
  *   [1] TOKEN BLOCK  — `:where(ui-breadcrumb)` (specificity 0,0,0) declares every `--ui-breadcrumb-*`
  *       component token: the inter-crumb/-separator gap (off the `--md-sys-space` ladder — the ONLY
  *       dimensional constant this file needs, per the intake's Tokens row) and the current-page/separator
  *       ink (a passive, on-surface-variant role — neither is an intent signal). NO control-height /
  *       `[size]`/`[scale]` row of its own (the intake's Geometry row, citing ADR-0163 cl.6 verbatim: the
- *       novelty here is zero, exactly pagination's own reasoning).
+ *       novelty here is zero, exactly pagination's own reasoning) — the S2 overflow trigger below is sized
+ *       off `1lh` (the crumb's own rendered line box), never a new control-height token.
  *   [2] STYLES BLOCK — `@scope (ui-breadcrumb)` CONSUMES ONLY `--ui-breadcrumb-*` (+ the fleet's own
  *       sanctioned direct reads: the MD3 label typescale row and the shared focus-ring tokens — the
  *       stat.css / text.css precedent: typescale/color-role reads are not banned by styling-gates.test.ts,
  *       only `--md-sys-font-*`/`--md-sys-space-*`/`--md-sys-shape-corner-base` are). The host lays its
  *       crumbs out as a simple wrapping flex row; crumb TEXT (every child, inherited) reads the label
  *       typescale row (the intake's Geometry row) — no new geometry row, exactly the gap-only lever
- *       pagination.css uses.
+ *       pagination.css uses. `collapse="menu"` (S2, GH #1515) folds hidden crumbs/separators via a plain
+ *       `[data-collapsed]{display:none}` rule; the composed `<ui-menu data-part="overflow">` is
+ *       `display:contents` (menu.css, an AUTHOR rule) — its trigger `<button>` becomes the real flex item at
+ *       the fold's exact DOM position, no grid dance needed (breadcrumb's fold is count-driven, in-flow —
+ *       unlike ui-tabs' fit-driven edge overflow, which needs a grid to keep the trigger OUTSIDE role=tablist).
  *
- * Forced-colors (the intake's own row): NO dedicated `@media (forced-colors: active)` block — every
- * visible affordance here is REAL TEXT (an author crumb's own content, the auto-stamped current-page span,
- * a slotted-or-default separator glyph), never a background-image / alpha-only wash / color-only `::before`
- * decoration, so nothing here is at risk of vanishing under `forced-colors` (breadcrumb.browser.test.ts
- * proves the separator survives CDP forced-colors emulation, both engines).
+ * Forced-colors (the intake's own row): NO dedicated `@media (forced-colors: active)` block for S1's own
+ * anatomy — every visible affordance there is REAL TEXT (an author crumb's own content, the auto-stamped
+ * current-page span, a slotted-or-default separator glyph), never a background-image / alpha-only wash /
+ * color-only `::before` decoration, so nothing there is at risk of vanishing under `forced-colors`
+ * (breadcrumb.browser.test.ts proves the separator survives CDP forced-colors emulation, both engines). S2
+ * DOES pin one explicit rule for the overflow trigger's icon glyph below — belt-and-braces certainty over
+ * relying purely on the UA's automatic `currentColor` remap (the tabs.css forced-colors block precedent).
  *
  * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from breadcrumb.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -73,5 +80,52 @@
   :scope > a:focus-visible {
     outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  /* `collapse="menu"` (S2, GH #1515) — a folded crumb (or a separator sitting between two folded crumbs)
+     renders nowhere; DOM order is preserved (breadcrumb.ts `#applyCollapse` never removes it — the relay
+     still needs to reach it), only display swaps. The exact `[data-overflowed]` shape ui-tabs already uses. */
+  :scope > [data-collapsed] {
+    display: none;
+  }
+
+  /* The overflow trigger — a compact square keyed to the CRUMB'S OWN line box (`1lh`, not a new control-
+     height token — the intake's Geometry row: ui-breadcrumb owns no geometry row of its own), a padded hit
+     area, the shared ink + focus ring. `setIcon` (breadcrumb.ts) injects a fresh <svg fill="currentColor">
+     that inherits `color` here (the tabs.css trigger precedent, minus the grid-area assignment — the
+     composed `<ui-menu>` wrapper is `display:contents`, so this button is simply the next flex item at the
+     fold's DOM position). */
+  :scope > [data-part='overflow'] > [data-part='trigger'] {
+    box-sizing: border-box;
+    inline-size: 1lh;
+    block-size: 1lh;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ui-breadcrumb-separator-ink);
+    cursor: pointer;
+  }
+  :scope > [data-part='overflow'] > [data-part='trigger'] svg {
+    inline-size: 1em;
+    block-size: 1em;
+  }
+  :scope > [data-part='overflow'] > [data-part='trigger']:hover {
+    color: var(--ui-breadcrumb-current-ink);
+  }
+  :scope > [data-part='overflow'] > [data-part='trigger']:focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  /* Forced-colors — the trigger's glyph is an SVG `fill="currentColor"` (not a real DOM text node like the
+     separator), so it is pinned explicitly rather than left to the UA's automatic remap (the tabs.css
+     forced-colors block precedent) — belt-and-braces, browser-probed in breadcrumb.browser.test.ts. */
+  @media (forced-colors: active) {
+    :scope > [data-part='overflow'] > [data-part='trigger'] {
+      color: ButtonText;
+    }
   }
 }

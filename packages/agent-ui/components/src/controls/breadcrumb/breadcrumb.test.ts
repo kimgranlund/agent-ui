@@ -275,3 +275,331 @@ describe('UIBreadcrumbElement — zero residue across connect/disconnect', () =>
     el.remove()
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+// GH #1515 S2 — collapse="menu" (the composed-ui-menu overflow fold)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+/** Drain both the MutationObserver-driven rebuild (a plain microtask) AND the collapse-prop effect
+ *  (scheduler microtask, `el.updateComplete`) — a live prop write and a childList mutation are each
+ *  driven by a DIFFERENT microtask source, so a single `settle()` is not always enough. */
+const flushAll = async (el: UIBreadcrumbElement): Promise<void> => {
+  await settle()
+  await el.updateComplete
+  await settle()
+}
+
+describe('UIBreadcrumbElement — collapse/collapseKeepTrailing typed props + defaults', () => {
+  it('collapse defaults "none", reflects; collapseKeepTrailing defaults 2, reflects to collapse-keep-trailing', () => {
+    const el = document.createElement('ui-breadcrumb') as UIBreadcrumbElement
+    expect(el.collapse).toBe('none')
+    expect(el.collapseKeepTrailing).toBe(2)
+    expect(el.hasAttribute('collapse')).toBe(false)
+    expect(el.hasAttribute('collapse-keep-trailing')).toBe(false)
+
+    el.collapse = 'menu'
+    expect(el.getAttribute('collapse')).toBe('menu')
+    el.collapseKeepTrailing = 3
+    expect(el.getAttribute('collapse-keep-trailing')).toBe('3')
+
+    el.setAttribute('collapse-keep-trailing', '5')
+    expect(el.collapseKeepTrailing).toBe(5)
+  })
+
+  it('an out-of-set collapse attribute snaps to "none" (values[0] fallback)', () => {
+    const el = document.createElement('ui-breadcrumb') as UIBreadcrumbElement
+    el.setAttribute('collapse', 'bogus')
+    expect(el.collapse).toBe('none')
+  })
+})
+
+describe('UIBreadcrumbElement — collapse="none" (default) stays byte-identical to S1', () => {
+  it('NEGATIVE — no [data-part="overflow"] part ever exists, for any crumb count, default collapse', async () => {
+    const el = mount(new UIBreadcrumbElement()) as UIBreadcrumbElement
+    el.innerHTML = '<a href="/">A</a><a href="/b">B</a><a href="/c">C</a><a href="/d">D</a><span>E</span>'
+    await flushAll(el)
+    expect(el.querySelector('[data-part="overflow"]')).toBeNull()
+    expect(el.querySelectorAll('[data-collapsed]')).toHaveLength(0)
+  })
+
+  it('NEGATIVE — collapse="none" set explicitly is identical to absent', async () => {
+    const el = mount(new UIBreadcrumbElement()) as UIBreadcrumbElement
+    el.setAttribute('collapse', 'none')
+    el.innerHTML = '<a href="/">A</a><a href="/b">B</a><a href="/c">C</a><a href="/d">D</a><span>E</span>'
+    await flushAll(el)
+    expect(el.querySelector('[data-part="overflow"]')).toBeNull()
+    expect(el.querySelectorAll('[data-collapsed]')).toHaveLength(0)
+    expect(el.querySelectorAll('[data-part="separator"]')).toHaveLength(4)
+  })
+})
+
+describe('UIBreadcrumbElement — collapse="menu" fold computation across crumb counts', () => {
+  const buildCrumbs = (el: UIBreadcrumbElement, n: number): HTMLElement[] => {
+    const made: HTMLElement[] = []
+    for (let i = 0; i < n - 1; i++) {
+      const a = document.createElement('a')
+      a.href = `/${i}`
+      a.textContent = `Crumb ${i}`
+      el.append(a)
+      made.push(a)
+    }
+    const leaf = document.createElement('span')
+    leaf.textContent = 'Current'
+    el.append(leaf)
+    made.push(leaf)
+    return made
+  }
+
+  it('n <= keepTrailing+1 (default 2): nothing folds — no overflow part, no data-collapsed', async () => {
+    const el = mount(new UIBreadcrumbElement()) as UIBreadcrumbElement
+    el.setAttribute('collapse', 'menu')
+    buildCrumbs(el, 3) // first(pinned) + 2 trailing(pinned) = everything pinned already
+    await flushAll(el)
+    expect(el.querySelector('[data-part="overflow"]')).toBeNull()
+    expect(el.querySelectorAll('[data-collapsed]')).toHaveLength(0)
+  })
+
+  it('n = keepTrailing+2 (default 2 ⇒ n=4): exactly ONE crumb folds behind the overflow menu', async () => {
+    const el = mount(new UIBreadcrumbElement()) as UIBreadcrumbElement
+    el.setAttribute('collapse', 'menu')
+    const crumbs = buildCrumbs(el, 4)
+    await flushAll(el)
+
+    const menu = el.querySelector('[data-part="overflow"]')
+    expect(menu, 'the overflow menu must exist once a fold is non-empty').not.toBeNull()
+    expect(menu?.tagName.toLowerCase()).toBe('ui-menu')
+
+    const collapsedCrumbs = [...el.querySelectorAll(':scope > [data-collapsed]')].filter((c) => c.getAttribute('data-part') !== 'separator')
+    expect(collapsedCrumbs).toHaveLength(1)
+    expect(collapsedCrumbs[0]).toBe(crumbs[1]) // crumb index 1 (the sole middle crumb) folds
+
+    // first crumb + the last two (keepTrailing=2) stay visible (no data-collapsed)
+    expect(crumbs[0].hasAttribute('data-collapsed')).toBe(false)
+    expect(crumbs[2].hasAttribute('data-collapsed')).toBe(false)
+    expect(crumbs[3].hasAttribute('data-collapsed')).toBe(false)
+
+    // the menu sits right before the folded crumb — "the first gap"
+    expect(menu?.nextElementSibling).toBe(crumbs[1])
+  })
+
+  it('n = 6, keepTrailing=2 (default): 3 crumbs fold (indices 1,2,3); the menu carries 3 proxy rows', async () => {
+    const el = mount(new UIBreadcrumbElement()) as UIBreadcrumbElement
+    el.setAttribute('collapse', 'menu')
+    const crumbs = buildCrumbs(el, 6)
+    await flushAll(el)
+
+    const folded = [crumbs[1], crumbs[2], crumbs[3]]
+    for (const c of folded) expect(c.hasAttribute('data-collapsed')).toBe(true)
+    expect(crumbs[0].hasAttribute('data-collapsed')).toBe(false)
+    expect(crumbs[4].hasAttribute('data-collapsed')).toBe(false)
+    expect(crumbs[5].hasAttribute('data-collapsed')).toBe(false)
+
+    const menu = el.querySelector('[data-part="overflow"]') as HTMLElement
+    const proxies = [...menu.querySelectorAll('[role="menuitem"]')]
+    expect(proxies).toHaveLength(3)
+    expect(proxies.map((p) => p.textContent)).toEqual(['Crumb 1', 'Crumb 2', 'Crumb 3'])
+  })
+
+  it('separators between two folded crumbs are ALSO data-collapsed; the ONE separator before the FIRST folded crumb (and the one before the first pinned-trailing crumb) stay visible', async () => {
+    const el = mount(new UIBreadcrumbElement()) as UIBreadcrumbElement
+    el.setAttribute('collapse', 'menu')
+    buildCrumbs(el, 6) // folds indices 1,2,3 (3 middle crumbs, 2 "between" separators)
+    await flushAll(el)
+
+    const kids = [...el.children]
+    const separators = kids.filter((k) => k.getAttribute('data-part') === 'separator')
+    expect(separators).toHaveLength(5) // 6 crumbs ⇒ 5 gaps, unchanged by folding
+    const collapsedSeparators = separators.filter((s) => s.hasAttribute('data-collapsed'))
+    const visibleSeparators = separators.filter((s) => !s.hasAttribute('data-collapsed'))
+    expect(collapsedSeparators).toHaveLength(2) // between (1,2) and (2,3)
+    expect(visibleSeparators).toHaveLength(3) // before crumb0→[menu gap], before crumb4, before crumb5(current)
+  })
+
+  it('collapseKeepTrailing clamps: 0 and negative floor at 1; non-finite/null snap to the default (2)', async () => {
+    const el = mount(new UIBreadcrumbElement()) as UIBreadcrumbElement
+    el.setAttribute('collapse', 'menu')
+    const crumbs = buildCrumbs(el, 5) // indices 0..4, current=4
+
+    el.setAttribute('collapse-keep-trailing', '0')
+    await flushAll(el)
+    // keepTrailing clamps to 1 ⇒ pin first(0) + last 1(4); fold 1,2,3
+    expect(crumbs[1].hasAttribute('data-collapsed')).toBe(true)
+    expect(crumbs[2].hasAttribute('data-collapsed')).toBe(true)
+    expect(crumbs[3].hasAttribute('data-collapsed')).toBe(true)
+    expect(crumbs[0].hasAttribute('data-collapsed')).toBe(false)
+    expect(crumbs[4].hasAttribute('data-collapsed')).toBe(false)
+
+    el.setAttribute('collapse-keep-trailing', '-3')
+    await flushAll(el)
+    expect(crumbs[3].hasAttribute('data-collapsed')).toBe(true) // same as keepTrailing=1
+
+    el.setAttribute('collapse-keep-trailing', 'not-a-number')
+    await flushAll(el)
+    // non-finite (parses to NaN) ⇒ default 2 ⇒ pin first(0) + last 2(3,4); fold 1,2
+    expect(crumbs[1].hasAttribute('data-collapsed')).toBe(true)
+    expect(crumbs[2].hasAttribute('data-collapsed')).toBe(true)
+    expect(crumbs[3].hasAttribute('data-collapsed')).toBe(false)
+    expect(crumbs[4].hasAttribute('data-collapsed')).toBe(false)
+
+    el.removeAttribute('collapse-keep-trailing') // null ⇒ default 2, same as above
+    await flushAll(el)
+    expect(crumbs[1].hasAttribute('data-collapsed')).toBe(true)
+    expect(crumbs[2].hasAttribute('data-collapsed')).toBe(true)
+    expect(crumbs[3].hasAttribute('data-collapsed')).toBe(false)
+  })
+
+  it('a live collapse flip (menu→none→menu) re-folds reactively, without any childList mutation', async () => {
+    const el = mount(new UIBreadcrumbElement()) as UIBreadcrumbElement
+    buildCrumbs(el, 5)
+    await flushAll(el)
+    expect(el.querySelector('[data-part="overflow"]')).toBeNull() // collapse defaults 'none'
+
+    el.collapse = 'menu'
+    await flushAll(el)
+    expect(el.querySelector('[data-part="overflow"]')).not.toBeNull()
+
+    el.collapse = 'none'
+    await flushAll(el)
+    expect(el.querySelector('[data-part="overflow"]')).toBeNull()
+    expect(el.querySelectorAll('[data-collapsed]')).toHaveLength(0)
+  })
+
+  it('the overflow trigger is a labelled, iconed <button>, first child of the composed ui-menu', async () => {
+    const el = mount(new UIBreadcrumbElement()) as UIBreadcrumbElement
+    el.setAttribute('collapse', 'menu')
+    buildCrumbs(el, 5)
+    await flushAll(el)
+
+    const menu = el.querySelector('[data-part="overflow"]') as HTMLElement
+    const trigger = menu.firstElementChild as HTMLButtonElement
+    expect(trigger.tagName.toLowerCase()).toBe('button')
+    expect(trigger.getAttribute('aria-label')).toBe('Show hidden breadcrumbs')
+    expect(trigger.querySelector('svg'), 'setIcon must have injected an <svg> (dots-three)').not.toBeNull()
+  })
+})
+
+describe('UIBreadcrumbElement — commit relay + event containment (the tabs.ts C8 precedent)', () => {
+  it('a proxy select relays a real .click() to the REAL folded crumb (a plain <a>)', async () => {
+    const el = mount(new UIBreadcrumbElement()) as UIBreadcrumbElement
+    el.setAttribute('collapse', 'menu')
+    const crumbs: HTMLElement[] = []
+    for (let i = 0; i < 4; i++) {
+      const a = document.createElement('a')
+      a.href = `/${i}`
+      a.textContent = `Crumb ${i}`
+      el.append(a)
+      crumbs.push(a)
+    }
+    const leaf = document.createElement('span')
+    leaf.textContent = 'Current'
+    el.append(leaf)
+    crumbs.push(leaf)
+    await flushAll(el)
+
+    let clicked = false
+    ;(crumbs[1] as HTMLAnchorElement).addEventListener('click', (e) => {
+      e.preventDefault() // jsdom has no real navigation — prevent the "not implemented" navigation error
+      clicked = true
+    })
+
+    const menu = el.querySelector('[data-part="overflow"]') as HTMLElement
+    menu.dispatchEvent(new CustomEvent('select', { bubbles: true, composed: true, detail: { value: '0', index: 0 } }))
+    expect(clicked, 'selecting the ONE proxy row must .click() the real hidden crumb (index 0 ⇒ crumbs[1])').toBe(true)
+  })
+
+  it('a proxy select relays through a custom-element crumb\'s OWN inner <a> (ADR-0115-blind, ui-router-link shape) once upgraded', async () => {
+    class FakeRouterLink extends HTMLElement {
+      connectedCallback(): void {
+        const a = document.createElement('a')
+        a.href = '/fake'
+        a.textContent = this.textContent ?? ''
+        this.replaceChildren(a)
+      }
+    }
+    if (!customElements.get('fake-router-link')) customElements.define('fake-router-link', FakeRouterLink)
+
+    const el = mount(new UIBreadcrumbElement()) as UIBreadcrumbElement
+    el.setAttribute('collapse', 'menu')
+    const home = document.createElement('a')
+    home.href = '/'
+    home.textContent = 'Home'
+    el.append(home)
+    const link = document.createElement('fake-router-link') as FakeRouterLink
+    link.textContent = 'Middle'
+    el.append(link)
+    for (let i = 0; i < 2; i++) {
+      const a = document.createElement('a')
+      a.href = `/t${i}`
+      a.textContent = `Trail ${i}`
+      el.append(a)
+    }
+    await flushAll(el)
+    // by the time this test asserts, the whole tree has long since upgraded (custom elements upgrade
+    // synchronously on connect in a real engine/jsdom alike) — the fold computation itself runs post-connect
+    // (never pre-upgrade), and the relay's own anchor lookup is lazy (only at commit time) either way.
+    const innerAnchor = link.querySelector('a') as HTMLAnchorElement
+    expect(innerAnchor, 'the fake router-link must have stamped its own inner <a> by connect time').not.toBeNull()
+
+    let clicked = false
+    innerAnchor.addEventListener('click', (e) => {
+      e.preventDefault()
+      clicked = true
+    })
+
+    const menu = el.querySelector('[data-part="overflow"]') as HTMLElement
+    menu.dispatchEvent(new CustomEvent('select', { bubbles: true, composed: true, detail: { value: '0', index: 0 } }))
+    expect(clicked, 'the relay must reach the custom-element crumb\'s OWN inner <a>, never the wrapper itself').toBe(true)
+  })
+
+  it('select/toggle/close from the overflow menu are CONTAINED — ui-breadcrumb emits none of its own', async () => {
+    const el = mount(new UIBreadcrumbElement()) as UIBreadcrumbElement
+    el.setAttribute('collapse', 'menu')
+    for (let i = 0; i < 4; i++) {
+      const a = document.createElement('a')
+      a.href = `/${i}`
+      a.textContent = `Crumb ${i}`
+      el.append(a)
+    }
+    const leaf = document.createElement('span')
+    leaf.textContent = 'Current'
+    el.append(leaf)
+    await flushAll(el)
+    el.addEventListener('click', (e) => e.preventDefault()) // the relay's OWN .click() genuinely fires — suppress jsdom's real-navigation attempt, irrelevant to this test's concern
+
+    const seenSelect: Event[] = []
+    let toggles = 0
+    let closes = 0
+    el.addEventListener('select', (e) => seenSelect.push(e))
+    el.addEventListener('toggle', () => toggles++)
+    el.addEventListener('close', () => closes++)
+
+    const menu = el.querySelector('[data-part="overflow"]') as HTMLElement
+    menu.dispatchEvent(new CustomEvent('select', { bubbles: true, composed: true, detail: { value: '0', index: 0 } }))
+    menu.dispatchEvent(new CustomEvent('toggle', { bubbles: true, composed: true }))
+    menu.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }))
+
+    expect(seenSelect, 'ui-breadcrumb emits NONE of its own — the raw menu select must never surface').toHaveLength(0)
+    expect(toggles).toBe(0)
+    expect(closes).toBe(0)
+  })
+
+  it('a bogus/unresolvable proxy index relays to nothing (no throw, no crash)', async () => {
+    const el = mount(new UIBreadcrumbElement()) as UIBreadcrumbElement
+    el.setAttribute('collapse', 'menu')
+    for (let i = 0; i < 4; i++) {
+      const a = document.createElement('a')
+      a.href = `/${i}`
+      a.textContent = `Crumb ${i}`
+      el.append(a)
+    }
+    const leaf = document.createElement('span')
+    leaf.textContent = 'Current'
+    el.append(leaf)
+    await flushAll(el)
+
+    const menu = el.querySelector('[data-part="overflow"]') as HTMLElement
+    expect(() =>
+      menu.dispatchEvent(new CustomEvent('select', { bubbles: true, composed: true, detail: { value: 'x', index: 99 } })),
+    ).not.toThrow()
+  })
+})

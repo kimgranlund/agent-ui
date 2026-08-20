@@ -14,8 +14,8 @@ import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
 // breadcrumb-descriptor.test.ts — the three-layer descriptor pattern (pagination-descriptor.test.ts /
-// toolbar-descriptor.test.ts precedent): structural, contract↔props, contract↔source. S1 scope: `label`/
-// `inline` only — `collapse`/`collapseKeepTrailing` are S2 (GH #1515) and are NOT part of this contract yet.
+// toolbar-descriptor.test.ts precedent): structural, contract↔props, contract↔source. S2 scope (GH #1515):
+// `label`/`inline`/`collapse`/`collapseKeepTrailing` — the full attribute contract now that S2 has landed.
 
 const DIR = `${process.cwd()}/packages/agent-ui/components/src/controls/breadcrumb`
 const md = readFileSync(`${DIR}/breadcrumb.md`, 'utf8') as string
@@ -24,7 +24,7 @@ const css = readFileSync(`${DIR}/breadcrumb.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['label', 'inline']
+const ATTR_NAMES = ['label', 'inline', 'collapse', 'collapseKeepTrailing']
 
 describe('breadcrumb.md descriptor — structural validity', () => {
   it('has a leading frontmatter fence and a prose body', () => {
@@ -60,15 +60,21 @@ describe('breadcrumb.md descriptor — structural validity', () => {
     expect(names.has('scale')).toBe(false)
   })
 
-  it('S1 scope: no collapse/collapseKeepTrailing attribute yet (S2, GH #1515)', () => {
-    const names = new Set(parsed.attributes.map((a) => a.name))
-    expect(names.has('collapse')).toBe(false)
-    expect(names.has('collapseKeepTrailing')).toBe(false)
+  it('S2 (GH #1515): collapse enum [none,menu] default none; collapseKeepTrailing number default 2', () => {
+    const collapse = parsed.attributes.find((a) => a.name === 'collapse')
+    const keepTrailing = parsed.attributes.find((a) => a.name === 'collapseKeepTrailing')
+    expect(collapse?.type).toBe('enum')
+    expect(collapse?.values).toEqual(['none', 'menu'])
+    expect(collapse?.default).toBe('none')
+    expect(collapse?.reflect).toBe(true)
+    expect(keepTrailing?.type).toBe('number')
+    expect(keepTrailing?.default).toBe('2')
+    expect(keepTrailing?.reflect).toBe(true)
   })
 
-  it('declares exactly ONE part — separator', () => {
+  it('declares exactly TWO parts — separator, overflow (GH #1515 S2)', () => {
     const names = (parsed.sequences.get('parts') ?? []).map((p) => p.get('name'))
-    expect(names).toEqual(['separator'])
+    expect(names).toEqual(['separator', 'overflow'])
   })
 
   it('declares exactly ONE slot — separator', () => {
