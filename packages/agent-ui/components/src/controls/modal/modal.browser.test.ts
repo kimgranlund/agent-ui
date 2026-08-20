@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp, userEvent } from 'vitest/browser'
+import { server, cdp, page, userEvent } from 'vitest/browser'
 import type { UIModalElement } from './modal.ts'
 
 // G9 s9 (browser leg) — the CROSS-ENGINE platform-truth smoke for ui-modal (decomp g9-containers node s9).
@@ -550,4 +550,128 @@ describe('ui-modal cross-engine — GH #913: the dialog scrolls with an unobtrus
       `${server.browser}: thumb paints while the dialog is focus-within`,
     ).not.toBe('rgba(0, 0, 0, 0)')
   })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [8] GH #1554 — a REAL pixel-legibility regression: a computed-style assertion (§[6] above) would NOT
+//  have caught this bug, because the ::backdrop's computed `background-color` was already the ruled
+//  black-80% the whole time. The actual defect is a visual RESULT: a near-black-on-near-white (or
+//  near-white-on-near-black) page stays legible right through a uniform opacity scrim, because a
+//  near-black source pixel blended toward black is still near-black (0 * (1 - a) ≈ 0 for any a) — no
+//  --ui-modal-scrim opacity increase can fix this. `backdrop-filter: blur()` is the actual fix: it smears
+//  the page's own sharp ink/background edges together BEFORE the wash composites over them, so legibility
+//  collapses independent of the page's own contrast. Proven via a REAL screenshot — `page.screenshot({
+//  element })` (the same `@vitest/browser` instrument `toMatchScreenshot` uses elsewhere in this file's
+//  sibling `*.visual.browser.test.ts` files, scoped to exactly the probe element — no manual top-page/
+//  iframe coordinate translation needed) — decoded into real pixel data via canvas `getImageData`, never a
+//  computed-style read. Chromium only; WebKit has no screenshot/pixel-sampling leg here (the fleet
+//  forced-colors split precedent — tool substituted, not a behaviour gap: modal.css applies the SAME rule
+//  regardless of engine, proven structurally for WebKit by modal-css.test.ts).
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-modal — GH #1554: real pixel-legibility regression (page text behind an open modal must become genuinely illegible)', () => {
+  /** A REAL screenshot of exactly `el` (base64 PNG, `@vitest/browser`'s own element-scoped capture — the
+   *  `toMatchScreenshot` infra minus the golden-diff step), decoded into real pixel data via canvas. */
+  const captureElement = async (el: Element): Promise<{ data: Uint8ClampedArray; width: number; height: number }> => {
+    const base64 = (await page.screenshot({ element: el, save: false })) as string
+    const img = new Image()
+    img.src = `data:image/png;base64,${base64}`
+    await img.decode()
+    const canvas = document.createElement('canvas')
+    canvas.width = img.naturalWidth
+    canvas.height = img.naturalHeight
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
+    ctx.drawImage(img, 0, 0)
+    const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    return { data, width: canvas.width, height: canvas.height }
+  }
+
+  /** The pixel-spread (max - min) of a photometric brightness approximation (Rec.709 weights on the raw
+   *  gamma-encoded bytes — a legibility HEURISTIC, not a WCAG relative-luminance contrast ratio) across an
+   *  inset region of the captured element (inset so the element's own edge/anti-aliasing never confounds
+   *  the reading). Real text at typical ink density spans nearly the full 0-255 range (white background,
+   *  near-black strokes); once blurred+dimmed together the range COLLAPSES — the actual illegibility signal
+   *  a single computed-style read can never see. */
+  const brightnessSpread = (
+    shot: { data: Uint8ClampedArray; width: number; height: number },
+    inset = 10,
+  ): { min: number; max: number; spread: number } => {
+    let min = 255
+    let max = 0
+    const x0 = Math.max(0, inset)
+    const y0 = Math.max(0, inset)
+    const x1 = Math.min(shot.width, shot.width - inset)
+    const y1 = Math.min(shot.height, shot.height - inset)
+    for (let y = y0; y < y1; y++) {
+      for (let x = x0; x < x1; x++) {
+        const i = (y * shot.width + x) * 4
+        const b = 0.2126 * shot.data[i] + 0.7152 * shot.data[i + 1] + 0.0722 * shot.data[i + 2]
+        if (b < min) min = b
+        if (b > max) max = b
+      }
+    }
+    return { min, max, spread: max - min }
+  }
+
+  it.skipIf(server.browser !== 'chromium')(
+    'LIGHT-theme page (near-black text on near-white bg): real text is legible closed, genuinely illegible behind the open modal',
+    async () => {
+      const { wrap, modal } = mount(
+        `<div data-role="probe" style="position:fixed; inset:0 0 auto 0; block-size:170px; margin:0; ` +
+          `background:rgb(250,250,250); color:rgb(8,8,8); font:16px/1.5 system-ui, sans-serif; padding:16px; z-index:0">` +
+          `<p style="margin:0 0 8px 0">Grouped commands, an empty-state affordance, and a consumer-wired action set compose the whole surface end to end, exactly as reported.</p>` +
+          `<p style="margin:0">A second realistic line gives the sampled region genuine ink density for the pixel probe.</p>` +
+          `</div><ui-modal><p>Body</p></ui-modal>`,
+      )
+      const probe = wrap.querySelector('[data-role="probe"]') as HTMLElement
+
+      // BASELINE (dialog CLOSED — display:none, contributes nothing): anti-vacuous — the probe region must
+      // show REAL text contrast before any scrim, or the "collapses once open" assertion below is meaningless.
+      const beforeStats = brightnessSpread(await captureElement(probe))
+      expect(beforeStats.spread, `${server.browser}: the closed-dialog baseline has no real text contrast (probe setup is vacuous)`).toBeGreaterThan(150)
+
+      modal.open = true
+      await modal.updateComplete
+      await raf()
+
+      const afterStats = brightnessSpread(await captureElement(probe))
+      // Measured (real Chromium, this exact probe): blurred+dimmed ≈13; the pre-fix opacity-ONLY scrim
+      // (TKT-0019's shipped 80% black, no blur) measures ≈49 on the SAME probe — 30 sits with margin on
+      // both sides, so this genuinely discriminates the fix from the regression (a bare opacity bump can
+      // never clear it — see the modal.css GH #1554 comment on why).
+      expect(
+        afterStats.spread,
+        `${server.browser}: page text behind the open modal is still legible (spread ${afterStats.spread}, was ${beforeStats.spread}) — GH #1554`,
+      ).toBeLessThan(30)
+    },
+  )
+
+  it.skipIf(server.browser !== 'chromium')(
+    'DARK-theme page (near-white text on near-black bg): real text is legible closed, genuinely illegible behind the open modal',
+    async () => {
+      const { wrap, modal } = mount(
+        `<div data-role="probe" style="position:fixed; inset:0 0 auto 0; block-size:170px; margin:0; ` +
+          `background:rgb(6,6,6); color:rgb(246,246,246); font:16px/1.5 system-ui, sans-serif; padding:16px; z-index:0">` +
+          `<p style="margin:0 0 8px 0">Grouped commands, an empty-state affordance, and a consumer-wired action set compose the whole surface end to end, exactly as reported.</p>` +
+          `<p style="margin:0">A second realistic line gives the sampled region genuine ink density for the pixel probe.</p>` +
+          `</div><ui-modal><p>Body</p></ui-modal>`,
+      )
+      const probe = wrap.querySelector('[data-role="probe"]') as HTMLElement
+
+      const beforeStats = brightnessSpread(await captureElement(probe))
+      expect(beforeStats.spread, `${server.browser}: the closed-dialog dark-theme baseline has no real text contrast (probe setup is vacuous)`).toBeGreaterThan(150)
+
+      modal.open = true
+      await modal.updateComplete
+      await raf()
+
+      const afterStats = brightnessSpread(await captureElement(probe))
+      // Measured (real Chromium, this exact probe): blurred+dimmed ≈16; the pre-fix opacity-ONLY scrim
+      // measures ≈48 on the SAME probe — 30 discriminates the same way as the light-theme leg above.
+      expect(
+        afterStats.spread,
+        `${server.browser}: dark-theme page text behind the open modal is still legible (spread ${afterStats.spread}, was ${beforeStats.spread}) — GH #1554`,
+      ).toBeLessThan(30)
+    },
+  )
 })

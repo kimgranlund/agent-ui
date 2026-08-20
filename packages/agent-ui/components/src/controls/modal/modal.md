@@ -148,6 +148,18 @@ default `--ui-container-bg` so the plane is opaque. The shell pads off `--md-sys
 **not** a control height) and corners off the shared `--md-sys-shape-corner-base`. A forced-colors block keeps the
 surface, frame, and ink visible as system colours.
 
+## Scrim (GH #1554)
+
+The `::backdrop` reads `--ui-modal-scrim` (black 80% opacity, `--md-sys-color-dialog-backdrop`, TKT-0019) **and**
+applies `backdrop-filter: blur(var(--ui-modal-scrim-blur))` (default `6px`). Opacity alone cannot make already
+near-black page text illegible — blending toward black leaves a near-black source pixel near-black regardless of
+how high the scrim's alpha climbs — so the blur is load-bearing: it smears the page's own text/background edges
+together *before* the wash composites over them, defeating legibility independent of the page's own contrast.
+This is the first `backdrop-filter` use in the fleet (a new visual-language element, not yet a repo-wide
+convention). `prefers-reduced-transparency: reduce` drops the blur back to the pre-fix, opacity-only wash for
+users who have asked their OS to suppress blur/vibrancy effects; forced-colors leaves the blur in effect
+deliberately (it touches no colour channel, so it cannot defeat the forced Canvas base).
+
 ## The frame dials (TKT-0017 — the composition seam)
 
 Three public tokens let a COMPOSER that nests `ui-modal` (the `ui-command-modal` precedent) pin the
