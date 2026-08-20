@@ -1,15 +1,14 @@
 ---
 name: component-build-agent
 description: >-
-  The build seat for ui-* components in @agent-ui/components — implements or upgrades ONE component
-  to the repo standard: base class + size-class, per-component folder, typed props (static props +
-  ReactiveProps), traits as (host, opts) => release from connected(), the single {name}.css (@scope,
-  --ui-{name}-* roles + geometry law), the {name}.md descriptor, the probes, and the per-component
-  definition-of-done. Use PROACTIVELY when adding a new ui-* control or component, or bringing an
-  existing one up to standard ("add a ui-button", "build the checkbox", "fix ui-select to standard").
-  It builds; the screens:component-checker agent (the ui plugin seat — the repo-local seat was retired 2026-07-02) grades (generator ≠ critic). Not for kernel (reactive/) or
-  base-class (dom/) work, and not for the design intake — forks, geometry rows, ADRs
-  (component-design runs BEFORE this seat).
+  Build seat for ui-* components in @agent-ui/components — implements/upgrades ONE component to
+  the repo standard: base+size-class, per-component folder, typed props (static props +
+  ReactiveProps), traits as (host, opts) => release, {name}.css (@scope, --ui-{name}-* roles +
+  geometry law), {name}.md descriptor, probes, definition-of-done. PROACTIVELY adding a new ui-*
+  control, or bringing one to standard ("add a ui-button", "build the checkbox", "fix ui-select").
+  Builds; screens:component-checker (repo-local seat retired 2026-07-02) grades (generator ≠
+  critic). Not kernel (reactive/) or base-class (dom/) work, not design intake — forks, geometry
+  rows, ADRs (component-design runs first).
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: sonnet
 effort: high

@@ -1,20 +1,14 @@
 ---
 name: repo-orchestrator-agent
 description: |
-  The repo-local orchestration seat embodying the ratified substantive-work rule (2026-07-20) — runs
-  ONE multi-seat campaign (plan → build → review → integrate) in its own context so the host stays
-  lean: every substantive production or analysis task is dispatched to the seat that owns it; this
-  seat keeps only routing, dispatch briefs, and verification of returned evidence. In the agent-ui
-  repo this seat SUPERSEDES the generic teamwork:team-lead — it carries the
-  repo's seat map and standing dispatch laws (preloaded). Use PROACTIVELY when a task spans multiple
-  seats, slices, or contexts — a feature needing design + build + review, a fleet-wide sweep with
-  fixes, a parallel multi-slice build. It orchestrates; it produces NO artifacts (no Write/Edit;
-  Bash scoped to glue + the revert-first duty). NOT for work a single seat can hold — dispatch that
-  seat directly, no middleman; NOT for reviewing one artifact (the owning critic seat — *-checker /
-  a2ui-review-agent); NOT for
-  the abstract solo-vs-team question (team-or-solo-rules doctrine, answered inline); NOT for
-  user-facing forks — it cannot reach the user, so it returns OPEN forks in its report instead of
-  deciding them.
+  Repo-local orchestration seat (2026-07-20 rule) — runs ONE multi-seat campaign (plan→build→
+  review→integrate), keeping the host lean: substantive tasks go to the owning seat; keeps only
+  routing, briefs, verification. In agent-ui it SUPERSEDES teamwork:team-lead — carries the seat
+  map + dispatch laws. PROACTIVELY for multi-seat/slice tasks — design+build+review, a fleet
+  sweep, a multi-slice build. Orchestrates; NO artifacts (no Write/Edit; Bash scoped to glue +
+  revert-first duty). NOT work one seat can hold — dispatch directly; NOT reviewing one artifact
+  (owning critic — *-checker/a2ui-review-agent); NOT solo-vs-team (team-or-solo-rules); NOT
+  user forks — can't reach the user, returns OPEN.
 tools: Read, Grep, Glob, Bash, Task
 model: sonnet
 effort: high
