@@ -1,6 +1,6 @@
 # Overhaul plan — agent-ui `.claude/` estate — 2026-08-19
 
-Owner: Kim · status: draft (awaiting Gate A) · review-cadence: per-wave
+Owner: Kim · status: complete (all waves landed 2026-08-20; see overhaul-run close-out) · review-cadence: per-wave
 (Authored directly at the fallback path; `docs:make-doc` not invoked this run — deviation recorded in the run ledger.)
 
 ## Steps

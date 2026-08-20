@@ -49,3 +49,6 @@ One estate: `.claude/` (governed, naming.manifest.json; 29 skills + 3 stub dirs 
 
 ## PRs (drafts, human merge)
 #1455 (W2-1) · #1456 (W2-2, rev 3) · #1457 (W1+records) · #1458 (W2-3, stacked on #1456)
+
+## Close-out (2026-08-20, marshal desk on behalf of the worktree-pinned 5e session)
+#1466 → PR #1471 (re-landed #1473): built + re-judged 20/20 (a2ui-build 8/8 t02 fixed · admin pair 2/2 · a2ui-review suite 10/10 no-trigger); residual 1 accepted menu-scope artifact (integ n06). All five PRs merged 2026-08-20 (#1458/#1471 re-landed as #1472/#1473 after stack-base deletion). Campaign CLOSED.
