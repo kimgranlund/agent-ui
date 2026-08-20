@@ -1,0 +1,126 @@
+{
+ "$schema_note": "agent-ui estate doctrine manifest (seeded 2026-08-19; doctrine-audit was SKIP-no-manifest every run before this). Separate from any naming manifest. Enumerates canon-to-dependent DOCTRINE edges: a rule stated canonically in one artifact that a dependent artifact must not violate, omit, or paraphrase away from. Edge types per authorkit:doctrine-audit sweep.py: verbatim-line (mode require|forbid), ledger-sync, vocab-term, judgment. Starter set of 6 edges, each verified live against the files on disk at seed time — canon rules that have actually bitten (GH #754's copied-event-list drift; ADR-0163's stale carve-out) or are load-bearing (the import DAG, the sizing law).",
+ "version": 1,
+ "edges": [
+  {
+   "id": "E01",
+   "type": "verbatim-line",
+   "mode": "require",
+   "title": "ADR-0223 fill-by-default sizing law: the skills teaching sizing must cite ADR-0223 (block-level fill hosts, the one `inline` opt-out, the four min-width roles) rather than restate or omit it",
+   "severity": "major",
+   "canon_file": ".claude/docs/adr/0223-fill-by-default-fleet-sizing-contract.md",
+   "canon_ref": "the ratified fill-by-default fleet sizing contract; sizing-gates.test.ts is ENFORCING with an empty DEBT table",
+   "dependents": [
+    {
+     "file": ".claude/skills/component-standards/SKILL.md",
+     "pattern": "ADR-0223"
+    },
+    {
+     "file": ".claude/skills/composition-patterns/references/surface-primitives.md",
+     "pattern": "ADR-0223"
+    }
+   ],
+   "source": "seeded 2026-08-19 (doctrine-audit SKIP-no-manifest repair). Verified live: component-standards/SKILL.md:39+51 carries the full ADR-0223 citation with the cite-its-tables-never-copy clause; surface-primitives.md:52 cites it for ui-row's fill. component-design/component-build do NOT cite 0223 today — deliberately not edged until they do; this edge arms the two surfaces that teach the law."
+  },
+  {
+   "id": "E02",
+   "type": "verbatim-line",
+   "mode": "require",
+   "title": "ADR-0163 Amendment (no-native-form-elements law; the sanctioned descriptor-documented internal `data-part` button class; zero fleet-wide exceptions after the amendment retired ui-table's carve-out): component-patterns' patterns-table must carry the amendment citation, not the pre-amendment carve-out state",
+   "severity": "major",
+   "canon_file": ".claude/docs/adr/0163-ui-table-interactive-widening.md",
+   "canon_ref": "the ratified 2026-08-19 Amendment: both cl.3 native exceptions fall; exception RETIREMENT by amendment, not relaxation",
+   "dependents": [
+    {
+     "file": ".claude/skills/component-patterns/references/patterns-table.md",
+     "pattern": "ADR-0163\\s+Amendment"
+    },
+    {
+     "file": ".claude/skills/component-patterns/references/patterns-table.md",
+     "pattern": "data-part"
+    }
+   ],
+   "source": "seeded 2026-08-19. Verified live: patterns-table.md rows 54-55 carry 'ADR-0163 Amendment (2026-08-19, ratified)' and the data-part anatomy — the exception-retirement worked example. A future rewrite that drops the amendment reverts the table to a stale carve-out reading; this edge catches that."
+  },
+  {
+   "id": "E03",
+   "type": "verbatim-line",
+   "mode": "require",
+   "title": "Event-name vocabulary (ADR-0153 closed set): skills that teach event naming must CITE the gate constant `ALLOWED_EVENTS`, never carry their own copied member list — the copied-list class already drifted past ADR-0153's seventh member once (GH #754)",
+   "severity": "major",
+   "canon_file": "packages/agent-ui/components/src/controls/naming-gates.test.ts",
+   "canon_ref": "the ALLOWED_EVENTS gate constant (canon per naming.md §4 / CLAUDE.md §Conventions; grown by ADR-0153)",
+   "dependents": [
+    {
+     "file": ".claude/skills/component-design/SKILL.md",
+     "pattern": "ALLOWED_EVENTS"
+    },
+    {
+     "file": ".claude/skills/component-build/SKILL.md",
+     "pattern": "ALLOWED_EVENTS"
+    }
+   ],
+   "source": "seeded 2026-08-19. Verified live: component-design/SKILL.md:77 and component-build/SKILL.md:52 both point at ALLOWED_EVENTS with the drifted-copy history (GH #754) stated inline. Losing the pointer re-opens the copied-list drift class."
+  },
+  {
+   "id": "E04",
+   "type": "verbatim-line",
+   "mode": "require",
+   "title": "Import-DAG canon (ADR-0115/0119/0139/0192/0200, 'Imports point inward only' + per-package layering.test.ts trip-wires): component-patterns' package-mint rows must keep naming layering.test.ts as the enforcement surface every mint extends",
+   "severity": "major",
+   "canon_file": "CLAUDE.md",
+   "canon_ref": "§Conventions 'Imports point inward only. Cross-package DAG: ...' — enforced by the per-package layering.test.ts trip-wires (ADR-0115/0139/0192/0200)",
+   "dependents": [
+    {
+     "file": ".claude/skills/component-patterns/references/patterns-table.md",
+     "pattern": "layering\\.test\\.ts"
+    },
+    {
+     "file": ".claude/skills/component-patterns/references/patterns-table.md",
+     "pattern": "ADR-0200"
+    }
+   ],
+   "source": "seeded 2026-08-19. Verified live: patterns-table.md rows 39-40 (package-mint geometries) restate the DAG with the ADR-0115/0119/0192/0200 chain and name layering.test.ts as the per-mint extension duty. This is the highest-traffic DAG restatement outside CLAUDE.md itself; drift here misroutes every future package mint."
+  },
+  {
+   "id": "E05",
+   "type": "verbatim-line",
+   "mode": "require",
+   "title": "ADR-0068 judged-corpus loop (verdict adapter, rescore, --replace quarantine exit): a2ui-corpus-curation must keep citing ADR-0068 as the owning record rather than restating or dropping the judged-path law",
+   "severity": "major",
+   "canon_file": ".claude/docs/adr/0068-corpus-quality-judge-verdict-adapter.md",
+   "canon_ref": "the judge/verdict-adapter decision: quarantine exits only through the FULL judged pipeline (cl.5-6); rubric version marker (cl.1); back-scoring (cl.4)",
+   "dependents": [
+    {
+     "file": ".claude/skills/a2ui-corpus-curation/SKILL.md",
+     "pattern": "ADR-0068"
+    }
+   ],
+   "source": "seeded 2026-08-19. Verified live: a2ui-corpus-curation/SKILL.md cites ADR-0068 nine times (judge activation, quarantine per cl.6, rescore per cl.4, --replace per cl.5) in point-at-the-owner style. An edit that drops the citations would orphan the curation procedure from its ratified record."
+  },
+  {
+   "id": "E06",
+   "type": "verbatim-line",
+   "mode": "require",
+   "title": "EXCLUSION_ALLOWLIST justification categories (ADR-0112 cl.6 chrome family + ADR-0225 cl.2 persona-scoped content type): patterns-table must carry BOTH categories plus the allowlist-drain-by-amendment reversal path — a table rewrite that keeps only the chrome category silently outlaws the second, ruled category",
+   "severity": "major",
+   "canon_file": ".claude/docs/adr/0225-ui-playing-card-mint-persona-scoped.md",
+   "canon_ref": "ADR-0225 cl.2 (persona-scoped exclusion category, beside ADR-0112 cl.6's chrome family; reversal stays allowlist-drain-by-amendment per the ADR-0112 Amendment, GH #1184)",
+   "dependents": [
+    {
+     "file": ".claude/skills/component-patterns/references/patterns-table.md",
+     "pattern": "EXCLUSION_ALLOWLIST"
+    },
+    {
+     "file": ".claude/skills/component-patterns/references/patterns-table.md",
+     "pattern": "ADR-0225\\s+cl\\.2"
+    },
+    {
+     "file": ".claude/skills/component-patterns/references/patterns-table.md",
+     "pattern": "allowlist-drain-by-amendment"
+    }
+   ],
+   "source": "seeded 2026-08-19. Verified live: patterns-table.md rows 23-25 carry the ADR-0112 cl.6 permanent-exclusion row, the ADR-0112 Amendment drain row (GH #1184, PR #1186), and the ADR-0225 cl.2 persona-scoped category row naming the drain path as the reversal route."
+  }
+ ]
+}
