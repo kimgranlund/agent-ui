@@ -178,6 +178,25 @@
     margin: var(--ui-card-region-margin);
   }
 
+  /* FOOTER BOTTOM-PIN CONSTRAINT — dormant today, discoverable via GH#1553 (no code change there, a
+     documented gotcha for whoever implements this next; found via cross-repo comparison against
+     gen-ui-kit's Card, which already hit this as gen-ui-kit GH#1098). The default shell above is block
+     flow (a flow-root BFC, NOT flex/grid — see the banner comment at the top of this file, "let
+     contents space themselves"), and the region margins immediately above rely on BLOCK-FLOW
+     margin-collapse to produce a clean 6px gutter (card.browser.test.ts asserts the gap is NOT doubled
+     to 12px). The moment a feature needs the footer pinned to the bottom of an equal-height card (e.g.
+     `margin-top: auto` on ui-card-footer), the region container must switch to
+     `flex-direction: column` — and flex containers do NOT collapse adjacent margins the way block flow
+     does. Naively flipping to flex while keeping these existing region margins would silently DOUBLE
+     the visible gap between every region (6px+6px → 12px, worse with 3 regions); `margin-top: auto`
+     wouldn't even work under plain block flow in the first place. Whoever implements footer
+     bottom-pinning must NOT just add `margin-top: auto` here — instead either (a) flip the shell to
+     `flex-direction: column` for that case AND convert these region gutters from `margin` to `gap` on
+     that flex container (flex `gap` is immune to the margin-collapse question entirely — gen-ui-kit's
+     own eventual fix shape), or (b) follow SCROLL MODE's existing precedent below (`[scrollable]`) and
+     remove header/footer from flow via `position: absolute` instead, if that shape fits the new
+     feature. */
+
   /* Region-less humane default (ADR-0056): NO region child present → apply the region-equivalent PADDING +
      content rhythm to the card's own box (the same OWN-ink-padding a real region would carry: inline 12 · block
      6 · gap 8 — REVISED 2026-07-04, was 6·6·8 under the rescinded card-only override). This mirrors a region's
