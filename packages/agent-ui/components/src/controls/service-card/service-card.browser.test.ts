@@ -5,7 +5,7 @@ import type { UIServiceCardElement } from '@agent-ui/components/components'
 // service-card.browser.test.ts — the cross-engine (Chromium + WebKit) browser-truth probes for
 // ui-service-card (ADR-0224). jsdom cannot prove paint/geometry/WHCM (service-card.test.ts pins the
 // DECLARED rules) — this is the authoritative rendered-px + rendered-colour proof: the availability
-// flip's accent-edge/dot/title-mute PIXELS in both states, the ADR-0223 two-posture geometry law (fill
+// flip's dot/title-mute/action PIXELS in both states, the ADR-0223 two-posture geometry law (fill
 // default / [inline] hug), the menu-slot presence-driven column, a REAL user click (not a synthetic
 // dispatchEvent) proving the disabled chip is genuinely inert to a real gesture, and forced-colors.
 //
@@ -76,23 +76,24 @@ describe('ui-service-card — ADR-0223 two postures (fill default / [inline] hug
 // ── the availability law — pixel truth, both states (cl.4) ──────────────────────────────────────────
 
 describe('ui-service-card — the availability law, pixel truth (ADR-0224 cl.4)', () => {
-  it('available: success-tinted accent edge + full-ink title; unavailable: neutral edge + muted title — ONE write flips both', async () => {
+  it('available: success-tinted status dot + full-ink title; unavailable: neutral dot + muted title — ONE write flips both', async () => {
     const { card } = mount(`<ui-service-card name="Claims Agent" available></ui-service-card>`)
     await card.updateComplete
+    const dot = card.querySelector('[data-part="status"]') as Element
 
-    const availableEdge = getComputedStyle(card).borderInlineStartColor || getComputedStyle(card).borderLeftColor
+    const availableDot = getComputedStyle(dot).backgroundColor
     const availableTitle = getComputedStyle(card.querySelector('[data-part="title"]') as Element).color
 
     card.available = false
     await card.updateComplete
-    const unavailableEdge = getComputedStyle(card).borderInlineStartColor || getComputedStyle(card).borderLeftColor
+    const unavailableDot = getComputedStyle(dot).backgroundColor
     const unavailableTitle = getComputedStyle(card.querySelector('[data-part="title"]') as Element).color
 
-    expect(unavailableEdge, 'the accent edge colour did not change on the availability flip').not.toBe(availableEdge)
+    expect(unavailableDot, 'the status dot colour did not change on the availability flip').not.toBe(availableDot)
     expect(unavailableTitle, 'the title ink did not mute on the availability flip').not.toBe(availableTitle)
   })
 
-  it('the action background repoints together with the edge/title (the whole cascade, one write)', async () => {
+  it('the action background repoints together with the dot/title (the whole cascade, one write)', async () => {
     const { card } = mount(`<ui-service-card name="Claims Agent" available></ui-service-card>`)
     await card.updateComplete
     const btn = card.querySelector('[data-part="action"]') as HTMLElement
@@ -172,13 +173,13 @@ describe('ui-service-card — the optional menu slot (cl.3)', () => {
 // ── forced-colors (cl.6) ─────────────────────────────────────────────────────────────────────────
 
 describe('ui-service-card forced-colors (ADR-0224 cl.6)', () => {
-  it('the accent edge + status dot survive under forced-colors — Chromium emulates (CDP); WebKit asserts baseline', async () => {
+  it('the perimeter outline + status dot survive under forced-colors — Chromium emulates (CDP); WebKit asserts baseline', async () => {
     const { card } = mount(`<ui-service-card name="Claims Agent" available></ui-service-card>`)
     await card.updateComplete
     const dot = card.querySelector('[data-part="status"]') as HTMLElement
 
-    // Baseline (BOTH engines): a real edge border + a real dot fill.
-    expect(alphaOf(getComputedStyle(card).borderInlineStartColor), 'baseline accent edge is invisible').toBeGreaterThan(0)
+    // Baseline (BOTH engines): a real perimeter border + a real dot fill.
+    expect(alphaOf(getComputedStyle(card).borderInlineStartColor), 'baseline perimeter outline is invisible').toBeGreaterThan(0)
     expect(alphaOf(getComputedStyle(dot).backgroundColor), 'baseline dot fill is invisible').toBeGreaterThan(0)
 
     if (server.browser !== 'chromium') {
@@ -190,7 +191,7 @@ describe('ui-service-card forced-colors (ADR-0224 cl.6)', () => {
     await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
     try {
       expect(window.matchMedia('(forced-colors: active)').matches, 'CDP did not enter forced-colors').toBe(true)
-      expect(alphaOf(getComputedStyle(card).borderInlineStartColor), 'the accent edge vanished under forced-colors').toBeGreaterThan(0)
+      expect(alphaOf(getComputedStyle(card).borderInlineStartColor), 'the perimeter outline vanished under forced-colors').toBeGreaterThan(0)
       expect(px(getComputedStyle(dot).borderTopWidth), 'the status dot did not gain a border under forced-colors').toBeGreaterThan(0)
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] })

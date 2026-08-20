@@ -396,7 +396,7 @@
       "name": "Service Card",
       "tag": "ui-service-card",
       "url": "./service-card-doc.html",
-      "description": "The availability-stated service/agent launch card — ONE bindable boolean (available) drives the accent edge, status dot, title mute, and the Open⟷Unavailable action swap together.",
+      "description": "The availability-stated service/agent launch card — ONE bindable boolean (available) drives the status dot, title mute, and the Open⟷Unavailable action swap together.",
       "level": "L1",
       "section": "Components"
     },

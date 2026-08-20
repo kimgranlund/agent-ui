@@ -176,6 +176,32 @@ Eight clauses:
 - **Stale → re-verify on build:** the §5.2 draft row · `EXCLUSION_ALLOWLIST` vs catalog-row
   disposition (clause 8, Kim's ruling) · this ADR's Repairs cell.
 
+## Amendment — reference-alignment restyle (proposed 2026-08-20; awaiting ratification)
+
+Kim's 2026-08-20 design-mode intake (the dark launch-card reference: outlined rounded surface,
+enlarged status dot, bold display title, code-accent path, wrapping description, trailing tonal
+action) supersedes three visual clauses. The anatomy, the availability LAW (one bindable boolean
+drives every posture change), ADR-0057's text-carried status, and cl.5's sizing/geometry laws are
+all untouched — this amendment moves only where the status ink lives and how the interior reads.
+
+- **A1 — the cl.3 accent EDGE is retired.** The host carries a full-perimeter `1px` outline
+  (`neutral-outline-variant`, non-status-bearing) instead of the status-tinted
+  `border-inline-start` band. The status dot grows to `0.75rem` and becomes the sole colour-status
+  carrier (still never colour-alone — the visually-hidden status-text part stands). Forced-colors:
+  the perimeter border maps CanvasText/GrayText exactly as the edge did.
+- **A2 — interior re-read.** Radius doubles (`2× corner-base`); padding moves to the `lg` step;
+  title keeps the regular card-header title row (title-medium) at weight 700; the path keeps the
+  mono treatment but takes the PRIMARY (code-accent) ink at body-medium size, muting to on-surface-variant when unavailable; the
+  description's cl.2 ONE-line clamp becomes a TWO-line `-webkit-line-clamp` (the reference wraps).
+  Path/title/name verbatim-rendering (cl.2) is unchanged.
+- **A3 — the action chip goes neutral-tonal, trailing END.** `justify-self: end`, the `sm` control
+  ramp, `neutral-surface-higher` bg + on-surface ink (hover/active one surface step up) — the
+  SUCCESS-family chip colour is retired with the edge; availability still swaps Open⟷Unavailable
+  and repoints the chip via the same one-write cascade (cl.4 unchanged).
+
+Goldens re-baselined in the same change (ADR-0223 R5); descriptor + demo prose repaired in the
+same change (stale-context law).
+
 ## Alternatives considered
 
 - **Documented composition only (no mint).** Rejected on both arms: the accent edge has no

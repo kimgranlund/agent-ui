@@ -45,11 +45,12 @@ describe('service-card-demo — the toggle scenario drives the availability law 
     expect(action.textContent).toContain('Open')
   })
 
-  it('one real click on the toggle button flips `available` off AND repaints the accent edge + the action swap TOGETHER', async () => {
+  it('one real click on the toggle button flips `available` off AND repaints the status dot + the action swap TOGETHER', async () => {
     const card = byId<UIServiceCardElement>('service-card-toggle-target')
     const toggleButton = byId<HTMLButtonElement>('service-card-toggle-button')
     await card.updateComplete
-    const availableEdge = getComputedStyle(card).borderInlineStartColor
+    const dot = card.querySelector('[data-part="status"]') as Element
+    const availableDot = getComputedStyle(dot).backgroundColor
 
     toggleButton.click()
     await card.updateComplete
@@ -59,11 +60,12 @@ describe('service-card-demo — the toggle scenario drives the availability law 
     // The action swap: the SAME native <button> element, now disabled, reading the literal "Unavailable" chip.
     expect(action.disabled, 'a real disabled native button — the platform inert contract, free of charge').toBe(true)
     expect(action.textContent).toBe('Unavailable')
-    // The accent edge REPAINTED — a REAL browser fact (the css custom-property cascade a jsdom
+    // The status dot REPAINTED (the 0224 Amendment retired the accent edge — the dot is the sole
+    // colour-status carrier) — a REAL browser fact (the css custom-property cascade a jsdom
     // getComputedStyle cannot be trusted to resolve the same way, service-card.browser.test.ts's own
     // rationale) — from this ONE click, never a separate coordinated edit.
-    const unavailableEdge = getComputedStyle(card).borderInlineStartColor
-    expect(unavailableEdge, 'the accent edge colour did not repaint on the toggle click').not.toBe(availableEdge)
+    const unavailableDot = getComputedStyle(dot).backgroundColor
+    expect(unavailableDot, 'the status dot colour did not repaint on the toggle click').not.toBe(availableDot)
   })
 
   it('the `action` event fires on a real click while available, and NEVER on a real click while unavailable', async () => {
