@@ -151,7 +151,12 @@ const LAYOUT_SHOWCASE = ['layout-overview.html', 'layout-permutations.html'] as 
 // slice (the ADR's OWN "S1 — the control" vs "S2 — site surfaces: doc page, demo specimen, gallery row,
 // knobs" split); its `service-card-doc.html` + `service-card-demo.html` landed in the following docs-writer
 // seat's S2 slice (the ui-image/GH #1189 precedent, above) — stopgap drained, empty again.
-const KNOWN_UNDOCUMENTED = new Set<string>([])
+//
+// GH #1515 — ui-breadcrumb's descriptor + control shipped in the component-build seat's S1 slice (the
+// frozen design intake's OWN 3-slice split, `.claude/docs/spec/breadcrumb.intake.md` §7: "S1 — core
+// anatomy" vs "S3 — site + catalog": doc/demo pages, gallery/preview specimen); its `breadcrumb-doc.html`
+// (+ demo) lands in the S3 slice (the ui-service-card/GH #1429 precedent, above) — parked here until then.
+const KNOWN_UNDOCUMENTED = new Set<string>(['breadcrumb'])
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()
@@ -278,9 +283,12 @@ describe('site coverage — every shipped component has its required per-tier pa
     // ui-service-card (ADR-0224, GH #1429) — the availability-stated service/agent launch card: tier=pattern
     // (container spacing + one control-height action row). Its {doc, demo} site pages landed in the
     // docs-writer seat's S2 slice (the ui-image/GH #1189 precedent) — no longer parked in KNOWN_UNDOCUMENTED.
+    // ui-breadcrumb (GH #1515, the frozen design intake) — the wayfinding trail: tier=pattern (composed/
+    // authored crumb stops carry their own geometry, no new geometry row — the ADR-0163 cl.6 reasoning
+    // verbatim). Parked in KNOWN_UNDOCUMENTED above until its S3 slice lands {doc, demo} site pages.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
       [
-        'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'drill', 'file-drop', 'form-popover', 'menu', 'modal',
+        'breadcrumb', 'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'drill', 'file-drop', 'form-popover', 'menu', 'modal',
         'multi-select', 'pagination', 'popover', 'segmented-control', 'select', 'service-card', 'status-stream', 'suggestions', 'swiper',
         'swiper-paddles', 'swiper-pagination', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
       ],
@@ -315,9 +323,9 @@ describe('site coverage — every descriptor is documented XOR a known, delibera
   it('KNOWN_UNDOCUMENTED lists exactly the real undocumented descriptors (no stale name lingers, no surprise gap)', () => {
     const undocumentedNames = COMPONENTS.filter((c) => !isDocumented(c)).map((c) => c.name).sort()
     expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(undocumentedNames)
-    // [] — the whole fleet is documented again; ADR-0224/GH #1429's ui-service-card drained the stopgap
-    // (its site doc/demo pages landed in the docs-writer seat's S2 slice, the ui-image/GH #1189 precedent).
-    expect([...KNOWN_UNDOCUMENTED].sort()).toEqual([])
+    // ['breadcrumb'] — GH #1515's ui-breadcrumb re-seeded the gap at its S1 slice (the ADR-0224/GH #1429
+    // ui-service-card precedent, above); it drains back to [] when the S3 slice lands its site pages.
+    expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(['breadcrumb'])
   })
 })
 

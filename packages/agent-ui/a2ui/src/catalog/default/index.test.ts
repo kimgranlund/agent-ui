@@ -165,7 +165,11 @@ function fleetPrimaryTypes(): string[] {
  *  seeds above were drained. ADR-0224 (GH #1429, `ui-service-card`) re-seeded this SAME shape at S1
  *  (control minted ahead of its clause-8 catalog-row-vs-exclusion disposition, RECOMMENDED-not-decided at
  *  ratification) — this S3 wave lands the `ServiceCard` row + factory (clause 8 ratified) and DRAINS that
- *  seed too, the same way every wave above was drained. */
+ *  seed too, the same way every wave above was drained. GH #1515 (`ui-breadcrumb`, the frozen design
+ *  intake `.claude/docs/spec/breadcrumb.intake.md`) re-seeds this SAME shape at S1 (core anatomy only,
+ *  §4 Catalog posture row: A2UI-EMITTABLE, "row-or-allowlist at ship time" — the row itself is the S3
+ *  slice's job, by the intake's own 3-slice build plan) — a future S3 wave lands the `Breadcrumb` row +
+ *  factory and DRAINS this seed too, the same way every wave above was drained. */
 //
 // `ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel`/`CommandModal` are
 // the only PERMANENT entries — NOT catalogue-bound AT ALL (app-surface/theming/live-streaming/chrome-anchor
@@ -219,6 +223,12 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'fragment + mini-skills teach it; a default-catalog row would hand every generic agent a casino-' +
     'domain object with no teaching context. Widening to the default catalog is a separate, later ' +
     'intake (the mint-vs-compose TYPE arm), never a drive-by row.'],
+  ['Breadcrumb',
+    'GH #1515 S1 — TEMPORARY, shipped-ahead-of-its-catalog-row seed (the ServiceCard/FileDrop/Rating/ ' +
+    'PieChart/ChoiceGroup class, ADR-0087 cl.6): the frozen design intake ' +
+    '(.claude/docs/spec/breadcrumb.intake.md §4 Catalog posture row) rules `ui-breadcrumb` A2UI-EMITTABLE ' +
+    'and plans a 3-slice build (S1 core anatomy · S2 collapse="menu" · S3 site + catalog row/factory) — ' +
+    'this seed is drained when the S3 slice lands the `Breadcrumb` catalog row + factory.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

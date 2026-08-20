@@ -1520,7 +1520,11 @@ export const NO_SLOT_TEXT = new Set([
 // its ui-choice-card options (the exact ui-radio-group shape — nearest-group-scoped discovery, cl.7);
 // ui-choice-card's default slot IS agent-composed rich display content (the exact ui-card shape, cl.4) —
 // neither is a plain text/label string.
-export const STRUCTURAL = new Set(['ui-card', 'ui-choice-card', 'ui-choice-group', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-multi-select', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-split', 'ui-split-pane', 'ui-swiper-item', 'ui-theme-provider', 'ui-timeline', 'ui-status-stream', 'ui-toast-region', 'ui-toolbar'])
+// ui-breadcrumb (GH #1515, the frozen design intake) joins this set too: its default slot IS the ordered
+// crumb trail (real author children — <a>/ui-router-link/a plain leaf span — left as DIRECT host children,
+// interleaved with control-injected separator furniture, never adopted into an owned part) — the exact
+// ui-row/ui-list STRUCTURAL shape, never a text/label string.
+export const STRUCTURAL = new Set(['ui-breadcrumb', 'ui-card', 'ui-choice-card', 'ui-choice-group', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-multi-select', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-split', 'ui-split-pane', 'ui-swiper-item', 'ui-theme-provider', 'ui-timeline', 'ui-status-stream', 'ui-toast-region', 'ui-toolbar'])
 
 // SLOT_TEXT_OK — SLOT_TEXT is a real, safe, MEANINGFUL knob: a genuine text/label default slot, the accessible
 // label content a viewer edits to see the control's OWN typography/sizing respond (button/checkbox/radio/
