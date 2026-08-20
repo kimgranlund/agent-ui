@@ -1,0 +1,65 @@
+{
+  "skill": "ui-composition",
+  "_note": "Seeded 2026-08-19 (routing follow-up, GH #1466 — E6 coverage warn). Positives: composing ONE feature/fragment from shipped agent-ui controls through their public surface (props/attrs/events, forms, overlays). Negatives drawn from the skill's own NOT-list: whole-screen structure/scroll/shell (layout-composition), an application's package/routing/theming spine (app-composition), authoring an A2UI payload (a2ui-payload-authoring), and building a brand-new control (component-build).",
+  "cases": [
+    {
+      "id": "t01",
+      "prompt": "build a signup form with agent-ui using the text-field and button controls",
+      "expect": "trigger"
+    },
+    {
+      "id": "t02",
+      "prompt": "compose a filter bar out of a select and a few chips",
+      "expect": "trigger"
+    },
+    {
+      "id": "t03",
+      "prompt": "wire these controls together into a settings panel",
+      "expect": "trigger"
+    },
+    {
+      "id": "t04",
+      "prompt": "add a confirm dialog to this checkout flow",
+      "expect": "trigger"
+    },
+    {
+      "id": "t05",
+      "prompt": "assemble a multi-field form on the field/form-provider spine and prove validation works",
+      "expect": "trigger"
+    },
+    {
+      "id": "t06",
+      "prompt": "drive an overlay by a prop toggle for this widget cluster",
+      "expect": "trigger"
+    },
+    {
+      "id": "t07",
+      "prompt": "put together a toolbar from the icon-button and menu controls",
+      "expect": "trigger"
+    },
+    {
+      "id": "n01",
+      "prompt": "design the whole-page scroll and shell structure for the admin dashboard",
+      "expect": "no-trigger",
+      "note": "true owner: layout-composition"
+    },
+    {
+      "id": "n02",
+      "prompt": "wire up the application's routing and theming spine across packages",
+      "expect": "no-trigger",
+      "note": "true owner: app-composition"
+    },
+    {
+      "id": "n03",
+      "prompt": "author an A2UI payload stream that creates this surface and updates its data model",
+      "expect": "no-trigger",
+      "note": "true owner: a2ui-payload-authoring"
+    },
+    {
+      "id": "n04",
+      "prompt": "build a brand-new ui-date-picker control from scratch",
+      "expect": "no-trigger",
+      "note": "true owner: component-build"
+    }
+  ]
+}
