@@ -20,7 +20,7 @@ interface CdpSession {
 
 const mounted: HTMLElement[] = []
 
-function mount(): {
+function mount(opts: { chrome?: 'backbar' | 'crumbs' } = {}): {
   wrap: HTMLElement
   host: HTMLElement
   settingsTrigger: HTMLElement
@@ -30,12 +30,16 @@ function mount(): {
   const wrap = document.createElement('div')
   wrap.style.inlineSize = '400px' // a realistic, deterministic container for the whole-shape assertions below
   wrap.innerHTML = `
-    <ui-drill aria-label="Settings">
+    <ui-drill aria-label="Settings"${opts.chrome ? ` chrome="${opts.chrome}"` : ''}>
       <ui-drill-panel key="root" heading="Root">
         <button data-role="drill-trigger" data-drill-key="settings">Settings</button>
       </ui-drill-panel>
       <ui-drill-panel key="settings" parent="root" heading="Settings">
         <p>Settings content, a little taller than the root panel to prove intrinsic block-sizing.</p>
+        <button data-role="drill-trigger" data-drill-key="appearance">Appearance</button>
+      </ui-drill-panel>
+      <ui-drill-panel key="appearance" parent="settings" heading="Appearance">
+        <p>Appearance content.</p>
       </ui-drill-panel>
     </ui-drill>
   `
@@ -209,6 +213,77 @@ describe('ui-drill — forced-colors: the card border + header hairline + Back i
       const borderColor = getComputedStyle(host).borderTopColor
       expect(borderColor).not.toBe('rgba(0, 0, 0, 0)')
       expect(borderColor).not.toBe('transparent')
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  ADR-0195 Amendment S2 (GH #1510) — chrome="crumbs": real click navigation, keyboard reach, forced-colors
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-drill — chrome="crumbs" real-engine navigation (ADR-0195 Amendment cl.A2/A3/A6)', () => {
+  it('at mount, chrome="crumbs" paints the crumbs nav (not the Back button); the heading is the trail\'s only entry', () => {
+    const { host } = mount({ chrome: 'crumbs' })
+    const back = host.querySelector('[data-part="back"]') as HTMLElement
+    const crumbsNav = host.querySelector('[data-part="crumbs"]') as HTMLElement
+    const heading = host.querySelector('[data-part="heading"]') as HTMLElement
+    expect(getComputedStyle(back).display).toBe('none')
+    expect(getComputedStyle(crumbsNav).display).not.toBe('none')
+    expect(crumbsNav.contains(heading)).toBe(true)
+    expect(heading.getAttribute('aria-current')).toBe('location')
+    expect(crumbsNav.querySelectorAll('[data-part="crumb"]')).toHaveLength(0)
+  })
+
+  it('a real pointer click on an ancestor crumb navigates: truncates the path (direction back), never touching an INERT ancestor pane', async () => {
+    const { host, settingsTrigger } = mount({ chrome: 'crumbs' })
+    await userEvent.click(settingsTrigger)
+    const appearanceTrigger = host.querySelector('[key="settings"] [data-drill-key="appearance"]') as HTMLElement
+    await userEvent.click(appearanceTrigger)
+    // three-level path: root/settings/appearance — two ancestor crumbs render
+    let crumbs = [...host.querySelectorAll('[data-part="crumb"]')] as HTMLButtonElement[]
+    expect(crumbs.map((c) => c.textContent)).toEqual(['Root', 'Settings'])
+    const rootCrumb = crumbs[0]!
+    await userEvent.click(rootCrumb)
+    const root = host.querySelector('[key="root"]') as HTMLElement
+    expect(getComputedStyle(root).display).not.toBe('none')
+    expect(root.getAttribute('data-drill-pane')).toBe('active')
+    // the crumbs nav rebuilt down to zero ancestors (back at the root)
+    crumbs = [...host.querySelectorAll('[data-part="crumb"]')] as HTMLButtonElement[]
+    expect(crumbs).toHaveLength(0)
+    const heading = host.querySelector('[data-part="heading"]') as HTMLElement
+    expect(heading.textContent).toBe('Root')
+    expect(heading.getAttribute('aria-current')).toBe('location')
+  })
+
+  it('Tab reaches an ancestor crumb button; Enter activates it (real keyboard, native <button> semantics)', async () => {
+    const { host, settingsTrigger } = mount({ chrome: 'crumbs' })
+    await userEvent.click(settingsTrigger)
+    const rootCrumb = host.querySelector('[data-part="crumb"]') as HTMLButtonElement
+    expect(getComputedStyle(rootCrumb).display).not.toBe('none')
+    rootCrumb.focus()
+    expect(document.activeElement).toBe(rootCrumb)
+    await userEvent.keyboard('{Enter}')
+    const root = host.querySelector('[key="root"]') as HTMLElement
+    expect(root.getAttribute('data-drill-pane')).toBe('active')
+  })
+
+  it('forced-colors: the crumb link ink + separator stay real system colours (Chromium CDP; WebKit asserts baseline)', async () => {
+    const { host, settingsTrigger } = mount({ chrome: 'crumbs' })
+    await userEvent.click(settingsTrigger)
+    const crumb = host.querySelector('[data-part="crumb"]') as HTMLElement
+    if (server.browser !== 'chromium') {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(true)
+      const ink = getComputedStyle(crumb).color
+      expect(ink).not.toBe('rgba(0, 0, 0, 0)')
+      expect(ink).not.toBe('transparent')
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] })
     }

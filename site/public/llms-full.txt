@@ -1909,10 +1909,26 @@ clipped to the card's own rounded, bordered edge (`overflow: clip`). Every off-p
 `layout="stack"` (the default) paints every panel in the resolved path, z-ordered so the active panel — always
 `path.at(-1)` — sits on top. Painted ancestors are visible but dimmed under a non-blocking `--ui-drill-scrim`
 wash and carry the real `inert` attribute (visible pixels, no interaction surface — the swiper clone shape):
-no focus, no clicks, and no drill-trigger inside an ancestor panel can ever fire. Two more presentations —
-`chrome="crumbs"` (a clickable breadcrumb trail) and `layout="columns"` (Miller columns) — are reflected,
-closed-enum host props already, but their render mappings are NOT yet implemented; setting either renders
-identically to the `stack`/`backbar` default until those slices ship (ADR-0195 Amendment, GH #1510).
+no focus, no clicks, and no drill-trigger inside an ancestor panel can ever fire. `layout="columns"` (Miller
+columns) is a reflected, closed-enum host prop already, but its render mapping is NOT yet implemented; setting
+it renders identically to the `stack` default until that slice ships (ADR-0195 Amendment, GH #1510).
+
+## Chrome: backbar (default) vs. crumbs
+
+`chrome` selects the header's anatomy, orthogonal to `layout` (a crumbs trail is legal under `stack`, and will
+be under `columns` too). `chrome="backbar"` (default) is the Back button + heading pair described above.
+`chrome="crumbs"` (ADR-0195 Amendment cl.A2/A3, GH #1510) replaces that pair with a clickable breadcrumb
+trail: a real `<nav data-part="crumbs" aria-label="Breadcrumb">` holding one real
+`<button data-part="crumb">` per ANCESTOR entry of the resolved path (label = that panel's `heading`), then
+the SAME `[data-part="heading"]` element — never recreated — as the trail's last, non-interactive entry,
+carrying `aria-current="location"` (cl.A6: a drill level is a position within a UI, not a page — the named
+alternative, `aria-current="page"`, was considered and NOT chosen; ancestor crumbs carry no `aria-current` of
+their own — the APG current-item semantic names exactly one entry, the trail's last). Clicking crumb *i*
+commits `path.slice(0, i+1)` (direction `back`) through the SAME `change`-emitting commit path the Back button
+uses — no new event, and the byte-unchanged `#drillTo`/`#back`/`#commit`/`#resolve` state machine is
+untouched (a new, purpose-built method reuses `#commit`, it does not replace it). Reusing the one heading node
+across chrome modes is what keeps its focus target, `aria-labelledby` element-reflection, and heading
+semantics unchanged regardless of which chrome renders it.
 
 ## Panels — the flat parent-chain
 

@@ -42,7 +42,7 @@ attributes:               # attributes-as-API — mirrors drill.ts `static props
   - name: chrome
     type: enum
     values: [backbar, crumbs]
-    default: backbar       # ADR-0195 Amendment cl.A2. S1 (this build) implements ONLY the 'backbar' header anatomy; 'crumbs' (breadcrumb trail, S2) is accepted but renders identically to 'backbar' until that slice lands
+    default: backbar       # ADR-0195 Amendment cl.A2/cl.A3. 'backbar' (default, S1) = the Back button + heading pair; 'crumbs' (S2, GH #1510) = a clickable breadcrumb trail replacing that pair — orthogonal to `layout`
     reflect: true
 
 properties:               # IDL beyond attributes-as-API
@@ -62,7 +62,11 @@ parts:                    # the control-created header strip is a PART (ADR-0195
   - name: back
     description: The control-created `<button data-part="back" type="button">` — hidden when the resolved path has only the root (nothing to go back to). aria-label reads "Back" or "Back to {parent heading}" when the parent panel's heading is resolvable. Real button semantics — native Tab/Enter/Space, no bespoke keyboard wiring needed for it.
   - name: heading
-    description: The control-created `<h2 data-part="heading" tabindex="-1">` — a REAL heading element (not a generic div), textContent mirrors the active panel's `heading` prop. Receives programmatic focus on every NON-INITIAL path change (a #primed guard prevents focus theft on mount). aria-labelledby target for the active ui-drill-panel's region role.
+    description: The control-created `<h2 data-part="heading" tabindex="-1">` — a REAL heading element (not a generic div), textContent mirrors the active panel's `heading` prop. Receives programmatic focus on every NON-INITIAL path change (a #primed guard prevents focus theft on mount). aria-labelledby target for the active ui-drill-panel's region role. Under `chrome="crumbs"` this SAME node (never recreated) is moved to be the last entry of the `crumbs` trail, carrying `aria-current="location"` (ADR-0195 Amendment cl.A3/cl.A6, GH #1510).
+  - name: crumbs
+    description: 'chrome="crumbs" ONLY: the control-created `<nav data-part="crumbs" aria-label="Breadcrumb">`, created once (hidden whenever chrome !== "crumbs"). Holds one `<button data-part="crumb">` per ANCESTOR entry of the resolved path plus the `heading` part (moved in) as the trail''s last entry. Rebuilt wholesale on every render (ADR-0195 Amendment cl.A3, GH #1510).'
+  - name: crumb
+    description: 'chrome="crumbs" ONLY: one real `<button type="button" data-part="crumb">` per ancestor path entry, text = that panel''s `heading` (falling back to its `key`). Clicking commits `path.slice(0, i+1)` (direction back) — the same `change`-emitting commit the Back button uses, never a new event (ADR-0195 Amendment cl.A1/A3, GH #1510). Carries NO `aria-current` — that lives on the trail''s last (heading) entry only.
 
 customStates: []          # none — visibility rides the plain `hidden` attribute (the ui-tab-panel precedent), not a :state() hook
 
@@ -76,11 +80,11 @@ aria:
 
 keyboard:
   - keys: Tab / Shift+Tab
-    action: Native document Tab order — the Back button and any interactive content inside the active panel are ordinary Tab stops. No roving focus, no type-ahead (a container, not a listbox/tablist).
+    action: Native document Tab order — the Back button (or, under chrome="crumbs", each [data-part="crumb"] link) and any interactive content inside the active panel are ordinary Tab stops. No roving focus, no type-ahead (a container, not a listbox/tablist).
   - keys: Enter / Space
-    action: Activates the focused [data-part="back"] button (native) OR, when focus sits on a non-native data-role="drill-trigger" element inside the active panel, drills forward into the key it names (a delegated keydown covers the non-native case; a real <button>/<a href> trigger needs no extra wiring).
+    action: Activates the focused [data-part="back"] button, or (chrome="crumbs") the focused [data-part="crumb"] button — both real native buttons, Enter/Space free — OR, when focus sits on a non-native data-role="drill-trigger" element inside the active panel, drills forward into the key it names (a delegated keydown covers the non-native case; a real <button>/<a href> trigger needs no extra wiring).
   - keys: Escape
-    action: A convenience alias for Back (not required by the component's own contract, zero cost — the standard drill-down UX expectation). No-op when already at the root.
+    action: A convenience alias for Back (not required by the component's own contract, zero cost — the standard drill-down UX expectation). No-op when already at the root. Unaffected by chrome — a crumbs trail truncates via the SAME #commit path, but Escape itself still pops exactly one level.
 
 geometry:
   sizeClass: pattern       # container + control-height header row (geometry.md Pattern class, the ui-tabs/ui-toolbar example); the panel viewport uses the space-scale ladder, no control height
@@ -134,10 +138,26 @@ clipped to the card's own rounded, bordered edge (`overflow: clip`). Every off-p
 `layout="stack"` (the default) paints every panel in the resolved path, z-ordered so the active panel — always
 `path.at(-1)` — sits on top. Painted ancestors are visible but dimmed under a non-blocking `--ui-drill-scrim`
 wash and carry the real `inert` attribute (visible pixels, no interaction surface — the swiper clone shape):
-no focus, no clicks, and no drill-trigger inside an ancestor panel can ever fire. Two more presentations —
-`chrome="crumbs"` (a clickable breadcrumb trail) and `layout="columns"` (Miller columns) — are reflected,
-closed-enum host props already, but their render mappings are NOT yet implemented; setting either renders
-identically to the `stack`/`backbar` default until those slices ship (ADR-0195 Amendment, GH #1510).
+no focus, no clicks, and no drill-trigger inside an ancestor panel can ever fire. `layout="columns"` (Miller
+columns) is a reflected, closed-enum host prop already, but its render mapping is NOT yet implemented; setting
+it renders identically to the `stack` default until that slice ships (ADR-0195 Amendment, GH #1510).
+
+## Chrome: backbar (default) vs. crumbs
+
+`chrome` selects the header's anatomy, orthogonal to `layout` (a crumbs trail is legal under `stack`, and will
+be under `columns` too). `chrome="backbar"` (default) is the Back button + heading pair described above.
+`chrome="crumbs"` (ADR-0195 Amendment cl.A2/A3, GH #1510) replaces that pair with a clickable breadcrumb
+trail: a real `<nav data-part="crumbs" aria-label="Breadcrumb">` holding one real
+`<button data-part="crumb">` per ANCESTOR entry of the resolved path (label = that panel's `heading`), then
+the SAME `[data-part="heading"]` element — never recreated — as the trail's last, non-interactive entry,
+carrying `aria-current="location"` (cl.A6: a drill level is a position within a UI, not a page — the named
+alternative, `aria-current="page"`, was considered and NOT chosen; ancestor crumbs carry no `aria-current` of
+their own — the APG current-item semantic names exactly one entry, the trail's last). Clicking crumb *i*
+commits `path.slice(0, i+1)` (direction `back`) through the SAME `change`-emitting commit path the Back button
+uses — no new event, and the byte-unchanged `#drillTo`/`#back`/`#commit`/`#resolve` state machine is
+untouched (a new, purpose-built method reuses `#commit`, it does not replace it). Reusing the one heading node
+across chrome modes is what keeps its focus target, `aria-labelledby` element-reflection, and heading
+semantics unchanged regardless of which chrome renders it.
 
 ## Panels — the flat parent-chain
 
