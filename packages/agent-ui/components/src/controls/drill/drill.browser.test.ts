@@ -103,6 +103,21 @@ describe('ui-drill — real painted visibility (stack default, ADR-0195 Amendmen
     expect(scrim).not.toBe('rgba(0, 0, 0, 0)')
     expect(scrim).not.toBe('transparent')
   })
+
+  it('GH #1550 — a painted panel is opaque: the same-cell-stacked ancestor never bleeds through the active panel', async () => {
+    const { settingsTrigger, host } = mount()
+    await userEvent.click(settingsTrigger)
+    const settings = host.querySelector('[key="settings"]') as HTMLElement
+    const active = getComputedStyle(settings).backgroundColor
+    expect(active).not.toBe('rgba(0, 0, 0, 0)')
+    expect(active).not.toBe('transparent')
+    // a bare (no elevation/brightness) ancestor panel is opaque too — the same base rule applies to every
+    // painted panel, active or ancestor, so neither leaks the host's own background through it.
+    const root = host.querySelector('[key="root"]') as HTMLElement
+    const ancestor = getComputedStyle(root).backgroundColor
+    expect(ancestor).not.toBe('rgba(0, 0, 0, 0)')
+    expect(ancestor).not.toBe('transparent')
+  })
 })
 
 describe('ui-drill — `inert` is a REAL platform block, not just a software guard (cl.A1/A6)', () => {
