@@ -166,6 +166,25 @@ trailing action Row inside CardContent or CardFooter.
 ```
 Real: `examples/patterns.ts:34-35`, every pattern/list card root.
 
+**CardFooter's multi-action rule (GH #1475 — the live defect this closes).** `CardFooter`'s own
+side-by-side layout is `[slot="trailing"]`-driven (`card.css`'s presence-derived host-as-grid); a
+slotless footer is ONE `1fr` column, so bare children stack full-width one above the other instead of
+sitting in a row. ONE action -> the `Button` is `CardFooter`'s own direct child (no wrapper needed).
+TWO OR MORE actions (a confirm/decline pair, a game's Check/Bet/Fold move set, anything) -> wrap them in
+a `Row` (with a `gap`) INSIDE `CardFooter`, side-by-side by construction — never bare Button siblings,
+they stack:
+```json
+// WRONG — b1/b2/b3 are bare CardFooter children; they stack full-width, they don't sit in a row
+{ "id": "ft", "component": "CardFooter", "children": ["b1", "b2", "b3"] }
+
+// RIGHT — one Row inside CardFooter carries the whole action set, side-by-side
+{ "id": "ft", "component": "CardFooter", "children": ["actions"] }
+{ "id": "actions", "component": "Row", "gap": "md", "justify": "end", "children": ["b1", "b2", "b3"] }
+```
+Real: `examples/patterns.ts:76-78` (`card_footer` -> `actions` Row -> `btn_save`), `examples/patterns.ts:108-112`
+(the confirm/decline pair, same shape); `examples/catalog-frontier.ts`'s `frontier-greet-card` seed carried
+the WRONG bare shape until GH #1475 caught it live and it was upgraded to match.
+
 ## Tabs / Tab / TabPanel
 `catalog.json:154-172`. Tabs: `value: { prop:"selected", event:"select" }`, `selected` bindable (`string|number`),
 `children:"ChildList"`. Tabs' children is a FLAT list of every Tab THEN every TabPanel, matched by position

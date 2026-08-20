@@ -20,7 +20,14 @@
 // (GH #1377) names ONE judged corpus seed, for the flagship. (2) and (3) carry the same "NO VERDICT
 // SOUGHT YET, not a refusal" pending-state disposition the GH #729/#1205/#1206 waves used
 // (disposition-allowlist.ts) — a future judged wave should admit or drop them, deleting their entries.
-
+//
+// (4) FEATURES LIST CARD (GH #1479) — an Amenities-style feature list: a Card whose CardHeader carries
+//     the one identity Text ("Amenities") and whose CardContent carries a Column of icon+label Rows,
+//     templated over the data model. Distinct from PRODUCT-PRESENTATION's Stat tiles (quantified
+//     metrics) and from a DescriptionList's label/VALUE pairs (a2ui-container-vocabulary's own label/
+//     value shape) — a feature row carries NO value, just an Icon(leading) + a Text(label), the
+//     Airbnb-amenities archetype. Same pending-state disposition as (2)/(3) — admission is a future
+//     judged wave's call, never this authoring session's own (ADR-0068 generator≠critic).
 import type { ExampleSeed } from './types.ts'
 
 const PRODUCT_ID = 'commerce-product-card'
@@ -193,10 +200,146 @@ export const listingPhotoGridSeed: ExampleSeed = {
   ],
 }
 
+const FEATURES_ID = 'features-list-card'
+/** GH #1479 — the Amenities-style feature list: distinct from a DescriptionList's label/VALUE pairs
+ *  (`a2ui-container-vocabulary`'s own home for that shape) — a feature row carries NO value, only an
+ *  Icon(leading) + a Text(label), the Airbnb-amenities archetype the intake reference image named.
+ *  Card-anatomy law observed: CardHeader carries the one identity Text ("Amenities"), CardContent
+ *  carries the substance — a `Column` of icon+label `Row`s, `{path,componentId}`-templated over
+ *  `/amenities` (never five hand-baked nodes — the "dead data" defect class named at intake). Every
+ *  templated item's TWO leaves (`icon`, `label`) are consumed: `Icon.name`/`Icon.label` both bind
+ *  `icon`/`label` (so the glyph carries its own accessible name, not a bare label float), and the
+ *  visible `Text` rebinds `label` again for sighted readers — the icon_row precedent
+ *  (`high-frequency-patterns.ts`'s `empty-error-retry-card`), applied per-item instead of once.
+ *
+ *  Icon coverage (verified against `packages/agent-ui/icons/src/types.ts`'s `ICON_NAMES`, the
+ *  registered-pack truth per the host's intake ruling — NOT a catalog concern, `Icon.name` is a free
+ *  bindable string): the reference image's own amenity vocabulary (mountain view, fireplace, hot tub/
+ *  bathtub, pool, Wi-Fi, pet-friendly) has NO dedicated glyph in the pack at all — grepping for
+ *  mountain/tree/fire/bathtub/pool/wifi/paw turns up nothing close. Rather than invent a plausible-
+ *  sounding name that would silently resolve to a blank `<svg data-icon-missing>` (`resolve.ts`), five
+ *  amenities were chosen whose REAL, already-registered glyphs are a defensible nearest-available
+ *  stand-in, named honestly below (never claimed as a purpose-built match):
+ *    - "In-room safe" → `lock-simple` — a genuine direct fit, no substitution needed.
+ *    - "24-hour front desk" → `phone` — nearest-available; the pack has no reception/concierge glyph.
+ *    - "Air conditioning" → `wind` — nearest-available; a breeze glyph standing in for climate control,
+ *      no HVAC-specific glyph exists.
+ *    - "In-room entertainment" → `play` — nearest-available; a media-playback glyph standing in for a
+ *      TV/entertainment amenity, no television glyph exists.
+ *    - "Mountain view" → `image` — nearest-available; a picture/scenic-view glyph standing in for a
+ *      landscape view, no mountain/terrain glyph exists.
+ *  Deliberately NOT forced into the list: pool, Wi-Fi, fireplace, hot tub, pet-friendly — none of the
+ *  pack's remaining glyphs are a defensible nearest-available for any of these (the closest candidates
+ *  read as a different concept entirely, e.g. a bare `heart` for "pet-friendly"), so naming them here
+ *  would be the manufactured-fit this jsdoc exists to rule out, not an honest degradation note. */
+export const featuresListCardSeed: ExampleSeed = {
+  name: 'features-list-card',
+  description:
+    'An Amenities-style feature list card — a CardHeader identity Text over a CardContent Column of icon+label Rows, templated over the data model, no values (distinct from a DescriptionList).',
+  promptText: 'Show the amenities for this room: mountain view, an in-room safe, 24-hour front desk, air conditioning, and in-room entertainment.',
+  surfaceId: FEATURES_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: FEATURES_ID, catalogId: 'agent-ui' } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: FEATURES_ID,
+        value: {
+          amenities: [
+            { icon: 'image', label: 'Mountain view' },
+            { icon: 'lock-simple', label: 'In-room safe' },
+            { icon: 'phone', label: '24-hour front desk' },
+            { icon: 'wind', label: 'Air conditioning' },
+            { icon: 'play', label: 'In-room entertainment' },
+          ],
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: FEATURES_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['head', 'content'] },
+          { id: 'head', component: 'CardHeader', children: ['head_title'] },
+          { id: 'head_title', component: 'Text', variant: 'h4', text: 'Amenities' },
+          { id: 'content', component: 'CardContent', children: ['list'] },
+          {
+            id: 'list', component: 'Column', gap: 'sm',
+            children: { path: '/amenities', componentId: 'amenity_row' },
+          },
+          {
+            id: 'amenity_row', component: 'Row', gap: 'sm', align: 'center',
+            children: ['amenity_icon', 'amenity_label'],
+          },
+          { id: 'amenity_icon', component: 'Icon', name: { path: 'icon' }, label: { path: 'label' } },
+          { id: 'amenity_label', component: 'Text', variant: 'body', text: { path: 'label' } },
+        ],
+      },
+    },
+  ],
+}
+
+
+const REVIEW_CARD_ID = 'customer-review-card'
+/** GH #1480 — the Airbnb-style review-summary card (host image-verified reading, issue comment
+ *  5349854821): a plain Card whose first row is ONE star Icon + a bold rating Text + a muted
+ *  "· N reviews" Text (composed via `${…}` interpolation over an absolute path — the
+ *  corpus-growth.ts:274 precedent for interpolation outside a list-item template), followed by a prose
+ *  highlights sentence. Deliberately NOT a five-star `Rating` row (ratingReviewSeed's idiom,
+ *  catalog-frontier.ts) — the host's explicit non-choice, since the reference image shows one glyph plus
+ *  the composed number as the identity carrier (ADR-0057-clean: the glyph is never the sole signifier).
+ *  "N reviews" is plain text, never tappable (the host's default-assumption answer). Every model leaf is
+ *  bound — rating, review count, and the highlights line are all live data, never a literal standing in
+ *  for what a real agent would template (the "dead data" defect class). */
+export const customerReviewCardSeed: ExampleSeed = {
+  name: 'customer-review-card',
+  description:
+    'A customer review-summary card — a header Row of one star Icon, a bold rating value, and a muted review-count line, followed by a prose highlights sentence (Airbnb-style single-star-plus-number summary, not a five-star Rating row).',
+  promptText: "Show this listing's review summary: the star rating, the review count, and a one-line highlights sentence.",
+  surfaceId: REVIEW_CARD_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: REVIEW_CARD_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: REVIEW_CARD_ID,
+        value: {
+          review: {
+            rating: '4.8',
+            count: 46,
+            highlights: 'Guests love the mountain view, forest view, fire place and more.',
+          },
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: REVIEW_CARD_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['head_row', 'highlights_text'] },
+          { id: 'head_row', component: 'Row', gap: 'sm', align: 'center', children: ['star_icon', 'rating_value', 'review_count'] },
+          { id: 'star_icon', component: 'Icon', name: 'star', label: 'Rating' },
+          { id: 'rating_value', component: 'Text', variant: 'label', emphasis: true, text: { path: '/review/rating' } },
+          { id: 'review_count', component: 'Text', variant: 'caption', text: '· ${/review/count} reviews' },
+          { id: 'highlights_text', component: 'Text', variant: 'body', text: { path: '/review/highlights' } },
+        ],
+      },
+    },
+  ],
+}
+
 /** Every seed this module defines — the barrel's family-array precedent (index.ts derives `allSeeds`
  *  length from these, never a hand-counted literal). */
 export const commerceHospitalitySeeds: readonly ExampleSeed[] = [
   commerceProductCardSeed,
   productOptionsQuantitySeed,
   listingPhotoGridSeed,
+  featuresListCardSeed,
+  customerReviewCardSeed,
 ]

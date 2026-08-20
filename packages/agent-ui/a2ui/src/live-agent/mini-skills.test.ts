@@ -334,9 +334,10 @@ describe('greeting-card — the GH #1201 persona-conditional greet-bookend modul
     expect(skill.body).toMatch(/first turn only, when your persona opens the session with a greeting/)
   })
 
-  it('teaches the greet-card anatomy (starter Buttons carrying concrete intents in action.context)', () => {
+  it('teaches the greet-card anatomy (side-by-side option Cards carrying concrete intents in action.context)', () => {
     const skill = MINI_SKILLS.find((m) => m.id === 'greeting-card')!
-    expect(skill.body).toMatch(/CardFooter with 2–4 Buttons/)
+    expect(skill.body).toMatch(/Row \(gap "sm"\) of 2–4 small Cards side by side, never stacked/)
+    expect(skill.body).toMatch(/CardFooter with ONE Button/)
     expect(skill.body).toMatch(/action\.context naming a concrete starter intent/)
   })
 
