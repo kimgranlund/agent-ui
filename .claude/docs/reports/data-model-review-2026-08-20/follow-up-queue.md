@@ -1,7 +1,13 @@
 # Follow-up queue — data-model review 2026-08-20
 
-Proposed work items derived from FINDINGS.md. **None minted** — items 1-2 are blocked on the
-forks in FINDINGS.md §"The forks needing a ruling"; the rest await Kim's go-ahead on scope.
+Proposed work items derived from FINDINGS.md.
+
+**Rulings (Kim, 2026-08-20, in-session AskUserQuestion round):** Fork 1 = **unify** ·
+Fork 2 = **planning lane** · Fork 3 = **fold the data-layer question into the Fork 2 lane**.
+
+**Minted:** Q1 → GH #1537 (bug, build lane dispatched) · Q2+Q6 → GH #1538 (feature, planning
+lane dispatched — the lane rules adopt-vs-shelve, which then decides Q3/Q4's fate per the
+ordering note below). Q5/Q7 remain unminted proposals; Q8 stays a watch-item.
 
 | # | Proposed item | Kind | Blocked on | Size |
 |---|---|---|---|---|
