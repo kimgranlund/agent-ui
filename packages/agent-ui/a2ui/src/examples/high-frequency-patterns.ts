@@ -19,9 +19,12 @@
 //     ("Total balance"), one bold headline metric (a Text `h1`, not a Stat — see the seed's own doc for
 //     why), then a CardFooter Row of FOUR labeled icon actions (Add Money / Send / Cards / Transactions),
 //     each a Column of a decorative Icon over a ghost-variant Button carrying the actual tap target +
-//     visible label (the catalog-real stand-in for an "icon-only Button" — Button is a pure action leaf
-//     in this catalog, no Icon-child/icon-glyph mechanism, the seed's own doc names the deviation).
-//     Homed here (the dashboard/receipt family) rather than commerce-hospitality.ts: a wallet balance
+//     visible label — at authoring time the closest catalog-real stand-in for an "icon-only Button"
+//     (`Button` was a pure action leaf, no icon mechanism, the seed's own doc named the deviation);
+//     ADR-0226 (GH #1504, shipped 2026-08-20) since added real `icon`/`iconOnly` wire props — see the
+//     seed's own doc for the repair and `catalog-frontier.ts`'s `frontier-button-icon-actions` for the
+//     new mechanism's own worked exemplar. Homed here (the dashboard/receipt family) rather than
+//     commerce-hospitality.ts: a wallet balance
 //     summary is a generic financial-dashboard widget, not a product/booking/hospitality listing — its
 //     nearest sibling is THIS module's own receipt-order-summary card (a financial-summary card + a
 //     data-bound headline value), not commerce-hospitality.ts's product/room/amenity/review domain.
@@ -303,14 +306,25 @@ const WALLET_ID = 'wallet-summary-card'
  *  caption arms actually need. A plain `Text` (`variant:'h1'`, `emphasis:true`) reads as the single bold
  *  headline the reference image shows, with no redundant label — the more honest fit.
  *
- *  The "icon-only Button" the record asks for is NOT literally expressible in this catalog: `Button`
- *  (catalog.json) declares no `children` key and no `icon` prop — it is a pure action leaf (`
- *  references/node-idioms.md`'s own "Button — action leaf" characterization), and no seed on this whole
- *  shelf pairs an Icon INSIDE a Button. (The validator's structural `RESERVED` set happens to skip
+ *  STALE CLAIM, repaired (ADR-0226, GH #1504, shipped 2026-08-20): this jsdoc used to say the
+ *  "icon-only Button" the record asks for was NOT literally expressible in this catalog. That is no
+ *  longer true — `Button` (catalog.json) now declares bindable `icon` (string, ICON_NAMES verbatim,
+ *  factory-realized as one decorative leading `ui-icon`) and static `iconOnly` (the label routes to
+ *  `aria-label` instead of visible text), validator-enforced by the new cross-prop `requires` check
+ *  (`icon` requires `label`; `iconOnly` requires `icon`) — a REAL, sanctioned Button-with-icon
+ *  mechanism, still no Icon-CHILD contract (ADR-0226's own rejected alternative). The `Column(Icon,
+ *  Button)` composition below is consequently no longer "the catalog-real answer to a Button with no
+ *  icon mechanism" (this seed's own prior phrase) — it is now an ORDINARY layout choice, still valid
+ *  (`Column` declares children), simply no longer forced; re-seeding this card onto the new
+ *  `icon`/`iconOnly` props is the build wave's own call (ADR-0226 Consequences), not done here. Left
+ *  as-is below so this repair stays doc-only, per the "one Repairs-cell item, one change" discipline.
+ *  (Before this record: `Button` declared no `children` key and no `icon` prop — it was a pure action
+ *  leaf (`references/node-idioms.md`'s own "Button — action leaf" characterization), and no seed on this
+ *  whole shelf paired an Icon INSIDE a Button. The validator's structural `RESERVED` set happened to skip
  *  `child`/`children` for ANY component, so a Button node could mechanically carry an Icon child without
- *  failing `validate-payload` — but that is undocumented validator leniency, not a sanctioned composition;
- *  exploiting it here would be exactly the "invent a capability the catalog doesn't declare" move this
- *  skill rules out.) Composed instead as the closest catalog-real equivalent: `Column(Icon, Button)` — a
+ *  failing `validate-payload` — undocumented validator leniency, not a sanctioned composition; ADR-0226
+ *  cl.4 closes that leniency catalog-wide in the SAME record that adds the real mechanism.) Composed
+ *  instead as the closest catalog-real equivalent of the day: `Column(Icon, Button)` — a
  *  purely decorative `Icon` (glyph only, no `label` prop — an empty label IS the decorative contract,
  *  `icon.ts:29`; a non-empty label would double-announce the action to assistive tech alongside the
  *  Button's own name, the GH #1489 judge PASS-4/5 finding this rider repairs) sits above a `ghost`-variant

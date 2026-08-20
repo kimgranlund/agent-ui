@@ -2076,3 +2076,104 @@ describe('default catalog — Breadcrumb via the shared validator (GH #1515)', (
     expect(defaultFactories.Breadcrumb.value).toBeUndefined()
   })
 })
+
+// ── ADR-0226 (GH #1504) — the Button icon mechanism: `icon`/`iconOnly` wire props, no Icon-child ───────
+//
+// Two wire props, no new component, no new catalog row — `label`/`variant`/`disabled`/`action` stay
+// byte-untouched (AC1). `icon` is bindable (the ICON_NAMES vocabulary verbatim, an open string — the
+// `Icon.name` posture, no catalog-pinned enum); `iconOnly` is a static structural boolean (the `variant`
+// precedent — NOT bindable, per-node structure). Cross-prop conformance is the new opt-in `PropDef.
+// requires` (cl.3): `icon` requires `label`, `iconOnly` requires `icon`. The structural-children
+// leniency (cl.4) closes catalog-wide in the SAME wave — see conformance.test.ts for the
+// catalog-agnostic mechanism proofs; these are the REAL default-catalog Button-shaped proofs (AC1/AC2).
+describe('default catalog — Button icon mechanism (ADR-0226, GH #1504)', () => {
+  it('AC1 — Button declares icon (string, bindable, requires:[label]) and iconOnly (boolean, not bindable, requires:[icon])', () => {
+    expect(defaultCatalog.components.Button.properties.icon).toEqual({
+      type: { type: 'string' },
+      bindable: true,
+      mapsTo: 'glyph',
+      requires: ['label'],
+    })
+    expect(defaultCatalog.components.Button.properties.iconOnly).toEqual({
+      type: { type: 'boolean' },
+      mapsTo: 'iconOnly',
+      requires: ['icon'],
+    })
+  })
+
+  it('AC1 — label/variant/disabled/action stay byte-untouched', () => {
+    expect(defaultCatalog.components.Button.properties.label).toEqual({ type: { type: 'string' }, bindable: true, mapsTo: 'textContent' })
+    expect(defaultCatalog.components.Button.properties.variant).toEqual({ type: { type: 'string', enum: ['solid', 'soft', 'ghost'] }, mapsTo: 'variant' })
+    expect(defaultCatalog.components.Button.properties.disabled).toEqual({ type: { type: 'boolean' }, bindable: true, mapsTo: 'disabled' })
+    expect(defaultCatalog.components.Button.properties.action).toEqual({
+      type: {
+        type: 'object',
+        properties: {
+          action: { type: 'string' },
+          context: { type: 'object' },
+          wantResponse: { type: 'boolean' },
+          submit: { type: 'boolean' },
+        },
+        required: ['action'],
+      },
+      mapsTo: 'action',
+    })
+  })
+
+  it('Button declares no children key (a pure action leaf, untouched — the icon mechanism is props, never a child)', () => {
+    expect(defaultCatalog.components.Button.children).toBeUndefined()
+  })
+
+  it('AC2 — icon without label fails CATALOG once; icon+label (literal or {path}-bound) conforms', () => {
+    const missingLabel: A2uiComponent = { id: 'b1', component: 'Button', icon: 'download-simple' }
+    expect(validateCatalogConformance(missingLabel, defaultCatalog)).toEqual([{ code: 'CATALOG', path: 'b1.label' }])
+
+    const literal: A2uiComponent = { id: 'b2', component: 'Button', icon: 'download-simple', label: 'Download' }
+    expect(validateCatalogConformance(literal, defaultCatalog)).toEqual([])
+
+    const bound: A2uiComponent = { id: 'b3', component: 'Button', icon: { path: '/glyph' }, label: { path: '/labelText' } }
+    expect(validateCatalogConformance(bound, defaultCatalog)).toEqual([])
+  })
+
+  it('AC2 — iconOnly without icon fails CATALOG once; iconOnly+icon (+ label, the accessible name) conforms', () => {
+    const missingIcon: A2uiComponent = { id: 'b4', component: 'Button', iconOnly: true, label: 'Dismiss' }
+    expect(validateCatalogConformance(missingIcon, defaultCatalog)).toEqual([{ code: 'CATALOG', path: 'b4.icon' }])
+
+    const complete: A2uiComponent = { id: 'b5', component: 'Button', iconOnly: true, icon: 'x', label: 'Dismiss' }
+    expect(validateCatalogConformance(complete, defaultCatalog)).toEqual([])
+  })
+
+  it('AC2 — a Button node carrying `children` OR `child` fails CATALOG (cl.4 covers both structural keys — the wallet-summary-card jsdoc\'s former exploit)', () => {
+    const withChildren: A2uiComponent = { id: 'b6', component: 'Button', label: 'Save', children: ['icon1'] }
+    expect(validateCatalogConformance(withChildren, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'b6.children' })
+
+    const withChild: A2uiComponent = { id: 'b7', component: 'Button', label: 'Save', child: 'icon1' }
+    expect(validateCatalogConformance(withChild, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'b7.child' })
+  })
+
+  it('AC2 negative control — a Column carrying `children` still passes (Column declares a children model, the wallet card\'s own shape)', () => {
+    const col: A2uiComponent = { id: 'col', component: 'Column', gap: 'xs', children: ['icon', 'btn'] }
+    expect(validateCatalogConformance(col, defaultCatalog)).toEqual([])
+  })
+
+  it('AC2 negative control — a Field carrying `child` still passes (the catalog\'s ONE children:"child" row)', () => {
+    expect(defaultCatalog.components.Field.children).toBe('child')
+    const field: A2uiComponent = { id: 'f1', component: 'Field', label: 'Name', child: 'input1' }
+    expect(validateCatalogConformance(field, defaultCatalog)).toEqual([])
+  })
+
+  it('a representative icon+label AND icon-only payload validates 0-failure via validateA2ui end to end', () => {
+    const message = {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          { id: 'root', component: 'Row', gap: 'sm', children: ['btn_download', 'btn_dismiss'] },
+          { id: 'btn_download', component: 'Button', variant: 'soft', icon: 'download-simple', label: 'Download' },
+          { id: 'btn_dismiss', component: 'Button', variant: 'ghost', icon: 'x', iconOnly: true, label: 'Dismiss' },
+        ],
+      },
+    }
+    expect(validateA2ui(message, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+})

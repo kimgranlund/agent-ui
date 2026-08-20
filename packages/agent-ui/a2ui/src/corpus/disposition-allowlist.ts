@@ -234,4 +234,16 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
     'GH #1515 — NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the ' +
     'new `Breadcrumb` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
     'self-judged discipline — this authoring session assigns no rubric score to its own seed).'],
+
+  // ADR-0226/GH #1504 (2026-08-20) — `frontier-button-icon-actions`: the same pending-state shape (NO
+  // VERDICT SOUGHT YET, not a refusal). Added to `catalog-frontier.ts` as the worked exemplar for the
+  // new `Button.icon`/`Button.iconOnly` wire props (icon+label AND icon-only in one payload) — the
+  // authoring session judging its own seed is the manufactured judgment ADR-0068's Alternatives ban.
+  // Run the judged pipeline (`import-seeds.ts` with a real VerdictsFile) and DELETE this entry when
+  // that wave lands.
+  ['frontier-button-icon-actions',
+    'ADR-0226/GH #1504 — NO VERDICT SOUGHT YET, not a refusal. The worked exemplar for the new ' +
+    '`Button.icon`/`Button.iconOnly` wire props; corpus admission is a separate, later judged wave ' +
+    '(ADR-0068\'s never-self-judged discipline — this authoring session assigns no rubric score to ' +
+    'its own seed).'],
 ])

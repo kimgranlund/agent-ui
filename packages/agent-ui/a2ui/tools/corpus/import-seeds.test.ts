@@ -542,6 +542,11 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     // zero-admission reason as every row above; its real disposition is DISPOSITION_ALLOWLIST's pending
     // "NO VERDICT SOUGHT YET" entry (a later judged wave runs the real pipeline).
     'frontier-breadcrumb-trail': { passed: false, qualityScore: 2 },
+    // ADR-0226/GH #1504 — the Button.icon/iconOnly worked exemplar (catalog-frontier.ts); refused here
+    // for the same zero-admission reason as every row above; its real disposition is
+    // DISPOSITION_ALLOWLIST's pending "NO VERDICT SOUGHT YET" entry (a later judged wave runs the real
+    // pipeline).
+    'frontier-button-icon-actions': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {

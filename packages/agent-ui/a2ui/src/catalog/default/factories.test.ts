@@ -245,6 +245,93 @@ describe('default catalog factories — Button + TextField (catalog LLD-C5, SPEC
   })
 })
 
+describe('default catalog factories — Button icon mechanism (ADR-0226, GH #1504)', () => {
+  it('the plain-label arm (no icon, iconOnly absent) stays byte-identical to the pre-ADR-0226 shape', () => {
+    const el = buttonFactory.create()
+    buttonFactory.applyProp(el, 'label', 'Hi')
+    expect(el.textContent).toBe('Hi')
+    expect(el.childNodes).toHaveLength(1)
+    expect(el.childNodes[0]!.nodeType).toBe(Node.TEXT_NODE)
+  })
+
+  it('label re-applied twice (no icon) still converges to exactly one text node', () => {
+    const el = buttonFactory.create()
+    buttonFactory.applyProp(el, 'label', 'Hi')
+    buttonFactory.applyProp(el, 'label', 'Bye')
+    expect(el.textContent).toBe('Bye')
+    expect(el.childNodes).toHaveLength(1)
+  })
+
+  it('AC3 — icon+label yields exactly one ui-icon[slot="leading"][data-role="icon"] child with glyph set and decorative ARIA, label as textContent', () => {
+    const el = buttonFactory.create()
+    buttonFactory.applyProp(el, 'icon', 'download-simple')
+    buttonFactory.applyProp(el, 'label', 'Download')
+
+    const icons = el.querySelectorAll('ui-icon[slot="leading"][data-role="icon"]')
+    expect(icons).toHaveLength(1)
+    const icon = icons[0] as HTMLElement & { glyph?: unknown; label?: unknown }
+    expect(icon.glyph).toBe('download-simple')
+    expect(icon.label).toBe('') // decorative by construction — icon.ts's own label effect keeps it aria-hidden
+    expect(el.textContent).toBe('Download')
+    expect(el.hasAttribute('aria-label')).toBe(false)
+  })
+
+  it('icon THEN label also lands the icon element BEFORE the label text node (button.css\'s auto-placed grid reads DOM order)', () => {
+    const el = buttonFactory.create()
+    buttonFactory.applyProp(el, 'icon', 'plus')
+    buttonFactory.applyProp(el, 'label', 'Add Money')
+    expect(el.children).toHaveLength(1) // just the ui-icon element — the label is a bare text node
+    expect(el.children[0]!.getAttribute('slot')).toBe('leading')
+    expect(el.textContent).toBe('Add Money')
+    expect(el.childNodes[0]).toBe(el.children[0]) // icon precedes the label text node
+  })
+
+  it('AC3 — iconOnly:true yields the host icon-only prop, aria-label = label, empty textContent — label-THEN-iconOnly order', () => {
+    const el = buttonFactory.create()
+    buttonFactory.applyProp(el, 'icon', 'x')
+    buttonFactory.applyProp(el, 'label', 'Dismiss')
+    buttonFactory.applyProp(el, 'iconOnly', true)
+
+    expect((el as { iconOnly?: unknown }).iconOnly).toBe(true)
+    expect(el.getAttribute('aria-label')).toBe('Dismiss')
+    expect(el.textContent).toBe('') // migrated OUT of textContent into aria-label
+    expect(el.querySelectorAll('ui-icon[slot="leading"][data-role="icon"]')).toHaveLength(1) // the icon child survives
+  })
+
+  it('AC3 — iconOnly:true yields the SAME result in the OTHER applyProp order — iconOnly-THEN-label', () => {
+    const el = buttonFactory.create()
+    buttonFactory.applyProp(el, 'icon', 'x')
+    buttonFactory.applyProp(el, 'iconOnly', true)
+    buttonFactory.applyProp(el, 'label', 'Dismiss')
+
+    expect((el as { iconOnly?: unknown }).iconOnly).toBe(true)
+    expect(el.getAttribute('aria-label')).toBe('Dismiss')
+    expect(el.textContent).toBe('')
+    expect(el.querySelectorAll('ui-icon[slot="leading"][data-role="icon"]')).toHaveLength(1)
+  })
+
+  it('AC3 — a bound icon re-apply retargets glyph on the SAME child — no duplicate (the LLD-C7 bindProp re-apply shape)', () => {
+    const el = buttonFactory.create()
+    buttonFactory.applyProp(el, 'icon', 'plus')
+    buttonFactory.applyProp(el, 'icon', 'minus') // simulates a re-resolved {path} binding
+    const icons = el.querySelectorAll('[data-role="icon"]')
+    expect(icons).toHaveLength(1)
+    expect((icons[0] as HTMLElement & { glyph?: unknown }).glyph).toBe('minus')
+  })
+
+  it('AC3 — clearing icon (empty string, or null) removes the child', () => {
+    const el = buttonFactory.create()
+    buttonFactory.applyProp(el, 'icon', 'plus')
+    buttonFactory.applyProp(el, 'icon', '')
+    expect(el.querySelectorAll('[data-role="icon"]')).toHaveLength(0)
+
+    const el2 = buttonFactory.create()
+    buttonFactory.applyProp(el2, 'icon', 'plus')
+    buttonFactory.applyProp(el2, 'icon', null)
+    expect(el2.querySelectorAll('[data-role="icon"]')).toHaveLength(0)
+  })
+})
+
 describe('default catalog factories — G9 container family (catalog LLD-C5, SPEC-R4/R8)', () => {
   it('Row → ui-row maps the surface + flex grammar onto accessors', () => {
     expect(rowFactory.tag).toBe('ui-row')

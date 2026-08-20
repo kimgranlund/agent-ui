@@ -109,12 +109,88 @@ function setAttr(el: HTMLElement, name: string, value: unknown): void {
   else el.setAttribute(name, String(value))
 }
 
+/** Every direct child TEXT node of `el` (never descending into an element, e.g. a factory-owned
+ *  `ui-icon`'s own light DOM) — the PRE-CONNECT shape of a button's stray label text, before
+ *  `button.ts`'s own `#heal()` (ADR-0133) has ever run on it. */
+function directText(el: HTMLElement): string {
+  let out = ''
+  for (const node of el.childNodes) if (node.nodeType === Node.TEXT_NODE) out += node.textContent ?? ''
+  return out
+}
+
+/** Remove every direct child TEXT node of `el`, leaving any Element child (the factory-owned icon
+ *  adornment) untouched. Pre-connect only — see `clearLabelText` below for the connected shape. */
+function clearDirectText(el: HTMLElement): void {
+  for (const node of Array.from(el.childNodes)) if (node.nodeType === Node.TEXT_NODE) node.remove()
+}
+
 /**
- * `Button` → `ui-button` (catalog LLD-C5, SPEC-R4). `variant` maps to the control's reflecting `variant`
- * prop; `label` is the button's text content (host-as-grid light-DOM label, button ADR-0006). Not an
- * input ⇒ no `value` (the renderer's input controller, LLD-C8, wires no two-way binding for it). The
- * catalog's `action` prop is the renderer's click→actionResponse trigger, dispatched by the action
- * controller — not a DOM attribute — so it is never routed through `applyProp`.
+ * The `<span data-part="label">` wrapper `button.ts`'s own `#heal()` (ADR-0133) adopts stray label text
+ * INTO once the host is CONNECTED — present only post-connect (or a later heal pass); absent pre-connect,
+ * where a factory-written text node still sits bare on the host. Looked up FRESH every call, never
+ * cached — a full clobber can detach it at any time (button.ts's own `#heal` doc comment: "a full clobber
+ * that destroys the wrapper rebuilds it fresh").
+ */
+function labelWrapper(el: HTMLElement): HTMLElement | null {
+  return el.querySelector(':scope > [data-part="label"]')
+}
+
+/**
+ * The button's CURRENT label text, wherever it lives — inside the heal wrapper once connected, or a
+ * bare direct text-node child pre-connect (ADR-0226 cl.1: `label`/`iconOnly` both need to read "what's
+ * already there" to converge order-independently under per-prop `applyProp`).
+ */
+function currentLabelText(el: HTMLElement): string {
+  const wrapper = labelWrapper(el)
+  return wrapper ? (wrapper.textContent ?? '') : directText(el)
+}
+
+/**
+ * Clear whatever currently holds the label TEXT — removing the heal wrapper WHOLESALE once connected
+ * (the "full clobber" button.ts's own `#heal()` is built to survive: the NEXT stray label write re-heals
+ * a fresh wrapper), or the bare direct text-node children pre-connect. Using `el.textContent = ''`
+ * instead would be the bug this function exists to avoid: once connected, the label text lives INSIDE
+ * the wrapper SPAN, not as a direct child, so `directText`/`clearDirectText` alone see nothing to clear
+ * post-connect — a stale wrapper survives underneath a freshly-appended stray, and button.ts's heal pass
+ * then ADOPTS the new stray INTO the old wrapper instead of replacing it, concatenating old+new text
+ * (confirmed against `renderer.test.ts`'s live bound-label rebind proof). Never touches an icon
+ * adornment — the wrapper never holds one (button.ts's `isAdornment` scope excludes it from `strays`).
+ */
+function clearLabelText(el: HTMLElement): void {
+  const wrapper = labelWrapper(el)
+  if (wrapper) wrapper.remove()
+  else clearDirectText(el)
+}
+
+/**
+ * `Button` → `ui-button` (catalog LLD-C5, SPEC-R4; icon mechanism ADR-0226). `variant` maps to the
+ * control's reflecting `variant` prop; `label` is the button's text content (host-as-grid light-DOM
+ * label, button ADR-0006) UNLESS `icon-only` is set, where it routes to `aria-label` instead (cl.1/cl.3
+ * — the label IS the accessible name in both forms). Not an input ⇒ no `value` (the renderer's input
+ * controller, LLD-C8, wires no two-way binding for it). The catalog's `action` prop is the renderer's
+ * click→actionResponse trigger, dispatched by the action controller — not a DOM attribute — so it is
+ * never routed through `applyProp`.
+ *
+ * ADR-0226 cl.1 — `icon` (bindable string, the ICON_NAMES vocabulary verbatim) realizes as ONE
+ * factory-owned `<ui-icon slot="leading" data-role="icon">` child: `glyph` set to the value, `label`
+ * left at its own default (empty) so `icon.ts`'s own label effect keeps it decorative (aria-hidden, no
+ * role) by construction; a re-apply (bound update) retargets `glyph` on the SAME child (no duplicate),
+ * and an empty/null value removes it. `iconOnly` (static boolean, deliberately NOT bindable — per-node
+ * structure, not state) sets the host's OWN reflecting `iconOnly` prop (button.md, the CSS fifth
+ * structure) and forks `label`'s destination.
+ *
+ * The two arms are ORDER-INDEPENDENT under per-prop `applyProp` (widget.ts iterates the node's OWN key
+ * order): `label` reads the host's CURRENT `icon-only` state at apply time (routes to `aria-label` if
+ * already icon-only, else to the label region); `iconOnly` arriving AFTER `label` migrates whatever
+ * label text is already there into `aria-label`. Neither arm uses a blind `el.textContent = …` write
+ * once an icon child might be present — that setter clobbers EVERY child, icon included — instead both
+ * manage ONLY the label TEXT region via `currentLabelText`/`clearLabelText` (above), which locate the
+ * label wherever it currently lives: a bare direct text-node child pre-connect, or `button.ts`'s own
+ * `<span data-part="label">` heal wrapper once connected (ADR-0133) — byte-identical to the old
+ * `el.textContent = …` arm whenever there is no other child to preserve (the pre-ADR-0226 shape,
+ * `factories.test.ts`'s own pinned assertion) and CORRECT once connected too (`renderer.test.ts`'s live
+ * bound-label rebind proof — a naive direct-text-only clear left the heal wrapper's OLD text behind
+ * under a freshly-appended stray, concatenating old+new instead of replacing).
  */
 export const buttonFactory: WidgetFactory = {
   tag: 'ui-button',
@@ -124,8 +200,46 @@ export const buttonFactory: WidgetFactory = {
       case 'variant':
         ;(el as { variant?: unknown }).variant = value
         break
-      case 'label':
-        el.textContent = value == null ? '' : String(value)
+      case 'label': {
+        const text = value == null ? '' : String(value)
+        if ((el as { iconOnly?: unknown }).iconOnly) {
+          el.setAttribute('aria-label', text)
+          clearLabelText(el) // icon-only carries no visible label text
+        } else {
+          clearLabelText(el)
+          if (text) el.appendChild(document.createTextNode(text))
+        }
+        break
+      }
+      case 'icon': {
+        const glyph = value == null ? '' : String(value)
+        const existing = el.querySelector(':scope > [data-role="icon"]') as (HTMLElement & { glyph?: unknown }) | null
+        if (!glyph) {
+          existing?.remove()
+          break
+        }
+        if (existing) {
+          existing.glyph = glyph
+        } else {
+          const icon = document.createElement('ui-icon') as HTMLElement & { glyph?: unknown }
+          icon.setAttribute('slot', 'leading')
+          icon.setAttribute('data-role', 'icon')
+          icon.glyph = glyph // label stays at its own default (empty) — decorative by construction
+          el.insertBefore(icon, el.firstChild) // leading position, ahead of any label text
+        }
+        break
+      }
+      case 'iconOnly':
+        if (value) {
+          ;(el as { iconOnly?: unknown }).iconOnly = true
+          const already = currentLabelText(el)
+          if (already) {
+            el.setAttribute('aria-label', already) // migrate label text arrived BEFORE iconOnly
+            clearLabelText(el)
+          }
+        } else {
+          ;(el as { iconOnly?: unknown }).iconOnly = false
+        }
         break
       default:
         setAttr(el, prop, value)

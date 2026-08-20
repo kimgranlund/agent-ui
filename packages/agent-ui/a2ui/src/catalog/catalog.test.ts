@@ -61,6 +61,17 @@ describe('loadCatalog — structural validation (catalog LLD-C1, SPEC-R1/R4)', (
   )
 
   throws(
+    'a requires entry that is not a string array',
+    { catalogId: 'c', protocolVersion: 'v1.0', components: { A: { properties: { x: { type: {}, mapsTo: 'x', requires: 'label' } } } } },
+    CatalogLoadCode.MALFORMED,
+  )
+  throws(
+    'a requires array with a non-string member',
+    { catalogId: 'c', protocolVersion: 'v1.0', components: { A: { properties: { x: { type: {}, mapsTo: 'x', requires: [1] } } } } },
+    CatalogLoadCode.MALFORMED,
+  )
+
+  throws(
     'a reserved @ component name',
     { catalogId: 'c', protocolVersion: 'v1.0', components: { '@index': { properties: {} } } },
     CatalogLoadCode.NAME_INVALID,
@@ -80,6 +91,31 @@ describe('loadCatalog — structural validation (catalog LLD-C1, SPEC-R1/R4)', (
     },
     CatalogLoadCode.NAME_INVALID,
   )
+})
+
+// ADR-0226 cl.3 — the opt-in cross-prop `PropDef.requires` (GH #1189's `required` shape, widened to
+// name sibling keys rather than just gating the declaring key's own presence).
+describe('loadCatalog — PropDef.requires (ADR-0226 cl.3)', () => {
+  it('a declared requires array survives loading, byte-identical', () => {
+    const cat = loadCatalog({
+      catalogId: 'c',
+      protocolVersion: 'v1.0',
+      components: {
+        A: {
+          properties: {
+            icon: { type: { type: 'string' }, mapsTo: 'icon', requires: ['label'] },
+            label: { type: { type: 'string' }, mapsTo: 'label' },
+          },
+        },
+      },
+    })
+    expect(cat.components.A.properties.icon!.requires).toEqual(['label'])
+  })
+
+  it('a property that does not declare requires stays undefined (byte-identical for every non-opted-in prop)', () => {
+    const cat = loadCatalog(demoCatalogDoc)
+    expect(cat.components.Button.properties.label!.requires).toBeUndefined()
+  })
 })
 
 // ADR-0161 — the `value` mark widens to one-or-more slots (Calendar range + SliderMulti write-back,

@@ -38,14 +38,30 @@ const RESERVED = new Set(['id', 'component', 'child', 'children', 'checks'])
  * props (unknown / type-mismatch, SPEC-R9's security allowlist scope) PLUS — GH #1189 — key PRESENCE
  * for any `PropDef.required:true` (an opt-in extension; every property that does not declare it behaves
  * byte-identically to before, the `Modal.open` negative control in `catalog/default/index.test.ts` among
- * them). The two checks are independent: an omitted required key fails once here even if no OTHER prop
- * on the node is present/type-mismatched.
+ * them) PLUS — ADR-0226 cl.3 — cross-prop `PropDef.requires` (a declaring key present without one of
+ * its named sibling keys) PLUS — ADR-0226 cl.4 — the structural children-model check (a `child`/
+ * `children` key on a node whose def declares no children model at all). Every check is independent:
+ * each fires once per defect even if no OTHER prop on the node is present/type-mismatched.
  */
 export function validateCatalogConformance(component: A2uiComponent, catalog: Catalog): Failure[] {
   const def = catalog.components[component.component]
   if (!def) return [{ code: 'CATALOG', path: component.id }] // unknown type (SPEC-R9)
 
   const out: Failure[] = []
+
+  // ADR-0226 cl.4 — closes the catalog-wide structural leniency (renderer/validate.ts `RESERVED` and
+  // this module's own `RESERVED` both skip `child`/`children` unconditionally in the props loop below,
+  // so — before this check — a node could carry either key regardless of its def declaring a children
+  // model at all; `renderer/tree.ts` would then generically mount it, e.g. adopting a slotless Icon
+  // child into a Button's label wrapper, a silently wrong render, never an error). Presence-vs-none
+  // only, the deliberately minimal floor (ADR-0226 cl.4): a `child`-vs-`children`-vs-`ChildList` KIND
+  // mismatch on a DECLARING def is refused this pass — no evidence of that defect class, and a wrong
+  // kind still renders or IDGRAPH-fails visibly, unlike the silent leniency this closes.
+  if (def.children === undefined) {
+    if ('child' in component) out.push({ code: 'CATALOG', path: `${component.id}.child` })
+    if ('children' in component) out.push({ code: 'CATALOG', path: `${component.id}.children` })
+  }
+
   for (const [k, v] of Object.entries(component)) {
     if (RESERVED.has(k)) continue
     const pd = def.properties[k]
@@ -58,6 +74,22 @@ export function validateCatalogConformance(component: A2uiComponent, catalog: Ca
   for (const [k, pd] of Object.entries(def.properties)) {
     if (pd.required && !(k in component)) out.push({ code: 'CATALOG', path: `${component.id}.${k}` }) // omitted required key (GH #1189)
   }
+
+  // ADR-0226 cl.3 — cross-prop `requires`: a declared key's PRESENCE on the node requires its named
+  // sibling keys' PRESENCE too (never their eventual VALUE, cl.3's owned limit — a `{path}`/`{call}`
+  // binding on either side satisfies presence, ADR-0026). Scoped to keys the node actually carries —
+  // a `requires` declaration on a key the node never carries never fires, and every prop that doesn't
+  // opt in behaves byte-identically. Reported at the MISSING sibling's own path (the actionable gap),
+  // the same "point at the omitted key" convention `required` (GH #1189) already uses.
+  for (const k of Object.keys(component)) {
+    if (RESERVED.has(k)) continue
+    const pd = def.properties[k]
+    if (!pd?.requires) continue
+    for (const need of pd.requires) {
+      if (!(need in component)) out.push({ code: 'CATALOG', path: `${component.id}.${need}` })
+    }
+  }
+
   return out
 }
 
