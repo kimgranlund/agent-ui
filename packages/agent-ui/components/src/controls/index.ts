@@ -228,3 +228,9 @@ export * from './suggestions/suggestions.ts'
 // naming trip-wire's own documented constraint) — each folder's own name === its one descriptor's name.
 export * from './choice-group/choice-group.ts'
 export * from './choice-card/choice-card.ts'
+
+// ADR-0225 (GH #1478) — ui-playing-card, the Display-class true card-face/back leaf: real corner
+// indices + a true suit-pip field (or J/Q/K letter treatment), a CSS-painted back, and the fleet's
+// first 3D-transform flip. Persona-scoped in the catalog (the croupier persona factory retarget) — a
+// fleet member like any other control, still exported here.
+export * from './playing-card/playing-card.ts'

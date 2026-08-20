@@ -49,6 +49,7 @@
     "./controls/otp-field": "./src/controls/otp-field/otp-field.ts",
     "./controls/pagination": "./src/controls/pagination/pagination.ts",
     "./controls/pie-chart": "./src/controls/pie-chart/pie-chart.ts",
+    "./controls/playing-card": "./src/controls/playing-card/playing-card.ts",
     "./controls/popover": "./src/controls/popover/popover.ts",
     "./controls/progress": "./src/controls/progress/progress.ts",
     "./controls/radio": "./src/controls/radio/radio.ts",
