@@ -37,22 +37,9 @@ documents. This skill is the *method*; the per-type depth and the rubrics live i
 
 A docs page restates nothing it can **derive**. Every fact on a page has a single owner elsewhere in the
 repo; the page is its *second consumer*, not a hand-transcribed copy (the copy is the precondition for
-drift — `.claude/docs/process.md`'s drift disease). The four owners a site page derives from:
-
-- **The descriptor** — `{name}.md` frontmatter is the attributes-as-API record. The API table and the
-  enum-driven specimens are built from the canonical parser's `attributes[]` (ADR-0004, one parser / two
-  consumers — `site/lib/frontmatter.ts` → `parseDescriptor`). Never hand-type an attribute row.
-- **The real renderer / control** — a demo runs the *actual* `createRenderer` / mounts the *actual*
-  `ui-*` control through its public surface, exactly as the transport or an app would. The page IS the
-  integration proof, made visible (the `a2ui-canvas` precedent), not a screenshot or a mock.
-- **The props enum** — variant/size specimen rows iterate the parsed enum members, so adding a variant
-  to the descriptor adds its specimen for free.
-- **The token roles** — page chrome consumes the `--md-sys-color-{family}-{role}` roles; a page **never restyles a
-  `ui-*` control** (states/appearance belong to the control's own `{name}.css` — the "honest labels"
-  discipline below).
-
-What genuinely *can't* be derived (a structural anatomy shape, hand-authored prose under the fence) is
-labelled as hand-authored and kept minimal.
+drift — `.claude/docs/process.md`'s drift disease). The four owners a site page derives from — descriptor
+· real renderer · props enum · token roles — plus what genuinely can't be derived: `references/foundations.md`
+§The four derive-from sources.
 
 ## Method
 
@@ -98,28 +85,9 @@ NEAREST row's derivation discipline and names the mismatch, exactly as `file-*`'
 
 ## The demo-page recipe (per-component interaction demos)
 
-The proven mechanism for one control's scenario demo page — 39 pages shipped through it (PRs
-#1303–#1312, 2026-08-18). Types nearest T9 (a live composition proving real behaviour);
-`site/pages/disclosure-demo.ts` is the realized reference.
-
-- **Nav**: a Demo tab `{ href: './{name}-demo.html', label: 'Demo' }` FIRST in the component's NAV
-  group in `site/pages/_page.ts`. The tab strip renders only at ≥2 links, and it is CLIENT-rendered —
-  grepping built HTML for the tab proves nothing.
-- **Files**: `site/{name}-demo.html` shell (copy `disclosure-demo.html`) + `site/pages/{name}-demo.ts`
-  self-mounting via `mountPage`.
-- **Module shape**: the `mountPage` import FIRST (foundation CSS cascade), then
-  `import './containers.css'`; helpers from `site/lib/specimens.ts`
-  (`el`/`demoBox`/`uiButton`/`exampleSection`/`captioned`/`applyDemoWidth`); realistic scenario
-  content; the REAL control, never mocked; a `<ul class="event-log" aria-live="polite">` wherever the
-  control emits events; DOM via `el()`, never `innerHTML`; the intro closes "The API table is on the
-  ui-X API page."
-- **Registration**: a Demo card in `site/main.ts`'s CARD_GROUPS; `llms.txt` gains
-  `; [demo](./x-demo.html)` (the G2 coverage gate bites otherwise); the sitemap EXCLUDES demo pages
-  BY DESIGN (`EXCLUDED_SUFFIX` in `site/lib/sitemap.test.ts`) — their absence there is not a defect.
-- **Gates**: the coverage tier law is a MINIMUM — extra demos always pass; behaviour proof rides a
-  browser test per the `modal-demo.browser.test.ts` precedent.
-- **Trap**: `data-role` is reserved canonical role vocab enforced by `site-canon.test.ts` — demo/test
-  hooks use `data-demo` instead (the #1313-era split-demo strike).
+The proven mechanism for one control's scenario demo page — nav wiring, file shells, module shape,
+registration, gates, and a dated `data-role`-reservation trap: `references/content-types.md` §The
+demo-page recipe.
 
 ## The drift discipline — back a page with a check where structurable
 
