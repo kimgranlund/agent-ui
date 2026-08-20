@@ -177,6 +177,11 @@
       "canonical": "composition",
       "plural": "compositions",
       "banned_aliases": []
+    },
+    {
+      "canonical": "rendering",
+      "plural": null,
+      "banned_aliases": []
     }
   ],
   "brand_tokens": [
@@ -188,5 +193,7 @@
     "Kim Granlund"
   ],
   "mutating_no_confirm_allowlist": [],
-  "exemptions": []
+  "exemptions": [
+    "due-process"
+  ]
 }
