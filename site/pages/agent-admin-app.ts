@@ -325,6 +325,59 @@ admin.onTeamDeclared((team) =>
   void handleTeamDeclared(team).catch(() => notify('The team could not be created — something went wrong saving it.', true)),
 )
 
+// ── GH #1537 — ONE agent name everywhere (Kim's 2026-08-20 unify ruling) ────────────────────────────────
+// Two "agent name" identities used to never synchronize: `Persona.label` (the roster identity the header
+// select, the drawer rows, and the Team pane's GM/member lines all read) and the store's `'name'` key (the
+// turn-time identity the Settings pane's Name field writes and `AgentConfigSnapshot.name` reads). The unify
+// mechanism is this page-level subscription: the ACTIVE persona's store notifies every write
+// (`SettingsStore.subscribe`, agent-admin-presets.ts's `personaStore` seam), and a real `'name'` change
+// drives the SAME `renameImportedPersona` + `refreshRoster`/`pushRoster` path the drawer's pencil rename
+// already uses — so the select trigger, the option rows, the drawer, and the Team pane (which reads the
+// same `#pendingRoster` snapshot at invoke time) all follow in one motion. The reverse direction (drawer
+// rename → store `'name'`) lives in `beginRename`'s commit below; BOTH directions guard on value equality,
+// so subscribe→rename→subscribe can never loop. The Settings pane's Name field is not the only intended
+// writer: the Builder's personaPatch applies `name` through the SAME active store (`applyPersonaPatch` →
+// `store.set`, agent-admin.ts), so an interview that names the draft renames its roster row live — the
+// feature working, not a side effect.
+let unsubscribeActiveName: (() => void) | undefined
+
+/** Drive the roster label from a committed store `'name'` write (GH #1537). `personaId` is captured at
+ *  subscribe time — the subscription is torn down and re-armed on every `applyPersona`, so a rename on
+ *  persona A can never rename persona B. The persona is re-resolved from the LIVE roster by id (never the
+ *  captured object): `refreshRoster` replaces the array's contents wholesale, so a captured reference's
+ *  label goes stale after any rename/reorder. */
+function syncRosterLabelFromName(personaId: string, value: unknown): void {
+  if (typeof value !== 'string') return
+  const next = value.trim()
+  const persona = roster.find((p) => p.id === personaId)
+  // A blank commit is skipped SILENTLY: the schema marks `name` required (agent-admin-schema.ts), so the
+  // field's own validation is the visible feedback — and the drawer's own "an agent needs a name" law
+  // already keeps a blank label out of the roster.
+  if (persona === undefined || next.length === 0 || next === persona.label) return
+  if (persona.imported !== true) {
+    // A shipped preset is structurally rename-fenced (renameImportedPersona's own imported-only guard +
+    // the drawer's affordance gate — GH #848's rename law), so for a preset the Name field edits ONLY the
+    // turn-time identity (`AgentConfigSnapshot.name` — how the agent refers to itself in generation); the
+    // picker keeps the shipped label. Stated visibly, never a silent divergence.
+    notify(`“${persona.label}” is a shipped agent — the picker keeps its shipped name. The new name applies only to the agent's own replies.`)
+    return
+  }
+  if (roster.some((p) => p.id !== persona.id && p.label === next)) {
+    // The drawer rename's own collision law, mirrored — the store keeps what the user typed (their
+    // turn-time name), but the roster label refuses the duplicate, and says so.
+    notify(`Another agent is already called “${next}” — the picker still shows “${persona.label}”.`, true)
+    return
+  }
+  if (renameImportedPersona(persona, next)) {
+    refreshRoster()
+    // The label took the TRIMMED form, so the store keeps it byte-equal too — an untrimmed commit
+    // ("  Wrench  ") must not leave a residual two-identity divergence inside the unify feature itself.
+    // Loop-safe: the re-notification this write fires lands on the `next === persona.label` guard above
+    // (refreshRoster already updated the label).
+    if (value !== next) personaStore(persona).set('name', next)
+  }
+}
+
 function applyPersona(persona: Persona): void {
   active = persona
   localStorage.setItem(ACTIVE_PRESET_KEY, persona.id)
@@ -333,6 +386,14 @@ function applyPersona(persona: Persona): void {
   // re-enter), so switching personas can never leave a previous draft's interview armed over a new one.
   admin.authoringStore = undefined
   admin.store = personaStore(persona)
+  // GH #1537 — the name-unify subscription FOLLOWS the active persona: tear down the previous persona's
+  // listener before arming this one (a rename on persona A must never rename persona B), and re-arm even
+  // for a same-persona re-apply — `resetPersona` (the onResetRequest path) drops the cached store, so the
+  // instance under `personaStore(persona)` here can be a fresh one the old listener never knew.
+  unsubscribeActiveName?.()
+  unsubscribeActiveName = personaStore(persona).subscribe?.((key, value) => {
+    if (key === 'name') syncRosterLabelFromName(persona.id, value)
+  })
   // GH #143 — re-scope the add-from-library menu to the NEW persona's category. A fresh object every call
   // (never a reused reference) is load-bearing: `libraries`' reactive effect (agent-admin.ts) rebuilds the
   // menu on an identity change, the same law `store`'s reassignment above relies on — handing back a
@@ -710,6 +771,11 @@ function announce(message: string, urgent = false): void {
  *  rebuild the drawer list when it is open. */
 function refreshRoster(): void {
   roster.splice(0, roster.length, ...personaRoster())
+  // GH #1537 — `active` follows the re-read: the splice above replaces every persona OBJECT, so after a
+  // rename the captured reference's `label` is stale (exportActivePersona's filename/toast and the
+  // name-sync's own equality guard all read `active.label`). Ids are stable (GH #848's rename law), so
+  // re-resolving by id is always the same persona.
+  active = roster.find((p) => p.id === active.id) ?? active
   pushRoster(active.id)
   if (drawer.open) renderRosterRows()
 }
@@ -1059,6 +1125,14 @@ function beginRename(row: HTMLElement, persona: Persona): void {
     settled = true
     if (next !== persona.label && renameImportedPersona(persona, next)) {
       refreshRoster()
+      // GH #1537 — the pencil rename round-trips into the persona's own store `'name'` key, so the
+      // Settings pane's Name field shows the new name too (generate.ts's subscribeExternalSync reflects
+      // an external write into the control). Value-equality guarded on both directions — here, and in
+      // syncRosterLabelFromName's own label check (refreshRoster above already updated the label, so the
+      // subscription this write fires sees `next === persona.label` and no-ops) — so the two writers can
+      // never chase each other.
+      const store = personaStore(persona)
+      if (store.get('name') !== next) store.set('name', next)
       announce(`Renamed “${persona.label}” to “${next}”.`)
       return
     }

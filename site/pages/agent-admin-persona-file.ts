@@ -331,7 +331,15 @@ export function mintBlankPersona(seed: Readonly<Record<string, unknown>>, roster
     id,
     label: mintedLabel,
     tagline: 'A freshly minted agent, ready to configure.',
-    seed: { ...seed },
+    // GH #1537 — ONE name at birth: the store's `name` key seeds from the minted roster label (the
+    // collision-safe "New agent N" slug — what the picker shows), overriding the caller seed's schema
+    // default. The 'Untitled agent' default (agent-admin-schema.ts) stays the SCHEMA-level fallback for a
+    // persona with no stored name; a mint always has a label, so here the two identities start equal.
+    // This is the one deliberate exception to "the seed is carried verbatim": `name` IS roster identity
+    // under Kim's 2026-08-20 unify ruling, and identity is exactly what this module mints. (An IMPORT and
+    // a DUPLICATE keep their source's `name` byte-verbatim on purpose — their law is identical live
+    // behaviour to the source, importedPersonaFrom/duplicatePersonaFrom's own headers.)
+    seed: { ...seed, name: mintedLabel },
     imported: true, // roster-persisted the SAME way an imported persona is (GH #406) — never a shipped preset
     createdAt: new Date().toISOString(), // GH #921 — the Manage-agents card's Date field
   }

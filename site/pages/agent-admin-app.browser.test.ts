@@ -17,7 +17,7 @@
 // cross-engine already; this file does not re-prove it).
 import { describe, it, expect, vi, afterAll } from 'vitest'
 import './agent-admin-app.ts' // side-effect import — mounts the real ui-agent-admin, no page-level header
-import { AGENT_PRESETS, ACTIVE_PRESET_KEY, IMPORTED_PERSONAS_KEY, ROSTER_ORDER_KEY, loadImportedPersonas, personaRoster } from './agent-admin-presets.ts'
+import { AGENT_PRESETS, ACTIVE_PRESET_KEY, IMPORTED_PERSONAS_KEY, ROSTER_ORDER_KEY, loadImportedPersonas, personaRoster, personaStore } from './agent-admin-presets.ts'
 import { readPersonaFile } from './agent-admin-persona-file.ts'
 
 /** The bytes the Export row handed the browser — captured by the first GH #406 leg, replayed by the
@@ -503,6 +503,12 @@ describe('agent-admin-app — the Edit Agents drawer: duplicate, then delete the
     expect(preset.querySelector('.roster-row-duplicate'), 'duplicate is the escape hatch, and it IS offered').not.toBeNull()
   })
 
+  /** The duplicated copy's id, carried between the two legs below BY ID: since GH #1537 the
+   *  `store.set('name', …)` dirty-write below RENAMES the active copy's roster label too (the unified-name
+   *  subscription — that is the feature), so a label-based `endsWith('(copy)')` lookup in the delete leg
+   *  would come up empty. Ids are stable across renames (GH #848's rename law). */
+  let copyId = ''
+
   it('Duplicate on a preset row mints an editable copy; activating and dirtying it writes real persisted keys', async () => {
     const source = AGENT_PRESETS[0]!
     ;(rowFor(source.id)!.querySelector('.roster-row-duplicate') as HTMLElement).click()
@@ -510,6 +516,7 @@ describe('agent-admin-app — the Edit Agents drawer: duplicate, then delete the
 
     const copy = personaRoster().find((p) => p.label === `${source.label} (copy)`)
     expect(copy, 'the copy joined the roster').toBeDefined()
+    copyId = copy!.id
     expect(copy?.imported, 'as a LIBRARY record — deletable, unlike its source').toBe(true)
     expect(rowFor(copy!.id)?.querySelector('.roster-row-delete'), 'and its row carries Delete').not.toBeNull()
 
@@ -528,7 +535,9 @@ describe('agent-admin-app — the Edit Agents drawer: duplicate, then delete the
   })
 
   it('Delete on the ACTIVE copy sweeps EVERY key under its prefix, drops the record, and falls back to the first roster entry', async () => {
-    const copy = loadImportedPersonas().find((p) => p.label.endsWith('(copy)'))!
+    // BY ID, not by label: the previous leg's `store.set('name', 'DIRTY-BEFORE-DELETE')` renamed the
+    // copy's label through the GH #1537 name-unify subscription (see `copyId`'s own comment above).
+    const copy = loadImportedPersonas().find((p) => p.id === copyId)!
     expect(copy, 'the previous leg minted it').toBeDefined()
 
     await openDrawerViaPicker()
@@ -710,5 +719,150 @@ describe("agent-admin-app — opening the Edit Agents drawer centers the CURRENT
     ;(document.querySelector('.roster-drawer-done') as HTMLElement).click()
     await raf()
     await pickAgent(original)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #1537 — ONE agent name everywhere (Kim's 2026-08-20 unify ruling). The exact coverage gap the
+//  data-model review named (F10): no test anywhere edited the Agent-panel Name field and asserted the
+//  select-menu label. These legs drive the REAL settings field (commit via `change` — generate.ts's
+//  COMMIT_EVENT.text) and assert the REAL roster surfaces: the select's option row + trigger label (the
+//  rebuilt `#pendingRoster` render — the SAME snapshot the Team pane's GM/member `nameFor` reads at invoke
+//  time, agent-admin.ts's `getKnownAgents`; that pane's at-invoke-time freshness is pinned in its own
+//  agent-team-pane.browser.test.ts, so proving the snapshot updated closes the chain) and the persisted
+//  library record. Plus the two flanks: mint-time convergence and the drawer-rename round-trip.
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+describe('agent-admin-app — the Settings Name field drives the roster label (GH #1537)', () => {
+  afterAll(() => {
+    // The no-residue duty every minting describe in this file carries — plus the PRESET name key the
+    // fence leg below writes (a persisted preset `name` would redden the delete-fallback assertion's
+    // `config.name` read on the NEXT run's boot).
+    for (const persona of loadImportedPersonas()) {
+      for (const key of Object.keys(localStorage).filter((k) => k.startsWith(`agent-admin-app.${persona.id}.`))) {
+        localStorage.removeItem(key)
+      }
+    }
+    localStorage.removeItem(IMPORTED_PERSONAS_KEY)
+    for (const key of Object.keys(localStorage).filter((k) => k.startsWith(`agent-admin-app.${AGENT_PRESETS[0]!.id}.`))) {
+      localStorage.removeItem(key)
+    }
+    localStorage.setItem(ACTIVE_PRESET_KEY, AGENT_PRESETS[0]!.id)
+  })
+
+  /** The Agent panel's Name field on the LIVE settings pane (rebuilt on every store swap — re-query,
+   *  never capture across a persona switch). */
+  const nameField = (): HTMLElement & { value: string } =>
+    admin().querySelector('ui-settings [name="name"]') as HTMLElement & { value: string }
+
+  /** Commit a Name edit the way a user does: type, then the control's own commit event (`change` —
+   *  blur-with-change or Enter; generate.ts's COMMIT_EVENT.text). The store write behind it is
+   *  microtask-deferred, so one rAF settle follows. */
+  async function commitName(value: string): Promise<void> {
+    const field = nameField()
+    field.value = value
+    field.dispatchEvent(new Event('change', { bubbles: true }))
+    await raf()
+  }
+
+  /** The minted agent's id, carried across the legs below (label-based lookups are exactly what this
+   *  describe's renames invalidate; ids are stable — GH #848). */
+  let mintedId = ''
+
+  it('mint seeding converges: a freshly minted agent’s store `name` and roster label start EQUAL', async () => {
+    ;(admin().querySelector('[data-part="new-agent-narrow"]') as HTMLElement).click()
+    await raf()
+
+    const options = rosterOptions()
+    const minted = options[options.length - 1]!
+    expect(agentSelect().value, 'the mint activated the fresh agent').toBe(minted.getAttribute('value'))
+    mintedId = agentSelect().value
+    expect(
+      admin().store!.get('name'),
+      'the store name IS the roster label at birth — never the schema default diverging from the "New agent N" slug',
+    ).toBe(minted.textContent)
+  })
+
+  it('editing the Name field updates the select’s option row, the trigger label, and the persisted record — the id untouched', async () => {
+    const activeId = agentSelect().value
+    expect(nameField(), 'the Agent panel’s Name field renders').not.toBeNull()
+
+    await commitName('Wrench')
+
+    expect(admin().store!.get('name'), 'the store took the commit').toBe('Wrench')
+    const row = rosterOptions().find((o) => o.getAttribute('value') === activeId)
+    expect(row?.textContent, 'the roster option row follows (renameImportedPersona → pushRoster)').toBe('Wrench')
+    expect(
+      (agentSelect().querySelector('[data-part="trigger"]') as HTMLElement).textContent,
+      'the header select’s TRIGGER label follows — the symptom the review screenshot showed stale',
+    ).toContain('Wrench')
+    expect(agentSelect().value, 'rename is display-only — the id every store key hangs off is stable').toBe(activeId)
+    expect(loadImportedPersonas().find((p) => p.id === activeId)?.label, 'and the library record persisted it').toBe('Wrench')
+  })
+
+  it('the drawer’s pencil rename round-trips INTO the store `name`, and the Settings field shows it (no loop)', async () => {
+    const activeId = agentSelect().value
+    const select = agentSelect()
+    ;(select.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await raf()
+    ;(select.querySelector('[data-part="roster-action"][value="agent-admin:edit-agents"]') as HTMLElement).click()
+    await raf()
+
+    const row = document.querySelector(`.roster-row[data-agent="${activeId}"]`) as HTMLElement
+    ;(row.querySelector('.roster-row-rename') as HTMLElement).click()
+    await raf()
+    const renameField = row.querySelector('.roster-row-field') as HTMLElement & { value: string }
+    renameField.value = 'Spanner'
+    ;(row.querySelector('.roster-row-save') as HTMLElement).click()
+    await raf()
+
+    expect(loadImportedPersonas().find((p) => p.id === activeId)?.label, 'the drawer rename landed').toBe('Spanner')
+    expect(admin().store!.get('name'), 'and round-tripped into the store name key').toBe('Spanner')
+    expect(nameField().value, 'the Settings field reflects it (subscribeExternalSync)').toBe('Spanner')
+
+    ;(document.querySelector('.roster-drawer-done') as HTMLElement).click()
+    await raf()
+    // The no-loop proof, settled: both identities agree and STAY agreed one frame later (the two writers'
+    // value-equality guards mean neither fires again).
+    await raf()
+    expect(admin().store!.get('name')).toBe('Spanner')
+    expect(rosterOptions().find((o) => o.getAttribute('value') === activeId)?.textContent).toBe('Spanner')
+  })
+
+  it('a SHIPPED preset’s roster label never renames through the Name field — the fence holds, stated not silent', async () => {
+    const preset = AGENT_PRESETS[0]!
+    const select = agentSelect()
+    ;(select.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await raf()
+    ;(select.querySelector(`[role="option"][value="${preset.id}"]`) as HTMLElement).click()
+    await raf()
+    expect(select.value).toBe(preset.id)
+
+    await commitName('Preset Probe Name')
+
+    expect(admin().store!.get('name'), 'the TURN-TIME name takes the edit (AgentConfigSnapshot.name)').toBe('Preset Probe Name')
+    expect(
+      rosterOptions().find((o) => o.getAttribute('value') === preset.id)?.textContent,
+      'but the roster label keeps the shipped name — presets are structurally rename-fenced (GH #848)',
+    ).toBe(preset.label)
+    expect(loadImportedPersonas().some((p) => p.id === preset.id), 'and no library record was ever minted for it').toBe(false)
+  })
+
+  it('a name write on a NON-active persona’s store renames NOTHING — the subscription follows the active persona (teardown proof)', async () => {
+    // The preset is active (the fence leg above); the minted agent is not. A leaked listener from any
+    // earlier applyPersona would fire on this direct write and rename the minted row — the exact
+    // rename-A-renames-B class the unsubscribe-on-switch exists to prevent.
+    const minted = loadImportedPersonas().find((p) => p.id === mintedId)!
+    expect(minted, 'the minted agent from the first leg still exists').toBeDefined()
+    expect(agentSelect().value, 'and it is NOT the active persona').not.toBe(mintedId)
+    const labelBefore = minted.label
+
+    personaStore(minted).set('name', 'GHOST-RENAME')
+    await raf()
+
+    expect(
+      rosterOptions().find((o) => o.getAttribute('value') === mintedId)?.textContent,
+      'the non-active row keeps its label — no leaked subscription renamed it',
+    ).toBe(labelBefore)
+    expect(loadImportedPersonas().find((p) => p.id === mintedId)?.label, 'the persisted record is untouched too').toBe(labelBefore)
   })
 })
