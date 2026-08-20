@@ -158,6 +158,7 @@ import {
   productOptionsQuantitySeed,
   listingPhotoGridSeed,
   featuresListCardSeed,
+  customerReviewCardSeed,
 } from '../../src/examples/commerce-hospitality.ts'
 import { allSeeds } from '../../src/examples/index.ts'
 
@@ -332,6 +333,7 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
       productOptionsQuantitySeed, // admission pending the judged wave (disposition-allowlist.ts)
       listingPhotoGridSeed, // admission pending the judged wave (disposition-allowlist.ts)
       featuresListCardSeed, // GH #1479 — the Amenities-style feature-list seed; admission pending the judged wave (disposition-allowlist.ts)
+      customerReviewCardSeed, // GH #1480 — the review-summary card seed; admission pending the judged wave (disposition-allowlist.ts)
     ],
   },
   {

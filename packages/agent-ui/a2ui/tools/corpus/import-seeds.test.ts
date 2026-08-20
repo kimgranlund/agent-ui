@@ -512,6 +512,10 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     // reason as the three GH #1377 rows above (its real disposition is DISPOSITION_ALLOWLIST's pending
     // "NO VERDICT SOUGHT YET" entry).
     'features-list-card': { passed: false, qualityScore: 2 },
+    // GH #1480 — a sibling seed appended to the same module (commerce-hospitality.ts), NOT part of the
+    // #1377 pack: the review-summary card. Refused here for the same zero-admission reason as every row
+    // above; its real disposition is DISPOSITION_ALLOWLIST's pending "NO VERDICT SOUGHT YET" entry.
+    'customer-review-card': { passed: false, qualityScore: 2 },
     // The 2026-08-19 nine-ADR campaign's six coverage-gap seeds (catalog-frontier.ts) — refused here for
     // the same zero-admission reason as every row above; their real disposition is DISPOSITION_ALLOWLIST's
     // pending "NO VERDICT SOUGHT YET" entries (wave 3 runs the real judged pipeline).

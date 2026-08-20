@@ -200,4 +200,12 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // judgment ADR-0068's Alternatives ban. Run the judged pipeline (`import-seeds.ts` with a real
   // VerdictsFile) and DELETE this entry when that wave lands.
   ['features-list-card', 'GH #1479 — no verdict sought yet; a future judged wave should admit or drop this seed and delete this entry.'],
+  // (ADR-0068: never self-judged). The map was back to its EMPTY steady state until the row below.
+  //
+  // GH #1480 (2026-08-19) — `customer-review-card`: the same pending-state shape (NO VERDICT SOUGHT
+  // YET, not a refusal). Added as the Airbnb-style review-summary card seed (a plain Card: star Icon +
+  // bold rating + muted review-count Text, then a highlights line) — the authoring session judging its
+  // own seed is the manufactured judgment ADR-0068's Alternatives ban. Run the judged pipeline
+  // (import-seeds.ts with a real VerdictsFile) and DELETE this entry when that wave lands.
+  ['customer-review-card', 'GH #1480 — pending judged import wave (NO VERDICT SOUGHT YET, not a refusal); delete this entry once import-seeds --verdicts admits it.'],
 ])

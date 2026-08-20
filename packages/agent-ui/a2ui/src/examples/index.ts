@@ -97,11 +97,15 @@ export { planAndExecutePlanSeed, planAndExecuteApproveAskSeed, planAndExecuteSee
 // admission pending the judged wave for the latter two (disposition-allowlist.ts). GH #1479 adds a
 // fourth: features-list-card (an Amenities-style icon+label feature list, no catalog promotion this
 // pass) — the same pending-state disposition (disposition-allowlist.ts).
+// admission pending the judged wave for the latter two (disposition-allowlist.ts). GH #1480 appended a
+// fourth, sibling-not-pack seed to the same module's END — customer-review-card (also pending the
+// judged wave, disposition-allowlist.ts).
 export {
   commerceProductCardSeed,
   productOptionsQuantitySeed,
   listingPhotoGridSeed,
   featuresListCardSeed,
+  customerReviewCardSeed,
   commerceHospitalitySeeds,
 } from './commerce-hospitality.ts'
 

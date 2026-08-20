@@ -282,6 +282,58 @@ export const featuresListCardSeed: ExampleSeed = {
   ],
 }
 
+
+const REVIEW_CARD_ID = 'customer-review-card'
+/** GH #1480 — the Airbnb-style review-summary card (host image-verified reading, issue comment
+ *  5349854821): a plain Card whose first row is ONE star Icon + a bold rating Text + a muted
+ *  "· N reviews" Text (composed via `${…}` interpolation over an absolute path — the
+ *  corpus-growth.ts:274 precedent for interpolation outside a list-item template), followed by a prose
+ *  highlights sentence. Deliberately NOT a five-star `Rating` row (ratingReviewSeed's idiom,
+ *  catalog-frontier.ts) — the host's explicit non-choice, since the reference image shows one glyph plus
+ *  the composed number as the identity carrier (ADR-0057-clean: the glyph is never the sole signifier).
+ *  "N reviews" is plain text, never tappable (the host's default-assumption answer). Every model leaf is
+ *  bound — rating, review count, and the highlights line are all live data, never a literal standing in
+ *  for what a real agent would template (the "dead data" defect class). */
+export const customerReviewCardSeed: ExampleSeed = {
+  name: 'customer-review-card',
+  description:
+    'A customer review-summary card — a header Row of one star Icon, a bold rating value, and a muted review-count line, followed by a prose highlights sentence (Airbnb-style single-star-plus-number summary, not a five-star Rating row).',
+  promptText: "Show this listing's review summary: the star rating, the review count, and a one-line highlights sentence.",
+  surfaceId: REVIEW_CARD_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: REVIEW_CARD_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: REVIEW_CARD_ID,
+        value: {
+          review: {
+            rating: '4.8',
+            count: 46,
+            highlights: 'Guests love the mountain view, forest view, fire place and more.',
+          },
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: REVIEW_CARD_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['head_row', 'highlights_text'] },
+          { id: 'head_row', component: 'Row', gap: 'sm', align: 'center', children: ['star_icon', 'rating_value', 'review_count'] },
+          { id: 'star_icon', component: 'Icon', name: 'star', label: 'Rating' },
+          { id: 'rating_value', component: 'Text', variant: 'label', emphasis: true, text: { path: '/review/rating' } },
+          { id: 'review_count', component: 'Text', variant: 'caption', text: '· ${/review/count} reviews' },
+          { id: 'highlights_text', component: 'Text', variant: 'body', text: { path: '/review/highlights' } },
+        ],
+      },
+    },
+  ],
+}
+
 /** Every seed this module defines — the barrel's family-array precedent (index.ts derives `allSeeds`
  *  length from these, never a hand-counted literal). */
 export const commerceHospitalitySeeds: readonly ExampleSeed[] = [
@@ -289,4 +341,5 @@ export const commerceHospitalitySeeds: readonly ExampleSeed[] = [
   productOptionsQuantitySeed,
   listingPhotoGridSeed,
   featuresListCardSeed,
+  customerReviewCardSeed,
 ]
