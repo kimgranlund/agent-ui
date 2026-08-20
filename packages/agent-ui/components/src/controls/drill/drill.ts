@@ -115,6 +115,11 @@ export class UIDrillElement extends UIContainerElement {
   // stays true forever after the first render, so a re-render for an UNRELATED reason (a panel added/removed,
   // an author prop unrelated to `path`) must not replay the VT swap or the focus move (component-checker fix).
   #lastActiveKey: string | null = null
+  // S2 (component-checker MINOR fix): the crumbs trail is REBUILT wholesale (`#renderCrumbs`'s own
+  // pagination.ts precedent), which drops focus if the rebuild runs on an unrelated re-render (a panel
+  // added/removed elsewhere) while a crumb or the heading holds it — the same "only a REAL change licenses
+  // a rebuild" discipline `keyChanged` already applies to VT/focus, extended to this trail's own content.
+  #lastCrumbsPath: string | null = null
   #warnedNoRoot = false
   #warnedMultiRoot = false
 
@@ -335,6 +340,12 @@ export class UIDrillElement extends UIContainerElement {
     const heading = this.#heading
     if (!nav || !heading) return
     nav.hidden = false
+    // Skip the wholesale rebuild when the trail's own content hasn't changed — an unrelated re-render
+    // (a panel appended/removed elsewhere, a prop unrelated to `path`) must never churn DOM that may be
+    // holding focus (a crumb button or the heading itself).
+    const pathKey = resolvedPath.join(' ')
+    if (pathKey === this.#lastCrumbsPath) return
+    this.#lastCrumbsPath = pathKey
     const ancestorButtons = resolvedPath.slice(0, -1).map((key, index) => {
       const ancestorPanel = panels.find((p) => p.key === key)
       const button = document.createElement('button')
@@ -427,6 +438,7 @@ export class UIDrillElement extends UIContainerElement {
         if (this.#crumbsNav) {
           this.#crumbsNav.hidden = true
           this.#crumbsNav.replaceChildren()
+          this.#lastCrumbsPath = null // force a real rebuild next time chrome flips back to 'crumbs'
         }
         if (this.#heading && this.#header && this.#heading.parentElement !== this.#header) {
           this.#header.append(this.#heading)

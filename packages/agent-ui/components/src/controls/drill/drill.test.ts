@@ -449,6 +449,32 @@ describe('UIDrillElement — chrome="crumbs" (ADR-0195 Amendment cl.A2/A3/A6, S2
     el.remove()
   })
 
+  it('an unchanged trail keeps the SAME crumb node identity across an unrelated re-render (component-checker MINOR fix — the trail rebuilds only when its own content actually changes)', async () => {
+    const el = makeTree()
+    el.chrome = 'crumbs'
+    await click(el.querySelector('[data-drill-key="settings"]')!)
+    const rootCrumb = el.parts.crumbsNav!.querySelector('[data-part="crumb"]') as HTMLButtonElement
+    rootCrumb.setAttribute('data-test-marker', 'the-original') // a jsdom-safe identity tag —
+    // `document.activeElement` is NOT a reliable removal signal in jsdom (it doesn't reliably null out on a
+    // focused node's disconnection the way a real browser does), so this asserts DOM node IDENTITY directly.
+    // an unrelated structural change (a new sibling panel appended) bumps #version and re-renders — the
+    // trail's own path ('root','settings') hasn't changed, so #renderCrumbs must skip its rebuild rather
+    // than replaceChildren() (which would silently drop the marker on a freshly-created button).
+    const extraPanel = document.createElement('ui-drill-panel')
+    extraPanel.setAttribute('key', 'extra')
+    extraPanel.setAttribute('parent', 'root')
+    extraPanel.setAttribute('heading', 'Extra')
+    el.append(extraPanel)
+    // MutationObserver callbacks run in their own microtask checkpoint, which can land AFTER a bare
+    // `whenFlushed()` resolves — give the observer's queued callback a real turn before asking again.
+    await new Promise<void>((resolve) => queueMicrotask(resolve))
+    await whenFlushed()
+    const rootCrumbAfter = el.parts.crumbsNav!.querySelector('[data-part="crumb"]') as HTMLButtonElement
+    expect(rootCrumbAfter).toBe(rootCrumb) // same object reference — never rebuilt
+    expect(rootCrumbAfter.getAttribute('data-test-marker')).toBe('the-original') // survives, proving it
+    el.remove()
+  })
+
   it('an INERT ancestor pane\'s own drill-trigger still cannot fire under chrome="crumbs" (cl.A1/A6 unchanged — chrome never affects PANEL painting)', async () => {
     const el = makeTree()
     el.chrome = 'crumbs'
