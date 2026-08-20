@@ -12,9 +12,7 @@ import { DEFAULT_PROMPT_SECTIONS, ENTRY_KINDS } from '@agent-ui/app/agent-admin-
 import { entriesStoreKey, type Entry } from '@agent-ui/app/entry-data'
 import { lintSectionContent } from '@agent-ui/app/agent-admin-prompt-lint'
 import {
-  ACTIVE_PRESET_KEY,
   AGENT_PRESETS,
-  ROSTER_ORDER_KEY,
   deleteImportedPersona,
   loadImportedPersonas,
   loadRosterOrder,
@@ -27,8 +25,13 @@ import {
   renameImportedPersona,
   saveImportedPersona,
   saveRosterOrder,
+  rosterSource,
   type Persona,
 } from './agent-admin-presets.ts'
+// ADR-0227 wave 1 (GH #1542) — the raw order-record key lives in the roster source now (same underlying
+// storage key; the retired active-preset key constant stays inside the source module — the active-id
+// probes below go through the source's own read/write surface instead).
+import { ROSTER_ORDER_KEY } from '@agent-ui/app/agent-admin-roster-source'
 
 /** The worst case for the lint: NO modality is on, so every term in the vocabulary is live. */
 const ALL_OFF = { a2ui: false, genui: false }
@@ -186,13 +189,13 @@ describe('deleteImportedPersona (GH #845, LLD-C12) — the records AND the keys,
     saveImportedPersona(customPersona('drop', 'Drop'))
     localStorage.setItem(`${PREFIX}.keep.name`, '"Keep"')
     localStorage.setItem(`${PREFIX}.drop.name`, '"Drop"')
-    localStorage.setItem(ACTIVE_PRESET_KEY, 'keep')
+    rosterSource.writeActiveIdSync('keep')
 
     deleteImportedPersona(customPersona('drop', 'Drop'))
 
     expect(keysUnder('keep')).toEqual([`${PREFIX}.keep.name`])
     expect(loadImportedPersonas().map((p) => p.id)).toEqual(['keep'])
-    expect(localStorage.getItem(ACTIVE_PRESET_KEY), 'ACTIVE_PRESET_KEY is the page’s business, not this function’s').toBe('keep')
+    expect(rosterSource.activeIdSync(), 'the active-id record is the page’s business, not this function’s').toBe('keep')
   })
 })
 

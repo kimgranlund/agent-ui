@@ -37,7 +37,6 @@ import {
 import type { AdminAgentTurn, AdminTurnRequest } from '@agent-ui/app/agent-admin-schema'
 import {
   AGENT_PRESETS,
-  IMPORTED_PERSONAS_KEY,
   loadImportedPersonas,
   personaFromPreset,
   personaRoster,
@@ -47,6 +46,9 @@ import {
   saveImportedPersona,
   type Persona,
 } from './agent-admin-presets.ts'
+// ADR-0227 wave 1 (GH #1542) — the raw library-record key lives in the roster source now (same
+// underlying storage key as the retired agent-admin-presets.ts constant).
+import { IMPORTED_PERSONAS_KEY } from '@agent-ui/app/agent-admin-roster-source'
 import {
   PERSONA_FILE_KIND,
   PERSONA_FILE_VERSION,

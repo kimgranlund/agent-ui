@@ -22,16 +22,17 @@ import { installDialogPolyfill } from '@agent-ui/shared/testing/dialog-polyfill'
 import { readFileSync } from 'node:fs'
 import { whenFlushed } from '@agent-ui/components'
 import {
-  ACTIVE_PRESET_KEY,
   AGENT_PRESETS,
-  IMPORTED_PERSONAS_KEY,
-  ROSTER_ORDER_KEY,
   loadImportedPersonas,
   loadRosterOrder,
   personaRoster,
   presetSeed,
+  rosterSource,
   type Persona,
 } from './agent-admin-presets.ts'
+// ADR-0227 wave 1 (GH #1542) — the raw record keys + active-id read/write live in the roster source now
+// (same underlying storage keys; the retired active-preset key constant stays inside the source module).
+import { IMPORTED_PERSONAS_KEY, ROSTER_ORDER_KEY } from '@agent-ui/app/agent-admin-roster-source'
 
 const PREFIX = 'agent-admin-app'
 const CUSTOM_A = 'probe-alpha'
@@ -79,7 +80,7 @@ beforeAll(async () => {
   // so the active-deleted fallback has something real to fall back FROM.
   clearPageState()
   localStorage.setItem(IMPORTED_PERSONAS_KEY, JSON.stringify([customPersona(CUSTOM_A, 'Probe Alpha'), customPersona(CUSTOM_B, 'Probe Beta')]))
-  localStorage.setItem(ACTIVE_PRESET_KEY, CUSTOM_A)
+  rosterSource.writeActiveIdSync(CUSTOM_A)
 
   await import('./agent-admin-app.ts')
   await whenFlushed()
@@ -337,7 +338,7 @@ describe('agent-admin-app — deleting the ACTIVE custom agent sweeps its state 
     expect(store, 'the active persona has a live store').toBeDefined()
     store!.set('name', 'DIRTY-BEFORE-DELETE')
     expect(Object.keys(localStorage).filter((k) => k.startsWith(`${PREFIX}.${CUSTOM_A}.`)).length, 'real keys exist to sweep').toBeGreaterThan(0)
-    expect(localStorage.getItem(ACTIVE_PRESET_KEY)).toBe(CUSTOM_A)
+    expect(rosterSource.activeIdSync()).toBe(CUSTOM_A)
 
     await openViaPicker()
     click(rowFor(CUSTOM_A).querySelector('.roster-row-delete'))
@@ -354,7 +355,7 @@ describe('agent-admin-app — deleting the ACTIVE custom agent sweeps its state 
     const fallback = personaRoster()[0]!
     expect(fallback.id, 'the fallback is the fresh roster’s first entry — a shipped preset, never a deleted id').toBe(AGENT_PRESETS[0]!.id)
     expect(agentSelect().value, 'the picker moved to it').toBe(fallback.id)
-    expect(localStorage.getItem(ACTIVE_PRESET_KEY), 'and the persisted active id was rewritten').toBe(fallback.id)
+    expect(rosterSource.activeIdSync(), 'and the persisted active id was rewritten').toBe(fallback.id)
     expect(admin().store?.get('name'), 'the admin is showing the fallback persona’s own store, not the dead one').toBe(AGENT_PRESETS[0]!.config.name)
 
     expect(rowFor(CUSTOM_A), 'the drawer row is gone too').toBeNull()

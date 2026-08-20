@@ -43,7 +43,8 @@ npm-workspaces monorepo; ten packages under `packages/agent-ui/*`.
 - `code/` — code+prose family (ADR-0119): zero-dep core + `./highlight` · `./markdown` · `./editor`
   (the CodeMirror exception, ADR-0139).
 - `data/` — headless SaaS data layer (ADR-0192): `DataSource<T>` seam, signal-backed
-  `resource()/mutation()/paginated()`, + `./gateway` and `./stream` opt-in subpaths.
+  `resource()/mutation()/paginated()`, + `./gateway` and `./stream` opt-in subpaths; first real
+  consumer: agent-admin's persona roster via `app`'s `PersonaRosterSource` (ADR-0227 wave 1).
 - `devtools/` — chat & A2UI dev/debug harness (ADR-0200): the three-backend transport shelf behind
   the ADR-0137 `AgentTransport` seam, `DevtoolsEvent`/`recordTurn`, + `./server` and `./playwright`
   subpaths; no key/provider/`produce()` ever enters it (the ADR-0073 trust boundary stays at
@@ -61,9 +62,10 @@ npm-workspaces monorepo; ten packages under `packages/agent-ui/*`.
 - Imports point inward only. Cross-package DAG: `shared` ← `components` ← `a2ui` ← {`app`,
   `devtools`}, with `router`/`code`/`data` as sibling branches off `components`, all three
   catalog-invisible (never imported by `a2ui`); `a2a` ← `devtools`; `app` and `devtools` are peers;
-  nothing imports `devtools`; `app` may import `code` but never `router`; `icons`/`a2a` import
-  nothing. Enforced by the per-package `layering.test.ts` trip-wires — consult those on any edge
-  question (ADR-0115/0139/0192/0200).
+  nothing imports `devtools`; `app` may import `code` and `data` (the ADR-0192 cl.1 reserved edge,
+  activated by ADR-0227's roster adoption) but never `router`; `icons`/`a2a` import nothing.
+  Enforced by the per-package `layering.test.ts` trip-wires — consult those on any edge
+  question (ADR-0115/0139/0192/0200/0227).
 - Naming: tags `ui-{name}`, classes `UI{Name}Element`, tokens `--ui-{name}-*` / color roles
   `--md-sys-color-{family}-{role}` / type scale `--md-sys-typescale-{role}-{size}-*` (ADR-0078).
   Event names ∈ `change · input · select · open · close · toggle · action` (ADR-0153).

@@ -7,7 +7,7 @@
 //
 // The design (ruled in-conversation 2026-07-16, the option-2 shape): each preset is its OWN store —
 // `createMemoryStore({ initial: seed, persistKey: 'agent-admin-app.<id>' })` — so edits persist PER
-// PERSONA and survive switching away and back (localStorage-persisted values WIN over the seed,
+// PERSONA and survive switching away and back (persisted values WIN over the seed,
 // memory-store.ts's native-parity law). Switching personas swaps `admin.store`; the component's own
 // reactive store effect (agent-admin.ts's connected()) re-pushes it into the settings pane, rewires
 // every entry section, and — GH #145 fix — genuinely resets the conversation: a real store
@@ -31,6 +31,13 @@
 // cites the composed prompt + enabled capabilities without emitting surfaces.
 import { createMemoryStore } from '@agent-ui/app/settings-memory-store'
 import type { SettingsStore } from '@agent-ui/app/settings-store'
+// ADR-0227 wave 1 (GH #1542) — the roster's persisted records (imported library · display order ·
+// active id · seedVersion/modifiedAt markers) all live in the PersonaRosterSource now: @agent-ui/data's
+// first real consumer surface, persisting through the StorageAdapter browser-storage tier under the SAME
+// raw keys this file used to hand-roll, so existing users' personas survive byte-for-byte. This file
+// keeps its sync function surface (personaRoster · saveImportedPersona · …) as thin delegations — the
+// page's own resource()/mutation() grammar lives in agent-admin-app.ts.
+import { createPersonaRosterSource, PERSONA_ROSTER_NAMESPACE, type PersonaRosterSource } from '@agent-ui/app/agent-admin-roster-source'
 import { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS } from '@agent-ui/app/agent-admin-entries'
 import { entriesStoreKey } from '@agent-ui/app/entry-data'
 import type { Entry, NewEntryInput } from '@agent-ui/app/entry-data'
@@ -634,9 +641,10 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
 
 // ── seed + store mechanics ────────────────────────────────────────────────────────────────────────────────
 
-const PERSIST_PREFIX = 'agent-admin-app'
+// ONE prefix truth: the memory-store persist keys and the roster source's records share the namespace
+// they always did (`agent-admin-app.…`) — imported from the source module so the two can never drift.
+const PERSIST_PREFIX = PERSONA_ROSTER_NAMESPACE
 const persistKeyFor = (id: string): string => `${PERSIST_PREFIX}.${id}`
-export const ACTIVE_PRESET_KEY = `${PERSIST_PREFIX}.activePreset`
 
 /** Expand a persona's seed entries to full `Entry` records (order = index; enabled defaults true). */
 function expand(kind: string, seeds: readonly SeedEntry[]): Entry[] {
@@ -745,36 +753,23 @@ export function personaFromPreset(preset: AgentPreset): Persona {
 
 const storeCache = new Map<string, SettingsStore>()
 
-/** The persisted seed-version marker key (GH #46 / PR #60 review). Persisted-wins-over-seed is the
- *  store law — correct for USER edits, but it also makes an in-place PRESET UPGRADE (the Concierge →
- *  Hotel Concierge rewrite) invisible to anyone whose browser carries the old persona's persisted
- *  store. A preset that declares a bumped `seedVersion` performs an EXPLICIT one-time migration: the
- *  stale persisted store (old seed AND any edits made on top of it) is dropped and the new seed
- *  applies — the same semantic as the user's own "Reset persona", triggered by the upgrade instead.
- *
- *  It sits INSIDE the persona store's own namespace, which `resetPersona`'s prefix sweep relies on (the
- *  marker is dropped with the store and rewritten immediately below). Since GH #409 that also means the
- *  store rehydrates a `seedVersion` key of its own — inert by construction: nothing reads that store key,
- *  and the persona file's key set is enumerated (`PERSONA_STATE_KEYS`), so it never reaches an export. */
-const seedVersionKey = (id: string): string => `${persistKeyFor(id)}.seedVersion`
-
-// GH #921 — the "Date" card field's own FALLBACK (Scope/Open: "if neither [created/modified] exists yet,
-// show modified-at from persistence, note it in Findings"): a shipped preset carries no `createdAt` (it
-// ships with the build, never "created" by this user) and the store format itself carries no timestamp
-// field, so this is the persistence layer's OWN last-write marker — bumped on every real store `set()` via
-// the store's own `subscribe` seam (memory-store.ts), namespaced beside the seedVersion marker so
-// `resetPersona`'s prefix sweep drops it along with everything else on a reset.
-const modifiedAtKey = (id: string): string => `${persistKeyFor(id)}.modifiedAt`
+// ── the roster source (ADR-0227 clause 4 — @agent-ui/data's first real consumer) ─────────────────────────
+// Constructed HERE, the composition seam that owns the shipped roster (clause 2: delivery is explicit
+// injection — the shipped personas are page data, so the page tier hands them in). It owns every record
+// the retired hand-rolled keys carried: the imported library, the display order, the active-agent id,
+// and the per-persona seedVersion/modifiedAt markers — same raw keys, now through the StorageAdapter
+// tier (ADR-0193). `onRemove` keeps the page-side store cache honest in the same motion a delete sweeps.
+export const rosterSource: PersonaRosterSource<Persona> = createPersonaRosterSource<Persona>({
+  shipped: AGENT_PRESETS.map(personaFromPreset),
+  onRemove: (id) => storeCache.delete(id),
+})
 
 /** The persisted last-write time (epoch ms), or `undefined` when this persona's store has never been
  *  written to since boot (a fresh preset, or a reset one) — the Manage-agents card's Date fallback reads
- *  this when `Persona.createdAt` is absent. */
+ *  this when `Persona.createdAt` is absent (GH #921's own fallback ruling; the marker is bumped by the
+ *  store-subscribe seam in `personaStore` below and swept with the namespace on reset). */
 export function loadModifiedAt(id: string): number | undefined {
-  if (typeof localStorage === 'undefined') return undefined
-  const raw = localStorage.getItem(modifiedAtKey(id))
-  if (raw === null) return undefined
-  const parsed = Number(raw)
-  return Number.isFinite(parsed) ? parsed : undefined
+  return rosterSource.modifiedAtSync(id)
 }
 
 /** GH #1277 — has this persona ever been INSTANTIATED (its store built at least once, seed applied)?
@@ -783,49 +778,43 @@ export function loadModifiedAt(id: string): number | undefined {
  *  pane's 'From catalog' section is exactly the presets for which this is still `false` — once
  *  instantiated a preset leaves the catalog read (the pane's dedup law) and is picked as a live agent. */
 export function personaInstantiated(id: string): boolean {
-  if (storeCache.has(id)) return true
-  return typeof localStorage !== 'undefined' && localStorage.getItem(seedVersionKey(id)) !== null
+  return storeCache.has(id) || rosterSource.seedVersionSync(id) !== undefined
 }
 
 /** The persona's store — cached per id so switching away and back keeps one live instance; persisted
- *  values (this persona's OWN prior edits) win over the seed, memory-store.ts's parity law. */
+ *  values (this persona's OWN prior edits) win over the seed, memory-store.ts's parity law.
+ *
+ *  The seedVersion marker (GH #46 / PR #60 review): persisted-wins-over-seed is correct for USER edits,
+ *  but it makes an in-place PRESET UPGRADE invisible to a browser holding the old persisted store — a
+ *  bumped `seedVersion` performs an explicit one-time migration (drop the stale store, apply the new
+ *  seed), the user's own "Reset persona" semantic triggered by the upgrade. The marker sits INSIDE the
+ *  persona's namespace so the reset sweep drops and rewrites it; the sweep-before-reseed ordering here
+ *  leans on the storage tier's same-tick writes (persona-roster-source.ts's own stated law). */
 export function personaStore(persona: Persona): SettingsStore {
   let store = storeCache.get(persona.id)
   if (!store) {
     const wanted = persona.seedVersion ?? 1
-    if (typeof localStorage !== 'undefined') {
-      const persisted = Number(localStorage.getItem(seedVersionKey(persona.id)) ?? '1')
-      if (persisted < wanted) resetPersona(persona) // the one-time migration — drops the stale persisted store
-      localStorage.setItem(seedVersionKey(persona.id), String(wanted))
-    }
+    const persisted = rosterSource.seedVersionSync(persona.id) ?? 1
+    if (persisted < wanted) resetPersona(persona) // the one-time migration — drops the stale persisted store
+    rosterSource.writeSeedVersionSync(persona.id, wanted)
     store = createMemoryStore({ initial: persona.seed, persistKey: persistKeyFor(persona.id) })
     // GH #921 — bump the modified-at marker on every REAL write (never on construction itself — a fresh
     // store's seed read is not an edit). `subscribe` is optional on `SettingsStore`; `createMemoryStore`
     // always implements it, but the guard keeps this inert against a hypothetical future store shape that
     // doesn't.
-    store.subscribe?.(() => {
-      if (typeof localStorage !== 'undefined') localStorage.setItem(modifiedAtKey(persona.id), String(Date.now()))
-    })
+    store.subscribe?.(() => rosterSource.bumpModifiedAtSync(persona.id))
     storeCache.set(persona.id, store)
   }
   return store
 }
 
-/** Reset a persona to its seed: drop every localStorage key under its persistKey (including keys the
+/** Reset a persona to its seed: drop every persisted key under its namespace (including keys the
  *  user's own edits minted) + the cached store, so the next `personaStore` rebuilds from the pure seed.
  *  For an IMPORTED persona the seed IS the imported file's state — reset returns it to exactly what was
- *  imported, the same "back to how it shipped" semantic a preset gets. */
+ *  imported, the same "back to how it shipped" semantic a preset gets. The active-id record lives
+ *  OUTSIDE any persona namespace, so the sweep can never take it (the page's own fallback rule). */
 export function resetPersona(persona: Persona): void {
-  if (typeof localStorage !== 'undefined') {
-    const prefix = `${persistKeyFor(persona.id)}.`
-    // Collect first — removing while iterating by index skips entries (live key list).
-    const doomed: string[] = []
-    for (let i = 0; i < localStorage.length; i += 1) {
-      const key = localStorage.key(i)
-      if (key !== null && key.startsWith(prefix)) doomed.push(key)
-    }
-    for (const key of doomed) localStorage.removeItem(key)
-  }
+  rosterSource.resetStateSync(persona.id)
   storeCache.delete(persona.id)
 }
 
@@ -838,7 +827,7 @@ export function resetPreset(preset: AgentPreset): void {
 }
 
 // ── the imported-persona library (GH #406) ────────────────────────────────────────────────────────────
-// Imported personas are ROSTER data, so they persist as one localStorage record (metadata + seed), NOT
+// Imported personas are ROSTER data, so they persist as one storage record (metadata + seed), NOT
 // as a store: their store is minted from that seed by `personaStore` exactly like a preset's, which is
 // what makes an imported persona survive a reload — the roster record restores WHAT the persona is, and
 // its own `agent-admin-app.<id>.*` keys restore the edits made since.
@@ -850,37 +839,17 @@ export function resetPreset(preset: AgentPreset): void {
 // hidden allowlist — Surface Options and the capability master switches (no preset seed carries them, and
 // neither does an export taken before they were ever touched) persisted on write and vanished on reload.
 
-export const IMPORTED_PERSONAS_KEY = `${PERSIST_PREFIX}.importedPersonas`
-
 /** The persisted imported personas, fail-closed: a corrupt/foreign record reads as an EMPTY library
- *  (never a throw at page boot — a broken record must not take the whole admin page down with it). */
+ *  (never a throw at page boot — a broken record must not take the whole admin page down with it).
+ *  The record itself (and its raw key) lives in the roster source (ADR-0227 wave 1). */
 export function loadImportedPersonas(): Persona[] {
-  if (typeof localStorage === 'undefined') return []
-  const raw = localStorage.getItem(IMPORTED_PERSONAS_KEY)
-  if (raw === null) return []
-  try {
-    const parsed = JSON.parse(raw) as unknown
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter(
-      (p): p is Persona =>
-        typeof p === 'object' &&
-        p !== null &&
-        typeof (p as Persona).id === 'string' &&
-        typeof (p as Persona).label === 'string' &&
-        typeof (p as Persona).seed === 'object' &&
-        (p as Persona).seed !== null,
-    )
-  } catch {
-    return []
-  }
+  return rosterSource.importedSync()
 }
 
 /** Append one imported persona to the persisted library (last-write-wins on a same-id record — ids are
  *  minted collision-safe against the live roster, so this is a defensive dedupe, not a merge policy). */
 export function saveImportedPersona(persona: Persona): void {
-  if (typeof localStorage === 'undefined') return
-  const next = [...loadImportedPersonas().filter((p) => p.id !== persona.id), { ...persona, imported: true }]
-  localStorage.setItem(IMPORTED_PERSONAS_KEY, JSON.stringify(next))
+  rosterSource.upsertImportedSync(persona)
 }
 
 // ── roster management: order · delete · rename (GH #845, LLD-C11/C12/C13) ─────────────────────────────
@@ -892,107 +861,44 @@ export function saveImportedPersona(persona: Persona): void {
 // shipped preset, and both functions ALSO guard on `imported === true` and return `false` — defense in
 // depth, so a future caller (or a hand-crafted `Persona` object) can never sweep a shipped preset's keys.
 
-/** The persisted display order: an explicit array of persona ids (GH #845, LLD-C11/§8a).
- *
- *  Why an ORDER ARRAY rather than an index on the library record: a record-side order cannot order PRESETS
- *  relative to imported entries (presets never live in `IMPORTED_PERSONAS_KEY`), and the drawer reorders the
- *  WHOLE roster. It lives beside the other page records under `PERSIST_PREFIX`, deliberately OUTSIDE any
+/** The persisted order, fail-closed: a corrupt/foreign record reads as NO order (⇒ the natural order),
+ *  never a throw at page boot. Why an ORDER ARRAY rather than an index on the library record: a
+ *  record-side order cannot order PRESETS relative to imported entries (presets never live in the
+ *  library record), and the drawer reorders the WHOLE roster. The record lives OUTSIDE any
  *  `agent-admin-app.<id>.` namespace, so `resetPersona`'s prefix sweep can never take it with it. */
-export const ROSTER_ORDER_KEY = `${PERSIST_PREFIX}.rosterOrder`
-
-/** The persisted order, fail-closed exactly like `loadImportedPersonas`: a corrupt/foreign record reads as
- *  NO order (⇒ today's natural order), never a throw at page boot. */
 export function loadRosterOrder(): string[] {
-  if (typeof localStorage === 'undefined') return []
-  const raw = localStorage.getItem(ROSTER_ORDER_KEY)
-  if (raw === null) return []
-  try {
-    const parsed = JSON.parse(raw) as unknown
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter((id): id is string => typeof id === 'string')
-  } catch {
-    return []
-  }
+  return rosterSource.orderSync()
 }
 
 /** Persist the display order (ids, in display order). Ids that no longer resolve are harmless — the read
  *  side skips them (`personaRoster`), so a ghost can never resurrect a deleted persona. */
 export function saveRosterOrder(ids: readonly string[]): void {
-  if (typeof localStorage === 'undefined') return
-  localStorage.setItem(ROSTER_ORDER_KEY, JSON.stringify([...ids]))
+  rosterSource.saveOrderSync(ids)
 }
 
 /** The full roster the page offers: the shipped presets first, then the imported library in import order —
- *  THEN the persisted display order applied on top (GH #845, LLD-C11/§8a).
- *
- *  `personaRoster()` itself is the ONE choke point that applies the order, so every caller (this page or
- *  another) sees one order rather than each re-deriving it. The rule: ids named by the stored order come
- *  first, in stored order (an id no longer on the roster is SKIPPED — a ghost from a delete elsewhere, or a
- *  corrupt record); everything unlisted follows in the natural order above (presets, then imports in import
- *  order), so a fresh mint/import lands at the end and an absent/empty order record reproduces today's
- *  order byte for byte. Read FRESH (never cached) — the page rebuilds nothing else when an import lands. */
+ *  THEN the persisted display order applied on top (GH #845, LLD-C11/§8a). The order rule itself is the
+ *  source module's `applyRosterOrder` (one choke point, reused by the page's optimistic commits too);
+ *  the records are read FRESH on every call — the page rebuilds nothing else when an import lands. */
 export function personaRoster(): Persona[] {
-  const natural = [...AGENT_PRESETS.map(personaFromPreset), ...loadImportedPersonas()]
-  const order = loadRosterOrder()
-  if (order.length === 0) return natural
-  // A Map keeps insertion (= natural) order for whatever the stored order never names, and deleting as we
-  // go is also what makes a REPEATED id in the record harmless (it can only match once).
-  const unlisted = new Map(natural.map((persona) => [persona.id, persona]))
-  const listed: Persona[] = []
-  for (const id of order) {
-    const persona = unlisted.get(id)
-    if (persona === undefined) continue
-    unlisted.delete(id)
-    listed.push(persona)
-  }
-  return [...listed, ...unlisted.values()]
+  return rosterSource.listSync()
 }
 
 /** Delete an IMPORTED persona — the roster record, every persisted key it owns, and its slot in the order
- *  array (GH #845, LLD-C12/§8b). Returns `false` (and touches NOTHING) for a shipped preset.
- *
- *  Delete = reset + forget the records, stated as such rather than re-implementing a second sweep:
- *  (1) `resetPersona` — the tested prefix sweep that drops every `agent-admin-app.<id>.*` key (INCLUDING
- *      the seedVersion marker, which lives inside that namespace by design) plus the cached store instance;
- *  (2) the `IMPORTED_PERSONAS_KEY` record — the one thing reset deliberately does NOT touch, because reset
- *      means "back to how it shipped", not "gone";
- *  (3) the order array's mention of the id, so a later mint reusing the slug cannot inherit its position.
- *  `ACTIVE_PRESET_KEY` is deliberately NOT this function's concern — the page's own fallback (`applyPersona`
- *  on the fresh `personaRoster()[0]`) rewrites it, and doing it here would fight that. */
+ *  array (GH #845, LLD-C12/§8b). Returns `false` (and touches NOTHING) for a shipped preset. The sweep,
+ *  the record rewrite, and the order-slot removal live in the source (`removeImportedSync`), whose
+ *  `onRemove` seam also evicts this page's cached store instance in the same motion. The active-id
+ *  record is deliberately NOT this function's concern — the page's own fallback rewrites it. */
 export function deleteImportedPersona(persona: Persona): boolean {
-  if (persona.imported !== true) return false
-  resetPersona(persona)
-  if (typeof localStorage !== 'undefined') {
-    const next = loadImportedPersonas().filter((p) => p.id !== persona.id)
-    localStorage.setItem(IMPORTED_PERSONAS_KEY, JSON.stringify(next))
-    const order = loadRosterOrder()
-    if (order.includes(persona.id)) saveRosterOrder(order.filter((id) => id !== persona.id))
-  }
-  return true
+  return rosterSource.removeImportedSync(persona)
 }
 
 /** Rename an IMPORTED persona — DISPLAY ONLY, ids stay stable (GH #845, LLD-C13/§8c; the GH #848 rename
  *  law). Returns `false` (and touches nothing) for a preset, a blank label, or an id no library record
- *  answers to.
- *
- *  The record is re-read LIVE (`loadImportedPersonas`) rather than trusting the caller's possibly-stale
- *  object, and only its `label` changes — the `seed` bytes are untouched, and no store key is written at
- *  all (edits live under the `agent-admin-app.<id>.*` keys, not in the record), so a rename has no
- *  reload semantics and cannot lose an edit.
- *
- *  IN-PLACE rewrite, not `saveImportedPersona`: that helper's append-after-filter shape (correct for a
- *  fresh import) would move the renamed record to the END of the library, silently reordering the picker
- *  on a rename. Order is the reorder verb's business alone (LLD-C11), so the rewrite preserves position. */
+ *  answers to. The record is re-read LIVE and rewritten IN PLACE (never append-after-filter, which would
+ *  reorder the picker) — the ported law lives in the source's `renameImportedSync`. */
 export function renameImportedPersona(persona: Persona, label: string): boolean {
-  if (persona.imported !== true) return false
-  const next = label.trim()
-  if (next.length === 0) return false
-  if (typeof localStorage === 'undefined') return false
-  const library = loadImportedPersonas()
-  if (!library.some((p) => p.id === persona.id)) return false
-  const rewritten = library.map((p) => (p.id === persona.id ? { ...p, label: next, imported: true } : p))
-  localStorage.setItem(IMPORTED_PERSONAS_KEY, JSON.stringify(rewritten))
-  return true
+  return rosterSource.renameImportedSync(persona, label)
 }
 
 // ── the Builder (ADR-0178 cl.4 / LLD-C7, GH #633) ─────────────────────────────────────────────────────
