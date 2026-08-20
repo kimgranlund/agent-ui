@@ -94,11 +94,14 @@ export { crudEntryListDrawerSeed, crudEntryListSeeds } from './crud-entry-list.t
 export { planAndExecutePlanSeed, planAndExecuteApproveAskSeed, planAndExecuteSeeds } from './plan-and-execute.ts'
 // GH #1377 — the commerce+hospitality genui-pack: product-presentation (flagship, judged+admitted),
 // variant-picker + quantity (product-options-quantity), and media-grid (listing-photo-grid) —
-// admission pending the judged wave for the latter two (disposition-allowlist.ts).
+// admission pending the judged wave for the latter two (disposition-allowlist.ts). GH #1480 appended a
+// fourth, sibling-not-pack seed to the same module's END — customer-review-card (also pending the
+// judged wave, disposition-allowlist.ts).
 export {
   commerceProductCardSeed,
   productOptionsQuantitySeed,
   listingPhotoGridSeed,
+  customerReviewCardSeed,
   commerceHospitalitySeeds,
 } from './commerce-hospitality.ts'
 
