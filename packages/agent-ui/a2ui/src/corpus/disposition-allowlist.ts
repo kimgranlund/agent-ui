@@ -192,4 +192,12 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // fresh-context a2ui-review-agent (PASS, qualityScore 4, verdicts archived 2026-08-19t23-40-00z) and
   // admitted via import-seeds --verdicts the same day — entry DRAINED per its own instruction
   // (ADR-0068: never self-judged). The map is back to its EMPTY steady state.
+  //
+  // GH #1479 (2026-08-19) — `features-list-card`: the same pending-state shape (NO VERDICT SOUGHT YET,
+  // not a refusal). Added to `commerce-hospitality.ts` as its own composed-pattern seed — an
+  // Amenities-style icon+label feature list, no catalog promotion this pass. Its corpus admission is a
+  // pending judged import wave — the authoring session judging its own seed is the manufactured
+  // judgment ADR-0068's Alternatives ban. Run the judged pipeline (`import-seeds.ts` with a real
+  // VerdictsFile) and DELETE this entry when that wave lands.
+  ['features-list-card', 'GH #1479 — no verdict sought yet; a future judged wave should admit or drop this seed and delete this entry.'],
 ])
