@@ -8,7 +8,7 @@
 > | **Date** | 2026-08-20 |
 > | **Proposed by** | planning lane against GH [#1538](https://github.com/kimgranlund/agent-ui/issues/1538) (due-process Phases 1–2, GH #969) — pulling ADR-0050's own named re-evaluation trigger, on F3 + F4 of the data-model review corpus (`../reports/data-model-review-2026-08-20/`, Kim's 2026-08-20 fold-into-one-lane ruling on the issue). Number 0227 claimed against the file tree (0226 present at HEAD, zero open PRs claiming a number) |
 > | **Ratified by** | *(pending — Kim, via a `ratify ADR-0227` utterance executed by `scripts/adr_ratify.py`; `proposed` means "return it to me", never self-flip)* |
-> | **Repairs** | on ratification + build (wave 1, the roster adoption — none authored here): `CLAUDE.md` §Layout/DAG rows (`app` gains the `data` import edge ADR-0192 cl.1 reserved as "`app` MAY, later") · `packages/agent-ui/app/package.json` (+`@agent-ui/data`) · the inward `layering.test.ts` trip-wires touched by that edge · `site/pages/agent-admin-presets.ts` (the hand-rolled roster keys retire onto the new source) · `site/pages/agent-admin-app.ts` (roster/active-id become derivations of the one resource) · `../reports/data-model-review-2026-08-20/follow-up-queue.md` Q6 mints, Q3/Q4 fold into it (its own ordering note) |
+> | **Repairs** | on ratification + build (wave 1, the roster adoption — none authored here): `CLAUDE.md` §Layout/DAG rows (`app` gains the `data` import edge ADR-0192 cl.1 reserved as "`app` MAY, later") · `packages/agent-ui/app/package.json` (+`@agent-ui/data`) · the inward `layering.test.ts` trip-wires touched by that edge · `site/pages/agent-admin-presets.ts` (the hand-rolled roster keys retire onto the new source) · `site/pages/agent-admin-app.ts` (roster/active-id become derivations of the one resource) · `../reports/data-model-review-2026-08-20/follow-up-queue.md` Q6 mints, Q3/Q4 fold into it (its own ordering note). GH #1538 IS the §1 tracking issue holding these items — this cell gets commented onto it at flip time; the wave PR carries `Refs #1538`, never `Closes` |
 > | **Supersedes / Superseded by** | (none) — **Resolves** ADR-0050's Consequences trigger line ("if a second context consumer appears, the community `context-request` protocol is the named re-evaluation trigger") — the re-evaluation this record IS; ADR-0050's decision stands whole. **Relates** [ADR-0051](./0051-uiformelement-field-labelling-seam.md) (the second point solution, ratified in place here) · [ADR-0117](./0117-theme-provider-shipped-component.md) (the third, likewise) · [ADR-0192](./0192-agent-ui-data-package.md) (the package this record gives its first consumer; its structural-sharing move-down condition and soft-global default store are cited, untouched) · [ADR-0193](./0193-shared-storage-adapter-seam.md) (+ its ratified sync-read amendment — the persistence tier the adopted source rides) · [ADR-0115](./0115-spa-router-v1-scope.md) (the `defaultRouter` soft-global posture cl.2 fences as the exception, never the pattern) |
 
 ## Context
@@ -20,15 +20,16 @@ implementations now"; full inventories in `../reports/data-model-review-2026-08-
 **F3 — no general context/shared-state grammar was ever sanctioned.** The framework has three
 structurally unrelated point solutions: ADR-0050's connect-event registry (forms), ADR-0051's direct
 imperative signal push (field labelling, one clause away on the same base class), ADR-0117's pure CSS
-cascade (theme — deliberately zero kernel state). ADR-0050's own Consequences named the re-evaluation
-trigger — "if a second context consumer appears, the community `context-request` protocol is the named
-re-evaluation trigger… do not pre-abstract" — and it was never pulled when ADR-0117 shipped the second
+cascade (theme — deliberately zero kernel state beyond one scheme→`colorScheme` effect). ADR-0050
+named the re-evaluation trigger — "if a second context consumer appears, the community
+`context-request` protocol is the named re-evaluation trigger" (Consequences) … "do not pre-abstract"
+(Alternatives (a)) — and it was never pulled when ADR-0117 shipped the second
 provider-shaped control ~8 days later. The cost is measured, not speculative: agent-admin-app is FOUR
 stacked generations of state pattern (reactive `SettingsStore` → hand-rolled `Persona[]` on raw
 localStorage → imperative push-snapshot roster seam → `StorageAdapter` tier), with two live
 user-visible bugs from the same defect class (the "New agent 48"/"Wrench" name split and its Team-pane
-twin — `agent-admin-app-state-audit.md` §sync-1/2), a triplicated active-agent-id, and a
-five-call-site fresh-object law enforced only by discipline. The audit's verdict: every generation
+twin — `agent-admin-app-state-audit.md` §sync-1/2), a triplicated active-agent-id, and the
+`admin.libraries` fresh-object reassignment law (F7) enforced only by call-site discipline. The audit's verdict: every generation
 was added because there was never a second sanctioned option to converge on. (One honesty note: the
 corpus's `context/provide/inject/singleton` grep-hit list over-reads — the `agent-admin.ts`
 "singleton" hits are toast-region ownership comments, not DI attempts; the load-bearing app-tier
@@ -69,8 +70,8 @@ consumers).
 - *Field labelling (ADR-0051)*: the field owns the label nodes and their ids; its Alternatives
   explicitly rejected "a control-pulls protocol (context-style)" as inverting ownership. Would not
   migrate.
-- *Theme/scale/density (ADR-0117)*: rides native CSS cascade/inheritance with zero JS state —
-  strictly superior for inheritable presentational axes (works for non-component subtrees, costs no
+- *Theme/scale/density (ADR-0117)*: rides native CSS cascade/inheritance with zero reactive state
+  beyond the one scheme mapping — strictly superior for inheritable presentational axes (works for non-component subtrees, costs no
   kernel bytes). Would not migrate.
 - *App-tier shared state (the audit)*: the pain is never "a descendant can't discover an ancestor's
   value" — every failing surface already HAS a reference to what it needs; the pain is multiple
@@ -113,8 +114,10 @@ the agent-admin persona roster CRUD as its first real consumer.** Five clauses:
      hydration on the localStorage tier) — never a raw `localStorage` touch-point. (`SettingsStore`'s
      own sync contract stays untouched per ADR-0193 cl.6; this clause governs NEW state, it does not
      retrofit that seam.)
-   - **Presentational, inheritable axes ride the CSS cascade** (ADR-0117's mechanism), never JS
-     state. Module-level default instances (ADR-0115's `defaultRouter`, ADR-0192's default store)
+   - **Presentational, inheritable axes ride the CSS cascade** (ADR-0117's mechanism) — delivery to
+     descendants is cascade/inheritance, never kernel state; the provider's own typed reflected
+     props and its one scheme→`colorScheme` mapping are in-grammar per ADR-0117 itself.
+     Module-level default instances (ADR-0115's `defaultRouter`, ADR-0192's default store)
      stay documented soft-global *exceptions*, never the pattern; traits stay channel-less by design
      ("there is no `host.use()`") — neither is widened here.
 
@@ -148,7 +151,9 @@ the agent-admin persona roster CRUD as its first real consumer.** Five clauses:
      `mutation()`s with prefix invalidation. The page's `roster`/`active` module vars and the
      component's `#pendingRoster` push become *derivations* of that one resource (the active-agent
      id collapses to one owner + two derivations — F6/Q4), and `setAgentRoster` is fed from a
-     subscription, closing the write-only-no-read-path class at its root.
+     subscription, closing the write-only-no-read-path class at its root. (The raw
+     `localStorage[ACTIVE_PRESET_KEY]` write at `agent-admin-app.ts:330` retires with the keys —
+     the Acceptance predicate covers BOTH page modules, not just the presets file.)
    - The DAG edge activates: `app` depends on `@agent-ui/data` (ADR-0192 cl.1's reserved "MAY,
      later"), with `CLAUDE.md`'s DAG row and the inward layering trip-wires updated in the same
      build. `data` stays catalog-invisible; nothing else in the DAG moves. ADR-0192's
@@ -157,8 +162,9 @@ the agent-admin persona roster CRUD as its first real consumer.** Five clauses:
    - Follow-up-queue Q6 mints as the build wave; Q3/Q4 fold into it per that file's own ordering
      note. **Honest cost, accepted:** `resource()`'s SWR/dedup/abort machinery is heavier than a
      purely local roster strictly needs — priced against carrying ONE grammar instead of a fifth
-     generation, the roster already genuinely spanning two storage tiers plus cross-tab, and the
-     alternative leaving ADR-0192 at zero consumers indefinitely.
+     generation, the roster already genuinely spanning two storage tiers (with cross-tab staleness
+     unguarded today — the subscription this wave adds), and the alternative leaving ADR-0192 at
+     zero consumers indefinitely.
    - **Coupling, stated for a partial ratification:** if Kim rejects clause 2 (ratifying the
      status-quo fork instead), this clause's default flips to SHELVE — a dated deferral so
      built-but-unadopted stops reading as drift — because without the grammar the roster migration
@@ -205,12 +211,14 @@ the agent-admin persona roster CRUD as its first real consumer.** Five clauses:
   converts clause 4 to the dated shelve record per its own coupling paragraph.
 - **Wave 1 (the roster adoption), checkable at its PR:** `packages/agent-ui/app/package.json`
   declares `@agent-ui/data`; every inward layering trip-wire green; `grep -n 'localStorage'
-  site/pages/agent-admin-presets.ts` returns ZERO hits (the hand-rolled keys retired onto the
-  source); exactly ONE owner for the active-agent id (the audit's three cited sites reduced to one
+  site/pages/agent-admin-presets.ts site/pages/agent-admin-app.ts` returns ZERO hits and
+  `ACTIVE_PRESET_KEY` has zero references outside the new source module (the hand-rolled keys
+  retired onto the source); exactly ONE owner for the active-agent id (the audit's three cited sites reduced to one
   write path + derivations); the roster select, Edit-Agents drawer, and Team-pane GM line all render
   from derivations of the one resource; `npm run check` and `npm test` green by exit code.
 - **Grammar conformance, standing:** every post-ratification PR introducing a provider-shaped
-  mechanism or a new persistence touch-point cites ADR-0227 (conformance or named exception) in its
+  control, an app-tier shared-state mechanism, or a new persistence touch-point (clause 5's three
+  categories) cites ADR-0227 (conformance or named exception) in its
   descriptor/LLD/PR body — reviewable by grep, enforced at review per clause 5.
 - **Trigger hygiene:** if clause 3's fact-shaped condition fires (an ancestry-blind consumer
   appears), the adopting record must cite this clause and deliver stores-once on the one kernel —
@@ -239,7 +247,8 @@ the agent-admin persona roster CRUD as its first real consumer.** Five clauses:
   shelving the ratified realization while sanctioning its grammar would mandate a third hand-rolled
   variant. Kept as the explicit fallback if clause 2 is rejected (clause 4's coupling paragraph) —
   a partial ratification stays coherent either way.
-- **A different first consumer (a gateway-backed site demo page, ADR-0192's own M2 dogfood)** —
+- **A different first consumer (ADR-0192 cl.6's own M2 dogfood — "one `site/` page migrated onto
+  `resource()`/`fromFetchStream()`")** —
   rejected: doc-page dogfood is exactly what left the package at zero *real* consumers; the roster
   is live, central, symptomatic, and buys the F5/F6 modernization as a side effect of adoption
   instead of as separate migration chores.
