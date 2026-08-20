@@ -1,7 +1,9 @@
-// site/pages/drill-doc.ts — the ui-drill API doc page (ADR-0195). DERIVED from `drill.md` via the shared
-// doc-page.ts renderer (the attribute table is surfaceProps + path + view-transitions). One representative
-// LIVE specimen mounts a real 2-level drill (root → settings). The N-level tree + the change-event log is the
-// Drill demo. Parts/keyboard sections render straight from drill.md's own descriptor (composeDocPage).
+// site/pages/drill-doc.ts — the ui-drill API doc page (ADR-0195 + its Amendment, GH #1510). DERIVED from
+// `drill.md` via the shared doc-page.ts renderer (the attribute table is surfaceProps + path +
+// view-transitions + `layout`/`chrome`). One representative LIVE specimen mounts a real 2-level drill (root →
+// settings), stack/backbar default. All three layout/chrome combinations (stack, chrome="crumbs",
+// layout="columns" incl. the narrow-degrade) are the Drill demo's job, live — this page's own body prose
+// (composeDocPage, straight from drill.md below the frontmatter fence) already documents each mode's mechanics.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo-content chrome; never restyles a ui-* control
 import { loadDrillDoc } from '../lib/frontmatter.ts'
@@ -12,9 +14,10 @@ const { descriptor, body } = loadDrillDoc()
 
 const { content } = mountPage({
   title: 'ui-drill — API',
-  intro: 'A one-panel container that drills down an N-level selection tree — exactly one level visible at a ' +
-    'time, a Back affordance, a bindable path (ADR-0195). Generated from drill.md (descriptor-derived table). ' +
-    'See the Drill demo for a deeper tree + the change-event log.',
+  intro: 'A contained, card-like container that drills down an N-level selection tree (ADR-0195 + its ' +
+    'Amendment, GH #1510) — stack (default), chrome="crumbs", and layout="columns" (Miller columns, with a ' +
+    'narrow-host auto-degrade back to stack). Generated from drill.md (descriptor-derived table). See the ' +
+    'Drill demo for all three modes live + the change-event log.',
 })
 
 const text = (s: string): Text => document.createTextNode(s)
