@@ -47,4 +47,14 @@ describe('the Phosphor subpath self-registers + activates on import (LLD-C4)', (
       expect(svg.children.length, `${name} resolved to an empty svg`).toBeGreaterThan(0)
     }
   })
+
+  it('GH #1485 — every amenity/hospitality glyph is registered and resolves to a real (non-missing) svg', () => {
+    const AMENITIES = ['mountains', 'tree', 'campfire', 'bathtub', 'swimming-pool', 'wifi-high', 'paw-print'] as const
+    for (const name of AMENITIES) {
+      expect(ICON_NAMES, `${name} missing from ICON_NAMES`).toContain(name)
+      const svg = resolveIcon(name, iconRegistry)
+      expect(svg.getAttribute('data-icon-missing'), `${name} resolved as missing`).toBeNull()
+      expect(svg.children.length, `${name} resolved to an empty svg`).toBeGreaterThan(0)
+    }
+  })
 })
