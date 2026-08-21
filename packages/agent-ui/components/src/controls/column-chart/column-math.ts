@@ -45,8 +45,9 @@ export interface ColumnRow {
 }
 
 /** One resolved value-scale gridline: the tick VALUE, its printed text, and its percent-from-BOTTOM
- *  position (0 = baseline, 100 = the scale's top) — a consuming control flips to SVG `y` (`100 - pct`)
- *  at the render boundary, never here. */
+ *  position (0 = baseline, 100 = the scale's top) — a consuming control flips to a block-start
+ *  distance from the top (`100 - pct`, ADR-0230 cl.1: `inset-block-start` on an HTML div, never SVG
+ *  `y`) at the render boundary, never here. */
 export interface GridTick {
   value: number
   text: string
@@ -61,6 +62,12 @@ export interface ColumnChartGeometry {
   /** Category-axis chip indices to actually RENDER after chip-collision thinning (ADR-0228 cl.2) — a
    *  subset of `[0, rows.length)`, ascending, first/last always present for a non-empty axis. */
   categoryChipIndices: readonly number[]
+  /** The COARSE subset of `categoryChipIndices` that survives the container-query ladder's medium rung
+   *  (ADR-0230 cl.4) — `thinnedIndices` re-applied over the RENDERED chip list at a cap of 4, endpoint-
+   *  preserving by construction, mapped back onto original row indices. A consuming control marks every
+   *  rendered category chip NOT in this subset with the fine-tier density attribute; the medium rung's
+   *  CSS hides it. Count-derived at render, width-blind — only the CSS rung itself is width-aware. */
+  coarseCategoryChipIndices: readonly number[]
   /** The actual/projected boundary percent (ADR-0228 cl.4's now-marker), or `null` when there is none. */
   nowPct: number | null
 }
@@ -165,12 +172,22 @@ export function columnChartGeometry(
     pct: scale.max === scale.min ? 0 : ((value - scale.min) / (scale.max - scale.min)) * 100,
   }))
 
+  const categoryChipIndices = thinnedIndices(n, maxCategoryChips)
+  // ADR-0230 cl.4 — the medium container rung's coarse tier: re-apply `thinnedIndices` over the RENDERED
+  // chip list (not the raw row indices) at a fixed cap of 4. `thinnedIndices` is endpoint-preserving by
+  // construction (its k=0/k=keep-1 slots always pin index 0 and n-1 of whatever list it's given), so this
+  // keeps both ends of `categoryChipIndices` — never a parity/`:nth-child` selection, which would drop an
+  // endpoint on an even rendered count (the rejected alternative, ADR-0230 Consequences).
+  const coarsePositions = thinnedIndices(categoryChipIndices.length, 4)
+  const coarseCategoryChipIndices = coarsePositions.map((p) => categoryChipIndices[p])
+
   return {
     rows: renderedRows,
     series,
     scale,
     gridTicks,
-    categoryChipIndices: thinnedIndices(n, maxCategoryChips),
+    categoryChipIndices,
+    coarseCategoryChipIndices,
     nowPct: nowMarkerPercent(n, clampedProjected),
   }
 }

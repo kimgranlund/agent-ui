@@ -1,12 +1,15 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp } from 'vitest/browser'
 
-// column-chart.browser.test.ts — the cross-engine browser-truth proof (ADR-0228/ADR-0229; jsdom is blind
-// to painted geometry). Runs in BOTH Chromium and WebKit (vitest.browser.config.ts). Covers what jsdom
-// cannot: the whole-shape floor, the two-layer full-bleed model (plot/columns at zero inset, chrome
-// chips staying INSIDE the box), the now-marker's short (never full-height) tick, the projected ghost's
-// hollow paint, the six-step series ramp's RESOLVED lightness ladder (the ADR-0219 Amendment class of
-// regression only a real engine can catch), and forced-colors.
+// column-chart.browser.test.ts — the cross-engine browser-truth proof (ADR-0228/ADR-0229/ADR-0230; jsdom
+// is blind to painted geometry AND to container queries). Runs in BOTH Chromium and WebKit
+// (vitest.browser.config.ts). Covers what jsdom cannot: the whole-shape floor, the two-layer full-bleed
+// model (plot/columns at zero inset, chrome chips staying INSIDE the box) — now proven over the HTML
+// plot layer (ADR-0230 cl.1, the SVG substrate retired), the now-marker's short (never full-height)
+// tick, the projected ghost's hollow paint, the six-step series ramp's RESOLVED lightness ladder (the
+// ADR-0219 Amendment class of regression only a real engine can catch), forced-colors, the
+// container-query chrome-degradation ladder's three rungs (ADR-0230 cl.4), and the now-marker's
+// RTL-mirrored position (ADR-0230 Consequences — a latent defect the HTML swap retires).
 
 import '@agent-ui/components/foundation-styles.css'
 import '../_chart/chart-axis.css' // the shared ADR-0228 token chain — column-chart.css ALIASES from it (the family-tunnel pattern); loaded first, the same load-bearing order component-styles.css enforces
@@ -80,6 +83,24 @@ describe('ui-column-chart — the two-layer full-bleed model (ADR-0228 cl.1-3)',
     }
   })
 
+  it('SPEC-R48 AC1: zero <svg> element exists anywhere in the rendered DOM (the plot layer is HTML divs, ADR-0230 cl.1)', () => {
+    const chart = mount(`<ui-column-chart data='${REVENUE}' projected="1"></ui-column-chart>`) as HTMLElement
+    expect(chart.querySelector('svg')).toBeNull()
+  })
+
+  it('SPEC-R48 AC3: the now-dot renders as a TRUE circle (width === height) on a deliberately non-square box, never an ellipse', () => {
+    const wrap = document.createElement('div')
+    wrap.style.inlineSize = '600px'
+    wrap.style.blockSize = '160px' // aggressively non-square — the SVG-era preserveAspectRatio:none distortion trigger
+    wrap.innerHTML = `<ui-column-chart data='${REVENUE}' projected="1" style="inline-size:100%;block-size:100%"></ui-column-chart>`
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const dot = wrap.querySelector('[data-part="now-dot"]') as HTMLElement
+    const box = dot.getBoundingClientRect()
+    expect(box.width, 'anti-vacuous: the dot must have painted a real, non-zero size').toBeGreaterThan(0)
+    expect(Math.round(box.width)).toBe(Math.round(box.height))
+  })
+
   it('every chip stays INSIDE the plot box — never overflows past the chart edges (the chip-collision clamp law)', () => {
     const chart = mount(`<ui-column-chart data='${REVENUE}'></ui-column-chart>`) as HTMLElement
     const chartBox = chart.getBoundingClientRect()
@@ -93,27 +114,149 @@ describe('ui-column-chart — the two-layer full-bleed model (ADR-0228 cl.1-3)',
       expect(box.bottom, `a chip overflowed the BOTTOM edge`).toBeLessThanOrEqual(chartBox.bottom + 1)
     }
   })
+
+  it('every category-label chip AND the callout stay INSIDE the plot box under dir="rtl" too (the chrome-layer half of the RTL fix — translate\'s x-component is physical, so the clamp shift needs its own dir(rtl) sign-flip, ADR-0230 build-review finding)', () => {
+    const wrap = document.createElement('div')
+    wrap.dir = 'rtl'
+    wrap.innerHTML = `<ui-column-chart data='${REVENUE}' highlight="0"></ui-column-chart>`
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const chart = wrap.querySelector('ui-column-chart') as HTMLElement
+    const chartBox = chart.getBoundingClientRect()
+    const chips = chart.querySelectorAll('[data-part="category-label"], [data-part="callout"]')
+    expect(chips.length).toBeGreaterThan(0)
+    for (const chip of chips) {
+      const box = (chip as HTMLElement).getBoundingClientRect()
+      expect(box.left, `RTL: a chip overflowed the LEFT edge (${box.left} < ${chartBox.left})`).toBeGreaterThanOrEqual(chartBox.left - 1)
+      expect(box.right, `RTL: a chip overflowed the RIGHT edge (${box.right} > ${chartBox.right})`).toBeLessThanOrEqual(chartBox.right + 1)
+    }
+  })
 })
 
 describe('ui-column-chart — the now-marker is a SHORT tick, never full-height (ADR-0228 cl.4)', () => {
   it('the now-tick spans only a small fraction of the plot height, anchored at the baseline', () => {
     const chart = mount(`<ui-column-chart data='${REVENUE}' projected="1"></ui-column-chart>`) as HTMLElement
     const chartBox = chart.getBoundingClientRect()
-    const tick = chart.querySelector('[data-part="now-tick"]') as unknown as SVGLineElement
-    const dot = chart.querySelector('[data-part="now-dot"]') as unknown as SVGCircleElement
+    const tick = chart.querySelector('[data-part="now-tick"]') as HTMLElement
+    const dot = chart.querySelector('[data-part="now-dot"]') as HTMLElement
     expect(tick).not.toBeNull()
     expect(dot).not.toBeNull()
-    const tickBox = (tick as unknown as SVGGraphicsElement).getBBox()
-    // the tick's height in user units is NOW_TICK_DEPTH_PCT (8) out of a 100-unit viewBox — well under half.
-    expect(tickBox.height).toBeLessThan(50)
+    // ADR-0230 cl.1 — geometry facts, not SVG user-unit facts (the SVG plot layer retired): the now-tick
+    // is a real, rendered CSS box whose height is NOW_TICK_DEPTH_PCT (8%) of the plot's block size — well
+    // under half — anchored at the baseline (its bottom edge sits on the chart's own bottom edge).
+    const tickBox = tick.getBoundingClientRect()
+    expect(tickBox.height).toBeLessThan(chartBox.height * 0.5)
     expect(tickBox.height).toBeGreaterThan(0)
-    void chartBox
+    expect(Math.round(tickBox.bottom)).toBeCloseTo(Math.round(chartBox.bottom), 0)
   })
 
   it('is absent entirely when there is no projected span', () => {
     const chart = mount(`<ui-column-chart data='${REVENUE}'></ui-column-chart>`) as HTMLElement
     expect(chart.querySelector('[data-part="now-tick"]')).toBeNull()
     expect(chart.querySelector('[data-part="now-dot"]')).toBeNull()
+  })
+})
+
+describe('ui-column-chart — the now-marker mirrors under dir="rtl" (ADR-0230 Consequences — the RTL/columns disagreement latent defect retires)', () => {
+  it('the now-marker sits at the SAME rendered column as the actual/projected boundary in both directions', () => {
+    const ltr = mount(`<ui-column-chart data='${REVENUE}' projected="1"></ui-column-chart>`) as HTMLElement
+    const rtlWrap = document.createElement('div')
+    rtlWrap.dir = 'rtl'
+    rtlWrap.innerHTML = `<ui-column-chart data='${REVENUE}' projected="1"></ui-column-chart>`
+    document.body.append(rtlWrap)
+    mounted.push(rtlWrap)
+    const rtl = rtlWrap.querySelector('ui-column-chart') as HTMLElement
+
+    for (const chart of [ltr, rtl]) {
+      const isRtl = getComputedStyle(chart).direction === 'rtl'
+      const dot = chart.querySelector('[data-part="now-dot"]') as HTMLElement
+      const lastActualCategory = chart.querySelectorAll('[data-part="category"]')[2] as HTMLElement
+      const projectedCategory = chart.querySelectorAll('[data-part="category"]')[3] as HTMLElement
+      const dotBox = dot.getBoundingClientRect()
+      const lastBox = lastActualCategory.getBoundingClientRect()
+      const projectedBox = projectedCategory.getBoundingClientRect()
+      const dotCenter = (dotBox.left + dotBox.right) / 2
+      // The two categories are ADJACENT flex items separated only by `--ui-column-chart-column-gap` — the
+      // now-marker's math (axis-math.ts) is gap-BLIND by design (a presentational CSS detail, not a data
+      // fact), so the correct check is a RANGE (the facing edges of the two boxes, whatever the gap is),
+      // never an exact-pixel target. The facing edge flips with direction (LTR: last-actual's physical
+      // RIGHT faces projected's LEFT; RTL: mirrored — last-actual's physical LEFT faces projected's RIGHT)
+      // — exactly the agreement ADR-0230's HTML swap buys: both the marker and the columns move together.
+      const facingEdgeOfLast = isRtl ? lastBox.left : lastBox.right
+      const facingEdgeOfProjected = isRtl ? projectedBox.right : projectedBox.left
+      const boundaryLo = Math.min(facingEdgeOfLast, facingEdgeOfProjected)
+      const boundaryHi = Math.max(facingEdgeOfLast, facingEdgeOfProjected)
+      const slack = 1 // sub-pixel rounding only — the range itself already absorbs the real column-gap
+      expect(dotCenter, `${isRtl ? 'RTL' : 'LTR'}: now-dot center (${dotCenter}) fell outside the last-actual/projected boundary gap [${boundaryLo}, ${boundaryHi}]`).toBeGreaterThanOrEqual(boundaryLo - slack)
+      expect(dotCenter).toBeLessThanOrEqual(boundaryHi + slack)
+    }
+  })
+})
+
+describe('ui-column-chart — the container-query chrome-degradation ladder (ADR-0230 cl.3/cl.4)', () => {
+  const WIDE_ROWS = JSON.stringify(
+    Array.from({ length: 9 }, (_, i) => ({ label: `Cat${i}`, values: [i + 1] })),
+  )
+
+  // Container-query `em` resolves against the QUERIED CONTAINER's own font-size — the host's, which is
+  // `--md-sys-typescale-label-medium-size` (12px at default scale/density), NOT the document root's
+  // 16px (the ADR-0230 Context arithmetic's own basis: "1 host-em = 12px", 28em = 336px, 16em = 192px).
+  // Fixed PX widths set directly on the CHART element (never the wrap) so the assertion is immune to any
+  // ambient root font-size — comfortably clear of each boundary, never mounted exactly AT one.
+  const WIDE_PX = 400 // > 28em (336px)
+  const MEDIUM_PX = 260 // between 16em (192px) and 28em (336px)
+  const NARROW_PX = 150 // < 16em (192px) — reachable only via a deliberate floor override (ADR-0230 cl.4)
+
+  const mountAt = (widthPx: number): HTMLElement => {
+    const wrap = document.createElement('div')
+    wrap.innerHTML = `<ui-column-chart data='${WIDE_ROWS}'></ui-column-chart>`
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const chart = wrap.querySelector('ui-column-chart') as HTMLElement
+    chart.style.inlineSize = `${widthPx}px`
+    return chart
+  }
+
+  it('wide (>=28em): full chrome — no fine-density chip is hidden', () => {
+    const chart = mountAt(WIDE_PX)
+    const fine = [...chart.querySelectorAll('[data-density="fine"]')] as HTMLElement[]
+    expect(fine.length).toBeGreaterThan(0) // anti-vacuous — the math DID stamp a fine tier
+    for (const chip of fine) expect(getComputedStyle(chip).display).not.toBe('none')
+  })
+
+  it('medium (16em-28em): the fine density tier hides; first + last category chips survive with no intersecting chips (SPEC-R17 AC1/AC2)', () => {
+    const chart = mountAt(MEDIUM_PX)
+    const fine = [...chart.querySelectorAll('[data-density="fine"]')] as HTMLElement[]
+    expect(fine.length).toBeGreaterThan(0)
+    for (const chip of fine) expect(getComputedStyle(chip).display).toBe('none')
+
+    const survivors = [...chart.querySelectorAll('[data-part="category-label"]')].filter(
+      (chip) => getComputedStyle(chip).display !== 'none',
+    ) as HTMLElement[]
+    expect(survivors.length).toBeGreaterThan(0)
+    expect(survivors[0].textContent).toBe('Cat0') // AC1 — first category survives
+    expect(survivors[survivors.length - 1].textContent).toBe('Cat8') // AC1 — last category survives
+
+    // AC2 — no two SURVIVING chip bounding boxes intersect.
+    const boxes = survivors.map((el) => el.getBoundingClientRect())
+    for (let i = 1; i < boxes.length; i++) {
+      expect(boxes[i].left, `chip ${i} overlaps its predecessor`).toBeGreaterThanOrEqual(boxes[i - 1].right)
+    }
+
+    // the plot + chrome layers still render at the medium rung (only the fine tier hides).
+    expect(getComputedStyle(chart.querySelector('[data-part="plot"]') as HTMLElement).display).not.toBe('none')
+    expect(getComputedStyle(chart.querySelector('[data-part="chrome"]') as HTMLElement).display).not.toBe('none')
+  })
+
+  it('narrow (<16em): bare marks — all chrome and plot furniture hide, only the columns mark remains', () => {
+    const chart = mountAt(NARROW_PX)
+    chart.style.setProperty('min-inline-size', '0') // the deliberate sub-floor override the rung is FOR (ADR-0230 cl.4)
+    const plot = chart.querySelector('[data-part="plot"]') as HTMLElement
+    const chrome = chart.querySelector('[data-part="chrome"]') as HTMLElement
+    const columns = chart.querySelector('[data-part="columns"]') as HTMLElement
+    expect(getComputedStyle(plot).display).toBe('none')
+    expect(getComputedStyle(chrome).display).toBe('none')
+    expect(getComputedStyle(columns).display).not.toBe('none')
   })
 })
 

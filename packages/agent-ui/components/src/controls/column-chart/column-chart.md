@@ -46,13 +46,13 @@ slots: []              # no light-DOM content model — render() stays the inher
 
 parts:                  # data-part nodes inside the component-built three-layer DOM (selected by column-chart.css)
   - name: plot
-    description: The `<svg data-part="plot" aria-hidden="true">` — the zero-inset plot layer's gridlines + now-marker. Always aria-hidden; the HOST carries role=img and a generated summary is the accessible rendering.
+    description: The `<div data-part="plot" aria-hidden="true">` (ADR-0230 — an HTML div layer, never `<svg>`; every mark here is axis-aligned) — the zero-inset plot layer's gridlines + now-marker. Always aria-hidden; the HOST carries role=img and a generated summary is the accessible rendering. Hides entirely below the container-query ladder's narrow rung (<16em, ADR-0230 cl.4).
   - name: grid-line
-    description: One `<line data-part="grid-line">` per nice-number tick (ADR-0228 cl.2) — subtle, decorative, never load-bearing for reading a value (the tick's own printed pill is).
+    description: One `<div data-part="grid-line">` per nice-number tick (ADR-0228 cl.2) — a border-drawn (never background-drawn) horizontal line at a device-pixel-constant weight, positioned via `inset-block-start` (ADR-0230 cl.1). Subtle, decorative, never load-bearing for reading a value (the tick's own printed pill is).
   - name: now-dot
-    description: The `<circle data-part="now-dot">` — the now-marker's baseline dot at the actual/projected boundary (ADR-0228 cl.4). Absent when `projected` names no boundary.
+    description: The `<div data-part="now-dot">` — the now-marker's baseline dot at the actual/projected boundary (ADR-0228 cl.4), a fixed-em circle positioned via logical `inset-inline-start` so it agrees with the columns track's own mirroring under `dir="rtl"` (ADR-0230 cl.1/Consequences — retires the SVG era's RTL disagreement and non-scaling ellipse distortion). Absent when `projected` names no boundary.
   - name: now-tick
-    description: The `<line data-part="now-tick">` — a SHORT tick rising from the now-dot, never a full-height rule (ADR-0228 cl.4). Absent under the same condition as now-dot.
+    description: The `<div data-part="now-tick">` — a border-drawn SHORT tick rising from the now-dot, never a full-height rule (ADR-0228 cl.4). Absent under the same condition as now-dot.
   - name: columns
     description: The `<div data-part="columns" aria-hidden="true">` — the CSS-drawn stacked column marks, zero-inset (plot-layer citizen).
   - name: category
@@ -64,7 +64,7 @@ parts:                  # data-part nodes inside the component-built three-layer
   - name: tick-label
     description: One `<div data-part="tick-label">` chip per nice-number gridline — the printed value-scale reading, real DOM text.
   - name: category-label
-    description: One `<div data-part="category-label">` chip per THINNED category index (ADR-0228 cl.2's collision law — corner-clamped ends, dropped intermediates on overlap, never shrunk type) — the row's label, real DOM text.
+    description: One `<div data-part="category-label">` chip per THINNED category index (ADR-0228 cl.2's collision law — corner-clamped ends, dropped intermediates on overlap, never shrunk type) — the row's label, real DOM text. Carries `data-density="fine"` when it is NOT in the geometry's coarse subset (ADR-0230 cl.4) — the container-query ladder's medium rung (16em–28em) hides fine chips, endpoint-preserving; a coarse chip carries no attribute and survives every rung down to the narrow rung's all-chrome hide.
   - name: callout
     description: The `<div data-part="callout">` rendered only when `highlight` names a valid row — `{value} · {category}`, real DOM text (ADR-0228 cl.5's static, zero-event callout).
   - name: callout-value
@@ -113,14 +113,27 @@ gesture.
 ></ui-column-chart>
 ```
 
-## The two-layer model (ADR-0228 cl.1-3)
+## The two-layer model (ADR-0228 cl.1-3; ADR-0230 cl.1)
 
-The **plot layer** — gridlines + the CSS-drawn stacked column marks — spans the chart box edge-to-edge
-at zero inset. The **chrome layer** — every tick-label/category-label pill and the highlight callout, all
-real DOM text — floats **on top**, inset from all four edges by ONE knob
-(`--ui-column-chart-chrome-inset`). Labels never push the plot inward; they inset *within* it — dropping
-this chart into a padding-less `ui-card`-style container reproduces board geometry with zero consumer
-CSS.
+The **plot layer** — gridlines + the now-marker, rendered as positioned HTML divs (ADR-0230: the SVG
+substrate retired — every mark here is axis-aligned, the CSS side of ADR-0107 cl.3's rendering-follows-
+the-mark law) plus the CSS-drawn stacked column marks — spans the chart box edge-to-edge at zero inset.
+The **chrome layer** — every tick-label/category-label pill and the highlight callout, all real DOM
+text — floats **on top**, inset from all four edges by ONE knob (`--ui-column-chart-chrome-inset`).
+Labels never push the plot inward; they inset *within* it — dropping this chart into a padding-less
+`ui-card`-style container reproduces board geometry with zero consumer CSS.
+
+## The container-query chrome-degradation ladder (ADR-0230 cl.3/cl.4)
+
+The host establishes its own named `inline-size` query container (lawful under ADR-0100 — the chart's
+intrinsic inline size is already as-if-empty by construction; its real minimum is the specified floor
+token below, which containment never touches). Three rungs at two geometry-derived, LITERAL breakpoints
+(host-em units, riding `--md-sys-scale` for free): **wide** (≥28em) full chrome; **medium**
+(16em–28em) the category-label chip's math-stamped fine-density tier hides, endpoint-preserving (first
+and last category always survive, SPEC-R17 AC1); **narrow** (<16em, the ADR-0229 cl.6 whole-shape floor)
+all chrome AND plot furniture hide, leaving the columns mark alone — reachable only via a deliberate
+`min-inline-size` override. Zero resize-JS at every rung: the rendered DOM is identical at every width,
+only CSS is width-aware.
 
 ## The data schema (ADR-0229 cl.2)
 

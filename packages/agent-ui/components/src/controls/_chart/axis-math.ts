@@ -10,11 +10,16 @@
 //
 // Coordinate convention: every position this module returns is a PERCENT (0..100) within the plot box,
 // with the VALUE axis measured bottom-up (0% = the domain minimum / bottom edge, 100% = the domain
-// maximum / top edge) — a consuming control's SVG viewBox (y grows down) converts with `100 - pct`
-// exactly once, at the render boundary, never inside this module. The CATEGORY axis is index-based and
-// left-to-right (0% = the first category's leading edge, 100% = the last category's trailing edge) —
-// deliberately physical, not bidi-mirrored (the ui-sparkline/ui-line-chart precedent: a series reads
-// data order, not text direction).
+// maximum / top edge) — an SVG-rendering consumer's viewBox (y grows down) converts with `100 - pct`
+// exactly once at the render boundary, never inside this module (an HTML-div-rendering consumer's own
+// equivalent flip is a block-start distance from the top, ADR-0230 cl.1). The CATEGORY axis is
+// index-based, 0% = the first category's leading edge, 100% = the last category's trailing edge — this
+// module hands back the SAME index-ordered percents regardless of substrate; whether a consumer treats
+// that edge as PHYSICAL left-to-right (an SVG consumer's own coordinate space, deliberately not
+// bidi-mirrored — the ui-sparkline/ui-line-chart precedent: a series reads data order, not text
+// direction) or as a LOGICAL inline position that mirrors under `dir="rtl"` (an HTML-div consumer using
+// `inset-inline-start`, ADR-0230 Consequences — deliberately, so the marker agrees with a `flex`
+// columns track's own mirroring) is each consuming control's own rendering choice, not this module's.
 
 /** One resolved value-axis scale: the nice-rounded [min, max] domain, its step, and every tick VALUE the
  *  domain spans (inclusive of both ends, evenly spaced by `step`). */

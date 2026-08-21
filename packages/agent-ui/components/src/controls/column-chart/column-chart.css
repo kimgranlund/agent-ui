@@ -1,6 +1,6 @@
 /* column-chart.css — ui-column-chart, the Display-class axis-bearing stacked-column chart (ADR-0229
- * cl.1/cl.2, consuming ADR-0228's shared `_chart/chart-axis.css` vocabulary). Two clearly-SECTIONED
- * blocks:
+ * cl.1/cl.2, consuming ADR-0228's shared `_chart/chart-axis.css` vocabulary; ADR-0230's all-HTML plot
+ * layer + container-query chrome-degradation ladder). Two clearly-SECTIONED blocks:
  *
  *   [1] TOKEN BLOCK — `:where(ui-column-chart)` (specificity 0,0,0) declares the `--ui-column-chart-*`
  *       chain: the whole-shape floor (ADR-0229 cl.6's new role-(d) row — a bare, unstyled chart in a
@@ -11,16 +11,19 @@
  *       family-tunnel pattern: THIS file aliases, `@scope` below reads ONLY `--ui-column-chart-*`.
  *   [2] STYLES BLOCK — `@scope (ui-column-chart)` consumes ONLY `--ui-column-chart-*` (∪ the shared
  *       `--md-sys-color-*`/`--md-sys-typescale-*` namespaces the token block itself reads to build that
- *       chain) ∪ the row/segment-scoped `--_seg-*`/`--_tick-pct`/`--_cat-pct` hooks (out of the governed
- *       namespace entirely — the bar-chart `--_bar-start`/`--_bar-length` precedent, set imperatively by
- *       column-chart.ts, never declared here).
+ *       chain) ∪ the row/segment-scoped `--_seg-*`/`--_tick-pct`/`--_cat-pct`/`--_grid-pct`/`--_now-pct`/
+ *       `--_now-tick-depth` hooks (out of the governed namespace entirely — the bar-chart
+ *       `--_bar-start`/`--_bar-length` precedent, set imperatively by column-chart.ts, never declared
+ *       here).
  *
- * The two-layer full-bleed model (ADR-0228 cl.1-3): THREE children full-overlay one CSS grid cell
- * (`grid-area: 1/1` on each, the standard stacking-context technique) — `[data-part='plot']` (SVG
- * gridlines + now-marker) and `[data-part='columns']` (the CSS-drawn stacked marks) both span the box
- * edge-to-edge at ZERO inset (plot-layer citizens); `[data-part='chrome']` (every real-DOM text element)
- * is padded by `--ui-column-chart-chrome-inset` so labels float INSIDE the box rather than pushing it —
- * Kim's zero-padding-container contract, realized as a mechanism, not a host padding opinion.
+ * The two-layer full-bleed model (ADR-0228 cl.1-3; ADR-0230 cl.1): THREE children full-overlay one CSS
+ * grid cell (`grid-area: 1/1` on each, the standard stacking-context technique) — `[data-part='plot']`
+ * (ADR-0230: an HTML div layer of gridline + now-marker divs, never `<svg>` — every mark here is
+ * axis-aligned, the CSS side of ADR-0107 cl.3's rendering-follows-the-mark law) and `[data-part=
+ * 'columns']` (the CSS-drawn stacked marks) both span the box edge-to-edge at ZERO inset (plot-layer
+ * citizens); `[data-part='chrome']` (every real-DOM text element) is padded by
+ * `--ui-column-chart-chrome-inset` so labels float INSIDE the box rather than pushing it — Kim's
+ * zero-padding-container contract, realized as a mechanism, not a host padding opinion.
  *
  * Rounded caps (the boards' law): only the TOPMOST segment of a stack (`:last-child`) rounds its
  * block-start corners — an interior segment boundary never shows a rounded notch. A projected category
@@ -28,13 +31,24 @@
  * boundary) — `[data-projected]` on the segment itself (column-chart.ts collapses a projected row's
  * stack into one ghost shape before this file ever sees it).
  *
- * RTL: the category axis stays PHYSICAL left-to-right (the ui-sparkline/ui-line-chart precedent — data
- * order, not bidi) via the SVG's own coordinate space; the CSS columns track uses `flex` (which DOES
- * mirror under `dir="rtl"` by default) so a consumer wanting board-parity RTL sets the columns track to
- * `flex-direction: row` explicitly if ever needed — deferred, not fenced, since no board shows RTL.
+ * RTL (ADR-0230 Consequences — a latent defect retired by the HTML swap): plot-layer furniture positions
+ * via `inset-inline-*`/logical properties, which agree with the CSS columns track's own `flex` mirroring
+ * under `dir="rtl"` in BOTH directions — the SVG era's physical-LTR viewBox space disagreed with the
+ * mirrored columns track, so the now-marker could sit at the wrong column under `dir="rtl"`; that
+ * self-disagreement cannot occur anymore. The family's board-parity-RTL preference (data order, not
+ * bidi) stays exactly as deferred as before — this only makes the two layers internally consistent.
  * `forced-colors`: gridlines/now-marker/projected ink all resolve through system colors; segment fills
  * flatten to `CanvasText` with a `Canvas` separator so adjacent series stay distinguishable (identity
  * survives via the callout/summary text, never hue alone — ADR-0057).
+ *
+ * Container-query chrome-degradation ladder (ADR-0230 cl.3/cl.4): the host self-establishes
+ * `container-type: inline-size` (lawful under ADR-0100 — see the base `:scope` rule below) at two
+ * geometry-derived, LITERAL breakpoints (`var()` is illegal in a container size query) — 28em/16em in
+ * host-em units, riding `--md-sys-scale` for free. Wide (≥28em): full chrome. Medium (16em–28em): the
+ * category-label chip's math-stamped `[data-density='fine']` tier hides (endpoint-preserving —
+ * column-math.ts). Narrow (<16em, the ADR-0229 cl.6 whole-shape floor): all chrome AND plot furniture
+ * hide, leaving the columns mark alone. Zero resize-JS at every rung — the DOM is identical at every
+ * width, only this file's `@container` rules are width-aware.
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-column-chart) declares --ui-column-chart-* ════════════════ */
@@ -83,31 +97,70 @@
        lever, not a [size]/[scale] attribute; a chart takes neither. */
     font-size: var(--md-sys-typescale-label-medium-size);
     line-height: var(--md-sys-typescale-label-medium-line-height);
+    /* ADR-0230 cl.3 — the host establishes its OWN inline-size query container (lawful under ADR-0100:
+       every plot/chrome child is absolutely positioned and the columns track is zero-basis flex, so this
+       chart's intrinsic inline size is already as-if-empty by construction; the real minimum is the
+       SPECIFIED `min-inline-size` floor above, which containment never touches). Named so the ladder's
+       `@container` rules below target it by name, never falling through to an ancestor's container. */
+    container-type: inline-size;
+    container-name: ui-column-chart;
   }
 
   :scope > * {
     grid-area: 1 / 1; /* the full-overlay stacking technique — plot / columns / chrome share one box */
   }
 
-  :scope svg[data-part='plot'] {
-    display: block;
+  :scope [data-part='plot'] {
+    position: relative; /* the positioning context for its own gridline/now-marker div children */
     inline-size: 100%;
     block-size: 100%;
   }
 
+  /* ADR-0230 cl.1 — a gridline is a full-width, BORDER-drawn (never background — a background vanishes
+     to `Canvas` under forced-colors) horizontal line at its tick's percent-from-bottom position, flipped
+     to a block-start distance from the top (`100 - pct`) — a device-pixel-constant 1px line regardless
+     of the box's aspect ratio (the `non-scaling-stroke` guarantee, re-proven in CSS: a CSS px never
+     scales with percent geometry). */
   :scope [data-part='grid-line'] {
-    stroke: var(--ui-column-chart-grid-ink);
-    stroke-width: 0.4;
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: calc((100 - var(--_grid-pct, 0)) * 1%);
+    block-size: 0;
+    border-block-start: 1px solid var(--ui-column-chart-grid-ink);
   }
 
+  /* The now-marker's baseline dot: a fixed-em (never percent-sized) circle, so it stays a true circle at
+     every box aspect ratio — the SVG era's `r:1.4` under `preserveAspectRatio:none` distorted into an
+     ellipse on a non-square box (ADR-0230 Consequences); a device-pixel-sized div cannot. Centered
+     horizontally on `nowPct` by baking the half-width offset INTO the logical `inset-inline-start`
+     itself (never `translate`, whose x-component is always PHYSICAL — it does not mirror under
+     `dir="rtl"` the way a logical inset does, which would silently re-open the very RTL disagreement
+     this swap retires) — the box's own inline-start/inline-end edges then sit symmetric around
+     `nowPct` in LOGICAL space, which maps to the correct physical center under either direction, in
+     agreement with the columns track's own `flex` mirroring. Vertically ON the baseline (half above,
+     half below — matching the SVG era's `cy="100"`; the BLOCK axis is untouched by `dir`, so `translate`
+     is exactly right there). */
   :scope [data-part='now-dot'] {
-    r: 1.4;
-    fill: var(--ui-column-chart-now-ink);
+    position: absolute;
+    inset-inline-start: calc(var(--_now-pct, 0) * 1% - 0.25em);
+    inset-block-end: 0;
+    inline-size: 0.5em;
+    block-size: 0.5em;
+    translate: 0 50%;
+    border-radius: 50%;
+    background: var(--ui-column-chart-now-ink);
   }
 
+  /* The now-marker's short tick: a BORDER-drawn (never background) vertical line rising from the
+     baseline by `--_now-tick-depth` percent of the plot's block size — the density-invariant fraction
+     ADR-0228 cl.4 fixes (never a full-height rule). */
   :scope [data-part='now-tick'] {
-    stroke: var(--ui-column-chart-now-ink);
-    stroke-width: 0.6;
+    position: absolute;
+    inset-inline-start: calc(var(--_now-pct, 0) * 1%);
+    inset-block-end: 0;
+    inline-size: 0;
+    block-size: calc(var(--_now-tick-depth, 8) * 1%);
+    border-inline-start: 1.5px solid var(--ui-column-chart-now-ink);
   }
 
   :scope [data-part='columns'] {
@@ -181,7 +234,20 @@
   /* End chips clamp INWARD rather than overflow the chart box (ADR-0228 cl.2 / SPEC-R17): a chip
      CENTERED on its anchor would half-overflow the plot box at the two axis extremes, so the
      translate offset is INTERPOLATED (`--_tick-shift`/`--_cat-shift`, column-chart.ts) rather than a
-     fixed -50% — -100%/0% at the bottom/top (or left/right) extremes, -50% mid-scale. */
+     fixed -50% — -100%/0% at the bottom/top (or left/right) extremes, -50% mid-scale.
+     `tick-label`'s shift is on the BLOCK axis only — `dir` never touches block, so its plain
+     `translate` needs no direction correction. `category-label`/`callout`'s shift is on the INLINE
+     axis, and `translate`'s x-component is always PHYSICAL (unlike `inset-inline-start`, which is
+     logical) — the SAME class of mismatch ADR-0230's now-dot fix retired, surviving here in the
+     chrome layer (caught in review, ADR-0230 build wave). Fixed the same way in spirit — direction-
+     aware — but the shift here is a percentage of the CHIP'S OWN size (variable, text-content-sized),
+     which only `translate` can express; `inset-inline-start` can't bake in an unknown own-size
+     offset the way the fixed-em now-dot could. So the correction flips the shift's SIGN under RTL
+     instead (`:dir(rtl)` below): at `--_cat-pct` = 0 the shift is already 0 (no correction needed,
+     purely logical); at the far end the LTR "-100%" (physical-left) must become PHYSICAL-RIGHT to stay
+     the safe direction under a mirrored inline axis — negating the shift does exactly that, and
+     recovers the intended CENTERING at mid-scale too (verified: unshifted-physical-center offset
+     analysis, both extremes and the midpoint agree). */
   :scope [data-part='tick-label'] {
     inset-inline-start: 0;
     inset-block-start: calc(100% - var(--_tick-pct, 0) * 1%);
@@ -204,13 +270,44 @@
     gap: 0.35ch;
   }
 
+  /* `dir="rtl"` sign-flip (ADR-0230 Consequences — the chrome-layer half of the RTL fix): negate the
+     inline-axis clamp shift so it stays the SAFE (inward) direction under a mirrored inline axis,
+     rather than doubling down on a now-wrong physical-left shift. */
+  :scope:dir(rtl) [data-part='category-label'] {
+    translate: calc(var(--_cat-shift, -50) * -1%) 0;
+  }
+
+  :scope:dir(rtl) [data-part='callout'] {
+    translate: calc(var(--_cat-shift, -50) * -1%) 0;
+  }
+
+  /* ADR-0230 cl.4 — the container-query chrome-degradation ladder. Two LITERAL breakpoints (container
+     size queries cannot read `var()`): 28em (the math's 8-chip cap × ~42px worst-case month-chip pitch —
+     the width below which 8 chips can no longer hold SPEC-R17's no-overlap law) and 16em (the ratified
+     ADR-0229 cl.6 whole-shape floor — the narrowest box the family calls an honest full chart). Nested
+     ranges: the narrow rule is a strict superset of the medium rule's effect (hiding `[data-part=
+     'chrome']` entirely already hides every category-label chip, fine or coarse), so both apply below
+     16em with no conflict. */
+  @container ui-column-chart (width < 28em) {
+    :scope [data-density='fine'] {
+      display: none;
+    }
+  }
+
+  @container ui-column-chart (width < 16em) {
+    :scope [data-part='plot'],
+    :scope [data-part='chrome'] {
+      display: none;
+    }
+  }
+
   @media (forced-colors: active) {
     :scope [data-part='grid-line'],
     :scope [data-part='now-tick'] {
-      stroke: CanvasText;
+      border-color: CanvasText;
     }
     :scope [data-part='now-dot'] {
-      fill: CanvasText;
+      background: CanvasText;
     }
     :scope [data-part='segment'] {
       background: CanvasText;
