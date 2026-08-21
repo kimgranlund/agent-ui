@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-20 |
 > | **Proposed by** | planning-leader (design seat — GH #1561, the svg-chart-system intake; due-process Phases 1–2, GH #969) |
-> | **Ratified by** | *(awaiting Kim — `ratify ADR-0228` on GH #1561, executed by `scripts/adr_ratify.py`, ADR-0149)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-21, via the [`ratify ADR-0228` utterance](https://github.com/kimgranlund/agent-ui/issues/1561#issuecomment-5364097735) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | booked ON RATIFICATION, applied by the build wave (the ADR-0219 precedent): `chart-family.spec.md` gains its axis/inset/series R-clauses · `chart-family.prd.md` version-bumps (§3 scope prose names the axis system as admitted under this ADR). The #1207 close's "chart-axis vocabulary … its own ADR" deferral is DISCHARGED by this record |
 > | **Supersedes / Superseded by** | (none) — relates [ADR-0107](./0107-chart-family-v1-scope.md) (the axis-system fence whose named "new intake" this is — its clause 1 fence rows for axis systems are realized, not silently breached; sibling [ADR-0229](./0229-svg-chart-family-extensions.md) carries the type-set half) · [ADR-0205](./0205-line-chart-v1-axis-vocabulary.md) (the minimal baseline+min/max vocabulary this record builds ON, per its own cl.7/Consequences "build on its baseline/min-max vocabulary rather than re-deriving one") · [ADR-0219](./0219-pie-donut-part-of-whole-chart.md) (the lightness-ramp identity mechanism clause 6 generalizes; its cl.8 categorical-palette fence STANDS) · [ADR-0223](./0223-fill-by-default-fleet-sizing-contract.md) (fill-by-default — clause 3 states the composition) · [ADR-0046](./0046-container-box-model.md) (the container inset system clause 3 composes against, without double-padding) · [ADR-0078](./0078-ui-text-three-axis-variant-size-as.md) (the typescale rows tick/category pills read) · [ADR-0057](./0057-intent-non-color-signifier-rule.md) (the never-hue-alone law clause 6 obeys) |
 

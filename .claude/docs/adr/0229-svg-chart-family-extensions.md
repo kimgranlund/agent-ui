@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-20 |
 > | **Proposed by** | planning-leader (design seat — GH #1561, the svg-chart-system intake; due-process Phases 1–2, GH #969; sibling record [ADR-0228](./0228-chart-axis-inset-series-vocabulary.md) carries the shared vocabulary this type-set consumes) |
-> | **Ratified by** | *(awaiting Kim — `ratify ADR-0229` on GH #1561, executed by `scripts/adr_ratify.py`, ADR-0149)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-21, via the [`ratify ADR-0229` utterance](https://github.com/kimgranlund/agent-ui/issues/1561#issuecomment-5364099551) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | booked ON RATIFICATION, applied by the build waves (the ADR-0219 precedent): [ADR-0107](./0107-chart-family-v1-scope.md) gains an Amendment pointer (its cl.1 fence rows for *stacked/multi-series columns* and *the axis system* are realized by THIS named intake, scoped to these types — the Amendment-3/ADR-0219 pattern) · [ADR-0205](./0205-line-chart-v1-axis-vocabulary.md) gains an **Extended by ADR-0229** pointer (its cl.7 gridlines/ticks later-list realized, AND its cl.3 "min/max labels are always shown" law becomes default-state-scoped — the tick pills carry the axis values in the `axes` state; its own Decision stands) · [ADR-0223](./0223-fill-by-default-fleet-sizing-contract.md) role (d) closed table gains the two rows clause 6 names (this ADR is the "extended only by ADR" vehicle) · `chart-family.prd.md` version-bumps + `chart-family.spec.md` gains the new R-clauses at the build wave |
 > | **Supersedes / Superseded by** | (none) — **Extends ADR-0205** (two-way pointer per doc-standards §1b: its Decision stands; a separate decision builds on it). Relates [ADR-0107](./0107-chart-family-v1-scope.md) (the one-type-per-mark law clause 1 honors) · [ADR-0219](./0219-pie-donut-part-of-whole-chart.md) (the mint-not-variant precedent, the key-list-IS-the-legend law, and the part-of-whole semantics clause 4 must NOT inherit) · GH #1208's `ui-stat` ring variant (the single-ring progress precedent clause 4 weighs) |
 

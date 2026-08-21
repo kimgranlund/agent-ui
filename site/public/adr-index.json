@@ -1559,5 +1559,19 @@
     "description": "the sanctioned context/shared-state grammar: single-owner signal-backed stores, explicitly injected; CSS cascade for presentational axes; the three point solut…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0228",
+    "url": "./adr-index.html#adr-0228",
+    "description": "The chart axis/inset/series vocabulary: a shared controls/_chart/ subsystem (pure axis math + shared CSS), charts own their internal insets for zero-padding co…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0229",
+    "url": "./adr-index.html#adr-0229",
+    "description": "svg-chart family extensions: mint ui-column-chart (stacked/dense vertical series, projected + now-marker + highlight callout) and ui-gauge (multi-ring radial p…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
