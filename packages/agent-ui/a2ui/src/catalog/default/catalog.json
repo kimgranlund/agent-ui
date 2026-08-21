@@ -513,7 +513,10 @@
       "properties": {
         "values": { "type": { "type": "array", "items": { "type": "number" } }, "bindable": true, "mapsTo": "values" },
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
-        "variant": { "type": { "type": "string", "enum": ["line", "area"] }, "mapsTo": "variant" }
+        "variant": { "type": { "type": "string", "enum": ["line", "area"] }, "mapsTo": "variant" },
+        "axes": { "type": { "type": "boolean" }, "mapsTo": "axes" },
+        "labels": { "type": { "type": "array", "items": { "type": "string" } }, "bindable": true, "mapsTo": "labels" },
+        "projected": { "type": { "type": "number" }, "bindable": true, "mapsTo": "projected" }
       }
     },
 
@@ -533,6 +536,48 @@
         },
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
         "variant": { "type": { "type": "string", "enum": ["donut", "pie"] }, "mapsTo": "variant" }
+      }
+    },
+
+    "ColumnChart": {
+      "properties": {
+        "data": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": { "type": "string" },
+                "values": { "type": "array", "items": { "type": "number" } }
+              },
+              "required": ["label", "values"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "data"
+        },
+        "series": { "type": { "type": "array", "items": { "type": "string" } }, "bindable": true, "mapsTo": "series" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "projected": { "type": { "type": "number" }, "bindable": true, "mapsTo": "projected" },
+        "highlight": { "type": { "type": ["number", "null"] }, "bindable": true, "mapsTo": "highlight" }
+      }
+    },
+
+    "Gauge": {
+      "properties": {
+        "data": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": { "label": { "type": "string" }, "value": { "type": "number" } },
+              "required": ["label", "value"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "data"
+        },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
       }
     },
 

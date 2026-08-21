@@ -246,4 +246,23 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
     '`Button.icon`/`Button.iconOnly` wire props; corpus admission is a separate, later judged wave ' +
     '(ADR-0068\'s never-self-judged discipline — this authoring session assigns no rubric score to ' +
     'its own seed).'],
+
+  // ADR-0229/GH #1568 (2026-08-20, svg-charts wave 4 — the design tracker GH #1561's FINAL wave): the
+  // same pending-state shape (NO VERDICT SOUGHT YET, not a refusal) for all three new/widened-type seeds.
+  // Added to `catalog-frontier.ts` with the `ColumnChart`/`Gauge` catalog rows + `LineChart`'s `axes`-
+  // state widening to close their GH #729 coverage gaps — the authoring session judging its own seeds is
+  // the manufactured judgment ADR-0068's Alternatives ban. Run the judged pipeline (`import-seeds.ts`
+  // with a real VerdictsFile) and DELETE these three entries when that wave lands.
+  ['frontier-column-chart-revenue',
+    'ADR-0229 cl.1/cl.2, GH #1568 — NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-' +
+    'coverage gap for the new `ColumnChart` type; corpus admission is a separate, later judged ' +
+    'import wave (ADR-0068\'s never-self-judged discipline).'],
+  ['frontier-gauge-system-load',
+    'ADR-0229 cl.4, GH #1568 — NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage ' +
+    'gap for the new `Gauge` type; corpus admission is a separate, later judged import wave (ADR-0068\'s ' +
+    'never-self-judged discipline).'],
+  ['frontier-line-chart-axes-weekly-sales',
+    'ADR-0229 cl.3, GH #1568 — NO VERDICT SOUGHT YET, not a refusal. Exercises `LineChart`\'s new `axes` ' +
+    'opt-in state (`axes`/`labels`/`projected`), distinct from Frontier 11\'s default-state seed; corpus ' +
+    'admission is a separate, later judged import wave (ADR-0068\'s never-self-judged discipline).'],
 ])

@@ -338,6 +338,12 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   // Toolbar.label precedent: seeded explicitly so an eval-catalog knob edit→revert on `label` has a
   // stable static value to revert TO (C2), not just the component's own empty-string default.
   Breadcrumb: { label: 'Breadcrumb' },
+  // ColumnChart/Gauge (ADR-0229, GH #1568 — svg-charts wave 4): the array props (`data`/`series`) ride
+  // SAMPLE_TREES rootRef below (the BarChart/PieChart precedent); the number/string knobs seeded here
+  // so the specimen shows the projected ghost + highlight callout / a legible list name, not just the
+  // bare default state.
+  ColumnChart: { label: 'Revenue by month', projected: '1', highlight: '4' },
+  Gauge: { label: 'System load' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -716,6 +722,34 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
         { label: 'Social', value: 28000 },
         { label: 'Content', value: 18000 },
         { label: 'Events', value: 12000 },
+      ],
+    },
+    extras: [],
+  }),
+  // ColumnChart (ADR-0229 cl.1/cl.2): the revenue-by-month idiom (catalog-frontier.ts's
+  // frontier-column-chart-revenue) — the SAME dataset the descriptor's own worked example ships.
+  ColumnChart: () => ({
+    rootRef: {
+      data: [
+        { label: 'Mar', values: [8, 4, 2] },
+        { label: 'Apr', values: [10, 5, 3] },
+        { label: 'May', values: [9, 6, 4] },
+        { label: 'Jun', values: [11, 7, 4] },
+        { label: 'Jul', values: [12, 7, 5] },
+        { label: 'Aug', values: [6, 4, 2] },
+      ],
+      series: ['Product', 'Services', 'Support'],
+    },
+    extras: [],
+  }),
+  // Gauge (ADR-0229 cl.4): the CPU/Memory/Disk system-load idiom (catalog-frontier.ts's
+  // frontier-gauge-system-load) — the SAME dataset the descriptor's own worked example ships.
+  Gauge: () => ({
+    rootRef: {
+      data: [
+        { label: 'CPU', value: 72 },
+        { label: 'Memory', value: 54 },
+        { label: 'Disk', value: 31 },
       ],
     },
     extras: [],

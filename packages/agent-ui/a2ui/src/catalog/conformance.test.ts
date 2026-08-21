@@ -99,6 +99,15 @@ describe('validateCatalogConformance (catalog LLD-C6, SPEC-R7/R9/N3)', () => {
     const f = validateCatalogConformance(comp({ id: 'lc', component: 'LineChart', values: '3,5,4' }), defaultCatalog)
     expect(f).toEqual([{ code: 'CATALOG', path: 'lc.values' }])
   })
+
+  it('ColumnChart (ADR-0229, GH #1568) — same array-typed `data`/`series` shape: a comma-joined STRING on either still fails CATALOG', () => {
+    // The chart family's fifth member (`ColumnChart`, svg-charts wave 4) carries TWO array-typed props
+    // (`data`/`series`, ADR-0229 cl.2's "both bindable" wire contract) — the SAME parity proof on both.
+    const fData = validateCatalogConformance(comp({ id: 'cc', component: 'ColumnChart', data: 'Mar,Apr' }), defaultCatalog)
+    expect(fData).toEqual([{ code: 'CATALOG', path: 'cc.data' }])
+    const fSeries = validateCatalogConformance(comp({ id: 'cc2', component: 'ColumnChart', series: 'Product,Services' }), defaultCatalog)
+    expect(fSeries).toEqual([{ code: 'CATALOG', path: 'cc2.series' }])
+  })
 })
 
 describe('validateCatalogConformance — enum membership (ADR-0098)', () => {

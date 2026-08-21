@@ -95,6 +95,12 @@
 // the SAME wave it ships (cl.8, the ADR-0107 cl.6 same-wave precedent); this wave drains the `LineChart`
 // `EXCLUSION_ALLOWLIST` seed (index.test.ts). Plain `accessorFactory`, no bespoke mapping — see its own
 // factory doc comment below (the Sparkline/BarChart section).
+//
+// ADR-0229/GH #1568 (svg-charts wave 4, the design tracker GH #1561's final wave) adds `ColumnChart`/
+// `Gauge` — draining the ADR-0229 cl.7 TEMPORARY `EXCLUSION_ALLOWLIST` seeds their own control-mint waves
+// (GH #1565/#1567) left — and widens `LineChart`'s row with the `axes` opt-in state's new props
+// (`axes`/`labels`/`projected`, ADR-0229 cl.3). All three ride plain `accessorFactory` — no bespoke
+// mapping, no `value` mark, no children, no submitGate — see the chart-family section below.
 
 import '@agent-ui/components/components' // self-defines ui-button + the G9 container family on import
 import type { WidgetFactory } from '../types.ts'
@@ -850,6 +856,17 @@ export const barChartFactory: WidgetFactory = accessorFactory('ui-bar-chart')
 // line-chart.ts `static props`, the SAME shape as sparklineFactory above (whole-array `values` codec +
 // `cleanSeries` hardening re-run inside the control's own mark effect, line-chart-math.ts). A plain
 // `accessorFactory` suffices. Display-only leaf: no `value` mark, no children, no submitGate.
+//
+// **Widened by ADR-0229 cl.3 (GH #1568, svg-charts wave 4)** with the `axes` opt-in state's new props —
+// verified against line-chart.ts's CURRENT `static props` (`values`/`label`/`variant`/`axes`/`labels`/
+// `projected`), all still 1:1 reflecting accessors, so the row widens with zero factory code. `axes`
+// (boolean, NOT bindable — the `variant` structural-enum precedent applied to a boolean: which chrome
+// anatomy renders, min/max rows vs the full tick/gridline/category system, is an author-picked
+// presentation mode, not live content) mirrors `Sparkline`/`PieChart`'s own non-bindable `variant`.
+// `labels` (string[], bindable — the optional category-label series, index-aligned to `values`, ADR-0229
+// cl.3) and `projected` (number, bindable — the shared ADR-0228 cl.4 projected/ghost-count grammar,
+// `ColumnChart.projected` verbatim) are both genuine DATA facts a producer emits/updates turn over turn,
+// the `BarChart.data`/`Table.selected` array-and-count-prop precedent, not chrome.
 export const lineChartFactory: WidgetFactory = accessorFactory('ui-line-chart')
 
 // PieChart → ui-pie-chart (ADR-0219, GH #1397 — the part-of-whole mark, donut-default, lifting ADR-0107's
@@ -860,6 +877,27 @@ export const lineChartFactory: WidgetFactory = accessorFactory('ui-line-chart')
 // `value:{prop,event}` mark, no children (the donut center caption is a SIBLING composition in the
 // consumer's own layout, ADR-0219 cl.6 — never a child of this row).
 export const pieChartFactory: WidgetFactory = accessorFactory('ui-pie-chart')
+
+// ColumnChart → ui-column-chart (ADR-0229 cl.1/cl.2, GH #1568 svg-charts wave 4 — drains the cl.7
+// TEMPORARY `EXCLUSION_ALLOWLIST` seed the control-mint wave, GH #1565, left). `data` (`{label:string,
+// values:number[]}[]`, bindable, `mapsTo: data`) and `series` (`string[]`, bindable, `mapsTo: series`) are
+// the category-major multi-series wire contract ADR-0229 cl.2 pins VERBATIM ("both bindable"); `label`
+// (bindable, the accessible context) and `projected`/`highlight` (both bindable — data facts a producer
+// updates: the trailing-forecast row count and the static-callout row index, ADR-0228 cl.4/cl.5) — ALL
+// 1:1 reflecting accessor props verified against column-chart.ts `static props`, so plain
+// `accessorFactory` suffices. Display-only leaf: no `value:{prop,event}` mark (the display tier stays
+// zero-event by construction, ADR-0228 cl.5), no children, no submitGate.
+export const columnChartFactory: WidgetFactory = accessorFactory('ui-column-chart')
+
+// Gauge → ui-gauge (ADR-0229 cl.4, GH #1568 svg-charts wave 4 — drains the cl.7 TEMPORARY
+// `EXCLUSION_ALLOWLIST` seed the control-mint wave, GH #1567, left). `data` (`{label:string,
+// value:number}[]`, bindable, `mapsTo: data` — the `BarChart`/`PieChart` row schema verbatim: each ring
+// is an INDEPENDENT 0-100 progress value, never part-of-whole) and `label` (bindable, the list's
+// accessible name — an unlabeled list is legal) are 1:1 reflecting accessor props verified against
+// gauge.ts `static props`, so plain `accessorFactory` suffices, the same shape as `barChartFactory`.
+// Display-only leaf: no `value:{prop,event}` mark, no children (the real-DOM legend rows are ALL
+// component-built from `data`, never agent-composed).
+export const gaugeFactory: WidgetFactory = accessorFactory('ui-gauge')
 
 // ── the ADR-0111 report family (Table / Stat / Badge, catalog LLD-C12, report-family.lld.md §6) ───────
 // ── widened by ADR-0163 cl.9 (selection/sort/filter/search/pagination; `Pagination` newly minted) ──────
@@ -1443,6 +1481,8 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   BarChart: barChartFactory,
   LineChart: lineChartFactory,
   PieChart: pieChartFactory,
+  ColumnChart: columnChartFactory,
+  Gauge: gaugeFactory,
   Table: tableFactory,
   Pagination: paginationFactory,
   Stat: statFactory,

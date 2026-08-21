@@ -34,6 +34,8 @@ import {
   sparklineFactory,
   barChartFactory,
   lineChartFactory,
+  columnChartFactory,
+  gaugeFactory,
   tableFactory,
   paginationFactory,
   multiSelectFactory,
@@ -1005,6 +1007,58 @@ describe('default catalog factories — Sparkline / BarChart (ADR-0107, chart-fa
     expect(target.values).toEqual([3, 5, 4, 8, 7])
     expect(target.label).toBe('Revenue trend')
     expect(target.variant).toBe('area')
+  })
+
+  it('LineChart → ui-line-chart maps the ADR-0229 cl.3 axes-state widening (axes/labels/projected) onto accessors too', () => {
+    const el = lineChartFactory.create()
+    lineChartFactory.applyProp(el, 'axes', true)
+    lineChartFactory.applyProp(el, 'labels', ['Mon', 'Tue', 'Wed'])
+    lineChartFactory.applyProp(el, 'projected', 1)
+    const target = el as unknown as Record<string, unknown>
+    expect(target.axes).toBe(true)
+    expect(target.labels).toEqual(['Mon', 'Tue', 'Wed'])
+    expect(target.projected).toBe(1)
+  })
+
+  it('ColumnChart → ui-column-chart maps data/series/label/projected/highlight onto accessors; not an input, no children (ADR-0229 cl.1/cl.2)', () => {
+    expect(columnChartFactory.tag).toBe('ui-column-chart')
+    expect(columnChartFactory.value).toBeUndefined() // a display leaf — no two-way binding
+    expect(columnChartFactory.submitGate).toBeUndefined()
+    const el = columnChartFactory.create()
+    expect(el.tagName.toLowerCase()).toBe('ui-column-chart')
+    const data = [
+      { label: 'Mar', values: [8, 4, 2] },
+      { label: 'Apr', values: [10, 5, 3] },
+    ]
+    columnChartFactory.applyProp(el, 'data', data)
+    columnChartFactory.applyProp(el, 'series', ['Product', 'Services', 'Support'])
+    columnChartFactory.applyProp(el, 'label', 'Revenue by month')
+    columnChartFactory.applyProp(el, 'projected', 1)
+    columnChartFactory.applyProp(el, 'highlight', 0)
+    const target = el as unknown as Record<string, unknown>
+    expect(target.data).toEqual(data)
+    expect(target.series).toEqual(['Product', 'Services', 'Support'])
+    expect(target.label).toBe('Revenue by month')
+    expect(target.projected).toBe(1)
+    expect(target.highlight).toBe(0)
+  })
+
+  it('Gauge → ui-gauge maps data/label onto accessors; not an input, no children (ADR-0229 cl.4)', () => {
+    expect(gaugeFactory.tag).toBe('ui-gauge')
+    expect(gaugeFactory.value).toBeUndefined() // a display leaf — no two-way binding
+    expect(gaugeFactory.submitGate).toBeUndefined()
+    const el = gaugeFactory.create()
+    expect(el.tagName.toLowerCase()).toBe('ui-gauge')
+    const data = [
+      { label: 'CPU', value: 72 },
+      { label: 'Memory', value: 54 },
+      { label: 'Disk', value: 31 },
+    ]
+    gaugeFactory.applyProp(el, 'data', data)
+    gaugeFactory.applyProp(el, 'label', 'System load')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.data).toEqual(data)
+    expect(target.label).toBe('System load')
   })
 })
 
