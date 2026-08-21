@@ -653,7 +653,15 @@ const appCssQuerySuffixPlugin = {
 // own code-splitting made bare `isEntry` under-count). Per GH #1080's ruling and ADR-0197 cl.5, upward
 // re-bases of this row are CLOSED as a class: future growth pays with a diet or a ruled feature-weight
 // ADR, never a drift bump. Downward re-bases remain ordinary.
-const APP_MARGINAL_BUDGET = 102 * KB
+// Re-based 104448 -> 104982 B gz 2026-08-21 (ADR-0197 cl.5's named exception, "a ruled feature-weight
+// ADR" — not a drift bump): ADR-0229 (svg-charts wave 1, GH #1565/#1561) ships `ui-column-chart`, the
+// fleet's fifth first-class chart type, self-registering in `component-styles.css` alongside
+// sparkline/bar-chart/line-chart/pie-chart per the existing foundation-CSS shape every prior chart
+// type paid into this same row — real reviewed weight from a Kim-ratified control, not accretion.
+// Kim ruling 2026-08-21 (in-session): rule the exception now rather than diet the shared foundation
+// CSS apart. Measured 104982 B gz (fresh npm ci, exit-code verified) — zero headroom by design; the
+// next chart wave (line-chart axes/gradient, GH #1566) pays for its own weight the same way.
+const APP_MARGINAL_BUDGET = 104982
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
