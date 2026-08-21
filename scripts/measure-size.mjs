@@ -682,7 +682,15 @@ const appCssQuerySuffixPlugin = {
 // scoped size:big precisely because it spans several waves. Measured 105943 B gz (fresh npm ci,
 // exit-code verified) — zero headroom by design; wave 3 (ui-gauge, GH #1567) pays for its own weight
 // the same way, or diets if the pattern strains further.
-const APP_MARGINAL_BUDGET = 105943
+// Re-based 105943 -> 106353 B gz 2026-08-21 (ADR-0197 cl.5's named exception, invoked a THIRD
+// consecutive time — pre-anticipated by the wave-2 comment above, "wave 3 (ui-gauge) pays for its
+// own weight the same way"; not re-asked, applied on that standing basis): ADR-0229 cl.4 (svg-charts
+// wave 3, GH #1567/#1561) ships `ui-gauge`, the sixth first-class chart type — concentric SVG-ring
+// anatomy + its legend column, self-registering alongside the other five per the same
+// component-styles.css shape. +410 B gz — DECELERATING vs the prior two waves (534, then 961), not
+// runaway. Measured 106353 B gz (fresh npm ci, exit-code verified) — zero headroom; wave 4 is
+// catalog-rows-only (no new control), so this budget should hold steady from here.
+const APP_MARGINAL_BUDGET = 106353
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
