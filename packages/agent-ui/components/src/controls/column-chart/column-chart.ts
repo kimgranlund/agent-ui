@@ -12,8 +12,11 @@
 //
 // The two-layer model (ADR-0228 cl.1-3), realized as THREE full-overlay grid children (`grid-area: 1/1`,
 // column-chart.css):
-//   1. `[data-part='plot']` — an `aria-hidden` `<svg>` spanning the box edge-to-edge at ZERO inset: nice-
-//      number gridlines + the now-marker (baseline dot + a SHORT tick — never a full-height rule).
+//   1. `[data-part='plot']` — an `aria-hidden` HTML `<div>` (ADR-0230: the SVG plot layer retires — every
+//      mark here is axis-aligned, squarely the CSS side of ADR-0107 cl.3's rendering-follows-the-mark
+//      law) spanning the box edge-to-edge at ZERO inset: nice-number gridlines + the now-marker (baseline
+//      dot + a SHORT tick — never a full-height rule), each a positioned div reading the SAME percent
+//      coordinates `column-math.ts` always produced.
 //   2. `[data-part='columns']` — the CSS-drawn stacked column marks (bar-chart's box-mark law: length-
 //      proportional CSS, real DOM text for the printed facts, never SVG `<text>`), ALSO edge-to-edge at
 //      zero inset — columns are plot-layer citizens, not chrome.
@@ -22,7 +25,9 @@
 //      plot box rather than pushing it inward (Kim's zero-padding-container contract, ADR-0228 cl.3) —
 //      real DOM text, pruned from the accessible tree by the host's `role=img` (the ARIA img-pruning
 //      rule) but sighted and REPEATED in the generated summary for AT parity (cl.5's own citation of the
-//      ui-line-chart min/max precedent).
+//      ui-line-chart min/max precedent). Every rendered category-label chip carries a math-stamped
+//      `data-density` tier (ADR-0230 cl.4) — `'fine'` when it is NOT in the geometry's coarse subset, so
+//      the container-query medium rung (column-chart.css) can hide it; coarse chips carry no attribute.
 //
 // `internals.role = 'img'` is a CONSTANT set directly in connected() (the ui-line-chart precedent) —
 // never inside an effect. `ariaLabel` is a SECOND effect: the generated summary (per-series totals/
@@ -30,6 +35,14 @@
 // prop. `cleanData`/`cleanSeries` run again at the render boundary (not just inside the codec): a
 // PROPERTY write of garbage never reaches the math either (the SPEC-R3 AC2 sibling rule the whole family
 // applies).
+//
+// Container-query chrome-degradation ladder (ADR-0230 cl.3/cl.4): the host self-establishes
+// `container-type: inline-size` (column-chart.css) — lawful under ADR-0100 because every plot/chrome
+// child here is absolutely positioned and the columns track is zero-basis flex, so the chart's intrinsic
+// inline size is already as-if-empty by construction; the real minimum is the SPECIFIED
+// `min-inline-size` floor token, which containment never touches. Three rungs, two geometry-derived
+// breakpoints (28em/16em, host-em units), zero resize-JS, zero state written by a resize: the DOM this
+// effect renders is IDENTICAL at every width — only the CSS in column-chart.css is width-aware.
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import {
@@ -43,7 +56,6 @@ import {
   type ColumnRow,
 } from './column-math.ts'
 
-const SVG_NS = 'http://www.w3.org/2000/svg'
 /** The now-marker's short tick length, in the SAME 0..100 percent space as every other plot coordinate —
  *  a fixed, density-invariant fraction of the plot height (never a full-height rule, ADR-0228 cl.4). */
 const NOW_TICK_DEPTH_PCT = 8
@@ -94,46 +106,41 @@ export class UIColumnChartElement extends UIElement {
     return h === null || !Number.isFinite(h) ? null : Math.trunc(h)
   }
 
-  /** Layer 1 — the aria-hidden SVG plot: nice-number gridlines (percent-from-bottom, flipped to SVG y)
-   *  + the now-marker (baseline dot + a SHORT tick, never full-height). Zero inset — plot-layer citizen. */
-  #plotNode(g: ColumnChartGeometry): SVGSVGElement {
-    const svg = document.createElementNS(SVG_NS, 'svg')
-    svg.setAttribute('viewBox', '0 0 100 100')
-    svg.setAttribute('preserveAspectRatio', 'none')
-    svg.setAttribute('data-part', 'plot')
-    svg.setAttribute('aria-hidden', 'true')
-    svg.setAttribute('focusable', 'false')
+  /** Layer 1 — the aria-hidden HTML plot (ADR-0230: divs, never `<svg>` — every mark here is
+   *  axis-aligned): nice-number gridlines (percent-from-bottom, positioned via `inset-block-start`) +
+   *  the now-marker (baseline dot + a SHORT tick, never full-height). Zero inset — plot-layer citizen.
+   *  Border-drawn (never background-drawn — a background vanishes to `Canvas` under forced-colors,
+   *  ADR-0230 Decision cl.1) at device-pixel-constant CSS px, the `non-scaling-stroke` guarantee
+   *  re-proven in CSS: a CSS px never scales with the box's percent geometry, whatever its aspect ratio —
+   *  which also retires the SVG-era now-dot's ellipse distortion (a fixed-em circle is round at every
+   *  box aspect ratio) and the RTL/columns disagreement (`inset-inline-start` agrees with the flex
+   *  columns track's own mirroring in both directions, where the old physical-LTR viewBox space did not). */
+  #plotNode(g: ColumnChartGeometry): HTMLElement {
+    const plot = document.createElement('div')
+    plot.setAttribute('data-part', 'plot')
+    plot.setAttribute('aria-hidden', 'true')
 
     for (const tick of g.gridTicks) {
-      const y = 100 - tick.pct
-      const line = document.createElementNS(SVG_NS, 'line')
+      const line = document.createElement('div')
       line.setAttribute('data-part', 'grid-line')
-      line.setAttribute('x1', '0')
-      line.setAttribute('x2', '100')
-      line.setAttribute('y1', String(y))
-      line.setAttribute('y2', String(y))
-      line.setAttribute('vector-effect', 'non-scaling-stroke')
-      svg.append(line)
+      line.style.setProperty('--_grid-pct', String(tick.pct))
+      plot.append(line)
     }
 
     if (g.nowPct !== null) {
-      const dot = document.createElementNS(SVG_NS, 'circle')
+      const dot = document.createElement('div')
       dot.setAttribute('data-part', 'now-dot')
-      dot.setAttribute('cx', String(g.nowPct))
-      dot.setAttribute('cy', '100')
-      svg.append(dot)
+      dot.style.setProperty('--_now-pct', String(g.nowPct))
+      plot.append(dot)
 
-      const tick = document.createElementNS(SVG_NS, 'line')
+      const tick = document.createElement('div')
       tick.setAttribute('data-part', 'now-tick')
-      tick.setAttribute('x1', String(g.nowPct))
-      tick.setAttribute('x2', String(g.nowPct))
-      tick.setAttribute('y1', String(100 - NOW_TICK_DEPTH_PCT))
-      tick.setAttribute('y2', '100')
-      tick.setAttribute('vector-effect', 'non-scaling-stroke')
-      svg.append(tick)
+      tick.style.setProperty('--_now-pct', String(g.nowPct))
+      tick.style.setProperty('--_now-tick-depth', String(NOW_TICK_DEPTH_PCT))
+      plot.append(tick)
     }
 
-    return svg
+    return plot
   }
 
   /** Layer 2 — the CSS-drawn stacked columns (aria-hidden: the printed facts live in the chrome layer +
@@ -206,10 +213,16 @@ export class UIColumnChartElement extends UIElement {
       chrome.append(chip)
     }
 
+    const coarse = new Set(g.coarseCategoryChipIndices)
     for (const i of g.categoryChipIndices) {
       const row = g.rows[i]
       const chip = document.createElement('div')
       chip.setAttribute('data-part', 'category-label')
+      // ADR-0230 cl.4 — the math-stamped density tier: a chip NOT in the coarse subset is 'fine', hidden
+      // by the container-query medium rung (column-chart.css); a coarse chip carries no attribute at
+      // all and survives every rung down to the narrow rung's all-chrome hide. Count-derived at render,
+      // zero resize-JS — only the CSS rung itself is width-aware.
+      if (!coarse.has(i)) chip.setAttribute('data-density', 'fine')
       chip.textContent = row.label
       chip.style.setProperty('--_cat-pct', String(row.centerPct))
       // The SAME clamp law, horizontal axis: `-centerPct` interpolates 0% (leftmost: sit entirely
