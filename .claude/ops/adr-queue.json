@@ -1,18 +1,3 @@
 {
-  "candidates": [
-    {
-      "adr_id": "adr-0227",
-      "evidence": "New (2026-08-20, ratified): sanctions ONE shared/app-state grammar (single-owner signal-backed store, explicit injection, StorageAdapter persistence, CSS cascade for presentational axes) + a fact-shaped context-request re-trigger, replacing four ad-hoc precedents. Not covered verbatim on origin/main: component-patterns/references/patterns-table.md rows 39/42 cite ADR-0192/0193 individually but carry no general shared-state-grammar row; a2ui-build/SKILL.md's 'single-owner' hit is an unrelated canonical-sources heading. Fits component-patterns' existing patterns-table.md axis (trigger -> pattern -> ADR/path rows) as a new row, or its own reference file if the grammar's four rules don't compress to one row.",
-      "kind": "harvest",
-      "plan": "",
-      "queued_at": "2026-08-20T22:03:27Z"
-    },
-    {
-      "adr_id": "adr-0226",
-      "evidence": "Amended/ratified 2026-08-20: Button gains wire-level icon/iconOnly props (ICON_NAMES vocabulary verbatim, label-is-accessible-name, validator requires: cross-prop check) closing the undocumented child/children structural-leniency exploit fleet-wide. Not covered on origin/main: a2ui-payload-authoring/references/composition-patterns.md's only ICON_NAMES hit is the unrelated weather-glyph-gap note; node-idioms.md's 'Button - action leaf' entry (cited in this ADR's own Alternatives) predates the mechanism and doesn't mention icon/iconOnly. Fits a2ui-payload-authoring as an extend of node-idioms.md's Button entry (drop the Column(Icon,Button) workaround pattern) plus a conformance.ts requires: cross-prop-validation pattern worth a component-patterns row (catalog-wide floor, not Button-scoped).",
-      "kind": "harvest",
-      "plan": "",
-      "queued_at": "2026-08-20T22:03:27Z"
-    }
-  ]
+  "candidates": []
 }

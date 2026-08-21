@@ -11,7 +11,9 @@
     "add validity checks and gate the submit under a FormProvider in my payload",
     "run the compose validate self-correct loop on this payload",
     "I need the server to client message stream that draws a generative UI from the catalog",
-    "put together the createSurface and updateDataModel messages for this screen"
+    "put together the createSurface and updateDataModel messages for this screen",
+    "add an icon-only dismiss button to my A2UI payload",
+    "which icon names can a Button carry in this catalog and does it still need a label"
   ],
   "negatives": [
     "write the ui-checkbox control source with ElementInternals",

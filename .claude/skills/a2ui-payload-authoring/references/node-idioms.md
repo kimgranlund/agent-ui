@@ -26,7 +26,8 @@ literal. A prop with a `value: { prop, event }` block is a two-way surface — s
 Real: `examples/patterns.ts:38` (literal), `examples/dynamic-lists.ts:33` (`{path}`), `patterns.ts:186` (`${…}`).
 
 ## Button — action leaf
-`catalog.json:12-30`. Props: `label` (bindable → `textContent`), `variant`, `disabled` (bindable),
+`catalog.json:15-37`. Props: `label` (bindable → `textContent`), `variant`, `disabled` (bindable),
+`icon` (bindable → the leading glyph; ADR-0226), `iconOnly` (boolean; ADR-0226),
 `action` (object: `action` REQUIRED, optional `context`, `wantResponse`). The fleet has NO danger tone —
 a destructive intent is carried by the action NAME + wording, not a red variant (`patterns.ts:1-8, 84-86`).
 `action.submit` is a client-only FormProvider gate flag (ADR-0054), not a catalog prop —
@@ -36,6 +37,26 @@ see `references/bindings-actions-checks.md`.
   "action": { "action": "save_settings", "submit": true } }
 ```
 Real: `examples/canvas-button.ts:27`, `examples/generative-form.ts:148`, `examples/patterns.ts:85-86`.
+
+**Icons (ADR-0226, 2026-08-20):** `icon` names a glyph from `@agent-ui/icons`' ICON_NAMES — the same
+open-string vocabulary `Icon.name` takes, NOT a catalog-pinned enum (an unknown name renders the
+fallback glyph, never a validation error). Two forms, both validator-enforced by `requires:`
+cross-prop checks (a violation is a CATALOG failure at finalize):
+- **icon + label** — `icon` REQUIRES `label`; the glyph leads, the label stays visible text.
+- **icon-only** — `iconOnly: true` REQUIRES `icon`; the `label` is still REQUIRED and routes to
+  `aria-label` instead of visible text (the label IS the accessible name — never omit it).
+```json
+{ "id": "btn_dl", "component": "Button", "variant": "soft", "icon": "download-simple",
+  "label": "Download", "action": { "action": "download_report" } }
+{ "id": "btn_x", "component": "Button", "variant": "ghost", "icon": "x", "iconOnly": true,
+  "label": "Dismiss", "action": { "action": "dismiss_notice" } }
+```
+Real: `examples/catalog-frontier.ts:1260-1300` (`frontier-button-icon-actions`, both forms in one tree).
+**Retired workaround** — the old `Column(Icon, ghost Button)` pairing (an Icon leaf visually glued to
+a bare Button) is dead: use `icon`/`iconOnly` instead. Nesting an `Icon` CHILD inside `Button` was
+never a contract and now FAILS validation outright — ADR-0226 closed the `child`/`children`
+structural leniency catalog-wide, so a child key on any non-children-model component is a CATALOG
+failure, not a silent ignore.
 
 ## TextField — text/number/date/time input
 `catalog.json:32-50`. `value: { prop:"value", event:"change" }` (two-way). Bindable: `value`, `label`,
