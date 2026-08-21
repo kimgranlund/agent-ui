@@ -691,7 +691,16 @@ const appCssQuerySuffixPlugin = {
 // component-styles.css shape. +410 B gz — DECELERATING vs the prior two waves (534, then 961), not
 // runaway. Measured 106353 B gz (fresh npm ci, exit-code verified) — zero headroom; wave 4 is
 // catalog-rows-only (no new control), so this budget should hold steady from here.
-const APP_MARGINAL_BUDGET = 106353
+// Re-based 106353 -> 106455 B gz 2026-08-21 (ADR-0197 cl.5's named exception, invoked a FOURTH and
+// FINAL time — applied on the same standing basis the prior three waves used): GH #1568 (svg-charts
+// wave 4 — catalog rows + allowlist drain for ColumnChart/Gauge/LineChart, no new control) shifted
+// the leave-one-out frame by +102 B gz — the smallest movement yet (534, 961, 410, 102 —
+// monotonically decelerating to near-zero, exactly as the "should hold steady" comment above
+// predicted). This is the LAST wave of GH #1561 (the design tracker closes with this wave) — no
+// further wave is anticipated to draw on this exception; the next legitimate growth here is a
+// genuinely new feature, which pays its own way per cl.5's rule, not this system's residue.
+// Measured 106455 B gz (fresh npm ci, exit-code verified) — zero headroom.
+const APP_MARGINAL_BUDGET = 106455
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
