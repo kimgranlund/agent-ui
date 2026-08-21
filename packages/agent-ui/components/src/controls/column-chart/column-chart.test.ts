@@ -102,7 +102,7 @@ describe('UIColumnChartElement — img semantics via internals', () => {
 })
 
 describe('UIColumnChartElement — three-layer DOM (ADR-0228 cl.1-3)', () => {
-  it('renders exactly one plot svg, one columns div, one chrome div', () => {
+  it('renders exactly one plot layer, one columns div, one chrome div', () => {
     const el = new UIColumnChartElement()
     el.data = REVENUE
     mount(el)
@@ -111,7 +111,7 @@ describe('UIColumnChartElement — three-layer DOM (ADR-0228 cl.1-3)', () => {
     expect(el.querySelectorAll('[data-part="chrome"]')).toHaveLength(1)
   })
 
-  it('the plot svg is aria-hidden; the columns layer is aria-hidden too (the summary carries the facts)', () => {
+  it('the plot layer is aria-hidden; the columns layer is aria-hidden too (the summary carries the facts)', () => {
     const el = new UIColumnChartElement()
     el.data = REVENUE
     mount(el)

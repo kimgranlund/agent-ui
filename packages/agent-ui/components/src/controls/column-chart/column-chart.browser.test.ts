@@ -83,6 +83,24 @@ describe('ui-column-chart — the two-layer full-bleed model (ADR-0228 cl.1-3)',
     }
   })
 
+  it('SPEC-R48 AC1: zero <svg> element exists anywhere in the rendered DOM (the plot layer is HTML divs, ADR-0230 cl.1)', () => {
+    const chart = mount(`<ui-column-chart data='${REVENUE}' projected="1"></ui-column-chart>`) as HTMLElement
+    expect(chart.querySelector('svg')).toBeNull()
+  })
+
+  it('SPEC-R48 AC3: the now-dot renders as a TRUE circle (width === height) on a deliberately non-square box, never an ellipse', () => {
+    const wrap = document.createElement('div')
+    wrap.style.inlineSize = '600px'
+    wrap.style.blockSize = '160px' // aggressively non-square — the SVG-era preserveAspectRatio:none distortion trigger
+    wrap.innerHTML = `<ui-column-chart data='${REVENUE}' projected="1" style="inline-size:100%;block-size:100%"></ui-column-chart>`
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const dot = wrap.querySelector('[data-part="now-dot"]') as HTMLElement
+    const box = dot.getBoundingClientRect()
+    expect(box.width, 'anti-vacuous: the dot must have painted a real, non-zero size').toBeGreaterThan(0)
+    expect(Math.round(box.width)).toBe(Math.round(box.height))
+  })
+
   it('every chip stays INSIDE the plot box — never overflows past the chart edges (the chip-collision clamp law)', () => {
     const chart = mount(`<ui-column-chart data='${REVENUE}'></ui-column-chart>`) as HTMLElement
     const chartBox = chart.getBoundingClientRect()
