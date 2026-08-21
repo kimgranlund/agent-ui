@@ -547,6 +547,13 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     // DISPOSITION_ALLOWLIST's pending "NO VERDICT SOUGHT YET" entry (a later judged wave runs the real
     // pipeline).
     'frontier-button-icon-actions': { passed: false, qualityScore: 2 },
+    // ADR-0229/GH #1568 — svg-charts wave 4's three coverage-gap seeds (catalog-frontier.ts); refused
+    // here for the same zero-admission reason as every row above; their real disposition is
+    // DISPOSITION_ALLOWLIST's pending "NO VERDICT SOUGHT YET" entries (a later judged wave runs the
+    // real pipeline).
+    'frontier-column-chart-revenue': { passed: false, qualityScore: 2 },
+    'frontier-gauge-system-load': { passed: false, qualityScore: 2 },
+    'frontier-line-chart-axes-weekly-sales': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {

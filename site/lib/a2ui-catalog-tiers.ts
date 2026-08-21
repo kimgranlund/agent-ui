@@ -105,7 +105,8 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   Table: 'FEATURE',
   Timeline: 'FEATURE',
 
-  // WIDGET (18) — small, self-contained display/utility leaves.
+  // WIDGET (24, the derived true count as of this wave — the header comment's own note stands: this
+  // figure is orientation only, never gated) — small, self-contained display/utility leaves.
   Attachment: 'WIDGET',
   Avatar: 'WIDGET',
   Badge: 'WIDGET',
@@ -113,6 +114,8 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   BarChart: 'WIDGET',
   Button: 'WIDGET',
   Code: 'WIDGET',
+  ColumnChart: 'WIDGET', // ADR-0229 cl.1/cl.2 (GH #1568) — the stacked/dense-series column mark, a display leaf riding with its BarChart/Sparkline/LineChart/PieChart chart-family kin
+  Gauge: 'WIDGET', // ADR-0229 cl.4 (GH #1568) — the multi-ring radial progress mark, a display leaf riding with its chart-family kin (never part-of-whole, unlike PieChart)
   Image: 'WIDGET',
   Video: 'WIDGET',
   AudioPlayer: 'WIDGET', // GH #1189 — the URL-sourced content-image primitive, a display leaf like Avatar/Attachment (no ADR — conventional admission, host ruling)

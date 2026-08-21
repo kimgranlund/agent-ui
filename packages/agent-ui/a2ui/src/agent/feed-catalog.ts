@@ -128,7 +128,7 @@ export interface FeedExclusion {
 }
 
 /**
- * The 40 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
+ * The 43 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
  * the ADR-0097 Amendment / ADR-0107 Amendment 2 — + the chart family's third member, `LineChart`
  * [ADR-0205 cl.8] — + the report/content/feed catalog wave's five:
  * `Stat`/`Table` [ADR-0111], `Disclosure` [ADR-0113], `Progress`/`Attachment` [ADR-0112] — + the
@@ -153,7 +153,9 @@ export interface FeedExclusion {
  * `ServiceCard` [ADR-0224, GH #1429 — a gateway service-list card is report/canvas-scale content (the
  * Stat/Table dashboard-idiom reasoning), and its Open action does not round-trip to the server this pass
  * (the Drill Fork D2 precedent verbatim — no catalog `action` prop maps to it, factories.ts); `available`
- * binds forward only, so an ask embedding this card could never learn what a click resolved to].
+ * binds forward only, so an ask embedding this card could never learn what a click resolved to]) + the
+ * svg-charts wave 4's two: `ColumnChart`/`Gauge` [ADR-0229 cl.7, GH #1568 — the chart family's fifth/sixth
+ * members, the same display-only/no-value-mark reasoning as Sparkline/BarChart/LineChart/PieChart].
  * Composite-closure note: a composite's children are excluded ALONGSIDE their parent for the SAME
  * reason (Tab/TabPanel with Tabs; MenuItem with Menu) — `feed-catalog.test.ts` asserts this closure
  * holds, both here and for the IN composites (RadioGroup/Radio, SegmentedControl/Segment, Card/its
@@ -214,6 +216,16 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
     type: 'PieChart',
     reason:
       'report content, not an ask affordance (ADR-0219, inheriting the ADR-0107 cl.8 + Amendment 2 reasoning): the part-of-whole mark is display-only, no value mark — the same chart-family class as Sparkline/BarChart/LineChart, reaching the artifact feed via full-catalog rendering only.',
+  },
+  {
+    type: 'ColumnChart',
+    reason:
+      'report content, not an ask affordance (ADR-0229 cl.7, GH #1568, inheriting the ADR-0107 cl.8 + Amendment 2 reasoning): the stacked/dense-series column mark is display-only, no value mark — the same chart-family class as Sparkline/BarChart/LineChart/PieChart, reaching the artifact feed via full-catalog rendering only.',
+  },
+  {
+    type: 'Gauge',
+    reason:
+      'report content, not an ask affordance (ADR-0229 cl.7, GH #1568, inheriting the ADR-0107 cl.8 + Amendment 2 reasoning): the multi-ring radial progress mark is display-only, no value mark (the legend rows are read-only real DOM, never a commit affordance) — the same chart-family class as its chart-family kin, reaching the artifact feed via full-catalog rendering only.',
   },
   {
     type: 'Grid',

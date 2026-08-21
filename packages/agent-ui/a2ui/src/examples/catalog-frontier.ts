@@ -43,6 +43,16 @@
 // not merely unit-probed. Corpus admission is a SEPARATE, later judged wave (disposition-allowlist.ts
 // carries the pending entry) — not this slice's job.
 
+// Frontier 25-27 (ADR-0229, GH #1568 — svg-charts wave 4, the design tracker GH #1561's FINAL wave):
+// `ColumnChart` (25) and `Gauge` (26) close their own GH #729 coverage gaps the moment their rows exist
+// (drains ADR-0229 cl.7's TEMPORARY `EXCLUSION_ALLOWLIST` seeds); `LineChart`'s `axes`-state widening
+// (27, ADR-0229 cl.3) gets its OWN seed distinct from Frontier 11's default-state `latencyLineChartSeed`
+// (byte-untouched by this wave) — a full tick/gridline/category-label axis system with a projected tail,
+// the shape neither Frontier 11 nor any prior seed exercises. All three real board-shape content (the
+// GH #1561 boards' own revenue-by-month / CPU-Memory-Disk / weekly-trend-with-forecast archetypes),
+// never lorem. Corpus admission is a SEPARATE, later judged wave (disposition-allowlist.ts carries the
+// pending entries) — not this slice's job.
+
 import type { ExampleSeed } from './types.ts'
 
 const TRIP_ID = 'frontier-trip-card'
@@ -1299,4 +1309,152 @@ export const buttonIconActionsSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed]
+const COLUMN_CHART_ID = 'frontier-column-chart-revenue'
+/** Frontier 25 (ADR-0229 cl.1/cl.2, GH #1568): `ColumnChart` — a revenue-by-month Card, the boards' own
+ *  stacked-multi-series archetype (Product/Services/Support), `data`/`series` both bound to the data
+ *  model (ADR-0229 cl.2's "both bindable" wire contract, verbatim), the peak month (July) called out via
+ *  `highlight`, and the trailing month (August) still `projected` — the exact revenue-by-month dataset
+ *  the wave-1 site demo (`column-chart-demo.html`) and the descriptor's own worked example ship. */
+export const columnChartRevenueSeed: ExampleSeed = {
+  name: 'frontier-column-chart-revenue',
+  description: 'A revenue-by-month Card — ColumnChart bound to a 3-series stacked dataset (Product/Services/Support), July highlighted as the best month, August still projected (ADR-0229 cl.1/cl.2).',
+  promptText: 'Show monthly revenue by product line for the last six months, call out July as our best month, and mark August as still a forecast.',
+  surfaceId: COLUMN_CHART_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: COLUMN_CHART_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: COLUMN_CHART_ID,
+        value: {
+          revenue: {
+            rows: [
+              { label: 'Mar', values: [8, 4, 2] },
+              { label: 'Apr', values: [10, 5, 3] },
+              { label: 'May', values: [9, 6, 4] },
+              { label: 'Jun', values: [11, 7, 4] },
+              { label: 'Jul', values: [12, 7, 5] },
+              { label: 'Aug', values: [6, 4, 2] },
+            ],
+            series: ['Product', 'Services', 'Support'],
+          },
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: COLUMN_CHART_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['hd', 'ct'] },
+          { id: 'hd', component: 'CardHeader', children: ['hd_title'] },
+          { id: 'hd_title', component: 'Text', variant: 'h5', text: 'Revenue by month' },
+          { id: 'ct', component: 'CardContent', children: ['chart', 'caption'] },
+          {
+            id: 'chart', component: 'ColumnChart',
+            data: { path: '/revenue/rows' }, series: { path: '/revenue/series' },
+            projected: 1, highlight: 4,
+            label: 'Revenue by month, Product/Services/Support',
+          },
+          { id: 'caption', component: 'Text', variant: 'caption', text: 'August is still a forecast; July was the best month so far.' },
+        ],
+      },
+    },
+  ],
+}
+
+const GAUGE_ID = 'frontier-gauge-system-load'
+/** Frontier 26 (ADR-0229 cl.4, GH #1568): `Gauge` — a system-load Card, the boards' own multi-ring
+ *  archetype: three INDEPENDENT 0-100 rings (CPU/Memory/Disk, never part-of-whole — rings do not sum)
+ *  bound to the data model, with a caption naming the metric closest to capacity. */
+export const gaugeSystemLoadSeed: ExampleSeed = {
+  name: 'frontier-gauge-system-load',
+  description: 'A system-load Card — Gauge bound to three independent CPU/Memory/Disk progress rings sharing one center, with a caption naming the metric closest to capacity (ADR-0229 cl.4).',
+  promptText: 'Show current CPU, memory, and disk load as a set of gauges.',
+  surfaceId: GAUGE_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: GAUGE_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: GAUGE_ID,
+        value: {
+          system: {
+            metrics: [
+              { label: 'CPU', value: 72 },
+              { label: 'Memory', value: 54 },
+              { label: 'Disk', value: 31 },
+            ],
+          },
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: GAUGE_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['hd', 'ct'] },
+          { id: 'hd', component: 'CardHeader', children: ['hd_title'] },
+          { id: 'hd_title', component: 'Text', variant: 'h5', text: 'System load' },
+          { id: 'ct', component: 'CardContent', children: ['gauge', 'caption'] },
+          { id: 'gauge', component: 'Gauge', data: { path: '/system/metrics' }, label: 'System load' },
+          { id: 'caption', component: 'Text', variant: 'caption', text: 'CPU is closest to capacity at 72%.' },
+        ],
+      },
+    },
+  ],
+}
+
+const LINE_CHART_AXES_ID = 'frontier-line-chart-axes-weekly-sales'
+/** Frontier 27 (ADR-0229 cl.3, GH #1568): `LineChart`'s `axes` opt-in state — a weekly-sales Card
+ *  distinct from Frontier 11's default-state `latencyLineChartSeed` (baseline + min/max labels only,
+ *  byte-untouched by this wave): the full tick/gridline/category-label axis system, `labels` bound
+ *  index-aligned to `values` (the days of the week), a `projected` trailing day (tomorrow, still a
+ *  forecast) and the `variant="area"` gradient fill upgrade riding the same row. */
+export const lineChartAxesWeeklySalesSeed: ExampleSeed = {
+  name: 'frontier-line-chart-axes-weekly-sales',
+  description: 'A weekly-sales Card — LineChart in the ADR-0229 cl.3 axes state: a full tick/gridline/category-label axis system bound to a 7-day series with day labels, the last day still projected as a forecast.',
+  promptText: 'Show this week daily sales as a line chart with the days labeled along the bottom, and mark tomorrow as still a forecast.',
+  surfaceId: LINE_CHART_AXES_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: LINE_CHART_AXES_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: LINE_CHART_AXES_ID,
+        value: {
+          sales: {
+            amounts: [420, 455, 480, 512, 498, 530, 545],
+            days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          },
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: LINE_CHART_AXES_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['hd', 'ct'] },
+          { id: 'hd', component: 'CardHeader', children: ['hd_title'] },
+          { id: 'hd_title', component: 'Text', variant: 'h5', text: 'Sales this week ($)' },
+          { id: 'ct', component: 'CardContent', children: ['chart'] },
+          {
+            id: 'chart', component: 'LineChart', variant: 'area', axes: true,
+            values: { path: '/sales/amounts' }, labels: { path: '/sales/days' },
+            projected: 1, label: 'Daily sales, this week',
+          },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed]
