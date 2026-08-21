@@ -42,7 +42,7 @@ exemplars ARE the standard — read them, don't re-derive.
 1. `npm run check` (tsc + site) and `npm test` — both green, read separately.
 2. The control's `.browser.test.ts` green on BOTH engines — jsdom-green ≠ done.
 3. `npm run size` by hand when the bundle surface changed (manual by Kim's ruling).
-4. **Independent review is non-optional**: the `screens:component-checker` agent grades before the
+4. **Independent review is non-optional**: the `frontend:component-checker` agent grades before the
    commit (generator ≠ critic) — it has caught real cross-engine bugs green suites bypassed.
 5. New site pages drag the standing site gates: `site-canon`, `site-toc`,
    `site-coverage` (all under `components/src/descriptor/`), and the llms byte-gate

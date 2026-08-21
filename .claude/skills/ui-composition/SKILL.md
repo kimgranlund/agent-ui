@@ -51,8 +51,8 @@ exemplar to read first: `site/pages/forms.ts` (one live form, narrated end-to-en
 
 ## Review (generator ≠ critic)
 
-An interactive flow gets `screens:flow-checker`; a fragment whose claim is visual/structural
-gets `screens:layout-checker`; a code-level change riding a repo contract gets
+An interactive flow gets `frontend:flow-checker`; a fragment whose claim is visual/structural
+gets `frontend:layout-checker`; a code-level change riding a repo contract gets
 `teamwork:code-checker`. Name the artifact and hand off before shipping.
 
 ## Definition of done

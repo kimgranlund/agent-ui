@@ -74,8 +74,8 @@ entirely from the fleet — read them before scaffolding a new host.
 
 ## Review (generator ≠ critic)
 
-The shell/screen structure → `screens:layout-checker`; cross-screen journeys →
-`screens:flow-checker`; contract-touching code → the house code review. Name the artifact,
+The shell/screen structure → `frontend:layout-checker`; cross-screen journeys →
+`frontend:flow-checker`; contract-touching code → the house code review. Name the artifact,
 hand off.
 
 ## Definition of done

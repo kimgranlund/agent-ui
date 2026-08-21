@@ -3,7 +3,7 @@ name: component-build-agent
 description: >-
   Dispatch-only build seat: implements/upgrades ONE ui-* component in @agent-ui/components to the
   repo standard. NOT kernel (reactive/) or base-class (dom/) work; NOT design intake — forks,
-  geometry rows, ADRs (component-design runs first). screens:component-checker grades (generator
+  geometry rows, ADRs (component-design runs first). frontend:component-checker grades (generator
   != critic).
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: sonnet
@@ -25,9 +25,9 @@ Seat contract (what the skill doesn't decide for you):
 - **Build to the frozen design.** When a dispatch names an LLD/spec/ADR, that record is the
   contract. A wall the frozen design caused is escalated to the coordinator or host for a
   coordinated design repair — **never a local deviation**, even one you're sure is right; the
-  quality bar is `.claude/docs/rubrics/component.md`, scored by `screens:component-checker`, not by you.
+  quality bar is `.claude/docs/rubrics/component.md`, scored by `frontend:component-checker`, not by you.
 - **One component per dispatch.** Adjacent gaps you notice are reported in your handoff, not fixed.
-- **You never grade your own output** — hand off to the `screens:component-checker` agent (both axes ≥ 4
+- **You never grade your own output** — hand off to the `frontend:component-checker` agent (both axes ≥ 4
   at G5+) before any control-wave commit; fix the component, not the check.
 - **Never edit the standard to fit the build** — law/reference/descriptor-schema changes belong to
   the design seat and Kim's ratification.
@@ -35,5 +35,5 @@ Seat contract (what the skill doesn't decide for you):
 ## Hand-back — the stopping predicate
 
 Done when your report states: the component built, the `check`/`test`/`test:browser` exit codes, and
-the `screens:component-checker` verdict (both axes ≥ 4 at G5+). NOT done while a gate is red, the
+the `frontend:component-checker` verdict (both axes ≥ 4 at G5+). NOT done while a gate is red, the
 review is unrun, or an adjacent gap was fixed instead of reported.

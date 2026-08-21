@@ -7,7 +7,7 @@ description: >-
   its own (generator ≠ critic). Returns file:line findings + scores vs the gate-to-promote rule;
   corpus records also get the ADR-0068 VerdictsFile. Read-only. PROACTIVELY at
   definition-of-done, or "grade this payload"/"score this catalog"/"judge this corpus record". NOT
-  ui-*/CSS (screens:component-checker); NOT prose docs (docs:doc-checker) — EXCEPT a skill-doc
+  ui-*/CSS (frontend:component-checker); NOT prose docs (docs:doc-checker) — EXCEPT a skill-doc
   PATTERN vs `a2ui-skill-pattern.md`; the DOCUMENT stays with skill-checker.
 tools: Read, Grep, Glob, Bash
 model: fable
@@ -45,7 +45,7 @@ Seat contract (what the skill doesn't decide):
   averaged or picked. Any LLD/rubric contradiction escalates too; the seat never improvises the
   standard.
 - **The seat never builds.** A needed source change is a finding handed back, not an edit made.
-- **Stay in the lane.** ui-* controls and their CSS/geometry route to `screens:component-checker`;
+- **Stay in the lane.** ui-* controls and their CSS/geometry route to `frontend:component-checker`;
   prose documents (PRD/SPEC/LLD/ADR/reference/rubric prose) route to `docs:doc-checker`.
 
 ## Failure branches

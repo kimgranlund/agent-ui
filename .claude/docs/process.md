@@ -54,7 +54,7 @@ authored as a discoverable skill; the procedure lives directly in the `component
 them. `auditing-components` was never built either — the mechanical `family-coherence.test.ts` standing
 gate (ADR-0081, landed G8) does the library-wide drift detection instead, arguably a *better* fit for
 placement rule 1 above (a true/false answer belongs in code, not agent judgment). `component-checker`
-and `tokens-specialist` were realized as the global plugin agents `screens:component-checker` and
+and `tokens-specialist` were realized as the global plugin agents `frontend:component-checker` and
 `design:token-builder` rather than repo-local subagents authored via `agent-author`. The planned
 standalone **coherence/health rubric** doc was never written — `family-coherence.test.ts`'s 9 invariants
 absorbed that role as a mechanical gate. The current build-team roster (`.claude/agents/`) is
@@ -132,7 +132,7 @@ Valuable only once 3+ components exist.
 ## 3. Subagents — result-only delegation (isolated judgment)
 
 *(`component-checker` and `tokens-specialist` below were realized as the global plugin agents
-`screens:component-checker` and `design:token-builder`, not repo-local subagents — see the artifact-map note
+`frontend:component-checker` and `design:token-builder`, not repo-local subagents — see the artifact-map note
 above. This section is kept as the original design rationale.)*
 
 A subagent is the right unit for scoped, isolatable work where only the summary returns — which keeps
@@ -220,7 +220,7 @@ per-tier  council bloat red-team (occasional, justified fan-out)
 
 - No autonomous harness-forge lattice yet — human-driven was chosen; that call hasn't been revisited even
   as the fleet grew from ~7 to 37+ components across multiple families (as of 2026-07-09).
-- No bespoke *per-component* agents — reviewer + tokens work route to the global `screens:component-checker` /
+- No bespoke *per-component* agents — reviewer + tokens work route to the global `frontend:component-checker` /
   `design:token-builder` plugins, not a new agent per control. *(The roster did grow bespoke agents per
   concern instead, as the surface area diversified: `component-build-agent` (ui-* build seat), `a2ui-build-agent`/
   `a2ui-payload-authoring-agent`/`a2ui-review-agent` (the A2UI layer), `example-authoring-agent` (docs-site preview content) —

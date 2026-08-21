@@ -13,12 +13,12 @@ disable-model-invocation: false
 
 | Artifact class | Maker seat | Critic seat |
 |---|---|---|
-| ui-* control source / CSS / geometry | `component-build-agent` | `screens:component-checker` (NON-optional before a control-wave commit) |
+| ui-* control source / CSS / geometry | `component-build-agent` | `frontend:component-checker` (NON-optional before a control-wave commit) |
 | `@agent-ui/a2ui` package / renderer / catalog code | `a2ui-build-agent` | `a2ui-review-agent` |
 | A2UI payload composition (message streams) | `a2ui-payload-authoring-agent` | `a2ui-review-agent` |
 | Docs-site pages / shell / non-preview prose | `teamwork:docs-writer` | `teamwork:code-checker` |
 | Preview specimens + knobs in `site/lib/component-preview.ts` | `example-authoring-agent` | host judges representativeness |
-| Color / dimension tokens | `design:token-builder` | `screens:component-checker` (consuming control) |
+| Color / dimension tokens | `design:token-builder` | `frontend:component-checker` (consuming control) |
 | PRD / SPEC / LLD / ADR authoring | `teamwork:planner` | `docs:doc-checker` |
 | Non-UI code diffs / slices | `teamwork:builder` | `teamwork:code-checker` |
 | Broad searches / codebase questions | `Explore` (read-only, conclusions not dumps) | — |
@@ -31,8 +31,8 @@ disable-model-invocation: false
 | A hook (registration + script) | maker of the change | `harness:hook-checker` |
 | Prompt-carrying wording (a brief, a description, a CLAUDE.md line) | maker of the change | `harness:wording-checker` |
 | Skill/agent/team wiring + frontmatter composition | maker of the change | `teamwork:wiring-checker` |
-| One screen/shell/page layout | maker of the change | `screens:layout-checker` |
-| A cross-screen user flow (*.flow.json, journeys) | maker of the change | `screens:flow-checker` |
+| One screen/shell/page layout | maker of the change | `frontend:layout-checker` |
+| A cross-screen user flow (*.flow.json, journeys) | maker of the change | `frontend:flow-checker` |
 
 `example-authoring-agent` and `docs-writer` share `component-preview.ts` by concern — never dispatch both
 onto that file concurrently.

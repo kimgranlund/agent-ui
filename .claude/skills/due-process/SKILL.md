@@ -63,7 +63,7 @@ green, a PR opened) — not only a single entry at the end.
 Two independent proofs, both required, before the issue closes:
 
 1. **Independent checker verdict** — the artifact's owning critic seat per `seat-map`'s table
-   (`teamwork:code-checker` for a non-UI slice, `screens:component-checker` for a `ui-*`
+   (`teamwork:code-checker` for a non-UI slice, `frontend:component-checker` for a `ui-*`
    component, `harness:skill-checker` for a skill, and so on). Generator ≠ critic — the maker
    never grades its own change.
 2. **Rendered-on-the-live-surface proof** — pixel-truth: "fixed" means seen working on the real

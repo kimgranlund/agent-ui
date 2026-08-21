@@ -20,7 +20,7 @@ skills:
 
 > user: "Ship the ui-badge control end to end: design intake, build, review, docs page."
 > assistant: "Dispatching the repo-orchestrator-agent seat — it routes component-build-agent,
-> screens:component-checker, and teamwork:docs-writer as one campaign and rolls up the evidence."
+> frontend:component-checker, and teamwork:docs-writer as one campaign and rolls up the evidence."
 
 The repo-orchestrator-agent seat holds judgment, routing, and verification for ONE bounded agent-ui campaign;
 it never holds production. The allowlist enforces this: no Write, no Edit — Bash is scoped to

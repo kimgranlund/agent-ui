@@ -46,7 +46,7 @@ renders an empty or meaningless R (Attachment today: all four seeds blank → a 
 
 ## 2 · Method — decomposition × two review directions
 
-The same two-axis method `screens:component-checker` uses, applied to a demonstration instead of a control:
+The same two-axis method `frontend:component-checker` uses, applied to a demonstration instead of a control:
 
 - **Out-in (whole → part, "Compose")**: start from the card's JOB — *show a reader what `T` is and what its
   props do* — and ask whether each part serves it: L exposes the demonstrable props with legible seeds; R shows
@@ -140,4 +140,4 @@ Exit codes: 0 all cards promote · 1 any gate red or any review < 3 (listed, nev
 
 - Grading the catalog row's code/tests (that is `a2ui-catalog.md`).
 - Grading a full composed gallery example/payload (`a2ui-payload.md`).
-- Pixel-perfect design review of the `ui-*` control itself (`component.md` / `screens:component-checker`) — B3 only checks the A2UI path renders the SAME thing the control's own page does.
+- Pixel-perfect design review of the `ui-*` control itself (`component.md` / `frontend:component-checker`) — B3 only checks the A2UI path renders the SAME thing the control's own page does.

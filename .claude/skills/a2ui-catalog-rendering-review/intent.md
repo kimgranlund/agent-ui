@@ -18,7 +18,7 @@ should:
 should_not:
   - "grade this catalog row's catalog.json + factory + tests"           # a2ui-review (rubric a2ui-catalog.md)
   - "review this A2UI payload / gallery example"                         # a2ui-review (rubric a2ui-payload.md)
-  - "is ui-attachment's anatomy and geometry right"                      # screens:component-checker / component.md
+  - "is ui-attachment's anatomy and geometry right"                      # frontend:component-checker / component.md
   - "screenshot the docs site pages for the README"                      # plain playwright, no eval
 
 ## delta
@@ -36,7 +36,7 @@ component-build-agent · card → docs-writer). Deleted after a month: reviews r
 ## fences
 - NOT for grading the catalog ROW — catalog.json/factory/tests (a2ui-review, rubric a2ui-catalog.md)
 - NOT for grading a composed A2UI payload or gallery example (a2ui-review, rubric a2ui-payload.md)
-- NOT for the ui-* control's own anatomy/geometry (screens:component-checker)
+- NOT for the ui-* control's own anatomy/geometry (frontend:component-checker)
 - (RETIRED 2026-08-18) "NOT for fixing seeds/knobs" — Kim ruling: the skill owns the fix leg through the catalog pipeline; ownership seats stay the DISPATCH targets for cross-package edits (component-build-agent for control source, a2ui-corpus-curation for admission)
 - NOT for the site page shell/nav (docs-writer)
 
@@ -73,7 +73,7 @@ P5 validate:   PASS 2026-08-18 (review leg) + PASS 2026-08-18 (fix leg: skill_li
 ## rulings
 - Baseline finding (P2): WITHOUT the skill, a fresh session still located scripts/screenshot-a2ui-catalog.mjs (already in tree) and wrote a fair narrative on Attachment (blank seeds, inert href) — but produced no per-dim gate table, no rubric anchors, no quadrant/owner routing, no blind-identify line, no coverage reconciliation. That set is the measured delta.
 - Audit minor accepted-with-note: docs-writer fence not in the description (700-char budget); intent.md fences + evals t17 carry it; add if /check-routing shows a leak.
-- Audit minor accepted-with-note: screens:component-checker (plugin agent) and example-authoring-agent (agent, no evals) get no reciprocal suite case — not editable from this repo / not skills.
+- Audit minor accepted-with-note: frontend:component-checker (plugin agent) and example-authoring-agent (agent, no evals) get no reciprocal suite case — not editable from this repo / not skills.
 - Behavior-check side finding (not this skill's scope): with-skill run surfaced site/pages/attachment-doc.ts:58 setting `name` instead of `filename` — every attachment-doc specimen renders the fallback label. Route via /file-bug.
 - Re-audit minors accepted-with-note: transcribed PropDef schema in catalog-pipeline.md §1 is a drift pair with catalog.ts validators — kept for self-sufficiency, marked with the file's own "re-verify before citing" rule; 7 line refs drift 1–13 lines (nit).
 - Fix-leg behavior check left a REAL desirable fix (A2UI_INITIAL.Attachment seed) uncommitted in worktree `.claude/worktrees/agent-a4c56c520a6ee1440` — port to a branch or discard; not this skill's deliverable.

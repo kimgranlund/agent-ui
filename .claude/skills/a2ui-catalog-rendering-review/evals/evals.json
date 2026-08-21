@@ -1,6 +1,6 @@
 {
   "skill": "a2ui-catalog-rendering-review",
-  "_note": "Positives: reviewing/evaluating the LIVE catalog-page cards (site/a2ui-catalog.html) — the props panel (L) vs the rendered A2UI surface (R), per component or across the tier tabs, incl. the screenshot-then-judge phrasing. Since 2026-08-18 the skill also FIXES through the catalog pipeline (seeds, catalog.json/factory rows, new types) — those asks trigger. Negatives drawn from the fenced siblings: a2ui-review (catalog ROW code, payloads/gallery examples), screens:component-checker (the ui-* control itself), example-authoring-agent (fixing seeds/knobs), docs-writer (page shell), plain screenshotting with no eval.",
+  "_note": "Positives: reviewing/evaluating the LIVE catalog-page cards (site/a2ui-catalog.html) — the props panel (L) vs the rendered A2UI surface (R), per component or across the tier tabs, incl. the screenshot-then-judge phrasing. Since 2026-08-18 the skill also FIXES through the catalog pipeline (seeds, catalog.json/factory rows, new types) — those asks trigger. Negatives drawn from the fenced siblings: a2ui-review (catalog ROW code, payloads/gallery examples), frontend:component-checker (the ui-* control itself), example-authoring-agent (fixing seeds/knobs), docs-writer (page shell), plain screenshotting with no eval.",
   "cases": [
     {
       "id": "t01",
