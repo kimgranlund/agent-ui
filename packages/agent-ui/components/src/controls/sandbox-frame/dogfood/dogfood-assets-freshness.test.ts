@@ -54,11 +54,22 @@ describe('dogfood-assets.ts — purity (SPEC-R12 closed-network proof)', () => {
   const committed = readFileSync(OUT_MODULE, 'utf8') as string
 
   it('contains no `url(...)` reference resolving outside data: (no external network reach)', () => {
+    // A bare `#id` fragment (an SVG same-document reference, e.g. a <linearGradient> a chart's
+    // fill points at) resolves to nothing outside the document — no network reach, no CSP
+    // implication — so it stands beside `data:` as the second closed-network-safe form.
     const urlMatches = committed.match(/url\(\s*['"]?([^'")]+)/g) ?? []
     for (const match of urlMatches) {
       const inner = match.replace(/^url\(\s*['"]?/, '')
-      expect(inner.startsWith('data:'), `dogfood-assets.ts contains a non-data: url(...) reference: ${match}`).toBe(true)
+      const closedNetwork = inner.startsWith('data:') || inner.startsWith('#')
+      expect(closedNetwork, `dogfood-assets.ts contains a non-data:/non-fragment url(...) reference: ${match}`).toBe(true)
     }
+  })
+
+  it('negative control: a genuine external url(...) is still caught (the fragment exemption does not swallow real network refs)', () => {
+    const planted = "url('https://example.com/leak.png')"
+    const inner = planted.replace(/^url\(\s*['"]?/, '')
+    const closedNetwork = inner.startsWith('data:') || inner.startsWith('#')
+    expect(closedNetwork).toBe(false)
   })
 
   it('contains no `@import` (CSS import) or dynamic `import(` (JS import) — everything is flattened/static', () => {

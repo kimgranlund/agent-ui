@@ -210,7 +210,13 @@ const targets = [
   // with the control's own per-row marginal figure (column-chart 1831 B gz) below. ~732 B stated
   // headroom over the measured 70436 B gz. CHECKPOINT, not ratchet — the pre-existing 2183 B gz drift
   // is a separate, standing follow-up (unattributed movers since 2026-08-20), not this wave's to explain.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 69.5 * KB],
+  // RE-BASED 2026-08-21 (GH #1566, svg-charts wave 2 — reviewed by the dispatching host, not an
+  // unattended measurement): 69.5 KB -> 70 KB (71680 B gz) -- this wave's own mover is `ui-line-chart`'s
+  // `axes` state (ADR-0229 cl.3): +302 B gz measured (71376 marginal delta on this branch's own leave-
+  // one-out frame vs the 71168 checkpoint), consistent with sharing the `_chart/` subsystem's gridline/
+  // chip math rather than duplicating it. ~300 B headroom over the measured 71378 B gz. CHECKPOINT, not
+  // ratchet.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 70 * KB],
   // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
   // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
   // `./markdown`, `./editor`) is not the one exception.
@@ -332,7 +338,7 @@ const MARGINAL_OVERRIDES = {
   'sandbox-frame': [2336, 'genui-surface.spec.md SPEC §3.2/§3.3 (D9, B1): the CSP builder, the closed bridge message-guard, the host-owned bootstrap script TEXT, and the build/replace/teardown + live-theme control logic — measured 2124 B gz 2026-07-24, ~8% headroom; re-bumped 2304 → 2336 for the gzip measurement-frame drift class (the split/status-stream precedent): sandbox-frame source untouched while the 2026-08-19 campaign grew the family bundle by seven controls — measured 2321 B gz 2026-08-20, Kim ruling'],
   'status-stream': [2740, 'gzip measurement-frame drift from the SAME genui-surface B1 wave adding a new family member (the split-wave precedent above — leave-one-out deltas shift with the shared dictionary once the family bundle grows); status-stream source is byte-identical that wave — measured 2107 B gz 2026-07-24 (was within budget pre-wave); re-bumped 2176 → 2192 for the SAME drift class when MA-1 grew the family bundle (measured 2182 B gz 2026-08-05, source untouched by that diff — GH #445, Kim ruling); re-bumped 2192 → 2384 for REAL reviewed weight, not drift: the GH #737/ADR-0184 reasoning-trace opt-ins (note entries + setPlan + settle summary — measured 2376 B gz 2026-08-12; the ADR ships proposed with the build, its ratification covers this bump — the otp-field per-control precedent); re-bumped 2384 → 2386 for the SAME drift class a third time (measured 2386 B gz 2026-08-13, source untouched — Kim ruling, close-session confirm round 2026-08-13); re-bumped 2386 → 2710 for REAL reviewed weight, not drift: ADR-0191/GH #999\'s booked repair — status-stream is the ADR\'s own first `pendingComputed` consumer (setPendingSource() + the :state(pending) wiring + its CSS dim rule) — measured 2707 B gz 2026-08-16 (the ADR ships accepted before this build; ratification covers this bump, the SAME GH #737/ADR-0184 precedent immediately above); re-bumped 2710 → 2736 for the SAME drift class a fourth time (GH #1031, ruling: re-base to measured — #1020\'s own override was set from a pre-merge 2707; the 2026-08-16 board-clear then grew the family bundle (#1018 ui-drill → #1020 → #1023 → #1027) and the leave-one-out frame shifted +26 B with status-stream source untouched — measured 2736 B gz 2026-08-16, npm ci fresh)'],
   'table': [2624, 'RULED 2026-08-05 (GH #445, Kim — "re-base + shrink follow-up"): ADR-0163 widens the ratified display-only contract IN PLACE (Kim\'s 2026-07-28 direction, deliberately against a separate interactive tier), so one control carries selection + sort + filter/search + pagination composition + their a11y and delegation machinery — measured 2558 B gz 2026-08-05 after three review rounds already trimmed it; the cap is a checkpoint, not a ratchet. GH #455\'s shrink pass (same day): consolidated the three `<th scope="col">` builders into one shared helper, folded the `cleanColumns`/`cleanRows`/`cleanFilter` array-hardening loop into one `hardenArray`, merged the `#thead`/`#tbody` `change` listeners into one delegated on `#table` (a stable node wrapping both — behaviorally identical, listener count 3→2), and shared the two selection-toggle commits\' `selected` write + `select` emit — measured 2517 B gz 2026-08-05, zero behavior change (table-interactive.browser.test.ts + the byte-identity probe both green). Cap stays 2624 (the checkpoint), not re-based down — the next honest shrink continues from here'],
-  'otp-field': [2304, 'Kim ruling 2026-08-08 (host round): LLD-mandated machinery (total reducer + paste-split + echo channel), reviewer confirmed no remaining fat — measured 2150 B gz 2026-08-08 (code-entry-control.lld.md, GH #490 S2-a).'],
+  'otp-field': [2400, 'Kim ruling 2026-08-08 (host round): LLD-mandated machinery (total reducer + paste-split + echo channel), reviewer confirmed no remaining fat — measured 2150 B gz 2026-08-08 (code-entry-control.lld.md, GH #490 S2-a); re-bumped 2304 → 2400 for the SAME gzip measurement-frame drift class (the split/status-stream precedent): otp-field source untouched while GH #1566 (svg-charts wave 2) grew the family bundle with ui-line-chart\'s axes state — measured 2399 B gz 2026-08-21, npm ci fresh.'],
 }
 
 // ── The CLUSTER leg (GH #354, Kim's 2026-07-29 ruling) — the one shape a leave-one-out cannot measure ────
@@ -661,7 +667,15 @@ const appCssQuerySuffixPlugin = {
 // Kim ruling 2026-08-21 (in-session): rule the exception now rather than diet the shared foundation
 // CSS apart. Measured 104982 B gz (fresh npm ci, exit-code verified) — zero headroom by design; the
 // next chart wave (line-chart axes/gradient, GH #1566) pays for its own weight the same way.
-const APP_MARGINAL_BUDGET = 104982
+// Re-based 104982 -> 105943 B gz 2026-08-21 (ADR-0197 cl.5's named exception, invoked a SECOND
+// consecutive time — Kim ruling, explicit check-in, not a silent repeat): ADR-0229 cl.3 (svg-charts
+// wave 2, GH #1566/#1561) ships `ui-line-chart`'s `axes` state — gridlines/chip-axis chrome + the
+// gradient area fill + the shared now-marker/provisional-span mechanism reused from wave 1. Real
+// reviewed weight from the same ratified system, not accretion; the whole svg-chart intake was
+// scoped size:big precisely because it spans several waves. Measured 105943 B gz (fresh npm ci,
+// exit-code verified) — zero headroom by design; wave 3 (ui-gauge, GH #1567) pays for its own weight
+// the same way, or diets if the pattern strains further.
+const APP_MARGINAL_BUDGET = 105943
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
