@@ -54,6 +54,13 @@
         "date": "2026-08-17",
         "action": "joined",
         "agent_name": "agent-ui-planner"
+      },
+      {
+        "role": "orchestrator",
+        "mode": "host",
+        "date": "2026-08-21",
+        "action": "joined",
+        "agent_name": "agent-ui-fleet-marshal-2026-08-21-resweep"
       }
     ],
     "loop_position": null,
