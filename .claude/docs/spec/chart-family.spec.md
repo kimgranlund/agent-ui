@@ -7,8 +7,9 @@
 > own scope and reported it, not fixed, per the one-slice-per-wave discipline). This closes the LAST of
 > the two pre-existing booked repairs those waves left outstanding — `ui-line-chart`'s own half (ADR-0205,
 > via ADR-0229 cl.3) was discharged in §3.7 (wave 2, v0.3); `ui-pie-chart`'s is discharged here. Nothing
-> else was found missing: `a2ui-catalog.spec.md` §5.2's `PieChart` row landed already (the GH #1352
-> catalog-decision pass), so only this file's own normative behavior contract was the residual gap.
+> else was found missing: `a2ui-catalog.spec.md` §5.2's `PieChart` row landed already (the 2026-08-19
+> nine-ADR campaign's catalog-integration lane, draining the ADR-0219 seed — `a2ui-catalog.spec.md`
+> §5.2's own preamble), so only this file's own normative behavior contract was the residual gap.
 > **v0.4 (GH #1567, svg-charts wave 3):** §3.8 adds the R-clauses for `ui-gauge` (ADR-0229 cl.4) — the
 > multi-ring radial gauge, never a `ui-pie-chart` extension: concentric, INDEPENDENT 0-100 progress rings
 > (clamped, never dropped, for an out-of-range value — a documented divergence from `ui-pie-chart`'s
@@ -20,7 +21,7 @@
 > provisional/now-marker system, and the default-state-scoped min/max-labels law. This discharges
 > `ui-line-chart`'s own outstanding half of the booked repair; `ui-pie-chart`'s stayed outstanding until
 > §3.9 (v0.5).
-> **v0.2 (GH #1565, svg-charts wave 1):** §3.5/§3.6 add the R-clauses [ADR-0228](../adr/0228-chart-axis-inset-series-vocabulary.md) (the shared `controls/_chart/` axis/inset/series vocabulary) and [ADR-0229](../adr/0229-svg-chart-family-extensions.md) cl.1/cl.2/cl.5/cl.6 (`ui-column-chart`) book as this wave's repair — the booked repairs for `ui-line-chart` (ADR-0205) and `ui-pie-chart` (ADR-0219) remain OUTSTANDING (a pre-existing gap this wave found but does not discharge — those two controls' own R-clauses never landed in this file; reported, not fixed here, per the one-slice-per-wave discipline).
+> **v0.2 (GH #1565, svg-charts wave 1):** §3.5/§3.6 add the R-clauses [ADR-0228](../adr/0228-chart-axis-inset-series-vocabulary.md) (the shared `controls/_chart/` axis/inset/series vocabulary) and [ADR-0229](../adr/0229-svg-chart-family-extensions.md) cl.1/cl.2/cl.5/cl.6 (`ui-column-chart`) book as this wave's repair — the booked repairs for `ui-line-chart` (ADR-0205) and `ui-pie-chart` (ADR-0219) remain OUTSTANDING (a pre-existing gap this wave found but does not discharge — those two controls' own R-clauses never landed in this file; reported, not fixed here, per the one-slice-per-wave discipline). **Both since discharged:** `ui-line-chart`'s half in §3.7 (wave 2, v0.3); `ui-pie-chart`'s half in §3.9 (v0.5).
 > Refines: [`../prd/chart-family.prd.md`](../prd/chart-family.prd.md) — **PRD-G1, PRD-G2, PRD-G3** — under the ratified scope + contract directions of [ADR-0107](../adr/0107-chart-family-v1-scope.md) (accepted; forks F1–F3 as recommended). Every clause of ADR-0107 is binding here; this SPEC adds the behavior contract, it re-litigates nothing.
 > Refined by: [`../lld/chart-family.lld.md`](../lld/chart-family.lld.md).
 > Altitude: owns **what the two chart controls do and how they behave at every boundary** + the chart rows' catalog contract. Implementation (path math internals, CSS mechanics, file layout) is the LLD's. Filed in the charter home (`docs/spec/`, the a2a-family regime — doc-review F1 ruling 2026-07-08); the catalog surface (§5.2 of [`../spec/a2ui-catalog.spec.md`](../spec/a2ui-catalog.spec.md)) stays a first-class same-wave deliverable, cross-referenced.
@@ -511,14 +512,16 @@ free under `[density]`; key-row text reads the `--md-sys-typescale-body-medium-*
 background to `Canvas`, the track keeping a `CanvasText` border) — identity survives untouched via the
 key list's real text (the SPEC-R10 pattern, generalized). *(→ PRD-G2; ADR-0219 cl.7; ADR-0223; SPEC-R9/
 R10/R12)*
-- **AC1** *Given* a bare, unstyled, populated chart in a flex row, *then* its painted box is ≥ both floor
-  tokens (browser-measured, both engines) — never a collapsed sliver.
+- **AC1** *Given* a bare, unstyled, populated chart in a flex row, *then* its painted inline size is ≥
+  the `--ui-pie-chart-min-inline-size` floor and its block size is non-zero (the ring's fixed
+  `--ui-pie-chart-ring-size` box paints) — never a collapsed sliver (browser-measured, both engines).
 - **AC2** *Given* forced-colors emulation (browser leg), *then* every slice and the key-swatch paint in
   system inks and fill ≠ track/separator rendering.
 
 **SPEC-R47 — Catalog row, already shipped.** Unlike `ui-column-chart`/`ui-gauge` (SPEC-R26/R39), the
-`PieChart` A2UI catalog row is NOT a follow-up: it landed with the GH #1352 catalog-decision pass
-(`a2ui-catalog.spec.md` §5.2), draining ADR-0219's own UNAPPLIED-at-ratification drafted row. This
+`PieChart` A2UI catalog row is NOT a follow-up: it landed with the 2026-08-19 nine-ADR campaign's
+catalog-integration lane (`a2ui-catalog.spec.md` §5.2's own preamble, draining ADR-0219's own
+UNAPPLIED-at-ratification drafted row). This
 clause exists only to close the traceability gap — no allowlist entry, no follow-up issue, nothing left
 to name. *(→ PRD-G1; ADR-0219 Repairs field; `a2ui-catalog.spec.md` §5.2)*
 - **AC1** *Given* the SPEC-N2 fleet-derived catalog-coverage gate, *then* `PieChart` resolves to its
