@@ -435,6 +435,25 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0228/ADR-0229 (svg-charts wave 1, GH #1565): the fifth chart-family control — a category-major
+  // stacked (or dense single-series) axis-bearing column mark, the first consumer of the shared
+  // `_chart/` axis/inset/series vocabulary. Same shape as the three above — Display-class, a
+  // descriptor-derived API doc.
+  {
+    label: 'ui-column-chart',
+    cards: [
+      {
+        href: './column-chart-demo.html',
+        title: 'Demo',
+        blurb: 'Live stacked/dense-single-series column charts over a real revenue-by-month dataset — the projected/ghost trailing column, the now-marker, the static highlight callout, a zero-padding full-bleed composition, degenerate cases, and a live data rewrite.',
+      },
+      {
+        href: './column-chart-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class axis-bearing stacked column chart — nice-number gridlines, real-DOM tick/category-label pills, a projected/ghost column, a now-marker, and a static highlight callout, generated from column-chart.md.',
+      },
+    ],
+  },
   // The token-surface family (ADR-0118): three Display-class show-never-edit primitives, each a
   // descriptor-derived API doc (tier=display ⇒ {doc} only, the ui-sparkline/ui-bar-chart precedent).
   {

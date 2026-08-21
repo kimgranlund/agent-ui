@@ -1,0 +1,72 @@
+/* chart-axis.css — the shared `--ui-chart-*` vocabulary (ADR-0228 cl.1-6). Pure TOKEN declarations, no
+ * `@scope` of its own — this is a family-shared home, not a control (the `_surface/container-box.css`
+ * precedent ADR-0228 cl.1 names verbatim: "shared paint/spacing consumed by per-control markup"). Every
+ * axis-bearing chart's OWN `:where(ui-{name})` token block ALIASES what it needs from this chain into
+ * its own `--ui-{name}-*` names (the family-tunnel pattern, `tokens.md`'s "a family LEAF routes through
+ * the family tunnel", ADR-0124's swiper-pagination precedent generalized to a shared MODULE rather than
+ * a shared ELEMENT — `_chart/` mints no host of its own, ADR-0228 cl.1's own rejection of a `ui-axis`
+ * element) — a consuming control's `@scope` body then reads ONLY its own chain, never these names
+ * directly (styling-gates.test.ts's law stays intact: this file sits OUTSIDE any `@scope`, so it is not
+ * itself gated by that scan, but the ALIASING discipline is what keeps every consumer's `@scope` clean).
+ *
+ * Declared at `:where(:root)` (a fleet CONSTANT tier, mirroring `shared/tokens.css`'s own primitives) —
+ * every axis-bearing chart's box is a descendant of `:root`, so no shared host element is needed for the
+ * cascade to reach it; ADR-0228 cl.1 rejected a shared `ui-axis` element for exactly this reason (no
+ * lifecycle to own, no positional-composition coupling to reopen).
+ *
+ * The six clauses this file realizes:
+ *   cl.2 — chip (tick-label/category-label pill) treatment: ONE knob set for both axes (real DOM text,
+ *          never SVG `<text>` — the family's never-SVG-text law holds; this file supplies paint only).
+ *   cl.2 — plot-layer inks: gridline + baseline, subtle, never load-bearing for reading a value.
+ *   cl.3 — the ONE inset knob (`--ui-chart-chrome-inset`) governing the chrome layer's clearance from
+ *          all four chart-box edges — the plot bleeds to zero, the chrome insets WITHIN it.
+ *   cl.4 — projected (ghost) marks: a LINE-STYLE carrier (dashed, hollow), never hue alone, so
+ *          provisionality survives CVD and forced-colors.
+ *   cl.4 — the now-marker ink (a baseline dot + short tick, never a full-height rule — the RENDERING is
+ *          each consuming control's own SVG; this file supplies only the paint token).
+ *   cl.6 — the shared six-step series ramp, generalizing ADR-0219's Amendment tone-primitive mechanism
+ *          (pairwise-distinct, strictly monotone PRIMARY tone primitives per scheme via `light-dark()`,
+ *          series 1 always brightest) — `ui-pie-chart`'s own six `--ui-pie-chart-slice-{1..6}-ink`
+ *          DEFAULTS repoint to ALIAS this chain in the SAME change (ADR-0228 cl.6; names unchanged, the
+ *          consumer re-map seam stays put).
+ */
+
+:where(:root) {
+  /* cl.3 — the chrome layer's clearance from every chart-box edge; `--md-sys-space`-laddered so a scoped
+     [density] ancestor rescales it for free (the fleet's density mechanism, no chart-side code). */
+  --ui-chart-chrome-inset: var(--md-sys-space-sm);
+
+  /* cl.2 — chip (pill) treatment: one token set consumed by both the value-scale (tick-label) and
+     category (month/day) pills. A pill radius has no dedicated fleet ramp token (badge/swatch-class
+     "fully round" shapes use the same literal) — 999px is the house idiom for "always a pill regardless
+     of box size," not a governed dimensional value. */
+  --ui-chart-chip-bg: var(--md-sys-color-neutral-container);
+  --ui-chart-chip-fg: var(--md-sys-color-neutral-on-surface);
+  --ui-chart-chip-radius: 999px;
+  --ui-chart-chip-pad-inline: var(--md-sys-space-sm);
+  --ui-chart-chip-pad-block: var(--md-sys-space-xs);
+  --ui-chart-chip-font-size: var(--md-sys-typescale-label-small-size);
+
+  /* cl.2 — plot-layer inks: subtle, decorative, never load-bearing for reading a value (the value is
+     always ALSO printed as real DOM text in a tick-label pill). */
+  --ui-chart-grid-ink: var(--md-sys-color-neutral-outline-variant);
+  --ui-chart-baseline-ink: var(--md-sys-color-neutral-outline-variant);
+
+  /* cl.4 — projected/ghost marks: a line-style carrier (dashed stroke, hollow fill), never hue alone. */
+  --ui-chart-projected-ink: var(--md-sys-color-neutral-outline);
+  --ui-chart-projected-dash: 3 2;
+
+  /* cl.4 — the now-marker (baseline dot + short band tick). */
+  --ui-chart-now-ink: var(--md-sys-color-primary);
+
+  /* cl.6 — the shared series ramp: six pairwise-distinct, strictly monotone primary TONE primitives per
+     scheme via light-dark() — the exact ADR-0219 Amendment mechanism (dark rides one 100-step brighter
+     than light, the estate's base-role convention), generalized here as the ONE shared chain every
+     multi-series chart mark (and ui-pie-chart's own re-pointed defaults) consumes. */
+  --ui-chart-series-1-ink: light-dark(var(--md-sys-color-primary-300), var(--md-sys-color-primary-200));
+  --ui-chart-series-2-ink: light-dark(var(--md-sys-color-primary-400), var(--md-sys-color-primary-300));
+  --ui-chart-series-3-ink: light-dark(var(--md-sys-color-primary-500), var(--md-sys-color-primary-400));
+  --ui-chart-series-4-ink: light-dark(var(--md-sys-color-primary-600), var(--md-sys-color-primary-500));
+  --ui-chart-series-5-ink: light-dark(var(--md-sys-color-primary-700), var(--md-sys-color-primary-600));
+  --ui-chart-series-6-ink: light-dark(var(--md-sys-color-primary-800), var(--md-sys-color-primary-700));
+}

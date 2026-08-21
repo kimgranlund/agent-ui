@@ -123,6 +123,7 @@
 - [ui-bar-chart](./bar-chart-doc.html): magnitude comparison bars, including diverging negative values; [demo](./bar-chart-demo.html).
 - [ui-line-chart](./line-chart-doc.html): the fleet's first axis-bearing chart — a value-range baseline (zero-line or value floor) + always-shown min/max labels, single-series line/area; [demo](./line-chart-demo.html).
 - [ui-pie-chart](./pie-chart-doc.html): the part-of-whole ring (donut, default) or solid pie — a printed-percent key list carries identity by order + label + percent, never hue alone; [demo](./pie-chart-demo.html).
+- [ui-column-chart](./column-chart-doc.html): a category-major stacked (or dense single-series) column chart with nice-number gridlines, a projected/ghost trailing column, a now-marker, and a static highlight callout; [demo](./column-chart-demo.html).
 - [ui-swatch](./swatch-doc.html): one color value rendered AS color — bounded bordered box + label + printed value; the browser is the only color engine; a `--var` value resolves live in place; [demo](./swatch-demo.html).
 - [ui-ramp](./ramp-doc.html): an ordered color series as a strip of swatch cells — tonal progressions, physically LTR in every locale; order is the content; [demo](./ramp-demo.html).
 - [ui-ladder](./ladder-doc.html): labeled dimensional tiers, each magnitude drawn as a literal-length bar beside its printed value — degrade the mark, never drop the datum; [demo](./ladder-demo.html).

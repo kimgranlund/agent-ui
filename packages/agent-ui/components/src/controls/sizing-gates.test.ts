@@ -132,6 +132,10 @@ const R4_EXEMPT_FLOOR = new Set([
 const WHOLE_SHAPE_FLOORS = new Set([
   'bar-chart', 'line-chart', 'pie-chart', 'ladder', 'table', 'progress', 'ramp',
   'slider', 'slider-multi', 'timeline', 'status-stream', 'stat', 'attachment',
+  // ADR-0229 cl.6 — the two role-(d) rows this ADR names: `ui-column-chart` (this wave) + `ui-gauge`
+  // (a later wave, when that control ships — its row is not added here until it actually exists, the
+  // sizing-gates.test.ts own "extended only by ADR, and only for a REAL control" discipline).
+  'column-chart',
 ])
 
 // ── DEBT — the migration-wave allowlist (Appendix §B's 15 rows, slices 0–3). ENFORCING as of slice 3

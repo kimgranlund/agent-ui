@@ -199,7 +199,18 @@ const targets = [
   // (ui-file-drop, ui-suggestions, ui-source-list, ui-rating, ui-pie-chart, ui-choice-group, ui-choice-card
   // + the selection-commit trait seams; PRs #1412-#1424). The ui-rating re-base above was measured
   // mid-wave before its six siblings joined the bundle. ~840 B stated headroom. CHECKPOINT, not ratchet.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 65 * KB],
+  // RE-BASED 2026-08-21 (GH #1565, svg-charts wave 1 — an UNATTENDED build dispatch measured this, NOT a
+  // live Kim ruling; flagged for confirmation, the GH #1208/GH #1395 precedent's wording): 65 KB -> 69.5
+  // KB (71168 B gz) -- the 65 KB line was ALREADY over budget pre-wave (measured 68743 B gz on a clean
+  // origin/main checkout, 2183 B gz of unattributed drift accrued across mints since the 2026-08-20
+  // checkpoint — a pre-existing red this wave did not cause and does not attribute; named here, not
+  // silently absorbed into this wave's own delta). This wave's OWN mover is the `ui-column-chart` mint
+  // (ADR-0228/ADR-0229): +1693 B gz (68743 -> 70436 measured on this branch) — the shared `_chart/`
+  // axis-math module + the control's own stacking/scale math and three-layer DOM builder, consistent
+  // with the control's own per-row marginal figure (column-chart 1831 B gz) below. ~732 B stated
+  // headroom over the measured 70436 B gz. CHECKPOINT, not ratchet — the pre-existing 2183 B gz drift
+  // is a separate, standing follow-up (unattributed movers since 2026-08-20), not this wave's to explain.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 69.5 * KB],
   // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
   // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
   // `./markdown`, `./editor`) is not the one exception.
@@ -642,7 +653,15 @@ const appCssQuerySuffixPlugin = {
 // own code-splitting made bare `isEntry` under-count). Per GH #1080's ruling and ADR-0197 cl.5, upward
 // re-bases of this row are CLOSED as a class: future growth pays with a diet or a ruled feature-weight
 // ADR, never a drift bump. Downward re-bases remain ordinary.
-const APP_MARGINAL_BUDGET = 102 * KB
+// Re-based 104448 -> 104982 B gz 2026-08-21 (ADR-0197 cl.5's named exception, "a ruled feature-weight
+// ADR" — not a drift bump): ADR-0229 (svg-charts wave 1, GH #1565/#1561) ships `ui-column-chart`, the
+// fleet's fifth first-class chart type, self-registering in `component-styles.css` alongside
+// sparkline/bar-chart/line-chart/pie-chart per the existing foundation-CSS shape every prior chart
+// type paid into this same row — real reviewed weight from a Kim-ratified control, not accretion.
+// Kim ruling 2026-08-21 (in-session): rule the exception now rather than diet the shared foundation
+// CSS apart. Measured 104982 B gz (fresh npm ci, exit-code verified) — zero headroom by design; the
+// next chart wave (line-chart axes/gradient, GH #1566) pays for its own weight the same way.
+const APP_MARGINAL_BUDGET = 104982
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })

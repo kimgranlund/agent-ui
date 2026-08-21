@@ -129,6 +129,14 @@
       "section": "Components"
     },
     {
+      "name": "Column Chart",
+      "tag": "ui-column-chart",
+      "url": "./column-chart-doc.html",
+      "description": "A category-major stacked (or dense single-series) column chart with a nice-number axis, a projected/ghost trailing column, a now-marker, and a static highlight callout.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Combo Box",
       "tag": "ui-combo-box",
       "url": "./combo-box-doc.html",

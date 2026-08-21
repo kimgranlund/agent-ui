@@ -28,6 +28,7 @@
     "./controls/code": "./src/controls/code/code.ts",
     "./controls/color-picker": "./src/controls/color-picker/color-picker.ts",
     "./controls/column": "./src/controls/column/column.ts",
+    "./controls/column-chart": "./src/controls/column-chart/column-chart.ts",
     "./controls/combo-box": "./src/controls/combo-box/combo-box.ts",
     "./controls/command-modal": "./src/controls/command-modal/command-modal.ts",
     "./controls/description-list": "./src/controls/description-list/description-list.ts",

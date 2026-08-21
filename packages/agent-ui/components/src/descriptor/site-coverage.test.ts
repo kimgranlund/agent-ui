@@ -229,7 +229,7 @@ describe('site coverage — every shipped component has its required per-tier pa
       // + ui-playing-card (ADR-0225, GH #1478) — the true card-face/back display leaf; its {doc} page
       // (`playing-card-doc.html`) shipped in the SAME component-build seat's wave — no KNOWN_UNDOCUMENTED
       // parking needed.
-      ['attachment', 'audio', 'badge', 'bar-chart', 'code', 'description-list', 'icon', 'image', 'ladder', 'line-chart', 'pie-chart', 'playing-card', 'progress', 'ramp', 'source-list', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text', 'video'],
+      ['attachment', 'audio', 'badge', 'bar-chart', 'code', 'column-chart', 'description-list', 'icon', 'image', 'ladder', 'line-chart', 'pie-chart', 'playing-card', 'progress', 'ramp', 'source-list', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text', 'video'],
     )
     // Wave 1 Indicator family (checkbox, switch, radio, radio-group) + ui-segment (ADR-0095 clause 3 —
     // the SAME real ancestor, UIIndicatorElement, as ui-radio) + the Wave M1 feed family (ADR-0112): ui-avatar

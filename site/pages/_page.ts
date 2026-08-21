@@ -205,6 +205,16 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // ADR-0228/ADR-0229 (svg-charts wave 1, GH #1565) — the fifth chart-family control: a category-major
+    // stacked (or dense single-series) axis-bearing column mark, the first consumer of the shared
+    // `_chart/` axis/inset/series vocabulary. Same shape as the three above — Display-class, {doc} + demo.
+    label: 'ui-column-chart',
+    links: [
+      { href: './column-chart-demo.html', label: 'Demo' },
+      { href: './column-chart-doc.html', label: 'API' },
+    ],
+  },
+  {
     // The token-surface family (ADR-0118) — three Display-class show-never-edit primitives, each a single
     // descriptor-derived API doc (tier=display ⇒ {doc} only, the ui-sparkline/ui-bar-chart precedent).
     label: 'ui-swatch',

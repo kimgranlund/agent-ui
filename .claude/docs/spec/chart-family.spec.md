@@ -1,6 +1,7 @@
 # SPEC — Chart Family (`ui-sparkline` + `ui-bar-chart` + catalog surface)
 
-> Status: proposed · v0.1 · 2026-07-08 · Layer: SPEC (execution contract)
+> Status: proposed · v0.2 · 2026-07-08 (§§1-4 original) / 2026-08-21 (§§3.5-3.6 added) · Layer: SPEC (execution contract)
+> **v0.2 (GH #1565, svg-charts wave 1):** §3.5/§3.6 add the R-clauses [ADR-0228](../adr/0228-chart-axis-inset-series-vocabulary.md) (the shared `controls/_chart/` axis/inset/series vocabulary) and [ADR-0229](../adr/0229-svg-chart-family-extensions.md) cl.1/cl.2/cl.5/cl.6 (`ui-column-chart`) book as this wave's repair — the booked repairs for `ui-line-chart` (ADR-0205) and `ui-pie-chart` (ADR-0219) remain OUTSTANDING (a pre-existing gap this wave found but does not discharge — those two controls' own R-clauses never landed in this file; reported, not fixed here, per the one-slice-per-wave discipline).
 > Refines: [`../prd/chart-family.prd.md`](../prd/chart-family.prd.md) — **PRD-G1, PRD-G2, PRD-G3** — under the ratified scope + contract directions of [ADR-0107](../adr/0107-chart-family-v1-scope.md) (accepted; forks F1–F3 as recommended). Every clause of ADR-0107 is binding here; this SPEC adds the behavior contract, it re-litigates nothing.
 > Refined by: [`../lld/chart-family.lld.md`](../lld/chart-family.lld.md).
 > Altitude: owns **what the two chart controls do and how they behave at every boundary** + the chart rows' catalog contract. Implementation (path math internals, CSS mechanics, file layout) is the LLD's. Filed in the charter home (`docs/spec/`, the a2a-family regime — doc-review F1 ruling 2026-07-08); the catalog surface (§5.2 of [`../spec/a2ui-catalog.spec.md`](../spec/a2ui-catalog.spec.md)) stays a first-class same-wave deliverable, cross-referenced.
@@ -140,6 +141,131 @@ The rows declare full item schemas; the shared validator MUST accept literal arr
 
 *(ADR-0107 cl.8 trace — a deliberate no-op: no ADR-0097 `FEED_SURFACE_TYPES` edit is owed or permitted in this wave; charts reach the artifact feed via its full-catalog rendering.)*
 
+### 3.5 Shared axis/inset/series vocabulary (`controls/_chart/`, ADR-0228)
+
+**SPEC-R15 — The shared subsystem.** `controls/_chart/` MUST be pure math (`axis-math.ts`, DOM-free,
+unit-testable: nice-number tick generation over a resolved value domain honoring optional min/max pins,
+plus percent-position primitives for gridlines/category bands/the actual-projected boundary) plus a
+shared, non-`@scope`d stylesheet (`chart-axis.css`) declaring the `--ui-chart-*` chain at `:where(:root)`
+— NOT a trait, NOT an element (ADR-0228 cl.1). Every axis-bearing chart's own `:where(ui-{name})` token
+block ALIASES the subset it needs into its own `--ui-{name}-*` chain (the family-tunnel pattern); a
+consuming control's `@scope` body reads ONLY its own chain, never `--ui-chart-*` directly. Each
+consuming control stamps its OWN `data-part` DOM from the shared math. *(→ PRD-G2; ADR-0228 cl.1)*
+- **AC1** *Given* `niceScale(dataMin, dataMax)`, *then* the resolved step is a 1/2/5 × 10ⁿ value and every
+  tick is step-spaced, inclusive of both resolved ends.
+- **AC2** *Given* an explicit `pinMin`/`pinMax`, *then* the resolved domain honors it exactly (never
+  auto-widened past the pin) — the "honoring optional min/max pins" clause.
+- **AC3** *Given* the token-hygiene trip-wire, *then* `_chart/chart-axis.css` is scanned into the shared
+  cross-family allowlist (the `_surface/container-box.css` precedent) so no consuming control's
+  `--ui-{name}-series-{k}-ink` alias is flagged as an out-of-family reach.
+
+**SPEC-R16 — The two-layer full-bleed model.** The *plot layer* (gridlines, marks, fills) MUST span the
+chart box edge-to-edge at zero inset; the *chrome layer* (every text element — tick-label/category-label
+pills, the highlight callout) MUST float on top, inset from all four edges by exactly one knob
+(`--ui-chart-chrome-inset`, aliased per-control). Labels never push the plot inward. *(→ PRD-G2; ADR-0228
+cl.2/cl.3)*
+- **AC1** *Given* a full-bleed fixture, *then* plot-layer ink (gridline endpoints, mark edges) reaches all
+  four chart-box edges while no chrome-layer glyph's bounding box is closer than the chrome-inset token
+  to any edge (a geometry assert over the rendered box, browser leg).
+- **AC2** *Given* a zero-padding `[data-box]`/`ui-card`-style container, *then* dropping any axis-bearing
+  chart into it reproduces the board geometry with zero consumer CSS (the CSS-less-consumer honesty
+  surface, ADR-0102).
+
+**SPEC-R17 — Chip collision + thinning.** End chips MUST clamp inward rather than overflow the chart box;
+overlapping intermediate chips MUST drop (density thinning) rather than shrink type below the declared
+chip font-size token. *(→ PRD-G2; ADR-0228 cl.2)*
+- **AC1** *Given* a wide category axis (more categories than fit legibly), *then* the rendered chip set
+  keeps the first and last category and thins the interior, never shrinking type.
+- **AC2** *Given* any chip set, *then* no two chip bounding boxes intersect and no chip overflows the
+  chart box (browser-measured geometry assert).
+
+**SPEC-R18 — Projected/now-marker grammar.** A per-datum "not yet actual" state MUST render as a
+per-mark, line-style treatment (never a hue-only signal) — a projected COLUMN is hollow with a dashed
+outline, no fill. The now-marker (a baseline dot plus a SHORT tick, never a full-height rule through the
+plot) MUST render exactly when a chart's `projected` count names a real actual/projected boundary, and
+MUST be a no-op (absent) on any chart type ADR-0228 cl.4 names N/A. *(→ PRD-G2; ADR-0228 cl.4)*
+- **AC1** *Given* `projected > 0` on an axis-bearing cartesian chart, *then* the trailing N rows/points
+  render the provisional treatment and exactly one now-marker (dot + short tick) renders at the
+  actual/projected boundary.
+- **AC2** *Given* `projected === 0` or `projected >= data.length`, *then* the now-marker is absent (no
+  boundary exists) — a typed absence, not a degenerate `0`/`100` position.
+
+**SPEC-R19 — The static highlight callout.** A chart-internal `data-part="callout"` (real DOM text,
+value + category) MUST render at the datum a `highlight` prop names, with NO hover/focus/keyboard
+affordance — the display tier's zero-interaction contract is unchanged. The callout's fact MUST be
+repeated in the chart's generated accessible summary (AT parity under the ARIA `role=img` pruning rule).
+*(→ PRD-G2; ADR-0228 cl.5)*
+- **AC1** *Given* a valid `highlight` index, *then* the callout renders `{printed value} · {category
+  label}` and the generated summary contains the same fact.
+- **AC2** *Given* an absent/null/out-of-range `highlight`, *then* no callout renders and no error is
+  thrown.
+
+**SPEC-R20 — The shared series ramp.** Multi-series fill MUST step down `--ui-chart-series-{1..6}-ink`
+(cycling past 6) — six pairwise-distinct, strictly monotone primary tone primitives per scheme via
+`light-dark()` (the ADR-0219 Amendment mechanism, generalized). Identity is carried by ORDER + printed
+series LABEL, fill never the sole carrier. `ui-pie-chart`'s own six slice-ink defaults MUST alias this
+chain (byte-identical resolved values to its pre-existing defaults). *(→ PRD-G2; ADR-0228 cl.6)*
+- **AC1** *Given* six series/slices under both color schemes, *then* the six RESOLVED fills are pairwise
+  distinct and strictly monotone brighter→dimmer 1→6 (browser-measured, the ADR-0219 Amendment class of
+  regression only a real engine can catch).
+
+### 3.6 `ui-column-chart` (ADR-0229 cl.1/cl.2/cl.5/cl.6)
+
+**SPEC-R21 — Component contract.** `ui-column-chart` MUST be a Display-class, non-interactive,
+non-form-associated leaf (`UIElement`; `events: []`) with exactly five props: `data`
+(`{label: string, values: number[]}[]`, default `[]`), `series` (`string[]`, default `[]` — a
+single-series fallback auto-names "Series N"), `label` (`string`, default `''`), `projected` (`number`,
+default `0`, the trailing-row count), and `highlight` (`number | null`, default `null`, the callout row
+index). Never a `ui-bar-chart` `orientation`/stacking variant (ADR-0229 cl.1). *(→ PRD-G1; ADR-0229
+cl.1/cl.2)*
+- **AC1** *Given* the descriptor (`column-chart.md`), *then* `tier: display`, `extends: UIElement`,
+  `events: []`, and the `attributes[]` block mirrors `static props` (the descriptor↔props trip-wire).
+
+**SPEC-R22 — Data hardening (stack semantics).** A row survives only with a non-empty string `label` AND
+every `values` entry a finite, non-negative number — a negative or non-finite entry drops the WHOLE row
+(a negative segment has no legal position in a stack, unlike `ui-bar-chart`'s legal-magnitude rows).
+Ragged rows (fewer `values` than the resolved series count) pad with trailing zeros; excess values
+truncate. The resolved series count is `series.length` when non-empty, else the widest surviving row's
+`values.length` (floored at 1). *(→ PRD-G2; ADR-0229 cl.2)*
+- **AC1** *Given* a row with any negative/non-finite value, *then* the WHOLE row drops, siblings render.
+- **AC2** *Given* a ragged row shorter than the resolved series count, *then* it renders padded with
+  trailing zero-length segments — never thrown.
+
+**SPEC-R23 — Rendering (stacked + dense single-series, one schema).** Segments stack bottom-up in series
+order over a shared zero-anchored nice-number scale; rounded caps apply ONLY to the topmost segment of
+each stack. `values.length === 1` (no/one series) and `values.length > 1` (multi-series) are the SAME
+schema, not a fork. *(→ PRD-G1/G2; ADR-0229 cl.1/cl.2)*
+- **AC1** *Given* `values: [n]` with no `series`, *then* one segment per column renders (the dense
+  single-series board archetype), auto-named "Series 1".
+- **AC2** *Given* `values.length > 1`, *then* segments stack in series order and only the LAST
+  (topmost) segment of each stack rounds its leading corners.
+
+**SPEC-R24 — A11y contract.** The host MUST announce `role=img` with a generated, never-null summary
+(category count + series count + low/high per-category TOTALS, plus the highlighted row's fact when set)
+— per-datum values are not printed individually in this mark, so `role=list` would announce nothing a
+reader can use (the ADR-0107 cl.4 chart-is-data-not-decoration law, realized as `role=img` here — the
+`ui-line-chart` pattern, not the `ui-bar-chart`/`ui-pie-chart` list pattern). *(→ PRD-G2; ADR-0229 cl.5)*
+- **AC1** *Given* a rendered chart, *then* `internals.role === 'img'` and the accessible name is never
+  null, with or without `label`.
+- **AC2** *Given* an empty rendered set, *then* the summary reads "no data" (optionally label-prefixed).
+
+**SPEC-R25 — Geometry + tokens (Display class, ADR-0223 role (d)).** No `[size]`/`[scale]` attribute, no
+control height. The host's `min-inline-size`/`min-block-size` floor is a NEW ratified role-(d) row
+(ADR-0229 cl.6) — `16em` on both axes, token-overridable, surviving the fill state (ADR-0223). Mark
+geometry (segment radius) rides `--md-sys-shape-corner-base`'s own chain; column gap rides
+`--md-sys-space` for free under `[density]`. *(→ PRD-G2; ADR-0229 cl.6; ADR-0223)*
+- **AC1** *Given* a bare, unstyled, populated chart in a flex row, *then* its painted box is ≥ both floor
+  tokens (browser-measured, both engines) — never a collapsed sliver.
+- **AC2** *Given* the `sizing-gates.test.ts` role-(d) table, *then* `ui-column-chart` is a NAMED member,
+  the DEBT table stays empty (a new control ships conformant from day one).
+
+**SPEC-R26 — Catalog disposition, follow-up (ADR-0229 cl.7).** The `ColumnChart` A2UI catalog row is a
+SEPARATE, later intake — this wave carries an `EXCLUSION_ALLOWLIST` seed naming that follow-up issue as
+its drain (bookkeeping, not a design decision; the schema SPEC-R21/R22 already fix the eventual wire
+contract). *(→ PRD-G1; ADR-0229 cl.7)*
+- **AC1** *Given* the SPEC-N2 fleet-derived catalog-coverage gate, *then* `ColumnChart` is EITHER
+  catalog-covered OR named in the allowlist with a real, cited follow-up issue — never silently missing.
+
 ## 4. Non-functional requirements
 
 | ID | Requirement | Target |
@@ -152,7 +278,8 @@ The rows declare full item schemas; the shared validator MUST accept literal arr
 
 ## 5. Open items (non-normative)
 
-- Foreseen extensions, deliberately out of v1 (each re-enters only by its own record): explicit `min`/`max` range overrides · bar `orientation` (vertical columns, fork F2) · a number-format prop · an author-supplied long-description/data-table a11y fallback · any axis-bearing type (a **new intake**, per the fence).
+- Foreseen extensions, deliberately out of v1 (each re-enters only by its own record): explicit `min`/`max` range overrides · bar `orientation` (vertical columns, fork F2) · a number-format prop · an author-supplied long-description/data-table a11y fallback · any axis-bearing type (a **new intake**, per the fence) — REALIZED for `ui-column-chart` only, §3.5/§3.6 above; `ui-gauge`, the `ui-line-chart` `axes` state, and the `ColumnChart`/`Gauge` catalog rows are LATER waves of the SAME ADR-0229, not yet this SPEC's normative reach.
+- **Known outstanding repair (found, not fixed, this wave):** `ui-line-chart` (ADR-0205) and `ui-pie-chart` (ADR-0219) both booked "`chart-family.spec.md` gains R-clauses for the new control" on ratification; neither landed before this wave. Flagged for a follow-up doc-repair pass — out of THIS wave's one-slice scope (GH #1565 is `_chart/` + `ui-column-chart` only).
 
 ## 6. Traceability
 
@@ -162,4 +289,6 @@ The rows declare full item schemas; the shared validator MUST accept literal arr
 | SPEC-R9–R12 | PRD-G2 (tokens, WHCM, RTL, geometry law, CSS-less consumer) |
 | SPEC-R13 | PRD-G1 (catalog-reachable), PRD-G3 (rows feed the teaching surface) |
 | SPEC-R14 | PRD-G3 (exemplar + guidance + corpus re-validation) |
+| SPEC-R15–R20 | PRD-G2 (the shared `_chart/` axis/inset/series vocabulary every axis-bearing chart consumes) |
+| SPEC-R21–R26 | PRD-G1 (`ui-column-chart` exists + behaves), PRD-G2 (a11y/geometry/token pillars), PRD-G1 (catalog follow-up named honestly) |
 | SPEC-N1–N5 | PRD-G2 (zero-dep, cross-engine, gates, size, series cost) |
