@@ -454,6 +454,24 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0229 cl.4 (svg-charts wave 3, GH #1567): the sixth chart-family control — a multi-ring RADIAL
+  // gauge, concentric independent 0-100 progress rings (never part-of-whole) plus a real-DOM label/value
+  // legend column. Same shape as the five above — Display-class, a descriptor-derived API doc.
+  {
+    label: 'ui-gauge',
+    cards: [
+      {
+        href: './gauge-demo.html',
+        title: 'Demo',
+        blurb: 'Live multi-ring radial gauges over a realistic system-load (CPU/Memory/Disk) dataset — the outer→inner ring order, the two-layer inset composition, clamped out-of-range values, and a live data rewrite.',
+      },
+      {
+        href: './gauge-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class multi-ring radial gauge — concentric, independent 0-100 progress rings with a real-DOM label/value legend column, never a ui-pie-chart extension, generated from gauge.md.',
+      },
+    ],
+  },
   // The token-surface family (ADR-0118): three Display-class show-never-edit primitives, each a
   // descriptor-derived API doc (tier=display ⇒ {doc} only, the ui-sparkline/ui-bar-chart precedent).
   {

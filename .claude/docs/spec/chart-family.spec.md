@@ -1,6 +1,14 @@
 # SPEC — Chart Family (`ui-sparkline` + `ui-bar-chart` + catalog surface)
 
-> Status: proposed · v0.3 · 2026-07-08 (§§1-4 original) / 2026-08-21 (§§3.5-3.6 added) / 2026-08-21 (§3.7 added) · Layer: SPEC (execution contract)
+> Status: proposed · v0.4 · 2026-07-08 (§§1-4 original) / 2026-08-21 (§§3.5-3.6 added) / 2026-08-21 (§3.7 added) / 2026-08-21 (§3.8 added) · Layer: SPEC (execution contract)
+> **v0.4 (GH #1567, svg-charts wave 3):** §3.8 adds the R-clauses for `ui-gauge` (ADR-0229 cl.4) — the
+> multi-ring radial gauge, never a `ui-pie-chart` extension: concentric, INDEPENDENT 0-100 progress rings
+> (clamped, never dropped, for an out-of-range value — a documented divergence from `ui-pie-chart`'s
+> part-of-whole hardening) plus a real-DOM label/value legend column, consuming the ADR-0228 inset
+> mechanism generalized to a radial mark while the axis/today-marker/projected chrome stays N/A. The
+> booked repair for `ui-pie-chart` (ADR-0219) — its own R-clauses never landing in this file — remains
+> OUTSTANDING (found, not fixed, the SAME adjacent gap waves 1/2 reported; still out of THIS wave's
+> one-slice scope).
 > **v0.3 (GH #1566, svg-charts wave 2):** §3.7 adds the R-clauses for `ui-line-chart`'s new `axes` state
 > (ADR-0229 cl.3, EXTENDING ADR-0205) — nice-number gridlines/tick-label chips over the series' own
 > `[min,max]` domain, optional category-label chips (`labels`), the gradient area fill (both states), the
@@ -333,6 +341,87 @@ ADR-0205 cl.6 pattern" for the axes-state line chart, not a new summary shape. *
 - **AC1** *Given* the SAME `values`/`label`, *then* `internals.ariaLabel` is byte-identical whether `axes`
   is true or false.
 
+### 3.8 `ui-gauge` — the multi-ring radial gauge (ADR-0229 cl.4)
+
+**SPEC-R32 — Component contract.** `ui-gauge` MUST be a Display-class, non-interactive,
+non-form-associated leaf (`UIElement`; `events: []`) with exactly two props: `data`
+(`{label: string, value: number}[]`, default `[]` — the fleet row verbatim) and `label` (`string`,
+default `''`). Never a `ui-pie-chart` extension, never composed `ui-stat variant="ring"` tiles (ADR-0229
+cl.4 — each ring is an INDEPENDENT progress value; rings never sum, and there is no shared-center
+geometry across N separate stat tiles). *(→ PRD-G1; ADR-0229 cl.4)*
+- **AC1** *Given* the descriptor (`gauge.md`), *then* `tier: display`, `extends: UIElement`, `events: []`,
+  and the `attributes[]` block mirrors `static props` (the descriptor↔props trip-wire).
+
+**SPEC-R33 — Data hardening (independent-percent semantics).** A datum survives only with a non-empty
+string `label` AND a finite number `value` — dropped, never coerced, when either check fails. A
+SURVIVING value is then CLAMPED into `[0, 100]` — **never dropped** for being out of range (a documented
+hardening DIVERGENCE from `ui-pie-chart`'s `cleanData`, which drops a negative/non-finite value: a
+part-of-whole share is meaningless when negative, but an independent progress reading of `-20` or `140`
+is simply an over/under-run of a real metric, clamped to its displayable end — the GH #1208 `ui-stat
+variant="ring"` `ringPercent()` precedent). *(→ PRD-G2; ADR-0229 cl.4)*
+- **AC1** *Given* `value: 140`, *then* the entry is KEPT and its ring/legend read `100%`; *given*
+  `value: -20`, *then* the entry is KEPT and its ring/legend read `0%`.
+- **AC2** *Given* a missing/empty `label` or a non-finite `value`, *then* that entry drops; siblings render.
+
+**SPEC-R34 — Rendering (concentric rings, outer→inner).** Rings MUST render as N concentric SVG
+`<circle>` pairs (a track circle + a rounded-cap progress circle whose `stroke-dasharray`/
+`stroke-dashoffset` reveal exactly the clamped percent), data order = ring order, the FIRST datum the
+OUTERMOST (largest-radius) ring, stepping INWARD; fill/stroke steps the shared six-step series ramp in
+the SAME outer→inner order, cycling past 6. *(→ PRD-G1/G2; ADR-0229 cl.4)*
+- **AC1** *Given* ≥ 2 rings, *then* the first datum's progress ring is the outermost (strictly largest
+  radius) and reads ramp token 1; each subsequent ring is strictly smaller and steps the ramp forward.
+- **AC2** *Given* > 6 rings, *then* the ramp tokens cycle (the 7th ring reuses token 1).
+
+**SPEC-R35 — The two-layer full-bleed model, generalized to a radial mark (ADR-0228 cl.1-3).** The
+rings layer (an `aria-hidden` `<svg data-part="rings">`) MUST span the host box edge-to-edge at ZERO
+inset — its own element box is never shrunk to reserve legend room. The legend layer
+(`[data-part="legend"]`, real-DOM `role=listitem` rows) floats ON TOP, its own box also spanning the
+host, inset from all four edges by exactly ONE knob (`--ui-gauge-chrome-inset`, aliasing the shared
+`--ui-chart-chrome-inset`) — never by shrinking the rings layer. *(→ PRD-G2; ADR-0228 cl.2/cl.3; ADR-0229
+cl.4/cl.5)*
+- **AC1** *Given* a populated gauge, *then* the rings svg's bounding box equals the host's bounding box
+  (browser-measured, both engines — the `ui-column-chart` SPEC-R16 precedent).
+- **AC2** *Given* any legend row, *then* its bounding box comes no closer than the chrome-inset token to
+  any host edge (browser-measured geometry assert).
+
+**SPEC-R36 — A11y contract (the legend IS the data list).** Via `ElementInternals`: the host is
+`role=list` (never a host attribute) named by `label` when non-empty (an unlabeled list is legal). Each
+rendered ring MUST get a real `role=listitem` row whose text content is exactly `{label} · {value%}`
+(real DOM text); the rings svg is `aria-hidden` and MUST NOT double-announce — the ADR-0219 cl.5/cl.7
+list-semantics pattern, never `role=img`/a generated summary (unlike `ui-column-chart`/the `axes`-state
+`ui-line-chart`, whose per-datum totals do not read cleanly as a flat list — a gauge's per-ring reading
+DOES). *(→ PRD-G2; ADR-0229 cl.5)*
+- **AC1** *Given* n valid rings, *then* n `role=listitem` rows exist, each containing its label + the
+  Intl percent-formatted clamped value.
+- **AC2** *Given* an empty rendered set, *then* the host stays `role=list` with zero items (AT reads
+  "list, 0 items" — the honest empty state, no generated summary owed).
+
+**SPEC-R37 — Axis/today-marker/provisional-span grammar: N/A.** Per ADR-0228's own per-mark N/A grammar
+for radial/part-of-whole types, `ui-gauge` MUST render NO gridlines, tick/category-label chips,
+now-marker, or projected-ghost treatment — its only chrome is the label/value legend column (SPEC-R35).
+*(→ PRD-G2; ADR-0228 cl.4)*
+- **AC1** *Given* a rendered gauge, *then* no `[data-part]` node named `grid-line`/`tick-label`/
+  `category-label`/`now-dot`/`now-tick`/`callout` ever exists in its DOM.
+
+**SPEC-R38 — Geometry + tokens (Display class, ADR-0223 role (d)).** No `[size]`/`[scale]` attribute, no
+control height. The host's `min-inline-size`/`min-block-size` floor is the SECOND ratified role-(d) row
+ADR-0229 cl.6 named (`16em` on both axes, token-overridable, surviving the fill state), realized THIS
+wave. Ring stroke width is a density-invariant mark-geometry constant (non-scaling-stroke); legend row
+rhythm rides `--md-sys-space` for free under `[density]`. The legend label reads the KICKER typescale row
+(ADR-0078 cl.2b, uppercase) — never an ad-hoc font value. *(→ PRD-G2; ADR-0229 cl.6; ADR-0223; ADR-0078
+cl.2b)*
+- **AC1** *Given* a bare, unstyled, populated gauge in a flex row, *then* its painted box is ≥ both floor
+  tokens (browser-measured, both engines) — never a collapsed sliver.
+- **AC2** *Given* the `sizing-gates.test.ts` role-(d) table, *then* `ui-gauge` is a NAMED member, the DEBT
+  table stays empty (a new control ships conformant from day one).
+
+**SPEC-R39 — Catalog disposition, follow-up (ADR-0229 cl.7).** The `Gauge` A2UI catalog row is a
+SEPARATE, later intake — this wave carries an `EXCLUSION_ALLOWLIST` entry naming GH #1568 (svg-charts
+wave 4) as its drain (bookkeeping, not a design decision; the clause-4 schema already fixes the eventual
+wire contract). *(→ PRD-G1; ADR-0229 cl.7)*
+- **AC1** *Given* the SPEC-N2 fleet-derived catalog-coverage gate, *then* `Gauge` is EITHER
+  catalog-covered OR named in the allowlist with a real, cited follow-up issue — never silently missing.
+
 ## 4. Non-functional requirements
 
 | ID | Requirement | Target |
@@ -345,12 +434,12 @@ ADR-0205 cl.6 pattern" for the axes-state line chart, not a new summary shape. *
 
 ## 5. Open items (non-normative)
 
-- Foreseen extensions, deliberately out of v1 (each re-enters only by its own record): explicit `min`/`max` range overrides · bar `orientation` (vertical columns, fork F2) · a number-format prop · an author-supplied long-description/data-table a11y fallback · any axis-bearing type (a **new intake**, per the fence) — REALIZED for `ui-column-chart` (§3.5/§3.6) AND `ui-line-chart`'s `axes` state (§3.7) this wave; `ui-gauge` and the `ColumnChart`/`Gauge`/`LineChart`-axes catalog rows are LATER waves of the SAME ADR-0229, not yet this SPEC's normative reach.
+- Foreseen extensions, deliberately out of v1 (each re-enters only by its own record): explicit `min`/`max` range overrides · bar `orientation` (vertical columns, fork F2) · a number-format prop · an author-supplied long-description/data-table a11y fallback · any axis-bearing type (a **new intake**, per the fence) — REALIZED for `ui-column-chart` (§3.5/§3.6), `ui-line-chart`'s `axes` state (§3.7), AND `ui-gauge` (§3.8) — the LAST of the three ADR-0229 control waves; the `ColumnChart`/`Gauge`/`LineChart`-axes A2UI catalog rows remain a separate, later wave (GH #1568, svg-charts wave 4), not this SPEC's normative reach.
 - **Known outstanding repair (found, not fixed, wave 1; STILL outstanding this wave):** `ui-pie-chart`
   (ADR-0219) booked "`chart-family.spec.md` gains R-clauses for the new control" on ratification; it never
-  landed. `ui-line-chart`'s OWN outstanding half of this same repair is now DISCHARGED by §3.7 above
-  (its `axes`-state R-clauses). `ui-pie-chart`'s remains flagged for a follow-up doc-repair pass — out of
-  THIS wave's one-slice scope (GH #1566 is `ui-line-chart` + the pie-ramp repoint verification only).
+  landed. `ui-line-chart`'s OWN outstanding half of this same repair was DISCHARGED by §3.7 (its
+  `axes`-state R-clauses, wave 2). `ui-pie-chart`'s remains flagged for a follow-up doc-repair pass — out
+  of THIS wave's one-slice scope too (GH #1567 is `ui-gauge` only).
 
 ## 6. Traceability
 
@@ -363,4 +452,5 @@ ADR-0205 cl.6 pattern" for the axes-state line chart, not a new summary shape. *
 | SPEC-R15–R20 | PRD-G2 (the shared `_chart/` axis/inset/series vocabulary every axis-bearing chart consumes) |
 | SPEC-R21–R26 | PRD-G1 (`ui-column-chart` exists + behaves), PRD-G2 (a11y/geometry/token pillars), PRD-G1 (catalog follow-up named honestly) |
 | SPEC-R27–R31 | PRD-G1/G2 (`ui-line-chart`'s `axes` state exists + behaves, the gradient fill, the a11y pillar unchanged) |
+| SPEC-R32–R39 | PRD-G1 (`ui-gauge` exists + behaves, catalog follow-up named honestly), PRD-G2 (independent-percent hardening, the generalized inset model, the list-semantics a11y pillar, geometry/token pillars) |
 | SPEC-N1–N5 | PRD-G2 (zero-dep, cross-engine, gates, size, series cost) |

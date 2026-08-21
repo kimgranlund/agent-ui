@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · ui-gauge API</title>
+  </head>
+  <body>
+    <!-- The ui-gauge API doc page (ADR-0229 cl.4): the Display-class multi-ring radial gauge, its API +
+         parts tables + a live outer→inner ring/legend specimen strip derived from gauge.md. An MPA entry
+         auto-discovered by vite.config.ts's site/**/*.html glob — no config edit needed. The page module
+         imports pages/_page.ts FIRST for the foundation CSS cascade + self-defining ui-* controls. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/gauge-doc.ts"></script>
+  </body>
+</html>

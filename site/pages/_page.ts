@@ -215,6 +215,16 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // ADR-0229 cl.4 (svg-charts wave 3, GH #1567) — the sixth chart-family control: a multi-ring RADIAL
+    // gauge, concentric independent 0-100 progress rings (never part-of-whole) plus a real-DOM legend
+    // column. Same shape as the five above — Display-class, {doc} + demo.
+    label: 'ui-gauge',
+    links: [
+      { href: './gauge-demo.html', label: 'Demo' },
+      { href: './gauge-doc.html', label: 'API' },
+    ],
+  },
+  {
     // The token-surface family (ADR-0118) — three Display-class show-never-edit primitives, each a single
     // descriptor-derived API doc (tier=display ⇒ {doc} only, the ui-sparkline/ui-bar-chart precedent).
     label: 'ui-swatch',

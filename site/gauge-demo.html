@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · ui-gauge demo</title>
+  </head>
+  <body>
+    <!-- The ui-gauge demo (ADR-0229 cl.4): the Display-class multi-ring radial gauge, live, over a
+         realistic system-load dataset. An MPA entry auto-discovered by vite.config.ts's site/**/*.html
+         glob — no config edit needed. The page module imports pages/_page.ts FIRST for the foundation
+         CSS cascade + self-defining ui-* controls. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/gauge-demo.ts"></script>
+  </body>
+</html>
