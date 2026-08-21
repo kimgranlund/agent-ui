@@ -7,7 +7,7 @@
 > | **Status** | proposed |
 > | **Date** | 2026-08-21 |
 > | **Proposed by** | planning-leader (design seat — GH #1578, the html-column-chart intake; due-process Phases 1–2, GH #969; design reasoning worked through live with Kim, 2026-08-21) |
-> | **Ratified by** | *(awaiting Kim — the ratification comment must ALSO name the clause-6 fork's branch, A or B; the fork carries NO default by Kim's own 2026-08-21 ruling)* |
+> | **Ratified by** | *(awaiting Kim — the ratification comment must ALSO name the clause-6 fork's branch, A or B; the fork carries NO default by Kim's own 2026-08-21 ruling. The ratification flip WRITES the picked branch into this cell as a mechanical part of the flip — "branch A/B picked" beside the ratifier line — so the accepted record carries its own verdict rather than pointing at a comment)* |
 > | **Repairs** | booked ON RATIFICATION, applied by the build wave (the ADR-0219/0228 precedent): [ADR-0228](./0228-chart-axis-inset-series-vocabulary.md) header gains the reciprocal Superseded-in-part pointer (REV-annotated mechanical pointer repair — cl.2's gridline-rendering assignment only) · `chart-family.spec.md` SPEC-R16/SPEC-R23-class deltas (the HTML plot layer + the ladder's rung/breakpoint contract) + `chart-family.prd.md` version-bump · `column-chart.md` descriptor doc anatomy section · the stale test/golden list in Consequences. ADR-0107 is NOT repaired — its cl.3 law already reads continuous-marks-only (Decision, clause 1) |
 > | **Supersedes / Superseded by** | **Partially supersedes [ADR-0228](./0228-chart-axis-inset-series-vocabulary.md)** — ONLY cl.2's plot-furniture rendering assignment (its "SVG `<line>` gridlines at computed tick positions" mechanism sentence, and the "SVG for strokes" half of its one-math-source law, which NARROWS to *SVG for continuous strokes*); the two-layer full-bleed model, the chrome/inset contract, the chip-collision law, and every other clause STAND · **Extends ADR-0228** (its cl.7 later-item "a ruled chrome DEGRADATION ORDER" is realized here, widened from below-floor-only to a full per-width ladder) · relates [ADR-0107](./0107-chart-family-v1-scope.md) (cl.3's rendering-follows-the-mark law — read, honored, untouched) · [ADR-0229](./0229-svg-chart-family-extensions.md) (the control this re-renders; its dense-archetype producer-mode reasoning is fork branch B's precedent) · [ADR-0223](./0223-fill-by-default-fleet-sizing-contract.md) (fill-by-default — the axis the ladder adapts along) · [ADR-0100](./0100-query-container-boundary-establishment.md) (the query-container establishment law clause 3 must satisfy) · [ADR-0102](./0102-css-less-consumer-contract-law.md) (bare-markup honesty for the new divs) · [ADR-0057](./0057-intent-non-color-signifier-rule.md) (no rung may make hue a sole carrier) |
 
@@ -115,12 +115,24 @@ clause 6's OPEN fork.** Six clauses; SPEC/LLD own mechanisms at the build wave.
      × ~42px worst-case month-chip pitch (36px chip + ≥4px clearance, Context arithmetic)
      = 336px = 28 × 12px — the width below which 8 chips can no longer hold SPEC-R17's
      no-overlap law.
-   - **Medium — `16em–28em`: category chips thin by parity** — every second rendered
-     `category-label` hides (`:nth-child(… of [data-part='category-label'])`-class selection, so
-     tick-chip count never shifts the indexing), halving worst-case chip demand to 4 × 42px
-     = 168px, which still clears the floor-wide box (192px − 2×8px chrome inset = 176px). Tick
-     chips, gridlines, now-marker, and the callout all stay — they stack block-axis or sit at
-     the baseline and are not inline-collision-bound in this band.
+   - **Medium — `16em–28em`: category chips thin ENDPOINT-PRESERVING** — the first and last
+     rendered category chips always survive the rung (SPEC-R17 AC1's own law: the rendered set
+     "keeps the first and last category and thins the interior"); only interior chips hide.
+     Mechanism, stated honestly: a pure-CSS structural selector cannot express
+     keep-ends-thin-interior over an arbitrary rendered count — parity selection drops an
+     endpoint on even counts, and sparing the last chip from a parity hide keeps chips n−1 and
+     n as an ADJACENT pair, violating AC2's no-intersect law at exactly the widths the rung
+     exists for. So the MATH layer stamps the tier: `thinnedIndices` — already
+     endpoint-preserving by construction (k=0 and k=keep−1 pin indices 0 and n−1) — re-applies
+     over the rendered chip list at a coarse cap of 4, and each rendered chip carries a density
+     tier attribute (`data-density`-class, LLD owns the literal); the medium rung's CSS hides
+     the fine tier. Still ZERO resize-JS: the tier is count-derived at render, width-blind —
+     only the CSS rung is width-aware. Worst case on the 8-chip cap: `thinnedIndices(8, 4)` =
+     {0, 2, 5, 7} — both endpoints kept, minimum surviving pitch 2 slots = 48px at the
+     floor-wide box (192px), clearing the ~42px no-overlap pitch. Tick chips, gridlines,
+     now-marker, and the callout all stay — they stack block-axis or sit at the baseline and
+     are not inline-collision-bound in this band. No SPEC-R17 delta is owed: the rung realizes
+     R17's missing width-aware half WITHIN its endpoint and no-overlap ACs, weakening neither.
    - **Narrow — `< 16em`: bare marks.** All chrome (tick/category chips, callout) AND plot
      furniture (gridlines, now-marker) hide; the columns alone remain — a proportional-mark
      glyph, the gen-ui-kit degradation order's last rung realized live. Derivation: 16em IS the
@@ -138,8 +150,9 @@ clause 6's OPEN fork.** Six clauses; SPEC/LLD own mechanisms at the build wave.
    hears. No rung makes hue a sole carrier (ADR-0057): the narrow rung's bare marks still carry
    identity through the summary's printed series labels.
 6. **The data-granularity fork — structured here, OPEN for Kim; her ratification comment names
-   the branch. Deliberately NO default (Kim's 2026-08-21 ruling — this is not the ADR-0107
-   "recommendation is the default" fork style).**
+   the branch, and the flip records the pick in this record's own Ratified-by cell (header) so
+   the accepted body never reads open. Deliberately NO default (Kim's 2026-08-21 ruling — this
+   is not the ADR-0107 "recommendation is the default" fork style).**
    - **Branch A — self-sensing re-bucketing, a named law exception.** The component measures its
      own box (ResizeObserver) and re-buckets rows below a threshold (months→quarters), rendering
      and re-announcing the coarser set. Honest costs: it breaks the no-JS sizing discipline
@@ -231,6 +244,13 @@ clause 6's OPEN fork.** Six clauses; SPEC/LLD own mechanisms at the build wave.
 - **Block-axis rungs too (`container-type: size`)** — rejected: no rung keys on height; two-axis
   size containment is a heavier containment class adopted speculatively — re-openable with a real
   height-degradation need.
+- **Pure-CSS parity selection for the medium rung (`:nth-child(… of …)` hiding every second
+  category chip)** — rejected (clause 4): on an even rendered count a parity keep necessarily
+  drops one endpoint, contradicting SPEC-R17 AC1's keep-first-and-last law; patching it by
+  sparing the last chip keeps chips n−1 and n as an adjacent pair, violating AC2's no-intersect
+  law at exactly the widths the rung serves. The math-stamped density tier keeps the selection in
+  the one place that already knows how to thin endpoint-preserving (`thinnedIndices`), at zero
+  resize-JS cost.
 - **Round-number breakpoints (320px/200px)** — rejected: the intake explicitly owed
   geometry-derived values; 28em falls out of the chip-pitch arithmetic and 16em out of the
   ratified floor, and both ride the type scale via host-em units where round px values would not.
