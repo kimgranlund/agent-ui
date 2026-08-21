@@ -7,7 +7,7 @@
 > | **Status** | proposed |
 > | **Date** | 2026-08-21 |
 > | **Proposed by** | planning-leader (design seat — GH #1578, the html-column-chart intake; due-process Phases 1–2, GH #969; design reasoning worked through live with Kim, 2026-08-21) |
-> | **Ratified by** | *(awaiting Kim — the ratification comment must ALSO name the clause-6 fork's branch, A or B; the fork carries NO default by Kim's own 2026-08-21 ruling. The ratification flip WRITES the picked branch into this cell as a mechanical part of the flip — "branch A/B picked" beside the ratifier line — so the accepted record carries its own verdict rather than pointing at a comment)* |
+> | **Ratified by** | *(awaiting Kim — the ratification comment must ALSO name the clause-6 fork's branch, A or B; the fork carries NO default by Kim's own 2026-08-21 ruling. Capture path, stated against the real tool: `adr_ratify.py` composes this cell from a fixed template via whole-cell substitution (`scripts/adr_ratify.py:651-656` / the `RATIFIED_BY_ROW_RE` sub) — it has no branch-capture input and would erase any fork text sitting here — so the HOST appends "branch A/B picked" to this cell by hand in the SAME COMMIT as the flip, before pushing it; the accepted record then carries its own verdict rather than pointing at a comment)* |
 > | **Repairs** | booked ON RATIFICATION, applied by the build wave (the ADR-0219/0228 precedent): [ADR-0228](./0228-chart-axis-inset-series-vocabulary.md) header gains the reciprocal Superseded-in-part pointer (REV-annotated mechanical pointer repair — cl.2's gridline-rendering assignment only) · `chart-family.spec.md` SPEC-R16/SPEC-R23-class deltas (the HTML plot layer + the ladder's rung/breakpoint contract) + `chart-family.prd.md` version-bump · `column-chart.md` descriptor doc anatomy section · the stale test/golden list in Consequences. ADR-0107 is NOT repaired — its cl.3 law already reads continuous-marks-only (Decision, clause 1) |
 > | **Supersedes / Superseded by** | **Partially supersedes [ADR-0228](./0228-chart-axis-inset-series-vocabulary.md)** — ONLY cl.2's plot-furniture rendering assignment (its "SVG `<line>` gridlines at computed tick positions" mechanism sentence, and the "SVG for strokes" half of its one-math-source law, which NARROWS to *SVG for continuous strokes*); the two-layer full-bleed model, the chrome/inset contract, the chip-collision law, and every other clause STAND · **Extends ADR-0228** (its cl.7 later-item "a ruled chrome DEGRADATION ORDER" is realized here, widened from below-floor-only to a full per-width ladder) · relates [ADR-0107](./0107-chart-family-v1-scope.md) (cl.3's rendering-follows-the-mark law — read, honored, untouched) · [ADR-0229](./0229-svg-chart-family-extensions.md) (the control this re-renders; its dense-archetype producer-mode reasoning is fork branch B's precedent) · [ADR-0223](./0223-fill-by-default-fleet-sizing-contract.md) (fill-by-default — the axis the ladder adapts along) · [ADR-0100](./0100-query-container-boundary-establishment.md) (the query-container establishment law clause 3 must satisfy) · [ADR-0102](./0102-css-less-consumer-contract-law.md) (bare-markup honesty for the new divs) · [ADR-0057](./0057-intent-non-color-signifier-rule.md) (no rung may make hue a sole carrier) |
 
@@ -127,9 +127,13 @@ clause 6's OPEN fork.** Six clauses; SPEC/LLD own mechanisms at the build wave.
      over the rendered chip list at a coarse cap of 4, and each rendered chip carries a density
      tier attribute (`data-density`-class, LLD owns the literal); the medium rung's CSS hides
      the fine tier. Still ZERO resize-JS: the tier is count-derived at render, width-blind —
-     only the CSS rung is width-aware. Worst case on the 8-chip cap: `thinnedIndices(8, 4)` =
-     {0, 2, 5, 7} — both endpoints kept, minimum surviving pitch 2 slots = 48px at the
-     floor-wide box (192px), clearing the ~42px no-overlap pitch. Tick chips, gridlines,
+     only the CSS rung is width-aware. True worst case across category counts is n=9, not the
+     8-chip cap itself: rendered = `thinnedIndices(9, 8)` = [0,1,2,3,5,6,7,8]; re-thinning at 4
+     keeps original slots {0, 2, 6, 8} — both endpoints kept, minimum surviving pitch 2 slots
+     of 9 = 42.67px at the floor-wide box (192px), clearing the STRICT no-overlap floor of
+     40px (36px chip + 4px clearance) — the margin is honest at ~2.7px; the wide rung's ~42px
+     figure is that floor plus comfort headroom, not the survival requirement. Tick chips,
+     gridlines,
      now-marker, and the callout all stay — they stack block-axis or sit at the baseline and
      are not inline-collision-bound in this band. No SPEC-R17 delta is owed: the rung realizes
      R17's missing width-aware half WITHIN its endpoint and no-overlap ACs, weakening neither.
@@ -150,9 +154,11 @@ clause 6's OPEN fork.** Six clauses; SPEC/LLD own mechanisms at the build wave.
    hears. No rung makes hue a sole carrier (ADR-0057): the narrow rung's bare marks still carry
    identity through the summary's printed series labels.
 6. **The data-granularity fork — structured here, OPEN for Kim; her ratification comment names
-   the branch, and the flip records the pick in this record's own Ratified-by cell (header) so
-   the accepted body never reads open. Deliberately NO default (Kim's 2026-08-21 ruling — this
-   is not the ADR-0107 "recommendation is the default" fork style).**
+   the branch, and the HOST appends the pick to this record's Ratified-by cell in the same
+   commit as the flip (the header cell states the mechanism against the real tool — the flip
+   script's whole-cell substitution cannot carry it) so the accepted body never reads open.
+   Deliberately NO default (Kim's 2026-08-21 ruling — this is not the ADR-0107 "recommendation
+   is the default" fork style).**
    - **Branch A — self-sensing re-bucketing, a named law exception.** The component measures its
      own box (ResizeObserver) and re-buckets rows below a threshold (months→quarters), rendering
      and re-announcing the coarser set. Honest costs: it breaks the no-JS sizing discipline
