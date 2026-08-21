@@ -3,7 +3,8 @@ name: component-patterns
 description: >-
   Route to the fleet's PRIOR-ART map: the settled mechanisms a new or novel ui-* component
   should reuse instead of reinventing — overlay/dismissal, container box-model, value codecs,
-  provider/context, field labelling, focus-preserving reorder, swappable packs, z-scoping,
+  provider/context, the shared-state grammar (store/injection/persistence), field labelling,
+  focus-preserving reorder, swappable packs, z-scoping,
   catalog exclusion, adopt-or-create declarative children, derived-never-hand-listed maps,
   opt-in progressive-enhancement seams, first-paint-vs-re-render detection. Use when
   designing anything and asking "has the fleet solved this before" — a floating panel, a
@@ -70,6 +71,7 @@ ADR-worthy fork, not a local choice.
 | A reflecting stateful prop needs a declared-state reset baseline | capture through the reflect-echo lock (`isReflectEcho`), never the live prop/attribute | PR #1390 (GH #1333) |
 | CSS Anchor Positioning renders a panel detached | IACVT/stale-pin taxonomy + verify guard, demote-per-session | PR #1401 (GH #1339; supersedes #1359) |
 | Categorical identity in a data-viz mark (hue-only is the trap) | CVD-safe identity: order + label + printed value + single-family lightness ramp — fill is the fourth carrier, never the only one | ADR-0219 cl.4–5 (generalizes ADR-0057) |
+| Shared/app-tier state — store, injection, persistence, context (the "do I need a provider?" question) | the sanctioned shared-state grammar: one fact one owner · explicit injection · StorageAdapter persistence · CSS cascade for presentational axes; `context-request` deferred behind a fact-shaped trigger | ADR-0227 |
 
 ## How to use a row
 
