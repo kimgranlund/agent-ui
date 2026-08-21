@@ -39,17 +39,18 @@
      MONOTONE primary tone primitives per scheme, slice 1 always brightest. cl.4's originally-named
      emphasis-role chain (-bright/-high/base/-dim/-low/-muted) resolves to only FOUR distinct colors and
      a lightness zigzag in the shipped estate (light 350->650->550->650->350; dark 1≡2 and 4≡5 adjacent —
-     and -muted is a different HUE family), breaking cl.4's own CVD-ordering rationale. So the defaults
-     read the TONE primitives directly via light-dark() — dark rides one 100-step brighter than light,
-     the estate's base-role convention (550 light / 450 dark). The ONE ruled exception to the
-     roles-only token hygiene rule, pinned by pie-chart-css.test.ts; the six slice-{1..6}-ink NAMES stay
-     the stable consumer re-map seam. */
-  --ui-pie-chart-slice-1-ink: light-dark(var(--md-sys-color-primary-300), var(--md-sys-color-primary-200));
-  --ui-pie-chart-slice-2-ink: light-dark(var(--md-sys-color-primary-400), var(--md-sys-color-primary-300));
-  --ui-pie-chart-slice-3-ink: light-dark(var(--md-sys-color-primary-500), var(--md-sys-color-primary-400));
-  --ui-pie-chart-slice-4-ink: light-dark(var(--md-sys-color-primary-600), var(--md-sys-color-primary-500));
-  --ui-pie-chart-slice-5-ink: light-dark(var(--md-sys-color-primary-700), var(--md-sys-color-primary-600));
-  --ui-pie-chart-slice-6-ink: light-dark(var(--md-sys-color-primary-800), var(--md-sys-color-primary-700));
+     and -muted is a different HUE family), breaking cl.4's own CVD-ordering rationale. The Amendment
+     repointed these six DEFAULTS at the raw TONE primitives directly; ADR-0228 cl.6 repoints them AGAIN,
+     this build wave, to ALIAS the shared `_chart/chart-axis.css` `--ui-chart-series-{1..6}-ink` chain —
+     the exact same resolved values (chart-axis.css declares the identical light-dark() tone-primitive
+     ladder), generalized to one family-wide ramp so every future multi-series chart shares it. The six
+     slice-{1..6}-ink NAMES stay the stable consumer re-map seam (unchanged by either repoint). */
+  --ui-pie-chart-slice-1-ink: var(--ui-chart-series-1-ink);
+  --ui-pie-chart-slice-2-ink: var(--ui-chart-series-2-ink);
+  --ui-pie-chart-slice-3-ink: var(--ui-chart-series-3-ink);
+  --ui-pie-chart-slice-4-ink: var(--ui-chart-series-4-ink);
+  --ui-pie-chart-slice-5-ink: var(--ui-chart-series-5-ink);
+  --ui-pie-chart-slice-6-ink: var(--ui-chart-series-6-ink);
 
   --ui-pie-chart-separator-ink: var(--md-sys-color-neutral-surface); /* the constant-width stroke KEEPING adjacent slices distinct (cl.4) */
   --ui-pie-chart-separator-width: 1px; /* density-invariant, non-scaling-stroke */

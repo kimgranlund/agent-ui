@@ -1,0 +1,231 @@
+/* column-chart.css — ui-column-chart, the Display-class axis-bearing stacked-column chart (ADR-0229
+ * cl.1/cl.2, consuming ADR-0228's shared `_chart/chart-axis.css` vocabulary). Two clearly-SECTIONED
+ * blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-column-chart)` (specificity 0,0,0) declares the `--ui-column-chart-*`
+ *       chain: the whole-shape floor (ADR-0229 cl.6's new role-(d) row — a bare, unstyled chart in a
+ *       flex row must still paint a visible, non-collapsed, proportionally-correct box), density-
+ *       INVARIANT mark geometry (segment radius/gap — mark geometry never rides `[scale]`, SPEC-R12),
+ *       and every `--ui-chart-*` alias this control consumes from the shared `_chart/` chain (the
+ *       chrome-inset knob, the chip token set, grid/now/projected inks, the six-step series ramp) — the
+ *       family-tunnel pattern: THIS file aliases, `@scope` below reads ONLY `--ui-column-chart-*`.
+ *   [2] STYLES BLOCK — `@scope (ui-column-chart)` consumes ONLY `--ui-column-chart-*` (∪ the shared
+ *       `--md-sys-color-*`/`--md-sys-typescale-*` namespaces the token block itself reads to build that
+ *       chain) ∪ the row/segment-scoped `--_seg-*`/`--_tick-pct`/`--_cat-pct` hooks (out of the governed
+ *       namespace entirely — the bar-chart `--_bar-start`/`--_bar-length` precedent, set imperatively by
+ *       column-chart.ts, never declared here).
+ *
+ * The two-layer full-bleed model (ADR-0228 cl.1-3): THREE children full-overlay one CSS grid cell
+ * (`grid-area: 1/1` on each, the standard stacking-context technique) — `[data-part='plot']` (SVG
+ * gridlines + now-marker) and `[data-part='columns']` (the CSS-drawn stacked marks) both span the box
+ * edge-to-edge at ZERO inset (plot-layer citizens); `[data-part='chrome']` (every real-DOM text element)
+ * is padded by `--ui-column-chart-chrome-inset` so labels float INSIDE the box rather than pushing it —
+ * Kim's zero-padding-container contract, realized as a mechanism, not a host padding opinion.
+ *
+ * Rounded caps (the boards' law): only the TOPMOST segment of a stack (`:last-child`) rounds its
+ * block-start corners — an interior segment boundary never shows a rounded notch. A projected category
+ * renders ONE hollow, dashed-outline ghost (never a per-segment outline, which would seam at every stack
+ * boundary) — `[data-projected]` on the segment itself (column-chart.ts collapses a projected row's
+ * stack into one ghost shape before this file ever sees it).
+ *
+ * RTL: the category axis stays PHYSICAL left-to-right (the ui-sparkline/ui-line-chart precedent — data
+ * order, not bidi) via the SVG's own coordinate space; the CSS columns track uses `flex` (which DOES
+ * mirror under `dir="rtl"` by default) so a consumer wanting board-parity RTL sets the columns track to
+ * `flex-direction: row` explicitly if ever needed — deferred, not fenced, since no board shows RTL.
+ * `forced-colors`: gridlines/now-marker/projected ink all resolve through system colors; segment fills
+ * flatten to `CanvasText` with a `Canvas` separator so adjacent series stay distinguishable (identity
+ * survives via the callout/summary text, never hue alone — ADR-0057).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-column-chart) declares --ui-column-chart-* ════════════════ */
+
+:where(ui-column-chart) {
+  --ui-column-chart-min-inline-size: 16em; /* the whole-shape floor (ADR-0229 cl.6 role-(d) row) */
+  --ui-column-chart-min-block-size: 16em; /* a real plot height, not a sliver — the SAME cl.6 floor on the block axis */
+  --ui-column-chart-column-gap: var(--md-sys-space-xs); /* between adjacent category tracks — rides [density] for free */
+  --ui-column-chart-segment-radius: var(--md-sys-shape-corner-base); /* the rounded-cap radius, topmost segment only */
+  --ui-column-chart-text-ink: var(--md-sys-color-neutral-on-surface); /* chip/callout text — the ONE role reference */
+
+  /* Aliases into the shared `_chart/chart-axis.css` chain (the family-tunnel pattern) — this control's
+     OWN chain is what `@scope` below may read; the shared names never leak into a `@scope` body. */
+  --ui-column-chart-chrome-inset: var(--ui-chart-chrome-inset);
+  --ui-column-chart-chip-bg: var(--ui-chart-chip-bg);
+  --ui-column-chart-chip-fg: var(--ui-chart-chip-fg);
+  --ui-column-chart-chip-radius: var(--ui-chart-chip-radius);
+  --ui-column-chart-chip-pad-inline: var(--ui-chart-chip-pad-inline);
+  --ui-column-chart-chip-pad-block: var(--ui-chart-chip-pad-block);
+  --ui-column-chart-chip-font-size: var(--ui-chart-chip-font-size);
+  --ui-column-chart-grid-ink: var(--ui-chart-grid-ink);
+  --ui-column-chart-now-ink: var(--ui-chart-now-ink);
+  --ui-column-chart-projected-ink: var(--ui-chart-projected-ink);
+  --ui-column-chart-projected-dash: var(--ui-chart-projected-dash);
+  --ui-column-chart-highlight-ink: var(--md-sys-color-primary);
+  --ui-column-chart-highlight-ink-on: var(--md-sys-color-primary-on-primary);
+  --ui-column-chart-series-1-ink: var(--ui-chart-series-1-ink);
+  --ui-column-chart-series-2-ink: var(--ui-chart-series-2-ink);
+  --ui-column-chart-series-3-ink: var(--ui-chart-series-3-ink);
+  --ui-column-chart-series-4-ink: var(--ui-chart-series-4-ink);
+  --ui-column-chart-series-5-ink: var(--ui-chart-series-5-ink);
+  --ui-column-chart-series-6-ink: var(--ui-chart-series-6-ink);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-column-chart) consumes ONLY --ui-column-chart-* ════════════════ */
+
+@scope (ui-column-chart) {
+  :scope {
+    display: grid;
+    grid-template: 1fr / 1fr; /* one cell — every layer full-overlays it */
+    min-inline-size: var(--ui-column-chart-min-inline-size);
+    min-block-size: var(--ui-column-chart-min-block-size);
+    box-sizing: border-box;
+    color: var(--ui-column-chart-text-ink);
+    /* text-bearing Display (the ui-bar-chart/ui-pie-chart SPEC-R12 precedent) — the type matrix is the
+       lever, not a [size]/[scale] attribute; a chart takes neither. */
+    font-size: var(--md-sys-typescale-label-medium-size);
+    line-height: var(--md-sys-typescale-label-medium-line-height);
+  }
+
+  :scope > * {
+    grid-area: 1 / 1; /* the full-overlay stacking technique — plot / columns / chrome share one box */
+  }
+
+  :scope svg[data-part='plot'] {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  :scope [data-part='grid-line'] {
+    stroke: var(--ui-column-chart-grid-ink);
+    stroke-width: 0.4;
+  }
+
+  :scope [data-part='now-dot'] {
+    r: 1.4;
+    fill: var(--ui-column-chart-now-ink);
+  }
+
+  :scope [data-part='now-tick'] {
+    stroke: var(--ui-column-chart-now-ink);
+    stroke-width: 0.6;
+  }
+
+  :scope [data-part='columns'] {
+    display: flex;
+    align-items: stretch;
+    column-gap: var(--ui-column-chart-column-gap);
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  :scope [data-part='category'] {
+    position: relative;
+    flex: 1 1 0;
+    min-inline-size: 0;
+  }
+
+  :scope [data-part='segment'] {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: calc(var(--_seg-start, 0) * 1%);
+    block-size: calc(var(--_seg-length, 0) * 1%);
+    background: var(--_seg-ink, var(--ui-column-chart-series-1-ink));
+  }
+
+  :scope [data-part='segment']:last-child {
+    border-start-start-radius: var(--ui-column-chart-segment-radius);
+    border-start-end-radius: var(--ui-column-chart-segment-radius);
+  }
+
+  /* The projected ghost (column-chart.ts collapses a projected row to ONE such segment): hollow +
+     dashed-outline, no fill — a line-style carrier of provisionality, never hue (ADR-0228 cl.4). */
+  :scope [data-part='segment'][data-projected] {
+    background: transparent;
+    border: 1.5px dashed var(--ui-column-chart-projected-ink);
+    border-start-start-radius: var(--ui-column-chart-segment-radius);
+    border-start-end-radius: var(--ui-column-chart-segment-radius);
+  }
+
+  :scope [data-part='category'][data-highlight] [data-part='segment'] {
+    outline: 2px solid var(--ui-column-chart-highlight-ink);
+    outline-offset: -1px;
+  }
+
+  :scope [data-part='chrome'] {
+    position: relative;
+    inline-size: 100%;
+    block-size: 100%;
+    padding: var(--ui-column-chart-chrome-inset);
+    box-sizing: border-box;
+  }
+
+  /* Chips — real DOM text pills, floating INSIDE the plot box (never outside it — Kim's zero-padding
+     contract). Value-scale chips sit at the start edge, at their gridline's percent-from-bottom position
+     (flipped: CSS `top`/`bottom` grow the same direction as `pct` counts UP from the baseline, so
+     `bottom: calc(pct% - 50%)` centers the chip on its gridline, clamped by the chrome padding box). */
+  :scope [data-part='tick-label'],
+  :scope [data-part='category-label'],
+  :scope [data-part='callout'] {
+    position: absolute;
+    background: var(--ui-column-chart-chip-bg);
+    color: var(--ui-column-chart-chip-fg);
+    border-radius: var(--ui-column-chart-chip-radius);
+    padding-inline: var(--ui-column-chart-chip-pad-inline);
+    padding-block: var(--ui-column-chart-chip-pad-block);
+    font-size: var(--ui-column-chart-chip-font-size);
+    line-height: 1;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* End chips clamp INWARD rather than overflow the chart box (ADR-0228 cl.2 / SPEC-R17): a chip
+     CENTERED on its anchor would half-overflow the plot box at the two axis extremes, so the
+     translate offset is INTERPOLATED (`--_tick-shift`/`--_cat-shift`, column-chart.ts) rather than a
+     fixed -50% — -100%/0% at the bottom/top (or left/right) extremes, -50% mid-scale. */
+  :scope [data-part='tick-label'] {
+    inset-inline-start: 0;
+    inset-block-start: calc(100% - var(--_tick-pct, 0) * 1%);
+    translate: 0 calc(var(--_tick-shift, -50) * 1%);
+  }
+
+  :scope [data-part='category-label'] {
+    inset-inline-start: calc(var(--_cat-pct, 0) * 1%);
+    inset-block-end: 0;
+    translate: calc(var(--_cat-shift, -50) * 1%) 0;
+  }
+
+  :scope [data-part='callout'] {
+    inset-inline-start: calc(var(--_cat-pct, 0) * 1%);
+    inset-block-start: 0;
+    translate: calc(var(--_cat-shift, -50) * 1%) 0;
+    background: var(--ui-column-chart-highlight-ink);
+    color: var(--ui-column-chart-highlight-ink-on);
+    display: flex;
+    gap: 0.35ch;
+  }
+
+  @media (forced-colors: active) {
+    :scope [data-part='grid-line'],
+    :scope [data-part='now-tick'] {
+      stroke: CanvasText;
+    }
+    :scope [data-part='now-dot'] {
+      fill: CanvasText;
+    }
+    :scope [data-part='segment'] {
+      background: CanvasText;
+      border: 1px solid Canvas;
+    }
+    :scope [data-part='segment'][data-projected] {
+      background: Canvas;
+      border-color: CanvasText;
+    }
+    :scope [data-part='tick-label'],
+    :scope [data-part='category-label'],
+    :scope [data-part='callout'] {
+      background: Canvas;
+      color: CanvasText;
+      border: 1px solid CanvasText;
+    }
+  }
+}

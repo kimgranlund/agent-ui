@@ -28,42 +28,26 @@ describe('pie-chart.css — structure + token hygiene', () => {
     for (const token of consumed) expect(declared, `${token} consumed in @scope but never declared in :where()`).toContain(token)
   })
 
-  it('declares the SIX-step single-family lightness ramp — pairwise-distinct, strictly monotone primary TONE primitives per scheme via light-dark(), slice 1 brightest (ADR-0219 cl.4 + Amendment)', () => {
-    // The originally-named emphasis-role chain (-bright/-high/base/-dim/-low/-muted) resolves to only
-    // FOUR distinct colors and a lightness zigzag in the shipped estate (ADR-0219 Amendment) — the
-    // defaults must read tone primitives, split per scheme. Higher tone step = darker in this estate,
-    // so a strictly INCREASING step sequence = strictly monotone darker = slice 1 brightest.
-    const steps = Array.from({ length: 6 }, (_, i) => {
-      const m = tokenBlock.match(
-        new RegExp(
-          `--ui-pie-chart-slice-${i + 1}-ink:\\s*light-dark\\(var\\(--md-sys-color-primary-(\\d{3})\\),\\s*var\\(--md-sys-color-primary-(\\d{3})\\)\\)`,
-        ),
-      )
-      expect(m, `slice-${i + 1}-ink must be light-dark(primary tone primitive, primary tone primitive)`).not.toBeNull()
-      return { light: Number(m![1]), dark: Number(m![2]) }
-    })
-    for (const scheme of ['light', 'dark'] as const) {
-      const ladder = steps.map((s) => s[scheme])
-      expect(new Set(ladder).size, `${scheme}: the six steps must be pairwise distinct (${ladder.join(', ')})`).toBe(6)
-      for (let i = 1; i < ladder.length; i++) {
-        expect(ladder[i], `${scheme}: the ladder must be strictly monotone darker 1→6 (${ladder.join(', ')})`).toBeGreaterThan(ladder[i - 1])
-      }
+  it('the six slice inks ALIAS the shared `_chart/chart-axis.css` series ramp (ADR-0228 cl.6 repoint — names unchanged, the consumer re-map seam stays put)', () => {
+    // ADR-0228 cl.6: the pie-chart ramp repoint is a BUILD-WAVE byte-change with test fallout, booked in
+    // that ADR's own Consequences — this replaces the pre-0228 "reads primary tone primitives directly"
+    // assertion with "aliases the shared --ui-chart-series-{k}-ink chain" (chart-axis-css.test.ts is now
+    // the one place the actual light-dark()/tone-primitive ladder is pinned).
+    for (let i = 1; i <= 6; i++) {
+      const m = tokenBlock.match(new RegExp(`--ui-pie-chart-slice-${i}-ink:\\s*var\\(--ui-chart-series-${i}-ink\\)`))
+      expect(m, `slice-${i}-ink must alias var(--ui-chart-series-${i}-ink)`).not.toBeNull()
     }
-    // dark rides exactly one 100-step brighter than light (the estate's base-role convention, 550→450).
-    for (const s of steps) expect(s.light - s.dark).toBe(100)
   })
 
-  it('every --ui-pie-chart-* token declaration points at a role or a shared ramp token — the ONE ruled exception: the six slice inks read primary TONE primitives inside light-dark() (ADR-0219 cl.4 Amendment)', () => {
+  it('every --ui-pie-chart-* token declaration points at a role, the shared chart-series alias, or a shared ramp token — no raw tone primitive lives in THIS file anymore (ADR-0228 cl.6 moved the ladder to _chart/chart-axis.css)', () => {
     const decls = [...tokenBlock.matchAll(/(--ui-pie-chart-[\w-]+)\s*:([^;]*);/g)]
     expect(decls.length).toBeGreaterThan(0) // anti-vacuous
-    const offenders = decls
-      .filter((m) => !/^--ui-pie-chart-slice-[1-6]-ink$/.test(m[1]) && /--md-sys-color-[\w-]*\d{3}/.test(m[2]))
-      .map((m) => m[1])
-    expect(offenders, 'raw tone primitives are legal ONLY in the six slice-ink defaults').toEqual([])
-    // and the slice inks never read a primitive OUTSIDE a light-dark() scheme split (no mode-blind default).
+    const offenders = decls.filter((m) => /--md-sys-color-[\w-]*\d{3}/.test(m[2])).map((m) => m[1])
+    expect(offenders, 'raw tone primitives no longer belong in pie-chart.css post-ADR-0228 cl.6 repoint').toEqual([])
+    // and every slice-ink is exactly a shared-ramp alias, nothing else.
     for (const m of decls) {
       if (!/^--ui-pie-chart-slice-[1-6]-ink$/.test(m[1])) continue
-      expect(m[2].trim(), `${m[1]} must wrap its primitives in light-dark()`).toMatch(/^light-dark\(/)
+      expect(m[2].trim(), `${m[1]} must alias var(--ui-chart-series-N-ink)`).toMatch(/^var\(--ui-chart-series-[1-6]-ink\)$/)
     }
   })
 

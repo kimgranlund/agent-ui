@@ -40,6 +40,7 @@ const CONTROL_TREES = [
 const EXEMPT: ReadonlyMap<string, string> = new Map([
   ['_base', 'shared Indicator/Listbox/Range base classes (UIIndicatorElement/UIListboxElement/UIRangeElement) — no tag of their own, extended by real controls only'],
   ['_surface', 'shared G9 container/container-box base classes — no tag of their own, extended by ui-card and siblings'],
+  ['_chart', 'shared ADR-0228 axis/inset/series vocabulary (pure axis-math.ts + chart-axis.css) — no tag of its own, aliased by ui-column-chart and every future axis-bearing chart'],
   ['_token-surface', "shared token-surface base class (ui-swatch/ui-ramp/ui-ladder's common ancestor) — no tag of its own"],
   ['entry-list', 'a shared entry-rendering helper (entry-list.ts/entry-data.ts) — no customElements.define, no tag of its own; consumed by ui-settings/ui-agent-admin'],
   // ADR-0224/GH #1429 — service-card's TEMPORARY entry removed here: its docs-writer S2 slice landed

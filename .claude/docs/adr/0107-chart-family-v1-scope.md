@@ -222,3 +222,26 @@ stands untouched; this is not a general re-opening of the v1 boundary. `chart-fa
 to v1.1 in the same change — its §3 "Pie/donut" ruled-out bullet is annotated admitted-under-ADR-0219,
 not deleted, so the original fence's reasoning stays legible as history (the ADR-0205 precedent: a
 named intake ADR realizing a named fence, recorded rather than silently overwritten).
+
+## Amendment 4 — the "axis systems" and "stacked/multi-series columns" fence rows are REALIZED, scoped to `ui-column-chart`, by ADR-0228/ADR-0229 (2026-08-21, GH #1565)
+
+Clause 1's ruled-out list named two fences this record fenced OUT of v1 wholesale: *"axis systems"*
+(gridlines, ticks, scale labels, legends, label-collision handling — the exact scope-explosion cost this
+ADR's own Context section states) and, by the F2 fork's own naming, *stacked/multi-series columns* (F2's
+"vertical columns … is the *foreseen extension* … not v1", explicitly axis-free-columns only — a
+multi-series STACK is a further fork F2 never considered). [ADR-0228](./0228-chart-axis-inset-series-vocabulary.md)
+(the shared `controls/_chart/` axis-math + chrome-CSS subsystem — pure nice-number tick math, the
+two-layer full-bleed model, the shared `--ui-chart-series-{1..6}-ink` ramp) and
+[ADR-0229](./0229-svg-chart-family-extensions.md) (minting `ui-column-chart`, the category-major
+stacked/dense-single-series column mark that CONSUMES that subsystem) together REALIZE both fence rows —
+scoped exactly to the one new type these two records name, never a general re-opening of "any axis
+system is a new intake" (ADR-0228 cl.1 IS that new intake, ratified through due process, GH #969) or of
+the F2 orientation-flip fence (`ui-bar-chart` itself stays axis-free; ADR-0229 cl.1 rejects extending it
+with an `orientation`/stacking variant precisely to keep this ADR's own generic-`type` rejection intact).
+
+Neither the axis-systems fence nor the stacked-columns fence is deleted — both stand for every OTHER
+chart type not yet given its own realizing record (scatter, log/dual axes, a typed time axis, and
+`ui-bar-chart`'s own still-foreseen simple `orientation` flip all remain fenced, ADR-0228 cl.7). The
+build wave realizing this Amendment ships `controls/_chart/` + `ui-column-chart` in the SAME change
+(GH #1565, "svg-charts wave 1") — `chart-family.spec.md`/`chart-family.prd.md` gain the corresponding
+R-clauses/version-bump in that same change, the ADR-0219 Amendment-3 precedent verbatim.

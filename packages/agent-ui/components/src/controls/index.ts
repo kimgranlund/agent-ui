@@ -130,6 +130,14 @@ export * from './line-chart/line-chart.ts' // axis-bearing line/area mark (ADR-0
 // by order + label + printed percent in a real-DOM key list (never hue alone).
 export * from './pie-chart/pie-chart.ts' // part-of-whole ring/pie mark (ADR-0219)
 
+// Chart family — ADR-0228/ADR-0229 (svg-charts wave 1): the fleet's FIFTH chart, the first to consume
+// the shared `_chart/` axis/inset/series vocabulary — a category-major STACKED (or dense single-series)
+// column mark with nice-number gridlines, a projected/ghost trailing column, a now-marker, and a static
+// highlight callout. Same shape as the four above — Display-class, extends UIElement directly, no
+// [size]/[scale] geometry row — role=img + a generated summary (per-series totals/extents), not role=list
+// (per-datum totals do not read cleanly as a flat list).
+export * from './column-chart/column-chart.ts' // axis-bearing stacked column mark (ADR-0228/ADR-0229)
+
 // Report family — Wave M1 (ADR-0111, report-family.lld.md): the real native <table>, the metric tile, and
 // the compact-realm intent badge. All Display-class, non-interactive, non-form-associated leaves.
 export * from './table/table.ts'   // scroll-preserving re-render + ADR-0163 interactive widening (selection/sort/filter/page)

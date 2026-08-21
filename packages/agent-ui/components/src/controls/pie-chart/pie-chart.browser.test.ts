@@ -10,7 +10,12 @@ import { server, cdp } from 'vitest/browser'
 // FIRST, then pie-chart.css directly, then pie-chart.ts (self-defines). The component-styles barrel
 // already @imports pie-chart.css (this wave's own integration slice) — this suite ALSO imports it
 // directly (the bar-chart/line-chart precedent), harmless given the idempotent side-effect import.
+// ADR-0228 cl.6 (svg-charts wave 1, GH #1565): pie-chart.css's six slice-ink defaults now ALIAS the
+// shared `_chart/chart-axis.css` ramp — that file must load before pie-chart.css or every var()
+// reference resolves invalid (a shorthand + invalid-var interaction that silently zeroes OTHER
+// longhands too, the exact class this repoint's own browser leg must re-prove, not just jsdom).
 import '@agent-ui/components/foundation-styles.css'
+import '../_chart/chart-axis.css'
 import './pie-chart.css'
 import './pie-chart.ts'
 

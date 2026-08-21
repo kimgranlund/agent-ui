@@ -92,6 +92,13 @@
  * theme-provider.css declares no --ui-theme-provider-* tokens (SPEC-R6 — pure coordination, no paint). */
 @import './controls/theme-provider/theme-provider.css';
 
+/* Chart family — ADR-0228: the shared `_chart/` axis/inset/series vocabulary (pure `--ui-chart-*` token
+ * declarations at `:where(:root)` — the `_surface/container.css` shared-seam precedent, generalized to
+ * charts). Imported FIRST, before any chart control's own sheet, so every consuming control's alias
+ * chain (`--ui-{name}-* : var(--ui-chart-*)`) resolves — including `ui-pie-chart`'s repointed ramp,
+ * ADR-0228 cl.6. */
+@import './controls/_chart/chart-axis.css';
+
 /* Chart family — Wave M1 (ADR-0107, chart-family.lld.md LLD-C8): Display-class, axis-free chart marks. */
 @import './controls/sparkline/sparkline.css';
 @import './controls/bar-chart/bar-chart.css';
@@ -101,8 +108,14 @@
 @import './controls/line-chart/line-chart.css';
 
 /* Chart family — ADR-0219: ui-pie-chart, the part-of-whole ring (donut default) or solid pie mark,
- * lifting ADR-0107's pie fence. Display-class, non-interactive, non-form-associated. */
+ * lifting ADR-0107's pie fence. Display-class, non-interactive, non-form-associated. Its six slice-ink
+ * defaults ALIAS the shared _chart/chart-axis.css ramp above (ADR-0228 cl.6 repoint). */
 @import './controls/pie-chart/pie-chart.css';
+
+/* Chart family — ADR-0228/ADR-0229 (svg-charts wave 1): ui-column-chart, the fleet's FIRST consumer of
+ * the shared axis/inset/series vocabulary above — a category-major stacked (or dense single-series)
+ * column mark. Display-class, non-interactive, non-form-associated. */
+@import './controls/column-chart/column-chart.css';
 
 /* Report family — Wave M1 (ADR-0111, report-family.lld.md LLD-C10): the native table, the metric tile,
  * and the compact-realm intent badge. All Display-class, non-interactive, non-form-associated leaves. */

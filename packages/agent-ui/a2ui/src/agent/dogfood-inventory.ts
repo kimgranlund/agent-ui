@@ -145,7 +145,11 @@ export function readAttributes(fence: string): LocalAttribute[] {
 // 2026-08-19 (ADR-0225/GH #1478, ui-playing-card mint): the new descriptor (rank/suit/faceDown/size,
 // four attributes) rides the inventory; measured 18706, budget 19_000 (measured + headroom; evidence
 // per SPEC §8 — genui-surface.spec.md v0.9 amendment, same change — never silent drift).
-export const DOGFOOD_INVENTORY_CHAR_BUDGET = 19_000
+// 2026-08-21 (ADR-0228/ADR-0229, GH #1565, svg-charts wave 1 — ui-column-chart mint): the new
+// descriptor (data/series/label/projected/highlight, five attributes) rides the inventory; measured
+// 19180, budget 19_600 (measured + headroom; evidence per SPEC §8 — genui-surface.spec.md v0.10
+// amendment, same change — never silent drift).
+export const DOGFOOD_INVENTORY_CHAR_BUDGET = 19_600
 
 /** One discovered control: its tag, a one-line role summary (the descriptor's own prose body, first
  *  sentence — never hand-written, so it can never drift from what the component's own docs say), the

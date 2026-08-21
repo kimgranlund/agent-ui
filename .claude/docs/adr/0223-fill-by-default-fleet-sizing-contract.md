@@ -338,6 +338,7 @@ anchor below is file-qualified; "no per-row AC" rows carry the measured defect c
 | ui-slider-multi | `grid` `C/slider-multi/slider-multi.css:91` | 12rem `:96` | no per-row AC — slider's sibling |
 | ui-timeline | `flex` `C/timeline/timeline.css:27` | 12rem `:20,31` | `timeline-family.spec.md` SPEC-R14 AC1/AC2 (`:282-289`) |
 | ui-status-stream | `flex` `C/status-stream/status-stream.css:147` | 16rem `:18,149` | `timeline-family.spec.md` SPEC-R14 (per-host family law — status-stream is a named family host, `:1`; the ACs exemplify timeline/item only) |
+| ui-column-chart | `grid` `C/column-chart/column-chart.css:77` | 16em (both axes) `:43-44,78-79` | [ADR-0229](./0229-svg-chart-family-extensions.md) cl.6 — one of the closed table's two ratified NEW rows (the sibling `ui-gauge` row lands with that control's own wave) |
 
 ### §D — R4 EXEMPT (14)
 

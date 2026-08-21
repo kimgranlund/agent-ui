@@ -1,6 +1,12 @@
 # SPEC — GenUI surface (sandboxed free-form generative UI): wire · frame · bridge · producer
 
-> Status: proposed · v0.9 · 2026-08-19 · Layer: SPEC (execution contract)
+> Status: proposed · v0.10 · 2026-08-21 · Layer: SPEC (execution contract)
+> **v0.10 amendment (docs-only, 2026-08-21, GH #1565):** SPEC-R13(b)'s inventory budget revised ≤ 19 000
+> → ≤ 19 600 chars on real corpus evidence — the ruled §8 path ("tightening or loosening on real corpus
+> data is a SPEC version bump, not silent drift"): ADR-0228/ADR-0229's `ui-column-chart` control mint
+> (data/series/label/projected/highlight, five attributes) adds its descriptor to the fleet, growing the
+> descriptor-derived inventory to a measured 19 180 chars (combined measured value enforced by the
+> standing test). No other clause changes.
 > **v0.9 amendment (docs-only, 2026-08-19):** SPEC-R13(b)'s inventory budget revised ≤ 18 600 → ≤ 19 000
 > chars on real corpus evidence — the ruled §8 path ("tightening or loosening on real corpus data is a
 > SPEC version bump, not silent drift"): ADR-0225/GH #1478's `ui-playing-card` control mint (rank/suit/

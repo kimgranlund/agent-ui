@@ -341,10 +341,16 @@ describe('API — descriptor present + tag↔class↔folder naming aligned (ADR-
 // already owns fully distinct tokens and consumes none of its sibling's.
 
 const sharedSurfaceFiles: string[] = readdirSync(`${CONTROLS}/_surface`).filter((f: string) => f.endsWith('.css'))
+// `_chart/` (ADR-0228 cl.1) is the SAME shared-cross-family-CSS-home shape as `_surface/` — a pure
+// `:where()` token/paint layer with no tag of its own, consumed (aliased) by per-control `@scope`
+// blocks. Scanned into SHARED_UI_TOKENS the same way, so `--ui-chart-*` (the shared inset/chip/grid/
+// series-ramp chain) is universally consumable, never flagged as a cross-control reach.
+const sharedChartFiles: string[] = readdirSync(`${CONTROLS}/_chart`).filter((f: string) => f.endsWith('.css'))
 const SHARED_SOURCES = [
   read(`${SHARED}/tokens.css`),
   read(`${SHARED}/dimensions.css`),
   ...sharedSurfaceFiles.map((f: string) => read(`${CONTROLS}/_surface/${f}`)),
+  ...sharedChartFiles.map((f: string) => read(`${CONTROLS}/_chart/${f}`)),
 ]
 const SHARED_UI_TOKENS = new Set<string>()
 for (const text of SHARED_SOURCES) for (const m of text.matchAll(/--ui-[\w-]+/g)) SHARED_UI_TOKENS.add(m[0])

@@ -1358,6 +1358,13 @@ const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
   // ADR-0205 — ui-line-chart's `values` is the same JSON-string `kind: 'skip'` codec gap as ui-sparkline's
   // above (no editable knob), so its LIVE default ([]) would mount nothing. Seeded with the same sample series.
   'ui-line-chart': { values: '[3,5,4,8,7]' },
+  // ADR-0228/ADR-0229 — ui-column-chart's `data`/`series` are the same JSON-string `kind: 'skip'` codec gap
+  // (no editable knob); an empty `data` default renders NO plot at all (not even an empty track ring, unlike
+  // ui-pie-chart) — an uninstructive bare specimen. Seeded with the revenue-by-month shape the doc/demo pages use.
+  'ui-column-chart': {
+    data: '[{"label":"Mar","values":[18,6]},{"label":"Apr","values":[21,7]},{"label":"May","values":[19,8]},{"label":"Jun","values":[24,9]}]',
+    series: '["Product","Services"]',
+  },
   'ui-table': {
     columns: '[{"key":"region","label":"Region"},{"key":"revenue","label":"Revenue","type":"number"}]',
     rows: '[{"region":"EMEA","revenue":42000},{"region":"APAC","revenue":31000}]',
@@ -1465,6 +1472,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-sparkline', // component-built inline <svg> (createElementNS + replaceChildren) — the ui-icon precedent, a name/values-driven mark, not authored text (slots: [] — sparkline.md)
   'ui-line-chart', // ADR-0205: component-built label rows + inline <svg> (replaceChildren) — the ui-sparkline precedent, a values-driven mark, not authored text (slots: [] — line-chart.md)
   'ui-pie-chart', // ADR-0219: component-built key-list rows + aria-hidden <svg> ring (replaceChildren) — the chart-family precedent, a data-driven mark, not authored text (slots: [] — pie-chart.md)
+  'ui-column-chart', // ADR-0228/ADR-0229: component-built plot/columns/chrome three-layer DOM (replaceChildren) — the chart-family precedent, a data-driven mark, not authored text (slots: [] — column-chart.md)
   'ui-disclosure', // #ensureParts(): the details/summary/chevron chrome — host children are ADOPTED into a nested body PART, never left as direct host children (unlike a STRUCTURAL container), so a host-level SLOT_TEXT write would destroy the whole part tree
   'ui-stat', // connected() builds four spans once (replaceChildren) from label/value/delta/caption PROPS — no light-DOM content model at all (slots: [] — stat.md)
   'ui-description-list', // connected() builds row/label/value spans (replaceChildren) from the rows PROP — no light-DOM content model at all (slots: [] — description-list.md, ADR-0201)
