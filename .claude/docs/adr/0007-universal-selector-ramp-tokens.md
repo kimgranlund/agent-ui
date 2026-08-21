@@ -77,3 +77,27 @@ execution-lead validated in a real engine (Chromium + WebKit): subtree `scale=co
   a required capability.
 - **`html *` or `:where(*)`** — rejected: plain `*` is the simplest correct selector; `:where()` changes
   nothing (already `(0,0,0)`), and `html *` needlessly excludes the root element's own ramp.
+
+## Amendment 1 — the Decision's `*`-ramp roster narrowed by ADR-0038, renamed by ADR-0078; body brought current (2026-08-21, revalidation repair)
+
+The Decision above names three derived legs declared on `*`: `--ui-{height,font,gap}-{sm,md,lg}`. Two
+later-ratified records changed that surface, and the frontmatter lineage cell records both — but the body
+prose never restated them, so read on its own it is stale for two of the three named tokens. Flagged
+FALSIFIED by the 2026-08-21 decision-watcher Revalidation firing (`.claude/ops/revalidation-queue.json`,
+claim `adr-0007`); this amendment is that repair — it records already-ratified decisions and makes none of
+its own.
+
+- **ADR-0078** renamed the namespace: the multipliers are `--md-sys-scale` / `--md-sys-density` (still on
+  `:root`, still repointed by the `[scale]` / `[density]` ancestor blocks), and every ramp token is
+  `--md-sys-*`, not `--ui-*`.
+- **ADR-0038** removed the height/font/icon control-band legs from the `*` ramp entirely: they are now
+  explicit `:root` + per-`[scale]` literal lookup tables (Kim's (scale × size) → row lookup, **no
+  multiplier**), so nothing about them derives per-element anymore and the substitution mechanics this ADR
+  fixed no longer apply to them.
+
+What SURVIVES on `*` — and still depends on this ADR's re-substitution mechanics — is exactly the derived
+set in `dimensions.css`'s `*` block today: `--md-sys-gap-{sm,md,lg}` (× `--md-sys-density`),
+`--md-sys-typescale-*-size` (× `--md-sys-scale`, the display leg — ADR-0025/0033), and `--md-sys-space-*`
+(× `--md-sys-density`). Consequence 4's generalizing rule is unchanged and still enforced by
+`dimensions.css`'s own comments: a DERIVED token (a `var()` over a subtree-repointable multiplier) is
+declared on `*`; a constant stays on `:root`.
