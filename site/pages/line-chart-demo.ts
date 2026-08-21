@@ -1,9 +1,11 @@
 // site/pages/line-chart-demo.ts — the ui-line-chart demo (the Display-class axis-bearing line/area chart,
-// ADR-0205; pairs with line-chart-doc.ts, the descriptor-derived API page). Mounts the REAL control over
-// realistic report series — p95 latency (all-positive ⇒ the value-floor baseline), net cash flow (mixed sign ⇒
-// the zero-line baseline), MRR under the area variant, a report-row layout, degenerate data, and a live rolling
-// window driven by real ui-buttons — never a mock. A display leaf emits nothing; the honesty proof is the
-// mounted control's own baseline + min/max labels re-deriving under real `values` writes.
+// ADR-0205, EXTENDED by ADR-0229 cl.3; pairs with line-chart-doc.ts, the descriptor-derived API page).
+// Mounts the REAL control over realistic report series — p95 latency (all-positive ⇒ the value-floor
+// baseline), net cash flow (mixed sign ⇒ the zero-line baseline), MRR under the area variant, the `axes`
+// state (gridlines/chips/gradient/projected+now-marker) over a real revenue-by-month series, a zero-
+// padding full-bleed composition, a report-row layout, degenerate data, and a live rolling window driven
+// by real ui-buttons — never a mock. A display leaf emits nothing; the honesty proof is the mounted
+// control's own baseline/gridlines/chips re-deriving under real `values`/`axes`/`projected` writes.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.demo-figure/.demo-grid + section spacing)
 import { applyDemoWidth, captioned, el, exampleSection, uiButton } from '../lib/specimens.ts'
@@ -12,8 +14,10 @@ const { content } = mountPage({
   title: 'ui-line-chart — demo',
   intro:
     'The axis-bearing line chart, live: real report series under both baseline branches (the value floor for ' +
-    'an all-positive series, the zero line for a mixed-sign one), the area variant, a report row, the ' +
-    'degenerate cases, and a rolling window under live values writes. The API table is on the ui-line-chart API page.',
+    'an all-positive series, the zero line for a mixed-sign one), the area variant, the opt-in `axes` state ' +
+    '(gridlines, chips, gradient fill, projected + now-marker), a zero-padding full-bleed composition, a ' +
+    'report row, the degenerate cases, and a rolling window under live values writes. The API table is on ' +
+    'the ui-line-chart API page.',
 })
 
 const text = (s: string): Text => document.createTextNode(s)
@@ -49,7 +53,44 @@ const area = el('div', { class: 'demo-grid' }, [
   captioned('variant="area" — mixed sign: fill to the zero line, both directions', lineChart(NET_CASH_FLOW_12M, 'Net cash flow (USD)', 'area')),
 ])
 
-// ── [3] a report row — the chart in the layout a dashboard actually gives it ────────────────────────────────
+// ── [3] the `axes` state (ADR-0229 cl.3) — gridlines/chips/gradient fill/projected+now-marker ────────────────
+const MRR_BY_MONTH = [41200, 42800, 43100, 44900, 46200, 45800] // USD, the SAME shape MRR_12M's opening half shows
+const MONTH_LABELS = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
+const axesLineChart = (values: readonly number[], labels: readonly string[], label: string, projected?: number): HTMLElement =>
+  el('ui-line-chart', {
+    axes: '',
+    variant: 'area',
+    values: JSON.stringify(values),
+    labels: JSON.stringify(labels),
+    label,
+    ...(projected !== undefined ? { projected: String(projected) } : {}),
+  })
+const axesGrid = el('div', { class: 'demo-grid' }, [
+  captioned('axes, variant="area"', axesLineChart(MRR_BY_MONTH, MONTH_LABELS, 'MRR by month')),
+  captioned('axes, variant="area", projected="1"', axesLineChart(MRR_BY_MONTH, MONTH_LABELS, 'MRR by month, incl. projection', 1)),
+])
+const axesNote = el('p', {}, [
+  text('The '), code('axes'), text(' state swaps the min/max label rows for the shared ADR-0228 tick/' +
+    'gridline/category system — gridlines over the series’ own value range, month chips from '),
+  code('labels'), text(' (index-aligned to '), code('values'), text('), and a gradient-to-transparent area ' +
+    'fill. The trailing month on the right renders '), strong('projected'), text(' (a dashed stroke + a ' +
+    'now-marker at the actual/projected boundary) — the SAME mechanism '), code('ui-column-chart'), text(' uses.'),
+])
+
+// ── [3b] a zero-padding full-bleed `axes` composition — Kim's contract, realized for the time axis ────────────
+const bleed = axesLineChart(MRR_BY_MONTH, MONTH_LABELS, 'MRR by month, incl. projection', 1)
+applyDemoWidth(bleed, '100%')
+bleed.style.setProperty('--ui-line-chart-min-block-size', '11em')
+const bleedCard = el('div', {
+  style: 'border-radius: var(--md-sys-shape-corner-base); overflow: hidden; background: var(--md-sys-color-neutral-container-low, var(--md-sys-color-neutral-container));',
+}, [bleed])
+const bleedNote = el('p', {}, [
+  text('Dropped into a zero-padding card with NO consumer CSS — every tick/category chip floats '),
+  strong('inside'), text(' the plot box (the chrome-inset knob), never pushing it — the same ADR-0228 cl.3 ' +
+    'contract '), code('ui-column-chart'), text(' realizes, now proven for a point-major series too.'),
+])
+
+// ── [4] a report row — the chart in the layout a dashboard actually gives it ────────────────────────────────
 const wide = lineChart(SIGNUPS_30D, 'Sign-ups, last 30 days', 'area')
 applyDemoWidth(wide, '100%')
 wide.style.setProperty('--ui-line-chart-min-block-size', '12em')
@@ -66,7 +107,7 @@ const reportNote = el('p', {}, [
     'rides the space ladder.'),
 ])
 
-// ── [4] degenerate data — every case still paints and still announces ───────────────────────────────────────
+// ── [5] degenerate data — every case still paints and still announces ───────────────────────────────────────
 const degenerate = el('div', { class: 'demo-grid' }, [
   captioned('values="[]" — no data (empty tile, "no data" name)', lineChart([], 'Empty series')),
   captioned('values="[42]" — one point (a centered dot, baseline coincident)', lineChart([42], 'Single point')),
@@ -74,7 +115,7 @@ const degenerate = el('div', { class: 'demo-grid' }, [
   captioned('non-finite entries dropped', el('ui-line-chart', { values: '[3,"x",5,null,4,8,7]', label: 'Hardened input' })),
 ])
 
-// ── [5] a live rolling window — real prop writes; baseline + min/max labels re-derive on every write ────────
+// ── [6] a live rolling window — real prop writes; baseline + min/max labels re-derive on every write ────────
 const live = lineChart(P95_LATENCY_24H, 'p95 latency, rolling 24 h (ms)')
 applyDemoWidth(live, '32rem')
 let rolling = [...P95_LATENCY_24H]
@@ -105,6 +146,8 @@ const liveNote = el('p', {}, [
 content.append(
   exampleSection('The two baseline branches', baselines, baselineNote),
   exampleSection('Area variant', area),
+  exampleSection('The `axes` state', axesGrid, axesNote),
+  exampleSection('A zero-padding full-bleed `axes` composition', bleedCard, bleedNote),
   exampleSection('A report row', reportRow, reportNote),
   exampleSection('Degenerate data', degenerate),
   exampleSection('Live rolling window', liveBlock, liveNote),

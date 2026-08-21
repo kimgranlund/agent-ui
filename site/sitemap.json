@@ -252,7 +252,7 @@
       "name": "Line Chart",
       "tag": "ui-line-chart",
       "url": "./line-chart-doc.html",
-      "description": "An axis-bearing line or area chart with a value-range baseline and always-shown min/max labels, single-series, hand-rolled inline SVG.",
+      "description": "An axis-bearing line or area chart with a value-range baseline; the default state shows always-shown min/max labels, the opt-in `axes` state shows nice-number gridlines + tick/category chips + a gradient area fill + a provisional/now-marker system, single-series, hand-rolled inline SVG.",
       "level": "L1",
       "section": "Components"
     },

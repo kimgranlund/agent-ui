@@ -12,6 +12,7 @@ import { server, cdp } from 'vitest/browser'
 // CSS first (roles + ramp), then this control's own sheet, then the self-defining module (ADR-0003
 // load-bearing order).
 import '@agent-ui/components/foundation-styles.css'
+import '../_chart/chart-axis.css' // the shared ADR-0228 token chain — line-chart.css ALIASES from it (`[axes]` only), the ui-column-chart load-bearing order
 import './line-chart.css'
 import './line-chart.ts'
 
@@ -178,6 +179,146 @@ describe('ui-line-chart forced-colors — currentColor tracks the forced ink (li
       expect(alphaOf(getComputedStyle(baseline()).stroke), 'the baseline vanished under forced-colors').toBeGreaterThan(0)
       // the stroke still equals the host's forced computed color — no dedicated WHCM block needed (line-chart.css)
       expect(getComputedStyle(line()).stroke).toBe(getComputedStyle(el).color)
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+// the `axes` state (ADR-0229 cl.3) — browser-truth probes for what jsdom cannot see: the two-layer
+// full-bleed model (the PLOT never shrinks to make room for chrome; every chrome chip gets its
+// clearance from the ONE `--ui-line-chart-chrome-inset` knob, never a smaller plot box — Kim's
+// zero-padding-container contract, ADR-0228 cl.1-3, the `ui-column-chart` reference shape), the
+// now-marker's short (never full-height) tick, and the gradient area fill's resolved paint.
+
+const px = (v: string): number => Number.parseFloat(v)
+
+describe('ui-line-chart [axes] — whole-shape (test-the-whole-shape)', () => {
+  it('a bare, unstyled, populated axes chart in a flex row paints a non-collapsed box >= its floor, with the plot + chrome both painted', () => {
+    const el = mount('<ui-line-chart axes values="[18,21,19,24,27,23]" labels=\'["Mar","Apr","May","Jun","Jul","Aug"]\'></ui-line-chart>') as HTMLElement
+    const fontPx = Number.parseFloat(getComputedStyle(el).fontSize)
+    const expectedWidth = 16 * fontPx
+    const rect = el.getBoundingClientRect()
+    expect(rect.width, 'the axes chart collapsed below its whole-shape width floor').toBeGreaterThanOrEqual(expectedWidth - 1)
+    expect(rect.height, 'the axes chart painted a zero-height box').toBeGreaterThan(0)
+
+    const plot = el.querySelector('[data-part="plot"]') as unknown as SVGSVGElement
+    const chrome = el.querySelector('[data-part="chrome"]') as HTMLElement
+    expect(plot, 'no plot layer was injected').not.toBeNull()
+    expect(chrome, 'no chrome layer was injected').not.toBeNull()
+    expect((plot as unknown as HTMLElement).getBoundingClientRect().width).toBeGreaterThan(0)
+    expect(chrome.getBoundingClientRect().width).toBeGreaterThan(0)
+  })
+})
+
+describe('ui-line-chart [axes] — the two-layer full-bleed model (ADR-0228 cl.1-3): the plot NEVER shrinks for chrome', () => {
+  it('the plot layer spans the SAME box as the host, edge-to-edge, at zero inset — regardless of chrome being active', () => {
+    const el = mount('<ui-line-chart axes values="[18,21,19,24,27,23]" labels=\'["Mar","Apr","May","Jun","Jul","Aug"]\'></ui-line-chart>') as HTMLElement
+    const chartBox = el.getBoundingClientRect()
+    const plot = el.querySelector('[data-part="plot"]') as unknown as HTMLElement
+    const plotBox = plot.getBoundingClientRect()
+    expect(Math.round(plotBox.width)).toBeCloseTo(Math.round(chartBox.width), 0)
+    expect(Math.round(plotBox.height)).toBeCloseTo(Math.round(chartBox.height), 0)
+    expect(Math.abs(plotBox.left - chartBox.left)).toBeLessThanOrEqual(1)
+    expect(Math.abs(plotBox.top - chartBox.top)).toBeLessThanOrEqual(1)
+  })
+
+  it('every chrome chip clears the chrome-inset distance from the box edges — never closer, and the plot never shrank to make room', () => {
+    const el = mount('<ui-line-chart axes values="[18,21,19,24,27,23]" labels=\'["Mar","Apr","May","Jun","Jul","Aug"]\'></ui-line-chart>') as HTMLElement
+    const chartBox = el.getBoundingClientRect()
+    const chrome = el.querySelector('[data-part="chrome"]') as HTMLElement
+    // The chrome-inset custom property is a `calc()` expression — not parseable via getComputedStyle
+    // directly (custom properties don't resolve nested calc() to a bare number); read the REAL, USED
+    // `padding` the token drives instead (a real layout property DOES resolve to a px number).
+    const insetPx = px(getComputedStyle(chrome).paddingLeft)
+    expect(insetPx, 'anti-vacuous: the chrome layer\'s resolved padding must be a real px value').toBeGreaterThan(0)
+
+    const chips = el.querySelectorAll('[data-part="tick-label"], [data-part="category-label"]')
+    expect(chips.length).toBeGreaterThan(0)
+    const EPS = 1 // sub-pixel layout slack
+    for (const chip of chips) {
+      const box = (chip as HTMLElement).getBoundingClientRect()
+      expect(box.left, 'a chip crossed the LEFT edge (never closer than the chrome-inset)').toBeGreaterThanOrEqual(chartBox.left - EPS)
+      expect(box.right, 'a chip crossed the RIGHT edge').toBeLessThanOrEqual(chartBox.right + EPS)
+      expect(box.top, 'a chip crossed the TOP edge').toBeGreaterThanOrEqual(chartBox.top - EPS)
+      expect(box.bottom, 'a chip crossed the BOTTOM edge').toBeLessThanOrEqual(chartBox.bottom + EPS)
+    }
+
+    // the plot's own box is UNCHANGED by the chrome's presence — the inset is the chrome's clearance,
+    // never a plot-shrinking mechanism (ADR-0228 cl.3's own composition law).
+    const plot = el.querySelector('[data-part="plot"]') as unknown as HTMLElement
+    const plotBox = plot.getBoundingClientRect()
+    expect(Math.round(plotBox.width)).toBeCloseTo(Math.round(chartBox.width), 0)
+    expect(Math.round(plotBox.height)).toBeCloseTo(Math.round(chartBox.height), 0)
+  })
+})
+
+describe('ui-line-chart [axes] — the now-marker is a SHORT tick, never full-height (ADR-0228 cl.4)', () => {
+  it('the now-tick spans only a small fraction of the plot height, anchored at the category band', () => {
+    const el = mount('<ui-line-chart axes values="[18,21,19,24,27,23]" projected="1"></ui-line-chart>') as HTMLElement
+    const tick = el.querySelector('[data-part="now-tick"]') as unknown as SVGLineElement
+    const dot = el.querySelector('[data-part="now-dot"]') as unknown as SVGCircleElement
+    expect(tick).not.toBeNull()
+    expect(dot).not.toBeNull()
+    const tickBox = (tick as unknown as SVGGraphicsElement).getBBox()
+    expect(tickBox.height).toBeLessThan(50) // NOW_TICK_DEPTH_PCT=8 of a 100-unit viewBox — well under half
+    expect(tickBox.height).toBeGreaterThan(0)
+  })
+
+  it('is absent entirely when there is no projected span', () => {
+    const el = mount('<ui-line-chart axes values="[18,21,19,24,27,23]"></ui-line-chart>') as HTMLElement
+    expect(el.querySelector('[data-part="now-tick"]')).toBeNull()
+    expect(el.querySelector('[data-part="now-dot"]')).toBeNull()
+  })
+})
+
+describe('ui-line-chart [axes] — the projected span is a DASHED line-style carrier (ADR-0228 cl.4)', () => {
+  it('the projected polyline segment computes a dashed stroke', () => {
+    const el = mount('<ui-line-chart axes values="[18,21,19,24,27,23]" projected="1"></ui-line-chart>') as HTMLElement
+    const projected = el.querySelector('[data-part="line-projected"]') as unknown as SVGPolylineElement
+    expect(projected).not.toBeNull()
+    expect(getComputedStyle(projected).strokeDasharray).not.toBe('none')
+  })
+})
+
+describe('ui-line-chart the gradient area fill (ADR-0229 cl.3, both states)', () => {
+  it('DEFAULT state: the area resolves a real (non-transparent) paint via the gradient', () => {
+    const el = mount('<ui-line-chart values="[3,5,4,8,7]" variant="area"></ui-line-chart>') as HTMLElement
+    const area = el.querySelector('[data-part="area"]') as unknown as SVGPolygonElement
+    expect(alphaOf(getComputedStyle(area).fill), 'the gradient-filled area painted invisible').toBeGreaterThan(0)
+  })
+
+  it('AXES state: the SAME gradient mechanism paints the area', () => {
+    const el = mount('<ui-line-chart axes values="[18,21,19,24,27,23]" variant="area"></ui-line-chart>') as HTMLElement
+    const area = el.querySelector('[data-part="area"]') as unknown as SVGPolygonElement
+    expect(area).not.toBeNull()
+    expect(alphaOf(getComputedStyle(area).fill), 'the axes-state gradient area painted invisible').toBeGreaterThan(0)
+  })
+})
+
+describe('ui-line-chart [axes] — forced colors (ADR-0057/ADR-0228)', () => {
+  it('forced-colors keeps gridlines + chips + the gradient area visible in system inks; Chromium emulates (CDP), WebKit asserts the baseline', async () => {
+    const el = mount('<ui-line-chart axes values="[18,21,19,24,27,23]" labels=\'["Mar","Apr","May","Jun","Jul","Aug"]\' variant="area"></ui-line-chart>') as HTMLElement
+    const gridLine = el.querySelector('[data-part="grid-line"]') as unknown as SVGLineElement
+    const chip = el.querySelector('[data-part="tick-label"]') as HTMLElement
+    const area = el.querySelector('[data-part="area"]') as unknown as SVGPolygonElement
+
+    expect(alphaOf(getComputedStyle(gridLine).stroke), 'baseline gridline is invisible').toBeGreaterThan(0)
+    expect(alphaOf(getComputedStyle(chip).backgroundColor), 'baseline chip is invisible').toBeGreaterThan(0)
+
+    if (server.browser !== 'chromium') {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches, 'CDP did not enter forced-colors').toBe(true)
+      expect(alphaOf(getComputedStyle(gridLine).stroke), 'gridline vanished under forced-colors').toBeGreaterThan(0)
+      expect(alphaOf(getComputedStyle(chip).backgroundColor), 'chip vanished under forced-colors').toBeGreaterThan(0)
+      expect(alphaOf(getComputedStyle(area).fill), 'the gradient area vanished under forced-colors').toBeGreaterThan(0)
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] })
     }
