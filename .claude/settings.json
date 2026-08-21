@@ -5,6 +5,17 @@
   "permissions": {
     "defaultMode": "bypassPermissions"
   },
+  "enabledPlugins": {
+    "llm@nonoun-plugins": true,
+    "harness@nonoun-plugins": true,
+    "docs@nonoun-plugins": true,
+    "teamwork@nonoun-plugins": true,
+    "frontend@nonoun-plugins": true,
+    "agent-protocols@nonoun-plugins": true,
+    "design@nonoun-plugins": true,
+    "figma@claude-plugins-official": true,
+    "cloudflare@claude-plugins-official": true
+  },
   "extraKnownMarketplaces": {
     "nonoun-plugins": {
       "source": {
@@ -12,16 +23,5 @@
         "repo": "kimgranlund/claude-plugins"
       }
     }
-  },
-  "enabledPlugins": {
-    "llm@nonoun-plugins": true,
-    "harness@nonoun-plugins": true,
-    "docs@nonoun-plugins": true,
-    "teamwork@nonoun-plugins": true,
-    "screens@nonoun-plugins": true,
-    "agent-protocols@nonoun-plugins": true,
-    "design@nonoun-plugins": true,
-    "figma@claude-plugins-official": true,
-    "cloudflare@claude-plugins-official": true
   }
 }
