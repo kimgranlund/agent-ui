@@ -1,0 +1,11 @@
+{
+  "candidates": [
+    {
+      "claim_id": "adr-0007",
+      "evidence": "ADR-0007's Decision literally states: 'we declare the derived ramp tokens (--ui-{height,font,gap}-{sm,md,lg}) on the universal * selector, not :root.' Checked against packages/agent-ui/shared/src/tokens/dimensions.css today: only the GAP leg (plus typescale-size, space-*) still lives on the * ramp; the HEIGHT/FONT/ICON control-band legs moved to explicit :root + per-[scale] literal tables (Kim's (scale x size) -> row lookup, no multiplier at all) -- ADR-0007's own frontmatter Superseded-by cell already names this ('Whole control-ramp leg superseded by ADR-0038'), but that supersession is recorded ONLY in the frontmatter table, never restated in the Decision/Consequences body prose sampled for this claim, so the body text read on its own is now materially inaccurate for 2 of its 3 named tokens. Dialect-2 (blockquote-table) ADR record -- carries no owner: frontmatter field; this is an unattended scheduled sweep firing, so owner is left unassigned per the no-fabricated-name rule.",
+      "kind": "falsified",
+      "owner": "unassigned",
+      "queued_at": "2026-08-21T11:20:00Z"
+    }
+  ]
+}
