@@ -19,6 +19,7 @@
 // mapping as every data point, so it always lands inside (or at the edge of) the plotted range.
 
 import type { PropConfig, PropType } from '../../dom/props.ts'
+import { niceScale, valueToPercent, thinnedIndices, type NiceScale } from '../_chart/axis-math.ts'
 
 /** The real chart-tile viewBox (cl.5) — wider than tall, unlike sparkline's decorative 100x100 square. */
 export const VIEWBOX_WIDTH = 300
@@ -125,5 +126,173 @@ const lineChartValuesType: PropType<number[]> = {
 
 export const lineChartValuesProp: PropConfig<number[]> = {
   type: lineChartValuesType,
+  default: [],
+}
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+// axes-state geometry (ADR-0229 cl.3) — the `axes` reflected boolean swaps the min/max label rows for
+// the shared ADR-0228 tick/gridline/category system. This is a SEPARATE geometry function in a SEPARATE
+// 0..100 PERCENT coordinate space (the `_chart/axis-math.ts` convention: percent-from-BOTTOM for the
+// value axis, physical left-to-right for the category axis) — the DEFAULT-state `lineChartGeometry`
+// above (fixed 300x150 viewBox) is byte-for-byte UNTOUCHED by everything below (ADR-0229 cl.3's own
+// byte-for-byte-untouched clause, scoped to cl.1's baseline + cl.3's always-shown min/max rows).
+//
+// Baseline semantics stay ADR-0205 cl.1's, inherited not re-derived (ADR-0228 cl.2's own citation): the
+// value-axis DOMAIN is pinned to the series' OWN [min, max] (via niceScale's pinMin/pinMax), never
+// forced to include zero the way a bar/column chart's zero-anchored stack domain is — an all-positive
+// series' axis floor is its own minimum, matching cl.1's "value floor" law exactly, just now with
+// nice-rounded gridlines around it instead of a bare min/max label pair.
+//
+// Category positions are POINT-based (edge-anchored: first point at x=0%, last at x=100%,
+// `x(i) = n===1 ? 50 : i/(n-1)*100` — the SAME formula as the default state's `x(i)` in VIEWBOX_WIDTH
+// units, just in percent), deliberately NOT `_chart/axis-math.ts`'s `categoryPercentCenters` (which
+// centers BAND-major categories like ui-column-chart's stack tracks) — a line/area series is POINT-major
+// (each rendered value sits at an exact x, connected by strokes), not band-major. The chip-collision
+// clamp law (thinnedIndices, the tick-label vertical shift, the category-label horizontal shift) is
+// shared verbatim from axis-math.ts / the column-chart.ts pattern — coordinate MAJOR-ity differs, the
+// collision-avoidance MATH does not.
+
+/** One resolved value-axis gridline: tick VALUE, printed text, percent-from-BOTTOM position (flipped to
+ *  SVG `y` at the render boundary, never here — the axis-math.ts convention). */
+export interface AxesGridTick {
+  value: number
+  text: string
+  pct: number
+}
+
+/** One rendered point's coordinates, both percent-from-bottom-left (0..100): `xPct` edge-anchored by
+ *  index, `yPct` the value mapped into the resolved scale. */
+export interface AxesPoint {
+  xPct: number
+  yPct: number
+}
+
+export interface LineChartAxesGeometry {
+  scale: NiceScale
+  gridTicks: readonly AxesGridTick[]
+  points: readonly AxesPoint[] // one per rendered value, index-aligned to the hardened `values`/`labels`
+  baselinePct: number // percent-from-bottom (ADR-0205 cl.1, inherited)
+  /** Index into `points` of the first PROJECTED point, or `null` when there is no projected span
+   *  (`projectedCount <= 0`) — the ADR-0228 cl.4 grammar, resolved here since axis-math's own
+   *  `nowMarkerPercent` is band-major and does not fit point-major coordinates (see the file banner). */
+  projectedFromIndex: number | null
+  /** The actual/projected boundary x-percent (the now-marker position), or `null` when no real boundary
+   *  exists (mirrors `axis-math.ts`'s `nowMarkerPercent` semantics, point-major). */
+  nowPct: number | null
+  /** Category-axis chip indices to actually render, AFTER chip-collision thinning (ADR-0228 cl.2) AND
+   *  filtering to indices with a real (non-empty) label — a subset of `[0, points.length)`. `[]` when
+   *  `labels` is empty (cl.3's "absent labels ⇒ value ticks only"). */
+  categoryChipIndices: readonly number[]
+  labels: readonly string[] // hardened, index-aligned to `points` (padded with '' — never re-indexed)
+  count: number
+  min: number
+  max: number
+  minText: string
+  maxText: string
+}
+
+/** Harden an arbitrary `labels` input (ADR-0229 cl.3's optional category-label array): a non-array is
+ *  `[]`; non-string entries become `''` (a POSITION-preserving hardening — labels are index-aligned to
+ *  `values`, so a bad entry must not shift every later label, unlike a dropped-row hardening class). */
+export function cleanLabels(input: unknown): string[] {
+  if (!Array.isArray(input)) return []
+  return input.map((v) => (typeof v === 'string' ? v : ''))
+}
+
+/** The `n` point x-percents, edge-anchored (0% = first point, 100% = last) — the SAME formula as the
+ *  default geometry's `x(i)`, generalized to percent (point-MAJOR, never band-major — see file banner). */
+function pointXPercents(n: number): number[] {
+  if (n <= 0) return []
+  if (n === 1) return [50]
+  return Array.from({ length: n }, (_, i) => round2((i / (n - 1)) * 100))
+}
+
+/** The actual/projected boundary x-percent for POINT-major coordinates: the midpoint between the last
+ *  actual point's x and the first projected point's x (mirrors `axis-math.ts`'s `nowMarkerPercent`
+ *  band-boundary semantics, adapted — a point series has no band edges to sit between, only points). */
+function pointNowPercent(xPercents: readonly number[], projectedFromIndex: number | null): number | null {
+  if (projectedFromIndex === null || projectedFromIndex <= 0) return null
+  const lastActualIdx = projectedFromIndex - 1
+  if (lastActualIdx < 0 || projectedFromIndex >= xPercents.length) return null
+  return round2((xPercents[lastActualIdx] + xPercents[projectedFromIndex]) / 2)
+}
+
+/** `null` when the clean series is empty (the `lineChartGeometry` empty-clears-host contract, mirrored).
+ *  `rawLabels`/`rawProjected` are the ALREADY-hardened `labels`/clamped `projected` count (the props
+ *  layer's own hardening boundary, the column-chart.ts precedent — this function trusts them). */
+export function lineChartAxesGeometry(
+  values: readonly number[],
+  rawLabels: readonly string[],
+  projectedCount: number,
+  maxTicks = 5,
+  maxCategoryChips = 8,
+): LineChartAxesGeometry | null {
+  const n = values.length
+  if (n === 0) return null
+
+  let min = values[0]
+  let max = values[0]
+  for (const v of values) {
+    if (v < min) min = v
+    if (v > max) max = v
+  }
+  // cl.1, inherited: the domain is the series' OWN [min, max] — nice-rounded outward, never forced to
+  // include zero the way a zero-anchored stack domain is (niceScale's pinMin/pinMax honor this exactly).
+  const scale = niceScale(min, max, { maxTicks, pinMin: min, pinMax: max })
+
+  const xPercents = pointXPercents(n)
+  const points: AxesPoint[] = values.map((v, i) => ({ xPct: xPercents[i], yPct: valueToPercent(v, scale.min, scale.max) }))
+
+  const baselineValue = min <= 0 && 0 <= max ? 0 : min // cl.1, inherited verbatim
+  const baselinePct = valueToPercent(baselineValue, scale.min, scale.max)
+
+  const clampedProjected = Math.min(Math.max(0, Math.trunc(projectedCount)), n)
+  const projectedFromIndex = clampedProjected > 0 ? n - clampedProjected : null
+  const nowPct = pointNowPercent(xPercents, projectedFromIndex)
+
+  const gridTicks: AxesGridTick[] = scale.ticks.map((value) => ({
+    value,
+    text: numberFormat.format(value),
+    pct: valueToPercent(value, scale.min, scale.max),
+  }))
+
+  const labels = Array.from({ length: n }, (_, i) => rawLabels[i] ?? '')
+  const categoryChipIndices = labels.some((l) => l !== '') ? thinnedIndices(n, maxCategoryChips).filter((i) => labels[i] !== '') : []
+
+  return {
+    scale,
+    gridTicks,
+    points,
+    baselinePct,
+    projectedFromIndex,
+    nowPct,
+    categoryChipIndices,
+    labels,
+    count: n,
+    min,
+    max,
+    minText: numberFormat.format(min),
+    maxText: numberFormat.format(max),
+  }
+}
+
+/** The safe `labels` codec (the `lineChartValuesType`/`seriesType` construction, LLD-C1's own
+ *  reasoning): `from(null) = []`, malformed JSON caught -> [], always run through `cleanLabels`. */
+const lineChartLabelsType: PropType<string[]> = {
+  from(attr) {
+    if (attr === null) return []
+    try {
+      return cleanLabels(JSON.parse(attr))
+    } catch {
+      return []
+    }
+  },
+  to(value) {
+    return JSON.stringify(value)
+  },
+}
+
+export const lineChartLabelsProp: PropConfig<string[]> = {
+  type: lineChartLabelsType,
   default: [],
 }

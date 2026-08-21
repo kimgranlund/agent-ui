@@ -1,6 +1,12 @@
 # SPEC — Chart Family (`ui-sparkline` + `ui-bar-chart` + catalog surface)
 
-> Status: proposed · v0.2 · 2026-07-08 (§§1-4 original) / 2026-08-21 (§§3.5-3.6 added) · Layer: SPEC (execution contract)
+> Status: proposed · v0.3 · 2026-07-08 (§§1-4 original) / 2026-08-21 (§§3.5-3.6 added) / 2026-08-21 (§3.7 added) · Layer: SPEC (execution contract)
+> **v0.3 (GH #1566, svg-charts wave 2):** §3.7 adds the R-clauses for `ui-line-chart`'s new `axes` state
+> (ADR-0229 cl.3, EXTENDING ADR-0205) — nice-number gridlines/tick-label chips over the series' own
+> `[min,max]` domain, optional category-label chips (`labels`), the gradient area fill (both states), the
+> provisional/now-marker system, and the default-state-scoped min/max-labels law. The booked repair for
+> `ui-pie-chart` (ADR-0219) — its own R-clauses never landing in this file — remains OUTSTANDING (found,
+> not fixed, the SAME adjacent gap wave 1 reported; still out of THIS wave's one-slice scope).
 > **v0.2 (GH #1565, svg-charts wave 1):** §3.5/§3.6 add the R-clauses [ADR-0228](../adr/0228-chart-axis-inset-series-vocabulary.md) (the shared `controls/_chart/` axis/inset/series vocabulary) and [ADR-0229](../adr/0229-svg-chart-family-extensions.md) cl.1/cl.2/cl.5/cl.6 (`ui-column-chart`) book as this wave's repair — the booked repairs for `ui-line-chart` (ADR-0205) and `ui-pie-chart` (ADR-0219) remain OUTSTANDING (a pre-existing gap this wave found but does not discharge — those two controls' own R-clauses never landed in this file; reported, not fixed here, per the one-slice-per-wave discipline).
 > Refines: [`../prd/chart-family.prd.md`](../prd/chart-family.prd.md) — **PRD-G1, PRD-G2, PRD-G3** — under the ratified scope + contract directions of [ADR-0107](../adr/0107-chart-family-v1-scope.md) (accepted; forks F1–F3 as recommended). Every clause of ADR-0107 is binding here; this SPEC adds the behavior contract, it re-litigates nothing.
 > Refined by: [`../lld/chart-family.lld.md`](../lld/chart-family.lld.md).
@@ -266,6 +272,67 @@ contract). *(→ PRD-G1; ADR-0229 cl.7)*
 - **AC1** *Given* the SPEC-N2 fleet-derived catalog-coverage gate, *then* `ColumnChart` is EITHER
   catalog-covered OR named in the allowlist with a real, cited follow-up issue — never silently missing.
 
+### 3.7 `ui-line-chart` — the `axes` state (ADR-0229 cl.3, EXTENDING ADR-0205)
+
+**SPEC-R27 — The `axes` opt-in state, default-state byte-for-byte untouched.** `ui-line-chart` MUST gain
+three new props: `axes` (`boolean`, default `false`, reflected), `labels` (`string[]`, default `[]`,
+index-aligned to `values`), and `projected` (`number`, default `0`, reflected — the ADR-0228 cl.4
+grammar). When `axes` is `false`, every existing ADR-0205 behavior (the baseline `<line>`, the
+always-shown min/max label rows, the `300x150` viewBox) MUST remain byte-for-byte unchanged. *(→ PRD-G2;
+ADR-0229 cl.3)*
+- **AC1** *Given* `axes` is absent/false, *then* the rendered DOM and every SPEC-R1–R... ADR-0205 acceptance
+  criterion (min/max rows, baseline position, viewBox) holds exactly as before this wave.
+- **AC2** *Given* `axes` is set true, *then* the min/max label rows (`label-max`/`label-min`) do NOT
+  render — the two systems never render together (ADR-0205 cl.3's law is now default-state-scoped).
+
+**SPEC-R28 — The axes-state rendering (the shared `_chart/` two-layer model).** When `axes` is true, the
+control MUST render the ADR-0228 two-layer model: a zero-inset `[data-part="plot"]` svg (nice-number
+gridlines + the baseline, over the series' OWN `[min, max]` domain — never zero-forced, ADR-0228 cl.2's
+"baseline semantics stay ADR-0205 cl.1's, inherited") plus a `[data-part="chrome"]` layer of real-DOM
+tick-label chips (the value scale) and, when `labels` is non-empty, category-label chips (index-aligned;
+absent `labels` ⇒ value ticks only). Category (point) positions are edge-anchored by index (`x(i) =
+n===1 ? 50 : i/(n-1)*100`), never band-centered. *(→ PRD-G1/G2; ADR-0229 cl.3; ADR-0228 cl.1-3)*
+- **AC1** *Given* `axes` with no `labels`, *then* tick-label chips render and zero category-label chips
+  render.
+- **AC2** *Given* `axes` with `labels` index-aligned to `values`, *then* one category-label chip renders
+  per THINNED index with a real (non-empty) label.
+- **AC3** *Given* the two-layer full-bleed model, *then* the plot spans the chart box edge-to-edge at zero
+  inset and every chrome chip clears `--ui-line-chart-chrome-inset` from every edge — the plot NEVER
+  shrinks to make room (browser-measured, both engines — the `ui-column-chart` SPEC-R16 precedent).
+
+**SPEC-R29 — The gradient area fill (both states).** `variant="area"` MUST paint its fill via an SVG
+`<linearGradient>` (two `<stop>`s reading `--ui-line-chart-area-fill-stop-{start,end}`), never a bare
+`fill="currentColor"` attribute — applying identically in the default AND `axes` states (this clause is
+NOT gated on `axes`; ADR-0229 cl.3's byte-untouched clause names only the baseline + min/max rows).
+`--ui-line-chart-area-opacity` still multiplies on top (unchanged default); setting the two new stop
+tokens equal reproduces the original flat low-alpha wash exactly (the ADR's own token fallback). *(→
+PRD-G2; ADR-0229 cl.3)*
+- **AC1** *Given* `variant="area"` in either state, *then* the area polygon's `fill` attribute is
+  `url(#<id>)` referencing a sibling `<defs><linearGradient>`, and the computed paint is non-transparent
+  (browser-measured).
+- **AC2** *Given* two chart instances on one page, *then* their gradient ids never collide (a real DOM
+  fact, not just a type fact).
+
+**SPEC-R30 — Provisional span + now-marker (`axes` + `projected`, ADR-0228 cl.4).** `projected` (a
+trailing point count) MUST split the polyline into a solid actual segment (`[data-part="line"]`) and a
+DASHED projected continuation (`[data-part="line-projected"]`, starting at the last actual point for
+stroke contiguity) — a line-style provisionality carrier, never a hue change. The area fill (when
+`variant="area"`) MUST be suppressed entirely over the projected span. The now-marker (baseline dot +
+a SHORT tick through the category-label band, never full-height) MUST render exactly when `projected`
+names a real actual/projected boundary (`0 < projected < values.length`) — the `ui-column-chart`
+mechanism reused verbatim for the time axis. Both are no-ops when `axes` is false or `projected` names no
+real boundary. *(→ PRD-G2; ADR-0228 cl.4)*
+- **AC1** *Given* `axes` + `0 < projected < values.length`, *then* exactly one now-marker renders at the
+  actual/projected boundary and the polyline splits solid/dashed at that same point.
+- **AC2** *Given* `projected <= 0` or `projected >= values.length`, *then* no now-marker renders (a typed
+  absence, REQ-F-016) and the polyline stays a single solid segment.
+
+**SPEC-R31 — A11y contract, unchanged by `axes`.** The generated accessible summary (label + min/max +
+point count, ADR-0205 cl.6) MUST be IDENTICAL regardless of `axes` — ADR-0229 cl.5's own citation of "the
+ADR-0205 cl.6 pattern" for the axes-state line chart, not a new summary shape. *(→ PRD-G2; ADR-0229 cl.5)*
+- **AC1** *Given* the SAME `values`/`label`, *then* `internals.ariaLabel` is byte-identical whether `axes`
+  is true or false.
+
 ## 4. Non-functional requirements
 
 | ID | Requirement | Target |
@@ -278,8 +345,12 @@ contract). *(→ PRD-G1; ADR-0229 cl.7)*
 
 ## 5. Open items (non-normative)
 
-- Foreseen extensions, deliberately out of v1 (each re-enters only by its own record): explicit `min`/`max` range overrides · bar `orientation` (vertical columns, fork F2) · a number-format prop · an author-supplied long-description/data-table a11y fallback · any axis-bearing type (a **new intake**, per the fence) — REALIZED for `ui-column-chart` only, §3.5/§3.6 above; `ui-gauge`, the `ui-line-chart` `axes` state, and the `ColumnChart`/`Gauge` catalog rows are LATER waves of the SAME ADR-0229, not yet this SPEC's normative reach.
-- **Known outstanding repair (found, not fixed, this wave):** `ui-line-chart` (ADR-0205) and `ui-pie-chart` (ADR-0219) both booked "`chart-family.spec.md` gains R-clauses for the new control" on ratification; neither landed before this wave. Flagged for a follow-up doc-repair pass — out of THIS wave's one-slice scope (GH #1565 is `_chart/` + `ui-column-chart` only).
+- Foreseen extensions, deliberately out of v1 (each re-enters only by its own record): explicit `min`/`max` range overrides · bar `orientation` (vertical columns, fork F2) · a number-format prop · an author-supplied long-description/data-table a11y fallback · any axis-bearing type (a **new intake**, per the fence) — REALIZED for `ui-column-chart` (§3.5/§3.6) AND `ui-line-chart`'s `axes` state (§3.7) this wave; `ui-gauge` and the `ColumnChart`/`Gauge`/`LineChart`-axes catalog rows are LATER waves of the SAME ADR-0229, not yet this SPEC's normative reach.
+- **Known outstanding repair (found, not fixed, wave 1; STILL outstanding this wave):** `ui-pie-chart`
+  (ADR-0219) booked "`chart-family.spec.md` gains R-clauses for the new control" on ratification; it never
+  landed. `ui-line-chart`'s OWN outstanding half of this same repair is now DISCHARGED by §3.7 above
+  (its `axes`-state R-clauses). `ui-pie-chart`'s remains flagged for a follow-up doc-repair pass — out of
+  THIS wave's one-slice scope (GH #1566 is `ui-line-chart` + the pie-ramp repoint verification only).
 
 ## 6. Traceability
 
@@ -291,4 +362,5 @@ contract). *(→ PRD-G1; ADR-0229 cl.7)*
 | SPEC-R14 | PRD-G3 (exemplar + guidance + corpus re-validation) |
 | SPEC-R15–R20 | PRD-G2 (the shared `_chart/` axis/inset/series vocabulary every axis-bearing chart consumes) |
 | SPEC-R21–R26 | PRD-G1 (`ui-column-chart` exists + behaves), PRD-G2 (a11y/geometry/token pillars), PRD-G1 (catalog follow-up named honestly) |
+| SPEC-R27–R31 | PRD-G1/G2 (`ui-line-chart`'s `axes` state exists + behaves, the gradient fill, the a11y pillar unchanged) |
 | SPEC-N1–N5 | PRD-G2 (zero-dep, cross-engine, gates, size, series cost) |
