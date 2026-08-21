@@ -1573,5 +1573,12 @@
     "description": "svg-chart family extensions: mint ui-column-chart (stacked/dense vertical series, projected + now-marker + highlight callout) and ui-gauge (multi-ring radial p…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0230",
+    "url": "./adr-index.html#adr-0230",
+    "description": "ui-column-chart goes all-HTML: axis-aligned plot furniture is CSS-drawn DOM (the SVG layer retires), a pure-CSS container-query chrome-degradation ladder rides…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
