@@ -1467,14 +1467,27 @@ gesture.
 ></ui-column-chart>
 ```
 
-## The two-layer model (ADR-0228 cl.1-3)
+## The two-layer model (ADR-0228 cl.1-3; ADR-0230 cl.1)
 
-The **plot layer** — gridlines + the CSS-drawn stacked column marks — spans the chart box edge-to-edge
-at zero inset. The **chrome layer** — every tick-label/category-label pill and the highlight callout, all
-real DOM text — floats **on top**, inset from all four edges by ONE knob
-(`--ui-column-chart-chrome-inset`). Labels never push the plot inward; they inset *within* it — dropping
-this chart into a padding-less `ui-card`-style container reproduces board geometry with zero consumer
-CSS.
+The **plot layer** — gridlines + the now-marker, rendered as positioned HTML divs (ADR-0230: the SVG
+substrate retired — every mark here is axis-aligned, the CSS side of ADR-0107 cl.3's rendering-follows-
+the-mark law) plus the CSS-drawn stacked column marks — spans the chart box edge-to-edge at zero inset.
+The **chrome layer** — every tick-label/category-label pill and the highlight callout, all real DOM
+text — floats **on top**, inset from all four edges by ONE knob (`--ui-column-chart-chrome-inset`).
+Labels never push the plot inward; they inset *within* it — dropping this chart into a padding-less
+`ui-card`-style container reproduces board geometry with zero consumer CSS.
+
+## The container-query chrome-degradation ladder (ADR-0230 cl.3/cl.4)
+
+The host establishes its own named `inline-size` query container (lawful under ADR-0100 — the chart's
+intrinsic inline size is already as-if-empty by construction; its real minimum is the specified floor
+token below, which containment never touches). Three rungs at two geometry-derived, LITERAL breakpoints
+(host-em units, riding `--md-sys-scale` for free): **wide** (≥28em) full chrome; **medium**
+(16em–28em) the category-label chip's math-stamped fine-density tier hides, endpoint-preserving (first
+and last category always survive, SPEC-R17 AC1); **narrow** (<16em, the ADR-0229 cl.6 whole-shape floor)
+all chrome AND plot furniture hide, leaving the columns mark alone — reachable only via a deliberate
+`min-inline-size` override. Zero resize-JS at every rung: the rendered DOM is identical at every width,
+only CSS is width-aware.
 
 ## The data schema (ADR-0229 cl.2)
 
