@@ -117,6 +117,14 @@
  * column mark. Display-class, non-interactive, non-form-associated. */
 @import './controls/column-chart/column-chart.css';
 
+/* Chart family — ADR-0229 cl.4 (svg-charts wave 3): ui-gauge, the fleet's SIXTH chart control — a
+ * multi-ring radial gauge (concentric, independent 0-100 progress rings + a real-DOM legend column).
+ * Display-class, non-interactive, non-form-associated. Its six series-ink defaults ALIAS the shared
+ * _chart/chart-axis.css ramp above (the ADR-0228 cl.6 family-tunnel pattern, generalized to a radial
+ * mark), and its chrome-inset knob aliases the SAME shared `--ui-chart-chrome-inset` every axis-bearing
+ * chart consumes. */
+@import './controls/gauge/gauge.css';
+
 /* Report family — Wave M1 (ADR-0111, report-family.lld.md LLD-C10): the native table, the metric tile,
  * and the compact-realm intent badge. All Display-class, non-interactive, non-form-associated leaves. */
 @import './controls/table/table.css';

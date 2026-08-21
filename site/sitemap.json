@@ -217,6 +217,14 @@
       "section": "Components"
     },
     {
+      "name": "Gauge",
+      "tag": "ui-gauge",
+      "url": "./gauge-doc.html",
+      "description": "A multi-ring radial gauge — concentric, independent 0-100 progress rings (never part-of-whole) with a real-DOM label/value legend column.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Grid",
       "tag": "ui-grid",
       "url": "./grid-doc.html",

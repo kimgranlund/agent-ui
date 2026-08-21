@@ -224,12 +224,22 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'domain object with no teaching context. Widening to the default catalog is a separate, later ' +
     'intake (the mint-vs-compose TYPE arm), never a drive-by row.'],
   ['ColumnChart',
-    'ADR-0229 cl.7 — TEMPORARY exclusion, drained by GH #1569 (the svg-charts catalog follow-up wave): ' +
-    'the control ships this wave (`ui-column-chart`, GH #1565); its A2UI catalog row is a named, ' +
+    'ADR-0229 cl.7 — TEMPORARY exclusion, drained by GH #1568 (svg-charts wave 4 — the tracker that ' +
+    'superseded the originally-named #1569, closed as a duplicate 2026-08-21): the control ships this ' +
+    'wave (`ui-column-chart`, GH #1565); its A2UI catalog row is a named, ' +
     'separate later intake per GH #1561\'s own scope + the SPEC-N2 gate\'s own "catalog-or-allowlist at ' +
     'ship time" bookkeeping posture (the shipped chart-family M1-b `LineChart`-class precedent — an ' +
     'allowlist entry with a named drain is bookkeeping, not a design decision). The clause-2 schema ' +
-    '(`data: {label, values[]}[]` + `series[]`, bindable) is the wire contract GH #1569 implements — no ' +
+    '(`data: {label, values[]}[]` + `series[]`, bindable) is the wire contract GH #1568 implements — no ' +
+    'schema decision is deferred to it.'],
+  ['Gauge',
+    'ADR-0229 cl.7 — TEMPORARY exclusion, drained by GH #1568 (svg-charts wave 4 — the tracker that ' +
+    'superseded the originally-named #1569, closed as a duplicate 2026-08-21): the control ships this ' +
+    'wave (`ui-gauge`, GH #1567); its A2UI catalog row is a named, separate later intake per GH #1561\'s ' +
+    'own scope + the SPEC-N2 gate\'s own "catalog-or-allowlist at ship time" bookkeeping posture (the ' +
+    'shipped `ColumnChart`/`LineChart`-class precedent — an allowlist entry with a named drain is ' +
+    'bookkeeping, not a design decision). The clause-4 schema (`data: {label, value}[]`, bindable, ' +
+    'value independent-percent, never part-of-whole) is the wire contract GH #1568 implements — no ' +
     'schema decision is deferred to it.'],
 ])
 

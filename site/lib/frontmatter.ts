@@ -86,6 +86,9 @@ import pieChartMd from '../../packages/agent-ui/components/src/controls/pie-char
 // svg-charts wave 1 (ADR-0228/ADR-0229, GH #1565): ui-column-chart, the fleet's fifth chart control —
 // the first to consume the shared `_chart/` axis/inset/series vocabulary.
 import columnChartMd from '../../packages/agent-ui/components/src/controls/column-chart/column-chart.md?raw'
+// svg-charts wave 3 (ADR-0229 cl.4, GH #1567): ui-gauge, the fleet's sixth chart control — a multi-ring
+// radial gauge (concentric, independent 0-100 progress rings + a real-DOM legend column).
+import gaugeMd from '../../packages/agent-ui/components/src/controls/gauge/gauge.md?raw'
 // The Wave M1 report family (ADR-0111, report-family.lld.md): table/stat/badge — all tier=display. `ui-table`
 // widened in place by ADR-0163 (selection/sort/filter/pagination, all default off).
 import tableMd from '../../packages/agent-ui/components/src/controls/table/table.md?raw'
@@ -241,6 +244,9 @@ export const loadPieChartDoc = (): ComponentDoc => parseDoc(pieChartMd)
 // ADR-0228/ADR-0229, GH #1565 — ui-column-chart, the stacked/dense-single-series axis-bearing mark
 // (tier=display ⇒ {doc} only).
 export const loadColumnChartDoc = (): ComponentDoc => parseDoc(columnChartMd)
+// ADR-0229 cl.4, GH #1567 (svg-charts wave 3) — ui-gauge, the multi-ring radial gauge (tier=display ⇒
+// {doc} only).
+export const loadGaugeDoc = (): ComponentDoc => parseDoc(gaugeMd)
 // The Wave M1 report family (ADR-0111 — all three tier=display ⇒ {doc} only).
 export const loadTableDoc = (): ComponentDoc => parseDoc(tableMd)
 export const loadStatDoc  = (): ComponentDoc => parseDoc(statMd)

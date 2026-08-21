@@ -320,7 +320,10 @@ genuinely ambiguous. "Slice" = migration wave slice (— = no change).
 | ui-stat | `inline-grid` `C/stat/stat.css:63` | 8em floor `:47,65` → role (d) on flip (`report-family.spec.md` SPEC-R10 `:249` — its own whole-shape AC) | V-P | 3 |
 | ui-attachment | `inline-grid` `C/attachment/attachment.css:48` | 12em floor `:32,57` → role (d) (`feed-family.spec.md` SPEC-R18 `:153`); `max-inline-size:100%` `:58` drops on flip | V-P | 3 |
 
-### §C — CONTESTED whole-shape floors → ratified role (d) under amendment A1 (11)
+### §C — CONTESTED whole-shape floors → ratified role (d) under amendment A1 (13 — the count reflects
+`ui-column-chart`'s wave-1 row and this wave's `ui-gauge` row, both realizing ADR-0229 cl.6's own two
+named additions to the closed list; the header's own row-count arithmetic, kept honest at each row's
+landing)
 
 SPEC anchors verified against the owning file (the corpus holds ≥4 distinct SPEC-R9s — every
 anchor below is file-qualified; "no per-row AC" rows carry the measured defect class only):
@@ -339,6 +342,7 @@ anchor below is file-qualified; "no per-row AC" rows carry the measured defect c
 | ui-timeline | `flex` `C/timeline/timeline.css:27` | 12rem `:20,31` | `timeline-family.spec.md` SPEC-R14 AC1/AC2 (`:282-289`) |
 | ui-status-stream | `flex` `C/status-stream/status-stream.css:147` | 16rem `:18,149` | `timeline-family.spec.md` SPEC-R14 (per-host family law — status-stream is a named family host, `:1`; the ACs exemplify timeline/item only) |
 | ui-column-chart | `grid` `C/column-chart/column-chart.css:77` | 16em (both axes) `:43-44,78-79` | [ADR-0229](./0229-svg-chart-family-extensions.md) cl.6 — one of the closed table's two ratified NEW rows (the sibling `ui-gauge` row lands with that control's own wave) |
+| ui-gauge | `grid` `C/gauge/gauge.css:75` | 16em (both axes) `:41-42,77-78` | [ADR-0229](./0229-svg-chart-family-extensions.md) cl.6 — the closed table's SECOND ratified NEW row, realized (svg-charts wave 3, GH #1567) |
 
 ### §D — R4 EXEMPT (14)
 

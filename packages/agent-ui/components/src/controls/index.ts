@@ -138,6 +138,14 @@ export * from './pie-chart/pie-chart.ts' // part-of-whole ring/pie mark (ADR-021
 // (per-datum totals do not read cleanly as a flat list).
 export * from './column-chart/column-chart.ts' // axis-bearing stacked column mark (ADR-0228/ADR-0229)
 
+// Chart family — ADR-0229 cl.4 (svg-charts wave 3): the fleet's SIXTH chart, a multi-ring RADIAL
+// gauge — concentric, INDEPENDENT 0-100 progress rings (never part-of-whole, never a ui-pie-chart
+// extension) plus a real-DOM label/value legend column. Same shape as the five above — Display-class,
+// extends UIElement directly, no [size]/[scale] geometry row — role=list + a real listitem per ring
+// (the ui-pie-chart pattern, not role=img/a generated summary); the axis/today-marker/projected-span
+// chrome is N/A for a radial mark (ADR-0228's own per-mark N/A grammar).
+export * from './gauge/gauge.ts' // multi-ring radial gauge (ADR-0229 cl.4)
+
 // Report family — Wave M1 (ADR-0111, report-family.lld.md): the real native <table>, the metric tile, and
 // the compact-realm intent badge. All Display-class, non-interactive, non-form-associated leaves.
 export * from './table/table.ts'   // scroll-preserving re-render + ADR-0163 interactive widening (selection/sort/filter/page)

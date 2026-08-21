@@ -1,0 +1,166 @@
+/* gauge.css — ui-gauge, the Display-class multi-ring RADIAL gauge (ADR-0229 cl.4, consuming ADR-0228's
+ * shared `_chart/chart-axis.css` vocabulary). Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-gauge)` (specificity 0,0,0) declares the `--ui-gauge-*` chain: the
+ *       whole-shape floor (ADR-0229 cl.6's role-(d) row — a bare, unstyled gauge in a flex row must
+ *       still paint a visible, non-collapsed box), density-INVARIANT ring geometry (stroke width, mark
+ *       geometry never rides `[scale]`, SPEC-R12), the KICKER-typescale legend-label treatment
+ *       (ADR-0078 cl.2b), and every `--ui-chart-*` alias this control consumes from the shared `_chart/`
+ *       chain (the chrome-inset knob + the six-step series ramp) — the family-tunnel pattern: THIS file
+ *       aliases, `@scope` below reads ONLY `--ui-gauge-*`.
+ *   [2] STYLES BLOCK — `@scope (ui-gauge)` consumes ONLY `--ui-gauge-*` (∪ the shared
+ *       `--md-sys-color-*`/`--md-sys-typescale-*` namespaces the token block itself reads to build that
+ *       chain) ∪ the ring-scoped `--_ring-*` hooks (out of the governed namespace entirely — the
+ *       bar-chart `--_bar-start`/`--_bar-length` precedent, set imperatively by gauge.ts, never declared
+ *       here).
+ *
+ * The two-layer full-bleed model (ADR-0228 cl.1-3), generalized to a RADIAL mark (ADR-0229 cl.4/cl.5's
+ * own citation of the shared vocabulary — the axis/tick/now-marker/projected chrome itself is N/A for a
+ * radial type, but the INSET MECHANISM is not): TWO children full-overlay one CSS grid cell
+ * (`grid-area: 1/1`, the `ui-column-chart` stacking technique) — `[data-part='rings']` (the aria-hidden
+ * SVG concentric rings) spans the box edge-to-edge at ZERO inset (its own element box, `inline-size:
+ * 100%; block-size: 100%`, never shrunk to reserve legend room — the ADR-0228 "residual-gutter model"
+ * rejected alternative, applied here); `[data-part='legend']` (the real-DOM `role=listitem` rows) is
+ * ALSO a full-box layer, but padded by `--ui-gauge-chrome-inset` from all four edges and right-aligned
+ * within that padded box (`justify-content: flex-end`) — Kim's zero-padding-container contract
+ * (ADR-0228 cl.3), realized as a mechanism, never a host padding opinion. `preserveAspectRatio="xMinYMid
+ * meet"` (gauge.ts) pins the ring drawing itself to the box's START edge, so a wide host's extra width
+ * letterboxes into genuinely empty room at the END edge for the legend column to occupy without visually
+ * colliding with the rings — no shrinking, no overlap, by construction.
+ *
+ * Identity (cl.4): each `[data-part='progress']`/`[data-part='key-swatch']` reads its OWN `--_ring-ink`
+ * hook (imperatively set per-node by gauge.ts to one of the six ramp tokens, OUTER ring first) — never
+ * an nth-child/hue rule baked into this sheet, so the SAME six-token chain lights both a ring and its
+ * matching legend row. `forced-colors`: every progress ring flattens to `CanvasText`, the track to
+ * `Canvas` — identity survives via the legend's real text, untouched under WHCM (ADR-0057).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-gauge) declares --ui-gauge-* ════════════════ */
+
+:where(ui-gauge) {
+  --ui-gauge-min-inline-size: 16em; /* the whole-shape floor (ADR-0229 cl.6 role-(d) row) */
+  --ui-gauge-min-block-size: 16em; /* a real ring box, not a sliver — the SAME cl.6 floor on the block axis */
+  --ui-gauge-ring-stroke-width: 8px; /* density-invariant mark geometry (SPEC-R12) — non-scaling-stroke keeps it crisp at any box size */
+  --ui-gauge-track-ink: var(--md-sys-color-neutral-container); /* the unfilled ring track (mirrors --ui-pie-chart-track-ink) */
+  --ui-gauge-text-ink: var(--md-sys-color-neutral-on-surface); /* legend text — the ONE role reference */
+  --ui-gauge-row-gap: var(--md-sys-space-sm); /* legend-row rhythm — rides [density] for free (ADR-0103) */
+  --ui-gauge-key-gap: var(--md-sys-space-xs); /* swatch/label/percent rhythm within one legend row */
+  --ui-gauge-swatch-size: 0.75em; /* the legend row's fill-carrying swatch (cl.4 — fill is a shared carrier, never the only one) */
+
+  /* The legend LABEL reads the KICKER typescale row (ADR-0078 cl.2b, ADR-0229 cl.4's own "uppercase
+     metric labels read the KICKER typescale row" — the card.css structured-header precedent: size +
+     weight + line-height + tracking from the SAME row `ui-text[variant='kicker']` reads, plus the
+     text-transform: uppercase leg declared in the styles block below, never baked into the token itself). */
+  --ui-gauge-label-font-size: var(--md-sys-typescale-kicker-small-size);
+  --ui-gauge-label-font-weight: var(--md-sys-typescale-kicker-small-weight);
+  --ui-gauge-label-line-height: var(--md-sys-typescale-kicker-small-line-height);
+  --ui-gauge-label-tracking: var(--md-sys-typescale-kicker-small-tracking);
+  --ui-gauge-percent-font-size: var(--md-sys-typescale-label-medium-size); /* the printed value — the accuracy carrier */
+
+  /* Aliases into the shared `_chart/chart-axis.css` chain (the family-tunnel pattern) — this control's
+     OWN chain is what `@scope` below may read; the shared names never leak into a `@scope` body. */
+  --ui-gauge-chrome-inset: var(--ui-chart-chrome-inset);
+  --ui-gauge-series-1-ink: var(--ui-chart-series-1-ink);
+  --ui-gauge-series-2-ink: var(--ui-chart-series-2-ink);
+  --ui-gauge-series-3-ink: var(--ui-chart-series-3-ink);
+  --ui-gauge-series-4-ink: var(--ui-chart-series-4-ink);
+  --ui-gauge-series-5-ink: var(--ui-chart-series-5-ink);
+  --ui-gauge-series-6-ink: var(--ui-chart-series-6-ink);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-gauge) consumes ONLY --ui-gauge-* ════════════════ */
+
+@scope (ui-gauge) {
+  :scope {
+    display: grid;
+    grid-template: 1fr / 1fr; /* one cell — the rings layer and the legend layer both full-overlay it */
+    min-inline-size: var(--ui-gauge-min-inline-size);
+    min-block-size: var(--ui-gauge-min-block-size);
+    box-sizing: border-box;
+    color: var(--ui-gauge-text-ink);
+    /* text-bearing Display (the ui-pie-chart/ui-column-chart SPEC-R12 precedent) — the type matrix is
+       the lever, not a [size]/[scale] attribute; a chart takes neither. */
+    font-size: var(--md-sys-typescale-body-medium-size);
+    line-height: var(--md-sys-typescale-body-medium-line-height);
+  }
+
+  :scope > * {
+    grid-area: 1 / 1; /* the full-overlay stacking technique — rings / legend share one box */
+  }
+
+  :scope svg[data-part='rings'] {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  :scope [data-part='track'] {
+    fill: none;
+    stroke: var(--ui-gauge-track-ink);
+    stroke-width: var(--ui-gauge-ring-stroke-width);
+    vector-effect: non-scaling-stroke;
+  }
+
+  :scope [data-part='progress'] {
+    fill: none;
+    stroke: var(--_ring-ink, var(--ui-gauge-series-1-ink));
+    stroke-width: var(--ui-gauge-ring-stroke-width);
+    stroke-linecap: round; /* the boards' rounded caps */
+    stroke-dasharray: var(--_ring-circumference, 0);
+    stroke-dashoffset: var(--_ring-dashoffset, 0);
+    vector-effect: non-scaling-stroke;
+  }
+
+  :scope [data-part='legend'] {
+    box-sizing: border-box;
+    inline-size: 100%;
+    block-size: 100%;
+    padding: var(--ui-gauge-chrome-inset); /* the ONE inset knob — floats INSIDE the box, never shrinking the rings layer */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end; /* the boards' side legend — hugs the box's END edge, inside the ring's own letterboxed room */
+    gap: var(--ui-gauge-row-gap);
+  }
+
+  :scope [role='listitem'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-gauge-key-gap);
+  }
+
+  :scope [data-part='key-swatch'] {
+    display: inline-block;
+    inline-size: var(--ui-gauge-swatch-size);
+    block-size: var(--ui-gauge-swatch-size);
+    border-radius: 50%;
+    background: var(--_ring-ink, var(--ui-gauge-series-1-ink)); /* row-scoped, imperatively set (gauge.ts) — matches its ring's ink */
+    flex-shrink: 0;
+  }
+
+  :scope [data-part='key-label'] {
+    font-size: var(--ui-gauge-label-font-size);
+    font-weight: var(--ui-gauge-label-font-weight);
+    line-height: var(--ui-gauge-label-line-height);
+    letter-spacing: var(--ui-gauge-label-tracking);
+    text-transform: uppercase; /* the KICKER treatment's uppercase leg (ADR-0229 cl.4) */
+  }
+
+  :scope [data-part='key-percent'] {
+    font-size: var(--ui-gauge-percent-font-size);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (forced-colors: active) {
+    :scope [data-part='track'] {
+      stroke: Canvas;
+    }
+    :scope [data-part='progress'] {
+      stroke: CanvasText; /* identity rides the legend's real text under WHCM (ADR-0057) */
+    }
+    :scope [data-part='key-swatch'] {
+      background: CanvasText;
+      border: 1px solid Canvas;
+    }
+  }
+}
