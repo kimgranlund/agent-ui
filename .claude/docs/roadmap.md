@@ -317,6 +317,11 @@ decision (dated line in §4).
 - **ui-menu selected-option scroll-centering + default focus on open (GH #1100, size:small).** An
   overflowing menu panel opens at scroll offset 0 today; the selected option should open centered
   in the viewport and focused (ARIA listbox pattern). `ui-select`/`ui-multi-select` share the panel.
+- **svg-chart system (GH #1561, size:big).** Axis/inset chart family per the Claude-Code-Gateway
+  Figma boards: stacked columns (+ projected ghost column, now-marker), gradient area, dense
+  highlighted bars with tooltip callout, multi-ring radial gauge — built around a zero-padding-
+  container inset contract (charts carry their own insets). Triggers the chart-axis-vocabulary ADR
+  the #1207 close deferred; new-tag-vs-extend and series-ramp-token forks named on the issue.
 - **GenUI B3 — the judged pack-idiom eval.** Out of the GenUI SPEC's contract by its own §6 cut:
   PRD §8 m3 (judge-scored pack-idiom use) realized as a judged corpus-rubric shard plus its docs
   page (PRD-G6) — a named manual live-model run, never part of the deterministic gates (SPEC-N3).
