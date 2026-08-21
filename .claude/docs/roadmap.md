@@ -171,6 +171,13 @@ decision (dated line in §4).
   cl.5 amendment, the #808 S1 precedent; new heading rows honor ADR-0142's compact scale) and add
   per-register when-to-use guidance to the producer prompt path. Exact enum membership is Kim's
   ruling at the amendment.
+- **ui-column-chart all-HTML plot layer + container-query chrome-degradation ladder (GH #1578,
+  `size:big`, filed 2026-08-21).** Drop the `[data-part=plot]` SVG (gridlines/now-marker become
+  positioned divs — all its marks are axis-aligned), add a pure-CSS container-query ladder
+  (full chrome → thinned pills → bare marks) per ADR-0223's fill axis, and put the self-sensing
+  data-granularity rung to Kim at design intake as an explicit law-exception fork (ResizeObserver
+  vs ADR-0229-precedent producer mode). Touches ADR-0228 cl.2's "SVG for strokes" wording —
+  amendment or new ADR.
 - **M-D — "Personas with their own catalogs" (first of the 2026-08-05 arc). 🟡 IN FLIGHT** — built
   from the RATIFIED [ADR-0172](adr/0172-persona-catalog-composition-intake.md) (GH #421's reopened
   intake, frozen 2026-08-05): each persona composes `shared primitives + the shared system-patterns
