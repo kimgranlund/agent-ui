@@ -3,11 +3,14 @@ import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
 // column-chart-css.test.ts — column-chart.css static structural + token-hygiene probe (ADR-0228/
-// ADR-0229). Mirrors the pie-chart-css.test.ts precedent: pin the STRUCTURE (the two sectioned blocks,
-// `:where()` declares `--ui-column-chart-*` (aliasing the shared `_chart/chart-axis.css` chain), `@scope`
-// consumes ONLY its own chain ∪ the shared `--md-sys-*` namespaces ∪ the row/segment-scoped `--_seg-*`/
-// `--_tick-pct`/`--_cat-pct` hooks, no `[size]`/`[scale]` selector, a forced-colors block exists). The
-// rendered-px PROOF (whole-shape/percent math) is column-chart.browser.test.ts.
+// ADR-0229/ADR-0230). Mirrors the pie-chart-css.test.ts precedent: pin the STRUCTURE (the two sectioned
+// blocks, `:where()` declares `--ui-column-chart-*` (aliasing the shared `_chart/chart-axis.css` chain),
+// `@scope` consumes ONLY its own chain ∪ the shared `--md-sys-*` namespaces ∪ the row/segment-scoped
+// `--_seg-*`/`--_tick-pct`/`--_cat-pct`/`--_grid-pct`/`--_now-pct`/`--_now-tick-depth` hooks, no
+// `[size]`/`[scale]` selector, a forced-colors block exists). The rendered-px PROOF (whole-shape/percent
+// math, the container-query ladder rungs, RTL) is column-chart.browser.test.ts — element-TYPE assertions
+// (`svg[data-part='plot']`, `stroke`/`fill`) retired with the SVG plot layer (ADR-0230 cl.1/cl.2);
+// geometry facts re-key element-agnostic.
 
 const css = readFileSync(`${process.cwd()}/packages/agent-ui/components/src/controls/column-chart/column-chart.css`, 'utf8') as string
 const tokenBlock = css.slice(css.indexOf(':where(ui-column-chart) {'), css.indexOf('@scope (ui-column-chart) {'))
@@ -61,7 +64,10 @@ describe('column-chart.css — structure + token hygiene', () => {
   it('the @scope styles block consumes ONLY --ui-column-chart-* ∪ the shared --md-sys-* namespaces ∪ the row/segment-scoped hooks — no cross-control reach', () => {
     const refs = [...stylesBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1])
     expect(refs.length).toBeGreaterThan(0) // anti-vacuous
-    const localHooks = new Set(['--_seg-start', '--_seg-length', '--_seg-ink', '--_tick-pct', '--_cat-pct', '--_tick-shift', '--_cat-shift'])
+    const localHooks = new Set([
+      '--_seg-start', '--_seg-length', '--_seg-ink', '--_tick-pct', '--_cat-pct', '--_tick-shift', '--_cat-shift',
+      '--_grid-pct', '--_now-pct', '--_now-tick-depth', // ADR-0230 cl.1 — the HTML plot layer's own render-set hooks
+    ])
     for (const v of refs) {
       const allowed = v.startsWith('--ui-column-chart-') || v.startsWith('--md-sys-') || localHooks.has(v)
       expect(allowed, `@scope consumed an out-of-family token: ${v}`).toBe(true)
@@ -69,7 +75,10 @@ describe('column-chart.css — structure + token hygiene', () => {
   })
 
   it('the row/segment-scoped hooks are consumed but NEVER declared in :where() (imperatively set by column-chart.ts)', () => {
-    for (const hook of ['--_seg-start', '--_seg-length', '--_seg-ink', '--_tick-pct', '--_cat-pct', '--_tick-shift', '--_cat-shift']) {
+    for (const hook of [
+      '--_seg-start', '--_seg-length', '--_seg-ink', '--_tick-pct', '--_cat-pct', '--_tick-shift', '--_cat-shift',
+      '--_grid-pct', '--_now-pct', '--_now-tick-depth',
+    ]) {
       expect(stylesBlock).toMatch(new RegExp(`var\\(${hook}`))
       expect(tokenBlock).not.toMatch(new RegExp(`${hook}\\s*:`))
     }
@@ -104,7 +113,28 @@ describe('column-chart.css — structure + token hygiene', () => {
     expect(stylesBlock).toMatch(/@media \(forced-colors: active\)/)
     const whcm = stylesBlock.slice(stylesBlock.indexOf('@media (forced-colors: active)'))
     expect(whcm).toMatch(/\[data-part='segment'\][^}]*background:\s*CanvasText/)
-    expect(whcm).toMatch(/\[data-part='grid-line'\][^,]*,[^{]*\{[^}]*stroke:\s*CanvasText/)
+    // ADR-0230 cl.1 — gridline/now-tick are BORDER-drawn HTML divs now (never SVG stroke); a
+    // background-drawn line would vanish to `Canvas` under forced-colors (the SPEC-R10 lesson), so the
+    // fence keeps its ink on `border-color`.
+    expect(whcm).toMatch(/\[data-part='grid-line'\][^,]*,[^{]*\{[^}]*border-color:\s*CanvasText/)
+  })
+
+  it('the container-query ladder hides the fine density tier at medium, and all chrome + plot at narrow (ADR-0230 cl.4)', () => {
+    expect(stylesBlock).toMatch(/@container ui-column-chart \(width < 28em\)/)
+    expect(stylesBlock).toMatch(/@container ui-column-chart \(width < 16em\)/)
+    const medium = stylesBlock.slice(
+      stylesBlock.indexOf('@container ui-column-chart (width < 28em)'),
+      stylesBlock.indexOf('@container ui-column-chart (width < 16em)'),
+    )
+    expect(medium).toMatch(/\[data-density='fine'\][^{]*\{[^}]*display:\s*none/)
+    const narrow = stylesBlock.slice(stylesBlock.indexOf('@container ui-column-chart (width < 16em)'))
+    expect(narrow).toMatch(/\[data-part='plot'\][^,]*,[^{]*\[data-part='chrome'\][^{]*\{[^}]*display:\s*none/)
+  })
+
+  it('the host establishes its own named inline-size query container (ADR-0230 cl.3)', () => {
+    const baseRule = (stylesBlock.match(/:scope \{[^}]*\}/) ?? [''])[0]
+    expect(baseRule).toMatch(/container-type:\s*inline-size/)
+    expect(baseRule).toMatch(/container-name:\s*ui-column-chart/)
   })
 
   it('no control-frame law (padding-block on the host) — this is Display, not Control', () => {
