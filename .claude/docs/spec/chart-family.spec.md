@@ -1,6 +1,7 @@
 # SPEC — Chart Family (`ui-sparkline` + `ui-bar-chart` + catalog surface)
 
-> Status: proposed · v0.5 · 2026-07-08 (§§1-4 original) / 2026-08-21 (§§3.5-3.6 added) / 2026-08-21 (§3.7 added) / 2026-08-21 (§3.8 added) / 2026-08-21 (§3.9 added, GH #1575) · Layer: SPEC (execution contract)
+> Status: proposed · v0.6 · 2026-07-08 (§§1-4 original) / 2026-08-21 (§§3.5-3.6 added) / 2026-08-21 (§3.7 added) / 2026-08-21 (§3.8 added) / 2026-08-21 (§3.9 added, GH #1575) / 2026-08-21 (§3.6 gains SPEC-R48/R49, GH #1578) · Layer: SPEC (execution contract)
+> **v0.6 (GH #1578, ADR-0230 booked repair):** §3.6 gains **SPEC-R48** (the HTML plot layer — `ui-column-chart`'s `[data-part='plot']` retires its SVG substrate for positioned HTML divs; SPEC-R16's full-bleed model now reads element-agnostic, this control's own realization named explicitly) and **SPEC-R49** (the container-query chrome-degradation ladder — the host self-establishes its own named inline-size query container; three rungs at two geometry-derived breakpoints, 28em/16em host-em; the medium rung's math-stamped density-tier mechanism; the narrow rung's bare-marks floor). Booked by ADR-0230's own Repairs cell (the ADR-0219/0228 precedent), applied by that record's build wave. No existing R-clause's NORMATIVE text changes — SPEC-R16/R17/R23 all still hold verbatim, realized over the new substrate; this is an ADDITIVE delta, never a narrowing.
 > **v0.5 (GH #1575, doc-repair pass):** §3.9 adds the R-clauses for `ui-pie-chart` (ADR-0219) — the
 > part-of-whole ring/disc mark, its own booked repair ("`chart-family.spec.md` gains R-clauses for the
 > new control") never having landed across svg-chart waves 1-4 (each wave found the gap adjacent to its
@@ -285,6 +286,48 @@ its drain (bookkeeping, not a design decision; the schema SPEC-R21/R22 already f
 contract). *(→ PRD-G1; ADR-0229 cl.7)*
 - **AC1** *Given* the SPEC-N2 fleet-derived catalog-coverage gate, *then* `ColumnChart` is EITHER
   catalog-covered OR named in the allowlist with a real, cited follow-up issue — never silently missing.
+
+**SPEC-R48 — The HTML plot layer (ADR-0230 cl.1/cl.2).** `ui-column-chart`'s `[data-part='plot']` MUST
+be a positioned HTML `<div>` layer — zero `<svg>` in the rendered component — never SVG: every mark in
+this control's plot layer (gridlines, the now-marker) is axis-aligned, squarely the CSS side of
+ADR-0107 cl.3's rendering-follows-the-mark law. Furniture strokes render as BORDERS, never backgrounds (a
+background-drawn line vanishes to `Canvas` under forced-colors), at device-pixel-constant CSS px
+regardless of the box's aspect ratio (the `non-scaling-stroke` guarantee, re-proven in CSS). `data-part`
+names (`plot`/`grid-line`/`now-dot`/`now-tick`) carry over UNCHANGED — parts name anatomy, never
+rendering substrate. This REALIZES SPEC-R16's full-bleed model over the new substrate (SPEC-R16's own
+normative text is unchanged, element-agnostic already); it does not narrow or amend R16. *(→ PRD-G2;
+ADR-0230 cl.1/cl.2)*
+- **AC1** *Given* a rendered chart, *then* zero `<svg>` element exists in its DOM, and the plot layer
+  still spans the SAME box as the columns layer, edge-to-edge, at zero inset (SPEC-R16 AC1, proven over
+  the HTML substrate — browser-measured).
+- **AC2** *Given* `dir="rtl"`, *then* the now-marker's rendered inline position agrees with the CSS
+  columns track's own `flex` mirroring (both use logical inline positioning) — the SVG-era physical-LTR
+  plot space's disagreement with the mirrored columns track cannot recur (browser-measured, both
+  engines).
+- **AC3** *Given* any container box (including a non-square aspect ratio), *then* the now-dot renders as
+  a true circle, never an ellipse (the SVG era's `preserveAspectRatio:none` distortion retires — a
+  fixed-em box is round at every aspect ratio).
+
+**SPEC-R49 — The container-query chrome-degradation ladder (ADR-0230 cl.3/cl.4).** The host MUST
+self-establish a named `container-type: inline-size` query container (lawful under ADR-0100: the
+chart's intrinsic inline size is already as-if-empty by construction, and its real minimum is the
+SPECIFIED `min-inline-size` floor token, which containment never touches). Three rungs at two
+LITERAL, geometry-derived breakpoints (`var()` is illegal in a container size query) in host-em units
+(riding `--md-sys-scale` for free): **wide** (`≥ 28em`) full chrome; **medium** (`16em`–`28em`) the
+category-label chip's math-stamped density-FINE tier hides, endpoint-preserving (`thinnedIndices`
+re-applied over the rendered chip list at a cap of 4 — never a parity/`:nth-child` selection, which
+would drop an endpoint on an even count); **narrow** (`< 16em`, the ADR-0229 cl.6 whole-shape floor) all
+chrome AND plot furniture hide, leaving the columns mark alone. Zero resize-JS at every rung — the
+rendered DOM is identical at every width; only the CSS `@container` rules are width-aware. *(→ PRD-G2;
+ADR-0230 cl.3/cl.4; ADR-0229 cl.6)*
+- **AC1** *Given* a container between 16em and 28em, *then* the fine-density category chips hide while
+  the first and last rendered category chips survive (SPEC-R17 AC1) with no two surviving chip bounding
+  boxes intersecting (SPEC-R17 AC2) — browser-measured, both engines.
+- **AC2** *Given* a container below 16em (reachable only via a deliberate `min-inline-size` override),
+  *then* the plot AND chrome layers both hide and only the columns mark renders — the family's bare-marks
+  floor (ADR-0229 cl.6), realized as a rung rather than left accidental.
+- **AC3** *Given* a container at or above 28em, *then* no category-label chip carries the hidden
+  (fine-density) state — full chrome renders.
 
 ### 3.7 `ui-line-chart` — the `axes` state (ADR-0229 cl.3, EXTENDING ADR-0205)
 
