@@ -6,51 +6,15 @@
 // field constant — every OTHER field is a pure function of the committed data.
 
 import type { GenuiCorpusRecord } from '../../../src/corpus-genui/record.ts'
-import type { GenuiArchivedVerdict, GenuiDimensionScores } from '../../../src/corpus-genui/verdicts.ts'
-import type { GenuiHtmlLint } from '../../../src/corpus-genui/lint.ts'
+import type { GenuiArchivedVerdict } from '../../../src/corpus-genui/verdicts.ts'
 import { loadGenuiRecords, loadGenuiVerdictArchive, loadPrompts, readRubricVersion, writeIndexJson } from '../fs.ts'
-
-export interface GenuiCorpusIndexRecordRow {
-  name: string
-  promptId: string
-  packId: string | null
-  model: string | null
-  status: 'pending' | 'judged'
-  qualityScore?: number
-  passed?: boolean
-  failingDimensions?: string[]
-  dimensions?: GenuiDimensionScores
-  htmlHash: string
-  verdictDate?: string
-  lint: GenuiHtmlLint
-}
-
-export interface GenuiCorpusIndexPerPack {
-  judged: number
-  passed: number
-  meanD2: number
-  minScore: number
-}
-
-export interface GenuiCorpusIndexM3 {
-  judged: number
-  passed: number
-  passRate: number
-  minScore: number
-  meanScore: number
-  /** Every judged pack-conditioned record has `qualityScore >= 4` — the PRD §8 m3 floor (LLD §5). */
-  floorMet: boolean
-  perPack: Record<string, GenuiCorpusIndexPerPack>
-  control?: { judged: number; meanD2: number }
-}
-
-export interface GenuiCorpusIndex {
-  generatedAt: string
-  rubricVersion: string
-  promptSetVersion: number
-  records: GenuiCorpusIndexRecordRow[]
-  m3: GenuiCorpusIndexM3 | null
-}
+// The pure, node-free TYPE shape lives in src/corpus-genui/index-shape.ts (a browser/site consumer type-
+// imports it directly from there, never from here — this Node shell's own node:*/fs.ts imports would
+// otherwise drag into the site's type program, the `site/tsconfig.json` "no node types" constraint).
+// Re-exported here too so an EXISTING caller of THIS module's types (this leg, the standing gate) needs
+// no import-path change.
+export type { GenuiCorpusIndex, GenuiCorpusIndexRecordRow, GenuiCorpusIndexPerPack, GenuiCorpusIndexM3 } from '../../../src/corpus-genui/index-shape.ts'
+import type { GenuiCorpusIndex, GenuiCorpusIndexRecordRow, GenuiCorpusIndexPerPack, GenuiCorpusIndexM3 } from '../../../src/corpus-genui/index-shape.ts'
 
 /** `dimensions` is NOT a field `GenuiCorpusRecord.meta` carries (LLD §3.1 names only `qualityScore`/
  *  `passed`/`failingDimensions`/`verdictDate` — the per-dimension breakdown lives on the ARCHIVED
@@ -58,7 +22,7 @@ export interface GenuiCorpusIndex {
  *  consulted — LLD §5's `dimensions?` index-row field is optional for exactly this reason: a critic seat
  *  may score without per-dimension detail, and the row degrades honestly to `undefined` when so. */
 function rowOf(record: GenuiCorpusRecord, archive: ReadonlyMap<string, GenuiArchivedVerdict>): GenuiCorpusIndexRecordRow {
-  const dimensions = archive.get(record.name)?.dimensions
+  const archived = archive.get(record.name)
   return {
     name: record.name,
     promptId: record.promptId,
@@ -68,7 +32,8 @@ function rowOf(record: GenuiCorpusRecord, archive: ReadonlyMap<string, GenuiArch
     ...(record.meta.qualityScore !== undefined ? { qualityScore: record.meta.qualityScore } : {}),
     ...(record.meta.passed !== undefined ? { passed: record.meta.passed } : {}),
     ...(record.meta.failingDimensions !== undefined ? { failingDimensions: record.meta.failingDimensions } : {}),
-    ...(dimensions !== undefined ? { dimensions } : {}),
+    ...(archived?.dimensions !== undefined ? { dimensions: archived.dimensions } : {}),
+    ...(archived?.rationale !== undefined ? { rationale: archived.rationale } : {}),
     ...(record.meta.verdictDate !== undefined ? { verdictDate: record.meta.verdictDate } : {}),
     htmlHash: record.meta.htmlHash,
     lint: record.meta.lint,

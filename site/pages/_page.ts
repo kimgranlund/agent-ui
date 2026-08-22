@@ -867,6 +867,12 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './gen-ui-live.html', label: 'GenUI Chat Demo' }],
   },
   {
+    // GH #1584 (genui-b3-judged-eval.lld.md LLD-C5) — the B3 judged pack-idiom eval's own results page:
+    // the SAME ungrouped-site-level posture as GenUI Chat Demo just above (an independent destination,
+    // not a sub-page of it).
+    links: [{ href: './genui-corpus.html', label: 'GenUI Corpus Eval' }],
+  },
+  {
     // The SaaS Data Workbench (GH #461, M-A MA-3) — the SAME standalone/ungrouped posture as Agent Admin
     // App/GenUI Chat Demo just above: a real, listed destination (an entry in site-manifest.json/
     // sitemap.json, an ungrouped nav link here, a landing card in main.ts) that still renders shell-less
