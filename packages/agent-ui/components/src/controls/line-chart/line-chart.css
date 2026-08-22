@@ -191,17 +191,18 @@
     translate: 0 calc(var(--_tick-shift, -50) * 1%);
   }
 
+  /* `left` — deliberately the PHYSICAL property, not `inset-inline-start` — because `--_cat-pct` is
+     always a physical left-edge percentage (the SVG plot is physical/never-mirrored — cl. above —
+     unlike ui-column-chart's box-flow bars, which DO mirror under RTL). `translate`'s x-component is
+     ALSO always physical, so once the anchor is physical too, this rule is direction-invariant top
+     to bottom: no `:dir(rtl)` override, no sign-flip — the two engines already agree with no
+     correction needed (#1581 build-review finding — the first two attempts each re-derived a
+     `:dir(rtl)` correction for one of the two physical properties and got the compounding math
+     wrong; the actual fix is that NEITHER property needed one once `inset-inline-start` was retired). */
   :scope [data-part='category-label'] {
-    inset-inline-start: calc(var(--_cat-pct, 0) * 1%);
+    left: calc(var(--_cat-pct, 0) * 1%);
     inset-block-end: 0;
     translate: calc(var(--_cat-shift, -50) * 1%) 0;
-  }
-
-  /* `translate`'s x-component is always PHYSICAL and does not mirror under dir="rtl" — negate the
-     shift's sign so the clamp stays inward (same fix pattern as ui-column-chart's category-label/
-     callout parts, GH #1578 / ADR-0230). */
-  :scope:dir(rtl) [data-part='category-label'] {
-    translate: calc(var(--_cat-shift, -50) * -1%) 0;
   }
 
   @media (forced-colors: active) {

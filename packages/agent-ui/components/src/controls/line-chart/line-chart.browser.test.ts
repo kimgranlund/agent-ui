@@ -252,6 +252,32 @@ describe('ui-line-chart [axes] — the two-layer full-bleed model (ADR-0228 cl.1
     expect(Math.round(plotBox.width)).toBeCloseTo(Math.round(chartBox.width), 0)
     expect(Math.round(plotBox.height)).toBeCloseTo(Math.round(chartBox.height), 0)
   })
+
+  it('every category-label chip stays INSIDE the plot box under dir="rtl" AND paints at the EXACT SAME physical position it does under dir="ltr" (the plot is physical/never-mirrored, so the chrome layer must be pixel-identical across both directions, not merely mirror-corrected — #1581 build-review finding: an `inset-inline-start` anchor mirrors under RTL even after `translate`\'s own physical x-component is left alone, so the anchor itself has to be a physical `left`, and once it is, NEITHER property needs a `:dir(rtl)` override any more)', () => {
+    const markup = '<ui-line-chart axes values="[18,21,19,24,27,23]" labels=\'["Mar","Apr","May","Jun","Jul","Aug"]\'></ui-line-chart>'
+    const ltr = mount(markup, 'ltr') as HTMLElement
+    const rtl = mount(markup, 'rtl') as HTMLElement
+    const ltrBox = ltr.getBoundingClientRect()
+    const rtlBox = rtl.getBoundingClientRect()
+    const ltrChips = [...ltr.querySelectorAll('[data-part="category-label"]')] as HTMLElement[]
+    const rtlChips = [...rtl.querySelectorAll('[data-part="category-label"]')] as HTMLElement[]
+    expect(ltrChips.length).toBeGreaterThan(0)
+    expect(rtlChips.length).toBe(ltrChips.length)
+    const EPS = 1
+
+    for (const [i, rtlChip] of rtlChips.entries()) {
+      const box = rtlChip.getBoundingClientRect()
+      expect(box.left, `RTL: a chip overflowed the LEFT edge (${box.left} < ${rtlBox.left})`).toBeGreaterThanOrEqual(rtlBox.left - EPS)
+      expect(box.right, `RTL: a chip overflowed the RIGHT edge (${box.right} > ${rtlBox.right})`).toBeLessThanOrEqual(rtlBox.right + EPS)
+
+      // Both charts mount at the same host offset (siblings, same wrap width), so their box-relative
+      // positions are directly comparable — the ground truth is "identical to LTR", not a derived
+      // formula that has to independently reconstruct the ADR-0228 cl.2 edge-clamp interpolation.
+      const ltrRelLeft = ltrChips[i].getBoundingClientRect().left - ltrBox.left
+      const rtlRelLeft = box.left - rtlBox.left
+      expect(rtlRelLeft, `RTL: "${rtlChip.textContent}" chip drifted from its LTR position (rel-left ${rtlRelLeft} vs ${ltrRelLeft})`).toBeCloseTo(ltrRelLeft, 0)
+    }
+  })
 })
 
 describe('ui-line-chart [axes] — the now-marker is a SHORT tick, never full-height (ADR-0228 cl.4)', () => {
