@@ -46,13 +46,12 @@ decision (dated line in §4).
 > and was carried further by the later, unrelated retire-catalog-level-theming pass (GH #531,
 > 2026-08-07). M-F (the second SaaS composition — Support Dashboard, GH #499 — plus the
 > `ui-multi-select` association/multi-select field, ADR-0175) shipped 2026-08-07. This closes out
-> the 2026-08-05 wave in full. **No successor arc has been ruled since** — the work that has
-> actually shipped in the three weeks since (the svg-chart system, ADR-0227's shared-state
-> grammar + `@agent-ui/data` adoption, `ui-breadcrumb`, `ui-drill` amendments, `ui-playing-card`,
-> the ADR-0230 column-chart HTML-plot ladder) arrived as individually-filed/ADR'd issues, not a
-> ruled multi-milestone arc. Candidate next-arc material sits in §4 (GenUI B3, the identity
-> family-wide layout cards, AC19's sheet-set widening) — due for its own intake round if Kim wants
-> another named arc rather than continuing the issue-by-issue cadence.
+> the 2026-08-05 wave in full. The work that shipped in the three weeks after (the svg-chart
+> system, ADR-0227's shared-state grammar + `@agent-ui/data` adoption, `ui-breadcrumb`, `ui-drill`
+> amendments, `ui-playing-card`, the ADR-0230 column-chart HTML-plot ladder) arrived as
+> individually-filed/ADR'd issues, not a ruled arc — but **a successor arc has now been ruled**:
+> **"GenUI production polish"**, picked by Kim 2026-08-22 from a 3-candidate menu, three
+> milestones (GenUI B3 · GH #1221 · GH #1101) — see §3 for the full record.
 
 - **Component foundation — complete.** G0–G9 + the Control Suite + the icon adapter: the reactive
   kernel, FACE element layer, templating/directives, and ~50 `ui-*` controls across the
@@ -175,17 +174,34 @@ decision (dated line in §4).
   value at rest. Add a `layout` prop — standard (label left / value right, above the track,
   default) · inline (label/track/value on one row) · block (label above-center, value
   below-center) — with a default-visible readout.
-- **Chat dialog formatting: bubble on/off setting + GenUI hoisted out of bubbles (GH #1221,
-  `size:big`, filed 2026-08-17).** Turn ADR-0160's hardcoded de-bubbled agent presentation into a
-  setting (bubbles on/off for host/agent messages), and formalize GenUI cards as first-class
-  siblings in the host message group — a card keeps its own contained chrome in BOTH bubble modes
-  and never re-nests inside a prose bubble. Home: `app`'s conversation controls + surface-host.
-- **Ask-flow COMPLETION state (GH #1101, `size:big`, filed 2026-08-17).** Kim's live test-chat
-  report: a multi-step intake flow ends on a bare summary card — no closing prose turn, no
-  end-of-flow affordance (done/start-over/handoff). Two halves: producer/prompt guidance in
-  `@agent-ui/a2ui` `./agent`, plus a surface-side affordance on the summary card or page chrome.
-  Adjacent to ADR-0196 (per-card settling, not flow completion) and the #1065 shared-template
-  question — this may be where the a2ui-live/agent-admin shared-chrome lift gets forced.
+- **The "GenUI production polish" arc — Kim-ruled 2026-08-22, successor to the closed M-D → M-E →
+  M-F arc (§2).** Chosen from a 3-candidate menu (the other two — sequential agent orchestration
+  off ADR-0174, and A2UI Text/slider/menu wire-vocabulary completeness — stay unpicked, available
+  for a later round). Intent: closes out the GenUI SPEC's own remaining contract rather than
+  opening new design surface, and two of its three milestones are fixes for pain Kim hit directly
+  in live testing. Serves [`prd/genui-surface.prd.md`](prd/genui-surface.prd.md) §8 **m3** (the
+  judge-scored pack-idiom-use metric) and the broader mandate in
+  [IDR-0003](idr/0003-generative-ui-is-the-primary-medium.md) (generative UI is the primary
+  medium) and [IDR-0006](idr/0006-conversation-medium-generative-ui.md) (conversation medium =
+  generative UI). Three milestones, no ruled build order yet among them:
+  - **Milestone 1 — GenUI B3, the judged pack-idiom eval.** The one piece the GenUI SPEC's own §6
+    build-plan cut explicitly out of its contract (`spec/genui-surface.spec.md` SPEC-N3: "PRD §8
+    m3 ... is realized as a judged corpus-rubric eval in the B3 wave (PRD-G6), a NAMED MANUAL
+    run — never `npm test`/`test:browser`"). **No GitHub issue exists yet for B3** — needs minting
+    before build; issue seed reported separately, not minted by this pass.
+  - **Milestone 2 — chat dialog formatting: bubble on/off setting + GenUI hoisted out of bubbles**
+    (GH #1221, `size:big`, filed 2026-08-17). Turn ADR-0160's hardcoded de-bubbled agent
+    presentation into a setting (bubbles on/off for host/agent messages), and formalize GenUI
+    cards as first-class siblings in the host message group — a card keeps its own contained
+    chrome in BOTH bubble modes and never re-nests inside a prose bubble. Home: `app`'s
+    conversation controls + surface-host.
+  - **Milestone 3 — ask-flow COMPLETION state** (GH #1101, `size:big`, filed 2026-08-17). Kim's
+    live test-chat report: a multi-step intake flow ends on a bare summary card — no closing
+    prose turn, no end-of-flow affordance (done/start-over/handoff). Two halves: producer/prompt
+    guidance in `@agent-ui/a2ui` `./agent`, plus a surface-side affordance on the summary card or
+    page chrome. Adjacent to ADR-0196 (per-card settling, not flow completion) and the #1065
+    shared-template question — this may be where the a2ui-live/agent-admin shared-chrome lift
+    gets forced.
 - **A2UI Text: full register vocabulary + per-variant producer guidance (GH #1321, `size:big`,
   filed 2026-08-18).** The wire `Text.variant` enum reaches 8 registers while `ui-text` carries
   9 roles × 3 sizes + 11 `as` semantics — `h6`/`kicker`/`overline`/`quote`/`lead`/`display` and
@@ -305,6 +321,14 @@ decision (dated line in §4).
   family today (every `@agent-ui/app` sheet + the shell-composing site sheets). Whether it extends
   further — components-package sheets, the remaining site sheets — is an open, per-sheet decision;
   the gate's own design makes each extension a one-line reviewed append, never automatic.
+- **Loose hardening debt — considered and declined as an arc, 2026-08-22.** AC19's sheet-set
+  widening (above), the sync read surface on shared's localStorage `StorageAdapter` tier (GH
+  #1077, §4), and the identity family's unbuilt S3-c layout cards (§3's identity-flow line) were
+  weighed as a fourth "foundation hardening" arc candidate alongside GenUI production polish,
+  sequential agent orchestration, and A2UI wire-vocabulary completeness. Declined: the three don't
+  share one PRD/IDR-cited intent — they're unrelated debts that happen to have no owner, not a
+  multi-milestone arc serving a stated purpose. Recorded here so they aren't lost, not because
+  they're scheduled.
 - (The older proposed scope intakes — content, feed, and report families, the a2ui expert system —
   remain parked intakes, not scheduled work.)
 
