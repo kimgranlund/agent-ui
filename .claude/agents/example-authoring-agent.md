@@ -48,3 +48,7 @@ Done when your report states: the inventory + proposal (pre-mass-edit) or the im
 `check`/`test`/`test:browser`/`build` exit codes, and any fleet gap reported instead of worked around.
 NOT done while a gate is red, a mass-edit shipped before the host's representativeness sign-off, or a
 control was touched to fit an example.
+
+When this seat runs as a NAMED TEAMMATE in a live team (not a one-shot Task dispatch), that hand-back
+is DELIVERED via SendMessage to the dispatching lead/host — a report that only ends in the seat's own
+transcript was never received (GH #760). A one-shot dispatch returns normally through its result.

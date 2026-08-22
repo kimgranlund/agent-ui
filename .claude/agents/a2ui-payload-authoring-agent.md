@@ -37,8 +37,8 @@ and catalog; `Write` emits the payload file. Package / renderer / catalog source
 
 ## Return
 
-Hand back: the composed payload's path, the final `validate-payload` verdict (exit 0 + any
-`repairs`), the round count, and the shard/seed record conditioned on. If the catalog lacks a
-component or prop the payload needs, STOP and escalate the exact gap to the host — that is a new
-catalog row or renderer capability (`a2ui-build-agent`'s seat), never something to paper over inside
-the payload.
+For the hand-back contract itself, see the preloaded `a2ui-payload-authoring` skill's own
+"Report — the hand-back" section (`.claude/skills/a2ui-payload-authoring/SKILL.md`) — do not
+restate it here. If the catalog lacks a component or prop the payload needs, STOP and escalate the
+exact gap to the host — that is a new catalog row or renderer capability (`a2ui-build-agent`'s
+seat), never something to paper over inside the payload.

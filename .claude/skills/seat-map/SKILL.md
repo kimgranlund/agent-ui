@@ -24,8 +24,8 @@ disable-model-invocation: false
 | Broad searches / codebase questions | `Explore` (read-only, conclusions not dumps) | — |
 | Measured experiment loops (regressions, tuning, stress) | `docs:experiment-runner` | host verifies the report |
 | A2UI corpus record admission/judging (ADR-0068) | `a2ui-corpus-curation` (skill, host-run or briefed) | `a2ui-review-agent` (the VerdictsFile judge — never the seed's own author) |
-| One confirmed work-item build (feature/task/bug, by issue id) | `teamwork:build-lead` | per-artifact critic above |
-| Raw report/idea intake → durable records | `docs:intake-lead` | — (intake only, structurally cannot dispatch builds) |
+| One confirmed work-item build (feature/task/bug, by issue id) | `teamwork:build-leader` | per-artifact critic above |
+| Raw report/idea intake → durable records | `docs:intake-leader` | — (intake only, structurally cannot dispatch builds) |
 | A SKILL.md's contract/shape | maker of the change | `harness:skill-checker` |
 | An agents/*.md definition | maker of the change | `harness:agent-checker` |
 | A hook (registration + script) | maker of the change | `harness:hook-checker` |

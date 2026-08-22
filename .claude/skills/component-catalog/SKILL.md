@@ -8,7 +8,7 @@ description: >-
   Y", "is there a chart/date/upload control", "can an agent emit this type" — BEFORE
   composing a surface. Routing only: the inventory lives in the descriptors and the choosing
   guide (derive, never restate). NOT for building/changing a control
-  (component-design/-create) or assembly mechanics (composition-patterns).
+  (component-design/-build) or assembly mechanics (composition-patterns).
 user-invocable: false
 disable-model-invocation: false
 ---

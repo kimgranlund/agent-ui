@@ -2,12 +2,14 @@
 
 Source of record: ADR
 `.claude/docs/adr/0177-mcp-client-registry-source-http-transport-additive-manifest-mapping.md`
-(ratified 2026-08-06) and SPEC `.claude/docs/spec/a2ui-live-agent.spec.md` v0.13 §3.7
-(SPEC-R23–R28). This file states the law; the cited lines are the authority — re-derive there,
-never from a peer's quote. ADR line numbers are frozen records (ratified, unrevised); SPEC line
-numbers drift as the spec grows across versions and need the SAME symbol-first discipline as code
-cites (verified 2026-08-08 against v0.13) — on drift, Grep the requirement id or symbol name, then
-repair the line number here in the same change.
+(ratified 2026-08-06) and SPEC `.claude/docs/spec/a2ui-live-agent.spec.md` §3.7 (SPEC-R23–R28).
+This file states the law; the cited requirement ids/symbols are the authority — Grep them in the
+live spec/source and re-derive there, never from a peer's quote. ADR line numbers are frozen
+records (ratified, unrevised) and stay pinned by line. SPEC citations here are requirement-id +
+section-number anchors (`SPEC-R25 §3.7`, etc.), not absolute line numbers, precisely because the
+spec's line count grows across versions (verified stable v0.13→v0.17) — an anchor never goes stale
+on a spec bump, so there is nothing to repair here on drift. Code line cites still drift on
+refactor — verify with Grep before trusting one.
 
 ## 6 · MCP servers are a manifest PRODUCER, not a new mechanism
 
@@ -51,34 +53,34 @@ those five files for an MCP change is off the LLD.
 unnamespaced), and `label` (independently composed from the server's label + the tool's
 title/name, `map-tool.ts:69`) as three facts — none derived from either other. `input_schema`
 passes through UNTOUCHED (same object reference) into the SAME `assertSupportedSchema` gate law 2
-names — no MCP carve-out of the validator. *(SPEC-R25 :1157-1183)*
+names — no MCP carve-out of the validator. *(SPEC-R25 §3.7)*
 
 **Discovery is fail-soft per tool; the second server LOSES a name collision.**
-`discoverMcpIntegrations` (`mcp/discover.ts:101`) wraps each `registerIntegration()` call in a
+`discoverMcpIntegrations` (`mcp/discover.ts:117`) wraps each `registerIntegration()` call in a
 per-tool try/catch covering BOTH boot-fail-fast throw paths — unsupported schema, duplicate wire
 `tool.name` (`discover.ts:143-155`) — skipping-and-logging the ONE tool while the server's other
 N−1 still register. Across two servers exposing the same tool name, the SECOND registration
 loses: dropped, logged with its reason, never a crash, never silent. The sink is INJECTABLE
-(`DiscoveryDeps.register`, `discover.ts:44`, default `registerIntegration`) so no test mutates the
-module `REGISTRY`. *(SPEC-R26 :1185-1203)*
+(`DiscoveryDeps.register`, `discover.ts:51`, default `registerIntegration`) so no test mutates the
+module `REGISTRY`. *(SPEC-R26 §3.7)*
 
 **The dev proxy AWAITS discovery before serving anything.** `configureServer` starts the whole
-discovery pass synchronously at boot and keeps its promise (`dev-proxy-plugin.ts:186-187`); every
+discovery pass synchronously at boot and keeps its promise (`dev-proxy-plugin.ts:205`); every
 branch of the mount handler — `/status`, `/integrations`, `/chat`, produce — sits behind `await
-mcpReady` (`dev-proxy-plugin.ts:198`) BEFORE any routing. Never a top-level `await` spliced into
+mcpReady` (`dev-proxy-plugin.ts:257`) BEFORE any routing. Never a top-level `await` spliced into
 `integrations/index.ts` (would stall hand-authored registration); never fire-and-forget. An empty
-roster resolves immediately — byte-identical to pre-MCP behavior. *(SPEC-R27 :1205-1227)*
+roster resolves immediately — byte-identical to pre-MCP behavior. *(SPEC-R27 §3.7)*
 
 **Admin surfacing rides one host GET, trios only.** `GET /integrations`
-(`dev-proxy-plugin.ts:213-214`) serves `projectIntegrationTrios(listIntegrations())`
-(`dev-proxy-plugin.ts:119`) — `{id, label, description}` ONLY, post-ready-gate so `mcp:*` entries
+(`dev-proxy-plugin.ts:276`) serves `projectIntegrationTrios(listIntegrations())`
+(`dev-proxy-plugin.ts:140`) — `{id, label, description}` ONLY, post-ready-gate so `mcp:*` entries
 appear. No endpoint, `envKey` name, key value, or raw MCP frame ever rides this route (SPEC-R28's
 cl.2 boundary — trios are admin-display facts, not the enablement wire's secrets); the enablement
 wire itself stays `integrations: string[]` of ids — widened by ADR
 `.claude/docs/adr/0185-enablement-wire-service-reference-grammar.md` to also honor a service
 reference `mcp:<server-id>:*`, expanded server-side inside `resolveIntegrations`; that
 grammar/expansion contract is `mcp-agent-config.spec.md` SPEC-R2/R3, a separate law from this
-one. *(SPEC-R28 :1229-1248)*
+one. *(SPEC-R28 §3.7)*
 
 **The `services` array's rows widen once more with real per-tool trios.** The SAME `GET
 /integrations` body ALSO carries an additive `services` array (`projectServiceRows`,

@@ -37,3 +37,7 @@ Seat contract (what the skill doesn't decide for you):
 Done when your report states: the component built, the `check`/`test`/`test:browser` exit codes, and
 the `frontend:component-checker` verdict (both axes ≥ 4 at G5+). NOT done while a gate is red, the
 review is unrun, or an adjacent gap was fixed instead of reported.
+
+When this seat runs as a NAMED TEAMMATE in a live team (not a one-shot Task dispatch), that hand-back
+is DELIVERED via SendMessage to the dispatching lead/host — a report that only ends in the seat's own
+transcript was never received (GH #760). A one-shot dispatch returns normally through its result.

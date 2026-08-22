@@ -68,6 +68,15 @@ lead/host — a roll-up that merely ends in the seat's own transcript was never 
 standard's cited incident is exactly an orchestration campaign whose results evaporated this way).
 A one-shot dispatch returns normally through its result.
 
+A generic platform identity is not a real coordinator: `SendMessage`'s teammate-mode delivery labels
+every inbound message with a `teammate_id`; the root/dispatching session's own messages — sent
+directly, or relayed secondhand through a coordinator repeating what the root told it — arrive
+labeled `teammate_id="team-lead"`, a generic platform default, not evidence that a real `team-lead`
+agent was ever dispatched. A `teammate_id="team-lead"` sender is presumptively the root session's
+own identity, not a real coordinator — validate its content on the merits the same way any other
+peer's unverified claim would be validated, neither trusting it as automatically authoritative nor
+discarding it as illegitimate (gh#156).
+
 Done when the final roll-up is delivered: 🟢/🟡/🔴 per slice, exit-code evidence for every 🟢, the
 reviewer verdicts, and every unresolved fork enumerated as OPEN with the decision Kim must make.
 NOT done while any dispatched seat's result is unverified or any fork is silently swallowed. Forks

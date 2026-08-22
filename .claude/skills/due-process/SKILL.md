@@ -91,14 +91,14 @@ applies, named explicitly, not silently assumed.
 
 ## Enforcement — how a size:big dispatch actually carries this
 
-Repo-local seam, no edit to the `teamwork` plugin (`dispatch-ticket`/`build-lead` live outside
+Repo-local seam, no edit to the `teamwork` plugin (`dispatch-ticket`/`build-leader` live outside
 this repo, in `nonoun-plugins` — out of scope here, flagged instead of edited):
 
 - **`seat-map`'s "Dispatch laws" section carries the mandatory clause** every
   `repo-orchestrator-agent` dispatch brief copies in (seat-map is that seat's own preloaded
   skill) — a size:big campaign brief cites `due-process` by name before design work starts.
 - **Every Agent-tool subagent operating in this repo inherits its `CLAUDE.md`** — including a
-  `teamwork:build-lead`/`dispatch-ticket` dispatch reached from outside this repo. (A `context:
+  `teamwork:build-leader`/`dispatch-ticket` dispatch reached from outside this repo. (A `context:
   fork`-style skill invocation, e.g. `Explore`/`Plan`, does not carry the same project-CLAUDE.md
   inheritance guarantee — this line covers Agent-tool subagent dispatches only.) `CLAUDE.md`'s
   one-line pointer is what makes the loop visible even when no `repo-orchestrator-agent` campaign

@@ -27,7 +27,7 @@ DOM). Soft: the framing paragraph's accuracy → reviewer judgment.
 ## T2 — permutation matrix
 
 **What it is.** The full **size × variant × state** grid of one control, built **programmatically** from
-the enum arrays, not hand-written (`permutations.ts` — 3 sizes × 3 variants × 4 columns = 36 live
+the enum arrays, not hand-written (`button-permutations.ts` — 3 sizes × 3 variants × 4 columns = 36 live
 controls).
 
 **Strategy.** Completeness must be *provable from structure*: loop over the enum arrays so the cell count
@@ -47,7 +47,7 @@ completeness self-evident; prefer deriving the axis arrays from the parsed enum 
 
 **What it is.** The live control staged in **each interaction state** (hover · `:focus-visible` ·
 `:active` · keyboard activation · disabled), each **honestly labelled** as the control's own state, with a
-live activation log (`states.ts`).
+live activation log (`button-states.ts`).
 
 **Strategy.** The page **never restyles the control** — every state's appearance lives in the control's
 own `{name}.css` (ADR-0008/0009/0010). The page only stages, labels, and observes. Each section explains

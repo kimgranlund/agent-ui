@@ -30,8 +30,10 @@ which file.
 
 - **ADR** — blockquote TABLE, six fixed rows; vocabulary `proposed · accepted · superseded ·
   deprecated`. **Only Kim ratifies → accepted** (ADR-0149): an in-tree hand-edit, or a `ratify
-  ADR-####` GitHub utterance executed by `scripts/adr_ratify.py`. The registered PreToolUse guard
-  blocks every other agent flip to `accepted` unconditionally.
+  ADR-####` GitHub utterance executed by `scripts/adr_ratify.py`. No PreToolUse guard enforces
+  this today (removed 2026-08-17); discipline rests on agents never hand-editing a Status cell
+  and on `scripts/adr_ratify.py` staying the only sanctioned flip path — see
+  `references/gates-and-citation-law.md §5`.
 - **Ticket, current (ADR-0145)** — GitHub Issues, not files; `.claude/docs/tickets/` is a frozen
   historical archive. `status`/`kind`/`size` map onto native GitHub primitives (labels, close
   reason) — never a parallel taxonomy.

@@ -7,7 +7,7 @@ user-invocable: true
 disable-model-invocation: false
 ---
 
-# Component create — the build procedure
+# Component build — the build procedure
 
 Implements ONE `ui-*` component per pass to the repo standard, so the fleet shares one shape
 instead of drifting into dialects. **Anti-drift by construction**: the standard lives in the
