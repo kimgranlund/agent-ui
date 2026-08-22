@@ -20,6 +20,20 @@
       "kind": "harvest",
       "plan": "",
       "queued_at": "2026-08-21T11:20:00Z"
+    },
+    {
+      "adr_id": "adr-0230",
+      "evidence": "cl.4 (ADR-0230): container-query SIZE queries cannot read var() -- rung breakpoints (28em/16em) had to be literal, banner-documented values (platform constraint, Consequences). Not yet in skills/*/references/*.md; component-standards/references/css-structural-laws.md is the natural extension point (numbered CSS-gotcha list, no existing entry).",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-22T18:29:34Z"
+    },
+    {
+      "adr_id": "adr-0008",
+      "evidence": "Amendment 2 (2026-08-22, ADR-0008): --md-sys-color-primary-dim and -high resolve to the SAME value in the light light-dark() branch, so any control using the generic -dim/-high emphasis ladder for the primary family collapses hover===active in light scheme -- a KNOWN defect Kim directed reopened over the investigating agent's objection, with an explicit standing warning for future controls (use the dedicated -hover/-active roles instead, or re-derive per the family-role pattern). Not found anywhere in skills/*/references/*.md; a hover/active-ladder gotcha worth capturing before the next control hits it blind.",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-22T18:29:34Z"
     }
   ]
 }
