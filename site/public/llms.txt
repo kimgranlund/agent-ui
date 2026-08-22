@@ -178,6 +178,7 @@
 ## GenUI — sandboxed free-form generative UI
 
 - [GenUI chat demo](./gen-ui-live.html): a chat app rendering agent-authored HTML/CSS/JS through the sandboxed ui-sandbox-frame containment host — a recorded backbone of canned turns, one exercising the genui.action bridge round-trip (no live producer yet).
+- [GenUI Corpus Eval](./genui-corpus.html): the B3 judged pack-idiom eval (PRD §8 m3) — index.json's own m3 summary + record table, a real ui-sandbox-frame per judged record on disclosure open; honest empty state until Kim's named manual run (`npm run eval:genui-corpus`).
 
 ## A2A — Agent2Agent
 

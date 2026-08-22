@@ -31,7 +31,8 @@
     "ops:reap-worktrees": "node scripts/reap-worktrees.mjs",
     "publish:packages": "node scripts/publish/publish-packages.mjs",
     "deploy:docs": "npm run build && wrangler deploy",
-    "eval:catalog": "node scripts/eval-a2ui-catalog.mjs"
+    "eval:catalog": "node scripts/eval-a2ui-catalog.mjs",
+    "eval:genui-corpus": "node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus-genui/eval-genui-corpus.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

@@ -1,0 +1,65 @@
+{
+  "promptSetVersion": 1,
+  "prompts": [
+    {
+      "id": "animated-explainers-1",
+      "packId": "animated-explainers",
+      "promptText": "Walk new hires through the stages a support ticket moves through from open to resolved, and make clear which stage a given ticket is in right now."
+    },
+    {
+      "id": "animated-explainers-2",
+      "packId": "animated-explainers",
+      "promptText": "Show which of our Q4 launch milestones are already done, which one we're on now, and what's still ahead."
+    },
+    {
+      "id": "animated-explainers-3",
+      "packId": "animated-explainers",
+      "promptText": "Explain how an order moves from cart to payment to confirmation, and show that we're currently sitting at the payment step."
+    },
+    {
+      "id": "animated-explainers-4",
+      "packId": "animated-explainers",
+      "promptText": "Give a quick visual of our onboarding checklist's progress: the steps already completed, the one in progress, and what's left."
+    },
+    {
+      "id": "data-viz-layouts-1",
+      "packId": "data-viz-layouts",
+      "promptText": "Compare monthly revenue across our four regions, and call out the top performer."
+    },
+    {
+      "id": "data-viz-layouts-2",
+      "packId": "data-viz-layouts",
+      "promptText": "Give me a quick snapshot of active users, churn rate, and average session length for this week."
+    },
+    {
+      "id": "data-viz-layouts-3",
+      "packId": "data-viz-layouts",
+      "promptText": "Rank our five best-selling products by units sold, and show total units sold this month as a headline number."
+    },
+    {
+      "id": "data-viz-layouts-4",
+      "packId": "data-viz-layouts",
+      "promptText": "Compare Q1 vs Q2 spend across our three departments, and highlight the department that grew the most."
+    },
+    {
+      "id": "interactive-widgets-1",
+      "packId": "interactive-widgets",
+      "promptText": "Let the reviewer rate this design submission out of five stars."
+    },
+    {
+      "id": "interactive-widgets-2",
+      "packId": "interactive-widgets",
+      "promptText": "Give the user three delivery-time options to choose from, and let them see which one they picked."
+    },
+    {
+      "id": "interactive-widgets-3",
+      "packId": "interactive-widgets",
+      "promptText": "Set up a simple two-player turn-based grid game they can play against each other while they wait for a match."
+    },
+    {
+      "id": "interactive-widgets-4",
+      "packId": "interactive-widgets",
+      "promptText": "Let someone vote for their favorite of three color options, then rate how confident they are in that pick."
+    }
+  ]
+}

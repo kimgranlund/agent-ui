@@ -129,7 +129,7 @@ decision (dated line in §4).
   three curated pattern-source packs plus a degradation-safe prompt block (SPEC-R9), and
   `ui-agent-admin` mounting GenUI surfaces inside its real turn loop on a parallel path beside
   the A2UI client. The `gen-ui-live` site demo stays deliberately recorded-only. What's left is
-  out of the SPEC's own contract: B3, the judged pack-idiom eval (§4).
+  out of the SPEC's own contract: B3, the judged pack-idiom eval (§3 Milestone 1, GH #1584).
 - **A2A protocol layer (`@agent-ui/a2a`)** — pinned to spec v0.3.0, the tic-tac-toe
   isolation-proof arena, its own concepts corpus.
 - **`@agent-ui/router`** — the memory-first SPA router (ADR-0115).
@@ -187,8 +187,10 @@ decision (dated line in §4).
   - **Milestone 1 — GenUI B3, the judged pack-idiom eval.** The one piece the GenUI SPEC's own §6
     build-plan cut explicitly out of its contract (`spec/genui-surface.spec.md` SPEC-N3: "PRD §8
     m3 ... is realized as a judged corpus-rubric eval in the B3 wave (PRD-G6), a NAMED MANUAL
-    run — never `npm test`/`test:browser`"). **No GitHub issue exists yet for B3** — needs minting
-    before build; issue seed reported separately, not minted by this pass.
+    run — never `npm test`/`test:browser`"). **GH #1584** minted 2026-08-22; design ruled in
+    [`lld/genui-b3-judged-eval.lld.md`](lld/genui-b3-judged-eval.lld.md) (the keyless half builds
+    now — harness, rubric, record/verdict shapes, docs page, `npm run eval:genui-corpus`; the
+    scored run itself is Kim's named manual leg, never fabricated).
   - **Milestone 2 — chat dialog formatting: bubble on/off setting + GenUI hoisted out of bubbles**
     (GH #1221, `size:big`, filed 2026-08-17). Turn ADR-0160's hardcoded de-bubbled agent
     presentation into a setting (bubbles on/off for host/agent messages), and formalize GenUI
@@ -349,10 +351,8 @@ decision (dated line in §4).
 - **ui-menu selected-option scroll-centering + default focus on open (GH #1100, size:small).** An
   overflowing menu panel opens at scroll offset 0 today; the selected option should open centered
   in the viewport and focused (ARIA listbox pattern). `ui-select`/`ui-multi-select` share the panel.
-- **GenUI B3 — the judged pack-idiom eval.** Out of the GenUI SPEC's contract by its own §6 cut:
-  PRD §8 m3 (judge-scored pack-idiom use) realized as a judged corpus-rubric shard plus its docs
-  page (PRD-G6) — a named manual live-model run, never part of the deterministic gates (SPEC-N3).
-  Revisit when the producer's output quality needs a measured floor.
+- *(GenUI B3 — the judged pack-idiom eval — moved to §3's "GenUI production polish" Milestone 1 on
+  Kim's 2026-08-22 arc pick; GH #1584, `lld/genui-b3-judged-eval.lld.md`. Not deferred any more.)*
 - *(The GH #421 per-persona-catalogs deferral that lived here moved to §3's M-D milestone on
   ADR-0172's ratification — its three questions are FROZEN answers now, not open framing:
   package-level per-persona catalog-schema homes · a compose-time overlay over ADR-0169's registry

@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · GenUI Corpus Eval</title>
+  </head>
+  <body>
+    <!-- The GenUI B3 judged pack-idiom eval results page (GH #1584, genui-b3-judged-eval.lld.md LLD-C5):
+         presents corpus-genui/index.json's own m3 summary + record table, mounting a real
+         ui-sandbox-frame per judged record on disclosure open. Honest empty state at ship (m3:null, 0
+         records) — the judged run is Kim's named manual run, never a standing gate. An MPA entry
+         auto-discovered by vite.config.ts's site/**/*.html glob — no config edit needed. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/genui-corpus.ts"></script>
+  </body>
+</html>
