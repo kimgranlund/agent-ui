@@ -5,7 +5,12 @@ import { describe, it, expect } from 'vitest'
 // every non-test module under a2ui/src/** imports ONLY {@agent-ui/components, @agent-ui/shared}
 // (root or subpath) or a local `./`/`../` path. The structural fences this makes un-regressable:
 // a2ui never imports `router` or `code` (catalog invisibility), never `app` (upward), never `a2a`
-// (the A2UI-over-A2A bridge composes in TESTS/tools, not shipped src), never its own package name.
+// (the A2UI-over-A2A bridge composes in TESTS/tools, not shipped src), never its own package name —
+// with ONE named exception (GH #1584): `@agent-ui/a2ui/agent/*`, the declared `package.json` exports
+// subpath gates.test.ts's own COMPOSITION CONTAINMENT check already legalizes as "the only legal door"
+// for a non-agent/ module to reach `src/agent/` (e.g. `corpus-genui/record.ts` reusing
+// `genui-line.ts`'s wire gate rather than a second copy). This is that same door, not a new one — it
+// widens nothing gates.test.ts hasn't already sanctioned.
 // Same no-execution raw-text idiom as the sibling gates; this file closed one of the three gaps the
 // 2026-08-11 audit named in CLAUDE.md's enforcement claim (decision D2, ruled 2026-08-12).
 //
@@ -31,6 +36,7 @@ const isAllowedA2uiSpecifier = (path: string, spec: string): boolean =>
   spec.startsWith('.') ||
   spec === '@agent-ui/components' || spec.startsWith('@agent-ui/components/') ||
   spec === '@agent-ui/shared' || spec.startsWith('@agent-ui/shared/') ||
+  spec.startsWith('@agent-ui/a2ui/agent/') ||
   (path.startsWith('agent/') && spec.startsWith('node:'))
 
 // The synthetic-violation specifiers are ASSEMBLED at runtime — this file lives INSIDE a package the
@@ -95,5 +101,12 @@ describe('import layering — a2ui/src imports only {components, shared} or loca
     const src = `import { readFileSync } from 'node:fs'\n`
     expect(specifiersOf(src).filter((s) => !isAllowedA2uiSpecifier('renderer/renderer.ts', s))).toEqual(['node:fs'])
     expect(specifiersOf(src).filter((s) => !isAllowedA2uiSpecifier('agent/system-prompt.ts', s))).toEqual([])
+  })
+
+  it('the self-package door is narrow: `@agent-ui/a2ui/agent/*` is legal, any other self-package subpath is still flagged (GH #1584)', () => {
+    const legal = `import { readGenuiLine } from '${spec('a2ui')}/agent/genui-line'\n`
+    expect(specifiersOf(legal).filter((s) => !isAllowedA2uiSpecifier('corpus-genui/record.ts', s))).toEqual([])
+    const illegal = `import { x } from '${spec('a2ui')}'\nimport { y } from '${spec('a2ui')}/renderer'\n`
+    expect(specifiersOf(illegal).filter((s) => !isAllowedA2uiSpecifier('corpus-genui/record.ts', s))).toEqual([spec('a2ui'), `${spec('a2ui')}/renderer`])
   })
 })
