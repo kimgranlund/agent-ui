@@ -41,3 +41,8 @@ dist-*
 # summary.md, written fresh on every run of the new standing test:eval-catalog gate (GH #1356);
 # never committed, gate-verdicts-only (no baseline PNGs live here).
 /screenshots/
+
+# GenUI B3 judged eval (GH #1584, genui-b3-judged-eval.lld.md §5) — per-run reports (misses, timings,
+# raw replies for E_JUDGE_PARSE post-mortems) from `npm run eval:genui-corpus -- generate|judge`; never
+# committed, the same gate-verdicts-only posture as /screenshots/ above.
+packages/agent-ui/a2ui/corpus-genui/runs/
