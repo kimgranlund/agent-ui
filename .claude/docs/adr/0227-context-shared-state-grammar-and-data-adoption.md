@@ -256,3 +256,44 @@ the agent-admin persona roster CRUD as its first real consumer.** Five clauses:
   ("smaller diff") — rejected: it re-creates the persistence-style split (F5) inside the very wave
   meant to close it; clause 2's persistence rule and ADR-0193's seam are the point, not an
   accessory.
+
+## Amendment (2026-08-22, **proposed** — Kim ratifies) — adoption wave 2 recorded: the skill-pack shelf and AgentTeam records join the roster on `DataSource`, and the page's reads/writes ride `resource()`/`mutation()` throughout (GH [#1545](https://github.com/kimgranlund/agent-ui/issues/1545), PR [#1548](https://github.com/kimgranlund/agent-ui/pull/1548), commit `a69125b8`)
+
+> Append-only, and **proposed**: the Status cell above reads `accepted` for the accepted record as a
+> whole and stays byte-untouched — agents never flip status, nothing self-ratifies; THIS amendment
+> awaits Kim's own `ratify ADR-0227 amendment` utterance on GH #1545, executed by
+> `scripts/adr_ratify.py`'s amendment mode. Every accepted section above — cl.1–cl.5, Consequences,
+> Acceptance, Alternatives — is unedited. GH #1545 is the durable design record; the build this
+> amendment describes already shipped as PR #1548 (commit `a69125b8`), so no new Repairs are booked
+> on ratification — deliberately, see the note below.
+
+This record's body names only wave 1 (clause 4's roster adoption); a second adoption wave shipped
+2026-08-20 under the same grammar and is recorded here so the SPEC/PRD "waves 1–2" citations resolve
+to an owning fact. Scope, verified against the shipped source:
+
+- **Skill-pack shelf onto `DataSource`** —
+  `packages/agent-ui/app/src/controls/agent-admin/skill-pack-store.ts` gains
+  `createSkillPackSource(): SkillPackSource` (a `DataSource<SkillPackSnapshot>` face over the
+  UNCHANGED `skill-packs:<id>` IDB store — the persona-roster-source pattern applied). The page's
+  `importedSkillPacks` cache becomes a `resource()` derivation; import/remove ride `mutation()`s
+  with atomic read-back mirror commits (the wave-1 mirror-doctrine precedent); the SIX hand-called
+  `admin.libraries` assignment sites collapse into ONE derivation effect (clause 2's one-fact/
+  one-owner rule applied to the shelf). Q5 rides the same wave:
+  `Readonly<Record<string, readonly EntryLibraryPack[]>>` on the `libraries` prop makes the
+  fresh-object law (Context, F7) a compile error instead of call-site discipline.
+- **AgentTeam records onto `DataSource`** —
+  `packages/agent-ui/app/src/controls/agent-admin/agent-team.ts` gains
+  `createAgentTeamSource(): AgentTeamSource` (a `DataSource<AgentTeam>` over the UNCHANGED
+  `agent-ui-agent-teams` localStorage records via `StorageAdapter`). The page's team read is ONE
+  `resource()` (refetched at mint time for the collision scan's cross-tab freshness — fail-closed
+  on a failed refetch per the review pass); `handleTeamDeclared` writes through a `mutation()`
+  whose validation refusal carries the typed `AgentTeamValidationError` issue set.
+- **Repairs carried in the same PR:** `CLAUDE.md`'s `data` row updated to name the wave-2
+  consumers; review-pass fixes (mirror-commit isolation, stable `EMPTY_SHELF` identity guard,
+  remove-mutation sentinel) landed inside the wave, not as follow-ups. (No new Repairs booked on
+  this amendment's ratification — everything above already shipped in PR #1548; the omission of
+  the bookable-list label is deliberate.)
+
+Nothing in the accepted body changes: clause 2's grammar is what this wave conformed to; clause 3's
+declined protocol and its fact-shaped re-trigger are untouched; clause 4 remains the wave-1 record.
+This amendment is descriptive (recording a shipped, gate-green build), not a new fork.
