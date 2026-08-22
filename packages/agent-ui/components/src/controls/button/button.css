@@ -24,11 +24,15 @@
 
 :where(ui-button) {
   /* Colour channel (default family = primary). solid = filled (accent bg, on-accent ink). Per-state bg from
-     the DEDICATED interaction roles (--md-sys-color-primary · -hover · -active) — distinct steps in BOTH schemes, a role
-     step NOT a color-mix (ADR-0008 + its tok-states amendment that split the LIGHT --md-sys-color-primary-650 collapse). */
+     the generic accent-ladder role steps (--md-sys-color-primary · -dim · -high) — a role step NOT a color-mix
+     (ADR-0008's original Decision table, restored by the 2026-08-22 reversal amendment; the dedicated
+     `-hover`/`-active` roles the interim `tok-states` amendment added are UNUSED by this control again — kept in
+     tokens.css for any other consumer, per the ADR's own note). KNOWN REGRESSION (see the amendment): -dim and
+     -high both resolve to --md-sys-color-primary-650 in the LIGHT scheme, so a hovered solid button is visually
+     indistinguishable from a pressed one in light mode — the exact collapse the tok-states amendment fixed. */
   --ui-button-bg: var(--md-sys-color-primary);
-  --ui-button-bg-hover: var(--md-sys-color-primary-hover);
-  --ui-button-bg-active: var(--md-sys-color-primary-active);
+  --ui-button-bg-hover: var(--md-sys-color-primary-dim);
+  --ui-button-bg-active: var(--md-sys-color-primary-high);
   --ui-button-ink: var(--md-sys-color-primary-on-primary);
   --ui-button-border: transparent;
 

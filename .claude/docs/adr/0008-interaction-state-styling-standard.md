@@ -133,3 +133,26 @@ This is the **family-role pattern** the next solid-filled control reuses: a fami
 its own `--md-sys-color-{family}-hover/-active` roles when (and only when) its generic `-dim/-high` ladder collapses in a
 scheme. The old `--md-sys-color-primary-dim`/`-high` roles are unchanged (no other consumer). Token-layer only — no
 component change. `references/interaction-states.md` documents the pattern.
+
+## Amendment 2 — reversion to the generic `-dim`/`-high` ladder (2026-08-22, directed by Kim)
+
+`ui-button`'s solid-variant `--ui-button-bg-hover`/`-bg-active` are repointed back from the dedicated
+`--md-sys-color-primary-hover`/`-active` roles (Amendment 1) to the original Decision-table ladder,
+`--md-sys-color-primary-dim`/`-high` — directed by Kim directly, over the investigating agent's flagged
+objection.
+
+**This knowingly reopens the exact defect Amendment 1 closed.** `--md-sys-color-primary-dim` and
+`--md-sys-color-primary-high` still resolve to the same value (`--md-sys-color-primary-650`) in the LIGHT
+`light-dark()` branch — verified unchanged in `tokens.css` at the time of this amendment — so a hovered solid
+button is once again visually indistinguishable from a pressed one in light scheme. The wave-2 RISK-1
+cross-engine tripwire (`hover != active`) that Amendment 1 turned green is expected to fail red in light scheme
+again; no tripwire has been added or budgeted to keep it green after this reversion, so it is likely to go
+unmonitored going forward. Dark scheme is unaffected in kind but changes direction: `-dim` (dark) is darker than
+idle (backgrounds DIM on hover), where Amendment 1's `-hover` (dark) was lighter than idle (backgrounds LIFT on
+hover) — a reversed hover affordance in dark theme with no separate rationale recorded here.
+
+The dedicated `--md-sys-color-primary-hover`/`-active` roles Amendment 1 added stay in `tokens.css` unchanged
+(no consumer removes token-layer roles); `ui-button` (`controls/button/button.css`) is simply no longer the
+consumer. Any other control that later needs a collapse-free solid-hover ladder should reach for those roles,
+or re-derive its own per the family-role pattern above, rather than assume the generic `-dim/-high` ladder is
+safe — it is not, in light scheme, for the `primary` family.
