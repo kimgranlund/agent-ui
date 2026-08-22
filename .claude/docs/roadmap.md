@@ -9,7 +9,7 @@
 > lives in GitHub Issues ([ADR-0145](adr/0145-ticket-tier-github-issues-backend.md)) or, on other
 > projects, Linear — **never here**. An issue may cite a section of this doc the same way it cites
 > an ADR/SPEC/LLD id; this doc never enumerates issues by number, because that list goes stale the
-> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-08-05 evening (the M-D → M-E → M-F arc ruled).
+> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-08-22 (§2 fully resynthesized against merged reality — the M-D → M-E → M-F arc closed out, the svg-chart system, ADR-0227's data-layer adoption, ADR-0230, `ui-breadcrumb`, `ui-drill`, `ui-playing-card` all folded in; §3/§4 repaired the same pass).
 
 ## 1 · Why a fourth doc
 
@@ -38,21 +38,21 @@ append-only going forward, **never backfilled**, and this roadmap's §2 is the o
 "current state." The gap is therefore the ruled shape of the doc set, not a defect awaiting a
 decision (dated line in §4).
 
-## 2 · Now — current state (as of 2026-08-05)
+## 2 · Now — current state (as of 2026-08-22)
 
-> **Arc status, 2026-08-05 (evening): the NEXT ARC IS RULED — M-D → M-E → M-F** (the same-day
-> intake wave [`reports/roadmap-wave-2026-08-05/`](reports/roadmap-wave-2026-08-05/) + Kim's
-> in-session decision round; the sheet's Q1–Q4 all answered). The prior arc (M-C 07-29 · M-B 08-04
-> · M-A 08-05) is fully closed — §4's dated lines. The ruled order and standing decisions:
-> **M-D** per-persona A2UI catalogs — GH #421 REOPENED by Kim's own ruling; its design intake
-> (GH #472) is in flight and its ADR gates the build. **M-E** upstream-drift correctness — with
-> Q3 pre-ruled: `protocol.ts`'s `surfaceProperties` DROPS (upstream v1.0-RC removed it; GH #477
-> carries the ruling). **M-F** the second SaaS composition + the association/multi-select intake.
-> The ecosystem SPEC ([`spec/a2ui-ecosystem-alignment.spec.md`](spec/a2ui-ecosystem-alignment.spec.md))
-> was ratified the same round (Q4) and its action rows filed (GH #473–#477); its R7 pack re-sync
-> is a user-scope harness action, R1 waits on its own streaming-SPEC revision.
-> `main` green across every gate incl. size (post #469/#470); the standing checkpoints (#455/#468)
-> and the ADR-0168 MCP deferral (#438) remain deliberate.
+> **The M-D → M-E → M-F arc is CLOSED.** M-D (per-persona A2UI catalogs, ADR-0172, GH
+> #421/#472/#480) shipped and all three tracking issues are closed on GitHub. M-E (upstream-drift
+> correctness, GH #477's Q3 ruling — `protocol.ts`'s `surfaceProperties` dropped) shipped 2026-08-06/07
+> and was carried further by the later, unrelated retire-catalog-level-theming pass (GH #531,
+> 2026-08-07). M-F (the second SaaS composition — Support Dashboard, GH #499 — plus the
+> `ui-multi-select` association/multi-select field, ADR-0175) shipped 2026-08-07. This closes out
+> the 2026-08-05 wave in full. **No successor arc has been ruled since** — the work that has
+> actually shipped in the three weeks since (the svg-chart system, ADR-0227's shared-state
+> grammar + `@agent-ui/data` adoption, `ui-breadcrumb`, `ui-drill` amendments, `ui-playing-card`,
+> the ADR-0230 column-chart HTML-plot ladder) arrived as individually-filed/ADR'd issues, not a
+> ruled multi-milestone arc. Candidate next-arc material sits in §4 (GenUI B3, the identity
+> family-wide layout cards, AC19's sheet-set widening) — due for its own intake round if Kim wants
+> another named arc rather than continuing the issue-by-issue cadence.
 
 - **Component foundation — complete.** G0–G9 + the Control Suite + the icon adapter: the reactive
   kernel, FACE element layer, templating/directives, and ~50 `ui-*` controls across the
@@ -68,6 +68,17 @@ decision (dated line in §4).
   summary on turn end, error stays loud), and a per-step raw-source reveal (a `progressDetail`
   sibling rung, fail-closed, capped) — all riding the shared `ui-timeline-item` disclosure
   anatomy, zero new public surface on that control.
+  The window since has kept adding real, not-yet-planned controls rather than closing the family
+  down further: the **svg-chart system** (ADR-0228/0229, axis/inset/series vocabulary) minted
+  `ui-column-chart`, widened `ui-line-chart` with axes-state + gradient fill, and shipped
+  `ui-gauge` (multi-ring radial); **ADR-0230** then retired `ui-column-chart`'s SVG plot layer
+  for a pure-HTML div layer plus a 3-rung container-query chrome-degradation ladder (§4's dated
+  line). **`ui-breadcrumb`** was minted whole (ADR-0195 amendments S1–S4: contained/stack
+  presentation, `chrome="crumbs"`, `collapse="menu"` overflow fold, `layout="columns"` Miller
+  columns) and its sibling **`ui-drill`** grew the same contained-pane/columns/crumbs
+  presentation options in step. **`ui-playing-card`** (ADR-0225) is the other clean net-new
+  control. None of this reopens the "closed" framing above — it's the same steady
+  single-control-riding-a-review cadence, just a longer list of reviews.
 - **The shell system — the current center of gravity.** The named-archetype family (ADR-0151):
   `ui-super-shell`, a two-level recursive rail+pane grammar on an 18px module, with
   `ui-workspace-shell`/`ui-chat-shell` as presets; resizable panes + tab collapse (ADR-0154); the
@@ -135,6 +146,17 @@ decision (dated line in §4).
   registry — per-package READMEs with CDN usage, an install-from-registry consumer smoke in CI —
   and the docs site auto-deploys to `ui.nonoun.io` on every push to main. This closes the
   library-emit deferral that sat in §4 since G8 (dated line below).
+- **`@agent-ui/data` — a fourth sibling package, adopted, not just minted.** ADR-0192 (accepted
+  2026-08-16) minted the zero-dep `@agent-ui/data` package (`shared ← components ← data`,
+  catalog-invisible): the `DataSource<T>` seam, signal-backed `resource()`/`mutation()`/
+  `paginated()`, plus `./gateway` and `./stream` opt-in subpaths. ADR-0227 (ratified 2026-08-20)
+  then ruled the fleet-wide context/shared-state grammar — one signal-backed owner per piece of
+  state, explicit injection, `StorageAdapter` persistence, CSS cascade for presentational axes —
+  and drove real adoption in two waves: wave 1 put `ui-agent-admin`'s persona roster onto
+  `DataSource`, wave 2 did the same for its skill-pack shelf, teams, and resources. A fleet gate
+  backs the grammar: `state-grammar ratchet` (GH #1544) reds any raw `localStorage`/IDB access
+  outside the `StorageAdapter` seam. The routable how-to, incl. the `resource()`/`mutation()`
+  worked example, lives at [`references/state-and-persistence.md`](references/state-and-persistence.md).
 - **Vocabulary + process.** The anatomy-attribute axis vocabulary is law (ADR-0157 →
   [`references/naming.md`](references/naming.md) §6): `data-part` = control-created anatomy,
   `data-slot` = the consumer-side slot claim, orthogonal state/variant axes each their own
@@ -171,28 +193,6 @@ decision (dated line in §4).
   cl.5 amendment, the #808 S1 precedent; new heading rows honor ADR-0142's compact scale) and add
   per-register when-to-use guidance to the producer prompt path. Exact enum membership is Kim's
   ruling at the amendment.
-- **ui-column-chart all-HTML plot layer + container-query chrome-degradation ladder (GH #1578,
-  `size:big`, filed 2026-08-21).** Drop the `[data-part=plot]` SVG (gridlines/now-marker become
-  positioned divs — all its marks are axis-aligned), add a pure-CSS container-query ladder
-  (full chrome → thinned pills → bare marks) per ADR-0223's fill axis, and put the self-sensing
-  data-granularity rung to Kim at design intake as an explicit law-exception fork (ResizeObserver
-  vs ADR-0229-precedent producer mode). Touches ADR-0228 cl.2's "SVG for strokes" wording —
-  amendment or new ADR.
-- **M-D — "Personas with their own catalogs" (first of the 2026-08-05 arc). 🟡 IN FLIGHT** — built
-  from the RATIFIED [ADR-0172](adr/0172-persona-catalog-composition-intake.md) (GH #421's reopened
-  intake, frozen 2026-08-05): each persona composes `shared primitives + the shared system-patterns
-  tier + its own package-level local-pattern catalog-schema` — realized as a compose-time OVERLAY
-  over ADR-0169's two-catalog registry (no third wire-visible catalog id), the persona carrying only
-  its catalog SELECTION on the ADR-0170 seam. Next artifact per the ADR's own Repairs cell: **M-D's
-  SPEC** (then the build — GH #480). After M-D: **M-E** (upstream-drift correctness; Q3 pre-ruled,
-  GH #477 drops `surfaceProperties`) then **M-F** — per
-  [ADR-0175](adr/0175-association-multiselect-field-design-intake.md) (ratified 2026-08-06, GH
-  #498): a multi-select FIELD primitive is minted for the record-edit/binding case (PRD-D3's
-  composed facet vehicle stands, unreopened, for the filter case); its wire value rides the
-  ORIGINAL single two-way slot with an array-typed prop, not ADR-0161's multi-slot mechanism;
-  to-many association/relationship editing is fenced OUT as its own, later, harder intake. Next
-  artifact: [`spec/multi-select-field.spec.md`](spec/multi-select-field.spec.md) (this SPEC), then
-  M-F's own LLD/build — the 2026-08-05 wave's ruled order (§2).
 - **The 2026-07-28 intake ruled the next arc.** A six-system inventory wave (agent-admin · a2ui ·
   GenUI · components · shells · SaaS patterns) fed a dependency-spine synthesis and three
   candidate milestones; Kim ruled the order on 2026-07-28. The full wave record — six inventories
@@ -297,8 +297,9 @@ decision (dated line in §4).
   already rides. **(3) the host-side half — designed, buildable today, NOT scheduled:** the
   persona-scoped opt-in gate, the plan-runner module (N sequential `produce()` calls over one
   growing `Session`), the step projection onto the existing status-stream grouping, and the
-  closing synthesis turn. It waits on a scheduling decision only — the ruled arc is M-D → M-E →
-  M-F — not on any missing mechanism. **(4) the concurrent/parallel-step upgrade** stays an
+  closing synthesis turn. It waits on a scheduling decision only — the M-D → M-E → M-F arc that
+  once queued ahead of it is now closed (§2), so nothing outstanding blocks it but a fresh
+  priority call — not on any missing mechanism. **(4) the concurrent/parallel-step upgrade** stays an
   unwritten design (its surface-ID-prefixing precondition has since landed; the design has not).
 - **AC19's sheet set — widen deliberately, or not.** The spacing-drift gate covers the shell
   family today (every `@agent-ui/app` sheet + the shell-composing site sheets). Whether it extends
@@ -324,11 +325,6 @@ decision (dated line in §4).
 - **ui-menu selected-option scroll-centering + default focus on open (GH #1100, size:small).** An
   overflowing menu panel opens at scroll offset 0 today; the selected option should open centered
   in the viewport and focused (ARIA listbox pattern). `ui-select`/`ui-multi-select` share the panel.
-- **svg-chart system (GH #1561, size:big).** Axis/inset chart family per the Claude-Code-Gateway
-  Figma boards: stacked columns (+ projected ghost column, now-marker), gradient area, dense
-  highlighted bars with tooltip callout, multi-ring radial gauge — built around a zero-padding-
-  container inset contract (charts carry their own insets). Triggers the chart-axis-vocabulary ADR
-  the #1207 close deferred; new-tag-vs-extend and series-ramp-token forks named on the issue.
 - **GenUI B3 — the judged pack-idiom eval.** Out of the GenUI SPEC's contract by its own §6 cut:
   PRD §8 m3 (judge-scored pack-idiom use) realized as a judged corpus-rubric shard plus its docs
   page (PRD-G6) — a named manual live-model run, never part of the deterministic gates (SPEC-N3).
@@ -403,3 +399,26 @@ decision (dated line in §4).
   only, no script path exists for `accepted`→`superseded`), their clause-5 forward pointers
   landing via `f0debd6`, and the CLAUDE.md/README/getting-started rows updated — ADR-0156
   clauses 4–5's full surface. §2's shell-system entry now reads removed, not deprecated.
+- **2026-08-20/21** — **svg-chart system (GH #1561) shipped**: ADR-0228/0229 (axis/inset/series
+  vocabulary + family extensions) ratified, then built wave-by-wave — `_chart` subsystem +
+  `ui-column-chart` (#1570), `ui-line-chart` axes state + gradient fill (#1572), `ui-gauge`
+  multi-ring radial gauge (#1573), and the catalog rows + allowlist drain (#1574). §4's line
+  above named the pre-build scope; the shipped shape matches it.
+- **2026-08-21** — **ui-column-chart all-HTML plot layer + container-query chrome-degradation
+  ladder (GH #1578) shipped**: [ADR-0230](adr/0230-column-chart-html-plot-layer-container-query-ladder.md)
+  ratified (clause-6 fork branch B — producer-side granularity, no ResizeObserver), built in PR
+  #1582 — the SVG plot substrate retired for positioned HTML divs, the 3-rung ladder landed, and
+  the ADR's booked repairs (ADR-0228 reciprocal pointer, `chart-family.spec.md`/`.prd.md` deltas,
+  `column-chart.md` anatomy) executed in the same wave. One out-of-scope finding spun off as its
+  own bug, GH #1581 (`ui-line-chart`'s category-label chip has the same RTL `translate()`
+  physical-vs-logical class) — open, not yet fixed. GH #1580 (the booked-repairs tracker) stays
+  open by its own contract until the checklist item is confirmed closed on GitHub, though the PR
+  that merged states every item landed.
+- **2026-08-06/07** — **the M-D → M-E → M-F arc (ruled 2026-08-05) closed out**: M-D ("Personas
+  with their own catalogs") shipped under ADR-0172, its SPEC accepted and build merged — GH
+  #421/#472/#480 all closed. M-E (upstream-drift correctness) shipped GH #477's Q3 ruling,
+  dropping `protocol.ts`'s `surfaceProperties`. M-F shipped both halves: the second SaaS
+  composition (Support Dashboard, GH #499) and the `ui-multi-select` association/multi-select
+  field under ADR-0175 (GH #498). This dated line was written 2026-08-22, on discovering §3 still
+  carried a stale "M-D 🟡 IN FLIGHT" block two weeks after the arc actually closed — the repair,
+  not the ship, is what's late.
