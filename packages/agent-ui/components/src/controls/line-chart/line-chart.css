@@ -197,6 +197,13 @@
     translate: calc(var(--_cat-shift, -50) * 1%) 0;
   }
 
+  /* `translate`'s x-component is always PHYSICAL and does not mirror under dir="rtl" — negate the
+     shift's sign so the clamp stays inward (same fix pattern as ui-column-chart's category-label/
+     callout parts, GH #1578 / ADR-0230). */
+  :scope:dir(rtl) [data-part='category-label'] {
+    translate: calc(var(--_cat-shift, -50) * -1%) 0;
+  }
+
   @media (forced-colors: active) {
     :scope [data-part='grid-line'],
     :scope [data-part='now-tick'] {
