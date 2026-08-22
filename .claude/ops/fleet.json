@@ -17,8 +17,8 @@
       "mode": "background"
     },
     "product": {
-      "tier": "fable+high",
-      "justification_date": "2026-08-17",
+      "tier": "sonnet+xhigh",
+      "justification_date": "2026-08-22",
       "mode": "manual"
     }
   },
