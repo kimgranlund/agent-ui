@@ -18,12 +18,12 @@
 //
 // Regen-on-main ruling (GH #1599, Kim ruling 2026-08-23): the committed fixture spans the WHOLE site
 // bundle's CSS (the same joined text light-dark-minify.test.ts's own build produces), so an UNRELATED
-// site CSS edit reflows its bytes too — it drifted on PR CI three times in one weekend (#1596 ->
+// site CSS edit reflows its bytes too, it drifted on PR CI three times in one weekend (#1596 ->
 // #1590/#1597 -> #1598) purely from that class of edit. This is fleet-rules §4's "reproducible from
-// source" derived-artifact class, not "bytes ARE the contract" — regen belongs on `main`, not as a
+// source" derived-artifact class, not "bytes ARE the contract"; regen belongs on `main`, not as a
 // PR-blocking gate. `.github/workflows/theme-provider-fixture-regen.yml` re-runs the real build on every
 // push to `main` and opens ONE bot PR per drift (no-op when bytes already match); this test's freshness
-// check WARNS (never reds) on a `pull_request` CI run — `GITHUB_EVENT_NAME` is GitHub Actions' own signal
+// check WARNS (never reds) on a `pull_request` CI run: `GITHUB_EVENT_NAME` is GitHub Actions' own signal
 // for that, unset everywhere else (a local `npm test`, a push-to-main run) so the byte check still holds
 // there. Regenerate by hand: `npm run regen:theme-provider-fixture` (site/lib/build-css.ts's
 // `buildSiteCssShared`, the SAME helper this test and the regen workflow both use).
@@ -40,7 +40,7 @@ const ROOT = process.cwd()
 // its own scratch --outDir (only the CACHED RESULT is shared, never the scratch directory).
 const SCRATCH_OUT_DIR = `${ROOT}/dist-theme-provider-gate-scratch`
 const FIXTURE_PATH = `${ROOT}/site/lib/__fixtures__/theme-provider-built.css`
-// GitHub Actions sets this to `pull_request` on a PR-triggered run only — unset locally and on a
+// GitHub Actions sets this to `pull_request` on a PR-triggered run only, unset locally and on a
 // push-to-main run, both of which keep the strict byte check (regen-on-main ruling, banner above).
 const IS_PR_RUN = process.env.GITHUB_EVENT_NAME === 'pull_request'
 
@@ -51,15 +51,22 @@ describe('ui-theme-provider built-output fixture — byte-identical to a fresh `
     expect(committed).toContain('light-dark(')
   })
 
-  it('a fresh production build matches the committed fixture byte-for-byte (regen-on-main; warns, never reds, on a PR run — see file banner)', async () => {
+  it('a fresh production build matches the committed fixture byte-for-byte (regen-on-main; warns, never reds, on a PR run, see file banner)', async () => {
     try {
       const fresh = await buildSiteCssShared(ROOT, SCRATCH_OUT_DIR)
       const committed = readFileSync(FIXTURE_PATH, 'utf8') as string
       if (fresh !== committed) {
+        // Structural validity is checked UNCONDITIONALLY, on the PR path too: the regen-on-main
+        // downgrade only excuses a byte-for-byte drift from an unrelated CSS edit, never a genuinely
+        // broken build. A build that runs to completion but emits truncated or malformed CSS (missing
+        // the `light-dark(` anchor, or far short of the real bundle's size) still fails here regardless
+        // of GITHUB_EVENT_NAME.
+        expect(fresh.length, 'a fresh build produced suspiciously little CSS, likely a broken build, not drift').toBeGreaterThan(1000)
+        expect(fresh, 'a fresh build is missing light-dark( entirely, likely a broken build, not drift').toContain('light-dark(')
         if (IS_PR_RUN) {
           // eslint-disable-next-line no-console -- deliberate: the PR-CI-visible signal this branch exists to give
           console.warn(
-            'theme-provider-build-fixture: committed fixture drifted from a fresh build on a PR run — ' +
+            'theme-provider-build-fixture: committed fixture drifted from a fresh build on a PR run, ' +
               'expected (regen-on-main, GH #1599); the push-to-main regen workflow will refresh it, not this PR.',
           )
           return

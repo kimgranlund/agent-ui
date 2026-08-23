@@ -1,5 +1,5 @@
-# theme-provider-fixture-regen.yml — the regen-on-main mechanism for the LLD-C11 committed fixture (GH
-# #1599, Kim ruling 2026-08-23), extended to `dogfood-assets.ts` (GH #1599's stretch scope — same
+# theme-provider-fixture-regen.yml, the regen-on-main mechanism for the LLD-C11 committed fixture (GH
+# #1599, Kim ruling 2026-08-23), extended to `dogfood-assets.ts` (GH #1599's stretch scope, same
 # derived-artifact class, GH #1589). Both are fleet-rules §4 "reproducible from source" derived artifacts
 # whose byte-for-byte gates used to red PR CI on ANY unrelated `ui-*` CSS/JS change:
 #   - `site/lib/__fixtures__/theme-provider-built.css` drifted three times in one weekend
@@ -8,12 +8,12 @@
 #     identical shape (theme-provider-build-fixture.test.ts's own banner names it "the theme-provider
 #     LLD-C11 shape") and was still on manual regen duty (#1589).
 # This workflow re-runs both real builds on every push to `main` and opens ONE bot PR only when a byte
-# actually moved — `peter-evans/create-pull-request` no-ops on a clean working tree, so no separate
+# actually moved, `peter-evans/create-pull-request` no-ops on a clean working tree, so no separate
 # per-target diff bookkeeping is needed here.
 #
 # Deliberately workflow-on-push (not scheduled): the drift's own root cause is a merge to main changing
 # CSS/JS source, so reacting to that push catches it same-day rather than waiting out a cron window, and
-# both real builds together measure single-digit seconds — well inside workflow budget.
+# both real builds together measure single-digit seconds, well inside workflow budget.
 name: Theme-provider fixture regen
 
 on:
@@ -25,12 +25,18 @@ on:
       - 'vite.config.ts'
   workflow_dispatch: {}
 
-# A bot-authored commit from this workflow must never trigger itself again — `paths` scoping above already
+# A bot-authored commit from this workflow must never trigger itself again, `paths` scoping above already
 # excludes the workflow file itself, and the regen commit only ever touches the two derived-artifact files
 # below, so a second push-to-main from this bot re-runs, finds both fresh, and opens nothing.
 permissions:
   contents: write
   pull-requests: write
+
+# deploy-docs.yml's own convention: two pushes to main in quick succession should not run two regen
+# builds concurrently against the same branch/PR (bot/theme-provider-fixture-regen).
+concurrency:
+  group: theme-provider-fixture-regen
+  cancel-in-progress: true
 
 jobs:
   regen:
@@ -44,15 +50,19 @@ jobs:
 
       - run: npm ci
 
-      # Do NOT set NODE_ENV here — build-css.ts sets it for its own spawned `vite build` subprocess only;
+      # Do NOT set NODE_ENV here, build-css.ts sets it for its own spawned `vite build` subprocess only;
       # an outer NODE_ENV=production breaks this step's own module resolution (regen script's own banner).
-      # `|| true` on both: the regen scripts intentionally exit non-zero to signal drift to a caller that
-      # cares (a local run), but this workflow decides via the working-tree diff below, not the exit code.
+      # Neither step swallows its exit code: `regen:theme-provider-fixture` exits 0 on a completed run
+      # (fresh or genuinely rewritten) and non-zero only on a real build crash (its own banner);
+      # `regen:dogfood-assets` (the existing `build-dogfood-assets.mjs` CLI) writes unconditionally on a
+      # successful run and never signals drift via its exit code at all, so a thrown build error is the
+      # only way either step reds this job. Whether anything actually changed is decided below, by the
+      # working-tree diff `peter-evans/create-pull-request` performs, never by either exit code.
       - name: Regenerate theme-provider-built.css
-        run: npm run --silent regen:theme-provider-fixture || true
+        run: npm run --silent regen:theme-provider-fixture
 
       - name: Regenerate dogfood-assets.ts
-        run: npm run --silent regen:dogfood-assets || true
+        run: npm run --silent regen:dogfood-assets
 
       - name: Open bot PR on drift
         uses: peter-evans/create-pull-request@v6
@@ -61,7 +71,7 @@ jobs:
           commit-message: 'chore: regen build-derived fixtures (LLD-C11 / LLD-C1)'
           title: 'chore: regen theme-provider + dogfood-assets fixtures'
           body: |
-            Automated regen — one or both of the committed build-derived artifacts below drifted from a
+            Automated regen, one or both of the committed build-derived artifacts below drifted from a
             real build on `main`:
               - `site/lib/__fixtures__/theme-provider-built.css` (theme-provider-build-fixture.test.ts, LLD-C11)
               - `packages/agent-ui/components/src/controls/sandbox-frame/dogfood/dogfood-assets.ts` (dogfood-assets-freshness.test.ts, LLD-C1)
