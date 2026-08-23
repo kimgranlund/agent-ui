@@ -267,12 +267,14 @@ describe('renderMarkdownBody — blockquote parsing (TKT-0036: the card.md `>` d
     expect(code?.textContent).toBe('> not a quote — a diff/heredoc marker inside the fence')
   })
 
-  it('card.md — the real corpus: its two decision-log asides render as two <blockquote> elements', () => {
+  // Content-pinned on purpose: this is the real corpus, so adding/removing a `>` aside in card.md MUST touch this
+  // list too (GH #1593 — the third aside landed in #1559 without repairing the pinned count, reddening main).
+  it('card.md — the real corpus: its three decision-log asides render as three <blockquote> elements', () => {
     const { body } = loadCardDoc()
     const article = renderMarkdownBody(body)
     const quotes = article.querySelectorAll('blockquote')
-    expect(quotes.length).toBe(2)
-    expect(quotes[0].textContent).toMatch(/^Why this keeps the running mid-scroll fade/)
-    expect(quotes[1].textContent).toMatch(/^The HOLD/)
+    const leads = [/^Footer bottom-pin constraint/, /^Why this keeps the running mid-scroll fade/, /^The HOLD/]
+    expect(quotes.length, 'card.md aside count changed — update the pinned leads in this test').toBe(leads.length)
+    leads.forEach((lead, i) => expect(quotes[i].textContent).toMatch(lead))
   })
 })
