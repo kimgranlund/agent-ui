@@ -7,8 +7,9 @@
 # The fleet drift gate (descriptor/props-gen-driftwire.test.ts) keeps the two byte-identical.
 tag: ui-avatar
 description: A compact circular identity mark that shows a photo, initials, or a fallback glyph for one person.
-tier: indicator        # geometry size-class — the F3 widget-box class (ADR-0041; SPEC-R20), NOT display:
-                        # a small fixed painted box, same kin as checkbox/switch/tag, sized off the
+tier: indicator        # geometry size-class — a fixed painted SQUARE box (SPEC-R20), NOT display; since
+                        # ADR-0112 Amendment 3 (2026-08-23) sized off the CONTROL-HEIGHT ladder
+                        # --md-sys-height-{sm,md,lg} (the button row, ADR-0038), no longer the ADR-0041
                         # compact ramp — non-interactive is stated in prose (no keyboard/focus contract)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (SPEC-R4)
 # marginal: not yet measured — this folder-only wave (M1-a) ships ahead of the LLD-C11 shared-file
@@ -38,9 +39,9 @@ attributes:            # attributes-as-API — the GENERATION SOURCE for avatar.
     type: enum
     values: [sm, md, lg]
     default: md
-    reflect: true       # REFLECTED — the CSS `[size]` hook that repoints the widget-box ramp tier
-                         # (the checkbox/badge precedent)
-    description: A step on the compact-realm widget-box ramp (sm, md default, lg).
+    reflect: true       # REFLECTED — the CSS `[size]` hook that repoints the control-height tier
+                         # (the button precedent)
+    description: A step on the control-height ladder shared with ui-button (sm, md default, lg).
 
 properties: []         # no manual accessors beyond the four typed props
 
@@ -76,10 +77,12 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 
 geometry:
   sizeClass: indicator
-  boxSize: var(--ui-avatar-size)  # off the widget-box ramp `--md-sys-compact-{sm,md,lg}` (ADR-0041, fork F3);
+  boxSize: var(--ui-avatar-size)  # a SQUARE off the control-height ladder `--md-sys-height-{sm,md,lg}`
+                                    # (ADR-0038's row lookup — the same root tokens ui-button's block-size /
+                                    # min-inline-size ride; ADR-0112 Amendment 3, 2026-08-23, re-ruling fork F3);
                                     # `[size]` repoints the tier; `[scale]` on an ancestor re-tables the
-                                    # ramp for the subtree for free — no avatar-local [scale] rule needed
-  # NO --md-sys-height-* consumption (SPEC-R20 AC2) — a box, not a control-height row.
+                                    # ladder for the subtree for free — no avatar-local [scale] rule needed
+  # 20–48px across the tiers, 28px at the ui-md × md default (SPEC-R20 as amended). Initials/glyph derive from the box.
 
 forcedColors: An explicit `@media (forced-colors: active)` block adds a system-ink (`CanvasText`) border so the circle boundary stays visible under WHCM (SPEC-R19 — a background-drawn plane can otherwise merge with the page). Initials are real text and survive untouched; the `ui-icon` glyph inherits the consuming context's forced-colors ink (icon.md's own posture).
 ---
@@ -130,8 +133,9 @@ named foreseen extension if identity-at-a-glance proves needed.
 
 ## Sizing
 
-`size` (`sm` / `md` / `lg`, default `md`, reflected) selects the widget-box tier off the ratified
-`--md-sys-compact-{sm,md,lg}` ramp (ADR-0041) — the same ramp checkbox/switch/tag use, 12–28px depending on an
-ancestor `[scale]`. The component token `--ui-avatar-size` is the page's override for larger chrome (a
-profile header); a real fleet register above 28px is a named, separately-earned extension, not this
-component's default.
+`size` (`sm` / `md` / `lg`, default `md`, reflected) selects a tier off the ratified control-height
+ladder `--md-sys-height-{sm,md,lg}` (ADR-0038) — the same root tokens `ui-button` sizes its frame with, so
+an avatar sits at a button's height in a row: 28px at the default `ui-md` scale, 20–48px across ancestor
+`[scale]` tiers. The component token `--ui-avatar-size` is the page's override for larger chrome (a
+profile header). Before ADR-0112 Amendment 3 (2026-08-23) the box rode the ADR-0041 compact ramp
+(12–28px); that fork's own ">28px register" re-open trigger fired.

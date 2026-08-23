@@ -1,9 +1,11 @@
 /* avatar.css — ui-avatar, the Indicator-class compact identity mark (LLD-C3, feed-family.lld.md §3;
  * SPEC-R4/R5/R6/R7/R19/R20; ADR-0112 cl.3, fork F3). Two sectioned blocks:
  *
- *   [1] TOKEN BLOCK — `:where(ui-avatar)` declares `--ui-avatar-*`: the widget box off the widget-box
- *       ramp `--md-sys-compact-{sm,md,lg}` (ADR-0041 — fork F3, no new register minted; `[size]` repoints the
- *       tier, `[scale]` on an ancestor re-tables the ramp for free, no avatar-local [scale] rule needed)
+ *   [1] TOKEN BLOCK — `:where(ui-avatar)` declares `--ui-avatar-*`: the square box off the CONTROL-HEIGHT
+ *       ladder `--md-sys-height-{sm,md,lg}` (ADR-0038's (scale × size) row lookup — the same root tokens
+ *       ui-button's block-size/min-inline-size ride; ADR-0112 Amendment 3 moved it here off ADR-0041's
+ *       widget-box ramp, fork F3's named re-open trigger having fired; `[size]` repoints the tier, `[scale]`
+ *       on an ancestor re-tables the ladder for free, no avatar-local [scale] rule needed)
  *       and ONE neutral plane + on-surface ink pair (SPEC-R7 — no per-identity hue).
  *   [2] STYLES BLOCK — `@scope (ui-avatar)` consumes ONLY `--ui-avatar-*`. The host is a circle-masked
  *       widget box (`inline-grid`, `place-items: center`, `border-radius: 50%`); exactly one child paints
@@ -26,21 +28,25 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-avatar) declares --ui-avatar-* ════════════════ */
 
 :where(ui-avatar) {
-  /* Widget-box size (ADR-0041 fork F3) — defaults to the compact-realm `md` tier; a page override for
-     larger chrome (a profile header) is the token's job, not a new fleet register (F3's named trigger). */
-  --ui-avatar-size: var(--md-sys-compact-md);
+  /* Box size — the CONTROL-HEIGHT ladder `--md-sys-height-{sm,md,lg}` (ADR-0038's (scale × size) row lookup),
+     the same root tokens ui-button's frame rides (block-size = min-inline-size = height), so an avatar sits
+     at a button's height in a row. ADR-0112 Amendment 3 (Kim, 2026-08-23) moved it here off the ADR-0041
+     widget-box ramp — F3's own named re-open trigger (a register above the compact ceiling) fired: a
+     compact-md mark beside height-md controls was unreadable. The box is square; initials/glyph still
+     derive from it. */
+  --ui-avatar-size: var(--md-sys-height-md);
 
   /* ONE neutral pair (SPEC-R7) — AA-verifiable once; every `name` computes the identical plane/ink. */
   --ui-avatar-plane: var(--md-sys-color-neutral-surface-high);
   --ui-avatar-ink: var(--md-sys-color-neutral-on-surface);
 }
 
-/* [size] → widget-box tier (the checkbox/badge precedent: sm/lg repoint, md is the base default above). */
+/* [size] → control-height tier (the button precedent: sm/lg repoint, md is the base default above). */
 :where(ui-avatar[size='sm']) {
-  --ui-avatar-size: var(--md-sys-compact-sm);
+  --ui-avatar-size: var(--md-sys-height-sm);
 }
 :where(ui-avatar[size='lg']) {
-  --ui-avatar-size: var(--md-sys-compact-lg);
+  --ui-avatar-size: var(--md-sys-height-lg);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-avatar) consumes ONLY --ui-avatar-* ════════════════ */

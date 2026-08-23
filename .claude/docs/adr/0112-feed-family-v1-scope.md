@@ -356,3 +356,57 @@ persistent inline status. Every affected code site cites GH #1184.
 - [ ] none — PR #1186 landed the reversal in full (catalog row, factory, conformance, feed
   disposition, tier map, grammar, playbooks); this amendment is the decision record catching up
   with the ruled, shipped state.
+
+## Amendment 3 (2026-08-23, **proposed**) — fork F3 re-ruled: `ui-avatar` moves off the ADR-0041 widget-box ramp onto the control-height ladder `--md-sys-height-{sm,md,lg}` (the `ui-button` row)
+
+> Append-only, and **proposed**: the Status cell above reads `accepted` for the record as a
+> whole and stays byte-untouched — agents never flip status
+> (`.claude/hooks/adr-status-guard.py`), and this amendment carries no ratification of its
+> own until Kim gives one. Every accepted clause above is unedited prose; what this amendment
+> re-rules is precisely fork **F3** (avatar sizing lever) and the one SPEC-R20 sentence that
+> carries it. Every other clause, fork, and the avatar's no-hue / decorative-default / circle-mask
+> contract (cl.3, SPEC-R4–R7) stand unchanged — only the ROOT TOKENS the square box reads change.
+
+**The trigger F3 itself named fired.** F3 (2026-07-08) chose the Indicator-class widget box —
+`--ui-avatar-size` off `--md-sys-compact-{sm,md,lg}`, 12–28 px — and wrote its own re-open
+condition: *"a new avatar ramp … not earned until a real >28 px fleet register is demonstrated;
+the named trigger for re-opening."* On the docs site (2026-08-23, the A2UI `preview` surface)
+the default mark rendered 16 × 16 px beside 28 px-tall controls; Kim's ruling, verbatim: *"these
+are comically small. they should use the same root height/min-width tokens as buttons."* That is
+the >28 px register (the `ui-lg`/`content-md` tiers put `height-md` at 36 px and `height-lg` at
+48 px), demonstrated on a live surface, not conjectured.
+
+**Decision.** `ui-avatar`'s square box reads the **control-height ladder** — the same root tokens
+`ui-button` sizes its frame with (`block-size` = `min-inline-size` = `--md-sys-height-{size}`,
+geometry.md's Control-class lever, ADR-0038's (scale × size) → §1-row lookup):
+
+| `[size]` | was (compact ramp, `ui-md`) | now (`--md-sys-height-*`, `ui-md`) | `ui-sm` | `ui-lg` / `content-md` |
+|---|---|---|---|---|
+| `sm` | 14 px | **24 px** | 20 px | 28 px |
+| `md` (default) | 16 px | **28 px** | 24 px | 36 px |
+| `lg` | 18 px | **36 px** | 28 px | 48 px |
+
+F3 rejected this alternative as "entangling a non-control Display mark with the ADR-0038 control
+lookup's contract". That objection is withdrawn on mechanics: the avatar does not consume
+`--md-sys-font-*`/`-icon-*` rows, padding, or the `h/2` frame law — it reads ONE height token as
+a square side, exactly as an icon-only button's frame does, and inherits every ancestor `[scale]`
+re-table for free (no avatar-local `[scale]` rule, unchanged). Initials (`0.42 × box`) and the
+fallback glyph (`0.6 × box`) still derive from the box. The "new avatar ramp" alternative stays
+rejected — no register is minted; the existing ladder is reused. `--ui-avatar-size` remains the
+page's override.
+
+**Blast radius.** One control. Consumers: `site/pages/list-demo.ts` (`size="sm"`, 14 → 24 px),
+the avatar demo/doc pages, and the A2UI `Avatar` catalog row (factory unchanged — no prop
+changes). No visual golden contains an avatar; `avatar.browser.test.ts` re-pins the new rows and
+adds a "box height equals `--md-sys-height-md`" probe. `sizing-gates.test.ts` lists avatar among
+display atoms — untouched (it is still `inline-grid`, still hugs).
+
+**Repairs (this change, branch `avatar-control-height-ramp`)**
+- [x] `controls/avatar/avatar.css` — token block + `[size]` legs repoint; header comment.
+- [x] `controls/avatar/avatar.md` — tier note, `size` description, geometry block, Sizing section.
+- [x] `controls/avatar/avatar.browser.test.ts` — 28/24/36 pins + `ui-lg` 36 + the shared-row probe.
+- [x] `spec/feed-family.spec.md` SPEC-R20 — the avatar sentence, superseded wording kept inline.
+- [x] `lld/feed-family.lld.md` — the avatar CSS snippet + two prose mentions.
+- [x] `site/pages/avatar-demo.ts` — the sizes-section comment.
+- [x] `sandbox-frame/dogfood/dogfood-assets.ts` — regenerated (embeds avatar.css).
+- [ ] Kim ratifies this amendment (`ratify ADR-0112` is the host's flip; the Status cell is untouched here).

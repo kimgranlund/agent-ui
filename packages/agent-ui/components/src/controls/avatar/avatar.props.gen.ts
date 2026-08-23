@@ -9,6 +9,6 @@ export const props = {
   identity: prop.string(''),
   // The a11y escape hatch — non-empty makes the avatar itself the accessible name (role=img). — generated from avatar.md attributes.label — edit the descriptor, not this file.
   label: { ...prop.string(''), reflect: true },
-  // A step on the compact-realm widget-box ramp (sm, md default, lg). — generated from avatar.md attributes.size — edit the descriptor, not this file.
+  // A step on the control-height ladder shared with ui-button (sm, md default, lg). — generated from avatar.md attributes.size — edit the descriptor, not this file.
   size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
 } satisfies PropsSchema
