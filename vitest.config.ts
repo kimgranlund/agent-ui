@@ -112,6 +112,10 @@ export default defineConfig({
             'packages/agent-ui/a2ui/tools/corpus/*.test.ts',
             'packages/agent-ui/a2ui/tools/conformance/*.test.ts',
             'packages/agent-ui/a2a/tools/corpus/*.test.ts',
+            // GH #1584 (genui-b3-judged-eval.lld.md LLD-C7 n7b) — the GenUI B3 judged-eval CLI's own
+            // tests. Explicit, never a wildcard (the GH #112 rule this whole `tools` project already
+            // documents above): a new leg's test file must land its OWN line here to be armed.
+            'packages/agent-ui/a2ui/tools/corpus-genui/*.test.ts',
           ],
         },
       },

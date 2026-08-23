@@ -371,6 +371,13 @@
     "section": "GenUI"
   },
   {
+    "href": "./genui-corpus.html",
+    "label": "GenUI Corpus Eval",
+    "description": "The B3 judged pack-idiom eval (PRD \u00a78 m3): index.json's own m3 summary + record table, a real ui-sandbox-frame per judged record on disclosure open \u2014 honest empty state until Kim's named manual run.",
+    "level": "L2",
+    "section": "GenUI"
+  },
+  {
     "href": "./workbench.html",
     "label": "SaaS Data Workbench",
     "description": "A data table + filter toolbar + record-edit modal + agent-summary card composed entirely from published fleet primitives inside ui-workspace-shell \u2014 the M-A flagship composition proof (GH #461).",

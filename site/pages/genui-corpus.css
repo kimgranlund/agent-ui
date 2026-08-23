@@ -1,0 +1,62 @@
+/* genui-corpus.css — PAGE-LOCAL chrome for the GenUI B3 judged pack-idiom eval results page (GH #1584).
+ * Styles the m3 summary panel, the record table, and the per-record disclosure ONLY — the rendered
+ * ui-sandbox-frame/ui-disclosure controls keep their OWN component CSS; this page never restyles a
+ * control (no `ui-*` selector below). Colours are `--md-sys-color-*` roles (declared by the foundation
+ * barrels, imported first via _page.ts); spacing rides the `--md-sys-space-*` ramp. */
+
+.genui-corpus-m3 {
+  margin: 0 0 1.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  background: var(--md-sys-color-neutral-surface-high);
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+.genui-corpus-m3 p {
+  margin: 0 0 0.5rem;
+}
+.genui-corpus-m3[data-floor-met='true'] {
+  border-color: var(--md-sys-color-primary);
+}
+.genui-corpus-m3[data-floor-met='false'] {
+  border-color: var(--md-sys-color-error);
+}
+.genui-corpus-m3 ul {
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+.genui-corpus-count {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.genui-corpus-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.genui-corpus-table th,
+.genui-corpus-table td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--md-sys-color-neutral-outline-variant);
+  text-align: start;
+  vertical-align: top;
+}
+.genui-corpus-table th {
+  font-weight: 650;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.genui-corpus-detail {
+  padding: 0.75rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-inline-size: 28rem;
+}
+.genui-corpus-rationale {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
