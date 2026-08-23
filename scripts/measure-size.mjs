@@ -700,7 +700,12 @@ const appCssQuerySuffixPlugin = {
 // further wave is anticipated to draw on this exception; the next legitimate growth here is a
 // genuinely new feature, which pays its own way per cl.5's rule, not this system's residue.
 // Measured 106455 B gz (fresh npm ci, exit-code verified) — zero headroom.
-const APP_MARGINAL_BUDGET = 106455
+// Re-based 106455 -> 106559 B gz 2026-08-23 (ADR-0197 cl.5 ruled exception — Kim ruling): the
+// Kim-directed hover->-dim/-high repoint (commit c6784a0c), bisected on GH #1583 — read that
+// issue's Findings comment first. +104 B gz is the entire, deliberate source; no other change
+// contributed. Measured 106559 B gz (repo measure script, exit-code verified) — zero headroom.
+// ADR-0197 cl.5 ruled exception 2026-08-23 — +104 B from ADR-0008 Am.2 (c6784a0c), GH #1583
+const APP_MARGINAL_BUDGET = 106559
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
