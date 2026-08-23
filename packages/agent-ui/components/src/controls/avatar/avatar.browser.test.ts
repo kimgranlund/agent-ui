@@ -2,8 +2,8 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp } from 'vitest/browser'
 
 // avatar.browser.test.ts — the cross-engine browser-truth proof for ui-avatar (SPEC-N2: jsdom is blind to
-// painted geometry, computed-style ink, and WHCM). Covers: the compact-ramp widget-box geometry under
-// [size]×[scale] (SPEC-R20 AC1, the ADR-0041 lookup), the no-hue identity surface (SPEC-R7 AC1 — two
+// painted geometry, computed-style ink, and WHCM). Covers: the control-height square-box geometry under
+// [size]×[scale] (SPEC-R20 AC1 — the ADR-0038 row lookup since ADR-0112 Amendment 3), the no-hue identity surface (SPEC-R7 AC1 — two
 // different `name`s compute an IDENTICAL plane/ink pair, and the initials text clears AA against it), and
 // forced-colors (SPEC-R19 AC1 — the circle boundary survives WHCM).
 //
@@ -31,30 +31,36 @@ afterEach(() => {
   while (mounted.length) mounted.pop()?.remove()
 })
 
-describe('ui-avatar — compact-ramp widget-box geometry (SPEC-R20 AC1, ADR-0041)', () => {
-  it('default (size=md, no ancestor [scale]) → 16×16 box (--md-sys-compact-md at ui-md scale)', () => {
+describe('ui-avatar — control-height square box (SPEC-R20 AC1; ADR-0112 Amendment 3 — the button ladder, ADR-0038)', () => {
+  it('default (size=md, no ancestor [scale]) → 28×28 box (--md-sys-height-md at ui-md scale — a button\'s height)', () => {
     const el = mount('<ui-avatar identity="Ada Lovelace"></ui-avatar>')
     const box = el.getBoundingClientRect()
-    expect(box.width).toBe(16)
-    expect(box.height).toBe(16)
+    expect(box.width).toBe(28)
+    expect(box.height).toBe(28)
   })
 
-  it('[size=sm] → 14px box; [size=lg] → 18px box (the compact ramp)', () => {
+  it('[size=sm] → 24px box; [size=lg] → 36px box (the control-height ladder)', () => {
     const sm = mount('<ui-avatar identity="Ada Lovelace" size="sm"></ui-avatar>')
-    expect(sm.getBoundingClientRect().width).toBe(14)
+    expect(sm.getBoundingClientRect().width).toBe(24)
 
     const lg = mount('<ui-avatar identity="Ada Lovelace" size="lg"></ui-avatar>')
-    expect(lg.getBoundingClientRect().width).toBe(18)
+    expect(lg.getBoundingClientRect().width).toBe(36)
   })
 
-  it('[scale=ui-lg] × [size=md] → 18px (the scale × size lookup, ADR-0041 clause 2)', () => {
+  it('[scale=ui-lg] × [size=md] → 36px (the scale × size row lookup, ADR-0038)', () => {
     const wrap = document.createElement('div')
     wrap.setAttribute('scale', 'ui-lg')
     wrap.innerHTML = '<ui-avatar identity="Ada Lovelace"></ui-avatar>'
     document.body.append(wrap)
     mounted.push(wrap)
     const el = wrap.querySelector('ui-avatar') as HTMLElement
-    expect(el.getBoundingClientRect().width).toBe(18)
+    expect(el.getBoundingClientRect().width).toBe(36)
+  })
+
+  it('ui-avatar and ui-button share the same height row: the avatar box equals --md-sys-height-md', () => {
+    const el = mount('<ui-avatar identity="Ada Lovelace"></ui-avatar>')
+    const row = Number.parseFloat(getComputedStyle(el).getPropertyValue('--md-sys-height-md'))
+    expect(el.getBoundingClientRect().height).toBe(row)
   })
 
   it('the box is a true CIRCLE (border-radius 50%) at every size', () => {

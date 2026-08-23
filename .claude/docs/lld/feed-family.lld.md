@@ -126,12 +126,12 @@ Fallback chain (SPEC-R5) — one **render effect** over `src`, `name`, and a pri
 
 ```css
 :where(ui-avatar) {
-  --ui-avatar-size: var(--ui-compact-md);   /* fork F3 — the ratified widget-box ramp; page override for big chrome */
+  --ui-avatar-size: var(--md-sys-height-md);   /* ADR-0112 Amendment 3 (2026-08-23) — the control-height ladder (button row, ADR-0038); was the F3 compact ramp; page override for big chrome */
   --ui-avatar-plane: var(--md-sys-color-neutral-surface-high);   /* ONE neutral pair (SPEC-R7) — AA-probed once */
   --ui-avatar-ink: var(--md-sys-color-neutral-on-surface);
 }
-:where(ui-avatar[size='sm']) { --ui-avatar-size: var(--ui-compact-sm); }
-:where(ui-avatar[size='lg']) { --ui-avatar-size: var(--ui-compact-lg); }
+:where(ui-avatar[size='sm']) { --ui-avatar-size: var(--md-sys-height-sm); }
+:where(ui-avatar[size='lg']) { --ui-avatar-size: var(--md-sys-height-lg); }
 @scope (ui-avatar) {
   :scope { display: inline-grid; place-items: center; overflow: hidden; border-radius: 50%;
     inline-size: var(--ui-avatar-size); block-size: var(--ui-avatar-size);
@@ -367,10 +367,10 @@ own). Each: attributes mirror `static props`, `parts:` documented (`track/fill` 
 `glyph/body/name/meta` · `message/action/close`), `aria:` block (progress `role: progressbar` + value
 semantics; avatar decorative-default + `label` escape hatch **including the "label-less avatar beside no
 name announces nothing" author-error note** — SPEC-R6; toast `role: status/alert`, `roleSource: internals`),
-`forcedColors:` lines, geometry blocks (avatar names the compact-ramp lookup; progress/attachment declare NO
+`forcedColors:` lines, geometry blocks (avatar names the control-height `--md-sys-height-*` lookup — ADR-0112 Amendment 3, formerly the compact ramp; progress/attachment declare NO
 `size`), and the toast pair's **app-surface consumption story** (region-hosted, `show()`, not catalogued —
 the ADR-0112 cl.6 pointer). The attachment descriptor states `sizeBytes` (renamed from `size`, ADR-0112
-Amendment 1) is **embedder-supplied, not a wire field** (SPEC-R8). Each folder ships its
+Amendment 3) is **embedder-supplied, not a wire field** (SPEC-R8). Each folder ships its
 `{name}-descriptor.test.ts` trip-wire.
 
 **LLD-C11 — the serial integration slice** (ONE writer, after all four folders land):
@@ -491,7 +491,7 @@ pattern); drift repaired in the same change.
 - **Browser, Chromium + WebKit** (SPEC-N2 — jsdom is blind to top layer, real timers, WHCM, painted
   geometry): whole-shape floors (bare progress + populated attachment in an unstyled flex row); progress
   fill proportion ε-check + RTL fill direction + forced-colors computed styles + reduced-motion emulation
-  (no translation animation); avatar box-tracks-compact-ramp geometry probe under `[size]`×`[scale]` +
+  (no translation animation); avatar box-tracks-control-height-ladder geometry probe under `[size]`×`[scale]` (ADR-0112 Amendment 3) +
   circle WHCM border; attachment truncation + RTL glyph position; toast focus-neutrality
   (`document.activeElement` unchanged across `show()`), tab-order reachability, real-duration
   expiry/pause, region top-layer above an open `ui-modal` (`elementsFromPoint` at the toast rect), region

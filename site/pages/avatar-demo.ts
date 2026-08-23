@@ -87,7 +87,7 @@ const cluster = el('div', { style: 'display:flex; align-items:center;', 'aria-la
 )
 cluster.append(el('span', { class: 'demo-caption', style: 'margin-inline-start:0.5rem;' }, [text('4 assignees')]))
 
-// ── sizes — every [size] tier off the widget-box ramp ────────────────────────────────────────────────────
+// ── sizes — every [size] tier off the control-height ladder (the button row; ADR-0112 Amendment 3) ────────────────────────────────────────────────────
 const sizeRow = el('div', { style: 'display:flex; gap:1rem; align-items:center; flex-wrap:wrap;' }, [
   captioned('size="sm"', avatar({ src: portrait('#6750a4'), identity: 'Priya Natarajan', size: 'sm' })),
   captioned('size="md"', avatar({ src: portrait('#6750a4'), identity: 'Priya Natarajan', size: 'md' })),

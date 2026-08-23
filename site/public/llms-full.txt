@@ -151,11 +151,12 @@ named foreseen extension if identity-at-a-glance proves needed.
 
 ## Sizing
 
-`size` (`sm` / `md` / `lg`, default `md`, reflected) selects the widget-box tier off the ratified
-`--md-sys-compact-{sm,md,lg}` ramp (ADR-0041) — the same ramp checkbox/switch/tag use, 12–28px depending on an
-ancestor `[scale]`. The component token `--ui-avatar-size` is the page's override for larger chrome (a
-profile header); a real fleet register above 28px is a named, separately-earned extension, not this
-component's default.
+`size` (`sm` / `md` / `lg`, default `md`, reflected) selects a tier off the ratified control-height
+ladder `--md-sys-height-{sm,md,lg}` (ADR-0038) — the same root tokens `ui-button` sizes its frame with, so
+an avatar sits at a button's height in a row: 28px at the default `ui-md` scale, 20–48px across ancestor
+`[scale]` tiers. The component token `--ui-avatar-size` is the page's override for larger chrome (a
+profile header). Before ADR-0112 Amendment 3 (2026-08-23) the box rode the ADR-0041 compact ramp
+(12–28px); that fork's own ">28px register" re-open trigger fired.
 
 ---
 
