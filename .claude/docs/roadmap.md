@@ -9,7 +9,7 @@
 > lives in GitHub Issues ([ADR-0145](adr/0145-ticket-tier-github-issues-backend.md)) or, on other
 > projects, Linear — **never here**. An issue may cite a section of this doc the same way it cites
 > an ADR/SPEC/LLD id; this doc never enumerates issues by number, because that list goes stale the
-> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-08-22 (§2 fully resynthesized against merged reality — the M-D → M-E → M-F arc closed out, the svg-chart system, ADR-0227's data-layer adoption, ADR-0230, `ui-breadcrumb`, `ui-drill`, `ui-playing-card` all folded in; §3/§4 repaired the same pass).
+> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-08-23 (a stale-premise repair: the "GenUI production polish" arc picked 2026-08-22 turned out to already have two of its three milestones closed before the pick, and both declined alternate candidates plus a chunk of unrelated §3/§4 material turned out to be shipped-but-uncited too, once every issue number was actually checked with `gh issue view` instead of trusted from an earlier pass; see the process note this pass added at the relevant §4 lines).
 
 ## 1 · Why a fourth doc
 
@@ -38,7 +38,7 @@ append-only going forward, **never backfilled**, and this roadmap's §2 is the o
 "current state." The gap is therefore the ruled shape of the doc set, not a defect awaiting a
 decision (dated line in §4).
 
-## 2 · Now — current state (as of 2026-08-22)
+## 2 · Now — current state (as of 2026-08-23)
 
 > **The M-D → M-E → M-F arc is CLOSED.** M-D (per-persona A2UI catalogs, ADR-0172, GH
 > #421/#472/#480) shipped and all three tracking issues are closed on GitHub. M-E (upstream-drift
@@ -49,9 +49,13 @@ decision (dated line in §4).
 > the 2026-08-05 wave in full. The work that shipped in the three weeks after (the svg-chart
 > system, ADR-0227's shared-state grammar + `@agent-ui/data` adoption, `ui-breadcrumb`, `ui-drill`
 > amendments, `ui-playing-card`, the ADR-0230 column-chart HTML-plot ladder) arrived as
-> individually-filed/ADR'd issues, not a ruled arc — but **a successor arc has now been ruled**:
-> **"GenUI production polish"**, picked by Kim 2026-08-22 from a 3-candidate menu, three
-> milestones (GenUI B3 · GH #1221 · GH #1101) — see §3 for the full record.
+> individually-filed/ADR'd issues, not a ruled arc. **A successor arc, "GenUI production polish",
+> was picked by Kim on 2026-08-22 and is now itself CLOSED** (§4's dated line): all three
+> milestones shipped by 2026-08-23, and the one open thread left (AC18's live-scored run) is Kim's
+> own manual leg, not build work. The two declined alternatives from that pass turned out to be
+> stale too on re-verification — see §4's "Candidate C" and "loose hardening debt" dated lines.
+> **No fresh arc is ruled as of this pass**; the visible open backlog is thin (one open GitHub
+> issue, GH #1600, unrelated to any candidate here) — see the process note below.
 
 - **Component foundation — complete.** G0–G9 + the Control Suite + the icon adapter: the reactive
   kernel, FACE element layer, templating/directives, and ~50 `ui-*` controls across the
@@ -118,18 +122,23 @@ decision (dated line in §4).
   seam ADR-0138) — now with the live-turn lifecycle progress channel built into the transport
   meta-line (ADR-0146), produce-halt surfacing, in-persona self-correct feedback, and the dev
   live-agent proxy ported to a Cloudflare Worker (ADR-0152).
-- **GenUI surface — shipped end to end (B0–B2).** The ruled identity: free-form HTML/CSS/JS in a
-  sandboxed iframe — "contained, not forbidden" ([PRD](prd/genui-surface.prd.md) v0.4 ·
-  [SPEC](spec/genui-surface.spec.md) v0.3, both `proposed`, every fork ruled; D6 = the in-house
-  wire, MCP-Apps-shaped safety model, atomic HTML). `ui-sandbox-frame` (components) is the
-  fail-closed containment host — CSP · closed agent↔frame bridge · token bridge. B2 made the
-  path real: the canonical wire reader/writer at `@agent-ui/a2ui/agent` (`genui-line` — the
-  site's B1-era stub is now a thin re-export of it), `produce()` peeling genui lines ahead of
-  heal/validate with structural defects tallied as `GENUI_*` failure codes on the turn trace,
-  three curated pattern-source packs plus a degradation-safe prompt block (SPEC-R9), and
-  `ui-agent-admin` mounting GenUI surfaces inside its real turn loop on a parallel path beside
-  the A2UI client. The `gen-ui-live` site demo stays deliberately recorded-only. What's left is
-  out of the SPEC's own contract: B3, the judged pack-idiom eval (§3 Milestone 1, GH #1584).
+- **GenUI surface — shipped end to end (B0–B3 mechanism; AC18's live-scored run is the one open
+  thread).** The ruled identity: free-form HTML/CSS/JS in a sandboxed iframe — "contained, not
+  forbidden" ([PRD](prd/genui-surface.prd.md) v0.4 · [SPEC](spec/genui-surface.spec.md) v0.3, both
+  `proposed`, every fork ruled; D6 = the in-house wire, MCP-Apps-shaped safety model, atomic
+  HTML). `ui-sandbox-frame` (components) is the fail-closed containment host — CSP · closed
+  agent↔frame bridge · token bridge. B2 made the path real: the canonical wire reader/writer at
+  `@agent-ui/a2ui/agent` (`genui-line` — the site's B1-era stub is now a thin re-export of it),
+  `produce()` peeling genui lines ahead of heal/validate with structural defects tallied as
+  `GENUI_*` failure codes on the turn trace, three curated pattern-source packs plus a
+  degradation-safe prompt block (SPEC-R9), and `ui-agent-admin` mounting GenUI surfaces inside its
+  real turn loop on a parallel path beside the A2UI client. The `gen-ui-live` site demo stays
+  deliberately recorded-only. **B3 shipped 2026-08-23** (PR #1587, closing GH #1584): the judged
+  corpus-rubric shard, the `eval:genui-corpus` CLI, the `genui-pack-idiom.md` rubric, and the docs
+  page all built keyless and honest — `index.json` reports `m3: null` on purpose, no score
+  fabricated. What's left is the one thing that was always out of scope for a PR: AC18, the actual
+  live-model scored run, which only Kim can trigger (needs `ANTHROPIC_API_KEY`). See §4's dated
+  line for the full arc close-out.
 - **A2A protocol layer (`@agent-ui/a2a`)** — pinned to spec v0.3.0, the tic-tac-toe
   isolation-proof arena, its own concepts corpus.
 - **`@agent-ui/router`** — the memory-first SPA router (ADR-0115).
@@ -169,48 +178,6 @@ decision (dated line in §4).
 
 ## 3 · Next — concrete, near-term
 
-- **ui-slider label/value layout patterns (GH #1141, `size:small`, filed 2026-08-17).** The #1126
-  readout is transient-only and single-placement; agent-rendered sliders (blackjack bet) show no
-  value at rest. Add a `layout` prop — standard (label left / value right, above the track,
-  default) · inline (label/track/value on one row) · block (label above-center, value
-  below-center) — with a default-visible readout.
-- **The "GenUI production polish" arc — Kim-ruled 2026-08-22, successor to the closed M-D → M-E →
-  M-F arc (§2).** Chosen from a 3-candidate menu (the other two — sequential agent orchestration
-  off ADR-0174, and A2UI Text/slider/menu wire-vocabulary completeness — stay unpicked, available
-  for a later round). Intent: closes out the GenUI SPEC's own remaining contract rather than
-  opening new design surface, and two of its three milestones are fixes for pain Kim hit directly
-  in live testing. Serves [`prd/genui-surface.prd.md`](prd/genui-surface.prd.md) §8 **m3** (the
-  judge-scored pack-idiom-use metric) and the broader mandate in
-  [IDR-0003](idr/0003-generative-ui-is-the-primary-medium.md) (generative UI is the primary
-  medium) and [IDR-0006](idr/0006-conversation-medium-generative-ui.md) (conversation medium =
-  generative UI). Three milestones, no ruled build order yet among them:
-  - **Milestone 1 — GenUI B3, the judged pack-idiom eval.** The one piece the GenUI SPEC's own §6
-    build-plan cut explicitly out of its contract (`spec/genui-surface.spec.md` SPEC-N3: "PRD §8
-    m3 ... is realized as a judged corpus-rubric eval in the B3 wave (PRD-G6), a NAMED MANUAL
-    run — never `npm test`/`test:browser`"). **GH #1584** minted 2026-08-22; design ruled in
-    [`lld/genui-b3-judged-eval.lld.md`](lld/genui-b3-judged-eval.lld.md) (the keyless half builds
-    now — harness, rubric, record/verdict shapes, docs page, `npm run eval:genui-corpus`; the
-    scored run itself is Kim's named manual leg, never fabricated).
-  - **Milestone 2 — chat dialog formatting: bubble on/off setting + GenUI hoisted out of bubbles**
-    (GH #1221, `size:big`, filed 2026-08-17). Turn ADR-0160's hardcoded de-bubbled agent
-    presentation into a setting (bubbles on/off for host/agent messages), and formalize GenUI
-    cards as first-class siblings in the host message group — a card keeps its own contained
-    chrome in BOTH bubble modes and never re-nests inside a prose bubble. Home: `app`'s
-    conversation controls + surface-host.
-  - **Milestone 3 — ask-flow COMPLETION state** (GH #1101, `size:big`, filed 2026-08-17). Kim's
-    live test-chat report: a multi-step intake flow ends on a bare summary card — no closing
-    prose turn, no end-of-flow affordance (done/start-over/handoff). Two halves: producer/prompt
-    guidance in `@agent-ui/a2ui` `./agent`, plus a surface-side affordance on the summary card or
-    page chrome. Adjacent to ADR-0196 (per-card settling, not flow completion) and the #1065
-    shared-template question — this may be where the a2ui-live/agent-admin shared-chrome lift
-    gets forced.
-- **A2UI Text: full register vocabulary + per-variant producer guidance (GH #1321, `size:big`,
-  filed 2026-08-18).** The wire `Text.variant` enum reaches 8 registers while `ui-text` carries
-  9 roles × 3 sizes + 11 `as` semantics — `h6`/`kicker`/`overline`/`quote`/`lead`/`display` and
-  `blockquote`/`p` are unreachable from a payload. Widen the vocabulary (via a ratified ADR-0078
-  cl.5 amendment, the #808 S1 precedent; new heading rows honor ADR-0142's compact scale) and add
-  per-register when-to-use guidance to the producer prompt path. Exact enum membership is Kim's
-  ruling at the amendment.
 - **The 2026-07-28 intake ruled the next arc.** A six-system inventory wave (agent-admin · a2ui ·
   GenUI · components · shells · SaaS patterns) fed a dependency-spine synthesis and three
   candidate milestones; Kim ruled the order on 2026-07-28. The full wave record — six inventories
@@ -298,39 +265,33 @@ decision (dated line in §4).
   (LLD §15). Residue: [GH #644](https://github.com/kimgranlund/agent-ui/issues/644) (prose-arm
   history isolation under the degrade config, in progress).
 
-- **Planner-stage pilot — the wire half is IN, the loop half is unscheduled. 🟡**
+- **Planner-stage pilot — only the concurrent/parallel-step upgrade remains.**
   ([ADR-0174](adr/0174-planner-stage-pilot-sequential-opt-in-loop.md), ratified 2026-08-06.) An
   opt-in, SEQUENTIAL plan→execute→synthesize loop composed entirely from already-shipped
   `Session`/`produce()`/meta-line/status-stream mechanics — no new component, no new transport.
-  Its sequencing is the ADR's cl.5 ruling, **not** the filing issue's "depends on AG-UI +
-  SPEC-R4" framing: `AgentTransport` already isolates transports (an AG-UI arrival is an
-  implementation swap behind an interface built for swaps), and orchestrator surface-ID prefixing
-  is load-bearing only for a future CONCURRENT-step upgrade this ADR explicitly declines to
-  design. What that leaves, in order: **(1) the `plan` meta-line arm — DONE**
-  ([`spec/a2ui-live-agent.spec.md`](spec/a2ui-live-agent.spec.md) SPEC-R20, PR #537): a
-  model-authored, additive, shallow-validated `plan` field on the ADR-0088 envelope (a malformed
-  `plan` drops only `plan`), passed through by `produce()` with no integrity check and no retry
-  arm, `AgentTransport.turn` byte-identical. **(2) recorded/live parity — DONE** (PR #551):
-  `RecordedTurn`/`createRecordedTransport` carry the same `{note, plan}` shape the `ask` arm
-  already rides. **(3) the host-side half — designed, buildable today, NOT scheduled:** the
-  persona-scoped opt-in gate, the plan-runner module (N sequential `produce()` calls over one
-  growing `Session`), the step projection onto the existing status-stream grouping, and the
-  closing synthesis turn. It waits on a scheduling decision only — the M-D → M-E → M-F arc that
-  once queued ahead of it is now closed (§2), so nothing outstanding blocks it but a fresh
-  priority call — not on any missing mechanism. **(4) the concurrent/parallel-step upgrade** stays an
-  unwritten design (its surface-ID-prefixing precondition has since landed; the design has not).
+  **(1) the `plan` meta-line arm — DONE** ([`spec/a2ui-live-agent.spec.md`](spec/a2ui-live-agent.spec.md)
+  SPEC-R20, PR #537). **(2) recorded/live parity — DONE** (PR #551). **(3) the host-side loop —
+  DONE**: SPEC-R21/R22 accepted (PR #570), the plan-runner shipped (GH #485, closed 2026-08-06, PR
+  #580), wired into the live `a2ui-live` page (GH #579, closed 2026-08-07, PR #594), and two
+  render/dispatch bugs fixed the same window (GH #602/#592, PRs #607/#601). This item's own text
+  called this "NOT scheduled" as of the last pass — it was in fact fully shipped by 2026-08-07,
+  caught only now by re-verifying every cited issue against `gh issue view` (2026-08-23). **(4) the
+  concurrent/parallel-step upgrade stays the one real gap:** an unwritten design (its
+  surface-ID-prefixing precondition has since landed; the design has not) with no GitHub issue
+  minted for it yet.
 - **AC19's sheet set — widen deliberately, or not.** The spacing-drift gate covers the shell
   family today (every `@agent-ui/app` sheet + the shell-composing site sheets). Whether it extends
   further — components-package sheets, the remaining site sheets — is an open, per-sheet decision;
   the gate's own design makes each extension a one-line reviewed append, never automatic.
-- **Loose hardening debt — considered and declined as an arc, 2026-08-22.** AC19's sheet-set
-  widening (above), the sync read surface on shared's localStorage `StorageAdapter` tier (GH
-  #1077, §4), and the identity family's unbuilt S3-c layout cards (§3's identity-flow line) were
-  weighed as a fourth "foundation hardening" arc candidate alongside GenUI production polish,
-  sequential agent orchestration, and A2UI wire-vocabulary completeness. Declined: the three don't
-  share one PRD/IDR-cited intent — they're unrelated debts that happen to have no owner, not a
-  multi-milestone arc serving a stated purpose. Recorded here so they aren't lost, not because
-  they're scheduled.
+- **Loose hardening debt — re-verified 2026-08-23, one of three items already shipped.** AC19's
+  sheet-set widening (above, still genuinely open) and the identity family's unbuilt S3-c layout
+  cards (§3's identity-flow line, still genuinely open) were weighed alongside a third item, the
+  sync read surface on shared's localStorage `StorageAdapter` tier, as a fourth "foundation
+  hardening" arc candidate on 2026-08-22 — declined then because the three don't share one
+  PRD/IDR-cited intent, not because any of them were done. Re-checking via `gh issue view` on
+  2026-08-23 found the sync-read item (GH #1077) had in fact shipped 2026-08-17
+  (`SyncReadableStorageAdapter`, PR #1095) — closed six days before it was cited here as open. Only
+  AC19 and the S3-c layout cards remain real, unshipped debt.
 - (The older proposed scope intakes — content, feed, and report families, the a2ui expert system —
   remain parked intakes, not scheduled work.)
 
@@ -343,14 +304,6 @@ decision (dated line in §4).
   here. If Linear becomes the standard elsewhere in the user's work, the open question is whether
   this repo follows (and how the ID-spine convention — ADR/SPEC/LLD citing an issue — survives a
   backend swap) — not a live fork today, just the thing that would reopen ADR-0145 if raised.
-- **Sync read surface on shared's localStorage StorageAdapter tier (GH #1077).** ADR-0193's seam is
-  async-by-ruling, so PR #1027 migrated app memory-store's write path only — hydration stays a direct
-  synchronous prefix scan (SettingsStore must answer construct→get same-tick). An optional sync
-  capability on the localStorage tier alone (getSync/keysSync or a snapshot() warm cache) would
-  unblock the full read-path migration; ADR-0193 amendment territory — design ruling before build.
-- **ui-menu selected-option scroll-centering + default focus on open (GH #1100, size:small).** An
-  overflowing menu panel opens at scroll offset 0 today; the selected option should open centered
-  in the viewport and focused (ARIA listbox pattern). `ui-select`/`ui-multi-select` share the panel.
 - *(GenUI B3 — the judged pack-idiom eval — moved to §3's "GenUI production polish" Milestone 1 on
   Kim's 2026-08-22 arc pick; GH #1584, `lld/genui-b3-judged-eval.lld.md`. Not deferred any more.)*
 - *(The GH #421 per-persona-catalogs deferral that lived here moved to §3's M-D milestone on
@@ -446,3 +399,29 @@ decision (dated line in §4).
   field under ADR-0175 (GH #498). This dated line was written 2026-08-22, on discovering §3 still
   carried a stale "M-D 🟡 IN FLIGHT" block two weeks after the arc actually closed — the repair,
   not the ship, is what's late.
+- **2026-08-17/18/23** — **the "GenUI production polish" arc (ruled 2026-08-22) closed out, with
+  one thread still open.** Milestone 2 (chat bubble on/off + GenUI cards hoisted out of bubbles,
+  GH #1221) shipped 2026-08-18, PRs #1240/#1257. Milestone 3 (ask-flow COMPLETION state, GH #1101)
+  shipped 2026-08-17. Milestone 1 (GenUI B3, GH #1584) shipped 2026-08-23, PR #1587 — the judged
+  corpus-rubric mechanism, keyless and honest (`m3: null` on purpose, no score fabricated); the
+  scored run itself, AC18 in the LLD, is Kim's own manual leg and stays outstanding. Correction:
+  both #1221 and #1101 were CLOSED before the arc was even ruled on 2026-08-22 (2026-08-18 and
+  2026-08-17 respectively) — the 2026-08-22 candidate pass that picked this arc cited them as open
+  milestones without checking `gh issue view`. This line repairs that; see the roadmap's own
+  process note (2026-08-23) on citing issue state without verifying it.
+- **2026-08-17/19** — **three more items closed before ever being cited as open**: `ui-slider`
+  label/value layout patterns (GH #1141, closed 2026-08-17), `ui-menu` selected-option
+  scroll-centering + default focus (GH #1100, closed 2026-08-17), and A2UI Text full register
+  vocabulary (GH #1321, closed 2026-08-19). All three were named as Candidate C ("A2UI wire
+  vocabulary completeness") in the 2026-08-22 arc-candidate pass and as standalone §3/§4 lines
+  before that — none were re-verified against GitHub at either point. Candidate C is therefore not
+  available for a fresh candidate round: its entire cited scope already shipped.
+- **2026-08-06/07** — **the planner-stage pilot's host-side loop shipped**: SPEC-R21/R22 accepted
+  (PR #570), the plan-runner built (GH #485, PR #580), wired into the live `a2ui-live` page (GH
+  #579, PR #594), two dispatch/render bugs fixed (GH #602/#592, PRs #607/#601). §3's own line said
+  "NOT scheduled" until this pass re-verified every cited issue against GitHub (2026-08-23) and
+  found it had shipped over two weeks earlier. Only the concurrent/parallel-step upgrade (leg 4,
+  no issue minted) remains open.
+- **2026-08-17** — **sync read surface on shared's localStorage `StorageAdapter` tier shipped**:
+  `SyncReadableStorageAdapter` (GH #1077, PR #1095), unblocking the app memory-store/SettingsStore
+  read-path migration ADR-0193's amendment called for.
