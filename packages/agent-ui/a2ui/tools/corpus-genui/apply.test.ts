@@ -4,7 +4,7 @@
 // already-judged name halts naming both.
 
 import { describe, it, expect, afterEach } from 'vitest'
-import { writeFileSync, readFileSync, readdirSync } from 'node:fs'
+import { writeFileSync, readFileSync, readdirSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { runApplyLeg } from './legs/apply.ts'
 import { runGenerateLeg } from './legs/generate.ts'
@@ -52,6 +52,23 @@ describe('apply — rewrites exactly the named records and archives the file', (
 
     const archived = readdirSync(join(repoRoot, 'packages/agent-ui/a2ui/corpus-genui/verdicts')) as string[]
     expect(archived).toHaveLength(1)
+  })
+})
+
+describe('apply — a --verdicts path already inside verdicts/ archives in place, no double-slugified duplicate (GH #1604)', () => {
+  it('reuses the given path as the archive target instead of deriving a garbled name', async () => {
+    repoRoot = makeTempRepoRoot()
+    const name = await seedOnePendingRecord(repoRoot)
+    const inPlaceRelPath = 'packages/agent-ui/a2ui/corpus-genui/verdicts/2026-08-23t18-29-46-943z--claude-sonnet-5.json'
+    mkdirSync(join(repoRoot, 'packages/agent-ui/a2ui/corpus-genui/verdicts'), { recursive: true })
+    writeVerdictsFixture(repoRoot, inPlaceRelPath, { [name]: { qualityScore: 5, passed: true, failingDimensions: [] } })
+
+    const result = await runApplyLeg(repoRoot, { verdictsPath: join(repoRoot, inPlaceRelPath) })
+    expect(result.ok).toBe(true)
+    expect(result.updated).toEqual([name])
+
+    const archived = readdirSync(join(repoRoot, 'packages/agent-ui/a2ui/corpus-genui/verdicts')) as string[]
+    expect(archived).toEqual(['2026-08-23t18-29-46-943z--claude-sonnet-5.json'])
   })
 })
 

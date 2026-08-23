@@ -4,7 +4,7 @@
 // halts the WHOLE run before any write; an identical re-apply is a byte-level no-op.
 
 import { readFileSync } from 'node:fs'
-import { basename } from 'node:path'
+import { basename, relative, resolve } from 'node:path'
 import { parseGenuiVerdictsFile } from '../../../src/corpus-genui/verdicts.ts'
 import type { GenuiJudgeVerdict } from '../../../src/corpus-genui/verdicts.ts'
 import type { GenuiCorpusRecord } from '../../../src/corpus-genui/record.ts'
@@ -40,7 +40,7 @@ export async function runApplyLeg(repoRoot: string, opts: ApplyOptions): Promise
 
   let text: string
   try {
-    text = readFileSync(opts.verdictsPath, 'utf8') as string
+    text = readFileSync(resolve(repoRoot, opts.verdictsPath), 'utf8') as string
   } catch {
     return { ok: false, updated: [], noops: [], issues: [`could not read --verdicts path: ${opts.verdictsPath}`] }
   }
@@ -94,7 +94,14 @@ export async function runApplyLeg(repoRoot: string, opts: ApplyOptions): Promise
     return { ok: false, updated: [], noops, issues }
   }
 
-  const outPath = `${VERDICTS_DIR}/${genuiVerdictArchiveFileName(parsed.file.date, basename(opts.verdictsPath))}`
+  // If `--verdicts` already points at a file living inside `VERDICTS_DIR` (the normal case: `judge`'s
+  // own default `--out` writes directly there, and the runbook's documented apply step points at
+  // exactly that file), the target IS that same already-archived path — re-deriving a name from its
+  // basename would slugify an already-slugified `<date>--<slug>.json` name a second time (GH #1604).
+  const verdictsRelPath = relative(repoRoot, resolve(repoRoot, opts.verdictsPath)).split('\\').join('/')
+  const outPath = verdictsRelPath.startsWith(`${VERDICTS_DIR}/`)
+    ? verdictsRelPath
+    : `${VERDICTS_DIR}/${genuiVerdictArchiveFileName(parsed.file.date, basename(opts.verdictsPath))}`
 
   // Check the archive step FIRST, read-only (dryRun:true never writes on ANY of its three outcomes) —
   // all-or-nothing means a conflicting archive target must halt BEFORE the records are ever touched,
