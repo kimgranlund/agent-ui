@@ -16,9 +16,19 @@
 // The negative control (RED on a planted one-byte edit) is run once as part of THIS suite and asserted,
 // never silently skipped — "a freshness gate that can't fail is theatre" (S1 leaf 3's own acceptance
 // predicate).
+//
+// Regen-on-main (GH #1599, Kim ruling 2026-08-23, extended here per that ticket's stretch scope): same
+// derived-artifact class as the theme-provider LLD-C11 fixture — a real-build-vs-committed byte check that
+// drifts on ANY component CSS/JS change, not just this asset pair's own inputs. The freshness assertion
+// below WARNS instead of failing on a PR-triggered CI run (`GITHUB_EVENT_NAME === 'pull_request'`);
+// `.github/workflows/theme-provider-fixture-regen.yml` re-runs `node scripts/build-dogfood-assets.mjs` on
+// every push to `main` alongside the theme-provider fixture and opens the same bot PR on drift.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { buildDogfoodAssets, OUT_MODULE, ROOT } from '../../../../../../../scripts/build-dogfood-assets.mjs'
+
+declare const process: { env: Record<string, string | undefined> }
+const IS_PR_RUN = process.env.GITHUB_EVENT_NAME === 'pull_request'
 
 const SCRATCH_OUT_DIR = `${ROOT}/dist-dogfood-assets-freshness-gate-scratch`
 const SCRATCH_ENTRY_DIR = `${ROOT}/dist-dogfood-assets-freshness-gate-entry-scratch`
@@ -34,10 +44,18 @@ describe('dogfood-assets.ts — freshness (LLD-C1 rebuild-and-compare, the theme
   })
 
   it(
-    'a fresh rebuild is byte-identical to the committed module (regenerate on red — see file banner)',
+    'a fresh rebuild is byte-identical to the committed module (regen-on-main; warns, never reds, on a PR run — see file banner)',
     async () => {
       const { moduleSource } = await buildDogfoodAssets(SCRATCH_OUT_DIR, SCRATCH_ENTRY_DIR)
       const committed = readFileSync(OUT_MODULE, 'utf8') as string
+      if (moduleSource !== committed && IS_PR_RUN) {
+        // eslint-disable-next-line no-console -- deliberate: the PR-CI-visible signal this branch exists to give
+        console.warn(
+          'dogfood-assets-freshness: committed module drifted from a fresh build on a PR run — expected ' +
+            '(regen-on-main, GH #1599); the push-to-main regen workflow will refresh it, not this PR.',
+        )
+        return
+      }
       expect(moduleSource).toBe(committed)
     },
     60_000,

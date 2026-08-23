@@ -287,6 +287,23 @@ three ALREADY-PROVEN patterns (`light-dark-minify.test.ts`'s shell-out, `llms.te
 freshness gate, `app-shell.ts`'s `?raw`-under-browser-project asset import) and touches zero shared
 infrastructure — judged sturdier on that basis.
 
+**Regen-on-main ruling (GH #1599, Kim ruling 2026-08-23).** The committed fixture spans the WHOLE site
+bundle's CSS, so an unrelated `ui-*` CSS change reflows its bytes too — this drifted the node-side
+freshness test on PR CI three times in one weekend (#1596 -> #1590/#1597 -> #1598). It is fleet-rules §4's
+"reproducible from source" derived-artifact class (regen-on-main), not the "bytes ARE the contract"
+published-bundle class — so the freshness proof stayed a mechanical gate but moved OFF the PR-blocking
+path:
+
+- `.github/workflows/theme-provider-fixture-regen.yml` runs on every push to `main`, re-running
+  `scripts/regen-theme-provider-fixture.ts` (same `buildSiteCssShared` helper) and opening ONE bot PR per
+  drift (no PR when bytes already match).
+- `theme-provider-build-fixture.test.ts`'s freshness assertion now branches on `GITHUB_EVENT_NAME ===
+  'pull_request'`: on a PR run, a mismatch WARNS (console) instead of failing — a CSS PR is never red for
+  fixture drift alone. Everywhere else (local `npm test`, a push-to-main run) the byte check still holds,
+  since that is exactly the regen workflow's own freshness proof.
+- `theme-provider-build.browser.test.ts` (the resolved-color consumer of the same fixture) is unaffected —
+  it keeps running unconditionally on every CI leg.
+
 ## 7 · Failure/edge summary (cross-cutting, MEDIUM-3 doc-review)
 
 - **Empty-attribute vs absent-attribute (LOW-1)** — `scale=""` (explicitly set) and no `scale` attribute at

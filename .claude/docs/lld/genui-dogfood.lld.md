@@ -70,6 +70,13 @@
 - **Determinism**: minified IIFE output for a fixed source tree is deterministic under Rolldown; the
   gate's rebuild-and-compare IS the proof — if an environment delta ever breaks byte-determinism the
   gate reds and the comparison relaxes to structural (recorded fallback, not silently adopted).
+- **Regen-on-main (GH #1599, Kim ruling 2026-08-23)** — same derived-artifact class as the theme-provider
+  LLD-C11 fixture: any `ui-*` CSS/JS change reflows `dogfood-assets.ts`'s bytes even though nothing about
+  the asset-pair generation itself changed. The freshness gate warns (never reds) on a PR-triggered CI run
+  (`GITHUB_EVENT_NAME === 'pull_request'`); `.github/workflows/theme-provider-fixture-regen.yml` re-runs
+  `node scripts/build-dogfood-assets.mjs` on every push to `main` alongside the theme-provider fixture and
+  opens one shared bot PR on drift. Manual regen (`npm run regen:dogfood-assets`, formerly #1589's
+  unmechanized duty) still works identically for a local fix.
 
 > **REV 2026-07-28 (S1 build, coordinator ruling — no ADR earned, no contract/law change):**
 > `dogfood-assets.ts`'s `DOGFOOD_JS` string literal embeds the fleet's OWN already-compliant minified

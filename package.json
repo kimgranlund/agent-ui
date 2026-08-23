@@ -32,6 +32,8 @@
     "publish:packages": "node scripts/publish/publish-packages.mjs",
     "deploy:docs": "npm run build && wrangler deploy",
     "eval:catalog": "node scripts/eval-a2ui-catalog.mjs",
+    "regen:theme-provider-fixture": "node --experimental-strip-types scripts/regen-theme-provider-fixture.ts",
+    "regen:dogfood-assets": "node scripts/build-dogfood-assets.mjs",
     "eval:genui-corpus": "node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus-genui/eval-genui-corpus.ts"
   },
   "devDependencies": {

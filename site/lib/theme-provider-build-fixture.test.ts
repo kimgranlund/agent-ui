@@ -16,26 +16,33 @@
 // via a `?raw` import. A red result here names its own fix: rebuild, inspect the diff, commit the refreshed
 // fixture (regenerate below).
 //
-// Regenerate: read the fresh CSS this test computes (or run `npx vite build --outDir <scratch> --emptyOutDir
-// --logLevel silent` yourself and join every emitted assets/*.css file with '\n', exactly as buildSiteCss
-// does) and overwrite site/lib/__fixtures__/theme-provider-built.css with it.
-//
-// Fixture-drift note (process, not a defect): the committed fixture spans the WHOLE site bundle's CSS (the
-// same joined text light-dark-minify.test.ts's own build produces) — so an UNRELATED site CSS edit reddens
-// this gate too. That is expected, not a phantom regression: regenerate the fixture the same way.
+// Regen-on-main ruling (GH #1599, Kim ruling 2026-08-23): the committed fixture spans the WHOLE site
+// bundle's CSS (the same joined text light-dark-minify.test.ts's own build produces), so an UNRELATED
+// site CSS edit reflows its bytes too — it drifted on PR CI three times in one weekend (#1596 ->
+// #1590/#1597 -> #1598) purely from that class of edit. This is fleet-rules §4's "reproducible from
+// source" derived-artifact class, not "bytes ARE the contract" — regen belongs on `main`, not as a
+// PR-blocking gate. `.github/workflows/theme-provider-fixture-regen.yml` re-runs the real build on every
+// push to `main` and opens ONE bot PR per drift (no-op when bytes already match); this test's freshness
+// check WARNS (never reds) on a `pull_request` CI run — `GITHUB_EVENT_NAME` is GitHub Actions' own signal
+// for that, unset everywhere else (a local `npm test`, a push-to-main run) so the byte check still holds
+// there. Regenerate by hand: `npm run regen:theme-provider-fixture` (site/lib/build-css.ts's
+// `buildSiteCssShared`, the SAME helper this test and the regen workflow both use).
 import { describe, expect, it } from 'vitest'
 import { buildSiteCssShared } from './build-css.ts'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (site/tsconfig.json
 // deliberately has no "node" in its `types` array — build-css.ts / light-dark-minify.test.ts's own banner).
 import { readFileSync, rmSync } from 'node:fs'
 
-declare const process: { cwd(): string }
+declare const process: { cwd(): string; env: Record<string, string | undefined> }
 
 const ROOT = process.cwd()
 // Distinct from light-dark-minify.test.ts's own SCRATCH_OUT_DIR — each buildSiteCss(Shared) CALL still owns
 // its own scratch --outDir (only the CACHED RESULT is shared, never the scratch directory).
 const SCRATCH_OUT_DIR = `${ROOT}/dist-theme-provider-gate-scratch`
 const FIXTURE_PATH = `${ROOT}/site/lib/__fixtures__/theme-provider-built.css`
+// GitHub Actions sets this to `pull_request` on a PR-triggered run only — unset locally and on a
+// push-to-main run, both of which keep the strict byte check (regen-on-main ruling, banner above).
+const IS_PR_RUN = process.env.GITHUB_EVENT_NAME === 'pull_request'
 
 describe('ui-theme-provider built-output fixture — byte-identical to a fresh `vite build` (LLD-C11 node-side freshness gate)', () => {
   it('anti-vacuous: the committed fixture is real, non-empty content', () => {
@@ -44,11 +51,21 @@ describe('ui-theme-provider built-output fixture — byte-identical to a fresh `
     expect(committed).toContain('light-dark(')
   })
 
-  it('a fresh production build matches the committed fixture byte-for-byte (regenerate on red — see file banner)', async () => {
+  it('a fresh production build matches the committed fixture byte-for-byte (regen-on-main; warns, never reds, on a PR run — see file banner)', async () => {
     try {
       const fresh = await buildSiteCssShared(ROOT, SCRATCH_OUT_DIR)
       const committed = readFileSync(FIXTURE_PATH, 'utf8') as string
-      expect(fresh).toBe(committed)
+      if (fresh !== committed) {
+        if (IS_PR_RUN) {
+          // eslint-disable-next-line no-console -- deliberate: the PR-CI-visible signal this branch exists to give
+          console.warn(
+            'theme-provider-build-fixture: committed fixture drifted from a fresh build on a PR run — ' +
+              'expected (regen-on-main, GH #1599); the push-to-main regen workflow will refresh it, not this PR.',
+          )
+          return
+        }
+        expect(fresh).toBe(committed)
+      }
     } finally {
       rmSync(SCRATCH_OUT_DIR, { recursive: true, force: true })
     }
