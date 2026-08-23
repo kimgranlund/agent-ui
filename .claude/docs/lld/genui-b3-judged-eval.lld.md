@@ -381,6 +381,19 @@ Every predicate is keyless unless marked; each maps to a decomp leaf's `accept`.
 | AC17 | `npm run check` and `npm test` green by exit code with **no** `ANTHROPIC_API_KEY` in the environment (SPEC-N3 / live-agent SPEC-R3 AC2) | the standing gates |
 | **AC18 (NEEDS KEY — the manual run, out of tonight's scope)** | `generate` → `judge` → `apply` → `report` complete on Kim's machine; `index.json` shows `m3 ≠ null`; the docs page renders real verdicts + frames; the `--calibrate` Δ report is appended to the rubric | Kim, later; recorded as a dated Findings entry on GH #1584 |
 
+**Repair note (AC18 landed, 2026-08-23 — the literal-empty half of AC5/AC17 is retired).** AC5's "`records/` and
+`verdicts/` ship EMPTY" clause and `corpus-genui-data.test.ts`'s two matching assertions ("the committed
+index.json shows the honest empty state at ship", "zero \*.jsonl files under records/, zero \*.json files
+under verdicts/") described the pre-AC18 ship state ONLY — they were never meant to hold once Kim's named
+manual run actually landed real records, since AC18 itself names `index.json` showing `m3 ≠ null` as this
+design's own intended outcome. GH #1584's AC18 run landed on 2026-08-23 (PR #1603); both assertions were
+replaced in the same PR with the invariant they were always standing in for — the no-fabrication law
+(every `judged` record's `qualityScore`/`passed` pair is internally consistent and never present on a
+non-`judged` record; `m3` is null iff zero judged pack-conditioned records exist) plus a duplicate-archive
+guard (no two `verdicts/*.json` files are byte-identical). AC17's "green by exit code" clause is otherwise
+unaffected — `npm run check`/`npm test` still gate with no key in the environment, now against a populated
+corpus instead of an empty one.
+
 ## 9. Risks (ranked)
 
 1. **The m3 floor may simply not be met on the first real run** (a pack idiom the model ignores, or a

@@ -187,10 +187,25 @@ describe('corpus-genui-data — index.json is byte-identical to a fresh derivati
     expect(freshText).toBe(committedText)
   })
 
-  it('the committed index.json shows the honest empty state at ship (m3:null, zero records — LLD §0)', () => {
-    const committed = JSON.parse(readFileSync(join(DATA_DIR, 'index.json'), 'utf8') as string)
-    expect(committed.records).toEqual([])
-    expect(committed.m3).toBeNull()
+  it('every judged record in the committed index.json carries a matching qualityScore/passed pair; no non-judged record carries a score (no-fabrication, index-level; the literal-empty check retired at AC18 landing, LLD §8)', () => {
+    const committed = JSON.parse(readFileSync(join(DATA_DIR, 'index.json'), 'utf8') as string) as {
+      records: { name: string; status: string; packId: string | null; qualityScore?: number; passed?: boolean }[]
+      m3: { judged: number } | null
+    }
+    for (const r of committed.records) {
+      if (r.status === 'judged') {
+        expect(r.qualityScore, `${r.name}: judged record missing qualityScore`).toBeTypeOf('number')
+        expect(r.passed, `${r.name}: judged record missing passed`).toBeTypeOf('boolean')
+        expect(r.passed, `${r.name}: passed must equal qualityScore >= 4`).toBe((r.qualityScore as number) >= 4)
+      } else {
+        expect(r.qualityScore, `${r.name}: non-judged record must not carry a score`).toBeUndefined()
+        expect(r.passed, `${r.name}: non-judged record must not carry passed`).toBeUndefined()
+      }
+    }
+    // LLD §5: m3 is null until >= 1 judged pack-conditioned record exists; holds vacuously true when
+    // the corpus is still empty, and exactly when it is not once AC18 lands real records.
+    const judgedPackConditioned = committed.records.filter((r) => r.status === 'judged' && r.packId !== null)
+    expect(committed.m3 === null).toBe(judgedPackConditioned.length === 0)
   })
 })
 
@@ -258,10 +273,25 @@ describe('corpus-genui-data — the two fixtures are calibration-only (LLD-C2 n2
   })
 })
 
-describe('corpus-genui-data — records/ and verdicts/ ship EMPTY at commit (LLD §0)', () => {
-  it('zero *.jsonl files under records/, zero *.json files under verdicts/', () => {
-    expect(listFiles(join(DATA_DIR, 'records/v1'), '.jsonl')).toEqual([])
-    expect(listFiles(join(DATA_DIR, 'verdicts'), '.json')).toEqual([])
+describe('corpus-genui-data — records/ and verdicts/ integrity (LLD §0; the literal-empty check retired at AC18 landing, LLD §8)', () => {
+  it('no verdicts file is a byte-identical duplicate of another (guards the apply-leg re-archive-under-a-new-name class of bug)', () => {
+    const verdictsDir = join(DATA_DIR, 'verdicts')
+    const seen = new Map<string, string>()
+    for (const f of listFiles(verdictsDir, '.json')) {
+      const text = readFileSync(join(verdictsDir, f), 'utf8') as string
+      const dup = seen.get(text)
+      expect(dup, `${f} is a byte-identical duplicate of ${String(dup)}`).toBeUndefined()
+      seen.set(text, f)
+    }
+  })
+
+  it('every records/*.jsonl file present, if any, holds at least one non-empty line', () => {
+    const recordsDir = join(DATA_DIR, 'records/v1')
+    for (const f of listFiles(recordsDir, '.jsonl')) {
+      const text = readFileSync(join(recordsDir, f), 'utf8') as string
+      const lines = text.split('\n').filter((l) => l.trim() !== '')
+      expect(lines.length, `${f} is empty`).toBeGreaterThan(0)
+    }
   })
 })
 
