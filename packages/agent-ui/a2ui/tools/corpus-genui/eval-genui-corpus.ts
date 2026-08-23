@@ -50,6 +50,7 @@ export function helpText(): string {
     ...LEGS.map((leg) => `  ${leg.name.padEnd(10)} ${leg.side}`),
     '',
     'every leg accepts --dry-run (compute + print, write nothing)',
+    'every leg accepts --repo-root <dir> (the tree read/written + whose .env supplies the key; default: cwd)',
     '  collect  --from <dir|file> [--pack <id> --prompt <id> | --unpinned]',
     '  generate [--model <id>] [--only-pack <id>] [--only-prompt <id>] [--control] [--dogfood] [--runs N]',
     '  judge    [--judge-model <id>] [--only <name>] [--calibrate] [--out <path>]',
@@ -195,7 +196,14 @@ export async function runCli(argv: readonly string[], repoRoot: string, env: Rec
 }
 
 async function main(): Promise<void> {
-  const code = await runCli(process.argv.slice(2), process.cwd(), process.env)
+  // `--repo-root <dir>`: the tree every leg reads/writes AND whose `.env` backs the key lookup — the one
+  // seam that lets the CLI-entry test (n4a) spawn the literal invocation at the REAL cwd (which
+  // `produce.ts`'s import chain needs at module load) while proving the no-key arm against a temp root
+  // that carries no `.env` (GH #1592: a dev host's git-ignored repo-root `.env` otherwise supplies a key
+  // and the "no key" proof makes a live provider call).
+  const argv = process.argv.slice(2)
+  const repoRoot = flagValue(argv, 'repo-root') ?? process.cwd()
+  const code = await runCli(argv, repoRoot, process.env)
   process.exit(code)
 }
 

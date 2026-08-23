@@ -99,23 +99,33 @@ describe('runCli — collect/apply/report never require a key (KEYLESS)', () => 
 // chain (`mini-skills.ts`/`genui-packs.ts`, ADR-0135) reads its `.md` registries relative to
 // `process.cwd()` AT MODULE LOAD (measured: a temp cwd throws `ENOENT` scanning for
 // `prompts/mini-skills`, since those modules — by design, mirroring the real npm-script invocation —
-// never accept an injected repo root). Safe regardless: the no-key check in `runCli` fires BEFORE any
-// leg logic ever runs, so nothing is ever written even against the real tree; the record-dir-growth
-// assertion below is a paranoia check on top of that.
+// never accept an injected repo root). BUT `--repo-root` points the key lookup + every leg's tree at a
+// temp root that carries NO `.env`: an empty spawn env alone is NOT "no key" — `readAnthropicApiKey`
+// falls through to the repo-root `.env`, and on a dev host whose git-ignored `.env` holds a key this
+// proof used to construct the real provider and make a live call (GH #1592: 401 → exit 1, red on main).
+// The no-key check in `runCli` fires BEFORE any leg logic ever runs, so nothing is ever written; the
+// record-dir-growth assertions below (temp root AND real tree) are a paranoia check on top of that.
 describe('the REAL CLI subprocess — node --experimental-strip-types eval-genui-corpus.ts generate, no key', () => {
-  it('exits 2 with the named no-key message, writing nothing (proven against the real repo root)', () => {
+  it('exits 2 with the named no-key message, writing nothing (no key in env, no .env at --repo-root)', () => {
+    repoRoot = makeTempRepoRoot()
     const scriptPath = join(process.cwd(), 'packages/agent-ui/a2ui/tools/corpus-genui/eval-genui-corpus.ts')
-    const recordsDir = join(process.cwd(), 'packages/agent-ui/a2ui/corpus-genui/records/v1')
-    const before = safeReaddir(recordsDir)
-    const result = spawnSync('node', ['--experimental-strip-types', scriptPath, 'generate', '--only-prompt', 'data-viz-layouts-1'], {
-      cwd: process.cwd(),
-      env: { PATH: process.env.PATH }, // deliberately NO ANTHROPIC_API_KEY, no other inherited vars
-      encoding: 'utf8',
-      timeout: 15_000,
-    })
+    const realRecordsDir = join(process.cwd(), 'packages/agent-ui/a2ui/corpus-genui/records/v1')
+    const tempRecordsDir = join(repoRoot, 'packages/agent-ui/a2ui/corpus-genui/records/v1')
+    const before = safeReaddir(realRecordsDir)
+    const result = spawnSync(
+      'node',
+      ['--experimental-strip-types', scriptPath, 'generate', '--only-prompt', 'data-viz-layouts-1', '--repo-root', repoRoot],
+      {
+        cwd: process.cwd(),
+        env: { PATH: process.env.PATH }, // deliberately NO ANTHROPIC_API_KEY, no other inherited vars
+        encoding: 'utf8',
+        timeout: 15_000,
+      },
+    )
     expect(result.status).toBe(2)
     expect(result.stderr).toMatch(/no ANTHROPIC_API_KEY/)
-    expect(safeReaddir(recordsDir)).toEqual(before) // nothing new written to the REAL tree
+    expect(safeReaddir(tempRecordsDir)).toEqual([]) // never even created at the temp root
+    expect(safeReaddir(realRecordsDir)).toEqual(before) // and nothing new written to the REAL tree
   })
 
   it('the same subprocess with --help exits 0 and lists every leg', () => {
