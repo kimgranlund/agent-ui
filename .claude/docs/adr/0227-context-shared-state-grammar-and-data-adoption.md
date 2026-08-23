@@ -257,7 +257,7 @@ the agent-admin persona roster CRUD as its first real consumer.** Five clauses:
   meant to close it; clause 2's persistence rule and ADR-0193's seam are the point, not an
   accessory.
 
-## Amendment (2026-08-22, **proposed** — Kim ratifies) — adoption wave 2 recorded: the skill-pack shelf and AgentTeam records join the roster on `DataSource`, and the page's reads/writes ride `resource()`/`mutation()` throughout (GH [#1545](https://github.com/kimgranlund/agent-ui/issues/1545), PR [#1548](https://github.com/kimgranlund/agent-ui/pull/1548), commit `a69125b8`)
+## Amendment (2026-08-22, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/1545#issuecomment-5386649892), verified 2026-08-23) — adoption wave 2 recorded: the skill-pack shelf and AgentTeam records join the roster on `DataSource`, and the page's reads/writes ride `resource()`/`mutation()` throughout (GH [#1545](https://github.com/kimgranlund/agent-ui/issues/1545), PR [#1548](https://github.com/kimgranlund/agent-ui/pull/1548), commit `a69125b8`)
 
 > Append-only, and **proposed**: the Status cell above reads `accepted` for the accepted record as a
 > whole and stays byte-untouched — agents never flip status, nothing self-ratifies; THIS amendment
