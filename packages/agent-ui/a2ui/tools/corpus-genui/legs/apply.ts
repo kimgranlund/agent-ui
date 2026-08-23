@@ -40,7 +40,7 @@ export async function runApplyLeg(repoRoot: string, opts: ApplyOptions): Promise
 
   let text: string
   try {
-    text = readFileSync(opts.verdictsPath, 'utf8') as string
+    text = readFileSync(resolve(repoRoot, opts.verdictsPath), 'utf8') as string
   } catch {
     return { ok: false, updated: [], noops: [], issues: [`could not read --verdicts path: ${opts.verdictsPath}`] }
   }
@@ -98,7 +98,7 @@ export async function runApplyLeg(repoRoot: string, opts: ApplyOptions): Promise
   // own default `--out` writes directly there, and the runbook's documented apply step points at
   // exactly that file), the target IS that same already-archived path — re-deriving a name from its
   // basename would slugify an already-slugified `<date>--<slug>.json` name a second time (GH #1604).
-  const verdictsRelPath = relative(repoRoot, resolve(opts.verdictsPath)).split('\\').join('/')
+  const verdictsRelPath = relative(repoRoot, resolve(repoRoot, opts.verdictsPath)).split('\\').join('/')
   const outPath = verdictsRelPath.startsWith(`${VERDICTS_DIR}/`)
     ? verdictsRelPath
     : `${VERDICTS_DIR}/${genuiVerdictArchiveFileName(parsed.file.date, basename(opts.verdictsPath))}`
