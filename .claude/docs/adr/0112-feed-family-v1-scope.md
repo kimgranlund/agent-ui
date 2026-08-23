@@ -357,7 +357,7 @@ persistent inline status. Every affected code site cites GH #1184.
   disposition, tier map, grammar, playbooks); this amendment is the decision record catching up
   with the ruled, shipped state.
 
-## Amendment 3 (2026-08-23, **proposed**) — fork F3 re-ruled: `ui-avatar` moves off the ADR-0041 widget-box ramp onto the control-height ladder `--md-sys-height-{sm,md,lg}` (the `ui-button` row)
+## Amendment (2026-08-23, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/pull/1597#issuecomment-5386928457), verified 2026-08-23) — Amendment 3: fork F3 re-ruled: `ui-avatar` moves off the ADR-0041 widget-box ramp onto the control-height ladder `--md-sys-height-{sm,md,lg}` (the `ui-button` row)
 
 > Append-only, and **proposed**: the Status cell above reads `accepted` for the record as a
 > whole and stays byte-untouched — agents never flip status
