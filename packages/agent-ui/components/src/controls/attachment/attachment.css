@@ -2,9 +2,13 @@
  * feed-family.lld.md §4; SPEC-R9/R18/R19/R20; ADR-0112 cl.4, fork F4). Two sectioned blocks:
  *
  *   [1] TOKEN BLOCK — `:where(ui-attachment)` declares --ui-attachment-* from the colour roles
- *       (--md-sys-color-{family}-{role}) + the content-icon register (--md-sys-icon-md, geometry.md's
- *       "Affordance vs content-icon" taxonomy — the glyph is a CONTENT icon, not an inline affordance,
- *       so it rides the icon ramp, never `= font`). Display class (SPEC-R20 AC2): no [size]/[scale]
+ *       (--md-sys-color-{family}-{role}), the typescale roles (--md-sys-typescale-label-{medium,small}-*
+ *       for name/meta — the ADR-0078 type matrix, routed through --ui-attachment-{name,meta}-{size,line-height}
+ *       by Kim's 2026-08-23 ruling for THIS control: the fleet convention is a direct typescale read in the
+ *       styles block — TKT-0066 item 5 covers only --md-sys-font/space/shape — but the attachment's register
+ *       was ruled a page-tunable axis, so a page repoints the four tokens, never a part selector) + the content-icon register
+ *       (--md-sys-icon-md, geometry.md's "Affordance vs content-icon" taxonomy — the glyph is a CONTENT
+ *       icon, not an inline affordance, so it rides the icon ramp, never `= font`). Display class (SPEC-R20 AC2): no [size]/[scale]
  *       control-band lookup, no --md-sys-height-* consumption — the border/radius/floor are frame constants,
  *       the glyph is the fixed default icon-ramp tier (no ancestor [scale] repoint needed at v1).
  *   [2] STYLES BLOCK — `@scope (ui-attachment)` consumes ONLY --ui-attachment-*.
@@ -42,6 +46,15 @@
   --ui-attachment-glyph: var(--md-sys-icon-md); /* content-icon register (geometry.md taxonomy), fixed tier — Display class, no [scale] row */
   --ui-attachment-name-ink: var(--md-sys-color-neutral-on-surface);
   --ui-attachment-meta-ink: var(--md-sys-color-neutral-on-surface-variant);
+  /* Type register (ADR-0078 typescale, NOT the ADR-0038 control ladder — Display class, no [size]/[scale] row):
+     the card is a compact secondary artefact, so name/meta ride the LABEL roles (label-medium / label-small),
+     one step below body prose. Kim's 2026-08-23 ruling for ui-attachment, not fleet law: the four tokens exist
+     so a page can repoint the register without touching a part selector (other text-bearing controls read the
+     typescale directly and that stays the convention). */
+  --ui-attachment-name-size: var(--md-sys-typescale-label-medium-size);
+  --ui-attachment-name-line-height: var(--md-sys-typescale-label-medium-line-height);
+  --ui-attachment-meta-size: var(--md-sys-typescale-label-small-size);
+  --ui-attachment-meta-line-height: var(--md-sys-typescale-label-small-line-height);
   --ui-attachment-radius: var(--md-sys-shape-corner-base); /* TKT-0066 item 5 ruling: constants route through the own chain */
 }
 
@@ -87,14 +100,14 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis; /* ADR-0106 mechanism, cited — its home use */
-    font-size: var(--md-sys-typescale-body-medium-size);
-    line-height: var(--md-sys-typescale-body-medium-line-height);
+    font-size: var(--ui-attachment-name-size);
+    line-height: var(--ui-attachment-name-line-height);
   }
 
   :scope [data-part='meta'] {
     color: var(--ui-attachment-meta-ink);
-    font-size: var(--md-sys-typescale-body-small-size);
-    line-height: var(--md-sys-typescale-body-small-line-height);
+    font-size: var(--ui-attachment-meta-size);
+    line-height: var(--ui-attachment-meta-line-height);
   }
 
   @media (forced-colors: active) {
