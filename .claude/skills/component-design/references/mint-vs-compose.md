@@ -2,7 +2,9 @@
 
 Decision records: ADR-0175 (the multi-select/association field intake — the aggregate-value
 test), ADR-0201 (the composed-pattern-retired-by-a-mint case study), ADR-0107 → ADR-0205 (the
-smallest-floor scoping test for admitting a new category — third instance ADR-0219), ADR-0220
+smallest-floor scoping test for admitting a new category — third instance ADR-0219, fourth
+instance ADR-0228/ADR-0229 via ADR-0107 Amendment 4), ADR-0112 Amendment 3 (a falsifiable named
+re-open condition on a rejected scoping alternative), ADR-0220
 (the TYPE arm — semantics+behavior inexpressible — coined there, backfilled here per GH #1430),
 ADR-0217 (the FUNCTION arm — locale-correct formatting as a default-catalog function). Read this at
 fork-sheet step 6 (component-design's "decide what the change earns") whenever the candidate
@@ -178,11 +180,11 @@ event, no geometry row. And per the #1174 supersession, the composition's LAWS s
 verbatim, relocated onto the primitive's clause (humanization stays producer-side, sentence-case
 headers, adjacency) — retiring a composition retires its CONSTRUCTION, never its laws.
 
-## The smallest-floor scoping test: how little earns the category name (ADR-0107 → ADR-0205 → ADR-0219)
+## The smallest-floor scoping test: how little earns the category name (ADR-0107 → ADR-0205 → ADR-0219 → ADR-0228/ADR-0229)
 
 A different recurring fork: the mint decision is already made, but the new control opens a whole
 CATEGORY whose scope explodes (charts are the worked domain — ticks, gridlines, legends, label
-collision are where a "small chart" becomes a rendering framework). The test, now run three times:
+collision are where a "small chart" becomes a rendering framework). The test, now run four times:
 
 **Ship the SMALLEST vocabulary that honestly earns the category name; fence everything else out
 as named LATER intakes, each its own future issue — never riders on the build wave.**
@@ -212,6 +214,21 @@ scope-explosive) intake:
    superseded-IN-PART, scoped to the one type: every other named fence (axis systems, scatter,
    multi-series, …) stands untouched, and the original fence's reasoning stays legible as history
    (the PRD bullet annotated admitted-under-ADR-0219, never deleted).
+4. **ADR-0107 Amendment 4 → ADR-0228 + ADR-0229 (the axis-system fence lift)** — the fourth
+   instance, and the first to lift a fence ADR-0107 itself named rather than one of its own
+   Amendment-3 conditions: cl.1's axis-systems and stacked/multi-series-columns fence rows are
+   REALIZED, scoped to ONE type (`ui-column-chart`), by the same by-construction discipline as
+   ADR-0219 — ADR-0228 mints the smallest SHARED axis vocabulary that earns "axis-bearing at
+   scale" (a two-layer full-bleed plot/chrome split, one inset knob, a projected/now-marker
+   grammar, a static never-hover callout, a shared series-ink ramp) rather than let three
+   simultaneous archetypes (stacked columns, gradient area, radial gauge) each re-derive one, and
+   ADR-0229 spends that shared vocabulary on the smallest TYPE-set that earns it (`ui-column-chart`
+   mint, `ui-line-chart` extended with an opt-in `axes` state, `ui-gauge` mint) while explicitly
+   fencing hover/keyboard interaction, typed time scales, log/dual axes, SVG legends, and a `ratio`
+   attribute as their own later intakes — the ADR-0107 cl.1 fence STYLE reapplied one level down,
+   inside the newly-admitted vocabulary itself. Every other fenced axis case (scatter,
+   still-undecided multi-series line, …) stands untouched; only the boards' three named archetypes
+   are admitted.
 
 The test has two halves and both are load-bearing: the floor must be small (no borrowed scope),
 AND it must genuinely EARN the name — ADR-0205 explicitly rejected shipping "a second sparkline
@@ -219,3 +236,26 @@ with a different name" as failing the earning half. The next axis-bearing intake
 legend, tick marks, a time axis) should cite the prior instances and set its own one-notch floor
 the same way, building on the prior vocabulary rather than re-deriving one — and a fence LIFT
 must name and answer the original fence's own stated conditions, ADR-0219's discipline.
+
+## A scoping fork's re-open condition must be FALSIFIABLE, not "revisit later" (ADR-0112 Amendment 3)
+
+A sibling discipline to the smallest-floor test, for the OTHER half of a scoping fork — not the
+category floor itself, but a rejected alternative recorded alongside it. ADR-0112's `ui-avatar`
+intake (fork F3, 2026-07-08) chose the Indicator-class widget box (12–28px) over the control-height
+ladder (16–64px) and rejected a brand-new avatar ramp with a NAMED, checkable condition, not a vague
+deferral: *"not earned until a real >28px fleet register is demonstrated."* That sentence is a
+falsifiable claim — it names the exact evidence that would flip the ruling — not a "come back to
+this sometime" placeholder.
+
+The condition fired on a live surface (the docs-site A2UI preview, 2026-08-23): the 16×16px default
+avatar sat beside 28px-tall controls, and Kim's ruling was verbatim "these are comically small."
+Amendment 3 re-ruled fork F3 on exactly that evidence — off the widget-box ramp, onto the existing
+`--md-sys-height-{sm,md,lg}` control-height ladder (the `ui-button` row), re-using rather than
+minting a register. The re-ruling was objective in the sense that mattered: the trigger sentence
+from 2026-07-08 could be checked against a real screenshot without re-litigating the original
+scoping argument — the fork's own text did the work.
+
+Generalizes past this one control: when a fork rejects an option, name the SPECIFIC, checkable
+condition that would reopen it — a measured threshold, a demonstrated register, a real surface —
+never "later" or "if it comes up." A vague deferral can only be re-argued from scratch; a
+falsifiable one can be objectively re-ruled the moment its own stated trigger fires.

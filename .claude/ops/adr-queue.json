@@ -5,49 +5,56 @@
       "evidence": "New ratified ADR (2026-08-20/21): mints controls/_chart/ shared axis-math+CSS subsystem (two-layer full-bleed model, chrome-inset contract, projected/now-marker grammar, static callout, shared series-ink ramp). No existing skill/reference cites adr-0228 or adr-0229 (checked against origin/main). Fits as a 4th worked instance in component-design/references/mint-vs-compose.md's existing 'smallest-floor scoping test' lineage (ADR-0107 -> ADR-0205 -> ADR-0219), which already tracks exactly this axis-systems-fence-realization pattern.",
       "kind": "harvest",
       "plan": "",
-      "queued_at": "2026-08-21T11:20:00Z"
+      "queued_at": "2026-08-21T11:20:00Z",
+      "harvested": "2026-08-23"
     },
     {
       "adr_id": "adr-0229",
       "evidence": "New ratified ADR (2026-08-20/21): mints ui-column-chart + ui-gauge, extends ui-line-chart (axes state + gradient fill), category-major multi-series schema. Clean mint-vs-extend/mint-vs-compose reasoning (orientation-variant rejected, pie-chart-extension rejected, ui-stat-ring-composition rejected) -- same axis component-design/references/mint-vs-compose.md already documents. No existing skill/reference cites adr-0229 (checked against origin/main). Companion candidate to adr-0228's queued row -- likely lands as ONE combined extension, not two.",
       "kind": "harvest",
       "plan": "",
-      "queued_at": "2026-08-21T11:20:00Z"
+      "queued_at": "2026-08-21T11:20:00Z",
+      "harvested": "2026-08-23"
     },
     {
       "adr_id": "adr-0107",
       "evidence": "Amendment 4 (2026-08-21, GH #1565): records that ADR-0107 cl.1's axis-systems and stacked/multi-series-columns fence rows are REALIZED (scoped to ui-column-chart only) by ADR-0228/ADR-0229 -- every other fenced type stays fenced. component-design/references/mint-vs-compose.md already cites 'ADR-0107 -> ADR-0205 -> ADR-0219' as a 3-instance lineage of the smallest-floor scoping test; this amendment is the natural 4th instance and the existing lineage prose is now stale (still reads 3 instances) the moment adr-0228/adr-0229 are judged in. Bundle with those two rows -- one extension, not three.",
       "kind": "harvest",
       "plan": "",
-      "queued_at": "2026-08-21T11:20:00Z"
+      "queued_at": "2026-08-21T11:20:00Z",
+      "harvested": "2026-08-23"
     },
     {
       "adr_id": "adr-0230",
       "evidence": "cl.4 (ADR-0230): container-query SIZE queries cannot read var() -- rung breakpoints (28em/16em) had to be literal, banner-documented values (platform constraint, Consequences). Not yet in skills/*/references/*.md; component-standards/references/css-structural-laws.md is the natural extension point (numbered CSS-gotcha list, no existing entry).",
       "kind": "harvest",
       "plan": "",
-      "queued_at": "2026-08-22T18:29:34Z"
+      "queued_at": "2026-08-22T18:29:34Z",
+      "harvested": "2026-08-23"
     },
     {
       "adr_id": "adr-0008",
       "evidence": "Amendment 2 (2026-08-22, ADR-0008): --md-sys-color-primary-dim and -high resolve to the SAME value in the light light-dark() branch, so any control using the generic -dim/-high emphasis ladder for the primary family collapses hover===active in light scheme -- a KNOWN defect Kim directed reopened over the investigating agent's objection, with an explicit standing warning for future controls (use the dedicated -hover/-active roles instead, or re-derive per the family-role pattern). Not found anywhere in skills/*/references/*.md; a hover/active-ladder gotcha worth capturing before the next control hits it blind.",
       "kind": "harvest",
       "plan": "",
-      "queued_at": "2026-08-22T18:29:34Z"
+      "queued_at": "2026-08-22T18:29:34Z",
+      "harvested": "2026-08-23"
     },
     {
       "adr_id": "adr-0112",
       "evidence": "Amendment 3 (ratified 2026-08-23, PR #1597): ui-avatar's square box moves off the ADR-0041 Indicator-class widget-box ramp onto the control-height ladder --md-sys-height-{sm,md,lg} (the ui-button row), because F3's own 2026-07-08 named re-open condition ('not earned until a real >28px fleet register is demonstrated') fired on a live docs-site surface (16x16 avatar beside 28px-tall controls, Kim: 'comically small'). No existing skill/reference cites this pattern (checked against origin/main; ADR-0112 itself is cited only for its Toast/allowlist amendment in component-patterns/references/patterns-table.md). Candidate pattern: a scoping fork records a falsifiable, named re-open condition instead of a vague 'revisit later', and is objectively re-ruled once that condition is demonstrated on a live surface -- generalizes past this one control.",
       "kind": "harvest",
       "plan": "",
-      "queued_at": "2026-08-23T20:02:29Z"
+      "queued_at": "2026-08-23T20:02:29Z",
+      "harvested": "2026-08-23"
     },
     {
       "adr_id": "adr-0227",
       "evidence": "Amendment (ratified 2026-08-23, GH #1545/PR #1548): adoption wave 2 -- skill-pack shelf (skill-pack-store.ts: createSkillPackSource) and AgentTeam records (agent-team.ts: createAgentTeamSource) join the DataSource/resource()/mutation() roster, page reads/writes ride resource()/mutation() throughout. component-patterns/references/patterns-table.md's existing ADR-0227 row already generically forward-names 'first real consumers: the persona roster, then skill-packs/teams' but cites only persona-roster-source.ts (wave 1) as the worked file -- this sharpens/extends that row with the wave-2 worked files + PR #1548, not a wholly new entry.",
       "kind": "harvest",
       "plan": "",
-      "queued_at": "2026-08-23T20:02:29Z"
+      "queued_at": "2026-08-23T20:02:29Z",
+      "harvested": "2026-08-23"
     }
   ]
 }
