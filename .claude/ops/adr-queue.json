@@ -34,6 +34,20 @@
       "kind": "harvest",
       "plan": "",
       "queued_at": "2026-08-22T18:29:34Z"
+    },
+    {
+      "adr_id": "adr-0112",
+      "evidence": "Amendment 3 (ratified 2026-08-23, PR #1597): ui-avatar's square box moves off the ADR-0041 Indicator-class widget-box ramp onto the control-height ladder --md-sys-height-{sm,md,lg} (the ui-button row), because F3's own 2026-07-08 named re-open condition ('not earned until a real >28px fleet register is demonstrated') fired on a live docs-site surface (16x16 avatar beside 28px-tall controls, Kim: 'comically small'). No existing skill/reference cites this pattern (checked against origin/main; ADR-0112 itself is cited only for its Toast/allowlist amendment in component-patterns/references/patterns-table.md). Candidate pattern: a scoping fork records a falsifiable, named re-open condition instead of a vague 'revisit later', and is objectively re-ruled once that condition is demonstrated on a live surface -- generalizes past this one control.",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-23T20:02:29Z"
+    },
+    {
+      "adr_id": "adr-0227",
+      "evidence": "Amendment (ratified 2026-08-23, GH #1545/PR #1548): adoption wave 2 -- skill-pack shelf (skill-pack-store.ts: createSkillPackSource) and AgentTeam records (agent-team.ts: createAgentTeamSource) join the DataSource/resource()/mutation() roster, page reads/writes ride resource()/mutation() throughout. component-patterns/references/patterns-table.md's existing ADR-0227 row already generically forward-names 'first real consumers: the persona roster, then skill-packs/teams' but cites only persona-roster-source.ts (wave 1) as the worked file -- this sharpens/extends that row with the wave-2 worked files + PR #1548, not a wholly new entry.",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-23T20:02:29Z"
     }
   ]
 }

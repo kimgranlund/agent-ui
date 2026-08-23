@@ -14,3 +14,12 @@ authored by the evidence-seeded owner (`kimgranlund`), so nothing reached the tr
   - PR #1585 (#1581, ui-line-chart RTL chip) — fix-first → repaired (physical `left` anchor, RTL-pixel-identity test) → re-review clear-to-merge; carries a no-op held-items hunk identical to main.
   - PR #1587 (#1584, GenUI B3 judged-eval harness) — write-gate accepted @ b445f2f1; **blocked(AC18)**: the live judge-scored run needs ANTHROPIC_API_KEY — commands in the PR body / corpus-genui/README.md. Merge the harness, then run AC18 manually.
   - #1583 — ruling (above), no PR.
+
+## Resolutions, 2026-08-23 (marshal refresh)
+
+- #1583 ruling: RULED (a) — APP_MARGINAL_BUDGET bumped ~104 B citing ADR-0008 Am.2 (PR #1588, merged); issue closed.
+- Morning merge queue: all three merged (#1585, #1586, #1587). AC18 then ran live (PR #1603, merged): m3 floor NOT MET; triage parked as #1605, now in build (build-1605).
+- Still Kim's, open:
+  - Reap scratch clone /var/folders/0b/jf4lh4jd4sd9y2q7x271c9jm0000gn/T/agent-ui-1583 manually (rm denied to seats and marshal).
+  - Local branch `pr-1590` (dc6cd350): 1 unmerged commit, reap script refuses; decide keep or delete.
+  - 5 pending ADR harvest candidates (adr-queue.json): mint-vs-compose bundle (0228+0229+0107), css-structural-laws bundle (0230+0008), placements for 0112 Am.3 and 0227 wave-2 — via /make-pack when you choose.
