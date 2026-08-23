@@ -1,7 +1,299 @@
 {
-  "generatedAt": "2026-08-22T22:22:32.240Z",
+  "generatedAt": "2026-08-23T18:57:13.621Z",
   "rubricVersion": "1.0",
   "promptSetVersion": 1,
-  "records": [],
-  "m3": null
+  "records": [
+    {
+      "name": "animated-explainers--animated-explainers-1--run:2026-08-23T18:19:38.759Z-s2ger",
+      "promptId": "animated-explainers-1",
+      "packId": "animated-explainers",
+      "model": "claude-sonnet-5",
+      "status": "judged",
+      "qualityScore": 4,
+      "passed": true,
+      "dimensions": {
+        "D1": 5,
+        "D2": 4,
+        "D3": 5,
+        "D4": 5
+      },
+      "rationale": "D1: meta.lint.hasDoctype=true, byteLength=4287, single html root, no truncation/unbalanced markup, no leftover prompt prose — clean doctype document, anchor-5. D2: the html follows the animated-explainers pack's named 'roadmap/timeline' anatomy — a row of stops with dots distinguished by fill (solid .done, outlined .current, muted .later) plus connecting line and labels underneath, honoring the pack's explicit 'never rely on color alone' constraint via border/fill treatment. Animation (pulse 2.4s ease-in-out infinite on .current) is slow/continuous per the Wall's subtlety rule, and CSS-only (@keyframes, no JS loop) per the constraint. However only ONE named idiom is used (roadmap/timeline), not the ≥2 idioms anchor-5 requires, and the extra '.tag You are here' callout echoes the exact redundant-callout anti-pattern the pack calls out for state-machine diagrams, in spirit if not letter — capping this below anchor-5 but above the partial-adherence anchor-3 since the single idiom used is fully, not partially, followed. Score 4. D3: prompt asks to walk new hires through a support ticket's open-to-resolved stages and mark current stage; html supplies concrete, on-topic stage labels (Open, Triaged, In progress, Waiting on customer, Resolved) and explicitly marks stage 3/5 as current with 'Example ticket #4821' framing — answers the specific ask, not a generic pack demo. Anchor-5. D4: meta.lint.externalRefs=0, tokenRefs=25, scriptBlocks=0 — self-contained, no network dependency, and tokens (var(--md-sys-color-primary,...), var(--md-sys-color-neutral-*,...)) are consistently paired with literal fallbacks across dots/labels/legend/background, giving graceful degradation. Anchor-5. MIN(5,4,5,5)=4 ⇒ passed.",
+      "verdictDate": "2026-08-23T18:29:46.943Z",
+      "htmlHash": "afb601e1e010cd8035c1b573be9409d3a6b0f6d61f8d35b3f9a7e5102ccdc470",
+      "lint": {
+        "byteLength": 4287,
+        "externalRefs": 0,
+        "tokenRefs": 25,
+        "scriptBlocks": 0,
+        "hasDoctype": true
+      }
+    },
+    {
+      "name": "animated-explainers--animated-explainers-3--run:2026-08-23T18:20:03.552Z-ibbwc",
+      "promptId": "animated-explainers-3",
+      "packId": "animated-explainers",
+      "model": "claude-sonnet-5",
+      "status": "judged",
+      "qualityScore": 3,
+      "passed": false,
+      "failingDimensions": [
+        "D2"
+      ],
+      "dimensions": {
+        "D1": 5,
+        "D2": 3,
+        "D3": 5,
+        "D4": 5
+      },
+      "rationale": "D1: valid single-root <!doctype html> document, no truncation/unbalanced markup, no stray prompt prose — anchor-5 (hasDoctype:true cited from meta.lint). D4: externalRefs=0, tokenRefs=16 (cited) — theming via var(--md-sys-color-*) with literal fallbacks applied meaningfully across fill/border/text roles — anchor-5. D3: the three stops map exactly to the prompt's named steps (Cart done, Payment current, Confirmation later), correctly places 'currently sitting at payment' with no invented steps or generic demo — anchor-5. D2 is the gate that sinks the record: only ONE named animated-explainers idiom is present — the roadmap/timeline (dot done/next/later distinguished by fill+outline, not color alone, connecting line, labels underneath) is followed faithfully. But the pack's anchor-5 requires '≥2 named idioms AND stated constraints honored' — no pipeline/flow diagram or state-machine idiom appears alongside it. Additionally the record adds a 'You are here' badge on the current stop, which echoes almost verbatim the pack's explicit anti-pattern ('highlight the CURRENT state with an accent border, never a separate redundant \"you are here\" callout') — a genuine, if idiom-adjacent, constraint drop layered on top of the single-idiom shortfall. That combination — one idiom, partially undercut by a redundant callout — lands squarely at anchor-3, not 4 or 5, which caps qualityScore at 3 and fails the m3 ≥4 floor despite otherwise-clean D1/D3/D4.",
+      "verdictDate": "2026-08-23T18:29:46.943Z",
+      "htmlHash": "cd3ed095ddd35994c6911cd8435ae06652a3b9d2ac2de0f83a8cb3a7c201e2e8",
+      "lint": {
+        "byteLength": 3052,
+        "externalRefs": 0,
+        "tokenRefs": 16,
+        "scriptBlocks": 0,
+        "hasDoctype": true
+      }
+    },
+    {
+      "name": "control--animated-explainers-1--run:2026-08-23T18:17:07.642Z-k954w",
+      "promptId": "animated-explainers-1",
+      "packId": null,
+      "model": "claude-sonnet-5",
+      "status": "judged",
+      "qualityScore": 2,
+      "passed": false,
+      "failingDimensions": [
+        "D2"
+      ],
+      "dimensions": {
+        "D1": 5,
+        "D2": 2,
+        "D3": 5,
+        "D4": 5
+      },
+      "rationale": "D1: hasDoctype:true, single coherent <html> root, no truncation/unbalanced markup, no leftover prompt prose — clean document, 5. D2 (CONTROL, judged relative to animated-explainers): the html is a well-built interactive stage-selector (numbered circles, current-stage highlight, badge, click-to-select with genui.action bridge) but shows no animated-explainer-specific idiom — no staged/sequential reveal animation, no keyframe-driven progress, only a generic .18s hover transition. It reads as a self-contained CSS interactive widget rather than a demonstration of the animated-explainers pack's own named anatomy, closer to anchor-1's 'generic component unrelated to the pack' than to a partial/full idiom match — capped at 2. D3: prompt asks to walk hires through open→resolved stages and mark the current one; html names the exact five real lifecycle stages (Open/In Progress/Waiting on Customer/Resolved/Closed), uses a concrete ticket (#4821), highlights and states the current stage in the footer — answers the specific ask precisely, 5. D4: lint shows externalRefs:0, tokenRefs:18, scriptBlocks:1 with no network dependency; CSS uses var(--md-sys-color-*) tokens throughout (surface, on-surface, outline-variant, primary, primary-container, on-primary) each with literal hex fallbacks, giving genuine fallback-guarded theming — 5. qualityScore = MIN = 2, driven entirely by D2, the exact 'clean mechanics, no named idiom' failure mode the rubric calls out as the top thing to look for.",
+      "verdictDate": "2026-08-23T18:29:46.943Z",
+      "htmlHash": "2f27753b8fdc821af268d73122864763b14dbbc6aff07f3ea43e40a2a44fdae5",
+      "lint": {
+        "byteLength": 3991,
+        "externalRefs": 0,
+        "tokenRefs": 18,
+        "scriptBlocks": 1,
+        "hasDoctype": true
+      }
+    },
+    {
+      "name": "control--animated-explainers-3--run:2026-08-23T18:17:30.022Z-socw7",
+      "promptId": "animated-explainers-3",
+      "packId": null,
+      "model": "claude-sonnet-5",
+      "status": "judged",
+      "qualityScore": 4,
+      "passed": true,
+      "dimensions": {
+        "D1": 5,
+        "D2": 4,
+        "D3": 5,
+        "D4": 5
+      },
+      "rationale": "D1: doctype present (meta.lint.hasDoctype=true), single root <html>, no truncated/unbalanced markup, no stray prompt prose — a clean document, 5. D2: CONTROL run, judged against the paired 'Animated explainers' pack idiom expectations per instructions; no pack anatomy text was supplied to compare literally, so full anchor-5 confirmation isn't possible, but the html shows genuine CSS-driven animated-explainer patterns — a step tracker with done/current/upcoming states, a @keyframes pulse purely in CSS (no external library), and animated transitions on state change — at least two distinguishable idioms (progress-step anatomy + animated current-step highlight), landing a solid 4 rather than an unconfirmed 5. D3: prompt asks to explain cart→payment→confirmation and show 'currently at payment' — the html names exactly these three steps, marks Cart done ('Items reviewed & confirmed'), Payment current ('Entering payment details now') with a pulsing highlight, Confirmation upcoming, plus an explicit 'You are here: Payment' badge — answers the specific ask precisely, 5. D4: lint shows externalRefs=0 and tokenRefs=20, and the html uses var(--md-sys-color-*) tokens throughout (primary, on-primary, outline, surface-container, on-surface-variant, primary-container) each with literal hex fallbacks, satisfying the anchor-5 graceful-degradation bar, 5. qualityScore = MIN(5,4,5,5) = 4, meeting the ≥4 gate; no dimension below 4 so failingDimensions is empty.",
+      "verdictDate": "2026-08-23T18:29:46.943Z",
+      "htmlHash": "d21ea7c3f4da311bbfff7d5b59c68fdcc28622810483f7cf75f811f78e9efa18",
+      "lint": {
+        "byteLength": 3507,
+        "externalRefs": 0,
+        "tokenRefs": 20,
+        "scriptBlocks": 0,
+        "hasDoctype": true
+      }
+    },
+    {
+      "name": "control--data-viz-layouts-2--run:2026-08-23T18:17:53.176Z-5c49i",
+      "promptId": "data-viz-layouts-2",
+      "packId": null,
+      "model": "claude-sonnet-5",
+      "status": "judged",
+      "qualityScore": 2,
+      "passed": false,
+      "failingDimensions": [
+        "D2",
+        "D3"
+      ],
+      "dimensions": {
+        "D1": 5,
+        "D2": 3,
+        "D3": 2,
+        "D4": 5
+      },
+      "rationale": "D1: hasDoctype=true (meta.lint), single root <html>, no truncation/unbalanced markup, no leftover prompt prose — clean document, 5. D2: this is a CONTROL record (no pack conditioning), judged against the data-viz-layouts pack it's normally paired with. The html shows one recognizable named idiom — a KPI/metric grid (label/value/note tiles in a flex grid) — but no second idiom (e.g. no bar/column comparison) is present, so it cannot reach the ≥2-idiom anchor-5 bar; per anchor-3 ('one idiom present') this caps at 3. D3: the prompt asks for a snapshot of active users, churn rate, and avg session length 'for this week' — the html correctly labels exactly these three metrics but every value is a placeholder '—' with 'Awaiting data feed' text and a footer punting the request back to the user ('Tell me where this data lives... I'll fill this in'). No actual data/numbers answer the ask at all; only the label shape is right. This sits between anchor-1 ('renders nothing... ignores the prompt's actual data') and anchor-3 ('misses... specific data') — since zero substantive content is rendered despite correct labels, I score 2, not 3. D4: externalRefs=0, tokenRefs=9 (meta.lint), and every var(--md-sys-color-*) usage carries a literal hex fallback (e.g. var(--md-sys-color-primary,#3a5ba0)) across surface/outline/primary roles — meets the anchor-5 bar for self-contained, fallback-guarded theming, 5. qualityScore = MIN(5,3,2,5) = 2, well below the ≥4 floor; D2 and D3 both fail gate.",
+      "verdictDate": "2026-08-23T18:29:46.943Z",
+      "htmlHash": "2d44491691a37f3c5f936926df0e5c7ba5a1ac813fb0fa5ea42a86e75af0037e",
+      "lint": {
+        "byteLength": 1776,
+        "externalRefs": 0,
+        "tokenRefs": 9,
+        "scriptBlocks": 0,
+        "hasDoctype": true
+      }
+    },
+    {
+      "name": "control--interactive-widgets-1--run:2026-08-23T18:18:16.644Z-qgv8h",
+      "promptId": "interactive-widgets-1",
+      "packId": null,
+      "model": "claude-sonnet-5",
+      "status": "judged",
+      "qualityScore": 4,
+      "passed": true,
+      "dimensions": {
+        "D1": 5,
+        "D2": 4,
+        "D3": 5,
+        "D4": 5
+      },
+      "rationale": "D1: hasDoctype:true, single coherent document, no truncation or leftover prose — anchor-5 met. D2: no pack body was supplied (CONTROL), so judged against interactive-widgets' typical idioms per instruction. The html implements a CSS-driven star-rating selector (no external library, unicode glyphs, hover-preview/filled states) plus a properly gated submit button, and correctly wires the `genui.action('submit_rating', …)` bridge — the stated constraints (CSS-driven shapes, no external lib, action bridge) are all honored with zero dropped constraints. However only one clearly named idiom (the rating control) is identifiable rather than the ≥2 named idioms the 5-anchor requires, so this lands at 4 rather than a clean 5. D3: prompt asks 'let the reviewer rate this design submission out of five stars' — the html delivers exactly that: a 5-star selector with live label feedback and a submit action, no generic decontextualized demo — anchor-5 met. D4: lint shows externalRefs:0 and tokenRefs:7, and every var(--md-sys-color-*) use carries a literal fallback (#fff, #1a1a1a, #bbb, #f5a623, #666, #4a63e7), so theming is real and fallback-guarded — anchor-5 met. MIN(5,4,5,5)=4, so qualityScore=4 and passed=true; no dimension scored below 4.",
+      "verdictDate": "2026-08-23T18:29:46.943Z",
+      "htmlHash": "15da2363733114d5c7ac5e6d44f4c81622738bb2a206cacf57e96f432bf914ce",
+      "lint": {
+        "byteLength": 2304,
+        "externalRefs": 0,
+        "tokenRefs": 7,
+        "scriptBlocks": 1,
+        "hasDoctype": true
+      }
+    },
+    {
+      "name": "control--interactive-widgets-2--run:2026-08-23T18:18:30.863Z-huw0w",
+      "promptId": "interactive-widgets-2",
+      "packId": null,
+      "model": "claude-sonnet-5",
+      "status": "judged",
+      "qualityScore": 5,
+      "passed": true,
+      "dimensions": {
+        "D1": 5,
+        "D2": 5,
+        "D3": 5,
+        "D4": 5
+      },
+      "rationale": "D1: hasDoctype:true (cited), single root <html>, no truncated/unbalanced markup, no leftover prompt prose — clean document, 5. D2: though this is a CONTROL record (no pack body furnished), the html independently demonstrates the interactive-widgets pack's normal idioms — a custom CSS-driven selectable option list (no native <input type=radio>, hand-built .check circle with :after dot), a selected-state style toggle, and the genui.action bridge invoked on interaction (`genui.action('select_delivery_time', {...})`) guarded by a `window.genui` check. That's ≥2 named-shape idioms (custom radio indicator + selectable card list) with the stated constraints honored (CSS-driven shapes, no external library, genui.action bridge) — 5. D3: prompt asks for exactly three delivery-time options with visible pick-feedback; html renders exactly three named/priced options (Standard/Express/Overnight with real day-ranges and prices) and shows the pick via both a checked-circle affordance and a status line ('Selected: ...') — answers the specific ask, not a generic demo — 5. D4: lint shows externalRefs:0 and tokenRefs:11 (well above the ≥1 floor), and every var(--md-sys-color-*) usage carries a literal hex fallback (e.g. var(--md-sys-color-primary,#4a6cf7)), so the surface degrades gracefully absent a bridge theme message — 5. MIN across D1-D4 = 5, all gates cleared, no failing dimensions.",
+      "verdictDate": "2026-08-23T18:29:46.943Z",
+      "htmlHash": "4a8712bbb2753f7fd15a0cada883eecd3355b72996873adadab9055cc8c759fd",
+      "lint": {
+        "byteLength": 3261,
+        "externalRefs": 0,
+        "tokenRefs": 11,
+        "scriptBlocks": 1,
+        "hasDoctype": true
+      }
+    },
+    {
+      "name": "control--interactive-widgets-3--run:2026-08-23T18:18:51.339Z-xwigp",
+      "promptId": "interactive-widgets-3",
+      "packId": null,
+      "model": "claude-sonnet-5",
+      "status": "judged",
+      "qualityScore": 4,
+      "passed": true,
+      "dimensions": {
+        "D1": 5,
+        "D2": 4,
+        "D3": 5,
+        "D4": 5
+      },
+      "rationale": "D1: single-root, well-formed <!doctype html> document, no truncation/unbalanced markup, no leftover prompt prose — clean 5. D2 (CONTROL, judged against the interactive-widgets pack it's normally paired with): the html builds a genuine interactive grid-widget — a clickable 3x3 board with disabled-state cells, hover feedback, win-highlight class, and a live turn/score status readout — plus it explicitly wires the genui.action bridge on round completion ('genui.action(\"round_over\", {winner...})'), one of the pack's named constraints (bridge use, no external library, CSS-driven styling, all cells/scores driven by vanilla DOM manipulation). That's a plausible ≥2-idiom hit (grid/board widget + bridge integration) with constraints honored, though without the literal pack anatomy text to cross-check exact named sections I hold this at 4 rather than a confirmed 5. D3: prompt asks for 'a simple two-player turn-based grid game they can play against each other while they wait for a match' — the html delivers exactly that: turn-based X/O grid, live turn indicator, win/draw detection, and a running score tally, matching the ask's specifics rather than a generic demo — 5. D4: lint shows externalRefs=0, tokenRefs=13; theming uses var(--md-sys-color-primary/tertiary/neutral-surface/outline-variant/surface-container/surface-container-high/primary-container/on-primary, <literal fallback>) throughout — self-contained and gracefully degrading if tokens never arrive — 5. MIN(5,4,5,5)=4, passed.",
+      "verdictDate": "2026-08-23T18:29:46.943Z",
+      "htmlHash": "0fced24342303cd29feb002e8c098344a4e952bfaecb293b17e013c9847cb5cf",
+      "lint": {
+        "byteLength": 4630,
+        "externalRefs": 0,
+        "tokenRefs": 13,
+        "scriptBlocks": 1,
+        "hasDoctype": true
+      }
+    },
+    {
+      "name": "control--interactive-widgets-4--run:2026-08-23T18:19:08.196Z-b5aox",
+      "promptId": "interactive-widgets-4",
+      "packId": null,
+      "model": "claude-sonnet-5",
+      "status": "judged",
+      "qualityScore": 2,
+      "passed": false,
+      "failingDimensions": [
+        "D2"
+      ],
+      "dimensions": {
+        "D1": 5,
+        "D2": 2,
+        "D3": 5,
+        "D4": 5
+      },
+      "rationale": "D1: hasDoctype:true (cited), single coherent <html> root, no truncation/unbalanced markup, no leftover prompt prose — anchor-5. D3: the html answers exactly the specific ask — three named color swatches (red/blue/green) for the pick, a confidence range input with matching '1..5' scale labels and live readout, a submit that gates on selection — no genericized demo, anchor-5. D4: meta.lint externalRefs=0 (3-floor met) and tokenRefs=7 (≥1 floor met); every var(--md-sys-color-*) usage carries a literal fallback (e.g. var(--md-sys-color-primary,#3b82f6), var(--md-sys-color-neutral-surface,#fff)) across background/text/accent/button roles — real fallback-guarded theming, anchor-5. D2 is the control case: PACK BODY supplies no 'Anatomy —' sections to compare against (explicitly 'CONTROL — no pack'), so there is no mechanical or textual basis to confirm ≥2 named interactive-widgets idioms were followed per the rubric's own evidence rule ('the pack body's named Anatomy — sections... compared against the html'). The record does honor one general pack-adjacent constraint — the genui.action bridge call (genui.action('vote_confidence', {...})) — and builds a custom CSS-driven selectable-swatch control rather than a native radio input, which is a weak, unverified idiom signal. Absent the anatomy text to confirm a genuine named-idiom match, this lands as 'one idiom present, only partially followed/unverifiable' rather than a confirmed ≥2-idiom anchor-5, and well short of anchor-5's bar — scored 2, the dimension this eval exists to gate.",
+      "verdictDate": "2026-08-23T18:29:46.943Z",
+      "htmlHash": "df7d23db541c90ef012ad1cce23e2aed8eba49b990280bce06ed8c70588d080e",
+      "lint": {
+        "byteLength": 3759,
+        "externalRefs": 0,
+        "tokenRefs": 7,
+        "scriptBlocks": 1,
+        "hasDoctype": true
+      }
+    },
+    {
+      "name": "interactive-widgets--interactive-widgets-3--run:2026-08-23T18:21:33.883Z-af2x2",
+      "promptId": "interactive-widgets-3",
+      "packId": "interactive-widgets",
+      "model": "claude-sonnet-5",
+      "status": "judged",
+      "qualityScore": 3,
+      "passed": false,
+      "failingDimensions": [
+        "D2"
+      ],
+      "dimensions": {
+        "D1": 5,
+        "D2": 3,
+        "D3": 5,
+        "D4": 5
+      },
+      "rationale": "D1: hasDoctype:true (cited), single coherent <!doctype html> document, no truncation/unbalanced markup, no leftover prompt prose — 5. D2: pack anatomy for a turn-based mini board specifies clicks report genui.action('cell', {row,col}) with optimistic local marking while the agent's NEXT turn supplies the authoritative rebuild; this record instead computes the entire win/draw/turn-alternation logic client-side and only calls genui.action for 'game_over' and 'reset', never 'cell' — a stated constraint of the named anatomy is dropped even though the CSS-grid-of-cell-buttons shape and 'disable rather than remove a resolved cell' idiom are followed. Only one idiom (the board) is attempted, and it is only partially followed — anchor-3 case (shape recognizable, a stated constraint dropped), not the ≥2-idiom-with-constraints-honored anchor-5 bar. D3: promptText asks for a simple two-player turn-based grid game to play while waiting for a match; the html delivers exactly that — a pass-and-play tic-tac-toe grid with per-turn status, win/draw detection, and reset, not a decontextualized pack demo — 5. D4: lint shows externalRefs:0 and tokenRefs:9, all var(--md-sys-color-*, <literal fallback>) reads (surface, on-surface, outline-variant, surface-container, primary, tertiary, primary-container, secondary-container, on-secondary-container) — self-contained with graceful degradation, meeting the anchor-5 bar. qualityScore = MIN(5,3,5,5) = 3, so the record fails m3's ≥4 floor on D2 alone despite clean mechanical D1/D4 — the exact 'top failure to look for first' pattern the rubric calls out (structurally clean but idiom-constraint-dropped).",
+      "verdictDate": "2026-08-23T18:29:46.943Z",
+      "htmlHash": "a7511541d01214a79b10d9c9379775179dd4b143c90faf3d993093d342b89fa5",
+      "lint": {
+        "byteLength": 4094,
+        "externalRefs": 0,
+        "tokenRefs": 9,
+        "scriptBlocks": 1,
+        "hasDoctype": true
+      }
+    }
+  ],
+  "m3": {
+    "judged": 3,
+    "passed": 1,
+    "passRate": 0.3333333333333333,
+    "minScore": 3,
+    "meanScore": 3.3333333333333335,
+    "floorMet": false,
+    "perPack": {
+      "animated-explainers": {
+        "judged": 2,
+        "passed": 1,
+        "meanD2": 3.5,
+        "minScore": 3
+      },
+      "interactive-widgets": {
+        "judged": 1,
+        "passed": 0,
+        "meanD2": 3,
+        "minScore": 3
+      }
+    },
+    "control": {
+      "judged": 7,
+      "meanD2": 3.4285714285714284
+    }
+  }
 }
