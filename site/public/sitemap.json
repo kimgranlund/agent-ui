@@ -126,7 +126,8 @@
       "url": "./column-doc.html",
       "description": "ui-column is the vertical A2UI layout primitive — ui-row's sibling with the main axis flipped to the block axis (flex-direction: column).",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Layout primitives"
     },
     {
       "name": "Column Chart",
@@ -230,7 +231,8 @@
       "url": "./grid-doc.html",
       "description": "A responsive track-grid container that fits as many columns as its own width allows, no breakpoints needed.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Layout primitives"
     },
     {
       "name": "Icon",
@@ -270,7 +272,8 @@
       "url": "./list-doc.html",
       "description": "ui-list is a semantic vertical stack — a ui-column specialization that adds list semantics.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Layout primitives"
     },
     {
       "name": "Markdown",
@@ -390,7 +393,8 @@
       "url": "./row-doc.html",
       "description": "ui-row is the canonical layout primitive — a light-DOM custom element that lays its children out as a horizontal flex row.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Layout primitives"
     },
     {
       "name": "Sandbox Frame",
@@ -470,7 +474,8 @@
       "url": "./split-doc.html",
       "description": "A multi-pane container with user-resizable, draggable and keyboard-adjustable dividers between panes.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Layout primitives"
     },
     {
       "name": "Split Pane",
@@ -478,7 +483,8 @@
       "url": "./split-pane-doc.html",
       "description": "One resizable pane inside a ui-split container, with optional initial ratio, min, and max bounds.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Layout primitives"
     },
     {
       "name": "Stat",
@@ -526,7 +532,8 @@
       "url": "./swiper-item-doc.html",
       "description": "ui-swiper-item is the slide of the ui-swiper family (swiper-family.lld.md LLD-C4) — an author-written wrapper around arbitrary content, one per logical slide.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Layout primitives"
     },
     {
       "name": "Swiper Label",
@@ -638,7 +645,8 @@
       "url": "./toast-region-doc.html",
       "description": "ui-toast-region is the top-layer host ui-toast instances stack inside — the fleet's first transient notification surface (ADR-0112, feed-family.lld.md LLD-C8).",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Layout primitives"
     },
     {
       "name": "Toggle",

@@ -34,6 +34,7 @@ interface SitemapEntry {
   readonly description: string
   readonly level: 'L1' | 'L2' | 'L3'
   readonly section: string
+  readonly group?: string
   readonly index?: string
 }
 
@@ -59,6 +60,17 @@ describe('sitemap.json — byte-identical to a fresh generation (the committed i
     expect(commandModal, 'expected ui-command-modal as an L1 entry').toBeDefined()
     expect(commandModal!.description).not.toMatch(/[*`]/)
     expect(commandModal!.description.length).toBeGreaterThan(0)
+  })
+
+  it('GH #1600: `group` mirrors NAV\'s own fold — set only for the Layout-primitives bundle, absent for every standalone L1 tag', () => {
+    const parsed = JSON.parse(fresh) as { entries: SitemapEntry[] }
+    const l1 = parsed.entries.filter((e) => e.level === 'L1')
+    const rowGroup = l1.find((e) => e.tag === 'ui-row')
+    expect(rowGroup?.group, 'ui-row folds into Layout primitives in NAV').toBe('Layout primitives')
+    const gridGroup = l1.find((e) => e.tag === 'ui-grid')
+    expect(gridGroup?.group, 'ui-grid folds into Layout primitives in NAV').toBe('Layout primitives')
+    const button = l1.find((e) => e.tag === 'ui-button')
+    expect('group' in (button ?? {}), 'ui-button stands alone in NAV — no group key at all').toBe(false)
   })
 
   it('the committed file matches the generator byte-for-byte (regenerate: node scripts/generate-sitemap.mjs)', () => {

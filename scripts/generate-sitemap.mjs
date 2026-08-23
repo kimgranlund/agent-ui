@@ -21,6 +21,11 @@
 // generator edit required. Router itself still resolves to its one combined page via site-manifest.json's L2
 // row (site/pages/_page.ts's ungrouped site-level GUIDE posture) — unaffected by this change, since
 // `packages/agent-ui/router/src/controls` was never added to L1_TREES.
+//
+// Optional `group` field (GH #1600) — a within-section cluster narrower than `section`, present only where
+// site/pages/_page.ts's NAV (mirrored by site/main.ts's CARD_GROUPS) actually folds multiple pages under one
+// shared label; see L1_FOLD_GROUPS below for why this stays a small hand-kept map rather than a parse of
+// NAV itself (a Node script cannot import Vite-transformed TS).
 
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -30,6 +35,37 @@ import { slug } from './slug.mjs'
 const repoRootFromScript = () => fileURLToPath(new URL('..', import.meta.url))
 
 const L1_TREES = ['packages/agent-ui/components/src/controls', 'packages/agent-ui/code/src']
+
+// L1_FOLD_GROUPS — the ONE place site/pages/_page.ts's NAV array (and site/main.ts's CARD_GROUPS, the same
+// shape) actually shares a single label across MULTIPLE distinct component tags, rather than one label per
+// tag (GH #1600): the "Layout primitives" bundle (row/column/list/grid/toast-region/split/split-pane/
+// swiper-item — each folded in one at a time, per that array's own inline history: ADR-0112's ui-toast-region,
+// ADR-0120 cl.2's ui-split/ui-split-pane, ADR-0124's ui-swiper-item). Every OTHER L1 tag stands alone in NAV
+// (its own single-tag group), so it carries no `group` at all here — reusing NAV as the one source of truth
+// (Kim, 2026-08-23) means never synthesizing a second, broader taxonomy (Forms/Data display/…) NAV itself
+// does not carry. Keep this list in lockstep with _page.ts's own 'Layout primitives' NavGroup if that bundle
+// ever grows or splits — there is no shared import (a Node script cannot import the Vite-transformed TS NAV
+// array, the same constraint L1 generation as a whole already lives under).
+const L1_FOLD_GROUPS = {
+  'Layout primitives': [
+    'ui-row',
+    'ui-column',
+    'ui-list',
+    'ui-grid',
+    'ui-toast-region',
+    'ui-split',
+    'ui-split-pane',
+    'ui-swiper-item',
+  ],
+}
+
+/** groupOf — the L1_FOLD_GROUPS label `tag` folds into, or undefined when `tag` stands alone in NAV. */
+function groupOf(tag) {
+  for (const [label, tags] of Object.entries(L1_FOLD_GROUPS)) {
+    if (tags.includes(tag)) return label
+  }
+  return undefined
+}
 
 /** Split a descriptor's `---`-fenced frontmatter from its prose body; null when no fence leads the file.
  *  (generate-llms-full.mjs precedent, duplicated rather than imported — that script has no export for it.) */
@@ -135,7 +171,16 @@ function generateL1(repoRoot) {
         if (!existsSync(join(repoRoot, 'site', url.slice(2)))) continue // no real page yet — skip, never a dead link
         const authored = descriptionOf(split.fence)
         const description = authored !== null ? authored : deriveFallbackDescription(split.body)
-        entries.push({ name: titleCaseFromTag(tag), tag, url, description, level: 'L1', section: 'Components' })
+        const group = groupOf(tag)
+        entries.push({
+          name: titleCaseFromTag(tag),
+          tag,
+          url,
+          description,
+          level: 'L1',
+          section: 'Components',
+          ...(group ? { group } : {}),
+        })
       }
     }
   }
@@ -154,6 +199,7 @@ function generateL2AndStubs(repoRoot) {
     description: row.description,
     level: row.level,
     section: row.section,
+    ...(row.group ? { group: row.group } : {}),
     ...(row.index ? { index: row.index } : {}),
   }))
 }

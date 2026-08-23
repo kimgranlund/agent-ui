@@ -10,6 +10,10 @@ export interface SitemapEntry {
   description: string
   level: 'L1' | 'L2' | 'L3'
   section: string
+  /** A within-section cluster narrower than `section`, present ONLY when the site's own NAV/CARD_GROUPS
+   *  arrangement (site/pages/_page.ts + site/main.ts) actually folds multiple pages under one shared label
+   *  (e.g. 'Layout primitives'). Absent when the entry stands alone in NAV — never a synthesized value. */
+  group?: string
   index?: string
 }
 
