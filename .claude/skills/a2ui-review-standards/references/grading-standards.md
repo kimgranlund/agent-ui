@@ -1,6 +1,6 @@
 # a2ui-review-agent standards — ground rules, per-artifact procedure, VerdictsFile
 
-Harvested verbatim from `a2ui-review`'s own body (2026-08-15 extraction, GH #932/wave-2 W2-8).
+Harvested verbatim from `a2ui-review-standards`'s own body (2026-08-15 extraction, GH #932/wave-2 W2-8; skill renamed from `a2ui-review` 2026-08-23).
 The SKILL.md's routing table (artifact → rubric → deterministic floor) stays inline; this file
 is the judgment-layer detail behind it. Read before grading anything — these seven rules and
 the per-artifact procedure are what makes a grading run reproducible instead of improvised.

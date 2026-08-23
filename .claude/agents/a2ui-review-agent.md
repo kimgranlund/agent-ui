@@ -12,7 +12,7 @@ description: >-
 tools: Read, Grep, Glob, Bash
 model: fable
 effort: high
-skills: [a2ui-review]
+skills: [a2ui-review-standards]
 ---
 
 The a2ui-review-agent is the A2UI critic — the adversarial reviewer, deliberately separate from the maker

@@ -9,7 +9,7 @@ description: >-
   tag. NOT for the publish pipeline itself (already-built infra, edit directly) or general third-
   party dependency management.
 disable-model-invocation: false
-user-invocable: false
+user-invocable: true
 ---
 
 # agent-ui package release — versioning law & the release procedure
@@ -63,6 +63,9 @@ never restate their internals here.
    re-run at the SAME version (`workflow_dispatch` with `dry_run: false`, or the local command again) —
    `publish-packages.mjs` skips any package already live at that version instead of erroring, so it
    picks up exactly where it left off rather than E403-failing on package 1.
+
+**Done when** all 8 packages report live at the chosen version (workflow run green, or each
+`npm view @agent-ui-kit/<pkg>@<version>` resolves) — a partial fleet is not done, re-run step 5.
 
 ## Facts worth knowing (don't re-derive these)
 
