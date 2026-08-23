@@ -1,5 +1,5 @@
 ---
-name: a2ui-review
+name: a2ui-review-standards
 description: >-
   Wiring-only: preloaded by the a2ui-review-agent seat as its grading method (rubric routing,
   procedure, VerdictsFile contract). Not user-invocable, not a routing target.
