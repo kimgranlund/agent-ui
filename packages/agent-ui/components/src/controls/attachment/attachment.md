@@ -89,7 +89,13 @@ geometry:
   # NO [size] attribute, NO [scale] geometry row, NO --md-sys-height-* consumption (SPEC-R20 AC2) — the glyph
   # rides the fixed content-icon register (--md-sys-icon-md, geometry.md's "Affordance vs content-icon" law);
   # rhythm (gap/padding) rides the space ladder, density-responsive for free (SPEC-R18 AC3).
-  typeRegister: name = var(--ui-attachment-name-size) ← --md-sys-typescale-label-medium-size (12px) · meta = var(--ui-attachment-meta-size) ← --md-sys-typescale-label-small-size (11px)   # ADR-0078 type matrix, one step below body prose — the compact secondary-artefact register (ui-source-list's secondary cell); each with its -line-height twin; a page repoints the four --ui-attachment-{name,meta}-{size,line-height} tokens, never the part selectors (own-chain law, TKT-0066 item 5). Kim, 2026-08-23 (was body-medium/body-small, a direct typescale read).
+  # Type register (not a geometry key — noted here because it is the card's only size lever): name reads
+  # var(--ui-attachment-name-size) ← --md-sys-typescale-label-medium-size (12px), meta reads
+  # var(--ui-attachment-meta-size) ← --md-sys-typescale-label-small-size (11px), each with a -line-height twin —
+  # the ADR-0078 matrix one step below body prose. Kim's 2026-08-23 ruling for ui-attachment (was body-medium /
+  # body-small read directly): the four --ui-attachment-{name,meta}-{size,line-height} tokens exist so a page
+  # repoints the register without a part selector. A one-off, not fleet law — direct typescale reads stay the
+  # convention elsewhere (TKT-0066 item 5 covers --md-sys-font/space/shape only).
 
 forcedColors: An explicit `@media (forced-colors: active)` block repoints the card's border to `CanvasText` (the boxed identity survives, SPEC-R19). The glyph is a `<ui-icon>` (an inline SVG the icon adapter draws in `currentColor`) and the name/meta are real text — both survive WHCM with no dedicated rule in this file.
 ---
