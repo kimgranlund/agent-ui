@@ -1,10 +1,10 @@
 # CSS structural laws — PR-harvested
 
-Two normative laws (2026-08-19 harvest), each proven by a merged fix and stated here because no
-shared-corpus law doc owns its question yet. Each cites its proving PR — read the diff's own
-commentary for the measured evidence before relaxing either. Promotion path: a third instance of
-either class graduates the law into `.claude/docs/references/` (or an ADR) and this file's entry
-becomes a citation.
+Three normative laws (2026-08-19 harvest, +1 2026-08-23), each proven by a merged fix or ratified
+ADR and stated here because no shared-corpus law doc owns its question yet. Each cites its proving
+PR/ADR — read the diff's own commentary or the record's own Context for the measured evidence
+before relaxing any of them. Promotion path: a third instance of any class graduates the law into
+`.claude/docs/references/` (or an ADR) and this file's entry becomes a citation.
 
 ## 1. A visually-hidden absolutely-positioned part REQUIRES a positioned host
 
@@ -56,3 +56,27 @@ component's own element instead.
   child scoping. Whoever next touches super-shell.css or composes sandbox-frame into a shell owns
   closing it. The shell's other generic part names (canvas, middle, pane, rail, scrim) collided
   with nothing fleet-side at harvest time.
+
+## 3. Container-query SIZE queries cannot read `var()` — a ladder's breakpoints are platform-forced literals
+
+CSS Containment's `@container` size queries (`(min-width: …)`/`(max-width: …)` conditions on an
+inline/block-size query container) reject a `var()` inside the condition — the query needs a
+resolvable length at parse time the cascade cannot supply. Any pure-CSS chrome-degradation ladder
+keyed on a container's own measured box (a per-width rung system, never a resize-driven JS
+mechanism) is therefore FORCED to spell its breakpoints as literal values, not token references —
+a real platform constraint, not a convention choice. Measured (ADR-0230, GH #1578):
+`ui-column-chart`'s three-rung ladder needed its 28em/16em breakpoints to ride `--md-sys-scale` for
+free (host-em units do that), but the em VALUES themselves — derived from chip-pitch arithmetic and
+the ratified whole-shape floor — could not be pulled from a custom property inside the `@container`
+condition and had to be written as bare numbers.
+
+- The fix is not a workaround, it is disclosure: BANNER-DOCUMENT the literal in the CSS file's own
+  comment, naming what it was derived from (the geometry arithmetic, the token it snapshots) so a
+  later token-system change doesn't silently desync a breakpoint no one remembers is a copy.
+- A breakpoint derived FROM a token (e.g. a whole-shape floor token's default) is a SNAPSHOT, not a
+  live link — a consumer who overrides that token later does not re-time the query; only the
+  literal changes the rung's reachability. State this explicitly wherever the ladder's derivation
+  is documented, so re-tuning is understood as a deliberate follow-up, never an automatic one.
+- Review check: any `@container` size-query condition in a control's CSS ⇒ confirm no `var()`
+  appears inside the condition parens (it would be a no-op/invalid query, not a soft failure) and
+  that the literal's derivation is banner-documented beside it.
