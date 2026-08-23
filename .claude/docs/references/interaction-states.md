@@ -78,18 +78,27 @@ variants on the `primary` family:
 
 | `ui-button` variant | `--ui-button-bg` | `-bg-hover` | `-bg-active` |
 |---|---|---|---|
-| **solid** (filled) | `--md-sys-color-primary` | `--md-sys-color-primary-hover` | `--md-sys-color-primary-active` |
+| **solid** (filled) | `--md-sys-color-primary` | `--md-sys-color-primary-dim` | `--md-sys-color-primary-high` |
 | **soft** (tonal) | `--md-sys-color-primary-container-low` | `--md-sys-color-primary-container` | `--md-sys-color-primary-container-high` |
 | **ghost** (text) | `transparent` | `--md-sys-color-primary-container-low` | `--md-sys-color-primary-container` |
 
-> **When a generic ladder step collapses — dedicated `--md-sys-color-{f}-hover/-active` roles (ADR-0008 amendment).** The
+> **When a generic ladder step collapses — dedicated `--md-sys-color-{f}-hover/-active` roles (ADR-0008 Amendment 1).** The
 > filled channel's default rungs (`--md-sys-color-{f}-dim`/`-high`) can resolve to the SAME step in one `light-dark()`
 > branch: `--md-sys-color-primary-dim` and `--md-sys-color-primary-high` both land on `--md-sys-color-primary-650` in light, collapsing solid
 > `hover`==`active` there (distinct in dark — the wave-2 cross-engine smoke caught it). The remedy is token-layer,
 > NEVER a component `color-mix`: dedicated `--md-sys-color-{f}-hover/-active` roles with a real three-step monotonic-
 > darkening ladder in BOTH schemes — `--md-sys-color-primary-hover` = `light-dark(700, 600)`, `--md-sys-color-primary-active` =
-> `light-dark(750, 700)` (light 550→700→750, dark 450→600→700). The solid row above uses them; the next
-> solid-filled control of any family gets its own `-hover/-active` roles the same way.
+> `light-dark(750, 700)` (light 550→700→750, dark 450→600→700). The next solid-filled control of any family that
+> needs a collapse-free ladder gets its own `-hover/-active` roles the same way.
+>
+> **Amendment 2 (2026-08-22, directed by Kim, over the investigating agent's flagged objection):
+> `ui-button`'s solid row reverted to the generic `-dim`/`-high` ladder shown in the table above** —
+> the dedicated roles are NOT its current consumer. This knowingly reopens the light-scheme
+> `hover`==`active` collapse Amendment 1 closed, with no replacement tripwire budgeted. The
+> dedicated `--md-sys-color-primary-hover/-active` roles stay in `tokens.css` unchanged, unconsumed
+> by `ui-button`; a future control needing a collapse-free solid-hover ladder should reach for them,
+> or re-derive its own per the family-role pattern — never assume the generic `-dim`/`-high` ladder
+> is collapse-free for the `primary` family in light scheme.
 
 ### Disabled holds at idle (no lift)
 

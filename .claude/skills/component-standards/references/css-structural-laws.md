@@ -3,7 +3,7 @@
 Three normative laws (2026-08-19 harvest, +1 2026-08-23), each proven by a merged fix or ratified
 ADR and stated here because no shared-corpus law doc owns its question yet. Each cites its proving
 PR/ADR — read the diff's own commentary or the record's own Context for the measured evidence
-before relaxing any of them. Promotion path: a second instance of a class graduates the law into
+before relaxing any of them. Promotion path: a third instance of any class graduates the law into
 `.claude/docs/references/` (or an ADR) and this file's entry becomes a citation.
 
 ## 1. A visually-hidden absolutely-positioned part REQUIRES a positioned host

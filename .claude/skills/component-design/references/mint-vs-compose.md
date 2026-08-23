@@ -189,7 +189,7 @@ collision are where a "small chart" becomes a rendering framework). The test, no
 **Ship the SMALLEST vocabulary that honestly earns the category name; fence everything else out
 as named LATER intakes, each its own future issue — never riders on the build wave.**
 
-Three worked instances, citable as precedent for the next axis-bearing (or otherwise
+Four worked instances, citable as precedent for the next axis-bearing (or otherwise
 scope-explosive) intake:
 
 1. **ADR-0107 (chart family v1)** — the floor for "chart" was set at NO axis at all:
