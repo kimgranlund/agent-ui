@@ -259,10 +259,11 @@ the agent-admin persona roster CRUD as its first real consumer.** Five clauses:
 
 ## Amendment (2026-08-22, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/1545#issuecomment-5386649892), verified 2026-08-23) — adoption wave 2 recorded: the skill-pack shelf and AgentTeam records join the roster on `DataSource`, and the page's reads/writes ride `resource()`/`mutation()` throughout (GH [#1545](https://github.com/kimgranlund/agent-ui/issues/1545), PR [#1548](https://github.com/kimgranlund/agent-ui/pull/1548), commit `a69125b8`)
 
-> Append-only, and **proposed**: the Status cell above reads `accepted` for the accepted record as a
-> whole and stays byte-untouched — agents never flip status, nothing self-ratifies; THIS amendment
-> awaits Kim's own `ratify ADR-0227 amendment` utterance on GH #1545, executed by
-> `scripts/adr_ratify.py`'s amendment mode. Every accepted section above — cl.1–cl.5, Consequences,
+> Append-only, and **ratified** (Kim's `ratify ADR-0227 amendment` utterance on GH #1545, executed
+> by `scripts/adr_ratify.py`'s amendment mode 2026-08-23 — this banner originally read "proposed"
+> pending that utterance; prose repaired 2026-08-23): the Status cell above reads `accepted` for the
+> accepted record as a whole and stays byte-untouched — agents never flip status, nothing
+> self-ratifies. Every accepted section above — cl.1–cl.5, Consequences,
 > Acceptance, Alternatives — is unedited. GH #1545 is the durable design record; the build this
 > amendment describes already shipped as PR #1548 (commit `a69125b8`), so no new Repairs are booked
 > on ratification — deliberately, see the note below.

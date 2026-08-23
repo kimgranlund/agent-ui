@@ -359,10 +359,10 @@ persistent inline status. Every affected code site cites GH #1184.
 
 ## Amendment (2026-08-23, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/pull/1597#issuecomment-5386928457), verified 2026-08-23) — Amendment 3: fork F3 re-ruled: `ui-avatar` moves off the ADR-0041 widget-box ramp onto the control-height ladder `--md-sys-height-{sm,md,lg}` (the `ui-button` row)
 
-> Append-only, and **proposed**: the Status cell above reads `accepted` for the record as a
-> whole and stays byte-untouched — agents never flip status
-> (`.claude/hooks/adr-status-guard.py`), and this amendment carries no ratification of its
-> own until Kim gives one. Every accepted clause above is unedited prose; what this amendment
+> Append-only, and **ratified** (2026-08-23, per the header's utterance link; this banner
+> originally read "proposed" pending that ratification — prose repaired 2026-08-23): the Status
+> cell above reads `accepted` for the record as a whole and stays byte-untouched — agents never
+> flip status (`.claude/hooks/adr-status-guard.py`). Every accepted clause above is unedited prose; what this amendment
 > re-rules is precisely fork **F3** (avatar sizing lever) and the one SPEC-R20 sentence that
 > carries it. Every other clause, fork, and the avatar's no-hue / decorative-default / circle-mask
 > contract (cl.3, SPEC-R4–R7) stand unchanged — only the ROOT TOKENS the square box reads change.
