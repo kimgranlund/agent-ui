@@ -159,6 +159,10 @@ export async function runCli(argv: readonly string[], repoRoot: string, env: Rec
       for (const row of result.calibration) console.log(`  ${row.name}: maxDelta=${row.maxDelta}`)
       return result.ok ? 0 : 1
     }
+    if (dryRun) {
+      console.log(`judge --dry-run: ${result.pendingCount ?? 0} pending record(s), would write ${result.outPath}`)
+      return 0
+    }
     console.log(`judge: ${Object.keys(result.verdicts).length} verdict(s), ${result.parseFailures.length} parse failure(s)`)
     for (const f of result.parseFailures) console.error(`  E_JUDGE_PARSE: ${f.name}`)
     if (result.archiveOutcome === 'conflict') {

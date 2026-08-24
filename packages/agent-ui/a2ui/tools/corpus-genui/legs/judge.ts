@@ -66,6 +66,9 @@ export interface JudgeResult {
   ok: boolean
   verdicts: Record<string, GenuiJudgeVerdict>
   parseFailures: JudgeParseFailure[]
+  /** Count of pending records this run would have scored — only set on the `--dry-run` short-circuit,
+   *  where `verdicts` stays empty and this is the sole signal of how much work is queued. */
+  pendingCount?: number
   outPath?: string
   archiveOutcome?: 'archived' | 'unchanged' | 'conflict'
   conflict?: { existingHash: string; incomingHash: string }
@@ -178,6 +181,7 @@ export async function runJudgeLeg(repoRoot: string, judgeModel: string, opts: Ju
       ok: true,
       verdicts: {},
       parseFailures: [],
+      pendingCount: pending.length,
       outPath,
       ...(opts.calibrate === true ? { calibration: [] } : {}),
     }
