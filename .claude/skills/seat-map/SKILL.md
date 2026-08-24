@@ -72,6 +72,13 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   sources (type identity intact). A red `check` in a worktree whose readlink points at MAIN is
   ENVIRONMENT, not regression — the desk re-gates on merged main before trusting either verdict.
   Never a bare `npm install` in a worktree.
+- **Host-shell worktree pin (marshal finding, 2026-08-23).** A HOST session whose shell cd's into
+  a seat's `.claude/worktrees/` entry gets pinned there by the isolation guard: subsequent git
+  commands that redirect to the shared checkout are refused, so the host can neither reap that
+  worktree nor fast-forward the primary's `main`. Recovery: the OWNING seat reaps its own worktree
+  and branch from the primary checkout (one SendMessage), never a cd-and-hope from the pinned
+  shell; once the worktree is gone the pin is moot and the host shell re-anchors on the primary.
+  Prevention: the host never cd's into a seat worktree — reads go through absolute paths.
 - **Concurrency ceiling (Kim ruling 2026-08-20).** At most **3 gate-running lanes** concurrent
   on this host (10 cores: `(cores − 2) / 3`, rounded down — each lane's vitest + a checker's
   Chromium shard is ~3 cores of real load); builders beyond the ceiling QUEUE, they don't fan
