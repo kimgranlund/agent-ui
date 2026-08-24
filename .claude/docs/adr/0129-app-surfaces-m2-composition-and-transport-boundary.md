@@ -66,3 +66,42 @@ express; Kim's call, TKT-0028 tracks) · **`canvas-surface.ts` STAYS** — it is
 helper with legitimate non-chat consumers, not chat-lifecycle duplication; PRD-G6's coherence bar
 is not violated by keeping it. Clause 4's re-expression requirement stands for both pages
 (`a2ui-chat` done; `a2ui-live` held on Fork B). SPEC-R9/LLD-C13 read subject to this scope.
+
+## Amendment (2026-08-24, **proposed** — Kim ratifies) — Amendment 2: the shared artboard core extracted to @agent-ui/app; canvas-surface.ts becomes a thin wrapper
+
+Amendment 1 (2026-07-13) ruled `canvas-surface.ts` STAYS as "a general artboard helper with
+legitimate non-chat consumers, not chat-lifecycle duplication." The lifecycle half of that ruling
+holds and is not revisited: `component-preview.ts` genuinely cannot ride `ui-surface-host` (its
+component mode mounts arbitrary specimen DOM directly, `component-preview.ts` `#buildComponent`;
+the element's contract is one internal `RendererHost`, SPEC-R2), and no element is merged or
+grown a mode here. What has NOT held is the "not duplication" half: the artboard's visual core
+became dual-maintained truth at the surface-host.css promotion ("the SAME visual contract"),
+and it has since demonstrably drifted — site's `applyRootStretch` (canvas-surface.ts) lacks the
+`stretch`-attribute guard and never received the GH #1163 root-card logic, while the ADR-0100
+`container-type` repair had to be hand-applied to both sheets and was kept in sync only by luck.
+
+**Decision (Kim's ruling, 2026-08-23 investigation):** extract the shared visual core once,
+merge nothing else.
+
+- The ~40-line artboard geometry (checkered stage · translate-centered surface · definite-width
+  collapse guard · ADR-0100 `container-type` boundary · anticipatory `:empty` hint) moves to a
+  package-owned sheet, `@agent-ui/app`'s new `./artboard.css` subpath, with its own
+  `--ui-artboard-*` token chain (ADR-0003 discipline). `surface-host.css` and the site's artboard
+  consumers both consume it; each keeps only its additive rules (surface-host: scrollbar hiding,
+  wrap anatomy, bare card chrome, working/superseded states, ADR-0187 terminal-empty; site:
+  its page-level `.canvas-stage`/`.feed-artifact-stage` overrides, unchanged).
+- `applyRootStretch` gains ONE canonical implementation, exported from `@agent-ui/app`'s new
+  `./artboard` subpath; `canvas-surface.ts`'s copy becomes a re-export, and
+  `ui-surface-host`'s private method delegates to it (keeping only its own GH #1163 root-card
+  mirroring, a `[bare]`-mode concern site artboards do not have).
+- `canvas-surface.ts` STAYS, re-read: a thin site-side wrapper (DOM-pair builder + re-export)
+  over the package-owned core — no longer a second maintenance point for the visual contract.
+- PRD-G6's coherence bar is addressed by eliminating the dual-maintained visual truth, not by
+  merging the elements. Both elements' behavior and public APIs are untouched; the
+  `--ui-surface-host-*` token API stays live via a token-block repoint (the TKT-0062 pattern).
+- Declined alternatives (Kim, same ruling): migrating `a2a-artifact-feed.ts` onto
+  `ui-surface-host` (Shape A — the always-on GH #805 disable-on-action sweep would end its
+  "compose, don't send" teaching loop after one click) and the eyes-open status quo (Shape C).
+- One accepted visual delta: site artboards move from literal spacing (0.75rem/1rem/2rem) to the
+  `--md-sys-space-*` chain — byte-identical at default density, and ALIGNED (rather than
+  divergent) under any future density change, which is the point.
