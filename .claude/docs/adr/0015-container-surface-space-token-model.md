@@ -161,3 +161,37 @@ churn** (verified — the text-field geometry probes pin the inline-**padding** 
 2. **`controls/text-field/text-field.md`** — in the `geometry:` frontmatter block, add a `radius:` line:
    `radius: var(--ui-radius-base) (fixed rounded-rect — the container-fleet referent, NOT the h/2 pill; entry-control class, geometry.md "Corner radius" / ADR-0015 cl.5 #71 amendment)`. No pill claim exists elsewhere in the
    descriptor to unwind (the `inlinePad` line is padding, not radius — leave it).
+
+## Amendment — cl.4/5 token names repointed to `--md-sys-*` (2026-08-24, ADR-0140 rename)
+
+Clauses 1-3 (the elevation/brightness two-axis surface model and the `--ui-container-bg`/
+`--ui-container-tint` seam) are unaffected by this amendment and remain byte-identical.
+
+Clauses 4 and 5 named the shared token IDs as `--ui-space-{...}` and `--ui-radius-base`. **ADR-0140**
+(ratified 2026-07-18) migrated the entire shared foundation tier from `--ui-*` to `--md-sys-*`
+(slot names stable, family names swapped, no value change) — its mapping table renames these two
+families specifically:
+
+- `--ui-space-{none,xs,sm,md,lg,xl,2xl}` → **`--md-sys-space-{none,xs,sm,md,lg,xl,2xl}`**
+- `--ui-radius-base` → **`--md-sys-shape-corner-base`**
+
+Restated under the current names:
+
+- **Clause 4 — `--md-sys-space` (the density-responsive layout-spacing ladder).** The ramp in
+  `@agent-ui/shared` `dimensions.css`, declared on the `*` subtree ramp (ADR-0007) so a subtree
+  `[density]` re-multiplies it: `--md-sys-space-{...}: calc(<base px> * var(--md-sys-density))`. It
+  remains the gap/padding/margin **between** laid-out children (Row/Column/List/Grid gap, Card
+  padding) — distinct from control geometry (the `h/2` law, `geometry.md`).
+- **Clause 5 — `--md-sys-shape-corner-base` (one shared radius token).** The constant in
+  `dimensions.css` (`:root`, not the `*` ramp — it is not subtree-derived, value `12px`) that a
+  root container's corner radius reads, and that the `ui-text-field` radius adoption above also
+  consumes — one fleet radius serving both controls and containers. It seeds the one-level
+  nested-radius chain (ADR-0018).
+
+The decisions of clauses 4/5 do not change — only the token IDs the repo-wide rename already
+carried out under ADR-0140. Every prose reference to `--ui-space-*` / `--ui-radius-base` elsewhere
+in this document (the Decision text above, the `ui-text-field` adoption amendment, its build
+brief) is historical narrative describing the state at time of writing and is left as originally
+authored, per ADR mutability rules — this amendment is the current-names restatement of record.
+`dimensions.css` itself has carried the renamed declarations since ADR-0140 landed; no code change
+accompanies this amendment.
