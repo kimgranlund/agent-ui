@@ -110,11 +110,12 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     expect(alphaOf(getComputedStyle(card).backgroundColor), 'card surface is transparent').toBeGreaterThan(0)
   })
 
-  it('a NESTED card radius DECREMENTS one level — measured px == max(0, parent − padding) (ADR-0018)', () => {
+  it('a NESTED card radius DECREMENTS one level — measured px == max(--md-sys-space-xs, parent − padding) (ADR-0018)', () => {
     // Reseed the root radius well larger than the region padding so the one-level decrement is a clear
-    // unambiguous px (with the default --md-sys-shape-corner-base of 12px against the shared 12px region padding, REVISED
-    // 2026-07-04, the inner radius would floor at a knife-edge 0 — reseeding to 32px keeps the margin wide and
-    // demonstrative). The author-set --ui-card-radius reseeds the chain root (ADR-0018 cl.1).
+    // unambiguous px well above the floor (with the default --md-sys-shape-corner-base of 12px against the
+    // shared 12px region padding the decrement would land exactly ON the --md-sys-space-xs (4px) floor RESOLVED
+    // 2026-08-24 — a literal 0px until then — reseeding to 32px keeps the margin wide and demonstrative, clear
+    // of the floor entirely). The author-set --ui-card-radius reseeds the chain root (ADR-0018 cl.1).
     const root = mount(
       '<ui-card style="--ui-card-radius: 32px"><ui-card-content><ui-card>nested</ui-card></ui-card-content></ui-card>',
     )
@@ -130,12 +131,31 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
 
     expect(rootR, 'root radius did not reseed to 32px').toBeCloseTo(32, 0)
     expect(pad, 'content inline padding is not a positive px').toBeGreaterThan(0)
-    // the concentric-corner law, measured: child == max(0, parent − content inline padding)
-    expect(nestedR, 'nested radius != max(0, parent − content inline padding)').toBeCloseTo(Math.max(0, rootR - pad), 1)
+    // the concentric-corner law, measured: child == max(--md-sys-space-xs, parent − content inline padding) —
+    // 4px at the default density; at this reseed (32px) the decrement (20px) sits well clear of the floor
+    // either way — see the dedicated default-root floor test below for the case where the floor actually binds.
+    expect(nestedR, 'nested radius != max(floor, parent − content inline padding)').toBeCloseTo(Math.max(4, rootR - pad), 1)
     // anti-vacuous negative control: the nested radius is genuinely SMALLER than the parent (the decrement is
     // real — a same-radius/no-decrement bug would make these equal and FAIL here)
     expect(nestedR, 'nested radius did not decrement below the parent').toBeLessThan(rootR)
     expect(nestedR, 'nested radius collapsed to 0 (no demonstrable decrement)').toBeGreaterThan(0)
+  })
+
+  it('a nested card under the DEFAULT (unreseeded) root radius keeps a small floor, not a knife-edge 0', () => {
+    // RESOLVED 2026-08-24 (Kim, live off a design-mode report on comparison-pricing-table's plan tiles): with
+    // the default --md-sys-shape-corner-base (12px) exactly equal to the shared region inline padding (12px),
+    // an UNRESEEDED root card's nested children used to decrement to a literal 0 (12 − 12), rendering every
+    // DEFAULT nested card knife-edge square regardless of the outer card's own visibly-rounded corners. The
+    // --ui-card-inner-radius floor is now --md-sys-space-xs (4px) instead of 0px, so this — the common,
+    // no-reseed case every payload that nests a card without an explicit --ui-card-radius hits — keeps a
+    // small but real rounding.
+    const root = mount('<ui-card><ui-card-content><ui-card>nested</ui-card></ui-card-content></ui-card>')
+    const nested = root.querySelector('ui-card-content > ui-card') as HTMLElement
+
+    expect(radiusPx(root), 'root did not fall to the default corner-base').toBeCloseTo(12, 0)
+    // 4px == --md-sys-space-xs at the default density (1) — see this file's px()/mount() helpers; a fresh
+    // mount carries no [density] repoint, so the token resolves to its literal 4px base.
+    expect(radiusPx(nested), 'default-root nested card lost the floor (regressed to knife-edge 0)').toBeCloseTo(4, 1)
   })
 
   it('regions are PRESENCE-DRIVEN in BLOCK FLOW — a present region adds a box, an absent one leaves nothing', () => {

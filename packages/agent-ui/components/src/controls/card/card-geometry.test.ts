@@ -6,8 +6,12 @@ declare const process: { cwd(): string }
 // G9 s7 — card.css STATIC geometry probes (ADR-0018 one-level nested radius · ADR-0015 --md-sys-space padding ·
 // anatomy.md host-as-grid). jsdom can't resolve @scope / :has() / computed px — these pin the DECLARED
 // formulas + structure; the RENDERED decrement (measured px) is card.browser.test.ts. The load-bearing law:
-// the concentric-corner chain `r_child = max(0, r_parent − pad_parent)`, realized CYCLE-FREE (a card publishes
-// its inner radius to its DESCENDANTS, never reads back its own published value — ADR-0018's recorded cycle).
+// the concentric-corner chain `r_child = max(--md-sys-space-xs, r_parent − pad_parent)`, realized CYCLE-FREE (a
+// card publishes its inner radius to its DESCENDANTS, never reads back its own published value — ADR-0018's
+// recorded cycle). The floor was a literal 0px until 2026-08-24 (Kim, off a design-mode report on
+// comparison-pricing-table's plan tiles): with the default corner-base (12px) exactly equal to the region's
+// own inline padding (12px), every nested card decremented to a hard knife-edge square; a small positive
+// floor (4px) keeps a nested card's rounding visible without touching the corner-base constant itself.
 
 const css = readFileSync(`${process.cwd()}/packages/agent-ui/components/src/controls/card/card.css`, 'utf8') as string
 
@@ -30,11 +34,12 @@ describe('card.css — the concentric-corner radius chain (ADR-0018, cycle-free)
     )
   })
 
-  it('the inner radius IS the concentric-corner law max(0, radius − content inline padding) [box-model]', () => {
+  it('the inner radius IS the concentric-corner law max(--md-sys-space-xs, radius − content inline padding) [box-model]', () => {
     // Under the box-model the card holds NO padding; the inset that a nested card sits inside is the CONTENT
-    // region's inline padding, so the concentric chain re-bases off --ui-card-region-pad-inline.
+    // region's inline padding, so the concentric chain re-bases off --ui-card-region-pad-inline. The floor is
+    // --md-sys-space-xs (4px), not a literal 0px (RESOLVED 2026-08-24 — see this file's own banner comment).
     expect(cardTokens).toMatch(
-      /--ui-card-inner-radius:\s*max\(\s*0px\s*,\s*calc\(\s*var\(--ui-card-radius\)\s*-\s*var\(--ui-card-region-pad-inline\)\s*\)\s*\)/,
+      /--ui-card-inner-radius:\s*max\(\s*var\(--md-sys-space-xs\)\s*,\s*calc\(\s*var\(--ui-card-radius\)\s*-\s*var\(--ui-card-region-pad-inline\)\s*\)\s*\)/,
     )
   })
 

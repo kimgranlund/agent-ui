@@ -34,10 +34,16 @@
  * card now reads container-box.css's shared region defaults straight (inline 12px / block 6px), same as
  * modal/select/menu/combo-box (one spacing vocabulary, restoring ADR-0046's original intent). Region padding
  * going from 6px inline to 12px means `--ui-card-inner-radius` (below) now decrements against a LARGER value —
- * with the default `--md-sys-shape-corner-base` of 12px, the inner radius floors at EXACTLY 0 for an unreseeded root card
- * (12 − 12 = 0, a knife-edge, not the old 6px-positive headroom). This is a real visual consequence of removing
- * the override, not a bug: an author who wants a visibly rounded nested corner now needs to reseed
- * `--ui-card-radius` larger than 12px. Flagged for Kim; not silently patched around.
+ * with the default `--md-sys-shape-corner-base` of 12px, the inner radius floored at EXACTLY 0 for an unreseeded
+ * root card (12 − 12 = 0, a knife-edge, not the old 6px-positive headroom): every nested card rendered square
+ * regardless of the outer card's own visibly-rounded corners. Flagged for Kim 2026-07-04; RESOLVED 2026-08-24
+ * (Kim, live off a design-mode report on `comparison-pricing-table`'s plan tiles) — the floor in
+ * `--ui-card-inner-radius` below is now `--md-sys-space-xs` (4px) instead of a literal `0px`, so a nested card
+ * always keeps a small visible rounding rather than a hard knife-edge; a root card is unaffected (the floor
+ * only ever binds the DECREMENT, never the root's own `--ui-card-radius`). The one deliberate residual: an
+ * author who explicitly reseeds an outer `--ui-card-radius` to 0 (a genuinely square root card, not the
+ * default) now hands its own children a 4px floor instead of staying knife-edge square too — judged an
+ * acceptable trade against every DEFAULT nested card losing its rounding, not reopened per-case.
  *
  * Region-less humane default (ADR-0056): a card with NO region child (no header/content/footer) applies the
  * region-equivalent padding + content rhythm to its OWN box (the `:not(:has(...))` leg in the STYLES block
@@ -94,8 +100,14 @@
   /* The card's INNER radius (the concentric-corner law) — the value handed down to a nested card. Under the
      box-model the inset is the CONTENT region's inline padding (a nested card lives inside ui-card-content),
      so the chain re-bases off that, NOT the (now-zero) card padding. Not read back into --ui-card-radius → no
-     self-referential cycle (ADR-0018). */
-  --ui-card-inner-radius: max(0px, calc(var(--ui-card-radius) - var(--ui-card-region-pad-inline)));
+     self-referential cycle (ADR-0018). Floored at --md-sys-space-xs (4px), not a literal 0px (RESOLVED
+     2026-08-24, see the banner comment above) — with the DEFAULT corner-base (12px) exactly equal to the
+     region's own inline padding (12px), the un-floored decrement always landed on a hard 0, so every nested
+     card rendered knife-edge square regardless of the outer card's own visibly-rounded corners; a small
+     positive floor keeps a nested card's rounding visible without touching --md-sys-shape-corner-base itself
+     (a fleet-wide constant every OTHER corner-radius consumer also reads) or requiring every payload that
+     nests a card to reseed --ui-card-radius by hand. */
+  --ui-card-inner-radius: max(var(--md-sys-space-xs), calc(var(--ui-card-radius) - var(--ui-card-region-pad-inline)));
 }
 
 /* PUBLISH the child radius ONE level (ADR-0018): hand every direct child the card's inner radius as the
@@ -355,6 +367,12 @@
    FOUR of its own corners to the card's INNER radius (below) — REVISED 2026-07-04: a region is inset, not
    full-bleed, so it no longer meets the card's outer edge at all. */
 :where(ui-card-header, ui-card-footer) {
+  /* Unlike ui-card (its own `@scope (ui-card) :scope` rule above), this region never declared its own
+   * box-sizing — it ran the UA content-box default despite carrying real padding below, so its rendered
+   * width silently exceeded whatever width the grid-template-columns anatomy assigned it by that padding
+   * amount (the identical mechanism behind the `.seed-card` site-chrome bug, found in the same investigation,
+   * 2026-08-24). border-box here matches every other region across the fleet's shared box model. */
+  box-sizing: border-box;
   --ui-card-region-gap: var(--md-sys-space-sm); /* adornment↔label column-gap (off the --md-sys-space ladder) */
 
   /* ADR-0186 — the structured-container title's font-family. Default `inherit` (today's byte-identical
@@ -451,6 +469,12 @@
      so the shared L1/L2/L3 descendant-level rules never match it; this region padding stays FLAT (12/6) at every
      nesting depth (a card-in-card-content-in-card sees 12/6 inside 12/6, not a decrement). Only the RADIUS chain
      steps one level (ADR-0018, above). */
+  /* Like ui-card-header/-footer above, this region never declared its own box-sizing (unlike ui-card itself),
+   * so it ran UA content-box despite the real padding two lines down — its rendered width silently exceeded
+   * whatever width the card's flex column assigned it by that padding amount (found live: a 354px assigned
+   * row width rendering as a 378px box, exactly the 2×12px inline padding — `document-row-toolbar` seed,
+   * 2026-08-24). border-box matches every other region across the fleet's shared box model. */
+  box-sizing: border-box;
   display: block;
   padding-inline: var(--ui-card-region-pad-inline);
   padding-block: var(--ui-card-region-pad-block);
