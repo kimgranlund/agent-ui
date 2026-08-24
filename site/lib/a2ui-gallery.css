@@ -18,6 +18,13 @@
 
 /* ── one seed card: head + description + prompt + the live surface ─────────────────────────────────────── */
 .seed-card {
+  /* Neither this file nor any other site-local sheet ever declared box-sizing, so this card ran the UA's
+   * content-box default — harmless everywhere else, but `.seed-gallery` assigns it a track WIDTH via CSS
+   * Grid, and content-box then adds this rule's own padding + border ON TOP of that track width instead of
+   * inside it, overflowing the track by exactly 2×1rem padding + 2×1px border (measured live, 332.5px track
+   * vs. a 366.5px rendered box, `#seed-document-row-toolbar`, 2026-08-24) — the "not using block width"/
+   * misaligned-card report. border-box is the fix at THIS element's own layer, not a page-wide reset. */
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
@@ -88,6 +95,10 @@
  *    frame ABSORB the grid-row stretch (rows stretch every card to the row's tallest — without this the
  *    surplus falls below a short frame as dead whitespace); the 30rem cap still bounds it. ────────────── */
 .seed-surface {
+  /* Same gap as `.seed-card` above (neither ever declared box-sizing) — this box carries its own padding +
+   * border too, so it ran content-box by UA default and inflated past its flex-stretched width by that same
+   * padding+border amount. border-box here for the identical reason. */
+  box-sizing: border-box;
   flex: 1 1 auto;
   margin-block-start: 0.2rem;
   padding: 1rem;

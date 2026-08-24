@@ -69,6 +69,14 @@
      (leg below), only flips the display level back to the pre-wave inline-grid (N-up composition in a
      Row(wrap) or as ui-list children). */
   :scope {
+    /* Never declared its own box-sizing, so it ran UA content-box despite the padding + border below — as a
+     * flex/grid item (a Row/Toolbar child, or any track-sized ancestor) that meant the rendered box exceeded
+     * whatever width the parent assigned it by the padding+border amount, the same content-box-overflow
+     * mechanism found on `.seed-card`/ui-card-content in the same investigation (`document-row-toolbar`
+     * seed, 2026-08-24) — NOT the "block-level host never exceeds its container" guarantee this file's own
+     * banner comment claims (that guarantee only holds for a normal-flow block box with `width: auto`, not a
+     * flex item, where box-sizing governs whether padding/border are inside or outside the assigned size). */
+    box-sizing: border-box;
     display: grid;
     grid-template-columns: auto 1fr;
     align-items: center;

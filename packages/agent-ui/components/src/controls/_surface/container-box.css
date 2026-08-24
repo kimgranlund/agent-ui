@@ -89,6 +89,10 @@
    every other `[data-box]` child (the generic `> *` rule below), so a header/footer divider or background no
    longer reaches the box edge; it floats inside the frame with a uniform 6px gutter, same as any other region. */
 :where([data-box]) > :where(header, footer, [data-region='header'], [data-region='footer']) {
+  box-sizing: border-box; /* the region carries real padding below but never declared its own box-sizing
+                              (found live: modal-demo.html's [data-region='content'] rendered 12px wider
+                              than its assigned width, the same content-box-overflow class as ui-card-
+                              content/ui-attachment, 2026-08-24) */
   display: flex;
   align-items: center;
   gap: var(--ui-box-gap);
@@ -103,6 +107,8 @@
    floor — L2 and the floor now coincide, since the inset and the block-pad token are both 6px). Three levels
    covers real nesting; deeper content stays at the 6px floor. */
 :where([data-region='content'], main) {
+  box-sizing: border-box; /* same missing-declaration class as the header/footer rule above — confirmed
+                              live on this exact selector (modal-demo.html), the report that found it */
   display: block; /* NOT flex — overflow:auto scrolls a block, and a block child keeps its height (flex would
                      shrink it and break a scroll viewport). The region gap comes from an adjacent-sibling margin. */
   padding-inline: var(--ui-box-pad-inline); /* L1 = 12px */
@@ -138,6 +144,7 @@
 
 /* `[padded]` — full-bleed box, content inset (margin 0 + inset padding). */
 :where([data-box]) > :where([padded]) {
+  box-sizing: border-box; /* same missing-declaration class as the two region rules above */
   margin: 0;
   padding: var(--ui-box-inset);
 }
