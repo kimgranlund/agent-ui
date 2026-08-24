@@ -93,6 +93,37 @@ describe('ui-swiper — whole-shape (n15/n16)', () => {
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [1b] Scroll-snap suspension during the JS scroll animation (regression, commit 40ff1ea8)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+// `scroll-snap-type: x mandatory` (swiper.css) used to reject every intermediate scrollTo() the rAF
+// animation (#runScrollAnimation) wrote — the interpolated values computed correctly but the real
+// scrollLeft stayed pinned at the START position until the browser's own snap correction jumped it
+// straight to the END position on one frame, i.e. no animation at all (a live design-mode report caught
+// this on frontier-onboarding-tour's paddle click). The fix suspends snap (`scroll-snap-type: none`) on
+// the track for the animation's duration. A test that only checks the FINAL settled position (as the
+// existing suite already did, and still passed both before and after the fix) cannot distinguish a real
+// eased animation from an instant jump — this one samples a frame mid-flight and requires it to sit
+// strictly between the two snap points.
+
+describe('ui-swiper — scroll-snap is genuinely suppressed mid-animation (regression)', () => {
+  it('a frame sampled partway through a goTo animation lands OFF both snap points, not pinned at start or jumped to end', async () => {
+    const { swiper, track } = mount(THREE)
+    const itemWidth = track.getBoundingClientRect().width // one slide == one page; snap points sit at n * itemWidth
+    swiper.goTo(1) // scrollLeft 0 -> itemWidth over --ui-swiper-duration (default 300ms, eased)
+    // Sample well inside the animation window (before the ~300ms duration completes, after the first
+    // frame). Under the pre-fix bug, mandatory snap rejected every intermediate scrollTo() — scrollLeft
+    // would still read exactly 0 here, only jumping straight to itemWidth on the animation's last frame.
+    await new Promise((r) => setTimeout(r, 130))
+    const mid = track.scrollLeft
+    expect(mid, 'scrollLeft is still pinned at the START snap point — the animation never actually moved').toBeGreaterThan(2)
+    expect(mid, 'scrollLeft already sits at the END snap point — snap jumped straight to the target instead of easing').toBeLessThan(itemWidth - 2)
+    await settle()
+    expect(swiper.activeIndex, 'the animation did not still land on the correct target slide once settled').toBe(1)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
 //  [2] The seamless clone-teleport — a REAL scroll-position assertion (n9/n10)
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
