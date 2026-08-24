@@ -114,3 +114,11 @@ mint `.claude/docs/rdd/` as an accepted zero-RDD placeholder so revalidation_che
 now-mandatory three-source check passes. The 2026-08-20 ruling's intent (no real RDD tier in this
 repo) stands; only its mechanical realization changes. Future firings: an empty rdd/ is correct,
 never a gap finding.
+
+## 2026-08-24 — mobilize close-out rulings (Kim, live AskUserQuestion, session agent-ui-90)
+
+1. PR #1610 (fix #1608): merge now + file a fast-follow task for threading pendingCount/outPath
+   into the dry-run CLI output. Merged 2026-08-24T04:20Z.
+2. #1609: closed as superseded — the 2026-08-09 keep-list ruling stands; sweep noise accepted.
+3. #1605: UNPARKED by name — the 2026-08-23 "parked, pick up in a later ruled arc" note is
+   overridden for this issue; build proceeds now.
