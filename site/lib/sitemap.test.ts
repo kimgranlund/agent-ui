@@ -153,22 +153,38 @@ describe('changelog-index.json — byte-identical to a fresh generation', () => 
 
 // ── G2 · page coverage — every doc/manifest page resolves to a sitemap entry ────────────────────────────────
 
-/** The KNOWN, deliberately-unindexed page-type suffixes — permutation/states/demo pages are per-component
- *  tab content reached only through their owning `-doc.html` page, never surfaced as a standalone
- *  searchable/navigable entry. Everything else is real, top-level content and needs an entry. */
-const EXCLUDED_SUFFIX = /-(demo|permutations|states)\.html$/
+/** A per-component page-type file — `{slug}-{doc|demo|permutations|states}.html` — one page family per
+ *  component, each reached from the others via that family's own tab strip. */
+const PAGE_TYPE_FILE = /^(.*)-(doc|demo|permutations|states)\.html$/
 
-/** The `real site pages that need a sitemap entry`: any `{name}-doc.html` page, OR any OTHER page not
- *  matching `EXCLUDED_SUFFIX` (SPEC-R5 AC1(b)) — a genuinely new guide page (e.g. a fresh `{name}.html` +
- *  `{name}.ts` under site/pages/, no `site-manifest.json` row yet) must be REQUIRED here, not silently
- *  exempted for having no manifest row yet — that is precisely the gap that let `layout-overview.html`
- *  and a freshly-shipped `agent-admin.html` both go unindexed until this fix (neither is a `-doc.html`
- *  page, and `manifestHrefs.has(...)` can only ever confirm a page that's ALREADY registered — it can
- *  never catch one that never got registered in the first place). The prior version of this function
- *  used `manifestHrefs.has(...)` as an allow-list instead of this suffix-based deny-list; that is what
- *  let both gaps through undetected. */
+/** canonicalPageFor — the ONE page-type file independently required for a component family, mirroring
+ *  generate-sitemap.mjs's own demo-preferred rule (GH #1619): `{slug}-demo.html` when it exists, else
+ *  `{slug}-doc.html`. The other files in the family (doc/permutations/states, or demo/permutations/
+ *  states) are per-component tab content reached only through that one page, never surfaced as a
+ *  standalone searchable/navigable entry. `undefined` when neither exists (a stray suffix match with
+ *  no real family, e.g. no component named for it). */
+function canonicalPageFor(slugName: string, allPages: ReadonlySet<string>): string | undefined {
+  if (allPages.has(`${slugName}-demo.html`)) return `${slugName}-demo.html`
+  if (allPages.has(`${slugName}-doc.html`)) return `${slugName}-doc.html`
+  return undefined
+}
+
+/** The `real site pages that need a sitemap entry`: any page-type family's own canonical page, OR any
+ *  OTHER page not shaped like a page-type file at all (SPEC-R5 AC1(b)) — a genuinely new guide page
+ *  (e.g. a fresh `{name}.html` + `{name}.ts` under site/pages/, no `site-manifest.json` row yet) must be
+ *  REQUIRED here, not silently exempted for having no manifest row yet — that is precisely the gap that
+ *  let `layout-overview.html` and a freshly-shipped `agent-admin.html` both go unindexed until this fix
+ *  (neither is a page-type file, and `manifestHrefs.has(...)` can only ever confirm a page that's
+ *  ALREADY registered — it can never catch one that never got registered in the first place). The prior
+ *  version of this function used `manifestHrefs.has(...)` as an allow-list instead of this deny-list;
+ *  that is what let both gaps through undetected. */
 function pagesRequiringEntry(allPages: readonly string[]): string[] {
-  return allPages.filter((p) => !EXCLUDED_SUFFIX.test(p))
+  const allPagesSet = new Set(allPages)
+  return allPages.filter((p) => {
+    const m = PAGE_TYPE_FILE.exec(p)
+    if (!m) return true // not a component page-type file — independently required, as before
+    return p === canonicalPageFor(m[1], allPagesSet)
+  })
 }
 
 /** unindexedPages — the pages `pagesRequiringEntry` names that `sitemap.json` fails to cover, out of `pages`

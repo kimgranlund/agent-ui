@@ -53,8 +53,8 @@ export interface PageHandle {
 // `NAV` groups the site's per-component page-type links (Permutations/States/API/Demo). Since ADR-0130's mode-1
 // migration, the LEFT RAIL no longer derives from this array — it derives from `sitemap.json` (SITE_NAV_ENTRIES
 // below, rendered on `ui-nav-rail`). `NAV` SURVIVES only as the residue that genuinely cannot
-// derive from the sitemap: the per-component page-type sub-links, which `sitemap.json` (one `-doc.html` per
-// component) does not carry. `activeGroup()`/`buildTabs()`/`buildPageHeader()` read it to render the page-header
+// derive from the sitemap: the per-component page-type sub-links, which `sitemap.json` (one entry per
+// component — demo-preferred, GH #1619) does not carry. `activeGroup()`/`buildTabs()`/`buildPageHeader()` read it to render the page-header
 // context-label + tab strip, so a component's page-type pages tab between each other for free (SPEC-R10 AC3 —
 // the sub-links stay on the tab strip, deliberately NOT folded into the rail). Hrefs are sibling-relative
 // (`./x.html`). The site-toc drift gate still scans this array to hold its per-component groups ≡ the fleet.
@@ -1069,16 +1069,21 @@ function activeGroup(): NavGroup | undefined {
 }
 
 // isNavCurrent — is `url` (a SITE_NAV_ENTRIES entry) the one this page should be treated as "current"
-// for? True for the real current page, OR — on a component's own sub-page (Permutations/States/API,
-// which SITE_NAV_ENTRIES doesn't carry, only the `{tag}-doc.html` does) — the active NAV group's own doc
-// entry, so a sub-page still resolves to that entry. ONE predicate shared by `buildNav`'s rail-highlight
+// for? True for the real current page, OR — on a component's own sub-page (Demo/Permutations/States/API,
+// whichever ones SITE_NAV_ENTRIES doesn't carry a standalone entry for) — the active NAV group's own
+// sitemap entry, so a sub-page still resolves to that entry. Looked up by tag rather than reconstructed
+// from a hardcoded `-doc.html` suffix (GH #1619): generate-sitemap.mjs's own `url` per component now
+// varies (demo-preferred, doc as fallback), so this must resolve whichever one the sitemap actually
+// carries, not assume it's always the doc page. ONE predicate shared by `buildNav`'s rail-highlight
 // (`isSelected`, below) and `buildPageFooter`'s prev/next index, so a component sub-page gets a working
-// pager derived from its parent doc's neighbors instead of an empty band (the S3c pager and the rail can
+// pager derived from its parent's neighbors instead of an empty band (the S3c pager and the rail can
 // never independently drift on what "current" means for a sub-page).
 function isNavCurrent(url: string): boolean {
   const active = activeGroup()
-  const activeDocUrl = active?.label?.startsWith('ui-') ? `./${active.label.slice('ui-'.length)}-doc.html` : undefined
-  return isCurrent(url) || url === activeDocUrl
+  const activeEntryUrl = active?.label?.startsWith('ui-')
+    ? SITE_NAV_ENTRIES.find((entry) => entry.tag === active.label)?.url
+    : undefined
+  return isCurrent(url) || url === activeEntryUrl
 }
 
 // buildNav — the shared cross-page browse rail, a real `ui-nav-rail` (ADR-0130, the mode-1 consumer) fed
@@ -1104,8 +1109,9 @@ function buildNav(): HTMLElement {
   rail.setAttribute('data-site-nav', '') // the shell's scroll hook (_page.css); NOT the rail's own anatomy
   rail.setAttribute('aria-label', 'Site')
 
-  // On a component's sub-page the exact URL is not in the sitemap (only its `-doc.html` is) — `isNavCurrent`
-  // maps the active NAV group (the tab-strip residue) to that component's doc URL so the rail stays oriented.
+  // On a component's sub-page the exact URL is not in the sitemap (only its ONE canonical page-type is) —
+  // `isNavCurrent` maps the active NAV group (the tab-strip residue) to that component's own sitemap entry
+  // so the rail stays oriented.
   const isSelected = isNavCurrent
 
   // Group by the sitemap's `group` (GH #1600 — narrower than `section`), falling back to `section` for
