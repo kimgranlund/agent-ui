@@ -129,12 +129,38 @@ describe('judge — a differing-bytes target halts before any write, both hashes
   })
 })
 
-describe('judge — --dry-run computes and reports, writes nothing', () => {
-  it('writes no verdicts file under --dry-run', async () => {
+describe('judge — --dry-run never calls the judge model, writes nothing (GH #1608)', () => {
+  it('reports the intended outPath but never invokes the provider or writes a file', async () => {
     repoRoot = makeTempRepoRoot()
     await seedOnePendingRecord(repoRoot)
-    const result = await runJudgeLeg(repoRoot, 'claude-sonnet-5', { dryRun: true }, { provider: stubStreamingJson(GOOD_REPLY) })
-    expect(Object.keys(result.verdicts)).toHaveLength(1)
+    let calls = 0
+    const provider: AgentProvider = {
+      async *stream() {
+        calls += 1
+        yield GOOD_REPLY
+      },
+    }
+    const result = await runJudgeLeg(repoRoot, 'claude-sonnet-5', { dryRun: true }, { provider })
+    expect(calls).toBe(0) // the API is never hit under --dry-run
+    expect(result.ok).toBe(true)
+    expect(result.verdicts).toEqual({})
+    expect(result.parseFailures).toEqual([])
+    expect(result.outPath).toBeDefined()
     expect(() => readFileSync(join(repoRoot, result.outPath!), 'utf8')).toThrow()
+  })
+
+  it('--dry-run --calibrate also never calls the provider', async () => {
+    repoRoot = makeTempRepoRoot()
+    await seedOnePendingRecord(repoRoot)
+    let calls = 0
+    const provider: AgentProvider = {
+      async *stream() {
+        calls += 1
+        yield GOOD_REPLY
+      },
+    }
+    const result = await runJudgeLeg(repoRoot, 'claude-sonnet-5', { dryRun: true, calibrate: true }, { provider })
+    expect(calls).toBe(0)
+    expect(result.calibration).toEqual([])
   })
 })

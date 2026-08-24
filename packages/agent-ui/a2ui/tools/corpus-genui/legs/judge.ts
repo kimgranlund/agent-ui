@@ -169,6 +169,20 @@ export async function runJudgeLeg(repoRoot: string, judgeModel: string, opts: Ju
   const all = loadGenuiRecords(repoRoot)
   const pending = all.filter(({ record }) => record.meta.status === 'pending' && (opts.only === undefined || record.name === opts.only))
 
+  // `--dry-run` must never hit the judge model API — the CLI's own contract for the flag
+  // (eval-genui-corpus.ts:52). Short-circuit BEFORE any `callJudge` call, for both the
+  // calibrate and normal paths: report the pending count + intended outPath, spend nothing.
+  if (opts.dryRun === true) {
+    const outPath = opts.out ?? `${VERDICTS_DIR}/${genuiVerdictArchiveFileName(now(), judgeModel)}`
+    return {
+      ok: true,
+      verdicts: {},
+      parseFailures: [],
+      outPath,
+      ...(opts.calibrate === true ? { calibration: [] } : {}),
+    }
+  }
+
   if (opts.calibrate === true) {
     const calibration: JudgeCalibrationRow[] = []
     for (const { record } of pending) {
@@ -210,10 +224,6 @@ export async function runJudgeLeg(repoRoot: string, judgeModel: string, opts: Ju
   }
   const text = `${JSON.stringify(file, null, 2)}\n`
   const outPath = opts.out ?? `${VERDICTS_DIR}/${genuiVerdictArchiveFileName(file.date, judgeModel)}`
-
-  if (opts.dryRun) {
-    return { ok: parseFailures.length === 0, verdicts, parseFailures, outPath }
-  }
 
   const outcome = archiveGenuiVerdicts(repoRoot, outPath, text)
   if (outcome.kind === 'conflict') {
