@@ -122,3 +122,13 @@ never a gap finding.
 2. #1609: closed as superseded — the 2026-08-09 keep-list ruling stands; sweep noise accepted.
 3. #1605: UNPARKED by name — the 2026-08-23 "parked, pick up in a later ruled arc" note is
    overridden for this issue; build proceeds now.
+
+## 2026-08-24 (17:xx) — Revalidation-mode scope, IDR-tier amendment (amends 2026-08-20 ruling a second time)
+
+Kim ruled (live AskUserQuestion, session agent-ui-90, sweep 2026-08-24T17:08:45Z / plan 3.1):
+decision-watcher's Revalidation mode stays ADR-only for this repo — the IDR tier exists here
+(H1+blockquote-status-table dialect, proposed·accepted·superseded vocabulary, no `locked` state)
+but revalidation_checkpoint.py's parser requires YAML frontmatter this repo's IDR docs never
+carry, so the IDR arm has sampled 0 claims since inception. Same shape as the closed RDD gap:
+scoped out until upstream (nonoun-plugins) supports the frontmatter-free dialect. Future firings:
+0 IDR claims sampled is correct, never a gap finding, until this ruling is superseded.
