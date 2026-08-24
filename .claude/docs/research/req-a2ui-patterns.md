@@ -1,7 +1,7 @@
 ---
 doc-type: research
 id: req-a2ui-patterns
-status: awaiting-approval
+status: approved
 owner: Kim
 date: 2026-08-17
 ---

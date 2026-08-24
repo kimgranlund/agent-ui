@@ -141,3 +141,32 @@ above stays untouched):
 > **Addendum (2026-08-18, Kim's ratify round):** the identity sentence's canonical citation
 > target is [IDR-0005](idr/0005-agent-product-platform-identity.md); §1 here is the narrative
 > home and defers to it.
+
+## 8 · Addendum (2026-08-23) — the four 2026-08-17 lanes' buildable-now scope has shipped
+
+Ratified by Kim at the 2026-08-23 `/fleet-bootstrap` Phase 3 gate (live AskUserQuestion, session
+`agent-ui-90`; recorded in [`.claude/ops/rulings.md`](../ops/rulings.md)), from the product
+seat's dated review pass. This amends §3 by dated addendum, per this doc's own §7 precedent —
+§3's per-lane table stays as the historical 2026-08-17 reading; current state lives here and in
+[`roadmap.md`](./roadmap.md) / the owning PRDs' own goal tables.
+
+- **Agent Teams** — fully built. [ADR-0203](adr/0203-agentteam-declaration-first-record.md) + its
+  ratified 2026-08-18 amendment, [ADR-0204](adr/0204-team-meta-line-arm.md) (the one-shot builder
+  arm); GH #1191/#1194/#1195/#1196/#1197/#1277/#1282 all closed 2026-08-18, plus ADR-0227's
+  wave-2 DataSource adoption (GH #1545) closed 2026-08-23. Realized at
+  [agent-admin-app](prd/agent-admin-app.prd.md) PRD-G4 — that PRD's own goal-table State cell
+  stays `building`, held pending a witnessed end-to-end run in `goals.md` (Kim's 2026-08-23
+  ruling, held separately — not a build gap).
+- **Document ingestion** — fully built. [ADR-0202](adr/0202-pdfjs-second-runtime-dependency-exception.md)
+  (the pdf.js gate) accepted; GH #1190/#1210/#1211/#1212/#1214/#1215 all closed 2026-08-18.
+  Realized at agent-admin-app PRD-G5 — same held-State-cell note as above.
+- **Refined A2UI patterns** — the bundled [ADR-0198](adr/0198-ask-flow-completion-flowend-meta-signal.md)
+  amendment is accepted and cited as shipped grammar law in `agent-admin-app.prd.md` §3.6.
+- **Expanded widget library** — the gate-opener shipped: `ui-image`
+  (`packages/agent-ui/components/src/controls/image/`) and the `Image` catalog row both exist and
+  are tested.
+
+None of the above falsifies IDR-0005–0008 or reopens a north-star fork — the loop that turned on
+2026-08-17 stays parked, per §3's own framing ("the loop parks again once Kim ratifies or
+corrects them"). The four `research/req-*.md` docs' frontmatter `status` fields are synced
+`approved` to match, per the same ruling.

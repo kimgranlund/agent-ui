@@ -3,3 +3,4 @@
 | planner (agent-ui-planner) | planner | background | 2026-08-17 | fable+medium (canonical planner tier) |
 | product (agent-ui-product) | product | manual | 2026-08-17 | fable+high; row reconciled from fleet.json by the 2026-08-19 orchestration audit (A3-R2) |
 | agent (agent-ui-marshal) (takeover) | agent | manual | 2026-08-22 | fable+low (canonical agent tier); /fleet-bootstrap takeover of the live agent seat |
+| agent (agent-ui-marshal) (takeover) | agent | manual | 2026-08-23 | sonnet+high (canonical agent tier, reconciled 2026-08-23); /fleet-bootstrap takeover; address agent-ui-90 |

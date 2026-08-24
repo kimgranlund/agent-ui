@@ -46,6 +46,14 @@ without an app-level record drift toward whatever the last ADR happened to say.
 Stable IDs; features already shipped carry their realizing records as the acceptance trail;
 open goals state checkable acceptance. **A goal states WHAT/WHY — the cited records own HOW.**
 
+> **Dated note (2026-08-23, Kim's fleet-bootstrap Phase 3 gate ruling — `.claude/ops/rulings.md`):**
+> PRD-G4 and PRD-G5's `building (the open arc)` cells stay `building` on purpose, even though every
+> GH issue §5 cites as their realizing record is closed (Teams: #1191/#1194/#1195/#1196/#1197/
+> #1277/#1282, ADR-0227 wave-2 #1545; Knowledge: #1190/#1210/#1211/#1212/#1214/#1215 — all closed).
+> Kim's ruling: a witnessed end-to-end run recorded in `goals.md` (the M-A/M-B/M-C dated-evidence
+> convention) is required before either flips to `shipped` — not a build gap, an unmet acceptance
+> bar. See [product-brief.md §8](../product-brief.md#8--addendum-2026-08-23--the-four-2026-08-17-lanes-buildable-now-scope-has-shipped).
+
 | ID | Priority | Outcome | State |
 |---|---|---|---|
 | **PRD-G1** | must | A user picks, inspects, and manages agents from a persona roster and authors new ones | shipped |

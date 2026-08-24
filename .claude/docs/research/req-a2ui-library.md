@@ -1,6 +1,6 @@
 ---
 doc-type: research
-status: awaiting-approval
+status: approved
 id: req-a2ui-library
 owner: Kim
 date: 2026-08-17

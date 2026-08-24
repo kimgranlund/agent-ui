@@ -2,13 +2,13 @@
   "version": 1,
   "seats": {
     "agent": {
-      "tier": "fable+low",
-      "justification_date": "2026-08-17",
+      "tier": "sonnet+high",
+      "justification_date": "2026-08-23",
       "mode": "manual"
     },
     "reviewer": {
-      "tier": "fable+xhigh",
-      "justification_date": "2026-08-17",
+      "tier": "sonnet+high",
+      "justification_date": "2026-08-23",
       "mode": "background"
     },
     "planner": {
@@ -54,6 +54,13 @@
         "date": "2026-08-17",
         "action": "joined",
         "agent_name": "agent-ui-planner"
+      },
+      {
+        "role": "agent",
+        "mode": "manual",
+        "date": "2026-08-23",
+        "action": "joined",
+        "agent_name": "agent-ui-90"
       },
       {
         "role": "orchestrator",

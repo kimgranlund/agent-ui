@@ -93,3 +93,16 @@ may build; layer-contract change = proposed ADR). **#954** → new `ui-drill` co
 nav-rail trait); component-design intake → build. **ADR harvest**: BOTH `adr-0187` (atFinalize
 validator signal → a2ui-review / a2ui-payload-authoring) and `adr-0178-amendment` (authorship-scoped
 re-ruling → composition-patterns or sibling) confirmed for harvest. Rulings posted on each issue.
+
+## 2026-08-23 — fleet-bootstrap Phase 3 gate: intent-layer ratification (Kim, live AskUserQuestion in session agent-ui-90)
+
+Kim ratified the product seat's 2026-08-23 intent-layer review at the /fleet-bootstrap Phase 3
+hard gate, answered live via AskUserQuestion in the marshal session (agent-ui-90). Rulings,
+verbatim from the selected options:
+1. Overall report: **Ratify**.
+2. Approved repairs (all three): product-brief.md §8 dated addendum (four 2026-08-17 lanes'
+   buildable-now scope shipped); ADR-0220 label fix in a2ui-expert-system.prd.md §8.1
+   (proposed → accepted); req-* status sync (four research/req-*.md frontmatter
+   awaiting-approval → approved, matching brief §3's 2026-08-17 record).
+3. PRD-G4/PRD-G5: **hold at `building`** — a witnessed end-to-end run recorded in goals.md is
+   required before flipping to shipped (M-A/M-B/M-C dated-evidence convention).
