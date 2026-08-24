@@ -381,7 +381,7 @@ export const walletSummaryCardSeed: ExampleSeed = {
           { id: 'metric', component: 'Text', variant: 'h1', emphasis: true, text: { path: '/wallet/balance' } },
           { id: 'footer', component: 'CardFooter', children: ['actions_row'] },
           {
-            id: 'actions_row', component: 'Row', justify: 'between', gap: 'md',
+            id: 'actions_row', component: 'Row', justify: 'between', gap: 'md', wrap: true,
             children: ['action_add', 'action_send', 'action_cards', 'action_txns'],
           },
           { id: 'action_add', component: 'Column', gap: 'xs', children: ['icon_add', 'btn_add'] },
