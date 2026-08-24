@@ -1,6 +1,6 @@
 # LLD — GenUI B3: the judged pack-idiom eval (GH #1584)
 
-> Status: proposed · v0.2 · 2026-08-22 · Layer: LLD (implementation plan)
+> Status: proposed · v0.2 · 2026-08-24 · Layer: LLD (implementation plan)
 > **v0.2 amendment (2026-08-24, GH #1605, Kim-ratified design + doc-checker addendum):** the AC18
 > live judged run (PR #1603) exposed two defects in the v0.1 §5 m3 reading — E_NO_GENUI misses never
 > became records so they were invisible to the floor, and "every judged record passes" gets
