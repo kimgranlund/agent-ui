@@ -173,19 +173,29 @@ entry blocks another this firing.)
   present this compute pass.
 - **Size**: ~2 minutes.
 
-### 4.3 nonoun-plugins#46 — ratify-only-flip hash gap; pin stands (upstream lane; 0 min here)
-- **Action**: carried forward, NOT re-verified this firing (sweep mode — treated as still OPEN;
-  last live-verified OPEN 2026-08-20T22:43Z, now stale by **six** firings — none of this firing's
-  three seats carry cross-repo `nonoun-plugins` evidence). INTERIM PIN unchanged: when Kim ratifies
-  an amendment on an already-`accepted` ADR with no body-byte change, the host re-dispatches
-  decision-watcher with an explicit "re-judge adr-00NN amendment" instruction. Pin stays until #46
-  closes.
-- **Owner**: nonoun-plugins upstream (the script fix) · dispatching host (the pin, per firing) ·
-  Kim (unparking the upstream bundle).
-- **Evidence**: prior plan 4.3; live `gh issue view 46 -R kimgranlund/nonoun-plugins` → OPEN as of
-  2026-08-20T22:43Z (now stale by six firings, safer-default open — not re-verified this firing
-  per sweep-mode discipline).
-- **Size**: 0 minutes here; small tooling task upstream.
+### 4.3 claude-plugins#929 — ratify-only-flip hash gap; RE-FILED correct repo, build dispatched (2026-08-24, marshal session)
+- **Action**: seven firings (2026-08-17 through 2026-08-24) carried this pin citing
+  `kimgranlund/nonoun-plugins#46` — that repo is NOT this marketplace's live source (verified
+  2026-08-24 against `.claude/plugins/known_marketplaces.json`: the `nonoun-plugins` marketplace
+  resolves to `kimgranlund/claude-plugins`; the harness plugin's `adr_checkpoint.py` lives there,
+  confirmed on disk at the marketplace checkout). Re-filed correctly as
+  `kimgranlund/claude-plugins#929` (dedup-swept clean first — never previously filed there); the
+  stale original closed with a pointer. A `build-cp929` seat is dispatched against a fresh scratch
+  clone of `claude-plugins` (never the plugin-manager's own auto-updating marketplace checkout) to
+  widen the hash basis to include the amendment's own ratification marker line. INTERIM PIN stays
+  until #929 closes: on ratifying an amendment on an already-accepted ADR with no body-byte change,
+  the host re-dispatches decision-watcher with an explicit "re-judge adr-00NN amendment"
+  instruction.
+- **Owner**: claude-plugins upstream (the script fix, in flight) · dispatching host (the pin, per
+  firing) · Kim (merging the upstream PR once reviewed).
+- **Evidence**: `.claude/plugins/known_marketplaces.json` (marketplace→repo resolution);
+  `kimgranlund/claude-plugins#929` (correct, live issue); `kimgranlund/nonoun-plugins#46` (closed,
+  wrong-repo pointer).
+- **Size**: 0 minutes here; small tooling task upstream, already dispatched.
+- **Process lesson**: a citation naming a repo should be verified against the actual installed
+  marketplace source before being carried forward across firings — a plausible-sounding repo name
+  is not proof it's the live one. See memory `verify-marketplace-repo-before-citing` (host-scope,
+  2026-08-24) for the general rule.
 
 ## Standing notes (not queue entries)
 
