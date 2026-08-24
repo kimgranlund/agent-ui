@@ -74,7 +74,7 @@ describe('sitemap.json — byte-identical to a fresh generation (the committed i
     const byGroup = new Map<string, number>()
     for (const e of l1) byGroup.set(e.group!, (byGroup.get(e.group!) ?? 0) + 1)
     expect(byGroup.size, 'expected multiple Components groups, not one flat bucket').toBeGreaterThan(5)
-    for (const [group, count] of byGroup) expect(count, `group "${group}" should stay well under the full 84-item flat list`).toBeLessThan(15)
+    for (const [group, count] of byGroup) expect(count, `group "${group}" should stay at or under the 10-tag ceiling`).toBeLessThanOrEqual(10)
   })
 
   it('GH #1600: every L2 (Guides) entry carries a `group` from site-manifest.json, no flat 44-item bucket', () => {
