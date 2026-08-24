@@ -40,7 +40,12 @@ export interface GenuiCorpusIndexM3 {
   passRate: number
   minScore: number
   meanScore: number
-  /** Every judged pack-conditioned record has `qualityScore >= 4` — the PRD §8 m3 floor (LLD §5). */
+  /** The PRD §8 m3 floor (LLD §5, v0.2 amendment 2026-08-24): every `(promptId, packId)` cell (12 —
+   *  4 prompts x 3 packs) has `>=2` of its (at most 3) records scoring `qualityScore >= 4`. A cell
+   *  with fewer than 2 judged/passing records — whether from a low score or an E_NO_GENUI miss that
+   *  never became a record at all — fails the floor for that cell; `floorMet` requires every cell to
+   *  pass. Superseded the v0.1 reading ("every judged record >= 4"), which went invisible to misses
+   *  and got monotonically harder to clear as `--runs` grew. */
   floorMet: boolean
   perPack: Record<string, GenuiCorpusIndexPerPack>
   control?: { judged: number; meanD2: number }

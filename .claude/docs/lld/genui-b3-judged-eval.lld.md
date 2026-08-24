@@ -1,6 +1,19 @@
 # LLD — GenUI B3: the judged pack-idiom eval (GH #1584)
 
-> Status: proposed · v0.1 · 2026-08-22 · Layer: LLD (implementation plan)
+> Status: proposed · v0.2 · 2026-08-22 · Layer: LLD (implementation plan)
+> **v0.2 amendment (2026-08-24, GH #1605, Kim-ratified design + doc-checker addendum):** the AC18
+> live judged run (PR #1603) exposed two defects in the v0.1 §5 m3 reading — E_NO_GENUI misses never
+> became records so they were invisible to the floor, and "every judged record passes" gets
+> monotonically harder to clear as `--runs` grows (a p=0.9 model clears a 12-cell floor at n=1 ~28%
+> of the time, at n=3 ~2% — a defective metric, not a stricter one). §5's `floorMet` reading is
+> revised to a per-`(promptId, packId)` cell majority: a cell passes iff ≥2 of its (≤3) records score
+> `qualityScore ≥ 4`; `floorMet` requires all 12 pack-conditioned cells to pass; a cell with zero
+> records fails it by absence, same as a cell with sub-4 records. The `report` leg also gains a hard
+> rejection of any cell carrying >3 records (a retry piled on top of a prior run instead of clearing
+> it — named error, no data deleted implicitly). `data-viz-layouts`'s 4 eval prompts (`prompts.json`)
+> were revised to carry concrete figures so its Honesty wall clause stops correctly refusing every
+> prompt; `promptSetVersion` bumped 1 → 2. No other clause changes; the mechanism (B0–B2) stays
+> untouched, same as v0.1's own altitude line below.
 > Implements: [`../prd/genui-surface.prd.md`](../prd/genui-surface.prd.md) **PRD-G6** (a judged GenUI
 > corpus shard + a docs page, matching the A2UI corpus discipline — facets · admission · pins) and
 > PRD §8 **m3** ("uses the source: judge-scored ≥ 4/5 against the corpus rubric for demonstrable use
@@ -267,7 +280,7 @@ explanatory figure beside it. Optional per run, recommended for the first judged
 ```
 packages/agent-ui/a2ui/corpus-genui/
   README.md                 # the operator runbook (§7) — the ONLY non-data file at the root
-  prompts.json              # { promptSetVersion: 1, prompts: [{ id, packId, promptText }] } — 4 per pack × 3 packs = 12
+  prompts.json              # { promptSetVersion: 2, prompts: [{ id, packId, promptText }] } — 4 per pack × 3 packs = 12
   fixtures/
     anatomy-data-viz.genui.json      # a pack's own anatomy snippet wrapped as a full document: the POSITIVE calibration fixture
     off-idiom-cdn.genui.json         # hand-written counter-fixture: generic markup + a CDN <script src>: the NEGATIVE one
@@ -292,17 +305,36 @@ interface GenuiCorpusIndex {
   records: { name; promptId; packId; model; status; qualityScore?; passed?; failingDimensions?; dimensions?; htmlHash; verdictDate?; lint }[]   // stable-sorted by name
   m3: null | {                                                // null until ≥1 judged pack-conditioned record exists
     judged: number; passed: number; passRate: number; minScore: number; meanScore: number
-    floorMet: boolean                                         // every judged pack-conditioned record has qualityScore ≥ 4
+    floorMet: boolean                                         // v0.2: every (promptId,packId) cell has ≥2-of-≤3 records qualityScore ≥ 4
     perPack: Record<string, { judged; passed; meanD2; minScore }>
     control?: { judged: number; meanD2: number }             // present when the control arm was judged
   }
 }
 ```
 
-**The m3 reading, fixed here:** PRD §8 says "judge-scored ≥ 4/5" of the turn; the rubric's MIN
-aggregation makes `passed` per record; the floor is **every** judged pack-conditioned record `passed`
-(a single sub-4 record fails it — the A2UI rubric's "one weak dimension sinks the record" posture lifted
-to the run). `passRate`/`meanScore` are reported beside it so a near-miss is legible, never a substitute.
+**The m3 reading (v0.2, 2026-08-24 amendment):** PRD §8 says "judge-scored ≥ 4/5" of the turn; the
+rubric's MIN aggregation makes `passed` per record. The floor is now read per **cell** — a
+`(promptId, packId)` pair (12 total: 4 prompts × 3 packs, enumerated from `prompts.json` itself, not
+from whatever records happen to exist) — rather than per record: a cell passes iff `≥2` of its (at
+most 3, under `--runs 3`) records score `qualityScore ≥ 4`; `floorMet` requires every cell to pass. A
+cell with zero judged records (every run missed with `E_NO_GENUI`) fails by absence, exactly like a
+cell whose records score below 4 — the v0.1 reading counted only judged records and so went blind to
+a pack that never emitted at all. `passRate`/`meanScore` stay reported beside `floorMet` (over all
+judged records, unchanged) so a near-miss is legible, never a substitute for the gate.
+
+**Superseded (v0.1):** the floor as originally specified was "**every** judged pack-conditioned
+record `passed`" — a single sub-4 record failed the whole eval, and the reading counted only records
+that existed, so a pack emitting on 0 of its prompts trivially couldn't fail (nothing to fail on).
+Both defects surfaced on the AC18 live run (PR #1603, GH #1605): `data-viz-layouts` emitted 0/4 and
+was invisible to the floor under this reading, while the strict every-record test gets exponentially
+harder to clear as `--runs` grows, independent of true model quality — kept here only as the prior
+reading's record, never re-applied.
+
+**The retry/reset guard (v0.2, `report` leg):** a `(promptId, packId)` cell carrying **more than 3**
+records is a hard rejection — `report` refuses to derive `index.json`, names every offending cell,
+and instructs clearing that cell's `records/v1/*.jsonl` entries before re-running. Never silently
+kept-newest-3 or auto-cleared: that would let the 2-of-3 majority silently loosen to 2-of-N as
+retries pile up, and no data is ever deleted implicitly by this leg.
 
 ## 6. LLD-C3 — the rubric `.claude/docs/rubrics/genui-pack-idiom.md` (v1.0)
 
@@ -421,6 +453,20 @@ corpus instead of an empty one.
    pattern without altering them; the eval-only facet and the no-quarantine posture are this LLD's
    scoping, reversible by a later LLD rev. A reviewer who disagrees should raise it on GH #1584 before
    build, not after.
+8. **The v0.1 strict-every-record floor vs. the v0.2 per-cell-majority floor, recorded (2026-08-24,
+   GH #1605):** the AC18 live run exposed that the strict reading (every judged record passes) hides
+   two failure modes it cannot distinguish — a systemically-missing pack (invisible: no record, no
+   failure) and ordinary n=1 sampling noise (indistinguishable from a real defect). §5's v0.2 reading
+   fixes both by moving the unit of measurement from the RECORD to the `(promptId, packId)` CELL with
+   `--runs 3` and a 2-of-3 majority. **Deliberately not chosen:** a stricter per-cell unanimous
+   3-of-3 (rejected — reintroduces the same n-growth trap at one remove, just with a larger n) and
+   accepting any 1-of-3 pass (rejected — a coin flip that happened to land right is not "demonstrable
+   use," the exact PRD §8 m3 bar). 2-of-3 is the smallest majority that separates signal from a single
+   unlucky sample without loosening the bar to "ever passed once." *Detection if this reading also
+   proves wrong:* a future named run showing `floorMet` swings on sampling noise even at n=3.
+   *Fallback:* raise `--runs` (the record `name` grammar and `report`'s cell grouping already
+   generalize to N without further code change) — never loosen the per-record `qualityScore ≥ 4` bar
+   itself.
 
 ## 10. Build sequence (slices = decomp nodes; gates named per slice; FOREGROUND, exit codes only)
 
