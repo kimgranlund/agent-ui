@@ -60,7 +60,8 @@
         "mode": "manual",
         "date": "2026-08-23",
         "action": "joined",
-        "agent_name": "agent-ui-90"
+        "agent_name": "agent-ui-90",
+        "note": "reality check 2026-08-24: live terminal runs fable (claude-fable-5) vs seat tier sonnet+high — mismatch accepted for the live terminal; explicit per-dispatch model pinning mandatory (claude-plugins#919 patch)"
       },
       {
         "role": "orchestrator",
