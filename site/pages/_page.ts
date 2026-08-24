@@ -908,15 +908,129 @@ export const NAV: readonly NavGroup[] = [
   },
 ]
 
+// ── the NAV taxonomy — GH #1600, Kim's ruling (2026-08-23): "add the taxonomy to NAV itself, then derive" ────
+// A semantic cluster narrower than `section`, so neither "Components (84)" nor "Guides (44)" reads as one flat
+// list. `tags` covers a Components (L1) `ui-*` custom-element tag; `guideLabels` covers a Guides (L2)
+// site-manifest.json row by its exact `label`. This is the ONE place the grouping is authored — the sitemap
+// generator (`scripts/generate-sitemap.mjs`'s `L1_TAXONOMY`) mirrors the `tags` half byte-identical (a Node
+// script cannot import Vite-transformed TS, so it duplicates rather than imports), while the `guideLabels`
+// half is realized directly as a `group` field on each matching row in site/lib/site-manifest.json (the
+// single-owner manifest `generateL2AndStubs` already reads `row.group` from unchanged) — so a reader auditing
+// either surface finds the same boundaries this array names. `buildNav` below renders one rail sub-group per
+// taxonomy entry (falling back to the sitemap's own `section` for anything this array doesn't name — A2UI/
+// A2A/GenUI/Records, already narrow enough on their own).
+interface NavTaxonomyGroup {
+  readonly label: string
+  readonly tags?: readonly string[]
+  readonly guideLabels?: readonly string[]
+}
+export const NAV_TAXONOMY: readonly NavTaxonomyGroup[] = [
+  {
+    label: 'Actions & selection controls',
+    tags: [
+      'ui-button', 'ui-toggle', 'ui-checkbox', 'ui-switch', 'ui-radio', 'ui-radio-group',
+      'ui-choice-group', 'ui-choice-card', 'ui-segment', 'ui-segmented-control',
+    ],
+  },
+  {
+    label: 'Text & value entry',
+    tags: [
+      'ui-text-field', 'ui-textarea', 'ui-otp-field', 'ui-slider', 'ui-slider-multi', 'ui-rating',
+      'ui-color-picker', 'ui-calendar',
+    ],
+  },
+  {
+    label: 'Charts & data visuals',
+    tags: [
+      'ui-sparkline', 'ui-bar-chart', 'ui-line-chart', 'ui-pie-chart', 'ui-column-chart', 'ui-gauge',
+      'ui-swatch', 'ui-ramp', 'ui-ladder',
+    ],
+  },
+  { label: 'Typography & media primitives', tags: ['ui-text', 'ui-icon', 'ui-image', 'ui-video', 'ui-audio'] },
+  {
+    label: 'Layout primitives',
+    tags: [
+      'ui-row', 'ui-column', 'ui-list', 'ui-grid', 'ui-toast-region', 'ui-split', 'ui-split-pane',
+      'ui-swiper-item',
+    ],
+  },
+  {
+    label: 'Containers & chrome',
+    tags: ['ui-card', 'ui-tabs', 'ui-modal', 'ui-drawer', 'ui-toolbar', 'ui-service-card', 'ui-playing-card', 'ui-drill'],
+  },
+  {
+    label: 'Overlays & pickers',
+    tags: [
+      'ui-popover', 'ui-tooltip', 'ui-menu', 'ui-select', 'ui-multi-select', 'ui-form-popover',
+      'ui-combo-box', 'ui-command-modal', 'ui-sandbox-frame',
+    ],
+  },
+  { label: 'Form composition', tags: ['ui-field', 'ui-form-provider', 'ui-theme-provider'] },
+  {
+    label: 'Data & reporting',
+    tags: [
+      'ui-table', 'ui-stat', 'ui-description-list', 'ui-source-list', 'ui-badge', 'ui-pagination',
+      'ui-suggestions', 'ui-breadcrumb',
+    ],
+  },
+  { label: 'Content & code', tags: ['ui-code', 'ui-code-editor', 'ui-markdown', 'ui-disclosure'] },
+  {
+    label: 'Feed & status',
+    tags: [
+      'ui-progress', 'ui-avatar', 'ui-attachment', 'ui-file-drop', 'ui-toast', 'ui-timeline-item',
+      'ui-timeline', 'ui-status-stream',
+    ],
+  },
+  { label: 'Carousel', tags: ['ui-swiper', 'ui-swiper-pagination', 'ui-swiper-paddles', 'ui-swiper-label'] },
+  {
+    label: 'Foundations & reference',
+    guideLabels: [
+      'Getting started', 'Accessibility', 'Testing guide', 'Theming', 'Token reference', 'Sizing & density',
+      'Which component when', 'Events', 'Changelog',
+    ],
+  },
+  {
+    label: 'Forms & identity flows',
+    guideLabels: [
+      'Forms', 'Registration & sign in', 'Magic link sign in', 'One-time code sign in', 'Social sign in',
+      'Onboarding', 'Onboarding checklist', 'Account settings',
+    ],
+  },
+  {
+    label: 'Layout & composition patterns',
+    guideLabels: ['Composition patterns', 'Card grid + drawer edit', 'Sticky TOC content layout', 'Layout Primitives'],
+  },
+  {
+    label: 'App shells & surfaces',
+    guideLabels: [
+      'Super Shell', 'Chat Shell', 'Workspace Shell', 'Master Detail', 'Settings', 'Nav Rail',
+      'Surface Host', 'Conversation',
+    ],
+  },
+  {
+    label: 'Packages & seams',
+    guideLabels: ['Router', 'Highlight', 'Data', 'Traits', 'View Transitions', 'Entry List', 'Persistence'],
+  },
+  {
+    label: 'Agent Admin',
+    guideLabels: ['Agent Admin', 'Agent Admin App', 'Devtools Harness', 'Persona Library Pattern', 'Agent Schema'],
+  },
+  { label: 'SaaS compositions', guideLabels: ['SaaS Data Workbench', 'Support Dashboard'] },
+  { label: 'Meta', guideLabels: ['Gallery'] },
+]
+
 // ── the sitemap-derived browse rail source (mode-1, SPEC-R10) ────────────────────────────────────────────────
-// One rail entry per sitemap.json entry, grouped by the sitemap's own `section` axis. The derivation INVERTED
-// (TKT-0029): the rail reads the build-time index, not the hand array. `section` is exactly the sitemap's field
-// today — Components (56 L1, name|tag rows) / Guides (25 L2) / Records (the ADR index) — no curated re-grouping.
+// One rail entry per sitemap.json entry, grouped by the sitemap's own `group` axis where the entry carries
+// one (NAV_TAXONOMY above), falling back to `section` otherwise. The derivation INVERTED (TKT-0029): the rail
+// reads the build-time index, not the hand array. `section`/`group` are exactly the sitemap's own fields —
+// Components (84 L1, name|tag rows, 12 groups) / Guides (44 L2, 8 groups) / A2UI/A2A/GenUI/Records ungrouped
+// (already narrow) — no curated re-grouping happens in this file beyond what the sitemap already carries.
 interface SitemapEntry {
   readonly name: string
   readonly tag?: string
   readonly url: string
   readonly section: string
+  readonly group?: string
 }
 
 // dedupeByUrl — collapse entries that resolve to the SAME page (the sitemap lists `changelog.html` under both
@@ -969,9 +1083,10 @@ function isNavCurrent(url: string): boolean {
 
 // buildNav — the shared cross-page browse rail, a real `ui-nav-rail` (ADR-0130, the mode-1 consumer) fed
 // from `sitemap.json`. It renders its grouped vertical anatomy at EVERY band — one `ui-nav-rail-group` per
-// sitemap `section`, its context-label the section name, each item a real `<a>` with the proper name at the
-// leading edge and (for the tag-bearing Components) the tag right-justified in the trailing `data-role="tag"`
-// cell (SPEC-R6's name|tag row). Narrow is now the SHELL's job (GH #170/ADR-0155): the ui-super-shell hides
+// sitemap `group` (GH #1600's NAV_TAXONOMY sub-header, falling back to `section` for the entries that carry
+// no `group` — A2UI/A2A/GenUI/Records, already narrow), its context-label that group/section name, each item
+// a real `<a>` with the proper name at the leading edge and (for the tag-bearing Components) the tag
+// right-justified in the trailing `data-role="tag"` cell (SPEC-R6's name|tag row). Narrow is now the SHELL's job (GH #170/ADR-0155): the ui-super-shell hides
 // this whole pane below the 52.5rem compact line and toggle-restores it as an overlay, so the rail's own
 // `collapse="menu"` dropdown + `collapse-container="ancestor"` arrangement (TKT-0035) RETIRE for this
 // consumer. The rail's active indicator keys off the `selected` item — the current page, or,
@@ -993,17 +1108,19 @@ function buildNav(): HTMLElement {
   // maps the active NAV group (the tab-strip residue) to that component's doc URL so the rail stays oriented.
   const isSelected = isNavCurrent
 
-  // Group by the sitemap's `section`, preserving first-seen section + item order (a Map keeps insertion order).
-  const bySection = new Map<string, SitemapEntry[]>()
+  // Group by the sitemap's `group` (GH #1600 — narrower than `section`), falling back to `section` for
+  // entries the taxonomy doesn't name, preserving first-seen order (a Map keeps insertion order).
+  const byGroup = new Map<string, SitemapEntry[]>()
   for (const entry of SITE_NAV_ENTRIES) {
-    const list = bySection.get(entry.section) ?? []
+    const key = entry.group ?? entry.section
+    const list = byGroup.get(key) ?? []
     list.push(entry)
-    bySection.set(entry.section, list)
+    byGroup.set(key, list)
   }
 
-  for (const [section, entries] of bySection) {
+  for (const [label, entries] of byGroup) {
     const group = document.createElement('ui-nav-rail-group')
-    group.setAttribute('label', section) // the context-label (SPEC-R6)
+    group.setAttribute('label', label) // the context-label (SPEC-R6)
     for (const entry of entries) {
       const item = document.createElement('ui-nav-rail-item')
       item.setAttribute('href', entry.url) // link-shaped ⇒ real navigation + aria-current on the active one

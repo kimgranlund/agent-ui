@@ -34,6 +34,7 @@ interface SitemapEntry {
   readonly description: string
   readonly level: 'L1' | 'L2' | 'L3'
   readonly section: string
+  readonly group?: string
   readonly index?: string
 }
 
@@ -59,6 +60,33 @@ describe('sitemap.json — byte-identical to a fresh generation (the committed i
     expect(commandModal, 'expected ui-command-modal as an L1 entry').toBeDefined()
     expect(commandModal!.description).not.toMatch(/[*`]/)
     expect(commandModal!.description.length).toBeGreaterThan(0)
+  })
+
+  it('GH #1600: every L1 (Components) entry carries a `group` from the NAV_TAXONOMY, no flat 84-item bucket', () => {
+    const parsed = JSON.parse(fresh) as { entries: SitemapEntry[] }
+    const l1 = parsed.entries.filter((e) => e.level === 'L1')
+    const ungrouped = l1.filter((e) => !e.group)
+    expect(ungrouped.map((e) => e.tag), 'every L1 tag must resolve to a NAV_TAXONOMY group').toEqual([])
+    const rowGroup = l1.find((e) => e.tag === 'ui-row')
+    expect(rowGroup?.group, 'ui-row folds into Layout primitives').toBe('Layout primitives')
+    const buttonGroup = l1.find((e) => e.tag === 'ui-button')
+    expect(buttonGroup?.group, 'ui-button groups under Actions & selection controls').toBe('Actions & selection controls')
+    const byGroup = new Map<string, number>()
+    for (const e of l1) byGroup.set(e.group!, (byGroup.get(e.group!) ?? 0) + 1)
+    expect(byGroup.size, 'expected multiple Components groups, not one flat bucket').toBeGreaterThan(5)
+    for (const [group, count] of byGroup) expect(count, `group "${group}" should stay at or under the 10-tag ceiling`).toBeLessThanOrEqual(10)
+  })
+
+  it('GH #1600: every L2 (Guides) entry carries a `group` from site-manifest.json, no flat 44-item bucket', () => {
+    const parsed = JSON.parse(fresh) as { entries: SitemapEntry[] }
+    const guides = parsed.entries.filter((e) => e.section === 'Guides')
+    const ungrouped = guides.filter((e) => !e.group)
+    expect(ungrouped.map((e) => e.name), 'every Guides entry must carry a group').toEqual([])
+    const gettingStarted = guides.find((e) => e.name === 'Getting started')
+    expect(gettingStarted?.group).toBe('Foundations & reference')
+    const byGroup = new Map<string, number>()
+    for (const e of guides) byGroup.set(e.group!, (byGroup.get(e.group!) ?? 0) + 1)
+    expect(byGroup.size, 'expected multiple Guides groups, not one flat bucket').toBeGreaterThan(3)
   })
 
   it('the committed file matches the generator byte-for-byte (regenerate: node scripts/generate-sitemap.mjs)', () => {

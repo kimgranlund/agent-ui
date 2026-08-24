@@ -24,6 +24,13 @@ interface Sitemap {
 const GROUP_LABELS: Record<SitemapEntry['level'], string> = { L1: 'Components', L2: 'Guides', L3: 'Records' }
 const GROUP_ORDER: readonly SitemapEntry['level'][] = ['L1', 'L2', 'L3']
 
+// GH #1600 — this palette deliberately does NOT sub-group by the sitemap's new `group` field (the
+// NAV_TAXONOMY cluster _page.ts's buildNav uses for the browse rail). The three-bucket L1-above-L2-above-L3
+// shape above is SPEC-R8 AC1's locked search-result contract, sized for a live-FILTERED list — a real
+// search narrows the visible option count long before a reader would want a 12-way Components sub-header;
+// nesting the taxonomy in here would fragment a short filtered result set rather than clarify it. The
+// taxonomy's actual home is the unfiltered browse rail, which already renders it (_page.ts's buildNav).
+
 /**
  * One rendered `[role=option]` for a sitemap entry — the control's own shipped content model (command-modal.md
  * `contentModel`): `value` carries the navigation target, `data-keywords` folds tag+description into the
