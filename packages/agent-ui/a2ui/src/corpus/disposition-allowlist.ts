@@ -228,17 +228,8 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // all four judged PASS (a2ui-corpus.md v1.2, joint wave — archived 2026-08-24--wave6-verdicts.json)
   // and admitted — entries DRAINED.
 
-  // 2026-08-24 — `frontier-button-icon-actions` (ADR-0226/GH #1504): judged in the same joint wave,
-  // qualityScore 2/5, REJECTED (D1/P9 — both action Buttons sat loose in CardContent instead of a
-  // CardFooter, the same anatomy defect class `wallet-summary-card` already avoids). Archived as the
-  // durable E_QUALITY record (2026-08-24--wave6-verdicts.json), never fabricated to pass. Kept on the
-  // shelf pending repair rather than dropped (Kim's ruling) — it's the only exemplar for the new
-  // `Button.icon`/`Button.iconOnly` wire props. Anatomy fix landed (commit 2c1afc24: both buttons now
-  // ride in a CardFooter); awaiting a fresh judged re-run. DELETE this entry when that re-judge passes
-  // and the seed is admitted.
-  ['frontier-button-icon-actions',
-    'ADR-0226/GH #1504 — judged E_QUALITY 2026-08-24 (VerdictsFile, a2ui-corpus.md v1.2, ' +
-    'a2ui-review-agent): qualityScore 2/5, failing D1/P9 (action Buttons outside CardFooter). ' +
-    'Anatomy fix landed (commit 2c1afc24); awaiting re-judge. The worked exemplar for the new ' +
-    '`Button.icon`/`Button.iconOnly` wire props.'],
+  // 2026-08-24 — `frontier-button-icon-actions` (ADR-0226/GH #1504): first judged qualityScore 2/5,
+  // REJECTED (D1/P9 — action Buttons outside CardFooter). Anatomy fix landed (commit 2c1afc24: both
+  // buttons moved into a CardFooter, matching `wallet-summary-card`'s precedent). Re-judged PASS
+  // qualityScore 4/5 (archived 2026-08-24--button-icon-verdict.json) and admitted — entry DRAINED.
 ])
