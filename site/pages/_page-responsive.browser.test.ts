@@ -226,11 +226,12 @@ describe('docs-site chrome — site-chrome polish (S1 header hairline, S3a foote
     expect(last.shell.querySelector('.page-footer-prev'), 'the last entry still gets a real Previous').not.toBeNull()
   })
 
-  it('S3c sub-page — a component sub-page (not itself in SITE_NAV_ENTRIES) resolves the pager to its PARENT doc entry\'s neighbors', async () => {
-    // button-permutations.html is NOT in SITE_NAV_ENTRIES (only button-doc.html is) — isNavCurrent must
-    // map it to that parent doc entry, the SAME mapping buildNav's own rail-highlight already relies on.
-    const docIndex = SITE_NAV_ENTRIES.findIndex((e) => e.url === './button-doc.html')
-    expect(docIndex, 'button-doc.html must exist in SITE_NAV_ENTRIES for this probe to mean anything').toBeGreaterThanOrEqual(0)
+  it('S3c sub-page — a component sub-page (not itself in SITE_NAV_ENTRIES) resolves the pager to its PARENT entry\'s neighbors', async () => {
+    // button-permutations.html is NOT in SITE_NAV_ENTRIES (only button-demo.html is, GH #1619's demo-preferred
+    // canonical URL) — isNavCurrent must map it to that parent entry, the SAME mapping buildNav's own
+    // rail-highlight already relies on.
+    const docIndex = SITE_NAV_ENTRIES.findIndex((e) => e.url === './button-demo.html')
+    expect(docIndex, 'button-demo.html must exist in SITE_NAV_ENTRIES for this probe to mean anything').toBeGreaterThanOrEqual(0)
     window.history.pushState(null, '', './button-permutations.html')
     const { shell } = mountAt(1200)
     await raf()
@@ -239,10 +240,10 @@ describe('docs-site chrome — site-chrome polish (S1 header hairline, S3a foote
     const resolve = (href: string): string => new URL(href, location.href).pathname
     const expectedPrev = docIndex > 0 ? SITE_NAV_ENTRIES[docIndex - 1] : undefined
     const expectedNext = docIndex < SITE_NAV_ENTRIES.length - 1 ? SITE_NAV_ENTRIES[docIndex + 1] : undefined
-    expect(expectedPrev && expectedNext, 'button-doc.html must have both neighbors for this probe to exercise both links').toBeTruthy()
-    expect(prevLink, 'the sub-page gets a real Previous, derived from its parent doc entry\'s own neighbor').not.toBeNull()
+    expect(expectedPrev && expectedNext, 'button-demo.html must have both neighbors for this probe to exercise both links').toBeTruthy()
+    expect(prevLink, 'the sub-page gets a real Previous, derived from its parent entry\'s own neighbor').not.toBeNull()
     expect(resolve(prevLink!.getAttribute('href')!)).toBe(resolve(expectedPrev!.url))
-    expect(nextLink, 'the sub-page gets a real Next, derived from its parent doc entry\'s own neighbor').not.toBeNull()
+    expect(nextLink, 'the sub-page gets a real Next, derived from its parent entry\'s own neighbor').not.toBeNull()
     expect(resolve(nextLink!.getAttribute('href')!)).toBe(resolve(expectedNext!.url))
   })
 

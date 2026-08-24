@@ -98,23 +98,23 @@ describe('site nav — ui-nav-rail structure (both engines)', () => {
 })
 
 // ── GH #884 — the component-sub-page mapping (isNavCurrent's fallback arm) ─────────────────────────────────
-// A component's Permutations/States sub-pages are NOT their own sitemap entries (only `{tag}-doc.html` is,
-// per the NAV comment in _page.ts) — `isNavCurrent` maps the active NAV group back to that doc entry so the
-// rail still shows where you are while the tab strip carries the sub-pages themselves. This is the SECOND
-// half of #884's acceptance (a sitemap-absent page still selects its parent doc entry) and was previously
-// UNCOVERED by a browser test — a regression here would silently drop the highlight on every Permutations/
-// States page while `isCurrent`-only pages (tested above) kept passing.
-describe('site nav — component sub-page maps to its parent doc entry (GH #884)', () => {
-  const SUB_ROUTE = '/button-permutations.html' // not in SITE_NAV_ENTRIES — only button-doc.html is
+// A component's Permutations/States/API sub-pages are NOT their own sitemap entries (only the component's ONE
+// canonical page-type is — demo-preferred when it ships, GH #1619) — `isNavCurrent` maps the active NAV group
+// back to that canonical entry so the rail still shows where you are while the tab strip carries the sub-pages
+// themselves. This is the SECOND half of #884's acceptance (a sitemap-absent page still selects its parent
+// entry) and was previously UNCOVERED by a browser test — a regression here would silently drop the highlight
+// on every Permutations/States page while `isCurrent`-only pages (tested above) kept passing.
+describe('site nav — component sub-page maps to its canonical rail entry (GH #884)', () => {
+  const SUB_ROUTE = '/button-permutations.html' // not in SITE_NAV_ENTRIES — only button-demo.html is (ui-button ships a demo)
   beforeEach(() => mountAt(SUB_ROUTE))
   afterEach(() => unmount())
 
-  it('a Permutations sub-page (absent from the sitemap) selects its component\'s -doc.html rail entry', async () => {
+  it('a Permutations sub-page (absent from the sitemap) selects its component\'s -demo.html rail entry', async () => {
     await ready()
     const current = rail().querySelector('a[aria-current="page"]') as HTMLAnchorElement
-    expect(current?.getAttribute('href')).toBe('./button-doc.html')
+    expect(current?.getAttribute('href')).toBe('./button-demo.html')
     const selectedItems = [...rail().querySelectorAll('ui-nav-rail-item[selected]')]
-    expect(selectedItems, 'the API entry — not zero, not the whole group — carries the highlight').toHaveLength(1)
+    expect(selectedItems, 'the Demo entry — not zero, not the whole group — carries the highlight').toHaveLength(1)
     expect(selectedItems[0]?.textContent).toContain('ui-button')
   })
 })

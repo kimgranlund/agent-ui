@@ -14,9 +14,10 @@
 // `router-doc.html` for the whole package), but that reasoning never actually applied to ui-code-editor,
 // which has exactly one descriptor and one real page, same as every genuine L1 component; the resemblance to
 // router was the wrong precedent, not a real structural match. Rather than re-hardcoding a SECOND fixed
-// exception, the walk now covers every tree in L1_TREES and only emits an entry when `./{slug}-doc.html`
-// ACTUALLY EXISTS under `site/` — so a descriptor with no matching page (today: ui-markdown, which has a real
-// tagged descriptor but ships no doc page yet) is silently skipped rather than minting a dead nav link, and a
+// exception, the walk now covers every tree in L1_TREES and only emits an entry when `./{slug}-demo.html`
+// OR `./{slug}-doc.html` ACTUALLY EXISTS under `site/` (GH #1619 — demo preferred when both exist) — so a
+// descriptor with no matching page (today: ui-markdown, which has a real tagged descriptor but ships no
+// page yet) is silently skipped rather than minting a dead nav link, and a
 // FUTURE @agent-ui/code control with both a descriptor AND a shipped page is picked up automatically, no
 // generator edit required. Router itself still resolves to its one combined page via site-manifest.json's L2
 // row (site/pages/_page.ts's ungrouped site-level GUIDE posture) — unaffected by this change, since
@@ -177,10 +178,14 @@ export function titleCaseFromTag(tag) {
 }
 
 /** generateL1 — one entry per tagged descriptor across every L1_TREES root, name/tag/url derived,
- *  description from the authored scalar or the fallback derivation — but ONLY when a real `{slug}-doc.html`
- *  page exists under `site/` (the 1:1-page-existence gate, TKT-0095): a descriptor with no matching page
- *  (e.g. ui-markdown today) is skipped, never minting a dead nav link. Alphabetical by tag (the
- *  generate-llms-full.mjs precedent). */
+ *  description from the authored scalar or the fallback derivation — but ONLY when a real page exists
+ *  under `site/` (the 1:1-page-existence gate, TKT-0095): a descriptor with no matching page (e.g.
+ *  ui-markdown today) is skipped, never minting a dead nav link. GH #1619 — the left nav renders this
+ *  `url` directly, so users expect it to land on the component's Demo, not its API reference: `url`
+ *  prefers `{slug}-demo.html` when that page exists (pattern/interactive tier), falling back to
+ *  `{slug}-doc.html` (display tier, doc-only — e.g. ui-source-list) when no demo page ships. Both pages
+ *  render the same shell with a Demo/API tab strip, so either is reachable from the other regardless of
+ *  which one is canonical here. Alphabetical by tag (the generate-llms-full.mjs precedent). */
 function generateL1(repoRoot) {
   const entries = []
   for (const tree of L1_TREES) {
@@ -195,8 +200,12 @@ function generateL1(repoRoot) {
         const tag = tagOf(split.fence)
         if (tag === null) continue // a .md without a tag: scalar is not a component descriptor
         const slugName = tag.slice('ui-'.length)
-        const url = `./${slugName}-doc.html`
-        if (!existsSync(join(repoRoot, 'site', url.slice(2)))) continue // no real page yet — skip, never a dead link
+        const demoUrl = `./${slugName}-demo.html`
+        const docUrl = `./${slugName}-doc.html`
+        const demoExists = existsSync(join(repoRoot, 'site', demoUrl.slice(2)))
+        const docExists = existsSync(join(repoRoot, 'site', docUrl.slice(2)))
+        if (!demoExists && !docExists) continue // no real page yet — skip, never a dead link
+        const url = demoExists ? demoUrl : docUrl
         const authored = descriptionOf(split.fence)
         const description = authored !== null ? authored : deriveFallbackDescription(split.body)
         const group = groupOf(tag)
