@@ -10,9 +10,9 @@ export interface SitemapEntry {
   description: string
   level: 'L1' | 'L2' | 'L3'
   section: string
-  /** A within-section cluster narrower than `section`, present ONLY when the site's own NAV/CARD_GROUPS
-   *  arrangement (site/pages/_page.ts + site/main.ts) actually folds multiple pages under one shared label
-   *  (e.g. 'Layout primitives'). Absent when the entry stands alone in NAV — never a synthesized value. */
+  /** A within-section cluster narrower than `section` (GH #1600), sourced from site/pages/_page.ts's
+   *  `NAV_TAXONOMY` for Components (L1) and from a `group` field on each site-manifest.json row for Guides
+   *  (L2) — every L1/L2 entry carries one; A2UI/A2A/GenUI/Records stay ungrouped (already narrow). */
   group?: string
   index?: string
 }

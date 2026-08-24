@@ -4,287 +4,328 @@
     "label": "Getting started",
     "description": "How to consume agent-ui in your own app: the workspace packages and the one load-bearing CSS import order.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Foundations & reference"
   },
   {
     "href": "./accessibility.html",
     "label": "Accessibility",
     "description": "Roles/state via ElementInternals, focus + roving tabindex, landmarks, live regions, reduced motion, and how a consumer labels a control.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Foundations & reference"
   },
   {
     "href": "./testing-guide.html",
     "label": "Testing guide",
     "description": "The jsdom/browser vitest harness, the shared @agent-ui/shared/testing/dialog-polyfill stub, when a real-engine run is required, and the ElementInternals/ARIA assertion idiom.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Foundations & reference"
   },
   {
     "href": "./theming.html",
     "label": "Theming",
     "description": "One theming subtree, three live axes: scheme (light/dark), scale, and density.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Foundations & reference"
   },
   {
     "href": "./tokens.html",
     "label": "Token reference",
     "description": "Every colour role across every family, the numbered tonal primitives, plus the dimensional ramp.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Foundations & reference"
   },
   {
     "href": "./sizing.html",
     "label": "Sizing & density",
     "description": "Control geometry is an explicit (scale x size) lookup, never a multiplier; density touches spacing only.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Foundations & reference"
   },
   {
     "href": "./forms.html",
     "label": "Forms",
     "description": "A form-provider coordinating three field-wrapped controls, one working example narrated concern by concern.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Forms & identity flows"
   },
   {
     "href": "./credentials.html",
     "label": "Registration & sign in",
     "description": "Sign-up and sign-in forms over ui-form-provider/ui-field, wired to a real in-memory identity-mock-transport in a dev/preview build (GH #490, ADR-0176).",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Forms & identity flows"
   },
   {
     "href": "./magic-link.html",
     "label": "Magic link sign in",
     "description": "Request a magic link, confirm the demo's stand-in for clicking the emailed link, and reach the signed-in state \u2014 the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Forms & identity flows"
   },
   {
     "href": "./otp-signin.html",
     "label": "One-time code sign in",
     "description": "Request a one-time code, enter it into ui-otp-field (auto-verifying on completion, no submit button), resend with a real per-email cooldown, and reach the signed-in state \u2014 the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Forms & identity flows"
   },
   {
     "href": "./social-signin.html",
     "label": "Social sign in",
     "description": "Choose a provider, walk a simulated redirect + callback round trip, complete or cancel the sign-in, and reach the signed-in state \u2014 the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Forms & identity flows"
   },
   {
     "href": "./onboarding.html",
     "label": "Onboarding",
     "description": "Advance/back/skip through a first-run step shell (Welcome / Workspace name / Choose a theme) with a discrete step-N-of-M progress readout, gated on an existing demo session \u2014 the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Forms & identity flows"
   },
   {
     "href": "./onboarding-checklist.html",
     "label": "Onboarding checklist",
     "description": "The checklist-onboarding composition recipe: card + list + checkbox + progress bound to a plain signals store, matched to onboarding-first-run.flow.json \u2014 the mint-last proof that no ui-stepper is needed (GH #961).",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Forms & identity flows"
   },
   {
     "href": "./card-grid-drawer.html",
     "label": "Card grid + drawer edit",
     "description": "The card-grid + edit-via-drawer composition recipe: ui-grid + ui-card + ui-drawer, a buffered record form, and a page-owned dirty-state/discard-confirm convention (recipe-level, not a fleet ADR) \u2014 extracted from the agent-admin entry-list/entry-form shape (GH #917/#947, PR #948; GH #965).",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Layout & composition patterns"
   },
   {
     "href": "./toc-content.html",
     "label": "Sticky TOC content layout",
     "description": "A long-form article + a scroll-spy'd ui-nav-rail sidebar, swapped to a ui-select below the ADR-0150 compact line \u2014 the TOC-corpus composition recipe (heading-derived entries, the new scrollSpy trait), and the mint-last proof that no ui-toc control is needed (GH #964).",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Layout & composition patterns"
   },
   {
     "href": "./account-settings.html",
     "label": "Account settings",
     "description": "A generic account SettingsSchema rendered by the shipped ui-settings \u2014 view preferences, edit and save one through the SettingsStore \u2014 behind a must-be-signed-in gate reading the SAME in-memory identity-mock-transport as Registration & sign in (GH #615, ADR-0176).",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Forms & identity flows"
   },
   {
     "href": "./composition.html",
     "label": "Composition patterns",
     "description": "The consumer-assembly pattern map (build-time parsed from the composition-patterns skill's references) plus every shipped recipe page and the deeper compose-procedure skills (GH #1042).",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Layout & composition patterns"
   },
   {
     "href": "./choosing.html",
     "label": "Which component when",
     "description": "A quick chooser between components that overlap in purpose, condensed from the A2UI catalog's own guidance.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Foundations & reference"
   },
   {
     "href": "./events.html",
     "label": "Events",
     "description": "The closed seven-event vocabulary, UIElement.emit's bubbles/composed/cancelable mechanics, a per-control event inventory derived from every descriptor's events[], and a live ui-select + ui-switch event log.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Foundations & reference"
   },
   {
     "href": "./changelog.html",
     "label": "Changelog",
     "description": "The shipping summary of agent-ui's milestones, newest-first.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Foundations & reference"
   },
   {
     "href": "./super-shell.html",
     "label": "Super Shell",
     "description": "ui-super-shell is the shell-archetype family's grammar ceiling (M5): a two-level recursive frame \u2014 header/rails/panes/canvas/footer, all optional, header-hosted per-side collapse.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "App shells & surfaces"
   },
   {
     "href": "./chat-shell.html",
     "label": "Chat Shell",
     "description": "ui-chat-shell is a thin ui-super-shell preset for the chat archetype: header, nav-pane, content \u2014 no options side.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "App shells & surfaces"
   },
   {
     "href": "./workspace-shell.html",
     "label": "Workspace Shell",
     "description": "ui-workspace-shell is a thin ui-super-shell preset for the full outer-level workspace grammar: header, global-nav rail, nav-pane, section-nav, content, options-pane, options-section, global-options rail, footer.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "App shells & surfaces"
   },
   {
     "href": "./master-detail.html",
     "label": "Master Detail",
     "description": "ui-master-detail is a docked list | detail arrangement over the shipped ui-split, drilling into one record.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "App shells & surfaces"
   },
   {
     "href": "./settings.html",
     "label": "Settings",
     "description": "ui-settings is a sections rail + panel, composing ui-master-detail for a schema-driven settings surface.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "App shells & surfaces"
   },
   {
     "href": "./nav-rail.html",
     "label": "Nav Rail",
     "description": "ui-nav-rail is ONE navigation-rail primitive whose closed collapse enum picks its own narrow disposition: a top-layer flyout, a plain list, icon-only popovers, or anatomy-only drill-in.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "App shells & surfaces"
   },
   {
     "href": "./router-doc.html",
     "label": "Router",
     "description": "@agent-ui/router: a memory-first SPA router whose route state lives in a kernel signal.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Packages & seams"
   },
   {
     "href": "./surface-host-doc.html",
     "label": "Surface Host",
     "description": "ui-surface-host is the M2 mount/stream seam \u2014 wraps one @agent-ui/a2ui RendererHost, standalone-usable (SPEC-R3), with the GH #805 disable-on-action mechanics.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "App shells & surfaces"
   },
   {
     "href": "./conversation-doc.html",
     "label": "Conversation",
     "description": "ui-conversation is the M2 thread + composer + per-turn narration primitive, with an opt-in declarative composition mode (ADR-0180) for its header/dialog/composer bands.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "App shells & surfaces"
   },
   {
     "href": "./highlight-doc.html",
     "label": "Highlight",
     "description": "@agent-ui/code/highlight: a swappable syntax-highlighter registry plus seven bundled, zero-dependency tokenizers.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Packages & seams"
   },
   {
     "href": "./data-doc.html",
     "label": "Data",
     "description": "@agent-ui/data: a headless SaaS data layer \u2014 the DataSource seam, signal-backed resource()/mutation()/paginated(), the ./gateway client onion, and the ./stream Streamed<T> bridge.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Packages & seams"
   },
   {
     "href": "./traits-doc.html",
     "label": "Traits",
     "description": "@agent-ui/components' three published trait subpaths (./traits/overlay, ./traits/list-reorder, ./traits/scroll-spy) plus ./dogfood-frame \u2014 the (host, opts) => cleanup behaviours below controls, derived from source.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Packages & seams"
   },
   {
     "href": "./motion.html",
     "label": "View Transitions",
     "description": "ADR-0183's shared withViewTransition seam + its four opt-in surfaces (ui-super-shell, ui-surface-host, ui-drill, ui-router-outlet) \u2014 the opt-in law, per-surface tables, and the GH #1005 named-morph proof.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Packages & seams"
   },
   {
     "href": "./entry-list.html",
     "label": "Entry List",
     "description": "mountEntryList()/entry-data.ts \u2014 the headless ordered-entry-list primitive (ADR-0132/ADR-0164) reused by every agent-admin capability kind and the card-grid-drawer recipe, plus composer-options.ts and agent-admin-persona-patch.ts coverage.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Packages & seams"
   },
   {
     "href": "./persistence.html",
     "label": "Persistence",
     "description": "@agent-ui/shared's StorageAdapter seam (ADR-0193, proposed) \u2014 the async get/set/delete/keys interface, a live localStorage-tier demo, the IndexedDB tier, choosing a tier, and how it relates to ui-settings' own SettingsStore and to @agent-ui/data's in-memory cache.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Packages & seams"
   },
   {
     "href": "./agent-admin.html",
     "label": "Agent Admin",
     "description": "ui-agent-admin is a three-pane ui-split (chat canvas, prompts, settings) over ui-conversation and ui-settings, one shared SettingsStore, live-apply with no external model dependency.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Agent Admin"
   },
   {
     "href": "./agent-admin-app.html",
     "label": "Agent Admin App",
     "description": "The full ui-agent-admin composition at real viewport scale, no docs-site chrome \u2014 the six-persona A2UI-showcase surface exactly as it would ship in production.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Agent Admin"
   },
   {
     "href": "./devtools-harness.html",
     "label": "Devtools Harness",
     "description": "The chat & A2UI dev/debug harness (ADR-0200): three swappable backends behind one AgentTransport seam, the raw DevtoolsEvent NDJSON timeline, per-surface render-confirm verdicts, and capture export/import.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Agent Admin"
   },
   {
     "href": "./persona-library-pattern.html",
     "label": "Persona Library Pattern",
     "description": "Export a whole authored configuration as a shareable file, re-import it as a NEW library entry, never an overwrite \u2014 the reusable pattern behind agent-admin's persona export/import (GH #406).",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Agent Admin"
   },
   {
     "href": "./agent-schema.html",
     "label": "Agent Schema",
     "description": "The agentConfigSchema() config surface and the AgentConfigSnapshot turn-time read ui-agent-admin actually uses, derived live from agent-admin-schema.ts, plus pointers to the persona/entry-library/preset shapes.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Agent Admin"
   },
   {
     "href": "./layout-overview.html",
     "label": "Layout Primitives",
     "description": "The structural layout family \u2014 ui-row, ui-column, ui-list, ui-grid \u2014 sharing the UIContainerElement base and gap/align/justify props.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Layout & composition patterns"
   },
   {
     "href": "./a2ui-canvas.html",
@@ -382,14 +423,16 @@
     "label": "SaaS Data Workbench",
     "description": "A data table + filter toolbar + record-edit modal + agent-summary card composed entirely from published fleet primitives inside ui-workspace-shell \u2014 the M-A flagship composition proof (GH #461).",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "SaaS compositions"
   },
   {
     "href": "./dashboard.html",
     "label": "Support Dashboard",
     "description": "Stat cards + a bar chart + a read-only table + an agent-summary card composed entirely from published fleet primitives inside ui-workspace-shell \u2014 the fleet's second SaaS composition, proving the data-app posture generalizes (GH #499).",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "SaaS compositions"
   },
   {
     "href": "./a2a-tic-tac-toe.html",
@@ -417,7 +460,8 @@
     "label": "Gallery",
     "description": "Every shipped component, browsable and filterable in one live grid.",
     "level": "L2",
-    "section": "Guides"
+    "section": "Guides",
+    "group": "Meta"
   },
   {
     "href": "./changelog.html",

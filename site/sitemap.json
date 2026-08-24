@@ -6,7 +6,8 @@
       "url": "./attachment-doc.html",
       "description": "A non-interactive compact file card showing a category glyph, name, and formatted size for one attached file.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Feed & status"
     },
     {
       "name": "Audio",
@@ -14,7 +15,8 @@
       "url": "./audio-doc.html",
       "description": "A URL-sourced audio player — the native <audio controls>, no custom chrome, intrinsic UA player height.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Typography & media primitives"
     },
     {
       "name": "Avatar",
@@ -22,7 +24,8 @@
       "url": "./avatar-doc.html",
       "description": "A compact circular identity mark that shows a photo, initials, or a fallback glyph for one person.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Feed & status"
     },
     {
       "name": "Badge",
@@ -30,7 +33,8 @@
       "url": "./badge-doc.html",
       "description": "A non-interactive status tag with an intent-keyed color and a matching non-color glyph.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Data & reporting"
     },
     {
       "name": "Bar Chart",
@@ -38,7 +42,8 @@
       "url": "./bar-chart-doc.html",
       "description": "An axis-free horizontal bar list that compares magnitudes with a printed value, no ticks or legend.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Charts & data visuals"
     },
     {
       "name": "Breadcrumb",
@@ -46,7 +51,8 @@
       "url": "./breadcrumb-doc.html",
       "description": "A wayfinding trail of ordered crumb links ending in the current page — tag-agnostic author children, an optional slotted separator template, an auto-stamped current-page leaf, and an optional `collapse=\"menu\"` fold of the middle behind a composed overflow menu.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Data & reporting"
     },
     {
       "name": "Button",
@@ -54,7 +60,8 @@
       "url": "./button-doc.html",
       "description": "ui-button is the reference FACE control — a light-DOM custom element that renders an activatable button.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Actions & selection controls"
     },
     {
       "name": "Calendar",
@@ -62,7 +69,8 @@
       "url": "./calendar-doc.html",
       "description": "A month-grid date picker form control that selects a single date or a start/end date range.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Text & value entry"
     },
     {
       "name": "Card",
@@ -70,7 +78,8 @@
       "url": "./card-doc.html",
       "description": "ui-card is the surface container of the G9 layout family — the first non-form container with a default plane.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Containers & chrome"
     },
     {
       "name": "Checkbox",
@@ -78,7 +87,8 @@
       "url": "./checkbox-doc.html",
       "description": "ui-checkbox is a FACE form-associated Indicator-class control (extends UIIndicatorElement → UIFormElement, ADR-0042).",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Actions & selection controls"
     },
     {
       "name": "Choice Card",
@@ -86,7 +96,8 @@
       "url": "./choice-card-doc.html",
       "description": "The rich option unit of the `choice` family — the WHOLE card is the hit target and the a11y unit; no selection commit of its own (the owning ui-choice-group commits).",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Actions & selection controls"
     },
     {
       "name": "Choice Group",
@@ -94,7 +105,8 @@
       "url": "./choice-group-doc.html",
       "description": "A form-associated rich-card selection container — a committed choice over agent-composed ui-choice-card option cards, single or multi.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Actions & selection controls"
     },
     {
       "name": "Code",
@@ -102,7 +114,8 @@
       "url": "./code-doc.html",
       "description": "A zero-machinery block that displays verbatim, whitespace-preserved code with its own horizontal scroll.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Content & code"
     },
     {
       "name": "Code Editor",
@@ -110,7 +123,8 @@
       "url": "./code-editor-doc.html",
       "description": "A form-associated, editable-first source editor with markdown syntax highlighting — a plain contenteditable surface that CodeMirror 6 progressively enhances (lazy-loaded, ADR-0139), with an opt-in richtext live-preview mode (decoration-rendered over the SAME document, ADR-0147); the editor counterpart of the display-only ui-code.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Content & code"
     },
     {
       "name": "Color Picker",
@@ -118,7 +132,8 @@
       "url": "./color-picker-doc.html",
       "description": "A color-input control combining a 2D chroma-lightness pad, three channel sliders, and an editable readout.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Text & value entry"
     },
     {
       "name": "Column",
@@ -135,7 +150,8 @@
       "url": "./column-chart-doc.html",
       "description": "A category-major stacked (or dense single-series) column chart with a nice-number axis, a projected/ghost trailing column, a now-marker, and a static highlight callout.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Charts & data visuals"
     },
     {
       "name": "Combo Box",
@@ -143,7 +159,8 @@
       "url": "./combo-box-doc.html",
       "description": "ui-combo-box is a FACE form-associated combo-box: a contenteditable text input + a top-layer listbox panel (Popover API).",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Overlays & pickers"
     },
     {
       "name": "Command Modal",
@@ -151,7 +168,8 @@
       "url": "./command-modal-doc.html",
       "description": "ui-command-modal is a Pattern-class UIElement coordinator — the classic CMD-K command palette.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Overlays & pickers"
     },
     {
       "name": "Description List",
@@ -159,7 +177,8 @@
       "url": "./description-list-doc.html",
       "description": "ui-description-list is the key–value receipt primitive (ADR-0201, GH #1185): a Display-class leaf that renders a record — per row a label on the secondary plan…",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Data & reporting"
     },
     {
       "name": "Disclosure",
@@ -167,7 +186,8 @@
       "url": "./disclosure-doc.html",
       "description": "A one-line summary that expands or collapses its content, built on the native <details> element.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Content & code"
     },
     {
       "name": "Drawer",
@@ -175,7 +195,8 @@
       "url": "./drawer-doc.html",
       "description": "ui-drawer is an edge-docked modal container built on the native <dialog> element opened with showModal() (ADR-0188, re-applying the ADR-0017 <dialog> machinery…",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Containers & chrome"
     },
     {
       "name": "Drill",
@@ -183,7 +204,8 @@
       "url": "./drill-doc.html",
       "description": "A contained, card-like container that drills down an N-level selection tree — the active level slides in over its dimmed, inert ancestor by default (stack presentation), with a Back affordance and a bindable path.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Containers & chrome"
     },
     {
       "name": "Field",
@@ -191,7 +213,8 @@
       "url": "./field-doc.html",
       "description": "ui-field is the visible label / description / error wrapper around ONE slotted form control.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Form composition"
     },
     {
       "name": "File Drop",
@@ -199,7 +222,8 @@
       "url": "./file-drop-doc.html",
       "description": "ui-file-drop is the fleet's file-input affordance (extends UIFormElement, ADR-0210 — the ADR-0112 cl.1 fence opened) — a dropzone + picker button + committed-f…",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Feed & status"
     },
     {
       "name": "Form Popover",
@@ -207,7 +231,8 @@
       "url": "./form-popover-doc.html",
       "description": "ui-form-popover is a pattern-tier control that packages the ui-popover + form-spine composition recipe (GH #294's first design leg) as one tag: a control-creat…",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Overlays & pickers"
     },
     {
       "name": "Form Provider",
@@ -215,7 +240,8 @@
       "url": "./form-provider-doc.html",
       "description": "ui-form-provider is the fleet's first context/provider primitive — a pure coordination layer over UIFormElement descendants (ADR-0050).",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Form composition"
     },
     {
       "name": "Gauge",
@@ -223,7 +249,8 @@
       "url": "./gauge-doc.html",
       "description": "A multi-ring radial gauge — concentric, independent 0-100 progress rings (never part-of-whole) with a real-DOM label/value legend column.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Charts & data visuals"
     },
     {
       "name": "Grid",
@@ -240,7 +267,8 @@
       "url": "./icon-doc.html",
       "description": "ui-icon is the Display-class icon primitive — the declarative consumer surface over the @agent-ui/icons adapter (ADR-0065/0066).",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Typography & media primitives"
     },
     {
       "name": "Image",
@@ -248,7 +276,8 @@
       "url": "./image-doc.html",
       "description": "A URL-sourced image with a reserved aspect-ratio box (zero CLS), native lazy-loading, and an optional bottom scrim for overlay caption content.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Typography & media primitives"
     },
     {
       "name": "Ladder",
@@ -256,7 +285,8 @@
       "url": "./ladder-doc.html",
       "description": "A labeled list of dimensional tiers shown as literal-length bars alongside their printed values.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Charts & data visuals"
     },
     {
       "name": "Line Chart",
@@ -264,7 +294,8 @@
       "url": "./line-chart-doc.html",
       "description": "An axis-bearing line or area chart with a value-range baseline; the default state shows always-shown min/max labels, the opt-in `axes` state shows nice-number gridlines + tick/category chips + a gradient area fill + a provisional/now-marker system, single-series, hand-rolled inline SVG.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Charts & data visuals"
     },
     {
       "name": "List",
@@ -281,7 +312,8 @@
       "url": "./markdown-doc.html",
       "description": "ui-markdown is the Display-class, flagship element of the code+prose family (ADR-0119, M1) — it renders the agent-common markdown subset into real fleet DOM, s…",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Content & code"
     },
     {
       "name": "Menu",
@@ -289,7 +321,8 @@
       "url": "./menu-doc.html",
       "description": "A keyboard-navigable overlay menu opened from a trigger, with roving focus and type-ahead selection.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Overlays & pickers"
     },
     {
       "name": "Modal",
@@ -297,7 +330,8 @@
       "url": "./modal-doc.html",
       "description": "ui-modal is a modal dialog built on the native <dialog> element opened with showModal() (ADR-0017).",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Containers & chrome"
     },
     {
       "name": "Multi Select",
@@ -305,7 +339,8 @@
       "url": "./multi-select-doc.html",
       "description": "ui-multi-select is a multi-select FIELD — an always-visible, non-overlay listbox whose [role=option] rows paint a CSS-only checkmark on selection, toggled by p…",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Overlays & pickers"
     },
     {
       "name": "Otp Field",
@@ -313,7 +348,8 @@
       "url": "./otp-field-doc.html",
       "description": "A segmented N-cell one-time-code entry field — one focusable editable surface, N presentational cells, auto-advance/backspace-walk/arrow traversal under a no-gaps invariant, and full/partial paste-split.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Text & value entry"
     },
     {
       "name": "Pagination",
@@ -321,7 +357,8 @@
       "url": "./pagination-doc.html",
       "description": "A standalone page navigator — previous/next plus a windowed page-number list with ellipsis, composing ui-button for every stop.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Data & reporting"
     },
     {
       "name": "Pie Chart",
@@ -329,7 +366,8 @@
       "url": "./pie-chart-doc.html",
       "description": "A part-of-whole ring (donut, default) or solid pie chart with a printed-percent key list, identity carried by order + label + percent, never hue alone.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Charts & data visuals"
     },
     {
       "name": "Playing Card",
@@ -337,7 +375,8 @@
       "url": "./playing-card-doc.html",
       "description": "A true standard playing card — corner indices + a real suit-pip field or letter treatment, red/black inks, a CSS-painted back — as a fixed-bridge-aspect display leaf that flips on faceDown and deals in on insertion.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Containers & chrome"
     },
     {
       "name": "Popover",
@@ -345,7 +384,8 @@
       "url": "./popover-doc.html",
       "description": "ui-popover is a disclosure popover built on the Overlay controller (overlay-controller.lld.md · ADR-0043) and the native Popover API.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Overlays & pickers"
     },
     {
       "name": "Progress",
@@ -353,7 +393,8 @@
       "url": "./progress-doc.html",
       "description": "ui-progress is the Display-class thin-rail progress bar (feed family v1, ADR-0112) — bar-only task progress with a native-<progress>-shaped value model.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Feed & status"
     },
     {
       "name": "Radio",
@@ -361,7 +402,8 @@
       "url": "./radio-doc.html",
       "description": "A single radio-button control, typically grouped inside a ui-radio-group for exclusive selection.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Actions & selection controls"
     },
     {
       "name": "Radio Group",
@@ -369,7 +411,8 @@
       "url": "./radio-group-doc.html",
       "description": "A form-associated container that gives its ui-radio children exclusive selection and roving-focus navigation.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Actions & selection controls"
     },
     {
       "name": "Ramp",
@@ -377,7 +420,8 @@
       "url": "./ramp-doc.html",
       "description": "An ordered strip of color cells, each labeled with real accessible text, showing a tonal or palette series.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Charts & data visuals"
     },
     {
       "name": "Rating",
@@ -385,7 +429,8 @@
       "url": "./rating-doc.html",
       "description": "ui-rating is a FACE form-associated Indicator-class Range control (extends UIRangeElement → UIFormElement, ADR-0042/ADR-0216) that carries a numeric value with…",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Text & value entry"
     },
     {
       "name": "Row",
@@ -402,7 +447,8 @@
       "url": "./sandbox-frame-doc.html",
       "description": "The sandboxed containment host for free-form, agent-authored HTML/CSS/JS (GenUI) — one native iframe, a closed postMessage bridge, and a fail-closed never-paint law.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Overlays & pickers"
     },
     {
       "name": "Segment",
@@ -410,7 +456,8 @@
       "url": "./segment-doc.html",
       "description": "The child button of ui-segmented-control, rendering only its label while the host supplies all geometry.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Actions & selection controls"
     },
     {
       "name": "Segmented Control",
@@ -418,7 +465,8 @@
       "url": "./segmented-control-doc.html",
       "description": "A joined-button single-select toggle with one shared, animated highlight sliding between segments.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Actions & selection controls"
     },
     {
       "name": "Select",
@@ -426,7 +474,8 @@
       "url": "./select-doc.html",
       "description": "ui-select is a single-select form control built on the Overlay controller (overlay-controller.lld.md · ADR-0043), rovingFocus, and selectionCommit.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Overlays & pickers"
     },
     {
       "name": "Service Card",
@@ -434,7 +483,8 @@
       "url": "./service-card-doc.html",
       "description": "The availability-stated service/agent launch card — ONE bindable boolean (available) drives the status dot, title mute, and the Open⟷Unavailable action swap together.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Containers & chrome"
     },
     {
       "name": "Slider",
@@ -442,7 +492,8 @@
       "url": "./slider-doc.html",
       "description": "ui-slider is a FACE form-associated Indicator-class Range control (extends UIRangeElement → UIFormElement, ADR-0042).",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Text & value entry"
     },
     {
       "name": "Slider Multi",
@@ -450,7 +501,8 @@
       "url": "./slider-multi-doc.html",
       "description": "ui-slider-multi is a FACE form-associated Range-class control (extends UIRangeElement → UIFormElement, ADR-0042).",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Text & value entry"
     },
     {
       "name": "Source List",
@@ -458,7 +510,8 @@
       "url": "./source-list-doc.html",
       "description": "Source attribution as one aggregate leaf — a numbered list of {href, title, snippet?} sources, index markers assigned by array position, each entry's href gated by the fleet's safe-href scheme allowlist.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Data & reporting"
     },
     {
       "name": "Sparkline",
@@ -466,7 +519,8 @@
       "url": "./sparkline-doc.html",
       "description": "An inline, axis-free line or area mark that shows the shape of a numeric series at a glance.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Charts & data visuals"
     },
     {
       "name": "Split",
@@ -492,7 +546,8 @@
       "url": "./stat-doc.html",
       "description": "ui-stat is the Display-class metric tile (ADR-0111, report family v1) — label + value + optional delta + optional caption as real, selectable DOM text.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Data & reporting"
     },
     {
       "name": "Status Stream",
@@ -500,7 +555,8 @@
       "url": "./status-stream-doc.html",
       "description": "A live status strip that streams work-in-progress entries and tail-follows the newest arrival.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Feed & status"
     },
     {
       "name": "Suggestions",
@@ -508,7 +564,8 @@
       "url": "./suggestions-doc.html",
       "description": "ui-suggestions is the one-shot follow-up/next-prompt chip set (ADR-0213, GH #1393) — a Pattern-class leaf that renders suggestions (a bindable array of {label,…",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Data & reporting"
     },
     {
       "name": "Swatch",
@@ -516,7 +573,8 @@
       "url": "./swatch-doc.html",
       "description": "A bordered color box that shows one resolved color value alongside its token name as accessible text.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Charts & data visuals"
     },
     {
       "name": "Swiper",
@@ -524,7 +582,8 @@
       "url": "./swiper-doc.html",
       "description": "ui-swiper is a CSS-native (scroll-snap) carousel family — the fleet's first scroll-snap surface (ADR-0124).",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Carousel"
     },
     {
       "name": "Swiper Item",
@@ -541,7 +600,8 @@
       "url": "./swiper-label-doc.html",
       "description": "ui-swiper-label is an author-placed anchor whose light-DOM text becomes the owning ui-swiper's accessible name (swiper-family.lld.md LLD-C11, SPEC-R15).",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Carousel"
     },
     {
       "name": "Swiper Paddles",
@@ -549,7 +609,8 @@
       "url": "./swiper-paddles-doc.html",
       "description": "An author-placed anchor that the owning ui-swiper fills with previous/next navigation buttons.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Carousel"
     },
     {
       "name": "Swiper Pagination",
@@ -557,7 +618,8 @@
       "url": "./swiper-pagination-doc.html",
       "description": "ui-swiper-pagination is an author-placed anchor the owning ui-swiper fills and wires wherever it is written (swiper-family.lld.md LLD-C9).",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Carousel"
     },
     {
       "name": "Switch",
@@ -565,7 +627,8 @@
       "url": "./switch-doc.html",
       "description": "ui-switch is the FACE switch indicator control (extends UIIndicatorElement, ADR-0013): a pill track + sliding thumb representing a boolean ON/OFF value.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Actions & selection controls"
     },
     {
       "name": "Table",
@@ -573,7 +636,8 @@
       "url": "./table-doc.html",
       "description": "A data table with typed columns and record rows, rendered as a real native HTML table — with opt-in row selection, per-column sort, filter/search state, and pagination (all default OFF).",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Data & reporting"
     },
     {
       "name": "Tabs",
@@ -581,7 +645,8 @@
       "url": "./tabs-doc.html",
       "description": "A tab strip and panel container that switches visible content via keyboard-navigable, roving-focus tabs.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Containers & chrome"
     },
     {
       "name": "Text",
@@ -589,7 +654,8 @@
       "url": "./text-doc.html",
       "description": "ui-text is the Display-class text primitive — a light-DOM custom element rendering text on the fleet's M3-derived type scale.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Typography & media primitives"
     },
     {
       "name": "Text Field",
@@ -597,7 +663,8 @@
       "url": "./text-field-doc.html",
       "description": "A form-associated text input with a contenteditable surface supporting thirteen typed input variants.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Text & value entry"
     },
     {
       "name": "Textarea",
@@ -605,7 +672,8 @@
       "url": "./textarea-doc.html",
       "description": "A form-associated multi-line text input with a contenteditable surface — a long-form editable primitive, and a sibling of ui-text-field, not one of its modes.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Text & value entry"
     },
     {
       "name": "Theme Provider",
@@ -613,7 +681,8 @@
       "url": "./theme-provider-doc.html",
       "description": "A coordination element that establishes a color-scheme, scale, and density subtree for its descendants.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Form composition"
     },
     {
       "name": "Timeline",
@@ -621,7 +690,8 @@
       "url": "./timeline-doc.html",
       "description": "A static, authored chronology of ui-timeline-item rows showing an order history or audit trail.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Feed & status"
     },
     {
       "name": "Timeline Item",
@@ -629,7 +699,8 @@
       "url": "./timeline-item-doc.html",
       "description": "One rail row in a timeline or status stream, showing a status marker, label, timestamp, and optional detail.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Feed & status"
     },
     {
       "name": "Toast",
@@ -637,7 +708,8 @@
       "url": "./toast-doc.html",
       "description": "A self-expiring, non-interrupting notification card shown in the platform's top layer via ui-toast-region.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Feed & status"
     },
     {
       "name": "Toast Region",
@@ -654,7 +726,8 @@
       "url": "./toggle-doc.html",
       "description": "ui-toggle is a light-DOM pressed-state pill button (extends UIElement, ADR-0179 GH #686 Amendment S7-a) — icon + label + an optional orthogonal state icon, tog…",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Actions & selection controls"
     },
     {
       "name": "Toolbar",
@@ -662,7 +735,8 @@
       "url": "./toolbar-doc.html",
       "description": "A flex action bar that arranges the consumer's own controls with role=toolbar and arrow-key roving focus.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Containers & chrome"
     },
     {
       "name": "Tooltip",
@@ -670,7 +744,8 @@
       "url": "./tooltip-doc.html",
       "description": "ui-tooltip is a non-modal tooltip built on the Overlay controller (overlay-controller.lld.md · ADR-0043) and the native Popover API (popover=manual).",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Overlays & pickers"
     },
     {
       "name": "Video",
@@ -678,294 +753,336 @@
       "url": "./video-doc.html",
       "description": "A URL-sourced video player — the native <video controls> in a reserved aspect-ratio box (zero CLS), poster support, no custom chrome.",
       "level": "L1",
-      "section": "Components"
+      "section": "Components",
+      "group": "Typography & media primitives"
     },
     {
       "name": "Getting started",
       "url": "./getting-started.html",
       "description": "How to consume agent-ui in your own app: the workspace packages and the one load-bearing CSS import order.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Foundations & reference"
     },
     {
       "name": "Accessibility",
       "url": "./accessibility.html",
       "description": "Roles/state via ElementInternals, focus + roving tabindex, landmarks, live regions, reduced motion, and how a consumer labels a control.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Foundations & reference"
     },
     {
       "name": "Testing guide",
       "url": "./testing-guide.html",
       "description": "The jsdom/browser vitest harness, the shared @agent-ui/shared/testing/dialog-polyfill stub, when a real-engine run is required, and the ElementInternals/ARIA assertion idiom.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Foundations & reference"
     },
     {
       "name": "Theming",
       "url": "./theming.html",
       "description": "One theming subtree, three live axes: scheme (light/dark), scale, and density.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Foundations & reference"
     },
     {
       "name": "Token reference",
       "url": "./tokens.html",
       "description": "Every colour role across every family, the numbered tonal primitives, plus the dimensional ramp.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Foundations & reference"
     },
     {
       "name": "Sizing & density",
       "url": "./sizing.html",
       "description": "Control geometry is an explicit (scale x size) lookup, never a multiplier; density touches spacing only.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Foundations & reference"
     },
     {
       "name": "Forms",
       "url": "./forms.html",
       "description": "A form-provider coordinating three field-wrapped controls, one working example narrated concern by concern.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Forms & identity flows"
     },
     {
       "name": "Registration & sign in",
       "url": "./credentials.html",
       "description": "Sign-up and sign-in forms over ui-form-provider/ui-field, wired to a real in-memory identity-mock-transport in a dev/preview build (GH #490, ADR-0176).",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Forms & identity flows"
     },
     {
       "name": "Magic link sign in",
       "url": "./magic-link.html",
       "description": "Request a magic link, confirm the demo's stand-in for clicking the emailed link, and reach the signed-in state — the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Forms & identity flows"
     },
     {
       "name": "One-time code sign in",
       "url": "./otp-signin.html",
       "description": "Request a one-time code, enter it into ui-otp-field (auto-verifying on completion, no submit button), resend with a real per-email cooldown, and reach the signed-in state — the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Forms & identity flows"
     },
     {
       "name": "Social sign in",
       "url": "./social-signin.html",
       "description": "Choose a provider, walk a simulated redirect + callback round trip, complete or cancel the sign-in, and reach the signed-in state — the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Forms & identity flows"
     },
     {
       "name": "Onboarding",
       "url": "./onboarding.html",
       "description": "Advance/back/skip through a first-run step shell (Welcome / Workspace name / Choose a theme) with a discrete step-N-of-M progress readout, gated on an existing demo session — the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Forms & identity flows"
     },
     {
       "name": "Onboarding checklist",
       "url": "./onboarding-checklist.html",
       "description": "The checklist-onboarding composition recipe: card + list + checkbox + progress bound to a plain signals store, matched to onboarding-first-run.flow.json — the mint-last proof that no ui-stepper is needed (GH #961).",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Forms & identity flows"
     },
     {
       "name": "Card grid + drawer edit",
       "url": "./card-grid-drawer.html",
       "description": "The card-grid + edit-via-drawer composition recipe: ui-grid + ui-card + ui-drawer, a buffered record form, and a page-owned dirty-state/discard-confirm convention (recipe-level, not a fleet ADR) — extracted from the agent-admin entry-list/entry-form shape (GH #917/#947, PR #948; GH #965).",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Layout & composition patterns"
     },
     {
       "name": "Sticky TOC content layout",
       "url": "./toc-content.html",
       "description": "A long-form article + a scroll-spy'd ui-nav-rail sidebar, swapped to a ui-select below the ADR-0150 compact line — the TOC-corpus composition recipe (heading-derived entries, the new scrollSpy trait), and the mint-last proof that no ui-toc control is needed (GH #964).",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Layout & composition patterns"
     },
     {
       "name": "Account settings",
       "url": "./account-settings.html",
       "description": "A generic account SettingsSchema rendered by the shipped ui-settings — view preferences, edit and save one through the SettingsStore — behind a must-be-signed-in gate reading the SAME in-memory identity-mock-transport as Registration & sign in (GH #615, ADR-0176).",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Forms & identity flows"
     },
     {
       "name": "Composition patterns",
       "url": "./composition.html",
       "description": "The consumer-assembly pattern map (build-time parsed from the composition-patterns skill's references) plus every shipped recipe page and the deeper compose-procedure skills (GH #1042).",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Layout & composition patterns"
     },
     {
       "name": "Which component when",
       "url": "./choosing.html",
       "description": "A quick chooser between components that overlap in purpose, condensed from the A2UI catalog's own guidance.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Foundations & reference"
     },
     {
       "name": "Events",
       "url": "./events.html",
       "description": "The closed seven-event vocabulary, UIElement.emit's bubbles/composed/cancelable mechanics, a per-control event inventory derived from every descriptor's events[], and a live ui-select + ui-switch event log.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Foundations & reference"
     },
     {
       "name": "Changelog",
       "url": "./changelog.html",
       "description": "The shipping summary of agent-ui's milestones, newest-first.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Foundations & reference"
     },
     {
       "name": "Super Shell",
       "url": "./super-shell.html",
       "description": "ui-super-shell is the shell-archetype family's grammar ceiling (M5): a two-level recursive frame — header/rails/panes/canvas/footer, all optional, header-hosted per-side collapse.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "App shells & surfaces"
     },
     {
       "name": "Chat Shell",
       "url": "./chat-shell.html",
       "description": "ui-chat-shell is a thin ui-super-shell preset for the chat archetype: header, nav-pane, content — no options side.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "App shells & surfaces"
     },
     {
       "name": "Workspace Shell",
       "url": "./workspace-shell.html",
       "description": "ui-workspace-shell is a thin ui-super-shell preset for the full outer-level workspace grammar: header, global-nav rail, nav-pane, section-nav, content, options-pane, options-section, global-options rail, footer.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "App shells & surfaces"
     },
     {
       "name": "Master Detail",
       "url": "./master-detail.html",
       "description": "ui-master-detail is a docked list | detail arrangement over the shipped ui-split, drilling into one record.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "App shells & surfaces"
     },
     {
       "name": "Settings",
       "url": "./settings.html",
       "description": "ui-settings is a sections rail + panel, composing ui-master-detail for a schema-driven settings surface.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "App shells & surfaces"
     },
     {
       "name": "Nav Rail",
       "url": "./nav-rail.html",
       "description": "ui-nav-rail is ONE navigation-rail primitive whose closed collapse enum picks its own narrow disposition: a top-layer flyout, a plain list, icon-only popovers, or anatomy-only drill-in.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "App shells & surfaces"
     },
     {
       "name": "Router",
       "url": "./router-doc.html",
       "description": "@agent-ui/router: a memory-first SPA router whose route state lives in a kernel signal.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Packages & seams"
     },
     {
       "name": "Surface Host",
       "url": "./surface-host-doc.html",
       "description": "ui-surface-host is the M2 mount/stream seam — wraps one @agent-ui/a2ui RendererHost, standalone-usable (SPEC-R3), with the GH #805 disable-on-action mechanics.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "App shells & surfaces"
     },
     {
       "name": "Conversation",
       "url": "./conversation-doc.html",
       "description": "ui-conversation is the M2 thread + composer + per-turn narration primitive, with an opt-in declarative composition mode (ADR-0180) for its header/dialog/composer bands.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "App shells & surfaces"
     },
     {
       "name": "Highlight",
       "url": "./highlight-doc.html",
       "description": "@agent-ui/code/highlight: a swappable syntax-highlighter registry plus seven bundled, zero-dependency tokenizers.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Packages & seams"
     },
     {
       "name": "Data",
       "url": "./data-doc.html",
       "description": "@agent-ui/data: a headless SaaS data layer — the DataSource seam, signal-backed resource()/mutation()/paginated(), the ./gateway client onion, and the ./stream Streamed<T> bridge.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Packages & seams"
     },
     {
       "name": "Traits",
       "url": "./traits-doc.html",
       "description": "@agent-ui/components' three published trait subpaths (./traits/overlay, ./traits/list-reorder, ./traits/scroll-spy) plus ./dogfood-frame — the (host, opts) => cleanup behaviours below controls, derived from source.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Packages & seams"
     },
     {
       "name": "View Transitions",
       "url": "./motion.html",
       "description": "ADR-0183's shared withViewTransition seam + its four opt-in surfaces (ui-super-shell, ui-surface-host, ui-drill, ui-router-outlet) — the opt-in law, per-surface tables, and the GH #1005 named-morph proof.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Packages & seams"
     },
     {
       "name": "Entry List",
       "url": "./entry-list.html",
       "description": "mountEntryList()/entry-data.ts — the headless ordered-entry-list primitive (ADR-0132/ADR-0164) reused by every agent-admin capability kind and the card-grid-drawer recipe, plus composer-options.ts and agent-admin-persona-patch.ts coverage.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Packages & seams"
     },
     {
       "name": "Persistence",
       "url": "./persistence.html",
       "description": "@agent-ui/shared's StorageAdapter seam (ADR-0193, proposed) — the async get/set/delete/keys interface, a live localStorage-tier demo, the IndexedDB tier, choosing a tier, and how it relates to ui-settings' own SettingsStore and to @agent-ui/data's in-memory cache.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Packages & seams"
     },
     {
       "name": "Agent Admin",
       "url": "./agent-admin.html",
       "description": "ui-agent-admin is a three-pane ui-split (chat canvas, prompts, settings) over ui-conversation and ui-settings, one shared SettingsStore, live-apply with no external model dependency.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Agent Admin"
     },
     {
       "name": "Agent Admin App",
       "url": "./agent-admin-app.html",
       "description": "The full ui-agent-admin composition at real viewport scale, no docs-site chrome — the six-persona A2UI-showcase surface exactly as it would ship in production.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Agent Admin"
     },
     {
       "name": "Devtools Harness",
       "url": "./devtools-harness.html",
       "description": "The chat & A2UI dev/debug harness (ADR-0200): three swappable backends behind one AgentTransport seam, the raw DevtoolsEvent NDJSON timeline, per-surface render-confirm verdicts, and capture export/import.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Agent Admin"
     },
     {
       "name": "Persona Library Pattern",
       "url": "./persona-library-pattern.html",
       "description": "Export a whole authored configuration as a shareable file, re-import it as a NEW library entry, never an overwrite — the reusable pattern behind agent-admin's persona export/import (GH #406).",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Agent Admin"
     },
     {
       "name": "Agent Schema",
       "url": "./agent-schema.html",
       "description": "The agentConfigSchema() config surface and the AgentConfigSnapshot turn-time read ui-agent-admin actually uses, derived live from agent-admin-schema.ts, plus pointers to the persona/entry-library/preset shapes.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Agent Admin"
     },
     {
       "name": "Layout Primitives",
       "url": "./layout-overview.html",
       "description": "The structural layout family — ui-row, ui-column, ui-list, ui-grid — sharing the UIContainerElement base and gap/align/justify props.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Layout & composition patterns"
     },
     {
       "name": "A2UI Canvas",
@@ -1063,14 +1180,16 @@
       "url": "./workbench.html",
       "description": "A data table + filter toolbar + record-edit modal + agent-summary card composed entirely from published fleet primitives inside ui-workspace-shell — the M-A flagship composition proof (GH #461).",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "SaaS compositions"
     },
     {
       "name": "Support Dashboard",
       "url": "./dashboard.html",
       "description": "Stat cards + a bar chart + a read-only table + an agent-summary card composed entirely from published fleet primitives inside ui-workspace-shell — the fleet's second SaaS composition, proving the data-app posture generalizes (GH #499).",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "SaaS compositions"
     },
     {
       "name": "A2A Tic-Tac-Toe Arena",
@@ -1098,7 +1217,8 @@
       "url": "./gallery.html",
       "description": "Every shipped component, browsable and filterable in one live grid.",
       "level": "L2",
-      "section": "Guides"
+      "section": "Guides",
+      "group": "Meta"
     },
     {
       "name": "Changelog",

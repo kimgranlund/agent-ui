@@ -22,10 +22,15 @@
 // row (site/pages/_page.ts's ungrouped site-level GUIDE posture) — unaffected by this change, since
 // `packages/agent-ui/router/src/controls` was never added to L1_TREES.
 //
-// Optional `group` field (GH #1600) — a within-section cluster narrower than `section`, present only where
-// site/pages/_page.ts's NAV (mirrored by site/main.ts's CARD_GROUPS) actually folds multiple pages under one
-// shared label; see L1_FOLD_GROUPS below for why this stays a small hand-kept map rather than a parse of
-// NAV itself (a Node script cannot import Vite-transformed TS).
+// Optional `group` field (GH #1600) — a within-section cluster narrower than `section`, so neither
+// "Components (84)" nor "Guides (44)" ever reads as one flat list. Kim's ruling (2026-08-23): "add the
+// taxonomy to NAV itself, then derive" — site/pages/_page.ts's NAV is the one source of truth for the
+// L1 (Components) grouping (mirrored below as L1_TAXONOMY, byte-identical to _page.ts's own
+// `NAV_TAXONOMY` export — a Node script cannot import Vite-transformed TS, the same constraint
+// generate-llms-full.mjs already lives under); the L2 (Guides) grouping lives directly on each row in
+// site/lib/site-manifest.json (the single-owner manifest generateL2AndStubs already reads `row.group`
+// from unchanged) — the NAV array's own "GUIDE cluster" comments named these same boundaries before this
+// field existed, this just makes them machine-readable data instead of prose.
 
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -36,32 +41,55 @@ const repoRootFromScript = () => fileURLToPath(new URL('..', import.meta.url))
 
 const L1_TREES = ['packages/agent-ui/components/src/controls', 'packages/agent-ui/code/src']
 
-// L1_FOLD_GROUPS — the ONE place site/pages/_page.ts's NAV array (and site/main.ts's CARD_GROUPS, the same
-// shape) actually shares a single label across MULTIPLE distinct component tags, rather than one label per
-// tag (GH #1600): the "Layout primitives" bundle (row/column/list/grid/toast-region/split/split-pane/
-// swiper-item — each folded in one at a time, per that array's own inline history: ADR-0112's ui-toast-region,
-// ADR-0120 cl.2's ui-split/ui-split-pane, ADR-0124's ui-swiper-item). Every OTHER L1 tag stands alone in NAV
-// (its own single-tag group), so it carries no `group` at all here — reusing NAV as the one source of truth
-// (Kim, 2026-08-23) means never synthesizing a second, broader taxonomy (Forms/Data display/…) NAV itself
-// does not carry. Keep this list in lockstep with _page.ts's own 'Layout primitives' NavGroup if that bundle
-// ever grows or splits — there is no shared import (a Node script cannot import the Vite-transformed TS NAV
-// array, the same constraint L1 generation as a whole already lives under).
-const L1_FOLD_GROUPS = {
+// L1_TAXONOMY — the semantic cluster every L1 (Components) tag belongs to, one label per group, MIRRORED
+// byte-identical to site/pages/_page.ts's own `NAV_TAXONOMY` export (that file is the one source of truth
+// this data was authored against; a Node script cannot import Vite-transformed TS, so the object is
+// duplicated here rather than shared — the same constraint L1 generation as a whole already lives under).
+// 12 groups over 56 tags, each narrower than the flat "Components" section: no single component group grows
+// past ~9 tags, so the rail's Components band always shows real sub-headers instead of one long list.
+const L1_TAXONOMY = {
+  'Actions & selection controls': [
+    'ui-button', 'ui-toggle', 'ui-checkbox', 'ui-switch', 'ui-radio', 'ui-radio-group',
+    'ui-choice-group', 'ui-choice-card', 'ui-segment', 'ui-segmented-control',
+  ],
+  'Text & value entry': [
+    'ui-text-field', 'ui-textarea', 'ui-otp-field', 'ui-slider', 'ui-slider-multi', 'ui-rating',
+    'ui-color-picker', 'ui-calendar',
+  ],
+  'Charts & data visuals': [
+    'ui-sparkline', 'ui-bar-chart', 'ui-line-chart', 'ui-pie-chart', 'ui-column-chart', 'ui-gauge',
+    'ui-swatch', 'ui-ramp', 'ui-ladder',
+  ],
+  'Typography & media primitives': ['ui-text', 'ui-icon', 'ui-image', 'ui-video', 'ui-audio'],
   'Layout primitives': [
-    'ui-row',
-    'ui-column',
-    'ui-list',
-    'ui-grid',
-    'ui-toast-region',
-    'ui-split',
-    'ui-split-pane',
+    'ui-row', 'ui-column', 'ui-list', 'ui-grid', 'ui-toast-region', 'ui-split', 'ui-split-pane',
     'ui-swiper-item',
   ],
+  'Containers & chrome': [
+    'ui-card', 'ui-tabs', 'ui-modal', 'ui-drawer', 'ui-toolbar', 'ui-service-card', 'ui-playing-card',
+    'ui-drill',
+  ],
+  'Overlays & pickers': [
+    'ui-popover', 'ui-tooltip', 'ui-menu', 'ui-select', 'ui-multi-select', 'ui-form-popover',
+    'ui-combo-box', 'ui-command-modal', 'ui-sandbox-frame',
+  ],
+  'Form composition': ['ui-field', 'ui-form-provider', 'ui-theme-provider'],
+  'Data & reporting': [
+    'ui-table', 'ui-stat', 'ui-description-list', 'ui-source-list', 'ui-badge', 'ui-pagination',
+    'ui-suggestions', 'ui-breadcrumb',
+  ],
+  'Content & code': ['ui-code', 'ui-code-editor', 'ui-markdown', 'ui-disclosure'],
+  'Feed & status': [
+    'ui-progress', 'ui-avatar', 'ui-attachment', 'ui-file-drop', 'ui-toast', 'ui-timeline-item',
+    'ui-timeline', 'ui-status-stream',
+  ],
+  Carousel: ['ui-swiper', 'ui-swiper-pagination', 'ui-swiper-paddles', 'ui-swiper-label'],
 }
 
-/** groupOf — the L1_FOLD_GROUPS label `tag` folds into, or undefined when `tag` stands alone in NAV. */
+/** groupOf — the L1_TAXONOMY label `tag` belongs to; every L1 tag is covered (unlike the prior single-
+ *  bundle map, this is total over L1_TREES, not just the one folded label). */
 function groupOf(tag) {
-  for (const [label, tags] of Object.entries(L1_FOLD_GROUPS)) {
+  for (const [label, tags] of Object.entries(L1_TAXONOMY)) {
     if (tags.includes(tag)) return label
   }
   return undefined
