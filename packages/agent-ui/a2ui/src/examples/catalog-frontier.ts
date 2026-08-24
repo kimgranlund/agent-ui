@@ -1286,11 +1286,11 @@ export const buttonIconActionsSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: BUTTON_ICON_ACTIONS_ID,
         components: [
-          { id: 'root', component: 'Card', elevation: '1', children: ['content'] },
-          { id: 'content', component: 'CardContent', children: ['row'] },
-          { id: 'row', component: 'Row', justify: 'between', align: 'center', gap: 'md', children: ['message', 'actions'] },
+          { id: 'root', component: 'Card', elevation: '1', children: ['content', 'footer'] },
+          { id: 'content', component: 'CardContent', children: ['message'] },
           { id: 'message', component: 'Text', text: 'Your export is ready.' },
-          { id: 'actions', component: 'Row', gap: 'sm', children: ['btn_download', 'btn_dismiss'] },
+          { id: 'footer', component: 'CardFooter', children: ['actions'] },
+          { id: 'actions', component: 'Row', justify: 'end', gap: 'sm', children: ['btn_download', 'btn_dismiss'] },
           {
             id: 'btn_download', component: 'Button', variant: 'soft',
             icon: 'download-simple', label: 'Download',
