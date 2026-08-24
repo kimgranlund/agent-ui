@@ -173,25 +173,30 @@ entry blocks another this firing.)
   present this compute pass.
 - **Size**: ~2 minutes.
 
-### 4.3 claude-plugins#929 — ratify-only-flip hash gap; RE-FILED correct repo, build dispatched (2026-08-24, marshal session)
-- **Action**: seven firings (2026-08-17 through 2026-08-24) carried this pin citing
+### 4.3 claude-plugins#929/#931 — ratify-only-flip hash gap — CLOSED, pin RETIRED (2026-08-24)
+- **Resolution**: seven firings (2026-08-17 through 2026-08-24) carried this pin citing
   `kimgranlund/nonoun-plugins#46` — that repo is NOT this marketplace's live source (verified
   2026-08-24 against `.claude/plugins/known_marketplaces.json`: the `nonoun-plugins` marketplace
-  resolves to `kimgranlund/claude-plugins`; the harness plugin's `adr_checkpoint.py` lives there,
-  confirmed on disk at the marketplace checkout). Re-filed correctly as
-  `kimgranlund/claude-plugins#929` (dedup-swept clean first — never previously filed there); the
-  stale original closed with a pointer. A `build-cp929` seat is dispatched against a fresh scratch
-  clone of `claude-plugins` (never the plugin-manager's own auto-updating marketplace checkout) to
-  widen the hash basis to include the amendment's own ratification marker line. INTERIM PIN stays
-  until #929 closes: on ratifying an amendment on an already-accepted ADR with no body-byte change,
-  the host re-dispatches decision-watcher with an explicit "re-judge adr-00NN amendment"
-  instruction.
-- **Owner**: claude-plugins upstream (the script fix, in flight) · dispatching host (the pin, per
-  firing) · Kim (merging the upstream PR once reviewed).
+  resolves to `kimgranlund/claude-plugins`). Re-filed correctly as `kimgranlund/claude-plugins#929`,
+  the stale original closed with a pointer. `build-cp929` widened `adr_checkpoint.py`'s hash basis
+  to include the amendment's own ratification-marker line (new `amendment_ratification_markers()`),
+  harness bumped 3.18.6 → 3.18.7. Reviewed clear-to-merge (independently re-verified: reproduction
+  claim confirmed true against the real cited agent-ui commit, non-regressive, correctly scoped to
+  the table dialect only) and merged as PR #931, 2026-08-24T19:33:24Z. Issue #929 closed.
+  **INTERIM PIN RETIRED** — the fix is live in the installed harness build; no further re-judge
+  workaround needed on future amendment ratifications.
+- **Open note (non-blocking, from the builder's own investigation):** the original "zero-byte-change"
+  premise could not be reproduced against the pre-fix code for the real cited case (agent-ui's
+  ADR-0160 ratify commit) — `decision_content()`'s existing section scan already included the
+  amendment heading's marker text. The fix ships anyway as genuine structural hardening (now an
+  explicit, independently-tested signal rather than incidental inclusion), but whether the original
+  decision-watcher report ever correctly diagnosed a real gap is unresolved. Not reopening — no
+  live symptom to chase, and the hardening is correct regardless of the original diagnosis.
+- **Owner**: closed — no further owner. Merged by Kim's standing merge authorization.
 - **Evidence**: `.claude/plugins/known_marketplaces.json` (marketplace→repo resolution);
-  `kimgranlund/claude-plugins#929` (correct, live issue); `kimgranlund/nonoun-plugins#46` (closed,
-  wrong-repo pointer).
-- **Size**: 0 minutes here; small tooling task upstream, already dispatched.
+  `kimgranlund/claude-plugins#929`/PR #931 (merged 2026-08-24T19:33:24Z); `kimgranlund/nonoun-plugins#46`
+  (closed, wrong-repo pointer).
+- **Size**: closed — 0 minutes remaining.
 - **Process lesson**: a citation naming a repo should be verified against the actual installed
   marketplace source before being carried forward across firings — a plausible-sounding repo name
   is not proof it's the live one. See memory `verify-marketplace-repo-before-citing` (host-scope,
