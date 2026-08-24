@@ -106,3 +106,11 @@ verbatim from the selected options:
    awaiting-approval → approved, matching brief §3's 2026-08-17 record).
 3. PRD-G4/PRD-G5: **hold at `building`** — a witnessed end-to-end run recorded in goals.md is
    required before flipping to shipped (M-A/M-B/M-C dated-evidence convention).
+
+## 2026-08-24 — Revalidation-mode RDD source (amends the 2026-08-20 ADR/IDR-only ruling)
+
+Kim ruled (live AskUserQuestion, session agent-ui-90, sweep 2026-08-24T03:15:36Z / plan 3.1):
+mint `.claude/docs/rdd/` as an accepted zero-RDD placeholder so revalidation_checkpoint.py's
+now-mandatory three-source check passes. The 2026-08-20 ruling's intent (no real RDD tier in this
+repo) stands; only its mechanical realization changes. Future firings: an empty rdd/ is correct,
+never a gap finding.
