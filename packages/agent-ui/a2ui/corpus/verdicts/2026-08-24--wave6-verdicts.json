@@ -1,0 +1,40 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.2",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-08-24",
+  "verdicts": {
+    "frontier-greet-card": {
+      "qualityScore": 4,
+      "passed": true,
+      "failingDimensions": []
+    },
+    "frontier-breadcrumb-trail": {
+      "qualityScore": 4,
+      "passed": true,
+      "failingDimensions": []
+    },
+    "frontier-button-icon-actions": {
+      "qualityScore": 2,
+      "passed": false,
+      "failingDimensions": [
+        "D1"
+      ]
+    },
+    "frontier-column-chart-revenue": {
+      "qualityScore": 4,
+      "passed": true,
+      "failingDimensions": []
+    },
+    "frontier-gauge-system-load": {
+      "qualityScore": 4,
+      "passed": true,
+      "failingDimensions": []
+    },
+    "frontier-line-chart-axes-weekly-sales": {
+      "qualityScore": 4,
+      "passed": true,
+      "failingDimensions": []
+    }
+  }
+}
