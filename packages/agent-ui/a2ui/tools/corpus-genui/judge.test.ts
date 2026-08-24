@@ -145,6 +145,7 @@ describe('judge — --dry-run never calls the judge model, writes nothing (GH #1
     expect(result.ok).toBe(true)
     expect(result.verdicts).toEqual({})
     expect(result.parseFailures).toEqual([])
+    expect(result.pendingCount).toBe(1) // GH #1611: dry-run stays informative post-#1608's short-circuit
     expect(result.outPath).toBeDefined()
     expect(() => readFileSync(join(repoRoot, result.outPath!), 'utf8')).toThrow()
   })

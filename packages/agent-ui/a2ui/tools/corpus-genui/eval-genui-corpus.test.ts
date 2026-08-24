@@ -4,7 +4,7 @@
 // documented invocation, `node --experimental-strip-types eval-genui-corpus.ts <leg>`); an unknown
 // `--model` exits 2 naming `resolvePair`'s reason.
 
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import { spawnSync } from 'node:child_process'
 import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -77,6 +77,22 @@ describe('runCli — an unknown --model exits 2, naming resolvePair\'s reason', 
     // NOTE: no ANTHROPIC_API_KEY in env either — proving model validation runs FIRST regardless.
     const code = await runCli(['generate', '--model', 'nonsense-model'], repoRoot, {})
     expect(code).toBe(2)
+  })
+})
+
+describe('runCli — judge --dry-run --calibrate: dry-run surfaces first, never dropped by the calibrate branch (GH #1611)', () => {
+  it('prints the pendingCount/outPath line, never the calibrate-only line, and exits 0', async () => {
+    repoRoot = makeTempRepoRoot()
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    try {
+      const code = await runCli(['judge', '--dry-run', '--calibrate'], repoRoot, { ANTHROPIC_API_KEY: 'fake-key-never-used' })
+      expect(code).toBe(0)
+      const lines = logSpy.mock.calls.map((call) => String(call[0]))
+      expect(lines.some((line) => line.startsWith('judge --dry-run:'))).toBe(true)
+      expect(lines.some((line) => line.startsWith('judge --calibrate:'))).toBe(false) // never the dropped branch
+    } finally {
+      logSpy.mockRestore()
+    }
   })
 })
 
