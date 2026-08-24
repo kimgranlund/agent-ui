@@ -215,8 +215,8 @@ describe('corpus-genui-data — prompts.json rules (LLD-C2 n2a)', () => {
     prompts: { id: string; packId: string; promptText: string }[]
   }
 
-  it('version 1, 12 prompts (4 per pack x 3 packs)', () => {
-    expect(promptSet.promptSetVersion).toBe(1)
+  it('version 2, 12 prompts (4 per pack x 3 packs)', () => {
+    expect(promptSet.promptSetVersion).toBe(2)
     expect(promptSet.prompts).toHaveLength(12)
   })
 

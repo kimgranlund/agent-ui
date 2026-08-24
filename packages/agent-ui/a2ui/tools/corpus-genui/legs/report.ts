@@ -8,6 +8,7 @@
 import type { GenuiCorpusRecord } from '../../../src/corpus-genui/record.ts'
 import type { GenuiArchivedVerdict } from '../../../src/corpus-genui/verdicts.ts'
 import { loadGenuiRecords, loadGenuiVerdictArchive, loadPrompts, readRubricVersion, writeIndexJson } from '../fs.ts'
+import type { LoadedGenuiRecord } from '../fs.ts'
 // The pure, node-free TYPE shape lives in src/corpus-genui/index-shape.ts (a browser/site consumer type-
 // imports it directly from there, never from here — this Node shell's own node:*/fs.ts imports would
 // otherwise drag into the site's type program, the `site/tsconfig.json` "no node types" constraint).
@@ -42,6 +43,40 @@ function rowOf(record: GenuiCorpusRecord, archive: ReadonlyMap<string, GenuiArch
 
 function mean(values: readonly number[]): number {
   return values.length === 0 ? 0 : values.reduce((a, b) => a + b, 0) / values.length
+}
+
+/** A cell key over `(promptId, packId)` — `packId` is `null` for the control arm; ` ` never occurs
+ *  in either field so this is collision-free. */
+function cellKey(promptId: string, packId: string | null): string {
+  return `${promptId} ${packId ?? ''}`
+}
+
+export interface CellOverflow {
+  promptId: string
+  packId: string | null
+  count: number
+}
+
+/** The report-time retry/reset guard (LLD §5 amendment, 2026-08-24): a `(promptId, packId)` cell carrying
+ *  MORE than 3 records means a re-run piled up on top of a prior one instead of clearing it first — never
+ *  silently cleared or deduped here (no data is deleted implicitly), always a hard rejection naming the
+ *  offending cells so an operator clears `records/v1/*.jsonl` for exactly those cells before re-running.
+ *  Chosen over silently keeping the newest 3: that would let the 2-of-3 majority floor loosen to
+ *  2-of-N as retries accumulate, exactly the drift this guard exists to prevent. */
+export function findCellOverflow(loaded: readonly LoadedGenuiRecord[]): CellOverflow[] {
+  const counts = new Map<string, number>()
+  for (const { record } of loaded) {
+    const key = cellKey(record.promptId, record.packId)
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+  const overflow: CellOverflow[] = []
+  for (const [key, count] of counts) {
+    if (count > 3) {
+      const [promptId, packIdRaw] = key.split(' ') as [string, string]
+      overflow.push({ promptId, packId: packIdRaw === '' ? null : packIdRaw, count })
+    }
+  }
+  return overflow.sort((a, b) => (a.promptId < b.promptId ? -1 : a.promptId > b.promptId ? 1 : 0))
 }
 
 /**
@@ -81,13 +116,33 @@ export function deriveGenuiCorpusIndex(repoRoot: string, opts?: { now?: () => st
         minScore: Math.min(...packScores),
       }
     }
+
+    // D2 (2026-08-24 LLD §5 amendment, genui-b3-judged-eval.lld.md v0.2): the floor reads per CELL
+    // (promptId, packId), not per record. `--runs 3` means every cell is a small sample, not a single
+    // coin flip; strict every-record-passes also gets monotonically harder as n grows (a p=0.9 model
+    // passes a 12-cell floor at n=1 ~28% of the time, at n=3 ~2% — a defective metric, not a stricter
+    // one). A cell passes iff >=2 of its (at most 3) records score qualityScore>=4; an E_NO_GENUI miss
+    // never becomes a record at all, so it counts by ABSENCE — a cell with fewer than 2 passing records
+    // fails the floor whether the shortfall is a low score or a miss. Cells are enumerated from
+    // `prompts.json` itself (every prompt is pack-conditioned; 4 per pack x 3 packs = 12), not from
+    // whatever records happen to exist, so a cell with ZERO judged records still counts as failing —
+    // the exact "invisible miss" defect this amendment fixes.
+    const passingRunsByCell = new Map<string, number>()
+    for (const { record } of judgedPackConditioned) {
+      if (record.meta.qualityScore! >= 4) {
+        const key = cellKey(record.promptId, record.packId)
+        passingRunsByCell.set(key, (passingRunsByCell.get(key) ?? 0) + 1)
+      }
+    }
+    const floorMet = promptSet.prompts.every((p) => (passingRunsByCell.get(cellKey(p.id, p.packId)) ?? 0) >= 2)
+
     m3 = {
       judged: judgedPackConditioned.length,
       passed: passedCount,
       passRate: passedCount / judgedPackConditioned.length,
       minScore: Math.min(...scores),
       meanScore: mean(scores),
-      floorMet: scores.every((s) => s >= 4),
+      floorMet,
       perPack,
       ...(judgedControl.length > 0
         ? {
@@ -140,9 +195,24 @@ export interface ReportResult {
   index: GenuiCorpusIndex
   text: string
   summary: string
+  /** Present only on the E_CELL_OVERFLOW rejection below — the leg's own named-error shape (the
+   *  `collect` leg's `setupError` precedent), never thrown. */
+  cellOverflow?: CellOverflow[]
 }
 
 export function runReportLeg(repoRoot: string, opts: ReportOptions): ReportResult {
+  // The retry/reset guard runs BEFORE deriving anything — a cell over the 3-record cap means a prior
+  // run's records were never cleared, and computing a floor over inflated cells would silently let the
+  // 2-of-3 majority loosen to 2-of-N. Reject whole, write nothing, name every offending cell.
+  const overflow = findCellOverflow(loadGenuiRecords(repoRoot))
+  if (overflow.length > 0) {
+    const index = deriveGenuiCorpusIndex(repoRoot, { now: opts.now }) // still computed, for visibility
+    const lines = [
+      `E_CELL_OVERFLOW: ${overflow.length} cell(s) exceed the 3-record cap — clear these before re-running:`,
+      ...overflow.map((o) => `  (promptId=${o.promptId}, packId=${o.packId ?? 'control'}): ${o.count} records — clear records/v1/*.jsonl entries for this cell`),
+    ]
+    return { ok: false, index, text: stableStringify(index), summary: lines.join('\n'), cellOverflow: overflow }
+  }
   const index = deriveGenuiCorpusIndex(repoRoot, { now: opts.now })
   const text = stableStringify(index)
   if (!opts.dryRun) writeIndexJson(repoRoot, text)

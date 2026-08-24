@@ -1,5 +1,5 @@
 {
-  "promptSetVersion": 1,
+  "promptSetVersion": 2,
   "prompts": [
     {
       "id": "animated-explainers-1",
@@ -24,22 +24,22 @@
     {
       "id": "data-viz-layouts-1",
       "packId": "data-viz-layouts",
-      "promptText": "Compare monthly revenue across our four regions, and call out the top performer."
+      "promptText": "Compare monthly revenue across our four regions: NA $182k, EMEA $141k, APAC $96k, LATAM $54k. Call out the top performer."
     },
     {
       "id": "data-viz-layouts-2",
       "packId": "data-viz-layouts",
-      "promptText": "Give me a quick snapshot of active users, churn rate, and average session length for this week."
+      "promptText": "Give me a quick snapshot of this week's numbers: 8,412 active users, 3.2% churn rate, and an average session length of 6m 40s."
     },
     {
       "id": "data-viz-layouts-3",
       "packId": "data-viz-layouts",
-      "promptText": "Rank our five best-selling products by units sold, and show total units sold this month as a headline number."
+      "promptText": "Rank our five best-selling products by units sold this month: Widget A 1,240, Widget B 980, Widget C 875, Widget D 610, Widget E 402. Show total units sold this month as a headline number."
     },
     {
       "id": "data-viz-layouts-4",
       "packId": "data-viz-layouts",
-      "promptText": "Compare Q1 vs Q2 spend across our three departments, and highlight the department that grew the most."
+      "promptText": "Compare Q1 vs Q2 spend across our three departments: Engineering $210k to $265k, Sales $150k to $172k, Marketing $95k to $88k. Highlight the department that grew the most."
     },
     {
       "id": "interactive-widgets-1",
