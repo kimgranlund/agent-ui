@@ -91,3 +91,29 @@ We implement nested radius in **pure CSS, one level deep**. Three clauses (decom
 - **Same radius at every level (ignore concentricity)** — rejected: the inner corner visibly bows away from the
   outer at the diagonal; the one-level decrement fixes the common case for free, so there is no reason to ship the
   wrong look.
+
+## Amendment — cl.1 token name repointed to `--md-sys-shape-corner-base` (2026-08-24, ADR-0140 rename)
+
+Clauses 2 and 3 (the cycle-free two-token publish/read split — `--ui-card-inner-radius` computed on self,
+`--ui-card-child-radius` published to `> *` — and the one-level-only decrement with manual reseed past depth 1)
+are unaffected by this amendment and remain byte-identical.
+
+Clause 1 named the shared chain-root token as `--ui-radius-base`. **ADR-0140** (ratified 2026-07-18) migrated
+the entire shared foundation tier from `--ui-*` to `--md-sys-*` (slot names stable, family names swapped, no
+value change) — its mapping table renames this family specifically:
+
+- `--ui-radius-base` → **`--md-sys-shape-corner-base`**
+
+Restated under the current name:
+
+- **Clause 1 — Root radius from `--md-sys-shape-corner-base`.** A `ui-card` with no ancestor card rounds to
+  `border-radius: var(--ui-card-radius, var(--md-sys-shape-corner-base))` (the shared token, ADR-0140 —
+  originally seeded by ADR-0015 as `--ui-radius-base`). An author may override with an explicit `border-radius`
+  (or `--ui-card-radius`) — that becomes the chain root.
+
+The decision of clause 1 does not change — only the token ID the repo-wide rename already carried out under
+ADR-0140. Every prose reference to `--ui-radius-base` elsewhere in this document (the Decision text above, the
+header table's "Relates" line, the Consequences section) is historical narrative describing the state at time
+of writing and is left as originally authored, per ADR mutability rules — this amendment is the current-names
+restatement of record. `card.css` itself has consumed the renamed declaration since ADR-0140 landed; no code
+change accompanies this amendment.
