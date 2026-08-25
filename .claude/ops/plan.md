@@ -1,97 +1,98 @@
 <!-- target-path: .claude/ops/plan.md -->
 # Ops plan — agent-ui
 
-- **Dispatch**: 2026-08-24T17:08:45Z sweep firing (chore-planner, /sweep-chores — seat findings
-  attached for three lanes: decision-watcher, issue-sorter, repo-cleaner; judged exactly those,
-  nothing refetched beyond the prior plan and the durable state those reports name by path —
-  `held-items.md`, `rulings.md`, `revalidation-queue.json`, `watch-checkpoint.json`).
-- **Evidence**: attached seat findings this firing —
-  `reports/2026-08-24T170845Z-issue-sorter.md` (7 items touched since the 2026-08-24T03:15:36Z
-  checkpoint, all trusted-author kimgranlund, all already resolved/merged/in-flight; one
-  observation — #1605 carries no severity label, pre-existing gap, not repaired, out of
-  discovery-only scope) · `reports/2026-08-24T170845Z-repo-cleaner.md` (one gated mutation
-  executed — `campaign_close.py 1607`, PR #1607's stray remote branch reaped and reverified gone;
-  local `main` was 1 commit behind `origin/main` at report time — RESOLVED by the dispatching
-  session same-session, fast-forwarded to `fff8e2d7` and a stray empty eval-verdict stub
-  discarded, confirmed live by `git log`/`git status` this compute pass: `main` now reads
-  `fff8e2d7 [origin/main]` clean, no stray untracked non-ops file remains; 0 open PRs, 1 live
-  worktree `build-1600` correctly kept; #1609's gitignore G1 rules now standing-accepted noise,
-  drops from future risk reporting) · `reports/2026-08-24T170845Z-decision-watcher.md` (Forward
-  mode clean no-op, 226/226 ADRs, nothing new; Revalidation mode sampled 5 claims, cursor 10→15 —
-  adr-0011/12/13/14 confirmed, adr-0015 FALSIFIED, queued to `revalidation-queue.json` owner
-  unassigned; new attention finding — `revalidation_checkpoint.py`'s IDR parser requires YAML
-  frontmatter this repo's IDR dialect never carries, so the IDR arm has sampled 0 claims ever,
-  distinct from the already-ruled-and-now-closed RDD placeholder gap) · `revalidation-queue.json`
-  (1 pending: adr-0015 falsified, owner unassigned) · `watch-checkpoint.json` (both `gh_issues`/
-  `gh_prs` advanced to 2026-08-24T17:08:45Z) · the prior plan (2026-08-24T03:15:36Z compose,
-  carry-forward only) and `held-items.md`/`rulings.md` (durable state, read for exact
-  carry-forward and ruling-conflict text, including the live-ruled 2026-08-24 entries covering the
-  RDD mint and the #1609/#1605/#1610 mobilize close-out).
-- **UNMEASURED**: none — all three seats reported successfully this firing; `gh` reachable
-  (issue-sorter's checkpoint advance, repo-cleaner's live `gh pr list`); no missing input. `[]`.
-- **Corrections vs the prior plan**:
-  - Prior 1.1 (land the 2026-08-24T03:15:36Z ops state) — **DONE**: commit `28151364` ("ops:
-    2026-08-24T03:15Z sweep state — ADR queue cleared, checkpoints advanced, plan refresh"),
+- **Dispatch**: 2026-08-25T00:59:54Z sweep firing (chore-planner, /sweep-chores — seat findings
+  attached for three lanes: issue-sorter, repo-cleaner as report files; decision-watcher via its
+  applied checkpoint/queue state directly, no separate report file this firing per the dispatch
+  brief). Judged those plus the prior plan (carry-forward only) and durable state
+  (`held-items.md`, `rulings.md`, `revalidation-queue.json`, `adr-checkpoint.json`,
+  `watch-checkpoint.json`); a light live-`gh` spot-check covered exactly the mandatory
+  backlog/roadmap parked-label scan on the two currently-open items and confirmation of the
+  dispatching host's own pre-planner cleanup (below) — nothing else refetched.
+- **Evidence**: `reports/2026-08-25T00:59:54Z-issue-sorter.md` (5 issues + 6 PRs since the
+  2026-08-24T17:08:45Z checkpoint, all trusted-author kimgranlund; 4 issues + 5 PRs already
+  resolved/merged before this window opened; #1618 relabeled `task`→`needs-ruling`, label minted
+  fresh) · `reports/2026-08-25T005954Z-repo-cleaner.md` (1 open PR #1617, healthy, live worktree
+  backing it; two findings — an orphaned worktree, a stale local branch — proposed-but-not-executed
+  by the seat, since resolved out-of-band, see Corrections) · decision-watcher's applied state:
+  `adr-checkpoint.json` (Forward mode: adr-0015 and adr-0129 hashes both advanced — amendment
+  activity), `revalidation-checkpoint.json` (cursor 15→20), `revalidation-queue.json`
+  (adr-0016/0019/0020 confirmed; adr-0017/adr-0018 newly falsified; adr-0015's row carries its own
+  embedded "amendment landed, queue-clear needed" note), `watch-checkpoint.json` (both sources
+  advanced to 2026-08-25T00:59:54Z) · the prior plan (2026-08-24T17:08:45Z compose, carry-forward
+  only) and `held-items.md`/`rulings.md` (durable state, read for exact carry-forward and ruling
+  text, including the live-ruled 2026-08-24 (17:xx) IDR-scope amendment).
+- **UNMEASURED**: none — all three seats reported successfully this firing (decision-watcher via
+  its applied state, no gap); `gh` reachable (issue-sorter's checkpoint advance; this compute
+  pass's own live spot-check). `[]`.
+- **Corrections vs the prior plan** (2026-08-24T17:08:45Z) — every entry resolved:
+  - Prior 1.1 (land the 2026-08-24T17:08:45Z ops state) — **DONE**: commit `fbdcdb18` ("ops:
+    2026-08-24T17:08Z sweep state — ADR-0015 falsified, IDR dialect gap flagged, plan refresh"),
     confirmed by `git log`. Superseded by this firing's own 1.1.
-  - Prior 3.1 (rule on the RDD-tier tension) — **DONE, resolved**: `rulings.md`'s "2026-08-24 —
-    Revalidation-mode RDD source" entry records Kim ruled live to mint `.claude/docs/rdd/` as an
-    accepted zero-RDD placeholder (the 2026-08-20 ruling's original intent stands, only the
-    mechanical realization changed); commit `1672354c` landed it; `.claude/docs/rdd/README.md`
-    confirmed present on disk this compute pass. Dropped.
-  - Prior 4.1 (#1609 — retire 6 stale G1 `.gitignore` rules) — **DONE, resolved out-of-band, NOT
-    as originally framed**: `rulings.md`'s "2026-08-24 — mobilize close-out rulings" #2 records
-    #1609 closed as **superseded** — the 2026-08-09 keep-list ruling stands, the six rules stay,
-    the recurring `gitignore_check.py` noise is accepted permanently rather than the rules being
-    removed. repo-cleaner confirms this firing: issue closed, tool keeps flagging by design, this
-    line drops from risk reporting going forward. Dropped — closed as won't-fix, not as
-    completed-per-original-spec.
-  - Prior 4.2 (reap the #1583 scratch clone) — **STILL OPEN, carried forward unchanged**: neither
-    seat touched it this firing, and `/var/folders/0b/jf4lh4jd4sd9y2q7x271c9jm0000gn/T/agent-ui-1583`
-    is still present on disk (confirmed, full checkout incl. `node_modules`, not reaped). Carries
-    as this firing's 4.2.
-  - Prior 4.3 (nonoun-plugins#46 ratify-only-flip hash gap) — **carried, unchanged**: no seat
-    carries cross-repo `nonoun-plugins` evidence this firing either; last live-verified OPEN
-    2026-08-20T22:43Z, now stale by **six** consecutive firings. Carried forward as this firing's
-    4.3, same interim pin.
-  - No entry dropped as parked — no carried id shows a `backlog`/`roadmap` label in this firing's
-    evidence.
-- **New this firing** (decision-watcher, Revalidation mode):
-  - adr-0015 **falsified** — cl.1-3 (elevation/brightness model, the `--ui-container-bg`/
-    `--ui-container-tint` seam) hold unchanged; cl.4/5 name `--ui-space-{...}`/`--ui-radius-base`,
-    which ADR-0140 (2026-07-18) renamed to `--md-sys-space-{...}`/`--md-sys-shape-corner-base` —
-    neither old name exists anywhere today. Mechanical, no decision fork (the seat's own "Next
-    command" names one clear path) — queues as new 4.1, hygiene debt, not a human-decision item.
-  - IDR frontmatter-dialect gap — `revalidation_checkpoint.py`'s IDR parser requires YAML
-    frontmatter (`doc-type: idr`, `status: locked`); this repo's `.claude/docs/idr/*.md` carries
-    none (H1+blockquote-status-table dialect, `proposed·accepted·superseded` vocabulary, no
-    `locked` state exists here at all). Result: the IDR arm has sampled **0 claims ever** since
-    inception — a genuine new tooling tension, not a re-surfacing of the closed RDD question (that
-    one was "no RDD tier exists"; this one is "an IDR tier exists but the tool can't read its
-    shape"). Queues as new 3.1, human-decision — three real forks, no single obviously-correct
-    mechanical path the way adr-0015 has one.
-- **New this firing** (issue-sorter): nothing new needing action — all 7 touched items (#1611
-  doing, #1609/#1605 closed, #1608 closed via merged #1610, PRs #1610/#1612/#1613 merged) were
-  already resolved, correctly-labeled records before this window opened. #1605's missing severity
-  label is a pre-existing gap on an existing record, flagged as observation only — out of a
-  discovery-only seat's scope to repair, and out of this plan's own scope (dev-backlog record
-  hygiene, not ops-mechanism debt, same treatment class as #1608 in the prior plan) — carried as a
-  standing note only, not queued.
-- **needs-ruling lane**: none — no `needs-ruling`-labeled GH issue in evidence this firing (the
-  IDR dialect gap is a direct decision-watcher/tooling-contract tension, not a GH-label-driven
-  lane, same class as last firing's RDD entry before it closed).
-- **Blocked-by convention (#193)**: neither new queue candidate (adr-0015's amendment, the IDR
-  ruling) is yet a minted GH issue with body text to check, and none of issue-sorter's 7 touched
-  items are new queue entries this firing — no `Blocked-by:` evidence either way; queue order
-  below is the plain (1)-(4) ranking, unmodified.
-- **Verdict**: another consolidation pass. The prior firing's one open human-decision item
-  (RDD-tier tension) resolved via Kim's live ruling and is now minted on disk; its hygiene item
-  (#1609) closed as won't-fix rather than fixed-as-specified; its ops-state landing confirmed.
-  What's left: one genuinely new human-decision item (the IDR frontmatter-dialect gap — 0 IDR
-  claims ever sampled), one new small hygiene fix (adr-0015's falsified cl.4/5 token names), one
-  still-open carried cleanup (#1583's scratch clone, confirmed still on disk), and the same stale
-  upstream pin (nonoun-plugins#46, now six firings stale). repo-cleaner ran one gated mutation
-  (PR #1607's branch reap) and the dispatching session resolved its one proposed-but-withheld item
-  (the main fast-forward) same-session; issue-sorter's pass was a clean 7-item no-op.
+  - Prior 3.1 (rule on the IDR frontmatter-dialect gap) — **DONE, resolved**: Kim ruled live,
+    same firing, before this plan's next compose (`rulings.md`'s "2026-08-24 (17:xx) —
+    Revalidation-mode scope, IDR-tier amendment" entry) — stays ADR-only until upstream
+    (`nonoun-plugins`) supports the frontmatter-free dialect; commit `34958349` landed the ops-state
+    acknowledgment. Dropped — not re-surfaced as a gap per the ruling's own instruction.
+  - Prior 4.1 (file a dated ADR-0015 amendment for falsified cl.4/5 token names) — **DONE, shipped
+    end-to-end**: issue #1614 filed and closed, PR #1615 merged, commit `97227ee0` ("docs(adr):
+    repoint ADR-0015 cl.4/5 token names to md-sys grammar (#1614) (#1615)") — confirmed live on
+    disk, `.claude/docs/adr/0015-container-surface-space-token-model.md:165` carries the dated
+    Amendment. Dropped as completed-per-spec. One follow-up surfaces new this firing below (the
+    `revalidation-queue.json` row itself still needs a human queue-clear — a distinct, smaller
+    action from the amendment work, which is done).
+  - Prior 4.2 (reap the #1583 scratch clone) — **DONE**: `/var/folders/0b/jf4lh4jd4sd9y2q7x271c9jm0000gn/T/agent-ui-1583`
+    confirmed absent this compute pass (`ls` — no such file or directory). Dropped, fully resolved.
+  - Prior 4.3 (nonoun-plugins#46 / claude-plugins#929 ratify-only-flip hash gap) — already closed
+    as of the prior plan itself (commits `9bb9f3fe`, `fa827447`); not carried forward as a numbered
+    entry.
+  - **Two findings resolved out-of-band, pre-planner** (not from the prior plan — new this firing,
+    already closed before this compute pass started): the dispatching host removed the orphaned
+    worktree `corpus-wave-6-seeds` (5 commits verified already on
+    `origin/a2ui-design-mode-triage-fixes` before removal) and deleted the stale local branch
+    `pr-1617-review` (0 unique commits vs. PR #1617's real branch, per repo-cleaner's own
+    verification) — both confirmed absent from `git worktree list`/`git branch -vv` this compute
+    pass. Not queued; already executed, noted for continuity only.
+  - No entry dropped as parked — live scan of the only two currently-open items (#1617, #1618)
+    carries neither `backlog` nor `roadmap` on either id.
+- **New this firing** (decision-watcher, via applied state):
+  - Forward mode: adr-0129's hash advanced — a NEW proposed Amendment 2 (shared artboard-core
+    extraction to `@agent-ui/app/artboard.{css,ts}`, zero behavior/public-API change), gated on
+    Kim's explicit ratify comment. issue-sorter minted issue #1618 `needs-ruling` for exactly this
+    gate this firing. Queues as new 3.1, human-decision, referenced by id only.
+  - Revalidation mode: cursor 15→20 — adr-0016/0019/0020 confirmed; **adr-0017 and adr-0018 both
+    falsified**, same drift class as adr-0015's now-closed gap (a stale token/prop name superseded
+    by a later ratified ADR): adr-0017's `[dismissable]` prop was inverted to `persistent` by
+    ADR-0020 (cl.1/2/4/5 stand); adr-0018's `--ui-radius-base` was renamed to
+    `--md-sys-shape-corner-base` by ADR-0140 (cl.2/3 stand). Both need a dated restatement
+    amendment mirroring adr-0015's own #1614/#1615 fix. Queues as new 4.1, hygiene debt.
+  - adr-0015's `revalidation-queue.json` row carries its own embedded note: the amendment is
+    confirmed landed, and the row "should be queue-cleared by a human" — decision-watcher flags
+    but never clears its own queue by design. Queues as new 4.2, hygiene debt (mechanical, tiny).
+- **New this firing** (issue-sorter): #1618 correctly relabeled `task`→`needs-ruling` (label minted
+  fresh, didn't exist before) — referenced in §3.1, not restated. All other 4 discovered issues +
+  5 of 6 PRs already resolved before this window opened — no action.
+- **New this firing** (repo-cleaner): 1 open PR (#1617), healthy — live worktree
+  `frontier-swiper-fixes` backs it, tracking `behind 2` (routine, ancestor-of, not a conflict), no
+  stale-open risk. The seat's two proposed-but-not-executed findings were resolved directly by the
+  dispatching host before this compute pass — see Corrections above.
+- **needs-ruling lane**: #1618 is this firing's one `needs-ruling`-labeled issue — referenced by id
+  in §3.1 below; the ratify-comment procedure and full amendment text live on the issue and on
+  ADR-0129's own `## Amendment (2026-08-24, proposed — Kim ratifies)` section
+  (`.claude/docs/adr/0129-app-surfaces-m2-composition-and-transport-boundary.md:70`), not restated
+  here.
+- **Blocked-by convention (#193)**: checked #1618's and #1617's bodies directly — neither carries a
+  `Blocked-by:` line. No queue entry sits behind a named blocker this firing; ranking is the plain
+  (1)-(4) order.
+- **Verdict**: full consolidation. Every entry carried from the prior plan (2026-08-24T17:08:45Z)
+  is now resolved end-to-end: its ops-state landing confirmed, its IDR ruling landed same-firing,
+  its ADR-0015 amendment task shipped issue→PR→live doc, its scratch-clone cleanup confirmed gone,
+  and its stale upstream pin stayed closed. Two more findings (an orphaned worktree, a stale review
+  branch) surfaced and were resolved out-of-band by the dispatching host before this compute pass
+  even started. What's left standing: one new human-decision item (ratify or decline ADR-0129
+  Amendment 2, gated on issue #1618) and two small new hygiene items (restate adr-0017/adr-0018
+  under current names; queue-clear adr-0015's now-resolved revalidation row). No blockers, no
+  parked drops, no UNMEASURED sections.
 
 Queue order: (1) gated mutations verified safe → (2) blockers → (3) human decisions → (4) hygiene.
 
@@ -99,134 +100,105 @@ Queue order: (1) gated mutations verified safe → (2) blockers → (3) human de
 
 ### 1.1 Land this firing's ops state — one commit, ops paths ONLY (dispatching host; 5 min)
 - **Action**: the seat outputs are already computed and on disk but not yet committed — `git add`
-  exactly: `.claude/ops/revalidation-checkpoint.json` (modified, cursor advanced to 15),
-  `.claude/ops/revalidation-queue.json` (modified, adr-0015:falsified queued),
-  `.claude/ops/watch-checkpoint.json` (modified, both sources advanced to 2026-08-24T17:08:45Z),
-  `.claude/ops/reports/2026-08-24T170845Z-decision-watcher.md` (new),
-  `.claude/ops/reports/2026-08-24T170845Z-issue-sorter.md` (new),
-  `.claude/ops/reports/2026-08-24T170845Z-repo-cleaner.md` (new), plus this plan's own payload
-  once applied — then commit on `main`. Do NOT stage `.claude/ops/sweep-in-flight.json` (this
-  sweep's own live marker, same exclusion as every prior firing).
+  exactly: `.claude/ops/adr-checkpoint.json` (modified, adr-0015/adr-0129 hash advance),
+  `.claude/ops/revalidation-checkpoint.json` (modified, cursor advanced to 20),
+  `.claude/ops/revalidation-queue.json` (modified, adr-0017/adr-0018 falsified rows added +
+  adr-0015's resolved-note appended), `.claude/ops/watch-checkpoint.json` (modified, both sources
+  advanced to 2026-08-25T00:59:54Z), `.claude/ops/reports/2026-08-25T00:59:54Z-issue-sorter.md`
+  (new), `.claude/ops/reports/2026-08-25T005954Z-repo-cleaner.md` (new), plus this plan's own
+  payload once applied — then commit on `main`. Do NOT stage
+  `.claude/ops/sweep-in-flight.json` (this sweep's own live marker, same exclusion as every prior
+  firing).
 - **Owner**: dispatching host (the ops-write split's dispatching session).
-- **Evidence**: `git status --porcelain` this firing (3 modified + 3 untracked ops paths,
-  confirmed live); `ops-write-sandbox-rules` (dispatcher applies + lands payloads).
+- **Evidence**: `git status --porcelain=v1 -b` this compute pass (4 modified + 2 untracked ops
+  report/queue paths, plus the excluded sweep marker, confirmed live); `ops-write-sandbox-rules`
+  (dispatcher applies + lands payloads).
 - **Size**: 5 minutes.
 
 ## 2. Blocking other work
 
-(none — repo-cleaner: 0 open PRs, one live worktree (`build-1600`, correctly kept — backs open
-issue #1600), primary back in sync with `origin/main` after the same-session fast-forward, no
-entry blocks another this firing.)
+(none — 1 open PR (#1617), healthy, live worktree backing it; primary exactly current with
+`origin/main` (0 ahead/0 behind); no entry blocks another this firing.)
 
 ## 3. Human-decision items
 
-### 3.1 Rule on the IDR frontmatter-dialect gap — Revalidation's IDR arm has sampled 0 claims ever (Kim; ~15 min) — new this firing
-- **Action**: decision-watcher's Revalidation mode reports `revalidation_checkpoint.py`'s IDR
-  parser hard-requires YAML frontmatter (`doc-type: idr`, `status: locked`) to identify a
-  sampleable claim. This repo's `.claude/docs/idr/*.md` carries no frontmatter at all — an
-  H1+blockquote-status-table dialect with `proposed·accepted·superseded` vocabulary, and no
-  `locked` state exists in this repo's IDR tier (idr-0005's own table confirms). Net effect: the
-  IDR arm of Revalidation mode has sampled 0 claims every firing since inception — a coverage gap
-  distinct from the RDD placeholder gap that closed 2026-08-24 (that one was "no RDD tier exists
-  here"; this one is "an IDR tier exists but the tool can't parse its shape"). Decide: (a) add
-  YAML frontmatter to this repo's existing IDR docs to match the tool's expectation (mechanical,
-  but changes every IDR doc's own format), (b) file an upstream bug against `nonoun-plugins`'
-  `revalidation_checkpoint.py` to support a frontmatter-free H1+blockquote-status-table IDR
-  dialect, or (c) formally scope Revalidation to ADR-only here (same shape as the closed RDD
-  ruling) until a real fix lands, amending the 2026-08-20 ruling a second time. Whichever path,
-  append a dated amendment to `rulings.md` recording it, so a future firing doesn't re-litigate.
-- **Owner**: Kim (the ruling) · whichever session applies it (mechanical once ruled — frontmatter
-  edits, an upstream issue filing, or a rulings.md amendment).
-- **Evidence**: decision-watcher's report this firing, "Attention — IDR dialect gap" section;
-  `.claude/ops/rulings.md` "Revalidation-mode scope — RULED 2026-08-20" and its 2026-08-24
-  amendment (the RDD half of this same tension, already closed).
-- **Size**: ~15 minutes (ruling + whichever mechanical fix).
+### 3.1 Ratify or decline ADR-0129 Amendment 2 — gated on issue #1618 (Kim; ~5 min to decide + comment) — new this firing
+- **Action**: decision text, tradeoffs, and the exact ratify procedure live entirely on issue
+  #1618 (`needs-ruling`, minted this firing by issue-sorter) and on ADR-0129's own
+  `## Amendment (2026-08-24, proposed — Kim ratifies)` section — referenced here, not restated
+  (ruled 2026-08-17: a needs-ruling issue is the single source of its own decision text). In
+  short: extract the shared ~40-line artboard visual core to `@agent-ui/app/artboard.{css,ts}`,
+  consumed by both `surface-host.{css,ts}` and the site's `canvas-surface.ts`, zero behavior/
+  public-API change. Post the literal comment `ratify ADR-0129 amendment` on #1618 to flip it (or
+  comment declining/proposing an alternative). Ratifying triggers
+  `scripts/adr_ratify.py 0129 <comment-url>` and a downstream build dispatch (6 files, bounded
+  refactor per the issue's own stated acceptance criteria) — that build is dev work, out of this
+  plan's own ops-mechanism scope once the ratify gate clears.
+- **Owner**: Kim (the ratify/decline decision) · whichever session runs `adr_ratify.py` once ruled.
+- **Evidence**: issue #1618 (OPEN, `needs-ruling`); `.claude/ops/adr-checkpoint.json` (`adr-0129`
+  hash advanced this firing — Forward mode confirms the amendment landed on disk, proposed);
+  `.claude/docs/adr/0129-app-surfaces-m2-composition-and-transport-boundary.md:70`.
+- **Size**: ~5 minutes for the ratify decision itself; the triggered build is separately sized
+  once dispatched.
 
 ## 4. Hygiene debt
 
-### 4.1 File a dated ADR-0015 amendment for the falsified cl.4/5 token names (any available dev; ~15 min) — new this firing
-- **Action**: `revalidation-queue.json` carries adr-0015 as falsified, owner unassigned. Cl.1-3
-  (elevation/brightness two-axis model, the `--ui-container-bg`/`--ui-container-tint` seam) remain
-  byte-identical and confirmed; only cl.4/5's literal token names drifted — they still read
-  `--ui-space-{...}`/`--ui-radius-base`, which ADR-0140 (2026-07-18) renamed to
-  `--md-sys-space-{...}`/`--md-sys-shape-corner-base`. No functional rework needed, only the
-  record's own text. File a task (`file-task`) to append a dated amendment to ADR-0015 restating
-  cl.4/5 under the current names, cross-referencing ADR-0140; once landed, the claim clears on
-  decision-watcher's next Revalidation pass.
-- **Owner**: any available dev (currently unclaimed — `revalidation-queue.json`'s own `owner`
-  field reads `"unassigned"`).
-- **Evidence**: `.claude/ops/revalidation-queue.json` (adr-0015 candidate, queued_at
-  2026-08-24T17:11:36Z); decision-watcher's report this firing, Revalidation-mode table + "Next
-  command" line.
-- **Size**: ~15 minutes (doc-only amendment + file-task overhead).
+### 4.1 File dated restatement amendments for ADR-0017 and ADR-0018 — same falsified-token/prop-name drift class as ADR-0015 (any available dev; ~20 min) — new this firing
+- **Action**: decision-watcher's Revalidation pass (cursor 15→20) falsified both:
+  - adr-0017 cl.3 still reads the pre-ADR-0020 `[dismissable]` prop name; ADR-0020 inverted it to
+    `persistent` (default OFF, presence-boolean) — confirmed live in `modal.ts`. Cl.1/2/4/5
+    (control-owned dialog part, open-driven `showModal()`/close, focus restore, dialog ARIA) stand,
+    byte-accurate. ADR-0017's own header already says "Superseded in part by ADR-0020" but the
+    Decision body text itself was never restated.
+  - adr-0018 cl.1 still reads `var(--ui-radius-base)`; ADR-0140 renamed the family to
+    `--md-sys-shape-corner-base` — confirmed live in `card.css`. Cl.2/3 (the cycle-free two-token
+    publish/read split, one-level-only decrement) stand, byte-accurate.
+  Same mechanical, no-decision-fork shape as adr-0015's own fix (issue #1614 → PR #1615, merged,
+  commit `97227ee0`) — file one task (or two, dev's choice) to append a dated amendment section to
+  each ADR restating the current names, cross-referencing ADR-0020/ADR-0140 respectively. Once
+  landed, both claims clear on decision-watcher's next Revalidation pass.
+- **Owner**: any available dev (currently unclaimed — both `revalidation-queue.json` rows read
+  `owner: "unassigned"`).
+- **Evidence**: `.claude/ops/revalidation-queue.json` (adr-0017/adr-0018 candidates, queued_at
+  2026-08-25T01:03:52Z); `.claude/docs/adr/0017-native-dialog-modal.md` header row;
+  `.claude/docs/adr/0018-css-one-level-nested-radius.md` cl.1; precedent commit `97227ee0`.
+- **Size**: ~20 minutes (two doc-only amendments + task-filing overhead).
 
-### 4.2 Reap the #1583 scratch clone left on disk (Kim or any non-sandboxed session; ~2 min) — carried, still open
-- **Action**: `/var/folders/0b/jf4lh4jd4sd9y2q7x271c9jm0000gn/T/agent-ui-1583` is still on disk
-  (confirmed this firing — full checkout incl. `node_modules`, not reaped) — `rm` was denied to
-  both the build seat and the marshal (sandboxing), per `held-items.md`'s 2026-08-23 resolutions
-  section. The ruling that produced this clone (#1583's budget ceiling) closed weeks ago (PR
-  #1588, merged) — this is pure leftover cleanup, not a pending decision. `rm -rf` the directory
-  from a session with full filesystem permission.
-- **Owner**: Kim, or any session not running under the write-sandbox.
-- **Evidence**: `.claude/ops/held-items.md` "Resolutions, 2026-08-23 (marshal refresh)" — "Reap
-  scratch clone ... manually (rm denied to seats and marshal)"; directory listing confirmed
-  present this compute pass.
+### 4.2 Queue-clear the adr-0015 row from revalidation-queue.json — amendment already landed (dispatching host or Kim; ~2 min) — new this firing
+- **Action**: adr-0015's own `revalidation-queue.json` entry carries a self-appended note: its
+  falsified cl.4/5 gap is now fixed on disk (issue #1614, PR #1615, commit `97227ee0`, confirmed
+  live this compute pass) — the row looks resolved, but decision-watcher never clears its own
+  queue by design (queue-clear is a human/host action). Remove the `adr-0015` object from the
+  `candidates` array in `.claude/ops/revalidation-queue.json` — leave `adr-0017`/`adr-0018` in
+  place.
+- **Owner**: dispatching host (mechanical) or Kim.
+- **Evidence**: `.claude/ops/revalidation-queue.json`'s own adr-0015 entry ("UPDATE 2026-08-25
+  sweep: ... this row looks resolved; a human should verify and queue-clear it");
+  `.claude/docs/adr/0015-container-surface-space-token-model.md:165` (the landed amendment).
 - **Size**: ~2 minutes.
-
-### 4.3 claude-plugins#929/#931 — ratify-only-flip hash gap — CLOSED, pin RETIRED (2026-08-24)
-- **Resolution**: seven firings (2026-08-17 through 2026-08-24) carried this pin citing
-  `kimgranlund/nonoun-plugins#46` — that repo is NOT this marketplace's live source (verified
-  2026-08-24 against `.claude/plugins/known_marketplaces.json`: the `nonoun-plugins` marketplace
-  resolves to `kimgranlund/claude-plugins`). Re-filed correctly as `kimgranlund/claude-plugins#929`,
-  the stale original closed with a pointer. `build-cp929` widened `adr_checkpoint.py`'s hash basis
-  to include the amendment's own ratification-marker line (new `amendment_ratification_markers()`),
-  harness bumped 3.18.6 → 3.18.7. Reviewed clear-to-merge (independently re-verified: reproduction
-  claim confirmed true against the real cited agent-ui commit, non-regressive, correctly scoped to
-  the table dialect only) and merged as PR #931, 2026-08-24T19:33:24Z. Issue #929 closed.
-  **INTERIM PIN RETIRED** — the fix is live in the installed harness build; no further re-judge
-  workaround needed on future amendment ratifications.
-- **Open note (non-blocking, from the builder's own investigation):** the original "zero-byte-change"
-  premise could not be reproduced against the pre-fix code for the real cited case (agent-ui's
-  ADR-0160 ratify commit) — `decision_content()`'s existing section scan already included the
-  amendment heading's marker text. The fix ships anyway as genuine structural hardening (now an
-  explicit, independently-tested signal rather than incidental inclusion), but whether the original
-  decision-watcher report ever correctly diagnosed a real gap is unresolved. Not reopening — no
-  live symptom to chase, and the hardening is correct regardless of the original diagnosis.
-- **Owner**: closed — no further owner. Merged by Kim's standing merge authorization.
-- **Evidence**: `.claude/plugins/known_marketplaces.json` (marketplace→repo resolution);
-  `kimgranlund/claude-plugins#929`/PR #931 (merged 2026-08-24T19:33:24Z); `kimgranlund/nonoun-plugins#46`
-  (closed, wrong-repo pointer).
-- **Size**: closed — 0 minutes remaining.
-- **Process lesson**: a citation naming a repo should be verified against the actual installed
-  marketplace source before being carried forward across firings — a plausible-sounding repo name
-  is not proof it's the live one. See memory `verify-marketplace-repo-before-citing` (host-scope,
-  2026-08-24) for the general rule.
 
 ## Standing notes (not queue entries)
 
-- **RDD placeholder + ADR harvest both fully cleared**: `.claude/docs/rdd/README.md` confirmed
-  present on disk (commit `1672354c`); `adr-queue.json` still reads `{"candidates": []}` — 0
-  pending. Nothing further to confirm-batch on either front.
-- **Intake fully clean, no-op**: issue-sorter — 7 items since 2026-08-24T03:15:36Z (#1611 doing,
-  #1609/#1605 closed, #1608 closed via merged #1610, PRs #1610/#1612/#1613 merged), all
-  trusted-author kimgranlund, all already minted/labeled, zero new holds. Checkpoint advanced for
-  both `gh_issues` and `gh_prs` to 2026-08-24T17:08:45Z.
-- **#1611 (task, size:small, doing)** — corpus-genui: thread pendingCount/outPath through judge
-  --dry-run. Already correctly minted and in-flight; ordinary dev backlog, no ops-mechanics angle
-  this firing — tracked here for visibility only, not queued.
-- **#1605 missing severity label**: issue-sorter's own observation — pre-existing gap on an
-  existing record (only a comment/park-note landed inside it this window), not newly minted here,
-  so no create-time label-fallback applies. Dev-backlog record hygiene, not ops-mechanism debt —
-  noted so a human or a future explicit re-triage can pick it up; not queued.
-- **Hygiene git surface**: 0 open PRs, 1 gated mutation executed and reverified this firing
-  (`campaign_close.py 1607` — PR #1607's stray remote branch reaped), 1 live worktree correctly
-  kept, `main` back in sync with `origin/main` (`fff8e2d7`) after the dispatching session's
-  same-session fast-forward + stray eval-verdict-stub discard.
+- **Prior plan fully cleared**: every 2026-08-24T17:08:45Z entry (1.1 ops-state, 3.1 IDR ruling,
+  4.1 ADR-0015 amendment, 4.2 scratch-clone reap, 4.3 upstream pin) confirmed resolved this
+  compute pass — see Corrections above.
+- **Two findings resolved out-of-band, pre-planner**: orphaned worktree `corpus-wave-6-seeds`
+  (removed by the dispatching host, its 5 commits verified already on
+  `origin/a2ui-design-mode-triage-fixes` first) and stale local branch `pr-1617-review` (deleted,
+  0 unique commits vs. PR #1617's real branch) — both confirmed absent from `git worktree list`/
+  `git branch -vv` this compute pass. Not queued; already executed.
+- **Intake clean**: issue-sorter — 5 issues + 6 PRs since the 2026-08-24T17:08:45Z checkpoint, all
+  trusted-author kimgranlund, all already resolved except #1618 (correctly relabeled
+  `needs-ruling`). Checkpoint advanced for both `gh_issues`/`gh_prs` to 2026-08-25T00:59:54Z.
+- **One open PR (#1617), healthy**: live worktree `frontier-swiper-fixes` backs it, tracking
+  `behind 2` (routine, ancestor-of, not a conflict) — no stale-open risk.
+- **No entry parked this firing** — live scan of the only two open items (#1617, #1618) carries
+  neither `backlog` nor `roadmap`.
 - **Dirty `main` markers**: `.claude/ops/sweep-in-flight.json` only (this sweep's own live
   marker — leave until the sweep concludes).
 - **gen-ui-kit**: out of this board's scope (dedicated session per Kim's ruling).
 
-*Composed by chore-planner, 2026-08-24T17:08:45Z sweep firing — returned as payload per the #125
+*Composed by chore-planner, 2026-08-25T00:59:54Z sweep firing — returned as payload per the #125
 ops-write split; written and landed by the dispatching session.*
 
-Dispatch: 2026-08-24T17:08:45Z
+Dispatch: 2026-08-25T00:59:54Z
