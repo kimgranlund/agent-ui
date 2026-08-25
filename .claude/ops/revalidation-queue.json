@@ -1,18 +1,3 @@
 {
-  "candidates": [
-    {
-      "claim_id": "adr-0017",
-      "evidence": "Decision cl.3 names a [dismissable] prop (default ON) gating backdrop-click dismissal. ADR-0020 (ratified) inverted this to persistent (default OFF, presence-boolean) -- confirmed live in modal.ts (persistent prop, cancel/backdrop-click gates both read this.persistent) and modal.md/modal-descriptor.test.ts; dismissable does not exist anywhere in the codebase. Clauses 1/2/4/5 (control-owned dialog part, open-driven showModal()/close(), focus restore, dialog ARIA via the part) remain byte-accurate, confirmed against modal.ts today. This drift is ALREADY self-documented in ADR-0017's own header ('Superseded in part by ADR-0020 (cl.3 dismissal-gate prop... cl.1/2/4/5 stand)') but the Decision BODY text itself still reads the pre-ADR-0020 wording verbatim, with no restatement amendment -- the same gap ADR-0015 just closed for its own cl.4/5 token rename via a dated Amendment section (2026-08-24). No owner: field on this record (blockquote-table dialect, no frontmatter); unattended scheduled firing -> owner unassigned.",
-      "kind": "falsified",
-      "owner": "unassigned",
-      "queued_at": "2026-08-25T01:03:52Z"
-    },
-    {
-      "claim_id": "adr-0018",
-      "evidence": "Clause 1 names the chain root literally as var(--ui-radius-base). ADR-0140 (ratified 2026-07-18) renamed this family --ui-radius-base -> --md-sys-shape-corner-base; confirmed live in card.css (--ui-card-radius: var(--ui-card-child-radius, var(--md-sys-shape-corner-base))) -- --ui-radius-base does not exist anywhere in the codebase today. Clauses 2/3 (the cycle-free two-token publish/read split -- --ui-card-inner-radius computed on self, --ui-card-child-radius published to > * -- and the one-level-only decrement with manual reseed past depth 1) remain byte-accurate, confirmed against card.css today (matches the ADR's own cycle-avoidance rationale verbatim, including its comment block). Same drift class ADR-0015 just closed for its own cl.4/5 rename via a dated Amendment (2026-08-24); ADR-0018 has no equivalent restatement amendment yet. No owner: field (blockquote-table dialect, no frontmatter); unattended scheduled firing -> owner unassigned.",
-      "kind": "falsified",
-      "owner": "unassigned",
-      "queued_at": "2026-08-25T01:03:52Z"
-    }
-  ]
+  "candidates": []
 }
