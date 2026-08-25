@@ -83,3 +83,32 @@ machinery and adding only the gaps the platform leaves. Five clauses, each a bui
   literally) — rejected: it misreads the rule. The rule exists to keep form **semantics/affordances** under FACE
   control via `ElementInternals`; a `<dialog>` introduces no form semantics. ADR-0014 already established the
   widgets-not-elements reading; applying it consistently here avoids re-litigating settled scope.
+
+## Amendment — cl.3 dismissal-gate prop repointed to `persistent` (2026-08-24, ADR-0020 inversion)
+
+Clauses 1, 2, 4, and 5 (the control-owned `<dialog>` part, the `open`-driven `showModal()` /
+`close()`, focus restore, and dialog ARIA via the part) are unaffected by this amendment and
+remain byte-identical.
+
+Clause 3 named the dismissal-gate prop `[dismissable]`, a presence-boolean **default `true`**.
+**ADR-0020** (ratified 2026-07-12) inverted this gate to **`persistent`**, a presence-boolean
+**default `false`** — the common case (a dismissable modal) is the unmarked default; the override
+(a blocking modal) is the named, presence-set attribute.
+
+Restated under the current prop:
+
+- **Clause 3 — Escape + backdrop dismissal → `close` event, state synced.** The platform's Escape
+  `cancel`/`close` events are listened on `dialog` (via the connection `AbortSignal`); on a
+  platform-initiated close the control sets `open = false` (keeping the prop and the platform
+  state in sync) and emits the family `close` event (plus `toggle` for the two-way bind). A
+  `persistent` prop (presence-boolean, reflected, default `false`) gates dismissal: absent (the
+  default) → Escape and a backdrop click close the modal; present (`<ui-modal persistent>`) → the
+  platform `cancel` event is `preventDefault`-ed and a backdrop click is ignored, so the agent
+  owns the close (set `open = false`).
+
+The decision of clause 3 does not change — only the gate's prop name and default, per ADR-0020's
+inversion. Every prose reference to `[dismissable]` elsewhere in this document (the Decision text
+above and the header's own `Supersedes / Superseded by` note) is historical narrative describing
+the state at time of writing and is left as originally authored, per ADR mutability rules — this
+amendment is the current-prop restatement of record. `controls/modal/*` has carried the renamed
+prop since ADR-0020 landed; no code change accompanies this amendment.
