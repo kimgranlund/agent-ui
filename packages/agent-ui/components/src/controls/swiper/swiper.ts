@@ -241,6 +241,7 @@ export class UISwiperElement extends UIContainerElement {
     if (this.#animFrame !== null) {
       cancelAnimationFrame(this.#animFrame)
       this.#animFrame = null
+      if (this.#track) this.#track.style.scrollSnapType = '' // undo #runScrollAnimation's mid-flight suspension
     }
     if (this.#scrollSettleTimer !== null) {
       clearTimeout(this.#scrollSettleTimer)
@@ -640,6 +641,26 @@ export class UISwiperElement extends UIContainerElement {
     this.#runScrollAnimation(from, to)
   }
 
+  /**
+   * The rAF scroll animation. `scroll-snap-type: x/y mandatory` (swiper.css) makes the UA reject or
+   * override any `scrollTo()` that doesn't land exactly on a snap point — every intermediate frame this
+   * loop writes is a non-snap position by construction, so the mandatory snap silently ate the whole
+   * animation (confirmed live: the interpolated `left` values were computed correctly, but `scrollLeft`
+   * stayed pinned at the START position until the browser's own snap correction jumped it straight to the
+   * END position, i.e. no animation at all — the design-mode report's "not animating"). Snap enforcement
+   * is fully suspended (`none`) on the track for the animation's duration (an inline style beats the CSS
+   * `@scope` rule regardless of specificity), giving a genuinely smooth interpolated curve — a softer
+   * `proximity` downgrade was tried first and still let snap pull the motion to an early stop partway
+   * through (measured: 2 intermediate frames instead of the full ~10-frame curve `none` gives).
+   *
+   * Suspending snap entirely means the UA fires no `scrollsnapchange` for this move, so `#onSnapChange`
+   * (the loop's clone-band teleport trigger, SPEC-R11) never runs on its own — confirmed by the infinite-
+   * loop wrap tests regressing under a first `none`-only attempt. `#onSettle` is the SAME shared commit/
+   * teleport machinery both the native-event path and the debounce-timer fallback converge on, and it
+   * only needs live geometry (`#nearestSlide`), not an active snap state — so it is called directly, once,
+   * right after restoring `mandatory`, rather than relying on the browser to notice a change into a
+   * position it was already sitting at. Any real native/debounced settle event that still arrives after is
+   * harmless: `#commit`'s changed-index guard makes a repeat call a no-op. */
   #runScrollAnimation(from: number, to: number): void {
     if (this.#animFrame !== null) cancelAnimationFrame(this.#animFrame)
     const track = this.#track
@@ -648,12 +669,18 @@ export class UISwiperElement extends UIContainerElement {
     const durationMs = parseCssTime(durationRaw, 250)
     const ease = bezierEase(parseCubicBezier(easingRaw || 'ease-in-out'))
     const start = performance.now()
+    if (track) track.style.scrollSnapType = 'none'
     const step = (now: number): void => {
       const elapsed = now - start
       const t = durationMs <= 0 ? 1 : Math.min(1, elapsed / durationMs)
       this.#setScrollPos(from + (to - from) * ease(t), 'auto')
-      if (t < 1) this.#animFrame = requestAnimationFrame(step)
-      else this.#animFrame = null
+      if (t < 1) {
+        this.#animFrame = requestAnimationFrame(step)
+      } else {
+        this.#animFrame = null
+        if (track) track.style.scrollSnapType = ''
+        this.#onSettle()
+      }
     }
     this.#animFrame = requestAnimationFrame(step)
   }

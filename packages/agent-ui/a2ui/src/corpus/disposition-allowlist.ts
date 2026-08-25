@@ -223,46 +223,13 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // Icon labels duplicate the Button labels (double-announce to AT — drop them so the icons are truly
   // decorative per icon.ts's empty-label contract), and the quad Columns should state align:'center'.
   //
-  // GH #1515 (2026-08-20) — `frontier-breadcrumb-trail`: the same pending-state shape (NO VERDICT SOUGHT
-  // YET, not a refusal). Added to `catalog-frontier.ts` with the `Breadcrumb` catalog row (the frozen
-  // design intake `.claude/docs/spec/breadcrumb.intake.md` §4 Catalog posture row, the docs-writer S3
-  // wire arm) to close its GH #729 coverage gap — the authoring session judging its own seed is the
-  // manufactured judgment ADR-0068's Alternatives ban. Corpus admission is a SEPARATE, later judged wave
-  // (per the S3 dispatch's own instruction: a corpus seed is a follow-up, not this slice's job). Run the
-  // judged pipeline (`import-seeds.ts` with a real VerdictsFile) and DELETE this entry when that wave lands.
-  ['frontier-breadcrumb-trail',
-    'GH #1515 — NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the ' +
-    'new `Breadcrumb` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
-    'self-judged discipline — this authoring session assigns no rubric score to its own seed).'],
+  // 2026-08-24 — GH #1515 (`frontier-breadcrumb-trail`), ADR-0229 cl.1/cl.2/cl.3/cl.4 GH #1568
+  // (`frontier-column-chart-revenue`, `frontier-gauge-system-load`, `frontier-line-chart-axes-weekly-sales`):
+  // all four judged PASS (a2ui-corpus.md v1.2, joint wave — archived 2026-08-24--wave6-verdicts.json)
+  // and admitted — entries DRAINED.
 
-  // ADR-0226/GH #1504 (2026-08-20) — `frontier-button-icon-actions`: the same pending-state shape (NO
-  // VERDICT SOUGHT YET, not a refusal). Added to `catalog-frontier.ts` as the worked exemplar for the
-  // new `Button.icon`/`Button.iconOnly` wire props (icon+label AND icon-only in one payload) — the
-  // authoring session judging its own seed is the manufactured judgment ADR-0068's Alternatives ban.
-  // Run the judged pipeline (`import-seeds.ts` with a real VerdictsFile) and DELETE this entry when
-  // that wave lands.
-  ['frontier-button-icon-actions',
-    'ADR-0226/GH #1504 — NO VERDICT SOUGHT YET, not a refusal. The worked exemplar for the new ' +
-    '`Button.icon`/`Button.iconOnly` wire props; corpus admission is a separate, later judged wave ' +
-    '(ADR-0068\'s never-self-judged discipline — this authoring session assigns no rubric score to ' +
-    'its own seed).'],
-
-  // ADR-0229/GH #1568 (2026-08-20, svg-charts wave 4 — the design tracker GH #1561's FINAL wave): the
-  // same pending-state shape (NO VERDICT SOUGHT YET, not a refusal) for all three new/widened-type seeds.
-  // Added to `catalog-frontier.ts` with the `ColumnChart`/`Gauge` catalog rows + `LineChart`'s `axes`-
-  // state widening to close their GH #729 coverage gaps — the authoring session judging its own seeds is
-  // the manufactured judgment ADR-0068's Alternatives ban. Run the judged pipeline (`import-seeds.ts`
-  // with a real VerdictsFile) and DELETE these three entries when that wave lands.
-  ['frontier-column-chart-revenue',
-    'ADR-0229 cl.1/cl.2, GH #1568 — NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-' +
-    'coverage gap for the new `ColumnChart` type; corpus admission is a separate, later judged ' +
-    'import wave (ADR-0068\'s never-self-judged discipline).'],
-  ['frontier-gauge-system-load',
-    'ADR-0229 cl.4, GH #1568 — NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage ' +
-    'gap for the new `Gauge` type; corpus admission is a separate, later judged import wave (ADR-0068\'s ' +
-    'never-self-judged discipline).'],
-  ['frontier-line-chart-axes-weekly-sales',
-    'ADR-0229 cl.3, GH #1568 — NO VERDICT SOUGHT YET, not a refusal. Exercises `LineChart`\'s new `axes` ' +
-    'opt-in state (`axes`/`labels`/`projected`), distinct from Frontier 11\'s default-state seed; corpus ' +
-    'admission is a separate, later judged import wave (ADR-0068\'s never-self-judged discipline).'],
+  // 2026-08-24 — `frontier-button-icon-actions` (ADR-0226/GH #1504): first judged qualityScore 2/5,
+  // REJECTED (D1/P9 — action Buttons outside CardFooter). Anatomy fix landed (commit 2c1afc24: both
+  // buttons moved into a CardFooter, matching `wallet-summary-card`'s precedent). Re-judged PASS
+  // qualityScore 4/5 (archived 2026-08-24--button-icon-verdict.json) and admitted — entry DRAINED.
 ])
