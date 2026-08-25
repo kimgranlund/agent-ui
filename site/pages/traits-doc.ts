@@ -292,7 +292,7 @@ content.append(
       'mechanics on ',
     link('./agent-admin-app.html', 'the Agent Admin App page'),
     ' (',
-    code('site/pages/agent-admin-app.ts:830'),
+    code('site/pages/agent-admin-app.ts:1636'),
     ') — an app-tier page, not a fleet component. Stated plainly rather than staged: this is the trait’s ' +
       'documented first-slice status, not a gap in this page.',
   ),
