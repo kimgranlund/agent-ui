@@ -26,8 +26,24 @@ const { content } = mountPage({
     'forever-spinner. The API table is on the ui-status-stream API page.',
 })
 
-const stream = document.createElement('ui-status-stream') as UIStatusStreamElement
-stream.setAttribute('label', 'Live match')
+/** A fresh `ui-status-stream` instance, configured with the opt-in streaming header (ADR-0146 F8) +
+ *  the receipt pattern (ADR-0159), the SAME trio a2ui-live.ts/gen-ui-live.ts already set on their own
+ *  narration strips: header shows the live escalated status pinned outside the scroll region; oneline
+ *  morphs to one line while a turn runs (current step + ticking clock); receipt auto-collapses that
+ *  line to "N steps · total elapsed" + the settled outcome glyph once finalize() runs — click/Enter/
+ *  Space re-expands the steps. A fresh INSTANCE per run (never a reused one, see `replay()` below) —
+ *  the header/turn-clock/settled state this opts into has no public reset, and appendEntry's own
+ *  duplicate-key guard would otherwise silently no-op every entry on a second run. */
+function createStream(): UIStatusStreamElement {
+  const el = document.createElement('ui-status-stream') as UIStatusStreamElement
+  el.setAttribute('label', 'Live match')
+  el.setAttribute('header', '')
+  el.setAttribute('oneline', '')
+  el.setAttribute('receipt', '')
+  return el
+}
+
+let stream = createStream()
 
 interface ArenaLine {
   matchId?: string
@@ -42,7 +58,17 @@ interface ArenaLine {
 function projectLine(line: ArenaLine, seeded: Set<string>): void {
   if (line.matchId !== undefined && line.seats !== undefined) {
     for (const seat of Object.keys(line.seats)) {
-      stream.appendEntry({ key: seat, status: 'pending', label: `Seat ${seat} — ${line.seats[seat]!.model}` })
+      const info = line.seats[seat]!
+      stream.appendEntry({
+        key: seat,
+        status: 'pending',
+        label: `Seat ${seat} — ${info.model}`,
+        // `source` (status-stream.ts) is a creation-time-only affordance — an empty/absent value
+        // plants no reveal at all, and a later update() can re-stamp an existing one but never
+        // creates one late. Seed it here so each seat's own moves (below) can re-stamp it with the
+        // seat's actual raw reply as the match plays.
+        source: `${info.provider}/${info.model} joins the match as ${seat}.`,
+      })
       seeded.add(seat)
     }
     return
@@ -52,7 +78,10 @@ function projectLine(line: ArenaLine, seeded: Set<string>): void {
     return
   }
   if (line.context !== undefined && line.context.entry.role === 'assistant') {
-    stream.update(line.context.seat, { text: line.context.entry.content })
+    // The seat's raw reply IS its move/reasoning for this turn — keep it inline (`text`, unchanged)
+    // and re-stamp the seat's collapsed "Source" reveal with the SAME content, exercising the
+    // per-entry disclosure (ADR-0143) this demo never touched before.
+    stream.update(line.context.seat, { text: line.context.entry.content, source: line.context.entry.content })
     return
   }
   if (line.game !== undefined && line.game.kind === 'move' && line.game.seat !== undefined) {
@@ -72,7 +101,13 @@ async function replay(cutShort: boolean): Promise<void> {
   running = true
   playButton.setAttribute('disabled', '')
   cutButton.setAttribute('disabled', '')
-  stream.replaceChildren() // a fresh run each time
+  // A fresh run each time — swap in a brand-new instance rather than clearing this one's children:
+  // `replaceChildren()` would also wipe the header/receipt DOM the opt-in effect above just built
+  // (the header materializes as this element's own first child), and the class exposes no public
+  // reset for its turn-clock/settled state or its appendEntry duplicate-key guard either way.
+  const fresh = createStream()
+  stream.replaceWith(fresh)
+  stream = fresh
 
   const bytes = new TextEncoder().encode(flagshipRaw)
   const body = new ReadableStream<Uint8Array>({
@@ -90,7 +125,10 @@ async function replay(cutShort: boolean): Promise<void> {
     projectLine(JSON.parse(raw) as ArenaLine, seeded)
     await delay(60) // paced so tail-follow + keyed transitions are visibly live
   }
-  if (cutShort) stream.finalize() // the completion invariant — any still-active seat renders TRUNCATED
+  // The completion invariant, always — it also settles the header/receipt (ADR-0146 F8/ADR-0159), so
+  // the rollup only auto-collapses once a run has genuinely finished; "cut short" additionally
+  // leaves a still-active seat visibly TRUNCATED.
+  stream.finalize()
 
   running = false
   playButton.removeAttribute('disabled')
