@@ -67,7 +67,7 @@ helper with legitimate non-chat consumers, not chat-lifecycle duplication; PRD-G
 is not violated by keeping it. Clause 4's re-expression requirement stands for both pages
 (`a2ui-chat` done; `a2ui-live` held on Fork B). SPEC-R9/LLD-C13 read subject to this scope.
 
-## Amendment (2026-08-24, **proposed** — Kim ratifies) — Amendment 2: the shared artboard core extracted to @agent-ui/app; canvas-surface.ts becomes a thin wrapper
+## Amendment (2026-08-24, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/1618#issuecomment-5405393381), verified 2026-08-25) — Amendment 2: the shared artboard core extracted to @agent-ui/app; canvas-surface.ts becomes a thin wrapper
 
 Amendment 1 (2026-07-13) ruled `canvas-surface.ts` STAYS as "a general artboard helper with
 legitimate non-chat consumers, not chat-lifecycle duplication." The lifecycle half of that ruling
