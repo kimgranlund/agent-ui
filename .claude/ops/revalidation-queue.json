@@ -1,3 +1,18 @@
 {
-  "candidates": []
+  "candidates": [
+    {
+      "claim_id": "adr-0021",
+      "evidence": "Decision's unconditional host min-inline-size floor ('A bare field now reads as a usable, hittable text field') no longer holds for the default (fill) sizing posture. text-field.css:169-179 restricts the floor to the [inline] (hug) posture only, per ADR-0223 cl.2/3(b); the comment there reads '...superseding ADR-0021's default-state placement'. ADR-0021's own header carries no Supersedes/Amendment note reflecting this scope narrowing (table dialect, no frontmatter owner field -> unassigned, unattended /sweep-chores firing, no human present).",
+      "kind": "falsified",
+      "owner": "unassigned",
+      "queued_at": "2026-08-25T17:59:51Z"
+    },
+    {
+      "claim_id": "adr-0025",
+      "evidence": "Decision cl.1 (single variant enum h1-h5/caption/body), cl.3/3a (--ui-type-* token family), and cl.4 (ElementInternals role=heading mechanism) no longer match current code. controls/text/text.ts implements ADR-0078's three-axis model (variant M3-role enum x size x as-stamping) reading --md-sys-typescale-*, and its own file header states the cl.4 internals-heading path 'is deleted outright'. Clauses 2 (slotted content) and 5 (catalog Text type) still stand. ADR-0078's header formally records 'Superseded by ADR-0078 - in part', but ADR-0025's own file carries no inline Amendment restating current values the way ADR-0017/ADR-0018 do - a reader of ADR-0025's raw Decision section alone gets 3 of 5 clauses wrong with no in-file pointer. No frontmatter owner field on this dialect -> unassigned, unattended firing.",
+      "kind": "falsified",
+      "owner": "unassigned",
+      "queued_at": "2026-08-25T17:59:51Z"
+    }
+  ]
 }

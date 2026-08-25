@@ -1,3 +1,11 @@
 {
-  "candidates": []
+  "candidates": [
+    {
+      "adr_id": "adr-0129",
+      "evidence": "Amendment 2 (2026-08-24, ratified, .claude/docs/adr/0129-app-surfaces-m2-composition-and-transport-boundary.md L70-107): extracts the shared artboard visual-core CSS to a package-owned @agent-ui/app/artboard.css subpath after it demonstrably drifted as dual-maintained truth between surface-host.css and site canvas-surface.ts (GH #1163 root-card logic + ADR-0100 container-type repair both missed one copy) - a generalizable defect-class fix (dual-maintained CSS truth across a promoted control and its origin site consumer) not yet covered by any references/*.md (checked origin/main: adr-0129/artboard hits are unrelated clauses - cl.4's two-implementations-on-one-element pattern and an unrelated data-table facet row).",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-25T17:57:12Z"
+    }
+  ]
 }
