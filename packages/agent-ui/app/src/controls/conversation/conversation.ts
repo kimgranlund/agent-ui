@@ -641,6 +641,7 @@ export class UIConversationElement extends UIElement {
     if (references !== undefined && references.length > 0) bubble.append(this.#buildReferenceTags(references))
     this.#log!.append(outer)
     void this.#log!.followTail(wasNear)
+    this.#focusAfterAppend(outer) // GH #1627 — a plain user bubble never carries a focusable of its own; falls back to the composer
   }
 
   /** GH #891 (SPEC-R10) — the sent turn's attachment record: one small, DISMISS-LESS tag per reference
@@ -701,6 +702,15 @@ export class UIConversationElement extends UIElement {
     }
 
     const wasNear = this.#log!.isNearBottom()
+    // GH #1627 — the guard's own `wasNear` posture stays sampled ONCE per turn (unchanged, the existing
+    // discipline one screen up), but the FOLLOW itself used to fire only at turn-open (on the still-empty
+    // bubble) and at finalize() — never while the turn's own content actually grows in between. A long
+    // streaming turn could grow well past the viewport with no follow in between, reading as "didn't
+    // scroll" even though the guard's posture was correctly `true` the whole time. This helper re-applies
+    // the SAME cached posture at every content-growing mutation below (ingestLine/mountGenui/setNote/
+    // progress) — never a re-sample, so the "never mixes postures within one turn" law holds; `followTail`
+    // itself still no-ops instantly when `wasNear` is false, so a reading-history turn is untouched.
+    const followTail = (): void => void this.#log!.followTail(wasNear)
     // GH #805 repair — the SPECIFIC key this handle's own fail()/finalize() will check against the
     // pending Set; never a blind dequeue (see the Set's own doc comment for the two collision vectors
     // that ruled that out).
@@ -752,7 +762,7 @@ export class UIConversationElement extends UIElement {
       // than a CSS-only one.
       bubble.dataset.empty = ''
     }
-    void this.#log!.followTail(wasNear)
+    followTail()
 
     this.#turnSeq += 1
     const seq = this.#turnSeq
@@ -1034,9 +1044,11 @@ export class UIConversationElement extends UIElement {
           narration.update(`t${seq}-${cat}`, { source: catLines.get(cat)!.join('\n') })
         }
         routeLine(line)
+        followTail() // GH #1627 — a routed line (a fresh mount, or a known surface's in-place ingest) grows the log
       },
       mountGenui: (surfaceId: string, html: string, assets?: SandboxFrameAssets) => {
         routeGenui(surfaceId, html, assets)
+        followTail() // GH #1627 — a mounted/rebuilt genui frame grows the log same as any other mid-turn content
       },
       setNote: (text: string) => {
         noteText = text
@@ -1049,9 +1061,13 @@ export class UIConversationElement extends UIElement {
         if (text !== '') {
           revealBubble()
           this.#renderBody(note, text)
+          followTail() // GH #1627 — the note's own growing text is exactly the "just added" content the guard exists to reveal
         }
       },
-      progress: (ev: TurnProgress) => routeProgress(ev),
+      progress: (ev: TurnProgress) => {
+        routeProgress(ev)
+        followTail() // GH #1627 — a narrated progress entry (active or settled) grows/changes the strip's own height
+      },
       target: (surfaceId: string) => {
         // GH #1259 / ADR-0206 cl.4 — the model-declared mutation target, arriving on the leading
         // meta-line (the one line ahead of the validate-then-stream content burst — effective turn
@@ -1098,7 +1114,11 @@ export class UIConversationElement extends UIElement {
         // claim on the pending Set is spent either way, so drop it (never re-enable, just stop tracking
         // it as "pending" — a card can't be re-clicked to re-push it while it's still disabled).
         if (disabledSurfaceId !== undefined) this.#pendingDisabledSurfaceIds.delete(disabledSurfaceId)
-        void this.#log!.followTail(wasNear)
+        followTail()
+        // GH #1627 — the turn's own `[data-part='turn']` wrapper (`bubble`'s parent, fresh or resumed
+        // alike — `#resumableBubble`'s own derivation) is the right scope: it covers the prose bubble's
+        // action chips AND the sibling `mounts` cards (GH #1221), never just the bubble alone.
+        this.#focusAfterAppend((bubble.parentElement as HTMLElement | null) ?? bubble)
       },
       fail: (message: string) => {
         endTurn() // TKT-0034 — re-enable the composer THE MOMENT fail() runs
@@ -1392,6 +1412,7 @@ export class UIConversationElement extends UIElement {
     bubble.append(body)
     this.#log!.append(outer)
     void this.#log!.followTail(wasNear)
+    this.#focusAfterAppend(outer) // GH #1627 — a system bubble never carries a focusable of its own; falls back to the composer
   }
 
   /** SPEC-R12 — writes `text` into `el` via the registered content renderer, or plain `textContent`
@@ -1418,6 +1439,36 @@ export class UIConversationElement extends UIElement {
    *  test.ts Gate-3 dynamic-role matcher already allowlists this `role` identifier for BOTH call sites,
    *  same file/variable). `system` has neither a label nor a strip — no wrapper is minted for it (the
    *  smaller diff): `outer === bubble`, appended to the log exactly as before this change. */
+  /** GH #1627 (Acceptance) — after a message finishes appending, focus lands on the first keyboard-
+   *  focusable element `scope` (the just-appended turn/bubble) introduced — an action chip, a mounted
+   *  A2UI/genui card's own control — if there is one; otherwise it falls back to the composer, per
+   *  Kim's own resolution of the ticket's named open question ("focus should land on a focusable
+   *  element if one is available, and the composer is always available" — never leaves focus
+   *  unchanged). Mirrors the existing first-focusable-descendant convention `overlay.ts`'s
+   *  `moveFocusIn()` already uses, same selector. Fires once per fully-appended message (immediate for
+   *  a user/system bubble, at `finalize()` for an agent turn) — never per streamed token, which would
+   *  fight the user for focus while a turn is still growing.
+   *
+   *  GH #1627 fix-up (live repros: follow-the-change.browser.test.ts SPEC-R3 AC3 + follow-the-
+   *  change.test.ts SPEC-R4 AC1) — an agent turn's finalize() can land while the user's focus sits
+   *  ENTIRELY OUTSIDE this control
+   *  (agent-admin's own settings pane, mid-edit — SPEC-R4 AC1's "no yank while focus is deliberately
+   *  elsewhere"), or nowhere at all yet (`document.body`, the ordinary un-focused starting state —
+   *  SPEC-R3 AC3's "never moves focus" for a patch-only authoring turn nobody is watching as chat).
+   *  Both sibling contracts pre-date this ticket and must not regress, so this only ever REDIRECTS
+   *  focus the control already held — it acts SOLELY when focus is already somewhere inside THIS
+   *  element, never when it is `body`/`null`/anywhere else on the page. */
+  #focusAfterAppend(scope: HTMLElement): void {
+    const active = document.activeElement
+    if (!this.contains(active)) return
+    const focusable = scope.querySelector<HTMLElement>(
+      'a[href],area[href],button:not([disabled]),details>summary,' +
+        'input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])',
+    )
+    if (focusable) focusable.focus()
+    else this.#composer?.focus()
+  }
+
   #makeBubble(role: Role): { outer: HTMLElement; bubble: HTMLElement } {
     const bubble = document.createElement('div')
     bubble.dataset.part = 'bubble'
