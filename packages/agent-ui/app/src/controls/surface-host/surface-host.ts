@@ -1,6 +1,7 @@
 // surface-host.ts — UISurfaceHostElement, the M2 mount/stream seam (LLD-C1 · SPEC-R2/R3; ADR-0129 clause
-// 1). BEHAVIOUR + props + self-define ONLY; the checkered-artboard geometry (promoted from
-// site/lib/canvas-surface.css) lives in surface-host.css, the public contract in surface-host.md.
+// 1). BEHAVIOUR + props + self-define ONLY; the checkered-artboard geometry (ADR-0129 Amendment 2:
+// extracted to the shared artboard.css, consumed by surface-host.css) lives in the sibling artboard.{ts,css}
+// pair, the public contract in surface-host.md.
 //
 // Wraps exactly ONE @agent-ui/a2ui `RendererHost` per instance: builds its own light-DOM artboard pair — a
 // `[data-part="stage"]` checkered box nesting a `[data-part="surface"]` translate-centered mount point,
@@ -66,9 +67,10 @@
 //     those; an element already disabled for a payload/checks reason when the sweep ran is never added,
 //     so it is never touched on the way back either.
 
-import { UIContainerElement, UIElement, prop, withViewTransition, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
+import { UIElement, prop, withViewTransition, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import { createRenderer } from '@agent-ui/a2ui'
 import type { RendererHost, ClientMessageListener, A2uiClientMessage } from '@agent-ui/a2ui'
+import { applyRootStretch } from '../surface-host/artboard.ts'
 
 export type { ClientMessageListener, A2uiClientMessage }
 
@@ -160,8 +162,10 @@ export class UISurfaceHostElement extends UIElement {
     if (this.#host === undefined) {
       const stage = document.createElement('div')
       stage.dataset.part = 'stage'
+      stage.classList.add('ui-artboard-stage')
       const surface = document.createElement('div')
       surface.dataset.part = 'surface'
+      surface.classList.add('ui-artboard-surface')
       stage.append(surface)
       this.append(stage)
       this.#surface = surface
@@ -251,7 +255,10 @@ export class UISurfaceHostElement extends UIElement {
   }
 
   /** GH #892 root stretch (see finalize()'s doc comment for the full law) — factored out so ingest()
-   *  can apply it mid-stream too (GH #1124). Idempotent by construction.
+   *  can apply it mid-stream too (GH #1124). Idempotent by construction. ADR-0129 Amendment 2: the
+   *  actual stretch application delegates to the canonical `applyRootStretch` (artboard.ts), shared with
+   *  `site/lib/canvas-surface.ts` — this method keeps only the GH #1163 root-card mirroring below, a
+   *  `[bare]`-mode concern site artboards do not have.
    *
    *  GH #1163 — exactly ONE container owner. #1150/#1161 gave the [bare] chat mount structural card
    *  chrome so a bare (non-Card) root is always contained; but a payload whose ROOT is itself a Card
@@ -266,12 +273,7 @@ export class UISurfaceHostElement extends UIElement {
     const root = this.#surface?.firstElementChild ?? null
     if (root !== null && root.tagName.toLowerCase() === 'ui-card') this.dataset.rootCard = ''
     else delete this.dataset.rootCard
-    if (!root) return
-    if (root.tagName.toLowerCase() === 'ui-column') {
-      if (!root.hasAttribute('stretch')) root.setAttribute('stretch', '')
-    } else if (root instanceof UIContainerElement && root.style.alignSelf !== 'stretch') {
-      root.style.alignSelf = 'stretch'
-    }
+    if (this.#surface) applyRootStretch(this.#surface)
   }
 
   /** End of a batch: forwards to the `RendererHost`, then stretches the root to fill the artboard
