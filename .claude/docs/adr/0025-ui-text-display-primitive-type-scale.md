@@ -178,3 +178,45 @@ acceptance.
   `text`-prop design (above) just to satisfy the 1:1 accessor pattern. The bespoke `textFactory` (the
   `buttonFactory` precedent) is the correct, already-blessed exception for a content property whose `mapsTo`
   differs from its name.
+
+## Amendment — cl.1/3/3a/4 restated as superseded by ADR-0078's three-axis model (2026-08-25)
+
+Clauses 2 (slotted `textContent`, not a `text` prop) and 5 (the A2UI `Text` catalog type) are
+unaffected by this amendment and remain byte-identical.
+
+Clauses 1, 3, 3a, and 4 described the original single-`variant` design: one reflected enum
+(`h1…h5|caption|body`), the `--ui-type-*` token family it repointed, the two-block CSS seam
+consuming it, and an `ElementInternals role='heading'`/`ariaLevel` effect for `h1…h5`. **ADR-0078**
+(accepted, ratified by Kim 2026-07-04) replaced all four with a three-orthogonal-axis design; the
+header's own `Supersedes / Superseded by` cell already names this at clause granularity, but the
+Decision body text below was never restated. Restated under the current design:
+
+- **Clause 1 — one `variant` enum → three orthogonal props.** `ui-text` no longer carries a single
+  `variant: 'h1'|'h2'|'h3'|'h4'|'h5'|'caption'|'body'` prop. It carries **three** reflected enum
+  props: `variant` (visual type ROLE, `display · headline · title · body · label · kicker ·
+  overline · quote · lead`, default `body`), `size` (`sm · md · lg`, default `md`), and `as`
+  (document SEMANTICS — the real element stamped, `none · h1…h6 · p · span · blockquote`, default
+  `none`) — ADR-0078 cl.1.
+- **Clause 3/3a — `--ui-type-*` → `--md-sys-typescale-*`.** The `--ui-type-{h1,h2,h3,h4,h5,caption,
+  body}-{size,weight,leading}` family is **retired**; `text.css` now repoints its two-block seam
+  (unchanged in shape — a role-pure token block + a styles block reading only `--ui-text-*`) to
+  **`--md-sys-typescale-{role}-{size}-{size|weight|line-height|tracking}`**, a 27-row M3-spelled
+  family — ADR-0078 cl.2/cl.2b/cl.3. The role-purity law itself (the component reads no fleet
+  token directly) is unchanged; only the family it repoints to changed.
+- **Clause 4 — `ElementInternals role='heading'` → real-element stamping, then deletion.** The
+  `connected()` effect that set `internals.role = 'heading'` + `internals.ariaLevel` for
+  `variant ∈ h1…h5` **is deleted outright** (`packages/agent-ui/components/src/controls/text/
+  text.ts`'s own header states this). Heading semantics now come from `as`: when `as ≠ 'none'`,
+  `ui-text` stamps a real semantic element (`<h1>`…`<h6>`, `<p>`, `<span>`, `<blockquote>`) around
+  its light-DOM children via a scope-owned DOM-adoption effect + a childList `MutationObserver` —
+  ADR-0078 cl.4. `variant` alone now has zero semantic effect; a document heading requires the
+  author to say `as` explicitly.
+
+The decisions of clauses 1/3/3a/4 do not change from what is shipped today — this amendment only
+restates them under ADR-0078's current design so a reader of this ADR's raw Decision section is
+not misled. Every prose reference to the single-`variant` enum, `--ui-type-*`, or the internals-
+heading mechanism elsewhere in this document (the Decision text above, its build brief, the
+Alternatives section) is historical narrative describing the state at time of writing and is left
+as originally authored, per ADR mutability rules — this amendment is the current-design
+restatement of record. `controls/text/*` has carried the three-axis design since ADR-0078 landed;
+no code change accompanies this amendment.
