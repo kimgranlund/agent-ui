@@ -449,6 +449,8 @@ export function a2uiDevProxyPlugin(opts?: {
                 // pre-stream failure, extended to a post-stream one. `res.destroyed` (the client
                 // disconnected) is the one case that stays silent — there's no one left to read it.
                 if (!res.destroyed) {
+                  // Server-only: prints to the dev server's own terminal, never crosses the wire.
+                  console.error('produce() turn failed:', err)
                   const message = err instanceof ProduceHalt ? err.message : GENERIC_FAILURE_MESSAGE
                   res.write(formatErrorLine(message) + '\n')
                 }

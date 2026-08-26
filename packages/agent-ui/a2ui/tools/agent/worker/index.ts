@@ -314,6 +314,8 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
       // safe fallback instead — that raw text is exactly the kind of internal detail that must never
       // reach an end user's chat log.
       if (!request.signal.aborted) {
+        // Server-only: reaches `wrangler tail`/the Cloudflare dashboard, never crosses the wire.
+        console.error('produce() turn failed:', err)
         const message = err instanceof ProduceHalt ? err.message : GENERIC_FAILURE_MESSAGE
         try {
           await writer.write(encoder.encode(formatErrorLine(message) + '\n'))
