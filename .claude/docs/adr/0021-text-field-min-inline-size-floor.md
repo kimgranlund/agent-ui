@@ -100,3 +100,37 @@ Gate: `npm run check && npm test && npm run test:browser`. The existing geometry
 - **A square floor `= height`** (button's exact action-control value) for the field too — rejected: a ~40px square
   is hittable but reads as a *square*, not a text field. An entry control's sensible minimum is a **typing width**
   (measured in characters) — which is precisely why the frame quantity splits by class.
+
+## Amendment — Decision restated for the `[inline]`-only floor (2026-08-25, ADR-0223 supersession)
+
+The Context, Consequences, Build brief, and Alternatives-considered sections above describe the floor's
+original DEFAULT-state placement and are left as originally authored, per ADR mutability rules — historical
+narrative describing the state at time of writing, not current behavior.
+
+**ADR-0223** (ratified 2026-08-19, the fleet-wide fill-by-default sizing contract) narrows this ADR's floor.
+Its **clause 2** mints the shared `[inline]` boolean (the one sizing opt-out, flipping both display level and
+sizing posture to hug); its **clause 3(b)** rules that every entry-class ch floor — including this ADR's
+~20ch `ui-text-field` floor — moves from the default block state into the `:scope[inline]` leg, "token names
+and defaults unchanged — this is ADR-0021's supersession." In the DEFAULT (block, fill) state, `ui-text-field`
+now carries no `min-inline-size` floor at all: the degenerate bare-field collapse this ADR was written to fix
+is instead resolved by ADR-0223's own R1 (a block-level host fills its container, so an unsized field is never
+width-starved). The collapse this ADR fixed can now only recur in the `[inline]` (hug) state, which is exactly
+where the floor lives today.
+
+Restated under the current scope:
+
+- **Decision — host `min-inline-size` floor, scoped to `[inline]`.** `ui-text-field` carries the
+  entry-control typing-width floor (native `<input size>` parity) via the component token
+  `--ui-text-field-min-inline-size` (default ~`20ch`, unchanged) applied on the `:scope[inline]` leg only
+  (`text-field.css:169-179`). A field rendered `[inline]` (hugging) reads as a usable, hittable text field; a
+  field in the default block-fill state fills its container per ADR-0223 and needs no floor to avoid the
+  degenerate collapse. Width above the floor — in either state — stays the layout's / author's job. The
+  rejection of a chars-width prop (the `size` name-collision) is unaffected by this amendment and stands as
+  originally decided.
+
+The decision does not change — only the state the floor is scoped to, per ADR-0223's fleet-wide contract.
+Every prose reference to a default-state (non-`[inline]`) floor elsewhere in this document (the Context,
+Decision, Consequences, and Build-brief text above, and the header's own Repairs line) is historical narrative
+describing the state at time of writing and is left as originally authored — this amendment is the
+current-scope restatement of record. `controls/text-field/text-field.css` has carried the `[inline]`-scoped
+floor since ADR-0223 landed; no code change accompanies this amendment.
