@@ -19,7 +19,11 @@ authored by the evidence-seeded owner (`kimgranlund`), so nothing reached the tr
 
 - #1583 ruling: RULED (a) — APP_MARGINAL_BUDGET bumped ~104 B citing ADR-0008 Am.2 (PR #1588, merged); issue closed.
 - Morning merge queue: all three merged (#1585, #1586, #1587). AC18 then ran live (PR #1603, merged): m3 floor NOT MET; triage parked as #1605, now in build (build-1605).
-- Still Kim's, open:
-  - Reap scratch clone /var/folders/0b/jf4lh4jd4sd9y2q7x271c9jm0000gn/T/agent-ui-1583 manually (rm denied to seats and marshal).
-  - Local branch `pr-1590` (dc6cd350): 1 unmerged commit, reap script refuses; decide keep or delete.
-  - 5 pending ADR harvest candidates (adr-queue.json): mint-vs-compose bundle (0228+0229+0107), css-structural-laws bundle (0230+0008), placements for 0112 Am.3 and 0227 wave-2 — via /make-pack when you choose.
+- Still Kim's, open: none — all three below are resolved (2026-08-25 sweep, confirmed live; ops
+  plan.md's own 4.3 flagged this section as stale).
+  - ~~Reap scratch clone /var/folders/0b/jf4lh4jd4sd9y2q7x271c9jm0000gn/T/agent-ui-1583 manually~~
+    — confirmed absent (2026-08-25T00:59:54Z sweep, `ls`: no such file or directory).
+  - ~~Local branch `pr-1590` (dc6cd350)~~ — confirmed gone (2026-08-25T17:55:43Z sweep,
+    `git branch -a`: local `main` only).
+  - ~~5 pending ADR harvest candidates~~ — landed via issue #1607 / commit `e91d612b`, plus the
+    stale-proposed-banner repair, commit `3bdd2772`.
