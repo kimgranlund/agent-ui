@@ -9,7 +9,7 @@
 > | **Proposed by** | planning-lead — the design seat, on the #22 user-ratified column-default change |
 > | **Ratified by** | orchestration-lead (on the build gate) |
 > | **Repairs** | `goals §G9` (the layout-family cross-axis default — vertical stacks fill, row does not) · **shipped-default change**: `components/controls/column/{column.ts,column.css,column.md}` (`align` default `start`→`stretch`, CSS base token + descriptor kept consistent) · `components/controls/list/{list.ts,list.css,list.md}` (the same flip — **ratified**, user 2026-06-30) · `components/dom/container.ts` (the shared `flexProps.align` default **stays** `start`; column/list override only the `default`) · **relates ADR-0015** (surface/space) · **relates ADR-0005** (lazy-upgrade: a default is **not** reflected as an attribute, so the CSS base token must carry it) |
-> | **Supersedes / Superseded by** | **Extends ADR-0016** — a *separate, new* decision (the per-consumer default + the direction-appropriate cross-axis asymmetry) that builds on the `flexProps` grammar **without reversing it**: ADR-0016's grammar (the prop set, the 1:1 CSS keyword mapping, the container-query switcher) **stands** unchanged; only column's (and list's) `align` *default* differs. Not an amendment (ADR-0016 did **not** anticipate per-consumer default divergence, so there is no foreseen branch to append) and not a supersession (nothing is reversed) — an **Extension** per the ADR-log classification table. |
+> | **Supersedes / Superseded by** | **Extends ADR-0016** — a *separate, new* decision (the per-consumer default + the direction-appropriate cross-axis asymmetry) that builds on the `flexProps` grammar **without reversing it**: ADR-0016's grammar (the prop set, the 1:1 CSS keyword mapping, the container-query switcher) **stands** unchanged; only column's (and list's) `align` *default* differs. Not an amendment (ADR-0016 did **not** anticipate per-consumer default divergence, so there is no foreseen branch to append) and not a supersession (nothing is reversed) — an **Extension** per the ADR-log classification table. · **cl.1 narrowed by shipped code, never fed back** — `column.ts:30-42`'s own "Kim's directive" header comment restricts `align` to a column-local 4-member enum (`center` dropped); restated in the `## Amendment` below. |
 
 ## Context
 
@@ -72,3 +72,43 @@ Grounded against the repo at HEAD. The load-bearing facts:
 - **Leave the CSS base token at `flex-start` and rely on the prop default reflecting `stretch`** — rejected (and incorrect): a default is **not** reflected as an attribute (ADR-0005), so with no `align` attribute the `[align='stretch']` selector never matches and the base token governs. The base token **must** carry the new default; this is why the CSS + prop flip together.
 - **Flip `ui-list` silently as part of the column change** — rejected in favor of flagging it. It is a second shipped-default change on a primitive the user did not name; the consistency argument is strong (recommended), but a user-facing default change deserves explicit ratification, not a silent bundle.
 - **Also reset `align-items` in the container-query switcher so the switched row top-aligns** — rejected for this change (scope). The equal-height result is usually desirable and internally consistent; changing the switcher is a separable concern that should be driven by a real want, not pre-emptively bundled.
+
+## Amendment — cl.1 restated for the shipped column-local 4-member `align` enum (2026-08-26, `center` narrowing never fed back)
+
+Clauses 2, 3, and 4 (the CSS base-token/prop-default consistency, the descriptor contract, and
+`stretch` yielding to an explicit child width) are unaffected by this amendment and remain
+byte-identical.
+
+Clause 1 decided that `column.ts` would override only `align`'s `default` field while **reusing
+the shared `flexProps.align` type wholesale** — "The value vocabulary is **not** re-listed — so if
+`flexProps.align` ever grows a sixth member, column inherits it with zero drift." The Alternatives
+section went further and explicitly **rejected** re-listing the enum, on exactly that drift
+concern. Shipped code does neither: `column.ts:30-42`'s own header comment ("Kim's directive:
+`center` is NOT allowed on ui-column — a column can only center children by shrink-wrapping them,
+which defeats the fill-width default and is an anti-pattern for the stacked-content the tag exists
+to lay out") re-lists a **column-local 4-member enum** — `prop.enum(['stretch', 'start', 'end',
+'baseline'] as const, 'stretch')`, `center` dropped — present since build commit `7a6ff773`. This
+narrowing was never fed back into this ADR's Decision text.
+
+Restated under the actual shipped enum:
+
+- **Clause 1 — per-consumer default override, on a column-local narrowed enum (not the shared
+  type wholesale).** `column.ts` overrides `align`'s `default` to `'stretch'`, as originally
+  decided, but does not reuse `flexProps.align`'s five-member type unmodified: it re-lists a
+  **column-local 4-member enum** (`['stretch', 'start', 'end', 'baseline']`), dropping `center`
+  (Kim's directive — a column can only center children by shrink-wrapping them, which defeats the
+  fill-width default and is an anti-pattern for the stacked content `ui-column` exists to lay
+  out). `stretch` leads the array so it is both the default **and** the invalid-value snap target
+  (`enumType.from` falls to `values[0]`) — an `align="center"` attribute snaps back to `stretch`,
+  and `column.css` drops its `[align='center']` repoint so even a raw attribute cannot center.
+  `ui-row`/`ui-grid`/`ui-list` keep the full 5-member grammar — the narrowing is column-local only.
+
+The decision's fill-by-default intent does not change — only clause 1's "reuse the type wholesale,
+zero drift on growth" claim, which the shipped code does not honor: a sixth `flexProps.align`
+member would need `column.ts:42`'s own enum literal updated by hand, not inherited automatically.
+Every prose reference to a fully-reused, un-narrowed `align` type elsewhere in this document (the
+Decision text above, and the Alternatives section's rejection of re-listing the enum) is
+historical narrative describing the state at time of writing and is left as originally authored,
+per ADR mutability rules — this amendment is the current-shape restatement of record. `column.ts`
+has carried the narrowed enum since build commit `7a6ff773`; no code change accompanies this
+amendment.
