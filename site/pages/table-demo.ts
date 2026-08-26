@@ -168,9 +168,9 @@ const single = makeTable({
 wireLog(single, 'single')
 const singleNote = el('p', {}, [
   code('selectable="single"'), text(' stamps a leading radio column (an empty header cell — a radio column has no select-all); ' +
-    'a click commits '), code('select'), text(' with a one-identity '), code('selected'), text('. These native inputs and the sort ' +
-    'buttons are the fleet’s one sanctioned "no native form elements" exception (ADR-0163 cl.3): they sit in the normal tab ' +
-    'order — no roving tabindex, no '), code('role=grid'), text('.'),
+    'a click commits '), code('select'), text(' with a one-identity '), code('selected'), text('. These composed '), code('<ui-radio>'),
+    text(' and '), code('<ui-button>'), text(' sort controls (ADR-0163 cl.3\'s amendment — zero native-form-element exceptions ' +
+    'remain fleet-wide) sit in the normal tab order — no roving tabindex, no '), code('role=grid'), text('.'),
 ])
 
 // ── [3] the default-off baseline — byte-identical to the pre-widening display-only control ──────────────────
