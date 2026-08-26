@@ -1,7 +1,7 @@
 // site/pages/timeline-item-demo.ts — the ui-timeline-item interaction demo (ADR-0122). Proves the item's
 // two live facts honestly: the collapsible detail (a real ui-disclosure composition — click OR a
 // model-driven toggleDetail(), with a toggle event log) and a status transition cycling through every
-// marker shape live (pending → active → done, on a button click) — the control owns the mechanics
+// marker shape live (pending → active → done → error → warning, on a button click) — the control owns the mechanics
 // (timeline-item.ts + the composed ui-disclosure); this page only stages + logs.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
@@ -38,7 +38,7 @@ item.addEventListener('toggle', () => logEvent(`toggle  →  detail open=${Strin
 const modelToggle = inline(uiButton('Toggle detail (model-driven)', 'soft')) // ADR-0223: bare demo action — hugs
 modelToggle.addEventListener('click', () => item.toggleDetail())
 
-const STATUS_CYCLE = ['pending', 'active', 'done', 'error'] as const
+const STATUS_CYCLE = ['pending', 'active', 'done', 'error', 'warning'] as const
 let statusIdx = 0
 const cycleButton = inline(uiButton('Cycle status →', 'soft')) // ADR-0223: bare demo action — hugs
 cycleButton.addEventListener('click', () => {
