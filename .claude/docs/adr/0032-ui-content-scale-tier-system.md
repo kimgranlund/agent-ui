@@ -76,3 +76,37 @@ Replace the 3-step `[scale]` placeholder with the **6-tier `ui-sm…content-lg` 
 - **Back-compat: keep `compact/comfortable/spacious` as aliases of three of the new tiers** — rejected. It would re-introduce the `comfortable`/`spacious` collision with `[density]` (the overlap this resolves), and the only consumers are tests (migrated same-wave), not shipped-app markup — so aliases buy nothing. Hard-replace is clean.
 - **Defer `--ui-compact-*` to the first compact widget** (my original recommendation) — **overridden by the user** (build now). The defer rationale (unconsumed forward-ready tokens) was outweighed by the user's preference to materialize the full §3/§5.2 two-band system in one wave; the `DIM-COMPACT` probe + the §5.2 spec guard against drift.
 - **Re-map the default to a non-1.0 tier** — rejected. Keeping `ui-md = 1.0 = :root` preserves the shipped default exactly (no surprise resize of existing controls), and 1.0 is the natural anchor of the ladder.
+
+## Amendment — cl.2 control ramp restated as superseded by ADR-0038's explicit lookup (2026-08-26)
+
+Clause 2 described the original per-tier `--ui-scale` MULTIPLIER mechanism for the control ramp
+(ADR-0007 mechanism kept). **ADR-0038** (ratified 2026-06-30) replaced this for CONTROLS with an
+explicit `(scale × size) → §1-row` lookup — the header's own `Supersedes / Superseded by` cell
+already names this ("Multiplier ladder superseded for CONTROLS by ADR-0038 — Kim ruled *'let's not
+use multipliers'*"; "What SURVIVES: the 6 `[scale]` tier names... and the `--ui-scale` values as
+the `--ui-type-*` display multiplier only"), but the Decision body text below (clause 2) was never
+restated. Restated under the current mechanism:
+
+- **Clause 2 — the CONTROL ramp is an explicit per-tier `(scale × size) → §1-row` LOOKUP (ADR-0038
+  mechanism).** Each `[scale]` tier re-tables `--md-sys-{height,font,icon}-{sm,md,lg}` (and
+  `--md-sys-compact-{sm,md,lg}`, the ADR-0041 widget-box ramp) to its literal §1-row px values
+  directly — `dimensions.css:398-482`, one `[scale="..."]` block per tier. There is no multiplier
+  arithmetic on the control path: height picks the row, font/icon derive from it, one consistent
+  row per cell (the inconsistency the multiplier produced). Each tier still sets `--md-sys-scale`
+  to its historical multiplier value (the same six values clause 2's table named, `0.875…1.75`),
+  but that variable is now DISPLAY-ONLY — only `--md-sys-typescale-*-size` (the ADR-0025/ADR-0033
+  ruled-linear fork) reads it; `--md-sys-scale` has left the control path entirely (the
+  display-only-variable comment, `dimensions.css:390-396`). The former control-ramp formula
+  `base × var(--ui-scale)` (base 24·28·36 / 13·14·16) named in clause 2's opening sentence no
+  longer exists on the control path — those base numbers survive only as the literal `ui-md` row
+  (`--md-sys-height-{sm,md,lg}: 24px·28px·36px`, `--md-sys-font-{sm,md,lg}: 13px·14px·16px`, the
+  default/no-attribute row per clause 3).
+
+The decision of clause 2 does not change in its named-tier coverage or per-tier magnitude
+ordering — only the mechanism computing each tier's control values, per ADR-0038's ruling. Every
+prose reference to the `--ui-scale` multiplier ladder elsewhere in this document (the Decision
+text above, the table under clause 2, the Consequences and Alternatives sections) is historical
+narrative describing the state at time of writing and is left as originally authored, per ADR
+mutability rules — this amendment is the current-mechanism restatement of record. `dimensions.css`
+has carried the explicit per-tier lookup since ADR-0038 landed; no code change accompanies this
+amendment.
