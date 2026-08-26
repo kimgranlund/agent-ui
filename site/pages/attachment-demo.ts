@@ -40,7 +40,7 @@ const RECEIVED: readonly FileFixture[] = [
 ]
 
 function card(file: FileFixture): HTMLElement {
-  return el('ui-attachment', { name: file.name, 'mime-type': file.mimeType, 'size-bytes': String(file.sizeBytes) })
+  return el('ui-attachment', { filename: file.name, 'mime-type': file.mimeType, 'size-bytes': String(file.sizeBytes) })
 }
 
 // ── the composer action log — page-level add/remove, honestly labelled ─────────────────────────────────────

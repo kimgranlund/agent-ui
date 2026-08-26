@@ -99,9 +99,9 @@ function miniProgress(): HTMLElement {
 }
 function miniAttachment(): HTMLElement {
   const a = document.createElement('ui-attachment')
-  a.setAttribute('name', 'report.pdf')
-  a.setAttribute('mimeType', 'application/pdf')
-  a.setAttribute('sizeBytes', '204800')
+  a.setAttribute('filename', 'report.pdf')
+  a.setAttribute('mime-type', 'application/pdf')
+  a.setAttribute('size-bytes', '204800')
   return a
 }
 
