@@ -28,6 +28,15 @@ import type {
   UISwiperPaddlesElement,
 } from '@agent-ui/components/components'
 import { createCanvasSurface, applyRootStretch } from './canvas-surface.ts'
+// GH #1664 (component-preview-code-tabs.lld.md LLD-C4) — the tabbed code view's highlighter: `./highlight`
+// self-registers the bundled dispatch-by-language tokenizer into the default registry (the same pattern
+// site/pages/code-demo.ts already rides), `./highlight.css` is the `[data-token]` tint sheet the projected
+// spans read, and `projectHighlight` is the ONE core seam that turns a token stream into a `ui-code`'s light
+// DOM. `ui-code` itself is UNCHANGED by this wave (its own zero-machinery contract stays intact).
+import '@agent-ui/code/highlight'
+import '@agent-ui/code/highlight.css'
+import { projectHighlight } from '@agent-ui/code'
+import { generateComponentHtml, generateComponentJs, formatA2uiJson, cssTokenSource } from './preview-source.ts'
 
 // The `value` of the enum-knob "unset" option. ui-select's selectionCommit treats value="" as "no key"
 // and SKIPS it (selection-commit.ts:98/147 — never commits, never emits `select`, panel stays open), so a
@@ -1620,6 +1629,31 @@ export const STRUCTURAL = new Set(['ui-breadcrumb', 'ui-card', 'ui-choice-card',
 // edits the label, exactly as it does for ui-button.
 export const SLOT_TEXT_OK = new Set(['ui-button', 'ui-checkbox', 'ui-code', 'ui-radio', 'ui-segment', 'ui-swiper-label', 'ui-switch', 'ui-text', 'ui-toggle'])
 
+// ── the tabbed code view (GH #1664, component-preview-code-tabs.lld.md LLD-C4/C5/C6) ───────────────────────────
+// component mode → HTML/JS/CSS; a2ui mode → JSON/CSS (the ratified tab-mode mapping, Kim 2026-08-26). Active
+// tab is the first by default; #buildCodeView below never shows all four for one specimen.
+type CodeTab = 'html' | 'js' | 'css' | 'json'
+const COMPONENT_MODE_TABS: readonly CodeTab[] = ['html', 'js', 'css']
+const A2UI_MODE_TABS: readonly CodeTab[] = ['json', 'css']
+const CODE_TAB_LABEL: Record<CodeTab, string> = { html: 'HTML', js: 'JS', css: 'CSS', json: 'JSON' }
+// Dispatch language for bundledHighlighter (self-registered by the `@agent-ui/code/highlight` import above);
+// also the `language` attribute set on each panel's `ui-code` host (inert metadata, code.ts's own contract).
+const CODE_TAB_LANGUAGE: Record<CodeTab, string> = { html: 'html', js: 'js', css: 'css', json: 'json' }
+
+let codeUid = 0
+const nextCodeId = (): string => `cp-code-${(codeUid += 1)}`
+
+/** The component-mode HTML/JS generators' `sampleChildren` input: a fresh `COMPONENT_SAMPLE_CHILDREN[tag]()`
+ *  call, serialized to indented outerHTML (`''` when the target has none) — computed ONCE per build (sample
+ *  children are knob-independent, LLD §4 "Generators' inputs"), never re-serialized on every refresh. */
+function serializeSampleChildren(tag: string): string {
+  const factory = COMPONENT_SAMPLE_CHILDREN[tag]
+  if (!factory) return ''
+  return factory()
+    .map((el) => el.outerHTML.split('\n').map((line) => `  ${line}`).join('\n'))
+    .join('\n')
+}
+
 // ── the element ──────────────────────────────────────────────────────────────────────────────────────────────
 type Mode = 'component' | 'a2ui'
 
@@ -1634,6 +1668,17 @@ class ComponentPreview extends HTMLElement {
   #canvasCol: HTMLElement | undefined // the right column (holds the artboard) — toggles the empty-specimen hint
   #host: RendererHost | undefined // a2ui mode: the CURRENT renderer (disposed + rebuilt each change, N3)
   #liveEl: HTMLElement | undefined // component mode: the ONE element, diff-mutated in place
+
+  // ── the tabbed code view (GH #1664) — .preview-code is a SIBLING of stage (E1: never torn down by an a2ui
+  // rebuild), so tab selection + strip DOM persist by construction; only the ACTIVE panel's source regenerates.
+  #codeTabs: readonly CodeTab[] = []
+  #activeCodeTab: CodeTab | undefined
+  #codeSources = new Map<CodeTab, string>() // Copy reads THIS cache — never re-serializes DOM
+  #codeTabButtons = new Map<CodeTab, HTMLButtonElement>()
+  #codePanelEls = new Map<CodeTab, HTMLElement>() // the `.preview-code-panel` wrapper (toggles `hidden`)
+  #codePanelBodies = new Map<CodeTab, HTMLElement>() // the `ui-code` host (projectHighlight target)
+  #codeRafPending = false // rAF-coalesced refresh: one pending flag collapses a knob-edit burst to one regen/frame
+  #sampleChildrenSource = '' // component mode only — computed once at build (LLD §4)
 
   connectedCallback(): void {
     if (this.#built) {
@@ -1675,7 +1720,10 @@ class ComponentPreview extends HTMLElement {
     const { stage, surface } = createCanvasSurface()
     this.#surface = surface
     this.#canvasCol = canvasCol
-    canvasCol.append(stage)
+    // .preview-code is appended AFTER stage — a SIBLING of the artboard, never inside it, so a2ui's
+    // `surface.replaceChildren()` (every knob edit) never touches it (E1). #buildCodeView() pushes its own
+    // refresher onto #refreshers BEFORE #render() runs, so it rides the very first refresh pass too.
+    canvasCol.append(stage, this.#buildCodeView())
 
     root.append(controls, canvasCol)
     this.append(root)
@@ -1893,6 +1941,187 @@ class ComponentPreview extends HTMLElement {
     })
     row.append(field)
     return row
+  }
+
+  // ── right column: the tabbed code view (GH #1664, LLD-C4) ─────────────────────────────────────────────────
+  // Static DOM up front (tablist + every panel, per §4's structure diagram) — only the panels' `ui-code`
+  // bodies regenerate, on refresh (LLD-C5) or on activation. Component mode → HTML/JS/CSS; a2ui mode →
+  // JSON/CSS; active = first by default.
+  #buildCodeView(): HTMLElement {
+    const tabs = this.#mode === 'component' ? COMPONENT_MODE_TABS : A2UI_MODE_TABS
+    this.#codeTabs = tabs
+    this.#activeCodeTab = tabs[0]
+    if (this.#mode === 'component') this.#sampleChildrenSource = serializeSampleChildren(this.#target)
+
+    const container = document.createElement('div')
+    container.className = 'preview-code'
+
+    const tablist = document.createElement('div')
+    tablist.className = 'preview-code-tabs'
+    tablist.setAttribute('role', 'tablist')
+    tablist.setAttribute('aria-label', `${this.#target} source code`)
+    tablist.addEventListener('keydown', (e) => this.#onCodeTabKeydown(e as KeyboardEvent))
+
+    const panels = document.createElement('div')
+    panels.className = 'preview-code-panels'
+
+    for (const tab of tabs) panels.append(this.#buildCodeTab(tab, tablist))
+
+    container.append(tablist, panels)
+    this.#refreshers.push(() => this.#scheduleCodeRefresh())
+    return container
+  }
+
+  /** One tab button + its paired panel (header: language label · Copy · status; body: a `ui-code` host). */
+  #buildCodeTab(tab: CodeTab, tablist: HTMLElement): HTMLElement {
+    const active = tab === this.#activeCodeTab
+    const tabButtonId = nextCodeId()
+    const panelId = nextCodeId()
+
+    const tabButton = document.createElement('button')
+    tabButton.type = 'button'
+    tabButton.className = 'preview-code-tab'
+    tabButton.id = tabButtonId
+    tabButton.setAttribute('role', 'tab')
+    tabButton.setAttribute('aria-controls', panelId)
+    tabButton.setAttribute('aria-selected', active ? 'true' : 'false')
+    tabButton.tabIndex = active ? 0 : -1
+    tabButton.textContent = CODE_TAB_LABEL[tab]
+    tabButton.addEventListener('click', () => this.#activateCodeTab(tab, true))
+    tablist.append(tabButton)
+    this.#codeTabButtons.set(tab, tabButton)
+
+    const panel = document.createElement('div')
+    panel.className = 'preview-code-panel'
+    panel.id = panelId
+    panel.setAttribute('role', 'tabpanel')
+    panel.setAttribute('aria-labelledby', tabButtonId)
+    panel.hidden = !active
+    this.#codePanelEls.set(tab, panel)
+
+    const head = document.createElement('div')
+    head.className = 'preview-code-head'
+    const langLabel = document.createElement('span')
+    langLabel.className = 'preview-code-lang'
+    langLabel.textContent = CODE_TAB_LABEL[tab]
+    const copyButton = document.createElement('button')
+    copyButton.type = 'button'
+    copyButton.className = 'preview-code-copy'
+    copyButton.textContent = 'Copy'
+    const status = document.createElement('span')
+    status.className = 'preview-code-status'
+    status.setAttribute('role', 'status')
+    copyButton.addEventListener('click', () => this.#copyCodeTab(tab, status))
+    head.append(langLabel, copyButton, status)
+
+    const codeEl = document.createElement('ui-code')
+    codeEl.setAttribute('language', CODE_TAB_LANGUAGE[tab])
+    this.#codePanelBodies.set(tab, codeEl)
+
+    panel.append(head, codeEl)
+    return panel
+  }
+
+  /** ArrowLeft/ArrowRight/Home/End — roving tabindex, selection-follows-focus (the simple-tablist pattern). */
+  #onCodeTabKeydown(e: KeyboardEvent): void {
+    const tabs = this.#codeTabs
+    const current = this.#activeCodeTab
+    const idx = current ? tabs.indexOf(current) : -1
+    if (idx === -1) return
+    let nextIdx: number | undefined
+    if (e.key === 'ArrowRight') nextIdx = (idx + 1) % tabs.length
+    else if (e.key === 'ArrowLeft') nextIdx = (idx - 1 + tabs.length) % tabs.length
+    else if (e.key === 'Home') nextIdx = 0
+    else if (e.key === 'End') nextIdx = tabs.length - 1
+    if (nextIdx === undefined) return
+    e.preventDefault()
+    this.#activateCodeTab(tabs[nextIdx] as CodeTab, true)
+  }
+
+  /** Activate `tab`: swap `hidden`/`aria-selected`/roving tabindex, then regenerate that panel IMMEDIATELY
+   *  (not rAF-coalesced — a discrete user action gets instant feedback, per LLD §4 "Lazy generation"). */
+  #activateCodeTab(tab: CodeTab, moveFocus: boolean): void {
+    if (this.#activeCodeTab === tab) {
+      if (moveFocus) this.#codeTabButtons.get(tab)?.focus()
+      return
+    }
+    this.#activeCodeTab = tab
+    for (const [t, button] of this.#codeTabButtons) {
+      const selected = t === tab
+      button.setAttribute('aria-selected', selected ? 'true' : 'false')
+      button.tabIndex = selected ? 0 : -1
+    }
+    for (const [t, panel] of this.#codePanelEls) panel.hidden = t !== tab
+    if (moveFocus) this.#codeTabButtons.get(tab)?.focus()
+    this.#writeCodeTab(tab)
+  }
+
+  /** rAF-coalesced refresh trigger — joined to #refreshers (LLD-C5): one pending flag collapses a knob-edit
+   *  burst to ONE regeneration per frame; only the ACTIVE tab regenerates. Deferring through rAF also means
+   *  this runs AFTER #render()'s synchronous #buildComponent()/#buildA2ui() call, so the live root
+   *  cssTokenSource reads via getComputedStyle already exists by the time this fires. */
+  #scheduleCodeRefresh(): void {
+    if (this.#codeRafPending) return
+    this.#codeRafPending = true
+    requestAnimationFrame(() => {
+      this.#codeRafPending = false
+      if (this.#activeCodeTab) this.#writeCodeTab(this.#activeCodeTab)
+    })
+  }
+
+  /** Generate `tab`'s source from the CURRENT #state, cache it (#codeSources — Copy reads this, never
+   *  re-serializes DOM), and project it into that panel's `ui-code` body. */
+  #writeCodeTab(tab: CodeTab): void {
+    const source = this.#generateCodeTabSource(tab)
+    this.#codeSources.set(tab, source)
+    const codeEl = this.#codePanelBodies.get(tab)
+    if (codeEl) projectHighlight(codeEl, source, CODE_TAB_LANGUAGE[tab])
+  }
+
+  #generateCodeTabSource(tab: CodeTab): string {
+    if (tab === 'json') return formatA2uiJson(this.#a2uiPayload())
+    if (tab === 'css') return cssTokenSource(this.#codeCssTag(), this.#codeLiveRoot())
+    const sampleAttrs = COMPONENT_SAMPLE_ATTRS[this.#target] ?? {}
+    if (tab === 'html') return generateComponentHtml(this.#target, this.#knobs, this.#state, sampleAttrs, this.#sampleChildrenSource)
+    return generateComponentJs(this.#target, this.#knobs, this.#state, sampleAttrs)
+  }
+
+  /** The CSS tab's live root (LLD §5): component mode → #liveEl; a2ui mode → the surface's firstElementChild. */
+  #codeLiveRoot(): Element | null {
+    if (this.#mode === 'component') return this.#liveEl ?? null
+    return (this.#surface as HTMLElement | undefined)?.firstElementChild ?? null
+  }
+
+  /** The CSS tab's tag (LLD §5): component mode → #target (already a tag); a2ui mode → the live root's OWN
+   *  tag (a2ui targets are catalog NAMES like "Button", not tags — read the real rendered `ui-*` tag off it). */
+  #codeCssTag(): string {
+    if (this.#mode === 'component') return this.#target
+    const root = (this.#surface as HTMLElement | undefined)?.firstElementChild
+    return root ? root.tagName.toLowerCase() : ''
+  }
+
+  /** Copy (LLD §4 "Copy confirmation", E3): writes the cached source to the clipboard; the panel's own
+   *  role=status span reads "Copied" (clearing after ~1.5s) on resolve, "Copy failed" on reject/unavailable —
+   *  never a throw, never an unhandled rejection, and the button's own accessible name never changes. */
+  #copyCodeTab(tab: CodeTab, status: HTMLElement): void {
+    const source = this.#codeSources.get(tab) ?? ''
+    const clipboard = navigator.clipboard as { writeText?: (text: string) => Promise<void> } | undefined
+    if (clipboard?.writeText === undefined) {
+      this.#showCopyStatus(status, 'Copy failed')
+      return
+    }
+    clipboard.writeText(source).then(
+      () => this.#showCopyStatus(status, 'Copied'),
+      () => this.#showCopyStatus(status, 'Copy failed'),
+    )
+  }
+
+  #showCopyStatus(status: HTMLElement, text: 'Copied' | 'Copy failed'): void {
+    status.textContent = text
+    if (text !== 'Copied') return
+    setTimeout(() => {
+      if (status.textContent === 'Copied') status.textContent = ''
+    }, 1500)
   }
 
   // ── state + render ─────────────────────────────────────────────────────────────────────────────────────────
