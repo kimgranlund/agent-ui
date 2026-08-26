@@ -64,9 +64,9 @@ describe('command-modal.md descriptor — frontmatter parses + schema-valid', ()
     }
   })
 
-  it('declares the search/list/status/empty parts + the empty slot', () => {
+  it('declares the search/list/status/empty/footer parts + the empty slot', () => {
     const parts = (parsed.sequences.get('parts') ?? []).map((i) => i.get('name'))
-    expect(parts).toEqual(expect.arrayContaining(['search', 'list', 'status', 'empty']))
+    expect(parts).toEqual(expect.arrayContaining(['search', 'list', 'status', 'empty', 'footer']))
     const slots = (parsed.sequences.get('slots') ?? []).map((i) => i.get('name'))
     expect(slots).toContain('empty')
   })

@@ -157,6 +157,20 @@ export class UICommandModalElement extends UIElement {
     list.append(emptyRow)
     this.#emptyRow = emptyRow
 
+    // GH #1670 (LLD amendment) — the footer keyboard-hint bar: fixed, static, always visible (the Ratified
+    // Design's four DECIDED axes — no new prop). A real <footer> (matching the adia gen-ui-kit prior art,
+    // command.class.js:123-127) holding three [data-hint] pairs, each with real <kbd> element(s) + label text.
+    // Static/created-once — no runtime updates, so no #footer field is needed (nothing ever re-reads it).
+    const footer = document.createElement('footer')
+    footer.setAttribute('data-part', 'footer')
+    for (const [keys, text] of [[['↑', '↓'], 'Navigate'], [['↵'], 'Select'], [['⎋'], 'Close']] as const) {
+      const hint = document.createElement('span')
+      hint.setAttribute('data-hint', '')
+      for (const k of keys) { const kbd = document.createElement('kbd'); kbd.textContent = k; hint.append(kbd) }
+      hint.append(` ${text}`)
+      footer.append(hint)
+    }
+
     // The nested ui-modal — accessible name forwarded from the INITIAL label (the modal forwards aria-label→dialog
     // ONCE at its ensureDialog; a reactive label updates the SEARCH field name, not the dialog's — LLD §3 note).
     const modal = document.createElement('ui-modal') as UIModalElement
@@ -168,8 +182,10 @@ export class UICommandModalElement extends UIElement {
     modal.style.setProperty('--ui-modal-inline-size', 'var(--ui-command-modal-inline-size)')
     modal.style.setProperty('--ui-modal-margin-block-start', 'var(--ui-command-modal-block-anchor)')
     // ORDER: put the parts inside the modal BEFORE appending the modal to the host, so when ui-modal connects it
-    // moves search/status/list into its <dialog> together (identity preserved; our refs stay valid). LLD §3 note.
-    modal.append(search, status, list)
+    // moves search/status/list/footer into its <dialog> together (identity preserved; our refs stay valid). LLD §3
+    // note. Footer LAST — the dialog part is plain block flow (no flex, modal.css), so DOM order is visual order:
+    // search → list → footer paints the footer as the bottom edge (LLD amendment A1).
+    modal.append(search, status, list, footer)
     this.#modal = modal
     this.append(modal)
     return { modal, search, list }

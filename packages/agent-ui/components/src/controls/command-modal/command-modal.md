@@ -73,6 +73,8 @@ parts:
   - name: empty
     role: presentation
     description: The control-created default "No results" row shown when the filter matches nothing and no author `[slot=empty]`/`[data-role=empty]` child is present. `role=presentation` — never reachable by Arrow/Enter/click.
+  - name: footer
+    description: The control-created keyboard-hint bar along the dialog's bottom edge — three fixed [data-hint] pairs (↑↓ Navigate, ↵ Select, ⎋ Close) built from real <kbd> elements. Always visible (no data-empty gating); static content, no prop.
 
 customStates: []         # none — the palette uses no :state() custom states of its own (the nested modal owns its own surface state)
 
@@ -152,9 +154,9 @@ active-descendant filter pattern (ADR-0085) — typing filters the list; Arrow k
 The palette is **arrangement + filter + selection semantics**, never a command bus, a router, or a store
 (ADR-0125). It composes three mechanisms the fleet already ships:
 
-- **The surface = a nested `ui-modal`.** `connected()` creates a `<ui-modal>`, moves the search/list/status
-  parts inside it, then appends the modal to the host — so when `ui-modal` connects it relocates the whole
-  subtree into its own `<dialog>` together. The palette's `open` drives the modal's `open`; a platform
+- **The surface = a nested `ui-modal`.** `connected()` creates a `<ui-modal>`, moves the search/list/status/
+  footer parts inside it, then appends the modal to the host — so when `ui-modal` connects it relocates the
+  whole subtree into its own `<dialog>` together. The palette's `open` drives the modal's `open`; a platform
   dismissal (Escape/backdrop) syncs the palette's `open` back to `false` and re-emits `close`+`toggle` one
   level up. The palette owns **no** dialog/backdrop/Escape machinery of its own.
 - **The filter = the combo-box active-descendant pattern, re-derived.** The search field is a control-created
@@ -197,6 +199,14 @@ substring test — the palette never throws and never blanks the list on a bad p
 
 A visually-hidden `[data-part="status"]` `aria-live="polite"` region announces the visible result count on
 every filter change ("12 results" / "No results") — the one net-new a11y behavior over the combo-box precedent.
+
+## The footer keyboard-hint bar (GH #1670)
+
+A control-created `[data-part="footer"]` `<footer>` sits along the dialog's bottom edge, below the list: three
+fixed `[data-hint]` pairs (`↑`/`↓` Navigate, `↵` Select, `⎋` Close), each built from real `<kbd>` elements.
+Fixed, static content — no prop drives it, and it carries no `[data-empty]`/`[hidden]` gating; it is always
+visible whenever the palette is open. It is inert, non-interactive markup: never focusable, never part of the
+option/active-descendant machinery.
 
 ## Escape is the modal's, single path
 

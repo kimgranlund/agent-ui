@@ -484,3 +484,126 @@ what jsdom's locators and non-layout engine cannot; jsdom is also blind to the `
 - **A `ui-command-group` sub-tag** (F3) — fenced additive v2; v1 groups with `[role=group]` children.
 - **A live dialog accessible name** — needs a `ui-modal` labelling-seam amendment (the §3 note); the named
   escalation only, not a v1 requirement.
+
+## Amendment (2026-08-26, GH #1670) — the `footer` keyboard-hint part
+
+Additive anatomy under the accepted ADR-0125 composition (no fork of its ruling — Pattern-tier coordinator,
+nested `ui-modal`, catalog-excluded, all unchanged; the ticket's Compose plane confirms no tier/base-class
+change). §3's frozen body is NOT edited; this section extends it, the doc's own REV convention scaled up to a
+part addition. The four design axes are RATIFIED on GH #1670 (`grill-the-ask`, 2026-08-26) and are inputs here,
+not re-derived: **fixed static content** (↑↓ Navigate · ↵ Select · ⎋ Close — no new prop/attribute), **always
+visible** (no `[data-empty]` gating), **real `<kbd>` elements** (the fleet's first; not a form element, so
+ADR-0163 is untouched), **existing `--md-sys-color-*-outline-variant` + surface-container token chain only**
+(no new `--md-sys-*` token).
+
+### A1 · DOM — the footer part in `#ensureParts()` (extends LLD-C2)
+
+Prior art: the adia gen-ui-kit footer markup (`gen-ui-kit/.../command/command.class.js:123-127`) —
+`<footer><span data-hint><kbd>↑</kbd><kbd>↓</kbd> Navigate</span><span data-hint><kbd>↵</kbd> Select</span>
+<span data-hint><kbd>⎋</kbd> Close</span></footer>` — translated into THIS control's programmatic-creation
+idiom (the live `#ensureParts()` builds every part via `document.createElement` + `setAttribute('data-part',…)`;
+no `<template>`, no innerHTML — the innerHTML path in the adia sibling is exactly what this control's idiom
+replaced):
+
+```ts
+// inside #ensureParts(), after the emptyRow block, before the ui-modal creation:
+const footer = document.createElement('footer')          // a real <footer>, matching the prior art
+footer.setAttribute('data-part', 'footer')
+for (const [keys, text] of [[['↑', '↓'], 'Navigate'], [['↵'], 'Select'], [['⎋'], 'Close']] as const) {
+  const hint = document.createElement('span')
+  hint.setAttribute('data-hint', '')
+  for (const k of keys) { const kbd = document.createElement('kbd'); kbd.textContent = k; hint.append(kbd) }
+  hint.append(` ${text}`)
+  footer.append(hint)
+}
+```
+
+Static, fixed, created once — no field ref is strictly required (nothing updates it), but a `#footer` private
+field following the sibling parts' shape is acceptable builder's choice.
+
+**Placement — `modal.append(search, status, list, footer)`, footer LAST.** Rationale: the parts MUST enter the
+`ui-modal` element while it is still detached (the §3 load-bearing child-move ORDER — unchanged and reaffirmed;
+the footer rides the same single `append` call so it relocates into the `<dialog>` with its siblings). Within
+that call, DOM order is visual order: the dialog part is plain block flow (no flex — `modal.css`), and `status`
+is visually hidden (`position: absolute`), so `search → list → footer` paints search on top, the list below it,
+and the footer as the bottom edge — the reference's column. Appending footer last also leaves the
+`[data-part='search']:focus ~ [data-part='list']` scrollbar-reveal sibling selector (GH #906) untouched.
+
+### A2 · CSS — `command-modal.css` (extends LLD-C11)
+
+New tokens in the `[1] TOKEN BLOCK` (`:where(ui-command-modal)`), resolving ONLY to existing roles/ladders —
+confirmed present in `shared/src/tokens/tokens.css` (`--md-sys-color-neutral-outline-variant`,
+`--md-sys-color-neutral-container-low`):
+
+```css
+--ui-command-modal-footer-border: var(--md-sys-color-neutral-outline-variant); /* the top hairline vs the list */
+--ui-command-modal-footer-ink: var(--ui-command-modal-muted-ink);              /* alias the existing muted role */
+--ui-command-modal-footer-pad-inline: var(--md-sys-space-sm);
+--ui-command-modal-footer-pad-block: var(--md-sys-space-xs);
+--ui-command-modal-footer-gap: var(--md-sys-space-sm);                         /* between the three hints */
+--ui-command-modal-hint-gap: var(--md-sys-space-xs);                           /* kbd ↔ label inside a hint */
+--ui-command-modal-kbd-border: var(--md-sys-color-neutral-outline-variant);
+--ui-command-modal-kbd-bg: var(--md-sys-color-neutral-container-low);          /* the search field's own surface-container register */
+--ui-command-modal-kbd-ink: var(--ui-command-modal-muted-ink);
+--ui-command-modal-kbd-radius: calc(var(--md-sys-shape-corner-base) / 2);      /* the reference's smaller pill radius, derived, no new shape token */
+```
+
+`[2] STYLES BLOCK` rules (the gen-ui-kit `command.css:247-277` treatment, re-expressed on the own chain): the
+footer is `display: flex; align-items: center; gap: var(--ui-command-modal-footer-gap)`, footer padding off the
+new pad tokens, `border-block-start: 1px solid var(--ui-command-modal-footer-border)`, ink + the existing
+`--ui-command-modal-caption-font`; `[data-hint]` is `inline-flex` with the hint gap; `kbd` is an inline-flex
+pill — `min-inline-size: 1.25em`, the kbd padding/border/radius/bg/ink tokens, `font: inherit` (a UA `<kbd>`
+defaults to monospace; the reference inherits). Always visible: no `[hidden]` rule, no `[data-empty]` gate.
+The `forced-colors` block gains the footer: kbd `background-color: Canvas; color: CanvasText;
+border-color: CanvasText` and the footer hairline `CanvasText` — the border IS the non-color signifier, so
+nothing color-only is introduced.
+
+### A3 · Descriptor + trip-wire (extends LLD-C12/C13)
+
+`command-modal.md` frontmatter `parts:` gains, after `empty`:
+
+```yaml
+  - name: footer
+    description: The control-created keyboard-hint bar along the dialog's bottom edge — three fixed [data-hint] pairs (↑↓ Navigate, ↵ Select, ⎋ Close) built from real <kbd> elements. Always visible (no data-empty gating); static content, no prop.
+```
+
+**The trip-wire MUST move in the same build:** `command-modal-descriptor.test.ts`'s parts assertion
+(`expect(parts).toEqual(expect.arrayContaining(['search', 'list', 'status', 'empty']))`, ~line 69) gains
+`'footer'` — without it the test passes vacuously whether or not the new part is documented. Prose sections of
+`command-modal.md` mentioning the parts list update in the same pass (stale-context law).
+
+### A4 · `modal.css` determination — NO change (in-scope, examined, declined)
+
+The ticket resolves `modal.css` as in scope for "whatever backdrop/frame/elevation change the reference calls
+for". Determination, grounded in both sheets read side by side (the reference URL is the deployed gen-ui-kit
+site, so its local `command.css` token block IS the visual source of truth): the reference frame is
+`1px solid --md-sys-color-neutral-outline-variant` border + opaque surface bg + radius + `--a-shadow-lg` drop
+shadow. Our `modal.css` already supplies the first three as dials (`--ui-modal-outline` = the SAME
+outline-variant role, opaque `--ui-container-bg` surface, `--ui-modal-radius`), plus a backdrop treatment the
+reference lacks entirely (80%-black scrim + 6px blur, GH #1554). The one genuine delta is the drop shadow —
+deliberately NOT adopted: this fleet's elevation model is tonal (`--ui-container-bg`/`-tint`, ADR-0015 signed
+axes), no `--md-sys-*` shadow token exists (adding one is exactly the new-token detour the ratified design
+forbids), and against the shipped near-opaque blurred backdrop a shadow is imperceptible (it would paint onto
+an already-dark scrim). If the Phase 3 visual baseline wants the reference's larger corner radius, the route is
+the EXISTING TKT-0017 forwarding seam — `command-modal.ts` pins `--ui-modal-radius` inline on the modal it
+owns, exactly as it already pins `--ui-modal-inline-size`/`--ui-modal-margin-block-start` — a
+command-modal-side dial, never a `modal.css` edit. `modal.css` ships this ticket byte-identical.
+
+### A5 · Acceptance (checkable, pre-build)
+
+1. `#ensureParts()` creates `footer[data-part=footer]` with exactly three `span[data-hint]` children, each
+   containing ≥1 real `<kbd>` element; appended in the single detached-modal `append` call, after `list`
+   (jsdom probe in `command-modal.test.ts`).
+2. The footer is present and visible with `open=true` AND with an empty/filtered-out list (no `hidden`, no
+   `[data-empty]` coupling) — jsdom assertion.
+3. `command-modal.md` `parts:` contains `footer`; the descriptor trip-wire's `arrayContaining` includes
+   `'footer'` (a red test on the un-amended descriptor proves non-vacuity).
+4. `command-modal.css` introduces NO raw `--md-sys-color-*` outside the `[1] TOKEN BLOCK` and NO new
+   `--md-sys-*` token anywhere; every new `--ui-command-modal-{footer,hint,kbd}-*` resolves to the roles named
+   in A2 (grep-checkable).
+5. `git diff` of `packages/agent-ui/components/src/controls/modal/modal.css` is empty for this ticket (A4).
+6. Browser leg: a fresh `command-modal.browser.test.ts` screenshot baseline including the footer (nothing to
+   diff against — the ticket's named OPEN item; the rig exists, the baseline is new), footer below the list's
+   bottom edge in both engines.
+7. Standing gates: `npm run check` + `npm test` green by exit code; `component-checker` DoD pass (the ticket's
+   named DoD owner).
