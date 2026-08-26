@@ -1,0 +1,72 @@
+/* artboard.css — the SHARED A2UI artboard visual core (ADR-0129 Amendment 2), extracted from the two
+ * independently-maintained copies this ADR found dual-maintained and drifting: `surface-host.css`
+ * (`ui-surface-host`'s own `[data-part]` rules) and `site/lib/canvas-surface.css` (the site's artboard
+ * helper). Both now consume THIS sheet via the `.ui-artboard-stage`/`.ui-artboard-surface` classes, tagged
+ * onto each consumer's own stage/surface elements alongside their existing selectors — a `:where(...)`
+ * TOKEN block minting `--ui-artboard-*` (ADR-0003 discipline), then the geometry every consumer shares:
+ * the checkered stage, the translate-centered surface with its definite-width collapse guard (an
+ * absolutely-positioned flex column with only a max width shrink-fits — see the `:empty` comment below),
+ * the ADR-0100 cl.2 `container-type` mount boundary, and the anticipatory `:empty` hint. Anything a single
+ * consumer needs beyond this (surface-host's scrollbar hiding, wrap/bare/working/superseded states, the
+ * terminal-empty override; the site's own page-level stage overrides) stays local to that consumer's own
+ * sheet — this file owns only what is truly identical between them.
+ */
+
+:where(.ui-artboard-stage) {
+  --ui-artboard-checker-a: transparent;
+  --ui-artboard-checker-b: var(--md-sys-color-neutral-surface, currentColor);
+  --ui-artboard-stage-bg: var(--md-sys-color-neutral-surface-low, currentColor);
+  --ui-artboard-empty-ink: var(--md-sys-color-neutral-on-surface-variant, currentColor);
+  --ui-artboard-gap: var(--md-sys-space-md);
+  --ui-artboard-pad: var(--md-sys-space-lg);
+  --ui-artboard-inline-inset: var(--md-sys-space-2xl); /* the calc() arm subtracted from 100% below — the 32rem cap itself has no ladder rung */
+}
+
+/* The artboard box — the rendered surface is CENTERED via a CSS translate transform (per the A2UI spec). */
+.ui-artboard-stage {
+  position: relative;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: auto;
+  background:
+    repeating-linear-gradient(0deg, var(--ui-artboard-checker-a) 0 15px, var(--ui-artboard-checker-b) 15px 16px),
+    repeating-linear-gradient(90deg, var(--ui-artboard-checker-a) 0 15px, var(--ui-artboard-checker-b) 15px 16px);
+  background-color: var(--ui-artboard-stage-bg);
+}
+
+.ui-artboard-surface {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* centre the surface within the stage via translate offsets (per spec) */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-artboard-gap);
+  align-items: center;
+  padding: var(--ui-artboard-pad);
+  /* A DEFINITE artboard width — NOT just max-inline-size. An absolutely-positioned flex column with only a max
+   * width shrink-fits, and its align-items:center children then resolve to min-content (~1ch): the whole surface
+   * collapses to a one-character-per-line strip. A definite width gives the rendered surface a real space to lay
+   * out in; content wider than the cap scrolls (overflow:auto below). */
+  inline-size: min(32rem, calc(100% - var(--ui-artboard-inline-inset)));
+  /* ADR-0100 cl.2 — the A2UI mount boundary: THIS box (not any rendered ui-row/ui-column/ui-list/ui-grid) is
+   * the query container the fleet's layout primitives resolve their `@container` reflow rules against. It
+   * qualifies under the law (`container-type: inline-size` only on an EXTERNALLY-sized box) because its
+   * inline-size is DEFINITE (the line above), not content-derived — the primitives themselves are never
+   * query containers (ADR-0016 cl.4's establishment sub-clause was deleted; an intrinsically-sized box can't
+   * safely be one). Without this, a mounted `ui-row`/`ui-column` renders its un-reflowed identity — graceful,
+   * per ADR-0100 cl.2 — but the canvas's own narrow-stack behaviour (a mounted toolbar wrapping under a
+   * narrow artboard) depends on it. */
+  container-type: inline-size;
+  /* Cap at the stage box so the translate-centered surface NEVER clips above the top edge: a surface shorter
+   * than the stage centres; one taller than the stage is clamped to the stage height and scrolls INSIDE this
+   * centred box (the stage's own overflow can't reach a negative-offset absolute child). */
+  max-block-size: 100%;
+  overflow: auto;
+}
+.ui-artboard-surface:empty::after {
+  content: 'The rendered surface appears here.';
+  color: var(--ui-artboard-empty-ink);
+  font-size: 0.85rem;
+}
