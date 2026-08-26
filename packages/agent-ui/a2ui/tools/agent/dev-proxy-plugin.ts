@@ -57,7 +57,7 @@ import type { ProduceDeps } from '../../src/agent/produce.ts'
 import { formatErrorLine } from '../../src/agent/meta-line.ts'
 import { resolvePair, validateProvidersConfig } from './providers-config.ts'
 import type { ProvidersConfig } from './providers-config.ts'
-import { providerFor } from './providers/index.ts'
+import { providerFor, validateProviderKeyCached } from './providers/index.ts'
 import { retrieve } from '../../src/corpus/retrieve.ts'
 import type { CorpusRecord } from '../../src/corpus/record.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
@@ -258,11 +258,21 @@ export function a2uiDevProxyPlugin(opts?: {
           const url = req.url ?? '/'
           try {
             const config = loadConfig() // fresh per request — stays in lockstep with the HMR'd switcher
-            // GET /status — which implemented providers have a key configured? (a boolean + count; no key)
+            // GET /status — which implemented providers have a key configured AND working? (a boolean +
+            // count; no key). Ticket #1634: a present-but-revoked/invalid key used to read the same as a
+            // working one (a non-empty-string check only) — now a live, TTL-cached round-trip
+            // (`validateProviderKeyCached`) confirms the key actually authenticates before counting it.
             if (req.method === 'GET' && url.startsWith('/status')) {
-              const available = Object.values(config.providers).filter(
-                (e) => e.implemented && typeof env[e.envKey] === 'string' && env[e.envKey] !== '',
-              ).length
+              const checks = await Promise.all(
+                Object.entries(config.providers)
+                  .filter(([, e]) => e.implemented)
+                  .map(async ([id, e]) => {
+                    const key = env[e.envKey]
+                    if (typeof key !== 'string' || key === '') return false
+                    return validateProviderKeyCached(id, key, e.endpoint)
+                  }),
+              )
+              const available = checks.filter(Boolean).length
               sendJson(res, 200, { available: available > 0, providers: available })
               return
             }

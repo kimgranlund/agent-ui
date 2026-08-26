@@ -275,6 +275,27 @@ const MAX_TOOL_ROUNDS = 4
  *  so total outbound work is bounded at MAX_TOOL_ROUNDS × MAX_CALLS_PER_ROUND. */
 const MAX_CALLS_PER_ROUND = 4
 
+/**
+ * Ticket #1634 — `/status` today only checks the env var is a non-empty string, never that it actually
+ * authenticates, so a revoked/invalid key still reads "available" until a real chat turn fails (masked).
+ * `GET /v1/models` is the cheapest live check Anthropic's API offers: no completion, no token cost, just
+ * confirms the key authenticates. The models URL is derived from the SAME registry-authoritative
+ * `endpoint` `stream()` takes (never a second hardcoded origin) by swapping the trailing `/messages` for
+ * `/models`. A 401/403 is the only definitive "this key is bad" signal — any other outcome (200, an
+ * unexpected status, a network fault reaching the check itself) fails OPEN, matching the non-empty-string
+ * check's own permissive posture: this is a dev-experience signal, not a security gate, and a hiccup in
+ * the CHECK is not evidence the KEY is bad.
+ */
+export async function validateAnthropicKey(apiKey: string, endpoint: string = DEFAULT_ENDPOINT): Promise<boolean> {
+  const modelsUrl = endpoint.replace(/\/messages$/, '/models')
+  try {
+    const res = await fetch(modelsUrl, { headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' } })
+    return res.status !== 401 && res.status !== 403
+  } catch {
+    return true
+  }
+}
+
 export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): AgentProvider {
   const endpoint = opts.endpoint ?? DEFAULT_ENDPOINT
 

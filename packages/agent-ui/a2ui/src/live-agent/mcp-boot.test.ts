@@ -49,6 +49,9 @@ afterAll(() => {
 // The impure `provider.stream` leg is mocked exactly like chat-route.test.ts's own suite (a separate
 // module registry — this file's mock never touches that file's), so the empty-roster `/chat` case
 // below can drive the REAL middleware end to end without a key or a network call.
+// `validateProviderKeyCached` rides the SAME mock (ticket #1634's `/status` live-validation dispatch) —
+// stubbed to resolve `true` so the pre-existing `/status` shape assertion below stays a no-network check,
+// same posture as the `stream` stub above.
 const captured = vi.hoisted(() => ({ requests: [] as Array<Record<string, unknown>> }))
 vi.mock('../../tools/agent/providers/index.ts', () => ({
   providerFor: () => ({
@@ -60,6 +63,7 @@ vi.mock('../../tools/agent/providers/index.ts', () => ({
       },
     },
   }),
+  validateProviderKeyCached: async () => true,
 }))
 
 type Middleware = (req: unknown, res: unknown) => void
