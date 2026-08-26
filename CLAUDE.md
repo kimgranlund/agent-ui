@@ -56,6 +56,7 @@ npm-workspaces monorepo; ten packages under `packages/agent-ui/*`.
 - `.claude/docs/` — adr, prd, spec, lld, rubrics, references, archive; `*.test.ts` co-located with
   source. Doc grammar + status law: `.claude/skills/doc-standards/`. `tickets/` is FROZEN (ADR-0145)
   — work items are GitHub Issues; ADR/PRD/SPEC/LLD and PLAN/ROADMAP stay files, always.
+  backend: B  # doc-writing-rules backend-resolver.md routing-table row, TICKET tier -> gh issue, ADR-0145
 
 ## Conventions (non-obvious only)
 
