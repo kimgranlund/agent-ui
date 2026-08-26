@@ -42,9 +42,10 @@ import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 const { content } = mountPage({
   title: 'Composing a ui-agent-admin surface',
   intro:
-    'ui-agent-admin is a live-editable agent config + instructions with a working chat preview — a ' +
-    'three-pane ui-split composing ui-settings, ui-conversation, and a generic ordered-entry-list ' +
-    'primitive instantiated five times. No new protocol dependency.',
+    'ui-agent-admin is a live-editable agent config + instructions with a working chat preview — one ' +
+    'composed ui-super-shell with three sibling content regions (Chat, Settings, Co-pilot) under a shown-' +
+    'set + primary visibility model, composing ui-conversation, ui-settings, and a generic ordered-entry-' +
+    'list primitive instantiated five times. No new protocol dependency.',
 })
 
 content.append(
@@ -106,14 +107,16 @@ function wireLiveOverlay(admin: UIAgentAdminElement, status: HTMLElement): void 
 content.append(sectionHeading('1 · One primitive, five instantiations'))
 content.append(
   pageLead(
-    'Left to right: the chat canvas (', code('ui-conversation'), ') and the tabbed config region ' +
-      '(vision rev.5) — the Settings tab stacks the Agent config (', code('ui-settings'),
-    ') with its ACTIVE master switch, the model grid, a generic ordered-entry-list seeded with three ' +
-      'built-in prompt sections (Foundation/Personality/Critical Items, each toggleable, none ' +
-      'deletable), and four MORE instances of that same entry-list primitive — Skills, Workflows, ' +
-      'Resources, Tools — each unseeded, custom-authorable, and master-switchable; the Context: System ' +
-      'and Context: Dialog tabs are the read-only introspection surface (the compiled Agent System JSON ' +
-      'and the Dialog Turns payload log, respectively). Toggle a section off, ' +
+    'Three sibling regions — Chat, Settings, Co-pilot — share one header bar; a shown-set + primary ' +
+      'model decides what paints at a given width (all three together wide, one at a time narrow). The ' +
+      'chat canvas (', code('ui-conversation'), ') is one region; Settings is another, reached through ' +
+      'its own internal ', code('settings-nav'), ' sub-nav — Agent (', code('ui-settings'),
+    ' with its ACTIVE master switch and the model grid), Capabilities (a generic ordered-entry-list ' +
+      'seeded with three built-in prompt sections — Foundation/Personality/Critical Items, each ' +
+      'toggleable, none deletable — plus four more instances of that same entry-list primitive: Skills, ' +
+      'Workflows, Resources, Tools, each unseeded, custom-authorable, and master-switchable), Surface, ' +
+      'and the read-only Context: System / Context: Dialog introspection segments (the compiled Agent ' +
+      'System JSON and the Dialog Turns payload log, respectively). Toggle a section off, ' +
       'add a custom skill, then send a message — the reply is a deterministic stub that visibly cites ' +
       'the composed prompt AND every enabled capability, proving the wiring without a live model call: ' +
       'the shipped build makes no external network dependency.',
