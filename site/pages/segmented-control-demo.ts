@@ -38,9 +38,8 @@ const record = (kind: string, value: unknown): void => {
   log.append(line)
   log.scrollTop = log.scrollHeight
 }
-// The control emits `select` on a committed selection; as a form control its value also surfaces via `change`.
-// Log whichever the control fires so the demo is honest about the real event surface.
-control.addEventListener('select', (event) => record('select', (event as CustomEvent<{ value: unknown }>).detail?.value))
+// The control emits ONLY `change` on a committed selection (radio-group.ts's #commit, inherited via
+// segmented-control.ts) — no `select` event exists on this control.
 control.addEventListener('change', () => record('change', (control as unknown as { value: string | null }).value))
 
 const instructions = el('p', {}, [
