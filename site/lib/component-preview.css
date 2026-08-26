@@ -119,7 +119,114 @@ component-preview {
   min-inline-size: 0;
 }
 .preview-canvas > .canvas-stage {
+  flex: 1 1 45%;
+  min-inline-size: 0;
+}
+
+/* ── the tabbed code view (GH #1664): a NEW sibling of .canvas-stage, inside .preview-canvas — never inside
+ * the a2ui #surface (which is torn down on every knob edit), so the tab strip + its selection persist by
+ * construction (E1). Side-by-side with the artboard within the same fixed-height row; its own panel body
+ * scrolls (min-block-size: 0) rather than stretching that row. */
+.preview-code {
+  flex: 1 1 55%;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  border-inline-start: 1px solid var(--md-sys-color-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface-low);
+}
+
+.preview-code-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.15rem;
+  padding: 0.4rem 0.4rem 0;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+
+.preview-code-tab {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.68rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.35rem 0.35rem 0 0;
+  cursor: pointer;
+}
+.preview-code-tab[aria-selected='true'] {
+  color: var(--md-sys-color-primary-on-surface, var(--md-sys-color-neutral-on-surface));
+  background: var(--md-sys-color-neutral-surface-high);
+}
+/* Focus ring (ADR-0009) — the SHARED fleet ring, read directly (no new tokens): the button.css precedent. */
+.preview-code-tab:focus-visible,
+.preview-code-copy:focus-visible {
+  outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+  outline-offset: var(--md-sys-state-focus-ring-offset);
+}
+
+.preview-code-panels {
   flex: 1 1 auto;
+  min-block-size: 0;
+  display: flex;
+}
+.preview-code-panel {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  overflow: hidden;
+}
+/* An author `display` declaration otherwise beats the UA stylesheet's `[hidden] { display: none }` on origin
+ * alone (author normal-importance rules always win over UA ones, regardless of specificity) — re-assert it
+ * explicitly, at higher specificity than the bare class rule above, so an inactive panel is truly hidden
+ * (not just visually squeezed to 0 by the flex/hidden layout fighting each other). */
+.preview-code-panel[hidden] {
+  display: none;
+}
+.preview-code-head {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+.preview-code-lang {
+  font-size: 0.66rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+.preview-code-copy {
+  appearance: none;
+  margin-inline-start: auto;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 0.3rem;
+  background: var(--md-sys-color-neutral-surface);
+  color: var(--md-sys-color-neutral-on-surface);
+  font-size: 0.68rem;
+  padding: 0.15rem 0.5rem;
+  cursor: pointer;
+}
+.preview-code-status {
+  min-inline-size: 3.5rem;
+  font-size: 0.66rem;
+  color: var(--md-sys-color-success-on-surface, var(--md-sys-color-neutral-on-surface-variant));
+}
+/* ui-code fills the remaining panel space and scrolls its own overflow (both axes — the component's own
+ * `overflow-x: auto` handles the unbroken-line case; this adds the vertical scroll a fixed-height panel
+ * needs). Page-authored layout only — code.css itself is UNCHANGED (specificity: a class+type selector here
+ * outranks the component's own `:scope` rule, so this wins regardless of source order). */
+.preview-code-panel > ui-code {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow: auto;
 }
 /* Empty-specimen affordance: a component that renders nothing visible in its current state (e.g. a closed Modal,
  * whose `<dialog>` is display:none and IS a surface child, so `.canvas-surface:empty` never fires) would leave a
