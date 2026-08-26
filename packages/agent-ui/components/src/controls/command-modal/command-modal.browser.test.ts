@@ -381,6 +381,61 @@ describe('ui-command-modal — TKT-0017: the fixed frame (both engines)', () => 
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #1670 — the footer keyboard-hint bar: a FRESH baseline (no prior baseline to diff against — the
+//  ticket's own named OPEN item). Follows this file's established before/after RECT idiom (getBoundingClientRect
+//  comparisons, e.g. the TKT-0017 fixed-frame test above) rather than a pixel-diff harness — this file carries
+//  no toMatchScreenshot rig of its own (that pattern lives in separate *.visual.browser.test.ts files with
+//  their own committed __baselines__ directory, e.g. checkbox.visual.browser.test.ts; the LLD amendment's own
+//  acceptance criterion A5.6 — "footer below the list's bottom edge in both engines" — is a geometry proof).
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-command-modal — GH #1670: the footer keyboard-hint bar (both engines)', () => {
+  it('renders as the visual bottom edge of the dialog, below the list, always visible, non-interactive', async () => {
+    const { el } = mount(PALETTE_MARKUP)
+    el.open = true
+    await el.updateComplete
+
+    const list = el.querySelector<HTMLElement>('[data-part="list"]')!
+    const footer = el.querySelector<HTMLElement>('[data-part="footer"]')!
+    const dialog = el.querySelector<HTMLDialogElement>('[data-part="dialog"]')!
+
+    const footerRect = footer.getBoundingClientRect()
+    expect(footerRect.width, `${server.browser}: the footer collapsed to zero width`).toBeGreaterThan(0)
+    expect(footerRect.height, `${server.browser}: the footer collapsed to zero height`).toBeGreaterThan(0)
+
+    // Baseline geometry — the footer paints BELOW the list's bottom edge (LLD amendment A1/A5.6), and inside
+    // the dialog's own bounding box (never spilling outside the nested modal's surface).
+    const listRect = list.getBoundingClientRect()
+    const dialogRect = dialog.getBoundingClientRect()
+    expect(footerRect.top, `${server.browser}: the footer did not render below the list`).toBeGreaterThanOrEqual(listRect.bottom - 1)
+    expect(footerRect.bottom, `${server.browser}: the footer spilled outside the dialog surface`).toBeLessThanOrEqual(dialogRect.bottom + 1)
+
+    // Three hints, each with a real <kbd> — the whole-shape law (per-part px passing while the hints collapse
+    // to nothing would still be a failure the count/kbd assertions below catch).
+    const hints = footer.querySelectorAll<HTMLElement>('[data-hint]')
+    expect(hints, `${server.browser}: expected exactly 3 keyboard hints`).toHaveLength(3)
+    for (const hint of hints) {
+      const kbdRect = hint.querySelector('kbd')!.getBoundingClientRect()
+      expect(kbdRect.width, `${server.browser}: a kbd pill collapsed to zero width`).toBeGreaterThan(0)
+    }
+
+    // Non-interactive: never focusable, never in the tab order, no role that would pull it into the
+    // combobox/listbox machinery (the non-regression requirement — inert static markup only).
+    expect(footer.getAttribute('tabindex')).toBeNull()
+    expect(footer.getAttribute('role')).toBeNull()
+    for (const kbd of footer.querySelectorAll('kbd')) expect(kbd.getAttribute('tabindex')).toBeNull()
+
+    // Always visible even filtered to zero results (no [data-empty]/[hidden] coupling).
+    const search = el.querySelector<HTMLElement>('[data-part="search"]')!
+    search.focus()
+    await userEvent.type(search, 'zzz-no-match')
+    await el.updateComplete
+    expect(getComputedStyle(footer).display, `${server.browser}: the footer hid itself on an empty filtered list`).not.toBe('none')
+    expect(footer.getBoundingClientRect().height, `${server.browser}: the footer collapsed on an empty filtered list`).toBeGreaterThan(0)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
 //  GH #906 (supersedes TKT-0084) — the results list scrolls with a thin, auto-hiding scrollbar, never
 //  the platform-default chunky bar. MEASURED (both engines under test fully expose the computed-style
 //  surface this probes — verified empirically, not assumed): a bare `overflow: auto` box renders with a

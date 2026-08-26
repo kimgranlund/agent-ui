@@ -67,6 +67,20 @@
      signifier itself (never color-only intent, ADR-0057). */
   --ui-command-modal-active-bg: var(--md-sys-color-neutral-tint-dim);
   --ui-command-modal-active-ink: var(--md-sys-color-neutral-on-surface);
+
+  /* GH #1670 (LLD amendment A2) — the footer keyboard-hint bar. Resolves ONLY to existing roles: the same
+     outline-variant role the search/active-option treatments already use, and the search field's own
+     surface-container register — no new --md-sys-* token. */
+  --ui-command-modal-footer-border: var(--md-sys-color-neutral-outline-variant); /* the top hairline vs the list */
+  --ui-command-modal-footer-ink: var(--ui-command-modal-muted-ink);              /* alias the existing muted role */
+  --ui-command-modal-footer-pad-inline: var(--md-sys-space-sm);
+  --ui-command-modal-footer-pad-block: var(--md-sys-space-xs);
+  --ui-command-modal-footer-gap: var(--md-sys-space-sm);                         /* between the three hints */
+  --ui-command-modal-hint-gap: var(--md-sys-space-xs);                           /* kbd ↔ label inside a hint */
+  --ui-command-modal-kbd-border: var(--md-sys-color-neutral-outline-variant);
+  --ui-command-modal-kbd-bg: var(--md-sys-color-neutral-container-low);          /* the search field's own surface-container register */
+  --ui-command-modal-kbd-ink: var(--ui-command-modal-muted-ink);
+  --ui-command-modal-kbd-radius: calc(var(--md-sys-shape-corner-base) / 2);      /* the reference's smaller pill radius, derived, no new shape token */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-command-modal) ════════════════ */
@@ -246,9 +260,43 @@
     display: none;
   }
 
+  /* ── Footer keyboard-hint bar (GH #1670 LLD amendment) — fixed, static, ALWAYS visible ──────────── */
+  /* No [data-empty]/[hidden] gate anywhere below — the Ratified Design's always-visible axis. Inert,
+     non-interactive markup: never focusable, never in the option/active-descendant machinery. */
+
+  :scope [data-part='footer'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-command-modal-footer-gap);
+    padding-inline: var(--ui-command-modal-footer-pad-inline);
+    padding-block: var(--ui-command-modal-footer-pad-block);
+    border-block-start: 1px solid var(--ui-command-modal-footer-border);
+    color: var(--ui-command-modal-footer-ink);
+    font-size: var(--ui-command-modal-caption-font);
+  }
+  :scope [data-hint] {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui-command-modal-hint-gap);
+  }
+  :scope [data-part='footer'] kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 1.25em;
+    padding-inline: var(--ui-command-modal-hint-gap);
+    border: 1px solid var(--ui-command-modal-kbd-border);
+    border-radius: var(--ui-command-modal-kbd-radius);
+    background-color: var(--ui-command-modal-kbd-bg);
+    color: var(--ui-command-modal-kbd-ink);
+    font: inherit; /* a UA <kbd> defaults to monospace; the reference inherits the footer's caption font */
+    line-height: 1.4;
+  }
+
   /* forced-colors (WHCM) — the active-option highlight becomes Highlight/HighlightText (not a faint bg that
      vanishes under WHCM); the aria-activedescendant + [data-active] pairing is the non-color signifier, so no
-     color-only intent exists (the combo-box [data-active] forced-colors precedent). */
+     color-only intent exists (the combo-box [data-active] forced-colors precedent). The kbd pills' border IS
+     their own non-color signifier (GH #1670), so they get the same System Colors treatment. */
   @media (forced-colors: active) {
     :scope [data-part='search'] {
       background-color: Field;
@@ -259,6 +307,14 @@
       background-color: Highlight;
       color: HighlightText;
       forced-color-adjust: none;
+    }
+    :scope [data-part='footer'] {
+      border-block-start-color: CanvasText;
+    }
+    :scope [data-part='footer'] kbd {
+      background-color: Canvas;
+      color: CanvasText;
+      border-color: CanvasText;
     }
   }
 }

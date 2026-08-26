@@ -124,13 +124,46 @@ describe('ui-command-modal — upgrade + typed prop surface', () => {
 // ── parts creation (idempotent) + host/part ARIA ────────────────────────────────────────────────────────
 
 describe('ui-command-modal — control-created parts (idempotent) + ARIA', () => {
-  it('creates exactly ONE search/list/status/empty part on connect, nested inside ONE ui-modal', () => {
+  it('creates exactly ONE search/list/status/empty/footer part on connect, nested inside ONE ui-modal', () => {
     const { el } = makePalette([option('a', 'Alpha')])
     expect(el.querySelectorAll('[data-part="search"]')).toHaveLength(1)
     expect(el.querySelectorAll('[data-part="list"]')).toHaveLength(1)
     expect(el.querySelectorAll('[data-part="status"]')).toHaveLength(1)
     expect(el.querySelectorAll('[data-part="empty"]')).toHaveLength(1)
+    expect(el.querySelectorAll('[data-part="footer"]')).toHaveLength(1)
     expect(el.querySelectorAll('ui-modal')).toHaveLength(1)
+    el.remove()
+  })
+
+  // GH #1670 (LLD amendment A5.1/A5.2) — the footer keyboard-hint bar: three fixed [data-hint] pairs, each
+  // with ≥1 real <kbd>, appended after the list inside the single detached-modal append call; always visible,
+  // never gated by [data-empty]/[hidden] — even with an empty/all-filtered-out list.
+  it('the footer is a real <footer>[data-part=footer] with exactly three [data-hint] hints, each with ≥1 real <kbd>', () => {
+    const { el, modal } = makePalette([option('a', 'Alpha')])
+    const footer = el.querySelector<HTMLElement>('[data-part="footer"]')!
+    expect(footer.tagName).toBe('FOOTER')
+    expect(footer.closest('ui-modal')).toBe(modal) // rode the same detached-modal append call as search/list/status
+    const hints = footer.querySelectorAll<HTMLElement>('[data-hint]')
+    expect(hints).toHaveLength(3)
+    for (const hint of hints) expect(hint.querySelectorAll('kbd').length).toBeGreaterThanOrEqual(1)
+    expect(footer.textContent).toContain('Navigate')
+    expect(footer.textContent).toContain('Select')
+    expect(footer.textContent).toContain('Close')
+    el.remove()
+  })
+
+  it('the footer is present and visible whether the list is populated, empty, or filtered to nothing (no [data-empty]/[hidden] gating)', async () => {
+    const { el, search } = makePalette([option('a', 'Alpha')])
+    el.open = true
+    await whenFlushed()
+    const footer = el.querySelector<HTMLElement>('[data-part="footer"]')!
+    expect(footer.hidden).toBe(false)
+
+    search.textContent = 'zzz-no-match'
+    search.dispatchEvent(new Event('input', { bubbles: true }))
+    await whenFlushed()
+    expect(footer.hidden).toBe(false) // filtered to zero visible options — footer still shown
+
     el.remove()
   })
 
