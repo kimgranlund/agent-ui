@@ -6,6 +6,27 @@
       "kind": "falsified",
       "owner": "unassigned",
       "queued_at": "2026-08-26T02:01:17Z"
+    },
+    {
+      "claim_id": "adr-0032",
+      "evidence": "Decision cl.2's own stated mechanism ('The CONTROL ramp = a per-tier --ui-scale MULTIPLIER (ADR-0007 mechanism kept)') no longer matches shipped code. ADR-0038 (2026-06-30, ratified, header-recorded: 'Supersedes ADR-0032's multiplier ladder for CONTROLS') replaced the multiplier with Kim's explicit (scale x size) -> Sec.1-row lookup; packages/agent-ui/shared/src/tokens/dimensions.css:398-482 sets --md-sys-height/-font/-icon-* as literal per-tier px values under each [scale=...] block, with --md-sys-scale surviving only as a display-only variable (comment at dimensions.css:390-396 states this explicitly). ADR-0032's own header table cell names the supersession, but cl.2's body prose (sampled verbatim by revalidation_checkpoint.py) still reads as the standing mechanism with no inline caveat -- same header-recorded/body-unrestated shape already flagged for adr-0021/adr-0025 in the open harvest candidate (adr-queue.json), now a 3rd-and-counting sibling instance found via revalidation rather than forward classification. (Table dialect, no frontmatter owner field -> unassigned, unattended /sweep-chores firing, no human present.)",
+      "kind": "falsified",
+      "owner": "unassigned",
+      "queued_at": "2026-08-26T16:32:03Z"
+    },
+    {
+      "claim_id": "adr-0033",
+      "evidence": "Decision cl.2 ('Control font = base x pow(--ui-scale, 0.45) (sublinear; the ruling)') no longer matches shipped code -- unlike cl.1 in the SAME sampled section, which already carries an inline '(History -- superseded by ADR-0038...)' caveat, cl.2 carries none, even though ADR-0035 superseded the pow mechanism entirely (ratified same day) and ADR-0038 went on to re-table ADR-0035's own values. grep for 'pow(' across packages/agent-ui/shared/src/tokens/dimensions.css returns zero hits -- the mechanism is gone from shipped code. A reader of cl.2 alone (the whole-Decision extraction this mode samples) is misled into thinking pow() is still the live formula. Header table (adr-0033 L12) does record the supersession chain correctly; only the body clause was left unrestated for this one sub-clause -- the identical shape already flagged for adr-0021/adr-0025/adr-0032 in the open harvest candidate. (Table dialect, no owner field -> unassigned, unattended firing.)",
+      "kind": "falsified",
+      "owner": "unassigned",
+      "queued_at": "2026-08-26T16:32:04Z"
+    },
+    {
+      "claim_id": "adr-0035",
+      "evidence": "Decision cl.2/cl.4's own font/icon tables (e.g. content-sm column: font 16/16/18, content-md: 16/16/18, ui-lg lg: font 16) no longer match shipped values. ADR-0038 (2026-06-30, header-recorded: 're-tables ADR-0035's non-default font/icon values') moved 6 font + 6 icon non-default cells; current packages/agent-ui/shared/src/tokens/dimensions.css shows content-sm as font 13/14/16 and content-md as font 14/16/18 (both smaller than ADR-0035's own table) and ui-lg lg font 18 (larger than ADR-0035's 16) -- verified by direct diff against the shipped [scale=...] blocks. ADR-0035's header (L12) names the re-tabling; the Decision body's literal number tables carry no inline caveat, so a reader taking cl.2/cl.4 at face value gets stale numbers -- same header-recorded/body-unrestated shape as adr-0021/adr-0025/adr-0032/adr-0033. (Table dialect, no owner field -> unassigned, unattended firing.)",
+      "kind": "falsified",
+      "owner": "unassigned",
+      "queued_at": "2026-08-26T16:32:04Z"
     }
   ]
 }
