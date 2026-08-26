@@ -338,6 +338,23 @@ export function loadDescriptorByTag(tag: string): ComponentDoc | undefined {
   return undefined
 }
 
+/**
+ * descriptorKeyByTag — the `ALL_DESCRIPTORS` glob KEY whose parsed descriptor `tag` scalar equals `tag`, or
+ * undefined (GH #1664, LLD-C3, `component-preview-code-tabs.lld.md` §5). The KEY (not the ComponentDoc) is
+ * what a CSS-tab caller needs: `site/lib/preview-source.ts`'s `cssTokenSource` derives the sibling
+ * stylesheet's glob key as `key.replace(/\.md$/, '.css')` — the md-basename ≡ css-basename invariant, pinned
+ * repo-wide by `preview-source.test.ts`'s E4 probe. A folder → `ui-{folder}` guess would mis-resolve the
+ * multi-doc folders (radio/split/swiper ×5/toast each host several tag-named md+css pairs) — correlation
+ * must go through the parsed descriptor, never the folder name.
+ */
+export function descriptorKeyByTag(tag: string): string | undefined {
+  for (const [key, raw] of Object.entries(ALL_DESCRIPTORS)) {
+    const doc = parseDoc(raw)
+    if (doc.descriptor.scalars.get('tag') === tag) return key
+  }
+  return undefined
+}
+
 /** Every shipped control whose descriptor `tier` matches, sorted by name — the DERIVED member list for a tier page. */
 export function membersOfTier(tier: string): TierMember[] {
   const members: TierMember[] = []
