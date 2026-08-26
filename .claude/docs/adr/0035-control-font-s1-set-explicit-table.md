@@ -96,3 +96,55 @@ Replace the `pow` font/icon mechanism with an **explicit per-`[scale]`-tier `--u
 - **Round the snap UP (larger §1 font) at ties** — rejected as the default tiebreak (round-down is fail-safe against the over-large-font defect that triggered this) — but offered to Kim as the one-cell fork (clause 3).
 - **Leave the icon on `pow`** (font-only fix) — rejected (fork 4). The icon has the identical derived-vs-set issue; leaving it on `pow` would render icon decimals against §1-set fonts — inconsistent. Both become explicit §1 tables.
 - **Snap by rounding the §1.1 law `3.16·h^0.45` to the set** (instead of nearest §1 height row) — equivalent for all tiers except it leaves more apparent ambiguity (15.0/19.0 law-ties); the nearest-§1-height-row rule (Kim's model) is cleaner and resolves all but the single height-42 tie.
+
+## Amendment — cl.2/cl.4 font/icon tables restated per ADR-0038's re-tabling (2026-08-26)
+
+Clauses 1, 3, and 5 (the snap rule, the height-42 tie ruling, and the height/other-ledgers-unchanged
+clause) are unaffected by this amendment and remain byte-identical.
+
+Clause 2 (the font table) and clause 4 (the icon table) gave literal per-`[scale]`-tier tables of
+§1 SET integers. **ADR-0038** (ratified 2026-06-30, the `(scale × size) → §1-row` lookup; its own
+header names this "re-tables ADR-0035's non-default font/icon values") re-derives font/icon from
+Kim's height rows: same-row consistency moves **6 font + 6 icon non-default cells** to different
+numbers (ADR-0038 cl.4). The default `ui-md` column is unaffected in both clauses — byte-identical
+across ADR-0035, ADR-0038, and the shipped `dimensions.css`.
+
+Restated under ADR-0038's current numbers (`packages/agent-ui/shared/src/tokens/dimensions.css`,
+`--md-sys-font-{sm,md,lg}` / `--md-sys-icon-{sm,md,lg}`, one triple per `[scale]` = `[size]`
+sm/md/lg):
+
+**Clause 2 — font.** The 6 diverging cells (ADR-0035's cl.2 value → ADR-0038/shipped value):
+
+| `[scale]` | `[size]` | ADR-0035 cl.2 | ADR-0038 / shipped |
+|---|---|---|---|
+| `ui-lg` | md | 14 | **16** |
+| `ui-lg` | lg | 16 | **18** |
+| `content-sm` | sm | 16 | **13** |
+| `content-sm` | md | 16 | **14** |
+| `content-sm` | lg | 18 | **16** |
+| `content-md` | sm | 16 | **14** |
+
+Every other font cell (`ui-sm` all rows, `ui-md` all rows [default], `content-md` md/lg,
+`content-lg` all rows) is byte-identical between ADR-0035's cl.2 table and today's shipped values.
+
+**Clause 4 — icon.** The 6 diverging cells (same shape, ADR-0035's cl.4 value → ADR-0038/shipped value):
+
+| `[scale]` | `[size]` | ADR-0035 cl.4 | ADR-0038 / shipped |
+|---|---|---|---|
+| `ui-lg` | md | 18 | **20** |
+| `ui-lg` | lg | 20 | **24** |
+| `content-sm` | sm | 20 | **16** |
+| `content-sm` | md | 20 | **18** |
+| `content-sm` | lg | 24 | **20** |
+| `content-md` | sm | 20 | **18** |
+
+Every other icon cell is likewise byte-identical to ADR-0035's cl.4 table.
+
+The decisions of clauses 2/4 do not change in mechanism — only the specific non-default numbers,
+per ADR-0038's own re-derivation from Kim's ratified height rows. Every prose reference to the
+original cl.2/cl.4 tables elsewhere in this document (the Decision text above, the Consequences
+and Slice-plan sections) is historical narrative describing the state at time of writing and is
+left as originally authored, per ADR mutability rules — this amendment is the current-numbers
+restatement of record, and ADR-0038's own clause-1 table is the source of truth going forward.
+`dimensions.css` has carried the re-tabled values since ADR-0038 landed; no code change
+accompanies this amendment.
