@@ -6,6 +6,20 @@
       "kind": "harvest",
       "plan": "",
       "queued_at": "2026-08-25T17:57:12Z"
+    },
+    {
+      "adr_id": "adr-0021",
+      "evidence": "ADR-0021's Amendment (2026-08-25, #1636, this firing's amended delta) restates its Decision under ADR-0223's [inline]-only floor scope, following the exact same-file append-only-Amendment shape now seen 5x across the corpus (adr-0007 Am.1 'bring the Decision body current with ADR-0038/0078', adr-0017 cl.3 restated for ADR-0020's persistent gate, adr-0018 cl.1 token repointed for ADR-0140, adr-0021, adr-0025) -- a header-only-recorded partial supersession/rename left its own Decision-body prose unrestated until a dedicated revalidation-driven Amendment fixed it. Checked origin/main: doc-standards/references/adr-log-mechanics.md's Amendment vs supersession vs extension table (lines 40-53) covers 'Foreseen amendment' / 'Supersession' / 'Extension' but names no row for this 4th, now-frequent shape -- a partial supersession/repoint already recorded in the header cell whose body text was never restated, fixed later by a same-file Amendment. No reference anywhere greps 'restat'/'misled'/'in part' for this pattern (git grep against origin/main, empty).",
+      "kind": "harvest",
+      "plan": "Extend .claude/skills/doc-standards/references/adr-log-mechanics.md's Amendment/Supersession/Extension table (or an adjoining paragraph) with this 4th shape: a header-recorded partial supersession/repoint whose Decision-body prose goes unrestated is fixed by a same-file append-only ## Amendment section restating current values while leaving the original prose as historical narrative -- cite adr-0007/0017/0018/0021/0025 as the worked instances.",
+      "queued_at": "2026-08-26T02:01:05Z"
+    },
+    {
+      "adr_id": "adr-0025",
+      "evidence": "ADR-0025's Amendment (2026-08-25, #1635, this firing's amended delta) restates cl.1/3/3a/4 under ADR-0078's three-axis design -- the same shape as adr-0021's amendment queued alongside it this firing; see that row's evidence for the shared, now-5x-occurring pattern (adr-0007/0017/0018/0021/0025) and the doc-standards gap it crosses.",
+      "kind": "harvest",
+      "plan": "Same target as adr-0021's row: extend .claude/skills/doc-standards/references/adr-log-mechanics.md's Amendment/Supersession/Extension table with the header-recorded-partial-supersession/repoint-restated-via-Amendment shape.",
+      "queued_at": "2026-08-26T02:01:05Z"
     }
   ]
 }

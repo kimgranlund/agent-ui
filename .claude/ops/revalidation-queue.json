@@ -1,18 +1,11 @@
 {
   "candidates": [
     {
-      "claim_id": "adr-0021",
-      "evidence": "Decision's unconditional host min-inline-size floor ('A bare field now reads as a usable, hittable text field') no longer holds for the default (fill) sizing posture. text-field.css:169-179 restricts the floor to the [inline] (hug) posture only, per ADR-0223 cl.2/3(b); the comment there reads '...superseding ADR-0021's default-state placement'. ADR-0021's own header carries no Supersedes/Amendment note reflecting this scope narrowing (table dialect, no frontmatter owner field -> unassigned, unattended /sweep-chores firing, no human present).",
+      "claim_id": "adr-0030",
+      "evidence": "Decision cl.1's own stated design ('reusing the shared type... value vocabulary is NOT re-listed... if flexProps.align ever grows a sixth member, column inherits it with zero drift') no longer matches shipped code. packages/agent-ui/components/src/controls/column/column.ts:42 narrows align to a column-local 4-member enum ['stretch','start','end','baseline'] (center dropped) with its own header comment: 'Kim's directive: center is NOT allowed on ui-column... the shared 5-member flexProps.align enum is NARROWED here'. This is a real, intentional deviation (present since the original 7a6ff773 build commit) but ADR-0030's own Decision text was never restated/amended to reflect it -- no ## Amendment section, no header Supersedes/Superseded-by update. A reader of the raw Decision clause 1 is misled about whether the enum is reused verbatim. (Table dialect, no frontmatter owner field -> unassigned, unattended /sweep-chores firing, no human present.)",
       "kind": "falsified",
       "owner": "unassigned",
-      "queued_at": "2026-08-25T17:59:51Z"
-    },
-    {
-      "claim_id": "adr-0025",
-      "evidence": "Decision cl.1 (single variant enum h1-h5/caption/body), cl.3/3a (--ui-type-* token family), and cl.4 (ElementInternals role=heading mechanism) no longer match current code. controls/text/text.ts implements ADR-0078's three-axis model (variant M3-role enum x size x as-stamping) reading --md-sys-typescale-*, and its own file header states the cl.4 internals-heading path 'is deleted outright'. Clauses 2 (slotted content) and 5 (catalog Text type) still stand. ADR-0078's header formally records 'Superseded by ADR-0078 - in part', but ADR-0025's own file carries no inline Amendment restating current values the way ADR-0017/ADR-0018 do - a reader of ADR-0025's raw Decision section alone gets 3 of 5 clauses wrong with no in-file pointer. No frontmatter owner field on this dialect -> unassigned, unattended firing.",
-      "kind": "falsified",
-      "owner": "unassigned",
-      "queued_at": "2026-08-25T17:59:51Z"
+      "queued_at": "2026-08-26T02:01:17Z"
     }
   ]
 }
