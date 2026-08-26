@@ -136,6 +136,8 @@ ui-super-shell.ss-demo--inner {
 .ss-demo [data-slot='global-nav'],
 .ss-demo [data-slot='global-options'] { background: var(--md-sys-color-secondary-container-high); text-align: center; }
 .ss-demo [data-slot='nav-pane'],
+.ss-demo [data-slot='section-nav'],
+.ss-demo [data-slot='options-section'],
 .ss-demo [data-slot='options-pane'] { background: var(--md-sys-color-primary-container-low); }
 /* GH #778 (A) / GH #782 Fork 1 (Kim's ruling, 2026-08-12) — the fill half of this rule (`flex: 1 1
    auto; min-block-size: 0`) is now a COMPONENT-side default (`[data-part='canvas'] > [data-slot=
