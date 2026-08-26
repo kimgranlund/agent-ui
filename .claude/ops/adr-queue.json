@@ -20,6 +20,34 @@
       "kind": "harvest",
       "plan": "Same target as adr-0021's row: extend .claude/skills/doc-standards/references/adr-log-mechanics.md's Amendment/Supersession/Extension table with the header-recorded-partial-supersession/repoint-restated-via-Amendment shape.",
       "queued_at": "2026-08-26T02:01:05Z"
+    },
+    {
+      "adr_id": "adr-0030",
+      "evidence": "adr-0030's own 2026-08-26 Amendment (PR #1679, this firing's true delta -- verified via a checkpoint-hash-formula-compatible reclassify, see report) restates cl.1 for the shipped column-local 4-member align enum -- the SAME header-recorded/body-unrestated-fixed-via-same-file-Amendment shape as adr-0007/0017/0018/0021/0025 already queued under adr-0021/adr-0025's rows. Now 6th+ corpus-wide instance. Checked origin/main: doc-standards/references/adr-log-mechanics.md's Amendment/Supersession/Extension table (lines 40-53) still names no 4th row for this shape (unchanged since last check).",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-26T22:55:19Z"
+    },
+    {
+      "adr_id": "adr-0032",
+      "evidence": "adr-0032's own 2026-08-26 Amendment (PR #1676, this firing's true delta) restates cl.2's control ramp as superseded by ADR-0038's explicit lookup -- same shape as adr-0021/0025/0030's rows (now queued alongside this one), fixing the exact gap this firing's revalidation sampling first flagged (adr-0032 was falsified in the 2026-08-26T16:28Z firing). Checked origin/main: adr-log-mechanics.md's 3-row table still names no 4th row.",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-26T22:55:19Z"
+    },
+    {
+      "adr_id": "adr-0033",
+      "evidence": "adr-0033's own 2026-08-26 Amendment (PR #1678, this firing's true delta) retires cl.2's pow() formula per the ADR-0035/ADR-0038 supersession -- same shape, now resolving the revalidation-queue's adr-0033 falsified finding from the 2026-08-26T16:28Z firing. Checked origin/main: adr-log-mechanics.md's 3-row table still names no 4th row.",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-26T22:55:19Z"
+    },
+    {
+      "adr_id": "adr-0035",
+      "evidence": "adr-0035's own 2026-08-26 Amendment (PR #1677, this firing's true delta) restates cl.2/cl.4's font/icon tables per ADR-0038's re-tabling -- same shape, resolving the revalidation-queue's adr-0035 falsified finding from the 2026-08-26T16:28Z firing. Checked origin/main: adr-log-mechanics.md's 3-row table still names no 4th row. 9 corpus-wide instances of this pattern now confirmed (adr-0007/0017/0018/0021/0025/0030/0032/0033/0035).",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-26T22:55:19Z"
     }
   ]
 }
