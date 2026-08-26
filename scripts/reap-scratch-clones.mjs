@@ -124,11 +124,27 @@ function originUrl(cwd) {
   try { return git(cwd, 'remote', 'get-url', 'origin'); } catch { return null; }
 }
 
-function githubRepo(cwd) {
-  const url = originUrl(cwd);
+function repoFromUrl(url) {
   if (!url) return null;
   const m = url.match(/github\.com[:/]([^/]+)\/([^/]+?)(?:\.git)?$/);
   return m ? { owner: m[1], repo: m[2] } : null;
+}
+
+function githubRepo(cwd) {
+  return repoFromUrl(originUrl(cwd));
+}
+
+/** Two origin URLs "match" if they're identical strings, or both resolve to the same GitHub
+ *  `{owner, repo}` via `repoFromUrl` — the canonical-form fallback that makes an SSH remote
+ *  (`git@github.com:owner/repo.git`) and an HTTPS remote (`https://github.com/owner/repo.git`)
+ *  compare equal. A non-GitHub origin (e.g. a local bare-repo path) never canonicalizes, so it
+ *  falls back to exact string equality only — unchanged from the pre-fix behavior. */
+function originsMatch(a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const ra = repoFromUrl(a);
+  const rb = repoFromUrl(b);
+  return !!ra && !!rb && ra.owner === rb.owner && ra.repo === rb.repo;
 }
 
 /** GraphQL PR check: does an exactly-matching (head OID) MERGED PR exist? Mirrors
@@ -265,7 +281,7 @@ function classifyCandidate(candidate, { mainOriginUrl, mergedPrFn, issueStateFn,
   const { path, ticket } = candidate;
 
   const candidateOrigin = originUrl(path);
-  if (!candidateOrigin || candidateOrigin !== mainOriginUrl) {
+  if (!originsMatch(candidateOrigin, mainOriginUrl)) {
     return { ...candidate, branch: null, disposition: 'SKIP', reason: 'not a clone of this repo (origin mismatch or unreadable)' };
   }
 
@@ -518,6 +534,25 @@ function selftest() {
 
     const rForeign = classifyFixture(foreignClone, '500');
     assert(rForeign.disposition === 'SKIP', `classify: origin URL mismatch → SKIP, never a reap target (got ${rForeign.disposition})`);
+
+    // SSH-vs-HTTPS regression (ticket #1666): a candidate whose origin is the SSH form of the
+    // SAME github.com repo the primary checkout's origin names in HTTPS form (or vice versa)
+    // must canonicalize-match, not SKIP on a raw string mismatch.
+    assert(originsMatch('git@github.com:owner/repo.git', 'https://github.com/owner/repo.git'),
+      'originsMatch: SSH remote and HTTPS remote of the same repo canonicalize-match');
+    assert(originsMatch('https://github.com/owner/repo.git', 'git@github.com:owner/repo.git'),
+      'originsMatch: the reverse direction (HTTPS main, SSH candidate) also matches');
+    assert(!originsMatch('git@github.com:owner/repo.git', 'https://github.com/owner/other-repo.git'),
+      'originsMatch: SSH/HTTPS canonicalization never masks a genuinely different repo');
+
+    const sshCandidate = classifyCandidate(
+      { path: closedCleanClone, ticket: '9001' },
+      { ...fakeDeps, mainOriginUrl: 'https://github.com/owner/repo.git' },
+    );
+    // closedCleanClone's real origin is the local `bare` path (non-github), so against an
+    // unrelated github.com mainOriginUrl it must still SKIP — proving the fallback never
+    // over-matches a local-path origin just because canonicalization was attempted.
+    assert(sshCandidate.disposition === 'SKIP', `classify: local-path origin vs github.com mainOriginUrl → SKIP, canonicalization never over-matches (got ${sshCandidate.disposition})`);
 
     // negative control: --execute never removes a KEEP/SKIP row.
     const rowsAll = [rDirty, rMerged, rOpen, rClosedClean, rClosedUnmerged, rUnknown, rForeign];
