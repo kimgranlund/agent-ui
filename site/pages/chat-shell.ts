@@ -176,19 +176,34 @@ content.append(
 content.append(sectionHeading('3 · Configuration lives on the inner ui-super-shell'))
 content.append(
   pageLead(
-    'ui-chat-shell has NO API of its own — its descriptor declares attributes, properties, events, and slots ' +
-      'all empty (see the derived reference below). Everything you can configure — the collapse toggles, ' +
-      'the per-side ', code('narrow-start'), '/', code('narrow-end'), ' story, the header-hosted collapse ' +
-      'contract, the ', code(DATA_SLOT_ATTR), ' vocabulary itself — is the composed ',
+    'ui-chat-shell declares no NEW typed API of its own — its descriptor’s attributes, properties, events, and ' +
+      'slots all resolve to empty (see the derived reference below). It does forward a real attribute surface ' +
+      'onto the inner shell it composes (SPEC-R6/R7/R8, LLD-C3, ADR-0154/ADR-0155): set ',
+    code('resizable-start'), '/', code('resizable-end'), ', ', code('size-start'), '/', code('size-end'), ', ',
+    code('narrow-start'), '/', code('narrow-end'), ', or ', code('collapse-band'), ' on THIS element and each is ' +
+      'copied onto the composed inner shell at compose time, exactly as if it had been set there directly — ',
+    code('collapse-band'), ' stays unset by default so agent-admin’s pinned narrow-tabs parity holds (the ' +
+      'negative control).',
+  ),
+)
+content.append(
+  pageLead(
+    code('size-start'), '/', code('size-end'), ' are the one pair that additionally relay LIVE if changed after ' +
+      'connect — the pair a consumer plausibly sets once an async persistence restore resolves; every other ' +
+      'forwarded attribute is read once, at author time. This is attribute forwarding, not a new typed property ' +
+      'of ui-chat-shell’s own — the empty descriptor below stays accurate. Everything else you can configure — ' +
+      'the collapse toggles’ own behavior, the header-hosted collapse contract, the ', code(DATA_SLOT_ATTR),
+    ' vocabulary itself — is still the composed ',
     (() => {
       const a = document.createElement('a')
       a.href = './super-shell.html'
       a.textContent = 'ui-super-shell'
       return a
     })(),
-    '’s own, inherited wholesale. The one exception is a default, not a setting: ui-chat-shell sets ',
-    code('narrow-start="stack"'), ' on the inner shell for you (the same default ui-workspace-shell chooses), ' +
-      'so a consumer never has to remember it.',
+    '’s own, inherited wholesale. The one true default (not a setting) is that ui-chat-shell sets ',
+    code('narrow-start="stack"'), ' on the inner shell for you (the same default ui-workspace-shell chooses), so ' +
+      'a consumer never has to remember it — an authored ', code('narrow-start'), '/', code('narrow-end'),
+    ' above simply overrides it.',
   ),
 )
 
