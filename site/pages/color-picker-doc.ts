@@ -2,8 +2,8 @@
 // from `color-picker.md` via the shared doc-page.ts renderer (composeDocPage): the attribute/properties/
 // events/parts tables are read straight from the descriptor the contract trip-wire validates, so they cannot
 // drift. Two LIVE specimens sit between the tables and the prose — the default hex-format control and an
-// oklch-format one; the full interaction demo (pad drag, format switching, presets, the type=color leg) is
-// on the color-picker demo page.
+// oklch-format one, demonstrating format=hex vs format=oklch right here; the interactive pad-drag + presets
+// demo is on the color-picker demo page.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo-content chrome; never restyles a ui-* control
 import { loadColorPickerDoc } from '../lib/frontmatter.ts'
@@ -17,8 +17,8 @@ const { content } = mountPage({
   intro: 'A standalone color-input control: a 2-axis chroma×lightness pad, three composed ui-slider channels ' +
     '(hue always; chroma + lightness mirrored — the accessible spine), and an editable readout with a composed ' +
     'ui-swatch preview. Internal model is always OKLCH; `value` serializes per `format` (hex default, oklch ' +
-    'opt-in). Generated from color-picker.md (descriptor-derived tables). See the color-picker demo for the ' +
-    'live pad drag + format switching + presets + the ui-text-field type=color leg.',
+    'opt-in) — see the two live specimens below for hex vs oklch side by side. Generated from color-picker.md ' +
+    '(descriptor-derived tables). See the color-picker demo for the live pad drag + presets.',
 })
 
 // ── live specimens (real <ui-color-picker>s, placed between the tables and the prose) ─────────────────

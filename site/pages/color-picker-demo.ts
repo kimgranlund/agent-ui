@@ -1,8 +1,8 @@
 // site/pages/color-picker-demo.ts — the ui-color-picker interaction demo (ADR-0123, color-picker.lld.md).
 // Mounts the REAL standalone control in a <form> and proves the round-trip: dragging the pad or a channel
 // updates el.value AND the FormData entry keyed by `name`. A live readout reflects both; an input/change
-// event log tracks every gesture tick + commit. Also shows a required field (valueMissing), an author-
-// supplied `[slot=presets]` row of ui-swatch presets, and the `ui-text-field type=color` lazy-overlay leg.
+// event log tracks every gesture tick + commit. Also shows a required field (valueMissing) and an author-
+// supplied `[slot=presets]` row of ui-swatch presets.
 // The descriptor-derived API table is on the color-picker-doc page.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
@@ -13,8 +13,7 @@ const { content } = mountPage({
   intro: 'The standalone color-input control, live inside a <form>. Drag the pad, drag/step a channel slider, ' +
     'or type a value into the readout — the color round-trips into the form (FormData keyed by name), shown ' +
     'in the readout below. The second picker is required (unset → valueMissing). The third shows an author-' +
-    'supplied preset row. The fourth is the ui-text-field type=color lazy-overlay leg. The API table is on ' +
-    'the ui-color-picker API page.',
+    'supplied preset row. The API table is on the ui-color-picker API page.',
 })
 
 const text = (s: string): Text => document.createTextNode(s)
