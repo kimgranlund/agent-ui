@@ -76,3 +76,36 @@ The gate is a **Chromium + WebKit** smoke measuring `getBoundingClientRect()` / 
 - **A hand-tuned per-tier `--ui-font-scale` (≠ `--ui-scale`), discrete (option (b))** — rejected. A per-*tier* font multiplier does **not compose with `[size]`**: font must track the **final** height (`size × scale`), but a per-tier constant ignores `[size]`, so `[size=lg] [scale=content-lg]` would get the wrong font%. Only a function of `scale` (clause 2), applied to the per-size base, composes. (It also forfeits `pow()`'s continuity for no benefit, since `pow()` support is fine.)
 - **Make display type `--ui-type-*` sublinear too (for "consistency")** — rejected (the fork, clause 5). Display type has no box, so the glyph-in-box optical correction does not apply; and the `content-*` band's presence intent wants headings to scale fully. Sublinear display type would be a *worse* result dressed as consistency. The two ledgers correctly differ.
 - **Keep linear font + just cap `content-lg`'s multiplier lower** (e.g. content-lg → 1.4 instead of 1.75) — rejected. That mis-sizes the *height* (the frame the user wants generous) to compensate for the font, conflating the two levers. The §1.1 decoupling fixes the font *at any height* — the principled fix, not a per-tier patch.
+
+## Amendment — cl.2 retired: no live `pow()` formula in shipped code (2026-08-26, ADR-0035/ADR-0038 supersession)
+
+Clauses 1, 3, 4, 5, and 6 are unaffected by this amendment and remain byte-identical (clause 1
+already carries its own inline history caveat, above).
+
+Clause 2 declared the control font mechanism as `--ui-font-{sm,md,lg}: calc(<base>px *
+pow(var(--ui-scale), 0.45))`. **ADR-0035** (accepted 2026-06-30, Kim's ruling: control fonts must
+be the exact §1 SET integers, not `pow` approximations) replaced this continuous approximation
+with an explicit per-`[scale]`-tier lookup table — the outcome (font grows sublinearly, landing on
+the §1 ramp) stands; only the `pow()`-in-`calc()` mechanism is superseded. **ADR-0038** (accepted
+2026-06-30, Kim's ruling "let's not use multipliers") then re-tabled the whole control ramp:
+`--ui-{height,font,icon}` become one explicit `(scale × size) → §1-row` lookup with no `×
+--ui-scale` multiplier anywhere in the formula. A repo-wide grep for `pow(` across
+`packages/agent-ui/shared/src/tokens/dimensions.css` returns zero hits — the mechanism named in
+clause 2 is entirely gone from shipped code.
+
+Restated under the current mechanism:
+
+- **Clause 2 — retired; no live `pow()` formula.** `--ui-font-{sm,md,lg}` is no longer computed as
+  `base × pow(--ui-scale, 0.45)`. It is one row of Kim's explicit `(scale × size) → §1-row` lookup
+  table (ADR-0038), read directly with no multiplier and no `pow()` call anywhere in the formula.
+  The sublinear, §1-faithful ratio this clause ruled on stands (font% still drops as the control
+  grows); only the `pow()` MECHANISM is gone.
+
+The decision of clause 2 does not change in outcome — only the mechanism realizing it, per
+ADR-0035's explicit-table replacement and ADR-0038's later re-tabling. Every prose reference to
+the `pow()` formula elsewhere in this document (the Decision text above, its worked-example
+verification numbers, and the Consequences/Alternatives sections' `pow()` discussion) is
+historical narrative describing the state at time of writing and is left as originally authored,
+per ADR mutability rules — this amendment is the current-mechanism restatement of record.
+`packages/agent-ui/shared/src/tokens/dimensions.css` has carried the ADR-0038 lookup table with no
+`pow()` call since ADR-0038 landed; no code change accompanies this amendment.
