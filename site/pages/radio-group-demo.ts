@@ -24,7 +24,6 @@ const group = el(
   'ui-radio-group',
   {
     name: 'plan',
-    value: 'pro',
     orientation: 'horizontal',
     style: 'display:flex; flex-wrap:wrap; align-items:center; gap:var(--md-sys-space-md);',
   },
@@ -34,6 +33,10 @@ const group = el(
     el('ui-radio', { value: 'team' }, [text('Team')]),
   ],
 )
+// `value` is a property-only accessor on ui-radio-group (not an observed/reflected attribute), so the
+// el() helper's attrs object — which only ever calls setAttribute — cannot seed it; assign the property
+// directly to select "Pro" by default. A programmatic write like this does not emit `change`.
+;(group as unknown as { value: string | null }).value = 'pro'
 
 // ── the event log — the selection commit (USER gesture only; a programmatic `value` write is silent) ────────
 const log = document.createElement('ul')
@@ -47,10 +50,10 @@ const record = (kind: string, value: unknown): void => {
   log.append(line)
   log.scrollTop = log.scrollHeight
 }
-// The container emits `select` on a committed selection; as a form control its value also surfaces via `change`.
-// Log whichever the group fires so the demo is honest about the real event surface.
-group.addEventListener('select', (event) => record('select', (event as CustomEvent<{ value: unknown }>).detail?.value))
-group.addEventListener('change', () => record('change', group.getAttribute('value')))
+// The container emits ONLY `change` on a committed selection (radio-group.ts's #commit) — no `select` event
+// exists on this control. `value` is a property-only accessor (not a reflected attribute), so the log reads
+// the property, not `getAttribute`.
+group.addEventListener('change', () => record('change', (group as unknown as { value: string | null }).value))
 
 const instructions = el('p', {}, [
   text('Exactly one option is selected. This group is `orientation="horizontal"`, so Arrow Left/Right move the ' +

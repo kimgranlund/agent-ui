@@ -29,7 +29,6 @@ function renderExample(): HTMLElement {
 
   const group = document.createElement('ui-radio-group')
   group.setAttribute('name', 'plan')
-  group.setAttribute('value', 'pro')
   // ADR-0103: ui-radio-group now owns its own interior layout (flex column by default, a wrapping row + gap
   // under `orientation="horizontal"`). The inline `style` below just matches the demo page's identical
   // plan-picker shape (radio-group-demo.ts, `--md-sys-space-md` — this page's own gap choice, not the component's
@@ -46,6 +45,9 @@ function renderExample(): HTMLElement {
     radio.textContent = label
     group.append(radio)
   }
+  // `value` is a property-only accessor on ui-radio-group (not an observed/reflected attribute) — seed the
+  // default selection via the property, after the members it matches against are in place.
+  ;(group as unknown as { value: string | null }).value = 'pro'
 
   section.append(specimenRow([group]))
   return section
