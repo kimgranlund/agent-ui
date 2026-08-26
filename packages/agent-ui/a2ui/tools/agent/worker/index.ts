@@ -13,7 +13,7 @@ import type { ProduceDeps } from '../../../src/agent/produce.ts'
 import { formatErrorLine } from '../../../src/agent/meta-line.ts'
 import { resolvePair, validateProvidersConfig } from '../providers-config.ts'
 import type { ProvidersConfig } from '../providers-config.ts'
-import { providerFor } from '../providers/index.ts'
+import { providerFor, validateProviderKeyCached } from '../providers/index.ts'
 import { retrieve } from '../../../src/corpus/retrieve.ts'
 import type { CorpusRecord } from '../../../src/corpus/record.ts'
 import { loadCatalog } from '../../../src/catalog/catalog.ts'
@@ -149,11 +149,21 @@ async function readBody(request: Request): Promise<string> {
   return new TextDecoder().decode(merged)
 }
 
+// Ticket #1634: a present-but-revoked/invalid key used to read the same as a working one (a
+// non-empty-string check only) — now a live, TTL-cached round-trip (`validateProviderKeyCached`, the
+// SAME dispatch the dev proxy uses) confirms the key actually authenticates before counting it.
 async function handleStatus(env: Env): Promise<Response> {
   const env2 = envVars(env)
-  const available = Object.values(config.providers).filter(
-    (e) => e.implemented && typeof env2[e.envKey] === 'string' && env2[e.envKey] !== '',
-  ).length
+  const checks = await Promise.all(
+    Object.entries(config.providers)
+      .filter(([, e]) => e.implemented)
+      .map(async ([id, e]) => {
+        const key = env2[e.envKey]
+        if (typeof key !== 'string' || key === '') return false
+        return validateProviderKeyCached(id, key, e.endpoint)
+      }),
+  )
+  const available = checks.filter(Boolean).length
   return json(200, { available: available > 0, providers: available })
 }
 

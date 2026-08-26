@@ -11,7 +11,7 @@
 // never an unhandled crash either way.
 
 import type { AgentProvider } from '../../../src/agent/agent-transport.ts'
-import { anthropicProvider } from '../../../src/agent/providers/anthropic.ts'
+import { anthropicProvider, validateAnthropicKey } from '../../../src/agent/providers/anthropic.ts'
 
 /** Reasons `providerFor` degrades instead of returning a live adapter (SPEC-R11 AC4) — mirrors, but is
  * independent of, `resolvePair`'s registry-level rejection reasons (that check runs first, upstream). */
@@ -50,4 +50,44 @@ export function providerFor(id: string, opts: { apiKey: string; endpoint?: strin
     return { ok: false, reason: 'unimplemented' }
   }
   return { ok: true, provider: factory(opts) }
+}
+
+/** The set of provider ids this module wires a LIVE key-authentication check for (ticket #1634) — a
+ *  sibling table to `IMPLEMENTED` above, same reasoning: `openai`/`gemini` have no real adapter to
+ *  validate against either, so they're absent here too. */
+const KEY_VALIDATORS: Record<string, (apiKey: string, endpoint?: string) => Promise<boolean>> = {
+  anthropic: validateAnthropicKey,
+}
+
+/** Ticket #1634's design decision: LIVE round-trip validation on `/status`, memoized per (provider, key
+ *  value) for `KEY_VALIDATION_TTL_MS` — see the ticket's Findings for the full rationale. Short version:
+ *  `probeLive()` fires once per page mount, not on a recurring poll (verified against every call site
+ *  before choosing this), so a live check's added latency is bounded to real navigations; the TTL exists
+ *  only to absorb a BURST of those (several pages open, a rapid dev-server reload loop) without re-firing
+ *  the upstream call on every single request, not to serve as the correctness mechanism. Keying on the
+ *  KEY VALUE itself (not just the provider id) makes a key edit a natural cache miss — no separate
+ *  invalidation path needed for "the user just fixed it". */
+const KEY_VALIDATION_TTL_MS = 30_000
+
+interface KeyValidationEntry {
+  ok: boolean
+  expiresAt: number
+}
+const keyValidationCache = new Map<string, KeyValidationEntry>()
+
+/**
+ * `id`'s configured key → does it actually authenticate? `undefined` from `KEY_VALIDATORS` (no adapter
+ * wired) answers `true` — the caller's own non-empty-string check already gated getting here, and there
+ * is no live adapter to validate against either way (unchanged from before this ticket for openai/gemini).
+ */
+export async function validateProviderKeyCached(id: string, apiKey: string, endpoint?: string): Promise<boolean> {
+  const validator = KEY_VALIDATORS[id]
+  if (validator === undefined) return true
+  const cacheKey = `${id}:${apiKey}`
+  const now = Date.now()
+  const cached = keyValidationCache.get(cacheKey)
+  if (cached !== undefined && cached.expiresAt > now) return cached.ok
+  const ok = await validator(apiKey, endpoint)
+  keyValidationCache.set(cacheKey, { ok, expiresAt: now + KEY_VALIDATION_TTL_MS })
+  return ok
 }
