@@ -18,6 +18,9 @@ Process `.claude/docs/process.md` · Standards `.claude/docs/references/` · `si
   (boots its own vite + Chromium, gate-verdicts only). Never re-monolith the shards or add a heap
   bump — history + the focus-timing extension rule: `component-testing`.
 - `npm run dev` / `npm run build` — the docs site (`site/`) is the app entry · `npm run deploy:docs` — ui.nonoun.io
+- `npm run ops:reap-worktrees` / `ops:reap-branches` / `ops:reap-scratch-clones` — gated,
+  dry-run-by-default reap scripts (append `-- --execute` to apply) for `.claude/worktrees/`
+  entries, local branches, and orphaned `dispatch_envelope.py` scratch-clone dirs, respectively.
 
 `check` + `test` must be green before a change is done — judge by EXIT CODES, never by grepping
 output (a piped grep-count masked a red check and an OOM'd browser run, 2026-07-19).
