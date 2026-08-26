@@ -36,7 +36,7 @@ const { content } = mountPage({
 content.append(
   pageLead(
     'ui-super-shell (@agent-ui/app) composes ' +
-      '[ header? | (rail?+pane?) | content | (pane?+rail?) | footer? ]. Every slot is OPTIONAL and ' +
+      '[ header? | (rail?+pane*) | content | (pane*+rail?) | footer? ]. Every slot is OPTIONAL and ' +
       'ABSENT when unfilled — you author only the slots you need. Spec-sourced from Kim’s Figma ' +
       'frames (shell-archetypes-m5.spec.md, GH #44): the wireframe and its all-collapsed extreme. Below, ' +
       'five systems, each shown on a live shell you can inspect and click.',
@@ -85,10 +85,12 @@ content.append(
     'A shell is ',
     code('[ header? | side-L? | content | side-R? | footer? ]'),
     ', where a side is a rail + pane (mirrored on both sides — SPEC-R1a). Mark a light-DOM child ',
-    code('data-slot="header|global-nav|nav-pane|content|options-pane|global-options|footer"'),
+    code(
+      'data-slot="header|global-nav|nav-pane|section-nav|content|options-section|options-pane|global-options|footer"',
+    ),
     '; an unmarked child folds into ',
     code('content'),
-    ', the one mandatory slot. The full grammar, all seven slots:',
+    ', the one mandatory slot. The full grammar, all nine slots:',
   ),
 )
 content.append(
@@ -96,7 +98,9 @@ content.append(
     slot('header', 'header', 'Permanent chrome — hosts the collapse toggles.'),
     slot('global-nav', 'global-nav', 'Outer rail — 3 modules (54px).'),
     slot('nav-pane', 'nav-pane', 'Outer pane — 14 modules (252px).'),
+    slot('section-nav', 'section-nav', 'Second outer pane — stacks after nav-pane, same side.'),
     slot('content', 'content', 'The mandatory slot — flexible, fills the rest.'),
+    slot('options-section', 'options-section', 'Second options pane — stacks before options-pane, mirrors section-nav.'),
     slot('options-pane', 'options-pane', 'Mirrors nav-pane.'),
     slot('global-options', 'global-options', 'Mirrors global-nav.'),
     slot('footer', 'footer', 'Permanent chrome, like header.'),
