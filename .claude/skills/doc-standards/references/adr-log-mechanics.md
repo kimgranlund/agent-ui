@@ -45,12 +45,37 @@ stands**. All three are append-only with respect to an accepted decision's subst
 | **Foreseen amendment** | stands; an extension it ALREADY anticipated lands | append-only `## Amendment` section in the SAME ADR — never a new file |
 | **Supersession** | is reversed / replaced / no longer applies | a NEW ADR; the old one's Status flips `superseded` + `Superseded by ADR-NNNN` links forward |
 | **Extension** | stands; a *separate, new* decision builds on it | a NEW ADR, two-way `Extends` ↔ `Extended by` cross-reference |
+| **Partial supersession, left unrestated** | is partly superseded — a LATER ADR already replaced or renamed one clause/mechanism, and the header cell records that supersession — but the Decision-body prose was never restated to match | append-only `## Amendment` in the SAME ADR restating the affected clause under the current mechanism/value — same mechanical form as a foreseen amendment, distinct trigger (below) |
 
 An `## Amendment` **adds** the foreseen follow-through; it does not edit the original Context /
 Decision / Consequences, so it does not breach *never edit an accepted decision's substance*. If you
 want to *change* a sentence inside an accepted Decision, that is a supersession — open a new ADR.
 An amendment header carrying `**proposed** — Kim ratifies` is flipped only by `adr_ratify.py`'s
 amendment mode (§5), never by hand-editing.
+
+**The 4th shape: partial supersession left unrestated (found via revalidation, not foreseen at
+write time).** A later ADR can supersede one clause or mechanism of an earlier ADR without
+superseding the earlier ADR as a whole — the earlier ADR's own header cell (`Supersedes`/
+`Superseded by`) correctly names the later ADR, but nothing forces the Decision-BODY prose to
+catch up. A reader who reads only the body clause, never the header table, is misled into thinking
+the old mechanism or value is still live. This is neither a foreseen amendment (nobody planned the
+restatement when the ADR was written) nor a full supersession (the ADR's OTHER clauses still
+stand) — it takes its own append-only `## Amendment`, mechanically identical to a foreseen
+amendment (never edits the original Context/Decision/Consequences), but triggered by a
+revalidation finding rather than a planned follow-through.
+
+**Detecting it.** The header table's `Supersedes`/`Superseded by` cell names a later ADR for one
+specific clause or mechanism — but the Decision body's own prose for that clause still states the
+old mechanism/value with no inline caveat. `harness:decision-watcher`'s revalidation mode is what
+actually finds these live, by sampling accepted Decision text against shipped code: a
+header-recorded-but-body-unrestated gap reads as a `falsified` verdict, not `confirmed`, because
+the sampled body clause no longer matches reality even though the ADR's own paper trail (the
+header cell) is technically complete.
+
+[verified] 9 worked instances, all in this repo, each fixed via its own append-only `## Amendment`
+(2026-08-21 through 2026-08-26): adr-0007 (Amendment 1, 2026-08-21, commit `21bea37c` — a direct
+commit, no PR), adr-0017 (PR #1626), adr-0018 (PR #1625), adr-0021 (PR #1636), adr-0025
+(PR #1635), adr-0030 (PR #1679), adr-0032 (PR #1676), adr-0033 (PR #1678), adr-0035 (PR #1677).
 
 **How to add one.** Copy `0000-template.md` → `NNNN-<title>.md` at the next free number; fill
 Context · Decision · Consequences · Alternatives; set `Repairs:`; leave `Status: proposed` until
