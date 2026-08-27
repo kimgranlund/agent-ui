@@ -20,6 +20,11 @@
  *       worktree has no branch to verify disposal against, so it is always kept.
  *   (c) the worktree is NOT `locked` (a live Agent-tool process holds the lock — the
  *       lane-kill incident class this script must never repeat).
+ *   (d) the worktree's basename is NOT a live fleet seat's `agent_name`, per
+ *       `.claude/ops/fleet.json`'s `live_state.joined[]` (GH #1680) — a standing seat's
+ *       worktree (e.g. `agent-ui-reviewer`) is held open by design and is often
+ *       content-identical to `main`, which would otherwise read as disposed under rule (b)
+ *       regardless of actual commits-ahead count.
  *
  * Only entries physically under `<repo-root>/.claude/worktrees/` are ever candidates — the
  * main checkout (and any worktree registered elsewhere) is never touched, never even listed.
@@ -52,9 +57,9 @@
  */
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve, sep } from 'node:path';
+import { basename, dirname, join, resolve, sep } from 'node:path';
 
 const NAME = 'reap-worktrees';
 
@@ -125,6 +130,24 @@ function repoRoot(cwd) {
   return dirname(abs); // `--git-common-dir` always resolves to the shared `<root>/.git`
 }
 
+/** Basenames of worktrees currently backing a live fleet seat, per `.claude/ops/fleet.json`'s
+ *  `live_state.joined[].agent_name` — a standing seat's worktree (e.g. `agent-ui-reviewer`) is
+ *  content-identical to `main` by design and must never REAP on that basis alone (GH #1680).
+ *  Read fresh on every classify() call, so a since-departed seat's worktree becomes reapable
+ *  again with no code change. Missing/malformed fleet.json → empty set — never blocks a reap on
+ *  a fleet-state read failure. */
+function liveFleetSeatNames(root) {
+  const fleetPath = join(root, '.claude', 'ops', 'fleet.json');
+  if (!existsSync(fleetPath)) return new Set();
+  try {
+    const fleet = JSON.parse(readFileSync(fleetPath, 'utf8'));
+    const joined = fleet?.live_state?.joined ?? [];
+    return new Set(joined.map((j) => j.agent_name).filter((n) => typeof n === 'string' && n.length > 0));
+  } catch {
+    return new Set();
+  }
+}
+
 /** Parse `git worktree list --porcelain` into structured entries. */
 function listWorktrees(cwd) {
   const out = git(cwd, 'worktree', 'list', '--porcelain');
@@ -156,6 +179,7 @@ function classify(cwd) {
   const worktreesDir = join(root, '.claude', 'worktrees') + sep;
   const gh = githubRepo(cwd);
   const hasOriginMain = gitOk(cwd, 'rev-parse', '--verify', '--quiet', 'refs/remotes/origin/main');
+  const fleetSeats = liveFleetSeatNames(root);
 
   const all = listWorktrees(cwd);
   const rows = [];
@@ -185,6 +209,11 @@ function classify(cwd) {
 
     if (!wt.branch) {
       rows.push({ path: wt.path, branch: null, disposition: 'KEEP(live-branch)', reason: 'detached HEAD — no branch to verify disposal against' });
+      continue;
+    }
+
+    if (fleetSeats.has(basename(wt.path))) {
+      rows.push({ path: wt.path, branch: wt.branch, disposition: 'KEEP(fleet-seat)', reason: `worktree backs a live fleet seat (agent_name "${basename(wt.path)}" in .claude/ops/fleet.json live_state.joined) — held open by design regardless of commits-ahead-of-main count` });
       continue;
     }
 
@@ -302,12 +331,28 @@ function selftest() {
     git(work, 'worktree', 'add', join(wtRoot, 'keep-locked'), 'keep-locked-branch');
     git(work, 'worktree', 'lock', join(wtRoot, 'keep-locked'), '--reason', 'live Agent-tool process (selftest)');
 
+    /* fixture: keep-fleet-seat — content-identical to `main` (0 commits ahead, would
+       otherwise disposal-check REAP under rule (b)), clean, unlocked, but its worktree
+       basename matches a live fleet seat's `agent_name` in `.claude/ops/fleet.json` →
+       KEEP(fleet-seat) regardless of commits-ahead count (GH #1680). */
+    git(work, 'branch', 'keep-fleet-seat-branch');
+    git(work, 'worktree', 'add', join(wtRoot, 'agent-ui-fixture-seat'), 'keep-fleet-seat-branch');
+
     /* fixture: keep-unmerged — NEGATIVE CONTROL: real, un-merged commits, clean, unlocked → KEEP(live-branch) */
     git(work, 'checkout', '-b', 'keep-unmerged-branch');
     writeFileSync(join(work, 'u.txt'), 'unmerged\n');
     git(work, 'add', '.'); git(work, 'commit', '-m', 'unmerged work');
     git(work, 'checkout', 'main');
     git(work, 'worktree', 'add', join(wtRoot, 'keep-unmerged'), 'keep-unmerged-branch');
+
+    // Written only now, after every `git add .`/`checkout` above — an untracked
+    // `.claude/ops/fleet.json` written earlier gets swept up by keep-unmerged's own
+    // `git add .`, committed onto that branch, then deleted from the working tree the
+    // instant `git checkout main` switches back (main's tree never had it).
+    mkdirSync(join(work, '.claude', 'ops'), { recursive: true });
+    writeFileSync(join(work, '.claude', 'ops', 'fleet.json'), JSON.stringify({
+      live_state: { joined: [{ role: 'reviewer', agent_name: 'agent-ui-fixture-seat' }] },
+    }));
 
     writeFileSync(join(wtRoot, '.metadata_never_index'), '');
 
@@ -327,6 +372,8 @@ function selftest() {
     assert(/keep-dirty\s+keep-dirty-branch\s+KEEP\(dirty\)/.test(dry.stdout), 'dry-run: keep-dirty → KEEP(dirty)');
     assert(/keep-locked\s+keep-locked-branch\s+KEEP\(locked\)/.test(dry.stdout), 'dry-run: keep-locked → KEEP(locked)');
     assert(/keep-unmerged-branch\s+KEEP\(live-branch\)/.test(dry.stdout), 'dry-run: keep-unmerged → KEEP(live-branch), negative control');
+    assert(/agent-ui-fixture-seat\s+keep-fleet-seat-branch\s+KEEP\(fleet-seat\)/.test(dry.stdout),
+      'dry-run: keep-fleet-seat → KEEP(fleet-seat), 0 commits ahead of main still excluded from REAP');
     assert(!dry.stdout.includes(work + '\n') && !new RegExp(`${work.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+main`).test(dry.stdout),
       'dry-run: main checkout is never a candidate/listed');
     assert(existsSync(join(wtRoot, 'reap-clean')), 'dry-run removed nothing (reap-clean still on disk)');
@@ -338,6 +385,7 @@ function selftest() {
     assert(existsSync(join(wtRoot, 'keep-dirty')), '--execute kept keep-dirty (dirty guard held)');
     assert(existsSync(join(wtRoot, 'keep-locked')), '--execute kept keep-locked (locked guard held)');
     assert(existsSync(join(wtRoot, 'keep-unmerged')), '--execute kept keep-unmerged (NEGATIVE CONTROL bit)');
+    assert(existsSync(join(wtRoot, 'agent-ui-fixture-seat')), '--execute kept keep-fleet-seat (fleet-seat guard held)');
     assert(existsSync(work), '--execute never touched the main checkout');
     const afterList = git(work, 'worktree', 'list', '--porcelain');
     assert(!afterList.includes(join(wtRoot, 'reap-clean')), '--execute: reap-clean no longer registered after prune');
@@ -346,11 +394,13 @@ function selftest() {
     const usage = invoke('--bogus-flag');
     assert(usage.status === 2, `unknown flag exits 2 (got ${usage.status})`);
 
-    /* Re-running dry-run after execute: the three KEEP fixtures still classify identically. */
+    /* Re-running dry-run after execute: the surviving KEEP fixtures still classify identically. */
     const dry2 = invoke();
     assert(dry2.status === 0, `post-execute dry-run exits 0 (got ${dry2.status})`);
     assert(!dry2.stdout.includes('reap-clean'), 'post-execute dry-run no longer lists reap-clean');
     assert(/keep-unmerged-branch\s+KEEP\(live-branch\)/.test(dry2.stdout), 'post-execute dry-run: keep-unmerged still KEPT');
+    assert(/agent-ui-fixture-seat\s+keep-fleet-seat-branch\s+KEEP\(fleet-seat\)/.test(dry2.stdout),
+      'post-execute dry-run: keep-fleet-seat still KEPT(fleet-seat)');
   } catch (err) {
     failures.push(`selftest scaffolding threw: ${err.message}`);
     console.log(`  FAIL scaffolding: ${err.message}`);
