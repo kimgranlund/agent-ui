@@ -413,3 +413,29 @@ alignment proofs — short card and mid-scroll).
 Gates green: `check` (tsc + site) · jsdom 2478 · `test:browser` 738 (Chromium + WebKit) · `size` 22949/23552.
 **Status: accepted** (Kim ratified, 2026-07-05).
 (unchanged). **Status: proposed** — awaiting Kim's ratification.
+
+## Amendment — orphaned "Status: proposed" fragment on line 415 retracted (2026-08-26, stray incomplete-edit text)
+
+Found live during the 2026-08-27T01:10:00Z decision-watcher revalidation sample (agent-ui#1682).
+The file's literal last line reads "(unchanged). **Status: proposed** — awaiting Kim's
+ratification." — right after the Amendment 6 refinement's own "**Status: accepted** (Kim
+ratified, 2026-07-05)." on the line above, and after the header blockquote's own Status cell,
+which already reads accepted.
+
+Traced to `8ad44174` ("docs(adr-0046): ratify the Amendment 6 refinement (Kim, 2026-07-05)"), the
+commit that flipped the Amendment 6 refinement section from proposed to accepted. Before that
+commit the section's closing line read as one sentence: "Gates green: ... `size` 22949/23552
+(unchanged). **Status: proposed** — awaiting Kim's ratification." The ratification edit rewrote
+the sentence's first half into two complete sentences — "`size` 22949/23552." + "**Status:
+accepted** (Kim ratified, 2026-07-05)." — but left the sentence's other half, "(unchanged).
+**Status: proposed** — awaiting Kim's ratification.", standing on its own orphaned line below
+instead of deleting it. It is a discarded remainder of that edit, not a second, later decision.
+
+**Retracted as stray incomplete-edit text.** It names no actual pending or proposed status — not
+for the Amendment 6 refinement, not for this ADR. The file's Status story is, and was always meant
+to be, fully consistent: header blockquote — accepted; Amendment 6 — accepted (Kim ratified,
+2026-07-05); Amendment 6 refinement — accepted (Kim ratified, 2026-07-05). No mechanism, decision,
+or consequence changes, and every substantive piece of the Amendment 6 refinement (the
+`margin-block`/`margin-inline` split) is unaffected and remains byte-identical. The orphaned line
+above is left standing verbatim, per ADR mutability rules — this amendment is the record that it
+carries no live meaning.
