@@ -74,3 +74,37 @@ tree-shakes individual control modules fine, but there is no per-control public 
 G8/publish** (goals.md G8 DoD): add per-control `exports` + gate the per-control MARGINAL (the ≤~2 KB "real cap"),
 so `size` measures the eventual DISTRIBUTED footprint, not the all-controls worst case. Until then the
 family-barrel ceiling stays the soft sanity check, re-based to 23 KB. `measure-size.mjs:26` (`22 → 23 * KB`).
+
+## Amendment 2 — 2026-08-27 (restated at the current live figure, 23 KB → 70.5 KB; 23552 → 72192 B gz) — GH #1687
+
+**This restates already-shipped reality; it rules nothing new** — the same shape as the
+ADR-0030/0032/0033/0035 restatement amendments (`doc-standards` `adr-log-mechanics.md`'s "partial
+supersession left unrestated" class): documentation catching up to a figure already merged and
+reviewed elsewhere, not a fresh ruling. No `**proposed** — Kim ratifies` marker accompanies this
+section — nothing here awaits ratification.
+
+**The gap.** Amendment 1 above recorded the family barrel at 23 KB (23552 B gz, 2026-07-05).
+ADR-0040 independently tracks the SAME row from its own vantage and has been re-based well past
+that figure since, via `scripts/measure-size.mjs`'s own comment ladder alone (GH #1009 through
+#1567) — none of those rungs ever reached this ADR. ADR-0049 is the more stale of the two: a drift
+of roughly 47 KB (48640 B) against the live figure, only ONE rung of which (55 → 58 KB) was ever
+caught anywhere outside the script comments, by ADR-0040's own 2026-08-16 amendment. Found via
+`harness:decision-watcher`'s revalidation mode, firing 2026-08-27T18:00:00Z (this ADR's own claim
+falsified against the live script value) — the second of two firings that also falsified ADR-0040
+the day before (2026-08-26T22:05:00Z) via the identical root cause; that firing recommended filing
+ONE ticket covering both, GH #1687.
+
+**The current figure (verified at this amendment's writing).** `scripts/measure-size.mjs` has
+carried the row at **70.5 KB = 72192 B gz** since GH #1567 (2026-08-21). Re-run live on `main` for
+this amendment (2026-08-27): `npm run size` reports `@agent-ui/components/components (self-defining
+ui-* family): 72063 B gz — within budget (72192 B gz)` — the script's figure has not drifted
+further since #1567; GH #1687's cited value is still current.
+
+**Filed alongside a matching restatement on ADR-0040** — GH #1687 covers both ADRs' identical root
+cause in one ticket.
+
+**Left open, not this amendment's scope.** The recurring-drift root cause itself —
+`measure-size.mjs`'s ladder re-basing with no automatic feedback into the owning ADR(s) — is
+unfixed by this restatement; GH #1687's Findings name it as a standing process follow-up.
+
+No code changes accompany this amendment; the Status cell above stays `accepted`.

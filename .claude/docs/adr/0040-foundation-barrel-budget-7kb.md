@@ -189,3 +189,43 @@ reports the `@agent-ui/components/components (self-defining ui-* family)` row **
 gz against 59392), and any remaining red is ONLY the two out-of-scope rows named under Scope; the header
 above reads `**ratified**` only via `adr_ratify.py` amendment mode on Kim's `ratify ADR-0040 amendment`;
 `npx vitest run site/lib/adr.test.ts site/lib/docs-grammar.test.ts` green.
+
+## Amendment (2026-08-27) — the `components` family-barrel row restated at its current live figure, 58 KB → 70.5 KB (59392 → 72192 B gz) — GH #1687
+
+**This restates already-shipped reality; it rules nothing new.** cl.A1's own 2026-08-16 amendment
+above is still `**proposed**` — unratified as of this writing — so this section deliberately carries
+no `**proposed** — Kim ratifies` marker of its own: `scripts/adr_ratify.py`'s amendment mode requires
+exactly one such candidate per ADR or fails closed (`doc-standards` §5), and a second pending marker
+here would break cl.A1's own path to ratification. This section is a plain append, the same shape as
+the ADR-0030/0032/0033/0035 restatement amendments (`doc-standards` `adr-log-mechanics.md`'s
+"partial supersession left unrestated" class) — documentation catching up to an already-merged,
+already-reviewed figure, not a fresh ruling.
+
+**The gap.** cl.A1 recorded the family barrel at 58 KB (59392 B gz, GH #1009, 2026-08-16) — the
+first time this row's re-basing was routed through the ADR log rather than left in
+`scripts/measure-size.mjs`'s own comment ladder alone. The row has since moved through the ladder
+eight more times with none of it fed back here — GH #1189, #1208, #1209, #1395, the 2026-08-20
+find-open-questions round, #1565, #1566, and #1567 — the identical drift class cl.A1 was filed to
+close. Found via `harness:decision-watcher`'s revalidation mode, firing 2026-08-26T22:05:00Z (this
+ADR's own claim falsified against the live script value).
+
+**The current figure (verified at this amendment's writing).** `scripts/measure-size.mjs` has
+carried the row at **70.5 KB = 72192 B gz** since GH #1567 (2026-08-21, the `ui-gauge`/ADR-0229
+cl.4 mint). Re-run live on `main` for this amendment (2026-08-27): `npm run size` reports
+`@agent-ui/components/components (self-defining ui-* family): 72063 B gz — within budget (72192 B
+gz)` — confirming the script's figure has not drifted further since #1567, and that GH #1687's
+cited value is still current. Each rung between 58 KB and 70.5 KB was reviewed at its own merge
+(component-build/a2ui-review on the control mints; #1208 and #1395 are flagged "unattended, not a
+live Kim ruling" in the ladder's own wording, left open for confirmation at the time) — this
+amendment records the ladder's own running total, not a fresh weighing of any individual rung.
+
+**Filed alongside a matching restatement on ADR-0049** — GH #1687 covers both ADRs' identical root
+cause in one ticket, per decision-watcher's own recommendation on its second falsifying firing
+(2026-08-27T18:00:00Z, ADR-0049).
+
+**Left open, not this amendment's scope.** The recurring-drift root cause — `measure-size.mjs`'s
+ladder re-basing with no automatic feedback into the owning ADR(s) — is unfixed by this
+restatement; GH #1687's Findings name it as a standing process follow-up, the same way GH #455's
+shrink-follow-up stays separate from every CHECKPOINT re-base above.
+
+No code changes accompany this amendment; the Status cell above stays `accepted`.
