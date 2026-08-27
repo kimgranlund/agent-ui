@@ -1,20 +1,6 @@
 {
   "candidates": [
     {
-      "claim_id": "adr-0036",
-      "evidence": "Decision cl.3's own mechanism ('a shared token --ui-control-line-height: 1 on dimensions.css :root') no longer matches the literal shipped token name. ADR-0140 (ratified 2026-07-18, the corpus-wide --ui-* -> --md-sys-* foundation-tier rename, cl.1 mapping table row 'ui-control-line-height -> md-sys-control-line-height') renamed it; packages/agent-ui/shared/src/tokens/dimensions.css:63 declares --md-sys-control-line-height: 1, and button.css:107/text-field.css:193 both consume var(--md-sys-control-line-height) -- the MECHANISM is intact and correctly wired, only the literal name in ADR-0036's own Decision prose is stale. ADR-0140's header cell never names adr-0036 as a downstream repair target, and adr-0036 carries no Amendment/marker pointing at ADR-0140 -- a reader grepping the Decision text's own --ui-control-line-height finds nothing live. (Table dialect, no owner field -> unassigned, unattended /sweep-chores firing, no human present.)",
-      "kind": "falsified",
-      "owner": "unassigned",
-      "queued_at": "2026-08-26T22:55:49Z"
-    },
-    {
-      "claim_id": "adr-0038",
-      "evidence": "Decision cl.1's mapping table names --ui-height/-font/-icon-{sm,md,lg}; ADR-0140 (ratified 2026-07-18) renamed all three families to --md-sys-height/-font/-icon-{sm,md,lg} (cl.1 mapping table). Verified against shipped packages/agent-ui/shared/src/tokens/dimensions.css: every [scale=...] block (lines 398-483) sets --md-sys-height/-font/-icon-* as literal per-tier px values that match Kim's table EXACTLY across all 6 tiers (ui-sm 20/24/28, ui-md 24/28/36 default, ui-lg 28/36/48, content-sm 24/28/36, content-md 28/36/48, content-lg 36/48/64; font/icon cells match too) -- the mechanism and every value are correct, only the token spelling in adr-0038's own prose is stale. Notably ADR-0140's own Repairs cell explicitly claims 'the ADR-0038 geometry tables' prose' as one of its repair targets, but adr-0038.md itself carries zero 'md-sys' mentions and no Amendment/marker -- the claimed repair did not land in the ADR record itself (may have landed in geometry-sizing-spec.md instead, unverified). (Table dialect, no owner field -> unassigned, unattended firing.)",
-      "kind": "falsified",
-      "owner": "unassigned",
-      "queued_at": "2026-08-26T22:55:49Z"
-    },
-    {
       "claim_id": "adr-0040",
       "evidence": "ADR-0040's own Acceptance criterion and its 2026-08-16 Amendment cl.A1 state the components family-barrel budget as 58 KB (59392 B gz, measured 58485). scripts/measure-size.mjs's own comment ladder shows the SAME row re-based at least 8 more times since (2026-08-18: 58->58.5->59 KB; 2026-08-18: 59->59.5->61 KB; 2026-08-20 Kim ruling: 61->65 KB; then ->69.5->70 KB), none fed back into ADR-0040 as a further Amendment -- current budget is >70 KB, nowhere near the 58485/59392 B figures the ADR's own Acceptance section still names as current. ADR-0040's own Amendment explicitly argued for ending exactly this failure mode ('the barrel-budget re-base record has a durable home in the ADR log, not only in a script comment') after finding 11 prior silent re-bases -- the practice reverted to script-comment-only re-basing again immediately after this ADR's last entry. (Table dialect, no owner field -> unassigned, unattended firing.)",
       "kind": "falsified",
@@ -22,32 +8,11 @@
       "queued_at": "2026-08-26T22:55:49Z"
     },
     {
-      "claim_id": "adr-0041",
-      "evidence": "Decision cl.1/cl.3 name --ui-compact-{sm,md,lg} and --ui-widget-inset; ADR-0140 (ratified 2026-07-18, cl.1 mapping table) renamed both to --md-sys-compact-{sm,md,lg} / --md-sys-widget-inset. Verified against shipped dimensions.css: --md-sys-widget-inset: 2px (line 35, matches cl.3 exactly) and every [scale=...] block's --md-sys-compact-* values match Kim's ratified cl.2 table exactly across all 6 tiers (ui-sm 12/14/16 through content-lg 22/24/28) -- the ratified mechanism and every value are correct (cl.2's 'CANDIDATE' framing is itself stale phrasing superseded by the header's own 'Ratified by' cell and the Forks section's 'F1 -- RATIFIED', a separate small drift), only the token spelling is stale. Same ADR-0140 rename-sweep root cause as adr-0036/adr-0038, now the 3rd of 5 this firing's sample -- likely a corpus-wide gap affecting every pre-2026-07-18 ADR that names one of ADR-0140's ~34 renamed foundation tokens verbatim, distinct from (though same-shaped as) the already-queued header-recorded-supersession pattern. (Table dialect, no owner field -> unassigned, unattended firing.)",
+      "claim_id": "adr-0049",
+      "evidence": "Decision re-bases the family-barrel budget 16 KB -> 22 KB, then Amendment 1 (2026-07-05) re-bases 22 KB -> 23 KB (23552 B gz) citing the container box-model + scroll-fade wave as the mover. scripts/measure-size.mjs's own comment ladder for this SAME row ('components/index.ts (self-defining ui-* family)') shows at least a dozen further re-bases since (25 -> 26 -> 28 -> 30 -> 32 -> 34 -> 38 -> 44 -> 44.1 -> 47.3 -> 47.5 -> 48.625 -> 50 -> 51 -> 52.224 -> 53 -> 54 -> 55 -> 58 (ADR-0040 Amendment cl.A1) -> 58.5 -> 59 -> ... -> 70.5 KB current), almost none fed back into adr-0049 as a further Amendment (only ADR-0040's own later Amendment cl.A1 caught one rung, 55->58 KB) -- adr-0049's own last recorded figure (23552 B gz) is off by roughly 47 KB from the live budget (72192 B gz at line 225, 70.5 * KB). Same root-cause class as the already-queued adr-0040 falsified verdict (script-comment-only re-basing resuming after the ADR log was supposed to be the durable record) -- a distinct claim id, same defect. (Table dialect, no owner field -> unassigned, unattended /sweep-chores firing, no human present.)",
       "kind": "falsified",
       "owner": "unassigned",
-      "queued_at": "2026-08-26T22:55:49Z"
-    },
-    {
-      "claim_id": "adr-0042",
-      "evidence": "Decision cl.2/cl.4's own prose names --ui-compact/--ui-widget-inset (superseded by ADR-0140, ratified 2026-07-18, cl.1 mapping table -> --md-sys-compact-{sm,md,lg} / --md-sys-widget-inset). Mechanism and every value are byte-correct in shipped code (indicator-element.ts comment cites --md-sys-compact-{size} directly, dimensions.css carries the renamed tokens) -- only the ADR's own token spelling is stale. Already tracked as one of the 24 candidate ADRs in agent-ui#1681 (filed 2026-08-26T22:05Z firing) -- no new ticket needed, this row just confirms the finding survives a direct re-sample. (Table dialect, no owner field -> unassigned, unattended /sweep-chores firing, no human present.)",
-      "kind": "falsified",
-      "owner": "unassigned",
-      "queued_at": "2026-08-27T00:55:47Z"
-    },
-    {
-      "claim_id": "adr-0043",
-      "evidence": "Decision cl.5 (Geometry boundary, LLD-C5) names '--ui-compact' verbatim ('NOT the --ui-compact widget box'); ADR-0140 (ratified 2026-07-18, cl.1) renamed it to --md-sys-compact-{sm,md,lg}. The substantive point (listbox/menu rows take item-pad, not the widget box) is unaffected and correct -- only the token literal is stale. Was NOT in agent-ui#1681's original 24-candidate list (that sweep's regex missed this bare-family phrasing) -- appended to #1681 by the dispatching session as a 25th instance. (Table dialect, no owner field -> unassigned, unattended firing.)",
-      "kind": "falsified",
-      "owner": "unassigned",
-      "queued_at": "2026-08-27T00:55:47Z"
-    },
-    {
-      "claim_id": "adr-0046",
-      "evidence": "Two independent problems, same claim. (1) Decision prose names --ui-space-md/--ui-space-lg (Context, still in-scope text) and --ui-radius-base (Amendment 2); ADR-0140 renamed these to --md-sys-space-{...} and --md-sys-shape-corner-base. Already tracked as one of the 24 candidates in agent-ui#1681. (2) Filed separately as agent-ui#1682 by the dispatching session: the file's literal LAST LINE (415) reads '(unchanged). Status: proposed -- awaiting Kim's ratification.' directly after Amendment 6 refinement's own 'Status: accepted (Kim ratified, 2026-07-05).' on line 414, and after the header blockquote's own Status cell already says accepted -- a self-contradicting orphaned fragment with no heading of its own. Shipped code confirms every substantive mechanism through Amendment 6's refinement is correctly implemented -- the fragment reads like leftover/incomplete-edit text, not a real pending decision. (Table dialect, no owner field -> unassigned, unattended firing.)",
-      "kind": "falsified",
-      "owner": "unassigned",
-      "queued_at": "2026-08-27T00:55:47Z"
+      "queued_at": "2026-08-27T21:53:33Z"
     }
   ]
 }
