@@ -73,3 +73,30 @@ Both: C10 connect→disconnect zero-residue + the gz marginal.
 - **4 separate primitive ADRs** — folded: Indicator + Range share the `controls/_base/` pattern + UIFormElement
   + widget geometry, so one ADR for the **widget value-control bases** reduces sprawl while staying individually
   supersedable (leg-scoped, like ADR-0007). The overlay/selection infra is the separate ADR-0043.
+
+## Amendment — cl.2/4 token names repointed to `--md-sys-*` (2026-08-27, ADR-0140 rename)
+
+Clauses 1 and 3 (the `controls/_base/` layer and `UIRangeElement`'s own contract) are unaffected
+by this amendment and remain byte-identical.
+
+Clauses 2 and 4 named the shared token IDs as `--ui-compact` and `--ui-widget-inset`. **ADR-0140**
+(ratified 2026-07-18) migrated the entire shared foundation tier from `--ui-*` to `--md-sys-*`
+(slot names stable, family names swapped, no value change) — its mapping table renames these
+families specifically:
+
+- `--ui-compact-{sm,md,lg}` → **`--md-sys-compact-{sm,md,lg}`**
+- `--ui-widget-inset` → **`--md-sys-widget-inset`**
+
+Restated under the current names:
+
+- **Clause 2 — `UIIndicatorElement`'s geometry.** The `:state(checked)`/`ariaChecked` machine
+  consumes the `--md-sys-compact`/`--md-sys-widget-inset` geometry (ADR-0041).
+- **Clause 4 — both bases consume ADR-0041 geometry.** The box rides `--md-sys-compact`; a
+  thumbed widget insets `--md-sys-widget-inset` (2px).
+
+The decisions of clauses 2 and 4 do not change — only the token IDs the repo-wide rename already
+carried out under ADR-0140. Every prose reference to `--ui-compact` / `--ui-widget-inset`
+elsewhere in this document is historical narrative describing the state at time of writing and is
+left as originally authored, per ADR mutability rules — this amendment is the current-names
+restatement of record. `dimensions.css` itself has carried the renamed declarations since
+ADR-0140 landed; no code change accompanies this amendment.

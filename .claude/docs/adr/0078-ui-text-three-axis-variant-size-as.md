@@ -493,3 +493,25 @@ instead of `label` — graceful, register-approximate, fidelity drops, no enum/t
 **Repairs**:
 - on ratification: `a2ui-catalog.spec.md` §5.2's `Text` row (the `h1…h5|caption|body` prose enumeration gains `label`)
 - on ratification: `a2ui-catalog.lld.md`'s `textFactory` description, if it enumerates the wire variant set verbatim
+
+## Amendment — cl.2/B1's `--ui-scale` reference repointed to `--md-sys-scale` (2026-08-27, ADR-0140 rename)
+
+Every design decision above — the `--ui-type-*` → `--md-sys-typescale-*` retirement (cl.2 itself,
+already ADR-0140-spelled), the three-axis props, and the real-element stamping — is unaffected by
+this amendment and remains byte-identical.
+
+Cl.2's `-size` extension law and the B1 realization section named the multiplier this family
+rides on as `--ui-scale`. **ADR-0140** (ratified 2026-07-18) migrated the entire shared foundation
+tier from `--ui-*` to `--md-sys-*` (slot names stable, family names swapped, no value change) —
+its mapping table renames this family specifically:
+
+- `--ui-scale` → **`--md-sys-scale`**
+
+Restated under the current name: `-size` = `calc(<M3 px> * var(--md-sys-scale))`, declared on the
+`*` subtree ramp — `--md-sys-scale`'s only consumer remains display type (ADR-0038 unchanged).
+
+The decisions do not change — only the token ID the repo-wide rename already carried out under
+ADR-0140. Every prose reference to `--ui-scale` elsewhere in this document is historical narrative
+describing the state at time of writing and is left as originally authored, per ADR mutability
+rules — this amendment is the current-names restatement of record. `dimensions.css` itself has
+carried the renamed declaration since ADR-0140 landed; no code change accompanies this amendment.

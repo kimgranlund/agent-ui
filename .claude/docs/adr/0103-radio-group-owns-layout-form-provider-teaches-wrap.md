@@ -144,3 +144,27 @@ group's flex LAYOUT unit for this record's Decision — the "teaching a destruct
 Alternatives above becomes moot, because the idiom (`RadioGroup > visual container > Radio`) stops being
 destructive. A nested inner `ui-radio-group` stays an ownership boundary: its own radios never join an
 outer group's set.
+
+## Amendment — cl.1/2 token name repointed to `--md-sys-space-sm` (2026-08-27, ADR-0140 rename)
+
+Clauses 3-5 and the ADR-0212 extension above are unaffected by this amendment and remain
+byte-identical.
+
+Clauses 1 and 2 named the shared layout-ladder token ID as `--ui-space-sm` (and, in passing,
+`--ui-space-md` describing the live pages' prior value). **ADR-0140** (ratified 2026-07-18)
+migrated the entire shared foundation tier from `--ui-*` to `--md-sys-*` (slot names stable,
+family names swapped, no value change) — its mapping table renames this family specifically:
+
+- `--ui-space-{none,xs,sm,md,lg,xl,2xl}` → **`--md-sys-space-{none,xs,sm,md,lg,xl,2xl}`**
+
+Restated under the current name: `radio-group.css`'s `@scope` block declares
+`gap: var(--ui-radio-group-gap)`, where `--ui-radio-group-gap: var(--md-sys-space-sm)` (0.5rem) —
+the group's own component-tier token (ADR-0140 cl.2, untouched) defaulting to the renamed
+foundation ladder.
+
+The decisions of clauses 1 and 2 do not change — only the foundation token ID the repo-wide
+rename already carried out under ADR-0140. Every prose reference to `--ui-space-sm` /
+`--ui-space-md` elsewhere in this document is historical narrative describing the state at time
+of writing and is left as originally authored, per ADR mutability rules — this amendment is the
+current-names restatement of record. `dimensions.css` itself has carried the renamed declaration
+since ADR-0140 landed; no code change accompanies this amendment.

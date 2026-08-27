@@ -261,3 +261,25 @@ a selection control doubles that machinery; if a carousel presentation is ever e
   dominant single-pick case an array dance for producers and diverges from `RadioGroup`/`Select`
   familiarity; the ADR-0161 per-slot opt-in gives each mode its natural shape at zero mechanism
   cost.
+
+## Amendment — cl.6's gap token name repointed to `--md-sys-space` (2026-08-27, ADR-0140 rename)
+
+Every other decision in this document is unaffected by this amendment and remains byte-identical.
+
+Clause 6 named the shared layout-ladder token family as `--ui-space` — a stale spelling even at
+this ADR's own 2026-08-19 authoring date, more than a month after ADR-0140's 2026-07-18
+ratification; this is a plain drafting slip, not a later supersession, but this ADR is
+accepted and therefore append-only the same as any other (per ADR mutability rules, no exception
+for a post-rename typo). **ADR-0140** migrated the entire shared foundation tier from `--ui-*` to
+`--md-sys-*` (slot names stable, family names swapped, no value change) — its mapping table
+renames this family specifically:
+
+- `--ui-space-{none,xs,sm,md,lg,xl,2xl}` → **`--md-sys-space-{none,xs,sm,md,lg,xl,2xl}`**
+
+Restated under the current name: the group's interior layout uses `gap` (the `--md-sys-space`
+ladder enum).
+
+The decision of clause 6 does not change — only the token ID. The prose reference to `--ui-space`
+elsewhere in this document is left as originally authored, per ADR mutability rules — this
+amendment is the current-names restatement of record. `dimensions.css` itself has carried the
+renamed declaration since ADR-0140 landed; no code change accompanies this amendment.

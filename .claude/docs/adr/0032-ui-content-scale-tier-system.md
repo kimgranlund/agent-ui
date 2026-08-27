@@ -110,3 +110,37 @@ narrative describing the state at time of writing and is left as originally auth
 mutability rules — this amendment is the current-mechanism restatement of record. `dimensions.css`
 has carried the explicit per-tier lookup since ADR-0038 landed; no code change accompanies this
 amendment.
+
+## Amendment — cl.4/6's remaining token names repointed to `--md-sys-*` (2026-08-27, ADR-0140 rename)
+
+Clauses 1, 3, 5, 7, and 8 (the six-tier vocabulary, the byte-identical default, the disjoint
+`[density]` axis, the migration, and the spec reconciliation) are unaffected by this amendment
+and remain byte-identical; clause 2's mechanism is already covered by the Amendment above.
+
+Clause 4 ("the other ledgers are untouched") and clause 6 (the compact-box ramp, unaffected by
+the ADR-0038 supersession per the header's own note) named the shared token IDs as
+`--ui-height-*`, `--ui-font-*`, `--ui-gap`, `--ui-space-*`, and `--ui-compact-{sm,md,lg}`.
+**ADR-0140** (ratified 2026-07-18) migrated the entire shared foundation tier from `--ui-*` to
+`--md-sys-*` (slot names stable, family names swapped, no value change) — its mapping table
+renames these families specifically:
+
+- `--ui-height-{sm,md,lg}` → **`--md-sys-height-{sm,md,lg}`**
+- `--ui-font{,-sm,-md,-lg}` → **`--md-sys-font{,-sm,-md,-lg}`**
+- `--ui-gap{,-sm,-md,-lg}` → **`--md-sys-gap{,-sm,-md,-lg}`**
+- `--ui-space-{none,xs,sm,md,lg,xl,2xl}` → **`--md-sys-space-{none,xs,sm,md,lg,xl,2xl}`**
+- `--ui-compact-{sm,md,lg}` → **`--md-sys-compact-{sm,md,lg}`**
+
+(`--ui-type-*`, also named in clause 4, is a separate namespace renamed to `--md-sys-typescale-*`
+under ADR-0078, not ADR-0140 — out of scope here and left exactly as written.)
+
+Restated under the current names: clause 4's other ledgers (`--md-sys-height-*`/`--md-sys-font-*`
+base values, `gap = font/2 × density`, `--md-sys-space-* × density`) were untouched by this ADR's
+own change; clause 6's compact-box ramp publishes explicit `--md-sys-compact-{sm,md,lg}` rows per
+`[scale]` tier.
+
+The decisions of clauses 4 and 6 do not change — only the token IDs the repo-wide rename already
+carried out under ADR-0140. Every prose reference to `--ui-height`/`--ui-font`/`--ui-gap`/
+`--ui-space`/`--ui-compact` elsewhere in this document is historical narrative describing the
+state at time of writing and is left as originally authored, per ADR mutability rules — this
+amendment is the current-names restatement of record. `dimensions.css` itself has carried the
+renamed declarations since ADR-0140 landed; no code change accompanies this amendment.

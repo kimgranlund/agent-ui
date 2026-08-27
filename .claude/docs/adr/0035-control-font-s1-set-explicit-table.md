@@ -148,3 +148,29 @@ left as originally authored, per ADR mutability rules — this amendment is the 
 restatement of record, and ADR-0038's own clause-1 table is the source of truth going forward.
 `dimensions.css` has carried the re-tabled values since ADR-0038 landed; no code change
 accompanies this amendment.
+
+## Amendment — cl.5's remaining token names repointed to `--md-sys-*` (2026-08-27, ADR-0140 rename)
+
+Clauses 1-4 (the snap rule and the font/icon tables, already addressed by the Amendment above)
+are unaffected by this amendment.
+
+Clause 5 ("height + the other ledgers unchanged") named the shared token IDs as `--ui-height-*`
+and `--ui-space-*`. **ADR-0140** (ratified 2026-07-18) migrated the entire shared foundation tier
+from `--ui-*` to `--md-sys-*` (slot names stable, family names swapped, no value change) — its
+mapping table renames these families specifically:
+
+- `--ui-height-{sm,md,lg}` → **`--md-sys-height-{sm,md,lg}`**
+- `--ui-space-{none,xs,sm,md,lg,xl,2xl}` → **`--md-sys-space-{none,xs,sm,md,lg,xl,2xl}`**
+
+(`--ui-type-*`, also named in clause 5, is a separate namespace renamed to `--md-sys-typescale-*`
+under ADR-0078, not ADR-0140 — out of scope here and left exactly as written.)
+
+Restated under the current names: `--md-sys-height-*` stays `base × scale` (ADR-0033 leg,
+later re-tabled by ADR-0038); `--md-sys-space-*` unchanged.
+
+The decision of clause 5 does not change — only the token IDs the repo-wide rename already
+carried out under ADR-0140. Every prose reference to `--ui-height` / `--ui-space` elsewhere in
+this document is historical narrative describing the state at time of writing and is left as
+originally authored, per ADR mutability rules — this amendment is the current-names restatement
+of record. `dimensions.css` itself has carried the renamed declarations since ADR-0140 landed; no
+code change accompanies this amendment.

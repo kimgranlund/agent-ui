@@ -184,3 +184,24 @@ unchanged). Build slices + gates: the Phase-B leaves of
   **escalation path**: if the protected-hook seam or the import-layering trip-wire fights the direct
   subclass at build, the builder escalates to extracting a `_base/` single-select-group rather than forcing
   it — a build-time re-verify point, not a fork for Kim.
+
+## Amendment — cl.4's motion-constant reference repointed to `--md-sys-motion-duration-fast` (2026-08-27, ADR-0140 rename)
+
+Clauses 1-3 and 5 (the class hierarchy, the parent seam refactor, the `ui-segment` children, and
+the fleet surface) are unaffected by this amendment and remain byte-identical.
+
+Clause 4 named the shared token ID as `--ui-motion-fast`. **ADR-0140** (ratified 2026-07-18)
+migrated the entire shared foundation tier from `--ui-*` to `--md-sys-*` (slot names stable,
+family names swapped, no value change) — its mapping table renames this family specifically:
+
+- `--ui-motion-fast` → **`--md-sys-motion-duration-fast`**
+
+Restated under the current name: the moved CSS re-targets `--md-sys-motion-duration-fast` +
+reduced-motion jump, unchanged.
+
+The decision of clause 4 does not change — only the token ID the repo-wide rename already carried
+out under ADR-0140. The prose reference to `--ui-motion-fast` elsewhere in this document is
+historical narrative describing the state at time of writing and is left as originally authored,
+per ADR mutability rules — this amendment is the current-names restatement of record.
+`dimensions.css` itself has carried the renamed declaration since ADR-0140 landed; no code change
+accompanies this amendment.

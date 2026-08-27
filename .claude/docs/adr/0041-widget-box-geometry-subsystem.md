@@ -116,3 +116,30 @@ as ADR-0038** (an explicit per-`[scale]` table, no multiplier), adds the **2px i
   `--ui-compact-*`; glyphs are `--ui-icon-*` (ADR-0035). The docs are repaired, not the code bent to a ghost.
 - **Scale the 2px inset with the box** — rejected (F3); the inset is a frame constant (like a 1px border) —
   a flat 2px reads correctly from the 12-box to the 28-box; scaling it would over-thicken the small widgets.
+
+## Amendment — cl.1/2/3 token names repointed to `--md-sys-*` (2026-08-27, ADR-0140 rename)
+
+Clauses 4 and 5 (the stale `--ui-ind` reconciliation and the realm-becomes-CONSUMED note) are
+unaffected by this amendment and remain byte-identical.
+
+Clauses 1-3 named the shared token IDs as `--ui-compact-{sm,md,lg}` and `--ui-widget-inset`.
+**ADR-0140** (ratified 2026-07-18) migrated the entire shared foundation tier from `--ui-*` to
+`--md-sys-*` (slot names stable, family names swapped, no value change) — its mapping table
+renames these families specifically:
+
+- `--ui-compact-{sm,md,lg}` → **`--md-sys-compact-{sm,md,lg}`**
+- `--ui-widget-inset` → **`--md-sys-widget-inset`**
+
+Restated under the current names:
+
+- **Clauses 1/2 — the widget box.** The widget box rides `--md-sys-compact-{sm,md,lg}`; `[size]`
+  selects sm/md/lg; `[scale]` re-tables to Kim's ratified widget ramp.
+- **Clause 3 — the 2px inset law.** A fleet constant `--md-sys-widget-inset: 2px` insets a thumbed
+  widget's thumb inside its track box on every edge.
+
+The decisions of clauses 1-3 do not change — only the token IDs the repo-wide rename already
+carried out under ADR-0140. Every prose reference to `--ui-compact-*` / `--ui-widget-inset`
+elsewhere in this document is historical narrative describing the state at time of writing and is
+left as originally authored, per ADR mutability rules — this amendment is the current-names
+restatement of record. `dimensions.css` itself has carried the renamed declarations since
+ADR-0140 landed; no code change accompanies this amendment.

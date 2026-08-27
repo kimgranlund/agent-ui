@@ -109,3 +109,30 @@ historical narrative describing the state at time of writing and is left as orig
 per ADR mutability rules — this amendment is the current-mechanism restatement of record.
 `packages/agent-ui/shared/src/tokens/dimensions.css` has carried the ADR-0038 lookup table with no
 `pow()` call since ADR-0038 landed; no code change accompanies this amendment.
+
+## Amendment — cl.3/4/5's `--ui-scale`/`--ui-gap` references repointed to `--md-sys-*` (2026-08-27, ADR-0140 rename)
+
+Clause 1 (already flagged historical inline) and clause 2 (retired by the Amendment above) are
+unaffected by this amendment.
+
+Clauses 3-5 named the shared token IDs as `--ui-gap` and `--ui-scale`. **ADR-0140** (ratified
+2026-07-18) migrated the entire shared foundation tier from `--ui-*` to `--md-sys-*` (slot names
+stable, family names swapped, no value change) — its mapping table renames these families
+specifically:
+
+- `--ui-gap{,-sm,-md,-lg}` → **`--md-sys-gap{,-sm,-md,-lg}`**
+- `--ui-scale` → **`--md-sys-scale`**
+
+(`--ui-type-*`, also named in clause 5, is a separate namespace renamed to `--md-sys-typescale-*`
+under ADR-0078, not ADR-0140 — out of scope here and left exactly as written.)
+
+Restated under the current names: the rhythm family (`--md-sys-gap = font/2 × density`, caret =
+font) follows font automatically; `--ui-type-*` display type stays linear, keeping
+`× var(--md-sys-scale)` (the fork ruled in clause 5).
+
+The decisions do not change — only the token IDs the repo-wide rename already carried out under
+ADR-0140. Every prose reference to `--ui-gap` / `--ui-scale` elsewhere in this document (the
+Decision text, Consequences, and slice-plan sections) is historical narrative describing the
+state at time of writing and is left as originally authored, per ADR mutability rules — this
+amendment is the current-names restatement of record. `dimensions.css` itself has carried the
+renamed declarations since ADR-0140 landed; no code change accompanies this amendment.

@@ -67,4 +67,27 @@ This is an **intake** ADR — realized in two stages:
 - **Bespoke button+region disclosure.** Rejected (fork F3): re-implements what `<details>` gives free, against internals-ARIA limits, and loses find-in-page + the `name` substrate. The styling ceiling is the accepted price.
 - **`Disclosure.open` one-way (display-only row).** Rejected: a fold the model cannot observe desyncs the data model on every user toggle — the exact phantom-state class ADR-0101 closed for overlays; the two-way mark is shipped machinery.
 - **Copy-to-clipboard on ui-code at v1.** Rejected (clause 2): mints interactivity, focus order, and clipboard-permission surface into a passive Display leaf; composition already expresses it.
+
+## Amendment — cl.2's radius referent repointed to `--md-sys-shape-corner-base` (2026-08-27, ADR-0140 rename)
+
+Clauses 1 and 3+ (the `ui-disclosure` contract and the rest of the family scope) are unaffected by
+this amendment and remain byte-identical.
+
+Clause 2 (`ui-code`) named the shared radius referent as `--ui-radius-base`. **ADR-0140** (ratified
+2026-07-18) migrated the entire shared foundation tier from `--ui-*` to `--md-sys-*` (slot names
+stable, family names swapped, no value change) — its mapping table renames this family
+specifically:
+
+- `--ui-radius-base` → **`--md-sys-shape-corner-base`**
+
+Restated under the current name: `ui-code`'s own `--ui-code-*` tokens (pad, surface — the
+untouched per-component consumer-knob tier, ADR-0140 cl.2) carry a radius riding the fleet
+`--md-sys-shape-corner-base` referent.
+
+The decision of clause 2 does not change — only the foundation token ID the repo-wide rename
+already carried out under ADR-0140. The prose reference to `--ui-radius-base` elsewhere in this
+document is historical narrative describing the state at time of writing and is left as
+originally authored, per ADR mutability rules — this amendment is the current-names restatement
+of record. `dimensions.css` itself has carried the renamed declaration since ADR-0140 landed; no
+code change accompanies this amendment.
 - **Exclusive accordion (`name`) at v1.** Rejected: no forcing evidence; the native substrate makes it a cheap foreseen extension whose prop-sync mechanics clause 4's announce law already covers.
