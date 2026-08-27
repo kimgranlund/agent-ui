@@ -441,6 +441,8 @@ function selftest() {
   const makeClone = (name, { branch, dirty, extraCommitNotInMain } = {}) => {
     const dest = join(clonesRoot, name);
     git(scratch, 'clone', bare, dest);
+    git(dest, 'config', 'user.email', 'selftest@example.com');
+    git(dest, 'config', 'user.name', 'selftest');
     if (branch) git(dest, 'checkout', '-b', branch);
     if (extraCommitNotInMain) {
       writeFileSync(join(dest, `${name}.txt`), 'work\n');
@@ -464,30 +466,11 @@ function selftest() {
     // Named to match the CLI's own repo-name pattern (`seed-<ticket>` — `cliCwd` below is the
     // `seed` checkout) so the end-to-end --root discovery test picks it up like a real candidate.
     const dirtyClone = makeClone('seed-9006', { branch: '9006-x', dirty: true });
-    for (const c of [dirtyClone]) {
-      git(c, 'config', 'user.email', 'selftest@example.com');
-      git(c, 'config', 'user.name', 'selftest');
-    }
-
     const mergedClone = makeClone('merged-clone', { branch: 'merged-branch-fixture', extraCommitNotInMain: true });
-    git(mergedClone, 'config', 'user.email', 'selftest@example.com');
-    git(mergedClone, 'config', 'user.name', 'selftest');
-
     const openClone = makeClone('open-clone', { branch: '9003-x' });
-    git(openClone, 'config', 'user.email', 'selftest@example.com');
-    git(openClone, 'config', 'user.name', 'selftest');
-
     const closedCleanClone = makeClone('closed-clean-clone', { branch: '9001-x' }); // zero unique commits
-    git(closedCleanClone, 'config', 'user.email', 'selftest@example.com');
-    git(closedCleanClone, 'config', 'user.name', 'selftest');
-
     const closedUnmergedClone = makeClone('closed-unmerged-clone', { branch: '9002-x', extraCommitNotInMain: true });
-    git(closedUnmergedClone, 'config', 'user.email', 'selftest@example.com');
-    git(closedUnmergedClone, 'config', 'user.name', 'selftest');
-
     const unknownTicketClone = makeClone('unknown-ticket-clone', { branch: '9005-x' });
-    git(unknownTicketClone, 'config', 'user.email', 'selftest@example.com');
-    git(unknownTicketClone, 'config', 'user.name', 'selftest');
 
     // origin-mismatch fixture: a real git repo, but its origin points somewhere else entirely.
     const foreignBare = join(scratch, 'foreign.git');
