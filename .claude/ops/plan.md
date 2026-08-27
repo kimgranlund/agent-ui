@@ -1,243 +1,219 @@
 <!-- target-path: .claude/ops/plan.md -->
 # Ops plan — agent-ui
 
-- **Dispatch**: 2026-08-26T22:05:00Z sweep firing (chore-planner, three-seat sweep per
+- **Dispatch**: 2026-08-27T01:10:00Z sweep firing (chore-planner, three-seat sweep per
   `/teamwork:mobilize-chores` → `harness:sweep-chores`; no repo-local `harness/` tree, so this
   firing planned from durable ops state directly, same as every prior firing this session). Judged
   the three fresh seat reports attached to this dispatch (issue-sorter, repo-cleaner,
-  decision-watcher) plus the prior plan (`2026-08-26T16:28:22Z`, carry-forward only) and durable
-  state (`adr-queue.json` now 7 rows, `revalidation-queue.json` now 8 rows,
-  `revalidation-checkpoint.json`, `watch-checkpoint.json`, `held-items.md`) — no live `gh`/`git`
-  call of my own beyond a `git log`/`git status`/`git diff --stat` spot-check confirming every
-  prior-plan claim and this firing's file-level state is real on disk.
+  decision-watcher) plus the prior plan (`2026-08-26T22:05:00Z`, carry-forward only) and durable
+  state (`adr-queue.json` still 7 rows unchanged, `revalidation-queue.json` now 7 rows,
+  `revalidation-checkpoint.json`, `watch-checkpoint.json`, `held-items.md`) — plus a live `gh`
+  spot-check (issue list/view + label read on #1680/#1681/#1682, `git log`/`git status`) to confirm
+  every attached-report claim and this firing's file-level state is real, per the same practice as
+  every prior firing.
 - **Evidence**:
-  `reports/2026-08-26T22-05-00Z-issue-sorter.md` (checkpoint window 16:28:22Z→22:05:00Z; 5 issues
-  + 5 PRs, all closure/merge events on already-fully-triaged records — #1670/#1672/#1673/#1674/
-  #1675 closed by #1671/#1676/#1677/#1678/#1679 respectively, 1:1; independently confirmed via
-  `gh issue list --state open` / `gh pr list --state open`, both empty; both checkpoint entries
-  advance to 22:05:00Z) ·
-  `reports/2026-08-26T220500Z-repo-cleaner.md` (git surface fully clean: 0 open PRs, 0 open issues,
-  5 stale already-merged-PR tracking refs pruned; a second worktree+branch now exist
-  — `.claude/worktrees/agent-ui-reviewer` / `reviewer-worktree-2026-08-26` — from this session's own
-  `/teamwork:fleet-bootstrap` immediately prior, standing infrastructure not cruft;
-  `reap-worktrees.mjs --dry` reads that worktree as `REAP` since its cherry-diff can't distinguish a
-  content-identical standing seat from a finished campaign branch — correctly held, not executed,
-  not proposed for removal; this exact classification gap already filed as agent-ui#1680 by the
-  dispatching session, **treated as ACTIONED not open, not re-proposed here**) ·
-  `reports/2026-08-26T220500Z-decision-watcher.md` (forward mode: root-caused and worked around a
-  tooling anomaly — `adr_checkpoint.py`'s hash basis changed in harness 3.18.8 with no checkpoint
-  migration, briefly flooding all 226 ADRs as "amended"; isolated the true delta by reclassifying
-  under 3.18.6, then re-baselined the checkpoint under 3.18.8 to prevent recurrence; filed as a bug
-  in the plugins repo by the dispatching session, **treated as ACTIONED not open**; queued 4 new
-  harvest rows — adr-0030/0032/0033/0035, each now carrying a landed same-file `## Amendment`,
-  confirmed against `origin/main` at `ac6b80f2`. Revalidation mode: sampled cursor 35→40,
-  adr-0036/0038/0040/0041 falsified, adr-0039 confirmed; 3 of the 4 new falsified findings
-  (adr-0036/0038/0041) share an ADR-0140 rename-propagation root cause already filed as a separate
-  agent-ui task by the dispatching session, **treated as ACTIONED not open, not re-proposed**;
-  adr-0040 (recurring silent budget re-basing) has **not** been filed anywhere — named as open
-  below. All four previously-queued falsified rows (adr-0030/0032/0033/0035) independently
-  re-verified accurate against their now-landed Amendments; `queue-clear` explicitly not run per
-  `watch-adrs`'s own boundary — command named for a human) ·
-  `git log --oneline -25` (confirms prior plan's own 1.1 landed as `220ae0ac`, and prior plan's 4.2
-  landed as the four merged PRs `ac6b80f2`/`55d8e075`/`5245599a`/`7b3f8bb9`) ·
-  `git diff --stat` on the durable state files (`adr-checkpoint.json` +1130/−202 lines — the
-  corpus-wide re-baseline; `adr-queue.json` +28 lines / 4 new rows; `revalidation-queue.json` +28
-  lines / 4 new rows; `revalidation-checkpoint.json` cursor 35→40; `watch-checkpoint.json` both
-  sources → 22:05:00Z; `fleet.json`/`fleet-roster.md` +52/+3 lines, confirmed as fleet-bootstrap's
-  own dirt, out of this seat's 1.1 scope).
-- **UNMEASURED**: none — both `gh` sources reachable all firing (issue-sorter's own
-  `gh auth status`/`gh api rate_limit` check, 5000/5000 unused); `git` reachable throughout. `[]`.
-- **Corrections vs the prior plan** (2026-08-26T16:28:22Z) — both open entries resolved or carried:
-  - Prior 1.1 (land the 16:28:22Z ops state) — **DONE**: commit `220ae0ac` ("ops: 2026-08-26T16:28Z
-    sweep state..."), confirmed by `git log`. Superseded by this firing's own 1.1.
+  `reports/2026-08-27T011000Z-issue-sorter.md` (checkpoint window 22:05:00Z→01:10:00Z; both
+  gh_issues/gh_prs reachable; 2 items discovered, #1680/#1681, both already correctly minted at
+  filing time — RESUME no-op, no duplicate; 0 PRs; 0 held items; both checkpoint entries advance to
+  01:10:00Z) ·
+  `reports/2026-08-27T011000Z-repo-cleaner.md` (git surface byte-for-byte unchanged from the prior
+  firing's report — same 2-worktree/1-branch/0-open-PR/0-leftover-remote-branch state; the one
+  genuinely new item, 2 open issues vs 0 last firing, reset the unchanged-count to 0; `reap-worktrees
+  --dry` still reads the standing reviewer worktree as `REAP` — held, not executed, tracked by
+  agent-ui#1680, not re-flagged; v0.1.0 release + `9a62617f` selftest fix both accounted for as
+  expected state, not drift) ·
+  `reports/2026-08-27T011000Z-decision-watcher.md` (forward mode: `adr_checkpoint.py` against the
+  freshly re-baselined checkpoint — 226/226 ADRs, nothing changed; confirms `9a62617f` touched no
+  ADR content and confirms the 2026-08-26T22:2X:00Z queue-clear on adr-0030/0032/0033/0035 landed
+  correctly, those rows now gone from `revalidation-queue.json`. Revalidation mode: cursor 40→45,
+  sampled adr-0042..adr-0046 — adr-0044/0045 confirmed (byte-verified against `text-field.css`/
+  `overlay.ts`/`combo-box.ts`/`selection-commit.ts`), no action; adr-0042/0043/0046 falsified, all
+  via the ADR-0140 rename root cause — adr-0042 and the rename-half of adr-0046 already inside
+  agent-ui#1681's original 24-candidate list, adr-0043 a genuine miss appended as #1681's 25th
+  instance, adr-0046 also carrying a second, unrelated orphaned-"Status: proposed"-fragment defect
+  filed separately) ·
+  `git log --oneline -15` (confirms prior plan's own 1.1 landed as `227c87d4`; confirms
+  `81394705` fleet-bootstrap cold start and `9a62617f` selftest fix both landed since, neither
+  touching ADR content) ·
+  `git status --porcelain` (3 modified ops paths — `revalidation-checkpoint.json`,
+  `revalidation-queue.json`, `watch-checkpoint.json` — 3 untracked new report files, plus this
+  firing's own `sweep-in-flight.json` marker; `adr-checkpoint.json`/`adr-queue.json` correctly
+  NOT modified, matching decision-watcher's forward-mode clean no-op) ·
+  live `gh issue list --state open --json number,title,labels,updatedAt` (3 open issues:
+  #1680/#1681/#1682, each `task` + one `size:*` label only — **no `backlog`/`roadmap` on any**, no
+  `needs-ruling` on any; #1682 confirmed to genuinely exist — a first `gh issue view 1682` call
+  transient-errored, a second `--repo`-qualified call plus a title-text search both returned it
+  live, `state: OPEN`, `createdAt: 2026-08-27T00:59:10Z`, body matches decision-watcher's cited
+  defect exactly — **not** a narrated-but-absent claim, the filing genuinely landed) · `gh issue
+  view 1680/1681 --json body` (both bodies grepped for a `Blocked-by:` line — **none found on
+  either**, per `blocked-by-rules`).
+- **UNMEASURED**: none — both `gh` sources reachable all firing (issue-sorter's own check; my own
+  live spot-check all succeeded); `git` reachable throughout. `[]`.
+- **Corrections vs the prior plan** (2026-08-26T22:05:00Z):
+  - Prior 1.1 (land the 22:05:00Z ops state) — **DONE**: commit `227c87d4` ("ops: 2026-08-26T22:05Z
+    sweep state — checkpoint re-baseline, 4 ADR queue rows cleared"), confirmed by `git log`.
+    Superseded by this firing's own 1.1.
+  - Prior 3.1 (queue-clear adr-0030/0032/0033/0035) — **DONE**, per this dispatch's own note and
+    independently confirmed: `revalidation-queue.json` no longer carries any of those 4 ids.
+    Dropped, not re-proposed.
   - Prior 4.1 (harvest the ADR-restatement-gap fix via `/make-pack`) — **STILL OPEN, carried
-    forward as new 4.1, elevated further** — `adr-queue.json`'s same-shape candidate count grew
-    3→6 this firing (adr-0021/0025 plus newly-added adr-0030/0032/0033/0035), and the
-    corpus-wide confirmed-and-individually-fixed instance count grew 5→9 — see Verdict below.
-  - Prior 4.2 (file + land dated restatement amendments for adr-0030/0032/0033/0035) — **DONE, all
-    four**: filed as issues #1672(adr-0030)/#1673(adr-0032)/#1674(adr-0033)/#1675(adr-0035),
-    fixed via merged PRs #1679/#1676/#1678/#1677 respectively (confirmed by `git log` — commits
-    `ac6b80f2`/`7b3f8bb9`/`55d8e075`/`5245599a` — and independently re-verified accurate by
-    decision-watcher's own re-read of all four landed Amendments against shipped code). Dropped as
-    completed-and-proven; each now instead feeds new 4.1 (as a 4th–7th worked instance of the
-    still-undocumented pattern) and new 3.1 (their revalidation-queue rows still need a human
-    `queue-clear`).
-  - No entry dropped as parked — 0 open issues exist this firing, so nothing carries `backlog` or
-    `roadmap` to check against.
-- **New this firing** (decision-watcher, forward mode): a tooling anomaly
-  (`adr_checkpoint.py`'s hash-basis change, harness#929, no checkpoint migration) briefly flooded
-  all 226 ADRs as "amended" — root-caused, worked around live (reclassified under 3.18.6 to isolate
-  the true 4-ADR delta), then the checkpoint was re-baselined under 3.18.8 so the flood doesn't
-  repeat next firing. Filed as a bug in the plugins repo by the dispatching session — **ACTIONED,
-  not open, not re-proposed**. 4 new ADR-queue harvest rows (adr-0030/0032/0033/0035) — see 4.1.
-- **New this firing** (decision-watcher, revalidation mode): sampled cursor 35→40 —
-  adr-0036/0038/0041 falsified via a *distinct* root cause (ADR-0140's 2026-07-18 corpus-wide
-  `--ui-*`→`--md-sys-*` rename swept shipped code but never propagated into these ADRs' own
-  Decision-prose token names; mechanism/values all verified byte-correct, only the literal name is
-  stale) — already filed as a separate agent-ui task by the dispatching session, **ACTIONED, not
-  open, not re-proposed**. adr-0040 falsified via an unrelated cause (recurring silent budget
-  re-basing, the exact failure mode its own 2026-08-16 Amendment claimed to close) — **not filed
-  anywhere yet** — new 4.2 below. adr-0039 confirmed (box-alignment `start`/`end` still live) — no
-  action.
-- **New this firing** (issue-sorter): 5 closures + 5 merges since the prior checkpoint, all
-  closure/merge events on already-fully-triaged records from this session's own prior-firing
-  dispatches — clean no-op for this seat's own remit. Repo now carries 0 open issues, 0 open PRs.
-- **New this firing** (repo-cleaner): git surface fully clean, 5 stale tracking refs pruned. A
-  second worktree+branch (`agent-ui-reviewer` / `reviewer-worktree-2026-08-26`) now exist as
-  standing fleet infrastructure from this session's own `/teamwork:fleet-bootstrap`, run
-  immediately before this sweep (standing context for this plan, not itself a finding) — a
-  reviewer seat and a planner seat are both now live and idle in the background. `reap-worktrees.mjs`
-  cannot tell that worktree apart from a finished campaign worktree; already filed as agent-ui#1680
-  by the dispatching session — **ACTIONED, not open, not re-proposed**.
-- **needs-ruling lane**: none this firing — 0 open issues exist, so no issue can carry the
-  `needs-ruling` label. §3 below is a human-decision item of a different shape (a batch confirm on
-  already-verified-safe queue state), not a labeled-issue ruling.
-- **Blocked-by convention (#193)**: 0 open issues this firing — nothing to grep a `Blocked-by:`
-  line from; no blocker relationship to check on any entry below.
-- **Verdict — the ADR-restatement-gap harvest fix is now past the point batching helps**: every
-  one of 9 corpus-wide instances of the same defect shape (header records a supersession, the
-  Decision-body prose is never restated) is now **individually fixed** —
-  adr-0007/0017/0018/0021/0025 (fixed earlier, PRs #1615/#1625/#1626/#1636/#1635) plus
-  adr-0030/0032/0033/0035 (fixed **this session**, PRs #1679/#1676/#1678/#1677) — yet the
-  doc-standards convention that would let a future ADR author or reviewer recognize and fix this
-  shape without re-deriving the rationale each time is **still unwritten**
-  (`adr-log-mechanics.md`'s Amendment/Supersession/Extension table still carries only 3 rows,
-  confirmed against `origin/main` by both this seat's own prior read and decision-watcher's fresh
-  check this firing). `adr-queue.json` now carries 6 rows proposing the exact same fix text
-  verbatim (`plan` field unchanged since the first candidate) — going from 3 candidates to 6 netted
-  **zero new design work**, only more evidence that batching further buys nothing. This stays
-  hygiene debt by contract (queue order is fixed by the entry, not by urgency), but it holds the
-  top of §4 for the second firing running. Two more items surfaced this firing: adr-0040's own
-  silent-drift recurrence needs its first-ever filing (new 4.2), and adr-0129's dual-maintained-CSS
-  harvest candidate has now sat unconverted-to-an-action for 4 consecutive firings since
-  2026-08-25T17:57:12Z (new 4.3) — named explicitly so it stops being silent background noise.
+    forward, now held at the top of §4 for the 3rd firing running** — `adr-queue.json`'s candidate
+    count is flat at 6 of 7 rows (no growth, no shrinkage, since the last firing) — see Verdict.
+  - Prior 4.2 (file a task for adr-0040's recurring silent budget re-basing) — **STILL OPEN, not
+    filed anywhere yet, carried forward to the 2nd consecutive firing named** — `revalidation-queue.json`'s adr-0040 row is unchanged and no matching issue exists on a live `gh
+    issue list` check.
+  - Prior 4.3 (harvest adr-0129's dual-maintained-CSS-drift class) — **STILL OPEN, carried
+    forward, now 5 consecutive firings unconverted** (queued_at unchanged at
+    2026-08-25T17:57:12Z).
+  - No entry dropped as parked — 3 open issues exist this firing (#1680/#1681/#1682), none carries
+    `backlog` or `roadmap` — nothing to park.
+- **New this firing** (issue-sorter): clean no-op — #1680/#1681 both already correctly minted and
+  labeled at filing time, no duplicate, 0 PRs, 0 held items, both checkpoint sources advance.
+- **New this firing** (repo-cleaner): git surface unchanged from the prior firing; the
+  reap-worktrees classification gap still held (tracked #1680, unclaimed); no execute-gate actions.
+- **New this firing** (decision-watcher, forward mode): clean no-op, 226/226 ADRs unchanged —
+  independently confirms both the checkpoint re-baseline and the adr-0030/0032/0033/0035
+  queue-clear landed correctly.
+- **New this firing** (decision-watcher, revalidation mode, cursor 40→45): adr-0044/adr-0045
+  confirmed, no action. adr-0042/adr-0043/adr-0046 falsified — **all three now fully accounted for
+  by exactly two GitHub issues**: adr-0042 and the rename-half of adr-0046 were already inside
+  agent-ui#1681's 24-candidate list; adr-0043 was a genuine miss by #1681's original regex sweep,
+  now appended as its 25th instance (confirmed live in #1681's own Findings section, dated
+  2026-08-27 — the append genuinely landed); adr-0046's second, unrelated defect (the orphaned
+  self-contradicting "Status: proposed" fragment on its literal last line) is filed separately as
+  agent-ui#1682 (confirmed live, OPEN, body matches). All three **ACTIONED, not open, not
+  re-proposed here.**
+- **Cross-cutting observation, new this firing**: `revalidation-queue.json`'s 7 open rows now
+  resolve to exactly two buckets — 6 rows (adr-0036/0038/0041/0042/0043/0046) trace to the single
+  unclaimed `size:big` task agent-ui#1681, and 1 sub-defect (adr-0046's second problem) traces to
+  agent-ui#1682 — leaving **adr-0040 as the only revalidation-queue finding with no ticket at all**,
+  now the 2nd consecutive firing this has been true. This sharpens 4.2 below from "a new finding"
+  to "the one orphaned gap in an otherwise fully-tracked queue."
+- **needs-ruling lane**: none this firing — of the 3 open issues, none carries the `needs-ruling`
+  label (#1680/#1681/#1682 each carry `task` + one `size:*` label only, verified via live `gh`
+  read). §3 is empty for a different reason this firing (see below), not because of this lane.
+- **Blocked-by convention (#193)**: 3 open issues this firing (#1680, #1681, #1682); grepped all
+  three bodies for a `Blocked-by:` line — **none found on any**. No blocker relationship changes
+  any entry's ordering below.
+- **Verdict — the revalidation queue's real orphaned surface is now exactly one ADR, and the
+  ADR-restatement-gap harvest decision has gone from growing to flat**: `adr-queue.json`'s
+  restatement-gap candidate count held at 6 rows this firing (no growth, no shrinkage) — the
+  corpus-wide defect shape is fully worked (9 of 9 known instances individually fixed via landed
+  Amendments), only the doc-standards convention documenting it for the next ADR author is still
+  unwritten; batching has nothing left to wait for. Separately, the cross-cutting observation above
+  means the revalidation queue's 7 open rows are no longer 7 independent problems needing 7
+  independent triages — 6 are already one filed, unclaimed `size:big` task (#1681) plus one filed
+  `size:small` task (#1682); only **adr-0040** sits with zero ticket, zero owner, 2 firings running.
+  That makes 4.2 this firing's sharpest, cheapest (~10 min) unblocked action.
 
 Queue order: (1) gated mutations verified safe → (2) blockers → (3) human decisions → (4) hygiene.
 
 ## 1. Gated mutations already verified safe
 
 ### 1.1 Land this firing's ops state — one commit, ops paths ONLY (dispatching host; 5 min)
-- **Action**: `git add` exactly: `.claude/ops/adr-checkpoint.json` (modified, +1130/−202 lines —
-  the corpus-wide hash-basis re-baseline under harness 3.18.8, resolving the tooling anomaly for
-  every future firing), `.claude/ops/adr-queue.json` (modified, +4 rows: adr-0030/0032/0033/0035,
-  now 7 total), `.claude/ops/revalidation-queue.json` (modified, +4 rows:
-  adr-0036/0038/0040/0041 falsified, now 8 total; the existing adr-0030/0032/0033/0035 rows are
-  left untouched here — see 3.1), `.claude/ops/revalidation-checkpoint.json` (modified, cursor
-  35→40), `.claude/ops/watch-checkpoint.json` (modified, both `gh_issues`/`gh_prs` → 22:05:00Z),
-  `.claude/ops/reports/2026-08-26T22-05-00Z-issue-sorter.md` (new),
-  `.claude/ops/reports/2026-08-26T220500Z-repo-cleaner.md` (new),
-  `.claude/ops/reports/2026-08-26T220500Z-decision-watcher.md` (new), plus this plan's own payload
-  once applied — then commit on `main`. Do NOT stage `.claude/ops/fleet.json` or
-  `.claude/ops/fleet-roster.md` (this session's own `/teamwork:fleet-bootstrap` output, a different
-  seat's scope) and do NOT stage `.claude/ops/sweep-in-flight.json` (this sweep's own live marker,
-  same exclusion as every prior firing).
+- **Action**: `git add` exactly: `.claude/ops/revalidation-queue.json` (modified, +3 rows:
+  adr-0042/adr-0043/adr-0046, now 7 total), `.claude/ops/revalidation-checkpoint.json` (modified,
+  cursor 40→45), `.claude/ops/watch-checkpoint.json` (modified, both `gh_issues`/`gh_prs` →
+  2026-08-27T01:10:00Z), `.claude/ops/reports/2026-08-27T011000Z-issue-sorter.md` (new),
+  `.claude/ops/reports/2026-08-27T011000Z-repo-cleaner.md` (new),
+  `.claude/ops/reports/2026-08-27T011000Z-decision-watcher.md` (new), plus this plan's own payload
+  once applied — then commit on `main`. Do NOT stage `.claude/ops/adr-checkpoint.json` or
+  `.claude/ops/adr-queue.json` (both correctly unchanged this firing — forward mode was a clean
+  no-op) and do NOT stage `.claude/ops/sweep-in-flight.json` (this sweep's own live marker, same
+  exclusion as every prior firing).
 - **Owner**: dispatching host (the ops-write split's dispatching session).
-- **Evidence**: `git status --porcelain` and `git diff --stat` this compute pass (7 modified + 3
-  untracked ops paths this seat's own remit; 2 modified + 1 untracked paths correctly excluded as
-  a different seat's scope); `ops-write-sandbox-rules` (dispatcher applies + lands payloads).
+- **Evidence**: `git status --porcelain` this compute pass (3 modified + 3 untracked ops paths
+  this seat's own remit; `adr-checkpoint.json`/`adr-queue.json` correctly absent from the modified
+  set); `ops-write-sandbox-rules` (dispatcher applies + lands payloads).
 - **Size**: 5 minutes.
 
 ## 2. Blocking other work
 
-(none — 0 open PRs, 0 open issues, primary exactly current with `origin/main`; no entry blocks
-another this firing.)
+(none — 0 open PRs, primary exactly current with `origin/main`; no entry blocks another this
+firing; both open task issues, #1680 and #1681, carry no `Blocked-by:` line and name no blocker.)
 
 ## 3. Human-decision items
 
-### 3.1 Run the revalidation queue-clear for adr-0030/0032/0033/0035 (Kim; ~5 min)
-- **Action**: all four rows' underlying findings are now fixed — each ADR carries a landed,
-  merged, same-file `## Amendment` (PRs #1679/#1676/#1678/#1677), and decision-watcher
-  independently re-read all four this firing and confirmed each accurately restates its clause
-  against shipped reality. Per `watch-adrs`'s own boundary ("never decides a queued
-  falsified/untestable finding is 'resolved' on its own — only a human clearing the queue row does
-  that"), no seat may self-clear this; run:
-  ```
-  python3 "<harness plugin root>/scripts/revalidation_checkpoint.py" queue-clear <path> --ids adr-0030:falsified,adr-0032:falsified,adr-0033:falsified,adr-0035:falsified
-  ```
-- **Owner**: Kim.
-- **Evidence**: `.claude/ops/revalidation-queue.json` (4 rows still open, full evidence text
-  per-ADR); decision-watcher's report (independent re-verification of all four landed Amendments);
-  `.claude/ops/adr-queue.json`'s new rows (citing the same 4 merged PRs as their own evidence).
-- **Size**: ~5 minutes (single mechanical command).
-
-**Status: DONE (2026-08-26T22:2X:00Z, same firing)** — Kim confirmed via AskUserQuestion, run by
-the dispatching session: `revalidation_checkpoint.py queue-clear` — cleared 4 candidate(s), 4
-remain (adr-0036/0038/0040/0041, this firing's own fresh findings).
+(none this firing — no revalidation row is newly fixed-and-ready for a `queue-clear` confirm
+[all 7 open rows still await either agent-ui#1681 or agent-ui#1682 landing, or adr-0040's own
+still-unfiled fix], and no issue carries `needs-ruling`. The last batch confirm, §3.1 on the
+prior plan, is DONE and dropped above.)
 
 ## 4. Hygiene debt
 
-### 4.1 Harvest the ADR-restatement-gap fix now via `/make-pack` (Kim; ~20 min) — held at top of §4 for the 2nd firing running
-- **Action**: `adr-queue.json` carries 6 rows proposing the identical fix (extend
+### 4.1 Harvest the ADR-restatement-gap fix now via `/make-pack` (Kim; ~20 min) — held at top of §4 for the 3rd firing running
+- **Action**: `adr-queue.json` still carries 6 rows proposing the identical fix (extend
   `.claude/skills/doc-standards/references/adr-log-mechanics.md`'s Amendment/Supersession/
   Extension table with a 4th row for "a header-recorded partial supersession whose Decision-body
   prose goes unrestated until a dedicated Amendment") — adr-0021, adr-0025, adr-0030, adr-0032,
-  adr-0033, adr-0035. Every one of the 9 corpus-wide worked instances of this shape
-  (adr-0007/0017/0018/0021/0025/0030/0032/0033/0035) is now individually fixed via its own landed
-  Amendment; only the convention documenting the pattern for the *next* ADR author/reviewer is
-  still unwritten. The fix text is already drafted verbatim in `adr-queue.json`'s own `plan`
-  field — this is purely a batching decision, not a design decision, and batching has stopped
-  paying for itself (3→6 candidates this firing, zero new design work). Same lane as the
-  5-candidate batch shipped via #1607 (commit `e91d612b`).
+  adr-0033, adr-0035, unchanged since the last firing (no growth, no shrinkage — the corpus-wide
+  defect shape is fully worked: all 9 known instances now have their own landed Amendment). The fix
+  text is already drafted verbatim in `adr-queue.json`'s own `plan` field — this is purely a
+  batching decision, not a design decision, and batching has nothing left to wait for. Same lane as
+  the 5-candidate batch shipped via #1607 (commit `e91d612b`).
 - **Owner**: Kim (`/make-pack` runner).
-- **Evidence**: `.claude/ops/adr-queue.json` (6 of 7 rows, identical `plan` field);
-  `.claude/ops/revalidation-queue.json` (adr-0030/0032/0033/0035 rows, same pattern, now fixed);
-  precedent commit `e91d612b` (#1607).
+- **Evidence**: `.claude/ops/adr-queue.json` (6 of 7 rows, identical `plan` field, byte-unchanged
+  vs. the prior firing's read); precedent commit `e91d612b` (#1607).
 - **Size**: ~20 minutes once run.
 
-### 4.2 File a task for adr-0040's recurring silent budget re-basing (Kim; ~10 min) — net-new finding, not yet filed anywhere
+### 4.2 File a task for adr-0040's recurring silent budget re-basing (Kim; ~10 min) — 2nd consecutive firing named, now the queue's only fully-orphaned finding
 - **Action**: ADR-0040's own 2026-08-16 Amendment argued explicitly for ending silent,
   script-comment-only budget re-basing after finding 11 prior undocumented instances — yet the
   same row has been silently re-based ≥8 more times since (58KB→70KB+ per `measure-size.mjs`'s own
-  comment ladder), none fed back as a further Amendment: the exact failure mode the Amendment
-  claimed to close, recurring immediately after it landed. File a task (owner: unassigned per
-  `revalidation-queue.json`) asking for either a further dated Amendment recording the current real
-  budget, or a process fix that makes re-basing feed back automatically — the choice is the
-  ticket-owner's, not decided here. Distinct root cause from 4.1/4.3 and from the already-filed
-  ADR-0140 rename-propagation task (adr-0040's staleness is a re-basing-discipline gap, not a
-  token-rename gap) — do not fold it into that filing.
+  comment ladder), none fed back as a further Amendment. Unlike every other row in
+  `revalidation-queue.json` (all 6 of the others now trace to agent-ui#1681 or #1682, both
+  confirmed filed and live), **adr-0040 still has no ticket at all** — file one (owner: unassigned
+  per `revalidation-queue.json`) asking for either a further dated Amendment recording the current
+  real budget, or a process fix that makes re-basing feed back automatically — the choice is the
+  ticket-owner's, not decided here. Distinct root cause from 4.1/4.3 and from #1681's ADR-0140
+  rename-propagation cause (adr-0040's staleness is a re-basing-discipline gap, not a token-rename
+  gap) — do not fold it into either.
 - **Owner**: Kim (file-task runner); any available dev to action once filed.
 - **Evidence**: `.claude/ops/revalidation-queue.json`'s adr-0040 row (full 58KB→70KB+ ladder
-  evidence); ADR-0040's own 2026-08-16 Amendment text (the fix it argued for, now recurring).
+  evidence, unchanged since last firing); ADR-0040's own 2026-08-16 Amendment text (the fix it
+  argued for, now recurring); live `gh issue list` confirming no matching issue exists.
 - **Size**: ~10 minutes to file; further sizing depends on the fix chosen.
 
-### 4.3 Harvest adr-0129's dual-maintained-CSS-drift class (Kim; ~15–20 min) — queued since 2026-08-25T17:57:12Z, unconverted for 4 consecutive firings
-- **Action**: `adr-129`'s row (unchanged mtime this firing) flags a generalizable defect class — a
-  promoted control's CSS drifting as dual-maintained truth between its site-consumer copy and its
-  package-owned canonical copy (GH #1163's root-card logic and ADR-0100's container-type repair
-  both independently missed one copy) — not yet covered by any `references/*.md`. Distinct fix
-  target from 4.1 (different pattern, different target doc); surfaced as its own entry now because
-  it has sat as background-only prose across 4 consecutive sweep firings without ever becoming an
-  actionable line.
+### 4.3 Harvest adr-0129's dual-maintained-CSS-drift class (Kim; ~15–20 min) — queued since 2026-08-25T17:57:12Z, now 5 consecutive firings unconverted
+- **Action**: `adr-0129`'s row (unchanged mtime and evidence text this firing) flags a
+  generalizable defect class — a promoted control's CSS drifting as dual-maintained truth between
+  its site-consumer copy and its package-owned canonical copy (GH #1163's root-card logic and
+  ADR-0100's container-type repair both independently missed one copy) — not yet covered by any
+  `references/*.md`. Distinct fix target from 4.1 (different pattern, different target doc);
+  restated again because it is now the single most stale unconverted item in this queue.
 - **Owner**: Kim (`/make-pack` runner).
 - **Evidence**: `.claude/ops/adr-queue.json`'s adr-0129 row (full evidence text, citing GH #1163
-  and ADR-0100); `.claude/docs/adr/0129-app-surfaces-m2-composition-and-transport-boundary.md`
-  L70-107 (Amendment 2, the artboard-extraction precedent this harvest would generalize from).
+  and ADR-0100, byte-unchanged since 2026-08-25T17:57:12Z);
+  `.claude/docs/adr/0129-app-surfaces-m2-composition-and-transport-boundary.md` L70-107 (Amendment
+  2, the artboard-extraction precedent this harvest would generalize from).
 - **Size**: ~15–20 minutes.
 
 ## Standing notes (not queue entries)
 
-- **Prior plan (2026-08-26T16:28:22Z) fully triaged**: its 1.1 landed (`220ae0ac`); its 4.2 landed
-  in full (4 issues filed, 4 PRs merged, closing them 1:1); its 4.1 carries forward as new 4.1
-  above, elevated for the 2nd consecutive firing.
-- **Repo surface is at a clean floor**: 0 open issues, 0 open PRs, primary at exact parity with
-  `origin/main` — the entire actionable queue this dispatch is hygiene debt (§4) plus one batch
-  confirm (§3.1, now DONE); §2 is empty.
-- **Fleet-bootstrap context (standing, not a finding)**: this session's own
-  `/teamwork:fleet-bootstrap`, run immediately before this sweep, left a reviewer seat
-  (background-subprocess, walled, holding for its first review task) and a planner seat
-  (background, holding for its first design/decomposition charter) both live and idle. The
-  reviewer's own worktree is what `reap-worktrees.mjs` currently misreads as reapable — see
-  agent-ui#1680 (ACTIONED, not open).
-- **Two cross-cutting findings ACTIONED elsewhere this firing, not re-proposed here**: the
-  `adr_checkpoint.py` hash-basis tooling anomaly (filed as claude-plugins#945) and the
-  ADR-0140 rename-propagation root cause behind adr-0036/0038/0041 (filed as agent-ui#1681) —
-  both filed by the dispatching session, both out of this plan's own action list by design.
-- **No entry parked this firing** — 0 open issues exist, so none can carry `backlog`/`roadmap`.
-- **Dirty `main` markers**: `.claude/ops/fleet.json`/`fleet-roster.md` (this session's own
-  fleet-bootstrap, dirty-but-intentional, a different seat's scope — not staged by 1.1) and
-  `.claude/ops/sweep-in-flight.json` (this sweep's own live marker, session `agent-ui-81` — leave
-  until the sweep concludes).
+- **Prior plan (2026-08-26T22:05:00Z) fully triaged**: its 1.1 landed (`227c87d4`); its 3.1
+  (queue-clear) landed and is dropped; its 4.1/4.2/4.3 all carry forward above, each one firing
+  more stale.
+- **Three open issues this firing, none of them a plan queue entry**: #1680 (reap-worktrees
+  classification gap) and #1681 (ADR-0140 rename sweep, now 25 candidates per its own Findings)
+  were both already ACTIONED as of the prior firing and remain unclaimed but properly filed; #1682
+  (adr-0046's orphaned status-line fragment) is new this firing, confirmed live and correctly
+  filed. None carries `backlog`/`roadmap`; none is re-proposed here — filed work stays tracked on
+  its own issue, not duplicated into this plan.
+- **Repo surface is at a clean floor apart from those 3 unclaimed issues**: 0 open PRs, primary at
+  exact parity with `origin/main` — the entire actionable queue this dispatch is hygiene debt (§4);
+  §2 and §3 are both empty this firing.
+- **Fleet-bootstrap context (standing, not a finding)**: the reviewer seat
+  (`.claude/worktrees/agent-ui-reviewer`, branch `reviewer-worktree-2026-08-26`) and the planner
+  seat from `/teamwork:fleet-bootstrap` remain live and idle. The reviewer's own worktree is what
+  `reap-worktrees.mjs` still misreads as reapable — see agent-ui#1680 (open, unclaimed).
+- **Two cross-cutting rename/tooling findings tracked entirely on GitHub, not on this plan**:
+  agent-ui#1681 (ADR-0140 rename-propagation, 25 candidates as of this firing) and agent-ui#1682
+  (adr-0046's orphaned status line) — both confirmed live, both out of this plan's action list by
+  design (filed work is tracked on its own issue).
+- **No entry parked this firing** — 3 open issues exist, none carries `backlog`/`roadmap`.
+- **Dirty `main` markers**: `.claude/ops/sweep-in-flight.json` (this sweep's own live marker —
+  leave until the sweep concludes).
 - **gen-ui-kit**: out of this board's scope (dedicated session per Kim's ruling).
 
-*Composed by chore-planner, 2026-08-26T22:05:00Z sweep firing — returned as payload per the #125
+*Composed by chore-planner, 2026-08-27T01:10:00Z sweep firing — returned as payload per the #125
 ops-write split; written and landed by the dispatching session.*

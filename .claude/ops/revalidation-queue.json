@@ -27,6 +27,27 @@
       "kind": "falsified",
       "owner": "unassigned",
       "queued_at": "2026-08-26T22:55:49Z"
+    },
+    {
+      "claim_id": "adr-0042",
+      "evidence": "Decision cl.2/cl.4's own prose names --ui-compact/--ui-widget-inset (superseded by ADR-0140, ratified 2026-07-18, cl.1 mapping table -> --md-sys-compact-{sm,md,lg} / --md-sys-widget-inset). Mechanism and every value are byte-correct in shipped code (indicator-element.ts comment cites --md-sys-compact-{size} directly, dimensions.css carries the renamed tokens) -- only the ADR's own token spelling is stale. Already tracked as one of the 24 candidate ADRs in agent-ui#1681 (filed 2026-08-26T22:05Z firing) -- no new ticket needed, this row just confirms the finding survives a direct re-sample. (Table dialect, no owner field -> unassigned, unattended /sweep-chores firing, no human present.)",
+      "kind": "falsified",
+      "owner": "unassigned",
+      "queued_at": "2026-08-27T00:55:47Z"
+    },
+    {
+      "claim_id": "adr-0043",
+      "evidence": "Decision cl.5 (Geometry boundary, LLD-C5) names '--ui-compact' verbatim ('NOT the --ui-compact widget box'); ADR-0140 (ratified 2026-07-18, cl.1) renamed it to --md-sys-compact-{sm,md,lg}. The substantive point (listbox/menu rows take item-pad, not the widget box) is unaffected and correct -- only the token literal is stale. Was NOT in agent-ui#1681's original 24-candidate list (that sweep's regex missed this bare-family phrasing) -- appended to #1681 by the dispatching session as a 25th instance. (Table dialect, no owner field -> unassigned, unattended firing.)",
+      "kind": "falsified",
+      "owner": "unassigned",
+      "queued_at": "2026-08-27T00:55:47Z"
+    },
+    {
+      "claim_id": "adr-0046",
+      "evidence": "Two independent problems, same claim. (1) Decision prose names --ui-space-md/--ui-space-lg (Context, still in-scope text) and --ui-radius-base (Amendment 2); ADR-0140 renamed these to --md-sys-space-{...} and --md-sys-shape-corner-base. Already tracked as one of the 24 candidates in agent-ui#1681. (2) Filed separately as agent-ui#1682 by the dispatching session: the file's literal LAST LINE (415) reads '(unchanged). Status: proposed -- awaiting Kim's ratification.' directly after Amendment 6 refinement's own 'Status: accepted (Kim ratified, 2026-07-05).' on line 414, and after the header blockquote's own Status cell already says accepted -- a self-contradicting orphaned fragment with no heading of its own. Shipped code confirms every substantive mechanism through Amendment 6's refinement is correctly implemented -- the fragment reads like leftover/incomplete-edit text, not a real pending decision. (Table dialect, no owner field -> unassigned, unattended firing.)",
+      "kind": "falsified",
+      "owner": "unassigned",
+      "queued_at": "2026-08-27T00:55:47Z"
     }
   ]
 }
