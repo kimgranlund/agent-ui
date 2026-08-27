@@ -439,3 +439,37 @@ or consequence changes, and every substantive piece of the Amendment 6 refinemen
 `margin-block`/`margin-inline` split) is unaffected and remains byte-identical. The orphaned line
 above is left standing verbatim, per ADR mutability rules — this amendment is the record that it
 carries no live meaning.
+
+## Amendment — foundation token names repointed to `--md-sys-*` (2026-08-27, ADR-0140 rename)
+
+Every mechanism and decision above (the flow-root BFC box model, the inset-region change, the
+scroll-fade mask, the card scroll/keyboard model, and the six prior amendments' own substance) is
+unaffected by this amendment and remains byte-identical.
+
+This document's own Context and Amendment 2/6 named the shared token IDs as `--ui-space-{md,lg}`,
+`--ui-radius-base`, and `--ui-focus-ring-offset` (the `--ui-box-*`/`--ui-card-*` component-tier
+tokens Amendment 2 introduces — e.g. `--ui-box-inset`, `--ui-box-pad-block/inline`,
+`--ui-card-radius`, `--ui-card-region-margin` — are the UNTOUCHED per-component consumer-knob
+tier, ADR-0140 cl.2, and are not part of this restatement). **ADR-0140** (ratified 2026-07-18)
+migrated the entire shared foundation tier from `--ui-*` to `--md-sys-*` (slot names stable,
+family names swapped, no value change) — its mapping table renames the affected families
+specifically:
+
+- `--ui-space-{none,xs,sm,md,lg,xl,2xl}` → **`--md-sys-space-{none,xs,sm,md,lg,xl,2xl}`**
+- `--ui-radius-base` → **`--md-sys-shape-corner-base`**
+- `--ui-focus-ring-{width,offset}` → **`--md-sys-state-focus-ring-{width,offset}`**
+
+Restated under the current names: the Context's bespoke per-container spacing predates the shared
+`--md-sys-space` ladder this ADR's own box model does not ride (Card's box-model is deliberately
+off the space ladder, by Kim's later ruling — see ADR-0144); Amendment 2's default
+`--md-sys-shape-corner-base` is 12px, so an unreseeded root card's inner radius floors at exactly
+0 (12−12) under the rescinded 6px override; Amendment 6's superseded first draft negated
+`var(--md-sys-state-focus-ring-offset)` to draw the ring inside the border-box, before Kim's
+ratified fix moved the ring to the parent `ui-card` with the fleet's standard positive offset.
+
+The decisions above do not change — only the foundation token IDs the repo-wide rename already
+carried out under ADR-0140. Every prose reference to `--ui-space` / `--ui-radius-base` /
+`--ui-focus-ring-offset` elsewhere in this document is historical narrative describing the state
+at time of writing and is left as originally authored, per ADR mutability rules — this amendment
+is the current-names restatement of record. `dimensions.css` itself has carried the renamed
+declarations since ADR-0140 landed; no code change accompanies this amendment.

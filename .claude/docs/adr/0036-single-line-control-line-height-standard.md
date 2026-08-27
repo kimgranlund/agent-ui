@@ -114,3 +114,29 @@ token consumed on the control host.
   (`ui-text`) and any multi-line content; the rule is Control-class-scoped by design (clause 2).
 - **Name it `--ui-control-leading` / `--ui-leading-control`** — rejected. "leading" collides with the pervasive
   leading/trailing **slot** vocabulary; `--ui-control-line-height` is unambiguous (and Display keeps `-leading`).
+
+## Amendment — cl.3 token name repointed to `--md-sys-control-line-height` (2026-08-27, ADR-0140 rename)
+
+Clauses 1, 2, 4, and 5 (the single-line Control-class law, the Display-class exclusion, the host
+`:scope` placement, and the centering preservation) are unaffected by this amendment and remain
+byte-identical.
+
+Clause 3 named the shared token ID as `--ui-control-line-height`. **ADR-0140** (ratified
+2026-07-18) migrated the entire shared foundation tier from `--ui-*` to `--md-sys-*` (slot names
+stable, family names swapped, no value change) — its mapping table renames this family
+specifically:
+
+- `--ui-control-line-height` → **`--md-sys-control-line-height`**
+
+Restated under the current name:
+
+- **Clause 3 — Mechanism.** A shared token `--md-sys-control-line-height: 1` on `dimensions.css`
+  `:root`, consumed by each Control's `@scope (ui-{cmp}) :scope` as
+  `line-height: var(--md-sys-control-line-height)`.
+
+The decision of clause 3 does not change — only the token ID the repo-wide rename already carried
+out under ADR-0140. Every prose reference to `--ui-control-line-height` elsewhere in this document
+is historical narrative describing the state at time of writing and is left as originally
+authored, per ADR mutability rules — this amendment is the current-names restatement of record.
+`dimensions.css` itself has carried the renamed declaration since ADR-0140 landed; no code change
+accompanies this amendment.

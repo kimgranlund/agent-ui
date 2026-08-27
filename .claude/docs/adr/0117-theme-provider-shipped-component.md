@@ -199,3 +199,24 @@ before the build commits.
 - **Fold the multi-theme package-swapping system into this intake** ("since we're touching `theme` anyway")
   — rejected, out of scope by TKT-0003's own acceptance criteria and ADR-0079's F2b next-tier scope dial;
   this ADR ships the wired-but-inert seam only.
+
+## Amendment — F4's spacing reference repointed to `--md-sys-space` (2026-08-27, ADR-0140 rename)
+
+The rest of this document (F1-F3, F4's geometry class and site-page verdicts) is unaffected by
+this amendment and remains byte-identical.
+
+F4 named the shared token family as `--ui-space` (in negated form — describing an opinion the
+component deliberately does NOT carry). **ADR-0140** (ratified 2026-07-18) migrated the entire
+shared foundation tier from `--ui-*` to `--md-sys-*` (slot names stable, family names swapped, no
+value change) — its mapping table renames this family specifically:
+
+- `--ui-space-{none,xs,sm,md,lg,xl,2xl}` → **`--md-sys-space-{none,xs,sm,md,lg,xl,2xl}`**
+
+Restated under the current name: `ui-theme-provider` carries zero geometry lever of its own (no
+control height, no `--md-sys-space` opinion).
+
+The decision does not change — only the token ID the repo-wide rename already carried out under
+ADR-0140. The prose reference to `--ui-space` elsewhere in this document is historical narrative
+describing the state at time of writing and is left as originally authored, per ADR mutability
+rules — this amendment is the current-names restatement of record. `dimensions.css` itself has
+carried the renamed declaration since ADR-0140 landed; no code change accompanies this amendment.

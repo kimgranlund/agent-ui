@@ -78,3 +78,32 @@ We repair `goals.md` §G5's geometry/smoke acceptance to be **law-true** (and *s
   grid switch itself.
 - **Prove `[density]` on a later control** (e.g. `ui-text-field`'s affordance gap) — rejected: G5 is the
   geometry-law proving vertical; the reference control should prove the density path itself, not punt it to G6.
+
+## Amendment — Context's s6 mechanism reference repointed to `--md-sys-*` (2026-08-27, ADR-0140 rename)
+
+The Decision and Consequences (the optional leading icon slot, the bare-label/icon+label variants,
+and the law-true `[density]` acceptance) are unaffected by this amendment and remain
+byte-identical.
+
+The Context named the shared s6 mechanism's token IDs as `--ui-scale`, `--ui-height`/`--ui-font`,
+`--ui-density`, and `--ui-gap`. **ADR-0140** (ratified 2026-07-18) migrated the entire shared
+foundation tier from `--ui-*` to `--md-sys-*` (slot names stable, family names swapped, no value
+change) — its mapping table renames these families specifically:
+
+- `--ui-scale` → **`--md-sys-scale`**
+- `--ui-height-{sm,md,lg}` → **`--md-sys-height-{sm,md,lg}`**
+- `--ui-font{,-sm,-md,-lg}` → **`--md-sys-font{,-sm,-md,-lg}`**
+- `--ui-density` → **`--md-sys-density`**
+- `--ui-gap{,-sm,-md,-lg}` → **`--md-sys-gap{,-sm,-md,-lg}`**
+
+Restated under the current names: `--md-sys-scale` multiplies the frame + font
+(`--md-sys-height`/`--md-sys-font`), and `--md-sys-density` multiplies only `--md-sys-gap`
+(`= font/2 × density`) — `--md-sys-gap` remains the single density-bearing quantity in the
+system.
+
+The Decision does not change — only the token IDs the repo-wide rename already carried out under
+ADR-0140. Every prose reference to `--ui-scale`/`--ui-height`/`--ui-font`/`--ui-density`/`--ui-gap`
+elsewhere in this document is historical narrative describing the state at time of writing and is
+left as originally authored, per ADR mutability rules — this amendment is the current-names
+restatement of record. `dimensions.css` itself has carried the renamed declarations since
+ADR-0140 landed; no code change accompanies this amendment.

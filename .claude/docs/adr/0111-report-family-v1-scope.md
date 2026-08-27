@@ -266,3 +266,27 @@ This is an **intake** ADR — realized in two stages:
 - **Automatic delta valence coloring (green up / red down).** Rejected: direction ≠ goodness (churn,
   cost, latency); a wrong automatic valence is a lying dashboard. Direction-only v1; valence is a
   foreseen, separately-argued extension.
+
+## Amendment — cl.5's font/widget token names repointed to `--md-sys-*` (2026-08-27, ADR-0140 rename)
+
+Clauses 1-4 (the record shape, the wire vocabulary, and the accessible-name contract) are
+unaffected by this amendment and remain byte-identical.
+
+Clause 5 named the shared token IDs as `--ui-font-*` and `--ui-compact-{size}`. **ADR-0140**
+(ratified 2026-07-18) migrated the entire shared foundation tier from `--ui-*` to `--md-sys-*`
+(slot names stable, family names swapped, no value change) — its mapping table renames these
+families specifically:
+
+- `--ui-font{,-sm,-md,-lg}` → **`--md-sys-font{,-sm,-md,-lg}`**
+- `--ui-compact-{sm,md,lg}` → **`--md-sys-compact-{sm,md,lg}`**
+
+Restated under the current names: `ui-table`/`ui-stat` cells/labels/values read the
+`--md-sys-typescale-*`/`--md-sys-font-*` matrices; `ui-badge`'s box rides the
+`--md-sys-compact-{size}` widget ramp.
+
+The decision of clause 5 does not change — only the token IDs the repo-wide rename already
+carried out under ADR-0140. Every prose reference to `--ui-font-*` / `--ui-compact-*` elsewhere in
+this document is historical narrative describing the state at time of writing and is left as
+originally authored, per ADR mutability rules — this amendment is the current-names restatement
+of record. `dimensions.css` itself has carried the renamed declarations since ADR-0140 landed; no
+code change accompanies this amendment.

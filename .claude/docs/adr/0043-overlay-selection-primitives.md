@@ -72,3 +72,27 @@ ancestor, light-dismisses (Escape + outside-click), and flips/shifts at the view
   makes the behavior reusable (tabs migrates to the shared trait).
 - **Folding this into ADR-0042** — rejected; the overlay/selection infra is a distinct sub-system (different
   mechanism, different milestone G7) from the widget value-bases (G6). Two coherent, separately-gated ADRs.
+
+## Amendment — cl.5 token name repointed to `--md-sys-compact-*` (2026-08-27, ADR-0140 rename)
+
+Clauses 1-4 (the Overlay controller, the roving-focus trait, selection-commit, and
+`UIListboxElement`) are unaffected by this amendment and remain byte-identical.
+
+Clause 5 named the shared token family as `--ui-compact` (bare, no size suffix). **ADR-0140**
+(ratified 2026-07-18) migrated the entire shared foundation tier from `--ui-*` to `--md-sys-*`
+(slot names stable, family names swapped, no value change) — its mapping table renames this
+family specifically:
+
+- `--ui-compact-{sm,md,lg}` → **`--md-sys-compact-{sm,md,lg}`**
+
+Restated under the current name:
+
+- **Clause 5 — Geometry boundary (LLD-C5).** Listbox/menu rows are not Indicator widgets — they
+  take the legacy item-pad, NOT the `--md-sys-compact` widget box.
+
+The decision of clause 5 does not change — only the token ID the repo-wide rename already carried
+out under ADR-0140. The prose reference to `--ui-compact` elsewhere in this document is historical
+narrative describing the state at time of writing and is left as originally authored, per ADR
+mutability rules — this amendment is the current-names restatement of record. `dimensions.css`
+itself has carried the renamed declaration since ADR-0140 landed; no code change accompanies this
+amendment.

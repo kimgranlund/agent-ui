@@ -410,3 +410,31 @@ display atoms — untouched (it is still `inline-grid`, still hugs).
 - [x] `site/pages/avatar-demo.ts` — the sizes-section comment.
 - [x] `sandbox-frame/dogfood/dogfood-assets.ts` — regenerated (embeds avatar.css).
 - [ ] Kim ratifies this amendment (`ratify ADR-0112` is the host's flip; the Status cell is untouched here).
+
+## Amendment — remaining `--ui-compact`/`--ui-radius-base` references repointed to `--md-sys-*` (2026-08-27, ADR-0140 rename)
+
+Fork F3's `--ui-compact` mention is superseded by Amendment 3 above (avatar moved to the
+control-height ladder, already `--md-sys-height-{sm,md,lg}`-spelled) and needs no further
+restatement here. Every other decision in this document is unaffected by this amendment and
+remains byte-identical.
+
+The `ui-progress` geometry clause and its rejected Alternatives entry named the shared token
+family as `--ui-compact-*` (in each case naming what the bar's rail deliberately does NOT use);
+fork F4 (attachment posture) named `--ui-radius-base`. **ADR-0140** (ratified 2026-07-18) migrated
+the entire shared foundation tier from `--ui-*` to `--md-sys-*` (slot names stable, family names
+swapped, no value change) — its mapping table renames these families specifically:
+
+- `--ui-compact-{sm,md,lg}` → **`--md-sys-compact-{sm,md,lg}`**
+- `--ui-radius-base` → **`--md-sys-shape-corner-base`**
+
+Restated under the current names: `ui-progress`'s thickness is a density-invariant thin fleet
+token (`--ui-progress-track-size`), NOT a `--md-sys-compact-*` box lookup — a bar is a rail, not a
+box; `ui-attachment`'s own bordered surface rides `--md-sys-shape-corner-base` (the entry/container
+radius kin).
+
+The decisions do not change — only the token IDs the repo-wide rename already carried out under
+ADR-0140. Every prose reference to `--ui-compact` / `--ui-radius-base` elsewhere in this document
+is historical narrative describing the state at time of writing and is left as originally
+authored, per ADR mutability rules — this amendment is the current-names restatement of record.
+`dimensions.css` itself has carried the renamed declarations since ADR-0140 landed; no code
+change accompanies this amendment.

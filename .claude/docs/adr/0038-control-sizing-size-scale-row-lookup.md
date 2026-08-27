@@ -157,3 +157,38 @@ All the "revise history" doc work is **done** (the token build is the only remai
   the authoritative table directly; this ADR is grounded on hers verbatim.
 - **Remove `--ui-scale` entirely (make display explicit too)** — deferred (F-scale). Display is the
   ruled-linear fork wanting continuous scaling; Kim left it untouched. `--ui-scale` survives solely for it.
+
+## Amendment — cl.1/5 token names repointed to `--md-sys-*` (2026-08-27, ADR-0140 rename)
+
+Clauses 2, 3, and 4 (the byte-identical default, Kim's band structure, and the font/icon
+re-derivation) are unaffected by this amendment and remain byte-identical.
+
+Clauses 1 and 5 named the shared token IDs as `--ui-{height,font,icon}-{sm,md,lg}` and
+`--ui-scale`. **ADR-0140** (ratified 2026-07-18) migrated the entire shared foundation tier from
+`--ui-*` to `--md-sys-*` (slot names stable, family names swapped, no value change) — its mapping
+table renames these families specifically:
+
+- `--ui-height-{sm,md,lg}` → **`--md-sys-height-{sm,md,lg}`**
+- `--ui-font{,-sm,-md,-lg}` → **`--md-sys-font{,-sm,-md,-lg}`**
+- `--ui-icon-{sm,md,lg}` → **`--md-sys-icon-{sm,md,lg}`**
+- `--ui-scale` → **`--md-sys-scale`**
+
+(`--ui-type-*`, also named in clause 5, is a separate namespace renamed to `--md-sys-typescale-*`
+under ADR-0078, not ADR-0140 — out of scope here and left exactly as written.)
+
+Restated under the current names:
+
+- **Clause 1 — Kim's table.** `[scale]` re-tables `--md-sys-{height,font,icon}-{sm,md,lg}` to
+  Kim's chosen §1 row values; `[size]` selects sm/md/lg.
+- **Clause 5 — `--md-sys-scale` leaves the control path; survives for display only.** Controls
+  read the explicit tables — no `× --md-sys-scale`. `--ui-type-*` (display) keeps
+  `× var(--md-sys-scale)`; `[scale]` still sets `--md-sys-scale` to its tier value for that one
+  consumer.
+
+The decisions of clauses 1 and 5 do not change — only the token IDs the repo-wide rename already
+carried out under ADR-0140. Every prose reference to `--ui-{height,font,icon}-*` / `--ui-scale`
+elsewhere in this document (the Decision text above, the Consequences/Resolved sections, the
+Acceptance criteria) is historical narrative describing the state at time of writing and is left
+as originally authored, per ADR mutability rules — this amendment is the current-names
+restatement of record. `dimensions.css` itself has carried the renamed declarations since
+ADR-0140 landed; no code change accompanies this amendment.

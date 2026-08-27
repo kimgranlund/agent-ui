@@ -127,3 +127,31 @@ default and the shared tokens/recipe are unchanged.
   contract.
 - **JS-driven focus ring** (a `focus`/`blur` listener toggling a class) — rejected: `:focus-visible` is the
   platform primitive; JS would reintroduce listener residue the kernel discipline exists to avoid.
+
+## Amendment — cl.2 token names repointed to `--md-sys-state-focus-ring-*` (2026-08-27, ADR-0140 rename)
+
+Clauses 1 and 3 (the dedicated `--md-sys-color-focus-ring` role, already `--md-sys-*`, and the
+`:focus-visible` recipe) and the `:focus-within` Amendment above are otherwise unaffected by this
+amendment and remain byte-identical.
+
+Clause 2 named the shared token IDs as `--ui-focus-ring-width` / `--ui-focus-ring-offset`.
+**ADR-0140** (ratified 2026-07-18) migrated the entire shared foundation tier from `--ui-*` to
+`--md-sys-*` (slot names stable, family names swapped, no value change) — its mapping table
+renames this family specifically:
+
+- `--ui-focus-ring-{width,offset}` → **`--md-sys-state-focus-ring-{width,offset}`**
+
+Restated under the current names:
+
+- **Clause 2 — ring geometry.** Two dimensional tokens in `dimensions.css`:
+  `--md-sys-state-focus-ring-width` (`2px`) and `--md-sys-state-focus-ring-offset` (`2px`).
+- **Clause 3's recipe** now reads `outline: var(--md-sys-state-focus-ring-width) solid
+  var(--md-sys-color-focus-ring); outline-offset: var(--md-sys-state-focus-ring-offset);`.
+
+The decision of clause 2 does not change — only the token IDs the repo-wide rename already
+carried out under ADR-0140. Every prose reference to `--ui-focus-ring-width` /
+`--ui-focus-ring-offset` elsewhere in this document (the Decision text above and the
+`:focus-within` Amendment) is historical narrative describing the state at time of writing and is
+left as originally authored, per ADR mutability rules — this amendment is the current-names
+restatement of record. `dimensions.css` itself has carried the renamed declarations since
+ADR-0140 landed; no code change accompanies this amendment.

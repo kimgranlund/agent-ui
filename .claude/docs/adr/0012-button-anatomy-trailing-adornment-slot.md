@@ -142,3 +142,27 @@ inlined per-control today (`--ui-button-icon`; this adds `--ui-button-glyph`). H
   `aria-hidden`, and the label remains the accessible name.
 - **Wire `aria-haspopup`/`aria-expanded` now** — rejected: presentation-only is the directive; disclosure AX
   is G7's, on the host via internals — a caret with no popup must not announce one.
+
+## Amendment — Consequences' verified token facts repointed to `--md-sys-*` (2026-08-27, ADR-0140 rename)
+
+The Decision (the position/role two-axis anatomy) is unaffected by this amendment and remains
+byte-identical.
+
+The "No size-ramp conflict" Consequences bullet named the shared token IDs as
+`--ui-height-{sm,md,lg}`, `--ui-font`, and `--ui-gap`. **ADR-0140** (ratified 2026-07-18) migrated
+the entire shared foundation tier from `--ui-*` to `--md-sys-*` (slot names stable, family names
+swapped, no value change) — its mapping table renames these families specifically:
+
+- `--ui-height-{sm,md,lg}` → **`--md-sys-height-{sm,md,lg}`**
+- `--ui-font{,-sm,-md,-lg}` → **`--md-sys-font{,-sm,-md,-lg}`**
+- `--ui-gap{,-sm,-md,-lg}` → **`--md-sys-gap{,-sm,-md,-lg}`**
+
+Restated under the current names: `dimensions.css`'s `--md-sys-height-{sm,md,lg}` = 24·28·36,
+`--md-sys-font` = 13·14·16, `--md-sys-gap` = font/2 × density.
+
+The Decision does not change — only the token IDs the repo-wide rename already carried out under
+ADR-0140. Every prose reference to `--ui-height`/`--ui-font`/`--ui-gap` elsewhere in this document
+is historical narrative describing the state at time of writing and is left as originally
+authored, per ADR mutability rules — this amendment is the current-names restatement of record.
+`dimensions.css` itself has carried the renamed declarations since ADR-0140 landed; no code
+change accompanies this amendment.

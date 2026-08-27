@@ -170,3 +170,26 @@ vanish.
 **Realized by** `text-field.css` (the `--ui-text-field-border-focus: transparent` token + the `:focus-within` rule
 keeping only the `outline`) and its probes (`text-field-css.test.ts` asserts the transparent focus token + the
 ring; `text-field-states.browser.test.ts` asserts the transparent focus border + ring survival).
+
+## Amendment — focus-ring geometry tokens repointed to `--md-sys-state-focus-ring-*` (2026-08-27, ADR-0140 rename)
+
+The rest of this document — the contenteditable editor, deviations (b)/(c), labelling, and both
+prior Amendments' own substance — is unaffected by this amendment and remains byte-identical.
+
+Deviation (2a) and the 2026-06-28 Amendment above named the shared token IDs as
+`--ui-focus-ring-width` / `--ui-focus-ring-offset`. **ADR-0140** (ratified 2026-07-18) migrated
+the entire shared foundation tier from `--ui-*` to `--md-sys-*` (slot names stable, family names
+swapped, no value change) — its mapping table renames this family specifically:
+
+- `--ui-focus-ring-{width,offset}` → **`--md-sys-state-focus-ring-{width,offset}`**
+
+Restated under the current names: the host draws
+`outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring)` at
+`var(--md-sys-state-focus-ring-offset)` — the same shared tokens ADR-0009 (as amended) now names.
+
+The decisions above do not change — only the token IDs the repo-wide rename already carried out
+under ADR-0140. Every prose reference to `--ui-focus-ring-width` / `--ui-focus-ring-offset`
+elsewhere in this document is historical narrative describing the state at time of writing and is
+left as originally authored, per ADR mutability rules — this amendment is the current-names
+restatement of record. `dimensions.css` itself has carried the renamed declarations since
+ADR-0140 landed; no code change accompanies this amendment.

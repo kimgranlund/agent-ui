@@ -120,3 +120,28 @@ layout↔style loop). The precise statement of the contract:
   `container-type` above it. The A2UI canvas mounts surfaces under a container context, so an agent-emitted
   root primitive is covered; a primitive used standalone on a host page should be wrapped in (or given) a
   container-context parent. No clause changes — this records the precondition the wording implied.
+
+### A2 — Context/cl.4's spacing token names repointed to `--md-sys-*` (2026-08-27, ADR-0140 rename)
+
+The Decision clauses (Row/Column's shared `flexProps`, container-query responsiveness) and A1
+above are unaffected by this amendment and remain byte-identical.
+
+The Context and clause 4 named the shared token IDs as `--ui-space` and `--ui-height-*`.
+**ADR-0140** (ratified 2026-07-18) migrated the entire shared foundation tier from `--ui-*` to
+`--md-sys-*` (slot names stable, family names swapped, no value change) — its mapping table
+renames these families specifically:
+
+- `--ui-space-{none,xs,sm,md,lg,xl,2xl}` → **`--md-sys-space-{none,xs,sm,md,lg,xl,2xl}`**
+- `--ui-height-{sm,md,lg}` → **`--md-sys-height-{sm,md,lg}`**
+
+Restated under the current names: these layout primitives have no control height (spacing off
+`--md-sys-space`, ADR-0015, never `--md-sys-height-*`); `gap` renders as
+`gap: var(--md-sys-space-{step})` (the ADR-0015 density-responsive ladder, never a control
+dimension).
+
+The Decision does not change — only the token IDs the repo-wide rename already carried out under
+ADR-0140. Every prose reference to `--ui-space` / `--ui-height-*` elsewhere in this document is
+historical narrative describing the state at time of writing and is left as originally authored,
+per ADR mutability rules — this amendment is the current-names restatement of record.
+`dimensions.css` itself has carried the renamed declarations since ADR-0140 landed; no code
+change accompanies this amendment.
