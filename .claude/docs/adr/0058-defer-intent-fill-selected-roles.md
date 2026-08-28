@@ -85,3 +85,42 @@ repoint its fill-text token — a 1–4 line edit whose numbers this ADR already
 - **Darken `--md-sys-color-{f}` itself to clear white text** — rejected: the anchor is used fleet-wide as
   border/ink/glyph at the **3:1 UI bar** where it already passes; darkening it to clear the **4.5 text bar**
   over-darkens every 3:1-bar consumer and breaks the deliberately L-matched intent ladder (ADR-0057).
+
+## Amendment — per-family `-selected` remedy re-verified against the reworked ramp (2026-08-27, revalidation repair)
+
+`references/tokens.md`'s `-selected` note flagged the pre-computed remedy in the Decision table above
+as stale after the 2026-07-10 color-ramp rework: the light `{f}-550` leg no longer reliably clears the
+4.5:1 AA-text bar on the reworked ramp, and the note proposed a uniform `light-dark({f}-600, {f}-600)`
+fallback (copying `--md-sys-color-primary-selected`'s own post-rework recomputation) but explicitly left
+it unverified per family ("RE-VERIFY per family against the live ramp when minting").
+
+`color-verify/contrast-check.py` — the tool this ADR's Decision cites as ground truth — is not present in
+the repository (`git log --all -- '**/contrast-check.py'` returns no history; it was never committed).
+The numbers below are computed directly from the shipped ramp
+(`packages/agent-ui/shared/src/tokens/tokens.css`) using the same measure the Decision itself performed:
+white text (`--md-sys-color-{f}-050`, `oklch(1 0 89.88)` — chroma 0, so it maps to linear sRGB `(1, 1,
+1)` regardless of hue) against each candidate fill, converted OKLCH → OKLab → linear sRGB via the
+published Ottosson matrices, relative luminance `0.2126R + 0.7152G + 0.0722B` on the linear channels, and
+WCAG contrast ratio `(1.05) / (L_fill + 0.05)`. Every candidate stop below sits inside the sRGB gamut on
+this ramp (no channel clips), so the linear math matches what a browser renders.
+
+**Per-family result — three of four keep the original `{f}-550` light leg; only `success` moves:**
+
+| family | `{f}-550` vs white | `{f}-600` vs white | verified `-selected` formula |
+|---|---|---|---|
+| danger | 5.26 (AA) | 6.31 (AA) | `light-dark(var(--md-sys-color-danger-550), var(--md-sys-color-danger-600))` — unchanged |
+| warning | 4.76 (AA) | 5.73 (AA) | `light-dark(var(--md-sys-color-warning-550), var(--md-sys-color-warning-600))` — unchanged |
+| success | 4.46 (fails) | 5.42 (AA) | `light-dark(var(--md-sys-color-success-600), var(--md-sys-color-success-600))` — moved to uniform `-600` |
+| info | 4.69 (AA) | 5.68 (AA) | `light-dark(var(--md-sys-color-info-550), var(--md-sys-color-info-600))` — unchanged |
+
+Only `success`'s light leg fell below 4.5:1 on the reworked ramp (danger/warning/info's `{f}-550` still
+clear, by 0.26–0.76:1 of margin); `tokens.md`'s blanket `light-dark({f}-600, {f}-600)` guess — copied
+from `--md-sys-color-primary-selected`'s own post-rework recomputation rather than measured per family —
+was conservative for three of the four families. `{f}-600` clears comfortably for every family in both
+positions, so it remains the correct dark-leg (and, for `success`, the light-leg too) pin.
+
+This corrects only the pre-computed remedy NUMBERS; the Decision to defer minting these four roles until
+a real filled-intent control needs them is unaffected and still holds — confirmed no filled intent
+button/alert/toast control exists yet in `packages/agent-ui/components/src/controls` as of this
+amendment. The Context, Decision, and Consequences sections above are otherwise unedited; this amendment
+restates only the reserved-remedy table's numbers for the current ramp.
