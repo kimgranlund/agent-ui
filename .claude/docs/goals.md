@@ -771,7 +771,12 @@ the PRD §2 `State` cell flips to `shipped` citing that note, and nothing else.
 **Scope.** Run + record only. No code, no PRD edit ahead of the note, no status flip inside this file
 (the flip is Kim's, in the PRD, ADR-0149's status law). A step that fails is filed as a bug against the
 owning record (ADR-0203/0204 for Teams; ADR-0202/0193/0132 + req-doc-ingestion for Knowledge) and the
-run is re-attempted after the fix; the checklist is not edited to fit the failure.
+run is re-attempted after the fix; the checklist is not edited to fit the failure. **Excludes:** a
+partial pass (a subset of one goal's boxes never flips that goal); ticking a box from a jsdom or scripted
+run; the runtime team orchestrator, retrieval/RAG, and server-side ingestion (PRD §4 non-goals, each an
+intent-tier escalation, none of them under test here). *Shape note:* this entry forks the M-B/M-C single
+DoD list into two per-goal checklists (T-/K- boxes) because it records two independent goals; a future
+multi-goal entry follows this variant rather than re-deriving a third shape.
 
 **Shared preconditions (both runs).**
 - [ ] A real browser (Chrome, for its Network + Application panels), NOT jsdom. M-B's 2026-08-04 run
@@ -804,7 +809,7 @@ flows regress nowhere. Surface: the **Teams** fold under Settings → Capabiliti
       no instructions. `Save`. **Visible:** the fold lists the team with a `GM: <name>` line and one line per
       member as `<role>: <name> — <routing description>`.
 - [ ] **T2, fail-closed validation.** `Edit` the team, blank one member's `Routing description`, `Save`.
-      **Visible:** an inline issue on that row, the form stays open with every other typed field intact,
+      **Visible:** an inline `<field>: <message>` line under that row, the form stays open with every other typed field intact,
       nothing persisted (the list behind the form is unchanged). Restore the text, `Save`.
 - [ ] **T3, reload → roster renders.** Hard-reload the page. **Visible:** the Teams fold shows the same
       team, same GM line, same member lines in the same order; the member instantiated from the catalog in
@@ -877,14 +882,20 @@ file), `notes.pdf` with a text layer (print-to-PDF of a document, not a scan), `
 - [ ] **K4, visible truncation.** Attach `big.md`. **Visible:** its chip's size line ends in ` — truncated`;
       its Resources entry's text ends with a marker of the shape `…[truncated: N of M chars]` where M is the
       original length and the kept text plus marker is ≤ 50,000 chars.
-- [ ] **K5, the fences hold.** Attach `photo.png`. **Visible:** toast `Can't attach "photo.png", unsupported
-      file type.`, no chip, no Resources entry. (Optional, only if a >10 MB text file is to hand: its toast
-      names the `10 MB per-file limit`. Optional: a fourth+ large document tripping the 200,000-character
-      aggregate toast.)
-- [ ] **K6, survives reload via IndexedDB.** Hard-reload. **Visible:** the Resources fold still lists all
-      five entries; opening `big.md`'s entry shows its real text, not a placeholder (`resource-idb-store.ts`
-      materializes the routed text). DevTools → Application → IndexedDB: an `@agent-ui` store holds the
-      large text; Application → Local Storage holds the entry list with the large entry's `idbRef`, not its
+- [ ] **K5, the type fence holds.** Attach `photo.png`. **Visible:** toast
+      `Can't attach "photo.png" — unsupported file type.`, no chip, no Resources entry. (The 10 MB per-file
+      fence is the one budget left optional here: it needs a >10 MB text file, impractical in a scratch
+      folder; if one is to hand, its toast names the `10 MB per-file limit` and mints nothing.)
+- [ ] **K5b, the aggregate budget holds.** Attach three more copies of `big.md` (rename them `big2.md`,
+      `big3.md`, `big4.md`; each lands at the 50,000-char per-document cap, so the fourth pushes the agent
+      past 200,000). **Visible:** the fourth attach's toast
+      `Can't attach "big4.md" — it would push this agent's knowledge past its 200,000-character budget.`,
+      no chip for it, no Resources entry for it; the first three are minted. Delete `big2.md`..`big4.md`'s
+      entries from the Resources fold afterwards so K6/K7 run against the five original documents.
+- [ ] **K6, survives reload via IndexedDB.** Hard-reload. **Visible:** the Resources fold still lists the
+      five original entries; opening `big.md`'s entry shows its real text, not a placeholder (`resource-idb-store.ts`
+      materializes the routed text). DevTools → Application → IndexedDB: a database named `agent-ui-resource-text`
+      (object store `kv`) holds the large text; Application → Local Storage holds the entry list with the large entry's `idbRef`, not its
       body.
 - [ ] **K7, composes into the live prompt, and the wire carries text only.** Settings → Context: System:
       the compiled prompt carries a resources section containing the documents' text, `big.md`'s ending
