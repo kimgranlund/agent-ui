@@ -72,10 +72,19 @@ header-recorded-but-body-unrestated gap reads as a `falsified` verdict, not `con
 the sampled body clause no longer matches reality even though the ADR's own paper trail (the
 header cell) is technically complete.
 
-[verified] 9 worked instances, all in this repo, each fixed via its own append-only `## Amendment`
-(2026-08-21 through 2026-08-26): adr-0007 (Amendment 1, 2026-08-21, commit `21bea37c` — a direct
+**The stale clause need not be another ADR's supersession** — adr-0040/adr-0049 (below) drift
+against a script's own comment-ladder value (`scripts/measure-size.mjs`'s repeated silent budget
+re-basing) with no `Supersedes`/`Superseded by` relationship at all. The shape test is still the
+same one: the ADR's own recorded fact (there, a header cell; here, the Acceptance/Decision text
+itself) has moved on without the body prose catching up — the source of the drift varies, the fix
+(a same-file restating `## Amendment`) doesn't (Kim's ruling, 2026-08-27).
+
+[verified] 11 worked instances, all in this repo, each fixed via its own append-only `## Amendment`
+(2026-08-21 through 2026-08-27): adr-0007 (Amendment 1, 2026-08-21, commit `21bea37c` — a direct
 commit, no PR), adr-0017 (PR #1626), adr-0018 (PR #1625), adr-0021 (PR #1636), adr-0025
-(PR #1635), adr-0030 (PR #1679), adr-0032 (PR #1676), adr-0033 (PR #1678), adr-0035 (PR #1677).
+(PR #1635), adr-0030 (PR #1679), adr-0032 (PR #1676), adr-0033 (PR #1678), adr-0035 (PR #1677),
+adr-0040 (PR #1688), adr-0049 (PR #1688, batched with adr-0040 — the script/comment-ladder-drift
+variant named above).
 
 **How to add one.** Copy `0000-template.md` → `NNNN-<title>.md` at the next free number; fill
 Context · Decision · Consequences · Alternatives; set `Repairs:`; leave `Status: proposed` until
