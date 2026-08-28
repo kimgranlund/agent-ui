@@ -79,12 +79,14 @@ same one: the ADR's own recorded fact (there, a header cell; here, the Acceptanc
 itself) has moved on without the body prose catching up — the source of the drift varies, the fix
 (a same-file restating `## Amendment`) doesn't (Kim's ruling, 2026-08-27).
 
-[verified] 11 worked instances, all in this repo, each fixed via its own append-only `## Amendment`
-(2026-08-21 through 2026-08-27): adr-0007 (Amendment 1, 2026-08-21, commit `21bea37c` — a direct
+[verified] 12 worked instances, all in this repo, each fixed via its own append-only `## Amendment`
+(2026-08-21 through 2026-08-28): adr-0007 (Amendment 1, 2026-08-21, commit `21bea37c` — a direct
 commit, no PR), adr-0017 (PR #1626), adr-0018 (PR #1625), adr-0021 (PR #1636), adr-0025
 (PR #1635), adr-0030 (PR #1679), adr-0032 (PR #1676), adr-0033 (PR #1678), adr-0035 (PR #1677),
 adr-0040 (PR #1688), adr-0049 (PR #1688, batched with adr-0040 — the script/comment-ladder-drift
-variant named above).
+variant named above), adr-0058 (PR #1691 — a third drift-source variant: a live AA-contrast
+re-measurement found the `success` remedy's original pin no longer cleared, with no other ADR and
+no script value involved at all).
 
 **How to add one.** Copy `0000-template.md` → `NNNN-<title>.md` at the next free number; fill
 Context · Decision · Consequences · Alternatives; set `Repairs:`; leave `Status: proposed` until

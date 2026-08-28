@@ -1,11 +1,3 @@
 {
-  "candidates": [
-    {
-      "claim_id": "adr-0058",
-      "evidence": "Decision's pre-computed remedy pinned the -selected intent siblings to light-dark({f}-550, {f}-600) with numeric AA proof (danger 4.92/5.89, warning 4.82/5.81, success 4.52/5.45, info 4.58/5.57); references/tokens.md L51-56 (edited after a 2026-07-10 ramp rework, post-dating this ADR's 2026-07-02 verification) now states the light 550 leg no longer clears against the reworked ramp and pins the remedy to light-dark({f}-600, {f}-600) instead, flagging RE-VERIFY per family when minting. The activation trigger (first filled intent control) still has not fired -- no filled intent button/alert/toast exists in packages/agent-ui/components/src/controls -- so the DEFERRAL itself still holds, but the Decision's own stated remedy numbers are stale and would mint wrong values if triggered today. No owner: frontmatter field on this ADR (agent-ui's blockquote-table dialect carries none); unattended CronCreate-style firing, so owner recorded as unassigned per revalidation_checkpoint.py's no-frontmatter branch.",
-      "kind": "falsified",
-      "owner": "unassigned",
-      "queued_at": "2026-08-28T01:36:51Z"
-    }
-  ]
+  "candidates": []
 }
