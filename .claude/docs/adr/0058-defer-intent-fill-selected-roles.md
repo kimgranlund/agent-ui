@@ -124,3 +124,29 @@ a real filled-intent control needs them is unaffected and still holds — confir
 button/alert/toast control exists yet in `packages/agent-ui/components/src/controls` as of this
 amendment. The Context, Decision, and Consequences sections above are otherwise unedited; this amendment
 restates only the reserved-remedy table's numbers for the current ramp.
+
+## Amendment — `color-verify/contrast-check.py` citation formally corrected across Decision/Consequences/Acceptance (2026-08-28, ticket #1692)
+
+The amendment above already found and disclosed (in passing, while re-deriving the remedy numbers)
+that `color-verify/contrast-check.py` was never committed to this repository. This amendment
+formalizes that finding against every citation of the tool in this ADR, not only the remedy table:
+
+- The Decision's "**The reserved remedy** (verified with `color-verify/contrast-check.py`,
+  2026-07-02)" and the Acceptance's "The reserved-remedy table reproduces via
+  `color-verify/contrast-check.py`" both name a script with no history in this repository
+  (`git log --all -- '**/contrast-check.py'`, re-confirmed 2026-08-28).
+- The Consequences' "A review that ships white intent-fill TEXT on the bare
+  `--md-sys-color-{f}` would be an AA regression the `color-verify` gate catches" names a CI gate
+  that does not exist either — no automated `color-verify` check runs today; this is manual review
+  discipline, not a mechanized gate.
+
+None of this changes what was decided or what the numbers are (the amendment above already
+re-verified those); it corrects what "verified"/"reproduces via" refer to. The standing, canonical
+procedure — for this ADR, for ADR-0059 (color-verify/contrast-check.py citation corrected in its
+own 2026-08-28 amendment), and for any future re-verification under the same 2026-07-02 audit
+lineage — is direct computation: OKLCH → OKLab → linear sRGB (the published Ottosson matrices) →
+relative luminance (`0.2126R + 0.7152G + 0.0722B`) → WCAG contrast ratio
+(`(L_light + 0.05) / (L_dark + 0.05)`), exactly as worked above and as ticket #1690 used to build
+this ADR's own re-verification. No `color-verify/contrast-check.py` script or `color-verify` CI
+gate exists or is planned; every remaining citation of either in this ADR's Decision, Consequences,
+and Acceptance sections should be read as this manual procedure.

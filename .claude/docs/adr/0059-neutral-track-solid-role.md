@@ -94,3 +94,31 @@ rail to it — a state-bearing part gets its own contrast-gated role, not a deco
 ## Extended by ADR-0094 — the third contrast dimension (thumb vs page surface)
 
 See [ADR-0094](./0094-slider-thumb-page-surface-ring.md), which extends this record's contrast analysis with a third backdrop dimension — the thumb's dominant page-surface border, covered by the independent `--ui-slider-thumb-ring` paint layer; this record's Decision and every floor measured above stand unchanged (and are re-pinned by ADR-0094's regression guard).
+
+## Amendment — `color-verify/contrast-check.py` citation corrected; standing procedure canonized (2026-08-28, ticket #1692)
+
+The Decision above ("**Verified** (`color-verify/contrast-check.py`, 2026-07-02)") and the
+Acceptance section ("The measured floors above reproduce via `color-verify/contrast-check.py`")
+both cite a script that was never committed to this repository: `git log --all --
+'**/contrast-check.py'` returns no history (re-confirmed 2026-08-28, same finding ticket #1690
+made independently for ADR-0058). The 2026-07-02 audit's floors were produced by direct
+computation at authoring time, not a checked-in tool.
+
+The standing, canonical procedure for reproducing or re-verifying any contrast figure this ADR
+cites — now and going forward — is the method ticket #1690 used and ADR-0058's 2026-08-27
+amendment documents in full: OKLCH → OKLab → linear sRGB (the published Ottosson matrices) →
+relative luminance (`0.2126R + 0.7152G + 0.0722B` on the linear channels) → WCAG contrast ratio
+(`(L_light + 0.05) / (L_dark + 0.05)`). No `color-verify/contrast-check.py` script exists or is
+planned; every citation of it in this ADR's Decision and Acceptance sections above should be read
+as this computation.
+
+As a spot check against the currently shipped ramp (`packages/agent-ui/shared/src/tokens/tokens.css`)
+using this method: the idle track's two headline worst-case floors and its best-case figure
+reproduce within rounding — `--md-sys-color-neutral-600` vs the light `-surface-highest` plane
+(`neutral-200`) measures 3.81:1 (Decision: 3.80), `--md-sys-color-neutral-400` vs the dark
+`-surface-highest` plane (`neutral-800`) measures 4.40:1 (Decision: 4.41), and vs the dark
+background (`neutral-900`) measures 6.07:1 (Decision: "up to 6.06"). The Decision's core claim —
+every plane clears the 3:1 SC 1.4.11 floor in both schemes — stands. This amendment corrects only
+the citation; a full re-audit of every figure in this ADR (including the hover-track range) is out
+of this ticket's scope and, if wanted, is its own dedicated re-verification ticket in the pattern
+of #1690.
