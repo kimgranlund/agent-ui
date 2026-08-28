@@ -122,3 +122,73 @@ every plane clears the 3:1 SC 1.4.11 floor in both schemes — stands. This amen
 the citation; a full re-audit of every figure in this ADR (including the hover-track range) is out
 of this ticket's scope and, if wanted, is its own dedicated re-verification ticket in the pattern
 of #1690.
+
+## Amendment — full Decision-section re-audit against the current shipped ramp (2026-08-28, ticket #1694)
+
+Every numeric contrast claim in this ADR's Decision section was recomputed against the current
+`packages/agent-ui/shared/src/tokens/tokens.css` using the canonized method (OKLCH → OKLab →
+linear sRGB via the published Ottosson matrices → relative luminance
+`0.2126R + 0.7152G + 0.0722B` → WCAG contrast ratio `(L_light + 0.05) / (L_dark + 0.05)`), the same
+procedure the 2026-08-28 amendment above used for its three-figure spot check. This amendment
+covers the figures that spot check left out, most notably the hover-track range and the slider
+thumb comparisons.
+
+**`--md-sys-color-neutral-track` (idle) — CONFIRMED.** Checked against all fourteen
+`neutral-surface-*`/`background` plane pairs (not only the two the spot check sampled): worst
+light case is **3.81:1** (`neutral-600` vs `neutral-200`, which is both the `-surface-highest` and
+`-surface-dimmest` light leg), worst dark case is **4.40:1** (`neutral-400` vs `neutral-800`,
+`-surface-highest`'s dark leg), and the dark-background case is **6.07:1**. These match the
+Decision's cited 3.80 / 4.41 / "up to 6.06" within rounding — every plane still clears the SC
+1.4.11 3:1 floor in both schemes, so the Decision's central claim stands unchanged.
+
+**`--md-sys-color-neutral-track-hover` — DRIFTED (range widened, no regression).** The Decision
+cites "clears 5.56–7.81:1" for the hover role. Recomputed against the same fourteen-plane matrix,
+the actual range on the current ramp is **5.61:1 (light, worst case) to 9.44:1 (dark, best
+case)** — the floor is confirmed within rounding (5.56 → 5.61), but the cited 7.81:1 ceiling is
+stale: the current ramp's brightest dark-mode pairing (`neutral-300` vs `neutral-950`,
+`-surface-dimmest`) now measures 9.44:1. The role is still monotonic (`600→700` light,
+`400→300` dark) and distinct from idle in both schemes (light 1.47:1 idle-vs-hover step, dark
+1.37:1 dark), so the Decision's qualitative claim is unaffected — only the specific ceiling number
+needs restating. **Corrected figure: `--md-sys-color-neutral-track-hover` clears 5.61–9.44:1
+across every surface plane in both schemes.**
+
+**Slider thumb vs fill — PARTIALLY DRIFTED.** The Decision cites "thumb clears 3:1 against... the
+fill (4.79:1 light / 3.67:1 dark)", i.e. `--ui-slider-thumb`
+(`--md-sys-color-neutral-surface-brightest`, light-dark(`neutral-050`, `neutral-800`)) against
+`--ui-slider-fill` (`--md-sys-color-primary`, light-dark(`primary-550`, `primary-450`)).
+Recomputed: **4.66:1 light / 3.72:1 dark**. The dark leg is within rounding of the citation
+(3.67 → 3.72); the light leg has drifted by 0.13 (4.79 → 4.66) — still comfortably clears 3:1 (and
+the unrelated 4.5:1 AA-text bar), so no consequence follows, but the number itself no longer
+reproduces exactly. **Corrected figure: thumb vs fill clears 4.66:1 light / 3.72:1 dark.**
+
+**Slider thumb vs rail — DRIFTED.** The Decision cites "the new solid rail (4.69:1 / 3.74:1)" for
+the same thumb against `--ui-slider-rail` (`--md-sys-color-neutral-track`, light-dark(`neutral-600`,
+`neutral-400`)). Recomputed: **5.65:1 light / 4.40:1 dark** — both legs differ from the cited
+figures by roughly a full contrast point, well outside rounding. Both the cited and the recomputed
+numbers clear the 3:1 floor with comfortable margin, so this does not change the Decision's
+conclusion that the thumb carries the slider's value indication safely; only the specific figures
+were stale (most likely predating the 2026-07-10 neutral-ramp rework, the same rework #1690/#1692
+found responsible for ADR-0058's per-family drift). **Corrected figure: thumb vs rail clears
+5.65:1 light / 4.40:1 dark.**
+
+**Alternatives considered — CONFIRMED.** "Reuse the existing `--md-sys-color-neutral` role"
+(light-dark(`neutral-550`, `neutral-450`)) cites "a tight 3.15:1 on the worst light plane
+(`-surface-highest`)". Recomputed: **3.15:1** light vs `-surface-highest` — exact match. (The
+dark leg, uncited in the Decision text, measures 3.70:1 — also clears, consistent with the
+Decision's framing that this alternative would have passed but with less headroom than the
+minted role.)
+
+**Scope note — Context section not re-audited.** This ticket's Acceptance scopes the re-audit to
+"ADR-0059's Decision"; the pre-fix figures in the Context section (the translucent
+`neutral-outline-variant` off-track measuring 1.51:1/1.73:1, and the pre-fix thumb measuring
+1.22–1.84:1) describe a historical, already-superseded state used to motivate the Decision, not a
+claim about the current shipped ramp, and are left as authored.
+
+**ADR-0094 — no re-audit needed, decided at build time.** ADR-0094 extends this record with the
+slider thumb ring's own contrast figures, but cites a different, still-extant verification path
+(`slider.browser.test.ts`'s OKLCH→linear-sRGB→WCAG path, the same one `tokens.test.ts` uses) rather
+than the phantom `color-verify/contrast-check.py` this and ADR-0058 both had to correct — so
+ADR-0094 does not carry the citation-drift defect class this ticket and its #1690/#1692
+predecessors exist to fix. It is also outside this ticket's stated Acceptance, which names only
+ADR-0059's Decision. Left as its own, separately-triggerable re-audit if its cited figures are
+ever suspected stale.
