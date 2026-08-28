@@ -18,7 +18,8 @@
 > `.claude/docs/{prd,spec,lld}/` (or `specs/` for A2UI) — this file's scope stays the FACE control
 > foundation (G0–G9) + Control Suite + icon adapter, **plus the 2026-H2 M-series milestones**
 > (M-B/M-C, appended at the foot per the 2026-07-28 roadmap intake — ordering is stated per-entry,
-> not by the G-sequence rule). The one still-deferred item is the multi-theme
+> not by the G-sequence rule) **plus the PRD-G4/PRD-G5 witnessed-run checklists** (the foot, 2026-08-28:
+> the dated-evidence record Kim's 2026-08-23 ruling requires before either goal flips to `shipped`). The one still-deferred item is the multi-theme
 > `theme` package-swapping system (the seam is wired; one `default` package ships).
 > Layout: npm-workspaces monorepo — `src/core/*` in milestone text now lives under `packages/agent-ui/components/src/*`.
 > Consumed by the A2UI effort (`@agent-ui/a2ui`; docs on the unified `.claude/docs/{spec,lld,prd}/` map), which tracks these milestones (its
@@ -748,3 +749,159 @@ but untaught because the descriptor format has no compound-family field → the 
 `.define()` sites. Separately, [#354](https://github.com/kimgranlund/agent-ui/issues/354): the S4
 wave left `@agent-ui/app`'s public entry at **2.08× its size budget** (a static import of the 450 KB
 asset pair); lazy-loaded per Kim's ruling, 153,969 → 71,519 B gz.
+
+---
+
+## PRD-G4 / PRD-G5: witnessed end-to-end runs (opened 2026-08-28, Kim's ruling)
+
+> Minted from Kim's 2026-08-23 fleet-bootstrap Phase 3 gate ruling (`.claude/ops/rulings.md`,
+> "PRD-G4/PRD-G5: hold at `building`"): every GH issue [agent-admin-app.prd.md §5](prd/agent-admin-app.prd.md)
+> cites as a realizing record is closed, yet both goals stay `building (the open arc)` until a
+> **witnessed end-to-end run** is recorded here in the M-B/M-C dated-evidence convention. This entry is
+> that record's home: two checklists, one per goal, each step an observable Kim ticks in a real browser,
+> plus the exact progress-note line to append when a run completes. Not a milestone letter (no M-D):
+> the goals live in the PRD; this file only carries their evidence. **No box here is met yet.**
+
+**Goal.** PRD-G4 (a user declares a team, GM plus roster, and one-shots it from the builder) and
+PRD-G5 (a user makes an agent knowledgeable from their own documents, browser-only) each complete one
+live, human-witnessed run against the standalone `agent-admin-app.html` surface, with every PRD §5
+acceptance clause observed on real pixels. The run's evidence is the progress note appended below;
+the PRD §2 `State` cell flips to `shipped` citing that note, and nothing else.
+
+**Scope.** Run + record only. No code, no PRD edit ahead of the note, no status flip inside this file
+(the flip is Kim's, in the PRD, ADR-0149's status law). A step that fails is filed as a bug against the
+owning record (ADR-0203/0204 for Teams; ADR-0202/0193/0132 + req-doc-ingestion for Knowledge) and the
+run is re-attempted after the fix; the checklist is not edited to fit the failure.
+
+**Shared preconditions (both runs).**
+- [ ] A real browser (Chrome, for its Network + Application panels), NOT jsdom. M-B's 2026-08-04 run
+      recorded "no live browser attached" as a deviation; this run exists precisely to close that gap,
+      so the same deviation is not admissible here.
+- [ ] `npm run dev` from the primary checkout on `main`; open the URL vite prints + `/agent-admin-app.html`.
+      `.env` carries a live provider key for the ADR-0073 dev proxy. The browser console prints
+      `[agent-admin-app] live model connected (N provider(s)) — surface turns armed` (`site/pages/agent-admin-app.ts`);
+      without that line the run is not live and must not proceed.
+- [ ] Note the roster strip's persona count before starting (the regression box at the end of each run
+      compares against it).
+- [ ] Record the browser + version, the provider/model the proxy reports, and the `main` SHA the dev
+      server was started from; all three go into the progress note.
+
+### PRD-G4 (Teams): the witnessed run
+
+Maps [PRD §5 Teams](prd/agent-admin-app.prd.md): create from catalog + roster (instantiate-on-pick,
+optional per-member instructions) → designate GM → reload → roster renders → GM prompt names each
+member/role/routing rule deterministically → builder one-shot yields ≥2 members + 1 GM + 1 team → single-agent
+flows regress nowhere. Surface: the **Teams** fold under Settings → Capabilities (`agent-team-pane.ts`).
+
+- [ ] **T1, create by hand.** Settings → Capabilities → Teams fold → `Add team`. Fill `Team name`; leave
+      `Tagline` blank (it is optional). `GM (general manager)` select shows two sections, `Your agents` and
+      `From catalog`; pick an existing persona under `Your agents`. `Add member` → the member row's `Agent`
+      select → pick a preset under `From catalog`. **Visible:** the pick instantiates on its own (the preset
+      leaves the `From catalog` section, appears under `Your agents`, and a new persona lands on the roster
+      strip); the row's `Role` field is pre-seeded from the preset's category. Type a `Routing description`
+      (hint text: "When the GM should hand off to this member") and fill `Instructions (optional)` on this
+      member only. `Add member` again → pick a second member under `Your agents`, routing description,
+      no instructions. `Save`. **Visible:** the fold lists the team with a `GM: <name>` line and one line per
+      member as `<role>: <name> — <routing description>`.
+- [ ] **T2, fail-closed validation.** `Edit` the team, blank one member's `Routing description`, `Save`.
+      **Visible:** an inline issue on that row, the form stays open with every other typed field intact,
+      nothing persisted (the list behind the form is unchanged). Restore the text, `Save`.
+- [ ] **T3, reload → roster renders.** Hard-reload the page. **Visible:** the Teams fold shows the same
+      team, same GM line, same member lines in the same order; the member instantiated from the catalog in
+      T1 is still on the roster strip and still absent from `From catalog`.
+- [ ] **T4, the composed GM prompt, deterministic.** Select the GM persona on the roster strip → Settings →
+      Context: System. **Visible:** the compiled system JSON's prompt carries a `## Your team` block: the
+      fixed intro sentence ("You lead the team below. When a request matches a teammate's routing rule…"),
+      then every member by name, role, and routing rule, and the T1 instructions text on the one member that
+      has it (`agent-team-prompt.ts`). Copy the block, hard-reload, re-open Context: System, copy again:
+      the two copies are byte-identical (same members, same order, same text).
+- [ ] **T5, dangling flags, never drops.** Delete the T1 catalog-instantiated member persona from the
+      roster (header `•••` → Delete, or its config-surface Delete row). Re-open the Teams fold.
+      **Visible:** the team is still listed; that member's line reads `<role>: <agentId> (missing agent) — <routing>`
+      (`data-dangling="true"`), the other member and the GM line are unchanged. (Use a throwaway member for
+      this box; the deletion is real.)
+- [ ] **T6, builder one-shot.** Switch to the Co-pilot place; in its composer send one team-shaped ask,
+      e.g. "Build me a customer-support team: a general manager plus a billing specialist and a technical
+      troubleshooter, each with a clear routing rule." **Visible, in one generate:** the status toast
+      `Created team "<label>" — N members + "<gm>" as GM.` with N ≥ 2; the roster strip gains N + 1 new
+      personas (the members and the GM); the Teams fold lists the new team with `GM:` + N member lines,
+      each with a non-empty routing description. If the model needs a second turn to produce the team,
+      that is a T6 failure (ADR-0204's arm is one-shot by contract): record it, do not tick.
+- [ ] **T7, single-agent flows regress nowhere.** Select a persona that belongs to no team. Test chat:
+      send one message, receive a live reply. Its Context: System carries NO `## Your team` block. The
+      roster strip's count equals the precondition count + the personas T1 and T6 minted − the one T5 deleted.
+
+**Record line for PRD-G4** (append verbatim below this entry when every T-box is ticked; fill the
+angle-bracketed fields; then flip PRD-G4's §2 `State` cell in `agent-admin-app.prd.md` to
+`shipped (witnessed run <date>, goals.md)`):
+
+```
+**Progress note — <YYYY-MM-DD>. PRD-G4 WITNESSED RUN COMPLETE** (run by Kim, <browser + version>,
+dev proxy → <provider/model>, main @ <sha>): T1–T7 ticked above. Deviations: <none | list, each with
+the step it touched>. Filed en route: <none | GH #…>. PRD-G4 flips to `shipped` in the PRD citing this note.
+```
+
+### PRD-G5 (Knowledge): the witnessed run
+
+Maps [PRD §5 Knowledge](prd/agent-admin-app.prd.md): attach md/txt/docx/pdf through the composer →
+extraction provably client-side (no network egress of file bytes) → text lands as a `resource` entry →
+survives reload via the IndexedDB tier → composes into the live prompt under visible budgets with visible
+truncation. Surface: the Chat place's composer attach path (`agent-admin.ts` `#handleAttach`) + the
+Resources fold under Settings → Capabilities. Budgets (`document-budget.ts`): 10 MB per file,
+50,000 chars per document, 200,000 chars per agent.
+
+*Instrument note, recorded not papered over:* PRD §5 names the devtools `DevtoolsCapture` network timeline
+(ADR-0200) as the no-egress assert instrument. That capture is wired on `devtools-harness.html`, not on
+`agent-admin-app.html` (`site/pages/agent-admin-app.ts` records no capture). The witnessed instrument for
+this run is therefore the browser's own Network panel with `Preserve log` on, plus the standing mechanical
+twin `document-ingest-no-egress.test.ts`. If Kim wants the PRD's named instrument on this page, that is a
+feature ask against ADR-0200 clause 7, filed separately; it does not gate this run.
+
+Prepare before starting, in a scratch folder: `notes.md` (a few paragraphs of real prose with one fact the
+model cannot know, e.g. an invented product code), `notes.txt`, `notes.docx` (real Word output, not a renamed
+file), `notes.pdf` with a text layer (print-to-PDF of a document, not a scan), `big.md` over 50,000 chars
+(`python3 -c "print('lorem ipsum dolor ' * 4000)" > big.md` gives ~72,000), and `photo.png` (any image).
+
+- [ ] **K1, attach `.md`, no egress.** Chat place. DevTools → Network, `Preserve log` on, clear. Attach
+      `notes.md` via the composer's attach control (drop onto the composer also works). **Visible:** a
+      context chip with the file name and a size line (e.g. `1.2 KB`); the Network panel shows NO new
+      request between the attach and the chip settling (extraction is `File.text()` in-browser). Do not
+      send yet.
+- [ ] **K2, `.txt`, `.docx`, `.pdf` land the same way.** Attach the other three. **Visible:** three more
+      chips with sizes. Network: for `.pdf` exactly one kind of new traffic is admissible, the dev server
+      serving the lazy pdf.js worker script (a GET for a `.js` asset, ADR-0202's lazy-load), and NO POST,
+      NO request whose payload is the file. For `.txt`/`.docx`: no new request at all.
+- [ ] **K3, the resource entries exist.** Settings → Capabilities → Resources fold. **Visible:** four new
+      enabled `resource` entries named after the files; opening one shows the extracted text (the docx and
+      pdf entries show their prose, not XML or binary).
+- [ ] **K4, visible truncation.** Attach `big.md`. **Visible:** its chip's size line ends in ` — truncated`;
+      its Resources entry's text ends with a marker of the shape `…[truncated: N of M chars]` where M is the
+      original length and the kept text plus marker is ≤ 50,000 chars.
+- [ ] **K5, the fences hold.** Attach `photo.png`. **Visible:** toast `Can't attach "photo.png", unsupported
+      file type.`, no chip, no Resources entry. (Optional, only if a >10 MB text file is to hand: its toast
+      names the `10 MB per-file limit`. Optional: a fourth+ large document tripping the 200,000-character
+      aggregate toast.)
+- [ ] **K6, survives reload via IndexedDB.** Hard-reload. **Visible:** the Resources fold still lists all
+      five entries; opening `big.md`'s entry shows its real text, not a placeholder (`resource-idb-store.ts`
+      materializes the routed text). DevTools → Application → IndexedDB: an `@agent-ui` store holds the
+      large text; Application → Local Storage holds the entry list with the large entry's `idbRef`, not its
+      body.
+- [ ] **K7, composes into the live prompt, and the wire carries text only.** Settings → Context: System:
+      the compiled prompt carries a resources section containing the documents' text, `big.md`'s ending
+      with the K4 marker. Back in Chat, ask the question only `notes.*` can answer (the invented fact).
+      **Visible:** a live reply that states the fact. Network: exactly one POST to the dev proxy for the turn;
+      its request payload is JSON/text containing the prompt (the fact is findable in it) and NO multipart
+      body, NO base64 blob the size of a file, NO request to any host but the dev server.
+- [ ] **K8, dismiss discards cleanly.** Attach `notes.txt` again, dismiss its chip before sending.
+      **Visible:** the chip is gone AND the Resources fold gained no second `notes.txt` entry.
+
+**Record line for PRD-G5** (append verbatim below this entry when every K-box is ticked; fill the
+angle-bracketed fields; then flip PRD-G5's §2 `State` cell in `agent-admin-app.prd.md` to
+`shipped (witnessed run <date>, goals.md)`):
+
+```
+**Progress note — <YYYY-MM-DD>. PRD-G5 WITNESSED RUN COMPLETE** (run by Kim, <browser + version>,
+dev proxy → <provider/model>, main @ <sha>): K1–K8 ticked above; no-egress witnessed on the browser
+Network panel (instrument note above). Deviations: <none | list, each with the step it touched>. Filed
+en route: <none | GH #…>. PRD-G5 flips to `shipped` in the PRD citing this note.
+```
