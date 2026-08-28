@@ -1,0 +1,117 @@
+{
+  "skill": "doc-standards",
+  "_note": "Seeded 2026-08-27 (GH #1686 — doc-standards had no evals/ tree at all, found while running /make-pack against it). Positives cover the skill's 4 axes, one file each in references/: status-dialects, adr-log-mechanics, id-spine-and-ticket-contracts, gates-and-citation-law. Negatives are reciprocal no-triggers for the two skills this skill's own description explicitly excludes: docs:doc-writing-rules (the generic, portable type contract) and component-standards (component code law) — both fenced by doc-standards' own 'NOT for' clause. KNOWN estate-mode limitation (measured 2026-08-27, blind judge dispatch): docs:doc-writing-rules lives in a different plugin, so it is never in the menu an ESTATE-mode check-routing run builds from this repo's own .claude/skills/ tree alone — n01-n03 below score 'leaked' to doc-standards under --estate for that structural reason (no in-menu skill covers generic document-type authoring at all, confirmed against 6 independently-worded phrasings, none of which routed to `none`), not because doc-standards' description overreaches. The same 3 cases are expected to pass once docs:doc-writing-rules is loaded alongside this estate (a live session, or a future cross-plugin check-routing mode).",
+  "cases": [
+    {
+      "id": "t01",
+      "prompt": "what status vocabulary does a SPEC use in this repo — proposed, accepted, something else?",
+      "expect": "trigger",
+      "axis": "status-dialects"
+    },
+    {
+      "id": "t02",
+      "prompt": "who is actually allowed to flip an ADR's status cell to accepted?",
+      "expect": "trigger",
+      "axis": "status-dialects"
+    },
+    {
+      "id": "t03",
+      "prompt": "does a new feature's WHY/WHAT belong in its own IDR, or in the owning family PRD?",
+      "expect": "trigger",
+      "axis": "status-dialects"
+    },
+    {
+      "id": "t04",
+      "prompt": "should I add a README.md to index the ADR folder now that it has 130 files?",
+      "expect": "trigger",
+      "axis": "adr-log-mechanics"
+    },
+    {
+      "id": "t05",
+      "prompt": "is this change to an accepted ADR an amendment, or does it need a full supersession?",
+      "expect": "trigger",
+      "axis": "adr-log-mechanics"
+    },
+    {
+      "id": "t06",
+      "prompt": "how do I claim the next free ADR number without racing a stale index file?",
+      "expect": "trigger",
+      "axis": "adr-log-mechanics"
+    },
+    {
+      "id": "t07",
+      "prompt": "what sections does a bug-kind ticket need, versus a feature-kind one, in this repo's Issues?",
+      "expect": "trigger",
+      "axis": "id-spine-and-ticket-contracts"
+    },
+    {
+      "id": "t08",
+      "prompt": "when I cite ADR-0107 from inside a SPEC, do I use the bare id or a relative markdown link?",
+      "expect": "trigger",
+      "axis": "id-spine-and-ticket-contracts"
+    },
+    {
+      "id": "t09",
+      "prompt": "in prose should I write this ticket as TKT-0018 or tkt-0018?",
+      "expect": "trigger",
+      "axis": "id-spine-and-ticket-contracts"
+    },
+    {
+      "id": "t10",
+      "prompt": "why is this SPEC still marked proposed even though its build already shipped?",
+      "expect": "trigger",
+      "axis": "gates-and-citation-law"
+    },
+    {
+      "id": "t11",
+      "prompt": "which gate would catch a dangling cross-reference link inside an ADR?",
+      "expect": "trigger",
+      "axis": "gates-and-citation-law"
+    },
+    {
+      "id": "t12",
+      "prompt": "is a bare file:120 line-number citation into a mutable file okay to leave in a skill body?",
+      "expect": "trigger",
+      "axis": "gates-and-citation-law"
+    },
+    {
+      "id": "n01",
+      "prompt": "what frontmatter fields does a BRIEF document need before I start drafting one?",
+      "expect": "no-trigger",
+      "owner": "docs:doc-writing-rules (the generic, portable type contract, not this repo's own dialect)",
+      "note": "estate-mode-leaked 2026-08-27: doc-writing-rules is out-of-estate (different plugin), absent from an --estate menu — see suite _note"
+    },
+    {
+      "id": "n02",
+      "prompt": "how does a PLAN document track its own status as work moves forward?",
+      "expect": "no-trigger",
+      "owner": "docs:doc-writing-rules (doc-standards' own description names this exact question as doc-writing-rules' territory)",
+      "note": "estate-mode-leaked 2026-08-27: doc-writing-rules is out-of-estate (different plugin), absent from an --estate menu — see suite _note"
+    },
+    {
+      "id": "n03",
+      "prompt": "is a TASK document just a chore note, or does it carry its own required frontmatter?",
+      "expect": "no-trigger",
+      "owner": "docs:doc-writing-rules (generic mutability-class question, not agent-ui's own divergence)",
+      "note": "estate-mode-leaked 2026-08-27: doc-writing-rules is out-of-estate (different plugin), absent from an --estate menu — see suite _note"
+    },
+    {
+      "id": "n04",
+      "prompt": "which way should this button's label align inside the control?",
+      "expect": "no-trigger",
+      "owner": "component-standards (anatomy/label-alignment law)"
+    },
+    {
+      "id": "n05",
+      "prompt": "what height and font should this control use at the compact scale?",
+      "expect": "no-trigger",
+      "owner": "component-standards (geometry & sizing ramp)"
+    },
+    {
+      "id": "n06",
+      "prompt": "which color-token role should a disabled control's border consume?",
+      "expect": "no-trigger",
+      "owner": "component-standards (color-token roles)"
+    }
+  ]
+}
