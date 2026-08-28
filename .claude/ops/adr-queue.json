@@ -4,7 +4,7 @@
       "adr_id": "adr-0129",
       "evidence": "Amendment 2 (2026-08-24, ratified, .claude/docs/adr/0129-app-surfaces-m2-composition-and-transport-boundary.md L70-107): extracts the shared artboard visual-core CSS to a package-owned @agent-ui/app/artboard.css subpath after it demonstrably drifted as dual-maintained truth between surface-host.css and site canvas-surface.ts (GH #1163 root-card logic + ADR-0100 container-type repair both missed one copy) - a generalizable defect-class fix (dual-maintained CSS truth across a promoted control and its origin site consumer) not yet covered by any references/*.md (checked origin/main: adr-0129/artboard hits are unrelated clauses - cl.4's two-implementations-on-one-element pattern and an unrelated data-table facet row).",
       "kind": "harvest",
-      "plan": "",
+      "plan": "Home decided (Kim, 2026-08-28): grow .claude/skills/component-packaging via `/harness:make-pack .claude/skills/component-packaging` \u2014 one axis, the promotion seam's dual-maintained-CSS-drift class (ADR-0129 Amendment 2 as the worked instance; GH #1163 + ADR-0100 as the two misses). Command-only skill; Kim runs it.",
       "queued_at": "2026-08-25T17:57:12Z"
     }
   ]

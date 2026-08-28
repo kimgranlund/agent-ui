@@ -61,7 +61,7 @@
         "date": "2026-08-23",
         "action": "joined",
         "agent_name": "agent-ui-90",
-        "note": "reality check 2026-08-24: live terminal runs fable (claude-fable-5) vs seat tier sonnet+high — mismatch accepted for the live terminal; explicit per-dispatch model pinning mandatory (claude-plugins#919 patch)"
+        "note": "reality check 2026-08-24: live terminal runs fable (claude-fable-5) vs seat tier sonnet+high \u2014 mismatch accepted for the live terminal; explicit per-dispatch model pinning mandatory (claude-plugins#919 patch)"
       },
       {
         "role": "orchestrator",
@@ -77,7 +77,7 @@
         "action": "joined",
         "agent_name": "agent-ui-81",
         "branch": "main",
-        "note": "fleet-bootstrap takeover of the still-live 2026-08-23 agent row (same conversation, re-running /fleet-bootstrap); reality check resolved — session now runs Sonnet 5 (sonnet+high), matching seat tier, superseding the 2026-08-24 fable mismatch note on the prior row. Address corrected mid-run from agent-ui-90 to agent-ui-81 — ListAgents reported a session-identity change (likely /reload-plugins fallout) between this row's initial write and its correction; the prior teammate roster (dozens of build-* seats) also vanished from ListAgents at the same moment."
+        "note": "fleet-bootstrap takeover of the still-live 2026-08-23 agent row (same conversation, re-running /fleet-bootstrap); reality check resolved \u2014 session now runs Sonnet 5 (sonnet+high), matching seat tier, superseding the 2026-08-24 fable mismatch note on the prior row. Address corrected mid-run from agent-ui-90 to agent-ui-81 \u2014 ListAgents reported a session-identity change (likely /reload-plugins fallout) between this row's initial write and its correction; the prior teammate roster (dozens of build-* seats) also vanished from ListAgents at the same moment."
       },
       {
         "role": "product",
@@ -93,7 +93,7 @@
         "date": "2026-08-26",
         "action": "released",
         "agent_name": "agent-ui-reviewer",
-        "reason": "ListAgents shows no live session by this name after the mid-session /reload-plugins runs reset the harness's agent registry; Kim's live call (fleet-bootstrap Phase 4 gate, 2026-08-26) was to treat as dead rather than assume survival — released so a fresh spawn is a clean join, not a collision"
+        "reason": "ListAgents shows no live session by this name after the mid-session /reload-plugins runs reset the harness's agent registry; Kim's live call (fleet-bootstrap Phase 4 gate, 2026-08-26) was to treat as dead rather than assume survival \u2014 released so a fresh spawn is a clean join, not a collision"
       },
       {
         "role": "planner",
@@ -101,7 +101,7 @@
         "date": "2026-08-26",
         "action": "released",
         "agent_name": "agent-ui-planner",
-        "reason": "ListAgents shows no live session by this name after the mid-session /reload-plugins runs reset the harness's agent registry; Kim's live call (fleet-bootstrap Phase 4 gate, 2026-08-26) was to treat as dead rather than assume survival — released so a fresh spawn is a clean join, not a collision"
+        "reason": "ListAgents shows no live session by this name after the mid-session /reload-plugins runs reset the harness's agent registry; Kim's live call (fleet-bootstrap Phase 4 gate, 2026-08-26) was to treat as dead rather than assume survival \u2014 released so a fresh spawn is a clean join, not a collision"
       },
       {
         "role": "planner",
@@ -120,7 +120,33 @@
         "branch": "reviewer-worktree-2026-08-26",
         "wall_applied": true,
         "wall_verified_via": "subprocess-spawn",
-        "note": "I2 probe, run inside the spawned claude -p child: (a) Write to .claude/ops/.wall-probe-test — DENIED ('Write is disabled for this session'); (b) echo redirect to /tmp — DENIED (PreToolUse hook: 'reviewer seat: Bash is gh-only, plus surgical edits to the three fleet-state files for retirement'); (c) gh pr view 1679 — PASSED. Locked-spec self-check carried forward from orchestrator's own pre-spawn grep (no status: locked spec/LLD in this repo) since the walled child had no Grep/Glob tool and Bash is gh-only-gated — child correctly could not re-verify itself; STYLE-REVIEW-ONLY posture applies until a spec locks."
+        "note": "I2 probe, run inside the spawned claude -p child: (a) Write to .claude/ops/.wall-probe-test \u2014 DENIED ('Write is disabled for this session'); (b) echo redirect to /tmp \u2014 DENIED (PreToolUse hook: 'reviewer seat: Bash is gh-only, plus surgical edits to the three fleet-state files for retirement'); (c) gh pr view 1679 \u2014 PASSED. Locked-spec self-check carried forward from orchestrator's own pre-spawn grep (no status: locked spec/LLD in this repo) since the walled child had no Grep/Glob tool and Bash is gh-only-gated \u2014 child correctly could not re-verify itself; STYLE-REVIEW-ONLY posture applies until a spec locks."
+      },
+      {
+        "role": "reviewer",
+        "mode": "background-subprocess",
+        "date": "2026-08-28",
+        "action": "released",
+        "agent_name": "agent-ui-reviewer",
+        "worktree_path": "/Users/kimba/Projects/nonoun/agent-ui/.claude/worktrees/agent-ui-reviewer",
+        "branch": "reviewer-worktree-2026-08-26",
+        "reason": "fleet stand-down (Kim, 2026-08-28, find-open-questions round after close-session): session's work fully landed (agent-ui main 2060ff67, teamwork 2.29.2); walled worktree .claude/worktrees/agent-ui-reviewer kept for the next bootstrap by Kim's call; subprocess pid 46023 already exited before stand-down"
+      },
+      {
+        "role": "planner",
+        "mode": "background",
+        "date": "2026-08-28",
+        "action": "released",
+        "agent_name": "agent-ui-planner",
+        "reason": "fleet stand-down (Kim, 2026-08-28, find-open-questions round after close-session): session's work fully landed (agent-ui main 2060ff67, teamwork 2.29.2); walled worktree .claude/worktrees/agent-ui-reviewer kept for the next bootstrap by Kim's call"
+      },
+      {
+        "role": "agent",
+        "mode": "manual",
+        "date": "2026-08-28",
+        "action": "released",
+        "agent_name": "agent-ui-81",
+        "reason": "fleet stand-down (Kim, 2026-08-28, find-open-questions round after close-session): session's work fully landed (agent-ui main 2060ff67, teamwork 2.29.2); walled worktree .claude/worktrees/agent-ui-reviewer kept for the next bootstrap by Kim's call; bind-team charter (this fleet's operation) ended explicitly"
       }
     ],
     "loop_position": null,

@@ -7,3 +7,6 @@
 | agent (agent-ui-marshal) (takeover) | agent | manual | 2026-08-26 | sonnet+high (canonical agent tier, matches — reality check clean); /fleet-bootstrap takeover of same-conversation live row; address agent-ui-81 (corrected mid-run from agent-ui-90 — session-identity change observed, see fleet.json note); branch main (matches expected) |
 | planner (agent-ui-planner) (fresh spawn) | planner | background | 2026-08-26 | fable+medium (canonical planner tier); replaces the 2026-08-17 planner row, released same day after /reload-plugins killed the prior process; holding for first charter |
 | reviewer (agent-ui-reviewer) (fresh spawn) | reviewer | background-subprocess | 2026-08-26 | sonnet+high (deny-edit-write); replaces the 2026-08-17 reviewer row, released same day; genuinely walled claude -p subprocess in .claude/worktrees/agent-ui-reviewer, I2 probe confirmed structural enforcement (wall_applied: true) |
+| reviewer (agent-ui-reviewer) (released) | reviewer | background-subprocess | 2026-08-28 | fleet stand-down, Kim's call after close-session; worktree kept for next bootstrap |
+| planner (agent-ui-planner) (released) | planner | background | 2026-08-28 | fleet stand-down, Kim's call after close-session |
+| agent (agent-ui-marshal) (released) | agent | manual | 2026-08-28 | fleet stand-down; bind-team charter ended explicitly; address agent-ui-81 |

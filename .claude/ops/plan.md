@@ -131,7 +131,9 @@ citations, is normal ticket-build discretion, queued below at §4.2.)
   repair both independently missed one copy) — not yet covered by any `references/*.md`. Restated
   again because it remains the single most stale unconverted item in this queue and the gap between
   firings continues widening (8→9).
-- **Owner**: Kim (`/make-pack` runner).
+- **Owner**: Kim (`/make-pack` runner). **Home decided 2026-08-28: `component-packaging`** — the
+  exact command is `/harness:make-pack .claude/skills/component-packaging`; the queue row's
+  `plan` field carries the one-axis charter. Only the run itself remains.
 - **Evidence**: `.claude/ops/adr-queue.json`'s sole remaining row (full evidence text, citing GH
   #1163 and ADR-0100, byte-unchanged since 2026-08-25T17:57:12Z); `git log --oneline -- .claude/
   ops/adr-queue.json` (last touch `ad1d457d` explicitly left this row alone); `.claude/docs/adr/
