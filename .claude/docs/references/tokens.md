@@ -55,9 +55,10 @@ families):
   for a *numeral/label*. First consumer: the `ui-calendar` selected day (ADR-0048). The four intent families
   (`danger/warning/success/info`) have **no `-selected` step yet**: white-on-intent-FILL TEXT is a measured but
   currently *unreachable* AA gap (the anchor dark leg is 3.13–3.41:1, below 4.5 — but no filled intent control
-  exists). The siblings are **reserved**; the pre-computed remedy is `light-dark({f}-600, {f}-600)` on the
-  2026-07-10 ramp (the older `550` light leg no longer clears — RE-VERIFY per family against the live
-  ramp when minting) at the first filled intent control (ADR-0058).
+  exists). The siblings are **reserved**; the per-family remedy is verified against the live ramp (ADR-0058's
+  2026-08-27 amendment): `light-dark({f}-550, {f}-600)` for `danger`/`warning`/`info` (their `550` light
+  leg still clears) and `light-dark({f}-600, {f}-600)` for `success` (its `550` light leg alone fell to
+  4.46:1) at the first filled intent control (ADR-0058).
 
 ## Consumption invariants
 
