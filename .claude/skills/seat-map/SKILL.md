@@ -60,7 +60,12 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   then typecheck against main's sources while relative imports use the worktree's, and `npm run
   check` goes red on a clean tree); lockfile CHANGED ⇒ `npm ci --prefer-offline` (the one case an
   install is earned); then (3) `readlink node_modules/@agent-ui/shared` MUST print a path inside
-  THIS worktree, never the main checkout. The recipe:
+  THIS worktree, never the main checkout. **A scratch-clone dispatch (the `Agent`-tool isolation
+  rung, no `EnterWorktree` reach) runs `node scripts/bootstrap-scratch-clone.mjs <clone-dir>
+  [--root <path>]` (GH #1695) instead of the by-hand recipe below** — it mechanizes exactly this
+  recipe and performs step (3)'s verify itself, exiting non-zero on failure; a live worktree
+  session still applies the recipe by hand (no clone-dir argument shape fits there). The recipe,
+  for the worktree case or to understand what the script automates:
   ```
   mkdir node_modules && for d in <root>/node_modules/* <root>/node_modules/.[!.]*; do ln -s "$d" node_modules/; done
   rm node_modules/@agent-ui && mkdir node_modules/@agent-ui

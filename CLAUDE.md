@@ -21,6 +21,9 @@ Process `.claude/docs/process.md` · Standards `.claude/docs/references/` · `si
 - `npm run ops:reap-worktrees` / `ops:reap-branches` / `ops:reap-scratch-clones` — gated,
   dry-run-by-default reap scripts (append `-- --execute` to apply) for `.claude/worktrees/`
   entries, local branches, and orphaned `dispatch_envelope.py` scratch-clone dirs, respectively.
+- `npm run ops:bootstrap-scratch-clone -- <clone-dir> [--root <path>]` — deterministic per-entry
+  `node_modules` symlink bootstrap for a `dispatch_envelope.py` scratch clone (GH #1695); a build
+  seat in a scratch clone runs this instead of improvising the `seat-map` recipe by hand.
 
 `check` + `test` must be green before a change is done — judge by EXIT CODES, never by grepping
 output (a piped grep-count masked a red check and an OOM'd browser run, 2026-07-19).
