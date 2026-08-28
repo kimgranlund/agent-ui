@@ -10,3 +10,6 @@
 | reviewer (agent-ui-reviewer) (released) | reviewer | background-subprocess | 2026-08-28 | fleet stand-down, Kim's call after close-session; worktree kept for next bootstrap |
 | planner (agent-ui-planner) (released) | planner | background | 2026-08-28 | fleet stand-down, Kim's call after close-session |
 | agent (agent-ui-marshal) (released) | agent | manual | 2026-08-28 | fleet stand-down; bind-team charter ended explicitly; address agent-ui-81 |
+| agent (agent-ui-marshal) | agent | manual | 2026-08-28 | sonnet+high (canonical agent tier, manifest matches); fresh join after the 2026-08-28 stand-down; address agent-ui-93; branch main (matches expected); reality check: terminal runs Fable 5, deviation-in-fact, unjustified |
+| planner (agent-ui-planner) (fresh spawn) | planner | background | 2026-08-28 | fable+medium (canonical planner tier); fleet-bootstrap Phase 5 spawn after the 2026-08-28 stand-down; holding for first charter |
+| reviewer (agent-ui-reviewer) (fresh spawn) | reviewer | background-subprocess | 2026-08-28 | sonnet+high (deny-edit-write); fleet-bootstrap Phase 5 spawn after the 2026-08-28 stand-down into the kept walled worktree .claude/worktrees/agent-ui-reviewer; I2 probe confirmed structural enforcement (wall_applied: true, subprocess-spawn) |
