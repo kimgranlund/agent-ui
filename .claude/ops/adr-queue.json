@@ -6,6 +6,20 @@
       "kind": "harvest",
       "plan": "Home decided (Kim, 2026-08-28): grow .claude/skills/component-packaging via `/harness:make-pack .claude/skills/component-packaging` \u2014 one axis, the promotion seam's dual-maintained-CSS-drift class (ADR-0129 Amendment 2 as the worked instance; GH #1163 + ADR-0100 as the two misses). Command-only skill; Kim runs it.",
       "queued_at": "2026-08-25T17:57:12Z"
+    },
+    {
+      "adr_id": "adr-0058",
+      "evidence": "Amendment (2026-08-28, PR #1693, GH #1692, this firing's true delta re-derived under the pre-#945 hash formula since the checkpoint hit a FORMULA MISMATCH): the Decision/Consequences/Acceptance's citation of color-verify/contrast-check.py is formally corrected -- the script has zero git history in this repo (confirmed via git log --all) and was never a real CI gate. Canonizes the standing replacement procedure: OKLCH -> OKLab -> linear sRGB (Ottosson matrices) -> relative luminance -> WCAG contrast ratio, the method ticket #1690 used. This is a DIFFERENT defect class from the already-documented '4th shape' (header-recorded/body-unrestated supersession) that doc-standards/references/adr-log-mechanics.md already tracks 12 worked instances of, including adr-0058's own PR #1691 -- this is instead an ADR citing tooling that was never actually committed to the repo. Checked origin/main: no skill/reference anywhere greps color-verify/contrast-check.py/OKLCH/'never committed' -- not yet covered.",
+      "kind": "harvest",
+      "plan": "New sibling pattern for .claude/skills/doc-standards/references/adr-log-mechanics.md (or its own reference if doc-standards judges it out of scope): an ADR's 'verified with <script>'/'reproduces via <script>' citation of a tool that was never actually committed, fixed via append-only Amendment + a canonized manual-procedure replacement. Worked instances: adr-0058 (PR #1691 discovery in passing, PR #1693 formal correction), adr-0059 (PR #1693 correction, PR #1694/#1696 full re-audit surfacing real post-correction figure drift). Kim to decide final home.",
+      "queued_at": "2026-08-29T17:26:20Z"
+    },
+    {
+      "adr_id": "adr-0059",
+      "evidence": "Two amendments this firing's true delta: (1) 2026-08-28 PR #1693/GH #1692 -- same color-verify/contrast-check.py phantom-script citation correction as adr-0058's row (see that row's evidence for the shared pattern); (2) 2026-08-28 PR #1694/#1696 -- a full Decision-section re-audit under the newly canonized OKLCH->OKLab->linear-sRGB->WCAG procedure found REAL figure drift (hover-track ceiling 7.81->9.44:1, thumb-vs-fill light leg 4.79->4.66, thumb-vs-rail both legs off by ~1 full point), most likely from the 2026-07-10 neutral-ramp rework -- corrected via append-only Amendment, no consequence (every pairing still clears the SC 1.4.11 3:1 floor). Checked origin/main: no reference covers phantom-tool-citation correction or ramp-rework-induced contrast-figure drift as a pattern.",
+      "kind": "harvest",
+      "plan": "Same target as adr-0058's row for the citation-correction half. The figure-drift-after-a-ramp-rework half (hover-track ceiling, thumb-vs-rail) may be its own axis -- 'a token-ramp rework can silently stale a prior ADR's pinned contrast figures even when the pairing still clears its floor' -- Kim to judge whether this folds into the same doc-standards extension or earns its own color-science-adjacent reference.",
+      "queued_at": "2026-08-29T17:26:20Z"
     }
   ]
 }
