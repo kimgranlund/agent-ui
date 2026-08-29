@@ -26,7 +26,7 @@
 | "the harness" | four different things; use the qualified term | §2 |
 | a roster | the ordered agent list, or a team's member list; never a capability list | §3 |
 | a pack | a **skill pack** (imported snapshot) or a **library pack** (the entry list it becomes) | §3 |
-| why `AdminTurn` is not a2ui's `Turn` | the package DAG runs `a2ui ← app`; the shape is duplicated on purpose | §4 |
+| why `AdminTurn` is not a2ui's `Turn` | the component keeps its own minimal shapes so it binds to no transport type; the code comment's stated reason is stale | §4 |
 
 ## 1 · Layers
 
@@ -86,24 +86,7 @@ the GM's prompt; it has no runtime, no dispatch, no group conversation (ADR-0203
 The builder's `TeamDeclaration` (`a2ui/src/agent/meta-line.ts`, ADR-0204) is the wire-side proposal
 that `handleTeamDeclared` (`site/pages/agent-admin-app.ts`) mints into agents plus one `AgentTeam`.
 
-### Type → source
-
-| Type | Source (under `packages/agent-ui/app/src/` unless stated) | Owning record |
-|---|---|---|
-| `AgentRecord`, `AgentRosterView`, `AgentRosterSource` | `controls/agent-admin/agent-roster-source.ts` (pre-#1699: `persona-roster-source.ts`) | ADR-0227 cl.4 |
-| `AgentRosterEntry`, `GenerateSeed` | `controls/agent-admin/agent-admin.ts` | LLD admin-three-pane-ia §16.3 |
-| `SettingsStore` | `controls/settings/store.ts` | app-surfaces-m4 LLD-C15 |
-| `AgentConfigSnapshot`, `AdminTurn`, `AdminTurnRequest`, `AdminAgentTurn`, `AdminAgentSurfaceTurn` | `controls/agent-admin/agent-admin-schema.ts` | ADR-0135, ADR-0136 |
-| `Entry`, `EntryLibraryPack`, `NewEntryInput`, `entriesStoreKey` | `controls/entry-list/entry-data.ts` | ADR-0132, ADR-0164 cl.2 |
-| `ENTRY_KINDS`, `composeSystemPrompt`, `composeLiveSystemPrompt`, `EntryRosters` (pre-#1699: `ComposerRosters`) | `controls/agent-admin/entries.ts` | ADR-0132 cl.6 |
-| `AgentTeam`, `AgentTeamMember` | `controls/agent-admin/agent-team.ts` | ADR-0203 |
-| `composeTeamPromptSection` | `controls/agent-admin/agent-team-prompt.ts` | ADR-0203 cl.2 |
-| `TeamDeclaration` | `packages/agent-ui/a2ui/src/agent/meta-line.ts` | ADR-0204 |
-| `RoutedContent`, `RESOURCE_IDB_TEXT_THRESHOLD_CHARS` | `controls/agent-admin/resource-idb-store.ts` | ADR-0193, ADR-0227 cl.5 exception |
-| `SkillPackSnapshot`, `SkillPackShelfSource` | `controls/agent-admin/skill-pack-store.ts` | ADR-0208 |
-| `Persona` (site literal) | `site/pages/agent-admin-presets.ts` | §4; folds into `AgentRecord` under #1699 |
-| `AgentTransport`, `Turn` | `packages/agent-ui/a2ui/src/agent/agent-transport.ts` | ADR-0069, ADR-0073 |
-| `DevtoolsEvent`, `DevtoolsCapture` | `packages/agent-ui/devtools/src/timeline/events.ts`, `capture/format.ts` | ADR-0200 |
+The type → source-path table is Appendix A (kept out of this section for length).
 
 ## 2 · "Harness", disambiguated
 
@@ -149,12 +132,17 @@ header pointing here.
 
 **`AdminTurn` vs a2ui `Turn` / `AgentTransport`.** `agent-admin-schema.ts` declares its own
 `AdminTurn`/`AdminTurnRequest` instead of importing `Turn`/`TurnInput` from
-`@agent-ui/a2ui/agent`. Reason (the code comment at the "injectable turn-runner seam" block,
-TKT-0052/ADR-0136): a2ui's `Turn` is tools-internal, not a package export (SPEC-N1), and the
-package DAG runs `a2ui ← app`, so the site runner matches the shapes structurally and the packaged
-component carries zero fetch/env/proxy code. `agent-transport.ts` cites the same precedent for its
-own local `Effort` union. The reason lives in those two code comments and ADR-0136; no ADR states
-the duplication rule on its own.
+`@agent-ui/a2ui/agent`, and `agent-transport.ts` declares a local `Effort` union instead of importing
+`@agent-ui/app`'s `EffortLevel`. The two halves have different reasons. The a2ui side is the package
+DAG: `app` may import `a2ui`, never the reverse, so a2ui duplicates the four-value union (comment on
+`Effort`, citing "the `AdminTurn`/a2ui `Turn` precedent, TKT-0052"). The app side is ADR-0136's
+posture: the packaged component ships zero fetch/env/proxy code and binds to no transport type; the
+site runner (`site/lib/admin-live-runner.ts`) matches `AdminTurn` structurally and owns everything
+transport-shaped. *Stale-comment note (2026-08-29):* the seam comment at the "injectable turn-runner
+seam" block in `agent-admin-schema.ts` states a2ui's `Turn` is "deliberately NOT a package export
+(SPEC-N1)"; that predates SPEC-N1 v0.5 (ADR-0137/TKT-0072), which exports `Turn` at
+`@agent-ui/a2ui/agent`. The duplication stands on ADR-0136's posture, not on export reachability;
+the comment is filed for repair (GH #1702) and this doc does not repeat its claim.
 
 **Site-side `Persona` literal vs the package record.** `site/pages/agent-admin-presets.ts`
 declares `Persona` with a literal `category: PresetCategory` union; the package's `AgentRecord`
@@ -176,3 +164,22 @@ threshold number itself is justified only in the module header, not in an ADR.
 of (the DAG forbids importing site code), so it takes a narrowed `{id, label, deletable?}` row and
 reaches every mutation through registered callbacks (`onDeleteAgentRequest`, `onGenerateRequest`).
 Reason: LLD admin-three-pane-ia §16.3's frozen seam shapes, restated in the type's comment.
+
+## A · Type → source
+
+| Type | Source (under `packages/agent-ui/app/src/` unless stated) | Owning record |
+|---|---|---|
+| `AgentRecord`, `AgentRosterView`, `AgentRosterSource` | `controls/agent-admin/agent-roster-source.ts` (pre-#1699: `persona-roster-source.ts`) | ADR-0227 cl.4 |
+| `AgentRosterEntry`, `GenerateSeed` | `controls/agent-admin/agent-admin.ts` | LLD admin-three-pane-ia §16.3 |
+| `SettingsStore` | `controls/settings/store.ts` | app-surfaces-m4 LLD-C15 |
+| `AgentConfigSnapshot`, `AdminTurn`, `AdminTurnRequest`, `AdminAgentTurn`, `AdminAgentSurfaceTurn` | `controls/agent-admin/agent-admin-schema.ts` | ADR-0135, ADR-0136 |
+| `Entry`, `EntryLibraryPack`, `NewEntryInput`, `entriesStoreKey` | `controls/entry-list/entry-data.ts` | ADR-0132, ADR-0164 cl.2 |
+| `ENTRY_KINDS`, `composeSystemPrompt`, `composeLiveSystemPrompt`, `EntryRosters` (pre-#1699: `ComposerRosters`) | `controls/agent-admin/entries.ts` | ADR-0132 cl.6 |
+| `AgentTeam`, `AgentTeamMember` | `controls/agent-admin/agent-team.ts` | ADR-0203 |
+| `composeTeamPromptSection` | `controls/agent-admin/agent-team-prompt.ts` | ADR-0203 cl.2 |
+| `TeamDeclaration` | `packages/agent-ui/a2ui/src/agent/meta-line.ts` | ADR-0204 |
+| `RoutedContent`, `RESOURCE_IDB_TEXT_THRESHOLD_CHARS` | `controls/agent-admin/resource-idb-store.ts` | ADR-0193, ADR-0227 cl.5 exception |
+| `SkillPackSnapshot`, `SkillPackShelfSource` | `controls/agent-admin/skill-pack-store.ts` | ADR-0208 |
+| `Persona` (site literal) | `site/pages/agent-admin-presets.ts` | §4; folds into `AgentRecord` under #1699 |
+| `AgentTransport`, `Turn` | `packages/agent-ui/a2ui/src/agent/agent-transport.ts` | ADR-0069, ADR-0073 |
+| `DevtoolsEvent`, `DevtoolsCapture` | `packages/agent-ui/devtools/src/timeline/events.ts`, `capture/format.ts` | ADR-0200 |
