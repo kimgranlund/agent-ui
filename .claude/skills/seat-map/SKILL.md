@@ -115,3 +115,9 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   `due-process` skill by name before design work starts — the four-phase Understand/Research →
   Plan → Execute → Evaluate loop, each phase with its own checkable exit artifact.
   `size:small` is unaffected.
+- **Marshal never rides a fix-inline fork (2026-08-28).** A fork (`context: fork` skill, e.g.
+  docs:file-bug) invoked from a marshal-held session inherits the marshal's identity, so its
+  fix-inline branch is the marshal building inline — barred by the 2026-08-27 marshal carve-out.
+  From this seat, intake dispatches are record-only; the fix is a separate build dispatch.
+  Upstream guard: claude-plugins#961 / PR claude-plugins#969 (docs 1.21.15) — distinct from this
+  repo's own GH #969 cited above.
