@@ -1,5 +1,8 @@
 # SPEC — `@agent-ui/devtools`: the Chat & A2UI dev/debug harness (GH #1122)
 
+> *Term note (2026-08-29):* the "harness" this spec names is the **devtools capture** (`@agent-ui/devtools`:
+> transports, `recordTurn`, the `DevtoolsEvent` timeline, the `DevtoolsCapture` file); the filename is
+> historical. Fleet term sheet: [`references/agent-model.md`](../references/agent-model.md) §2.
 > Status: proposed · v0.1 (skeleton — enough for build slices to cite; rows harden as slices land) · 2026-08-17 · Layer: SPEC (execution contract)
 > Refines: GH #1122 (Kim's Rulings comment, 2026-08-17 — the four ruled forks) under
 > [ADR-0200](../adr/0200-agent-ui-devtools-package.md) (the package mint + seam contract, proposed).

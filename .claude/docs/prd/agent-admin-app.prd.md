@@ -69,8 +69,9 @@ open goals state checkable acceptance. **A goal states WHAT/WHY — the cited re
 ### 3.1 Personas & roster (PRD-G1)
 
 A curated persona catalog (~37 presets) plus user-authored and imported agents, in a three-pane
-IA — [Chat | Author | Settings] as first-class places with place-based context routing
-([ADR-0179](../adr/0179-agent-admin-three-pane-ia.md)). A persona's local A2UI patterns are
+IA — [Chat | Settings | Co-pilot] as first-class places with place-based context routing
+([ADR-0179](../adr/0179-agent-admin-three-pane-ia.md), pane set as amended by GH #686; "Author" is the
+retired name, vocabulary fixed 2026-08-29 per [references/agent-model.md](../references/agent-model.md) §3). A persona's local A2UI patterns are
 catalog-schema content composed at derive-time ([ADR-0172](../adr/0172-persona-catalog-composition-intake.md)).
 Agent state persists through the shared storage-adapter seam
 ([ADR-0193](../adr/0193-shared-storage-adapter-seam.md)).

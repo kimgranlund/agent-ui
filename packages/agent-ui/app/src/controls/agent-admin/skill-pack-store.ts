@@ -46,7 +46,7 @@ export interface SkillPackProvenance {
   commitSha: string
   importedAt: string
   skillCount: number
-  /** Harness vocabulary the product has no semantics for — dropped by the CLI but COUNTED (D1). */
+  /** Skill vocabulary the product has no semantics for — dropped by the CLI but COUNTED (D1). */
   droppedFrontmatterKeys: string[]
   /** Malformed/fence-less SKILL.md dirs — skipped by the CLI, LISTED (never silently absent). */
   skipped: string[]

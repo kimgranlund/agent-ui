@@ -4,6 +4,8 @@
 > (`../reports/naming-inventory-2026-07-12.md` — the evidence base; counts live THERE, rules live
 > HERE). Siblings: `geometry.md` (the size/scale law) · `anatomy.md` (position slots × content
 > roles) · `tokens.md` (color roles). The doc-ID namespace is `doc-standards`' (§3).
+> Domain vocabulary for the agent-admin surface (agent/persona/preset, roster, pack, Knowledge,
+> Instructions, GM, the four "harness" terms) is fixed in [`agent-model.md`](./agent-model.md) §3, not here.
 > Migration policy for every rule here: **fix-on-touch, never big-bang** — the Recorded
 > Exceptions (§12) hold the standing deviations; gates are strict for NEW names from day one.
 

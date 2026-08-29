@@ -276,3 +276,13 @@ S3 depends on S2's store. Each slice lands with its gate green before the next s
 - Stale opted-in copies are possible by design (D4's no-background-mutation law); the
   collision-disabled picker row is the mitigation, and a richer "shelf is newer" affordance is a
   future UI slice, not a contract change.
+
+## Vocabulary note (2026-08-29, Kim's ruling; append-only, no clause changes)
+
+> This record's prose uses "pack" in three senses; the fleet glossary
+> ([`references/agent-model.md`](../references/agent-model.md) §3) fixes the terms. Read them as:
+> **skill pack** = the imported repo snapshot (the `*.skillpack.json` file, the `skill-packs:<packId>`
+> record; D1/D2/D3's "skill-pack file", "imported pack", "snapshot"); **library pack** = the
+> `EntryLibraryPack` the snapshot projects into beside the first-party packs (D4's "pack list",
+> "first-party packs"); **pack library** = the UI shelf that lists library packs (D3's "pack library
+> gains an Import pack… affordance"). New prose uses the qualified term; the accepted text stands.

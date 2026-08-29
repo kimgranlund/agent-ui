@@ -88,6 +88,9 @@ npm-workspaces monorepo; ten packages under `packages/agent-ui/*`.
 - Shared/app state follows the ADR-0227 grammar — one signal-backed owner, explicit injection,
   `StorageAdapter` persistence, CSS cascade for presentational axes; the routable how-to (incl. the
   `resource()`/`mutation()` worked example) is `.claude/docs/references/state-and-persistence.md`.
+- Agent vocabulary (layers, "harness" disambiguation, glossary, seams) is
+  `.claude/docs/references/agent-model.md`; new prose uses its terms (agent config · a2ui producer ·
+  devtools capture · skill vocabulary; skill pack vs library pack; Co-pilot, not Author).
 
 ## Always
 
