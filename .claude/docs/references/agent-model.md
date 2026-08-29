@@ -65,7 +65,7 @@ the store again" (ADR-0136).
 `description`, `content`, `order`, `enabled`, `builtin`, optional `availability`
 (`context` | `invocable`), optional `idbRef` + `contentLength` for IDB-routed text. Kinds are the
 `ENTRY_KINDS` constants in `entries.ts`: `prompt-section`, `skill`, `workflow`, `resource`, `tool`,
-`pattern-source` (the catalog kind, ADR-0170, is a separate pack-fed kind outside this constant). Each kind is one ordered array under the store key
+`pattern-source`, `catalog` (ADR-0170). Each kind is one ordered array under the store key
 `entries:<kind>`. A disabled entry is skipped, never removed (ADR-0132 Fork 4).
 
 **Composition.** `composeSystemPrompt(sections, team?)` (`entries.ts`) projects the enabled,
