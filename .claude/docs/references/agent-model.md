@@ -25,6 +25,7 @@
 | the difference between a team and an agent | a team is a **wrapper record** (GM + members) over agents; it never runs | §1 Wrappers |
 | "the harness" | four different things; use the qualified term | §2 |
 | a roster | the ordered agent list, or a team's member list; never a capability list | §3 |
+| Knowledge, Instructions | the `resource` kind and the composed system prompt, as the user sees them | §3 |
 | a pack | a **skill pack** (imported snapshot) or a **library pack** (the entry list it becomes) | §3 |
 | why `AdminTurn` is not a2ui's `Turn` | the component keeps its own minimal shapes so it binds to no transport type; the code comment's stated reason is stale | §4 |
 
@@ -109,8 +110,8 @@ header pointing here.
 - **agent** = **persona** = a preset or an import. One `AgentRecord`; "persona" survives only as a
   human-facing tagline word in the UI, "preset" means a shipped record (`seedVersion` set, not
   deletable), "import" means a user-minted one (`imported: true`, `createdAt` set).
-- **GM** (general manager): the agent an `AgentTeam` names in `gmAgentId`; its prompt gains the
-  `## Your team` block. The GM is an ordinary agent; nothing else marks it.
+- **GM** (general manager): the team's leading agent, the one an `AgentTeam` names in `gmAgentId`;
+  its prompt gains the `## Your team` block. The GM is an ordinary agent; nothing else marks it.
 - **Context: System**: the settings segment showing the compiled agent-system JSON, including the
   composed prompt; the read-only truth of what the next turn will send. Its sibling **Context: Dialog**
   is the per-turn payload log.
@@ -125,6 +126,18 @@ header pointing here.
   library** is the UI shelf that lists library packs.
 - **entry**: one capability row of any kind (§1 Capabilities). **Ambient** = enabled and
   `context`-available; **invocable** = enabled but inert until invoked from the composer.
+- **Knowledge**: the `resource` entry kind as the user sees it (attached documents, PRD §3.5).
+  User-facing copy says Knowledge; the `resource` kind, `RoutedContent`, and the budget constants keep
+  their names. Vendor convergence (vendor docs fetched 2026-08-29: Claude Projects "project knowledge",
+  ChatGPT GPTs "Knowledge", Gemini Gems "Knowledge"; §5).
+- **Instructions**: the composed system prompt as the user sees it, i.e. what the `Context: System`
+  segment shows (§1 Composition). User-facing copy may say Instructions; the segment id
+  `context-system` and `#renderContextSystem` keep their names.
+- **team member**: one `AgentTeamMember` of an `AgentTeam`; the GM consults it by prose only. Across
+  vendors the same role is a *subagent* (Claude Code, Google ADK) or a *handoff target* (OpenAI
+  Agents SDK); this repo's word is member (vendor docs fetched 2026-08-29, §5).
+- **persona** (decision, Kim 2026-08-29): survives only as a human-facing tagline word in the UI,
+  never as a type name or a doc noun; the type is `AgentRecord`, the doc noun is agent.
 - **Co-pilot**: the builder-interview place (`[Chat | Settings | Co-pilot]`, ADR-0179 as amended by
   GH #686); "Author" is its retired name.
 
@@ -164,6 +177,15 @@ threshold number itself is justified only in the module header, not in an ADR.
 of (the DAG forbids importing site code), so it takes a narrowed `{id, label, deletable?}` row and
 reaches every mutation through registered callbacks (`onDeleteAgentRequest`, `onGenerateRequest`).
 Reason: LLD admin-three-pane-ia §16.3's frozen seam shapes, restated in the type's comment.
+
+## 5 · Vendor vocabulary sources
+
+The Knowledge and team-member mappings in §3 rest on vendor docs fetched 2026-08-29 (the marshal's
+fetch, cited by URL; re-check on any vendor rename):
+platform.claude.com/docs/en/managed-agents/overview ·
+openai.github.io/openai-agents-python/agents/ · adk.dev/get-started/about/ ·
+help.openai.com/en/articles/8554397 (ChatGPT GPTs "Knowledge") ·
+support.google.com/gemini/answer/15236321 (Gemini Gems "Knowledge").
 
 ## A · Type → source
 

@@ -284,7 +284,7 @@ distinct ranks flattened into one scroll — into three sections, each still a h
 (`settings-item`, all open by default): **Agent** — who it is: Agent (`ui-settings`, the ACTIVE master
 switch on the fold's heading row) + the Model grid + Bankroll (a persona's opt-in stored figure, hidden
 entirely for one that never opted in). **Capabilities** — what it can do: the prompt sections (the old
-prompts pane, merged in) + four capability kinds (Skills/Workflows/Resources/Tools, each kind's master
+prompts pane, merged in) + four capability kinds (Skills/Workflows/Knowledge/Tools; Knowledge is the `resource` kind, the fold's rendered label still reads "Resources" until the copy change lands in code, agent-model.md §3; each kind's master
 switch on ITS fold heading row) + GH #1197's **Teams** fold (ADR-0203 cl.1/R5, `agent-team-pane.ts`) — a
 sixth, bespoke fold (not one more `CAPABILITY_KINDS` row: a team is a GM pick plus a nested member roster,
 not an `Entry`): list/create/edit/delete a declared `AgentTeam`, validation-closed against the live
@@ -433,7 +433,7 @@ toggleable entry in a typed list, with a shared custom-entry authoring form:
   own card (dialect belongs to the harness's grammar block, not to persona prose — ADR-0138's boundary,
   GH #412) — it clears on a re-enable or a reword, and gates nothing.
 - **Agent/Capabilities tabs** — the unchanged "Agent" config (name/model/temperature/toolsEnabled, via the
-  composed `ui-settings`, in the Agent tab) PLUS four capability kinds — Skills, Workflows, Resources,
+  composed `ui-settings`, in the Agent tab) PLUS four capability kinds — Skills, Workflows, Knowledge (the `resource` kind),
   Tools, in the Capabilities tab — each an unseeded, purely custom-authorable instance of the same
   primitive.
 - **Catalogs** (ADR-0170) — `kind: "catalog"`, the family's first SINGLE-select kind, and the first whose
@@ -522,7 +522,7 @@ error path, never a crash. A switch of model or prompt mid-conversation applies 
 ## The reach path: `@` mentions and `/` invocations (GH #849, SPEC-R8/R4)
 
 The composer's two rosters come from this element, rebuilt from a FRESH store read whenever anything the
-store holds changes: `@` offers the enabled **Resources**, `/` offers the enabled **Skills · Workflows ·
+store holds changes: `@` offers the enabled **Knowledge** (`resource` entries), `/` offers the enabled **Skills · Workflows ·
 Tools**, both availability modes included — an in-context entry may appear in the menu *and* compose
 ambiently; a user-invocable one appears ONLY here. A disabled entry, or any entry of a kind whose master
 switch is off, is absent. Labels are read from the entries themselves per build, so a rename (GH #848)
