@@ -108,3 +108,36 @@ We will build the harness at its reconciled, right-sized scope:
 - **Make the wiring check a standing vitest gate now** — rejected for this wave: vitest's include is
   packages-only and `.claude/` governance is not package behavior; the manual-gate precedent (`npm run
   size`, ADR-0040 §3) fits, with a named promotion trigger instead of speculative wiring.
+
+## Amendment (2026-08-29, **proposed** — Kim ratifies) — cl.1/cl.2's named roster realized under different identifiers: 7 `a2ui`-prefixed skills, `a2ui-build-agent`/`a2ui-payload-authoring-agent`/`a2ui-review-agent` (+3 shared seats) stand in for the stale `a2ui-compose`/`a2ui-corpus-curate`/`a2ui-composer`/`a2ui-reviewer` names
+
+Clauses 3–6 (rubric location, no harness gate code, the procedural SPEC-R6 loop, no eval facet
+this wave) are unaffected by this amendment and remain byte-identical.
+
+Clauses 1 and 2 named an exact skill/agent roster: two skills (`a2ui-compose`,
+`a2ui-corpus-curate`) and one maker/critic agent pair (`a2ui-composer`, `a2ui-reviewer`). The live
+corpus as of 2026-08-29 carries neither identifier — the roster realized under different names,
+confirmed falsified by `decision-watcher`'s 2026-08-29T17:29:44Z revalidation sweep
+(`.claude/ops/revalidation-queue.json`, `candidates[].claim_id == "adr-0067"`, kind `falsified`)
+and filed as [GH #1703](https://github.com/kimgranlund/agent-ui/issues/1703).
+
+Restated under the current names:
+
+- **Clause 1 — Skills.** Seven `a2ui`-prefixed skills carry the composition/curation/review
+  workflow the original two named: `a2ui-build`, `a2ui-catalog-rendering-review`,
+  `a2ui-corpus-curation`, `a2ui-multi-catalog`, `a2ui-payload-authoring`, `a2ui-prompt-authoring`,
+  `a2ui-review-standards`.
+- **Clause 2 — Agents.** The maker/critic pair realized as three dedicated seats —
+  `a2ui-build-agent`, `a2ui-payload-authoring-agent`, `a2ui-review-agent` — plus three seats
+  shared with the wider component estate: `component-build-agent`, `example-authoring-agent`,
+  `repo-orchestrator-agent`.
+
+The underlying capability this Decision ordered — payload authoring, corpus curation, artifact
+review, the generator≠critic separation — is unchanged and confirmed still alive; only the
+specific skill/agent identifiers named on 2026-07-03 drifted as the estate reorganized. No prior
+ADR recorded this reorganization as an Amendment or Supersession of this one; this amendment is
+that missing restatement of record.
+
+Provenance: [GH #1703](https://github.com/kimgranlund/agent-ui/issues/1703),
+`.claude/ops/revalidation-queue.json` `candidates[].claim_id == "adr-0067"` (queued
+2026-08-29T17:29:44Z, kind `falsified`).
