@@ -180,3 +180,29 @@ the mechanism so the render/round-trip/loop work is shape-independent.
   and the BYOK/other-transport futures become rewrites instead of a new transport impl.
 - **Put the live infra (SDK, HTTP) in `@agent-ui/a2ui`.** Rejected: violates the zero-dep invariant
   (SPEC-N5/ADR-0062) — the package exposes only pure surfaces; the live infra is site/tools-scoped.
+
+## Amendment — Decision clause 5's `BrowserDirectTransport` claim recorded as dropped: never built, no successor claims it (2026-08-29, ticket #1704)
+
+Decision clause 5 claims, present tense, that a `BrowserDirectTransport` "is provisioned behind
+the same seam," reading `import.meta.env.VITE_ANTHROPIC_API_KEY`, and that the `.env`'s `VITE_`
+variant "makes it a real provisioned dev path, not a paste-a-key hypothetical." No such class, no
+`VITE_ANTHROPIC_API_KEY` reference, and no `anthropic-dangerous-direct-browser-access` usage exist
+anywhere in `packages/` or `site/` source (re-confirmed by direct grep, 2026-08-29; the only prior
+hit was inside a built `site/.fixture-scratch` bundle asset, not source). `BrowserDirectTransport`
+was never built.
+
+ADR-0200 (ratified 2026-08-17) later built the "three backends behind one `AgentTransport` seam"
+generalization CLAUDE.md cites, but its three backends are replay/proxy/a2a
+(`packages/agent-ui/devtools/src/transports/backends.ts`, `BACKEND_IDS`) — no browser-direct or
+client-key backend among them, and ADR-0200's own header names no relation to ADR-0069 or its
+clause 5 at all. No successor ADR or shipped code claims clause 5's transport.
+
+Clauses 1-4 and 6 remain confirmed live and unaffected by this amendment: the `AgentTransport`
+interface and `RecordedTransport` exist
+(`packages/agent-ui/a2ui/src/agent/agent-transport.ts`, `recorded-transport.ts`) and the dev-proxy
+path is still consumed (`packages/agent-ui/devtools/src/transports/proxy.ts`).
+
+This amendment records the drop; it does not edit the Decision text above, which is left as
+originally accepted. Source: the 2026-08-29T17:29:44Z decision-watcher revalidation sweep, which
+sampled `adr-0069` and returned verdict **falsified** on clause 5 (`.claude/ops/revalidation-
+queue.json`, `claim_id: adr-0069`), queuing ticket #1704 as its own next step.
