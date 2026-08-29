@@ -1,4 +1,4 @@
-# ADR-0179 — agent-admin three-pane IA: [Chat | Author | Settings] as first-class places, place-based context routing, the wide-width settings pairing
+# ADR-0179 — agent-admin three-pane IA: [Chat | Settings | Co-pilot] as first-class places, place-based context routing, the wide-width settings pairing
 
 > Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-09
 >
@@ -412,3 +412,10 @@ adoption — they are the only DAG-legal bridge regardless of which header wins.
 > side; the shell's inline-size IS the holder's now). `--ui-agent-admin-shell-gutter` itself survives as
 > the header bar's own inline inset. Standing pin: `agent-admin-edge-to-edge.browser.test.ts` (both
 > engines, 414×896 + 1280×800, dark + light — card↔shell-edge and card↔card |gap| ≤ 0.5px).
+
+## Title note (2026-08-29, vocabulary alignment, Kim's ruling; append-only)
+
+> The H1 now reads `[Chat | Settings | Co-pilot]`, the pane set the ratified GH #686 Amendment above
+> re-pinned ("The vocabulary re-pins"). The original title carried the pre-amendment
+> `[Chat | Author | Settings]`; the accepted Decision and both Amendments are untouched. The fleet's
+> term sheet for this vocabulary is [`references/agent-model.md`](../references/agent-model.md) §3.

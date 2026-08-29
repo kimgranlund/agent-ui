@@ -1,5 +1,8 @@
 # SPEC — A2UI Expert Harness (agents · skills · rubrics · gates)
 
+> *Term note (2026-08-29):* the "harness" this spec names is the **a2ui producer** (the grammar/dialect owner
+> behind `produce()`: agents, skills, rubrics, gates); the filename is historical. Fleet term sheet:
+> [`references/agent-model.md`](../references/agent-model.md) §2.
 > Status: proposed · v0.4 · 2026-08-06 (v0.3 2026-07-29, v0.2 2026-07-03, v0.1 2026-06-26) · Layer: SPEC (execution contract)
 > **v0.4 amendment (2026-08-06, SPEC-R2 + SPEC-R3 only — GH #493, PR #492's rubric-fit escalation):**
 > the `a2ui-review-agent` critic's artifact classes widen from three to five (adds: a compose-time MECHANISM
