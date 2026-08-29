@@ -38,7 +38,7 @@ const ALLOWLIST: Record<string, { ruling: string; count: number }> = {
   // ADR-0227 wave 1 (PR #1543): the EXPLICIT LEGACY MIGRATION READ stated in that PR — one tolerant
   // raw read keeps every existing user's active-persona selection; the next write re-persists through
   // the adapter and the branch goes quiet. Remove this row when the legacy branch retires.
-  'packages/agent-ui/app/src/controls/agent-admin/persona-roster-source.ts': { ruling: 'ADR-0227 wave-1 legacy migration read (self-quieting)', count: 1 },
+  'packages/agent-ui/app/src/controls/agent-admin/agent-roster-source.ts': { ruling: 'ADR-0227 wave-1 legacy migration read (self-quieting)', count: 1 },
 }
 
 /** The migration-wave debt table — EMPTY from day one (the GH #1544 drain shipped with the gate).

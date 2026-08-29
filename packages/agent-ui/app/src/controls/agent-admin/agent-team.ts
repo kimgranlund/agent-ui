@@ -198,7 +198,7 @@ export async function deleteAgentTeam(id: string): Promise<void> {
   await getAdapter().delete(id)
 }
 
-// ── the DataSource face (ADR-0227 wave 2, GH #1545 — the persona-roster-source pattern applied) ────────
+// ── the DataSource face (ADR-0227 wave 2, GH #1545 — the agent-roster-source pattern applied) ────────
 // The team records' CRUD verbs as a `DataSource<AgentTeam>` over the SAME adapter + keys the module
 // functions above use (`agent-ui-agent-teams.<teamId>`, localStorage tier — persisted data survives
 // byte-for-byte), so a page's team read collapses to ONE `resource()` and `handleTeamDeclared`'s write

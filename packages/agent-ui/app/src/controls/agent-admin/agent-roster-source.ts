@@ -1,4 +1,4 @@
-// persona-roster-source.ts — ADR-0227 clause 4 (wave 1, GH #1542): `PersonaRosterSource`, the persona
+// agent-roster-source.ts — ADR-0227 clause 4 (wave 1, GH #1542): `AgentRosterSource`, the persona
 // roster CRUD as `@agent-ui/data`'s FIRST real consumer surface. This module is the ONE owner of the
 // roster's persisted records — the imported-personas library, the display order, the active-agent id,
 // and the per-persona `seedVersion`/`modifiedAt` markers — all riding the `StorageAdapter` localStorage
@@ -7,10 +7,10 @@
 // `${namespace}.${key}` law reproduces `agent-admin-app.importedPersonas` etc. exactly; the one
 // value-format delta, the active id, gets an explicit tolerant legacy read below).
 //
-// Shape: a generic factory (`createPersonaRosterSource<P>`) returning an object that IS a
+// Shape: a generic factory (`createAgentRosterSource<P>`) returning an object that IS a
 // `DataSource<P>` (`read · list · create · update · remove · subscribe` — ADR-0227's named verb set,
 // `subscribe` wired to the adapter's cross-tab seam) PLUS:
-//   - a `view` sub-source (`DataSource<PersonaRosterView<P>>`) the page's ONE `resource()` reads —
+//   - a `view` sub-source (`DataSource<AgentRosterView<P>>`) the page's ONE `resource()` reads —
 //     roster + active id as one value, so the triplicated active-id collapses to one owner (F6/Q4);
 //   - the sync twins (`listSync`/`activeIdSync`/…) the composition root needs for same-tick boot
 //     hydration — the exact job ADR-0193's sync-read amendment exists for (the tier is sync by nature).
@@ -47,7 +47,7 @@ export const ROSTER_ORDER_KEY = `${PERSONA_ROSTER_NAMESPACE}.${ORDER_KEY}`
 /** The roster-record shape this source persists. Kept structural and WIDE (`category` is any string)
  *  so the site's own `Persona` — whose `category` is a literal union — extends it without this package
  *  importing site vocabulary. */
-export interface PersonaRecord {
+export interface AgentRecord {
   id: string
   label: string
   tagline: string
@@ -64,7 +64,7 @@ export interface PersonaRecord {
 
 /** The ONE value the page's roster `resource()` holds: the ordered roster + the persisted active-agent
  *  id (undefined when never chosen — the FALLBACK rule, `personas[0]`, stays the consumer's own). */
-export interface PersonaRosterView<P extends PersonaRecord = PersonaRecord> {
+export interface AgentRosterView<P extends AgentRecord = AgentRecord> {
   readonly personas: readonly P[]
   readonly activeId: string | undefined
 }
@@ -74,7 +74,7 @@ export interface PersonaRosterView<P extends PersonaRecord = PersonaRecord> {
  *  everything unlisted follows in natural order, so a fresh mint/import lands at the end and an
  *  absent/empty order reproduces the natural order byte for byte. Exported pure so an optimistic
  *  `mutation()` commit can reuse the EXACT rule the real read applies — zero drift. */
-export function applyRosterOrder<P extends PersonaRecord>(natural: readonly P[], order: readonly string[]): P[] {
+export function applyRosterOrder<P extends AgentRecord>(natural: readonly P[], order: readonly string[]): P[] {
   if (order.length === 0) return [...natural]
   // A Map keeps insertion (= natural) order for whatever the stored order never names; deleting as we
   // go is also what makes a REPEATED id in the record harmless (it can only match once).
@@ -89,7 +89,7 @@ export function applyRosterOrder<P extends PersonaRecord>(natural: readonly P[],
   return [...listed, ...unlisted.values()]
 }
 
-export interface PersonaRosterSourceOptions<P extends PersonaRecord> {
+export interface AgentRosterSourceOptions<P extends AgentRecord> {
   /** The shipped (non-deletable) roster entries in natural order — injected by the composition root. */
   shipped: readonly P[]
   /** The persistence tier (ADR-0193). Defaults to the localStorage tier under the legacy namespace;
@@ -106,7 +106,7 @@ export interface PersonaRosterSourceOptions<P extends PersonaRecord> {
  * Every verb's write lands through the injected `StorageAdapter` — never a raw `localStorage` touch
  * (the ONE exception: `activeIdSync`'s explicit, documented legacy migration read).
  */
-export interface PersonaRosterSource<P extends PersonaRecord> extends DataSource<P, undefined, Partial<P>> {
+export interface AgentRosterSource<P extends AgentRecord> extends DataSource<P, undefined, Partial<P>> {
   // ── the DataSource verbs (all present — the interface narrows DataSource's optionality) ──
   read(key: string, ctx: SourceContext): Promise<P>
   list(query: undefined, ctx: SourceContext): Promise<readonly P[]>
@@ -119,14 +119,14 @@ export interface PersonaRosterSource<P extends PersonaRecord> extends DataSource
 
   /** The view-shaped sub-source the page's ONE roster `resource()` consumes (`live: true` rides its
    *  `subscribe` — the cross-tab staleness guard this wave adds). */
-  readonly view: DataSource<PersonaRosterView<P>>
+  readonly view: DataSource<AgentRosterView<P>>
 
   // ── sync twins (ADR-0193 sync-read amendment — the tier is sync by nature) ──
   listSync(): P[]
   importedSync(): P[]
   orderSync(): string[]
   saveOrderSync(ids: readonly string[]): void
-  readViewSync(): PersonaRosterView<P>
+  readViewSync(): AgentRosterView<P>
   upsertImportedSync(persona: P): P
   renameImportedSync(persona: P, label: string): boolean
   removeImportedSync(persona: P): boolean
@@ -143,9 +143,9 @@ export interface PersonaRosterSource<P extends PersonaRecord> extends DataSource
   resetStateSync(id: string): void
 }
 
-export function createPersonaRosterSource<P extends PersonaRecord>(
-  options: PersonaRosterSourceOptions<P>,
-): PersonaRosterSource<P> {
+export function createAgentRosterSource<P extends AgentRecord>(
+  options: AgentRosterSourceOptions<P>,
+): AgentRosterSource<P> {
   const adapter = options.adapter ?? createLocalStorageAdapter({ namespace: PERSONA_ROSTER_NAMESPACE })
   const shipped = options.shipped
   // The pre-ADR-0227 raw active-id key exists only under the production namespace — an injected adapter
@@ -161,10 +161,10 @@ export function createPersonaRosterSource<P extends PersonaRecord>(
       (p): p is P =>
         typeof p === 'object' &&
         p !== null &&
-        typeof (p as PersonaRecord).id === 'string' &&
-        typeof (p as PersonaRecord).label === 'string' &&
-        typeof (p as PersonaRecord).seed === 'object' &&
-        (p as PersonaRecord).seed !== null,
+        typeof (p as AgentRecord).id === 'string' &&
+        typeof (p as AgentRecord).label === 'string' &&
+        typeof (p as AgentRecord).seed === 'object' &&
+        (p as AgentRecord).seed !== null,
     )
   }
 
@@ -201,7 +201,7 @@ export function createPersonaRosterSource<P extends PersonaRecord>(
     void adapter.set(ACTIVE_KEY, id)
   }
 
-  const readViewSync = (): PersonaRosterView<P> => ({ personas: listSync(), activeId: activeIdSync() })
+  const readViewSync = (): AgentRosterView<P> => ({ personas: listSync(), activeId: activeIdSync() })
 
   /** Upsert one imported persona (last-write-wins on a same-id record — a defensive dedupe, not a
    *  merge policy; ids are minted collision-safe upstream). Stamps `imported: true`. */
@@ -302,7 +302,7 @@ export function createPersonaRosterSource<P extends PersonaRecord>(
     }
   }
 
-  const notFound = (id: string): Error => new Error(`persona-roster-source: no roster entry with id "${id}"`)
+  const notFound = (id: string): Error => new Error(`agent-roster-source: no roster entry with id "${id}"`)
 
   return {
     // ── DataSource<P> (ADR-0227 clause 4's verb set) ──
@@ -324,10 +324,10 @@ export function createPersonaRosterSource<P extends PersonaRecord>(
       // rewrites in place under the same imported-only fence.
       if (typeof patch.label === 'string') {
         if (!renameImportedSync(persona, patch.label)) {
-          throw new Error(`persona-roster-source: "${key}" refused the rename (shipped, blank, or no record)`)
+          throw new Error(`agent-roster-source: "${key}" refused the rename (shipped, blank, or no record)`)
         }
       } else {
-        if (persona.imported !== true) throw new Error(`persona-roster-source: "${key}" is shipped — records exist only for imports`)
+        if (persona.imported !== true) throw new Error(`agent-roster-source: "${key}" is shipped — records exist only for imports`)
         upsertImportedSync({ ...persona, ...patch, id: persona.id })
       }
       const updated = listSync().find((p) => p.id === key)

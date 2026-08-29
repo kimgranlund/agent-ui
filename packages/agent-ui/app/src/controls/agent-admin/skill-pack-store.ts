@@ -217,7 +217,7 @@ export async function removeSkillPack(packId: string): Promise<void> {
   await getAdapter().delete(skillPackStoreKey(packId))
 }
 
-// ── the DataSource face (ADR-0227 wave 2, GH #1545 — the persona-roster-source pattern applied) ─────
+// ── the DataSource face (ADR-0227 wave 2, GH #1545 — the agent-roster-source pattern applied) ─────
 // The shelf's CRUD verbs as a `DataSource<SkillPackSnapshot>` over the SAME adapter + keys the module
 // functions above use (`skill-packs:<packId>`, IndexedDB db `agent-ui-skill-packs` — persisted data
 // survives byte-for-byte), so a page's shelf read collapses to ONE `resource()` and every import/remove

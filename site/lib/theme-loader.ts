@@ -112,7 +112,7 @@ export function applyScheme(provider: { scheme: string }, scheme: SchemeId): voi
 /** Persist a choice for the next page load. The adapter degrades to a no-op when the backing store is
  *  unavailable (privacy mode, SSR-ish test harnesses) — persistence degrading to session-only is an
  *  acceptable fallback, never a throw. The write itself is same-tick (`set`'s body runs synchronously
- *  up to the promise wrapper — persona-roster-source.ts's stated law), so `void` keeps the old
+ *  up to the promise wrapper — agent-roster-source.ts's stated law), so `void` keeps the old
  *  fire-and-forget timing. */
 export function persistTheme(id: ThemeId): void {
   void siteStorage.set(THEME_KEY, id)

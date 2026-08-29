@@ -72,12 +72,12 @@ import type { UIToggleElement } from '@agent-ui/components/controls/toggle'
 // dogfood `traits/overlay` (vitest.config.ts's own precedent comment for that subpath).
 import { listReorder } from '@agent-ui/components/traits/list-reorder'
 // ADR-0227 wave 1 (GH #1542) — the roster read path is ONE resource() and every roster write is a
-// mutation() with invalidation over the PersonaRosterSource (@agent-ui/data's first real consumer).
+// mutation() with invalidation over the AgentRosterSource (@agent-ui/data's first real consumer).
 // `effect` drives the one derivation that feeds the component's push seam; the optimistic commits keep
 // every handler's same-tick reads honest (the source's own writes land in the calling tick too).
 import { effect, signal } from '@agent-ui/components'
 import { createStore, mutation, resource, type SourceContext, type Store } from '@agent-ui/data'
-import { applyRosterOrder, type PersonaRosterView } from '@agent-ui/app/agent-admin-roster-source'
+import { applyRosterOrder, type AgentRosterView } from '@agent-ui/app/agent-admin-roster-source'
 import {
   builderStore,
   loadModifiedAt,
@@ -136,7 +136,7 @@ const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
 const ROSTER_KEY = 'agent-admin/roster'
 const rosterStore = createStore()
 rosterStore.commit(ROSTER_KEY, rosterSource.readViewSync())
-const rosterResource = resource<PersonaRosterView<Persona>>(ROSTER_KEY, rosterSource.view, {
+const rosterResource = resource<AgentRosterView<Persona>>(ROSTER_KEY, rosterSource.view, {
   store: rosterStore,
   live: true,
 })
@@ -158,8 +158,8 @@ function activeAgent(): Persona {
 /** Optimistic-view helper: every roster mutation commits the SAME transform its source write persists,
  *  so the view — and every derivation on it — updates in the calling tick (mutation() rolls the commit
  *  back per-key on error). The store is seeded at boot, so `prev` only falls back defensively. */
-function optimisticView(store: Store, up: (prev: PersonaRosterView<Persona>) => PersonaRosterView<Persona>): void {
-  store.commit(ROSTER_KEY, (prev: unknown) => up((prev as PersonaRosterView<Persona> | undefined) ?? rosterSource.readViewSync()))
+function optimisticView(store: Store, up: (prev: AgentRosterView<Persona>) => AgentRosterView<Persona>): void {
+  store.commit(ROSTER_KEY, (prev: unknown) => up((prev as AgentRosterView<Persona> | undefined) ?? rosterSource.readViewSync()))
 }
 
 /** ATOMIC read-back commit — each mutation fn's settle step: the post-write truth is read AND committed
@@ -419,7 +419,7 @@ function withFlowChrome(inner: AdminAgentSurfaceTurn): AdminAgentSurfaceTurn {
  *  from the one resource — the roster derivation effect below re-runs this on every committed view, so
  *  a mint/import/rename/reorder/delete/switch all reach the select through one derivation instead of
  *  hand-threaded call sites (the seam's own re-callable contract, LLD §16.3). */
-function pushRoster(view: PersonaRosterView<Persona> = rosterResource.data.peek() ?? rosterSource.readViewSync()): void {
+function pushRoster(view: AgentRosterView<Persona> = rosterResource.data.peek() ?? rosterSource.readViewSync()): void {
   // GH #845 (LLD-C15) — `deletable` is the ONE new field, and its meaning is page-owned: a persona is
   // deletable exactly when it is a LIBRARY record (`imported === true` — an import, a mint, or a duplicate),
   // never when it is a shipped `AGENT_PRESETS` preset. The component reads it only as a visibility gate for

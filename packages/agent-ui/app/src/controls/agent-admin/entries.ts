@@ -457,7 +457,7 @@ export interface ReferenceGroup {
 
 /** The two rosters `ui-agent-admin` hands the composer (SPEC-R8): `@` and `/`, each already filtered,
  *  sorted and projected to the composer's generic option vocabulary. */
-export interface ComposerRosters {
+export interface EntryRosters {
   mentionables: ReferenceOption[]
   invocables: ReferenceOption[]
 }
@@ -527,7 +527,7 @@ function reachableEntries(group: ReferenceGroup): Entry[] {
  * show on the next menu open with zero further wiring, and what keeps `id` (never `label`) the resolution
  * key everywhere (GH #402's law).
  */
-export function buildComposerRosters(groups: readonly ReferenceGroup[]): ComposerRosters {
+export function buildEntryRosters(groups: readonly ReferenceGroup[]): EntryRosters {
   const rosterFor = (kinds: readonly string[]): ReferenceOption[] =>
     groups.filter((g) => kinds.includes(g.kind)).flatMap((g) => reachableEntries(g).map(referenceOptionOf))
   return { mentionables: rosterFor(MENTIONABLE_KINDS), invocables: rosterFor(INVOCABLE_KINDS) }
@@ -536,7 +536,7 @@ export function buildComposerRosters(groups: readonly ReferenceGroup[]): Compose
 // ── the capabilities MENU projection (GH #891/SPEC-R13, ADR-0190 rev.2 — the RULED global switch) ───────
 // The composer's third affordance (SPEC-R11) is a GLOBAL enable/disable over the roster's `enabled` axis:
 // its rows are this projection, its flips are a persistent store write (`agent-admin.ts`'s own handler).
-// Deliberately its OWN projection beside `buildComposerRosters` (SPEC-R13's own note), never a widening of
+// Deliberately its OWN projection beside `buildEntryRosters` (SPEC-R13's own note), never a widening of
 // it: that roster is enabled-ONLY by contract (SPEC-R8 — a menu of what may be reached THIS turn), while
 // this one must list BOTH enabled states, because a global off-switch that hides what it switched off
 // cannot be flipped back on. Same `ReferenceGroup` input shape, so `agent-admin.ts` keeps doing the fresh
@@ -589,7 +589,7 @@ export function parseCapabilityRowId(rowId: string): { kind: string; id: string 
  * kinds `Entry.availability` is defined for (SPEC-R1). A kind outside it contributes nothing even if a
  * caller hands it over.
  *
- * PURE and fresh-read by construction, exactly like `buildComposerRosters`: it holds no state, so every
+ * PURE and fresh-read by construction, exactly like `buildEntryRosters`: it holds no state, so every
  * build reflects whatever the store said when the caller read it (`agent-admin.ts`'s `#capabilityRowGroups`,
  * rebuilt from the standing `#applyMasterStates` reflect path — which is what makes an add, a delete, a
  * rename, an `enabled` flip, an availability flip and a master-switch flip all show without any

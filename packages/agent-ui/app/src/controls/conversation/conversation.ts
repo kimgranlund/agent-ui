@@ -136,7 +136,7 @@ function indexOfSquashedRun(words: readonly string[], target: string): number {
 
 /**
  * GH #1030 — the ONE auto-attach candidate, or `undefined`: among `options` (the caller's already-
- * REACHABLE roster — `entries.ts`'s `buildComposerRosters` output, enabled entries of a master-on kind
+ * REACHABLE roster — `entries.ts`'s `buildEntryRosters` output, enabled entries of a master-on kind
  * only, so "ENABLED" holds by construction and never needs a second filter here), the entry whose FULL
  * `label`, squashed, equals the squashed concatenation of one or more consecutive words of `text`,
  * EARLIEST in the text. `exclude` drops a candidate already explicitly referenced (same `kind`+`id`) — an

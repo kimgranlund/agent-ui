@@ -32,12 +32,17 @@
 import { createMemoryStore } from '@agent-ui/app/settings-memory-store'
 import type { SettingsStore } from '@agent-ui/app/settings-store'
 // ADR-0227 wave 1 (GH #1542) — the roster's persisted records (imported library · display order ·
-// active id · seedVersion/modifiedAt markers) all live in the PersonaRosterSource now: @agent-ui/data's
+// active id · seedVersion/modifiedAt markers) all live in the AgentRosterSource now: @agent-ui/data's
 // first real consumer surface, persisting through the StorageAdapter browser-storage tier under the SAME
 // raw keys this file used to hand-roll, so existing users' personas survive byte-for-byte. This file
 // keeps its sync function surface (personaRoster · saveImportedPersona · …) as thin delegations — the
 // page's own resource()/mutation() grammar lives in agent-admin-app.ts.
-import { createPersonaRosterSource, PERSONA_ROSTER_NAMESPACE, type PersonaRosterSource } from '@agent-ui/app/agent-admin-roster-source'
+import {
+  createAgentRosterSource,
+  PERSONA_ROSTER_NAMESPACE,
+  type AgentRecord,
+  type AgentRosterSource,
+} from '@agent-ui/app/agent-admin-roster-source'
 import { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS } from '@agent-ui/app/agent-admin-entries'
 import { entriesStoreKey } from '@agent-ui/app/entry-data'
 import type { Entry, NewEntryInput } from '@agent-ui/app/entry-data'
@@ -720,23 +725,13 @@ export function presetSeed(preset: AgentPreset): Record<string, unknown> {
 // bytes is exactly what "identical live behaviour" forbids. Everything below (the store cache, the
 // seedVersion migration, reset) keys on the persona id, so both kinds share one mechanism.
 
-export interface Persona {
-  id: string
-  label: string
-  tagline: string
+// GH #1699 (2026-08-29) — was a page-local `interface Persona` duplicating the package's roster-record
+// shape field-for-field; now a declared subset of the package's `AgentRecord` so the same thing has one
+// name (the builder's-call line the ticket left open). `category` narrows to this page's own literal
+// union — the package's `AgentRecord.category` stays structurally WIDE (any string) so this subtype
+// relation holds without the package importing site vocabulary.
+export type Persona = Omit<AgentRecord, 'category'> & {
   category?: PresetCategory
-  /** The store's `initial` values — a preset's computed seed, or an imported file's state verbatim. */
-  seed: Readonly<Record<string, unknown>>
-  /** Only a shipped preset declares one (an imported persona's seed is never rewritten in place). */
-  seedVersion?: number
-  /** True for a persona minted by an import — a library entry, not a shipped preset. */
-  imported?: boolean
-  /** GH #921 — the ONE moment a custom persona is genuinely "created": an ISO timestamp stamped at mint/
-   *  import/duplicate time (`agent-admin-persona-file.ts`'s three minting functions). Absent for a shipped
-   *  preset — it ships with the build, it was never "created" by this user — the Manage-agents card falls
-   *  back to `loadModifiedAt` (below) for those, and to an em dash when NEITHER exists yet (an untouched
-   *  preset), per the ticket's own fallback ruling. */
-  createdAt?: string
 }
 
 /** A shipped preset as a roster persona. */
@@ -759,7 +754,7 @@ const storeCache = new Map<string, SettingsStore>()
 // the retired hand-rolled keys carried: the imported library, the display order, the active-agent id,
 // and the per-persona seedVersion/modifiedAt markers — same raw keys, now through the StorageAdapter
 // tier (ADR-0193). `onRemove` keeps the page-side store cache honest in the same motion a delete sweeps.
-export const rosterSource: PersonaRosterSource<Persona> = createPersonaRosterSource<Persona>({
+export const rosterSource: AgentRosterSource<Persona> = createAgentRosterSource<Persona>({
   shipped: AGENT_PRESETS.map(personaFromPreset),
   onRemove: (id) => storeCache.delete(id),
 })
@@ -789,7 +784,7 @@ export function personaInstantiated(id: string): boolean {
  *  bumped `seedVersion` performs an explicit one-time migration (drop the stale store, apply the new
  *  seed), the user's own "Reset persona" semantic triggered by the upgrade. The marker sits INSIDE the
  *  persona's namespace so the reset sweep drops and rewrites it; the sweep-before-reseed ordering here
- *  leans on the storage tier's same-tick writes (persona-roster-source.ts's own stated law). */
+ *  leans on the storage tier's same-tick writes (agent-roster-source.ts's own stated law). */
 export function personaStore(persona: Persona): SettingsStore {
   let store = storeCache.get(persona.id)
   if (!store) {
