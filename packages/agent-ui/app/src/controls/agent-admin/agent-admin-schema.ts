@@ -762,15 +762,19 @@ export interface AgentConfigSnapshot {
 }
 
 // ── The injectable turn-runner seam (ALM-C2, TKT-0052/ADR-0136) ────────────────────────────────────────
-// The DEV-only live overlay's contract. App-local by construction: a2ui's tools-internal `Turn`
-// (agent-transport.ts) is deliberately NOT a package export (SPEC-N1), so this surface declares its OWN
-// minimal shapes and the site runner matches them structurally. This is NOT `resolveProduceOptions`/
-// `ProduceOptions` (ADR-0135) — those carry `produce()`-loop knobs this surface never runs and a Node-side
-// `ProvidersConfig` the browser can't read (LLD Q1). `agentTurn` stays `undefined` in every default/static
-// path, so the packaged component itself carries zero fetch/env/proxy code (the stub is the only built path).
+// The DEV-only live overlay's contract. App-local by construction: a2ui's `Turn`/`TurnInput`
+// (agent-transport.ts) ARE a package export today (SPEC-N1 v0.5, ADR-0137/TKT-0072, at `./agent`), but
+// this surface still declares its OWN minimal shapes rather than importing them — ADR-0136's posture is
+// that the packaged component ships zero fetch/env/proxy code and binds to no transport type in its
+// default/static path, so `site/lib/admin-live-runner.ts` matches `Turn` structurally instead of
+// importing it. This is NOT `resolveProduceOptions`/`ProduceOptions` (ADR-0135) — those carry
+// `produce()`-loop knobs this surface never runs and a Node-side `ProvidersConfig` the browser can't
+// read (LLD Q1). `agentTurn` stays `undefined` in every default/static path, so the packaged component
+// itself carries zero fetch/env/proxy code (the stub is the only built path).
 
 /** One prior completed turn replayed into a live request — the standard Messages-API role/content shape,
- *  matching a2ui's `Turn` structurally without importing it (SPEC-N1). */
+ *  matching a2ui's `Turn` structurally without importing it (ADR-0136's zero-transport-dependency
+ *  posture, not a missing export). */
 export interface AdminTurn {
   role: 'user' | 'assistant'
   content: string
