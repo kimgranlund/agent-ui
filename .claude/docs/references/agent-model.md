@@ -13,8 +13,8 @@
 > [ADR-0208](../adr/0208-external-skill-repo-import-pack-library.md) (skill packs),
 > [ADR-0227](../adr/0227-context-shared-state-grammar-and-data-adoption.md) (the roster as a `DataSource`).
 > Sibling how-to: [state-and-persistence.md](./state-and-persistence.md) (where state lives and how it persists).
-> Written 2026-08-29 (Kim's ruling, planner seat) against main `9d2075df`; type names follow the
-> GH [#1699](https://github.com/kimgranlund/agent-ui/issues/1699) rename (in flight at authoring time, see §1).
+> Written 2026-08-29 (Kim's ruling, planner seat) against main `b371558a`, after the
+> GH [#1699](https://github.com/kimgranlund/agent-ui/issues/1699) rename landed (PR #1708); type names are the shipped ones.
 
 ## 0 · Route by question
 
@@ -50,9 +50,7 @@ Identity      AgentRecord (roster row)           agent-roster-source.ts
 **Identity.** `AgentRecord` is the roster row: `id`, `label`, `tagline`, optional `category`,
 a `seed` (the settings store's initial values), and the provenance markers `seedVersion`
 (presets only), `imported`, `createdAt`. The roster is a `DataSource` (`AgentRosterSource`, ADR-0227
-cl.4) whose one view is `AgentRosterView` = ordered agents + the active id. *Rename note:* until GH
-#1699 lands these read `PersonaRecord` / `PersonaRosterSource` / `PersonaRosterView` in
-`persona-roster-source.ts`; the new names are canonical from this doc onward. The header's
+cl.4) whose one view is `AgentRosterView` = ordered agents + the active id. The header's
 `AgentRosterEntry` (`agent-admin.ts`) is the component-side projection of the same row (`id`,
 `label`, `deletable?`), kept separate because the component cannot import site code.
 
@@ -108,7 +106,8 @@ header pointing here.
 ## 3 · Glossary
 
 - **agent** = **persona** = a preset or an import. One `AgentRecord`; "persona" survives only as a
-  human-facing tagline word in the UI, never as a type name or a doc noun (Kim's decision, 2026-08-29), "preset" means a shipped record (`seedVersion` set, not
+  human-facing tagline word in the UI, never as a type name or a doc noun (Kim's decision, 2026-08-29;
+  the record type was renamed from `PersonaRecord` to `AgentRecord` by GH #1699, PR #1708, 2026-08-29), "preset" means a shipped record (`seedVersion` set, not
   deletable), "import" means a user-minted one (`imported: true`, `createdAt` set).
 - **GM** (general manager): the team's leading agent, the one an `AgentTeam` names in `gmAgentId`;
   its prompt gains the `## Your team` block. The GM is an ordinary agent; nothing else marks it.
@@ -117,8 +116,7 @@ header pointing here.
   is the per-turn payload log.
 - **roster**: two senses, both about agents. The **agent roster** is the ordered `AgentRecord` list
   (`AgentRosterView`); the **team roster** is an `AgentTeam`'s `members`. A capability list is
-  never a roster: the composer's `@`/`/` option lists are `EntryRosters` (pre-#1699
-  `ComposerRosters`), an entry-side name.
+  never a roster: the composer's `@`/`/` option lists are `EntryRosters`, an entry-side name.
 - **pack**: two senses. A **skill pack** is the imported repo snapshot (`*.skillpack.json`,
   persisted whole as `skill-packs:<packId>`, ADR-0208 D1/D3). A **library pack** is the
   `EntryLibraryPack` it projects into beside the first-party packs (ADR-0208 D4); a library pack is
@@ -156,10 +154,10 @@ seam" block in `agent-admin-schema.ts` states a2ui's `Turn` is "deliberately NOT
 the comment is filed for repair (GH #1702) and this doc does not repeat its claim.
 
 **Site-side `Persona` literal vs the package record.** `site/pages/agent-admin-presets.ts`
-declares `Persona` with a literal `category: PresetCategory` union; the package's `AgentRecord`
-keeps `category` a bare string so the package never imports site vocabulary (comment on the record
-type). GH #1699 folds the site type into the package one (a direct import or a declared subset,
-the builder's call); until then the two are structurally compatible by construction.
+declares `Persona` as `Omit<AgentRecord, 'category'> & { category?: PresetCategory }`, a declared
+subset of the package record with the page's literal category union; the package's `AgentRecord`
+keeps `category` a bare string so the package never imports site vocabulary (comments on both
+types, GH #1699). One shape, one name; the site alias exists only for the narrowed category.
 
 **`RoutedContent` and the IndexedDB thresholds.** A `resource` entry's text over
 `RESOURCE_IDB_TEXT_THRESHOLD_CHARS` (4,000) routes to the IndexedDB tier (`agent-ui-resource-text`,
@@ -190,17 +188,17 @@ support.google.com/gemini/answer/15236321 (Gemini Gems "Knowledge").
 
 | Type | Source (under `packages/agent-ui/app/src/` unless stated) | Owning record |
 |---|---|---|
-| `AgentRecord`, `AgentRosterView`, `AgentRosterSource` | `controls/agent-admin/agent-roster-source.ts` (pre-#1699: `persona-roster-source.ts`) | ADR-0227 cl.4 |
+| `AgentRecord`, `AgentRosterView`, `AgentRosterSource` | `controls/agent-admin/agent-roster-source.ts` | ADR-0227 cl.4 |
 | `AgentRosterEntry`, `GenerateSeed` | `controls/agent-admin/agent-admin.ts` | LLD admin-three-pane-ia §16.3 |
 | `SettingsStore` | `controls/settings/store.ts` | app-surfaces-m4 LLD-C15 |
 | `AgentConfigSnapshot`, `AdminTurn`, `AdminTurnRequest`, `AdminAgentTurn`, `AdminAgentSurfaceTurn` | `controls/agent-admin/agent-admin-schema.ts` | ADR-0135, ADR-0136 |
 | `Entry`, `EntryLibraryPack`, `NewEntryInput`, `entriesStoreKey` | `controls/entry-list/entry-data.ts` | ADR-0132, ADR-0164 cl.2 |
-| `ENTRY_KINDS`, `composeSystemPrompt`, `composeLiveSystemPrompt`, `EntryRosters` (pre-#1699: `ComposerRosters`) | `controls/agent-admin/entries.ts` | ADR-0132 cl.6 |
+| `ENTRY_KINDS`, `composeSystemPrompt`, `composeLiveSystemPrompt`, `EntryRosters` | `controls/agent-admin/entries.ts` | ADR-0132 cl.6 |
 | `AgentTeam`, `AgentTeamMember` | `controls/agent-admin/agent-team.ts` | ADR-0203 |
 | `composeTeamPromptSection` | `controls/agent-admin/agent-team-prompt.ts` | ADR-0203 cl.2 |
 | `TeamDeclaration` | `packages/agent-ui/a2ui/src/agent/meta-line.ts` | ADR-0204 |
 | `RoutedContent`, `RESOURCE_IDB_TEXT_THRESHOLD_CHARS` | `controls/agent-admin/resource-idb-store.ts` | ADR-0193, ADR-0227 cl.5 exception |
 | `SkillPackSnapshot`, `SkillPackShelfSource` | `controls/agent-admin/skill-pack-store.ts` | ADR-0208 |
-| `Persona` (site literal) | `site/pages/agent-admin-presets.ts` | §4; folds into `AgentRecord` under #1699 |
+| `Persona` (site alias, a declared subset of `AgentRecord`) | `site/pages/agent-admin-presets.ts` | §4 |
 | `AgentTransport`, `Turn` | `packages/agent-ui/a2ui/src/agent/agent-transport.ts` | ADR-0069, ADR-0073 |
 | `DevtoolsEvent`, `DevtoolsCapture` | `packages/agent-ui/devtools/src/timeline/events.ts`, `capture/format.ts` | ADR-0200 |
