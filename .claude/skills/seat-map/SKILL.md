@@ -121,3 +121,12 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   From this seat, intake dispatches are record-only; the fix is a separate build dispatch.
   Upstream guard: claude-plugins#961 / PR claude-plugins#969 (docs 1.21.15) — distinct from this
   repo's own GH #969 cited above.
+- **Full-suite concurrency ceiling (2026-08-29, rigour plan C).** At most two dispatches may run
+  `npm test` (full suite) on this host at once, counted across every repo's seats, not just this
+  one's; a third queues. Before any full-suite run the dispatcher runs `flaky-gates`' zombie reap
+  (stale vitest/tsc workers with ppid 1). A red seen only under load is re-run once in isolation
+  before it counts as a regression. Instances: #1695, #1699, #1701; the fixed-timeout test is #1711.
+- **Foreign repos are record-only (2026-08-29, rigour plan K).** In a repo where this session is
+  not a registered peer in that repo's `fleet.json`, this seat mints records (file-bug /
+  file-task) and never authors a PR or claims a version slot; claude-plugins #966 lost the slot
+  race twice to that repo's own loop. Hand the fix to that repo's marshal through the record.

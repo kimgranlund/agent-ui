@@ -184,6 +184,14 @@
         "wall_applied": true,
         "wall_verified_via": "subprocess-spawn",
         "note": "fleet-bootstrap Phase 5 spawn (claude -p --model sonnet --effort high) into the pre-walled worktree kept from 2026-08-26 (wall re-verified on disk before spawn). I2 probe inside the child: (a) Write .claude/ops/.wall-probe-test DENIED ('No such tool available: Write. Write is disabled for this session'); (b) echo redirect to /tmp DENIED (PreToolUse hook: 'reviewer seat: Bash is gh-only, plus surgical edits to the three fleet-state files for retirement (lld-0006 C1a)'); (c) gh pr view 1693 PASSED. No locked spec in repo: STYLE-REVIEW-ONLY posture. Ongoing review work via teamwork/scripts/reviewer_scheduler.py spawns into this worktree. Row first mis-landed in the reviewer worktree's copy (orchestrator cwd drift after the spawn cd, fleet-rules Section 6 class); worktree copy reverted, row re-applied here."
+      },
+      {
+        "role": "orchestrator",
+        "mode": "host",
+        "date": "2026-08-29",
+        "action": "released",
+        "agent_name": "agent-ui-fleet-marshal-2026-08-21-resweep",
+        "reason": "hygiene (rigour plan I): a 2026-08-21 host-mode row under a non-schema role key, left standing beside the live agent row; released so the latest-row-per-role read is unambiguous. No session by that name is live (ListAgents)."
       }
     ],
     "loop_position": null,
