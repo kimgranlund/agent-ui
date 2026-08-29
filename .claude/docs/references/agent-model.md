@@ -108,7 +108,7 @@ header pointing here.
 ## 3 · Glossary
 
 - **agent** = **persona** = a preset or an import. One `AgentRecord`; "persona" survives only as a
-  human-facing tagline word in the UI, "preset" means a shipped record (`seedVersion` set, not
+  human-facing tagline word in the UI, never as a type name or a doc noun (Kim's decision, 2026-08-29), "preset" means a shipped record (`seedVersion` set, not
   deletable), "import" means a user-minted one (`imported: true`, `createdAt` set).
 - **GM** (general manager): the team's leading agent, the one an `AgentTeam` names in `gmAgentId`;
   its prompt gains the `## Your team` block. The GM is an ordinary agent; nothing else marks it.
@@ -136,8 +136,6 @@ header pointing here.
 - **team member**: one `AgentTeamMember` of an `AgentTeam`; the GM consults it by prose only. Across
   vendors the same role is a *subagent* (Claude Code, Google ADK) or a *handoff target* (OpenAI
   Agents SDK); this repo's word is member (vendor docs fetched 2026-08-29, §5).
-- **persona** (decision, Kim 2026-08-29): survives only as a human-facing tagline word in the UI,
-  never as a type name or a doc noun; the type is `AgentRecord`, the doc noun is agent.
 - **Co-pilot**: the builder-interview place (`[Chat | Settings | Co-pilot]`, ADR-0179 as amended by
   GH #686); "Author" is its retired name.
 
@@ -182,8 +180,9 @@ Reason: LLD admin-three-pane-ia §16.3's frozen seam shapes, restated in the typ
 
 The Knowledge and team-member mappings in §3 rest on vendor docs fetched 2026-08-29 (the marshal's
 fetch, cited by URL; re-check on any vendor rename):
-platform.claude.com/docs/en/managed-agents/overview ·
-openai.github.io/openai-agents-python/agents/ · adk.dev/get-started/about/ ·
+docs.claude.com/en/docs/claude-code/sub-agents (Claude Code subagents) ·
+support.claude.com/en/articles/9517075-what-are-projects (Claude Projects "project knowledge") ·
+openai.github.io/openai-agents-python/agents/ (OpenAI Agents SDK handoffs) · adk.dev/get-started/about/ (Google ADK) ·
 help.openai.com/en/articles/8554397 (ChatGPT GPTs "Knowledge") ·
 support.google.com/gemini/answer/15236321 (Gemini Gems "Knowledge").
 
