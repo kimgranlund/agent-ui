@@ -49,7 +49,7 @@
     "./agent-admin-resource-idb": "./src/controls/agent-admin/resource-idb-store.ts",
     "./agent-admin-skill-packs": "./src/controls/agent-admin/skill-pack-store.ts",
     "./agent-admin-team": "./src/controls/agent-admin/agent-team.ts",
-    "./agent-admin-roster-source": "./src/controls/agent-admin/persona-roster-source.ts",
+    "./agent-admin-roster-source": "./src/controls/agent-admin/agent-roster-source.ts",
     "./document-extraction": "./src/lib/document-extraction.ts",
     "./document-extraction-docx": "./src/lib/document-extraction-docx.ts",
     "./document-budget": "./src/lib/document-budget.ts"

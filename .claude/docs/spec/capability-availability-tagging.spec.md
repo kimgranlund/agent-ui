@@ -906,3 +906,9 @@ only, not a new requirement.
 | Slice | Scope | Gate (exit-code judged, foreground) | Depends on |
 |---|---|---|---|
 | **S9 — client-side auto-attach + re-teach** | SPEC-R16 · SPEC-R15 amendment (§13.2) | `conversation.test.ts` (R16 AC1–AC5) · `entries.test.ts` (the re-teach) · `npm run check && npm test` | none (code-independent; **ADR-0190 amendment proposed for Kim**, not a build gate — the mechanism does not depend on ratification, the amendment only records it) |
+
+---
+
+**Rename note (2026-08-29, GH #1699, append-only):** `buildComposerRosters`/`ComposerRosters`
+(`entries.ts`) cited above are renamed to `buildEntryRosters`/`EntryRosters` (hard rename, no
+alias) — `roster` in this codebase now names only the agent roster and the team roster.

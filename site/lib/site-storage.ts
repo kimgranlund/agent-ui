@@ -9,7 +9,7 @@
 // The return type is the SYNC-READABLE extension (ADR-0193 Amendment): `getSync` keeps the
 // pre-paint hydration reads (scheme/theme at shell build, nav-collapsed before first paint)
 // same-tick, so no flash of the wrong scheme; `set`'s body is also same-tick up to the promise
-// wrapper (the load-bearing property persona-roster-source.ts already states), so `void set(...)`
+// wrapper (the load-bearing property agent-roster-source.ts already states), so `void set(...)`
 // preserves the old write timing exactly.
 import { createLocalStorageAdapter, type SyncReadableStorageAdapter } from '@agent-ui/shared'
 

@@ -228,7 +228,7 @@ import {
   readCatalogEntries,
   isRegisteredCatalog,
   buildCapabilityRows,
-  buildComposerRosters,
+  buildEntryRosters,
   parseCapabilityRowId,
   composeSystemPrompt,
   composeLiveSystemPrompt,
@@ -3942,7 +3942,7 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /** GH #849/SPEC-R8 — each MAPPED kind's raw store slice + its MASTER switch, for the two reference
-   *  projections (`buildComposerRosters` for the menus, `resolveTurnReferences` at send). The
+   *  projections (`buildEntryRosters` for the menus, `resolveTurnReferences` at send). The
    *  `#capabilityGroups` division of labor exactly: this method does the FRESH store reads, `entries.ts`
    *  does the filter/sort/projection. Its own kind list rather than `#capabilityGroups`' — that one exists
    *  to compose PROMPT prose and excludes kinds for prompt-shaped reasons (double-injection, wire-threaded
@@ -4018,10 +4018,10 @@ export class UIAgentAdminElement extends UIElement {
    *  agent the user is not looking at behind the interview composer is a remote control nobody asked for
    *  (SPEC-N1's "composers beyond the chat context keep the props default-off this arc", applied). Absent
    *  ⇒ no trigger, no panel (the default-off law), so the interview composer is byte-unchanged. */
-  #syncComposerRosters(): void {
+  #syncEntryRosters(): void {
     const apply = (conversation: UIConversationElement | null, store: SettingsStore | undefined): void => {
       if (!conversation) return
-      const { mentionables, invocables } = buildComposerRosters(this.#referenceGroups(store))
+      const { mentionables, invocables } = buildEntryRosters(this.#referenceGroups(store))
       conversation.mentionables = mentionables
       conversation.invocables = invocables
     }
@@ -4108,7 +4108,7 @@ export class UIAgentAdminElement extends UIElement {
     // exactly what this method already reads (each kind's master switch) plus each kind's entries. Same
     // reasoning as the lint above: every path that can change either ends in a call to this method, so this
     // is the one place a fresh roster has to be built. Both composers, each from its own store.
-    this.#syncComposerRosters()
+    this.#syncEntryRosters()
   }
 
   /** GH #419 — stamp the non-blocking modality warning onto whichever ENABLED prompt sections name a

@@ -1,4 +1,4 @@
-// persona-roster-source.test.ts — ADR-0227 wave 1 (GH #1542): the roster source's own laws.
+// agent-roster-source.test.ts — ADR-0227 wave 1 (GH #1542): the roster source's own laws.
 // Three stakes: (1) PERSISTED-DATA COMPATIBILITY — the adapter-tier writes land on the EXACT raw keys
 // (and value forms) the retired hand-rolled agent-admin-presets.ts bookkeeping used, including the one
 // deliberate delta (the active id is JSON now, with an explicit tolerant read for the legacy RAW form);
@@ -13,17 +13,17 @@ import {
   PERSONA_ROSTER_NAMESPACE,
   ROSTER_ORDER_KEY,
   applyRosterOrder,
-  createPersonaRosterSource,
-  type PersonaRecord,
-  type PersonaRosterView,
-} from './persona-roster-source.ts'
+  createAgentRosterSource,
+  type AgentRecord,
+  type AgentRosterView,
+} from './agent-roster-source.ts'
 
-const shipped: PersonaRecord[] = [
+const shipped: AgentRecord[] = [
   { id: 'alpha', label: 'Alpha', tagline: 'first', seed: { name: 'Alpha' } },
   { id: 'beta', label: 'Beta', tagline: 'second', seed: { name: 'Beta' } },
 ]
 
-const imported = (id: string, label: string): PersonaRecord => ({
+const imported = (id: string, label: string): AgentRecord => ({
   id,
   label,
   tagline: `${label} tagline`,
@@ -41,8 +41,8 @@ beforeEach(clearNamespace)
 afterEach(clearNamespace)
 
 /** The default-adapter source — the production construction, so writes hit the REAL raw keys. */
-const source = (): ReturnType<typeof createPersonaRosterSource<PersonaRecord>> =>
-  createPersonaRosterSource<PersonaRecord>({ shipped })
+const source = (): ReturnType<typeof createAgentRosterSource<AgentRecord>> =>
+  createAgentRosterSource<AgentRecord>({ shipped })
 
 describe('persisted-data compatibility — the retired raw keys, byte-for-byte (ADR-0227 acceptance)', () => {
   it('the exported raw-key constants ARE the legacy key names', () => {
@@ -55,7 +55,7 @@ describe('persisted-data compatibility — the retired raw keys, byte-for-byte (
     const s = source()
     expect(s.importedSync().map((p) => p.id)).toEqual(['cust'])
     s.upsertImportedSync(imported('cust-2', 'Custom Two'))
-    expect(JSON.parse(localStorage.getItem(IMPORTED_PERSONAS_KEY)!).map((p: PersonaRecord) => p.id)).toEqual(['cust', 'cust-2'])
+    expect(JSON.parse(localStorage.getItem(IMPORTED_PERSONAS_KEY)!).map((p: AgentRecord) => p.id)).toEqual(['cust', 'cust-2'])
   })
 
   it('a legacy order record reads back; saveOrderSync rewrites the SAME key in the SAME form', () => {
@@ -120,7 +120,7 @@ describe('the roster laws, ported (GH #845/#848 — order · rename · delete)',
 
   it('removeImportedSync: sweeps ONLY `${id}.` keys (trailing-dot boundary), drops the record + order slot, fires onRemove', () => {
     const evicted: string[] = []
-    const s = createPersonaRosterSource<PersonaRecord>({ shipped, onRemove: (id) => evicted.push(id) })
+    const s = createAgentRosterSource<AgentRecord>({ shipped, onRemove: (id) => evicted.push(id) })
     s.upsertImportedSync(imported('travel', 'Travel'))
     s.upsertImportedSync(imported('travel-imported', 'Travel Imported'))
     s.saveOrderSync(['travel', 'alpha'])
@@ -161,7 +161,7 @@ describe('the DataSource verbs (ADR-0227 clause 4 — read · list · create · 
 
   it('create upserts (stamping imported: true); update renames under the rename law; remove deletes under the delete law', async () => {
     const s = source()
-    const created = await s.create({ ...imported('cust', 'Custom'), imported: undefined } as PersonaRecord, ctx)
+    const created = await s.create({ ...imported('cust', 'Custom'), imported: undefined } as AgentRecord, ctx)
     expect(created.imported, 'stamped').toBe(true)
     const renamed = await s.update('cust', { label: 'Custom Renamed' }, ctx)
     expect(renamed.label).toBe('Custom Renamed')
@@ -181,7 +181,7 @@ describe('the adoption mechanics — resource()/mutation() over the view sub-sou
     const store = createStore()
     const KEY = 'agent-admin/roster'
     store.commit(KEY, s.readViewSync())
-    const r = resource<PersonaRosterView<PersonaRecord>>(KEY, s.view, { store })
+    const r = resource<AgentRosterView<AgentRecord>>(KEY, s.view, { store })
     try {
       // SWR: the seeded value is served in the SAME tick — the page's first paint never waits.
       expect(r.status.peek()).toBe('success')

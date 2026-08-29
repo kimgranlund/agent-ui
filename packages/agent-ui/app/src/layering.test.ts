@@ -11,7 +11,7 @@ declare const process: { cwd(): string }
 //       the DAG (it sits at the top, nothing is above it) and never on itself via its own package name. The
 //       @agent-ui/code edge is ADR-0139's opened `app ← code` edge (ui-agent-admin's entry editors use
 //       @agent-ui/code/editor); the @agent-ui/data edge is ADR-0227 clause 4's activation of the edge
-//       ADR-0192 clause 1 reserved (persona-roster-source.ts, the package's first real consumer);
+//       ADR-0192 clause 1 reserved (agent-roster-source.ts, the package's first real consumer);
 //       app still never imports @agent-ui/router (the M4 named NC below stays intact).
 //   (2) no source under components/src or a2ui/src — the two inward packages app sits above — imports
 //       @agent-ui/app; the apex is never imported back by anything it depends on (SPEC-R1 AC2).
@@ -92,7 +92,7 @@ describe('import layering — app/src imports only down the DAG', () => {
   })
 
   // ADR-0227 clause 4 (GH #1542) — the edge ADR-0192 clause 1 reserved as "`app` MAY, later" is now
-  // ACTIVE: the persona roster (persona-roster-source.ts) is @agent-ui/data's first real consumer, so
+  // ACTIVE: the persona roster (agent-roster-source.ts) is @agent-ui/data's first real consumer, so
   // the old ADR-0192 named NC (which asserted this exact specifier was flagged) flips to a POSITIVE
   // control — the allowlist admits it by name, and the package.json dependency row matches.
   it('positive control: @agent-ui/data is an ADMITTED app/src import (ADR-0227 cl.4 — the activated ADR-0192 cl.1 edge)', () => {
@@ -101,8 +101,8 @@ describe('import layering — app/src imports only down the DAG', () => {
     expect(violations).toEqual([])
   })
 
-  it('and the real consumer exists: persona-roster-source.ts imports @agent-ui/data (the edge is used, not just opened)', () => {
-    const src = raw['./controls/agent-admin/persona-roster-source.ts']
+  it('and the real consumer exists: agent-roster-source.ts imports @agent-ui/data (the edge is used, not just opened)', () => {
+    const src = raw['./controls/agent-admin/agent-roster-source.ts']
     expect(src, 'the ADR-0227 wave-1 source module is in the scanned tree').toBeTruthy()
     expect(specifiersOf(src!).some((s) => s === '@agent-ui/data' || s.startsWith('@agent-ui/data/'))).toBe(true)
   })

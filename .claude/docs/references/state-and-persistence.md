@@ -180,3 +180,11 @@ reader shouldn't have to re-derive why a touch-point sits outside the grammar):
 [#1548](https://github.com/kimgranlund/agent-ui/pull/1548): deliberately left off the `DataSource`
 migration on exactly this basis; GH [#1549](https://github.com/kimgranlund/agent-ui/issues/1549)
 recorded it here rather than leaving the call undocumented.)
+
+---
+
+**Rename note (2026-08-29, GH #1699, append-only):** `persona-roster-source.ts`'s cited exports
+`PersonaRecord`/`PersonaRosterView`/`PersonaRosterSource`/`createPersonaRosterSource<P>()` are
+renamed to `AgentRecord`/`AgentRosterView`/`AgentRosterSource`/`createAgentRosterSource<P>()`
+(hard rename, no alias); the file is renamed to `agent-roster-source.ts`. Read every `Persona*`
+mention above as the current `Agent*` name.

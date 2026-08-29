@@ -19,7 +19,7 @@ import {
   INVOCABLE_KINDS,
   MENTIONABLE_KINDS,
   buildCapabilityRows,
-  buildComposerRosters,
+  buildEntryRosters,
   composeSystemPrompt,
   composeLiveSystemPrompt,
   hasAvailabilityMode,
@@ -645,7 +645,7 @@ function refGroup(kind: string, entries: Entry[], enabled = true): ReferenceGrou
   return { kind, entries, enabled }
 }
 
-describe('buildComposerRosters (GH #849/SPEC-R8) — the menu roster projection', () => {
+describe('buildEntryRosters (GH #849/SPEC-R8) — the menu roster projection', () => {
   const groups = (): ReferenceGroup[] => [
     refGroup(ENTRY_KINDS.resource, [
       entry({
@@ -667,7 +667,7 @@ describe('buildComposerRosters (GH #849/SPEC-R8) — the menu roster projection'
   ]
 
   it('AC1: exactly the ENABLED entries of master-on mapped kinds — BOTH availability modes, nothing else', () => {
-    const { mentionables, invocables } = buildComposerRosters(groups())
+    const { mentionables, invocables } = buildEntryRosters(groups())
     // `@` = Resources: both modes present, the disabled row absent.
     expect(mentionables.map((o) => o.id)).toEqual(['menu', 'brand'])
     // GH #891/SPEC-R9 — the projection now also carries this kind's own GLYPH (`icon`), the domain mapping
@@ -691,7 +691,7 @@ describe('buildComposerRosters (GH #849/SPEC-R8) — the menu roster projection'
   })
 
   it('AC1 (the other side): an entry of an UNMAPPED kind never reaches either roster', () => {
-    const rosters = buildComposerRosters([
+    const rosters = buildEntryRosters([
       refGroup(ENTRY_KINDS.promptSection, [entry({ id: 'foundation', kind: ENTRY_KINDS.promptSection, label: 'Foundation' })]),
       refGroup(ENTRY_KINDS.patternSource, [entry({ id: 'pack', kind: ENTRY_KINDS.patternSource, label: 'Pack' })]),
       refGroup(ENTRY_KINDS.catalog, [entry({ id: 'agent-ui', kind: ENTRY_KINDS.catalog, label: 'Default' })]),
@@ -700,7 +700,7 @@ describe('buildComposerRosters (GH #849/SPEC-R8) — the menu roster projection'
   })
 
   it('AC2: a relabeled entry carries the NEW label on the next build, with the SAME id', () => {
-    const before = buildComposerRosters(groups()).mentionables[0]!
+    const before = buildEntryRosters(groups()).mentionables[0]!
     const renamed = groups().map((g) =>
       g.kind === ENTRY_KINDS.resource
         ? refGroup(
@@ -709,14 +709,14 @@ describe('buildComposerRosters (GH #849/SPEC-R8) — the menu roster projection'
           )
         : g,
     )
-    const after = buildComposerRosters(renamed).mentionables[0]!
+    const after = buildEntryRosters(renamed).mentionables[0]!
     expect(before.label).toBe('Menu PDF')
     expect(after.label, 'display truth is read fresh per build — a rename needs no further wiring').toBe('Dinner menu')
     expect(after.id, 'the reference key never moves (GH #402)').toBe(before.id)
   })
 
   it('sorts each kind by `order`, ties by `id` — the composeSystemPrompt sort law', () => {
-    const { invocables } = buildComposerRosters([
+    const { invocables } = buildEntryRosters([
       refGroup(ENTRY_KINDS.skill, [
         entry({ id: 'c', kind: ENTRY_KINDS.skill, label: 'C', order: 1 }),
         entry({ id: 'a', kind: ENTRY_KINDS.skill, label: 'A', order: 0 }),
@@ -727,7 +727,7 @@ describe('buildComposerRosters (GH #849/SPEC-R8) — the menu roster projection'
   })
 
   it('GH #891/SPEC-R9: every capability kind projects its OWN glyph — and only mapped kinds get one', () => {
-    const rosters = buildComposerRosters([
+    const rosters = buildEntryRosters([
       refGroup(ENTRY_KINDS.resource, [entry({ id: 'r', kind: ENTRY_KINDS.resource, label: 'R' })]),
       refGroup(ENTRY_KINDS.skill, [entry({ id: 's', kind: ENTRY_KINDS.skill, label: 'S' })]),
       refGroup(ENTRY_KINDS.workflow, [entry({ id: 'w', kind: ENTRY_KINDS.workflow, label: 'W' })]),

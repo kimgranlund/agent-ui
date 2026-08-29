@@ -298,3 +298,11 @@ to an owning fact. Scope, verified against the shipped source:
 Nothing in the accepted body changes: clause 2's grammar is what this wave conformed to; clause 3's
 declined protocol and its fact-shaped re-trigger are untouched; clause 4 remains the wave-1 record.
 This amendment is descriptive (recording a shipped, gate-green build), not a new fork.
+
+---
+
+**Rename note (2026-08-29, GH #1699, append-only — no Decision text above is edited):** the wave-1
+`PersonaRosterSource`/`PersonaRecord`/`PersonaRosterView` names cited above are renamed to
+`AgentRosterSource`/`AgentRecord`/`AgentRosterView` (hard rename, no alias, per Kim's 2026-08-29
+ruling); the file `persona-roster-source.ts` is renamed to `agent-roster-source.ts`. Read every
+`Persona*` mention above as the current `Agent*` name.
