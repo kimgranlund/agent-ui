@@ -2,9 +2,10 @@
   "version": 1,
   "seats": {
     "agent": {
-      "tier": "sonnet+high",
-      "justification_date": "2026-08-23",
-      "mode": "manual"
+      "tier": "fable+medium",
+      "justification_date": "2026-08-29",
+      "mode": "manual",
+      "justification": "Kim's ruling 2026-08-29 (rigour plan I): the marshal terminal is launched on Fable in practice; retiered to match reality rather than log a standing deviation. Deviates from the 2026-08-22 canonical sonnet+high row; forks ride the session model at Fable price, accepted."
     },
     "reviewer": {
       "tier": "sonnet+high",
