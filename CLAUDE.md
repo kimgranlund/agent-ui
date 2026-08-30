@@ -28,7 +28,8 @@ Process `.claude/docs/process.md` · Standards `.claude/docs/references/` · `si
 `check` + `test` must be green before a change is done — judge by EXIT CODES, never by grepping
 output (a piped grep-count masked a red check and an OOM'd browser run, 2026-07-19). One ruled carve-out:
 a docs-only diff (`.claude/docs/**`, `*.md` outside a descriptor's `attributes[]` fence, code comments) gates on `doc_lint` + `check`, CI runs `test`
-(process.md §1, Kim 2026-08-29).
+(process.md §1, Kim 2026-08-29); one that touches an ADR title, an L1 descriptor, the ADR log, or the changelog also
+regenerates the sitemap indexes and runs `site/lib/sitemap.test.ts` (the 2026-08-30 carve-out, same section).
 
 ## Layout
 
