@@ -82,6 +82,20 @@ check, so each is a script or a probe, never an agent. Two speeds:
 The fast gates are wired as a hook so they fire without anyone remembering (required reliability →
 lifecycle boundary, not a sentence in a doc).
 
+**Docs-only diffs gate on `doc_lint` + `npm run check`, not a local `npm test` (Kim's ruling,
+2026-08-29, `.claude/ops/improvement-plan-2026-08-29.md` finding E).** A diff whose every hunk lands in `.claude/docs/**`, a `*.md` file, or a
+code comment (operationally: every changed line of the hunk lies inside a `//`, `/* */`, or `<!-- -->`
+span, with no non-comment token added or removed) has no behaviour for the Vitest suite to observe: the standing gate for it is the docs
+plugin's `doc_lint.py` on every touched document plus `npm run check` (tsc still parses a comment
+edit; `check:scripts` still runs the repo's script selftests), judged by exit code. A local `npm test`
+run is not required; CI on the PR stays the gate of record and its Vitest job still runs. Anything
+outside that set (a descriptor's `attributes[]` fence, a test file, a script) is a code diff and takes
+the full gate. Instance: PR #1700 (2026-08-29, the agent-model reference), whose one `.ts` hunk was a
+comment word; the planner seat's handback disclosed that its local Vitest run timed out under a
+load-average-130 host (`flaky-gates`: contention, not regression) and leaned on CI, which was green.
+That disclosure is what this rule now makes unnecessary for the docs-only class, and a seat that
+skips the local run for any other class is still deviating and still says so.
+
 **A gate is only as good as its negative control** — anchor each NC on a *unique* code token and confirm
 the mutation actually applied before trusting a green run (the full anchor discipline is owned by
 `break-down-problem`). And a green gate is not yet a landed change — read it, *then* commit as a separate

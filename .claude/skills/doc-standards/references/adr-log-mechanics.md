@@ -88,6 +88,42 @@ variant named above), adr-0058 (PR #1691 — a third drift-source variant: a liv
 re-measurement found the `success` remedy's original pin no longer cleared, with no other ADR and
 no script value involved at all).
 
+**The 5th shape: the phantom-tool citation (an ADR "verified with" a script that was never
+committed).** An ADR's Decision, Consequences, or Acceptance cites a verification tool by path
+("verified with `color-verify/contrast-check.py`", "gated by `scripts/x.py`") and the file has no git
+history in the repo at all (`git log --all -- <path>` is empty): the tool existed on an author's disk,
+in a scratch clone, or only in intent, and the ADR's evidence trail rests on it. Different from the
+4th shape: nothing superseded the claim and no value moved; the cited instrument never existed here,
+so every figure it "verified" is an unverifiable pin until re-derived by a method the repo can
+actually run. Against the table above the original Decision still stands (the choice was right; only
+its evidence citation was false), so it is the amendment row, never a supersession: the original text
+stays; a same-file `## Amendment` (a) states the
+citation is phantom and how that was established, (b) canonizes the replacement procedure by name
+so later amendments and revalidation firings cite one method, and (c) re-derives or explicitly
+declines to re-derive each pinned figure. For contrast pins the canonized manual procedure is
+OKLCH → OKLab → linear sRGB (Ottosson matrices) → relative luminance → WCAG contrast ratio, the
+method GH #1690 used.
+
+**Detecting it.** Grep every accepted ADR for tool paths in the verification vocabulary ("verified
+with", "gated by", "measured by", a `scripts/`/`tools/` path) and check each against `git log --all`;
+`harness:decision-watcher`'s revalidation mode surfaces the same thing as an `untestable` verdict
+when the sampled claim names an instrument the sampler cannot run.
+
+**Ramp-rework figure drift, the note that rides with it.** Once a phantom-verified pin is re-derived,
+the re-derivation often finds REAL drift with no other ADR and no script involved: a later token-ramp
+rework moved the underlying colours and the ADR's pinned figures never caught up, even where every
+pairing still clears its floor. adr-0059's PR #1696 re-audit (GH #1694) is the instance: hover-track
+ceiling 7.81 → 9.44:1, thumb-vs-fill light leg 4.79 → 4.66, thumb-vs-rail both legs off by about one
+full point, most likely from the 2026-07-10 neutral-ramp rework, corrected by append-only Amendment
+with no consequence (every pairing still clears SC 1.4.11's 3:1). A ramp rework is therefore a
+revalidation trigger for every ADR that pins a contrast figure, not only for the ones it breaks.
+
+[verified] 2 worked instances, both in this repo, both fixed via append-only `## Amendment`
+(2026-08-28; harvested from `.claude/ops/adr-queue.json`'s adr-0058/adr-0059 rows, cleared by the PR that
+landed this entry, PR #1712, 2026-08-29): adr-0058 (phantom citation found during PR #1691's re-pin, GH #1690; the
+citation corrected and the procedure canonized in PR #1693, GH #1692), adr-0059 (same correction in
+PR #1693; the full Decision-section re-audit under the canonized procedure in PR #1696, GH #1694).
+
 **How to add one.** Copy `0000-template.md` → `NNNN-<title>.md` at the next free number; fill
 Context · Decision · Consequences · Alternatives; set `Repairs:`; leave `Status: proposed` until
 Kim ratifies. There is no index row to add — the file IS the index entry. First check §1c (in
