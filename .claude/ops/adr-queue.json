@@ -6,20 +6,6 @@
       "kind": "harvest",
       "plan": "Home decided (Kim, 2026-08-28): grow .claude/skills/component-packaging via `/harness:make-pack .claude/skills/component-packaging` — one axis, the promotion seam's dual-maintained-CSS-drift class (ADR-0129 Amendment 2 as the worked instance; GH #1163 + ADR-0100 as the two misses). Command-only skill; Kim runs it.",
       "queued_at": "2026-08-25T17:57:12Z"
-    },
-    {
-      "adr_id": "adr-0067",
-      "evidence": "Amendment (2026-08-29, GH #1703): cl.1/cl.2's named a2ui-compose/a2ui-corpus-curate skills + a2ui-composer/a2ui-reviewer agent pair realized under different identifiers (7 a2ui-prefixed skills, a2ui-build-agent/a2ui-payload-authoring-agent/a2ui-review-agent + 3 shared seats) with no prior Amendment recording it -- a fresh (13th) worked instance of the already-tracked 4th shape (.claude/skills/doc-standards/references/adr-log-mechanics.md), found via the 2026-08-29T17:29:44Z revalidation sweep. Checked origin/main: no references/*.md cites adr-0067 yet (git grep, 0 hits).",
-      "kind": "harvest",
-      "plan": "",
-      "queued_at": "2026-08-30T00:20:00Z"
-    },
-    {
-      "adr_id": "adr-0069",
-      "evidence": "Amendment (2026-08-29, GH #1704): Decision cl.5's present-tense BrowserDirectTransport/VITE_ANTHROPIC_API_KEY claim recorded dropped -- no such class, env var, or anthropic-dangerous-direct-browser-access usage exists in packages/ or site/ source; ADR-0200's later three-backend seam (replay/proxy/a2a) claims no relation to cl.5. Same 4th-shape pattern as adr-0067, same 2026-08-29T17:29:44Z sweep. Checked origin/main: no references/*.md cites adr-0069 yet (git grep, 0 hits).",
-      "kind": "harvest",
-      "plan": "",
-      "queued_at": "2026-08-30T00:20:00Z"
     }
   ]
 }

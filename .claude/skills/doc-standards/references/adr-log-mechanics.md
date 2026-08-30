@@ -80,21 +80,26 @@ itself) has moved on without the body prose catching up — the source of the dr
 (a same-file restating `## Amendment`) doesn't (Kim's ruling, 2026-08-27).
 
 [verified] 14 worked instances, all in this repo, each fixed via its own append-only `## Amendment`
-(2026-08-21 through 2026-08-29): adr-0007 (Amendment 1, 2026-08-21, commit `21bea37c` — a direct
+(2026-08-21 through 2026-08-29; 13 landed and ratified, adr-0067's still `proposed`, pending Kim's
+ratification): adr-0007 (Amendment 1, 2026-08-21, commit `21bea37c` — a direct
 commit, no PR), adr-0017 (PR #1626), adr-0018 (PR #1625), adr-0021 (PR #1636), adr-0025
 (PR #1635), adr-0030 (PR #1679), adr-0032 (PR #1676), adr-0033 (PR #1678), adr-0035 (PR #1677),
 adr-0040 (PR #1688), adr-0049 (PR #1688, batched with adr-0040 — the script/comment-ladder-drift
-variant named above), adr-0058 (PR #1691 — a third drift-source variant: a live AA-contrast
+variant named above), adr-0058 (PR #1691, GH #1690 — a third drift-source variant: a live AA-contrast
 re-measurement found the `success` remedy's original pin no longer cleared, with no other ADR and
-no script value involved at all), adr-0067 (PR #1705, GH #1703 — a fourth drift-source variant:
-cl.1/cl.2 named an exact skill/agent roster and the estate was realized under different identifiers,
-7 `a2ui`-prefixed skills plus `a2ui-build-agent`/`a2ui-payload-authoring-agent`/`a2ui-review-agent`,
-with no Amendment recording the swap; the Amendment sits `proposed` pending Kim's ratification),
+no script value involved at all), adr-0067 (PR #1705, GH #1703 — the same no-other-ADR, no-script drift source as adr-0058, the
+drifted fact being identifiers rather than a measured value: cl.1/cl.2 named an exact skill/agent
+roster and the estate was realized under different identifiers, 7 `a2ui`-prefixed skills plus
+`a2ui-build-agent`/`a2ui-payload-authoring-agent`/`a2ui-review-agent`, with no Amendment recording
+the swap; the Amendment sits `proposed` pending Kim's ratification),
 adr-0069 (PR #1706, GH #1704 — Decision cl.5's present-tense `BrowserDirectTransport` /
 `VITE_ANTHROPIC_API_KEY` claim was never built and no successor claims it; ADR-0200's three-backend
-seam names no relation to cl.5, so the clause is recorded dropped, not superseded). Both of the last
-two were found by the 2026-08-29T17:29:44Z revalidation sweep and harvested from
-`.claude/ops/adr-queue.json`'s adr-0067/adr-0069 rows (cleared 2026-08-30 on this line landing).
+seam names no relation to cl.5, so the clause is recorded dropped, not superseded; the never-built
+sub-case of the shape: the recorded fact that moved on is the ADR's own provisioning intent,
+abandoned rather than replaced, counted here per Kim's 2026-08-30 ruling). Both of the last two were
+found by the 2026-08-29T17:29:44Z revalidation sweep and harvested from `.claude/ops/adr-queue.json`'s
+adr-0067/adr-0069 rows (queued by the 2026-08-30T00:20:00Z sweep-firing commit `4b322032`, cleared
+by PR #1715, the PR that landed this line).
 
 **The 5th shape: the phantom-tool citation (an ADR "verified with" a script that was never
 committed).** An ADR's Decision, Consequences, or Acceptance cites a verification tool by path
