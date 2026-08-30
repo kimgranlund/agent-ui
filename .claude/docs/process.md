@@ -83,8 +83,9 @@ The fast gates are wired as a hook so they fire without anyone remembering (requ
 lifecycle boundary, not a sentence in a doc).
 
 **Docs-only diffs gate on `doc_lint` + `npm run check`, not a local `npm test` (Kim's ruling,
-2026-08-29, rigour plan E).** A diff whose every hunk lands in `.claude/docs/**`, a `*.md` file, or a
-code comment has no behaviour for the Vitest suite to observe: the standing gate for it is the docs
+2026-08-29, `.claude/ops/improvement-plan-2026-08-29.md` finding E).** A diff whose every hunk lands in `.claude/docs/**`, a `*.md` file, or a
+code comment (operationally: every changed line of the hunk lies inside a `//`, `/* */`, or `<!-- -->`
+span, with no non-comment token added or removed) has no behaviour for the Vitest suite to observe: the standing gate for it is the docs
 plugin's `doc_lint.py` on every touched document plus `npm run check` (tsc still parses a comment
 edit; `check:scripts` still runs the repo's script selftests), judged by exit code. A local `npm test`
 run is not required; CI on the PR stays the gate of record and its Vitest job still runs. Anything
