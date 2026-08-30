@@ -203,7 +203,15 @@ function escapeRegExp(s) {
 
 /* ── Candidate discovery ──────────────────────────────────────── */
 
-/** Immediate children of `root` matching `<repoName>-<digits>(-suffix)?`. Never recurses. */
+/** Immediate children of `root` matching `<repoName>-<digits>(-suffix)?` (the dispatch_envelope
+ *  default naming), OR — ticket #1710 — a dispatch that named its own clone dir instead (a build
+ *  seat cutting a clone under its own name, e.g. `1699-clone`, missed entirely before this fix):
+ *  any immediate child containing a `.git` entry, or matching the bare `<digits>-clone` shape,
+ *  is also a candidate. Widening the match here (not the scan roots — #1710's own root-cause
+ *  finding: the roots already walk correctly, only this name filter was too narrow) is safe
+ *  because `classifyCandidate` independently verifies the candidate's `origin` against this
+ *  repo before ever proposing REAP — a foreign `.git` dir picked up here is filtered there as
+ *  `SKIP` (origin mismatch), never reaped on name-match alone. Never recurses. */
 function scanRoot(root, pattern) {
   const out = [];
   let entries;
@@ -211,7 +219,13 @@ function scanRoot(root, pattern) {
   for (const e of entries) {
     if (!e.isDirectory()) continue;
     const m = e.name.match(pattern);
-    if (m) out.push({ path: join(root, e.name), ticket: m[1] });
+    if (m) { out.push({ path: join(root, e.name), ticket: m[1] }); continue; }
+    const cloneShape = e.name.match(/^(\d+)-clone$/);
+    const hasGit = existsSync(join(root, e.name, '.git'));
+    if (cloneShape || hasGit) {
+      const ticket = cloneShape ? cloneShape[1] : (e.name.match(/(\d+)/)?.[1] ?? e.name);
+      out.push({ path: join(root, e.name), ticket });
+    }
   }
   return out;
 }
@@ -431,7 +445,20 @@ function selftest() {
   assert(found3.some((c) => c.path.endsWith('fixture-repo-300')), 'discovery: bounded harness-scratchpad walk finds a nested scratch clone');
   assert(!found3.some((c) => c.path.endsWith('fixture-repo-400')), 'discovery: a uid dir not prefixed claude- is never walked');
 
+  // #1710: the widened child match — a dispatch-named clone (`<digits>-clone`, not
+  // `<repoName>-<digits>`) with a real `.git` entry IS a candidate, independent of repoName;
+  // a same-shaped dir with no `.git` and no digits-clone suffix is not.
+  const widenRoot = mkdtempSync(join(tmpdir(), 'reap-scratch-clones-widen-'));
+  spawnSync('mkdir', ['-p', join(widenRoot, '1699-clone', '.git')]); // positive: digits-clone shape + .git
+  spawnSync('mkdir', ['-p', join(widenRoot, '1700-notes')]); // negative: plain dir, no .git, no digits-clone shape
+  const foundWiden = findCandidates([widenRoot], 'fixture-repo');
+  assert(foundWiden.some((c) => c.path.endsWith('1699-clone') && c.ticket === '1699'),
+    'discovery (#1710): a `<digits>-clone` dir with `.git` is a candidate, ticket extracted from its own name');
+  assert(!foundWiden.some((c) => c.path.endsWith('1700-notes')),
+    'discovery (#1710): a non-git dir under the same root that is not `<digits>-clone`-shaped is never a candidate');
+
   rmSync(discRoot, { recursive: true, force: true });
+  rmSync(widenRoot, { recursive: true, force: true });
 
   /* ── Classification: real local git fixtures (file:// origin, no network) ── */
   const scratch = mkdtempSync(join(tmpdir(), 'reap-scratch-clones-selftest-'));
