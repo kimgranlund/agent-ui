@@ -95,14 +95,14 @@ comment word; the planner seat's handback disclosed that its local Vitest run ti
 load-average-130 host (`flaky-gates`: contention, not regression) and leaned on CI, which was green.
 That disclosure is what this rule now makes unnecessary for the docs-only class, and a seat that
 skips the local run for any other class is still deviating and still says so. *Carve-out (2026-08-30,
-the generated indexes):* a docs-only diff that touches an ADR title or status, a component descriptor
-(`{name}.md`), the ADR log, or the changelog also feeds `site/public/{sitemap,adr-index,changelog-index}.json`
-(+ the `site/sitemap.json` copy), and `site/lib/sitemap.test.ts` G1 requires those files byte-identical
-to a fresh generation from their sources ("a descriptor/manifest/ADR-log/changelog edit without a
-regeneration fails here"). Such a diff runs `node scripts/generate-sitemap.mjs`, commits the regenerated
-indexes in the same PR, and runs `npx vitest run site/lib/sitemap.test.ts` as its proof. Instance: PR #1700
-retitled ADR-0179, the docs-only gate skipped the local Vitest run that carries G1, and `main` went red
-until commit `868ac32c` regenerated `adr-index.json`.
+the generated indexes):* a docs-only diff that touches an ADR title, a component descriptor under
+`packages/agent-ui/components/src/controls` or `packages/agent-ui/code/src` (the generator's `L1_TREES`), the
+ADR log, or the changelog runs `node scripts/generate-sitemap.mjs`, commits the regenerated indexes in
+the same PR, and runs `npx vitest run site/lib/sitemap.test.ts` as its proof, because that test's G1
+holds the indexes byte-identical to a fresh generation ("a descriptor/manifest/ADR-log/changelog edit
+without a regeneration fails here", `site/lib/sitemap.test.ts` header). Instance: PR #1700 retitled
+ADR-0179, the docs-only gate skipped the local run carrying G1, and `main` went red until `868ac32c`
+regenerated `adr-index.json`. An ADR status edit is not a trigger: the generator does not parse Status.
 
 **A gate is only as good as its negative control** — anchor each NC on a *unique* code token and confirm
 the mutation actually applied before trusting a green run (the full anchor discipline is owned by
