@@ -34,6 +34,23 @@ export type TurnEndStatus = 'ok' | 'error' | 'halt'
 export const DEVTOOLS_EVENT_KINDS = ['turn-start', 'line', 'meta', 'client', 'render', 'turn-end', 'error'] as const
 export type DevtoolsEventKind = (typeof DEVTOOLS_EVENT_KINDS)[number]
 
+/** Both spellings Claude Code has used for the subagent-invoking tool: `Task` (the pre-v2.1.63 name,
+ *  still emitted in `system:init`'s tools list and `permission_denials[].tool_name`) and `Agent` (the
+ *  v2.1.63 rename, emitted in `tool_use` blocks — code.claude.com/docs/en/agent-sdk/subagents, fetched
+ *  2026-08-29). GH #1701: no call site in this package currently classifies on either name — this
+ *  package's `DevtoolsEvent` vocabulary above carries no tool-name field at all — but any future
+ *  subagent-tool classification (here or in `@agent-ui/app`) must go through this one constant/guard
+ *  rather than a fresh literal, so a second SDK rename never needs a second sweep. */
+export const SUBAGENT_TOOL_NAMES = ['Task', 'Agent'] as const
+export type SubagentToolName = (typeof SUBAGENT_TOOL_NAMES)[number]
+
+/** `true` when `name` is either spelling Claude Code has used for the subagent-invoking tool. The
+ *  single guard any future classification call site (here or in `@agent-ui/app`) must route through
+ *  instead of a fresh `=== 'Task'`/`=== 'Agent'` literal (GH #1701). */
+export function isSubagentToolName(name: string): name is SubagentToolName {
+  return (SUBAGENT_TOOL_NAMES as readonly string[]).includes(name)
+}
+
 /** The shared envelope: `seq` contiguous from 0 per timeline; `at` an ISO-8601 timestamp (injectable in
  *  `recordTurn` for deterministic tests — NEVER part of the replay contract, which is `seq`-ordered
  *  `line` payloads only, ADR-0200 Consequences' determinism law). */
