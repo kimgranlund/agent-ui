@@ -106,3 +106,26 @@ the proxy is stateless; the surface continues via the existing host.**
   touching the renderer.
 - **Only single-turn (no round-trip).** Rejected: it drops the rung's entire payoff — "the agent
   continues"; a rendered surface that can't feed the agent back is a screenshot, not a live agent.
+
+## Amendment (2026-08-30, **proposed** — Kim ratifies) — Clause 5's cross-turn cap and session state machine were never built; dropped
+
+Decision clause 5 named a cross-turn "demo-level max-turns cap" and an explicit session state
+machine (`idle → generating(turn N) → streaming → awaiting-interaction → (client message →
+reducer) → generating(turn N+1) → …`, halting at the cap). Neither exists in the implementation.
+A grep of `packages/agent-ui/a2ui/src/agent/session.ts`, `produce.ts`, `agent-transport.ts`,
+`a2ui-live.ts`, and `a2ui-agent.ts` for `maxTurns`, `turnCount`, and the named state labels
+returns zero hits.
+
+Clauses 1-4 remain confirmed live: `session.ts` is headed ADR-0072, `frameClientMessage` handles
+`action`/`functionResponse`/`error` exactly as decided, and the proxy is stateless per
+`dev-proxy-plugin.ts`.
+
+The guards that DO ship are per-generation, not cross-turn: ADR-0070's `maxRounds` (the
+intra-turn self-correct loop) and GH #49's tool-loop round cap. Both bound a single generation;
+neither ceilings the turn count across a session.
+
+Kim ruled DROP (2026-08-30): clause 5's cross-turn cap and session state machine are not built
+and not planned. No future ticket exists for a cross-turn cap.
+
+Source: the 2026-08-30T00:20:00Z decision-watcher revalidation sweep, verdict falsified on
+`adr-0072` clause 5 (`.claude/ops/revalidation-queue.json`, `claim_id: adr-0072`). GH #1713.
