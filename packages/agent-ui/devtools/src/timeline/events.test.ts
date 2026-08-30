@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent/agent-transport'
 import { formatErrorLine } from '@agent-ui/a2ui/agent/meta-line'
-import { recordTurn, serializeDevtoolsEvent } from './events.ts'
+import { recordTurn, serializeDevtoolsEvent, isSubagentToolName, SUBAGENT_TOOL_NAMES } from './events.ts'
 import type { DevtoolsEvent } from './events.ts'
 import { scriptTransport } from '../transports/replay.ts'
 
@@ -97,5 +97,29 @@ describe('recordTurn (SPEC-R7)', () => {
     const end = out.at(-1)!
     expect(end.kind).toBe('turn-end')
     if (end.kind === 'turn-end') expect(end.ms).toBe(steppingClock() - 25 - 25) // start=25, end=50 → ms=25
+  })
+})
+
+// GH #1701: Claude Code v2.1.63 renamed the subagent-invoking tool from `Task` to `Agent`; SDKs now
+// emit `Agent` in `tool_use` blocks but still emit `Task` in `system:init`'s tools list and
+// `permission_denials[].tool_name`. This package's own `DevtoolsEvent` vocabulary has no tool-name
+// field to misclassify (confirmed: no literal `Task`/`Agent` tool-name match anywhere in
+// `packages/agent-ui/devtools/src` or `packages/agent-ui/app/src`), so there is no existing call site
+// to fix — this locks the one shared guard any future classification must route through instead of a
+// fresh literal.
+describe('isSubagentToolName (GH #1701)', () => {
+  it('classifies both the pre- and post-v2.1.63 spellings as the subagent tool', () => {
+    expect(isSubagentToolName('Task')).toBe(true)
+    expect(isSubagentToolName('Agent')).toBe(true)
+  })
+
+  it('rejects an unrelated tool name', () => {
+    expect(isSubagentToolName('Bash')).toBe(false)
+    expect(isSubagentToolName('task')).toBe(false) // case-sensitive — SDKs emit exact-cased names
+  })
+
+  it('SUBAGENT_TOOL_NAMES carries exactly the two known spellings, and isSubagentToolName is derived from it', () => {
+    expect(SUBAGENT_TOOL_NAMES).toStrictEqual(['Task', 'Agent'])
+    for (const name of SUBAGENT_TOOL_NAMES) expect(isSubagentToolName(name)).toBe(true)
   })
 })
