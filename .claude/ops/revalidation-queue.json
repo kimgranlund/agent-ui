@@ -1,18 +1,11 @@
 {
   "candidates": [
     {
-      "claim_id": "adr-0067",
-      "evidence": "Decision cl.1/cl.2 name an exact, now-stale harness roster: TWO skills (a2ui-compose, a2ui-corpus-curate) and ONE maker/critic agent pair (a2ui-composer, a2ui-reviewer), realized as such per the archived .claude/docs/archive/a2ui-expert-system/NEXT.md snapshot (2026-07-04/08). Current live corpus (2026-08-29) carries SEVEN a2ui-prefixed skills (a2ui-build, a2ui-catalog-rendering-review, a2ui-corpus-curation, a2ui-multi-catalog, a2ui-payload-authoring, a2ui-prompt-authoring, a2ui-review-standards) and agents named a2ui-build-agent/a2ui-payload-authoring-agent/a2ui-review-agent (plus component-build-agent/example-authoring-agent/repo-orchestrator-agent) -- none literally named a2ui-compose/a2ui-corpus-curate/a2ui-composer/a2ui-reviewer. No later ADR documents this reorganization: grepped .claude/docs/adr for the current names, only incidental citations (ADR-0207/0212/0226) turned up, none an Amendment or Supersession of adr-0067; adr-0067's own body carries no Amendment section and its header's Supersedes/Superseded-by cell names only ADR-0060/the streaming LLD, not a harness-roster repoint. Same '4th shape' (header/body drift left unrestated) doc-standards/adr-log-mechanics.md already tracks 12 instances of, but this is a fresh, not-yet-recorded 13th -- the underlying capability (payload authoring, corpus curation, review) is clearly still alive, only the specific skill/agent identifiers this Decision names are stale. (Table dialect, no owner field -> unassigned, unattended fallback-fan-out firing per this dispatch's own note, no human present.)",
+      "claim_id": "adr-0072",
+      "evidence": "Clauses 1-4 confirmed live verbatim (session.ts headed 'ADR-0072', frameClientMessage handles action/functionResponse/error exactly as decided; the proxy is stateless per dev-proxy-plugin.ts). Clause 5 is FALSIFIED: the described cross-turn 'demo-level max-turns cap' and its named state machine (idle -> generating(turn N) -> streaming -> awaiting-interaction -> ...) do not exist anywhere in the implementation -- grepped session.ts, produce.ts, agent-transport.ts, a2ui-live.ts, a2ui-agent.ts for maxTurns/turnCount/turns.length-cap/the named state labels: zero hits. The only caps that DO exist are per-generation (ADR-0070's maxRounds intra-turn self-correct loop, GH #49's tool-loop round cap) -- a different, narrower guard than the cross-turn session ceiling clause 5 names. (Table dialect, no owner field -> unassigned, unattended fallback-fan-out firing, no human present.)",
       "kind": "falsified",
       "owner": "unassigned",
-      "queued_at": "2026-08-29T17:29:44Z"
-    },
-    {
-      "claim_id": "adr-0069",
-      "evidence": "Clauses 1-4/6 confirmed live: AgentTransport interface + RecordedTransport (packages/agent-ui/a2ui/src/agent/agent-transport.ts, recorded-transport.ts) and a dev-proxy path both exist and are still consumed (devtools/src/transports/proxy.ts). Clause 5 is FALSIFIED: 'A BrowserDirectTransport ... is provisioned behind the same seam ... The .env's VITE_ variant makes it a real provisioned dev path, not a paste-a-key hypothetical' -- present tense, claiming an already-real artifact. No BrowserDirectTransport class, no VITE_ANTHROPIC_API_KEY reference, and no anthropic-dangerous-direct-browser-access usage exist anywhere in packages/ or site/ source (only an incidental hit inside a built site/.fixture-scratch bundle asset, not source). ADR-0200 (ratified 2026-08-17) later built the actual 'three backends behind one AgentTransport seam' generalization CLAUDE.md cites, but its three backends are replay/proxy/a2a (packages/agent-ui/devtools/src/transports/backends.ts) -- no browser-direct/client-key backend, and ADR-0200's header names no relation to ADR-0069 or its clause 5 at all. adr-0069 itself carries no Amendment recording the drop. (Table dialect, no owner field -> unassigned, unattended fallback-fan-out firing, no human present.)",
-      "kind": "falsified",
-      "owner": "unassigned",
-      "queued_at": "2026-08-29T17:29:44Z"
+      "queued_at": "2026-08-30T00:20:00Z"
     }
   ]
 }
