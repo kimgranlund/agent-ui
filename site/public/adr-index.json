@@ -1241,7 +1241,7 @@
   {
     "name": "ADR-0179",
     "url": "./adr-index.html#adr-0179",
-    "description": "agent-admin three-pane IA: [Chat | Author | Settings] as first-class places, place-based context routing, the wide-width settings pairing",
+    "description": "agent-admin three-pane IA: [Chat | Settings | Co-pilot] as first-class places, place-based context routing, the wide-width settings pairing",
     "level": "L3",
     "section": "Records"
   },
