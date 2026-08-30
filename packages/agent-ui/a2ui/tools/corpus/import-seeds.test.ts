@@ -23,7 +23,7 @@
 // corpus data dir — while the script itself, the seed shelf and every `src/corpus` module resolve
 // relative to the real file, so the code under test is the shipped code.
 
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, afterAll, vi } from 'vitest'
 import { spawnSync } from 'node:child_process'
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, existsSync, readdirSync, cpSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -279,6 +279,16 @@ describe('dispositionAllowlistSnippet — a paste-ready DISPOSITION_ALLOWLIST en
 // clause-4 unjudged-halt case (the REAL script, a PLANTED archive refusal, a throwaway repo root) —
 // same subprocess tier, same deleted-call-site sensitivity, no real-corpus exposure. ──
 describe('import-seeds main() wiring — a real subprocess run proves arg-parsing runs before any fs work', () => {
+  // GH #1711: this block spawns a real `node` subprocess per test (~200ms uncontended per the last
+  // measured run) — the 5000ms vitest default reds under host contention. Raised per the GH #347
+  // REAL-TIMING HEADROOM precedent (`vi.setConfig({ testTimeout })`), scoped to this describe (not
+  // file-wide — the pure-helper blocks above finish in low single-digit ms and need no headroom) and
+  // reset in afterAll so it never leaks into a sibling describe in this file.
+  vi.setConfig({ testTimeout: 30_000 })
+  afterAll(() => {
+    vi.resetConfig()
+  })
+
   const repoRoot = process.cwd()
   const shardPath = `${repoRoot}/packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`
   const indexPath = `${repoRoot}/packages/agent-ui/a2ui/corpus/index.json`
@@ -346,6 +356,14 @@ describe('import-seeds main() wiring — a real subprocess run proves arg-parsin
 // behaviour against the real tree; this block proves the write behaviour the real tree must never
 // exercise in a test. ──
 describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 fail-closed guard, real subprocess runs against a sandbox repo root', () => {
+  // GH #1711: same subprocess-per-test shape as the block above (~200-1100ms uncontended per the
+  // last measured run, including the nested GH #1346 sub-block below — its runtimes don't warrant a
+  // separate budget of their own), scoped the same way for the same reason.
+  vi.setConfig({ testTimeout: 30_000 })
+  afterAll(() => {
+    vi.resetConfig()
+  })
+
   const REAL_ROOT = process.cwd()
   const SCRIPT = join(REAL_ROOT, 'packages/agent-ui/a2ui/tools/corpus/import-seeds.ts')
   const RUBRIC = '.claude/docs/rubrics/a2ui-corpus.md'
