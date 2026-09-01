@@ -25,19 +25,14 @@ jobs:
           fetch-depth: 1
 
       - name: Run Claude Code Review
-        id: claude-review
-        # No continue-on-error: claude-review is the REQUIRED check on main (branch protection,
-        # 2026-09-01) — an errored review must read as a red check, never a silent green. If the
-        # action is down, an admin merge (enforce_admins: false) is the deliberate escape hatch.
-        # Pinned to a release SHA (v1.0.211): this job holds ANTHROPIC_API_KEY and an
-        # inline-comment tool grant; a floating @v1 is supply-chain surface.
-        uses: anthropics/claude-code-action@cf44f7fa4886f7aea5dae9774caef8ae6ccebf81  # v1.0.211
+        uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}   # was: claude_code_oauth_token
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          allowed_bots: 'adiahealth'
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
           prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
-          # Effort goes through the settings input — inline JSON in claude_args loses its quotes
-          # at arg-split time and crashes the run (learned 0dbccb69; keep it here).
-          settings: '{"effortLevel": "low"}'
-          claude_args: '--model claude-fable-5 --allowedTools "mcp__github_inline_comment__create_inline_comment"'
+          # Effort goes through the settings input — inline JSON in claude_args
+          # loses its quotes at arg-split time and crashes the run.
+          settings: '{"effortLevel": "xhigh"}'
+          claude_args: '--model claude-sonnet-5 --allowedTools "mcp__github_inline_comment__create_inline_comment"'
