@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+# Deterministic PR gate: check + jsdom tests on every push, not just on builders' machines.
+# Before this workflow, `npm run check`/`npm test` ran solely locally (red-under-load three
+# times this week) and at publish time — the #1700 sitemap-drift regression reached main
+# because no PR CI ran site/lib/sitemap.test.ts. This job is the mechanical backstop;
+# claude-review stays the separate semantic check. Never test:browser here — the six-shard
+# real-engine gate is deliberately local-only per CLAUDE.md.
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run standing gate (tsc + check:site + check:tools + check:scripts)
+        run: npm run check
+
+      - name: Run jsdom test suite
+        run: npm test
