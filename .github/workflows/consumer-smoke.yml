@@ -34,6 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      issues: write
     steps:
       - uses: actions/checkout@v4
 
@@ -52,3 +53,7 @@ jobs:
         env:
           DISPATCH_VERSION: ${{ inputs.version }}
         run: node scripts/verify-consumer-install.mjs "$DISPATCH_VERSION"
+
+      - name: Report CI failure
+        if: failure()
+        uses: ./.github/actions/report-ci-failure
