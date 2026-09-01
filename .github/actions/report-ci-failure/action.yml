@@ -1,0 +1,53 @@
+# report-ci-failure — shared `if: failure()` reporter for a workflow whose red run blocks nothing
+# and pushes nothing (GH #1722): consumer-smoke.yml, publish.yml, deploy-docs.yml,
+# theme-provider-fixture-regen.yml. `claude-code-review.yml` and `ci.yml` stay OUT of scope — their
+# failures already block a PR visibly, so they need no separate reporting loop.
+#
+# Opens (or comments on, never duplicates) a `bug` + `ci-failure`-labeled issue titled
+# `[ci-failure] <workflow>` — a stable marker this action searches on before creating a new one —
+# carrying the workflow name, run URL, head SHA, and conclusion. The `ci-failure` label is created
+# if absent. A calling job needs `issues: write` added to its own `permissions:` (minimal, on top
+# of whatever it already declares) and a final step:
+#
+#   - name: Report CI failure
+#     if: failure()
+#     uses: ./.github/actions/report-ci-failure
+name: Report CI failure
+description: >-
+  Opens or updates a ci-failure-labeled issue for this workflow's red run (GH #1722).
+runs:
+  using: composite
+  steps:
+    - name: Open or update ci-failure issue
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        REPO: ${{ github.repository }}
+        WORKFLOW_NAME: ${{ github.workflow }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        HEAD_SHA: ${{ github.sha }}
+        CONCLUSION: ${{ job.status }}
+      run: |
+        set -euo pipefail
+
+        # Idempotent — a label that already exists is left untouched (--force updates
+        # color/description in place rather than erroring).
+        gh label create ci-failure --repo "$REPO" --color d93f0b \
+          --description "A workflow run failed with nothing else to catch it (GH #1722)" --force
+
+        TITLE="[ci-failure] ${WORKFLOW_NAME}"
+        BODY=$(printf 'Workflow: %s\nRun: %s\nHead SHA: %s\nConclusion: %s\n' \
+          "$WORKFLOW_NAME" "$RUN_URL" "$HEAD_SHA" "$CONCLUSION")
+
+        # Dedup by the stable title marker — search open issues, exact-match the title (search is
+        # fuzzy), comment on the first hit instead of opening a duplicate.
+        EXISTING=$(gh issue list --repo "$REPO" --state open --label ci-failure \
+          --search "\"${TITLE}\" in:title" --json number,title \
+          --jq "[.[] | select(.title == \"${TITLE}\")][0].number // empty")
+
+        if [ -n "$EXISTING" ]; then
+          gh issue comment "$EXISTING" --repo "$REPO" --body "$BODY"
+          echo "Commented on existing issue #${EXISTING}"
+        else
+          gh issue create --repo "$REPO" --title "$TITLE" --body "$BODY" --label bug,ci-failure
+        fi

@@ -39,6 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      issues: write
     steps:
       - uses: actions/checkout@v4
 
@@ -85,3 +86,7 @@ jobs:
             DRY_RUN_FLAG="--dry-run"
           fi
           node scripts/publish/publish-packages.mjs "$RESOLVED_VERSION" $DRY_RUN_FLAG
+
+      - name: Report CI failure
+        if: failure()
+        uses: ./.github/actions/report-ci-failure
