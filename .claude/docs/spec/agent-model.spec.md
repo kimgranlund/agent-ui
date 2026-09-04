@@ -358,8 +358,8 @@ Owner: ADR-0193 cl.2, cl.3, Amendment A1; ADR-0208 D3; ADR-0227 cl.2.
 **SPEC-R35 (why each duplicate shape exists).** Four seams are deliberate and stay:
 1. `AdminTurn`/`AdminTurnRequest` are declared in `agent-admin-schema.ts` rather than importing a2ui's
    `Turn`/`TurnInput` because the packaged component binds to no transport type (ADR-0136's posture); a2ui's
-   `Effort` union duplicates `EffortLevel` because `a2ui` may never import `app`. The stale comment claiming a2ui's
-   `Turn` is not a package export is filed as GH #1702; this SPEC does not repeat that claim.
+   `Effort` union duplicates `EffortLevel` because `a2ui` may never import `app`. The remaining stale comment claiming
+   a2ui's transport is not a package export is recorded in §8 item 5; this SPEC does not repeat that claim.
 2. `AgentRosterEntry` (component) versus `AgentRecord` (package data) exists because the component cannot import site
    code (SPEC-R3).
 3. The site's `Persona` is `Omit<AgentRecord, 'category'> & { category?: PresetCategory }`: one shape, one name, the
@@ -507,6 +507,7 @@ red on this document, not on the tree.
    namespace; the ADR's "no new storage tier" holds.
 4. The reference's Appendix A omits `SkillPackSource`, `AgentTeamSource`, and `AgentTeamValidationError`
    (ADR-0227 wave 2).
-5. `agent-admin-schema.ts`'s surface-turn header still says the a2ui transport is "deliberately NOT a package
-   export"; filed as GH #1702, not repeated here.
+5. `agent-admin-schema.ts` carried two stale "deliberately NOT a package export" comments. The ALM-C2 instance was
+   fixed by GH #1702 / PR #1707; this surface-turn instance (`agent-admin-schema.ts:811`) was missed by that repair
+   and has no open tracker. Not repeated here.
 6. `RESOURCE_IDB_TEXT_THRESHOLD_CHARS` (4,000) is justified in a module header only; an ADR clause would close it.
