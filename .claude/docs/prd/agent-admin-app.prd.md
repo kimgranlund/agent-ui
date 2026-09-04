@@ -75,6 +75,8 @@ retired name, vocabulary fixed 2026-08-29 per [references/agent-model.md](../ref
 catalog-schema content composed at derive-time ([ADR-0172](../adr/0172-persona-catalog-composition-intake.md)).
 Agent state persists through the shared storage-adapter seam
 ([ADR-0193](../adr/0193-shared-storage-adapter-seam.md)).
+The locked architecture contract for the record, its lifecycle, capabilities, composition, turn seam, and
+teams is [spec/agent-model.spec.md](../spec/agent-model.spec.md) (GH #1725).
 
 ### 3.2 Builder interview (PRD-G2)
 
