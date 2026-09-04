@@ -13,6 +13,8 @@
 > [ADR-0208](../adr/0208-external-skill-repo-import-pack-library.md) (skill packs),
 > [ADR-0227](../adr/0227-context-shared-state-grammar-and-data-adoption.md) (the roster as a `DataSource`).
 > Sibling how-to: [state-and-persistence.md](./state-and-persistence.md) (where state lives and how it persists).
+> Ruling contract (2026-09-04, GH #1725): [spec/agent-model.spec.md](../spec/agent-model.spec.md) locks the six layers,
+> lifecycles, tiers, and seams this map describes; on any conflict that SPEC and the source it cites win over this page.
 > Written 2026-08-29 (Kim's ruling, planner seat) against main `b371558a`, after the
 > GH [#1699](https://github.com/kimgranlund/agent-ui/issues/1699) rename landed (PR #1708); type names are the shipped ones.
 
@@ -105,7 +107,7 @@ header pointing here.
 
 ## 3 · Glossary
 
-- **agent** = **persona** = a preset or an import. One `AgentRecord`; "persona" survives only as a
+- **agent** = **persona** = a preset or an import (the record contract: [spec/agent-model.spec.md](../spec/agent-model.spec.md) SPEC-R1). One `AgentRecord`; "persona" survives only as a
   human-facing tagline word in the UI, never as a type name or a doc noun (Kim's decision, 2026-08-29;
   the record type was renamed from `PersonaRecord` to `AgentRecord` by GH #1699, PR #1708, 2026-08-29), "preset" means a shipped record (`seedVersion` set, not
   deletable), "import" means a user-minted one (`imported: true`, `createdAt` set).
