@@ -509,5 +509,5 @@ red on this document, not on the tree.
    (ADR-0227 wave 2).
 5. `agent-admin-schema.ts` carried two stale "deliberately NOT a package export" comments. The ALM-C2 instance was
    fixed by GH #1702 / PR #1707; this surface-turn instance (`agent-admin-schema.ts:811`) was missed by that repair
-   and has no open tracker. Not repeated here.
+   and is resolved by GH #1727. Not repeated here.
 6. `RESOURCE_IDB_TEXT_THRESHOLD_CHARS` (4,000) is justified in a module header only; an ADR clause would close it.

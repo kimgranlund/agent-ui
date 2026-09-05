@@ -807,11 +807,14 @@ export interface AdminTurnRequest {
 }
 
 // ── the SURFACE-capable live turn (TKT-0076/ADR-0138) ────────────────────────────────────────────────
-// The same SPEC-N1 discipline as AdminTurn above: the a2ui producer transport (agent-transport.ts) is
-// deliberately NOT a package export, so this surface declares its OWN seam. The RUNNER (a site-page
-// injection, admin-live-runner.ts) owns everything transport-shaped — the a2ui `Session` transcript,
-// the ADR-0088 meta-line peel, the provider pairing — and streams back a typed envelope the component
-// consumes without ever importing the fenced machinery.
+// The same posture as AdminTurn above: a2ui's producer transport (agent-transport.ts) IS a package
+// export today (SPEC-N1 v0.5, ADR-0137/TKT-0072, at `./agent`), but this surface still declares its
+// OWN minimal turn shapes rather than importing them. ADR-0136 rules that the packaged component ships
+// zero fetch/env/proxy code and binds to no transport type in its default/static path (SPEC-R35 item 1;
+// references/agent-model.md section 4). The RUNNER (a site-page injection, admin-live-runner.ts) owns
+// everything transport-shaped, matching these shapes structurally: the a2ui `Session` transcript, the
+// ADR-0088 meta-line peel, the provider pairing. It streams back a typed envelope the component
+// consumes without ever importing the fenced machinery. (Stale wording retired by GH #1727.)
 
 /** One streamed event of a surface turn: a VALIDATED A2UI wire line (fed to
  *  `AgentTurnHandle.ingestLine` — it routes by surfaceId to an inline ui-surface-host, ADR-0129), the
