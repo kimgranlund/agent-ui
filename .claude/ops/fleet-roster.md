@@ -14,3 +14,4 @@
 | planner (agent-ui-planner) (fresh spawn) | planner | background | 2026-08-28 | fable+medium (canonical planner tier); fleet-bootstrap Phase 5 spawn after the 2026-08-28 stand-down; holding for first charter |
 | reviewer (agent-ui-reviewer) (fresh spawn) | reviewer | background-subprocess | 2026-08-28 | sonnet+high (deny-edit-write); fleet-bootstrap Phase 5 spawn after the 2026-08-28 stand-down into the kept walled worktree .claude/worktrees/agent-ui-reviewer; I2 probe confirmed structural enforcement (wall_applied: true, subprocess-spawn) |
 | agent (agent-ui-marshal) (retier) | agent | manual | 2026-08-29 | fable+medium (deviation, justified 2026-08-29, Kim: matches the launched terminal); address agent-ui-93 |
+| stand-down | agent · product · planner · reviewer | manual | 2026-09-05 | released (Kim via adia-sdlc conductor): main 832ae9a9, board clear; planner/reviewer worktrees kept for the next bootstrap; address agent-ui-93 retired |
