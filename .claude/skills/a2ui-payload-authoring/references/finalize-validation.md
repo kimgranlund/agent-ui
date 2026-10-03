@@ -18,12 +18,12 @@ deliver?" — one question type: WHEN the validator judges a payload complete, a
 Two payloads are byte-identical on the wire yet mean opposite things: a `createSurface` with no
 `updateComponents` YET (a legitimate mid-stream prefix — more is coming) and a `createSurface` that never
 receives one (an abandoned, truly-final empty surface — GH #802's permanently-empty `ui-surface-host`).
-No change inside `validate.ts` can fail one without failing the other; the missing fact ("is more coming?")
+No change inside `renderer/validate.ts` can fail one without failing the other; the missing fact ("is more coming?")
 exists only at the call site. ADR-0187 therefore makes the caller SAY so:
 
 - `validateA2ui(msgOrOutput, catalog, sessionSeed?, opts?: { atFinalize?: boolean })` — a 4th
   optional OPTIONS BAG (future finalize-adjacent knobs extend it; never a 5th positional parameter).
-  Absent/`false` = byte-identical to the pre-ADR verdict, by construction (`validate.ts` `validateA2ui`,
+  Absent/`false` = byte-identical to the pre-ADR verdict, by construction (`renderer/validate.ts` `validateA2ui`,
   `opts?.atFinalize === true` is the only read).
 - `createSurface` now registers its `surfaceId` into the judged set unconditionally (gated on the id
   being a string) — behaviour-neutral in default mode because the empty-graph exemption stays there.
@@ -31,8 +31,8 @@ exists only at the call site. ADR-0187 therefore makes the caller SAY so:
   `${sid}:root-missing` — no new failure code (the SPEC-R6 CONTAINMENT precedent was weighed and NOT
   followed: this is the existing missing-root class judged at a new granularity, so the renderer's
   IDGRAPH filter, the wire union and the conformance code table stay untouched). One edge: a
-  same-payload `deleteSurface` excludes that sid (create-then-delete leaves nothing abandoned —
-  `deletedHere` in `validate.ts`).
+  same-payload `deleteSurface` excludes that sid (`deletedHere` in `renderer/validate.ts`), so the VALIDATOR
+  accepts create-then-delete. `produce()` does not: see the `NET_NOOP` round below.
 - Heuristic finalize inference (timers, stream-end sniffing inside the validator) was rejected as a
   category error: the validator is pure and total over a static array.
 
@@ -55,6 +55,14 @@ exists only at the call site. ADR-0187 therefore makes the caller SAY so:
 - The `validate-payload` CLI in the bounded compose→verify loop judges at finalize granularity, so
   the gate catches it before grading — read `IDGRAPH ${sid}:root-missing` as "you opened a surface
   and never rooted it", not as a dangling-child error.
+- Never author `createSurface` + `deleteSurface` with no surviving content in one turn as an "ack" or
+  placeholder. `produce()` gives it ONE `NET_NOOP` self-correct round when the round budget allows (`produce.ts`,
+  `round < maxRounds - 1`; otherwise it strips at once), then strips the whole group (the turn ships
+  prose-only when a note exists; `NET_NOOP_STRIPPED` on the trace). A delete of a previously-open surface is never
+  stripped. With nothing to render, send no A2UI lines (GH #1142).
+- The other `produce()` atFinalize correction round is `FLOW_END_MISSING`: the user explicitly closed a
+  completed flow but the leading meta-line lacks `"flowEnd": true`. The repair re-emits the same closing
+  meta-line with the field added, no A2UI lines (ADR-0198, GH #1168; `references/meta-line-vocabulary.md`).
 - Split `updateComponents` streams stay legal (runtime SPEC-R4 out-of-order tolerance): mid-stream
   emptiness is a prefix, and only the COMPLETE set is judged. A live producer that opens-and-abandons
   eats one self-correct round; the lever if that runs hot is prompt teaching, never loosening the
