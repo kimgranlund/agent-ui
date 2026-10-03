@@ -53,11 +53,11 @@ anti-pattern these seams exist to make unnecessary:
 - **Actions** — upstream's `{event:{name,context}}` shape is a THIRD documented Postel arm at
   the single wire-read chokepoint `readActionSpec`; the canonical `{action,…}` shape and the
   outbound wire are untouched (cl.10 — amends ADR-0011). Arms the renderer
-  cannot honestly serve are EXCLUDED with a named follow-up, and most fail loudly at
-  validate — with one recorded exception: `{functionCall}` VALIDATES but is excluded at
-  render time only (the Button paints; the click dispatches nothing), because
-  `matchesSchemaType` deliberately checks only top-level prop types; its validate-time gate
-  is the GH #429 follow-up (cl.10's booked follow-up + cl.12's E7 row).
+  cannot honestly serve are EXCLUDED with a named follow-up. `{functionCall}` is the one that
+  slips `matchesSchemaType` (it checks only top-level prop types), so a catalog opts in per prop
+  with `PropDef.rejectFunctionCall: true` (declared `catalog/catalog.ts`, enforced `catalog/conformance.ts`), and `a2ui-basic`'s Button
+  action sets it: the shape is rejected at validate (GH #429, closed; cl.12's E7 row). A new
+  catalog with an action prop the renderer cannot serve sets the same flag, never a render-time skip.
 
 ## 4 · Per-catalog functions + catalogId threaded end-to-end
 
@@ -66,14 +66,14 @@ anti-pattern these seams exist to make unnecessary:
   (cl.8). Two dialects (`{valid,message}` vs upstream booleans) share names
   without colliding; the shared table stays the default catalog's home.
 - **`catalogId` threads the whole path**: the client runner forwards the picker's sanitized
-  id on the POST body (cl.5; picker entry cl.6); both server
+  id on the POST body (cl.5; the picker is a library-pack `catalog` entry, ADR-0170 amending cl.6); both server
   hosts hold ALL catalogs in a map and select fail-closed via the shared `selectCatalog`
   helper — an unknown id degrades to the default (no 500, no mixed catalog+prompt;
 cl.3); the one
   `deps.catalog` seam feeds both prompt and validator, and the producer deletes any pinned
   catalog-id literal and stamps `createSurface.catalogId = deps.catalog.catalogId` as the
-  authority over the model-authored id (cl.4 — the mis-stamp at
-  `produce.ts:81` is the cautionary specimen).
+  authority over the model-authored id (cl.4 — `stampCreateSurfaceCatalogId` in
+  `agent/produce.ts` is that stamp; the pinned-literal mis-stamp it replaced is the cautionary specimen).
 - **Id policy**: short local id (`a2ui-basic`) is the registry/picker/corpus/outbound key;
   the upstream canonical URI registers as an inbound-only alias — same bytes, second id;
   the picker and the outbound stamp use the short id alone (cl.13).
