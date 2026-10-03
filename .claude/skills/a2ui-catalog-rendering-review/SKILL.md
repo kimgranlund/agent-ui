@@ -57,7 +57,7 @@ review that scores B4 without that record scored the control, not the demonstrat
    A gate carries ✓/✗ only; scores 1–5 belong to review dims.
 4. **Blind identify.** For each card, look at the screenshot's RIGHT half FIRST and write one line —
    *"this is a ⟨component⟩ doing ⟨job⟩"* — before reading the title or the record. A miss is B4 = 1.
-5. **Score the review dims** A3 B3 B4 C3 against the rubric anchors, in rubric §4's order (out-in
+5. **Score the review dims** A3-review B3-review B4 C3 against the rubric anchors, in rubric §4's order (out-in
    verdict, then in-out). Each score cites its matched anchor (1/3/5) and one image-region evidence
    sentence. The invoking session may score a spot-check; a promotion-grade run (a whole tier or
    `all`) dispatches the scoring to a fresh-context critic (`a2ui-review-agent` class), per §4.
@@ -93,8 +93,8 @@ If the ask is review-only → stop after step 6; the report's owner column is th
 
 ```
 # a2ui catalog rendering review — <scope> — <date> — probes: script|manual — theme: …
-| card | tier | A1 A2 A4 B1 B2 C1 C2 | A3 B3 B4 C3 | verdict |
-| Attachment | WIDGET | ✓ ✓ ✓ ✓ ✓ ✗ ✓ | 1 3 1 3 | HOLD |
+| card | tier | A1 A2 A3 A4 B1 B2 B3g C1 C2 | A3-review B3-review B4 C3 | verdict |
+| Attachment | WIDGET | ✓ ✓ ✗ ✓ ✓ ✓ ✓ ✗ ✓ | 1 3 1 3 | HOLD |
 …
 ## Findings (severity-ordered)
 - <card> · <dim> · quadrant <L-only|R-only|L↔R|card> · owner <seat> — <anchor matched> — <evidence: image region / file:line>
