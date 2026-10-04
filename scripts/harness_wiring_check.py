@@ -17,12 +17,13 @@ map since the 2026-07-12 repo-alignment). Two jobs:
 
 Exit 0 = everything resolves. Exit 1 = at least one wiring defect (fails loudly, prints each).
 
-Stdlib only; no pip deps. This is a MANUAL gate (the `npm run size` precedent, ADR-0040 §3):
-run by hand at authoring DoD + wave close. It is deliberately NOT wired into `npm test`/CI —
-vitest's include is packages-only, and `.claude/` governance does not belong in a package suite.
-Promotion to a standing gate triggers on the first observed wiring-drift incident (LLD §9).
+Stdlib only; no pip deps. Promoted to a standing gate (LLD §9 trigger, GH #1760: the #924 renames
+left the enumerated list stale and nothing reddened): `npm run check:scripts` runs the
+`--reachability-only` form (deterministic, host-independent, well under a second). The full form
+adds the forge `harness_checks.py` mode checks when that external plugin is installed and stays a
+by-hand authoring-DoD / wave-close run. Still NOT in `npm test` (vitest's include is packages-only).
 
-    python3 scripts/harness_wiring_check.py
+    python3 scripts/harness_wiring_check.py [--reachability-only]
 
 ===============================================================================================
 THE ENUMERATED HARNESS ARTIFACT SET (SPEC §5.1) — the exact files this script governs.
@@ -52,23 +53,21 @@ REPO = Path(__file__).resolve().parent.parent
 
 # --- the enumerated harness artifact set (SPEC §5.1) -------------------------------------------
 SKILLS = [
-    ".claude/skills/a2ui-compose/SKILL.md",
-    ".claude/skills/a2ui-corpus-curate/SKILL.md",
+    ".claude/skills/a2ui-payload-authoring/SKILL.md",
+    ".claude/skills/a2ui-corpus-curation/SKILL.md",
 ]
 # role per SPEC §5.1: a MAKER emits an artifact and is graded by a named rubric; a CRITIC grades
 # (and so legitimately embeds verdict shapes — the self-grade check must NOT run over a critic).
 AGENTS = [
-    (".claude/agents/a2ui-composer.md", "maker"),
-    (".claude/agents/a2ui-reviewer.md", "critic"),
+    (".claude/agents/a2ui-payload-authoring-agent.md", "maker"),
+    (".claude/agents/a2ui-review-agent.md", "critic"),
 ]
-RUBRICS = [
-    ".claude/docs/rubrics/a2ui-payload.md",
-    ".claude/docs/rubrics/a2ui-catalog.md",
-    ".claude/docs/rubrics/a2ui-corpus.md",
-    # the SPEC-R3 v0.4 siblings (GH #493) — same mode + no-orphan coverage as the original three
-    ".claude/docs/rubrics/a2ui-mechanism.md",
-    ".claude/docs/rubrics/a2ui-skill-pattern.md",
-]
+# Rubrics are DERIVED from disk (GH #1760): every `a2ui-*.md` under the rubrics dir is governed, so
+# a new rubric is covered (and orphan-checked) the day it lands and a rename cannot leave a stale
+# entry. Skills/agents stay enumerated because the maker/critic ROLE is semantic, not derivable;
+# `check_enumerated_exist` turns a stale entry there into a FAIL line, never a traceback.
+RUBRICS = sorted(p.relative_to(REPO).as_posix()
+                 for p in (REPO / ".claude/docs/rubrics").glob("a2ui-*.md"))
 
 
 def find_harness_checks():
@@ -128,12 +127,14 @@ class Report:
 # whose ONLY failures are its accepted divergences passes with a note; any OTHER failure still
 # fails loudly.
 ACCEPTED_DIVERGENCES = {
-    ".claude/agents/a2ui-composer.md": ["D9 name suffix is a registered role"],
+    ".claude/agents/a2ui-payload-authoring-agent.md": ["D9 name suffix is a registered role"],
 }
 
 
 def run_mode(hc, mode, relpath, r):
     f = REPO / relpath
+    if hc is None:  # declared-or-absent: no forge copy on this host, reachability still gates
+        return
     if not f.is_file():
         r.add(False, "%s enumerated file exists: %s" % (mode, relpath), "file missing from tree")
         return
@@ -168,8 +169,13 @@ def check_maker_graded_by(relpath, r):
             named = pm.group(0)
             break
     if named is None:
-        r.add(False, "maker names a 'graded by:' rubric: %s" % relpath,
-              "no 'graded by: .claude/docs/rubrics/*.md' line found")
+        # Since the #924 rename the maker names its GRADER (the critic agent, which selects the
+        # rubric per artifact) instead of a `graded by: <rubric>` line; that is the same
+        # generator != critic wiring, so accept a cite of an enumerated critic that exists on disk.
+        critics = [a for a, role in AGENTS if role == "critic" and (REPO / a).is_file()]
+        cited = [Path(a).stem for a in critics if Path(a).stem in text]
+        r.add(bool(cited), "maker names its grader (critic agent or 'graded by:' rubric): %s" % relpath,
+              "no 'graded by: .claude/docs/rubrics/*.md' line and no cite of a critic agent")
         return
     r.add((REPO / named).is_file(),
           "maker's graded-by rubric resolves: %s -> %s" % (relpath, named),
@@ -255,14 +261,34 @@ def check_no_self_grade(relpath, r):
           "; ".join(hits))
 
 
+def check_enumerated_exist(r):
+    """A stale enumerated path is a wiring defect to REPORT (the drift this gate exists to catch),
+    not an unhandled FileNotFoundError that kills the run before it can say which file moved."""
+    for f in SKILLS + [a for a, _ in AGENTS] + RUBRICS:
+        r.add((REPO / f).is_file(), "enumerated harness file exists: %s" % f,
+              "file missing from tree (renamed or removed? update SKILLS/AGENTS)")
+    r.add(bool(RUBRICS), "at least one a2ui-*.md rubric found on disk", "rubrics dir empty or moved")
+
+
 def main():
-    hc = find_harness_checks()
-    if hc is None:
+    # `--reachability-only` is the standing-gate form (check:scripts): it never probes the host's
+    # forge plugin cache, so the verdict is identical on every host and in CI.
+    hc = None if "--reachability-only" in sys.argv[1:] else find_harness_checks()
+    if "--reachability-only" in sys.argv[1:]:
+        print("mode checks skipped (--reachability-only); reachability checks still gate.")
+    elif hc is None:
         print("SKIP: harness_checks.py not found (forge plugin cache or the legacy skill dirs) — "
               "mode checks skipped (declared-or-absent posture, repo-alignment Phase 5 M5); "
               "reachability checks still run and still gate.")
 
     r = Report()
+
+    r.section("0. enumerated set resolves on disk")
+    start = len(r.checks)
+    check_enumerated_exist(r)
+    r.emit_since(start)
+    if any(not ok for ok, _, _ in r.checks):
+        return r.result()
 
     r.section("1. mode checks — harness_checks.py over the enumerated set (SPEC §5.1)")
     start = len(r.checks)
