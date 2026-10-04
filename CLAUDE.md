@@ -102,3 +102,6 @@ npm-workspaces monorepo; ten packages under `packages/agent-ui/*`.
 - Gates green by exit code before done (see Commands).
 - Worktree traps: symlink-not-install recipe + concurrency ceiling + reap-on-return live in
   `seat-map` §Dispatch laws; the test-side traps in `component-testing` §Traps.
+<!-- sdlc-lite:managed:start v1 sha256:336cc4fbf19b -->
+@AGENTS.md
+<!-- sdlc-lite:managed:end -->
