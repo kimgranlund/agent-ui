@@ -211,7 +211,7 @@ judging time.
 | Target-clarity | 5 | 5 | 0 |
 | Provenance integrity | 5 | 5 | 0 |
 | Dedup adjacency | 4 | 4 | 0 |
-| Turn coherence (D6) | 5 | 5 | 0 |
+| Turn coherence (dimension 6) | 5 | 5 | 0 |
 | qualityScore (MIN of gated dims) | 4 | 4 | 0 |
 | passed (≥ 4) | true | true | n/a |
 
@@ -264,7 +264,7 @@ D5 was read against the exemplar and multi-turn shards, because no repair shard 
 | Target-clarity | 5 | 5 | 0 | 5 | 5 | 0 |
 | Provenance integrity | 5 | 5 | 0 | 5 | 5 | 0 |
 | Dedup adjacency | 4 | 4 | 0 | 4 | 4 | 0 |
-| Repair fidelity (D7) | 5 | 5 | 0 | 5 | 5 | 0 |
+| Repair fidelity (dimension 7) | 5 | 5 | 0 | 5 | 5 | 0 |
 | qualityScore (MIN of gated dims) | 4 | 4 | 0 | 4 | 4 | 0 |
 | passed (≥ 4) | true | true | n/a | true | true | n/a |
 
@@ -309,12 +309,12 @@ Every Δ is ≤ 1.
 All five admitted records, with A's final-pass scores (each passed at qualityScore 4; the agenda and plan
 rows are the A columns of the table above):
 
-| Record | Breakage (stored `validatorErrors`) | D1 | D2 to D4 | D5 | D7 | qualityScore |
+| Record | Breakage (stored `validatorErrors`) | Dim 1 | Dims 2 to 4 | Dim 5 | Dim 7 | qualityScore |
 |---|---|---|---|---|---|---|
-| `rp-invite-dangling-button` | `IDGRAPH inv_actions->btn_send` | 4 (P7 4) | 5 | 4 | 5 | 4 |
+| `rp-invite-dangling-button` | `IDGRAPH inv_actions->btn_send` | 4 (payload row 7: 4) | 5 | 4 | 5 | 4 |
 | `rp-checkout-button-text-prop` | `CATALOG btn_continue.text` | 5 | 5 | 4 | 5 | 4 |
 | `rp-plan-card-footer-containment` | `CONTAINMENT pl_footer` | 5 | 5 | 4 | 5 | 4 |
-| `rp-prefs-pointer-slash` | `POINTER [1].updateDataModel.path` | 4 (P7 4) | 5 | 4 | 5 | 4 |
+| `rp-prefs-pointer-slash` | `POINTER [1].updateDataModel.path` | 4 (payload row 7: 4) | 5 | 4 | 5 | 4 |
 | `rp-agenda-components-map` | `SCHEMA [2].updateComponents.components`, `IDGRAPH agenda:root-missing` | 5 | 5 | 4 | 5 | 4 |
 
 The invite and plan records first failed D1 at 2 and passed after the maker's hand-back round. The invite

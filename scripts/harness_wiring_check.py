@@ -23,7 +23,7 @@ left the enumerated list stale and nothing reddened): `npm run check:scripts` ru
 adds the forge `harness_checks.py` mode checks when that external plugin is installed and stays a
 by-hand authoring-DoD / wave-close run. Still NOT in `npm test` (vitest's include is packages-only).
 
-    python3 scripts/harness_wiring_check.py [--reachability-only]
+    python3 scripts/harness_wiring_check.py [--reachability-only | --rubric-modes]
 
 ===============================================================================================
 THE ENUMERATED HARNESS ARTIFACT SET (SPEC §5.1) — the exact files this script governs.
@@ -78,8 +78,13 @@ def find_harness_checks():
     wins), then the legacy skill dirs. Declared-or-absent: the caller degrades to
     reachability-only when no copy resolves (external plugins are never assumed present)."""
     home = Path.home()
-    cache = home / ".claude" / "plugins" / "cache" / "nonoun-plugins" / "forge"
-    if cache.is_dir():
+    # `harness` is the plugin's current name; `forge` its pre-rename one (GH #1776: the stale
+    # probe found nothing, so the full form silently skipped every mode check and rubric drift
+    # went unseen).
+    for plugin in ("harness", "forge"):
+        cache = home / ".claude" / "plugins" / "cache" / "nonoun-plugins" / plugin
+        if not cache.is_dir():
+            continue
         versions = sorted(
             (d for d in cache.iterdir() if d.is_dir() and (d / "scripts" / "harness_checks.py").is_file()),
             key=lambda d: tuple(int(x) for x in d.name.split(".") if x.isdigit()),
@@ -128,6 +133,12 @@ class Report:
 # fails loudly.
 ACCEPTED_DIVERGENCES = {
     ".claude/agents/a2ui-payload-authoring-agent.md": ["D9 name suffix is a registered role"],
+    # GH #1776 follow-up: a2ui-catalog-example.md is a checklist-shaped rubric (lettered item groups,
+    # no typed 1/3/5 dimension table), so the plugin's table-shaped rubric gates cannot apply to it.
+    # Reshaping a runtime-consumed rubric is out of #1776's scope; narrowed to exactly its four gates.
+    ".claude/docs/rubrics/a2ui-catalog-example.md": [
+        "D1 every dimension typed", "D3 every dimension carries", "D5 evidence column present",
+        "D8 aggregation/gate rule present"],
 }
 
 
@@ -273,6 +284,10 @@ def check_enumerated_exist(r):
 def main():
     # `--reachability-only` is the standing-gate form (check:scripts): it never probes the host's
     # forge plugin cache, so the verdict is identical on every host and in CI.
+    # `--rubric-modes` is the check:scripts form that also runs the plugin's `rubric` mode over every
+    # a2ui-*.md rubric (GH #1776) so a rubric edit cannot silently drift off the D1/D3 shape. The
+    # plugin cache is host-local, so it SKIPS (exit unchanged) where the plugin is absent, e.g. CI.
+    rubric_modes = "--rubric-modes" in sys.argv[1:]
     hc = None if "--reachability-only" in sys.argv[1:] else find_harness_checks()
     if "--reachability-only" in sys.argv[1:]:
         print("mode checks skipped (--reachability-only); reachability checks still gate.")
@@ -292,9 +307,9 @@ def main():
 
     r.section("1. mode checks — harness_checks.py over the enumerated set (SPEC §5.1)")
     start = len(r.checks)
-    for f in SKILLS:
+    for f in ([] if rubric_modes else SKILLS):
         run_mode(hc, "skill", f, r)
-    for f, _role in AGENTS:
+    for f, _role in ([] if rubric_modes else AGENTS):
         run_mode(hc, "agent", f, r)
     for f in RUBRICS:
         run_mode(hc, "rubric", f, r)
