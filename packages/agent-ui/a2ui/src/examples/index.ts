@@ -21,8 +21,8 @@
 // (never a hand-counted literal — the drift-gate doctrine); each named export is what a `/site` page
 // imports directly.
 // GH #1737 (Kim's ruling 2026-10-03): the upstream Basic catalog's seeds live on a SEPARATE shelf,
-// `allBasicSeeds` (typed `ExampleSeed<'a2ui-basic'>`, empty until GH #1732 seeds the first Basic
-// exemplar). `allSeeds` stays agent-ui-only (a Basic seed is a compile error there), so its `site/`
+// `allBasicSeeds` (typed `ExampleSeed<'a2ui-basic'>`; GH #1732 seeded its first family,
+// basic-exemplars.ts). `allSeeds` stays agent-ui-only (a Basic seed is a compile error there), so its `site/`
 // consumers (gallery, catalog tiers, authoring counts) are untouched by the second catalog.
 // GH #1374 — the plan-and-execute exemplar: a Timeline plan snapshot (canvas) beside one ADR-0097
 // commit-gated approve ask carrying per-step Checkbox opt-outs (feed), emitted the same turn, then
@@ -121,7 +121,16 @@ export {
   commerceHospitalitySeeds,
 } from './commerce-hospitality.ts'
 
+export {
+  basicContactFormSeed,
+  basicProductListSeed,
+  basicNotificationSettingsSeed,
+  basicAppointmentBookingSeed,
+  basicExemplarSeeds,
+} from './basic-exemplars.ts'
+
 import type { ExampleSeed } from './types.ts'
+import { basicExemplarSeeds } from './basic-exemplars.ts'
 import { canvasSeeds } from './canvas-button.ts'
 import { dynamicListSeeds } from './dynamic-lists.ts'
 import { generativeFormSeeds } from './generative-form.ts'
@@ -159,9 +168,9 @@ export const allSeeds: readonly ExampleSeed[] = [
 ]
 
 /** Every seed rendered against the upstream A2UI Basic catalog (`a2ui-basic`), the second shelf beside
- *  `allSeeds` (GH #1737, ADR-0169 follow-up). Empty today: seeding the first Basic exemplar is GH #1732.
+ *  `allSeeds` (GH #1737, ADR-0169 follow-up). GH #1732 seeded the first family (basic-exemplars.ts).
  *  Compose it from per-module family arrays exactly as `allSeeds` is, never a hand-counted literal. The
  *  standing gates (`examples.test.ts`, `admission-coverage.test.ts`, `import-seeds.ts`) already walk this
  *  shelf, so the first seed added here is validated, rendered, admitted and coverage-checked with no
  *  further wiring. */
-export const allBasicSeeds: readonly ExampleSeed<'a2ui-basic'>[] = []
+export const allBasicSeeds: readonly ExampleSeed<'a2ui-basic'>[] = [...basicExemplarSeeds]

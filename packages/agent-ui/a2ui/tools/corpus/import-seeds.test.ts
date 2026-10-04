@@ -285,7 +285,7 @@ describe('dispositionAllowlistSnippet — a paste-ready DISPOSITION_ALLOWLIST en
 // clause-4 unjudged-halt case (the REAL script, a PLANTED archive refusal, a throwaway repo root) —
 // same subprocess tier, same deleted-call-site sensitivity, no real-corpus exposure. ──
 // ── GH #1737 (ADR-0169 follow-up, Kim's ruling 2026-10-03: separate shelf): two shelves, one catalog per
-// seed. The Basic shelf is EMPTY until GH #1732, so every leg here PLANTS a genuine Basic seed in memory
+// seed. Every leg here PLANTS a genuine Basic seed in memory (independent of the real shelf, GH #1732)
 // (the upstream fixtures `src/catalog/a2ui-basic/planted.ts` carries) and drives the SAME exported
 // functions `main()`'s seed loop calls (`depsForSeed`, `seedToCandidate`, `shelfDrift`). Nothing is
 // written to the shelf, the corpus, or any shard. ──
@@ -293,7 +293,7 @@ describe('GH #1737, shelfDrift: the per-file grouping must match the shelf, for 
   const groups = (...names: string[]): { seeds: { name: string }[] }[] => [{ seeds: names.map((name) => ({ name })) }]
   const shelf = (...names: string[]): { name: string }[] => names.map((name) => ({ name }))
 
-  it('an in-sync grouping reports no drift, including the EMPTY / EMPTY pair the Basic shelf is today', () => {
+  it('an in-sync grouping reports no drift, including the EMPTY / EMPTY pair (a shelf with no seeds yet)', () => {
     expect(shelfDrift('G', groups('a', 'b'), 'allSeeds', shelf('b', 'a'))).toBeUndefined()
     expect(shelfDrift('BASIC_SEEDS_BY_MODULE', [], 'allBasicSeeds', [])).toBeUndefined()
   })
@@ -312,8 +312,9 @@ describe('GH #1737, shelfDrift: the per-file grouping must match the shelf, for 
     expect(shelfDrift('G', groups('a', 'old-name'), 'allSeeds', shelf('a', 'new-name'))).toBeDefined()
   })
 
-  it('the real Basic shelf is empty today (so the real BASIC_SEEDS_BY_MODULE must be too, or the subprocess runs below halt)', () => {
-    expect(allBasicSeeds).toHaveLength(0)
+  it('the real Basic shelf holds the GH #1732 exemplars (at least 3), every one an a2ui-basic seed', () => {
+    expect(allBasicSeeds.length).toBeGreaterThanOrEqual(3)
+    for (const seed of allBasicSeeds) expect(seed.catalogId, seed.name).toBe('a2ui-basic')
   })
 })
 
@@ -504,22 +505,30 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
   const RUBRIC = '.claude/docs/rubrics/a2ui-corpus.md'
   const CATALOG = 'packages/agent-ui/a2ui/src/catalog/default/catalog.json'
   const SHARD = 'packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl'
+  // GH #1732: the Basic shelf is no longer empty, so a run resolves the Basic catalog for its seeds and
+  // the committed Basic shard is part of the "already admitted" baseline. Both mirror the agent-ui pair.
+  const BASIC_CATALOG = 'packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json'
+  const BASIC_SHARD = 'packages/agent-ui/a2ui/corpus/exemplar/v1_0/a2ui-basic.jsonl'
+  /** Every seed a run walks: the agent-ui shelf then the Basic shelf (main()'s own order). */
+  const SHELF: ReadonlyArray<{ name: string }> = [...allSeeds, ...allBasicSeeds]
   const ARCHIVE_DIR = 'packages/agent-ui/a2ui/corpus/verdicts'
 
   let sandbox: string
 
   /** A sandbox repo root holding exactly what `main()` reads off `process.cwd()`. `withShard` decides
-   *  whether the 24 committed records are already admitted (so every seed is an idempotent `E_DUP`) or
+   *  whether the committed records (both shards) are already admitted (so every seed is an idempotent `E_DUP`) or
    *  the corpus is empty (so every seed is a fresh candidate the judge must rule on). */
   const makeSandbox = (opts: { withShard: boolean }): void => {
     sandbox = mkdtempSync(join(tmpdir(), 'a2ui-import-seeds-'))
-    for (const rel of [RUBRIC, CATALOG]) {
+    for (const rel of [RUBRIC, CATALOG, BASIC_CATALOG]) {
       mkdirSync(join(sandbox, rel.slice(0, rel.lastIndexOf('/'))), { recursive: true })
       cpSync(join(REAL_ROOT, rel), join(sandbox, rel))
     }
     if (opts.withShard) {
-      mkdirSync(join(sandbox, SHARD.slice(0, SHARD.lastIndexOf('/'))), { recursive: true })
-      cpSync(join(REAL_ROOT, SHARD), join(sandbox, SHARD))
+      for (const rel of [SHARD, BASIC_SHARD]) {
+        mkdirSync(join(sandbox, rel.slice(0, rel.lastIndexOf('/'))), { recursive: true })
+        cpSync(join(REAL_ROOT, rel), join(sandbox, rel))
+      }
     }
   }
 
@@ -547,7 +556,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
    *  UNRELATED, deliberately-planted candidate — so any live disposition-allowlist name is pre-admitted
    *  into the sandbox first (below), the same way the REAL corpus will hold it once wave 3's judged
    *  pipeline runs. */
-  const LIVE_DISPOSITIONED_NAMES = allSeeds.map((s) => s.name).filter((n) => DISPOSITION_ALLOWLIST.has(n))
+  const LIVE_DISPOSITIONED_NAMES = SHELF.map((s) => s.name).filter((n) => DISPOSITION_ALLOWLIST.has(n))
 
   /** Pre-admit every currently-live disposition-allowlisted seed into the sandbox's shard via a REAL
    *  `--verdicts` run (never a hand-rolled JSONL row — the tool's own writer is the only source of a
@@ -575,7 +584,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
   const admitOnlyLiveDispositionedFromEmpty = (): void => {
     if (LIVE_DISPOSITIONED_NAMES.length === 0) return
     const verdicts: Record<string, unknown> = {}
-    for (const seed of allSeeds) verdicts[seed.name] = { passed: true, qualityScore: 5 }
+    for (const seed of SHELF) verdicts[seed.name] = { passed: true, qualityScore: 5 }
     const verdictsPath = writeVerdicts('pre-admit-whole-shelf.json', { date: '2026-08-19', verdicts })
     const result = run(['--verdicts', verdictsPath])
     if (result.status !== 0) {
@@ -732,7 +741,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
   it('THE ALL-REJECTED WAVE (clause 1) — every candidate rejected E_QUALITY, ZERO admissions, and the archive STILL lands carrying every passed:false verdict', () => {
     makeSandbox({ withShard: false })
     const verdicts: Record<string, unknown> = {}
-    for (const seed of allSeeds) verdicts[seed.name] = { passed: false, qualityScore: 2, failingDimensions: ['D1'] }
+    for (const seed of SHELF) verdicts[seed.name] = { passed: false, qualityScore: 2, failingDimensions: ['D1'] }
     const verdictsPath = writeVerdicts('all-rejected.json', { date: '2026-07-29', verdicts })
     const input = readFileSync(verdictsPath, 'utf8')
 
@@ -740,7 +749,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
 
     expect(result.status, result.stderr).toBe(0)
     expect(result.stdout, 'zero admissions — this is the whole point of the case').toMatch(/0 admitted/)
-    expect(result.stdout).toMatch(new RegExp(`${allSeeds.length} quality-rejected`))
+    expect(result.stdout).toMatch(new RegExp(`${SHELF.length} quality-rejected`))
     expect(existsSync(join(sandbox, SHARD)), 'nothing was admitted, so no shard exists').toBe(false)
     expect(archivedFiles(), 'zero admissions is NOT zero record').toEqual(['2026-07-29--all-rejected.json'])
     expect(readFileSync(join(sandbox, ARCHIVE_DIR, '2026-07-29--all-rejected.json'), 'utf8')).toBe(input)
@@ -749,7 +758,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     const archived = JSON.parse(readFileSync(join(sandbox, ARCHIVE_DIR, '2026-07-29--all-rejected.json'), 'utf8')) as {
       verdicts: Record<string, { passed: boolean }>
     }
-    expect(Object.keys(archived.verdicts).sort()).toEqual(allSeeds.map((s) => s.name).sort())
+    expect(Object.keys(archived.verdicts).sort()).toEqual(SHELF.map((s) => s.name).sort())
     expect(Object.values(archived.verdicts).every((v) => v.passed === false)).toBe(true)
   })
 
@@ -774,7 +783,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     writeFileSync(join(sandbox, CATALOG), JSON.stringify(catalog))
 
     const verdicts: Record<string, unknown> = {}
-    for (const seed of allSeeds) verdicts[seed.name] = { passed: true, qualityScore: 5 }
+    for (const seed of SHELF) verdicts[seed.name] = { passed: true, qualityScore: 5 }
     const verdictsPath = writeVerdicts('wave-b.json', { date: '2026-07-28', verdicts })
 
     const result = run(['--verdicts', verdictsPath])
@@ -792,7 +801,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     // no archive", which is exactly the skip the ADR warns an implementer is most likely to make.
     makeSandbox({ withShard: false })
     const verdicts: Record<string, unknown> = {}
-    for (const seed of allSeeds) verdicts[seed.name] = { passed: false, qualityScore: 2 }
+    for (const seed of SHELF) verdicts[seed.name] = { passed: false, qualityScore: 2 }
     const verdictsPath = writeVerdicts('wave-b.json', { date: '2026-07-28', verdicts })
 
     const result = run(['--verdicts', verdictsPath])
@@ -805,7 +814,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     makeSandbox({ withShard: false })
     // All-passing verdicts: without the collision this run would admit every seed and write a shard.
     const verdicts: Record<string, unknown> = {}
-    for (const seed of allSeeds) verdicts[seed.name] = { passed: true, qualityScore: 5 }
+    for (const seed of SHELF) verdicts[seed.name] = { passed: true, qualityScore: 5 }
     const verdictsPath = writeVerdicts('wave-b.json', { date: '2026-07-28', verdicts })
 
     const planted = plantArchive(
@@ -900,7 +909,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
 
   it('clause 4 — the same run WITH --verdicts supplying a fresh PASSING verdict admits the name and archives the newer file', () => {
     // The same PLANTED shape as the halt case above (empty corpus, archived refusal for canvas-button),
-    // now superseded by a fresh judgment: every other shelf seed is refused (derived from `allSeeds`,
+    // now superseded by a fresh judgment: every other shelf seed is refused (derived from `SHELF`,
     // never a hand-counted map) so this test's claim stays exactly "the re-judged name admits", nothing
     // else moves.
     makeSandbox({ withShard: false })
@@ -915,7 +924,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
       })}\n`,
     )
     const verdicts: Record<string, unknown> = {}
-    for (const seed of allSeeds) {
+    for (const seed of SHELF) {
       verdicts[seed.name] =
         seed.name === 'canvas-button' ? { passed: true, qualityScore: 5 } : { passed: false, qualityScore: 2 }
     }
@@ -964,24 +973,25 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     // plants.)
     makeSandbox({ withShard: false })
     const verdicts: Record<string, unknown> = {}
-    for (const seed of allSeeds) verdicts[seed.name] = { passed: true, qualityScore: 5 }
+    for (const seed of SHELF) verdicts[seed.name] = { passed: true, qualityScore: 5 }
     const verdictsPath = writeVerdicts('all-passing.json', { date: '2026-07-30', verdicts })
     const result = run(['--verdicts', verdictsPath])
     expect(result.status, result.stderr).toBe(0)
-    expect(result.stdout).toMatch(new RegExp(`${allSeeds.length} admitted`))
+    expect(result.stdout).toMatch(new RegExp(`${SHELF.length} admitted`))
     expect(existsSync(join(sandbox, SHARD)), 'the run reached saveStore and minted the shard').toBe(true)
+    expect(existsSync(join(sandbox, BASIC_SHARD)), 'the Basic seeds admitted into their own shard (GH #1732)').toBe(true)
   })
 
-  // GH #1737: the per-seed catalog resolver is LAZY and goes through the registry, proven on the real
-  // script. Both legs share the sandbox, which (by `makeSandbox`'s design) copies ONLY the default catalog.
-  const BASIC_CATALOG = 'packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json'
+  // GH #1737: the per-seed catalog resolver goes through the registry, proven on the real script for
+  // EACH catalog. Since GH #1732 seeded the Basic shelf, a run resolves the Basic catalog too, so both
+  // legs are the same shape: remove one catalog file from the sandbox and the run fails naming it.
 
-  it('GH #1737 - the Basic shelf is empty, so a run never reads the Basic catalog: with a2ui-basic/catalog.json ABSENT from the sandbox the run still completes', () => {
+  it('GH #1737/#1732 - the Basic catalog IS read through the registry for the Basic seeds: removing the sandbox a2ui-basic/catalog.json fails the run', () => {
     makeSandbox({ withShard: true })
-    expect(existsSync(join(sandbox, BASIC_CATALOG)), 'precondition: the sandbox holds no Basic catalog').toBe(false)
+    rmSync(join(sandbox, BASIC_CATALOG))
     const result = run(['--dry-run'])
-    expect(result.status, result.stderr).toBe(0)
-    expect(result.stdout).toMatch(/0 admitted, \d+ already present/)
+    expect(result.status).toBe(1)
+    expect(result.stderr).toMatch(/a2ui-basic\/catalog\.json/)
   })
 
   it('GH #1737 - the agent-ui catalog IS read through the registry: removing the sandbox default catalog.json fails the run (the lazy path is live, not stubbed)', () => {
@@ -1062,7 +1072,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
       const result = run([])
 
       expect(result.status, result.stderr).toBe(0)
-      expect(result.stdout).toMatch(new RegExp(`0 admitted, ${allSeeds.length} already present`))
+      expect(result.stdout).toMatch(new RegExp(`0 admitted, ${SHELF.length} already present`))
       expect(result.stderr).not.toMatch(/HALTED/)
     })
 
@@ -1073,7 +1083,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
       // "every shelf seed" here means every NON-dispositioned one, the guard this test actually targets.
       admitOnlyLiveDispositionedFromEmpty()
       const preAdmittedShard = existsSync(join(sandbox, SHARD)) ? readFileSync(join(sandbox, SHARD), 'utf8') : ''
-      const expectedCandidateCount = allSeeds.length - LIVE_DISPOSITIONED_NAMES.length
+      const expectedCandidateCount = SHELF.length - LIVE_DISPOSITIONED_NAMES.length
 
       const result = run([])
 

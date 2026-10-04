@@ -12,12 +12,12 @@
 // `meta.catalogId` through `CATALOGS` (the in-package mirror of `tools/catalog-files.ts`'s id registry,
 // bundler-safe JSON imports). It fails loudly on (i) a shard whose file name is no registered catalog id,
 // (ii) a record whose `meta.catalogId` is unregistered, and (iii) a record in the WRONG shard (the file
-// name must equal the record's catalogId). `agent-ui.jsonl` is REQUIRED and non-empty; `a2ui-basic.jsonl`
-// is TOLERATED absent (the Basic shelf is empty until GH #1732), but once it exists every record in it is
-// held to the same standard against `a2uiBasicCatalog`. `name` stays unique ACROSS shards (LLD §2
+// name must equal the record's catalogId). BOTH `agent-ui.jsonl` and `a2ui-basic.jsonl` are
+// REQUIRED and non-empty (the Basic shard was first admitted by GH #1732), and every record in the Basic
+// shard is held to the same standard against `a2uiBasicCatalog`. `name` stays unique ACROSS shards (LLD §2
 // invariant i, the corpus-wide join key).
 //
-// The Basic shard does not exist yet, so the gate is proven to BITE with planted in-memory records (the
+// The gate is ALSO proven to BITE with planted in-memory records (the
 // quarantine-legs precedent below): every predicate the standing loop runs (`catalogFor`, `shardProblem`,
 // `shardInventoryProblems`, `tier1Verdict`, `hashProblem`, `duplicateRecordNames`) is a NAMED FUNCTION the
 // planted legs drive too, so a vacuous or always-true predicate cannot hide behind an empty Basic shard.
@@ -57,8 +57,8 @@ const CATALOGS: Readonly<Record<SeedCatalogId, Catalog>> = {
 }
 const REGISTERED_IDS = Object.keys(CATALOGS)
 
-/** The shard that MUST exist and be non-empty. The Basic shard is deliberately absent from this list. */
-const REQUIRED_SHARDS: readonly string[] = [`agent-ui${SHARD_EXT}`]
+/** The shards that MUST exist and be non-empty (the Basic shard since GH #1732 admitted its first records). */
+const REQUIRED_SHARDS: readonly string[] = [`agent-ui${SHARD_EXT}`, `a2ui-basic${SHARD_EXT}`]
 
 /** The catalog for a record's `meta.catalogId`. THROWS on an unregistered id, naming the registered ones
  *  (a loud failure, never a silent fall-back to the default catalog). */
@@ -81,7 +81,7 @@ function shardProblem(shardFile: string, rec: CorpusRecord): string | undefined 
 }
 
 /** Problems with the SET of shard files: a required shard missing, or a shard whose stem is no
- *  registered catalog id. An absent optional shard (a2ui-basic.jsonl) is NOT a problem. */
+ *  registered catalog id. */
 function shardInventoryProblems(files: readonly string[]): string[] {
   const problems: string[] = []
   for (const required of REQUIRED_SHARDS) {
@@ -142,17 +142,19 @@ const shardLines: ShardLine[] = shardFiles.flatMap((shard) => {
 const records = shardLines.map((l) => l.rec)
 
 describe('corpus-data - every committed exemplar shard is self-consistent (LLD-C15, GH #1737 multi-shard)', () => {
-  it('the shard inventory is sound: agent-ui.jsonl present, every shard file names a registered catalog (a2ui-basic.jsonl may be absent)', () => {
+  it('the shard inventory is sound: agent-ui.jsonl and a2ui-basic.jsonl present, every shard file names a registered catalog', () => {
     expect(shardInventoryProblems(shardFiles)).toEqual([])
   })
 
-  it('the required agent-ui shard is non-empty (the seed import actually ran and was committed)', () => {
-    expect(shardLines.filter((l) => l.shard === 'agent-ui.jsonl').length).toBeGreaterThan(0)
+  it('every required shard is non-empty (the seed import actually ran and was committed)', () => {
+    for (const shard of REQUIRED_SHARDS) {
+      expect(shardLines.filter((l) => l.shard === shard).length, shard).toBeGreaterThan(0)
+    }
   })
 
-  it('a2ui-basic.jsonl is tolerated absent (empty until GH #1732); if it exists its records are judged by the per-line legs below', () => {
+  it('a2ui-basic.jsonl holds at least the GH #1732 floor of 3 records, every one stamped a2ui-basic (judged by the per-line legs below)', () => {
     const basic = shardLines.filter((l) => l.shard === 'a2ui-basic.jsonl')
-    if (!shardFiles.includes('a2ui-basic.jsonl')) expect(basic).toEqual([])
+    expect(basic.length).toBeGreaterThanOrEqual(3)
     for (const l of basic) expect(l.rec.meta.catalogId, `${l.shard}:${l.lineNo}`).toBe('a2ui-basic')
   })
 
@@ -198,8 +200,8 @@ describe('corpus-data - every committed exemplar shard is self-consistent (LLD-C
 
 // ── GH #1737: the gate BITES on the Basic dialect - planted in-memory records, never a real shard ────────
 //
-// The Basic shard does not exist, so nothing above exercises the a2ui-basic path. These legs plant genuine
-// records and run the SAME predicates the standing loop runs. Directional pairs (a Basic record passes
+// The standing loop above judges only the committed shard records; these legs plant genuine AND
+// wrong-dialect records and run the SAME predicates the standing loop runs. Directional pairs (a Basic record passes
 // Basic AND fails default; an agent-ui record stamped Basic fails Basic) are what make a no-op predicate
 // impossible: a gate that always returned valid, or always used `defaultCatalog`, fails one half.
 describe('GH #1737 - the multi-shard gate bites (planted in-memory records)', () => {
@@ -265,12 +267,12 @@ describe('GH #1737 - the multi-shard gate bites (planted in-memory records)', ()
     expect(() => tier1Verdict(stray)).toThrow(/unregistered catalogId "made-up"/)
   })
 
-  it('the shard inventory: agent-ui.jsonl required, a2ui-basic.jsonl tolerated absent, an unregistered shard stem reported', () => {
-    expect(shardInventoryProblems(['agent-ui.jsonl'])).toEqual([])
+  it('the shard inventory: agent-ui.jsonl and a2ui-basic.jsonl both required, an unregistered shard stem reported', () => {
     expect(shardInventoryProblems(['agent-ui.jsonl', 'a2ui-basic.jsonl'])).toEqual([])
+    expect(shardInventoryProblems(['agent-ui.jsonl'])).toEqual(['required shard a2ui-basic.jsonl is missing'])
     expect(shardInventoryProblems(['a2ui-basic.jsonl'])).toEqual(['required shard agent-ui.jsonl is missing'])
-    expect(shardInventoryProblems([])).toEqual(['required shard agent-ui.jsonl is missing'])
-    const stray = shardInventoryProblems(['agent-ui.jsonl', 'mystery.jsonl'])
+    expect(shardInventoryProblems([])).toEqual(['required shard agent-ui.jsonl is missing', 'required shard a2ui-basic.jsonl is missing'])
+    const stray = shardInventoryProblems(['agent-ui.jsonl', 'a2ui-basic.jsonl', 'mystery.jsonl'])
     expect(stray).toHaveLength(1)
     expect(stray[0]).toMatch(/shard mystery\.jsonl names no registered catalog/)
   })

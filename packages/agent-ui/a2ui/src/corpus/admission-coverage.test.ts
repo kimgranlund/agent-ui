@@ -157,7 +157,7 @@ function unjudgedAdmissions(
 
 /** The seed names this gate judges: BOTH shelves (GH #1737, Kim's ruling 2026-10-03: a separate Basic
  *  shelf beside `allSeeds`). A pure function of the two shelves so the planted legs below can drive it
- *  with a Basic seed the real (empty-until-GH-#1732) shelf cannot supply. Admission reads every shard
+ *  with a planted Basic seed, independent of the real shelf's contents (seeded by GH #1732). Admission reads every shard
  *  under the corpus data dir by `name`, so a Basic record in `a2ui-basic.jsonl` is found with no further
  *  wiring; the Basic shelf only has to be IN this name set for an un-admitted Basic seed to be reported. */
 function coverageSeedNames(agentUi: readonly { name: string }[], basic: readonly { name: string }[]): string[] {

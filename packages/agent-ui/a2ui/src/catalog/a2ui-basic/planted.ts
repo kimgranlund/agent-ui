@@ -5,8 +5,8 @@
 // the `ERR_IMPORT_ATTRIBUTE_MISSING` trap `tools/catalog-files.ts` documents). The `src/fixtures.ts`
 // shared-test-material precedent.
 //
-// Why it exists: `allBasicSeeds` is empty until GH #1732 seeds the first Basic exemplar, so a gate that
-// walks the Basic shelf proves nothing while the shelf is empty. These helpers PLANT a real Basic payload
+// Why it exists: a gate that walks only the real Basic shelf (first seeded by GH #1732) cannot plant a
+// WRONG-dialect seed, so it cannot prove it bites. These helpers PLANT a real Basic payload
 // (one of the three upstream fixtures `upstream-fixtures.test.ts` already proves valid and renderable) as
 // an in-memory seed or record, so each Basic leg is shown to pass on a genuine Basic seed AND to fail on
 // a wrong-dialect one. Nothing here is written to the shelf or to a corpus shard.
@@ -53,7 +53,7 @@ export function plantedBasicSurfaceId(key: PlantedBasicKey): string {
   return create.createSurface.surfaceId
 }
 
-/** A planted `ExampleSeed<'a2ui-basic'>`, in memory only (the real shelf stays empty until GH #1732). */
+/** A planted `ExampleSeed<'a2ui-basic'>`, in memory only (never added to the real shelf). */
 export function plantedBasicSeed(key: PlantedBasicKey, name = `planted-basic-${key}`): ExampleSeed<'a2ui-basic'> {
   return {
     name,

@@ -20,7 +20,7 @@
 //
 // TWO SHELVES (GH #1737, ADR-0169 follow-up, Kim's ruling 2026-10-03: separate shelf). The legs above
 // guard `allSeeds` (agent-ui only, `defaultCatalog`) and are unchanged. `allBasicSeeds` is a SECOND shelf
-// of `ExampleSeed<'a2ui-basic'>` (empty until GH #1732) with its own legs at the end of this file: the
+// of `ExampleSeed<'a2ui-basic'>` (first seeded by GH #1732) with its own legs at the end of this file: the
 // same two checks against `a2uiBasicCatalog`, plus the cross-shelf name-uniqueness invariant (corpus LLD
 // invariant i: `name` is the join key across every shard). Because the real Basic shelf is empty, each
 // Basic predicate is a named function shared by the standing loop AND by planted in-memory fixtures that
@@ -490,7 +490,7 @@ describe('the Basic example shelf (GH #1737) - standing gate over allBasicSeeds'
   }
 })
 
-describe('the Basic example shelf (GH #1737) - the gate bites (planted in-memory seeds; the real shelf stays empty until GH #1732)', () => {
+describe('the Basic example shelf (GH #1737) - the gate bites (planted in-memory seeds, independent of the real shelf)', () => {
   const planted = plantedBasicSeed('product-card')
   // The wrong-dialect negative control: a genuine agent-ui payload claiming the Basic catalog.
   const misStamped: ExampleSeed<'a2ui-basic'> = {
