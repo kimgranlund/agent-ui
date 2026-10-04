@@ -1,6 +1,6 @@
 # LLD — A2UI Corpus Store
 
-> Status: proposed · v0.7.3 · 2026-10-04 (v0.1 2026-06-26) · Layer: LLD (implementation plan)
+> Status: proposed · v0.7.4 · 2026-10-04 (v0.1 2026-06-26) · Layer: LLD (implementation plan)
 > Implements: [`../spec/a2ui-training-corpus.spec.md`](../spec/a2ui-training-corpus.spec.md) (SPEC-R1..R16, SPEC-N1..N6). Closes **PRD-D4** (storage substrate); PRD-D5 (MCP delivery) is now served through the streaming-pipeline LLD (see LLD-C13 note, §1).
 > Altitude: this document adds the **how**. It does not re-derive corpus behavior — that is the SPEC's; it cites `SPEC-R*` for the what and specifies data structures, algorithms, files, failures, and build order.
 > **v0.2 reconciliation (2026-07-03):** realized/unrealized state added (§0); LLD-C6 marked REALIZED; the healer (LLD-C7) is now **the ONE shared healer** for the whole system (the streaming LLD v0.2 re-pointed all healing here — the renderer deliberately does not heal) and its contract is ADR-0061; the phase-1 scope + tier-2 judge seam is ADR-0060; the pure-core/Node-shell split, the `"./corpus"` subpath, and the data home are ADR-0062; the dangling `a2ui-mcp.lld.md` reference repaired (LLD-C13 re-pointed to the streaming LLD-C6); the seed-import slice (ADR-0055's booked handshake) added as LLD-C14.
@@ -73,6 +73,12 @@
 > `sid:root-missing` before stage 6. The canonical fold (§4) still treats `createSurface` as a
 > non-boundary (hashes frozen), and `canonical.ts` is unchanged. All 78 exemplars and the committed
 > `multi-turn` and `repair` shards validate with identical verdicts and re-admit with their stored hashes.
+> **v0.7.4 (2026-10-04, ADR-0064 canonical-fold erratum, GH #1778):** §4 records that the canonical
+> fold keeping a re-create without a delete as ONE merged epoch is intended, not a gap: the hash is a
+> record identity over the full stream, frozen by the GH #1765 ruling, and the merged first-epoch data
+> model is a named divergence from renderer-visible state (identity only; stage 6 resets there). The stale
+> `canonical.ts#foldStream` comment is repaired (comment-only, no hash moves). The validator's reset at a
+> `createSurface` with an unregistered `catalogId` is recorded in the same erratum, not changed.
 
 ---
 
@@ -281,6 +287,16 @@ ONE component-bearing epoch serializes exactly as before (every committed `canon
 byte-identical, the `corpus-data.test.ts` stored-hash leg); a record with N >= 2 serializes as the ORDERED
 LIST of per-epoch forms, each the existing `{components, dataModel}` shape, and the hash covers the list,
 so two records that end on the same tree through different lifecycles are distinct.
+
+**A re-create without a delete stays ONE merged epoch, by design (v0.7.4, ADR-0064's canonical-fold
+erratum, GH #1778).** That this fold keeps `createSurface` a non-boundary while the validator and §6
+stage 6 reset there is intended, not a gap awaiting a hash migration: the hash is a record identity over
+the full stream it bundles, not the renderer's end state, and the GH #1765 ruling freezes every committed
+hash. On this shape it is a known divergence from renderer-visible state. The components converge (tier-1
+makes the second epoch self-contained, so the first epoch's other components drop as `disconnected`), but
+the merged data model keeps the first epoch's writes, which the renderer dropped at the re-create, so the
+hash can cover data the rendered surface does not have. The divergence is in identity only: stage 6
+resets at the re-create, so no binding resolves against that data. No committed record holds the shape.
 
 **Data-only epochs count in neither the fold nor resolution (GH #1750, decided with A6's build; recorded
 as ADR-0064's 2026-10-04 data-only epochs erratum).** An

@@ -1035,4 +1035,22 @@ describe('validateA2ui: re-create resets the id graph (ADR-0064 re-create erratu
       expect(both([rootText('one'), create(), rootText('two')]).finalize).toEqual(CLEAN)
     })
   })
+
+  // ADR-0064's GH #1778 erratum: the validator holds ONE catalog, not the renderer's registry, so it cannot
+  // tell a registered `catalogId` from an unregistered one, and every `createSurface` resets. The renderer
+  // refuses an unregistered id (`CATALOG_UNKNOWN`) and keeps the live surface; that divergence is recorded,
+  // not closed. These pin the recorded behavior so a silent change reds here and points at the erratum.
+  describe('the reset ignores `catalogId` (recorded divergence, GH #1778)', () => {
+    it('create, root, create(<an id the catalog does not carry>), root validates: the second create resets', () => {
+      const v = both([create(), rootText('one'), create('s', 'not-registered'), rootText('two')])
+      expect(v.default).toEqual(CLEAN)
+      expect(v.finalize).toEqual(CLEAN)
+    })
+
+    it("a rootless re-create under that id fails `root-missing`, exactly as under the catalog's own id", () => {
+      const v = both([create(), rootText('one'), create('s', 'not-registered'), label()])
+      expect(v.default).toEqual(ROOT_MISSING)
+      expect(v.finalize).toEqual(ROOT_MISSING)
+    })
+  })
 })
