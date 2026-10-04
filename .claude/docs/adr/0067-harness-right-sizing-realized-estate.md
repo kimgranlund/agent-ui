@@ -141,3 +141,32 @@ that missing restatement of record.
 Provenance: [GH #1703](https://github.com/kimgranlund/agent-ui/issues/1703),
 `.claude/ops/revalidation-queue.json` `candidates[].claim_id == "adr-0067"` (queued
 2026-08-29T17:29:44Z, kind `falsified`).
+
+## Amendment (2026-10-03, **ratified**, kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/1734#issuecomment-5974690128)): cl.1's deferred `a2ui-jsonl-mcp` skill: the named trigger fired and the skill is authored (GH #1734)
+
+Clause 1 deferred `a2ui-jsonl-mcp` to the streaming producer wave, on the ground that a skill must
+teach a realized workflow, not a planned one, and the Consequences section listed it among the deferred pieces that
+carry a named trigger (jsonl-mcp skill → streaming producer wave). The Alternatives section rejected
+authoring it against the streaming SPEC because the producer scope was then unscoped.
+
+That trigger has fired. The workflow the skill teaches is realized and tested: `produce()` and its
+per-round order, the `a2uiMeta` meta-line channel (ADR-0088), validate-then-stream and the `target`
+arm (ADR-0206), the closed per-line healer (ADR-0061), the recorded transport, and the devtools
+capture and replay family (ADR-0200). Kim ruled the trigger fired on 2026-10-03 (GH #1734).
+
+Restated as of this amendment:
+
+- **Clause 1, Skills.** `a2ui-jsonl-mcp` is no longer deferred; it is authored at
+  `.claude/skills/a2ui-jsonl-mcp/`, the eighth `a2ui`-prefixed skill alongside the seven the
+  2026-08-29 amendment lists. Its scope is the JSONL line protocol only: line framing, per-line
+  heal, the meta-line and its per-arm drop law, the producer and yield order, the terminal error
+  line, and transcript record and replay.
+- **Boundaries.** Payload composition and the meta-arm vocabulary stay with `a2ui-payload-authoring`;
+  package code and build method stay with `a2ui-build`. The new skill states what the line protocol
+  does to a line and defers what a line says.
+
+The Decision's other clauses, the remaining deferred triggers (programmatic driver and retrieval CLI,
+eval and scoring, wiring-check promotion) and this ADR's status are unchanged.
+
+Provenance: [GH #1734](https://github.com/kimgranlund/agent-ui/issues/1734), the ruling comment linked
+in the header above.
