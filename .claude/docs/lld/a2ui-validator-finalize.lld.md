@@ -91,6 +91,13 @@ payload end with `atFinalize`. `deletedHere` no longer exists; see mechanic 4's 
    emptiness arm, so create-then-delete still passes at finalize, and a non-empty closed epoch is judged
    in full in both modes as before. A `createSurface` after the last delete opens a new epoch that IS
    judged at finalize, so create, root, delete, create with nothing after fails `${sid}:root-missing`.)*
+   *(REV 2026-10-04, ADR-0064 re-create erratum, GH #1772: a `createSurface` is an epoch boundary too.
+   The `createSurface` arm of `validateMessage` no longer lands in the open epoch; it closes the sid's
+   open epoch, if any (`recreateEpoch`, sharing `freezeOpenEpoch` with `closeEpoch`), and opens a fresh
+   `created` one, without marking the sid deleted. A closed empty epoch is still exempt from the emptiness
+   arm, so a create over an empty epoch changes no verdict; a rootless re-create now fails
+   `${sid}:root-missing` (in default mode when its epoch holds components, at finalize when it holds
+   none), and create, root, create, root validates.)*
 
 ## 4. Call-site rulings (Findings 2's opt-in fork — every `validateA2ui` caller, with reasons)
 

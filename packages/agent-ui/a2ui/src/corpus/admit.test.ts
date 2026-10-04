@@ -968,33 +968,20 @@ describe('admit: a re-create without a deleteSurface resets resolution (ADR-0064
     expect((await admit(multiTurnRecord({ a2uiOutput: rebind }), mkFacetDeps())).ok).toBe(true)
   })
 
-  // A single stream. The exemplar shape `create, root, dm, create, root` never reaches stage 6: the second
-  // `root` is a resend (a `createSurface` inside an open epoch is not a boundary to the validator, A2), so
-  // tier-1 rejects `s:root` first. A re-create that delivers no second `root` does reach stage 6, and gets
-  // the same reset.
+  // A single stream. Since the 2026-10-04 re-create erratum (GH #1772) the shared validator resets its id
+  // graph at a `createSurface` too, so a re-create that delivers its own `root` is a first delivery at
+  // tier-1 and the exemplar shape `create, root, dm, create, root` reaches stage 6, which then resets the
+  // resolution fold the same way. A re-create that delivers NO second `root` no longer reaches stage 6: the
+  // first epoch's `root` does not carry over, so tier-1 rejects `s:root-missing` first.
   describe('one stream (an exemplar record)', () => {
     const agentUiCandidate = (a2uiOutput: A2uiOutput): unknown => mkCandidate({ a2uiOutput, meta: { catalogId: 'agent-ui' } })
-    const rootOnly: A2uiServerMessage = {
-      version: 'v1.0',
-      updateComponents: { surfaceId: 'login', components: [{ id: 'root', component: 'Column', children: ['status'] }] },
-    }
     const statusOnly: A2uiServerMessage = {
       version: 'v1.0',
       updateComponents: { surfaceId: 'login', components: [{ id: 'status', component: 'Text', text: { path: '/status' } }] },
     }
 
-    it('a re-create that resends `root` never reaches stage 6: tier-1 rejects the resend first (E_IDGRAPH login:root)', async () => {
+    it('a re-create that delivers its own `root` reaches stage 6 and resets: a binding to data only the first epoch wrote rejects', async () => {
       const output = login(recreate, statusTree, writeStatus, recreate, statusTree)
-      expect(validateA2ui(output, defaultCatalog, undefined, { atFinalize: true }).failures).toEqual([{ code: 'IDGRAPH', path: 'login:root' }])
-      const result = await admit(agentUiCandidate(output), mkFacetDeps())
-      expect(result.ok).toBe(false)
-      if (result.ok) return
-      expect(result.code).toBe('E_IDGRAPH')
-      expect(result.paths).toEqual(['login:root'])
-    })
-
-    it('a re-create with no second `root` reaches stage 6 and resets: a binding to data only the first epoch wrote rejects', async () => {
-      const output = login(recreate, rootOnly, writeStatus, recreate, statusOnly)
       expect(validateA2ui(output, defaultCatalog, undefined, { atFinalize: true }).valid).toBe(true)
       const stale = await admit(agentUiCandidate(output), mkFacetDeps())
       expect(stale.ok).toBe(false)
@@ -1003,8 +990,20 @@ describe('admit: a re-create without a deleteSurface resets resolution (ADR-0064
       expect(stale.paths).toEqual(['status.text'])
     })
 
+    it('a rootless re-create never reaches stage 6: tier-1 rejects `login:root-missing` first (GH #1772)', async () => {
+      // The first epoch is a complete tree (each epoch is judged on its own graph now), so the one failure is
+      // the second epoch's missing `root`.
+      const output = login(recreate, statusTree, writeStatus, recreate, statusOnly)
+      expect(validateA2ui(output, defaultCatalog, undefined, { atFinalize: true }).failures).toEqual([{ code: 'IDGRAPH', path: 'login:root-missing' }])
+      const result = await admit(agentUiCandidate(output), mkFacetDeps())
+      expect(result.ok).toBe(false)
+      if (result.ok) return
+      expect(result.code).toBe('E_IDGRAPH')
+      expect(result.paths).toEqual(['login:root-missing'])
+    })
+
     it('the same stream with a write after the re-create admits (positive control)', async () => {
-      const output = login(recreate, rootOnly, writeStatus, recreate, statusOnly, writeStatus)
+      const output = login(recreate, statusTree, writeStatus, recreate, statusTree, writeStatus)
       const own = await admit(agentUiCandidate(output), mkFacetDeps())
       expect(own.ok).toBe(true)
     })

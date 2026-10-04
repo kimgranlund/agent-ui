@@ -1,6 +1,6 @@
 # LLD — A2UI Corpus Store
 
-> Status: proposed · v0.7.2 · 2026-10-04 (v0.1 2026-06-26) · Layer: LLD (implementation plan)
+> Status: proposed · v0.7.3 · 2026-10-04 (v0.1 2026-06-26) · Layer: LLD (implementation plan)
 > Implements: [`../spec/a2ui-training-corpus.spec.md`](../spec/a2ui-training-corpus.spec.md) (SPEC-R1..R16, SPEC-N1..N6). Closes **PRD-D4** (storage substrate); PRD-D5 (MCP delivery) is now served through the streaming-pipeline LLD (see LLD-C13 note, §1).
 > Altitude: this document adds the **how**. It does not re-derive corpus behavior — that is the SPEC's; it cites `SPEC-R*` for the what and specifies data structures, algorithms, files, failures, and build order.
 > **v0.2 reconciliation (2026-07-03):** realized/unrealized state added (§0); LLD-C6 marked REALIZED; the healer (LLD-C7) is now **the ONE shared healer** for the whole system (the streaming LLD v0.2 re-pointed all healing here — the renderer deliberately does not heal) and its contract is ADR-0061; the phase-1 scope + tier-2 judge seam is ADR-0060; the pure-core/Node-shell split, the `"./corpus"` subpath, and the data home are ADR-0062; the dangling `a2ui-mcp.lld.md` reference repaired (LLD-C13 re-pointed to the streaming LLD-C6); the seed-import slice (ADR-0055's booked handshake) added as LLD-C14.
@@ -65,6 +65,14 @@
 > non-boundary, so the resolution fold and the canonical fold now differ on this one shape on purpose.
 > `canonical.ts` and `renderer/validate.ts` are unchanged and all 78 committed exemplars re-admit with
 > their stored `canonicalHash`.
+> **v0.7.3 (2026-10-04, ADR-0064 validator re-create erratum built, GH #1772):** the shared validator
+> (LLD-C6, `renderer/validate.ts`) now resets its id graph at every `createSurface` too, matching the
+> renderer, so tier-1 judges each `createSurface`-bounded epoch on its own graph. §4's epoch-rule sentence
+> and §6 stage 6's "Not covered" note are repaired to say so: a re-create that delivers its own `root` now
+> reaches stage 6 (it failed tier-1 `sid:root` before), and a rootless re-create now fails tier-1
+> `sid:root-missing` before stage 6. The canonical fold (§4) still treats `createSurface` as a
+> non-boundary (hashes frozen), and `canonical.ts` is unchanged. All 78 exemplars and the committed
+> `multi-turn` and `repair` shards validate with identical verdicts and re-admit with their stored hashes.
 
 ---
 
@@ -255,9 +263,11 @@ ADR), not speculative machinery now.
 re-created inside one record, so the fold is single-surface AND per epoch. An epoch is the run of
 messages between `deleteSurface` boundaries; at each `deleteSurface` the fold resets the component map
 and the data model, exactly as the renderer's surface teardown frees both, and the shared validator judges
-each epoch on its own graph (A2). A `createSurface` is never a boundary to THIS fold (one inside an open
-epoch is not a reset; §6 stage 6's resolution fold differs here on purpose, v0.7.2, ADR-0064's re-create
-erratum, because the hashes are frozen), but it is the ONLY message that reopens a deleted surface (ADR-0064's 2026-10-04 erratum): an
+each epoch on its own graph (A2), an epoch it closes at a `createSurface` as well as at a `deleteSurface`
+(v0.7.3, ADR-0064's validator re-create erratum, GH #1772). A `createSurface` is still never a boundary to
+THIS fold (one inside an open epoch is not a reset, so on a re-create without a delete this fold and the
+validator's epochs differ; §6 stage 6's resolution fold resets there too, v0.7.2, ADR-0064's resolution
+re-create erratum; only this fold keeps one merged epoch, because the hashes are frozen), but it is the ONLY message that reopens a deleted surface (ADR-0064's 2026-10-04 erratum): an
 `updateComponents`/`updateDataModel` between a `deleteSurface` and the next `createSurface` is the delivery
 the renderer drops, so the fold skips it (tier-1 already fails such a stream `sid:update-after-delete`, so
 no admitted record contains one). An epoch that delivered no components mounted nothing and contributes no
@@ -394,9 +404,11 @@ dispatch by `meta.facet`, and an exemplar takes exactly its pre-ADR-0231 path th
   test: every `createSurface` closes the fold. This differs from §4's
   canonical fold ON PURPOSE: that fold keeps `createSurface` a non-boundary because the ruling froze every
   committed hash, so a re-create without a delete resolves per epoch here yet hashes as one merged epoch.
-  Within one stream the shape reaches stage 6 only when the re-create delivers no second `root` (a
-  re-sent `root` is tier-1's `sid:root`). Not covered: the validator judges the id graph across a
-  re-create inside one stream as one epoch (A2), so a rootless second epoch is graph-valid at tier-1.
+  Within one stream the shape reaches stage 6 only when the re-create delivers its own `root` (v0.7.3,
+  GH #1772: tier-1 resets its id graph at the `createSurface` too, so the second `root` is a first
+  delivery and a rootless re-create fails tier-1 `sid:root-missing` before stage 6). Not covered: the
+  canonical fold still merges the re-created epochs into one (§4), so such a record's hash can carry the
+  first epoch's data model, which the renderer dropped at the re-create.
 - **Stage 8 (canonical + hash)** is `recordIdentity(record)` (§4).
 
 Stage 3 (eval fail-closed, `facet === "eval"` exactly), stage 7 (the leak gate, now over every

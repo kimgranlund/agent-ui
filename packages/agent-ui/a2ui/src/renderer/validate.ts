@@ -21,7 +21,7 @@
 // Granularity (renderer LLD §8 "Id-graph granularity"): the id-graph stage judges a COMPLETE
 // component set. Missing-root and dangling are legal *transient* states mid-stream (SPEC-R4), so
 // the renderer host (LLD-C13) MUST call this at FINALIZE granularity — never per incremental
-// `updateComponents`. A 2nd `root` and a cycle are always invalid. The corpus passes a complete
+// `updateComponents`. A 2nd `root` (within one epoch, see below) and a cycle are always invalid. The corpus passes a complete
 // `a2uiOutput`, so both callers judge the same set → identical verdict (N6).
 //
 // ADR-0187 / GH #829 — the FINALIZE SIGNAL (`opts.atFinalize`). One fact this function cannot know
@@ -50,10 +50,22 @@
 // closed (an empty closed epoch mounted nothing, so it is exempt; a non-empty one is judged in full,
 // in both modes), the epoch still open at payload end with the finalize arm as before. Judgment runs
 // at Stage 4 over those frozen graphs, so failure order stays stage-major and byte-identical to the
-// pre-epoch validator for every payload that never deletes a surface it delivered to. A
-// `createSurface` landing inside an already-open epoch is NOT a boundary (the resend rule is
-// untouched: two `root`s with no `deleteSurface` between them still fail `sid:root`). Codes are
-// unchanged; the one new path is `sid:update-after-delete`, which no delete-free payload can produce.
+// pre-epoch validator for every payload that neither deletes nor re-creates a surface it delivered to.
+//
+// ADR-0064 re-create erratum (2026-10-04, GH #1772 ruling): a `createSurface` is ALSO an epoch boundary.
+// The renderer replaces a live surface on a re-create (`renderer.ts#onCreateSurface` tears the DOM down
+// and `SurfaceStore.create` disposes the prior surface and builds a fresh one), so every `createSurface`
+// closes the sid's open epoch, if any, and opens a fresh one: the new epoch holds no `root`, no
+// components and no seed. No `deleteSurface` is needed. A create over an empty open epoch (a leading
+// create, a create right after a create, or after a delete) closes nothing that mounted, so it changes
+// no verdict. Two shapes change: `createSurface s, root, createSurface s, root` now VALIDATES (the second
+// `root` is a first delivery, as it is after a delete; it failed `sid:root` before), and a re-create
+// whose own epoch delivers components but no `root` now fails `sid:root-missing` (the first epoch's
+// `root` no longer satisfies it). A re-create with nothing after it stays clean in default mode and
+// fails `sid:root-missing` at finalize, as a create after a delete always did (A3). The resend rule
+// holds WITHIN an epoch: two `root`s with no `createSurface` or `deleteSurface` between still fail
+// `sid:root`. Codes are unchanged (`sid:update-after-delete`, from the delete erratum above, is still the
+// one path no delete-free payload can produce).
 
 import { SUPPORTED_VERSIONS, MAX_RENDER_DEPTH } from '../protocol.ts'
 import type { A2uiComponent, Failure } from '../protocol.ts'
@@ -134,8 +146,8 @@ interface SurfaceGraph {
 
 /** ADR-0064 amendment A2: one epoch of a surface's lifecycle within this payload (see module header). */
 interface Epoch extends SurfaceGraph {
-  /** A4: a `createSurface` opened this epoch or landed inside it, so the TKT-0081 seed never applies to
-   *  it. For a payload with no `deleteSurface` this is exactly the pre-epoch `createdHere` membership. */
+  /** A4: a `createSurface` opened this epoch, so the TKT-0081 seed never applies to it (the re-create
+   *  erratum: every `createSurface` opens its own epoch, so none ever "lands inside" one). */
   created: boolean
 }
 
@@ -266,12 +278,13 @@ function validateMessage(
       // BEHAVIOR-NEUTRAL ALONE: with the empty-set early returns intact for default mode, an empty graph
       // still yields no failure from `checkIdGraph`/`checkContainment`, and the TKT-0081 seed loop skips
       // every `created` epoch, so only a caller passing `atFinalize` sees any difference.
-      // ADR-0064 amendment A2/A4: registration now OPENS an epoch (or lands in the open one) and marks it
-      // `created`; it never closes one, so a re-create with no delete between is not a boundary. It is
-      // also the ONLY message that takes a deleted sid back (the erratum rule).
+      // ADR-0064 amendment A2/A4 + the 2026-10-04 re-create erratum (GH #1772): registration CLOSES the
+      // sid's open epoch, if any (the renderer replaces a live surface on a re-create), then OPENS a fresh
+      // one and marks it `created`. It is also the ONLY message that takes a deleted sid back (the
+      // erratum rule).
       if (typeof body.surfaceId === 'string') {
         surfaces.deleted.delete(body.surfaceId)
-        openEpoch(surfaces, body.surfaceId).created = true
+        recreateEpoch(surfaces, body.surfaceId)
       }
       return
     case 'updateComponents':
@@ -503,10 +516,11 @@ const isBinding = (v: unknown): v is { path: string } =>
   isObject(v) && typeof (v as { path?: unknown }).path === 'string'
 
 /**
- * ADR-0064 amendment A2: the epoch a `createSurface` or an `updateComponents` lands in. Returns the
- * sid's OPEN epoch, opening a fresh one when none is open: a `createSurface` after a delete, or the
- * first delivery to a surface this payload never saw (the validator's implicit open for an uncreated
- * surface). Never reached by a delivery to a DELETED sid (`rejectIfDeleted` stops it first).
+ * ADR-0064 amendment A2: the epoch an `updateComponents` lands in. Returns the sid's OPEN epoch (the one a
+ * `createSurface` or an earlier delivery opened), opening a fresh one only when none is open: the first
+ * delivery to a surface this payload never saw (the validator's implicit open for an uncreated surface).
+ * Never reached by a delivery to a DELETED sid (`rejectIfDeleted` stops it first). `createSurface` does
+ * not call it directly: it goes through `recreateEpoch`.
  */
 function openEpoch(surfaces: PayloadSurfaces, sid: string): Epoch {
   let lifecycle = surfaces.bySid.get(sid)
@@ -519,6 +533,18 @@ function openEpoch(surfaces: PayloadSurfaces, sid: string): Epoch {
 }
 
 /**
+ * Close the sid's open epoch, freezing its graph for Stage 4. A sid with no open epoch (the prior turn's
+ * surface, or none) registers nothing, so closing it never shifts the report order. The one close path
+ * shared by `deleteSurface` (`closeEpoch`) and `createSurface` (`recreateEpoch`).
+ */
+function freezeOpenEpoch(surfaces: PayloadSurfaces, sid: string): void {
+  const lifecycle = surfaces.bySid.get(sid)
+  if (lifecycle?.open === undefined) return
+  lifecycle.closed.push(lifecycle.open)
+  lifecycle.open = undefined
+}
+
+/**
  * ADR-0064 amendment A2: `deleteSurface` closes the sid's open epoch, freezing its graph for Stage 4,
  * and marks the sid DELETED until a `createSurface` re-creates it. A delete for a surface with no epoch
  * yet in this payload (the prior turn's surface, or none) registers no graph, so it never shifts the
@@ -526,10 +552,19 @@ function openEpoch(surfaces: PayloadSurfaces, sid: string): Epoch {
  */
 function closeEpoch(surfaces: PayloadSurfaces, sid: string): void {
   surfaces.deleted.add(sid)
-  const lifecycle = surfaces.bySid.get(sid)
-  if (lifecycle?.open === undefined) return
-  lifecycle.closed.push(lifecycle.open)
-  lifecycle.open = undefined
+  freezeOpenEpoch(surfaces, sid)
+}
+
+/**
+ * ADR-0064 re-create erratum (2026-10-04, GH #1772): a `createSurface` closes the sid's open epoch, if
+ * any, then opens a fresh one marked `created` (the TKT-0081 seed never applies to it, A4). The renderer
+ * replaces a live surface on a re-create, so the prior epoch's `root`, components and seed are gone; the
+ * new epoch is judged on what it delivers alone. Unlike `closeEpoch` it does NOT mark the sid deleted
+ * (the create IS the reopen). An empty epoch it closes mounted nothing, so A3 exempts it.
+ */
+function recreateEpoch(surfaces: PayloadSurfaces, sid: string): void {
+  freezeOpenEpoch(surfaces, sid)
+  openEpoch(surfaces, sid).created = true
 }
 
 /**

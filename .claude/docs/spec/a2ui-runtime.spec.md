@@ -181,8 +181,9 @@ Additionally, the renderer MUST support **DynamicString `${…}` interpolation**
 > covers.** The renderer frees a surface's graph and data model at `deleteSurface`, so the shared
 > validator does too: it partitions each surface's messages into EPOCHS. An epoch opens at `createSurface`
 > (or at the first `updateComponents` to a surface this payload never deleted) and closes at that
-> surface's next `deleteSurface`; a `createSurface` inside an open epoch is not a boundary (a resent `root`
-> there still fails `${surfaceId}:root`). **After a `deleteSurface`, only a `createSurface` reopens that
+> surface's next `deleteSurface` (a `createSurface` closes it too, see the re-create REV below; a resent
+> `root` with no `createSurface` or `deleteSurface` between still fails `${surfaceId}:root`).
+> **After a `deleteSurface`, only a `createSurface` reopens that
 > surface** (ADR-0064's 2026-10-04 erratum): the renderer drops an `updateComponents` or `updateDataModel`
 > addressed to a deleted surface, so the validator fails each such message with the existing `IDGRAPH`
 > code at `${surfaceId}:update-after-delete`, and the dropped delivery joins no graph. Each epoch is judged
@@ -193,10 +194,30 @@ Additionally, the renderer MUST support **DynamicString `${…}` interpolation**
 > deleteSurface s, createSurface s` with nothing after fails `${surfaceId}:root-missing` at finalize. The
 > TKT-0081 session seed merges into the first epoch only, and only when this payload neither created that
 > epoch nor deleted the surface before it. Codes are unchanged (the one new path is
-> `${surfaceId}:update-after-delete`), failures still report in stream order, and a payload with no
-> `deleteSurface` judges exactly as before. The corpus canonicalizer folds at the same boundary and skips
-> the same dropped deliveries (corpus LLD §4, the epoch rule), so admission and this renderer agree on what
-> a delete-then-recreate record is.
+> `${surfaceId}:update-after-delete`), failures still report in stream order, and a payload with neither a
+> `deleteSurface` nor a re-create judges exactly as before. The corpus canonicalizer folds at the
+> `deleteSurface` boundary and skips the same dropped deliveries (corpus LLD §4, the epoch rule), so
+> admission and this renderer agree on what a delete-then-recreate record is.
+
+> **REV 2026-10-04 (ADR-0064 re-create erratum, GH #1772): a `createSurface` is an epoch boundary too.**
+> The renderer replaces a live surface at a re-create (`#onCreateSurface` tears the surface's DOM down, and
+> the surface store disposes the prior surface and builds a fresh one), so after it the surface holds no
+> `root`, no components, no data and no session seed, whether or not a `deleteSurface` came first. The
+> shared validator therefore closes the surface's open epoch at EVERY `createSurface` and opens a fresh
+> one; the surface is not marked deleted (the create is the reopen). The rest of the lifecycle rule above
+> applies to the finer epochs. So `createSurface s, root, createSurface s, root` is valid in both modes
+> (the second `root` is a first delivery), and `createSurface s, root, createSurface s, <components with
+> no root>` fails `${surfaceId}:root-missing` in both modes, because the first epoch's `root` no longer
+> satisfies the second. A re-create with nothing after it stays clean by default (the prefix laws, SPEC-R4
+> AC1 of the message-lifecycle SPEC and SPEC-R5 AC1 of the live-agent SPEC) and fails
+> `${surfaceId}:root-missing` at finalize, and a re-create over an empty epoch changes no verdict. An
+> `updateComponents` that reaches a surface before its first `createSurface` is the delivery the renderer
+> drops (an unknown surface), so it is its own epoch and the create then replaces it. The resend rule
+> holds WITHIN an epoch: two `root`s with no `createSurface` or `deleteSurface` between still fail
+> `${surfaceId}:root` (SPEC-R3 AC2). Codes and path shapes are unchanged, and the corpus validator is the
+> same function (`corpus/validate.ts` re-exports it), so admission sees the same verdicts. The canonical
+> fold keeps `createSurface` a non-boundary because the committed hashes are frozen (ADR-0064's same-date
+> erratum records the difference).
 
 **SPEC-R12 — Capabilities exchange.** The renderer MUST be able to declare an `a2uiClientCapabilities` object (supported protocol versions, surfaces, action features) to the server; under A2A transport it MUST place it in the A2A `Message` metadata. *(→ PRD-G1, PRD-G7)*
 - **AC1** *Given* a capabilities request (or A2A handshake), *when* the renderer responds, *then* the declared object lists its supported `protocolVersion`(s) including `v1.0`.
@@ -216,7 +237,7 @@ Additionally, the renderer MUST support **DynamicString `${…}` interpolation**
 | **SPEC-N3** | Teardown is leak-free | After `deleteSurface` (or renderer disposal), the surface leaves zero live signals/effects/listeners — provable via the kernel's `inspect()` + AbortSignal (mirrors the component foundation's discipline). |
 | **SPEC-N4** | Fault isolation | One malformed message or one unknown component type MUST NOT tear down the surface or stop the stream. |
 | **SPEC-N5** | Zero runtime dependencies | The renderer adds no third-party runtime dependency (Constraint C2); it builds on `@agent-ui/components` (signals + controls) only — it MUST NOT use `@a2ui/web_core`. |
-| **SPEC-N6** | Validator parity | The validation in SPEC-R11 is the same code path as corpus admission (one implementation, two callers). *(REV 2026-08-13, ADR-0187/GH #829: still ONE implementation; it now takes an optional `atFinalize` completeness assertion from the caller. Parity means two callers judging the same completeness return identical verdicts; the renderer's finalize and corpus admission both judge a COMPLETE set, so they agree, which is the case this law was always about. See SPEC-R11's REV of the same date.)* *(REV 2026-10-04, ADR-0064 amendment 2026-10-03 / GH #1740: the shared path judges each surface per EPOCH, freeing its id graph at `deleteSurface` as the renderer does; delete-then-recreate of one surface is valid for every caller, and a delivery to a deleted, not yet re-created surface fails `${surfaceId}:update-after-delete`. See SPEC-R11's REV of the same date.)* |
+| **SPEC-N6** | Validator parity | The validation in SPEC-R11 is the same code path as corpus admission (one implementation, two callers). *(REV 2026-08-13, ADR-0187/GH #829: still ONE implementation; it now takes an optional `atFinalize` completeness assertion from the caller. Parity means two callers judging the same completeness return identical verdicts; the renderer's finalize and corpus admission both judge a COMPLETE set, so they agree, which is the case this law was always about. See SPEC-R11's REV of the same date.)* *(REV 2026-10-04, ADR-0064 amendment 2026-10-03 / GH #1740: the shared path judges each surface per EPOCH, freeing its id graph at `deleteSurface` as the renderer does; delete-then-recreate of one surface is valid for every caller, and a delivery to a deleted, not yet re-created surface fails `${surfaceId}:update-after-delete`. See SPEC-R11's REV of the same date.)* *(REV 2026-10-04, ADR-0064 re-create erratum / GH #1772: the same per-epoch judgment also resets at every `createSurface`, as the renderer replaces a live surface on a re-create; `createSurface s, root, createSurface s, root` is valid for every caller and a rootless re-create fails `${surfaceId}:root-missing`. `corpus/validate.ts` re-exports the one function, and `corpus/validate.test.ts` proves it. See SPEC-R11's second REV of that date.)* |
 
 ## 5. Typed contracts
 
