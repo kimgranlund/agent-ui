@@ -47,7 +47,9 @@ version: 1.4
    prior VerdictsFile must be re-authored against the new version when a dimension or an anchor **that
    applies to the judged facet** moves (ADR-0231 cl.5): a bump that only adds facet-scoped dimensions
    (1.3's D6 and D7) leaves every archived file valid history under the version it cites, and only a
-   VerdictsFile authored after the bump cites the new marker. The VerdictsFile also carries
+   VerdictsFile authored after the bump cites the new marker. A clarification bump that anchors the read
+   every archived verdict already applied moves no read, so it re-authors nothing either (1.4's D2 and D5
+   rulings, GH #1769: Kim's "no rescore is needed"). The VerdictsFile also carries
    `rubric: "a2ui-corpus"` (the name) separately; `rubricVersion` is only this marker's value.
 3. **Tag semantics in this rubric.** `[gate]` marks a dimension whose score **gates admission** — it is
    one of the terms of the `qualityScore` MIN; `[review]` (none used here — see below) would mark an
