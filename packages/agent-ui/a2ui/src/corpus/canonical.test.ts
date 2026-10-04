@@ -85,7 +85,7 @@ describe('canonicalize — order / whitespace / id-spelling invariance (SPEC-R6 
     expect(a.serialized).toBe(b.serialized)
     expect(a.hash).toBe(b.hash)
     // Canonical ids are the DFS numbering, never the original spelling.
-    expect(a.form.components.map((c) => c.id)).toEqual(['c0', 'c1', 'c2'])
+    expect(a.finalForm.components.map((c) => c.id)).toEqual(['c0', 'c1', 'c2'])
   })
 })
 
@@ -163,7 +163,7 @@ describe('canonicalize — updateDataModel path:"/" is the root alias, same as p
 
     const a = await canonicalize(omitted)
     const b = await canonicalize(slashRoot)
-    expect(b.form.dataModel).toEqual({ cta: 'Go' }) // NOT nested under a spurious {"":...} key
+    expect(b.finalForm.dataModel).toEqual({ cta: 'Go' }) // NOT nested under a spurious {"":...} key
     expect(a.serialized).toBe(b.serialized)
     expect(a.hash).toBe(b.hash)
   })
@@ -184,10 +184,10 @@ describe('canonicalize — children-template componentId rewrite (v1.0 dynamic l
 
     expect(result.disconnected).toEqual([])
     expect(result.componentsUsed).toEqual(['Column', 'Text'])
-    const root = result.form.components.find((c) => c.component === 'Column')!
+    const root = result.finalForm.components.find((c) => c.component === 'Column')!
     expect(root.children).toEqual({ path: '/items', componentId: 'c1' })
     // the template's target is itself present in the canonical component list (reachable).
-    expect(result.form.components.some((c) => c.id === 'c1' && c.component === 'Text')).toBe(true)
+    expect(result.finalForm.components.some((c) => c.id === 'c1' && c.component === 'Text')).toBe(true)
   })
 })
 
@@ -205,7 +205,7 @@ describe('canonicalize — disconnected components (LLD §4 edge case)', () => {
     const result = await canonicalize(out)
 
     expect(result.disconnected).toEqual(['orphan'])
-    expect(result.form.components.some((c) => c.component === 'Text')).toBe(false)
+    expect(result.finalForm.components.some((c) => c.component === 'Text')).toBe(false)
     expect(result.componentsUsed).toEqual(['Button', 'Column'])
   })
 })
@@ -259,11 +259,13 @@ describe('canonicalize: surface epochs, the fold resets at deleteSurface (ADR-00
   it('a one-epoch record serializes the bare form, not a list (the byte-identity the committed hashes rest on)', async () => {
     const result = await canonicalize([createSurfaceMsg(), updateComponentsMsg(basicTree()), updateDataModelMsg({ cta: 'Go' })])
 
-    expect(result.epochs).toEqual([result.form])
+    expect(result.epochs).toEqual([result.finalForm])
     expect(Array.isArray(JSON.parse(result.serialized))).toBe(false)
-    expect(JSON.parse(result.serialized)).toEqual(result.form)
+    expect(JSON.parse(result.serialized)).toEqual(result.finalForm)
   })
 
+  // Deliberate: `create, root, delete` and `create, root` are near-duplicates by design, and folding the
+  // teardown in would rehash the committed kpi-panel-lifecycle record.
   it('a trailing deleteSurface leaves the hash unchanged (the kpi-panel-lifecycle shape)', async () => {
     const live = await canonicalize([createSurfaceMsg(), updateComponentsMsg(basicTree()), updateDataModelMsg({ cta: 'Go' })])
     const torn = await canonicalize([
@@ -304,8 +306,8 @@ describe('canonicalize: surface epochs, the fold resets at deleteSurface (ADR-00
 
     expect(result.epochs).toHaveLength(2)
     expect(JSON.parse(result.serialized)).toEqual(result.epochs)
-    expect(result.form).toEqual(result.epochs[1])
-    expect(result.form).toEqual(finalAlone.form)
+    expect(result.finalForm).toEqual(result.epochs[1])
+    expect(result.finalForm).toEqual(finalAlone.finalForm)
     // The record is not its final epoch alone: the list (and so the hash) carries epoch 1 too.
     expect(result.hash).not.toBe(finalAlone.hash)
   })
@@ -367,7 +369,7 @@ describe('canonicalize: surface epochs, the fold resets at deleteSurface (ADR-00
     ])
 
     expect(result.epochs).toHaveLength(1)
-    expect(result.form.components.some((c) => c.component === 'Text' && c['text'] === 'replaced')).toBe(true)
+    expect(result.finalForm.components.some((c) => c.component === 'Text' && c['text'] === 'replaced')).toBe(true)
   })
 
   it('a stream with no component-bearing epoch still hits the no-root backstop', async () => {
@@ -376,6 +378,32 @@ describe('canonicalize: surface epochs, the fold resets at deleteSurface (ADR-00
       await expect(canonicalize(out)).rejects.toBeInstanceOf(CanonicalizeError)
       await expect(canonicalize(out)).rejects.toMatchObject({ code: 'IDGRAPH' })
     }
+  })
+
+  it('erratum: a delivery after a delete and before a re-create is dropped from the fold, as the renderer drops it', async () => {
+    // Tier-1 fails these streams `s:update-after-delete`, so no admitted record reaches here this way;
+    // the fold still mirrors the renderer for a direct caller.
+    const live = await canonicalize([createSurfaceMsg(), updateComponentsMsg(basicTree())])
+    const dropped = await canonicalize([
+      createSurfaceMsg(),
+      updateComponentsMsg(basicTree()),
+      deleteSurfaceMsg(),
+      updateComponentsMsg(secondTree()), // addresses the deleted surface
+    ])
+    expect(dropped.epochs).toHaveLength(1)
+    expect(dropped.hash).toBe(live.hash)
+
+    // A data write in the gap is dropped too: the re-created surface starts from an undefined model.
+    const gap = await canonicalize([
+      createSurfaceMsg(),
+      updateComponentsMsg(basicTree()),
+      deleteSurfaceMsg(),
+      updateDataModelMsg({ stale: true }),
+      createSurfaceMsg(),
+      updateComponentsMsg(secondTree()),
+    ])
+    expect(gap.epochs).toHaveLength(2)
+    expect(gap.epochs[1]!.dataModel).toBeUndefined()
   })
 
   it('every epoch passes the root guard on its own: a rootless closed epoch rejects', async () => {

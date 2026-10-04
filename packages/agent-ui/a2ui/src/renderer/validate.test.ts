@@ -563,8 +563,10 @@ describe('validateA2ui — ADR-0187 atFinalize: the abandoned-createSurface judg
 //
 // The renderer frees a surface's whole graph at `deleteSurface`, so a later `root` for the same id is a
 // first delivery, not a resend. The validator mirrors it: an epoch opens at `createSurface` (or the first
-// `updateComponents`) and closes at `deleteSurface`; each epoch is judged on its own graph. The numbered
-// legs are the amendment's §Acceptance items; each runs in BOTH modes where the item says so.
+// `updateComponents` to a never-deleted surface) and closes at `deleteSurface`; each epoch is judged on
+// its own graph. After a delete only `createSurface` reopens the id (the amendment's 2026-10-04 erratum:
+// the renderer drops a delivery to a deleted surface). The numbered legs are the amendment's §Acceptance
+// items; each runs in BOTH modes where the item says so.
 describe('validateA2ui: ADR-0064 amendment surface epochs (delete frees the id graph, GH #1740)', () => {
   const create = (sid = 's', catalogId = 'demo') => ({ version: 'v1.0', createSurface: { surfaceId: sid, catalogId } })
   const del = (sid = 's') => ({ version: 'v1.0', deleteSurface: { surfaceId: sid } })
@@ -658,10 +660,45 @@ describe('validateA2ui: ADR-0064 amendment surface epochs (delete frees the id g
     ])
   })
 
-  it('a delivery after a delete with NO new createSurface opens a fresh epoch implicitly (A2), so its root is a first delivery', () => {
+  it('erratum: a delivery after a delete with NO new createSurface fails `s:update-after-delete` (the renderer drops it)', () => {
+    // `renderer.ts#onUpdateComponents` no-ops for a deleted surface, so this root never mounts. Only a
+    // `createSurface` reopens a deleted sid; the dropped delivery joins no graph, so nothing else fires.
     const v = both([create(), rootText('one'), del(), rootText('two')])
-    expect(v.default).toEqual(CLEAN)
-    expect(v.finalize).toEqual(CLEAN)
+    const expected = { valid: false, failures: [{ code: 'IDGRAPH', path: 's:update-after-delete' }] }
+    expect(v.default).toEqual(expected)
+    expect(v.finalize).toEqual(expected)
+  })
+
+  it('erratum: an updateDataModel to a deleted surface fails the same way; a never-deleted one is untouched', () => {
+    const data = (sid = 's') => ({ version: 'v1.0', updateDataModel: { surfaceId: sid, value: { a: 1 } } })
+    expect(validateA2ui([create(), rootText(), del(), data()], demoCatalog).failures).toEqual([
+      { code: 'IDGRAPH', path: 's:update-after-delete' },
+    ])
+    // Negative controls: the same data write BEFORE the delete, or after a re-create, is clean.
+    expect(validateA2ui([create(), rootText(), data(), del()], demoCatalog)).toEqual(CLEAN)
+    expect(validateA2ui([create(), rootText(), del(), create(), data(), rootText()], demoCatalog)).toEqual(CLEAN)
+  })
+
+  it('erratum: the rejection reports at the dropped message, once per message, and the re-create clears it', () => {
+    const payload = [
+      create(),
+      rootText('one'),
+      del(),
+      comps([{ id: 'root', component: 'Column', children: ['ghost'] }]), // dropped: its dangling ref is never judged
+      rootText('two'), // dropped too
+      create(),
+      rootText('three'), // a first delivery to the re-created surface
+    ]
+    expect(validateA2ui(payload, demoCatalog, undefined, { atFinalize: true }).failures).toEqual([
+      { code: 'IDGRAPH', path: 's:update-after-delete' },
+      { code: 'IDGRAPH', path: 's:update-after-delete' },
+    ])
+  })
+
+  it('erratum: a never-created, never-deleted surface keeps the implicit open (non-delete verdicts unchanged)', () => {
+    expect(validateA2ui([rootText()], demoCatalog, undefined, { atFinalize: true })).toEqual(CLEAN)
+    // A delete of a DIFFERENT surface does not touch it.
+    expect(validateA2ui([del('other'), rootText()], demoCatalog, undefined, { atFinalize: true })).toEqual(CLEAN)
   })
 
   it('order now matters (A3): delete then create with nothing after is an empty OPEN epoch, so it fails at finalize', () => {
@@ -679,10 +716,12 @@ describe('validateA2ui: ADR-0064 amendment surface epochs (delete frees the id g
   })
 
   it('a leading delete never moves a surface in the report order (it registers nothing)', () => {
-    // `a` is deleted first but only OPENED after `b`, so `b`'s failure still reports first, as before.
+    // `a` is deleted first but only re-OPENED (by its createSurface) after `b`, so `b`'s failure still
+    // reports first.
     const payload = [
       del('a'),
       comps([{ id: 'lbl', component: 'Text', text: 'x' }], 'b'),
+      create('a'),
       comps([{ id: 'lbl', component: 'Text', text: 'y' }], 'a'),
     ]
     expect(validateA2ui(payload, demoCatalog).failures).toEqual([
@@ -720,8 +759,16 @@ describe('validateA2ui: ADR-0064 amendment surface epochs (delete frees the id g
   describe('the TKT-0081 seed under epochs (A4)', () => {
     const seed = new Map([['s', { components: [{ id: 'root', component: 'Text', text: 'prior' }], rootDelivered: true }]])
 
-    it('a delete before the first delivery frees the seeded graph: delete, root (no create) validates', () => {
-      expect(validateA2ui([del(), rootText('fresh')], demoCatalog, seed, { atFinalize: true })).toEqual(CLEAN)
+    it('a delete frees the seeded graph: delete, create, root validates (the new root is a first delivery)', () => {
+      expect(validateA2ui([del(), create(), rootText('fresh')], demoCatalog, seed, { atFinalize: true })).toEqual(CLEAN)
+    })
+
+    it('erratum: delete, root with NO create fails `s:update-after-delete`, seed or not (the renderer drops it)', () => {
+      for (const s of [seed, undefined]) {
+        expect(validateA2ui([del(), rootText('fresh')], demoCatalog, s, { atFinalize: true }).failures).toEqual([
+          { code: 'IDGRAPH', path: 's:update-after-delete' },
+        ])
+      }
     })
 
     it('negative control: the same root WITHOUT the delete is the seeded resend, `s:root`', () => {

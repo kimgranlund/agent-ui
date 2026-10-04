@@ -34,7 +34,9 @@
 > **v0.6.1 (2026-10-04, ADR-0064 amendment 2026-10-03 built, GH #1740):** §4 gains the EPOCH RULE: the
 > canonicalizer's fold resets at every `deleteSurface` (A5), one epoch serializes byte-identically to
 > before (74/74 committed hashes re-derive unchanged), N >= 2 serialize as the ordered list of per-epoch
-> forms, component-empty epochs contribute no form, and `CanonicalizeResult` gains `epochs` (additive).
+> forms, component-empty epochs contribute no form (a trailing delete is deliberately hash-neutral), a
+> delivery after a delete and before a re-create is skipped (the ADR's 2026-10-04 erratum), and
+> `CanonicalizeResult` gains `epochs` and renames `form` to `finalForm` (it had no consumers).
 > The single-surface precondition stands (amendment A1). A6 (admission's pointer resolution per epoch,
 > `foldForResolution` in `admit.ts`) is not built by this change.
 
@@ -189,14 +191,22 @@ re-created inside one record, so the fold is single-surface AND per epoch. An ep
 messages between `deleteSurface` boundaries; at each `deleteSurface` the fold resets the component map
 and the data model, exactly as the renderer's surface teardown frees both, and the shared validator judges
 each epoch on its own graph (A2). A `createSurface` is never a boundary (one inside an open epoch is not a
-reset). An epoch that delivered no components mounted nothing and contributes no form, so a leading or
-trailing `deleteSurface` and a `createSurface, deleteSurface` prefix never change the hash. A record with
+reset), but it is the ONLY message that reopens a deleted surface (ADR-0064's 2026-10-04 erratum): an
+`updateComponents`/`updateDataModel` between a `deleteSurface` and the next `createSurface` is the delivery
+the renderer drops, so the fold skips it (tier-1 already fails such a stream `sid:update-after-delete`, so
+no admitted record contains one). An epoch that delivered no components mounted nothing and contributes no
+form, so a leading or trailing `deleteSurface` and a `createSurface, deleteSurface` prefix never change the
+hash. That elision is DELIBERATE: `create, root, delete` and `create, root` canonicalize identically, so
+they are near-duplicates by design (exact-hash duplicates to dedup, LLD-C4; the teardown teaches nothing
+the tree does not), and folding the teardown into the form would rehash the committed
+`kpi-panel-lifecycle` record (whose `deleteSurface` is its last message). Only a surface RE-CREATED and
+then left empty reds, at tier-1 (A3), never a plain trailing delete. A record with
 ONE component-bearing epoch serializes exactly as before (every committed `canonicalHash` re-derives
 byte-identical, the `corpus-data.test.ts` stored-hash leg); a record with N >= 2 serializes as the ORDERED
 LIST of per-epoch forms, each the existing `{components, dataModel}` shape, and the hash covers the list,
 so two records that end on the same tree through different lifecycles are distinct.
 
-**Algorithm `canonicalize(out: A2uiOutput): Promise<{ form: CanonicalForm; epochs: CanonicalForm[]; hash: string; componentsUsed: string[] }>`** (async: the hash rides `crypto.subtle.digest`; `form` is the FINAL epoch's form, `epochs` every epoch's in stream order):
+**Algorithm `canonicalize(out: A2uiOutput): Promise<{ finalForm: CanonicalForm; epochs: CanonicalForm[]; hash: string; componentsUsed: string[] }>`** (async: the hash rides `crypto.subtle.digest`; `finalForm` is the FINAL epoch's form, renamed from `form` by this change since the form of a multi-epoch record is the list; `epochs` is every epoch's form in stream order):
 1. Fold the stream PER EPOCH (the epoch rule above): within an epoch, apply `updateComponents` (upsert by id) into a component map and `updateDataModel` (in order) into ONE data-model object (whole-model when `path` is omitted/`""`/`"/"`, the ADR-0099 root alias, mirroring the renderer's `#onUpdateDataModel`; both this fold and `admit.ts`'s carry the alias); note the `createSurface` pins (`catalogId`). Steps 2 to 5 run on each epoch alone; a stream with no component-bearing epoch folds to one empty epoch so step 2's guard fires as before. `componentsUsed` is the FINAL epoch's set (what the record ends up rendering, ADR-0231 §2); `disconnected` concatenates every epoch's.
 2. Assert exactly one `root` (else surface to caller as `E_IDGRAPH` — admission handles, §8; in the §6 order tier-1 has already rejected this, so here it is a defensive guard).
 3. DFS from `root`, visiting `child`/`children` in declared order; assign canonical IDs `c0=root, c1, c2…` in visit order; record `componentsUsed` (set of `component` type names).

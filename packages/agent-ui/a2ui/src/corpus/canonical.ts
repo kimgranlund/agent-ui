@@ -26,7 +26,13 @@
 // identical, so every committed `canonicalHash` re-derives unchanged); a record with N >= 2 serializes
 // the ordered LIST of per-epoch forms, each the existing shape, and the hash covers the list. An epoch
 // that delivered no components mounted nothing and contributes no form (the validator's A3 exemption
-// for an empty closed epoch), so a leading or trailing `deleteSurface` never changes the hash.
+// for an empty closed epoch), so a leading or trailing `deleteSurface` never changes the hash. That
+// elision is deliberate: `create, root, delete` and `create, root` are near-duplicates by design (the
+// teardown teaches nothing the tree does not), and folding the teardown in would rehash the committed
+// `kpi-panel-lifecycle` record. After a `deleteSurface` only a `createSurface` reopens the surface (the
+// amendment's 2026-10-04 erratum): the renderer drops a delivery to a deleted surface, so the fold drops
+// it too. Tier-1 already rejects such a stream (`sid:update-after-delete`), so for every admitted record
+// this changes nothing; it keeps the fold faithful for a direct caller.
 //
 // Zero-dep, platform-neutral (SPEC-N5): only `protocol.ts` types are imported; hashing rides the
 // platform's `crypto.subtle` (Node ≥ 19 and every browser) — no `node:crypto`, no reactive-kernel
@@ -52,18 +58,19 @@ export interface CanonicalForm {
 }
 
 /**
- * `canonicalize`'s result. `form`/`hash`/`componentsUsed` are the LLD §4 contract; `serialized` and
+ * `canonicalize`'s result. `finalForm`/`hash`/`componentsUsed` are the LLD §4 contract; `serialized` and
  * `disconnected` are additive (not a widened wire contract — nothing here crosses the wire): `serialized`
  * is the exact string `hash` was computed over, so a caller/test can assert byte-identical serialization
  * directly (SPEC-R6 AC1), not just hash equality; `disconnected` names the declared-but-unreachable
  * component ids the DFS dropped (LLD §4 "dropped and noted" edge case) so admission can log them.
  */
 export interface CanonicalizeResult {
-  /** The FINAL epoch's canonical form. For a one-epoch record (every record before ADR-0064's 2026-10-03
-   *  amendment) it is exactly the value `serialized` encodes. */
-  form: CanonicalForm
+  /** The FINAL epoch's canonical form (named for it: ADR-0064 amendment A5 makes a record's form a list
+   *  when it has two or more epochs). For a one-epoch record (every record before the amendment) it is
+   *  exactly the value `serialized` encodes. */
+  finalForm: CanonicalForm
   /** ADR-0064 amendment A5: every epoch's form in stream order (length >= 1). With two or more, this
-   *  ordered list is what `serialized` encodes and `hash` covers; with one, it is `[form]`. */
+   *  ordered list is what `serialized` encodes and `hash` covers; with one, it is `[finalForm]`. */
   epochs: CanonicalForm[]
   serialized: string
   hash: string
@@ -99,7 +106,7 @@ export async function canonicalize(out: A2uiOutput): Promise<CanonicalizeResult>
   const componentsUsed = [...final.used].sort()
   const disconnected = epochs.flatMap((e) => e.disconnected)
 
-  return { form: final.form, epochs: forms, serialized, hash, componentsUsed, disconnected }
+  return { finalForm: final.form, epochs: forms, serialized, hash, componentsUsed, disconnected }
 }
 
 /** Steps 2 to 4 on ONE epoch's fold: DFS numbering, id rewrite, and the unreachable ids it dropped. */
@@ -129,14 +136,16 @@ interface FoldedEpoch {
  * Fold the stream into its epochs, in order (ADR-0064 amendment A5). Within an epoch: upsert
  * `updateComponents` by id, apply `updateDataModel` writes in stream order. At a `deleteSurface` the
  * epoch closes and the next starts from an empty component map and an undefined data model, the state
- * the renderer's fresh surface starts from. Only epochs that delivered at least one component are
- * returned. A stream that delivered none folds to ONE empty epoch, so the DFS's defensive no-root guard
- * fires exactly as it always has.
+ * the renderer's fresh surface starts from. From that delete until the next `createSurface`, a delivery
+ * addresses a deleted surface and is skipped, as the renderer drops it (the erratum rule). Only epochs
+ * that delivered at least one component are returned. A stream that delivered none folds to ONE empty
+ * epoch, so the DFS's defensive no-root guard fires exactly as it always has.
  */
 function foldStream(out: A2uiOutput): FoldedEpoch[] {
   const epochs: FoldedEpoch[] = []
   let byId = new Map<string, A2uiComponent>()
   let dataModel: unknown
+  let deleted = false // a `deleteSurface` with no `createSurface` since: deliveries are dropped
 
   const close = (): void => {
     if (byId.size > 0) epochs.push({ byId, dataModel })
@@ -145,7 +154,11 @@ function foldStream(out: A2uiOutput): FoldedEpoch[] {
   }
 
   for (const msg of out) {
-    if ('updateComponents' in msg) {
+    if ('createSurface' in msg) {
+      deleted = false // the only message that reopens a deleted surface
+    } else if (deleted && ('updateComponents' in msg || 'updateDataModel' in msg)) {
+      continue // the renderer's dropped delivery (tier-1 fails it `sid:update-after-delete`)
+    } else if ('updateComponents' in msg) {
       for (const comp of msg.updateComponents.components) byId.set(comp.id, comp) // upsert by id
     } else if ('updateDataModel' in msg) {
       const { path, value } = msg.updateDataModel
@@ -156,6 +169,7 @@ function foldStream(out: A2uiOutput): FoldedEpoch[] {
         path === undefined || path === '' || path === '/' ? value : setAtPointer(dataModel, path, value)
     } else if ('deleteSurface' in msg) {
       close() // the epoch boundary: the renderer frees the surface's graph and data model here
+      deleted = true
     }
     // createSurface / actionResponse / callFunction carry no component/data-model content and are not
     // boundaries (a createSurface never resets an open epoch, matching the validator's A2 rule).

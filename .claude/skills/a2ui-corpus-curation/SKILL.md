@@ -169,7 +169,7 @@ the owner. A halt left unresolved is a blocker reported, never a bypassed gate.
 | `.claude/docs/lld/a2ui-harness-wiring.lld.md` §7 | The judge activation — verdict adapter, rescore, `--verdicts`/`--replace`, the halt table |
 | `ADR-0055` | The seed shelf (`src/examples/` shape) an authored candidate is written in |
 | `ADR-0060` … `ADR-0064` | The corpus store: injected judge seam · shared healer · packaging · record schema |
-| `ADR-0064` §Amendment 2026-10-03 + corpus LLD §4 (the epoch rule) | Surface lifecycle: a seed that deletes and re-creates its one surface. The validator frees the id graph at `deleteSurface` and the canonical hash covers every epoch; a final epoch left empty reds at tier-1 |
+| `ADR-0064` §Amendment 2026-10-03 + its 2026-10-04 Erratum + corpus LLD §4 (the epoch rule) | Surface lifecycle: a seed that deletes and re-creates its one surface. The validator frees the id graph at `deleteSurface`; only `createSurface` reopens it (a delivery in between reds `sid:update-after-delete`); a surface re-created and then left empty reds at tier-1 (a plain trailing delete does not). The hash covers every epoch, but a trailing `deleteSurface` does not change it, so `create, root, delete` and `create, root` are near-duplicates by design |
 | `ADR-0068` | The verdict adapter, back-score/quarantine semantics, and the standing-gate amendment |
 | `ADR-0165` + `packages/agent-ui/a2ui/corpus/verdicts/README.md` | The verdict archive — the committed record a judged run writes, its filename/precedence/no-expiry rules, and the unjudged-run guard that reads it |
 | `.claude/docs/rubrics/a2ui-corpus.md` | The standard the `a2ui-review-agent` critic judges verdicts against |
