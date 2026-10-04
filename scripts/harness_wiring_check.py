@@ -133,12 +133,6 @@ class Report:
 # fails loudly.
 ACCEPTED_DIVERGENCES = {
     ".claude/agents/a2ui-payload-authoring-agent.md": ["D9 name suffix is a registered role"],
-    # GH #1776 follow-up: a2ui-catalog-example.md is a checklist-shaped rubric (lettered item groups,
-    # no typed 1/3/5 dimension table), so the plugin's table-shaped rubric gates cannot apply to it.
-    # Reshaping a runtime-consumed rubric is out of #1776's scope; narrowed to exactly its four gates.
-    ".claude/docs/rubrics/a2ui-catalog-example.md": [
-        "D1 every dimension typed", "D3 every dimension carries", "D5 evidence column present",
-        "D8 aggregation/gate rule present"],
 }
 
 

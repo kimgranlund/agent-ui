@@ -1,6 +1,6 @@
 # Rubric — a2ui-catalog-example (one catalog-page card)
 
-> Status: accepted · v0.2 · 2026-08-18 (ratified by Kim 2026-08-19, the ruled "after the sweep" condition met: v0.2 survived the full 60-card run + verify round) (v0.1 same day; v0.2 resolves the two escalations the first full
+> Status: accepted · v0.3 · 2026-10-04 (v0.3, GH #1782: reshaped to the dimension-table form the harness rubric check grades: bracketed `[gate]`/`[review]` types, a `What it checks (evidence)` column, a `Gate to promote` rule line, and the §1 parts and §6 routing tables recast as lists; no dimension, anchor, or score moves) · v0.2 · 2026-08-18 (ratified by Kim 2026-08-19, the ruled "after the sweep" condition met: v0.2 survived the full 60-card run + verify round) (v0.1 same day; v0.2 resolves the two escalations the first full
 > five-tier review raised — the `demonstrable` definition now encodes the fleet's ruled visibility law, B4's
 > anchors decide the bare-but-recognizable case — and repairs §5's own probe list, which omitted A3's gate) ·
 > Layer: rubric (the standard ONE card on `site/a2ui-catalog.html` is graded against — the eval framework the
@@ -13,11 +13,15 @@
 
 One **card** = `section.catalog-item` on the catalog page, for one catalog type `T`:
 
-| Part | DOM | Derived from (the truth to grade against) |
-|---|---|---|
-| **L — props panel** (left) | `component-preview .preview-knobs`, one `.knob` per prop | `catalog.json` `components[T].properties` → `a2uiKnobs()` (`site/lib/component-preview.ts`); seeds from `A2UI_INITIAL[T]` |
-| **R — rendered surface** (right) | `.preview-canvas` → the renderer's output, root tag = `factories.ts` `WidgetFactory.tag` for `T` | `SAMPLE_TREES[T]` / `sampleFor()` (children), the seeded props, the target `ui-*` control's own `{name}.md` descriptor + `{name}.css` |
-| **U — uses line** | `.catalog-item-uses` | `seedsUsingType(T)` (gallery seeds that render `T`) |
+Each part, its DOM, and what it is derived from (the truth to grade against):
+
+- **L, props panel** (left). DOM: `component-preview .preview-knobs`, one `.knob` per prop. Derived from:
+  `catalog.json` `components[T].properties` → `a2uiKnobs()` (`site/lib/component-preview.ts`); seeds from
+  `A2UI_INITIAL[T]`.
+- **R, rendered surface** (right). DOM: `.preview-canvas` → the renderer's output, root tag = `factories.ts`
+  `WidgetFactory.tag` for `T`. Derived from: `SAMPLE_TREES[T]` / `sampleFor()` (children), the seeded props,
+  the target `ui-*` control's own `{name}.md` descriptor + `{name}.css`.
+- **U, uses line**. DOM: `.catalog-item-uses`. Derived from: `seedsUsingType(T)` (gallery seeds that render `T`).
 
 Nothing on the card is hand-authored per component; every expectation is **derivable**, so most checks are
 mechanical. Judgment is reserved for "does the specimen make sense" (§4, B4/C3).
@@ -60,33 +64,33 @@ Every dimension below is tagged with its direction and its type: **[gate]** = a 
 
 ## 3 · Dimensions
 
-Scale 1–5; 1 = failure, 3 = adequate, 5 = excellent. Gate-to-promote: **every [gate] green AND no [review] < 3**.
+Scale 1–5; 1 = failure, 3 = adequate, 5 = excellent. Gate to promote: **every [gate] green AND no [review] < 3**.
 
 ### Axis A — L, the props panel (is the left side ok, does it reflect the component?)
 
-| # | Dim | Dir | Type | Check | 1 → 3 → 5 |
+| # | Dim | Dir | Type | What it checks (evidence) | 1 → 3 → 5 |
 |---|---|---|---|---|---|
-| A1 | Knob completeness | in-out | gate | Set of `.knob-label` texts == set of `catalog.json` prop names for `T` (a `skip` knob still appears, with its note) | 1: a catalog prop has no knob, or a knob names a prop the catalog lacks · 3: sets equal · 5: + declared order preserved |
-| A2 | Knob kind fidelity | in-out | gate | enum → `ui-select`/`ui-radio-group` with exactly the enum members; boolean → `ui-switch`/check; number → number field; string → text field; complex → labeled skip | 1: wrong control (an enum as free text) or missing enum member · 3: every kind right · 5: + `skip` note names the prop's shape (`object — edit in code`) |
-| A3 | Seed sufficiency | out-in | gate+review | Every `demonstrable` prop has a non-empty seed in `A2UI_INITIAL[T]` (or a sample-tree child supplies the visible content) — [gate]: `demonstrable ∖ seeded = ∅` (overlays' `open` exempt by rule, see `A2UI_INITIAL` comment) · [review]: seeds are realistic (`invoice-2026-08.pdf`, not `Sample`) | 1: a demonstrable prop is blank and R shows nothing for it · 3: all seeded, placeholder-grade text · 5: seeds are domain-realistic and chosen to show the prop's *range* (an enum seeded to a non-default member when the default is invisible) |
-| A4 | One knob per prop | in-out | gate | No duplicated `.knob-label` text; no second control row for the same prop (`example-authoring-agent`'s doubling law) | 1: doubled · 3: unique · 5: unique + no dead knob (a knob whose change provably does not alter R — see C1) |
+| A1 | Knob completeness | in-out | [gate] | Set of `.knob-label` texts == set of `catalog.json` prop names for `T` (a `skip` knob still appears, with its note) | 1: a catalog prop has no knob, or a knob names a prop the catalog lacks · 3: sets equal · 5: + declared order preserved |
+| A2 | Knob kind fidelity | in-out | [gate] | enum → `ui-select`/`ui-radio-group` with exactly the enum members; boolean → `ui-switch`/check; number → number field; string → text field; complex → labeled skip | 1: wrong control (an enum as free text) or missing enum member · 3: every kind right · 5: + `skip` note names the prop's shape (`object — edit in code`) |
+| A3 | Seed sufficiency | out-in | [gate] + [review] | Every `demonstrable` prop has a non-empty seed in `A2UI_INITIAL[T]` (or a sample-tree child supplies the visible content) — [gate]: `demonstrable ∖ seeded = ∅` (overlays' `open` exempt by rule, see `A2UI_INITIAL` comment) · [review]: seeds are realistic (`invoice-2026-08.pdf`, not `Sample`) | 1: a demonstrable prop is blank and R shows nothing for it · 3: all seeded, placeholder-grade text · 5: seeds are domain-realistic and chosen to show the prop's *range* (an enum seeded to a non-default member when the default is invisible) |
+| A4 | One knob per prop | in-out | [gate] | No duplicated `.knob-label` text; no second control row for the same prop (`example-authoring-agent`'s doubling law) | 1: doubled · 3: unique · 5: unique + no dead knob (a knob whose change provably does not alter R — see C1) |
 
 ### Axis B — R, the rendered surface (is the right side ok, does it render correctly?)
 
-| # | Dim | Dir | Type | Check | 1 → 3 → 5 |
+| # | Dim | Dir | Type | What it checks (evidence) | 1 → 3 → 5 |
 |---|---|---|---|---|---|
-| B1 | Renders through the real renderer | in-out | gate | `.preview-canvas` has a child; its root (or first control) tag == `factories.ts` tag for `T`; zero `pageerror`/console errors and zero validator rejections during mount | 1: empty canvas, wrong tag, or an error · 3: right tag, clean console · 5: + surface passes `validate()` when re-serialized (SAMPLE tree + seeds form a valid A2UI payload) |
-| B2 | Prop reflection | in-out | gate | For each non-skip knob: set a probe value (2 members for enums, toggle for booleans, a sentinel string) → the `mapsTo` target on the control changes (attribute/prop) AND the canvas re-renders (fresh renderer, N3) | 1: a knob change leaves the control unchanged · 3: every knob reflects · 5: + bindable props verified via a data-model write, not only a static prop |
-| B3 | Fidelity to the control's own standard | in-out | gate+review | [gate]: R's control passes the SAME size/geometry assertions the control's own doc page/gallery uses (`{name}.css` `--ui-{name}-*` roles resolved, host box within the descriptor's size row, no overflow of `.preview-canvas`) · [review]: side-by-side with the component-mode preview of the same `ui-*` tag — the A2UI path must not look like a degraded copy | 1: clipped/overflowing/zero-size or visibly off from the ui-* rendering · 3: matches the ui-* rendering at the seeded state · 5: + matches in dark AND light, and at a narrow (414px) canvas |
-| B4 | Makes sense (representative specimen) | out-in | review | Given only the screenshot + expected-card record, a reader can say what `T` is and what its job is; content quantity/kind is realistic (a `Table` with rows, a `Timeline` with ≥3 items, an `Attachment` with a name+size); no lorem "Sample content" fallback for a children-bearing type | 1: unreadable/meaningless (an empty chip, one lonely cell) or the generic fallback — a blind identification that FAILS or rests on fallback/incidental cues (a resize grip, an aspect-ratio guess) is 1 by construction · 2: blind-identifiable as `T` but content-empty (bare chrome, zero content — v0.2, decides the bare-but-recognizable case) · 3: recognizably `T` with minimal real content · 5: shows the component's *pattern* — the realistic composition an agent would actually emit (mirrors the corpus's catalog-coverage idioms) |
+| B1 | Renders through the real renderer | in-out | [gate] | `.preview-canvas` has a child; its root (or first control) tag == `factories.ts` tag for `T`; zero `pageerror`/console errors and zero validator rejections during mount | 1: empty canvas, wrong tag, or an error · 3: right tag, clean console · 5: + surface passes `validate()` when re-serialized (SAMPLE tree + seeds form a valid A2UI payload) |
+| B2 | Prop reflection | in-out | [gate] | For each non-skip knob: set a probe value (2 members for enums, toggle for booleans, a sentinel string) → the `mapsTo` target on the control changes (attribute/prop) AND the canvas re-renders (fresh renderer, N3) | 1: a knob change leaves the control unchanged · 3: every knob reflects · 5: + bindable props verified via a data-model write, not only a static prop |
+| B3 | Fidelity to the control's own standard | in-out | [gate] + [review] | [gate]: R's control passes the SAME size/geometry assertions the control's own doc page/gallery uses (`{name}.css` `--ui-{name}-*` roles resolved, host box within the descriptor's size row, no overflow of `.preview-canvas`) · [review]: side-by-side with the component-mode preview of the same `ui-*` tag — the A2UI path must not look like a degraded copy | 1: clipped/overflowing/zero-size or visibly off from the ui-* rendering · 3: matches the ui-* rendering at the seeded state · 5: + matches in dark AND light, and at a narrow (414px) canvas |
+| B4 | Makes sense (representative specimen) | out-in | [review] | Given only the screenshot + expected-card record, a reader can say what `T` is and what its job is; content quantity/kind is realistic (a `Table` with rows, a `Timeline` with ≥3 items, an `Attachment` with a name+size); no lorem "Sample content" fallback for a children-bearing type | 1: unreadable/meaningless (an empty chip, one lonely cell) or the generic fallback — a blind identification that FAILS or rests on fallback/incidental cues (a resize grip, an aspect-ratio guess) is 1 by construction · 2: blind-identifiable as `T` but content-empty (bare chrome, zero content — v0.2, decides the bare-but-recognizable case) · 3: recognizably `T` with minimal real content · 5: shows the component's *pattern* — the realistic composition an agent would actually emit (mirrors the corpus's catalog-coverage idioms) |
 
 ### Axis C — L↔R coherence and the whole card
 
-| # | Dim | Dir | Type | Check | 1 → 3 → 5 |
+| # | Dim | Dir | Type | What it checks (evidence) | 1 → 3 → 5 |
 |---|---|---|---|---|---|
-| C1 | Seed visibility | out-in | gate | Every seeded string/enum value in L is findable in R (text content or attribute) — proves L *describes* R | 1: a seeded value is invisible in R · 3: all visible · 5: + boolean seeds visible as state (`aria-checked`, `open`) |
-| C2 | Round-trip liveness | in-out | gate | Editing a knob and reverting restores an identical R (DOM snapshot equal) — the playground is a pure function of L | 1: state leaks across edits · 3: restores · 5: + no leaked top-layer (overlay closed after `open` toggled off) |
-| C3 | Card gestalt | out-in | review | Title, kind label, L, R, U read as ONE explanation of `T`; U present when a shelf seed uses `T`; nothing on the card contradicts another part (label says X, canvas shows Y) | 1: contradiction or missing part · 3: coherent · 5: + U links land on the seed (anchor resolves) |
+| C1 | Seed visibility | out-in | [gate] | Every seeded string/enum value in L is findable in R (text content or attribute) — proves L *describes* R | 1: a seeded value is invisible in R · 3: all visible · 5: + boolean seeds visible as state (`aria-checked`, `open`) |
+| C2 | Round-trip liveness | in-out | [gate] | Editing a knob and reverting restores an identical R (DOM snapshot equal) — the playground is a pure function of L | 1: state leaks across edits · 3: restores · 5: + no leaked top-layer (overlay closed after `open` toggled off) |
+| C3 | Card gestalt | out-in | [review] | Title, kind label, L, R, U read as ONE explanation of `T`; U present when a shelf seed uses `T`; nothing on the card contradicts another part (label says X, canvas shows Y) | 1: contradiction or missing part · 3: coherent · 5: + U links land on the seed (anchor resolves) |
 
 ## 4 · Judgment protocol for [review] dims (B3-review, B4, A3-review, C3)
 
@@ -127,14 +131,21 @@ Exit codes: 0 all cards promote · 1 any gate red or any review < 3 (listed, nev
 
 ## 6 · Findings route to owners (defect quadrant → seat)
 
-| Quadrant / dim | Owner | Why |
-|---|---|---|
-| L-only (A1–A4, C1 seeds) | `example-authoring-agent` (`A2UI_INITIAL`, `SAMPLE_TREES`, knob config) | example CONTENT + knob CONFIG is its charter |
-| R-only, wrong tag / prop not applied (B1, B2) | `a2ui-build-agent` (`catalog.json`, `factories.ts` `applyProp`/`mapsTo`) | catalog row mechanics |
-| R-only, control renders wrong (B3) | `component-build-agent` (the `ui-*` control + css) | the control itself, A2UI path is just a consumer |
-| B4 specimen not representative | `example-authoring-agent`; if the catalog TYPE itself can't express a sensible specimen → `a2ui-catalog.md` review of the row | representative-specimen law |
-| R-only where the control renders RIGHT natively but wrong through A2UI (the component-mode comparison shot decides) | `a2ui-build-agent` (factory `applyProp`/child construction) — v0.2 addition: the verify round's Ladder case was unroutable without this row | path-specific degradation is catalog-side, not control-side |
-| card (C3, U line) | `docs-writer` (page/harness) | page shell + derived links |
+Each quadrant or dimension, its owner, and why:
+
+- **L-only (A1 to A4, C1 seeds)**: `example-authoring-agent` (`A2UI_INITIAL`, `SAMPLE_TREES`, knob config).
+  Example CONTENT + knob CONFIG is its charter.
+- **R-only, wrong tag / prop not applied (B1, B2)**: `a2ui-build-agent` (`catalog.json`, `factories.ts`
+  `applyProp`/`mapsTo`). Catalog row mechanics.
+- **R-only, control renders wrong (B3)**: `component-build-agent` (the `ui-*` control + css). The control
+  itself; the A2UI path is just a consumer.
+- **B4 specimen not representative**: `example-authoring-agent`; if the catalog TYPE itself can't express a
+  sensible specimen → `a2ui-catalog.md` review of the row. Representative-specimen law.
+- **R-only where the control renders RIGHT natively but wrong through A2UI** (the component-mode comparison
+  shot decides): `a2ui-build-agent` (factory `applyProp`/child construction). v0.2 addition: the verify
+  round's Ladder case was unroutable without this entry. Path-specific degradation is catalog-side, not
+  control-side.
+- **card (C3, U line)**: `docs-writer` (page/harness). Page shell + derived links.
 
 ## 7 · Non-goals
 

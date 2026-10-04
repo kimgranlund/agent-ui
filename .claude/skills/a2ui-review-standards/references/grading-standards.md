@@ -46,7 +46,7 @@ the per-artifact procedure are what makes a grading run reproducible instead of 
   for D1–D3 (name conformance · load/payload conformance · factory binding & coverage), then judge
   D4–D6 (mapping fidelity to the real `ui-*` surface · PropDef typing idiom · example/doc coverage)
   against `factories.ts` + `catalog.json` + the row's tests/example/doc.
-- **Corpus record → `a2ui-corpus.md`** (1.4: ADR-0231 cl.5 facets, GH #1769 D2/D5 rulings; a VerdictsFile cites `1.4`). D1 folds the
+- **Corpus record → `a2ui-corpus.md`** (1.5: ADR-0231 cl.5 facets, GH #1769 D2/D5 rulings, GH #1780 D5 same-batch ruling; a VerdictsFile cites `1.5`). D1 folds the
   payload rubric: run the CLI on the facet's stream and take `MIN` across `a2ui-payload.md` P1–P9 (P9
   folded in at 1.2, GH #1262; P9 is N/A + omitted when no `Card` frames the payload). The stream is the
   exemplar's `a2uiOutput`; a multi-turn record's MERGED `priorOutput ⊕ a2uiOutput` (concatenate the two
@@ -55,7 +55,7 @@ the per-artifact procedure are what makes a grading run reproducible instead of 
   omitted for an eval-facet record. D2–D5 apply each dimension's deterministic floor (non-empty
   `promptText`/`description`; the `target ?? description` ADR-0063 consumer rule: grade the *effective*
   target, never `target` raw; the closed `source` enum + a resolvable `origin`; the θ_dup neighbour),
-  then judge above that floor (D2 reads a multi-turn `promptText` as a turn narration and a repair `description` as the correction; D5 counts a repair pair's breakage class as a technique axis). D6 turn coherence scores multi-turn only and D7 repair fidelity repair
+  then judge above that floor (D2 reads a multi-turn `promptText` as a turn narration and a repair `description` as the correction; D5 counts a repair pair's breakage class as a technique axis and draws neighbours from the same batch as well as the shard). D6 turn coherence scores multi-turn only and D7 repair fidelity repair
   only: cite admission's floor for each (action grounding + the prior-seeded follow-up for D6;
   recomputation equality for D7), never recompute it, then judge above it per the rubric's anchors.
   Score only the dimensions the record's facet applies (`Applies to` column), then emit the VerdictsFile below.
@@ -87,7 +87,7 @@ and `createVerdictJudge` — the shape is a contract, not a suggestion:
 ```json
 {
   "rubric": "a2ui-corpus",
-  "rubricVersion": "1.4",
+  "rubricVersion": "1.5",
   "judgedBy": "a2ui-review-agent",
   "date": "2026-07-03",
   "verdicts": {
