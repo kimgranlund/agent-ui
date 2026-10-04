@@ -494,16 +494,15 @@ const WIZARD_ID = 'ask-1'
  *  "rooms" themselves — resent with "scene" on every occurrence of each control (turn 1's dates scene AND
  *  the BACK-to-dates resend; turn 2's room scene AND the forward-again resend) — never touching root/
  *  card/ct.
- *
- *  KNOWN DEBT (GH #1780, recorded 2026-10-04): the two-button footers ("back2"/"next2" and
- *  "back3"/"commit") are bare CardFooter children, which the CardFooter multi-action rule
- *  (node-idioms.md, GH #1475; a2ui-payload.md P4 anchor 3 since 1.6) says belong in one Row inside
- *  CardFooter. Left as-is on purpose: this seed is an admitted exemplar record, and wrapping the
- *  footers moves its canonical hash (6b8fbf81... to 14289712...). The repair path is a seed edit plus
- *  a judged `rescore`/`--replace` re-admission (the GH #1475 greet-card precedent), not an in-place edit. */
+ *  The two-button footers ("back2"/"next2" on the room scene, "back3"/"commit" on the confirm scene)
+ *  ride one Row inside CardFooter ("nav2"/"nav3", gap "md", justify "end"), per the CardFooter
+ *  multi-action rule (node-idioms.md, GH #1475; a2ui-payload.md P4 since 1.6): bare Button siblings
+ *  stack full-width. Each Row is resent with its "ft" whenever the step's buttons change; the
+ *  single-button dates footer keeps "next1" as the footer's direct child. Re-admitted through the
+ *  judged `--replace` path (GH #1787, the GH #1475 greet-card precedent). */
 export const backableWizardSeed: ExampleSeed = {
   name: 'backable-wizard',
-  description: 'A 3-step backable wizard (dates → room → confirm) on ONE ask surface: draft answers under /draft/*, a stable root>Card>CardContent scene container swapped by updateComponents, per-step nav Buttons in their own CardFooter, Field-wrapped Calendar/RadioGroup controls (ADR-0051), and a BACK round-trip that leaves both prior answers untouched.',
+  description: 'A 3-step backable wizard (dates → room → confirm) on ONE ask surface: draft answers under /draft/*, a stable root>Card>CardContent scene container swapped by updateComponents, per-step nav Buttons in their own CardFooter (two-button steps in a Row inside it), Field-wrapped Calendar/RadioGroup controls (ADR-0051), and a BACK round-trip that leaves both prior answers untouched.',
   promptText: 'Let\'s book a stay — start with the dates, then I\'ll pick a room, and I can always go back to change something before I confirm.',
   surfaceId: WIZARD_ID,
   protocolVersion: 'v1.0',
@@ -559,7 +558,8 @@ export const backableWizardSeed: ExampleSeed = {
           { id: 'rooms', component: 'RadioGroup', children: ['r1', 'r2'] },
           { id: 'r1', component: 'Radio', value: 'standard', label: 'Standard · €180' },
           { id: 'r2', component: 'Radio', value: 'deluxe', label: 'Deluxe King · €240' },
-          { id: 'ft', component: 'CardFooter', children: ['back2', 'next2'] },
+          { id: 'ft', component: 'CardFooter', children: ['nav2'] },
+          { id: 'nav2', component: 'Row', gap: 'md', justify: 'end', children: ['back2', 'next2'] },
           { id: 'back2', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'step', context: { to: 'dates' } } },
           { id: 'next2', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'confirm' } } },
         ],
@@ -602,7 +602,8 @@ export const backableWizardSeed: ExampleSeed = {
           { id: 'rooms', component: 'RadioGroup', children: ['r1', 'r2'] },
           { id: 'r1', component: 'Radio', value: 'standard', label: 'Standard · €180' },
           { id: 'r2', component: 'Radio', value: 'deluxe', label: 'Deluxe King · €240' },
-          { id: 'ft', component: 'CardFooter', children: ['back2', 'next2'] },
+          { id: 'ft', component: 'CardFooter', children: ['nav2'] },
+          { id: 'nav2', component: 'Row', gap: 'md', justify: 'end', children: ['back2', 'next2'] },
           { id: 'back2', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'step', context: { to: 'dates' } } },
           { id: 'next2', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'step', context: { to: 'confirm' } } },
         ],
@@ -635,7 +636,8 @@ export const backableWizardSeed: ExampleSeed = {
         components: [
           { id: 'scene', component: 'Column', gap: 'md', children: ['rcpt'] },
           { id: 'rcpt', component: 'DescriptionList', rows: { path: '/draft/rows' } },
-          { id: 'ft', component: 'CardFooter', children: ['back3', 'commit'] },
+          { id: 'ft', component: 'CardFooter', children: ['nav3'] },
+          { id: 'nav3', component: 'Row', gap: 'md', justify: 'end', children: ['back3', 'commit'] },
           { id: 'back3', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'step', context: { to: 'room' } } },
           { id: 'commit', component: 'Button', variant: 'solid', label: 'Confirm booking', action: { action: 'commit' } },
         ],
