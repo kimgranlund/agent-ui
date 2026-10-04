@@ -7,7 +7,7 @@ import { canonicalize } from './canonical.ts'
 import { validateA2ui } from './validate.ts'
 import { demoCatalog } from '../fixtures.ts'
 import { loadCatalog } from '../catalog/catalog.ts'
-import type { A2uiOutput } from '../protocol.ts'
+import type { A2uiOutput, A2uiServerMessage } from '../protocol.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import type { CorpusRecord } from './record.ts'
 import {
@@ -916,6 +916,98 @@ describe('admit: the multi-turn facet (ADR-0231 cl.2)', () => {
     if (result.ok) return
     expect(result.code).toBe('E_LEAK')
     expect(result.message).toContain('held-out-eval')
+  })
+})
+
+// ADR-0064 erratum (2026-10-04, GH #1765): stage 6 also resets its resolution fold at a `createSurface`
+// that follows a component-bearing epoch, with no `deleteSurface` between. The renderer replaces the
+// surface and its store on a re-create (`renderer.ts#onCreateSurface`) and tier-1 refuses the prior seed
+// to an epoch a `createSurface` opened (A4), so a binding sees only what its own epoch delivered. The
+// canonical identity fold is NOT reset here (the hashes are frozen), so the two folds differ on this shape.
+describe('admit: a re-create without a deleteSurface resets resolution (ADR-0064 erratum, GH #1765)', () => {
+  const login = (...messages: A2uiServerMessage[]): A2uiOutput => messages
+  const recreate: A2uiServerMessage = { version: 'v1.0', createSurface: { surfaceId: 'login', catalogId: 'agent-ui' } }
+  const statusTree: A2uiServerMessage = {
+    version: 'v1.0',
+    updateComponents: {
+      surfaceId: 'login',
+      components: [
+        { id: 'root', component: 'Column', children: ['status'] },
+        { id: 'status', component: 'Text', text: { path: '/status' } }, // the prior turn defined /status
+      ],
+    },
+  }
+  const writeStatus: A2uiServerMessage = { version: 'v1.0', updateDataModel: { surfaceId: 'login', value: { status: 'Welcome' } } }
+
+  it("the issue's reproduction: login prior, then [createSurface, root->status bound /status] with no write, rejects E_POINTER", async () => {
+    const followUp = login(recreate, statusTree)
+    // No `deleteSurface`: tier-1 is clean (A4 skips the seed for the epoch the createSurface opened, so the
+    // `root` here is a first delivery), which makes the reject below stage 6's and not the validator's.
+    expect(checkTier1(multiTurnRecord({ a2uiOutput: followUp }), defaultCatalog)).toBeNull()
+
+    const stale = await admit(multiTurnRecord({ a2uiOutput: followUp }), mkFacetDeps())
+    expect(stale.ok).toBe(false)
+    if (stale.ok) return
+    expect(stale.code).toBe('E_POINTER')
+    expect(stale.paths).toEqual(['status.text']) // the prior epoch's own status.text still resolves
+  })
+
+  it('the same follow-up with its own /status write admits, and the canonical identity still folds ONE epoch', async () => {
+    const followUp = login(recreate, statusTree, writeStatus)
+    expect(checkTier1(multiTurnRecord({ a2uiOutput: followUp }), defaultCatalog)).toBeNull()
+
+    const own = await admit(multiTurnRecord({ a2uiOutput: followUp }), mkFacetDeps())
+    expect(own.ok).toBe(true)
+    // The hash fold is unchanged by this erratum: `createSurface` is still not a boundary there (A5), so the
+    // record's identity is one merged epoch while its resolution above ran over two.
+    expect((await recordIdentity(multiTurnRecord({ a2uiOutput: followUp }))).epochs).toHaveLength(1)
+  })
+
+  it('the update-only follow-up (no createSurface) still continues the prior epoch: the reset is the createSurface, nothing else', async () => {
+    const rebind: A2uiOutput = [{ version: 'v1.0', updateComponents: { surfaceId: 'login', components: [{ id: 'status', component: 'Text', text: { path: '/status' } }] } }]
+    expect((await admit(multiTurnRecord({ a2uiOutput: rebind }), mkFacetDeps())).ok).toBe(true)
+  })
+
+  // A single stream. The exemplar shape `create, root, dm, create, root` never reaches stage 6: the second
+  // `root` is a resend (a `createSurface` inside an open epoch is not a boundary to the validator, A2), so
+  // tier-1 rejects `s:root` first. A re-create that delivers no second `root` does reach stage 6, and gets
+  // the same reset.
+  describe('one stream (an exemplar record)', () => {
+    const agentUiCandidate = (a2uiOutput: A2uiOutput): unknown => mkCandidate({ a2uiOutput, meta: { catalogId: 'agent-ui' } })
+    const rootOnly: A2uiServerMessage = {
+      version: 'v1.0',
+      updateComponents: { surfaceId: 'login', components: [{ id: 'root', component: 'Column', children: ['status'] }] },
+    }
+    const statusOnly: A2uiServerMessage = {
+      version: 'v1.0',
+      updateComponents: { surfaceId: 'login', components: [{ id: 'status', component: 'Text', text: { path: '/status' } }] },
+    }
+
+    it('a re-create that resends `root` never reaches stage 6: tier-1 rejects the resend first (E_IDGRAPH login:root)', async () => {
+      const output = login(recreate, statusTree, writeStatus, recreate, statusTree)
+      expect(validateA2ui(output, defaultCatalog, undefined, { atFinalize: true }).failures).toEqual([{ code: 'IDGRAPH', path: 'login:root' }])
+      const result = await admit(agentUiCandidate(output), mkFacetDeps())
+      expect(result.ok).toBe(false)
+      if (result.ok) return
+      expect(result.code).toBe('E_IDGRAPH')
+      expect(result.paths).toEqual(['login:root'])
+    })
+
+    it('a re-create with no second `root` reaches stage 6 and resets: a binding to data only the first epoch wrote rejects', async () => {
+      const output = login(recreate, rootOnly, writeStatus, recreate, statusOnly)
+      expect(validateA2ui(output, defaultCatalog, undefined, { atFinalize: true }).valid).toBe(true)
+      const stale = await admit(agentUiCandidate(output), mkFacetDeps())
+      expect(stale.ok).toBe(false)
+      if (stale.ok) return
+      expect(stale.code).toBe('E_POINTER')
+      expect(stale.paths).toEqual(['status.text'])
+    })
+
+    it('the same stream with a write after the re-create admits (positive control)', async () => {
+      const output = login(recreate, rootOnly, writeStatus, recreate, statusOnly, writeStatus)
+      const own = await admit(agentUiCandidate(output), mkFacetDeps())
+      expect(own.ok).toBe(true)
+    })
   })
 })
 

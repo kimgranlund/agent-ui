@@ -155,7 +155,8 @@ export async function admit(candidate: unknown, deps: AdmitDeps): Promise<AdmitR
   // check: an exemplar bundles its complete data model, so resolution is checkable here. Each binding
   // resolves against its OWN epoch's data model (ADR-0064 amendment A6). A multi-turn follow-up folds
   // `priorOutput` then `a2uiOutput` (ADR-0231 cl.2): an update-only follow-up continues the prior's
-  // epoch, one that deletes and re-creates the surface resolves against its new epoch alone.
+  // epoch, one that re-creates the surface (with or without a `deleteSurface` first, the 2026-10-04
+  // erratum, GH #1765) resolves against its new epoch alone.
   const unresolved = findUnresolvedPointers(resolutionStream(record, output))
   if (unresolved.length > 0) {
     return { ok: false, code: 'E_POINTER', message: 'a binding does not resolve against the bundled data model', paths: unresolved }
@@ -474,18 +475,29 @@ interface ResolutionEpoch {
 }
 
 /**
- * Fold a candidate's message stream into its epochs (ADR-0064 amendment A6, GH #1750), with exactly the
- * semantics `canonical.ts`'s `foldStream` uses (A5) and the shared validator's epochs (A2): within an
- * epoch, upsert `updateComponents` by id and apply `updateDataModel` writes in stream order; at a
- * `deleteSurface` the epoch closes and the next starts from an empty map and an undefined data model, the
- * store the renderer's fresh surface starts from. That reset is what does the work in stage 6: no
- * binding sees an earlier epoch's data, including a DATA-ONLY epoch's (writes, no components). From a
- * delete until the next `createSurface` a delivery addresses a deleted surface and is skipped (the
- * erratum rule). Only component-bearing epochs are returned, a filter kept for parity with `foldStream`
- * (the corpus LLD §4 epoch rule): it changes no verdict, because an epoch with no components has no
- * binding to resolve. Re-implemented, not imported, for the same reason canonical.ts gives
- * for its own `setAtPointer`: this module stays decoupled from that module's private internals; both
- * independently mirror the renderer's documented semantics.
+ * Fold a candidate's message stream into its epochs (ADR-0064 amendment A6, GH #1750, and its 2026-10-04
+ * re-create erratum, GH #1765). Within an epoch, upsert `updateComponents` by id and apply
+ * `updateDataModel` writes in stream order. An epoch ends at TWO boundaries, and the resolution fold is
+ * deliberately not the canonical fold's (`canonical.ts`'s `foldStream`, A5, which has only the first):
+ *
+ * - a `deleteSurface`: the renderer frees the surface's graph and data model, and the next epoch starts
+ *   from an empty map and an undefined data model, the store a fresh surface starts from;
+ * - a `createSurface` that follows a component-bearing epoch, with no delete between: the renderer
+ *   replaces the surface and its store on a re-create (`renderer.ts`'s `#onCreateSurface`) and the shared
+ *   validator refuses the prior seed to an epoch a `createSurface` opened (A4), so the epoch that
+ *   follows starts empty too. The canonical fold keeps `createSurface` a non-boundary because its
+ *   hashes are frozen (every committed `canonicalHash`), so on this one shape the two folds differ: a
+ *   record's identity can merge what its resolution keeps apart. A `createSurface` over an epoch with
+ *   no component (a leading create, or the create after a delete) closes nothing.
+ *
+ * Those resets are what do the work in stage 6: no binding sees an earlier epoch's data, including a
+ * DATA-ONLY epoch's (writes, no components) behind a delete. From a delete until the next
+ * `createSurface` a delivery addresses a deleted surface and is skipped (the erratum rule). Only
+ * component-bearing epochs are returned, a filter kept for parity with `foldStream` (the corpus LLD §4
+ * epoch rule): it changes no verdict, because an epoch with no components has no binding to resolve.
+ * Re-implemented, not imported, for the same reason canonical.ts gives for its own `setAtPointer`: this
+ * module stays decoupled from that module's private internals; both independently mirror the renderer's
+ * documented semantics.
  */
 function foldForResolution(out: A2uiOutput): ResolutionEpoch[] {
   const epochs: ResolutionEpoch[] = []
@@ -502,6 +514,10 @@ function foldForResolution(out: A2uiOutput): ResolutionEpoch[] {
   for (const msg of out) {
     if ('createSurface' in msg) {
       deleted = false // the only message that reopens a deleted surface
+      // A re-create over a mounted epoch (no delete between): the renderer replaced the surface and its
+      // store, so the earlier data resolves nothing here. After a delete `byId` is already empty (close()
+      // ran), and a leading create finds it empty, so neither closes an epoch.
+      if (byId.size > 0) close()
     } else if (deleted && ('updateComponents' in msg || 'updateDataModel' in msg)) {
       // The renderer's dropped delivery. A defensive mirror of `foldStream`, unreachable through
       // `admit()`: within one stream tier-1 rejects it first (`sid:update-after-delete`), and across a

@@ -251,3 +251,53 @@ epoch.
 
 The rule's home is corpus LLD `a2ui-corpus-store.lld.md` §4, v0.7.1 ("Data-only epochs count in neither
 the fold nor resolution").
+
+## Erratum to the 2026-10-03 amendment (2026-10-04, resolution resets at re-create, GH #1765; append-only)
+
+> Ratified by kimgranlund (repo owner), 2026-10-04, by the ruling on GH #1765 (the ruling comment:
+> https://github.com/kimgranlund/agent-ui/issues/1765#issuecomment-5982535594): "reset at re-create".
+> Stage 6 resets its resolution fold at a `createSurface` that follows a component-bearing epoch; the
+> canonical hash fold is untouched, so all 78 exemplar hashes stay stable.
+
+A6 inherited a boundary that is wrong for resolution. A5 says a `createSurface` inside an open epoch is
+not a boundary, which is the shared validator's A2 rule: it keeps the resend rule intact (two `root`s with
+no `deleteSurface` between still fail `sid:root`). A6 resolved each binding "against its own epoch's data
+model" on those same epochs, so a follow-up that re-sends `createSurface` without a `deleteSurface` first
+stayed on the prior epoch and resolved against the prior turn's data. Two other layers disagree with that.
+The renderer replaces the surface and its store on a re-create (`renderer.ts#onCreateSurface` tears the
+live surface down and `SurfaceStore.create` disposes the prior one and builds a fresh one), and A4 already
+has the validator refuse the session seed to any epoch a `createSurface` opened or landed in. So, after the
+login prior, a follow-up `[createSurface, root->status (a Text bound /status)]` with no data write
+validated fresh and admitted, though the rendered surface has no `/status`. The #1764 review found it.
+
+The rule, narrowing A6 (A5 is unchanged). Admission's resolution fold (`foldForResolution`, `admit.ts`)
+closes its epoch at a `createSurface` that follows a component-bearing epoch, as well as at a
+`deleteSurface`, and the next epoch starts from an empty component map and an undefined data model. A
+`createSurface` over an epoch with no component closes nothing: a leading create, and the create that
+follows a delete (the delete already closed the epoch). The rule covers every stream stage 6 folds, a
+multi-turn record's `priorOutput` then `a2uiOutput`, and a single `a2uiOutput`. Within one stream it
+reaches stage 6 only when the re-create delivers no second `root`; a re-sent `root` is the validator's
+`sid:root` at tier-1, before stage 6.
+
+Why the resolution fold and the canonical fold now differ. The canonical fold (A5,
+`canonical.ts#foldStream`) keeps `createSurface` a non-boundary, because the ruling froze every committed
+hash and a boundary there would change the identity of any record that re-creates without a delete. The
+two folds also answer different questions. The canonical fold derives a record's dedup identity from its
+tree and stays aligned with the validator's A2 epochs. The resolution fold asks whether each binding
+resolves in the store the renderer would hold, which is the renderer's question, and the renderer resets
+here. The cost is that on this one shape a record's identity merges what its resolution keeps apart: it
+hashes as one epoch and can carry prior-turn components and data the renderer dropped at the re-create.
+
+Not covered. A `createSurface` over a fold holding data writes but no component is not a reset under the
+ruling's "component-bearing" scope, so a data-only prefix before a re-create still resolves later bindings
+against writes the renderer's replaced store dropped. The validator likewise judges the id graph across a
+re-create inside one stream (A2: not a boundary), a graph the renderer does not hold after the re-create.
+Neither is reachable from a committed record, and neither is changed here.
+
+No committed hash moves and the validator is untouched (`canonical.ts` and `renderer/validate.ts` are not
+edited, and resolution is the corpus-only stage that sits outside `validateA2ui`, so SPEC-N6 parity is
+unaffected). All 78 committed exemplars re-admit through `admit()` with their stored `canonicalHash`, and
+none holds more than one `createSurface`, so no committed record can reach the new boundary (no
+`multi-turn` or `repair` shard exists yet).
+
+The rule's home is corpus LLD `a2ui-corpus-store.lld.md` §6 stage 6, v0.7.2.
