@@ -613,3 +613,8 @@ is seeded" is met. Two follow-ups surfaced in judging and stay open: the
 renderer wires List-template button actions without the item scope (a relative `context` path such as
 `{path:'sku'}` is emitted unresolved), and the payload rubric's P4/P5/P7 anchors name only the agent-ui
 dialect.
+
+**Amendment (2026-10-04, GH #1748 / PR #1755, GH #1751 / PR #1753):** both follow-ups recorded in the
+2026-10-04 GH #1732 amendment above are closed. The renderer now resolves an action's `context` at click
+time against the List-template item scope (PR #1755), and the payload rubric's P4/P5/P7 anchors carry
+a2ui-basic dialect notes (rubric 1.4, PR #1753).
