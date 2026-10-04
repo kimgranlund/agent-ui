@@ -224,3 +224,185 @@ describe('retrieve — SPEC-N2 latency budget', () => {
     expect(duration).toBeLessThan(1000)
   })
 })
+
+// ADR-0231 cl.4: the opt-in facet filter
+
+// The pre-ADR-0231 implementation's output for every call shape above, captured before the `facet`
+// field existed (ADR-0231 acceptance 5). Each entry rebuilds the same fixtures and calls `retrieve()`
+// with NO `facet`, so the default (`exemplar`) must reproduce these names exactly, in order.
+const PRE_CHANGE_CAPTURE: ReadonlyArray<{ shape: string; call: () => CorpusRecord[]; names: readonly string[] }> = [
+  {
+    shape: 'ranks-best-first',
+    call: () =>
+      retrieve(
+        [
+          exemplar({ name: 'ex-dashboard', promptText: 'render an analytics dashboard with charts and a sidebar', componentsUsed: ['Card', 'Chart'] }),
+          exemplar({ name: 'ex-login-form', promptText: 'build a login form with a username and password field', componentsUsed: ['TextField', 'Button'] }),
+          exemplar({ name: 'ex-settings', promptText: 'a settings page with toggles and a save button', componentsUsed: ['Switch', 'Button'] }),
+        ],
+        query({ intent: 'a login form with username and password' }),
+      ),
+    names: ['ex-login-form', 'ex-settings', 'ex-dashboard'],
+  },
+  {
+    shape: 'truncates-to-k',
+    call: () =>
+      retrieve(
+        [
+          exemplar({ name: 'ex-strong', promptText: 'login form username password submit' }),
+          exemplar({ name: 'ex-medium', promptText: 'login page with a submit button' }),
+          exemplar({ name: 'ex-weak', promptText: 'a completely unrelated calendar widget' }),
+        ],
+        query({ intent: 'login form username password', k: 2 }),
+      ),
+    names: ['ex-strong', 'ex-medium'],
+  },
+  {
+    shape: 'never-more-than-k',
+    call: () => retrieve([1, 2, 3, 4].map((i) => exemplar({ name: `ex-${i}`, promptText: 'a login form' })), query({ intent: 'a login form', k: 2 })),
+    names: ['ex-1', 'ex-2'],
+  },
+  {
+    shape: 'scope-catalog',
+    call: () =>
+      retrieve(
+        [exemplar({ name: 'ex-in-scope', promptText: 'a login form' }), exemplar({ name: 'ex-out-of-scope', promptText: 'a login form', catalogId: 'other-catalog' })],
+        query({ intent: 'a login form' }),
+      ),
+    names: ['ex-in-scope'],
+  },
+  {
+    shape: 'scope-version',
+    call: () =>
+      retrieve(
+        [exemplar({ name: 'ex-in-scope', promptText: 'a login form' }), exemplar({ name: 'ex-out-of-scope', promptText: 'a login form', protocolVersion: 'v0.9.1' })],
+        query({ intent: 'a login form' }),
+      ),
+    names: ['ex-in-scope'],
+  },
+  {
+    shape: 'quarantined',
+    call: () =>
+      retrieve(
+        [exemplar({ name: 'ex-quarantined', promptText: 'a login form', status: 'quarantined' }), exemplar({ name: 'ex-other', promptText: 'a completely unrelated topic' })],
+        query({ intent: 'a login form' }),
+      ),
+    names: ['ex-other'],
+  },
+  {
+    shape: 'eval-leak',
+    call: () =>
+      retrieve(
+        [evalRecord({ name: 'eval-login-form', promptText: 'a login form' }), exemplar({ name: 'ex-other', promptText: 'a completely unrelated topic' })],
+        query({ intent: 'a login form' }),
+      ),
+    names: ['ex-other'],
+  },
+  { shape: 'empty-corpus', call: () => retrieve([], query({ intent: 'anything' })), names: [] },
+  {
+    shape: 'empty-scope',
+    call: () => retrieve([exemplar({ name: 'ex-1', promptText: 'a login form', catalogId: 'other-catalog' })], query({ intent: 'a login form' })),
+    names: [],
+  },
+  {
+    shape: 'zero-overlap',
+    call: () => retrieve([exemplar({ name: 'ex-1', promptText: 'alpha beta gamma' })], query({ intent: 'zzz qqq xyz' })),
+    names: [],
+  },
+  {
+    shape: 'k-zero',
+    call: () => retrieve([exemplar({ name: 'ex-1', promptText: 'a login form' })], query({ intent: 'a login form', k: 0 })),
+    names: [],
+  },
+  {
+    shape: 'k-negative',
+    call: () => retrieve([exemplar({ name: 'ex-1', promptText: 'a login form' })], query({ intent: 'a login form', k: -3 })),
+    names: [],
+  },
+  {
+    shape: 'tie-break',
+    call: () =>
+      retrieve(
+        [exemplar({ name: 'ex-b', promptText: 'a login form with a submit button' }), exemplar({ name: 'ex-a', promptText: 'a login form with a submit button' })],
+        query({ intent: 'a login form with a submit button', k: 2 }),
+      ),
+    names: ['ex-a', 'ex-b'],
+  },
+  {
+    shape: 'repeat-calls',
+    call: () =>
+      retrieve(
+        [
+          exemplar({ name: 'ex-a', promptText: 'a login form with a submit button' }),
+          exemplar({ name: 'ex-b', promptText: 'a login form with a submit button' }),
+          exemplar({ name: 'ex-c', promptText: 'a dashboard with charts' }),
+        ],
+        query({ intent: 'a login form with a submit button' }),
+      ),
+    names: ['ex-a', 'ex-b', 'ex-c'],
+  },
+  {
+    shape: 'synthetic-10k',
+    call: () => {
+      const vocabulary = [
+        'login', 'form', 'dashboard', 'chart', 'settings', 'toggle', 'button', 'submit',
+        'sidebar', 'card', 'field', 'password', 'username', 'analytics', 'calendar', 'widget',
+        'table', 'row', 'column', 'modal', 'menu', 'select', 'checkbox', 'radio', 'slider', 'tab',
+      ]
+      const componentsPool = ['TextField', 'Button', 'Card', 'Chart', 'Switch', 'Modal', 'Menu']
+      const records: CorpusRecord[] = []
+      for (let i = 0; i < 10_000; i++) {
+        const words: string[] = []
+        for (let j = 0; j < 8; j++) words.push(vocabulary[(i * 7 + j * 13) % vocabulary.length])
+        records.push(exemplar({ name: `ex-synth-${i}`, promptText: words.join(' '), componentsUsed: [componentsPool[i % componentsPool.length]] }))
+      }
+      return retrieve(records, query({ intent: 'login form username password submit', k: 10 }))
+    },
+    names: [
+      'ex-synth-1', 'ex-synth-1002', 'ex-synth-1067', 'ex-synth-1080', 'ex-synth-1093',
+      'ex-synth-1158', 'ex-synth-1171', 'ex-synth-1184', 'ex-synth-1249', 'ex-synth-1262',
+    ],
+  },
+]
+
+/** A record of a non-exemplar model-visible facet, otherwise shaped like `exemplar()`. */
+function ofFacet(facet: 'multi-turn' | 'repair', name: string, promptText: string): CorpusRecord {
+  const base = exemplar({ name, promptText })
+  return { ...base, meta: { ...base.meta, facet } }
+}
+
+describe('retrieve: the ADR-0231 opt-in facet filter (default exemplar)', () => {
+  it.each(PRE_CHANGE_CAPTURE.map((c) => [c.shape, c] as const))(
+    'with no facet argument, the %s call shape deep-equals the pre-change capture',
+    (_shape, c) => {
+      expect(c.call().map((r) => r.name)).toEqual(c.names)
+    },
+  )
+
+  it('the default scope excludes multi-turn and repair records even when they are the best textual match', () => {
+    const recs = [
+      ofFacet('multi-turn', 'mt-login', 'a login form'),
+      ofFacet('repair', 'rp-login', 'a login form'),
+      exemplar({ name: 'ex-login', promptText: 'a login form page' }),
+    ]
+    expect(retrieve(recs, query({ intent: 'a login form' })).map((r) => r.name)).toEqual(['ex-login'])
+  })
+
+  it('facet: "multi-turn" and facet: "repair" each draw from that facet only', () => {
+    const recs = [
+      ofFacet('multi-turn', 'mt-login', 'a login form'),
+      ofFacet('repair', 'rp-login', 'a login form'),
+      exemplar({ name: 'ex-login', promptText: 'a login form' }),
+      evalRecord({ name: 'eval-login', promptText: 'a login form' }),
+    ]
+    expect(retrieve(recs, query({ intent: 'a login form', facet: 'multi-turn' })).map((r) => r.name)).toEqual(['mt-login'])
+    expect(retrieve(recs, query({ intent: 'a login form', facet: 'repair' })).map((r) => r.name)).toEqual(['rp-login'])
+    expect(retrieve(recs, query({ intent: 'a login form', facet: 'exemplar' })).map((r) => r.name)).toEqual(['ex-login'])
+  })
+
+  it('a quarantined record of the named facet stays excluded', () => {
+    const quarantined = ofFacet('repair', 'rp-q', 'a login form')
+    const recs = [{ ...quarantined, meta: { ...quarantined.meta, status: 'quarantined' as const } }]
+    expect(retrieve(recs, query({ intent: 'a login form', facet: 'repair' }))).toEqual([])
+  })
+})

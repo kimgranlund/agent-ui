@@ -279,7 +279,7 @@ today is `agent-ui`-vocabulary-hardcoded (confirmed live — `mini-skills.test.t
 ADR-0172 Context names one specimen module, not a count), so each module's
 frontmatter gains an explicit `catalogId: agent-ui` line. `selectMiniSkills` (`mini-skills.ts:103-105`)
 MUST gain a `catalogId: string` parameter and filter `registry` to `m.catalogId === catalogId`
-BEFORE ranking — the exact hard-equality pattern `corpus/retrieve.ts:41,55`'s `meta.catalogId`
+BEFORE ranking: the exact hard-equality pattern `corpus/retrieve.ts:47,63`'s `meta.catalogId`
 filter already uses, reused rather than re-invented. `produce.ts`'s one call site (`:764`) MUST
 pass `deps.catalog.catalogId` — the SAME value line `:762`'s `queryOf` already threads into
 `retrieve`'s own query, zero new catalog-resolution logic.

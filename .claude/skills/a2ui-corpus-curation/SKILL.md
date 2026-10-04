@@ -1,7 +1,7 @@
 ---
 name: a2ui-corpus-curation
 description: >-
-  Curate the A2UI training corpus: author a seed (`src/examples`), admit it through the realized store pipeline, judge and rescore it. Use for importing seeds (`import-seeds --verdicts`), back-scoring records (`rescore`), resolving an admission HALT (near-duplicate, unjudged candidate, quarantined-name collision, disposition on an unjudged run), or the judged quarantine exit (`--replace`). Points at the owning docs (corpus and judge-wiring LLDs, ADR-0055/0060-0064/0068/0165); never restates schema or dedup math. NOT for composing a payload (a2ui-payload-authoring); NOT for pipeline/renderer/validator/catalog code (a2ui-build-agent); NOT for the corpus-genui store (its LLD).
+  Curate the A2UI training corpus: author a seed (`src/examples`), admit it through the realized store pipeline, judge and rescore it. Use for importing seeds (`import-seeds --verdicts`), back-scoring records (`rescore`), resolving an admission HALT (near-duplicate, unjudged candidate, quarantined-name collision, disposition on an unjudged run), or the judged quarantine exit (`--replace`). Points at the owning docs (corpus and judge-wiring LLDs, ADR-0055/0060-0064/0068/0165/0231); never restates schema or dedup math. NOT for composing a payload (a2ui-payload-authoring); NOT for pipeline/renderer/validator/catalog code (a2ui-build-agent); NOT for the corpus-genui store (its LLD).
 disable-model-invocation: false
 user-invocable: true
 ---
@@ -21,7 +21,9 @@ Each mechanism is owned and contract-frozen elsewhere. Point at the owner; repro
 contract:
 
 - **Record schema** → `src/corpus/record.ts` + `ADR-0063` (unconditional `description`, `E_NO_TARGET`
-  retired) + `ADR-0064` (single-surface v1). Do **not** transcribe the field list into this skill.
+  retired) + `ADR-0064` (single-surface v1) + `ADR-0231` (the `multi-turn` and `repair` facets: branch
+  fields, facet-dispatched admission, identity, shard homes). Do **not** transcribe the field list into
+  this skill.
 - **Admission pipeline** (stages · codes · order) → `.claude/docs/lld/a2ui-corpus-store.lld.md` §6
   and its §8 error table. Name the shape; read §6 for the detail.
 - **Dedup / MinHash math** (`θ_dup`, shingles, permutations) → corpus LLD §5. Cite the value, not the code.
@@ -31,6 +33,12 @@ contract:
   `packages/agent-ui/a2ui/corpus/verdicts/README.md`. The curator's ONE obligation over it is procedural
   (commit it — step 7); every rule about it is the tool's.
 - **Healer contract** (the closed repair list) → `ADR-0061`.
+- **Multi-turn and repair seeds** → `ADR-0231` cl.2/cl.3/cl.5 + `src/examples/types.ts` (`MultiTurnSeed`,
+  `RepairSeed`, each on its own shelf and its own drift-guarded per-file table in `import-seeds.ts`) +
+  rubric 1.3 D6/D7. Two facts a curator meets first: a repair pair's `validatorErrors` is copied from a
+  real finalize-mode `validateA2ui` run (admission recomputes it and rejects a mismatch), and every
+  repair pair gets its own `promptText` (two pairs sharing prompt and corrected tree whose breakages
+  differ in one path trip the θ_dup near-dup leg; corpus LLD §8).
 
 ## Procedure — seed → admit → judge → back-score → commit the archive
 
@@ -170,6 +178,7 @@ the owner. A halt left unresolved is a blocker reported, never a bypassed gate.
 | `ADR-0055` | The seed shelf (`src/examples/` shape) an authored candidate is written in |
 | `ADR-0060` … `ADR-0064` | The corpus store: injected judge seam · shared healer · packaging · record schema |
 | `ADR-0064` §Amendment 2026-10-03 + its 2026-10-04 Erratum + corpus LLD §4 (the epoch rule) | Surface lifecycle: a seed that deletes and re-creates its one surface. The validator frees the id graph at `deleteSurface`; only `createSurface` reopens it (a delivery in between reds `sid:update-after-delete`); a surface re-created and then left empty reds at tier-1 (a plain trailing delete does not). The hash covers every epoch, but a trailing `deleteSurface` does not change it, so `create, root, delete` and `create, root` are near-duplicates by design |
+| `ADR-0231` | The `multi-turn` and `repair` facets: record branches, facet-dispatched admission, identity, shard homes, rubric 1.3 D6/D7 |
 | `ADR-0068` | The verdict adapter, back-score/quarantine semantics, and the standing-gate amendment |
 | `ADR-0165` + `packages/agent-ui/a2ui/corpus/verdicts/README.md` | The verdict archive — the committed record a judged run writes, its filename/precedence/no-expiry rules, and the unjudged-run guard that reads it |
 | `.claude/docs/rubrics/a2ui-corpus.md` | The standard the `a2ui-review-agent` critic judges verdicts against |

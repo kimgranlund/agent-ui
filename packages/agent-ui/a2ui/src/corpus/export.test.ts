@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { exportFineTune, exportCatalogExamples } from './export.ts'
 import { validateA2ui } from './validate.ts'
 import { demoCatalog } from '../fixtures.ts'
+import { multiTurnRecord, repairRecord } from './facets.fixture.ts'
 import type { CorpusRecord } from './record.ts'
 import type { A2uiOutput } from '../protocol.ts'
 
@@ -74,6 +75,23 @@ describe('exportFineTune (SPEC-R12)', () => {
     for (const line of lines) {
       expect(line).not.toContain('planted-eval-gold')
       expect(line).not.toContain('THIS EVAL PROMPT MUST NEVER LEAK')
+    }
+  })
+
+  it('excludes multi-turn and repair records: the exporters stay exemplar-only (ADR-0231 cl.4, SPEC-R12)', () => {
+    const exemplar = makeRecord({ name: 'legit-exemplar' })
+    const multiTurn = multiTurnRecord()
+    const repair = repairRecord()
+    // Control: in-scope on every axis but facet, so only the facet invariant can exclude them.
+    const asExemplar = (r: CorpusRecord): CorpusRecord => ({ ...r, meta: { ...r.meta, facet: 'exemplar' } })
+    expect(exportFineTune([asExemplar(multiTurn), asExemplar(repair)], scope)).toHaveLength(2)
+
+    const lines = exportFineTune([exemplar, multiTurn, repair], scope)
+
+    expect(lines).toHaveLength(1)
+    for (const line of lines) {
+      expect(line).not.toContain(multiTurn.promptText)
+      expect(line).not.toContain(repair.promptText)
     }
   })
 
@@ -233,6 +251,22 @@ describe('exportCatalogExamples (SPEC-R10)', () => {
     const plantedEval = makeRecord({ name: 'planted-eval-gold', a2uiOutput: undefined, meta: { facet: 'eval' } })
 
     const files = exportCatalogExamples([exemplar, plantedEval], catalogScope)
+
+    expect(files.map((f) => f.name)).toEqual(['legit-exemplar'])
+  })
+
+  it('excludes multi-turn and repair records: the exporters stay exemplar-only (ADR-0231 cl.4, SPEC-R10)', () => {
+    const exemplar = makeRecord({ name: 'legit-exemplar' })
+    const multiTurn = multiTurnRecord()
+    const repair = repairRecord()
+    // Control: in-scope on every axis but facet, so only the facet invariant can exclude them.
+    const asExemplar = (r: CorpusRecord): CorpusRecord => ({ ...r, meta: { ...r.meta, facet: 'exemplar' } })
+    expect(exportCatalogExamples([asExemplar(multiTurn), asExemplar(repair)], catalogScope).map((f) => f.name)).toEqual([
+      repair.name,
+      multiTurn.name,
+    ].sort())
+
+    const files = exportCatalogExamples([exemplar, multiTurn, repair], catalogScope)
 
     expect(files.map((f) => f.name)).toEqual(['legit-exemplar'])
   })

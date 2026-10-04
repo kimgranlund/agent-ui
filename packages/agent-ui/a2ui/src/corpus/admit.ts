@@ -22,15 +22,25 @@
 // gap by defaulting a placeholder `meta.status` before the schema/field call purely so that stage can
 // run — admission is the sole authority over the FINAL status (computed from `heal`'s `changed` flag)
 // and overwrites whatever placeholder or caller-supplied value was there, always.
+//
+// ADR-0231 cl.4: the stage order is unchanged; stages 2, 5, 6 and 8 dispatch by `meta.facet` for the two
+// non-exemplar model-visible facets. Stage 2 is `validateRecord`'s facet branches; stage 5 is `checkTier1`
+// (a multi-turn record validates its prior, then its follow-up seeded with the prior's graph, then grounds
+// its action; a repair record recomputes its stored `validatorErrors`, then validates its corrected
+// stream); stage 6 resolves a multi-turn follow-up against the data model folded over both turns; stage
+// 8 is `recordIdentity`. Every exemplar takes exactly the pre-ADR-0231 path through each of them.
 
 import type { CorpusRecord, AdmitCode, RecordFailure } from './record.ts'
 import { validateRecord } from './record.ts'
 import { heal } from './heal.ts'
-import { canonicalize, CanonicalizeError } from './canonical.ts'
+import { canonicalize, canonicalizeIdentity, CanonicalizeError } from './canonical.ts'
+import type { CanonicalizeResult } from './canonical.ts'
 import { minHashSignature, jaccardEstimate, DEFAULT_THETA_DUP } from './dedup.ts'
 import type { DedupIndex } from './dedup.ts'
 import type { CorpusStore } from './store.ts'
 import { validateA2ui } from './validate.ts'
+import type { SurfaceSeed } from '../renderer/validate.ts'
+import { readActionSpec } from '../renderer/wire-tolerances.ts'
 import type { Catalog } from '../catalog/catalog.ts'
 import type { A2uiOutput, A2uiComponent, A2uiChildTemplate, ErrorCode, Failure } from '../protocol.ts'
 
@@ -74,6 +84,9 @@ export type AdmitResult =
        * absent for every other code. A structured alternative to regex-parsing `message`. */
       collidesWith?: string
     }
+
+/** A rejection verdict alone (the `ok:false` arm), for the stage helpers the standing gate re-runs. */
+export type AdmitRejection = Extract<AdmitResult, { ok: false }>
 
 /** Admit one candidate through the full pipeline (LLD §6). Async: `canonicalize` rides `crypto.subtle`. */
 export async function admit(candidate: unknown, deps: AdmitDeps): Promise<AdmitResult> {
@@ -133,12 +146,14 @@ export async function admit(candidate: unknown, deps: AdmitDeps): Promise<AdmitR
   // to except). So a record declaring a surface it never delivers components for is now rejected
   // `E_IDGRAPH` rather than admitted as an exemplar teaching a blank card. Nothing reds: the 29-record
   // exemplar shard admits unchanged (proven by `corpus-data.test.ts` + the slice's re-admission sweep).
-  const verdict = validateA2ui(output, deps.catalog, undefined, { atFinalize: true })
-  if (!verdict.valid) return rejectTier1(verdict.failures)
+  // ADR-0231: `checkTier1` dispatches by facet; the exemplar arm is exactly the one call it always was.
+  const tier1 = checkTier1(record, deps.catalog)
+  if (tier1 !== null) return tier1
 
   // Stage 6 — pointer RESOLUTION (corpus-only, LLD-C5 §6/§7): layered on top of tier-1's syntax-only
-  // check — an exemplar bundles its complete data model, so resolution is checkable here.
-  const unresolved = findUnresolvedPointers(output)
+  // check: an exemplar bundles its complete data model, so resolution is checkable here. A multi-turn
+  // follow-up resolves against the data model folded from `priorOutput` then `a2uiOutput` (ADR-0231 cl.2).
+  const unresolved = findUnresolvedPointers(resolutionStream(record, output))
   if (unresolved.length > 0) {
     return { ok: false, code: 'E_POINTER', message: 'a binding does not resolve against the bundled data model', paths: unresolved }
   }
@@ -149,10 +164,11 @@ export async function admit(candidate: unknown, deps: AdmitDeps): Promise<AdmitR
     return { ok: false, code: 'E_LEAK', message: `promptText collides with the held-out eval record "${leakName}"` }
   }
 
-  // Stage 8 — canonical + hash (LLD-C3): fills `meta.canonicalHash`/`componentsUsed`.
+  // Stage 8: canonical + hash (LLD-C3), fills `meta.canonicalHash`/`componentsUsed`. The identity
+  // input is facet-dispatched (ADR-0231 cl.2/cl.3); an exemplar's is `canonicalize(a2uiOutput)` as before.
   let canonical
   try {
-    canonical = await canonicalize(output)
+    canonical = await recordIdentity(record)
   } catch (e) {
     // The DFS's defensive root/cycle backstop (canonical.ts): tier-1 already rejects a missing/second
     // root or a cycle before this stage ever runs (LLD §6), so this branch is a totality guard, not a
@@ -216,6 +232,164 @@ function rejectPaths(code: AdmitCode, failures: RecordFailure[]): AdmitResult {
   return { ok: false, code, message: `${code}: ${paths.length} field(s) failed`, paths }
 }
 
+// ── ADR-0231 facet dispatch: tier-1 inputs, resolution stream, identity ─────────────
+
+/**
+ * Stage 5 for any model-visible record (ADR-0231 cl.2/cl.3), exported so the standing corpus-data gate
+ * re-runs the very same checks on a committed line. Returns the first rejection, or `null` when clean.
+ *
+ * - exemplar: `validateA2ui(a2uiOutput)` at finalize, unchanged.
+ * - multi-turn: the prior turn alone at finalize; then the follow-up at finalize with the prior's graph as
+ *   the TKT-0081 session seed (an update-only follow-up passes, a `root` resend fails `sid:root`); then
+ *   the action grounding check (E_IDGRAPH). Prior-turn failure paths carry a `priorOutput` prefix.
+ * - repair: recomputation equality of `validatorErrors` (E_SCHEMA at `validatorErrors`); then the
+ *   corrected `a2uiOutput` at finalize, the exemplar path.
+ */
+export function checkTier1(record: CorpusRecord, catalog: Catalog): AdmitRejection | null {
+  const output = record.a2uiOutput ?? []
+  if (record.meta.facet === 'multi-turn') {
+    const prior = record.priorOutput ?? []
+    const priorVerdict = validateA2ui(prior, catalog, undefined, { atFinalize: true })
+    if (!priorVerdict.valid) return rejectTier1(priorVerdict.failures, 'priorOutput')
+    const followUp = validateA2ui(output, catalog, priorSurfaceSeeds(prior), { atFinalize: true })
+    if (!followUp.valid) return rejectTier1(followUp.failures)
+    return checkActionGrounding(record, catalog)
+  }
+  if (record.meta.facet === 'repair') {
+    const recomputed = validateA2ui(record.invalidInput ?? [], catalog, undefined, { atFinalize: true })
+    if (!sameFailureSet(recomputed.failures, record.validatorErrors ?? [])) {
+      return {
+        ok: false,
+        code: 'E_SCHEMA',
+        message: `validatorErrors do not equal the recomputed verdict on invalidInput (${pairKeys(recomputed.failures).join(', ') || 'valid'})`,
+        paths: ['validatorErrors'],
+      }
+    }
+  }
+  const verdict = validateA2ui(output, catalog, undefined, { atFinalize: true })
+  return verdict.valid ? null : rejectTier1(verdict.failures)
+}
+
+/**
+ * The record's dedup identity (stage 8, ADR-0231 cl.2/cl.3), exported so the standing gate and the seed
+ * importer's dedup warm-up hash a committed line exactly as admission did.
+ *
+ * - exemplar (and any other facet): `canonicalize(a2uiOutput)`, byte-identical to the pre-ADR-0231 hash.
+ * - multi-turn: the fold of `priorOutput` then `a2uiOutput`, plus a `clientInput` member holding the
+ *   action minus its per-session nonces (`actionId`, `timestamp`): the same end state reached by the same
+ *   action is a duplicate, a different action is not. `componentsUsed` is the merged fold's.
+ * - repair: the corrected stream's form plus a `validatorErrors` member holding the sorted, deduplicated
+ *   `(code, path)` set: the same tree reached from a different breakage is a distinct pair.
+ */
+export async function recordIdentity(record: CorpusRecord): Promise<CanonicalizeResult> {
+  const output = record.a2uiOutput ?? []
+  if (record.meta.facet === 'multi-turn') {
+    const action = record.clientInput?.[0]?.action
+    let normalized: Record<string, unknown> | undefined
+    if (action !== undefined) {
+      const { actionId: _actionId, timestamp: _timestamp, ...rest } = action
+      void _actionId
+      void _timestamp
+      normalized = rest
+    }
+    return canonicalizeIdentity([...(record.priorOutput ?? []), ...output], { clientInput: normalized })
+  }
+  if (record.meta.facet === 'repair') {
+    return canonicalizeIdentity(output, { validatorErrors: sortedFailurePairs(record.validatorErrors ?? []) })
+  }
+  return canonicalize(output)
+}
+
+/** The stream stage 6 folds for pointer resolution: a multi-turn record's two turns in stream order
+ * (the live surface after the follow-up), every other facet's `a2uiOutput` alone. */
+function resolutionStream(record: CorpusRecord, output: A2uiOutput): A2uiOutput {
+  return record.meta.facet === 'multi-turn' ? [...(record.priorOutput ?? []), ...output] : output
+}
+
+/**
+ * The TKT-0081 session seed a multi-turn follow-up validates under: per surface, the prior turn's
+ * components upserted by id, and whether `root` was delivered. Mirrors `src/agent/produce.ts`'s
+ * `sessionSurfaceSeeds` (the producer loop's own seed builder): a `createSurface` or `deleteSurface`
+ * clears that surface's seed (teardown and rebuild, never a merge).
+ */
+export function priorSurfaceSeeds(prior: A2uiOutput): Map<string, SurfaceSeed> {
+  const seeds = new Map<string, { byId: Map<string, A2uiComponent>; rootDelivered: boolean }>()
+  for (const msg of prior) {
+    if ('deleteSurface' in msg) {
+      seeds.delete(msg.deleteSurface.surfaceId)
+    } else if ('createSurface' in msg) {
+      seeds.delete(msg.createSurface.surfaceId)
+    } else if ('updateComponents' in msg) {
+      const { surfaceId, components } = msg.updateComponents
+      let seed = seeds.get(surfaceId)
+      if (seed === undefined) {
+        seed = { byId: new Map(), rootDelivered: false }
+        seeds.set(surfaceId, seed)
+      }
+      for (const comp of components) {
+        seed.byId.set(comp.id, comp) // upsert: a later resend replaces (the renderer's merge)
+        if (comp.id === 'root') seed.rootDelivered = true
+      }
+    }
+  }
+  const out = new Map<string, SurfaceSeed>()
+  for (const [sid, seed] of seeds) out.set(sid, { components: [...seed.byId.values()], rootDelivered: seed.rootDelivered })
+  return out
+}
+
+/**
+ * Action grounding (ADR-0231 cl.2, E_IDGRAPH, the dangling-reference class): the action's
+ * `sourceComponentId` must name a component live on the action's surface after the prior turn, and that
+ * component must declare an action prop (catalog `mapsTo: 'action'`, the renderer's own trigger rule)
+ * whose name, read by the renderer's `readActionSpec`, equals `action.name`. An action no prior component
+ * can emit is a fabricated turn.
+ */
+function checkActionGrounding(record: CorpusRecord, catalog: Catalog): AdmitRejection | null {
+  const action = record.clientInput?.[0]?.action
+  if (action === undefined) return null // unreachable: stage 2 requires exactly one action envelope
+  const live = priorSurfaceSeeds(record.priorOutput ?? []).get(action.surfaceId)
+  const source = live?.components.find((c) => c.id === action.sourceComponentId)
+  if (source === undefined) {
+    return {
+      ok: false,
+      code: 'E_IDGRAPH',
+      message: `action.sourceComponentId "${action.sourceComponentId}" is not a component the prior turn left on surface "${action.surfaceId}"`,
+      paths: ['clientInput[0].action.sourceComponentId'],
+    }
+  }
+  const props = catalog.components[source.component]?.properties ?? {}
+  const emits = Object.entries(props).some(
+    ([prop, def]) => def.mapsTo === 'action' && source[prop] !== undefined && readActionSpec(source[prop]).name === action.name,
+  )
+  if (emits) return null
+  return {
+    ok: false,
+    code: 'E_IDGRAPH',
+    message: `component "${source.id}" declares no action named "${action.name}"`,
+    paths: ['clientInput[0].action.name'],
+  }
+}
+
+const pairKey = (f: { code: string; path: string }): string => `${f.code} ${f.path}`
+
+function pairKeys(failures: readonly Failure[]): string[] {
+  return [...new Set(failures.map(pairKey))].sort()
+}
+
+/** Recomputation equality (ADR-0231 cl.3): the two lists compared as SETS of `(code, path)` pairs. */
+function sameFailureSet(a: readonly Failure[], b: readonly Failure[]): boolean {
+  const ka = pairKeys(a)
+  const kb = pairKeys(b)
+  return ka.length === kb.length && ka.every((k, i) => k === kb[i])
+}
+
+/** The repair identity member: `(code, path)` pairs deduplicated and sorted, as plain objects. */
+function sortedFailurePairs(failures: readonly Failure[]): Failure[] {
+  const byKey = new Map<string, Failure>()
+  for (const f of failures) byKey.set(pairKey(f), { code: f.code, path: f.path })
+  return [...byKey.keys()].sort().map((k) => byKey.get(k)!)
+}
+
 // The LLD §6 tier-1 -> admission code table. `FUNCTION` is a render-time-only code (protocol.ts:
 // binding-evaluation failures, never emitted by the static `validateA2ui`) and has no table row —
 // defaulted to `E_SCHEMA` defensively rather than silently dropped.
@@ -244,14 +418,21 @@ function mapTier1Code(code: ErrorCode): AdmitCode {
 /** Map a tier-1 verdict's failures to ONE admission code (the first failure's mapped code wins — tier-1
  * itself already short-circuits a top-level PARSE/SCHEMA defect before any batched per-component
  * failures can co-occur); `paths` collects every failure that shares that same mapped code. */
-function rejectTier1(failures: Failure[]): AdmitResult {
+function rejectTier1(failures: Failure[], stream?: 'priorOutput'): AdmitRejection {
   const mapped = failures.map((f) => ({ code: mapTier1Code(f.code), path: f.path }))
   const primary = mapped[0]!.code
-  const paths = mapped.filter((m) => m.code === primary).map((m) => m.path)
-  return { ok: false, code: primary, message: `tier-1 validation failed (${primary})`, paths }
+  // ADR-0231: a multi-turn prior-turn failure names its stream, so `[0].version` reads
+  // `priorOutput[0].version` and `sid:root` reads `priorOutput:sid:root`; the follow-up and every
+  // exemplar keep the validator's own unprefixed paths.
+  const prefix = (path: string): string =>
+    stream === undefined ? path : path.startsWith('[') ? `${stream}${path}` : path === '' ? stream : `${stream}:${path}`
+  const paths = mapped.filter((m) => m.code === primary).map((m) => prefix(m.path))
+  const where = stream === undefined ? '' : ` in ${stream}`
+  return { ok: false, code: primary, message: `tier-1 validation failed${where} (${primary})`, paths }
 }
 
-/** The leak gate (LLD §6/§8): an EXEMPLAR candidate's prompt is checked against every already-admitted
+/** The leak gate (LLD §6/§8): a MODEL-VISIBLE candidate's prompt (exemplar, multi-turn or repair,
+ * ADR-0231 cl.1; stage 3 already turned every eval candidate away) is checked against every already-admitted
  * `facet:"eval"` record's prompt (MinHash near-match, LLD-C4's recipe applied to `promptText` alone —
  * an eval record may carry no `a2uiOutput` at all, so the full dedup recipe does not apply here). The
  * eval corpus is ALWAYS empty in phase 1 (the facet gate above fail-closes every eval candidate until

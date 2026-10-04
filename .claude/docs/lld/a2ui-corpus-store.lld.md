@@ -1,6 +1,6 @@
 # LLD — A2UI Corpus Store
 
-> Status: proposed · v0.6.1 · 2026-10-04 (v0.1 2026-06-26) · Layer: LLD (implementation plan)
+> Status: proposed · v0.7 · 2026-10-04 (v0.1 2026-06-26) · Layer: LLD (implementation plan)
 > Implements: [`../spec/a2ui-training-corpus.spec.md`](../spec/a2ui-training-corpus.spec.md) (SPEC-R1..R16, SPEC-N1..N6). Closes **PRD-D4** (storage substrate); PRD-D5 (MCP delivery) is now served through the streaming-pipeline LLD (see LLD-C13 note, §1).
 > Altitude: this document adds the **how**. It does not re-derive corpus behavior — that is the SPEC's; it cites `SPEC-R*` for the what and specifies data structures, algorithms, files, failures, and build order.
 > **v0.2 reconciliation (2026-07-03):** realized/unrealized state added (§0); LLD-C6 marked REALIZED; the healer (LLD-C7) is now **the ONE shared healer** for the whole system (the streaming LLD v0.2 re-pointed all healing here — the renderer deliberately does not heal) and its contract is ADR-0061; the phase-1 scope + tier-2 judge seam is ADR-0060; the pure-core/Node-shell split, the `"./corpus"` subpath, and the data home are ADR-0062; the dangling `a2ui-mcp.lld.md` reference repaired (LLD-C13 re-pointed to the streaming LLD-C6); the seed-import slice (ADR-0055's booked handshake) added as LLD-C14.
@@ -39,6 +39,15 @@
 > `CanonicalizeResult` gains `epochs` and renames `form` to `finalForm` (it had no consumers).
 > The single-surface precondition stands (amendment A1). A6 (admission's pointer resolution per epoch,
 > `foldForResolution` in `admit.ts`) is not built by this change.
+> **v0.7 (2026-10-04, ADR-0231 built, GH #1739 the facet build slice):** the record gains two
+> model-visible facets, `multi-turn` and `repair` (SPEC v0.6). §2 gains their shard homes and the
+> throwing `facetOfPath`; §3 the facet branches; §4 the facet identity (`canonicalizeIdentity`, the
+> exemplar identity untouched); §6 the facet dispatch inside stages 2, 5, 6 and 8 (stage order
+> unchanged) and the pin stage's absent-`version` arm for the never-healed streams (SPEC-R9 AC3); §8 the facet rows; §9 retrieval's opt-in `facet` filter (default `exemplar`; the exporters
+> stay exemplar-only). Both new shard directories are ABSENT until the curation slices admit their
+> first records (GH #1741/#1742); the standing gate's per-facet legs prove themselves against an
+> in-test fixture shard meanwhile. Every committed exemplar line re-admits with a byte-identical
+> `canonicalHash`.
 
 ---
 
@@ -90,6 +99,10 @@ Each component has a single responsibility and a SPEC home. No requirement is or
 packages/agent-ui/a2ui/corpus/
   exemplar/
     v1_0/<catalogId>.jsonl        # public; one CorpusRecord (facet:"exemplar") per line
+  multi-turn/                     # ADR-0231 cl.4; public; absent until GH #1741 admits a record
+    v1_0/<catalogId>.jsonl        # one CorpusRecord (facet:"multi-turn") per line
+  repair/                         # ADR-0231 cl.4; public; absent until GH #1742 admits a record
+    v1_0/<catalogId>.jsonl        # one CorpusRecord (facet:"repair") per line
   eval/                           # LANDS WITH LLD-C8 — no eval shard exists before the contamination mechanism
     v1_0/<catalogId>.jsonl.enc
   index.json                      # derived: {canonicalHash → name}, {catalogId → names[]}, counts
@@ -98,6 +111,13 @@ packages/agent-ui/a2ui/corpus/
 Shard dirs use the version pin with `.`→`_` (`'v1.0'` → `v1_0`, `'v0.9.1'` → `v0_9_1`) — the pin strings are `protocol.ts:160`'s, the dir names are their file-safe spellings.
 
 **Invariants.** (i) `name` is unique across both sub-corpora (join key). (ii) A file under `exemplar/` contains only `facet:"exemplar"` records; under `eval/`, only `facet:"eval"`. (iii) `index.json` is derived and regenerable from the JSONL; it is never the source of truth. (iv) **Only `tools/corpus/` writes the data dir** — the admission pipeline is the single mutation path, and it runs Node-side.
+
+**The ADR-0231 shard homes (v0.7).** Invariant (i) reads across all four facet directories (a name
+is unique corpus-wide, not per facet); (ii) extends to `multi-turn/` and `repair/` (a line whose facet
+disagrees with its directory throws at load). `facetOfPath(path)` (`store.ts`, exported) maps the
+directory segment to its facet and THROWS on a `.jsonl`/`.jsonl.enc` file under an unknown segment, so
+a misplaced shard can never load as an unclassified record set; a non-shard file (`index.json`) maps to
+`undefined`. `index.json`'s `byFacet` count carries all four keys.
 
 **The core is pure (ADR-0062):** it never touches the filesystem — the Node shell reads the shard files and hands their text in; writes go back through the shell.
 
@@ -125,15 +145,20 @@ function saveStore(dataDir: string, store: CorpusStore): void;   // serialize() 
 `CorpusRecord` is the TS form of the SPEC §5.1 schema. Validation is a zero-dep hand-rolled checker (the repo bans heavyweight deps); it mirrors the draft-07 schema field-by-field. `A2uiOutput` is **imported from `protocol.ts:153`** (realized), not redefined.
 
 ```ts
-import type { A2uiOutput } from '../protocol.ts'
+import type { A2uiActionMessage, A2uiOutput, Failure } from '../protocol.ts'
 
-type Facet = "exemplar" | "eval";
+type Facet = "exemplar" | "eval" | "multi-turn" | "repair";   // ADR-0231 cl.1
+type ModelVisibleFacet = Exclude<Facet, "eval">;                  // the model-visible class
 type Status = "valid" | "repaired" | "quarantined";
 
 interface CorpusRecord {
   name: string; description: string; promptText: string;
   target?: string; catalog?: string; role_description?: string; workflow_description?: string;
-  a2uiOutput?: A2uiOutput;                        // required iff facet==="exemplar" (SPEC-R2)
+  a2uiOutput?: A2uiOutput;                        // required iff facet is model-visible (SPEC-R2)
+  priorOutput?: A2uiOutput;                       // multi-turn only, required: turn 1 (ADR-0231 cl.2)
+  clientInput?: A2uiActionMessage[];              // multi-turn only, required: v1 exactly one action envelope
+  invalidInput?: A2uiOutput;                      // repair only, required: the broken stream (ADR-0231 cl.3)
+  validatorErrors?: Failure[];                    // repair only, required, non-empty: { code: ErrorCode, path }
   meta: {
     facet: Facet; protocolVersion: string; catalogId: string; catalogVersion?: string;
     provenance: { source: "authored"|"distilled"|"mined"; origin: string };
@@ -170,6 +195,29 @@ surfaceless `callFunction` envelopes are excluded from the count. Enforced HERE 
 corpus-data gate (LLD-C15) enforces it over stored records too. Landed as its OWN slice
 (`record.ts:207-234` — the ADR-0063 follow-up had already landed separately; v0.4.1 books note).
 Multi-surface streams stay wire/renderer-legal; this is corpus-only.
+
+**The facet branches (v0.7, ADR-0231 cl.2/cl.3, SPEC-R2 AC4/AC5).** `validateRecord` dispatches on
+`meta.facet`. A `multi-turn` record requires `priorOutput`, `clientInput` and `a2uiOutput`;
+`clientInput` is exactly one `{ version, action }` envelope whose `action` carries the five string
+fields (`surfaceId`, `actionId`, `name`, `sourceComponentId`, `timestamp`) and an object `context`,
+with optional `wantResponse`/`dataModel`; any other envelope kind rejects at `clientInput[0]`. A
+`repair` record requires `invalidInput`, `validatorErrors` and `a2uiOutput`; `validatorErrors` is a
+non-empty list of `{ code, path }` with `code` in the full `ErrorCode` union (a `Record<ErrorCode, true>`
+literal keeps the runtime set exhaustive under `tsc`; which codes a pair can actually carry is
+admission's recomputation, §6). A branch field on a facet that does not own it is still an unknown
+key, `E_SCHEMA` at the field, so the exemplar and eval branches reject it exactly as before. The
+single-surface rule and the pin walk run over the UNION of the streams the facet bundles, in stream
+order (`priorOutput`, `clientInput`, `a2uiOutput`; `invalidInput`, `a2uiOutput`), the action's
+`surfaceId` counting as surface-bearing; the facet's own `a2uiOutput` must carry at least one
+surface-bearing message. The interop projection (above) also drops the four branch fields (ADR-0231
+§6), so a projected record of any facet carries only the 7 upstream fields.
+
+**Seed kinds (v0.7, ADR-0231 cl.5).** `MultiTurnSeed` and `RepairSeed` (`src/examples/types.ts`) sit
+beside `ExampleSeed`, each on its own shelf (`allMultiTurnSeeds`, `allRepairSeeds`, empty until the
+curation slices). LLD-C14 maps `priorMessages` → `priorOutput`, `action` → `clientInput[0]`,
+`messages` → `a2uiOutput` (`meta.facet='multi-turn'`), and `invalidMessages` → `invalidInput`,
+`validatorErrors` verbatim, `messages` → `a2uiOutput` (`meta.facet='repair'`); the trio, pins and
+provenance map exactly as an `ExampleSeed`'s do (`candidateForSeed` dispatches by seed kind).
 
 **Seed pre-alignment (ADR-0055).** An `ExampleSeed` maps onto a candidate as: `name`/`description`/`promptText` verbatim; `messages` → `a2uiOutput`; `protocolVersion`/`catalogId` → the `meta` pins; `meta.facet='exemplar'`, `meta.provenance={source:'authored', origin:'src/examples/<module>.ts'}`, `meta.status` set by admission. `surfaceId` is dropped (it lives inside every message). The mapping is LLD-C14's; the seed shape never imports corpus code.
 
@@ -216,6 +264,20 @@ so two records that end on the same tree through different lifecycles are distin
 
 **Edge cases:** disconnected components (declared but unreachable from `root`) are dropped from the canonical form and noted; a cycle aborts with `E_IDGRAPH`.
 
+**Facet identity (v0.7, ADR-0231 cl.2/cl.3).** The facet build leaves `canonicalize()` unchanged. The identity a
+non-exemplar facet hashes is `canonicalizeIdentity(stream, members)` (`canonical.ts`): the value the
+plain `serialized` encodes (the one form, or the ordered epoch list under the epoch rule above) NESTED
+under `form` beside the facet's extra members, serialized stably and hashed, so the identity stays
+well-formed whatever shape it takes. `admit.ts`'s `recordIdentity`
+selects the input per facet: an exemplar's identity is `canonicalize(a2uiOutput)` byte for byte (every
+committed line re-admits with an identical hash); a multi-turn record's is the fold of
+`priorOutput ⊕ a2uiOutput` plus a `clientInput` member holding the action minus its per-session
+nonces (`actionId`, `timestamp`); a repair record's is the corrected stream's fold plus a
+`validatorErrors` member holding the sorted, de-duplicated `(code, path)` set. `componentsUsed` comes
+from the same fold (for multi-turn, the merged one). The canonicalizer's epoch fold is built (v0.6.1),
+but admission's per-epoch pointer resolution (amendment A6, GH #1750) is not, so a follow-up that
+`deleteSurface`s and recreates its surface waits on A6 before its seed lands.
+
 ## 5. Hasher + dedup — LLD-C4 (SPEC-R7)
 
 Two-stage: exact then near.
@@ -243,11 +305,11 @@ platform (determinism, no `Math.random`). The inclusive `≥ θ_dup` bound is pr
 Center-out orchestration; each stage is independently testable and short-circuits on first failure.
 
 ```
-admit(candidate, deps: AdmitDeps) =        // AdmitDeps = { catalog: Catalog; store: CorpusStore; dedupIndex: DedupIndex; judge?: Judge } (admit.ts:52-62 — catalog REQUIRED, caller resolves by meta.catalogId; ADR-0060 realization note)
+admit(candidate, deps: AdmitDeps) =        // AdmitDeps = { catalog: Catalog; store: CorpusStore; dedupIndex: DedupIndex; judge?: Judge } (admit.ts:62-72; catalog REQUIRED, caller resolves by meta.catalogId; ADR-0060 realization note)
   heal           (LLD-C7)   → text→messages + structural normalization; ok:false ⇒ E_SCHEMA; changed ⇒ status:"repaired" (ADR-0061)
   schema/field   (LLD-C2)   → E_SCHEMA (unconditional name/description/promptText — ADR-0063; E_NO_TARGET retired; single-surface rule — ADR-0064)
   facet gate     (ADR-0060) → facet==="eval" ⇒ E_LEAK (fail-closed until LLD-C8 exists — SPEC-R4 has no at-rest protection to admit into)
-  pin check      (LLD-C2)   → E_PIN     (SPEC-R9: meta pins present; every message's `version` === meta.protocolVersion; every createSurface.catalogId === meta.catalogId)
+  pin check      (LLD-C2)   → E_PIN     (SPEC-R9: meta pins present; every message's `version` === meta.protocolVersion; every createSurface.catalogId === meta.catalogId; the never-healed `priorOutput`/`invalidInput` messages must also carry `version`, absent is E_PIN, SPEC-R9 AC3)
   tier-1 deterministic (LLD-C6 = shared `validateA2ui`): the §0 realized reach — PARSE/SCHEMA/VERSION_UNSUPPORTED/CATALOG/IDGRAPH/POINTER-syntax → mapped per the table below
   pointer-RESOLUTION (corpus-only, LLD-C5): exemplar bindings must resolve against the record's bundled data model → E_POINTER. Layered ON TOP of tier-1; NOT part of `validateA2ui` (the renderer streams → an unresolved path is a placeholder, renderer SPEC-R4 AC2). Parity (N1/R8-AC3) is over `validateA2ui`, which is unchanged. SCOPE SEMANTICS = THE RENDERER'S LIST THREADING BY CONSTRUCTION (v0.5): `computeScopes()` (`admit.ts:351`) DFS-walks from `root` propagating the CURRENT scope to every static descendant and minting a new one at each children-TEMPLATE (composed `{outer}/0/{path}` — index 0, the witness element; nested templates compose), mirroring `renderer/tree.ts` + `list.ts` — the s7 import falsely E_POINTER'd 2 seeds under the earlier one-hop map (only the template's immediate target got a scope; its descendants didn't), fixed with regressions both shapes + a no-widening control. TWO latent gaps in the mirror remain (review-found, safe-direction, no shard hits — booked in §12's wave-close follow-ups): the compose lacks `scopedPointer`'s absolute-path short-circuit (an absolute INNER template path mis-composes), and resolution scans `root`-disconnected components canonicalization drops.
   leak gate      (LLD-C8 mechanism, LLD-C4 MinHash) → E_LEAK (candidate exemplar vs the loaded eval prompts — an empty set today, the stage still runs)
@@ -256,6 +318,28 @@ admit(candidate, deps: AdmitDeps) =        // AdmitDeps = { catalog: Catalog; st
   tier-2 rubric  (deps.judge — INJECTED seam, ADR-0060) → E_QUALITY when present and below the gate; ABSENT judge ⇒ stage skipped, qualityScore stays unset (the marker)
   write          (LLD-C1)   → store.put() + index update
 ```
+
+**Facet dispatch (v0.7, ADR-0231 cl.4).** The stage order above is unchanged; stages 2, 5, 6 and 8
+dispatch by `meta.facet`, and an exemplar takes exactly its pre-ADR-0231 path through each:
+- **Stage 2 (schema/field)** runs the facet branch (§3).
+- **Stage 5 (tier-1)** is `checkTier1(record, catalog)` (exported, so the standing gate re-runs the
+  same function). Multi-turn: `validateA2ui(priorOutput, catalog, undefined, {atFinalize:true})` must be
+  clean (a prior-turn failure path is prefixed `priorOutput:` or `priorOutput[`); then
+  `validateA2ui(a2uiOutput, catalog, seed, {atFinalize:true})` with `seed = priorSurfaceSeeds(priorOutput)`,
+  the TKT-0081 `SurfaceSeed` map (a `root` resend fails `<surfaceId>:root`); then action grounding, mapped
+  to `E_IDGRAPH`: `sourceComponentId` must resolve in the prior fold (else at
+  `clientInput[0].action.sourceComponentId`) to a component whose action prop, read through
+  `readActionSpec`, names `action.name` (else at `clientInput[0].action.name`). Repair: the finalize-mode
+  failures on `invalidInput` must equal the stored `validatorErrors` as a `(code, path)` set (else
+  `E_SCHEMA` at `validatorErrors`); then `a2uiOutput` takes the exemplar's tier-1 call.
+- **Stage 6 (pointer resolution)** resolves a multi-turn follow-up against the data model folded from
+  `priorOutput` then `a2uiOutput` in stream order; repair and exemplar resolve `a2uiOutput` alone.
+- **Stage 8 (canonical + hash)** is `recordIdentity(record)` (§4).
+
+Stage 3 (eval fail-closed, `facet === "eval"` exactly), stage 7 (the leak gate, now over every
+model-visible facet), stage 9 (dedup: one index, names unique across facets), stage 10 (the judge seam)
+and stage 11 (write) are facet-agnostic. Stage 1 heals `a2uiOutput` only: `priorOutput` and
+`invalidInput` are never healed, and `clientInput` is not a stream.
 
 **The archive side-effect (v0.6, ADR-0165 — outside `admit()`, in the import shell).** An admission-time
 `E_QUALITY` reject still writes NOTHING to the store: the asymmetry above is deliberate and ADR-0165
@@ -322,15 +406,22 @@ Every SPEC error code mapped to its raising stage, plus the non-obvious edges:
 |---|---|---|
 | `E_SCHEMA` | LLD-C2 / C7 | reject; return failing JSON paths; healer ran first so it is a true schema defect (incl. heal `ok:false`; incl. missing `description` on ANY facet — ADR-0063) |
 | `E_SCHEMA` (multi-surface) | LLD-C2 | exemplar `a2uiOutput` addressing ≠1 surface (two surfaceIds, or none — `callFunction`-only) → reject at the record schema, BEFORE canonicalization can chimera the global fold (ADR-0064) |
-| `E_PIN` | LLD-C2 / C6 | missing pin · a message `version` ≠ `meta.protocolVersion` · a `createSurface.catalogId` ≠ `meta.catalogId` · tier-1 `VERSION_UNSUPPORTED` → reject |
+| `E_SCHEMA` (facet branch) | LLD-C2 | multi-turn: a missing `priorOutput`/`clientInput`/`a2uiOutput`, a `clientInput` of length other than 1, a non-`action` envelope, a mistyped action field; repair: a missing branch field, an empty `validatorErrors`, an entry whose `code` is outside `ErrorCode`; any facet: a branch field the facet does not own → reject at the field path (ADR-0231 cl.2/cl.3) |
+| `E_SCHEMA` (repair recomputation) | LLD-C5 (stage 5) | stored `validatorErrors` ≠ the recomputed finalize-mode `validateA2ui(invalidInput)` failures, compared as a `(code, path)` set → reject at `validatorErrors`; a `FUNCTION` or `CATALOG_UNKNOWN` entry can never match (ADR-0231 cl.3) |
+| `E_PIN` | LLD-C2 / C6 | missing pin · a message `version` ≠ `meta.protocolVersion` · a `priorOutput`/`invalidInput` message with no string `version` (never healed, so arm (d) cannot fill it; SPEC-R9 AC3, ADR-0231 cl.3/cl.7) · a `createSurface.catalogId` ≠ `meta.catalogId` · tier-1 `VERSION_UNSUPPORTED` → reject |
 | `E_CATALOG` | LLD-C6 | component/property absent from pinned catalog → reject; report the offending `component` |
 | `E_IDGRAPH` | LLD-C3/C6 | ≠1 `root` (missing or 2nd — the shared finalize-granularity rule), dangling `child`, or cycle → reject |
+| `E_IDGRAPH` (multi-turn) | LLD-C5 (stage 5) | a follow-up resending `root` over the prior seed (`<surfaceId>:root`); a prior-turn defect (path prefixed `priorOutput:` or `priorOutput[`); an ungrounded action: `sourceComponentId` absent from the prior fold, or its component declares no action named `action.name` → reject (ADR-0231 cl.2) |
 | `E_POINTER` (syntax) | LLD-C6 (shared `validateA2ui`) | malformed JSON-Pointer → reject; identical verdict in renderer + corpus (N1); list-item-relative forms are legal (ADR-0024) |
 | `E_POINTER` (resolution) | LLD-C5 (corpus-only stage) | exemplar binding whose pointer does not resolve against the record's bundled data model → reject; layered ON TOP of `validateA2ui`, NOT part of it; relative-binding scope = the renderer's full-subtree list threading (`computeScopes()`, `admit.ts:351` — v0.5) |
+| `E_POINTER` (multi-turn resolution) | LLD-C5 | a follow-up binding that resolves against neither turn: the model is folded from `priorOutput` then `a2uiOutput` in stream order → reject (ADR-0231 cl.2; per-epoch once amendment A6 lands, GH #1750) |
 | `E_DUP` | LLD-C4 | exact or near duplicate → reject with the colliding first-admitted `name` in `AdmitResult.collidesWith` (SPEC §5.2, realized) |
+| `E_DUP` (facet identity) | LLD-C3/C4 | multi-turn: the same merged end state and the same action minus `actionId`/`timestamp`; repair: the same corrected tree and the same `(code, path)` set. The near-dup leg still shingles `promptText` plus the identity serialization, so two repair pairs sharing `promptText` and tree whose breakages differ in one path can reach θ_dup (0.94 measured): curation gives each pair its own `promptText` |
 | `E_QUALITY` | LLD-C5 (injected judge) | below rubric gate → reject with failing dimensions; **stage skipped when no judge is injected** (ADR-0060 — `qualityScore` absent is the marker) |
 | `E_LEAK` | LLD-C5/C8 | exemplar↔eval prompt collision → reject (admission) / fail CI (gate); **also the fail-closed refusal of any eval-facet candidate until LLD-C8 exists** (ADR-0060) |
+| `E_LEAK` (model-visible class) | LLD-C5 | the leak gate covers every model-visible facet: a multi-turn or repair candidate whose `promptText` near-matches an eval prompt → reject (ADR-0231 cl.1) |
 | **empty corpus** | LLD-C4/C9 | dedup admits first record; `retrieve()` returns `[]` (SPEC-R11 AC2) |
+| **shard under an unknown facet directory** | LLD-C1 | `facetOfPath` throws at load (never an unclassified record set); a line whose facet disagrees with its directory throws (ADR-0231 cl.4) |
 | **disconnected components** | LLD-C3 | dropped from canonical form; logged, not fatal |
 | **healer non-JSON** | LLD-C7 | `ok:false` → admission `E_SCHEMA` / codec `PARSE` |
 | **seed near-dup at import** | LLD-C14 | report + halt for a human θ_dup ruling; never silent-skip |
@@ -343,6 +434,7 @@ Every SPEC error code mapped to its raising stage, plus the non-obvious edges:
 **LLD-C9 retrieval (SPEC-R11, N2) — REALIZED (s8, `retrieve.ts:59`):** zero-dep **TF-IDF cosine** (resolves PRD-D1's retrieval-method open item to a TF-IDF baseline; an embedding backend is a later, tooling-scoped upgrade behind the same interface).
 - **Pure over an ARRAY** (v0.3.1 — replaces the v0.2 store-handle sketch): `retrieve(records: readonly CorpusRecord[], query: {intent, k, catalogId, protocolVersion})` — callers compose `retrieve(store.all({…}), query)`; no store-handle wrapper (one call; a wrapper widens the surface for nothing, and the decomp's only build edge is record.ts→retrieve.ts). Vectorize intent, cosine vs the scoped records (`promptText` + `meta.componentsUsed` tokens), top-k descending; ties broken by ascending `name` (deterministic order); a zero-vocabulary-overlap query returns `[]` (a genuine no-match, not an arbitrary top-k of zero scores).
 - **Hard eligibility invariant** (matches LLD-C10's explicit exemplar scoping; grounded in the SPEC's framing of retrieval as exemplar conditioning, §3 "Conditioning"/PRD-D1): only `facet:"exemplar"` AND `status ≠ "quarantined"` records are ever candidates, **regardless of what the caller passes** — defense-in-depth now that the input is a bare array (an eval or quarantined record in the input is silently ineligible, never an error).
+- **Facet filter (v0.7, ADR-0231 cl.4):** `query.facet?: ModelVisibleFacet` names the one model-visible facet the scope draws from; omitted means `exemplar`, so every existing call is byte-identical (`retrieve.test.ts` pins the pre-change outputs for each existing call shape). The invariant above therefore reads "only records of `query.facet ?? 'exemplar'`"; `eval` is not a `ModelVisibleFacet`, so the held-out class cannot be named. The exporters below keep their exemplar-only invariant; a facet-specific export shape lands by ADR-0231 amendment when a consumer names it.
 - **No cross-call index cache** — the v0.2 "cached per store instance; invalidated on put" claim is retired with the store handle; the TF-IDF index is built per call over the scoped set. **N2 budget (≤200 ms p95 @10⁴):** met by measurement as-built; a memoization layer is a later optimization behind the same signature IF a caller profile demands it.
 
 **LLD-C10 exporters — REALIZED (s9, `export.ts:67/:111`); both take the ARRAY pattern like C9 (v0.5 — not the store handle):**
@@ -383,8 +475,11 @@ packages/agent-ui/a2ui/
                      validate.ts judge.ts import-report.ts (realized) index.ts corpus-data.test.ts
                      disposition-allowlist.ts verdict-archive.ts (GH #335 / GH #340 — both deliberately
                      OUTSIDE the "./corpus" barrel: import/coverage-tooling bookkeeping, not a corpus API
-                     surface) (+ co-located *.test.ts)
+                     surface) (+ co-located *.test.ts; `facets.fixture.ts` holds the ADR-0231
+                     multi-turn/repair test records, test-only, never on the barrel)
   corpus/            exemplar/v1_0/agent-ui.jsonl index.json      # data — written ONLY by tools/corpus
+                     multi-turn/<pin>/<catalogId>.jsonl            # ADR-0231; absent until GH #1741
+                     repair/<pin>/<catalogId>.jsonl                # ADR-0231; absent until GH #1742
                      verdicts/<date>--<slug>.json                 # ADR-0165 — one file per judged wave,
                      verdicts/README.md                           #   archived verbatim; starts EMPTY
   tools/corpus/      fs-store.ts import-seeds.ts rescore.ts       # Node shell (later: contamination.ts repair.ts eval/)

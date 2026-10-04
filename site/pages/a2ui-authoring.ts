@@ -234,8 +234,9 @@ content.append(
   h(3, 'retrieve() — zero-dep TF-IDF cosine top-k'),
   p(
     'Ranks by `promptText` + `meta.componentsUsed`, scoped to a `catalogId`/`protocolVersion` pin, and ' +
-      'restricted to non-quarantined `facet:"exemplar"` records regardless of what the caller passes in — a ' +
-      'hard, defensive invariant so an eval-facet or quarantined record can never surface in a result. Never ' +
+      'restricted to non-quarantined records of ONE model-visible facet (the optional `facet`, default ' +
+      '`exemplar`, ADR-0231) regardless of what else the caller passes in: a hard, defensive invariant so an ' +
+      'eval-facet or quarantined record can never surface in a result. Never ' +
       'throws: an empty scope, `k <= 0`, or zero shared vocabulary all resolve to `[]`, not an error.',
   ),
   codeBlock(extractInterface(corpusRetrieveRaw, 'RetrieveQuery'), 'ts'),

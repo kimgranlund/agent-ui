@@ -23,7 +23,7 @@
 // catalog from: the import script hands `admit()` the catalog matching it, and the corpus shard it lands
 // in is `corpus/exemplar/v1_0/<catalogId>.jsonl`.
 
-import type { A2uiServerMessage } from '../protocol.ts'
+import type { A2uiActionMessage, A2uiServerMessage, Failure } from '../protocol.ts'
 
 /** The catalog ids a seed may render against: the fleet's own default catalog and the upstream Basic
  *  catalog. Widening this union is a deliberate act: every `Record<SeedCatalogId, ...>` registry (the
@@ -47,5 +47,34 @@ export interface ExampleSeed<C extends SeedCatalogId = 'agent-ui'> {
    *  `allSeeds` shelf, `'a2ui-basic'` on the `allBasicSeeds` shelf. */
   catalogId: C
   /** The ordered A2UI server-message stream (the future `CorpusRecord.a2uiOutput`) — fed line-by-line via `ingest`. */
+  messages: readonly A2uiServerMessage[]
+}
+
+// ADR-0231 cl.5: the two seed kinds beside `ExampleSeed`, one per new corpus facet. Same pre-alignment
+// posture: `tools/corpus/import-seeds.ts` maps each onto its `CorpusRecord` branch and sets `meta.facet`.
+// They are corpus seeds only: the site's example pages key off `ExampleSeed`, and rendering a multi-turn
+// or repair seed on a page is a non-goal. Each lives on its own shelf (`allMultiTurnSeeds`,
+// `allRepairSeeds`), never on `allSeeds`.
+
+/** A two-turn conversation seed (the `multi-turn` facet): turn 1, the user's one action, the follow-up. */
+export interface MultiTurnSeed<C extends SeedCatalogId = 'agent-ui'> extends Omit<ExampleSeed<C>, 'messages'> {
+  /** Turn 1, the stream the surface already rendered (`CorpusRecord.priorOutput`). */
+  priorMessages: readonly A2uiServerMessage[]
+  /** The one client-to-server action the user took on turn 1's surface (`CorpusRecord.clientInput[0]`).
+   *  Its `sourceComponentId` must name a turn-1 component whose action prop carries this `name`. */
+  action: A2uiActionMessage
+  /** The follow-up stream answering the action (`CorpusRecord.a2uiOutput`): updates the live surface,
+   *  never resends `root`. */
+  messages: readonly A2uiServerMessage[]
+}
+
+/** A repair-pair seed (the `repair` facet): a broken stream, the validator's verdict, the fix. */
+export interface RepairSeed<C extends SeedCatalogId = 'agent-ui'> extends Omit<ExampleSeed<C>, 'messages'> {
+  /** The broken stream a producer emitted or would emit (`CorpusRecord.invalidInput`). */
+  invalidMessages: readonly A2uiServerMessage[]
+  /** The shared validator's verdict on `invalidMessages` at finalize (`CorpusRecord.validatorErrors`):
+   *  admission recomputes it and rejects a mismatch, so author it from a real `validateA2ui` run. */
+  validatorErrors: readonly Failure[]
+  /** The corrected stream (`CorpusRecord.a2uiOutput`); it must admit as an exemplar would. */
   messages: readonly A2uiServerMessage[]
 }

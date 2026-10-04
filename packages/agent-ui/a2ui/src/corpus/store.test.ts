@@ -3,9 +3,10 @@ import { describe, it, expect } from 'vitest'
 // src/corpus/ imports node:*"). Test-only use of `node:fs` is fine — it never ships (same pattern as
 // `controls/barrels.test.ts`'s package.json/CSS-barrel text probes).
 import { readFileSync } from 'node:fs'
-import { createStore } from './store.ts'
+import { createStore, facetOfPath } from './store.ts'
 import type { ShardText } from './store.ts'
 import type { CorpusRecord } from './record.ts'
+import { multiTurnRecord, repairRecord } from './facets.fixture.ts'
 
 declare const process: { cwd(): string }
 
@@ -110,7 +111,7 @@ describe('createStore — the pure store core (LLD-C1)', () => {
       expect(index.byCanonicalHash).toEqual({ 'hash-a': 'a', 'hash-b': 'b' })
       expect(index.byCatalogId).toEqual({ 'agent-ui': ['a', 'b'] })
       expect(index.counts.total).toBe(2)
-      expect(index.counts.byFacet).toEqual({ exemplar: 2, eval: 0 })
+      expect(index.counts.byFacet).toEqual({ exemplar: 2, eval: 0, 'multi-turn': 0, repair: 0 })
       expect(index.counts.byStatus).toEqual({ valid: 1, repaired: 1, quarantined: 0 })
     })
 
@@ -215,5 +216,50 @@ describe('createStore — the pure store core (LLD-C1)', () => {
     const source = readFileSync(`${process.cwd()}/packages/agent-ui/a2ui/src/corpus/store.ts`, 'utf8') as string
     expect(source).not.toMatch(/from ['"]node:/)
     expect(source).not.toMatch(/require\(['"]node:/)
+  })
+})
+
+// ADR-0231 cl.4: the two model-visible facets shelve beside `exemplar/` (Acceptance item 7, store half).
+describe('the multi-turn and repair shard homes (ADR-0231 cl.4)', () => {
+  it('facetOfPath returns multi-turn and repair for their shard paths, and the two pre-existing facets as before', () => {
+    expect(facetOfPath('packages/agent-ui/a2ui/corpus/multi-turn/v1_0/agent-ui.jsonl')).toBe('multi-turn')
+    expect(facetOfPath('packages/agent-ui/a2ui/corpus/repair/v1_0/agent-ui.jsonl')).toBe('repair')
+    expect(facetOfPath('packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl')).toBe('exemplar')
+    expect(facetOfPath('packages/agent-ui/a2ui/corpus/eval/v1_0/agent-ui.jsonl.enc')).toBe('eval')
+  })
+
+  it('facetOfPath throws on a shard under an unknown facet segment, and createStore with it', () => {
+    const path = 'packages/agent-ui/a2ui/corpus/rehearsal/v1_0/agent-ui.jsonl'
+    expect(() => facetOfPath(path)).toThrow(/no known facet directory/)
+    expect(() => createStore([{ path, text: `${JSON.stringify(mkRecord('stray'))}\n` }])).toThrow(/no known facet directory/)
+  })
+
+  it('facetOfPath leaves a non-shard file (index.json) undefined: invariant (iii) is unchanged', () => {
+    expect(facetOfPath('packages/agent-ui/a2ui/corpus/index.json')).toBeUndefined()
+  })
+
+  it('shardPath shelves each facet under its own directory with the .jsonl extension', () => {
+    const store = createStore()
+    expect(store.shardPath(multiTurnRecord())).toBe('packages/agent-ui/a2ui/corpus/multi-turn/v1_0/agent-ui.jsonl')
+    expect(store.shardPath(repairRecord())).toBe('packages/agent-ui/a2ui/corpus/repair/v1_0/agent-ui.jsonl')
+  })
+
+  it('a multi-turn and a repair record round-trip byte-stably and count under their own facet', () => {
+    const store = createStore()
+    store.put(mkRecord('ex'))
+    store.put(multiTurnRecord())
+    store.put(repairRecord())
+    const first = store.serialize()
+    expect(createStore(first).serialize()).toEqual(first)
+    const index = JSON.parse(first.find((s) => s.path.endsWith('index.json'))!.text)
+    expect(index.counts.byFacet).toEqual({ exemplar: 1, eval: 0, 'multi-turn': 1, repair: 1 })
+  })
+
+  it('a record shelved under another facet directory still throws the facet/shard mismatch at parse', () => {
+    const shard: ShardText = {
+      path: 'packages/agent-ui/a2ui/corpus/repair/v1_0/agent-ui.jsonl',
+      text: `${JSON.stringify(multiTurnRecord())}\n`,
+    }
+    expect(() => createStore([shard])).toThrow(/facet\/shard mismatch/)
   })
 })
