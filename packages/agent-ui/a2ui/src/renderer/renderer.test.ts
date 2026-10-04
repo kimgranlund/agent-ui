@@ -585,7 +585,7 @@ describe('renderer host — action-prop reading (ADR-0011 canonical {action,cont
 // and checks use, with the clicked control's list-item scope. Before the fix the context was forwarded
 // verbatim and `#wireAction` never received the `itemScope`, so every row of a template dispatched the
 // same unresolved `{ path: 'sku' }` object (found curating `basic-product-results-list`, GH #1732).
-describe('renderer host — action context resolution (GH #1748, LLD-C9 collectContext)', () => {
+describe('renderer host: action context resolution (GH #1748, LLD-C9 collectContext)', () => {
   /** Mount `components` on a fresh surface, seed the whole data model, and return the live buttons. */
   async function mountWith(
     catalogId: string,
