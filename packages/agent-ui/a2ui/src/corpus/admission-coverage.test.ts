@@ -1,5 +1,6 @@
 // admission-coverage.test.ts — the TKT-0022 trip-wire: every example-shelf seed (`src/examples/`
-// `allSeeds`) is either ADMITTED to the corpus store (present by name — the corpus join key, corpus
+// `allSeeds` AND, since GH #1737, the separate `allBasicSeeds` shelf; names are the join key across both,
+// see `coverageSeedNames`) is either ADMITTED to the corpus store (present by name - the corpus join key, corpus
 // LLD §2 invariant i) or explicitly DISPOSITIONED with a recorded reason (the `EXCLUSION_ALLOWLIST`
 // comment-with-citation precedent, `catalog/default/index.test.ts`). A future wave that adds a seed to
 // `allSeeds` without either admitting it through `tools/corpus/import-seeds.ts` or dispositioning it here
@@ -24,7 +25,8 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { allSeeds } from '../examples/index.ts'
+import { allSeeds, allBasicSeeds } from '../examples/index.ts'
+import { plantedBasicSeed } from '../catalog/a2ui-basic/planted.ts'
 import type { CorpusRecord } from './record.ts'
 import { DISPOSITION_ALLOWLIST } from './disposition-allowlist.ts'
 import { mergeVerdictArchive, parseArchivedVerdicts } from './verdict-archive.ts'
@@ -153,13 +155,26 @@ function unjudgedAdmissions(
   })
 }
 
+/** The seed names this gate judges: BOTH shelves (GH #1737, Kim's ruling 2026-10-03: a separate Basic
+ *  shelf beside `allSeeds`). A pure function of the two shelves so the planted legs below can drive it
+ *  with a Basic seed the real (empty-until-GH-#1732) shelf cannot supply. Admission reads every shard
+ *  under the corpus data dir by `name`, so a Basic record in `a2ui-basic.jsonl` is found with no further
+ *  wiring; the Basic shelf only has to be IN this name set for an un-admitted Basic seed to be reported. */
+function coverageSeedNames(agentUi: readonly { name: string }[], basic: readonly { name: string }[]): string[] {
+  return [...agentUi, ...basic].map((s) => s.name)
+}
+
 describe('corpus admission coverage — the TKT-0022 trip-wire (every seed admitted or dispositioned)', () => {
-  const SEED_NAMES = allSeeds.map((s) => s.name)
+  const SEED_NAMES = coverageSeedNames(allSeeds, allBasicSeeds)
   const ADMITTED = admittedRecords()
   const ARCHIVE = verdictArchive()
 
   it('derived a non-empty seed-name set (anti-vacuous — a broken import cannot pass silently)', () => {
     expect(SEED_NAMES.length).toBeGreaterThan(0)
+  })
+
+  it('the judged name set spans BOTH shelves (derived count, never a literal: agent-ui seeds plus Basic seeds)', () => {
+    expect(SEED_NAMES).toHaveLength(allSeeds.length + allBasicSeeds.length)
   })
 
   it('found at least one admitted corpus record (anti-vacuous — an empty/missing shard cannot pass silently)', () => {
@@ -199,6 +214,25 @@ describe('corpus admission coverage — the TKT-0022 trip-wire (every seed admit
     ])
     const allowlist = new Map([['b', 'stale disposition — b was admitted since']])
     expect(allowlistResidue(admitted, allowlist)).toEqual(['b'])
+  })
+
+  // ── GH #1737: the Basic shelf is in the judged set. The real shelf is empty, so plant a Basic seed. ──
+
+  it('a Basic seed on the Basic shelf that is admitted nowhere and not allowlisted is REPORTED (the Basic shelf is not exempt from the trip-wire)', () => {
+    const planted = plantedBasicSeed('product-card')
+    const names = coverageSeedNames(allSeeds, [planted])
+    expect(names).toContain(planted.name)
+    expect(seedsMissingAdmission(names, ADMITTED, DISPOSITION_ALLOWLIST)).toEqual([planted.name])
+  })
+
+  it('the same planted Basic seed ADMITTED and judged is clean on all three legs, and ADMITTED but unjudged is reported by unjudgedAdmissions', () => {
+    const planted = plantedBasicSeed('product-card')
+    const names = coverageSeedNames([], [planted])
+    const judgedAdmission = new Map([[planted.name, judged(4)]])
+    expect(seedsMissingAdmission(names, judgedAdmission, new Map())).toEqual([])
+    expect(unjudgedAdmissions(names, judgedAdmission, new Map(), new Map())).toEqual([])
+    const unjudgedAdmission = new Map([[planted.name, unjudged()]])
+    expect(unjudgedAdmissions(names, unjudgedAdmission, new Map(), new Map())).toEqual([planted.name])
   })
 
   // ── ADR-0165 clause 5's own negative controls: the #340 scenario is that an unjudged run ADMITS a

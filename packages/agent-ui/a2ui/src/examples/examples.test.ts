@@ -17,11 +17,19 @@
 // `document.createElement(tag)` with no per-instance hook. So the stub is applied ONCE at the shared
 // `ElementInternals.prototype`, scoped to this file's `beforeAll`/`afterAll` (saved + restored) rather
 // than per-instance — every real form control connects safely for the duration of this suite only.
+//
+// TWO SHELVES (GH #1737, ADR-0169 follow-up, Kim's ruling 2026-10-03: separate shelf). The legs above
+// guard `allSeeds` (agent-ui only, `defaultCatalog`) and are unchanged. `allBasicSeeds` is a SECOND shelf
+// of `ExampleSeed<'a2ui-basic'>` (empty until GH #1732) with its own legs at the end of this file: the
+// same two checks against `a2uiBasicCatalog`, plus the cross-shelf name-uniqueness invariant (corpus LLD
+// invariant i: `name` is the join key across every shard). Because the real Basic shelf is empty, each
+// Basic predicate is a named function shared by the standing loop AND by planted in-memory fixtures that
+// show it passing a genuine Basic seed and failing a wrong-dialect one (checks that bite).
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { allSeeds, generativeFormSeed, kpiPanelLifecycleSeed } from './index.ts'
+import { allSeeds, allBasicSeeds, generativeFormSeed, kpiPanelLifecycleSeed } from './index.ts'
 import type { ExampleSeed } from './types.ts'
-import { canvasSeeds } from './canvas-button.ts'
+import { canvasSeeds, canvasButtonSeed } from './canvas-button.ts'
 import { dynamicListSeeds } from './dynamic-lists.ts'
 import { generativeFormSeeds } from './generative-form.ts'
 import { patternSeeds } from './patterns.ts'
@@ -38,6 +46,8 @@ import { planAndExecuteSeeds } from './plan-and-execute.ts'
 import { commerceHospitalitySeeds } from './commerce-hospitality.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
+import { a2uiBasicCatalog } from '../catalog/a2ui-basic/index.ts'
+import { plantedBasicSeed, stampCatalogId } from '../catalog/a2ui-basic/planted.ts'
 import { createRenderer } from '../renderer/renderer.ts'
 import type { A2uiClientMessage } from '../renderer/renderer.ts'
 
@@ -418,5 +428,127 @@ describe('GH #729 — every catalog component appears in at least one example (s
     }
     const uncovered = Object.keys(defaultCatalog.components).filter((c) => !used.has(c))
     expect(uncovered, `catalog component(s) with NO example anywhere — add a seed: ${uncovered.join(', ')}`).toEqual([])
+  })
+})
+
+// ── GH #1737 - the Basic shelf (`allBasicSeeds`): the same two legs against `a2uiBasicCatalog` ─────────
+//
+// Every predicate below is a NAMED FUNCTION so the standing loop over the (empty) real shelf and the
+// planted proofs run the SAME code: an always-true predicate cannot hide behind an empty shelf, because
+// the planted legs feed it a seed that must fail.
+
+/** The shelf-shape pins: the seed's protocol version and catalog id are the Basic shelf's. */
+function basicPinProblems(seed: ExampleSeed<'a2ui-basic'>): string[] {
+  const problems: string[] = []
+  if (seed.protocolVersion !== 'v1.0') problems.push(`protocolVersion ${seed.protocolVersion}`)
+  if (seed.catalogId !== 'a2ui-basic') problems.push(`catalogId ${seed.catalogId}`)
+  const stamped = seed.messages.filter((m) => 'createSurface' in m)
+  for (const m of stamped) {
+    if ('createSurface' in m && m.createSurface.catalogId !== 'a2ui-basic') {
+      problems.push(`createSurface.catalogId ${m.createSurface.catalogId}`)
+    }
+  }
+  if (stamped.length === 0) problems.push('no createSurface')
+  return problems
+}
+
+/** Leg (a) for the Basic shelf: the shared validator against the Basic catalog. */
+const validateBasic = (seed: Pick<ExampleSeed, 'messages'>): ReturnType<typeof validateA2ui> =>
+  validateA2ui(seed.messages, a2uiBasicCatalog)
+
+/** The cross-shelf invariant (corpus LLD invariant i): every name that appears more than once across
+ *  the given shelves, sorted. `name` is the corpus join key across ALL shards. */
+function duplicateNames(...shelves: ReadonlyArray<readonly { name: string }[]>): string[] {
+  const seen = new Map<string, number>()
+  for (const shelf of shelves) for (const { name } of shelf) seen.set(name, (seen.get(name) ?? 0) + 1)
+  return [...seen].filter(([, n]) => n > 1).map(([name]) => name).sort()
+}
+
+describe('the Basic example shelf (GH #1737) - standing gate over allBasicSeeds', () => {
+  it('every Basic seed pins protocolVersion v1.0 and catalogId a2ui-basic, and so does its createSurface', () => {
+    for (const seed of allBasicSeeds) expect(basicPinProblems(seed), seed.name).toEqual([])
+  })
+
+  it('every Basic seed name is unique within the shelf', () => {
+    expect(duplicateNames(allBasicSeeds)).toEqual([])
+  })
+
+  it('no name appears on BOTH shelves (corpus LLD invariant i: name is the join key across every shard)', () => {
+    expect(duplicateNames(allSeeds, allBasicSeeds)).toEqual([])
+  })
+
+  for (const seed of allBasicSeeds) {
+    describe(`basic seed: ${seed.name}`, () => {
+      it('validates 0-failure against a2uiBasicCatalog via the shared validator (SPEC-N3/N6 parity)', () => {
+        expect(validateBasic(seed)).toEqual({ valid: true, failures: [] })
+      })
+
+      it('renders through the real host with an empty error channel', () => {
+        expect(renderSmoke(seed).filter(isError)).toEqual([])
+      })
+    })
+  }
+})
+
+describe('the Basic example shelf (GH #1737) - the gate bites (planted in-memory seeds; the real shelf stays empty until GH #1732)', () => {
+  const planted = plantedBasicSeed('product-card')
+  // The wrong-dialect negative control: a genuine agent-ui payload claiming the Basic catalog.
+  const misStamped: ExampleSeed<'a2ui-basic'> = {
+    ...plantedBasicSeed('product-card', 'planted-misstamped-canvas-button'),
+    surfaceId: canvasButtonSeed.surfaceId,
+    messages: stampCatalogId(canvasButtonSeed.messages, 'a2ui-basic'),
+  }
+
+  it('the shelf is a distinct, typed shelf: ExampleSeed<a2ui-basic>[] (and allSeeds stays agent-ui only at compile time)', () => {
+    const shelf: readonly ExampleSeed<'a2ui-basic'>[] = allBasicSeeds
+    expect(shelf).toBe(allBasicSeeds)
+    // @ts-expect-error a Basic seed is not assignable to the agent-ui shelf's element type (the ruling's compile-time wall)
+    const wrongShelf: readonly ExampleSeed[] = [planted]
+    expect(wrongShelf).toHaveLength(1)
+  })
+
+  it('a planted Basic seed passes the pin predicate and validates 0-failure against a2uiBasicCatalog', () => {
+    expect(basicPinProblems(planted)).toEqual([])
+    expect(validateBasic(planted)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('the SAME Basic payload FAILS the default catalog with CATALOG failures only (so the Basic leg cannot be satisfied by the default catalog)', () => {
+    const verdict = validateA2ui(planted.messages, defaultCatalog)
+    expect(verdict.valid).toBe(false)
+    expect(verdict.failures.length).toBeGreaterThan(0)
+    expect(verdict.failures.every((f) => f.code === 'CATALOG')).toBe(true)
+  })
+
+  it('a planted Basic seed renders through the real host with an empty error channel (the default registry carries a2ui-basic)', () => {
+    expect(renderSmoke(planted).filter(isError)).toEqual([])
+  })
+
+  it('a wrong-dialect seed (an agent-ui payload stamped a2ui-basic) FAILS the Basic validator leg', () => {
+    const verdict = validateBasic(misStamped)
+    expect(verdict.valid).toBe(false)
+    expect(verdict.failures.length).toBeGreaterThan(0)
+  })
+
+  it('a wrong-dialect seed also FAILS the Basic render leg (VALIDATION_FAILED on the client channel), so both legs bite', () => {
+    const errors = renderSmoke(misStamped).filter(isError)
+    expect(errors.length).toBeGreaterThan(0)
+    expect(errors[0]!.error.code).toBe('VALIDATION_FAILED')
+  })
+
+  it('the pin predicate catches a mis-pinned seed (agent-ui id on the Basic shelf, v0.9 version, unstamped createSurface)', () => {
+    const wrongId = { ...planted, catalogId: 'agent-ui' } as unknown as ExampleSeed<'a2ui-basic'>
+    expect(basicPinProblems(wrongId)).toContain('catalogId agent-ui')
+    const wrongVersion = { ...planted, protocolVersion: 'v0.9' } as unknown as ExampleSeed<'a2ui-basic'>
+    expect(basicPinProblems(wrongVersion)).toContain('protocolVersion v0.9')
+    const wrongStamp = { ...planted, messages: stampCatalogId(planted.messages, 'agent-ui') }
+    expect(basicPinProblems(wrongStamp)).toContain('createSurface.catalogId agent-ui')
+    expect(basicPinProblems({ ...planted, messages: [] })).toContain('no createSurface')
+  })
+
+  it('duplicateNames reports a cross-shelf collision (a Basic seed named like an agent-ui seed) and a within-shelf one', () => {
+    const clash = plantedBasicSeed('product-card', canvasButtonSeed.name)
+    expect(duplicateNames(allSeeds, [clash])).toEqual([canvasButtonSeed.name])
+    expect(duplicateNames([planted, planted])).toEqual([planted.name])
+    expect(duplicateNames(allSeeds, [planted])).toEqual([]) // a distinct name is clean
   })
 })
