@@ -293,11 +293,16 @@ Every Δ is ≤ 1.
   description. A repair description describes the correction. Both scorers graded it without friction.
   This is the same watch item the D6 record raised.
 
-All five records passed A's final pass at qualityScore 4:
+All five admitted records, with A's final-pass scores (each passed at qualityScore 4; the agenda and plan
+rows are the A columns of the table above):
 
-- `rp-invite-dangling-button`: D1 4 (P7 4), D2 to D4 5, D5 4, D7 5.
-- `rp-checkout-button-text-prop`: D1 5, D2 to D4 5, D5 4, D7 5.
-- `rp-prefs-pointer-slash`: D1 4 (P7 4), D2 to D4 5, D5 4, D7 5.
+| Record | Breakage (stored `validatorErrors`) | D1 | D2 to D4 | D5 | D7 | qualityScore |
+|---|---|---|---|---|---|---|
+| `rp-invite-dangling-button` | `IDGRAPH inv_actions->btn_send` | 4 (P7 4) | 5 | 4 | 5 | 4 |
+| `rp-checkout-button-text-prop` | `CATALOG btn_continue.text` | 5 | 5 | 4 | 5 | 4 |
+| `rp-plan-card-footer-containment` | `CONTAINMENT pl_footer` | 5 | 5 | 4 | 5 | 4 |
+| `rp-prefs-pointer-slash` | `POINTER [1].updateDataModel.path` | 4 (P7 4) | 5 | 4 | 5 | 4 |
+| `rp-agenda-components-map` | `SCHEMA [2].updateComponents.components`, `IDGRAPH agenda:root-missing` | 5 | 5 | 4 | 5 | 4 |
 
 The invite and plan records first failed D1 at 2 and passed after the maker's hand-back round. The invite
 failure was P6: no `sendDataModel` on a surface whose Send action round-trips the model.

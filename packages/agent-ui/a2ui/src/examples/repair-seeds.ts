@@ -19,7 +19,7 @@
 // Corpus seeds only (never `allSeeds`, never a site page): imported by `tools/corpus/import-seeds.ts`
 // into `corpus/repair/v1_0/agent-ui.jsonl`.
 
-import type { A2uiServerMessage } from '../protocol.ts'
+import type { A2uiComponent, A2uiServerMessage } from '../protocol.ts'
 import type { RepairSeed } from './types.ts'
 
 const v = 'v1.0' as const
@@ -101,7 +101,7 @@ const checkoutHead: A2uiServerMessage[] = [
   },
 ]
 
-const checkoutComponents = (continueButton: Record<string, unknown>): Record<string, unknown>[] => [
+const checkoutComponents = (continueButton: A2uiComponent): A2uiComponent[] => [
   { id: 'root', component: 'Column', gap: 'md', children: ['co_title', 'co_summary', 'co_actions'] },
   { id: 'co_title', component: 'Text', variant: 'h4', text: 'Order summary' },
   { id: 'co_summary', component: 'DescriptionList', rows: { path: '/summary' } },
@@ -128,7 +128,7 @@ export const checkoutButtonPropSeed: RepairSeed = {
         surfaceId: CHECKOUT_ID,
         components: checkoutComponents({
           id: 'btn_continue', component: 'Button', variant: 'solid', text: 'Continue to payment', action: { action: 'continue_to_payment' },
-        }) as never,
+        }),
       },
     },
   ],
@@ -141,7 +141,7 @@ export const checkoutButtonPropSeed: RepairSeed = {
         surfaceId: CHECKOUT_ID,
         components: checkoutComponents({
           id: 'btn_continue', component: 'Button', variant: 'solid', label: 'Continue to payment', action: { action: 'continue_to_payment' },
-        }) as never,
+        }),
       },
     },
   ],
