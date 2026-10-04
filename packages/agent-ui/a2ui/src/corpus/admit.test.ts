@@ -569,7 +569,9 @@ describe('admit — the admission pipeline (LLD-C5)', () => {
     it("a DATA-ONLY epoch's writes are invisible to the next epoch (the corpus LLD §4 rule): rejects until the epoch delivers its own", async () => {
       // `create, dm, delete` is an empty closed epoch to the validator (A3: no component deliveries), so
       // tier-1 passes; its store is freed at the delete, so nothing it wrote can satisfy a later binding.
-      const leaked = await admit(mkCandidate({ a2uiOutput: [create, writeX, del, create, boundRoot] }), mkDeps())
+      const dataOnlyFirst = [create, writeX, del, create, boundRoot]
+      expect(validateA2ui(dataOnlyFirst, demoCatalog, undefined, { atFinalize: true }).valid).toBe(true)
+      const leaked = await admit(mkCandidate({ a2uiOutput: dataOnlyFirst }), mkDeps())
       expect(leaked.ok).toBe(false)
       if (leaked.ok) return
       expect(leaked.code).toBe('E_POINTER')
@@ -577,6 +579,16 @@ describe('admit — the admission pipeline (LLD-C5)', () => {
 
       const own = await admit(mkCandidate({ a2uiOutput: [create, writeX, del, create, boundRoot, writeX] }), mkDeps())
       expect(own.ok).toBe(true)
+    })
+
+    it('the same unbound path failing in two epochs is reported once', async () => {
+      const output = [create, boundRoot, del, create, boundRoot] // neither epoch writes /x
+      expect(validateA2ui(output, demoCatalog, undefined, { atFinalize: true }).valid).toBe(true)
+      const result = await admit(mkCandidate({ a2uiOutput: output }), mkDeps())
+      expect(result.ok).toBe(false)
+      if (result.ok) return
+      expect(result.code).toBe('E_POINTER')
+      expect(result.paths).toEqual(['root.label'])
     })
 
     it('a one-epoch record with a trailing delete still resolves against its whole data model (no regression)', async () => {

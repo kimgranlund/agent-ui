@@ -53,8 +53,10 @@
 > rules, so a binding resolves against its own epoch's data model only, and a multi-turn follow-up that
 > deletes and re-creates its surface resolves against its new epoch. §4 gains the data-only epoch rule
 > (an epoch counts iff it delivered a component: a data-only epoch contributes no form and is inert to
-> resolution); `canonical.ts` behaviour is unchanged. §6 stage 6 and two §8 rows updated. All 78
-> committed exemplars keep their `canonicalHash` (none has a data-only epoch).
+> resolution; ADR-0064's data-only epochs erratum records it); `canonical.ts` behaviour is unchanged.
+> §6 stage 6 and two §8 rows updated, stage 6 with the open GH #1765 gap (a re-create without a delete
+> still sees the prior turn's data). All 78 committed exemplars keep their `canonicalHash` (none has a
+> data-only epoch).
 
 ---
 
@@ -261,7 +263,8 @@ byte-identical, the `corpus-data.test.ts` stored-hash leg); a record with N >= 2
 LIST of per-epoch forms, each the existing `{components, dataModel}` shape, and the hash covers the list,
 so two records that end on the same tree through different lifecycles are distinct.
 
-**Data-only epochs count in neither the fold nor resolution (GH #1750, decided with A6's build).** An
+**Data-only epochs count in neither the fold nor resolution (GH #1750, decided with A6's build; recorded
+as ADR-0064's 2026-10-04 data-only epochs erratum).** An
 epoch counts iff it delivered at least one component. A DATA-ONLY epoch (`updateDataModel` writes, no
 `updateComponents`) is the same empty epoch the rule above elides: the shared validator registers no graph
 for a data write, so A3 already judges it an empty closed epoch (and an OPEN data-only final epoch reds
@@ -364,7 +367,13 @@ dispatch by `meta.facet`, and an exemplar takes exactly its pre-ADR-0231 path th
   deleted surface, exactly as §4's fold does, and each binding resolves against its own epoch's data
   model, so an update-only follow-up continues the prior turn's epoch while one that deletes and
   re-creates its surface sees only what its new epoch delivered. A data-only epoch is inert (§4).
-  Failure paths keep the one-epoch `compId.prop` shape, whichever epoch fails (A2's path rule).
+  Failure paths keep the one-epoch `compId.prop` shape, whichever epoch fails (A2's path rule), and a
+  path failing in several epochs is listed once.
+  KNOWN GAP (GH #1765, open, unchanged by v0.7.1): a follow-up that re-sends `createSurface` WITHOUT a
+  `deleteSurface` first still resolves against the prior turn's data, because this fold resets only at
+  `deleteSurface` (A5's "createSurface is not a boundary"). Tier-1 (A4) and the renderer both treat that
+  re-create as a fresh surface, so stage 6 is more lenient than both for this one shape until #1765's
+  ruling lands.
 - **Stage 8 (canonical + hash)** is `recordIdentity(record)` (§4).
 
 Stage 3 (eval fail-closed, `facet === "eval"` exactly), stage 7 (the leak gate, now over every

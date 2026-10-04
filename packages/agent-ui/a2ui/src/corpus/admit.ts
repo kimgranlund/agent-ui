@@ -478,12 +478,12 @@ interface ResolutionEpoch {
  * semantics `canonical.ts`'s `foldStream` uses (A5) and the shared validator's epochs (A2): within an
  * epoch, upsert `updateComponents` by id and apply `updateDataModel` writes in stream order; at a
  * `deleteSurface` the epoch closes and the next starts from an empty map and an undefined data model, the
- * store the renderer's fresh surface starts from, so no binding sees an earlier epoch's data. From a
+ * store the renderer's fresh surface starts from. That reset is what does the work in stage 6: no
+ * binding sees an earlier epoch's data, including a DATA-ONLY epoch's (writes, no components). From a
  * delete until the next `createSurface` a delivery addresses a deleted surface and is skipped (the
- * erratum rule; tier-1 already fails it `sid:update-after-delete`). Only component-bearing epochs are
- * returned: a DATA-ONLY epoch (writes, no components) mounted nothing, holds no binding to resolve, and
- * its store is freed at its delete, so it is inert here exactly as it is elided from the canonical form
- * (the corpus LLD §4 epoch rule). Re-implemented, not imported, for the same reason canonical.ts gives
+ * erratum rule). Only component-bearing epochs are returned, a filter kept for parity with `foldStream`
+ * (the corpus LLD §4 epoch rule): it changes no verdict, because an epoch with no components has no
+ * binding to resolve. Re-implemented, not imported, for the same reason canonical.ts gives
  * for its own `setAtPointer`: this module stays decoupled from that module's private internals; both
  * independently mirror the renderer's documented semantics.
  */
@@ -503,7 +503,10 @@ function foldForResolution(out: A2uiOutput): ResolutionEpoch[] {
     if ('createSurface' in msg) {
       deleted = false // the only message that reopens a deleted surface
     } else if (deleted && ('updateComponents' in msg || 'updateDataModel' in msg)) {
-      continue // the renderer's dropped delivery
+      // The renderer's dropped delivery. A defensive mirror of `foldStream`, unreachable through
+      // `admit()`: within one stream tier-1 rejects it first (`sid:update-after-delete`), and across a
+      // multi-turn record's two turns a prior that ends deleted fails action grounding (stage 5) first.
+      continue
     } else if ('updateComponents' in msg) {
       for (const comp of msg.updateComponents.components) byId.set(comp.id, comp)
     } else if ('updateDataModel' in msg) {
@@ -607,7 +610,7 @@ function computeScopes(byId: Map<string, A2uiComponent>): Map<string, EffectiveS
  * Every bound (`{path}`) top-level property on every declared component must resolve against its own
  * epoch's folded data model (LLD §6/§7, ADR-0064 amendment A6): each epoch is scoped and resolved on its
  * own, and a failure in any epoch carries the same `compId.prop` path shape a one-epoch record reports
- * (the shared validator's A2 path rule). Scope matches tier-1's own reach exactly (direct
+ * (the shared validator's A2 path rule), listed once however many epochs it fails in. Scope matches tier-1's own reach exactly (direct
  * component properties, `RESERVED_PROPS` excluded) — this stage adds resolution semantics on top of
  * tier-1's syntax check, not a wider surface. An ABSOLUTE path (`/`-led) resolves against the document
  * root; a RELATIVE path resolves only when `computeScopes` assigned its component a scope (anywhere
@@ -618,7 +621,8 @@ function computeScopes(byId: Map<string, A2uiComponent>): Map<string, EffectiveS
 function findUnresolvedPointers(out: A2uiOutput): string[] {
   const unresolved: string[] = []
   for (const epoch of foldForResolution(out)) unresolved.push(...findUnresolvedInEpoch(epoch))
-  return unresolved
+  // Deduplicated in first-seen order: one `compId.prop` failing in two epochs is reported once.
+  return [...new Set(unresolved)]
 }
 
 /** One epoch's unresolved bindings: its components, its scopes, its data model, nothing else. */
