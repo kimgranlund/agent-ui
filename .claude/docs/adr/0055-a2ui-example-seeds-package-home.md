@@ -101,3 +101,23 @@ We will move the example payloads into a **package-owned seed shelf** with a sta
   the subpath keeps the consumer surface clean (the `components/components` precedent).
 - **Duplicating the form payload into the streaming page** (no shared home) — rejected: the first payload
   fork; the two copies WILL drift and the streamed demo would silently stop matching the form page.
+
+## Amendment - cl.1 and cl.4 restated for two catalogs (2026-10-03, GH #1737, PR #1744)
+
+> Status: append-only; adds a foreseen follow-through, does not edit the Context / Decision / Consequences above.
+
+The original Decision stands: seeds are package-owned source on the `src/examples/` shelf, exposed through
+the `"./examples"` subpath, gated at check time. Kim's ruling on [GH #1737](https://github.com/kimgranlund/agent-ui/issues/1737#issuecomment-5974757993)
+(2026-10-03: a separate shelf, `ExampleSeed<C>` made generic), delivered by
+[PR #1744](https://github.com/kimgranlund/agent-ui/pull/1744), falsified two clauses as written:
+
+- **cl.1** pinned the seed shape to `catalogId: 'agent-ui'`. The shape is now
+  `ExampleSeed<C extends SeedCatalogId = 'agent-ui'>` with `SeedCatalogId = 'agent-ui' | 'a2ui-basic'`;
+  `catalogId: C`. A bare `ExampleSeed` is still the agent-ui seed, so `allSeeds` (typed
+  `readonly ExampleSeed[]`) and its `site/` consumers are unchanged. Upstream Basic seeds are
+  `ExampleSeed<'a2ui-basic'>` on a second shelf, `allBasicSeeds` (empty until GH #1732 seeds the first
+  one); a Basic seed on `allSeeds` is a compile error.
+- **cl.4** gated every seed with `validateA2ui(messages, defaultCatalog)`. The gate now walks both
+  shelves: `allSeeds` against `defaultCatalog` (unchanged), `allBasicSeeds` against `a2uiBasicCatalog`,
+  plus a cross-shelf `name` uniqueness check (corpus LLD invariant i). Each seed is validated against the
+  catalog its own `catalogId` names.
