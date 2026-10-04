@@ -44,6 +44,14 @@
 // action object is never `applyProp`'d/stringified onto the DOM) and instead wires the control's
 // `click` → `ActionDispatcher.emitAction` (listener owned by `surface.ac`, so it dies with the surface).
 //
+// Action context resolution (LLD-C9 `collectContext`, SPEC-R8 "the resolved context"; GH #1748). Each
+// `context` entry is a binding value resolved at CLICK time through the SAME `resolveValue` dispatcher
+// the bound props and checks use (literal as-is · `{path}` · `{call}` · `${…}` interpolation), with the
+// node's `itemScope`, so inside a ChildList template a RELATIVE `{path}` resolves against the row
+// (`{path}/{index}/…`) and `@index` is the row index. A literal context is emitted unchanged. Before
+// GH #1748 the context was forwarded verbatim and `#wireAction` never received the `itemScope`, so every
+// row of a list template dispatched the same unresolved `{path}` object.
+//
 // The submit-gated action (ADR-0054). An action object may carry a CLIENT-consumed `submit: true` flag
 // (never on the wire — stripped by `readActionSpec`, ADR-0011's shape stays byte-identical). On such a
 // flagged click, `#wireAction` resolves `el.closest(registry.submitGateSelector())` — the registry's
@@ -67,6 +75,7 @@ import { resolveValue as dispatchValue } from './functions.ts'
 import { setPointer } from './binding.ts'
 import { readActionSpec } from './wire-tolerances.ts' // GH #484 move phase — A1/A2/A3 (was local to this file)
 import type { CreateWidget, ItemScope } from './types.ts'
+import { untracked } from '@agent-ui/components'
 import type { Scope } from '@agent-ui/components'
 import { Registry } from '../catalog/registry.ts'
 import type { WidgetFactory } from '../catalog/types.ts'
@@ -422,7 +431,7 @@ class Renderer implements RendererHost {
       const rewireAc = new AbortController()
       ac.signal.addEventListener('abort', () => rewireAc.abort(), { once: true, signal: rewireAc.signal })
       this.#actionWiring.set(el, rewireAc)
-      for (const spec of actionProps.values()) this.#wireAction(el, node, surface, spec, rewireAc)
+      for (const spec of actionProps.values()) this.#wireAction(el, node, surface, spec, itemScope, rewireAc)
     }
     // Wire the checks controller (ADR-0029): reads node.checks, installs one scope-owned effect that
     // evaluates each check via evaluate (LLD-C10) and drives setCustomValidity / el.disabled.
@@ -463,8 +472,19 @@ class Renderer implements RendererHost {
    *
    * ADR-0054: a `submit:true`-flagged action additionally gates on `#submitGatePermits` before
    * emitting — an un-flagged action (the common case) is byte-for-byte the pre-ADR-0054 behavior.
+   *
+   * GH #1748: `itemScope` is the node's list-item scope (absent for a static node), threaded from
+   * `#wireNode` exactly as `wireProps`/`wireChecks` receive it, so `#collectContext` resolves the
+   * action's `context` against the row the clicked control belongs to.
    */
-  #wireAction(el: HTMLElement, node: A2uiComponent, surface: Surface, spec: unknown, ac: AbortController): void {
+  #wireAction(
+    el: HTMLElement,
+    node: A2uiComponent,
+    surface: Surface,
+    spec: unknown,
+    itemScope: ItemScope | undefined,
+    ac: AbortController,
+  ): void {
     const { name, wantResponse, context, submit } = readActionSpec(spec)
     el.addEventListener(
       'click',
@@ -474,10 +494,39 @@ class Renderer implements RendererHost {
         // async — a callback-time guard downstream can race a later re-enable and leak the action).
         if ((el as Partial<{ disabled: boolean }>).disabled === true) return
         if (submit === true && !this.#submitGatePermits(el)) return // gated + refused — no emit (ADR-0054)
-        void this.#actions.emitAction(node, surface, { name, wantResponse, context })
+        void this.#actions.emitAction(node, surface, {
+          name,
+          wantResponse,
+          context: this.#collectContext(context, surface, itemScope),
+        })
       },
       { signal: ac.signal },
     )
+  }
+
+  /**
+   * LLD-C9 `collectContext` (SPEC-R8 AC1 "resolved context"; GH #1748). Resolves each `context` entry
+   * through the host's `resolveValue` dispatcher, the SAME rule `wireProps` (bound props) and
+   * `wireChecks` (check args) apply: a literal passes through as-is, a `{path}` reads the data model
+   * (relative → `{itemScope.path}/{index}/…` inside a list item, absolute → root), a `{call}` evaluates
+   * (`@index` = the row index), and a `${…}` string interpolates. One level, per key, exactly as
+   * `evaluate` resolves a call's named args. Read at CLICK time so the context carries the CURRENT data
+   * (a committed two-way bind included, LLD-C8), and `untracked` so a click dispatched from inside some
+   * effect never subscribes that effect to the context's paths (the same posture as `emitAction`'s
+   * `surface.data.peek()` for `sendDataModel`). `undefined` in ⇒ `undefined` out (`emitAction` defaults
+   * the wire `context` to `{}`).
+   */
+  #collectContext(
+    context: Record<string, unknown> | undefined,
+    surface: Surface,
+    itemScope: ItemScope | undefined,
+  ): Record<string, unknown> | undefined {
+    if (context === undefined) return undefined
+    return untracked(() => {
+      const out: Record<string, unknown> = {}
+      for (const [key, value] of Object.entries(context)) out[key] = this.#widgetDeps.resolveValue(value, surface, itemScope)
+      return out
+    })
   }
 
   /**

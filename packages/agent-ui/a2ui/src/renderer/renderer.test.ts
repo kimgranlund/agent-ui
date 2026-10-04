@@ -580,6 +580,101 @@ describe('renderer host — action-prop reading (ADR-0011 canonical {action,cont
   })
 })
 
+// GH #1748 (LLD-C9 `collectContext`, SPEC-R8 AC1 "the resolved context", LLD-C6/ADR-0024 item scope). An
+// action's `context` entries resolve at CLICK time through the same `resolveValue` rule the bound props
+// and checks use, with the clicked control's list-item scope. Before the fix the context was forwarded
+// verbatim and `#wireAction` never received the `itemScope`, so every row of a template dispatched the
+// same unresolved `{ path: 'sku' }` object (found curating `basic-product-results-list`, GH #1732).
+describe('renderer host — action context resolution (GH #1748, LLD-C9 collectContext)', () => {
+  /** Mount `components` on a fresh surface, seed the whole data model, and return the live buttons. */
+  async function mountWith(
+    catalogId: string,
+    components: readonly Record<string, unknown>[],
+    data: unknown,
+  ): Promise<{ buttons: HTMLElement[]; sent: A2uiClientMessage[]; r: RendererHost; cleanup: () => void }> {
+    const { r, mount, sent, cleanup } = harness()
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'sx', catalogId } }))
+    r.ingest(line({ version: 'v1.0', updateComponents: { surfaceId: 'sx', components: components as never } }))
+    r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'sx', value: data } }))
+    await whenFlushed()
+    return { buttons: [...mount.querySelectorAll('ui-button')] as HTMLElement[], sent, r, cleanup }
+  }
+
+  it('two rows of ONE ChildList template dispatch DIFFERENT row-resolved context values', async () => {
+    const { buttons, sent, cleanup } = await mountWith(
+      'agent-ui',
+      [
+        { id: 'root', component: 'Column', children: { path: '/rows', componentId: 'rowTpl' } },
+        {
+          id: 'rowTpl',
+          component: 'Button',
+          label: 'Add',
+          action: {
+            action: 'add_to_cart',
+            // relative path (the row) · @index (the row index) · absolute path (the root) · literal
+            context: { sku: { path: 'sku' }, row: { call: '@index' }, cart: { path: '/cartId' }, source: 'results' },
+          },
+        },
+      ],
+      { cartId: 'c-9', rows: [{ sku: 'A-1' }, { sku: 'B-2' }] },
+    )
+    expect(buttons).toHaveLength(2)
+    buttons[0]!.click()
+    buttons[1]!.click()
+
+    const actions = sent.filter(isAction).map((m) => m.action)
+    expect(actions).toHaveLength(2)
+    expect(actions[0]!.context).toStrictEqual({ sku: 'A-1', row: 0, cart: 'c-9', source: 'results' })
+    expect(actions[1]!.context).toStrictEqual({ sku: 'B-2', row: 1, cart: 'c-9', source: 'results' })
+    expect(actions[0]!.context, 'the rows must differ: the pre-#1748 defect emitted one shared context').not.toEqual(actions[1]!.context)
+    expect(sent.filter(isError), 'no FUNCTION error: @index ran inside its collection scope').toHaveLength(0)
+    cleanup()
+  })
+
+  it('the upstream a2ui-basic `{event:{name,context}}` arm resolves per row too (ADR-0169 cl.10, the GH #1732 shape)', async () => {
+    const { buttons, sent, cleanup } = await mountWith(
+      'a2ui-basic',
+      [
+        { id: 'root', component: 'Column', children: { path: '/products', componentId: 'addBtn' } },
+        { id: 'addBtn', component: 'Button', child: 'addLbl', action: { event: { name: 'add_to_cart', context: { sku: { path: 'sku' } } } } },
+        { id: 'addLbl', component: 'Text', text: 'Add to cart' },
+      ],
+      { products: [{ sku: 'P-1' }, { sku: 'P-2' }, { sku: 'P-3' }] },
+    )
+    expect(buttons).toHaveLength(3)
+    for (const b of buttons) b.click()
+    expect(sent.filter(isAction).map((m) => m.action.context)).toStrictEqual([{ sku: 'P-1' }, { sku: 'P-2' }, { sku: 'P-3' }])
+    cleanup()
+  })
+
+  it('a non-template action with a LITERAL context is unchanged: emitted byte-identical, nested literals included', async () => {
+    const literal = { topic: 'orders', page: 2, flags: [true, false], meta: { source: 'toolbar' } }
+    const { buttons, sent, cleanup } = await mountWith(
+      'agent-ui',
+      [{ id: 'root', component: 'Button', label: 'Go', action: { action: 'go', context: literal } }],
+      {},
+    )
+    buttons[0]!.click()
+    const actions = sent.filter(isAction)
+    expect(actions).toHaveLength(1)
+    expect(actions[0]!.action.context).toStrictEqual(literal)
+    cleanup()
+  })
+
+  it('a non-template absolute `{path}` resolves against the root at CLICK time (the current value, not the wire-time one)', async () => {
+    const { buttons, sent, r, cleanup } = await mountWith(
+      'agent-ui',
+      [{ id: 'root', component: 'Button', label: 'Save', action: { action: 'save', context: { draft: { path: '/form/name' } } } }],
+      { form: { name: 'Ana' } },
+    )
+    buttons[0]!.click()
+    r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'sx', path: '/form/name', value: 'Bea' } }))
+    buttons[0]!.click()
+    expect(sent.filter(isAction).map((m) => m.action.context)).toStrictEqual([{ draft: 'Ana' }, { draft: 'Bea' }])
+    cleanup()
+  })
+})
+
 // Per-item action-listener leak (ADR-0024 amendment 3). Each list item's Button registers its click→action
 // listener on a per-item AbortController (list.ts `appendInstance` → renderer.ts `#wireAction`). When the
 // item is removed (`removeLast` aborts that ac), the listener is torn down immediately so no click on the
