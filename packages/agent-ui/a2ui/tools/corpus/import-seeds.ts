@@ -140,6 +140,11 @@ import { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed } from '../
 import { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed } from '../../src/examples/catalog-frontier.ts'
 import { structuredContainerSeed } from '../../src/examples/structured-container.ts'
 import {
+  supportTicketCloseThenNewSeed,
+  contactImportProgressToSummarySeed,
+  inviteDeclineThenFocusBlockSeed,
+} from '../../src/examples/surface-lifecycle.ts'
+import {
   comparisonPricingSeed,
   receiptOrderSummarySeed,
   emptyErrorRetryCardSeed,
@@ -373,6 +378,10 @@ const SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'agent-ui'>> = [
   {
     module: 'plan-and-execute.ts', // GH #1374 — the plan-and-execute exemplar pair; admission pending the judged wave (disposition-allowlist.ts)
     seeds: [planAndExecutePlanSeed, planAndExecuteApproveAskSeed],
+  },
+  {
+    module: 'surface-lifecycle.ts', // GH #1731: one surface at a time, delete-then-recreate and superseding (ADR-0064 amendment)
+    seeds: [supportTicketCloseThenNewSeed, contactImportProgressToSummarySeed, inviteDeclineThenFocusBlockSeed],
   },
 ]
 
