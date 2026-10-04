@@ -1652,7 +1652,11 @@ listReorder(drawer, {
 // on this same site — a deliberate SPEC-N2/ADR-0131 cl.4/7 supersession, see agent-admin.ts's header for
 // the full rationale). This page has no prose chrome, so the stub-vs-live status goes to the console
 // instead of a caption; DEV is still read for wording only, same as agent-admin.ts's pattern.
-void (async () => {
+// GH #1767 — the probe's promise is exported so a jsdom test that imports this page can await the REAL boot
+// work (its trailing console.info + live-overlay reads) instead of letting it land during environment
+// teardown. It never rejects: the whole body is in the try/catch below. Zero production cost — the same
+// one promise the page already started, now with a name.
+export const bootProbeSettled: Promise<void> = (async () => {
   try {
     const overlay = await import('../lib/admin-live-runner.ts')
     const probe = await overlay.probeLive()

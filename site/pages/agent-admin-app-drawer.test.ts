@@ -82,7 +82,10 @@ beforeAll(async () => {
   localStorage.setItem(IMPORTED_PERSONAS_KEY, JSON.stringify([customPersona(CUSTOM_A, 'Probe Alpha'), customPersona(CUSTOM_B, 'Probe Beta')]))
   rosterSource.writeActiveIdSync(CUSTOM_A)
 
-  await import('./agent-admin-app.ts')
+  // GH #1767 — the page's fire-and-forget boot probe (dynamic import → probeLive fetch → console.info) must
+  // settle INSIDE the file, not during vitest's environment teardown. Await the page's own exported promise.
+  const mod = await import('./agent-admin-app.ts')
+  await mod.bootProbeSettled
   await whenFlushed()
 })
 

@@ -57,6 +57,7 @@ beforeAll(async () => {
   const mod = await import('./agent-admin-app.ts')
   mintTeamId = mod.mintTeamId
   handleTeamDeclared = mod.handleTeamDeclared
+  await mod.bootProbeSettled // GH #1767 — the page's boot probe settles inside the file, not during teardown
 })
 
 afterAll(() => {
