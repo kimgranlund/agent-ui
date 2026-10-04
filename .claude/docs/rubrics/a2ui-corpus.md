@@ -101,6 +101,9 @@ dimension that applies to an exemplar. D6 and D7 have no committed record to cal
 **Update (2026-10-04, GH #1741).** D6 is calibrated: see the D6 calibration record at the end of this
 section. D7 is still owed by GH #1742.
 
+**Update (2026-10-04, GH #1742).** D7 is calibrated: see the D7 calibration record at the end of this
+section.
+
 **Record scored:** `pattern-confirmation-card` from the 11-seed shelf
 (`packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`) — an exemplar-facet record. Its
 `promptText` asks to "confirm deleting their workspace, with Cancel and Delete buttons"; its
@@ -222,5 +225,81 @@ judging time.
 The second record, `mt-order-list-select`, was judged by A at qualityScore 4 (D1 4, the P5 read of a
 Button as a `List` template node; D2 to D6 at 5), after the maker took A's two P4/P5 hand-backs. B scored
 the pre-revision stream at the same qualityScore 4.
+
+### D7 calibration record (2026-10-04, GH #1742, rubric 1.3)
+
+No anchor moved, so no version bump (the P7 reconciliation precedent above).
+
+**Records scored:** `rp-agenda-components-map` and `rp-plan-card-footer-containment`, two of the first
+five repair records (`packages/agent-ui/a2ui/corpus/repair/v1_0/agent-ui.jsonl`, origin
+`src/examples/repair-seeds.ts`).
+
+- The agenda record's `invalidInput` sends `updateComponents.components` as an id-keyed object. The
+  recomputed set is `SCHEMA [2].updateComponents.components` plus the consequential
+  `IDGRAPH agenda:root-missing`. The correction sends the same three records as an array.
+- The plan record's `invalidInput` nests the `CardFooter` inside the content column (`CONTAINMENT
+  pl_footer`). The correction moves that one reference to the `Card`.
+
+Two independent fresh-context `a2ui-review-agent` scorings were taken on the final streams. A authored
+the VerdictsFile, and B was dispatched blind to A. D1 was read on the corrected stream, as 1.3 requires.
+D5 was read against the exemplar and multi-turn shards, because no repair shard existed at judging time.
+
+| Gated dimension | Agenda A | Agenda B | Δ | Plan A | Plan B | Δ |
+|---|---|---|---|---|---|---|
+| Ground-truth validity (corrected stream) | 5 | 5 | 0 | 5 | 4 | 1 |
+| Prompt/description quality | 5 | 5 | 0 | 5 | 5 | 0 |
+| Target-clarity | 5 | 5 | 0 | 5 | 5 | 0 |
+| Provenance integrity | 5 | 5 | 0 | 5 | 5 | 0 |
+| Dedup adjacency | 4 | 4 | 0 | 4 | 4 | 0 |
+| Repair fidelity (D7) | 5 | 5 | 0 | 5 | 5 | 0 |
+| qualityScore (MIN of gated dims) | 4 | 4 | 0 | 4 | 4 | 0 |
+| passed (≥ 4) | true | true | n/a | true | true | n/a |
+
+Every Δ is ≤ 1.
+
+**Reasoning, per dimension:**
+
+- **D7 (5 on all four reads).** Both scorings cite the floor (recomputation equality on `invalidInput`
+  plus the corrected stream's exemplar path) rather than re-deriving it. Both land on the 5 anchor for
+  the same three reasons:
+  - The breakage is one a producer actually emits: an id-keyed map, or a footer treated as the last
+    content row.
+  - The diff is exactly the recorded error path. The agenda diff is the envelope field, with records,
+    ids and order unchanged. The plan diff is two reference lines, with all nodes otherwise identical.
+  - The intent survives the fix.
+
+  A consequential error that clears with the root fix (the agenda's `root-missing`) read as part of the
+  one breakage for both scorers, not as a second edit. The D7 anchors converged with no tightening.
+- **D1 on the plan card (A 5 · B 4).** This is the honest ±1, and it sits in the cited P5 read, not in
+  any 1.3 text. B docks a `List` with static `Text` children, because no shelf seed uses `List` outside a
+  template. A cites `list.md`, which sanctions static children for an itemized collection. The admission
+  outcome is identical.
+- **D5 (4 on all four reads).** Each record has a familiar scaffold. The new axis is the breakage class,
+  which `recordIdentity` folds in through `validatorErrors`.
+
+**Observations (no anchor change):**
+
+- **A first-pass divergence that the revision removed.** On the pre-revision plan stream, A read D1 at 2,
+  because the price was a `Text` `h2` with no seed precedent (P5 2, P7 3). A first blind B read the same
+  stream at 4. That is a Δ of 2 on the cited payload rubric's P5, not on D7. The maker took A's hand-back
+  (`pl_price` became a `Stat`, the shelf's price idiom), and the table above is on the revised stream. If
+  a later wave shows the same split on an in-enum value with no seed precedent, tighten `a2ui-payload.md`
+  P5, not this rubric.
+- **D5 is silent on the breakage class.** For repair records, D5's evidence column does not say whether
+  the breakage class counts as a technique axis. Both scorings credited it as one, and every repair MIN
+  sits on D5 = 4. A reader who excludes it lands at 3, which flips admission. This is the first candidate
+  for a versioned clarification.
+- **D2 wording.** D2's 5 anchor ("names the UI shape + the idiom it teaches") is written for an exemplar
+  description. A repair description describes the correction. Both scorers graded it without friction.
+  This is the same watch item the D6 record raised.
+
+All five records passed A's final pass at qualityScore 4:
+
+- `rp-invite-dangling-button`: D1 4 (P7 4), D2 to D4 5, D5 4, D7 5.
+- `rp-checkout-button-text-prop`: D1 5, D2 to D4 5, D5 4, D7 5.
+- `rp-prefs-pointer-slash`: D1 4 (P7 4), D2 to D4 5, D5 4, D7 5.
+
+The invite and plan records first failed D1 at 2 and passed after the maker's hand-back round. The invite
+failure was P6: no `sendDataModel` on a surface whose Send action round-trips the model.
 
 <!-- Independent critic: the doc-checker agent scores this rubric against rubric-for-rubrics (generator ≠ critic). Author self-check only: D1 typed/scaled ✓ · D3 anchors ✓ · D5 evidence column ✓ · D8 gate+aggregation+top-failure ✓ · harness_checks.py rubric exit 0. -->

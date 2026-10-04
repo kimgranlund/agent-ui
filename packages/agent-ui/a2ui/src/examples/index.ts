@@ -41,13 +41,23 @@ export type { MultiTurnSeed, RepairSeed } from './types.ts'
 import type { MultiTurnSeed, RepairSeed, SeedCatalogId } from './types.ts'
 import { multiTurnSeeds } from './multi-turn-seeds.ts'
 
+import { repairSeeds } from './repair-seeds.ts'
+
 export { rsvpFormSubmitSeed, orderListSelectSeed, multiTurnSeeds } from './multi-turn-seeds.ts'
+export {
+  inviteDanglingChildSeed,
+  checkoutButtonPropSeed,
+  planCardContainmentSeed,
+  prefsPointerSeed,
+  agendaComponentsMapSeed,
+  repairSeeds,
+} from './repair-seeds.ts'
 
 /** Every multi-turn corpus seed (ADR-0231 cl.2), imported into `corpus/multi-turn/v1_0/`. */
 export const allMultiTurnSeeds: readonly MultiTurnSeed<SeedCatalogId>[] = [...multiTurnSeeds]
 
 /** Every repair-pair corpus seed (ADR-0231 cl.3), imported into `corpus/repair/v1_0/`. */
-export const allRepairSeeds: readonly RepairSeed<SeedCatalogId>[] = []
+export const allRepairSeeds: readonly RepairSeed<SeedCatalogId>[] = [...repairSeeds]
 
 export { canvasButtonSeed, canvasSeeds } from './canvas-button.ts'
 export { listDisplaySeed, listPeopleSeed, listFormSeed, listNestedSeed, dynamicListSeeds } from './dynamic-lists.ts'

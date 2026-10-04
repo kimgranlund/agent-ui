@@ -493,9 +493,9 @@ describe('ADR-0231 - the multi-turn and repair seed mappers', () => {
     expect(candidateForSeed(canvasButtonSeed, 'canvas-button.ts')).toEqual(seedToCandidate(canvasButtonSeed, 'canvas-button.ts'))
   })
 
-  it('the real repair shelf is empty today; the multi-turn shelf holds the GH #1741 seeds (the subprocess sandbox below copies their committed shard)', () => {
+  it('the real facet shelves hold the GH #1741 multi-turn and GH #1742 repair seeds (the subprocess sandbox below copies both committed shards)', () => {
     expect(allMultiTurnSeeds.length).toBeGreaterThan(0)
-    expect(allRepairSeeds).toHaveLength(0)
+    expect(allRepairSeeds.length).toBeGreaterThan(0)
   })
 })
 
@@ -597,6 +597,8 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
   // GH #1741: the multi-turn shelf is no longer empty, so its committed shard joins the "already
   // admitted" baseline the same way (a run against it sees every multi-turn seed as an idempotent E_DUP).
   const MULTI_TURN_SHARD = 'packages/agent-ui/a2ui/corpus/multi-turn/v1_0/agent-ui.jsonl'
+  // GH #1742: the repair shelf joins the same baseline.
+  const REPAIR_SHARD = 'packages/agent-ui/a2ui/corpus/repair/v1_0/agent-ui.jsonl'
   /** Every seed a run walks: the agent-ui shelf, the Basic shelf, then the ADR-0231 facet shelves
    *  (main()'s own order). */
   const SHELF: ReadonlyArray<{ name: string }> = [...allSeeds, ...allBasicSeeds, ...allMultiTurnSeeds, ...allRepairSeeds]
@@ -614,7 +616,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
       cpSync(join(REAL_ROOT, rel), join(sandbox, rel))
     }
     if (opts.withShard) {
-      for (const rel of [SHARD, BASIC_SHARD, MULTI_TURN_SHARD]) {
+      for (const rel of [SHARD, BASIC_SHARD, MULTI_TURN_SHARD, REPAIR_SHARD]) {
         mkdirSync(join(sandbox, rel.slice(0, rel.lastIndexOf('/'))), { recursive: true })
         cpSync(join(REAL_ROOT, rel), join(sandbox, rel))
       }
