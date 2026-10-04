@@ -44,6 +44,7 @@ import { compositionPackBSeeds } from './composition-pack-b.ts'
 import { crudEntryListSeeds } from './crud-entry-list.ts'
 import { planAndExecuteSeeds } from './plan-and-execute.ts'
 import { commerceHospitalitySeeds } from './commerce-hospitality.ts'
+import { surfaceLifecycleSeeds } from './surface-lifecycle.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { a2uiBasicCatalog } from '../catalog/a2ui-basic/index.ts'
@@ -104,7 +105,8 @@ describe('the example seed shelf (ADR-0055) — shape', () => {
       compositionPackBSeeds.length +
       crudEntryListSeeds.length +
       planAndExecuteSeeds.length +
-      commerceHospitalitySeeds.length
+      commerceHospitalitySeeds.length +
+      surfaceLifecycleSeeds.length
     expect(allSeeds).toHaveLength(expectedTotal)
   })
 

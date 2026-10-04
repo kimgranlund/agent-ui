@@ -149,6 +149,15 @@ export {
   commerceHospitalitySeeds,
 } from './commerce-hospitality.ts'
 
+// GH #1731: the surface-lifecycle family. One surface at a time (ADR-0064 amendment 2026-10-03): two
+// delete-then-recreate seeds and one superseding seed that steps the live surface to its next scene.
+export {
+  supportTicketCloseThenNewSeed,
+  contactImportProgressToSummarySeed,
+  inviteDeclineThenFocusBlockSeed,
+  surfaceLifecycleSeeds,
+} from './surface-lifecycle.ts'
+
 export {
   basicContactFormSeed,
   basicProductListSeed,
@@ -174,6 +183,7 @@ import { compositionPackBSeeds } from './composition-pack-b.ts'
 import { crudEntryListSeeds } from './crud-entry-list.ts'
 import { planAndExecuteSeeds } from './plan-and-execute.ts'
 import { commerceHospitalitySeeds } from './commerce-hospitality.ts'
+import { surfaceLifecycleSeeds } from './surface-lifecycle.ts'
 
 /** Every seed on the shelf — the standing gate's (`examples.test.ts`) iteration surface. Composed from
  *  each module's own family array, so the total is always derived, never a separately-maintained count. */
@@ -193,6 +203,7 @@ export const allSeeds: readonly ExampleSeed[] = [
   ...crudEntryListSeeds,
   ...planAndExecuteSeeds,
   ...commerceHospitalitySeeds,
+  ...surfaceLifecycleSeeds,
 ]
 
 /** Every seed rendered against the upstream A2UI Basic catalog (`a2ui-basic`), the second shelf beside
