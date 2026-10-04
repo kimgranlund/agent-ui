@@ -15,7 +15,7 @@
 // surface (drawer.test.ts — jsdom has no showModal/close/open at all), and the Popover API
 // (toast-region.test.ts — the page's own `notify()` toast region calls showPopover, absent in jsdom). The
 // REAL top-layer/scrim/focus-trap behaviour is the cross-engine leg in agent-admin-app.browser.test.ts.
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { installDialogPolyfill } from '@agent-ui/shared/testing/dialog-polyfill'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (the
 // agent-admin-app.test.ts precedent — the CSS token-law sweep at the bottom of this file reads real bytes)
@@ -82,11 +82,26 @@ beforeAll(async () => {
   localStorage.setItem(IMPORTED_PERSONAS_KEY, JSON.stringify([customPersona(CUSTOM_A, 'Probe Alpha'), customPersona(CUSTOM_B, 'Probe Beta')]))
   rosterSource.writeActiveIdSync(CUSTOM_A)
 
+  // GH #1767 — the page boots a fire-and-forget IIFE (dynamic import of admin-live-runner → probeLive's
+  // `fetch` → a `console.info` stub/live status line). Left alone, that console write lands whenever the
+  // import + fetch settle — under load, AFTER the file's last test, during vitest's environment teardown
+  // (`EnvironmentTeardownError: Closing rpc while "onUserConsoleLog" was pending`). So the file owns it:
+  // a deterministic no-proxy `fetch` (the production-build answer — `!res.ok` ⇒ not available), and an
+  // explicit wait for the status line the IIFE ends its probe with, before any test runs. The spy passes
+  // the write through (no silencing); it only lets the file observe WHEN it happened.
+  vi.stubGlobal('fetch', async () => ({ ok: false, status: 404, json: async () => ({}) }) as unknown as Response)
+  const info = vi.spyOn(console, 'info')
+
   await import('./agent-admin-app.ts')
+  await vi.waitFor(() => {
+    expect(info, 'the page’s boot probe has logged its status line').toHaveBeenCalledWith(expect.stringContaining('[agent-admin-app] stub preview'))
+  })
+  info.mockRestore()
   await whenFlushed()
 })
 
 afterAll(() => {
+  vi.unstubAllGlobals()
   HTMLElement.prototype.attachInternals = realAttachInternals
   clearPageState()
 })
