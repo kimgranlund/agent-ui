@@ -100,12 +100,12 @@
  */
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 
 const NAME = 'reap-scratch-clones';
-const HARNESS_SCRATCHPAD_ROOT = '/tmp';
+const HARNESS_SCRATCHPAD_ROOT = process.env.REAP_SCRATCH_HARNESS_BASE ?? '/tmp';
 
 /* ── Plumbing (shared shape with reap-worktrees.mjs / reap-branches.mjs) ─── */
 
@@ -575,7 +575,14 @@ function selftest() {
                           // short-circuit to KEEP(unknown) — this only proves the CLI/discovery
                           // wiring and dirty/origin-mismatch gates, not the gh-dependent paths
                           // already proven directly above.
-    const invoke = (...args) => spawnSync(process.execPath, [process.argv[1], ...args], { cwd: cliCwd, encoding: 'utf8' });
+    // Hermetic (GH #1759): the CLI scans os.tmpdir()/$TMPDIR/$CLAUDE_SCRATCHPAD plus the /tmp
+    // harness walk, so point all of them at this run's own empty dirs. Without that the ambient
+    // temp dir (thousands of entries on a dev host) floods the table and slows every leg.
+    const hermeticTmp = join(scratch, 'hermetic-tmp');
+    mkdirSync(hermeticTmp, { recursive: true });
+    const env = { ...process.env, TMPDIR: hermeticTmp, REAP_SCRATCH_HARNESS_BASE: join(hermeticTmp, 'no-harness') };
+    delete env.CLAUDE_SCRATCHPAD;
+    const invoke = (...args) => spawnSync(process.execPath, [process.argv[1], ...args], { cwd: cliCwd, encoding: 'utf8', env, maxBuffer: 256 * 1024 * 1024 });
 
     const usage = invoke('--bogus-flag');
     assert(usage.status === 2, `CLI: unknown flag exits 2 (got ${usage.status})`);
@@ -592,6 +599,7 @@ function selftest() {
     assert(/seed-9006\s+\S+\s+KEEP\(dirty\)/.test(viaRoot.stdout.replace(/\s+/g, ' ')), 'CLI: dry-run table shows the dirty clone as KEEP(dirty) end-to-end');
     assert(!viaRoot.stdout.includes('removed '), 'CLI: dry-run (no --execute) removes nothing');
     assert(existsSync(dirtyClone), 'CLI: dry-run left the dirty clone on disk');
+
   } catch (err) {
     failures.push(`selftest scaffolding threw: ${err.message}`);
     console.log(`  FAIL scaffolding: ${err.message}`);
@@ -630,4 +638,6 @@ if (rest.includes('--dry') && rest.includes('--execute')) {
   console.error('--dry and --execute are mutually exclusive');
   process.exit(2);
 }
-process.exit(run(rest.includes('--execute'), extraRoots));
+// exitCode, not process.exit(): on a pipe stdout is async on POSIX, so an immediate exit drops
+// everything past the ~64 KiB pipe buffer (GH #1759) once the ambient scan lists thousands of rows.
+process.exitCode = run(rest.includes('--execute'), extraRoots);
