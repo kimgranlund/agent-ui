@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { admit, recordIdentity } from './admit.ts'
+import { admit, checkTier1, recordIdentity } from './admit.ts'
 import type { AdmitDeps } from './admit.ts'
 import { createStore } from './store.ts'
 import { createDedupIndex, minHashSignature } from './dedup.ts'
@@ -541,6 +541,62 @@ describe('admit — the admission pipeline (LLD-C5)', () => {
     })
   })
 
+  // ADR-0064 amendment A6 / GH #1750: resolution folds PER EPOCH, resetting at every `deleteSurface`
+  // exactly as `canonical.ts#foldStream` does (A5) and the shared validator's epochs do (A2). A binding
+  // resolves against its own epoch's data model only: the renderer freed the earlier store at the delete.
+  describe('E_POINTER: resolution is per epoch (ADR-0064 amendment A6, GH #1750)', () => {
+    const create = { version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'demo' } }
+    const del = { version: 'v1.0', deleteSurface: { surfaceId: 's1' } }
+    const boundRoot = { version: 'v1.0', updateComponents: { surfaceId: 's1', components: [{ id: 'root', component: 'Button', label: { path: '/x' } }] } }
+    const writeX = { version: 'v1.0', updateDataModel: { surfaceId: 's1', path: '/x', value: 'Go' } }
+
+    it("a second-epoch binding to a path only the FIRST epoch's data model defined rejects", async () => {
+      const output = [create, boundRoot, writeX, del, create, boundRoot]
+      // Tier-1 is clean (Acceptance 1 of the amendment), so the reject is stage 6's, not the validator's.
+      expect(validateA2ui(output, demoCatalog, undefined, { atFinalize: true }).valid).toBe(true)
+      const result = await admit(mkCandidate({ a2uiOutput: output }), mkDeps())
+      expect(result.ok).toBe(false)
+      if (result.ok) return
+      expect(result.code).toBe('E_POINTER')
+      expect(result.paths).toEqual(['root.label']) // epoch 1's own root.label resolves; only epoch 2's fails
+    })
+
+    it('the same path defined in its own epoch admits (positive control)', async () => {
+      const result = await admit(mkCandidate({ a2uiOutput: [create, boundRoot, writeX, del, create, boundRoot, writeX] }), mkDeps())
+      expect(result.ok).toBe(true)
+    })
+
+    it("a DATA-ONLY epoch's writes are invisible to the next epoch (the corpus LLD §4 rule): rejects until the epoch delivers its own", async () => {
+      // `create, dm, delete` is an empty closed epoch to the validator (A3: no component deliveries), so
+      // tier-1 passes; its store is freed at the delete, so nothing it wrote can satisfy a later binding.
+      const dataOnlyFirst = [create, writeX, del, create, boundRoot]
+      expect(validateA2ui(dataOnlyFirst, demoCatalog, undefined, { atFinalize: true }).valid).toBe(true)
+      const leaked = await admit(mkCandidate({ a2uiOutput: dataOnlyFirst }), mkDeps())
+      expect(leaked.ok).toBe(false)
+      if (leaked.ok) return
+      expect(leaked.code).toBe('E_POINTER')
+      expect(leaked.paths).toEqual(['root.label'])
+
+      const own = await admit(mkCandidate({ a2uiOutput: [create, writeX, del, create, boundRoot, writeX] }), mkDeps())
+      expect(own.ok).toBe(true)
+    })
+
+    it('the same unbound path failing in two epochs is reported once', async () => {
+      const output = [create, boundRoot, del, create, boundRoot] // neither epoch writes /x
+      expect(validateA2ui(output, demoCatalog, undefined, { atFinalize: true }).valid).toBe(true)
+      const result = await admit(mkCandidate({ a2uiOutput: output }), mkDeps())
+      expect(result.ok).toBe(false)
+      if (result.ok) return
+      expect(result.code).toBe('E_POINTER')
+      expect(result.paths).toEqual(['root.label'])
+    })
+
+    it('a one-epoch record with a trailing delete still resolves against its whole data model (no regression)', async () => {
+      const result = await admit(mkCandidate({ a2uiOutput: [create, boundRoot, writeX, del] }), mkDeps())
+      expect(result.ok).toBe(true)
+    })
+  })
+
   describe('E_DUP (LLD-C4)', () => {
     it('an exact canonical-hash collision rejects with the colliding name', async () => {
       const deps = mkDeps()
@@ -786,7 +842,7 @@ describe('admit: the multi-turn facet (ADR-0231 cl.2)', () => {
     expect(result.message).toMatch(/priorOutput/)
   })
 
-  it('resolves follow-up bindings against the data model folded across both turns (E_POINTER only when no turn delivers it)', async () => {
+  it('an update-only follow-up continues the prior epoch: it resolves against data either turn delivered (E_POINTER only when none did)', async () => {
     const rebind = (path: string): A2uiOutput => [
       { version: 'v1.0', updateComponents: { surfaceId: 'login', components: [{ id: 'status', component: 'Text', text: { path } }] } },
     ]
@@ -796,6 +852,39 @@ describe('admit: the multi-turn facet (ADR-0231 cl.2)', () => {
     expect(undelivered.ok).toBe(false)
     if (undelivered.ok) return
     expect(undelivered.code).toBe('E_POINTER')
+  })
+
+  // ADR-0064 amendment A6 / GH #1750 composed with ADR-0231 cl.2: a follow-up that deletes and re-creates
+  // its surface opens a new epoch (tier-1 validates it fresh, A4), and its bindings resolve against that
+  // epoch alone, never the prior turn's freed store.
+  it('a follow-up that deletes and re-creates the surface resolves against its OWN epoch', async () => {
+    const rebuilt = (withData: boolean): A2uiOutput => [
+      { version: 'v1.0', deleteSurface: { surfaceId: 'login' } },
+      { version: 'v1.0', createSurface: { surfaceId: 'login', catalogId: 'agent-ui' } },
+      {
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'login',
+          components: [
+            { id: 'root', component: 'Column', children: ['status'] },
+            { id: 'status', component: 'Text', text: { path: '/status' } }, // the prior turn defined /status
+          ],
+        },
+      },
+      ...(withData ? [{ version: 'v1.0' as const, updateDataModel: { surfaceId: 'login', value: { status: 'Welcome' } } }] : []),
+    ]
+    // The new epoch's second `root` is a first delivery (A4: the seed never applies to a created epoch),
+    // so tier-1 is clean and the reject below is stage 6's.
+    expect(checkTier1(multiTurnRecord({ a2uiOutput: rebuilt(false) }), defaultCatalog)).toBeNull()
+
+    const stale = await admit(multiTurnRecord({ a2uiOutput: rebuilt(false) }), mkFacetDeps())
+    expect(stale.ok).toBe(false)
+    if (stale.ok) return
+    expect(stale.code).toBe('E_POINTER')
+    expect(stale.paths).toEqual(['status.text']) // the prior epoch's own status.text still resolves
+
+    const own = await admit(multiTurnRecord({ a2uiOutput: rebuilt(true) }), mkFacetDeps())
+    expect(own.ok).toBe(true)
   })
 
   it('two records differing only in actionId/timestamp collide E_DUP (exact hash)', async () => {

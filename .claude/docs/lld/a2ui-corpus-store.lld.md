@@ -1,6 +1,6 @@
 # LLD — A2UI Corpus Store
 
-> Status: proposed · v0.7 · 2026-10-04 (v0.1 2026-06-26) · Layer: LLD (implementation plan)
+> Status: proposed · v0.7.1 · 2026-10-04 (v0.1 2026-06-26) · Layer: LLD (implementation plan)
 > Implements: [`../spec/a2ui-training-corpus.spec.md`](../spec/a2ui-training-corpus.spec.md) (SPEC-R1..R16, SPEC-N1..N6). Closes **PRD-D4** (storage substrate); PRD-D5 (MCP delivery) is now served through the streaming-pipeline LLD (see LLD-C13 note, §1).
 > Altitude: this document adds the **how**. It does not re-derive corpus behavior — that is the SPEC's; it cites `SPEC-R*` for the what and specifies data structures, algorithms, files, failures, and build order.
 > **v0.2 reconciliation (2026-07-03):** realized/unrealized state added (§0); LLD-C6 marked REALIZED; the healer (LLD-C7) is now **the ONE shared healer** for the whole system (the streaming LLD v0.2 re-pointed all healing here — the renderer deliberately does not heal) and its contract is ADR-0061; the phase-1 scope + tier-2 judge seam is ADR-0060; the pure-core/Node-shell split, the `"./corpus"` subpath, and the data home are ADR-0062; the dangling `a2ui-mcp.lld.md` reference repaired (LLD-C13 re-pointed to the streaming LLD-C6); the seed-import slice (ADR-0055's booked handshake) added as LLD-C14.
@@ -48,6 +48,15 @@
 > first records (GH #1741/#1742); the standing gate's per-facet legs prove themselves against an
 > in-test fixture shard meanwhile. Every committed exemplar line re-admits with a byte-identical
 > `canonicalHash`.
+> **v0.7.1 (2026-10-04, ADR-0064 amendment A6 built, GH #1750):** admission's pointer resolution
+> (§6 stage 6, `foldForResolution` in `admit.ts`) folds per epoch with §4's exact boundary and erratum
+> rules, so a binding resolves against its own epoch's data model only, and a multi-turn follow-up that
+> deletes and re-creates its surface resolves against its new epoch. §4 gains the data-only epoch rule
+> (an epoch counts iff it delivered a component: a data-only epoch contributes no form and is inert to
+> resolution; ADR-0064's data-only epochs erratum records it); `canonical.ts` behaviour is unchanged.
+> §6 stage 6 and two §8 rows updated, stage 6 with the open GH #1765 gap (a re-create without a delete
+> still sees the prior turn's data). All 78 committed exemplars keep their `canonicalHash` (none has a
+> data-only epoch).
 
 ---
 
@@ -254,6 +263,24 @@ byte-identical, the `corpus-data.test.ts` stored-hash leg); a record with N >= 2
 LIST of per-epoch forms, each the existing `{components, dataModel}` shape, and the hash covers the list,
 so two records that end on the same tree through different lifecycles are distinct.
 
+**Data-only epochs count in neither the fold nor resolution (GH #1750, decided with A6's build; recorded
+as ADR-0064's 2026-10-04 data-only epochs erratum).** An
+epoch counts iff it delivered at least one component. A DATA-ONLY epoch (`updateDataModel` writes, no
+`updateComponents`) is the same empty epoch the rule above elides: the shared validator registers no graph
+for a data write, so A3 already judges it an empty closed epoch (and an OPEN data-only final epoch reds
+at tier-1, `sid:root-missing`); no component ever bound its store, and the renderer freed that store at
+its `deleteSurface`, so no consumer can observe what it held. It therefore contributes no form, and two
+records that differ only in a data-only epoch's data (`create, dm(/a,1), delete, create, root` against
+the same with `/a,2`) are exact-hash duplicates of each other and of `create, root`, by design: A5's
+"distinct lifecycles" are distinct sequences of MOUNTED trees, and an epoch that mounted nothing teaches
+no lifecycle step, the same reasoning that keeps a trailing teardown hash-neutral. Counting it would
+also diverge from tier-1: absent a new rootless form shape, the epoch would reach step 2's root guard
+and fail `E_IDGRAPH` at stage 8 for a record tier-1 accepted. In resolution (§6 stage 6, A6) such an epoch is inert in both directions: it
+holds no binding to resolve, and its writes satisfy no binding in a later epoch (a later epoch starts
+from an undefined data model). Re-verified on this change: none of the 78 committed exemplars has a
+data-only epoch (only `kpi-panel-lifecycle` deletes at all, as its last message), so every
+`canonicalHash` is untouched.
+
 **Algorithm `canonicalize(out: A2uiOutput): Promise<{ finalForm: CanonicalForm; epochs: CanonicalForm[]; hash: string; componentsUsed: string[] }>`** (async: the hash rides `crypto.subtle.digest`; `finalForm` is the FINAL epoch's form, renamed from `form` by this change since the form of a multi-epoch record is the list; `epochs` is every epoch's form in stream order):
 1. Fold the stream PER EPOCH (the epoch rule above): within an epoch, apply `updateComponents` (upsert by id) into a component map and `updateDataModel` (in order) into ONE data-model object (whole-model when `path` is omitted/`""`/`"/"`, the ADR-0099 root alias, mirroring the renderer's `#onUpdateDataModel`; both this fold and `admit.ts`'s carry the alias); note the `createSurface` pins (`catalogId`). Steps 2 to 5 run on each epoch alone; a stream with no component-bearing epoch folds to one empty epoch so step 2's guard fires as before. `componentsUsed` is the FINAL epoch's set (what the record ends up rendering, ADR-0231 §2); `disconnected` concatenates every epoch's.
 2. Assert exactly one `root` (else surface to caller as `E_IDGRAPH` — admission handles, §8; in the §6 order tier-1 has already rejected this, so here it is a defensive guard).
@@ -274,9 +301,11 @@ committed line re-admits with an identical hash); a multi-turn record's is the f
 `priorOutput ⊕ a2uiOutput` plus a `clientInput` member holding the action minus its per-session
 nonces (`actionId`, `timestamp`); a repair record's is the corrected stream's fold plus a
 `validatorErrors` member holding the sorted, de-duplicated `(code, path)` set. `componentsUsed` comes
-from the same fold (for multi-turn, the merged one). The canonicalizer's epoch fold is built (v0.6.1),
-but admission's per-epoch pointer resolution (amendment A6, GH #1750) is not, so a follow-up that
-`deleteSurface`s and recreates its surface waits on A6 before its seed lands.
+from the same fold (for multi-turn, the merged one). The canonicalizer's epoch fold is built (v0.6.1)
+and so is admission's per-epoch pointer resolution (amendment A6, GH #1750, v0.7.1), so a follow-up that
+`deleteSurface`s and recreates its surface admits on the same rules as any other record: tier-1 judges
+its new epoch fresh (A4), stage 6 resolves it against that epoch alone, and its identity is the
+two-epoch list.
 
 ## 5. Hasher + dedup — LLD-C4 (SPEC-R7)
 
@@ -311,7 +340,7 @@ admit(candidate, deps: AdmitDeps) =        // AdmitDeps = { catalog: Catalog; st
   facet gate     (ADR-0060) → facet==="eval" ⇒ E_LEAK (fail-closed until LLD-C8 exists — SPEC-R4 has no at-rest protection to admit into)
   pin check      (LLD-C2)   → E_PIN     (SPEC-R9: meta pins present; every message's `version` === meta.protocolVersion; every createSurface.catalogId === meta.catalogId; the never-healed `priorOutput`/`invalidInput` messages must also carry `version`, absent is E_PIN, SPEC-R9 AC3)
   tier-1 deterministic (LLD-C6 = shared `validateA2ui`): the §0 realized reach — PARSE/SCHEMA/VERSION_UNSUPPORTED/CATALOG/IDGRAPH/POINTER-syntax → mapped per the table below
-  pointer-RESOLUTION (corpus-only, LLD-C5): exemplar bindings must resolve against the record's bundled data model → E_POINTER. Layered ON TOP of tier-1; NOT part of `validateA2ui` (the renderer streams → an unresolved path is a placeholder, renderer SPEC-R4 AC2). Parity (N1/R8-AC3) is over `validateA2ui`, which is unchanged. SCOPE SEMANTICS = THE RENDERER'S LIST THREADING BY CONSTRUCTION (v0.5): `computeScopes()` (`admit.ts:351`) DFS-walks from `root` propagating the CURRENT scope to every static descendant and minting a new one at each children-TEMPLATE (composed `{outer}/0/{path}` — index 0, the witness element; nested templates compose), mirroring `renderer/tree.ts` + `list.ts` — the s7 import falsely E_POINTER'd 2 seeds under the earlier one-hop map (only the template's immediate target got a scope; its descendants didn't), fixed with regressions both shapes + a no-widening control. TWO latent gaps in the mirror remain (review-found, safe-direction, no shard hits — booked in §12's wave-close follow-ups): the compose lacks `scopedPointer`'s absolute-path short-circuit (an absolute INNER template path mis-composes), and resolution scans `root`-disconnected components canonicalization drops.
+  pointer-RESOLUTION (corpus-only, LLD-C5): exemplar bindings must resolve against the record's bundled data model, each against its own epoch's (ADR-0064 amendment A6, GH #1750) → E_POINTER. Layered ON TOP of tier-1; NOT part of `validateA2ui` (the renderer streams → an unresolved path is a placeholder, renderer SPEC-R4 AC2). Parity (N1/R8-AC3) is over `validateA2ui`, which is unchanged. SCOPE SEMANTICS = THE RENDERER'S LIST THREADING BY CONSTRUCTION (v0.5): `computeScopes()` (`admit.ts:351`) DFS-walks from `root` propagating the CURRENT scope to every static descendant and minting a new one at each children-TEMPLATE (composed `{outer}/0/{path}`: index 0, the witness element; nested templates compose), mirroring `renderer/tree.ts` + `list.ts`. The s7 import falsely E_POINTER'd 2 seeds under the earlier one-hop map (only the template's immediate target got a scope; its descendants didn't), fixed with regressions both shapes + a no-widening control. TWO latent gaps in the mirror remain (review-found, safe-direction, no shard hits, booked in §12's wave-close follow-ups): the compose lacks `scopedPointer`'s absolute-path short-circuit (an absolute INNER template path mis-composes), and resolution scans `root`-disconnected components canonicalization drops.
   leak gate      (LLD-C8 mechanism, LLD-C4 MinHash) → E_LEAK (candidate exemplar vs the loaded eval prompts — an empty set today, the stage still runs)
   canonical+hash (LLD-C3)   → fills meta.canonicalHash, meta.componentsUsed
   dedup          (LLD-C4)   → E_DUP (both flavors carry AdmitResult.collidesWith = the first-admitted colliding name — SPEC §5.2's field, realized)
@@ -332,8 +361,19 @@ dispatch by `meta.facet`, and an exemplar takes exactly its pre-ADR-0231 path th
   `readActionSpec`, names `action.name` (else at `clientInput[0].action.name`). Repair: the finalize-mode
   failures on `invalidInput` must equal the stored `validatorErrors` as a `(code, path)` set (else
   `E_SCHEMA` at `validatorErrors`); then `a2uiOutput` takes the exemplar's tier-1 call.
-- **Stage 6 (pointer resolution)** resolves a multi-turn follow-up against the data model folded from
-  `priorOutput` then `a2uiOutput` in stream order; repair and exemplar resolve `a2uiOutput` alone.
+- **Stage 6 (pointer resolution)** folds a multi-turn record's `priorOutput` then `a2uiOutput` in stream
+  order; repair and exemplar fold `a2uiOutput` alone. Every facet resolves PER EPOCH (ADR-0064
+  amendment A6, GH #1750): `foldForResolution` resets at each `deleteSurface` and skips a delivery to a
+  deleted surface, exactly as §4's fold does, and each binding resolves against its own epoch's data
+  model, so an update-only follow-up continues the prior turn's epoch while one that deletes and
+  re-creates its surface sees only what its new epoch delivered. A data-only epoch is inert (§4).
+  Failure paths keep the one-epoch `compId.prop` shape, whichever epoch fails (A2's path rule), and a
+  path failing in several epochs is listed once.
+  KNOWN GAP (GH #1765, open, unchanged by v0.7.1): a follow-up that re-sends `createSurface` WITHOUT a
+  `deleteSurface` first still resolves against the prior turn's data, because this fold resets only at
+  `deleteSurface` (A5's "createSurface is not a boundary"). Tier-1 (A4) and the renderer both treat that
+  re-create as a fresh surface, so stage 6 is more lenient than both for this one shape until #1765's
+  ruling lands.
 - **Stage 8 (canonical + hash)** is `recordIdentity(record)` (§4).
 
 Stage 3 (eval fail-closed, `facet === "eval"` exactly), stage 7 (the leak gate, now over every
@@ -414,7 +454,8 @@ Every SPEC error code mapped to its raising stage, plus the non-obvious edges:
 | `E_IDGRAPH` (multi-turn) | LLD-C5 (stage 5) | a follow-up resending `root` over the prior seed (`<surfaceId>:root`); a prior-turn defect (path prefixed `priorOutput:` or `priorOutput[`); an ungrounded action: `sourceComponentId` absent from the prior fold, or its component declares no action named `action.name` → reject (ADR-0231 cl.2) |
 | `E_POINTER` (syntax) | LLD-C6 (shared `validateA2ui`) | malformed JSON-Pointer → reject; identical verdict in renderer + corpus (N1); list-item-relative forms are legal (ADR-0024) |
 | `E_POINTER` (resolution) | LLD-C5 (corpus-only stage) | exemplar binding whose pointer does not resolve against the record's bundled data model → reject; layered ON TOP of `validateA2ui`, NOT part of it; relative-binding scope = the renderer's full-subtree list threading (`computeScopes()`, `admit.ts:351` — v0.5) |
-| `E_POINTER` (multi-turn resolution) | LLD-C5 | a follow-up binding that resolves against neither turn: the model is folded from `priorOutput` then `a2uiOutput` in stream order → reject (ADR-0231 cl.2; per-epoch once amendment A6 lands, GH #1750) |
+| `E_POINTER` (multi-turn resolution) | LLD-C5 | a follow-up binding that does not resolve against its own epoch's data model: `priorOutput` then `a2uiOutput` fold in stream order, per epoch (amendment A6, GH #1750), so an update-only follow-up may bind data either turn delivered and a delete-then-recreate follow-up only data its new epoch delivered → reject (ADR-0231 cl.2) |
+| `E_POINTER` (per-epoch resolution) | LLD-C5 | any facet: a binding in epoch k that only an earlier epoch's data model (including a data-only epoch's) defines → reject; the renderer freed that store at the `deleteSurface` (ADR-0064 amendment A6, GH #1750) |
 | `E_DUP` | LLD-C4 | exact or near duplicate → reject with the colliding first-admitted `name` in `AdmitResult.collidesWith` (SPEC §5.2, realized) |
 | `E_DUP` (facet identity) | LLD-C3/C4 | multi-turn: the same merged end state and the same action minus `actionId`/`timestamp`; repair: the same corrected tree and the same `(code, path)` set. The near-dup leg still shingles `promptText` plus the identity serialization, so two repair pairs sharing `promptText` and tree whose breakages differ in one path can reach θ_dup (0.94 measured): curation gives each pair its own `promptText` |
 | `E_QUALITY` | LLD-C5 (injected judge) | below rubric gate → reject with failing dimensions; **stage skipped when no judge is injected** (ADR-0060 — `qualityScore` absent is the marker) |

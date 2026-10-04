@@ -229,3 +229,25 @@ SPEC-N6), where the repair landed.
 **Acceptance addendum.** `createSurface s, root, deleteSurface s, root` fails `IDGRAPH
 s:update-after-delete` in both modes; the same stream with a `createSurface s` before the second `root`
 is Acceptance 1 and validates.
+
+## Erratum to the 2026-10-03 amendment (2026-10-04, data-only epochs, GH #1750 / PR #1764 review; append-only)
+
+**A5's epoch count was underspecified.** A5 says a record "with N closed-or-open epochs canonicalizes as
+an ordered list of the per-epoch forms" and that records reaching the same tree "through different
+intermediate epochs are therefore distinct". It never said whether an epoch that received only
+`updateDataModel` writes is one of those N.
+
+**The rule, narrowing A5 (and read into A6).** An epoch counts only if it delivered at least one
+component. A data-only epoch counts in neither the canonical fold (it contributes no form) nor pointer
+resolution (its writes satisfy no binding in a later epoch, because the fold resets at the
+`deleteSurface` that closes it). "Distinct intermediate epochs" therefore means distinct mounted trees,
+so two records that differ only in a data-only epoch's data are exact-hash duplicates.
+
+**Why, briefly.** The validator already judges a data-only closed epoch as A3's empty closed epoch
+(a data write registers no graph). No component ever bound its store, and the renderer frees that store
+at the delete, so nothing observes it. Counting it would also trip the canonicalizer's root guard on a
+record tier-1 accepted. No committed hash moves: none of the 78 committed exemplars has a data-only
+epoch.
+
+The rule's home is corpus LLD `a2ui-corpus-store.lld.md` §4, v0.7.1 ("Data-only epochs count in neither
+the fold nor resolution").

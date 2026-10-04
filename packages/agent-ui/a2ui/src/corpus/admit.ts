@@ -27,8 +27,9 @@
 // non-exemplar model-visible facets. Stage 2 is `validateRecord`'s facet branches; stage 5 is `checkTier1`
 // (a multi-turn record validates its prior, then its follow-up seeded with the prior's graph, then grounds
 // its action; a repair record recomputes its stored `validatorErrors`, then validates its corrected
-// stream); stage 6 resolves a multi-turn follow-up against the data model folded over both turns; stage
-// 8 is `recordIdentity`. Every exemplar takes exactly the pre-ADR-0231 path through each of them.
+// stream); stage 6 resolves a multi-turn follow-up over both turns in stream order, PER EPOCH (ADR-0064
+// amendment A6, GH #1750); stage 8 is `recordIdentity`. Every exemplar takes exactly the pre-ADR-0231
+// path through each of them.
 
 import type { CorpusRecord, AdmitCode, RecordFailure } from './record.ts'
 import { validateRecord } from './record.ts'
@@ -151,8 +152,10 @@ export async function admit(candidate: unknown, deps: AdmitDeps): Promise<AdmitR
   if (tier1 !== null) return tier1
 
   // Stage 6 — pointer RESOLUTION (corpus-only, LLD-C5 §6/§7): layered on top of tier-1's syntax-only
-  // check: an exemplar bundles its complete data model, so resolution is checkable here. A multi-turn
-  // follow-up resolves against the data model folded from `priorOutput` then `a2uiOutput` (ADR-0231 cl.2).
+  // check: an exemplar bundles its complete data model, so resolution is checkable here. Each binding
+  // resolves against its OWN epoch's data model (ADR-0064 amendment A6). A multi-turn follow-up folds
+  // `priorOutput` then `a2uiOutput` (ADR-0231 cl.2): an update-only follow-up continues the prior's
+  // epoch, one that deletes and re-creates the surface resolves against its new epoch alone.
   const unresolved = findUnresolvedPointers(resolutionStream(record, output))
   if (unresolved.length > 0) {
     return { ok: false, code: 'E_POINTER', message: 'a binding does not resolve against the bundled data model', paths: unresolved }
@@ -301,7 +304,8 @@ export async function recordIdentity(record: CorpusRecord): Promise<Canonicalize
 }
 
 /** The stream stage 6 folds for pointer resolution: a multi-turn record's two turns in stream order
- * (the live surface after the follow-up), every other facet's `a2uiOutput` alone. */
+ * (the surface's whole lifecycle across both turns, folded per epoch by `foldForResolution`), every
+ * other facet's `a2uiOutput` alone. */
 function resolutionStream(record: CorpusRecord, output: A2uiOutput): A2uiOutput {
   return record.meta.facet === 'multi-turn' ? [...(record.priorOutput ?? []), ...output] : output
 }
@@ -463,24 +467,61 @@ function isChildTemplate(v: string[] | A2uiChildTemplate | undefined): v is A2ui
   return v !== undefined && !Array.isArray(v)
 }
 
-/** Fold a candidate's message stream into a flat component map + the final data model — the same
- * upsert/apply-in-order semantics `canonical.ts`'s `foldStream` uses (re-implemented, not imported,
- * for the same reason canonical.ts gives for its own `setAtPointer`: this module stays decoupled from
- * that module's private internals; both independently mirror the renderer's documented semantics). */
-function foldForResolution(out: A2uiOutput): { byId: Map<string, A2uiComponent>; dataModel: unknown } {
-  const byId = new Map<string, A2uiComponent>()
+/** One epoch's fold for resolution: its upserted component map and the data model its own writes built. */
+interface ResolutionEpoch {
+  byId: Map<string, A2uiComponent>
+  dataModel: unknown
+}
+
+/**
+ * Fold a candidate's message stream into its epochs (ADR-0064 amendment A6, GH #1750), with exactly the
+ * semantics `canonical.ts`'s `foldStream` uses (A5) and the shared validator's epochs (A2): within an
+ * epoch, upsert `updateComponents` by id and apply `updateDataModel` writes in stream order; at a
+ * `deleteSurface` the epoch closes and the next starts from an empty map and an undefined data model, the
+ * store the renderer's fresh surface starts from. That reset is what does the work in stage 6: no
+ * binding sees an earlier epoch's data, including a DATA-ONLY epoch's (writes, no components). From a
+ * delete until the next `createSurface` a delivery addresses a deleted surface and is skipped (the
+ * erratum rule). Only component-bearing epochs are returned, a filter kept for parity with `foldStream`
+ * (the corpus LLD §4 epoch rule): it changes no verdict, because an epoch with no components has no
+ * binding to resolve. Re-implemented, not imported, for the same reason canonical.ts gives
+ * for its own `setAtPointer`: this module stays decoupled from that module's private internals; both
+ * independently mirror the renderer's documented semantics.
+ */
+function foldForResolution(out: A2uiOutput): ResolutionEpoch[] {
+  const epochs: ResolutionEpoch[] = []
+  let byId = new Map<string, A2uiComponent>()
   let dataModel: unknown
+  let deleted = false // a `deleteSurface` with no `createSurface` since: deliveries are dropped
+
+  const close = (): void => {
+    if (byId.size > 0) epochs.push({ byId, dataModel })
+    byId = new Map()
+    dataModel = undefined
+  }
+
   for (const msg of out) {
-    if ('updateComponents' in msg) {
+    if ('createSurface' in msg) {
+      deleted = false // the only message that reopens a deleted surface
+    } else if (deleted && ('updateComponents' in msg || 'updateDataModel' in msg)) {
+      // The renderer's dropped delivery. A defensive mirror of `foldStream`, unreachable through
+      // `admit()`: within one stream tier-1 rejects it first (`sid:update-after-delete`), and across a
+      // multi-turn record's two turns a prior that ends deleted fails action grounding (stage 5) first.
+      continue
+    } else if ('updateComponents' in msg) {
       for (const comp of msg.updateComponents.components) byId.set(comp.id, comp)
     } else if ('updateDataModel' in msg) {
       const { path, value } = msg.updateDataModel
       // Whole-document replace when no path, "" or "/" (the upstream protocol's root alias — ADR-0099).
       dataModel =
         path === undefined || path === '' || path === '/' ? value : setAtPointer(dataModel, path, value)
+    } else if ('deleteSurface' in msg) {
+      close() // the epoch boundary: the renderer frees the surface's graph and data model here
+      deleted = true
     }
   }
-  return { byId, dataModel }
+  close()
+
+  return epochs
 }
 
 function setAtPointer(doc: unknown, pointer: string, value: unknown): unknown {
@@ -566,8 +607,10 @@ function computeScopes(byId: Map<string, A2uiComponent>): Map<string, EffectiveS
 }
 
 /**
- * Every bound (`{path}`) top-level property on every declared component must resolve against the
- * record's own folded data model (LLD §6/§7). Scope matches tier-1's own reach exactly (direct
+ * Every bound (`{path}`) top-level property on every declared component must resolve against its own
+ * epoch's folded data model (LLD §6/§7, ADR-0064 amendment A6): each epoch is scoped and resolved on its
+ * own, and a failure in any epoch carries the same `compId.prop` path shape a one-epoch record reports
+ * (the shared validator's A2 path rule), listed once however many epochs it fails in. Scope matches tier-1's own reach exactly (direct
  * component properties, `RESERVED_PROPS` excluded) — this stage adds resolution semantics on top of
  * tier-1's syntax check, not a wider surface. An ABSOLUTE path (`/`-led) resolves against the document
  * root; a RELATIVE path resolves only when `computeScopes` assigned its component a scope (anywhere
@@ -576,7 +619,14 @@ function computeScopes(byId: Map<string, A2uiComponent>): Map<string, EffectiveS
  * path with no enclosing list-item scope has nothing to resolve against and is reported unresolved.
  */
 function findUnresolvedPointers(out: A2uiOutput): string[] {
-  const { byId, dataModel } = foldForResolution(out)
+  const unresolved: string[] = []
+  for (const epoch of foldForResolution(out)) unresolved.push(...findUnresolvedInEpoch(epoch))
+  // Deduplicated in first-seen order: one `compId.prop` failing in two epochs is reported once.
+  return [...new Set(unresolved)]
+}
+
+/** One epoch's unresolved bindings: its components, its scopes, its data model, nothing else. */
+function findUnresolvedInEpoch({ byId, dataModel }: ResolutionEpoch): string[] {
   const scopes = computeScopes(byId)
 
   const unresolved: string[] = []
