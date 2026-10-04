@@ -303,6 +303,6 @@ No committed hash moves and the validator is untouched (`canonical.ts` and `rend
 edited, and resolution is the corpus-only stage that sits outside `validateA2ui`, so SPEC-N6 parity is
 unaffected). All 78 committed exemplars re-admit through `admit()` with their stored `canonicalHash`, and
 none holds more than one `createSurface` or a write before its `createSurface`, so no committed record
-can reach the new boundary (no `multi-turn` or `repair` shard exists yet).
+can reach the new boundary (the committed `multi-turn` and `repair` shards, #1766 and #1768, re-admit unchanged).
 
 The rule's home is corpus LLD `a2ui-corpus-store.lld.md` §6 stage 6, v0.7.2.
