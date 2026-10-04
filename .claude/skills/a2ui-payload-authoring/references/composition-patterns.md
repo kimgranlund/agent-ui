@@ -1,8 +1,8 @@
-# Composition patterns — the eight seeded idioms (packs A + B)
+# Composition patterns — the seven seeded idioms (packs A + B)
 
-The eight dispositioned composition patterns of `req-a2ui-library` R4 (GH #1213; packs A + B, GH
-#1205/#1206), each a pattern over EXISTING catalog types — never a new component. Every section
-cites its shipped seed BY NAME: the seed is the ground truth (`packages/agent-ui/a2ui/src/examples/
+The seven dispositioned composition patterns of `req-a2ui-library` R4 (GH #1213; packs A + B, GH
+#1205/#1206), each a pattern over EXISTING catalog types — never a new component. Every pattern section
+cites its shipped seed BY NAME (the closing boundary note points at `backable-wizard` by id): the seed is the ground truth (`packages/agent-ui/a2ui/src/examples/
 composition-pack-a.ts` · `composition-pack-b.ts`, both on `allSeeds` and proven by the shared
 validate+render-smoke gate in `examples.test.ts`); quoted node records below are byte-for-byte from
 the seed source. Re-open the seed on any suspicion of drift — the seed, not this file, is what the
@@ -215,21 +215,21 @@ event's status is a resend of that ONE TimelineItem record IN FULL (the whole-no
 SKILL.md's first Common trap). **Boundary:** a process the AGENT is running live (steps streaming
 in) is the status-stream idiom, not this itinerary snapshot.
 
-## 8 · Wizard step, presentation (seed: `wizard-step-progress`, pack B)
+## Boundary note · Wizard step, presentation vs protocol (seed `wizard-step-progress` DROPPED 2026-08-18, ADR-0165 drop path)
 
-**Mechanism.** The visual anatomy of ONE wizard step as a snapshot: `Column > Progress` meter
-pinning "step N of M" (`value`/`max` both bound — advancing the meter is a one-path data write),
-the step's title, its selection body (`RadioGroup` with `value` on the step's OWN dataModel path —
-`/wizard/plan` here; each step binds a DISTINCT path, the state-per-step law), and the
-`Row{ghost Back · solid Next}` nav pair.
+No pack seed backs this section any more; it keeps only the boundary. One wizard step as a snapshot is
+`Column > Progress` (`value`/`max` bound) + title + `RadioGroup` on the step's OWN data path (each step binds a
+DISTINCT path) + `Row{ghost Back · solid Next}`.
 
-**Worked shape** (seed source, verbatim):
+Worked shape, from the `backable-wizard` seed's step nodes (`catalog-frontier.ts`, `backableWizardSeed`;
+the seed puts the nav Buttons in a `CardFooter`, the snapshot form may use a `Row`):
 
-```ts
-{ id: 'meter', component: 'Progress', label: 'Setup — step 2 of 3', value: { path: '/wizard/step' }, max: { path: '/wizard/steps' } },
-{ id: 'plans', component: 'RadioGroup', value: { path: '/wizard/plan' }, orientation: 'vertical', children: ['plan_solo', 'plan_team', 'plan_business'] },
-{ id: 'btn_back', component: 'Button', variant: 'ghost', label: 'Back', action: { action: 'wizard_step', context: { to: 1 }, wantResponse: false } },
-{ id: 'btn_next', component: 'Button', variant: 'solid', label: 'Next', action: { action: 'wizard_step', context: { to: 3 } } },
+```json
+{ "id": "scene", "component": "Column", "gap": "md", "children": ["f_room"] },
+{ "id": "f_room", "component": "Field", "label": "Room type", "child": "rooms" },
+{ "id": "rooms", "component": "RadioGroup", "children": ["r1", "r2"] },
+{ "id": "back2", "component": "Button", "variant": "ghost", "label": "Back", "action": { "action": "step", "context": { "to": "dates" } } },
+{ "id": "next2", "component": "Button", "variant": "solid", "label": "Continue", "action": { "action": "step", "context": { "to": "confirm" } } }
 ```
 
 **Presentation vs. protocol (the known confusable — get this boundary right).** This pattern is

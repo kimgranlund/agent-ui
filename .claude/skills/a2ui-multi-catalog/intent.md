@@ -25,7 +25,7 @@ the knowledge it consults). Knowledge needed on demand → skill.
   schemas, forks the renderer for foreign wire shapes instead of using the closed widening
   seams (readProp/marshal, the Postel arm at `readActionSpec`), and misses the catalogId
   threading (the exact live mis-stamp ADR-0169 cl.4 found at `produce.ts:81`). With it, the
-  four ratified patterns route the work.
+  ratified patterns route the work (four at forging; ADR-0172 added a fifth).
 - **Species**: knowledge (pattern catalog citing the ADR — declarative, no procedure).
 - **Dials**: `user-invocable: false` · `disable-model-invocation: false` (model-only router,
   the `component-catalog` sibling's posture).
@@ -34,14 +34,14 @@ the knowledge it consults). Knowledge needed on demand → skill.
 - **Fences**: NOT payload composing (`a2ui-payload-authoring`); NOT the ui-* fleet map
   (`component-catalog`); NOT renderer/catalog build execution (`a2ui-build-agent` agent, which
   consults this).
-- **Done-when**: a catalog-interop ask reaches the four patterns + the ADR clauses by
+- **Done-when**: a catalog-interop ask reaches the ratified patterns + the ADR clauses by
   citation instead of improvisation.
 
 **Gate P1: PASS** (2026-08-04 — slots confirmed by the dispatch brief's pre-passed human gate).
 
 ## Phase 2 — Evals
 
-- Trigger evals: `evals/evals.json` — 21 cases (12 should-trigger, 9 should-not near-misses).
+- Trigger evals: `evals/evals.json` — 27 cases (15 trigger, 12 no-trigger; 21 at forging, 12/9).
 - Behavioral assertions:
   1. An answer about adding a catalog names the multi-catalog registry
      (`Registry.register` / renderer-constructor pre-registration) and the partition
@@ -89,14 +89,13 @@ contracts/fences in the head; ≤3 hard gates; examples (the citation table) in 
   `*-with-skill.md` transcripts exist; assertions 2 and 3 are demonstrated only by the
   audit's citation sweep (every cited clause resolves), not by a live re-run.
 - Fence closure: siblings `a2ui-payload-authoring` / `component-catalog` carry no `evals/evals.json`
-  (they pre-date the eval convention; verified 2026-08-04) — reciprocal no-trigger cases
-  cannot land in suites that do not exist. Accepted-with-note: this skill's own evals carry
-  the boundary cases in both directions; sibling suites inherit the reciprocal case when
-  they are minted.
+  (none at forging, 2026-08-04; `a2ui-payload-authoring` has one now) — this skill's own evals
+  carried the boundary cases in both directions; sibling suites inherit the reciprocal case.
 
 **Gate P5: PASS with the recorded evidence gaps above** (2026-08-04) — audit findings triaged:
 - MAJOR (E7 mischaracterization, SKILL.md pattern 3): FIXED — `{functionCall}` now recorded
-  as the one render-time-only exclusion (validates, click no-ops, gate = GH #429), per the
+  as the one render-time-only exclusion (validates, click no-ops, gate = GH #429; since closed:
+  `rejectFunctionCall` rejects it at validate), per the
   ADR's E7 row (0169:477) + Consequences (0169:552-555), which retract cl.10's earlier
   "loud at conformance" sentence.
 - MAJOR (intent.md claimed baseline evidence that did not exist): FIXED by honesty — Phases

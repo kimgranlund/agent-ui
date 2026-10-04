@@ -25,8 +25,9 @@ messages a renderer paints), never the code that consumes the wire.
 
 ## Mental model
 
-An A2UI payload is an ordered stream of `version:"v1.0"` server→client messages (protocol.ts's `A2uiServerMessage` union), of
-four kinds you compose:
+An A2UI payload is an ordered stream of `version:"v1.0"` server→client messages (protocol.ts's `A2uiServerMessage` union).
+The union has six envelopes; you compose four (`actionResponse` and `callFunction` are reply/RPC envelopes, out of
+scope here):
 
 1. **`createSurface`** — opens the surface (`{ surfaceId, catalogId, sendDataModel? }`). Always first.
 2. **`updateDataModel`** — the JSON data model bound paths read (`{ surfaceId, path?, value }`).
@@ -50,8 +51,8 @@ Condition on real payloads FIRST, then build outside-in:
    (`packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`) and the example seed shelf
    (`packages/agent-ui/a2ui/src/examples/` — `allSeeds` in `index.ts` names the current count) for the closest
    existing payload — a settings form, a dashboard of tiles, a wizard, a dynamic list. Adapt a shipped shape
-   rather than inventing one. For the eight seeded composition idioms (slideshow · confirmation · trend list ·
-   card layouts · weather · menu · itinerary · wizard presentation), read `references/composition-patterns.md`
+   rather than inventing one. For the seven seeded composition idioms (slideshow · confirmation · trend list ·
+   card layouts · weather · menu · itinerary), read `references/composition-patterns.md`
    — one worked section per seed, packs A + B.
 2. **Open the surface.** Emit `createSurface` with the target `catalogId` (default `agent-ui`). Add
    `sendDataModel:true` when a triggered action must carry the model back. Deciding createSurface vs.
@@ -64,8 +65,10 @@ Condition on real payloads FIRST, then build outside-in:
    template) for containers. Depth: `references/trees-and-lists.md`.
 5. **Wire the dynamics.** Bind bindable props (`{path}`), compose labels (`${…}`), attach `action` to Buttons,
    `checks` to inputs, and gate submits with a `FormProvider`. Depth: `references/bindings-actions-checks.md`.
-6. **Match each node to its card.** Every component's idiomatic shape, bindable props, and ordering traps are
-   in `references/node-idioms.md` (e.g. a Select and its Options MUST share one `updateComponents` message).
+6. **Match each node to its card.** `references/node-idioms.md` holds the idiomatic shape, bindable props, and
+   ordering traps for the components that have a non-obvious one (e.g. a Select and its Options MUST share one
+   `updateComponents` message). A component with no card is NOT cardless-safe: read its `catalog.json` entry (props,
+   `bindable`, `enum`, `requires`) before emitting it.
 
 Prefer splitting `updateComponents` into several messages when composing a stream — the renderer is
 out-of-order tolerant (`protocol.ts` + runtime SPEC-R4), so the root subtree can arrive before the leaves it
@@ -115,9 +118,10 @@ Draft → validate → fix → re-check → finalize only when clean:
 - [ ] `Tabs` and its `Tab`/`TabPanel` children ship in one `updateComponents` message (`Select`/`Option`
       ordering has its own rules — the Common-trap entry + `references/node-idioms.md`).
 - [ ] Required inputs sit under a `FormProvider` with a `submit:true` action to gate them.
-- [ ] Every `createSurface` delivers an `id:"root"` node for its `surfaceId` (or is `deleteSurface`d in the
-      same payload) — the CLI judges at finalize granularity and fails an abandoned surface
-      `IDGRAPH ${sid}:root-missing` (ADR-0187; `references/finalize-validation.md`).
+- [ ] Every `createSurface` delivers an `id:"root"` node for its `surfaceId`. A same-turn `createSurface` +
+      `deleteSurface` with no content is NOT an escape: the validator accepts it but `produce()` strips it
+      (`NET_NOOP`; rule in `references/finalize-validation.md`). The CLI judges at finalize granularity
+      and fails an abandoned surface `IDGRAPH ${sid}:root-missing` (ADR-0187).
 - [ ] The `validate-payload` CLI exits 0 (repairs, if any, reviewed) — THEN report gate-green to the host,
       which dispatches `a2ui-review-agent` for grading (you never invoke the critic yourself).
 
@@ -131,14 +135,17 @@ Draft → validate → fix → re-check → finalize only when clean:
   error and drops it, keeping the original (runtime SPEC-R3 AC2) — so if the container that needs a new
   child is the surface's root, wrap it one level down (a stable, never-resent root whose single child is
   the mutable container) rather than resending root.
+- **A newer surface supersedes older ones.** Update the live surface to the next scene and retire
+  superseded ones the same turn; at most one surface reads live in the renderer (`prompts/grammar.md`
+  surface-reuse rule, GH #1164).
 - **Field uses `child`, not `children`.** It wraps exactly one control; its `label` is that control's
   accessible name (ADR-0051).
-- **Select/Options ordering** — APPEND and mid-position insert are both safe now (TKT-0026/0031);
+- **Select/Options ordering** — APPEND and mid-position insert are both safe now (TKT-0026/0031, frozen archive per ADR-0145; work items are GH Issues);
   only the panel POSITION is not wire-faithful (a late Option lands at the listbox tail, not its
   requested index; true reorder is a non-goal, ADR-0128). The full saga — what each ticket fixed,
   the ADR-0017 child-relocating family it generalizes to, and the ship-together-for-exact-order
   guidance — lives in `references/node-idioms.md` (its ONE home, GH #761 consolidated the copies).
-- **`submit:true` is client-only.** It gates the FormProvider; it never appears on the emitted action wire.
+- **`submit:true` is client-only.** It is a declared boolean on `Button.action` in `catalog.json`, so it validates when authored; it gates the FormProvider and is stripped before emit (never on the outbound action message).
 - **Bindable prop = the control's own prop.** Bind `checked` on a Checkbox/Switch, `selected` on Tabs — not a
   generic `value` (ADR-0053 naming law).
 - **Positional lists.** A `{path, componentId}` template is index-based; v1.0 has no per-item key (ADR-0024).
@@ -161,7 +168,7 @@ papered over inside the payload.
 | `references/node-idioms.md` | The idiomatic node shape, bindable props, and ordering traps for each catalog component |
 | `references/trees-and-lists.md` | Building the adjacency-list tree, `child` vs `children`, `ChildList` templates, `${…}` interpolation, nesting |
 | `references/bindings-actions-checks.md` | Data bindings, two-way inputs, Button actions, reactive `checks`, FormProvider submit-gating |
-| `references/composition-patterns.md` | Composing one of the eight seeded whole-surface idioms (packs A + B: slideshow-gallery · confirmation-view · trend-list · card-layouts · five-day-weather · restaurant-menu · travel-itinerary · wizard-step-progress) — each section cites its seed + the catalog mechanics it proves |
+| `references/composition-patterns.md` | Composing one of the seven seeded whole-surface idioms (packs A + B: slideshow-gallery · confirmation-view · trend-list · card-layouts · five-day-weather · restaurant-menu · travel-itinerary), plus the wizard presentation-vs-protocol boundary — each section cites its seed + the catalog mechanics it proves |
 | `references/meta-line-vocabulary.md` | The `a2uiMeta` framing envelope's six MODEL-authored arms (`ask · plan · personaPatch · flowEnd · team · target`) as a growth axis — the inherited arm laws, ADR-0198's answered-ask-freeze/closing-turn amendments, and the truthful-signal-beats-heuristic lesson (ADR-0206) |
 | `references/finalize-validation.md` | A payload validates clean mid-stream but the CLI / renderer / `produce` fails it `IDGRAPH ${sid}:root-missing` — the finalize-granularity signal (ADR-0187) |
 | `catalog.json` (`src/catalog/default/`) | The authoritative component/prop/function inventory — never invent a component or prop |

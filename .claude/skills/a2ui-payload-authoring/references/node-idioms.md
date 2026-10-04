@@ -5,7 +5,7 @@ never restate from memory:
 
 - **Props / `mapsTo` / `value` blocks / children-kind** — `packages/agent-ui/a2ui/src/catalog/default/catalog.json`.
 - **Wire node shape** (`A2uiComponent`, `Binding`, `A2uiChildTemplate`) — `packages/agent-ui/a2ui/src/protocol.ts`.
-- **Real usage** — the 11-seed shelf under `packages/agent-ui/a2ui/src/examples/`.
+- **Real usage** — the seed shelf under `packages/agent-ui/a2ui/src/examples/` (`allSeeds` in `index.ts`).
 
 **Re-derive these cards and their line cites whenever `catalog.json`, `protocol.ts`, or the seed shelf
 changes** — the validate-payload CLI catches stale content at compose time, not a stale cite.
@@ -17,7 +17,7 @@ literal. A prop with a `value: { prop, event }` block is a two-way surface — s
 ---
 
 ## Text — display leaf
-`catalog.json:5-10`. Props: `text` (bindable → `textContent`), `variant` ∈ `h1 h2 h3 h4 h5 caption body`.
+`catalog.json` `Text` entry. Props: `text` (bindable → `textContent`), `variant` ∈ `h1 h2 h3 h4 h5 caption body label kicker overline quote lead` (12; ADR-0142, ADR-0207). The wire enum is deliberately wider than `ui-text`'s own prop (translated by `TEXT_VARIANT_TABLE` in `factories.ts`, GH #1638 wontfix); do not "fix" it.
 `text` takes a literal, a `{path}`, or a `${…}` interpolation template (`references/trees-and-lists.md`).
 ```json
 { "id": "title", "component": "Text", "variant": "h4", "text": "Workspace settings" }
@@ -109,10 +109,10 @@ flow back into the data model yet.
 Real: `examples/catalog-frontier.ts` (`paneSwitcherSeed`).
 
 ## Select / Option
-`catalog.json:86-103`. Select: `value: { prop:"value", event:"select" }`, `children:"ChildList"` of Option;
+`catalog.json` `Select` + `Option` entries. Select: `value: { prop:"value", event:"select" }`, `children:"ChildList"` of Option;
 bindable `value`, `disabled`, `required`; plain `placeholder`, `name`. Option: `value` (plain), `label`
 (bindable → `textContent`). Ordering: `ui-select` adopts `[role=option]` children into its panel at first
-connect AND on every later light-DOM mutation (TKT-0026, 2026-07-12 — a late-arriving Option now DOES
+connect AND on every later light-DOM mutation (TKT-0026, frozen archive per ADR-0145, 2026-07-12 — a late-arriving Option now DOES
 reach the panel and becomes selectable, superseding ADR-0053's ship-together limitation, BUT ONLY when
 the new id is APPENDED after every already-delivered Option). A resend that INSERTS a new Option id
 BETWEEN two already-delivered ones no longer throws either (TKT-0031, fixed — the renderer's generic
@@ -392,6 +392,33 @@ they read as one comparison, not two unrelated blocks.
 { "id": "features_table", "component": "Table", "columns": [{ "key": "feature", "label": "Feature" }], "rows": { "path": "/features" } }
 ```
 Real: `examples/high-frequency-patterns.ts:54-75` (`comparison-pricing-table`).
+
+## Cross-card constraints (catalog-derived unless a bullet cites its own source)
+- **Several Checkboxes go in a `Column`** (one per row, a sibling commit Button). `ui-checkbox` is `inline-flex`
+  and there is no CheckboxGroup, so bare siblings render as one inline row. `RadioGroup` is its own block
+  container and needs no wrapper (GH #1125).
+- **`Switch.label` is NOT bindable**; `Field.label` IS. A templated row of Switches takes a `Field` wrap with a
+  relative `label` bind so each switch is named per item (ADR-0051). `MenuItem` has only `value`/`label`, no
+  `action`: add-from-library rows are Buttons (GH #1355).
+- **A value-bearing Slider** takes its own `label` plus `layout:"standard"`; never a sibling caption `Text`
+  (the slider renders its label itself, GH #1152).
+- **Table owns `search`/`sort`/`filter`/`page`/`pageSize` and paints its own pager** once `page`+`pageSize` are
+  set. Never add a second `Pagination` for the same table (GH #1355).
+- **`Icon.label` non-empty makes the icon meaningful** (`role=img`), so an Icon beside a named Button announces
+  twice. Omit `label` on a decorative Icon; only a standalone meaningful Icon carries one (`icon.ts`, GH #1483).
+- **`Badge` is a short status/count token** (pill chrome), not a headline: sentence-length text belongs in
+  `Text` (GH #1279).
+- **Peer option Buttons carry the same explicit `variant`** (a variant-less sibling reads as the odd one out;
+  GH #1483, `greetCardSeed` in `catalog-frontier.ts`).
+
+## Known gaps: do not emit (re-enter only on the stated condition)
+| Need | Today | Re-entry condition |
+|---|---|---|
+| Option groups in `Select` | not in the catalog (GH #1366 WONTFIX) | a grouped payload specimen with more than 12 options |
+| Rich-text / Markdown input | plain `Textarea` carrying a Markdown string (GH #1378) | a ruled a2ui<->code package boundary |
+| Inline citation markers | none; `Text.text` is one string (GH #1370) | a ruled citation row |
+| `Map` | none (ADR-0222, no third dependency; Image covers a static map) | a dependency-law amendment |
+| `Chip` / `Tag` | none; Badge is the nearest, do not widen it (GH #1371) | evidence a Badge variant cannot hold the accessibility class |
 
 ---
 
