@@ -1,0 +1,44 @@
+{
+  "domain": "goals",
+  "plan": true,
+  "_note": "Two-plane decomposition for Kim's three 2026-10-03 corpus rulings (GH #1730 multi-turn facet, GH #1733 repair facet, GH #1736 surface lifecycle under ADR-0064 cl.4). OUTSIDE-IN nodes = the records and build slices the rulings produce. INSIDE-OUT actions = what each ruling must make true, each a checkable predicate. plan:true, so every leaf carries its accept. The two design leaves (ADR-0231, the ADR-0064 amendment) are authored by the planner seat in this change; the four build leaves are filed as GitHub Issues (label task) and dispatched to a2ui-build-agent after the docs land.",
+  "nodes": [
+    { "id": "design", "label": "the three rulings recorded as decision records", "leaf": false },
+    { "id": "adr-facets", "label": "ADR-0231: multi-turn + repair facets (record shape, validation, admission, verdict, rubric, exemplar non-regression)", "leaf": true, "accept": "`npx vitest run site/lib/adr.test.ts site/lib/docs-grammar.test.ts site/lib/sitemap.test.ts` exits 0 with the new file present; `node scripts/generate-sitemap.mjs` leaves `git diff --exit-code site/public/adr-index.json` clean; doc-checker handback filed with every substantive finding fixed" },
+    { "id": "adr-0064-amend", "label": "ADR-0064 cl.4 amendment: id-graph reset on deleteSurface, single-surface holds, trigger re-armed", "leaf": true, "accept": "same three vitest gates exit 0; the amendment is an appended `## Amendment` section and `git diff` shows zero changed lines above it in 0064" },
+    { "id": "build", "label": "build slices filed from the rulings", "leaf": false },
+    { "id": "s-schema", "label": "slice: facet schema + validator + admit + store + rubric 1.3 (record.ts/admit.ts/store.ts/canonical.ts/retrieve.ts/corpus-data.test.ts/examples types/import-seeds)", "leaf": true, "accept": "`npm run check` and `npm test` exit 0; `validateRecord` accepts a conforming multi-turn and a conforming repair record and rejects each ADR-0231 negative control at its named path; the 74-line exemplar shard re-admits with byte-identical `canonicalHash` for every line" },
+    { "id": "s-multiturn-seeds", "label": "slice: 2 multi-turn seeds (form submit, list item select) admitted with a judged VerdictsFile", "leaf": true, "accept": "`corpus/multi-turn/v1_0/agent-ui.jsonl` holds >= 2 lines; `npm test` exits 0 with the new shard under the standing gate; the follow-up of each record validates clean ONLY with the prior-derived seed (standalone it fails `sid:root-missing`), proven by a test" },
+    { "id": "s-repair-pairs", "label": "slice: 5 repair pairs over the top shared-validator error codes admitted with a judged VerdictsFile", "leaf": true, "accept": "`corpus/repair/v1_0/agent-ui.jsonl` holds >= 5 lines whose `validatorErrors` code sets cover >= 3 distinct `ErrorCode`s; the standing gate recomputes each record's `validatorErrors` and finds set-equality; `npm test` exits 0" },
+    { "id": "s-idgraph-reset", "label": "slice: validator + canonicalizer free a surface's id graph at deleteSurface (epochs)", "leaf": true, "accept": "`validate-payload.ts` on the #1736 probe (createSurface s, root, deleteSurface s, createSurface s, root) exits 0; a create+delete+create with an EMPTY second epoch fails `s:root-missing` at finalize; `canonicalize` of every existing shard line is byte-identical (74 hashes unchanged); `npm run check` and `npm test` exit 0" }
+  ],
+  "actions": [
+    { "id": "a-rule-facets", "label": "a future reader can cite the ruling that multi-turn and repair are separate facets with the exemplar shape unchanged" },
+    { "id": "a-rule-lifecycle", "label": "a future reader can cite the ruling that delete-then-recreate is legal and concurrent surfaces stay out" },
+    { "id": "a-shape", "label": "a multi-turn or repair record is accepted or rejected by validateRecord at a named path" },
+    { "id": "a-admit", "label": "admission validates the follow-up against the prior-derived seed and recomputes a repair record's validatorErrors" },
+    { "id": "a-no-regress", "label": "every existing exemplar record admits unchanged (hash, status, retrieval, export)" },
+    { "id": "a-teach-turns", "label": "the corpus teaches an action round-trip (form submit, list select)" },
+    { "id": "a-teach-repair", "label": "the corpus teaches a broken-then-repaired correction for the top validator codes" },
+    { "id": "a-reset", "label": "a surface deleted and recreated in one record validates clean and canonicalizes deterministically" },
+    { "id": "a-trigger", "label": "the ADR-0064 cl.4 widening trigger is re-armed for a genuine concurrent-surface consumer" }
+  ],
+  "hosts": [
+    { "action": "a-rule-facets", "node": "adr-facets" },
+    { "action": "a-rule-lifecycle", "node": "adr-0064-amend" },
+    { "action": "a-trigger", "node": "adr-0064-amend" },
+    { "action": "a-shape", "node": "s-schema" },
+    { "action": "a-admit", "node": "s-schema" },
+    { "action": "a-no-regress", "node": "s-schema" },
+    { "action": "a-no-regress", "node": "s-idgraph-reset" },
+    { "action": "a-teach-turns", "node": "s-multiturn-seeds" },
+    { "action": "a-teach-repair", "node": "s-repair-pairs" },
+    { "action": "a-reset", "node": "s-idgraph-reset" }
+  ],
+  "edges": [
+    { "from": "adr-facets", "to": "s-schema", "why": "the slice builds the record shape, codes, and rubric dimensions the ADR names" },
+    { "from": "s-schema", "to": "s-multiturn-seeds", "why": "a multi-turn seed cannot admit until the facet exists in record.ts/admit.ts/store.ts" },
+    { "from": "s-schema", "to": "s-repair-pairs", "why": "a repair pair cannot admit until validatorErrors recomputation exists in admission" },
+    { "from": "adr-0064-amend", "to": "s-idgraph-reset", "why": "the slice implements the epoch semantics the amendment rules" }
+  ]
+}

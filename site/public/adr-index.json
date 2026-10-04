@@ -1580,5 +1580,12 @@
     "description": "ui-column-chart goes all-HTML: axis-aligned plot furniture is CSS-drawn DOM (the SVG layer retires), a pure-CSS container-query chrome-degradation ladder rides…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0231",
+    "url": "./adr-index.html#adr-0231",
+    "description": "the corpus gains two model-visible facets, multi-turn (client action in, follow-up stream out) and repair (invalid input + recomputed validator errors + correc…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
