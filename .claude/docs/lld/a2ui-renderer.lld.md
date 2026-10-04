@@ -96,18 +96,44 @@ interface Surface {
 
 **LLD-C9 action dispatch (SPEC-R8):**
 ```ts
-function emitAction(node, surface, opts:{name; wantResponse?:boolean}) {
+// renderer.ts (host): the click listener collects, then hands a pre-collected context to emitAction
+#wireAction(el, node, surface, spec, itemScope: ItemScope | undefined, ac: AbortController) {
+  const { name, wantResponse, context, submit } = readActionSpec(spec);    // ADR-0011 / ADR-0169 arms
+  el.addEventListener('click', () => {
+    if (el.disabled === true) return;                                       // GH #1164 guard
+    if (submit === true && !submitGatePermits(el)) return;                  // ADR-0054 gate
+    void actions.emitAction(node, surface,
+      { name, wantResponse, context: collectContext(context, surface, itemScope) });
+  }, { signal: ac.signal });                                               // item ac in a list, else surface.ac
+}
+function collectContext(context: Record<string, unknown> | undefined, surface, itemScope?) {
+  if (context === undefined) return undefined;                             // emitAction defaults to {}
+  return untracked(() => mapValues(context, (v) => resolveValue(v, surface, itemScope)));  // LLD-C10 dispatcher
+}
+
+// action.ts (ActionDispatcher): context arrives resolved; this layer never reads bindings
+function emitAction(node, surface, opts: { name: string; context?: Record<string, unknown>; wantResponse?: boolean }) {
   const actionId = newId();                                  // v1.0 client-generated id
-  const context  = collectContext(node, surface);           // resolved bound paths + input values
-  const msg = { version: surface.version, action: { surfaceId: surface.id, actionId,
-                name: opts.name, sourceComponentId: node.id, timestamp: nowIso(),
-                context, wantResponse: opts.wantResponse,
-                dataModel: surface.sendDataModel ? surface.data.peek() : undefined } };
-  if (opts.wantResponse) pending.set(actionId, deferred());  // correlation map
-  emitClient(msg);
-  return opts.wantResponse ? pending.get(actionId)!.promise : undefined;
+  const action = { surfaceId: surface.id, actionId, name: opts.name, sourceComponentId: node.id,
+                   timestamp: nowIso(), context: opts.context ?? {} };
+  if (opts.wantResponse !== undefined) action.wantResponse = opts.wantResponse;  // tri-state preserved
+  if (surface.sendDataModel) action.dataModel = surface.data.peek();             // untracked read (SPEC-R8 AC2)
+  if (opts.wantResponse === true) pending.set(actionId, deferred());              // correlation map
+  emitClient({ version: surface.version, action });
+  return opts.wantResponse === true ? pending.get(actionId)!.promise : undefined;
 }
 ```
+**`collectContext` semantics (REV 2026-10-04, GH #1748, PR #1755; built).** Context is resolved at **click
+time**, so it carries the current data, a committed two-way bind included (LLD-C8). It runs inside
+**`untracked`**, so a click dispatched from inside an effect never subscribes that effect to the context
+paths (the same posture as `surface.data.peek()` for `sendDataModel`). It is **one level deep**: each
+top-level entry goes through `resolveValue` (a literal as-is, `{path}` via LLD-C5, `{call}` via LLD-C10, a
+string with an unescaped `${` via interpolation), and a nested literal object is passed through, not walked.
+Each entry resolves against the action node's own **`itemScope`**, so a relative `{path}` in a list
+template reads `{path}/{index}/…` per row and `@index` is the row index, the same rule wireProps and
+wireChecks apply. A missing path resolves to `undefined` with no error, and drops out of the serialized
+wire context. Before this REV the host passed the action prop's `context` through verbatim (ADR-0024
+amendment of the same date; ADR-0054 amendment of the same date).
 `actionResponse{actionId,value|error}` → resolve/reject `pending.get(actionId)` then delete it (SPEC-R8 AC1). **Edge:** an `actionResponse` with an unknown `actionId` is dropped with a logged warning (no throw). `timestamp`/`newId` come from injected providers (the kernel/scripts ban ambient `Date.now()`/random in some contexts; the renderer takes them via construction for testability/determinism).
 
 **Action listener lifetime (LLD-C13 wiring, ADR-0024 amendment 3).** The host strips the action-typed props before the base resolver and re-expresses them as a `click → emitAction` listener (`renderer.ts` `#wireAction`). That listener is registered on the **item's `AbortController`** when the action control is a dynamic-list item, else `surface.ac` — so a positionally-removed action row (e.g. a Card-with-button) drops its click listener with the item (SPEC-N3, item-granular). The ac threads to `#wireAction` through the **same** host `createWidget` closure that already receives the item's `scope`/`itemScope` (no separate action-wiring pass); the non-list default is `surface.ac`, unchanged.

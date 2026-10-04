@@ -84,3 +84,21 @@ We will gate actions on the provider through two small, generic extensions:
 - **Merging `provider.values()` into the action `context`** — rejected: duplicates what `sendDataModel`
   already round-trips, and `FormValue`'s `File`/`FormData` arms are not JSON-serializable — a silent-loss
   channel on the wire.
+
+## Amendment - action context is resolved now (2026-10-04, GH #1748, PR #1755)
+
+> Status: append-only; corrects one Context statement, does not edit the Decision.
+
+The Context section says action `context` "is emitted verbatim (no `collectContext` resolution is
+shipped)". Since GH #1748 (PR #1755) that is no longer true: `#wireAction` resolves each top-level context
+entry through `collectContext` (LLD-C9) at click time, against the list item scope when the Button sits in a
+ChildList template.
+
+The Decision stands as written. The typed aggregate still rides `sendDataModel` (cl.4), and the provider's
+values are still not merged into `context`. The reason that rejection holds was never only the missing
+resolution: `FormValue` admits `File`/`FormData`, which are not JSON-wire-safe, and the data model is the
+protocol-native aggregate.
+
+Order on a click is the disabled guard (GH #1164), then the submit gate (cl.3), then context collection. A
+refused submit therefore reads no context paths, and an un-flagged action collects its context exactly as
+any other action does.

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
-import { whenFlushed, UIFormElement, prop } from '@agent-ui/components'
+import { whenFlushed, UIFormElement, prop, effect, createScope } from '@agent-ui/components'
 import type { FormValue, ValidityResult, PropsSchema, ReactiveProps } from '@agent-ui/components'
 import { UIButtonElement, UISelectElement } from '@agent-ui/components/components'
 import { createRenderer } from './renderer.ts'
@@ -671,6 +671,91 @@ describe('renderer host: action context resolution (GH #1748, LLD-C9 collectCont
     r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'sx', path: '/form/name', value: 'Bea' } }))
     buttons[0]!.click()
     expect(sent.filter(isAction).map((m) => m.action.context)).toStrictEqual([{ draft: 'Ana' }, { draft: 'Bea' }])
+    cleanup()
+  })
+
+  it('a click dispatched INSIDE an effect never subscribes that effect to the context paths (collectContext is untracked)', async () => {
+    const { buttons, sent, r, cleanup } = await mountWith(
+      'agent-ui',
+      [{ id: 'root', component: 'Button', label: 'Save', action: { action: 'save', context: { draft: { path: '/form/name' } } } }],
+      { form: { name: 'Ana' } },
+    )
+    const scope = createScope()
+    let runs = 0
+    scope.run(() =>
+      effect(() => {
+        runs++
+        buttons[0]!.click() // resolves `/form/name` while THIS effect is the active consumer
+      }),
+    )
+    expect(runs).toBe(1)
+    expect(sent.filter(isAction).map((m) => m.action.context)).toStrictEqual([{ draft: 'Ana' }])
+
+    r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'sx', path: '/form/name', value: 'Bea' } }))
+    await whenFlushed()
+    expect(runs, 'a tracked context read would re-run the effect (and re-click) on the /form/name write').toBe(1)
+    expect(sent.filter(isAction)).toHaveLength(1)
+
+    buttons[0]!.click() // an ordinary click afterwards still reads the CURRENT value
+    expect(sent.filter(isAction).map((m) => m.action.context)).toStrictEqual([{ draft: 'Ana' }, { draft: 'Bea' }])
+    scope.dispose()
+    cleanup()
+  })
+
+  it('a `${…}` context string interpolates per row (ADR-0027); the `\\${` escape follows the same rule as a prop', async () => {
+    const { buttons, sent, cleanup } = await mountWith(
+      'agent-ui',
+      [
+        { id: 'root', component: 'Column', children: { path: '/rows', componentId: 'rowTpl' } },
+        {
+          id: 'rowTpl',
+          component: 'Button',
+          label: 'Add',
+          action: {
+            action: 'add_to_cart',
+            context: {
+              summary: 'Added ${sku} for ${/user}', // relative (the row) + absolute (the root)
+              mixed: 'cost \\${price} is ${price}', // escaped `\${` renders a literal `${` beside a live `${…}`
+              escapedOnly: 'literal \\${sku}', // no unescaped `${`: not a template, emitted byte-identical
+            },
+          },
+        },
+      ],
+      { user: 'kim', rows: [{ sku: 'A-1', price: 9.5 }, { sku: 'B-2', price: 12 }] },
+    )
+    buttons[0]!.click()
+    buttons[1]!.click()
+    expect(sent.filter(isAction).map((m) => m.action.context)).toStrictEqual([
+      { summary: 'Added A-1 for kim', mixed: 'cost ${price} is 9.5', escapedOnly: 'literal \\${sku}' },
+      { summary: 'Added B-2 for kim', mixed: 'cost ${price} is 12', escapedOnly: 'literal \\${sku}' },
+    ])
+    expect(sent.filter(isError)).toHaveLength(0)
+    cleanup()
+  })
+
+  it('a missing path resolves to `undefined` with no error (dropped on the wire); an object-valued `{path}` yields the object', async () => {
+    const prefs = { theme: 'dark', density: 2, pinned: ['inbox'] }
+    const { buttons, sent, cleanup } = await mountWith(
+      'agent-ui',
+      [
+        {
+          id: 'root',
+          component: 'Button',
+          label: 'Go',
+          action: { action: 'go', context: { missing: { path: '/nope/deeper' }, orphan: { path: 'relative-outside-a-list' }, prefs: { path: '/prefs' } } },
+        },
+      ],
+      { prefs },
+    )
+    buttons[0]!.click()
+    const actions = sent.filter(isAction)
+    expect(actions).toHaveLength(1)
+    const context = actions[0]!.action.context
+    expect(context.missing).toBeUndefined()
+    expect(context.orphan, 'a relative path with no item scope reads `undefined`, like the prop read side').toBeUndefined()
+    expect(context.prefs).toStrictEqual(prefs)
+    expect(JSON.parse(JSON.stringify(context)), 'undefined entries drop out of the serialized wire context').toStrictEqual({ prefs })
+    expect(sent.filter(isError), 'an unresolved path is a placeholder (SPEC-R4 AC2), never an error').toHaveLength(0)
     cleanup()
   })
 })
