@@ -25,7 +25,9 @@ const raw = import.meta.glob('./**/*.ts', { query: '?raw', import: 'default', ea
 const specifiersOf = (src: string): string[] => {
   const out: string[] = []
   const fromRe = /\b(?:import|export)\b[^\n;]*?\bfrom\s*['"]([^'"]+)['"]/g
-  const bareRe = /\bimport\s*['"]([^'"]+)['"]/g
+  // A side-effect import starts a statement; anchoring there keeps prose ("an import's") and string
+  // literals ('contact-import') from reading as specifiers (GH #1731 false positive).
+  const bareRe = /(?:^|[;\n])\s*import\s*['"]([^'"\n]+)['"]/g
   let m: RegExpExecArray | null
   while ((m = fromRe.exec(src))) out.push(m[1])
   while ((m = bareRe.exec(src))) out.push(m[1])
@@ -98,6 +100,11 @@ describe('import layering — a2ui/src imports only {components, shared} or loca
   it('synthetic-violation: the matcher flags @agent-ui/app (up the DAG) and @agent-ui/a2a (the bridge stays out of shipped src)', () => {
     const src = `import { x } from '${spec('app')}'\nimport { y } from '${spec('a2a')}'\n`
     expect(specifiersOf(src).filter((s) => !isAllowedA2uiSpecifier('renderer/renderer.ts', s))).toEqual([spec('app'), spec('a2a')])
+  })
+
+  it('negative control: prose and string literals containing "import" are not specifiers', () => {
+    const src = `// an import's progress scene\nconst ID = 'contact-import'\n\nexport const seed = { name: 'x' }\nimport './side-effect.ts'\n`
+    expect(specifiersOf(src)).toEqual(['./side-effect.ts'])
   })
 
   it('synthetic-violation: node builtins are lawful ONLY under agent/ (ADR-0137) — a renderer file reaching node:fs trips', () => {
