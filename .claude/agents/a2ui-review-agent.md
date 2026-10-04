@@ -10,7 +10,7 @@ description: >-
   ui-*/CSS (frontend:component-checker); NOT prose docs (docs:doc-checker) — EXCEPT a skill-doc
   PATTERN vs `a2ui-skill-pattern.md`; the DOCUMENT stays with skill-checker.
 tools: Read, Grep, Glob, Bash
-model: fable
+model: opus
 effort: high
 skills: [a2ui-review-standards]
 ---
