@@ -412,3 +412,84 @@ modes (184 of 184 comparisons), every record's stored `canonicalHash` re-derives
 `corpus/validate.test.ts` proves the identity and the re-create verdicts through the corpus entry point.
 
 The rule's home is the runtime SPEC `a2ui-runtime.spec.md` SPEC-R11's 2026-10-04 REV (re-create).
+
+## Erratum to the 2026-10-03 amendment (2026-10-04, the canonical fold keeps a re-create as one epoch, GH #1778; append-only)
+
+> Basis: kimgranlund's ruling on GH #1765 (the ruling comment:
+> https://github.com/kimgranlund/agent-ui/issues/1765#issuecomment-5982535594): "The canonical hash fold
+> is untouched, so all 78 exemplar hashes must stay stable", which the GH #1772 build (PR #1777) kept by
+> leaving `canonical.ts` unedited. This erratum records the consequence of that ruling as the intended
+> design and closes the two items the GH #1772 erratum left under "Not covered" (GH #1778). It adds no
+> new ruling; no `ratify` utterance exists, so `scripts/adr_ratify.py` was not run.
+
+**The decision: the canonical fold keeps a re-create without a delete as one epoch, by design.** A5's fold
+(`canonical.ts#foldStream`) closes an epoch only at a `deleteSurface`. The validator (the GH #1772
+erratum) and admission's resolution fold (the GH #1765 erratum) also close one at every `createSurface`,
+because the renderer replaces the surface there. The canonical fold does not follow them, and that is
+intended, not a gap awaiting a hash migration. The canonical hash is a record's IDENTITY over the full
+stream it bundles (dedup's exact-match leg, LLD-C4), not a model of what the renderer shows at the end,
+and the ruling above freezes every committed hash. Making `createSurface` a boundary would rehash any
+record that re-creates without a delete, and would reopen the hash contract for a shape no committed
+record holds.
+
+**The known divergence from renderer-visible state.** On a record `create s, <epoch 1>, create s, <epoch 2>`
+with no `deleteSurface` between, the canonical fold merges both epochs into one form while the renderer
+holds only epoch 2. The component half converges, as the GH #1772 erratum showed: tier-1 makes the second
+epoch self-contained, so every id reachable from the second `root` comes from epoch 2, and the first
+epoch's other components fold as `disconnected` and drop. The data model does not converge. Epoch 1's
+`updateDataModel` writes stay in the merged data model, though the renderer dropped them at the
+re-create. Such a record's hash can therefore include data the rendered surface does not have, and two
+records that differ only in that dropped data are distinct to dedup though they render the same. The
+divergence is in identity only: resolution (stage 6) resets at the re-create, so no binding resolves
+against the dropped data.
+
+**Supersedes, in the GH #1765 erratum above.** Its sentence that the canonical fold "stays aligned with the
+validator's A2 epochs" describes the validator before the GH #1772 erratum. The validator now closes an
+epoch at every `createSurface` and the canonical fold does not, so on a re-create without a delete the
+two differ. The rest of that paragraph stands: the fold keeps `createSurface` a non-boundary because the
+hashes are frozen.
+
+**Unregistered `catalogId`: recorded, not changed.** The GH #1772 erratum's "Not covered" names a
+`createSurface` whose `catalogId` the renderer has not registered. The renderer emits `CATALOG_UNKNOWN`
+and returns before its teardown, so a live surface survives, while the validator treats that create as a
+reset. The validator is not changed to skip that reset, for three reasons.
+
+1. The validator cannot decide "registered". Its input is one `Catalog` (`validateA2ui(payload, catalog,
+   seed?, opts?)`), not the renderer's registry, which holds the default catalog, `a2ui-basic` and its
+   canonical-URI alias (ADR-0169), and the persona-derived `<base>--<persona>` ids. Comparing the
+   `catalogId` to the one catalog's id would call a registered alias unregistered and move verdicts for a
+   caller that validates against a single catalog (`site/lib/artifact-feed.ts` validates every feed
+   against `defaultCatalog`). Passing the registry's ids in would widen the validator's interface
+   (SPEC-R11, LLD-C11, ADR-0187's options bag) for a caller that does not exist.
+2. Skipping the reset would move the gap, not close it. The renderer also reports `CATALOG_UNKNOWN`,
+   which the validator has no arm for, and when no live surface exists it drops every later delivery to
+   that id, while the validator's implicit open still builds a graph from them. Real parity needs a new
+   validator failure for an unregistered `catalogId`, which changes SPEC-R11's verdict and needs its own
+   ruling.
+3. No caller in the tree reaches the case with a registry to judge it by. The renderer's own validator
+   leg (`#finalizeSurface`) passes one synthetic `updateComponents` built from the live surface, never a
+   `createSurface`. The producer (`produce.ts`) stamps every `createSurface.catalogId` with its catalog's
+   id before it validates. Corpus admission pins every `createSurface.catalogId` to `meta.catalogId`
+   (`E_PIN`) before tier-1. The harness CLI, the conformance runner and the site's artifact feed validate
+   against one named catalog and hold no registry.
+
+The validator is not edited, so the shared spine (SPEC-N6) is unchanged. `renderer/validate.test.ts` pins
+the recorded behavior: a re-create under a `catalogId` the catalog does not carry resets like any other.
+
+**Repairs applied.** The comment the GH #1772 erratum booked is repaired: the note at the end of
+`canonical.ts#foldStream`'s loop now says a `createSurface` is a boundary for the validator and the
+resolution fold but not for this fold, by design, and cites this erratum; the module header gains one
+sentence saying the same. Both are comment-only edits, so no hash moves. The corpus LLD
+`a2ui-corpus-store.lld.md` §4 (v0.7.4) records the decision beside its epoch rule. The behavior of
+`canonical.ts` and of `renderer/validate.ts` is unchanged.
+
+**Acceptance addendum.** (1) `git diff` on `canonical.ts` changes comment lines only. (2) Every committed
+record re-derives its stored `canonicalHash` (`corpus-data.test.ts`, the stored-hash leg): the 81
+exemplar lines (the 78 the ruling froze plus the three GH #1731 lifecycle seeds, PR #1779), the 2
+multi-turn records and the 5 repair records. (3) No committed record holds a `createSurface` for a surface
+already live in the same stream (none across `a2uiOutput`, `priorOutput` and `invalidInput`, nor across a
+multi-turn record's `priorOutput` then `a2uiOutput`), and every `createSurface.catalogId` equals its
+record's `meta.catalogId`, so neither divergence reaches committed data. (4) The two `validate.test.ts`
+pins above pass. (5) `npm run check` and `npx vitest run packages/agent-ui/a2ui` exit 0.
+
+The rule's home is the corpus LLD `a2ui-corpus-store.lld.md` §4, v0.7.4.

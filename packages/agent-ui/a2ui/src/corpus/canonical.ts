@@ -38,6 +38,9 @@
 // amendment's 2026-10-04 erratum): the renderer drops a delivery to a deleted surface, so the fold drops
 // it too. Tier-1 already rejects such a stream (`sid:update-after-delete`), so for every admitted record
 // this changes nothing; it keeps the fold faithful for a direct caller.
+// A `createSurface` is NOT a boundary here, unlike the validator's epochs and admission's resolution fold:
+// the hash is a record identity over the full stream, frozen by ruling (ADR-0064's GH #1778 erratum; the
+// note at the end of `foldStream`'s loop).
 //
 // Zero-dep, platform-neutral (SPEC-N5): only `protocol.ts` types are imported; hashing rides the
 // platform's `crypto.subtle` (Node ≥ 19 and every browser) — no `node:crypto`, no reactive-kernel
@@ -177,8 +180,11 @@ function foldStream(out: A2uiOutput): FoldedEpoch[] {
       close() // the epoch boundary: the renderer frees the surface's graph and data model here
       deleted = true
     }
-    // createSurface / actionResponse / callFunction carry no component/data-model content and are not
-    // boundaries (a createSurface never resets an open epoch, matching the validator's A2 rule).
+    // createSurface / actionResponse / callFunction carry no component/data-model content, and none is a
+    // boundary to THIS fold. A createSurface does close an epoch for the shared validator (ADR-0064's
+    // GH #1772 erratum) and for admission's resolution fold (GH #1765), because the renderer replaces the
+    // surface there. This fold keeps it a non-boundary on purpose: a re-create without a delete hashes as
+    // ONE merged epoch, so every committed hash stays frozen (ADR-0064's GH #1778 erratum).
   }
   close()
 
