@@ -34,13 +34,17 @@ export type { MultiTurnSeed, RepairSeed } from './types.ts'
 
 // ADR-0231 cl.5: the multi-turn and repair corpus seeds, each on its own shelf (never `allSeeds`: the
 // site's example pages key off `ExampleSeed` only). Either catalog may appear on either shelf; the import
-// script resolves each seed's catalog from its own `catalogId`. Empty until the curation slices
-// (GH #1741/#1742) seed them; compose from per-module family arrays as `allSeeds` is, and register each
-// module in `tools/corpus/import-seeds.ts`'s matching per-file table (its drift check reds until it does).
+// script resolves each seed's catalog from its own `catalogId`. GH #1741 seeded the multi-turn shelf
+// (multi-turn-seeds.ts); the repair shelf stays empty until GH #1742. Compose from per-module family arrays
+// as `allSeeds` is, and register each module in `tools/corpus/import-seeds.ts`'s matching per-file table
+// (its drift check reds until it does).
 import type { MultiTurnSeed, RepairSeed, SeedCatalogId } from './types.ts'
+import { multiTurnSeeds } from './multi-turn-seeds.ts'
+
+export { rsvpFormSubmitSeed, orderListSelectSeed, multiTurnSeeds } from './multi-turn-seeds.ts'
 
 /** Every multi-turn corpus seed (ADR-0231 cl.2), imported into `corpus/multi-turn/v1_0/`. */
-export const allMultiTurnSeeds: readonly MultiTurnSeed<SeedCatalogId>[] = []
+export const allMultiTurnSeeds: readonly MultiTurnSeed<SeedCatalogId>[] = [...multiTurnSeeds]
 
 /** Every repair-pair corpus seed (ADR-0231 cl.3), imported into `corpus/repair/v1_0/`. */
 export const allRepairSeeds: readonly RepairSeed<SeedCatalogId>[] = []

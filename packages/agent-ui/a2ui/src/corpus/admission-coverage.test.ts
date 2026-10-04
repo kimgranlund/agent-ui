@@ -25,7 +25,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { allSeeds, allBasicSeeds } from '../examples/index.ts'
+import { allSeeds, allBasicSeeds, allMultiTurnSeeds, allRepairSeeds } from '../examples/index.ts'
 import { plantedBasicSeed } from '../catalog/a2ui-basic/planted.ts'
 import type { CorpusRecord } from './record.ts'
 import { DISPOSITION_ALLOWLIST } from './disposition-allowlist.ts'
@@ -159,13 +159,19 @@ function unjudgedAdmissions(
  *  shelf beside `allSeeds`). A pure function of the two shelves so the planted legs below can drive it
  *  with a planted Basic seed, independent of the real shelf's contents (seeded by GH #1732). Admission reads every shard
  *  under the corpus data dir by `name`, so a Basic record in `a2ui-basic.jsonl` is found with no further
- *  wiring; the Basic shelf only has to be IN this name set for an un-admitted Basic seed to be reported. */
-function coverageSeedNames(agentUi: readonly { name: string }[], basic: readonly { name: string }[]): string[] {
-  return [...agentUi, ...basic].map((s) => s.name)
+ *  wiring; the Basic shelf only has to be IN this name set for an un-admitted Basic seed to be reported.
+ *  The ADR-0231 facet shelves (`allMultiTurnSeeds`, GH #1741; `allRepairSeeds`, GH #1742) join the same
+ *  name set: their records live under `corpus/<facet>/v1_0/`, which `admittedRecords()` already walks. */
+function coverageSeedNames(
+  agentUi: readonly { name: string }[],
+  basic: readonly { name: string }[],
+  ...facetShelves: readonly (readonly { name: string }[])[]
+): string[] {
+  return [...agentUi, ...basic, ...facetShelves.flat()].map((s) => s.name)
 }
 
 describe('corpus admission coverage — the TKT-0022 trip-wire (every seed admitted or dispositioned)', () => {
-  const SEED_NAMES = coverageSeedNames(allSeeds, allBasicSeeds)
+  const SEED_NAMES = coverageSeedNames(allSeeds, allBasicSeeds, allMultiTurnSeeds, allRepairSeeds)
   const ADMITTED = admittedRecords()
   const ARCHIVE = verdictArchive()
 
@@ -173,8 +179,8 @@ describe('corpus admission coverage — the TKT-0022 trip-wire (every seed admit
     expect(SEED_NAMES.length).toBeGreaterThan(0)
   })
 
-  it('the judged name set spans BOTH shelves (derived count, never a literal: agent-ui seeds plus Basic seeds)', () => {
-    expect(SEED_NAMES).toHaveLength(allSeeds.length + allBasicSeeds.length)
+  it('the judged name set spans every shelf (derived count, never a literal: agent-ui, Basic, multi-turn and repair seeds)', () => {
+    expect(SEED_NAMES).toHaveLength(allSeeds.length + allBasicSeeds.length + allMultiTurnSeeds.length + allRepairSeeds.length)
   })
 
   it('found at least one admitted corpus record (anti-vacuous — an empty/missing shard cannot pass silently)', () => {

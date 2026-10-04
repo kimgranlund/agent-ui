@@ -94,9 +94,9 @@ version: 1.3
 ## Calibration record (harness SPEC-R3 AC2)
 
 **1.3 note (2026-10-04, ADR-0231 cl.5).** The exemplar calibration below stands as recorded: 1.3 moves no
-dimension that applies to an exemplar. D6 and D7 have no committed record to calibrate against yet; the
-±1 two-scoring check for each is owed by the curation slice that judges the first records of its facet
-(GH #1741 multi-turn, GH #1742 repair) and lands here as its own calibration record.
+dimension that applies to an exemplar. The ±1 two-scoring check for D6 and D7 is owed by the curation
+slice that judges the first records of its facet: D6 is now calibrated (GH #1741, the D6 record at the end
+of this section); D7 is still owed by GH #1742 and lands here as its own calibration record.
 
 **Record scored:** `pattern-confirmation-card` from the 11-seed shelf
 (`packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`) — an exemplar-facet record. Its
@@ -168,5 +168,56 @@ anchor says, the read the admitted shard (25/26 Field-wrapped) already embodies.
   destructive-confirmation intent + the action-name-as-intent idiom is covered by no other shard record →
   5. Both ≥ 4; the admission outcome is identical (`qualityScore` 4, `passed` true), so the spread is
   within tolerance and does not require an anchor repair.
+
+### D6 calibration record (2026-10-04, GH #1741, rubric 1.3)
+
+No anchor moved, so no version bump (the P7 reconciliation precedent above).
+
+**Record scored:** `mt-rsvp-form-submit`, the first multi-turn record
+(`packages/agent-ui/a2ui/corpus/multi-turn/v1_0/agent-ui.jsonl`, origin
+`src/examples/multi-turn-seeds.ts`). The prior turn is a `FormProvider > Card` RSVP form (name, guests, a
+dietary note) with a footer submit Button (`submit_rsvp`, `submit:true`, `disabled` bound to
+`/status/sent`) on a `sendDataModel:true` surface. The action is that submit, with the filled-in model.
+The follow-up is one `updateDataModel` at `/status`, which echoes the submitted values in the bound status
+line and flips the bound `disabled`, plus one `updateComponents` that resends only the footer action
+`Row` to add a soft "Add to calendar" Button. Two independent fresh-context `a2ui-review-agent` scorings
+were taken: A authored the VerdictsFile, and B was dispatched blind to A. D1 was read on the merged
+stream, as 1.3 requires. D5 was read against the exemplar shard, because no multi-turn shard existed at
+judging time.
+
+| Gated dimension | Scoring A | Scoring B | Δ (must be ≤ 1) |
+|---|---|---|---|
+| Ground-truth validity (merged stream) | 4 | 5 | 1 |
+| Prompt/description quality | 5 | 5 | 0 |
+| Target-clarity | 5 | 5 | 0 |
+| Provenance integrity | 5 | 5 | 0 |
+| Dedup adjacency | 4 | 4 | 0 |
+| Turn coherence (D6) | 5 | 5 | 0 |
+| qualityScore (MIN of gated dims) | 4 | 4 | 0 |
+| passed (≥ 4) | true | true | n/a |
+
+**Reasoning, per dimension:**
+
+- **D6 (A 5 · B 5).** Both reads cite the floor (`btn_rsvp` declares `submit_rsvp`; the prior-seeded
+  follow-up validates) and land on the 5 anchor for the same reasons:
+  - The follow-up answers the submit by echoing the submitted values through an existing binding.
+  - The `disabled` flip rides the same data write.
+  - The one structural change is the footer row gaining a Button.
+  - Root, card and fields are not resent.
+
+  The D6 anchors converged with no tightening.
+- **D1 (A 4 · B 5).** This is the honest ±1, and it sits in the cited P9 read, not in any 1.3 text. A
+  reads P9 at 4, because after the turn the only live footer affordance is the soft secondary beside a
+  disabled solid primary. B reads P9 at 5, because the footer is still one solid primary plus one
+  secondary. The admission outcome is identical.
+- **D5 (A 4 · B 4).** The prior is the `feedback-form` scaffold. The new axis is the
+  submit-acknowledge turn technique.
+- **Observation (no anchor change):** D2's wording assumes a standalone request. A multi-turn
+  `promptText` is necessarily a first-person turn narration. Both reads scored it 5. Watch for drift
+  here in later multi-turn waves before touching the anchor.
+
+The second record, `mt-order-list-select`, was judged by A at qualityScore 4 (D1 4, the P5 read of a
+Button as a `List` template node; D2 to D6 at 5), after the maker took A's two P4/P5 hand-backs. B scored
+the pre-revision stream at the same qualityScore 4.
 
 <!-- Independent critic: the doc-checker agent scores this rubric against rubric-for-rubrics (generator ≠ critic). Author self-check only: D1 typed/scaled ✓ · D3 anchors ✓ · D5 evidence column ✓ · D8 gate+aggregation+top-failure ✓ · harness_checks.py rubric exit 0. -->
