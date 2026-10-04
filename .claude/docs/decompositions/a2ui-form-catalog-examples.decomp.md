@@ -79,8 +79,11 @@ passes validation and the control falls back to its default — record as known-
 
 **Problem:** `ui-form-provider` takes no attributes; its whole surface is IDL (`submit()`/`reset()`/views) +
 the `change` submit event. Nothing in the catalog contract can *trigger* `submit()` — actions wire
-click→emitAction on the action-carrying node itself, and context is emitted verbatim (no `collectContext`
-resolution shipped), so the aggregate must ride the data model, not the action context.
+click→emitAction on the action-carrying node itself, and when this wave was planned context was emitted
+verbatim (no `collectContext` resolution shipped), so the aggregate must ride the data model, not the action
+context. (Built since: `collectContext` resolves action context at click time, 2026-10-04, GH #1748,
+PR #1755. The aggregate still rides the data model per ADR-0054 cl.4, because `FormValue` is not
+JSON-wire-safe.)
 
 **Recommended design (S1 — the submit-flagged action + a generic gate mark):**
 1. **ADR-0011 amendment:** the action object gains an optional, client-consumed `submit: true` key —
@@ -209,9 +212,11 @@ site-toc component-group gate is unaffected; verify it green anyway.
 - **No machine gate exists for demo-payload validity** (vitest includes `packages/*/src` only; the pages'
   errors surface visibly in their message logs — the shipped canvas/list precedent). Optional hardening,
   NOT this wave: widen the vitest include or move demo payloads behind a package-side corpus probe.
-- **`context` path resolution is unshipped** (LLD-C9 `collectContext` — action context is emitted
-  verbatim). The pages must NOT put `{path}` objects in `context`; the aggregate rides `sendDataModel`.
-  Flag for the corpus/streaming intakes.
+- **`context` path resolution is built** (2026-10-04, GH #1748, PR #1755): LLD-C9 `collectContext`
+  resolves each context entry at click time, against the list item scope inside a template. When this
+  decomp was written it was unshipped and context was emitted verbatim, so the pages kept `{path}` objects
+  out of `context`. The aggregate still rides `sendDataModel` (ADR-0054 cl.4). No longer a flag for the
+  corpus/streaming intakes.
 - **Basic-catalog name verification:** the F2 recommendation cites A2UI Basic's `CheckBox.value` from
   design memory — if Basic alignment weighs in the ruling, the host should fetch the v1.0 Basic catalog
   and verify verbatim (repo-absence ≠ spec-absence).

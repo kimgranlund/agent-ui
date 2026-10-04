@@ -366,3 +366,41 @@ re-rooting the shipped leaf list relies on).
 the **new no-leak tests** (a detached removed item's action/input listener no longer fires — `renderer.test.ts` for the
 action path, `list.test.ts` for the input path) · the existing `list.test.ts` child-scope/no-accumulation suites
 (`:190-247`) + every static-tree/byte-for-byte guard stay green.
+
+## Amendment - list-item action context resolves through the item scope (2026-10-04, GH #1748, PR #1755)
+
+> Status: append-only; retires two "Out of scope" notes in the amendments above and corrects their issue pointer, does not edit them.
+
+Two notes above are now stale. The write-side itemScope amendment's "Out of scope" paragraph says list-item
+action context (`collectContext`, LLD-C9) resolving relative paths through `itemScope` is "tracked under
+#140 (per-item action scope)". The per-item listener lifetime amendment's "Out of scope" list says the same
+resolution is "a SEPARATE #140 concern", that `#wireAction` passes the static `context` off the action prop,
+and that it is "left for the context slice".
+
+**Pointer correction.** GH #140 never tracked this work; it is an unrelated, already-merged PR. The context
+slice was tracked as GH #1748 and delivered by PR #1755. Read every "#140" in those two notes that refers to
+action context resolution as GH #1748. The "#140" in the per-item listener lifetime amendment's own heading
+(the `(scope, ac)` pair) is not covered by this correction.
+
+**What is built.** `#wireNode` now passes the node's `itemScope` to `#wireAction`, and the click listener
+collects the action context through `#collectContext(context, surface, itemScope)` (LLD-C9) before calling
+`emitAction`. Each top-level context entry goes through the same `resolveValue` dispatcher the prop read
+side uses: a `{path}` through `scopedPointer`, a `{call}` through `evaluate` (so `@index` is the row index),
+a string with an unescaped `${` through interpolation, and any other value as a literal. A relative
+`{path:'sku'}` inside a ChildList template therefore reads `{listPath}/{index}/sku` per row, the same rule
+wireProps and wireChecks apply. Resolution runs at click time, inside `untracked` (a click dispatched from
+inside an effect never subscribes that effect to the context paths), and one level deep (a nested literal
+object is passed through, not walked). A missing path resolves to `undefined`, emits no error, and drops out
+of the serialized wire context.
+
+**Unchanged.** The positional `ItemScope {path, index}` shape, the write-side rule, and the per-item
+`(scope, ac)` listener lifetime: the click listener is still registered on the item `ac`, so a removed row's
+listener is still aborted. No new seam.
+
+**One behavior change outside lists.** A non-template action whose context holds a `{path}`, `{call}`, or
+`${...}` value now resolves against the data model, where it was emitted verbatim before. That is the
+"resolved context" SPEC-R8 AC1 asks for. Literal context values are byte-identical.
+
+**Stale, re-verify on the next renderer touch:** `renderer.ts` (`#wireAction`, `#collectContext`) ·
+`renderer.test.ts` (the "action context resolution (GH #1748, LLD-C9 collectContext)" suite) · LLD-C9 in
+`lld/a2ui-renderer.lld.md` §7.
