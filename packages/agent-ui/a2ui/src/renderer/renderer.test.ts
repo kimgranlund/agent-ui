@@ -307,8 +307,9 @@ describe('renderer host — stream faults + lifecycle (renderer LLD §9, SPEC-N3
 
   it('ADR-0187: a surface DELETED in the same stream reports nothing at finalize (it is gone, not abandoned)', () => {
     // Belt-and-braces on the delete arm from the CLIENT side: `deleteSurface` releases the surface, so
-    // `finalize()` has no tree to visit at all — the validator's `deletedHere` exclusion (LLD §3 mechanic
-    // 4) and the renderer's own teardown agree, by two independent mechanisms.
+    // `finalize()` has no tree to visit at all. The validator's closed-epoch exemption (ADR-0064
+    // amendment A3, formerly `deletedHere`, LLD §3 mechanic 4) and the renderer's own teardown agree, by
+    // two independent mechanisms.
     const { r, sent, cleanup } = harness()
 
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'temp', catalogId: 'agent-ui' } }))

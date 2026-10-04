@@ -35,6 +35,25 @@
 // default-mode block and both prefix suites). Opted in by `renderer.ts#finalizeSurface`,
 // `produce.ts`'s per-round verdict, `corpus/admit.ts` stage 5 and `tools/harness/validate-payload.ts`
 // (ADR-0187 §4 / LLD §4); the conformance runner opts in PER FIXTURE, everything else stays default.
+//
+// ADR-0064 amendment (2026-10-03, A2 to A4; GH #1736 ruling, GH #1740 build): SURFACE EPOCHS. A
+// surface's messages in one payload partition into epochs, because the renderer frees a surface's
+// whole graph at `deleteSurface` (`renderer.ts#onDeleteSurface` tears it down and `store.delete`s it),
+// so a later `root` for the same id is a first delivery, not a resend. An epoch opens at a
+// `createSurface`, or at the first `updateComponents` for a surface this payload never deleted (the
+// implicit open this validator always had); it closes at the next `deleteSurface` for that id. After a
+// `deleteSurface`, ONLY a `createSurface` reopens the id (the amendment's erratum, 2026-10-04): the
+// renderer drops an `updateComponents`/`updateDataModel` for a deleted surface
+// (`renderer.ts#onUpdateComponents`, the unknown/deleted no-op), so such a delivery fails IDGRAPH
+// `sid:update-after-delete` at its own message and joins no graph. Every epoch is judged
+// by `checkIdGraph` + `checkContainment` on ITS OWN graph: a closed epoch on the graph it held when it
+// closed (an empty closed epoch mounted nothing, so it is exempt; a non-empty one is judged in full,
+// in both modes), the epoch still open at payload end with the finalize arm as before. Judgment runs
+// at Stage 4 over those frozen graphs, so failure order stays stage-major and byte-identical to the
+// pre-epoch validator for every payload that never deletes a surface it delivered to. A
+// `createSurface` landing inside an already-open epoch is NOT a boundary (the resend rule is
+// untouched: two `root`s with no `deleteSurface` between them still fail `sid:root`). Codes are
+// unchanged; the one new path is `sid:update-after-delete`, which no delete-free payload can produce.
 
 import { SUPPORTED_VERSIONS, MAX_RENDER_DEPTH } from '../protocol.ts'
 import type { A2uiComponent, Failure } from '../protocol.ts'
@@ -84,7 +103,9 @@ export interface ValidateA2uiOptions {
    *  finalize-only judgment: a surface created (or touched) with an EMPTY merged component set fails
    *  IDGRAPH `${sid}:root-missing` (the EXISTING missing-root class, judged at a new granularity — no
    *  new failure code, no wire widening; ADR-0187 §3 / LLD §5). Absent/false = byte-identical to the
-   *  pre-ADR-0187 validator, for every caller, test and fixture. */
+   *  pre-ADR-0187 validator, for every caller, test and fixture. Under surface epochs (ADR-0064
+   *  amendment A3) the judgment applies to each surface's epoch still OPEN at payload end; an epoch a
+   *  `deleteSurface` closed is never judged empty. */
   atFinalize?: boolean
 }
 
@@ -111,6 +132,29 @@ interface SurfaceGraph {
   byId: Map<string, A2uiComponent> // merged (upsert) view for dangling/cycle checks
 }
 
+/** ADR-0064 amendment A2: one epoch of a surface's lifecycle within this payload (see module header). */
+interface Epoch extends SurfaceGraph {
+  /** A4: a `createSurface` opened this epoch or landed inside it, so the TKT-0081 seed never applies to
+   *  it. For a payload with no `deleteSurface` this is exactly the pre-epoch `createdHere` membership. */
+  created: boolean
+}
+
+/** One surface's epochs in stream order: those a `deleteSurface` closed, then the one still open. */
+interface SurfaceLifecycle {
+  closed: Epoch[]
+  open: Epoch | undefined
+}
+
+/** Every surface this payload opened an epoch for (Map insertion order = first-open order, the order
+ *  Stage 4 reports in), plus the sids currently DELETED: a `deleteSurface` addressed them and no
+ *  `createSurface` has re-created them since (the erratum rule). A delivery to a deleted sid is the
+ *  renderer's dropped message, `sid:update-after-delete`. The set is kept apart from `bySid` so a
+ *  leading delete never registers a surface (and never moves its position in the report order). */
+interface PayloadSurfaces {
+  bySid: Map<string, SurfaceLifecycle>
+  deleted: Set<string>
+}
+
 function run(
   input: unknown,
   catalog: Catalog,
@@ -125,38 +169,49 @@ function run(
   if (norm.kind === 'parse') return verdict([{ code: 'PARSE', path: '' }])
   if (norm.kind === 'shape') return verdict([{ code: 'SCHEMA', path: '' }])
 
-  const surfaces = new Map<string, SurfaceGraph>()
+  const surfaces: PayloadSurfaces = { bySid: new Map(), deleted: new Set() }
   norm.messages.forEach((msg, i) => validateMessage(msg, i, catalog, failures, surfaces))
 
   // TKT-0081 — merge each seeded surface's PRIOR graph UNDER this payload's deliveries, only for
   // surfaces this payload actually touched (an untouched prior surface has nothing to judge). This
   // payload's records WIN an id collision (a resend REPLACES, the renderer's upsert); the seed's
   // root delivery COUNTS (so a re-delivery here is the same `sid:root` failure the renderer emits).
+  //
+  // ADR-0064 amendment A4: the seed describes the surface the prior turn left live, so it can only
+  // continue this payload's FIRST epoch for that sid, and only when that epoch is a continuation: not
+  // opened by (or holding) a `createSurface` of this payload (TKT-0081's `createdHere`, GH #307 F2), and
+  // not preceded by a `deleteSurface` of this payload (the delete freed the seeded graph). The second
+  // condition needs no check of its own: after a delete only a `createSurface` reopens the sid (the
+  // erratum rule), so an epoch preceded by a delete is always `created`. Every later epoch is fresh.
   if (sessionSeed !== undefined) {
-    // A payload that itself (re-)creates a surface starts that surface FRESH — its seed must not apply
-    // (a legitimate delete+create re-delivery of `root` is not a resend).
-    const createdHere = surfaceIdsOf(norm.messages, 'createSurface')
-    for (const [sid, g] of surfaces) {
+    for (const [sid, lifecycle] of surfaces.bySid) {
       const seed = sessionSeed.get(sid)
-      if (seed === undefined || createdHere.has(sid)) continue
-      for (const comp of seed.components) if (!g.byId.has(comp.id)) g.byId.set(comp.id, comp)
-      if (seed.rootDelivered) g.rootCount += 1
+      const first = lifecycle.closed[0] ?? lifecycle.open
+      if (seed === undefined || first === undefined || first.created) continue
+      for (const comp of seed.components) if (!first.byId.has(comp.id)) first.byId.set(comp.id, comp)
+      if (seed.rootDelivered) first.rootCount += 1
     }
   }
 
-  // ADR-0187 / LLD §3 mechanic 4 — the ONE new edge the finalize arm needs: a payload that
-  // `createSurface`s AND `deleteSurface`s the same sid leaves nothing mounted, so nothing was
-  // abandoned. Built ONLY in finalize mode (the emptiness arm is its sole consumer — a dangling-ref
-  // set followed by a delete still fails today's checks in both modes, untouched).
-  const deletedHere = atFinalize ? surfaceIdsOf(norm.messages, 'deleteSurface') : NO_SURFACE_IDS
+  // Stage 4: id-graph, per epoch, each on its own graph (ADR-0064 amendment A2/A3). A CLOSED epoch
+  // never takes the finalize emptiness arm: an empty one mounted nothing and was torn down, so nothing
+  // was abandoned (A3, the one case ADR-0187's former same-payload `deletedHere` exemption keeps); a
+  // non-empty one is judged in full in both modes (a dangling reference followed by a delete still
+  // fails). The epoch still OPEN at payload end is what the renderer would be showing, so it alone takes
+  // the ADR-0187 arm: in finalize mode an empty one is the abandoned-surface defect (`sid:root-missing`),
+  // including one opened by a `createSurface` after the last `deleteSurface`.
+  for (const [sid, lifecycle] of surfaces.bySid) {
+    for (const epoch of lifecycle.closed) checkIdGraph(sid, epoch, failures, false)
+    if (lifecycle.open !== undefined) checkIdGraph(sid, lifecycle.open, failures, atFinalize)
+  }
 
-  // Stage 4 — id-graph, per surface that delivered components (and, in finalize mode, per surface
-  // this payload merely CREATED — an empty one is then the abandoned-surface defect, ADR-0187).
-  for (const [sid, g] of surfaces) checkIdGraph(sid, g, failures, atFinalize && !deletedHere.has(sid))
-
-  // Stage 4b — containment (a2ui-container-vocabulary SPEC-R6), on the SAME assembled (post-seed-merge)
-  // graph id-graph judged above — a region's parent is only knowable once every delivery is merged.
-  for (const g of surfaces.values()) checkContainment(g, failures)
+  // Stage 4b: containment (a2ui-container-vocabulary SPEC-R6), on the SAME assembled (post-seed-merge)
+  // per-epoch graphs id-graph judged above; a region's parent is only knowable once every delivery to
+  // its epoch is merged.
+  for (const lifecycle of surfaces.bySid.values()) {
+    for (const epoch of lifecycle.closed) checkContainment(epoch, failures)
+    if (lifecycle.open !== undefined) checkContainment(lifecycle.open, failures)
+  }
 
   return verdict(failures)
 }
@@ -184,7 +239,7 @@ function validateMessage(
   i: number,
   catalog: Catalog,
   failures: Failure[],
-  surfaces: Map<string, SurfaceGraph>,
+  surfaces: PayloadSurfaces,
 ): void {
   const loc = `[${i}]`
   if (!isObject(msg)) return push(failures, 'SCHEMA', loc)
@@ -204,25 +259,35 @@ function validateMessage(
       requireStr(body, 'surfaceId', `${loc}.createSurface`, failures)
       requireStr(body, 'catalogId', `${loc}.createSurface`, failures)
       // ADR-0187 §3 clause 2 / GH #829 root cause — REGISTER the created surface into the judged set.
-      // Before this, `createSurface` was the only surface-bearing kind that never called `surfaceOf`, so
+      // Before this, `createSurface` was the only surface-bearing kind that never registered a graph, so
       // a surface created and never given any `updateComponents` was INVISIBLE to the id-graph stage —
       // not merely exempted by `checkIdGraph`'s empty-set early return, never even visited. Gated on
       // `surfaceId` being a string so a SCHEMA-invalid line (flagged just above) isn't double-flagged.
       // BEHAVIOR-NEUTRAL ALONE: with the empty-set early returns intact for default mode, an empty graph
       // still yields no failure from `checkIdGraph`/`checkContainment`, and the TKT-0081 seed loop skips
-      // every `createdHere` sid — so only a caller passing `atFinalize` sees any difference.
-      if (typeof body.surfaceId === 'string') surfaceOf(surfaces, body.surfaceId)
+      // every `created` epoch, so only a caller passing `atFinalize` sees any difference.
+      // ADR-0064 amendment A2/A4: registration now OPENS an epoch (or lands in the open one) and marks it
+      // `created`; it never closes one, so a re-create with no delete between is not a boundary. It is
+      // also the ONLY message that takes a deleted sid back (the erratum rule).
+      if (typeof body.surfaceId === 'string') {
+        surfaces.deleted.delete(body.surfaceId)
+        openEpoch(surfaces, body.surfaceId).created = true
+      }
       return
     case 'updateComponents':
       return validateUpdateComponents(body, loc, catalog, failures, surfaces)
     case 'updateDataModel':
       requireStr(body, 'surfaceId', `${loc}.updateDataModel`, failures)
+      if (typeof body.surfaceId === 'string') rejectIfDeleted(surfaces, body.surfaceId, failures)
       if (body.path !== undefined && (typeof body.path !== 'string' || !isValidPointer(body.path))) {
         push(failures, 'POINTER', `${loc}.updateDataModel.path`)
       }
       return
     case 'deleteSurface':
       requireStr(body, 'surfaceId', `${loc}.deleteSurface`, failures)
+      // ADR-0064 amendment A2: the delete frees the surface's id graph, closing its open epoch. Gated on a
+      // string `surfaceId`, mirroring `createSurface`'s registration (a SCHEMA-invalid line closes nothing).
+      if (typeof body.surfaceId === 'string') closeEpoch(surfaces, body.surfaceId)
       return
     case 'actionResponse':
       requireStr(body, 'surfaceId', `${loc}.actionResponse`, failures)
@@ -244,12 +309,14 @@ function validateUpdateComponents(
   loc: string,
   catalog: Catalog,
   failures: Failure[],
-  surfaces: Map<string, SurfaceGraph>,
+  surfaces: PayloadSurfaces,
 ): void {
   if (typeof body.surfaceId !== 'string') return push(failures, 'SCHEMA', `${loc}.updateComponents.surfaceId`)
   if (!Array.isArray(body.components)) return push(failures, 'SCHEMA', `${loc}.updateComponents.components`)
 
-  const g = surfaceOf(surfaces, body.surfaceId)
+  // The implicit open when no create precedes it (A2), unless the sid is deleted: then the renderer
+  // drops this message, so it joins NO graph (its components still get the per-component checks below).
+  const g = rejectIfDeleted(surfaces, body.surfaceId, failures) ? undefined : openEpoch(surfaces, body.surfaceId)
   body.components.forEach((c, ci) => {
     if (!isObject(c) || typeof c.id !== 'string' || typeof c.component !== 'string') {
       return push(failures, 'SCHEMA', `${loc}.updateComponents.components[${ci}]`)
@@ -257,8 +324,10 @@ function validateUpdateComponents(
     const comp = c as A2uiComponent
 
     // id-graph accumulation
-    if (comp.id === 'root') g.rootCount++
-    g.byId.set(comp.id, comp)
+    if (g !== undefined) {
+      if (comp.id === 'root') g.rootCount++
+      g.byId.set(comp.id, comp)
+    }
 
     // Stage 3 — catalog conformance (CATALOG).
     for (const f of validateCatalogConformance(comp, catalog)) failures.push(f)
@@ -273,14 +342,16 @@ function validateUpdateComponents(
   })
 }
 
-function checkIdGraph(sid: string, g: SurfaceGraph, failures: Failure[], atFinalize: boolean): void {
+function checkIdGraph(sid: string, g: SurfaceGraph, failures: Failure[], judgeEmpty: boolean): void {
   // ADR-0187 / LLD §3 mechanic 3 — the finalize arm. An EMPTY merged set is a legal transient
   // mid-stream state (SPEC-R4: content may still be coming), so default mode keeps exempting it. In
   // FINALIZE mode the caller has asserted nothing more is coming, so an empty set instead falls
   // through to the `rootCount === 0` judgment below and emits the EXISTING `${sid}:root-missing` — the
   // abandoned-createSurface defect (GH #829/#802), at the one granularity where it is decidable.
   // (The dangling/depth/cycle checks below are all vacuous over an empty set — no new code needed.)
-  if (g.byId.size === 0 && !atFinalize) return
+  // `judgeEmpty` is `atFinalize` for the epoch still open at payload end and always false for a closed
+  // epoch (ADR-0064 amendment A3: an empty closed epoch mounted nothing, so nothing was abandoned).
+  if (g.byId.size === 0 && !judgeEmpty) return
 
   // EXACTLY one root, on this COMPLETE set (renderer LLD §8/§9). Missing-root and 2nd-root both fail;
   // both are finalize-only judgments — a transient rootless set mid-stream is legal (SPEC-R4), which
@@ -431,34 +502,47 @@ const isObject = (v: unknown): v is Record<string, unknown> =>
 const isBinding = (v: unknown): v is { path: string } =>
   isObject(v) && typeof (v as { path?: unknown }).path === 'string'
 
-/** The zero-allocation stand-in for `deletedHere` in DEFAULT mode — the emptiness arm that consults it
- *  is finalize-only, so default mode never needs the set built (ADR-0187). */
-const NO_SURFACE_IDS: ReadonlySet<string> = new Set<string>()
-
 /**
- * Every string `surfaceId` this payload names under one envelope kind — the shared construction behind
- * TKT-0081's `createdHere` (seed-merge skip) and ADR-0187's `deletedHere` (finalize emptiness skip).
- * Both want the same thing: "which surfaces did THIS payload itself create / delete?" Set membership
- * only — deliberately order-INSENSITIVE, matching the ruled semantics of each caller (a create and a
- * delete of one sid in one payload leaves nothing mounted regardless of their order).
+ * ADR-0064 amendment A2: the epoch a `createSurface` or an `updateComponents` lands in. Returns the
+ * sid's OPEN epoch, opening a fresh one when none is open: a `createSurface` after a delete, or the
+ * first delivery to a surface this payload never saw (the validator's implicit open for an uncreated
+ * surface). Never reached by a delivery to a DELETED sid (`rejectIfDeleted` stops it first).
  */
-function surfaceIdsOf(messages: readonly unknown[], kind: 'createSurface' | 'deleteSurface'): ReadonlySet<string> {
-  const out = new Set<string>()
-  for (const m of messages) {
-    if (!isObject(m)) continue
-    const body = m[kind]
-    if (isObject(body) && typeof body.surfaceId === 'string') out.add(body.surfaceId)
+function openEpoch(surfaces: PayloadSurfaces, sid: string): Epoch {
+  let lifecycle = surfaces.bySid.get(sid)
+  if (lifecycle === undefined) {
+    lifecycle = { closed: [], open: undefined }
+    surfaces.bySid.set(sid, lifecycle)
   }
-  return out
+  if (lifecycle.open === undefined) lifecycle.open = { rootCount: 0, byId: new Map(), created: false }
+  return lifecycle.open
 }
 
-function surfaceOf(surfaces: Map<string, SurfaceGraph>, sid: string): SurfaceGraph {
-  let g = surfaces.get(sid)
-  if (!g) {
-    g = { rootCount: 0, byId: new Map() }
-    surfaces.set(sid, g)
-  }
-  return g
+/**
+ * ADR-0064 amendment A2: `deleteSurface` closes the sid's open epoch, freezing its graph for Stage 4,
+ * and marks the sid DELETED until a `createSurface` re-creates it. A delete for a surface with no epoch
+ * yet in this payload (the prior turn's surface, or none) registers no graph, so it never shifts the
+ * report order. A delete with no open epoch frees nothing more: a no-op, as in the renderer.
+ */
+function closeEpoch(surfaces: PayloadSurfaces, sid: string): void {
+  surfaces.deleted.add(sid)
+  const lifecycle = surfaces.bySid.get(sid)
+  if (lifecycle?.open === undefined) return
+  lifecycle.closed.push(lifecycle.open)
+  lifecycle.open = undefined
+}
+
+/**
+ * ADR-0064 amendment erratum (2026-10-04): a delivery (`updateComponents`/`updateDataModel`) to a sid
+ * this payload deleted and has not re-created is the message the renderer drops (it addresses no
+ * surface), so it fails the EXISTING IDGRAPH code at `sid:update-after-delete`, once per such message.
+ * A sid this payload never deleted is untouched (the implicit open stands), so a payload without a
+ * `deleteSurface` judges exactly as before. Returns whether the delivery was rejected.
+ */
+function rejectIfDeleted(surfaces: PayloadSurfaces, sid: string, failures: Failure[]): boolean {
+  if (!surfaces.deleted.has(sid)) return false
+  push(failures, 'IDGRAPH', `${sid}:update-after-delete`)
+  return true
 }
 
 function requireStr(body: Record<string, unknown>, key: string, loc: string, failures: Failure[]): void {

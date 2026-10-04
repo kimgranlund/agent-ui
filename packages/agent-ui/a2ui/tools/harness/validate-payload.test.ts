@@ -112,3 +112,49 @@ describe('validate-payload --catalog (GH #1737): real subprocess runs', () => {
     }
   })
 })
+
+// ADR-0064 amendment (2026-10-03) Acceptance 1 and 2 / GH #1740: the compose-verify instrument runs the
+// validator at FINALIZE granularity, so it is where the per-surface epoch rule meets a real producer. A
+// delete-then-recreate of the same surfaceId passes; the same stream without the second root is the
+// abandoned-surface defect on the epoch still open at payload end.
+describe('validate-payload: deleteSurface frees the id graph (ADR-0064 amendment, GH #1740): real subprocess runs', () => {
+  vi.setConfig({ testTimeout: 30_000 })
+
+  let dir: string
+  const msg = {
+    create: { version: 'v1.0', createSurface: { surfaceId: 's', catalogId: 'agent-ui' } },
+    root: (text: string) => ({
+      version: 'v1.0',
+      updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'Text', text }] },
+    }),
+    del: { version: 'v1.0', deleteSurface: { surfaceId: 's' } },
+  }
+
+  beforeAll(() => {
+    dir = mkdtempSync(join(tmpdir(), 'a2ui-validate-payload-epochs-'))
+  })
+  afterAll(() => {
+    rmSync(dir, { recursive: true, force: true })
+    vi.resetConfig()
+  })
+
+  const runPayload = (name: string, messages: unknown[]): { status: number | null; stdout: string; stderr: string } => {
+    const path = join(dir, name)
+    writeFileSync(path, JSON.stringify(messages))
+    const r = spawnSync('node', ['--experimental-strip-types', SCRIPT, path], { cwd: REAL_ROOT, encoding: 'utf8' })
+    return { status: r.status, stdout: r.stdout, stderr: r.stderr }
+  }
+
+  it('Acceptance 1: createSurface s, root, deleteSurface s, createSurface s, root exits 0', () => {
+    const r = runPayload('recreate.json', [msg.create, msg.root('first'), msg.del, msg.create, msg.root('second')])
+    expect(r.status, r.stdout + r.stderr).toBe(0)
+    expect(JSON.parse(r.stdout)).toEqual({ ok: true, repairs: [] })
+  })
+
+  it('Acceptance 2: the same stream without the second root exits 1 with exactly IDGRAPH s:root-missing', () => {
+    const r = runPayload('abandoned.json', [msg.create, msg.root('first'), msg.del, msg.create])
+    expect(r.status, r.stdout + r.stderr).toBe(1)
+    const failures = (JSON.parse(r.stdout) as { code: string; path: string }[]).map(({ code, path }) => ({ code, path }))
+    expect(failures).toEqual([{ code: 'IDGRAPH', path: 's:root-missing' }])
+  })
+})

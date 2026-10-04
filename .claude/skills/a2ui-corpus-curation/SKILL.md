@@ -42,7 +42,9 @@ contract:
    `SEEDS_BY_MODULE` (agent-ui) or `BASIC_SEEDS_BY_MODULE` (Basic) (`tools/corpus/import-seeds.ts`, a
    half-wired seed HALTS at the drift guard). One seed is ONE surface: a scenario with two surfaces is two
    seeds, since a corpus record is single-surface (`ADR-0064`; a two-surface draft reds `npm test` via
-   `record.ts#checkSingleSurface`, first hit in GH #1374). The import resolves the catalog per seed from its
+   `record.ts#checkSingleSurface`, first hit in GH #1374). One surface AT A TIME is legal: deleting and
+   re-creating that same `surfaceId` inside one seed is a lifecycle record, not a second surface (the
+   surface-lifecycle row under References). The import resolves the catalog per seed from its
    `catalogId` and `admit()` validates against that catalog; the record lands in
    `corpus/exemplar/v1_0/<catalogId>.jsonl`. It never imports corpus code; the seed→`CorpusRecord` mapping
    is the import script's (corpus LLD §3 "Seed pre-alignment").
@@ -167,6 +169,7 @@ the owner. A halt left unresolved is a blocker reported, never a bypassed gate.
 | `.claude/docs/lld/a2ui-harness-wiring.lld.md` §7 | The judge activation — verdict adapter, rescore, `--verdicts`/`--replace`, the halt table |
 | `ADR-0055` | The seed shelf (`src/examples/` shape) an authored candidate is written in |
 | `ADR-0060` … `ADR-0064` | The corpus store: injected judge seam · shared healer · packaging · record schema |
+| `ADR-0064` §Amendment 2026-10-03 + its 2026-10-04 Erratum + corpus LLD §4 (the epoch rule) | Surface lifecycle: a seed that deletes and re-creates its one surface. The validator frees the id graph at `deleteSurface`; only `createSurface` reopens it (a delivery in between reds `sid:update-after-delete`); a surface re-created and then left empty reds at tier-1 (a plain trailing delete does not). The hash covers every epoch, but a trailing `deleteSurface` does not change it, so `create, root, delete` and `create, root` are near-duplicates by design |
 | `ADR-0068` | The verdict adapter, back-score/quarantine semantics, and the standing-gate amendment |
 | `ADR-0165` + `packages/agent-ui/a2ui/corpus/verdicts/README.md` | The verdict archive — the committed record a judged run writes, its filename/precedence/no-expiry rules, and the unjudged-run guard that reads it |
 | `.claude/docs/rubrics/a2ui-corpus.md` | The standard the `a2ui-review-agent` critic judges verdicts against |

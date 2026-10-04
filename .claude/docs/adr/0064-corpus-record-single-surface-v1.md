@@ -202,3 +202,30 @@ GH #1731 (the 2026-10-03 skill refresh) raised the first need, and tracing it (G
 6. `canonicalize` of every committed exemplar line yields today's `canonicalHash` (74/74); a two-epoch
    record canonicalizes deterministically and differs from its final epoch alone.
 7. `npm run check` and `npm test` exit 0.
+
+## Erratum to the 2026-10-03 amendment (2026-10-04, independent review of PR #1749, GH #1740; append-only)
+
+**A2's renderer premise was false.** A2 says a message addressing a deleted surface before a new
+`createSurface` "opens a fresh epoch for it (the renderer re-creates implicitly on first delivery; the
+validator mirrors that, as it does for an uncreated surface today)". The renderer does not re-create: `renderer.ts#onUpdateComponents` returns early
+for an unknown or deleted surface (the LLD §9 no-op), and `#onUpdateDataModel` does the same, so such a
+delivery is dropped. A validator that reopened the epoch would pass `createSurface s, root, deleteSurface
+s, root` while the renderer shows nothing, the SPEC-N1 parity gap this amendment exists to close.
+
+**The rule, replacing A2's implicit-reopen sentence.** After a `deleteSurface` on a `surfaceId`, only a
+`createSurface` reopens that id. An `updateComponents` or `updateDataModel` addressing the deleted id
+before it is re-created fails the EXISTING `IDGRAPH` code at path `${surfaceId}:update-after-delete`,
+once per such message, and joins no graph (the renderer never applies it). A surface this payload never
+deleted keeps the implicit open on its first `updateComponents`, so every verdict for a payload without a
+`deleteSurface` is unchanged. The canonicalizer's fold (A5) skips the same deliveries, so it stays
+faithful for a direct caller; tier-1 rejects such a stream before any admitted record reaches the fold.
+A4 needs no separate delete check as a result: an epoch preceded by a delete is always opened by a
+`createSurface`, so the seed never applies to it.
+
+**Repairs pointer correction.** The Repairs cell above names the runtime SPEC as `a2ui-protocol.spec.md`;
+no such file exists. The parity statement lives in `.claude/docs/spec/a2ui-runtime.spec.md` (SPEC-R11 and
+SPEC-N6), where the repair landed.
+
+**Acceptance addendum.** `createSurface s, root, deleteSurface s, root` fails `IDGRAPH
+s:update-after-delete` in both modes; the same stream with a `createSurface s` before the second `root`
+is Acceptance 1 and validates.
