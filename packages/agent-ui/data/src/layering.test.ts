@@ -18,7 +18,9 @@ const raw = import.meta.glob('./**/*.ts', { query: '?raw', import: 'default', ea
 const specifiersOf = (src: string): string[] => {
   const out: string[] = []
   const fromRe = /\b(?:import|export)\b[^\n;]*?\bfrom\s*['"]([^'"]+)['"]/g
-  const bareRe = /\bimport\s*['"]([^'"]+)['"]/g
+  // A side-effect import starts a statement; anchoring there keeps prose ("an import's") and string
+  // literals ('contact-import') from reading as specifiers (GH #1731 false positive, GH #1783).
+  const bareRe = /(?:^|[;\n])\s*import\s*['"]([^'"\n]+)['"]/g
   let m: RegExpExecArray | null
   while ((m = fromRe.exec(src))) out.push(m[1])
   while ((m = bareRe.exec(src))) out.push(m[1])
@@ -135,5 +137,10 @@ describe('components/src, a2ui/src, shared/src, router/src and code/src never im
     const src = `import { resource } from '@agent-ui/data'\n`
     const violations = specifiersOf(src).filter(isDataSpecifier)
     expect(violations).toEqual(['@agent-ui/data'])
+  })
+
+  it('negative control: prose and string literals containing "import" are not specifiers', () => {
+    const src = `// an import's progress scene\nconst ID = 'contact-import'\n\nexport const seed = { name: 'x' }\nimport './side-effect.ts'\n`
+    expect(specifiersOf(src)).toEqual(['./side-effect.ts'])
   })
 })
