@@ -44,7 +44,7 @@ version: 1.5
    admitted only when **every** applicable gated dimension is ≥ 4 — one weak dimension sinks the record.
    The critic's VerdictsFile records `{ qualityScore, passed, failingDimensions }` per record, where
    `failingDimensions` lists every gated dimension scoring < 4 (corpus SPEC-R8 AC2 · ADR-0068 cl.3).
-2. **The `version:` marker is a runtime contract.** The `version:` line above (currently `1.4`) is the rubric's
+2. **The `version:` marker is a runtime contract.** The `version:` line above (currently `1.5`) is the rubric's
    identity. Every VerdictsFile MUST cite it as `rubricVersion` (ADR-0068 cl.1 · SPEC §5.3); the Node
    shell reads this marker and `parseVerdictsFile(text, expectedRubricVersion)` (build slice h11)
    **rejects** any verdicts file whose `rubricVersion` ≠ this marker — a verdict is meaningless without

@@ -113,6 +113,10 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
     const rooms = mount.querySelector('ui-radio-group') as (HTMLElement & { value: string | null }) | null
     expect(rooms).not.toBeNull()
     expect(rooms!.value).toBe('deluxe')
+    // the room scene's Back/Continue pair rides ONE Row inside CardFooter, never bare siblings (GH #1787).
+    const roomRow = mount.querySelector('ui-card-footer > ui-row')
+    expect(roomRow, 'the room footer\'s Buttons must ride a Row inside CardFooter').not.toBeNull()
+    expect([...roomRow!.querySelectorAll('ui-button')].map((b) => b.textContent?.trim())).toEqual(['Back', 'Continue'])
 
     // BACK: "scene" swaps to the dates shape again — a FRESH Calendar mount (the old one was disposed),
     // re-bound to the SAME /draft/from,/draft/to paths, which this update never rewrites.
@@ -142,7 +146,7 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
     expect(MSG_SET_ROWS).toMatchObject({ updateDataModel: { path: '/draft/rows' } })
     expect(MSG_SCENE_CONFIRM).toMatchObject({ updateComponents: {} })
     const ids = 'updateComponents' in MSG_SCENE_CONFIRM! ? MSG_SCENE_CONFIRM.updateComponents.components.map((c) => c.id) : []
-    expect(ids).toEqual(['scene', 'rcpt', 'ft', 'back3', 'commit'])
+    expect(ids).toEqual(['scene', 'rcpt', 'ft', 'nav3', 'back3', 'commit'])
   })
 
   it('confirm scene: the receipt passes the receipt-clause shape — a DescriptionList of humanized label/value rows', async () => {
@@ -173,6 +177,11 @@ describe('backable-wizard seed (GH #1192, req-a2ui-patterns.md R2) — real-rend
     expect(footer, 'the confirm scene\'s nav Buttons must ride a CardFooter').not.toBeNull()
     const buttons = [...footer!.querySelectorAll('ui-button')].map((b) => b.textContent?.trim())
     expect(buttons).toEqual(['Back', 'Confirm booking'])
+    // the two-button footer carries ONE Row, never bare Button siblings (the CardFooter multi-action
+    // rule, node-idioms.md GH #1475; GH #1787).
+    const row = footer!.querySelector(':scope > ui-row')
+    expect(row, 'the confirm footer\'s Buttons must ride a Row inside CardFooter').not.toBeNull()
+    expect([...row!.querySelectorAll('ui-button')].map((b) => b.textContent?.trim())).toEqual(['Back', 'Confirm booking'])
 
     r.dispose()
     mount.remove()
