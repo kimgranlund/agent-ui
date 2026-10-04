@@ -174,6 +174,7 @@ import {
   basicAppointmentBookingSeed,
 } from '../../src/examples/basic-exemplars.ts'
 import { multiTurnSeeds } from '../../src/examples/multi-turn-seeds.ts'
+import { repairSeeds } from '../../src/examples/repair-seeds.ts'
 import { allSeeds, allBasicSeeds, allMultiTurnSeeds, allRepairSeeds } from '../../src/examples/index.ts'
 import { createCatalogResolver } from '../catalog-files.ts'
 
@@ -444,12 +445,13 @@ export function seedToCandidate(seed: ExampleSeed<SeedCatalogId>, moduleFile: st
 
 // ADR-0231 cl.5: the two corpus-seed kinds. Each has its own hand-transcribed per-file table (the
 // `SEEDS_BY_MODULE` twin for its shelf, drift-checked by `checkGrouping`) and its own mapper onto the
-// facet's record branch. GH #1741 seeded the multi-turn table; the repair table stays EMPTY, exactly as
-// its shelf is, until GH #1742 seeds it.
+// facet's record branch. GH #1741 seeded the multi-turn table; GH #1742 seeded the repair table.
 const MULTI_TURN_SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly MultiTurnSeed<SeedCatalogId>[] }> = [
   { module: 'multi-turn-seeds.ts', seeds: multiTurnSeeds },
 ]
-const REPAIR_SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly RepairSeed<SeedCatalogId>[] }> = []
+const REPAIR_SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly RepairSeed<SeedCatalogId>[] }> = [
+  { module: 'repair-seeds.ts', seeds: repairSeeds },
+]
 
 /** The `seedToCandidate` twin for a multi-turn seed (ADR-0231 cl.2): `priorMessages` becomes
  * `priorOutput`, the one `action` becomes the one-entry `clientInput`, `messages` (the follow-up)
