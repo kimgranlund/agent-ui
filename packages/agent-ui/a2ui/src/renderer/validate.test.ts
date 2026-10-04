@@ -499,8 +499,9 @@ describe('validateA2ui — ADR-0187 atFinalize: the abandoned-createSurface judg
   })
 
   it('the delete exclusion is finalize-ONLY — a delete never softens a default-mode verdict', () => {
-    // A dangling-ref payload followed by a delete of the same surface still fails in BOTH modes: only
-    // the finalize emptiness arm consults `deletedHere` (LLD §3 mechanic 4).
+    // A dangling-ref payload followed by a delete of the same surface still fails in BOTH modes: the
+    // delete closes a NON-empty epoch, which is judged in full (ADR-0064 amendment A3; LLD §3 mechanic 4,
+    // formerly `deletedHere`).
     const danglingThenDelete = [
       {
         version: 'v1.0',
@@ -554,6 +555,188 @@ describe('validateA2ui — ADR-0187 atFinalize: the abandoned-createSurface judg
         },
       ]
       expect(validateA2ui(recreateFull, demoCatalog, seed, { atFinalize: true })).toEqual({ valid: true, failures: [] })
+    })
+  })
+})
+
+// ── ADR-0064 amendment (2026-10-03, A2 to A4) / GH #1740: surface epochs ─────────────────────────────
+//
+// The renderer frees a surface's whole graph at `deleteSurface`, so a later `root` for the same id is a
+// first delivery, not a resend. The validator mirrors it: an epoch opens at `createSurface` (or the first
+// `updateComponents`) and closes at `deleteSurface`; each epoch is judged on its own graph. The numbered
+// legs are the amendment's §Acceptance items; each runs in BOTH modes where the item says so.
+describe('validateA2ui: ADR-0064 amendment surface epochs (delete frees the id graph, GH #1740)', () => {
+  const create = (sid = 's', catalogId = 'demo') => ({ version: 'v1.0', createSurface: { surfaceId: sid, catalogId } })
+  const del = (sid = 's') => ({ version: 'v1.0', deleteSurface: { surfaceId: sid } })
+  const comps = (components: Record<string, unknown>[], sid = 's') => ({
+    version: 'v1.0',
+    updateComponents: { surfaceId: sid, components },
+  })
+  const rootText = (text = 'hi') => comps([{ id: 'root', component: 'Text', text }])
+  const both = (payload: unknown[]) => ({
+    default: validateA2ui(payload, demoCatalog),
+    finalize: validateA2ui(payload, demoCatalog, undefined, { atFinalize: true }),
+  })
+  const CLEAN = { valid: true, failures: [] }
+
+  it('Acceptance 1: create, root, delete, create, root VALIDATES in both modes (the second root is a first delivery)', () => {
+    const v = both([create(), rootText('one'), del(), create(), rootText('two')])
+    expect(v.default).toEqual(CLEAN)
+    expect(v.finalize).toEqual(CLEAN)
+  })
+
+  it('negative control: the SAME stream without the delete fails `s:root` (the delete is what legalizes it)', () => {
+    const v = both([create(), rootText('one'), create(), rootText('two')])
+    expect(v.default.failures).toEqual([{ code: 'IDGRAPH', path: 's:root' }])
+    expect(v.finalize.failures).toEqual([{ code: 'IDGRAPH', path: 's:root' }])
+  })
+
+  it('Acceptance 2: without the second root it fails EXACTLY `IDGRAPH s:root-missing` at finalize, passes in default mode (A3)', () => {
+    const v = both([create(), rootText(), del(), create()])
+    expect(v.finalize).toEqual({ valid: false, failures: [{ code: 'IDGRAPH', path: 's:root-missing' }] })
+    expect(v.default).toEqual(CLEAN)
+  })
+
+  it('Acceptance 3: create, delete (nothing after) still passes at finalize, the empty closed epoch A3 keeps exempt', () => {
+    const v = both([create(), del()])
+    expect(v.finalize).toEqual(CLEAN)
+    expect(v.default).toEqual(CLEAN)
+  })
+
+  it('Acceptance 3b: create, root, delete (nothing after) passes at finalize, a non-empty closed epoch judged clean', () => {
+    const v = both([create(), rootText(), del()])
+    expect(v.finalize).toEqual(CLEAN)
+    expect(v.default).toEqual(CLEAN)
+  })
+
+  it('3b counterpart: a NON-empty closed epoch is judged in full, so a rootless one fails `s:root-missing` in BOTH modes', () => {
+    const v = both([create(), comps([{ id: 'lbl', component: 'Text', text: 'x' }]), del()])
+    expect(v.default.failures).toEqual([{ code: 'IDGRAPH', path: 's:root-missing' }])
+    expect(v.finalize.failures).toEqual([{ code: 'IDGRAPH', path: 's:root-missing' }])
+  })
+
+  it('Acceptance 4: root twice with no intervening deleteSurface still fails `IDGRAPH s:root` (the resend rule is untouched)', () => {
+    const v = both([create(), rootText('one'), rootText('two')])
+    expect(v.default.failures).toEqual([{ code: 'IDGRAPH', path: 's:root' }])
+    expect(v.finalize.failures).toEqual([{ code: 'IDGRAPH', path: 's:root' }])
+  })
+
+  it('Acceptance 5: a dangling child in epoch 1 followed by deleteSurface fails `IDGRAPH root->ghost`, even with a clean epoch 2', () => {
+    const v = both([create(), comps([{ id: 'root', component: 'Column', children: ['ghost'] }]), del(), create(), rootText()])
+    const expected = { valid: false, failures: [{ code: 'IDGRAPH', path: 'root->ghost' }] }
+    expect(v.default).toEqual(expected)
+    expect(v.finalize).toEqual(expected)
+  })
+
+  it('epoch 2 does NOT see epoch 1: a reference to an id only epoch 1 delivered dangles (the graph was freed)', () => {
+    const payload = [
+      create(),
+      comps([
+        { id: 'root', component: 'Column', children: ['old'] },
+        { id: 'old', component: 'Text', text: 'gone after the delete' },
+      ]),
+      del(),
+      create(),
+      comps([{ id: 'root', component: 'Column', children: ['old'] }]),
+    ]
+    const v = both(payload)
+    expect(v.default.failures).toEqual([{ code: 'IDGRAPH', path: 'root->old' }])
+    expect(v.finalize.failures).toEqual([{ code: 'IDGRAPH', path: 'root->old' }])
+  })
+
+  it('failures from two epochs report in stream order with the SAME path shapes a single epoch uses', () => {
+    const payload = [
+      create(),
+      comps([{ id: 'lbl', component: 'Text', text: 'no root here' }]),
+      del(),
+      create(),
+      comps([{ id: 'root', component: 'Column', children: ['ghost'] }]),
+    ]
+    expect(validateA2ui(payload, demoCatalog).failures).toEqual([
+      { code: 'IDGRAPH', path: 's:root-missing' },
+      { code: 'IDGRAPH', path: 'root->ghost' },
+    ])
+  })
+
+  it('a delivery after a delete with NO new createSurface opens a fresh epoch implicitly (A2), so its root is a first delivery', () => {
+    const v = both([create(), rootText('one'), del(), rootText('two')])
+    expect(v.default).toEqual(CLEAN)
+    expect(v.finalize).toEqual(CLEAN)
+  })
+
+  it('order now matters (A3): delete then create with nothing after is an empty OPEN epoch, so it fails at finalize', () => {
+    // The former order-insensitive same-payload delete set passed this; the open epoch is what the
+    // renderer would be showing, an empty surface, so it is the abandoned-surface defect.
+    const v = both([del(), create()])
+    expect(v.finalize).toEqual({ valid: false, failures: [{ code: 'IDGRAPH', path: 's:root-missing' }] })
+    expect(v.default).toEqual(CLEAN)
+  })
+
+  it('the multi-turn follow-up shape (delete, create, root) validates in both modes', () => {
+    const v = both([del(), create(), rootText()])
+    expect(v.default).toEqual(CLEAN)
+    expect(v.finalize).toEqual(CLEAN)
+  })
+
+  it('a leading delete never moves a surface in the report order (it registers nothing)', () => {
+    // `a` is deleted first but only OPENED after `b`, so `b`'s failure still reports first, as before.
+    const payload = [
+      del('a'),
+      comps([{ id: 'lbl', component: 'Text', text: 'x' }], 'b'),
+      comps([{ id: 'lbl', component: 'Text', text: 'y' }], 'a'),
+    ]
+    expect(validateA2ui(payload, demoCatalog).failures).toEqual([
+      { code: 'IDGRAPH', path: 'b:root-missing' },
+      { code: 'IDGRAPH', path: 'a:root-missing' },
+    ])
+  })
+
+  it('a surfaceId-less deleteSurface is SCHEMA only and closes nothing (the resend after it still fails)', () => {
+    const payload = [create(), rootText('one'), { version: 'v1.0', deleteSurface: {} }, rootText('two')]
+    expect(validateA2ui(payload, demoCatalog).failures).toEqual([
+      { code: 'SCHEMA', path: '[2].deleteSurface.surfaceId' },
+      { code: 'IDGRAPH', path: 's:root' },
+    ])
+  })
+
+  it("containment is per epoch: epoch 1's stray region still fails though epoch 2 re-roots it under a Card", () => {
+    const payload = [
+      create('s', 'agent-ui'),
+      comps([
+        { id: 'root', component: 'Column', children: ['hdr'] },
+        { id: 'hdr', component: 'CardHeader', children: [] },
+      ]),
+      del(),
+      create('s', 'agent-ui'),
+      comps([
+        { id: 'root', component: 'Card', elevation: '1', children: ['hdr'] },
+        { id: 'hdr', component: 'CardHeader', children: [] },
+      ]),
+    ]
+    // One merged graph would last-write-win `root` to the Card (hiding the defect) and count two roots.
+    expect(validateA2ui(payload, defaultCatalog).failures).toEqual([{ code: 'CONTAINMENT', path: 'hdr' }])
+  })
+
+  describe('the TKT-0081 seed under epochs (A4)', () => {
+    const seed = new Map([['s', { components: [{ id: 'root', component: 'Text', text: 'prior' }], rootDelivered: true }]])
+
+    it('a delete before the first delivery frees the seeded graph: delete, root (no create) validates', () => {
+      expect(validateA2ui([del(), rootText('fresh')], demoCatalog, seed, { atFinalize: true })).toEqual(CLEAN)
+    })
+
+    it('negative control: the same root WITHOUT the delete is the seeded resend, `s:root`', () => {
+      expect(validateA2ui([rootText('fresh')], demoCatalog, seed, { atFinalize: true }).failures).toEqual([
+        { code: 'IDGRAPH', path: 's:root' },
+      ])
+    })
+
+    it('the seed continues the first epoch only: update, delete, create, root validates (epoch 1 seeded, epoch 2 fresh)', () => {
+      const payload = [comps([{ id: 'extra', component: 'Text', text: 'x' }]), del(), create(), rootText('fresh')]
+      expect(validateA2ui(payload, demoCatalog, seed, { atFinalize: true })).toEqual(CLEAN)
+      // Without the seed, epoch 1 (a lone `extra`, no root) is judged standalone and fails.
+      expect(validateA2ui(payload, demoCatalog, undefined, { atFinalize: true }).failures).toEqual([
+        { code: 'IDGRAPH', path: 's:root-missing' },
+      ])
     })
   })
 })

@@ -58,7 +58,10 @@ export function validateA2ui(
 
 An options bag, not a bare boolean 4th param — future finalize-adjacent knobs extend the bag, never
 mint param #5. Threading: `run(input, catalog, sessionSeed, atFinalize)` →
-`checkIdGraph(sid, g, failures, atFinalize && !deletedHere.has(sid))`.
+`checkIdGraph(sid, g, failures, atFinalize && !deletedHere.has(sid))`. *(REV 2026-10-04, ADR-0064
+amendment 2026-10-03 A2/A3, GH #1740: superseded by epochs. Each surface's graph is now a list of epochs
+split at `deleteSurface`; a closed epoch is judged with the emptiness arm off and the epoch open at
+payload end with `atFinalize`. `deletedHere` no longer exists; see mechanic 4's REV.)*
 
 **C1 mechanics, in stage order (all four moves required):**
 
@@ -83,6 +86,11 @@ mint param #5. Threading: `run(input, catalog, sessionSeed, atFinalize)` →
    set beside `createdHere` (same construction, `deleteSurface.surfaceId`); the finalize emptiness
    judgment skips members. Lenient-mode verdicts are untouched (a dangling-ref set followed by
    delete still fails today's checks — only the finalize-only emptiness arm consults the set).
+   *(REV 2026-10-04, ADR-0064 amendment 2026-10-03 A3, GH #1740: the exclusion narrowed to the EMPTY
+   CLOSED EPOCH. `deleteSurface` now closes the surface's epoch; a closed epoch never takes the
+   emptiness arm, so create-then-delete still passes at finalize, and a non-empty closed epoch is judged
+   in full in both modes as before. A `createSurface` after the last delete opens a new epoch that IS
+   judged at finalize, so create, root, delete, create with nothing after fails `${sid}:root-missing`.)*
 
 ## 4. Call-site rulings (Findings 2's opt-in fork — every `validateA2ui` caller, with reasons)
 

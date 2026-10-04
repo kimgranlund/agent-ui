@@ -244,3 +244,149 @@ describe('canonicalize — defensive root/cycle guard (LLD §4 step 2)', () => {
     await expect(canonicalize(out)).rejects.toMatchObject({ code: 'IDGRAPH' })
   })
 })
+
+// ADR-0064 amendment (2026-10-03, A5) / GH #1740: `foldStream` folds PER EPOCH, resetting the component
+// map and the data model at every `deleteSurface`. One epoch serializes exactly as before (the committed
+// `canonicalHash` values re-derive unchanged, gated record by record in corpus-data.test.ts); N >= 2
+// serialize as the ordered list of per-epoch forms.
+describe('canonicalize: surface epochs, the fold resets at deleteSurface (ADR-0064 amendment A5, GH #1740)', () => {
+  const deleteSurfaceMsg = (): A2uiOutput[number] => ({ version: V, deleteSurface: { surfaceId: 's1' } })
+  const secondTree = (): A2uiComponent[] => [
+    { id: 'root', component: 'Row', children: ['t'] },
+    { id: 't', component: 'Text', text: 'after the delete' },
+  ]
+
+  it('a one-epoch record serializes the bare form, not a list (the byte-identity the committed hashes rest on)', async () => {
+    const result = await canonicalize([createSurfaceMsg(), updateComponentsMsg(basicTree()), updateDataModelMsg({ cta: 'Go' })])
+
+    expect(result.epochs).toEqual([result.form])
+    expect(Array.isArray(JSON.parse(result.serialized))).toBe(false)
+    expect(JSON.parse(result.serialized)).toEqual(result.form)
+  })
+
+  it('a trailing deleteSurface leaves the hash unchanged (the kpi-panel-lifecycle shape)', async () => {
+    const live = await canonicalize([createSurfaceMsg(), updateComponentsMsg(basicTree()), updateDataModelMsg({ cta: 'Go' })])
+    const torn = await canonicalize([
+      createSurfaceMsg(),
+      updateComponentsMsg(basicTree()),
+      updateDataModelMsg({ cta: 'Go' }),
+      deleteSurfaceMsg(),
+    ])
+
+    expect(torn.epochs).toHaveLength(1)
+    expect(torn.serialized).toBe(live.serialized)
+    expect(torn.hash).toBe(live.hash)
+  })
+
+  it('an epoch that delivered no components contributes no form (a leading delete, or create-delete-create)', async () => {
+    const plain = await canonicalize([createSurfaceMsg(), updateComponentsMsg(basicTree())])
+    const streams: A2uiOutput[] = [
+      [deleteSurfaceMsg(), createSurfaceMsg(), updateComponentsMsg(basicTree())],
+      [createSurfaceMsg(), deleteSurfaceMsg(), createSurfaceMsg(), updateComponentsMsg(basicTree())],
+    ]
+    for (const out of streams) {
+      const result = await canonicalize(out)
+      expect(result.epochs).toHaveLength(1)
+      expect(result.hash).toBe(plain.hash)
+    }
+  })
+
+  it('create, root, delete, create, root folds to TWO epochs, serialized as the ordered list', async () => {
+    const result = await canonicalize([
+      createSurfaceMsg(),
+      updateComponentsMsg(basicTree()),
+      updateDataModelMsg({ cta: 'Go' }),
+      deleteSurfaceMsg(),
+      createSurfaceMsg(),
+      updateComponentsMsg(secondTree()),
+    ])
+    const finalAlone = await canonicalize([createSurfaceMsg(), updateComponentsMsg(secondTree())])
+
+    expect(result.epochs).toHaveLength(2)
+    expect(JSON.parse(result.serialized)).toEqual(result.epochs)
+    expect(result.form).toEqual(result.epochs[1])
+    expect(result.form).toEqual(finalAlone.form)
+    // The record is not its final epoch alone: the list (and so the hash) carries epoch 1 too.
+    expect(result.hash).not.toBe(finalAlone.hash)
+  })
+
+  it('the second epoch starts from an empty graph and an undefined data model (nothing leaks across the delete)', async () => {
+    const result = await canonicalize([
+      createSurfaceMsg(),
+      updateComponentsMsg(basicTree()),
+      updateDataModelMsg({ cta: 'Go' }),
+      deleteSurfaceMsg(),
+      createSurfaceMsg(),
+      updateComponentsMsg(secondTree()),
+    ])
+
+    expect(result.epochs[0]!.dataModel).toEqual({ cta: 'Go' })
+    expect(result.epochs[1]!.dataModel).toBeUndefined()
+    // Epoch 1's b1/b2 are not upserted into epoch 2: its form holds only its own two components.
+    expect(result.epochs[1]!.components.map((c) => c.component)).toEqual(['Row', 'Text'])
+  })
+
+  it('epoch order is semantic: swapping the two epochs changes the hash', async () => {
+    const ab = await canonicalize([
+      createSurfaceMsg(),
+      updateComponentsMsg(basicTree()),
+      deleteSurfaceMsg(),
+      createSurfaceMsg(),
+      updateComponentsMsg(secondTree()),
+    ])
+    const ba = await canonicalize([
+      createSurfaceMsg(),
+      updateComponentsMsg(secondTree()),
+      deleteSurfaceMsg(),
+      createSurfaceMsg(),
+      updateComponentsMsg(basicTree()),
+    ])
+
+    expect(ab.hash).not.toBe(ba.hash)
+  })
+
+  it('componentsUsed is the FINAL epoch set (ADR-0231 §2); disconnected concatenates every epoch in order', async () => {
+    const result = await canonicalize([
+      createSurfaceMsg(),
+      updateComponentsMsg([...basicTree(), { id: 'o1', component: 'Text', text: 'orphan one' }]),
+      deleteSurfaceMsg(),
+      createSurfaceMsg(),
+      updateComponentsMsg([...secondTree(), { id: 'o2', component: 'Text', text: 'orphan two' }]),
+    ])
+
+    expect(result.componentsUsed).toEqual(['Row', 'Text'])
+    expect(result.disconnected).toEqual(['o1', 'o2'])
+  })
+
+  it('a createSurface with no deleteSurface before it is NOT a boundary (one epoch, upserts carry over)', async () => {
+    const result = await canonicalize([
+      createSurfaceMsg(),
+      updateComponentsMsg(basicTree()),
+      createSurfaceMsg(),
+      updateComponentsMsg([{ id: 'b2', component: 'Text', text: 'replaced' }]),
+    ])
+
+    expect(result.epochs).toHaveLength(1)
+    expect(result.form.components.some((c) => c.component === 'Text' && c['text'] === 'replaced')).toBe(true)
+  })
+
+  it('a stream with no component-bearing epoch still hits the no-root backstop', async () => {
+    const streams: A2uiOutput[] = [[createSurfaceMsg()], [createSurfaceMsg(), deleteSurfaceMsg()]]
+    for (const out of streams) {
+      await expect(canonicalize(out)).rejects.toBeInstanceOf(CanonicalizeError)
+      await expect(canonicalize(out)).rejects.toMatchObject({ code: 'IDGRAPH' })
+    }
+  })
+
+  it('every epoch passes the root guard on its own: a rootless closed epoch rejects', async () => {
+    const out: A2uiOutput = [
+      createSurfaceMsg(),
+      updateComponentsMsg([{ id: 'b1', component: 'Button' }]),
+      deleteSurfaceMsg(),
+      createSurfaceMsg(),
+      updateComponentsMsg(secondTree()),
+    ]
+
+    await expect(canonicalize(out)).rejects.toMatchObject({ code: 'IDGRAPH' })
+  })
+})

@@ -177,6 +177,21 @@ Additionally, the renderer MUST support **DynamicString `${…}` interpolation**
 > ruling enumerated in ADR-0187 §4 (renderer finalize · the producer's per-round verdict · corpus admission
 > and its harness mirror), not a normative requirement of this SPEC.
 
+> **REV 2026-10-04 (ADR-0064 amendment 2026-10-03, GH #1740): the LIFECYCLE RULE the parity statement
+> covers.** The renderer frees a surface's graph and data model at `deleteSurface`, so the shared
+> validator does too: it partitions each surface's messages into EPOCHS. An epoch opens at `createSurface`
+> (or at the first `updateComponents` when none precedes it) and closes at that surface's next
+> `deleteSurface`; a `createSurface` inside an open epoch is not a boundary (a resent `root` there still
+> fails `${surfaceId}:root`). Each epoch is judged by the id-graph and containment checks on its OWN graph,
+> so `createSurface s, root, deleteSurface s, createSurface s, root` is valid. A CLOSED epoch never takes
+> the `atFinalize` emptiness arm (empty, it mounted nothing; non-empty, it is judged in full in both
+> modes); the epoch still OPEN at payload end takes it, so the same stream without the second `root` fails
+> `${surfaceId}:root-missing` at finalize. The TKT-0081 session seed merges into the first epoch only, and
+> only when this payload neither created that epoch nor deleted the surface before it. Codes and paths are
+> unchanged, failures still report in stream order, and a payload with no `deleteSurface` judges exactly as
+> before. The corpus canonicalizer folds at the same boundary (corpus LLD §4, the epoch rule), so admission
+> and this renderer agree on what a delete-then-recreate record is.
+
 **SPEC-R12 — Capabilities exchange.** The renderer MUST be able to declare an `a2uiClientCapabilities` object (supported protocol versions, surfaces, action features) to the server; under A2A transport it MUST place it in the A2A `Message` metadata. *(→ PRD-G1, PRD-G7)*
 - **AC1** *Given* a capabilities request (or A2A handshake), *when* the renderer responds, *then* the declared object lists its supported `protocolVersion`(s) including `v1.0`.
 
@@ -195,7 +210,7 @@ Additionally, the renderer MUST support **DynamicString `${…}` interpolation**
 | **SPEC-N3** | Teardown is leak-free | After `deleteSurface` (or renderer disposal), the surface leaves zero live signals/effects/listeners — provable via the kernel's `inspect()` + AbortSignal (mirrors the component foundation's discipline). |
 | **SPEC-N4** | Fault isolation | One malformed message or one unknown component type MUST NOT tear down the surface or stop the stream. |
 | **SPEC-N5** | Zero runtime dependencies | The renderer adds no third-party runtime dependency (Constraint C2); it builds on `@agent-ui/components` (signals + controls) only — it MUST NOT use `@a2ui/web_core`. |
-| **SPEC-N6** | Validator parity | The validation in SPEC-R11 is the same code path as corpus admission (one implementation, two callers). *(REV 2026-08-13, ADR-0187/GH #829: still ONE implementation — it now takes an optional `atFinalize` completeness assertion from the caller. Parity means two callers judging the same completeness return identical verdicts; the renderer's finalize and corpus admission both judge a COMPLETE set, so they agree, which is the case this law was always about. See SPEC-R11's REV of the same date.)* |
+| **SPEC-N6** | Validator parity | The validation in SPEC-R11 is the same code path as corpus admission (one implementation, two callers). *(REV 2026-08-13, ADR-0187/GH #829: still ONE implementation; it now takes an optional `atFinalize` completeness assertion from the caller. Parity means two callers judging the same completeness return identical verdicts; the renderer's finalize and corpus admission both judge a COMPLETE set, so they agree, which is the case this law was always about. See SPEC-R11's REV of the same date.)* *(REV 2026-10-04, ADR-0064 amendment 2026-10-03 / GH #1740: the shared path judges each surface per EPOCH, freeing its id graph at `deleteSurface` as the renderer does; delete-then-recreate of one surface is valid for every caller. See SPEC-R11's REV of the same date.)* |
 
 ## 5. Typed contracts
 

@@ -32,7 +32,11 @@ exists only at the call site. ADR-0187 therefore makes the caller SAY so:
   followed: this is the existing missing-root class judged at a new granularity, so the renderer's
   IDGRAPH filter, the wire union and the conformance code table stay untouched). One edge: a
   same-payload `deleteSurface` excludes that sid (`deletedHere` in `renderer/validate.ts`), so the VALIDATOR
-  accepts create-then-delete. `produce()` does not: see the `NET_NOOP` round below.
+  accepts create-then-delete. *(REV 2026-10-04, ADR-0064 amendment 2026-10-03, GH #1740: `deletedHere` is
+  gone; `deleteSurface` closes the surface's EPOCH and frees its id graph, a closed epoch never takes the
+  finalize emptiness arm, and only the epoch still open at payload end does. Create-then-delete still
+  passes; create, root, delete, create, root passes; the same without the last root fails
+  `${sid}:root-missing` at finalize.)* `produce()` does not: see the `NET_NOOP` round below.
 - Heuristic finalize inference (timers, stream-end sniffing inside the validator) was rejected as a
   category error: the validator is pure and total over a static array.
 
