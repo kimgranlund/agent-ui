@@ -450,6 +450,15 @@ const IDGRAPH_HINTS = {
     'neither in this payload nor in any earlier turn of this conversation. Deliver a component with ' +
     'that exact id in this same payload, or remove the reference from the parent\'s children.',
   cycle: ' The child/children references form a CYCLE — a component cannot be its own ancestor.',
+  // GH #1756 / ADR-0064 amendment erratum (2026-10-04, GH #1740): `sid:update-after-delete` fires when this
+  // payload sends `deleteSurface` for a surface and then updates it with NO `createSurface` between. The
+  // renderer drops such an update (a deleted surface addresses nothing), so only a `createSurface` reopens
+  // the id. The re-created surface starts EMPTY, so the sentence names the COMPLETE-tree half as well:
+  // the `rootMissing` chain (re-create, partial tree) is the failure the other hints exist to prevent.
+  updateAfterDelete:
+    ' This payload sends `deleteSurface` for a surface and then updates it. A deleted surface no longer ' +
+    'exists, so those updates are dropped. Re-send `createSurface` (with the SAME surfaceId) before ' +
+    'updating a deleted surface, and deliver `root` AND every component the tree references in that same turn.',
 } as const
 
 /**
@@ -457,7 +466,8 @@ const IDGRAPH_HINTS = {
  * (`checkIdGraph`, renderer/validate.ts). Dangling is decided FIRST, on the `->` that only IT carries
  * (`parent->child`): both halves of that path are MODEL-authored ids, so a child id ending in `:cycle` or
  * `:root-missing` would be misread by a suffix-first order (review F5). The three surface-level suffixes
- * are then matched only on a `->`-free path. One ambiguity is inherent to the path ENCODING and left
+ * are then matched only on a `->`-free path (GH #1756 adds a fourth, `:update-after-delete`; no member's
+ * suffix ends another's, so the match order among the `->`-free arms is not load-bearing). One ambiguity is inherent to the path ENCODING and left
  * unresolved: a surfaceId that itself contains `->` reads as dangling. Both misreads degrade to unhelpful
  * prose in a model-facing sentence, never to a wrong verdict — the verdict is the validator's.
  * Returns `''` when no IDGRAPH failure fired.
@@ -470,6 +480,7 @@ function idgraphHint(failures: RoundFailure[]): string {
     else if (f.path.endsWith(':root-missing')) members.add('rootMissing')
     else if (f.path.endsWith(':cycle')) members.add('cycle')
     else if (f.path.endsWith(':root')) members.add('duplicateRoot')
+    else if (f.path.endsWith(':update-after-delete')) members.add('updateAfterDelete')
   }
   // A stable order (declaration order), so the same round always composes the same sentence.
   return (Object.keys(IDGRAPH_HINTS) as (keyof typeof IDGRAPH_HINTS)[])
