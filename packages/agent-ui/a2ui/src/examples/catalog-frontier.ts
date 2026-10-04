@@ -493,7 +493,14 @@ const WIZARD_ID = 'ask-1'
  *  the frontier-card-anatomy-ask precedent, above). Both wraps are scene-local, exactly like "cal"/
  *  "rooms" themselves — resent with "scene" on every occurrence of each control (turn 1's dates scene AND
  *  the BACK-to-dates resend; turn 2's room scene AND the forward-again resend) — never touching root/
- *  card/ct. */
+ *  card/ct.
+ *
+ *  KNOWN DEBT (GH #1780, recorded 2026-10-04): the two-button footers ("back2"/"next2" and
+ *  "back3"/"commit") are bare CardFooter children, which the CardFooter multi-action rule
+ *  (node-idioms.md, GH #1475; a2ui-payload.md P4 anchor 3 since 1.6) says belong in one Row inside
+ *  CardFooter. Left as-is on purpose: this seed is an admitted exemplar record, and wrapping the
+ *  footers moves its canonical hash (6b8fbf81... to 14289712...). The repair path is a seed edit plus
+ *  a judged `rescore`/`--replace` re-admission (the GH #1475 greet-card precedent), not an in-place edit. */
 export const backableWizardSeed: ExampleSeed = {
   name: 'backable-wizard',
   description: 'A 3-step backable wizard (dates → room → confirm) on ONE ask surface: draft answers under /draft/*, a stable root>Card>CardContent scene container swapped by updateComponents, per-step nav Buttons in their own CardFooter, Field-wrapped Calendar/RadioGroup controls (ADR-0051), and a BACK round-trip that leaves both prior answers untouched.',
