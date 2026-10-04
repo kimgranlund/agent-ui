@@ -116,6 +116,12 @@ export default defineConfig({
             // tests. Explicit, never a wildcard (the GH #112 rule this whole `tools` project already
             // documents above): a new leg's test file must land its OWN line here to be armed.
             'packages/agent-ui/a2ui/tools/corpus-genui/*.test.ts',
+            // GH #1737 (the a2ui-basic corpus pipeline) - the Node-side catalog registry and the
+            // compose-verify CLI's `--catalog` map. Exact files, not a directory glob, the same rule:
+            // `validate-payload.ts` has NO CLI-entry guard (it runs `main()` on import), so its test
+            // only ever spawns it and a wildcard here would arm any future importer of it by accident.
+            'packages/agent-ui/a2ui/tools/catalog-files.test.ts',
+            'packages/agent-ui/a2ui/tools/harness/validate-payload.test.ts',
           ],
         },
       },
