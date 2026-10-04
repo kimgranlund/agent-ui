@@ -587,10 +587,12 @@ describe('validateA2ui: ADR-0064 amendment surface epochs (delete frees the id g
     expect(v.finalize).toEqual(CLEAN)
   })
 
-  it('negative control: the SAME stream without the delete fails `s:root` (the delete is what legalizes it)', () => {
+  it('re-create erratum (GH #1772): the SAME stream without the delete ALSO validates (a createSurface is a boundary too)', () => {
+    // Before the erratum this failed `s:root` (a `createSurface` inside an open epoch was not a boundary).
+    // The renderer replaces the surface at a re-create, so the second `root` is a first delivery either way.
     const v = both([create(), rootText('one'), create(), rootText('two')])
-    expect(v.default.failures).toEqual([{ code: 'IDGRAPH', path: 's:root' }])
-    expect(v.finalize.failures).toEqual([{ code: 'IDGRAPH', path: 's:root' }])
+    expect(v.default).toEqual(CLEAN)
+    expect(v.finalize).toEqual(CLEAN)
   })
 
   it('Acceptance 2: without the second root it fails EXACTLY `IDGRAPH s:root-missing` at finalize, passes in default mode (A3)', () => {
@@ -784,6 +786,253 @@ describe('validateA2ui: ADR-0064 amendment surface epochs (delete frees the id g
       expect(validateA2ui(payload, demoCatalog, undefined, { atFinalize: true }).failures).toEqual([
         { code: 'IDGRAPH', path: 's:root-missing' },
       ])
+    })
+  })
+})
+
+// ── ADR-0064 re-create erratum (2026-10-04, GH #1772): a `createSurface` resets the surface's id graph ──
+//
+// The renderer replaces a live surface at `createSurface` (`renderer.ts#onCreateSurface`), so a re-create
+// inside one stream leaves the surface holding only what its own epoch delivers. The validator mirrors it:
+// every `createSurface` closes the sid's open epoch and opens a fresh one, with no `deleteSurface` needed.
+describe('validateA2ui: re-create resets the id graph (ADR-0064 re-create erratum, GH #1772)', () => {
+  const create = (sid = 's', catalogId = 'demo') => ({ version: 'v1.0', createSurface: { surfaceId: sid, catalogId } })
+  const del = (sid = 's') => ({ version: 'v1.0', deleteSurface: { surfaceId: sid } })
+  const comps = (components: Record<string, unknown>[], sid = 's') => ({
+    version: 'v1.0',
+    updateComponents: { surfaceId: sid, components },
+  })
+  const rootText = (text = 'hi', sid = 's') => comps([{ id: 'root', component: 'Text', text }], sid)
+  const label = (id = 'lbl', sid = 's') => comps([{ id, component: 'Text', text: 'x' }], sid)
+  const both = (payload: unknown[], seed?: Parameters<typeof validateA2ui>[2]) => ({
+    default: validateA2ui(payload, demoCatalog, seed),
+    finalize: validateA2ui(payload, demoCatalog, seed, { atFinalize: true }),
+  })
+  const CLEAN = { valid: true, failures: [] }
+  const ROOT_MISSING = { valid: false, failures: [{ code: 'IDGRAPH', path: 's:root-missing' }] }
+
+  describe('a rootless re-create fails `root-missing`', () => {
+    it("create, root, create, <components with no root>: the first epoch's root no longer satisfies the second (both modes)", () => {
+      // Pre-erratum this was graph-valid (one merged graph, one root): the divergence from the renderer,
+      // which holds no `root` after the second createSurface.
+      const v = both([create(), rootText('one'), create(), label()])
+      expect(v.default).toEqual(ROOT_MISSING)
+      expect(v.finalize).toEqual(ROOT_MISSING)
+    })
+
+    it('create, root, create (nothing after): clean in default mode (prefix law), fails `root-missing` at finalize', () => {
+      const v = both([create(), rootText('one'), create()])
+      expect(v.default).toEqual(CLEAN)
+      expect(v.finalize).toEqual(ROOT_MISSING)
+    })
+
+    it('the rootless epoch reports ONCE, and only for the epoch that lacks the root (the first epoch is clean)', () => {
+      const v = both([create(), rootText('one'), create(), label('a'), label('b')])
+      expect(v.finalize.failures).toEqual([{ code: 'IDGRAPH', path: 's:root-missing' }])
+    })
+
+    it('every prefix of the valid re-create stream validates in default mode (the ratified prefix laws)', () => {
+      // message-lifecycle SPEC-R4 AC1 / live-agent SPEC-R5 AC1: a prefix of a stream that validates whole
+      // must itself validate, so the new boundary must not red a mid-stream re-create.
+      const stream = [create(), rootText('one'), create(), rootText('two')]
+      for (let n = 1; n <= stream.length; n++) {
+        expect(validateA2ui(stream.slice(0, n), demoCatalog)).toEqual(CLEAN)
+      }
+    })
+  })
+
+  describe('a re-create that delivers a new root passes', () => {
+    it('create, root, create, root validates in both modes (the second root is a first delivery)', () => {
+      const v = both([create(), rootText('one'), create(), rootText('two')])
+      expect(v.default).toEqual(CLEAN)
+      expect(v.finalize).toEqual(CLEAN)
+    })
+
+    it('a re-create that delivers a full new tree (root + child) validates', () => {
+      const tree = comps([
+        { id: 'root', component: 'Column', children: ['t'] },
+        { id: 't', component: 'Text', text: 'second' },
+      ])
+      const v = both([create(), rootText('one'), create(), tree])
+      expect(v.default).toEqual(CLEAN)
+      expect(v.finalize).toEqual(CLEAN)
+    })
+
+    it('three epochs (create, root, create, root, create, root) validate: each create resets', () => {
+      const v = both([create(), rootText('1'), create(), rootText('2'), create(), rootText('3')])
+      expect(v.default).toEqual(CLEAN)
+      expect(v.finalize).toEqual(CLEAN)
+    })
+  })
+
+  describe('the reset is per epoch, with the same path shapes a single epoch uses', () => {
+    it('epoch 2 does NOT see epoch 1: a reference to an id only epoch 1 delivered dangles', () => {
+      const payload = [
+        create(),
+        comps([
+          { id: 'root', component: 'Column', children: ['old'] },
+          { id: 'old', component: 'Text', text: 'gone after the re-create' },
+        ]),
+        create(),
+        comps([{ id: 'root', component: 'Column', children: ['old'] }]),
+      ]
+      const v = both(payload)
+      expect(v.default.failures).toEqual([{ code: 'IDGRAPH', path: 'root->old' }])
+      expect(v.finalize.failures).toEqual([{ code: 'IDGRAPH', path: 'root->old' }])
+    })
+
+    it('a defect in epoch 1 still fails though a clean epoch 2 follows (a non-empty closed epoch is judged in full)', () => {
+      const v = both([create(), comps([{ id: 'root', component: 'Column', children: ['ghost'] }]), create(), rootText()])
+      const expected = { valid: false, failures: [{ code: 'IDGRAPH', path: 'root->ghost' }] }
+      expect(v.default).toEqual(expected)
+      expect(v.finalize).toEqual(expected)
+    })
+
+    it('failures from two epochs report in stream order', () => {
+      const payload = [create(), label(), create(), comps([{ id: 'root', component: 'Column', children: ['ghost'] }])]
+      expect(validateA2ui(payload, demoCatalog).failures).toEqual([
+        { code: 'IDGRAPH', path: 's:root-missing' },
+        { code: 'IDGRAPH', path: 'root->ghost' },
+      ])
+    })
+
+    it("containment is per epoch: epoch 1's stray region still fails though epoch 2 re-roots it under a Card", () => {
+      const payload = [
+        create('s', 'agent-ui'),
+        comps([
+          { id: 'root', component: 'Column', children: ['hdr'] },
+          { id: 'hdr', component: 'CardHeader', children: [] },
+        ]),
+        create('s', 'agent-ui'),
+        comps([
+          { id: 'root', component: 'Card', elevation: '1', children: ['hdr'] },
+          { id: 'hdr', component: 'CardHeader', children: [] },
+        ]),
+      ]
+      expect(validateA2ui(payload, defaultCatalog).failures).toEqual([{ code: 'CONTAINMENT', path: 'hdr' }])
+    })
+  })
+
+  describe('the resend rule holds WITHIN an epoch', () => {
+    it('root twice with no createSurface between still fails `s:root` (control)', () => {
+      const v = both([create(), rootText('one'), rootText('two')])
+      expect(v.default.failures).toEqual([{ code: 'IDGRAPH', path: 's:root' }])
+      expect(v.finalize.failures).toEqual([{ code: 'IDGRAPH', path: 's:root' }])
+    })
+
+    it('root twice AFTER a re-create (inside the second epoch) still fails `s:root`', () => {
+      const v = both([create(), rootText('one'), create(), rootText('two'), rootText('three')])
+      expect(v.default.failures).toEqual([{ code: 'IDGRAPH', path: 's:root' }])
+      expect(v.finalize.failures).toEqual([{ code: 'IDGRAPH', path: 's:root' }])
+    })
+  })
+
+  describe('a delete-then-create behaves as before', () => {
+    it("create, root, delete, create, root validates (the amendment's Acceptance 1, unchanged)", () => {
+      const v = both([create(), rootText('one'), del(), create(), rootText('two')])
+      expect(v.default).toEqual(CLEAN)
+      expect(v.finalize).toEqual(CLEAN)
+    })
+
+    it('create, root, delete, create (nothing after): clean in default mode, `root-missing` at finalize (A3, unchanged)', () => {
+      const v = both([create(), rootText(), del(), create()])
+      expect(v.default).toEqual(CLEAN)
+      expect(v.finalize).toEqual(ROOT_MISSING)
+    })
+
+    it('a delivery after the delete and before the create still fails `s:update-after-delete` (the erratum, unchanged)', () => {
+      const v = both([create(), rootText('one'), del(), rootText('two'), create(), rootText('three')])
+      const expected = { valid: false, failures: [{ code: 'IDGRAPH', path: 's:update-after-delete' }] }
+      expect(v.default).toEqual(expected)
+      expect(v.finalize).toEqual(expected)
+    })
+
+    it('create, delete (nothing after) and create, root, delete still pass at finalize (A3: Acceptance 3 and 3b, unchanged)', () => {
+      expect(both([create(), del()]).finalize).toEqual(CLEAN)
+      expect(both([create(), rootText(), del()]).finalize).toEqual(CLEAN)
+    })
+
+    it('a re-create after a delete-then-create nests the same way: create, root, delete, create, root, create, root validates', () => {
+      expect(both([create(), rootText('a'), del(), create(), rootText('b'), create(), rootText('c')]).finalize).toEqual(CLEAN)
+    })
+  })
+
+  describe('a create over an empty epoch changes no verdict', () => {
+    it('create, create, root validates (the empty first epoch mounted nothing, so it is exempt in both modes)', () => {
+      const v = both([create(), create(), rootText()])
+      expect(v.default).toEqual(CLEAN)
+      expect(v.finalize).toEqual(CLEAN)
+    })
+
+    it('create, create (nothing after) is the same one empty epoch as a single create: clean by default, `root-missing` at finalize', () => {
+      const v = both([create(), create()])
+      expect(v.default).toEqual(CLEAN)
+      expect(v.finalize).toEqual(ROOT_MISSING)
+    })
+
+    it('the report order of two surfaces is first-open order, and a re-create never moves it', () => {
+      const payload = [create('a'), label('x', 'a'), create('b'), label('y', 'b'), create('a'), label('z', 'a')]
+      expect(validateA2ui(payload, demoCatalog).failures).toEqual([
+        { code: 'IDGRAPH', path: 'a:root-missing' },
+        { code: 'IDGRAPH', path: 'a:root-missing' },
+        { code: 'IDGRAPH', path: 'b:root-missing' },
+      ])
+    })
+  })
+
+  describe('another surface is untouched, and so is a surfaceId-less createSurface', () => {
+    it('re-creating `a` never resets `b`', () => {
+      const v = both([create('a'), rootText('a1', 'a'), create('b'), rootText('b1', 'b'), create('a'), rootText('a2', 'a')])
+      expect(v.default).toEqual(CLEAN)
+      expect(v.finalize).toEqual(CLEAN)
+      // ...and `b` keeps the resend rule: its second root, with no create for `b` between, still fails.
+      const bResend = both([create('a'), rootText('a1', 'a'), create('b'), rootText('b1', 'b'), create('a'), rootText('b2', 'b')])
+      expect(bResend.default.failures).toEqual([{ code: 'IDGRAPH', path: 'b:root' }])
+    })
+
+    it('a createSurface with no string surfaceId is SCHEMA only and resets nothing (the resend after it still fails)', () => {
+      const payload = [create(), rootText('one'), { version: 'v1.0', createSurface: { catalogId: 'demo' } }, rootText('two')]
+      expect(validateA2ui(payload, demoCatalog).failures).toEqual([
+        { code: 'SCHEMA', path: '[2].createSurface.surfaceId' },
+        { code: 'IDGRAPH', path: 's:root' },
+      ])
+    })
+  })
+
+  describe('the TKT-0081 seed under a re-create (A4)', () => {
+    const seed = new Map([['s', { components: [{ id: 'root', component: 'Text', text: 'prior' }], rootDelivered: true }]])
+
+    it('a re-create with its own root validates over the seed (the seed never applies to a create-opened epoch)', () => {
+      const v = both([create(), rootText('fresh')], seed)
+      expect(v.default).toEqual(CLEAN)
+      expect(v.finalize).toEqual(CLEAN)
+    })
+
+    it('an update before the create continues the seed in epoch 1; the create then opens a fresh epoch 2', () => {
+      // Epoch 1 (seeded) is the prior turn's surface plus `extra`; the create replaces it, and epoch 2 owns a root.
+      const payload = [label('extra'), create(), rootText('fresh')]
+      expect(both(payload, seed).finalize).toEqual(CLEAN)
+      // Unseeded, epoch 1 is a lone rootless `extra` and is judged standalone.
+      expect(both(payload).finalize).toEqual(ROOT_MISSING)
+    })
+
+    it('a seeded surface re-created and left rootless in its epoch fails `root-missing` (the seed does not rescue it)', () => {
+      const v = both([create(), label()], seed)
+      expect(v.default).toEqual(ROOT_MISSING)
+      expect(v.finalize).toEqual(ROOT_MISSING)
+    })
+  })
+
+  describe('an update that precedes the create (the implicit open) is its own epoch, as the renderer drops it', () => {
+    it('root, create (nothing after): epoch 1 is clean, the empty re-created epoch fails `root-missing` at finalize', () => {
+      // The renderer's `#onUpdateComponents` no-ops for an unknown surface, so the create leaves it empty.
+      const v = both([rootText(), create()])
+      expect(v.default).toEqual(CLEAN)
+      expect(v.finalize).toEqual(ROOT_MISSING)
+    })
+
+    it('root, create, root validates (the create resets; both roots are first deliveries)', () => {
+      expect(both([rootText('one'), create(), rootText('two')]).finalize).toEqual(CLEAN)
     })
   })
 })

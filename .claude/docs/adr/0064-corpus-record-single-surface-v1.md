@@ -306,3 +306,109 @@ none holds more than one `createSurface` or a write before its `createSurface`, 
 can reach the new boundary (the committed `multi-turn` and `repair` shards, #1766 and #1768, re-admit unchanged).
 
 The rule's home is corpus LLD `a2ui-corpus-store.lld.md` §6 stage 6, v0.7.2.
+
+## Erratum to the 2026-10-03 amendment (2026-10-04, the validator resets the id graph at re-create, GH #1772; append-only)
+
+> Ratified by kimgranlund (repo owner), 2026-10-04, by the ruling on GH #1772 (the ruling comment:
+> https://github.com/kimgranlund/agent-ui/issues/1772#issuecomment-5983017105): "reset the graph at
+> re-create. The validator resets the surface's id graph at any `createSurface`, matching the renderer.
+> A rootless re-create then fails `root-missing`." The ratification preceded this record; no `ratify`
+> utterance exists, so `scripts/adr_ratify.py` was not run.
+
+**A2 left a re-create inside one stream as one epoch.** The amendment's A2, with its closing sentence in
+the validator header, says a `createSurface` that lands inside an already-open epoch is not a boundary, so
+two `root`s with no `deleteSurface` between still fail `sid:root`. The renderer does not agree. Its
+`#onCreateSurface` tears the live surface's DOM down and `SurfaceStore.create` disposes the prior surface
+and builds a fresh one, so after a re-create the surface holds no `root`, no components, no data and no
+session seed, whether or not a `deleteSurface` came first. The validator kept one merged graph across the
+re-create, which made the two disagree in both directions (the SPEC-N6 parity gap this amendment exists to
+close). `createSurface s, root, createSurface s` with no second `root` was graph-valid while the renderer
+holds no `root`; and `createSurface s, root, createSurface s, root` failed `s:root` though the renderer
+mounts the second `root` as a first delivery.
+
+**The rule, replacing A2's "a `createSurface` inside an open epoch is not a boundary" clause.** Every
+`createSurface` closes its surface's open epoch, if there is one, and opens a fresh epoch. No
+`deleteSurface` is needed, and a re-create does not mark the surface deleted (the create is the reopen).
+Everything else in A2 to A4 and the 2026-10-04 delete erratum stands, applied to the finer epochs:
+
+- A3: a closed epoch that delivered no component mounted nothing and is exempt in both modes; a closed
+  epoch that delivered components is judged in full in both modes; the epoch still open at payload end
+  takes the finalize arm. A `createSurface` over an empty open epoch (a leading create, a create right
+  after a create, the create after a delete) therefore changes no verdict.
+- A4: every epoch a `createSurface` opens is `created`, so the session seed never applies to it. The seed
+  continues only a first epoch no `createSurface` opened, which is now also the epoch an `updateComponents`
+  opened implicitly before the surface's first `createSurface`.
+- The resend rule holds within an epoch. Two `root`s with no `createSurface` or `deleteSurface` between
+  them still fail `sid:root`, and a second `root` inside the re-created epoch fails the same way.
+- Codes and path shapes are unchanged. No new failure code, so the two-code wire contract (ADR-0031) and
+  `protocol.ts` are untouched.
+
+**What changes for a stream.** One verdict loosens and two tighten, each toward the renderer.
+
+- Loosens: `create s, root, create s, root` validates in both modes (it failed `s:root`).
+- Tightens: `create s, root, create s, <components with no root>` fails `s:root-missing` in both modes
+  (the first epoch's `root` no longer satisfies the second epoch). `create s, root, create s` with nothing
+  after passes by default, which the prefix laws (message-lifecycle SPEC-R4 AC1, live-agent SPEC-R5 AC1)
+  require, and fails `s:root-missing` at finalize, as a create after a delete always did (A3).
+- Tightens, the implicit open: an `updateComponents` that reaches a surface before its first
+  `createSurface` is the delivery the renderer drops (an unknown surface), so it is its own epoch and the
+  create then replaces it. `root, create` passes by default and fails `s:root-missing` at finalize, and an
+  unseeded `<non-root component>, create, root` fails `s:root-missing` for the first epoch. No committed
+  record has a second `createSurface` for a surface (checked across the exemplar, multi-turn and repair
+  shards, `invalidInput` included), and the only streams that update before a `createSurface` are the
+  two multi-turn follow-ups, which hold no `createSurface` at all and so keep the seed.
+
+**Hashes and the canonical fold are untouched.** The ruling froze every committed hash, so
+`canonical.ts#foldStream` still treats `createSurface` as a non-boundary and its source is not edited (the
+comment there that it matches the validator's A2 rule is stale as of this erratum, and is booked below).
+For a record tier-1 now accepts, the two folds differ on this one shape only in what the merged fold
+retains. Tier-1 guarantees the second epoch is self-contained (a reference to an id only the first epoch
+delivered dangles in the second), so every id reachable from the second `root` was delivered by the second
+epoch and wins the upsert; the first epoch's other components fold as disconnected and drop. A record
+`create, tree A, create, tree B` therefore hashes equal to `create, tree B` (checked: same hash, the
+superseded ids reported as `disconnected`). What the merged fold still carries is the first epoch's data
+model, which the renderer dropped at the re-create, so such a record's hash can include data the rendered
+surface does not have. That is the same identity-versus-resolution difference the GH #1765 erratum above
+records for resolution.
+
+**Not covered.**
+
+- `createSurface` with an unregistered `catalogId`. The renderer emits `CATALOG_UNKNOWN` and returns before
+  its teardown, so a live surface survives. The validator holds one catalog, checks only that `catalogId`
+  is a string, and treats that create as a reset. Corpus admission pins every `createSurface.catalogId`
+  to `meta.catalogId` (`E_PIN`) before tier-1, so no admitted record reaches the difference.
+- The canonical fold and its retained data model, above.
+
+**Supersedes, in the GH #1765 erratum above.** Its "Not covered" paragraph ("the validator judges the id
+graph across a re-create inside one stream ... so a rootless second epoch is graph-valid at tier-1") and
+its sentence that a re-sent `root` inside one stream is the validator's `sid:root` at tier-1 describe the
+validator as A2 left it, and no longer hold: tier-1 resets at the re-create, so a re-create that delivers
+its own `root` reaches stage 6 and a rootless one fails `root-missing` first. Its "the validator is
+untouched" is a statement about that build, not about this one. The resolution rule itself (stage 6 resets
+at every `createSurface`) is unchanged, and the exemplar shape `create, root, dm, create, root` it names is
+now reachable at stage 6.
+
+**Repairs booked.** Applied by the build of this erratum (GH #1772): `src/renderer/validate.ts` (the
+`createSurface` arm closes the open epoch; header and helper docs) with `validate.test.ts` and
+`src/corpus/validate.test.ts` (the parity table gains the re-create shapes); `src/corpus/admit.test.ts`
+(the one-stream tests the GH #1765 build wrote against the old validator are rewritten: the
+re-sent-`root` stream now reaches stage 6, the rootless one now fails tier-1, and the positive control
+uses two complete epochs, because each epoch is judged on its own graph); the runtime SPEC
+`a2ui-runtime.spec.md` SPEC-R11's REV paragraph and SPEC-N6's row; the validator-finalize LLD
+`a2ui-validator-finalize.lld.md` mechanic 4's REV; and the corpus LLD `a2ui-corpus-store.lld.md` v0.7.3
+(§4's epoch-rule sentence and §6 stage 6's "Not covered" note). Booked and NOT applied, because the ruling
+keeps `canonical.ts` untouched: the comment at `canonical.ts#foldStream` ("a createSurface never resets an
+open epoch, matching the validator's A2 rule"), stale as of this erratum.
+
+**Acceptance addendum.** (1) `create s, root, create s, root` exits 0 in both default and finalize mode.
+(2) `create s, root, create s, <a non-root component>` fails `IDGRAPH s:root-missing` in both modes.
+(3) `create s, root, create s` passes by default and fails `IDGRAPH s:root-missing` at finalize. (4) The
+delete-then-create items 1 to 5 of the amendment and the 2026-10-04 delete erratum's addendum are
+unchanged, and amendment Acceptance 4 reads "no intervening `deleteSurface` or `createSurface`". (5) The
+committed corpus is unmoved: every committed exemplar line (78), the multi-turn shard (2) and the repair shard (5, with its
+`invalidInput` streams) validate with an identical verdict under the old and the new validator in both
+modes (184 of 184 comparisons), every record's stored `canonicalHash` re-derives, and `corpus-data.test.ts`
+(the stored-hash leg) and `repair-shard.test.ts` (the `validatorErrors` recomputation) pass. (6) `corpus/validate.ts` is the single re-export of the renderer validator, and
+`corpus/validate.test.ts` proves the identity and the re-create verdicts through the corpus entry point.
+
+The rule's home is the runtime SPEC `a2ui-runtime.spec.md` SPEC-R11's 2026-10-04 REV (re-create).
