@@ -733,6 +733,58 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(feedback2.content).toMatch(/form a CYCLE/)
   })
 
+  // GH #1756: the fifth IDGRAPH member. ADR-0064's 2026-10-04 erratum (GH #1740): the renderer DROPS an
+  // update to a deleted surface (only a `createSurface` reopens the id), so the validator fails it as
+  // `sid:update-after-delete`. Un-hinted, that path names a location and nothing else, exactly the gap the
+  // four members above closed for #307. The shape is a model that "resets" a surface by deleting it and
+  // then patching it; the delete is what makes the update a drop, so no seed is needed to reproduce it.
+  it('GH #1756: update-after-delete names its repair (re-send createSurface), and following it validates', async () => {
+    const UPDATE_AFTER_DELETE =
+      '{"a2uiMeta":{"note":"Starting over!"}}\n' +
+      '{"version":"v1.0","deleteSurface":{"surfaceId":"main"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"q","component":"Text","text":"Q2?"}]}}'
+    const { provider, reqs } = stubProvider([UPDATE_AFTER_DELETE])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    let halted: unknown
+    try {
+      for await (const _l of produce(resumedClick, deps, { maxRounds: 2 })) void _l
+    } catch (e) {
+      halted = e
+    }
+    expect(halted).toBeInstanceOf(ProduceHalt)
+    // The MEMBER, not just the code: the one new path, never `root`, `root-missing`, a `->` or a cycle.
+    expect((halted as ProduceHalt).failures).toEqual([{ code: 'IDGRAPH', path: 'main:update-after-delete' }])
+    const feedback = reqs()[1]!.messages.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(feedback.content).toMatch(/IDGRAPH at main:update-after-delete/)
+    expect(feedback.content).toMatch(/Re-send `createSurface`/)
+    expect(feedback.content).toMatch(/before updating a deleted surface/)
+    // Negative control: the other four members' sentences must NOT ride along.
+    expect(feedback.content).not.toMatch(/already received its ONE|has NO `id:"root"`|NO component defines|form a CYCLE/)
+
+    // …and the converse: the existing members' feedback must NOT carry this sentence.
+    const { provider: p2, reqs: reqs2 } = stubProvider([ROOT_RESEND])
+    const deps2: ProduceDeps = { provider: p2, retrieve: () => [], catalog: defaultCatalog }
+    await expect(async () => {
+      for await (const _l of produce(resumedClick, deps2, { maxRounds: 2 })) void _l
+    }).rejects.toBeInstanceOf(ProduceHalt)
+    const other = reqs2()[1]!.messages.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(other.content).not.toMatch(/deleted surface|Re-send `createSurface`/)
+
+    // The repair the hint names (delete, RE-CREATE, then the COMPLETE tree) validates on round 2.
+    const RECREATED =
+      '{"a2uiMeta":{"note":"Starting over!"}}\n' +
+      '{"version":"v1.0","deleteSurface":{"surfaceId":"main"}}\n' +
+      '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[' +
+      '{"id":"root","component":"Column","children":["q"]},{"id":"q","component":"Text","text":"Q2?"}]}}'
+    const { provider: p3, calls: calls3 } = stubProvider([UPDATE_AFTER_DELETE, RECREATED])
+    const deps3: ProduceDeps = { provider: p3, retrieve: () => [], catalog: defaultCatalog }
+    const okLines: string[] = []
+    for await (const line of produce(resumedClick, deps3, { maxRounds: 2 })) okLines.push(line)
+    expect(calls3()).toBe(2) // round 1 self-corrects on the new member, round 2 validates
+    expect(okLines.some((l) => l.includes('"createSurface"'))).toBe(true)
+  })
+
   // Review F2 — the seed hole the escape hatch above walks onto. `sessionSurfaceSeeds` used to reset a
   // surface's seed on `deleteSurface` ONLY, so a prior-turn `createSurface` accumulated on top of the
   // components it actually TORE DOWN (renderer.ts re-creates the store surface and the SurfaceTree from

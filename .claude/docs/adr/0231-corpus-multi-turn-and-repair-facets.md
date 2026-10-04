@@ -325,3 +325,20 @@ Checkable predicates the facet build slice is dispatched against:
   rejected. It is a clean widening (`validatorErrors` gains an `E_POINTER` arm computed by
   `findUnresolvedPointers`), but no v1 pair needs it and mixing two taxonomies in one field without a
   consumer is speculative. Named as a trigger.
+
+## Erratum to cl.3 (2026-10-04, GH #1756, from the independent review of PR #1749; append-only)
+
+Cl.3's "Recomputation equality" rule says a *same-turn create+delete* validates clean at finalize "(ADR-0187's
+`deletedHere` exemption)". PR #1749 (GH #1740) removed that name: `deletedHere` no longer exists in
+`renderer/validate.ts`. The behavior the sentence describes still holds, and only its mechanism name is
+stale. A payload that sends `createSurface s` and then `deleteSurface s` in the same turn still validates
+clean at finalize, and so does `createSurface s, root, deleteSurface s`.
+
+**The current rule** is the surface epochs of the ADR-0064 2026-10-03 amendment (A2, A3). A surface's
+messages partition into epochs, and a `deleteSurface` closes the open one. A closed epoch never takes the
+finalize emptiness arm (an empty closed epoch mounted nothing, so nothing was abandoned; a non-empty one is
+judged in full in both modes). Only the epoch still open at payload end takes that arm, so a same-turn
+create plus delete passes, while `createSurface s, root, deleteSurface s, createSurface s` with nothing after
+it fails `s:root-missing`. Read cl.3's parenthetical as "(the ADR-0064 2026-10-03 amendment's epochs)"; the
+rest of the sentence stands, including `NET_NOOP` being the producer loop's own taxonomy
+(`src/agent/produce.ts`, GH #1142) and not a validator code.
