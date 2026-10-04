@@ -22,7 +22,7 @@ MODEL-authored arms — structural facts the model declares.
 | # | Arm | ADR | What the model declares | Shape (as ratified) |
 |---|---|---|---|---|
 | — | (envelope minted) | 0088 | `note`/`trace` conversational side-channel — the arms below ride this seam | `{"a2uiMeta":{"note":"…"}}` |
-| 1 | `ask` | 0097 | A structured, feed-embedded question (closed-set / typed-value answer) with a per-message frozen-history lifecycle; answers ride the existing `action` arm + `sendDataModel` | routing field on the envelope; exact shape per SPEC-R14 |
+| 1 | `ask` | 0097 | A structured, feed-embedded question (closed-set / typed-value answer) with a per-message frozen-history lifecycle; answers ride the existing `action` arm + `sendDataModel` | routing field on the envelope; exact shape per SPEC-R14. A question expecting ONE typed value (an amount, a date) must be a structured ask, never prose alone (grammar mandate, GH #1142). Reserved id `greet-1` rides this field WITHOUT being an ask (starter Buttons only, no data model, consumes no `ask-<n>`, never frozen) |
 | 2 | `plan` | 0174 | An opt-in multi-step task decomposition the host loop executes sequentially; steps render live via the shipped status-stream grouping | `plan: { steps: [{ id, description }] }` (exact shape pinned at SPEC/LLD) |
 | 3 | `personaPatch` | 0178 | Partial persona-state deltas during the Builder interview (the `PERSONA_STATE_KEYS` universe), merged incrementally per turn, applied HOST-side through the per-key-sanitizer gate | partial record; gate-keyed (`SURFACE_*_KEY`), off ⇒ never consumed |
 | 4 | `flowEnd` | 0198 | "This turn closes the flow" — the closing turn after the flow-final confirm (and every other terminal path, per amendment A1) | bare `true`; anything else drops only the field. Additively widenable to `true \| {...}` later |
@@ -41,7 +41,10 @@ own ADR-argued exception, not silence:
    stays byte-identical; existing fields are never touched. Unknown keys are dropped by
    `readMetaLine`, so old readers degrade silently.
 3. **Shallow per-field validation, whole-arm granularity.** A malformed arm drops ONLY itself —
-   never the envelope, never a sibling field on the same line. And the arm validates as a WHOLE:
+   never the envelope, never a sibling field on the same line. (`ask` is the one arm whose drop also
+   suppresses the surface: a dropped ask, e.g. a reused `ask-<n>` id, strips every payload line naming its
+   surface so no clickable card is left with no ask on record, GH #1064; a note-less ask that passes still
+   ships its routing fact.) And the arm validates as a WHOLE:
    `plan` drops entirely on one malformed step, `personaPatch` on one malformed member, `team` on
    any member missing a string field, `target` on a missing/non-string `surfaceId` — "a half-parsed
    roster is the one shape a host mint loop must never be handed" (ADR-0204 cl.2); "a

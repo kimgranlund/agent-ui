@@ -7,7 +7,7 @@ description: >-
   a mini-skill idiom module or a genui pack, changing grammar/mode/teaching prose, engineering
   trigger vocabularies, or when a red prompt-equivalence gate needs the deliberate-change
   recapture flow. NOT for composing payloads (a2ui-payload-authoring), producer/renderer CODE
-  (a2ui-build-agent), the composed persona/admin prompts (component-owned, agent-admin), or corpus
+  (a2ui-build-agent), the composed agent-config/admin prompts (component-owned, agent-admin), or corpus
   exemplars (a2ui-corpus-curation).
 user-invocable: true
 disable-model-invocation: false
@@ -17,9 +17,9 @@ disable-model-invocation: false
 
 The producer's system prompt is COMPOSED, not written: `buildSystemPrompt` (src/agent/system-prompt.ts)
 assembles catalog law + exemplars + mode prose (ADR-0090) + intent-selected mini-skills (ADR-0091) + an
-optional persona tail (ADR-0138) from prompt FILES under `src/agent/prompts/` (ADR-0135 — grammar.md, the
+optional agent-config tail (ADR-0138) from prompt FILES under `src/agent/prompts/` (ADR-0135 — grammar.md, the
 mode files, `mini-skills/*.md`). This skill is the editing discipline for those files; distilled from the
-TKT-0077/0080/0081 game-loop arc, where every lesson below was measured live.
+TKT-0077/0080/0081 game-loop arc (frozen tickets, ADR-0145; the Findings stay readable as the archive), where every lesson below was measured live.
 
 ## The byte-pinning law (read before any edit)
 
@@ -50,7 +50,8 @@ than you meant to, and an armed run on an UNCHANGED tree is a byte-identical no-
   SPEC-R6 hard filter — a module is retrievable only for its own catalog; GH #748 caught this field
   missing from the shape spec entirely).
 - **Budget:** body ≤ ~200 tokens (`chars / 4`, gated by `mini-skills.test.ts`). Trim prose, never
-  frontmatter. The count pin in that test moves when you add/remove modules.
+  frontmatter. The module-count pin in `src/live-agent/mini-skills.test.ts` moves when you add/remove modules; never copy the number into prose.
+- **Register every new module in `tools/agent/worker/fs-shim-content.ts`** (a static import plus its directory-list entry). Without it the file loads under node but is missing from the deployed Worker; `fs-shim-content-drift.test.ts` is the gate.
 - **Catalog-grounded ONLY:** every component/prop the body names must exist in
   `catalog/default/catalog.json` at its WIRE name (Stat's wire prop is `value`, not the DOM `figure`).
   Verify — there is no Divider, for example; teaching one causes validate-loop churn.
@@ -75,7 +76,7 @@ Mechanics that follow:
   `deal blackjack poker game`, so bare "deal me in" selects exactly those three (pinned by a test).
 - **Distinct per-area nouns** keep modules separable on specific intents ("show the score" favors the
   HUD module despite the shared core — shared terms get low IDF, distinct terms dominate).
-- Selection sees ONLY the user text — persona/capability prose never influences it.
+- Selection sees ONLY the user text — agent-config/capability prose never influences it.
 
 ## Runtime + verification
 
@@ -84,7 +85,11 @@ Mechanics that follow:
   (never `import.meta.url` — the vite-temp bundling trap, noted in mini-skills.ts).
 - Verify a teaching change LIVE, not just by gates: one real produce turn through the page or a curl to
   `/__a2ui/agent`, checking the RENDERED result (the TKT-0080 class validates cleanly and still renders
-  wrong).
+  wrong). `@agent-ui/devtools` (ADR-0200) is the agent-drivable path: its transports run a turn and return the raw
+  NDJSON timeline plus a capture, with per-surface render verdicts (`./server`, `./playwright`).
+- Transport is validate-then-stream: A2UI lines arrive in one burst after whole-reply validation
+  (live-agent SPEC-R5, ADR-0206). A test that ingests lines mid-turn proves nothing about live timing,
+  and any "mid-stream" renderer state must be driven from turn start (the `target` arm, ADR-0206).
 
 ## Triage: recurring model misbehavior (before you prompt-nudge)
 
@@ -103,4 +108,4 @@ The arc's ordering, cheapest-correct-first:
 
 TKT-0077 (the game trio + budget/trigger mechanics) · TKT-0080 (the relative-binding teaching gap,
 wire-captured) · TKT-0081 (the contradictory-gates deadlock) — all with full Findings in
-`.claude/docs/tickets/`.
+`.claude/docs/tickets/` (frozen archive, ADR-0145).

@@ -1,0 +1,109 @@
+{
+  "skill": "a2ui-jsonl-mcp",
+  "cases": [
+    {
+      "id": "t01",
+      "expect": "trigger",
+      "prompt": "My a2uiMeta line has a note but the host never shows it. What can make a meta-line get dropped on the A2UI stream?"
+    },
+    {
+      "id": "t02",
+      "expect": "trigger",
+      "prompt": "In what order do progress lines, the meta-line, the genui line and the A2UI messages reach the consumer from produce()?"
+    },
+    {
+      "id": "t03",
+      "expect": "trigger",
+      "prompt": "What exactly does the per-line heal repair, and why does the trace's healed count ignore single-object-envelope?"
+    },
+    {
+      "id": "t04",
+      "expect": "trigger",
+      "prompt": "Does validate-then-stream mean the user sees nothing until the whole turn is valid? What is the only early signal on the wire?"
+    },
+    {
+      "id": "t05",
+      "expect": "trigger",
+      "prompt": "A model emitted a meta-line as the third line of its output and the turn burned a self-correct round with a SCHEMA error. Why?"
+    },
+    {
+      "id": "t06",
+      "expect": "trigger",
+      "prompt": "How do I replay a captured real turn deterministically in CI, and why does the replay have no leading note?"
+    },
+    {
+      "id": "t07",
+      "expect": "trigger",
+      "prompt": "What does the stream look like when produce() halts after the transport already sent a 200?"
+    },
+    {
+      "id": "t08",
+      "expect": "trigger",
+      "prompt": "If the target arm of the meta-line is malformed, does the note on the same line survive?"
+    },
+    {
+      "id": "t09",
+      "expect": "trigger",
+      "prompt": "Can createRecordedTransport carry flowEnd or target for a recorded demo turn?"
+    },
+    {
+      "id": "t10",
+      "expect": "trigger",
+      "prompt": "Why did the ask get dropped and its surface's messages vanish from the shipped JSONL?"
+    },
+    {
+      "id": "t11",
+      "expect": "no-trigger",
+      "prompt": "Compose the createSurface and updateComponents messages for a settings form with a toggle and a Save button.",
+      "note": "owner: a2ui-payload-authoring"
+    },
+    {
+      "id": "t12",
+      "expect": "no-trigger",
+      "prompt": "When should the model declare a plan arm versus an ask arm, and what shape do the steps take?",
+      "note": "owner: a2ui-payload-authoring"
+    },
+    {
+      "id": "t13",
+      "expect": "no-trigger",
+      "prompt": "Fix this payload: the Column references a child id that is never defined and the validator reports an orphan.",
+      "note": "owner: a2ui-payload-authoring"
+    },
+    {
+      "id": "t14",
+      "expect": "no-trigger",
+      "prompt": "Add a fifth repair arm to heal.ts and write the unit test for it.",
+      "note": "owner: a2ui-build"
+    },
+    {
+      "id": "t15",
+      "expect": "no-trigger",
+      "prompt": "Refactor peelMetaLine in produce.ts so it also returns the line index, keeping the gates green.",
+      "note": "owner: a2ui-build"
+    },
+    {
+      "id": "t16",
+      "expect": "no-trigger",
+      "prompt": "Implement a new transport backend behind the AgentTransport seam in the a2ui package.",
+      "note": "owner: a2ui-build"
+    },
+    {
+      "id": "t17",
+      "expect": "no-trigger",
+      "prompt": "Admit this judged seed into the exemplar shard and rescore the verdicts file.",
+      "note": "owner: a2ui-corpus-curation"
+    },
+    {
+      "id": "t18",
+      "expect": "no-trigger",
+      "prompt": "Register a second catalog beside the default and thread catalogId to the proxy.",
+      "note": "owner: a2ui-multi-catalog"
+    },
+    {
+      "id": "t19",
+      "expect": "no-trigger",
+      "prompt": "Make the ui-button hover state use the new surface token.",
+      "note": "owner: component-build (outside the a2ui family)"
+    }
+  ]
+}

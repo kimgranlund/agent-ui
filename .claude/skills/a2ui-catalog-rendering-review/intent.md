@@ -16,8 +16,8 @@ should:
   - "fix the <Component> catalog card / its seeds / its catalog row" (2026-08-18 widening)
   - "add a prop or a new type/pattern to the A2UI catalog"
 should_not:
-  - "grade this catalog row's catalog.json + factory + tests"           # a2ui-review (rubric a2ui-catalog.md)
-  - "review this A2UI payload / gallery example"                         # a2ui-review (rubric a2ui-payload.md)
+  - "grade this catalog row's catalog.json + factory + tests"           # a2ui-review-agent (rubric a2ui-catalog.md)
+  - "review this A2UI payload / gallery example"                         # a2ui-review-agent (rubric a2ui-payload.md)
   - "is ui-attachment's anatomy and geometry right"                      # frontend:component-checker / component.md
   - "screenshot the docs site pages for the README"                      # plain playwright, no eval
 
@@ -34,8 +34,8 @@ defect quadrant (L-only → example-authoring-agent · R-tag/prop → a2ui-build
 component-build-agent · card → docs-writer). Deleted after a month: reviews regress to (a)/(b).
 
 ## fences
-- NOT for grading the catalog ROW — catalog.json/factory/tests (a2ui-review, rubric a2ui-catalog.md)
-- NOT for grading a composed A2UI payload or gallery example (a2ui-review, rubric a2ui-payload.md)
+- NOT for grading the catalog ROW — catalog.json/factory/tests (a2ui-review-agent, rubric a2ui-catalog.md)
+- NOT for grading a composed A2UI payload or gallery example (a2ui-review-agent, rubric a2ui-payload.md)
 - NOT for the ui-* control's own anatomy/geometry (frontend:component-checker)
 - (RETIRED 2026-08-18) "NOT for fixing seeds/knobs" — Kim ruling: the skill owns the fix leg through the catalog pipeline; ownership seats stay the DISPATCH targets for cross-package edits (component-build-agent for control source, a2ui-corpus-curation for admission)
 - NOT for the site page shell/nav (docs-writer)

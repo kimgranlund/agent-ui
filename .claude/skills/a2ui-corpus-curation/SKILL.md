@@ -1,15 +1,7 @@
 ---
 name: a2ui-corpus-curation
 description: >-
-  Curate the A2UI training corpus when adding an authored exemplar or back-scoring records: author a
-  seed (the `src/examples` shape), admit it through the REALIZED store pipeline, and judge/rescore it —
-  a thin procedure over the SHIPPED mechanism, never a re-implementation. Use for importing seeds
-  (`import-seeds --verdicts`, its archived verdicts file COMMITTED with the shard), back-scoring records
-  (`rescore`), resolving an admission HALT (near-duplicate · unjudged candidate · quarantined-name
-  collision · a recorded disposition on an unjudged run), or the judged quarantine exit (`--replace`).
-  It POINTS at the owning docs (corpus/harness LLDs · ADR-0055/0060–0064/0068/0165), never restating the
-  record schema, dedup math, or pipeline internals. NOT for composing an A2UI payload — `a2ui-payload-authoring`;
-  NOT for writing pipeline/renderer/validator/catalog code — the `a2ui-build-agent` agent.
+  Curate the A2UI training corpus: author a seed (`src/examples`), admit it through the realized store pipeline, judge and rescore it. Use for importing seeds (`import-seeds --verdicts`), back-scoring records (`rescore`), resolving an admission HALT (near-duplicate, unjudged candidate, quarantined-name collision, disposition on an unjudged run), or the judged quarantine exit (`--replace`). Points at the owning docs (corpus and judge-wiring LLDs, ADR-0055/0060-0064/0068/0165); never restates schema or dedup math. NOT for composing a payload (a2ui-payload-authoring); NOT for pipeline/renderer/validator/catalog code (a2ui-build-agent); NOT for the corpus-genui store (its LLD).
 disable-model-invocation: false
 user-invocable: true
 ---
@@ -19,7 +11,7 @@ user-invocable: true
 The curator's procedure over the **already-realized** corpus store — sequence the shipped pipeline and
 recognize its halts. The store (admission, dedup, canonicalization, retrieval, export) shipped in the
 corpus-store wave (`packages/agent-ui/a2ui/src/corpus/*`), and the tier-2 judge activates via the
-verdict adapter in the harness wave. This skill is a **procedure pointer, not a re-implementation
+verdict adapter in the judge-wiring wave (`a2ui-harness-wiring.lld.md`). This skill is a **procedure pointer, not a re-implementation
 surface**: every mechanism below has one owner doc, and the procedure cites it — it never reproduces the
 schema, the dedup math, or the pipeline internals.
 
@@ -48,7 +40,9 @@ contract:
    agent-ui seed, or `allBasicSeeds` for an `a2ui-basic` seed: two separate shelves, GH #1737, so a Basic
    seed is a compile error on `allSeeds`), and register it in the import script's drift-guarded
    `SEEDS_BY_MODULE` (agent-ui) or `BASIC_SEEDS_BY_MODULE` (Basic) (`tools/corpus/import-seeds.ts`, a
-   half-wired seed HALTS at the drift guard). The import resolves the catalog per seed from its
+   half-wired seed HALTS at the drift guard). One seed is ONE surface: a scenario with two surfaces is two
+   seeds, since a corpus record is single-surface (`ADR-0064`; a two-surface draft reds `npm test` via
+   `record.ts#checkSingleSurface`, first hit in GH #1374). The import resolves the catalog per seed from its
    `catalogId` and `admit()` validates against that catalog; the record lands in
    `corpus/exemplar/v1_0/<catalogId>.jsonl`. It never imports corpus code; the seed→`CorpusRecord` mapping
    is the import script's (corpus LLD §3 "Seed pre-alignment").
@@ -68,7 +62,7 @@ contract:
    `corpus/verdicts/README.md` (fenced above), never restated here.
 
 3. **Clear the gates** — the standing shard gate (`src/corpus/corpus-data.test.ts`), **amended for
-   quarantine per `ADR-0068` cl.6 (the amendment lands with the judge wiring, slice h11)**, backs the
+   quarantine per `ADR-0068` cl.6**, backs the
    shard: quarantined lines are legal (parse + `validateRecord`
    + facet for all lines; tier-1/hash legs run for non-quarantined lines only). Run `npm test`; it must be
    green before and after any curation.
@@ -76,7 +70,7 @@ contract:
    `.claude/docs/rubrics/a2ui-corpus.md` and emits ONE verdicts file whose `rubricVersion` equals the
    rubric's `version:` marker (`ADR-0068` cl.1). The adapter (`src/corpus/judge.ts`, `createVerdictJudge`)
    is deterministic plumbing — judgment is authored in the critic seat, never inside `admit()`
-   (harness LLD §7; `process.md` rule 1 + SPEC-R8).
+   (judge-wiring LLD §7; `process.md` rule 1 + SPEC-R8).
 5. **Back-score the phase-1 records** — `tools/corpus/rescore.ts` (`ADR-0068` cl.4) applies verdicts only
    to records with absent `qualityScore`: at/above bar → `meta.qualityScore`; below bar →
    `status:"quarantined"` (one-way under rescore). It is all-or-nothing (the whole file validates and every
@@ -107,7 +101,14 @@ share the CONTRACT — nano-ui/gen-ui-kit's `catalog-a2ui_0_9.json` still legiti
 catalog at all. Before stripping/migrating any stored payload, verify WHICH catalog it validates
 against; a different catalog makes the migration a corruption, not a fix.
 
-## The halts — recognize, then resolve at the owner (corpus/harness LLD §8; `ADR-0165` cl.2/4)
+## Scope: this skill is the exemplar shard only
+
+`packages/agent-ui/a2ui/corpus-genui/` (records, verdicts, the pack-idiom eval) is a SEPARATE store with its
+own rubric (`.claude/docs/rubrics/genui-pack-idiom.md`), judge leg, and CLI (`npm run eval:genui-corpus`);
+its procedure lives in `.claude/docs/lld/genui-b3-judged-eval.lld.md`, not here. Run any leg with
+`--dry-run` first: it makes no API call and writes nothing (GH #1608/#1611).
+
+## The halts — recognize, then resolve at the owner (corpus and judge-wiring LLD §8; `ADR-0165` cl.2/4)
 
 A halt is a **stop-and-resolve**, never a bypass. The pipeline fails closed; act on the cause:
 

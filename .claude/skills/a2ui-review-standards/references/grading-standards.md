@@ -37,7 +37,7 @@ the per-artifact procedure are what makes a grading run reproducible instead of 
 - **Payload → `a2ui-payload.md`.** Run
   `node --experimental-strip-types packages/agent-ui/a2ui/tools/harness/validate-payload.ts <payload.json> [--catalog agent-ui|a2ui-basic]`.
   Score P1–P3 from the exit code + codes + the `repairs` array; then, only if it exits 0, judge P4–P9
-  (composition · catalog idiom incl. the enum-range check the gate skips · binding hygiene ·
+  (composition · catalog idiom, the right in-enum choice, since off-enum already fails P2 (ADR-0098) · binding hygiene ·
   accessibility intent · declared-scope fidelity — P8, the GH #474 deceptive-composition defense,
   hard-blocks promotion regardless of the other dimensions · card anatomy fidelity — P9, GH #1199:
   where a `Card` frames the payload, header identity-only / content substance / footer THE action row)
@@ -53,6 +53,12 @@ the per-artifact procedure are what makes a grading run reproducible instead of 
   `target ?? description` ADR-0063 consumer rule — grade the *effective* target, never `target` raw;
   the closed `source` enum + a resolvable `origin`; the θ_dup neighbour), then judge above that floor.
   Then emit the VerdictsFile below.
+- **Catalog-page card → `a2ui-catalog-example.md`.** Dispatched only by `a2ui-catalog-rendering-review`,
+  which has already run `scripts/eval-a2ui-catalog.mjs`: cite its gate verdicts (A1 A2 A3 A4 B1 B2 B3g
+  C1 C2), never re-probe. You score ONLY the [review] halves, A3-review, B3-review, B4, C3, in that
+  rubric's §4 order: blind identify from the screenshot first, then the expected-card record, out-in
+  verdict, then in-out verdict, each citing its 1/3/5 anchor and one image-region sentence. Name the
+  defect quadrant (L-only, R-only, L↔R, card) per its §6. No VerdictsFile.
 - **Mechanism function → `a2ui-mechanism.md`.** Run the mechanism's co-located suite via `npm test`
   (exit code, never grep) for M1 [gate] (contract tests incl. anti-vacuous negative controls); score
   M2 ([review], definitional — hard-gated like a gate) by READING the imports/call sites for

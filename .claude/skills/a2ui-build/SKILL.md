@@ -27,15 +27,25 @@ builds; it never grades its own output (the `a2ui-review-agent` critic does — 
   `a2ui-streaming-pipeline.spec.md` · `a2ui-training-corpus.spec.md` · `a2ui-expert-harness.spec.md`.
 - **Design** — `.claude/docs/lld/a2ui-renderer.lld.md` (LLD-C1..C14 + the build sequence) ·
   `a2ui-catalog.lld.md` · `a2ui-streaming-pipeline.lld.md` · `a2ui-corpus-store.lld.md` ·
-  `a2ui-harness-wiring.lld.md`.
+  `a2ui-harness-wiring.lld.md` · `a2ui-validator-finalize.lld.md` · `renderer-structural-resend.{spec,lld}.md`
+  (ADR-0128) · `a2ui-message-lifecycle.{spec,lld}.md` · `a2ui-ecosystem-alignment.spec.md` (v0.3 pin).
+  A2A work: `a2a-foundations.spec.md` · `a2a-protocol-core.lld.md` · `a2a-a2ui-bridge.lld.md`.
+  Devtools work: `devtools-harness.spec.md`.
+- **Wire tolerances**: `.claude/docs/references/wire-tolerances.md` indexes every deliberate
+  inbound Postel arm, backed by `renderer/wire-tolerances.ts`. A new synonym or graceful degrade is a
+  row there (sanctioning record + a test that fires if it silently widens), never an ad-hoc branch.
 - **Decided history** — the A2UI ADR line in `.claude/docs/adr/`: 0011 (action shape) · 0024
   (v1.0 lists are POSITIONAL — the index IS the key) · 0026/0027/0028 (function calls · `${…}`
   interpolation · fn-expression grammar) · 0029 (`checks` → setCustomValidity) · 0031 (rich internal
   errors → the TWO-code wire vocab at `#emit`) · 0034 (`callFunction`/`callableFrom`,
   most-restrictive-wins) · 0023 (kernel reuse ONLY via the public seams: `mount` + the directive
-  trio — never the private `html``` entry).
+  trio — never the private `html``` entry) · 0187 (validator finalize signal, amends N6) · 0128
+  (structural-resend reconciliation) · 0137 (`./agent` producer export) · 0191/0199 (`pending` is the
+  STALE dim; `working` is the distinct live-target state) · 0194 (reveal order) · 0206 (`target` meta
+  arm) · 0200 (devtools).
 - **Conventions** — `CLAUDE.md` (strict TS, `.ts` imports, layering: a2ui depends on
-  `@agent-ui/components`, nothing imports upward).
+  `@agent-ui/components`, nothing imports upward). `@agent-ui/devtools` sits above `a2ui` + `a2a` and
+  nothing imports it, so a2ui code never reaches into it; devtools work routes to ADR-0200.
 
 ## Ground rules (the judgment layer)
 
@@ -57,10 +67,19 @@ builds; it never grades its own output (the `a2ui-review-agent` critic does — 
 6. **A2A alignment rides the wire types** — A2UI is the generative-UI payload standard in the
    Agent2Agent ecosystem; anything crossing the wire (messages, errors, callFunction,
    functionResponse) keeps `protocol.ts` as the single source and the ADR-0031 two-code error
-   contract at the boundary.
+   contract at the boundary. The A2A wire is pinned to spec v0.3.0 (`PROTOCOL_VERSION` in
+   `a2a/src/protocol/types.ts`); v1.0 drift is recorded in GH #1198 (closed bookkeeping), so never hand-upgrade the types.
 7. **Binding performance is a law, not a preference** — fine-grained waking rides the kernel's
    Object.is cutoff + structural-sharing pointer writes (per-path waking yes; per-path
-   invalidation no). Don't add caching or diffing the kernel already provides.
+   invalidation no). Don't add caching or diffing the kernel already provides. The draft helper
+   `mutate(doc, path, recipe)` in `renderer/binding.ts` follows it: it RECORDS assignments and replays
+   them as `setPointer`, never diffs snapshots.
+8. **Streaming order is renderer policy, and live timing is not jsdom timing.** Patch-in order is
+   greedy by default; `revealOrder` (top-down sibling hold) is opt-in, default OFF (ADR-0194), so
+   payload order stays out-of-order tolerant. The live transport is validate-then-stream: lines
+   arrive in one synchronous burst after whole-reply validation (ADR-0206), so state keyed to
+   "mid-stream" must start from turn START (`working`, GH #1104; `target`, ADR-0199/0206), and a jsdom test that
+   paces ingest proves nothing about live cadence.
 
 ## Procedure
 

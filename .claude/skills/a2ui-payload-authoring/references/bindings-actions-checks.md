@@ -8,8 +8,8 @@ under `packages/agent-ui/a2ui/src/examples/`.
 **Re-derive the cites here whenever `protocol.ts`, `renderer/checks.ts`, `catalog.json`, or the seed shelf
 changes** — the CLI catches a stale payload, not a stale line number.
 
-## The three message envelopes you compose
-Server→client, each tagged `version: "v1.0"` (`protocol.ts:116-150`):
+## The three message envelopes you compose (the fourth, `deleteSurface`, is in SKILL.md)
+Server→client, each tagged `version: "v1.0"` (`A2uiServerMessage` in `protocol.ts`, six envelopes in all: also `deleteSurface`, `actionResponse`, `callFunction`):
 - **`createSurface`** — `{ surfaceId, catalogId, sendDataModel? }`. ALWAYS first. `sendDataModel:true` makes a
   triggered action carry the live data model back (`generative-form.ts:35-36`).
 - **`updateComponents`** — `{ surfaceId, components: A2uiComponent[] }`. The adjacency list; may be split across
@@ -42,7 +42,8 @@ relative paths (`dynamic-lists.ts:109-110`).
 - **`action`** — the intent NAME the client emits (`A2uiAction.name`). Destructive intent lives in the name +
   wording — there is no danger variant (`patterns.ts:1-8`).
 - **`wantResponse: true`** — ask the server to reply (an `actionResponse` round-trips back).
-- **`submit: true`** — a CLIENT-consumed FormProvider gate flag (ADR-0054). It never reaches the wire — the
+- **`submit: true`** — a CLIENT-consumed FormProvider gate flag (ADR-0054), declared as a boolean on `Button.action`
+  in `catalog.json` (so it validates as authored). It is stripped before emit; the
   emitted `action` is byte-identical to a plain one (`generative-form.ts:140-141,148`). It only marks the button
   as the form's submit so the provider can block it while invalid.
 

@@ -18,7 +18,7 @@ disable-model-invocation: false
 Five ratified patterns (§1–§5 below — §5 joined via GH #480/ADR-0172) govern every "another catalog" ask in `@agent-ui/a2ui`. The contract is
 the ADR itself — `.claude/docs/adr/0169-a2ui-basic-catalog-upstream-interop.md` (accepted
 2026-08-04); this skill routes to its clauses — the tables stay in the ADR. `a2ui-basic`
-(upstream A2UI Basic) is the type specimen; any third catalog follows the same four patterns.
+(upstream A2UI Basic) is the type specimen; any third catalog follows the same five patterns.
 
 **Routing boundary.** This skill answers and routes; the build lands elsewhere: renderer /
 catalog / registry code → the `a2ui-build-agent` agent · payload authoring → `a2ui-payload-authoring` ·
