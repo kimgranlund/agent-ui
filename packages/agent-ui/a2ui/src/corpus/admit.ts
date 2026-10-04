@@ -482,13 +482,14 @@ interface ResolutionEpoch {
  *
  * - a `deleteSurface`: the renderer frees the surface's graph and data model, and the next epoch starts
  *   from an empty map and an undefined data model, the store a fresh surface starts from;
- * - a `createSurface` that follows a component-bearing epoch, with no delete between: the renderer
- *   replaces the surface and its store on a re-create (`renderer.ts`'s `#onCreateSurface`) and the shared
- *   validator refuses the prior seed to an epoch a `createSurface` opened (A4), so the epoch that
- *   follows starts empty too. The canonical fold keeps `createSurface` a non-boundary because its
- *   hashes are frozen (every committed `canonicalHash`), so on this one shape the two folds differ: a
- *   record's identity can merge what its resolution keeps apart. A `createSurface` over an epoch with
- *   no component (a leading create, or the create after a delete) closes nothing.
+ * - a `createSurface` that follows prior content (components or data) in the epoch, with no delete
+ *   between: the renderer replaces the surface and its store on a re-create (`renderer.ts`'s
+ *   `#onCreateSurface`) and the shared validator refuses the prior seed to an epoch a `createSurface`
+ *   opened (A4), so the epoch that follows starts empty too. The canonical fold keeps `createSurface` a
+ *   non-boundary because its hashes are frozen (every committed `canonicalHash`), so on this one shape
+ *   the two folds differ: a record's identity can merge what its resolution keeps apart. A
+ *   `createSurface` over an empty fold (a leading create, or the create after a delete) closes nothing,
+ *   so the rule needs no content test: every `createSurface` closes, and over nothing that is a no-op.
  *
  * Those resets are what do the work in stage 6: no binding sees an earlier epoch's data, including a
  * DATA-ONLY epoch's (writes, no components) behind a delete. From a delete until the next
@@ -514,10 +515,11 @@ function foldForResolution(out: A2uiOutput): ResolutionEpoch[] {
   for (const msg of out) {
     if ('createSurface' in msg) {
       deleted = false // the only message that reopens a deleted surface
-      // A re-create over a mounted epoch (no delete between): the renderer replaced the surface and its
-      // store, so the earlier data resolves nothing here. After a delete `byId` is already empty (close()
-      // ran), and a leading create finds it empty, so neither closes an epoch.
-      if (byId.size > 0) close()
+      // A re-create over prior content (components OR data, no delete between): the renderer replaced the
+      // surface and its store, so nothing the earlier writes built resolves here. After a delete the fold is
+      // already empty (close() ran) and a leading create finds it empty, so for those `close()` is a no-op:
+      // that is why this resets unconditionally rather than testing for content.
+      close()
     } else if (deleted && ('updateComponents' in msg || 'updateDataModel' in msg)) {
       // The renderer's dropped delivery. A defensive mirror of `foldStream`, unreachable through
       // `admit()`: within one stream tier-1 rejects it first (`sid:update-after-delete`), and across a

@@ -58,9 +58,9 @@
 > still sees the prior turn's data; closed by v0.7.2 below). All 78 committed exemplars keep their
 > `canonicalHash` (none has a data-only epoch).
 > **v0.7.2 (2026-10-04, ADR-0064 re-create erratum built, GH #1765):** admission's pointer resolution
-> (§6 stage 6, `foldForResolution` in `admit.ts`) also resets at a `createSurface` that follows a
-> component-bearing epoch, with no `deleteSurface` needed, matching the renderer (which replaces the
-> surface and its store on a re-create) and tier-1 (A4). §6 stage 6 replaces the KNOWN GAP note with the
+> (§6 stage 6, `foldForResolution` in `admit.ts`) also resets at every `createSurface` that follows prior
+> content (components or data) in the epoch, with no `deleteSurface` needed, matching the renderer (which
+> replaces the surface and its store on a re-create) and tier-1 (A4). §6 stage 6 replaces the KNOWN GAP note with the
 > rule; two §8 rows gain the arm; §4 notes that its canonical fold still treats `createSurface` as a
 > non-boundary, so the resolution fold and the canonical fold now differ on this one shape on purpose.
 > `canonical.ts` and `renderer/validate.ts` are unchanged and all 78 committed exemplars re-admit with
@@ -380,19 +380,23 @@ dispatch by `meta.facet`, and an exemplar takes exactly its pre-ADR-0231 path th
   surface sees only what its new epoch delivered. A data-only epoch is inert (§4).
   Failure paths keep the one-epoch `compId.prop` shape, whichever epoch fails (A2's path rule), and a
   path failing in several epochs is listed once.
-  A `createSurface` that follows a component-bearing epoch is also a reset (v0.7.2, ADR-0064's 2026-10-04
-  resolution-reset erratum, GH #1765): `foldForResolution` closes its epoch there, with no `deleteSurface`
-  needed, and the next epoch starts from an empty component map and an undefined data model, matching
+  A `createSurface` that follows prior content in the epoch, components or data, is also a reset (v0.7.2,
+  ADR-0064's 2026-10-04 resolution-reset erratum, GH #1765): `foldForResolution` closes its epoch there,
+  with no `deleteSurface` needed, and the next epoch starts from an empty component map and an undefined
+  data model, matching
   the renderer (it replaces the surface and its store on a re-create) and tier-1 (A4 refuses the prior
   seed to an epoch a `createSurface` opened). So after the login prior, a follow-up
   `[createSurface, root->status (Text bound /status)]` with no data write rejects `E_POINTER`
-  (`status.text`), and admits once it writes its own `/status`. A `createSurface` over an epoch with no
-  component (a leading create, or the create after a delete) closes nothing. This differs from §4's
+  (`status.text`), and admits once it writes its own `/status`; a data-only prefix is no different
+  (`[create, dm(/status), create, root bound /status]` rejects `E_POINTER`), and a write before the first
+  `createSurface` is the renderer's dropped delivery, so it resolves nothing. A `createSurface` over an
+  empty fold (a leading create, or the create after a delete) closes nothing, so the rule needs no content
+  test: every `createSurface` closes the fold. This differs from §4's
   canonical fold ON PURPOSE: that fold keeps `createSurface` a non-boundary because the ruling froze every
   committed hash, so a re-create without a delete resolves per epoch here yet hashes as one merged epoch.
   Within one stream the shape reaches stage 6 only when the re-create delivers no second `root` (a
-  re-sent `root` is tier-1's `sid:root`). Not covered, as ruled: a `createSurface` over a fold holding
-  writes but no component resets nothing.
+  re-sent `root` is tier-1's `sid:root`). Not covered: the validator judges the id graph across a
+  re-create inside one stream as one epoch (A2), so a rootless second epoch is graph-valid at tier-1.
 - **Stage 8 (canonical + hash)** is `recordIdentity(record)` (§4).
 
 Stage 3 (eval fail-closed, `facet === "eval"` exactly), stage 7 (the leak gate, now over every
@@ -474,7 +478,7 @@ Every SPEC error code mapped to its raising stage, plus the non-obvious edges:
 | `E_POINTER` (syntax) | LLD-C6 (shared `validateA2ui`) | malformed JSON-Pointer → reject; identical verdict in renderer + corpus (N1); list-item-relative forms are legal (ADR-0024) |
 | `E_POINTER` (resolution) | LLD-C5 (corpus-only stage) | exemplar binding whose pointer does not resolve against the record's bundled data model → reject; layered ON TOP of `validateA2ui`, NOT part of it; relative-binding scope = the renderer's full-subtree list threading (`computeScopes()`, `admit.ts:351` — v0.5) |
 | `E_POINTER` (multi-turn resolution) | LLD-C5 | a follow-up binding that does not resolve against its own epoch's data model: `priorOutput` then `a2uiOutput` fold in stream order, per epoch (amendment A6, GH #1750), so an update-only follow-up may bind data either turn delivered and a follow-up that re-creates its surface, after a `deleteSurface` or not (the re-create erratum, GH #1765, v0.7.2), only data its new epoch delivered → reject (ADR-0231 cl.2) |
-| `E_POINTER` (per-epoch resolution) | LLD-C5 | any facet: a binding in epoch k that only an earlier epoch's data model (including a data-only epoch's) defines → reject; the renderer freed that store at the `deleteSurface`, or replaced it at a `createSurface` over a mounted epoch (ADR-0064 amendment A6, GH #1750, and its re-create erratum, GH #1765) |
+| `E_POINTER` (per-epoch resolution) | LLD-C5 | any facet: a binding in epoch k that only an earlier epoch's data model (including a data-only epoch's) defines → reject; the renderer freed that store at the `deleteSurface`, or replaced it at a `createSurface` over prior content (ADR-0064 amendment A6, GH #1750, and its re-create erratum, GH #1765) |
 | `E_DUP` | LLD-C4 | exact or near duplicate → reject with the colliding first-admitted `name` in `AdmitResult.collidesWith` (SPEC §5.2, realized) |
 | `E_DUP` (facet identity) | LLD-C3/C4 | multi-turn: the same merged end state and the same action minus `actionId`/`timestamp`; repair: the same corrected tree and the same `(code, path)` set. The near-dup leg still shingles `promptText` plus the identity serialization, so two repair pairs sharing `promptText` and tree whose breakages differ in one path can reach θ_dup (0.94 measured): curation gives each pair its own `promptText` |
 | `E_QUALITY` | LLD-C5 (injected judge) | below rubric gate → reject with failing dimensions; **stage skipped when no judge is injected** (ADR-0060 — `qualityScore` absent is the marker) |

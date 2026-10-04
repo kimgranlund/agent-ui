@@ -919,10 +919,10 @@ describe('admit: the multi-turn facet (ADR-0231 cl.2)', () => {
   })
 })
 
-// ADR-0064 erratum (2026-10-04, GH #1765): stage 6 also resets its resolution fold at a `createSurface`
-// that follows a component-bearing epoch, with no `deleteSurface` between. The renderer replaces the
-// surface and its store on a re-create (`renderer.ts#onCreateSurface`) and tier-1 refuses the prior seed
-// to an epoch a `createSurface` opened (A4), so a binding sees only what its own epoch delivered. The
+// ADR-0064 erratum (2026-10-04, GH #1765): stage 6 also resets its resolution fold at every `createSurface`
+// that follows prior content (components or data), with no `deleteSurface` between. The renderer replaces
+// the surface and its store on a re-create (`renderer.ts#onCreateSurface`) and tier-1 refuses the prior
+// seed to an epoch a `createSurface` opened (A4), so a binding sees only what its own epoch delivered. The
 // canonical identity fold is NOT reset here (the hashes are frozen), so the two folds differ on this shape.
 describe('admit: a re-create without a deleteSurface resets resolution (ADR-0064 erratum, GH #1765)', () => {
   const login = (...messages: A2uiServerMessage[]): A2uiOutput => messages
@@ -1007,6 +1007,50 @@ describe('admit: a re-create without a deleteSurface resets resolution (ADR-0064
       const output = login(recreate, rootOnly, writeStatus, recreate, statusOnly, writeStatus)
       const own = await admit(agentUiCandidate(output), mkFacetDeps())
       expect(own.ok).toBe(true)
+    })
+
+    // A re-create over DATA only (no component yet): the renderer replaces the store on any re-create, so
+    // the earlier write is gone here too (the ruling's intent is the renderer's, so it is not limited to a
+    // component-bearing prefix, GH #1765).
+    describe('a re-create over data alone (no component in the fold yet)', () => {
+      const writeStatusAt: A2uiServerMessage = {
+        version: 'v1.0',
+        updateDataModel: { surfaceId: 'login', path: '/status', value: 'Welcome' },
+      }
+      const rootStatus: A2uiServerMessage = {
+        version: 'v1.0',
+        updateComponents: { surfaceId: 'login', components: [{ id: 'root', component: 'Text', text: { path: '/status' } }] },
+      }
+
+      it('[create, dm(/status), create, root bound /status] rejects E_POINTER: the re-create dropped the write', async () => {
+        const output = login(recreate, writeStatusAt, recreate, rootStatus)
+        expect(validateA2ui(output, defaultCatalog, undefined, { atFinalize: true }).valid).toBe(true)
+        const stale = await admit(agentUiCandidate(output), mkFacetDeps())
+        expect(stale.ok).toBe(false)
+        if (stale.ok) return
+        expect(stale.code).toBe('E_POINTER')
+        expect(stale.paths).toEqual(['root.text'])
+      })
+
+      it('the same stream with a write after the re-create admits (positive control)', async () => {
+        const output = login(recreate, writeStatusAt, recreate, rootStatus, writeStatusAt)
+        expect((await admit(agentUiCandidate(output), mkFacetDeps())).ok).toBe(true)
+      })
+
+      it('without the second createSurface the data write resolves: the reset is the re-create, nothing else (control)', async () => {
+        const output = login(recreate, writeStatusAt, rootStatus)
+        expect((await admit(agentUiCandidate(output), mkFacetDeps())).ok).toBe(true)
+      })
+
+      it('a write BEFORE the first createSurface is the renderer\'s dropped delivery (no surface yet), so it resolves nothing', async () => {
+        const output = login(writeStatusAt, recreate, rootStatus)
+        expect(validateA2ui(output, defaultCatalog, undefined, { atFinalize: true }).valid).toBe(true)
+        const stale = await admit(agentUiCandidate(output), mkFacetDeps())
+        expect(stale.ok).toBe(false)
+        if (stale.ok) return
+        expect(stale.code).toBe('E_POINTER')
+        expect(stale.paths).toEqual(['root.text'])
+      })
     })
   })
 })
