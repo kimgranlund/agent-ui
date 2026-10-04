@@ -2,8 +2,9 @@
 // ruling). Each seed is one conversation step on ONE live surface: turn 1 (`priorMessages`) puts a UI on
 // screen, the user takes one action on it (`action`, the exact envelope the renderer's `emitAction` sends),
 // and the follow-up (`messages`) updates that same surface in place. Neither follow-up resends `root` and
-// neither deletes the surface: a delete-then-recreate follow-up waits for the id-graph reset slice
-// (ADR-0231 cl.2 ordering bullet, GH #1750).
+// neither deletes the surface. That is this slice's scope, not a blocker: admission resolves a
+// delete-then-recreate follow-up per epoch since GH #1750 (ADR-0064 amendment A6), and a seed of that
+// shape is a later wave's to author.
 //
 // The two ruled shapes:
 // 1. A form submit. The submit Button carries `submit:true` (the FormProvider gate, ADR-0054) and the

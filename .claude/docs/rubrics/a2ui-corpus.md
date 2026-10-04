@@ -94,9 +94,12 @@ version: 1.3
 ## Calibration record (harness SPEC-R3 AC2)
 
 **1.3 note (2026-10-04, ADR-0231 cl.5).** The exemplar calibration below stands as recorded: 1.3 moves no
-dimension that applies to an exemplar. The ±1 two-scoring check for D6 and D7 is owed by the curation
-slice that judges the first records of its facet: D6 is now calibrated (GH #1741, the D6 record at the end
-of this section); D7 is still owed by GH #1742 and lands here as its own calibration record.
+dimension that applies to an exemplar. D6 and D7 have no committed record to calibrate against yet; the
+±1 two-scoring check for each is owed by the curation slice that judges the first records of its facet
+(GH #1741 multi-turn, GH #1742 repair) and lands here as its own calibration record.
+
+**Update (2026-10-04, GH #1741).** D6 is calibrated: see the D6 calibration record at the end of this
+section. D7 is still owed by GH #1742.
 
 **Record scored:** `pattern-confirmation-card` from the 11-seed shelf
 (`packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`) — an exemplar-facet record. Its
