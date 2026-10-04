@@ -38,11 +38,19 @@ export function isCatalogId(id: string): id is SeedCatalogId {
   return Object.prototype.hasOwnProperty.call(CATALOG_FILES, id)
 }
 
-/** Read and load one catalog from `repoRoot`. Throws if the document's own `catalogId` is not the id it
- *  was registered under (a mis-mapped path must fail here, not validate a payload against the wrong
- *  catalog). */
+/** Read and load one catalog from `repoRoot`. Throws if the registered file cannot be read (ONE line
+ *  naming the id, the repo-relative path and the fs error code, never a raw ENOENT stack) or if the
+ *  document's own `catalogId` is not the id it was registered under (a mis-mapped path must fail here,
+ *  not validate a payload against the wrong catalog). */
 export function loadCatalogById(repoRoot: string, id: SeedCatalogId): Catalog {
-  const doc: unknown = JSON.parse(readFileSync(join(repoRoot, CATALOG_FILES[id]), 'utf8') as string)
+  let text: string
+  try {
+    text = readFileSync(join(repoRoot, CATALOG_FILES[id]), 'utf8') as string
+  } catch (err) {
+    const code = (err as { code?: unknown }).code
+    throw new Error(`catalog-files: cannot read catalog "${id}" at ${CATALOG_FILES[id]} (${typeof code === 'string' ? code : 'read failed'})`)
+  }
+  const doc: unknown = JSON.parse(text)
   const catalog = loadCatalog(doc)
   if (catalog.catalogId !== id) {
     throw new Error(`catalog-files: ${CATALOG_FILES[id]} declares catalogId "${catalog.catalogId}", but it is registered as "${id}"`)

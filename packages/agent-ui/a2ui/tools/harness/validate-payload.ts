@@ -37,6 +37,7 @@
 import { readFileSync } from 'node:fs'
 import { heal } from '../../src/corpus/heal.ts'
 import { validateA2ui } from '../../src/corpus/validate.ts'
+import type { Catalog } from '../../src/catalog/catalog.ts'
 import type { Failure } from '../../src/protocol.ts'
 import { CATALOG_IDS, isCatalogId, loadCatalogById } from '../catalog-files.ts'
 
@@ -96,7 +97,15 @@ function main(): void {
     console.error(`validate-payload: unknown catalog "${catalogId}", loadable ids: ${CATALOG_IDS.join(', ')}`)
     process.exit(1)
   }
-  const catalog = loadCatalogById(process.cwd(), catalogId)
+  let catalog: Catalog
+  try {
+    catalog = loadCatalogById(process.cwd(), catalogId)
+  } catch (err) {
+    // A registered id whose catalog file is missing or mis-mapped is an operator-facing condition: one
+    // line naming it (catalog-files.ts words it), exit 1, never a raw stack.
+    console.error(`validate-payload: ${err instanceof Error ? err.message : String(err)}`)
+    process.exit(1)
+  }
 
   const text = readFileSync(payloadPath, 'utf8') as string
   const healed = heal(text, { protocolVersion: catalog.protocolVersion })

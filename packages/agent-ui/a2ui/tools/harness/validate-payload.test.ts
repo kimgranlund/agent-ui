@@ -46,8 +46,8 @@ describe('validate-payload --catalog (GH #1737): real subprocess runs', () => {
     vi.resetConfig()
   })
 
-  const run = (args: string[]): { status: number | null; stdout: string; stderr: string } => {
-    const r = spawnSync('node', ['--experimental-strip-types', SCRIPT, ...args], { cwd: REAL_ROOT, encoding: 'utf8' })
+  const run = (args: string[], cwd: string = REAL_ROOT): { status: number | null; stdout: string; stderr: string } => {
+    const r = spawnSync('node', ['--experimental-strip-types', SCRIPT, ...args], { cwd, encoding: 'utf8' })
     return { status: r.status, stdout: r.stdout, stderr: r.stderr }
   }
 
@@ -92,5 +92,23 @@ describe('validate-payload --catalog (GH #1737): real subprocess runs', () => {
     expect(r.stderr).toMatch(/unknown catalog "bogus"/)
     expect(r.stderr).toMatch(/agent-ui, a2ui-basic/)
     expect(r.stdout, 'an unknown catalog must never reach a verdict').toBe('')
+  })
+
+  // The script resolves each registry path against `process.cwd()` (the repo root), while the script and
+  // every module it imports resolve relative to the REAL file: so an EMPTY temp cwd is a repo root whose
+  // registered catalog files are all missing, with no real catalog file touched or moved.
+  it.each(['agent-ui', 'a2ui-basic'])('a REGISTERED id (%s) whose catalog.json is missing exits 1 with ONE line naming the id and path, not a raw ENOENT stack', (id) => {
+    const emptyRoot = mkdtempSync(join(tmpdir(), 'a2ui-validate-payload-noroot-'))
+    try {
+      const r = run([agentUiPath, '--catalog', id], emptyRoot)
+      expect(r.status, r.stdout + r.stderr).toBe(1)
+      expect(r.stdout, 'a missing catalog must never reach a verdict').toBe('')
+      const lines = r.stderr.trim().split('\n')
+      expect(lines, r.stderr).toHaveLength(1)
+      expect(lines[0]).toMatch(new RegExp(`^validate-payload: catalog-files: cannot read catalog "${id}" at packages/agent-ui/a2ui/src/catalog/.+/catalog\\.json \\(ENOENT\\)$`))
+      expect(r.stderr, 'no stack frames').not.toMatch(/\n\s+at /)
+    } finally {
+      rmSync(emptyRoot, { recursive: true, force: true })
+    }
   })
 })

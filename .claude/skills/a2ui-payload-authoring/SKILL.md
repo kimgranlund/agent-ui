@@ -79,7 +79,7 @@ Encode this loop; it is the contract every composed payload passes. Depth and th
 1. **Generate** the payload, corpus-conditioned (step above).
 2. **Run the deterministic gates FIRST** — the `validate-payload` CLI, before any grading:
    ```
-   node --experimental-strip-types packages/agent-ui/a2ui/tools/harness/validate-payload.ts <payload.json> [--catalog agent-ui]
+   node --experimental-strip-types packages/agent-ui/a2ui/tools/harness/validate-payload.ts <payload.json> [--catalog agent-ui|a2ui-basic]
    # exit 0 → { ok: true, repairs: [...] }   (heal ran first; any auto-repairs are named)
    # exit 1 → [ { code, path, message }, ... ]  (schema · unknown component · dangling child · bad pointer · version pin)
    ```

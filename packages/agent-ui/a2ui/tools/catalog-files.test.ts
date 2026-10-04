@@ -65,6 +65,13 @@ describe('catalog-files: failure arms, proven on throwaway roots (never the real
     expect(() => loadCatalogById(root, 'a2ui-basic')).toThrow(/declares catalogId "agent-ui", but it is registered as "a2ui-basic"/)
   })
 
+  it('a registered id whose catalog file is MISSING throws ONE line naming the id, the registry path and the fs code (the CLI prints it verbatim, no stack)', () => {
+    plantRoot({}) // an empty temp root: every registered file is absent
+    for (const id of CATALOG_IDS) {
+      expect(() => loadCatalogById(root, id)).toThrow(`catalog-files: cannot read catalog "${id}" at ${CATALOG_FILES[id]} (ENOENT)`)
+    }
+  })
+
   it('the resolver is LAZY: a root holding only the agent-ui catalog resolves agent-ui and never touches the Basic file until asked', () => {
     plantRoot({ 'agent-ui': 'agent-ui' })
     const resolve = createCatalogResolver(root)

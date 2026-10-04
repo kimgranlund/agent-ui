@@ -365,6 +365,30 @@ describe('GH #1737 - depsForSeed: admit() receives the catalog matching the seed
     if (!hardwired.ok) expect(hardwired.code).toBe('E_CATALOG')
   })
 
+  it('an ADMITTED Basic record lands in the a2ui-basic shard and an agent-ui one in the agent-ui shard (the "admits into a Basic shard" half)', async () => {
+    // `computeShardPath(facet, protocolVersion, catalogId)` is module-private to `src/corpus/store.ts`;
+    // `store.shardPath(record)` is its one public face (and `serialize()` the path the shard is WRITTEN
+    // to), so the exact-suffix pin below goes through them. Exact suffix, not a truthy check: a path that
+    // dropped the catalogId segment, or filed Basic under the default shard, fails here.
+    const basicSeed = plantedBasicSeed('product-card')
+    const basicBase = base()
+    const basic = await admit(seedToCandidate(basicSeed, 'basic-test.ts'), depsForSeed(basicBase, basicSeed, resolve))
+    expect(basic.ok, JSON.stringify(basic)).toBe(true)
+    if (!basic.ok) return
+    expect(basic.record.meta.catalogId).toBe('a2ui-basic')
+    const basicShard = basicBase.store.shardPath(basic.record)
+    expect(basicShard).toMatch(/corpus\/exemplar\/v1_0\/a2ui-basic\.jsonl$/)
+    expect(basicBase.store.serialize().map((s) => s.path)).toContain(basicShard)
+
+    const agentUiBase = base()
+    const agentUi = await admit(seedToCandidate(canvasButtonSeed, 'canvas-button.ts'), depsForSeed(agentUiBase, canvasButtonSeed, resolve))
+    expect(agentUi.ok, JSON.stringify(agentUi)).toBe(true)
+    if (!agentUi.ok) return
+    const agentUiShard = agentUiBase.store.shardPath(agentUi.record)
+    expect(agentUiShard).toMatch(/corpus\/exemplar\/v1_0\/agent-ui\.jsonl$/)
+    expect(agentUiShard).not.toBe(basicShard)
+  })
+
   it('the upstream login-form fixture is NOT corpus-admissible even under its own catalog (E_POINTER, no bundled data model): a #1732 exemplar must bundle one', async () => {
     const seed = plantedBasicSeed('login-form')
     const result = await admit(seedToCandidate(seed, 'basic-test.ts'), depsForSeed(base(), seed, resolve))

@@ -35,7 +35,7 @@ the per-artifact procedure are what makes a grading run reproducible instead of 
 ## Per-artifact procedure
 
 - **Payload → `a2ui-payload.md`.** Run
-  `node --experimental-strip-types packages/agent-ui/a2ui/tools/harness/validate-payload.ts <payload.json> --catalog agent-ui`.
+  `node --experimental-strip-types packages/agent-ui/a2ui/tools/harness/validate-payload.ts <payload.json> [--catalog agent-ui|a2ui-basic]`.
   Score P1–P3 from the exit code + codes + the `repairs` array; then, only if it exits 0, judge P4–P9
   (composition · catalog idiom incl. the enum-range check the gate skips · binding hygiene ·
   accessibility intent · declared-scope fidelity — P8, the GH #474 deceptive-composition defense,
