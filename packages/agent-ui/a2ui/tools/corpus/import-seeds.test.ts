@@ -428,9 +428,9 @@ describe('GH #1737 - depsForSeed: admit() receives the catalog matching the seed
   })
 })
 
-// ── ADR-0231 cl.5: the multi-turn and repair seed kinds map onto their facet's record branch. Both
-// shelves are EMPTY until the curation slices (GH #1741/#1742), so the legs build seeds in memory from the
-// corpus test fixtures and drive the same exported mappers `main()`'s loop calls. Nothing is written. ──
+// ── ADR-0231 cl.5: the multi-turn and repair seed kinds map onto their facet's record branch. The legs
+// build seeds in memory from the corpus test fixtures (independent of the real shelves the curation
+// slices fill, GH #1741/#1742) and drive the same exported mappers `main()`'s loop calls. Nothing is written. ──
 describe('ADR-0231 - the multi-turn and repair seed mappers', () => {
   const resolve = createCatalogResolver(process.cwd())
   const deps = (): AdmitDeps => ({ catalog: resolve('agent-ui'), store: createStore(), dedupIndex: createDedupIndex() })
@@ -493,8 +493,8 @@ describe('ADR-0231 - the multi-turn and repair seed mappers', () => {
     expect(candidateForSeed(canvasButtonSeed, 'canvas-button.ts')).toEqual(seedToCandidate(canvasButtonSeed, 'canvas-button.ts'))
   })
 
-  it('the real multi-turn and repair shelves are empty today (so their per-file tables must be too, or the subprocess runs below halt)', () => {
-    expect(allMultiTurnSeeds).toHaveLength(0)
+  it('the real repair shelf is empty today; the multi-turn shelf holds the GH #1741 seeds (the subprocess sandbox below copies their committed shard)', () => {
+    expect(allMultiTurnSeeds.length).toBeGreaterThan(0)
     expect(allRepairSeeds).toHaveLength(0)
   })
 })
@@ -594,8 +594,12 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
   // the committed Basic shard is part of the "already admitted" baseline. Both mirror the agent-ui pair.
   const BASIC_CATALOG = 'packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json'
   const BASIC_SHARD = 'packages/agent-ui/a2ui/corpus/exemplar/v1_0/a2ui-basic.jsonl'
-  /** Every seed a run walks: the agent-ui shelf then the Basic shelf (main()'s own order). */
-  const SHELF: ReadonlyArray<{ name: string }> = [...allSeeds, ...allBasicSeeds]
+  // GH #1741: the multi-turn shelf is no longer empty, so its committed shard joins the "already
+  // admitted" baseline the same way (a run against it sees every multi-turn seed as an idempotent E_DUP).
+  const MULTI_TURN_SHARD = 'packages/agent-ui/a2ui/corpus/multi-turn/v1_0/agent-ui.jsonl'
+  /** Every seed a run walks: the agent-ui shelf, the Basic shelf, then the ADR-0231 facet shelves
+   *  (main()'s own order). */
+  const SHELF: ReadonlyArray<{ name: string }> = [...allSeeds, ...allBasicSeeds, ...allMultiTurnSeeds, ...allRepairSeeds]
   const ARCHIVE_DIR = 'packages/agent-ui/a2ui/corpus/verdicts'
 
   let sandbox: string
@@ -610,7 +614,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
       cpSync(join(REAL_ROOT, rel), join(sandbox, rel))
     }
     if (opts.withShard) {
-      for (const rel of [SHARD, BASIC_SHARD]) {
+      for (const rel of [SHARD, BASIC_SHARD, MULTI_TURN_SHARD]) {
         mkdirSync(join(sandbox, rel.slice(0, rel.lastIndexOf('/'))), { recursive: true })
         cpSync(join(REAL_ROOT, rel), join(sandbox, rel))
       }
