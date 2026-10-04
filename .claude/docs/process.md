@@ -238,6 +238,29 @@ G8  family-coherence.test.ts gate (ADR-0081, realized in place of a coherence ru
 per-tier  council bloat red-team (occasional, justified fan-out)
 ```
 
+## Momentum rules (Kim, 2026-10-04)
+
+Bias to shipping. A loop that adds cost without adding signal gets cut. These rules override any
+skill or agent text that asks for more ceremony.
+
+1. **Local gates are scoped, CI owns the full suite.** A seat runs `npm run check` plus the tests of
+   the package(s) it touched (`npx vitest run <path>`), then pushes. CI's `npm test` is the full-suite
+   gate, and a PR merges on CI green. A seat runs the full `npm test` locally only when it touches
+   `reactive/`, `dom/`, or `shared/`. *Why:* parallel seats running full suites drove the host load
+   average to 100-200 on 2026-10-04, and every red was a load timeout that cost a rerun and found nothing.
+2. **One review, then merge.** A substantive PR gets one independent review pass. Only High or Medium
+   correctness or contract findings block (fix-first). Lows get fixed in the same push if mechanical,
+   or filed as one follow-up issue, or dropped. Lows never trigger a second round. A fix round is not
+   re-reviewed unless it changed logic.
+3. **Trivial diffs skip the checker seat.** Test-only, single-file, comment, config, and frontmatter
+   diffs merge on CI plus claude-review.
+4. **Out-of-scope findings get filed, not fixed in flight.** Scope creep is never fix-first.
+5. **Ask the user only when a choice moves a ratified contract** (an ADR rule, a canonical hash, a
+   public API). Otherwise pick the option that matches existing runtime behavior, record it on the
+   issue, and keep going.
+6. **One judge pass per seed.** Double-judging for calibration happens only when a rubric dimension is
+   new or was just reworded.
+
 ## What we do NOT build (anti-ceremony)
 
 - No autonomous harness-forge lattice yet — human-driven was chosen; that call hasn't been revisited even

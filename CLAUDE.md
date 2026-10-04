@@ -25,7 +25,9 @@ Process `.claude/docs/process.md` · Standards `.claude/docs/references/` · `si
   `node_modules` symlink bootstrap for a `dispatch_envelope.py` scratch clone (GH #1695); a build
   seat in a scratch clone runs this instead of improvising the `seat-map` recipe by hand.
 
-`check` + `test` must be green before a change is done — judge by EXIT CODES, never by grepping
+Locally a seat runs `check` + the touched package's tests; CI's `npm test` is the full-suite gate and a PR
+merges on CI green (process.md §Momentum rules, Kim 2026-10-04: one review pass, Lows never block, trivial diffs
+skip the checker). Gates must be green before a change is done — judge by EXIT CODES, never by grepping
 output (a piped grep-count masked a red check and an OOM'd browser run, 2026-07-19). One ruled carve-out:
 a docs-only diff (`.claude/docs/**`, `*.md` outside a descriptor's `attributes[]` fence, code comments) gates on `doc_lint` + `check`, CI runs `test`
 (process.md §1, Kim 2026-08-29); one that touches an ADR title, an L1 descriptor, the ADR log, or the changelog also
