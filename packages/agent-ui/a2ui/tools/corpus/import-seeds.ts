@@ -88,6 +88,14 @@
 // ("N candidate(s) reached the judge tier with no judge wired — nothing written", exit 1). Under
 // `--dry-run` that halt is the usual warning line instead — a dry run writes nothing by construction
 // and still owes its summary (the GH #335 review item 3 / GH #360 review item 3 posture).
+//
+// GH #1737 (ADR-0169 follow-up, Kim's ruling 2026-10-03: separate shelf): TWO shelves, one catalog per
+// seed. The run walks `allSeeds` (agent-ui) AND `allBasicSeeds` (a2ui-basic, empty until GH #1732), and
+// each seed is admitted against the catalog matching ITS `catalogId` (`depsForSeed`, resolved through
+// `../catalog-files.ts`), never one hardwired default: `admit()`'s contract is that the caller hands it
+// the catalog matching the candidate's `meta.catalogId` (`admit.ts` AdmitDeps.catalog). The resolver is
+// LAZY, so a run whose shelves hold no Basic seed never reads `a2ui-basic/catalog.json`. A Basic seed
+// lands in `corpus/exemplar/v1_0/a2ui-basic.jsonl` (store `computeShardPath`, no change needed here).
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -104,9 +112,8 @@ import { classifyRejections, shouldAbort } from '../../src/corpus/import-report.
 import type { SeedRejection } from '../../src/corpus/import-report.ts'
 import { DISPOSITION_ALLOWLIST } from '../../src/corpus/disposition-allowlist.ts'
 import type { ArchivedVerdict } from '../../src/corpus/verdict-archive.ts'
-import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
-import type { ExampleSeed } from '../../src/examples/types.ts'
+import type { ExampleSeed, SeedCatalogId } from '../../src/examples/types.ts'
 import { canvasButtonSeed } from '../../src/examples/canvas-button.ts'
 import { listDisplaySeed, listPeopleSeed, listFormSeed, listNestedSeed } from '../../src/examples/dynamic-lists.ts'
 import { generativeFormSeed } from '../../src/examples/generative-form.ts'
@@ -161,7 +168,8 @@ import {
   featuresListCardSeed,
   customerReviewCardSeed,
 } from '../../src/examples/commerce-hospitality.ts'
-import { allSeeds } from '../../src/examples/index.ts'
+import { allSeeds, allBasicSeeds } from '../../src/examples/index.ts'
+import { createCatalogResolver } from '../catalog-files.ts'
 
 declare const process: { cwd(): string; argv: string[]; exit(code?: number): never }
 declare const console: { log(...args: unknown[]): void; error(...args: unknown[]): void }
@@ -190,8 +198,9 @@ function readRubricVersion(repoRoot: string): string {
 
 const HELP_TEXT = `import-seeds — the ADR-0055 seed-import script (corpus LLD-C14)
 
-Maps every seed on the example shelf (src/examples/) onto a candidate CorpusRecord and runs it
-through admit() — the corpus's single write path.
+Maps every seed on the example shelves (src/examples/: allSeeds for agent-ui, allBasicSeeds for
+a2ui-basic) onto a candidate CorpusRecord and runs it through admit(), the corpus's single write
+path. Each seed is admitted against the catalog matching its own catalogId.
 
 A run WITHOUT --verdicts is legal only as a no-op: every seed must be an idempotent E_DUP re-run of
 its own already-admitted record. The moment ANY candidate clears dedup — a new seed, or the
@@ -258,8 +267,15 @@ export function parseArgs(argv: string[]): ParsedArgs {
 // `ExampleSeed` carries no "which file declared me" field (that's a static-authoring fact, not
 // runtime data) — so the ADR-0055 `origin: 'src/examples/<module>.ts'` mapping is transcribed here,
 // grouped exactly as `src/examples/index.ts` groups its own re-exports. `checkGrouping` below proves
-// this transcription hasn't drifted from the shelf's actual `allSeeds` list.
-const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSeed[] }> = [
+// this transcription hasn't drifted from the shelf's actual `allSeeds` list. A group is generic over the
+// catalog its seeds render against, so a Basic seed cannot be registered in the agent-ui table (compile
+// error), mirroring the `allSeeds` / `allBasicSeeds` split.
+interface SeedGroup<C extends SeedCatalogId> {
+  module: string
+  seeds: readonly ExampleSeed<C>[]
+}
+
+const SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'agent-ui'>> = [
   { module: 'canvas-button.ts', seeds: [canvasButtonSeed] },
   { module: 'dynamic-lists.ts', seeds: [listDisplaySeed, listPeopleSeed, listFormSeed, listNestedSeed] },
   { module: 'generative-form.ts', seeds: [generativeFormSeed] },
@@ -352,21 +368,45 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
   },
 ]
 
-/** Fail loudly (not silently) if the shelf's seed count/membership ever drifts from this script's
- * hand-transcribed per-file grouping — e.g. a new seed added to `index.ts` without updating this file. */
-function checkGrouping(): void {
-  const grouped = SEEDS_BY_MODULE.flatMap((g) => g.seeds)
+/** The Basic shelf's hand-transcribed per-file grouping (GH #1737), the `SEEDS_BY_MODULE` twin for
+ * `allBasicSeeds`. EMPTY today, exactly as the shelf is: GH #1732 adds the first Basic family module and
+ * registers it here, and `checkGrouping` reds until it does. */
+const BASIC_SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'a2ui-basic'>> = []
+
+/** Pure drift check for ONE shelf: the per-file grouping's seed count and name set must equal the
+ * shelf's. Returns the halt message, or `undefined` when they agree. Exported so the unit tier can plant
+ * a drifted shelf, since the real tables cannot be drifted from a test. */
+export function shelfDrift(
+  groupsLabel: string,
+  groups: ReadonlyArray<{ seeds: readonly { name: string }[] }>,
+  shelfLabel: string,
+  shelf: readonly { name: string }[],
+): string | undefined {
+  const grouped = groups.flatMap((g) => g.seeds)
   const groupedNames = new Set(grouped.map((s) => s.name))
-  const shelfNames = new Set(allSeeds.map((s) => s.name))
-  const sameSize = grouped.length === allSeeds.length
+  const shelfNames = new Set(shelf.map((s) => s.name))
+  const sameSize = grouped.length === shelf.length
   const sameMembers = groupedNames.size === shelfNames.size && [...groupedNames].every((n) => shelfNames.has(n))
-  if (!sameSize || !sameMembers) {
-    console.error(
-      `import-seeds: SEEDS_BY_MODULE (${grouped.length}: ${[...groupedNames].join(', ')}) has drifted from ` +
-        `src/examples/index.ts's allSeeds (${allSeeds.length}: ${[...shelfNames].join(', ')}). ` +
-        'Update the per-file grouping in this script before importing.',
-    )
-    process.exit(1)
+  if (sameSize && sameMembers) return undefined
+  return (
+    `import-seeds: ${groupsLabel} (${grouped.length}: ${[...groupedNames].join(', ')}) has drifted from ` +
+    `src/examples/index.ts's ${shelfLabel} (${shelf.length}: ${[...shelfNames].join(', ')}). ` +
+    'Update the per-file grouping in this script before importing.'
+  )
+}
+
+/** Fail loudly (not silently) if EITHER shelf's seed count/membership ever drifts from this script's
+ * hand-transcribed per-file grouping, e.g. a new seed added to `index.ts` without updating this file. */
+function checkGrouping(): void {
+  const drift = [
+    shelfDrift('SEEDS_BY_MODULE', SEEDS_BY_MODULE, 'allSeeds', allSeeds),
+    shelfDrift('BASIC_SEEDS_BY_MODULE', BASIC_SEEDS_BY_MODULE, 'allBasicSeeds', allBasicSeeds),
+  ]
+  for (const message of drift) {
+    if (message !== undefined) {
+      console.error(message)
+      process.exit(1)
+    }
   }
 }
 
@@ -374,7 +414,7 @@ function checkGrouping(): void {
  * `CorpusRecord` verbatim; `messages` becomes `a2uiOutput`; `protocolVersion`/`catalogId` become the
  * `meta` pins; `surfaceId` is dropped (it lives inside every message already). `meta.status` is left
  * for `admit()` to set — it always recomputes and overwrites it (never trust a caller-supplied value). */
-function seedToCandidate(seed: ExampleSeed, moduleFile: string): unknown {
+export function seedToCandidate(seed: ExampleSeed<SeedCatalogId>, moduleFile: string): unknown {
   return {
     name: seed.name,
     description: seed.description,
@@ -547,18 +587,19 @@ interface ReplacedInfo {
 }
 
 /**
- * Load the agent-ui default catalog WITHOUT importing `catalog/default/index.ts` (which does a bare
- * `import catalogDoc from './catalog.json'` — fine under the bundler/Vitest module resolution the rest
- * of the package uses, but Node's native ESM loader rejects an attribute-less JSON import outright:
- * `ERR_IMPORT_ATTRIBUTE_MISSING`, hit running this script under `--experimental-strip-types`). This
- * script is Node-side by definition (ADR-0062), so it reads the same `catalog.json` via `fs` and feeds
- * it through the SAME exported `loadCatalog()` — byte-identical to `defaultCatalog`, just assembled
- * without an ES-module JSON import in the way.
+ * The admission deps for ONE seed (GH #1737): the shared, stateful `store` + `dedupIndex` (+ judge) with
+ * `catalog` resolved from THIS seed's `catalogId`. `admit()` owns no catalog lookup, so the caller must
+ * hand it the catalog matching the candidate's `meta.catalogId` (`admit.ts` AdmitDeps.catalog), which is
+ * `seed.catalogId` by `seedToCandidate`'s mapping. A single hardwired catalog would tier-1-validate a
+ * Basic seed against the wrong dialect. `catalogFor` is the lazy `createCatalogResolver`, so only the
+ * catalogs the shelves actually use are ever read off disk.
  */
-function loadDefaultCatalog(repoRoot: string): Catalog {
-  const path = join(repoRoot, 'packages/agent-ui/a2ui/src/catalog/default/catalog.json')
-  const doc: unknown = JSON.parse(readFileSync(path, 'utf8') as string)
-  return loadCatalog(doc)
+export function depsForSeed(
+  base: Omit<AdmitDeps, 'catalog'>,
+  seed: { catalogId: SeedCatalogId },
+  catalogFor: (id: SeedCatalogId) => Catalog,
+): AdmitDeps {
+  return { ...base, catalog: catalogFor(seed.catalogId) }
 }
 
 async function main(): Promise<void> {
@@ -600,7 +641,10 @@ async function main(): Promise<void> {
   const dedupIndex = createDedupIndex()
   await warmDedupIndex(store, dedupIndex, replaceName)
 
-  const deps: AdmitDeps = { catalog: loadDefaultCatalog(repoRoot), store, dedupIndex }
+  // The catalog is resolved PER SEED (`depsForSeed` in the loop below); only the store, dedup index and
+  // judge are shared across the run.
+  const catalogFor = createCatalogResolver(repoRoot)
+  const deps: Omit<AdmitDeps, 'catalog'> = { store, dedupIndex }
 
   // Kept past the parse step to feed the paste-ready disposition-allowlist snippet at report time
   // (GH #335 review item 2) — the pipeline itself only ever needs `deps.judge`.
@@ -626,7 +670,8 @@ async function main(): Promise<void> {
   const report: ImportReport = { admitted: [], alreadyPresent: [], rejections: [], dispositionWarnings: [], unjudgedCandidates: [] }
   let replaced: ReplacedInfo | undefined
 
-  for (const group of SEEDS_BY_MODULE) {
+  const groups: ReadonlyArray<SeedGroup<SeedCatalogId>> = [...SEEDS_BY_MODULE, ...BASIC_SEEDS_BY_MODULE]
+  for (const group of groups) {
     for (const seed of group.seeds) {
       // Captured BEFORE admit() runs — the true prior state, since a name is only ever processed once
       // per run. `store.get()` sees every status (unlike `store.all()`), so this also sees quarantined.
@@ -652,7 +697,7 @@ async function main(): Promise<void> {
       const candidate = seedToCandidate(seed, group.module)
       let result: AdmitResult
       try {
-        result = await admit(candidate, deps)
+        result = await admit(candidate, depsForSeed(deps, seed, catalogFor))
       } catch (e) {
         if (e instanceof UnjudgedCandidateError) {
           console.error(`import-seeds: HALTED — ${e.message} (seed "${seed.name}"). Nothing was written.`)

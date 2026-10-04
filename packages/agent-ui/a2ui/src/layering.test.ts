@@ -118,3 +118,35 @@ describe('import layering — a2ui/src imports only {components, shared} or loca
     ])
   })
 })
+
+// GH #1737: `catalog/a2ui-basic/planted.ts` is shared TEST material: it PLANTS upstream Basic fixtures as
+// in-memory seeds while the real Basic shelf is empty (GH #1732), and its JSON imports are
+// bundler/Vitest-only (the `ERR_IMPORT_ATTRIBUTE_MISSING` trap `tools/catalog-files.ts` documents), so a
+// shipped module or a Node CLI importing it would drag fixtures into the catalog package or crash under
+// native Node. Its header states "imported only by *.test.ts"; this block pins that mechanically over
+// BOTH trees that could import it, `src/**` (the `raw` glob above) and `tools/**` (the Node CLIs). Same
+// no-execution raw-text idiom, same blind spot (static import/export specifiers only, no dynamic import).
+const toolsRaw = import.meta.glob('../tools/**/*.ts', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
+
+describe('planted.ts is test-only: only *.test.ts files may import it (GH #1737)', () => {
+  const importsPlanted = (src: string): boolean => specifiersOf(src).some((s) => /(^|\/)planted\.ts$/.test(s))
+  const scanned = [...Object.entries(raw), ...Object.entries(toolsRaw)]
+  const importers = scanned.filter(([, src]) => importsPlanted(src)).map(([path]) => path)
+
+  it('anti-vacuous: both trees are scanned and the real test importers are found', () => {
+    expect(scanned.some(([p]) => p === './catalog/a2ui-basic/index.ts')).toBe(true)
+    expect(scanned.some(([p]) => p === '../tools/catalog-files.ts')).toBe(true)
+    expect(importers.some((p) => p === './examples/examples.test.ts')).toBe(true)
+    expect(importers.some((p) => p === '../tools/corpus/import-seeds.test.ts')).toBe(true)
+  })
+
+  it('no non-test module under a2ui/src or a2ui/tools imports planted.ts', () => {
+    expect(importers.filter((p) => !p.endsWith('.test.ts'))).toEqual([])
+  })
+
+  it('synthetic-violation: the matcher flags a static import and a re-export of planted.ts, not a lookalike', () => {
+    expect(importsPlanted(`import { plantedBasicSeed } from '../catalog/a2ui-basic/planted.ts'\n`)).toBe(true)
+    expect(importsPlanted(`export * from './planted.ts'\n`)).toBe(true)
+    expect(importsPlanted(`import { x } from './planted-other.ts'\n`)).toBe(false)
+  })
+})

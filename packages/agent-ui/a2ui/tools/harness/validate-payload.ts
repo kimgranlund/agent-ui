@@ -1,10 +1,11 @@
 // validate-payload.ts — the compose→verify loop's deterministic instrument (harness LLD-C6, SPEC-R6).
 //
-// Composes the pure core's `heal` + `validateA2ui` against the default catalog and prints the ONE
-// verdict shape either side of the loop reads (harness LLD §6):
+// Composes the pure core's `heal` + `validateA2ui` against the catalog named by `--catalog` (default
+// `agent-ui`; `a2ui-basic` is the other registered id, GH #1737) and prints the ONE verdict shape either
+// side of the loop reads (harness LLD §6):
 //
 //   node --experimental-strip-types packages/agent-ui/a2ui/tools/harness/validate-payload.ts \
-//     <payload.json> [--catalog agent-ui]
+//     <payload.json> [--catalog agent-ui|a2ui-basic]
 //   # exit 0 → {ok:true, repairs:[…]}   (heal applied first — ADR-0061's closed list; repairs named)
 //   # exit 1 → [{code, path, message}]  (the shared validator's verdicts, unforked)
 //
@@ -17,11 +18,13 @@
 // on valid JSON text). The catalog's own `protocolVersion` is passed as heal's pin (arm (d): fills an
 // ABSENT per-message `version`, never corrects a present-but-wrong one — that stays tier-1's job).
 //
-// Catalog loading mirrors `tools/corpus/import-seeds.ts`'s `loadDefaultCatalog` exactly: Node's native
-// ESM loader rejects an attribute-less JSON import (`ERR_IMPORT_ATTRIBUTE_MISSING`, hit running this
-// script under `--experimental-strip-types`), so this Node-side script reads `catalog.json` via `fs`
-// and feeds it through the SAME exported `loadCatalog()` — byte-identical to `defaultCatalog`, just
-// assembled without an ES-module JSON import in the way.
+// Catalog loading goes through `tools/catalog-files.ts`, the Node-side `{catalogId -> catalog.json path}`
+// registry (`agent-ui`, `a2ui-basic`): Node's native ESM loader rejects an attribute-less JSON import
+// (`ERR_IMPORT_ATTRIBUTE_MISSING`, hit running this script under `--experimental-strip-types`), so the
+// registry reads `catalog.json` via `fs` and feeds it through the SAME exported `loadCatalog()`,
+// byte-identical to the module catalogs, just assembled without an ES-module JSON import in the way. An
+// id outside the registry still exits 1 (naming the registered ids), never a silent fallback to the
+// default catalog.
 //
 // ADR-0187 / GH #829: the validator runs at FINALIZE granularity here (`{atFinalize: true}`), mirroring
 // corpus admission — a payload FILE is a complete set by construction, and a divergent verdict between
@@ -32,12 +35,11 @@
 // it strips cleanly, ADR-0062).
 
 import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { heal } from '../../src/corpus/heal.ts'
 import { validateA2ui } from '../../src/corpus/validate.ts'
-import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import type { Failure } from '../../src/protocol.ts'
+import { CATALOG_IDS, isCatalogId, loadCatalogById } from '../catalog-files.ts'
 
 declare const process: { argv: string[]; cwd(): string; exit(code?: number): never }
 declare const console: { log(...args: unknown[]): void; error(...args: unknown[]): void }
@@ -62,18 +64,10 @@ function parseArgs(argv: string[]): Args {
   }
 
   if (payloadPath === undefined) {
-    console.error('usage: validate-payload.ts <payload.json> [--catalog <id>]')
+    console.error(`usage: validate-payload.ts <payload.json> [--catalog <${CATALOG_IDS.join('|')}>]`)
     process.exit(1)
   }
   return { payloadPath, catalogId }
-}
-
-/** See `tools/corpus/import-seeds.ts`'s `loadDefaultCatalog` — same workaround, same reason
- * (`ERR_IMPORT_ATTRIBUTE_MISSING` under Node's native ESM loader), byte-identical to `defaultCatalog`. */
-function loadDefaultCatalog(repoRoot: string): Catalog {
-  const path = join(repoRoot, 'packages/agent-ui/a2ui/src/catalog/default/catalog.json')
-  const doc: unknown = JSON.parse(readFileSync(path, 'utf8') as string)
-  return loadCatalog(doc)
 }
 
 // Human-readable text for the shared validator's `Failure.code` (the wire codes carry no `message`
@@ -98,11 +92,18 @@ function toPrintable(f: Failure): { code: Failure['code']; path: string; message
 
 function main(): void {
   const { payloadPath, catalogId } = parseArgs(process.argv)
-  const repoRoot = process.cwd()
-  const catalog = loadDefaultCatalog(repoRoot)
 
-  if (catalogId !== catalog.catalogId) {
-    console.error(`validate-payload: unknown catalog "${catalogId}" — only "${catalog.catalogId}" is loadable today`)
+  if (!isCatalogId(catalogId)) {
+    console.error(`validate-payload: unknown catalog "${catalogId}", loadable ids: ${CATALOG_IDS.join(', ')}`)
+    process.exit(1)
+  }
+  let catalog: Catalog
+  try {
+    catalog = loadCatalogById(process.cwd(), catalogId)
+  } catch (err) {
+    // A registered id whose catalog file is missing or mis-mapped is an operator-facing condition: one
+    // line naming it (catalog-files.ts words it), exit 1, never a raw stack.
+    console.error(`validate-payload: ${err instanceof Error ? err.message : String(err)}`)
     process.exit(1)
   }
 

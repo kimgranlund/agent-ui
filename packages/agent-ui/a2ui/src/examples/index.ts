@@ -20,12 +20,16 @@
 // the gate's (`examples.test.ts`) iteration surface, composed from each module's own family array
 // (never a hand-counted literal — the drift-gate doctrine); each named export is what a `/site` page
 // imports directly.
+// GH #1737 (Kim's ruling 2026-10-03): the upstream Basic catalog's seeds live on a SEPARATE shelf,
+// `allBasicSeeds` (typed `ExampleSeed<'a2ui-basic'>`, empty until GH #1732 seeds the first Basic
+// exemplar). `allSeeds` stays agent-ui-only (a Basic seed is a compile error there), so its `site/`
+// consumers (gallery, catalog tiers, authoring counts) are untouched by the second catalog.
 // GH #1374 — the plan-and-execute exemplar: a Timeline plan snapshot (canvas) beside one ADR-0097
 // commit-gated approve ask carrying per-step Checkbox opt-outs (feed), emitted the same turn, then
 // per-turn updateDataModel advancing the approved steps' status (the design ruling's own closure path,
 // Findings comment 5343203377 — no ADR earned, a teaching-corpus gap only).
 
-export type { ExampleSeed } from './types.ts'
+export type { ExampleSeed, SeedCatalogId } from './types.ts'
 
 export { canvasButtonSeed, canvasSeeds } from './canvas-button.ts'
 export { listDisplaySeed, listPeopleSeed, listFormSeed, listNestedSeed, dynamicListSeeds } from './dynamic-lists.ts'
@@ -153,3 +157,11 @@ export const allSeeds: readonly ExampleSeed[] = [
   ...planAndExecuteSeeds,
   ...commerceHospitalitySeeds,
 ]
+
+/** Every seed rendered against the upstream A2UI Basic catalog (`a2ui-basic`), the second shelf beside
+ *  `allSeeds` (GH #1737, ADR-0169 follow-up). Empty today: seeding the first Basic exemplar is GH #1732.
+ *  Compose it from per-module family arrays exactly as `allSeeds` is, never a hand-counted literal. The
+ *  standing gates (`examples.test.ts`, `admission-coverage.test.ts`, `import-seeds.ts`) already walk this
+ *  shelf, so the first seed added here is validated, rendered, admitted and coverage-checked with no
+ *  further wiring. */
+export const allBasicSeeds: readonly ExampleSeed<'a2ui-basic'>[] = []

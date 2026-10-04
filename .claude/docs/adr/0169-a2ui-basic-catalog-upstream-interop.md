@@ -580,3 +580,23 @@ validate and render.
   the host-ruled partial include (cl.9b row 16 / E6).
 - **No hard forks remain open.** One soft ratification note rides cl.13 (outbound stamp: short id vs
   canonical URI — recommended default encoded, one-constant switch if Kim prefers the URI).
+
+## Amendment - the Basic corpus shard follow-up: pipeline delivered, first seed still open (2026-10-03, GH #1737, PR #1744)
+
+> Status: append-only; adds a foreseen follow-through, does not edit the Context / Decision / Consequences above.
+
+The original Decision stands. Three passages name "seeding a Basic exemplar shard" as a follow-up: the
+cl.4 `queryOf` paragraph (the "named follow-up, not this wave" sentence), the Consequences bullet "Basic
+turns retrieve zero corpus exemplars until a Basic shard is seeded", and the Non-goal "no Basic corpus
+shard (follow-up)". [PR #1744](https://github.com/kimgranlund/agent-ui/pull/1744) delivers the
+infrastructure half of that follow-up under Kim's ruling on
+[GH #1737](https://github.com/kimgranlund/agent-ui/issues/1737#issuecomment-5974757993) (2026-10-03):
+
+- **Delivered:** a separate seed shelf, `allBasicSeeds` (`ExampleSeed<'a2ui-basic'>`, ADR-0055 amended
+  the same day), and a catalog-aware seed-import pipeline: each seed is admitted against the catalog its
+  `catalogId` names and lands in `corpus/exemplar/v1_0/<catalogId>.jsonl`, so Basic seeds target the
+  `a2ui-basic` shard. The examples, admission-coverage and corpus-data gates already walk the Basic shelf.
+- **Still open:** the shelf is empty. Seeding the first Basic exemplar is GH #1732. Until it lands the
+  Consequences statement holds as written: Basic turns retrieve zero exemplars and `fewShot` degrades to
+  `''`. The Non-goal "no Basic corpus shard" is retired as a non-goal; the shard itself exists only
+  once #1732 admits its first record.

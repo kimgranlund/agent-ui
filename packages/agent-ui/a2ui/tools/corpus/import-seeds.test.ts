@@ -28,11 +28,17 @@ import { spawnSync } from 'node:child_process'
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, existsSync, readdirSync, cpSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { parseArgs, dispositionGuard, dispositionAllowlistSnippet } from './import-seeds.ts'
+import { parseArgs, dispositionGuard, dispositionAllowlistSnippet, shelfDrift, depsForSeed, seedToCandidate } from './import-seeds.ts'
+import { createCatalogResolver } from '../catalog-files.ts'
 import type { SeedRejection } from '../../src/corpus/import-report.ts'
 import type { ArchivedVerdict } from '../../src/corpus/verdict-archive.ts'
-import { allSeeds } from '../../src/examples/index.ts'
+import { allSeeds, allBasicSeeds } from '../../src/examples/index.ts'
+import { canvasButtonSeed } from '../../src/examples/canvas-button.ts'
 import { DISPOSITION_ALLOWLIST } from '../../src/corpus/disposition-allowlist.ts'
+import { admit } from '../../src/corpus/admit.ts'
+import { createStore } from '../../src/corpus/store.ts'
+import { createDedupIndex } from '../../src/corpus/dedup.ts'
+import { plantedBasicSeed, stampCatalogId } from '../../src/catalog/a2ui-basic/planted.ts'
 
 declare const process: { cwd(): string }
 
@@ -278,6 +284,135 @@ describe('dispositionAllowlistSnippet — a paste-ready DISPOSITION_ALLOWLIST en
 // in the sandbox block below too.) The disposition-halt proof moved to the sandbox block's ADR-0165
 // clause-4 unjudged-halt case (the REAL script, a PLANTED archive refusal, a throwaway repo root) —
 // same subprocess tier, same deleted-call-site sensitivity, no real-corpus exposure. ──
+// ── GH #1737 (ADR-0169 follow-up, Kim's ruling 2026-10-03: separate shelf): two shelves, one catalog per
+// seed. The Basic shelf is EMPTY until GH #1732, so every leg here PLANTS a genuine Basic seed in memory
+// (the upstream fixtures `src/catalog/a2ui-basic/planted.ts` carries) and drives the SAME exported
+// functions `main()`'s seed loop calls (`depsForSeed`, `seedToCandidate`, `shelfDrift`). Nothing is
+// written to the shelf, the corpus, or any shard. ──
+describe('GH #1737, shelfDrift: the per-file grouping must match the shelf, for EACH shelf', () => {
+  const groups = (...names: string[]): { seeds: { name: string }[] }[] => [{ seeds: names.map((name) => ({ name })) }]
+  const shelf = (...names: string[]): { name: string }[] => names.map((name) => ({ name }))
+
+  it('an in-sync grouping reports no drift, including the EMPTY / EMPTY pair the Basic shelf is today', () => {
+    expect(shelfDrift('G', groups('a', 'b'), 'allSeeds', shelf('b', 'a'))).toBeUndefined()
+    expect(shelfDrift('BASIC_SEEDS_BY_MODULE', [], 'allBasicSeeds', [])).toBeUndefined()
+  })
+
+  it('a seed on the Basic shelf but in no group is reported, naming the Basic table, the Basic shelf and both counts', () => {
+    const message = shelfDrift('BASIC_SEEDS_BY_MODULE', groups(), 'allBasicSeeds', shelf('planted-basic-login-form'))
+    expect(message).toMatch(/BASIC_SEEDS_BY_MODULE \(0: \) has drifted from src\/examples\/index\.ts's allBasicSeeds \(1: planted-basic-login-form\)/)
+    expect(message).toMatch(/Update the per-file grouping in this script before importing/)
+  })
+
+  it('a grouped seed that is not on the shelf is reported (the reverse drift)', () => {
+    expect(shelfDrift('G', groups('a', 'ghost'), 'allSeeds', shelf('a'))).toMatch(/\(2: a, ghost\).*\(1: a\)/)
+  })
+
+  it('the SAME size with DIFFERENT members still drifts (the count check alone would miss a renamed seed)', () => {
+    expect(shelfDrift('G', groups('a', 'old-name'), 'allSeeds', shelf('a', 'new-name'))).toBeDefined()
+  })
+
+  it('the real Basic shelf is empty today (so the real BASIC_SEEDS_BY_MODULE must be too, or the subprocess runs below halt)', () => {
+    expect(allBasicSeeds).toHaveLength(0)
+  })
+})
+
+describe('GH #1737 - depsForSeed: admit() receives the catalog matching the seed, not one hardwired default', () => {
+  const resolve = createCatalogResolver(process.cwd())
+  const base = (): { store: ReturnType<typeof createStore>; dedupIndex: ReturnType<typeof createDedupIndex> } => ({
+    store: createStore(),
+    dedupIndex: createDedupIndex(),
+  })
+
+  it('resolves each seed to the catalog of ITS catalogId and shares the store + dedup index untouched', () => {
+    const b = base()
+    const agentUi = depsForSeed(b, canvasButtonSeed, resolve)
+    const basic = depsForSeed(b, plantedBasicSeed('login-form'), resolve)
+    expect(agentUi.catalog.catalogId).toBe('agent-ui')
+    expect(basic.catalog.catalogId).toBe('a2ui-basic')
+    for (const deps of [agentUi, basic]) {
+      expect(deps.store).toBe(b.store)
+      expect(deps.dedupIndex).toBe(b.dedupIndex)
+    }
+  })
+
+  it('seedToCandidate pins meta.catalogId to the seed catalogId and keeps the origin/facet mapping', () => {
+    const candidate = seedToCandidate(plantedBasicSeed('login-form'), 'basic-test.ts') as {
+      name: string
+      meta: { facet: string; catalogId: string; protocolVersion: string; provenance: { origin: string } }
+    }
+    expect(candidate.name).toBe('planted-basic-login-form')
+    expect(candidate.meta).toMatchObject({
+      facet: 'exemplar',
+      catalogId: 'a2ui-basic',
+      protocolVersion: 'v1.0',
+      provenance: { origin: 'src/examples/basic-test.ts' },
+    })
+  })
+
+  it('a planted Basic seed ADMITS under its own catalog and is REJECTED E_CATALOG under the agent-ui one (the pre-change single-catalog behaviour)', async () => {
+    // product-card, not login-form: the upstream login-form fixture binds /username and /password but ships
+    // no updateDataModel, so admission's own E_POINTER gate (a corpus rule, not a catalog one) rejects it
+    // under EITHER catalog. A Basic exemplar must bundle a model, so the planted proof uses one that does.
+    const seed = plantedBasicSeed('product-card')
+    const candidate = seedToCandidate(seed, 'basic-test.ts')
+
+    const own = await admit(candidate, depsForSeed(base(), seed, resolve))
+    expect(own.ok, JSON.stringify(own)).toBe(true)
+
+    const hardwired = await admit(candidate, { ...base(), catalog: resolve('agent-ui') })
+    expect(hardwired.ok).toBe(false)
+    if (!hardwired.ok) expect(hardwired.code).toBe('E_CATALOG')
+  })
+
+  it('an ADMITTED Basic record lands in the a2ui-basic shard and an agent-ui one in the agent-ui shard (the "admits into a Basic shard" half)', async () => {
+    // `computeShardPath(facet, protocolVersion, catalogId)` is module-private to `src/corpus/store.ts`;
+    // `store.shardPath(record)` is its one public face (and `serialize()` the path the shard is WRITTEN
+    // to), so the exact-suffix pin below goes through them. Exact suffix, not a truthy check: a path that
+    // dropped the catalogId segment, or filed Basic under the default shard, fails here.
+    const basicSeed = plantedBasicSeed('product-card')
+    const basicBase = base()
+    const basic = await admit(seedToCandidate(basicSeed, 'basic-test.ts'), depsForSeed(basicBase, basicSeed, resolve))
+    expect(basic.ok, JSON.stringify(basic)).toBe(true)
+    if (!basic.ok) return
+    expect(basic.record.meta.catalogId).toBe('a2ui-basic')
+    const basicShard = basicBase.store.shardPath(basic.record)
+    expect(basicShard).toMatch(/corpus\/exemplar\/v1_0\/a2ui-basic\.jsonl$/)
+    expect(basicBase.store.serialize().map((s) => s.path)).toContain(basicShard)
+
+    const agentUiBase = base()
+    const agentUi = await admit(seedToCandidate(canvasButtonSeed, 'canvas-button.ts'), depsForSeed(agentUiBase, canvasButtonSeed, resolve))
+    expect(agentUi.ok, JSON.stringify(agentUi)).toBe(true)
+    if (!agentUi.ok) return
+    const agentUiShard = agentUiBase.store.shardPath(agentUi.record)
+    expect(agentUiShard).toMatch(/corpus\/exemplar\/v1_0\/agent-ui\.jsonl$/)
+    expect(agentUiShard).not.toBe(basicShard)
+  })
+
+  it('the upstream login-form fixture is NOT corpus-admissible even under its own catalog (E_POINTER, no bundled data model): a #1732 exemplar must bundle one', async () => {
+    const seed = plantedBasicSeed('login-form')
+    const result = await admit(seedToCandidate(seed, 'basic-test.ts'), depsForSeed(base(), seed, resolve))
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.code).toBe('E_POINTER')
+  })
+
+  it('the reverse: an agent-ui-dialect seed stamped a2ui-basic is REJECTED E_CATALOG under the Basic catalog it claims', async () => {
+    const misStamped = {
+      ...plantedBasicSeed('login-form', 'planted-misstamped-canvas'),
+      surfaceId: canvasButtonSeed.surfaceId,
+      messages: stampCatalogId(canvasButtonSeed.messages, 'a2ui-basic'),
+    }
+    const result = await admit(seedToCandidate(misStamped, 'basic-test.ts'), depsForSeed(base(), misStamped, resolve))
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.code).toBe('E_CATALOG')
+  })
+
+  it('an agent-ui seed still admits under the agent-ui catalog (the default path is unchanged)', async () => {
+    const result = await admit(seedToCandidate(canvasButtonSeed, 'canvas-button.ts'), depsForSeed(base(), canvasButtonSeed, resolve))
+    expect(result.ok, JSON.stringify(result)).toBe(true)
+  })
+})
+
 describe('import-seeds main() wiring — a real subprocess run proves arg-parsing runs before any fs work', () => {
   // GH #1711: this block spawns a real `node` subprocess per test (~200ms uncontended per the last
   // measured run) — the 5000ms vitest default reds under host contention. Raised per the GH #347
@@ -835,6 +970,26 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     expect(result.status, result.stderr).toBe(0)
     expect(result.stdout).toMatch(new RegExp(`${allSeeds.length} admitted`))
     expect(existsSync(join(sandbox, SHARD)), 'the run reached saveStore and minted the shard').toBe(true)
+  })
+
+  // GH #1737: the per-seed catalog resolver is LAZY and goes through the registry, proven on the real
+  // script. Both legs share the sandbox, which (by `makeSandbox`'s design) copies ONLY the default catalog.
+  const BASIC_CATALOG = 'packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json'
+
+  it('GH #1737 - the Basic shelf is empty, so a run never reads the Basic catalog: with a2ui-basic/catalog.json ABSENT from the sandbox the run still completes', () => {
+    makeSandbox({ withShard: true })
+    expect(existsSync(join(sandbox, BASIC_CATALOG)), 'precondition: the sandbox holds no Basic catalog').toBe(false)
+    const result = run(['--dry-run'])
+    expect(result.status, result.stderr).toBe(0)
+    expect(result.stdout).toMatch(/0 admitted, \d+ already present/)
+  })
+
+  it('GH #1737 - the agent-ui catalog IS read through the registry: removing the sandbox default catalog.json fails the run (the lazy path is live, not stubbed)', () => {
+    makeSandbox({ withShard: true })
+    rmSync(join(sandbox, CATALOG))
+    const result = run(['--dry-run'])
+    expect(result.status).toBe(1)
+    expect(result.stderr).toMatch(/default\/catalog\.json/)
   })
 
 
