@@ -44,9 +44,13 @@ contract:
 
 1. **Author the seed** in the `src/examples/` shape — an `ExampleSeed` (`ADR-0055`;
    `packages/agent-ui/a2ui/src/examples/types.ts`) is package SOURCE and a pre-aligned authored admission
-   candidate. Add the module, export it from `src/examples/index.ts` (named export + `allSeeds`), and
-   register it in the import script's drift-guarded `SEEDS_BY_MODULE` (`tools/corpus/import-seeds.ts` — a
-   half-wired seed HALTS at the drift guard). It never imports corpus code; the seed→`CorpusRecord` mapping
+   candidate. Add the module, export it from `src/examples/index.ts` (named export + `allSeeds` for an
+   agent-ui seed, or `allBasicSeeds` for an `a2ui-basic` seed: two separate shelves, GH #1737, so a Basic
+   seed is a compile error on `allSeeds`), and register it in the import script's drift-guarded
+   `SEEDS_BY_MODULE` (agent-ui) or `BASIC_SEEDS_BY_MODULE` (Basic) (`tools/corpus/import-seeds.ts`, a
+   half-wired seed HALTS at the drift guard). The import resolves the catalog per seed from its
+   `catalogId` and `admit()` validates against that catalog; the record lands in
+   `corpus/exemplar/v1_0/<catalogId>.jsonl`. It never imports corpus code; the seed→`CorpusRecord` mapping
    is the import script's (corpus LLD §3 "Seed pre-alignment").
 2. **Import through the single write path** — run the seed-import script (corpus LLD-C14). A seed enters
    `admit()` and runs the corpus LLD §6 pipeline (heal → schema/pin gates → tier-1 `validateA2ui` → … →
@@ -90,7 +94,7 @@ contract:
    silently, exactly as before the archive existed. A wave that admitted NOTHING still has an archive to
    commit — zero admissions is not zero record.
    **Then drop the refused seed.** A refusal's expected disposition is that the seed leaves `src/examples/`
-   entirely — module, `index.ts` export + family array, `SEEDS_BY_MODULE` row (`ADR-0165` REV 2026-07-30, GH
+   entirely - module, `index.ts` export + family array, `SEEDS_BY_MODULE` (or `BASIC_SEEDS_BY_MODULE`) row (`ADR-0165` REV 2026-07-30, GH
    #361 reading (b); the `retreat-reschedule` precedent). It needs no `DISPOSITION_ALLOWLIST` entry because
    it is no longer a candidate any coverage leg iterates; the archive re-arms cl.4's halt if it is ever
    re-added. Keep it on the shelf instead (a repair pending) and it DOES owe an allowlist entry, or the
