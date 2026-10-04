@@ -29,7 +29,12 @@
 // for an empty closed epoch), so a leading or trailing `deleteSurface` never changes the hash. That
 // elision is deliberate: `create, root, delete` and `create, root` are near-duplicates by design (the
 // teardown teaches nothing the tree does not), and folding the teardown in would rehash the committed
-// `kpi-panel-lifecycle` record. After a `deleteSurface` only a `createSurface` reopens the surface (the
+// `kpi-panel-lifecycle` record. A DATA-ONLY epoch (writes, no components) is the same empty epoch (the
+// validator registers no graph for an `updateDataModel`): its store is freed at its delete without any
+// component ever binding it, so nothing observes it, it contributes no form, and two records that
+// differ only in it are exact-hash duplicates by design (GH #1750, the corpus LLD §4 epoch rule;
+// admission's per-epoch resolution, A6, finds nothing to resolve in it and hides it from later epochs).
+// After a `deleteSurface` only a `createSurface` reopens the surface (the
 // amendment's 2026-10-04 erratum): the renderer drops a delivery to a deleted surface, so the fold drops
 // it too. Tier-1 already rejects such a stream (`sid:update-after-delete`), so for every admitted record
 // this changes nothing; it keeps the fold faithful for a direct caller.
@@ -138,7 +143,8 @@ interface FoldedEpoch {
  * epoch closes and the next starts from an empty component map and an undefined data model, the state
  * the renderer's fresh surface starts from. From that delete until the next `createSurface`, a delivery
  * addresses a deleted surface and is skipped, as the renderer drops it (the erratum rule). Only epochs
- * that delivered at least one component are returned. A stream that delivered none folds to ONE empty
+ * that delivered at least one component are returned; a data-only epoch is elided like an empty one
+ * (GH #1750, the corpus LLD §4 epoch rule). A stream that delivered none folds to ONE empty
  * epoch, so the DFS's defensive no-root guard fires exactly as it always has.
  */
 function foldStream(out: A2uiOutput): FoldedEpoch[] {

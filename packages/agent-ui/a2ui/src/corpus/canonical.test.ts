@@ -293,6 +293,38 @@ describe('canonicalize: surface epochs, the fold resets at deleteSurface (ADR-00
     }
   })
 
+  // GH #1750, the corpus LLD §4 rule: a DATA-ONLY epoch (writes, no components) is an empty epoch. Its
+  // store is freed at its delete with no component ever bound to it, so two records that differ only in
+  // it are exact-hash duplicates by design, and both equal the record without it.
+  it('a data-only epoch contributes no form: its data never changes the hash (GH #1750)', async () => {
+    const plain = await canonicalize([createSurfaceMsg(), updateComponentsMsg(secondTree())])
+    const dataOnly = (value: number): A2uiOutput => [
+      createSurfaceMsg(),
+      updateDataModelMsg(value, '/a'),
+      deleteSurfaceMsg(),
+      createSurfaceMsg(),
+      updateComponentsMsg(secondTree()),
+    ]
+    const one = await canonicalize(dataOnly(1))
+    const two = await canonicalize(dataOnly(2))
+
+    expect(one.epochs).toHaveLength(1)
+    expect(one.finalForm.dataModel).toBeUndefined() // epoch 1's write never reaches epoch 2
+    expect(one.hash).toBe(two.hash)
+    expect(one.hash).toBe(plain.hash)
+
+    // Negative control: the same write inside a COMPONENT-bearing epoch is part of the form.
+    const bound = (value: number): A2uiOutput => [
+      createSurfaceMsg(),
+      updateComponentsMsg(basicTree()),
+      updateDataModelMsg(value, '/a'),
+      deleteSurfaceMsg(),
+      createSurfaceMsg(),
+      updateComponentsMsg(secondTree()),
+    ]
+    expect((await canonicalize(bound(1))).hash).not.toBe((await canonicalize(bound(2))).hash)
+  })
+
   it('create, root, delete, create, root folds to TWO epochs, serialized as the ordered list', async () => {
     const result = await canonicalize([
       createSurfaceMsg(),
