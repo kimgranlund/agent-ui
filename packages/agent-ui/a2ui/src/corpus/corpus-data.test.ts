@@ -494,7 +494,8 @@ describe('corpus-data - the facet legs bite on facet-specific defects (ADR-0231 
 const RUBRIC_PATH = `${process.cwd()}/.claude/docs/rubrics/a2ui-corpus.md`
 const VERDICTS_DIR = `${CORPUS_DIR}/verdicts`
 
-describe('rubric a2ui-corpus 1.3 (ADR-0231 cl.5)', () => {
+// 1.4 (GH #1769) is a clarification bump on the same terms: the live marker moves, the 1.3 files stay history.
+describe('rubric a2ui-corpus live marker (ADR-0231 cl.5, GH #1769)', () => {
   const rubricText = readFileSync(RUBRIC_PATH, 'utf8')
   const live = /^version:\s*(\S+)\s*$/m.exec(rubricText)?.[1]
   // The versions an archived file may cite: every `N.N = ...` entry of the rubric's own version-history
@@ -514,12 +515,12 @@ describe('rubric a2ui-corpus 1.3 (ADR-0231 cl.5)', () => {
     return parsed.ok ? [] : [`${file}: ${JSON.stringify(parsed)}`]
   }
 
-  it('the live marker reads 1.3', () => {
-    expect(live).toBe('1.3')
+  it('the live marker reads 1.4 (the GH #1769 clarification bump)', () => {
+    expect(live).toBe('1.4')
   })
 
-  it('the known-version set is read from the rubric history: 1.0 through the live 1.3', () => {
-    expect([...knownVersions].sort()).toEqual(['1.0', '1.1', '1.2', '1.3'])
+  it('the known-version set is read from the rubric history: 1.0 through the live 1.4', () => {
+    expect([...knownVersions].sort()).toEqual(['1.0', '1.1', '1.2', '1.3', '1.4'])
   })
 
   it('an archived file judged under the live version passes; one citing an unknown version is named', () => {
@@ -527,9 +528,9 @@ describe('rubric a2ui-corpus 1.3 (ADR-0231 cl.5)', () => {
     expect(archivedFileProblems('bogus.json', verdictsFile('9.9'))).toEqual(['bogus.json: cites unknown rubric version 9.9'])
   })
 
-  it('parseVerdictsFile accepts a new file citing 1.3 and rejects one still citing 1.2 at rubricVersion', () => {
-    expect(parseVerdictsFile(verdictsFile('1.3'), live!).ok).toBe(true)
-    const stale = parseVerdictsFile(verdictsFile('1.2'), live!)
+  it('parseVerdictsFile accepts a new file citing 1.4 and rejects one still citing 1.3 at rubricVersion', () => {
+    expect(parseVerdictsFile(verdictsFile('1.4'), live!).ok).toBe(true)
+    const stale = parseVerdictsFile(verdictsFile('1.3'), live!)
     expect(stale.ok).toBe(false)
     if (stale.ok) return
     expect(stale.issues.map((i) => i.path)).toEqual(['rubricVersion'])
