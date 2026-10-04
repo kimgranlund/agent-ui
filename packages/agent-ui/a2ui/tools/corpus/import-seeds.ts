@@ -90,7 +90,7 @@
 // and still owes its summary (the GH #335 review item 3 / GH #360 review item 3 posture).
 //
 // GH #1737 (ADR-0169 follow-up, Kim's ruling 2026-10-03: separate shelf): TWO shelves, one catalog per
-// seed. The run walks `allSeeds` (agent-ui) AND `allBasicSeeds` (a2ui-basic, empty until GH #1732), and
+// seed. The run walks `allSeeds` (agent-ui) AND `allBasicSeeds` (a2ui-basic, first seeded by GH #1732), and
 // each seed is admitted against the catalog matching ITS `catalogId` (`depsForSeed`, resolved through
 // `../catalog-files.ts`), never one hardwired default: `admit()`'s contract is that the caller hands it
 // the catalog matching the candidate's `meta.catalogId` (`admit.ts` AdmitDeps.catalog). The resolver is
@@ -168,6 +168,12 @@ import {
   featuresListCardSeed,
   customerReviewCardSeed,
 } from '../../src/examples/commerce-hospitality.ts'
+import {
+  basicContactFormSeed,
+  basicProductListSeed,
+  basicNotificationSettingsSeed,
+  basicAppointmentBookingSeed,
+} from '../../src/examples/basic-exemplars.ts'
 import { allSeeds, allBasicSeeds } from '../../src/examples/index.ts'
 import { createCatalogResolver } from '../catalog-files.ts'
 
@@ -369,9 +375,13 @@ const SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'agent-ui'>> = [
 ]
 
 /** The Basic shelf's hand-transcribed per-file grouping (GH #1737), the `SEEDS_BY_MODULE` twin for
- * `allBasicSeeds`. EMPTY today, exactly as the shelf is: GH #1732 adds the first Basic family module and
- * registers it here, and `checkGrouping` reds until it does. */
-const BASIC_SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'a2ui-basic'>> = []
+ * `allBasicSeeds`; `checkGrouping` reds whenever the two drift. */
+const BASIC_SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'a2ui-basic'>> = [
+  {
+    module: 'basic-exemplars.ts', // GH #1732: the first a2ui-basic exemplars
+    seeds: [basicContactFormSeed, basicProductListSeed, basicNotificationSettingsSeed, basicAppointmentBookingSeed],
+  },
+]
 
 /** Pure drift check for ONE shelf: the per-file grouping's seed count and name set must equal the
  * shelf's. Returns the halt message, or `undefined` when they agree. Exported so the unit tier can plant

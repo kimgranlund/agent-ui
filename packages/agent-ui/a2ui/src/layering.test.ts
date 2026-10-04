@@ -120,7 +120,7 @@ describe('import layering — a2ui/src imports only {components, shared} or loca
 })
 
 // GH #1737: `catalog/a2ui-basic/planted.ts` is shared TEST material: it PLANTS upstream Basic fixtures as
-// in-memory seeds while the real Basic shelf is empty (GH #1732), and its JSON imports are
+// in-memory seeds for the directional gate legs (independent of the real shelf), and its JSON imports are
 // bundler/Vitest-only (the `ERR_IMPORT_ATTRIBUTE_MISSING` trap `tools/catalog-files.ts` documents), so a
 // shipped module or a Node CLI importing it would drag fixtures into the catalog package or crash under
 // native Node. Its header states "imported only by *.test.ts"; this block pins that mechanically over

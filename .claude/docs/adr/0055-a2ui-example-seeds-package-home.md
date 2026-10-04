@@ -121,3 +121,13 @@ the `"./examples"` subpath, gated at check time. Kim's ruling on [GH #1737](http
   shelves: `allSeeds` against `defaultCatalog` (unchanged), `allBasicSeeds` against `a2uiBasicCatalog`,
   plus a cross-shelf `name` uniqueness check (corpus LLD invariant i). Each seed is validated against the
   catalog its own `catalogId` names.
+
+## Amendment - the Basic shelf is seeded (2026-10-04, GH #1732, PR #1747)
+
+> Status: append-only; records a follow-through, does not edit the Context / Decision / Consequences or the amendment above.
+
+The cl.1 restatement above says `allBasicSeeds` is "empty until GH #1732 seeds the first one". GH #1732
+has now seeded it: four Basic exemplars in `src/examples/basic-exemplars.ts`
+(`basic-contact-support-form`, `basic-product-results-list`, `basic-notification-settings`,
+`basic-appointment-booking`), judged by `a2ui-review-agent` and admitted into
+`corpus/exemplar/v1_0/a2ui-basic.jsonl`. The cl.4 gate now walks a non-empty Basic shelf.

@@ -157,7 +157,7 @@ function unjudgedAdmissions(
 
 /** The seed names this gate judges: BOTH shelves (GH #1737, Kim's ruling 2026-10-03: a separate Basic
  *  shelf beside `allSeeds`). A pure function of the two shelves so the planted legs below can drive it
- *  with a Basic seed the real (empty-until-GH-#1732) shelf cannot supply. Admission reads every shard
+ *  with a planted Basic seed, independent of the real shelf's contents (seeded by GH #1732). Admission reads every shard
  *  under the corpus data dir by `name`, so a Basic record in `a2ui-basic.jsonl` is found with no further
  *  wiring; the Basic shelf only has to be IN this name set for an un-admitted Basic seed to be reported. */
 function coverageSeedNames(agentUi: readonly { name: string }[], basic: readonly { name: string }[]): string[] {
@@ -216,7 +216,7 @@ describe('corpus admission coverage — the TKT-0022 trip-wire (every seed admit
     expect(allowlistResidue(admitted, allowlist)).toEqual(['b'])
   })
 
-  // ── GH #1737: the Basic shelf is in the judged set. The real shelf is empty, so plant a Basic seed. ──
+  // ── GH #1737: the Basic shelf is in the judged set. Plant a Basic seed so the leg bites independent of the real shelf. ──
 
   it('a Basic seed on the Basic shelf that is admitted nowhere and not allowlisted is REPORTED (the Basic shelf is not exempt from the trip-wire)', () => {
     const planted = plantedBasicSeed('product-card')
