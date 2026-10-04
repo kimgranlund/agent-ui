@@ -1,5 +1,5 @@
-// record.ts — corpus record model + schema validator (corpus LLD-C2, SPEC v0.5 R1/R2/R5/R9,
-// ADR-0063/ADR-0064).
+// record.ts: corpus record model + schema validator (corpus LLD-C2, SPEC v0.6 R1/R2/R5/R9,
+// ADR-0063/ADR-0064/ADR-0231).
 //
 // `validateRecord` is the zero-dep, hand-rolled checker for the CorpusRecord shape (SPEC §5.1's
 // draft-07 schema, transcribed field-by-field — no schema-validation dependency, SPEC-N5). Per the
@@ -12,10 +12,18 @@
 // Pure and TOTAL: never throws, always returns a (possibly empty) failure list — the safety net
 // mirrors `renderer/validate.ts`'s `validateA2ui`, the shared validator this module's sibling
 // `validate.ts` re-exports.
+//
+// ADR-0231 adds two model-visible facets, each with its own conditional branch of top-level fields:
+// `multi-turn` (`priorOutput` + `clientInput` + the follow-up `a2uiOutput`) and `repair`
+// (`invalidInput` + `validatorErrors` + the corrected `a2uiOutput`). The exemplar and eval branches are
+// unchanged: a branch field on a facet that does not own it rejects at that field, exactly as the closed
+// schema rejected it before the fields existed.
 
-import type { A2uiOutput } from '../protocol.ts'
+import type { A2uiActionMessage, A2uiOutput, ErrorCode, Failure } from '../protocol.ts'
 
-export type Facet = 'exemplar' | 'eval'
+export type Facet = 'exemplar' | 'eval' | 'multi-turn' | 'repair'
+/** The ADR-0231 cl.1 model-visible class: public conditioning material, plain `.jsonl` shards. */
+export type ModelVisibleFacet = Exclude<Facet, 'eval'>
 export type Status = 'valid' | 'repaired' | 'quarantined'
 export type ProvenanceSource = 'authored' | 'distilled' | 'mined'
 
@@ -27,7 +35,11 @@ export interface CorpusRecord {
   catalog?: string
   role_description?: string
   workflow_description?: string
-  a2uiOutput?: A2uiOutput // required iff meta.facet === 'exemplar' (SPEC-R2)
+  a2uiOutput?: A2uiOutput // required iff meta.facet is model-visible (SPEC-R2, ADR-0231)
+  priorOutput?: A2uiOutput // multi-turn only, required (ADR-0231 cl.2): turn 1
+  clientInput?: A2uiActionMessage[] // multi-turn only, required, v1 length exactly 1 (ADR-0231 cl.2)
+  invalidInput?: A2uiOutput // repair only, required (ADR-0231 cl.3): the broken stream
+  validatorErrors?: Failure[] // repair only, required, non-empty (ADR-0231 cl.3)
   meta: {
     facet: Facet
     protocolVersion: string
@@ -63,11 +75,29 @@ const KNOWN_RECORD_KEYS = new Set([
   'name', 'description', 'promptText', 'target', 'catalog',
   'role_description', 'workflow_description', 'a2uiOutput', 'meta',
 ])
+// The ADR-0231 branch fields, each owned by exactly one facet. On any other facet the field is still
+// an unknown key (E_SCHEMA at the field path), so the exemplar and eval branches reject it as before.
+const BRANCH_FIELD_OWNER: Readonly<Record<string, Facet>> = {
+  priorOutput: 'multi-turn',
+  clientInput: 'multi-turn',
+  invalidInput: 'repair',
+  validatorErrors: 'repair',
+}
 const KNOWN_META_KEYS = new Set([
   'facet', 'protocolVersion', 'catalogId', 'catalogVersion', 'provenance',
   'canonicalHash', 'componentsUsed', 'status', 'qualityScore',
 ])
-const FACETS: ReadonlySet<string> = new Set<Facet>(['exemplar', 'eval'])
+const FACETS: ReadonlySet<string> = new Set<Facet>(['exemplar', 'eval', 'multi-turn', 'repair'])
+// `ErrorCode` (`protocol.ts`) is a type-only union with no runtime list. A `Record<ErrorCode, true>`
+// literal is exhaustive by construction: adding or removing a union member reds `tsc` here.
+const ERROR_CODE_MEMBERS: Readonly<Record<ErrorCode, true>> = {
+  PARSE: true, SCHEMA: true, CATALOG: true, CATALOG_UNKNOWN: true, IDGRAPH: true,
+  POINTER: true, VERSION_UNSUPPORTED: true, FUNCTION: true, DEPTH_EXCEEDED: true, CONTAINMENT: true,
+}
+const ERROR_CODES: ReadonlySet<string> = new Set(Object.keys(ERROR_CODE_MEMBERS))
+// The six required `A2uiAction` fields (runtime SPEC §5.2 / `protocol.ts`) plus its two optionals.
+const ACTION_STRING_FIELDS = ['surfaceId', 'actionId', 'name', 'sourceComponentId', 'timestamp'] as const
+const KNOWN_ACTION_KEYS = new Set<string>([...ACTION_STRING_FIELDS, 'context', 'wantResponse', 'dataModel'])
 const STATUSES: ReadonlySet<string> = new Set<Status>(['valid', 'repaired', 'quarantined'])
 const PROVENANCE_SOURCES: ReadonlySet<string> = new Set<ProvenanceSource>(['authored', 'distilled', 'mined'])
 
@@ -92,8 +122,11 @@ function run(r: unknown): RecordFailure[] {
     return failures
   }
 
+  const facet = isObject(r.meta) ? r.meta.facet : undefined
   for (const key of Object.keys(r)) {
-    if (!KNOWN_RECORD_KEYS.has(key)) failures.push({ code: 'E_SCHEMA', path: key })
+    if (KNOWN_RECORD_KEYS.has(key)) continue
+    if (BRANCH_FIELD_OWNER[key] !== undefined && BRANCH_FIELD_OWNER[key] === facet) continue
+    failures.push({ code: 'E_SCHEMA', path: key })
   }
 
   requireStr(r, 'name', 'name', failures)
@@ -119,11 +152,93 @@ function run(r: unknown): RecordFailure[] {
   if (meta.facet === 'exemplar' && r.a2uiOutput === undefined) {
     failures.push({ code: 'E_SCHEMA', path: 'a2uiOutput' })
   }
+  if (meta.facet === 'multi-turn') checkMultiTurnBranch(r, failures)
+  if (meta.facet === 'repair') checkRepairBranch(r, failures)
 
   checkPins(r, meta, failures)
   checkSingleSurface(r, meta, failures)
 
   return failures
+}
+
+// ADR-0231 cl.2 shape: all three fields present; `clientInput` is exactly one `action` envelope whose
+// body carries the six required `A2uiAction` fields with the right primitive types. Any other client
+// envelope kind (`error`, `functionResponse`) is a v1 non-goal and rejects at `clientInput[0]`.
+function checkMultiTurnBranch(r: Record<string, unknown>, failures: RecordFailure[]): void {
+  checkStreamShape(r, 'priorOutput', failures)
+  if (r.a2uiOutput === undefined) failures.push({ code: 'E_SCHEMA', path: 'a2uiOutput' })
+
+  const ci = r.clientInput
+  if (ci === undefined || !Array.isArray(ci) || ci.length !== 1) {
+    failures.push({ code: 'E_SCHEMA', path: 'clientInput' })
+    return
+  }
+  const env: unknown = ci[0]
+  if (!isObject(env) || !isObject(env.action) || Object.keys(env).some((k) => k !== 'version' && k !== 'action')) {
+    failures.push({ code: 'E_SCHEMA', path: 'clientInput[0]' })
+    return
+  }
+  if (typeof env.version !== 'string') failures.push({ code: 'E_SCHEMA', path: 'clientInput[0].version' })
+  const action = env.action
+  const at = 'clientInput[0].action'
+  for (const key of Object.keys(action)) {
+    if (!KNOWN_ACTION_KEYS.has(key)) failures.push({ code: 'E_SCHEMA', path: `${at}.${key}` })
+  }
+  for (const key of ACTION_STRING_FIELDS) requireStr(action, key, `${at}.${key}`, failures)
+  if (!isObject(action.context)) failures.push({ code: 'E_SCHEMA', path: `${at}.context` })
+  if (action.wantResponse !== undefined && typeof action.wantResponse !== 'boolean') {
+    failures.push({ code: 'E_SCHEMA', path: `${at}.wantResponse` })
+  }
+}
+
+// ADR-0231 cl.3 shape: all three fields present; `validatorErrors` is a non-empty list of
+// `{ code, path }` entries with `code` in the full `ErrorCode` union. Membership only: which codes a
+// pair can actually carry is enforced by admission's recomputation equality, not here.
+function checkRepairBranch(r: Record<string, unknown>, failures: RecordFailure[]): void {
+  checkStreamShape(r, 'invalidInput', failures)
+  if (r.a2uiOutput === undefined) failures.push({ code: 'E_SCHEMA', path: 'a2uiOutput' })
+
+  const ve = r.validatorErrors
+  if (ve === undefined || !Array.isArray(ve) || ve.length === 0) {
+    failures.push({ code: 'E_SCHEMA', path: 'validatorErrors' })
+    return
+  }
+  ve.forEach((entry: unknown, i) => {
+    const at = `validatorErrors[${i}]`
+    if (!isObject(entry)) {
+      failures.push({ code: 'E_SCHEMA', path: at })
+      return
+    }
+    for (const key of Object.keys(entry)) {
+      if (key !== 'code' && key !== 'path') failures.push({ code: 'E_SCHEMA', path: `${at}.${key}` })
+    }
+    if (typeof entry.code !== 'string' || !ERROR_CODES.has(entry.code)) {
+      failures.push({ code: 'E_SCHEMA', path: `${at}.code` })
+    }
+    requireStr(entry, 'path', `${at}.path`, failures)
+  })
+}
+
+// A required message-array stream other than `a2uiOutput` (whose shape check runs before `meta`):
+// present, an array, every item an object.
+function checkStreamShape(r: Record<string, unknown>, key: 'priorOutput' | 'invalidInput', failures: RecordFailure[]): void {
+  const stream = r[key]
+  if (!Array.isArray(stream)) {
+    failures.push({ code: 'E_SCHEMA', path: key })
+    return
+  }
+  stream.forEach((item: unknown, i) => {
+    if (!isObject(item)) failures.push({ code: 'E_SCHEMA', path: `${key}[${i}]` })
+  })
+}
+
+// The streams a facet bundles, in stream order. The exemplar (and eval, and an unknown facet) bundle
+// `a2uiOutput` alone, so the walks below are byte-identical to the pre-ADR-0231 ones for them.
+type StreamField = 'priorOutput' | 'clientInput' | 'invalidInput' | 'a2uiOutput'
+function streamsOf(facet: unknown): readonly StreamField[] {
+  if (facet === 'multi-turn') return ['priorOutput', 'clientInput', 'a2uiOutput']
+  if (facet === 'repair') return ['invalidInput', 'a2uiOutput']
+  return ['a2uiOutput']
 }
 
 function checkMeta(meta: Record<string, unknown>, failures: RecordFailure[]): void {
@@ -178,9 +293,10 @@ function checkA2uiOutputShape(r: Record<string, unknown>, failures: RecordFailur
   })
 }
 
-// SPEC-R9: every record MUST pin `protocolVersion`/`catalogId` (non-empty, AC1), and — when the
-// record bundles an `a2uiOutput` — every message's `version` and every `createSurface.catalogId`
-// MUST agree with those pins (corpus LLD §6/§8). All three arms raise `E_PIN`.
+// SPEC-R9: every record MUST pin `protocolVersion`/`catalogId` (non-empty, AC1), and every message's
+// `version` and every `createSurface.catalogId` in every stream the record bundles (ADR-0231: the
+// multi-turn prior, client and follow-up streams; the repair invalid and corrected streams) MUST agree
+// with those pins (corpus LLD §6/§8). All three arms raise `E_PIN`.
 function checkPins(r: Record<string, unknown>, meta: Record<string, unknown>, failures: RecordFailure[]): void {
   const protocolVersion = meta.protocolVersion
   const catalogId = meta.catalogId
@@ -190,18 +306,21 @@ function checkPins(r: Record<string, unknown>, meta: Record<string, unknown>, fa
   if (typeof catalogId !== 'string' || catalogId === '') {
     failures.push({ code: 'E_PIN', path: 'meta.catalogId' })
   }
-  if (!Array.isArray(r.a2uiOutput)) return
 
-  r.a2uiOutput.forEach((msg, i) => {
-    if (!isObject(msg)) return
-    if (typeof protocolVersion === 'string' && typeof msg.version === 'string' && msg.version !== protocolVersion) {
-      failures.push({ code: 'E_PIN', path: `a2uiOutput[${i}].version` })
-    }
-    const cs = msg.createSurface
-    if (isObject(cs) && typeof catalogId === 'string' && typeof cs.catalogId === 'string' && cs.catalogId !== catalogId) {
-      failures.push({ code: 'E_PIN', path: `a2uiOutput[${i}].createSurface.catalogId` })
-    }
-  })
+  for (const field of streamsOf(meta.facet)) {
+    const stream = r[field]
+    if (!Array.isArray(stream)) continue
+    stream.forEach((msg: unknown, i) => {
+      if (!isObject(msg)) return
+      if (typeof protocolVersion === 'string' && typeof msg.version === 'string' && msg.version !== protocolVersion) {
+        failures.push({ code: 'E_PIN', path: `${field}[${i}].version` })
+      }
+      const cs = msg.createSurface
+      if (isObject(cs) && typeof catalogId === 'string' && typeof cs.catalogId === 'string' && cs.catalogId !== catalogId) {
+        failures.push({ code: 'E_PIN', path: `${field}[${i}].createSurface.catalogId` })
+      }
+    })
+  }
 }
 
 // A v1 corpus record is SINGLE-SURFACE (SPEC-R2 AC3, ADR-0064): every surface-bearing envelope in an
@@ -213,35 +332,47 @@ function checkPins(r: Record<string, unknown>, meta: Record<string, unknown>, fa
 // same-named components into a chimera before hashing. Rejecting here — the record schema, the same
 // message walk `checkPins` already does — means the standing corpus-data gate (LLD-C15) also catches a
 // hand-edited multi-surface line in a stored shard, not only a freshly-admitted one.
+//
+// ADR-0231 widens the rule to every model-visible facet over the UNION of the streams it bundles, walked
+// in stream order (multi-turn: `priorOutput`, `clientInput`, `a2uiOutput`; repair: `invalidInput`,
+// `a2uiOutput`), and requires the facet's own `a2uiOutput` to carry at least one surface-bearing message
+// (an empty follow-up or an empty correction teaches nothing). In `clientInput` the `action` body's
+// `surfaceId` is the surface-bearing field. The exemplar walk (one stream, `a2uiOutput`) is unchanged.
 const SURFACE_BEARING_KEYS = ['createSurface', 'updateComponents', 'updateDataModel', 'deleteSurface', 'actionResponse'] as const
 
 function checkSingleSurface(r: Record<string, unknown>, meta: Record<string, unknown>, failures: RecordFailure[]): void {
-  if (meta.facet !== 'exemplar' || !Array.isArray(r.a2uiOutput)) return
+  const facet = meta.facet
+  if (facet !== 'exemplar' && facet !== 'multi-turn' && facet !== 'repair') return
+  if (!Array.isArray(r.a2uiOutput)) return
 
   let firstSurfaceId: string | undefined
-  let sawAnySurface = false
+  let outputHasSurface = false
 
-  for (let i = 0; i < r.a2uiOutput.length; i++) {
-    const msg = r.a2uiOutput[i]
-    if (!isObject(msg)) continue
-    const surfaceId = surfaceIdOf(msg)
-    if (surfaceId === undefined) continue // callFunction (or an unrecognized/malformed envelope) — excluded
+  for (const field of streamsOf(facet)) {
+    const stream = r[field]
+    if (!Array.isArray(stream)) continue
+    for (let i = 0; i < stream.length; i++) {
+      const msg: unknown = stream[i]
+      if (!isObject(msg)) continue
+      const surfaceId = field === 'clientInput' ? actionSurfaceIdOf(msg) : surfaceIdOf(msg)
+      if (surfaceId === undefined) continue // callFunction (or an unrecognized/malformed envelope): excluded
 
-    sawAnySurface = true
-    if (firstSurfaceId === undefined) {
-      firstSurfaceId = surfaceId
-    } else if (surfaceId !== firstSurfaceId) {
-      // EXACTLY one surface, not at-most-one: report the SECOND surface's first message, then stop —
-      // one failure names the violation (ADR-0064 acceptance: "rejects at the second surface's message path").
-      failures.push({ code: 'E_SCHEMA', path: `a2uiOutput[${i}]` })
-      return
+      if (field === 'a2uiOutput') outputHasSurface = true
+      if (firstSurfaceId === undefined) {
+        firstSurfaceId = surfaceId
+      } else if (surfaceId !== firstSurfaceId) {
+        // EXACTLY one surface, not at-most-one: report the SECOND surface's first message, then stop;
+        // one failure names the violation (ADR-0064 acceptance: "rejects at the second surface's message path").
+        failures.push({ code: 'E_SCHEMA', path: `${field}[${i}]` })
+        return
+      }
     }
   }
 
   // Zero surfaces addressed (e.g. a callFunction-only output) renders nothing and is not an exemplar —
   // the EXACTLY-one bound closes this hole too (it would otherwise pass tier-1 vacuously: no surface,
-  // no id-graph check).
-  if (!sawAnySurface) failures.push({ code: 'E_SCHEMA', path: 'a2uiOutput' })
+  // no id-graph check). For an exemplar `a2uiOutput` is the only stream, so this is the same predicate.
+  if (!outputHasSurface) failures.push({ code: 'E_SCHEMA', path: 'a2uiOutput' })
 }
 
 function surfaceIdOf(msg: Record<string, unknown>): string | undefined {
@@ -250,6 +381,11 @@ function surfaceIdOf(msg: Record<string, unknown>): string | undefined {
     if (isObject(body) && typeof body.surfaceId === 'string') return body.surfaceId
   }
   return undefined
+}
+
+function actionSurfaceIdOf(msg: Record<string, unknown>): string | undefined {
+  const body = msg.action
+  return isObject(body) && typeof body.surfaceId === 'string' ? body.surfaceId : undefined
 }
 
 // — small helpers (mirrors `renderer/validate.ts`'s defensive style) ————————————————————

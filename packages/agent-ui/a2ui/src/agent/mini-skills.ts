@@ -2,7 +2,7 @@
 // selects a capped set of catalog-composition idioms for `buildSystemPrompt` to compose (LLD-C4 twin of
 // `fewShot`). A mini-skill is a named, prompt-injectable INSTRUCTION module (anatomy → catalog mapping →
 // wall) — the schema-fit reason it lives here rather than as a corpus exemplar: `CorpusRecord` requires
-// `a2uiOutput` for `facet:"exemplar"` (record.ts:30,119-121), and a mini-skill's `body` is prose, not a
+// `a2uiOutput` for `facet:"exemplar"` (record.ts:38,152-154), and a mini-skill's `body` is prose, not a
 // worked A2UI payload (ADR-0091 §1).
 //
 // Seed content (ADR-0091 Decision §1 / Build-sequencing step 2): ADR-0090's FIVE calibration examples,
@@ -110,7 +110,7 @@ export const MINI_SKILLS: MiniSkill[] = loadMiniSkills()
  * TF-IDF top-`cap` cosine ranking (`topKByCosine`, the SAME math `retrieve()` uses).
  *
  * M-D SPEC-R6 — `registry` is hard-filtered to `m.catalogId === catalogId` BEFORE ranking, mirroring
- * `corpus/retrieve.ts:41,55`'s own `meta.catalogId` filter (the SAME accepted zero-content degrade a
+ * `corpus/retrieve.ts:47,63`'s own `meta.catalogId` filter (the SAME accepted zero-content degrade a
  * Basic-catalog turn's retrieval already has, `produce.ts:292`'s own comment) — a mini-skill whose body
  * hardcodes a DIFFERENT catalog's vocabulary can never surface on this turn, closing the ADR-0172 cl.3 gap.
  *

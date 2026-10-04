@@ -39,6 +39,20 @@ import { admit } from '../../src/corpus/admit.ts'
 import { createStore } from '../../src/corpus/store.ts'
 import { createDedupIndex } from '../../src/corpus/dedup.ts'
 import { plantedBasicSeed, stampCatalogId } from '../../src/catalog/a2ui-basic/planted.ts'
+import { candidateForSeed, multiTurnSeedToCandidate, repairSeedToCandidate } from './import-seeds.ts'
+import type { AdmitDeps } from '../../src/corpus/admit.ts'
+import type { MultiTurnSeed, RepairSeed } from '../../src/examples/types.ts'
+import { allMultiTurnSeeds, allRepairSeeds } from '../../src/examples/index.ts'
+import {
+  multiTurnRecord,
+  repairRecord,
+  LOGIN_ACTION,
+  LOGIN_FOLLOW_UP,
+  LOGIN_PRIOR,
+  DANGLING_CHILD_INPUT,
+  DANGLING_CHILD_ERRORS,
+  DANGLING_CHILD_FIXED,
+} from '../../src/corpus/facets.fixture.ts'
 
 declare const process: { cwd(): string }
 
@@ -411,6 +425,77 @@ describe('GH #1737 - depsForSeed: admit() receives the catalog matching the seed
   it('an agent-ui seed still admits under the agent-ui catalog (the default path is unchanged)', async () => {
     const result = await admit(seedToCandidate(canvasButtonSeed, 'canvas-button.ts'), depsForSeed(base(), canvasButtonSeed, resolve))
     expect(result.ok, JSON.stringify(result)).toBe(true)
+  })
+})
+
+// ── ADR-0231 cl.5: the multi-turn and repair seed kinds map onto their facet's record branch. Both
+// shelves are EMPTY until the curation slices (GH #1741/#1742), so the legs build seeds in memory from the
+// corpus test fixtures and drive the same exported mappers `main()`'s loop calls. Nothing is written. ──
+describe('ADR-0231 - the multi-turn and repair seed mappers', () => {
+  const resolve = createCatalogResolver(process.cwd())
+  const deps = (): AdmitDeps => ({ catalog: resolve('agent-ui'), store: createStore(), dedupIndex: createDedupIndex() })
+  const common = { surfaceId: 'unused', protocolVersion: 'v1.0', catalogId: 'agent-ui' } as const
+
+  const mt = multiTurnRecord()
+  const multiTurnSeed: MultiTurnSeed = {
+    ...common,
+    name: mt.name,
+    description: mt.description,
+    promptText: mt.promptText,
+    priorMessages: LOGIN_PRIOR,
+    action: LOGIN_ACTION,
+    messages: LOGIN_FOLLOW_UP,
+  }
+  const rp = repairRecord()
+  const repairSeed: RepairSeed = {
+    ...common,
+    name: rp.name,
+    description: rp.description,
+    promptText: rp.promptText,
+    invalidMessages: DANGLING_CHILD_INPUT,
+    validatorErrors: DANGLING_CHILD_ERRORS,
+    messages: DANGLING_CHILD_FIXED,
+  }
+
+  it('multiTurnSeedToCandidate maps priorMessages/action/messages onto the multi-turn branch, and the candidate admits', async () => {
+    const candidate = multiTurnSeedToCandidate(multiTurnSeed, 'multi-turn-test.ts')
+    expect(candidate).toEqual({
+      name: mt.name,
+      description: mt.description,
+      promptText: mt.promptText,
+      priorOutput: LOGIN_PRIOR,
+      clientInput: [LOGIN_ACTION],
+      a2uiOutput: LOGIN_FOLLOW_UP,
+      meta: { facet: 'multi-turn', protocolVersion: 'v1.0', catalogId: 'agent-ui', provenance: { source: 'authored', origin: 'src/examples/multi-turn-test.ts' } },
+    })
+    const result = await admit(candidate, deps())
+    expect(result.ok, JSON.stringify(result)).toBe(true)
+  })
+
+  it('repairSeedToCandidate maps invalidMessages/validatorErrors/messages onto the repair branch, and the candidate admits', async () => {
+    const candidate = repairSeedToCandidate(repairSeed, 'repair-test.ts')
+    expect(candidate).toEqual({
+      name: rp.name,
+      description: rp.description,
+      promptText: rp.promptText,
+      invalidInput: DANGLING_CHILD_INPUT,
+      validatorErrors: DANGLING_CHILD_ERRORS,
+      a2uiOutput: DANGLING_CHILD_FIXED,
+      meta: { facet: 'repair', protocolVersion: 'v1.0', catalogId: 'agent-ui', provenance: { source: 'authored', origin: 'src/examples/repair-test.ts' } },
+    })
+    const result = await admit(candidate, deps())
+    expect(result.ok, JSON.stringify(result)).toBe(true)
+  })
+
+  it('candidateForSeed dispatches by seed kind, and an exemplar seed maps exactly as before', () => {
+    expect(candidateForSeed(multiTurnSeed, 'm.ts')).toEqual(multiTurnSeedToCandidate(multiTurnSeed, 'm.ts'))
+    expect(candidateForSeed(repairSeed, 'r.ts')).toEqual(repairSeedToCandidate(repairSeed, 'r.ts'))
+    expect(candidateForSeed(canvasButtonSeed, 'canvas-button.ts')).toEqual(seedToCandidate(canvasButtonSeed, 'canvas-button.ts'))
+  })
+
+  it('the real multi-turn and repair shelves are empty today (so their per-file tables must be too, or the subprocess runs below halt)', () => {
+    expect(allMultiTurnSeeds).toHaveLength(0)
+    expect(allRepairSeeds).toHaveLength(0)
   })
 })
 

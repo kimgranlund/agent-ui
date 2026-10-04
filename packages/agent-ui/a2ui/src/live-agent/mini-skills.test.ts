@@ -150,7 +150,7 @@ describe('selectMiniSkills — TF-IDF top-cap selection over the registry (ADR-0
 })
 
 // SPEC-R6 (`persona-catalog-composition.spec.md`, ADR-0172 cl.3) — the `catalogId` hard filter, applied
-// BEFORE ranking (mirrors `corpus/retrieve.ts:41,55`'s own `meta.catalogId` filter).
+// BEFORE ranking (mirrors `corpus/retrieve.ts:47,63`'s own `meta.catalogId` filter).
 describe('selectMiniSkills — SPEC-R6 catalogId scoping', () => {
   it('AC2 — a non-agent-ui catalogId (a2ui-basic or a derived id) returns [] even for a strong-match intent', () => {
     expect(selectMiniSkills('build me a settings screen with toggles', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'a2ui-basic')).toEqual([])

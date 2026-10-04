@@ -17,11 +17,15 @@
 // the caller passes in, so an eval-facet or quarantined record can never surface in a retrieval result.
 // Flagged to the team lead in case the LLD should be amended to state this explicitly.
 //
+// ADR-0231 cl.4 widens the eligible facet to the model-visible class through an OPT-IN `facet` field
+// whose default is `exemplar`, so every existing caller is byte-identical. `eval` is not a
+// `ModelVisibleFacet` and so cannot be named: the held-out class never surfaces, by construction.
+//
 // Zero-dep, platform-neutral (SPEC-N5/ADR-0062): no imports beyond the local `record.ts` types and the
 // shared `text-similarity.ts` tokenizer/cosine primitives (ADR-0091 §2 — extracted so there is exactly
 // ONE implementation of the math; `selectMiniSkills` is the other caller).
 
-import type { CorpusRecord } from './record.ts'
+import type { CorpusRecord, ModelVisibleFacet } from './record.ts'
 import { topKByCosine } from './text-similarity.ts'
 
 export interface RetrieveQuery {
@@ -29,6 +33,8 @@ export interface RetrieveQuery {
   k: number
   catalogId: string
   protocolVersion: string
+  /** The model-visible facet to draw from (ADR-0231 cl.4). Omitted means `exemplar`, the pre-ADR scope. */
+  facet?: ModelVisibleFacet
 }
 
 function documentText(rec: CorpusRecord): string {
@@ -38,7 +44,8 @@ function documentText(rec: CorpusRecord): string {
 
 /**
  * TF-IDF cosine top-k retrieval (SPEC-R11) over `promptText` + `meta.componentsUsed`, scoped to
- * `query.catalogId`/`query.protocolVersion` and restricted to non-quarantined exemplar records.
+ * `query.catalogId`/`query.protocolVersion` and restricted to non-quarantined records of one
+ * model-visible facet (`query.facet`, default `exemplar`).
  *
  * Never throws. Resolves to `[]` for: an empty `records` input, an empty scope after filtering
  * (SPEC-R11 AC2), `query.k <= 0`, or a query whose tokens share zero vocabulary with the scope — a
@@ -50,11 +57,12 @@ function documentText(rec: CorpusRecord): string {
 export function retrieve(records: readonly CorpusRecord[], query: RetrieveQuery): CorpusRecord[] {
   if (query.k <= 0) return []
 
+  const facet: ModelVisibleFacet = query.facet ?? 'exemplar'
   const scope = records.filter(
     (r) =>
       r.meta.catalogId === query.catalogId &&
       r.meta.protocolVersion === query.protocolVersion &&
-      r.meta.facet === 'exemplar' &&
+      r.meta.facet === facet &&
       r.meta.status !== 'quarantined',
   )
   if (scope.length === 0) return []

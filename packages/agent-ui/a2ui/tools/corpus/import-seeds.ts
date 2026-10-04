@@ -103,8 +103,7 @@ import { loadStore, saveStore, loadVerdictArchive, archiveVerdicts } from './fs-
 import type { VerdictArchiveOutcome } from './fs-store.ts'
 import { createDedupIndex, minHashSignature } from '../../src/corpus/dedup.ts'
 import type { DedupIndex } from '../../src/corpus/dedup.ts'
-import { canonicalize } from '../../src/corpus/canonical.ts'
-import { admit } from '../../src/corpus/admit.ts'
+import { admit, recordIdentity } from '../../src/corpus/admit.ts'
 import type { AdmitDeps, AdmitResult } from '../../src/corpus/admit.ts'
 import type { CorpusStore } from '../../src/corpus/store.ts'
 import { createVerdictJudge, parseVerdictsFile, UnjudgedCandidateError } from '../../src/corpus/judge.ts'
@@ -113,7 +112,7 @@ import type { SeedRejection } from '../../src/corpus/import-report.ts'
 import { DISPOSITION_ALLOWLIST } from '../../src/corpus/disposition-allowlist.ts'
 import type { ArchivedVerdict } from '../../src/corpus/verdict-archive.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
-import type { ExampleSeed, SeedCatalogId } from '../../src/examples/types.ts'
+import type { ExampleSeed, MultiTurnSeed, RepairSeed, SeedCatalogId } from '../../src/examples/types.ts'
 import { canvasButtonSeed } from '../../src/examples/canvas-button.ts'
 import { listDisplaySeed, listPeopleSeed, listFormSeed, listNestedSeed } from '../../src/examples/dynamic-lists.ts'
 import { generativeFormSeed } from '../../src/examples/generative-form.ts'
@@ -174,7 +173,7 @@ import {
   basicNotificationSettingsSeed,
   basicAppointmentBookingSeed,
 } from '../../src/examples/basic-exemplars.ts'
-import { allSeeds, allBasicSeeds } from '../../src/examples/index.ts'
+import { allSeeds, allBasicSeeds, allMultiTurnSeeds, allRepairSeeds } from '../../src/examples/index.ts'
 import { createCatalogResolver } from '../catalog-files.ts'
 
 declare const process: { cwd(): string; argv: string[]; exit(code?: number): never }
@@ -206,7 +205,8 @@ const HELP_TEXT = `import-seeds — the ADR-0055 seed-import script (corpus LLD-
 
 Maps every seed on the example shelves (src/examples/: allSeeds for agent-ui, allBasicSeeds for
 a2ui-basic) onto a candidate CorpusRecord and runs it through admit(), the corpus's single write
-path. Each seed is admitted against the catalog matching its own catalogId.
+path. Each seed is admitted against the catalog matching its own catalogId. The ADR-0231 corpus-seed
+shelves (allMultiTurnSeeds, allRepairSeeds) map onto their facet's record branch the same way.
 
 A run WITHOUT --verdicts is legal only as a no-op: every seed must be an idempotent E_DUP re-run of
 its own already-admitted record. The moment ANY candidate clears dedup — a new seed, or the
@@ -411,6 +411,8 @@ function checkGrouping(): void {
   const drift = [
     shelfDrift('SEEDS_BY_MODULE', SEEDS_BY_MODULE, 'allSeeds', allSeeds),
     shelfDrift('BASIC_SEEDS_BY_MODULE', BASIC_SEEDS_BY_MODULE, 'allBasicSeeds', allBasicSeeds),
+    shelfDrift('MULTI_TURN_SEEDS_BY_MODULE', MULTI_TURN_SEEDS_BY_MODULE, 'allMultiTurnSeeds', allMultiTurnSeeds),
+    shelfDrift('REPAIR_SEEDS_BY_MODULE', REPAIR_SEEDS_BY_MODULE, 'allRepairSeeds', allRepairSeeds),
   ]
   for (const message of drift) {
     if (message !== undefined) {
@@ -439,6 +441,65 @@ export function seedToCandidate(seed: ExampleSeed<SeedCatalogId>, moduleFile: st
   }
 }
 
+// ADR-0231 cl.5: the two corpus-seed kinds. Each has its own hand-transcribed per-file table (the
+// `SEEDS_BY_MODULE` twin for its shelf, drift-checked by `checkGrouping`) and its own mapper onto the
+// facet's record branch. Both tables are EMPTY, exactly as the shelves are, until the curation slices
+// (GH #1741/#1742) seed them.
+const MULTI_TURN_SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly MultiTurnSeed<SeedCatalogId>[] }> = []
+const REPAIR_SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly RepairSeed<SeedCatalogId>[] }> = []
+
+/** The `seedToCandidate` twin for a multi-turn seed (ADR-0231 cl.2): `priorMessages` becomes
+ * `priorOutput`, the one `action` becomes the one-entry `clientInput`, `messages` (the follow-up)
+ * becomes `a2uiOutput`, and `meta.facet` is `multi-turn`. Pins, provenance and the dropped `surfaceId`
+ * follow the exemplar mapping. */
+export function multiTurnSeedToCandidate(seed: MultiTurnSeed<SeedCatalogId>, moduleFile: string): unknown {
+  return {
+    name: seed.name,
+    description: seed.description,
+    promptText: seed.promptText,
+    priorOutput: seed.priorMessages,
+    clientInput: [seed.action],
+    a2uiOutput: seed.messages,
+    meta: {
+      facet: 'multi-turn',
+      protocolVersion: seed.protocolVersion,
+      catalogId: seed.catalogId,
+      provenance: { source: 'authored', origin: `src/examples/${moduleFile}` },
+    },
+  }
+}
+
+/** The `seedToCandidate` twin for a repair seed (ADR-0231 cl.3): `invalidMessages` becomes
+ * `invalidInput`, `validatorErrors` carries over verbatim (admission recomputes and compares it),
+ * `messages` (the corrected stream) becomes `a2uiOutput`, and `meta.facet` is `repair`. */
+export function repairSeedToCandidate(seed: RepairSeed<SeedCatalogId>, moduleFile: string): unknown {
+  return {
+    name: seed.name,
+    description: seed.description,
+    promptText: seed.promptText,
+    invalidInput: seed.invalidMessages,
+    validatorErrors: seed.validatorErrors,
+    a2uiOutput: seed.messages,
+    meta: {
+      facet: 'repair',
+      protocolVersion: seed.protocolVersion,
+      catalogId: seed.catalogId,
+      provenance: { source: 'authored', origin: `src/examples/${moduleFile}` },
+    },
+  }
+}
+
+/** Any seed the run imports: an exemplar `ExampleSeed` (either catalog) or one of the two ADR-0231 kinds. */
+export type ImportableSeed = ExampleSeed<SeedCatalogId> | MultiTurnSeed<SeedCatalogId> | RepairSeed<SeedCatalogId>
+
+/** The candidate for any importable seed, dispatched by kind: a multi-turn seed is the one carrying
+ * `priorMessages`, a repair seed the one carrying `invalidMessages`, anything else an exemplar. */
+export function candidateForSeed(seed: ImportableSeed, moduleFile: string): unknown {
+  if ('priorMessages' in seed) return multiTurnSeedToCandidate(seed, moduleFile)
+  if ('invalidMessages' in seed) return repairSeedToCandidate(seed, moduleFile)
+  return seedToCandidate(seed, moduleFile)
+}
+
 /**
  * Warm a fresh `DedupIndex` with every record ALREADY in the loaded store. `admit()`'s dedup stage
  * only ever sees what THIS run adds via its own write stage — a bare `createDedupIndex()` starts
@@ -459,7 +520,7 @@ async function warmDedupIndex(store: CorpusStore, dedupIndex: DedupIndex, exclud
     if (rec.name === excludeName) continue
     if (rec.meta.canonicalHash !== undefined) dedupIndex.addExact(rec.name, rec.meta.canonicalHash)
     if (rec.a2uiOutput !== undefined) {
-      const canonical = await canonicalize(rec.a2uiOutput)
+      const canonical = await recordIdentity(rec) // admission's own facet identity (ADR-0231)
       dedupIndex.addSignature(rec.name, minHashSignature(`${rec.promptText} ${canonical.serialized}`))
     }
   }
@@ -680,7 +741,12 @@ async function main(): Promise<void> {
   const report: ImportReport = { admitted: [], alreadyPresent: [], rejections: [], dispositionWarnings: [], unjudgedCandidates: [] }
   let replaced: ReplacedInfo | undefined
 
-  const groups: ReadonlyArray<SeedGroup<SeedCatalogId>> = [...SEEDS_BY_MODULE, ...BASIC_SEEDS_BY_MODULE]
+  const groups: ReadonlyArray<{ module: string; seeds: readonly ImportableSeed[] }> = [
+    ...SEEDS_BY_MODULE,
+    ...BASIC_SEEDS_BY_MODULE,
+    ...MULTI_TURN_SEEDS_BY_MODULE,
+    ...REPAIR_SEEDS_BY_MODULE,
+  ]
   for (const group of groups) {
     for (const seed of group.seeds) {
       // Captured BEFORE admit() runs — the true prior state, since a name is only ever processed once
@@ -704,7 +770,7 @@ async function main(): Promise<void> {
         process.exit(1)
       }
 
-      const candidate = seedToCandidate(seed, group.module)
+      const candidate = candidateForSeed(seed, group.module)
       let result: AdmitResult
       try {
         result = await admit(candidate, depsForSeed(deps, seed, catalogFor))

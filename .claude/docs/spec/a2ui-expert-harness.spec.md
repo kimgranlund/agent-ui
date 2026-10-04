@@ -141,7 +141,7 @@ skills: [a2ui-payload-authoring]
 # graded by: a2ui-payload rubric (.claude/docs/rubrics/a2ui-payload.md) — never self-grades (SPEC-R8)
 ```
 
-### 5.3 The judge/verdicts contract (per SPEC-R3; the realized seam is `admit.ts:39-62` — the harness FILLS it, never re-defines it)
+### 5.3 The judge/verdicts contract (per SPEC-R3; the realized seam is `admit.ts:49-72`; the harness FILLS it, never re-defines it)
 
 ```ts
 // realized in src/corpus/admit.ts (ADR-0060) — cited, not redefined:

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { validateRecord } from './record.ts'
 import type { CorpusRecord } from './record.ts'
+import { multiTurnRecord, repairRecord, LOGIN_ACTION, LOGIN_PRIOR, DANGLING_CHILD_ERRORS } from './facets.fixture.ts'
 // Test-only use of `node:fs` for the ADR-0063 grep-clean proof below (never ships — same pattern as
 // `store.test.ts`'s own source-text trip-wire).
 import { readFileSync, readdirSync } from 'node:fs'
@@ -228,5 +229,115 @@ describe('validateRecord — E_NO_TARGET is retired (ADR-0063)', () => {
       const text = readFileSync(`${dir}/${file}`, 'utf8') as string
       expect(text.includes('E_NO_TARGET'), `${file} still mentions E_NO_TARGET`).toBe(false)
     }
+  })
+})
+
+// ADR-0231 cl.2/cl.3: the multi-turn and repair facets' record shape (Acceptance item 1).
+
+/** A fixture record with top-level fields dropped (the facet branch's required-field probes). */
+function without(record: CorpusRecord, ...keys: (keyof CorpusRecord)[]): unknown {
+  const copy: Record<string, unknown> = { ...record }
+  for (const key of keys) delete copy[key]
+  return copy
+}
+
+describe('validateRecord: the multi-turn facet (ADR-0231 cl.2)', () => {
+  it('accepts a conforming multi-turn record', () => {
+    expect(validateRecord(multiTurnRecord())).toEqual([])
+  })
+
+  it('rejects a record missing priorOutput at `priorOutput`', () => {
+    expect(validateRecord(without(multiTurnRecord(), 'priorOutput'))).toContainEqual({ code: 'E_SCHEMA', path: 'priorOutput' })
+  })
+
+  it('rejects a record missing clientInput at `clientInput`', () => {
+    expect(validateRecord(without(multiTurnRecord(), 'clientInput'))).toEqual([{ code: 'E_SCHEMA', path: 'clientInput' }])
+  })
+
+  it('rejects a clientInput of length 2 at `clientInput`', () => {
+    expect(validateRecord(multiTurnRecord({ clientInput: [LOGIN_ACTION, LOGIN_ACTION] }))).toEqual([
+      { code: 'E_SCHEMA', path: 'clientInput' },
+    ])
+  })
+
+  it('rejects an empty clientInput at `clientInput`', () => {
+    expect(validateRecord(multiTurnRecord({ clientInput: [] }))).toEqual([{ code: 'E_SCHEMA', path: 'clientInput' }])
+  })
+
+  it('rejects a clientInput[0] that is not an action envelope at `clientInput[0]`', () => {
+    const notAction = { version: 'v1.0', error: { code: 'VALIDATION_FAILED', surfaceId: 'login', path: '/x', message: 'no' } }
+    expect(validateRecord(multiTurnRecord({ clientInput: [notAction] as never }))).toEqual([{ code: 'E_SCHEMA', path: 'clientInput[0]' }])
+  })
+
+  it('rejects a missing a2uiOutput (the follow-up) at `a2uiOutput`', () => {
+    expect(validateRecord(without(multiTurnRecord(), 'a2uiOutput'))).toContainEqual({ code: 'E_SCHEMA', path: 'a2uiOutput' })
+  })
+
+  it('rejects an action missing a required string field at that field', () => {
+    const { sourceComponentId: _drop, ...rest } = LOGIN_ACTION.action
+    void _drop
+    expect(validateRecord(multiTurnRecord({ clientInput: [{ version: 'v1.0', action: rest }] as never }))).toEqual([
+      { code: 'E_SCHEMA', path: 'clientInput[0].action.sourceComponentId' },
+    ])
+  })
+
+  it('rejects an unknown action key and a non-boolean wantResponse at their paths', () => {
+    const action = { ...LOGIN_ACTION.action, extra: 1, wantResponse: 'yes' }
+    expect(validateRecord(multiTurnRecord({ clientInput: [{ version: 'v1.0', action }] as never }))).toEqual([
+      { code: 'E_SCHEMA', path: 'clientInput[0].action.extra' },
+      { code: 'E_SCHEMA', path: 'clientInput[0].action.wantResponse' },
+    ])
+  })
+
+  it('pins every stream: a prior-turn version drift is E_PIN at its priorOutput path', () => {
+    const prior = LOGIN_PRIOR.map((msg, i) => (i === 2 ? { ...msg, version: 'v0.9' } : msg))
+    expect(validateRecord(multiTurnRecord({ priorOutput: prior as never }))).toEqual([{ code: 'E_PIN', path: 'priorOutput[2].version' }])
+  })
+
+  it('stays single-surface across both turns and the action: an action on another surface is E_SCHEMA', () => {
+    const action = { ...LOGIN_ACTION, action: { ...LOGIN_ACTION.action, surfaceId: 'other' } }
+    expect(validateRecord(multiTurnRecord({ clientInput: [action] }))).toEqual([{ code: 'E_SCHEMA', path: 'clientInput[0]' }])
+  })
+
+  it('a branch field on the wrong facet is an unknown top-level key (E_SCHEMA at the key)', () => {
+    const exemplarWithPrior = { ...validExemplar, priorOutput: LOGIN_PRIOR }
+    expect(validateRecord(exemplarWithPrior)).toEqual([{ code: 'E_SCHEMA', path: 'priorOutput' }])
+    const multiTurnWithRepairField = { ...multiTurnRecord(), validatorErrors: DANGLING_CHILD_ERRORS }
+    expect(validateRecord(multiTurnWithRepairField)).toEqual([{ code: 'E_SCHEMA', path: 'validatorErrors' }])
+  })
+})
+
+describe('validateRecord: the repair facet (ADR-0231 cl.3)', () => {
+  it('accepts a conforming repair record', () => {
+    expect(validateRecord(repairRecord())).toEqual([])
+  })
+
+  it('rejects an empty validatorErrors at `validatorErrors`', () => {
+    expect(validateRecord(repairRecord({ validatorErrors: [] }))).toEqual([{ code: 'E_SCHEMA', path: 'validatorErrors' }])
+  })
+
+  it('rejects a validatorErrors entry whose code is outside ErrorCode at `validatorErrors[i].code`', () => {
+    const errors = [...DANGLING_CHILD_ERRORS, { code: 'NOT_A_CODE', path: 'root' }]
+    expect(validateRecord(repairRecord({ validatorErrors: errors as never }))).toEqual([
+      { code: 'E_SCHEMA', path: 'validatorErrors[1].code' },
+    ])
+  })
+
+  it('accepts FUNCTION and CATALOG_UNKNOWN as shapes (membership only; recomputation rejects them at admit)', () => {
+    expect(validateRecord(repairRecord({ validatorErrors: [{ code: 'FUNCTION', path: '[0]' }] }))).toEqual([])
+    expect(validateRecord(repairRecord({ validatorErrors: [{ code: 'CATALOG_UNKNOWN', path: '[0]' }] }))).toEqual([])
+  })
+
+  it('rejects a non-string path and an extra entry key at their paths', () => {
+    const errors = [{ code: 'IDGRAPH', path: 7, hint: 'x' }]
+    expect(validateRecord(repairRecord({ validatorErrors: errors as never }))).toEqual([
+      { code: 'E_SCHEMA', path: 'validatorErrors[0].hint' },
+      { code: 'E_SCHEMA', path: 'validatorErrors[0].path' },
+    ])
+  })
+
+  it('rejects a missing invalidInput and a missing a2uiOutput at their keys', () => {
+    expect(validateRecord(without(repairRecord(), 'invalidInput'))).toEqual([{ code: 'E_SCHEMA', path: 'invalidInput' }])
+    expect(validateRecord(without(repairRecord(), 'a2uiOutput'))).toContainEqual({ code: 'E_SCHEMA', path: 'a2uiOutput' })
   })
 })

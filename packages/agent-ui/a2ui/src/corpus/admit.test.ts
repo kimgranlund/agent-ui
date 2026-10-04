@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { admit } from './admit.ts'
+import { admit, recordIdentity } from './admit.ts'
 import type { AdmitDeps } from './admit.ts'
 import { createStore } from './store.ts'
 import { createDedupIndex, minHashSignature } from './dedup.ts'
@@ -8,6 +8,19 @@ import { validateA2ui } from './validate.ts'
 import { demoCatalog } from '../fixtures.ts'
 import { loadCatalog } from '../catalog/catalog.ts'
 import type { A2uiOutput } from '../protocol.ts'
+import { defaultCatalog } from '../catalog/default/index.ts'
+import type { CorpusRecord } from './record.ts'
+import {
+  multiTurnRecord,
+  repairRecord,
+  LOGIN_ACTION,
+  LOGIN_FOLLOW_UP,
+  LOGIN_PRIOR,
+  DANGLING_CHILD_INPUT,
+  DANGLING_CHILD_ERRORS,
+  MISSING_TITLE_INPUT,
+  MISSING_TITLE_ERRORS,
+} from './facets.fixture.ts'
 
 // admit.test.ts — the admission pipeline (corpus LLD-C5, SPEC-R5-R9, ADR-0060/0061/0063). The LLD §8
 // error table is the test matrix: E_SCHEMA · E_PIN · E_CATALOG · E_IDGRAPH · E_POINTER (syntax AND
@@ -677,5 +690,229 @@ describe('admit — the admission pipeline (LLD-C5)', () => {
       if (result.ok) return
       expect(result.code).toBe('E_CATALOG')
     })
+  })
+})
+
+// ADR-0231: the multi-turn and repair facets through the pipeline (Acceptance items 2, 3, 4, 7). The
+// fixtures run on the agent-ui catalog: the demo catalog's Button declares no action prop, so no demo
+// component could ground a client action.
+
+function mkFacetDeps(): AdmitDeps {
+  return { catalog: defaultCatalog, store: createStore(), dedupIndex: createDedupIndex() }
+}
+
+/** Seed one held-out eval record directly (admit() never writes one), the leak gate's comparison set. */
+function seedEval(deps: AdmitDeps, promptText: string): void {
+  deps.store.put({
+    name: 'held-out-eval',
+    description: 'x',
+    promptText,
+    meta: { facet: 'eval', protocolVersion: 'v1.0', catalogId: 'agent-ui', provenance: { source: 'authored', origin: 'x' }, status: 'valid' },
+  })
+}
+
+function withAction(overrides: Partial<(typeof LOGIN_ACTION)['action']>): CorpusRecord['clientInput'] {
+  return [{ ...LOGIN_ACTION, action: { ...LOGIN_ACTION.action, ...overrides } }]
+}
+
+describe('admit: the multi-turn facet (ADR-0231 cl.2)', () => {
+  it('admits a conforming record: hash, componentsUsed over the merged fold, status valid', async () => {
+    const deps = mkFacetDeps()
+    const result = await admit(multiTurnRecord(), deps)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.record.meta.status).toBe('valid')
+    expect(result.record.meta.canonicalHash).toBe((await recordIdentity(multiTurnRecord())).hash)
+    expect(result.record.meta.componentsUsed).toEqual(['Button', 'Column', 'Text'])
+    expect(deps.store.get('mt-login-submit')).toEqual(result.record)
+  })
+
+  it('rejects a follow-up that resends `root` with E_IDGRAPH at `sid:root`, and admits it with the resend removed', async () => {
+    const rootResend: A2uiOutput = [
+      ...LOGIN_FOLLOW_UP,
+      { version: 'v1.0', updateComponents: { surfaceId: 'login', components: [{ id: 'root', component: 'Column', children: ['status', 'submit', 'cancel'] }] } },
+    ]
+    const rejected = await admit(multiTurnRecord({ a2uiOutput: rootResend }), mkFacetDeps())
+    expect(rejected.ok).toBe(false)
+    if (rejected.ok) return
+    expect(rejected.code).toBe('E_IDGRAPH')
+    expect(rejected.paths).toEqual(['login:root'])
+
+    const accepted = await admit(multiTurnRecord({ a2uiOutput: LOGIN_FOLLOW_UP }), mkFacetDeps())
+    expect(accepted.ok).toBe(true)
+  })
+
+  it('rejects an action whose sourceComponentId is absent from the prior fold with E_IDGRAPH', async () => {
+    const result = await admit(multiTurnRecord({ clientInput: withAction({ sourceComponentId: 'forgot-password' }) }), mkFacetDeps())
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('E_IDGRAPH')
+    expect(result.paths).toEqual(['clientInput[0].action.sourceComponentId'])
+  })
+
+  it('rejects an action name its source component does not declare with E_IDGRAPH', async () => {
+    const result = await admit(multiTurnRecord({ clientInput: withAction({ name: 'login_cancel' }) }), mkFacetDeps())
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('E_IDGRAPH')
+    expect(result.paths).toEqual(['clientInput[0].action.name'])
+  })
+
+  it('rejects an action whose source component carries no action at all with E_IDGRAPH', async () => {
+    const result = await admit(multiTurnRecord({ clientInput: withAction({ sourceComponentId: 'status' }) }), mkFacetDeps())
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('E_IDGRAPH')
+    expect(result.paths).toEqual(['clientInput[0].action.name'])
+  })
+
+  it('a prior turn that fails tier-1 rejects with its own code, the path prefixed `priorOutput`', async () => {
+    const prior = LOGIN_PRIOR.map((msg) =>
+      'updateComponents' in msg
+        ? {
+            ...msg,
+            updateComponents: {
+              ...msg.updateComponents,
+              components: msg.updateComponents.components.map((c) => (c.id === 'root' ? { ...c, children: ['status', 'submit', 'cancel', 'ghost'] } : c)),
+            },
+          }
+        : msg,
+    )
+    const result = await admit(multiTurnRecord({ priorOutput: prior }), mkFacetDeps())
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('E_IDGRAPH')
+    expect(result.paths).toEqual(['priorOutput:root->ghost'])
+    expect(result.message).toMatch(/priorOutput/)
+  })
+
+  it('resolves follow-up bindings against the data model folded across both turns (E_POINTER only when no turn delivers it)', async () => {
+    const rebind = (path: string): A2uiOutput => [
+      { version: 'v1.0', updateComponents: { surfaceId: 'login', components: [{ id: 'status', component: 'Text', text: { path } }] } },
+    ]
+    const priorDatum = await admit(multiTurnRecord({ a2uiOutput: rebind('/status') }), mkFacetDeps())
+    expect(priorDatum.ok).toBe(true)
+    const undelivered = await admit(multiTurnRecord({ a2uiOutput: rebind('/session/user') }), mkFacetDeps())
+    expect(undelivered.ok).toBe(false)
+    if (undelivered.ok) return
+    expect(undelivered.code).toBe('E_POINTER')
+  })
+
+  it('two records differing only in actionId/timestamp collide E_DUP (exact hash)', async () => {
+    const deps = mkFacetDeps()
+    expect((await admit(multiTurnRecord(), deps)).ok).toBe(true)
+    const nonceOnly = multiTurnRecord({ name: 'mt-login-submit-again', clientInput: withAction({ actionId: 'act-0002', timestamp: '2026-10-04T10:30:00.000Z' }) })
+    expect((await recordIdentity(nonceOnly)).hash).toBe((await recordIdentity(multiTurnRecord())).hash)
+    const result = await admit(nonceOnly, deps)
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('E_DUP')
+    expect(result.collidesWith).toBe('mt-login-submit')
+  })
+
+  it('two records differing in action.name do not collide', async () => {
+    const deps = mkFacetDeps()
+    expect((await admit(multiTurnRecord(), deps)).ok).toBe(true)
+    const cancel = multiTurnRecord({ name: 'mt-login-cancel', clientInput: withAction({ name: 'login_cancel', sourceComponentId: 'cancel' }) })
+    expect((await recordIdentity(cancel)).hash).not.toBe((await recordIdentity(multiTurnRecord())).hash)
+    const result = await admit(cancel, deps)
+    expect(result.ok).toBe(true)
+  })
+
+  it('a promptText near-matching a held-out eval prompt rejects E_LEAK', async () => {
+    const deps = mkFacetDeps()
+    seedEval(deps, multiTurnRecord().promptText)
+    const result = await admit(multiTurnRecord(), deps)
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('E_LEAK')
+    expect(result.message).toContain('held-out-eval')
+  })
+})
+
+describe('admit: the repair facet (ADR-0231 cl.3)', () => {
+  it('admits a pair whose validatorErrors equal the recomputed verdict', async () => {
+    expect(validateA2ui(DANGLING_CHILD_INPUT, defaultCatalog, undefined, { atFinalize: true }).failures).toEqual(DANGLING_CHILD_ERRORS)
+    const deps = mkFacetDeps()
+    const result = await admit(repairRecord(), deps)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.record.meta.canonicalHash).toBe((await recordIdentity(repairRecord())).hash)
+    expect(result.record.meta.componentsUsed).toEqual(['Column', 'Text'])
+  })
+
+  it('compares as a set of (code, path) pairs: a duplicated stored entry still matches', async () => {
+    const result = await admit(repairRecord({ validatorErrors: [...DANGLING_CHILD_ERRORS, ...DANGLING_CHILD_ERRORS] }), mkFacetDeps())
+    expect(result.ok).toBe(true)
+  })
+
+  it('rejects stored validatorErrors that differ from the recomputed set with E_SCHEMA at `validatorErrors`', async () => {
+    const result = await admit(repairRecord({ validatorErrors: MISSING_TITLE_ERRORS }), mkFacetDeps())
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('E_SCHEMA')
+    expect(result.paths).toEqual(['validatorErrors'])
+  })
+
+  it('rejects a pair whose corrected stream fails tier-1 with that tier-1 code', async () => {
+    const result = await admit(repairRecord({ a2uiOutput: DANGLING_CHILD_INPUT }), mkFacetDeps())
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('E_IDGRAPH')
+    expect(result.paths).toEqual(['root->subtitle'])
+  })
+
+  it.each(['FUNCTION', 'CATALOG_UNKNOWN'] as const)('rejects validatorErrors carrying %s at recomputation (the set can never match)', async (code) => {
+    const result = await admit(repairRecord({ validatorErrors: [...DANGLING_CHILD_ERRORS, { code, path: 'root' }] }), mkFacetDeps())
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('E_SCHEMA')
+    expect(result.paths).toEqual(['validatorErrors'])
+  })
+
+  it('identity: the same tree from a different breakage is a distinct pair, and the stored set is order-free', async () => {
+    const other = repairRecord({ name: 'rp-missing-title', invalidInput: MISSING_TITLE_INPUT, validatorErrors: MISSING_TITLE_ERRORS })
+    const a = await recordIdentity(repairRecord())
+    const b = await recordIdentity(other)
+    expect(b.hash).not.toBe(a.hash)
+    const index = createDedupIndex()
+    index.addExact('rp-dangling-child', a.hash)
+    expect(index.exact(b.hash)).toBeNull()
+
+    const both = [...DANGLING_CHILD_ERRORS, ...MISSING_TITLE_ERRORS]
+    const forward = await recordIdentity(repairRecord({ validatorErrors: both }))
+    const reversed = await recordIdentity(repairRecord({ validatorErrors: [...both].reverse() }))
+    expect(reversed.hash).toBe(forward.hash)
+  })
+
+  it('two pairs differing only in their breakage (each prompt naming its own) both admit', async () => {
+    const deps = mkFacetDeps()
+    expect((await admit(repairRecord(), deps)).ok).toBe(true)
+    const other = repairRecord({
+      name: 'rp-missing-title',
+      promptText: 'a welcome card whose title is missing above the subtitle',
+      invalidInput: MISSING_TITLE_INPUT,
+      validatorErrors: MISSING_TITLE_ERRORS,
+    })
+    const result = await admit(other, deps)
+    expect(result.ok).toBe(true)
+  })
+
+  it('a promptText near-matching a held-out eval prompt rejects E_LEAK', async () => {
+    const deps = mkFacetDeps()
+    seedEval(deps, repairRecord().promptText)
+    const result = await admit(repairRecord(), deps)
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('E_LEAK')
+  })
+})
+
+describe('recordIdentity: the exemplar identity is unchanged (ADR-0231 Acceptance 5)', () => {
+  it('an exemplar hashes exactly as canonicalize(a2uiOutput) does', async () => {
+    const exemplar = mkCandidate() as CorpusRecord
+    const identity = await recordIdentity(exemplar)
+    const direct = await canonicalize(DEFAULT_OUTPUT)
+    expect(identity).toEqual(direct)
   })
 })

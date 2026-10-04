@@ -307,3 +307,29 @@ async function sha256Hex(text: string): Promise<string> {
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('')
 }
+
+// ── ADR-0231 facet identity ─────────────────────────────────────────────────────────
+
+/** The extra identity members a non-exemplar model-visible facet folds into its hash (ADR-0231
+ * cl.2/cl.3): a multi-turn record's normalized client action, a repair record's sorted error set. The
+ * caller normalizes them; this module only serializes them stably beside the canonical form. */
+export interface IdentityMembers {
+  clientInput?: unknown
+  validatorErrors?: unknown
+}
+
+/**
+ * Canonicalize `out` and extend its identity with `members` (ADR-0231 cl.2/cl.3). The value the plain
+ * `serialized` encodes (the one form, or the ADR-0064 amendment A5 ordered epoch list when there are
+ * two or more) is NESTED under `form` rather than spread, so the identity stays well-formed whatever
+ * shape it takes. `finalForm`, `epochs`, `componentsUsed` and `disconnected` are the plain
+ * `canonicalize` result; `serialized` is the identity string and `hash` is computed over it, preserving
+ * the `CanonicalizeResult` contract. The exemplar identity never comes through here: it is
+ * `canonicalize` alone, byte-identical to the pre-ADR-0231 hash.
+ */
+export async function canonicalizeIdentity(out: A2uiOutput, members: IdentityMembers): Promise<CanonicalizeResult> {
+  const base = await canonicalize(out)
+  const form = base.epochs.length === 1 ? base.finalForm : base.epochs
+  const serialized = stableStringify({ form, ...members })
+  return { ...base, serialized, hash: await sha256Hex(serialized) }
+}

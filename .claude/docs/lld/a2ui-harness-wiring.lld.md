@@ -152,7 +152,7 @@ The CLI composes `heal` + `validateA2ui` + the default catalog via relative impo
 
 ## 7. Judge activation — LLD-C8 (SPEC-R3; corpus SPEC-R8/ADR-0060; mechanism ADR-0068)
 
-The corpus store shipped `admit(candidate, { catalog, store, dedupIndex, judge? })` with `Judge`/`JudgeVerdict` at `admit.ts:39-62` and named THIS wave as the activation trigger. The activation (one write path throughout — the pipeline):
+The corpus store shipped `admit(candidate, { catalog, store, dedupIndex, judge? })` with `Judge`/`JudgeVerdict` at `admit.ts:49-72` and named THIS wave as the activation trigger. The activation (one write path throughout: the pipeline):
 
 ```
 src/corpus/judge.ts        # PURE (zero-dep, joins the "./corpus" barrel — TEN core modules):

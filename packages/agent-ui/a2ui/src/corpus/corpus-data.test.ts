@@ -33,11 +33,16 @@
 // under `src/corpus/` stays node-free, SPEC-N5/ADR-0062).
 
 import { describe, it, expect } from 'vitest'
-import { readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { validateRecord } from './record.ts'
-import type { CorpusRecord } from './record.ts'
+import type { CorpusRecord, ModelVisibleFacet } from './record.ts'
 import { validateA2ui } from './validate.ts'
 import { canonicalize } from './canonical.ts'
+import { admit, checkTier1, recordIdentity } from './admit.ts'
+import { createStore } from './store.ts'
+import { createDedupIndex } from './dedup.ts'
+import { parseVerdictsFile } from './judge.ts'
+import { multiTurnRecord, repairRecord, MISSING_TITLE_ERRORS } from './facets.fixture.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { a2uiBasicCatalog } from '../catalog/a2ui-basic/index.ts'
 import type { Catalog } from '../catalog/catalog.ts'
@@ -110,11 +115,13 @@ function tier1Verdict(rec: CorpusRecord): ReturnType<typeof validateA2ui> {
   return validateA2ui(rec.a2uiOutput, catalogFor(rec.meta.catalogId), undefined, { atFinalize: true })
 }
 
-/** The stored canonical hash must match a FRESH recomputation from the record's own a2uiOutput - catches
- *  a hand-edited a2uiOutput whose meta.canonicalHash was left stale (LLD-C3, SPEC-R6/N6). */
+/** The stored canonical hash must match a FRESH recomputation from the record's own streams - catches
+ *  a hand-edited a2uiOutput whose meta.canonicalHash was left stale (LLD-C3, SPEC-R6/N6). The
+ *  recomputation is admission's own facet identity (`recordIdentity`, ADR-0231): for an exemplar that is
+ *  `canonicalize(a2uiOutput)`, byte-identical to before. */
 async function hashProblem(rec: CorpusRecord): Promise<string | undefined> {
   if (rec.a2uiOutput === undefined) throw new Error(`${rec.name}: exemplar record has no a2uiOutput`)
-  const recomputed = await canonicalize(rec.a2uiOutput)
+  const recomputed = await recordIdentity(rec)
   return rec.meta.canonicalHash === recomputed.hash ? undefined : `${rec.name}: stored hash ${rec.meta.canonicalHash} != recomputed ${recomputed.hash}`
 }
 
@@ -334,5 +341,185 @@ describe('quarantine legs (ADR-0068 cl.6, the B1 gate amendment) — planted fix
     const failures = validateRecord(quarantinedButBroken)
     expect(failures.length).toBeGreaterThan(0)
     expect(failures.some((f) => f.path === 'description')).toBe(true)
+  })
+})
+
+// ── ADR-0231 (Acceptance 8): the per-facet legs for the multi-turn and repair shard directories ────────
+//
+// `corpus/multi-turn/v1_0/` and `corpus/repair/v1_0/` hold `<catalogId>.jsonl` shards exactly as
+// `exemplar/v1_0/` does (`computeShardPath`). Both directories are TOLERATED absent: the curation slices
+// (GH #1741/#1742) make them real. Every committed line is held to admission's own facet dispatch: the
+// shape branch (`validateRecord`), the facet and shard pairing, and for a non-quarantined line
+// `checkTier1` (the multi-turn session seed and action grounding; the repair recomputation equality,
+// so a validator change that moves a stored verdict reds this gate) plus the identity hash
+// (`recordIdentity`). Each directory's leg is also run against a FIXTURE shard built here through
+// `admit()` and `store.serialize()`, so the leg is proven to pass a real line and to bite on a tampered
+// one before any committed shard exists. Record names stay unique across every facet directory
+// (LLD §2 invariant i).
+
+const CORPUS_DIR = `${process.cwd()}/packages/agent-ui/a2ui/corpus`
+const NEW_FACETS = ['multi-turn', 'repair'] as const satisfies readonly ModelVisibleFacet[]
+
+/** One shard file's non-blank lines, parsed. */
+function parseShardLines(shard: string, text: string): ShardLine[] {
+  return text
+    .split('\n')
+    .map((line, i) => ({ line, lineNo: i + 1 }))
+    .filter(({ line }) => line.trim() !== '')
+    .map(({ line, lineNo }) => ({ shard, lineNo, rec: JSON.parse(line) as CorpusRecord }))
+}
+
+/** Every committed line under `corpus/<facet>/v1_0/`; an absent directory is an empty shelf. */
+function facetShardLines(facet: ModelVisibleFacet): { files: string[]; lines: ShardLine[] } {
+  const dir = `${CORPUS_DIR}/${facet}/v1_0`
+  if (!existsSync(dir)) return { files: [], lines: [] }
+  const files = (readdirSync(dir) as string[]).filter((f) => f.endsWith(SHARD_EXT)).sort()
+  return { files, lines: files.flatMap((shard) => parseShardLines(shard, readFileSync(`${dir}/${shard}`, 'utf8') as string)) }
+}
+
+/** Shard files under a facet directory whose stem names no registered catalog. No shard is required. */
+function facetInventoryProblems(files: readonly string[]): string[] {
+  return files
+    .filter((file) => !Object.hasOwn(CATALOGS, shardStem(file)))
+    .map((file) => `shard ${file} names no registered catalog (registered: ${REGISTERED_IDS.join(', ')})`)
+}
+
+/** Everything wrong with one line of a facet shard; `[]` = it is what admission would accept today. */
+async function facetLineProblems(facet: ModelVisibleFacet, line: ShardLine): Promise<string[]> {
+  const { rec } = line
+  const where = `${line.shard}:${line.lineNo} ${rec.name}`
+  const schema = validateRecord(rec)
+  if (schema.length > 0) return [`${where}: validateRecord ${JSON.stringify(schema)}`]
+  const problems: string[] = []
+  if (rec.meta.facet !== facet) problems.push(`${where}: facet "${rec.meta.facet}" sits in the ${facet} directory`)
+  const misfiled = shardProblem(line.shard, rec)
+  if (misfiled !== undefined) problems.push(misfiled)
+  if (!Object.hasOwn(CATALOGS, rec.meta.catalogId)) return [...problems, `${where}: unregistered catalogId "${rec.meta.catalogId}"`]
+  if (rec.meta.status === 'quarantined') return problems
+  const tier1 = checkTier1(rec, catalogFor(rec.meta.catalogId))
+  if (tier1 !== null) problems.push(`${where}: ${tier1.code} ${tier1.message} ${JSON.stringify(tier1.paths ?? [])}`)
+  const stale = await hashProblem(rec)
+  if (stale !== undefined) problems.push(stale)
+  return problems
+}
+
+/** A fixture shard for `facet`, built the way the importer builds one: admit, then serialize. */
+async function fixtureShard(facet: ModelVisibleFacet): Promise<ShardLine[]> {
+  const deps = { catalog: defaultCatalog, store: createStore(), dedupIndex: createDedupIndex() }
+  const candidate = facet === 'multi-turn' ? multiTurnRecord() : repairRecord()
+  const admitted = await admit(candidate, deps)
+  if (!admitted.ok) throw new Error(`fixture ${candidate.name} did not admit: ${admitted.code} ${admitted.message}`)
+  const shard = deps.store.serialize().find((s) => s.path.endsWith(`/${facet}/v1_0/agent-ui${SHARD_EXT}`))
+  if (shard === undefined) throw new Error(`no ${facet} shard serialized`)
+  return parseShardLines('agent-ui.jsonl', shard.text)
+}
+
+const facetShelves = NEW_FACETS.map((facet) => ({ facet, ...facetShardLines(facet) }))
+
+describe('corpus-data - every record name is unique across all facet directories (LLD §2 invariant i)', () => {
+  it('no name repeats across exemplar, multi-turn and repair', () => {
+    expect(duplicateRecordNames([...records, ...facetShelves.flatMap((s) => s.lines.map((l) => l.rec))])).toEqual([])
+  })
+})
+
+for (const { facet, files, lines } of facetShelves) {
+  describe(`corpus-data - the ${facet} shard directory (ADR-0231, tolerated absent)`, () => {
+    it('every shard file names a registered catalog', () => {
+      expect(facetInventoryProblems(files)).toEqual([])
+    })
+
+    for (const line of lines) {
+      it(`${line.shard} line ${line.lineNo}${line.rec.meta.status === 'quarantined' ? ' (quarantined)' : ''} is what admission accepts`, async () => {
+        expect(await facetLineProblems(facet, line)).toEqual([])
+      })
+    }
+
+    it('the leg passes a fixture shard built through admit() + serialize()', async () => {
+      const fixture = await fixtureShard(facet)
+      expect(fixture).toHaveLength(1)
+      expect(await facetLineProblems(facet, fixture[0]!)).toEqual([])
+    })
+
+    it('the leg bites: a stale hash, a mis-shelved facet and a mis-filed catalog are each reported', async () => {
+      const [line] = await fixtureShard(facet)
+      const rec = line!.rec
+      const stale = { ...line!, rec: { ...rec, meta: { ...rec.meta, canonicalHash: 'stale' } } }
+      expect(await facetLineProblems(facet, stale)).toEqual([expect.stringMatching(/stored hash stale != recomputed/)])
+      const other = facet === 'multi-turn' ? 'repair' : 'multi-turn'
+      expect(await facetLineProblems(other, line!)).toEqual([expect.stringMatching(new RegExp(`sits in the ${other} directory`))])
+      expect(await facetLineProblems(facet, { ...line!, shard: 'a2ui-basic.jsonl' })).toEqual([
+        expect.stringMatching(/stamped catalogId "agent-ui" but sits in a2ui-basic\.jsonl/),
+      ])
+    })
+  })
+}
+
+describe('corpus-data - the facet legs bite on facet-specific defects (ADR-0231 cl.2/cl.3)', () => {
+  // Both edits below also move the record's identity (the action and the error set are identity
+  // members), so the stale stored hash is reported alongside the facet-specific defect.
+  it('multi-turn: an ungrounded action is reported (E_IDGRAPH)', async () => {
+    const [line] = await fixtureShard('multi-turn')
+    const rec = line!.rec
+    const action = rec.clientInput![0]!
+    const ungrounded = { ...rec, clientInput: [{ ...action, action: { ...action.action, sourceComponentId: 'nowhere' } }] }
+    expect(await facetLineProblems('multi-turn', { ...line!, rec: ungrounded })).toEqual([
+      expect.stringMatching(/^agent-ui\.jsonl:1 .*E_IDGRAPH/),
+      expect.stringMatching(/stored hash .* != recomputed/),
+    ])
+  })
+
+  it('repair: stored validatorErrors that no longer equal the recomputed verdict are reported (E_SCHEMA)', async () => {
+    const [line] = await fixtureShard('repair')
+    const drifted = { ...line!.rec, validatorErrors: MISSING_TITLE_ERRORS }
+    expect(await facetLineProblems('repair', { ...line!, rec: drifted })).toEqual([
+      expect.stringMatching(/E_SCHEMA validatorErrors do not equal the recomputed verdict/),
+      expect.stringMatching(/stored hash .* != recomputed/),
+    ])
+  })
+
+  it('a quarantined line skips tier-1 and the hash, never the shape branch', async () => {
+    const [line] = await fixtureShard('repair')
+    const rec = line!.rec
+    const quarantined = { ...rec, validatorErrors: MISSING_TITLE_ERRORS, meta: { ...rec.meta, status: 'quarantined' as const, canonicalHash: 'stale' } }
+    expect(await facetLineProblems('repair', { ...line!, rec: quarantined })).toEqual([])
+    const broken = { ...quarantined, validatorErrors: [] }
+    expect(await facetLineProblems('repair', { ...line!, rec: broken })).toEqual([expect.stringMatching(/validateRecord/)])
+  })
+})
+
+// ── ADR-0231 cl.5 / Acceptance 6: rubric 1.3 is a runtime bump. The live `version:` marker reads 1.3, a
+// new VerdictsFile still citing 1.2 is rejected against it, and every archived VerdictsFile still parses
+// under the version it was judged against (the qualified re-author sentence: 1.3 moves no dimension that
+// applies to an exemplar, so no archived exemplar verdict is re-authored). ──
+const RUBRIC_PATH = `${process.cwd()}/.claude/docs/rubrics/a2ui-corpus.md`
+const VERDICTS_DIR = `${CORPUS_DIR}/verdicts`
+
+describe('rubric a2ui-corpus 1.3 (ADR-0231 cl.5)', () => {
+  const live = /^version:\s*(\S+)\s*$/m.exec(readFileSync(RUBRIC_PATH, 'utf8'))?.[1]
+  const verdictsFile = (rubricVersion: string): string =>
+    JSON.stringify({ rubric: 'a2ui-corpus', rubricVersion, judgedBy: 'a2ui-review-agent', date: '2026-10-04', verdicts: {} })
+
+  it('the live marker reads 1.3', () => {
+    expect(live).toBe('1.3')
+  })
+
+  it('parseVerdictsFile accepts a new file citing 1.3 and rejects one still citing 1.2 at rubricVersion', () => {
+    expect(parseVerdictsFile(verdictsFile('1.3'), live!).ok).toBe(true)
+    const stale = parseVerdictsFile(verdictsFile('1.2'), live!)
+    expect(stale.ok).toBe(false)
+    if (stale.ok) return
+    expect(stale.issues.map((i) => i.path)).toEqual(['rubricVersion'])
+  })
+
+  it('every archived VerdictsFile still parses under the version it cites (history, never re-authored)', () => {
+    const files = readdirSync(VERDICTS_DIR).filter((f) => f.endsWith('.json'))
+    expect(files.length).toBeGreaterThan(0)
+    for (const file of files) {
+      const text = readFileSync(`${VERDICTS_DIR}/${file}`, 'utf8')
+      const cited = (JSON.parse(text) as { rubricVersion: string }).rubricVersion
+      expect(['1.0', '1.1', '1.2'], file).toContain(cited)
+      const parsed = parseVerdictsFile(text, cited)
+      expect(parsed.ok, `${file}: ${JSON.stringify(parsed)}`).toBe(true)
+    }
   })
 })

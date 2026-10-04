@@ -6,10 +6,11 @@
 // provided JSONL text into an in-memory index at construction time ("at parse"); `serialize()` derives
 // the shards (and the regenerable `index.json`) back out, byte-stably.
 //
-// Invariants (LLD §2): (i) `name` is the unique join key across both sub-corpora. (ii) a shard under
-// `exemplar/` holds only `facet:"exemplar"` records, `eval/` only `facet:"eval"` — enforced eagerly at
-// parse (a mismatch throws; this can only happen from a hand-corrupted or mis-shelved shard file, never
-// from `put()`, which is the single writer and always shelves by the record's own facet). (iii)
+// Invariants (LLD §2): (i) `name` is the unique join key across every facet's sub-corpus. (ii) a shard
+// under a facet directory (`exemplar/`, `eval/`, and the ADR-0231 `multi-turn/` and `repair/`) holds only
+// records of that facet, enforced eagerly at parse (a mismatch throws; this can only happen from a
+// hand-corrupted or mis-shelved shard file, never from `put()`, which is the single writer and always
+// shelves by the record's own facet), and a shard file under an unknown facet directory throws too. (iii)
 // `index.json` is DERIVED, never the source of truth — any `index.json`-shaped input is ignored by
 // `createStore`, and `serialize()` always recomputes it fresh from the live record set. (iv) only
 // `tools/corpus/` writes the data dir; this module is the single IN-MEMORY mutation surface (`put`)
@@ -70,17 +71,24 @@ function computeShardPath(facet: Facet, protocolVersion: string, catalogId: stri
   return `${CORPUS_ROOT}/${facet}/${pinDir}/${catalogId}${ext}`
 }
 
-/** The facet a shard's directory segment implies — `undefined` for anything not under `exemplar/`
- * or `eval/` (e.g. `index.json`, which sits at the corpus root and is never a record shard). */
-function facetOfPath(path: string): Facet | undefined {
-  if (path.includes('/exemplar/')) return 'exemplar'
-  if (path.includes('/eval/')) return 'eval'
-  return undefined
+const FACET_SEGMENTS: readonly Facet[] = ['exemplar', 'eval', 'multi-turn', 'repair']
+
+/** The facet a shard's directory segment implies (ADR-0231 cl.4: the two model-visible facets shelve
+ * beside `exemplar/`). `undefined` for anything that is not a shard file (no `.jsonl`/`.jsonl.enc`
+ * extension, e.g. `index.json`, which sits at the corpus root and is never a record shard). A shard
+ * file whose directory segment names no facet THROWS: a `.jsonl` under an unknown directory is a
+ * mis-shelved shard, not a file to skip silently. Exported for the ADR-0231 acceptance tests. */
+export function facetOfPath(path: string): Facet | undefined {
+  for (const facet of FACET_SEGMENTS) {
+    if (path.includes(`/${facet}/`)) return facet
+  }
+  if (!path.endsWith('.jsonl') && !path.endsWith('.jsonl.enc')) return undefined
+  throw new Error(`corpus store: shard ${path} is under no known facet directory (${FACET_SEGMENTS.join(', ')})`)
 }
 
-/** Parse one shard's JSONL text into records, enforcing invariant (ii) eagerly. A shard whose
- * directory implies no facet (not under `exemplar/`/`eval/`) yields no records — it is not a record
- * shard (invariant iii: a stray `index.json` handed in is silently not a shard, never parsed as one). */
+/** Parse one shard's JSONL text into records, enforcing invariant (ii) eagerly. A file whose path is
+ * not a shard (no shard extension) yields no records (invariant iii: a stray `index.json` handed in is
+ * silently not a shard, never parsed as one); a shard under an unknown facet directory throws. */
 function parseShard(shard: ShardText): CorpusRecord[] {
   const facet = facetOfPath(shard.path)
   if (facet === undefined) return []
@@ -100,9 +108,9 @@ function parseShard(shard: ShardText): CorpusRecord[] {
   return records
 }
 
-/** Build the store's in-memory index from provided shard text. Only paths under `exemplar/`/`eval/`
- * are treated as record shards — anything else (an `index.json`, a misplaced file) is ignored, never
- * parsed and never blindly echoed back out (invariant iii; `serialize()` always recomputes it). */
+/** Build the store's in-memory index from provided shard text. Only shard files under a facet
+ * directory are treated as record shards; a non-shard file (an `index.json`) is ignored, never parsed and
+ * never blindly echoed back out (invariant iii; `serialize()` always recomputes it). */
 export function createStore(shards: ShardText[] = []): CorpusStore {
   const records = new Map<string, CorpusRecord>() // name -> record (invariant i)
 
@@ -157,7 +165,7 @@ export function createStore(shards: ShardText[] = []): CorpusStore {
 function computeIndex(records: Map<string, CorpusRecord>): CorpusIndex {
   const byCanonicalHash: Record<string, string> = {}
   const byCatalogId: Record<string, string[]> = {}
-  const byFacet: Record<Facet, number> = { exemplar: 0, eval: 0 }
+  const byFacet: Record<Facet, number> = { exemplar: 0, eval: 0, 'multi-turn': 0, repair: 0 }
   const byStatus: Record<Status, number> = { valid: 0, repaired: 0, quarantined: 0 }
 
   for (const rec of records.values()) {
