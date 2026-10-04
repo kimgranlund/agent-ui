@@ -22,8 +22,8 @@
 // guard `allSeeds` (agent-ui only, `defaultCatalog`) and are unchanged. `allBasicSeeds` is a SECOND shelf
 // of `ExampleSeed<'a2ui-basic'>` (first seeded by GH #1732) with its own legs at the end of this file: the
 // same two checks against `a2uiBasicCatalog`, plus the cross-shelf name-uniqueness invariant (corpus LLD
-// invariant i: `name` is the join key across every shard). Because the real Basic shelf is empty, each
-// Basic predicate is a named function shared by the standing loop AND by planted in-memory fixtures that
+// invariant i: `name` is the join key across every shard). Each Basic predicate is a named function shared
+// by the standing loop over the real Basic shelf AND by planted in-memory fixtures that
 // show it passing a genuine Basic seed and failing a wrong-dialect one (checks that bite).
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'

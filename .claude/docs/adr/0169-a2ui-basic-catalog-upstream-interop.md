@@ -600,3 +600,16 @@ infrastructure half of that follow-up under Kim's ruling on
   Consequences statement holds as written: Basic turns retrieve zero exemplars and `fewShot` degrades to
   `''`. The Non-goal "no Basic corpus shard" is retired as a non-goal; the shard itself exists only
   once #1732 admits its first record.
+
+## Amendment - the first Basic exemplars are admitted (2026-10-04, GH #1732, PR #1747)
+
+> Status: append-only; closes the "Still open" item of the amendment above, does not edit it.
+
+GH #1732 seeded the Basic shelf with four exemplars (`src/examples/basic-exemplars.ts`), judged by
+`a2ui-review-agent` against the corpus rubric (qualityScores 4, 4, 5, 4) and admitted into
+`corpus/exemplar/v1_0/a2ui-basic.jsonl`. The shard now exists and `corpus-data.test.ts` requires it, so the
+precondition in the Consequences statement "Basic turns retrieve zero corpus exemplars until a Basic shard
+is seeded" is met. Two follow-ups surfaced in judging and stay open: the
+renderer wires List-template button actions without the item scope (a relative `context` path such as
+`{path:'sku'}` is emitted unresolved), and the payload rubric's P4/P5/P7 anchors name only the agent-ui
+dialect.

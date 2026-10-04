@@ -43,6 +43,7 @@ import { a2uiBasicCatalog } from '../catalog/a2ui-basic/index.ts'
 import type { Catalog } from '../catalog/catalog.ts'
 import type { SeedCatalogId } from '../examples/types.ts'
 import { canvasButtonSeed } from '../examples/canvas-button.ts'
+import { basicExemplarSeeds } from '../examples/basic-exemplars.ts'
 import { plantedBasicSeed, stampCatalogId } from '../catalog/a2ui-basic/planted.ts'
 
 declare const process: { cwd(): string }
@@ -152,9 +153,9 @@ describe('corpus-data - every committed exemplar shard is self-consistent (LLD-C
     }
   })
 
-  it('a2ui-basic.jsonl holds at least the GH #1732 floor of 3 records, every one stamped a2ui-basic (judged by the per-line legs below)', () => {
+  it('a2ui-basic.jsonl holds exactly the GH #1732 exemplar family, every one stamped a2ui-basic (judged by the per-line legs below)', () => {
     const basic = shardLines.filter((l) => l.shard === 'a2ui-basic.jsonl')
-    expect(basic.length).toBeGreaterThanOrEqual(3)
+    expect(basic).toHaveLength(basicExemplarSeeds.length)
     for (const l of basic) expect(l.rec.meta.catalogId, `${l.shard}:${l.lineNo}`).toBe('a2ui-basic')
   })
 

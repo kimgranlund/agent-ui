@@ -216,7 +216,7 @@ describe('corpus admission coverage — the TKT-0022 trip-wire (every seed admit
     expect(allowlistResidue(admitted, allowlist)).toEqual(['b'])
   })
 
-  // ── GH #1737: the Basic shelf is in the judged set. The real shelf is empty, so plant a Basic seed. ──
+  // ── GH #1737: the Basic shelf is in the judged set. Plant a Basic seed so the leg bites independent of the real shelf. ──
 
   it('a Basic seed on the Basic shelf that is admitted nowhere and not allowlisted is REPORTED (the Basic shelf is not exempt from the trip-wire)', () => {
     const planted = plantedBasicSeed('product-card')

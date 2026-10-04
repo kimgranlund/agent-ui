@@ -32,7 +32,7 @@ import { parseArgs, dispositionGuard, dispositionAllowlistSnippet, shelfDrift, d
 import { createCatalogResolver } from '../catalog-files.ts'
 import type { SeedRejection } from '../../src/corpus/import-report.ts'
 import type { ArchivedVerdict } from '../../src/corpus/verdict-archive.ts'
-import { allSeeds, allBasicSeeds } from '../../src/examples/index.ts'
+import { allSeeds, allBasicSeeds, basicExemplarSeeds } from '../../src/examples/index.ts'
 import { canvasButtonSeed } from '../../src/examples/canvas-button.ts'
 import { DISPOSITION_ALLOWLIST } from '../../src/corpus/disposition-allowlist.ts'
 import { admit } from '../../src/corpus/admit.ts'
@@ -312,8 +312,8 @@ describe('GH #1737, shelfDrift: the per-file grouping must match the shelf, for 
     expect(shelfDrift('G', groups('a', 'old-name'), 'allSeeds', shelf('a', 'new-name'))).toBeDefined()
   })
 
-  it('the real Basic shelf holds the GH #1732 exemplars (at least 3), every one an a2ui-basic seed', () => {
-    expect(allBasicSeeds.length).toBeGreaterThanOrEqual(3)
+  it('the real Basic shelf is exactly the GH #1732 exemplar family, every one an a2ui-basic seed', () => {
+    expect(allBasicSeeds).toHaveLength(basicExemplarSeeds.length)
     for (const seed of allBasicSeeds) expect(seed.catalogId, seed.name).toBe('a2ui-basic')
   })
 })
@@ -751,6 +751,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     expect(result.stdout, 'zero admissions — this is the whole point of the case').toMatch(/0 admitted/)
     expect(result.stdout).toMatch(new RegExp(`${SHELF.length} quality-rejected`))
     expect(existsSync(join(sandbox, SHARD)), 'nothing was admitted, so no shard exists').toBe(false)
+    expect(existsSync(join(sandbox, BASIC_SHARD)), 'nor a Basic shard').toBe(false)
     expect(archivedFiles(), 'zero admissions is NOT zero record').toEqual(['2026-07-29--all-rejected.json'])
     expect(readFileSync(join(sandbox, ARCHIVE_DIR, '2026-07-29--all-rejected.json'), 'utf8')).toBe(input)
 
@@ -984,7 +985,10 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
 
   // GH #1737: the per-seed catalog resolver goes through the registry, proven on the real script for
   // EACH catalog. Since GH #1732 seeded the Basic shelf, a run resolves the Basic catalog too, so both
-  // legs are the same shape: remove one catalog file from the sandbox and the run fails naming it.
+  // legs are the same shape: remove one catalog file from the sandbox and the run fails naming it. The
+  // earlier "an absent Basic catalog is never read" subprocess leg needed an empty Basic shelf; the
+  // resolver's laziness stays covered at the unit level by `tools/catalog-files.test.ts` ("the resolver
+  // is LAZY: a root holding only the agent-ui catalog resolves agent-ui and never touches the Basic file").
 
   it('GH #1737/#1732 - the Basic catalog IS read through the registry for the Basic seeds: removing the sandbox a2ui-basic/catalog.json fails the run', () => {
     makeSandbox({ withShard: true })
