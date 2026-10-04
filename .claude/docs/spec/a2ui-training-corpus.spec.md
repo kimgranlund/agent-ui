@@ -5,7 +5,7 @@
 > **v0.3 (2026-07-03, s1-build discrepancy repair):** the §5.1 schema block contradicted SPEC-R2 AC2 — `description` sat in the top-level `required` array, and under strict draft-07 semantics (top-level `required` ANDs with every `allOf` branch) the eval `anyOf(target, description)` carve-out was unreachable, making R2 AC2's own fixture untriggerable. Repaired in R2 AC2's favor (the resolution the s1 build shipped, `src/corpus/record.ts`): `description` moved out of the top-level `required` into the facet conditionals; upstream-interop caveat logged in §7. **Reversed at v0.4.**
 > **v0.4 (2026-07-03, ADR-0063 proposed — the §7 caveat fired):** the host fetched the authoritative upstream (`google/A2UI@main` `eval/datasets/dataset_schema.json`); verbatim: `"required": ["name", "description", "promptText"]` (unconditional `description`); `target` "If omitted, defaults to the value of `description`" (NO missing-target failure mode); items set `additionalProperties:false` (only the 7 upstream fields survive projection — `a2uiOutput` is not among them); the dataset file is one JSON **array**, not JSONL. Per Constraint C1 the v0.3 carve-out is **reversed**: `description` unconditionally required (§5.1/R1); `target` optional with the explicit fallback semantic (R2); **`E_NO_TARGET` retired** from §5.3 (unreachable by construction); R1 AC1's interop check is a PROJECTION onto the upstream field set; the array-form fact noted at R16. §7's open item is resolved.
 > **v0.5 (2026-07-03, ADR-0064 proposed — the s6 multi-surface ruling):** a v1 corpus record is **single-surface** — SPEC-R2 gains the clause (exemplar `a2uiOutput` addresses exactly ONE surface; surfaceless `callFunction` excluded from the count) + AC3. Grounded in the s6 trace: the shared validator judges per surface but the canonicalizer folds globally, so a multi-surface record would pass tier-1 and silently chimera before hashing. Corpus-only; wire/renderer multi-surface stays legal; widening trigger named in the ADR.
-> **v0.6 (2026-10-04, ADR-0231 accepted, GH #1739 the facet build slice):** the corpus gains two model-visible facets, `multi-turn` (one client `action` in, the follow-up stream out, beside the turn-1 stream it answers) and `repair` (a broken stream, the shared validator's recomputed verdict on it, the corrected stream). §2's facet table gains the two rows and the model-visible/held-out class; SPEC-R2 gains the facet-conditional branches (+ AC4/AC5); SPEC-R3's leak invariant reads over the model-visible class; SPEC-R11 gains the opt-in `facet` filter (default `exemplar`); §5.1 widens the `facet` enum and adds the four top-level fields and the two `allOf` conditionals; R1 AC1's projection drops the four new fields too. The exemplar and eval contracts are unchanged.
+> **v0.6 (2026-10-04, ADR-0231 accepted, GH #1739 the facet build slice):** the corpus gains two model-visible facets, `multi-turn` (one client `action` in, the follow-up stream out, beside the turn-1 stream it answers) and `repair` (a broken stream, the shared validator's recomputed verdict on it, the corrected stream). §2's facet table gains the two rows and the model-visible/held-out class; SPEC-R2 gains the facet-conditional branches (+ AC4/AC5); SPEC-R3's leak invariant reads over the model-visible class; SPEC-R11 gains the opt-in `facet` filter (default `exemplar`); SPEC-R9 gains AC3 (the never-healed `priorOutput`/`invalidInput` pin an absent `version`, `E_PIN`); §5.1 widens the `facet` enum, adds the four top-level fields and the two new `allOf` conditionals, and gives every facet conditional a `not.anyOf` excluding the other facets' branch fields; R1 AC1's projection drops the four new fields too. The exemplar and eval contracts are unchanged.
 > Refines: [`../a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G5** (flagship) and **PRD-D1**; supports PRD-G4, PRD-G6, PRD-G7.
 > Refined by: [`../lld/a2ui-corpus-store.lld.md`](../lld/a2ui-corpus-store.lld.md) (storage, dedup algorithm, MCP wiring) and the harness LLDs (gates).
 > Altitude: this document owns the corpus **behavior + data/schema contract**. Storage substrate, indexing internals, and file layout are deferred to the LLD. Requirements reference PRD goal IDs; they do not restate them.
@@ -113,6 +113,7 @@ Normative language: **MUST** / **SHOULD** / **MAY** per RFC 2119. Each requireme
 **SPEC-R9 — Version pinning.** Every record MUST pin the A2UI `protocolVersion` and the `catalogId`(+version) it targets. *(→ PRD-G6)*
 - **AC1** *Given* any admitted record, *when* inspected, *then* `protocolVersion` and `catalogId` are present and non-empty.
 - **AC2** *Given* a record whose `a2uiOutput` references a catalog/version it does not pin, *when* admission runs, *then* it is rejected with `E_PIN`.
+- **AC3** *Given* a `multi-turn` or `repair` record, *when* admission runs, *then* every message of the server streams admission never heals (`priorOutput`, `invalidInput`; ADR-0231 cl.4) carries a `version` equal to `protocolVersion`, and an absent, non-string or different one is rejected with `E_PIN` at `<stream>[i].version`. Filling an absent `version` is the healer's arm (d) (ADR-0061), so a repair pair built around that breakage is a named non-goal (ADR-0231 cl.3/cl.7). `a2uiOutput` is healed first, so AC2's mismatch rule is the whole check there.
 
 ### 4.4 Consumption
 
@@ -175,11 +176,11 @@ JSON Schema (draft-07, matching A2UI's `dataset_schema.json` dialect). The first
     // ── model-visible facets (SPEC-R2): the record's output, one field for every consumer ──
     "a2uiOutput":           { "type": "array", "items": { "type": "object" } }, // ordered A2UI message stream (exemplar: ground truth; multi-turn: the follow-up; repair: the corrected stream)
     // ── multi-turn facet (SPEC-R2, ADR-0231 cl.2) ──
-    "priorOutput":          { "type": "array", "items": { "type": "object" } }, // turn 1, the stream that put the surface on screen
+    "priorOutput":          { "type": "array", "items": { "type": "object" } }, // turn 1, the stream that put the surface on screen; never healed, so an absent version is E_PIN, not E_SCHEMA (SPEC-R9 AC3)
     "clientInput":          { "type": "array", "minItems": 1, "maxItems": 1,    // v1: exactly one client envelope, an action
                               "items": { "type": "object", "required": ["version", "action"] } },
     // ── repair facet (SPEC-R2, ADR-0231 cl.3) ──
-    "invalidInput":         { "type": "array", "items": { "type": "object" } }, // the broken stream (message objects, never text)
+    "invalidInput":         { "type": "array", "items": { "type": "object" } }, // the broken stream (message objects, never text); never healed, so an absent version is E_PIN, not E_SCHEMA (SPEC-R9 AC3)
     "validatorErrors":      { "type": "array", "minItems": 1,                    // the shared validator's verdict, recomputed at admission
                               "items": { "type": "object", "required": ["code", "path"],
                                          "properties": { "code": { "enum": ["PARSE", "SCHEMA", "CATALOG", "CATALOG_UNKNOWN", "IDGRAPH",
@@ -212,15 +213,23 @@ JSON Schema (draft-07, matching A2UI's `dataset_schema.json` dialect). The first
   },
   "allOf": [
     { "if": { "properties": { "meta": { "properties": { "facet": { "const": "exemplar" } } } } },
-      "then": { "required": ["a2uiOutput"] } },                           // SPEC-R2
+      "then": { "required": ["a2uiOutput"],                               // SPEC-R2
+                "not": { "anyOf": [{ "required": ["priorOutput"] }, { "required": ["clientInput"] },
+                                   { "required": ["invalidInput"] }, { "required": ["validatorErrors"] }] } } },
     { "if": { "properties": { "meta": { "properties": { "facet": { "const": "multi-turn" } } } } },
-      "then": { "required": ["priorOutput", "clientInput", "a2uiOutput"] } }, // SPEC-R2 AC4, ADR-0231 cl.2
+      "then": { "required": ["priorOutput", "clientInput", "a2uiOutput"], // SPEC-R2 AC4, ADR-0231 cl.2
+                "not": { "anyOf": [{ "required": ["invalidInput"] }, { "required": ["validatorErrors"] }] } } },
     { "if": { "properties": { "meta": { "properties": { "facet": { "const": "repair" } } } } },
-      "then": { "required": ["invalidInput", "validatorErrors", "a2uiOutput"] } }, // SPEC-R2 AC5, ADR-0231 cl.3
-    // A branch field on a facet that does not own it rejects at that field (`validateRecord`, the
-    // closed-schema behavior the exemplar and eval branches had before the fields existed).
-    // No eval-facet conditional: `target` is optional with the description-fallback CONSUMER rule
-    // (R2, ADR-0063) — there is no missing-target failure mode to encode.
+      "then": { "required": ["invalidInput", "validatorErrors", "a2uiOutput"], // SPEC-R2 AC5, ADR-0231 cl.3
+                "not": { "anyOf": [{ "required": ["priorOutput"] }, { "required": ["clientInput"] }] } } },
+    { "if": { "properties": { "meta": { "properties": { "facet": { "const": "eval" } } } } },
+      "then": { "not": { "anyOf": [{ "required": ["priorOutput"] }, { "required": ["clientInput"] },
+                                   { "required": ["invalidInput"] }, { "required": ["validatorErrors"] }] } } },
+    // Each `not.anyOf` is the branch-field exclusion: a field owned by another facet rejects at that
+    // field (`validateRecord`, E_SCHEMA at the key, the closed-schema behavior the exemplar and eval
+    // branches had before the fields existed). The eval conditional carries only that exclusion:
+    // `target` is optional with the description-fallback CONSUMER rule (R2, ADR-0063), so there is no
+    // missing-target failure mode to encode.
   ]
 }
 ```

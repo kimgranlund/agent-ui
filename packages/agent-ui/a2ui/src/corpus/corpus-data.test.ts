@@ -495,12 +495,36 @@ const RUBRIC_PATH = `${process.cwd()}/.claude/docs/rubrics/a2ui-corpus.md`
 const VERDICTS_DIR = `${CORPUS_DIR}/verdicts`
 
 describe('rubric a2ui-corpus 1.3 (ADR-0231 cl.5)', () => {
-  const live = /^version:\s*(\S+)\s*$/m.exec(readFileSync(RUBRIC_PATH, 'utf8'))?.[1]
+  const rubricText = readFileSync(RUBRIC_PATH, 'utf8')
+  const live = /^version:\s*(\S+)\s*$/m.exec(rubricText)?.[1]
+  // The versions an archived file may cite: every `N.N = ...` entry of the rubric's own version-history
+  // block (the header, before the first `## ` section) plus the live marker. Read from the rubric, never a
+  // closed list here, so a file judged under the live version (or under any version a later bump keeps in
+  // its history) stays valid without editing this test.
+  const header = rubricText.slice(0, rubricText.indexOf('\n## '))
+  const knownVersions = new Set([...header.matchAll(/(\d+\.\d+) = /g)].map((m) => m[1]!))
+  if (live !== undefined) knownVersions.add(live)
   const verdictsFile = (rubricVersion: string): string =>
     JSON.stringify({ rubric: 'a2ui-corpus', rubricVersion, judgedBy: 'a2ui-review-agent', date: '2026-10-04', verdicts: {} })
+  /** The archived-file predicate: cites a version the rubric knows and parses under it. */
+  const archivedFileProblems = (file: string, text: string): string[] => {
+    const cited = (JSON.parse(text) as { rubricVersion: string }).rubricVersion
+    if (!knownVersions.has(cited)) return [`${file}: cites unknown rubric version ${cited}`]
+    const parsed = parseVerdictsFile(text, cited)
+    return parsed.ok ? [] : [`${file}: ${JSON.stringify(parsed)}`]
+  }
 
   it('the live marker reads 1.3', () => {
     expect(live).toBe('1.3')
+  })
+
+  it('the known-version set is read from the rubric history: 1.0 through the live 1.3', () => {
+    expect([...knownVersions].sort()).toEqual(['1.0', '1.1', '1.2', '1.3'])
+  })
+
+  it('an archived file judged under the live version passes; one citing an unknown version is named', () => {
+    expect(archivedFileProblems('live.json', verdictsFile(live!))).toEqual([])
+    expect(archivedFileProblems('bogus.json', verdictsFile('9.9'))).toEqual(['bogus.json: cites unknown rubric version 9.9'])
   })
 
   it('parseVerdictsFile accepts a new file citing 1.3 and rejects one still citing 1.2 at rubricVersion', () => {
@@ -514,12 +538,7 @@ describe('rubric a2ui-corpus 1.3 (ADR-0231 cl.5)', () => {
   it('every archived VerdictsFile still parses under the version it cites (history, never re-authored)', () => {
     const files = readdirSync(VERDICTS_DIR).filter((f) => f.endsWith('.json'))
     expect(files.length).toBeGreaterThan(0)
-    for (const file of files) {
-      const text = readFileSync(`${VERDICTS_DIR}/${file}`, 'utf8')
-      const cited = (JSON.parse(text) as { rubricVersion: string }).rubricVersion
-      expect(['1.0', '1.1', '1.2'], file).toContain(cited)
-      const parsed = parseVerdictsFile(text, cited)
-      expect(parsed.ok, `${file}: ${JSON.stringify(parsed)}`).toBe(true)
-    }
+    const problems = files.flatMap((file) => archivedFileProblems(file, readFileSync(`${VERDICTS_DIR}/${file}`, 'utf8')))
+    expect(problems).toEqual([])
   })
 })

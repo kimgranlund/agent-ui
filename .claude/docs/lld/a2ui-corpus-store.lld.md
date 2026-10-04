@@ -43,7 +43,7 @@
 > model-visible facets, `multi-turn` and `repair` (SPEC v0.6). §2 gains their shard homes and the
 > throwing `facetOfPath`; §3 the facet branches; §4 the facet identity (`canonicalizeIdentity`, the
 > exemplar identity untouched); §6 the facet dispatch inside stages 2, 5, 6 and 8 (stage order
-> unchanged); §8 the facet rows; §9 retrieval's opt-in `facet` filter (default `exemplar`; the exporters
+> unchanged) and the pin stage's absent-`version` arm for the never-healed streams (SPEC-R9 AC3); §8 the facet rows; §9 retrieval's opt-in `facet` filter (default `exemplar`; the exporters
 > stay exemplar-only). Both new shard directories are ABSENT until the curation slices admit their
 > first records (GH #1741/#1742); the standing gate's per-facet legs prove themselves against an
 > in-test fixture shard meanwhile. Every committed exemplar line re-admits with a byte-identical
@@ -275,7 +275,7 @@ committed line re-admits with an identical hash); a multi-turn record's is the f
 nonces (`actionId`, `timestamp`); a repair record's is the corrected stream's fold plus a
 `validatorErrors` member holding the sorted, de-duplicated `(code, path)` set. `componentsUsed` comes
 from the same fold (for multi-turn, the merged one). The canonicalizer's epoch fold is built (v0.6.1),
-but admission's per-epoch pointer resolution (amendment A6) is not, so a follow-up that
+but admission's per-epoch pointer resolution (amendment A6, GH #1750) is not, so a follow-up that
 `deleteSurface`s and recreates its surface waits on A6 before its seed lands.
 
 ## 5. Hasher + dedup — LLD-C4 (SPEC-R7)
@@ -309,7 +309,7 @@ admit(candidate, deps: AdmitDeps) =        // AdmitDeps = { catalog: Catalog; st
   heal           (LLD-C7)   → text→messages + structural normalization; ok:false ⇒ E_SCHEMA; changed ⇒ status:"repaired" (ADR-0061)
   schema/field   (LLD-C2)   → E_SCHEMA (unconditional name/description/promptText — ADR-0063; E_NO_TARGET retired; single-surface rule — ADR-0064)
   facet gate     (ADR-0060) → facet==="eval" ⇒ E_LEAK (fail-closed until LLD-C8 exists — SPEC-R4 has no at-rest protection to admit into)
-  pin check      (LLD-C2)   → E_PIN     (SPEC-R9: meta pins present; every message's `version` === meta.protocolVersion; every createSurface.catalogId === meta.catalogId)
+  pin check      (LLD-C2)   → E_PIN     (SPEC-R9: meta pins present; every message's `version` === meta.protocolVersion; every createSurface.catalogId === meta.catalogId; the never-healed `priorOutput`/`invalidInput` messages must also carry `version`, absent is E_PIN, SPEC-R9 AC3)
   tier-1 deterministic (LLD-C6 = shared `validateA2ui`): the §0 realized reach — PARSE/SCHEMA/VERSION_UNSUPPORTED/CATALOG/IDGRAPH/POINTER-syntax → mapped per the table below
   pointer-RESOLUTION (corpus-only, LLD-C5): exemplar bindings must resolve against the record's bundled data model → E_POINTER. Layered ON TOP of tier-1; NOT part of `validateA2ui` (the renderer streams → an unresolved path is a placeholder, renderer SPEC-R4 AC2). Parity (N1/R8-AC3) is over `validateA2ui`, which is unchanged. SCOPE SEMANTICS = THE RENDERER'S LIST THREADING BY CONSTRUCTION (v0.5): `computeScopes()` (`admit.ts:351`) DFS-walks from `root` propagating the CURRENT scope to every static descendant and minting a new one at each children-TEMPLATE (composed `{outer}/0/{path}` — index 0, the witness element; nested templates compose), mirroring `renderer/tree.ts` + `list.ts` — the s7 import falsely E_POINTER'd 2 seeds under the earlier one-hop map (only the template's immediate target got a scope; its descendants didn't), fixed with regressions both shapes + a no-widening control. TWO latent gaps in the mirror remain (review-found, safe-direction, no shard hits — booked in §12's wave-close follow-ups): the compose lacks `scopedPointer`'s absolute-path short-circuit (an absolute INNER template path mis-composes), and resolution scans `root`-disconnected components canonicalization drops.
   leak gate      (LLD-C8 mechanism, LLD-C4 MinHash) → E_LEAK (candidate exemplar vs the loaded eval prompts — an empty set today, the stage still runs)
@@ -408,13 +408,13 @@ Every SPEC error code mapped to its raising stage, plus the non-obvious edges:
 | `E_SCHEMA` (multi-surface) | LLD-C2 | exemplar `a2uiOutput` addressing ≠1 surface (two surfaceIds, or none — `callFunction`-only) → reject at the record schema, BEFORE canonicalization can chimera the global fold (ADR-0064) |
 | `E_SCHEMA` (facet branch) | LLD-C2 | multi-turn: a missing `priorOutput`/`clientInput`/`a2uiOutput`, a `clientInput` of length other than 1, a non-`action` envelope, a mistyped action field; repair: a missing branch field, an empty `validatorErrors`, an entry whose `code` is outside `ErrorCode`; any facet: a branch field the facet does not own → reject at the field path (ADR-0231 cl.2/cl.3) |
 | `E_SCHEMA` (repair recomputation) | LLD-C5 (stage 5) | stored `validatorErrors` ≠ the recomputed finalize-mode `validateA2ui(invalidInput)` failures, compared as a `(code, path)` set → reject at `validatorErrors`; a `FUNCTION` or `CATALOG_UNKNOWN` entry can never match (ADR-0231 cl.3) |
-| `E_PIN` | LLD-C2 / C6 | missing pin · a message `version` ≠ `meta.protocolVersion` · a `createSurface.catalogId` ≠ `meta.catalogId` · tier-1 `VERSION_UNSUPPORTED` → reject |
+| `E_PIN` | LLD-C2 / C6 | missing pin · a message `version` ≠ `meta.protocolVersion` · a `priorOutput`/`invalidInput` message with no string `version` (never healed, so arm (d) cannot fill it; SPEC-R9 AC3, ADR-0231 cl.3/cl.7) · a `createSurface.catalogId` ≠ `meta.catalogId` · tier-1 `VERSION_UNSUPPORTED` → reject |
 | `E_CATALOG` | LLD-C6 | component/property absent from pinned catalog → reject; report the offending `component` |
 | `E_IDGRAPH` | LLD-C3/C6 | ≠1 `root` (missing or 2nd — the shared finalize-granularity rule), dangling `child`, or cycle → reject |
 | `E_IDGRAPH` (multi-turn) | LLD-C5 (stage 5) | a follow-up resending `root` over the prior seed (`<surfaceId>:root`); a prior-turn defect (path prefixed `priorOutput:` or `priorOutput[`); an ungrounded action: `sourceComponentId` absent from the prior fold, or its component declares no action named `action.name` → reject (ADR-0231 cl.2) |
 | `E_POINTER` (syntax) | LLD-C6 (shared `validateA2ui`) | malformed JSON-Pointer → reject; identical verdict in renderer + corpus (N1); list-item-relative forms are legal (ADR-0024) |
 | `E_POINTER` (resolution) | LLD-C5 (corpus-only stage) | exemplar binding whose pointer does not resolve against the record's bundled data model → reject; layered ON TOP of `validateA2ui`, NOT part of it; relative-binding scope = the renderer's full-subtree list threading (`computeScopes()`, `admit.ts:351` — v0.5) |
-| `E_POINTER` (multi-turn resolution) | LLD-C5 | a follow-up binding that resolves against neither turn: the model is folded from `priorOutput` then `a2uiOutput` in stream order → reject (ADR-0231 cl.2; per-epoch once GH #1740 lands) |
+| `E_POINTER` (multi-turn resolution) | LLD-C5 | a follow-up binding that resolves against neither turn: the model is folded from `priorOutput` then `a2uiOutput` in stream order → reject (ADR-0231 cl.2; per-epoch once amendment A6 lands, GH #1750) |
 | `E_DUP` | LLD-C4 | exact or near duplicate → reject with the colliding first-admitted `name` in `AdmitResult.collidesWith` (SPEC §5.2, realized) |
 | `E_DUP` (facet identity) | LLD-C3/C4 | multi-turn: the same merged end state and the same action minus `actionId`/`timestamp`; repair: the same corrected tree and the same `(code, path)` set. The near-dup leg still shingles `promptText` plus the identity serialization, so two repair pairs sharing `promptText` and tree whose breakages differ in one path can reach θ_dup (0.94 measured): curation gives each pair its own `promptText` |
 | `E_QUALITY` | LLD-C5 (injected judge) | below rubric gate → reject with failing dimensions; **stage skipped when no judge is injected** (ADR-0060 — `qualityScore` absent is the marker) |

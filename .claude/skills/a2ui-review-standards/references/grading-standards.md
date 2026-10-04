@@ -46,13 +46,19 @@ the per-artifact procedure are what makes a grading run reproducible instead of 
   for D1–D3 (name conformance · load/payload conformance · factory binding & coverage), then judge
   D4–D6 (mapping fidelity to the real `ui-*` surface · PropDef typing idiom · example/doc coverage)
   against `factories.ts` + `catalog.json` + the row's tests/example/doc.
-- **Corpus record → `a2ui-corpus.md`.** D1 folds the payload rubric: run the CLI on the record's
-  `a2uiOutput` and take `MIN` across `a2ui-payload.md` P1–P9 (a2ui-corpus.md 1.2, GH #1262 — P9 folded
-  in; P9 is N/A + omitted when no `Card` frames the payload; D1 itself is N/A + omitted for an eval-facet record).
-  D2–D5 apply each dimension's deterministic floor (non-empty `promptText`/`description`; the
-  `target ?? description` ADR-0063 consumer rule — grade the *effective* target, never `target` raw;
-  the closed `source` enum + a resolvable `origin`; the θ_dup neighbour), then judge above that floor.
-  Then emit the VerdictsFile below.
+- **Corpus record → `a2ui-corpus.md`** (1.3, ADR-0231 cl.5; a VerdictsFile cites `1.3`). D1 folds the
+  payload rubric: run the CLI on the facet's stream and take `MIN` across `a2ui-payload.md` P1–P9 (P9
+  folded in at 1.2, GH #1262; P9 is N/A + omitted when no `Card` frames the payload). The stream is the
+  exemplar's `a2uiOutput`; a multi-turn record's MERGED `priorOutput ⊕ a2uiOutput` (concatenate the two
+  arrays into one payload file; a follow-up run standalone fails P3 for want of the prior graph and
+  proves nothing); a repair record's CORRECTED `a2uiOutput`, never its `invalidInput`. D1 is N/A +
+  omitted for an eval-facet record. D2–D5 apply each dimension's deterministic floor (non-empty
+  `promptText`/`description`; the `target ?? description` ADR-0063 consumer rule: grade the *effective*
+  target, never `target` raw; the closed `source` enum + a resolvable `origin`; the θ_dup neighbour),
+  then judge above that floor. D6 turn coherence scores multi-turn only and D7 repair fidelity repair
+  only: cite admission's floor for each (action grounding + the prior-seeded follow-up for D6;
+  recomputation equality for D7), never recompute it, then judge above it per the rubric's anchors.
+  Score only the dimensions the record's facet applies (`Applies to` column), then emit the VerdictsFile below.
 - **Catalog-page card → `a2ui-catalog-example.md`.** Dispatched only by `a2ui-catalog-rendering-review`,
   which has already run `scripts/eval-a2ui-catalog.mjs`: cite its gate verdicts (A1 A2 A3 A4 B1 B2 B3g
   C1 C2), never re-probe. You score ONLY the [review] halves, A3-review, B3-review, B4, C3, in that
@@ -81,7 +87,7 @@ and `createVerdictJudge` — the shape is a contract, not a suggestion:
 ```json
 {
   "rubric": "a2ui-corpus",
-  "rubricVersion": "1.0",
+  "rubricVersion": "1.3",
   "judgedBy": "a2ui-review-agent",
   "date": "2026-07-03",
   "verdicts": {
@@ -95,7 +101,7 @@ and `createVerdictJudge` — the shape is a contract, not a suggestion:
   bumps, this follows it, or `parseVerdictsFile` rejects the file). **`judgedBy`** is `"a2ui-review-agent"`;
   **`date`** is the grade date. No other top-level keys — unknown keys are rejected.
 - Per record: **`qualityScore`** = the `MIN` across the applicable `[gate]` dims (D1 omitted for
-  eval-facet); **`passed`** = `qualityScore ≥ 4` (the SPEC-R8 bar); **`failingDimensions`** lists every
+  eval-facet; D6 only on multi-turn, D7 only on repair); **`passed`** = `qualityScore ≥ 4` (the SPEC-R8 bar); **`failingDimensions`** lists every
   gated dimension scoring < 4 (omit or `[]` when none fail). No other per-verdict keys.
 - The per-dimension scores + file:line findings still go in your findings block — the VerdictsFile is
   the machine-consumed distillation of them, not a replacement.

@@ -862,6 +862,24 @@ describe('admit: the repair facet (ADR-0231 cl.3)', () => {
     expect(result.paths).toEqual(['root->subtitle'])
   })
 
+  it('a pair built around a missing version (the healer arm (d), a cl.3/cl.7 non-goal) rejects E_PIN before recomputation', async () => {
+    const invalidInput = DANGLING_CHILD_INPUT.map((msg, i) => {
+      if (i !== 1) return msg
+      const copy: Record<string, unknown> = { ...msg }
+      delete copy.version
+      return copy
+    })
+    // The stored errors are exactly what the validator reports for this input, so only the pin arm stands
+    // between the pair and admission.
+    const validatorErrors = validateA2ui(invalidInput as never, defaultCatalog, undefined, { atFinalize: true }).failures
+    expect(validatorErrors.length).toBeGreaterThan(0)
+    const result = await admit(repairRecord({ invalidInput: invalidInput as never, validatorErrors }), mkFacetDeps())
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('E_PIN')
+    expect(result.paths).toEqual(['invalidInput[1].version'])
+  })
+
   it.each(['FUNCTION', 'CATALOG_UNKNOWN'] as const)('rejects validatorErrors carrying %s at recomputation (the set can never match)', async (code) => {
     const result = await admit(repairRecord({ validatorErrors: [...DANGLING_CHILD_ERRORS, { code, path: 'root' }] }), mkFacetDeps())
     expect(result.ok).toBe(false)

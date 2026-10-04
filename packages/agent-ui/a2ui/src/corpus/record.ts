@@ -297,6 +297,16 @@ function checkA2uiOutputShape(r: Record<string, unknown>, failures: RecordFailur
 // `version` and every `createSurface.catalogId` in every stream the record bundles (ADR-0231: the
 // multi-turn prior, client and follow-up streams; the repair invalid and corrected streams) MUST agree
 // with those pins (corpus LLD §6/§8). All three arms raise `E_PIN`.
+//
+// The two server streams admission never heals (`priorOutput`, `invalidInput`; ADR-0231 cl.4) are held
+// stricter than `a2uiOutput`: a message whose `version` is ABSENT (or not a string) there is `E_PIN` too,
+// not only one that names another version. Filling an absent `version` is the healer's arm (d)
+// (ADR-0061), so a repair pair built around that breakage is a named non-goal (ADR-0231 cl.3/cl.7), and a
+// prior turn is held to the same post-heal shape its follow-up has. `a2uiOutput` keeps the mismatch-only arm:
+// stage 1 has already filled its absent versions from the pin. `clientInput`'s envelope `version` is a
+// required string in its own shape check (E_SCHEMA), so it keeps the mismatch-only arm as well.
+const UNHEALED_STREAMS: ReadonlySet<StreamField> = new Set(['priorOutput', 'invalidInput'])
+
 function checkPins(r: Record<string, unknown>, meta: Record<string, unknown>, failures: RecordFailure[]): void {
   const protocolVersion = meta.protocolVersion
   const catalogId = meta.catalogId
@@ -310,9 +320,11 @@ function checkPins(r: Record<string, unknown>, meta: Record<string, unknown>, fa
   for (const field of streamsOf(meta.facet)) {
     const stream = r[field]
     if (!Array.isArray(stream)) continue
+    const unhealed = UNHEALED_STREAMS.has(field)
     stream.forEach((msg: unknown, i) => {
       if (!isObject(msg)) return
-      if (typeof protocolVersion === 'string' && typeof msg.version === 'string' && msg.version !== protocolVersion) {
+      const versionChecked = unhealed || typeof msg.version === 'string'
+      if (typeof protocolVersion === 'string' && versionChecked && msg.version !== protocolVersion) {
         failures.push({ code: 'E_PIN', path: `${field}[${i}].version` })
       }
       const cs = msg.createSurface

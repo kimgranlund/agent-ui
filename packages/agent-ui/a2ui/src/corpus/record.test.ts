@@ -1,7 +1,15 @@
 import { describe, it, expect } from 'vitest'
 import { validateRecord } from './record.ts'
 import type { CorpusRecord } from './record.ts'
-import { multiTurnRecord, repairRecord, LOGIN_ACTION, LOGIN_PRIOR, DANGLING_CHILD_ERRORS } from './facets.fixture.ts'
+import {
+  multiTurnRecord,
+  repairRecord,
+  LOGIN_ACTION,
+  LOGIN_PRIOR,
+  DANGLING_CHILD_ERRORS,
+  DANGLING_CHILD_INPUT,
+  DANGLING_CHILD_FIXED,
+} from './facets.fixture.ts'
 // Test-only use of `node:fs` for the ADR-0063 grep-clean proof below (never ships — same pattern as
 // `store.test.ts`'s own source-text trip-wire).
 import { readFileSync, readdirSync } from 'node:fs'
@@ -339,5 +347,45 @@ describe('validateRecord: the repair facet (ADR-0231 cl.3)', () => {
   it('rejects a missing invalidInput and a missing a2uiOutput at their keys', () => {
     expect(validateRecord(without(repairRecord(), 'invalidInput'))).toEqual([{ code: 'E_SCHEMA', path: 'invalidInput' }])
     expect(validateRecord(without(repairRecord(), 'a2uiOutput'))).toContainEqual({ code: 'E_SCHEMA', path: 'a2uiOutput' })
+  })
+})
+
+// ADR-0231 cl.3/cl.7 + ADR-0061 arm (d): filling an absent per-message `version` is the healer's job, and
+// only `a2uiOutput` is healed (cl.4). In the never-healed server streams an absent or non-string `version`
+// is E_PIN at its message, so no repair pair (and no prior turn) can be built around that breakage.
+describe('validateRecord: the unhealed streams pin an absent version (ADR-0231 cl.3/cl.7)', () => {
+  const dropVersion = (stream: readonly object[], at: number): object[] =>
+    stream.map((msg, i) => {
+      if (i !== at) return msg
+      const copy: Record<string, unknown> = { ...msg }
+      delete copy.version
+      return copy
+    })
+
+  it('an invalidInput message with no version is E_PIN at `invalidInput[i].version`', () => {
+    const invalidInput = dropVersion(DANGLING_CHILD_INPUT, 1)
+    expect(validateRecord(repairRecord({ invalidInput: invalidInput as never }))).toEqual([
+      { code: 'E_PIN', path: 'invalidInput[1].version' },
+    ])
+  })
+
+  it('an invalidInput message whose version is not a string is E_PIN at the same path', () => {
+    const invalidInput = DANGLING_CHILD_INPUT.map((msg, i) => (i === 0 ? { ...msg, version: 1 } : msg))
+    expect(validateRecord(repairRecord({ invalidInput: invalidInput as never }))).toEqual([
+      { code: 'E_PIN', path: 'invalidInput[0].version' },
+    ])
+  })
+
+  it('a priorOutput message with no version is E_PIN at `priorOutput[i].version`', () => {
+    const priorOutput = dropVersion(LOGIN_PRIOR, 2)
+    expect(validateRecord(multiTurnRecord({ priorOutput: priorOutput as never }))).toEqual([
+      { code: 'E_PIN', path: 'priorOutput[2].version' },
+    ])
+  })
+
+  it('negative control: the healed a2uiOutput keeps the mismatch-only arm (stage 1 fills an absent version)', () => {
+    const a2uiOutput = dropVersion(DANGLING_CHILD_FIXED, 0)
+    expect(validateRecord(repairRecord({ a2uiOutput: a2uiOutput as never }))).toEqual([])
+    expect(validateRecord({ ...validExemplar, a2uiOutput: dropVersion(validExemplar.a2uiOutput!, 0) as never })).toEqual([])
   })
 })
