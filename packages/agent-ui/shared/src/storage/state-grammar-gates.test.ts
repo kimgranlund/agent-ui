@@ -7,7 +7,7 @@ declare const process: { cwd(): string }
 // state-grammar-gates.test.ts — ADR-0227 clause 2's persistence rule ("Persistence rides
 // `StorageAdapter` — never a raw `localStorage` touch-point"), the fleet state-grammar ratchet gate
 // (GH #1544), sited beside the seam it enforces and in the sizing-gates.test.ts shape: a raw-text
-// fs-read of every SOURCE file (packages + site + scripts + .claude/ops), comments and string
+// fs-read of every SOURCE file (packages + site + scripts), comments and string
 // literals blanked, then ONE closed rule — no `localStorage.…`/`localStorage[…]`/`indexedDB` touch
 // outside (i) this directory (the sanctioned tiers), (ii) test files (they seed/assert storage
 // deliberately), and (iii) the ALLOWLIST below.
@@ -21,7 +21,7 @@ declare const process: { cwd(): string }
 // change (the table is exact in BOTH directions, so a stale row also reds the gate).
 
 const ROOT = process.cwd()
-const SCAN_ROOTS = ['packages/agent-ui', 'site', 'scripts', '.claude/ops']
+const SCAN_ROOTS = ['packages/agent-ui', 'site', 'scripts']
 /** The sanctioned implementations — the StorageAdapter contract + its localStorage/IndexedDB tiers
  *  (ADR-0193). The ONE place raw `localStorage`/`indexedDB` may live. */
 const SANCTIONED_DIR = 'packages/agent-ui/shared/src/storage/'
@@ -32,9 +32,6 @@ const EXTENSIONS = ['.ts', '.mts', '.js', '.mjs']
  *  the gate (remove it), and so does a file that quietly ACCUMULATES touches beyond what was ruled
  *  (`count` pins it — an allowlisted file is not a blank check for more raw touches). */
 const ALLOWLIST: Record<string, { ruling: string; count: number }> = {
-  // GH #1544 ruling: an ops proof harness clearing a live page's whole origin state between M-B proof
-  // runs — not app code persisting through a seam; allowlisted, never migrated.
-  '.claude/ops/mb-live-proof/mb-live-proof.harness.ts': { ruling: 'ops proof harness — resets live-page storage between runs', count: 1 },
   // ADR-0227 wave 1 (PR #1543): the EXPLICIT LEGACY MIGRATION READ stated in that PR — one tolerant
   // raw read keeps every existing user's active-persona selection; the next write re-persists through
   // the adapter and the branch goes quiet. Remove this row when the legacy branch retires.

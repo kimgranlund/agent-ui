@@ -97,7 +97,7 @@ adr-0069 (PR #1706, GH #1704 — Decision cl.5's present-tense `BrowserDirectTra
 seam names no relation to cl.5, so the clause is recorded dropped, not superseded; the never-built
 sub-case of the shape: the recorded fact that moved on is the ADR's own provisioning intent,
 abandoned rather than replaced, counted here per Kim's 2026-08-30 ruling). Both of the last two were
-found by the 2026-08-29T17:29:44Z revalidation sweep and harvested from `.claude/ops/adr-queue.json`'s
+found by the 2026-08-29T17:29:44Z revalidation sweep and harvested from the retired ops ledger's adr-queue
 adr-0067/adr-0069 rows (queued by the 2026-08-30T00:20:00Z sweep-firing commit `4b322032`, cleared
 by PR #1715, the PR that landed this line).
 
@@ -132,7 +132,7 @@ with no consequence (every pairing still clears SC 1.4.11's 3:1). A ramp rework 
 revalidation trigger for every ADR that pins a contrast figure, not only for the ones it breaks.
 
 [verified] 2 worked instances, both in this repo, both fixed via append-only `## Amendment`
-(2026-08-28; harvested from `.claude/ops/adr-queue.json`'s adr-0058/adr-0059 rows, cleared by the PR that
+(2026-08-28; harvested from the retired ops ledger's adr-queue adr-0058/adr-0059 rows, cleared by the PR that
 landed this entry, PR #1712, 2026-08-29): adr-0058 (phantom citation found during PR #1691's re-pin, GH #1690; the
 citation corrected and the procedure canonized in PR #1693, GH #1692), adr-0059 (same correction in
 PR #1693; the full Decision-section re-audit under the canonized procedure in PR #1696, GH #1694).

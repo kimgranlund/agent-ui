@@ -145,7 +145,7 @@ above stays untouched):
 ## 8 · Addendum (2026-08-23) — the four 2026-08-17 lanes' buildable-now scope has shipped
 
 Ratified by Kim at the 2026-08-23 `/fleet-bootstrap` Phase 3 gate (live AskUserQuestion, session
-`agent-ui-90`; recorded in [`.claude/ops/rulings.md`](../ops/rulings.md)), from the product
+`agent-ui-90`; recorded in the retired ops ledger's rulings file, in git history), from the product
 seat's dated review pass. This amends §3 by dated addendum, per this doc's own §7 precedent —
 §3's per-lane table stays as the historical 2026-08-17 reading; current state lives here and in
 [`roadmap.md`](./roadmap.md) / the owning PRDs' own goal tables.

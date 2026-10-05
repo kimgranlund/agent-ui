@@ -632,7 +632,7 @@ is a *live-run* proof and none has been run. What exists underneath them:
   closed 2026-07-29 after its owed independent doc-reviewer pass finally ran.
 
 **Progress note — 2026-08-04. Boxes 1 + 2 PROVEN LIVE** (run on Kim's explicit "run M-B's live proofs"
-instruction; evidence + the reusable harness at `.claude/ops/mb-live-proof/`). The rig: the REAL
+instruction; evidence + the reusable harness in the retired ops ledger's mb-live-proof folder, in git history). The rig: the REAL
 `ui-agent-admin` element on the REAL persona preset stores with the REAL site live runner
 (`createAdminSurfaceTurn` → dev proxy → `produce()` → live Anthropic models), driven in jsdom. **One
 recorded deviation** (the M-C precedent): no live browser was attached to the session, so input commits
@@ -669,7 +669,7 @@ against a fresh roster read) + the standalone page's Export/Import overflow acti
 functions, drift-gated). **The live round-trip leg:** the Quizmaster exported → re-imported (minted
 `the-quizmaster-imported`) → one real live turn on EACH via the real runner — the wire requests are
 **byte-equal** (`personaSystem` 1218 B identical, model + integrations identical) and both turns
-completed clean; evidence `.claude/ops/mb-live-proof/box3-roundtrip.json`. Deterministic legs (store
+completed clean; evidence: the box3-roundtrip capture (retired ops ledger, in git history). Deterministic legs (store
 round-trip, key coverage, fail-closed rejection incl. a de-vacuoused browser leg) ride the standing
 suite. Out-of-slice finding filed: GH #409 (Surface-Options/master toggles never rehydrate on reload,
 persona-wide, pre-existing).
@@ -687,7 +687,7 @@ rubric dimensions ≥4, its four adversarial exclusion probes shipped as suite c
 catalog-switch leg:** picked `a2ui-basic` in the real admin store → one real live turn
 (`claude-sonnet-5`) → the request carried `catalogId:"a2ui-basic"`, the streamed `createSurface` came
 back stamped `a2ui-basic` (the cl.4 authority stamp), and the surface rendered 18 real DOM nodes
-through the basic factories — evidence `.claude/ops/mb-live-proof/box4-catalog-switch.json`. Gates at
+through the basic factories — evidence: the box4-catalog-switch capture (retired ops ledger, in git history). Gates at
 head: `npm run check` exit 0 · `npm test` exit 0 (403 files / 7347 tests). One soft ratification note
 rides ADR-0169 cl.13 for Kim: the outbound catalogId stamp (short id, the recommended default) vs the
 canonical URI is a one-constant switch.
@@ -754,7 +754,7 @@ asset pair); lazy-loaded per Kim's ruling, 153,969 → 71,519 B gz.
 
 ## PRD-G4 / PRD-G5: witnessed end-to-end runs (opened 2026-08-28, Kim's ruling)
 
-> Minted from Kim's 2026-08-23 fleet-bootstrap Phase 3 gate ruling (`.claude/ops/rulings.md`,
+> Minted from Kim's 2026-08-23 fleet-bootstrap Phase 3 gate ruling (retired ops ledger's rulings file, in git history,
 > "PRD-G4/PRD-G5: hold at `building`"): every GH issue [agent-admin-app.prd.md §5](prd/agent-admin-app.prd.md)
 > cites as a realizing record is closed, yet both goals stay `building (the open arc)` until a
 > **witnessed end-to-end run** is recorded here in the M-B/M-C dated-evidence convention. This entry is

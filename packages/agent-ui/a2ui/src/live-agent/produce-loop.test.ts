@@ -521,7 +521,7 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(feedback2.content).not.toMatch(/SINGLE line/)
   })
 
-  // GH #404 (live observation, `.claude/ops/mb-live-proof/box2-quizmaster-FAIL.json`) — a real quizmaster
+  // GH #404 (live observation, box2-quizmaster capture, in git history) — a real quizmaster
   // session (haiku-4.5 @ 0.9) appended a literal trailing `</parameter>` line after an otherwise-valid
   // payload — tool-call/XML closing-tag bleed-through — and repeated the SAME mistake across all 3 retry
   // rounds, halting on PARSE. The fix stays in the hint lane (ADR-0102 lane 3): the PARSE retry now names

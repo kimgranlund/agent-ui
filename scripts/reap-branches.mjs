@@ -18,7 +18,7 @@
  *   RULE 2 (`worktree-agent-<hash>` markers) — these are the Agent-tool worktree BASE
  *     markers (the branch a `.claude/worktrees/agent-<hash>` worktree is created on before
  *     the real feature branch is checked out inside it — see this repo's own
- *     `.claude/ops/plan.md` sweep-8 §4.1). They typically carry zero unique commits, so
+ *     retired ops ledger's sweep-8 plan §4.1, in git history). They typically carry zero unique commits, so
  *     Rule 1 alone would usually already say REAP — but the worktree can still be LIVE
  *     under a *different* checked-out branch (exactly this build: this worktree now holds
  *     `1050-reap-branches`, not `worktree-agent-<hash>`, yet the lane is still open). So a

@@ -378,7 +378,7 @@ function stampCreateSurfaceCatalogId(output: A2uiOutput, catalogId: string): voi
  * component/property to look up, unlike CATALOG) restates the ONE constraint that covers both
  * observed failure shapes, appended once regardless of how many failures this round carries.
  *
- * GH #404 (live observation, `.claude/ops/mb-live-proof/box2-quizmaster-FAIL.json`) — a THIRD concrete
+ * GH #404 (live observation, box2-quizmaster capture, in git history) — a THIRD concrete
  * way a real model breaks the "one JSON object per line" rule: `claude-haiku-4-5-20251001` at temp 0.9
  * appended a literal trailing `</parameter>` line — tool-call/XML closing-tag bleed-through — after an
  * otherwise-valid single-round payload, and repeated the identical mistake across all 3 retry rounds
