@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-10-05 |
 > | **Proposed by** | the sdlc-lite run `context-budget-trace` (tracking issues GH [#1809](https://github.com/kimgranlund/agent-ui/issues/1809) and the token accounting remainder of GH [#1797](https://github.com/kimgranlund/agent-ui/issues/1797)) |
-> | **Ratified by** | pending Kim |
+> | **Ratified by** | kimgranlund (repo owner), 2026-10-05, ratified by Kim in the sdlc-lite session (run `context-budget-trace`) |
 > | **Repairs** | [`../spec/a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) TurnTrace, SPEC-R6 (a whole-prompt budget paragraph and AC8), SPEC-R29 AC3, SPEC-R30 AC3, the typed contract and the SSE note · [`../lld/a2ui-live-agent.lld.md`](../lld/a2ui-live-agent.lld.md) LLD-C3, LLD-C4, LLD-C10 and the module tree · [`../spec/devtools-harness.spec.md`](../spec/devtools-harness.spec.md) SPEC-R7 (`turn-end.usage`) · code: `packages/agent-ui/a2ui/src/agent/prompt-budget.ts` (new), `src/agent/meta-line.ts`, `src/agent/agent-transport.ts`, `src/agent/system-prompt.ts`, `src/agent/produce.ts`, `src/agent/providers/anthropic.ts`, `packages/agent-ui/devtools/src/timeline/events.ts`, `packages/agent-ui/devtools/src/capture/format.ts` |
 > | **Supersedes / Superseded by** | none · relates [ADR-0073](./0073-a2ui-live-model-provider-seam.md) (provider keys and usage parsing stay server-side, behind the dev-proxy) · relates [ADR-0088](./0088-a2ui-live-conversational-channel.md) (the meta-line; this ADR adds optional trace members and does NOT amend it) · relates [ADR-0146](./0146-live-turn-lifecycle-progress-channel.md) (the `ProviderEvent` seam gains a non-stage kind) · relates [ADR-0200](./0200-agent-ui-devtools-package.md) (the devtools timeline consumes the trace, never the provider) · relates [ADR-0232](./0232-catalog-selection-guidance-sidecar.md) (the selection-guidance char budget, a per-clause budget this one sits above) |
 
