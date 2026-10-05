@@ -201,8 +201,8 @@ describe('the /chat route builds the SHARED tool dispatch (SPEC-R19 AC1 — GH #
     const request = out.streamRequest!
     expect('tools' in request).toBe(false)
     expect('executeTool' in request).toBe(false)
-    // The whole request the route composes — the pre-amendment shape exactly.
-    expect(Object.keys(request).sort()).toEqual(['effort', 'messages', 'model', 'system'])
+    // The whole request the route composes: the pre-amendment shape plus the turn `signal` (GH #1797), the key the Worker's handleChat also sends.
+    expect(Object.keys(request).sort()).toEqual(['effort', 'messages', 'model', 'signal', 'system'])
   })
 
   it('a MALFORMED or unknown-id integrations value degrades to no tools — never a 400, never a partial pair', async () => {
