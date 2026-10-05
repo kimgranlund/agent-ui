@@ -141,9 +141,9 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'croupier',
     category: 'games', // GH #143 — a card table, thematically a game even though it predates the games-roster wave
-    seedVersion: 5, // GH #525 — the persistent-bankroll capability opt-in + the surfaceStyle amendment stating cross-session resume; migrates pre-#525 stores
+    seedVersion: 6, // one surface per round (Kim 2026-10-04) — supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores
     label: 'The Croupier',
-    tagline: 'Card games — Blackjack, Poker, and their variants — on ONE live surface (ADR-0129 routing)',
+    tagline: 'Card games — Blackjack, Poker, and their variants — one table per round, each a new step in the dialog',
     config: { name: 'The Croupier', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true }, // rev.4: fable retired from the roster
     localPatterns: 'croupier', // GH #497 — PlayingCard closes the glyph-formatting idiom structurally
     bankroll: true, // GH #525 — opts into the persistent cross-session bankroll capability, croupier enabled first
@@ -155,17 +155,20 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'announce the pick, and recap its table rules in one breath before the first deal. Play strictly by ' +
       'the chosen game’s rules resource.',
     surfaceStyle:
-      'Always play on ONE persistent game surface: build the table once — the hands, the running score, ' +
-      'and the current game’s action controls (Hit / Stand for blackjack, Check / Bet / Fold for poker, ' +
-      'Deal again between rounds) — then UPDATE THAT SAME surface in place on ' +
-      'every move; never redraw a fresh surface per message. Prose is only for table talk; the surface ' +
-      'always carries the state. Every round ends with an explicit result line — the winner, the ' +
-      'winning hand spelled out, and the chip delta — never a bare status badge; zero the pot ONLY in ' +
-      'the SAME update that states the result. That running chip count is your bankroll: ONE figure on ' +
-      'the surface, always visible, updated by every settlement, and carried across a game switch — a ' +
-      'new game never resets it to a fresh stake. If you are told a current bankroll at the start of ' +
-      'this conversation, seed that SAME figure as your very first surface state — the running count ' +
-      'carries across a whole session exactly like it carries across a game switch.',
+      'Play each ROUND on its own game surface, a NEW step in the dialog: build that round’s table with a ' +
+      'FRESH surfaceId (table-1, table-2, … never reused) — the hands, the running score, and the current ' +
+      'game’s action controls (Hit / Stand for blackjack, Check / Bet / Fold for poker) — then UPDATE THAT ' +
+      'SAME round surface in place on every move within the round. The finished round’s surface is left as ' +
+      'history, never edited again. Its closing control is a Deal again Button whose action sets ' +
+      '"context":{"newRound":true}; answering it starts the next round: create the next fresh surface. ' +
+      'Prose is only for table talk; the surface always carries the state. Every round ends with an ' +
+      'explicit result line — the winner, the winning hand spelled out, and the chip delta — never a bare ' +
+      'status badge; zero the pot ONLY in the SAME update that states the result. The running chip count is ' +
+      'your bankroll: ONE figure on every round’s surface, always visible, updated by every settlement, ' +
+      'written at /bankroll, and carried across rounds and a game switch — each new round’s surface is ' +
+      'seeded with the last settled figure, never a fresh stake. If you are told a current bankroll at the ' +
+      'start of this conversation, seed that SAME figure as your very first surface state — the running ' +
+      'count carries across a whole session exactly like it carries across rounds.',
     skills: [
       {
         // GH #497 — the glyph-formatting/face-down half retired: `PlayingCard` (the croupier local
@@ -182,7 +185,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
         id: 'game-table-chrome',
         label: 'game-table-chrome',
         description: 'The table frame — header title+badges, full-width zones per player, footer actions.',
-        content: 'One Card is the table: CardHeader title + status badges, CardContent zones (dealer, player) spanning the width, CardFooter action buttons.',
+        content: 'One Card is the table: CardHeader title + status badges, CardContent zones (dealer, player) spanning the width, CardFooter = a Row of the action Buttons (never a Column).',
       },
       {
         id: 'game-hud',
@@ -195,8 +198,8 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       {
         id: 'round-loop',
         label: 'round-loop',
-        description: 'Deal → hits/stands → settle → next round, all on the same surface.',
-        content: 'One surfaceId for the session; each move is an updateDataModel, settlement updates the chip Stat.',
+        description: 'Deal → hits/stands → settle on one round surface; Deal again opens the next round on a fresh surface.',
+        content: 'One fresh surfaceId per round; each move is an updateDataModel on that round’s surface, settlement updates the chip Stat; the Deal again Button carries context newRound:true and starts the next round on a new surfaceId, seeded with the settled bankroll.',
       },
     ],
     // Every GAMES_RULES entry seeds enabled — the random pick draws from the ENABLED rules resources,

@@ -4261,6 +4261,63 @@ describe('UIAgentAdminElement — GH #802: an answered ask opens the next dialog
     expect(mountsOf(firstBubble).querySelectorAll('ui-surface-host'), "round 2's card mounted into the resumed turn's mounts").toHaveLength(2)
     expect(noteOf(firstBubble), 'the resumed bubble takes the new note').toBe('Got it — and which colour?')
   })
+
+  /** The SAME two-round script, no ask declared, but round 1's Button carries `context.newRound` when
+   *  `newRound` is true (a game's "Deal again"). The flag is the ONLY difference between the two tests. */
+  async function mountNewRoundScript(newRound: boolean): Promise<UIAgentAdminElement> {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.agentSurfaceTurn = async function* (req) {
+      const round = req.turn.kind === 'intent' ? 1 : 2
+      const surfaceId = `table-${round}`
+      yield { kind: 'note' as const, note: `Round ${round}` }
+      yield { kind: 'line' as const, line: JSON.stringify({ version: 'v1.0', createSurface: { surfaceId, catalogId: 'agent-ui' } }) }
+      yield {
+        kind: 'line' as const,
+        line: JSON.stringify({
+          version: 'v1.0',
+          updateComponents: {
+            surfaceId,
+            components: [
+              {
+                id: 'root',
+                component: 'Button',
+                variant: 'solid',
+                label: `Deal ${round}`,
+                action: { action: 'deal', wantResponse: true, ...(newRound ? { context: { newRound: true } } : {}) },
+              },
+            ],
+          },
+        }),
+      }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await gh418Submit(el, 'blackjack')
+    const button = [...el.querySelectorAll<HTMLElement>('ui-surface-host ui-button')].find((b) => b.textContent?.trim() === 'Deal 1')
+    expect(button, 'round 1 rendered a real, clickable Deal button').not.toBeUndefined()
+    button!.click()
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    await whenFlushed()
+    return el
+  }
+
+  it('a click whose context carries newRound:true opens a NEW bubble with its own surface, the finished round left behind as history', async () => {
+    const el = await mountNewRoundScript(true)
+    const bubbles = agentBubbles(el)
+    expect(bubbles, 'newRound advances the dialog: a SECOND agent bubble').toHaveLength(2)
+    expect(mountsOf(bubbles[0]!).querySelectorAll('ui-surface-host'), 'round 1 keeps only its own table').toHaveLength(1)
+    const second = mountsOf(bubbles[1]!).querySelector('ui-surface-host') as HTMLElement
+    expect(second.querySelector('ui-button')?.textContent?.trim(), "round 2's table mounted in the new bubble").toBe('Deal 2')
+    expect(noteOf(bubbles[0]!), "round 1's note is not overwritten").toBe('Round 1')
+  })
+
+  it('REGRESSION (TKT-0079): the same click WITHOUT newRound still resumes the owning bubble', async () => {
+    const el = await mountNewRoundScript(false)
+    expect(agentBubbles(el), 'no flag, no new bubble').toHaveLength(1)
+  })
 })
 
 // ── GH #1064 (candidate-B disproof) — the a2uiOn gate is ONE per-turn capture (`#runSurfaceTurn`), read

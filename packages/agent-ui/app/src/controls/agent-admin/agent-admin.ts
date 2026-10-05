@@ -3567,8 +3567,9 @@ export class UIAgentAdminElement extends UIElement {
     }
     // TKT-0079 — an action-click/error turn RESUMES the bubble owning its surface (the game loop stays in
     // one card); a typed intent stays a fresh bubble (its reply must not appear above the question).
-    // GH #802 (Kim's 2026-08-13 ruling) — with ONE ruled exception, `#resumeTargetFor`: a click that
-    // ANSWERS a declared ask advances the dialog to a new round instead of resuming.
+    // GH #802 (Kim's 2026-08-13 ruling) — with TWO ruled exceptions, `#resumeTargetFor`: a click that
+    // ANSWERS a declared ask, or one the surface marks `context.newRound`, advances the dialog to a new round
+    // instead of resuming.
     // GH #805 repair — `disabledSurfaceId` is passed EXPLICITLY, separate from `intoSurface`: for an ask
     // (GH #802/#803), `#resumeTargetFor` deliberately returns `undefined` (the fresh-bubble routing), but
     // the answered surfaceId (`clientMessageSurfaceId`) is still real and still owed a re-enable if this
@@ -3834,6 +3835,10 @@ export class UIAgentAdminElement extends UIElement {
   #resumeTargetFor(message: unknown): string | undefined {
     const surfaceId = clientMessageSurfaceId(message)
     if (surfaceId !== undefined && this.#askSurfaceIds.has(surfaceId)) return undefined
+    // The SECOND ruled exception (Kim, 2026-10-04): a click the surface itself marks `context.newRound`
+    // (a game's "Deal again") advances the dialog exactly as an answered ask does, so each round is its own
+    // step in the feed. Surface-declared and structural, like the ask arm: no persona or action-name sniffing.
+    if (isNewRoundAction(message)) return undefined
     return surfaceId
   }
 
@@ -4807,6 +4812,15 @@ function clientMessageSurfaceId(message: unknown): string | undefined {
   // agent's reply to a GenUI action stays in the SAME card, never a fresh one above the click.
   if (m && typeof m === 'object' && m.genuiAction && typeof m.genuiAction.surfaceId === 'string') return m.genuiAction.surfaceId
   return undefined
+}
+
+/** `true` iff `message` is an A2UI `action` whose resolved `context.newRound` is literally `true`: the
+ *  surface's own declaration that this click starts a NEW round, so its reply opens a fresh bubble instead of
+ *  resuming the clicked one (`#resumeTargetFor`). Only the `action` arm carries it: an `error` or genui
+ *  message never does. */
+function isNewRoundAction(message: unknown): boolean {
+  const m = message as { action?: { context?: { newRound?: unknown } } } | null
+  return typeof m === 'object' && m !== null && m.action?.context?.newRound === true
 }
 
 /** genui-surface.spec.md SPEC-R10/R11 — `true` iff `message` is a genui bridge-action bubble
