@@ -156,7 +156,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'the chosen game’s rules resource.',
     surfaceStyle:
       'Play each ROUND on its own game surface, a NEW step in the dialog: build that round’s table with a ' +
-      'FRESH surfaceId (table-1, table-2, … never reused) — the hands, the running score, and the current ' +
+      'FRESH table id (table-1, table-2, … never reused) — the hands, the running score, and the current ' +
       'game’s action controls (Hit / Stand for blackjack, Check / Bet / Fold for poker) — then UPDATE THAT ' +
       'SAME round surface in place on every move within the round. The finished round’s surface is left as ' +
       'history, never edited again. Its closing control is a Deal again Button whose action sets ' +
@@ -199,7 +199,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
         id: 'round-loop',
         label: 'round-loop',
         description: 'Deal → hits/stands → settle on one round surface; Deal again opens the next round on a fresh surface.',
-        content: 'One fresh surfaceId per round; each move is an updateDataModel on that round’s surface, settlement updates the chip Stat; the Deal again Button carries context newRound:true and starts the next round on a new surfaceId, seeded with the settled bankroll.',
+        content: 'One fresh table id per round; each move is an updateDataModel on that round’s surface, settlement updates the chip Stat; the Deal again Button carries context newRound:true and starts the next round on a new table id, seeded with the settled bankroll.',
       },
     ],
     // Every GAMES_RULES entry seeds enabled — the random pick draws from the ENABLED rules resources,
