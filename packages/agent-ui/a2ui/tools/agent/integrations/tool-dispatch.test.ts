@@ -102,11 +102,13 @@ describe('buildToolDispatch — executeTool routing', () => {
     await expect(executeTool('valid-call', { q: 'helsinki', n: 3 })).resolves.toBe('ran valid-call')
     expect(m.calls).toHaveLength(1)
     expect(m.calls[0].input).toEqual({ q: 'helsinki', n: 3 })
-    // The ExecuteContext is always a real object with both seam fields present, even when both are empty —
-    // an executor may read either without a shape check.
+    // The ExecuteContext is always a real object with both seam fields present, so an executor may read
+    // either without a shape check. `apiKey` may be empty; `signal` never is, because the per-call deadline
+    // (TOOL_CALL_TIMEOUT_MS) is always armed, even with no turn or per-call signal.
     expect('signal' in m.calls[0].ctx).toBe(true)
     expect('apiKey' in m.calls[0].ctx).toBe(true)
-    expect(m.calls[0].ctx.signal).toBeUndefined()
+    expect(m.calls[0].ctx.signal).toBeInstanceOf(AbortSignal)
+    expect(m.calls[0].ctx.signal?.aborted).toBe(false)
   })
 })
 
@@ -151,7 +153,11 @@ describe('buildToolDispatch — abort propagation', () => {
     const m = stubManifest('sig-turn')
     const { executeTool } = buildToolDispatch([m], NO_ENV, turn.signal)
     await executeTool('sig-turn', { q: 'x' })
-    expect(m.calls[0].ctx.signal).toBe(turn.signal)
+    const { signal } = m.calls[0].ctx
+    expect(signal?.aborted).toBe(false)
+    turn.abort()
+    expect(signal?.aborted).toBe(true)
+    expect(signal?.reason).toBe(turn.signal.reason) // the turn signal is the source of this abort
   })
 
   it('hands the executor the LIVE signal, not a copy — aborting the turn flips ctx.signal.aborted', async () => {
@@ -162,7 +168,7 @@ describe('buildToolDispatch — abort propagation', () => {
     const { ctx } = m.calls[0]
     expect(ctx.signal?.aborted).toBe(false)
     turn.abort()
-    expect(ctx.signal?.aborted).toBe(true) // the same AbortSignal object the host owns
+    expect(ctx.signal?.aborted).toBe(true) // the composed signal follows the host's abort live
   })
 
   it('an executor reading ctx.signal at call time sees an already-aborted turn', async () => {
@@ -187,10 +193,15 @@ describe('buildToolDispatch — abort propagation', () => {
     const { executeTool } = buildToolDispatch([m], NO_ENV, turn.signal)
 
     await executeTool('sig-priority', { q: 'x' }, perCall.signal)
-    expect(m.calls[0].ctx.signal).toBe(perCall.signal)
-
     await executeTool('sig-priority', { q: 'x' }) // no per-call signal ⇒ the turn signal carries
-    expect(m.calls[1].ctx.signal).toBe(turn.signal)
+    const withPerCall = m.calls[0].ctx.signal
+    const turnOnly = m.calls[1].ctx.signal
+
+    turn.abort()
+    expect(turnOnly?.aborted).toBe(true) // the fallback: the turn carries when no per-call signal was passed
+    expect(withPerCall?.aborted).toBe(false) // the per-call signal wins, so the turn is not a source here
+    perCall.abort()
+    expect(withPerCall?.aborted).toBe(true)
   })
 
   it('carries the per-call signal even when the builder was given none (the dev-proxy route today)', async () => {
@@ -198,7 +209,11 @@ describe('buildToolDispatch — abort propagation', () => {
     const m = stubManifest('sig-percall-only')
     const { executeTool } = buildToolDispatch([m], NO_ENV)
     await executeTool('sig-percall-only', { q: 'x' }, perCall.signal)
-    expect(m.calls[0].ctx.signal).toBe(perCall.signal)
+    const { signal } = m.calls[0].ctx
+    expect(signal?.aborted).toBe(false)
+    perCall.abort()
+    expect(signal?.aborted).toBe(true)
+    expect(signal?.reason).toBe(perCall.signal.reason) // the per-call signal is the source of this abort
   })
 })
 
