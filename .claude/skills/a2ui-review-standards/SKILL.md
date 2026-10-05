@@ -30,6 +30,7 @@ verification re-review after a fix round reports persisting defects plainly — 
 The middle rows above are the GH #493 siblings — before them, mechanism functions and pattern sections were
 graded against `a2ui-catalog.md` by analogy (PR #492's escalation); never do that again. A persona
 fragment's own rows (`catalog/personas/*/`) are catalog rows and take the catalog-row route.
+This seat does not grade "does the model choose the right type" (concept, `notFor`, repair, per persona); that routes to `npm run eval:agent-behavior`.
 
 ## Ground rules + per-artifact procedure + VerdictsFile — read `references/grading-standards.md`
 

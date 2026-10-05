@@ -48,7 +48,8 @@ Seat contract (what the skill doesn't decide):
 - **The seat never builds.** A needed source change is a finding handed back, not an edit made.
 - **Stay in the lane.** ui-* controls and their CSS/geometry route to an sdlc-lite verifier run
   (`run.sh`) against `.claude/docs/rubrics/component.md`; prose documents (PRD/SPEC/LLD/ADR/reference/
-  rubric prose) route to an sdlc-lite verifier run (`run.sh`).
+  rubric prose) route to an sdlc-lite verifier run (`run.sh`). Model selection behavior (does the model
+  pick the right type) routes to `npm run eval:agent-behavior`, never to a rubric score here.
 
 ## Failure branches
 

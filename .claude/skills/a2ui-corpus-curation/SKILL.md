@@ -117,6 +117,7 @@ against; a different catalog makes the migration a corruption, not a fix.
 own rubric (`.claude/docs/rubrics/genui-pack-idiom.md`), judge leg, and CLI (`npm run eval:genui-corpus`);
 its procedure lives in `.claude/docs/lld/genui-b3-judged-eval.lld.md`, not here. Run any leg with
 `--dry-run` first: it makes no API call and writes nothing (GH #1608/#1611).
+A2UI selection and repair behavior is a separate eval, `npm run eval:agent-behavior`, not this skill's.
 
 ## The halts — recognize, then resolve at the owner (corpus and judge-wiring LLD §8; `ADR-0165` cl.2/4)
 

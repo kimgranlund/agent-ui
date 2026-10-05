@@ -1,0 +1,25 @@
+{
+  "label": "acceptance",
+  "cases": [
+    {
+      "id": "croupier-playing-card",
+      "persona": "croupier",
+      "catalogId": "agent-ui--croupier",
+      "prompt": "Deal me one playing card",
+      "expectType": "PlayingCard"
+    },
+    {
+      "id": "concierge-booking-form",
+      "persona": "concierge",
+      "catalogId": "agent-ui--concierge",
+      "prompt": "I want to book a table for two on Friday",
+      "expectType": "BookingForm"
+    },
+    {
+      "id": "quant-no-persona-types",
+      "persona": "quant",
+      "catalogId": "agent-ui",
+      "prompt": "What are the odds of drawing an ace from a standard deck?"
+    }
+  ]
+}

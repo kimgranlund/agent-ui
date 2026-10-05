@@ -122,6 +122,9 @@ export default defineConfig({
             // only ever spawns it and a wildcard here would arm any future importer of it by accident.
             'packages/agent-ui/a2ui/tools/catalog-files.test.ts',
             'packages/agent-ui/a2ui/tools/harness/validate-payload.test.ts',
+            // GH #1810 - the agent-behavior eval CLI's own tests; `eval-agent-behavior.ts` carries the
+            // CLI-entry guard, so importing `runCli` here is safe. Explicit, never a wildcard (GH #112).
+            'packages/agent-ui/a2ui/tools/agent-eval/*.test.ts',
           ],
         },
       },

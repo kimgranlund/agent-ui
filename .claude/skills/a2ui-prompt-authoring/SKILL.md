@@ -58,6 +58,7 @@ than you meant to, and an armed run on an UNCHANGED tree is a byte-identical no-
   import served as `JSON.stringify`), gated by `fs-shim.test.ts`; coverage and caps are gated by
   `catalog/selection-guidance.test.ts`, and the default catalog's total by
   `SELECTION_GUIDANCE_CHAR_BUDGET` in `prompt-drift.test.ts` (re-author tersely, never raise it to green).
+  A sidecar edit also moves the derived cases of `npm run eval:agent-behavior`, so run its selftest afterwards.
 - **Register every new module in `tools/agent/worker/fs-shim-content.ts`** (a static import plus its directory-list entry). Without it the file loads under node but is missing from the deployed Worker; `fs-shim-content-drift.test.ts` is the gate.
 - **Catalog-grounded ONLY:** every component/prop the body names must exist in
   `catalog/default/catalog.json` at its WIRE name (Stat's wire prop is `value`, not the DOM `figure`).

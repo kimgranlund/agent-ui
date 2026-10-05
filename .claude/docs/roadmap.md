@@ -139,6 +139,7 @@ decision (dated line in §4).
   fabricated. What's left is the one thing that was always out of scope for a PR: AC18, the actual
   live-model scored run, which only Kim can trigger (needs `ANTHROPIC_API_KEY`). See §4's dated
   line for the full arc close-out.
+  The agent-behavior eval shipped too (GH #1810): `npm run eval:agent-behavior` scores A2UI selection and repair keylessly, with a manual live leg.
 - **A2A protocol layer (`@agent-ui/a2a`)** — pinned to spec v0.3.0, the tic-tac-toe
   isolation-proof arena, its own concepts corpus.
 - **`@agent-ui/router`** — the memory-first SPA router (ADR-0115).

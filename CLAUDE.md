@@ -17,6 +17,8 @@ Process `.claude/docs/process.md` · Standards `.claude/docs/references/` · `si
   (packages:{components,app,rest} · site · focus-timing · visual) then `test:eval-catalog`
   (boots its own vite + Chromium, gate-verdicts only). Never re-monolith the shards or add a heap
   bump — history + the focus-timing extension rule: `component-testing`.
+- `npm run eval:agent-behavior -- selftest` is keyless and runs inside `check:scripts`; `-- live --leg selection|persona`
+  needs `ANTHROPIC_API_KEY` and is Kim's manual run (exit 0, 1 or 2). Home: `packages/agent-ui/a2ui/tools/agent-eval/`, GH #1810.
 - `npm run dev` / `npm run build` — the docs site (`site/`) is the app entry · `npm run deploy:docs` — ui.nonoun.io
 - `npm run ops:reap-worktrees` / `ops:reap-branches` / `ops:reap-scratch-clones` — gated,
   dry-run-by-default reap scripts (append `-- --execute` to apply) for `.claude/worktrees/`

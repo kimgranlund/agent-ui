@@ -65,6 +65,7 @@ the per-artifact procedure are what makes a grading run reproducible instead of 
   rubric's §4 order: blind identify from the screenshot first, then the expected-card record, out-in
   verdict, then in-out verdict, each citing its 1/3/5 anchor and one image-region sentence. Name the
   defect quadrant (L-only, R-only, L↔R, card) per its §6. No VerdictsFile.
+  Whether a model chooses the right type (concept, `notFor`, repair, per persona) is never graded here; it routes to `npm run eval:agent-behavior`.
 - **Mechanism function → `a2ui-mechanism.md`.** Run the mechanism's co-located suite via `npm test`
   (exit code, never grep) for M1 [gate] (contract tests incl. anti-vacuous negative controls); score
   M2 ([review], definitional — hard-gated like a gate) by READING the imports/call sites for
