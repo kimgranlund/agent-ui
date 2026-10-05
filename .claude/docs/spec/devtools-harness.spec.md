@@ -116,8 +116,10 @@ timeline · `GET /captures` → the capture index · `POST /captures` (a `Devtoo
 from 0 per timeline. Kinds: `turn-start` `{input, backend}` · `line` `{line}` (one raw emitted A2UI JSONL
 line, verbatim) · `meta` `{meta}` (a parsed `a2uiMeta` line — progress/error — routed distinctly, absent
 from `line`) · `client` `{message}` (an injected client message that becomes a follow-up turn) · `render`
-`{surfaceId, ok, error?}` (browser-truth only — see R9) · `turn-end` `{status: 'ok'|'error'|'halt', lines,
-ms}` · `error` `{message}`. `recordTurn(transport, input)` is the ONE producer of this shape; the seam
+`{surfaceId, ok, error?}` (browser-truth only — see R9) · `turn-end` `{status, lines, ms, usage?}`
+(`status` is `'ok'|'error'|'halt'`; the optional `usage` is the provider-billed `TokenUsage` latched from
+the meta trace's `trace.usage`, ADR-0234 proposed, token counts only; captures stay at version 1) ·
+`error` `{message}`. `recordTurn(transport, input)` is the ONE producer of this shape; the seam
 serializes it, the page renders it, the capture stores it — no second vocabulary anywhere.
 - **AC1:** `turn-start` first and `turn-end` last, exactly once each; every event round-trips
   `JSON.parse(JSON.stringify(e))` structurally equal.

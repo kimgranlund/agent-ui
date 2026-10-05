@@ -18,6 +18,7 @@
 // to the provider-agnostic `ProviderEvent` kinds; the ACCUMULATED text (only `text_delta`) is unchanged.
 
 import type { AgentProvider, Turn, Effort, ProviderEvent, ToolDef } from '../agent-transport.ts'
+import type { TokenUsage } from '../meta-line.ts'
 
 /** The Anthropic Messages API's per-provider request body (this module's private wire shape — never
  * exported past this adapter; the `AgentProvider` seam is the only public contract). `content` grew the
@@ -45,6 +46,48 @@ export interface ToolUseCollector {
 
 export function newToolCollector(): ToolUseCollector {
   return { calls: [], byIndex: new Map(), stopReason: undefined }
+}
+
+/** ADR-0234 (proposed): the per-request token-usage collector `parseAnthropicSSE` fills when one is
+ *  passed. Separate from `ToolUseCollector`, which stays byte-quiet. `usage` stays undefined until a
+ *  `message_start` or `message_delta` frame carries a usage object. PURE state, fixture-testable. */
+export interface UsageCollector {
+  usage: Partial<TokenUsage> | undefined
+}
+
+export function newUsageCollector(): UsageCollector {
+  return { usage: undefined }
+}
+
+/** Anthropic's snake_case usage fields → the camelCase `TokenUsage` keys. */
+const USAGE_FIELDS: ReadonlyArray<readonly [string, keyof TokenUsage]> = [
+  ['input_tokens', 'inputTokens'],
+  ['output_tokens', 'outputTokens'],
+  ['cache_read_input_tokens', 'cacheReadInputTokens'],
+  ['cache_creation_input_tokens', 'cacheCreationInputTokens'],
+]
+
+/** Merge one upstream usage object into the collector: each numeric field present overrides (the
+ *  `message_delta` counts are cumulative, so the latest value wins). A non-object is ignored. */
+function mergeUsage(collector: UsageCollector, raw: unknown): void {
+  if (typeof raw !== 'object' || raw === null) return
+  const next: Partial<TokenUsage> = { ...collector.usage }
+  for (const [wire, key] of USAGE_FIELDS) {
+    const v = (raw as Record<string, unknown>)[wire]
+    if (typeof v === 'number' && Number.isFinite(v)) next[key] = v
+  }
+  collector.usage = next
+}
+
+/** The collected usage as a `TokenUsage` (input/output default to 0 when the upstream never sent them;
+ *  the optional cache fields appear only when sent). */
+function finishedUsage(u: Partial<TokenUsage>): TokenUsage {
+  return {
+    inputTokens: u.inputTokens ?? 0,
+    outputTokens: u.outputTokens ?? 0,
+    ...(u.cacheReadInputTokens !== undefined ? { cacheReadInputTokens: u.cacheReadInputTokens } : {}),
+    ...(u.cacheCreationInputTokens !== undefined ? { cacheCreationInputTokens: u.cacheCreationInputTokens } : {}),
+  }
 }
 
 /** A sentinel yielded (never thrown) when the upstream stream carries an `event: error` frame — an
@@ -103,8 +146,18 @@ function splitFrames(text: string): SseFrame[] {
  * (`ANTHROPIC_SSE_ERROR_PREFIX + data`) rather than throwing — this keeps the function a plain generator
  * (no try/catch obligation on every caller) while still making the failure observable and distinguishable
  * from ordinary text (`stream()` below checks the prefix and throws/reports from there).
+ *
+ * ADR-0234 (proposed): with the OPTIONAL `usage` collector, `message_start.message.usage` seeds the
+ * token counts and each `message_delta.usage` overrides the fields it carries (cumulative, latest wins).
+ * At `message_stop` it emits ONE `{kind:'usage'}` event immediately before `done`, only when a collector
+ * was passed and a usage object was seen. Without the fourth argument the event sequence is unchanged.
  */
-export function* parseAnthropicSSE(chunk: string, onEvent?: (ev: ProviderEvent) => void, tools?: ToolUseCollector): Iterable<string> {
+export function* parseAnthropicSSE(
+  chunk: string,
+  onEvent?: (ev: ProviderEvent) => void,
+  tools?: ToolUseCollector,
+  usage?: UsageCollector,
+): Iterable<string> {
   for (const frame of splitFrames(chunk)) {
     if (frame.event === 'error') {
       yield ANTHROPIC_SSE_ERROR_PREFIX + frame.data
@@ -113,6 +166,7 @@ export function* parseAnthropicSSE(chunk: string, onEvent?: (ev: ProviderEvent) 
     // Lifecycle frames → onEvent (ADR-0146 F1). No text is yielded for any of these; content still flows
     // ONLY from `content_block_delta`'s `text_delta` below, so the accumulated model output is unchanged.
     if (frame.event === 'message_start') {
+      if (usage) mergeUsage(usage, (safeJson(frame.data) as { message?: { usage?: unknown } } | null)?.message?.usage)
       onEvent?.({ kind: 'message_start' })
       continue
     }
@@ -135,14 +189,17 @@ export function* parseAnthropicSSE(chunk: string, onEvent?: (ev: ProviderEvent) 
       continue
     }
     if (frame.event === 'message_delta') {
-      // Previously ignored wholesale; GH #49 needs its stop_reason ('tool_use' drives the loop).
-      if (tools) {
-        const parsedDelta = safeJson(frame.data) as { delta?: { stop_reason?: unknown } } | null
-        if (typeof parsedDelta?.delta?.stop_reason === 'string') tools.stopReason = parsedDelta.delta.stop_reason
+      // Previously ignored wholesale; GH #49 needs its stop_reason ('tool_use' drives the loop), and
+      // ADR-0234 its cumulative usage.
+      if (tools || usage) {
+        const parsedDelta = safeJson(frame.data) as { delta?: { stop_reason?: unknown }; usage?: unknown } | null
+        if (tools && typeof parsedDelta?.delta?.stop_reason === 'string') tools.stopReason = parsedDelta.delta.stop_reason
+        if (usage) mergeUsage(usage, parsedDelta?.usage)
       }
       continue
     }
     if (frame.event === 'message_stop') {
+      if (usage?.usage !== undefined) onEvent?.({ kind: 'usage', usage: finishedUsage(usage.usage) })
       onEvent?.({ kind: 'done' })
       continue
     }
@@ -464,6 +521,10 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): 
       throw new Error('anthropicProvider: response carried no body to stream')
     }
 
+    // ADR-0234 (proposed): ONE usage collector per accepted upstream request (created after retry
+    // resolution and the res.ok check, so a retried request never double-reports), shared by the main
+    // parse loop and the trailing flush: each request, and so each tool-loop round, reports once.
+    const usage = newUsageCollector()
     const reader = res.body.getReader()
     const decoder = new TextDecoder()
     let buffer = ''
@@ -497,7 +558,7 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): 
         if (lastBoundary === -1) continue
         const complete = buffer.slice(0, lastBoundary)
         buffer = buffer.slice(lastBoundary + 2)
-        for (const fragment of parseAnthropicSSE(complete, onEvent, collector)) {
+        for (const fragment of parseAnthropicSSE(complete, onEvent, collector, usage)) {
           if (fragment.startsWith(ANTHROPIC_SSE_ERROR_PREFIX)) {
             throw new Error(`anthropicProvider: upstream error event — ${fragment.slice(ANTHROPIC_SSE_ERROR_PREFIX.length)}`)
           }
@@ -507,7 +568,7 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): 
 
       // Flush any trailing complete-but-unterminated buffer (a stream that ends without a final blank line).
       if (buffer.trim().length > 0) {
-        for (const fragment of parseAnthropicSSE(buffer, onEvent, collector)) {
+        for (const fragment of parseAnthropicSSE(buffer, onEvent, collector, usage)) {
           if (fragment.startsWith(ANTHROPIC_SSE_ERROR_PREFIX)) {
             throw new Error(`anthropicProvider: upstream error event — ${fragment.slice(ANTHROPIC_SSE_ERROR_PREFIX.length)}`)
           }

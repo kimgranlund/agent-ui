@@ -137,6 +137,7 @@ describe('buildSystemPromptSections section-sum leg (ADR-0234)', () => {
     it(`${label}: text is byte-identical and the sections sum to it, unique and in order`, () => {
       const { text, sections } = buildSystemPromptSections(...args)
       expect(text).toBe(buildSystemPrompt(...args))
+      expect(buildSystemPromptSections(...args).text).toBe(buildSystemPrompt(...args))
       expect(sections.reduce((n, s) => n + s.chars, 0)).toBe(text.length)
       const ids = sections.map((s) => s.id)
       expect(new Set(ids).size).toBe(ids.length)

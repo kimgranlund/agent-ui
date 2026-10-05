@@ -5,6 +5,7 @@ The A2UI protocol layer. Root `AGENTS.md` and `CLAUDE.md` hold the package DAG, 
 ## Byte-pinned prompt stack
 
 - `src/agent/prompts/` (`src/agent/prompts/grammar.md`, the mode files, `src/agent/prompts/mini-skills/`, `src/agent/prompts/genui-packs/`) is byte-pinned by the golden baseline `src/live-agent/prompt-equivalence.baseline.json`, asserted by `src/live-agent/prompt-equivalence.test.ts`.
+- The whole composed prompt has a declared character budget (`src/agent/prompt-budget.ts`, ADR-0234), gated by `src/live-agent/prompt-budget.test.ts`. Re-author tersely or re-measure deliberately; never raise the ceiling just to get green.
 - After a deliberate prompt change, recapture from the repo root, then diff the baseline: `RECAPTURE_BASELINE=1 npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/recapture-baseline.test.ts`
 
 ## Catalogs

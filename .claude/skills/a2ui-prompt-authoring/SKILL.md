@@ -59,6 +59,10 @@ than you meant to, and an armed run on an UNCHANGED tree is a byte-identical no-
   `catalog/selection-guidance.test.ts`, and the default catalog's total by
   `SELECTION_GUIDANCE_CHAR_BUDGET` in `prompt-drift.test.ts` (re-author tersely, never raise it to green).
   A sidecar edit also moves the derived cases of `npm run eval:agent-behavior`, so run its selftest afterwards.
+- **The whole composed prompt has a character budget too.** `PROMPT_CHAR_BUDGET_BASE` and
+  `PROMPT_CHAR_BUDGET_DERIVED` in `src/agent/prompt-budget.ts` (ADR-0234) cap the worst-case composition,
+  gated by `src/live-agent/prompt-budget.test.ts`. When an edit reds it, re-author tersely or re-measure
+  deliberately (update the MEASURED note); never raise the ceiling just to get green.
 - **Register every new module in `tools/agent/worker/fs-shim-content.ts`** (a static import plus its directory-list entry). Without it the file loads under node but is missing from the deployed Worker; `fs-shim-content-drift.test.ts` is the gate.
 - **Catalog-grounded ONLY:** every component/prop the body names must exist in
   `catalog/default/catalog.json` at its WIRE name (Stat's wire prop is `value`, not the DOM `figure`).
