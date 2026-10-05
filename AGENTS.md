@@ -1,29 +1,69 @@
 # agent-ui
 
-## What this repository is
+Zero-dependency, signals-based web-component library in strict TypeScript (signals, FACE custom elements, tagged templates, traits).
+Two ruled dependency exceptions, opt-in and lazy: CodeMirror 6 on `@agent-ui/code/editor` (ADR-0139), pdfjs-dist on the `@agent-ui/app` ingestion seam (ADR-0202).
 
-A zero-dependency, signals-based web-component library in strict TypeScript: signals reactivity,
-FACE custom elements, tagged-template rendering, traits. An npm-workspaces monorepo with ten
-packages under `packages/agent-ui/*` and a docs site in `site/`. `CLAUDE.md` holds the full layout,
-package DAG, and conventions; project docs (ADR, PRD, SPEC, LLD, plan, roadmap, process) live in
-`.claude/docs/`, not `docs/`.
+## Packages
 
-## Shared rules
+Ten packages under `packages/agent-ui/*`; full layout in [CLAUDE.md](CLAUDE.md).
 
-- Imports point inward only. `reactive/` <- `dom/` <- `traits/` <- `controls/`; cross-package edges
-  are enforced by the per-package `layering.test.ts` gates.
-- `erasableSyntaxOnly` bans `enum`/`namespace`/decorators; use `import type` for type-only imports
-  and keep the explicit `.ts` on local imports.
-- Components are light-DOM by default, ARIA via `ElementInternals`, tags `ui-{name}`.
-- Work items are GitHub Issues; `.claude/docs/tickets/` is frozen (ADR-0145).
+| Package | Role |
+| --- | --- |
+| `components` | the framework: `reactive/` <- `dom/` <- `traits/` <- `controls/` (`ui-*`) |
+| `shared` | tokens, utility types, `StorageAdapter` seam |
+| `a2ui` | A2UI protocol: renderer, validator, catalog, agent toolkit |
+| `a2a` | Agent2Agent wire types and validation |
+| `icons` | swappable icon-pack adapter |
+| `app` | app-surface compositions (`ui-super-shell`) |
+| `router` | memory-first SPA router |
+| `code` | code and prose family |
+| `data` | headless data layer (`DataSource<T>`) |
+| `devtools` | chat and A2UI dev/debug harness |
+
+- DAG: `shared <- components <- a2ui <- {app, devtools}`; `router`/`code`/`data` are siblings off `components`; `a2a` and `icons` import nothing.
+- Enforced by each package's `src/layering.test.ts`. Consult those on any edge question.
+
+## Where truth lives
+
+| Question | Home |
+| --- | --- |
+| Plan, goals, roadmap, process | `.claude/docs/plan.md`, `goals.md`, `roadmap.md`, `process.md` |
+| Decisions and designs | ADR/PRD/SPEC/LLD under `.claude/docs/` |
+| A control's contract | descriptor `{name}.md` beside each control |
+| A2UI catalogs | `catalog.json` under `packages/agent-ui/a2ui/src/catalog/` |
+| Producer prompt stack | `packages/agent-ui/a2ui/src/agent/prompts/` |
+| Work items | GitHub issues; `.claude/docs/tickets/` is frozen (ADR-0145) |
+| Adding or moving a document | [docs/AGENTS.md](docs/AGENTS.md) |
+
+## Never hand-edit
+
+- `*.props.gen.ts`: generated from descriptors by `scripts/generate-props.mjs`, drift-gated.
+- `packages/agent-ui/a2ui/src/live-agent/prompt-equivalence.baseline.json`: recapture only via the deliberate flow in skill `a2ui-prompt-authoring`.
+
+## Gates
+
+- `npm run check`, `npm test`, `npm run test:browser`. Judge by exit code, never by grepping output.
+- Docs-only diffs gate on `doc_lint` plus `check` (`.claude/docs/process.md` section 1).
+
+## Hard conventions
+
+- `erasableSyntaxOnly` (no `enum`/`namespace`/decorators); `import type` for type-only imports; explicit `.ts` on local imports.
+- Light-DOM components, ARIA via `ElementInternals`, tags `ui-{name}`.
+- Event names: `change input select open close toggle action`.
+- Trust boundary: keys and `produce()` never enter `devtools`; it sits at `/__a2ui/agent` (ADR-0073).
+- Bare "the harness" is retired; use `.claude/docs/references/agent-model.md` section 2.
+
+## Process
+
+- Seat ownership (controls, a2ui code, payloads, docs, review): skill `seat-map`.
+- Momentum rules: `.claude/docs/process.md`. `size:big` work runs the `due-process` loop (GH #969).
+- Worktree traps: `seat-map` Dispatch laws.
+
+## Landmines
+
+- Stale context is a defect: a change that invalidates a record repairs it in the same change.
 - No em dashes anywhere, including commits and issue comments.
-
-## Checks
-
-- `npm run check` is the standing gate (`tsc` plus site, tools, and scripts checks). Judge by exit code.
-- `npm test` runs Vitest (jsdom); `npm run test:browser` is the real-engine gate.
-- Locally run `check` plus the touched package's tests; CI runs the full suite. Docs-only diffs gate
-  on `doc_lint` plus `check` (`.claude/docs/process.md` section 1).
+- GH #1798 tracks skills that name plugin agents that are currently disabled.
 
 <!-- sdlc-lite:managed:start v1 sha256:559a254eb95c -->
 ## Documents
