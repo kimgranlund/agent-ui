@@ -1,6 +1,11 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.19 · 2026-10-05 (v0.18 2026-10-05; v0.17 2026-08-18; v0.16 2026-08-13; v0.15 2026-08-12; v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.20 · 2026-10-05 (v0.19 2026-10-05; v0.18 2026-10-05; v0.17 2026-08-18; v0.16 2026-08-13; v0.15 2026-08-12; v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.20 changelog ([ADR-0234](../adr/0234-turn-trace-prompt-budget-and-token-usage.md), ACCEPTED, ratified by Kim 2026-10-05;
+> GH #1809 and #1797): `TurnTrace` gains optional `prompt` (a `PromptBudgetReport`) and `usage` (a
+> `TokenUsage`); SPEC-R6 gains a whole-prompt budget paragraph and AC8; the SSE note gains usage extraction
+> and `PROMPT_OVER_BUDGET`; SPEC-R29 AC3 and SPEC-R30 AC3 now hold apart from `trace.prompt`. AC1 to AC7
+> are otherwise byte-untouched.
 > v0.19 changelog (2026-10-05, GH #1810, docs-only pointer): SPEC-R4 gains one non-normative "Eval coverage"
 > line naming `npm run eval:agent-behavior`; no requirement, ID or AC is added, removed or changed.
 > v0.18 changelog ([ADR-0232](../adr/0232-catalog-selection-guidance-sidecar.md), ACCEPTED, ratified
@@ -377,7 +382,9 @@ isolated behind one interface (ADR-0069).
   query, matched `exemplarIds`, self-correct `rounds`, healer `healed` count, `failureCodes`, `model`)
   carried on the same meta-line as the note. It lives parallel to `Session.turns` (never inside it, never
   on the validated A2UI wire) and grounds a later "why X vs Y" turn in the run's real retrieval/
-  correction history instead of a retroactive confabulation.
+  correction history instead of a retroactive confabulation. ADR-0234 (proposed) adds two optional
+  members: `prompt` (the composed system prompt's section sizes against the declared character budget)
+  and `usage` (provider-billed token counts summed over the turn, absent when none arrived).
 - **Runtime loop** — the bounded generate → `heal`+`validate` → self-correct → validated-stream driver
   (ADR-0070), the SPEC-R6 contract minus the authoring-time critic round.
 - **AgentProvider** — the injected `stream({model,system,messages,signal}) → AsyncIterable<string>`
@@ -671,6 +678,22 @@ line FORMAT only, never its type set: the inventory still equals `Object.keys(ca
   most `SELECTION_GUIDANCE_CHAR_BUDGET`, so the default prompt's delta over the pre-ADR-0232 default is at
   most that budget; and a derived persona catalog's fragment lines carry their clauses: the
   `prompt-drift.test.ts` selection-guidance block, `npm test` green, no live model.
+
+**The whole system prompt has a declared character budget (ADR-0234, proposed).** `produce()` MUST assess
+the composed sections (`buildSystemPromptSections`) against `promptBudgetFor(catalogId)`:
+`PROMPT_CHAR_BUDGET_BASE` for a base catalog, `PROMPT_CHAR_BUDGET_DERIVED` for a `<base>--<persona>` id
+(`src/agent/prompt-budget.ts`), or `ProduceOptions.promptBudget.limit` when set. The assessment rides the
+turn as `trace.prompt` (`{limit, total, sections, over}`). Over budget is REPORTED, never truncated: no
+section is dropped or shortened. Only `promptBudget: {mode: 'halt'}` turns an over-budget prompt into a
+pre-call `ProduceHalt` with the code `PROMPT_OVER_BUDGET`. The worst-case composition matrix stays at or
+under each constant, held by `live-agent/prompt-budget.test.ts`; an over-budget prompt is re-authored
+tersely or re-measured deliberately, never green-washed by raising the ceiling.
+- **AC8** *Given* a stub `produce()` run, *when* it completes, *then* `trace.prompt.total` equals the
+  composed system prompt's length and the sum of `trace.prompt.sections[].chars`; *given* a limit below
+  that total in report mode, *then* the turn completes with `over: true` and the full prompt sent; *given*
+  the same limit with `mode: 'halt'`, *then* `produce()` throws `PROMPT_OVER_BUDGET` before any provider
+  call; *and* the worst-case matrix stays at or under both constants: `prompt-budget.test.ts`,
+  `produce-budget-usage.test.ts`, `npm test` green, no live model.
 
 **SPEC-R7 — Retrieval conditioning.** Generation MUST be conditioned by `retrieve()` top-k exemplars
 over the JUDGED shard, co-located with the key-holder (proxy-side for the shipped default — the Node
@@ -1081,7 +1104,9 @@ does not occur; if one ever must, it is an additive amendment on the SAME seam, 
   intact, passed through unchanged; *given* a stub run emitting no `personaPatch`, *then* the outgoing
   meta-line omits the key entirely (byte-identical to the pre-this-field wire shape); *given* the SAME
   patch-carrying run with the SPEC-R30 gate OFF, *then* the outgoing meta-line is IDENTICAL to the
-  gate-ON run's (the passthrough is gate-blind — the gate governs consumption, SPEC-R30) — mirroring
+  gate-ON run's
+  apart from `trace.prompt` (ADR-0234), which reports the prompt the gate steers
+  (the passthrough is gate-blind — the gate governs consumption, SPEC-R30) — mirroring
   SPEC-R20 AC3's stub-`produce()`-run shape, `produce-loop.test.ts`, `npm test` green, no live model.
 
 **SPEC-R30 — The opt-in authoring gate: one persona-scoped modality boolean gating BOTH the arm's
@@ -1145,7 +1170,9 @@ cl.3)*
   stay green untouched), `npm test` green, no live model.
 - **AC3** *Given* a stub `produce()` run with the gate OFF whose model volunteers a well-formed
   `personaPatch`, *when* it completes, *then* the run composes ZERO teaching bytes and yields a stream
-  byte-identical to the gate-ON run's (the wire is gate-blind, SPEC-R29 AC3) — the degrade is a
+  byte-identical to the gate-ON run's
+  apart from `trace.prompt` (ADR-0234), which reports the prompt the gate steers
+  (the wire is gate-blind, SPEC-R29 AC3) — the degrade is a
   CONSUMPTION fact, asserted host-side at S3, and this AC pins the producer half: no gate-conditional wire
   branch exists to drift — `produce-loop.test.ts`, `npm test` green, no live model.
 
@@ -1664,6 +1691,25 @@ interface TurnTrace {
   healed: number;                 // lines the shared healer corrected
   failureCodes: string[];         // validator failures fed back, if any
   model: string;
+  prompt?: PromptBudgetReport;    // ADR-0234: composed section sizes vs the declared char budget
+  usage?: TokenUsage;             // ADR-0234: provider-billed tokens summed over the turn
+}
+// ADR-0234 (proposed): token counts only, no prices. Cache fields appear only when the provider sent them.
+interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadInputTokens?: number;
+  cacheCreationInputTokens?: number;
+}
+interface PromptSection {
+  id: 'grammar' | 'components' | 'functions' | 'few-shot' | 'mini-skills' | 'genui' | 'authoring' | 'mission' | 'persona';
+  chars: number;
+}
+interface PromptBudgetReport {
+  limit: number;
+  total: number;                  // sum of sections[].chars
+  sections: PromptSection[];
+  over: boolean;                  // total > limit; reported, never truncated
 }
 // AskDeclaration (SPEC-R14 / ADR-0097 §1) — a routing fact only; the surface it names is ordinary A2UI.
 interface AskDeclaration {
@@ -1751,7 +1797,11 @@ function buildToolDispatch(active: readonly IntegrationManifest[], env: Record<s
 - **Host-verify — all three RESOLVED (2026-07-04).** (1) Anthropic Messages streaming: `POST
   /v1/messages`, headers `x-api-key` + `anthropic-version: 2023-06-01` + content-type, body
   `"stream":true`; SSE `message_start → content_block_delta`(`text_delta`, text at `delta.text`)`* →
-  message_stop`; `event: error` mid-stream surfaced. (2) Browser-direct CORS: supported but Anthropic
+  message_stop`; `event: error` mid-stream surfaced. Usage (ADR-0234, proposed): `message_start.message.usage`
+  seeds the token counts, each `message_delta.usage` overrides the fields it carries, and at
+  `message_stop` the adapter (`newUsageCollector`) emits one `{kind:'usage'}` `ProviderEvent` per request,
+  which `produce()` sums into `trace.usage`. An over-budget prompt under `promptBudget: {mode: 'halt'}`
+  halts with `PROMPT_OVER_BUDGET` before the request is sent. (2) Browser-direct CORS: supported but Anthropic
   officially DANGEROUS (`anthropic-dangerous-direct-browser-access` "exposes your secret API
   credentials") → confirms proxy-default, `BrowserDirectTransport` stays deferred/dev-only. (3) A2A
   continuity: `contextId`/`taskId` + `TASK_STATE_INPUT_REQUIRED`, resume via a normal `SendMessage`
@@ -1838,6 +1888,7 @@ function buildToolDispatch(active: readonly IntegrationManifest[], env: Record<s
 | SPEC-R19 | PRD-G7 (transport interop — enablement reaches every live arm via one shared dispatch; GH #402 branch (a); ADR-0136/0152/0168 §5) |
 | SPEC-R20, R6 AC6 | PRD-G1/G6 (the `plan` meta-line arm — a model-authored, additive, shallow-validated field on the ADR-0088 envelope, following the `ask`-arm precedent exactly; parsed by `readMetaLine` and passed through `produce()`'s outgoing meta-line unchanged; its GRAMMAR-half mechanics teaching folded into SPEC-R6 per ADR-0174 cl.6; the host-side plan→execute→synthesize loop and any `plan`-analogue of the `ask` integrity check are OUT OF SCOPE — ADR-0174 cl.2) |
 | SPEC-R6 AC7 | PRD-G6 (per-type selection guidance on the derived inventory line, sourced from each catalog's Node-only `selection.json` sidecar, coverage-gated by `catalog/selection-guidance.test.ts` and budget-gated by `SELECTION_GUIDANCE_CHAR_BUDGET`; ADR-0232, accepted) |
+| SPEC-R6 AC8 | PRD-G6 (the declared whole-prompt character budget, report-only by default with an opt-in `PROMPT_OVER_BUDGET` halt, plus provider-billed `trace.usage`; budget-gated by `live-agent/prompt-budget.test.ts`; ADR-0234, proposed) |
 | SPEC-R21, R22 | PRD-G1/G6 (the host-side sequential plan-runner — persona-gated opt-in, one ordinary `{kind:'intent'}` dispatch per declared step over one growing `Session`, closing-turn synthesis under SPEC-R5's validate-then-stream law, step lifecycle projected onto the existing status-stream grouping with `TURN_PROGRESS_STAGES` unwidened, a step cap + one `AbortSignal` bounding the run at `(K+2) × maxRounds`, tiered failure grain with fold-in acknowledgment, and the OF1 advisory law — no declaration-vs-output check; ADR-0174 cl.1/cl.3/cl.4/cl.6) |
 | SPEC-R29 | PRD-G1/G6 (the `personaPatch` meta-line arm — a model-authored, additive, shallow-validated seventh field on the ADR-0088 envelope, following the `ask`/`plan`-arm precedent exactly; parsed by `readMetaLine` and passed through `produce()`'s outgoing meta-line unchanged and gate-blind; the merge law ADR-0178 OF1 left open, pinned here (incremental per turn, per-key whole-value last-writer-wins, entries-as-contributions, no deletion semantics); the host-side three-filter apply gate, the runner event kind, and recorded-transport parity are OUT OF SCOPE — ADR-0178 cl.1) |
 | SPEC-R30 | PRD-G1/G6 (the opt-in authoring gate — one persona-scoped, inverse-default, fail-closed modality boolean joining the persona-file key set, threaded per call, gating BOTH the arm's host-owned byte-pinned mechanics teaching (composed as a `genuiBlock`-shaped conditional segment so SPEC-R6's byte-identity baselines never move) AND host consumption, with SPEC-R21's degrade law verbatim; ADR-0178 cl.3) |

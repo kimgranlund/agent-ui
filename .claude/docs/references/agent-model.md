@@ -142,6 +142,11 @@ header pointing here.
   `selectionGuidanceFor` on `@agent-ui/a2ui/agent` and rendered as a clause on the composed prompt's
   inventory line (ADR-0232, accepted). The human twins are the catalog SPEC §5.2 Notes and the site's
   choosing guide; neither is generated from it.
+- **prompt budget**: the declared character ceiling on the whole composed system prompt, per catalog
+  family (`PROMPT_CHAR_BUDGET_BASE`, `PROMPT_CHAR_BUDGET_DERIVED` in `src/agent/prompt-budget.ts`). Each
+  turn reports its section sizes against it as `trace.prompt`, and the provider-billed token counts as
+  `trace.usage`. Over budget is reported, never truncated; halting is opt-in (`PROMPT_OVER_BUDGET`,
+  ADR-0234, proposed).
 - **Co-pilot**: the builder-interview place (`[Chat | Settings | Co-pilot]`, ADR-0179 as amended by
   GH #686); "Author" is its retired name.
 

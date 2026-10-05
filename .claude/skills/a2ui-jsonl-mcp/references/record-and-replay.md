@@ -34,7 +34,8 @@ Source: `packages/agent-ui/devtools/src/` : `timeline/events.ts` (`recordTurn`, 
 - `recordTurn` wraps any `AgentTransport` and yields an event timeline. A line that `readMetaLine`
   accepts becomes a `meta` event; every other line becomes a `line` event. Ordering is a sequence
   number, never the wall clock. Event kinds: `turn-start`, `line`, `meta`, `client`, `render`,
-  `turn-end`, `error`.
+  `turn-end`, `error`. A `turn-end` event carries an optional `usage` (provider-billed token counts
+  latched from the meta trace's `trace.usage`, ADR-0234); the capture version stays 1.
 - A capture is a versioned, parse-checked artifact (`DEVTOOLS_CAPTURE_KIND`,
   `DEVTOOLS_CAPTURE_VERSION`); `parseCapture` throws a typed `CaptureParseError`.
 - `capturedLineTimelines(capture)` extracts only the `line` events, per turn.

@@ -72,6 +72,14 @@
 // additive-widening reason `ask` is. What a stated target is CONSUMED into (`working` at turn start,
 // `ui-conversation`'s `beginAgentTurn` seam) is entirely the host's call — wire representation ONLY.
 //
+// ADR-0234 (proposed) adds two OPTIONAL, runtime-assembled fields to `TurnTrace`: `prompt`, the per-turn
+// prompt budget report (the system prompt's section sizes in characters against a declared whole-prompt
+// limit, with an `over` flag; reported, never truncated), and `usage`, the provider-billed token counts
+// summed over every round and every upstream request of the turn (present only when the provider reported
+// usage at all; absence means unknown, never zero spend). Both are additive: `readMetaLine` never validates
+// the trace's inner shape, so older readers and captures are unaffected. The types live here, not in
+// `agent-transport.ts`, because this file's law is no imports and the trace field types sit beside the trace.
+//
 // Zero-dep, pure (SPEC-N5): no imports.
 
 /**
@@ -93,6 +101,46 @@ export interface TurnTrace {
   /** The validator failure codes fed back into the successful round's prompt, if any. */
   failureCodes: string[]
   model: string
+  /** ADR-0234 (proposed): the system prompt's section sizes against the declared whole-prompt budget. */
+  prompt?: PromptBudgetReport
+  /** ADR-0234 (proposed): provider-reported token usage summed over the turn; absent when none arrived. */
+  usage?: TokenUsage
+}
+
+/** ADR-0234 (proposed): provider-billed token counts for one upstream request, or a sum over a turn. The
+ *  two cache fields are present only when the provider reported them. */
+export interface TokenUsage {
+  inputTokens: number
+  outputTokens: number
+  cacheReadInputTokens?: number
+  cacheCreationInputTokens?: number
+}
+
+/** ADR-0234 (proposed): the closed set of system-prompt sections, in composition order. */
+export type PromptSectionId =
+  | 'grammar'
+  | 'components'
+  | 'functions'
+  | 'few-shot'
+  | 'mini-skills'
+  | 'genui'
+  | 'authoring'
+  | 'mission'
+  | 'persona'
+
+/** ADR-0234 (proposed): one composed system-prompt section and its length in characters. */
+export interface PromptSection {
+  id: PromptSectionId
+  chars: number
+}
+
+/** ADR-0234 (proposed): the per-turn prompt budget assessment. `total` is the sum of `sections[].chars`
+ *  (the whole system prompt's length); `over` is `total > limit`. Reported only: nothing is ever dropped. */
+export interface PromptBudgetReport {
+  limit: number
+  total: number
+  sections: PromptSection[]
+  over: boolean
 }
 
 /**

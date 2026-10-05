@@ -235,5 +235,7 @@ export function renderSelectionClause(entry: SelectionEntry | undefined, catalog
  *  section of the pinned default prompt (`live-agent/prompt-equivalence.baseline.json`, 9 570 chars at
  *  38ed6721). Value = min(ceiling, measured rounded up to the next 100, plus 300 headroom).
  *  MEASURED 2026-10-04: 8 277 chars over 80 types (144 notFor edges, 72 reciprocal pairs);
- *  ceiling 9 570; budget 8 600. */
+ *  ceiling 9 570; budget 8 600.
+ *  This budgets one clause family; the whole composed prompt has its own budget in `prompt-budget.ts`
+ *  (ADR-0234), which stays separate because that module must stay free of `node:*`. */
 export const SELECTION_GUIDANCE_CHAR_BUDGET = 8_600

@@ -30,6 +30,23 @@ function stubProvider(output: string): AgentProvider {
   }
 }
 
+// ADR-0234 (proposed): trace.prompt reports the composed prompt's section sizes, which this gate steers
+// by design. The comparison drops that one field and nothing else, and throws when no line carries it,
+// so it can never pass vacuously.
+function withoutTracePrompt(lines: readonly string[]): string[] {
+  let stripped = 0
+  const out = lines.map((line) => {
+    const parsed = JSON.parse(line) as { a2uiMeta?: { trace?: { prompt?: unknown } } }
+    const trace = parsed.a2uiMeta?.trace
+    if (trace?.prompt === undefined) return line
+    delete trace.prompt
+    stripped++
+    return JSON.stringify(parsed)
+  })
+  if (stripped === 0) throw new Error('withoutTracePrompt: no line carries a2uiMeta.trace.prompt')
+  return out
+}
+
 describe('buildSystemPrompt — GH #418: a2uiEnabled degrades byte-identically when absent (Decision precedent)', () => {
   it('an ABSENT 7th argument reproduces the prompt byte-for-byte (every existing caller is unaffected)', () => {
     const withoutParam = buildSystemPrompt(defaultCatalog, [])
@@ -196,7 +213,7 @@ describe('produce() — GH #418: ProduceOptions.a2uiEnabled threads to buildSyst
     }
     // The peel/heal/validate result is identical either way — `a2uiEnabled` only steers the PROMPT, not
     // this loop's own mechanics (the exact posture GenuiSurfaceConfig.exclusive already holds).
-    expect(await runWith(true)).toEqual(await runWith(false))
+    expect(withoutTracePrompt(await runWith(true))).toEqual(withoutTracePrompt(await runWith(false)))
   })
 })
 

@@ -51,6 +51,23 @@ function stubProvider(output: string): AgentProvider {
   }
 }
 
+// ADR-0234 (proposed): trace.prompt reports the composed prompt's section sizes, which this gate steers
+// by design. The comparison drops that one field and nothing else, and throws when no line carries it,
+// so it can never pass vacuously.
+function withoutTracePrompt(lines: readonly string[]): string[] {
+  let stripped = 0
+  const out = lines.map((line) => {
+    const parsed = JSON.parse(line) as { a2uiMeta?: { trace?: { prompt?: unknown } } }
+    const trace = parsed.a2uiMeta?.trace
+    if (trace?.prompt === undefined) return line
+    delete trace.prompt
+    stripped++
+    return JSON.stringify(parsed)
+  })
+  if (stripped === 0) throw new Error('withoutTracePrompt: no line carries a2uiMeta.trace.prompt')
+  return out
+}
+
 /** The EXACT client-side shape `gen-ui-live.ts`'s `runTurn` loop uses (site/pages/gen-ui-live.ts ~L296-311):
  *  a meta-line captures `note`/`progress`; anything else is checked ONLY against `readGenuiLine` — a line
  *  that is neither is silently dropped (SPEC-R1). Reproduced inline (no site import — package-only test)
@@ -92,7 +109,7 @@ describe('the reported bug, reproduced deterministically: a genui-only client si
       for await (const line of produce(intent, deps, { maxRounds: 3, genuiSurface: { enabled: true, exclusive } })) lines.push(line)
       return lines
     }
-    expect(await runWith(false)).toEqual(await runWith(true))
+    expect(withoutTracePrompt(await runWith(false))).toEqual(withoutTracePrompt(await runWith(true)))
   })
 })
 
