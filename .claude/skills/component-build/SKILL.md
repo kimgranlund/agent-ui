@@ -99,8 +99,8 @@ before a first build; `controls/checkbox/` is the gold probe template.
    change — run the migration step (`.claude/docs/process.md`) before treating it as done.
 3. `npm run size` by hand when the bundle surface changed (manual by Kim's ruling);
    marginal size within the tier budget, tree-shake clean.
-4. **Hand off to the `frontend:component-checker` agent** (both rubric axes ≥ 4 at G5+) — the
-   non-optional independent pass before any control-wave commit. Fix the component, not the
+4. **Hand off to an sdlc-lite verifier run (`run.sh`)** against `.claude/docs/rubrics/component.md` (both rubric
+   axes ≥ 4 at G5+), the non-optional independent pass before any control-wave commit. Fix the component, not the
    check.
 
 ## Definition of done
@@ -113,4 +113,4 @@ before a first build; `controls/checkbox/` is the gold probe template.
 - [ ] `{name}.md` validates and matches `static props` AND the source.
 - [ ] Full probe set green incl. cross-engine browser truth (+ built-output leg where earned).
 - [ ] Integrated (barrel/exports/styles/site) with standing gates green; size in budget.
-- [ ] Independent `component-checker` pass done; findings fixed.
+- [ ] Independent sdlc-lite verifier run (`run.sh`) done; findings fixed.

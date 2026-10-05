@@ -13,28 +13,28 @@ disable-model-invocation: false
 
 | Artifact class | Maker seat | Critic seat |
 |---|---|---|
-| ui-* control source / CSS / geometry | `component-build-agent` | `frontend:component-checker` (NON-optional before a control-wave commit) |
+| ui-* control source / CSS / geometry | `component-build-agent` | an sdlc-lite verifier run (`run.sh`) against `.claude/docs/rubrics/component.md` (NON-optional before a control-wave commit) |
 | `@agent-ui/a2ui` package / renderer / catalog code | `a2ui-build-agent` | `a2ui-review-agent` |
 | A2UI payload composition (message streams) | `a2ui-payload-authoring-agent` | `a2ui-review-agent` |
-| Docs-site pages / shell / non-preview prose | `teamwork:docs-writer` | `teamwork:code-checker` |
+| Docs-site pages / shell / non-preview prose | a site-authoring maker (the host session or an sdlc-lite builder preloading `site-authoring`) | an sdlc-lite verifier run (`run.sh`) |
 | Preview specimens + knobs in `site/lib/component-preview.ts` | `example-authoring-agent` | host judges representativeness |
-| Color / dimension tokens | `design:token-builder` | `frontend:component-checker` (consuming control) |
-| PRD / SPEC / LLD / ADR authoring | `teamwork:planner` | `docs:doc-checker` |
-| Non-UI code diffs / slices | `teamwork:builder` | `teamwork:code-checker` |
+| Color / dimension tokens | the host session or an sdlc-lite builder | an sdlc-lite verifier run (`run.sh`) (consuming control, against `.claude/docs/rubrics/component.md`) |
+| PRD / SPEC / LLD / ADR authoring | the host session or an sdlc-lite builder | an sdlc-lite verifier run (`run.sh`) |
+| Non-UI code diffs / slices | an sdlc-lite builder via `run.sh` (`/sdlc-lite:chain` or `/sdlc-lite:build`) | an sdlc-lite verifier run (`run.sh`) |
 | Broad searches / codebase questions | `Explore` (read-only, conclusions not dumps) | — |
-| Measured experiment loops (regressions, tuning, stress) | `docs:experiment-runner` | host verifies the report |
+| Measured experiment loops (regressions, tuning, stress) | the host session or an sdlc-lite builder | host verifies the report |
 | A2UI corpus record admission/judging (ADR-0068) | `a2ui-corpus-curation` (skill, host-run or briefed) | `a2ui-review-agent` (the VerdictsFile judge — never the seed's own author) |
-| One confirmed work-item build (feature/task/bug, by issue id) | `teamwork:build-leader` | per-artifact critic above |
-| Raw report/idea intake → durable records | `docs:intake-leader` | — (intake only, structurally cannot dispatch builds) |
-| A SKILL.md's contract/shape | maker of the change | `harness:skill-checker` |
-| An agents/*.md definition | maker of the change | `harness:agent-checker` |
-| A hook (registration + script) | maker of the change | `harness:hook-checker` |
-| Prompt-carrying wording (a brief, a description, a CLAUDE.md line) | maker of the change | `harness:wording-checker` |
-| Skill/agent/team wiring + frontmatter composition | maker of the change | `teamwork:wiring-checker` |
-| One screen/shell/page layout | maker of the change | `frontend:layout-checker` |
-| A cross-screen user flow (*.flow.json, journeys) | maker of the change | `frontend:flow-checker` |
+| One confirmed work-item build (feature/task/bug, by issue id) | `/sdlc-lite:chain` (size S and M: the `sdlc-lite:solo` agent) | per-artifact critic above |
+| Raw report/idea intake → durable records | a GitHub Issue via `gh issue create` (ADR-0145) | none (intake only, a record and never a build) |
+| A SKILL.md's contract/shape | maker of the change | an sdlc-lite verifier run (`run.sh`) |
+| An agents/*.md definition | maker of the change | an sdlc-lite verifier run (`run.sh`) |
+| A hook (registration + script) | maker of the change | an sdlc-lite verifier run (`run.sh`) |
+| Prompt-carrying wording (a brief, a description, a CLAUDE.md line) | maker of the change | an sdlc-lite verifier run (`run.sh`) |
+| Skill/agent/team wiring + frontmatter composition | maker of the change | an sdlc-lite verifier run (`run.sh`) |
+| One screen/shell/page layout | maker of the change | an sdlc-lite verifier run (`run.sh`) |
+| A cross-screen user flow (*.flow.json, journeys) | maker of the change | an sdlc-lite verifier run (`run.sh`) |
 
-`example-authoring-agent` and `docs-writer` share `component-preview.ts` by concern — never dispatch both
+`example-authoring-agent` and a site-authoring maker share `component-preview.ts` by concern; never dispatch both
 onto that file concurrently.
 
 ## Dispatch laws — copy the directive, point at the law

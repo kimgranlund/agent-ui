@@ -123,7 +123,7 @@ see the table below.
   anchor-1 double violation exactly — 1 both reads. MIN lands 1 / 1 (Δ 0); `passed:false` both reads, with
   `D2 ≤ 2` and `D4 ≤ 2` on both — the calibration requirement this record exists to prove.
 
-<!-- Independent critic: the doc-checker agent scores this rubric against rubric-for-rubrics (generator ≠
+<!-- Independent critic: an sdlc-lite verifier run (`run.sh`) scores this rubric against rubric-for-rubrics (generator ≠
      critic). Author self-check only: D1-D4 typed [gate] + anchored 1/3/5 ✓ · evidence column names a cited
      mechanical fact per gated dimension ✓ · gate-to-promote + top-failure + calibration ✓ ·
      harness_checks.py rubric exit 0. -->

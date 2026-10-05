@@ -18,7 +18,7 @@ should:
 should_not:
   - "grade this catalog row's catalog.json + factory + tests"           # a2ui-review-agent (rubric a2ui-catalog.md)
   - "review this A2UI payload / gallery example"                         # a2ui-review-agent (rubric a2ui-payload.md)
-  - "is ui-attachment's anatomy and geometry right"                      # frontend:component-checker / component.md
+  - "is ui-attachment's anatomy and geometry right"                      # sdlc-lite verifier run / component.md
   - "screenshot the docs site pages for the README"                      # plain playwright, no eval
 
 ## delta
@@ -31,14 +31,14 @@ kind fidelity, renders via real renderer with the right tag, seed visibility, pr
 identify the component from the image, grade the review dims against
 `.claude/docs/rubrics/a2ui-catalog-example.md` (A/B/C axes, out-in × in-out), and route each finding by
 defect quadrant (L-only → example-authoring-agent · R-tag/prop → a2ui-build-agent · R-render →
-component-build-agent · card → docs-writer). Deleted after a month: reviews regress to (a)/(b).
+component-build-agent · card → a site-authoring maker). Deleted after a month: reviews regress to (a)/(b).
 
 ## fences
 - NOT for grading the catalog ROW — catalog.json/factory/tests (a2ui-review-agent, rubric a2ui-catalog.md)
 - NOT for grading a composed A2UI payload or gallery example (a2ui-review-agent, rubric a2ui-payload.md)
-- NOT for the ui-* control's own anatomy/geometry (frontend:component-checker)
+- NOT for the ui-* control's own anatomy/geometry (an sdlc-lite verifier run against component.md)
 - (RETIRED 2026-08-18) "NOT for fixing seeds/knobs" — Kim ruling: the skill owns the fix leg through the catalog pipeline; ownership seats stay the DISPATCH targets for cross-package edits (component-build-agent for control source, a2ui-corpus-curation for admission)
-- NOT for the site page shell/nav (docs-writer)
+- NOT for the site page shell/nav (a site-authoring maker)
 
 ## assertions
 1. The report carries one row per card reviewed with a gate ✓/✗ per mechanical dim (A1 A2 A4 B1 B2 C1 C2) and a 1–5 score per review dim (A3 B3 B4 C3), plus a promote/hold verdict from the gate-to-promote rule.

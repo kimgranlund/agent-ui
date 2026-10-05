@@ -7,8 +7,9 @@ description: >-
   this settings page", "fix this page's broken scroll / collapsed regions", "make this
   screen denser". NOT for the feature fragments placed INTO the layout (ui-composition), the
   app-wide shell/routing/theming spine (app-composition), or generic layout THEORY —
-  regions, hierarchy, the two-axis method (frontend:break-down-layout is the method spine; this
-  skill is its agent-ui realization).
+  regions, hierarchy, the two-axis method. Its method spine is the frontend plugin's
+  break-down-layout skill (not loaded in this repo since PR #1791); this skill is its agent-ui
+  realization.
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -17,15 +18,17 @@ disable-model-invocation: false
 
 Structures a screen with the fleet's container/layout tier and proves the **whole rendered
 shape** — the known failure class is a layout that passes every per-part probe and still
-collapses to a sliver. Method questions (what regions, what hierarchy) belong to
-`frontend:break-down-layout`; this skill is the agent-ui realization. Worked exemplars:
+collapses to a sliver. Method questions (what regions, what hierarchy) belong to the frontend
+plugin's break-down-layout skill (not loaded in this repo since PR #1791); this skill is the
+agent-ui realization. Worked exemplars:
 `site/pages/layout-overview.ts` (the primitives, live) and the docs site's own page shell
 (`site/pages/_page.ts` + `_page.css`).
 
 ## Procedure
 
-1. **Decompose the screen first** (frontend:break-down-layout where a real design question exists;
-   inline for a conventional page): regions, hierarchy, what scrolls, what's sticky.
+1. **Decompose the screen first**: regions, hierarchy, what scrolls, what's sticky. Inline for a
+   conventional page; a real design question takes the frontend plugin's break-down-layout skill
+   (not loaded in this repo since PR #1791).
 2. **Structure with the container/layout tier** — `ui-row`/`ui-column`/`ui-grid` for
    arrangement, `ui-card`/`ui-tabs`/`ui-disclosure`/`ui-modal` for surfaces (`ui-modal` as
    a SCREEN-level surface belongs here; a confirm dialog inside a feature's flow is
@@ -64,7 +67,7 @@ red in isolation is the real defect, route it).
 
 ## Review (generator ≠ critic)
 
-`frontend:layout-checker` grades the composed screen (the two-axis rubric). Hand off before
+An sdlc-lite verifier run (`run.sh`) grades the composed screen (the two-axis rubric). Hand off before
 shipping; fix the layout, not the check.
 
 ## Definition of done
@@ -73,4 +76,4 @@ shipping; fix the layout, not the check.
 - [ ] Exactly one owned scroll region; sticky via the box-model.
 - [ ] Axes set at region roots; theme boundaries via `ui-theme-provider`.
 - [ ] Whole-shape browser proof green (gestalt + scroll + axis response).
-- [ ] `frontend:layout-checker` pass done.
+- [ ] Independent sdlc-lite verifier run (`run.sh`) done.

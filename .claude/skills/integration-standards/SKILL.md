@@ -52,7 +52,7 @@ ADR/SPEC id and Grep-repaired on line drift, never restated here from memory.
 
 - New/changed catalog components the renderer paints → `component-catalog`.
 - Authoring the A2UI message stream an agent emits → `a2ui-payload-authoring`.
-- The session/turn model or validate-then-stream pipeline → `agent-protocols:a2ui-chat-agent-facts`.
+- The session/turn model or validate-then-stream pipeline → `a2ui-jsonl-mcp`.
 - Adding an MCP server so the live agent gains its tools → BUILT: law 6, `references/mcp-roster-law.md`
   (ADR-0177 / SPEC-R23–R28 §3.7 / `.claude/docs/lld/mcp-connector.lld.md`). Distinguished, still routed OUT:
   agent-ui AS an MCP *server* — the opposite direction, unbuilt

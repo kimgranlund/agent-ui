@@ -7,8 +7,8 @@ description: >-
   "what's on the plan / the roadmap / the goals", "what did we decide about Y", "is there a spec
   for Z", "what's the status of TKT-####", "what's already been queued or shipped". ANSWERS from
   the records only. NOT for authoring or editing a document (the docs plugin's authoring skills);
-  NOT for capturing a new feature idea (/docs:file-feature) or bug (/docs:file-bug); NOT for
-  building from a record.
+  NOT for capturing a new feature idea or bug, which becomes a GitHub Issue via `gh issue create`
+  (ADR-0145); NOT for building from a record.
 user-invocable: false
 disable-model-invocation: false
 ---
@@ -60,7 +60,7 @@ row: three weeks routing "which tickets are open" to a frozen archive.)
 3. Cross-references between records use the ID spine (`ADR-####` · `SPEC-R#`/`SPEC-N#` ·
    `LLD-C#` · `PRD-G#`/`PRD-D#` · `TKT-####` · `GH #NN`) — follow them rather than assuming one
    file is complete.
-4. Route all making: a new idea → `/docs:file-feature`; a defect → `/docs:file-bug`; building a
+4. Route all making: a new idea or a defect → a GitHub Issue via `gh issue create` (ADR-0145); building a
    queued record → the project's own build path; authoring or revising any document → the docs
    plugin's doc-authoring skills (all where installed — otherwise name the record that would be
    touched and hand back to the user).

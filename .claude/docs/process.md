@@ -59,6 +59,9 @@ and `tokens-specialist` were realized as the global plugin agents `frontend:comp
 standalone **coherence/health rubric** doc was never written — `family-coherence.test.ts`'s 9 invariants
 absorbed that role as a mechanical gate. The current build-team roster (`.claude/agents/`) is
 `component-build-agent`, `a2ui-build-agent`, `a2ui-payload-authoring-agent`, `a2ui-review-agent`, `example-authoring-agent`.
+Update 2026-10-04: PR #1791 disabled the nonoun-plugins (llm, harness, docs, teamwork, frontend,
+agent-protocols, design) in this repo, so those global plugin agents no longer load here; no repo-local
+component-review or token seat loads either, and the independent check runs as an sdlc-lite verifier run (`run.sh`).
 
 ## 1. Trip-wires — the loud contracts (determinism → code)
 
@@ -265,8 +268,8 @@ skill or agent text that asks for more ceremony.
 
 - No autonomous harness-forge lattice yet — human-driven was chosen; that call hasn't been revisited even
   as the fleet grew from ~7 to 37+ components across multiple families (as of 2026-07-09).
-- No bespoke *per-component* agents — reviewer + tokens work route to the global `frontend:component-checker` /
-  `design:token-builder` plugins, not a new agent per control. *(The roster did grow bespoke agents per
+- No bespoke *per-component* agents. Review work routes to an sdlc-lite verifier run (`run.sh`) and tokens
+  work to the host session or an sdlc-lite builder, not a new agent per control. *(The roster did grow bespoke agents per
   concern instead, as the surface area diversified: `component-build-agent` (ui-* build seat), `a2ui-build-agent`/
   `a2ui-payload-authoring-agent`/`a2ui-review-agent` (the A2UI layer), `example-authoring-agent` (docs-site preview content) —
   `.claude/agents/`, updated 2026-07-09. Still mechanical for anything a probe can own.)*

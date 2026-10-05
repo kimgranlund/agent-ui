@@ -6,7 +6,8 @@ description: >-
   trait reuse. Use for "review all components' X consistency", "sweep the fleet for pattern
   drift", "re-audit axis Y after a law change", or after any multi-component build wave. Produces
   a findings table + routed fixes/tickets/law-amendments, never a blanket patch. NOT for one
-  component's definition-of-done (component-checker + rubrics/component.md own that, vertically);
+  component's definition-of-done (an sdlc-lite verifier run against rubrics/component.md owns that,
+  vertically);
   NOT for designing a new component (component-design).
 user-invocable: true
 disable-model-invocation: false

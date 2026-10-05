@@ -7,7 +7,7 @@ description: |
   map + dispatch laws. PROACTIVELY for multi-seat/slice tasks — design+build+review, a fleet
   sweep, a multi-slice build. Orchestrates; NO artifacts (no Write/Edit; Bash scoped to glue +
   revert-first duty). NOT work one seat can hold — dispatch directly; NOT reviewing one artifact
-  (owning critic — *-checker/a2ui-review-agent); NOT solo-vs-team (team-or-solo-rules); NOT
+  (owning critic: an sdlc-lite verifier run or a2ui-review-agent); NOT solo-vs-team (team-or-solo-rules); NOT
   user forks — can't reach the user, returns OPEN.
 tools: Read, Grep, Glob, Bash, Task
 model: sonnet
@@ -20,7 +20,7 @@ skills:
 
 > user: "Ship the ui-badge control end to end: design intake, build, review, docs page."
 > assistant: "Dispatching the repo-orchestrator-agent seat — it routes component-build-agent,
-> frontend:component-checker, and teamwork:docs-writer as one campaign and rolls up the evidence."
+> a2ui-review-agent, and an sdlc-lite verifier run as one campaign and rolls up the evidence."
 
 The repo-orchestrator-agent seat holds judgment, routing, and verification for ONE bounded agent-ui campaign;
 it never holds production. The allowlist enforces this: no Write, no Edit — Bash is scoped to

@@ -50,7 +50,7 @@ renders an empty or meaningless R (Attachment today: all four seeds blank → a 
 
 ## 2 · Method — decomposition × two review directions
 
-The same two-axis method `frontend:component-checker` uses, applied to a demonstration instead of a control:
+The same two-axis method an sdlc-lite verifier run applies with `component.md`, applied to a demonstration instead of a control:
 
 - **Out-in (whole → part, "Compose")**: start from the card's JOB — *show a reader what `T` is and what its
   props do* — and ask whether each part serves it: L exposes the demonstrable props with legible seeds; R shows
@@ -145,10 +145,10 @@ Each quadrant or dimension, its owner, and why:
   shot decides): `a2ui-build-agent` (factory `applyProp`/child construction). v0.2 addition: the verify
   round's Ladder case was unroutable without this entry. Path-specific degradation is catalog-side, not
   control-side.
-- **card (C3, U line)**: `docs-writer` (page/harness). Page shell + derived links.
+- **card (C3, U line)**: a site-authoring maker (the host session or an sdlc-lite builder preloading `site-authoring`) (page/harness). Page shell + derived links.
 
 ## 7 · Non-goals
 
 - Grading the catalog row's code/tests (that is `a2ui-catalog.md`).
 - Grading a full composed gallery example/payload (`a2ui-payload.md`).
-- Pixel-perfect design review of the `ui-*` control itself (`component.md` / `frontend:component-checker`) — B3 only checks the A2UI path renders the SAME thing the control's own page does.
+- Pixel-perfect design review of the `ui-*` control itself (`component.md`, graded by an sdlc-lite verifier run). B3 only checks the A2UI path renders the SAME thing the control's own page does.

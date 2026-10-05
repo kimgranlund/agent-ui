@@ -7,8 +7,8 @@ description: >-
   rendered surface make sense for X", "fix the X catalog card / seeds", "add a prop or new type to
   a catalog PAGE demonstration". NOT for GRADING a row, payload, or corpus record (a2ui-review-
   agent); NOT for the package's catalog.json entry or factory CODE (a2ui-build owns those as
-  source); NOT for ui-* control source (component-build-agent); NOT for the page shell (docs-
-  writer).
+  source); NOT for ui-* control source (component-build-agent); NOT for the page shell (a
+  site-authoring maker).
 disable-model-invocation: false
 user-invocable: true
 argument-hint: "[Component | TIER | all] [--base URL] [--theme dark|light|both] [--fix]"
@@ -78,7 +78,7 @@ review that scores B4 without that record scored the control, not the demonstrat
    missing/mis-mapped prop → shape (ii) prop on an existing type (`catalog.json` `mapsTo` ↔ descriptor
    attribute, `factories.ts` mapping, conformance test, prompt-baseline recapture); a type that does
    not exist → shape (iii) end to end; `card` quadrant (tier/nested/uses/page) → `TIER_OF`/`NESTED_ONLY`
-   in `a2ui-catalog-tiers.ts`, or dispatch docs-writer for page shell. Edit in the pipeline's layer
+   in `a2ui-catalog-tiers.ts`, or hand the page shell to a site-authoring maker. Edit in the pipeline's layer
    ORDER (control → row → seed → site), run each regen command as soon as its layer is touched
    (§3 — a `catalog.json` edit owes the prompt-baseline recapture immediately), and finish with
    `npm run check` and `npm test` read by exit code. Then re-capture the card and re-grade — the

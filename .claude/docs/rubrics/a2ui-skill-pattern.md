@@ -16,9 +16,8 @@ pattern section added to (or extended in) an a2ui skill doc — prose teaching a
 to a future consumer. **The reference specimen the anchors cite is `a2ui-multi-catalog` §5**
 ("Composed/derived catalogs", `.claude/skills/a2ui-multi-catalog/SKILL.md`, PR #492's fifth pattern).
 
-**Lane split (deliberate, not an overlap):** the harness `skill-checker` critic keeps the skill
-DOCUMENT's contract — frontmatter, description/routing grammar, body shape (`docs:doc-checker`'s own
-charter fences SKILL.md files to it). THIS rubric grades the section's **A2UI substance**: whether what
+**Lane split (deliberate, not an overlap):** an sdlc-lite verifier run (`run.sh`) keeps the skill
+DOCUMENT's contract: frontmatter, description/routing grammar, body shape. THIS rubric grades the section's **A2UI substance**: whether what
 it teaches is true of the shipped mechanism and complete enough to consume. The same section can pass
 one lane and fail the other; neither verdict substitutes for the other.
 
