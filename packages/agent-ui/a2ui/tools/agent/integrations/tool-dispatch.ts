@@ -41,8 +41,8 @@ function apiKeyFor(manifest: IntegrationManifest, env: Record<string, string | u
  * `resolveIntegrations` first — validation of the browser's enablement list is that function's job, not
  * this one's).
  *
- * `signal` is the TURN-level abort signal where the host has one (the Worker's `request.signal`; the dev
- * proxy's Node route has none). It is the FALLBACK: the adapter passes its own per-call signal as
+ * `signal` is the TURN-level abort signal (the Worker's `request.signal`; the dev proxy's disconnect-aborted
+ * per-request `AbortController`, GH #1797). It is the FALLBACK: the adapter passes its own per-call signal as
  * `executeTool`'s third argument, and that one wins when present — same signal in practice today, since the
  * adapter forwards exactly what the host threaded into `produce()`. Either way an aborted turn cancels
  * in-flight tool work instead of leaving an orphaned outbound fetch running.

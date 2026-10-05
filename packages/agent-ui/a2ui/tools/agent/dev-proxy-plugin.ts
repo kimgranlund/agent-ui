@@ -332,15 +332,29 @@ export function a2uiDevProxyPlugin(opts?: {
               // registry (non-array/unknown ids ⇒ [], capped, fail-closed — never a 400), then
               // `buildToolDispatch` builds the validate→key→execute pair. Zero active manifests ⇒ `{}`, so
               // the spread adds NOTHING and the stream request stays byte-identical for every caller that
-              // enables nothing. No turn-level AbortSignal exists on this Node route (the Worker's
-              // `request.signal` twin has one) — the adapter's own per-call signal reaches ctx.signal.
-              const active = resolveIntegrations(chatIntegrations, env)
-              const toolOpts = buildToolDispatch(active, env)
-              let text = ''
-              for await (const fragment of providerDispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, ...toolOpts })) {
-                text += fragment // buffered server-side — single-shot (LLD Q3); one full reply, no mid-stream truncation
+              // enables nothing. GH #1797: a per-request `AbortController`, aborted when `res` emits
+              // `close` before `writableEnded`, is this route's turn-level signal (the twin of the Worker's
+              // `request.signal`). It is threaded into `buildToolDispatch` and the provider, so a client
+              // disconnect cancels the upstream stream and any in-flight tool call.
+              const controller = new AbortController()
+              if (typeof res.on === 'function') {
+                res.on('close', () => {
+                  if (!res.writableEnded) controller.abort()
+                })
               }
-              sendJson(res, 200, { text })
+              const active = resolveIntegrations(chatIntegrations, env)
+              const toolOpts = buildToolDispatch(active, env, controller.signal)
+              let text = ''
+              try {
+                for await (const fragment of providerDispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, signal: controller.signal, ...toolOpts })) {
+                  text += fragment // buffered server-side, single-shot (LLD Q3); one full reply, no mid-stream truncation
+                }
+                sendJson(res, 200, { text })
+              } catch (err) {
+                // An aborted turn has no reader left: write nothing to the closed response.
+                if (controller.signal.aborted) return
+                throw err
+              }
               return
             }
 
@@ -401,12 +415,19 @@ export function a2uiDevProxyPlugin(opts?: {
               // the proxy's node process (the ADR-0137 shell law; produce's ExecuteTool cannot cross HTTP).
               // ADR-0168 cl.3 / LLD-C4 — the tools/executeTool pair itself is built by the SHARED
               // buildToolDispatch (schema-validated dispatch, key resolution, the `{}`-when-empty shape),
-              // identical to the Worker's: this route no longer carries its own copy of that logic. No
-              // turn-level AbortSignal exists on this Node route (unlike the Worker's `request.signal`,
-              // and `produce()` below is called without one), so none is passed — the adapter's own
-              // per-call signal is the only one there is, and it reaches ctx.signal unchanged.
+              // identical to the Worker's: this route no longer carries its own copy of that logic.
+              // GH #1797: a per-request `AbortController`, aborted when `res` emits `close` before
+              // `writableEnded`, is this route's turn-level signal (the twin of the Worker's
+              // `request.signal`). It is threaded into `buildToolDispatch` and `produce()`, so a client
+              // disconnect cancels the upstream stream and any in-flight tool call.
+              const controller = new AbortController()
+              if (typeof res.on === 'function') {
+                res.on('close', () => {
+                  if (!res.writableEnded) controller.abort()
+                })
+              }
               const active = resolveIntegrations(integrations, env)
-              const toolOpts = buildToolDispatch(active, env)
+              const toolOpts = buildToolDispatch(active, env, controller.signal)
               // ADR-0146 F1 — opt IN to the live-turn progress channel: produce() interleaves
               // {"a2uiMeta":{"progress":…}} meta-lines that flush through the SAME per-line res.write below
               // (NO structural proxy change — a progress line is an ordinary NDJSON line; the browser's
@@ -439,7 +460,7 @@ export function a2uiDevProxyPlugin(opts?: {
               // default), never a 400.
               const validatedEffort = validateEffort(effort)
               try {
-                for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), ...(authoringSurface !== undefined ? { authoringSurface } : {}), ...(builderMissionGate !== undefined ? { builderMission: builderMissionGate } : {}), ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), ...toolOpts })) {
+                for await (const line of produce(input, deps, { maxRounds: 3, signal: controller.signal, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), ...(authoringSurface !== undefined ? { authoringSurface } : {}), ...(builderMissionGate !== undefined ? { builderMission: builderMissionGate } : {}), ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), ...toolOpts })) {
                   res.write(line + '\n')
                 }
               } catch (err) {
@@ -458,7 +479,7 @@ export function a2uiDevProxyPlugin(opts?: {
                 // "report without leaking a key" discipline the outer catch below already applies to a
                 // pre-stream failure, extended to a post-stream one. `res.destroyed` (the client
                 // disconnected) is the one case that stays silent — there's no one left to read it.
-                if (!res.destroyed) {
+                if (!res.destroyed && !controller.signal.aborted) {
                   // Server-only: prints to the dev server's own terminal, never crosses the wire.
                   console.error('produce() turn failed:', err)
                   const message = err instanceof ProduceHalt ? err.message : GENERIC_FAILURE_MESSAGE
