@@ -6,15 +6,13 @@
     "defaultMode": "bypassPermissions"
   },
   "enabledPlugins": {
-    "llm@nonoun-plugins": true,
-    "harness@nonoun-plugins": true,
-    "docs@nonoun-plugins": true,
-    "teamwork@nonoun-plugins": true,
-    "frontend@nonoun-plugins": true,
-    "agent-protocols@nonoun-plugins": true,
-    "design@nonoun-plugins": true,
-    "figma@claude-plugins-official": true,
-    "cloudflare@claude-plugins-official": true
+    "llm@nonoun-plugins": false,
+    "harness@nonoun-plugins": false,
+    "docs@nonoun-plugins": false,
+    "teamwork@nonoun-plugins": false,
+    "frontend@nonoun-plugins": false,
+    "agent-protocols@nonoun-plugins": false,
+    "design@nonoun-plugins": false
   },
   "extraKnownMarketplaces": {
     "nonoun-plugins": {
