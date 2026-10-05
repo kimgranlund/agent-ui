@@ -136,6 +136,12 @@ header pointing here.
 - **team member**: one `AgentTeamMember` of an `AgentTeam`; the GM consults it by prose only. Across
   vendors the same role is a *subagent* (Claude Code, Google ADK) or a *handoff target* (OpenAI
   Agents SDK); this repo's word is member (vendor docs fetched 2026-08-29, §5).
+- **selection guidance**: per-type "which one when" data for the model: `intents` (the job, in the
+  user's words) and `notFor` (a confusable sibling and the axis that separates them). Its machine home
+  is each catalog's Node-only `selection.json` sidecar beside `catalog.json`, read by
+  `selectionGuidanceFor` on `@agent-ui/a2ui/agent` and rendered as a clause on the composed prompt's
+  inventory line (ADR-0232, accepted). The human twins are the catalog SPEC §5.2 Notes and the site's
+  choosing guide; neither is generated from it.
 - **Co-pilot**: the builder-interview place (`[Chat | Settings | Co-pilot]`, ADR-0179 as amended by
   GH #686); "Author" is its retired name.
 

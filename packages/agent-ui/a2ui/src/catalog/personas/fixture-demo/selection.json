@@ -1,0 +1,16 @@
+{
+  "personaId": "fixture-demo",
+  "types": {
+    "FixtureBanner": {
+      "intents": [
+        "the demo persona banner line"
+      ],
+      "notFor": [
+        {
+          "type": "Text",
+          "why": "ordinary copy"
+        }
+      ]
+    }
+  }
+}

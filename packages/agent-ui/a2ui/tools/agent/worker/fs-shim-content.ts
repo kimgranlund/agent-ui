@@ -4,6 +4,12 @@
 // bundled as plain strings at Worker-build time via Wrangler's Text module rule (wrangler.jsonc). Keys are
 // the EXACT paths those two files compute from `process.cwd()` (shimmed to `''` by `process-shim.ts`), so
 // `fs-shim.ts`'s `readFileSync`/`readdirSync` can serve them with zero changes to either canonical file.
+//
+// ADR-0232 (accepted): the same holds for the catalogs' `selection.json` sidecars `selection-guidance.ts`
+// reads at module load (explicit `readFileSync` paths, never `readdirSync`, so `DIRS` is untouched). The
+// Text rule covers only `*.md`/`*.jsonl`, so each sidecar comes in through esbuild's default JSON loader
+// (as `worker/index.ts` imports `catalog.json`) and is served as `JSON.stringify(<import>)`; the loader
+// `JSON.parse`s it, so the content is equivalent. `fs-shim.test.ts` holds the key set equal to the disk.
 
 import grammar from '../../../src/agent/prompts/grammar.md'
 import honestyFloor from '../../../src/agent/prompts/honesty-floor.md'
@@ -59,9 +65,17 @@ import dataVizLayouts from '../../../src/agent/prompts/genui-packs/data-viz-layo
 import interactiveWidgets from '../../../src/agent/prompts/genui-packs/interactive-widgets.md'
 import animatedExplainers from '../../../src/agent/prompts/genui-packs/animated-explainers.md'
 
+// ADR-0232 (accepted): the five catalog selection sidecars `selection-guidance.ts` reads.
+import defaultSelection from '../../../src/catalog/default/selection.json'
+import a2uiBasicSelection from '../../../src/catalog/a2ui-basic/selection.json'
+import conciergeSelection from '../../../src/catalog/personas/concierge/selection.json'
+import croupierSelection from '../../../src/catalog/personas/croupier/selection.json'
+import fixtureDemoSelection from '../../../src/catalog/personas/fixture-demo/selection.json'
+
 const PROMPTS_PATH = '/packages/agent-ui/a2ui/src/agent/prompts'
 const MINI_SKILLS_PATH = `${PROMPTS_PATH}/mini-skills`
 const GENUI_PACKS_PATH = `${PROMPTS_PATH}/genui-packs`
+const CATALOG_PATH = '/packages/agent-ui/a2ui/src/catalog'
 
 export const FILES: Record<string, string> = {
   [`${PROMPTS_PATH}/grammar.md`]: grammar,
@@ -100,6 +114,11 @@ export const FILES: Record<string, string> = {
   [`${MINI_SKILLS_PATH}/media-grid.md`]: mediaGrid,
   [`${MINI_SKILLS_PATH}/comparison-table.md`]: comparisonTable,
   [`${MINI_SKILLS_PATH}/table-toolbar-pagination.md`]: tableToolbarPagination,
+  [`${CATALOG_PATH}/default/selection.json`]: JSON.stringify(defaultSelection),
+  [`${CATALOG_PATH}/a2ui-basic/selection.json`]: JSON.stringify(a2uiBasicSelection),
+  [`${CATALOG_PATH}/personas/concierge/selection.json`]: JSON.stringify(conciergeSelection),
+  [`${CATALOG_PATH}/personas/croupier/selection.json`]: JSON.stringify(croupierSelection),
+  [`${CATALOG_PATH}/personas/fixture-demo/selection.json`]: JSON.stringify(fixtureDemoSelection),
 }
 
 // mini-skills.ts's `loadMiniSkills` re-`.sort()`s this list itself, so insertion order here is not

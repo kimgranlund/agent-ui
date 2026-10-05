@@ -1587,5 +1587,12 @@
     "description": "the corpus gains two model-visible facets, multi-turn (client action in, follow-up stream out) and repair (invalid input + recomputed validator errors + correc…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0232",
+    "url": "./adr-index.html#adr-0232",
+    "description": "Catalog selection guidance (intents and notFor) lives in a Node-only selection.json sidecar beside each catalog and renders as a clause on the prompt inventory…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

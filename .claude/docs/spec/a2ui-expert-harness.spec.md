@@ -9,7 +9,7 @@
 > function — `compose.ts`-class code that assembles/derives/selects at compose time; a skill-doc PATTERN
 > section — an `a2ui-multi-catalog`-class pattern row), and the SPEC-R3 rubric set widens from three to
 > five: **`a2ui-mechanism.md`** and **`a2ui-skill-pattern.md`**, SIBLINGS of `a2ui-catalog.md` (split,
-> not widened, so D1–D6 stay precise to catalog rows — rationale in that rubric's "Scope & siblings"
+> not widened, so D1–D7 stay precise to catalog rows — rationale in that rubric's "Scope & siblings"
 > note). Both siblings are held to every SPEC-R3 rubric requirement and are enumerated in
 > `scripts/harness_wiring_check.py`. No other clause changes. Append-only.
 > **v0.3 amendment (2026-07-29, §5.3 only — ADR-0165, built at GH #360):** the `VerdictsFile`'s LIFETIME

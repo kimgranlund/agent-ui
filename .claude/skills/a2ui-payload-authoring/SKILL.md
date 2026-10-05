@@ -112,6 +112,9 @@ Draft → validate → fix → re-check → finalize only when clean:
 - [ ] `createSurface` is the first message; every message carries `version:"v1.0"`.
 - [ ] Every `component` and every prop exists in the target catalog (`catalog.json`); bound props are
       `"bindable": true`.
+- [ ] Each type was picked by its `use:` intents and honors its `not for:` edges (the inventory clause,
+      sourced from the catalog's `selection.json`, ADR-0232): a type whose `not for:` names the job you
+      are filling is the wrong pick; switch to the sibling it names.
 - [ ] Every `child`/`children` id resolves to a node (allowing later-in-stream arrival); no dangling refs.
 - [ ] Every `{path}` bind and `${…}` template resolves against the seeded data model; relative paths only
       inside a list-item template.
@@ -172,5 +175,6 @@ papered over inside the payload.
 | `references/meta-line-vocabulary.md` | The `a2uiMeta` framing envelope's six MODEL-authored arms (`ask · plan · personaPatch · flowEnd · team · target`) as a growth axis — the inherited arm laws, ADR-0198's answered-ask-freeze/closing-turn amendments, and the truthful-signal-beats-heuristic lesson (ADR-0206) |
 | `references/finalize-validation.md` | A payload validates clean mid-stream but the CLI / renderer / `produce` fails it `IDGRAPH ${sid}:root-missing` — the finalize-granularity signal (ADR-0187) |
 | `catalog.json` (`src/catalog/default/`) | The authoritative component/prop/function inventory — never invent a component or prop |
+| `selection.json` (beside each catalog's `catalog.json`) | Choosing between confusable types: per type, `use:` intents and `not for:` siblings with the axis that separates them (ADR-0232); the composed prompt shows the same clause on each inventory line |
 | `src/examples/` + `corpus/exemplar/v1_0/agent-ui.jsonl` | Real payloads to condition on before composing |
 | `a2ui-harness-wiring.lld.md` §6 | The full bounded-loop contract and round-orchestration rules |

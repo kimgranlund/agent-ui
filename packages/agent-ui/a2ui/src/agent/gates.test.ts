@@ -10,7 +10,8 @@
 //  3. NODE-FENCE — `node:*` imports under `src/agent/` appear ONLY in the clause-4 prompt-loading modules
 //     (`system-prompt.ts`/`mini-skills.ts`, plus `prompts/genui-packs.ts` — genui-surface SPEC-R9's own
 //     pack registry, the SAME ADR-0135 readFileSync/frontmatter mechanics — and `dogfood-inventory.ts`,
-//     SPEC-R13(b)'s descriptor-scanning module, GH #316/ADR-0162); `vite` and `node:http` (the dev-proxy
+//     SPEC-R13(b)'s descriptor-scanning module, GH #316/ADR-0162, and `selection-guidance.ts`, the
+//     catalogs' `selection.json` sidecar loader); `vite` and `node:http` (the dev-proxy
 //     fence that stays behind in `tools/agent/`) never appear anywhere under `src/agent/`.
 //  4. PROMPT BYTE-IDENTITY — carried by the pre-existing `prompt-equivalence.test.ts` (ADR-0135 equivalence
 //     gate) + `prompt-drift.test.ts`, which now exercise the MOVED `src/agent/system-prompt.ts` and its
@@ -78,7 +79,7 @@ describe('ADR-0137 clause 8 — the ./agent subpath gates', () => {
   it('IDENTITY: the root barrel exposes NO producer-only symbol at runtime', () => {
     // If a future edit accidentally re-exported the pack from the root, these would appear on the renderer
     // consumer's surface. They must live ONLY on `@agent-ui/a2ui/agent`.
-    for (const sym of ['produce', 'buildSystemPrompt', 'createRecordedTransport', 'selectMiniSkills', 'anthropicProvider']) {
+    for (const sym of ['produce', 'buildSystemPrompt', 'createRecordedTransport', 'selectMiniSkills', 'anthropicProvider', 'selectionGuidanceFor', 'loadSelectionGuidance']) {
       expect(rootBarrel, `root barrel must not expose producer symbol "${sym}"`).not.toHaveProperty(sym)
     }
   })
@@ -102,11 +103,14 @@ describe('ADR-0137 clause 8 — the ./agent subpath gates', () => {
     // readdirSync call site (GH #316/ADR-0162), the same "loads real files at call/load time" class the
     // other three already are; it scans `@agent-ui/components/src/controls/*/*.md`, not `prompts/`, but
     // the fence's rule is "which files may touch node:*", not "which directory they read".
+    // `selection-guidance.ts` is the FIFTH Node-only call site: it reads the catalogs' `selection.json`
+    // sidecars at module load, the same readFileSync-from-process.cwd() class as the four above.
     const NODE_ALLOWED = new Set([
       'src/agent/system-prompt.ts',
       'src/agent/mini-skills.ts',
       'src/agent/prompts/genui-packs.ts',
       'src/agent/dogfood-inventory.ts',
+      'src/agent/selection-guidance.ts',
     ])
     for (const { rel, abs } of MODULES) {
       const specs = importSpecifiers(readFileSync(abs, 'utf8') as string)
