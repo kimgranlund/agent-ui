@@ -163,7 +163,7 @@ packages/agent-ui/a2ui/{src,exports}   # UNCHANGED — public surface stays .`/`
 | `session.ts`·`produce.ts`·`system-prompt.ts`·`providers-config.ts`·`providers/index.ts`·`recorded-transport.ts`·`transcript.ts`·`structural-transcript.ts`·`gen-ui-mode.ts`·`mini-skills.ts` | ✅ **transitive** (imported by a src test) | ✅ **transitive** (exercised by a src test) | NOT in `include`; covered because a `src/live-agent` test imports them (the pure logic) — `gen-ui-mode.ts` via `system-prompt-grammar.test.ts`/`validate-mode.test.ts`; `structural-transcript.ts` via its own `structural-transcript.test.ts`; `mini-skills.ts` via its own `mini-skills.test.ts` AND `system-prompt-grammar.test.ts` (the §4 double-injection regression) |
 | `dev-proxy-plugin.ts`'s `validateMode()` (the mode membership guard) | ✅ **transitive** (imported directly by `validate-mode.test.ts`) | ✅ **transitive** (exercised directly) | split out as a plain, pure, exported function (ADR-0090 §4) so it is gate-covered independent of the rest of the (type-stripped, MANUAL) proxy wiring below |
 | `providers/anthropic.ts` — the PURE SSE-chunk→fragment parse | ✅ **transitive** (the fixture test imports it) | ✅ **transitive** (the SSE-parse fixture test) | the parse is split OUT as a pure fn (LLD-C10, §5) so it IS gate-covered |
-| `providers/anthropic.ts` — the `fetch`/network arm | ⚠️ transitive typecheck via dispatch import | ✋ **no standing test** — MANUAL live acceptance | type-stripped execution; a real key + `vite dev` |
+| `providers/anthropic.ts`: the `fetch`/network arm | ⚠️ transitive typecheck via dispatch import | ✅ **transitive**: `anthropic-timeouts.test.ts` (first-byte deadline, stall guard) and `anthropic-retry.test.ts` (`fetchWithRetry`) drive it against a stubbed `fetch` under fake timers (GH #1797) | the live-key leg (a real key + `vite dev`) stays MANUAL live acceptance |
 | `dev-proxy-plugin.ts` (server wiring) | ✋ type-stripped/executed by Vite (not in `include`, not imported by a src test) | ✋ **no standing test** — MANUAL live acceptance | its PURE allowlist/env-routing/degrade logic IS split into `providers-config.ts` and unit-tested (SPEC-R12 AC1 / R11 AC4) |
 | `providers.json` | n/a (data) | ✅ via `providers-config.test.ts` (shape) | committed; no secrets |
 | `site/pages/a2ui-live.ts`·`site/lib/*.ts` | ✅ `check:site` (site `include`) | ✋ vitest is packages-only — site tests don't run | proof rides the `src/live-agent` gates + MANUAL browser/live acceptance |
@@ -394,13 +394,17 @@ gate-covered with NO live model (SPEC-R4 AC1). Each adapter is ITS provider's si
 // PURE (fixture-tested — LLD-C8/SPEC-R11 AC3): SSE chunk text → the accumulated model text fragments.
 function* parseAnthropicSSE(chunk: string): Iterable<string> { /* yield delta.text on
   content_block_delta where delta.type==="text_delta"; ignore ping/thinking/tool; surface event:error */ }
-// IMPURE (MANUAL live acceptance): the fetch + ReadableStream reader that feeds parseAnthropicSSE.
+// IMPURE (stubbed-fetch tests; the live-key leg stays MANUAL): the fetch + ReadableStream reader that feeds parseAnthropicSSE.
 async function* stream(req) { /* fetch(endpoint, …); for await (chunk) yield* parseAnthropicSSE(chunk) */ }
+//   first-byte deadline: each attempt's fetch rejects `no response within ANTHROPIC_FIRST_BYTE_TIMEOUT_MS ms` (60000) if headers never arrive; cleared once they do.
+//   stall guard: each body read races ANTHROPIC_STALL_TIMEOUT_MS (60000) of silence, reset per read; on expiry the reader is cancelled and the round throws `stream stalled`.
+//   fetchWithRetry: a 429/5xx or network error retries up to ANTHROPIC_MAX_RETRIES (2), Retry-After capped at 10000 ms; only before the body is consumed, never after streaming starts, never for a first-byte timeout or a caller abort.
 ```
 
 The pure `parseAnthropicSSE` is fed a CAPTURED SSE-response fixture in a `src/live-agent` unit test
 (deterministic, no network — the code most likely to break on an upstream change is gated); the `fetch`
-arm is MANUAL live acceptance. Completion = `message_stop`; `event: error` is surfaced (the
+arm's first-byte deadline, stall guard and `fetchWithRetry` are gated by the stubbed-fetch tests named in
+the §2 discovery table; only its live-key leg is MANUAL live acceptance. Completion = `message_stop`; `event: error` is surfaced (the
 host-verified 2026-07-04 contract). **Default model:** `claude-sonnet-5` (the registry's `defaultModel`)
 — Execute tier; `claude-opus-4-8` opt-in, `claude-fable-5` for latency; the model id rides
 `{provider,model}` from the switcher (SPEC-R12). Keys are passed IN (the `loadEnv`-resolved value

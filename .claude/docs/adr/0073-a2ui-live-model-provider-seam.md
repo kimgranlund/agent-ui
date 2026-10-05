@@ -122,3 +122,22 @@ providers now; implement Anthropic now; OpenAI and Gemini are the immediate next
   security hole; the committed registry is the allowlist the proxy validates against.
 - **A heavyweight plugin/registry framework for providers.** Rejected as over-engineering: a JSON file
   + one `stream()` signature per module is the whole mechanism; no runtime plugin system is warranted.
+
+## Amendment (2026-10-05, **proposed**): the Anthropic adapter bounds its upstream waits and retries transient connection failures (GH #1797 gaps c and d, PRs #1805 and #1806)
+
+> Append-only, and **proposed**: the Status cell above reads `accepted` for the record as a whole
+> and stays byte-untouched; agents never flip status, and this amendment carries no ratification of
+> its own until Kim gives one. Every accepted section above is unedited.
+
+- The seam is unchanged: `stream()` keeps its signature, and both mechanisms live inside
+  `providers/anthropic.ts` (SPEC-N5 isolation holds).
+- First-byte deadline: each attempt's `fetch` must deliver headers within
+  `ANTHROPIC_FIRST_BYTE_TIMEOUT_MS` (60000), else the round throws
+  `anthropicProvider: no response within 60000 ms`. Stall guard: each body read must arrive within
+  `ANTHROPIC_STALL_TIMEOUT_MS` (60000) of the last, else the reader is cancelled and the round throws.
+- Bounded retry: `fetchWithRetry` retries a 429, a 5xx or a network error at connection time up to
+  `ANTHROPIC_MAX_RETRIES` (2) times, honouring `Retry-After` capped at `ANTHROPIC_RETRY_AFTER_CAP_MS`.
+  It never retries once the body is being consumed, a first-byte timeout, or a caller abort.
+- Standing tests: `anthropic-timeouts.test.ts` and `anthropic-retry.test.ts` (stubbed `fetch`, fake
+  timers); the live-key leg stays manual acceptance. The LLD-C10 record is
+  `../lld/a2ui-live-agent.lld.md` (§2 discovery table and the impure `stream` sketch).

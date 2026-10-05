@@ -3,7 +3,11 @@
 // a body that errors mid-stream are never retried. Fetch is stubbed PER-TEST with an afterEach unstub (a
 // module-level stub bleeds), and backoff waits run under fake timers so no real time passes.
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { anthropicProvider } from '../agent/providers/anthropic.ts'
+import {
+  anthropicProvider,
+  ANTHROPIC_FIRST_BYTE_TIMEOUT_MS,
+  ANTHROPIC_RETRY_AFTER_CAP_MS,
+} from '../agent/providers/anthropic.ts'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -51,6 +55,20 @@ function stubFetchSequence(outcomes: Array<Response | Error>) {
   })
   vi.stubGlobal('fetch', fetchMock)
   return fetchMock
+}
+
+/** A fetch that never answers on its own; it rejects once `init.signal` aborts (the first-byte deadline
+ *  or the caller), with the signal's reason or a fresh AbortError. */
+function neverAnsweringFetch() {
+  return vi.fn(
+    (_url: RequestInfo | URL, init?: RequestInit) =>
+      new Promise<Response>((_, reject) => {
+        const signal = init?.signal
+        signal?.addEventListener('abort', () =>
+          reject(signal.reason ?? new DOMException('The operation was aborted.', 'AbortError')),
+        )
+      }),
+  )
 }
 
 type Settled = { ok: true; text: string } | { ok: false; error: unknown }
@@ -180,5 +198,64 @@ describe('anthropicProvider: bounded upstream retry (GH #1797)', () => {
     const result = await done
     expect(result).toEqual({ ok: false, error: midStream })
     expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+  it('first-byte timeout is not retried', async () => {
+    vi.useFakeTimers()
+    const fetchMock = neverAnsweringFetch()
+    vi.stubGlobal('fetch', fetchMock)
+    const done = runStream()
+    await vi.advanceTimersByTimeAsync(ANTHROPIC_FIRST_BYTE_TIMEOUT_MS)
+    // Past the longest jittered backoff (1500 ms + 20%): a retry would have made a second call by now.
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(vi.getTimerCount()).toBe(0)
+    const result = await done
+    expect(result.ok).toBe(false)
+    expect(((result as { error: unknown }).error as Error).message).toBe(
+      'anthropicProvider: no response within 60000 ms',
+    )
+  })
+
+  it('caller abort is rethrown unwrapped', async () => {
+    vi.useFakeTimers()
+    const fetchMock = neverAnsweringFetch()
+    vi.stubGlobal('fetch', fetchMock)
+    const controller = new AbortController()
+    const done = runStream(controller.signal)
+    await vi.advanceTimersByTimeAsync(10)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const reason = new Error('caller aborted')
+    controller.abort(reason)
+    // No timer is advanced: the rejection must arrive without any wait.
+    const result = await done
+    expect(result.ok).toBe(false)
+    expect((result as { error: unknown }).error).toBe(reason)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('doFetch AbortError is rethrown as the same object', async () => {
+    vi.useFakeTimers()
+    const abortError = Object.assign(new Error('fetch aborted'), { name: 'AbortError' })
+    const fetchMock = stubFetchSequence([abortError, sseResponse(TEXT_FRAMES)])
+    const done = runStream()
+    await vi.runAllTimersAsync()
+    const result = await done
+    expect(result.ok).toBe(false)
+    expect((result as { error: unknown }).error).toBe(abortError)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('Retry-After above the cap sleeps the capped delay', async () => {
+    vi.useFakeTimers()
+    expect(ANTHROPIC_RETRY_AFTER_CAP_MS).toBe(10_000)
+    const fetchMock = stubFetchSequence([errorResponse(503, { 'retry-after': '3600' }), sseResponse(TEXT_FRAMES)])
+    const done = runStream()
+    await vi.advanceTimersByTimeAsync(ANTHROPIC_RETRY_AFTER_CAP_MS - 1)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    const result = await done
+    expect(result).toEqual({ ok: true, text: 'hello after retry' })
   })
 })
