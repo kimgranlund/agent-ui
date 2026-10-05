@@ -1,0 +1,127 @@
+{
+  "label": "scripted",
+  "turns": [
+    {
+      "id": "selection-forbidden-code",
+      "leg": "selection",
+      "case": {
+        "id": "agent-ui:Text->Code",
+        "source": "agent-ui",
+        "catalogId": "agent-ui",
+        "expectType": "Text",
+        "forbidType": "Code",
+        "why": "verbatim source or output",
+        "prompt": "headings and prose"
+      },
+      "rounds": [
+        "{\"a2uiMeta\":{\"note\":\"scripted\"}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"Code\",\"code\":\"npm test\"}]}}"
+      ],
+      "expect": {
+        "exitCode": 1,
+        "names": "Code"
+      }
+    },
+    {
+      "id": "selection-clean-text",
+      "leg": "selection",
+      "case": {
+        "id": "agent-ui:Text->Code",
+        "source": "agent-ui",
+        "catalogId": "agent-ui",
+        "expectType": "Text",
+        "forbidType": "Code",
+        "why": "verbatim source or output",
+        "prompt": "headings and prose"
+      },
+      "rounds": [
+        "{\"a2uiMeta\":{\"note\":\"scripted\"}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"Text\",\"text\":\"Quarterly report\"}]}}"
+      ],
+      "expect": {
+        "exitCode": 0
+      }
+    },
+    {
+      "id": "repair-eventual",
+      "leg": "repair",
+      "case": {
+        "catalogId": "agent-ui",
+        "prompt": "a submit button"
+      },
+      "rounds": [
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"NotARealComponent\"}]}}",
+        "{\"a2uiMeta\":{\"note\":\"scripted\"}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"Button\",\"label\":\"Hi\",\"action\":{\"action\":\"submit\"}}]}}"
+      ],
+      "expect": {
+        "outcome": "eventual",
+        "rounds": 2,
+        "failureCodes": [
+          "CATALOG"
+        ]
+      }
+    },
+    {
+      "id": "repair-first-pass",
+      "leg": "repair",
+      "case": {
+        "catalogId": "agent-ui",
+        "prompt": "a submit button"
+      },
+      "rounds": [
+        "{\"a2uiMeta\":{\"note\":\"scripted\"}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"Button\",\"label\":\"Hi\",\"action\":{\"action\":\"submit\"}}]}}"
+      ],
+      "expect": {
+        "outcome": "first-pass",
+        "rounds": 1
+      }
+    },
+    {
+      "id": "repair-halt",
+      "leg": "repair",
+      "case": {
+        "catalogId": "agent-ui",
+        "prompt": "a submit button"
+      },
+      "rounds": [
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"NotARealComponent\"}]}}"
+      ],
+      "expect": {
+        "outcome": "halt",
+        "rounds": 3
+      }
+    },
+    {
+      "id": "persona-quant-playing-card",
+      "leg": "persona",
+      "case": {
+        "id": "quant-playing-card",
+        "persona": "quant",
+        "catalogId": "agent-ui",
+        "prompt": "What are the odds of drawing an ace from a standard deck?"
+      },
+      "rounds": [
+        "{\"a2uiMeta\":{\"note\":\"scripted\"}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"PlayingCard\",\"rank\":\"A\",\"suit\":\"spades\"}]}}"
+      ],
+      "expect": {
+        "exitCode": 1,
+        "names": "PlayingCard"
+      }
+    },
+    {
+      "id": "persona-croupier-clean",
+      "leg": "persona",
+      "case": {
+        "id": "croupier-playing-card",
+        "persona": "croupier",
+        "catalogId": "agent-ui--croupier",
+        "prompt": "Deal me one playing card",
+        "expectType": "PlayingCard"
+      },
+      "rounds": [
+        "{\"a2uiMeta\":{\"note\":\"scripted\"}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui--croupier\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"PlayingCard\",\"rank\":\"A\",\"suit\":\"spades\"}]}}"
+      ],
+      "expect": {
+        "exitCode": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "persona-cases.json": "8b0265ca8d43a09aca3fc5375fc4e46ae31e00132cf2fed0042b478a541469f6",
+    "scripted-turns.json": "434efdfc91aa8b033433a0be450cca8b74a7a2d4ccfeac981569dbd05ca9909a"
+  }
+}

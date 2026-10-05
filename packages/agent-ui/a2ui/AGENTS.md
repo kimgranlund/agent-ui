@@ -16,7 +16,7 @@ The A2UI protocol layer. Root `AGENTS.md` and `CLAUDE.md` hold the package DAG, 
 | personas | `src/catalog/personas/` |
 
 - Catalog content is hand-curated, never generated (ADR-0173 cl.5). The agreement gate `src/catalog/default/descriptor-agreement.test.ts` checks each row against its component descriptor.
-- Each catalog has a `selection.json` sidecar (per-type `intents` and `notFor`, ADR-0232) loaded by `src/agent/selection-guidance.ts` and rendered on the prompt inventory line. A new emittable type needs an entry or `src/catalog/selection-guidance.test.ts` fails; an edit moves the byte-pinned baseline, so recapture it deliberately.
+- Each catalog has a `selection.json` sidecar (per-type `intents` and `notFor`, ADR-0232) loaded by `src/agent/selection-guidance.ts` and rendered on the prompt inventory line. A new emittable type needs an entry or `src/catalog/selection-guidance.test.ts` fails; an edit moves the byte-pinned baseline, so recapture it deliberately. `npm run eval:agent-behavior` (`tools/agent-eval/`) derives one case per `notFor` edge from these sidecars through `selectionGuidanceFor`.
 
 ## Boundaries
 

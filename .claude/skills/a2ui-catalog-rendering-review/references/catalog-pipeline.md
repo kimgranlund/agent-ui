@@ -111,7 +111,7 @@ control's own surface must change (a prop the catalog wants to expose does not e
 | TS strictness | `npm run check` |
 | Standing real-engine catalog gate (`npm run eval:catalog` verdicts, no pixel diff) | `npm run test:eval-catalog` (`scripts/eval-catalog-gate.mjs`: boots its own vite + Chromium, `--no-shots`; wired LAST in `test:browser`; the screenshot tier stays opt-in via `eval:catalog`) |
 
-`npm test` covers every jsdom gate above; `*.browser.test.ts` need `npm run test:browser` (sharded).
+`npm test` covers every jsdom gate above; `*.browser.test.ts` need `npm run test:browser` (sharded). `eval-a2ui-catalog.mjs` checks page rendering, never agent selection, which is `npm run eval:agent-behavior`.
 
 ## 3 · Regeneration commands (run only the ones the touched layer owes)
 

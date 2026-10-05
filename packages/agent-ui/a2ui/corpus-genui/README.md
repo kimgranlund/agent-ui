@@ -21,6 +21,8 @@ inside `a2ui/corpus/`, whose gates walk every `.jsonl`/`.json` there as an A2UI 
 SAME reader `packages/agent-ui/a2a/tools/arena/run-flagship.ts` uses. No key found ⇒ exit 2, writing
 nothing (never a faked result).
 
+The sibling `npm run eval:agent-behavior` (`tools/agent-eval/`, GH #1810) mirrors this CLI's key boundary and exit codes for A2UI selection and repair, and writes nothing here.
+
 ## The no-fabrication law
 
 `records/` and `verdicts/` ship **EMPTY**. No stubbed, sample, or illustrative score ever enters a

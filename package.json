@@ -12,7 +12,7 @@
     "check": "tsc && npm run check:site && npm run check:tools && npm run check:scripts",
     "check:site": "tsc -p site/tsconfig.json",
     "check:tools": "tsc -p tsconfig.tools.json",
-    "check:scripts": "python3 scripts/adr_ratify_test.py && python3 scripts/hook_selftests.py && python3 scripts/claude_wiring_check.py && python3 scripts/harness_wiring_check.py --reachability-only && python3 scripts/harness_wiring_check.py --rubric-modes && node scripts/reap-branches.mjs selftest && node scripts/reap-worktrees.mjs selftest && node scripts/reap-scratch-clones.mjs selftest && node scripts/bootstrap-scratch-clone.mjs selftest && node scripts/e2e-devtools.mjs selftest && node scripts/import-skill-pack.mjs selftest && node scripts/eval-catalog-gate.mjs selftest",
+    "check:scripts": "python3 scripts/adr_ratify_test.py && python3 scripts/hook_selftests.py && python3 scripts/claude_wiring_check.py && python3 scripts/harness_wiring_check.py --reachability-only && python3 scripts/harness_wiring_check.py --rubric-modes && node scripts/reap-branches.mjs selftest && node scripts/reap-worktrees.mjs selftest && node scripts/reap-scratch-clones.mjs selftest && node scripts/bootstrap-scratch-clone.mjs selftest && node scripts/e2e-devtools.mjs selftest && node scripts/import-skill-pack.mjs selftest && node scripts/eval-catalog-gate.mjs selftest && node --experimental-strip-types packages/agent-ui/a2ui/tools/agent-eval/eval-agent-behavior.ts selftest",
     "e2e:devtools": "node scripts/e2e-devtools.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -36,7 +36,8 @@
     "eval:catalog": "node scripts/eval-a2ui-catalog.mjs",
     "regen:theme-provider-fixture": "node --experimental-strip-types scripts/regen-theme-provider-fixture.ts",
     "regen:dogfood-assets": "node scripts/build-dogfood-assets.mjs",
-    "eval:genui-corpus": "node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus-genui/eval-genui-corpus.ts"
+    "eval:genui-corpus": "node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus-genui/eval-genui-corpus.ts",
+    "eval:agent-behavior": "node --experimental-strip-types packages/agent-ui/a2ui/tools/agent-eval/eval-agent-behavior.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

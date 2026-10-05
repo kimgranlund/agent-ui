@@ -142,3 +142,5 @@ Chromium against `site/a2ui-catalog.html`, mirroring `scripts/e2e-devtools.mjs`'
 freePort/killTree boot-a-server shape rather than a vitest project. It's appended to the
 `test:browser` chain, not the six-shard vitest count above — the two counts stay distinct
 because this step has no vitest project to split or heap-bump in the first place.
+
+The agent-behavior eval (`npm run eval:agent-behavior`) adds no browser shard: its selftest runs in `check:scripts`, its stub tests ride the vitest `tools` project, and its live leg is manual.

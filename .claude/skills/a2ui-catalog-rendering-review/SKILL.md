@@ -55,6 +55,7 @@ review that scores B4 without that record scored the control, not the demonstrat
    when a NEW probe goes red, triage against that taxonomy before filing a defect. `probes: manual` (a
    hand Playwright pass) is the fallback only when the runner itself is broken, and the report says so.
    A gate carries ✓/✗ only; scores 1–5 belong to review dims.
+   `eval-a2ui-catalog.mjs` checks page rendering, never agent selection, which is `npm run eval:agent-behavior`.
 4. **Blind identify.** For each card, look at the screenshot's RIGHT half FIRST and write one line —
    *"this is a ⟨component⟩ doing ⟨job⟩"* — before reading the title or the record. A miss is B4 = 1.
 5. **Score the review dims** A3-review B3-review B4 C3 against the rubric anchors, in rubric §4's order (out-in

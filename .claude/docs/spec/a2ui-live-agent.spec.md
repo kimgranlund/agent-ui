@@ -1,6 +1,8 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.18 · 2026-10-05 (v0.17 2026-08-18; v0.16 2026-08-13; v0.15 2026-08-12; v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.19 · 2026-10-05 (v0.18 2026-10-05; v0.17 2026-08-18; v0.16 2026-08-13; v0.15 2026-08-12; v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.19 changelog (2026-10-05, GH #1810, docs-only pointer): SPEC-R4 gains one non-normative "Eval coverage"
+> line naming `npm run eval:agent-behavior`; no requirement, ID or AC is added, removed or changed.
 > v0.18 changelog ([ADR-0232](../adr/0232-catalog-selection-guidance-sidecar.md), ACCEPTED, ratified
 > by Kim 2026-10-05; GH #1796): SPEC-R6 gains one paragraph and a new AC7. Each catalog-derived inventory line
 > for a catalog with a `selection.json` sidecar now carries a selection clause (`use:` intents, then
@@ -470,6 +472,8 @@ PRD-G4; realizes streaming SPEC-R2, harness SPEC-R6)*
   are fed back, and exhaustion halts-and-reports — a deterministic unit test, `npm test` green.
 - **AC2** *Given* the driver's validation step, *when* compared to the renderer's and corpus
   admission's, *then* all use the same `validateA2ui`/`heal` (parity; no fork — streaming SPEC-N3).
+
+*Eval coverage (non-normative, GH #1810):* `npm run eval:agent-behavior` reads `TurnTrace.rounds` and `failureCodes` to score first-pass versus eventual success with scripted providers, keylessly; its live leg is manual.
 
 > **REV 2026-08-13 (ADR-0187, GH #829) — the fed-back failure class now INCLUDES the at-finalize empty
 > surface. A membership addition, not a mechanism change.** The self-correct loop above is unchanged in

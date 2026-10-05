@@ -217,6 +217,7 @@ against a page, which this tool never does. Exit codes follow that runner's cont
 green · **1** any red, each listed · **2** setup failure (no key on a key leg, unknown model, unreadable
 rubric/data dir). `--dry-run` on every leg computes and prints, writes nothing. `--help` lists the legs
 with their side.
+The sibling `npm run eval:agent-behavior` (`tools/agent-eval/`, GH #1810) mirrors this CLI's key boundary and exit codes for A2UI selection and repair, and writes nothing under `corpus-genui/`.
 
 | Leg | Side | Reads | Writes | Red (exit 1) when |
 |---|---|---|---|---|
