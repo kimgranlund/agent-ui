@@ -90,6 +90,12 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   out. Every worktree gate command carries `--maxWorkers=4` (3 lanes × 4 = 12 ≈ cores, never
   N×cores). A desk that sees 1-min load > 40 stops dispatching and reaps finished worktrees
   FIRST — `flaky-gates` owns the red-under-load verdict, this law owns not getting there.
+  Those are the 2026-08-20 values for the 10-core host. Amended 2026-10-05 (Kim): on the
+  20-core M1 Ultra (16 performance, 4 efficiency, 128 GB) at most **5 gate-running lanes**, each
+  gate command still `--maxWorkers=4` (5 lanes x 4 = 20 = cores). The formula `(cores - 2) / 3`
+  gives 6 on 20 cores; 5 leaves headroom for other sessions. At most 2 lanes may run browser
+  shards (the Chromium work) at once. Unchanged: the full-suite ceiling of 2, the load-over-40
+  stop rule. Re-derive on any other host.
 - **Stacked PRs: retarget children BEFORE deleting the base (GH #1494, 2 kills 2026-08-20).**
   Merging a stack-bottom PR with `--delete-branch` makes GitHub auto-CLOSE every child PR based
   on that branch, and a closed-by-base-deletion PR refuses `gh pr reopen`. Landing a stack:

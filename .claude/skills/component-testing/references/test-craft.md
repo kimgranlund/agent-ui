@@ -79,7 +79,7 @@ shard.
   re-links @agent-ui/* to the worktree's own packages); lockfile changed ⇒ `npm ci
   --prefer-offline`; then `readlink node_modules/@agent-ui/shared` MUST resolve inside the
   worktree before trusting any import-resolving gate. The
-  dispatch-side ceilings (≤3 concurrent gate-running lanes, `--maxWorkers=4` per lane, reap
+  dispatch-side ceilings (≤5 concurrent gate-running lanes (20-core host, amended 2026-10-05, see seat-map), `--maxWorkers=4` per lane, reap
   worktrees on lane-return) live in `seat-map`'s Dispatch laws.
 - Bundle-shape gates (the built-output-proofs bar, applied to lazy splits): assert the arm is
   absent from the transitive **EAGER CLOSURE** — entry chunks PLUS every chunk they statically
