@@ -275,6 +275,15 @@ const MAX_TOOL_ROUNDS = 4
  *  so total outbound work is bounded at MAX_TOOL_ROUNDS × MAX_CALLS_PER_ROUND. */
 const MAX_CALLS_PER_ROUND = 4
 
+/** GH #1797 (c): the maximum wait from request start to the response headers. Generous so it never fires
+ *  on a healthy turn; on expiry the round throws `anthropicProvider: no response within <ms> ms`. Applies
+ *  to the `fetch` only, never to the body read (a long healthy stream is not cut off). */
+export const ANTHROPIC_FIRST_BYTE_TIMEOUT_MS = 60_000
+/** GH #1797 (c): the maximum silence between two body reads. Reset on every read, so a slow but live
+ *  stream (high-effort reasoning) never trips it; on expiry the reader is cancelled and the round throws
+ *  `anthropicProvider: stream stalled for <ms> ms`. */
+export const ANTHROPIC_STALL_TIMEOUT_MS = 60_000
+
 /**
  * Ticket #1634 — `/status` today only checks the env var is a non-empty string, never that it actually
  * authenticates, so a revoked/invalid key still reads "available" until a real chat turn fails (masked).
@@ -309,16 +318,31 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): 
     signal: AbortSignal | undefined,
     collector: ToolUseCollector | undefined,
   ): AsyncIterable<string> {
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'x-api-key': opts.apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(body),
-      signal,
-    })
+    // GH #1797 (c): first-byte deadline. A local controller (not `AbortSignal.timeout`) so the timer is
+    // cleared once headers arrive: the fetch signal also governs the body stream, and a deadline left
+    // armed would abort a healthy long turn mid-stream. A caller abort keeps its own error unrelabelled.
+    const deadline = new AbortController()
+    const deadlineTimer = setTimeout(() => deadline.abort(), ANTHROPIC_FIRST_BYTE_TIMEOUT_MS)
+    let res: Response
+    try {
+      res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'x-api-key': opts.apiKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(body),
+        signal: signal ? AbortSignal.any([signal, deadline.signal]) : deadline.signal,
+      })
+    } catch (err) {
+      if (deadline.signal.aborted && !signal?.aborted) {
+        throw new Error(`anthropicProvider: no response within ${ANTHROPIC_FIRST_BYTE_TIMEOUT_MS} ms`)
+      }
+      throw err
+    } finally {
+      clearTimeout(deadlineTimer)
+    }
 
     if (!res.ok) {
       // TKT-0075: a non-200 carries a JSON error body, NOT an SSE stream — without this guard it
@@ -340,11 +364,25 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): 
     const decoder = new TextDecoder()
     let buffer = ''
 
+    // GH #1797 (c): stall guard. Each read races a fresh timer, cleared on every settle (no leaked timer).
+    // The throw lands inside the try below, whose finally cancels the reader. No buffering: each read's
+    // frames are still parsed and yielded in the same iteration (ADR-0146 live progress).
+    const readOrStall = (): Promise<ReadableStreamReadResult<Uint8Array>> => {
+      let stallTimer: ReturnType<typeof setTimeout> | undefined
+      const stall = new Promise<never>((_, reject) => {
+        stallTimer = setTimeout(
+          () => reject(new Error(`anthropicProvider: stream stalled for ${ANTHROPIC_STALL_TIMEOUT_MS} ms`)),
+          ANTHROPIC_STALL_TIMEOUT_MS,
+        )
+      })
+      return Promise.race([reader.read(), stall]).finally(() => clearTimeout(stallTimer))
+    }
+
     // try/finally so an early consumer break or a thrown upstream-error frame still releases the reader
     // lock + cancels the underlying network stream — no dangling connection.
     try {
       for (;;) {
-        const { done, value } = await reader.read()
+        const { done, value } = await readOrStall()
         if (done) break
         buffer += decoder.decode(value, { stream: true })
 
