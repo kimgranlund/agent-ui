@@ -62,6 +62,17 @@ export function serializeCapture(capture: DevtoolsCapture): string {
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
+const isOptNumber = (v: unknown): boolean => v === undefined || typeof v === 'number'
+
+/** A provider-billed `TokenUsage` (the optional `turn-end.usage` member): numeric input/output counts,
+ *  each cache field absent or a number. */
+const isTokenUsage = (v: unknown): boolean =>
+  isRecord(v) &&
+  typeof v.inputTokens === 'number' &&
+  typeof v.outputTokens === 'number' &&
+  isOptNumber(v.cacheReadInputTokens) &&
+  isOptNumber(v.cacheCreationInputTokens)
+
 /** Per-kind required-field rows for timeline validation — one entry per DevtoolsEvent arm (SPEC-R7's
  *  closed vocabulary), each a `[field, predicate, expected]` triple checked against the event object. */
 const EVENT_FIELD_RULES: Record<(typeof DEVTOOLS_EVENT_KINDS)[number], ReadonlyArray<[string, (v: unknown) => boolean, string]>> = {
@@ -80,6 +91,7 @@ const EVENT_FIELD_RULES: Record<(typeof DEVTOOLS_EVENT_KINDS)[number], ReadonlyA
     ['status', (v) => v === 'ok' || v === 'error' || v === 'halt', "'ok' | 'error' | 'halt'"],
     ['lines', (v) => typeof v === 'number', 'a number'],
     ['ms', (v) => typeof v === 'number', 'a number'],
+    ['usage', (v) => v === undefined || isTokenUsage(v), 'absent or a TokenUsage object'],
   ],
   error: [['message', (v) => typeof v === 'string', 'a string']],
 }

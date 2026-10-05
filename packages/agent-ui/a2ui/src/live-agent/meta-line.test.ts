@@ -6,6 +6,7 @@ import { describe, it, expect } from 'vitest'
 import { readMetaLine, isMetaLine, formatErrorLine } from '../agent/meta-line.ts'
 import { dispatch } from '../renderer/dispatch.ts'
 import type { A2uiServerMessage } from '../protocol.ts'
+import type { TurnTrace } from '../agent/meta-line.ts'
 import type { DispatchHandlers } from '../renderer/dispatch.ts'
 
 const realServerMessage: A2uiServerMessage = {
@@ -33,6 +34,30 @@ describe('readMetaLine / isMetaLine (ADR-0088 §1)', () => {
     const line = JSON.stringify({ a2uiMeta: { note: 'ok', trace } })
     const parsed = readMetaLine(line)
     expect(parsed?.a2uiMeta.note).toBe('ok')
+    expect(parsed?.a2uiMeta.trace).toEqual(trace)
+  })
+
+  it('round-trips a trace carrying the ADR-0234 prompt report and token usage (inner shape unvalidated)', () => {
+    const trace: TurnTrace = {
+      turnIndex: 2,
+      query: { intent: 'a button', k: 3 },
+      exemplarIds: [],
+      rounds: 2,
+      healed: 0,
+      failureCodes: ['CATALOG'],
+      model: 'claude-sonnet-5',
+      prompt: {
+        limit: 140_000,
+        total: 30,
+        sections: [
+          { id: 'grammar', chars: 20 },
+          { id: 'persona', chars: 10 },
+        ],
+        over: false,
+      },
+      usage: { inputTokens: 1200, outputTokens: 340, cacheReadInputTokens: 800 },
+    }
+    const parsed = readMetaLine(JSON.stringify({ a2uiMeta: { note: 'ok', trace } }))
     expect(parsed?.a2uiMeta.trace).toEqual(trace)
   })
 

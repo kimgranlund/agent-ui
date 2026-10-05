@@ -17,7 +17,7 @@ import type { AgentTransport, TurnInput } from '@agent-ui/a2ui/agent/agent-trans
 import type { A2uiClientMessage } from '@agent-ui/a2ui'
 import type { GenuiActionMessage } from '@agent-ui/a2ui/agent/genui-line'
 import { readMetaLine } from '@agent-ui/a2ui/agent/meta-line'
-import type { A2uiMetaEnvelope } from '@agent-ui/a2ui/agent/meta-line'
+import type { A2uiMetaEnvelope, TokenUsage } from '@agent-ui/a2ui/agent/meta-line'
 
 /** The parsed payload of one `a2uiMeta` meta-line (ADR-0088's envelope, unwrapped) — what a `meta`
  *  event carries, routed distinctly from raw `line` events (SPEC-R7). */
@@ -67,7 +67,7 @@ export type DevtoolsEvent =
   | (DevtoolsEventBase & { kind: 'meta'; meta: DevtoolsMeta })
   | (DevtoolsEventBase & { kind: 'client'; message: A2uiClientMessage | GenuiActionMessage })
   | (DevtoolsEventBase & { kind: 'render'; surfaceId: string; ok: boolean; error?: string })
-  | (DevtoolsEventBase & { kind: 'turn-end'; status: TurnEndStatus; lines: number; ms: number })
+  | (DevtoolsEventBase & { kind: 'turn-end'; status: TurnEndStatus; lines: number; ms: number; usage?: TokenUsage })
   | (DevtoolsEventBase & { kind: 'error'; message: string })
 
 /** Serialize one event as its NDJSON wire line (one JSON object per line, SPEC-R7). The inverse is a
@@ -122,6 +122,7 @@ export async function* recordTurn(
   let seq = 0
   let lines = 0
   let sawMetaError = false
+  let usage: TokenUsage | undefined
   const started = clock()
 
   yield { seq: seq++, at: now(), kind: 'turn-start', input, backend }
@@ -130,6 +131,8 @@ export async function* recordTurn(
       const meta = readMetaLine(line)
       if (meta !== undefined) {
         if (meta.a2uiMeta.error !== undefined) sawMetaError = true
+        const traceUsage = meta.a2uiMeta.trace?.usage
+        if (traceUsage !== undefined) usage = traceUsage
         yield { seq: seq++, at: now(), kind: 'meta', meta: compactMeta(meta.a2uiMeta) }
       } else {
         lines += 1
@@ -139,8 +142,8 @@ export async function* recordTurn(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     yield { seq: seq++, at: now(), kind: 'error', message }
-    yield { seq: seq++, at: now(), kind: 'turn-end', status: 'error', lines, ms: clock() - started }
+    yield { seq: seq++, at: now(), kind: 'turn-end', status: 'error', lines, ms: clock() - started, ...(usage !== undefined ? { usage } : {}) }
     return
   }
-  yield { seq: seq++, at: now(), kind: 'turn-end', status: sawMetaError ? 'halt' : 'ok', lines, ms: clock() - started }
+  yield { seq: seq++, at: now(), kind: 'turn-end', status: sawMetaError ? 'halt' : 'ok', lines, ms: clock() - started, ...(usage !== undefined ? { usage } : {}) }
 }

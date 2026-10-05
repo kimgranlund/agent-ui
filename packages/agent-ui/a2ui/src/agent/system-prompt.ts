@@ -52,6 +52,7 @@ import { FEED_SURFACE_TYPES } from './feed-catalog.ts'
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
 import { dogfoodInventory } from './dogfood-inventory.ts'
 import { selectionGuidanceFor, renderSelectionClause } from './selection-guidance.ts'
+import type { PromptSection, PromptSectionId } from './meta-line.ts'
 
 declare const process: { cwd(): string }
 
@@ -407,23 +408,59 @@ export function buildSystemPrompt(
   authoringSurface?: boolean,
   builderMission?: boolean,
 ): string {
+  return buildSystemPromptSections(
+    catalog,
+    exemplars,
+    mode,
+    miniSkills,
+    personaSystem,
+    genui,
+    a2uiEnabled,
+    authoringSurface,
+    builderMission,
+  ).text
+}
+
+/**
+ * ADR-0234 (proposed): the same composition as `buildSystemPrompt` (same nine parameters, and `text` is
+ * byte-identical to its return value, which is literally `.text` of this call), plus each composed
+ * section's length in characters, in composition order. A section's `chars` counts its own leading
+ * `\n\n## ...` header, so the sum of every `chars` equals `text.length`. A zero-length section (an
+ * absent persona, a turn with no exemplars or mini-skills, the A2UI half when `a2uiEnabled` is false) is
+ * omitted, never reported as 0. Observation only: the sections never feed back into the composed bytes.
+ */
+export function buildSystemPromptSections(
+  catalog: Catalog,
+  exemplars: readonly CorpusRecord[],
+  mode?: GenUiMode,
+  miniSkills?: readonly MiniSkill[],
+  personaSystem?: string,
+  genui?: GenuiSurfaceConfig,
+  a2uiEnabled?: boolean,
+  authoringSurface?: boolean,
+  builderMission?: boolean,
+): { text: string; sections: PromptSection[] } {
   const a2uiOn = a2uiEnabled !== false // absent ⇒ on — the zero-regression default (Decision precedent)
-  return (
-    (a2uiOn
-      ? grammarFor(mode) +
-        `\n\n## Available components (catalog "${catalog.catalogId}", protocol ${catalog.protocolVersion})\n\n` +
+  const parts: [PromptSectionId, string][] = []
+  if (a2uiOn) {
+    parts.push(['grammar', grammarFor(mode)])
+    parts.push([
+      'components',
+      `\n\n## Available components (catalog "${catalog.catalogId}", protocol ${catalog.protocolVersion})\n\n` +
         catalogIdTeaching(catalog) +
-        catalogInventory(catalog) +
-        `\n\n## Available functions\n\n` +
-        functionsInventory(catalog) +
-        fewShot(exemplars) +
-        miniSkillsBlock(miniSkillsFor(mode, miniSkills ?? []))
-      : '') +
-    genuiBlock(genui, a2uiOn) +
-    authoringBlock(authoringSurface) +
-    missionBlock(builderMission) +
-    personaBlock(personaSystem)
-  )
+        catalogInventory(catalog),
+    ])
+    parts.push(['functions', `\n\n## Available functions\n\n` + functionsInventory(catalog)])
+    parts.push(['few-shot', fewShot(exemplars)])
+    parts.push(['mini-skills', miniSkillsBlock(miniSkillsFor(mode, miniSkills ?? []))])
+  }
+  parts.push(['genui', genuiBlock(genui, a2uiOn)])
+  parts.push(['authoring', authoringBlock(authoringSurface)])
+  parts.push(['mission', missionBlock(builderMission)])
+  parts.push(['persona', personaBlock(personaSystem)])
+  const sections: PromptSection[] = []
+  for (const [id, body] of parts) if (body.length > 0) sections.push({ id, chars: body.length })
+  return { text: parts.map(([, body]) => body).join(''), sections }
 }
 
 /** ADR-0138 cl.1 — the optional trailing persona section. Appended AFTER every catalog/exemplar/mode/

@@ -19,6 +19,7 @@
 
 import type { A2uiClientMessage } from '../renderer/index.ts'
 import type { GenuiActionMessage } from './genui-line.ts'
+import type { TokenUsage } from './meta-line.ts'
 
 // ── The session (SPEC-R8 / ADR-0072) — the standard Messages-API turn array ─────────────────────────
 
@@ -92,16 +93,20 @@ export type Effort = 'low' | 'medium' | 'high' | 'xhigh'
 /**
  * A provider lifecycle event (ADR-0146 F1/F4) — the raw upstream signals an adapter already parses and
  * (today) drops, surfaced through the OPTIONAL `onEvent` callback so `produce()` can compose them into the
- * closed `TurnProgress` stage vocabulary. Provider-agnostic and MINIMAL: each adapter maps its OWN upstream
- * events onto these five kinds; an adapter that maps nothing degrades to the coarser stages `produce()`
+ * closed `TurnProgress` stage vocabulary (a `usage` event is not a stage: `produce()` sums it onto the
+ * turn's trace, ADR-0234 proposed). Provider-agnostic and MINIMAL: each adapter maps its OWN upstream
+ * events onto these kinds; an adapter that maps nothing degrades to the coarser stages `produce()`
  * observes by itself (F4 — a coarser dial, never a broken one). `text` carries a `thinking`-delta excerpt
  * (raw reasoning), forwarded onto the wire only under an explicit `progressDetail:'full'` opt-in (F3).
  */
 export interface ProviderEvent {
-  kind: 'message_start' | 'block_start' | 'thinking' | 'block_stop' | 'done' | 'tool'
+  kind: 'message_start' | 'block_start' | 'thinking' | 'block_stop' | 'done' | 'tool' | 'usage'
   /** `thinking`: a reasoning-delta excerpt. `tool`: the tool NAME being executed (a factual process
    *  claim from the closed registry, GH #49 — never model-composed prose). */
   text?: string
+  /** `usage` (ADR-0234, proposed): the token counts of ONE upstream request. An adapter emits one per
+   *  request it makes (so a tool loop reports once per round trip); `produce()` sums them over the turn. */
+  usage?: TokenUsage
 }
 
 // ── Tool use (GH #49) — the integration seam ────────────────────────────────────────────────────────────

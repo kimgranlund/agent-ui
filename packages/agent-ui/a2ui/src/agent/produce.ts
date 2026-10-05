@@ -75,10 +75,11 @@ import { validateA2ui } from '../renderer/validate.ts'
 import type { SurfaceSeed } from '../renderer/validate.ts'
 import type { A2uiComponent } from '../protocol.ts'
 import type { AgentProvider, Effort, ExecuteTool, ProviderEvent, Session, ToolDef, Turn, TurnInput } from './agent-transport.ts'
-import { buildSystemPrompt } from './system-prompt.ts'
+import { buildSystemPromptSections } from './system-prompt.ts'
+import { assessPromptBudget, promptBudgetFor } from './prompt-budget.ts'
 import { frameClientMessage } from './session.ts'
 import { readMetaLine } from './meta-line.ts'
-import type { AskDeclaration, PersonaPatch, PlanDeclaration, TargetDeclaration, TeamDeclaration, TurnProgress, TurnTrace } from './meta-line.ts'
+import type { AskDeclaration, PersonaPatch, PlanDeclaration, TargetDeclaration, TeamDeclaration, TokenUsage, TurnProgress, TurnTrace } from './meta-line.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
 import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-skills.ts'
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
@@ -186,6 +187,12 @@ export interface ProduceOptions {
    *  ONE thing — conditioning prompt composition — and equally gate-blind at the wire layer: `plan` is
    *  SPEC-R20's existing passthrough, unaffected by this flag either way. */
   builderMission?: boolean
+  /** ADR-0234 (proposed): the whole-prompt character budget. Absent ⇒ `mode: 'report'` at
+   *  `promptBudgetFor(deps.catalog.catalogId)`: the turn's `TurnTrace.prompt` carries the assessment and
+   *  `over: true` when exceeded, and nothing else changes (no byte is dropped, the request is identical).
+   *  `mode: 'halt'` ⇒ an over-budget prompt throws `ProduceHalt([{code: 'PROMPT_OVER_BUDGET', path: ''}])`
+   *  BEFORE the first provider call, so no tokens are spent. `limit` overrides the declared budget. */
+  promptBudget?: { mode: 'report' | 'halt'; limit?: number }
 }
 
 /** The bounded raw-reasoning excerpt cap (ADR-0146 F3, `progressDetail:'full'`) — a `thinking` delta can be
@@ -964,7 +971,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   const query = queryOf(input, k, deps.catalog.catalogId) // ADR-0169 cl.4 — catalog-aware, not the old pinned literal
   const exemplars = deps.retrieve(query) // SPEC-R7 — top-k over the judged shard
   const miniSkills = selectMiniSkills(query.intent, MINI_SKILLS, opts.miniSkillCap ?? DEFAULT_MINI_SKILL_CAP, deps.catalog.catalogId) // ADR-0091 §2 — once per turn, beside retrieve(); ADR-0135 cl.7 — cap now tunable, absent ⇒ default; SPEC-R6 — catalogId-scoped, the SAME value line :762's queryOf already threads into retrieve's own query
-  const system = buildSystemPrompt(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface, opts.a2uiEnabled, opts.authoringSurface, opts.builderMission) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10 + GH #418 a2uiEnabled + SPEC-R30 authoring gate + SPEC-R31 builder-mission gate
+  const { text: system, sections } = buildSystemPromptSections(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface, opts.a2uiEnabled, opts.authoringSurface, opts.builderMission) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10 + GH #418 a2uiEnabled + SPEC-R30 authoring gate + SPEC-R31 builder-mission gate
   const model = opts.model ?? input.model ?? DEFAULT_MODEL // opts.model = the proxy's allowlist-validated model (SPEC-R12); it WINS over a client-supplied input.model
   // ADR-0088 §2 — data ALREADY flowing above, captured once for the eventual TurnTrace (no new collection).
   // NOTE: this is a `session.turns` MESSAGE index (the alternating Messages-API array, user+assistant per
@@ -974,6 +981,22 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   const turnIndex = input.session.turns.length
   const sessionSeeds = sessionSurfaceSeeds(input.session) // TKT-0081 — once per turn; seeds every round's validate
   const exemplarIds = exemplars.map((e) => e.name)
+  // ADR-0234 (proposed): the prompt budget, assessed ONCE per turn (the system prompt is built once).
+  const promptReport = assessPromptBudget(sections, opts.promptBudget?.limit ?? promptBudgetFor(deps.catalog.catalogId))
+  // ADR-0234 (proposed): provider-billed token usage, summed over every round and every `usage` event
+  // (an adapter's tool loop reports once per upstream request). Stays undefined until one arrives.
+  let usage: TokenUsage | undefined
+  const addUsage = (u: TokenUsage): void => {
+    const next: TokenUsage = {
+      inputTokens: (usage?.inputTokens ?? 0) + u.inputTokens,
+      outputTokens: (usage?.outputTokens ?? 0) + u.outputTokens,
+    }
+    if (usage?.cacheReadInputTokens !== undefined || u.cacheReadInputTokens !== undefined)
+      next.cacheReadInputTokens = (usage?.cacheReadInputTokens ?? 0) + (u.cacheReadInputTokens ?? 0)
+    if (usage?.cacheCreationInputTokens !== undefined || u.cacheCreationInputTokens !== undefined)
+      next.cacheCreationInputTokens = (usage?.cacheCreationInputTokens ?? 0) + (u.cacheCreationInputTokens ?? 0)
+    usage = next
+  }
   const traceFor = (rounds: number, healed: number, failureCodes: string[]): TurnTrace => ({
     turnIndex,
     query: { intent: query.intent, k: query.k },
@@ -982,6 +1005,8 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
     healed,
     failureCodes,
     model,
+    prompt: promptReport,
+    ...(usage !== undefined ? { usage: { ...usage } } : {}),
   })
 
   const emitProgress = opts.progress === true // ADR-0146 F1 — opt-in; absent ⇒ byte-identical to before
@@ -996,6 +1021,8 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   let lastCandidate: string | undefined // the previous round's peeled candidate wire text — the `retry` stage's source
   let genuiMultiplicityHit = false // genui-surface SPEC-R1: sticky across rounds — a factual "this happened at least once" tally, never reset
   let netNoopFedBack = false // GH #1142 — the ONE correction round the net-no-op dodge gets; on recurrence (or a last-round hit) the group is stripped instead, never a ProduceHalt on an otherwise-valid turn
+  // ADR-0234 (proposed): the opt-in hard stop: an over-budget prompt halts before ANY provider call.
+  if (opts.promptBudget?.mode === 'halt' && promptReport.over) throw new ProduceHalt([{ code: 'PROMPT_OVER_BUDGET', path: '' }])
   let flowEndFedBack = false // GH #1168 — the ONE correction round a closing-shaped turn missing `flowEnd` gets; on refusal (or a last-round hit) the turn ships UNCHANGED — the runtime never synthesizes the field, only tallies FLOW_END_UNCORRECTED on the trace
   for (let round = 0; round < opts.maxRounds; round++) {
     const failuresFedBack = failures // what THIS round's prompt carried back — the trace's failureCodes
@@ -1017,34 +1044,39 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
     // generator itself). GH #290 fix: delivery is driven by `interleaveProgress` below, which races the
     // channel's next push against the provider's next fragment — `started` on the provider's first
     // signal, `reasoning` on a thinking delta (text-free at 'stages', a bounded excerpt at 'full'), and
-    // `tool` on each GH #49 tool call, ALL surfacing the instant they're pushed, tool-round or not. When
-    // progress is OFF, no callback is installed (byte-identical accumulation) and the plain for-await runs.
+    // `tool` on each GH #49 tool call, ALL surfacing the instant they're pushed, tool-round or not. The
+    // callback is ALWAYS installed (ADR-0234, proposed): a `usage` event is summed into the turn's token
+    // usage whether or not progress is on. Every OTHER kind pushes onto the channel only when progress is
+    // on; when it is OFF, nothing is pushed and the plain for-await runs (the stream stays byte-identical).
     const channel = createProgressChannel()
     let sawStarted = false
     let sawReasoning = false
     let sawContent = false
-    const onEvent = emitProgress
-      ? (ev: ProviderEvent): void => {
-          if (!sawStarted && (ev.kind === 'message_start' || ev.kind === 'block_start')) {
-            sawStarted = true
-            channel.push({ stage: 'started' })
-          } else if (ev.kind === 'thinking') {
-            if (progressDetail === 'full') channel.push({ stage: 'reasoning', ...(ev.text ? { detail: ev.text.slice(0, REASONING_EXCERPT_CAP) } : {}) })
-            else if (!sawReasoning) {
-              sawReasoning = true
-              channel.push({ stage: 'reasoning' }) // transition only — NO thinking text on the wire (F3 default)
-            }
-          }
-          else if (ev.kind === 'tool') {
-            // GH #49 — the adapter is executing a registry tool: a factual process claim (the tool NAME
-            // from the closed registry, never model prose — the F2 discipline the 'tool' stage's
-            // TURN_PROGRESS_STAGES note records).
-            channel.push({ stage: 'tool', ...(ev.text ? { detail: ev.text } : {}) })
-          }
-          // block_stop/done provider events are NOT mapped to a stage — produce() is the pinned emitter of
-          // `content`/`validating`/`done`, owning those transitions itself (F1).
+    const onEvent = (ev: ProviderEvent): void => {
+      if (ev.kind === 'usage') {
+        if (ev.usage !== undefined) addUsage(ev.usage)
+        return
+      }
+      if (!emitProgress) return
+      if (!sawStarted && (ev.kind === 'message_start' || ev.kind === 'block_start')) {
+        sawStarted = true
+        channel.push({ stage: 'started' })
+      } else if (ev.kind === 'thinking') {
+        if (progressDetail === 'full') channel.push({ stage: 'reasoning', ...(ev.text ? { detail: ev.text.slice(0, REASONING_EXCERPT_CAP) } : {}) })
+        else if (!sawReasoning) {
+          sawReasoning = true
+          channel.push({ stage: 'reasoning' }) // transition only — NO thinking text on the wire (F3 default)
         }
-      : undefined
+      }
+      else if (ev.kind === 'tool') {
+        // GH #49 — the adapter is executing a registry tool: a factual process claim (the tool NAME
+        // from the closed registry, never model prose — the F2 discipline the 'tool' stage's
+        // TURN_PROGRESS_STAGES note records).
+        channel.push({ stage: 'tool', ...(ev.text ? { detail: ev.text } : {}) })
+      }
+      // block_stop/done provider events are NOT mapped to a stage — produce() is the pinned emitter of
+      // `content`/`validating`/`done`, owning those transitions itself (F1).
+    }
     const providerStream = deps.provider.stream({
       model,
       system,

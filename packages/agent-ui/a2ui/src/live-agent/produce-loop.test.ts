@@ -20,7 +20,8 @@ import type { ProduceDeps } from '../agent/produce.ts'
 import type { AgentProvider, TurnInput } from '../agent/agent-transport.ts'
 import { readMetaLine } from '../agent/meta-line.ts'
 import type { TurnProgress } from '../agent/meta-line.ts'
-import { buildSystemPrompt } from '../agent/system-prompt.ts'
+import { buildSystemPrompt, buildSystemPromptSections } from '../agent/system-prompt.ts'
+import { assessPromptBudget, promptBudgetFor } from '../agent/prompt-budget.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from '../agent/mini-skills.ts'
@@ -56,6 +57,23 @@ function stubProvider(outputs: string[]): { provider: AgentProvider; calls: () =
 const intent: TurnInput = { kind: 'intent', text: 'a submit button', session: { turns: [] } }
 
 // ── ADR-0146 F1/F3 helpers: a provider that DRIVES onEvent, + progress/content extractors ──────────────
+// ADR-0234 (proposed): trace.prompt reports the composed prompt's section sizes, which this gate steers
+// by design. The comparison drops that one field and nothing else, and throws when no line carries it,
+// so it can never pass vacuously.
+function withoutTracePrompt(lines: readonly string[]): string[] {
+  let stripped = 0
+  const out = lines.map((line) => {
+    const parsed = JSON.parse(line) as { a2uiMeta?: { trace?: { prompt?: unknown } } }
+    const trace = parsed.a2uiMeta?.trace
+    if (trace?.prompt === undefined) return line
+    delete trace.prompt
+    stripped++
+    return JSON.stringify(parsed)
+  })
+  if (stripped === 0) throw new Error('withoutTracePrompt: no line carries a2uiMeta.trace.prompt')
+  return out
+}
+
 /** A stub provider that drives the ADR-0146 onEvent lifecycle (message_start/block_start before the yield,
  *  an optional thinking delta, block_stop/done after) around each recorded output — proving produce()
  *  composes real provider events into its stage stream, not just its own loop stages. */
@@ -900,6 +918,14 @@ describe('produce() meta-line + TurnTrace (ADR-0088 §1/§2/§4)', () => {
     const meta = readMetaLine(lines[0]!)
     expect(meta).toBeDefined()
     expect(meta!.a2uiMeta.note).toBe('hi')
+    // ADR-0234 (proposed): the prompt report is always attached; recomputed here from the same composition
+    // inputs produce() used. No provider usage event arrived, so the trace carries no `usage` key at all.
+    const { sections } = buildSystemPromptSections(
+      defaultCatalog,
+      [exemplar],
+      undefined,
+      selectMiniSkills('a submit button', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui'),
+    )
     expect(meta!.a2uiMeta.trace).toEqual({
       turnIndex: 0,
       query: { intent: 'a submit button', k: 3 },
@@ -908,7 +934,10 @@ describe('produce() meta-line + TurnTrace (ADR-0088 §1/§2/§4)', () => {
       healed: 0,
       failureCodes: [],
       model: 'claude-sonnet-5',
+      prompt: assessPromptBudget(sections, promptBudgetFor('agent-ui')),
     })
+    expect(meta!.a2uiMeta.trace!.prompt!.over).toBe(false)
+    expect(meta!.a2uiMeta.trace).not.toHaveProperty('usage')
     // The two A2UI lines that follow are the SAME validated payload as the no-meta case (byte-identical).
     const a2uiLines = lines.slice(1)
     expect(validateA2ui(a2uiLines.map((l) => JSON.parse(l)), defaultCatalog).valid).toBe(true)
@@ -1341,7 +1370,7 @@ describe('produce() personaPatch meta-line arm — passthrough (ADR-0178 cl.1 / 
     expect(readMetaLine(lines[0]!)!.a2uiMeta.personaPatch).toBeUndefined()
   })
 
-  it('the passthrough is GATE-BLIND: a volunteered patch with the gate OFF yields a byte-identical stream to the gate-ON run (SPEC-R30 AC3)', async () => {
+  it('the passthrough is GATE-BLIND: a volunteered patch with the gate OFF yields a stream identical to the gate-ON run apart from trace.prompt (SPEC-R30 AC3)', async () => {
     const raw = JSON.stringify({ a2uiMeta: { note: 'Volunteered.', personaPatch: PATCH } }) + '\n' + VALID
     const run = async (authoringSurface: boolean | undefined): Promise<string[]> => {
       const { provider } = stubProvider([raw])
@@ -1357,8 +1386,8 @@ describe('produce() personaPatch meta-line arm — passthrough (ADR-0178 cl.1 / 
     const absent = await run(undefined)
     // What the gate withholds is CONSUMPTION (host-side, ADR-0178 cl.2) and TEACHING (the composed
     // prompt) — never framing. One peel path, so there is no gate-conditional wire branch to drift.
-    expect(off).toEqual(on)
-    expect(absent).toEqual(on)
+    expect(withoutTracePrompt(off)).toEqual(withoutTracePrompt(on))
+    expect(withoutTracePrompt(absent)).toEqual(withoutTracePrompt(on))
     expect(readMetaLine(off[0]!)!.a2uiMeta.personaPatch).toEqual(PATCH)
   })
 
