@@ -16,7 +16,7 @@ Route by artifact type; score against that rubric's dimensions ONLY. Do not mix 
 | Artifact under grade | Named rubric | Deterministic floor you CITE (never re-decide) |
 |---|---|---|
 | An A2UI payload (`A2uiOutput` stream / message batch) | `.claude/docs/rubrics/a2ui-payload.md` (P1–P9) | the `validate-payload` CLI verdict |
-| A catalog row (one `catalog.json` type ↔ `ui-*` factory, its tests/example/doc) | `.claude/docs/rubrics/a2ui-catalog.md` (D1–D6) | `naming.ts`/`conformance.ts`/`registry` probes via `npm test` |
+| A catalog row (one `catalog.json` type ↔ `ui-*` factory, its tests/example/doc) | `.claude/docs/rubrics/a2ui-catalog.md` (D1–D7) | `naming.ts`/`conformance.ts`/`registry` probes via `npm test` |
 | A corpus record (one `CorpusRecord` line) | `.claude/docs/rubrics/a2ui-corpus.md` (D1–D5) | `a2ui-payload.md` (folded), `validateRecord`'s enum, the θ_dup index |
 | A compose-time mechanism function (`compose.ts`-class — code that assembles/derives/selects at compose time) | `.claude/docs/rubrics/a2ui-mechanism.md` (M1–M4) | M1: the co-located `*.test.ts` via `npm test` · M2's cited floor: `layering.test.ts` + the biting test (M2 itself is [review], definitional) |
 | A skill-doc pattern section (an `a2ui-multi-catalog`-class pattern row) | `.claude/docs/rubrics/a2ui-skill-pattern.md` (S1–S3) | none — S1 is [review], definitional (fixed open-and-diff method against every cited source; no realized script) |

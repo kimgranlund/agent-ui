@@ -1,0 +1,183 @@
+{
+  "catalogId": "a2ui-basic",
+  "types": {
+    "Text": {
+      "intents": [
+        "headings, body text or captions"
+      ],
+      "notFor": [
+        {
+          "type": "Button",
+          "why": "a click that runs an action"
+        }
+      ]
+    },
+    "Image": {
+      "intents": [
+        "a photo or picture"
+      ],
+      "notFor": [
+        {
+          "type": "Icon",
+          "why": "a small glyph"
+        }
+      ]
+    },
+    "Icon": {
+      "intents": [
+        "a small glyph"
+      ],
+      "notFor": [
+        {
+          "type": "Image",
+          "why": "a photo or picture"
+        }
+      ]
+    },
+    "Row": {
+      "intents": [
+        "lay children side by side"
+      ],
+      "notFor": [
+        {
+          "type": "Column",
+          "why": "stacking vertically"
+        }
+      ]
+    },
+    "Column": {
+      "intents": [
+        "stack children vertically"
+      ],
+      "notFor": [
+        {
+          "type": "Row",
+          "why": "side by side"
+        },
+        {
+          "type": "List",
+          "why": "a run of like items"
+        },
+        {
+          "type": "Card",
+          "why": "a bounded surface"
+        }
+      ]
+    },
+    "List": {
+      "intents": [
+        "a run of like items"
+      ],
+      "notFor": [
+        {
+          "type": "Column",
+          "why": "mixed children"
+        }
+      ]
+    },
+    "Card": {
+      "intents": [
+        "a bounded surface around one child"
+      ],
+      "notFor": [
+        {
+          "type": "Column",
+          "why": "plain stacking"
+        },
+        {
+          "type": "Divider",
+          "why": "a plain line between parts"
+        }
+      ]
+    },
+    "Divider": {
+      "intents": [
+        "a rule between sections"
+      ],
+      "notFor": [
+        {
+          "type": "Card",
+          "why": "grouping on a surface"
+        }
+      ]
+    },
+    "Button": {
+      "intents": [
+        "run an action on click"
+      ],
+      "notFor": [
+        {
+          "type": "Text",
+          "why": "static words"
+        }
+      ]
+    },
+    "TextField": {
+      "intents": [
+        "typed text input"
+      ],
+      "notFor": [
+        {
+          "type": "DateTimeInput",
+          "why": "a date or time value"
+        },
+        {
+          "type": "ChoicePicker",
+          "why": "a fixed set of options"
+        },
+        {
+          "type": "Slider",
+          "why": "dragging within a range"
+        }
+      ]
+    },
+    "CheckBox": {
+      "intents": [
+        "one yes/no answer"
+      ],
+      "notFor": [
+        {
+          "type": "ChoicePicker",
+          "why": "picking among options"
+        }
+      ]
+    },
+    "ChoicePicker": {
+      "intents": [
+        "pick one or more from options"
+      ],
+      "notFor": [
+        {
+          "type": "TextField",
+          "why": "free text with no options"
+        },
+        {
+          "type": "CheckBox",
+          "why": "a single yes/no"
+        }
+      ]
+    },
+    "Slider": {
+      "intents": [
+        "set a number by dragging"
+      ],
+      "notFor": [
+        {
+          "type": "TextField",
+          "why": "typing an exact value"
+        }
+      ]
+    },
+    "DateTimeInput": {
+      "intents": [
+        "pick a date or time"
+      ],
+      "notFor": [
+        {
+          "type": "TextField",
+          "why": "free text"
+        }
+      ]
+    }
+  }
+}

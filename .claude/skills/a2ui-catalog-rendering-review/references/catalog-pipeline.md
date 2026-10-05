@@ -44,6 +44,9 @@ control's own surface must change (a prop the catalog wants to expose does not e
   now carries its own Fork-T1/D1-shaped block in `suggestions.test.ts` proving `#onClick` commits
   `selected` BEFORE `select` fires. Commit the probe in the row's test block as the standing guard;
   a probe-failed control ships bindable-forward-only until a real readback/commit-order fix lands.
+- A row lands WITH its `selection.json` entry (same dir; `intents` plus `notFor` confusable siblings,
+  ADR-0232): the prompt-only selection guidance the inventory line renders. Each `notFor` edge needs its
+  reverse edge on the sibling's entry, and the edit recaptures the prompt baseline (Layer 4).
 - Persona fragments `catalog/personas/{concierge,croupier,fixture-demo}/{catalog.json,factories.ts,manifest.ts}`
   merge via `compose.ts` (`CATALOG_COMPOSE_COLLISION` on a name already in the base). `catalog/a2ui-basic/`
   is the upstream-pinned catalog (SPEC-R10/N5), reusing default factories via `withBasicCommon`.
@@ -86,6 +89,7 @@ control's own surface must change (a prop the catalog wants to expose does not e
 | Omission | Red test |
 |---|---|
 | Malformed PropDef / bad name / dup value-slot prop | import throws `CatalogError` → everything importing `defaultCatalog` (`catalog.test.ts`, `naming.test.ts`) |
+| Type in catalog.json with no selection.json entry, or vice versa (or a one-way `notFor` edge) | `catalog/selection-guidance.test.ts` |
 | Type in catalog.json with no factory, or vice versa | `default/factories.test.ts` · `registry.test.ts` (`CATALOG_FACTORY_MISSING`) |
 | New `ui-*` control with no row and no `EXCLUSION_ALLOWLIST` entry | `default/index.test.ts` (residue guard if the row lands but the allowlist seed stays) |
 | Identity-`mapsTo` prop whose accessor doesn't reflect | `factories.test.ts` walker (bespoke types are skip-listed + own block) |
@@ -94,7 +98,7 @@ control's own surface must change (a prop the catalog wants to expose does not e
 | CONVERTED control `.md` edited, `.props.gen.ts` stale | `descriptor/props-gen-driftwire.test.ts` |
 | Any control TS/CSS change without dogfood rebuild | `sandbox-frame/dogfood/dogfood-assets-freshness.test.ts` |
 | Descriptor prose change without llms regen | `site/lib/llms.test.ts` |
-| ANY catalog.json change | `live-agent/prompt-equivalence.test.ts` (byte-pinned prompts) |
+| ANY catalog.json or selection.json change | `live-agent/prompt-equivalence.test.ts` (byte-pinned prompts) |
 | Catalog type with no example anywhere | `examples/examples.test.ts` (GH #729) |
 | Seed not admitted and not in `DISPOSITION_ALLOWLIST` | `corpus/admission-coverage.test.ts` |
 | Seed invalid / renders with errors | `examples.test.ts` · `site/lib/a2ui-gallery.test.ts` |
@@ -116,7 +120,7 @@ control's own surface must change (a prop the catalog wants to expose does not e
 | CONVERTED control `.md` | `node scripts/generate-props.mjs <name>` | props-gen-driftwire |
 | any control TS/CSS | `node scripts/build-dogfood-assets.mjs` | dogfood-assets-freshness |
 | any descriptor prose | `node scripts/generate-llms-full.mjs` | llms.test |
-| any `catalog.json` | `RECAPTURE_BASELINE=1 npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/recapture-baseline.test.ts` — then `git diff` the baseline: ONLY inventory lines move | prompt-equivalence |
+| any `catalog.json` or `selection.json` | `RECAPTURE_BASELINE=1 npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/recapture-baseline.test.ts` — then `git diff` the baseline: ONLY inventory lines move | prompt-equivalence |
 | a seed | `node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts --verdicts <verdicts.json> [--replace <name>]` | admission-coverage |
 | the card | `node scripts/screenshot-a2ui-catalog.mjs --only <Type>` (dev server up) → re-grade | rubric re-check |
 

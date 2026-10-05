@@ -36,7 +36,9 @@ drifted and was removed, GH #760).
 <payload.json> [--catalog agent-ui]`) — the deterministic gate, nothing else (not the test suite,
 not source edits, not arbitrary shell). `Read`/`Grep`/`Glob` condition on the shard, seed shelf,
 and catalog; `Write` emits the payload file. Package / renderer / catalog source edits are
-`a2ui-build-agent`'s seat — no `Edit` tool by design.
+`a2ui-build-agent`'s seat — no `Edit` tool by design. Type choice reads the inventory clause
+(`use:` intents, `not for:` siblings) sourced from the catalog's `selection.json` (ADR-0232); read
+that file directly when composing outside the produce loop.
 
 ## Return
 

@@ -58,7 +58,8 @@ Load the map skills as you go: [[component-standards]] (law),
      schema's `SIZE_CLASSES` seven (`control · indicator · range · pattern · container ·
      layout · display`). The value picks the sizing lever (`geometry.md` owns each class's
      law: §1 ramp row vs widget ramp vs none) AND drives the standing descriptor/site gates.
-   - **Catalog posture**: A2UI-emittable (a catalog row lands with the build) or permanently
+   - **Catalog posture**: A2UI-emittable (a catalog row lands with the build, together with its
+     `selection.json` entry: intents plus `notFor` confusable siblings, ADR-0232) or permanently
      excluded (`EXCLUSION_ALLOWLIST`) — the ADR-0087 catalog-or-allowlist gate is the law;
      ADR-0112 cl.6 is the worked application (is this page/app-owner chrome an agent must
      never emit?).

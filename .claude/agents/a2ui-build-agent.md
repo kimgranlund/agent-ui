@@ -33,7 +33,9 @@ mirror `a2ui-payload-authoring-agent` → `a2ui-payload-authoring`).
 `Bash` runs the gates (`npm run check`, `npm test`) by exit code. This seat has NO fetch tool by
 design — an external-protocol gap (A2UI v1.0, A2A) is escalated to the host, never inferred (ground
 rule 2). Component-side changes (a new prop/event/two-way bind) are `component-build-agent` territory:
-escalate the exact interface need, never cross the package boundary.
+escalate the exact interface need, never cross the package boundary. A catalog row this seat lands
+includes its `selection.json` entry beside `catalog.json` (ADR-0232); `catalog/selection-guidance.test.ts`
+reds without it.
 
 ## Hand-back — the stopping predicate
 

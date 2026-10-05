@@ -46,6 +46,12 @@ two have no merge primitive in common (`persona-catalog-composition.spec.md` §1
 5. **Composed/derived catalogs** — `composeCatalog(base, fragment, personaId)` merges a
    package-authored `CatalogFragment` onto an already-registered base (ADR-0172 cl.2); reject-loud
    collisions; `<base>--<persona>` naming; multi-base `targetCatalogs`.
+   Selection guidance follows the same shape (ADR-0232): each base catalog and each persona fragment
+   carries its own `selection.json` sidecar; `selectionGuidanceFor` resolves a derived
+   `<base>--<persona>` id to the union of the base's entries and the fragment's. Edges inside one
+   catalog or fragment are reciprocal; the persona edge rule lets a fragment edge point one-way at a
+   base type present in every base the fragment targets, since a base can never name persona types.
+   A third catalog ships its own sidecar, or its inventory composes with no clause.
 
 ## Citation key
 

@@ -37,6 +37,9 @@
 // · ADR-0126 (LLD-C1, TKT-0016) — the message-lifecycle decision-layer teaching (the four-type choice rule +
 //   deleteSurface wire shape + whole-record-upsert warning + root-immutability), appended inside the
 //   OUTPUT_RULES zone of `prompts/grammar.md`, so it rides `OUTPUT_RULES` into every mode.
+// · ADR-0232 (proposed): per-type selection guidance: `catalogInventory` appends each type's
+//   ` · use: … · not for: …` clause from the catalog's `selection.json` sidecar (`selection-guidance.ts`),
+//   only for a type the sidecar covers, so a catalog with no sidecar composes today's lines byte-identically.
 
 import { readFileSync } from 'node:fs'
 import type { Catalog } from '../catalog/catalog.ts'
@@ -48,6 +51,7 @@ import type { MiniSkill } from './mini-skills.ts'
 import { FEED_SURFACE_TYPES } from './feed-catalog.ts'
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
 import { dogfoodInventory } from './dogfood-inventory.ts'
+import { selectionGuidanceFor, renderSelectionClause } from './selection-guidance.ts'
 
 declare const process: { cwd(): string }
 
@@ -181,13 +185,18 @@ function grammarFor(mode: GenUiMode | undefined): string {
 // just the prop's bare name. Grounds the model on what SHAPE a value must take (e.g. `variant:
 // h1|h2|h3|h4|h5|caption|body`, `emphasis: boolean`) instead of leaving it to guess-and-check blind — the
 // #286 root cause: the corpus carries zero `Text.emphasis` exemplars, so few-shot alone never compensated.
+// ADR-0232 (proposed): the selection clause rides AFTER the closing `)` on the same line, so
+// `prompt-drift.test.ts`'s `^- (.+?) \(` id regex still reads the row; a type with no sidecar entry (or a
+// catalog with no sidecar) gets no clause and its line stays byte-identical.
 function catalogInventory(catalog: Catalog): string {
+  const guidance = selectionGuidanceFor(catalog)
   const lines: string[] = []
   for (const id of Object.keys(catalog.components)) {
     const def = catalog.components[id]!
     const props = Object.keys(def.properties).map((p) => `${p}: ${describePropType(def.properties[p]!)}`)
     const child = def.children ? ` · children model: ${def.children}` : ''
-    lines.push(`- ${id} (props: ${props.length > 0 ? props.join(', ') : 'none'}${child})`)
+    const clause = Object.hasOwn(guidance, id) ? renderSelectionClause(guidance[id], catalog) : ''
+    lines.push(`- ${id} (props: ${props.length > 0 ? props.join(', ') : 'none'}${child})${clause}`)
   }
   return lines.join('\n')
 }

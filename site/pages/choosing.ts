@@ -6,6 +6,9 @@
 // not quotes). The forms/overlays groupings have no single spec row at all; they are HAND-AUTHORED, derived
 // from the fleet's own tier structure (form-associated controls; the overlay-controller family) and flagged
 // as such — the T6 soft-staleness case docs-author's method names.
+// Machine twin (ADR-0232, proposed): each A2UI catalog's `selection.json` sidecar beside its catalog.json
+// (`intents` + `notFor` per type) is the Node-only, prompt-only version of these rulings, rendered on the
+// model's inventory line. This browser page cannot import it, so it cites rather than derives.
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './choosing.css'
 import { heading } from '../lib/doc-page.ts'

@@ -29,7 +29,11 @@ control ships. Three owners answer every "what exists / which one" question:
 - **By-job routing**: the site choosing guide — the `GROUPS` table inside
   `site/pages/choosing.ts` (read the file; it exports nothing) — is the curated "I need to
   …" → control decision layer, and `site/gallery.html` (`<component-gallery>`) renders
-  every shipped member live.
+  every shipped member live. For the AGENT-EMITTABLE types the machine twin of that routing is
+  each catalog's `selection.json` sidecar (beside its `catalog.json`; per type, `intents` plus
+  `notFor` confusable siblings with the axis that separates them, ADR-0232), read through
+  `selectionGuidanceFor` on `@agent-ui/a2ui/agent` (Node-only) and rendered on the model's
+  prompt inventory line. Read it for "which emittable type does this job"; never copy its entries.
 - **Agent-emittable vs page-chrome**: the A2UI default catalog
   (`packages/agent-ui/a2ui/src/catalog/default/`) is the emittable set;
   `EXCLUSION_ALLOWLIST` (in its `index.test.ts`) is the deliberate, permanent NOT-emittable

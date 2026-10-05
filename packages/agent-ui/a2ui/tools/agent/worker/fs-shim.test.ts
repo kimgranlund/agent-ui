@@ -57,7 +57,13 @@ describe('fs-shim-content.ts FILES/DIRS vs the real prompts directory — GH #11
     // genui-surface.spec.md SPEC-R9 — `/genui-packs/` is the THIRD prompt subdirectory (alongside
     // `/mini-skills/`), excluded here the SAME way: its own top-level-vs-subdirectory parity is checked
     // by the genui-packs-specific pair below.
-    const bundledFiles = new Set(Object.keys(FILES).filter((k) => !k.includes('/mini-skills/') && !k.includes('/genui-packs/')))
+    // ADR-0232 (proposed): FILES also carries the catalogs' `selection.json` keys, which live outside the
+    // prompts tree; restrict to the prompts prefix (their own parity leg is below).
+    const bundledFiles = new Set(
+      Object.keys(FILES).filter(
+        (k) => k.startsWith(`${PROMPTS_KEY_PREFIX}/`) && !k.includes('/mini-skills/') && !k.includes('/genui-packs/'),
+      ),
+    )
     expect([...bundledFiles].sort()).toEqual([...realFiles].sort())
   })
 
@@ -93,6 +99,33 @@ describe('fs-shim-content.ts FILES/DIRS vs the real prompts directory — GH #11
   })
 })
 
+// ADR-0232 (proposed): `selection-guidance.ts` reads each catalog's `selection.json` sidecar at module
+// load, so every one on disk must be bundled under its exact key, with content that parses to the disk file.
+const CATALOG_DIR = `${REPO_ROOT}/packages/agent-ui/a2ui/src/catalog`
+const CATALOG_KEY_PREFIX = '/packages/agent-ui/a2ui/src/catalog'
+
+function realSelectionSidecars(dir: string = CATALOG_DIR, rel = ''): string[] {
+  const out: string[] = []
+  for (const e of realReaddirSync(dir, { withFileTypes: true })) {
+    if (e.isDirectory()) out.push(...realSelectionSidecars(`${dir}/${e.name}`, `${rel}/${e.name}`))
+    else if (e.isFile() && e.name === 'selection.json') out.push(`${rel}/${e.name}`)
+  }
+  return out
+}
+
+describe('fs-shim-content.ts FILES vs the real catalog selection sidecars (ADR-0232, proposed)', () => {
+  it('the on-disk selection.json set equals the FILES keys ending in /selection.json, and each value parses to its disk file', () => {
+    const real = realSelectionSidecars()
+    expect(real.length).toBeGreaterThan(0)
+    const bundled = Object.keys(FILES).filter((k) => k.endsWith('/selection.json'))
+    expect(bundled.sort()).toEqual(real.map((r) => `${CATALOG_KEY_PREFIX}${r}`).sort())
+    for (const r of real) {
+      const disk = JSON.parse(realReadFileSync(`${CATALOG_DIR}${r}`, 'utf8') as string) as unknown
+      expect(JSON.parse(FILES[`${CATALOG_KEY_PREFIX}${r}`]!), `bundled ${r} must equal its disk file`).toEqual(disk)
+    }
+  })
+})
+
 // GH #811 — statSync joined the shim after 15 straight red deploys: dogfood-inventory.ts imports it,
 // and the wrangler build (the ONE gate that sees the alias) fails on any node:fs symbol the shim lacks.
 describe('fs-shim statSync — GH #811', () => {
@@ -120,6 +153,7 @@ describe('fs-shim statSync — GH #811', () => {
       `${a2uiRoot}/src/agent/system-prompt.ts`,
       `${a2uiRoot}/src/agent/mini-skills.ts`,
       `${a2uiRoot}/src/agent/dogfood-inventory.ts`,
+      `${a2uiRoot}/src/agent/selection-guidance.ts`,
     ]
     for (const modPath of aliasedModules) {
       const src = realReadFileSync(modPath, 'utf8')

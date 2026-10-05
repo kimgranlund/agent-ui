@@ -7,18 +7,26 @@ import { buildSystemPrompt } from '../agent/system-prompt.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import type { Catalog } from '../catalog/catalog.ts'
 import { dogfoodInventory, dogfoodInventoryTags, DOGFOOD_INVENTORY_CHAR_BUDGET } from '../agent/dogfood-inventory.ts'
+import { selectionGuidanceFor, renderSelectionClause, SELECTION_GUIDANCE_CHAR_BUDGET } from '../agent/selection-guidance.ts'
+import { composeCatalog } from '../catalog/compose.ts'
+import { croupierFragment } from '../catalog/personas/croupier/index.ts'
 
 // Extract the `- Id (…` inventory ids from ONE named `## <header>` section of the prompt (up to the next
 // `## ` or end). Reading each section independently means the components inventory is asserted as SET
 // EQUALITY (not merely ⊇) without the GRAMMAR's inline example component names ("Button") leaking into
 // the count, and the functions inventory gets its own equally-strict gate.
-function sectionIds(prompt: string, header: string): Set<string> {
+function sectionBody(prompt: string, header: string): string | undefined {
   const marker = `## ${header}`
   const start = prompt.indexOf(marker)
-  if (start === -1) return new Set()
+  if (start === -1) return undefined
   const rest = prompt.slice(start + marker.length)
   const end = rest.indexOf('\n## ')
-  const body = end === -1 ? rest : rest.slice(0, end)
+  return end === -1 ? rest : rest.slice(0, end)
+}
+
+function sectionIds(prompt: string, header: string): Set<string> {
+  const body = sectionBody(prompt, header)
+  if (body === undefined) return new Set()
   const ids = new Set<string>()
   for (const m of body.matchAll(/^- (.+?) \(/gm)) ids.add(m[1]!)
   return ids
@@ -111,6 +119,54 @@ describe('buildSystemPrompt drift gate (LLD-C4 / SPEC-R6)', () => {
     }
     const prompt = buildSystemPrompt(planted, [])
     expect(prompt).toContain('- PlantedTypeShapes (props: aString: string, aNumber: number, anyShape: any)')
+  })
+})
+
+// ADR-0232 (proposed): the per-type selection clause (`selection-guidance.ts`, from each catalog's
+// `selection.json` sidecar) rides after each inventory line's closing `)`. These legs pin the wiring:
+// every default line carries its clause, a catalog with no sidecar carries none, the summed default
+// clause bytes stay under the measured budget, and a derived persona catalog carries the union.
+describe('inventory selection clauses (ADR-0232, proposed)', () => {
+  const inventoryLine = (prompt: string, id: string): string | undefined =>
+    sectionBody(prompt, 'Available components')
+      ?.split('\n')
+      .find((l) => l.startsWith(`- ${id} (props: `))
+
+  it("every default type's inventory line ends with its rendered selection clause", () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [])
+    const guidance = selectionGuidanceFor(defaultCatalog)
+    for (const id of Object.keys(defaultCatalog.components)) {
+      const clause = renderSelectionClause(guidance[id], defaultCatalog)
+      expect(clause, `${id} has no selection clause`).toMatch(/^ · use: /)
+      expect(inventoryLine(prompt, id)?.endsWith(`)${clause}`), `${id} line must end with its clause`).toBe(true)
+    }
+  })
+
+  it('a catalog with no selection sidecar composes no clause in its components section', () => {
+    const planted: Catalog = { ...defaultCatalog, catalogId: 'planted-no-sidecar' }
+    const body = sectionBody(buildSystemPrompt(planted, []), 'Available components')
+    expect(body).toBeDefined()
+    expect(body).not.toContain(' · use: ')
+    expect(body).not.toContain(' · not for: ')
+  })
+
+  it('the summed default clause length stays within SELECTION_GUIDANCE_CHAR_BUDGET', () => {
+    const guidance = selectionGuidanceFor(defaultCatalog)
+    let total = 0
+    for (const id of Object.keys(defaultCatalog.components)) total += renderSelectionClause(guidance[id], defaultCatalog).length
+    expect(total).toBeGreaterThan(0)
+    expect(total).toBeLessThanOrEqual(SELECTION_GUIDANCE_CHAR_BUDGET)
+  })
+
+  it('a derived persona catalog carries base and persona clauses (croupier: PlayingCard + Badge)', () => {
+    const derived = composeCatalog(defaultCatalog, croupierFragment, 'croupier')
+    const prompt = buildSystemPrompt(derived, [])
+    const guidance = selectionGuidanceFor(derived)
+    for (const id of ['PlayingCard', 'Badge']) {
+      const clause = renderSelectionClause(guidance[id], derived)
+      expect(clause, `${id} has no selection clause on the derived catalog`).toMatch(/^ · use: /)
+      expect(inventoryLine(prompt, id)?.endsWith(`)${clause}`), `${id} line must end with its clause`).toBe(true)
+    }
   })
 })
 

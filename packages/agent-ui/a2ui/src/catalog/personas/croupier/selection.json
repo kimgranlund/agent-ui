@@ -1,0 +1,16 @@
+{
+  "personaId": "croupier",
+  "types": {
+    "PlayingCard": {
+      "intents": [
+        "show one playing card"
+      ],
+      "notFor": [
+        {
+          "type": "Card",
+          "why": "a content surface"
+        }
+      ]
+    }
+  }
+}

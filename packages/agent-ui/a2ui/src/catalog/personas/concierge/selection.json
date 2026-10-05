@@ -1,0 +1,31 @@
+{
+  "personaId": "concierge",
+  "types": {
+    "BookingForm": {
+      "intents": [
+        "collect booking details"
+      ],
+      "notFor": [
+        {
+          "type": "BookingConfirmation",
+          "why": "showing a confirmed booking"
+        },
+        {
+          "type": "TextField",
+          "why": "one loose input outside a booking"
+        }
+      ]
+    },
+    "BookingConfirmation": {
+      "intents": [
+        "confirm a completed booking"
+      ],
+      "notFor": [
+        {
+          "type": "BookingForm",
+          "why": "collecting booking details"
+        }
+      ]
+    }
+  }
+}

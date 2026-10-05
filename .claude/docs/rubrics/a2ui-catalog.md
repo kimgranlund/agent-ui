@@ -1,15 +1,15 @@
 # Rubric — a2ui-catalog (a catalog row)
 
-> Status: proposed · v0.2 · 2026-08-06 (v0.1 2026-07-03; v0.2 adds the Scope & siblings note ONLY — no
-> dimension or anchor moved) · Layer: rubric (the referential standard `a2ui-review-agent` grades a catalog row against).
+> Status: proposed · v0.3 · 2026-10-05 (v0.1 2026-07-03; v0.2 2026-08-06 adds the Scope & siblings note ONLY — no
+> dimension or anchor moved; v0.3 2026-10-05 adds D7 Selection guidance and the `selection.json` artifact, per ADR-0232, proposed) · Layer: rubric (the referential standard `a2ui-review-agent` grades a catalog row against).
 > Implements: [`../spec/a2ui-expert-harness.spec.md`](../spec/a2ui-expert-harness.spec.md) SPEC-R3 · wired by [`../lld/a2ui-harness-wiring.lld.md`](../lld/a2ui-harness-wiring.lld.md) §4.
 
-**Scope & siblings (GH #493).** This rubric grades ONE artifact class: a catalog row — the three
-co-located artifacts below. The M-D wave (PR #492) surfaced two artifact classes that fit D1–D6 only by
+**Scope & siblings (GH #493).** This rubric grades ONE artifact class: a catalog row — the four
+co-located artifacts below. The M-D wave (PR #492) surfaced two artifact classes that fit D1–D7 only by
 analogy, and they route to SIBLING rubrics instead of widened dimensions here — split, not widened,
 because a compose-time mechanism shares none of a row's evidence (no PropDef, no `WidgetFactory`
 mapping) and a taught pattern shares neither the row's evidence nor the mechanism's probes; cramming
-either into D1–D6 would dilute anchors that are deliberately precise to `catalog.json`/`factories.ts`:
+either into D1–D7 would dilute anchors that are deliberately precise to `catalog.json`/`factories.ts`:
 
 - a **compose-time mechanism function** (`compose.ts`-class — code that assembles/derives/selects at
   compose time) → [`a2ui-mechanism.md`](./a2ui-mechanism.md) (M1–M4);
@@ -21,11 +21,12 @@ rows and stay graded here.
 
 The standard a **catalog row** is authored against and graded by when a new A2UI component type is added
 or an existing one extended. A row is the mapping from **one A2UI component type → one `ui-*` control
-factory**, and it is three co-located artifacts that must agree:
+factory**, and it is four co-located artifacts that must agree:
 
 1. the `catalog.json` component definition — `{ properties: { <name>: { type, bindable?, mapsTo } }, children?, value? }` (`packages/agent-ui/a2ui/src/catalog/default/catalog.json`);
 2. the `WidgetFactory` in `defaultFactories` (`packages/agent-ui/a2ui/src/catalog/default/factories.ts`) — `{ tag, create, applyProp, value?, submitGate? }`;
-3. the tests + example + doc comment that exercise and explain it.
+3. the tests + example + doc comment that exercise and explain it;
+4. the type's `selection.json` entry beside its `catalog.json` (`intents` + `notFor`, ADR-0232), the prompt-only selection guidance the inventory clause renders.
 
 Dimensions are typed **[gate]** (a named probe decides it — the anchor cites the realized script, it never
 re-judges the verdict; `process.md` rule 1) or **[review]** (judgment grounded in `file:line` + the committed
@@ -43,16 +44,17 @@ the ADR-0053 form-family rows** — `Field` · `FormProvider` · `Checkbox` · `
 | D4 | Mapping fidelity to the `ui-*` control | [review] | The PropDef set actually corresponds to the target control's real surface — each `mapsTo` names a reflecting prop/attribute the control exposes (or its bespoke light-DOM target); `value: {prop, event}` names the control's real bindable prop + a commit event in the allowlist (`change`·`input`·`select`·`open`·`close`·`toggle`); `bindable`/`submitGate` are claimed only where the control supports them (a `submitGate` control exposes `submit(): boolean`) | 1: a `mapsTo` names a prop the control lacks (the payload validates but renders inert), a non-identity `mapsTo` is routed through `accessorFactory` (the `factories.ts` INVARIANT — the prop silently never reflects), or a `value.event` outside the allowlist · 3: every `mapsTo` resolves to a real accessor/attribute; identity mappings ride `accessorFactory`, a non-identity one (`Checkbox.label` → `textContent`) rides a bespoke factory (`indicatorFactory`); `value` names the control's bindable prop + commit event (`Select` → `{value, select}`) · 5: + the binding contract matches the shipped family exactly — one `value` mark per component (`Select` declares `value` not `open`, avoiding a light-dismiss desync), `FormProvider` carries `submitGate:true` over a control that exposes `submit()`, and `Option`'s non-`ui-*` `div[role=option]` primitive is a sanctioned exception |
 | D5 | PropDef typing idiom | [review] | Each PropDef `type` is a precise JSON-Schema fragment — a closed set is an `enum`, a flag is `boolean`, a structured prop carries an object schema with `required`; `bindable` marks exactly the props the renderer wires a bind for; the identity-vs-bespoke `mapsTo` split is honored | 1: stringly types where a closed set exists (`type`/`variant`/`size` as bare `string`), a structured prop with no `required`, or `bindable` blanket-set / omitted regardless of the control · 3: closed sets are enums (`TextField.type`'s 12-value enum, `size` = `[sm,md,lg]`), flags are `boolean`, `Button.action` is an object schema with `required:['action']`, and `bindable` matches the two-way props · 5: + nothing is over-wide relative to the shipped rows, `bindable` is set precisely where a bind is wired and nowhere else, and every non-identity `mapsTo` prop is kept off `accessorFactory` |
 | D6 | Example & doc coverage per row | [review] | Each new/extended row ships test + example + doc coverage — a conformance/factory test exercising its props, a seed or examples page that renders it (`src/examples/`), and the factory's doc comment naming the mapping rationale + owning ADR | 1: a row with no factory/conformance test, no example that renders it, or an undocumented bespoke mapping · 3: `factories.test.ts`/`conformance.test.ts` cover the row's props, a seed or examples page renders it, and the factory carries a doc comment citing its ADR (the ADR-0053 block precedent) · 5: + coverage exercises the binding path and the bespoke `mapsTo`, an idiomatic seed shows the row in a realistic tree, and the doc comment states the mapping invariant (identity vs bespoke, the `value`-mark rationale) |
+| D7 | Selection guidance | [review] | The type's `selection.json` entry (ADR-0232): `intents` name the job a user asks for, and each `notFor` edge names a confusable sibling plus the axis that separates them (count, persistence, data shape, interaction); `catalog/selection-guidance.test.ts` decides presence, caps, reciprocity and render, this dimension judges the words | 1: the type has no entry, so `catalog/selection-guidance.test.ts` is red; or an intent restates the type name; or a `why` copies a mini-skill sentence (the recipe belongs in `prompts/mini-skills/`) · 3: the gate is green, the intents name the job in user words, and each `why` names the discriminating axis · 5: as 3, and every edge is a real confusable pair from catalog SPEC §5.2 or `site/pages/choosing.ts`, with no filler reverse `why` written only to satisfy reciprocity |
 
 ## Gate to promote (the row is admissible / shippable)
 
 - **Every [gate] dimension (D1, D2, D3) ≥ 4 — hard.** A mechanically-checkable fact that fails blocks
   admission regardless of the review scores: a name the loader rejects (D1), a payload-conformance defect
   (D2), or a declared type absent from `defaultFactories` (D3) is not negotiable.
-- **Every [review] dimension (D4, D5, D6) ≥ 4.**
+- **Every [review] dimension (D4, D5, D6, D7) ≥ 4.**
 - **No compensation across dimensions** — a 5 elsewhere cannot offset a sub-4 dimension.
 
-A row is admissible/promotable when all six dimensions clear ≥ 4 **and** zero [gate] fails. The `a2ui-review-agent`
+A row is admissible/promotable when all seven dimensions clear ≥ 4 **and** zero [gate] fails. The `a2ui-review-agent`
 critic scores against this rubric in a fresh context (generator ≠ critic, SPEC-R8); the `validName` /
 `validateCatalogConformance` / `loadCatalog` / `registry` probes are the deterministic half.
 
