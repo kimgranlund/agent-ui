@@ -305,6 +305,107 @@ export async function validateAnthropicKey(apiKey: string, endpoint: string = DE
   }
 }
 
+/**
+ * GH #1797 gap (d): a bounded retry of the upstream REQUEST on transient failures, so a 429 or a 5xx at
+ * connection time does not fail the whole turn. Only the connection phase is wrapped: the wrapper's job
+ * ends once it returns a Response, so a body that errors mid-stream is never retried, and tool execution
+ * never passes through here. On exhaustion the LAST Response is returned with its body unread, so
+ * `runRound`'s existing `upstream error <status>: <body>` throw fires unchanged.
+ */
+export const ANTHROPIC_MAX_RETRIES = 2
+export const ANTHROPIC_RETRY_BACKOFF_MS: readonly number[] = [500, 1500]
+export const ANTHROPIC_RETRY_AFTER_CAP_MS = 10_000
+
+const ANTHROPIC_RETRYABLE_STATUSES: ReadonlySet<number> = new Set([429, 500, 502, 503, 504, 529])
+
+/** The default sleep: one timer, cancelled (timer cleared, promise rejected with `signal.reason`) on abort.
+ *  No timer stays pending after an abort, and the listener is removed when the timer fires. */
+function abortableSleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason)
+      return
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const onAbort = (): void => {
+      clearTimeout(timer)
+      reject(signal?.reason)
+    }
+    timer = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort)
+      resolve()
+    }, ms)
+    signal?.addEventListener('abort', onAbort, { once: true })
+  })
+}
+
+/** `Retry-After` as milliseconds: whole seconds, or an HTTP-date (never below 0). Undefined when absent
+ *  or unparseable, which falls back to the jittered backoff. */
+function retryAfterMs(res: Response): number | undefined {
+  const raw = res.headers.get('retry-after')
+  if (raw === null) return undefined
+  const value = raw.trim()
+  if (/^\d+$/.test(value)) return Number(value) * 1000
+  const at = Date.parse(value)
+  if (Number.isNaN(at)) return undefined
+  return Math.max(0, at - Date.now())
+}
+
+/** The first-byte deadline's rejection. A distinct class so `fetchWithRetry` never retries it: the attempt
+ *  already waited its full limit. */
+class FirstByteTimeoutError extends Error {}
+
+function isAbortError(err: unknown, signal: AbortSignal | undefined): boolean {
+  if (signal?.aborted) return true
+  return typeof err === 'object' && err !== null && (err as { name?: unknown }).name === 'AbortError'
+}
+
+export async function fetchWithRetry(
+  doFetch: () => Promise<Response>,
+  opts: {
+    signal?: AbortSignal
+    maxRetries?: number
+    backoffMs?: readonly number[]
+    sleep?: (ms: number, signal?: AbortSignal) => Promise<void>
+    random?: () => number
+  } = {},
+): Promise<Response> {
+  const {
+    signal,
+    maxRetries = ANTHROPIC_MAX_RETRIES,
+    backoffMs = ANTHROPIC_RETRY_BACKOFF_MS,
+    sleep = abortableSleep,
+    random = Math.random,
+  } = opts
+  const backoff = (retry: number): number => {
+    const base = backoffMs[Math.min(retry, backoffMs.length - 1)] ?? 0
+    return base + Math.floor(random() * base * 0.2)
+  }
+
+  for (let attempt = 0; ; attempt++) {
+    if (attempt > 0 && signal?.aborted) throw signal.reason
+    const last = attempt >= maxRetries
+
+    let res: Response
+    try {
+      res = await doFetch()
+    } catch (err) {
+      // An abort is the caller's decision: rethrown at once, unwrapped, with no wait. A first-byte timeout
+      // already waited its full limit, so it is not retried either.
+      if (isAbortError(err, signal) || err instanceof FirstByteTimeoutError || last) throw err
+      await sleep(backoff(attempt), signal)
+      continue
+    }
+
+    if (res.ok || !ANTHROPIC_RETRYABLE_STATUSES.has(res.status) || last) return res
+
+    const hinted = retryAfterMs(res)
+    // The discarded response's body is cancelled so its connection is not leaked.
+    await res.body?.cancel().catch(() => {})
+    await sleep(hinted === undefined ? backoff(attempt) : Math.min(hinted, ANTHROPIC_RETRY_AFTER_CAP_MS), signal)
+  }
+}
+
 export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): AgentProvider {
   const endpoint = opts.endpoint ?? DEFAULT_ENDPOINT
 
@@ -318,31 +419,34 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): 
     signal: AbortSignal | undefined,
     collector: ToolUseCollector | undefined,
   ): AsyncIterable<string> {
-    // GH #1797 (c): first-byte deadline. A local controller (not `AbortSignal.timeout`) so the timer is
-    // cleared once headers arrive: the fetch signal also governs the body stream, and a deadline left
-    // armed would abort a healthy long turn mid-stream. A caller abort keeps its own error unrelabelled.
-    const deadline = new AbortController()
-    const deadlineTimer = setTimeout(() => deadline.abort(), ANTHROPIC_FIRST_BYTE_TIMEOUT_MS)
-    let res: Response
-    try {
-      res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'x-api-key': opts.apiKey,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify(body),
-        signal: signal ? AbortSignal.any([signal, deadline.signal]) : deadline.signal,
-      })
-    } catch (err) {
-      if (deadline.signal.aborted && !signal?.aborted) {
-        throw new Error(`anthropicProvider: no response within ${ANTHROPIC_FIRST_BYTE_TIMEOUT_MS} ms`)
+    // GH #1797 (c): first-byte deadline, armed PER ATTEMPT. A local controller (not `AbortSignal.timeout`)
+    // so the timer is cleared once headers arrive: the fetch signal also governs the body stream, and a
+    // deadline left armed would abort a healthy long turn mid-stream. A caller abort keeps its own error
+    // unrelabelled. GH #1797 (d): `fetchWithRetry` wraps each attempt; a first-byte timeout is never retried.
+    const attempt = async (): Promise<Response> => {
+      const deadline = new AbortController()
+      const deadlineTimer = setTimeout(() => deadline.abort(), ANTHROPIC_FIRST_BYTE_TIMEOUT_MS)
+      try {
+        return await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'x-api-key': opts.apiKey,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify(body),
+          signal: signal ? AbortSignal.any([signal, deadline.signal]) : deadline.signal,
+        })
+      } catch (err) {
+        if (deadline.signal.aborted && !signal?.aborted) {
+          throw new FirstByteTimeoutError(`anthropicProvider: no response within ${ANTHROPIC_FIRST_BYTE_TIMEOUT_MS} ms`)
+        }
+        throw err
+      } finally {
+        clearTimeout(deadlineTimer)
       }
-      throw err
-    } finally {
-      clearTimeout(deadlineTimer)
     }
+    const res = await fetchWithRetry(attempt, { signal })
 
     if (!res.ok) {
       // TKT-0075: a non-200 carries a JSON error body, NOT an SSE stream — without this guard it
