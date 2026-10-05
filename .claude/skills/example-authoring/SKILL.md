@@ -17,7 +17,7 @@ disable-model-invocation: false
   (the knob→control mapping — the single source of every `cp-knob-*`), `SAMPLE_TREES` + `sampleFor`
   (per-container specimen trees + the generic fallback), the a2ui-mode defaults, and
   `COMPONENT_SAMPLE_CHILDREN`. You edit the CONTENT + knob CONFIG here — never the harness's render
-  pipeline, and never concurrently with docs-writer (the maker↔maker file-race).
+  pipeline, and never concurrently with a site-authoring maker (the maker↔maker file-race).
 - **The gallery** — `site/lib/component-gallery.ts`: composes one `<component-preview>` per fleet member
   from `ALL_DESCRIPTORS`; `themeSelect()` is the reference ui-select-knob wiring.
 - **Per-control doc pages** — `site/pages/*-doc.ts` + the shared `site/lib/doc-page.ts` renderer.
@@ -78,7 +78,7 @@ disable-model-invocation: false
    both engines) · `npm run build` — all green; the site drift gates pass.
 2. Assert the WHOLE rendered shape, not a single part — a specimen can pass a per-element probe and still
    read as an empty box (the "test the whole shape" law). Measure the rendered preview in a realistic frame.
-3. Hand off to `teamwork:code-checker` for the code, and surface the visual result to the host for the taste verdict.
+3. Hand off to an sdlc-lite verifier run (`run.sh`) for the code, and surface the visual result to the host for the taste verdict.
    Fix the example, never the control.
 
 ## Definition of done

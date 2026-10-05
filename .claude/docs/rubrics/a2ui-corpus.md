@@ -325,4 +325,4 @@ rows are the A columns of the table above):
 The invite and plan records first failed D1 at 2 and passed after the maker's hand-back round. The invite
 failure was P6: no `sendDataModel` on a surface whose Send action round-trips the model.
 
-<!-- Independent critic: the doc-checker agent scores this rubric against rubric-for-rubrics (generator ≠ critic). Author self-check only: D1 typed/scaled ✓ · D3 anchors ✓ · D5 evidence column ✓ · D8 gate+aggregation+top-failure ✓ · harness_checks.py rubric exit 0. -->
+<!-- Independent critic: an sdlc-lite verifier run (`run.sh`) scores this rubric against rubric-for-rubrics (generator ≠ critic). Author self-check only: D1 typed/scaled ✓ · D3 anchors ✓ · D5 evidence column ✓ · D8 gate+aggregation+top-failure ✓ · harness_checks.py rubric exit 0. -->

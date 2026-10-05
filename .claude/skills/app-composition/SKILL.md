@@ -74,9 +74,8 @@ entirely from the fleet — read them before scaffolding a new host.
 
 ## Review (generator ≠ critic)
 
-The shell/screen structure → `frontend:layout-checker`; cross-screen journeys →
-`frontend:flow-checker`; contract-touching code → the house code review. Name the artifact,
-hand off.
+The shell/screen structure, cross-screen journeys, and contract-touching code each get
+an sdlc-lite verifier run (`run.sh`). Name the artifact, hand off.
 
 ## Definition of done
 

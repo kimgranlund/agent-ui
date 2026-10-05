@@ -7,8 +7,8 @@ description: >-
   local authority. Use for "what status vocabulary does a SPEC use", "who flips an ADR to
   accepted", "does this earn an ADR", "should I add a README/index to the ADR folder", "what
   sections does a bug ticket carry", "why is this shipped spec still proposed", "how do docs cite
-  each other". NOT for the generic type contracts (docs:doc-writing-rules) or component-code law
-  (component-standards).
+  each other". NOT for the generic type contracts, owned by the docs plugin's doc-writing-rules
+  skill (not loaded in this repo since PR #1791), or component-code law (component-standards).
 disable-model-invocation: false
 user-invocable: false
 ---
@@ -65,5 +65,5 @@ status IS the index.
 | `references/id-spine-and-ticket-contracts.md` (§3 / §4) | citing an ID (`ADR-####` / `SPEC-R#` / `LLD-C#` / `PRD-G#`\|`D#` / `TKT-####`) or the supersession/extension vocabulary; a ticket or Issue's required sections by kind (feature vs bug) |
 | `references/gates-and-citation-law.md` (§5 / §5b / §6) | which gate enforces what (`adr.test.ts`, `docs-grammar.test.ts`, the status-guard hook, `adr_ratify.py`); the cite-by-stable-anchor law (GH #757); the archive/historical-record rule |
 
-NOT for the document types' generic contracts (`docs:doc-writing-rules`) or component-code law
-(`component-standards`).
+NOT for the document types' generic contracts, owned by the docs plugin's doc-writing-rules skill
+(not loaded in this repo since PR #1791), or component-code law (`component-standards`).

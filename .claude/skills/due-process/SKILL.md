@@ -38,7 +38,7 @@ what the gap actually is. No comment, no proof this phase ran.
 
 ## Phase 2 — Plan
 
-Decide which doc(s) the change actually EARNS per `doc-standards` / `docs:doc-writing-rules` —
+Decide which doc(s) the change actually EARNS per `doc-standards`:
 PRD/SPEC/LLD where warranted, **never the bundle by default**. An ADR is earned only by a genuine
 fork in an existing ratified decision, not a default step for every size:big item. Design is
 ruled before code: a build that starts writing source before this phase's docs land is out of
@@ -63,8 +63,9 @@ green, a PR opened) — not only a single entry at the end.
 Two independent proofs, both required, before the issue closes:
 
 1. **Independent checker verdict** — the artifact's owning critic seat per `seat-map`'s table
-   (`teamwork:code-checker` for a non-UI slice, `frontend:component-checker` for a `ui-*`
-   component, `harness:skill-checker` for a skill, and so on). Generator ≠ critic — the maker
+   (an sdlc-lite verifier run (`run.sh`) for a non-UI slice, a `ui-*` component against
+   `rubrics/component.md`, or a skill; `a2ui-review-agent` for an A2UI artifact). Generator ≠
+   critic: the maker
    never grades its own change.
 2. **Rendered-on-the-live-surface proof** — pixel-truth: "fixed" means seen working on the real
    running surface, never inferred from a green gate alone (memory/ops precedent: *pixel-truth

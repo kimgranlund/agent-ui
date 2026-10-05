@@ -109,7 +109,7 @@ Load the map skills as you go: [[component-standards]] (law),
    dispatchable: one writer per file.
 
 8. **Independent doc review gates the build — non-optional, before freeze.** Hand the record
-   set to a fresh-context doc reviewer (`docs:doc-checker` / the house review seat) —
+   set to a fresh-context doc reviewer (an sdlc-lite verifier run (`run.sh`)),
    and PRE-ARM the reviewer: this repo's ADR/SPEC/LLD corpus uses a blockquote-header house
    style gated by its own tests (`adr.test.ts`, coverage_check), NOT scribe frontmatter;
    generic `doc_lint` abstains by design (every reviewer re-discovers this as a MAJOR

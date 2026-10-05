@@ -28,10 +28,10 @@ documents. This skill is the *method*; the per-type depth and the rubrics live i
 - **Skip** for the *referential* docs under `.claude/docs/` (plan / goals / process / `references/`) — those are
   authored with [[make-reference]], not this. This skill owns the **published site**, not the
   repo's internal knowledge docs.
-- **Generator, not critic.** This skill (and the `docs-writer` seat that preloads it) is the
-  AUTHORING side; a **separate** critic scores the page — `teamwork:code-checker` for the page's
-  code, `docs:doc-checker` for a rubric-bearing document (GH #761 corrected the earlier line that
-  named `docs-writer` as its own reviewer). Build it to clear the gate, then hand off.
+- **Generator, not critic.** This skill (and a site-authoring maker preloading it: the host session
+  or an sdlc-lite builder) is the AUTHORING side; a **separate** critic scores the page, an sdlc-lite verifier run (`run.sh`)
+  for the page's code or for a rubric-bearing document (GH #761 corrected the earlier line that
+  named the maker as its own reviewer). Build it to clear the gate, then hand off.
 
 ## The cardinal discipline — every fact derives from its owner
 
