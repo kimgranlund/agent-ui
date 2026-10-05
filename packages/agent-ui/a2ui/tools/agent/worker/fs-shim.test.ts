@@ -57,7 +57,7 @@ describe('fs-shim-content.ts FILES/DIRS vs the real prompts directory — GH #11
     // genui-surface.spec.md SPEC-R9 — `/genui-packs/` is the THIRD prompt subdirectory (alongside
     // `/mini-skills/`), excluded here the SAME way: its own top-level-vs-subdirectory parity is checked
     // by the genui-packs-specific pair below.
-    // ADR-0232 (proposed): FILES also carries the catalogs' `selection.json` keys, which live outside the
+    // ADR-0232 (accepted): FILES also carries the catalogs' `selection.json` keys, which live outside the
     // prompts tree; restrict to the prompts prefix (their own parity leg is below).
     const bundledFiles = new Set(
       Object.keys(FILES).filter(
@@ -99,7 +99,7 @@ describe('fs-shim-content.ts FILES/DIRS vs the real prompts directory — GH #11
   })
 })
 
-// ADR-0232 (proposed): `selection-guidance.ts` reads each catalog's `selection.json` sidecar at module
+// ADR-0232 (accepted): `selection-guidance.ts` reads each catalog's `selection.json` sidecar at module
 // load, so every one on disk must be bundled under its exact key, with content that parses to the disk file.
 const CATALOG_DIR = `${REPO_ROOT}/packages/agent-ui/a2ui/src/catalog`
 const CATALOG_KEY_PREFIX = '/packages/agent-ui/a2ui/src/catalog'
@@ -113,7 +113,7 @@ function realSelectionSidecars(dir: string = CATALOG_DIR, rel = ''): string[] {
   return out
 }
 
-describe('fs-shim-content.ts FILES vs the real catalog selection sidecars (ADR-0232, proposed)', () => {
+describe('fs-shim-content.ts FILES vs the real catalog selection sidecars (ADR-0232, accepted)', () => {
   it('the on-disk selection.json set equals the FILES keys ending in /selection.json, and each value parses to its disk file', () => {
     const real = realSelectionSidecars()
     expect(real.length).toBeGreaterThan(0)

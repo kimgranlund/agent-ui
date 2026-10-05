@@ -1,8 +1,8 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
 > Status: accepted · v0.18 · 2026-10-05 (v0.17 2026-08-18; v0.16 2026-08-13; v0.15 2026-08-12; v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
-> v0.18 changelog ([ADR-0232](../adr/0232-catalog-selection-guidance-sidecar.md), PROPOSED, not yet
-> ratified; GH #1796): SPEC-R6 gains one paragraph and a new AC7. Each catalog-derived inventory line
+> v0.18 changelog ([ADR-0232](../adr/0232-catalog-selection-guidance-sidecar.md), ACCEPTED, ratified
+> by Kim 2026-10-05; GH #1796): SPEC-R6 gains one paragraph and a new AC7. Each catalog-derived inventory line
 > for a catalog with a `selection.json` sidecar now carries a selection clause (`use:` intents, then
 > `not for:` confusable siblings with the axis that separates them) after its `(props: ...)`; a catalog
 > with no sidecar composes the pre-ADR-0232 line byte for byte. AC1 to AC6 are byte-untouched; the
@@ -648,7 +648,7 @@ SPEC-R13; this requirement covers only the COMPOSITION seam.
   `system-prompt-grammar.test.ts` assertion (the ADR-0091 §4 fix regression block, lines 300-368),
   `npm test` green, no live model.
 
-**Each inventory line carries the type's selection guidance (ADR-0232, proposed).** For a catalog with a
+**Each inventory line carries the type's selection guidance (ADR-0232, accepted).** For a catalog with a
 `selection.json` sidecar (`catalog/default/`, `catalog/a2ui-basic/`, and each persona fragment's, the
 derived `<base>--<persona>` catalog reading the base entries plus the fragment's), the derived inventory
 MUST append each type's selection clause on the SAME line, after its `(props: ...)`: ` · use: ` and the
@@ -1833,7 +1833,7 @@ function buildToolDispatch(active: readonly IntegrationManifest[], env: Record<s
 | SPEC-R18 | Constraint C2 (the secret-free invariant — integration keys resolve server-side in both hosts, never in a build/browser/tool_result; ADR-0073 cl.5, ADR-0152, ADR-0168 §4) |
 | SPEC-R19 | PRD-G7 (transport interop — enablement reaches every live arm via one shared dispatch; GH #402 branch (a); ADR-0136/0152/0168 §5) |
 | SPEC-R20, R6 AC6 | PRD-G1/G6 (the `plan` meta-line arm — a model-authored, additive, shallow-validated field on the ADR-0088 envelope, following the `ask`-arm precedent exactly; parsed by `readMetaLine` and passed through `produce()`'s outgoing meta-line unchanged; its GRAMMAR-half mechanics teaching folded into SPEC-R6 per ADR-0174 cl.6; the host-side plan→execute→synthesize loop and any `plan`-analogue of the `ask` integrity check are OUT OF SCOPE — ADR-0174 cl.2) |
-| SPEC-R6 AC7 | PRD-G6 (per-type selection guidance on the derived inventory line, sourced from each catalog's Node-only `selection.json` sidecar, coverage-gated by `catalog/selection-guidance.test.ts` and budget-gated by `SELECTION_GUIDANCE_CHAR_BUDGET`; ADR-0232, proposed) |
+| SPEC-R6 AC7 | PRD-G6 (per-type selection guidance on the derived inventory line, sourced from each catalog's Node-only `selection.json` sidecar, coverage-gated by `catalog/selection-guidance.test.ts` and budget-gated by `SELECTION_GUIDANCE_CHAR_BUDGET`; ADR-0232, accepted) |
 | SPEC-R21, R22 | PRD-G1/G6 (the host-side sequential plan-runner — persona-gated opt-in, one ordinary `{kind:'intent'}` dispatch per declared step over one growing `Session`, closing-turn synthesis under SPEC-R5's validate-then-stream law, step lifecycle projected onto the existing status-stream grouping with `TURN_PROGRESS_STAGES` unwidened, a step cap + one `AbortSignal` bounding the run at `(K+2) × maxRounds`, tiered failure grain with fold-in acknowledgment, and the OF1 advisory law — no declaration-vs-output check; ADR-0174 cl.1/cl.3/cl.4/cl.6) |
 | SPEC-R29 | PRD-G1/G6 (the `personaPatch` meta-line arm — a model-authored, additive, shallow-validated seventh field on the ADR-0088 envelope, following the `ask`/`plan`-arm precedent exactly; parsed by `readMetaLine` and passed through `produce()`'s outgoing meta-line unchanged and gate-blind; the merge law ADR-0178 OF1 left open, pinned here (incremental per turn, per-key whole-value last-writer-wins, entries-as-contributions, no deletion semantics); the host-side three-filter apply gate, the runner event kind, and recorded-transport parity are OUT OF SCOPE — ADR-0178 cl.1) |
 | SPEC-R30 | PRD-G1/G6 (the opt-in authoring gate — one persona-scoped, inverse-default, fail-closed modality boolean joining the persona-file key set, threaded per call, gating BOTH the arm's host-owned byte-pinned mechanics teaching (composed as a `genuiBlock`-shaped conditional segment so SPEC-R6's byte-identity baselines never move) AND host consumption, with SPEC-R21's degrade law verbatim; ADR-0178 cl.3) |

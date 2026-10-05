@@ -1,7 +1,7 @@
 # Rubric — a2ui-catalog (a catalog row)
 
 > Status: proposed · v0.3 · 2026-10-05 (v0.1 2026-07-03; v0.2 2026-08-06 adds the Scope & siblings note ONLY — no
-> dimension or anchor moved; v0.3 2026-10-05 adds D7 Selection guidance and the `selection.json` artifact, per ADR-0232, proposed) · Layer: rubric (the referential standard `a2ui-review-agent` grades a catalog row against).
+> dimension or anchor moved; v0.3 2026-10-05 adds D7 Selection guidance and the `selection.json` artifact, per ADR-0232, accepted) · Layer: rubric (the referential standard `a2ui-review-agent` grades a catalog row against).
 > Implements: [`../spec/a2ui-expert-harness.spec.md`](../spec/a2ui-expert-harness.spec.md) SPEC-R3 · wired by [`../lld/a2ui-harness-wiring.lld.md`](../lld/a2ui-harness-wiring.lld.md) §4.
 
 **Scope & siblings (GH #493).** This rubric grades ONE artifact class: a catalog row — the four

@@ -5,7 +5,7 @@
 // the EXACT paths those two files compute from `process.cwd()` (shimmed to `''` by `process-shim.ts`), so
 // `fs-shim.ts`'s `readFileSync`/`readdirSync` can serve them with zero changes to either canonical file.
 //
-// ADR-0232 (proposed): the same holds for the catalogs' `selection.json` sidecars `selection-guidance.ts`
+// ADR-0232 (accepted): the same holds for the catalogs' `selection.json` sidecars `selection-guidance.ts`
 // reads at module load (explicit `readFileSync` paths, never `readdirSync`, so `DIRS` is untouched). The
 // Text rule covers only `*.md`/`*.jsonl`, so each sidecar comes in through esbuild's default JSON loader
 // (as `worker/index.ts` imports `catalog.json`) and is served as `JSON.stringify(<import>)`; the loader
@@ -65,7 +65,7 @@ import dataVizLayouts from '../../../src/agent/prompts/genui-packs/data-viz-layo
 import interactiveWidgets from '../../../src/agent/prompts/genui-packs/interactive-widgets.md'
 import animatedExplainers from '../../../src/agent/prompts/genui-packs/animated-explainers.md'
 
-// ADR-0232 (proposed): the five catalog selection sidecars `selection-guidance.ts` reads.
+// ADR-0232 (accepted): the five catalog selection sidecars `selection-guidance.ts` reads.
 import defaultSelection from '../../../src/catalog/default/selection.json'
 import a2uiBasicSelection from '../../../src/catalog/a2ui-basic/selection.json'
 import conciergeSelection from '../../../src/catalog/personas/concierge/selection.json'

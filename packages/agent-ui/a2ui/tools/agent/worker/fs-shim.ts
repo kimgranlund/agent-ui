@@ -6,7 +6,7 @@
 // `mini-skills.ts` — both files ship UNMODIFIED in the Worker bundle (they're ADR-cited and
 // drift-gated by `prompt-drift.test.ts`; this shim exists so neither needs to change, ever). Content
 // comes from `fs-shim-content.ts`'s static imports, bundled at Worker-build time — Workers has no real
-// filesystem, so this is never a live read. `selection-guidance.ts` (ADR-0232, proposed) reads the
+// filesystem, so this is never a live read. `selection-guidance.ts` (ADR-0232, accepted) reads the
 // catalogs' `selection.json` sidecars through the same `readFileSync`.
 
 import { FILES, DIRS } from './fs-shim-content.ts'

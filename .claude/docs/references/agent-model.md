@@ -140,7 +140,7 @@ header pointing here.
   user's words) and `notFor` (a confusable sibling and the axis that separates them). Its machine home
   is each catalog's Node-only `selection.json` sidecar beside `catalog.json`, read by
   `selectionGuidanceFor` on `@agent-ui/a2ui/agent` and rendered as a clause on the composed prompt's
-  inventory line (ADR-0232, proposed). The human twins are the catalog SPEC §5.2 Notes and the site's
+  inventory line (ADR-0232, accepted). The human twins are the catalog SPEC §5.2 Notes and the site's
   choosing guide; neither is generated from it.
 - **Co-pilot**: the builder-interview place (`[Chat | Settings | Co-pilot]`, ADR-0179 as amended by
   GH #686); "Author" is its retired name.

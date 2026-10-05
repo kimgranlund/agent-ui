@@ -3,7 +3,7 @@
 // messages instead of describing a UI in prose — `buildSystemPrompt` (the drift-gated, catalog-grounded
 // prompt), `produce()` (the bounded generate → heal+validate → self-correct driver), the
 // `AgentTransport`/`Session` seam types, the `GenUiMode` axis, the mini-skill registry, the feed-catalog
-// partition, the catalogs' per-type selection guidance (`selection-guidance.ts`, ADR-0232 proposed), and
+// partition, the catalogs' per-type selection guidance (`selection-guidance.ts`, ADR-0232 accepted), and
 // the hand-rolled, SDK-free Anthropic `AgentProvider` adapter.
 //
 // Exposed ONLY via the package.json "./agent" subpath export — the ROOT barrel (`../index.ts`) does NOT

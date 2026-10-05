@@ -37,7 +37,7 @@
 // · ADR-0126 (LLD-C1, TKT-0016) — the message-lifecycle decision-layer teaching (the four-type choice rule +
 //   deleteSurface wire shape + whole-record-upsert warning + root-immutability), appended inside the
 //   OUTPUT_RULES zone of `prompts/grammar.md`, so it rides `OUTPUT_RULES` into every mode.
-// · ADR-0232 (proposed): per-type selection guidance: `catalogInventory` appends each type's
+// · ADR-0232 (accepted): per-type selection guidance: `catalogInventory` appends each type's
 //   ` · use: … · not for: …` clause from the catalog's `selection.json` sidecar (`selection-guidance.ts`),
 //   only for a type the sidecar covers, so a catalog with no sidecar composes today's lines byte-identically.
 
@@ -185,7 +185,7 @@ function grammarFor(mode: GenUiMode | undefined): string {
 // just the prop's bare name. Grounds the model on what SHAPE a value must take (e.g. `variant:
 // h1|h2|h3|h4|h5|caption|body`, `emphasis: boolean`) instead of leaving it to guess-and-check blind — the
 // #286 root cause: the corpus carries zero `Text.emphasis` exemplars, so few-shot alone never compensated.
-// ADR-0232 (proposed): the selection clause rides AFTER the closing `)` on the same line, so
+// ADR-0232 (accepted): the selection clause rides AFTER the closing `)` on the same line, so
 // `prompt-drift.test.ts`'s `^- (.+?) \(` id regex still reads the row; a type with no sidecar entry (or a
 // catalog with no sidecar) gets no clause and its line stays byte-identical.
 function catalogInventory(catalog: Catalog): string {

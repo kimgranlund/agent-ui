@@ -122,11 +122,11 @@ describe('buildSystemPrompt drift gate (LLD-C4 / SPEC-R6)', () => {
   })
 })
 
-// ADR-0232 (proposed): the per-type selection clause (`selection-guidance.ts`, from each catalog's
+// ADR-0232 (accepted): the per-type selection clause (`selection-guidance.ts`, from each catalog's
 // `selection.json` sidecar) rides after each inventory line's closing `)`. These legs pin the wiring:
 // every default line carries its clause, a catalog with no sidecar carries none, the summed default
 // clause bytes stay under the measured budget, and a derived persona catalog carries the union.
-describe('inventory selection clauses (ADR-0232, proposed)', () => {
+describe('inventory selection clauses (ADR-0232, accepted)', () => {
   const inventoryLine = (prompt: string, id: string): string | undefined =>
     sectionBody(prompt, 'Available components')
       ?.split('\n')
