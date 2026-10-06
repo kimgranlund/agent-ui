@@ -112,6 +112,11 @@ payload end with `atFinalize`. `deletedHere` no longer exists; see mechanic 4's 
 | `site/pages/workbench-summary.ts` (via its test gate) | **DEFAULT now, MAY opt in later** | Authored-complete demo sets would benefit, but the gate is not on the bug's path; flipping it is a one-line follow-up once C1 ships, not required scope. Named here so the hold is a decision, not an omission. |
 | `site/pages/dashboard-summary.ts` (via `dashboard-summary.test.ts`) | **DEFAULT now, MAY opt in later** | Mirrors `workbench-summary.test.ts` exactly (its own header says so) — same ruling, same reason, same one-line follow-up if wanted. |
 
+The A2UI test kit's judge (`packages/agent-ui/a2ui/tools/testkit/judge.ts`, T-0011) is one more caller: it seeds
+`validateA2ui` from the session (`sessionSurfaceSeeds`, now in `src/agent/surface-seeds.ts`) and passes each
+scenario turn's own `atFinalize`, the conformance runner's per-fixture opt-in; the kit's generated matrix cells
+always validate with `atFinalize: true`.
+
 ## 5. Failure shape (the first fork this design names beyond Findings 2): REUSE `IDGRAPH` + `${sid}:root-missing`
 
 **No new code.** SPEC-R6's `CONTAINMENT` precedent minted a code because parent-typing was a

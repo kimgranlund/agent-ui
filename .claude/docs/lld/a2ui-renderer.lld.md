@@ -239,6 +239,11 @@ Pure and total (never throws). Produces the `error` payloads of §5.2.
 > instrument that mirrors admission. The §9 `IDGRAPH` row below is amended in place; nothing else in this LLD
 > changes — no new code, no new stage, no wire widening.
 
+The A2UI test kit's mount (`packages/agent-ui/a2ui/tools/testkit/mount.ts`, T-0011) drives this host
+deterministically for its scenario and per-type matrix legs: pinned `newId` and `now`, a settle that rejects with
+the kit's `RENDER_ERROR` before vitest's timeout, and reads only through `RendererHost`. Its interaction loop
+re-proves the finalize parity above on every scripted turn.
+
 ## 9. Error & edge-case handling (the enumeration this LLD owns)
 
 The first column is the **internal** diagnostic code; the **wire** column is the v1.0 two-code (`VALIDATION_FAILED` / `INVALID_FUNCTION_CALL`) the `#emit` boundary maps it to (ADR-0031). The wire `message` (with the internal `path` locus folded in — there is no wire `path`) carries the specificity the coarse wire code drops; the validator's internal codes are unchanged (corpus parity, SPEC-N6).

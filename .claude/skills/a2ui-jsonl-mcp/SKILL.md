@@ -46,6 +46,7 @@ error line is the same kind, `formatErrorLine`.
 | How is a line classified, peeled, healed? What do the arms do when malformed? | `references/line-framing-and-heal.md` |
 | In what order does `produce()` work and what order does the consumer see? | `references/producer-order-and-yield.md` |
 | Record a turn, replay a transcript or a devtools capture | `references/record-and-replay.md` |
+| Script a multi-turn stream, judge its line order, heal and seeded verdict keylessly | the A2UI test kit, `packages/agent-ui/a2ui/tools/testkit/README.md` (`agent-ui-a2ui-scenario`; `toRecordedTranscript` bridges to `createRecordedTransport`) |
 
 ## Traps (each verified against the code, 2026-10-03)
 

@@ -93,6 +93,12 @@ Encode this loop; it is the contract every composed payload passes. Depth and th
    (`.claude/docs/rubrics/a2ui-payload.md`) by the independent `a2ui-review-agent` critic — never by you.
 4. **Bound at `maxRounds = 3`**, then halt-and-report the round count and every verdict. Never retry silently.
 
+A payload that must survive more than one turn, an action round-trip or a re-render is verified by wrapping
+it in an A2UI test kit scenario (`packages/agent-ui/a2ui/tools/testkit/README.md`, format
+`agent-ui-a2ui-scenario`): `kit.ts run <file>` judges heal, order and the cross-turn seeded verdict
+DOM-free, and the host's `npm run test:a2ui-kit` adds the mounted tree, binding and click-loop checks.
+`validate-payload` stays the single-payload gate this seat runs.
+
 ### Who drives the rounds (get this right)
 
 - **Rounds are HOST-orchestrated.** The composer has no Task tool and cannot invoke the critic; the dispatching

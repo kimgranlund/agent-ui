@@ -149,3 +149,11 @@ run outside the shards and outside `test:browser`: local only, no CI job. A chan
 `npm run e2e:admin` locally.
 
 The agent-behavior eval (`npm run eval:agent-behavior`) adds no browser shard: its selftest runs in `check:scripts`, its stub tests ride the vitest `tools` project, and its live leg is manual.
+
+The A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/`, T-0011) adds no shard either: its jsdom legs
+ride the `packages` project, its Node-only tests the `tools` project, `kit.ts selftest` rides
+`check:scripts`, and its two real-engine files (`a2ui/src/testkit/{interaction,matrix}.browser.test.ts`)
+join `packages-rest` with programmatic acts that need no focus. Keep the two checks apart:
+`test:eval-catalog` judges the docs-site catalog PAGE (knobs, cards, overlays), while the kit's per-type
+matrix judges the WIRE: one minimal surface per catalog type, derived from `catalog.json`, validated and
+mounted.

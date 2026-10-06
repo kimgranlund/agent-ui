@@ -272,6 +272,10 @@ build seat's convenience:
 | LLD-C6's `round-trip.test.ts` additions | SPEC-R5 AC1, AC2, AC4 |
 | A manual `npm run dev` walk of `a2ui-live` with the new transcript | SPEC-R5 AC3 (visible annotation) end-to-end, human-observed |
 
+Keyless lifecycle scenarios also live in the A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/`, T-0011): the
+seeded `validator` fixture (a `root` re-sent without `createSurface`) and the `upstream-error` scenario (a surface
+standing across a failed turn).
+
 ## 7 · Open items carried to build
 
 - Exact final GRAMMAR bullet prose (LLD-C1 gives intent + anchor, not a frozen final string — the build seat

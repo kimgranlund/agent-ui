@@ -120,4 +120,9 @@ interface A2uiMcpTools {
 | SPEC-R4, R5, R6 | PRD-G7 (AG-UI / A2A / MCP interop) · PRD-D5 |
 | SPEC-R7, N3 | PRD-G1, PRD-G6 (conformance/version coherence) |
 
+The A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/`, T-0011) adds keyless evidence for SPEC-R7 and N3: the
+shared healer and validator judge every scripted turn, and a generated matrix validates and mounts one minimal
+surface per type of every catalog. It realizes no requirement here; SPEC-R6 (agent-ui as an MCP server) stays
+unbuilt, and the kit's scripted MCP server is a test double for the client side only.
+
 _Co-serves PRD-G1 with runtime/catalog and completes PRD-G7. Status: each doc's own header (the tree wins); the original charter table is archived (frozen 2026-07-08)._

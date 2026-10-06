@@ -121,6 +121,12 @@ header pointing here.
   the guided-authoring flow.
 - **scenario fixture**: the recorded raw wire lines an admin flow replays through Playwright routes in
   place of the live model; captured by `npm run e2e:admin:record`.
+- **A2UI test kit**: the keyless kit under `packages/agent-ui/a2ui/tools/testkit/` (T-0011) that tests the
+  A2UI layer itself, not an agent-admin flow. Its unit is the **kit scenario** (`*.scenario.json`, format
+  `agent-ui-a2ui-scenario`), always qualified so it never reads as an admin flow's scenario fixture. A
+  **seeded fixture** is a known defect pinned to the **layer** that must catch it (validator, heal,
+  renderer, catalog, producer, integration, interop) and its code. Its doubles are *scripted*
+  (scripted transport, scripted provider, scripted MCP server), never "fake" or "harness".
 - **roster**: two senses, both about agents. The **agent roster** is the ordered `AgentRecord` list
   (`AgentRosterView`); the **team roster** is an `AgentTeam`'s `members`. A capability list is
   never a roster: the composer's `@`/`/` option lists are `EntryRosters`, an entry-side name.

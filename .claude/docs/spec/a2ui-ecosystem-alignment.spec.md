@@ -315,6 +315,10 @@ created by this document:
 | SPEC-R7 | PRD-G6 | `/make-pack` re-sync (user-scope) |
 | SPEC-R8 | PRD-G7 | this SPEC (the ruling record) · streaming SPEC-R6 unchanged |
 
+SPEC-R5's packaged suite also runs inside the A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/`, T-0011):
+`fromConformanceFixture` maps every `conformance/fixtures.jsonl` row onto the kit's scenario format, and every row
+must stay green through the kit's judge. The suite's own zero-import format is unchanged.
+
 ## 7 · Acceptance for this document
 
 Ships `proposed`; Kim ratifies (nothing here self-flips — the SPEC-R8 ruling and the SPEC-R6

@@ -25,6 +25,10 @@ Process `.claude/docs/process.md` · Standards `.claude/docs/references/` · `si
   `.env`, never run in CI.
 - `npm run e2e:devtools`: the `@agent-ui/devtools` keyless browser smoke (`scripts/e2e-devtools.mjs`);
   local only, no CI job.
+- `npm run test:a2ui-kit`: the keyless A2UI test kit (T-0011): scenarios, scripted transport, provider, MCP
+  server and tools, the catalog-generated per-type matrix, seeded defects per layer, fuzz; jsdom and Node
+  legs plus `kit.ts selftest` (which also rides `check:scripts`). `npm run test:a2ui-kit:browser` runs its
+  two real-engine legs in `packages-rest`. Home and format: `packages/agent-ui/a2ui/tools/testkit/README.md`.
 - `npm run dev` / `npm run build` — the docs site (`site/`) is the app entry · `npm run deploy:docs` — ui.nonoun.io
 - `npm run ops:reap-worktrees` / `ops:reap-branches` / `ops:reap-scratch-clones` — gated,
   dry-run-by-default reap scripts (append `-- --execute` to apply) for `.claude/worktrees/`

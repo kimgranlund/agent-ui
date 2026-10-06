@@ -47,6 +47,7 @@ Ten packages under `packages/agent-ui/*`; full layout in [CLAUDE.md](CLAUDE.md).
 - Docs-only diffs gate on `doc_lint` plus `check` (`.claude/docs/process.md` section 1).
 - The keyless `npm run eval:agent-behavior -- selftest` rides `check:scripts`; its `live` leg needs a key, is a manual measurement, and is never a gate.
 - `npm run e2e:admin` (keyless agent-admin flows) and `npm run e2e:devtools` are local-only runners outside the shards, not CI gates.
+- The keyless A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/README.md`): `npm run test:a2ui-kit` and `npm run test:a2ui-kit:browser`; its legs also run in `npm test` and `test:browser`, and `kit.ts selftest` rides `check:scripts`.
 
 ## Hard conventions
 

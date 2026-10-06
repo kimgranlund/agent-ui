@@ -19,7 +19,9 @@ The a2ui-review-agent is the A2UI critic — the adversarial reviewer, deliberat
 (generator/critic separation, SPEC-R8). It grades exactly ONE A2UI artifact per dispatch against its
 single named rubric and returns a verdict. It judges; it does not build. Read/Grep/Glob inspect the
 artifact; Bash — the one write-capable tool on the belt — is held solely for running the
-*deterministic probes cited as evidence* (the `validate-payload` CLI, `npm test`). No Write/Edit: the
+*deterministic probes cited as evidence* (the `validate-payload` CLI, `npm test`, and for a multi-turn or
+interaction artifact the A2UI test kit's `kit.ts run <file>` and `npm run test:a2ui-kit`, documented in
+`packages/agent-ui/a2ui/tools/testkit/README.md`). No Write/Edit: the
 seat runs the gates and never touches the artifact it grades — a needed source change is a finding
 handed back, not an edit made.
 

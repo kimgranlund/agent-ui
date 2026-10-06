@@ -182,3 +182,7 @@ One writer per file; shared files (`main.ts`, `_page.ts`, `package.json`) deferr
 ## 11. Verification summary
 
 Done when: `coverage_check` clean (it is — strict/plan, exit 0) · S0–S4 checkpoints green · SPEC-R16 AC1 (smoke) + AC2 (feed surface, pending the widening's doc-review) hold · `trace_check` over the family reports zero UNIMPLEMENTED SPEC rows · the §2 repairs landed in the owning docs. NOT done if: the fixture gate ships without its firing negative controls, the page hardcodes a verdict, or any doc row still calls a shipped module "unbuilt".
+
+The A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/`, T-0011) judges the A2UI half of a stream (heal,
+line order, the seeded verdict, the mounted loop) once its lines are unwrapped; the A2A envelope and the standing
+fixture gate of §6 stay here.

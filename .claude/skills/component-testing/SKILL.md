@@ -55,6 +55,9 @@ per-control pair (`@agent-ui/components/controls/{name}.css` + `controls/{name}`
    descriptor/CHANGELOG/page changes).
 6. A change to `ui-agent-admin`, `site/pages/agent-admin-app.ts` or `site/lib/admin-live-runner.ts`
    runs `npm run e2e:admin` locally: keyless headless admin flows, outside the shards, no CI job.
+7. A new or changed control that an A2UI catalog maps also meets the A2UI test kit's generated matrix
+   (`packages/agent-ui/a2ui/tools/testkit/`, `npm run test:a2ui-kit` and `:browser`): its catalog type
+   must derive a minimal surface, validate and mount in jsdom and in both engines.
 
 ## Cross-links
 

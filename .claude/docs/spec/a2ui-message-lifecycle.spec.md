@@ -250,6 +250,10 @@ dialog's visible record.
 | SPEC-R4 | TKT-0016 "corpus exemplar" acceptance line; ADR-0126 (consequence of ADR-0064) |
 | SPEC-R5 | TKT-0016 Lane 2; ADR-0126 F4/F5 |
 
+The A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/`, T-0011) carries the lifecycle into keyless scenarios:
+its seeded `validator` fixture pins the rejection of a `root` re-sent without a `createSurface` (IDGRAPH
+`s:root`, the ADR-0064 epoch rule), and its `upstream-error` scenario keeps a surface standing across a failed turn.
+
 ## 7. Open items (non-normative)
 
 - Exact GRAMMAR bullet wording and the `a2ui-payload-authoring` skill diff are the LLD's (build-phase, not frozen here).

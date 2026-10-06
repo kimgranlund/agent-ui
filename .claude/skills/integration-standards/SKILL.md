@@ -47,6 +47,7 @@ ADR/SPEC id and Grep-repaired on line drift, never restated here from memory.
 | `references/manifest-validate-keys.md` | Adding or changing an integration manifest; the id≠tool.name≠label split; input-schema validation rules; serverKey/envKey mechanics (laws 1–3, ADR-0168 cl.1–4 · SPEC-R16–R18) |
 | `references/dispatch-placement.md` | Wiring a new call arm into `buildToolDispatch`; where registry/validator/dispatch code is allowed to live, `tools/agent/` vs `src/agent/` (laws 4–5, ADR-0168 cl.5 · SPEC-R19) |
 | `references/mcp-roster-law.md` | Adding or allowlisting an MCP server; the `mcp:server-id:tool` namespace; discovery fail-soft rules; the tool-description standard; admin-surfacing trios (law 6, ADR-0177 cl.1–4 · SPEC-R23–R28) |
+| `packages/agent-ui/a2ui/tools/testkit/README.md` | Testing an integration keylessly: the A2UI test kit's scripted MCP server (`scriptedMcpServer`, Streamable HTTP, JSON or SSE framing, paging, hang steps) plugs into the real client's `fetchImpl` and discovery's `createClient`/`register`; `scriptedTools` feeds `buildToolDispatch` without touching the registry; the seeded `integration` fixture pins `MCP_TIMEOUT` |
 
 ## Routing out
 
