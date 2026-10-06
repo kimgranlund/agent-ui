@@ -63,7 +63,8 @@ error line is the same kind, `formatErrorLine`.
 - Validate-then-stream means content arrives as one burst; only the meta-line is early.
 - `createRecordedTransport` cannot carry `personaPatch`, `flowEnd`, `team` or `target`, and emits
   a meta-line only when the turn has a `note`.
-- Devtools replay yields recorded `line` events only; `meta` events are not replayed.
+- Devtools replay yields a capture's `line` events verbatim and its `meta` events as meta-lines, in
+  capture order (ADR-0239, proposed); the meta-line is equivalent under `readMetaLine`, not byte-identical.
 
 ## Citation key
 

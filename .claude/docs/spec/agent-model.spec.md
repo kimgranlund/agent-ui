@@ -282,7 +282,7 @@ ADR-0136 Fork 1's dev-only ruling for the deployed docs site). Owner: ADR-0152; 
 **SPEC-R27 (devtools capture).** The agent-admin debug bundle carries an additive optional `captures/<id>.json`
 family written by `@agent-ui/devtools`'s `serializeCapture` and a `files.captures?: string[]` manifest field;
 `DEBUG_BUNDLE_VERSION` stays 1. A capture exported from either surface replays through `replayTransport` to a
-byte-identical `line` sequence. The bundle's `agent-settings` covers every roster agent as a persona file;
+byte-identical `line` sequence, its `meta` events re-emitted as meta-lines between them (ADR-0239, proposed). The bundle's `agent-settings` covers every roster agent as a persona file;
 `test-chat` and `builder-interview` cover the active agent only. Owner: ADR-0200 cl.7; devtools-harness SPEC-R10;
 `site/pages/agent-admin-debug-export.ts`; `packages/agent-ui/devtools/src/capture/format.ts`.
 

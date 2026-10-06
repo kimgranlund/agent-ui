@@ -25,8 +25,9 @@ export const DEVTOOLS_CAPTURE_VERSION = 1 as const
 /**
  * A persisted, replayable session capture (SPEC-R10): the session turns plus the full `DevtoolsEvent`
  * timeline recorded around them. Round-trip law: replaying a capture through `replayTransport` yields
- * a byte-identical `line` sequence — anything nondeterministic in here is a format defect by
- * definition (`seq` ordering is the contract).
+ * a byte-identical `line` sequence, with each `meta` event re-emitted as its a2uiMeta meta-line
+ * (equivalent under `readMetaLine`, ADR-0239). Anything nondeterministic in here is a format defect
+ * by definition (`seq` ordering is the contract).
  */
 export interface DevtoolsCapture {
   kind: typeof DEVTOOLS_CAPTURE_KIND
@@ -37,7 +38,7 @@ export interface DevtoolsCapture {
   backend: BackendId
   /** The browser-held turn history (ADR-0137's `Session`, byte-unchanged). */
   session: Session
-  /** The recorded event timeline — `line` events carry the replayable wire, in `seq` order. */
+  /** The recorded event timeline: `line` and `meta` events carry the replayable wire, in `seq` order. */
   timeline: DevtoolsEvent[]
 }
 
@@ -54,7 +55,7 @@ export class CaptureParseError extends Error {
 
 /** Serialize one capture as its persisted text (pretty-printed — the debug bundle's own `prettyJson`
  *  reading posture, GH #889). Determinism note: byte-stability of the TEXT is construction-order's;
- *  the replay CONTRACT is the `seq`-ordered `line` sequence, never the serialization (ADR-0200
+ *  the replay CONTRACT is the `seq`-ordered `line` and `meta` wire, never the serialization (ADR-0200
  *  Consequences' determinism law). */
 export function serializeCapture(capture: DevtoolsCapture): string {
   return `${JSON.stringify(capture, null, 2)}\n`

@@ -52,8 +52,8 @@ export function isSubagentToolName(name: string): name is SubagentToolName {
 }
 
 /** The shared envelope: `seq` contiguous from 0 per timeline; `at` an ISO-8601 timestamp (injectable in
- *  `recordTurn` for deterministic tests — NEVER part of the replay contract, which is `seq`-ordered
- *  `line` payloads only, ADR-0200 Consequences' determinism law). */
+ *  `recordTurn` for deterministic tests, NEVER part of the replay contract, which is the `seq`-ordered
+ *  `line` and `meta` wire only, ADR-0200 Consequences' determinism law, ADR-0239). */
 export interface DevtoolsEventBase {
   seq: number
   at: string
