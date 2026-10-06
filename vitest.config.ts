@@ -143,6 +143,10 @@ export default defineConfig({
             // `generate.ts` carries the CLI-entry guard, so importing `projectionText` here never writes.
             // Explicit, never a wildcard (GH #112).
             'packages/agent-ui/a2ui/tools/registry/*.test.ts',
+            // T-0011 - the A2UI test kit's Node-only tests (the loaders and the CLI); its jsdom legs live
+            // under `a2ui/src/testkit/` in the `packages` project. `kit.ts` carries the CLI-entry guard
+            // (`process.argv[1]?.endsWith('kit.ts')`), so importing `runCli` here is safe (GH #112).
+            'packages/agent-ui/a2ui/tools/testkit/*.test.ts',
           ],
         },
       },

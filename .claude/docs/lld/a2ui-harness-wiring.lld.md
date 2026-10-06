@@ -131,6 +131,11 @@ by the named MANUAL eval lane that spec's v0.2 amendment defines — never `npm 
 
 No harness gate code exists to build (§0 row 1). What the harness RELIES on: `validateA2ui`'s reach (raw-string PARSE, per-message schema, `SUPPORTED_VERSIONS`, all six envelopes, catalog conformance, id-graph, pointer syntax — corpus LLD §0/§7), admission's corpus-only pointer-RESOLUTION stage, the §8 error matrix as the labelled invalid set, and the standing shard gate. Parity is structural (one function object). A new check belongs in the shared validator or admission — never in a harness-local fork (SPEC-N3 incident rule otherwise).
 
+Beyond the single-payload `validate-payload` gate, the A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/`,
+T-0011) runs the same healer and validator over scripted multi-turn scenarios, a seeded-defect fixture per layer
+that must red with its pinned code, and a generated per-type matrix, all keyless; `kit.ts selftest` rides
+`check:scripts`.
+
 ## 6. Loop — LLD-C6 (SPEC-R6)
 
 **Contract (fixed here, both realizations bind it):** generate (corpus-conditioned) → deterministic gates FIRST (`validate-payload`) → critic rubric only on gate-green → self-correct on failure → `maxRounds = 3` → halt-and-report with round count + verdicts.

@@ -114,6 +114,9 @@ Mechanics that follow:
   NDJSON timeline plus a capture, with per-surface render verdicts (`./server`, `./playwright`).
   For agent-admin turns, `npm run e2e:admin` replays fixtures keylessly and `npm run e2e:admin:record`
   captures a new fixture (needs a key in `.env`, manual). Both are local only, no CI job.
+- The keyless A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/README.md`) runs scripted model text
+  through the real `produce()` (a `rounds` turn) and pins repair outcomes (`expect.produce`); it never
+  touches the byte-pinned baseline, so a prompt edit recaptures that deliberately as above.
 - Transport is validate-then-stream: A2UI lines arrive in one burst after whole-reply validation
   (live-agent SPEC-R5, ADR-0206). A test that ingests lines mid-turn proves nothing about live timing,
   and any "mid-stream" renderer state must be driven from turn start (the `target` arm, ADR-0206).

@@ -1,0 +1,53 @@
+{
+  "kind": "agent-ui-a2ui-scenario",
+  "version": 1,
+  "name": "tool-round",
+  "description": "A producer round calls a scripted tool through the real tool dispatch before it answers.",
+  "catalogId": "agent-ui",
+  "intent": "weather in Oslo",
+  "turns": [
+    {
+      "respond": {
+        "rounds": [
+          {
+            "tool": "forecast",
+            "input": {
+              "city": "Oslo"
+            },
+            "then": "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"weather\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"weather\",\"components\":[{\"id\":\"root\",\"component\":\"Text\",\"text\":\"Sunny, 21 C\"}]}}"
+          }
+        ],
+        "tools": [
+          {
+            "name": "forecast",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "city": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "city"
+              ]
+            },
+            "reply": "Sunny, 21 C"
+          }
+        ]
+      },
+      "expect": {
+        "produce": {
+          "outcome": "first-pass"
+        },
+        "tools": [
+          {
+            "tool": "forecast",
+            "input": {
+              "city": "Oslo"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

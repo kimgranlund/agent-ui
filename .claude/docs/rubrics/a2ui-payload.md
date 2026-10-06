@@ -37,6 +37,11 @@ per-message schema, `SUPPORTED_VERSIONS`, the six envelopes, catalog conformance
 These dimensions cite that one verdict — they do **not** cite the shard-scoped `corpus/corpus-data.test.ts` gate
 (a different, corpus-record-level check) and they do **not** re-judge what the CLI decides.
 
+For a payload whose claims span turns or interaction (P6's two-way round-trips, an action answered by a follow-up),
+the A2UI test kit's mounted verdict (`packages/agent-ui/a2ui/tools/testkit/README.md`: tree, binding, data-model and
+client-message expectations over the real renderer) is supporting evidence for the review dims. It never replaces the
+CLI as the P1–P3 probe.
+
 | # | Dimension | Type | What it checks (evidence) | 1 → 3 → 5 |
 |---|---|---|---|---|
 | P1 | Schema & protocol validity | [gate] | The CLI parses the raw payload and validates every message against the per-message schema, `SUPPORTED_VERSIONS`, and the six-envelope shape (`createSurface` · `updateComponents` · `updateDataModel` · …) | 1: CLI exits 1 with a SCHEMA / version / envelope code — an unsupported `version`, a malformed `updateComponents` envelope, a non-string `surfaceId` · 3: no code in this class — every message is schema-valid at a supported version, but heal rescued a form defect first (`repairs` names `fence-strip` / `trailing-comma` / `single-object-envelope` / `version-fill`) · 5: CLI exits 0 with `repairs: []` — schema-clean exactly as authored, no ADR-0061 heal needed (the `canvas-button` two-line shape) |

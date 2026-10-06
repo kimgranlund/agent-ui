@@ -1,0 +1,21 @@
+{
+  "kind": "agent-ui-a2ui-scenario",
+  "version": 1,
+  "name": "never-corrected",
+  "description": "Every round names an unknown type; the self-correct loop never repairs it and produce() halts.",
+  "catalogId": "agent-ui",
+  "intent": "what is the weather",
+  "expectRed": {
+    "layer": "producer",
+    "code": "PRODUCE_HALT"
+  },
+  "turns": [
+    {
+      "respond": {
+        "rounds": [
+          "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"weather\",\"components\":[{\"id\":\"root\",\"component\":\"NoSuchType\"}]}}"
+        ]
+      }
+    }
+  ]
+}

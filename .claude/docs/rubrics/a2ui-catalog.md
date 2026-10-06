@@ -58,7 +58,10 @@ D7 judges the words; whether a model actually picks the right type is measured b
 
 A row is admissible/promotable when all seven dimensions clear ≥ 4 **and** zero [gate] fails. The `a2ui-review-agent`
 critic scores against this rubric in a fresh context (generator ≠ critic, SPEC-R8); the `validName` /
-`validateCatalogConformance` / `loadCatalog` / `registry` probes are the deterministic half.
+`validateCatalogConformance` / `loadCatalog` / `registry` probes are the deterministic half. The A2UI test kit's
+generated matrix (`packages/agent-ui/a2ui/tools/testkit/`, `src/testkit/matrix.test.ts` and its browser twin) adds
+one more: every catalog type derives a minimal surface that must validate and mount; a red cell is gate evidence
+that the row does not render.
 
 **Top failure to look for first:** a declared type missing from `defaultFactories` (D3 = 1 — the row never
 registers, so nothing downstream matters), or a non-identity `mapsTo` routed through `accessorFactory`

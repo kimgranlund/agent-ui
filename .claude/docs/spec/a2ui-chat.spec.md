@@ -220,6 +220,10 @@ canvas/confirmation arc, mapped to the bubble/mount/annotation behavior this SPE
 | SPEC-R7 | TKT-0020 "the wire visible (the feed page's disclosure precedent)" |
 | SPEC-R8 | ADR-0073 (recorded-default posture) |
 
+The same keyless posture extends to tests: the A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/`, T-0011)
+replays scripted turns through a deterministic mount and the real `nextTurn` click to turn reducer, with `fetch`
+and every provider key disarmed for the run.
+
 ## 7. Open items (non-normative)
 
 - Exact narration copy/wording is the LLD's/build seat's to finalize.

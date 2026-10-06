@@ -1,0 +1,58 @@
+{
+  "kind": "agent-ui-a2ui-scenario",
+  "version": 1,
+  "name": "persona-croupier",
+  "description": "A derived persona catalog surface: a croupier PlayingCard on agent-ui--croupier.",
+  "catalogId": "agent-ui--croupier",
+  "intent": "deal me a card",
+  "turns": [
+    {
+      "respond": {
+        "lines": [
+          {
+            "version": "v1.0",
+            "createSurface": {
+              "surfaceId": "table",
+              "catalogId": "agent-ui--croupier"
+            }
+          },
+          {
+            "version": "v1.0",
+            "updateComponents": {
+              "surfaceId": "table",
+              "components": [
+                {
+                  "id": "root",
+                  "component": "Row",
+                  "children": [
+                    "card"
+                  ]
+                },
+                {
+                  "id": "card",
+                  "component": "PlayingCard",
+                  "rank": "Q",
+                  "suit": "hearts"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "atFinalize": true,
+      "expect": {
+        "verdict": {
+          "valid": true,
+          "failures": []
+        },
+        "tree": [
+          {
+            "surfaceId": "table",
+            "select": "ui-playing-card",
+            "count": 1
+          }
+        ]
+      }
+    }
+  ]
+}

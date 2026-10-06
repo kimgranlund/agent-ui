@@ -38,7 +38,9 @@ not source edits, not arbitrary shell). `Read`/`Grep`/`Glob` condition on the sh
 and catalog; `Write` emits the payload file. Package / renderer / catalog source edits are
 `a2ui-build-agent`'s seat — no `Edit` tool by design. Type choice reads the inventory clause
 (`use:` intents, `not for:` siblings) sourced from the catalog's `selection.json` (ADR-0232); read
-that file directly when composing outside the produce loop.
+that file directly when composing outside the produce loop. A payload that must hold across turns or an
+action round-trip may also be written as an A2UI test kit scenario
+(`packages/agent-ui/a2ui/tools/testkit/README.md`) for the HOST to run; this seat never runs the kit.
 
 ## Return
 

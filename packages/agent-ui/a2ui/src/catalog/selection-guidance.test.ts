@@ -15,8 +15,9 @@
 //     persona.
 //
 // Each NEGATIVE CONTROL plants its defect into a copy and asserts the SAME predicate the real-tree leg
-// uses reports it. Test files are exempt from the gates.test.ts composition-containment leg, so this file
-// may import the loader from `src/agent/`.
+// uses reports it. The predicates live in `tools/testkit/catalog-gates.ts` (T-0011), shared with the A2UI
+// test kit's seeded catalog fixture, so both run one copy of each rule. Test files are exempt from the
+// gates.test.ts composition-containment leg, so this file may import the loader from `src/agent/`.
 
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
@@ -25,14 +26,9 @@ import { defaultCatalog } from './default/index.ts'
 import { a2uiBasicCatalog } from './a2ui-basic/index.ts'
 import { composeCatalog } from './compose.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from './personas/manifests.ts'
-import {
-  loadSelectionGuidance,
-  renderSelectionClause,
-  selectionGuidanceFor,
-  SelectionGuidanceError,
-  SelectionGuidanceErrorCode,
-} from '../agent/selection-guidance.ts'
-import type { SelectionEntry, SelectionGuidance } from '../agent/selection-guidance.ts'
+import { loadSelectionGuidance, selectionGuidanceFor, SelectionGuidanceErrorCode } from '../agent/selection-guidance.ts'
+import type { SelectionEntry } from '../agent/selection-guidance.ts'
+import { loadDefect, missingEntries, bijectionDefects, renderDefects, reciprocityDefects, orphanDirs } from '../../tools/testkit/catalog-gates.ts'
 
 declare const process: { cwd(): string }
 const CATALOG_DIR = `${process.cwd()}/packages/agent-ui/a2ui/src/catalog`
@@ -52,55 +48,6 @@ function readDoc(dir: string): { types: Record<string, { intents: string[]; notF
   return JSON.parse(readFileSync(`${CATALOG_DIR}/${dir}/selection.json`, 'utf8'))
 }
 
-// ---- predicates, shared by the real-tree legs and the negative controls ----
-
-/** The loader's verdict on a document: `null` when it loads, else the error code. */
-function loadDefect(doc: unknown): string | null {
-  try {
-    loadSelectionGuidance(doc)
-    return null
-  } catch (e) {
-    if (e instanceof SelectionGuidanceError) return e.code
-    throw e
-  }
-}
-
-function missingEntries(guidance: SelectionGuidance, typeIds: readonly string[]): string[] {
-  return typeIds.filter((t) => !Object.hasOwn(guidance, t)).map((t) => `missing entry for "${t}"`)
-}
-
-function bijectionDefects(guidance: SelectionGuidance, typeIds: readonly string[]): string[] {
-  const declared = new Set(typeIds)
-  const extra = Object.keys(guidance)
-    .filter((t) => !declared.has(t))
-    .map((t) => `extra entry "${t}" is not a catalog type`)
-  return [...missingEntries(guidance, typeIds), ...extra]
-}
-
-function renderDefects(guidance: SelectionGuidance, catalog: Catalog): string[] {
-  const out: string[] = []
-  for (const [t, entry] of Object.entries(guidance)) {
-    try {
-      renderSelectionClause(entry, catalog)
-    } catch (e) {
-      out.push(`${t}: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-  return out
-}
-
-function reciprocityDefects(guidance: SelectionGuidance, exempt: ReadonlySet<string>): string[] {
-  const out: string[] = []
-  for (const [a, entry] of Object.entries(guidance)) {
-    for (const { type: b } of entry.notFor) {
-      if (exempt.has(b)) continue
-      const back = Object.hasOwn(guidance, b) && guidance[b]!.notFor.some((e) => e.type === a)
-      if (!back) out.push(`${a} -> ${b} has no ${b} -> ${a} edge`)
-    }
-  }
-  return out
-}
-
 /** Every `selection.json` under `src/catalog/`, as its directory relative to the catalog root. */
 function sidecarDirsOnDisk(dir: string = CATALOG_DIR, rel = ''): string[] {
   const out: string[] = []
@@ -110,11 +57,6 @@ function sidecarDirsOnDisk(dir: string = CATALOG_DIR, rel = ''): string[] {
     else if (d.name === 'selection.json') out.push(rel)
   }
   return out
-}
-
-function orphanDirs(onDisk: readonly string[], allowed: readonly string[]): string[] {
-  const ok = new Set(allowed)
-  return onDisk.filter((d) => !ok.has(d))
 }
 
 // ---- real-tree legs ----

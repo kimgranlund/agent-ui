@@ -1,0 +1,54 @@
+{
+  "kind": "agent-ui-a2ui-scenario",
+  "version": 1,
+  "name": "unresolved-binding",
+  "description": "A Text bound to a data path nothing ever writes; the kit's opt-in binding check reds it (the renderer itself renders a placeholder value, SPEC-R4 AC2).",
+  "catalogId": "agent-ui",
+  "intent": "greet the user",
+  "expectRed": {
+    "layer": "renderer",
+    "code": "BINDING_UNRESOLVED"
+  },
+  "turns": [
+    {
+      "respond": {
+        "lines": [
+          {
+            "version": "v1.0",
+            "createSurface": {
+              "surfaceId": "s",
+              "catalogId": "agent-ui"
+            }
+          },
+          {
+            "version": "v1.0",
+            "updateComponents": {
+              "surfaceId": "s",
+              "components": [
+                {
+                  "id": "root",
+                  "component": "Text",
+                  "text": {
+                    "path": "/user/name"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "version": "v1.0",
+            "updateDataModel": {
+              "surfaceId": "s",
+              "value": {
+                "user": {}
+              }
+            }
+          }
+        ]
+      },
+      "expect": {
+        "bindings": {}
+      }
+    }
+  ]
+}

@@ -76,6 +76,12 @@ two have no merge primitive in common (`persona-catalog-composition.spec.md` §1
    Croupier's hand check (`personas/croupier/checks.ts`) is the worked example; the contract is
    `src/catalog/semantic-check.ts`.
 
+Per-catalog conformance is generated, never hand-listed: the A2UI test kit's matrix
+(`packages/agent-ui/a2ui/tools/testkit/`, `src/testkit/matrix.test.ts`) derives one cell per type of every
+base and every derived `<base>--<persona>` catalog, validates it at finalize and mounts it; a new catalog or
+type reds there until it renders. Wrong-dialect payloads on `a2ui-basic` report on the kit's `interop`
+layer (seeded fixture `tools/testkit/__seeded__/interop/`).
+
 ## Citation key
 
 `cl.N` = `.claude/docs/adr/0169-a2ui-basic-catalog-upstream-interop.md`'s Decision clause N

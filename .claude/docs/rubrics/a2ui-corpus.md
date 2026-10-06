@@ -73,6 +73,9 @@ version: 1.5
    admission's own facet checks the same way (ADR-0231 cl.2/cl.3): action grounding plus the prior-seeded
    follow-up validation for a multi-turn record, recomputation equality for a repair record; a record
    failing either never reaches this judge.
+   The A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/README.md`) runs the same healer and the same
+   session-seeded validator over scripted turns, plus a mounted click loop; its findings may be cited as
+   supporting evidence for D6, never as a replacement for admission's floors.
 
 ## Dimensions
 

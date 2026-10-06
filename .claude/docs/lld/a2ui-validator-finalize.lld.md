@@ -9,7 +9,7 @@
 > validator) · [`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) SPEC-R4/R5 (self-correct
 > + validate-then-stream). Composes on: [`a2ui-renderer.lld.md`](a2ui-renderer.lld.md) §8 LLD-C11 /
 > §9 error table · TKT-0081's `SurfaceSeed` merge (the seed-merge loop in `validate.ts`'s `run` +
-> `produce.ts`'s `sessionSurfaceSeeds`) · GH [#829](https://github.com/kimgranlund/agent-ui/issues/829)'s two dated
+> `sessionSurfaceSeeds` in `src/agent/surface-seeds.ts`, moved out of `produce.ts` by T-0011) · GH [#829](https://github.com/kimgranlund/agent-ui/issues/829)'s two dated
 > Findings (2026-08-13 — the diagnosis this designs against, incl. the attempted-and-reverted
 > naive fix and its 5 red suites).
 
@@ -111,6 +111,11 @@ payload end with `atFinalize`. `deletedHere` no longer exists; see mechanic 4's 
 | `site/lib/artifact-feed.ts` | **DEFAULT** | It judges per-artifact envelope chunks of a recorded A2A feed; an artifact MAY be a partial delivery completed by a later artifact — a chunk boundary is not a finalize boundary. |
 | `site/pages/workbench-summary.ts` (via its test gate) | **DEFAULT now, MAY opt in later** | Authored-complete demo sets would benefit, but the gate is not on the bug's path; flipping it is a one-line follow-up once C1 ships, not required scope. Named here so the hold is a decision, not an omission. |
 | `site/pages/dashboard-summary.ts` (via `dashboard-summary.test.ts`) | **DEFAULT now, MAY opt in later** | Mirrors `workbench-summary.test.ts` exactly (its own header says so) — same ruling, same reason, same one-line follow-up if wanted. |
+
+The A2UI test kit's judge (`packages/agent-ui/a2ui/tools/testkit/judge.ts`, T-0011) is one more caller: it seeds
+`validateA2ui` from the session (`sessionSurfaceSeeds`, now in `src/agent/surface-seeds.ts`) and passes each
+scenario turn's own `atFinalize`, the conformance runner's per-fixture opt-in; the kit's generated matrix cells
+always validate with `atFinalize: true`.
 
 ## 5. Failure shape (the first fork this design names beyond Findings 2): REUSE `IDGRAPH` + `${sid}:root-missing`
 

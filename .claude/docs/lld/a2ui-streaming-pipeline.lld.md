@@ -91,6 +91,10 @@ Default delivery is CLI (`npx a2ui-mcp` / stdio MCP), self-hosted HTTP optional.
 
 `negotiate(consumerCaps): { version } | VersionError`: intersect producer-supported {v1.0, v0.9.1} with the consumer's advertised versions; pick the highest common (default v1.0); if none → decline with a version error (never stream unsupported, SPEC-R7 AC1). Payloads are tagged `application/a2ui+json`. Capabilities exchange precedes surface content.
 
+The A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/README.md`, T-0011) runs every conformance fixture
+through its own judge and adds a generated per-type matrix over every catalog; neither changes the negotiation
+contract above.
+
 ## 7. Error & edge-case handling
 
 | Code / edge | Stage | Handling |

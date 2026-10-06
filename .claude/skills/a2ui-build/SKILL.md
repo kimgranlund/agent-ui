@@ -106,7 +106,11 @@ builds; it never grades its own output (the `a2ui-review-agent` critic does — 
 ## Validation loop (finalize only when clean)
 
 `npm run check` and `npm test` green — run and read them by exit code, separately. The
-validator-parity leg (N6) is re-proven when the spine is touched. The reviewer seat the host names
+validator-parity leg (N6) is re-proven when the spine is touched. A renderer, catalog, validator, heal,
+producer or integration change also runs the keyless A2UI test kit (`npm run test:a2ui-kit`, plus
+`npm run test:a2ui-kit:browser` when rendered controls move): its seeded fixture per layer must still red
+with its pinned code, and a new catalog type gets a generated matrix cell that must derive, validate and
+mount. Format, codes and pin procedure: `packages/agent-ui/a2ui/tools/testkit/README.md`. The reviewer seat the host names
 grades against the owning SPEC/LLD acceptance rows (the a2ui-specific rubrics have LANDED —
 `.claude/docs/rubrics/a2ui-{payload,catalog,corpus}.md` — grading a2ui ARTIFACTS: payloads ·
 catalog rows · corpus records via the `a2ui-review-agent` critic; this seat's package units still trace

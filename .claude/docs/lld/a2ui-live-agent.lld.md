@@ -288,6 +288,11 @@ parity), (b) a real `createRenderer()` host renders both turns' surfaces with an
 is driven directly and each turn's `note` meta-line is recovered ahead of byte-identical `lines` (the
 `round-trip.test.ts` second-`it` shape). `npm test` green, zero live model, zero key, zero network.
 
+The A2UI test kit's scripted transport (`packages/agent-ui/a2ui/tools/testkit/scripted-transport.ts`, T-0011)
+generalizes this backbone for tests: input-matched turns, a terminal error arm, and `rounds` turns through the real
+`produce()`. `toRecordedTranscript` maps a lines-only kit scenario back onto `createRecordedTransport`; the shipped
+recorded backbone itself is unchanged.
+
 ## 4. Round-trip state machine (LLD-C5) — SPEC-R8
 
 ```

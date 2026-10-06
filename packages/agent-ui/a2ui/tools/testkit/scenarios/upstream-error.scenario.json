@@ -1,0 +1,51 @@
+{
+  "kind": "agent-ui-a2ui-scenario",
+  "version": 1,
+  "name": "upstream-error",
+  "description": "A follow-up intent answered by a terminal error line: nothing is ingested and the surface stays.",
+  "catalogId": "agent-ui",
+  "intent": "show a status",
+  "turns": [
+    {
+      "respond": {
+        "lines": [
+          {
+            "version": "v1.0",
+            "createSurface": {
+              "surfaceId": "status",
+              "catalogId": "agent-ui"
+            }
+          },
+          {
+            "version": "v1.0",
+            "updateComponents": {
+              "surfaceId": "status",
+              "components": [
+                {
+                  "id": "root",
+                  "component": "Text",
+                  "text": "All good"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "intent": "refresh it",
+      "respond": {
+        "error": "upstream unavailable"
+      },
+      "expect": {
+        "tree": [
+          {
+            "surfaceId": "status",
+            "select": "ui-text",
+            "textIncludes": "All good"
+          }
+        ]
+      }
+    }
+  ]
+}

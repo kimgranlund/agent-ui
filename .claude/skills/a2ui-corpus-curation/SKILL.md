@@ -184,3 +184,4 @@ the owner. A halt left unresolved is a blocker reported, never a bypassed gate.
 | `ADR-0165` + `packages/agent-ui/a2ui/corpus/verdicts/README.md` | The verdict archive — the committed record a judged run writes, its filename/precedence/no-expiry rules, and the unjudged-run guard that reads it |
 | `.claude/docs/rubrics/a2ui-corpus.md` | The standard the `a2ui-review-agent` critic judges verdicts against |
 | `[[a2ui-payload-authoring]]` | The task is composing an A2UI PAYLOAD from the catalog, not curating the corpus |
+| `packages/agent-ui/a2ui/tools/testkit/README.md` | A seed's multi-turn or interaction behavior needs a keyless check beyond admission: the A2UI test kit's scenario format runs the same healer and seeded validator, plus a mounted loop; it never admits or scores |

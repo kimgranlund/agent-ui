@@ -33,6 +33,12 @@ The A2UI protocol layer. Root `AGENTS.md` and `CLAUDE.md` hold the package DAG, 
 - The validator judges structure only. A persona may declare `semanticChecks` on its `PersonaCatalogManifest` (contract `src/catalog/semantic-check.ts`, ADR-0238); `produce()` runs them after the validator and feeds a finding into the repair round, shipping tallied at the round bound. Both hosts resolve them for the selected catalog through `semanticChecksDeps` (`tools/agent/chat-validation.ts`). The Croupier's hand check is `src/catalog/personas/croupier/checks.ts`.
 - SPEC `.claude/docs/spec/a2ui-runtime.spec.md`, `.claude/docs/spec/a2ui-message-lifecycle.spec.md`; LLD `.claude/docs/lld/a2ui-renderer.lld.md`, `.claude/docs/lld/a2ui-validator-finalize.lld.md`. The full set is `.claude/docs/spec/a2ui-*` and `.claude/docs/lld/a2ui-*`.
 
+## Test kit
+
+- `tools/testkit/` holds the keyless A2UI test kit (T-0011): the scenario format, scripted transport, provider, MCP server and tools, the mount and interaction loop, the catalog-generated matrix, seeded defects under `tools/testkit/__seeded__/<layer>/` (pinned) and fuzz. Its vitest legs live in `src/testkit/`, because the browser shard only globs `src/**`.
+- Commands: `npm run test:a2ui-kit`, `npm run test:a2ui-kit:browser`, and `node --experimental-strip-types packages/agent-ui/a2ui/tools/testkit/kit.ts selftest|run <file>|list`. The format, every finding code and the pin procedure: `tools/testkit/README.md`.
+- A new catalog type gets a generated matrix cell with no hand file; it reds `src/testkit/matrix.test.ts` until it can be derived, validated and mounted.
+
 ## Skills
 
 | Task | Skill |

@@ -1938,4 +1938,10 @@ function buildToolDispatch(active: readonly IntegrationManifest[], env: Record<s
 | SPEC-R27 | Constraint C2 + PRD-G7 (the committed-roster allowlist fence + dev-proxy boot-await + once-per-lifetime discovery + empty-roster byte-identity; ADR-0177 cl.4) |
 | SPEC-R28 | PRD-G7 (admin surfacing — the host GET trio route, the live-read integrations pack, the ONE sanctioned parity-test reshape; Kim's F1 ruling, GH #567 2026-08-07; ADR-0177 cl.2/cl.4) |
 
+The keyless A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/`, T-0011) re-proves rows of this SPEC through
+scripted doubles on the real seams, adding no requirement: SPEC-R5 validate-then-stream (meta-lines before content,
+the producer's repair and halt through the real `produce()`), the `wantResponse`-routed click to turn (SPEC-R8
+AC2/AC3), the shared tool dispatch (SPEC-R17, R19) and the MCP client and discovery (SPEC-R24, R26). The dev-proxy
+boot rows stay with `src/live-agent/mcp-boot.test.ts`.
+
 _Realizes streaming SPEC-R2 and harness SPEC-R6 in running code, co-serving PRD-G1 and PRD-G7. Status: each doc's own header (the tree wins); the original charter table is archived (frozen 2026-07-08)._

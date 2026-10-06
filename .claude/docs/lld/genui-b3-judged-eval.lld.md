@@ -531,3 +531,7 @@ page tests (AC13). **Existing instruments reused:** `harness_checks.py rubric` (
 (AC14), `check:tools` (typing the shell), `layering.test.ts` (no new DAG edge), and the standing
 `check`/`test`/`test:browser` run with no key (AC17). **The one criterion no agent can verify tonight is
 AC18** — named as the manual run, not left silent.
+
+The deterministic, keyless A2UI checks (scenarios, seeded defects per layer, the per-type matrix) live in the A2UI
+test kit (`packages/agent-ui/a2ui/tools/testkit/`, T-0011); this judged eval stays separate, and its live leg
+stays manual.

@@ -1,0 +1,149 @@
+{
+  "kind": "agent-ui-a2ui-scenario",
+  "version": 1,
+  "name": "click-loop",
+  "description": "Click a button, frame the action into the next turn, answer it with updateDataModel, and see the bound text re-render.",
+  "catalogId": "agent-ui",
+  "intent": "show me a counter",
+  "turns": [
+    {
+      "respond": {
+        "lines": [
+          {
+            "version": "v1.0",
+            "createSurface": {
+              "surfaceId": "counter",
+              "catalogId": "agent-ui"
+            }
+          },
+          {
+            "version": "v1.0",
+            "updateComponents": {
+              "surfaceId": "counter",
+              "components": [
+                {
+                  "id": "root",
+                  "component": "Column",
+                  "children": [
+                    "count",
+                    "bump"
+                  ]
+                },
+                {
+                  "id": "count",
+                  "component": "Text",
+                  "text": {
+                    "path": "/label"
+                  }
+                },
+                {
+                  "id": "bump",
+                  "component": "Button",
+                  "label": "Add one",
+                  "action": {
+                    "action": "increment",
+                    "context": {
+                      "by": 1
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "version": "v1.0",
+            "updateDataModel": {
+              "surfaceId": "counter",
+              "value": {
+                "label": "Count: 0"
+              }
+            }
+          }
+        ]
+      },
+      "expect": {
+        "verdict": {
+          "valid": true,
+          "failures": []
+        },
+        "tree": [
+          {
+            "surfaceId": "counter",
+            "select": "ui-text",
+            "count": 1,
+            "textIncludes": "Count: 0"
+          }
+        ],
+        "bindings": {},
+        "dataModel": [
+          {
+            "surfaceId": "counter",
+            "path": "/label",
+            "equals": "Count: 0"
+          }
+        ],
+        "clientMessages": [
+          {
+            "action": {
+              "name": "increment",
+              "surfaceId": "counter",
+              "sourceComponentId": "bump",
+              "context": {
+                "by": 1
+              },
+              "actionId": "kit-action-1"
+            }
+          }
+        ]
+      },
+      "act": {
+        "click": {
+          "surfaceId": "counter",
+          "select": "ui-button"
+        }
+      }
+    },
+    {
+      "match": {
+        "inputKind": "client",
+        "actionName": "increment"
+      },
+      "respond": {
+        "lines": [
+          {
+            "a2uiMeta": {
+              "note": "Counted.",
+              "target": {
+                "surfaceId": "counter"
+              }
+            }
+          },
+          {
+            "version": "v1.0",
+            "updateDataModel": {
+              "surfaceId": "counter",
+              "path": "/label",
+              "value": "Count: 1"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "tree": [
+          {
+            "surfaceId": "counter",
+            "select": "ui-text",
+            "textIncludes": "Count: 1"
+          }
+        ],
+        "dataModel": [
+          {
+            "surfaceId": "counter",
+            "path": "/label",
+            "equals": "Count: 1"
+          }
+        ]
+      }
+    }
+  ]
+}
