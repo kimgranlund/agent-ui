@@ -5346,6 +5346,11 @@ before: no disclosure, no pre, no affordance. The gate that decides *whether* ra
 all belongs to the producer/consumer (the `progressDetail:'source'` opt-in ladder + `ui-conversation`'s
 `sources` prop) — this host renders exactly what it is handed, and nothing when handed nothing.
 
+An optional **`sourceLabel`** (T-0016, the ADR-0159 amendment, proposed) names the reveal's summary for
+that one entry, for a consumer whose block is not a per-step source (`ui-conversation`'s step mode labels
+its single turn-level block "Raw output"). It is read once at append, beside `source`; absent or empty
+keeps "Source", so every existing entry renders byte-identically.
+
 ## The imperative API (ADR-0122 F4)
 
 - **`appendEntry(entry: StatusEntry): UITimelineItemElement`** — for a NEW `key`, creates a `ui-timeline-item`,

@@ -1455,7 +1455,7 @@ describe('conversation.md descriptor', () => {
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
   const ATTR_NAMES = [
-    'disclosure', 'disabled', 'receipt', 'sources', 'models', 'model', 'efforts', 'effort',
+    'disclosure', 'disabled', 'receipt', 'sources', 'steps', 'models', 'model', 'efforts', 'effort',
     'providers', 'provider', 'modes', 'mode', 'contextItems', 'mentionables', 'invocables', 'capabilities',
     'bubbles', // GH #1221 — the host/agent bubble on/off setting
   ]
@@ -2010,5 +2010,245 @@ describe('ui-conversation — GH #1164: a newer surface supersedes earlier ones;
     t2.ingestLine(CREATE_X('next'))
     t2.finalize()
     expect(closed.superseded, 'a closed surface already reads as history — never marked superseded too').toBe(false)
+  })
+})
+
+// ── T-0016 (ADR-0159 amendment, proposed): the opt-in STEP MODE: the strip renders only the neutral
+// ActivityStep model a host pushes through `handle.step()`/`handle.footer()`. General purpose by
+// construction: nothing here names a catalog, a component type, or A2UI.
+
+describe('ui-conversation: step mode renders the neutral ActivityStep model (T-0016, ADR-0159 amendment)', () => {
+  type Item = HTMLElement & { status: string; icon: string; label: string }
+  const strip = (el: UIConversationElement): HTMLElement => {
+    const all = el.querySelectorAll<HTMLElement>('[data-part="narration"]')
+    return all[all.length - 1]!
+  }
+  const rows = (el: UIConversationElement): Item[] => [...strip(el).querySelectorAll<Item>(':scope > ui-timeline-item')]
+  const cell = (item: Element, role: string): string => item.querySelector(`:scope > [data-role="${role}"]`)?.textContent ?? ''
+  const stepMode = (): UIConversationElement => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.steps = true
+    return el
+  }
+
+  it('step() upserts one row per id: label, one-line summary, frozen duration, status, and the data-kind hook', async () => {
+    const el = stepMode()
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'request', kind: 'request', label: 'Request sent', status: 'ok', durationMs: 420 })
+    handle.step({ id: 'tool-1', kind: 'tool', label: 'Calling tool search…', status: 'running' })
+    handle.step({ id: 'tool-1', kind: 'tool', label: 'Called tool search', status: 'ok', durationMs: 1200, summary: '3 results' })
+    handle.step({ id: 'check', kind: 'validate', label: 'Validated', status: 'repaired', summary: 'Round 1 failed (SCHEMA), repaired in round 2' })
+    handle.step({ id: 'boom', kind: 'other', label: 'Exploded', status: 'failed' })
+    await whenFlushed()
+    const r = rows(el)
+    expect(r.map((i) => cell(i, 'label')), 'one row per distinct id; the second tool-1 call updated in place').toEqual([
+      'Request sent',
+      'Called tool search',
+      'Validated',
+      'Exploded',
+    ])
+    expect(r.map((i) => i.dataset.kind)).toEqual(['request', 'tool', 'validate', 'other'])
+    expect(r.map((i) => i.status), 'running→active, ok→done, repaired→done, failed→error').toEqual(['done', 'done', 'done', 'error'])
+    expect(cell(r[0]!, 'timestamp'), 'durationMs renders through formatTotalElapsed').toBe('0.4s')
+    expect(cell(r[1]!, 'timestamp')).toBe('1.2s')
+    expect(cell(r[1]!, 'description'), 'the summary is the one line under the label').toBe('3 results')
+    expect(r[2]!.icon, 'a repaired step wears its own marker glyph, distinct from a clean done').toBe('arrow-clockwise')
+    expect(r[1]!.icon, 'a clean done keeps the default status glyph').toBe('')
+    expect(cell(r[3]!, 'timestamp'), 'no durationMs, no time: missing data shows nothing').toBe('')
+    expect(cell(r[3]!, 'description')).toBe('')
+  })
+
+  it('a running step with startedAt shows a live elapsed time; settling freezes its duration instead', async () => {
+    const el = stepMode()
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'gen', kind: 'generate', label: 'Generating…', status: 'running', startedAt: Date.now() - 5000 })
+    await whenFlushed()
+    expect(cell(rows(el)[0]!, 'timestamp'), 'ticks from startedAt (the strip owns the clock)').toBe('5s')
+    handle.step({ id: 'gen', kind: 'generate', label: 'Generated', status: 'ok', durationMs: 5300 })
+    await whenFlushed()
+    expect(cell(rows(el)[0]!, 'timestamp')).toBe('5.3s')
+    handle.finalize()
+  })
+
+  it('step mode silences the legacy narration: ingestLine and progress add no rows, yet lines still mount their surface', () => {
+    const el = stepMode()
+    const handle = el.beginAgentTurn()
+    handle.progress({ stage: 'validating', source: 'raw' })
+    handle.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui' } }))
+    handle.finalize()
+    expect(rows(el), 'no category or stage rows in step mode').toEqual([])
+    expect(log(el).querySelector('ui-surface-host'), 'routing is untouched: the surface still mounts').not.toBeNull()
+  })
+
+  it('raw output shows ONCE: one collapsed "Raw output" row at settle, distinct raws joined, no per-step Source blocks', async () => {
+    const el = stepMode()
+    el.receipt = true
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'a', kind: 'validate', label: 'Validated', status: 'running', raw: '{"a":1}' })
+    expect(strip(el).querySelector('[data-role="source"]'), 'no raw row while the turn runs').toBeNull()
+    handle.step({ id: 'a', kind: 'validate', label: 'Validated', status: 'ok', raw: '{"a":1}\n{"b":2}' })
+    handle.step({ id: 'b', kind: 'output', label: 'Updated data', status: 'ok', summary: '2 keys', raw: '{"a":1}\n{"b":2}' })
+    handle.step({ id: 'c', kind: 'note', label: 'Wrote the reply', status: 'ok', raw: 'hello' })
+    handle.finalize()
+    await whenFlushed()
+    const sources = strip(el).querySelectorAll('[data-role="source"]')
+    expect(sources.length, 'exactly one raw block for the whole turn').toBe(1)
+    expect(sources[0]!.textContent, 'latest raw per step, distinct, in step order').toBe('{"a":1}\n{"b":2}\n\nhello')
+    const rawRow = strip(el).querySelector('[data-activity="raw"]')!
+    expect(rawRow.hasAttribute('data-note'), 'a markerless row').toBe(true)
+    const disclosure = rawRow.querySelector(':scope > [data-part="detail"]') as HTMLElement & { summary: string; open: boolean }
+    expect(disclosure.summary).toBe('Raw output')
+    expect(disclosure.open, 'collapsed by default').toBe(false)
+    expect(strip(el).querySelector('[data-part="header-meta"]')?.textContent, 'the receipt counts steps only, never the raw row').toMatch(/^3 steps · /)
+  })
+
+  it('no step carries raw: no raw row at all', () => {
+    const el = stepMode()
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'a', kind: 'request', label: 'Request sent', status: 'ok' })
+    handle.finalize()
+    expect(strip(el).querySelector('[data-activity="raw"]')).toBeNull()
+  })
+
+  it('footer() renders the turn facts as the LAST row; absent facts render nothing, and no footer() call renders no row', () => {
+    const el = stepMode()
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'a', kind: 'request', label: 'Request sent', status: 'ok', raw: 'x' })
+    handle.footer({ rounds: 2, inputTokens: 3210, outputTokens: 845, model: 'model-x' })
+    handle.finalize()
+    const last = strip(el).querySelector(':scope > ui-timeline-item:last-of-type')!
+    expect(last.getAttribute('data-activity')).toBe('footer')
+    expect(last.hasAttribute('data-note')).toBe(true)
+    expect(cell(last, 'text')).toBe('2 rounds · 3,210 input tokens · 845 output tokens · model-x')
+
+    const t2 = el.beginAgentTurn()
+    t2.footer({})
+    t2.finalize()
+    expect(strip(el).querySelector('[data-activity="footer"]'), 'an all-absent footer renders no row').toBeNull()
+    const t3 = el.beginAgentTurn()
+    t3.finalize()
+    expect(strip(el).querySelector('[data-activity="footer"]')).toBeNull()
+  })
+
+  it('fail(): the error row, then raw and footer; a still-running step truncates (never claimed done)', () => {
+    const el = stepMode()
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'v', kind: 'validate', label: 'Validating…', status: 'running', raw: 'bad' })
+    handle.footer({ model: 'model-x' })
+    handle.fail('boom')
+    const kinds = [...strip(el).querySelectorAll(':scope > ui-timeline-item')].map((i) => i.getAttribute('data-activity') ?? i.getAttribute('data-key'))
+    expect(kinds).toEqual(['t1-step-v', 't1-error', 'raw', 'footer'])
+    expect((strip(el).querySelector('[data-key="t1-step-v"]') as Item).status, 'never re-stamped done by the turn ending').toBe('active')
+    expect(cell(strip(el).querySelector('[data-key="t1-step-v"]')!, 'label'), 'the live label survives').toBe('Validating…')
+  })
+
+  it('a step or footer arriving after the turn ended is ignored (no row after the footer)', () => {
+    const el = stepMode()
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'a', kind: 'request', label: 'Request sent', status: 'ok' })
+    handle.finalize()
+    handle.step({ id: 'late', kind: 'request', label: 'Late', status: 'ok' })
+    handle.footer({ model: 'late' })
+    expect(rows(el).map((i) => cell(i, 'label'))).toEqual(['Request sent'])
+  })
+
+  it('OPT-IN DEFAULT: with steps absent, step() and footer() are no-ops and the strip is byte-identical (the negative control)', () => {
+    const CREATE = line({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui' } })
+    const run = (callStepApi: boolean): string => {
+      const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+      const handle = el.beginAgentTurn()
+      handle.progress({ stage: 'sent' })
+      if (callStepApi) handle.step({ id: 'a', kind: 'request', label: 'Request sent', status: 'ok', durationMs: 5, raw: 'x' })
+      handle.ingestLine(CREATE)
+      if (callStepApi) handle.footer({ rounds: 1, model: 'model-x' })
+      handle.finalize()
+      return el.querySelector('[data-part="narration"]')!.outerHTML
+    }
+    const plain = run(false)
+    expect(plain).toContain('Opened a new surface') // the legacy narration really ran
+    expect(run(true), 'the step API leaves a default consumer untouched').toBe(plain)
+  })
+
+  it('the steps gate samples ONCE per turn: flipping it mid-turn never mixes postures within one strip', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn() // sampled: off
+    el.steps = true
+    t1.step({ id: 'a', kind: 'request', label: 'Request sent', status: 'ok' })
+    t1.progress({ stage: 'sent' })
+    t1.finalize()
+    expect(rows(el).map((i) => i.dataset.key), 'the in-flight turn keeps its sampled (legacy) posture').toEqual(['t1-progress-sent'])
+    const t2 = el.beginAgentTurn()
+    t2.step({ id: 'a', kind: 'request', label: 'Request sent', status: 'ok' })
+    t2.progress({ stage: 'sent' })
+    t2.finalize()
+    expect(rows(el).map((i) => i.dataset.key), 'the next turn picks the step posture up').toEqual(['t2-step-a'])
+  })
+})
+
+// ── T-0016 generality proof: a NON-A2UI host (a plain chat with one tool call) drives the SAME control
+// through its own tiny adapter. No A2UI line, no stage table, no catalog: only the neutral model.
+
+describe('ui-conversation: step mode is general purpose: a plain tool-calling chat renders through it (T-0016)', () => {
+  type ChatEvent =
+    | { type: 'request'; at: number }
+    | { type: 'tool_start'; name: string; at: number }
+    | { type: 'tool_end'; name: string; at: number; result: string }
+    | { type: 'reply'; at: number; text: string }
+    | { type: 'usage'; input: number; output: number; model: string }
+
+  /** The fixture adapter: plain chat events in, ActivityStep/ActivityFooter out (what any host would write). */
+  function plainChatAdapter(handle: ReturnType<UIConversationElement['beginAgentTurn']>) {
+    const started = new Map<string, number>()
+    let last = 0
+    return (ev: ChatEvent): void => {
+      if (ev.type === 'request') {
+        last = ev.at
+        handle.step({ id: 'request', kind: 'request', label: 'Request sent', status: 'ok' })
+      } else if (ev.type === 'tool_start') {
+        started.set(ev.name, ev.at)
+        handle.step({ id: `tool-${ev.name}`, kind: 'tool', label: `Calling tool ${ev.name}…`, status: 'running', startedAt: ev.at })
+      } else if (ev.type === 'tool_end') {
+        const ms = ev.at - (started.get(ev.name) ?? ev.at)
+        last = ev.at
+        handle.step({ id: `tool-${ev.name}`, kind: 'tool', label: `Called tool ${ev.name}`, status: 'ok', durationMs: ms, summary: '1 result', raw: ev.result })
+      } else if (ev.type === 'reply') {
+        handle.step({ id: 'reply', kind: 'message', label: 'Wrote the reply', status: 'ok', durationMs: ev.at - last })
+      } else {
+        handle.footer({ inputTokens: ev.input, outputTokens: ev.output, model: ev.model })
+      }
+    }
+  }
+
+  it('renders per-step time, status, summary, the raw row once and the footer, with zero A2UI involvement', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.steps = true
+    const handle = el.beginAgentTurn()
+    const feed = plainChatAdapter(handle)
+    const t0 = Date.now()
+    feed({ type: 'request', at: t0 })
+    feed({ type: 'tool_start', name: 'search', at: t0 + 300 })
+    feed({ type: 'tool_end', name: 'search', at: t0 + 1500, result: '{"hits":["a"]}' })
+    feed({ type: 'reply', at: t0 + 2400, text: 'Here you go.' })
+    feed({ type: 'usage', input: 1200, output: 80, model: 'model-y' })
+    handle.setNote('Here you go.')
+    handle.finalize()
+    await whenFlushed()
+    const s = el.querySelector('[data-part="narration"]')!
+    const items = [...s.querySelectorAll(':scope > ui-timeline-item')]
+    const text = (i: Element, role: string): string => i.querySelector(`:scope > [data-role="${role}"]`)?.textContent ?? ''
+    expect(items.map((i) => text(i, 'label') || i.getAttribute('data-activity'))).toEqual([
+      'Request sent',
+      'Called tool search',
+      'Wrote the reply',
+      'raw',
+      'footer',
+    ])
+    expect(text(items[1]!, 'timestamp'), '"Called tool search (1.2s)"').toBe('1.2s')
+    expect(text(items[1]!, 'description')).toBe('1 result')
+    expect(text(items[2]!, 'timestamp')).toBe('0.9s')
+    expect(s.querySelectorAll('[data-role="source"]').length).toBe(1)
+    expect(s.querySelector('[data-role="source"]')!.textContent).toBe('{"hits":["a"]}')
+    expect(text(items[4]!, 'text')).toBe('1,200 input tokens · 80 output tokens · model-y')
+    expect(s.textContent, 'no A2UI vocabulary leaks into a non-A2UI host').not.toMatch(/surface|Validat|A2UI/i)
   })
 })

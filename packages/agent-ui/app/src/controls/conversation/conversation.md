@@ -29,6 +29,10 @@ attributes:              # attributes-as-API — mirrors conversation.ts `props`
     type: boolean
     default: false
     reflect: true         # GH #240/ADR-0159 wave B — opt-in per-step SOURCE reveal: each narrated step carries the raw wire line(s) it stands for (StatusEntry.source → ui-status-stream's collapsed mono reveal). Default false ⇒ no source ever attached AND producer-attached progress sources dropped — byte-identical narration, fail-closed
+  - name: steps
+    type: boolean
+    default: false
+    reflect: true         # T-0016 (ADR-0159 amendment, proposed): opt-in step mode. Each turn's strip renders only the neutral ActivityStep model the host pushes via handle.step()/footer(); the built-in category/stage narration stays off for that turn. Default false: step()/footer() are no-ops and the strip is byte-identical
   - name: models
     type: json            # readonly {id,label}[] (composer-options.ts's PickerOption) — too structured to reflect
     default: undefined    # undefined ⇒ no Models picker; the original field+Send composer, unchanged
@@ -92,6 +96,8 @@ properties:
     description: OPT-IN receipt pattern (GH #239/ADR-0159, Kim's 2026-07-23 ruling) for the per-turn narration strip. When true, each agent turn's `ui-status-stream` gets BOTH stream-level opt-ins — `oneline` (one morphing line while the turn runs — current step's live label + ticking elapsed + shimmer, expandable mid-turn) and `receipt` (auto-collapse to "Agent activity · N steps · total" at finalize()/fail(), click to re-expand). Reflected boolean, default false — existing consumers keep the always-expanded narration byte-identically.
   - name: sources
     description: 'OPT-IN per-step source reveal (GH #240/ADR-0159 wave B — Kim''s receipt-pattern ruling, part 3). When true, each narrated step carries the raw wire line(s) it stands for as `StatusEntry.source`, rendered by ui-status-stream as a collapsed-by-default mono reveal (summary "Source", one deliberate developer level deep): a CATEGORY entry ("Opened a new surface") accumulates its own ingested A2UI JSONL (createSurface/updateDataModel/… — cumulative, newline-joined), and a PROGRESS entry ("Validating…"/"Self-correcting…") passes through whatever `TurnProgress.source` the producer attached under ITS `progressDetail:''source''` opt-in (the privacy gate — a default stream carries none). Sampled once per turn. Reflected boolean, default false — and fail-closed both ways: when false, no category line is ever attached AND a producer-attached progress source is DROPPED, so default narration stays byte-identical even against a source-carrying stream.'
+  - name: steps
+    description: 'OPT-IN step mode (T-0016, ADR-0159 amendment, proposed). When true (sampled once per turn, at `beginAgentTurn()`), the turn''s narration strip renders ONLY the neutral `ActivityStep` model (`activity-step.ts`, re-exported from this module) that the host pushes through `AgentTurnHandle.step()` and `footer()`: one row per step id (label, one-line summary, live elapsed while running, frozen duration once settled, status glyph; a `repaired` step reads done with its own `arrow-clockwise` marker), then at settle ONE collapsed "Raw output" row holding every distinct step `raw` once, then an optional footer row of turn facts (rounds, input/output tokens, model). `ingestLine()` and `progress()` add no rows in this mode (lines still route and mount surfaces unchanged), and `sources` has no effect. The control knows no A2UI or catalog here: an adapter builds the steps (`site/lib/a2ui-activity.ts` for A2UI turns; any other host writes its own). Reflected boolean, default false: `step()`/`footer()` are no-ops and every existing consumer''s strip is byte-identical. `ui-agent-admin` (the Test Chat) opts in.'
   - name: bubbles
     description: 'GH #1221 (Kim''s 2026-08-17 + 2026-08-18 rulings, the Surface tab''s "Chat bubbles" toggle, `ui-agent-admin`) — the host/agent bubble chrome setting: `''off''` (the DEFAULT, per the morning ruling) keeps the HOST/AGENT bubble CONTAINED — padding + radius — but chrome-less: no background, no border; `''on''` paints the neutral container background (ADR-0160''s chromed look). The USER bubble is untouched in either state. Orthogonal to the Gen-UI/A2UI card hoist (below): a card mounted in `[data-part="mounts"]` keeps its own chrome in EVERY `bubbles` mode, since GH #1221 also moved it to be a sibling of the bubble rather than nested inside it.'
   - name: models
@@ -145,7 +151,7 @@ parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-D
   - name: who
     description: 'GH #306/ADR-0160 amendment — the sender label ("You"/"Agent"), `[data-part="who"]`, the first child of a user/agent turn''s `[data-part="turn"]` wrapper (OUTSIDE the bubble). Absent for a system turn.'
   - name: narration
-    description: 'The per-agent-turn `ui-status-stream` instance (`[data-part="narration"]`), composed fresh per turn. GH #306/ADR-0160 amendment — renders OUTSIDE the bubble, as the agent turn''s `[data-part="turn"]` wrapper''s second child (after `who`, before the bubble).'
+    description: 'The per-agent-turn `ui-status-stream` instance (`[data-part="narration"]`), composed fresh per turn. GH #306/ADR-0160 amendment — renders OUTSIDE the bubble, as the agent turn''s `[data-part="turn"]` wrapper''s second child (after `who`, before the bubble). T-0016 step mode: each step row is a `ui-timeline-item` keyed `t{turn}-step-{id}` carrying `data-kind` (the step''s opaque `kind`); the settle-time rows are markerless note rows marked `data-activity="raw"` (the one "Raw output" reveal) and `data-activity="footer"` (the turn facts).'
   - name: reference-tags
     description: 'GH #891/SPEC-R10 — the SENT user turn''s attachment record (`[data-part="reference-tags"]`), appended INSIDE the user bubble after its `[data-part="body"]`, and ONLY when that turn actually carried references (`addUserMessage`''s optional second argument; an absent/empty list appends nothing at all, so a reference-less bubble is byte-identical to pre-R10). One `[data-part="reference-tag"][data-kind]` per reference — an optional leading `[data-part="reference-tag-icon"]` `ui-icon` (the `TurnReference.icon` glyph the consumer supplied, SPEC-R9) plus a `[data-part="reference-tag-label"]`. DISMISS-LESS by contract: the turn is sent, so there is nothing to remove (the pre-send dismiss affordance is the composer chip''s, and it clears with the text). DISPLAY-ONLY: the bubble body stays the typed text, and the FRAMED attachment text SPEC-R4 puts on the wire never renders in any bubble.'
   - name: mounts
@@ -276,6 +282,35 @@ Each agent turn renders a fresh `ui-status-stream` narrating the turn's own mech
 (open/restructure/react/close, derived from the same envelope-key inspection `categoryOf` already proves
 elsewhere in the fleet) — this ships **unconditionally** (ADR-0088's honest-narration law). The raw JSONL
 `<details>` wire dump is an **opt-in** debugging affordance behind the `disclosure` prop (default `false`).
+
+## Step mode: the strip renders a neutral activity model (T-0016, ADR-0159 amendment, proposed)
+
+The built-in narration above names A2UI message kinds and producer stages, and with `sources` it repeats
+the same raw lines under several rows. A host that wants a general-purpose activity trace opts in with
+`steps` and pushes the neutral `ActivityStep` model itself; the strip then renders only that:
+
+```ts
+import type { ActivityStep } from '@agent-ui/app/conversation'
+
+conv.steps = true
+const handle = conv.beginAgentTurn()
+handle.step({ id: 'request', kind: 'request', label: 'Request sent', status: 'ok', durationMs: 420 })
+handle.step({ id: 'tool-search', kind: 'tool', label: 'Calling tool search…', status: 'running', startedAt: Date.now() })
+handle.step({ id: 'tool-search', kind: 'tool', label: 'Called tool search', status: 'ok', durationMs: 1200, raw: resultJson })
+handle.footer({ inputTokens: 1200, outputTokens: 80, model: 'model-id' })
+handle.finalize()
+```
+
+One row per step `id` (a repeated id updates its row in place): the label, the `summary` as one line
+under it, a live elapsed time while `running` (from `startedAt`), the frozen `durationMs` once settled,
+and the status glyph (`running` active, `ok` done, `failed` error, `repaired` done with its own
+`arrow-clockwise` marker, so a repair is visible without escalating the turn's outcome). At `finalize()`
+or `fail()` the strip appends ONE collapsed "Raw output" row with every distinct step `raw` once, then a
+footer row from `footer()` (rounds, input and output tokens, model). Any absent field renders nothing.
+Summaries are the adapter's job, built from counts and verbs, never from catalog or component type names:
+`site/lib/a2ui-activity.ts` maps an A2UI turn (progress stages, the `TurnTrace`, the shipped lines),
+and any other host (a plain tool-calling chat, say) writes its own small adapter. Without `steps`,
+`step()` and `footer()` are no-ops and the strip renders exactly as before.
 
 ## The agent bubble is hidden until it has real content (GH #313/ADR-0160 amendment, Kim's 2026-07-28 ruling)
 

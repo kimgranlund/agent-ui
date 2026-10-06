@@ -68,12 +68,24 @@
 // §4 contract change the app-surfaces-m2 amendment records), routing the live-turn lifecycle channel into
 // the strip. (The LLD's `narrateTrace`/`TurnTrace` is a separate browser-side DIAGNOSTIC, not a narration
 // entry — it stays out of this narration surface, unchanged by this widening.)
+//
+// STEP MODE (T-0016, ADR-0159 amendment, proposed): the OPT-IN `steps` prop hands the strip to the host.
+// The turn's strip then renders ONLY the neutral `ActivityStep` model (`activity-step.ts`) the host pushes
+// through `handle.step()`/`handle.footer()`: per-step time and status, a one-line summary, ONE collapsed
+// "Raw output" row and an optional footer row, appended at settle. The built-in category/stage narration
+// above stays OFF for that turn (lines still route and mount exactly as before). The control knows no
+// A2UI here: adapters build the steps (the A2UI one is site/lib/a2ui-activity.ts). Default false keeps
+// every existing consumer byte-identical, and step()/footer() are no-ops when it is off (fail-closed).
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 // ADR-0233: the fleet controls this module renders, defined by its own imports (control-reach.test.ts).
 import '@agent-ui/components/controls/icon'
-import '@agent-ui/components/controls/status-stream'
-import type { UIStatusStreamElement } from '@agent-ui/components/controls/status-stream'
+import { formatTotalElapsed } from '@agent-ui/components/controls/status-stream'
+import type { UIStatusStreamElement, StatusEntry, ItemStatus } from '@agent-ui/components/controls/status-stream'
+// T-0016: the neutral step model step mode renders (pure, no DOM, no A2UI).
+import { formatActivityFooter, joinActivityRaw } from './activity-step.ts'
+import type { ActivityStep, ActivityStatus, ActivityFooter } from './activity-step.ts'
+export type { ActivityStep, ActivityStatus, ActivityFooter } from './activity-step.ts' // hosts and adapters import the model from here
 // GH #291/ADR-0160 clause 3 — the settled-turn action-chip row reuses `ui-button` (the
 // ui-status-stream inline-retry-action precedent, GH #147/ADR-0153 Fork 2) rather than hand-rolling a
 // chip control; registered here exactly like that precedent's own import.
@@ -211,6 +223,10 @@ const props = {
   // narration stays byte-identical even against a source-carrying stream.
   sources: { ...prop.boolean(false), reflect: true },
 
+  // T-0016 (ADR-0159 amendment, proposed): the OPT-IN step mode (file header): the strip renders only
+  // the host's `ActivityStep`s. Reflected, default false; sampled once per turn, like `sources`.
+  steps: { ...prop.boolean(false), reflect: true },
+
   // ── The opt-in composer capabilities (the Figma chat-input refactor) ────────────────────────────────
   // Every one below defaults to undefined/empty, so an existing consumer that never sets them (a2ui-chat,
   // a2ui-live) gets the ORIGINAL field+Send composer, unchanged. A consumer (e.g. ui-agent-admin) opts in
@@ -301,6 +317,13 @@ export interface AgentTurnHandle {
    *  B: a producer-attached `ev.source` (the `progressDetail:'source'` opt-in) feeds the entry's per-step
    *  reveal — only when this element's own `sources` prop is set; dropped otherwise (fail-closed). */
   progress(ev: TurnProgress): void
+  /** T-0016 (ADR-0159 amendment): STEP MODE only (the `steps` prop, sampled at turn start; a no-op
+   *  otherwise): upsert one neutral `ActivityStep` row by `id` (a known id updates its row in place). In
+   *  step mode `progress()` and `ingestLine()` add no rows; the host owns the strip's content. */
+  step(step: ActivityStep): void
+  /** T-0016: STEP MODE only: the turn's facts (rounds, tokens, model) for a footer row appended at settle.
+   *  Last write wins; absent fields render nothing; a no-op otherwise. */
+  footer(footer: ActivityFooter): void
   /** GH #1259 / ADR-0206 cl.4 — routes the leading meta-line's model-declared mutation target (the
    *  `target` arm, the SIXTH model-authored meta-line field). Under validate-then-stream the meta-line
    *  is the ONE line that arrives ahead of the content burst, so this call lands at effective turn
@@ -429,6 +452,32 @@ const PROGRESS_LABEL: Record<TurnProgressStage, LabelPair> = {
   retry: { live: 'Self-correcting…', done: 'Self-corrected' },
   tool: { live: 'Running an integration…', done: 'Ran an integration' }, // GH #49 — detail carries the registry tool NAME, composed at call time
   done: { live: 'Done', done: 'Done' },
+}
+
+// ── T-0016 step mode: the neutral ActivityStep → StatusEntry projection ──────────────────────────────
+
+/** The step outcome → strip status. `repaired` reads `done` (the turn's output is good, so it never
+ *  escalates the header) and is told apart by its own marker glyph (`REPAIRED_GLYPH`) and its summary. */
+const STEP_STATUS: Record<ActivityStatus, ItemStatus> = { running: 'active', ok: 'done', repaired: 'done', failed: 'error' }
+const REPAIRED_GLYPH = 'arrow-clockwise'
+const RAW_LABEL = 'Raw output'
+
+/** Project one step onto the strip's entry shape. Every optional field degrades to an EMPTY cell (never a
+ *  stale one from an earlier upsert): a running step ticks from `startedAt` (the strip owns the clock), a
+ *  settled one shows its frozen `durationMs`. An unknown status from an untyped host reads `done`. */
+function stepEntry(key: string, step: ActivityStep): StatusEntry {
+  const running = step.status === 'running'
+  const startedAt = step.startedAt
+  return {
+    key,
+    status: STEP_STATUS[step.status] ?? 'done',
+    label: step.label,
+    description: step.summary ?? '',
+    icon: step.status === 'repaired' ? REPAIRED_GLYPH : '',
+    timestamp: !running && step.durationMs !== undefined && Number.isFinite(step.durationMs) ? formatTotalElapsed(step.durationMs) : '',
+    // '' is the strip's documented "no tick" value: it also clears a clock left over from an earlier span.
+    startedAt: running && startedAt !== undefined && Number.isFinite(startedAt) ? new Date(startedAt).toISOString() : '',
+  }
 }
 
 /** Backward-compat fallback for a turn with no `note` (ADR-0088: a factual message-kind tally, never a
@@ -701,7 +750,7 @@ export class UIConversationElement extends UIElement {
    *  lookup, never a blind "claim whatever's pending" dequeue. */
   beginAgentTurn(opts?: { intoSurface?: string; disabledSurfaceId?: string }): AgentTurnHandle {
     if (!this.#guard('beginAgentTurn')) {
-      return { ingestLine: () => {}, mountGenui: () => {}, setNote: () => {}, progress: () => {}, target: () => {}, finalize: () => {}, fail: () => {} }
+      return { ingestLine: () => {}, mountGenui: () => {}, setNote: () => {}, progress: () => {}, step: () => {}, footer: () => {}, target: () => {}, finalize: () => {}, fail: () => {} }
     }
 
     const wasNear = this.#log!.isNearBottom()
@@ -840,6 +889,20 @@ export class UIConversationElement extends UIElement {
     // progress `source` is dropped — the byte-identical default.
     const withSources = this.sources
     const catLines = new Map<Category, string[]>()
+    // T-0016: step mode, sampled ONCE per turn (the `withSources` discipline). The rows it has rendered,
+    // by step id (insertion order = row order, which the single raw block follows), plus the footer text.
+    const withSteps = this.steps
+    const stepRows = new Map<string, { step: ActivityStep; item: HTMLElement }>()
+    let footerText = ''
+    /** T-0016: the settle-time rows, after every step: ONE collapsed "Raw output" block (every distinct
+     *  step `raw`, step order) and the footer. Both are markerless `note` rows, so the receipt's step count
+     *  never includes them and the completion invariant never truncates them. */
+    const appendSettleRows = (): void => {
+      if (!withSteps) return
+      const raw = joinActivityRaw([...stepRows.values()].map((r) => r.step))
+      if (raw !== '') narration.appendEntry({ key: `t${seq}-raw`, note: true, source: raw, sourceLabel: RAW_LABEL }).dataset.activity = 'raw'
+      if (footerText !== '') narration.appendEntry({ key: `t${seq}-footer`, note: true, text: footerText }).dataset.activity = 'footer'
+    }
     // GH #313 — reveals the bubble exactly once, on the first real content of any kind: a streamed note
     // token, a fresh mount, the chip row, or finalize()'s own note/fallback text. A RESUMED bubble never
     // carries `data-empty` in the first place (TKT-0079: it can only resume because it already mounted a
@@ -1016,7 +1079,7 @@ export class UIConversationElement extends UIElement {
     return {
       ingestLine: (line: string) => {
         turnLines.push(line)
-        const cat = categoryOf(line)
+        const cat = withSteps ? undefined : categoryOf(line) // T-0016: step mode narrates no categories
         if (cat !== undefined && withSources) {
           // GH #240/ADR-0159 wave B — each category step reveals the ACTUAL wire line(s) it stands for:
           // "Opened a new surface" carries its createSurface JSONL, "Updated data" every updateDataModel
@@ -1068,8 +1131,23 @@ export class UIConversationElement extends UIElement {
         }
       },
       progress: (ev: TurnProgress) => {
+        if (withSteps) return // T-0016: in step mode the host's steps are the strip's only content
         routeProgress(ev)
         followTail() // GH #1627 — a narrated progress entry (active or settled) grows/changes the strip's own height
+      },
+      step: (step: ActivityStep) => {
+        if (!withSteps || ended) return // fail-closed off step mode; a late step never lands past the footer
+        const key = `t${seq}-step-${step.id}`
+        const known = stepRows.get(step.id)
+        if (known !== undefined) narration.update(key, stepEntry(key, step))
+        const item = known?.item ?? narration.appendEntry(stepEntry(key, step))
+        item.dataset.kind = step.kind
+        stepRows.set(step.id, { step, item })
+        followTail()
+      },
+      footer: (footer: ActivityFooter) => {
+        if (!withSteps || ended) return
+        footerText = formatActivityFooter(footer)
       },
       target: (surfaceId: string) => {
         // GH #1259 / ADR-0206 cl.4 — the model-declared mutation target, arriving on the leading
@@ -1097,6 +1175,7 @@ export class UIConversationElement extends UIElement {
         // not completed).
         for (const cat of categoriesSeen) narration.update(`t${seq}-${cat}`, { status: 'done', label: LABEL[cat].done })
         if (lastProgressKey !== undefined) settleProgress(lastProgressKey)
+        appendSettleRows() // T-0016: step mode's raw + footer rows, after every step, before the receipt settles
         narration.finalize()
         const finalNote = noteText ?? summarize(turnLines)
         if (finalNote !== '') revealBubble() // GH #313 — the fallback tally is real content too
@@ -1131,6 +1210,7 @@ export class UIConversationElement extends UIElement {
         // F8's header-level face) and truncates the in-flight entries. Still settles whatever surfaces the
         // partial turn touched (the a2ui-chat.ts `finally` block precedent, unconditional on success/failure).
         narration.appendEntry({ key: `t${seq}-error`, status: 'error', label: `Turn failed — ${message}` })
+        appendSettleRows() // T-0016: a failed turn still shows its raw output and facts, after the error row
         narration.fail()
         this.#settleTouchedHosts(touchedIds)
         // GH #805 — don't strand a dead card: re-enable the surface whose OWN action started this now-

@@ -1443,3 +1443,57 @@ describe('ui-conversation GH #1124 — a throttled A2UI stream paints full-width
     expect(settled.left, 'finalize moved the root — streaming and settled geometry disagree').toBeCloseTo(beforeLeft, 0)
   })
 })
+
+// T-0016 (ADR-0159 amendment, proposed): step mode in a real engine: jsdom proves the rows' text and
+// order; only a real layout proves the time/summary cells actually paint, the raw block really stays
+// collapsed until clicked, and the settle-time rows sit after every step.
+describe('ui-conversation cross-engine: step mode paints the neutral ActivityStep strip (T-0016)', () => {
+  it('per-step time and summary paint as real boxes; the one raw block is collapsed; the footer sits last', async () => {
+    const el = mountConversation('520px', '480px')
+    el.steps = true
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'request', kind: 'request', label: 'Request sent', status: 'ok', durationMs: 420 })
+    handle.step({ id: 'tool', kind: 'tool', label: 'Called tool search', status: 'ok', durationMs: 1200, summary: '1 result', raw: '{"hits":["a"]}' })
+    handle.step({ id: 'check', kind: 'validate', label: 'Validated', status: 'repaired', durationMs: 90, summary: 'Round 1 failed (SCHEMA), repaired in round 2' })
+    handle.footer({ rounds: 2, inputTokens: 3210, outputTokens: 845, model: 'model-x' })
+    handle.finalize()
+    await whenFlushed()
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const strip = el.querySelector('[data-part="narration"]') as HTMLElement
+    const items = [...strip.querySelectorAll<HTMLElement>(':scope > ui-timeline-item')]
+    const cell = (i: HTMLElement, role: string): HTMLElement => i.querySelector(`:scope > [data-role="${role}"]`) as HTMLElement
+    const painted = (n: Element): boolean => {
+      const r = n.getBoundingClientRect()
+      return r.width > 0 && r.height > 0
+    }
+
+    const tool = items[1]!
+    expect(cell(tool, 'timestamp').textContent).toBe('1.2s')
+    expect(painted(cell(tool, 'timestamp')), 'the per-step time paints').toBe(true)
+    expect(painted(cell(tool, 'description')), 'the one-line summary paints').toBe(true)
+    const repairedMarker = items[2]!.querySelector('svg[data-role="marker"]')
+    expect(repairedMarker, 'a repaired step wears a real glyph marker').not.toBeNull()
+    expect(painted(repairedMarker!)).toBe(true)
+
+    const raw = strip.querySelector<HTMLElement>('[data-activity="raw"]')!
+    const pre = raw.querySelector<HTMLElement>('[data-role="source"]')!
+    expect(pre.textContent).toBe('{"hits":["a"]}')
+    // checkVisibility, not a box probe: a closed details hides content via content-visibility and keeps a
+    // layout box (the status-stream.browser.test.ts source-reveal precedent).
+    expect(pre.checkVisibility(), 'collapsed by default: the raw text is genuinely hidden').toBe(false)
+    const summary = raw.querySelector('summary')!
+    expect(summary.textContent).toContain('Raw output')
+    expect(painted(summary), 'the "Raw output" trigger itself is visible').toBe(true)
+    summary.click()
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    expect(pre.checkVisibility(), 'one click reveals the raw output').toBe(true)
+
+    const footer = strip.querySelector<HTMLElement>('[data-activity="footer"]')!
+    expect(cell(footer, 'text').textContent).toBe('2 rounds · 3,210 input tokens · 845 output tokens · model-x')
+    expect(painted(cell(footer, 'text'))).toBe(true)
+    const tops = [items[2]!, raw, footer].map((n) => n.getBoundingClientRect().top)
+    expect(tops[0]!, 'raw row sits below the last step').toBeLessThan(tops[1]!)
+    expect(tops[1]!, 'the footer sits last').toBeLessThan(tops[2]!)
+  })
+})
