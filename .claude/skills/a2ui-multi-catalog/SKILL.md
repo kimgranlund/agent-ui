@@ -70,6 +70,11 @@ two have no merge primitive in common (`persona-catalog-composition.spec.md` §1
    `npm run generate:registry`; the loader's persona list is hard-coded and a gate holds it equal to
    `SHIPPED_PERSONA_CATALOG_MANIFESTS`. A persona type carries a derived control tag only when it is itself a
    fleet control (`PlayingCard`); a composition such as `BookingForm` carries none.
+   A persona's server-safe `PersonaCatalogManifest` may declare `semanticChecks` (ADR-0238):
+   pure, DOM-less domain checks `produce()` runs after the shared validator on every turn whose
+   selected catalog is one of the persona's derived ids, resolved by `semanticChecksForCatalog`. The
+   Croupier's hand check (`personas/croupier/checks.ts`) is the worked example; the contract is
+   `src/catalog/semantic-check.ts`.
 
 ## Citation key
 

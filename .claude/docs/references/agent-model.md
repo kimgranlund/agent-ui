@@ -157,7 +157,14 @@ header pointing here.
   `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts`
   (ADR-0235, proposed). Not the fragment manifest `PersonaCatalogManifest`
   (`catalog/personas/<id>/manifest.ts`), the Node-safe `personaId`/`fragment`/`targetCatalogs`
-  triple of GH #516, which stays inside the a2ui package.
+  triple of GH #516 (plus any `semanticChecks`), which stays inside the a2ui package.
+- **semantic check**: a pure, deterministic domain check a persona declares on its fragment manifest
+  (`PersonaCatalogManifest.semanticChecks`, contract in `packages/agent-ui/a2ui/src/catalog/semantic-check.ts`).
+  `produce()` runs it on a round that already passed the shared validator, over each touched surface merged
+  with the session; a finding (`{code, path, message}`) is fed back as a self-correct round, and at the round
+  bound the valid payload ships tallied `SEMANTIC_UNCORRECTED` (ADR-0238). The first one is the
+  Croupier's hand check (a stated total must match the cards shown). Not the A2UI protocol's `checks`
+  (input validation on a component) and not a model-graded round.
 - **prompt budget**: the declared character ceiling on the whole composed system prompt, per catalog
   family (`PROMPT_CHAR_BUDGET_BASE`, `PROMPT_CHAR_BUDGET_DERIVED` in `src/agent/prompt-budget.ts`). Each
   turn reports its section sizes against it as `trace.prompt`, and the provider-billed token counts as
@@ -247,4 +254,5 @@ support.google.com/gemini/answer/15236321 (Gemini Gems "Knowledge").
 | `AgentManifest` | `site/lib/agent-manifest/agent-manifest.ts` | ADR-0235 |
 | `AgentTransport`, `Turn` | `packages/agent-ui/a2ui/src/agent/agent-transport.ts` | ADR-0069, ADR-0073 |
 | `ActivityStep`, `ActivityStatus`, `ActivityFooter` | `controls/conversation/activity-step.ts` (re-exported from `@agent-ui/app/conversation`) | ADR-0159 amendment (T-0016) |
+| `SemanticCheck`, `SemanticFinding`, `SurfaceView` | `packages/agent-ui/a2ui/src/catalog/semantic-check.ts` | ADR-0238 |
 | `DevtoolsEvent`, `DevtoolsCapture` | `packages/agent-ui/devtools/src/timeline/events.ts`, `capture/format.ts` | ADR-0200 |

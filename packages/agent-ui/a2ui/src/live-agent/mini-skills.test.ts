@@ -579,3 +579,34 @@ describe('card-layout: the GH #1795 Card-body padding teaching (ADR-0056 mixed c
     expect(skill.body).toMatch(/PlayingCard \(rank\/suit enums, faceDown boolean\)/)
   })
 })
+
+// GH #1795 (T-0016, hand-consistency half). The live Croupier listed three dealer cards (6, 5, 3 = 14)
+// while its own readout said "Dealer: 14, draws to 17": static card components and a free-text total
+// can drift apart. The teaching now makes the hand DATA (one list per hand, drawn by one templated Row) and
+// the total a value computed from that list, so the cards shown and the total stated share one source.
+// The runtime backstop is the ADR-0238 croupier hand check (`catalog/personas/croupier/checks.ts`).
+describe('card-layout + game-table-chrome: the data-driven hand and computed total (GH #1795, T-0016)', () => {
+  const body = (id: string): string => MINI_SKILLS.find((m) => m.id === id)!.body
+
+  it('card-layout teaches each hand as a data-model list drawn by one templated Row, never a static card per component', () => {
+    expect(body('card-layout')).toMatch(/A hand is DATA: an array at \/dealerHand or \/playerHand/)
+    expect(body('card-layout')).toMatch(/"children":\{"path":"\/dealerHand","componentId":"dealerCard"\}/)
+    expect(body('card-layout')).toMatch(/never one static component per card/)
+    expect(body('card-layout')).toMatch(/A draw appends to the array/)
+  })
+
+  it('card-layout teaches computing each total from the listed cards, with the blackjack values, at a bound path', () => {
+    expect(body('card-layout')).toMatch(/Compute each total from the cards you list \(A = 1 or 11, J\/Q\/K = 10\)/)
+    expect(body('card-layout')).toMatch(/write it at \/dealerTotal or \/playerTotal/)
+  })
+
+  it('game-table-chrome binds each zone total and keeps the readout to the total only', () => {
+    expect(body('game-table-chrome')).toMatch(/bound to \/dealerTotal or \/playerTotal and stating the total only/)
+  })
+
+  it('both modules stay within the per-module token budget and still fire together on a blackjack deal', () => {
+    for (const id of ['card-layout', 'game-table-chrome']) expect(estimateTokens(body(id)), id).toBeLessThanOrEqual(PER_MODULE_TOKEN_BUDGET)
+    const ids = selectMiniSkills('Deal a round of Blackjack.', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui').map((m) => m.id)
+    expect(ids).toEqual(expect.arrayContaining(['card-layout', 'game-table-chrome']))
+  })
+})

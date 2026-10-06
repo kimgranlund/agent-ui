@@ -2,7 +2,8 @@
 
 Source of truth: `produce` in `packages/agent-ui/a2ui/src/agent/produce.ts` (with
 `ProduceOptions.maxRounds`, `ProduceHalt`, `interleaveProgress`, `formatMetaLine`,
-`sessionSurfaceSeeds`, `feedScopeFailures`, `netNoOpSurfaceIds`, `askIntegrityHolds`), and
+`sessionSurfaceSeeds`, `feedScopeFailures`, `netNoOpSurfaceIds`, `askIntegrityHolds`),
+`src/catalog/semantic-check.ts` (`semanticSurfaceViews`, `runSemanticChecks`, ADR-0238), and
 `meta-line.ts` (`formatErrorLine`, `TURN_PROGRESS_STAGES`). ADR-0206 for the timing contract.
 
 ## Per round, in this order
@@ -22,7 +23,9 @@ Source of truth: `produce` in `packages/agent-ui/a2ui/src/agent/produce.ts` (wit
    `atFinalize` is a turn-end-only judgment (ADR-0187), off mid-stream, so a
    `createSurface` with no components fails `root-missing` before anything ships.
 7. On a valid verdict: the FEED_SCOPE gate when an `ask` is declared (a violation is a
-   self-correct round), then the NET_NOOP dodge check (a surface created and deleted in one turn
+   self-correct round), then the persona's semantic checks when `deps.semanticChecks` is set
+   (ADR-0238: a finding is a self-correct round carrying its sentence; on the last round
+   the valid payload ships tallied `SEMANTIC_UNCORRECTED`, never a halt), then the NET_NOOP dodge check (a surface created and deleted in one turn
    gets one correction round, then the group is stripped and the turn degrades to prose,
    tally `NET_NOOP_STRIPPED`), then ask integrity.
 8. Ask integrity is a silent whole-degrade, never a retry: an ask with no matching payload, or
@@ -33,8 +36,9 @@ Source of truth: `produce` in `packages/agent-ui/a2ui/src/agent/produce.ts` (wit
 
 `maxRounds` bounds the loop. Exhaustion throws `ProduceHalt` carrying the last failures; a
 transport that already committed a 200 turns that into the terminal error line below.
-`FEED_SCOPE`, `NET_NOOP`, `FLOW_END_MISSING` and the genui codes are produce-layer-only and are
-not members of the protocol `ErrorCode` union.
+`FEED_SCOPE`, `NET_NOOP`, `FLOW_END_MISSING`, the genui codes and a semantic check's own codes
+(`HAND_TOTAL`, `HAND_COUNT`, `SEMANTIC_UNCORRECTED`, `SEMANTIC_CHECK_ERROR`) are produce-layer-only and
+are not members of the protocol `ErrorCode` union.
 
 ## What the consumer sees, in order (validate-then-stream)
 

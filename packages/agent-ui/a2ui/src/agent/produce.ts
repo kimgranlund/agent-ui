@@ -64,6 +64,16 @@
 // the final yield). VALIDATE-THEN-STREAM is UNTOUCHED: progress is not content — it never enters
 // heal/validate/corpus and no A2UI content line ever precedes validation (SPEC-R5). `progressDetail`
 // ('stages' default) keeps raw thinking text OFF the wire; 'full' forwards bounded excerpts (F3).
+//
+// ADR-0238, GH #1795: a persona MAY declare SEMANTIC CHECKS (`ProduceDeps.semanticChecks`, the
+// host resolves them for the selected catalog). They run on a round whose payload ALREADY passed the shared
+// validator and the FEED_SCOPE gate, over the merged per-surface view (`catalog/semantic-check.ts`). A finding is a
+// self-correct round fed back like a validator failure, carrying its one-sentence `detail` (the GH #288
+// lesson: a code and a path alone teach nothing). Rounds are spent while any remain (bounded by
+// `maxRounds`); a finding on the LAST round never halts: that structurally valid payload ships with
+// `SEMANTIC_UNCORRECTED` tallied on the trace (the NET_NOOP/FLOW_END posture for a policy check, because a
+// domain check is a heuristic and a false positive must never stall a turn). A throwing check is skipped
+// and tallied `SEMANTIC_CHECK_ERROR`. Absent or empty `semanticChecks` ⇒ none of this runs: byte-identical.
 
 import type { A2uiServerMessage, A2uiOutput } from '../protocol.ts'
 import type { Catalog } from '../catalog/catalog.ts'
@@ -85,6 +95,8 @@ import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-sk
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
 import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES } from './genui-line.ts'
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
+import { runSemanticChecks, semanticSurfaceViews } from '../catalog/semantic-check.ts'
+import type { SemanticCheck } from '../catalog/semantic-check.ts'
 
 const PROTOCOL_VERSION = 'v1.0'
 const DEFAULT_MODEL = 'claude-sonnet-5' // the registry's defaultModel (providers.json)
@@ -95,6 +107,9 @@ export interface ProduceDeps {
   provider: AgentProvider
   retrieve: (query: RetrieveQuery) => CorpusRecord[]
   catalog: Catalog
+  /** ADR-0238: the persona's semantic checks for `catalog` (a host resolves them with
+   *  `semanticChecksForCatalog(catalog.catalogId, …)`). Absent or empty ⇒ no check runs, byte-identical. */
+  semanticChecks?: readonly SemanticCheck[]
 }
 
 export interface ProduceOptions {
@@ -296,6 +311,9 @@ async function* interleaveProgress(
 interface RoundFailure {
   code: string
   path: string
+  /** ADR-0238: a semantic finding's one-sentence explanation, appended to the self-correct
+   *  feedback (`messagesFor`). Validator and produce-layer failures never carry one. */
+  detail?: string
 }
 
 /** Thrown when the loop exhausts `maxRounds` without a valid payload — the page shows a "could not
@@ -507,13 +525,14 @@ function messagesFor(
   if (failures && failures.length > 0 && lastRaw !== undefined) {
     turns.push({ role: 'assistant', content: lastRaw })
     const summary = failures
-      .map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}${expectedTypeNote(f, catalog, lastOutput)}`)
+      .map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}${expectedTypeNote(f, catalog, lastOutput)}${f.detail ? `: ${f.detail}` : ''}`)
       .join('; ')
     const hint =
       (failures.some((f) => f.code === 'PARSE') ? PARSE_HINT : '') +
       idgraphHint(failures) +
       (failures.some((f) => f.code === 'NET_NOOP') ? NET_NOOP_HINT : '') + // GH #1142 — the net-no-op correction round's guidance
-      (failures.some((f) => f.code === 'FLOW_END_MISSING') ? FLOW_END_HINT : '') // GH #1168 — the missing-flowEnd correction round's guidance
+      (failures.some((f) => f.code === 'FLOW_END_MISSING') ? FLOW_END_HINT : '') + // GH #1168 — the missing-flowEnd correction round's guidance
+      (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') // ADR-0238: a semantic-finding round's guidance
     turns.push({
       role: 'user',
       content: `That output was INVALID (${summary}).${hint} Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,
@@ -902,6 +921,13 @@ const FLOW_END_HINT =
   'note, addressed to the user in persona — with "flowEnd": true added on that same line, and still ' +
   'NO A2UI lines after it.'
 
+/** ADR-0238: the self-correct sentence for a round with semantic findings (the NET_NOOP_HINT
+ *  shape: one appended sentence, no new round kind). The payload was structurally valid; what it states
+ *  contradicts what it shows, and each finding's own detail names the contradiction and the repair. */
+const SEMANTIC_HINT =
+  ' Those findings are contradictions inside your content, not schema errors: change the values so ' +
+  'what the surface states agrees with what it shows, and keep every other line as it was.'
+
 /**
  * TKT-0081 — the cross-turn validation seed: replay the session's prior ASSISTANT turns (validated JSONL,
  * exactly what `appendAssistantTurn` stored) into a per-surface `SurfaceSeed` for `validateA2ui`. Without
@@ -1210,6 +1236,19 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
           continue
         }
       }
+      // ADR-0238: the persona's semantic checks, AFTER structure and feed scope, BEFORE anything
+      // streams. A finding spends a self-correct round while one is left; on the last round the valid
+      // payload ships with a tally instead (see the header). Skipped entirely when no check is declared.
+      const semanticTally: string[] = []
+      if (deps.semanticChecks !== undefined && deps.semanticChecks.length > 0) {
+        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces: semanticSurfaceViews(input.session, assembled.output) })
+        if (semantic.findings.length > 0 && round < opts.maxRounds - 1) {
+          failures = semantic.findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
+          continue
+        }
+        if (semantic.findings.length > 0) semanticTally.push('SEMANTIC_UNCORRECTED')
+        if (semantic.errored.length > 0) semanticTally.push('SEMANTIC_CHECK_ERROR')
+      }
       // GH #1142 — the net-no-op dodge (a surface created AND deleted in this same turn, closing GH
       // #1061's producer strand). The dodge gets exactly ONE targeted correction round through the
       // existing ADR-0187 atFinalize self-correct seam (NET_NOOP + NET_NOOP_HINT: emit no A2UI instead);
@@ -1267,6 +1306,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
         // otherwise-successful round still needs to land on the trace, not just the retried case.
         if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
         if (flowEndFedBack && flowEnd === undefined) failureCodes.push('FLOW_END_UNCORRECTED') // GH #1168 — the correction round came back content-bearing and still without flowEnd: ships unchanged, tallied
+        failureCodes.push(...semanticTally) // ADR-0238: SEMANTIC_UNCORRECTED / SEMANTIC_CHECK_ERROR on the shipping round, never a retry trigger
         yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk, plan, personaPatch, flowEnd, team, target) // meta-line FIRST
       }
       // genui-surface SPEC-R1 — a genui structural failure on an OTHERWISE-valid A2UI round is DROPPED

@@ -130,6 +130,13 @@ The arc's ordering, cheapest-correct-first:
    structural trap needs a code fix (there: session-seeded validation), not prose.
 3. **Only then sharpen prose** — and prefer teaching the MECHANISM over adding a guard sentence
    (TKT-0077's guard sentence aimed at a wrong hypothesis and changed nothing).
+4. **A structurally valid payload that contradicts itself in a persona's domain** (GH #1795: a dealer
+   readout stating 17 over cards that total 14) is invisible to the validator. Teach the shape that
+   makes it impossible by construction (`card-layout`: a hand is a data list drawn by one templated
+   Row, the total computed from that list), and back it with a persona semantic check
+   (`PersonaCatalogManifest.semanticChecks`, ADR-0238) whose finding feeds the repair round.
+   Keep the teaching and the check naming the same paths (`/dealerHand`, `/dealerTotal`), or the
+   check judges a shape the prompt never asked for.
 
 ## Worked precedents
 

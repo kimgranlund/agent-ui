@@ -1622,5 +1622,12 @@
     "description": "The capability registry is a derived index in @agent-ui/a2ui, composed from objects hosts already hold and projected to one committed file",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0238",
+    "url": "./adr-index.html#adr-0238",
+    "description": "A persona may declare semantic checks that produce() runs after structural validation, feeding the existing repair round",
+    "level": "L3",
+    "section": "Records"
   }
 ]
