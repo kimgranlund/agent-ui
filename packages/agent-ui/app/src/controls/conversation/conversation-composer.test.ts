@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, beforeAll, afterAll } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 import { UIConversationComposerElement } from './conversation-composer.ts'
-import '@agent-ui/components/components' // self-registers ui-button/ui-menu/ui-icon
+import '@agent-ui/components/all' // self-registers ui-button/ui-menu/ui-icon
 import {
   splitFrontmatter,
   parseDescriptor,

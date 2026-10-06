@@ -6,7 +6,7 @@ import { server, cdp, userEvent } from 'vitest/browser'
 // (vitest.browser.config.ts). jsdom-green ≠ done — this proves REAL painted geometry, real platform
 // click/keyboard activation, and forced-colors survival.
 //
-// These imports are DIRECT (not the `@agent-ui/components/components` barrel / `component-styles.css`
+// These imports are DIRECT (not the retired family barrel / CSS
 // barrel) — the M1-a checkpoint ships this folder standalone; the barrel/style-barrel wiring is the
 // LLD-C11 integration slice's job (a separate, single-writer wave). The checkbox.browser.test.ts precedent.
 import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--md-sys-height/font/space-*)

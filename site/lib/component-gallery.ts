@@ -17,7 +17,8 @@ import '@agent-ui/components/controls/theme-provider' // self-defining <ui-theme
 import './component-gallery.css'
 import { UIElement, computed, mount, repeat, signal, watch, Directive, directive, NO_COMMIT } from '@agent-ui/components'
 import type { DirectiveResult, Signal } from '@agent-ui/components'
-import type { UISelectElement, UITextFieldElement } from '@agent-ui/components/components'
+import type { UISelectElement } from '@agent-ui/components/controls/select'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import { parseDoc } from './frontmatter.ts'
 
 // ── LLD-C1 — the derived member list ───────────────────────────────────────────────────────────────────────

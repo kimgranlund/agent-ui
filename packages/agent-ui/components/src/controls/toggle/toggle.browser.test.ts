@@ -8,10 +8,10 @@ import { server, cdp, userEvent } from 'vitest/browser'
 // refused-toggle cancel path under real userEvent dispatch (not scripted MouseEvent construction).
 //
 // Side-effect imports — the load-bearing CSS order (ADR-0003): foundation roles + dimensional ramp FIRST,
-// then the component sheet, then the self-defining family barrel. Vite injects them.
+// then the component sheet, then the self-defining `all` entry. Vite injects them.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 import '@agent-ui/icons/phosphor' // registers the Phosphor pack so <ui-icon glyph="…"> resolves real glyphs
 
 // ── markup ───────────────────────────────────────────────────────────────────────────────────────────

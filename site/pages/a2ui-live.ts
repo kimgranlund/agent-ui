@@ -29,7 +29,7 @@ import '@agent-ui/app/surface-host' // self-defines <ui-surface-host>
 import '@agent-ui/app/conversation-composer.css' // ui-conversation-composer's own field-frame chrome (TKT-0056/0058)
 import '@agent-ui/app/conversation-composer' // self-defines <ui-conversation-composer> — composed standalone, NOT via <ui-conversation>
 import type { UIConversationComposerElement } from '@agent-ui/app/conversation-composer' // the ONE subpath — never the root barrel, which would also type-name (never runtime-import) UIConversationElement
-import type { UIStatusStreamElement } from '@agent-ui/components/components' // the standalone narration widget (ui-status-stream is already registered — `_page.ts`'s `@agent-ui/components/components` import, step [3])
+import type { UIStatusStreamElement } from '@agent-ui/components/controls/status-stream' // the standalone narration widget (ui-status-stream is already registered — `_page.ts`'s `@agent-ui/components/all` import, step [3])
 import './a2ui-live.css'
 import { codeBlock } from '../lib/code-block.ts'
 import type { A2uiClientMessage, A2uiServerMessage } from '@agent-ui/a2ui'

@@ -8,6 +8,8 @@ tag: ui-breadcrumb
 description: A wayfinding trail of ordered crumb links ending in the current page — tag-agnostic author children, an optional slotted separator template, an auto-stamped current-page leaf, and an optional `collapse="menu"` fold of the middle behind a composed overflow menu.
 tier: pattern          # geometry.md Pattern band — NO control-height row of its own (the intake's Geometry row, citing ADR-0163 cl.6 verbatim: the crumbs carry their own geometry, the novelty is zero)
 extends: UIElement     # NOT form-associated (face below) — transient wayfinding view state, not a submittable value
+uses:
+  - ui-menu
 
 attributes:             # attributes-as-API — mirrors breadcrumb.ts `static props` (label, inline, collapse, collapseKeepTrailing)
   - name: label

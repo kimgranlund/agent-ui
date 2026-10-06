@@ -5,7 +5,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
-import '@agent-ui/components/components' // self-defines the ui-* controls so the renderer's nodes upgrade + wire clicks
+import '@agent-ui/components/all' // self-defines the ui-* controls so the renderer's nodes upgrade + wire clicks
 import { createRenderer } from '../renderer/renderer.ts'
 import type { A2uiClientMessage } from '../renderer/renderer.ts'
 import type { A2uiActionMessage } from '../protocol.ts'

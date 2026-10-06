@@ -6,7 +6,7 @@ import { page, server } from 'vitest/browser'
 // composer FILLS its block container; an `[inline]` composer HUGS at the relocated ~20ch floor.
 // Chromium-only. Re-baseline only via `npm run test:visual:update`.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import './conversation-composer.css'
 import './conversation-composer.ts'
 import '@agent-ui/icons/phosphor'

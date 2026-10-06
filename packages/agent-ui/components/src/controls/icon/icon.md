@@ -6,6 +6,7 @@
 tag: ui-icon
 tier: display          # geometry size-class (Display band — NO control frame/height; geometry.md lists "icon" as a Display example)
 extends: UIElement     # a non-interactive display LEAF — NOT form-associated (face below), NOT a UIContainerElement surface
+uses: []
 # marginal: ui-icon adds 513 B gz (1546 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without ui-icon's export — it + the @agent-ui/icons resolve/registry/types path it pulls in, zero Phosphor bytes — subpath-only) — within budget: family total 22193 B gz / 22528 B gz (scripts/measure-size.mjs); the family total stays gated each run.
 
 attributes:            # attributes-as-API — mirrors icon.ts `static props` (name, label)

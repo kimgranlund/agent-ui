@@ -84,6 +84,7 @@ const FAILURE_DESCRIPTIONS: Record<Failure['code'], string> = {
   FUNCTION: 'a render-time function-binding failure (never emitted by the static validator)',
   DEPTH_EXCEEDED: 'the root-reachable component tree nests past the render-depth cap (SPEC-R15, GH #473)',
   CONTAINMENT: 'a CardHeader/CardContent/CardFooter node is not a direct child of a Card (a2ui-container-vocabulary SPEC-R6)',
+  CONTROL_LOAD: 'a catalog control loader failed at render time (never emitted by the static validator)',
 }
 
 function toPrintable(f: Failure): { code: Failure['code']; path: string; message: string } {

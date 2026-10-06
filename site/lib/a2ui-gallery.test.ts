@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
 import { buildSeedGallery, buildSeedCard } from './a2ui-gallery.ts'
 import { allSeeds } from '@agent-ui/a2ui/examples'
 import type { ExampleSeed } from '@agent-ui/a2ui/examples'

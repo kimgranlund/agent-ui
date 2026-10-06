@@ -12,7 +12,7 @@ import type { UIModalElement } from './modal.ts'
 //
 // Side-effect imports — the load-bearing CSS order (ADR-0003): foundation roles + dimensional ramp FIRST, then
 // the shared container surface seam, then the modal sheet, then the self-defining module. Imported DIRECTLY
-// (relative), not via the component-styles barrel — the s12 barrel wiring of container.css + modal.css lands
+// (relative), not per control or via shared-styles.css (ADR-0233, no barrel) — the s12 barrel wiring of container.css + modal.css lands
 // after this slice, so the test is self-contained.
 import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container.css'

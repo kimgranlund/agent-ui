@@ -21,11 +21,17 @@
  *       the text-field leading/trailing-adornment precedent) is ordered LAST via flex `order` and paints
  *       nothing when absent (no layout hole, SPEC-R4 AC3).
  *
- * Standalone stylesheet — linked via component-styles.css; never injected from color-picker.ts (behaviour-
+ * Standalone stylesheet, linked as its own control sheet (ADR-0233 cl.3); never injected from color-picker.ts (behaviour-
  * only `.ts`, no runtime style injection — plan §2).
  */
 
 /* ══════════════════════ [1] TOKEN BLOCK — :where(ui-color-picker) ══════════════════════════════ */
+
+/* uses: synced from color-picker.md by scripts/codemod-uses.mjs */
+@import '../button/button.css';
+@import '../slider/slider.css';
+@import '../swatch/swatch.css';
+@import '../text-field/text-field.css';
 
 :where(ui-color-picker) {
   /* Shell gap — off the space scale (the container-box.css / calendar-panel precedent). */

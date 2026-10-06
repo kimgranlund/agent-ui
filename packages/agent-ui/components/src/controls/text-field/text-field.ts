@@ -369,7 +369,7 @@ export class UITextFieldElement extends UIFormElement {
         // Slow path: dynamic import on first open; after that, `calendarLoaded` keeps it synchronous.
         //
         // NOTE — M1 test gap: the slow path (dynamic import) is NOT exercised by the test suite because
-        // both the barrel (controls/index.ts) and the browser test harness pre-register <ui-calendar>,
+        // both the demo-only `all` entry (all.gen.ts) and the browser test harness pre-register <ui-calendar>,
         // making customElements.get('ui-calendar') always truthy. Isolating an unregistered-calendar
         // context would require unregistering a custom element, which the spec forbids. The slow path
         // is correct by code-review (same try-free import chain as `calendarLoaded=true → open()`); the

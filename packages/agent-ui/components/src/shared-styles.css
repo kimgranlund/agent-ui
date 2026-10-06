@@ -1,0 +1,17 @@
+/* shared-styles.css: the cross-family seam sheet (ADR-0233). It loads the shared `_surface/` and `_chart/`
+ * layers exactly once, between the foundation (`foundation-styles.css`, or shared's `tokens.css` then
+ * `dimensions.css`) and any control sheet:
+ *   - `_surface/container.css`: the surface paint seam (`--ui-container-bg`/`-tint`, elevation and
+ *     brightness, ADR-0015) the container family consumes;
+ *   - `_surface/container-box.css`: the shared container box model (margin inset and sticky regions), after
+ *     the paint layer and before any control sheet, so a control's own `@scope` block can override it;
+ *   - `_chart/chart-axis.css`: the chart axis, inset and series vocabulary at `:where(:root)` (ADR-0228).
+ *
+ * The order inside this sheet is load-bearing; keep it. A control sheet never imports a seam: a browser
+ * applies every duplicate import separately, so a second seam copy would land after `card.css` and reset the
+ * `--ui-container-bg` seed card declares by later source at equal `:where()` specificity. Link this sheet once.
+ * Relative imports only, so the sheet stays CDN-safe. Exposed as the package `./shared-styles.css` export.
+ */
+@import './controls/_surface/container.css';
+@import './controls/_surface/container-box.css';
+@import './controls/_chart/chart-axis.css';

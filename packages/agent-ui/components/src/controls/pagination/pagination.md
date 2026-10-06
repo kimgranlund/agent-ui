@@ -7,6 +7,8 @@ tag: ui-pagination
 description: A standalone page navigator — previous/next plus a windowed page-number list with ellipsis, composing ui-button for every stop.
 tier: pattern          # geometry.md Pattern band — NO control-height row of its own (ADR-0163 cl.6): the composed ui-button stops carry their own §1 geometry
 extends: UIElement     # NOT form-associated (face below) — transient navigation state, not a submittable value
+uses:
+  - ui-button
 
 attributes:             # attributes-as-API — mirrors pagination.ts `static props` (page, pages, label)
   - name: page

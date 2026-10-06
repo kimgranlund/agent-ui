@@ -9,7 +9,7 @@
 // element, no shadow-root focus delegation to route around).
 
 import { describe, it, expect } from 'vitest'
-import '@agent-ui/components/components' // self-defines ui-* controls (the real default-catalog factories)
+import '@agent-ui/components/all' // self-defines ui-* controls (the real default-catalog factories)
 import { createRenderer } from './renderer.ts'
 
 describe('structural-resend reconciliation — focus survival across engines (RSR-C6, SPEC-R2 AC1)', () => {

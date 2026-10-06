@@ -11,6 +11,9 @@ tag: ui-toast
 description: A self-expiring, non-interrupting notification card shown in the platform's top layer via ui-toast-region.
 tier: pattern            # geometry size-class — a fixed-width notification card (Container/surface geometry), NOT a control height
 extends: UIElement       # NOT form-associated — a toast carries no value; it announces + optionally emits an action (select)
+uses:
+  - ui-button
+  - ui-icon
 # marginal: measured at the LLD-C11 shared-file integration slice (npm run size, ADR-0040 §3) — not measured in this folder-local wave
 
 attributes:               # attributes-as-API — mirrors toast.ts static props (urgent, duration, action)

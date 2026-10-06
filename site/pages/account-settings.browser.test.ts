@@ -13,7 +13,7 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest'
 import { userEvent, page } from 'vitest/browser'
 import './account-settings.ts'
-import type { UIButtonElement } from '@agent-ui/components/components'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
 
 // A DESKTOP viewport for the whole file, not the fleet's 414×896 default (vitest.browser.config.ts). Not a
 // convenience: the surface's frame is a `container-type: inline-size` query container, and at 414px it

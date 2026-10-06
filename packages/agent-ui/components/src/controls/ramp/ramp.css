@@ -16,7 +16,7 @@
  * WHCM (SPEC-R14): same border-degradation honesty as swatch — a color box cannot paint under
  * `forced-colors: active`; it degrades to a `CanvasText` hairline, never a fake system color.
  *
- * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from ramp.ts
+ * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from ramp.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

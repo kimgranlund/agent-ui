@@ -11,6 +11,7 @@ tag: ui-calendar
 description: A month-grid date picker form control that selects a single date or a start/end date range.
 tier: pattern           # a composite picker: nav + 2D grid + form-associated selection
 extends: UIFormElement  # form-associated: formValue() = ISO string (or FormData pair in mode=range); formValidity() = valueMissing + range
+uses: []
 # marginal: tracked at the wave-5 integration slice (s12 barrel pass); ≤ ~3 kB tier budget (plan §10).
 # GH #352 — this line previously claimed "+ the ADR-0093 range-mode re-base"; that re-base was never run
 # (the only dated figure predated range mode by three days). Re-measured 2026-07-29, post-range: calendar's

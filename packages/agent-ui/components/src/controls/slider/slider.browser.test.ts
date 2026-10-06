@@ -16,7 +16,7 @@ import { describe, it, expect } from 'vitest'
 //   content-lg:       sm=22px · md=24px · lg=28px
 // Thumb = box − 4px (−2px × each side; --md-sys-widget-inset=2px; ADR-0041 cl.3).
 //
-// These imports are direct (not through the barrel) because the component-styles barrel is the host's
+// These imports are direct (not through the barrel) because the retired component-styles CSS barrel (ADR-0233) is the host's
 // integration slice — it gains the slider @import at barrel-wiring time. The foundation CSS (tokens +
 // dimensions) is loaded via the shared package barrel so --md-sys-color-* / --md-sys-compact-* tokens are present.
 

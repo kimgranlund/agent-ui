@@ -7,9 +7,10 @@ tag: ui-ramp
 description: An ordered strip of color cells, each labeled with real accessible text, showing a tonal or palette series.
 tier: display          # Display band — no control frame/height/[size]/[scale] (SPEC-R16/ADR-0118 cl.5)
 extends: UIElement     # a non-interactive display LEAF — NOT form-associated (SPEC-R5)
+uses: []
 # marginal: 148 B gz — within the 2048 B gz per-control budget (ADR-0080 clause 3); solo 4962 B gz
 # (foundation-inclusive, informational). Measured 2026-07-10 (wave M1-c, LLD-C9) via `npm run size` through
-# the public `./controls/ramp` entry, after the barrel + component-styles.css wiring landed. Family total
+# the public `./controls/ramp` entry, after the barrel + CSS-barrel wiring landed. Family total
 # (`components` barrel): 30593 B gz — within the 30720 B gz ceiling (127 B headroom), no re-base needed.
 
 attributes:            # attributes-as-API — mirrors ramp.ts `static props` (steps, label, scheme)

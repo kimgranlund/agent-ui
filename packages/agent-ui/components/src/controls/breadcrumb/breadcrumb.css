@@ -28,11 +28,14 @@
  * DOES pin one explicit rule for the overflow trigger's icon glyph below — belt-and-braces certainty over
  * relying purely on the UA's automatic `currentColor` remap (the tabs.css forced-colors block precedent).
  *
- * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from breadcrumb.ts
+ * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from breadcrumb.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-breadcrumb) declares --ui-breadcrumb-* ════════════════ */
+
+/* uses: synced from breadcrumb.md by scripts/codemod-uses.mjs */
+@import '../menu/menu.css';
 
 :where(ui-breadcrumb) {
   --ui-breadcrumb-gap: var(--md-sys-space-xs); /* the inter-crumb/-separator rhythm — rides [density] free (ADR-0103) */

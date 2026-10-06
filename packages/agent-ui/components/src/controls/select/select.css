@@ -32,7 +32,7 @@
  *       Forced-colors keeps the trigger frame, label, and panel surface visible as system colours.
  *
  * Standalone stylesheet — NOT injected from select.ts (behaviour-only `.ts`, no runtime injection
- * per plan §2). Linked via the component-styles barrel (s12); the barrel @imports foundation roles
+ * per plan §2). Linked per control or via shared-styles.css (ADR-0233, no barrel) (s12); the barrel @imports foundation roles
  * FIRST. The listbox's `popover` attribute (set by the overlay controller) gives it `display: none`
  * in the UA stylesheet until `showPopover()` places it in the top layer.
  */

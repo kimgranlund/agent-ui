@@ -4,8 +4,8 @@ import { describe, it, expect, afterEach } from 'vitest'
 // timeline renders as a REAL rail (markers aligned to one axis, real width/height, no phantom trailing
 // connector) — the ui-slider whole-shape lesson applied to the durable host.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 const mounted: HTMLElement[] = []
 const mount = (markup: string): { wrap: HTMLElement; timeline: HTMLElement } => {

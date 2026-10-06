@@ -8,7 +8,7 @@
 // public surface.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import type { UIFormProviderElement } from '@agent-ui/components/components' // the barrel re-exports the class (s12)
+import type { UIFormProviderElement } from '@agent-ui/components/controls/form-provider' // the control entry exports the class (s12)
 import { el, exampleSection, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({

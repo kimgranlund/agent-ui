@@ -7,7 +7,7 @@ import { userEvent } from 'vitest/browser'
 // browser does not emulate forced-colors in headless runs, so that branch is verified by reading only);
 // C10 connect→disconnect zero-residue (one toggle per click, no listener stacking).
 //
-// These imports are direct (not through the barrel) because the component-styles barrel is the
+// These imports are direct (not through the barrel) because the retired component-styles CSS barrel (ADR-0233) is the
 // host's integration slice — it gains the checkbox @import at barrel-wiring time. The foundation CSS
 // (tokens + dimensions) is loaded through the shared package barrel so the --md-sys-color-* / --md-sys-compact-*
 // token chain is in place before the control sheet resolves.

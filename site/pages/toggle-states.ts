@@ -8,7 +8,7 @@ import { mountPage } from './_page.ts' // FIRST import — foundation CSS cascad
 import './states.css' // SHARED page scaffold (sections, captions, the activation log), reused by every {name}-states page
 import { resolveIcon, type IconName } from '@agent-ui/icons'
 import '@agent-ui/icons/phosphor' // registers + activates the Phosphor default pack (ADR-0066)
-import type { UIToggleElement } from '@agent-ui/components/components'
+import type { UIToggleElement } from '@agent-ui/components/controls/toggle'
 
 const { content } = mountPage({
   title: 'Toggle — interaction states',

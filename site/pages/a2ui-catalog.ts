@@ -14,7 +14,8 @@
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './a2ui-catalog.css' // page-local: the filter bar + section spacing (after the shared shell)
 import '../lib/component-preview.ts' // registers <component-preview> (side-effect import)
-import type { UITextFieldElement, UITabsElement } from '@agent-ui/components/components'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
+import type { UITabsElement } from '@agent-ui/components/controls/tabs'
 import { TIERS, TIER_LABEL, browsableNames, tierOf, seedsUsingType, seedGalleryHref } from '../lib/a2ui-catalog-tiers.ts'
 import type { Tier } from '../lib/a2ui-catalog-tiers.ts'
 

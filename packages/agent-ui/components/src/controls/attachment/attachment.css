@@ -36,6 +36,9 @@
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-attachment) declares --ui-attachment-* ════════════════ */
 
+/* uses: synced from attachment.md by scripts/codemod-uses.mjs */
+@import '../icon/icon.css';
+
 :where(ui-attachment) {
   --ui-attachment-min-inline-size: 12em; /* the whole-shape floor (SPEC-R18 AC1) — ADR-0223 role (d): SURVIVES both the fill default and the [inline] hug state (cl.3(d)) */
   --ui-attachment-gap: var(--md-sys-space-sm);

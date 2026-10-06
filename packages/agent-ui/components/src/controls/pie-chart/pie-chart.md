@@ -7,6 +7,7 @@ tag: ui-pie-chart
 description: A part-of-whole ring (donut, default) or solid pie chart with a printed-percent key list, identity carried by order + label + percent, never hue alone.
 tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; ADR-0219, mirrors ui-bar-chart/ui-line-chart)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (ADR-0219)
+uses: []
 # marginal: measured at the build wave via `npm run size` (see the commit's gate evidence) — the manual
 # size gate (Kim's ruling); the family size-budget re-base (ADR-0219 Consequences) is a separate,
 # host-owned repair step, not this control's own marginal figure.

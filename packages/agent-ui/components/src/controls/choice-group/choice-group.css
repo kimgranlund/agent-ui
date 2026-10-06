@@ -13,12 +13,15 @@
  *       user-invalid danger cue below reaches CROSS-BOUNDARY into each unselected card's own frame
  *       border, the exact `radio-group.css` technique.
  *
- * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from choice-group.ts
+ * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from choice-group.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2; the `min` token thread is the values-API,
  * not a style rule, the grid.css precedent).
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-choice-group) declares --ui-choice-group-* ════════════════ */
+
+/* uses: synced from choice-group.md by scripts/codemod-uses.mjs */
+@import '../choice-card/choice-card.css';
 
 :where(ui-choice-group) {
   /* the auto-fit/minmax track FLOOR (clause 6) — a sensible card-gallery default; choice-group.ts

@@ -55,7 +55,14 @@
 // the editor; the focus ring renders on the HOST frame (conversation-composer.css, :has(editor:focus)).
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
-import type { UIButtonElement, UIMenuElement, UISwitchElement } from '@agent-ui/components/components'
+// ADR-0233: the fleet controls this module renders, defined by its own imports (control-reach.test.ts).
+import '@agent-ui/components/controls/button'
+import '@agent-ui/components/controls/icon'
+import '@agent-ui/components/controls/menu'
+import '@agent-ui/components/controls/switch'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import type { UIMenuElement } from '@agent-ui/components/controls/menu'
+import type { UISwitchElement } from '@agent-ui/components/controls/switch'
 // The PURE placement function out of the overlay trait (flip + viewport shift) — NOT the `overlay()`
 // controller itself: that controller announces `close`/`toggle` ON ITS HOST (ADR-0101), and this element's
 // contract is `events: []` with no menu event allowed to escape the host (SPEC-R7). Borrowing only the

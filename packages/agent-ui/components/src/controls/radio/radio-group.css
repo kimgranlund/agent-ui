@@ -19,11 +19,14 @@
  * `[orientation='horizontal']` a wrapping row — with the gap re-based to the `--md-sys-space` ladder (`sm`) so it
  * rides `[density]` for free, rather than the site's hard-coded `0.4rem`/`--md-sys-space-md` duplicates.
  *
- * Standalone stylesheet — linked via the component-styles barrel (s12, after radio.css); NEVER injected
+ * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel) (s12, after radio.css); NEVER injected
  * from radio-group.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 
 /* ════════════ [1] TOKEN BLOCK — :where(ui-radio-group) (specificity 0,0,0) ════════════ */
+
+/* uses: synced from radio-group.md by scripts/codemod-uses.mjs */
+@import './radio.css';
 
 :where(ui-radio-group) {
   /* ADR-0103: the group's own interior gap, off the layout ladder (density-responsive for free) — the seat

@@ -10,26 +10,20 @@ npm install @agent-ui-kit/components
 
 ## Usage
 
+The host contract is four lines: the token foundation first, the shared seam sheet once, the sheet of each control you use, then the control modules (each self-defines its tag on import). Each control sheet imports the sheets of the controls it composes, so the order of lines 3 and 4 within themselves does not matter.
+
 ```js
-// 1. Styles: the token foundation, then the component sheets.
 import '@agent-ui-kit/components/foundation-styles.css'
-import '@agent-ui-kit/components/component-styles.css'
-// 2. Elements: the whole fleet (self-defining on import)…
-import '@agent-ui-kit/components/components'
+import '@agent-ui-kit/components/shared-styles.css'
+import '@agent-ui-kit/components/controls/button.css'
+import '@agent-ui-kit/components/controls/button'
 ```
 
 ```html
 <ui-button variant="solid">Save</ui-button>
-<ui-text-field label="Name" required></ui-text-field>
-<ui-select name="model" label="Model">…</ui-select>
 ```
 
-Or import per control for a smaller graph:
-
-```js
-import '@agent-ui-kit/components/controls/button'
-import '@agent-ui-kit/components/controls/menu'
-```
+Add one `controls/{name}.css` and one `controls/{name}` import per control your app uses. For demos and prototypes only, `@agent-ui-kit/components/all.css` and `@agent-ui-kit/components/all` load the whole fleet; an app that imports them pays for every control.
 
 Design notes: light-DOM rendering (your CSS reaches everything), ARIA via `ElementInternals` (form-associated custom elements — real form participation, no native inputs), and per-component `--ui-{name}-*` CSS custom-property seams over the shared `--md-sys-*` token system.
 
@@ -37,13 +31,14 @@ Design notes: light-DOM rendering (your CSS reaches everything), ARIA via `Eleme
 
 ```html
 <!-- styles: shared's two sheets DIRECTLY (foundation-styles.css uses bare @imports a browser
-     can't resolve), then the component barrel (relative imports only — CDN-safe) -->
+     can't resolve), then the seam sheet and each control sheet (relative imports only, CDN-safe) -->
 <link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.0.5/tokens.css">
 <link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.0.5/dimensions.css">
-<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/components@0.0.5/component-styles.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/components@0.0.5/shared-styles.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/components@0.0.5/controls/button.css">
 
 <script type="module">
-  import 'https://esm.sh/@agent-ui-kit/components@0.0.5/components' // the whole fleet, self-defining
+  import 'https://esm.sh/@agent-ui-kit/components@0.0.5/controls/button' // self-defines ui-button
 </script>
 
 <ui-button variant="solid">Save</ui-button>

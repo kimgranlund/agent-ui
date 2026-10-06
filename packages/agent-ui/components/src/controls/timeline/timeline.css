@@ -16,6 +16,9 @@
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-timeline) declares --ui-timeline-* ════════════════ */
 
+/* uses: synced from timeline.md by scripts/codemod-uses.mjs */
+@import '../timeline-item/timeline-item.css';
+
 :where(ui-timeline) {
   --ui-timeline-min-inline-size: 12rem;
 }

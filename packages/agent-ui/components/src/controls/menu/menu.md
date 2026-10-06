@@ -10,6 +10,7 @@ tag: ui-menu
 description: A keyboard-navigable overlay menu opened from a trigger, with roving focus and type-ahead selection.
 tier: pattern           # geometry size-class — panel uses Container/surface geometry; items use the legacy item-pad (NOT a control height)
 extends: UIElement      # NOT form-associated — the menu carries no form value; it emits an action (`select`)
+uses: []
 # marginal: tracked at the wave-4 integration slice (s12 barrel pass); ≤ ~2 kB tier budget (plan §10)
 
 attributes:             # attributes-as-API — mirrors UIMenuElement.props (open, then placement, then label)

@@ -9,6 +9,7 @@
 // REAL browser — `concierge.browser.test.ts` — not here.
 
 import { describe, it, expect } from 'vitest'
+import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
 import { bookingFormFactory, bookingConfirmationFactory, conciergeFactories } from './factories.ts'
 import { conciergeFragment } from './index.ts'
 

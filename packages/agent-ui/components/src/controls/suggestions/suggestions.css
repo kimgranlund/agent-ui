@@ -22,7 +22,7 @@
  * chip carries a real `disabled` attribute (suggestions.ts), so `:disabled` styling covers both the
  * taken chip and its untaken siblings; `[data-taken]` wins the colour repoint via source order.
  *
- * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from suggestions.ts
+ * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from suggestions.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

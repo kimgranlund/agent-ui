@@ -10,7 +10,7 @@ import type { UIStatElement } from './stat.ts'
 // `__baselines__/stat.visual.browser.test.ts/<name>-chromium-darwin.png`; re-baseline only via
 // `npm run test:visual:update` (a deliberate act, per ADR-0223's R5 golden-regen law).
 //
-// controls/stat/ is not yet exported from controls/index.ts (the LLD-C10 shared-file integration slice,
+// controls/stat/ was not yet exported from the family barrel (the LLD-C10 shared-file integration slice,
 // a separate wave) — direct (pre-barrel) imports, the stat.browser.test.ts precedent.
 import '@agent-ui/components/foundation-styles.css'
 import './stat.css'

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 // Side-effect import: the demo page mounts the app shell + the four live ui-swiper specimens into document.body.
 import './swiper-item-demo.ts'
-import type { UISwiperElement } from '@agent-ui/components/components'
+import type { UISwiperElement } from '@agent-ui/components/controls/swiper'
 
 // GH #347 — REAL-TIMING HEADROOM (rAF settles + scroll snaps under load).
 vi.setConfig({ testTimeout: 30_000 })

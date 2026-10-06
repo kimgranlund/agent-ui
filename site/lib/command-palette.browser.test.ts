@@ -20,8 +20,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css' // foundation tokens + dimensional ramp (FIRST — geometry source)
-import '@agent-ui/components/component-styles.css' // per-control CSS, so the mounted palette has real geometry
-import '@agent-ui/components/components' // registers ui-command-modal (+ nested ui-modal) for real
+import '@agent-ui/components/all.css' // per-control CSS, so the mounted palette has real geometry
+import '@agent-ui/components/all' // registers ui-command-modal (+ nested ui-modal) for real
 import { mountCommandPalette } from './command-palette.ts'
 
 interface SitemapEntry {

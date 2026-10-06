@@ -12,21 +12,19 @@
 //
 // It is a PLAIN custom element (a docs meta-component), NOT a ui-* control (light DOM, no ElementInternals/ARIA
 // contract, no descriptor) — it composes controls for documentation, it is not itself part of the fleet.
-import '@agent-ui/components/components' // self-defining ui-* controls (a component-mode target is defined even standalone)
+import '@agent-ui/components/all' // self-defining ui-* controls (a component-mode target is defined even standalone)
 import './component-preview.css'
 import { createRenderer, defaultCatalog, valueSlots } from '@agent-ui/a2ui'
 import type { RendererHost, ComponentDef, PropDef, JsonSchema } from '@agent-ui/a2ui'
 import { loadDescriptorByTag } from './frontmatter.ts'
 import type { ParsedAttribute } from '@agent-ui/components/descriptor'
-import type {
-  UISelectElement,
-  UISwitchElement,
-  UITextFieldElement,
-  UISegmentedControlElement,
-  UISegmentElement,
-  UISwiperPaginationElement,
-  UISwiperPaddlesElement,
-} from '@agent-ui/components/components'
+import type { UISelectElement } from '@agent-ui/components/controls/select'
+import type { UISwitchElement } from '@agent-ui/components/controls/switch'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
+import type { UISegmentedControlElement } from '@agent-ui/components/controls/segmented-control'
+import type { UISegmentElement } from '@agent-ui/components/controls/segment'
+import type { UISwiperPaginationElement } from '@agent-ui/components/controls/swiper-pagination'
+import type { UISwiperPaddlesElement } from '@agent-ui/components/controls/swiper-paddles'
 import { createCanvasSurface, applyRootStretch } from './canvas-surface.ts'
 // GH #1664 (component-preview-code-tabs.lld.md LLD-C4) — the tabbed code view's highlighter: `./highlight`
 // self-registers the bundled dispatch-by-language tokenizer into the default registry (the same pattern

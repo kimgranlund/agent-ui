@@ -31,6 +31,16 @@
 // store notification), never per-keystroke; a content edit commits on ui-code-editor's own `change` (blur),
 // not on `input`, matching the fleet's per-field-on-change law (settings.ts's own SPEC-R12 timing).
 
+// ADR-0233: the fleet controls this module renders, defined by its own imports (control-reach.test.ts).
+import '@agent-ui/components/controls/button'
+import '@agent-ui/components/controls/disclosure'
+import '@agent-ui/components/controls/drawer'
+import '@agent-ui/components/controls/field'
+import '@agent-ui/components/controls/icon'
+import '@agent-ui/components/controls/menu'
+import '@agent-ui/components/controls/switch'
+import '@agent-ui/components/controls/text-field'
+import '@agent-ui/components/controls/toggle'
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import type { UIDisclosureElement } from '@agent-ui/components/controls/disclosure'
 import type { UIIconElement } from '@agent-ui/components/controls/icon'

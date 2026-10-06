@@ -8,6 +8,7 @@
 tag: ui-combo-box
 tier: pattern          # geometry size-class — the editor is Control-class; the panel is Container/surface; the options are item-pad rows (the Geometry-by-part three-class pattern from the decomp)
 extends: UIFormElement # form-associated: value + validity participate via ElementInternals (ADR-0013)
+uses: []
 # marginal: tracked at the wave-4 integration slice (s12 barrel pass); ≤ ~2 kB tier budget (plan §10)
 
 attributes:            # attributes-as-API — mirrors UIComboBoxElement.props (form-specific first, then formProps)

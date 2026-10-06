@@ -23,7 +23,7 @@ import type { UIComboBoxElement } from './combo-box.ts'
 //
 // Side-effect imports — CSS load order (ADR-0003): foundation roles + dimensional ramp FIRST,
 // then the combo-box sheet, then the self-defining module. Imported DIRECTLY (relative), NOT
-// via the component-styles barrel (the s12 barrel wiring lands at the integration slice).
+// per control or via shared-styles.css (ADR-0233, no barrel) (the s12 barrel wiring lands at the integration slice).
 import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container-box.css' // the box-model layer — provides the shared [data-fade-top]/[data-fade-bottom] mask
 import './combo-box.css'

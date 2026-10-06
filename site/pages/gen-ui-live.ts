@@ -69,7 +69,8 @@ import '@agent-ui/app/super-shell' // self-defines ui-super-shell
 import '@agent-ui/app/conversation-composer.css' // ui-conversation-composer's own field-frame chrome (TKT-0056/0058)
 import '@agent-ui/app/conversation-composer' // self-defines <ui-conversation-composer> — composed standalone
 import type { UIConversationComposerElement } from '@agent-ui/app/conversation-composer'
-import type { UIStatusStreamElement, UISandboxFrameElement, GenuiActionDetail } from '@agent-ui/components/components'
+import type { UIStatusStreamElement } from '@agent-ui/components/controls/status-stream'
+import type { UISandboxFrameElement, GenuiActionDetail } from '@agent-ui/components/controls/sandbox-frame'
 import './gen-ui-live.css'
 import { createRecordedTransport, appendUserTurn, appendAssistantTurn, readMetaLine } from '../lib/agent-runtime.ts'
 import type { AgentTransport, TurnInput, Session } from '../lib/agent-runtime.ts'
@@ -85,7 +86,7 @@ import type { EffortLevel } from '../lib/provider-mode-selection.ts'
 // genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the dogfood frame asset pair, the opt-in
 // `@agent-ui/components` subpath (`site` already imports `components`; catalog-invisible by construction).
 import { DOGFOOD_CSS, DOGFOOD_JS } from '@agent-ui/components/dogfood-frame'
-import type { SandboxFrameAssets } from '@agent-ui/components/components'
+import type { SandboxFrameAssets } from '@agent-ui/components/controls/sandbox-frame'
 import { createLocalStorageAdapter } from '@agent-ui/shared'
 
 // Computed ONCE at module scope — `PROVIDER_OPTIONS` is static (built from the committed `providers.json`

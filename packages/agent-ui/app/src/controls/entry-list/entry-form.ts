@@ -34,6 +34,11 @@
 // leaving the absence to read as a missing feature (the roster drawer's "Shipped" tag precedent,
 // agent-admin-app.ts).
 
+// ADR-0233: the fleet controls this module renders, defined by its own imports (control-reach.test.ts).
+import '@agent-ui/components/controls/button'
+import '@agent-ui/components/controls/field'
+import '@agent-ui/components/controls/segmented-control'
+import '@agent-ui/components/controls/text-field'
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import type { UICodeEditorElement } from '@agent-ui/code/editor'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'

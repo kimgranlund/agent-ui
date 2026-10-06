@@ -12,7 +12,7 @@ import { server, cdp } from 'vitest/browser'
 // RTL-mirrored position (ADR-0230 Consequences — a latent defect the HTML swap retires).
 
 import '@agent-ui/components/foundation-styles.css'
-import '../_chart/chart-axis.css' // the shared ADR-0228 token chain — column-chart.css ALIASES from it (the family-tunnel pattern); loaded first, the same load-bearing order component-styles.css enforces
+import '../_chart/chart-axis.css' // the shared ADR-0228 token chain — column-chart.css ALIASES from it (the family-tunnel pattern); loaded first, the same load-bearing order shared-styles.css enforces
 import './column-chart.css'
 import './column-chart.ts'
 

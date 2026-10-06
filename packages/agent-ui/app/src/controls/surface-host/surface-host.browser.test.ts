@@ -7,7 +7,8 @@ import { server, cdp } from 'vitest/browser'
 // forced-colors legibility of the mounted control (SPEC-R11 AC2) — the decorative checkered stage itself
 // is allowed to simplify.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test asserts the DOM synchronously after ingest
 import './surface-host.css'
 import { UISurfaceHostElement } from './surface-host.ts'
 

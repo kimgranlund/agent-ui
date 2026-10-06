@@ -8,6 +8,7 @@ tag: ui-playing-card
 description: A true standard playing card — corner indices + a real suit-pip field or letter treatment, red/black inks, a CSS-painted back — as a fixed-bridge-aspect display leaf that flips on faceDown and deals in on insertion.
 tier: display          # geometry size-class (Display band) — a non-interactive, non-form-associated mark; the [size] em-box ramp is the pie-chart-ring/avatar-F3 REPOINT pattern, not a control-height lever (ADR-0225 cl.5)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (ADR-0225)
+uses: []
 # marginal: measured at the build wave via `npm run size` (see the commit's gate evidence)
 
 attributes:            # attributes-as-API — mirrors playing-card.ts's static props (rank, suit, faceDown, size)

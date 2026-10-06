@@ -70,7 +70,10 @@
 // entry — it stays out of this narration surface, unchanged by this widening.)
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
-import type { UIStatusStreamElement } from '@agent-ui/components/components'
+// ADR-0233: the fleet controls this module renders, defined by its own imports (control-reach.test.ts).
+import '@agent-ui/components/controls/icon'
+import '@agent-ui/components/controls/status-stream'
+import type { UIStatusStreamElement } from '@agent-ui/components/controls/status-stream'
 // GH #291/ADR-0160 clause 3 — the settled-turn action-chip row reuses `ui-button` (the
 // ui-status-stream inline-retry-action precedent, GH #147/ADR-0153 Fork 2) rather than hand-rolling a
 // chip control; registered here exactly like that precedent's own import.
@@ -83,7 +86,7 @@ import type { UISurfaceHostElement } from '../surface-host/surface-host.ts'
 // PARALLEL mount path (`#genuiRegistry`/`mountGenui`, not `ingestLine`'s A2UI-shaped registry) — a genui
 // line carries no `createSurface`/`updateComponents`/etc envelope key `surfaceIdOf` could ever parse.
 import '@agent-ui/components/controls/sandbox-frame'
-import type { UISandboxFrameElement, GenuiActionDetail, SandboxFrameAssets } from '@agent-ui/components/components'
+import type { UISandboxFrameElement, GenuiActionDetail, SandboxFrameAssets } from '@agent-ui/components/controls/sandbox-frame'
 import type { ClientMessageListener, A2uiClientMessage } from '@agent-ui/a2ui'
 // ADR-0146 F1: the live-turn progress vocabulary is produce-layer-owned (a2ui) — imported TYPE-ONLY (it
 // erases at build, so zero producer bytes cross the ADR-0137 identity gate) as the shared spine both the

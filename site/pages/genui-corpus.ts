@@ -12,7 +12,7 @@
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './genui-corpus.css'
 import { el } from '../lib/specimens.ts'
-import type { UISandboxFrameElement } from '@agent-ui/components/components'
+import type { UISandboxFrameElement } from '@agent-ui/components/controls/sandbox-frame'
 // Type-only, from the PURE core (never from tools/corpus-genui/legs/report.ts, whose own node:*/fs.ts
 // imports would otherwise drag into this site's type program — site/tsconfig.json carries no node
 // types, the SAME constraint vitest.config.ts's own `@agent-ui/a2ui/agent/*` alias comments name).

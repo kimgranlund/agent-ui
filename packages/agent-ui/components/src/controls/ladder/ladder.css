@@ -22,7 +22,7 @@
  * anywhere in this file. WHCM (SPEC-R14): the bar paints `CanvasText` (a system ink is never forced away) —
  * magnitude still travels by length + the printed value.
  *
- * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from ladder.ts
+ * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from ladder.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

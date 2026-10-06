@@ -10,7 +10,7 @@
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
 import './accessibility.css'
-import type { UIToastRegionElement } from '@agent-ui/components/components'
+import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
 import { heading } from '../lib/doc-page.ts'
 import { codeBlock } from '../lib/code-block.ts'
 import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'

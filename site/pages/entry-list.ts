@@ -25,7 +25,7 @@
 // page names their exported vocabulary + the ADR/consumer it serves rather than re-narrating logic already
 // owned by `conversation-doc.html`/`agent-admin.html`/`persona-library-pattern.html`.
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
-import '@agent-ui/components/component-styles.css' // ui-button/ui-switch/ui-text-field/ui-menu/ui-toggle/etc.'s shipped CSS
+import '@agent-ui/components/all.css' // ui-button/ui-switch/ui-text-field/ui-menu/ui-toggle/etc.'s shipped CSS
 import '@agent-ui/code/editor.css' // ADR-0139 — ui-code-editor's own sheet (the per-entry content editors' frame + CM tokens)
 import '@agent-ui/app/entry-list.css' // the primitive's own self-sufficient stylesheet (ADR-0164 cl.4/cl.6)
 import '@agent-ui/code/editor' // self-defines ui-code-editor (entry-list.ts creates it but never registers it itself)

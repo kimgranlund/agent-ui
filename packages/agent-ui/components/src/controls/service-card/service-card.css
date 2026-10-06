@@ -35,7 +35,7 @@
  * (reduced-motion zeroed, same as every other control) rather than being gated behind a first-paint guard
  * this display primitive has no OTHER motion to bundle with.
  *
- * Standalone stylesheet — linked via the host page / component-styles barrel; NEVER injected from
+ * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from
  * service-card.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

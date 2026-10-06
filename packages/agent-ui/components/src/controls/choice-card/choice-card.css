@@ -13,7 +13,7 @@
  *       forced-colors maps the frame/badge to Highlight/HighlightText so the non-color signifier survives
  *       WHCM without relying on the badge glyph's color contrast alone.
  *
- * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from choice-card.ts
+ * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from choice-card.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

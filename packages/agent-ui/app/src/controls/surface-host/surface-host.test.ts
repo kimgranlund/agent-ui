@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach, beforeAll, afterAll } from 'vitest'
 import { UISurfaceHostElement } from './surface-host.ts'
 import { whenFlushed } from '@agent-ui/components'
-import '@agent-ui/components/components' // self-registers ui-button/ui-column for the streamed fixture below
+import '@agent-ui/components/all' // self-registers ui-button/ui-column for the streamed fixture below
 import {
   splitFrontmatter,
   parseDescriptor,

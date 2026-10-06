@@ -7,7 +7,7 @@
 // import cycle while keeping one definition of the wire types.
 
 /**
- * Internal error codes — the rich 10-code diagnostic taxonomy used by the renderer, validator, and
+ * Internal error codes: the rich 11-code diagnostic taxonomy used by the renderer, validator, and
  * corpus subsystems (SPEC-N6 parity). NOT the wire codes: these are mapped to `WireErrorCode` at the
  * single client→server boundary (`renderer.ts #emitInternalError → toWireError`, ADR-0031 clause 2).
  * The internal codes are kept for the validator's fine-grained `Failure` (corpus admission distinguishes
@@ -18,6 +18,10 @@
  * `CardFooter` node whose id-graph parent is not a `Card`; also a graph-shape rejection, mapped to the
  * SAME `E_IDGRAPH` family (`corpus/admit.ts`), for the same reason `DEPTH_EXCEEDED` is: it judges the
  * assembled adjacency list, not a single component's catalog conformance.
+ * `CONTROL_LOAD` (ADR-0233) is a render-time failure: a catalog's `controls` loader could not define the
+ * controls a surface's `updateComponents` needs. Surface-scoped like `CATALOG`; the renderer emits it once
+ * per failed load and renders the affected nodes as `a2ui-placeholder`s. It never comes from the validator,
+ * so corpus admission keeps its `default` arm for it (`corpus/admit.ts`).
  */
 export type ErrorCode =
   | 'PARSE'
@@ -30,6 +34,7 @@ export type ErrorCode =
   | 'FUNCTION'
   | 'DEPTH_EXCEEDED'
   | 'CONTAINMENT'
+  | 'CONTROL_LOAD'
 
 /**
  * The render-depth cap (a2ui-runtime SPEC-R15, GH #473, ecosystem SPEC-R2): the maximum root-reachable
@@ -72,7 +77,7 @@ export type A2uiWireError =
 
 /**
  * Map one internal `A2uiError` to the v1.0 wire shape (`A2uiWireError`, ADR-0031 clause 2/3/4).
- * ALL 10 internal codes → `VALIDATION_FAILED` + `surfaceId` this wave (the flow-grounded resolution,
+ * ALL 11 internal codes → `VALIDATION_FAILED` + `surfaceId` this wave (the flow-grounded resolution,
  * ADR-0031 clause 2): every error we emit is a message-validation failure — `FUNCTION` included (our
  * `FUNCTION` emits are render-time binding-evaluation failures, exactly parallel to `CATALOG`, not the
  * spec's server-initiated function-call rejections); `DEPTH_EXCEEDED` (SPEC-R2/GH #473) and
@@ -85,10 +90,10 @@ export type A2uiWireError =
 export function toWireError(e: A2uiError): A2uiWireError {
   // Fold the internal path locus into the free-form message (ADR-0031 clause 4: no path on the wire).
   const message = e.path !== undefined ? `${e.message} (at ${e.path})` : e.message
-  // All 10 internal codes → VALIDATION_FAILED + surfaceId. FUNCTION included: our render-time
+  // All 11 internal codes → VALIDATION_FAILED + surfaceId. FUNCTION included: our render-time
   // binding-eval errors are message-validation failures (CATALOG parallel), not server-initiated calls.
   // VERSION_UNSUPPORTED / CATALOG_UNKNOWN / DEPTH_EXCEEDED / CONTAINMENT also map here — the two-code
-  // enum offers no third bucket.
+  // enum offers no third bucket. CONTROL_LOAD (ADR-0233) maps like CATALOG: surface-scoped, no path.
   return { code: 'VALIDATION_FAILED', surfaceId: e.surfaceId ?? '', message }
 }
 

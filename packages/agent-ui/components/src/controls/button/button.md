@@ -9,6 +9,7 @@
 tag: ui-button
 tier: control          # geometry size-class (Control band — full control height; geometry.md §"five size-classes")
 extends: UIElement     # reactive display control, NOT form-associated (face below)
+uses: []
 # bundle: the self-defining ui-* family is 4435 B gz (11660 B min) — within the 8192 B gz budget; enforced each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:            # attributes-as-API — the GENERATION SOURCE for button.ts's `static props` (ADR-0173)

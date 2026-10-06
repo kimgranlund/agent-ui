@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest'
 // :column`, the `--md-sys-space × [density]` gap, and the host-at-boundary AX role. Anti-vacuous: the gap px must
 // actually CHANGE across two [density] containers.
 //
-// Host-at-boundary: the component-styles barrel does NOT yet @import container.css / list.css (that wiring is
+// Host-at-boundary: the retired component-styles CSS barrel (ADR-0233) does NOT yet @import container.css / list.css (that wiring is
 // s12), so this test injects the needed sheets DIRECTLY — the foundation tokens (the --md-sys-color-* roles + the
 // --md-sys-space ladder + the [density] selectors), the SHARED surface seam, then list.css — and imports ./list.ts
 // to self-define `ui-list`. No `container-type` here (ADR-0100 — ui-list never establishes one; it has no

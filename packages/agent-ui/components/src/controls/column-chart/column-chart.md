@@ -8,6 +8,7 @@ tag: ui-column-chart
 description: A category-major stacked (or dense single-series) column chart with a nice-number axis, a projected/ghost trailing column, a now-marker, and a static highlight callout.
 tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; ADR-0229, mirrors ui-bar-chart/ui-line-chart/ui-pie-chart)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF
+uses: []
 
 attributes:            # attributes-as-API — mirrors column-chart.ts `static props`
   - name: data

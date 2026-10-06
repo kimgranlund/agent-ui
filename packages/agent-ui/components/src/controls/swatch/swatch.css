@@ -18,7 +18,7 @@
  * RTL is free: `column-gap` + logical inline-grid flow mirror under `dir="rtl"` — no physical property
  * anywhere in this file.
  *
- * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from swatch.ts
+ * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from swatch.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

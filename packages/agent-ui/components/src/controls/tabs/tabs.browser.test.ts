@@ -11,7 +11,7 @@ import { UITabPanelElement } from './tab-panel.ts'
 // lacks) is live. Runs in BOTH Chromium and WebKit (vitest.browser.config.ts → the two playwright instances).
 //
 // Side-effect CSS imports — the load-bearing order (ADR-0003): foundation roles + ramp FIRST, then the SHARED
-// container surface seam, then this component sheet. (The component-styles barrel does NOT yet @import tabs.css
+// container surface seam, then this component sheet. (The retired component-styles CSS barrel (ADR-0233) does NOT yet @import tabs.css
 // — that is decomp s12 / integration — so this suite imports the two sheets directly, pre-barrel.) GH #586 —
 // `tabs.ts` composes `ui-menu` as the overflow part (a real value import, self-registers `ui-menu`), so this
 // suite ALSO needs `ui-menu`'s own sheet (its `display:contents` host rule — load-bearing for the trigger

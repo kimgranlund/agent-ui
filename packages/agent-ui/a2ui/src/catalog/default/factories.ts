@@ -5,10 +5,10 @@
 // Basic ships as a SECOND first-party catalog (`../a2ui-basic/`, SPEC-R10) registered BESIDE this one,
 // never as a translation layer inside it — a few of these factories are REUSED there through the
 // `withBasicCommon` wrapper (ADR-0169 cl.9a), which is import direction a2ui-basic → default, not an
-// adapter here. Importing this module also imports the
-// `@agent-ui/components` controls barrel, whose control modules `customElements.define` their tags as a
-// load-time side effect; so a `create()`'d element is the REAL upgraded control (e.g. `UIButtonElement`),
-// not an inert `HTMLUnknownElement`. `applyProp` maps one A2UI property (per the catalog `PropDef.mapsTo`)
+// adapter here. This module imports no control (ADR-0233): the renderer defines the tags a surface needs
+// through the catalog's `controls` loader (`../controls.ts`) before it calls `create()`, so a `create()`'d
+// element is the REAL upgraded control (e.g. `UIButtonElement`), not an inert `HTMLUnknownElement`. A
+// factory that mints another tag inside its control names it in `uses`. `applyProp` maps one A2UI property (per the catalog `PropDef.mapsTo`)
 // onto the control as a prop or attribute — the renderer's widget resolution (renderer LLD-C7) calls
 // `create` once, then `applyProp` for each static prop and inside each scope-owned bound-prop effect.
 //
@@ -102,7 +102,6 @@
 // (`axes`/`labels`/`projected`, ADR-0229 cl.3). All three ride plain `accessorFactory` — no bespoke
 // mapping, no `value` mark, no children, no submitGate — see the chart-family section below.
 
-import '@agent-ui/components/components' // self-defines ui-button + the G9 container family on import
 import type { WidgetFactory } from '../types.ts'
 import type { ValueSlot } from '../catalog.ts'
 
@@ -200,6 +199,7 @@ function clearLabelText(el: HTMLElement): void {
  */
 export const buttonFactory: WidgetFactory = {
   tag: 'ui-button',
+  uses: ['ui-icon'], // ADR-0233: the `icon` prop mints a leading ui-icon
   create: () => document.createElement('ui-button'),
   applyProp: (el, prop, value) => {
     switch (prop) {

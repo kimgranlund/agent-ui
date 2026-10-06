@@ -7,8 +7,8 @@ import { server, cdp } from 'vitest/browser'
 // differ by SHAPE (a structural/computed-style probe, never a pixel diff); a populated rail aligns its
 // markers to one axis; forced-colors keeps every marker legible.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 import '@agent-ui/icons/phosphor' // activates the Phosphor default pack — without it resolveIcon() falls back to an empty <svg data-icon-missing> (the _page.ts shell precedent)
 import type { UITimelineItemElement } from './timeline-item.ts'
 

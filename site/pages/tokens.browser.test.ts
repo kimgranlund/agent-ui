@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest'
 // content, no SSR stub) — the page composes real `ui-swatch`/`ui-ramp`/`ui-ladder` elements, never throws,
 // and both color schemes resolve to real, different colors.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import './tokens.ts' // mounts itself into document.body (no #app present in this test document — mountPage's own fallback)
 
 const app = document.querySelector('[data-page-content]') as HTMLElement

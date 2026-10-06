@@ -85,7 +85,7 @@ shard.
   absent from the transitive **EAGER CLOSURE** — entry chunks PLUS every chunk they statically
   import, walked to a fixed point — never merely from `isEntry` chunks. A lazy accessor's arm can
   leak into a STATIC SHARED chunk the entry imports eagerly (`isEntry: false` yet loaded with the
-  barrel), so "absent from isEntry chunks" passes VACUOUSLY on exactly the regression it exists to
+  package entry), so "absent from isEntry chunks" passes VACUOUSLY on exactly the regression it exists to
   catch. Pattern: `chunksOf`'s eager `Set` (seeded from `isEntry`, expanded over `imports`) in
   `packages/agent-ui/app/src/controls/agent-admin/agent-admin-lazy.bundle.test.ts` (ADR-0197,
   refining the markdown-lazy precedent), with its anti-vacuous non-empty-closure guard and the

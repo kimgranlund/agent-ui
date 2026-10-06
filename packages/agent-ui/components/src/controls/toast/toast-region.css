@@ -15,11 +15,14 @@
  *       empty region area means it never intercepts page clicks (SPEC-R12) — re-enabled per-toast so
  *       each card (and its affordances) stays fully interactive.
  *
- * Standalone stylesheet — linked via the host page / component-styles barrel; NEVER injected from
+ * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from
  * toast-region.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 
 /* ══════════ [1] TOKEN BLOCK — :where(ui-toast-region) declares --ui-toast-region-* ══════════ */
+
+/* uses: synced from toast-region.md by scripts/codemod-uses.mjs */
+@import './toast.css';
 
 :where(ui-toast-region) {
   --ui-toast-region-inset: var(--md-sys-space-lg); /* block-end/inline-end fixed inset off the shell ramp */

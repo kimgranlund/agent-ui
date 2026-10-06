@@ -1,111 +1,54 @@
 import { describe, it, expect } from 'vitest'
-import * as componentsBarrel from './index.ts'
-import { UIButtonElement } from './button/button.ts'
-import { UITextFieldElement } from './text-field/text-field.ts'
-import { UITextElement } from './text/text.ts'
-import { UIRowElement } from './row/row.ts'
-import { UIColumnElement } from './column/column.ts'
-import { UIListElement } from './list/list.ts'
-import { UIGridElement } from './grid/grid.ts'
-import { UICardElement } from './card/card.ts'
-import { UITabsElement } from './tabs/tabs.ts'
-import { UIModalElement } from './modal/modal.ts'
+import * as rootBarrel from '../index.ts'
 // Read package.json + the CSS barrels as text (vite strips `.css?raw`; no `@types/node` devDep — same
 // approach as the s6/s7 probes).
 import { readFileSync, existsSync, readdirSync, statSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
 declare const process: { cwd(): string }
 
-// Phase-1 s17 — the three barrels (ADR-0003) exist and are wired into the package exports:
-//   • components        — the self-defining JS module barrel (controls/index.ts → `./components`)
-//   • component-styles  — the per-component CSS barrel (component-styles.css → `./component-styles.css`)
-//   • foundation-styles — the foundation CSS barrel (foundation-styles.css → `./foundation-styles.css`)
-// The host page itself is Phase 2; here we prove the barrels + their wiring + the load-bearing CSS order.
+// The package's host-facing entries (ADR-0003 as amended by ADR-0233) exist and are wired into the exports:
+//   • foundation-styles — the foundation sheet (foundation-styles.css → `./foundation-styles.css`)
+//   • shared-styles     — the seams, once (shared-styles.css → `./shared-styles.css`)
+//   • controls/{name}   — one JS entry and one sheet per control, plus the lazy registry (`./registry`)
+//   • all / all.css     — the generated DEMO-ONLY whole-fleet entry and sheet
+// Here we prove that wiring, the load-bearing CSS order, and the T4 folders/registry/exports drift gate.
 
 const PKG = `${process.cwd()}/packages/agent-ui/components`
 const pkg = JSON.parse(readFileSync(`${PKG}/package.json`, 'utf8') as string) as { exports: Record<string, string> }
 const read = (rel: string) => readFileSync(`${PKG}/${rel}`, 'utf8') as string
+/** The `@import` specifiers of a package stylesheet, comments stripped, in source order. */
+const cssImportsOf = (rel: string): string[] =>
+  [...read(rel).replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/@import\s+'([^']+)'/g)].map((m) => m[1])
 
-describe('components barrel — self-defines the ui-* family (s17)', () => {
-  it('importing the barrel registers ui-button and re-exports its element class', () => {
-    expect(customElements.get('ui-button')).toBe(UIButtonElement) // the self-define side effect ran on import
-    expect(componentsBarrel.UIButtonElement).toBe(UIButtonElement) // the class is surfaced for typed references
+describe('CSS entries — wired into exports + the load-bearing order (s17, ADR-0233)', () => {
+  it('`./all.css` (all.gen.css) aggregates each control stylesheet (button.css, text-field.css, text.css), sorted by path', () => {
+    expect(pkg.exports['./all.css']).toBe('./src/all.gen.css')
+    const imports = cssImportsOf('src/all.gen.css')
+    const controlSheets = imports.slice(1)
+    expect(controlSheets).toEqual([...controlSheets].sort()) // generated in plain path order, never addition order
+    const buttonAt = imports.indexOf('./controls/button/button.css')
+    const textFieldAt = imports.indexOf('./controls/text-field/text-field.css')
+    const textAt = imports.indexOf('./controls/text/text.css')
+    expect(buttonAt).toBeGreaterThan(0)
+    expect(textFieldAt).toBeGreaterThan(buttonAt) // `text-field/` sorts before `text/` ('-' < '/')
+    expect(textAt).toBeGreaterThan(textFieldAt)
   })
 
-  it('importing the barrel ALSO registers ui-text-field and re-exports its element class (s12)', () => {
-    expect(customElements.get('ui-text-field')).toBe(UITextFieldElement) // `export * from './text-field/text-field.ts'` ran the self-define
-    expect(componentsBarrel.UITextFieldElement).toBe(UITextFieldElement) // the class is surfaced for typed references
+  it('`./shared-styles.css` imports the seams in order: container, container-box, chart-axis (ADR-0233)', () => {
+    expect(pkg.exports['./shared-styles.css']).toBe('./src/shared-styles.css')
+    const imports = [...read('src/shared-styles.css').replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/@import\s+'([^']+)'/g)].map((m) => m[1])
+    // the surface paint seam first, then the box model over it, then the chart vocabulary: a container's `@scope`
+    // block resolves the `--ui-container-*` tokens the seam declares (ADR-0015/0016), and card.css seeds
+    // `--ui-container-bg` by later source over container.css, so the seams load once, before any control sheet.
+    expect(imports).toEqual(['./controls/_surface/container.css', './controls/_surface/container-box.css', './controls/_chart/chart-axis.css'])
   })
 
-  it('importing the barrel registers ui-text (ADR-0025) and re-exports its element class', () => {
-    expect(customElements.get('ui-text')).toBe(UITextElement) // `export * from './text/text.ts'` ran the self-define
-    expect(componentsBarrel.UITextElement).toBe(UITextElement) // the class is surfaced for typed references
-  })
-
-  it('importing the barrel self-defines the WHOLE G9 container family — all ~14 tags (s12)', () => {
-    // The seven family entries each self-define on import; the two compounds (card, tabs) transitively
-    // self-define their sub-elements, so `export * from './card/card.ts'` / `'./tabs/tabs.ts'` registers all
-    // of them — importing the one barrel registers every container tag with no per-sub-element barrel line.
-    const CONTAINER_TAGS = [
-      'ui-row',
-      'ui-column',
-      'ui-list',
-      'ui-grid',
-      'ui-card',
-      'ui-card-header', // a card region sub-element — registered via card.ts's transitive self-define
-      'ui-card-content',
-      'ui-card-footer',
-      'ui-tabs',
-      'ui-tab', // a tabs sub-element — registered via tabs.ts's transitive self-define
-      'ui-tab-panel',
-      'ui-modal',
-    ]
-    for (const tag of CONTAINER_TAGS) {
-      expect(customElements.get(tag), `barrel did not self-define ${tag}`).toBeDefined()
-    }
-  })
-
-  it('the barrel surfaces each container FAMILY ENTRY class for typed references (s12)', () => {
-    // The seven family entries' classes are surfaced (the `export *` re-export). Sub-element classes
-    // (UICardHeaderElement / UITabElement / …) are registered-only, NOT surfaced — the ui-tabs precedent.
-    expect(componentsBarrel.UIRowElement).toBe(UIRowElement)
-    expect(componentsBarrel.UIColumnElement).toBe(UIColumnElement)
-    expect(componentsBarrel.UIListElement).toBe(UIListElement)
-    expect(componentsBarrel.UIGridElement).toBe(UIGridElement)
-    expect(componentsBarrel.UICardElement).toBe(UICardElement)
-    expect(componentsBarrel.UITabsElement).toBe(UITabsElement)
-    expect(componentsBarrel.UIModalElement).toBe(UIModalElement)
-  })
-
-  it('is exported as `./components` and points at controls/index.ts', () => {
-    expect(pkg.exports['./components']).toBe('./src/controls/index.ts')
-    expect(existsSync(`${PKG}/${pkg.exports['./components']}`)).toBe(true)
-  })
-})
-
-describe('CSS barrels — wired into exports + the load-bearing order (s17)', () => {
-  it('`./component-styles.css` aggregates each control stylesheet (button.css, text-field.css, text.css) in addition order', () => {
-    expect(pkg.exports['./component-styles.css']).toBe('./src/component-styles.css')
-    const css = read('src/component-styles.css')
-    const buttonAt = css.indexOf("@import './controls/button/button.css'")
-    const textFieldAt = css.indexOf("@import './controls/text-field/text-field.css'")
-    const textAt = css.indexOf("@import './controls/text/text.css'")
-    expect(buttonAt).toBeGreaterThanOrEqual(0)
-    expect(textFieldAt).toBeGreaterThan(buttonAt) // append-only in control-addition order (do-not-reorder, s12)
-    expect(textAt).toBeGreaterThan(textFieldAt) // text display control appended after text-field (ADR-0025)
-  })
-
-  it('`./component-styles.css` imports the shared `_surface/container.css` seam FIRST, before any element sheet (s12)', () => {
-    const css = read('src/component-styles.css')
-    const containerAt = css.indexOf("@import './controls/_surface/container.css'")
-    const buttonAt = css.indexOf("@import './controls/button/button.css'")
-    expect(containerAt).toBeGreaterThanOrEqual(0)
-    // the shared surface seam is the FIRST @import (before even the existing control sheets) so a container's
-    // `@scope` block resolves the `--ui-container-*` tokens it declares (ADR-0015/0016).
-    expect(containerAt).toBeLessThan(buttonAt)
-    // and it precedes EVERY G9 container element sheet that consumes it.
+  it('`all.gen.css` imports `./shared-styles.css` FIRST, before any control sheet, and no `_` seam directly (ADR-0233)', () => {
+    const imports = cssImportsOf('src/all.gen.css')
+    expect(imports[0]).toBe('./shared-styles.css')
+    expect(imports.filter((i) => i.includes('/_'))).toEqual([])
+    // and every G9 container element sheet that consumes the surface seam follows it.
     for (const name of ['row', 'column', 'list', 'grid', 'card', 'tabs', 'modal']) {
-      const at = css.indexOf(`@import './controls/${name}/${name}.css'`)
-      expect(at, `missing container sheet: ${name}.css`).toBeGreaterThan(containerAt)
+      expect(imports.indexOf(`./controls/${name}/${name}.css`), `missing container sheet: ${name}.css`).toBeGreaterThan(0)
     }
   })
 
@@ -125,30 +68,31 @@ describe('CSS barrels — wired into exports + the load-bearing order (s17)', ()
   })
 })
 
-// ── T4 (ADR-0080) — the three-way exports-map ↔ controls/ folders ↔ family-barrel drift gate ──
+// ── T4 (ADR-0080 cl.2, as amended by ADR-0233) — the three-way exports-map ↔ controls/ folders ↔ registry
+// drift gate ──
 // Per-control public entries (`./controls/{name}`) let a consumer reach ONE control through the package's
-// public API instead of only the whole-family `./components` barrel (ADR-0080 clause 1). Three independent
-// sources must agree on the SAME set of shipped control modules:
-//   (a) the package.json exports map's `./controls/{name}` entries
+// public API (ADR-0080 clause 1). Three independent sources must agree on the SAME set of shipped control
+// modules:
+//   (a) the package.json exports map's `./controls/{name}` JS entries
 //   (b) the actual folders under controls/ (excluding the shared `_base`/`_surface` bases — file-set.test.ts's
 //       controlDirs exclusion, reused here)
-//   (c) the family barrel's (controls/index.ts) `export * from './{folder}/{file}.ts'` lines
-// A control added to the barrel without an exports-map entry (or vice versa), or a folder wired into
-// neither, is the drift this gate catches (clause 2) — proven below with three synthetic (string/object-
-// level fixtures, no real file mutated) negative controls, one per failure mode.
+//   (c) the generated lazy registry's (`registry.gen.ts`, `CONTROLS`) `load: () => import('./{folder}/{file}.ts')`
+//       records
+// A control in the registry without an exports-map entry (or vice versa), or a folder wired into neither, is
+// the drift this gate catches (clause 2) — proven below with three synthetic (string/object-level fixtures,
+// no real file mutated) negative controls, one per failure mode.
 
-const barrelSrc = read('src/controls/index.ts')
+const registrySrc = read('src/controls/registry.gen.ts')
 const CONTROLS_DIR = `${PKG}/src/controls`
 const folderNames: string[] = readdirSync(CONTROLS_DIR).filter(
   (e: string) => !e.startsWith('_') && statSync(`${CONTROLS_DIR}/${e}`).isDirectory(),
 )
 
-/** Every REAL `export * from './{folder}/{file}.ts'` line in the barrel (line-comments excluded — the
- * barrel's own header comment quotes the pattern generically as `'./{family}/{family}.ts'`, not a real
- * target), as a Set of folder/file.ts targets. */
-const parseBarrelTargets = (src: string): Set<string> => {
+/** Every REAL `load: () => import('./{folder}/{file}.ts')` record in the registry (line comments excluded),
+ *  as a Set of folder/file.ts targets. */
+const parseRegistryTargets = (src: string): Set<string> => {
   const out = new Set<string>()
-  const re = /export \* from '\.\/([^']+)'/
+  const re = /load: \(\) => import\('\.\/([^']+)'\)/
   for (const line of src.split('\n')) {
     if (line.trim().startsWith('//')) continue
     const m = re.exec(line)
@@ -157,12 +101,13 @@ const parseBarrelTargets = (src: string): Set<string> => {
   return out
 }
 
-/** Every `./controls/{name}` exports-map entry, as a Map<name, folder/file.ts target> (prefix stripped). */
+/** Every `./controls/{name}` JS exports-map entry, as a Map<name, folder/file.ts target> (prefix stripped).
+ *  The generated `./controls/{name}.css` sheet keys (ADR-0233) are skipped: T4 stays three-way over JS keys. */
 const CONTROLS_TARGET_PREFIX = './src/controls/'
 const parseControlsExportsMap = (exportsMap: Record<string, string>): Map<string, string> => {
   const out = new Map<string, string>()
   for (const [key, target] of Object.entries(exportsMap)) {
-    if (!key.startsWith('./controls/')) continue
+    if (!key.startsWith('./controls/') || key.endsWith('.css')) continue
     if (!target.startsWith(CONTROLS_TARGET_PREFIX)) continue // malformed target — the file-existence test flags this, not here
     out.set(key.slice('./controls/'.length), target.slice(CONTROLS_TARGET_PREFIX.length))
   }
@@ -170,32 +115,32 @@ const parseControlsExportsMap = (exportsMap: Record<string, string>): Map<string
 }
 
 type ThreeWayReport = {
-  barrelOnly: string[] // barrel export lines with no matching exports-map entry
-  exportsOnly: string[] // exports-map entries whose target has no matching barrel export line
+  registryOnly: string[] // registry records with no matching exports-map entry
+  exportsOnly: string[] // exports-map entries whose target has no matching registry record
   uncoveredFolders: string[] // controls/ folders with zero exports-map entry pointing into them
 }
 
 const threeWayCheck = (src: string, exportsMap: Record<string, string>, folders: string[]): ThreeWayReport => {
-  const barrelTargets = parseBarrelTargets(src)
+  const registryTargets = parseRegistryTargets(src)
   const mapTargets = new Set(parseControlsExportsMap(exportsMap).values())
   const coveredFolders = new Set([...mapTargets].map((t) => t.split('/')[0]))
   return {
-    barrelOnly: [...barrelTargets].filter((t) => !mapTargets.has(t)),
-    exportsOnly: [...mapTargets].filter((t) => !barrelTargets.has(t)),
+    registryOnly: [...registryTargets].filter((t) => !mapTargets.has(t)),
+    exportsOnly: [...mapTargets].filter((t) => !registryTargets.has(t)),
     uncoveredFolders: folders.filter((f) => !coveredFolders.has(f)),
   }
 }
 
-describe('exports map ↔ controls/ folders ↔ family barrel — the T4 three-way drift gate (ADR-0080)', () => {
+describe('exports map ↔ controls/ folders ↔ registry.gen.ts — the T4 three-way drift gate (ADR-0080, ADR-0233)', () => {
   it('finds a real, non-trivial set on every side (anti-vacuous)', () => {
     expect(folderNames.length).toBeGreaterThan(10)
-    expect(parseBarrelTargets(barrelSrc).size).toBeGreaterThan(10)
+    expect(parseRegistryTargets(registrySrc).size).toBeGreaterThan(10)
     expect(parseControlsExportsMap(pkg.exports).size).toBeGreaterThan(10)
   })
 
   it('is a clean bijection today — zero orphans on any side', () => {
-    expect(threeWayCheck(barrelSrc, pkg.exports, folderNames)).toEqual({
-      barrelOnly: [],
+    expect(threeWayCheck(registrySrc, pkg.exports, folderNames)).toEqual({
+      registryOnly: [],
       exportsOnly: [],
       uncoveredFolders: [],
     })
@@ -209,22 +154,22 @@ describe('exports map ↔ controls/ folders ↔ family barrel — the T4 three-w
 
   it('a planted unpaired exports-map entry fails the bijection (negative control — exportsOnly)', () => {
     const planted = { ...pkg.exports, './controls/phantom': './src/controls/phantom/phantom.ts' }
-    expect(threeWayCheck(barrelSrc, planted, folderNames).exportsOnly).toEqual(['phantom/phantom.ts'])
+    expect(threeWayCheck(registrySrc, planted, folderNames).exportsOnly).toEqual(['phantom/phantom.ts'])
   })
 
-  it('a planted unpaired barrel export fails the bijection (negative control — barrelOnly)', () => {
-    const planted = `${barrelSrc}\nexport * from './phantom/phantom.ts'\n`
-    expect(threeWayCheck(planted, pkg.exports, folderNames).barrelOnly).toEqual(['phantom/phantom.ts'])
+  it('a planted unpaired registry record fails the bijection (negative control — registryOnly)', () => {
+    const planted = `${registrySrc}\n  'ui-phantom': { tag: 'ui-phantom', load: () => import('./phantom/phantom.ts'), uses: [] },\n`
+    expect(threeWayCheck(planted, pkg.exports, folderNames).registryOnly).toEqual(['phantom/phantom.ts'])
   })
 
   it('a folder wired into neither side fails the bijection (negative control — uncoveredFolders)', () => {
-    expect(threeWayCheck(barrelSrc, pkg.exports, [...folderNames, 'phantom']).uncoveredFolders).toEqual(['phantom'])
+    expect(threeWayCheck(registrySrc, pkg.exports, [...folderNames, 'phantom']).uncoveredFolders).toEqual(['phantom'])
   })
 })
 
 // ── LLD-C1 (genui-dogfood.lld.md, GH #316/ADR-0162) — the `./dogfood-frame` subpath's barrel-purity
-// trip-wire, the ADR-0137 zero-bytes gate pattern applied here: opt-in only, so importing EITHER default
-// barrel (the root `.` OR the family `./components`) must carry ZERO dogfood bytes — a real transitive
+// trip-wire, the ADR-0137 zero-bytes gate pattern applied here: opt-in only, so importing the root `.` barrel
+// OR the demo-only whole-fleet `./all` entry (ADR-0233) must carry ZERO dogfood bytes — a real transitive
 // import-graph trace (not just a one-line grep of the entry file, so a future re-export buried a few
 // modules deep still trips this), plus the ADR-0137 IDENTITY leg's runtime symbol-absence check.
 
@@ -271,7 +216,7 @@ function crawlDogfood(entryRel: string): Set<string> {
   return reached
 }
 
-describe('./dogfood-frame subpath — opt-in only, zero bytes in either default barrel (LLD-C1, ADR-0137 gate pattern)', () => {
+describe('./dogfood-frame subpath — opt-in only, zero bytes in the root barrel or `./all` (LLD-C1, ADR-0137 gate pattern)', () => {
   it('is wired into package.json exports and resolves to a real, non-empty generated module', () => {
     expect(pkg.exports['./dogfood-frame']).toBe(`./${DOGFOOD_MODULE_REL}`)
     expect(existsSync(`${PKG}/${DOGFOOD_MODULE_REL}`)).toBe(true)
@@ -286,8 +231,9 @@ describe('./dogfood-frame subpath — opt-in only, zero bytes in either default 
     expect(reached.has(DOGFOOD_MODULE_REL)).toBe(false)
   })
 
-  it('the family `./components` barrel (src/controls/index.ts) never transitively reaches the dogfood module', () => {
-    const reached = crawlDogfood('src/controls/index.ts')
+  it('the demo-only `./all` entry (src/all.gen.ts) never transitively reaches the dogfood module', () => {
+    const reached = crawlDogfood('src/all.gen.ts')
+    expect(reached.size).toBeGreaterThan(60) // the crawl walked the whole fleet, so the absence below is real
     expect(reached.has(DOGFOOD_MODULE_REL)).toBe(false)
   })
 
@@ -312,9 +258,9 @@ describe('./dogfood-frame subpath — opt-in only, zero bytes in either default 
     }
   })
 
-  it('neither default barrel exposes a dogfood-only symbol at runtime (ADR-0137 IDENTITY leg)', () => {
+  it('the root barrel exposes no dogfood-only symbol at runtime (ADR-0137 IDENTITY leg)', () => {
     for (const sym of ['DOGFOOD_CSS', 'DOGFOOD_JS', 'DOGFOOD_TAGS']) {
-      expect(componentsBarrel, `./components barrel must not expose dogfood symbol "${sym}"`).not.toHaveProperty(sym)
+      expect(rootBarrel, `the root \`.\` barrel must not expose dogfood symbol "${sym}"`).not.toHaveProperty(sym)
     }
   })
 })

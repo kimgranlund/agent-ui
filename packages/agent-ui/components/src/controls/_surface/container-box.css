@@ -1,7 +1,7 @@
 /* container-box.css — the shared container BOX-MODEL (margin inset + the sticky-region pattern). The second
  * shared surface layer (after `_surface/container.css` which owns the elevation/brightness PAINT); this one
  * owns the SPACING + region rhythm every container/panel adopts by marking itself `[data-box]`. Imported by
- * component-styles.css right after container.css, before any element sheet.
+ * shared-styles.css right after container.css, before any control sheet (ADR-0233 cl.3).
  *
  * THE MODEL (ruled with Kim, flow-root + margin-collapse — REVISED 2026-07-04, inset regions):
  *   • L1 `[data-box]` establishes a BFC (`display: flow-root`) and holds NO inner padding — the children's

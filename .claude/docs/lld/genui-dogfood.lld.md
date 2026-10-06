@@ -38,8 +38,8 @@
 
 - **Generation script** `scripts/build-dogfood-assets.mjs`: shells ONE real Vite (Rolldown) build
   with a dedicated inline config, entry = a tiny in-script virtual entry importing
-  `@agent-ui/components/foundation-styles.css`, `@agent-ui/components/component-styles.css`,
-  `@agent-ui/components/components`, `@agent-ui/icons/phosphor` (the `_page.ts` cascade members
+  `@agent-ui/components/foundation-styles.css`, the demo-only `@agent-ui/components/all.css` and
+  `@agent-ui/components/all` (ADR-0233), `@agent-ui/icons/phosphor` (the `_page.ts` cascade members
   [1][2][3][3b], verbatim, in that order), `build.lib` IIFE format, minified, `cssCodeSplit:false`,
   into a scratch outDir (the `build-css.ts` scratch discipline: never the real `dist/`). Emits the
   committed module from the two build artifacts:
@@ -159,7 +159,7 @@
   (the #346 REV above), attributes truncated per control to the descriptor's declared set,
   siblings carrying neither summary nor attributes because they have no descriptor to read them
   from. Skips controls outside `DOGFOOD_TAGS`? No, see LLD-C5: the inventory derives from the SAME
-  control set the bundle entry imports (the components barrel), and the set-equality gate holds the
+  control set the bundle entry imports (`@agent-ui/components/all`), and the set-equality gate holds the
   pair; the function takes the tag list as an argument so the gate can probe both directions.
 - `system-prompt.ts`, `genuiBlock` gains the dogfood leg:
 
@@ -221,7 +221,7 @@
 ## 6. LLD-C5, cross-half gates
 
 - **Set-equality**: `DOGFOOD_TAGS` (committed, LLD-C1) ≡ the tags `dogfoodInventory()` teaches ≡
-  the tags the components barrel REGISTERS at runtime, one test, three-way, planted-extra
+  the tags `@agent-ui/components/all` REGISTERS at runtime, one test, three-way, planted-extra
   negative control each direction (SPEC-R13 AC2). The three legs must stay MECHANISM-distinct: a
   static scan of the minified bundle, a source-text derivation, and a runtime observation. A leg
   re-implemented as a second source scan is a transcription, not a check (GH #351 F3).
@@ -252,7 +252,7 @@
 - **Recorded-transcript replay** without assets renders unstyled fleet markup, accepted, recorded
   in ADR-0162/SPEC-R10.
 - **Recursive self-hosting (S2 independent review finding, CONTAINED, not a deviation).**
-  `ui-sandbox-frame` is itself part of the default components barrel the dogfood bundle embeds, so a
+  `ui-sandbox-frame` is itself part of the `@agent-ui/components/all` fleet the dogfood bundle embeds, so a
   model document running inside a dogfood frame CAN instantiate a nested `<ui-sandbox-frame>`, the
   bundle recursively includes the very control class that hosts it. Traced and judged safe by
   construction: a nested frame inherits `sandbox="allow-scripts"` only (never `allow-same-origin`/
@@ -274,8 +274,8 @@
   bundle generator's own `extractTags` regex, reused, because two derivations that disagreed IS this
   finding's root cause) and teaches the siblings on their parent descriptor's row. **The allowlist is
   DELETED and the gate is restored to TRUE three-way set equality**, bundle-defined ≡ inventory-taught
-  ≡ the tags the real barrel REGISTERS AT RUNTIME (a `customElements.define` interception over a real
-  barrel import, a behavioral observation, deliberately NOT a second source scan, which would be a
+  ≡ the tags the real `all` entry REGISTERS AT RUNTIME (a `customElements.define` interception over a real
+  `@agent-ui/components/all` import, a behavioral observation, deliberately NOT a second source scan, which would be a
   transcription of the derivation it is meant to check: GH #351 F3), with no named exceptions, red in
   EITHER direction.
   Both directions are proven by negative control (neutering the sibling scan reds with "shipped but not

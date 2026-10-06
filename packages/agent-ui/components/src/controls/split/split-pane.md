@@ -9,6 +9,7 @@ tag: ui-split-pane
 description: One resizable pane inside a ui-split container, with optional initial ratio, min, and max bounds.
 tier: layout             # geometry size-class (Container/layout band — NO control height; a pure flex-distribution box, geometry.md "five size-classes"). Also folds this descriptor into the site's bundled 'Layout primitives' TOC group (site-toc.test.ts's editorial rule) rather than demanding its own standalone showcase page — the ui-toast-region precedent (a structural, non-multi-child layout host)
 extends: UIContainerElement   # structural surface container, NOT form-associated (face below)
+uses: []
 # marginal: measured at build (npm run size, LLD-C9) — within the per-control ≤ ~2 kB tier budget (plan §10)
 
 attributes:              # attributes-as-API — mirrors split-pane.ts `static props` (initial, min, max, collapsible)

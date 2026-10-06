@@ -8,6 +8,7 @@
 // `FixtureBanner` root actually renders as a real `<div>` under the mount.
 
 import { describe, it, expect } from 'vitest'
+import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
 import { createRenderer } from './renderer.ts'
 import type { A2uiClientMessage, RendererHost } from './renderer.ts'
 import type { A2uiServerMessage } from '../protocol.ts'

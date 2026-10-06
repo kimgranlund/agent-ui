@@ -20,7 +20,7 @@ import { exampleSection, captioned } from '../lib/specimens.ts'
 import { resolveIcon, type IconName } from '@agent-ui/icons'
 import '@agent-ui/icons/phosphor' // registers + activates the Phosphor default pack (ADR-0066) — resolveIcon below
 import type { ParsedDescriptor } from '@agent-ui/components/descriptor'
-import type { UIToggleElement } from '@agent-ui/components/components'
+import type { UIToggleElement } from '@agent-ui/components/controls/toggle'
 
 const { descriptor, body } = loadToggleDoc()
 

@@ -7,7 +7,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 // internals (its drill-in/keyboard/ARIA contract is already proven there) — the only NEW geometry here is
 // the rail's own layout + the panel swap.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import '@agent-ui/app/master-detail-pane.css'
 import '@agent-ui/app/master-detail.css'
 import '@agent-ui/app/master-detail-pane'

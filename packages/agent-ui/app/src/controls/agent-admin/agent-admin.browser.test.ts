@@ -8,10 +8,10 @@ import { server, userEvent } from 'vitest/browser'
 // pane-nav geometry, the narrow one-place-at-a-time drill-in, and the wide Author⇄Settings pairing
 // (the container-query narrow crossing) become TRUE in BOTH Chromium and WebKit (the master-detail
 // .browser.test.ts precedent). CSS wiring: the foundation first, then
-// `component-styles.css` (the family barrel carries ui-text-field/etc.'s shipped CSS), then every
+// `all.css` (every fleet sheet, so ui-text-field/etc.'s shipped CSS), then every
 // composed sibling's own CSS (incl. super-shell below), then this element's own.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import '@agent-ui/code/editor.css' // ADR-0139 — ui-code-editor's own sheet (the entry editors' frame + CM highlight tokens)
 import '../master-detail/master-detail.css'
 import '../master-detail/master-detail-pane.css'

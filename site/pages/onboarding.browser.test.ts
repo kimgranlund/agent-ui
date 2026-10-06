@@ -13,7 +13,9 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import './onboarding.ts'
-import type { UIButtonElement, UIProgressElement, UITextFieldElement } from '@agent-ui/components/components'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import type { UIProgressElement } from '@agent-ui/components/controls/progress'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits the transport's real (non-zero, default 400ms) SPEC-R7
 // latency across several sequential ops; see vitest.browser.config.ts's own class definition.

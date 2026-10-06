@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 // Side-effect import: the demo page mounts the app shell + the live ui-textarea form into document.body
 // (the modal-demo.browser.test.ts precedent).
 import './textarea-demo.ts'
-import type { UITextareaElement } from '@agent-ui/components/components'
+import type { UITextareaElement } from '@agent-ui/components/controls/textarea'
 
 // GH #347 — REAL-TIMING HEADROOM (vitest.browser.config.ts).
 vi.setConfig({ testTimeout: 30_000 })

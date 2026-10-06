@@ -10,7 +10,8 @@
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
 import { applyDemoWidth, el, exampleSection } from '../lib/specimens.ts'
-import type { UITableElement, UITextFieldElement } from '@agent-ui/components/components'
+import type { UITableElement } from '@agent-ui/components/controls/table'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 
 const { content } = mountPage({
   title: 'ui-table — demo',

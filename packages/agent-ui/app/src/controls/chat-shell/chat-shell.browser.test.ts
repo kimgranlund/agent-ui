@@ -3,10 +3,10 @@
 // SPEC-R7b narrow-tabs strip (super-shell.ts, relocated inside chat-shell.ts's ONE inner ui-super-shell)
 // — chat-shell.test.ts covers the jsdom-provable composition/descriptor facts, this file is the
 // measurement half. CSS wiring mirrors agent-admin.browser.test.ts's own precedent: foundation, then
-// component-styles, then every composed sibling's own sheet, then this element's.
+// `all.css`, then every composed sibling's own sheet, then this element's.
 import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import '../super-shell/super-shell.css'
 import './chat-shell.css'
 import '../super-shell/super-shell.ts'

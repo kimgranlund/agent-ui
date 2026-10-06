@@ -32,6 +32,9 @@
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-split) declares --ui-split-* ════════════════ */
 
+/* uses: synced from split.md by scripts/codemod-uses.mjs */
+@import './split-pane.css';
+
 :where(ui-split) {
   --ui-split-divider: 1px; /* the visible divider thickness */
   --ui-split-hit-slop: 24px; /* the invisible pointer hit target (WCAG 2.5.8, SPEC-R5 AC1) */

@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 // the flex mapping resolves to computed CSS, the gap responds to [density], and the column REFLOWS by its
 // CONTAINER width (resize the wrapper, not the viewport) — anti-vacuous (the computed property actually changes).
 //
-// CSS wiring is SELF-CONTAINED (host-runs-at-boundary): column.css is not in the component-styles barrel until
+// CSS wiring is SELF-CONTAINED (host-runs-at-boundary): column.css is not in the retired component-styles CSS barrel (ADR-0233) until
 // s12, so this test injects the foundation tokens, the shared surface seam, and column.css directly, then the
 // self-defining module. Vite resolves the bare specifier + the relative sheets and injects them. Per-test
 // wrappers establish their own `container-type: inline-size` where a query needs one (ADR-0100 — column.css

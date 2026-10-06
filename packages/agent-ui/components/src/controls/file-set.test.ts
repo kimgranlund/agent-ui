@@ -6,8 +6,8 @@ declare const process: { cwd(): string }
 // FACE-control folder under controls/ must hold the EXACT per-component set: `{name}.ts` (behaviour),
 // `{name}.css` (the single-file stylesheet), `{name}.md` (the descriptor — ADR-0004) and ONE-OR-MORE
 // co-located `*.test.ts`. Generalized over every folder so each future control is checked identically — the
-// gold button is just folder #1. The components barrel (controls/index.ts) sits at the controls/ root, not
-// inside a control folder, so it is not a control and is not scanned.
+// gold button is just folder #1. The generated registry and loader (registry.gen.ts, loader.ts) sit at the
+// controls/ root, not inside a control folder, so they are not controls and are not scanned.
 
 const CONTROLS = `${process.cwd()}/packages/agent-ui/components/src/controls`
 // Leading-underscore folders (e.g. `_surface/`, the shared container surface CSS the G9 containers extend) are

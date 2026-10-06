@@ -7,7 +7,8 @@ import { server, cdp } from 'vitest/browser'
 // away preserves position — the biting negative control being a naive reactive-listener regression, the
 // a2ui-chat.ts banner's own documented failure mode), and forced-colors legibility of the chrome.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test asserts the DOM synchronously after ingest
 import './conversation.css'
 import './conversation-dialog.css' // ADR-0180 (GH #688) — the adopted-or-created log's own layout/scroll CSS, promoted off conversation.css
 import './conversation-header.css' // ADR-0180 — the optional recognized header band's own layout CSS

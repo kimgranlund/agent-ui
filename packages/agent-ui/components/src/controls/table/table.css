@@ -34,11 +34,17 @@
  * signifier — the composed checkbox/radio's OWN checked state is the real signifier, ADR-0057 satisfied
  * structurally, ADR-0163 cl.4).
  *
- * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
+ * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel) (Phase 2); NEVER injected
  * from table.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-table) declares --ui-table-* ════════════════ */
+
+/* uses: synced from table.md by scripts/codemod-uses.mjs */
+@import '../button/button.css';
+@import '../checkbox/checkbox.css';
+@import '../pagination/pagination.css';
+@import '../radio/radio.css';
 
 :where(ui-table) {
   --ui-table-min-inline-size: 16em; /* the whole-shape floor (SPEC-R14/R17 AC1) */

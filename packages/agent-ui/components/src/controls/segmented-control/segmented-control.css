@@ -18,13 +18,18 @@
  *       own `@scope (ui-segment) { :scope … }` rules ((0,1,0) / (0,1,1)) without `!important` (the ADR-0086
  *       clause 2 mechanism, ported verbatim).
  *
- * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from segmented-control.ts
+ * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from segmented-control.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2). The `--ui-segmented-control-index`/`-count`
  * custom properties consumed below are the ONE exception: reactive STATE written by segmented-control.ts
  * (the `--value-pct` seam, range-element.ts:111), not injected style RULES.
  */
 
 /* ════════════ [1] TOKEN BLOCK — :where(ui-segmented-control) (specificity 0,0,0) ════════════ */
+
+/* uses: synced from segmented-control.md by scripts/codemod-uses.mjs */
+@import '../radio/radio.css';
+@import '../radio/radio-group.css';
+@import '../segment/segment.css';
 
 :where(ui-segmented-control) {
   /* Geometry — the Pattern-class CONTROL-height ramp (geometry.md's `segmented-control` example,

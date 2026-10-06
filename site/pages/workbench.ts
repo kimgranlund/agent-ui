@@ -39,8 +39,8 @@
 
 import '@agent-ui/components/foundation-styles.css' // [1] foundation: tokens.css → dimensions.css (FIRST)
 import '@agent-ui/components/base-styles.css' // [1b] the DOCUMENT BASE layer: typeface/leading/ink/rendering (shell-less pages need this or they render in the UA serif)
-import '@agent-ui/components/component-styles.css' // [2] per-control CSS (table/pagination/toolbar/form-popover/checkbox/select/field/form-provider/modal/button — one bundle)
-import '@agent-ui/components/components' // [3] self-defining ui-* controls (the whole default-catalog fleet)
+import '@agent-ui/components/all.css' // [2] per-control CSS (table/pagination/toolbar/form-popover/checkbox/select/field/form-provider/modal/button — one bundle)
+import '@agent-ui/components/all' // [3] self-defining ui-* controls (the whole default-catalog fleet)
 import '@agent-ui/icons/phosphor' // [3b] the Phosphor default pack — ui-form-popover's own caret glyph renders a real SVG
 import '@agent-ui/app/workspace-shell.css'
 import '@agent-ui/app/super-shell.css' // ui-workspace-shell composes ui-super-shell (LLD-C5) — the composed child's own sheet, the agent-admin-app.ts precedent
@@ -49,16 +49,14 @@ import '@agent-ui/app/workspace-shell' // self-defines ui-workspace-shell
 import '@agent-ui/app/surface-host' // self-defines ui-surface-host
 import './workbench.css' // page-local: full-viewport sizing (a plain dimension, no shell frame rules) + content-region layout only
 
-import type {
-  UITableElement,
-  UIModalElement,
-  UIFormPopoverElement,
-  UICheckboxElement,
-  UISelectElement,
-  UITextFieldElement,
-  UIFormProviderElement,
-  UIButtonElement,
-} from '@agent-ui/components/components'
+import type { UITableElement } from '@agent-ui/components/controls/table'
+import type { UIModalElement } from '@agent-ui/components/controls/modal'
+import type { UIFormPopoverElement } from '@agent-ui/components/controls/form-popover'
+import type { UICheckboxElement } from '@agent-ui/components/controls/checkbox'
+import type { UISelectElement } from '@agent-ui/components/controls/select'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
+import type { UIFormProviderElement } from '@agent-ui/components/controls/form-provider'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import type { UISurfaceHostElement } from '@agent-ui/app'
 
 import {

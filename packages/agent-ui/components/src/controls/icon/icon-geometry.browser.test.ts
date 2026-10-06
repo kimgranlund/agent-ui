@@ -15,11 +15,11 @@ import { describe, it, expect, beforeAll, afterEach } from 'vitest'
 // home for a select-specific proof once a later wave migrates select onto `setIcon` (LLD §1 audit row 1).
 //
 // Side-effect imports — same load-bearing CSS order as the s12/s13 harness (ADR-0003): foundation roles +
-// dimensional ramp FIRST, then the component sheet, then the self-defining family barrel (registers BOTH
-// ui-button and ui-icon — icon.ts already joins controls/index.ts).
+// dimensional ramp FIRST, then the component sheet, then the self-defining `all` entry (registers BOTH
+// ui-button and ui-icon).
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 import { iconRegistry, type IconName, type IconPack } from '@agent-ui/icons'
 
 // A deterministic, in-file pack — registered against the module-singleton `iconRegistry` (what `ui-icon`

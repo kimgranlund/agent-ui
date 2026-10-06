@@ -6,14 +6,13 @@
 
 import { describe, it, expect } from 'vitest'
 // Side-effect CSS imports — load-bearing ORDER (foundation tokens/ramp first, then the shipped component
-// sheets incl. card.css's `:has([slot=…])` grid this file probes; the `component-styles.css` barrel
-// precedent, verified against `packages/agent-ui/app/src/controls/*.browser.test.ts`). `factories.ts`
-// (pulled in by `createRenderer`) only self-defines the CUSTOM ELEMENTS (`@agent-ui/components/components`)
+// sheets incl. card.css's `:has([slot=…])` grid this file probes; the `all.css` demo sheet, verified against `packages/agent-ui/app/src/controls/*.browser.test.ts`). `factories.ts`
+// (pulled in by `createRenderer`) only self-defines the CUSTOM ELEMENTS (`@agent-ui/components/all` here)
 // — it carries zero CSS bytes (the framework's own JS/CSS split, plan §2) — so a renderer-level browser
-// test that reads COMPUTED STYLE must import the stylesheet barrels itself, same as every other consumer.
+// test that reads COMPUTED STYLE must import the stylesheets itself, same as every other consumer.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components' // self-defines ui-* controls (the real default-catalog factories)
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all' // self-defines ui-* controls (the real default-catalog factories)
 import { createRenderer } from './renderer.ts'
 
 function harness() {

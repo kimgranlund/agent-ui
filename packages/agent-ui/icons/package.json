@@ -4,6 +4,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "sideEffects": [
+    "./src/phosphor/**"
+  ],
   "exports": {
     ".": "./src/index.ts",
     "./phosphor": "./src/phosphor/index.ts"

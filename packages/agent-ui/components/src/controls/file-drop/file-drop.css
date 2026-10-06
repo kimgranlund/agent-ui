@@ -15,10 +15,15 @@
  *       wrapped row of committed-file chips.
  *
  * Standalone stylesheet — NOT injected from file-drop.ts (behaviour-only `.ts`, no runtime injection per
- * plan §2). Linked via the component-styles barrel; the barrel @imports foundation roles FIRST.
+ * plan §2). Linked per control or via shared-styles.css (ADR-0233, no barrel); the barrel @imports foundation roles FIRST.
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-file-drop) declares --ui-file-drop-* ════════════════ */
+
+/* uses: synced from file-drop.md by scripts/codemod-uses.mjs */
+@import '../attachment/attachment.css';
+@import '../button/button.css';
+@import '../icon/icon.css';
 
 :where(ui-file-drop) {
   /* ── Shell geometry — Pattern-class (geometry.md): the shell rides the space scale, minted own-chain

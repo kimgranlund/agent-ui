@@ -9,10 +9,10 @@ import type { UITextElement } from './text.ts'
 // Runs in BOTH Chromium and WebKit via vitest.browser.config.ts → playwright instances.
 //
 // CSS wiring is SELF-CONTAINED: foundation-styles (the --md-sys-color-* roles + the --md-sys-typescale-*
-// ramp from dimensions.css) then component-styles (text.css), then the self-defining module.
+// ramp from dimensions.css) then `all.css` (text.css), then the self-defining module.
 import '@agent-ui/components/foundation-styles.css' // the --md-sys-color-* roles + the --md-sys-typescale-* type scale
-import '@agent-ui/components/component-styles.css' // includes text.css (added to the barrel)
-import '@agent-ui/components/components' // self-defines ui-text + the whole family
+import '@agent-ui/components/all.css' // includes text.css
+import '@agent-ui/components/all' // self-defines ui-text + the whole family
 
 /** A CDP session for Chromium-only emulation probes. */
 type CdpSession = { send(method: string, params?: object): Promise<unknown> }

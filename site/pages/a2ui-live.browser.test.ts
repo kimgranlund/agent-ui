@@ -29,8 +29,8 @@ import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/app/super-shell.css'
 import '@agent-ui/app/super-shell'
-import '@agent-ui/components/component-styles.css' // the [hidden] panel rule + tab chrome (Batch C tabs legs)
-import '@agent-ui/components/components' // self-defines ui-tabs / ui-tab / ui-tab-panel
+import '@agent-ui/components/all.css' // the [hidden] panel rule + tab chrome (Batch C tabs legs)
+import '@agent-ui/components/all' // self-defines ui-tabs / ui-tab / ui-tab-panel
 import './a2ui-live.css'
 
 const mounted: HTMLElement[] = []

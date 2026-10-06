@@ -4,6 +4,10 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "sideEffects": [
+    "./src/controls/**",
+    "./src/**/*.css"
+  ],
   "exports": {
     ".": "./src/index.ts",
     "./router-outlet": "./src/controls/router-outlet/router-outlet.ts",

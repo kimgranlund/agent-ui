@@ -7,6 +7,7 @@
 tag: ui-swiper-label
 tier: display            # geometry size-class — author text, no interactive/structural surface of its own
 extends: UIElement       # NOT form-associated — carries no value
+uses: []
 # marginal: measured at integration (npm run size, ADR-0040 §3) — the five-tag family total
 
 attributes: []            # no configuration — the author's light-DOM text IS the accessible name

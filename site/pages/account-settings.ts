@@ -49,7 +49,8 @@ import { heading } from '../lib/doc-page.ts'
 import { createMemoryStore } from '@agent-ui/app/settings-memory-store'
 import type { UISettingsElement } from '@agent-ui/app/settings'
 import type { SettingsSchema } from '@agent-ui/app/settings-schema'
-import type { UIButtonElement, UICardElement } from '@agent-ui/components/components'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import type { UICardElement } from '@agent-ui/components/controls/card'
 // TYPE-ONLY (verbatimModuleSyntax): erased at compile time (SPEC-R9 AC2) — the only RUNTIME touch of that
 // module is the dynamic import() inside wireIdentityDemo's DEV-gated branch below.
 import type { IdentityMockTransport, IdentitySession } from '../lib/identity-mock-transport.ts'

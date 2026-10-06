@@ -22,7 +22,7 @@
  *       (the Indicator/Range family pattern — NO :state(ready) gate; ADR-0042 LLD-C6). Forced-colors safe.
  *       Density-invariant (box/thumb scale with `--md-sys-compact-{size}`, never a raw px override here).
  *
- * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
+ * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel) (Phase 2); NEVER injected
  * from slider-multi.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

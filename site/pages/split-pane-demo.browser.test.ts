@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 // Side-effect import: the demo page mounts the app shell + the three live ui-split specimens into document.body.
 import './split-pane-demo.ts'
-import type { UISplitElement } from '@agent-ui/components/components'
+import type { UISplitElement } from '@agent-ui/components/controls/split'
 
 // GH #347 — REAL-TIMING HEADROOM (rAF settles under load).
 vi.setConfig({ testTimeout: 30_000 })

@@ -10,6 +10,7 @@ tag: ui-service-card
 description: The availability-stated service/agent launch card — ONE bindable boolean (available) drives the status dot, title mute, and the Open⟷Unavailable action swap together.
 tier: pattern           # geometry size-class (container spacing + ONE control-height action row, ADR-0224 cl.1)
 extends: UIElement      # a display primitive with data-props — NOT UIContainerElement (the interior is component-rendered from hardened props, not an agent-composed ChildList) and NOT form-associated (no value)
+uses: []
 # marginal: not yet measured (S1 build, folder-local) — measured at the fleet size gate (npm run size) once wired into the shared barrel
 
 attributes:             # attributes-as-API — mirrors service-card.ts static props

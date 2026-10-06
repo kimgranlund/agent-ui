@@ -19,7 +19,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
 

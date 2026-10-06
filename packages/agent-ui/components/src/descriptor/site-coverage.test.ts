@@ -455,7 +455,7 @@ describe('site coverage — the type-sample check BITES (synthetic negative cont
 // the call fails the build instead of silently under-rendering for however long nobody happens to look.
 //
 // SOURCE-LEVEL, not a live DOM render: mounting the ~19 real parts-bearing page modules here would import
-// `@agent-ui/components/components` from each and self-register the SAME ui-* custom elements repeatedly against
+// the fleet's control entries from each and self-register the SAME ui-* custom elements repeatedly against
 // one shared jsdom `customElements` registry (a global per test file) — colliding with each other and with every
 // other page module the site test project exercises elsewhere. The house's own precedent for exactly this
 // question — "did this page thread a derived fact through" — is site-canon's dead-name scan and this file's own

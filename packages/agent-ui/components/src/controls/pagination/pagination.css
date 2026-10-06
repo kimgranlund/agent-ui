@@ -10,11 +10,14 @@
  *       out as a simple inline-flex row; the `[data-part='ellipsis']` marker is inert (no interactive
  *       affordance, `aria-hidden` on the element itself carries the a11y half).
  *
- * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from pagination.ts
+ * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from pagination.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-pagination) declares --ui-pagination-* ════════════════ */
+
+/* uses: synced from pagination.md by scripts/codemod-uses.mjs */
+@import '../button/button.css';
 
 :where(ui-pagination) {
   --ui-pagination-gap: var(--md-sys-space-xs); /* the inter-stop rhythm — rides [density] free (ADR-0103) */

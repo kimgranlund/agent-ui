@@ -56,10 +56,10 @@ import './nav-rail.ts'
 // claim these two legs exist to hold, and the label derivation is gated by nav-rail.test.ts's own #376
 // equality assertion, where it belongs.
 //
-// Side-effect imports — CSS load order (ADR-0003): foundation roles + dimensional ramp FIRST, then the
-// components barrel, then this family's CSS.
+// Side-effect imports — CSS load order (ADR-0003): foundation roles + dimensional ramp FIRST, then
+// `all.css`, then this family's CSS.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import './nav-rail.css'
 
 const mounted: HTMLElement[] = []

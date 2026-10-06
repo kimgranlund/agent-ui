@@ -104,10 +104,11 @@ content.append(heading(2, 'The CSS import order (load-bearing — ADR-0003)'))
 content.append(
   el('p', {}, [
     document.createTextNode(
-      'Foundation tokens must load before per-control CSS, which must load before the controls self-define — ' +
-        'reversing the order leaves a control reading undeclared custom properties. Every page on this site ' +
-        'opens with exactly this sequence (verbatim from site/pages/_page.ts, the shared shell every page ' +
-        'imports first):',
+      'Foundation tokens load first, then the shared seam sheet once, then the sheet of each control you use, ' +
+        'then the control modules, which self-define their tags. Import only the controls the app uses; each ' +
+        'control sheet already imports the sheets of the controls it composes. The demo-only ' +
+        '@agent-ui/components/all and all.css entries load the whole fleet; this site uses them (site/pages/_page.ts), ' +
+        'an app should not:',
     ),
   ]),
 )
@@ -119,8 +120,10 @@ content.append(
       '                                                     //      leading, ink/surface, font smoothing — for a page',
       "                                                     //      WITHOUT its own shell/body rule (this site's shell",
       '                                                     //      sets its own, so the docs pages skip it)',
-      "import '@agent-ui/components/component-styles.css' // [2] per-control CSS, after the foundation",
-      "import '@agent-ui/components/components'           // [3] self-defining ui-* controls (registers every tag)",
+      "import '@agent-ui/components/shared-styles.css'    // [2] the shared seam sheets, once, after the foundation",
+      "import '@agent-ui/components/controls/button.css'  // [2b] the sheet of each control you use, in any order",
+      "import '@agent-ui/components/controls/button'      // [3] each control module you use (registers ui-button)",
+      "                                                     //      demo-only: '@agent-ui/components/all.css' + '/all' load the fleet",
       "import '@agent-ui/icons/phosphor'                   // [3b] the default icon pack — activates the affordances",
       '                                                     //      controls render through @agent-ui/icons',
     ].join('\n'),
@@ -171,8 +174,8 @@ content.append(heading(2, 'Per-control imports (tree-shaking)'))
 content.append(
   el('p', {}, [
     document.createTextNode(
-      'The barrel import above (@agent-ui/components/components) registers every control. A production build ' +
-        'that only uses a handful of controls can import each by its own subpath instead — read below straight ' +
+      'Each control has its own module subpath and its own sheet subpath (controls/{name} and ' +
+        'controls/{name}.css), as in the recipe above. The list below is read straight ' +
         'from @agent-ui/components’ real package.json exports map, so a control renamed or added there updates ' +
         'this list with no edit here.',
     ),

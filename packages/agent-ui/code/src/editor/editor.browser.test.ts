@@ -27,7 +27,7 @@ interface CdpSession {
 // then the component sheet. Then `@agent-ui/code/editor` self-defines ui-code-editor; its own sheet colours
 // the highlight tokens. The browser config resolves via real package `exports` (no aliasing).
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import '@agent-ui/code/editor.css'
 import '@agent-ui/code/editor'
 

@@ -10,6 +10,7 @@
 tag: ui-switch
 tier: indicator          # geometry size-class (Indicator widget box — compact ramp, not full control height; geometry.md "five size-classes")
 extends: UIIndicatorElement   # the Indicator base (ADR-0042); UISwitchElement → UIIndicatorElement → UIFormElement
+uses: []
 # marginal: ui-switch adds 55 B gz (263 B min) to the self-defining ui-* family above ui-checkbox (UIIndicatorElement is already in the bundle via checkbox — UISwitchElement adds only its role assignment; the dominant shared cost is on checkbox's marginal) — within the per-control ≤ ~2 kB tier budget (plan §10)
 
 attributes:              # attributes-as-API — mirrors indicator-element.ts `indicatorProps` (indicator-specific first, then spread formProps)

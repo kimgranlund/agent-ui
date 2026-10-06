@@ -11,7 +11,7 @@ import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-d
 import './containers.css' // shared demo chrome (.event-log + section spacing)
 import { exampleSection, inline, uiButton } from '../lib/specimens.ts'
 import { readNdjsonLines } from '../lib/ndjson-lines.ts'
-import type { UIStatusStreamElement } from '@agent-ui/components/components'
+import type { UIStatusStreamElement } from '@agent-ui/components/controls/status-stream'
 // The committed fixture, the SAME bytes the a2a-tic-tac-toe demo page's arena-replay reads (a Vite `?raw`
 // static import — zero network, zero fetch).
 import flagshipRaw from '../../packages/agent-ui/a2a/matches/flagship.match.jsonl?raw'

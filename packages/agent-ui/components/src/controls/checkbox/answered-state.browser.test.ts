@@ -15,8 +15,8 @@ import { userEvent } from 'vitest/browser'
 //
 // Side-effect imports — the load-bearing CSS order (ADR-0003).
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 import type { UICheckboxElement } from './checkbox.ts'
 
 const mounted: HTMLElement[] = []

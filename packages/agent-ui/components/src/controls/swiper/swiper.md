@@ -11,6 +11,11 @@
 tag: ui-swiper
 tier: pattern            # geometry size-class — geometry.md "Pattern" (container + control-height rows); the fleet's FIRST scroll-snap surface
 extends: UIContainerElement  # the ui-tabs base — surface axes + reused internals (ARIA); NOT form-associated (face below)
+uses:
+  - ui-swiper-item
+  - ui-swiper-label
+  - ui-swiper-paddles
+  - ui-swiper-pagination
 # marginal: 2406 B gz (8385 B min solo) — re-measured 2026-07-10 after the five-file/five-export-line
 # repair (npm run size, ADR-0040 §3); the four leaf descriptors each measure 0 B gz marginal on their own
 # barrel line (swiper.ts already imports them transitively, so removing only THEIR line changes nothing —

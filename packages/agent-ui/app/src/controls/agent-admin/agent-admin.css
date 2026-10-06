@@ -48,8 +48,8 @@
  * `@agent-ui/app/*.css` sheet a page lists explicitly), `../entry-list/entry-list.ts`'s `mountEntryList` is
  * a plain JS mount function — invisible glue INSIDE this file, never a tag a page's own markup names. A
  * page has nothing to remember to import a second sheet FOR, so this sheet pulls its composed primitive's
- * CSS in itself (the `component-styles.css` barrel `@import` precedent, applied at control scope instead of
- * package scope) — every existing `@agent-ui/app/agent-admin.css` import site keeps rendering agent-admin's
+ * CSS in itself (the same `@import` a control sheet's `uses` prologue carries under ADR-0233 cl.3, applied here by hand
+ * for a composed primitive that is not a `uses` tag) — every existing `@agent-ui/app/agent-admin.css` import site keeps rendering agent-admin's
  * entry sections styled with ZERO changes of its own. */
 @import '../entry-list/entry-list.css';
 

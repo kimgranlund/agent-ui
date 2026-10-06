@@ -10,6 +10,7 @@
 
 import { loadCatalog } from './catalog.ts'
 import type { Catalog } from './catalog.ts'
+import type { ControlLoader } from '@agent-ui/components/loader'
 import type { CatalogEntry, CatalogRegistry, VariantDispatch, WidgetFactory } from './types.ts'
 import { factoriesOf } from './variant.ts'
 
@@ -41,6 +42,7 @@ export class Registry implements CatalogRegistry {
     catalog: unknown,
     factories: Record<string, WidgetFactory | VariantDispatch>,
     functions?: Record<string, (args: Record<string, unknown>) => unknown>,
+    controls?: ControlLoader,
   ): void {
     // Defensive re-assert + narrow `unknown` → a structurally-valid `Catalog`. The loader is the single
     // shape gate (LLD-C1 invariant); storing its normalized result keeps the stored entry valid downstream.
@@ -65,7 +67,10 @@ export class Registry implements CatalogRegistry {
     }
     // ADR-0169 cl.8: the optional per-catalog function-impl override, stored only when provided (a plain
     // `functions` key of `undefined` would still satisfy the optional-field type but pollutes intent).
-    this.#catalogs.set(loaded.catalogId, functions !== undefined ? { catalog: loaded, factories, functions } : { catalog: loaded, factories })
+    // ADR-0233: the optional control loader follows the same rule.
+    const entry: CatalogEntry = functions !== undefined ? { catalog: loaded, factories, functions } : { catalog: loaded, factories }
+    if (controls !== undefined) entry.controls = controls
+    this.#catalogs.set(loaded.catalogId, entry)
   }
 
   get(id: string): CatalogEntry | undefined {

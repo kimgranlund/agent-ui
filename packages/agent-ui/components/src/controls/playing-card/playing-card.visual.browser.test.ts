@@ -7,8 +7,8 @@ import { page, server } from 'vitest/browser'
 // Baselines commit under `__baselines__/playing-card.visual.browser.test.ts/<name>-chromium-darwin.png`;
 // re-baseline only via `npm run test:visual:update` (a deliberate act).
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 const mount = (attrs = ''): { wrap: HTMLElement; host: HTMLElement } => {
   const wrap = document.createElement('div')

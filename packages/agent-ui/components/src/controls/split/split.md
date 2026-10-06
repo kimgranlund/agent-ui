@@ -7,6 +7,8 @@ tag: ui-split
 description: A multi-pane container with user-resizable, draggable and keyboard-adjustable dividers between panes.
 tier: layout           # geometry size-class (Container/layout band — NO control height; geometry.md §"five size-classes")
 extends: UIContainerElement   # structural surface container, NOT form-associated (face below)
+uses:
+  - ui-split-pane
 # marginal: measured at build (npm run size, LLD-C9) — the per-control ≤ ~2 kB tier budget (plan §10); the
 # family total is re-based measured-at-build in the same wave (scripts/measure-size.mjs)
 

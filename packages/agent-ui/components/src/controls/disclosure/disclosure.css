@@ -15,7 +15,7 @@
  *       is too cross-engine-fresh; a grep-able absence, pinned by disclosure-css.test.ts).
  *
  * Standalone stylesheet — NOT injected from disclosure.ts (behaviour-only `.ts`, no runtime injection per
- * plan §2). Linked via the component-styles barrel at the integration wave (LLD-C11) — this folder ships
+ * plan §2). Linked per control or via shared-styles.css (ADR-0233, no barrel) at the integration wave (LLD-C11) — this folder ships
  * standalone for the M1-a checkpoint (content-family.lld.md §9).
  */
 

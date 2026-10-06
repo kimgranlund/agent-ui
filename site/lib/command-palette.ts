@@ -5,7 +5,7 @@
 // (ADR/changelog) as background fetches that merge in — closed-instance swap, or deferred to the next `close`
 // — once they resolve (SPEC-R10). No @agent-ui/router import anywhere in this module (SPEC-R9 AC1's
 // grep-checkable negative control) — selection navigates via a plain `location.href` assignment.
-import type { UICommandModalElement } from '@agent-ui/components/components'
+import type { UICommandModalElement } from '@agent-ui/components/controls/command-modal'
 
 interface SitemapEntry {
   readonly name: string

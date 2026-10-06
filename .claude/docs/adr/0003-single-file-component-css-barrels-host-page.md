@@ -9,7 +9,7 @@
 > | **Proposed by** | planning-lead — encoding the host/user-ratified plan-incorporation, forced live by the gold `ui-button` (the reference template every later control copies) |
 > | **Ratified by** | orchestration-lead — 2026-06-26 |
 > | **Repairs** | `.claude/docs/plan.md` §8 (the CSS-trio + per-component file set), `.claude/docs/goals.md` §G5 DoD (the styling bullet), `.claude/docs/process.md` §1 (the naming/structure trip-wire's "exact per-component file set"), the `component-author` skill (scaffold step 2 + CSS-trio step 5). *(No edit: the import-layering trip-wire — `controls/` stays the FACE layer.)* |
-> | **Supersedes / Superseded by** | *(none)* |
+> | **Supersedes / Superseded by** | **Superseded in part by [ADR-0233](./0233-per-control-entries-and-generated-control-registry.md)** (the barrel clause; single-file CSS, behavior-only `.ts` and the host-page clauses stand) |
 
 ## Context
 
@@ -74,3 +74,7 @@ and self-defining JS modules. This repairs `plan.md` §8, `goals.md` §G5, `proc
 - **Flatten FACE controls into `components/{name}/`** (as the incorporation's loose wording suggests) —
   rejected: `controls/` is the import-layering trip-wire's enforced layer (CLAUDE.md, `plan.md` §3); the
   layer carries meaning (controls import `dom` + `traits`), so it stays.
+
+## Amendment (2026-10-05): superseded in part by ADR-0233
+
+[ADR-0233](./0233-per-control-entries-and-generated-control-registry.md) retires this ADR's barrel clause. The family barrel (`controls/index.ts`) and the CSS barrel (`component-styles.css`) give way to per-control entries (`./controls/{name}` and `./controls/{name}.css`), the once-linked `shared-styles.css` that holds the cross-family seams, and the demo-only `./all` and `./all.css`. The host page links `foundation-styles.css`, then `shared-styles.css`, then control sheets (or `all.css`). The single-file CSS clause, the behavior-only `.ts` invariant and the host-page clause stand.

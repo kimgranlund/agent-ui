@@ -1596,6 +1596,13 @@
     "section": "Records"
   },
   {
+    "name": "ADR-0233",
+    "url": "./adr-index.html#adr-0233",
+    "description": "Per-control entry points and a descriptor-generated control registry replace the family and CSS barrels",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "ADR-0234",
     "url": "./adr-index.html#adr-0234",
     "description": "Each turn reports its composed prompt against a declared character budget and the provider-billed token usage on the TurnTrace",

@@ -7,6 +7,7 @@ tag: ui-gauge
 description: A multi-ring radial gauge — concentric, independent 0-100 progress rings (never part-of-whole) with a real-DOM label/value legend column.
 tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; ADR-0229, mirrors ui-bar-chart/ui-pie-chart/ui-column-chart)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF
+uses: []
 
 attributes:            # attributes-as-API — mirrors gauge.ts `static props` (data, label)
   - name: data

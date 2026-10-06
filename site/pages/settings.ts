@@ -9,7 +9,7 @@
 // `<ui-settings>` driven by a real schema + a real `localStorage`-backed store the reader can reload the
 // page against to see the persistence round-trip).
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
-import '@agent-ui/components/component-styles.css' // ui-split/ui-text-field/ui-switch/etc.'s shipped CSS (composed by ui-settings)
+import '@agent-ui/components/all.css' // ui-split/ui-text-field/ui-switch/etc.'s shipped CSS (composed by ui-settings)
 import '@agent-ui/app/master-detail-pane.css'
 import '@agent-ui/app/master-detail.css'
 import '@agent-ui/app/settings.css'

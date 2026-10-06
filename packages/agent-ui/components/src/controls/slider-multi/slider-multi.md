@@ -8,6 +8,7 @@
 tag: ui-slider-multi
 tier: range           # geometry size-class (Range band — widget box + fill + dual thumbs; geometry.md)
 extends: UIRangeElement   # the Range base (ADR-0042); UISliderMultiElement → UIRangeElement → UIFormElement
+uses: []
 # marginal: ui-slider-multi adds 893 B gz (5183 B min) to the self-defining ui-* family above ui-slider (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — UIRangeElement is already in the bundle via ui-slider; this leaf adds the dual-thumb thumb builder + lo/hi normaliser + nearer-thumb-grabs logic) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:           # attributes-as-API — mirrors UISliderMultiElement.props (range params first, then formProps)

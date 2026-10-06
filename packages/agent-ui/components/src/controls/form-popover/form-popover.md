@@ -11,6 +11,7 @@
 tag: ui-form-popover
 tier: pattern      # geometry composite: trigger = Control class; panel = Container/surface (select's trigger + popover's panel, by part)
 extends: UIElement # NOT form-associated — the panel's children each own their own value/validity; live-apply (F2) leaves no aggregate draft value on the host
+uses: []
 # marginal: tracked at the integration slice; ≤ ~2 kB tier budget (plan §10)
 
 attributes:             # attributes-as-API — mirrors UIFormPopoverElement.props exactly

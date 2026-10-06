@@ -8,7 +8,7 @@
 // so a prop rename/default change flows here with no page edit. What is hand-authored is the teaching prose
 // + the live examples (a real, resizable `<ui-master-detail>` the reader can narrow to see the drill-in).
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
-import '@agent-ui/components/component-styles.css' // ui-split/ui-split-pane's shipped CSS (composed by master-detail)
+import '@agent-ui/components/all.css' // ui-split/ui-split-pane's shipped CSS (composed by master-detail)
 import '@agent-ui/app/master-detail-pane.css'
 import '@agent-ui/app/master-detail.css'
 import '@agent-ui/app/master-detail-pane' // self-defines ui-master-detail-pane

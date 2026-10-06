@@ -14,7 +14,7 @@
  *       colour, no spacing, no geometry: the coordination host paints nothing, the slotted subtree owns
  *       every box.
  *
- * Standalone stylesheet — linked via the component-styles barrel (wired in s12); NEVER injected from
+ * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel) (wired in s12); NEVER injected from
  * form-provider.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  *
  * ADR-0103 re-confirms this contract UNCHANGED: unlike `ui-radio-group` (a value-owning group whose direct-

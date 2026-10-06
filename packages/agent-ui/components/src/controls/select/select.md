@@ -10,6 +10,7 @@
 tag: ui-select
 tier: pattern           # geometry composite: trigger = Control class; panel = Container/surface; rows = legacy item-pad
 extends: UIFormElement  # form-associated: formValue() = selected key; formValidity() = valueMissing
+uses: []
 # marginal: tracked at the wave-4 integration slice (s12 barrel pass); ≤ ~3 kB tier budget (plan §10)
 
 attributes:             # attributes-as-API — mirrors UISelectElement.props (formProps spread first, then own)

@@ -16,7 +16,7 @@ import { server, userEvent } from 'vitest/browser'
 //
 // CSS load order (ADR-0003): foundation roles + the dimensional ramp first, then this control's sheet.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import './conversation-composer.css'
 import { UIConversationComposerElement } from './conversation-composer.ts'
 // GH #891 (SPEC-R9) — registers + activates the curated Phosphor pack (ADR-0066) AND defines the two

@@ -38,7 +38,7 @@
  *       property).
  *
  * Standalone — NOT injected from calendar.ts (behaviour-only `.ts`, no runtime style injection
- * per plan §2). Linked via component-styles.css; foundation roles FIRST in the load order.
+ * per plan §2). Linked as its own control sheet after the foundation and shared-styles.css (ADR-0233 cl.3).
  */
 
 /* ══════════════════════ [1] TOKEN BLOCK — :where(ui-calendar) ══════════════════════════════ */

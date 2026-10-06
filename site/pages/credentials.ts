@@ -37,13 +37,11 @@
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './credentials.css'
 import { heading } from '../lib/doc-page.ts'
-import type {
-  UIFormProviderElement,
-  UITextFieldElement,
-  UICheckboxElement,
-  UIButtonElement,
-  UICardElement,
-} from '@agent-ui/components/components'
+import type { UIFormProviderElement } from '@agent-ui/components/controls/form-provider'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
+import type { UICheckboxElement } from '@agent-ui/components/controls/checkbox'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import type { UICardElement } from '@agent-ui/components/controls/card'
 // TYPE-ONLY (verbatimModuleSyntax): erased at compile time, so this reference never survives into the
 // built dist/ output (SPEC-R9 AC2) — the only RUNTIME touch of this module is the dynamic import() inside
 // wireIdentityDemo's DEV-gated branch below.

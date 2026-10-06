@@ -19,7 +19,7 @@
 | **LLD-C7** | Client function library | SPEC-R5 | `functions.ts` |
 | **LLD-C8** | ~~Theme / surfaceProperties applier~~ — RETIRED (GH #531) | — | — |
 
-**Dependencies.** Factories (LLD-C5) import `ui-*` controls from `@agent-ui/components`. Conformance (LLD-C6) is called by the renderer's `validate.ts` and (transitively) by corpus admission — one implementation, three callers (SPEC-N3). Zero third-party deps (SPEC-N4).
+**Dependencies.** Factories (LLD-C5) name `ui-*` tags and import no control (ADR-0233); the renderer registers the built-in catalogs with `builtinControls` (`catalog/controls.ts`, over `@agent-ui/components/registry` and `/loader`), which defines a surface's controls on demand. Conformance (LLD-C6) is called by the renderer's `validate.ts` and (transitively) by corpus admission — one implementation, three callers (SPEC-N3). Zero third-party deps (SPEC-N4).
 
 ## 2. Catalog model & loader — LLD-C1 (SPEC-R1)
 
@@ -207,11 +207,11 @@ function validateCatalogConformance(component: A2uiComponent, catalog: Catalog):
 
 ```
 packages/agent-ui/a2ui/src/catalog/
-  catalog.ts naming.ts registry.ts conformance.ts functions.ts index.ts
+  catalog.ts naming.ts registry.ts conformance.ts functions.ts controls.ts index.ts
   default/  catalog.json  factories.ts  index.ts
 ```
 
-**Integration:** `conformance.ts` is imported by renderer `validate.ts` (renderer LLD-C11) → also reached by corpus admission. `registry.ts` + `WidgetFactory` are consumed by renderer widget resolution (renderer LLD-C7). `default/factories.ts` imports `ui-*` controls from `@agent-ui/components`. `supportedCatalogIds()` feeds renderer capabilities (renderer LLD-C12). No `theme.ts` — LLD-C8 is retired (GH #531; §7 above).
+**Integration:** `conformance.ts` is imported by renderer `validate.ts` (renderer LLD-C11) → also reached by corpus admission. `registry.ts` + `WidgetFactory` are consumed by renderer widget resolution (renderer LLD-C7). `default/factories.ts` imports no control (ADR-0233); `controls.ts` exports `builtinControls`, the loader the renderer registers for the default and a2ui-basic catalogs. `supportedCatalogIds()` feeds renderer capabilities (renderer LLD-C12). No `theme.ts` — LLD-C8 is retired (GH #531; §7 above).
 
 ## 10. Build sequence (dependency-ordered; each step verifiable)
 

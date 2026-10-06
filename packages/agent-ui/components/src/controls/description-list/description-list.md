@@ -8,6 +8,7 @@
 tag: ui-description-list
 tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; the ui-stat/ui-table posture, ADR-0201 cl.1) — the levers are the type matrix + the space ladder
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (no events, no keyboard, no focus)
+uses: []
 # marginal: ui-description-list adds 209 B gz to the self-defining ui-* family (measured 2026-08-17 via
 # `npm run size`'s leave-one-out — one render effect + one hardened JSON codec, no interaction machinery)
 # — well within the per-control ≤ ~2 kB tier budget (plan §10).

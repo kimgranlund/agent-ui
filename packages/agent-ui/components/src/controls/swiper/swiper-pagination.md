@@ -6,6 +6,7 @@
 tag: ui-swiper-pagination
 tier: pattern            # geometry size-class — an author-placed anchor the coordinator fills (LLD-C9)
 extends: UIElement       # NOT form-associated — a pure render-target anchor, no value of its own
+uses: []
 # marginal: measured at integration (npm run size, ADR-0040 §3) — the five-tag family total
 
 attributes:

@@ -11,7 +11,7 @@
 //
 // Home: `packages/agent-ui/a2ui/src/examples/`, exposed ONLY via the package.json `"./examples"`
 // subpath export (never the root barrel — payload bytes must never enter a renderer consumer's
-// bundle, the `@agent-ui/components/components` subpath precedent).
+// bundle, the `@agent-ui/components/all` demo-only subpath precedent).
 //
 // Two catalogs, two shelves (GH #1737, Kim's ruling 2026-10-03, ADR-0169 follow-up): the seed is generic
 // over the catalog it renders against, `ExampleSeed<C extends SeedCatalogId = 'agent-ui'>`. The default

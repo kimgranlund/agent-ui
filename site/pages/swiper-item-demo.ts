@@ -10,7 +10,7 @@
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + .demo-box + section spacing)
 import { el, exampleSection, uiButton, demoBox } from '../lib/specimens.ts'
-import type { UISwiperElement } from '@agent-ui/components/components'
+import type { UISwiperElement } from '@agent-ui/components/controls/swiper'
 
 const { content } = mountPage({
   title: 'ui-swiper-item — demo',

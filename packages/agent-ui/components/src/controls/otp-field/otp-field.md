@@ -9,6 +9,7 @@ tag: ui-otp-field
 description: A segmented N-cell one-time-code entry field — one focusable editable surface, N presentational cells, auto-advance/backspace-walk/arrow traversal under a no-gaps invariant, and full/partial paste-split.
 tier: control          # geometry size-class (Control band — full control height; geometry.md "five size-classes")
 extends: UIFormElement  # FACE form-associated control (value/validity participation via ElementInternals; ADR-0013)
+uses: []
 # marginal: measured via `npm run size` (scripts/measure-size.mjs) at build time — the components barrel delta with vs. without this control's export (it + UIFormElement + trackUserInvalid, tree-shaken); no codec/adornment machinery, so the marginal is expected near the checkbox/switch Wave-1 floor, not the text-field ceiling.
 
 attributes:            # attributes-as-API — mirrors otp-field.ts `static props` (control-specific first, then the spread formProps)

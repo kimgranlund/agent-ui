@@ -13,7 +13,7 @@ import type { UIToastElement } from './toast.ts'
 //
 // Side-effect imports — CSS load order (ADR-0003): foundation roles FIRST, then the button/icon
 // sheets (the toast's own child parts), then the toast sheet, then the self-defining modules.
-// Imported DIRECTLY (relative), NOT via the component-styles barrel (that's LLD-C11, a later wave).
+// Imported DIRECTLY (relative), NOT per control or via shared-styles.css (ADR-0233, no barrel) (that's LLD-C11, a later wave).
 import '@agent-ui/components/foundation-styles.css'
 import '../button/button.css'
 import '../icon/icon.css'

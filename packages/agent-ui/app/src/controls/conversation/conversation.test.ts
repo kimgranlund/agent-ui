@@ -5,7 +5,7 @@ import type { UIConversationComposerElement } from './conversation-composer.ts'
 import type { UIConversationDialogElement } from './conversation-dialog.ts'
 import type { UIConversationHeaderElement } from './conversation-header.ts'
 import type { UISurfaceHostElement } from '../surface-host/surface-host.ts'
-import '@agent-ui/components/components' // self-registers ui-button/ui-status-stream/ui-timeline-item
+import '@agent-ui/components/all' // self-registers ui-button/ui-status-stream/ui-timeline-item
 import {
   splitFrontmatter,
   parseDescriptor,

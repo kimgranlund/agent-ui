@@ -23,7 +23,7 @@
  *       zeroes it. Forced-colors: the inks stay CanvasText (real text, not decorative glyphs — no
  *       `forced-color-adjust: none`); the error stays distinguishable by presence, not colour alone (WCAG 1.4.1).
  *
- * Standalone stylesheet — linked via the host page / component-styles barrel (s12); NEVER injected from
+ * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel) (s12); NEVER injected from
  * field.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

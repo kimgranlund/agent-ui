@@ -15,7 +15,7 @@
  *       with a symmetric 2px inset from the track end (the ADR-0041 rendered-px proof).
  *       `:focus-visible` ring (keyboard-only, ADR-0009). Forced-colors safe. Density-invariant.
  *
- * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected from
+ * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel) (Phase 2); NEVER injected from
  * switch.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

@@ -5,7 +5,9 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import './dashboard.ts'
-import type { UITableElement, UIBarChartElement, UISegmentedControlElement } from '@agent-ui/components/components'
+import type { UITableElement } from '@agent-ui/components/controls/table'
+import type { UIBarChartElement } from '@agent-ui/components/controls/bar-chart'
+import type { UISegmentedControlElement } from '@agent-ui/components/controls/segmented-control'
 import { FIXTURE_RECORDS, computeDashboardStats, computeCategoryBreakdown } from './dashboard-data.ts'
 
 const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))

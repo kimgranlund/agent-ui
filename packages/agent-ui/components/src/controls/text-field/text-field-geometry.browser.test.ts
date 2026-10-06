@@ -16,10 +16,10 @@ import { server, cdp } from 'vitest/browser'
 //
 // Side-effect imports — the load-bearing CSS order (ADR-0003): foundation roles + dimensional ramp FIRST,
 // then the component sheet (text-field's :where() token block + @scope geometry), then the self-defining
-// family barrel (registers ui-text-field). Vite injects them.
+// `all` entry (registers ui-text-field). Vite injects them.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 import { iconRegistry, type IconName, type IconPack } from '@agent-ui/icons'
 
 // Minimal CDP session interface for forced-colors emulation (Chromium only — WebKit has no CDP emulation).
@@ -614,8 +614,7 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
 //   4. FOCUS-RESTORE — after overlay close the calendar button has focus (ADR-0045 guarantee).
 //   5. CODEC (time) — "14:30" blurs to a localized string on a real ICU stack.
 //
-// The `@agent-ui/components/components` barrel already registers `<ui-calendar>` (controls/index.ts
-// line 53). The text-field's click handler checks `customElements.get('ui-calendar')` at runtime —
+// The `@agent-ui/components/all` entry already registers `<ui-calendar>`. The text-field's click handler checks `customElements.get('ui-calendar')` at runtime —
 // since the calendar IS already registered, `open()` fires SYNCHRONOUSLY on the first click (the
 // dynamic import is skipped). Only the Popover API toggle event needs a task-queue drain:
 // all awaits use `setTimeout(r, 0)`, matching select.browser.test.ts lines 192–225.
@@ -644,7 +643,7 @@ describe('ui-text-field Wave-5B — type=date calendar picker (s11 Wave-5B, both
   })
 
   it('OVERLAY: calendar button click opens the popup in the top layer (:popover-open)', async () => {
-    // The barrel pre-registers ui-calendar, so the click handler opens synchronously (customElements.get
+    // The `all` entry pre-registers ui-calendar, so the click handler opens synchronously (customElements.get
     // shortcut). One `setTimeout(r, 0)` lets the Popover toggle event (a queued task) settle.
     const { field } = mount('<ui-text-field type="date"></ui-text-field>')
     const calBtn = field.querySelector('[data-part="calendar-button"]') as HTMLElement
@@ -820,12 +819,12 @@ describe('ui-text-field Wave-5B — type=time codec (s11 Wave-5B, both engines)'
 // These tests prove what jsdom cannot:
 //   1. SHAPE — type=color field is not a collapsed dot in a flex row.
 //   2. OVERLAY — the swatch button opens the picker popup in the top layer (Popover API) on BOTH engines.
-//   3. LIVE UPDATE — a real picker `change` (dispatched on the real <ui-color-picker>, since the barrel
-//      pre-registers it — customElements.get shortcut) updates the field value AND does NOT close the
+//   3. LIVE UPDATE — a real picker `change` (dispatched on the real <ui-color-picker>, since the `all`
+//      entry pre-registers it — customElements.get shortcut) updates the field value AND does NOT close the
 //      popup (SPEC-R11 — unlike the calendar leg, one channel commit is not "done").
 //   4. FOCUS — the swatch button stays a real, focusable anchor for the overlay.
 //
-// The `@agent-ui/components/components` barrel already registers `<ui-color-picker>` (controls/index.ts),
+// The `@agent-ui/components/all` entry already registers `<ui-color-picker>`,
 // so the swatch button's click handler opens synchronously (the customElements.get fast path — the
 // ADR-0048 precedent). The popup/`<ui-color-picker>` do not exist in the DOM until the swatch button's
 // first click (`ensureColorPicker()`) — every test below queries them AFTER `swatchBtn.click()`.

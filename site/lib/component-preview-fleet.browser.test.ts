@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import '@agent-ui/icons/phosphor'
 import './component-preview.ts'
 import { NO_SLOT_TEXT, SLOT_TEXT_OK, STRUCTURAL } from './component-preview.ts'

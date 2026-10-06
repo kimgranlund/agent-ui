@@ -8,7 +8,7 @@
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
 import './forms.css'
-import type { UIFormProviderElement } from '@agent-ui/components/components'
+import type { UIFormProviderElement } from '@agent-ui/components/controls/form-provider'
 import { el, exampleSection, uiButton } from '../lib/specimens.ts'
 import { heading } from '../lib/doc-page.ts'
 

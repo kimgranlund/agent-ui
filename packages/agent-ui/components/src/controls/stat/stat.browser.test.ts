@@ -9,8 +9,8 @@ import { server, cdp } from 'vitest/browser'
 // orientation + sign + word while ink stays IDENTICAL) — and forced-colors (SPEC-R15 AC1).
 //
 // Side-effect CSS/JS imports — the load-bearing order (ADR-0003): foundation roles + dimensional ramp
-// FIRST, then this control's own sheet, then the self-defining module. controls/stat/ is not yet
-// exported from controls/index.ts (that barrel edit is the LLD-C10 shared-file integration slice, a
+// FIRST, then this control's own sheet, then the self-defining module. controls/stat/ was not yet
+// exported from the family barrel (that barrel edit was the LLD-C10 shared-file integration slice, a
 // separate wave from this folder) — direct (pre-barrel) imports, the sparkline/bar-chart precedent.
 import '@agent-ui/components/foundation-styles.css'
 import './stat.css'

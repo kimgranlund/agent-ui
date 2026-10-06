@@ -15,8 +15,8 @@
 // (GH #170/ADR-0155 — no rail-owned `collapse="menu"` dropdown here). The top-bar / footer CONTENT stays
 // site-built chrome slotted into that frame, the same way the pages already dogfood ui-button / ui-text-field.
 import '@agent-ui/components/foundation-styles.css' // [1] foundation: tokens.css -> dimensions.css (FIRST)
-import '@agent-ui/components/component-styles.css' // [2] per-control CSS, after the foundation
-import '@agent-ui/components/components' // [3] self-defining ui-* controls (registers ui-button on import)
+import '@agent-ui/components/all.css' // [2] per-control CSS, after the foundation
+import '@agent-ui/components/all' // [3] self-defining ui-* controls (registers ui-button on import)
 import '@agent-ui/app/nav-rail' // [3a] the shared ui-nav-rail family (@agent-ui/app) the site nav composes (ADR-0130, mode 1)
 import '@agent-ui/app/nav-rail.css' // [3a] its stylesheet — the rail's grouped vertical anatomy, after the foundation
 import '@agent-ui/app/super-shell' // [3c] M5 (GH #84): the site chrome now RIDES the shell system — ui-super-shell owns the frame
@@ -25,7 +25,9 @@ import '@agent-ui/icons/phosphor' // [3b] activate the Phosphor default pack (AD
 // affordances (select caret, text-field clear/reveal/steppers, calendar nav) through the app-owned icon pack — pack-agnostic
 // by design, so the SHELL that self-defines them must activate the default pack, else those glyphs resolve to an empty <svg>.
 import './_page.css' // [4] shared page chrome (shell + nav + header), AFTER the foundation so it reads the --md-sys-color-* roles
-import type { UIButtonElement, UIMenuElement, UIThemeProviderElement } from '@agent-ui/components/components'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import type { UIMenuElement } from '@agent-ui/components/controls/menu'
+import type { UIThemeProviderElement } from '@agent-ui/components/controls/theme-provider'
 import { THEME_OPTIONS, applyTheme, applyScheme, persistTheme, persistScheme, loadPersistedTheme, loadPersistedScheme, type SchemeId } from '../lib/theme-loader.ts'
 import { siteStorage } from '../lib/site-storage.ts'
 

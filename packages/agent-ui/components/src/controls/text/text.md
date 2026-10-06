@@ -7,6 +7,7 @@
 tag: ui-text
 tier: display          # geometry size-class (Display band — NO control frame/height; geometry.md "size-classes" + ADR-0025 cl.1: the typographic ramp is the lever, not --md-sys-height-*)
 extends: UIElement     # a non-interactive display LEAF — NOT form-associated (face below), NOT a UIContainerElement surface
+uses: []
 # marginal: re-measure at the build wave (`npm run size`) — ADR-0114 adds one string prop + one private
 # method (#syncLink) + one effect; no new observer. Family total re-based against the 25600 B gz budget.
 

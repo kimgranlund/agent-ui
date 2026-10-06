@@ -46,6 +46,17 @@ own context:
 `default` stays the existing string field, reparsed by declared kind at generation time — no new
 field needed for defaults.
 
+## The top-level `uses:` field (ADR-0233)
+
+Beside the props-layer fields above, every fleet descriptor carries a top-level `uses:` block sequence
+on the line after `extends:`: the other fleet tags the control's entry module reaches through relative
+imports, sorted, `uses: []` when none. It is derived, never hand-written: run
+`node scripts/codemod-uses.mjs` after any import change (`--check` to verify without writing). The
+crawl is `src/descriptor/control-graph.ts` (`deriveUses`), shared by the codemod and the gate
+`src/controls/uses-driftwire.test.ts`; the schema reports a malformed block (an inline list, a map, a
+non-`ui-` item, a duplicate, the own tag) as `BAD_USES`. `generate-props.ts` reads only `tag` and
+`attributes`, so `uses` never moves a `{name}.props.gen.ts`.
+
 ## The 7-control bespoke-codec allowlist (seed population, drains via `codec:`)
 
 `table`, `bar-chart`, `sparkline`, `stat`, `sandbox-frame`, `ladder`, `ramp` — each has at least one

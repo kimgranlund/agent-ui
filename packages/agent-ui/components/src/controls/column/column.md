@@ -10,6 +10,7 @@
 tag: ui-column
 tier: layout           # geometry size-class (Container/layout band — NO control height; geometry.md "size-classes")
 extends: UIContainerElement  # the surface base (ADR-0015/0016) — a structural container, NOT form-associated (face below)
+uses: []
 # marginal: ui-column adds 66 B gz to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken; re-measured after the ADR-0096 `reflow` prop) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:            # attributes-as-API — mirrors column.ts `static props` (surfaceProps then flexProps)

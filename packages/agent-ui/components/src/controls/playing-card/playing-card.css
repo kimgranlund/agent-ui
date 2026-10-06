@@ -30,7 +30,7 @@
  * insertion; reduced-motion ⇒ none. Zero new motion tokens, zero timing/easing/distance props — nothing
  * is configurable, so the greenfield mechanism-honors-every-attribute check passes trivially.
  *
- * Standalone stylesheet — linked via the host page / component-styles barrel; NEVER injected from
+ * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from
  * playing-card.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 
