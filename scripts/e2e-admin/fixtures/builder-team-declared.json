@@ -1,0 +1,19 @@
+{
+  "kind": "agent-ui-admin-scenario",
+  "version": 1,
+  "name": "builder-team-declared",
+  "turns": [
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": true,
+        "inputKind": "intent"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"note\":\"Scripted Builder note: I set up a crew.\",\"team\":{\"label\":\"Scripted Crew\",\"members\":[{\"name\":\"Scripted Scout\",\"role\":\"researcher\",\"routingDescription\":\"Finds facts for the crew.\"},{\"name\":\"Scripted Scribe\",\"role\":\"writer\",\"routingDescription\":\"Writes up what the scout found.\"}]}}}"
+        ]
+      }
+    }
+  ]
+}

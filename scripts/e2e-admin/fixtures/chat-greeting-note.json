@@ -1,0 +1,25 @@
+{
+  "kind": "agent-ui-admin-scenario",
+  "version": 1,
+  "name": "chat-greeting-note",
+  "seed": {
+    "localStorage": {
+      "agent-admin-app.activePreset": "\"quant\""
+    }
+  },
+  "turns": [
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "intent",
+        "textIncludes": "hello"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"note\":\"Scripted quant note: the dashboard is ready when you are.\"}}"
+        ]
+      }
+    }
+  ]
+}

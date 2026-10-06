@@ -103,6 +103,8 @@ Mechanics that follow:
   `/__a2ui/agent`, checking the RENDERED result (the TKT-0080 class validates cleanly and still renders
   wrong). `@agent-ui/devtools` (ADR-0200) is the agent-drivable path: its transports run a turn and return the raw
   NDJSON timeline plus a capture, with per-surface render verdicts (`./server`, `./playwright`).
+  For agent-admin turns, `npm run e2e:admin` replays fixtures keylessly and `npm run e2e:admin:record`
+  captures a new fixture (needs a key in `.env`, manual). Both are local only, no CI job.
 - Transport is validate-then-stream: A2UI lines arrive in one burst after whole-reply validation
   (live-agent SPEC-R5, ADR-0206). A test that ingests lines mid-turn proves nothing about live timing,
   and any "mid-stream" renderer state must be driven from turn start (the `target` arm, ADR-0206).

@@ -1,0 +1,32 @@
+{
+  "kind": "agent-ui-admin-scenario",
+  "version": 1,
+  "name": "failure-error-line",
+  "turns": [
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "intent"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"error\":\"Scripted provider fault\"}}"
+        ]
+      }
+    },
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "intent",
+        "textIncludes": "try again"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"note\":\"Scripted recovery note: back on track.\"}}"
+        ]
+      }
+    }
+  ]
+}

@@ -31,6 +31,8 @@ builds; it never grades its own output (the `a2ui-review-agent` critic does — 
   (ADR-0128) · `a2ui-message-lifecycle.{spec,lld}.md` · `a2ui-ecosystem-alignment.spec.md` (v0.3 pin).
   A2A work: `a2a-foundations.spec.md` · `a2a-protocol-core.lld.md` · `a2a-a2ui-bridge.lld.md`.
   Devtools work: `devtools-harness.spec.md`.
+  Keyless agent-admin replays: `npm run e2e:admin`; capture a new fixture with `npm run e2e:admin:record`
+  (needs a key, manual). Both local only, no CI job.
 - **Selection guidance** (ADR-0232, accepted): each catalog's `selection.json` sidecar, loaded by
   `src/agent/selection-guidance.ts` (`loadSelectionGuidance` · `selectionGuidanceFor` ·
   `selectionGuidanceForId` · `renderSelectionClause` · `renderSelectionClauseWith`, Node-only) and gated by `catalog/selection-guidance.test.ts` (bijection

@@ -53,6 +53,8 @@ per-control pair (`@agent-ui/components/controls/{name}.css` + `controls/{name}`
    `site-coverage` (all under `components/src/descriptor/`), and the llms byte-gate
    (`site/lib/llms.test.ts` — regenerate via `node scripts/generate-llms-full.mjs` after
    descriptor/CHANGELOG/page changes).
+6. A change to `ui-agent-admin`, `site/pages/agent-admin-app.ts` or `site/lib/admin-live-runner.ts`
+   runs `npm run e2e:admin` locally: keyless headless admin flows, outside the shards, no CI job.
 
 ## Cross-links
 

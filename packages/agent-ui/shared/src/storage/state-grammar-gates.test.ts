@@ -36,6 +36,11 @@ const ALLOWLIST: Record<string, { ruling: string; count: number }> = {
   // raw read keeps every existing user's active-persona selection; the next write re-persists through
   // the adapter and the branch goes quiet. Remove this row when the legacy branch retires.
   'packages/agent-ui/app/src/controls/agent-admin/agent-roster-source.ts': { ruling: 'ADR-0227 wave-1 legacy migration read (self-quieting)', count: 1 },
+  // T-0010 (PR #1826): the headless admin e2e driver is a Node script, never app code. Its raw touches
+  // run inside Playwright `page.evaluate` / `addInitScript` in the browser page: they seed and read the
+  // page's localStorage from OUTSIDE the app, which cannot reach the StorageAdapter seam (it lives in
+  // the app bundle). Count pins it: 4 reads/seeds in helper evaluates + 1 seed in the init script.
+  'scripts/e2e-admin/admin-page.ts': { ruling: 'Playwright page.evaluate/addInitScript storage seeding and reads for the e2e driver (Node script, not app code)', count: 5 },
 }
 
 /** The migration-wave debt table — EMPTY from day one (the GH #1544 drain shipped with the gate).

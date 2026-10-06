@@ -1866,6 +1866,10 @@ function buildToolDispatch(active: readonly IntegrationManifest[], env: Record<s
   `.browser.test.ts`) and the producer-layer peel/compose/integrity/FEED_SCOPE coverage (`produce-loop.test.ts`)
   stand as before, unaffected.
 
+- **Keyless admin flows (non-normative, 2026-10-05, T-0010):** `scripts/e2e-admin` answers
+  `/__a2ui/agent/status`, `/__a2ui/agent/chat` and `/__a2ui/agent` in the browser through Playwright
+  `page.route` handlers fed by fixtures, with zero production change. Local only, no CI job.
+
 ## 7. Traceability
 
 | Requirement | PRD goal(s) / upstream |

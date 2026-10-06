@@ -1,0 +1,39 @@
+{
+  "kind": "agent-ui-admin-scenario",
+  "version": 1,
+  "name": "chat-ask-answer",
+  "seed": {
+    "localStorage": {
+      "agent-admin-app.activePreset": "\"quant\""
+    }
+  },
+  "turns": [
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "intent",
+        "textIncludes": "coach me"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"ask\":{\"surfaceId\":\"ask-1\"},\"note\":\"Scripted ask: which size?\"}}",
+          "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\"}}",
+          "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Button\",\"variant\":\"solid\",\"label\":\"Small\",\"action\":{\"action\":\"submit\"}}]}}"
+        ]
+      }
+    },
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "client"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"note\":\"Scripted answer received: small it is.\"}}"
+        ]
+      }
+    }
+  ]
+}

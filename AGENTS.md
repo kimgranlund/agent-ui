@@ -46,6 +46,7 @@ Ten packages under `packages/agent-ui/*`; full layout in [CLAUDE.md](CLAUDE.md).
 - `npm run check`, `npm test`, `npm run test:browser`. Judge by exit code, never by grepping output.
 - Docs-only diffs gate on `doc_lint` plus `check` (`.claude/docs/process.md` section 1).
 - The keyless `npm run eval:agent-behavior -- selftest` rides `check:scripts`; its `live` leg needs a key, is a manual measurement, and is never a gate.
+- `npm run e2e:admin` (keyless agent-admin flows) and `npm run e2e:devtools` are local-only runners outside the shards, not CI gates.
 
 ## Hard conventions
 
