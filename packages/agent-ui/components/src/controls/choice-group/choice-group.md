@@ -9,6 +9,8 @@ tag: ui-choice-group
 description: A form-associated rich-card selection container — a committed choice over agent-composed ui-choice-card option cards, single or multi.
 tier: container         # geometry size-class (a value-owning container that sizes to its ui-choice-card children — the radio-group.md precedent)
 extends: UIFormElement  # FACE form-associated container (value/validity via ElementInternals, ADR-0013); composes rovingFocus + selectionCommit directly (ADR-0220 cl.1) — NOT a UIListboxElement subclass
+uses:
+  - ui-choice-card
 # marginal: measured at integration (npm run size, ADR-0040 §3)
 
 attributes:             # attributes-as-API — mirrors choice-group.ts static props (formProps spread + own)

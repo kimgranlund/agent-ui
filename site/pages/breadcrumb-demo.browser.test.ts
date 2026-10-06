@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 // Side-effect import: the demo page mounts the app shell + all four live ui-breadcrumb specimens into
 // document.body (mountPage appends to `#app ?? document.body` — the modal-demo.browser.test.ts precedent).
 import './breadcrumb-demo.ts'
-import type { UIBreadcrumbElement } from '@agent-ui/components/components'
+import type { UIBreadcrumbElement } from '@agent-ui/components/controls/breadcrumb'
 
 // GH #347 — REAL-TIMING HEADROOM. See vitest.browser.config.ts's own comment; a raf-settling test's duration
 // is set by the browser's own scheduling, which stretches under concurrent host load.

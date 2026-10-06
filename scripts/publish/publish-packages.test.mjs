@@ -5,7 +5,7 @@
 // direct-execution check (the module's own bottom-of-file comment) so this import never triggers a real
 // build/publish.
 import { describe, it, expect } from 'vitest'
-import { rewriteSpecifiers, PACKAGE_ORDER } from './publish-packages.mjs'
+import { rewriteSpecifiers, PACKAGE_ORDER, transformPackageJson } from './publish-packages.mjs'
 
 describe('rewriteSpecifiers — scoped to real specifier positions (GH #69 item 3)', () => {
   it('rewrites a `from` import specifier (bare package)', () => {
@@ -62,5 +62,25 @@ describe('rewriteSpecifiers — scoped to real specifier positions (GH #69 item 
     const src = `import '@agent-ui/router'\nconsole.log('tag: @agent-ui/router')\n`
     const out = rewriteSpecifiers(src, false)
     expect(out).toBe(`import '@agent-ui-kit/router'\nconsole.log('tag: @agent-ui/router')\n`)
+  })
+})
+
+describe('transformPackageJson: carries `sideEffects` into the dist/ layout (ADR-0233)', () => {
+  const base = { name: '@agent-ui/components', description: 'd', type: 'module', exports: { '.': './src/index.ts' } }
+
+  it('maps each pattern ./src/ -> ./dist/ and .ts -> .js', () => {
+    const out = transformPackageJson(
+      { ...base, sideEffects: ['./src/controls/**', './src/all.gen.ts', './src/**/*.css'] },
+      '1.2.3',
+    )
+    expect(out.sideEffects).toEqual(['./dist/controls/**', './dist/all.gen.js', './dist/**/*.css'])
+  })
+
+  it('passes `false` through unchanged', () => {
+    expect(transformPackageJson({ ...base, sideEffects: false }, '1.2.3').sideEffects).toBe(false)
+  })
+
+  it('adds no `sideEffects` key when the workspace manifest declares none', () => {
+    expect('sideEffects' in transformPackageJson(base, '1.2.3')).toBe(false)
   })
 })

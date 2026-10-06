@@ -3,11 +3,10 @@ import { describe, it, expect, afterEach } from 'vitest'
 // n2a — the CROSS-ENGINE ui-master-detail smoke (LLD-C10, SPEC-R7). jsdom cannot resolve CSS Grid/flex
 // layout or `@container` — this file is where the wide side-by-side / narrow drill-in geometry becomes
 // TRUE, in BOTH Chromium and WebKit (the app-shell.browser.test.ts precedent). CSS wiring: the foundation
-// first, then `component-styles.css` (the family barrel — @agent-ui/components has NO standalone per-control
-// CSS export, only the aggregate barrel; this is what actually carries ui-split/ui-split-pane's shipped CSS
+// first, then `all.css` (every fleet sheet; this is what carries ui-split/ui-split-pane's shipped CSS
 // to a consumer OUTSIDE the components package, the site `_page.ts` precedent), then this element's own CSS.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import './master-detail-pane.css'
 import './master-detail.css'
 import './master-detail.ts'

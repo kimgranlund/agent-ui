@@ -19,6 +19,9 @@
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-segment) ════════════════ */
 
+/* uses: synced from segment.md by scripts/codemod-uses.mjs */
+@import '../radio/radio.css';
+
 :where(ui-segment) {
   /* No design tokens: every sized value a segment renders (height/padding/font/ink/dividers/fill) is the
      HOST segmented-control's own token chain, consumed via a descendant compound selector

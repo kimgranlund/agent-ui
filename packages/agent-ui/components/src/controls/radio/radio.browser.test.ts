@@ -5,13 +5,14 @@
 // the group, checked paint (::before ring-fill + ::after dot, the 2026-07-07 fix), forced-colors
 // (CanvasText ink), C10 zero-residue.
 //
-// Imports the self-defining family barrel + the foundation/component CSS so tokens resolve in the real engine.
+// Imports the self-defining `all` entry + the foundation/component CSS so tokens resolve in the real engine.
 
 import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import type { UIRadioElement, UIRadioGroupElement } from '@agent-ui/components/components'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import type { UIRadioElement } from '@agent-ui/components/controls/radio'
+import type { UIRadioGroupElement } from '@agent-ui/components/controls/radio-group'
+import '@agent-ui/components/all'
 
 const mounted: Element[] = []
 afterEach(() => {

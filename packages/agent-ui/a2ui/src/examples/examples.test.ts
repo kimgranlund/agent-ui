@@ -27,6 +27,7 @@
 // show it passing a genuine Basic seed and failing a wrong-dialect one (checks that bite).
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
 import { allSeeds, allBasicSeeds, generativeFormSeed, kpiPanelLifecycleSeed } from './index.ts'
 import type { ExampleSeed } from './types.ts'
 import { canvasSeeds, canvasButtonSeed } from './canvas-button.ts'

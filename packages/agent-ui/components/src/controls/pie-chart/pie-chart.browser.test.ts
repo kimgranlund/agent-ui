@@ -7,7 +7,7 @@ import { server, cdp } from 'vitest/browser'
 // fixed density-invariant box, the donut-vs-pie hole distinction, and forced-colors.
 //
 // Side-effect CSS/JS imports — the load-bearing order (ADR-0003): foundation roles + dimensional ramp
-// FIRST, then pie-chart.css directly, then pie-chart.ts (self-defines). The component-styles barrel
+// FIRST, then pie-chart.css directly, then pie-chart.ts (self-defines). The retired component-styles CSS barrel (ADR-0233)
 // already @imports pie-chart.css (this wave's own integration slice) — this suite ALSO imports it
 // directly (the bar-chart/line-chart precedent), harmless given the idempotent side-effect import.
 // ADR-0228 cl.6 (svg-charts wave 1, GH #1565): pie-chart.css's six slice-ink defaults now ALIAS the

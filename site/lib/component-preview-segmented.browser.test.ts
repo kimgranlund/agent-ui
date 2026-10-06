@@ -22,7 +22,7 @@ import { userEvent } from 'vitest/browser'
 //       fail this, not merely a hidden one).
 // Runs in BOTH Chromium and WebKit (vitest.browser.config.ts).
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import './component-preview.ts'
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles + real-input

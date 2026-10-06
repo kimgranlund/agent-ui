@@ -8,7 +8,7 @@
 // every mechanic (service-card.ts); this page only stages, toggles, and logs.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import type { UIServiceCardElement } from '@agent-ui/components/components'
+import type { UIServiceCardElement } from '@agent-ui/components/controls/service-card'
 import { specimenRow } from '../lib/doc-page.ts'
 import { applyDemoWidth, captioned, el, exampleSection, uiButton } from '../lib/specimens.ts'
 

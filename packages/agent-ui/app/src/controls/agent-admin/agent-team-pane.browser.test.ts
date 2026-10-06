@@ -11,7 +11,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css' // ui-button/ui-icon/ui-text-field/ui-field/ui-select's shipped CSS
+import '@agent-ui/components/all.css' // ui-button/ui-icon/ui-text-field/ui-field/ui-select's shipped CSS
 
 import '@agent-ui/components/controls/button'
 import '@agent-ui/components/controls/icon'

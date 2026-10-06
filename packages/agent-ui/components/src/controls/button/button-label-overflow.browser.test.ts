@@ -12,8 +12,8 @@ import { describe, it, expect, afterEach } from 'vitest'
 //
 // Side-effect imports — same load-bearing CSS order as button-geometry.browser.test.ts (ADR-0003).
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 const mounted: HTMLElement[] = []
 const mount = (markup: string): { wrap: HTMLElement; btn: HTMLElement } => {

@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest'
 // into the neighbors' captions. jsdom cannot catch either defect (no layout), so this proof is browser-only —
 // the [[test-the-whole-shape]] law: assert the rendered geometry, not the DOM counts alone.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import './text-field-permutations.ts' // mounts itself (mountPage's fallback — no #app in this test document)
 
 const content = document.querySelector('[data-page-content]') as HTMLElement

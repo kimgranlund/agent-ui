@@ -9,8 +9,8 @@ import { server, cdp } from 'vitest/browser'
 // intent × colour-scheme (SPEC-R14 AC3 — the build-time gate the LLD named as likely to fail; this file
 // reports the MEASURED verdict, not the prediction).
 //
-// Direct (pre-barrel) imports — controls/badge/ is not yet wired into controls/index.ts /
-// component-styles.css (the LLD-C10 serial-integration wave, out of this folder-only build's fence).
+// Direct (pre-barrel) imports — controls/badge/ was not yet wired into the family and CSS
+// barrels (the LLD-C10 serial-integration wave, out of this folder-only build's fence).
 import '@agent-ui/components/foundation-styles.css'
 import './badge.css'
 import './badge.ts'

@@ -24,7 +24,8 @@
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './social-signin.css'
 import { heading } from '../lib/doc-page.ts'
-import type { UIButtonElement, UICardElement } from '@agent-ui/components/components'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import type { UICardElement } from '@agent-ui/components/controls/card'
 // TYPE-ONLY (verbatimModuleSyntax): erased at compile time (SPEC-R9 AC2) — the only RUNTIME touch of this
 // module is the dynamic import() inside wireIdentityDemo's DEV-gated branch below.
 import type { IdentityMockTransport, IdentitySession, SocialProvider } from '../lib/identity-mock-transport.ts'

@@ -14,8 +14,8 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 const mounted: HTMLElement[] = []
 const mount = (markup: string): { wrap: HTMLElement; group: HTMLElement; segments: HTMLElement[] } => {

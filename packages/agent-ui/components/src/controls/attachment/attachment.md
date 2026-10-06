@@ -8,8 +8,10 @@ tag: ui-attachment
 description: A non-interactive compact file card showing a category glyph, name, and formatted size for one attached file.
 tier: display          # geometry size-class (Display band — NO control frame/height; SPEC-R20)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (SPEC-R8)
+uses:
+  - ui-icon
 # marginal: not yet measured — this folder-only wave (M1-a) ships ahead of the LLD-C11 shared-file
-# integration slice (barrel export, component-styles.css import, package.json exports entry); the real
+# integration slice (barrel export, CSS-barrel import, package.json exports entry); the real
 # `npm run size` figure lands with that slice, per feed-family.lld.md §11.
 
 attributes:            # attributes-as-API — mirrors attachment.ts `static props` (filename, mimeType, sizeBytes, href)

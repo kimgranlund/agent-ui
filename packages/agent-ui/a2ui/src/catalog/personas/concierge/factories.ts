@@ -50,7 +50,6 @@
 // (e.g. `checkIn`/`checkOut`), which is both simpler to implement and a better fit for
 // `BookingConfirmation`'s one-row-per-value display.
 
-import '@agent-ui/components/components' // self-defines ui-form-provider/ui-calendar/ui-select/ui-checkbox/ui-text/ui-card on import
 import type { WidgetFactory } from '../../types.ts'
 
 // ── shared field schema (wire-authored, NOT a JSON pointer — see the header) ────────────────────────
@@ -190,6 +189,7 @@ function rebuildFields(parts: BookingFormParts, fields: BookingField[]): void {
  */
 export const bookingFormFactory: WidgetFactory = {
   tag: 'ui-form-provider',
+  uses: ['ui-calendar', 'ui-checkbox', 'ui-select', 'ui-text'], // ADR-0233: the field controls it mints
   create: () => {
     const el = document.createElement('ui-form-provider') as unknown as FormProviderLike
     const titleEl = document.createElement('ui-text')
@@ -307,6 +307,7 @@ function applyConfirmationData(parts: BookingConfirmationParts, data: unknown): 
  */
 export const bookingConfirmationFactory: WidgetFactory = {
   tag: 'ui-card',
+  uses: ['ui-text'], // ADR-0233: the title and row labels it mints
   create: () => {
     const el = document.createElement('ui-card')
     const titleEl = document.createElement('ui-text')

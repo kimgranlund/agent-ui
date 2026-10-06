@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import './video.ts'
 import type { UIVideoElement } from './video.ts'
 import { whenFlushed } from '../../reactive/index.ts'

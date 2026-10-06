@@ -7,9 +7,10 @@ tag: ui-ladder
 description: A labeled list of dimensional tiers shown as literal-length bars alongside their printed values.
 tier: display          # Display band — no control frame/height/[size]/[scale] (SPEC-R16/ADR-0118 cl.5)
 extends: UIElement     # a non-interactive display LEAF — NOT form-associated (SPEC-R9)
+uses: []
 # marginal: 282 B gz — within the 2048 B gz per-control budget (ADR-0080 clause 3); solo 5062 B gz
 # (foundation-inclusive, informational). Measured 2026-07-10 (wave M1-c, LLD-C9) via `npm run size` through
-# the public `./controls/ladder` entry, after the barrel + component-styles.css wiring landed. Family total
+# the public `./controls/ladder` entry, after the barrel + CSS-barrel wiring landed. Family total
 # (`components` barrel): 30593 B gz — within the 30720 B gz ceiling (127 B headroom), no re-base needed.
 
 attributes:            # attributes-as-API — mirrors ladder.ts `static props` (tiers, label)

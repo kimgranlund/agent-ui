@@ -15,8 +15,9 @@
 tag: ui-stat
 tier: display          # geometry size-class (Display band — NO control frame/height; SPEC-R17/ADR-0111 cl.5)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (SPEC-R7)
+uses: []
 # marginal: not yet measured — this folder-only wave (M1-a) ships ahead of the LLD-C10 shared-file
-# integration slice (barrel export, component-styles.css import, package.json exports entry); the real
+# integration slice (barrel export, CSS-barrel import, package.json exports entry); the real
 # `npm run size` figure lands with that slice, per report-family.lld.md §5 (measured, never guessed).
 # GH#1208's ring variant is folder-only too — `measure-size.mjs` deltas are reported at PR time, per R6.
 

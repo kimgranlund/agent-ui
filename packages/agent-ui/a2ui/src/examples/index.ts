@@ -1,7 +1,7 @@
 // index.ts — the example seed shelf's public surface (ADR-0055). Exposed ONLY via the package.json
 // "./examples" subpath export — the root barrel does NOT re-export this module (consumer-bundle
 // hygiene: demo payload JSON must never enter a renderer consumer's bundle, the
-// `@agent-ui/components/components` subpath precedent).
+// `@agent-ui/components/all` demo-only subpath precedent).
 //
 // 27 seeds: 1 canvas + 4 dynamic-list + 1 generative-form + 5 patterns + 10 catalog-coverage (the
 // ADR-0087/ADR-0093/ADR-0095 wave — booking-reservation, rental-filter-panel, document-row-toolbar,

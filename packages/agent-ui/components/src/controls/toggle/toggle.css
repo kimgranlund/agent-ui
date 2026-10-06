@@ -22,7 +22,7 @@
  *       Highlight/HighlightText (the segmented-control indicator precedent) and keeps the idle outline/ink at
  *       ButtonText.
  *
- * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected from
+ * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel) (Phase 2); NEVER injected from
  * toggle.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

@@ -6,9 +6,9 @@
 import { describe, it, expect, afterEach, beforeAll, afterAll } from 'vitest'
 import { userEvent, page } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
-// GH #221 — the shell's tab strips compose the fleet ui-tabs control; its own sheet (tabs.css, via the
-// family barrel) supplies the real tab anatomy + the tablist overflow viewport the R7 legs assert on.
-import '@agent-ui/components/component-styles.css'
+// GH #221 — the shell's tab strips compose the fleet ui-tabs control; its own sheet (tabs.css, via
+// `all.css`) supplies the real tab anatomy + the tablist overflow viewport the R7 legs assert on.
+import '@agent-ui/components/all.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
 

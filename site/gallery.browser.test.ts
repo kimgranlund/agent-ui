@@ -13,12 +13,12 @@ import { server, cdp, page } from 'vitest/browser'
 // per-control sheet, the icon pack (controls render caret/clear/nav glyphs through it), then the gallery itself
 // (which self-defines <component-preview>/<ui-theme-provider> in turn).
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import '@agent-ui/icons/phosphor'
 import './lib/component-gallery.ts'
 import { galleryMembers } from './lib/component-gallery.ts'
 import { whenFlushed } from '@agent-ui/components'
-import type { UISelectElement } from '@agent-ui/components/components'
+import type { UISelectElement } from '@agent-ui/components/controls/select'
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
 // so its duration is set by the browser's scheduling, which stretches under concurrent host load.

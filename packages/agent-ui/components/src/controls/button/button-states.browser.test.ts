@@ -17,10 +17,10 @@ import { server, cdp, userEvent } from 'vitest/browser'
 // no pseudo-state needed) so the light/dark collapse is provable identically in both engines.
 //
 // Side-effect imports — the load-bearing CSS order (ADR-0003): foundation roles + dimensional ramp FIRST,
-// then the component sheet, then the self-defining family barrel. Vite injects them.
+// then the component sheet, then the self-defining `all` entry. Vite injects them.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 // ── mount/cleanup ────────────────────────────────────────────────────────────────────────────────────
 const mounted: HTMLElement[] = []

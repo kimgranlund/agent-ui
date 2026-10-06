@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
-import type { UITextFieldElement } from '@agent-ui/components/components'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 
 // s11 (states leg) — the CROSS-ENGINE behaviour + focus-ring + forced-colors smoke for ui-text-field (decomp
 // g4-g6 node s11). Where the jsdom probes pin the DECLARED rules, this pins what a REAL engine does with a
@@ -18,10 +18,10 @@ import type { UITextFieldElement } from '@agent-ui/components/components'
 // forced-colors (do not vanish).
 //
 // Side-effect imports — the load-bearing CSS order (ADR-0003): foundation roles + dimensional ramp FIRST,
-// then the component sheet, then the self-defining family barrel. Vite injects them.
+// then the component sheet, then the self-defining `all` entry. Vite injects them.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 // A realistic author width. ui-text-field FILLS by default (block-level grid, ADR-0223 — the slice-0
 // pilot) and hugs only under `[inline]`; an explicit author width here keeps every state assertion

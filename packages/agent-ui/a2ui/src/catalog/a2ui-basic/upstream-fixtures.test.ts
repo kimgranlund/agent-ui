@@ -10,6 +10,7 @@
 // `a2ui-basic` — both resolve on the SAME renderer (both registered, cl.2).
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
 import { whenFlushed } from '@agent-ui/components'
 import { validateA2ui } from '../../renderer/validate.ts'
 import { createRenderer } from '../../renderer/renderer.ts'

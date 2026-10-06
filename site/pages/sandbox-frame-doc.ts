@@ -10,7 +10,7 @@ import './containers.css' // shared demo-content chrome; never restyles a ui-* c
 import { loadDescriptorByTag } from '../lib/frontmatter.ts'
 import { composeDocPage } from '../lib/doc-page.ts'
 import { applyDemoWidth, el, exampleSection } from '../lib/specimens.ts'
-import type { UISandboxFrameElement } from '@agent-ui/components/components'
+import type { UISandboxFrameElement } from '@agent-ui/components/controls/sandbox-frame'
 
 const doc = loadDescriptorByTag('ui-sandbox-frame')
 if (!doc) throw new Error('sandbox-frame-doc.ts: no ui-sandbox-frame descriptor found via loadDescriptorByTag')

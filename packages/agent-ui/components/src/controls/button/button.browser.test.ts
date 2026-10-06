@@ -7,11 +7,11 @@ import { describe, it, expect } from 'vitest'
 
 // Side-effect imports. Order is the load-bearing CSS order (ADR-0003): foundation (the `--md-sys-color-*` colour
 // roles + the `--ui-{height,font,gap}-*` ramp) FIRST, then the component sheet (button's `:where()`
-// token block + `@scope` styles), then the self-defining family barrel (registers `ui-button`). Vite
-// resolves the bare specifiers + the barrels' inner `@import '@agent-ui/shared/...'` and injects the CSS.
+// token block + `@scope` styles), then the self-defining `all` entry (registers `ui-button`). Vite
+// resolves the bare specifiers + the sheets' inner `@import '@agent-ui/shared/...'` and injects the CSS.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 describe('ui-button browser-truth harness (s12)', () => {
   it('mounts ui-button and a real engine resolves the --ui-button-* frame to a computed px', () => {

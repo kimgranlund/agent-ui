@@ -1,6 +1,6 @@
 # SPEC — Persona Catalog Composition (M-D)
 
-> Status: accepted · v0.2 · 2026-08-06 · Layer: SPEC (execution contract)
+> Status: accepted · v0.3 · 2026-10-05 (v0.2 2026-08-06; v0.3 adds SPEC-R1's optional `controls` records, `ControlRecord`, and SPEC-R2 AC7, the derived entry's control loader, ADR-0233, accepted) · Layer: SPEC (execution contract)
 > **v0.2 (2026-08-06):** Kim's acceptance-round rulings fold in (§5, citing
 > [PR #482#issuecomment-5199254913](https://github.com/kimgranlund/agent-ui/pull/482#issuecomment-5199254913)
 > as their provisional record) — OF1 (reject-loud collision policy), OF1b (`<base>--<persona>`
@@ -97,6 +97,9 @@ document (see SPEC-R1 AC2 for exactly what it omits vs. a full `Catalog`), `fact
 (`targetCatalogs: readonly string[]`, SPEC-R2's per-pairing input — naming one or both of the two
 currently-registered bases, `agent-ui`/`a2ui-basic`, SPEC-N5; absent defaults to `['agent-ui']`
 alone, preserving a single-base fragment's authoring shape unchanged by this widening).
+The package MAY also export `controls: readonly ControlRecord[]` (ADR-0233; `ControlRecord` from
+`@agent-ui/components/loader`): one lazy record (`tag`, `load()`) per control the fragment's factories
+create that lives outside `@agent-ui/components`, so a renderer can define it on demand (SPEC-R2 AC7).
 `<persona-id>` is a stable kebab identifier (matching the persona/preset it scopes to, e.g.
 `concierge`), never a free-text label. The fragment document is NEVER stored in the persona-file
 runtime envelope or as an `Entry` (ADR-0172 cl.1's rejection of both — the persona's runtime state
@@ -195,6 +198,13 @@ production.
   is NOT one of the two currently-registered bases (a typo, or a not-yet-shipped third base),
   *when* the constructor's derive-then-register step runs, *then* it fails loud — the SAME
   posture AC3's collision case has — rather than silently skipping that pairing.
+- **AC7 (control loader, ADR-0233)** *Given* a persona package with `controls` records, *when* the
+  derive-then-register step registers its derived entry, *then* the entry's `controls` loader
+  (`composeControlLoaders(base.controls, pkg.controls)`) routes each tag with a persona record to a
+  `'host'`-mode loader over those records and every other tag to the base entry's loader, so a
+  persona control outside `@agent-ui/components` renders through the derived catalog (runtime SPEC-R9
+  AC3's deferred apply). With no persona records the derived entry carries the base loader; with
+  neither, it carries no `controls` at all, exactly as before.
 
 **SPEC-R3 — Selection recognizes derived ids across every (base, persona-local-set) pairing,
 without regressing the base picker** *(ADR-0172 cl.2 · Repairs item 3)*. `A2UI_CATALOG_OPTIONS`/

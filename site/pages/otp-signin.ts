@@ -44,13 +44,11 @@
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './otp-signin.css'
 import { heading } from '../lib/doc-page.ts'
-import type {
-  UIFormProviderElement,
-  UITextFieldElement,
-  UIOtpFieldElement,
-  UIButtonElement,
-  UICardElement,
-} from '@agent-ui/components/components'
+import type { UIFormProviderElement } from '@agent-ui/components/controls/form-provider'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
+import type { UIOtpFieldElement } from '@agent-ui/components/controls/otp-field'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import type { UICardElement } from '@agent-ui/components/controls/card'
 // TYPE-ONLY (verbatimModuleSyntax): erased at compile time (SPEC-R9 AC2) — the only RUNTIME touch of this
 // module is the dynamic import() inside wireIdentityDemo's DEV-gated branch below.
 import type { IdentityMockErrorCode, IdentityMockTransport, IdentitySession } from '../lib/identity-mock-transport.ts'

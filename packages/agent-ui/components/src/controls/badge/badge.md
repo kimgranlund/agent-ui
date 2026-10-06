@@ -17,8 +17,9 @@ tier: display           # SPEC-R11 AC3 + LLD-C9: a non-interactive display leaf 
                         # display-tier membership list (site-coverage.test.ts) landing at LLD-C10.
 extends: UIElement      # a non-interactive, non-form-associated display LEAF (SPEC-R11) — no UIIndicatorElement
                         # base: no checked/value/disabled, no tabbable/pressActivation (chips are fenced, F3)
-# marginal: NOT measured in this M1-a slice — ui-badge is not yet wired into controls/index.ts /
-# component-styles.css / package.json exports (the LLD-C10 serial-integration wave, a shared-file slice
+uses: []
+# marginal: NOT measured in this M1-a slice — ui-badge is not yet wired into the family barrel /
+# the CSS barrel / package.json exports (the LLD-C10 serial-integration wave, a shared-file slice
 # explicitly out of this folder-only build's fence). `npm run size` through the family barrel is owed at
 # LLD-C10 alongside ui-table/ui-stat, per the family's ≤ ~2 KB gz per-control budget (plan §10).
 

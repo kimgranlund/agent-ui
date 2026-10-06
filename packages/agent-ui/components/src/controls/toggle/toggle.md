@@ -18,6 +18,7 @@ tier: control       # Control-band geometry (full control height, the button.css
 extends: UIElement  # reactive display control, NOT form-associated (face below) — the button.ts precedent,
                      # not the UIIndicatorElement one: aria-pressed is a toggle-BUTTON pattern, not a
                      # checkbox/switch boolean-form-value pattern.
+uses: []
 # bundle: measured post-build via `npm run size` (manual by Kim's ruling) — not run this pass; the marginal
 # cost rides the already-shipped UIElement + pressActivation/tabbable traits (both already in the bundle
 # via ui-button), so ui-toggle's own marginal is small (props + connected() wiring only).

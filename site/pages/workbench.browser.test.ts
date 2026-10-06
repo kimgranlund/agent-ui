@@ -9,7 +9,13 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import './workbench.ts'
-import type { UITableElement, UIModalElement, UIFormPopoverElement, UITextFieldElement, UICheckboxElement, UIButtonElement, UISelectElement } from '@agent-ui/components/components'
+import type { UITableElement } from '@agent-ui/components/controls/table'
+import type { UIModalElement } from '@agent-ui/components/controls/modal'
+import type { UIFormPopoverElement } from '@agent-ui/components/controls/form-popover'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
+import type { UICheckboxElement } from '@agent-ui/components/controls/checkbox'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import type { UISelectElement } from '@agent-ui/components/controls/select'
 import { FIXTURE_RECORDS, computeMatchingCount } from './workbench-data.ts'
 
 const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))

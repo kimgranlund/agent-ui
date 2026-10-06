@@ -33,7 +33,7 @@
  *   rendering, underline-free, by construction; the CSS needs no knowledge of the gate's verdict. Underline
  *   is ALWAYS present, never hue-only (ADR-0057) — `--ui-text-link-ink` is the one new component token.
  *
- * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
+ * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel) (Phase 2); NEVER injected
  * from text.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

@@ -11,7 +11,7 @@ import './containers.css' // shared demo chrome (.event-log + section spacing)
 import { captioned, el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
 import { resolveIcon, type IconName } from '@agent-ui/icons'
 import '@agent-ui/icons/phosphor' // registers + activates the Phosphor default pack (ADR-0066)
-import type { UIToggleElement } from '@agent-ui/components/components'
+import type { UIToggleElement } from '@agent-ui/components/controls/toggle'
 
 const { content } = mountPage({
   title: 'ui-toggle — demo',

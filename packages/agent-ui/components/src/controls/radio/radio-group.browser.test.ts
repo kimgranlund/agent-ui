@@ -6,14 +6,14 @@
 // a negative control proves the child-position assertions actually depend on the shipped rule (an
 // element-level `gap: 0` override collapses the very delta the positive legs measure).
 //
-// Imports the self-defining family barrel + the foundation/component CSS so tokens resolve in the real engine.
+// Imports the self-defining `all` entry + the foundation/component CSS so tokens resolve in the real engine.
 
 import { describe, it, expect, afterEach } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import type { UIRadioGroupElement } from '@agent-ui/components/components'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import type { UIRadioGroupElement } from '@agent-ui/components/controls/radio-group'
+import '@agent-ui/components/all'
 
 const mounted: Element[] = []
 afterEach(() => {

@@ -11,6 +11,7 @@
 tag: ui-rating
 tier: indicator        # geometry size-class (Indicator band — widget box, the checkbox/switch/slider ramp; geometry.md)
 extends: UIRangeElement  # the Range base (range-element.lld.md); UIRatingElement → UIRangeElement → UIFormElement
+uses: []
 
 attributes:            # attributes-as-API — mirrors UIRatingElement.props
   - name: value

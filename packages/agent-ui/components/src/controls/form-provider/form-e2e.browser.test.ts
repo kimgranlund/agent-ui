@@ -2,7 +2,7 @@
 // g7-field-form-provider.decomp.json slice s13 · field-form-provider.lld.md §4 s13 · ADR-0050/0051).
 //
 // ONE realistic, keyboard-only form scenario — composed the way a consumer actually would (real
-// light-DOM markup, component-styles loaded, a realistic flex container): button + text-field + checkbox
+// light-DOM markup, `all.css` loaded, a realistic flex container): button + text-field + checkbox
 // + switch + select, EACH wrapped in its own `ui-field`, coordinated by ONE `ui-form-provider`. A single
 // keyboard actor drives the whole journey — Tab / Space / Enter / Arrow only, no click/pointer input
 // anywhere below the setup (the leading focus sentinel and the Submit-button wiring are setup, not probes).
@@ -28,13 +28,13 @@
 // geometry/whole-shape/forced-colors (checkbox.browser.test.ts, select.browser.test.ts, et al.).
 //
 // Side-effect imports — the load-bearing CSS order (ADR-0003): foundation roles + dimensional ramp FIRST,
-// then the component sheet (pulls in field.css/form-provider.css, s12), then the self-defining family
-// barrel (registers ui-field/ui-form-provider alongside the four controls under test in one line).
+// then the component sheet (pulls in field.css/form-provider.css, s12), then the self-defining `all`
+// entry (registers ui-field/ui-form-provider alongside the four controls under test in one line).
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 import type { UIFormProviderElement, FormSubmitDetail } from './form-provider.ts'
 import type { UIFieldElement } from '../field/field.ts'
 import type { UITextFieldElement } from '../text-field/text-field.ts'

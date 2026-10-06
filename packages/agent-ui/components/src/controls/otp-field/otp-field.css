@@ -28,7 +28,7 @@
  *       text-field ratified shape, closing the bare-usage colour-only gap. Motion is gated behind
  *       `:state(ready)`, reduced-motion zeroed, forced-colors keeps every cell border/ink visible.
  *
- * Standalone stylesheet — linked via the host page / component-styles barrel; NEVER injected from otp-field.ts
+ * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from otp-field.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

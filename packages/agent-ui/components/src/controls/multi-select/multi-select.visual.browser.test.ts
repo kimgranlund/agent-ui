@@ -8,8 +8,8 @@ import type { UIMultiSelectElement } from './multi-select.ts'
 // `__baselines__/multi-select.visual.browser.test.ts/<name>-chromium-darwin.png`; a missing baseline
 // is created and FAILS FOR REVIEW on its first run — re-baseline only via `npm run test:visual:update`.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 const OPTIONS = `
   <div role="option" value="design">Design</div>

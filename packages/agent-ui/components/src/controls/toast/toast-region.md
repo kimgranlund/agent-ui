@@ -9,6 +9,8 @@
 tag: ui-toast-region
 tier: layout             # geometry size-class — inset/gap only, no surface paint of its own (LLD-C8)
 extends: UIElement       # NOT form-associated — a pure layout/coordination host, no value
+uses:
+  - ui-toast
 # marginal: measured at the LLD-C11 shared-file integration slice (npm run size, ADR-0040 §3) — not measured in this folder-local wave
 
 attributes: []            # a coordination/layout element takes no configuration in v1 — placement is tokens (a `placement` prop is the named foreseen extension, LLD-C8)

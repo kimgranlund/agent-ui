@@ -16,6 +16,7 @@ tier: display          # Display band (geometry.md): a media box has no control-
                         # aspect-ratio + the layout track sizing it — the ui-image posture verbatim
 extends: UIElement     # non-form-associated display leaf; the NATIVE element carries all interaction —
                         # this host mints no events, no keyboard contract, no focus of its own
+uses: []
 
 attributes:            # attributes-as-API — the GENERATION SOURCE for video.ts's `static props` (ADR-0173)
   - name: src

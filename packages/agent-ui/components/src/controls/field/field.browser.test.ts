@@ -1,7 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent, page } from 'vitest/browser'
-import { UICheckboxElement } from '@agent-ui/components/components'
-import type { UIFieldElement, UITextFieldElement } from '@agent-ui/components/components'
+import { UICheckboxElement } from '@agent-ui/components/controls/checkbox'
+import type { UIFieldElement } from '@agent-ui/components/controls/field'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 
 // s11 — the CROSS-ENGINE browser smoke for ui-field (decomp g7-field-form-provider slice s11,
 // field-form-provider.lld.md §4). Where the jsdom field.test.ts pins the DECLARED wiring (aria-labelledby
@@ -42,11 +43,11 @@ import type { UIFieldElement, UITextFieldElement } from '@agent-ui/components/co
 // Verified green in both engines below.
 //
 // Side-effect imports — the load-bearing CSS order (ADR-0003): foundation roles + dimensional ramp FIRST,
-// then the component sheet (field.css + text-field.css + checkbox.css all @import through the barrel, s12),
-// then the self-defining family barrel. Vite injects them.
+// then the component sheet (field.css + text-field.css + checkbox.css all through `all.css`, s12),
+// then the self-defining `all` entry. Vite injects them.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 // A realistic sized text-field. ui-text-field has no intrinsic width (the ADR-0021 20ch floor still applies
 // without this), but an explicit author width is the common real case, and gives the whole-shape leg a fixed

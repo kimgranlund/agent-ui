@@ -19,11 +19,15 @@
  *
  * No custom-state motion gate, no transitions — the LLD ships no entrance/exit animation in v1 (a
  * fade/slide-in is a named foreseen extension, not this wave's contract). Standalone stylesheet —
- * linked via the host page / component-styles barrel; NEVER injected from toast.ts (behaviour-only
+ * linked via the host page per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from toast.ts (behaviour-only
  * `.ts`, no runtime style injection — plan §2).
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-toast) declares --ui-toast-* ════════════════ */
+
+/* uses: synced from toast.md by scripts/codemod-uses.mjs */
+@import '../button/button.css';
+@import '../icon/icon.css';
 
 :where(ui-toast) {
   /* A notification card is a FIXED-width surface, not a control on the height ramp (geometry.md's

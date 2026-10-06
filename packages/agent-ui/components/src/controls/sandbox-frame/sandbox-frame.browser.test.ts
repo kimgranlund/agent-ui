@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest'
 // channel, `genui.action(name, payload)` — the SPEC-R3 AC1 pattern verbatim ("each probe reports its
 // own outcome via the bridge action channel").
 //
-// Direct imports (pre-barrel, the checkbox.browser.test.ts precedent) — the component-styles barrel
+// Direct imports (pre-barrel, the checkbox.browser.test.ts precedent) — the retired component-styles CSS barrel (ADR-0233)
 // gains the sandbox-frame @import at the barrel-wiring integration slice (this same change).
 import '@agent-ui/components/foundation-styles.css'
 import './sandbox-frame.css'

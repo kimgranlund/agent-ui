@@ -24,7 +24,7 @@
  *       ADR-0009), still painted on the HOST (the whole control is the one focusable/tabbable element —
  *       ADR-0010). Forced-colors safe. Density-invariant.
  *
- * Standalone stylesheet — linked via the host page / component-styles barrel; NEVER injected from
+ * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from
  * slider.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  *
  * 2026-07-07 fix (Kim-filed visual bug): the dark-mode thumb "blends into its surroundings." Measured

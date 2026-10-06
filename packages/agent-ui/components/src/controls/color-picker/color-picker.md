@@ -8,6 +8,11 @@ tag: ui-color-picker
 description: A color-input control combining a 2D chroma-lightness pad, three channel sliders, and an editable readout.
 tier: pattern             # a composite: 2-axis pad + channel sliders + editable readout — no _base/ family fits
 extends: UIFormElement    # form-associated: formValue() = the serialized `value` (null when unset); formValidity() = valueMissing + customError
+uses:
+  - ui-button
+  - ui-slider
+  - ui-swatch
+  - ui-text-field
 
 attributes:               # attributes-as-API — mirrors UIColorPickerElement.props (formProps spread first, then own)
   - name: name

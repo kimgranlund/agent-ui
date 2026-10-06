@@ -139,7 +139,7 @@ import { UIConversationElement } from '../conversation/conversation.ts'
 // catalog-invisible by construction — the a2ui catalog never maps `ui-sandbox-frame` either way). GH #354
 // (Kim's 2026-07-29 ruling) — reached ONLY through the dynamic `import()` in `loadDogfoodAssets()` below;
 // the sole STATIC dogfood reference left in this file is the type-only import on the next line (zero bytes).
-import type { SandboxFrameAssets } from '@agent-ui/components/components'
+import type { SandboxFrameAssets } from '@agent-ui/components/controls/sandbox-frame'
 // GH #525 — the bankroll RESET row's own trailing `<ui-button>` (TKT-0048's real-button precedent,
 // entry-list.ts's `deleteBtn`); `ui-button` is already registered above (`controls/button`).
 import type { UIButtonElement } from '@agent-ui/components/controls/button'

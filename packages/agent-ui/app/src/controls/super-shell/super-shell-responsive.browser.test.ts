@@ -8,8 +8,8 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
 // GH #221 — the shell's tab strips compose the fleet ui-tabs control, whose own sheet (tabs.css, via
-// the family barrel) owns the tablist viewport this file's R10a strip assertion now targets.
-import '@agent-ui/components/component-styles.css'
+// `all.css`) owns the tablist viewport this file's R10a strip assertion now targets.
+import '@agent-ui/components/all.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
 

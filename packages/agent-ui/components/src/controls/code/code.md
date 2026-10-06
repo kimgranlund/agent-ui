@@ -7,8 +7,9 @@ tag: ui-code
 description: A zero-machinery block that displays verbatim, whitespace-preserved code with its own horizontal scroll.
 tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; SPEC-R20)
 extends: UIElement     # a non-interactive, non-form-associated, ZERO-MACHINERY display LEAF (SPEC-R1)
+uses: []
 # marginal: measured at the build wave (`npm run size`, manual discipline, ADR-0040/SPEC-N4) once
-# controls/index.ts wires this folder in (LLD-C11, a separate serial wave — not this fence).
+# the family barrel wires this folder in (LLD-C11, a separate serial wave — not this fence).
 
 attributes:            # attributes-as-API — mirrors code.ts `static props` (language)
   - name: language

@@ -16,7 +16,7 @@
  *       A `forced-color-adjust: auto` block keeps the surface and frame in system colours.
  *
  * Standalone stylesheet — NOT injected from popover.ts (behaviour-only `.ts`, no runtime injection
- * per plan §2). Linked via the component-styles barrel (s12); the barrel @imports foundation roles
+ * per plan §2). Linked per control or via shared-styles.css (ADR-0233, no barrel) (s12); the barrel @imports foundation roles
  * FIRST. The panel's `popover` attribute (set by the overlay controller) gives it `display: none`
  * in the UA stylesheet until `showPopover()` places it in the top layer — our CSS only applies to
  * the visible (open) panel, which is correct since `[popover]` elements are normally hidden.

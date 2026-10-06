@@ -8,8 +8,8 @@ import type { UIOtpFieldElement } from './otp-field.ts'
 // commit under `__baselines__/otp-field.visual.browser.test.ts/<name>-chromium-darwin.png`; a missing
 // baseline is created and FAILS FOR REVIEW on its first run — re-baseline only via `npm run test:visual:update`.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 describe('ui-otp-field — visual regression (LLD §12.4: empty / active / complete / disabled / user-invalid)', () => {
   it.skipIf(server.browser !== 'chromium')('empty: six idle cells, no active ring (unfocused)', async () => {

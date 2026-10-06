@@ -33,8 +33,8 @@
 import { describe, it, expect } from 'vitest'
 import '@agent-ui/shared/tokens.css'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 import { createRenderer } from './renderer.ts'
 import { bookingReservationSeed } from '../examples/catalog-coverage.ts'
 

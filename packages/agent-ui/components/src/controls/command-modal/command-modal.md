@@ -6,6 +6,8 @@
 tag: ui-command-modal
 tier: pattern            # a composed control with internal parts, no §1 control-height row of its own (the ui-combo-box precedent)
 extends: UIElement       # the coordinator base (the ui-theme-provider/ui-form-provider precedent) — paints no surface of its own
+uses:
+  - ui-modal
 # marginal: measured at the integration slice (npm run size, hand-run per ADR-0040 §3) — the family total stays
 # gated; note ui-modal (nested) is already in the family total, so this control's own delta is the marginal.
 composes: [ui-modal]     # nested for the surface + dismissal (ADR-0017/0019/0020) — a sanctioned sibling-control import

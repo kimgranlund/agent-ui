@@ -8,6 +8,7 @@
 tag: ui-drawer
 tier: container          # geometry size-class — container-class sizing via [data-box]; NO control height (geometry.md)
 extends: UIContainerElement  # the FACE surface base — NOT form-associated (no value/validity); a <dialog> submits nothing
+uses: []
 # marginal: measured by `npm run size`'s components-barrel delta (manual by Kim's ruling) — within the per-control ≤ ~2 kB tier budget (plan §10)
 
 attributes:               # attributes-as-API — mirrors drawer.ts `static props` (the surface axes first, then open/persistent/edge)

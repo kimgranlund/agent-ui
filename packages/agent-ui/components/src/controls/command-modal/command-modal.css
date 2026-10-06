@@ -11,10 +11,13 @@
  *       search / list / status / empty / option / group, all rendered INSIDE the nested modal's <dialog>.
  *
  * Standalone stylesheet — NOT injected from command-modal.ts (behaviour-only `.ts`, plan §2). Linked via the
- * component-styles barrel, appended after every other control (ADR-0003 append-only import order).
+ * retired component-styles CSS barrel (ADR-0233), appended after every other control (ADR-0003 append-only import order).
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-command-modal) ════════════════ */
+
+/* uses: synced from command-modal.md by scripts/codemod-uses.mjs */
+@import '../modal/modal.css';
 
 :where(ui-command-modal) {
   /* The search field borrows the entry-control height register (the combo-box/select trigger precedent) — no

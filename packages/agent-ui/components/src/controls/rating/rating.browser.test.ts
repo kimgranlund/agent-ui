@@ -10,7 +10,7 @@ import { describe, it, expect } from 'vitest'
 // `forced-colors: active` in headless runs, so that branch is verified by reading only, the checkbox/
 // slider browser-test precedent).
 //
-// These imports are direct (not through the barrel) because the component-styles barrel is the host's
+// These imports are direct (not through the barrel) because the retired component-styles CSS barrel (ADR-0233) is the host's
 // integration slice — it gains the rating @import at barrel-wiring time. The foundation CSS (tokens +
 // dimensions) is loaded via the shared package barrel so --md-sys-color-* / --md-sys-compact-* tokens
 // are present.

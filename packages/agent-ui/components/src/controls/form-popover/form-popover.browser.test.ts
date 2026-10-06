@@ -23,7 +23,7 @@ import type { UIFormPopoverElement } from './form-popover.ts'
 //
 // Side-effect imports — CSS load order (ADR-0003): foundation roles + dimensional ramp FIRST, then
 // the sibling form-control sheets (T7's fixture), then the form-popover sheet, then the
-// self-defining module. Imported DIRECTLY (relative), NOT via the component-styles barrel.
+// self-defining module. Imported DIRECTLY (relative), NOT per control or via shared-styles.css (ADR-0233, no barrel).
 import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container-box.css' // the [data-box] box-model layer the panel opts into
 import '../checkbox/checkbox.css'

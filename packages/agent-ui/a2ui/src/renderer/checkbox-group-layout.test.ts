@@ -16,6 +16,7 @@
 // (radio behaviour stays exactly as it already was).
 
 import { describe, it, expect, beforeAll } from 'vitest'
+import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
 import { createRenderer } from './renderer.ts'
 import type { RendererHost } from './renderer.ts'
 

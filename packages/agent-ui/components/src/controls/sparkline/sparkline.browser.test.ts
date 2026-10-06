@@ -6,8 +6,8 @@ import { server, cdp } from 'vitest/browser'
 // stroke under resize (SPEC-R2 AC1), RTL physical series direction (SPEC-R11 AC1), and forced-colors
 // currentColor tracking (SPEC-R10 AC1, ADR-0102 computed-style proof — no pixel-diff harness).
 //
-// Direct (pre-barrel) imports — controls/sparkline/ is not yet exported from controls/index.ts (that
-// barrel edit is wave M1-b's ONE serial-integration slice); foundation CSS first (roles + ramp), then this
+// Direct (pre-barrel) imports — controls/sparkline/ was not yet exported from the family barrel (that
+// barrel edit was wave M1-b's ONE serial-integration slice); foundation CSS first (roles + ramp), then this
 // control's own sheet, then the self-defining module (ADR-0003 load-bearing order).
 import '@agent-ui/components/foundation-styles.css'
 import './sparkline.css'

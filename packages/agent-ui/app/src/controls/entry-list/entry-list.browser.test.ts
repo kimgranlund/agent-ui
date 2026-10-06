@@ -10,7 +10,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 
 import '@agent-ui/components/foundation-styles.css' // the --md-sys-color-*/--md-sys-space-*/-shape-corner-base roots entry-list.css's own token block reads
-import '@agent-ui/components/component-styles.css' // ui-button/ui-icon/ui-switch/ui-text-field/ui-field's shipped CSS (composed by entry-list.ts)
+import '@agent-ui/components/all.css' // ui-button/ui-icon/ui-switch/ui-text-field/ui-field's shipped CSS (composed by entry-list.ts)
 import '@agent-ui/code/editor.css' // ADR-0139 — ui-code-editor's own sheet (the per-entry content editor)
 import '@agent-ui/icons/phosphor' // the add-toggle's leading `plus` glyph
 import './entry-list.css' // the ONE sheet under test

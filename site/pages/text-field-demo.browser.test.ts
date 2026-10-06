@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 // Side-effect import: the demo page mounts the app shell + the live ui-text-field form into document.body
 // (the modal-demo.browser.test.ts precedent).
 import './text-field-demo.ts'
-import type { UITextFieldElement } from '@agent-ui/components/components'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 
 // GH #347 — REAL-TIMING HEADROOM (vitest.browser.config.ts).
 vi.setConfig({ testTimeout: 30_000 })

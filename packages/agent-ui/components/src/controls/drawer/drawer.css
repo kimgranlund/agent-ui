@@ -21,9 +21,9 @@
  *       constants; `prefers-reduced-motion: reduce` suppresses the transition entirely (the split/tabs/radio
  *       precedent).
  *
- * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from drawer.ts (behaviour-only
- * `.ts`, no runtime style injection). component-styles.css @imports container.css FIRST (the shared surface
- * seam), then this sheet.
+ * Standalone stylesheet, linked as its own control sheet; NEVER injected from drawer.ts (behaviour-only
+ * `.ts`, no runtime style injection). shared-styles.css loads container.css (the shared surface seam) once,
+ * before this sheet (ADR-0233 cl.3).
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-drawer) declares the surface default + --ui-drawer-* ════════════════ */

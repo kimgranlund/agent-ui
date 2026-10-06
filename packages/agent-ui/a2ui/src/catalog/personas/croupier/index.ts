@@ -11,10 +11,15 @@
 // directly). `manifest.ts` carries the SAME `personaId`/`fragment`/`targetCatalogs` data, factory-free
 // and DOM-less, so a server host can compose derived catalog DOCUMENTS without ever importing this
 // file (GH #516 — see `manifest.ts`'s own header for why that import boundary is load-bearing).
+//
+// `controls` (ADR-0233): the in-repo demonstration of the persona seam. `ui-playing-card` is a fleet
+// control, so the base loader could serve it too; declaring its record here routes the tag through the
+// persona's own loader, the path a persona whose control lives outside `@agent-ui/components` takes.
 
 import type { PersonaCatalogPackage } from '../../compose.ts'
 import { CROUPIER_PERSONA_ID, croupierFragment, croupierTargetCatalogs } from './manifest.ts'
 import { croupierFactories } from './factories.ts'
+import { CONTROLS } from '@agent-ui/components/registry'
 
 export { CROUPIER_PERSONA_ID, croupierFragment, croupierTargetCatalogs, croupierFactories }
 
@@ -24,4 +29,5 @@ export const croupierPersona: PersonaCatalogPackage = {
   fragment: croupierFragment,
   factories: croupierFactories,
   targetCatalogs: croupierTargetCatalogs,
+  controls: [CONTROLS['ui-playing-card']!],
 }

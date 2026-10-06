@@ -20,6 +20,7 @@ tier: pattern          # geometry size-class — geometry.md's Pattern band ("co
 extends: UIElement     # NOT form-associated (ADR-0213 cl.2's {prop:'selected',event:'select'} two-way
                         # slot needs only {prop,event} — the table.md precedent for the identical shape,
                         # table.md:148: "no name/value pair, no validity/reset semantics apply")
+uses: []
 # marginal: not yet measured via `npm run size` (new control; measure at the integration wave per
 # component-testing's gates step 3 — manual by Kim's ruling).
 

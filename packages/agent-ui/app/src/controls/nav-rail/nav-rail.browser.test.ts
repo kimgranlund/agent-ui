@@ -33,10 +33,10 @@ import { UINavRailItemElement } from './nav-rail-item.ts'
 //   [5] SPEC-R6 — the wide name|tag row + narrow ellipsis truncation (never wrap)
 //   [6] SPEC-R4 — forced-colors: the active indicator survives (Chromium via CDP; WebKit asserts baseline)
 //
-// Side-effect imports — CSS load order (ADR-0003): foundation roles + dimensional ramp FIRST, then the
-// components barrel (ui-menu's own CSS, composed by collapse="icon-popover"), then this family's CSS.
+// Side-effect imports — CSS load order (ADR-0003): foundation roles + dimensional ramp FIRST, then
+// `all.css` (ui-menu's own CSS, composed by collapse="icon-popover"), then this family's CSS.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import './nav-rail.css'
 
 interface CdpSession {

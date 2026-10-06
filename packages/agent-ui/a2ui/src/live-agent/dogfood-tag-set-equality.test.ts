@@ -11,7 +11,7 @@
 //
 // The INTERIM `KNOWN_UNDOCUMENTED_FAMILY_TAGS` allowlist this file carried between S5 and that ruling is
 // GONE, and this gate is restored to the exact three-way SET-EQUALITY SPEC-R13 AC2 asked for originally:
-// bundle-defined ≡ inventory-taught ≡ the tags the real barrel REGISTERS AT RUNTIME. No allowlist, no
+// bundle-defined ≡ inventory-taught ≡ the tags the real `@agent-ui/components/all` entry REGISTERS AT RUNTIME. No allowlist, no
 // subset-only leg, no named exceptions — a gap in EITHER direction reds this gate.
 //
 // **The third leg is a RUNTIME derivation, deliberately (GH #351 F3).** It used to be a source re-scan,
@@ -20,7 +20,7 @@
 // original, and review proved the cost empirically: a commented-out `.define('ui-x')` planted in a real
 // control flowed through BOTH source re-scans unchallenged, leaving a three-way gate that was two-way on
 // siblings. So this leg now asks the question by a genuinely different MECHANISM: intercept
-// `customElements.define` and import the real components barrel, recording what actually registers. It
+// `customElements.define` and import the real `@agent-ui/components/all` entry, recording what actually registers. It
 // reads no source text and no descriptor — it observes behavior. That also cross-checks the bundle
 // generator itself: `DOGFOOD_TAGS` is `extractTags`' STATIC scan of the MINIFIED bundle, so a minifier
 // change that defeated that regex would show up here as a disagreement rather than as a silent zero.
@@ -29,9 +29,9 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { DOGFOOD_TAGS } from '@agent-ui/components/dogfood-frame'
 import { dogfoodInventoryTags } from '../agent/dogfood-inventory.ts'
 
-/** Every `ui-*` tag the REAL components barrel registers when it loads — captured by wrapping
+/** Every `ui-*` tag the REAL `@agent-ui/components/all` entry registers when it loads — captured by wrapping
  *  `customElements.define` before the import, so this is a behavioral observation, never a re-reading of
- *  the same bytes `dogfood-inventory.ts` parses. Computed ONCE (`beforeAll`): the barrel self-defines on
+ *  the same bytes `dogfood-inventory.ts` parses. Computed ONCE (`beforeAll`): the `all` entry self-defines on
  *  first import, and a module-cached second import would register nothing. */
 let runtimeRegisteredTags: Set<string>
 
@@ -43,7 +43,7 @@ beforeAll(async () => {
     return realDefine(name, ctor, options)
   }
   try {
-    await import('@agent-ui/components/components')
+    await import('@agent-ui/components/all')
   } finally {
     customElements.define = realDefine
   }
@@ -89,8 +89,8 @@ describe('DOGFOOD_TAGS ≡ dogfoodInventoryTags() — TRUE set equality, no allo
   })
 })
 
-describe('dogfoodInventoryTags() ≡ what the real barrel REGISTERS at runtime (SPEC-R13 AC2, the third leg)', () => {
-  it('the inventory-taught tags exactly match the tags the components barrel actually self-defines', () => {
+describe('dogfoodInventoryTags() ≡ what the real `all` entry REGISTERS at runtime (SPEC-R13 AC2, the third leg)', () => {
+  it('the inventory-taught tags exactly match the tags the `all` entry actually self-defines', () => {
     expect(new Set(dogfoodInventoryTags())).toEqual(runtimeRegisteredTags)
   })
 

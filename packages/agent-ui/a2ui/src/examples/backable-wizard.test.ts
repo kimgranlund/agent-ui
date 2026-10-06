@@ -18,6 +18,7 @@
 // ADR-0051 Field wrap ("f_dates"/"f_room", per the booking-reservation/frontier-card-anatomy-ask
 // precedents) — this file's ids/assertions were updated in the SAME repair to match.
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
 import { whenFlushed } from '@agent-ui/components'
 import { createRenderer } from '../renderer/renderer.ts'
 import { backableWizardSeed } from './catalog-frontier.ts'

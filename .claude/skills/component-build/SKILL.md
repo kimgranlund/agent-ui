@@ -33,7 +33,7 @@ before a first build; `controls/checkbox/` is the gold probe template.
 
 2. **Scaffold** the per-component folder — `controls/{name}/` (ALL components today, display
    and layout included; `components/{name}/` is the packaging doc's RESERVED future split,
-   not yet realized — the barrel and `component-styles.css` wire only `controls/`) — holding
+   not yet realized; `scripts/generate-controls.mjs` scans only `controls/`) — holding
    exactly `{name}.ts` · `{name}.css` (single file, ADR-0003) · `{name}.md` (descriptor,
    ADR-0004) · `{name}.test.ts` (+ `{name}.browser.test.ts`, `{name}-descriptor.test.ts` per
    the test bar).
@@ -65,7 +65,11 @@ before a first build; `controls/checkbox/` is the gold probe template.
    `block-size` off the ramp, zero block padding, the centering law. Keep the blocks sectioned
    so the "tokens in `:where()`" probe can tell declaration from consumption. (Beware the
    `*/`-inside-a-comment trap — a stray close silently drops the next rule; only browser
-   smokes catch it.)
+   smokes catch it.) The sheet stays self-scoped: every `:where(ui-T)` names this folder's own
+   tags, never another control's, and it never imports a `_` seam (those load once through
+   `shared-styles.css`, ADR-0233). Never hand-write the sheet's `@import` prologue: the codemod in
+   step 8 writes it from `uses` (gate: `controls/css-uses.test.ts`; order proof:
+   `controls/css-order.browser.test.ts`).
 
 6. **Descriptor** (`{name}.md`) — the attributes-as-API record; the field set is what
    `FIELD_SHAPE` enumerates in the schema source
@@ -78,10 +82,16 @@ before a first build; `controls/checkbox/` is the gold probe template.
    bounding-box assertion in a realistic container (jsdom-green ≠ done; geometry must be
    browser-MEASURED) · a built-output leg when the design depends on production CSS behavior.
 
-8. **Integrate** — barrel export (`controls/index.ts`), `component-styles.css` `@import`,
-   `package.json` `exports` subpath, and the site surfaces the design named (doc/demo pages,
-   gallery/preview specimen) with their standing gates; regenerate llms artifacts after
-   descriptor/CHANGELOG/page changes (`node scripts/generate-llms-full.mjs`).
+8. **Integrate** — the generated entries below (no hand-kept barrel, ADR-0233) and the site surfaces the design named
+   (doc/demo pages, gallery/preview specimen) with their standing gates; regenerate llms
+   artifacts after descriptor/CHANGELOG/page changes (`node scripts/generate-llms-full.mjs`).
+   Sync every descriptor's derived `uses:` block, and each sheet's `@import` prologue, with
+   `node scripts/codemod-uses.mjs` (ADR-0233; gates: `controls/uses-driftwire.test.ts`,
+   `controls/css-uses.test.ts`), never by hand. Then run `node scripts/generate-controls.mjs`
+   (ADR-0233): it writes the control registry (`controls/registry.gen.ts`), the demo-only
+   `all.gen.ts` / `all.gen.css` pair and the
+   `./controls/{name}` + `./controls/{name}.css` `package.json` `exports` keys, so none of
+   those is a hand edit (drift gate: `controls/controls-gen-driftwire.test.ts`).
 
 ## Validation loop (finalize only when clean)
 
@@ -112,5 +122,5 @@ before a first build; `controls/checkbox/` is the gold probe template.
       off the ramp.
 - [ ] `{name}.md` validates and matches `static props` AND the source.
 - [ ] Full probe set green incl. cross-engine browser truth (+ built-output leg where earned).
-- [ ] Integrated (barrel/exports/styles/site) with standing gates green; size in budget.
+- [ ] Integrated (generated registry/exports/`uses`, site) with standing gates green; size in budget.
 - [ ] Independent sdlc-lite verifier run (`run.sh`) done; findings fixed.

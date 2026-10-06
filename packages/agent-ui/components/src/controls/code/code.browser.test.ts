@@ -10,7 +10,7 @@ import { server, cdp } from 'vitest/browser'
 // Side-effect CSS/JS imports — the load-bearing order (ADR-0003): foundation roles + dimensional ramp
 // FIRST (tokens.css/dimensions.css — the --md-sys-color-*/--md-sys-typeface-mono/--md-sys-shape-corner-base/--ui-container-bg
 // this sheet's :where() token block reads), then code.css directly, then code.ts (self-defines). The
-// component-styles barrel does NOT yet @import code.css (LLD-C11's serial integration slice, a separate
+// retired component-styles CSS barrel (ADR-0233) does NOT yet @import code.css (LLD-C11's serial integration slice, a separate
 // wave) — this suite imports it directly, the bar-chart/sparkline precedent for a pre-integration folder.
 import '@agent-ui/components/foundation-styles.css'
 import './code.css'

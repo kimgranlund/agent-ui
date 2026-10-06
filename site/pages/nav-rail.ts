@@ -14,7 +14,7 @@
 // clipping-ancestor case the bug report was about — a real `overflow: hidden` box far too short to contain
 // the panel, which the top-layer flyout escapes in front of the reader.
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
-import '@agent-ui/components/component-styles.css' // ui-menu's shipped CSS (composed by collapse="icon-popover")
+import '@agent-ui/components/all.css' // ui-menu's shipped CSS (composed by collapse="icon-popover")
 import '@agent-ui/app/nav-rail.css'
 import '@agent-ui/app/nav-rail' // self-defines ui-nav-rail + ui-nav-rail-group + ui-nav-rail-item
 import './nav-rail.css' // page-local demo chrome only — never restyles a control's internals

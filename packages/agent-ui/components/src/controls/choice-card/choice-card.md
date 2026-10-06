@@ -6,6 +6,7 @@ tag: ui-choice-card
 description: The rich option unit of the `choice` family — the WHOLE card is the hit target and the a11y unit; no selection commit of its own (the owning ui-choice-group commits).
 tier: container         # geometry size-class (Container/layout band — a rich-content card, no control height; the ui-card precedent)
 extends: UIElement      # NOT form-associated — a card carries no value of its own (the Radio/RadioGroup precedent: the GROUP owns the commit)
+uses: []
 # marginal: measured at integration (npm run size, ADR-0040 §3)
 
 attributes:             # attributes-as-API — mirrors choice-card.ts static props

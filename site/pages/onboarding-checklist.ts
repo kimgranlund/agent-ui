@@ -22,13 +22,11 @@ import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cas
 import './onboarding-checklist.css'
 import { heading } from '../lib/doc-page.ts'
 import { signal, computed, effect } from '@agent-ui/components'
-import type {
-  UIBadgeElement,
-  UIButtonElement,
-  UICardElement,
-  UICheckboxElement,
-  UIProgressElement,
-} from '@agent-ui/components/components'
+import type { UIBadgeElement } from '@agent-ui/components/controls/badge'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import type { UICardElement } from '@agent-ui/components/controls/card'
+import type { UICheckboxElement } from '@agent-ui/components/controls/checkbox'
+import type { UIProgressElement } from '@agent-ui/components/controls/progress'
 
 const { content } = mountPage({
   title: 'Onboarding checklist',

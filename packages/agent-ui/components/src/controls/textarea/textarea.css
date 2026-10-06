@@ -22,7 +22,7 @@
  *       and reduced-motion are inherited verbatim from the text-field precedent (the field-frame pattern is
  *       shape-independent — ADR-0134 "The multi-line geometry law").
  *
- * Standalone stylesheet — linked via the host page / component-styles barrel; NEVER injected from textarea.ts
+ * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from textarea.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

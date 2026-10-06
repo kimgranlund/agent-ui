@@ -39,16 +39,14 @@
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './card-grid-drawer.css'
 import { signal, effect, untracked, whenFlushed } from '@agent-ui/components'
-import type {
-  UIBadgeElement,
-  UIButtonElement,
-  UICardElement,
-  UIDrawerElement,
-  UIFieldElement,
-  UISegmentedControlElement,
-  UISwitchElement,
-  UITextFieldElement,
-} from '@agent-ui/components/components'
+import type { UIBadgeElement } from '@agent-ui/components/controls/badge'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import type { UICardElement } from '@agent-ui/components/controls/card'
+import type { UIDrawerElement } from '@agent-ui/components/controls/drawer'
+import type { UIFieldElement } from '@agent-ui/components/controls/field'
+import type { UISegmentedControlElement } from '@agent-ui/components/controls/segmented-control'
+import type { UISwitchElement } from '@agent-ui/components/controls/switch'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 
 const { content } = mountPage({
   title: 'Card grid + drawer edit',

@@ -18,10 +18,10 @@ import { server, cdp } from 'vitest/browser'
 //   • C10 zero-residue: connect→disconnect leaves zero live listeners (toggle inert; reconnect re-wires once).
 //
 // Side-effect imports — the load-bearing CSS order (ADR-0003): foundation first, then component sheet,
-// then the self-defining barrel. Vite injects them.
+// then the self-defining `all` entry. Vite injects them.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 // ── mount/cleanup helpers ─────────────────────────────────────────────────────────────────────────────
 const mounted: HTMLElement[] = []

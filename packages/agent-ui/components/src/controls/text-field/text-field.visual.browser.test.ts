@@ -10,8 +10,8 @@ import type { UITextFieldElement } from './text-field.ts'
 // `__baselines__/text-field.visual.browser.test.ts/<name>-chromium-darwin.png`; re-baseline only via
 // `npm run test:visual:update` (a deliberate act, per the ADR's R5 golden-regen law).
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 const mount = (attrs = ''): { wrap: HTMLElement; field: UITextFieldElement } => {
   const wrap = document.createElement('div')

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { mount, watch, whenFlushed } from '@agent-ui/components'
-import type { UITextFieldElement } from '@agent-ui/components/components'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import { galleryMembers, node, ComponentGallery } from './lib/component-gallery.ts'
 import { parseDoc } from './lib/frontmatter.ts'
 // Raw-text fs read — the same reverse-coupling fs-read pattern the site drift

@@ -12,10 +12,13 @@ npm install @agent-ui-kit/a2ui
 
 ```js
 import '@agent-ui-kit/components/foundation-styles.css'
-import '@agent-ui-kit/components/component-styles.css'
+import '@agent-ui-kit/components/shared-styles.css'
+import '@agent-ui-kit/components/all.css' // or one `@agent-ui-kit/components/controls/{name}.css` per control your surfaces use
 import { /* renderer + validator + catalog */ } from '@agent-ui-kit/a2ui'
 import { /* seed payloads */ } from '@agent-ui-kit/a2ui/examples'
 ```
+
+The host links the styles: `foundation-styles.css`, `shared-styles.css`, and the control sheets (or `all.css`). You never import the controls yourself: the renderer defines the controls a surface uses, on demand, before it renders them (ADR-0233). A message whose controls are not defined yet waits for them; later messages for that surface queue behind it in order.
 
 Feed validated A2UI server messages (`createSurface` / `updateComponents` / `updateDataModel`) to the renderer and it maintains live surfaces — two-way input bindings, validity checks, dynamic lists, and action round-trips included. `./examples` ships seed payload transcripts; `./corpus` is the exemplar store.
 

@@ -38,8 +38,8 @@
 
 import '@agent-ui/components/foundation-styles.css' // [1] foundation: tokens.css → dimensions.css (FIRST)
 import '@agent-ui/components/base-styles.css' // [1b] the DOCUMENT BASE layer: typeface/leading/ink/rendering (shell-less pages need this or they render in the UA serif)
-import '@agent-ui/components/component-styles.css' // [2] per-control CSS (stat/bar-chart/table/segmented-control/segment/field/card/text — one bundle)
-import '@agent-ui/components/components' // [3] self-defining ui-* controls (the whole default-catalog fleet)
+import '@agent-ui/components/all.css' // [2] per-control CSS (stat/bar-chart/table/segmented-control/segment/field/card/text — one bundle)
+import '@agent-ui/components/all' // [3] self-defining ui-* controls (the whole default-catalog fleet)
 import '@agent-ui/app/workspace-shell.css'
 import '@agent-ui/app/super-shell.css' // ui-workspace-shell composes ui-super-shell (LLD-C5) — the composed child's own sheet, the workbench.ts/agent-admin-app.ts precedent
 import '@agent-ui/app/surface-host.css'
@@ -47,7 +47,10 @@ import '@agent-ui/app/workspace-shell' // self-defines ui-workspace-shell
 import '@agent-ui/app/surface-host' // self-defines ui-surface-host
 import './dashboard.css' // page-local: full-viewport sizing (a plain dimension, no shell frame rules) + content-region layout only
 
-import type { UIStatElement, UIBarChartElement, UITableElement, UISegmentedControlElement } from '@agent-ui/components/components'
+import type { UIStatElement } from '@agent-ui/components/controls/stat'
+import type { UIBarChartElement } from '@agent-ui/components/controls/bar-chart'
+import type { UITableElement } from '@agent-ui/components/controls/table'
+import type { UISegmentedControlElement } from '@agent-ui/components/controls/segmented-control'
 import type { UISurfaceHostElement } from '@agent-ui/app'
 
 import {

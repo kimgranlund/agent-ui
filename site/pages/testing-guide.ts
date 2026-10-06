@@ -230,7 +230,7 @@ content.append(
   codeBlock(
     [
       "import { describe, it, expect } from 'vitest'",
-      "import '@agent-ui/components/components' // registers ui-button (and every other ui-*)",
+      "import '@agent-ui/components/controls/button' // registers ui-button (demo-only '@agent-ui/components/all' registers every ui-*)",
       '',
       "describe('my app renders a save button', () => {",
       "  it('mounts and reflects its label', () => {",

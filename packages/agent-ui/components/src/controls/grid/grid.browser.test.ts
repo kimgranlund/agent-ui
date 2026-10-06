@@ -13,7 +13,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 //     (proves the grid.ts --ui-grid-min token thread is live in a real engine).
 //   • gap rides --md-sys-space × [density] (layout rhythm, ADR-0015 cl.4) — an ancestor [density] changes the gap px.
 //
-// HOST-AT-BOUNDARY: ui-grid is NOT in the component-styles barrel yet (that is s12), so this injects the
+// HOST-AT-BOUNDARY: ui-grid is NOT in the retired component-styles CSS barrel (ADR-0233) yet (that is s12), so this injects the
 // load-bearing sheets DIRECTLY in CSS order — foundation (the --md-sys-color-* roles + --md-sys-space ramp + [density]) FIRST,
 // then the SHARED surface seam (elevation/brightness only — ADR-0100: ui-grid never establishes
 // `container-type`, and never needed to: auto-fit/minmax reflows off the grid's OWN rendered width, a track

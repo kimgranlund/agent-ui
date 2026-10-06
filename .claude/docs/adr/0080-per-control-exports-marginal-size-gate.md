@@ -9,7 +9,7 @@
 > | **Proposed by** | planner — the G8 planning intake, realizing the ADR-0049 Amendment 1 booking |
 > | **Ratified by** | Kim — 2026-07-05 |
 > | **Repairs** | `packages/agent-ui/components/package.json` `exports` (build-time, gated on ratification) · `scripts/measure-size.mjs` (the marginal leg) · `controls/barrels.test.ts` (the drift gate) · `plan.md` §10 budgets paragraph (the marginal cap becomes a measured gate, not a descriptor note) · goals.md §G8 DoD line 3 |
-> | **Supersedes / Superseded by** | Realizes the booking in ADR-0049 Amendment 1 · follows ADR-0040 (§3 manual-gate policy, unchanged) · relates ADR-0003 (packaging) |
+> | **Supersedes / Superseded by** | Realizes the booking in ADR-0049 Amendment 1 · follows ADR-0040 (§3 manual-gate policy, unchanged) · relates ADR-0003 (packaging) · **Superseded in part by [ADR-0233](./0233-per-control-entries-and-generated-control-registry.md)** (cl.1-2: the `./components` entry is removed, per-control entries become generator-written, the T4 gate becomes folders, `registry.gen.ts` and exports; cl.3-5 stand) |
 
 ## Context
 
@@ -78,3 +78,7 @@ tree-shake proof re-run through a public entry (importing `./controls/button` dr
   manual (ADR-0040 §3); the recommendation to wire it remains recorded there, not here.
 - **`./components/{name}` naming** — rejected: `@agent-ui/components/components/button` doubles the word;
   `./controls/{name}` matches the source layout and reads clean.
+
+## Amendment (2026-10-05): superseded in part by ADR-0233
+
+[ADR-0233](./0233-per-control-entries-and-generated-control-registry.md) amends cl.1 and cl.2. Cl.1: the `./components` entry is removed, and the per-control JS and `.css` entries become generator-written by `scripts/generate-controls.mjs`. Cl.2: the three-way gate becomes folders, `registry.gen.ts` and exports. Cl.3 to cl.5 stand.

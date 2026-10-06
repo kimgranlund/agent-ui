@@ -1,6 +1,6 @@
 /* container.css — the SHARED `UIContainerElement` surface seam (ADR-0015). The one stylesheet every
- * container/layout `ui-*` element sits on; it is `@import`-ed FIRST (before any element sheet) by
- * component-styles.css (wired in decomp s12). It owns NO per-element layout (display/flex/grid is each
+ * container/layout `ui-*` element sits on; it loads FIRST (before any element sheet) through
+ * shared-styles.css, the seam sheet a host links once after the foundation (ADR-0233 cl.3). It owns NO per-element layout (display/flex/grid is each
  * element's own `@scope` block) — only the cross-family surface. It does NOT establish query containers
  * (ADR-0100 deleted the blanket `container-type: inline-size` this file used to set on the four layout
  * primitives — see the seam's own banner below for why and where establishment moved).
@@ -30,7 +30,7 @@
  * left this trio in ADR-0104 — a bare `<ui-tabs>` is transparent like every other container, and a plane
  * is an asked-for intent via the shipped `elevation`/`brightness` axes.
  *
- * Standalone sheet — linked via the component-styles barrel, NEVER injected from container.ts (behaviour
+ * Standalone sheet, loaded through shared-styles.css, NEVER injected from container.ts (behaviour
  * `.ts` holds no runtime style; plan §2). */
 
 /* ════════════════ surface seam — the 8 surface-bearing container tags ════════════════ */

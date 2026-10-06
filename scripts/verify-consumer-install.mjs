@@ -88,8 +88,9 @@ function scaffoldApp(dir, version) {
     join(dir, 'main.js'),
     `// Exactly the README's documented "npm install" recipe — the recipe this whole check keeps honest.
 import '@agent-ui-kit/components/foundation-styles.css'
-import '@agent-ui-kit/components/component-styles.css'
-import '@agent-ui-kit/components/components'
+import '@agent-ui-kit/components/shared-styles.css'
+import '@agent-ui-kit/components/controls/button.css'
+import '@agent-ui-kit/components/controls/button'
 
 window.__consumerSmoke = { defined: !!customElements.get('ui-button') }
 `,
@@ -120,7 +121,7 @@ function assertRealBuildOutput({ jsText, cssText }) {
     throw new Error('built JS does not contain a ui-button customElements.define call — the fleet did not bundle in')
   }
   if (!cssText.includes('--ui-button-')) {
-    throw new Error('built CSS does not contain --ui-button-* tokens — component-styles.css did not resolve into the build')
+    throw new Error('built CSS does not contain --ui-button-* tokens — controls/button.css did not resolve into the build')
   }
   if (!cssText.includes('--md-sys-color-')) {
     throw new Error('built CSS does not contain --md-sys-color-* tokens — foundation-styles.css (the @agent-ui-kit/shared chain) did not resolve into the build')
@@ -202,8 +203,9 @@ async function assertRendersInBrowser(distDir) {
 async function assertCdnRecipeIsHonest(version) {
   const checks = [
     { url: `https://esm.sh/@agent-ui-kit/shared@${version}/tokens.css`, kind: 'css' },
-    { url: `https://esm.sh/@agent-ui-kit/components@${version}/component-styles.css`, kind: 'css' },
-    { url: `https://esm.sh/@agent-ui-kit/components@${version}/components`, kind: 'js' },
+    { url: `https://esm.sh/@agent-ui-kit/components@${version}/shared-styles.css`, kind: 'css' },
+    { url: `https://esm.sh/@agent-ui-kit/components@${version}/controls/button.css`, kind: 'css' },
+    { url: `https://esm.sh/@agent-ui-kit/components@${version}/controls/button`, kind: 'js' },
   ]
   for (const { url, kind } of checks) {
     const res = await fetch(url, { redirect: 'follow' })

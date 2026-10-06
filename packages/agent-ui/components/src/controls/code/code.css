@@ -17,7 +17,7 @@
  *       blowing out a flex/feed container. No `[size]`/`[scale]` rows (Display class, SPEC-R20) and no
  *       `[density]` legs (every quantity above is frame-class, density-invariant — ADR-0113 cl.2).
  *
- * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
+ * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel) (Phase 2); NEVER injected
  * from code.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

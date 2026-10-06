@@ -16,7 +16,7 @@
  *       icon-sized leading cell (the §4.1 caret-law mechanics, applied to a LEADING position).
  *
  * Standalone stylesheet — NOT injected from multi-select.ts (behaviour-only `.ts`, no runtime injection
- * per plan §2). Linked via the component-styles barrel; the barrel @imports foundation roles FIRST.
+ * per plan §2). Linked per control or via shared-styles.css (ADR-0233, no barrel); the barrel @imports foundation roles FIRST.
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-multi-select) declares --ui-multi-select-* ════════════════ */

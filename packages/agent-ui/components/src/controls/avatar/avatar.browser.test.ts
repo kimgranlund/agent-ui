@@ -7,8 +7,8 @@ import { server, cdp } from 'vitest/browser'
 // different `name`s compute an IDENTICAL plane/ink pair, and the initials text clears AA against it), and
 // forced-colors (SPEC-R19 AC1 — the circle boundary survives WHCM).
 //
-// Direct (pre-barrel) imports — controls/avatar/ is not yet wired into controls/index.ts /
-// component-styles.css (that's the LLD-C11 shared-file integration slice, a separate wave).
+// Direct (pre-barrel) imports — controls/avatar/ was not yet wired into the family and CSS
+// barrels (that was the LLD-C11 shared-file integration slice, a separate wave).
 import '@agent-ui/components/foundation-styles.css'
 import './avatar.css'
 import './avatar.ts'

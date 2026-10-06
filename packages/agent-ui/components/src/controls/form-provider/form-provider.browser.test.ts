@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import type { UIFormProviderElement, FormSubmitDetail } from '@agent-ui/components/components'
+import type { UIFormProviderElement, FormSubmitDetail } from '@agent-ui/components/controls/form-provider'
 
 // s11 — the CROSS-ENGINE browser smoke for ui-form-provider (decomp g7-field-form-provider slice s11,
 // field-form-provider.lld.md §4). The jsdom form-provider.test.ts drives the WHOLE registry/aggregate
@@ -21,11 +21,11 @@ import type { UIFormProviderElement, FormSubmitDetail } from '@agent-ui/componen
 // throw" to extend without inventing new harness machinery; s13's e2e drives the live pages instead.
 //
 // Side-effect imports — the load-bearing CSS order (ADR-0003): foundation roles + dimensional ramp FIRST,
-// then the component sheet (form-provider.css + field.css + text-field.css all @import through the barrel,
-// s12), then the self-defining family barrel. Vite injects them.
+// then the component sheet (form-provider.css + field.css + text-field.css all through `all.css`,
+// s12), then the self-defining `all` entry. Vite injects them.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 // A realistic sized text-field — no intrinsic width (the ADR-0021 20ch floor still applies without this),
 // but an explicit author width is the common real case and gives userEvent a stable hit-test target.

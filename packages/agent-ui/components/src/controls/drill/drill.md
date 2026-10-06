@@ -13,6 +13,7 @@ tag: ui-drill
 description: A contained, card-like container that drills down an N-level selection tree — the active level slides in over its dimmed, inert ancestor by default (stack presentation), with a Back affordance and a bindable path.
 tier: pattern          # geometry size-class — geometry.md "Pattern" (container + control-height rows): the header row (Back + heading) takes the CONTROL height, the panel viewport uses the --md-sys-space ladder
 extends: UIContainerElement  # the FIRST non-form family — surface axes + reused internals (ARIA); NOT form-associated (face below)
+uses: []
 # marginal: measured by `npm run size`'s components-barrel LEAVE-ONE-OUT delta (manual by Kim's ruling) — within the per-control ≤ ~2 kB tier budget (plan §10)
 
 attributes:               # attributes-as-API — mirrors drill.ts `static props` (the surface axes first, then path, then view-transitions)

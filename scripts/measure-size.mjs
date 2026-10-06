@@ -6,10 +6,11 @@
 //
 // Two barrel-level targets:
 //   • the `.` barrel (src/index.ts) — the FULL reactive+dom surface a foundation consumer pulls.
-//   • the `components` barrel (controls/index.ts) — the self-defining ui-* family (ADR-0003 s17). This is the
-//     BUNDLE leg of the tree-shake proof: importing the family drags only the controls + their real deps
-//     (dom + reactive + traits), so the family barrel lands in the SAME ballpark as the foundation surface —
-//     it does NOT pull "the whole package" twice. The deterministic import-graph SHAPE proof lives in
+//   • the demo-only `all` entry (all.gen.ts, ADR-0233), the self-defining ui-* family. This is the BUNDLE leg
+//     of the tree-shake proof: importing the family drags only the controls + their real deps (dom +
+//     reactive + traits), so the family row lands in the SAME ballpark as the foundation surface; it does NOT
+//     pull "the whole package" twice. The lazy registry (`registry.gen.ts` + `loader.ts`) has its own
+//     absolute row, entry chunk only. The deterministic import-graph SHAPE proof lives in
 //     controls/tree-shake.test.ts; this script pins the realised BYTES.
 //
 // A third, per-control leg (T5, ADR-0080): the barrel legs above measure the WORST-CASE (foundation alone /
@@ -222,7 +223,12 @@ const targets = [
   // per-row marginal figure (gauge 495 B gz) below — the concentric-ring SVG builder + the legend-row
   // builder share the `_chart/` subsystem's series-ramp aliasing rather than duplicating math, so the real
   // marginal cost is small. ~392 B headroom over the measured 71800 B gz. CHECKPOINT, not ratchet.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 70.5 * KB],
+  // RE-BASED 2026-10-05 (ADR-0233, Kim ruling): 70.5 KB -> 72 KB (73728 B gz) -- the family barrel is
+  // retired and this row measures the generated demo-only `all` entry, the same fleet entry modules in
+  // ADR-0233's path-sorted order. Measured 72993 B gz, while the same modules bundle to 71967 B gz in the
+  // retired barrel's `export *` order (the first attempt's Rolldown table), so the extra 1026 B gz is gzip
+  // reacting to module order, not added code. ~735 B headroom. CHECKPOINT, not ratchet.
+  ['@agent-ui/components/all (demo-only self-defining ui-* family)', '../packages/agent-ui/components/src/all.gen.ts', 72 * KB],
   // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
   // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
   // `./markdown`, `./editor`) is not the one exception.
@@ -284,17 +290,63 @@ for (const [label, rel, budget] of targets) {
   console.log(`${label}: ${gz} B gz (${min} B min) — ${status} budget (${budget} B gz)`)
 }
 
+// ADR-0233: the lazy control registry (`./registry`, registry.gen.ts) plus the loader over it (`./loader`,
+// loader.ts), measured ABSOLUTELY and ENTRY CHUNK ONLY. Each registry record holds a `load()` thunk, so every
+// control module lands in a lazy chunk a host fetches only when it defines that tag; those chunks are
+// excluded here. What this row guards is the static cost a lazy host pays up front: the 82 records and the
+// loader, with no control code and no kernel.
+// Pinned 2026-10-05 (ADR-0233, ADR-0080's measure-first-then-pin): measured 3155 B gz, rounded up to the next
+// 256 B (3328) plus 512 B headroom.
+const REGISTRY_BUDGET = 3840
+const registryEntries = [
+  fileURLToPath(new URL('../packages/agent-ui/components/src/controls/registry.gen.ts', import.meta.url)),
+  fileURLToPath(new URL('../packages/agent-ui/components/src/controls/loader.ts', import.meta.url)),
+]
+{
+  const VIRTUAL_ID = '\0virtual:measure-size-registry-entry'
+  const src = registryEntries.map((p) => `export * from ${JSON.stringify(p)}`).join('\n') + '\n'
+  const plugin = {
+    name: 'measure-size-registry-entry',
+    resolveId(id) {
+      if (id === 'virtual:measure-size-registry-entry') return VIRTUAL_ID
+    },
+    load(id) {
+      if (id === VIRTUAL_ID) return src
+    },
+  }
+  const bundle = await rolldown({ input: 'virtual:measure-size-registry-entry', plugins: [plugin] })
+  const { output } = await bundle.generate({ format: 'esm', minify: true })
+  await bundle.close()
+  const chunks = output.filter((c) => c.type === 'chunk')
+  const code = chunks.filter((c) => c.isEntry).map((c) => c.code).join('')
+  const lazyCount = chunks.filter((c) => !c.isEntry).length
+  const min = Buffer.byteLength(code)
+  const gz = gzipSync(code, { level: 9 }).length
+  const status = gz <= REGISTRY_BUDGET ? 'within' : 'OVER'
+  if (gz > REGISTRY_BUDGET) over = true
+  console.log(
+    `@agent-ui/components/registry + loader (entry chunk only): ${gz} B gz (${min} B min) — ${status} budget (${REGISTRY_BUDGET} B gz)   ${lazyCount} lazy chunks excluded`,
+  )
+}
+
 // ── T5 (ADR-0080 clauses 3–4) — per-control leave-one-out marginal + informational solo absolute ──
 
 const PKG_DIR = fileURLToPath(new URL('../packages/agent-ui/components', import.meta.url))
 const pkg = JSON.parse(readFileSync(`${PKG_DIR}/package.json`, 'utf8'))
 
-// Every public per-control entry (name → absolute path of its target module), read straight off the exports
-// map T4 wrote and keeps honest via the three-way drift gate (barrels.test.ts) — no separate control list to
-// drift out of sync here.
+// Every public per-control JS entry (name → absolute path of its target module), read straight off the exports
+// map `scripts/generate-controls.mjs` writes (ADR-0233; drift gate `controls/controls-gen-driftwire.test.ts`),
+// so there is no separate control list to drift out of sync here. The `./controls/{name}.css` sheet keys are skipped:
+// bundled as a JS entry, a sheet would measure as a control.
 const CONTROL_ENTRIES = Object.entries(pkg.exports)
-  .filter(([key]) => key.startsWith('./controls/'))
+  .filter(([key]) => key.startsWith('./controls/') && !key.endsWith('.css'))
   .map(([key, rel]) => [key.slice('./controls/'.length), `${PKG_DIR}/${rel.slice(2)}`])
+// Fail loudly on a filter that silently empties the per-control rows (82 JS entries today).
+const MIN_CONTROL_ENTRIES = 60
+if (CONTROL_ENTRIES.length < MIN_CONTROL_ENTRIES) {
+  console.error(`size: found ${CONTROL_ENTRIES.length} ./controls/* JS entries in the components exports map, expected at least ${MIN_CONTROL_ENTRIES}`)
+  process.exit(1)
+}
 
 /** Bundle a synthetic virtual entry `import`ing each of `paths` (via a resolveId/load plugin — no temp file
  * on disk), minified; return the gz byte size. Rolldown supports one `input`, so a multi-entry measurement
@@ -669,7 +721,7 @@ const appCssQuerySuffixPlugin = {
 // ADR, never a drift bump. Downward re-bases remain ordinary.
 // Re-based 104448 -> 104982 B gz 2026-08-21 (ADR-0197 cl.5's named exception, "a ruled feature-weight
 // ADR" — not a drift bump): ADR-0229 (svg-charts wave 1, GH #1565/#1561) ships `ui-column-chart`, the
-// fleet's fifth first-class chart type, self-registering in `component-styles.css` alongside
+// fleet's fifth first-class chart type, self-registering in the retired CSS barrel alongside
 // sparkline/bar-chart/line-chart/pie-chart per the existing foundation-CSS shape every prior chart
 // type paid into this same row — real reviewed weight from a Kim-ratified control, not accretion.
 // Kim ruling 2026-08-21 (in-session): rule the exception now rather than diet the shared foundation
@@ -688,7 +740,7 @@ const appCssQuerySuffixPlugin = {
 // own weight the same way"; not re-asked, applied on that standing basis): ADR-0229 cl.4 (svg-charts
 // wave 3, GH #1567/#1561) ships `ui-gauge`, the sixth first-class chart type — concentric SVG-ring
 // anatomy + its legend column, self-registering alongside the other five per the same
-// component-styles.css shape. +410 B gz — DECELERATING vs the prior two waves (534, then 961), not
+// shape of the retired CSS barrel. +410 B gz — DECELERATING vs the prior two waves (534, then 961), not
 // runaway. Measured 106353 B gz (fresh npm ci, exit-code verified) — zero headroom; wave 4 is
 // catalog-rows-only (no new control), so this budget should hold steady from here.
 // Re-based 106353 -> 106455 B gz 2026-08-21 (ADR-0197 cl.5's named exception, invoked a FOURTH and
@@ -705,7 +757,13 @@ const appCssQuerySuffixPlugin = {
 // issue's Findings comment first. +104 B gz is the entire, deliberate source; no other change
 // contributed. Measured 106559 B gz (repo measure script, exit-code verified) — zero headroom.
 // ADR-0197 cl.5 ruled exception 2026-08-23 — +104 B from ADR-0008 Am.2 (c6784a0c), GH #1583
-const APP_MARGINAL_BUDGET = 106559
+// ADR-0233 structural fix (2026-10-05): the row had gone red (106987 B gz) because the a2ui catalog
+// factories imported the whole components fleet, which rode app's eager bundle. The factories now import no
+// control (the renderer defines a surface's controls on demand through `builtinControls`), and app imports
+// the controls it renders itself (gate `app/src/control-reach.test.ts`). Measured 69979 B gz marginal;
+// RE-BASED 2026-10-05 under ADR-0197 cl.5 (downward re-bases stay ordinary): 106559 -> 72027 B gz, the
+// measured 69979 B gz plus 2048 B gz headroom.
+const APP_MARGINAL_BUDGET = 72027
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })

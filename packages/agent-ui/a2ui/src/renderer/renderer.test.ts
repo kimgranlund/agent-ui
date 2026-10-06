@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 import { whenFlushed, UIFormElement, prop, effect, createScope } from '@agent-ui/components'
 import type { FormValue, ValidityResult, PropsSchema, ReactiveProps } from '@agent-ui/components'
-import { UIButtonElement, UISelectElement } from '@agent-ui/components/components'
+import { UIButtonElement } from '@agent-ui/components/controls/button'
+import { UISelectElement } from '@agent-ui/components/controls/select'
+import '@agent-ui/components/all' // self-defines the ui-* controls so the renderer's nodes upgrade synchronously
 import { createRenderer } from './renderer.ts'
 import type { A2uiClientMessage, RendererHost } from './renderer.ts'
 import type { A2uiAction, A2uiActionMessage } from './action.ts'

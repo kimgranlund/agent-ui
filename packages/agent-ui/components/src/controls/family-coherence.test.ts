@@ -20,7 +20,7 @@ declare const process: { cwd(): string }
 //                 (A3); the descriptor exists and tag↔class↔folder naming is aligned (A4).
 //   B. Tokens   — a `{name}.css` `:where(ui-{name})` block declares only its own `--ui-{name}-*` (∪ the shared
 //                 allowlist); every consumed custom property is likewise its own ∪ shared — no cross-control reach.
-//   C. Lifecycle — every descriptor is exported from `controls/index.ts` AND imported by `component-styles.css`;
+//   C. Lifecycle — every descriptor has a `registry.gen.ts` record AND is imported by the generated `all.gen.css`;
 //                 every control with an `open` attribute declares the two-way `toggle`+`close` pair (ADR-0019).
 // This is a TEXT-level gate (ADR-0081's own scope cut) — the browser smokes remain the rendering truth.
 
@@ -476,43 +476,49 @@ describe('Tokens — consumed custom properties ∈ own ∪ shared ∪ (a family
   })
 })
 
-// ── C1. Lifecycle — controls/index.ts registration bijection ────────────────────────────────────────────────
+// ── C1. Lifecycle: registry.gen.ts registration bijection (ADR-0233) ─────────────────────────────────────
+// The generated lazy registry `CONTROLS` holds one record per fleet control; each record's `load()` imports
+// the control's entry module. The bijection reads the generated file, which `scripts/generate-controls.mjs`
+// writes from the fleet descriptors.
 
-/** The `{folder}/{name}` pairs a `controls/index.ts`-shaped module TEXT exports (`export * from './f/n.ts'`). */
-function exportedPairs(indexTs: string): Set<string> {
+/** The `{folder}/{name}` pairs a `registry.gen.ts`-shaped module TEXT loads (`load: () => import('./f/n.ts')`). */
+function registeredPairs(registryTs: string): Set<string> {
   const out = new Set<string>()
-  for (const m of indexTs.matchAll(/export \* from '\.\/([\w-]+)\/([\w-]+)\.ts'/g)) out.add(`${m[1]}/${m[2]}`)
+  for (const m of registryTs.matchAll(/load: \(\) => import\('\.\/([\w-]+)\/([\w-]+)\.ts'\)/g)) out.add(`${m[1]}/${m[2]}`)
   return out
 }
 
-const INDEX_TS = read(`${CONTROLS}/index.ts`)
+const REGISTRY_TS = read(`${CONTROLS}/registry.gen.ts`)
+const BUTTON_RECORD = "load: () => import('./button/button.ts')"
 
-describe('Lifecycle — every descriptor is exported from controls/index.ts (and vice versa)', () => {
-  it('the fleet ≡ the index.ts export set (0 missing, 0 phantom)', () => {
-    const exported = exportedPairs(INDEX_TS)
-    const missing = [...FLEET_PAIRS].filter((p) => !exported.has(p)).sort()
-    const phantom = [...exported].filter((p) => !FLEET_PAIRS.has(p)).sort()
-    expect(missing, 'descriptor(s) with no index.ts export').toEqual([])
-    expect(phantom, 'index.ts export(s) with no matching descriptor').toEqual([])
+describe('Lifecycle: every descriptor has a registry.gen.ts record (and vice versa)', () => {
+  it('the fleet ≡ the registry.gen.ts record set (0 missing, 0 phantom)', () => {
+    const registered = registeredPairs(REGISTRY_TS)
+    const missing = [...FLEET_PAIRS].filter((p) => !registered.has(p)).sort()
+    const phantom = [...registered].filter((p) => !FLEET_PAIRS.has(p)).sort()
+    expect(missing, 'descriptor(s) with no registry.gen.ts record').toEqual([])
+    expect(phantom, 'registry.gen.ts record(s) with no matching descriptor').toEqual([])
   })
 
-  it('negative control: a planted phantom export line fails the bijection', () => {
-    const exported = exportedPairs(`${INDEX_TS}\nexport * from './phantom/phantom.ts'\n`)
-    const phantom = [...exported].filter((p) => !FLEET_PAIRS.has(p))
+  it('negative control: a planted phantom record fails the bijection', () => {
+    const registered = registeredPairs(`${REGISTRY_TS}\n  'ui-phantom': { tag: 'ui-phantom', load: () => import('./phantom/phantom.ts'), uses: [] },\n`)
+    const phantom = [...registered].filter((p) => !FLEET_PAIRS.has(p))
     expect(phantom).toEqual(['phantom/phantom'])
   })
 
-  it('negative control: a removed export line fails the bijection (missing)', () => {
-    const withoutButton = INDEX_TS.replace("export * from './button/button.ts'\n", '')
-    const exported = exportedPairs(withoutButton)
-    const missing = [...FLEET_PAIRS].filter((p) => !exported.has(p))
+  it('negative control: a removed record fails the bijection (missing)', () => {
+    expect(REGISTRY_TS).toContain(BUTTON_RECORD) // the removal below is real, not a no-op replace
+    const registered = registeredPairs(REGISTRY_TS.replace(BUTTON_RECORD, ''))
+    const missing = [...FLEET_PAIRS].filter((p) => !registered.has(p))
     expect(missing).toEqual(['button/button'])
   })
 })
 
-// ── C2. Lifecycle — component-styles.css registration bijection ─────────────────────────────────────────────
+// ── C2. Lifecycle — all.gen.css registration bijection ──────────────────────────────────────────────────────
+// The demo-only whole-fleet sheet is the GENERATED `all.gen.css` (ADR-0233), so the bijection reads the
+// generated sheet, which `scripts/generate-controls.mjs` writes from the fleet descriptors.
 
-/** The `{folder}/{name}` pairs a `component-styles.css`-shaped stylesheet TEXT imports. `_`-prefixed folders
+/** The `{folder}/{name}` pairs an `all.gen.css`-shaped stylesheet TEXT imports. `_`-prefixed folders
  *  (`_surface/container.css`) are the shared cross-family seam, NOT a control — excluded, mirroring fleet discovery. */
 function importedPairs(cssBarrel: string): Set<string> {
   const out = new Set<string>()
@@ -523,15 +529,15 @@ function importedPairs(cssBarrel: string): Set<string> {
   return out
 }
 
-const CSS_BARREL = read(`${COMPONENTS}/src/component-styles.css`)
+const CSS_BARREL = read(`${COMPONENTS}/src/all.gen.css`)
 
-describe('Lifecycle — every descriptor is imported by component-styles.css (and vice versa)', () => {
-  it('the fleet ≡ the component-styles.css import set (0 missing, 0 phantom)', () => {
+describe('Lifecycle — every descriptor is imported by all.gen.css (and vice versa)', () => {
+  it('the fleet ≡ the all.gen.css import set (0 missing, 0 phantom)', () => {
     const imported = importedPairs(CSS_BARREL)
     const missing = [...FLEET_PAIRS].filter((p) => !imported.has(p)).sort()
     const phantom = [...imported].filter((p) => !FLEET_PAIRS.has(p)).sort()
-    expect(missing, 'descriptor(s) with no component-styles.css import').toEqual([])
-    expect(phantom, 'component-styles.css import(s) with no matching descriptor').toEqual([])
+    expect(missing, 'descriptor(s) with no all.gen.css import').toEqual([])
+    expect(phantom, 'all.gen.css import(s) with no matching descriptor').toEqual([])
   })
 
   it('negative control: a planted phantom @import fails the bijection', () => {

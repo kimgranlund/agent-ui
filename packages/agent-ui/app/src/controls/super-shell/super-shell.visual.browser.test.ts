@@ -27,10 +27,10 @@ import { page, server } from 'vitest/browser'
 // Chromium-only, per ADR-0110 Decision 2 and the nav-rail visual precedent; WebKit's sanctioned proof for
 // this surface stays the computed-style suite.
 //
-// Side-effect imports — CSS load order (ADR-0003): foundation roles + dimensional ramp FIRST, then the
-// components barrel, then this family's CSS.
+// Side-effect imports — CSS load order (ADR-0003): foundation roles + dimensional ramp FIRST, then
+// `all.css`, then this family's CSS.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
 

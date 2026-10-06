@@ -54,7 +54,7 @@
  * composition (a region PLUS loose siblings) does NOT match — regions present means the author owns the
  * structure; the loose siblings render at the box-model default (documented, not repaired).
  *
- * Standalone sheet — linked via the component-styles barrel (s12), NEVER injected from card.ts (behaviour-only
+ * Standalone sheet — linked per control or via shared-styles.css (ADR-0233, no barrel) (s12), NEVER injected from card.ts (behaviour-only
  * `.ts`, no runtime style; plan §2). */
 
 /* ════════════════ [ui-card] TOKEN BLOCK — :where(ui-card) declares the chain ════════════════ */

@@ -9,7 +9,7 @@
 > | **Proposed by** | planning-lead — the design seat, on Kim's ruling "bump the foundation barrel to 7 kB" (#102) |
 > | **Ratified by** | orchestration-lead (on the green gate — `npm run size` within the new 7 kB budget) |
 > | **Repairs** | `.claude/docs/plan.md §10` (the budget line: reactive+dom kernel `≤ ~6 kB` → `≤ ~7 kB`) · **shipped-script change**: `scripts/measure-size.mjs` (the `.` barrel budget `6 * KB` → `7 * KB`) — exec-owned · **records a recommendation**: wire `npm run size` into the standard gate so a budget regression FAILS rather than being silent. **Relates ADR-0023** (the `mount`/directive public-API growth that drove the size) + **ADR-0003** (the single-barrel size discipline / the `size` gate). |
-> | **Supersedes / Superseded by** | None — a budget RE-BASE (the `≤ ~6 kB` figure in plan §10 / measure-size.mjs was flagged "provisional, confirm with a `size` script"). The shrink-only ratchet ABOVE the new floor stands. |
+> | **Supersedes / Superseded by** | None — a budget RE-BASE (the `≤ ~6 kB` figure in plan §10 / measure-size.mjs was flagged "provisional, confirm with a `size` script"). The shrink-only ratchet ABOVE the new floor stands. · **Superseded in part by [ADR-0233](./0233-per-control-entries-and-generated-control-registry.md)** (the family row measures `@agent-ui/components/all`; the foundation budget stands) |
 
 ## Context
 
@@ -229,3 +229,7 @@ restatement; GH #1687's Findings name it as a standing process follow-up, the sa
 shrink-follow-up stays separate from every CHECKPOINT re-base above.
 
 No code changes accompany this amendment; the Status cell above stays `accepted`.
+
+## Amendment (2026-10-05): superseded in part by ADR-0233
+
+[ADR-0233](./0233-per-control-entries-and-generated-control-registry.md) retires the `components` family barrel. Once it retires, the family row measures `@agent-ui/components/all`, re-based on 2026-10-05 (Kim ruling) from 72192 to 73728 B gz (72 KB): the same fleet modules measure 72993 B gz in ADR-0233's path-sorted `all.gen.ts` order against 71967 B gz in the retired barrel's order. An absolute registry row (`@agent-ui/components/registry`) joins it. The foundation budget and the ratchet above it stand.

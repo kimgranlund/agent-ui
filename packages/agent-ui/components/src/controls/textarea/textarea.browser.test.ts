@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
-import type { UITextareaElement } from '@agent-ui/components/components'
+import type { UITextareaElement } from '@agent-ui/components/controls/textarea'
 
 // The cross-engine behaviour + geometry + focus-ring + forced-colors smoke for ui-textarea (ADR-0134). Where
 // the jsdom probes pin the DECLARED rules, this pins what a REAL engine does with a real contenteditable + a
@@ -17,10 +17,10 @@ import type { UITextareaElement } from '@agent-ui/components/components'
 // the calc() chain) the derived padding/line-box, and the box is truly `resize: vertical`.
 //
 // Side-effect imports — the load-bearing CSS order (ADR-0003): foundation roles + dimensional ramp FIRST,
-// then the component sheet, then the self-defining family barrel. Vite injects them.
+// then the component sheet, then the self-defining `all` entry. Vite injects them.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 const SIZED = 'style="inline-size: 260px"'
 

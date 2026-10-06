@@ -8,7 +8,8 @@ import { describe, it, expect, afterEach } from 'vitest'
 // width-fill assertion against the full `<component-preview>` element measure the page grid's incidental
 // squeeze, not this ticket's fix. Runs in BOTH Chromium and WebKit (vitest.browser.config.ts).
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test asserts the DOM synchronously after ingest
 import { createRenderer } from '@agent-ui/a2ui'
 import { createCanvasSurface, applyRootStretch } from './canvas-surface.ts'
 

@@ -13,7 +13,7 @@ if (typeof ElementInternals.prototype.setFormValue !== 'function') {
   ;(ElementInternals.prototype as unknown as Record<string, unknown>).setFormValue = function (): void {}
   ;(ElementInternals.prototype as unknown as Record<string, unknown>).setValidity = function (): void {}
 }
-import '@agent-ui/components/components' // self-defines ui-* controls so the renderer's nodes upgrade
+import '@agent-ui/components/all' // self-defines ui-* controls so the renderer's nodes upgrade
 import { AskRegistry, surfaceIdOf, componentTypesOf } from './ask-registry.ts'
 
 describe('surfaceIdOf (ADR-0097 §2 routing helper)', () => {

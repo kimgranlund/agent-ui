@@ -1,6 +1,6 @@
 # SPEC — A2UI Catalog (default catalog + two-tier extensibility)
 
-> Status: proposed · v0.4 · 2026-10-05 (v0.3 2026-08-07, v0.2 2026-08-07, v0.1 2026-06-26; v0.4 adds the §5.2 intro's `selection.json` machine-twin note, ADR-0232, accepted, no row or requirement moved) · Layer: SPEC (execution contract)
+> Status: proposed · v0.5 · 2026-10-05 (v0.4 2026-10-05, v0.3 2026-08-07, v0.2 2026-08-07, v0.1 2026-06-26; v0.5 adds §5.1's optional `WidgetFactory.uses` and the registry's optional `controls` loader, ADR-0233; v0.4 adds the §5.2 intro's `selection.json` machine-twin note, ADR-0232, accepted, no row or requirement moved) · Layer: SPEC (execution contract)
 > Refines: [`../a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G1, PRD-G2**; closes **PRD-D3**; supports PRD-G4, PRD-G6. Target protocol: **A2UI v1.0** (Constraint C1).
 > Refined by: [`../lld/a2ui-catalog.lld.md`](../lld/a2ui-catalog.lld.md). Consumed by the renderer ([`./a2ui-runtime.spec.md`](./a2ui-runtime.spec.md) SPEC-R9) for widget resolution.
 > Altitude: owns the **catalog contract + default-catalog coverage**. Renderer mechanics are the runtime SPEC's; storage/wiring is the LLD's.
@@ -145,6 +145,8 @@ interface FunctionDef { args: Record<string, JSONSchema>; returns: JSONSchema;  
 interface WidgetFactory {                                  // consumed by renderer SPEC-R9 / LLD-C7
   tag: string;                                             // e.g. "ui-button"
   create(): HTMLElement;
+  uses?: readonly string[];   // ADR-0233: other custom-element tags create/applyProp mint inside this
+                               // control (Button's `icon` → ui-icon); a `controls` loader defines them with `tag`
   applyProp(el: HTMLElement, prop: string, value: unknown): void;
   value?: ValueSlot | readonly ValueSlot[];                // input two-way commit (renderer LLD-C8); ADR-0161 (built) — one-or-more ValueSlot slots (shape above)
   submitGate?: true;          // ADR-0054: marks this factory's control a submit-action gate. The
@@ -158,7 +160,8 @@ interface VariantDispatch {                                // one catalog type �
 }
 interface CatalogRegistry {                                // the two-tier extension point (SPEC-R6)
   register(catalog: Catalog, factories: Record<string, WidgetFactory | VariantDispatch>,
-           functions?: Record<string, (args: Record<string, unknown>) => unknown>): void;
+           functions?: Record<string, (args: Record<string, unknown>) => unknown>,
+           controls?: ControlLoader): void;
            // A table slot MAY be a `VariantDispatch` — one catalog type resolving to a per-variant
            // factory arm (GH #545), the vehicle that drained a2ui-basic's ChoicePicker E6 exclusion;
            // a plain `WidgetFactory` slot passes through unchanged.
@@ -166,8 +169,13 @@ interface CatalogRegistry {                                // the two-tier exten
            // PER-CATALOG function-impl table (ADR-0169 cl.8, SPEC-R6 AC5): a catalog's own impl wins
            // for its payloads; an unshadowed name falls through to the shared table. The same seam
            // registers both first-party catalogs and any project catalog — no privileged path.
+           // The optional fourth arg (ADR-0233) is the catalog's control loader
+           // (`@agent-ui/components/loader`): when present the renderer defers a surface's messages
+           // until every factory tag (plus `uses`) is defined. Factory modules import no control; the
+           // built-in catalogs register `builtinControls` (`catalog/controls.ts`).
   get(catalogId: string): { catalog: Catalog; factories: Record<string, WidgetFactory | VariantDispatch>;
-                             functions?: Record<string, (args: Record<string, unknown>) => unknown> } | undefined;
+                             functions?: Record<string, (args: Record<string, unknown>) => unknown>;
+                             controls?: ControlLoader } | undefined;
   supportedCatalogIds(): string[];                         // → renderer capabilities (a2ui-runtime §3.7)
   submitGateSelector(): string;    // ADR-0054: CSS selector over every registered submitGate factory's
                                     // tag (two-tier, aggregated across ALL registered catalogs); '' when

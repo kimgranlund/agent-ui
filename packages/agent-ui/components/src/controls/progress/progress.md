@@ -8,8 +8,9 @@
 tag: ui-progress
 tier: display          # geometry size-class (Display band — a bar is a rail, not a widget box; SPEC-R20)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (SPEC-R1)
+uses: []
 # marginal: not yet measured — this folder-only wave (M1-a) ships ahead of the LLD-C11 shared-file
-# integration slice (barrel export, component-styles.css import, package.json exports entry); the real
+# integration slice (barrel export, CSS-barrel import, package.json exports entry); the real
 # `npm run size` figure lands with that slice, per feed-family.lld.md §6 (measured, never guessed).
 
 attributes:            # attributes-as-API — the GENERATION SOURCE for progress.ts `static props` (ADR-0173)

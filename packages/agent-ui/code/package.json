@@ -4,6 +4,12 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "sideEffects": [
+    "./src/editor/**",
+    "./src/markdown/**",
+    "./src/highlight/**",
+    "./src/**/*.css"
+  ],
   "exports": {
     ".": "./src/index.ts",
     "./highlight": "./src/highlight/index.ts",

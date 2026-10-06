@@ -8,6 +8,7 @@
 tag: ui-checkbox
 tier: indicator        # geometry size-class (Indicator band — widget box, not full control height; geometry.md)
 extends: UIIndicatorElement  # the Indicator base (ADR-0042); UICheckboxElement → UIIndicatorElement → UIFormElement
+uses: []
 # marginal: ui-checkbox adds 286 B gz (1405 B min) to the self-defining ui-* family as the FIRST Wave-1 Indicator control (the delta of `npm run size`'s components barrel with vs. without the Wave-1 Indicator family's first entry — includes UIIndicatorElement + the pressActivation trait; the remaining three Indicator controls pay incremental-only marginals above this shared base) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:            # attributes-as-API — mirrors UICheckboxElement.props (indicator-specific first, then formProps)

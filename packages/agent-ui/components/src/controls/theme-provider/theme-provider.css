@@ -22,7 +22,7 @@
  *       (Deliberately NOT the home of the ink re-root: a scoped `:scope` rule carries (0,1,0) specificity
  *       plus scoping proximity and would silently BEAT a consumer's class-selector ink — the TKT-0001 trap.)
  *
- * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from theme-provider.ts
+ * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from theme-provider.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2). No forced-colors block: the component
  * paints no surface of its own (SPEC-R6).
  */

@@ -9,6 +9,7 @@ tag: ui-grid
 description: A responsive track-grid container that fits as many columns as its own width allows, no breakpoints needed.
 tier: layout            # geometry size-class (Container/layout band — gaps off --md-sys-space × density, no control height; geometry.md "five size-classes")
 extends: UIContainerElement  # the shared surface base — NOT form-associated (no value/validity); the descriptor schema's BASE_CLASSES gains UIContainerElement at the s12 integration slice
+uses: []
 # marginal: ui-grid adds 79 B gz (340 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:            # attributes-as-API — mirrors grid.ts `static props` (the surfaceProps spread first, then gap, then min)

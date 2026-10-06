@@ -22,10 +22,13 @@
  *       `data-role` content cells (empty ones collapse), and a `forced-colors` block keeping every status
  *       marker legible by SHAPE (SPEC-R4 AC2).
  *
- * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from timeline-item.ts.
+ * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from timeline-item.ts.
  */
 
 /* ════════════════ [0] THE MARKER-SYSTEM RAMP — bare :root / [scale=…] (dimensions.css idiom) ════════════════ */
+
+/* uses: synced from timeline-item.md by scripts/codemod-uses.mjs */
+@import '../disclosure/disclosure.css';
 
 :root {
   /* The default register (≡ [scale="ui-md"] / [scale="content-sm"] — Kim's band-overlap law, SPEC-R13 AC2's

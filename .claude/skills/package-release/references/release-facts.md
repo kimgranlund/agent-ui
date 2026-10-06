@@ -35,12 +35,19 @@ procedure documents.
   entry + a `PACKAGE_ORDER` slot.
 - **The CDN recipes are load-bearing contracts** (README `## CDN` sections, probe-verified 2026-07-19):
   esm.sh resolves the exports-map subpaths for BOTH JS and CSS and rewrites bare `@agent-ui-kit/*`
-  sibling imports; `component-styles.css` must stay RELATIVE-imports-only (CDN-safe today) while
-  `foundation-styles.css` is known-bare (browsers can't resolve its `@import`s — the recipes link
-  shared's `tokens.css` + `dimensions.css` directly instead). A CSS-barrel edit that introduces a bare
+  sibling imports; `shared-styles.css` (the seam sheet), every control sheet (whose `uses` prologue
+  imports sibling control sheets, ADR-0233) and the demo-only `all.css` must stay RELATIVE-imports-only
+  (CDN-safe today) while `foundation-styles.css` is known-bare (browsers can't resolve its `@import`s;
+  the recipes link shared's `tokens.css` + `dimensions.css` directly instead). A sheet edit that introduces a bare
   `@import` silently breaks the documented recipe — the SHIPPED install-from-registry smoke
   (`.github/workflows/consumer-smoke.yml`) is the gate that catches it (GH #71, closed — the
   should-catch-it framing this line once carried is history, GH #761).
+- **`sideEffects` ships with the transform** (ADR-0233): `transformPackageJson` carries a workspace
+  manifest's `sideEffects` into the published one, each pattern mapped `./src/` to `./dist/` and `.ts`
+  to `.js` (`false` passes through). The components package declares its self-defining controls,
+  `all.gen.ts` and every sheet; drop the field and a consumer's bundler keeps every module, leave a
+  pattern on `./src/` and it matches nothing in `dist/`. Gates: `publish-packages.test.mjs` (the
+  mapping) and `scripts/side-effects.test.mjs` (the declaration is honest against the source).
 - License: MIT (`LICENSE` at repo root) — Kim's decision, 2026-07-19.
 - The app package's Vite-only consumer profile is HISTORY (relaxed GH #283, 2026-07-27, on a real
   esbuild+webpack+browser install smoke): its forcing mechanism was `?url`/`?raw` import-query specifiers

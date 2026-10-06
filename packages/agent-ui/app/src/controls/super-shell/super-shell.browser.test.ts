@@ -7,7 +7,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 // CSS wiring: the foundation (--md-sys-color-* roles + the dimensional ramp) FIRST, then this
 // component's own sheet, then the self-defining element module (the app-shell.browser.test.ts /
-// row.browser.test.ts precedent — @agent-ui/app has no component-styles barrel yet, LLD-C8).
+// row.browser.test.ts precedent — @agent-ui/app has no CSS barrel (ADR-0233), LLD-C8).
 import '@agent-ui/components/foundation-styles.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'

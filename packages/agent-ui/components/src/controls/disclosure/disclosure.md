@@ -9,6 +9,7 @@ tag: ui-disclosure
 description: A one-line summary that expands or collapses its content, built on the native <details> element.
 tier: pattern          # geometry.md Pattern band — "accordion" is named there: the summary row = control height, the shell rides the space scale
 extends: UIElement     # NOT form-associated — a <details> participates in no form (the ADR-0017 <dialog> precedent; the no-native-form-elements law does not bind, ADR-0113 Context)
+uses: []
 # marginal: measured at the LLD-C11 integration slice (the family barrel pass) — not guessed here (SPEC-N4)
 
 attributes:            # attributes-as-API — mirrors disclosure.ts `static props`

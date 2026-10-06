@@ -8,7 +8,7 @@
  *
  * Two sectioned blocks (ADR-0003): a :where() TOKEN block (specificity 0 — declares the --ui-swiper-*
  * chain from the colour roles + the space/motion ladders) then an @scope STYLES block (consumes ONLY
- * --ui-swiper-* + the shared fleet focus-ring/motion tokens). Linked via the component-styles barrel;
+ * --ui-swiper-* + the shared fleet focus-ring/motion tokens). Linked per control or via shared-styles.css (ADR-0233, no barrel);
  * NEVER injected from a .ts (behaviour holds no runtime style; plan §2).
  *
  * Geometry (swiper-family.lld.md §7 — the fleet's FIRST scroll-snap surface, ADR-0124 F1): the track is a
@@ -19,6 +19,12 @@
  * ui-tabs precedent): a bare <ui-swiper> is transparent by default (ADR-0015 cl.1). */
 
 /* ════════════════════════ [1] TOKEN BLOCK — :where() declarations (the WHOLE family's chain) ════════════════════════ */
+
+/* uses: synced from swiper.md by scripts/codemod-uses.mjs */
+@import './swiper-item.css';
+@import './swiper-label.css';
+@import './swiper-paddles.css';
+@import './swiper-pagination.css';
 
 :where(ui-swiper) {
   /* Track geometry — the responsive-auto column count (real @container repoint below); `[slides-in-view="n"]`

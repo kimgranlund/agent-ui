@@ -189,8 +189,8 @@ Includes the **global token wiring** (load `tokens.css` first so dimensional var
 `button.test.ts` + `button.md` descriptor (ADR-0004)) — with an **optional leading icon slot** (ADR-0006)
 so the reference control exercises the full slot/gap/density law; the dimensional token ramp authored in
 `@agent-ui/shared` (the `--ui-{height,font}-{sm,md,lg}` ramp **plus** the `[scale]`/`[density]`
-multipliers the geometry smoke asserts); the `components` / `component-styles` / `foundation-styles`
-barrels + the host page (tokens loaded first). The G5 governance machinery lands **with** the button
+multipliers the geometry smoke asserts); the per-control entries and sheets + `foundation-styles.css`
++ the host page (tokens loaded first; ADR-0233 retired the whole-family barrels this goal first shipped). The G5 governance machinery lands **with** the button
 (`process.md` sequencing): the `make-component` skill, the **frontmatter contract schema** +
 contract↔props trip-wire (ADR-0004), the **COMPOSE/REALIZE component rubric** (`.claude/docs/rubrics/`), the
 **`component-checker`** agent, and the **browser-truth harness** (`@vitest/browser` + Playwright —
@@ -439,9 +439,9 @@ Pulls renderer **LLD-C8 (two-way input binding)** into scope.
       back-fills the deferred `ui-text-field` value bind, with 0 per-component renderer code.
 
 *Packaging:*
-- [x] One serial integration slice wires the barrels (`controls/index.ts` `export *` per element · `component-
-      styles.css` `@import` per `{name}.css` after the shared `container.css` · `dom/index.ts` for
-      `UIContainerElement`/`surfaceProps`/`flexProps`); the catalog wiring (a2ui package) is its own single-writer
+- [x] One serial integration slice wires the family barrels (superseded by ADR-0233: per-control entries
+      and the generated control registry) · `dom/index.ts` for
+      `UIContainerElement`/`surfaceProps`/`flexProps`; the catalog wiring (a2ui package) is its own single-writer
       slice; `npm run check && npm test && npm run size` green; tree-shake clean (importing one container drags only
       it + the base + real deps).
 

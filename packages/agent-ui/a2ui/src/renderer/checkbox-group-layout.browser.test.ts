@@ -17,8 +17,8 @@
 
 import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 import { createRenderer } from './renderer.ts'
 import type { RendererHost } from './renderer.ts'
 

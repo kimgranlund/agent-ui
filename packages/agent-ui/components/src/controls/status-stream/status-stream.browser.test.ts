@@ -16,8 +16,8 @@ import type { UITimelineItemElement } from '../timeline-item/timeline-item.ts'
 // game/context lines are projected onto StatusEntry appendEntry/update calls a live consumer would make — the
 // SAME appendEntry/update/finalize path, never a mock of the component's own API.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 // The committed fixture, read the SAME way the a2a-tic-tac-toe demo page does (a Vite `?raw` static
 // import — zero network, zero fetch; site/lib/arena-replay.test.ts's fs-read is the Node-side proxy for

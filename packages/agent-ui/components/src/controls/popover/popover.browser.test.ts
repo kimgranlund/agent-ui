@@ -19,7 +19,7 @@ import type { UIPopoverElement } from './popover.ts'
 //
 // Side-effect imports — the CSS load order (ADR-0003): foundation roles + dimensional ramp FIRST,
 // then the popover sheet, then the self-defining module. Imported DIRECTLY (relative), NOT via the
-// component-styles barrel (the s12 barrel wiring lands at the integration slice).
+// retired component-styles CSS barrel (ADR-0233) (the s12 barrel wiring lands at the integration slice).
 import '@agent-ui/components/foundation-styles.css'
 import './popover.css'
 import './popover.ts'

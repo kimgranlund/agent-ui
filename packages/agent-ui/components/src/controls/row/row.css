@@ -20,15 +20,15 @@
  *       `@container` rule resolves against the nearest EXTERNALLY-SIZED ancestor boundary instead.
  *
  * The SURFACE (elevation/brightness plane) is NOT here — it lives once in the shared
- * controls/_surface/container.css (the UIContainerElement base sheet, `@import`-ed FIRST by
- * component-styles.css at s12), which also does NOT establish `container-type` on this element (ADR-0100)
+ * controls/_surface/container.css (the UIContainerElement base sheet, loaded once by shared-styles.css
+ * before any control sheet, ADR-0233 cl.3), which also does NOT establish `container-type` on this element (ADR-0100)
  * — that responsibility belongs to an externally-sized ancestor boundary, never the row itself. row.css adds
  * ONLY the flex layout + the corner radius; it reads no `--md-sys-color-*` colour role at all (colour is
  * delegated entirely to the shared surface seam).
  *
  * NO control height (geometry.md's `Container/layout` size-class): a layout primitive has no frame — spacing
- * is the `--md-sys-space` ladder × `[density]` (the gap), never `--md-sys-height-*`. Standalone sheet — linked via
- * the component-styles barrel (s12); NEVER injected from row.ts (behaviour-only `.ts`, plan §2).
+ * is the `--md-sys-space` ladder × `[density]` (the gap), never `--md-sys-height-*`. Standalone sheet, linked as its own
+ * control sheet (ADR-0233 cl.3); NEVER injected from row.ts (behaviour-only `.ts`, plan §2).
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-row) declares --ui-row-* ════════════════ */

@@ -8,6 +8,7 @@
 // compile against one another's interface without importing a not-yet-built implementation. Pure
 // types: `import type` only, zero runtime.
 
+import type { ControlLoader } from '@agent-ui/components/loader'
 import type { Catalog, ValueSlot } from './catalog.ts'
 
 /**
@@ -21,6 +22,12 @@ export interface WidgetFactory {
   tag: string
   /** Construct a fresh, unparented control instance. */
   create: () => HTMLElement
+  /**
+   * The other custom-element tags `create` or `applyProp` mint inside this control (ADR-0233), e.g. the
+   * `ui-icon` a Button's `icon` prop inserts. A renderer whose catalog entry has a `controls` loader
+   * defines these together with `tag` before it applies a message. Absent when the factory mints only `tag`.
+   */
+  uses?: readonly string[]
   /** Map one A2UI property (per the catalog `PropDef.mapsTo`) onto the control as a prop/attribute. */
   applyProp: (el: HTMLElement, prop: string, value: unknown) => void
   /**
@@ -81,11 +88,17 @@ export interface VariantDispatch {
  * vs. a Basic-dialect catalog's plain booleans) can share function NAMES without colliding. Absent ⇒
  * every lookup falls through to the shared table, byte-identical to before this clause (the default
  * catalog registers none).
+ *
+ * `controls` (ADR-0233): the loader that defines this catalog's controls on demand. When present, the
+ * renderer checks each `updateComponents` message's factory tags with `controls.missing` and, when any is
+ * undefined, queues that surface's messages until `controls.ensure` settles (deferred apply). Absent:
+ * every message applies synchronously, exactly as before.
  */
 export interface CatalogEntry {
   catalog: Catalog
   factories: Record<string, WidgetFactory | VariantDispatch>
   functions?: Record<string, (args: Record<string, unknown>) => unknown>
+  controls?: ControlLoader
 }
 
 /**
@@ -97,11 +110,13 @@ export interface CatalogRegistry {
   /** Register a catalog + its factory table (throws `CATALOG_FACTORY_MISSING` on a gap; last-wins on a dup
    *  id). A table slot MAY be a `VariantDispatch` (GH #545) in place of a plain `WidgetFactory`.
    *  `functions` (ADR-0169 cl.8) is an optional per-catalog function-impl override table — absent ⇒
-   *  every declared function falls through to the shared `catalogFunctions` table, unchanged. */
+   *  every declared function falls through to the shared `catalogFunctions` table, unchanged.
+   *  `controls` (ADR-0233) is an optional control loader, stored only when provided. */
   register(
     catalog: unknown,
     factories: Record<string, WidgetFactory | VariantDispatch>,
     functions?: Record<string, (args: Record<string, unknown>) => unknown>,
+    controls?: ControlLoader,
   ): void
   /** Resolve a registered catalog by id, or `undefined` if unregistered (the renderer's `CATALOG_UNKNOWN` allowlist). */
   get(id: string): CatalogEntry | undefined

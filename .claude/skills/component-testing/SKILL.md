@@ -28,6 +28,10 @@ exemplars ARE the standard — read them, don't re-derive.
 | Built-output proofs (when the behavior depends on the PRODUCTION build) | the shipped CSS/JS bytes behave — dev-green ≠ built-green (TKT-0002: LightningCSS downleveled `light-dark()` and broke per-subtree `color-scheme`; only a built-output test catches the class) | the two-test bridge: `site/lib/theme-provider-build-fixture.test.ts` (node-side real `vite build`, byte-identity vs a committed fixture — red names its own fix: regenerate) + `site/lib/theme-provider-build.browser.test.ts` (`?raw` fixture import, real `getComputedStyle`); shared build via `site/lib/build-css.ts` |
 | End-to-end (form controls) | keyboard-only, behaves-like-a-user flows — the archaeology instrument that catches what unit probes bypass | `packages/agent-ui/components/src/controls/form-provider/form-e2e.browser.test.ts` |
 
+A test loads controls the way an app does (ADR-0233): `foundation-styles.css` first, then either the
+per-control pair (`@agent-ui/components/controls/{name}.css` + `controls/{name}`, with
+`shared-styles.css`) or, for a fleet-wide test, the demo-only `@agent-ui/components/all.css` + `all`.
+
 ## Detail — read `references/test-craft.md` when
 
 - Writing a new browser-test settle helper (writer vs observer pacing choice), or porting one.

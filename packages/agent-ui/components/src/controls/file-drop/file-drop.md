@@ -16,6 +16,10 @@ tier: pattern          # geometry composite (geometry.md "Pattern" — container
                        # multi-select's virtual row-height lever is.
 extends: UIFormElement  # form-associated: formValue() = a JSON string of the committed descriptor array
                         # (or null when empty); formValidity() = required && files.length===0 → valueMissing
+uses:
+  - ui-attachment
+  - ui-button
+  - ui-icon
 # marginal: not yet measured — tracked at the integration slice (npm run size), the fleet's own convention
 # for a folder-only wave (the attachment.md M1-a precedent)
 

@@ -9,7 +9,7 @@ import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-d
 import { loadToastRegionDoc } from '../lib/frontmatter.ts'
 import { composeDocPage } from '../lib/doc-page.ts'
 import { el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
-import type { UIToastRegionElement } from '@agent-ui/components/components'
+import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
 
 const { descriptor, body } = loadToastRegionDoc()
 

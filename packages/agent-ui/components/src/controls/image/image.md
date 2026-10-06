@@ -17,6 +17,7 @@ tier: display          # geometry size-class (Display band, geometry.md's "five 
                         # because ui-image's box is arbitrary/author-sized, not a small fixed compact-ramp step)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (no events, no keyboard, no focus —
                         # the description-list/ui-stat posture; NOT a fallback-chain component like ui-avatar)
+uses: []
 # marginal: measured via `npm run size` at integration time (leave-one-out) — see the build report for the
 # actual delta; expected small (one render effect + two pure-math helpers, no interaction machinery).
 

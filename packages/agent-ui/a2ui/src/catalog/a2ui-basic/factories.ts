@@ -9,7 +9,6 @@
 // Card, Slider — cl.9b's own note: "import the default factory and wrap it — don't reimplement
 // them"); every other row is bespoke, matching its cl.9b "Factory shape" cell.
 
-import '@agent-ui/components/components' // self-defines ui-* controls on import (the default/factories.ts precedent)
 import type { VariantDispatch, WidgetFactory } from '../types.ts'
 import { textFactory, cardFactory, sliderFactory, multiSelectFactory } from '../default/factories.ts'
 

@@ -11,7 +11,7 @@ import { iconRegistry, ICON_NAMES, type IconName, type IconPack } from '@agent-u
 // `__baselines__/attachment.visual.browser.test.ts/<name>-chromium-darwin.png`; re-baseline only via
 // `npm run test:visual:update` (a deliberate act, per ADR-0223's R5 golden-regen law).
 //
-// controls/attachment/ is not yet exported from controls/index.ts (the LLD-C11 shared-file integration
+// controls/attachment/ was not yet exported from the family barrel (the LLD-C11 shared-file integration
 // slice, a separate wave) — direct (pre-barrel) imports, the attachment.browser.test.ts precedent.
 import '@agent-ui/components/foundation-styles.css'
 import '../icon/icon.css'

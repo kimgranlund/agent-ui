@@ -25,7 +25,8 @@ import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-d
 import { loadStatusStreamDoc } from '../lib/frontmatter.ts'
 import { composeDocPage } from '../lib/doc-page.ts'
 import { exampleSection, captioned } from '../lib/specimens.ts'
-import type { UIStatusStreamElement, UITimelineItemElement, StatusEntry } from '@agent-ui/components/components'
+import type { UIStatusStreamElement, StatusEntry } from '@agent-ui/components/controls/status-stream'
+import type { UITimelineItemElement } from '@agent-ui/components/controls/timeline-item'
 
 const { descriptor, body } = loadStatusStreamDoc()
 

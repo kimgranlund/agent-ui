@@ -7,7 +7,7 @@ import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cas
 import './adr-index.css'
 import { appendInline, renderMarkdownBody } from '../lib/doc-page.ts'
 import { type AdrRecord, isDecisionRecord, matchesQuery, parseAdr, sortAdrsDescending } from '../lib/adr.ts'
-import type { UITextFieldElement } from '@agent-ui/components/components'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 
 // Build-time glob of the ADR log — eager RAW text (the whole log is a few hundred KB, small enough to ship as
 // static text like any other doc source on this site). `exhaustive: true` is LOAD-BEARING: Vite's import.meta.glob

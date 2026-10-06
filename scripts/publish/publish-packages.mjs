@@ -123,8 +123,17 @@ function transformExportValue(value) {
   return distValue
 }
 
+/** Rewrite a `sideEffects` value for the published `dist/` layout: each pattern's `./src/` prefix becomes
+ *  `./dist/` and a `.ts` suffix becomes `.js` (the compiled module the bundler sees); `false`/`true` pass
+ *  through. Dropping the field would mark every published module side-effectful; passing a `./src/` pattern
+ *  through unmapped would match nothing in `dist/`, so a bundler could drop a control's self-define. */
+function transformSideEffects(value) {
+  if (!Array.isArray(value)) return value
+  return value.map((pattern) => pattern.replace(/^\.\/src\//, './dist/').replace(/\.ts$/, '.js'))
+}
+
 /** Build the transformed, publish-ready package.json for one package — never mutates the real one on disk. */
-function transformPackageJson(pkgJson, version) {
+export function transformPackageJson(pkgJson, version) {
   const excluded = new Set(EXCLUDE_EXPORTS_FROM_PUBLISH[pkgJson.name] ?? [])
   const exportsOut = {}
   for (const [key, value] of Object.entries(pkgJson.exports ?? {})) {
@@ -143,6 +152,9 @@ function transformPackageJson(pkgJson, version) {
     type: pkgJson.type,
     repository: { type: 'git', url: REPO_URL, directory: `packages/agent-ui/${pkgJson.name.replace('@agent-ui/', '')}` },
     exports: exportsOut,
+    // ADR-0233: the components package declares which modules carry a top-level effect (the self-defining
+    // controls and every sheet); carried through, mapped to the dist/ layout.
+    ...(pkgJson.sideEffects !== undefined ? { sideEffects: transformSideEffects(pkgJson.sideEffects) } : {}),
     ...(pkgJson.dependencies ? { dependencies: transformDeps(pkgJson.dependencies, version) } : {}),
     ...(pkgJson.optionalDependencies
       ? { optionalDependencies: transformDeps(pkgJson.optionalDependencies, version) }

@@ -1,6 +1,6 @@
 # SPEC — A2UI Runtime (`@agent-ui/a2ui` renderer)
 
-> Status: proposed · v0.1 · 2026-06-26 · Layer: SPEC (execution contract)
+> Status: proposed · v0.2 · 2026-10-05 (v0.1 2026-06-26; v0.2 adds SPEC-R9 AC3, deferred apply behind a catalog's `controls` loader, and the `CONTROL_LOAD` internal code, ADR-0233, accepted) · Layer: SPEC (execution contract)
 > Refines: [`../a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G1**; supports PRD-G2, PRD-G4, PRD-G6, PRD-G7. Target protocol: **A2UI v1.0** (Constraint C1; v0.9.1 supported via version pin).
 > Refined by: [`../lld/a2ui-renderer.lld.md`](../lld/a2ui-renderer.lld.md). The component **catalog** (type→widget mapping) is owned by [`./a2ui-catalog.spec.md`](./a2ui-catalog.spec.md); this SPEC owns the *runtime that consumes a stream and drives a catalog*.
 > Altitude: owns the renderer **behavior + message contract**. Module/signal internals are the LLD's. Requirements reference PRD goal IDs; they do not restate them.
@@ -123,6 +123,7 @@ strict admission-time REJECT rather than a graceful degrade. *(→ PRD-G1, PRD-G
 **SPEC-R9 — Catalog-driven widget resolution.** The renderer MUST instantiate each component by resolving its `component` type against the surface's bound catalog to a widget factory, and MUST map component properties + bindings to the widget. The *mapping definitions* are owned by the catalog (a2ui-catalog SPEC); the renderer owns resolution + instantiation + the unknown-type failure. *(→ PRD-G1, PRD-G2)*
 - **AC1** *Given* a component whose `component` type is registered in the bound catalog, *when* rendered, *then* the mapped widget is created and bound.
 - **AC2** *Given* a `component` type absent from the catalog, *when* rendered, *then* the renderer emits `error{code:"CATALOG"}` and renders a non-fatal placeholder (the rest of the tree still renders).
+- **AC3** *(ADR-0233, deferred apply)* *Given* a catalog registered with a `controls` loader and an `updateComponents` whose factory tags are not all defined, *when* ingested, *then* the renderer creates no element for that surface until the loader's `ensure` settles, queues that message and every later `updateComponents`, `updateDataModel` and `finalize` for the surface in arrival order, and drains the queue in order once the tags are defined (re-checking each queued message's tags). *Given* the load fails, *then* the renderer emits `error{code:"CONTROL_LOAD"}` once for that surface, drains anyway, and renders each node whose tag is still undefined as the non-fatal placeholder. A `deleteSurface` while pending tears the surface down and drops its queue; `createSurface` and every other surface are never delayed. *Given* no tag is missing and no queue is pending, or a catalog without `controls`, *then* the message applies synchronously, exactly as without a loader.
 
 **SPEC-R10 — Client-side function evaluation.** The renderer MUST evaluate **function-call bindings** — a `{ "call": <name>, "args"?: {…named…} }` value (alongside a literal and a `{path}`) — by resolving the named function (a `@`-prefixed **system** function, the only v1.0 one being `@index` = the innermost collection-scope index + optional `offset`; or a **catalog** function from the bound catalog's `functions`), resolving its args **recursively** (each arg a literal, a `{path}`, or a nested `{call}`), and producing the derived value or validation result. An unknown/throwing function (or `@index` outside a collection scope) MUST emit `error{code:"FUNCTION"}` and render a placeholder, not tear down the surface (SPEC-N4). *(→ PRD-G1)*
 
@@ -288,7 +289,8 @@ type WireErrorCode = "INVALID_FUNCTION_CALL" | "VALIDATION_FAILED";
 interface A2uiError { code: ErrorCode; surfaceId?: string; path?: string; message: string }
 type ErrorCode =
   | "PARSE" | "SCHEMA" | "CATALOG" | "CATALOG_UNKNOWN" | "IDGRAPH"
-  | "POINTER" | "VERSION_UNSUPPORTED" | "FUNCTION" | "DEPTH_EXCEEDED"; // DEPTH_EXCEEDED: SPEC-R15, GH #473
+  | "POINTER" | "VERSION_UNSUPPORTED" | "FUNCTION" | "DEPTH_EXCEEDED" // DEPTH_EXCEEDED: SPEC-R15, GH #473
+  | "CONTROL_LOAD"; // SPEC-R9 AC3, ADR-0233: a catalog's controls loader failed; surface-scoped like CATALOG
 ```
 
 ### 5.3 Renderer surface (behavioral; signatures illustrative — internals are the LLD)

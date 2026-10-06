@@ -8,6 +8,7 @@
 tag: ui-multi-select
 tier: pattern           # geometry composite: no trigger — a virtual row-height lever; listbox = Container/surface; rows = legacy item-pad (LLD-C5)
 extends: UIFormElement  # form-associated: formValue() = a FormData, one entry per selected value; formValidity() = valueMissing
+uses: []
 # marginal: tracked at the integration slice (npm run size); ≤ ~3 kB tier budget (plan §10, the ui-select `tier: pattern` precedent)
 
 attributes:             # attributes-as-API — mirrors UIMultiSelectElement.props (formProps spread first, then own)

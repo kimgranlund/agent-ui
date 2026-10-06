@@ -10,7 +10,7 @@ import type { UICommandModalElement } from './command-modal.ts'
 // Side-effect imports — the load-bearing CSS order (ADR-0003): foundation roles + the dimensional ramp FIRST,
 // then the shared container surface seam + box-model, then the NESTED ui-modal's own sheet + module (so it
 // self-defines before command-modal.ts's `document.createElement('ui-modal')` runs), then command-modal's own
-// sheet + module. Imported DIRECTLY (relative), not via the component-styles barrel.
+// sheet + module. Imported DIRECTLY (relative), not per control or via shared-styles.css (ADR-0233, no barrel).
 import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container.css'
 import '../_surface/container-box.css'

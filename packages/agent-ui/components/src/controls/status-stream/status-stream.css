@@ -14,6 +14,11 @@
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-status-stream) declares --ui-status-stream-* ════════════════ */
 
+/* uses: synced from status-stream.md by scripts/codemod-uses.mjs */
+@import '../button/button.css';
+@import '../timeline/timeline.css';
+@import '../timeline-item/timeline-item.css';
+
 :where(ui-status-stream) {
   --ui-status-stream-min-inline-size: 16rem;
   --ui-status-stream-max-block-size: 20rem;

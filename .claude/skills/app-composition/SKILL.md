@@ -27,14 +27,17 @@ entirely from the fleet — read them before scaffolding a new host.
    `a2ui` imports neither; `app` may import `code` (the editor surface, ADR-0139) but never
    `router` (catalog-invisible by construction, ADR-0115); `icons`/`a2a` are leaves. An app
    composes DOWN this graph; needing an upward edge means the design is wrong.
-2. **Foundation imports** — `@agent-ui/components/foundation-styles.css` (tokens.css THEN
-   dimensions.css, order load-bearing — ADR-0003; the exemplar is `site/pages/_page.ts`'s
-   own first import). NEVER bare `tokens.css` alone: it carries only the color system, so
-   every control's `--ui-{height,font,gap}-*` geometry ramp stays unresolved (GH #749 — an
-   app built that way renders visibly broken while checklists pass). Then the controls the
-   app uses (barrel, or subpaths where tree-shaking matters — single-control subpath
-   consumers under vitest need the `resolve.alias` precedent,
-   [[component-packaging]]).
+2. **Foundation imports** — the four-line host contract (ADR-0233):
+   `@agent-ui/components/foundation-styles.css` first (tokens.css THEN dimensions.css, order
+   load-bearing — ADR-0003), then `@agent-ui/components/shared-styles.css` once (the seam
+   sheets), then one `@agent-ui/components/controls/{name}.css` per control the app uses, then
+   each `@agent-ui/components/controls/{name}` module (self-defines its tag). NEVER bare
+   `tokens.css` alone: it carries only the color system, so every control's
+   `--ui-{height,font,gap}-*` geometry ramp stays unresolved (GH #749 — an app built that way
+   renders visibly broken while checklists pass). `@agent-ui/components/all` and `all.css`
+   load the whole fleet and are for demos only (the docs site, `site/pages/_page.ts`); package
+   code never imports them. Subpath consumers under vitest need the `resolve.alias` precedent,
+   [[component-packaging]].
 3. **Shell** — `ui-super-shell` (`@agent-ui/app`, ADR-0151/0154/0155): ONE element, no
    region sub-element. Mark light-DOM children with `data-slot="header|global-nav|nav-pane|
    section-nav|content|options-section|options-pane|global-options|footer"` (SPEC-R1/R5);
@@ -57,7 +60,7 @@ entirely from the fleet — read them before scaffolding a new host.
    [[composition-patterns]]). `[scale]`/`[density]` set at shell/region roots.
 6. **App state** — the props-as-signals surface each control exposes is the reactive
    contract; app-own state follows the same signals model — the kernel
-   (`signal`/`computed`/`effect`) is public API off the components barrel (`plan.md` §5
+   (`signal`/`computed`/`effect`) is public API off the `@agent-ui/components` root (`plan.md` §5
    props on the §4 kernel). Don't bolt a second reactivity system onto the fleet.
 7. **The A2UI arm (optional)** — an agent-driven surface = the `@agent-ui/a2ui` renderer +
    default catalog; payload authoring routes to [[a2ui-payload-authoring]]; live transports stay

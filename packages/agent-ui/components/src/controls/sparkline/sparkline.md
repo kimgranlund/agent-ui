@@ -7,9 +7,10 @@ tag: ui-sparkline
 description: An inline, axis-free line or area mark that shows the shape of a numeric series at a glance.
 tier: display          # geometry size-class (Display band — NO control frame/height; SPEC-R12/ADR-0107 cl.5)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (SPEC-R1)
+uses: []
 # marginal: 715 B gz — within the 2048 B gz per-control budget (ADR-0080 clause 3); solo 5309 B gz
 # (foundation-inclusive, informational). Measured 2026-07-08 (wave M1-b, LLD-C8, `npm run size` through the
-# public `./controls/sparkline` entry) after the barrel + component-styles.css wiring landed. The whole-family
+# public `./controls/sparkline` entry) after the barrel + CSS-barrel wiring landed. The whole-family
 # `components` barrel measured 25847 B gz — over the old 25 KB ceiling by 247 B once BOTH chart controls
 # wired in; RESOLVED same-wave by the ADR-0107 ## Amendment (the Consequences-anticipated re-base): the
 # ceiling is now 26 KB (26624 B gz), recorded in scripts/measure-size.mjs's re-base comment chain.

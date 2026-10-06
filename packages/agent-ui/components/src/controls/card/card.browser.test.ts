@@ -10,7 +10,7 @@ import { server, cdp, userEvent } from 'vitest/browser'
 // Side-effect CSS imports — the load-bearing order: foundation roles + dimensional ramp FIRST, then the SHARED
 // container surface seam (controls/_surface/container.css — the [elevation]/[brightness] mapping + the
 // background paint), then card.css (its own default surface overrides the seam's transparent default → later
-// source wins). The component-styles barrel does NOT yet @import container.css/card.css (that is the s12
+// source wins). The retired component-styles CSS barrel (ADR-0233) does NOT yet @import container.css/card.css (that is the s12
 // integration slice), so this suite imports them directly. The four element modules self-define on import.
 import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container.css'

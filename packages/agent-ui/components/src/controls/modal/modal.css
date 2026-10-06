@@ -16,9 +16,9 @@
  *       `::backdrop` scrim is the platform-painted blocking layer. Geometry is the Pattern/container size-class
  *       (geometry.md): the shell spaces off `--md-sys-space-*` × density — NO control height (`--md-sys-height-*`).
  *
- * Standalone stylesheet — linked via the component-styles barrel (s12); NEVER injected from modal.ts
- * (behaviour-only `.ts`, no runtime style injection — plan §2). component-styles.css @imports container.css
- * FIRST (the shared surface seam), then this sheet.
+ * Standalone stylesheet, linked as its own control sheet; NEVER injected from modal.ts
+ * (behaviour-only `.ts`, no runtime style injection, plan §2). shared-styles.css loads container.css
+ * (the shared surface seam) once, before this sheet (ADR-0233 cl.3).
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-modal) declares the surface default + --ui-modal-* ════════════════ */

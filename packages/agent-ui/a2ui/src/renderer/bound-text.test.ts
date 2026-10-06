@@ -4,6 +4,7 @@
 // defect this diagnosed was payload variance (a bound path the same turn never set), not this seam;
 // this pin keeps the renderer half of that claim honest.
 import { describe, it, expect } from 'vitest'
+import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
 import { whenFlushed } from '@agent-ui/components'
 import { createRenderer } from './renderer.ts'
 import type { A2uiServerMessage } from '../protocol.ts'

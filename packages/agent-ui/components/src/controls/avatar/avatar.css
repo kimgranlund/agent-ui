@@ -27,6 +27,9 @@
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-avatar) declares --ui-avatar-* ════════════════ */
 
+/* uses: synced from avatar.md by scripts/codemod-uses.mjs */
+@import '../icon/icon.css';
+
 :where(ui-avatar) {
   /* Box size — the CONTROL-HEIGHT ladder `--md-sys-height-{sm,md,lg}` (ADR-0038's (scale × size) row lookup),
      the same root tokens ui-button's frame rides (block-size = min-inline-size = height), so an avatar sits

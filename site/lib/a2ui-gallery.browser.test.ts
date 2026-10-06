@@ -29,8 +29,8 @@ import { userEvent } from 'vitest/browser'
 // explicitly (exactly what _page.ts does for the real page) so the rendered surfaces carry REAL geometry;
 // the lib module itself side-effect-imports its own page-local CSS.
 import '@agent-ui/components/foundation-styles.css' // foundation tokens + dimensional ramp (FIRST — geometry source)
-import '@agent-ui/components/component-styles.css' // per-control CSS (so a surface has real geometry, not 0×0)
-import '@agent-ui/components/components' // self-defining ui-* controls (the renderer mounts these by tag)
+import '@agent-ui/components/all.css' // per-control CSS (so a surface has real geometry, not 0×0)
+import '@agent-ui/components/all' // self-defining ui-* controls (the renderer mounts these by tag)
 import { buildSeedGallery, buildSeedCard } from './a2ui-gallery.ts'
 import { documentRowToolbarSeed, bookingReservationSeed, patternSettingsSeed } from '@agent-ui/a2ui/examples'
 

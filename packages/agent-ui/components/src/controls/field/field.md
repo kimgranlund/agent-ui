@@ -8,6 +8,7 @@
 tag: ui-field
 tier: container        # geometry size-class (the radio-group precedent — not a sized control): NO control height, the label rides the font/type tokens, spacing off --md-sys-space
 extends: UIElement     # a structural label/description/error wrapper — NOT form-associated (carries no value of its own) and NOT UIContainerElement (no elevation/brightness surface paint)
+uses: []
 # marginal: ui-field adds 475 B gz (~2166 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — a structural wrapper with no trait). The family total (21599 B gz) stays within the 22528 B gz budget (ADR-0049) — 929 B headroom left after this wave (field + ui-form-provider + the dom/form.ts protocol growth)
 
 attributes:            # attributes-as-API — mirrors field.ts `static props` (LLD-C4): label + description, both plain strings, both un-reflected

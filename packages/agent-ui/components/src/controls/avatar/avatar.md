@@ -12,8 +12,10 @@ tier: indicator        # geometry size-class — a fixed painted SQUARE box (SPE
                         # --md-sys-height-{sm,md,lg} (the button row, ADR-0038), no longer the ADR-0041
                         # compact ramp — non-interactive is stated in prose (no keyboard/focus contract)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (SPEC-R4)
+uses:
+  - ui-icon
 # marginal: not yet measured — this folder-only wave (M1-a) ships ahead of the LLD-C11 shared-file
-# integration slice (barrel export, component-styles.css import, package.json exports entry); the real
+# integration slice (barrel export, CSS-barrel import, package.json exports entry); the real
 # `npm run size` figure lands with that slice, per feed-family.lld.md §6 (measured, never guessed).
 
 attributes:            # attributes-as-API — the GENERATION SOURCE for avatar.ts `static props` (ADR-0173)

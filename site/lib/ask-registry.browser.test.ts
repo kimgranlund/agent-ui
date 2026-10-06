@@ -8,8 +8,8 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 import { AskRegistry } from './ask-registry.ts'
 import type { A2uiClientMessage } from '@agent-ui/a2ui'
 

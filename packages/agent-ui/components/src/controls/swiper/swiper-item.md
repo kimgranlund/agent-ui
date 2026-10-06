@@ -7,6 +7,7 @@
 tag: ui-swiper-item
 tier: layout             # geometry size-class — sized entirely by the track; no geometry of its own (SPEC-R9)
 extends: UIElement       # NOT form-associated — a slide wrapper carries no value
+uses: []
 # marginal: measured at integration (npm run size, ADR-0040 §3) — the five-tag family total
 
 attributes:

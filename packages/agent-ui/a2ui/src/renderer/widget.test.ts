@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest'
+import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
 import { effect, inspect, whenFlushed } from '@agent-ui/components'
 import { makeCreateWidget } from './widget.ts'
 import type { WidgetDeps } from './widget.ts'

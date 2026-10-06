@@ -8,6 +8,7 @@ tag: ui-line-chart
 description: An axis-bearing line or area chart with a value-range baseline; the default state shows always-shown min/max labels, the opt-in `axes` state shows nice-number gridlines + tick/category chips + a gradient area fill + a provisional/now-marker system, single-series, hand-rolled inline SVG.
 tier: display          # geometry size-class (Display band — NO control frame/height; ADR-0205 cl.5)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (ADR-0205)
+uses: []
 # marginal: not measured this pass — `npm run size` is a manual gate (Kim's ruling); run it once this
 # control is wired into a size-budgeted wave.
 

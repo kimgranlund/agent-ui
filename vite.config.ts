@@ -24,11 +24,11 @@ import { devtoolsHarnessPlugin } from './packages/agent-ui/devtools/src/server/h
 // repo-root `dist/` (gitignored).
 //
 // Deliberately NO `resolve.alias`: the `@agent-ui/*` workspace packages are symlinked under node_modules
-// with `exports` maps, so Vite/Rolldown resolves every bare specifier — `@agent-ui/components/components`,
-// the `*-styles.css` barrels, and the barrels' inner `@import '@agent-ui/shared/...'` — through those
+// with `exports` maps, so Vite/Rolldown resolves every bare specifier (`@agent-ui/components/controls/{name}`,
+// the `*-styles.css` sheets, and their inner `@import '@agent-ui/shared/...'`) through those
 // `exports` maps, exactly as `vitest.browser.config.ts` already proves. The index.ts aliases in
 // `vitest.config.ts` map a bare name to a single `src/index.ts` file and would, under prefix-matching,
-// rewrite the CSS/`./components` SUBPATHS into `.../src/index.ts/<subpath>` and break the build — so they
+// rewrite the CSS and `./controls/*` SUBPATHS into `.../src/index.ts/<subpath>` and break the build — so they
 // are intentionally not mirrored here. This config stays zero-runtime-dep (Vite is the only build tool).
 //
 // MPA auto-discovery (wave-2 prep): every `site/**/*.html` becomes a Rollup build input, so a later page

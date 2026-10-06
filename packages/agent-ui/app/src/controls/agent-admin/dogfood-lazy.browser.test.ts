@@ -12,7 +12,7 @@
 // agent-admin.test.ts's. This adds the two facts only a real engine can supply.
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import '@agent-ui/code/editor.css'
 import '../master-detail/master-detail.css'
 import '../master-detail/master-detail-pane.css'

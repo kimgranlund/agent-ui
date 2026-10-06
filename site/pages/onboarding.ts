@@ -26,13 +26,11 @@
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './onboarding.css'
 import { heading } from '../lib/doc-page.ts'
-import type {
-  UIButtonElement,
-  UICardElement,
-  UIProgressElement,
-  UIRadioGroupElement,
-  UITextFieldElement,
-} from '@agent-ui/components/components'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import type { UICardElement } from '@agent-ui/components/controls/card'
+import type { UIProgressElement } from '@agent-ui/components/controls/progress'
+import type { UIRadioGroupElement } from '@agent-ui/components/controls/radio-group'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 // TYPE-ONLY (verbatimModuleSyntax): erased at compile time (SPEC-R9 AC2) — the only RUNTIME touch of this
 // module is the dynamic import() inside wireIdentityDemo's DEV-gated branch below.
 import type { IdentityMockTransport, IdentitySession } from '../lib/identity-mock-transport.ts'

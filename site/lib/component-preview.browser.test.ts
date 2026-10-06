@@ -10,11 +10,11 @@ import { userEvent } from 'vitest/browser'
 // resolves none of this (no @scope, no dimensional ramp, no computed geometry), so it can only be proven here.
 // Runs in BOTH Chromium and WebKit (vitest.browser.config.ts → two playwright instances).
 //
-// The foundation CSS cascade (ADR-0003) is imported explicitly (the two barrels) so the control geometry is REAL;
+// The foundation CSS cascade (ADR-0003) is imported explicitly (foundation + `all.css`) so the control geometry is REAL;
 // the site module itself imports the self-defining controls + its own chrome. Runs under the `site` vitest project
 // (vitest.browser.config.ts's `test.projects`), co-located with the module it tests.
 import '@agent-ui/components/foundation-styles.css' // foundation tokens + dimensional ramp (FIRST — geometry source)
-import '@agent-ui/components/component-styles.css' // per-control CSS (so the specimen has real geometry, not 0×0)
+import '@agent-ui/components/all.css' // per-control CSS (so the specimen has real geometry, not 0×0)
 import './component-preview.ts' // registers <component-preview> + the self-defining ui-* controls
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles + real-input

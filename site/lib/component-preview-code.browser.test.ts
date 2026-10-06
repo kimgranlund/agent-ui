@@ -8,7 +8,7 @@ import { userEvent } from 'vitest/browser'
 // real clipboard. Proven here, in BOTH Chromium and WebKit, mirroring component-preview.browser.test.ts's own
 // mount/raf conventions (same file, same `site` vitest project).
 import '@agent-ui/components/foundation-styles.css' // foundation tokens + dimensional ramp (geometry + --md-sys-* values are REAL)
-import '@agent-ui/components/component-styles.css' // per-control CSS (the CSS tab's own token source)
+import '@agent-ui/components/all.css' // per-control CSS (the CSS tab's own token source)
 import './component-preview.ts' // registers <component-preview> + the self-defining ui-* controls
 
 // GH #347 — REAL-TIMING HEADROOM (same rationale as component-preview.browser.test.ts): this file awaits real

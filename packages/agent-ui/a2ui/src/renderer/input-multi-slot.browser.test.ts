@@ -8,7 +8,7 @@
 // precedent this file follows).
 
 import { describe, it, expect } from 'vitest'
-import '@agent-ui/components/components' // self-defines ui-* controls (the real default-catalog factories)
+import '@agent-ui/components/all' // self-defines ui-* controls (the real default-catalog factories)
 import { createRenderer } from './renderer.ts'
 import type { A2uiClientMessage } from './renderer.ts'
 import type { A2uiActionMessage } from './action.ts'

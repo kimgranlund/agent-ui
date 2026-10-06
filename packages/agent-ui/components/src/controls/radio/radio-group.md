@@ -13,6 +13,8 @@ tag: ui-radio-group
 description: A form-associated container that gives its ui-radio children exclusive selection and roving-focus navigation.
 tier: container        # geometry size-class (not a sized control — a container that holds ui-radio children)
 extends: UIFormElement  # FACE form-associated container (value/validity participation via ElementInternals; ADR-0013)
+uses:
+  - ui-radio
 # marginal: ui-radio-group adds 1 B gz (re-measured via `npm run size`, ADR-0080, 2026-07-08, after ADR-0103 gave the group its own owned-layout CSS — the --ui-radio-group-gap token + the @scope flex/orientation rules cost is negligible, still effectively zero marginal) to the self-defining ui-* family above the other three Wave-1 Indicator controls (UIRadioGroupElement owns rovingFocus group wiring, single-selection exclusivity, and the group form value — the largest Wave-1 leaf) — within the per-control ≤ ~2 kB tier budget (plan §10)
 
 attributes:            # attributes-as-API — mirrors radio-group.ts static props (UIFormElement.formProps spread + orientation)

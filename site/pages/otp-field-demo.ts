@@ -11,7 +11,7 @@
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
 import { captioned, el, exampleSection, uiButton } from '../lib/specimens.ts'
-import type { UIOtpFieldElement } from '@agent-ui/components/components'
+import type { UIOtpFieldElement } from '@agent-ui/components/controls/otp-field'
 
 const { content } = mountPage({
   title: 'ui-otp-field — demo',

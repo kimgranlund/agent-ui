@@ -9,6 +9,8 @@ description: A static, authored chronology of ui-timeline-item rows showing an o
 tier: pattern            # geometry.md's Pattern band does not literally fit (no interactive control-height
                          # row) — the marker-system family (ADR-0122 F2) generalizes it, mirroring timeline-item
 extends: UIContainerElement  # NOT form-associated — a structural container hosting authored children (ADR-0015)
+uses:
+  - ui-timeline-item
 # marginal: measured at the family barrel integration slice (npm run size, ADR-0040 §3)
 
 attributes:               # attributes-as-API — mirrors timeline.ts static props

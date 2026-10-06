@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 // The GLOBAL inline-code chip rule lives in the page sheet (`_page.css`'s `code { … }`); `doc-page.ts`
 // imports its OWN `doc-page.css` on import, below. Both are needed: the two GH #369 mechanisms live one in
 // each file, and the whole point is that they compose on a real page.

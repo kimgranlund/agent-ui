@@ -9,7 +9,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
-import '@agent-ui/components/components' // self-defines ui-* controls (the real fleet factories)
+import '@agent-ui/components/all' // self-defines ui-* controls (the real fleet factories)
 import { createRenderer } from '../../../renderer/renderer.ts'
 import type { A2uiClientMessage } from '../../../renderer/renderer.ts'
 import type { A2uiActionMessage } from '../../../renderer/action.ts'

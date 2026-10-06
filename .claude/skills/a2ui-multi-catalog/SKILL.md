@@ -35,6 +35,12 @@ two have no merge primitive in common (`persona-catalog-composition.spec.md` §1
 1. **Registering a catalog beside the default** — a sibling package folder mirroring
    `default/`'s shape, pre-registered in the `Renderer` constructor (cl.1/cl.2); the
    gate-encoded declared-or-excluded partition (cl.12/cl.14).
+   A catalog whose factories create controls the page has not imported registers with a control
+   loader, the optional fourth `register` argument (ADR-0233): for example
+   `renderer.register(catalog, factories, undefined, createControlLoader(CONTROLS, { css: 'host' }))`
+   from `@agent-ui/components/loader` and `@agent-ui/components/registry`. The renderer then defers a
+   surface's messages until the controls they need are defined, and reports a failed load as
+   `CONTROL_LOAD` with placeholders (runtime SPEC-R9 AC3). Without a loader, apply stays synchronous.
 2. **Machine schema is ground truth** — the pinned upstream JSON Schema is the wire authority,
    never the prose guide (cl.9; rev.1's `⚑`-marked prose-inferred-name defect).
 3. **Widen wire tolerances at the seams, not by forking** — closed `ValueSlot`/`marshal`
@@ -45,7 +51,10 @@ two have no merge primitive in common (`persona-catalog-composition.spec.md` §1
    (cl.3/cl.4/cl.5/cl.6); short-id-is-the-key policy (cl.13).
 5. **Composed/derived catalogs** — `composeCatalog(base, fragment, personaId)` merges a
    package-authored `CatalogFragment` onto an already-registered base (ADR-0172 cl.2); reject-loud
-   collisions; `<base>--<persona>` naming; multi-base `targetCatalogs`.
+   collisions; `<base>--<persona>` naming; multi-base `targetCatalogs`. A persona package may ship
+   `controls` records (`ControlRecord`) for its own controls; the derived entry's loader routes those
+   tags to them and every other tag to the base loader (`persona-catalog-composition.spec.md`
+   SPEC-R2 AC7).
    Selection guidance follows the same shape (ADR-0232): each base catalog and each persona fragment
    carries its own `selection.json` sidecar; `selectionGuidanceFor` resolves a derived
    `<base>--<persona>` id to the union of the base's entries and the fragment's. Edges inside one

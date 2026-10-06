@@ -21,7 +21,7 @@
  * children that might want to query — an externally-sized ancestor boundary provides that context, not the
  * list.
  *
- * Standalone stylesheet — linked via the component-styles barrel (wired in s12, AFTER container.css); NEVER
+ * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel) (wired in s12, AFTER container.css); NEVER
  * injected from list.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

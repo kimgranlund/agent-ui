@@ -8,7 +8,7 @@
 // (an equivalent proof, short of watching a real cross-document navigation complete — named there).
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
-import '@agent-ui/components/components' // registers ui-command-modal (+ its nested ui-modal) for real
+import '@agent-ui/components/all' // registers ui-command-modal (+ its nested ui-modal) for real
 import type { mountCommandPalette as MountCommandPalette } from './command-palette.ts'
 import { installDialogPolyfill } from '@agent-ui/shared/testing/dialog-polyfill'
 

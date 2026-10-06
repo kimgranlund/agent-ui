@@ -14,8 +14,8 @@ import { page, server } from 'vitest/browser'
 // `__baselines__/column-chart.visual.browser.test.ts/<name>-chromium-darwin.png`; re-baseline
 // only via `npm run test:visual:update` (a deliberate act, per ADR-0223's R5 golden-regen law).
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 const ROWS = JSON.stringify(
   Array.from({ length: 9 }, (_, i) => ({ label: `Cat${i}`, values: [i + 1] })),

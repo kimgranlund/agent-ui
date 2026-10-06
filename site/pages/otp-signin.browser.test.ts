@@ -15,7 +15,9 @@ import { userEvent } from 'vitest/browser'
 import './otp-signin.ts'
 import { __setTransportForTest, __setResendCooldownSecondsForTest } from './otp-signin.ts'
 import { createIdentityMockTransport } from '../lib/identity-mock-transport.ts'
-import type { UITextFieldElement, UIOtpFieldElement, UIButtonElement } from '@agent-ui/components/components'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
+import type { UIOtpFieldElement } from '@agent-ui/components/controls/otp-field'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits the transport's real (non-zero, default 400ms) SPEC-R7
 // latency across several sequential ops; see vitest.browser.config.ts's own class definition.

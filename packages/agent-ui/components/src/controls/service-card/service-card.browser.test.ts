@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
-import type { UIServiceCardElement } from '@agent-ui/components/components'
+import type { UIServiceCardElement } from '@agent-ui/components/controls/service-card'
 
 // service-card.browser.test.ts — the cross-engine (Chromium + WebKit) browser-truth probes for
 // ui-service-card (ADR-0224). jsdom cannot prove paint/geometry/WHCM (service-card.test.ts pins the
@@ -10,11 +10,11 @@ import type { UIServiceCardElement } from '@agent-ui/components/components'
 // dispatchEvent) proving the disabled chip is genuinely inert to a real gesture, and forced-colors.
 //
 // Side-effect imports — the load-bearing CSS order (ADR-0003): foundation roles + dimensional ramp
-// FIRST, then the component sheet (via the wired barrel — service-card IS integrated into
-// component-styles.css/controls/index.ts), then the self-defining family barrel.
+// FIRST, then the component sheet (via `all.css`, which carries
+// service-card.css), then the self-defining `all` entry.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 const mounted: HTMLElement[] = []
 const mount = (markup: string): { wrap: HTMLElement; card: UIServiceCardElement } => {

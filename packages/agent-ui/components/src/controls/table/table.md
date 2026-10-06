@@ -12,6 +12,11 @@ tag: ui-table
 description: A data table with typed columns and record rows, rendered as a real native HTML table — with opt-in row selection, per-column sort, filter/search state, and pagination (all default OFF).
 tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; SPEC-R17) — UNCHANGED by the widening: the four capabilities stamp native controls inside the existing anatomy, they do not add a control-height row of their own
 extends: UIElement     # NOT form-associated (ADR-0163 cl.8/F5 — a table's selection is transient view state, not a submittable value)
+uses:
+  - ui-button
+  - ui-checkbox
+  - ui-pagination
+  - ui-radio
 # marginal: re-measured at the ADR-0163 build wave (`npm run size`) against the 26 KB (26624 B gz) family
 # ceiling (ADR-0107 Amendment) — the widening's Consequences section pre-records the likely re-base.
 

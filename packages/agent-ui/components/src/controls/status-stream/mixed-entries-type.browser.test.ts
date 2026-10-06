@@ -8,8 +8,8 @@ import type { UIStatusStreamElement } from './status-stream.ts'
 // conversation narration's own pinned 0.78rem ambient (conversation.css), the exact mount the report
 // came from.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 const mounted: HTMLElement[] = []
 afterEach(() => {

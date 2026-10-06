@@ -12,6 +12,7 @@ description: A URL-sourced audio player — the native <audio controls>, no cust
 tier: display          # Display band: the UA's audio bar has its own intrinsic height — no control-height
                         # ramp, no aspect box (audio has no visual canvas to reserve; contrast ui-video)
 extends: UIElement     # non-form-associated display leaf; the NATIVE element carries all interaction
+uses: []
 
 attributes:            # attributes-as-API — the GENERATION SOURCE for audio.ts's `static props` (ADR-0173)
   - name: src

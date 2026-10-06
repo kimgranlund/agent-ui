@@ -9,6 +9,7 @@
 tag: ui-popover
 tier: pattern           # geometry size-class — the panel uses --md-sys-space padding (Container/surface, NOT a control height)
 extends: UIElement      # NOT form-associated — the popover carries no value/validity; it is a disclosure surface
+uses: []
 # marginal: tracked at the wave-4 integration slice (s12 barrel pass); ≤ ~2 kB tier budget (plan §10)
 
 attributes:             # attributes-as-API — mirrors UIPopoverElement.props (open first, then placement)

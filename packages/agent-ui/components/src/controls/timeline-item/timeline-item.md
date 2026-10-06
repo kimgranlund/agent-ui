@@ -11,6 +11,8 @@ tier: pattern            # geometry.md's Pattern band does not literally fit (no
                          # row) — the marker-system novelty leg (ADR-0122 F2) generalizes it to a
                          # structural, non-interactive multi-row family, kin to accordion/menu
 extends: UIElement       # NOT form-associated — an inert display row, no value/validity
+uses:
+  - ui-disclosure
 # marginal: measured at the family barrel integration slice (npm run size, ADR-0040 §3)
 
 attributes:               # attributes-as-API — mirrors timeline-item.ts static props

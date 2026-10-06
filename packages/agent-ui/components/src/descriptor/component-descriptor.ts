@@ -311,7 +311,7 @@ export function scalarSeq(desc: ParsedDescriptor, field: string): string[] {
 // ── schema ──────────────────────────────────────────────────────────────────────────────────────────────
 
 /** The structural defects validateComponentDescriptor reports. */
-export const DESCRIPTOR_CODES = ['MISSING_FIELD', 'BAD_SHAPE', 'BAD_TAG', 'BAD_TIER', 'BAD_EXTENDS', 'BAD_ATTRIBUTE', 'BAD_FACE'] as const
+export const DESCRIPTOR_CODES = ['MISSING_FIELD', 'BAD_SHAPE', 'BAD_TAG', 'BAD_TIER', 'BAD_EXTENDS', 'BAD_ATTRIBUTE', 'BAD_FACE', 'BAD_USES'] as const
 export type DescriptorCode = (typeof DESCRIPTOR_CODES)[number]
 
 /** One structural failure: a stable code + the field path it occurred at + a human message. */
@@ -419,6 +419,26 @@ export function validateComponentDescriptor(d: ParsedDescriptor): DescriptorFail
   if (face !== undefined) {
     const fa = face.get('formAssociated')
     if (fa === undefined || !has(BOOLEANS, fa)) add('BAD_FACE', 'face.formAssociated', 'face.formAssociated must be true|false')
+  }
+
+  // 7. uses (ADR-0233) is OPTIONAL, so it stays out of FIELD_SHAPE (every FIELD_SHAPE key is required, and
+  // app descriptors run through this validator too). When present it is a BLOCK sequence of bare ui-{name}
+  // scalars (`uses: []` when empty), no duplicates, never the descriptor's own tag. An inline flow list
+  // parses as a scalar, so it is BAD_USES by construction. The values themselves are held equal to the real
+  // import graph by controls/uses-driftwire.test.ts; `node scripts/codemod-uses.mjs` writes them.
+  if (d.scalars.has('uses') || d.maps.has('uses')) {
+    add('BAD_USES', 'uses', 'uses must be a block sequence of ui-{name} tags (`uses: []` when empty), never an inline list or a map')
+  }
+  const seenUses = new Set<string>()
+  for (const [i, item] of (d.sequences.get('uses') ?? []).entries()) {
+    const v = item.get(BARE_SCALAR_KEY)
+    if (item.size !== 1 || typeof v !== 'string' || !/^ui-[a-z][a-z0-9-]*$/.test(v)) {
+      add('BAD_USES', `uses[${i}]`, `uses item #${i} must be a bare ui-{name} tag`)
+      continue
+    }
+    if (seenUses.has(v)) add('BAD_USES', `uses[${i}]`, `duplicate uses tag "${v}"`)
+    if (v === tag) add('BAD_USES', `uses[${i}]`, `uses names the descriptor's own tag "${v}"`)
+    seenUses.add(v)
   }
 
   return failures

@@ -8,7 +8,7 @@
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
 import { el, exampleSection, uiButton } from '../lib/specimens.ts'
-import type { UISandboxFrameElement, GenuiActionDetail } from '@agent-ui/components/components'
+import type { UISandboxFrameElement, GenuiActionDetail } from '@agent-ui/components/controls/sandbox-frame'
 
 const { content } = mountPage({
   title: 'ui-sandbox-frame — demo',

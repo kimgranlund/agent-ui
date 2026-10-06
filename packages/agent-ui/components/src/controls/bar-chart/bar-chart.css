@@ -30,7 +30,7 @@
  * border. Non-color signifier (SPEC-R8, ADR-0057): magnitude travels by length + the printed number; no
  * intent-role is consumed anywhere in this sheet — nothing to co-carry.
  *
- * Standalone stylesheet — linked via the component-styles barrel (wave M1-b); NEVER injected from
+ * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel) (wave M1-b); NEVER injected from
  * bar-chart.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

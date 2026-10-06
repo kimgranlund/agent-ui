@@ -8,7 +8,7 @@ import { server, cdp } from 'vitest/browser'
 //
 // Side-effect CSS/JS imports — the load-bearing order (ADR-0003): foundation roles + dimensional ramp
 // FIRST, then this control's own sheet, then the self-defining module (which itself imports icon.ts as a
-// side effect). controls/attachment/ is not yet exported from controls/index.ts (that barrel edit is the
+// side effect). controls/attachment/ was not yet exported from the family barrel (that barrel edit was the
 // LLD-C11 shared-file integration slice, a separate wave from this folder) — direct (pre-barrel) imports,
 // the stat/sparkline/bar-chart precedent.
 import '@agent-ui/components/foundation-styles.css'

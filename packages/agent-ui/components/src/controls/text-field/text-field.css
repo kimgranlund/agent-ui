@@ -37,7 +37,7 @@
  *       the outline survives via `--md-sys-color-focus-ring → Highlight`). State PAINT motion gated behind `:state(ready)`, reduced-motion
  *       zeroed. A forced-colors block keeps the border + ink + placeholder visible (CanvasText).
  *
- * Standalone stylesheet — linked via the host page / component-styles barrel (s12); NEVER injected from
+ * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel) (s12); NEVER injected from
  * text-field.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 
@@ -46,6 +46,11 @@
    (a de-facto-standard property, universally supported despite the -webkit- prefix), search clear-button
    visibility via :has([data-empty]), and forced-color-adjust:none on decorative adornment glyphs so the
    magnifier/symbol/reveal survive forced-colors (they are aria-hidden decoration, not the text content). */
+
+/* uses: synced from text-field.md by scripts/codemod-uses.mjs */
+@import '../calendar/calendar.css';
+@import '../color-picker/color-picker.css';
+@import '../swatch/swatch.css';
 
 :where(ui-text-field) {
   /* Field-frame colour channel (family = neutral) — Kim's filled/container state law (TKT-0062),

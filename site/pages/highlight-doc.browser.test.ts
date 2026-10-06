@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest'
 // ui-code background == body background (no panel), and NO `[data-token]` spans (the page wrote
 // `.textContent`, never `projectHighlight`).
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import './highlight-doc.ts'
 
 const app = document.querySelector('[data-page-content]') as HTMLElement

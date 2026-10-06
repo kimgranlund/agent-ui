@@ -4,6 +4,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "sideEffects": [
+    "./src/agent/system-prompt.ts"
+  ],
   "exports": {
     ".": "./src/index.ts",
     "./examples": "./src/examples/index.ts",

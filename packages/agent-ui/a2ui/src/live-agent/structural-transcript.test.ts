@@ -7,7 +7,7 @@
 // `round-trip.test.ts` shape) — zero live model, zero API key, zero network call.
 
 import { describe, it, expect } from 'vitest'
-import '@agent-ui/components/components' // self-defines the ui-* controls so the renderer's nodes upgrade
+import '@agent-ui/components/all' // self-defines the ui-* controls so the renderer's nodes upgrade
 import { createRenderer } from '../renderer/renderer.ts'
 import type { A2uiClientMessage } from '../renderer/renderer.ts'
 import { validateA2ui } from '../renderer/validate.ts'

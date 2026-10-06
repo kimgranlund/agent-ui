@@ -7,7 +7,7 @@
 // see `:has()`-driven layout, only the DOM shape this file asserts.
 
 import { describe, it, expect } from 'vitest'
-import '@agent-ui/components/components' // self-defines ui-* controls (the real default-catalog factories)
+import '@agent-ui/components/all' // self-defines ui-* controls (the real default-catalog factories)
 import { createRenderer } from './renderer.ts'
 
 function harness() {

@@ -13,7 +13,7 @@ import { server, cdp } from 'vitest/browser'
 //       (ADR-0199 cl.3).
 import '@agent-ui/shared/tokens.css'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import './surface-host.css'
 import { UISurfaceHostElement } from './surface-host.ts'
 import { whenFlushed } from '@agent-ui/components'

@@ -13,10 +13,10 @@ import { server, cdp } from 'vitest/browser'
 // The sharp ADR-0006 pair: [density] MOVES the icon+label gap but leaves the bare-label FRAME untouched.
 //
 // Side-effect imports — same load-bearing CSS order as the s12 harness (ADR-0003): foundation roles +
-// dimensional ramp FIRST, then the component sheet, then the self-defining family barrel. Vite injects them.
+// dimensional ramp FIRST, then the component sheet, then the self-defining `all` entry. Vite injects them.
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
-import '@agent-ui/components/components'
+import '@agent-ui/components/all.css'
+import '@agent-ui/components/all'
 
 // ── markup: the two variants the smoke proves in parallel ───────────────────────────────────────────
 const BARE = '<ui-button>Label</ui-button>' //                          slotless — density-INVARIANT frame

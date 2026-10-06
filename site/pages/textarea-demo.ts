@@ -10,7 +10,7 @@
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
 import { applyDemoWidth, captioned, el, exampleSection, inline, uiButton } from '../lib/specimens.ts'
-import type { UITextareaElement } from '@agent-ui/components/components'
+import type { UITextareaElement } from '@agent-ui/components/controls/textarea'
 
 const { content } = mountPage({
   title: 'ui-textarea — demo',

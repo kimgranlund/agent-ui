@@ -9,7 +9,7 @@
 // `*.browser.test.ts` files.
 import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import '@agent-ui/code/editor.css'
 import '../master-detail/master-detail.css'
 import '../master-detail/master-detail-pane.css'

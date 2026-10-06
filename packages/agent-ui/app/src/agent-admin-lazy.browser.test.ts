@@ -3,12 +3,12 @@
 // real engine's real dynamic import: `loadAgentAdmin()` resolves the arm, defines `<ui-agent-admin>`, and
 // a mount through the accessor is the SAME surface a static `@agent-ui/app/agent-admin` subpath mount
 // produces — one class identity, one registry entry (no two-definitions stub, the ADR's rejected
-// alternative). CSS wiring follows agent-admin.browser.test.ts (the foundation, the family barrel, every
+// alternative). CSS wiring follows agent-admin.browser.test.ts (the foundation, `all.css`, every
 // composed sibling, then the element's own sheet).
 import { describe, it, expect, afterEach } from 'vitest'
 
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/components/component-styles.css'
+import '@agent-ui/components/all.css'
 import '@agent-ui/code/editor.css'
 import './controls/master-detail/master-detail.css'
 import './controls/master-detail/master-detail-pane.css'

@@ -16,7 +16,7 @@
  *       keyboard-only, layout-neutral `outline`). Forced-colors keeps the ink/border (the ring survives via the
  *       token layer's `--md-sys-color-focus-ring → Highlight` mapping). The reflected `disabled` attribute makes the host inert.
  *
- * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected from
+ * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel) (Phase 2); NEVER injected from
  * button.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 

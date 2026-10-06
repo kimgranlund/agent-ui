@@ -12,8 +12,9 @@ tier: container         # geometry.md Container/layout band — no control-heigh
 extends: UIElement      # a rendered-content-cell coordinator (the avatar.ts/bar-chart.ts shape) — NOT
                          # UIFormElement (no form value) and NOT UIContainerElement (no elevation/
                          # brightness surface axes; this control paints its OWN bespoke surface)
+uses: []
 # marginal: not yet measured — B1 folder-only wave; the real `npm run size` figure lands with the
-# barrel/component-styles.css/package.json exports integration slice (this same change).
+# barrel/CSS-barrel/package.json exports integration slice (this same change).
 
 attributes:             # attributes-as-API — mirrors sandbox-frame.ts `static props`
   - name: surfaceId

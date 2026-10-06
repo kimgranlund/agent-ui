@@ -9,6 +9,7 @@
 tag: ui-form-provider
 tier: container          # geometry size-class (comment: pure coordination, no geometry — no control height, no surface paint)
 extends: UIElement       # NOT UIFormElement — the provider carries no value/validity of its own; wrapping it formAssociated would double-submit (ADR-0050 "alternatives considered"). NOT UIContainerElement either — no surface paint.
+uses: []
 # marginal: ui-form-provider adds 794 B gz (~4029 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — it + the traits/form-registry.ts controller it invokes). The family total (21599 B gz) stays within the 22528 B gz budget (ADR-0049) — 929 B headroom left after this wave (form-provider + ui-field + the dom/form.ts protocol growth)
 
 attributes: []           # a coordination element takes no configuration (LLD-C7); form-provider.ts declares `static props = {} satisfies PropsSchema` — the EMPTY schema, present for the fleet convention + the descriptor trip-wire's empty-bijection (the s10 finding)

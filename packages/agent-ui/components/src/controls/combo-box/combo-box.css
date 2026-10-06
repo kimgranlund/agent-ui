@@ -28,7 +28,7 @@
  *       (h/4 + h/4 = h/2), now byte-identical in model to ui-select's trigger/listbox pairing.
  *
  * Standalone stylesheet — NOT injected from combo-box.ts (behaviour-only `.ts`, plan §2).
- * Linked via the component-styles barrel (wave-4 integration slice). The panel's `[popover]`
+ * Linked per control or via shared-styles.css (ADR-0233, no barrel) (wave-4 integration slice). The panel's `[popover]`
  * attribute gives it `display:none` until `showPopover()` opens it into the top layer.
  */
 

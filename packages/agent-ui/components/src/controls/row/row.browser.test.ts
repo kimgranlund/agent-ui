@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest'
 // responds to [density]; (3) the row REFLOWS by CONTAINER width — resized on the WRAPPER, not the viewport
 // (the ADR-0016 cl.4 intrinsic-responsiveness proof) — and the reflow actually moves the children (anti-vacuous).
 //
-// CSS wiring: the component-styles barrel does not @import container.css / row.css until the integration slice
+// CSS wiring: the retired component-styles CSS barrel (ADR-0233) does not @import container.css / row.css until the integration slice
 // (decomp s12), so this smoke injects them DIRECTLY (Vite resolves the relative .css + the foundation export,
 // and injects each as a <style>). Order is load-bearing: the foundation (--md-sys-color-* roles + the --md-sys-space ladder +
 // [density]) FIRST, then the shared surface seam (elevation/brightness — NOT a container-type establishment,

@@ -18,7 +18,6 @@
 // (`ui-playing-card`), never through either base's OWN dialect — the same "no dialect-fit question"
 // reasoning as `concierge/index.ts`.
 
-import '@agent-ui/components/components' // self-defines ui-playing-card (+ the rest of the fleet) on import
 import type { WidgetFactory } from '../../types.ts'
 
 export const playingCardFactory: WidgetFactory = {
