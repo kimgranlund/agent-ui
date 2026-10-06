@@ -15,6 +15,11 @@
 //   cards under a path that names `<p>`, e.g. `/game/dealer/cards`), the hand container must render
 //   exactly that many cards (recorded Haiku turn 2: a third dealer card in the data, no component). A Row templated over the list matches by construction; a static Row or
 //   a template over a missing path does not.
+// - NATURAL_ACTIONS (T-0020): a player hand of exactly two cards totalling 21 (an ace and a ten-value card)
+//   is a natural, and a natural ends the round on the deal. The surface must then carry no Hit, Stand or
+//   Double Button (matched by label or id, any case) and no face-down dealer card (the hole card is
+//   revealed for settlement). One finding names both faults. A player hand the check cannot resolve is
+//   never a natural; a dealer hand it cannot resolve is never judged for a hole card.
 //
 // A hand container is a component whose children are PlayingCards: static ids that resolve to
 // PlayingCard, or a template whose `componentId` is a PlayingCard. It belongs to `<p>` when its id or its
@@ -191,6 +196,52 @@ function listedHand(view: SurfaceView, p: Participant): { path: string; length: 
   return undefined
 }
 
+/** A two-card 21: one ace and one ten-value card (10, J, Q, K). */
+function isNatural(cards: readonly Card[]): boolean {
+  if (cards.length !== 2) return false
+  const aces = cards.filter((c) => c.rank === 'A').length
+  const tens = cards.filter((c) => RANK_VALUE[c.rank] === 10).length
+  return aces === 1 && tens === 1
+}
+
+const MOVE_WORDS: ReadonlySet<string> = new Set(['hit', 'stand', 'double'])
+
+/** The move word a Button carries in its id or its label (`hitBtn`, `stand-button`, "Double down"), or
+ *  `undefined`. Tokens split on case changes and non-letters, so "Standings" and "Deal again" do not match. */
+function moveWord(comp: A2uiComponent, dataModel: unknown): string | undefined {
+  const label = resolveProp(comp['label'], dataModel, undefined)
+  for (const text of [comp.id, typeof label === 'string' ? label : '']) {
+    const tokens = text.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z]+/)
+    const word = tokens.find((t) => MOVE_WORDS.has(t))
+    if (word !== undefined) return word
+  }
+  return undefined
+}
+
+/** NATURAL_ACTIONS: the player's two-card 21 ends the round, so no move button and no face-down dealer card. */
+function naturalFinding(view: SurfaceView, hand: HandContainer, dealer: readonly HandContainer[]): SemanticFinding | undefined {
+  if (hand.cards === undefined || !isNatural(hand.cards)) return undefined
+  const moves: { id: string; word: string }[] = []
+  for (const comp of view.components.values()) {
+    if (comp.component !== 'Button') continue
+    const word = moveWord(comp, view.dataModel)
+    if (word !== undefined) moves.push({ id: comp.id, word })
+  }
+  const hole = dealer.find((d) => d.cards?.some((c) => c.faceDown) === true)
+  if (moves.length === 0 && hole === undefined) return undefined
+  const faults: string[] = []
+  if (moves.length > 0) faults.push(`still has ${moves.map((m) => `${m.id} (${m.word})`).join(', ')}`)
+  if (hole !== undefined) faults.push(`still shows a face-down card in ${hole.id}`)
+  return {
+    code: 'NATURAL_ACTIONS',
+    path: `${view.surfaceId}:${moves[0]?.id ?? hole!.id}`,
+    message:
+      `The player's cards in ${hand.id} (${describeCards(hand.cards)}) are a natural blackjack, which ends the round on the deal, but the surface ${faults.join(' and ')}. ` +
+      `Settle the round in this same turn: turn the dealer's hole card face up, state the result (the player wins 3:2 unless the dealer also has 21, then a push) with the chip delta and the updated bankroll, ` +
+      `and leave only the Deal again Button in the actions row, with no Hit, Stand or Double.`,
+  }
+}
+
 function checkSurface(view: SurfaceView): SemanticFinding[] {
   const findings: SemanticFinding[] = []
   const containers = handContainers(view)
@@ -215,6 +266,10 @@ function checkSurface(view: SurfaceView): SemanticFinding[] {
     if (mine.length !== 1) continue
     const cards = mine[0]!.cards
     if (cards === undefined) continue
+    if (p === 'player') {
+      const natural = naturalFinding(view, mine[0]!, containers.filter((c) => c.participant === 'dealer'))
+      if (natural !== undefined) findings.push(natural)
+    }
     const accepted = acceptedTotals(cards)
     for (const r of readouts(view, p)) {
       const wrong = [...new Set(r.numbers.filter((n) => !accepted.has(n)))]

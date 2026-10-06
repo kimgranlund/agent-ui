@@ -133,6 +133,80 @@ export const DATA_DRIVEN_TURN: A2uiOutput = [
   },
 ]
 
+/** The T-0020 screenshot (2026-10-06): the dealer shows 7 of clubs over a face-down card, the player holds
+ *  A of spades and K of hearts (a natural), the surface even says "Blackjack!", and it still offers Hit,
+ *  Stand and Double with the hole card face down. Static shape like `DEAL_TURN`. */
+export const NATURAL_TURN: A2uiOutput = [
+  { version: 'v1.0', createSurface: { surfaceId: 'table-6', catalogId: CATALOG } },
+  {
+    version: 'v1.0',
+    updateComponents: {
+      surfaceId: 'table-6',
+      components: [
+        { id: 'root', component: 'Card', children: ['tableHeader', 'tableContent', 'tableFooter'] },
+        { id: 'tableHeader', component: 'CardHeader', children: ['title', 'chips'] },
+        { id: 'title', component: 'Text', variant: 'h4', text: 'Blackjack, round 6' },
+        { id: 'chips', component: 'Stat', label: 'Chips', value: 1000, delta: 0, variant: 'tile' },
+        { id: 'tableContent', component: 'CardContent', children: ['dealerColumn', 'playerColumn', 'messageZone'] },
+        { id: 'dealerColumn', component: 'Column', gap: 'sm', align: 'stretch', children: ['dealerLabel', 'dealerCards', 'dealerTotal'] },
+        { id: 'dealerLabel', component: 'Text', variant: 'h5', text: 'Dealer' },
+        { id: 'dealerCards', component: 'Row', gap: 'md', justify: 'center', children: ['dealerCard1', 'dealerCard2'] },
+        { id: 'dealerCard1', component: 'PlayingCard', rank: '7', suit: 'clubs' },
+        { id: 'dealerCard2', component: 'PlayingCard', rank: '9', suit: 'spades', faceDown: true },
+        { id: 'dealerTotal', component: 'Text', variant: 'h4', text: 'Dealer shows 7' },
+        { id: 'playerColumn', component: 'Column', gap: 'sm', align: 'stretch', children: ['playerLabel', 'playerCards', 'playerTotal'] },
+        { id: 'playerLabel', component: 'Text', variant: 'h5', text: 'You' },
+        { id: 'playerCards', component: 'Row', gap: 'md', justify: 'center', children: ['playerCard1', 'playerCard2'] },
+        { id: 'playerCard1', component: 'PlayingCard', rank: 'A', suit: 'spades' },
+        { id: 'playerCard2', component: 'PlayingCard', rank: 'K', suit: 'hearts' },
+        { id: 'playerTotal', component: 'Text', variant: 'h4', text: 'Blackjack! 21' },
+        { id: 'messageZone', component: 'Text', variant: 'body', text: 'Blackjack! Your move: hit, stand or double.' },
+        { id: 'tableFooter', component: 'CardFooter', children: ['moves'] },
+        { id: 'moves', component: 'Row', gap: 'sm', justify: 'center', children: ['hitBtn', 'standBtn', 'doubleBtn'] },
+        { id: 'hitBtn', component: 'Button', label: 'Hit', variant: 'solid', action: { action: 'hit' } },
+        { id: 'standBtn', component: 'Button', label: 'Stand', variant: 'solid', action: { action: 'stand' } },
+        { id: 'doubleBtn', component: 'Button', label: 'Double', variant: 'ghost', action: { action: 'double' } },
+      ],
+    },
+  },
+]
+
+/** The repair of `NATURAL_TURN`, re-emitted as the same turn: the hole card is face up (9 of spades, so the
+ *  dealer has 16 and the natural pays 3:2), the result is stated, the chips move, and the footer carries the
+ *  Deal again Button only. */
+export const NATURAL_REPAIRED_TURN: A2uiOutput = [
+  { version: 'v1.0', createSurface: { surfaceId: 'table-6', catalogId: CATALOG } },
+  {
+    version: 'v1.0',
+    updateComponents: {
+      surfaceId: 'table-6',
+      components: [
+        { id: 'root', component: 'Card', children: ['tableHeader', 'tableContent', 'tableFooter'] },
+        { id: 'tableHeader', component: 'CardHeader', children: ['title', 'chips'] },
+        { id: 'title', component: 'Text', variant: 'h4', text: 'Blackjack, round 6' },
+        { id: 'chips', component: 'Stat', label: 'Chips', value: 1150, delta: 150, variant: 'tile' },
+        { id: 'tableContent', component: 'CardContent', children: ['dealerColumn', 'playerColumn', 'messageZone'] },
+        { id: 'dealerColumn', component: 'Column', gap: 'sm', align: 'stretch', children: ['dealerLabel', 'dealerCards', 'dealerTotal'] },
+        { id: 'dealerLabel', component: 'Text', variant: 'h5', text: 'Dealer' },
+        { id: 'dealerCards', component: 'Row', gap: 'md', justify: 'center', children: ['dealerCard1', 'dealerCard2'] },
+        { id: 'dealerCard1', component: 'PlayingCard', rank: '7', suit: 'clubs' },
+        { id: 'dealerCard2', component: 'PlayingCard', rank: '9', suit: 'spades' },
+        { id: 'dealerTotal', component: 'Text', variant: 'h4', text: 'Dealer: 16' },
+        { id: 'playerColumn', component: 'Column', gap: 'sm', align: 'stretch', children: ['playerLabel', 'playerCards', 'playerTotal'] },
+        { id: 'playerLabel', component: 'Text', variant: 'h5', text: 'You' },
+        { id: 'playerCards', component: 'Row', gap: 'md', justify: 'center', children: ['playerCard1', 'playerCard2'] },
+        { id: 'playerCard1', component: 'PlayingCard', rank: 'A', suit: 'spades' },
+        { id: 'playerCard2', component: 'PlayingCard', rank: 'K', suit: 'hearts' },
+        { id: 'playerTotal', component: 'Text', variant: 'h4', text: 'Blackjack! 21' },
+        { id: 'messageZone', component: 'Text', variant: 'body', text: 'Blackjack! You win 3:2, +150 chips.' },
+        { id: 'tableFooter', component: 'CardFooter', children: ['actions'] },
+        { id: 'actions', component: 'Row', gap: 'sm', justify: 'center', children: ['dealAgainBtn'] },
+        { id: 'dealAgainBtn', component: 'Button', label: 'Deal again', variant: 'solid', action: { action: 'deal', context: { newRound: true } } },
+      ],
+    },
+  },
+]
+
 /** JSONL for a stored assistant turn (what `appendAssistantTurn` keeps: validated lines, no meta-line). */
 export function toJsonl(output: A2uiOutput): string {
   return output.map((m) => JSON.stringify(m)).join('\n')

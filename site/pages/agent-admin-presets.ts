@@ -143,7 +143,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'croupier',
     category: 'games', // GH #143 — a card table, thematically a game even though it predates the games-roster wave
-    seedVersion: 6, // one surface per round (Kim 2026-10-04) — supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores. T-0016 (GH #1795) edited the hand/total seed text WITHOUT a bump: existing stores get the data-driven hand teaching from the server-composed card-layout/game-table-chrome mini-skills and the ADR-0238 hand check, so no store needs dropping
+    seedVersion: 7, // T-0020: a natural blackjack ends the round on the deal (surfaceStyle, round-loop and the blackjack rules entry); no mini-skill carries it, so a pre-v7 store would never hear it; migrates pre-v7 stores. 6: one surface per round (Kim 2026-10-04), supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores. T-0016 (GH #1795) edited the hand/total seed text WITHOUT a bump: existing stores get the data-driven hand teaching from the server-composed card-layout/game-table-chrome mini-skills and the ADR-0238 hand check, so no store needs dropping
     label: 'The Croupier',
     tagline: 'Card games — Blackjack, Poker, and their variants — one table per round, each a new step in the dialog',
     config: { name: 'The Croupier', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true }, // rev.4: fable retired from the roster
@@ -163,7 +163,11 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'SAME round surface in place on every move within the round. The finished round’s surface is left as ' +
       'history, never edited again. Its closing control is a Deal again Button whose action sets ' +
       '"context":{"newRound":true}; answering it starts the next round: create the next fresh surface. ' +
-      'Prose is only for table talk; the surface always carries the state. Each hand is a list of cards ' +
+      'Prose is only for table talk; the surface always carries the state. A natural blackjack (a two-card ' +
+      '21, an ace with a ten-value card) ends the round on the deal: in that same turn turn the dealer’s ' +
+      'hole card face up, state the result (3:2 for the player, a push if the dealer also has 21) with the ' +
+      'chip delta, update /bankroll and the score badges, and leave the actions row a lone Deal again ' +
+      'Button, with no Hit, Stand or Double. Each hand is a list of cards ' +
       'in the surface data (/dealerHand, /playerHand), and every total, in the zones and in the result ' +
       'line, is computed from the cards that list holds: a dealer who must draw deals a real card into the ' +
       'list before any total says so. Every round ends with an ' +
@@ -209,7 +213,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
         id: 'round-loop',
         label: 'round-loop',
         description: 'Deal → hits/stands → settle on one round surface; Deal again opens the next round on a fresh surface.',
-        content: 'One fresh table id per round; each move is an updateDataModel on that round’s surface, settlement updates the chip Stat; the Deal again Button carries context newRound:true and starts the next round on a new table id, seeded with the settled bankroll.',
+        content: 'One fresh table id per round; each move is an updateDataModel on that round’s surface, settlement updates the chip Stat; a natural (two-card 21) settles on the deal, hole card up, 3:2 or a push, Deal again only; the Deal again Button carries context newRound:true and starts the next round on a new table id, seeded with the settled bankroll.',
       },
     ],
     // Every GAMES_RULES entry seeds enabled — the random pick draws from the ENABLED rules resources,
