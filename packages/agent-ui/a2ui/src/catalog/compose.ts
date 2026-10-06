@@ -30,6 +30,7 @@ import { validateComponent, validateFunctions, CatalogError, CatalogLoadCode } f
 import type { Catalog, ComponentDef, FunctionDef } from './catalog.ts'
 import { validName } from './naming.ts'
 import type { CatalogEntry, CatalogRegistry, VariantDispatch, WidgetFactory } from './types.ts'
+import type { SemanticCheck } from './semantic-check.ts'
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
@@ -290,6 +291,26 @@ export interface PersonaCatalogManifest {
   fragment: CatalogFragment
   /** Which registered base(s) this fragment composes onto — `agent-ui` and/or `a2ui-basic` (SPEC-N5). */
   targetCatalogs?: readonly string[]
+  /** ADR-0238 (proposed): this persona's semantic checks, run by `produce()` after structural validation on
+   *  every turn whose selected catalog is one of this persona's derived ids (`semanticChecksForCatalog`).
+   *  Absent or empty: no check runs and the turn streams byte-identically. Pure, DOM-less functions only,
+   *  since both server hosts import this manifest. */
+  semanticChecks?: readonly SemanticCheck[]
+}
+
+/**
+ * ADR-0238 (proposed): the semantic checks for a turn's SELECTED catalog id. A derived `<base>--<persona>`
+ * id resolves to that persona's declared `semanticChecks` (the same `targetsFor` pairing every derive step
+ * reads); a base id, an unknown id, or a persona that declares none resolves to `[]`. Both server hosts call
+ * this with the catalog `selectCatalog` actually chose, never the raw client id, so a fail-closed fallback to
+ * the default catalog also falls back to no checks.
+ */
+export function semanticChecksForCatalog(catalogId: string, personas: readonly PersonaCatalogManifest[]): readonly SemanticCheck[] {
+  for (const persona of personas) {
+    if (persona.semanticChecks === undefined || persona.semanticChecks.length === 0) continue
+    if (targetsFor(persona).some((baseId) => derivedCatalogId(baseId, persona.personaId) === catalogId)) return persona.semanticChecks
+  }
+  return []
 }
 
 /**

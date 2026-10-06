@@ -14,7 +14,8 @@
 
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { selectCatalog, buildCatalogMap } from '../../tools/agent/chat-validation.ts'
+import { selectCatalog, buildCatalogMap, semanticChecksDeps } from '../../tools/agent/chat-validation.ts'
+import { croupierSemanticChecks } from '../../src/catalog/personas/croupier/checks.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import catalogRaw from '../../src/catalog/default/catalog.json'
@@ -118,5 +119,31 @@ describe('buildCatalogMap (GH #516 / persona-catalog-composition SPEC-R3 — the
     }
     expect(error).toBeInstanceOf(CatalogComposeError)
     expect((error as InstanceType<typeof CatalogComposeError>).code).toBe(CatalogComposeErrorCode.COLLISION)
+  })
+})
+
+describe('semanticChecksDeps (ADR-0238, proposed; GH #1795): the selected catalog decides the persona checks', () => {
+  const catalog = loadCatalog(catalogRaw)
+  const basicCatalog = loadCatalog(basicCatalogRaw)
+  const catalogs = buildCatalogMap(catalog, basicCatalog)
+
+  it('a derived croupier catalog yields its checks; a base or check-less persona catalog yields {} (byte-identical deps)', () => {
+    expect(semanticChecksDeps(catalogs.get('agent-ui--croupier')!)).toEqual({ semanticChecks: croupierSemanticChecks })
+    expect(semanticChecksDeps(catalogs.get('a2ui-basic--croupier')!)).toEqual({ semanticChecks: croupierSemanticChecks })
+    expect(semanticChecksDeps(catalog)).toEqual({})
+    expect(semanticChecksDeps(catalogs.get('agent-ui--concierge')!)).toEqual({})
+  })
+
+  it('follows selectCatalog, never the raw id: an unknown id falls back to the default catalog and to no checks', () => {
+    expect(semanticChecksDeps(selectCatalog(catalogs, 'agent-ui--croupier', catalog))).toEqual({ semanticChecks: croupierSemanticChecks })
+    expect(semanticChecksDeps(selectCatalog(catalogs, 'agent-ui--croupier-typo', catalog))).toEqual({})
+  })
+
+  it('both HTTP hosts spread it from the SELECTED catalog into produce() deps (source-text, the buildCatalogMap idiom)', () => {
+    const ROOT = `${(process as { cwd(): string }).cwd()}/packages/agent-ui/a2ui/tools/agent`
+    for (const src of [readFileSync(`${ROOT}/dev-proxy-plugin.ts`, 'utf8'), readFileSync(`${ROOT}/worker/index.ts`, 'utf8')]) {
+      expect(src).toMatch(/const selectedCatalog = selectCatalog\(catalogs, catalogId, catalog\)/)
+      expect(src).toMatch(/\.\.\.semanticChecksDeps\(selectedCatalog\)/)
+    }
   })
 })

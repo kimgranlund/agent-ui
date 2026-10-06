@@ -20,7 +20,8 @@ import { selectCatalog as selectCatalogShared } from '../../src/renderer/wire-to
 // persona manifests, imported by LEAF PATH (never `catalog/index.ts`/`catalog/personas/index.ts`,
 // both of which pull in `@agent-ui/components`'s DOM self-define via `factories.ts` — a hard crash in
 // this Node/Workers module). See `buildCatalogMap`'s own doc comment below.
-import { composePersonaCatalogDocs } from '../../src/catalog/compose.ts'
+import { composePersonaCatalogDocs, semanticChecksForCatalog } from '../../src/catalog/compose.ts'
+import type { SemanticCheck } from '../../src/catalog/semantic-check.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../../src/catalog/personas/manifests.ts'
 
@@ -125,6 +126,18 @@ export const selectCatalog = selectCatalogShared
  * SAME fail-loud-at-boot posture `loadCatalog`'s own gates already have for a malformed base catalog,
  * never a half-composed production surface.
  */
+/**
+ * ADR-0238 (proposed), GH #1795: the `ProduceDeps.semanticChecks` slice for a turn, shared by both hosts
+ * (the `buildCatalogMap` precedent: one helper, never two host-side copies). `catalog` is the catalog
+ * `selectCatalog` CHOSE, so an unknown or malformed client id that fell back to the default also falls back
+ * to no checks. Returns `{}` when the catalog's persona declares none, so spreading it into the deps object
+ * adds NOTHING and the turn is byte-identical to a host without this hook.
+ */
+export function semanticChecksDeps(catalog: Catalog): { semanticChecks?: readonly SemanticCheck[] } {
+  const semanticChecks = semanticChecksForCatalog(catalog.catalogId, SHIPPED_PERSONA_CATALOG_MANIFESTS)
+  return semanticChecks.length > 0 ? { semanticChecks } : {}
+}
+
 export function buildCatalogMap(catalog: Catalog, basicCatalog: Catalog): Map<string, Catalog> {
   const bases = new Map<string, Catalog>([
     [catalog.catalogId, catalog],

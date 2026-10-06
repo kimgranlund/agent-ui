@@ -4,7 +4,8 @@
 // prompt), `produce()` (the bounded generate → heal+validate → self-correct driver), the
 // `AgentTransport`/`Session` seam types, the `GenUiMode` axis, the mini-skill registry, the feed-catalog
 // partition, the catalogs' per-type selection guidance (`selection-guidance.ts`, ADR-0232 accepted), and
-// the hand-rolled, SDK-free Anthropic `AgentProvider` adapter.
+// the hand-rolled, SDK-free Anthropic `AgentProvider` adapter; plus the opt-in persona semantic-check hook
+// `produce()` runs after structural validation (`catalog/semantic-check.ts`, ADR-0238 proposed).
 //
 // Exposed ONLY via the package.json "./agent" subpath export — the ROOT barrel (`../index.ts`) does NOT
 // re-export this module (ADR-0137 clause 1 identity gate: a renderer-only consumer bundles ZERO producer
@@ -23,6 +24,7 @@ export * from './genui-line.ts'
 export * from './gen-ui-mode.ts'
 export * from './feed-catalog.ts'
 export * from './produce.ts'
+export * from '../catalog/semantic-check.ts' // ADR-0238 (proposed): the hook lives beside compose.ts (ADR-0137 containment)
 export * from './system-prompt.ts'
 export * from './mini-skills.ts'
 export * from './selection-guidance.ts'

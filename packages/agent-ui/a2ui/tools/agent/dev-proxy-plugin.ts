@@ -86,6 +86,7 @@ import {
   resolveChatDispatch,
   selectCatalog,
   buildCatalogMap,
+  semanticChecksDeps,
 } from './chat-validation.ts'
 import type { ChatDispatch } from './chat-validation.ts'
 export { validateMode, validateGenuiSurface, validateA2uiEnabled, validateAuthoringSurface, validateEffort, isChatBody, resolveChatDispatch }
@@ -397,10 +398,14 @@ export function a2uiDevProxyPlugin(opts?: {
               // ADR-0169 cl.3 — select the request's catalog (fail-closed to the default on a non-string/
               // unknown id, never a 400/mixed catalog+prompt); reaches both the prompt and the validator
               // through the ONE existing `deps.catalog` seam (produce.ts) — no second threading path.
+              // ADR-0238 (proposed): the SELECTED catalog's persona semantic checks ride the same deps object
+              // (`semanticChecksDeps` adds nothing when the persona declares none, so such a turn is byte-identical).
+              const selectedCatalog = selectCatalog(catalogs, catalogId, catalog)
               const deps: ProduceDeps = {
                 provider: dispatch.provider,
                 retrieve: (q) => retrieve(shard, q),
-                catalog: selectCatalog(catalogs, catalogId, catalog),
+                catalog: selectedCatalog,
+                ...semanticChecksDeps(selectedCatalog),
               }
               // produce() yields ONLY a fully validated payload's lines (SPEC-R5) — stream them line by line.
               // `model` is the allowlist-VALIDATED value (resolvePair) passed as the AUTHORITATIVE opts.model:
