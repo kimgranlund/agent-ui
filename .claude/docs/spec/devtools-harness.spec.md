@@ -183,6 +183,12 @@ page; the roadmap row moves on ship.
 
 - **SPEC-N1** — NOT a test runner/assertion framework: scheduling, retries, reporting belong to the
   consumer's runner; the helper only wraps the page.
+
+  > **Note (non-normative, 2026-10-05, T-0010):** `scripts/e2e-admin` is a consumer-side runner of this
+  > kind: it drives the agent-admin app in headless Chromium, local only with no CI job. Known gap:
+  > `capturedLineTimelines` replays only `line` events, while `recordTurn` moves meta-lines into `meta`
+  > events, so a capture loses note, ask, patch, plan, team and flowEnd lines. Admin fixtures therefore
+  > carry raw wire lines. Meta replay is a follow-up that would amend R3/R10, not part of T-0010.
 - **SPEC-N2** — NOT CI infrastructure: no workflows, no shard changes beyond adopting the one smoke spec.
 - **SPEC-N3** — NO key handling, provider adapters, or `produce()` in this package; NO production mount for
   the seam (`apply: 'serve'` only). The trust boundary stays at `/__a2ui/agent` (ADR-0073/ADR-0152).

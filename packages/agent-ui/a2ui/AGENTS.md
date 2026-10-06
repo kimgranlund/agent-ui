@@ -21,7 +21,7 @@ The A2UI protocol layer. Root `AGENTS.md` and `CLAUDE.md` hold the package DAG, 
 
 ## Boundaries
 
-- Trust boundary: provider keys stay server-side behind the dev-proxy mount `/__a2ui/agent` (`tools/agent/dev-proxy-plugin.ts`, ADR-0073 clause 5). No key, provider adapter or `produce()` import may enter `@agent-ui/devtools` (ADR-0200).
+- Trust boundary: provider keys stay server-side behind the dev-proxy mount `/__a2ui/agent` (`tools/agent/dev-proxy-plugin.ts`, ADR-0073 clause 5). No key, provider adapter or `produce()` import may enter `@agent-ui/devtools` (ADR-0200). `scripts/e2e-admin` answers `/__a2ui/agent` from fixtures through Playwright routes and adds no key path (local only, no CI job).
 - Node-only fence: under `src/agent/`, only the modules in `NODE_ALLOWED` (`src/agent/gates.test.ts`) may import `node:*` (ADR-0137 clause 4).
 
 ## Wire and validator spine

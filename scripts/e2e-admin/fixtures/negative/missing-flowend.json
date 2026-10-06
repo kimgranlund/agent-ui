@@ -1,0 +1,25 @@
+{
+  "kind": "agent-ui-admin-scenario",
+  "version": 1,
+  "name": "negative/missing-flowend",
+  "seed": {
+    "localStorage": {
+      "agent-admin-app.activePreset": "\"quant\""
+    }
+  },
+  "turns": [
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "intent",
+        "textIncludes": "wrap it up"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"note\":\"Scripted closing note: you are all set.\"}}"
+        ]
+      }
+    }
+  ]
+}

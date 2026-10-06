@@ -1,0 +1,33 @@
+{
+  "kind": "agent-ui-admin-scenario",
+  "version": 1,
+  "name": "persona-switch-fresh-session",
+  "turns": [
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "intent",
+        "textIncludes": "first turn"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"note\":\"Scripted croupier note: welcome to the table.\"}}"
+        ]
+      }
+    },
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "intent",
+        "textIncludes": "second turn"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"note\":\"Scripted quant note: a fresh session.\"}}"
+        ]
+      }
+    }
+  ]
+}

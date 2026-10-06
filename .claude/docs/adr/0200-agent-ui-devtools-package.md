@@ -54,3 +54,6 @@
 - **Adopt Playwright as a real dependency of `./playwright`.** Rejected: a types-only helper over a consumer-supplied `Page` delivers the same API with zero runtime deps; the ADR-0139 ruled-exception machinery is not needed and therefore not spent.
 - **A new capture format disjoint from the debug bundle.** Rejected by ruling clause 4: one format, captures round-trip between the app and the harness; a disjoint format is the two-writers fork with none of the benefit.
 - **SSE or WebSocket for the seam instead of NDJSON.** Rejected: the dev-proxy and the whole a2ui wire already speak NDJSON lines; `POST + application/x-ndjson` reuses the exact reader idiom (`readNdjsonLines`, now `@agent-ui/data/stream`'s hoisted body) and stays curl-able for an agent driver.
+
+> **Note (2026-10-05, T-0010):** the keyless agent-admin flow runner lives in `scripts/e2e-admin`, outside
+> this package, which is consistent with SPEC-N1 (the package is not a test runner). Local only, no CI job.

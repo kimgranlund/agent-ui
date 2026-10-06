@@ -19,6 +19,12 @@ Process `.claude/docs/process.md` · Standards `.claude/docs/references/` · `si
   bump — history + the focus-timing extension rule: `component-testing`.
 - `npm run eval:agent-behavior -- selftest` is keyless and runs inside `check:scripts`; `-- live --leg selection|persona`
   needs `ANTHROPIC_API_KEY` and is Kim's manual run (exit 0, 1 or 2). Home: `packages/agent-ui/a2ui/tools/agent-eval/`, GH #1810.
+- `npm run e2e:admin`: keyless headless agent-admin flows (Test Chat, Builder, Settings, teams, error and
+  abort paths) replayed from fixtures in `scripts/e2e-admin/`; outside the six shards, local only, no CI job.
+- `npm run e2e:admin:record`: captures a new admin fixture from the live model; manual, needs a key in
+  `.env`, never run in CI.
+- `npm run e2e:devtools`: the `@agent-ui/devtools` keyless browser smoke (`scripts/e2e-devtools.mjs`);
+  local only, no CI job.
 - `npm run dev` / `npm run build` — the docs site (`site/`) is the app entry · `npm run deploy:docs` — ui.nonoun.io
 - `npm run ops:reap-worktrees` / `ops:reap-branches` / `ops:reap-scratch-clones` — gated,
   dry-run-by-default reap scripts (append `-- --execute` to apply) for `.claude/worktrees/`

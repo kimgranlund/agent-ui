@@ -33,6 +33,8 @@
 - [ ] New behaviour is covered by probes; the whole suite stays green (monotonic — nothing regresses).
 - [ ] Public surface changes are reflected in the relevant `{name}.md` frontmatter (ADR-0004) and in `plan.md` if a decision moved.
 
+Not a DoD item: `npm run e2e:admin` is a local agent-admin check, not in CI.
+
 ---
 
 ## G0 — Tooling & conventions baseline

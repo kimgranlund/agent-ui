@@ -1,0 +1,31 @@
+{
+  "kind": "agent-ui-admin-scenario",
+  "version": 1,
+  "name": "failure-http-error",
+  "turns": [
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "intent"
+      },
+      "respond": {
+        "status": 503,
+        "error": "Scripted upstream outage"
+      }
+    },
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "intent",
+        "textIncludes": "try again"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"note\":\"Scripted recovery note: back on track.\"}}"
+        ]
+      }
+    }
+  ]
+}

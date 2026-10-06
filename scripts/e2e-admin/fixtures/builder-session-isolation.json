@@ -1,0 +1,33 @@
+{
+  "kind": "agent-ui-admin-scenario",
+  "version": 1,
+  "name": "builder-session-isolation",
+  "turns": [
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "intent",
+        "textIncludes": "test side"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"note\":\"Scripted Test Chat note.\"}}"
+        ]
+      }
+    },
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": true,
+        "inputKind": "intent",
+        "textIncludes": "builder side"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"note\":\"Scripted Builder note: interview side.\"}}"
+        ]
+      }
+    }
+  ]
+}

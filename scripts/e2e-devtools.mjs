@@ -35,80 +35,10 @@ import { once } from 'node:events'
 import net from 'node:net'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { assertPortReleased, freePort, killTree, waitForHttp } from './lib/dev-server.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const VITE_BIN = path.join(ROOT, 'node_modules', '.bin', 'vite')
-
-// ── small machinery (selftested below) ────────────────────────────────────────────────────────────
-
-/** Ask the OS for a free ephemeral port — never squat a fixed number (5173 belongs to Kim's dev loop). */
-export function freePort() {
-  return new Promise((resolve, reject) => {
-    const srv = net.createServer()
-    srv.once('error', reject)
-    srv.listen(0, '127.0.0.1', () => {
-      const { port } = srv.address()
-      srv.close((err) => (err ? reject(err) : resolve(port)))
-    })
-  })
-}
-
-/** Poll `url` until fetch resolves ok (any HTTP status counts as "listening" when `anyStatus`),
- *  throwing past `timeoutMs`. The readiness target is /__devtools/status — readiness AND seam-mounted
- *  proven in one probe. */
-export async function waitForHttp(url, { timeoutMs = 60_000, intervalMs = 250, anyStatus = false } = {}) {
-  const deadline = Date.now() + timeoutMs
-  let lastErr = 'no attempt'
-  for (;;) {
-    try {
-      const res = await fetch(url)
-      if (anyStatus || res.ok) return res
-      lastErr = `HTTP ${res.status}`
-    } catch (err) {
-      lastErr = err instanceof Error ? err.message : String(err)
-    }
-    if (Date.now() > deadline) throw new Error(`waitForHttp: ${url} not ready after ${timeoutMs}ms (${lastErr})`)
-    await new Promise((r) => setTimeout(r, intervalMs))
-  }
-}
-
-/** Kill a detached child's WHOLE process group and verify nothing survives. Throws when a survivor
- *  remains — a zombie is a loud failure here, never a silent leak. */
-export async function killTree(child, { graceMs = 4000 } = {}) {
-  const pid = child.pid
-  if (typeof pid !== 'number') throw new Error('killTree: child has no pid')
-  const exited = child.exitCode !== null || child.signalCode !== null ? Promise.resolve() : once(child, 'exit')
-  try {
-    process.kill(-pid, 'SIGTERM') // negative pid ⇒ the whole group (detached ⇒ pgid === pid)
-  } catch (err) {
-    if (err.code !== 'ESRCH') throw err // already gone is fine
-  }
-  const timedOut = await Promise.race([
-    exited.then(() => false),
-    new Promise((r) => setTimeout(() => r(true), graceMs)),
-  ])
-  if (timedOut) {
-    try {
-      process.kill(-pid, 'SIGKILL')
-    } catch (err) {
-      if (err.code !== 'ESRCH') throw err
-    }
-    await Promise.race([exited, new Promise((r) => setTimeout(r, 2000))])
-  }
-  // Verification leg 1: the direct pid is gone.
-  let direct = true
-  try {
-    process.kill(pid, 0)
-  } catch (err) {
-    direct = err.code !== 'ESRCH' ? direct : false
-  }
-  if (direct) throw new Error(`killTree: pid ${pid} still alive after teardown`)
-  // Verification leg 2: no group survivor (macOS/Linux pgrep -g <pgid>; exit 1 = none found).
-  const pg = spawnSync('pgrep', ['-g', String(pid)], { encoding: 'utf8' })
-  if (pg.status === 0 && pg.stdout.trim() !== '') {
-    throw new Error(`killTree: process-group survivors remain: ${pg.stdout.trim().split('\n').join(', ')}`)
-  }
-}
 
 // ── the smoke ─────────────────────────────────────────────────────────────────────────────────────
 
@@ -202,13 +132,7 @@ async function smoke() {
   }
 
   // Post-teardown proof: the port is actually released — the next run (idempotence) starts clean.
-  await new Promise((resolve, reject) => {
-    const probe = net.connect({ host: '127.0.0.1', port }, () => {
-      probe.destroy()
-      reject(new Error(`port ${port} still accepting connections after teardown`))
-    })
-    probe.once('error', () => resolve())
-  })
+  await assertPortReleased(port)
   console.log('[e2e] teardown verified: process tree dead, port released')
 }
 

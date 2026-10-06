@@ -1,0 +1,27 @@
+{
+  "kind": "agent-ui-admin-scenario",
+  "version": 1,
+  "name": "chat-surface-render",
+  "seed": {
+    "localStorage": {
+      "agent-admin-app.activePreset": "\"quant\""
+    }
+  },
+  "turns": [
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "intent",
+        "textIncludes": "show me a button"
+      },
+      "respond": {
+        "lines": [
+          "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"canvas\",\"catalogId\":\"agent-ui\"}}",
+          "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"canvas\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"btn\"]},{\"id\":\"btn\",\"component\":\"Button\",\"variant\":\"solid\",\"label\":\"Click me\",\"action\":{\"action\":\"submit\"}}]}}",
+          "{\"a2uiMeta\":{\"note\":\"Scripted surface: one button.\"}}"
+        ]
+      }
+    }
+  ]
+}

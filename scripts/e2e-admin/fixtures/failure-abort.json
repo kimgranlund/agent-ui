@@ -1,0 +1,31 @@
+{
+  "kind": "agent-ui-admin-scenario",
+  "version": 1,
+  "name": "failure-abort",
+  "turns": [
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "intent"
+      },
+      "delayMs": 1500,
+      "respond": {
+        "abort": true
+      }
+    },
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "intent",
+        "textIncludes": "try again"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"note\":\"Scripted recovery note: back on track.\"}}"
+        ]
+      }
+    }
+  ]
+}

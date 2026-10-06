@@ -116,6 +116,11 @@ header pointing here.
 - **Context: System**: the settings segment showing the compiled agent-system JSON, including the
   composed prompt; the read-only truth of what the next turn will send. Its sibling **Context: Dialog**
   is the per-turn payload log.
+- **admin flow**: one scripted, keyless agent-admin scenario run by `npm run e2e:admin`
+  (`scripts/e2e-admin`) in headless Chromium. Always qualified: bare "flow" already names ask-flows and
+  the guided-authoring flow.
+- **scenario fixture**: the recorded raw wire lines an admin flow replays through Playwright routes in
+  place of the live model; captured by `npm run e2e:admin:record`.
 - **roster**: two senses, both about agents. The **agent roster** is the ordered `AgentRecord` list
   (`AgentRosterView`); the **team roster** is an `AgentTeam`'s `members`. A capability list is
   never a roster: the composer's `@`/`/` option lists are `EntryRosters`, an entry-side name.

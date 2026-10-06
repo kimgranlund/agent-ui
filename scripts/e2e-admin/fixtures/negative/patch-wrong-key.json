@@ -1,0 +1,19 @@
+{
+  "kind": "agent-ui-admin-scenario",
+  "version": 1,
+  "name": "negative/patch-wrong-key",
+  "turns": [
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": true,
+        "inputKind": "intent"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"note\":\"Scripted Builder note: I named the draft.\",\"personaPatch\":{\"values\":{\"nmae\":\"Scripted Draft\"}}}}"
+        ]
+      }
+    }
+  ]
+}

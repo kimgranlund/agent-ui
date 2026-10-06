@@ -221,6 +221,7 @@ POST /__a2ui/agent/chat
 | Pair derivation | `providers-config.test.ts` | `providerForModel`: hit · unknown id · id owned only by an `implemented:false` provider |
 | Route validation | tools test | the `/chat` branch's 400/503 arms with a stub provider; the impure fetch path stays **manual live acceptance** (the SPEC-R3 adapter precedent) |
 | Standing gates | repo | `npm run check && npm test` green; descriptor trip-wire covers ALM-C4's new prop row |
+| Keyless admin flows (local only, no CI job) | `scripts/e2e-admin` | the `page.route` seam answers `/__a2ui/agent/status`, `/chat` and `/__a2ui/agent` in the browser from fixtures, with zero production change; run by `npm run e2e:admin` |
 
 **Negative control** (per the decomposition best-practice): the tree-shake gate must FAIL when the dynamic
 import is hoisted to a static one — prove once by mutation during the build, don't just trust the regex.

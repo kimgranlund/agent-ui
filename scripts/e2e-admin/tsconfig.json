@@ -1,0 +1,6 @@
+{
+  // The type gate for the admin headless flows (scripts/e2e-admin.mjs's typed modules): the tools config's
+  // strictness and Node ambient types, scoped to this tree. Runs as the second half of `npm run check:tools`.
+  "extends": "../../tsconfig.tools.json",
+  "include": ["./**/*.ts"]
+}

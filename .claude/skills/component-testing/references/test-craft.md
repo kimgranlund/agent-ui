@@ -138,9 +138,14 @@ passes solo); a future addition to that class is a one-line append to
 
 A seventh, NON-vitest step runs after these six: `test:eval-catalog`
 (`scripts/eval-catalog-gate.mjs`, GH #1356) — its own vite dev server + real playwright
-Chromium against `site/a2ui-catalog.html`, mirroring `scripts/e2e-devtools.mjs`'s
-freePort/killTree boot-a-server shape rather than a vitest project. It's appended to the
+Chromium against `site/a2ui-catalog.html`, using the freePort/killTree boot-a-server
+helpers in `scripts/lib/dev-server.mjs` rather than a vitest project. It's appended to the
 `test:browser` chain, not the six-shard vitest count above — the two counts stay distinct
 because this step has no vitest project to split or heap-bump in the first place.
+
+The admin flows (`npm run e2e:admin`, `scripts/e2e-admin.mjs`) use the same dev-server helpers but
+run outside the shards and outside `test:browser`: local only, no CI job. A change to
+`ui-agent-admin`, `site/pages/agent-admin-app.ts` or `site/lib/admin-live-runner.ts` runs
+`npm run e2e:admin` locally.
 
 The agent-behavior eval (`npm run eval:agent-behavior`) adds no browser shard: its selftest runs in `check:scripts`, its stub tests ride the vitest `tools` project, and its live leg is manual.
