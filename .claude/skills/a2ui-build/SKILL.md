@@ -33,9 +33,11 @@ builds; it never grades its own output (the `a2ui-review-agent` critic does — 
   Devtools work: `devtools-harness.spec.md`.
 - **Selection guidance** (ADR-0232, accepted): each catalog's `selection.json` sidecar, loaded by
   `src/agent/selection-guidance.ts` (`loadSelectionGuidance` · `selectionGuidanceFor` ·
-  `renderSelectionClause`, Node-only) and gated by `catalog/selection-guidance.test.ts` (bijection
+  `selectionGuidanceForId` · `renderSelectionClause` · `renderSelectionClauseWith`, Node-only) and gated by `catalog/selection-guidance.test.ts` (bijection
   with the catalog's types, reciprocity, render). A catalog row lands with its sidecar entry.
-  The sidecars are exercised by `npm run eval:agent-behavior` (`tools/agent-eval/`).
+  The sidecars are exercised by `npm run eval:agent-behavior` (`tools/agent-eval/`). Two consumers:
+  `catalogInventory` and, for the `agent-ui` sidecar, `dogfoodInventory()` (`ui-*`-tag `not for:` targets,
+  ADR-0232 amendment).
 - **Wire tolerances**: `.claude/docs/references/wire-tolerances.md` indexes every deliberate
   inbound Postel arm, backed by `renderer/wire-tolerances.ts`. A new synonym or graceful degrade is a
   row there (sanctioning record + a test that fires if it silently widens), never an ad-hoc branch.

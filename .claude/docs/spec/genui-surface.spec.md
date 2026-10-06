@@ -1,6 +1,10 @@
 # SPEC — GenUI surface (sandboxed free-form generative UI): wire · frame · bridge · producer
 
-> Status: proposed · v0.10 · 2026-08-21 · Layer: SPEC (execution contract)
+> Status: proposed · v0.11 · 2026-10-05 · Layer: SPEC (execution contract)
+> **v0.11 amendment (T-0008, ADR-0232 amendment, 2026-10-05, GH #1815):** SPEC-R13(b)'s inventory row
+> gains the per-type selection clause from the `agent-ui` `selection.json` sidecar, `not for:` targets
+> named as `ui-*` tags; the inventory budget is revised ≤ 19 600 → ≤ 28 200 chars (measured 27 820) and a
+> clause budget of ≤ 8 800 chars joins it (measured 8 479), with a new AC5. Full text: §13.
 > **v0.10 amendment (docs-only, 2026-08-21, GH #1565):** SPEC-R13(b)'s inventory budget revised ≤ 19 000
 > → ≤ 19 600 chars on real corpus evidence — the ruled §8 path ("tightening or loosening on real corpus
 > data is a SPEC version bump, not silent drift"): ADR-0228/ADR-0229's `ui-column-chart` control mint
@@ -747,3 +751,44 @@ requirement itself, is UNCHANGED.
   for file, over every committed descriptor, and the two readers' frontmatter-fence extraction agrees —
   `npm test` green, red on any divergence. Removing or skipping this gate makes the local reader
   UNLAWFUL under SPEC-R13(b) as amended.
+
+## 13 · Amendment (v0.11, T-0008 / ADR-0232 amendment): SPEC-R13(b)'s line gains the selection clause
+
+> **Basis:** ADR-0232's amendment (2026-10-05, proposed, Kim ratifies) retires its owned limit "the genui
+> dogfood inventory carries no guidance" on Kim's 2026-10-05 ruling that the dogfood row carries the full
+> clause. Tracking: GH #1815 item 3. Budgets move by the ruled §8 path: a revision on real measured data
+> is a SPEC version bump, not silent drift.
+
+**SPEC-R13(b), the row format (amended).** A derived inventory row whose tag maps to a default catalog type
+with an `agent-ui` sidecar entry (`catalog/default/selection.json`, ADR-0232 cl.1) carries that entry's
+selection clause after its `(attrs: ...)` and before the optional `(family: ...)` clause:
+`· use:` then the intents joined by `; `, then, when the entry has edges, `· not for:` then each edge as
+`<ui-tag> (<why>)`, comma-separated. Every `not for:` target is named by its taught `ui-*` tag, never the
+catalog type id, because the dogfood document writes tags. A row whose tag maps to no sidecar entry is
+byte-identical to its v0.10 form.
+
+- **Tag to type.** `catalogTypeForTag` (`src/agent/dogfood-inventory.ts`) maps a tag to its type id: the
+  tag minus `ui-`, each kebab segment PascalCased, plus the one rename `ui-audio` to `AudioPlayer`.
+- **Source.** `selectionGuidanceForId('agent-ui')` reads the guidance and `renderSelectionClauseWith`
+  formats it, the same formatter the catalog inventory uses (`src/agent/selection-guidance.ts`). Base
+  guidance only: persona sidecars stay out, and family siblings get no clause of their own.
+- **Budgets.** The whole inventory is held at ≤ 28 200 chars (`DOGFOOD_INVENTORY_CHAR_BUDGET`, revised
+  from ≤ 19 600; measured 27 820 on 2026-10-05). The summed clause length is held at ≤ 8 800 chars
+  (`DOGFOOD_GUIDANCE_CHAR_BUDGET`; measured 8 479 over 72 rows, 144 edges). Both are enforced by
+  `prompt-drift.test.ts`, never by runtime truncation; an over-budget sidecar is re-authored tersely. The
+  named fallback if a later wave blows the clause budget is the use-only clause.
+
+Every other word of SPEC-R13, including the byte-pinned teaching file, NEVER byte-captured derivation and
+set-equality requirement, is UNCHANGED.
+
+- **AC5 (new).** *Given* the drift gate, *then*:
+  (i) every catalog-mapped row ends with its expected clause, rebuilt in the test from the sidecar and a
+  type-to-tag map over `dogfoodInventoryTags()` (never read back from the renderer), followed only by an
+  optional family clause;
+  (ii) the clause-less rows are exactly the rows whose mapped type has no sidecar entry;
+  (iii) the summed clause length is ≤ `DOGFOOD_GUIDANCE_CHAR_BUDGET` (8 800);
+  (iv) negative control: a `notFor` edge planted to a type no taught tag names (`Option`, whose factory is
+  `div[role=option]`) throws `UNRESOLVED`, never renders or drops silently;
+  and *given* the parity gate (`dogfood-inventory-parity.test.ts`), (v) `catalogTypeForTag` maps every
+  `ui-*` `WidgetFactory.tag` in `defaultFactories` back to its own type id, with a planted mismatching
+  factory as its negative control. `npm test` green.

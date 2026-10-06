@@ -17,7 +17,7 @@ describe('dogfoodInventory — deterministic, descriptor-derived (SPEC-R13(b))',
     const lines = inv.split('\n')
     expect(lines.length).toBeGreaterThan(20) // the fleet's controls/ barrel is 50+ descriptors deep
     for (const line of lines) {
-      expect(line).toMatch(/^- ui-[a-z0-9-]+ — .+ \(attrs: .+\)$/)
+      expect(line).toMatch(/^- ui-[a-z0-9-]+ \u2014 .+ \(attrs: .+\)( · use: .+)?( \(family: [^)]*\))?$/)
     }
   })
 
@@ -42,7 +42,7 @@ describe('dogfoodInventory — deterministic, descriptor-derived (SPEC-R13(b))',
     expect(buttonLine).toContain('disabled: boolean')
   })
 
-  it('stays within the SPEC-R13(b) budget (≤ 16 000 chars) — evidence-revisable per SPEC §8, never silently exceeded', () => {
+  it('stays within the SPEC-R13(b) budget (DOGFOOD_INVENTORY_CHAR_BUDGET) — evidence-revisable per SPEC §8, never silently exceeded', () => {
     expect(dogfoodInventory().length).toBeLessThanOrEqual(DOGFOOD_INVENTORY_CHAR_BUDGET)
   })
 
@@ -75,7 +75,7 @@ describe('dogfoodInventory — deterministic, descriptor-derived (SPEC-R13(b))',
     expect(dogfoodInventory(['ui-planted-phantom-control'])).toBe('')
   })
 
-  // TRUNCATION QUALITY (independent-review MEDIUM finding on the S3 build): the aggregate 16 000-char
+  // TRUNCATION QUALITY (independent-review MEDIUM finding on the S3 build): the aggregate DOGFOOD_INVENTORY_CHAR_BUDGET
   // budget test above says nothing about whether any ONE summary's cut reads cleanly — 17 of the 59 real
   // summaries, measured, used to cut on a dangling negation/article/conjunction or land inside an
   // unmatched "(" (e.g. "...UIElement (not…", "...that walks a…"). This asserts clause-aware-cut QUALITY

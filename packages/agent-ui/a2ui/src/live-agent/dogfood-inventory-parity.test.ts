@@ -16,8 +16,9 @@
 import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { splitFrontmatter as realSplitFrontmatter, parseDescriptor } from '@agent-ui/components/descriptor'
-import { splitFrontmatter as localSplitFrontmatter, readAttributes } from '../agent/dogfood-inventory.ts'
+import { catalogTypeForTag, splitFrontmatter as localSplitFrontmatter, readAttributes } from '../agent/dogfood-inventory.ts'
 import type { LocalAttribute } from '../agent/dogfood-inventory.ts'
+import { defaultFactories } from '../catalog/default/factories.ts'
 
 declare const process: { cwd(): string }
 const CONTROLS_DIR = `${process.cwd()}/packages/agent-ui/components/src/controls`
@@ -81,5 +82,30 @@ describe('dogfood-inventory.ts local reader ≡ the real @agent-ui/components/de
     const { fence } = localSplitFrontmatter(themeProvider!.src)
     const scheme = readAttributes(fence).find((a) => a.name === 'scheme')
     expect(scheme?.values).toEqual(['', 'light', 'dark'])
+  })
+})
+
+/** Every `[typeId, tag]` pair whose `ui-*` tag `catalogTypeForTag` does not map back to its type id. */
+function tagTypeDisagreements(factories: Readonly<Record<string, { tag: string }>>): string[] {
+  return Object.entries(factories)
+    .filter(([, f]) => f.tag.startsWith('ui-'))
+    .filter(([typeId, f]) => catalogTypeForTag(f.tag) !== typeId)
+    .map(([typeId, f]) => `${typeId}: tag ${f.tag} maps to ${catalogTypeForTag(f.tag)}`)
+}
+
+// `catalogTypeForTag` (the dogfood inventory's tag-to-type rule) against the renderer's own binding,
+// `WidgetFactory.tag`: the independent ground truth, so the rule is gated rather than a third hand copy.
+// `Option`/`MenuItem` (`div[role=...]` factories) fall out by the `ui-` prefix.
+describe('catalogTypeForTag agrees with every default factory\'s own ui-* tag', () => {
+  it('maps every ui-* factory tag back to its catalog type id', () => {
+    const uiFactories = Object.values(defaultFactories).filter((f) => f.tag.startsWith('ui-'))
+    expect(uiFactories.length).toBeGreaterThan(50)
+    expect(tagTypeDisagreements(defaultFactories)).toEqual([])
+  })
+
+  // NEGATIVE CONTROL: the comparison must bite on a planted factory row whose tag maps elsewhere.
+  it('NEGATIVE CONTROL: a planted factory with a mismatching tag reports a disagreement', () => {
+    const planted = { ...defaultFactories, PlantedWidget: { ...defaultFactories.Button!, tag: 'ui-not-planted-widget' } }
+    expect(tagTypeDisagreements(planted)).toEqual(['PlantedWidget: tag ui-not-planted-widget maps to NotPlantedWidget'])
   })
 })

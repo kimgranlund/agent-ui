@@ -9,7 +9,9 @@ import { A2UI_BASIC_CANONICAL_URI } from '../catalog/a2ui-basic/index.ts'
 import {
   loadSelectionGuidance,
   renderSelectionClause,
+  renderSelectionClauseWith,
   selectionGuidanceFor,
+  selectionGuidanceForId,
   SelectionGuidanceError,
   SelectionGuidanceErrorCode,
   SELECTION_GUIDANCE_CHAR_BUDGET,
@@ -187,5 +189,28 @@ describe('renderSelectionClause', () => {
 
   it('exports a positive char budget', () => {
     expect(SELECTION_GUIDANCE_CHAR_BUDGET).toBeGreaterThan(0)
+  })
+})
+
+describe('selectionGuidanceForId: the id-keyed seam selectionGuidanceFor delegates to', () => {
+  it('equals selectionGuidanceFor for a base, the upstream, a derived, and an unknown id', () => {
+    for (const id of ['agent-ui', 'a2ui-basic', 'agent-ui--croupier', 'nope']) {
+      expect(selectionGuidanceForId(id), id).toEqual(selectionGuidanceFor(cat(id)))
+    }
+  })
+})
+
+describe('renderSelectionClauseWith: the one formatter, target labels from the caller', () => {
+  it('names each notFor target through the labeller', () => {
+    const clause = renderSelectionClauseWith(
+      { intents: ['a', 'b'], notFor: [{ type: 'Text', why: 'w' }, { type: 'TextField', why: 'v' }] },
+      (t) => `ui-${t.toLowerCase()}`,
+    )
+    expect(clause).toBe(' · use: a; b · not for: ui-text (w), ui-textfield (v)')
+  })
+
+  it('renders a bare use clause when notFor is empty, and "" for a missing entry', () => {
+    expect(renderSelectionClauseWith({ intents: ['a'], notFor: [] }, (t) => t)).toBe(' · use: a')
+    expect(renderSelectionClauseWith(undefined, (t) => t)).toBe('')
   })
 })
