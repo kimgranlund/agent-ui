@@ -32,6 +32,9 @@ import { readGenuiLine } from '../../packages/agent-ui/a2ui/src/agent/genui-line
 // (never an A2uiClientMessage); frameClientMessage/nextTurn accept the union of both.
 import type { GenuiActionMessage } from '../../packages/agent-ui/a2ui/src/agent/genui-line.ts'
 import { readNdjsonLines } from './ndjson-lines.ts'
+// T-0016 (ADR-0159 amendment, proposed): the A2UI adapter that turns this turn's stages, trace and lines
+// into the neutral activity steps `ui-agent-admin` forwards to the conversation's step mode.
+import { createA2uiActivity } from './a2ui-activity.ts'
 // The live-key probe is shared verbatim with a2ui-live's overlay (a boolean + count; never the key). Static
 // import here is fine — this whole module already lives BEHIND the page's dev-only dynamic import, so it is
 // tree-shaken out of the static build alongside the runner. Re-exported so the page reaches it through the
@@ -207,7 +210,8 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
       // to the per-step raw-source attachment (`TurnProgress.source` on validating/retry progress events).
       // Membership-validated server-side (dev proxy + worker: only the literal 'source' is honored; 'full'
       // stays server-owned); every other consumer (a2ui-chat/a2ui-live) never sends it — their streams stay
-      // source-free, the fail-closed default.
+      // source-free, the fail-closed default. T-0016: the activity adapter keeps the last attached candidate
+      // as the one raw block of a turn that fails without shipping lines.
       body: JSON.stringify({
         input,
         provider: PROVIDER,
@@ -253,6 +257,7 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
       throw new Error(`Live agent proxy error (${res.status} ${res.statusText}).`)
     }
     const turnLines: string[] = []
+    const activity = createA2uiActivity() // T-0016: one adapter per turn
     try {
       for await (const line of readNdjsonLines(res.body)) {
         const meta = readMetaLine(line)
@@ -268,7 +273,15 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
           }
           // ADR-0146 F1 — a progress meta-line routes to the conversation's handle.progress (live narration);
           // it is never ingested as content (the SAME peel that already isolates note/trace, one arm added).
-          if (meta.a2uiMeta.progress) yield { kind: 'progress', progress: meta.a2uiMeta.progress }
+          if (meta.a2uiMeta.progress) {
+            yield { kind: 'progress', progress: meta.a2uiMeta.progress }
+            // T-0016: the same stage, folded into the activity steps it closes and opens.
+            for (const step of activity.progress(meta.a2uiMeta.progress)) yield { kind: 'step', step }
+          }
+          // T-0016: the runtime trace (rounds, failure codes, usage, model) rides the meta-line after
+          // `done`: it names the repair on the validate step and feeds the footer at the end. It was
+          // peeled and dropped here before; the wire and the trace shape are unchanged.
+          if (meta.a2uiMeta.trace) for (const step of activity.trace(meta.a2uiMeta.trace)) yield { kind: 'step', step }
           if (typeof meta.a2uiMeta.note === 'string' && meta.a2uiMeta.note.length > 0) {
             yield { kind: 'note', note: meta.a2uiMeta.note }
           }
@@ -321,9 +334,17 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
           continue // a genui line is never ingested as A2UI content (mirrors the meta-line peel above)
         }
         turnLines.push(line)
+        activity.line(line)
         yield { kind: 'line', line }
       }
+      // T-0016: the stream ended cleanly: the counted output steps, the one raw block, and the footer.
+      const end = activity.end()
+      for (const step of end.steps) yield { kind: 'step', step }
+      if (end.footer !== undefined) yield { kind: 'footer', footer: end.footer }
     } catch (err) {
+      // T-0016: the running step settles failed (keeping the last candidate as the raw block) before the
+      // failure surfaces through the component's fail() path.
+      for (const step of activity.fail()) yield { kind: 'step', step }
       // GH #144: the OTHER silent-looking failure mode reported — the client's own `TIMEOUT_MS` firing
       // mid-stream aborts the fetch, and reading `res.body` then rejects with a low-level stream error
       // (Chromium: "BodyStreamBuffer was aborted") that names no cause a person can act on. `AbortSignal.

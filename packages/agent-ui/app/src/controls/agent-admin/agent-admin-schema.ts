@@ -19,6 +19,7 @@ import type { AskDeclaration } from '@agent-ui/a2ui/agent/meta-line' // GH #802 
 import type { TeamDeclaration } from '@agent-ui/a2ui/agent/meta-line' // GH #1196 (ADR-0203 clause 4) — the declared team-roster shape, the SAME type-only import as PersonaPatch/PlanDeclaration/AskDeclaration above
 export type { TeamDeclaration } // re-exported so `agent-admin.ts` (which never imports @agent-ui/a2ui directly) can name the type for its own `#teamDeclaredRequest`/`onTeamDeclared` seam
 import type { TargetDeclaration } from '@agent-ui/a2ui/agent/meta-line' // GH #1259 (ADR-0206 cl.1) — the declared mutation-target shape ({surfaceId}), the SAME type-only import as its five sibling arms above
+import type { ActivityStep, ActivityFooter } from '../conversation/activity-step.ts' // T-0016: the neutral step model the runner's `step`/`footer` events carry
 import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line' // ADR-0146 F1 — the live-turn progress vocabulary (type-only, from the PURE meta-line module, never the node-first ./agent barrel); a cross-package specifier stays extensionless (the repo's own local-.ts-only convention) — a2ui/package.json exports this as its own subpath
 // M-D (SPEC-R3/R5) — the persona catalog compose-time overlay's static id-recognition inputs (the root
 // `@agent-ui/a2ui` barrel, catalog/index.ts's own re-export of `catalog/compose.ts` + `catalog/personas/index.ts`).
@@ -870,6 +871,14 @@ export type AdminSurfaceTurnEvent =
    *  validate-then-stream content burst); an unknown/closed id is silently dropped THERE (the
    *  registry-membership check is the guard — the peel stays gate-blind, like every sibling arm). */
   | { kind: 'target'; target: TargetDeclaration }
+  /** T-0016 (ADR-0159 amendment, proposed): one neutral activity row for the conversation's step mode,
+   *  built by the RUNNER's own adapter (the site's is `site/lib/a2ui-activity.ts`, from the progress
+   *  stages, the trace and the shipped lines). The component forwards it to `AgentTurnHandle.step()`
+   *  unread; a repeated `id` updates its row. A runner that yields none leaves the strip without rows. */
+  | { kind: 'step'; step: ActivityStep }
+  /** T-0016: the turn facts (rounds, tokens, model) for the step-mode footer row, forwarded to
+   *  `AgentTurnHandle.footer()`. Absent when the runner knows none. */
+  | { kind: 'footer'; footer: ActivityFooter }
 
 /** A surface turn's request. `turn` mirrors the producer's two arms: a typed user intent, or a surface
  *  client message (an action click / function response bubbled up via `onClientMessage`) — `message` is

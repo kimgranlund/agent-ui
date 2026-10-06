@@ -1047,12 +1047,13 @@ export class UIAgentAdminElement extends UIElement {
     // is the surface the ruling's screenshot came from): each turn's activity renders as one morphing line
     // while live and auto-collapses to a "N steps · total" receipt at the turn's end, expandable both ways.
     conversation.receipt = true
-    // GH #240/ADR-0159 wave B — and into the per-step SOURCE reveal (part 3 of the same ruling): each
-    // expanded activity step reveals the raw wire line(s) behind it (the createSurface/updateDataModel
-    // JSONL), one deliberate developer level deep. The admin chat is the fleet's developer surface — every
-    // other conversation consumer (a2ui-chat, the demos) stays default-off, byte-identical. The producer
-    // half of the channel is the live runner's own `progressDetail:'source'` request (admin-live-runner.ts).
-    conversation.sources = true
+    // T-0016 (ADR-0159 amendment, proposed): the chat also opts into STEP MODE, which replaces the GH #240 per-step
+    // `sources` opt-in this chat used to set: the strip renders only the neutral activity steps the
+    // runner yields (`step`/`footer` events, built by site/lib/a2ui-activity.ts from the stages, the
+    // trace and the shipped lines): per-step time and status, a one-line summary, a visible repair round,
+    // the raw output ONCE in a collapsed row, and a footer of rounds, tokens and model. Every other
+    // conversation consumer (a2ui-chat, the demos) stays default-off, byte-identical.
+    conversation.steps = true
     // GH #662 — the ORIGIN travels with the submission. Per-pane composers (cl.4) mean this composer IS
     // the test context, permanently and at every band; naming that here is what makes the triple dock's
     // two simultaneously-visible composers unable to cross-route (see `#contextFor`).
@@ -2578,10 +2579,11 @@ export class UIAgentAdminElement extends UIElement {
     // GH #665 — the interview's own kicker (the "Builder INTERVIEW" identity Kim's screenshot named),
     // matching the test conversation's `#makeRegionKicker` above.
     conversation.prepend(this.#makeRegionKicker('Builder interview'))
-    // Same two developer-surface opt-ins the test conversation takes (GH #238/#240/ADR-0159): the
-    // interview is watched by the same person debugging the draft.
+    // Same two developer-surface opt-ins the test conversation takes (GH #238/ADR-0159 receipt, and
+    // T-0016's step mode, which replaced GH #240's `sources` here too): the interview is watched by the
+    // same person debugging the draft, and its turns run through the same runner and event loop.
     conversation.receipt = true
-    conversation.sources = true
+    conversation.steps = true
     // GH #662 — this composer IS the authoring context, origin-keyed (`#contextFor`). GH #666 — and while
     // the flow is UNARMED it is also the flow's entry: the first message arms, then lands as the
     // interview's opening turn (one composer in the column at every moment, so there is no second submit
@@ -3644,7 +3646,9 @@ export class UIAgentAdminElement extends UIElement {
         if (epoch !== this.#conversationEpoch) return
         for await (const event of surfaceTurn(request)) {
           if (event.kind === 'note') note = event.note
-          else if (event.kind === 'progress') handle.progress(event.progress) // ADR-0146 F1 — live narration
+          else if (event.kind === 'progress') handle.progress(event.progress) // ADR-0146 F1 (inert under step mode, below)
+          else if (event.kind === 'step') handle.step(event.step) // T-0016: the runner's neutral activity rows
+          else if (event.kind === 'footer') handle.footer(event.footer) // T-0016: rounds, tokens, model
           else if (event.kind === 'genui') {
             // genui-surface.spec.md SPEC-R8/PRD-G8 — a PARALLEL mount path, never `ingestLine` (A2UI-
             // shaped; a genui line carries neither `createSurface` nor any envelope key `surfaceIdOf`

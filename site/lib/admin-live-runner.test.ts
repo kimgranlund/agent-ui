@@ -95,7 +95,40 @@ describe('createAdminSurfaceTurn', () => {
     const runner = createAdminSurfaceTurn()
     const events: string[] = []
     for await (const event of runner(SURFACE_REQUEST)) events.push(event.kind)
-    expect(events).toEqual(['note', 'line'])
+    // T-0016: the stream's end adds the activity adapter's output step (the createSurface line, counted).
+    expect(events).toEqual(['note', 'line', 'step'])
+  })
+
+  it('T-0016: progress, trace and lines fold into neutral step events, the footer closes the turn, and nothing names a type', async () => {
+    const create = '{"version":"v1.0","createSurface":{"surfaceId":"quokka","catalogId":"zebra-catalog"}}'
+    const trace = { turnIndex: 0, query: { intent: 'x', k: 0 }, exemplarIds: [], rounds: 2, healed: 0, failureCodes: ['SCHEMA'], model: 'model-x', usage: { inputTokens: 10, outputTokens: 4 } }
+    const lines = [
+      JSON.stringify({ a2uiMeta: { progress: { stage: 'validating' } } }),
+      JSON.stringify({ a2uiMeta: { progress: { stage: 'retry', round: 2 } } }),
+      JSON.stringify({ a2uiMeta: { progress: { stage: 'validating' } } }),
+      JSON.stringify({ a2uiMeta: { progress: { stage: 'done' } } }),
+      JSON.stringify({ a2uiMeta: { note: 'Opened it.', trace } }),
+      create,
+    ]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
+    )
+    const runner = createAdminSurfaceTurn()
+    const steps = new Map<string, Extract<AdminSurfaceTurnEvent, { kind: 'step' }>['step']>()
+    let footer: unknown
+    const kinds: string[] = []
+    for await (const event of runner(SURFACE_REQUEST)) {
+      kinds.push(event.kind)
+      if (event.kind === 'step') steps.set(event.step.id, event.step)
+      if (event.kind === 'footer') footer = event.footer
+    }
+    expect(kinds.at(-1), 'the footer is the last event').toBe('footer')
+    expect(steps.get('validate')).toMatchObject({ status: 'repaired', summary: 'Round 1 failed (SCHEMA), repaired in round 2', raw: create })
+    expect(steps.get('open')).toMatchObject({ label: 'Opened a new surface', status: 'ok' })
+    expect(footer).toEqual({ rounds: 2, inputTokens: 10, outputTokens: 4, model: 'model-x' })
+    const visible = [...steps.values()].map((st) => `${st.label} ${st.summary ?? ''}`).join(' ')
+    expect(visible).not.toMatch(/quokka|zebra|catalog/i)
   })
 
   it("requests the per-step raw-source attachment: the POST body carries progressDetail:'source' (GH #240/ADR-0159 wave B — the admin developer surface's standing opt-in)", async () => {
@@ -149,6 +182,26 @@ describe('createAdminSurfaceTurn', () => {
     ).rejects.toThrow(/produce: no valid surface within the round bound \(SCHEMA\)/)
   })
 
+  it('T-0016: a failing turn settles its running step failed, keeping the last candidate as the raw block, BEFORE the throw', async () => {
+    const lines = [
+      JSON.stringify({ a2uiMeta: { progress: { stage: 'validating', source: 'bad candidate' } } }),
+      formatErrorLine('produce: no valid surface within the round bound (SCHEMA)'),
+    ]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
+    )
+    const runner = createAdminSurfaceTurn()
+    const seen: AdminSurfaceTurnEvent[] = []
+    await expect(
+      (async () => {
+        for await (const event of runner(SURFACE_REQUEST)) seen.push(event)
+      })(),
+    ).rejects.toThrow(/round bound/)
+    const last = seen.at(-1)
+    expect(last).toMatchObject({ kind: 'step', step: { id: 'validate', status: 'failed', label: 'Validation failed', raw: 'bad candidate' } })
+  })
+
   it('a non-2xx response throws (never yields a partial)', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ error: 'no-key' }), { status: 503 })))
     const runner = createAdminSurfaceTurn()
@@ -193,7 +246,7 @@ describe('createAdminSurfaceTurn — genui-surface B2', () => {
     const runner = createAdminSurfaceTurn()
     const events: Array<{ kind: string; surfaceId?: string; html?: string }> = []
     for await (const event of runner(SURFACE_REQUEST)) events.push(event)
-    expect(events.map((e) => e.kind)).toEqual(['note', 'genui', 'line'])
+    expect(events.map((e) => e.kind)).toEqual(['note', 'genui', 'line', 'step']) // T-0016: the turn-end activity step
     expect(events[1]).toEqual({ kind: 'genui', surfaceId: 'q3-revenue', html: '<p>chart</p>' })
   })
 
@@ -568,7 +621,7 @@ describe('createAdminSurfaceTurn — the target peel (GH #1259 / ADR-0206)', () 
     const runner = createAdminSurfaceTurn()
     const events: AdminSurfaceTurnEvent[] = []
     for await (const event of runner(SURFACE_REQUEST)) events.push(event)
-    expect(events.map((e) => e.kind)).toEqual(['note', 'target', 'line'])
+    expect(events.map((e) => e.kind)).toEqual(['note', 'target', 'line', 'step']) // T-0016: the turn-end activity step
     expect(events.find((e) => e.kind === 'target')).toEqual({ kind: 'target', target: { surfaceId: 'weather-1' } })
   })
 
@@ -601,7 +654,7 @@ describe('createAdminSurfaceTurn — the ADR-0097 ask peel (GH #802)', () => {
     for await (const event of createAdminSurfaceTurn()(SURFACE_REQUEST)) events.push(event)
     // note → ask → the ask surface's OWN wire line, in stream order: the peel adds an event, it never
     // swallows the payload (the meta-line itself is still never ingested — ADR-0088 §1).
-    expect(events.map((e) => e.kind)).toEqual(['note', 'ask', 'line'])
+    expect(events.map((e) => e.kind)).toEqual(['note', 'ask', 'line', 'step']) // T-0016: the turn-end activity step
     expect(events.find((e) => e.kind === 'ask')).toEqual({ kind: 'ask', ask: { surfaceId: 'ask-1' } })
     expect(events.find((e) => e.kind === 'line')).toEqual({ kind: 'line', line: ASK_SURFACE_LINE })
   })
@@ -610,7 +663,7 @@ describe('createAdminSurfaceTurn — the ADR-0097 ask peel (GH #802)', () => {
     stubStream([JSON.stringify({ a2uiMeta: { note: 'Table set.' } }), ASK_SURFACE_LINE])
     const kinds: string[] = []
     for await (const event of createAdminSurfaceTurn()(SURFACE_REQUEST)) kinds.push(event.kind)
-    expect(kinds).toEqual(['note', 'line'])
+    expect(kinds).toEqual(['note', 'line', 'step']) // T-0016: the turn-end activity step
   })
 
   it('a MALFORMED ask drops only itself — the note on the same line still rides (readMetaLine\'s per-field law, end to end)', async () => {
