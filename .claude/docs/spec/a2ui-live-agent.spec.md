@@ -1,6 +1,11 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.20 · 2026-10-05 (v0.19 2026-10-05; v0.18 2026-10-05; v0.17 2026-08-18; v0.16 2026-08-13; v0.15 2026-08-12; v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.21 · 2026-10-06 (v0.20 2026-10-05; v0.19 2026-10-05; v0.18 2026-10-05; v0.17 2026-08-18; v0.16 2026-08-13; v0.15 2026-08-12; v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.21 changelog ([ADR-0238](../adr/0238-persona-semantic-checks-in-the-repair-loop.md), PROPOSED; GH #1795,
+> T-0016): `ProduceDeps` gains optional `semanticChecks`; Definitions gains `Semantic check`; SPEC-R4 gains one
+> paragraph and AC3 (persona-declared checks run after the shared validator and feed the existing repair
+> round; at the round bound a finding ships tallied, never halts; none declared is byte-identical). AC1 and
+> AC2 and every other requirement are byte-untouched.
 > v0.20 changelog ([ADR-0234](../adr/0234-turn-trace-prompt-budget-and-token-usage.md), ACCEPTED, ratified by Kim 2026-10-05;
 > GH #1809 and #1797): `TurnTrace` gains optional `prompt` (a `PromptBudgetReport`) and `usage` (a
 > `TokenUsage`); SPEC-R6 gains a whole-prompt budget paragraph and AC8; the SSE note gains usage extraction
@@ -387,6 +392,12 @@ isolated behind one interface (ADR-0069).
   and `usage` (provider-billed token counts summed over the turn, absent when none arrived).
 - **Runtime loop** — the bounded generate → `heal`+`validate` → self-correct → validated-stream driver
   (ADR-0070), the SPEC-R6 contract minus the authoring-time critic round.
+- **Semantic check** (ADR-0238, proposed): a pure, deterministic function a persona declares on its
+  server-safe `PersonaCatalogManifest` (`semanticChecks`) that judges a STRUCTURALLY VALID round for a
+  contradiction in its own domain (e.g. a hand's stated total against the cards it shows). It reads each
+  surface the round touches merged over the session's prior turns and returns `{code, path, message}`
+  findings. Not the protocol's `checks` (A2UI v1.0 input validation, `renderer/checks.ts`), and not a
+  rubric-graded round (ADR-0070): no model judges anything.
 - **AgentProvider** — the injected `stream({model,system,messages,signal}) → AsyncIterable<string>`
   seam (ADR-0073); one isolated module per provider (Anthropic implemented this wave, OpenAI/Gemini the
   next slices); each module is its provider's single upstream-format (SSE → text) boundary.
@@ -479,6 +490,22 @@ PRD-G4; realizes streaming SPEC-R2, harness SPEC-R6)*
   are fed back, and exhaustion halts-and-reports — a deterministic unit test, `npm test` green.
 - **AC2** *Given* the driver's validation step, *when* compared to the renderer's and corpus
   admission's, *then* all use the same `validateA2ui`/`heal` (parity; no fork — streaming SPEC-N3).
+
+**Persona semantic checks (ADR-0238, proposed).** When the host passes `ProduceDeps.semanticChecks` (resolved
+for the SELECTED catalog by `semanticChecksForCatalog`, so a derived `<base>--<persona>` id carries its persona's
+checks and every other id carries none), `produce()` MUST run them on a round whose payload passed
+`validateA2ui` and the FEED_SCOPE gate, before anything streams. A finding is a self-correct round fed back
+through the same feedback turn, `CODE at path: message`; rounds are spent while any remain. On the last round
+a finding MUST NOT halt: the structurally valid payload ships and `trace.failureCodes` gains
+`SEMANTIC_UNCORRECTED`; a check that throws contributes nothing and tallies `SEMANTIC_CHECK_ERROR`. Codes are
+produce-layer-only (never the `ErrorCode` union) and no wire field is added. With no checks declared,
+`produce()` builds no view and calls no check.
+- **AC3** *Given* a scripted provider whose round 1 is the GH #1795 Croupier evidence (valid on top of its
+  deal turn) and round 2 its repair, *when* `produce()` runs with the croupier checks, *then* exactly one
+  repair round runs, its feedback carries the finding's sentence, the stream is the repaired payload and
+  `trace.rounds` is 2; *given* no checks, *then* the evidence ships on round 1; *given* the evidence on every
+  round, *then* it ships at the bound tallied, never a `ProduceHalt`; *given* absent, empty or always-passing
+  checks, *then* the lines and provider requests are identical (`produce-semantic-checks.test.ts`, no key).
 
 *Eval coverage (non-normative, GH #1810):* `npm run eval:agent-behavior` reads `TurnTrace.rounds` and `failureCodes` to score first-pass versus eventual success with scripted providers, keylessly; its live leg is manual.
 
@@ -1627,7 +1654,14 @@ interface ProduceDeps {
   provider: AgentProvider;                                                 // the model seam (SPEC-R11); stub in tests
   retrieve(query: RetrieveQuery): CorpusRecord[];                          // over the judged shard
   catalog: Catalog;                                                        // the sole authority
+  semanticChecks?: readonly SemanticCheck[];                               // ADR-0238 (proposed): absent/empty ⇒ byte-identical
 }
+
+// ADR-0238 (proposed): a persona's semantic check (src/catalog/semantic-check.ts). Pure and synchronous;
+// declared on PersonaCatalogManifest.semanticChecks; run by produce() after the shared validator.
+interface SemanticCheck { id: string; check(input: { surfaces: SurfaceView[] }): SemanticFinding[]; }
+interface SurfaceView { surfaceId: string; components: ReadonlyMap<string, A2uiComponent>; dataModel: unknown; } // merged over prior turns
+interface SemanticFinding { code: string; path: string; message: string; } // message reaches the model only, never the wire
 
 // The provider seam (SPEC-R11 / ADR-0073) — one isolated module PER provider; key passed IN, not module-scoped.
 interface AgentProvider {

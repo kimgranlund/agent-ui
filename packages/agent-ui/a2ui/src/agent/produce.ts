@@ -532,7 +532,7 @@ function messagesFor(
       idgraphHint(failures) +
       (failures.some((f) => f.code === 'NET_NOOP') ? NET_NOOP_HINT : '') + // GH #1142 — the net-no-op correction round's guidance
       (failures.some((f) => f.code === 'FLOW_END_MISSING') ? FLOW_END_HINT : '') + // GH #1168 — the missing-flowEnd correction round's guidance
-      (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') // ADR-0238 (proposed) — a semantic-finding round's guidance
+      (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') // ADR-0238 (proposed): a semantic-finding round's guidance
     turns.push({
       role: 'user',
       content: `That output was INVALID (${summary}).${hint} Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,
@@ -921,7 +921,7 @@ const FLOW_END_HINT =
   'note, addressed to the user in persona — with "flowEnd": true added on that same line, and still ' +
   'NO A2UI lines after it.'
 
-/** ADR-0238 (proposed) — the self-correct sentence for a round with semantic findings (the NET_NOOP_HINT
+/** ADR-0238 (proposed): the self-correct sentence for a round with semantic findings (the NET_NOOP_HINT
  *  shape: one appended sentence, no new round kind). The payload was structurally valid; what it states
  *  contradicts what it shows, and each finding's own detail names the contradiction and the repair. */
 const SEMANTIC_HINT =
@@ -1236,7 +1236,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
           continue
         }
       }
-      // ADR-0238 (proposed) — the persona's semantic checks, AFTER structure and feed scope, BEFORE anything
+      // ADR-0238 (proposed): the persona's semantic checks, AFTER structure and feed scope, BEFORE anything
       // streams. A finding spends a self-correct round while one is left; on the last round the valid
       // payload ships with a tally instead (see the header). Skipped entirely when no check is declared.
       const semanticTally: string[] = []
@@ -1306,7 +1306,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
         // otherwise-successful round still needs to land on the trace, not just the retried case.
         if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
         if (flowEndFedBack && flowEnd === undefined) failureCodes.push('FLOW_END_UNCORRECTED') // GH #1168 — the correction round came back content-bearing and still without flowEnd: ships unchanged, tallied
-        failureCodes.push(...semanticTally) // ADR-0238 (proposed) — SEMANTIC_UNCORRECTED / SEMANTIC_CHECK_ERROR on the shipping round, never a retry trigger
+        failureCodes.push(...semanticTally) // ADR-0238 (proposed): SEMANTIC_UNCORRECTED / SEMANTIC_CHECK_ERROR on the shipping round, never a retry trigger
         yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk, plan, personaPatch, flowEnd, team, target) // meta-line FIRST
       }
       // genui-surface SPEC-R1 — a genui structural failure on an OTHERWISE-valid A2UI round is DROPPED

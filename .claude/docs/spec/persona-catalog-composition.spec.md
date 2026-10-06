@@ -1,6 +1,9 @@
 # SPEC — Persona Catalog Composition (M-D)
 
-> Status: accepted · v0.4 · 2026-10-06 (v0.2 2026-08-06; v0.3 2026-10-05 adds SPEC-R1's optional `controls` records, `ControlRecord`, and SPEC-R2 AC7, the derived entry's control loader, ADR-0233, accepted) · Layer: SPEC (execution contract)
+> Status: accepted · v0.5 · 2026-10-06 (v0.4 2026-10-06; v0.2 2026-08-06; v0.3 2026-10-05 adds SPEC-R1's optional `controls` records, `ControlRecord`, and SPEC-R2 AC7, the derived entry's control loader, ADR-0233, accepted) · Layer: SPEC (execution contract)
+> **v0.5 (2026-10-06):** SPEC-R1 gains one sentence: the persona's server-safe manifest MAY declare
+> `semanticChecks`, realizing [ADR-0238](../adr/0238-persona-semantic-checks-in-the-repair-loop.md) (proposed);
+> their runtime contract is [`a2ui-live-agent.spec.md`](./a2ui-live-agent.spec.md) SPEC-R4. No other clause moves.
 > **v0.4 (2026-10-06):** adds SPEC-R7, the agent manifest drift gate in `site/lib/agent-manifest/`,
 > realizing [ADR-0235](../adr/0235-agent-manifest-drift-gate.md) (proposed). No other clause moves.
 > **v0.2 (2026-08-06):** Kim's acceptance-round rulings fold in (§5, citing
@@ -102,6 +105,9 @@ alone, preserving a single-base fragment's authoring shape unchanged by this wid
 The package MAY also export `controls: readonly ControlRecord[]` (ADR-0233; `ControlRecord` from
 `@agent-ui/components/loader`): one lazy record (`tag`, `load()`) per control the fragment's factories
 create that lives outside `@agent-ui/components`, so a renderer can define it on demand (SPEC-R2 AC7).
+Its server-safe `PersonaCatalogManifest` MAY also declare `semanticChecks: readonly SemanticCheck[]`
+(ADR-0238, proposed): pure, DOM-less domain checks `produce()` runs on every turn whose selected catalog is
+one of the persona's derived ids (a2ui-live-agent SPEC-R4); the Croupier's is `personas/croupier/checks.ts`.
 `<persona-id>` is a stable kebab identifier (matching the persona/preset it scopes to, e.g.
 `concierge`), never a free-text label. The fragment document is NEVER stored in the persona-file
 runtime envelope or as an `Entry` (ADR-0172 cl.1's rejection of both — the persona's runtime state

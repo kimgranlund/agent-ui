@@ -30,6 +30,7 @@ The A2UI protocol layer. Root `AGENTS.md` and `CLAUDE.md` hold the package DAG, 
 ## Wire and validator spine
 
 - Wire types `src/protocol.ts`; validator `src/renderer/validate.ts`.
+- The validator judges structure only. A persona may declare `semanticChecks` on its `PersonaCatalogManifest` (contract `src/catalog/semantic-check.ts`, ADR-0238, proposed); `produce()` runs them after the validator and feeds a finding into the repair round, shipping tallied at the round bound. Both hosts resolve them for the selected catalog through `semanticChecksDeps` (`tools/agent/chat-validation.ts`). The Croupier's hand check is `src/catalog/personas/croupier/checks.ts`.
 - SPEC `.claude/docs/spec/a2ui-runtime.spec.md`, `.claude/docs/spec/a2ui-message-lifecycle.spec.md`; LLD `.claude/docs/lld/a2ui-renderer.lld.md`, `.claude/docs/lld/a2ui-validator-finalize.lld.md`. The full set is `.claude/docs/spec/a2ui-*` and `.claude/docs/lld/a2ui-*`.
 
 ## Skills
