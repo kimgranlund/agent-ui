@@ -54,8 +54,8 @@ than you meant to, and an armed run on an UNCHANGED tree is a byte-identical no-
 - **Catalog selection sidecars are byte-pinned surface too.** Each catalog's `selection.json`
   (`src/catalog/{default,a2ui-basic,personas/<id>}/`, ADR-0232) renders as the `use:`/`not for:`
   clause on every inventory line, so any edit moves the four composed keys and runs the recapture
-  writer above. A new sidecar is registered in `tools/agent/worker/fs-shim-content.ts` `FILES` (a JSON
-  import served as `JSON.stringify`), gated by `fs-shim.test.ts`; coverage and caps are gated by
+  writer above.
+  Coverage and caps are gated by
   `catalog/selection-guidance.test.ts`, and the default catalog's total by
   `SELECTION_GUIDANCE_CHAR_BUDGET` in `prompt-drift.test.ts` (re-author tersely, never raise it to green).
   A sidecar edit also moves the derived cases of `npm run eval:agent-behavior`, so run its selftest afterwards.
@@ -65,11 +65,13 @@ than you meant to, and an armed run on an UNCHANGED tree is a byte-identical no-
   which is drift-gated and never byte-captured: its clause sum is held by `DOGFOOD_GUIDANCE_CHAR_BUDGET` in
   `prompt-drift.test.ts` (re-author tersely, never raise it to green). A `notFor` edge to a type with no
   `ui-*` tag (`Option`, `MenuItem`) throws there.
+- **Regenerate the embedded assets after a prompt or sidecar edit.** Run `node scripts/generate-agent-assets.mjs`
+  from the repo root: it rewrites `src/agent/assets.gen.ts`, which `src/agent/agent-assets-freshness.test.ts`
+  and the `--check` leg of `npm run check:scripts` hold byte-equal to the files on disk.
 - **The whole composed prompt has a character budget too.** `PROMPT_CHAR_BUDGET_BASE` and
   `PROMPT_CHAR_BUDGET_DERIVED` in `src/agent/prompt-budget.ts` (ADR-0234) cap the worst-case composition,
   gated by `src/live-agent/prompt-budget.test.ts`. When an edit reds it, re-author tersely or re-measure
   deliberately (update the MEASURED note); never raise the ceiling just to get green.
-- **Register every new module in `tools/agent/worker/fs-shim-content.ts`** (a static import plus its directory-list entry). Without it the file loads under node but is missing from the deployed Worker; `fs-shim-content-drift.test.ts` is the gate.
 - **Catalog-grounded ONLY:** every component/prop the body names must exist in
   `catalog/default/catalog.json` at its WIRE name (Stat's wire prop is `value`, not the DOM `figure`).
   Verify — there is no Divider, for example; teaching one causes validate-loop churn.

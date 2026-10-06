@@ -1,8 +1,8 @@
 // route-guards.ts — the Worker's pure, side-effect-free request predicates, split out of index.ts
-// specifically so they're safe to unit-test. index.ts's module scope (via its first import,
-// process-shim.ts) globally overrides `process.cwd()` — fine inside the real Workers isolate, but
-// importing that into the SAME Node process the rest of `npm test` runs in would silently corrupt
-// `process.cwd()` for every other test in the run. This module has no such side effect: no imports beyond
+// specifically so they're safe to unit-test. index.ts statically imports the corpus `.jsonl`
+// shard as Wrangler Text, plus `providers.json` and catalog JSON, which only the Wrangler bundle loads,
+// so it cannot be imported into the SAME Node process the rest of `npm test` runs in. This module has no
+// such dependency: no imports beyond
 // the Fetch API types, safe to import from anywhere, including the jsdom test suite (GH #112).
 
 // GH #101 — same-origin gate for the two state-changing POST routes. See index.ts's call site for the

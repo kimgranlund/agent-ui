@@ -37,27 +37,15 @@
 // distinct from both `master-detail-split`'s selection-driven split and the flat `crud-entry-list`).
 //
 // ADR-0135 cl.11: the six-entry registry is no longer an inline object-literal array — each entry is a
-// `prompts/mini-skills/<id>.md` frontmatter file (`---\nid:\ntriggers:\n---\n<body>`), loaded + parsed at
-// module load. The bodies are prose, editable/diffable as prose; `selectMiniSkills` and the token-budget
-// test are unchanged. Node-only tooling (never a browser bundle, SPEC-R3/N2), so the synchronous
-// filesystem read at module load is safe — the same lifecycle position the prior static literal held.
+// `prompts/mini-skills/<id>.md` frontmatter file (`---\nid:\ntriggers:\n---\n<body>`), parsed at module
+// load. The bodies are prose, editable/diffable as prose; `selectMiniSkills` and the token-budget test are
+// unchanged. ADR-0236: the `.md` text is embedded at build time in `assets.gen.ts`
+// (`node scripts/generate-agent-assets.mjs`) and read through `asset-source.ts`, so this module touches no
+// filesystem and imports no `node:*` builtin.
 
-import { readFileSync, readdirSync } from 'node:fs'
 import { topKByCosine } from '../corpus/text-similarity.ts'
 import { parseFrontmatter } from './prompts/frontmatter.ts'
-
-declare const process: { cwd(): string }
-
-// Paths resolve from `process.cwd()` (the repo root `vite`/`vitest` runs from), NOT `import.meta.url` —
-// the dev-proxy-plugin.ts precedent this file failed to follow at first: Vite bundles `vite.config.ts`
-// (via esbuild, into a `node_modules/.vite-temp/*.mjs` temp file) and that bundling pulls in the WHOLE
-// reachable import graph, not just the plugin entry point — `dev-proxy-plugin.ts` imports `produce.ts`
-// imports THIS file, so `mini-skills.ts` gets relocated into the same temp file too. An
-// `import.meta.url`-relative path then resolves against the TEMP file's location, not this file's real
-// source location — `readdirSync` on a directory that only exists under the real source tree throws
-// ENOENT under `npm run dev` (caught live: TKT-0044/this ADR-0135 follow-up fix).
-const ROOT = process.cwd()
-const MINI_SKILLS_DIR = `${ROOT}/packages/agent-ui/a2ui/src/agent/prompts/mini-skills`
+import { listAssets, readAsset } from './asset-source.ts'
 
 /** A named, self-contained, prompt-injectable idiom-instruction module (ADR-0091 Decision §1). */
 export interface MiniSkill {
@@ -92,11 +80,11 @@ export const DEFAULT_MINI_SKILL_CAP = 3
  * an id tiebreak, and every id-keyed consumer (`calibrationExampleBullet`, the §4 filter) looks up by id.
  */
 function loadMiniSkills(): MiniSkill[] {
-  const files = readdirSync(MINI_SKILLS_DIR)
+  const files = listAssets('agent/prompts/mini-skills')
     .filter((name) => name.endsWith('.md'))
     .sort()
   return files.map((name) => {
-    const { data, body } = parseFrontmatter(readFileSync(`${MINI_SKILLS_DIR}/${name}`, 'utf8'))
+    const { data, body } = parseFrontmatter(readAsset('agent/prompts/mini-skills/' + name))
     if (!data.id || !data.triggers) throw new Error(`mini-skills: ${name} is missing id/triggers frontmatter`)
     if (!data.catalogId) throw new Error(`mini-skills: ${name} is missing catalogId frontmatter (SPEC-R6)`)
     return { id: data.id, triggers: data.triggers, body, catalogId: data.catalogId }

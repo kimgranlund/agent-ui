@@ -1,29 +1,18 @@
 // genui-packs.ts — genui-surface.spec.md SPEC-R9/R11: pattern-source packs, the producer-layer prompt
 // asset SPEC-R9 names. Loaded via the EXISTING ADR-0135 mechanics (frontmatter files under
 // `prompts/genui-packs/*.md`, parsed by the shared `frontmatter.ts`), following `mini-skills.ts`'s
-// established registry shape byte-for-byte: one committed `.md` per pack, loaded at MODULE LOAD via
-// `readFileSync`, resolved from `process.cwd()` — NOT `import.meta.url` (mini-skills.ts's own header
-// documents WHY: Vite bundles `vite.config.ts` and everything it transitively imports — including
-// `dev-proxy-plugin.ts` → `produce.ts` → this module — into a single temp file under
-// `node_modules/.vite-temp/`, so an `import.meta.url`-relative path resolves against THAT temp file's
-// location under `npm run dev`, not this file's real source location, throwing ENOENT; TKT-0044). SPEC-R9's
-// own parenthetical names `readFileSync(new URL(…, import.meta.url))` — this file deliberately follows the
-// ALREADY-FIXED `process.cwd()` precedent instead (the literal thing SPEC-R9 cites as "the EXISTING ADR-0135
-// mechanics"), so as not to reintroduce a bug this exact package already diagnosed and fixed once. Node-only
-// tooling, never a browser bundle (SPEC-N1/N2): the dev proxy (Node) and the Cloudflare Worker (via
-// worker/fs-shim.ts's pregenerated content) both run this module server-side; no browser bundle imports it.
+// established registry shape: one committed `.md` per pack, parsed at MODULE LOAD. ADR-0236: the `.md`
+// text is embedded at build time in `assets.gen.ts` (`node scripts/generate-agent-assets.mjs`) and read
+// through `asset-source.ts`, never from the filesystem, so the same module runs unchanged under Node (the
+// dev proxy), in the Cloudflare Worker, and from any working directory; it imports no `node:*` builtin.
+// No browser bundle imports it (SPEC-N1/N2).
 //
 // Root-barrel purity (ADR-0137): reachable ONLY via the `./agent` subpath, never `.` — the same discipline
 // mini-skills.ts/system-prompt.ts already hold, verified by `gates.test.ts`'s IDENTITY leg (this module lives
 // under `src/agent/`, so it is automatically covered by that walk).
 
-import { readFileSync, readdirSync } from 'node:fs'
 import { parseFrontmatter } from './frontmatter.ts'
-
-declare const process: { cwd(): string }
-
-const ROOT = process.cwd()
-const GENUI_PACKS_DIR = `${ROOT}/packages/agent-ui/a2ui/src/agent/prompts/genui-packs`
+import { listAssets, readAsset } from '../asset-source.ts'
 
 /** A named, curated exemplar pack of HTML/CSS(/JS) idioms conditioning what the model authors for the
  *  GenUI surface (SPEC-R9, PRD-G2). Distinct from `MiniSkill` (A2UI catalog-composition idioms) — a genui
@@ -48,11 +37,11 @@ export const GENUI_PACK_CHAR_BUDGET = 8_000
 /** Loaded in a stable filename-sorted order (the `loadMiniSkills` precedent) — order is not load-bearing;
  *  every id-keyed consumer (`genuiPackLibrary`, a future picker) looks up by id, never by array position. */
 function loadGenuiPacks(): GenuiPatternPack[] {
-  const files = readdirSync(GENUI_PACKS_DIR)
+  const files = listAssets('agent/prompts/genui-packs')
     .filter((name) => name.endsWith('.md'))
     .sort()
   return files.map((name) => {
-    const { data, body } = parseFrontmatter(readFileSync(`${GENUI_PACKS_DIR}/${name}`, 'utf8'))
+    const { data, body } = parseFrontmatter(readAsset('agent/prompts/genui-packs/' + name))
     if (!data.id || !data.label || !data.description) {
       throw new Error(`genui-packs: ${name} is missing id/label/description frontmatter`)
     }

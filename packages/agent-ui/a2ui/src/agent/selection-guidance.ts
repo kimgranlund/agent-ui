@@ -7,12 +7,13 @@
 // `catalog.json` (the ADR-0097 `feed-catalog.ts` precedent: per-type policy beside the agent, never a
 // policy view inside the catalog; it also keeps the prose out of every browser renderer bundle).
 //
-// Node-only, like `system-prompt.ts`/`mini-skills.ts`: the five sidecars load at MODULE LOAD through
-// `readFileSync` from `process.cwd()` (the TKT-0044 rule, never `import.meta.url`). No value import from
-// `../catalog/`: the persona `manifest.ts` files import `catalog.json` without an import attribute, so a
-// plain-Node import of `@agent-ui/a2ui/agent` would throw `ERR_IMPORT_ATTRIBUTE_MISSING`. That is also why
-// the persona list below is hard-coded; `catalog/selection-guidance.test.ts` holds it equal to
-// `SHIPPED_PERSONA_CATALOG_MANIFESTS` (coverage is a gate, never a hand-checked list).
+// The five sidecars are read at MODULE LOAD from the build-time embed (`assets.gen.ts`, ADR-0236) through
+// `asset-source.ts`, keyed `catalog/<dir>/selection.json`, so this module touches no filesystem and imports
+// no `node:*` builtin. No value import from `../catalog/`: the persona `manifest.ts` files import
+// `catalog.json` without an import attribute, so a plain-Node import of `@agent-ui/a2ui/agent` would throw
+// `ERR_IMPORT_ATTRIBUTE_MISSING`. That is also why the persona list below is derived from the embedded
+// `catalog/personas/` keys rather than from the manifests; `catalog/selection-guidance.test.ts` holds it
+// equal to `SHIPPED_PERSONA_CATALOG_MANIFESTS` (coverage is a gate, never a hand-checked list).
 //
 // Two consumers: the catalog inventory (`system-prompt.ts` `catalogInventory`, through
 // `selectionGuidanceFor` and `renderSelectionClause`) and the genui dogfood inventory
@@ -20,12 +21,8 @@
 // `renderSelectionClauseWith`, with `notFor` targets re-spelled as `ui-*` tags). The dogfood module has no
 // `Catalog` object, hence the id-keyed resolver; both clauses come from the one formatter.
 
-import { readFileSync } from 'node:fs'
 import type { Catalog } from '../catalog/catalog.ts'
-
-declare const process: { cwd(): string }
-
-const CATALOG_DIR = `${process.cwd()}/packages/agent-ui/a2ui/src/catalog`
+import { listAssets, readAsset } from './asset-source.ts'
 
 /** One `notFor` edge: a confusable sibling type and the axis that separates it from this type. */
 export interface SelectionEdge {
@@ -168,20 +165,21 @@ export function loadSelectionGuidance(doc: unknown): SelectionGuidance {
 }
 
 function readPinned(rel: string, pinKey: (typeof PIN_KEYS)[number], pinValue: string): SelectionGuidance {
-  const path = `${CATALOG_DIR}/${rel}`
+  const key = `catalog/${rel}`
   let doc: unknown
   try {
-    doc = JSON.parse(readFileSync(path, 'utf8'))
+    doc = JSON.parse(readAsset(key))
   } catch (e) {
-    throw malformed(`${path} is not readable JSON (${e instanceof Error ? e.message : String(e)})`)
+    throw malformed(`${key} is not readable JSON (${e instanceof Error ? e.message : String(e)})`)
   }
   const guidance = loadSelectionGuidance(doc)
-  if ((doc as Record<string, unknown>)[pinKey] !== pinValue) throw malformed(`${path} must pin ${pinKey} "${pinValue}"`)
+  if ((doc as Record<string, unknown>)[pinKey] !== pinValue) throw malformed(`${key} must pin ${pinKey} "${pinValue}"`)
   return guidance
 }
 
-/** The shipped persona fragments with a sidecar, hard-coded for the plain-Node reason in the header. */
-const PERSONA_IDS = ['concierge', 'croupier', 'fixture-demo'] as const
+/** The persona fragments with an embedded sidecar: the directory names under `catalog/personas/`
+ *  (`listAssets`, sorted), derived rather than hand-listed for the plain-Node reason in the header. */
+const PERSONA_IDS: readonly string[] = listAssets('catalog/personas')
 
 const BASE_GUIDANCE: Readonly<Record<string, SelectionGuidance>> = Object.freeze({
   'agent-ui': readPinned('default/selection.json', 'catalogId', 'agent-ui'),
@@ -259,5 +257,5 @@ export function renderSelectionClause(entry: SelectionEntry | undefined, catalog
  *  MEASURED 2026-10-04: 8 277 chars over 80 types (144 notFor edges, 72 reciprocal pairs);
  *  ceiling 9 570; budget 8 600.
  *  This budgets one clause family; the whole composed prompt has its own budget in `prompt-budget.ts`
- *  (ADR-0234), which stays separate because that module must stay free of `node:*`. */
+ *  (ADR-0234). */
 export const SELECTION_GUIDANCE_CHAR_BUDGET = 8_600

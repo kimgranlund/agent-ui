@@ -42,10 +42,16 @@
 // resolved, zero console errors). `app/README.md`'s profile note was relaxed in the same change.
 //
 // Two things the smoke did NOT prove, kept honest in that README rather than quietly dropped: a plain Node
-// ESM import (no DOM) still fails — for every control package in the family, not this one specially — and
-// no CDN/esm.sh probe covers the app package (`verify-consumer-install.mjs`'s CDN leg is
+// ESM import (no DOM) of a control package still fails, for every control package in the family, not this
+// one specially, and no CDN/esm.sh probe covers the app package (`verify-consumer-install.mjs`'s CDN leg is
 // shared/icons/components only). Growing that script a non-Vite app leg is the standing gate this
 // one-time smoke stands in for. NOTE releases through `0.0.5` still ship the old constrained artifact.
+//
+// The a2ui `./agent` producer toolkit is the exception that DOES import from plain Node: it ships, with its
+// prompts, selection sidecars and dogfood rows embedded at build time (ADR-0236), and
+// `agent-subpath-smoke.test.mjs` proves it on every run by packing shared/icons/components/a2ui through
+// `buildLibrary` + `preparePackage`, installing the tarballs into a scratch dir outside the workspace (the
+// GH #283 recipe above), and calling `buildSystemPrompt` from `node --input-type=module`.
 
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -85,17 +91,13 @@ const BUGS_URL = 'https://github.com/kimgranlund/agent-ui/issues'
 const toPublished = (internalName) => internalName.replace('@agent-ui/', '@agent-ui-kit/')
 
 // Exports subpaths that exist for INTERNAL monorepo consumption (site's own workspace-linked imports) but
-// must NOT ship in the published package — each entry is a real bug an independent review caught by
-// packing a dry-run payload and tracing what actually breaks for an external consumer, not a style choice:
-//   a2ui "./agent" — the NODE-FIRST producer toolkit (system-prompt.ts/mini-skills.ts) reads its prompt
-//   `.md` files via `${process.cwd()}/packages/agent-ui/a2ui/src/agent/prompts` at MODULE LOAD — a path
-//   that cannot exist in any consumer's install, so `import 'agent-ui-a2ui/agent'` throws immediately, and
-//   the `.md` files aren't packed anyway. "./agent/meta-line" (a separate, pure, type-only subpath) is
-//   UNAFFECTED and stays published. Shipping the producer toolkit for real (packing the prompts, resolving
-//   them via `import.meta.url` instead of cwd) is a separate, deliberate effort — not a silent default here.
-const EXCLUDE_EXPORTS_FROM_PUBLISH = {
-  '@agent-ui/a2ui': ['./agent'],
-}
+// must NOT ship in the published package, keyed by internal package name. Each entry must be a real bug
+// found by packing a payload and tracing what breaks for an external consumer, not a style choice.
+// Empty today: a2ui `./agent` used to sit here because its loaders read prompt `.md` files from
+// `${process.cwd()}/packages/agent-ui/a2ui/...` at module load. Since ADR-0236 those assets are embedded at
+// build time (`scripts/generate-agent-assets.mjs`), so `./agent` ships and imports from plain Node, as
+// `agent-subpath-smoke.test.mjs` proves against the packed tarballs.
+export const EXCLUDE_EXPORTS_FROM_PUBLISH = {}
 
 /** Rewrite one dependency map: `@agent-ui/X` keys -> the published scoped name + the lockstep version; every other
  *  (real, external) dependency passes through with its own declared range untouched. */
@@ -133,8 +135,8 @@ function transformSideEffects(value) {
 }
 
 /** Build the transformed, publish-ready package.json for one package — never mutates the real one on disk. */
-export function transformPackageJson(pkgJson, version) {
-  const excluded = new Set(EXCLUDE_EXPORTS_FROM_PUBLISH[pkgJson.name] ?? [])
+export function transformPackageJson(pkgJson, version, exclude = EXCLUDE_EXPORTS_FROM_PUBLISH) {
+  const excluded = new Set(exclude[pkgJson.name] ?? [])
   const exportsOut = {}
   for (const [key, value] of Object.entries(pkgJson.exports ?? {})) {
     if (excluded.has(key)) continue
@@ -236,16 +238,20 @@ function isAlreadyPublished(name, version) {
   }
 }
 
-function runBuild() {
-  rmSync(DIST_LIB, { recursive: true, force: true })
-  execFileSync('npx', ['tsc', '-p', 'tsconfig.build.json'], { cwd: REPO_ROOT, stdio: 'inherit' })
+/** The whole-monorepo library build (`tsc -p tsconfig.build.json`) into `outDir`. Exported so
+ *  `agent-subpath-smoke.test.mjs` can build into a temp dir and never write inside the repo. */
+export function buildLibrary(outDir = DIST_LIB) {
+  rmSync(outDir, { recursive: true, force: true })
+  execFileSync('npx', ['tsc', '-p', 'tsconfig.build.json', '--outDir', outDir], { cwd: REPO_ROOT, stdio: 'inherit' })
 }
 
-function preparePackage(pkgDir, version) {
+/** Stage one package's publish payload under `scratch`, reading the compiled slice from `distLib`. The
+ *  defaults are the real publish paths; the smoke test passes temp dirs. */
+export function preparePackage(pkgDir, version, { distLib = DIST_LIB, scratch = SCRATCH } = {}) {
   const pkgRoot = join(REPO_ROOT, 'packages/agent-ui', pkgDir)
   const pkgJson = JSON.parse(readFileSync(join(pkgRoot, 'package.json'), 'utf8'))
   const publishedName = toPublished(pkgJson.name)
-  const scratchRoot = join(SCRATCH, publishedName.replace('/', '__'))
+  const scratchRoot = join(scratch, publishedName.replace('/', '__'))
   rmSync(scratchRoot, { recursive: true, force: true })
   mkdirSync(scratchRoot, { recursive: true })
 
@@ -254,7 +260,7 @@ function preparePackage(pkgDir, version) {
   // copies the JSON alongside the compiled JS as part of its own emit, and omitting it here (a real bug an
   // independent review caught) leaves that import unresolvable for every consumer of the affected package.
   copyTree(
-    join(DIST_LIB, pkgDir, 'src'),
+    join(distLib, pkgDir, 'src'),
     join(scratchRoot, 'dist'),
     (fileName) => fileName.endsWith('.js') || fileName.endsWith('.d.ts') || fileName.endsWith('.json'),
     (content, fileName) => (fileName.endsWith('.json') ? content : rewriteSpecifiers(content, fileName.endsWith('.d.ts'))),
@@ -296,7 +302,7 @@ async function main() {
   const dryRun = flags.includes('--dry-run')
 
   console.log(`\n=== Building all packages (tsc -p tsconfig.build.json) ===`)
-  runBuild()
+  buildLibrary()
 
   rmSync(SCRATCH, { recursive: true, force: true })
   for (const pkgDir of PACKAGE_ORDER) {

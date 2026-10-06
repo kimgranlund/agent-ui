@@ -5,9 +5,11 @@
 // block from the retrieved exemplars. A standing drift test (`prompt-drift.test.ts`) asserts the derived
 // inventory equals the catalog's, so a catalog row added without regeneration FAILS (PRD-G6 coherence).
 // Pure of catalog I/O; the caller loads the catalog. ADR-0135 cl.8/13: the hand-authored GRAMMAR half +
-// the mode-scaled consts now LOAD from `./prompts/*.md` at module load (`readFileSync` +
-// `import.meta.url`) rather than living as inline template literals — editable/diffable as prose, with
-// the byte-identity gate below holding the `'default'`-mode contract ADR-0090 established.
+// the mode-scaled consts are authored as `./prompts/*.md` rather than inline template literals —
+// editable/diffable as prose, with the byte-identity gate below holding the `'default'`-mode contract
+// ADR-0090 established. ADR-0236: the `.md` text is embedded at build time in `assets.gen.ts`
+// (`node scripts/generate-agent-assets.mjs`) and read through `asset-source.ts`, so this module touches no
+// filesystem and imports no `node:*` builtin.
 //
 // The prose each ADR added, and where its text now lives (ADR-0135 cl.14 — the condensed index):
 // · ADR-0071 — the catalog-derived inventory + drift gate (this file, `catalogInventory`/`buildSystemPrompt`).
@@ -41,7 +43,6 @@
 //   ` · use: … · not for: …` clause from the catalog's `selection.json` sidecar (`selection-guidance.ts`),
 //   only for a type the sidecar covers, so a catalog with no sidecar composes today's lines byte-identically.
 
-import { readFileSync } from 'node:fs'
 import type { Catalog } from '../catalog/catalog.ts'
 import { describePropType } from '../catalog/catalog.ts'
 import type { CorpusRecord } from '../corpus/record.ts'
@@ -53,23 +54,13 @@ import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
 import { dogfoodInventory } from './dogfood-inventory.ts'
 import { selectionGuidanceFor, renderSelectionClause } from './selection-guidance.ts'
 import type { PromptSection, PromptSectionId } from './meta-line.ts'
+import { readAsset } from './asset-source.ts'
 
-declare const process: { cwd(): string }
-
-// Paths resolve from `process.cwd()` (the repo root `vite`/`vitest` runs from), matching
-// `dev-proxy-plugin.ts`'s own established pattern — NOT `import.meta.url`-relative resolution, which this
-// file used at first and which broke live under `npm run dev` (TKT-0044): Vite bundles `vite.config.ts`
-// (via esbuild, into a `node_modules/.vite-temp/*.mjs` temp file) and that bundling pulls in the WHOLE
-// reachable import graph — `dev-proxy-plugin.ts` imports `produce.ts` imports THIS file — so an
-// `import.meta.url`-relative path resolved against the TEMP file's location, not this file's real source
-// location, and `readFileSync` on a path that only exists under the real source tree threw ENOENT.
-const PROMPTS_DIR = `${process.cwd()}/packages/agent-ui/a2ui/src/agent/prompts`
-
-/** Load one prompt file from `PROMPTS_DIR`. Node-only tooling, never a browser bundle (SPEC-R3/N2).
- *  Trimmed so an authored trailing newline never perturbs byte-identity — every prompt const is
- *  whitespace-edge-free by construction (ADR-0090 §1: by construction, never re-transcription). */
+/** Read one prompt file's embedded text (`agent/prompts/<file>`, ADR-0236). Trimmed so an authored
+ *  trailing newline never perturbs byte-identity — every prompt const is whitespace-edge-free by
+ *  construction (ADR-0090 §1: by construction, never re-transcription). */
 function loadPrompt(file: string): string {
-  return readFileSync(`${PROMPTS_DIR}/${file}`, 'utf8').trim()
+  return readAsset('agent/prompts/' + file).trim()
 }
 
 // GRAMMAR — the whole hand-authored grammar, loaded from ONE file (ADR-0135 cl.8), never pre-sliced into

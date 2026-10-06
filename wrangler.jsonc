@@ -25,13 +25,6 @@
 		"directory": "./dist",
 		"binding": "ASSETS"
 	},
-	// Aliases `node:fs` to a Worker-safe shim (Wrangler's documented Node-API-polyfill pattern) so
-	// `system-prompt.ts`/`mini-skills.ts` — ADR-cited, drift-gated, and otherwise Node-fs-dependent —
-	// ship into the Worker bundle completely UNMODIFIED. See worker/fs-shim.ts.
-	"alias": {
-		"node:fs": "./packages/agent-ui/a2ui/tools/agent/worker/fs-shim.ts"
-	},
-	// Lets the Worker bundle statically `import` markdown prompts (worker/fs-shim-content.ts) and the
-	// corpus JSONL shard (worker/index.ts) as plain text.
-	"rules": [{ "type": "Text", "globs": ["**/*.md", "**/*.jsonl"] }]
+	// Lets the Worker bundle statically `import` the corpus JSONL shard (worker/index.ts) as plain text.
+	"rules": [{ "type": "Text", "globs": ["**/*.jsonl"] }]
 }

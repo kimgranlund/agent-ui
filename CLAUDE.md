@@ -57,7 +57,8 @@ npm-workspaces monorepo; ten packages under `packages/agent-ui/*`.
   types, and the `StorageAdapter` persistence seam (ADR-0193) — the DAG-bottom home lower layers
   persist through.
 - `a2ui/` — the A2UI protocol layer (renderer/validator/catalog · `./examples` · `./corpus` ·
-  `./agent`, the node-first producer toolkit, ADR-0137; the key/dev-proxy shell stays site-internal).
+  `./agent`, the producer toolkit with its assets embedded at build time, ADR-0137 and ADR-0236; the
+  key/dev-proxy shell stays site-internal).
 - `a2a/` — Agent2Agent wire types + validation pinned to spec v0.3.0, the tic-tac-toe arena, own
   corpus shards; zero deps.
 - `icons/` — swappable icon-pack adapter (pure core + `./phosphor`; ADR-0065/0066); zero deps.

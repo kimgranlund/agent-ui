@@ -7,12 +7,10 @@
 //  2. SDK-FREE / ZERO-DEP — no module under `src/agent/` imports a third-party package (plain `fetch`, no
 //     `@anthropic-ai/sdk`, no vendored dependency in costume — ADR-0069/0073/0107, SPEC-R3 AC1). Every
 //     import specifier is a relative path or a `node:*` builtin.
-//  3. NODE-FENCE — `node:*` imports under `src/agent/` appear ONLY in the clause-4 prompt-loading modules
-//     (`system-prompt.ts`/`mini-skills.ts`, plus `prompts/genui-packs.ts` — genui-surface SPEC-R9's own
-//     pack registry, the SAME ADR-0135 readFileSync/frontmatter mechanics — and `dogfood-inventory.ts`,
-//     SPEC-R13(b)'s descriptor-scanning module, GH #316/ADR-0162, and `selection-guidance.ts`, the
-//     catalogs' `selection.json` sidecar loader); `vite` and `node:http` (the dev-proxy
-//     fence that stays behind in `tools/agent/`) never appear anywhere under `src/agent/`.
+//  3. NODE-FENCE — no non-test module under `src/agent/` imports a `node:*` builtin (ADR-0236: the prompt,
+//     sidecar and dogfood assets are embedded at build time in `assets.gen.ts`/`dogfood-fleet.gen.ts`, so
+//     the toolkit runs from any working directory and in the Cloudflare Worker); `vite` (the dev-proxy
+//     fence that stays behind in `tools/agent/`) never appears anywhere under `src/agent/` either.
 //  4. PROMPT BYTE-IDENTITY — carried by the pre-existing `prompt-equivalence.test.ts` (ADR-0135 equivalence
 //     gate) + `prompt-drift.test.ts`, which now exercise the MOVED `src/agent/system-prompt.ts` and its
 //     `src/agent/prompts/*.md` at their new home; both stay green across the move (no assertion duplicated
@@ -50,6 +48,11 @@ function importSpecifiers(src: string): string[] {
   let m: RegExpExecArray | null
   while ((m = re.exec(src)) !== null) specs.push(m[1]!)
   return specs
+}
+
+/** The `node:*` builtin specifiers a source file imports: the NODE-FENCE predicate (non-empty = flagged). */
+function nodeImports(src: string): string[] {
+  return importSpecifiers(src).filter((s) => s.startsWith('node:'))
 }
 
 const MODULES = agentModules()
@@ -98,30 +101,19 @@ describe('ADR-0137 clause 8 — the ./agent subpath gates', () => {
     }
   })
 
-  it('NODE-FENCE: node:* imports appear ONLY in the prompt/asset-loading modules; never vite/node:http', () => {
-    // genui-surface.spec.md SPEC-R13(b) — `dogfood-inventory.ts` is the FOURTH Node-only readFileSync/
-    // readdirSync call site (GH #316/ADR-0162), the same "loads real files at call/load time" class the
-    // other three already are; it scans `@agent-ui/components/src/controls/*/*.md`, not `prompts/`, but
-    // the fence's rule is "which files may touch node:*", not "which directory they read".
-    // `selection-guidance.ts` is the FIFTH Node-only call site: it reads the catalogs' `selection.json`
-    // sidecars at module load, the same readFileSync-from-process.cwd() class as the four above.
-    const NODE_ALLOWED = new Set([
-      'src/agent/system-prompt.ts',
-      'src/agent/mini-skills.ts',
-      'src/agent/prompts/genui-packs.ts',
-      'src/agent/dogfood-inventory.ts',
-      'src/agent/selection-guidance.ts',
-    ])
+  it('NODE-FENCE: no module under src/agent/ imports node:*; never vite', () => {
     for (const { rel, abs } of MODULES) {
-      const specs = importSpecifiers(readFileSync(abs, 'utf8') as string)
-      const nodeImports = specs.filter((s) => s.startsWith('node:'))
-      if (nodeImports.length > 0) {
-        expect(NODE_ALLOWED.has(rel), `${rel} imports ${nodeImports.join(', ')} — only the clause-4 prompt loaders may (ADR-0137 clause 4)`).toBe(true)
-      }
-      // The dev-proxy fence: `vite` + `node:http` stay in tools/agent/, NEVER in the exported graph.
-      expect(specs, `${rel} must not import 'vite' (the dev-proxy fence, ADR-0137 clause 8)`).not.toContain('vite')
-      expect(specs, `${rel} must not import 'node:http' (the dev-proxy fence, ADR-0137 clause 8)`).not.toContain('node:http')
+      const src = readFileSync(abs, 'utf8') as string
+      const flagged = nodeImports(src)
+      expect(flagged, `${rel} imports ${flagged.join(', ')} — src/agent/ reads its assets from the build-time embed, never node:* (ADR-0236)`).toEqual([])
+      // The dev-proxy fence: `vite` stays in tools/agent/, NEVER in the exported graph.
+      expect(importSpecifiers(src), `${rel} must not import 'vite' (the dev-proxy fence, ADR-0137 clause 8)`).not.toContain('vite')
     }
+  })
+
+  it('NODE-FENCE NEGATIVE CONTROL: the predicate flags a source that imports node:fs', () => {
+    expect(nodeImports("import { readFileSync } from 'node:fs'\nexport const x = 1\n")).toEqual(['node:fs'])
+    expect(nodeImports("import { readAsset } from './asset-source.ts'\n")).toEqual([])
   })
 
   it('COMPOSITION CONTAINMENT: no src/ module outside src/agent/ imports from src/agent/', () => {

@@ -92,6 +92,9 @@ before a first build; `controls/checkbox/` is the gold probe template.
    `all.gen.ts` / `all.gen.css` pair and the
    `./controls/{name}` + `./controls/{name}.css` `package.json` `exports` keys, so none of
    those is a hand edit (drift gate: `controls/controls-gen-driftwire.test.ts`).
+   After a descriptor edit, run `node scripts/generate-agent-assets.mjs`: the a2ui dogfood fleet
+   (`a2ui/src/agent/dogfood-fleet.gen.ts`) is derived from the descriptors and drift-gated by
+   `agent-assets-freshness.test.ts`.
 
 ## Validation loop (finalize only when clean)
 

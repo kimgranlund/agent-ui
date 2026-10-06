@@ -1617,6 +1617,13 @@
     "section": "Records"
   },
   {
+    "name": "ADR-0236",
+    "url": "./adr-index.html#adr-0236",
+    "description": "Build-time asset embed for the producer toolkit",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "ADR-0237",
     "url": "./adr-index.html#adr-0237",
     "description": "The capability registry is a derived index in @agent-ui/a2ui, composed from objects hosts already hold and projected to one committed file",

@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest'
 import { dogfoodInventory, dogfoodInventoryTags, DOGFOOD_INVENTORY_CHAR_BUDGET } from '../agent/dogfood-inventory.ts'
 
 describe('dogfoodInventory — deterministic, descriptor-derived (SPEC-R13(b))', () => {
-  it('is deterministic — two calls (a real filesystem re-scan each time) produce byte-identical output', () => {
+  it('is deterministic — two calls (each rendering the embedded DOGFOOD_FLEET rows) produce byte-identical output', () => {
     expect(dogfoodInventory()).toBe(dogfoodInventory())
   })
 
@@ -60,8 +60,9 @@ describe('dogfoodInventory — deterministic, descriptor-derived (SPEC-R13(b))',
   // The drift-gate design's own negative control (LLD-C3 leaf 8 acceptance): a tag that the FLEET never
   // declares must never appear when asking for the unfiltered (real composition-call) inventory — proving
   // the function derives from the real descriptor set rather than tolerating/echoing an arbitrary filter.
-  // (No file is planted on disk here — `discoverDogfoodControls` walks the real committed tree, so the
-  // phantom tag below can only ever surface if this function stopped deriving and started trusting input.)
+  // (No file is planted on disk here — the rows come from `DOGFOOD_FLEET`, generated from the real committed
+  // tree, so the phantom tag below can only ever surface if this function stopped deriving and started
+  // trusting input.)
   it('NEGATIVE CONTROL — a phantom tag the fleet never declares never appears in the unfiltered inventory', () => {
     const inv = dogfoodInventory()
     expect(inv).not.toContain('ui-planted-phantom-control')

@@ -4,9 +4,6 @@
 // the client), same three routes, same wire shapes (`GET /status`, `POST /chat`, `POST /` — mounted at
 // `/__a2ui/agent`, matching `live-proxy-transport.ts`/`admin-live-runner.ts`'s hardcoded endpoint), same
 // `resolvePair`/`providerForModel`/`providerFor` PAIR-allowlist chain (SPEC-R12) reused verbatim.
-//
-// `process-shim.ts` MUST be the first import — see its own header for why the ordering is load-bearing.
-import './process-shim.ts'
 
 import { produce, ProduceHalt } from '../../../src/agent/produce.ts'
 import type { ProduceDeps } from '../../../src/agent/produce.ts'

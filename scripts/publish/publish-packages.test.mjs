@@ -4,8 +4,9 @@
 // happens to contain `@agent-ui/<pkg>` text. Importing the module is safe — `main()` is guarded behind a
 // direct-execution check (the module's own bottom-of-file comment) so this import never triggers a real
 // build/publish.
+import { readFileSync } from 'node:fs'
 import { describe, it, expect } from 'vitest'
-import { rewriteSpecifiers, PACKAGE_ORDER, transformPackageJson } from './publish-packages.mjs'
+import { rewriteSpecifiers, PACKAGE_ORDER, transformPackageJson, EXCLUDE_EXPORTS_FROM_PUBLISH } from './publish-packages.mjs'
 
 describe('rewriteSpecifiers — scoped to real specifier positions (GH #69 item 3)', () => {
   it('rewrites a `from` import specifier (bare package)', () => {
@@ -82,5 +83,27 @@ describe('transformPackageJson: carries `sideEffects` into the dist/ layout (ADR
 
   it('adds no `sideEffects` key when the workspace manifest declares none', () => {
     expect('sideEffects' in transformPackageJson(base, '1.2.3')).toBe(false)
+  })
+})
+
+describe('transformPackageJson: a2ui ships its ./agent producer toolkit (ADR-0236)', () => {
+  const a2uiPkg = JSON.parse(readFileSync(new URL('../../packages/agent-ui/a2ui/package.json', import.meta.url), 'utf8'))
+
+  it('the exclusion map is empty', () => {
+    expect(EXCLUDE_EXPORTS_FROM_PUBLISH).toEqual({})
+  })
+
+  it("maps the real a2ui manifest's './agent' to the compiled dist pair", () => {
+    const out = transformPackageJson(a2uiPkg, '1.2.3')
+    expect(out.exports['./agent']).toEqual({ types: './dist/agent/index.d.ts', default: './dist/agent/index.js' })
+  })
+
+  it("NEGATIVE CONTROL: a fixture exclude map naming './agent' drops that key and keeps its siblings", () => {
+    const out = transformPackageJson(a2uiPkg, '1.2.3', { '@agent-ui/a2ui': ['./agent'] })
+    expect('./agent' in out.exports).toBe(false)
+    expect(out.exports['./agent/meta-line']).toEqual({
+      types: './dist/agent/meta-line.d.ts',
+      default: './dist/agent/meta-line.js',
+    })
   })
 })

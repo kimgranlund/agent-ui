@@ -5,7 +5,7 @@
 // over-budget prompt into a pre-call `ProduceHalt`.
 //
 // Pure and platform-neutral on purpose: no `node:*`, no runtime import, so it runs in the Worker and in
-// jsdom tests and needs no `NODE_ALLOWED` entry (`gates.test.ts`). That is why it does not sit beside the
+// jsdom tests. (The `./agent` subpath is generated-assets based; the old node:fs allow-list is gone.) That is why it does not sit beside the
 // Node-only `SELECTION_GUIDANCE_CHAR_BUDGET` (`selection-guidance.ts`).
 
 import type { PromptBudgetReport, PromptSection } from './meta-line.ts'
