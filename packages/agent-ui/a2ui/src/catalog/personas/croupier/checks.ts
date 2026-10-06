@@ -11,8 +11,9 @@
 //   allowed, any case) reading its `text`, `label` or `value`. Every integer in a readout counts, which is
 //   what the teaching asks for ("stating the total only"): "Dealer: 14, draws to 17" next to 6, 5, 3 fails on
 //   the 17. Narration elsewhere (a result line) is never parsed.
-// - HAND_COUNT: when the data model lists a hand (`/<p>Hand` or `/<p>/hand`), the hand container must
-//   render exactly that many cards. A Row templated over the list matches by construction; a static Row or
+// - HAND_COUNT: when the data model lists a hand (`/<p>Hand` or `/<p>/hand`, or any array of rank-bearing
+//   cards under a path that names `<p>`, e.g. `/game/dealer/cards`), the hand container must render
+//   exactly that many cards (recorded Haiku turn 2: a third dealer card in the data, no component). A Row templated over the list matches by construction; a static Row or
 //   a template over a missing path does not.
 //
 // A hand container is a component whose children are PlayingCards: static ids that resolve to
@@ -167,11 +168,26 @@ function readouts(view: SurfaceView, p: Participant): Readout[] {
   return out
 }
 
+/** Arrays of rank-bearing records anywhere in the data model, keyed by pointer: how a model that nests
+ *  the table under its own root (`/game/dealer/cards`, recorded Haiku turn) still lists a hand. */
+function cardLists(node: unknown, pointer: string, out: Map<string, number>, depth = 0): void {
+  if (depth > 6) return
+  if (Array.isArray(node)) {
+    if (node.length > 0 && node.every((c) => isRecord(c) && typeof c['rank'] === 'string')) out.set(pointer, node.length)
+    return
+  }
+  if (!isRecord(node)) return
+  for (const [k, v] of Object.entries(node)) cardLists(v, `${pointer}/${k}`, out, depth + 1)
+}
+
 function listedHand(view: SurfaceView, p: Participant): { path: string; length: number } | undefined {
   for (const path of [`/${p}Hand`, `/${p}/hand`]) {
     const v = readPointer(view.dataModel, path)
     if (Array.isArray(v)) return { path, length: v.length }
   }
+  const found = new Map<string, number>()
+  cardLists(view.dataModel, '', found)
+  for (const [path, length] of found) if (participantNamedBy(path) === p) return { path, length }
   return undefined
 }
 
