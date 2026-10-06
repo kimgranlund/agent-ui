@@ -14,7 +14,7 @@ import { resolveKitCatalog } from '../../tools/testkit/catalogs.ts'
 import { parseScenario, isLinesTurn } from '../../tools/testkit/scenario.ts'
 import { FORM_REPAIR, OPERATORS, SEMANTIC_CODE, mutateWith } from '../../tools/testkit/mutate.ts'
 import { createKitMount } from '../../tools/testkit/mount.ts'
-import { heal } from '../corpus/heal.ts'
+import { healLine, lineRepairs as repairs } from '../../tools/testkit/judge.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 
 let disarm: () => void
@@ -24,7 +24,6 @@ beforeAll(() => {
 afterAll(() => disarm())
 
 const SEEDS = [1, 17, 2026]
-const PIN = { protocolVersion: 'v1.0' }
 
 const firstTurns = kitScenarioFiles()
   .map((f) => parseScenario(f.raw))
@@ -39,12 +38,6 @@ const cases = firstTurns.flatMap(({ scenario, lines, atFinalize }) =>
     return mutant === undefined ? [] : [{ scenario, lines, atFinalize, op, seed, mutant }]
   })),
 )
-
-const healLine = (line: string) => heal(line, PIN)
-const repairs = (line: string): string[] => {
-  const h = healLine(line)
-  return h.ok ? h.repairs.filter((r) => r !== 'single-object-envelope') : []
-}
 
 describe('mutation fuzz over the green scenarios', () => {
   it('there are green lines turns to fuzz, and every operator applies to at least one case', () => {

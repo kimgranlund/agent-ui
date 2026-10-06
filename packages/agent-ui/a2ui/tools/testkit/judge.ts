@@ -33,6 +33,18 @@ import type { ScenarioTurn, TurnExpect } from './scenario.ts'
 
 export const PROTOCOL_PIN = { protocolVersion: 'v1.0' } as const
 
+/** Heal one line with the kit's pin. The legs under `src/testkit/` reach heal through this: the corpus
+ *  root-purity gate (`src/corpus/index.test.ts`) bars every `src/` file outside corpus from importing it. */
+export function healLine(line: string): ReturnType<typeof heal> {
+  return heal(line, PROTOCOL_PIN)
+}
+
+/** One line's repair names, `single-object-envelope` dropped; `[]` when the line does not heal. */
+export function lineRepairs(line: string): string[] {
+  const h = healLine(line)
+  return h.ok ? h.repairs.filter((r) => r !== ENVELOPE_REPAIR) : []
+}
+
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
 export interface SplitLines {

@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { armOffline } from '../../tools/testkit/offline.ts'
 import { FORM_REPAIR, OPERATORS, SEMANTIC_CODE, mutate, mutateWith } from '../../tools/testkit/mutate.ts'
-import { heal } from '../corpus/heal.ts'
+import { healLine } from '../../tools/testkit/judge.ts'
 
 let disarm: () => void
 beforeAll(() => {
@@ -17,7 +17,7 @@ const LINES = [
   j({ version: 'v1.0', updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'Column', children: ['a'] }, { id: 'a', component: 'Text', text: 'x' }] } }),
 ]
 const repairsOf = (line: string): string[] => {
-  const h = heal(line, { protocolVersion: 'v1.0' })
+  const h = healLine(line)
   return h.ok ? h.repairs.filter((r) => r !== 'single-object-envelope') : ['UNHEALABLE']
 }
 
