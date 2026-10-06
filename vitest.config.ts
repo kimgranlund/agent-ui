@@ -91,7 +91,9 @@ export default defineConfig({
           // `process-shim.ts` are NOT safe to import here (process-shim.ts globally overrides
           // `process.cwd()`, a side effect that must never leak into a shared test process; see both
           // files' own header comments) — a future full-Worker integration test needs its own isolated
-          // runtime (e.g. `@cloudflare/vitest-pool-workers`), not this project. GH #335 widened it to
+          // runtime (e.g. `@cloudflare/vitest-pool-workers`), not this project; `worker/worker-bundle.test.ts`
+          // is the module-load slice of that, evaluating the `wrangler deploy --dry-run` bundle in a child
+          // process so the shim's global override never reaches this one. GH #335 widened it to
           // `a2ui/tools/corpus/` and GH #343 to `a2a/tools/corpus/` — BOTH `import-seeds.ts` modules now
           // carry the same CLI-entry guard (`process.argv[1]?.endsWith('import-seeds.ts')`) keeping
           // `main()` from firing on import, so each is exactly as safe to import here as `route-guards.ts`/
