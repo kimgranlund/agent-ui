@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-10-06 |
 > | **Proposed by** | the sdlc-lite run `persona-registry` (T-0013, tracking issue GH [#1807](https://github.com/kimgranlund/agent-ui/issues/1807), epic GH [#1817](https://github.com/kimgranlund/agent-ui/issues/1817)); Kim ruled the two forks on 2026-10-05, the build is the proposal |
-> | **Ratified by** | pending Kim |
+> | **Ratified by** | kimgranlund (repo owner), 2026-10-06, ratified by Kim in the sdlc-lite session (AskUserQuestion) |
 > | **Repairs** | [`../references/agent-model.md`](../references/agent-model.md) §3 glossary ("capability registry") · `packages/agent-ui/a2ui/AGENTS.md` (the Catalogs section) · skills `a2ui-multi-catalog` (pattern 5) and `a2ui-prompt-authoring` (the sidecar and exemplar scope note) · code: `packages/agent-ui/a2ui/src/registry/` (new), `src/catalog/default/exclusions.ts` (new), `tools/registry/` (new), `site/capability-registry.json` and its `site/public/` twin (generated), `site/pages/capability-registry.*`, `site/lib/capability-registry.*`, `vitest.config.ts` |
 > | **Supersedes / Superseded by** | none · relates [ADR-0071](./0071-a2ui-derived-drift-gated-system-prompt.md) (the derived inventory this registry indexes but does not change) · relates [ADR-0087](./0087-a2ui-whole-fleet-catalog-scope-policy.md) (the include-or-exclude partition the registry reports) · relates [ADR-0172](./0172-persona-catalog-composition-intake.md) (`SPEC-R6`'s exact `catalogId` filter stands, no amendment) · relates [ADR-0173](./0173-descriptor-inversion-generation-intake.md) cl.5 (catalog content stays hand-curated) · relates [ADR-0232](./0232-catalog-selection-guidance-sidecar.md) (the sidecars the registry reads) · relates [ADR-0233](./0233-per-control-entries-and-generated-control-registry.md) (the components registry the registry joins) · relates [ADR-0234](./0234-turn-trace-prompt-budget-and-token-usage.md) (the prompt budget, unchanged) |
 
