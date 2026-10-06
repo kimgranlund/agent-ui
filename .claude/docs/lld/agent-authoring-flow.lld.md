@@ -173,7 +173,8 @@ posture (§10).
 - **DOM.** `#compose()` wraps the content slot: `div[data-part="chat-stack"][data-slot="content"]`
   hosting `[ try-it bar (hidden) | authoring conversation (lazy) | #conversation (test — today's
   instance, untouched) ]`. The authoring `UIConversationElement` is created on the first
-  `authoringStore` assignment: `receipt`/`sources` like the test one, its `onSubmit`/
+  `authoringStore` assignment: `receipt`/`steps` like the test one (T-0016's step mode replaced
+  `sources` on both), its `onSubmit`/
   `onClientMessage`/`onModelChange` wired to the authoring context (below).
   **PIXEL-TRUTH OVERRIDE (Kim, 2026-08-10, GH #666 reopen — "the center pane should be a CHAT, just
   like Test chat"):** the LAZY half of that sentence is retired. The authoring conversation is now

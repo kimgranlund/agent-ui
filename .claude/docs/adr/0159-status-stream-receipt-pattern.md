@@ -166,3 +166,100 @@ default-off, byte-identical.
   exactly what the ADR-0122 family charter forbids; the wave stays on the fleet's one established
   `role=log` discipline (same-node mutation, no insertions) rather than adding a second,
   contradictory announcement path.
+
+## Amendment (2026-10-06, **proposed**): step mode, an opt-in strip that renders a neutral activity model (T-0016)
+
+> Append-only, and **proposed**: the Status cell above reads `accepted` for the record as a whole and
+> stays byte-untouched; agents never flip status, and this amendment carries no ratification of its
+> own until Kim gives one. Every accepted section above, the wave-B amendment included, is unedited.
+
+**Context.** Kim's 2026-10-06 screenshot of the Test Chat strip: it printed stage names only ("Request
+sent", "Generated", "Reasoned", "Wrote the response", "Validated"), repeated the same raw JSONL under
+"Validated", "Updated data" and "Updated the surface" (wave B attaches the whole candidate to the
+`validating` row while each category row accumulates its own lines), and summed the turn as a bare
+total ("7 steps · 14s"). Kim ruled the fix global: general purpose, never tied to a catalog, persona
+or app.
+
+**Decision.** Everything above stands for every consumer that does not opt in. This amendment adds an
+opt-in path beside it:
+
+1. **The model.** `ActivityStep` (`id`, `kind`, `label`, `status`: `running | ok | repaired | failed`,
+   optional `startedAt`, `durationMs`, `summary`, `raw`) and `ActivityFooter` (optional `rounds`,
+   `inputTokens`, `outputTokens`, `model`), in
+   `packages/agent-ui/app/src/controls/conversation/activity-step.ts`, re-exported from
+   `@agent-ui/app/conversation`. Pure data plus two formatters; no A2UI, catalog or DOM import.
+2. **The control.** `ui-conversation` gains a reflected boolean `steps` (default false, sampled once
+   per turn like `sources`) and two `AgentTurnHandle` methods: `step(step)` upserts one row by `id`,
+   `footer(footer)` records the turn facts. In step mode the turn's strip renders only the host's
+   steps: the label, the `summary` as the one line under it, a live elapsed time from `startedAt`
+   while running and the frozen `durationMs` once settled (`formatTotalElapsed`, one display
+   vocabulary with ADR-0153), and the status (`running` active, `ok` done, `failed` error, `repaired`
+   done with an `arrow-clockwise` marker, so a repair is visible without escalating the receipt's
+   outcome glyph for a turn whose output is valid). At `finalize()`/`fail()` it appends ONE collapsed
+   "Raw output" row holding every distinct step `raw` once, then one footer row; both are markerless
+   note rows (ADR-0184), so the receipt's "N steps" counts steps only and the completion invariant
+   never truncates them. `ingestLine()` and `progress()` add no rows in step mode (routing and mounting
+   are unchanged) and `sources` is inert. With `steps` off, `step()` and `footer()` are no-ops and the
+   strip is byte-identical (asserted by `outerHTML` equality).
+3. **The strip.** `StatusEntry.sourceLabel` (additive, read once at append beside `source`) names the
+   reveal's summary; absent or empty keeps "Source", so every existing entry is byte-identical.
+4. **The A2UI adapter**, `site/lib/a2ui-activity.ts`. ADR-0146 stages become timed steps carrying §1's
+   live/done labels; `retry` and `done` are transitions, not rows. On `retry` the validate step reads
+   "Validation failed" with "Round 1 failed, retrying in round 2"; at `done` it settles `repaired` with
+   "Round 1 failed, repaired in round 2", and the `TurnTrace` adds the fed-back codes ("Round 1 failed
+   (SCHEMA), repaired in round 2"). A `tool` stage becomes "Called tool <registry name>" with its own
+   time. The shipped lines become counted output steps by message kind ("Updated the surface" with "3
+   components", "Updated data" with "4 keys", opened and closed surfaces): counts and verbs only, never
+   a component type, catalog id or surface id. The raw output is attached once: the shipped lines, on
+   the validate step; a failed turn keeps the last candidate wave B's `progressDetail:'source'`
+   attached. The footer comes from the trace (rounds, usage, model); no trace means no footer and no
+   codes. The trace's inner shape is sanitized here, since the wire never validates it.
+5. **The wiring.** `AdminSurfaceTurnEvent` gains `step` and `footer` members (an in-process union, not
+   a wire format). The site runner (`admin-live-runner.ts`) folds every progress event, the trace
+   (which it used to peel and drop) and every shipped line through the adapter and yields the changed
+   steps; a failing turn yields its failed step before the throw. `ui-agent-admin` sets `steps` on both
+   of its conversations (the Test Chat and the Builder interview, which share the runner and event
+   loop) in place of `sources`, keeps §3's `receipt`, and forwards the two events.
+
+**Placement.** The adapter lives at the site layer because no lower layer can hold it: `a2ui` cannot
+import `app`, where the model lives; the `./agent` gates (ADR-0137 clause 8) admit only relative or
+`node:` specifiers there and forbid any other `a2ui/src` module from reaching into it; and
+`ui-agent-admin` (app) cannot import `site`. Keeping the step path A2UI-free inside the control is what
+lets a non-A2UI host use it: a plain tool-calling chat drives the same control through its own small
+adapter in `conversation.test.ts`.
+
+**Unchanged.** Wire formats, the `TurnProgress` and `TurnTrace` shapes, the producer loop, and every
+consumer that does not set `steps` (a2ui-chat, a2ui-live, the devtools harness, the doc pages).
+
+**Consequences.**
+
+- Opting in hands the strip's content to the host: a runner that yields no `step` events leaves a turn
+  with its header and no rows. The one runner that drives `ui-agent-admin` in this repo yields them.
+- The stage live/done pairs now exist at two sites, `conversation.ts`'s `PROGRESS_LABEL` (the default
+  narration) and the adapter's `STAGE_STEP` (step mode); they are kept in step by hand.
+- Step times are what the client observed between stage signals, not provider-measured durations.
+- `scripts/adr_ratify.py`'s amendment pattern matches only the older dash-separated header; this header
+  follows the newer colon form (ADR-0073's 2026-10-05 amendment), so ratification is a hand flip or a
+  widening of that pattern.
+
+**Repairs**: `packages/agent-ui/app/src/controls/conversation/{activity-step.ts,activity-step.test.ts,conversation.ts,conversation.md,conversation.test.ts,conversation.browser.test.ts}` ·
+`packages/agent-ui/components/src/controls/status-stream/{status-stream.ts,status-stream.md,status-stream.test.ts}` ·
+`packages/agent-ui/app/src/controls/agent-admin/{agent-admin.ts,agent-admin-schema.ts,agent-admin.test.ts,agent-admin-activity-steps.test.ts}` ·
+`site/lib/{a2ui-activity.ts,a2ui-activity.test.ts,admin-live-runner.ts,admin-live-runner.test.ts}` ·
+`scripts/e2e-admin/{admin-page.ts,flows/test-chat.ts}` (`chat-surface-render` asserts the real page's step rows) ·
+`.claude/docs/references/agent-model.md` (the "activity step" glossary entry) ·
+`.claude/docs/lld/agent-authoring-flow.lld.md` §5 (the interview's opt-ins).
+
+**Alternatives considered.**
+
+- **De-duplicate inside the default narration** (drop the `validating` source when category rows carry
+  lines). Rejected: the strip would still show stage names only, with no per-step time or summary, and
+  the control would stay A2UI-shaped.
+- **The adapter in `a2ui`.** Rejected by the gates and the DAG named under Placement.
+- **The adapter inside `ui-agent-admin`.** Rejected: the runner already owns the transport-shaped
+  peel (ADR-0136), and the component would gain wire tallying it otherwise never needs.
+- **Raw output as a per-step reveal** (wave B's mechanism, renamed). Rejected: the reveal is a
+  creation-time affordance and an A2UI turn's shipped lines arrive after its step rows exist; one
+  turn-level row is also what removes the duplication.
+- **`repaired` as `warning`.** Rejected: it would paint the receipt's outcome glyph as a warning for a
+  turn whose output is valid; the marker glyph and the summary keep the repair visible instead.
