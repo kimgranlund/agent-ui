@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Capability Registry</title>
+  </head>
+  <body>
+    <!-- The capability registry (GH #1807): one catalog id's composed capability view, per persona, read from
+         the committed projection site/capability-registry.json. An MPA entry auto-discovered by
+         vite.config.ts's site/**/*.html glob. The page module imports pages/_page.ts FIRST for the
+         foundation CSS cascade + self-defining ui-* controls. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/capability-registry.ts"></script>
+  </body>
+</html>
