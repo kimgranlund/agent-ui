@@ -38,7 +38,7 @@ Source of truth: `produce` in `packages/agent-ui/a2ui/src/agent/produce.ts` (wit
 `maxRounds` bounds the loop. Exhaustion throws `ProduceHalt` carrying the last failures; a
 transport that already committed a 200 turns that into the terminal error line below.
 `FEED_SCOPE`, `NET_NOOP`, `FLOW_END_MISSING`, the genui codes and a semantic check's own codes
-(`HAND_TOTAL`, `HAND_COUNT`, `SEMANTIC_UNCORRECTED`, `SEMANTIC_CHECK_ERROR`) are produce-layer-only and
+(`HAND_TOTAL`, `HAND_COUNT`, `NATURAL_ACTIONS`, `SEMANTIC_UNCORRECTED`, `SEMANTIC_CHECK_ERROR`) are produce-layer-only and
 are not members of the protocol `ErrorCode` union.
 
 ## What the consumer sees, in order (validate-then-stream)

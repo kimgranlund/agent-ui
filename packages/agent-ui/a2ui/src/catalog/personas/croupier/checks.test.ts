@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest'
 import { croupierHandConsistency, croupierSemanticChecks } from './checks.ts'
 import { croupierManifest } from './manifest.ts'
-import { CORRECTED_LINE, DATA_DRIVEN_TURN, DEAL_TURN, EVIDENCE_LINE, toJsonl } from './hands.fixture.ts'
+import { CORRECTED_LINE, DATA_DRIVEN_TURN, DEAL_TURN, EVIDENCE_LINE, NATURAL_REPAIRED_TURN, NATURAL_TURN, toJsonl } from './hands.fixture.ts'
 import { semanticSurfaceViews } from '../../semantic-check.ts'
 import type { SemanticFinding } from '../../semantic-check.ts'
 import type { Session } from '../../../agent/agent-transport.ts'
@@ -163,6 +163,146 @@ describe('croupier hand check: the taught data-driven shape', () => {
     expect(judge(session, draw(21))).toEqual([]) // A + 7 + 3: soft 21
     expect(judge(session, draw(11))).toEqual([]) // hard 11
     expect(judge(session, draw(18)).map((f) => f.code)).toEqual(['HAND_TOTAL']) // the stale total
+  })
+})
+
+describe('croupier hand check: a natural blackjack ends the round (T-0020, NATURAL_ACTIONS)', () => {
+  type Comp = Record<string, unknown>
+  /** A copy of the screenshot turn with `edit` applied to its component list (`get` finds one by id). */
+  function natural(edit: (comps: Comp[], get: (id: string) => Comp) => void): A2uiOutput {
+    const out = JSON.parse(JSON.stringify(NATURAL_TURN)) as A2uiOutput
+    const comps = (out[1] as { updateComponents: { components: Comp[] } }).updateComponents.components
+    edit(comps, (id) => comps.find((c) => c['id'] === id)!)
+    return out
+  }
+  /** The dealer shows its hole card: face up, and the readout restated as the full two-card total. */
+  const revealHole = (_: Comp[], get: (id: string) => Comp): void => {
+    delete get('dealerCard2')['faceDown']
+    get('dealerTotal')['text'] = 'Dealer: 16'
+  }
+  const remove = (comps: Comp[], ...ids: string[]): void => {
+    for (const id of ids) comps.splice(comps.findIndex((c) => c['id'] === id), 1)
+  }
+
+  it('precondition: the screenshot turn and its repair both pass structural validation', () => {
+    expect(validateA2ui(NATURAL_TURN, catalog, undefined, { atFinalize: true })).toEqual({ valid: true, failures: [] })
+    expect(validateA2ui(NATURAL_REPAIRED_TURN, catalog, undefined, { atFinalize: true })).toEqual({ valid: true, failures: [] })
+  })
+
+  it('fails the screenshot with one finding naming the move buttons and the face-down hole card', () => {
+    const findings = judge({ turns: [] }, NATURAL_TURN)
+    expect(findings).toHaveLength(1)
+    const f = findings[0]!
+    expect(f.code).toBe('NATURAL_ACTIONS')
+    expect(f.path).toBe('table-6:hitBtn')
+    expect(f.message).toContain("The player's cards in playerCards (A, K) are a natural blackjack")
+    expect(f.message).toContain('hitBtn (hit), standBtn (stand), doubleBtn (double)')
+    expect(f.message).toContain('a face-down card in dealerCards')
+    expect(f.message).toContain('leave only the Deal again Button')
+  })
+
+  it('passes the repair: hole card face up, result stated, Deal again only', () => {
+    expect(judge({ turns: [] }, NATURAL_REPAIRED_TURN)).toEqual([])
+  })
+
+  it('judges either fault alone: buttons with a face-up hole card, or a face-down hole card with no buttons', () => {
+    const buttonsOnly = judge({ turns: [] }, natural(revealHole))
+    expect(buttonsOnly).toHaveLength(1)
+    expect(buttonsOnly[0]).toMatchObject({ code: 'NATURAL_ACTIONS', path: 'table-6:hitBtn' })
+    expect(buttonsOnly[0]!.message).not.toContain('face-down')
+    const holeOnly = judge(
+      { turns: [] },
+      natural((comps, get) => {
+        get('moves')['children'] = []
+        remove(comps, 'hitBtn', 'standBtn', 'doubleBtn')
+      }),
+    )
+    expect(holeOnly).toHaveLength(1)
+    expect(holeOnly[0]).toMatchObject({ code: 'NATURAL_ACTIONS', path: 'table-6:dealerCards' })
+    expect(holeOnly[0]!.message).not.toContain('still has')
+  })
+
+  it('matches a move by id or by label in any case, and ignores other buttons', () => {
+    const renamed = natural((comps, get) => {
+      revealHole(comps, get)
+      get('hitBtn')['label'] = 'Take a card' // the id still says hit
+      const stand = get('standBtn')
+      stand['id'] = 'btn-2'
+      stand['label'] = 'STAND' // the label says stand
+      get('moves')['children'] = ['hitBtn', 'btn-2']
+      remove(comps, 'doubleBtn')
+    })
+    const findings = judge({ turns: [] }, renamed)
+    expect(findings).toHaveLength(1)
+    expect(findings[0]!.message).toContain('hitBtn (hit), btn-2 (stand)')
+    const dealOnly = natural((comps, get) => {
+      revealHole(comps, get)
+      const deal = get('hitBtn')
+      deal['id'] = 'dealAgain'
+      deal['label'] = 'Deal again'
+      const other = get('standBtn')
+      other['id'] = 'standingsBtn'
+      other['label'] = 'Standings'
+      get('moves')['children'] = ['dealAgain', 'standingsBtn']
+      remove(comps, 'doubleBtn')
+    })
+    expect(judge({ turns: [] }, dealOnly)).toEqual([])
+  })
+
+  it('stays green for a 21 reached with three cards, a two-card 20, and a soft 17, each with all three moves', () => {
+    const threeCard21 = natural((comps, get) => {
+      revealHole(comps, get)
+      get('playerCards')['children'] = ['playerCard1', 'playerCard2', 'playerCard3']
+      get('playerCard2')['rank'] = '5' // A + 5 + 5
+      comps.push({ id: 'playerCard3', component: 'PlayingCard', rank: '5', suit: 'clubs' })
+    })
+    const twoCard20 = natural((comps, get) => {
+      revealHole(comps, get)
+      get('playerCard1')['rank'] = 'Q' // Q + K
+      get('playerTotal')['text'] = 'Total: 20'
+    })
+    const soft17 = natural((comps, get) => {
+      revealHole(comps, get)
+      get('playerCard2')['rank'] = '6' // A + 6
+      get('playerTotal')['text'] = 'Total: 17'
+    })
+    for (const [name, out] of [['three-card 21', threeCard21], ['two-card 20', twoCard20], ['soft 17', soft17]] as const) {
+      expect(judge({ turns: [] }, out), name).toEqual([])
+    }
+    // The hole card stays face down in these too: only a natural must reveal it.
+    const faceDownSoft17 = natural((_, get) => {
+      get('playerCard2')['rank'] = '6'
+      get('playerTotal')['text'] = 'Total: 17'
+    })
+    expect(judge({ turns: [] }, faceDownSoft17)).toEqual([])
+  })
+
+  it('judges a data-driven hand list, for every ten-value card, and never two aces or an ace and a nine', () => {
+    const withDouble = (o: A2uiOutput): void => {
+      componentsOf(o).push({ id: 'doubleBtn', component: 'Button', label: 'Double', variant: 'ghost', action: { action: 'double' } })
+    }
+    const deal = (rank: string, total: number): A2uiOutput =>
+      dataDriven((v) => {
+        v['playerHand'] = [{ rank: 'A', suit: 'spades' }, { rank, suit: 'hearts' }]
+        v['playerTotal'] = total
+      }, withDouble)
+    for (const face of ['10', 'J', 'Q', 'K']) expect(judge({ turns: [] }, deal(face, 21)).map((f) => f.code), face).toEqual(['NATURAL_ACTIONS'])
+    expect(judge({ turns: [] }, deal('A', 12))).toEqual([])
+    expect(judge({ turns: [] }, deal('9', 20))).toEqual([])
+  })
+
+  it('is indeterminate, never a finding, when a hand cannot be resolved', () => {
+    const unknownPlayerRank = natural((_, get) => (get('playerCard2')['rank'] = { path: '/missing' }))
+    expect(judge({ turns: [] }, unknownPlayerRank)).toEqual([])
+    // An unresolvable dealer card: the buttons still fault, the hole card is not judged.
+    const unknownDealerRank = natural((_, get) => {
+      get('dealerCard1')['rank'] = { path: '/missing' }
+      get('dealerTotal')['text'] = 'Dealer: 9'
+    })
+    const findings = judge({ turns: [] }, unknownDealerRank)
+    expect(findings).toHaveLength(1)
+    expect(findings[0]!.message).toContain('hitBtn (hit)')
+    expect(findings[0]!.message).not.toContain('face-down')
   })
 })
 

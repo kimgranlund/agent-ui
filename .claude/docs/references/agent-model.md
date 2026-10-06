@@ -169,7 +169,7 @@ header pointing here.
   `produce()` runs it on a round that already passed the shared validator, over each touched surface merged
   with the session; a finding (`{code, path, message}`) is fed back as a self-correct round, and at the round
   bound the valid payload ships tallied `SEMANTIC_UNCORRECTED` (ADR-0238). The first one is the
-  Croupier's hand check (a stated total must match the cards shown). Not the A2UI protocol's `checks`
+  Croupier's hand check (a stated total must match the cards shown, and a natural blackjack leaves no Hit, Stand or Double). Not the A2UI protocol's `checks`
   (input validation on a component) and not a model-graded round.
 - **prompt budget**: the declared character ceiling on the whole composed system prompt, per catalog
   family (`PROMPT_CHAR_BUDGET_BASE`, `PROMPT_CHAR_BUDGET_DERIVED` in `src/agent/prompt-budget.ts`). Each
