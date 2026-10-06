@@ -201,7 +201,7 @@ page; the roadmap row moves on ship.
   > kind: it drives the agent-admin app in headless Chromium, local only with no CI job. Known gap:
   > `capturedLineTimelines` replayed only `line` events, while `recordTurn` moves meta-lines into `meta`
   > events, so a capture lost its note, ask, patch, plan, team and flowEnd lines, and admin fixtures
-  > carry raw wire lines. T-0018 closed the gap under ADR-0239 (proposed): R3 and R10 now replay `meta`
+  > carry raw wire lines. T-0018 closed the gap under ADR-0239: R3 and R10 now replay `meta`
   > events as meta-lines. Raw wire lines in a fixture remain lawful.
 - **SPEC-N2** — NOT CI infrastructure: no workflows, no shard changes beyond adopting the one smoke spec.
 - **SPEC-N3** — NO key handling, provider adapters, or `produce()` in this package; NO production mount for

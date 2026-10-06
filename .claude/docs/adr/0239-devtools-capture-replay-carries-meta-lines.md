@@ -4,9 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-10-06 |
 > | **Proposed by** | the sdlc-lite solo run `devtools-meta-replay` (T-0018), the follow-up T-0010 recorded in the SPEC-N1 note, GH [#1815](https://github.com/kimgranlund/agent-ui/issues/1815). Number 0239 claimed against the file tree and `origin/main` (0238 the highest), every sibling worktree, every remote branch, and the open PR list (none held a higher number) |
+> | **Ratified by** | kimgranlund (repo owner), 2026-10-06, ratified by Kim in the sdlc-lite session (AskUserQuestion) |
 > | **Ratified by** | *(pending: only Kim flips this, via `scripts/adr_ratify.py`)* |
 > | **Repairs** | [`../spec/devtools-harness.spec.md`](../spec/devtools-harness.spec.md) SPEC-R3 (the replay body, new AC3), SPEC-R7 (the `meta` arm description), SPEC-R10 (AC1 widened, new AC4), the SPEC-N1 note · [`../spec/agent-model.spec.md`](../spec/agent-model.spec.md) SPEC-R27 (one clause) · skill `a2ui-jsonl-mcp` (`references/record-and-replay.md`, `SKILL.md`, `intent.md`, `evals/evals.json`) · `packages/agent-ui/devtools/src/transports/replay.ts` (`capturedLineTimelines`) |
 > | **Supersedes / Superseded by** | none · **Extends** [ADR-0200](./0200-agent-ui-devtools-package.md) (cl.3 and cl.7 stand: the `line` sequence still replays byte-identical; this adds the `meta` events to what replays) · relates [ADR-0088](./0088-a2ui-live-conversational-channel.md) (the `a2uiMeta` envelope and its closed arm vocabulary, unchanged) |
