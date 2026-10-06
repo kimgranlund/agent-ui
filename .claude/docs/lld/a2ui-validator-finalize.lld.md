@@ -9,7 +9,7 @@
 > validator) · [`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) SPEC-R4/R5 (self-correct
 > + validate-then-stream). Composes on: [`a2ui-renderer.lld.md`](a2ui-renderer.lld.md) §8 LLD-C11 /
 > §9 error table · TKT-0081's `SurfaceSeed` merge (the seed-merge loop in `validate.ts`'s `run` +
-> `produce.ts`'s `sessionSurfaceSeeds`) · GH [#829](https://github.com/kimgranlund/agent-ui/issues/829)'s two dated
+> `sessionSurfaceSeeds` in `src/agent/surface-seeds.ts`, moved out of `produce.ts` by T-0011) · GH [#829](https://github.com/kimgranlund/agent-ui/issues/829)'s two dated
 > Findings (2026-08-13 — the diagnosis this designs against, incl. the attempted-and-reverted
 > naive fix and its 5 red suites).
 

@@ -2,9 +2,10 @@
 
 Source of truth: `produce` in `packages/agent-ui/a2ui/src/agent/produce.ts` (with
 `ProduceOptions.maxRounds`, `ProduceHalt`, `interleaveProgress`, `formatMetaLine`,
-`sessionSurfaceSeeds`, `feedScopeFailures`, `netNoOpSurfaceIds`, `askIntegrityHolds`),
-`src/catalog/semantic-check.ts` (`semanticSurfaceViews`, `runSemanticChecks`, ADR-0238), and
-`meta-line.ts` (`formatErrorLine`, `TURN_PROGRESS_STAGES`). ADR-0206 for the timing contract.
+`feedScopeFailures`, `netNoOpSurfaceIds`, `askIntegrityHolds`), `sessionSurfaceSeeds` in
+`packages/agent-ui/a2ui/src/agent/surface-seeds.ts`, `src/catalog/semantic-check.ts`
+(`semanticSurfaceViews`, `runSemanticChecks`, ADR-0238), and `meta-line.ts` (`formatErrorLine`,
+`TURN_PROGRESS_STAGES`). ADR-0206 for the timing contract.
 
 ## Per round, in this order
 

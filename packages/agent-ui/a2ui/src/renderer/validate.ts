@@ -392,7 +392,9 @@ function checkIdGraph(sid: string, g: SurfaceGraph, failures: Failure[], judgeEm
 
 // The three Card-region types SPEC-R6 scopes containment to (v1: no Tabs/Swiper sub-types — a future
 // extension of the SAME code, non-goal here, a2ui-container-vocabulary.spec.md SPEC-R6).
-const CARD_REGION_TYPES = new Set(['CardHeader', 'CardContent', 'CardFooter'])
+// Exported for the A2UI test kit's generated per-type matrix (tools/testkit/minimal-node.ts), which wraps
+// these in a Card instead of keeping a second copy; not re-exported from the renderer barrel.
+export const CARD_REGION_TYPES: ReadonlySet<string> = new Set(['CardHeader', 'CardContent', 'CardFooter'])
 
 /**
  * Containment (a2ui-container-vocabulary SPEC-R6): a `CardHeader`/`CardContent`/`CardFooter` node is
