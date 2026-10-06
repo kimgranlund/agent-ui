@@ -51,6 +51,8 @@ function componentsOf(out: A2uiOutput): Record<string, unknown>[] {
 
 describe('croupier hand check: the GH #1795 evidence (red) and its repair (green)', () => {
   it('precondition: the evidence passes structural validation on top of its deal turn', () => {
+    // The reconstructed deal turn is itself a turn the loop would have shipped (a seed is otherwise trusted).
+    expect(validateA2ui(DEAL_TURN, catalog, undefined, { atFinalize: true })).toEqual({ valid: true, failures: [] })
     expect(validateA2ui(parse(EVIDENCE_LINE), catalog, dealSeed(), { atFinalize: true })).toEqual({ valid: true, failures: [] })
     expect(validateA2ui(parse(CORRECTED_LINE), catalog, dealSeed(), { atFinalize: true })).toEqual({ valid: true, failures: [] })
   })
