@@ -83,7 +83,7 @@ import '@agent-ui/components/controls/icon'
 import { formatTotalElapsed } from '@agent-ui/components/controls/status-stream'
 import type { UIStatusStreamElement, StatusEntry, ItemStatus } from '@agent-ui/components/controls/status-stream'
 // T-0016: the neutral step model step mode renders (pure, no DOM, no A2UI).
-import { formatActivityFooter, joinActivityRaw } from './activity-step.ts'
+import { formatActivityFooter, formatActivityRetries, joinActivityRaw, totalActivityRetries } from './activity-step.ts'
 import type { ActivityStep, ActivityStatus, ActivityFooter } from './activity-step.ts'
 export type { ActivityStep, ActivityStatus, ActivityFooter } from './activity-step.ts' // hosts and adapters import the model from here
 // GH #291/ADR-0160 clause 3 — the settled-turn action-chip row reuses `ui-button` (the
@@ -456,9 +456,10 @@ const PROGRESS_LABEL: Record<TurnProgressStage, LabelPair> = {
 
 // ── T-0016 step mode: the neutral ActivityStep → StatusEntry projection ──────────────────────────────
 
-/** The step outcome → strip status. `repaired` reads `done` (the turn's output is good, so it never
- *  escalates the header) and is told apart by its own marker glyph (`REPAIRED_GLYPH`) and its summary. */
-const STEP_STATUS: Record<ActivityStatus, ItemStatus> = { running: 'active', ok: 'done', repaired: 'done', failed: 'error' }
+/** The step outcome → strip status. `repaired` reads `warning` (T-0019): the turn's output is good but a
+ *  round failed on the way, so the header settles amber instead of a plain success check; the row keeps its
+ *  own marker glyph (`REPAIRED_GLYPH`) and its summary says why. */
+const STEP_STATUS: Record<ActivityStatus, ItemStatus> = { running: 'active', ok: 'done', repaired: 'warning', failed: 'error' }
 const REPAIRED_GLYPH = 'arrow-clockwise'
 const RAW_LABEL = 'Raw output'
 
@@ -903,6 +904,13 @@ export class UIConversationElement extends UIElement {
       if (raw !== '') narration.appendEntry({ key: `t${seq}-raw`, note: true, source: raw, sourceLabel: RAW_LABEL }).dataset.activity = 'raw'
       if (footerText !== '') narration.appendEntry({ key: `t${seq}-footer`, note: true, text: footerText }).dataset.activity = 'footer'
     }
+    /** T-0019: the settle options for the strip's header: in step mode, a turn whose steps retried carries a
+     *  persistent "N retries" chip, so a repaired turn never collapses to a plain success receipt. */
+    const settleOptions = (): { badge: string } | undefined => {
+      if (!withSteps) return undefined
+      const retries = totalActivityRetries([...stepRows.values()].map((r) => r.step))
+      return retries > 0 ? { badge: formatActivityRetries(retries) } : undefined
+    }
     // GH #313 — reveals the bubble exactly once, on the first real content of any kind: a streamed note
     // token, a fresh mount, the chip row, or finalize()'s own note/fallback text. A RESUMED bubble never
     // carries `data-empty` in the first place (TKT-0079: it can only resume because it already mounted a
@@ -1176,7 +1184,7 @@ export class UIConversationElement extends UIElement {
         for (const cat of categoriesSeen) narration.update(`t${seq}-${cat}`, { status: 'done', label: LABEL[cat].done })
         if (lastProgressKey !== undefined) settleProgress(lastProgressKey)
         appendSettleRows() // T-0016: step mode's raw + footer rows, after every step, before the receipt settles
-        narration.finalize()
+        narration.finalize(settleOptions())
         const finalNote = noteText ?? summarize(turnLines)
         if (finalNote !== '') revealBubble() // GH #313 — the fallback tally is real content too
         this.#renderBody(note, finalNote)
@@ -1211,7 +1219,7 @@ export class UIConversationElement extends UIElement {
         // partial turn touched (the a2ui-chat.ts `finally` block precedent, unconditional on success/failure).
         narration.appendEntry({ key: `t${seq}-error`, status: 'error', label: `Turn failed — ${message}` })
         appendSettleRows() // T-0016: a failed turn still shows its raw output and facts, after the error row
-        narration.fail()
+        narration.fail(settleOptions())
         this.#settleTouchedHosts(touchedIds)
         // GH #805 — don't strand a dead card: re-enable the surface whose OWN action started this now-
         // failed turn, even when the turn never sent it another line (an ask-declared surface's real

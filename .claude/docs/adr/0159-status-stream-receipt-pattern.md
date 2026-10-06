@@ -184,7 +184,7 @@ or app.
 opt-in path beside it:
 
 1. **The model.** `ActivityStep` (`id`, `kind`, `label`, `status`: `running | ok | repaired | failed`,
-   optional `startedAt`, `durationMs`, `summary`, `raw`) and `ActivityFooter` (optional `rounds`,
+   optional `startedAt`, `durationMs`, `summary`, `retries`, `raw`) and `ActivityFooter` (optional `rounds`,
    `inputTokens`, `outputTokens`, `model`), in
    `packages/agent-ui/app/src/controls/conversation/activity-step.ts`, re-exported from
    `@agent-ui/app/conversation`. Pure data plus two formatters; no A2UI, catalog or DOM import.
@@ -194,8 +194,10 @@ opt-in path beside it:
    steps: the label, the `summary` as the one line under it, a live elapsed time from `startedAt`
    while running and the frozen `durationMs` once settled (`formatTotalElapsed`, one display
    vocabulary with ADR-0153), and the status (`running` active, `ok` done, `failed` error, `repaired`
-   done with an `arrow-clockwise` marker, so a repair is visible without escalating the receipt's
-   outcome glyph for a turn whose output is valid). At `finalize()`/`fail()` it appends ONE collapsed
+   warning with an `arrow-clockwise` marker; revised by T-0019 below). The steps' optional `retries`
+   counts sum into one persistent warning-toned "N retries" chip in the strip's header (the status
+   stream's `badge` settle option), so a repaired turn never settles as a plain success. At
+   `finalize()`/`fail()` it appends ONE collapsed
    "Raw output" row holding every distinct step `raw` once, then one footer row; both are markerless
    note rows (ADR-0184), so the receipt's "N steps" counts steps only and the completion invariant
    never truncates them. `ingestLine()` and `progress()` add no rows in step mode (routing and mounting
@@ -205,9 +207,10 @@ opt-in path beside it:
    reveal's summary; absent or empty keeps "Source", so every existing entry is byte-identical.
 4. **The A2UI adapter**, `site/lib/a2ui-activity.ts`. ADR-0146 stages become timed steps carrying §1's
    live/done labels; `retry` and `done` are transitions, not rows. On `retry` the validate step reads
-   "Validation failed" with "Round 1 failed, retrying in round 2"; at `done` it settles `repaired` with
-   "Round 1 failed, repaired in round 2", and the `TurnTrace` adds the fed-back codes ("Round 1 failed
-   (SCHEMA), repaired in round 2"). A `tool` stage becomes "Called tool <registry name>" with its own
+   "Validation failed" with "Round 1 failed (SCHEMA), retrying in round 2" (the `retry` progress event
+   carries the failed round's validator codes, T-0019); at `done` it settles `repaired` with
+   "Round 1 failed (SCHEMA), repaired in round 2" and `retries` set, the `TurnTrace` codes winning when
+   they arrive. A `tool` stage becomes "Called tool <registry name>" with its own
    time. The shipped lines become counted output steps by message kind ("Updated the surface" with "3
    components", "Updated data" with "4 keys", opened and closed surfaces): counts and verbs only, never
    a component type, catalog id or surface id. The raw output is attached once: the shipped lines, on
@@ -244,7 +247,7 @@ consumer that does not set `steps` (a2ui-chat, a2ui-live, the devtools harness, 
 
 **Repairs**: `packages/agent-ui/app/src/controls/conversation/{activity-step.ts,activity-step.test.ts,conversation.ts,conversation.md,conversation.test.ts,conversation.browser.test.ts}` ·
 `packages/agent-ui/components/src/controls/status-stream/{status-stream.ts,status-stream.md,status-stream.test.ts}` ·
-`packages/agent-ui/app/src/controls/agent-admin/{agent-admin.ts,agent-admin-schema.ts,agent-admin.test.ts,agent-admin-activity-steps.test.ts}` ·
+`packages/agent-ui/app/src/controls/agent-admin/{agent-admin.ts,agent-admin-schema.ts,agent-admin.test.ts,agent-admin-activity-steps.test.ts,agent-admin-chat-surface.browser.test.ts}` ·
 `site/lib/{a2ui-activity.ts,a2ui-activity.test.ts,admin-live-runner.ts,admin-live-runner.test.ts}` ·
 `scripts/e2e-admin/{admin-page.ts,flows/test-chat.ts}` (`chat-surface-render` asserts the real page's step rows) ·
 `.claude/docs/references/agent-model.md` (the "activity step" glossary entry) ·
@@ -261,5 +264,8 @@ consumer that does not set `steps` (a2ui-chat, a2ui-live, the devtools harness, 
 - **Raw output as a per-step reveal** (wave B's mechanism, renamed). Rejected: the reveal is a
   creation-time affordance and an A2UI turn's shipped lines arrive after its step rows exist; one
   turn-level row is also what removes the duplication.
-- **`repaired` as `warning`.** Rejected: it would paint the receipt's outcome glyph as a warning for a
-  turn whose output is valid; the marker glyph and the summary keep the repair visible instead.
+- **`repaired` as `warning`.** Rejected at first (the receipt's glyph would warn for a turn whose output
+  is valid), then ADOPTED by T-0019 (2026-10-06) after the Test Chat showed a repaired turn collapsing to
+  a plain green check with the failure reasons gone: a turn that needed a repair settles warning, with the
+  persistent "N retries" chip and the codes on the row, which is the visible-repair outcome this
+  alternative's rejection was trying to keep by other means.

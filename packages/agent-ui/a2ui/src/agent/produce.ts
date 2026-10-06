@@ -997,6 +997,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       yield formatProgressLine({
         stage: 'retry',
         round: round + 1,
+        ...(failures.length > 0 ? { codes: [...new Set(failures.map((f) => f.code))] } : {}), // T-0019: WHY the round failed, as codes only
         ...(attachSource && lastCandidate !== undefined && lastCandidate !== '' ? { source: capSource(lastCandidate) } : {}),
       })
     if (emitProgress) yield formatProgressLine({ stage: 'sent' })

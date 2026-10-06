@@ -1497,3 +1497,52 @@ describe('ui-conversation cross-engine: step mode paints the neutral ActivitySte
     expect(tops[1]!, 'the footer sits last').toBeLessThan(tops[2]!)
   })
 })
+
+// T-0019 in a real engine: the header's retry chip really paints (and in the warning ink, not the meta's
+// secondary ink) once the strip collapses to its receipt. The expanded-strip header stacking and the chat
+// Card region inset are guarded in the real ui-agent-admin host instead, see
+// agent-admin/agent-admin-chat-surface.browser.test.ts (T-0019 builder report, builder-solo-2.md).
+describe('ui-conversation cross-engine: the settled strip keeps its retry chip (T-0019)', () => {
+  const frames = (n = 2) =>
+    new Promise<void>((r) => {
+      const tick = (left: number): void => {
+        if (left <= 0) r()
+        else requestAnimationFrame(() => tick(left - 1))
+      }
+      tick(n)
+    })
+
+  function stepTurn(opts: { receipt: boolean }): { el: UIConversationElement; handle: ReturnType<UIConversationElement['beginAgentTurn']> } {
+    const el = mountConversation('380px', '480px')
+    el.steps = true
+    el.receipt = opts.receipt
+    return { el, handle: el.beginAgentTurn() }
+  }
+
+  it(`${server.browser}: a repaired turn keeps a painted, warning-toned "N retries" chip in the collapsed receipt header`, async () => {
+    const { el, handle } = stepTurn({ receipt: true })
+    handle.step({ id: 'generate', kind: 'generate', label: 'Generated', status: 'ok', durationMs: 1200 })
+    handle.step({ id: 'validate', kind: 'validate', label: 'Validated', status: 'repaired', retries: 1, summary: 'Round 1 failed (SCHEMA), repaired in round 2' })
+    handle.finalize()
+    await whenFlushed()
+    await frames()
+    const strip = el.querySelector('[data-part="narration"]') as HTMLElement
+    const header = strip.querySelector('[data-part="header"]') as HTMLElement
+    const chip = header.querySelector('[data-part="header-badge"]') as HTMLElement
+    const meta = header.querySelector('[data-part="header-meta"]') as HTMLElement
+    expect(header.getAttribute('aria-expanded'), 'the strip is collapsed to its receipt').toBe('false')
+    expect(chip.textContent).toBe('1 retry')
+    const cb = chip.getBoundingClientRect()
+    const hb = header.getBoundingClientRect()
+    expect(cb.width, 'the chip paints a real box').toBeGreaterThan(0)
+    expect(cb.left >= hb.left && cb.right <= hb.right, 'the chip sits inside the header row').toBe(true)
+    expect(getComputedStyle(chip).color, 'warning ink, not the meta cell\'s secondary ink').not.toBe(getComputedStyle(meta).color)
+    expect(header.dataset.status, 'a repaired turn settles the header warning, never a plain done').toBe('warning')
+    // the failure codes are one click away, on the row itself (no raw output needed)
+    header.click()
+    await frames()
+    const validateRow = strip.querySelector<HTMLElement>('ui-timeline-item[data-kind="validate"]')!
+    expect(validateRow.textContent).toContain('SCHEMA')
+    expect(validateRow.getBoundingClientRect().height).toBeGreaterThan(0)
+  })
+})

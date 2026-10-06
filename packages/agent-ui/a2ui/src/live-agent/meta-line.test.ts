@@ -191,6 +191,14 @@ describe('readMetaLine — the progress field (ADR-0146 F1)', () => {
     expect(parsed!.a2uiMeta.progress!.source).toBeUndefined()
   })
 
+  it('a retry progress round-trips its failure codes (T-0019); a non-string code drops only the progress', () => {
+    const parsed = readMetaLine('{"a2uiMeta":{"progress":{"stage":"retry","round":2,"codes":["SCHEMA","REF"]}}}')
+    expect(parsed!.a2uiMeta.progress).toEqual({ stage: 'retry', round: 2, codes: ['SCHEMA', 'REF'] })
+    expect(readMetaLine('{"a2uiMeta":{"note":"a","progress":{"stage":"retry","codes":["SCHEMA",7]}}}')!.a2uiMeta.progress).toBeUndefined()
+    expect(readMetaLine('{"a2uiMeta":{"note":"a","progress":{"stage":"retry","codes":"SCHEMA"}}}')!.a2uiMeta.progress).toBeUndefined()
+    expect(readMetaLine('{"a2uiMeta":{"note":"a","progress":{"stage":"retry","codes":"SCHEMA"}}}')!.a2uiMeta.note).toBe('a')
+  })
+
   it('a malformed progress (non-object / array / non-number round / non-string detail) drops only itself', () => {
     expect(readMetaLine('{"a2uiMeta":{"note":"a","progress":"nope"}}')!.a2uiMeta.progress).toBeUndefined()
     expect(readMetaLine('{"a2uiMeta":{"note":"a","progress":["reasoning"]}}')!.a2uiMeta.progress).toBeUndefined()

@@ -139,6 +139,19 @@ describe('produce() interleaved live-turn progress (ADR-0146 F1/F3)', () => {
     expect(lines.filter(isPureContent).join('\n')).not.toContain('NotARealComponent')
   })
 
+  it('the retry names WHY the round failed, as validator codes only (T-0019), with no progressDetail opt-in', async () => {
+    const { provider } = progressStub([INVALID, VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, progress: true })) lines.push(line)
+    const retry = progressOf(lines).find((p) => p.stage === 'retry')!
+    expect(retry.codes, 'the failed round fed back at least one validator code').toBeInstanceOf(Array)
+    expect(retry.codes!.length).toBeGreaterThan(0)
+    for (const code of retry.codes!) expect(code, 'a code is a closed SCREAMING_SNAKE name, never a message or a path').toMatch(/^[A-Z][A-Z0-9_]*$/)
+    expect(new Set(retry.codes).size, 'deduped').toBe(retry.codes!.length)
+    expect(retry.source, 'the candidate text stays behind the explicit source opt-in').toBeUndefined()
+  })
+
   it('progressDetail absent ⇒ a reasoning event carries NO detail text (the F3 default, a negative control)', async () => {
     const { provider } = progressStub([VALID], { thinking: 'weighing the layout options' })
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }

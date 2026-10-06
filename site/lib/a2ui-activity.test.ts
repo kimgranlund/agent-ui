@@ -208,6 +208,66 @@ describe('createA2uiActivity: a repaired turn ("Round 1 failed (code), repaired 
   })
 })
 
+// T-0019 (defect 1, errors hidden): a failed round must say WHY while it is live, and a repaired turn must
+// stay marked after it settles. The codes ride the `retry` progress event; the step carries a neutral
+// `retries` count the control rolls up into the header's persistent "N retries" chip.
+describe('createA2uiActivity: failure reasons stay visible (T-0019)', () => {
+  it('a live retry names the failure codes the round fed back, and counts one retry', () => {
+    const a = createA2uiActivity(clock().now)
+    a.progress({ stage: 'validating' })
+    const live = a.progress({ stage: 'retry', round: 2, codes: ['SCHEMA', 'UNKNOWN_COMPONENT'] })
+    expect(live.find((s) => s.id === 'validate')).toMatchObject({
+      status: 'failed',
+      summary: 'Round 1 failed (SCHEMA, UNKNOWN_COMPONENT), retrying in round 2',
+      retries: 1,
+    })
+  })
+
+  it('with no trace the settled repair keeps the codes it saw live, never a bare "Round 1 failed"', () => {
+    const a = createA2uiActivity(clock().now)
+    a.progress({ stage: 'validating' })
+    a.progress({ stage: 'retry', round: 2, codes: ['SCHEMA'] })
+    a.progress({ stage: 'validating' })
+    const done = a.progress({ stage: 'done' })
+    expect(done.find((s) => s.id === 'validate')).toMatchObject({
+      status: 'repaired',
+      summary: 'Round 1 failed (SCHEMA), repaired in round 2',
+      retries: 1,
+    })
+  })
+
+  it('codes accumulate across rounds without repeats, and the trace codes win once it arrives', () => {
+    const a = createA2uiActivity(clock().now)
+    a.progress({ stage: 'validating' })
+    a.progress({ stage: 'retry', round: 2, codes: ['SCHEMA'] })
+    a.progress({ stage: 'validating' })
+    const second = a.progress({ stage: 'retry', round: 3, codes: ['SCHEMA', 'REF'] })
+    expect(second.find((s) => s.id === 'validate')).toMatchObject({
+      summary: 'Rounds 1 to 2 failed (SCHEMA, REF), retrying in round 3',
+      retries: 2,
+    })
+    a.progress({ stage: 'validating' })
+    a.progress({ stage: 'done' })
+    expect(a.trace(trace({ rounds: 3, failureCodes: ['REF'] }))[0]).toMatchObject({
+      summary: 'Rounds 1 to 2 failed (REF), repaired in round 3',
+      retries: 2,
+    })
+  })
+
+  it('a clean turn carries no retries key at all, and a retry event without codes still counts the retry', () => {
+    const clean = createA2uiActivity(clock().now)
+    clean.progress({ stage: 'validating' })
+    const done = clean.progress({ stage: 'done' })
+    expect(done.find((s) => s.id === 'validate')).not.toHaveProperty('retries')
+    const bare = createA2uiActivity(clock().now)
+    bare.progress({ stage: 'validating' })
+    expect(bare.progress({ stage: 'retry', round: 2 }).find((s) => s.id === 'validate')).toMatchObject({
+      summary: 'Round 1 failed, retrying in round 2',
+      retries: 1,
+    })
+  })
+})
+
 describe('createA2uiActivity: a malformed trace degrades to nothing', () => {
   it('a trace with wrong-typed fields never throws and never prints garbage: no repair, no footer', () => {
     const a = createA2uiActivity(clock().now)

@@ -610,3 +610,21 @@ describe('card-layout + game-table-chrome: the data-driven hand and computed tot
     expect(ids).toEqual(expect.arrayContaining(['card-layout', 'game-table-chrome']))
   })
 })
+
+// T-0019 (defect 4): status badges and tags ride the CardHeader's own trailing slot (the header grid's
+// `1fr auto` cell), not a Row under the title and not a line in CardContent. The wire shape is a Badge with
+// `slot: "trailing"` as a direct CardHeader child (Badge's catalog `slot` prop, card.css's `:has()` anatomy).
+describe('game-table-chrome + game-hud: status badges ride the CardHeader trailing slot (T-0019)', () => {
+  const body = (id: string): string => MINI_SKILLS.find((m) => m.id === id)!.body
+
+  it('game-table-chrome seats ONE Badge with slot "trailing" in the CardHeader and bans the Row wrapper and CardContent placement', () => {
+    expect(body('game-table-chrome')).toMatch(/ONE status Badge \(bankroll, bet or round\) with slot "trailing", both direct children/)
+    expect(body('game-table-chrome')).toMatch(/Never wrap them in a Row, never put status Badges in CardContent/)
+    expect(body('game-table-chrome'), 'the old Row-of-Badges header is gone').not.toMatch(/CardHeader = Row/)
+  })
+
+  it('game-hud puts the bankroll Badge and a zone-Card score Badge in the trailing slot', () => {
+    expect(body('game-hud')).toMatch(/Bankroll\/chips = a Badge \(label bound to the data model\) with slot "trailing" in the table CardHeader/)
+    expect(body('game-hud')).toMatch(/\(slot "trailing" when the zone is its own Card\)/)
+  })
+})

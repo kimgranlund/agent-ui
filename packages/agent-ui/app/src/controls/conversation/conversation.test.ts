@@ -2048,7 +2048,7 @@ describe('ui-conversation: step mode renders the neutral ActivityStep model (T-0
       'Exploded',
     ])
     expect(r.map((i) => i.dataset.kind)).toEqual(['request', 'tool', 'validate', 'other'])
-    expect(r.map((i) => i.status), 'running→active, ok→done, repaired→done, failed→error').toEqual(['done', 'done', 'done', 'error'])
+    expect(r.map((i) => i.status), 'running→active, ok→done, repaired→warning, failed→error').toEqual(['done', 'done', 'warning', 'error'])
     expect(cell(r[0]!, 'timestamp'), 'durationMs renders through formatTotalElapsed').toBe('0.4s')
     expect(cell(r[1]!, 'timestamp')).toBe('1.2s')
     expect(cell(r[1]!, 'description'), 'the summary is the one line under the label').toBe('3 results')
@@ -2056,6 +2056,34 @@ describe('ui-conversation: step mode renders the neutral ActivityStep model (T-0
     expect(r[1]!.icon, 'a clean done keeps the default status glyph').toBe('')
     expect(cell(r[3]!, 'timestamp'), 'no durationMs, no time: missing data shows nothing').toBe('')
     expect(cell(r[3]!, 'description')).toBe('')
+  })
+
+  // T-0019 (defect 1): a repaired turn must not collapse to a plain success receipt.
+  it('a step with retries puts a persistent "N retries" chip in the header at settle, and the header settles warning', async () => {
+    const el = stepMode()
+    el.receipt = true
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'generate', kind: 'generate', label: 'Generated', status: 'ok', durationMs: 100 })
+    handle.step({ id: 'check', kind: 'validate', label: 'Validated', status: 'repaired', retries: 2, summary: 'Rounds 1 to 2 failed (SCHEMA, REF), repaired in round 3' })
+    handle.step({ id: 'tool', kind: 'tool', label: 'Called tool', status: 'repaired', retries: 1 })
+    handle.finalize()
+    await whenFlushed()
+    const strip = el.querySelector('[data-part="narration"]') as HTMLElement
+    expect(strip.querySelector('[data-part="header-badge"]')?.textContent, 'retries sum across steps').toBe('3 retries')
+    expect(strip.querySelector('[data-part="header"]')?.getAttribute('data-status'), 'repaired escalates the header to warning').toBe('warning')
+    expect(cell(rows(el).find((i) => i.dataset.kind === 'validate')!, 'description'), 'the codes are on the row, not behind raw output').toContain('SCHEMA, REF')
+  })
+
+  it('no retries, no chip: a clean turn settles a plain done header', async () => {
+    const el = stepMode()
+    el.receipt = true
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'check', kind: 'validate', label: 'Validated', status: 'ok', durationMs: 90 })
+    handle.finalize()
+    await whenFlushed()
+    const strip = el.querySelector('[data-part="narration"]') as HTMLElement
+    expect(strip.querySelector('[data-part="header-badge"]')).toBeNull()
+    expect(strip.querySelector('[data-part="header"]')?.getAttribute('data-status')).toBe('done')
   })
 
   it('a running step with startedAt shows a live elapsed time; settling freezes its duration instead', async () => {

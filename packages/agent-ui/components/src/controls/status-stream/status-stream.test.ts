@@ -1491,3 +1491,32 @@ describe('status-stream.css — the :state(pending) dim rule + its token chain (
     expect(ownBlock, `no reduced-motion block contains "${bareScopeRule}"`).toBeDefined()
   })
 })
+
+// ── T-0019: the settled header chip (finalize/fail's `badge` option) ────────────────────────────────────
+
+describe('ui-status-stream: the settled header badge (T-0019)', () => {
+  it('finalize({ badge }) adds a header-badge chip before the meta cell, and it survives the receipt collapse', async () => {
+    const { el, header, meta } = await makeReceiptStream({ oneline: true, receipt: true })
+    el.appendEntry({ key: 'a', status: 'done', label: 'Step' })
+    expect(el.querySelector('[data-part="header-badge"]'), 'no badge before settle').toBeNull()
+    el.finalize({ badge: '1 retry' })
+    const chip = el.querySelector('[data-part="header-badge"]')
+    expect(chip?.textContent).toBe('1 retry')
+    expect(chip!.nextElementSibling, 'the chip sits right before the meta cell').toBe(meta())
+    expect(header()!.getAttribute('aria-expanded'), 'the receipt is collapsed and the chip is still in the header').toBe('false')
+    el.remove()
+  })
+
+  it('fail({ badge }) shows it too, and a bare or empty-badge finalize adds no chip at all', async () => {
+    const failed = await makeReceiptStream({ oneline: true, receipt: true })
+    failed.el.appendEntry({ key: 'a', status: 'active', label: 'Step' })
+    failed.el.fail({ badge: '2 retries' })
+    expect(failed.el.querySelector('[data-part="header-badge"]')?.textContent).toBe('2 retries')
+    failed.el.remove()
+    const bare = await makeReceiptStream({ oneline: true, receipt: true })
+    bare.el.appendEntry({ key: 'a', status: 'done', label: 'Step' })
+    bare.el.finalize({ badge: '' })
+    expect(bare.el.querySelector('[data-part="header-badge"]')).toBeNull()
+    bare.el.remove()
+  })
+})
