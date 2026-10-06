@@ -13,6 +13,12 @@
 // plain-Node import of `@agent-ui/a2ui/agent` would throw `ERR_IMPORT_ATTRIBUTE_MISSING`. That is also why
 // the persona list below is hard-coded; `catalog/selection-guidance.test.ts` holds it equal to
 // `SHIPPED_PERSONA_CATALOG_MANIFESTS` (coverage is a gate, never a hand-checked list).
+//
+// Two consumers: the catalog inventory (`system-prompt.ts` `catalogInventory`, through
+// `selectionGuidanceFor` and `renderSelectionClause`) and the genui dogfood inventory
+// (`dogfood-inventory.ts` `dogfoodInventory`, through `selectionGuidanceForId` and
+// `renderSelectionClauseWith`, with `notFor` targets re-spelled as `ui-*` tags). The dogfood module has no
+// `Catalog` object, hence the id-keyed resolver; both clauses come from the one formatter.
 
 import { readFileSync } from 'node:fs'
 import type { Catalog } from '../catalog/catalog.ts'
@@ -189,13 +195,13 @@ const PERSONA_GUIDANCE: Readonly<Record<string, SelectionGuidance>> = Object.fre
 const EMPTY: SelectionGuidance = Object.freeze({})
 
 /**
- * Resolve a catalog to its guidance, keyed on `catalogId` only: `agent-ui` and `a2ui-basic` map to their
- * own sidecars; a derived `<base>--<persona>` id (`compose.ts` `derivedCatalogId`, split on the FIRST
- * `--`) maps to the base entries plus the persona's (base only when the persona half is unknown, empty
- * when the base half is). Any other id, including the inbound-only canonical-URI alias, maps to `{}`.
+ * Resolve a catalog id to its guidance: `agent-ui` and `a2ui-basic` map to their own sidecars; a derived
+ * `<base>--<persona>` id (`compose.ts` `derivedCatalogId`, split on the FIRST `--`) maps to the base
+ * entries plus the persona's (base only when the persona half is unknown, empty when the base half is).
+ * Any other id, including the inbound-only canonical-URI alias, maps to `{}`. The id-keyed seam for a
+ * consumer with no `Catalog` object (`dogfood-inventory.ts`).
  */
-export function selectionGuidanceFor(catalog: Catalog): SelectionGuidance {
-  const id = catalog.catalogId
+export function selectionGuidanceForId(id: string): SelectionGuidance {
   const sep = id.indexOf('--')
   if (sep === -1) return Object.hasOwn(BASE_GUIDANCE, id) ? BASE_GUIDANCE[id]! : EMPTY
   const baseId = id.slice(0, sep)
@@ -204,6 +210,24 @@ export function selectionGuidanceFor(catalog: Catalog): SelectionGuidance {
   const base = BASE_GUIDANCE[baseId]!
   if (!Object.hasOwn(PERSONA_GUIDANCE, personaId)) return base
   return Object.freeze({ ...base, ...PERSONA_GUIDANCE[personaId]! })
+}
+
+/** Resolve a catalog to its guidance, keyed on `catalogId` only (`selectionGuidanceForId`'s rules). */
+export function selectionGuidanceFor(catalog: Catalog): SelectionGuidance {
+  return selectionGuidanceForId(catalog.catalogId)
+}
+
+/**
+ * The one clause formatter: `''` for a missing entry; otherwise ` · use: <intents joined by "; ">`, then,
+ * when `notFor` is non-empty, ` · not for: <labelFor(type) (why), ...>`. `labelFor` names each edge
+ * target in the consumer's dialect (identity for the catalog inventory, a `ui-*` tag for the dogfood
+ * inventory). It resolves nothing itself: each caller owns its `UNRESOLVED` check.
+ */
+export function renderSelectionClauseWith(entry: SelectionEntry | undefined, labelFor: (type: string) => string): string {
+  if (entry === undefined) return ''
+  const use = ` ${MIDDLE_DOT} use: ${entry.intents.join('; ')}`
+  if (entry.notFor.length === 0) return use
+  return `${use} ${MIDDLE_DOT} not for: ${entry.notFor.map((e) => `${labelFor(e.type)} (${e.why})`).join(', ')}`
 }
 
 /**
@@ -222,9 +246,7 @@ export function renderSelectionClause(entry: SelectionEntry | undefined, catalog
       )
     }
   }
-  const use = ` ${MIDDLE_DOT} use: ${entry.intents.join('; ')}`
-  if (entry.notFor.length === 0) return use
-  return `${use} ${MIDDLE_DOT} not for: ${entry.notFor.map((e) => `${e.type} (${e.why})`).join(', ')}`
+  return renderSelectionClauseWith(entry, (t) => t)
 }
 
 /** The character budget for the selection clauses the default catalog's inventory carries: the sum of

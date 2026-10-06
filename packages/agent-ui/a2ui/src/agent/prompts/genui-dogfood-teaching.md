@@ -46,9 +46,11 @@ Idioms — how a fleet component is actually authored:
 - **Icons are a name, not markup.** `<ui-icon glyph="check">` resolves a canonical glyph name from the
   active icon pack — never paste raw inline SVG for a glyph the fleet already names.
 
-Reading the inventory below: each line is `- <tag> — <one-line role> (attrs: name: type, ...)`. An
-`enum(a|b|c)` attribute only accepts those literal values; a `boolean` attribute is present/absent
-(`disabled`, never `disabled="true"`); `json` means a structured value passed as a JS property when you
-script the document, or a JSON-stringified attribute when set declaratively. Use ONLY tags from that
-list — a tag not in it is not defined in this document and renders as an unstyled, inert unknown
-element (no special behavior, just its plain children).
+Reading the inventory below: each line is `- <tag> — <one-line role> (attrs: name: type, ...)`. A line
+may then carry `· use: <jobs>` (what the control is for), then `· not for: <ui-tag> (<why>), ...` (the
+confusable siblings and what tells them apart: pick between them by that axis), before the optional
+`(family: ...)` clause. An `enum(a|b|c)` attribute only accepts those literal values; a `boolean`
+attribute is present/absent (`disabled`, never `disabled="true"`); `json` means a structured value
+passed as a JS property when you script the document, or a JSON-stringified attribute when set
+declaratively. Use ONLY tags from that list — a tag not in it is not defined in this document and
+renders as an unstyled, inert unknown element (no special behavior, just its plain children).

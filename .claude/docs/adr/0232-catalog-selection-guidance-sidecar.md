@@ -118,3 +118,50 @@ catalog, and render it as a clause on that type's inventory line.
   marker is allowlist drift, and "one choice inside a Select" is a cheap, honest intent.
 - **Deriving the site choosing guide from the sidecar**: rejected because the sidecar is Node-only and the
   page runs in the browser. The page cites the sidecar instead; a browser-safe projection is a follow-up.
+
+## Amendment (2026-10-05, **ratified** by Kim, 2026-10-05) — the genui dogfood inventory carries the selection clause
+
+This amendment retires the Consequences bullet "The genui dogfood inventory carries no guidance." That
+limit no longer holds: the dogfood inventory now renders the same per-type selection clause the catalog
+inventory does (sdlc-lite run `dogfood-selection-guidance`, T-0008, tracking GH
+[#1815](https://github.com/kimgranlund/agent-ui/issues/1815) item 3). The body above is untouched;
+accepted ADRs are append-only.
+
+1. **Second consumer.** `dogfoodInventory()` (`src/agent/dogfood-inventory.ts`) reads the `agent-ui`
+   sidecar (`catalog/default/selection.json`). A row whose tag maps to a sidecar entry carries
+   ` · use: <intents>` and, when the entry has edges, ` · not for: <ui-tag> (<why>), ...`, after its
+   `(attrs: ...)` and before the optional `(family: ...)`. Each `notFor` target is labelled as its
+   taught `ui-*` tag, never the catalog type id, because the dogfood document writes tags. The
+   tag-to-type rule is `catalogTypeForTag`: the tag minus `ui-`, each kebab segment PascalCased, plus
+   the one rename `ui-audio` to `AudioPlayer`. A parity leg in `dogfood-inventory-parity.test.ts` holds
+   it equal to every `ui-*` `WidgetFactory.tag` in `defaultFactories`, so the rule is gated rather than
+   a third hand copy. `dogfoodSelectionClause` renders one entry the same way and is the drift gate's
+   planting seam.
+2. **cl.2's loader API grows by two.** `selectionGuidanceForId(id)` is the id-keyed resolver with
+   `selectionGuidanceFor`'s rules (the dogfood module has no `Catalog` object), and
+   `selectionGuidanceFor(catalog)` now delegates to it. `renderSelectionClauseWith(entry, labelFor)` is
+   the one clause formatter; `labelFor` names each edge target in the consumer's dialect (identity for
+   the catalog inventory, a `ui-*` tag for the dogfood inventory). `renderSelectionClause` delegates to
+   it, so the catalog inventory composes byte for byte as before and the baseline's four composed keys
+   do not move.
+3. **Budget.** The summed dogfood clause length is held at or under `DOGFOOD_GUIDANCE_CHAR_BUDGET`
+   (8 800 chars) by a `prompt-drift.test.ts` leg, never by runtime truncation. Measured 2026-10-05:
+   8 479 chars over 72 rows (144 `notFor` edges). The whole dogfood inventory measured 27 820 chars
+   against `DOGFOOD_INVENTORY_CHAR_BUDGET` 28 200. An over-budget sidecar is re-authored tersely; the
+   budget is never raised to get green.
+4. **Owned limits.**
+   - Base `agent-ui` guidance only. Persona sidecars are written against their persona catalog, so
+     they stay out of the dogfood inventory.
+   - Family-sibling tags (`ui-card-header`, `ui-tab`, and the rest) ride their parent's row and get no
+     clause of their own.
+   - A `notFor` edge to a type no taught tag names (`Option`, `MenuItem`: their factories are
+     `div[role=...]`, not `ui-*`) throws `UNRESOLVED`; it never renders or drops silently. Today no
+     sidecar edge targets either.
+5. **Ruling.** Kim ruled on 2026-10-05 that the dogfood row carries the FULL clause (`use:` plus
+   `not for:`). The named fallback, if a later wave blows the budget, is the use-only clause (2 691
+   chars projected by the architect), never a silent cap cut.
+
+The repaired records are SPEC-R13 in `../spec/genui-surface.spec.md` (v0.11, §13: the row format, the
+inventory budget, the clause budget and a new AC5), the LLD-C3 REV in `../lld/genui-dogfood.lld.md`
+(v0.4), the `selection-guidance.ts` module-tree line in `../lld/a2ui-live-agent.lld.md`, and the
+`a2ui-prompt-authoring` and `a2ui-build` skills.

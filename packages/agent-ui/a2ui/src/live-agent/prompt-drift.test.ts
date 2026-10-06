@@ -6,8 +6,22 @@ import { describe, it, expect } from 'vitest'
 import { buildSystemPrompt } from '../agent/system-prompt.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import type { Catalog } from '../catalog/catalog.ts'
-import { dogfoodInventory, dogfoodInventoryTags, DOGFOOD_INVENTORY_CHAR_BUDGET } from '../agent/dogfood-inventory.ts'
-import { selectionGuidanceFor, renderSelectionClause, SELECTION_GUIDANCE_CHAR_BUDGET } from '../agent/selection-guidance.ts'
+import {
+  catalogTypeForTag,
+  dogfoodInventory,
+  dogfoodInventoryTags,
+  dogfoodSelectionClause,
+  DOGFOOD_GUIDANCE_CHAR_BUDGET,
+  DOGFOOD_INVENTORY_CHAR_BUDGET,
+} from '../agent/dogfood-inventory.ts'
+import {
+  selectionGuidanceFor,
+  renderSelectionClause,
+  renderSelectionClauseWith,
+  SelectionGuidanceError,
+  SelectionGuidanceErrorCode,
+  SELECTION_GUIDANCE_CHAR_BUDGET,
+} from '../agent/selection-guidance.ts'
 import { composeCatalog } from '../catalog/compose.ts'
 import { croupierFragment } from '../catalog/personas/croupier/index.ts'
 
@@ -236,7 +250,73 @@ describe('dogfoodInventory drift gate (LLD-C3 leaf 10 / SPEC-R13(b) AC1)', () =>
     }
   })
 
-  it('stays within the SPEC-R13(b) budget (≤ 16 000 chars)', () => {
+  it('stays within the SPEC-R13(b) budget (DOGFOOD_INVENTORY_CHAR_BUDGET)', () => {
     expect(dogfoodInventory().length).toBeLessThanOrEqual(DOGFOOD_INVENTORY_CHAR_BUDGET)
+  })
+})
+
+// The dogfood selection clause (ADR-0232 amendment, T-0008): a row whose tag maps to an `agent-ui` sidecar
+// entry carries that entry's clause, `notFor` targets named by their taught `ui-*` tag, between its attrs
+// and its optional family clause. The expected clause is rebuilt here from the sidecar and a type-to-tag
+// map over `dogfoodInventoryTags()`, never read back from the renderer.
+describe('dogfoodInventory selection clause (ADR-0232 amendment / SPEC-R13(b))', () => {
+  const guidance = selectionGuidanceFor(defaultCatalog)
+  const tagByType = new Map(dogfoodInventoryTags().map((t) => [catalogTypeForTag(t), t]))
+  const labelFor = (type: string): string => {
+    const tag = tagByType.get(type)
+    if (tag === undefined) throw new Error(`no taught tag for notFor target ${type}`)
+    return tag
+  }
+  const rows = dogfoodInventory()
+    .split('\n')
+    .map((line) => ({ line, tag: /^- (ui-[a-z0-9-]+) \u2014 /.exec(line)![1]! }))
+  const entryFor = (tag: string) => {
+    const type = catalogTypeForTag(tag)
+    return Object.hasOwn(guidance, type) ? guidance[type] : undefined
+  }
+  /** The row with its trailing family clause dropped: the selection clause, if any, now ends it. */
+  const withoutFamily = (line: string): string => line.replace(/ \(family: [^)]*\)$/, '')
+
+  it('every catalog-mapped row ends with its expected clause, followed only by an optional family clause', () => {
+    const mapped = rows.filter((r) => entryFor(r.tag) !== undefined)
+    expect(mapped.length).toBeGreaterThan(0)
+    for (const { line, tag } of mapped) {
+      const expected = renderSelectionClauseWith(entryFor(tag), labelFor)
+      expect(withoutFamily(line).endsWith(expected), `${tag} must end with ${expected}`).toBe(true)
+      expect(line.split(' · use: ').length, `${tag} carries exactly one use clause`).toBe(2)
+    }
+  })
+
+  it('the clause-less rows are exactly the rows whose mapped type has no sidecar entry', () => {
+    const clauseLess = rows.filter((r) => !r.line.includes(' · use: ')).map((r) => r.tag)
+    const unmapped = rows.filter((r) => entryFor(r.tag) === undefined).map((r) => r.tag)
+    expect(clauseLess.length).toBeGreaterThan(0)
+    expect(clauseLess.length).toBeLessThan(rows.length)
+    expect(clauseLess).toEqual(unmapped)
+  })
+
+  it('the summed clause length stays within DOGFOOD_GUIDANCE_CHAR_BUDGET', () => {
+    let sum = 0
+    for (const { line } of rows) {
+      const body = withoutFamily(line)
+      const at = body.indexOf(' · use: ')
+      if (at !== -1) sum += body.length - at
+    }
+    expect(sum).toBeGreaterThan(0)
+    expect(sum).toBeLessThanOrEqual(DOGFOOD_GUIDANCE_CHAR_BUDGET)
+  })
+
+  // NEGATIVE CONTROL: `Option` is a real default type whose factory is `div[role=option]`, so no taught
+  // `ui-*` tag names it; an edge planted to it must throw UNRESOLVED, never render or drop silently.
+  it('NEGATIVE CONTROL: a planted edge to Option (no ui-* tag) throws UNRESOLVED', () => {
+    expect(Object.hasOwn(defaultCatalog.components, 'Option')).toBe(true)
+    let code: string | undefined
+    try {
+      dogfoodSelectionClause({ intents: ['a job'], notFor: [{ type: 'Option', why: 'w' }] })
+    } catch (e) {
+      if (e instanceof SelectionGuidanceError) code = e.code
+      else throw e
+    }
+    expect(code).toBe(SelectionGuidanceErrorCode.UNRESOLVED)
   })
 })

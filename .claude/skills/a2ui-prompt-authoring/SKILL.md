@@ -59,6 +59,10 @@ than you meant to, and an armed run on an UNCHANGED tree is a byte-identical no-
   `catalog/selection-guidance.test.ts`, and the default catalog's total by
   `SELECTION_GUIDANCE_CHAR_BUDGET` in `prompt-drift.test.ts` (re-author tersely, never raise it to green).
   A sidecar edit also moves the derived cases of `npm run eval:agent-behavior`, so run its selftest afterwards.
+  An edit to `catalog/default/selection.json` also moves the genui dogfood inventory (ADR-0232 amendment),
+  which is drift-gated and never byte-captured: its clause sum is held by `DOGFOOD_GUIDANCE_CHAR_BUDGET` in
+  `prompt-drift.test.ts` (re-author tersely, never raise it to green). A `notFor` edge to a type with no
+  `ui-*` tag (`Option`, `MenuItem`) throws there.
 - **The whole composed prompt has a character budget too.** `PROMPT_CHAR_BUDGET_BASE` and
   `PROMPT_CHAR_BUDGET_DERIVED` in `src/agent/prompt-budget.ts` (ADR-0234) cap the worst-case composition,
   gated by `src/live-agent/prompt-budget.test.ts`. When an edit reds it, re-author tersely or re-measure

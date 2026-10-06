@@ -29,6 +29,15 @@
 // extended here to a non-catalog surface: the fleet's WHOLE `controls/` barrel, not the a2ui catalog's
 // subset).
 //
+// SECOND SOURCE, the selection clause (ADR-0232 amendment, T-0008): a row whose tag maps to a default
+// catalog type (`catalogTypeForTag`) also carries that type's `default/selection.json` guidance as
+// ` · use: <intents> · not for: <ui-tag> (<why>), ...`, the catalog inventory's clause with each `notFor`
+// target re-spelled as the taught `ui-*` tag. So a default-sidecar edit ALSO moves this never-byte-
+// captured output; `prompt-drift.test.ts` holds the clause shape and its own budget
+// (`DOGFOOD_GUIDANCE_CHAR_BUDGET`). An edge to a type no taught tag names (`Option`, `MenuItem`: their
+// factories are `div[role=...]`, not `ui-*`) throws `UNRESOLVED`, never drops silently. Base `agent-ui`
+// guidance only: persona sidecars are written against their persona catalog, so they stay out.
+//
 // Node-only tooling (readdirSync/readFileSync), never a browser bundle (SPEC-N1/N2) — a twin of
 // `system-prompt.ts`'s `PROMPTS_DIR` resolution: paths resolve from `process.cwd()`, never
 // `import.meta.url` (ADR-0135/TKT-0044 — the vite-temp bundling trap that broke exactly this shape
@@ -37,6 +46,13 @@
 // loader" class those three already are.
 
 import { readdirSync, readFileSync, statSync } from 'node:fs'
+import {
+  renderSelectionClauseWith,
+  selectionGuidanceForId,
+  SelectionGuidanceError,
+  SelectionGuidanceErrorCode,
+} from './selection-guidance.ts'
+import type { SelectionEntry } from './selection-guidance.ts'
 
 declare const process: { cwd(): string }
 
@@ -149,7 +165,16 @@ export function readAttributes(fence: string): LocalAttribute[] {
 // descriptor (data/series/label/projected/highlight, five attributes) rides the inventory; measured
 // 19180, budget 19_600 (measured + headroom; evidence per SPEC §8 — genui-surface.spec.md v0.10
 // amendment, same change — never silent drift).
-export const DOGFOOD_INVENTORY_CHAR_BUDGET = 19_600
+// MEASURED 2026-10-05: 27 820 chars after the selection clause rides each catalog-mapped row (T-0008, the
+// mover; ADR-0232 amendment); budget 28 200 (measured rounded up to the next 100, plus 300), per the
+// SPEC-R13(b) v0.11 amendment in genui-surface.spec.md.
+export const DOGFOOD_INVENTORY_CHAR_BUDGET = 28_200
+
+/** The character budget for the selection clauses the dogfood inventory carries: the sum of the clause
+ *  lengths `dogfoodInventory()` appends to its rows. Held by a `prompt-drift.test.ts` leg, never by runtime
+ *  truncation: an over-budget sidecar is re-authored tersely, never silently clipped.
+ *  MEASURED 2026-10-05: 8 479 chars over 72 rows (144 notFor edges); budget 8 800 (Kim 2026-10-05; ADR-0232 cl.5 formula) */
+export const DOGFOOD_GUIDANCE_CHAR_BUDGET = 8_800
 
 /** One discovered control: its tag, a one-line role summary (the descriptor's own prose body, first
  *  sentence — never hand-written, so it can never drift from what the component's own docs say), the
@@ -359,6 +384,41 @@ export function dogfoodInventoryTags(): readonly string[] {
     .sort()
 }
 
+/** A `ui-*` tag's default-catalog type id: the fleet's one rule (`catalog/default/index.test.ts`), the
+ *  tag minus its `ui-` prefix with each kebab segment PascalCased, plus the single rename `ui-audio` to
+ *  `AudioPlayer` (GH #1209). Pure; `dogfood-inventory-parity.test.ts` holds it equal to every
+ *  `defaultFactories` entry's own `WidgetFactory.tag`. */
+export function catalogTypeForTag(tag: string): string {
+  if (tag === 'ui-audio') return 'AudioPlayer'
+  return tag
+    .replace(/^ui-/, '')
+    .split('-')
+    .map((seg) => (seg.length === 0 ? seg : seg[0]!.toUpperCase() + seg.slice(1)))
+    .join('')
+}
+
+/** Catalog type to the taught tag that names it, over `taught` (the FULL fleet's tags, family siblings
+ *  included). An unmapped type throws `UNRESOLVED`. */
+function tagLabeller(taught: readonly string[]): (type: string) => string {
+  const tagByType = new Map(taught.map((t) => [catalogTypeForTag(t), t]))
+  return (type) => {
+    const tag = tagByType.get(type)
+    if (tag !== undefined) return tag
+    throw new SelectionGuidanceError(
+      SelectionGuidanceErrorCode.UNRESOLVED,
+      `SELECTION_GUIDANCE_UNRESOLVED: notFor target "${type}" has no taught ui-* tag in the dogfood inventory; fix catalogTypeForTag or the sidecar edge, not the dogfood renderer`,
+    )
+  }
+}
+
+/** The dogfood twin of `renderSelectionClause`: one entry's clause with each `notFor` target named by
+ *  its taught `ui-*` tag, resolved over the full `dogfoodInventoryTags()` set. `''` for a missing entry;
+ *  an unresolvable edge throws `UNRESOLVED`. Exported as the drift gate's planting seam. */
+export function dogfoodSelectionClause(entry: SelectionEntry | undefined): string {
+  if (entry === undefined) return ''
+  return renderSelectionClauseWith(entry, tagLabeller(dogfoodInventoryTags()))
+}
+
 /**
  * The derived fleet inventory (SPEC-R13(b)): one `- <tag> — <summary> (attrs: ...)` line per discovered
  * control, tag-sorted (deterministic — LLD-C3 leaf 8's unit test asserts stable, repeated-call-identical
@@ -371,17 +431,33 @@ export function dogfoodInventoryTags(): readonly string[] {
  * so the function can never teach a tag the caller did not ask for. The real composition call in
  * `system-prompt.ts`'s `genuiBlock` passes no argument, so a live turn always teaches every control the
  * fleet documents.
+ *
+ * Selection clause: a row whose `catalogTypeForTag(tag)` has an `agent-ui` sidecar entry carries
+ * ` · use: <intents>` and, when the entry has edges, ` · not for: <ui-tag> (<why>), ...` between its
+ * `(attrs: ...)` and the optional `(family: ...)`; any other row is unchanged. Edges resolve against the
+ * FULL fleet even under `tags`, so an unresolvable edge (`Option`, `MenuItem`) always throws; a restricted
+ * call then drops the edges whose target tag is outside `tags`, the same rule as family members (the
+ * `use:` half stays).
  */
 export function dogfoodInventory(tags?: readonly string[]): string {
   const allow = tags === undefined ? undefined : new Set(tags)
-  const controls = discoverDogfoodControls()
-    .filter((c) => allow === undefined || allow.has(c.tag))
-    .sort((a, b) => a.tag.localeCompare(b.tag))
+  const discovered = discoverDogfoodControls()
+  const guidance = selectionGuidanceForId('agent-ui')
+  const labelFor = tagLabeller(discovered.flatMap((c) => [c.tag, ...c.family]))
+  const controls = discovered.filter((c) => allow === undefined || allow.has(c.tag)).sort((a, b) => a.tag.localeCompare(b.tag))
   return controls
     .map((c) => {
       const family = allow === undefined ? c.family : c.family.filter((t) => allow.has(t))
       const familyClause = family.length === 0 ? '' : ` (family: ${family.join(', ')})`
-      return `- ${c.tag} — ${c.summary} (attrs: ${c.attrs})${familyClause}`
+      const type = catalogTypeForTag(c.tag)
+      const entry = Object.hasOwn(guidance, type) ? guidance[type] : undefined
+      let selectionClause = ''
+      if (entry !== undefined) {
+        const targets = entry.notFor.map((e) => labelFor(e.type))
+        const kept = allow === undefined ? entry : { ...entry, notFor: entry.notFor.filter((_, i) => allow.has(targets[i]!)) }
+        selectionClause = renderSelectionClauseWith(kept, labelFor)
+      }
+      return `- ${c.tag} — ${c.summary} (attrs: ${c.attrs})${selectionClause}${familyClause}`
     })
     .join('\n')
 }

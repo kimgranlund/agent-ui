@@ -1,6 +1,10 @@
 # LLD, GenUI agent-ui dogfood mode (GH #316)
 
-> Status: proposed · v0.3 · 2026-07-29 · Layer: LLD (implementation plan)
+> Status: proposed · v0.4 · 2026-10-05 · Layer: LLD (implementation plan)
+> **v0.4 (T-0008, ADR-0232 amendment, 2026-10-05):** LLD-C3 gains a dated REV: each derived inventory row
+> whose tag maps to an `agent-ui` sidecar entry carries the selection clause, `not for:` targets named as
+> `ui-*` tags (`genui-surface.spec.md` §13, v0.11). §1's LLD-C3 files cell gains
+> `a2ui/src/agent/selection-guidance.ts`. No other component changes.
 > **v0.3 (GH #354, Kim's 2026-07-29 ruling):** LLD-C4's app-layer asset pass-through is now a LAZY
 > dynamic import (§5's dated realization amendment: memoized, dogfood-ON only, awaited at turn start,
 > degrading BOTH the assets and the prompt on failure), and §7's "bundle size unmeasured" risk is CLOSED with the measured
@@ -30,7 +34,7 @@
 |---|---|---|
 | **LLD-C1** | The generated asset pair + generation script + freshness/purity gates | `scripts/build-dogfood-assets.mjs` (new) · `packages/agent-ui/components/src/controls/sandbox-frame/dogfood/dogfood-assets.ts` (generated, committed) · `dogfood/dogfood-assets-freshness.test.ts` (new) · `packages/agent-ui/components/package.json` (the `./dogfood-frame` subpath export) |
 | **LLD-C2** | `ui-sandbox-frame` `assets` prop + srcdoc injection ordering | `sandbox-frame/{sandbox-frame.ts,bootstrap.ts,sandbox-frame.md,sandbox-frame.test.ts,sandbox-frame.browser.test.ts}` |
-| **LLD-C3** | The dogfood prompt segment: teaching file + derived inventory + composition | `a2ui/src/agent/prompts/genui-dogfood-teaching.md` (new) · `a2ui/src/agent/dogfood-inventory.ts` (new) · `a2ui/src/agent/{system-prompt.ts,genui-surface-config.ts}` · `a2ui/src/live-agent/{prompt-equivalence.test.ts,prompt-equivalence.baseline.json,prompt-drift.test.ts,genui-surface-prompt.test.ts}` |
+| **LLD-C3** | The dogfood prompt segment: teaching file + derived inventory + composition | `a2ui/src/agent/prompts/genui-dogfood-teaching.md` (new) · `a2ui/src/agent/dogfood-inventory.ts` (new) · `a2ui/src/agent/selection-guidance.ts` · `a2ui/src/agent/{system-prompt.ts,genui-surface-config.ts}` · `a2ui/src/live-agent/{prompt-equivalence.test.ts,prompt-equivalence.baseline.json,prompt-drift.test.ts,genui-surface-prompt.test.ts}` |
 | **LLD-C4** | Flag plumbing + surfacing | `tools/agent/chat-validation.ts` (+ its test) · `app/src/controls/agent-admin/agent-admin.ts` (Surface Options toggle) · `site/pages/gen-ui-live.ts` (options-strip toggle + asset pass-through) |
 | **LLD-C5** | Cross-half gates | the set-equality test (bundle tags ≡ inventory tags) · the mode-off zero-regression assertions riding the EXISTING equivalence/genui gates |
 
@@ -161,6 +165,24 @@
   from. Skips controls outside `DOGFOOD_TAGS`? No, see LLD-C5: the inventory derives from the SAME
   control set the bundle entry imports (the components barrel), and the set-equality gate holds the
   pair; the function takes the tag list as an argument so the gate can probe both directions.
+
+  > **REV 2026-10-05 (T-0008, ADR-0232 amendment):** the row gains a SECOND source, the per-type
+  > selection clause from `catalog/default/selection.json`. `catalogTypeForTag(tag)` maps a tag to its
+  > default catalog type (the tag minus `ui-`, each kebab segment PascalCased, plus the one rename
+  > `ui-audio` to `AudioPlayer`); `dogfoodInventory()` reads `selectionGuidanceForId('agent-ui')` and,
+  > for a row whose type has an entry, appends the clause through `renderSelectionClauseWith` with each
+  > `notFor` target labelled as its taught `ui-*` tag, resolved over the FULL fleet's tags (family
+  > siblings included). Row format: `(attrs: ...)`, then ` · use: <intents>`, then, when the entry has
+  > edges, ` · not for: <ui-tag> (<why>), ...`, then the optional ` (family: ...)`. A row with no entry is
+  > unchanged. `dogfoodSelectionClause(entry)` renders one entry the same way and is the drift gate's
+  > planting seam; an edge to a type no taught tag names (`Option`, `MenuItem`) throws `UNRESOLVED`. A
+  > restricted `tags` call drops edges whose target tag is outside `tags`, the same rule as family
+  > members. Gates: `prompt-drift.test.ts` holds the clause shape, the clause-less set and the sum at or
+  > under `DOGFOOD_GUIDANCE_CHAR_BUDGET` (8 800; measured 8 479), the whole inventory at or under
+  > `DOGFOOD_INVENTORY_CHAR_BUDGET` (28 200; measured 27 820), and the `UNRESOLVED` negative control. The
+  > parity leg in `dogfood-inventory-parity.test.ts` holds `catalogTypeForTag` equal to every `ui-*`
+  > `WidgetFactory.tag` in `defaultFactories`. The output is still NEVER byte-captured: a sidecar edit
+  > moves it with no baseline recapture.
 - `system-prompt.ts`, `genuiBlock` gains the dogfood leg:
 
   ```ts
