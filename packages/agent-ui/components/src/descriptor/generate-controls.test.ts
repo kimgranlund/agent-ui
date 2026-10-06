@@ -43,6 +43,17 @@ describe('generateControls: the registry', () => {
     expect(registry).toContain('\nexport const CONTROLS: Readonly<Record<string, ControlRecord>> = {\n')
   })
 
+  it('a family entry that declares defines carries them sorted on its record; an entry with none writes no field', () => {
+    const family: ControlsGenEntry = { tag: 'ui-card', folder: 'card', name: 'card', uses: [], defines: ['ui-card-header', 'ui-card-content'] }
+    const text = generateControls([...ENTRIES, family]).registry
+    expect(text).toContain(
+      "  'ui-card': { tag: 'ui-card', load: () => import('./card/card.ts'), css: './card/card.css', uses: [], defines: ['ui-card-content', 'ui-card-header'] },",
+    )
+    const withDefines = (registry: string): string[] => registry.split('\n').filter((l) => l.startsWith("  'ui-") && l.includes(', defines: ['))
+    expect(withDefines(text)).toHaveLength(1)
+    expect(withDefines(generateControls(ENTRIES).registry)).toEqual([])
+  })
+
   it('writes one record per entry, sorted by tag, with load, css and sorted uses', () => {
     const tags = importsOf(registry, /^ {2}'(ui-[a-z-]+)': \{/gm)
     expect(tags).toEqual(['ui-button', 'ui-radio', 'ui-radio-group', 'ui-table', 'ui-text', 'ui-text-field'])
@@ -113,6 +124,13 @@ describe('generateControls: determinism and failure', () => {
     expect(() => generateControls([...ENTRIES, { tag: 'ui-button', folder: 'x', name: 'x', uses: [] }])).toThrow(/duplicate tag ui-button/)
     expect(() => generateControls([...ENTRIES, { tag: 'ui-other', folder: 'other', name: 'button', uses: [] }])).toThrow(/duplicate control name button/)
   })
+
+  it('throws on a defines tag that is a fleet control or is declared by two entries', () => {
+    const card: ControlsGenEntry = { tag: 'ui-card', folder: 'card', name: 'card', uses: [], defines: ['ui-card-header'] }
+    expect(() => generateControls([...ENTRIES, { ...card, defines: ['ui-button'] }])).toThrow(/ui-card defines ui-button, which is a fleet control/)
+    const twin: ControlsGenEntry = { tag: 'ui-deck', folder: 'deck', name: 'deck', uses: [], defines: ['ui-card-header'] }
+    expect(() => generateControls([...ENTRIES, card, twin])).toThrow(/ui-card-header is defined by both ui-card and ui-deck/)
+  })
 })
 
 describe('mergeExports and withGeneratedExports', () => {
@@ -147,21 +165,21 @@ describe('mergeExports and withGeneratedExports', () => {
   })
 })
 
-describe('controlsGenEntries: uses read with the descriptor parser', () => {
+describe('controlsGenEntries: uses and defines read with the descriptor parser', () => {
   const fleet: FleetEntry[] = [
     { tag: 'ui-a', folder: 'a', name: 'a' },
     { tag: 'ui-b', folder: 'b', name: 'b' },
   ]
   const files: Record<string, string> = {
-    'a/a.md': '---\ntag: ui-a\nextends: UIElement\nuses:\n  - ui-b\n---\n',
+    'a/a.md': '---\ntag: ui-a\nextends: UIElement\nuses:\n  - ui-b\ndefines:\n  - ui-a-part\n---\n',
     'b/b.md': '---\ntag: ui-b\nextends: UIElement\nuses: []\n---\n',
   }
   const read: ControlsReader = (p) => files[p]
 
-  it('returns each entry with its declared uses', () => {
+  it('returns each entry with its declared uses and defines (none when the block is absent)', () => {
     expect(controlsGenEntries(fleet, read)).toEqual([
-      { tag: 'ui-a', folder: 'a', name: 'a', uses: ['ui-b'] },
-      { tag: 'ui-b', folder: 'b', name: 'b', uses: [] },
+      { tag: 'ui-a', folder: 'a', name: 'a', uses: ['ui-b'], defines: ['ui-a-part'] },
+      { tag: 'ui-b', folder: 'b', name: 'b', uses: [], defines: [] },
     ])
   })
 

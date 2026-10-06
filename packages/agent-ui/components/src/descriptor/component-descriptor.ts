@@ -311,7 +311,7 @@ export function scalarSeq(desc: ParsedDescriptor, field: string): string[] {
 // ── schema ──────────────────────────────────────────────────────────────────────────────────────────────
 
 /** The structural defects validateComponentDescriptor reports. */
-export const DESCRIPTOR_CODES = ['MISSING_FIELD', 'BAD_SHAPE', 'BAD_TAG', 'BAD_TIER', 'BAD_EXTENDS', 'BAD_ATTRIBUTE', 'BAD_FACE', 'BAD_USES'] as const
+export const DESCRIPTOR_CODES = ['MISSING_FIELD', 'BAD_SHAPE', 'BAD_TAG', 'BAD_TIER', 'BAD_EXTENDS', 'BAD_ATTRIBUTE', 'BAD_FACE', 'BAD_USES', 'BAD_DEFINES'] as const
 export type DescriptorCode = (typeof DESCRIPTOR_CODES)[number]
 
 /** One structural failure: a stable code + the field path it occurred at + a human message. */
@@ -426,19 +426,24 @@ export function validateComponentDescriptor(d: ParsedDescriptor): DescriptorFail
   // scalars (`uses: []` when empty), no duplicates, never the descriptor's own tag. An inline flow list
   // parses as a scalar, so it is BAD_USES by construction. The values themselves are held equal to the real
   // import graph by controls/uses-driftwire.test.ts; `node scripts/codemod-uses.mjs` writes them.
-  if (d.scalars.has('uses') || d.maps.has('uses')) {
-    add('BAD_USES', 'uses', 'uses must be a block sequence of ui-{name} tags (`uses: []` when empty), never an inline list or a map')
-  }
-  const seenUses = new Set<string>()
-  for (const [i, item] of (d.sequences.get('uses') ?? []).entries()) {
-    const v = item.get(BARE_SCALAR_KEY)
-    if (item.size !== 1 || typeof v !== 'string' || !/^ui-[a-z][a-z0-9-]*$/.test(v)) {
-      add('BAD_USES', `uses[${i}]`, `uses item #${i} must be a bare ui-{name} tag`)
-      continue
+  // 8. defines (ADR-0233, the sub-element tags the entry module self-defines besides its own) follows the
+  // same grammar under BAD_DEFINES, and its values are held equal to the real module graph by
+  // controls/defines-driftwire.test.ts.
+  for (const [field, code] of [['uses', 'BAD_USES'], ['defines', 'BAD_DEFINES']] as const) {
+    if (d.scalars.has(field) || d.maps.has(field)) {
+      add(code, field, `${field} must be a block sequence of ui-{name} tags (\`${field}: []\` when empty), never an inline list or a map`)
     }
-    if (seenUses.has(v)) add('BAD_USES', `uses[${i}]`, `duplicate uses tag "${v}"`)
-    if (v === tag) add('BAD_USES', `uses[${i}]`, `uses names the descriptor's own tag "${v}"`)
-    seenUses.add(v)
+    const seen = new Set<string>()
+    for (const [i, item] of (d.sequences.get(field) ?? []).entries()) {
+      const v = item.get(BARE_SCALAR_KEY)
+      if (item.size !== 1 || typeof v !== 'string' || !/^ui-[a-z][a-z0-9-]*$/.test(v)) {
+        add(code, `${field}[${i}]`, `${field} item #${i} must be a bare ui-{name} tag`)
+        continue
+      }
+      if (seen.has(v)) add(code, `${field}[${i}]`, `duplicate ${field} tag "${v}"`)
+      if (v === tag) add(code, `${field}[${i}]`, `${field} names the descriptor's own tag "${v}"`)
+      seen.add(v)
+    }
   }
 
   return failures

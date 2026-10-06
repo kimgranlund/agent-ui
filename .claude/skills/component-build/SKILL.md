@@ -87,7 +87,8 @@ before a first build; `controls/checkbox/` is the gold probe template.
    artifacts after descriptor/CHANGELOG/page changes (`node scripts/generate-llms-full.mjs`).
    Sync every descriptor's derived `uses:` block, and each sheet's `@import` prologue, with
    `node scripts/codemod-uses.mjs` (ADR-0233; gates: `controls/uses-driftwire.test.ts`,
-   `controls/css-uses.test.ts`), never by hand. Then run `node scripts/generate-controls.mjs`
+   `controls/css-uses.test.ts`), never by hand. A family that self-defines sub-element tags declares them in
+   its descriptor's `defines:` block (gate: `controls/defines-driftwire.test.ts`). Then run `node scripts/generate-controls.mjs`
    (ADR-0233): it writes the control registry (`controls/registry.gen.ts`), the demo-only
    `all.gen.ts` / `all.gen.css` pair and the
    `./controls/{name}` + `./controls/{name}.css` `package.json` `exports` keys, so none of

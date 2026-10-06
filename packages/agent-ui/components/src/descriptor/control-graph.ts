@@ -82,33 +82,71 @@ function resolveInControls(from: string, spec: string): string | undefined {
   return parts.join('/')
 }
 
+/** What one crawl from a fleet entry module reaches: the modules it read and the OTHER fleet tags it hit. */
+interface Crawl {
+  readonly modules: readonly string[]
+  readonly fleetTags: ReadonlySet<string>
+}
+
 /**
- * The tags of the other fleet controls `entry` uses: walk relative specifiers from its entry module, through
- * every non-entry module under `src/controls/` (helpers, `_`-folder seams, same-folder siblings that are not
- * entries), stopping at and recording each OTHER fleet entry module reached. Only `.ts` modules are walked;
- * a stylesheet or asset specifier is not a module edge. Sorted, without duplicates, never the entry's own tag.
+ * Walk relative specifiers from `entry`'s entry module, through every non-entry module under `src/controls/`
+ * (helpers, `_`-folder seams, same-folder siblings that are not entries), stopping at and recording each OTHER
+ * fleet entry module reached. Only `.ts` modules are walked; a stylesheet or asset specifier is not a module
+ * edge. The one crawl `deriveUses` and `deriveDefines` share, so the two fields read the same graph.
  */
-export function deriveUses(entry: FleetEntry, fleet: readonly FleetEntry[], read: ControlsReader): string[] {
+function crawl(entry: FleetEntry, fleet: readonly FleetEntry[], read: ControlsReader): Crawl {
   const tagByModule = new Map(fleet.map((e) => [entryModule(e), e.tag] as const))
   const start = entryModule(entry)
-  const uses = new Set<string>()
+  const fleetTags = new Set<string>()
+  const modules: string[] = []
   const visited = new Set<string>([start])
   const queue = [start]
   while (queue.length > 0) {
     const current = queue.shift() as string
     const source = read(current)
     if (source === undefined) continue
+    modules.push(current)
     for (const spec of relativeSpecifiers(source)) {
       const target = resolveInControls(current, spec)
       if (target === undefined || !target.endsWith('.ts') || visited.has(target)) continue
       visited.add(target)
       const tag = tagByModule.get(target)
-      if (tag !== undefined) uses.add(tag)
+      if (tag !== undefined) fleetTags.add(tag)
       else queue.push(target)
     }
   }
-  uses.delete(entry.tag)
-  return [...uses].sort()
+  return { modules, fleetTags }
+}
+
+/**
+ * The tags of the other fleet controls `entry` uses (see `crawl`). Sorted, without duplicates, never the
+ * entry's own tag.
+ */
+export function deriveUses(entry: FleetEntry, fleet: readonly FleetEntry[], read: ControlsReader): string[] {
+  const { fleetTags } = crawl(entry, fleet, read)
+  return [...fleetTags].filter((tag) => tag !== entry.tag).sort()
+}
+
+// A `customElements.define('ui-x', …)` call with a literal tag, the shape every control module self-defines with.
+const DEFINE_LITERAL = /customElements\.define\(\s*(?:'(ui-[a-z][a-z0-9-]*)'|"(ui-[a-z][a-z0-9-]*)")/g
+
+/** The `ui-*` tags a module source self-defines through a literal `customElements.define` call, comments stripped. */
+export function definedTags(source: string): string[] {
+  const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1')
+  return [...code.matchAll(DEFINE_LITERAL)].map((m) => m[1] ?? m[2])
+}
+
+/**
+ * The sub-element tags `entry`'s entry module self-defines on import besides its own (a card's three regions,
+ * tabs' tab and panel, drill's panel): every literal `customElements.define` tag in the modules `crawl`
+ * reaches, minus the entry's own tag. Sorted, without duplicates. Another fleet control's tag never appears
+ * here, because its module ends the crawl. A descriptor's `defines:` block must equal this.
+ */
+export function deriveDefines(entry: FleetEntry, fleet: readonly FleetEntry[], read: ControlsReader): string[] {
+  const { modules } = crawl(entry, fleet, read)
+  const tags = new Set<string>()
+  for (const m of modules) for (const tag of definedTags(read(m) as string)) tags.add(tag)
+  return [...tags].filter((tag) => tag !== entry.tag).sort()
 }
 
 // ── The CSS half: each fleet sheet's `@import` prologue mirrors its `uses` ──────────────────────────────────

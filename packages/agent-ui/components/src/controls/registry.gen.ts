@@ -3,7 +3,9 @@
 // Drift gate: src/controls/controls-gen-driftwire.test.ts.
 //
 // One lazy record per fleet tag, sorted by tag: `load()` imports the entry module, which self-defines the
-// tag; `css` is the sheet relative to `src/controls/`; `uses` is the descriptor `uses:` block.
+// tag; `css` is the sheet relative to `src/controls/`; `uses` is the descriptor `uses:` block; `defines`, present
+// only on a family entry, is its descriptor `defines:` block: the sub-element tags that entry module also
+// self-defines on import, which have no record of their own.
 
 import type { ControlRecord } from './control-record.ts'
 
@@ -19,7 +21,7 @@ export const CONTROLS: Readonly<Record<string, ControlRecord>> = {
   'ui-breadcrumb': { tag: 'ui-breadcrumb', load: () => import('./breadcrumb/breadcrumb.ts'), css: './breadcrumb/breadcrumb.css', uses: ['ui-menu'] },
   'ui-button': { tag: 'ui-button', load: () => import('./button/button.ts'), css: './button/button.css', uses: [] },
   'ui-calendar': { tag: 'ui-calendar', load: () => import('./calendar/calendar.ts'), css: './calendar/calendar.css', uses: [] },
-  'ui-card': { tag: 'ui-card', load: () => import('./card/card.ts'), css: './card/card.css', uses: [] },
+  'ui-card': { tag: 'ui-card', load: () => import('./card/card.ts'), css: './card/card.css', uses: [], defines: ['ui-card-content', 'ui-card-footer', 'ui-card-header'] },
   'ui-checkbox': { tag: 'ui-checkbox', load: () => import('./checkbox/checkbox.ts'), css: './checkbox/checkbox.css', uses: [] },
   'ui-choice-card': { tag: 'ui-choice-card', load: () => import('./choice-card/choice-card.ts'), css: './choice-card/choice-card.css', uses: [] },
   'ui-choice-group': { tag: 'ui-choice-group', load: () => import('./choice-group/choice-group.ts'), css: './choice-group/choice-group.css', uses: ['ui-choice-card'] },
@@ -32,7 +34,7 @@ export const CONTROLS: Readonly<Record<string, ControlRecord>> = {
   'ui-description-list': { tag: 'ui-description-list', load: () => import('./description-list/description-list.ts'), css: './description-list/description-list.css', uses: [] },
   'ui-disclosure': { tag: 'ui-disclosure', load: () => import('./disclosure/disclosure.ts'), css: './disclosure/disclosure.css', uses: [] },
   'ui-drawer': { tag: 'ui-drawer', load: () => import('./drawer/drawer.ts'), css: './drawer/drawer.css', uses: [] },
-  'ui-drill': { tag: 'ui-drill', load: () => import('./drill/drill.ts'), css: './drill/drill.css', uses: [] },
+  'ui-drill': { tag: 'ui-drill', load: () => import('./drill/drill.ts'), css: './drill/drill.css', uses: [], defines: ['ui-drill-panel'] },
   'ui-field': { tag: 'ui-field', load: () => import('./field/field.ts'), css: './field/field.css', uses: [] },
   'ui-file-drop': { tag: 'ui-file-drop', load: () => import('./file-drop/file-drop.ts'), css: './file-drop/file-drop.css', uses: ['ui-attachment', 'ui-button', 'ui-icon'] },
   'ui-form-popover': { tag: 'ui-form-popover', load: () => import('./form-popover/form-popover.ts'), css: './form-popover/form-popover.css', uses: [] },
@@ -80,7 +82,7 @@ export const CONTROLS: Readonly<Record<string, ControlRecord>> = {
   'ui-swiper-pagination': { tag: 'ui-swiper-pagination', load: () => import('./swiper/swiper-pagination.ts'), css: './swiper/swiper-pagination.css', uses: [] },
   'ui-switch': { tag: 'ui-switch', load: () => import('./switch/switch.ts'), css: './switch/switch.css', uses: [] },
   'ui-table': { tag: 'ui-table', load: () => import('./table/table.ts'), css: './table/table.css', uses: ['ui-button', 'ui-checkbox', 'ui-pagination', 'ui-radio'] },
-  'ui-tabs': { tag: 'ui-tabs', load: () => import('./tabs/tabs.ts'), css: './tabs/tabs.css', uses: ['ui-menu'] },
+  'ui-tabs': { tag: 'ui-tabs', load: () => import('./tabs/tabs.ts'), css: './tabs/tabs.css', uses: ['ui-menu'], defines: ['ui-tab', 'ui-tab-panel'] },
   'ui-text': { tag: 'ui-text', load: () => import('./text/text.ts'), css: './text/text.css', uses: [] },
   'ui-text-field': { tag: 'ui-text-field', load: () => import('./text-field/text-field.ts'), css: './text-field/text-field.css', uses: ['ui-calendar', 'ui-color-picker', 'ui-swatch'] },
   'ui-textarea': { tag: 'ui-textarea', load: () => import('./textarea/textarea.ts'), css: './textarea/textarea.css', uses: [] },

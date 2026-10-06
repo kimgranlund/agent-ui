@@ -5,7 +5,8 @@
 // generate-props.mjs / generate-props.ts pairing, reused). No `node:*` import here: callers pass readers.
 //
 // Outputs, all derived from the fleet (every `controls/{folder}/{name}.md` outside `_` folders):
-//   - `src/controls/registry.gen.ts`: `CONTROLS`, one lazy `ControlRecord` per tag, sorted by tag;
+//   - `src/controls/registry.gen.ts`: `CONTROLS`, one lazy `ControlRecord` per tag, sorted by tag, a record
+//     carrying its descriptor's `defines:` sub-element tags when it declares any;
 //   - `src/all.gen.ts`: DEMO-ONLY, one bare import per control entry module, sorted by path;
 //   - `src/all.gen.css`: DEMO-ONLY, the seam sheet, then one import per control sheet, sorted by path;
 //   - the generator-owned `exports` keys of the components `package.json`: `./controls/{name}` and
@@ -15,12 +16,16 @@
 import { parseDescriptor, scalarSeq, splitFrontmatter } from './component-descriptor.ts'
 import { descriptorPath, type ControlsReader, type FleetEntry } from './control-graph.ts'
 
-/** One fleet control as the generator sees it: its tag, folder, file name and declared `uses` tags. */
+/**
+ * One fleet control as the generator sees it: its tag, folder, file name, declared `uses` tags and declared
+ * `defines` tags (the sub-element tags its entry module self-defines besides its own; absent means none).
+ */
 export interface ControlsGenEntry {
   readonly tag: string
   readonly folder: string
   readonly name: string
   readonly uses: readonly string[]
+  readonly defines?: readonly string[]
 }
 
 /** The generated artifacts: three file texts and the generator-owned `exports` keys (sorted). */
@@ -60,7 +65,9 @@ const REGISTRY_HEADER = [
   '// Drift gate: src/controls/controls-gen-driftwire.test.ts.',
   '//',
   '// One lazy record per fleet tag, sorted by tag: `load()` imports the entry module, which self-defines the',
-  '// tag; `css` is the sheet relative to `src/controls/`; `uses` is the descriptor `uses:` block.',
+  '// tag; `css` is the sheet relative to `src/controls/`; `uses` is the descriptor `uses:` block; `defines`, present',
+  '// only on a family entry, is its descriptor `defines:` block: the sub-element tags that entry module also',
+  '// self-defines on import, which have no record of their own.',
 ]
 
 const ALL_TS_HEADER = [
@@ -83,7 +90,10 @@ const ALL_CSS_HEADER = [
   ' */',
 ]
 
-/** Throw when two entries share a tag or an export name (`./controls/{name}` would collide). */
+/**
+ * Throw when two entries share a tag or an export name (`./controls/{name}` would collide), or when a
+ * `defines` tag is a fleet tag or is declared by two entries (a sub-element has exactly one parent).
+ */
 function assertUnique(entries: readonly ControlsGenEntry[]): void {
   const tags = new Set<string>()
   const names = new Set<string>()
@@ -93,19 +103,30 @@ function assertUnique(entries: readonly ControlsGenEntry[]): void {
     tags.add(e.tag)
     names.add(e.name)
   }
+  const declared = new Map<string, string>()
+  for (const e of entries) {
+    for (const sub of e.defines ?? []) {
+      if (tags.has(sub)) throw new Error(`generate-controls: ${e.tag} defines ${sub}, which is a fleet control with its own record`)
+      const other = declared.get(sub)
+      if (other !== undefined) throw new Error(`generate-controls: ${sub} is defined by both ${other} and ${e.tag}`)
+      declared.set(sub, e.tag)
+    }
+  }
 }
 
-/** One registry line: `'ui-x': { tag, load, css, uses },`. */
+/** One registry line: `'ui-x': { tag, load, css, uses },`, plus `defines: [...]` when the entry declares any. */
 function registryLine(e: ControlsGenEntry): string {
   const uses = [...e.uses].sort(byString).map(quote).join(', ')
+  const defines = [...(e.defines ?? [])].sort(byString).map(quote).join(', ')
   const load = `() => import(${quote(`./${e.folder}/${e.name}.ts`)})`
-  return `  ${quote(e.tag)}: { tag: ${quote(e.tag)}, load: ${load}, css: ${quote(`./${e.folder}/${e.name}.css`)}, uses: [${uses}] },`
+  const tail = defines === '' ? '' : `, defines: [${defines}]`
+  return `  ${quote(e.tag)}: { tag: ${quote(e.tag)}, load: ${load}, css: ${quote(`./${e.folder}/${e.name}.css`)}, uses: [${uses}]${tail} },`
 }
 
 /**
  * Generate the registry, the demo-only `all` pair and the generator-owned `exports` keys from the fleet.
  * Pure and deterministic: the same entries in any order give byte-identical output. Throws on a duplicate
- * tag or control name.
+ * tag or control name, and on a `defines` tag that is a fleet tag or has two parents.
  */
 export function generateControls(entries: readonly ControlsGenEntry[]): GeneratedControls {
   assertUnique(entries)
@@ -170,9 +191,9 @@ export function withGeneratedExports(packageJsonText: string, generated: Readonl
 }
 
 /**
- * The generator entries for a fleet (from `fleetFromDescriptors`): each control's `uses` read from its
- * descriptor with the descriptor parser. Throws when a descriptor cannot be read or declares no `uses`
- * block (sync it first with `node scripts/codemod-uses.mjs`).
+ * The generator entries for a fleet (from `fleetFromDescriptors`): each control's `uses` and optional
+ * `defines` read from its descriptor with the descriptor parser. Throws when a descriptor cannot be read or
+ * declares no `uses` block (sync it first with `node scripts/codemod-uses.mjs`).
  */
 export function controlsGenEntries(fleet: readonly FleetEntry[], read: ControlsReader): ControlsGenEntry[] {
   return fleet.map((entry) => {
@@ -181,7 +202,7 @@ export function controlsGenEntries(fleet: readonly FleetEntry[], read: ControlsR
     if (source === undefined) throw new Error(`generate-controls: cannot read descriptor ${rel}`)
     const desc = parseDescriptor(splitFrontmatter(source).fence)
     if (!desc.sequences.has('uses')) throw new Error(`generate-controls: ${rel} declares no uses block; run node scripts/codemod-uses.mjs`)
-    return { tag: entry.tag, folder: entry.folder, name: entry.name, uses: scalarSeq(desc, 'uses') }
+    return { tag: entry.tag, folder: entry.folder, name: entry.name, uses: scalarSeq(desc, 'uses'), defines: scalarSeq(desc, 'defines') }
   })
 }
 

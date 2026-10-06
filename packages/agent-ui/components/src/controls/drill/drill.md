@@ -14,6 +14,8 @@ description: A contained, card-like container that drills down an N-level select
 tier: pattern          # geometry size-class — geometry.md "Pattern" (container + control-height rows): the header row (Back + heading) takes the CONTROL height, the panel viewport uses the --md-sys-space ladder
 extends: UIContainerElement  # the FIRST non-form family — surface axes + reused internals (ARIA); NOT form-associated (face below)
 uses: []
+defines:               # the panel sub-element drill.ts self-defines on import besides ui-drill; held equal to the module graph by defines-driftwire.test.ts, emitted into registry.gen.ts for the A2UI built-in loader (ADR-0233)
+  - ui-drill-panel
 # marginal: measured by `npm run size`'s components-barrel LEAVE-ONE-OUT delta (manual by Kim's ruling) — within the per-control ≤ ~2 kB tier budget (plan §10)
 
 attributes:               # attributes-as-API — mirrors drill.ts `static props` (the surface axes first, then path, then view-transitions)

@@ -4,7 +4,7 @@
 // pass in.
 
 import { describe, it, expect } from 'vitest'
-import { deriveUses, fleetFromDescriptors, relativeSpecifiers, type FleetEntry } from './control-graph.ts'
+import { definedTags, deriveDefines, deriveUses, fleetFromDescriptors, relativeSpecifiers, type FleetEntry } from './control-graph.ts'
 
 const Q = "'" // module text below is assembled so no line of this file reads as a real import statement
 const from = (spec: string): string => `from ${Q}${spec}${Q}`
@@ -139,5 +139,55 @@ describe('deriveUses', () => {
 
   it('a control that imports no other entry uses nothing', () => {
     expect(deriveUses(entry('ui-lone'), fleet, reader({ 'lone/lone.ts': `import ${Q}./lone-model.ts${Q}`, 'lone/lone-model.ts': '' }))).toEqual([])
+  })
+})
+
+describe('definedTags', () => {
+  const def = (tag: string, q = Q): string => `if (!customElements.get(${q}${tag}${q})) customElements.define(${q}${tag}${q}, Cls)`
+
+  it('reads single- and double-quoted literal ui-* tags, in source order', () => {
+    expect(definedTags(`${def('ui-a')}\n${def('ui-b', '"')}\ncustomElements.define(\n  ${Q}ui-c${Q},\n  Cls,\n)`)).toEqual(['ui-a', 'ui-b', 'ui-c'])
+  })
+
+  it('ignores a call in a line or block comment, a non-literal tag and a non-ui tag', () => {
+    const src = [`// ${def('ui-commented')}`, `/* ${def('ui-blocked')} */`, 'customElements.define(tag, Cls)', `customElements.define(${Q}x-other${Q}, Cls)`].join('\n')
+    expect(definedTags(src)).toEqual([])
+  })
+
+  it('negative control: a real define is kept (the stripper does not eat every call)', () => {
+    expect(definedTags(`// ${def('ui-commented')}\n${def('ui-real')}`)).toEqual(['ui-real'])
+  })
+})
+
+describe('deriveDefines', () => {
+  const fleet: FleetEntry[] = [
+    { tag: 'ui-card', folder: 'card', name: 'card' },
+    { tag: 'ui-menu', folder: 'menu', name: 'menu' },
+  ]
+  const card = (fleet[0]) as FleetEntry
+  const def = (tag: string): string => `customElements.define(${Q}${tag}${Q}, Cls)`
+
+  it('collects the sub-element tags the entry reaches, never its own tag, sorted', () => {
+    const tree = {
+      'card/card.ts': `import ${Q}./card-header.ts${Q}\nimport ${Q}./card-footer.ts${Q}\n${def('ui-card')}`,
+      'card/card-header.ts': def('ui-card-header'),
+      'card/card-footer.ts': def('ui-card-footer'),
+    }
+    expect(deriveDefines(card, fleet, reader(tree))).toEqual(['ui-card-footer', 'ui-card-header'])
+  })
+
+  it('reaches a sub-element through a helper module, and stops at another fleet entry', () => {
+    const tree = {
+      'card/card.ts': `import ${Q}./parts.ts${Q}\nimport ${Q}../menu/menu.ts${Q}`,
+      'card/parts.ts': `import ${Q}./card-header.ts${Q}`,
+      'card/card-header.ts': def('ui-card-header'),
+      'menu/menu.ts': def('ui-menu'),
+    }
+    expect(deriveDefines(card, fleet, reader(tree))).toEqual(['ui-card-header'])
+  })
+
+  it('a sub-element module the entry never imports is not defined by it', () => {
+    const tree = { 'card/card.ts': def('ui-card'), 'card/card-header.ts': def('ui-card-header') }
+    expect(deriveDefines(card, fleet, reader(tree))).toEqual([])
   })
 })
