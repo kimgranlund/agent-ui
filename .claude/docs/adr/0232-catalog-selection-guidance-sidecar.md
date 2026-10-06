@@ -93,6 +93,8 @@ catalog, and render it as a clause on that type's inventory line.
   as its machine twin rather than deriving from it.
 - **Reciprocity may force weak reverse `why`s.** The gate cannot tell a real axis from filler. Rubric
   `a2ui-catalog.md` D7 is the review half and rejects filler reverse edges.
+  Note (2026-10-06, T-0007, GH #1815 item 3): the ten weakest reverse `why`s were rewritten to name
+  their axis; the baseline was recaptured. Remaining weak ones are tracked on #1815.
 - **Prompt growth.** The default prompt grows by roughly a quarter. If a later wave blows the budget, the
   named fallback is a separate pairs section rather than per-line clauses; caps are never cut silently.
 
