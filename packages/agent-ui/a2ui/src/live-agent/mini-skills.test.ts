@@ -553,3 +553,29 @@ describe('comparison-table — the GH #1377 Stat-tiles-plus-Table plan-compariso
   })
 })
 
+// GH #1795 (Croupier on Haiku, Card-body padding half). The ADR-0056 region-less padding fallback does NOT
+// fire for a Card with a region child PLUS loose siblings, by contract: card.css's `:not(:has(...))` leg,
+// card.md "Mixed composition gets no fallback", and the negative control in card.browser.test.ts (the mixed
+// card, "mixed composition wrongly got the fallback padding", expects padding 0). So a model that emits
+// CardContent next to a bare Row renders an unpadded body, and ADR-0056 rules that documented, not repaired.
+// The owning layer is the teaching: card-layout is the one game module that taught a hand Row with no home
+// inside the table Card.
+describe('card-layout: the GH #1795 Card-body padding teaching (ADR-0056 mixed composition)', () => {
+  it('fires on the Croupier blackjack intent', () => {
+    const result = selectMiniSkills('Deal a round of Blackjack.', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).toContain('card-layout')
+  })
+
+  it('teaches the hand Row rides INSIDE CardContent, never as a loose sibling beside a region (loose renders unpadded)', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'card-layout')!
+    expect(skill.body).toMatch(/inside CardContent/)
+    expect(skill.body).toMatch(/never loose beside a region/)
+    expect(skill.body).toMatch(/unpadded/)
+  })
+
+  it('stays within the per-module token budget with the added sentence (no trimming of the PlayingCard teaching)', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'card-layout')!
+    expect(estimateTokens(skill.body)).toBeLessThanOrEqual(PER_MODULE_TOKEN_BUDGET)
+    expect(skill.body).toMatch(/PlayingCard \(rank\/suit enums, faceDown boolean\)/)
+  })
+})
