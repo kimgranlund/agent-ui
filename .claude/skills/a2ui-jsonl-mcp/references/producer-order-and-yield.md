@@ -3,7 +3,7 @@
 Source of truth: `produce` in `packages/agent-ui/a2ui/src/agent/produce.ts` (with
 `ProduceOptions.maxRounds`, `ProduceHalt`, `interleaveProgress`, `formatMetaLine`,
 `sessionSurfaceSeeds`, `feedScopeFailures`, `netNoOpSurfaceIds`, `askIntegrityHolds`),
-`src/catalog/semantic-check.ts` (`semanticSurfaceViews`, `runSemanticChecks`, ADR-0238 proposed), and
+`src/catalog/semantic-check.ts` (`semanticSurfaceViews`, `runSemanticChecks`, ADR-0238), and
 `meta-line.ts` (`formatErrorLine`, `TURN_PROGRESS_STAGES`). ADR-0206 for the timing contract.
 
 ## Per round, in this order
@@ -24,7 +24,7 @@ Source of truth: `produce` in `packages/agent-ui/a2ui/src/agent/produce.ts` (wit
    `createSurface` with no components fails `root-missing` before anything ships.
 7. On a valid verdict: the FEED_SCOPE gate when an `ask` is declared (a violation is a
    self-correct round), then the persona's semantic checks when `deps.semanticChecks` is set
-   (ADR-0238, proposed: a finding is a self-correct round carrying its sentence; on the last round
+   (ADR-0238: a finding is a self-correct round carrying its sentence; on the last round
    the valid payload ships tallied `SEMANTIC_UNCORRECTED`, never a halt), then the NET_NOOP dodge check (a surface created and deleted in one turn
    gets one correction round, then the group is stripped and the turn degrades to prose,
    tally `NET_NOOP_STRIPPED`), then ask integrity.

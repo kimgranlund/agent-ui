@@ -38,7 +38,7 @@ export {
   CatalogComposeErrorCode,
 } from './compose.ts'
 export type { CatalogFragment, PersonaCatalogPackage, PersonaCatalogManifest } from './compose.ts'
-// ADR-0238 (proposed): the contract a persona's `PersonaCatalogManifest.semanticChecks` is written against.
+// ADR-0238: the contract a persona's `PersonaCatalogManifest.semanticChecks` is written against.
 export type { SemanticCheck, SemanticCheckInput, SemanticFinding, SurfaceView } from './semantic-check.ts'
 export { SHIPPED_PERSONA_CATALOGS } from './personas/index.ts'
 // GH #516 — the Node/Workers-safe manifest twin (`compose.ts`'s `PersonaCatalogManifest` header): this

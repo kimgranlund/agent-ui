@@ -106,7 +106,7 @@ The package MAY also export `controls: readonly ControlRecord[]` (ADR-0233; `Con
 `@agent-ui/components/loader`): one lazy record (`tag`, `load()`) per control the fragment's factories
 create that lives outside `@agent-ui/components`, so a renderer can define it on demand (SPEC-R2 AC7).
 Its server-safe `PersonaCatalogManifest` MAY also declare `semanticChecks: readonly SemanticCheck[]`
-(ADR-0238, proposed): pure, DOM-less domain checks `produce()` runs on every turn whose selected catalog is
+(ADR-0238): pure, DOM-less domain checks `produce()` runs on every turn whose selected catalog is
 one of the persona's derived ids (a2ui-live-agent SPEC-R4); the Croupier's is `personas/croupier/checks.ts`.
 `<persona-id>` is a stable kebab identifier (matching the persona/preset it scopes to, e.g.
 `concierge`), never a free-text label. The fragment document is NEVER stored in the persona-file

@@ -584,7 +584,7 @@ describe('card-layout: the GH #1795 Card-body padding teaching (ADR-0056 mixed c
 // while its own readout said "Dealer: 14, draws to 17": static card components and a free-text total
 // can drift apart. The teaching now makes the hand DATA (one list per hand, drawn by one templated Row) and
 // the total a value computed from that list, so the cards shown and the total stated share one source.
-// The runtime backstop is the ADR-0238 (proposed) croupier hand check (`catalog/personas/croupier/checks.ts`).
+// The runtime backstop is the ADR-0238 croupier hand check (`catalog/personas/croupier/checks.ts`).
 describe('card-layout + game-table-chrome: the data-driven hand and computed total (GH #1795, T-0016)', () => {
   const body = (id: string): string => MINI_SKILLS.find((m) => m.id === id)!.body
 

@@ -1,4 +1,4 @@
-// checks.test.ts: the croupier hand check (ADR-0238, proposed; GH #1795), driven through the generic hook's
+// checks.test.ts: the croupier hand check (ADR-0238; GH #1795), driven through the generic hook's
 // own view builder (`semanticSurfaceViews`) so every case judges the MERGED graph the renderer would hold.
 // Red-then-green: the live evidence passes structural validation on top of its deal turn and still fails
 // here with one clear dealer finding; its repair and the taught data-driven shape pass.

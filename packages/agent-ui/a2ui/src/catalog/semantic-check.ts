@@ -1,4 +1,4 @@
-// semantic-check.ts: the opt-in persona semantic-check hook (ADR-0238, proposed; GH #1795).
+// semantic-check.ts: the opt-in persona semantic-check hook (ADR-0238; GH #1795).
 //
 // The shared validator (`validateA2ui`) judges STRUCTURE: shapes, catalog membership, the id graph. It
 // cannot see that a payload contradicts itself in its own domain, for example a blackjack zone listing
@@ -62,7 +62,7 @@ export interface SemanticCheckInput {
   readonly surfaces: readonly SurfaceView[]
 }
 
-/** A persona-declared semantic check (ADR-0238, proposed). Pure and synchronous; `[]` means consistent. */
+/** A persona-declared semantic check (ADR-0238). Pure and synchronous; `[]` means consistent. */
 export interface SemanticCheck {
   /** Stable kebab id, reported in `SemanticCheckResult.errored` when the check throws. */
   readonly id: string

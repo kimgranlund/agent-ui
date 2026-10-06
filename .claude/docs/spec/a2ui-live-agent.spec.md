@@ -1,7 +1,7 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
 > Status: accepted · v0.21 · 2026-10-06 (v0.20 2026-10-05; v0.19 2026-10-05; v0.18 2026-10-05; v0.17 2026-08-18; v0.16 2026-08-13; v0.15 2026-08-12; v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
-> v0.21 changelog ([ADR-0238](../adr/0238-persona-semantic-checks-in-the-repair-loop.md), PROPOSED; GH #1795,
+> v0.21 changelog ([ADR-0238](../adr/0238-persona-semantic-checks-in-the-repair-loop.md), ACCEPTED (ratified by Kim 2026-10-06); GH #1795,
 > T-0016): `ProduceDeps` gains optional `semanticChecks`; Definitions gains `Semantic check`; SPEC-R4 gains one
 > paragraph and AC3 (persona-declared checks run after the shared validator and feed the existing repair
 > round; at the round bound a finding ships tallied, never halts; none declared is byte-identical). AC1 and
@@ -392,7 +392,7 @@ isolated behind one interface (ADR-0069).
   and `usage` (provider-billed token counts summed over the turn, absent when none arrived).
 - **Runtime loop** — the bounded generate → `heal`+`validate` → self-correct → validated-stream driver
   (ADR-0070), the SPEC-R6 contract minus the authoring-time critic round.
-- **Semantic check** (ADR-0238, proposed): a pure, deterministic function a persona declares on its
+- **Semantic check** (ADR-0238): a pure, deterministic function a persona declares on its
   server-safe `PersonaCatalogManifest` (`semanticChecks`) that judges a STRUCTURALLY VALID round for a
   contradiction in its own domain (e.g. a hand's stated total against the cards it shows). It reads each
   surface the round touches merged over the session's prior turns and returns `{code, path, message}`
@@ -491,7 +491,7 @@ PRD-G4; realizes streaming SPEC-R2, harness SPEC-R6)*
 - **AC2** *Given* the driver's validation step, *when* compared to the renderer's and corpus
   admission's, *then* all use the same `validateA2ui`/`heal` (parity; no fork — streaming SPEC-N3).
 
-**Persona semantic checks (ADR-0238, proposed).** When the host passes `ProduceDeps.semanticChecks` (resolved
+**Persona semantic checks (ADR-0238).** When the host passes `ProduceDeps.semanticChecks` (resolved
 for the SELECTED catalog by `semanticChecksForCatalog`, so a derived `<base>--<persona>` id carries its persona's
 checks and every other id carries none), `produce()` MUST run them on a round whose payload passed
 `validateA2ui` and the FEED_SCOPE gate, before anything streams. A finding is a self-correct round fed back
@@ -1654,10 +1654,10 @@ interface ProduceDeps {
   provider: AgentProvider;                                                 // the model seam (SPEC-R11); stub in tests
   retrieve(query: RetrieveQuery): CorpusRecord[];                          // over the judged shard
   catalog: Catalog;                                                        // the sole authority
-  semanticChecks?: readonly SemanticCheck[];                               // ADR-0238 (proposed): absent/empty ⇒ byte-identical
+  semanticChecks?: readonly SemanticCheck[];                               // ADR-0238: absent/empty ⇒ byte-identical
 }
 
-// ADR-0238 (proposed): a persona's semantic check (src/catalog/semantic-check.ts). Pure and synchronous;
+// ADR-0238: a persona's semantic check (src/catalog/semantic-check.ts). Pure and synchronous;
 // declared on PersonaCatalogManifest.semanticChecks; run by produce() after the shared validator.
 interface SemanticCheck { id: string; check(input: { surfaces: SurfaceView[] }): SemanticFinding[]; }
 interface SurfaceView { surfaceId: string; components: ReadonlyMap<string, A2uiComponent>; dataModel: unknown; } // merged over prior turns

@@ -127,7 +127,7 @@ export const selectCatalog = selectCatalogShared
  * never a half-composed production surface.
  */
 /**
- * ADR-0238 (proposed), GH #1795: the `ProduceDeps.semanticChecks` slice for a turn, shared by both hosts
+ * ADR-0238, GH #1795: the `ProduceDeps.semanticChecks` slice for a turn, shared by both hosts
  * (the `buildCatalogMap` precedent: one helper, never two host-side copies). `catalog` is the catalog
  * `selectCatalog` CHOSE, so an unknown or malformed client id that fell back to the default also falls back
  * to no checks. Returns `{}` when the catalog's persona declares none, so spreading it into the deps object

@@ -1,5 +1,5 @@
 // produce-semantic-checks.test.ts: the persona semantic-check hook inside the real `produce()` loop
-// (ADR-0238, proposed; GH #1795), keyless, with a scripted provider. Round 1 is the live Croupier evidence
+// (ADR-0238; GH #1795), keyless, with a scripted provider. Round 1 is the live Croupier evidence
 // (structurally valid on top of its deal turn, self-contradicting), round 2 its repair: with the croupier
 // checks declared, exactly one repair round runs, the finding's sentence reaches the model, and only the
 // repaired payload streams (`trace.rounds === 2`). The negative control is today's behavior: with no checks

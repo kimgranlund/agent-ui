@@ -291,7 +291,7 @@ export interface PersonaCatalogManifest {
   fragment: CatalogFragment
   /** Which registered base(s) this fragment composes onto — `agent-ui` and/or `a2ui-basic` (SPEC-N5). */
   targetCatalogs?: readonly string[]
-  /** ADR-0238 (proposed): this persona's semantic checks, run by `produce()` after structural validation on
+  /** ADR-0238: this persona's semantic checks, run by `produce()` after structural validation on
    *  every turn whose selected catalog is one of this persona's derived ids (`semanticChecksForCatalog`).
    *  Absent or empty: no check runs and the turn streams byte-identically. Pure, DOM-less functions only,
    *  since both server hosts import this manifest. */
@@ -299,7 +299,7 @@ export interface PersonaCatalogManifest {
 }
 
 /**
- * ADR-0238 (proposed): the semantic checks for a turn's SELECTED catalog id. A derived `<base>--<persona>`
+ * ADR-0238: the semantic checks for a turn's SELECTED catalog id. A derived `<base>--<persona>`
  * id resolves to that persona's declared `semanticChecks` (the same `targetsFor` pairing every derive step
  * reads); a base id, an unknown id, or a persona that declares none resolves to `[]`. Both server hosts call
  * this with the catalog `selectCatalog` actually chose, never the raw client id, so a fail-closed fallback to

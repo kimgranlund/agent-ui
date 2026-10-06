@@ -122,7 +122,7 @@ describe('buildCatalogMap (GH #516 / persona-catalog-composition SPEC-R3 — the
   })
 })
 
-describe('semanticChecksDeps (ADR-0238, proposed; GH #1795): the selected catalog decides the persona checks', () => {
+describe('semanticChecksDeps (ADR-0238; GH #1795): the selected catalog decides the persona checks', () => {
   const catalog = loadCatalog(catalogRaw)
   const basicCatalog = loadCatalog(basicCatalogRaw)
   const catalogs = buildCatalogMap(catalog, basicCatalog)

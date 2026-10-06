@@ -1,4 +1,4 @@
-// semantic-check.test.ts: the generic persona semantic-check hook (ADR-0238, proposed; GH #1795). The view
+// semantic-check.test.ts: the generic persona semantic-check hook (ADR-0238; GH #1795). The view
 // builder replays the session the way the renderer does and never writes into the payload it reads; the
 // runner is fail-open; and the catalog resolver hands a derived persona id its declared checks and every
 // other id none.

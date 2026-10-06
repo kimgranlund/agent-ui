@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-10-06 |
 > | **Proposed by** | the sdlc-lite solo run `croupier-hand-consistency` (T-0016), from the GH [#1795](https://github.com/kimgranlund/agent-ui/issues/1795) live evidence `evidence-dealer-17` |
-> | **Ratified by** | (pending; Kim ratifies) |
+> | **Ratified by** | kimgranlund (repo owner), 2026-10-06, ratified by Kim in the sdlc-lite session (AskUserQuestion) |
 > | **Repairs** | [`../spec/a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) Definitions (`Semantic check`), SPEC-R4 (one paragraph and AC3), the typed contract (`ProduceDeps.semanticChecks`, the check types) · [`../spec/persona-catalog-composition.spec.md`](../spec/persona-catalog-composition.spec.md) SPEC-R1 (the manifest may declare checks) · [`../lld/a2ui-live-agent.lld.md`](../lld/a2ui-live-agent.lld.md) LLD-C15 (new), §2, §5 and §6 · [`../references/agent-model.md`](../references/agent-model.md) §3 (the `semantic check` glossary entry) · skills: `.claude/skills/a2ui-jsonl-mcp/references/producer-order-and-yield.md` (step 7), `.claude/skills/a2ui-multi-catalog/SKILL.md` (pattern 5), `.claude/skills/a2ui-prompt-authoring/SKILL.md` (Triage) · `packages/agent-ui/a2ui/AGENTS.md` (`## Wire and validator spine`) · code: `packages/agent-ui/a2ui/src/catalog/semantic-check.ts` (new), `src/catalog/compose.ts` (`PersonaCatalogManifest.semanticChecks`, `semanticChecksForCatalog`), `src/catalog/personas/croupier/checks.ts` (new), `src/catalog/personas/croupier/manifest.ts`, `src/agent/produce.ts`, `tools/agent/chat-validation.ts` (`semanticChecksDeps`), `tools/agent/dev-proxy-plugin.ts`, `tools/agent/worker/index.ts` |
 > | **Supersedes / Superseded by** | none · relates [ADR-0070](./0070-a2ui-live-runtime-loop-scope.md) (the deterministic gate stays the whole runtime verifier: a semantic check is a deterministic, declared function, never a model-graded round) · relates [ADR-0097](./0097-a2ui-feed-embedded-asks.md) (the FEED_SCOPE gate is the precedent for a produce-layer check after the shared validator) · relates [ADR-0172](./0172-persona-catalog-composition-intake.md) (the persona fragment and its server-safe manifest are where a persona declares checks) · relates [ADR-0187](./0187-validator-finalize-signal.md) (the round's payload is the turn's complete payload, which is what makes a whole-hand judgment sound) |
 

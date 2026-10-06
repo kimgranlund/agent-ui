@@ -1,4 +1,4 @@
-// checks.ts: the `croupier` persona's semantic checks (ADR-0238, proposed; GH #1795). DOM-less and
+// checks.ts: the `croupier` persona's semantic checks (ADR-0238; GH #1795). DOM-less and
 // node-free: `manifest.ts` declares these, and both server hosts import that manifest.
 //
 // One check, `croupier-hand-consistency`, for the two participants a blackjack table names, `dealer` and

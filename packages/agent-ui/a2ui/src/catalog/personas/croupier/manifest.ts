@@ -20,7 +20,7 @@ export const croupierFragment: CatalogFragment = loadCatalogFragment(fragmentDoc
 export const croupierTargetCatalogs: readonly string[] = ['agent-ui', 'a2ui-basic']
 
 /** The server-side derive input `composePersonaCatalogDocs` (GH #516) consumes directly. `semanticChecks`
- *  (ADR-0238, proposed; GH #1795): the hand check `produce()` runs on every `<base>--croupier` turn. */
+ *  (ADR-0238; GH #1795): the hand check `produce()` runs on every `<base>--croupier` turn. */
 export const croupierManifest: PersonaCatalogManifest = {
   personaId: CROUPIER_PERSONA_ID,
   fragment: croupierFragment,

@@ -134,7 +134,7 @@ The arc's ordering, cheapest-correct-first:
    readout stating 17 over cards that total 14) is invisible to the validator. Teach the shape that
    makes it impossible by construction (`card-layout`: a hand is a data list drawn by one templated
    Row, the total computed from that list), and back it with a persona semantic check
-   (`PersonaCatalogManifest.semanticChecks`, ADR-0238 proposed) whose finding feeds the repair round.
+   (`PersonaCatalogManifest.semanticChecks`, ADR-0238) whose finding feeds the repair round.
    Keep the teaching and the check naming the same paths (`/dealerHand`, `/dealerTotal`), or the
    check judges a shape the prompt never asked for.
 
