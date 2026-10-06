@@ -143,7 +143,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'croupier',
     category: 'games', // GH #143 — a card table, thematically a game even though it predates the games-roster wave
-    seedVersion: 6, // one surface per round (Kim 2026-10-04) — supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores
+    seedVersion: 6, // one surface per round (Kim 2026-10-04) — supersedes #525's one-persistent-surface surfaceStyle; #525's bankroll opt-in + cross-session resume carry over; migrates pre-v6 stores. T-0016 (GH #1795) edited the hand/total seed text WITHOUT a bump: existing stores get the data-driven hand teaching from the server-composed card-layout/game-table-chrome mini-skills and the ADR-0238 hand check, so no store needs dropping
     label: 'The Croupier',
     tagline: 'Card games — Blackjack, Poker, and their variants — one table per round, each a new step in the dialog',
     config: { name: 'The Croupier', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true }, // rev.4: fable retired from the roster
@@ -163,7 +163,10 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'SAME round surface in place on every move within the round. The finished round’s surface is left as ' +
       'history, never edited again. Its closing control is a Deal again Button whose action sets ' +
       '"context":{"newRound":true}; answering it starts the next round: create the next fresh surface. ' +
-      'Prose is only for table talk; the surface always carries the state. Every round ends with an ' +
+      'Prose is only for table talk; the surface always carries the state. Each hand is a list of cards ' +
+      'in the surface data (/dealerHand, /playerHand), and every total, in the zones and in the result ' +
+      'line, is computed from the cards that list holds: a dealer who must draw deals a real card into the ' +
+      'list before any total says so. Every round ends with an ' +
       'explicit result line — the winner, the winning hand spelled out, and the chip delta — never a bare ' +
       'status badge; zero the pot ONLY in the SAME update that states the result. The running chip count is ' +
       'your bankroll: ONE figure on every round’s surface, always visible, updated by every settlement, ' +
@@ -177,17 +180,22 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
         // pattern set, seeded via `localPatterns` above) now closes that idiom structurally (rank/suit
         // enums, a `faceDown` boolean) rather than by prose — mirrors the SAME trim in the byte-pinned
         // `card-layout.md` mini-skill (`a2ui-prompt-author`'s recapture flow). The hand-arrangement half
-        // stays prose (§1's table: a pure `Row` arrangement, no new schema surface).
+        // stays prose (§1's table: a pure `Row` arrangement, no new schema surface). GH #1795 (T-0016):
+        // the hand is DATA, a list rendered through one templated Row, so the cards shown and the total
+        // stated come from one list and cannot diverge; mirrors the byte-pinned `card-layout.md`.
         id: 'card-layout',
         label: 'card-layout',
-        description: 'Playing cards arranged as a hand — a Row of tiles, never loose text lines.',
-        content: 'A hand is a Row of tiles, never loose text lines.',
+        description: 'A hand is a data list drawn by one templated Row; each total comes from the listed cards.',
+        content:
+          'Each hand is a list at /dealerHand or /playerHand, drawn by one Row templated over it (a draw appends ' +
+          'to the list, never a new card component); compute each total from the cards you list and write it ' +
+          'at /dealerTotal or /playerTotal.',
       },
       {
         id: 'game-table-chrome',
         label: 'game-table-chrome',
         description: 'The table frame — header title+badges, full-width zones per player, footer actions.',
-        content: 'One Card is the table: CardHeader title + status badges, CardContent zones (dealer, player) spanning the width, CardFooter = a Row of the action Buttons (never a Column).',
+        content: 'One Card is the table: CardHeader title + status badges, CardContent zones (dealer, player) spanning the width, each zone stating its total bound to /dealerTotal or /playerTotal, CardFooter = a Row of the action Buttons (never a Column).',
       },
       {
         id: 'game-hud',
