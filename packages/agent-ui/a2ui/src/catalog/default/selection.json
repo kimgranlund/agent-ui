@@ -214,7 +214,7 @@
       "notFor": [
         {
           "type": "Column",
-          "why": "plain stacking"
+          "why": "children stacked with no surface or border"
         },
         {
           "type": "ServiceCard",
@@ -286,7 +286,7 @@
         },
         {
           "type": "Popover",
-          "why": "light content by an anchor"
+          "why": "a non-blocking panel at its trigger"
         },
         {
           "type": "Toast",
@@ -316,7 +316,7 @@
       "notFor": [
         {
           "type": "Modal",
-          "why": "something needing a decision"
+          "why": "a blocking dialog the user must answer"
         },
         {
           "type": "Badge",
@@ -350,7 +350,7 @@
         },
         {
           "type": "Popover",
-          "why": "free content"
+          "why": "arbitrary panel content, not a command list"
         }
       ]
     },
@@ -390,7 +390,7 @@
       "notFor": [
         {
           "type": "Popover",
-          "why": "interactive content"
+          "why": "a click-opened panel holding controls"
         }
       ]
     },
@@ -743,7 +743,7 @@
       "notFor": [
         {
           "type": "List",
-          "why": "items without columns"
+          "why": "a flat run of items, one value each"
         },
         {
           "type": "BarChart",
@@ -895,7 +895,7 @@
       "notFor": [
         {
           "type": "Image",
-          "why": "a picture as content"
+          "why": "a photo shown as content, not an identity mark"
         }
       ]
     },
@@ -1018,7 +1018,7 @@
       "notFor": [
         {
           "type": "Row",
-          "why": "a general arrangement"
+          "why": "children laid out with no command semantics"
         }
       ]
     },
@@ -1030,7 +1030,7 @@
       "notFor": [
         {
           "type": "List",
-          "why": "items with no time order"
+          "why": "a feed ranked by relevance, not time"
         }
       ]
     },
@@ -1119,7 +1119,7 @@
       "notFor": [
         {
           "type": "Card",
-          "why": "general grouped content"
+          "why": "any content, not a launchable entry"
         }
       ]
     },
