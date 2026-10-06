@@ -1954,10 +1954,11 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
     expect(narration?.getAttribute('receipt'), 'the terminal one-line receipt').toBe('')
   })
 
-  it('…and INTO the per-step source reveal (GH #240/ADR-0159 wave B — part 3 of the same ruling): conversation.sources is set, so each activity step reveals the wire line(s) behind it', () => {
+  it('…and INTO step mode (T-0016, ADR-0159 amendment): conversation.steps is set and the superseded per-step sources opt-in is not', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const conversation = el.querySelector('ui-conversation') as UIConversationElement
-    expect(conversation.sources, 'the developer surface\'s standing opt-in — every other consumer stays default-off').toBe(true)
+    expect(conversation.steps, 'the strip renders the runner\'s neutral activity steps').toBe(true)
+    expect(conversation.sources, 'step mode replaces the per-step Source blocks (raw shows once instead)').toBe(false)
   })
 
   it('GH #574: the Agent tab composes the Agent config (real ui-settings, wired to schema/store); the Capabilities and Surface tabs together compose all SEVEN entry-sections (prompts merged in, vision rev.5; genui-surface B2 added Pattern sources; GH #488 moved Catalogs INTO Surface Options; GH #574 ranked Catalogs+Pattern sources into the Surface tab, everything else into Capabilities)', () => {

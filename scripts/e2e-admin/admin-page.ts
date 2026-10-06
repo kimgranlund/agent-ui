@@ -31,6 +31,7 @@ export const ADMIN_SELECTORS = {
   composerSend: 'ui-conversation-composer [data-part="send"]',
   surfaceButton: '[data-part="mounts"] ui-surface-host ui-button',
   surfaceHost: '[data-part="mounts"] ui-surface-host',
+  activityStep: '[data-part="narration"] ui-timeline-item[data-kind]', // T-0016: a step-mode activity row
   flowChrome: '[data-part="log"] [role="group"][aria-label="Flow complete"]',
   contextJson: '[data-part="context-json"]',
 } as const
@@ -279,6 +280,14 @@ export class AdminPage {
     return this.page.evaluate(
       (selector) => [...document.querySelectorAll(selector)].map((b) => b.textContent?.trim() ?? ''),
       `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceButton}`,
+    )
+  }
+
+  /** T-0016: the `data-kind` of every activity step row in a pane's narration strips (step mode). */
+  activityStepKinds(pane: ConversationPane = 'chat'): Promise<string[]> {
+    return this.page.evaluate(
+      (selector) => [...document.querySelectorAll(selector)].map((row) => row.getAttribute('data-kind') ?? ''),
+      `${paneSelector(pane)} ${ADMIN_SELECTORS.activityStep}`,
     )
   }
 
