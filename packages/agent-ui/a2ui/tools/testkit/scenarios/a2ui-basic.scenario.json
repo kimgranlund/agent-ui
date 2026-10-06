@@ -1,0 +1,124 @@
+{
+  "kind": "agent-ui-a2ui-scenario",
+  "version": 1,
+  "name": "a2ui-basic",
+  "description": "An upstream A2UI Basic Catalog surface, its event action clicked through to a scripted reply.",
+  "catalogId": "a2ui-basic",
+  "intent": "show the upstream button",
+  "turns": [
+    {
+      "respond": {
+        "lines": [
+          {
+            "version": "v1.0",
+            "createSurface": {
+              "surfaceId": "basic",
+              "catalogId": "a2ui-basic"
+            }
+          },
+          {
+            "version": "v1.0",
+            "updateComponents": {
+              "surfaceId": "basic",
+              "components": [
+                {
+                  "id": "root",
+                  "component": "Column",
+                  "children": [
+                    "title",
+                    "go"
+                  ]
+                },
+                {
+                  "id": "title",
+                  "component": "Text",
+                  "text": {
+                    "path": "/title"
+                  }
+                },
+                {
+                  "id": "go",
+                  "component": "Button",
+                  "child": "go-label",
+                  "action": {
+                    "event": {
+                      "name": "submit",
+                      "context": {
+                        "from": "basic"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "go-label",
+                  "component": "Text",
+                  "text": "Submit"
+                }
+              ]
+            }
+          },
+          {
+            "version": "v1.0",
+            "updateDataModel": {
+              "surfaceId": "basic",
+              "value": {
+                "title": "Click the button below"
+              }
+            }
+          }
+        ]
+      },
+      "expect": {
+        "tree": [
+          {
+            "surfaceId": "basic",
+            "select": "ui-text",
+            "textIncludes": "Click the button below"
+          }
+        ],
+        "clientMessages": [
+          {
+            "action": {
+              "name": "submit",
+              "context": {
+                "from": "basic"
+              }
+            }
+          }
+        ]
+      },
+      "act": {
+        "click": {
+          "surfaceId": "basic",
+          "select": "ui-button"
+        }
+      }
+    },
+    {
+      "match": {
+        "actionName": "submit"
+      },
+      "respond": {
+        "lines": [
+          {
+            "version": "v1.0",
+            "updateDataModel": {
+              "surfaceId": "basic",
+              "path": "/title",
+              "value": "Submitted"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "tree": [
+          {
+            "surfaceId": "basic",
+            "select": "ui-text",
+            "textIncludes": "Submitted"
+          }
+        ]
+      }
+    }
+  ]
+}

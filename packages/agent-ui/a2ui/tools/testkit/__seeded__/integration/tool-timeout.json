@@ -1,0 +1,36 @@
+{
+  "kind": "agent-ui-a2ui-seeded-mcp",
+  "version": 1,
+  "name": "tool-timeout",
+  "server": {
+    "tools": [
+      {
+        "name": "slow_lookup",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "q": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    ],
+    "calls": {
+      "slow_lookup": {
+        "hang": true
+      }
+    }
+  },
+  "call": {
+    "tool": "slow_lookup",
+    "arguments": {
+      "q": "anything"
+    }
+  },
+  "timeoutMs": 200,
+  "expectRed": {
+    "layer": "integration",
+    "code": "MCP_TIMEOUT"
+  }
+}

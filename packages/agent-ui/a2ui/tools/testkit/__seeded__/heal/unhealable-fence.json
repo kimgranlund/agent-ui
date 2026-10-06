@@ -1,0 +1,21 @@
+{
+  "kind": "agent-ui-a2ui-scenario",
+  "version": 1,
+  "name": "unhealable-fence",
+  "description": "A fenced line whose body is not JSON: fence-strip runs, the parse still fails, and nothing heals it.",
+  "catalogId": "agent-ui",
+  "intent": "show a label",
+  "expectRed": {
+    "layer": "heal",
+    "code": "HEAL_UNPARSEABLE"
+  },
+  "turns": [
+    {
+      "respond": {
+        "lines": [
+          "```json\n{\"version\": \"v1.0\", createSurface: {surfaceId: s}}\n```"
+        ]
+      }
+    }
+  ]
+}

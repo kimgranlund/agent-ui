@@ -1,0 +1,60 @@
+{
+  "kind": "agent-ui-a2ui-scenario",
+  "version": 1,
+  "name": "root-recreate",
+  "description": "Turn 1 re-sends root without a createSurface; the seeded validator rejects the resend at s:root (ADR-0064, TKT-0081).",
+  "catalogId": "agent-ui",
+  "intent": "show a label",
+  "expectRed": {
+    "layer": "validator",
+    "code": "IDGRAPH"
+  },
+  "turns": [
+    {
+      "respond": {
+        "lines": [
+          {
+            "version": "v1.0",
+            "createSurface": {
+              "surfaceId": "s",
+              "catalogId": "agent-ui"
+            }
+          },
+          {
+            "version": "v1.0",
+            "updateComponents": {
+              "surfaceId": "s",
+              "components": [
+                {
+                  "id": "root",
+                  "component": "Text",
+                  "text": "one"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "intent": "change it",
+      "respond": {
+        "lines": [
+          {
+            "version": "v1.0",
+            "updateComponents": {
+              "surfaceId": "s",
+              "components": [
+                {
+                  "id": "root",
+                  "component": "Text",
+                  "text": "two"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

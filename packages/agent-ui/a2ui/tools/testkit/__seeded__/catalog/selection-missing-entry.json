@@ -1,0 +1,13 @@
+{
+  "kind": "agent-ui-a2ui-seeded-catalog",
+  "version": 1,
+  "name": "selection-missing-entry",
+  "catalogId": "agent-ui",
+  "dropEntries": [
+    "Badge"
+  ],
+  "expectRed": {
+    "layer": "catalog",
+    "code": "SELECTION_BIJECTION"
+  }
+}

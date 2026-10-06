@@ -1,0 +1,6 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "wrong-dialect-basic.json": "e6b8b442496ab7927550da06f0ad01134f1195a10625b263288c421184e6f93a"
+  }
+}
