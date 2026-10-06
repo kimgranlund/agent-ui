@@ -139,6 +139,10 @@ export default defineConfig({
             // GH #1810 - the agent-behavior eval CLI's own tests; `eval-agent-behavior.ts` carries the
             // CLI-entry guard, so importing `runCli` here is safe. Explicit, never a wildcard (GH #112).
             'packages/agent-ui/a2ui/tools/agent-eval/*.test.ts',
+            // GH #1807 - the capability-registry loader and its committed-projection drift gate.
+            // `generate.ts` carries the CLI-entry guard, so importing `projectionText` here never writes.
+            // Explicit, never a wildcard (GH #112).
+            'packages/agent-ui/a2ui/tools/registry/*.test.ts',
           ],
         },
       },
@@ -200,6 +204,10 @@ export default defineConfig({
       // (site/tsconfig.json deliberately carries no node types).
       '@agent-ui/a2ui/agent/agent-transport': r('./packages/agent-ui/a2ui/src/agent/agent-transport.ts'),
       '@agent-ui/a2ui/agent': r('./packages/agent-ui/a2ui/src/agent/index.ts'),
+      // The a2ui `./registry` subpath (the capability registry, GH #1807), mirrors the package's exports map,
+      // placed BEFORE the broad `@agent-ui/a2ui` entry for the same prefix-match reason as `./agent`. Pure and
+      // browser-safe (no `node:*`): the docs site's Capability Registry page imports it directly.
+      '@agent-ui/a2ui/registry': r('./packages/agent-ui/a2ui/src/registry/index.ts'),
       '@agent-ui/a2ui': r('./packages/agent-ui/a2ui/src/index.ts'),
       // ADR-0139 — the `./editor` subpath (ui-code-editor). `@agent-ui/app`'s entry-list.ts/agent-admin.ts are
       // the first cross-package consumers of `@agent-ui/code/editor` (the CM editor); a jsdom test driving

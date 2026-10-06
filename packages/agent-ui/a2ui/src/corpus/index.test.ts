@@ -113,6 +113,10 @@ describe('root-barrel purity — zero corpus bytes reachable from `@agent-ui/a2u
           // rationale for a subpath over a sibling package) never makes corpus reachable from `.`. The
           // root-purity invariant this gate protects is unaffected.
           if (full === `${SRC_DIR}/agent`) continue
+          // src/registry, the `@agent-ui/a2ui/registry` capability-registry subpath (GH #1807), is the same
+          // class: a SEPARATE opt-in subpath the root barrel never re-exports (`registry-wiring.test.ts` holds
+          // that), whose `select.ts` ranks with the shared `corpus/text-similarity.ts` primitive.
+          if (full === `${SRC_DIR}/registry`) continue
           files.push(...walk(full))
         } else if (entry.name.endsWith('.ts')) {
           files.push(full)

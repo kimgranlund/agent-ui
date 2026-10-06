@@ -1,0 +1,5672 @@
+{
+  "base": [
+    {
+      "id": "catalog:a2ui-basic",
+      "kind": "catalog",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "prompt",
+        "renderer"
+      ],
+      "name": "a2ui-basic"
+    },
+    {
+      "id": "catalog:agent-ui",
+      "kind": "catalog",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "prompt",
+        "renderer"
+      ],
+      "name": "agent-ui"
+    },
+    {
+      "id": "control:ui-attachment",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/attachment/attachment.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-attachment",
+      "tier": "display",
+      "description": "A non-interactive compact file card showing a category glyph, name, and formatted size for one attached file.",
+      "uses": [
+        "ui-icon"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-audio",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/audio/audio.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-audio",
+      "tier": "display",
+      "description": "A URL-sourced audio player — the native <audio controls>, no custom chrome, intrinsic UA player height.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-avatar",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/avatar/avatar.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-avatar",
+      "tier": "indicator",
+      "description": "A compact circular identity mark that shows a photo, initials, or a fallback glyph for one person.",
+      "uses": [
+        "ui-icon"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-badge",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/badge/badge.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-badge",
+      "tier": "display",
+      "description": "A non-interactive status tag with an intent-keyed color and a matching non-color glyph.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-bar-chart",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/bar-chart/bar-chart.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-bar-chart",
+      "tier": "display",
+      "description": "An axis-free horizontal bar list that compares magnitudes with a printed value, no ticks or legend.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-breadcrumb",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/breadcrumb/breadcrumb.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-breadcrumb",
+      "tier": "pattern",
+      "description": "A wayfinding trail of ordered crumb links ending in the current page — tag-agnostic author children, an optional slotted separator template, an auto-stamped current-page leaf, and an optional `collapse=\"menu\"` fold of the middle behind a composed overflow menu.",
+      "uses": [
+        "ui-menu"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-button",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/button/button.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-button",
+      "tier": "control",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-calendar",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/calendar/calendar.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-calendar",
+      "tier": "pattern",
+      "description": "A month-grid date picker form control that selects a single date or a start/end date range.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-card",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/card/card.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-card",
+      "tier": "container",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-checkbox",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/checkbox/checkbox.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-checkbox",
+      "tier": "indicator",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-choice-card",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/choice-card/choice-card.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-choice-card",
+      "tier": "container",
+      "description": "The rich option unit of the `choice` family — the WHOLE card is the hit target and the a11y unit; no selection commit of its own (the owning ui-choice-group commits).",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-choice-group",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/choice-group/choice-group.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-choice-group",
+      "tier": "container",
+      "description": "A form-associated rich-card selection container — a committed choice over agent-composed ui-choice-card option cards, single or multi.",
+      "uses": [
+        "ui-choice-card"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-code",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/code/code.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-code",
+      "tier": "display",
+      "description": "A zero-machinery block that displays verbatim, whitespace-preserved code with its own horizontal scroll.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-color-picker",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/color-picker/color-picker.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-color-picker",
+      "tier": "pattern",
+      "description": "A color-input control combining a 2D chroma-lightness pad, three channel sliders, and an editable readout.",
+      "uses": [
+        "ui-button",
+        "ui-slider",
+        "ui-swatch",
+        "ui-text-field"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-column",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/column/column.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-column",
+      "tier": "layout",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-column-chart",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/column-chart/column-chart.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-column-chart",
+      "tier": "display",
+      "description": "A category-major stacked (or dense single-series) column chart with a nice-number axis, a projected/ghost trailing column, a now-marker, and a static highlight callout.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-combo-box",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/combo-box/combo-box.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-combo-box",
+      "tier": "pattern",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-command-modal",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/command-modal/command-modal.md"
+      },
+      "status": {
+        "state": "excluded",
+        "reason": "ADR-0125 F8 / command-modal.lld.md LLD-C16 — PERMANENT exclusion: the CMD-K palette is app-owner launcher chrome (the Toast/ThemeProvider/StatusStream class, ADR-0112 cl.6 reasoning) — an agent emitting an app's command palette is the wrong trust shape; its items are the consumer's actions."
+      },
+      "consumers": [
+        "site"
+      ],
+      "tag": "ui-command-modal",
+      "tier": "pattern",
+      "uses": [
+        "ui-modal"
+      ],
+      "catalogs": []
+    },
+    {
+      "id": "control:ui-description-list",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/description-list/description-list.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-description-list",
+      "tier": "display",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-disclosure",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/disclosure/disclosure.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-disclosure",
+      "tier": "pattern",
+      "description": "A one-line summary that expands or collapses its content, built on the native <details> element.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-drawer",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/drawer/drawer.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-drawer",
+      "tier": "container",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-drill",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/drill/drill.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-drill",
+      "tier": "pattern",
+      "description": "A contained, card-like container that drills down an N-level selection tree — the active level slides in over its dimmed, inert ancestor by default (stack presentation), with a Back affordance and a bindable path.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-field",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/field/field.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-field",
+      "tier": "container",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-file-drop",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/file-drop/file-drop.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-file-drop",
+      "tier": "pattern",
+      "uses": [
+        "ui-attachment",
+        "ui-button",
+        "ui-icon"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-form-popover",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/form-popover/form-popover.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-form-popover",
+      "tier": "pattern",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-form-provider",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/form-provider/form-provider.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-form-provider",
+      "tier": "container",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-gauge",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/gauge/gauge.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-gauge",
+      "tier": "display",
+      "description": "A multi-ring radial gauge — concentric, independent 0-100 progress rings (never part-of-whole) with a real-DOM label/value legend column.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-grid",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/grid/grid.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-grid",
+      "tier": "layout",
+      "description": "A responsive track-grid container that fits as many columns as its own width allows, no breakpoints needed.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-icon",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/icon/icon.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-icon",
+      "tier": "display",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-image",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/image/image.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-image",
+      "tier": "display",
+      "description": "A URL-sourced image with a reserved aspect-ratio box (zero CLS), native lazy-loading, and an optional bottom scrim for overlay caption content.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-ladder",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/ladder/ladder.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-ladder",
+      "tier": "display",
+      "description": "A labeled list of dimensional tiers shown as literal-length bars alongside their printed values.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-line-chart",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/line-chart/line-chart.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-line-chart",
+      "tier": "display",
+      "description": "An axis-bearing line or area chart with a value-range baseline; the default state shows always-shown min/max labels, the opt-in `axes` state shows nice-number gridlines + tick/category chips + a gradient area fill + a provisional/now-marker system, single-series, hand-rolled inline SVG.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-list",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/list/list.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-list",
+      "tier": "layout",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-menu",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/menu/menu.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-menu",
+      "tier": "pattern",
+      "description": "A keyboard-navigable overlay menu opened from a trigger, with roving focus and type-ahead selection.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-modal",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/modal/modal.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-modal",
+      "tier": "pattern",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-multi-select",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/multi-select/multi-select.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-multi-select",
+      "tier": "pattern",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-otp-field",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/otp-field/otp-field.md"
+      },
+      "status": {
+        "state": "excluded",
+        "reason": "ADR-0176 cl.3 — PERMANENT exclusion, never catalogue-bound: credential-bearing authentication chrome is host-page-only (security inversion, PRD-D2); the ADR-0112 cl.6 Toast/ToastRegion reasoning applied verbatim — a one-time-code entry is the credential-bearing element of the identity family's Codes mode (code-entry-control.lld.md §9, GH #490 S2-a)."
+      },
+      "consumers": [
+        "site"
+      ],
+      "tag": "ui-otp-field",
+      "tier": "control",
+      "description": "A segmented N-cell one-time-code entry field — one focusable editable surface, N presentational cells, auto-advance/backspace-walk/arrow traversal under a no-gaps invariant, and full/partial paste-split.",
+      "uses": [],
+      "catalogs": []
+    },
+    {
+      "id": "control:ui-pagination",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/pagination/pagination.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-pagination",
+      "tier": "pattern",
+      "description": "A standalone page navigator — previous/next plus a windowed page-number list with ellipsis, composing ui-button for every stop.",
+      "uses": [
+        "ui-button"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-pie-chart",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/pie-chart/pie-chart.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-pie-chart",
+      "tier": "display",
+      "description": "A part-of-whole ring (donut, default) or solid pie chart with a printed-percent key list, identity carried by order + label + percent, never hue alone.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-playing-card",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/playing-card/playing-card.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-playing-card",
+      "tier": "display",
+      "description": "A true standard playing card — corner indices + a real suit-pip field or letter treatment, red/black inks, a CSS-painted back — as a fixed-bridge-aspect display leaf that flips on faceDown and deals in on insertion.",
+      "uses": [],
+      "catalogs": [
+        "croupier"
+      ]
+    },
+    {
+      "id": "control:ui-popover",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/popover/popover.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-popover",
+      "tier": "pattern",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-progress",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/progress/progress.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-progress",
+      "tier": "display",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-radio",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/radio/radio.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-radio",
+      "tier": "indicator",
+      "description": "A single radio-button control, typically grouped inside a ui-radio-group for exclusive selection.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-radio-group",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/radio/radio-group.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-radio-group",
+      "tier": "container",
+      "description": "A form-associated container that gives its ui-radio children exclusive selection and roving-focus navigation.",
+      "uses": [
+        "ui-radio"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-ramp",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/ramp/ramp.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-ramp",
+      "tier": "display",
+      "description": "An ordered strip of color cells, each labeled with real accessible text, showing a tonal or palette series.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-rating",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/rating/rating.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-rating",
+      "tier": "indicator",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-row",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/row/row.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-row",
+      "tier": "layout",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-sandbox-frame",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/sandbox-frame/sandbox-frame.md"
+      },
+      "status": {
+        "state": "excluded",
+        "reason": "genui-surface.spec.md SPEC-N1 / PRD-G4 — PERMANENT exclusion, never catalogue-bound: the GenUI containment host is composed by @agent-ui/app into the conversation feed off the (B2) genui wire kind, never authored by an agent through A2UI's catalog-typed payload — the two modalities never render through each other (PRD §3/§6). Structurally the same \"app-owner surface, not agent-emittable content\" class as ThemeProvider/StatusStream above (the ADR-0112 cl.6 reasoning applied verbatim)."
+      },
+      "consumers": [
+        "site"
+      ],
+      "tag": "ui-sandbox-frame",
+      "tier": "container",
+      "description": "The sandboxed containment host for free-form, agent-authored HTML/CSS/JS (GenUI) — one native iframe, a closed postMessage bridge, and a fail-closed never-paint law.",
+      "uses": [],
+      "catalogs": []
+    },
+    {
+      "id": "control:ui-segment",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/segment/segment.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-segment",
+      "tier": "indicator",
+      "description": "The child button of ui-segmented-control, rendering only its label while the host supplies all geometry.",
+      "uses": [
+        "ui-radio"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-segmented-control",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/segmented-control/segmented-control.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-segmented-control",
+      "tier": "pattern",
+      "description": "A joined-button single-select toggle with one shared, animated highlight sliding between segments.",
+      "uses": [
+        "ui-radio",
+        "ui-radio-group",
+        "ui-segment"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-select",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/select/select.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-select",
+      "tier": "pattern",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-service-card",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/service-card/service-card.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-service-card",
+      "tier": "pattern",
+      "description": "The availability-stated service/agent launch card — ONE bindable boolean (available) drives the status dot, title mute, and the Open⟷Unavailable action swap together.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-slider",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/slider/slider.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-slider",
+      "tier": "indicator",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-slider-multi",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/slider-multi/slider-multi.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-slider-multi",
+      "tier": "range",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-source-list",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/source-list/source-list.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-source-list",
+      "tier": "display",
+      "description": "Source attribution as one aggregate leaf — a numbered list of {href, title, snippet?} sources, index markers assigned by array position, each entry's href gated by the fleet's safe-href scheme allowlist.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-sparkline",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/sparkline/sparkline.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-sparkline",
+      "tier": "display",
+      "description": "An inline, axis-free line or area mark that shows the shape of a numeric series at a glance.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-split",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/split/split.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-split",
+      "tier": "layout",
+      "description": "A multi-pane container with user-resizable, draggable and keyboard-adjustable dividers between panes.",
+      "uses": [
+        "ui-split-pane"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-split-pane",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/split/split-pane.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-split-pane",
+      "tier": "layout",
+      "description": "One resizable pane inside a ui-split container, with optional initial ratio, min, and max bounds.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-stat",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/stat/stat.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-stat",
+      "tier": "display",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-status-stream",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/status-stream/status-stream.md"
+      },
+      "status": {
+        "state": "excluded",
+        "reason": "ADR-0122 F5 / timeline-family.lld.md §4 — PERMANENT exclusion, never catalogue-bound: a live \"what the system is doing now\" strip driven entirely by a consumer-owned imperative API (appendEntry/update/finalize) over a stream the consumer holds — not a one-shot serializable component tree (the ADR-0112 cl.6 Toast/ToastRegion reasoning applied verbatim: an agent emits a durable Timeline snapshot instead)."
+      },
+      "consumers": [
+        "site"
+      ],
+      "tag": "ui-status-stream",
+      "tier": "pattern",
+      "description": "A live status strip that streams work-in-progress entries and tail-follows the newest arrival.",
+      "uses": [
+        "ui-button",
+        "ui-timeline",
+        "ui-timeline-item"
+      ],
+      "catalogs": []
+    },
+    {
+      "id": "control:ui-suggestions",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/suggestions/suggestions.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-suggestions",
+      "tier": "pattern",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-swatch",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/swatch/swatch.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-swatch",
+      "tier": "display",
+      "description": "A bordered color box that shows one resolved color value alongside its token name as accessible text.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-swiper",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/swiper/swiper.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-swiper",
+      "tier": "pattern",
+      "uses": [
+        "ui-swiper-item",
+        "ui-swiper-label",
+        "ui-swiper-paddles",
+        "ui-swiper-pagination"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-swiper-item",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/swiper/swiper-item.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-swiper-item",
+      "tier": "layout",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-swiper-label",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/swiper/swiper-label.md"
+      },
+      "status": {
+        "state": "excluded",
+        "reason": "ADR-0124 F5 / swiper-family.lld.md LLD-C11 — PERMANENT exclusion, same reasoning: an author-placed anchor whose light-DOM text becomes the owning ui-swiper's accessible name; an agent-emitted empty marker node carries no catalog-visible content, and the region already falls back to \"Carousel\" absent one."
+      },
+      "consumers": [
+        "site"
+      ],
+      "tag": "ui-swiper-label",
+      "tier": "display",
+      "uses": [],
+      "catalogs": []
+    },
+    {
+      "id": "control:ui-swiper-paddles",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/swiper/swiper-paddles.md"
+      },
+      "status": {
+        "state": "excluded",
+        "reason": "ADR-0124 F5 / swiper-family.lld.md LLD-C10 — PERMANENT exclusion, same reasoning as SwiperPagination: an author-placed anchor the coordinator fills with two composed prev/next ui-buttons; the [paddles] boolean stamp is the agent-reachable fallback (F3)."
+      },
+      "consumers": [
+        "site"
+      ],
+      "tag": "ui-swiper-paddles",
+      "tier": "pattern",
+      "description": "An author-placed anchor that the owning ui-swiper fills with previous/next navigation buttons.",
+      "uses": [],
+      "catalogs": []
+    },
+    {
+      "id": "control:ui-swiper-pagination",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/swiper/swiper-pagination.md"
+      },
+      "status": {
+        "state": "excluded",
+        "reason": "ADR-0124 F5 / swiper-family.lld.md LLD-C9 — PERMANENT exclusion, never catalogue-bound: an author-placed chrome anchor the owning ui-swiper fills/wires wherever it is written; an agent reaches the same dots UI via the [pagination] boolean stamp on Swiper itself (F3) — an agent-emitted anchor node would carry no content of its own (the coordinator renders every dot), pure noise (the ADR-0112 cl.6 Toast/ToastRegion reasoning applied verbatim)."
+      },
+      "consumers": [
+        "site"
+      ],
+      "tag": "ui-swiper-pagination",
+      "tier": "pattern",
+      "uses": [],
+      "catalogs": []
+    },
+    {
+      "id": "control:ui-switch",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/switch/switch.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-switch",
+      "tier": "indicator",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-table",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/table/table.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-table",
+      "tier": "display",
+      "description": "A data table with typed columns and record rows, rendered as a real native HTML table — with opt-in row selection, per-column sort, filter/search state, and pagination (all default OFF).",
+      "uses": [
+        "ui-button",
+        "ui-checkbox",
+        "ui-pagination",
+        "ui-radio"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-tabs",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/tabs/tabs.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-tabs",
+      "tier": "pattern",
+      "description": "A tab strip and panel container that switches visible content via keyboard-navigable, roving-focus tabs.",
+      "uses": [
+        "ui-menu"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-text",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/text/text.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-text",
+      "tier": "display",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-text-field",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/text-field/text-field.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-text-field",
+      "tier": "control",
+      "description": "A form-associated text input with a contenteditable surface supporting thirteen typed input variants.",
+      "uses": [
+        "ui-calendar",
+        "ui-color-picker",
+        "ui-swatch"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-textarea",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/textarea/textarea.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-textarea",
+      "tier": "control",
+      "description": "A form-associated multi-line text input with a contenteditable surface — a long-form editable primitive, and a sibling of ui-text-field, not one of its modes.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-theme-provider",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/theme-provider/theme-provider.md"
+      },
+      "status": {
+        "state": "excluded",
+        "reason": "ADR-0117 / theme-provider.spec.md SPEC-R8 — PERMANENT exclusion, never catalogue-bound: page/app-owner theming chrome establishing a color-scheme subtree, not agent-emittable content (the ADR-0112 cl.6 Toast/ToastRegion reasoning applied verbatim)."
+      },
+      "consumers": [
+        "site"
+      ],
+      "tag": "ui-theme-provider",
+      "tier": "container",
+      "description": "A coordination element that establishes a color-scheme, scale, and density subtree for its descendants.",
+      "uses": [],
+      "catalogs": []
+    },
+    {
+      "id": "control:ui-timeline",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/timeline/timeline.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-timeline",
+      "tier": "pattern",
+      "description": "A static, authored chronology of ui-timeline-item rows showing an order history or audit trail.",
+      "uses": [
+        "ui-timeline-item"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-timeline-item",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/timeline-item/timeline-item.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-timeline-item",
+      "tier": "pattern",
+      "description": "One rail row in a timeline or status stream, showing a status marker, label, timestamp, and optional detail.",
+      "uses": [
+        "ui-disclosure"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-toast",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/toast/toast.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-toast",
+      "tier": "pattern",
+      "description": "A self-expiring, non-interrupting notification card shown in the platform's top layer via ui-toast-region.",
+      "uses": [
+        "ui-button",
+        "ui-icon"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-toast-region",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/toast/toast-region.md"
+      },
+      "status": {
+        "state": "excluded",
+        "reason": "ADR-0112 cl.6 — PERMANENT exclusion, never catalogue-bound: the top-layer toast HOST driven by show() is app-surface chrome (GH #1184 catalogued Toast itself, but the region + its imperative API stay page/app-frame primitives, never a catalog row)."
+      },
+      "consumers": [
+        "site"
+      ],
+      "tag": "ui-toast-region",
+      "tier": "layout",
+      "uses": [
+        "ui-toast"
+      ],
+      "catalogs": []
+    },
+    {
+      "id": "control:ui-toggle",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/toggle/toggle.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-toggle",
+      "tier": "control",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-toolbar",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/toolbar/toolbar.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-toolbar",
+      "tier": "pattern",
+      "description": "A flex action bar that arranges the consumer's own controls with role=toolbar and arrow-key roving focus.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-tooltip",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/tooltip/tooltip.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-tooltip",
+      "tier": "pattern",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "control:ui-video",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/video/video.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-video",
+      "tier": "display",
+      "description": "A URL-sourced video player — the native <video controls> in a reserved aspect-ratio box (zero CLS), poster support, no custom chrome.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
+      "id": "corpus-shard:exemplar/a2ui-basic",
+      "kind": "corpus-shard",
+      "source": {
+        "path": "packages/agent-ui/a2ui/corpus/exemplar/v1_0/a2ui-basic.jsonl"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "corpus"
+      ],
+      "name": "exemplar/a2ui-basic",
+      "scope": "a2ui-basic",
+      "records": 4
+    },
+    {
+      "id": "corpus-shard:exemplar/agent-ui",
+      "kind": "corpus-shard",
+      "source": {
+        "path": "packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "corpus"
+      ],
+      "name": "exemplar/agent-ui",
+      "scope": "agent-ui",
+      "records": 77
+    },
+    {
+      "id": "corpus-shard:multi-turn/agent-ui",
+      "kind": "corpus-shard",
+      "source": {
+        "path": "packages/agent-ui/a2ui/corpus/multi-turn/v1_0/agent-ui.jsonl"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "corpus"
+      ],
+      "name": "multi-turn/agent-ui",
+      "scope": "agent-ui",
+      "records": 2
+    },
+    {
+      "id": "corpus-shard:repair/agent-ui",
+      "kind": "corpus-shard",
+      "source": {
+        "path": "packages/agent-ui/a2ui/corpus/repair/v1_0/agent-ui.jsonl"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "corpus"
+      ],
+      "name": "repair/agent-ui",
+      "scope": "agent-ui",
+      "records": 5
+    },
+    {
+      "id": "function:a2ui-basic/and",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "and"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "and",
+      "scope": "a2ui-basic"
+    },
+    {
+      "id": "function:a2ui-basic/email",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "email"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "email",
+      "scope": "a2ui-basic"
+    },
+    {
+      "id": "function:a2ui-basic/formatCurrency",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "formatCurrency"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "formatCurrency",
+      "scope": "a2ui-basic"
+    },
+    {
+      "id": "function:a2ui-basic/formatDate",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "formatDate"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "formatDate",
+      "scope": "a2ui-basic"
+    },
+    {
+      "id": "function:a2ui-basic/formatNumber",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "formatNumber"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "formatNumber",
+      "scope": "a2ui-basic"
+    },
+    {
+      "id": "function:a2ui-basic/formatString",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "formatString"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "formatString",
+      "scope": "a2ui-basic"
+    },
+    {
+      "id": "function:a2ui-basic/length",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "length"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "length",
+      "scope": "a2ui-basic"
+    },
+    {
+      "id": "function:a2ui-basic/not",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "not"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "not",
+      "scope": "a2ui-basic"
+    },
+    {
+      "id": "function:a2ui-basic/numeric",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "numeric"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "numeric",
+      "scope": "a2ui-basic"
+    },
+    {
+      "id": "function:a2ui-basic/or",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "or"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "or",
+      "scope": "a2ui-basic"
+    },
+    {
+      "id": "function:a2ui-basic/pluralize",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "pluralize"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "pluralize",
+      "scope": "a2ui-basic"
+    },
+    {
+      "id": "function:a2ui-basic/regex",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "regex"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "regex",
+      "scope": "a2ui-basic"
+    },
+    {
+      "id": "function:a2ui-basic/required",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "required"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "required",
+      "scope": "a2ui-basic"
+    },
+    {
+      "id": "function:agent-ui/email",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "email"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "email",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "function:agent-ui/formatCurrency",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "formatCurrency"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "formatCurrency",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "function:agent-ui/ping",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "ping"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "ping",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "function:agent-ui/regex",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "regex"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "regex",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "function:agent-ui/required",
+      "kind": "function",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "required"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "renderer"
+      ],
+      "name": "required",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "genui-pack:animated-explainers",
+      "kind": "genui-pack",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/genui-packs/animated-explainers.md"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "animated-explainers"
+    },
+    {
+      "id": "genui-pack:data-viz-layouts",
+      "kind": "genui-pack",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/genui-packs/data-viz-layouts.md"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "data-viz-layouts"
+    },
+    {
+      "id": "genui-pack:interactive-widgets",
+      "kind": "genui-pack",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/genui-packs/interactive-widgets.md"
+      },
+      "status": {
+        "state": "shipped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "interactive-widgets"
+    },
+    {
+      "id": "mini-skill:card-game-sheet",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/card-game-sheet.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "card-game-sheet",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:card-layout",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/card-layout.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "card-layout",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:comparison-table",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/comparison-table.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "comparison-table",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:crud-entry-list",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/crud-entry-list.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "crud-entry-list",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:dashboard-kpi-grid",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/dashboard-kpi-grid.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "dashboard-kpi-grid",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:feature-collection",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/feature-collection.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "feature-collection",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:form-rhythm",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/form-rhythm.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "form-rhythm",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:game-hud",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/game-hud.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "game-hud",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:game-table-chrome",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/game-table-chrome.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "game-table-chrome",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:greeting-card",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/greeting-card.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "greeting-card",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:login-form",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/login-form.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "login-form",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:master-detail-split",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/master-detail-split.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "master-detail-split",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:media-grid",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/media-grid.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "media-grid",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:nested-record-editor",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/nested-record-editor.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "nested-record-editor",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:product-presentation",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/product-presentation.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "product-presentation",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:quantity",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/quantity.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "quantity",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:settings-screen",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/settings-screen.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "settings-screen",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:structured-container",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/structured-container.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "structured-container",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:table-toolbar-pagination",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/table-toolbar-pagination.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "table-toolbar-pagination",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "mini-skill:variant-picker",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/variant-picker.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "variant-picker",
+      "scope": "agent-ui"
+    },
+    {
+      "id": "type:a2ui-basic/Button",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "Button"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Button",
+      "scope": "a2ui-basic",
+      "intents": [
+        "run an action on click"
+      ],
+      "notFor": [
+        {
+          "type": "Text",
+          "why": "static words"
+        }
+      ]
+    },
+    {
+      "id": "type:a2ui-basic/Card",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "Card"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Card",
+      "scope": "a2ui-basic",
+      "intents": [
+        "a bounded surface around one child"
+      ],
+      "notFor": [
+        {
+          "type": "Column",
+          "why": "plain stacking"
+        },
+        {
+          "type": "Divider",
+          "why": "a plain line between parts"
+        }
+      ]
+    },
+    {
+      "id": "type:a2ui-basic/CheckBox",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "CheckBox"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "CheckBox",
+      "scope": "a2ui-basic",
+      "intents": [
+        "one yes/no answer"
+      ],
+      "notFor": [
+        {
+          "type": "ChoicePicker",
+          "why": "picking among options"
+        }
+      ]
+    },
+    {
+      "id": "type:a2ui-basic/ChoicePicker",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "ChoicePicker"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "ChoicePicker",
+      "scope": "a2ui-basic",
+      "intents": [
+        "pick one or more from options"
+      ],
+      "notFor": [
+        {
+          "type": "TextField",
+          "why": "free text with no options"
+        },
+        {
+          "type": "CheckBox",
+          "why": "a single yes/no"
+        }
+      ]
+    },
+    {
+      "id": "type:a2ui-basic/Column",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "Column"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Column",
+      "scope": "a2ui-basic",
+      "intents": [
+        "stack children vertically"
+      ],
+      "notFor": [
+        {
+          "type": "Row",
+          "why": "side by side"
+        },
+        {
+          "type": "List",
+          "why": "a run of like items"
+        },
+        {
+          "type": "Card",
+          "why": "a bounded surface"
+        }
+      ]
+    },
+    {
+      "id": "type:a2ui-basic/DateTimeInput",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "DateTimeInput"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "DateTimeInput",
+      "scope": "a2ui-basic",
+      "intents": [
+        "pick a date or time"
+      ],
+      "notFor": [
+        {
+          "type": "TextField",
+          "why": "free text"
+        }
+      ]
+    },
+    {
+      "id": "type:a2ui-basic/Divider",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "Divider"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Divider",
+      "scope": "a2ui-basic",
+      "intents": [
+        "a rule between sections"
+      ],
+      "notFor": [
+        {
+          "type": "Card",
+          "why": "grouping on a surface"
+        }
+      ]
+    },
+    {
+      "id": "type:a2ui-basic/Icon",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "Icon"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Icon",
+      "scope": "a2ui-basic",
+      "intents": [
+        "a small glyph"
+      ],
+      "notFor": [
+        {
+          "type": "Image",
+          "why": "a photo or picture"
+        }
+      ]
+    },
+    {
+      "id": "type:a2ui-basic/Image",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "Image"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Image",
+      "scope": "a2ui-basic",
+      "intents": [
+        "a photo or picture"
+      ],
+      "notFor": [
+        {
+          "type": "Icon",
+          "why": "a small glyph"
+        }
+      ]
+    },
+    {
+      "id": "type:a2ui-basic/List",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "List"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "List",
+      "scope": "a2ui-basic",
+      "intents": [
+        "a run of like items"
+      ],
+      "notFor": [
+        {
+          "type": "Column",
+          "why": "mixed children"
+        }
+      ]
+    },
+    {
+      "id": "type:a2ui-basic/Row",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "Row"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Row",
+      "scope": "a2ui-basic",
+      "intents": [
+        "lay children side by side"
+      ],
+      "notFor": [
+        {
+          "type": "Column",
+          "why": "stacking vertically"
+        }
+      ]
+    },
+    {
+      "id": "type:a2ui-basic/Slider",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "Slider"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Slider",
+      "scope": "a2ui-basic",
+      "intents": [
+        "set a number by dragging"
+      ],
+      "notFor": [
+        {
+          "type": "TextField",
+          "why": "typing an exact value"
+        }
+      ]
+    },
+    {
+      "id": "type:a2ui-basic/Text",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "Text"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Text",
+      "scope": "a2ui-basic",
+      "intents": [
+        "headings, body text or captions"
+      ],
+      "notFor": [
+        {
+          "type": "Button",
+          "why": "a click that runs an action"
+        }
+      ]
+    },
+    {
+      "id": "type:a2ui-basic/TextField",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json",
+        "record": "TextField"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "TextField",
+      "scope": "a2ui-basic",
+      "intents": [
+        "typed text input"
+      ],
+      "notFor": [
+        {
+          "type": "DateTimeInput",
+          "why": "a date or time value"
+        },
+        {
+          "type": "ChoicePicker",
+          "why": "a fixed set of options"
+        },
+        {
+          "type": "Slider",
+          "why": "dragging within a range"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Attachment",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Attachment"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "artifact content, not an ask affordance (ADR-0112 LLD-C13) — revisit trigger: a real file-pick ask."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Attachment",
+      "scope": "agent-ui",
+      "tag": "ui-attachment",
+      "intents": [
+        "a file card with name and size"
+      ],
+      "notFor": [
+        {
+          "type": "SourceList",
+          "why": "cited web sources"
+        },
+        {
+          "type": "FileDrop",
+          "why": "receiving files from the user"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/AudioPlayer",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "AudioPlayer"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a URL-sourced media player (GH #1209) — display-only, no value mark, no ask affordance; the Image/Video reasoning verbatim."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "AudioPlayer",
+      "scope": "agent-ui",
+      "tag": "ui-audio",
+      "intents": [
+        "play audio"
+      ],
+      "notFor": [
+        {
+          "type": "Video",
+          "why": "picture plus sound"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Avatar",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Avatar"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Avatar",
+      "scope": "agent-ui",
+      "tag": "ui-avatar",
+      "intents": [
+        "a person or account mark"
+      ],
+      "notFor": [
+        {
+          "type": "Image",
+          "why": "a picture as content"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Badge",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Badge"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Badge",
+      "scope": "agent-ui",
+      "tag": "ui-badge",
+      "intents": [
+        "a short status label",
+        "a count"
+      ],
+      "notFor": [
+        {
+          "type": "Text",
+          "why": "a sentence"
+        },
+        {
+          "type": "Toast",
+          "why": "an outcome that fades"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/BarChart",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "BarChart"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "report content, not an ask affordance (ADR-0107 cl.8 + Amendment 2): the List/Grid dashboard-content reasoning applied to the chart family — display-only, no value mark."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "BarChart",
+      "scope": "agent-ui",
+      "tag": "ui-bar-chart",
+      "intents": [
+        "compare amounts across categories"
+      ],
+      "notFor": [
+        {
+          "type": "ColumnChart",
+          "why": "stacked series over periods"
+        },
+        {
+          "type": "PieChart",
+          "why": "shares of a whole"
+        },
+        {
+          "type": "Table",
+          "why": "exact values to scan"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Breadcrumb",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Breadcrumb"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Breadcrumb",
+      "scope": "agent-ui",
+      "tag": "ui-breadcrumb",
+      "intents": [
+        "the path to the current page"
+      ],
+      "notFor": [
+        {
+          "type": "Drill",
+          "why": "moving between levels"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Button",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Button"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Button",
+      "scope": "agent-ui",
+      "tag": "ui-button",
+      "intents": [
+        "run an action on click",
+        "submit a form"
+      ],
+      "notFor": [
+        {
+          "type": "Text",
+          "why": "navigating to a URL"
+        },
+        {
+          "type": "Toggle",
+          "why": "a pressed on/off state"
+        },
+        {
+          "type": "Suggestions",
+          "why": "tappable follow-up prompts"
+        },
+        {
+          "type": "Menu",
+          "why": "several commands in a list"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Calendar",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Calendar"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Calendar",
+      "scope": "agent-ui",
+      "tag": "ui-calendar",
+      "intents": [
+        "pick a date or date range on a grid"
+      ],
+      "notFor": [
+        {
+          "type": "TextField",
+          "why": "typing a known date"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Card",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Card"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Card",
+      "scope": "agent-ui",
+      "tag": "ui-card",
+      "intents": [
+        "a bounded surface grouping content"
+      ],
+      "notFor": [
+        {
+          "type": "Column",
+          "why": "plain stacking"
+        },
+        {
+          "type": "ServiceCard",
+          "why": "a launchable service entry"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/CardContent",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "CardContent"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "CardContent",
+      "scope": "agent-ui",
+      "tag": "ui-card-content",
+      "intents": [
+        "body of a Card"
+      ],
+      "notFor": []
+    },
+    {
+      "id": "type:agent-ui/CardFooter",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "CardFooter"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "CardFooter",
+      "scope": "agent-ui",
+      "tag": "ui-card-footer",
+      "intents": [
+        "actions at the foot of a Card"
+      ],
+      "notFor": []
+    },
+    {
+      "id": "type:agent-ui/CardHeader",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "CardHeader"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "CardHeader",
+      "scope": "agent-ui",
+      "tag": "ui-card-header",
+      "intents": [
+        "title area of a Card"
+      ],
+      "notFor": []
+    },
+    {
+      "id": "type:agent-ui/Checkbox",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Checkbox"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Checkbox",
+      "scope": "agent-ui",
+      "tag": "ui-checkbox",
+      "intents": [
+        "a yes/no answer sent with a form"
+      ],
+      "notFor": [
+        {
+          "type": "Switch",
+          "why": "a setting that applies at once"
+        },
+        {
+          "type": "RadioGroup",
+          "why": "one pick among several"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/ChoiceCard",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "ChoiceCard"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "ChoiceCard",
+      "scope": "agent-ui",
+      "tag": "ui-choice-card",
+      "intents": [
+        "one card option in a ChoiceGroup"
+      ],
+      "notFor": []
+    },
+    {
+      "id": "type:agent-ui/ChoiceGroup",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "ChoiceGroup"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "ChoiceGroup",
+      "scope": "agent-ui",
+      "tag": "ui-choice-group",
+      "intents": [
+        "pick one or more rich option cards"
+      ],
+      "notFor": [
+        {
+          "type": "RadioGroup",
+          "why": "plain text options"
+        },
+        {
+          "type": "MultiSelect",
+          "why": "many picks in a compact field"
+        },
+        {
+          "type": "Suggestions",
+          "why": "prompts that send a reply"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Code",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Code"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Code",
+      "scope": "agent-ui",
+      "tag": "ui-code",
+      "intents": [
+        "source code or raw output"
+      ],
+      "notFor": [
+        {
+          "type": "Text",
+          "why": "readable prose"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/ColorPicker",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "ColorPicker"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "an INPUT, not report/reference content (ADR-0123 cl.6) — unlike the display-only Swatch/Ramp/Ladder trio, ColorPicker DOES carry a value:{prop,event} mark, but no ask affordance admits an editor to the artifact feed; a color ask inside a chat bubble stays a TextField/ComboBox choice, not a 2-axis pad+channels composite."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "ColorPicker",
+      "scope": "agent-ui",
+      "tag": "ui-color-picker",
+      "intents": [
+        "let the user choose a color"
+      ],
+      "notFor": [
+        {
+          "type": "TextField",
+          "why": "a compact color field in a form"
+        },
+        {
+          "type": "Swatch",
+          "why": "showing a fixed color"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Column",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Column"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Column",
+      "scope": "agent-ui",
+      "tag": "ui-column",
+      "intents": [
+        "stack children vertically"
+      ],
+      "notFor": [
+        {
+          "type": "Row",
+          "why": "side by side"
+        },
+        {
+          "type": "List",
+          "why": "a run of like items"
+        },
+        {
+          "type": "Card",
+          "why": "a bounded surface"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/ColumnChart",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "ColumnChart"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "report content, not an ask affordance (ADR-0229 cl.7, GH #1568, inheriting the ADR-0107 cl.8 + Amendment 2 reasoning): the stacked/dense-series column mark is display-only, no value mark — the same chart-family class as Sparkline/BarChart/LineChart/PieChart, reaching the artifact feed via full-catalog rendering only."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "ColumnChart",
+      "scope": "agent-ui",
+      "tag": "ui-column-chart",
+      "intents": [
+        "totals per period",
+        "stacked series by category"
+      ],
+      "notFor": [
+        {
+          "type": "BarChart",
+          "why": "ranked category amounts"
+        },
+        {
+          "type": "LineChart",
+          "why": "a continuous trend"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/ComboBox",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "ComboBox"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "ComboBox",
+      "scope": "agent-ui",
+      "tag": "ui-combo-box",
+      "intents": [
+        "type to filter and pick an option"
+      ],
+      "notFor": [
+        {
+          "type": "TextField",
+          "why": "free text with no options"
+        },
+        {
+          "type": "Select",
+          "why": "picking without typing"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/DescriptionList",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "DescriptionList"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "DescriptionList",
+      "scope": "agent-ui",
+      "tag": "ui-description-list",
+      "intents": [
+        "label and value pairs",
+        "a receipt or record summary"
+      ],
+      "notFor": [
+        {
+          "type": "Table",
+          "why": "many records"
+        },
+        {
+          "type": "Stat",
+          "why": "one headline number"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Disclosure",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Disclosure"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "folding hides ask content (ADR-0113 LLD-C13) — the Tabs \"hides half the ask\" reasoning verbatim: an ask must be fully visible and operable inline."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Disclosure",
+      "scope": "agent-ui",
+      "tag": "ui-disclosure",
+      "intents": [
+        "detail hidden until expanded"
+      ],
+      "notFor": [
+        {
+          "type": "Tabs",
+          "why": "sibling panels"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Drawer",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Drawer"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "the SAME focus-stealing top-layer overlay class as Modal (ADR-0188 cl.2 — edge-docked, not centred, but equally modal) — nesting one inside a chat bubble defeats the point exactly as Modal would."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Drawer",
+      "scope": "agent-ui",
+      "tag": "ui-drawer",
+      "intents": [
+        "a panel sliding over from an edge"
+      ],
+      "notFor": [
+        {
+          "type": "Modal",
+          "why": "a centered blocking task"
+        },
+        {
+          "type": "Split",
+          "why": "panes that stay on screen"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Drill",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Drill"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "multi-view structure contradicts a single-purpose ask, taken FURTHER than Tabs (GH #1353, ADR-0195 GH #954) — an arbitrary-depth tree of which only ONE panel is ever visible; no value mark exists to commit either (Fork D1, the toggleFactory-class finding — neither controlled nor uncontrolled mode ever writes the resolved position back onto `path`)."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Drill",
+      "scope": "agent-ui",
+      "tag": "ui-drill",
+      "intents": [
+        "step into nested levels"
+      ],
+      "notFor": [
+        {
+          "type": "Tabs",
+          "why": "sibling panels"
+        },
+        {
+          "type": "Breadcrumb",
+          "why": "showing the path only"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/DrillPanel",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "DrillPanel"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a Drill child — excluded alongside its parent (composite closure)."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "DrillPanel",
+      "scope": "agent-ui",
+      "tag": "ui-drill-panel",
+      "intents": [
+        "one level inside a Drill"
+      ],
+      "notFor": []
+    },
+    {
+      "id": "type:agent-ui/Field",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Field"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Field",
+      "scope": "agent-ui",
+      "tag": "ui-field",
+      "intents": [
+        "label and help text for one control"
+      ],
+      "notFor": [
+        {
+          "type": "FormProvider",
+          "why": "grouping many fields to submit"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/FileDrop",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "FileDrop"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "FileDrop",
+      "scope": "agent-ui",
+      "tag": "ui-file-drop",
+      "intents": [
+        "upload files"
+      ],
+      "notFor": [
+        {
+          "type": "Attachment",
+          "why": "showing a file"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/FormPopover",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "FormPopover"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a disclosure overlay that escapes the bubble box — the same reason as Popover/Menu, and worse for an ask: it hides real form content behind a trigger, when an ask must be fully visible and operable inline."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "FormPopover",
+      "scope": "agent-ui",
+      "tag": "ui-form-popover",
+      "intents": [
+        "a compact form behind a button"
+      ],
+      "notFor": [
+        {
+          "type": "FormProvider",
+          "why": "a form inline on the page"
+        },
+        {
+          "type": "Popover",
+          "why": "content with no submit"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/FormProvider",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "FormProvider"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "FormProvider",
+      "scope": "agent-ui",
+      "tag": "ui-form-provider",
+      "intents": [
+        "group controls into one submittable form"
+      ],
+      "notFor": [
+        {
+          "type": "Field",
+          "why": "labeling a single control"
+        },
+        {
+          "type": "FormPopover",
+          "why": "a small form behind a button"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Gauge",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Gauge"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "report content, not an ask affordance (ADR-0229 cl.7, GH #1568, inheriting the ADR-0107 cl.8 + Amendment 2 reasoning): the multi-ring radial progress mark is display-only, no value mark (the legend rows are read-only real DOM, never a commit affordance) — the same chart-family class as its chart-family kin, reaching the artifact feed via full-catalog rendering only."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Gauge",
+      "scope": "agent-ui",
+      "tag": "ui-gauge",
+      "intents": [
+        "2 or 3 percentages around one center"
+      ],
+      "notFor": [
+        {
+          "type": "PieChart",
+          "why": "parts of one whole"
+        },
+        {
+          "type": "Stat",
+          "why": "a single metric"
+        },
+        {
+          "type": "Progress",
+          "why": "one task's completion"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Grid",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Grid"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "the auto-fit dashboard track model — the exact \"elaborate dashboard\" this policy exists to keep out of the feed."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Grid",
+      "scope": "agent-ui",
+      "tag": "ui-grid",
+      "intents": [
+        "a gallery of tiles",
+        "a dashboard of cards"
+      ],
+      "notFor": [
+        {
+          "type": "Row",
+          "why": "a fixed arrangement"
+        },
+        {
+          "type": "List",
+          "why": "a run of like items"
+        },
+        {
+          "type": "Swiper",
+          "why": "one slide at a time"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Icon",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Icon"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Icon",
+      "scope": "agent-ui",
+      "tag": "ui-icon",
+      "intents": [
+        "a small glyph"
+      ],
+      "notFor": [
+        {
+          "type": "Image",
+          "why": "a photo or picture"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Image",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Image"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a URL-sourced content image/photo (GH #1189), not an ask affordance — display-only, no value mark; the Attachment/Swatch/Ramp/Ladder report/artifact-content parity argument, NOT the Avatar/Icon light-identity-mark class (an image IS the content, unlike a small non-interactive identity mark that merely furnishes an ask card) — reaches the artifact feed via full-catalog rendering (a Card-with-hero payload), never a click-to-answer ask surface."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Image",
+      "scope": "agent-ui",
+      "tag": "ui-image",
+      "intents": [
+        "a photo or picture"
+      ],
+      "notFor": [
+        {
+          "type": "Icon",
+          "why": "a small glyph"
+        },
+        {
+          "type": "Avatar",
+          "why": "a person with fallback initials"
+        },
+        {
+          "type": "Video",
+          "why": "moving pictures"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Ladder",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Ladder"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "report/reference content, not an ask affordance (ADR-0118 cl.6, token-surfaces.lld.md LLD-C14) — the Swatch reasoning applied to labeled dimensional tiers: display-only, no value mark."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Ladder",
+      "scope": "agent-ui",
+      "tag": "ui-ladder",
+      "intents": [
+        "size or spacing tiers as bars"
+      ],
+      "notFor": [
+        {
+          "type": "Ramp",
+          "why": "color steps"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/LineChart",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "LineChart"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "report content, not an ask affordance (ADR-0205 cl.8, inheriting the ADR-0107 cl.8 + Amendment 2 reasoning): the fleet's first axis-bearing chart is display-only, no value mark — it reaches the artifact feed via full-catalog rendering, the same as its Sparkline/BarChart chart-family kin."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "LineChart",
+      "scope": "agent-ui",
+      "tag": "ui-line-chart",
+      "intents": [
+        "a trend over time with axes"
+      ],
+      "notFor": [
+        {
+          "type": "Sparkline",
+          "why": "an inline trend shape"
+        },
+        {
+          "type": "ColumnChart",
+          "why": "discrete period totals"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/List",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "List"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "homogeneous-collection semantics signal canvas-scale content; Column hosts stacked ask options instead."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "List",
+      "scope": "agent-ui",
+      "tag": "ui-list",
+      "intents": [
+        "a run of like items",
+        "search results or a feed"
+      ],
+      "notFor": [
+        {
+          "type": "Column",
+          "why": "mixed children"
+        },
+        {
+          "type": "Grid",
+          "why": "tiles that reflow"
+        },
+        {
+          "type": "Table",
+          "why": "records with columns"
+        },
+        {
+          "type": "Timeline",
+          "why": "events in time order"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Menu",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Menu"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a disclosure/hover overlay — an ask must be fully visible and operable inline, never hidden behind a trigger."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Menu",
+      "scope": "agent-ui",
+      "tag": "ui-menu",
+      "intents": [
+        "a list of commands from a trigger"
+      ],
+      "notFor": [
+        {
+          "type": "Button",
+          "why": "a single action"
+        },
+        {
+          "type": "Select",
+          "why": "a form value"
+        },
+        {
+          "type": "Popover",
+          "why": "free content"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/MenuItem",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "MenuItem"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a Menu child — excluded alongside its parent (composite closure)."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "MenuItem",
+      "scope": "agent-ui",
+      "intents": [
+        "one command in a Menu"
+      ],
+      "notFor": []
+    },
+    {
+      "id": "type:agent-ui/Modal",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Modal"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a focus-stealing overlay inside a chat bubble — the ask IS the interruption; nesting one defeats the point."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Modal",
+      "scope": "agent-ui",
+      "tag": "ui-modal",
+      "intents": [
+        "a blocking dialog or task"
+      ],
+      "notFor": [
+        {
+          "type": "Drawer",
+          "why": "a panel from an edge"
+        },
+        {
+          "type": "Popover",
+          "why": "light content by an anchor"
+        },
+        {
+          "type": "Toast",
+          "why": "a passing notice"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/MultiSelect",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "MultiSelect"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "MultiSelect",
+      "scope": "agent-ui",
+      "tag": "ui-multi-select",
+      "intents": [
+        "pick several from a list"
+      ],
+      "notFor": [
+        {
+          "type": "Select",
+          "why": "exactly one"
+        },
+        {
+          "type": "ChoiceGroup",
+          "why": "options as visible cards"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Option",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Option"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Option",
+      "scope": "agent-ui",
+      "intents": [
+        "one choice inside a Select or ComboBox"
+      ],
+      "notFor": []
+    },
+    {
+      "id": "type:agent-ui/Pagination",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Pagination"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "pagination-natured furniture is the class ADR-0111 cl.7 already names as out (ADR-0163 cl.9) — a page navigator is dashboard/canvas-scale chrome bound to a report-scale collection, not a single-purpose ask affordance; it carries a value:{prop,event} mark (the ColorPicker precedent: two-way-bindable is not itself an ask ticket) but has no standalone ask shape."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Pagination",
+      "scope": "agent-ui",
+      "tag": "ui-pagination",
+      "intents": [
+        "page through a long result set"
+      ],
+      "notFor": [
+        {
+          "type": "Table",
+          "why": "rows that page themselves"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/PieChart",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "PieChart"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "report content, not an ask affordance (ADR-0219, inheriting the ADR-0107 cl.8 + Amendment 2 reasoning): the part-of-whole mark is display-only, no value mark — the same chart-family class as Sparkline/BarChart/LineChart, reaching the artifact feed via full-catalog rendering only."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "PieChart",
+      "scope": "agent-ui",
+      "tag": "ui-pie-chart",
+      "intents": [
+        "shares of a whole"
+      ],
+      "notFor": [
+        {
+          "type": "BarChart",
+          "why": "amounts that do not sum"
+        },
+        {
+          "type": "Gauge",
+          "why": "independent percentages"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Popover",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Popover"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a disclosure overlay that escapes the bubble box — the same reason as Menu."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Popover",
+      "scope": "agent-ui",
+      "tag": "ui-popover",
+      "intents": [
+        "a click-opened panel by its anchor"
+      ],
+      "notFor": [
+        {
+          "type": "Modal",
+          "why": "a blocking task"
+        },
+        {
+          "type": "Menu",
+          "why": "a list of commands"
+        },
+        {
+          "type": "Tooltip",
+          "why": "a hover hint"
+        },
+        {
+          "type": "FormPopover",
+          "why": "a small form with submit"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Progress",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Progress"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a live indicator inside a frozen-able ask is a lying record (ADR-0112 LLD-C13) — an ask bubble may be answered long after a progress value has moved on."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Progress",
+      "scope": "agent-ui",
+      "tag": "ui-progress",
+      "intents": [
+        "how far along a task is"
+      ],
+      "notFor": [
+        {
+          "type": "Slider",
+          "why": "a value the user sets"
+        },
+        {
+          "type": "Gauge",
+          "why": "several metrics at once"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Radio",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Radio"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Radio",
+      "scope": "agent-ui",
+      "tag": "ui-radio",
+      "intents": [
+        "one option in a RadioGroup"
+      ],
+      "notFor": []
+    },
+    {
+      "id": "type:agent-ui/RadioGroup",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "RadioGroup"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "RadioGroup",
+      "scope": "agent-ui",
+      "tag": "ui-radio-group",
+      "intents": [
+        "pick one of a few visible options"
+      ],
+      "notFor": [
+        {
+          "type": "Checkbox",
+          "why": "one independent yes/no"
+        },
+        {
+          "type": "Select",
+          "why": "a long list"
+        },
+        {
+          "type": "SegmentedControl",
+          "why": "a compact mode switch"
+        },
+        {
+          "type": "ChoiceGroup",
+          "why": "options as rich cards"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Ramp",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Ramp"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "report/reference content, not an ask affordance (ADR-0118 cl.6, token-surfaces.lld.md LLD-C14) — the Swatch reasoning applied to an ordered color series: display-only, no value mark."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Ramp",
+      "scope": "agent-ui",
+      "tag": "ui-ramp",
+      "intents": [
+        "an ordered strip of colors"
+      ],
+      "notFor": [
+        {
+          "type": "Swatch",
+          "why": "one color"
+        },
+        {
+          "type": "Ladder",
+          "why": "size or spacing steps"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Rating",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Rating"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Rating",
+      "scope": "agent-ui",
+      "tag": "ui-rating",
+      "intents": [
+        "a star score"
+      ],
+      "notFor": [
+        {
+          "type": "Slider",
+          "why": "any number in a range"
+        },
+        {
+          "type": "Stat",
+          "why": "showing a metric"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Row",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Row"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Row",
+      "scope": "agent-ui",
+      "tag": "ui-row",
+      "intents": [
+        "lay children side by side"
+      ],
+      "notFor": [
+        {
+          "type": "Column",
+          "why": "stacking vertically"
+        },
+        {
+          "type": "Toolbar",
+          "why": "a bar of commands"
+        },
+        {
+          "type": "Grid",
+          "why": "tiles that reflow by width"
+        },
+        {
+          "type": "Split",
+          "why": "panes the user resizes"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Segment",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Segment"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Segment",
+      "scope": "agent-ui",
+      "tag": "ui-segment",
+      "intents": [
+        "one option in a SegmentedControl"
+      ],
+      "notFor": []
+    },
+    {
+      "id": "type:agent-ui/SegmentedControl",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "SegmentedControl"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "SegmentedControl",
+      "scope": "agent-ui",
+      "tag": "ui-segmented-control",
+      "intents": [
+        "switch a mode or view",
+        "a short one-of set as joined buttons"
+      ],
+      "notFor": [
+        {
+          "type": "Tabs",
+          "why": "panels of content"
+        },
+        {
+          "type": "RadioGroup",
+          "why": "a form list of options"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Select",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Select"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Select",
+      "scope": "agent-ui",
+      "tag": "ui-select",
+      "intents": [
+        "pick one from a long list"
+      ],
+      "notFor": [
+        {
+          "type": "RadioGroup",
+          "why": "a few options all visible"
+        },
+        {
+          "type": "ComboBox",
+          "why": "typing to filter options"
+        },
+        {
+          "type": "MultiSelect",
+          "why": "picking several"
+        },
+        {
+          "type": "Menu",
+          "why": "running commands"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/ServiceCard",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "ServiceCard"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "report/dashboard content, not an ask affordance (ADR-0224, GH #1429) — a gateway service-list card is canvas-scale report content, the Stat/Table/chart-family reasoning applied to an availability-stated launch card; its Open action does not round-trip to the server this pass (the Drill Fork D2 precedent verbatim — no catalog `action` prop maps to it, serviceCardFactory doc comment), and `available` binds forward only, so an ask embedding this card could never learn what a click resolved to."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "ServiceCard",
+      "scope": "agent-ui",
+      "tag": "ui-service-card",
+      "intents": [
+        "a service or agent to open"
+      ],
+      "notFor": [
+        {
+          "type": "Card",
+          "why": "general grouped content"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Slider",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Slider"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Slider",
+      "scope": "agent-ui",
+      "tag": "ui-slider",
+      "intents": [
+        "set a number by dragging"
+      ],
+      "notFor": [
+        {
+          "type": "SliderMulti",
+          "why": "a low and high range"
+        },
+        {
+          "type": "Rating",
+          "why": "a star score"
+        },
+        {
+          "type": "Progress",
+          "why": "read-only completion"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/SliderMulti",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "SliderMulti"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "SliderMulti",
+      "scope": "agent-ui",
+      "tag": "ui-slider-multi",
+      "intents": [
+        "pick a low and high range"
+      ],
+      "notFor": [
+        {
+          "type": "Slider",
+          "why": "a single value"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/SourceList",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "SourceList"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "SourceList",
+      "scope": "agent-ui",
+      "tag": "ui-source-list",
+      "intents": [
+        "numbered sources or citations"
+      ],
+      "notFor": [
+        {
+          "type": "Attachment",
+          "why": "a file that was produced"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Sparkline",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Sparkline"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "report content, not an ask affordance (ADR-0107 cl.8 + Amendment 2): display-only, no value mark — it reaches the artifact feed via full-catalog rendering; the ask subset stays interaction-shaped."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Sparkline",
+      "scope": "agent-ui",
+      "tag": "ui-sparkline",
+      "intents": [
+        "a tiny inline trend"
+      ],
+      "notFor": [
+        {
+          "type": "LineChart",
+          "why": "a trend with axes and labels"
+        },
+        {
+          "type": "Stat",
+          "why": "one latest value"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Split",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Split"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "app-surface/canvas-scale chrome, not a single-purpose ask affordance (ADR-0120 cl.5, app-surfaces-m4.spec.md SPEC-R6) — the Grid/List \"elaborate dashboard/canvas-scale content\" reasoning applied to a user-resizable multi-pane layout: a drag-resize affordance has no room inside a chat-bubble-sized ask surface."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Split",
+      "scope": "agent-ui",
+      "tag": "ui-split",
+      "intents": [
+        "side-by-side panes the user resizes"
+      ],
+      "notFor": [
+        {
+          "type": "Row",
+          "why": "a fixed arrangement"
+        },
+        {
+          "type": "Drawer",
+          "why": "a temporary side panel"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/SplitPane",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "SplitPane"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a Split child — excluded alongside its parent (composite closure)."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "SplitPane",
+      "scope": "agent-ui",
+      "tag": "ui-split-pane",
+      "intents": [
+        "one resizable pane in a Split"
+      ],
+      "notFor": []
+    },
+    {
+      "id": "type:agent-ui/Stat",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Stat"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "report content with no ask affordance (ADR-0111 LLD-C13) — the atomic unit of the dashboard idiom the partition exists to keep out of ask bubbles; an ask that needs a number in prose has Text."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Stat",
+      "scope": "agent-ui",
+      "tag": "ui-stat",
+      "intents": [
+        "one headline metric with its change"
+      ],
+      "notFor": [
+        {
+          "type": "Rating",
+          "why": "a score the user gives"
+        },
+        {
+          "type": "Sparkline",
+          "why": "the shape of a series"
+        },
+        {
+          "type": "Gauge",
+          "why": "several percentages"
+        },
+        {
+          "type": "DescriptionList",
+          "why": "many label-value pairs"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Suggestions",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Suggestions"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Suggestions",
+      "scope": "agent-ui",
+      "tag": "ui-suggestions",
+      "intents": [
+        "next prompts the user can tap"
+      ],
+      "notFor": [
+        {
+          "type": "Button",
+          "why": "one fixed action"
+        },
+        {
+          "type": "ChoiceGroup",
+          "why": "a choice kept as a form value"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Swatch",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Swatch"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "report/reference content, not an ask affordance (ADR-0118 cl.6, token-surfaces.lld.md LLD-C14) — display-only, no value mark; a color identity mark reaches the artifact feed via full-catalog rendering, never a click-to-answer surface."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Swatch",
+      "scope": "agent-ui",
+      "tag": "ui-swatch",
+      "intents": [
+        "show one color value"
+      ],
+      "notFor": [
+        {
+          "type": "Ramp",
+          "why": "an ordered series of colors"
+        },
+        {
+          "type": "ColorPicker",
+          "why": "letting the user choose"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Swiper",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Swiper"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a scroll-snap carousel deliberately shows one (or a few) slide(s) at a time behind pagination/paddle navigation — the Tabs \"hides half the ask\" reasoning taken further (ADR-0124 F5): an ask must be fully visible and operable inline, never paged through to be seen in full."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Swiper",
+      "scope": "agent-ui",
+      "tag": "ui-swiper",
+      "intents": [
+        "a carousel of slides"
+      ],
+      "notFor": [
+        {
+          "type": "Tabs",
+          "why": "labeled panels"
+        },
+        {
+          "type": "Grid",
+          "why": "all tiles visible"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/SwiperItem",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "SwiperItem"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a Swiper child — excluded alongside its parent (composite closure)."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "SwiperItem",
+      "scope": "agent-ui",
+      "tag": "ui-swiper-item",
+      "intents": [
+        "one slide in a Swiper"
+      ],
+      "notFor": []
+    },
+    {
+      "id": "type:agent-ui/Switch",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Switch"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "an immediate-effect idiom; asks are commit-gated, so Checkbox is the honest boolean — a Switch implies an effect that has not happened yet."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Switch",
+      "scope": "agent-ui",
+      "tag": "ui-switch",
+      "intents": [
+        "turn a setting on or off at once"
+      ],
+      "notFor": [
+        {
+          "type": "Checkbox",
+          "why": "a yes/no awaiting submit"
+        },
+        {
+          "type": "Toggle",
+          "why": "a pressed tool button"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Tab",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Tab"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a Tabs child — excluded alongside its parent (composite closure)."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Tab",
+      "scope": "agent-ui",
+      "tag": "ui-tab",
+      "intents": [
+        "the label that opens one panel"
+      ],
+      "notFor": []
+    },
+    {
+      "id": "type:agent-ui/TabPanel",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "TabPanel"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a Tabs child — excluded alongside its parent (composite closure)."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "TabPanel",
+      "scope": "agent-ui",
+      "tag": "ui-tab-panel",
+      "intents": [
+        "the content of one tab"
+      ],
+      "notFor": []
+    },
+    {
+      "id": "type:agent-ui/Table",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Table"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "dashboard/canvas-scale content (ADR-0111 LLD-C13) — the recorded List/Grid exclusion reasoning applies a fortiori to a data table."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Table",
+      "scope": "agent-ui",
+      "tag": "ui-table",
+      "intents": [
+        "rows of records with columns",
+        "sort, filter or select rows"
+      ],
+      "notFor": [
+        {
+          "type": "List",
+          "why": "items without columns"
+        },
+        {
+          "type": "BarChart",
+          "why": "comparing magnitudes"
+        },
+        {
+          "type": "DescriptionList",
+          "why": "one record's fields"
+        },
+        {
+          "type": "Pagination",
+          "why": "paging a non-table list"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Tabs",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Tabs"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "multi-view structure contradicts a single-purpose ask — it would hide half the ask behind an unclicked tab."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Tabs",
+      "scope": "agent-ui",
+      "tag": "ui-tabs",
+      "intents": [
+        "switch between labeled panels"
+      ],
+      "notFor": [
+        {
+          "type": "SegmentedControl",
+          "why": "choosing a value or mode"
+        },
+        {
+          "type": "Disclosure",
+          "why": "folding one section"
+        },
+        {
+          "type": "Drill",
+          "why": "stepping into nested levels"
+        },
+        {
+          "type": "Swiper",
+          "why": "swiping through slides"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Text",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Text"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Text",
+      "scope": "agent-ui",
+      "tag": "ui-text",
+      "intents": [
+        "headings and prose",
+        "a label or inline link"
+      ],
+      "notFor": [
+        {
+          "type": "Code",
+          "why": "verbatim source or output"
+        },
+        {
+          "type": "Button",
+          "why": "a click that runs an action"
+        },
+        {
+          "type": "Badge",
+          "why": "a compact status chip"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/TextField",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "TextField"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "TextField",
+      "scope": "agent-ui",
+      "tag": "ui-text-field",
+      "intents": [
+        "one line of typed input",
+        "email, number, money or date entry"
+      ],
+      "notFor": [
+        {
+          "type": "Textarea",
+          "why": "several lines of text"
+        },
+        {
+          "type": "Calendar",
+          "why": "picking a date on a grid"
+        },
+        {
+          "type": "ColorPicker",
+          "why": "a color as the main control"
+        },
+        {
+          "type": "ComboBox",
+          "why": "typing to filter options"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Textarea",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Textarea"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Textarea",
+      "scope": "agent-ui",
+      "tag": "ui-textarea",
+      "intents": [
+        "multi-line free text"
+      ],
+      "notFor": [
+        {
+          "type": "TextField",
+          "why": "one line or a typed value"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Timeline",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Timeline"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "report/narrative content, not an ask affordance (ADR-0122 F5) — a durable chronology (order-tracking, audit log, reasoning recap) is homogeneous-collection report content, the List/Table \"canvas-scale content\" reasoning applied to an event rail: no value mark, no commit semantics — an ask is a commit-gated question, not a narrative record."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Timeline",
+      "scope": "agent-ui",
+      "tag": "ui-timeline",
+      "intents": [
+        "events in time order",
+        "an order history or audit trail"
+      ],
+      "notFor": [
+        {
+          "type": "List",
+          "why": "items with no time order"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/TimelineItem",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "TimelineItem"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a Timeline child — excluded alongside its parent (composite closure)."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "TimelineItem",
+      "scope": "agent-ui",
+      "tag": "ui-timeline-item",
+      "intents": [
+        "one event in a Timeline"
+      ],
+      "notFor": []
+    },
+    {
+      "id": "type:agent-ui/Toast",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Toast"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a self-expiring announcement that removes itself from the DOM (GH #1184) — an ask must stay fully visible and operable until answered; ephemeral outcome content belongs on the main surface, never inside an ask card."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Toast",
+      "scope": "agent-ui",
+      "tag": "ui-toast",
+      "intents": [
+        "a brief notice that fades"
+      ],
+      "notFor": [
+        {
+          "type": "Modal",
+          "why": "something needing a decision"
+        },
+        {
+          "type": "Badge",
+          "why": "a status that persists"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Toggle",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Toggle"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "no value mark at all (GH #1352, ADR-0179 GH #686 Amendment S7-a, Fork T1 — the toggleFactory doc comment) — worse than the already-excluded Switch, which at least commits `checked` back on press. Pressing a Toggle inside an ask would flip its own local paint with no way for the agent to ever learn the outcome; an ask is commit-gated by definition, and this control has nothing to commit."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Toggle",
+      "scope": "agent-ui",
+      "tag": "ui-toggle",
+      "intents": [
+        "a pressed on/off tool button"
+      ],
+      "notFor": [
+        {
+          "type": "Button",
+          "why": "a one-shot action"
+        },
+        {
+          "type": "Switch",
+          "why": "a setting value"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Toolbar",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Toolbar"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Toolbar",
+      "scope": "agent-ui",
+      "tag": "ui-toolbar",
+      "intents": [
+        "a bar of command buttons"
+      ],
+      "notFor": [
+        {
+          "type": "Row",
+          "why": "a general arrangement"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Tooltip",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Tooltip"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a hover-disclosure overlay, not operable inline — unsuitable for a click-to-answer ask."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Tooltip",
+      "scope": "agent-ui",
+      "tag": "ui-tooltip",
+      "intents": [
+        "a hover or focus hint"
+      ],
+      "notFor": [
+        {
+          "type": "Popover",
+          "why": "interactive content"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/Video",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "Video"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a URL-sourced media player (GH #1209) — display-only, no value mark, no ask affordance; the Image reasoning verbatim (the player IS the content), reaching the artifact feed via full-catalog rendering only."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "Video",
+      "scope": "agent-ui",
+      "tag": "ui-video",
+      "intents": [
+        "play a video"
+      ],
+      "notFor": [
+        {
+          "type": "Image",
+          "why": "a still picture"
+        },
+        {
+          "type": "AudioPlayer",
+          "why": "sound only"
+        }
+      ]
+    }
+  ],
+  "personas": {
+    "concierge": [
+      {
+        "id": "fragment:concierge",
+        "kind": "fragment",
+        "source": {
+          "path": "packages/agent-ui/a2ui/src/catalog/personas/concierge/catalog.json"
+        },
+        "status": {
+          "state": "shipped"
+        },
+        "consumers": [
+          "prompt",
+          "renderer"
+        ],
+        "name": "concierge",
+        "targetCatalogs": [
+          "agent-ui",
+          "a2ui-basic"
+        ]
+      },
+      {
+        "id": "type:concierge/BookingConfirmation",
+        "kind": "type",
+        "source": {
+          "path": "packages/agent-ui/a2ui/src/catalog/personas/concierge/catalog.json",
+          "record": "BookingConfirmation"
+        },
+        "status": {
+          "state": "emittable"
+        },
+        "consumers": [
+          "prompt",
+          "renderer",
+          "eval"
+        ],
+        "name": "BookingConfirmation",
+        "scope": "concierge",
+        "intents": [
+          "confirm a completed booking"
+        ],
+        "notFor": [
+          {
+            "type": "BookingForm",
+            "why": "collecting booking details"
+          }
+        ]
+      },
+      {
+        "id": "type:concierge/BookingForm",
+        "kind": "type",
+        "source": {
+          "path": "packages/agent-ui/a2ui/src/catalog/personas/concierge/catalog.json",
+          "record": "BookingForm"
+        },
+        "status": {
+          "state": "emittable"
+        },
+        "consumers": [
+          "prompt",
+          "renderer",
+          "eval"
+        ],
+        "name": "BookingForm",
+        "scope": "concierge",
+        "intents": [
+          "collect booking details"
+        ],
+        "notFor": [
+          {
+            "type": "BookingConfirmation",
+            "why": "showing a confirmed booking"
+          },
+          {
+            "type": "TextField",
+            "why": "one loose input outside a booking"
+          }
+        ]
+      }
+    ],
+    "croupier": [
+      {
+        "id": "fragment:croupier",
+        "kind": "fragment",
+        "source": {
+          "path": "packages/agent-ui/a2ui/src/catalog/personas/croupier/catalog.json"
+        },
+        "status": {
+          "state": "shipped"
+        },
+        "consumers": [
+          "prompt",
+          "renderer"
+        ],
+        "name": "croupier",
+        "targetCatalogs": [
+          "agent-ui",
+          "a2ui-basic"
+        ]
+      },
+      {
+        "id": "type:croupier/PlayingCard",
+        "kind": "type",
+        "source": {
+          "path": "packages/agent-ui/a2ui/src/catalog/personas/croupier/catalog.json",
+          "record": "PlayingCard"
+        },
+        "status": {
+          "state": "emittable"
+        },
+        "consumers": [
+          "prompt",
+          "renderer",
+          "eval"
+        ],
+        "name": "PlayingCard",
+        "scope": "croupier",
+        "tag": "ui-playing-card",
+        "intents": [
+          "show one playing card"
+        ],
+        "notFor": [
+          {
+            "type": "Card",
+            "why": "a content surface"
+          }
+        ]
+      }
+    ],
+    "fixture-demo": [
+      {
+        "id": "fragment:fixture-demo",
+        "kind": "fragment",
+        "source": {
+          "path": "packages/agent-ui/a2ui/src/catalog/personas/fixture-demo/catalog.json"
+        },
+        "status": {
+          "state": "shipped"
+        },
+        "consumers": [
+          "prompt",
+          "renderer"
+        ],
+        "name": "fixture-demo",
+        "targetCatalogs": [
+          "agent-ui",
+          "a2ui-basic"
+        ]
+      },
+      {
+        "id": "type:fixture-demo/FixtureBanner",
+        "kind": "type",
+        "source": {
+          "path": "packages/agent-ui/a2ui/src/catalog/personas/fixture-demo/catalog.json",
+          "record": "FixtureBanner"
+        },
+        "status": {
+          "state": "emittable"
+        },
+        "consumers": [
+          "prompt",
+          "renderer",
+          "eval"
+        ],
+        "name": "FixtureBanner",
+        "scope": "fixture-demo",
+        "intents": [
+          "the demo persona banner line"
+        ],
+        "notFor": [
+          {
+            "type": "Text",
+            "why": "ordinary copy"
+          }
+        ]
+      }
+    ]
+  }
+}

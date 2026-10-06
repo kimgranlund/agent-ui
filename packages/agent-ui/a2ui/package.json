@@ -15,7 +15,8 @@
     "./agent": "./src/agent/index.ts",
     "./agent/meta-line": "./src/agent/meta-line.ts",
     "./agent/genui-line": "./src/agent/genui-line.ts",
-    "./agent/agent-transport": "./src/agent/agent-transport.ts"
+    "./agent/agent-transport": "./src/agent/agent-transport.ts",
+    "./registry": "./src/registry/index.ts"
   },
   "dependencies": {
     "@agent-ui/components": "*",

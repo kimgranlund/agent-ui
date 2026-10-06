@@ -1615,5 +1615,12 @@
     "description": "Each agent preset has one agent manifest that pins its seed, seedVersion, catalog fragment and selection sidecar, held by a drift gate",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0237",
+    "url": "./adr-index.html#adr-0237",
+    "description": "The capability registry is a derived index in @agent-ui/a2ui, composed from objects hosts already hold and projected to one committed file",
+    "level": "L3",
+    "section": "Records"
   }
 ]

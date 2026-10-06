@@ -62,7 +62,14 @@ two have no merge primitive in common (`persona-catalog-composition.spec.md` §1
    base type present in every base the fragment targets, since a base can never name persona types.
    A third catalog ships its own sidecar, or its inventory composes with no clause.
    A new persona fragment also gets a hand-written agent manifest in `site/lib/agent-manifest/`
-   (ADR-0235, proposed), or `site/lib/agent-manifest/agent-manifest.test.ts` reds.
+   (ADR-0235), or `site/lib/agent-manifest/agent-manifest.test.ts` reds.
+   The capability registry (ADR-0237) indexes all of it per catalog id: `registryViewFor(registry, id)` from
+   `@agent-ui/a2ui/registry` splits the id on the first `--` and returns the base's types plus the persona
+   fragment's, with the guidance from both sidecars. It is a derived index, never a source (ADR-0173 cl.5), so
+   a new persona fragment or catalog is registered the usual way and then picked up by
+   `npm run generate:registry`; the loader's persona list is hard-coded and a gate holds it equal to
+   `SHIPPED_PERSONA_CATALOG_MANIFESTS`. A persona type carries a derived control tag only when it is itself a
+   fleet control (`PlayingCard`); a composition such as `BookingForm` carries none.
 
 ## Citation key
 
