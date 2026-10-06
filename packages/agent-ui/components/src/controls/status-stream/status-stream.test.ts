@@ -1100,6 +1100,18 @@ describe('ui-status-stream — the per-step source reveal (GH #240/ADR-0159 wave
     el.remove()
   })
 
+  it('sourceLabel (T-0016, ADR-0159 amendment) renames the reveal summary at append time; absent or empty keeps "Source"', () => {
+    const { el } = makeStream()
+    const named = el.appendEntry({ key: 'raw', note: true, source: RAW_CREATE, sourceLabel: 'Raw output' })
+    expect((revealOf(named).disclosure as { summary?: string }).summary, 'the consumer-named summary').toBe('Raw output')
+    expect(revealOf(named).pre!.textContent, 'the pre is unchanged by the label').toBe(RAW_CREATE)
+    const empty = el.appendEntry({ key: 'b', status: 'done', label: 'Validated', source: RAW_CREATE, sourceLabel: '' })
+    expect((revealOf(empty).disclosure as { summary?: string }).summary, 'an empty label falls back').toBe('Source')
+    const plain = el.appendEntry({ key: 'c', status: 'done', label: 'Validated', source: RAW_CREATE })
+    expect((revealOf(plain).disclosure as { summary?: string }).summary, 'the default stays byte-identical').toBe('Source')
+    el.remove()
+  })
+
   it('an entry with NO source renders byte-identically — no disclosure, no pre, no reveal affordance (the negative control)', () => {
     const { el } = makeStream()
     const item = el.appendEntry({ key: 't1-open', status: 'active', label: 'Opening a new surface…' })

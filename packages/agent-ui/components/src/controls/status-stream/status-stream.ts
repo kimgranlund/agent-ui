@@ -209,6 +209,10 @@ export interface StatusEntry {
    *  path) but never creates one late (graceful no-op, never a throw). Absent ⇒ byte-identical: no
    *  disclosure, no pre, no reveal affordance at all. */
   source?: string
+  /** T-0016 (ADR-0159 amendment, proposed): the reveal disclosure's summary text for this entry's
+   *  `source`, e.g. "Raw output". A CREATION-time fact read once at appendEntry, beside `source`;
+   *  absent or empty keeps the code-owned "Source" label, so every existing entry is byte-identical. */
+  sourceLabel?: string
   /** GH #737/ADR-0184 — a PROSE NARRATION interstitial (nano-ui's "thought"): `true` at APPEND time renders
    *  the entry as a markerless narration row — the host stamps `data-note` on the item and
    *  `timeline-item.css` owns the styling in its own family file (no dot, no connector, muted ink — the
@@ -476,7 +480,7 @@ export class UIStatusStreamElement extends UIContainerElement {
     // GH #240/ADR-0159 wave B — the item is CONNECTED now (both branches above append synchronously), so
     // its anatomy has adopted the planted `[data-role="detail"]` reveal into the shared composed
     // ui-disclosure; label its summary ("Source"). A source-less entry composed no disclosure — no-op.
-    if (entry.source !== undefined && entry.source !== '') this.#labelSourceDisclosure(item)
+    if (entry.source !== undefined && entry.source !== '') this.#labelSourceDisclosure(item, entry.sourceLabel)
 
     // GH #147/ADR-0153 Fork 1/2 — routing facts consumed HERE, never projected onto the item by `#assign`
     // (the `parent` precedent). Both are keyed side-registries so a later `update()` reaches them identically.
@@ -698,10 +702,10 @@ export class UIStatusStreamElement extends UIContainerElement {
   /** Label the freshly-composed reveal disclosure's summary (`Source`) — runs right after `appendEntry`
    *  connects the item (the item's anatomy builds synchronously at connect, so the shared disclosure
    *  exists by now). Fills only an EMPTY summary — a disclosure already carrying a label is never
-   *  overwritten. */
-  #labelSourceDisclosure(item: UITimelineItemElement): void {
+   *  overwritten. T-0016: a non-empty `label` (the entry's own `sourceLabel`) replaces the default. */
+  #labelSourceDisclosure(item: UITimelineItemElement, label?: string): void {
     const disclosure = item.querySelector(':scope > [data-part="detail"]') as UIDisclosureElement | null
-    if (disclosure && disclosure.summary === '') disclosure.summary = SOURCE_SUMMARY_LABEL
+    if (disclosure && disclosure.summary === '') disclosure.summary = label || SOURCE_SUMMARY_LABEL // '' and undefined both fall back
   }
 
   /** ADR-0146 F5 — the once-per-parent nested `<ui-timeline>` host, composed into the parent item's shared
