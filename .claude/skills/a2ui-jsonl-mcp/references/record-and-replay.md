@@ -38,10 +38,14 @@ Source: `packages/agent-ui/devtools/src/` : `timeline/events.ts` (`recordTurn`, 
   latched from the meta trace's `trace.usage`, ADR-0234); the capture version stays 1.
 - A capture is a versioned, parse-checked artifact (`DEVTOOLS_CAPTURE_KIND`,
   `DEVTOOLS_CAPTURE_VERSION`); `parseCapture` throws a typed `CaptureParseError`.
-- `capturedLineTimelines(capture)` extracts only the `line` events, per turn.
-  `replayTransport(capture)` and `scriptTransport(timelines)` replay those. Meta events are NOT
-  replayed. A replay of a captured real turn therefore has no leading meta-line unless a caller
-  re-composes one.
+- `capturedLineTimelines(capture)` extracts each turn's wire lines: a `line` event's payload
+  verbatim, and a `meta` event as the meta-line `{"a2uiMeta": <meta>}`, interleaved in capture
+  order (ADR-0239, proposed; before it, only `line` events replayed). `replayTransport(capture)`
+  and `scriptTransport(timelines)` replay those. The whole payload is re-emitted, so every arm in
+  `meta-line.ts` replays: `note`, `ask`, `plan`, `personaPatch`, `flowEnd`, `team`, `target`,
+  `trace`, `progress`, `error`. A replayed meta-line is equivalent under `readMetaLine`, not
+  byte-identical to the original wire line (`recordTurn` keeps only the parsed payload), and
+  `render`/`client` events never replay. A capture with no meta events replays only its lines.
 - Replay has zero I/O, zero timers, zero randomness: lines yield on the microtask queue only, so
   playback is byte-identical and swapping replay for a live transport is a one-construction-site
   edit (the unchanged `AgentTransport` seam, ADR-0137).
@@ -53,8 +57,8 @@ Source: `packages/agent-ui/devtools/src/` : `timeline/events.ts` (`recordTurn`, 
 | Need | Use |
 |---|---|
 | Keyless demo, or a UI test that wants a note and an ask | `createRecordedTransport` |
-| Reproduce a real captured turn, line for line, in CI | devtools `replayTransport` |
-| A turn that must carry `target`, `flowEnd`, `team` or `personaPatch` | neither carries them; feed the line directly to the consumer, or extend `RecordedTurn` (a build task, `a2ui-build`) |
+| Reproduce a real captured turn, line and meta-line, in CI | devtools `replayTransport` |
+| A turn that must carry `target`, `flowEnd`, `team` or `personaPatch` | devtools `replayTransport` over a capture that recorded them; `createRecordedTransport` cannot, so feed the line directly to the consumer, or extend `RecordedTurn` (a build task, `a2ui-build`) |
 
 The devtools package is a leaf: nothing imports it, and no key, provider or `produce()` ever
 enters it (ADR-0200, the ADR-0073 trust boundary stays at `/__a2ui/agent`).

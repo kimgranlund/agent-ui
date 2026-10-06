@@ -41,11 +41,19 @@ export function scriptTransport(timelines: ReadonlyArray<readonly string[]>): Ag
 }
 
 /**
- * Extract a capture's per-turn `line` payloads (SPEC-R3): one `string[]` per recorded turn, bracketed
- * by the timeline's `turn-start`/`turn-end` events, in `seq` order. Only `line` events replay —
- * `meta`/`render`/`client` events are observations ABOUT the wire, not the wire itself (the SPEC-R10
- * AC1 round-trip law is over the `line` sequence). A trailing unterminated bracket (a capture cut
- * mid-turn) still contributes its lines — liberal in what it accepts, deterministic in what it yields.
+ * Extract a capture's per-turn wire lines (SPEC-R3, ADR-0239): one `string[]` per recorded turn,
+ * bracketed by the timeline's `turn-start`/`turn-end` events, in `seq` order. The wire is two event
+ * kinds: a `line` event replays its payload verbatim, and a `meta` event replays as the NDJSON
+ * meta-line `{"a2uiMeta": <meta>}`, interleaved with the `line` events exactly where `recordTurn` saw it.
+ * `recordTurn` kept only the parsed payload of a meta-line, so the replayed meta-line is equivalent
+ * under `readMetaLine` (the same arms and values), not necessarily byte-identical to the original wire
+ * line (key order follows `readMetaLine`; an arm member `readMetaLine` normalizes stays normalized).
+ * The whole payload is re-emitted, never a hand-kept arm list, so the replay tracks the producer's
+ * closed `a2uiMeta` vocabulary (`a2ui/agent/meta-line`) as it grows. `render`/`client` events are
+ * observations ABOUT the wire (browser truth, injected input), never the wire, and never replay. A
+ * trailing unterminated bracket (a capture cut mid-turn) still contributes its lines: liberal in what
+ * it accepts, deterministic in what it yields. A capture with no `meta` events yields exactly its
+ * `line` payloads, as before.
  */
 export function capturedLineTimelines(capture: DevtoolsCapture): string[][] {
   const turns: string[][] = []
@@ -53,6 +61,7 @@ export function capturedLineTimelines(capture: DevtoolsCapture): string[][] {
   for (const event of capture.timeline) {
     if (event.kind === 'turn-start') current = []
     else if (event.kind === 'line') (current ??= []).push(event.line)
+    else if (event.kind === 'meta') (current ??= []).push(JSON.stringify({ a2uiMeta: event.meta }))
     else if (event.kind === 'turn-end' && current !== undefined) {
       turns.push(current)
       current = undefined
@@ -63,8 +72,9 @@ export function capturedLineTimelines(capture: DevtoolsCapture): string[][] {
 }
 
 /**
- * Replay a persisted capture (SPEC-R3): `turn()` call N yields capture turn N's `line` events'
- * payloads, byte-identical run over run (AC1). Exhaustion behaves exactly as `scriptTransport`'s (AC2).
+ * Replay a persisted capture (SPEC-R3): `turn()` call N yields capture turn N's wire lines (its `line`
+ * payloads verbatim plus its `meta` events as meta-lines, in capture order), byte-identical run over
+ * run (AC1). Exhaustion behaves exactly as `scriptTransport`'s (AC2).
  */
 export function replayTransport(capture: DevtoolsCapture): AgentTransport {
   return scriptTransport(capturedLineTimelines(capture))

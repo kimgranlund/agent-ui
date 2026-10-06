@@ -29,7 +29,7 @@
     {
       "id": "t06",
       "expect": "trigger",
-      "prompt": "How do I replay a captured real turn deterministically in CI, and why does the replay have no leading note?"
+      "prompt": "How do I replay a captured real turn deterministically in CI, and does the replay carry the leading note and the other meta-lines?"
     },
     {
       "id": "t07",

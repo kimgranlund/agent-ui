@@ -1636,5 +1636,12 @@
     "description": "A persona may declare semantic checks that produce() runs after structural validation, feeding the existing repair round",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0239",
+    "url": "./adr-index.html#adr-0239",
+    "description": "A devtools capture replays its meta events as meta-lines, in order, widening the line-only replay law",
+    "level": "L3",
+    "section": "Records"
   }
 ]

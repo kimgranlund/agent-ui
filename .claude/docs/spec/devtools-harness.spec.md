@@ -6,6 +6,8 @@
 > Status: proposed · v0.1 (skeleton — enough for build slices to cite; rows harden as slices land) · 2026-08-17 · Layer: SPEC (execution contract)
 > Refines: GH #1122 (Kim's Rulings comment, 2026-08-17 — the four ruled forks) under
 > [ADR-0200](../adr/0200-agent-ui-devtools-package.md) (the package mint + seam contract, proposed).
+> Amended 2026-10-06 (T-0018): R3, R7, R10 and the N1 note, under [ADR-0239](../adr/0239-devtools-capture-replay-carries-meta-lines.md)
+> (proposed): a capture replay also carries its `meta` events as meta-lines.
 > **No owning PRD** — a dev-tooling capability scoped entirely by its own issue + rulings (the
 > site-command-search precedent for a single issue-scoped surface with no family PRD); the why/what
 > lives in #1122 and ADR-0200's Context.
@@ -68,11 +70,20 @@ available(): Promise<boolean> }`.
 ### R3 — the scripted/replay transport (deterministic; CI backbone + fixture source)
 
 **SPEC-R3.** `replayTransport(capture: DevtoolsCapture)` replays the capture's assistant turns:
-`turn()` call N yields capture turn N's `line` events' payloads, in order. `scriptTransport(timelines:
-string[][])` does the same over inline canned line arrays. Zero I/O, zero timers, zero randomness.
+`turn()` call N yields capture turn N's wire lines, in `seq` order: each `line` event's payload verbatim, and
+each `meta` event as the NDJSON meta-line `{"a2uiMeta": <meta>}` at the position `recordTurn` saw it (ADR-0239).
+The whole `meta` payload is re-emitted, so the replay follows the closed `a2uiMeta` arm vocabulary
+(`a2ui/src/agent/meta-line.ts`) with no arm list of its own. `render` and `client` events never replay.
+`scriptTransport(timelines: string[][])` does the same over inline canned line arrays. Zero I/O, zero timers,
+zero randomness.
 - **AC1:** two runs over the same capture yield byte-identical line sequences.
 - **AC2:** call N+1 past the last recorded turn yields one terminal `a2uiMeta` error line (the
   recorded-transcript-exhausted idiom) rather than hanging or throwing.
+- **AC3:** a capture whose turn holds a `meta` event for every arm replays each as a meta-line that
+  `readMetaLine` parses back to the event's payload, interleaved with the `line` events in capture order; a
+  capture with no `meta` events replays exactly its `line` payloads. The replayed meta-line is equivalent under
+  `readMetaLine`, not necessarily byte-identical to the original wire line (`recordTurn` keeps only the parsed
+  payload).
 
 ### R4 — the live/proxy transport
 
@@ -114,7 +125,7 @@ timeline · `GET /captures` → the capture index · `POST /captures` (a `Devtoo
 
 **SPEC-R7.** One JSON object per line; envelope `{ seq: number, at: string, kind }`; `seq` contiguous
 from 0 per timeline. Kinds: `turn-start` `{input, backend}` · `line` `{line}` (one raw emitted A2UI JSONL
-line, verbatim) · `meta` `{meta}` (a parsed `a2uiMeta` line — progress/error — routed distinctly, absent
+line, verbatim) · `meta` `{meta}` (a parsed `a2uiMeta` line, any arm of the closed vocabulary, routed distinctly, absent
 from `line`) · `client` `{message}` (an injected client message that becomes a follow-up turn) · `render`
 `{surfaceId, ok, error?}` (browser-truth only — see R9) · `turn-end` `{status, lines, ms, usage?}`
 (`status` is `'ok'|'error'|'halt'`; the optional `usage` is the provider-billed `TokenUsage` latched from
@@ -157,10 +168,12 @@ session: Session, timeline: DevtoolsEvent[] }`. The agent-admin debug bundle (GH
 `files.captures?: string[]`; `DEBUG_BUNDLE_VERSION` stays 1 (optional, ignorable addition — the manifest's
 own bump rule).
 - **AC1:** round-trip: harness export → `parseCapture` → `replayTransport` replays a byte-identical `line`
-  sequence.
+  sequence, with the capture's `meta` events re-emitted as meta-lines between them (R3 AC3).
 - **AC2:** every pre-existing `agent-admin-debug-export` test passes unchanged with the extension in place
   (the additive proof); a v1 bundle WITHOUT captures parses with the field absent, never a throw.
 - **AC3:** malformed capture JSON → a typed parse error naming the offending field.
+- **AC4:** round-trip over the timeline: `recordTurn` → `replayTransport` → `recordTurn` yields the same `line`
+  and `meta` events in the same order, the same `turn-end.status` and the same `usage`.
 
 ### R11 — the Playwright helper contract
 
@@ -186,9 +199,10 @@ page; the roadmap row moves on ship.
 
   > **Note (non-normative, 2026-10-05, T-0010):** `scripts/e2e-admin` is a consumer-side runner of this
   > kind: it drives the agent-admin app in headless Chromium, local only with no CI job. Known gap:
-  > `capturedLineTimelines` replays only `line` events, while `recordTurn` moves meta-lines into `meta`
-  > events, so a capture loses note, ask, patch, plan, team and flowEnd lines. Admin fixtures therefore
-  > carry raw wire lines. Meta replay is a follow-up that would amend R3/R10, not part of T-0010.
+  > `capturedLineTimelines` replayed only `line` events, while `recordTurn` moves meta-lines into `meta`
+  > events, so a capture lost its note, ask, patch, plan, team and flowEnd lines, and admin fixtures
+  > carry raw wire lines. T-0018 closed the gap under ADR-0239: R3 and R10 now replay `meta`
+  > events as meta-lines. Raw wire lines in a fixture remain lawful.
 - **SPEC-N2** — NOT CI infrastructure: no workflows, no shard changes beyond adopting the one smoke spec.
 - **SPEC-N3** — NO key handling, provider adapters, or `produce()` in this package; NO production mount for
   the seam (`apply: 'serve'` only). The trust boundary stays at `/__a2ui/agent` (ADR-0073/ADR-0152).

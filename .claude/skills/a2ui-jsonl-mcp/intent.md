@@ -23,8 +23,8 @@ already exists; this is knowledge it and the payload seat consult). Knowledge on
   first line is treated as peeled (it is not; heal gives it a `version` and validate rejects it);
   per-line heal's "changed" is read as "corrected" (it always reports `single-object-envelope`);
   a malformed arm is assumed to kill the line (only `note` and `trace` do); a recording is assumed
-  to carry every arm (it carries four); devtools replay is assumed to re-emit meta (it replays
-  `line` events only).
+  to carry every arm (it carries four); devtools replay is assumed to drop meta (it re-emits each
+  captured `meta` event as a meta-line, equivalent under `readMetaLine`, ADR-0239).
 - Species: knowledge, a pattern map that cites code by symbol.
 - Dials: `user-invocable: false`, `disable-model-invocation: false` (a model-only router, the
   `a2ui-multi-catalog` posture).
