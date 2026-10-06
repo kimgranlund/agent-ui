@@ -57,6 +57,11 @@ crawl is `src/descriptor/control-graph.ts` (`deriveUses`), shared by the codemod
 non-`ui-` item, a duplicate, the own tag) as `BAD_USES`. `generate-props.ts` reads only `tag` and
 `attributes`, so `uses` never moves a `{name}.props.gen.ts`.
 
+A family descriptor whose entry module also self-defines sub-element tags (card, tabs, drill) adds an
+optional `defines:` block after `uses:`, same grammar (`BAD_DEFINES`). Unlike `uses` it is hand-declared and
+held equal to the module graph by `src/controls/defines-driftwire.test.ts` (`deriveDefines`); run
+`node scripts/generate-controls.mjs` after editing it. It moves no `{name}.props.gen.ts` either.
+
 ## The 7-control bespoke-codec allowlist (seed population, drains via `codec:`)
 
 `table`, `bar-chart`, `sparkline`, `stat`, `sandbox-frame`, `ladder`, `ramp` — each has at least one

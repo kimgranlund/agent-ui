@@ -69,6 +69,24 @@ describe('controls-gen-driftwire: CONTROLS through the package specifier', () =>
       expect(record.tag).toBe(e.tag)
       expect(record.css).toBe(`./${e.folder}/${e.name}.css`)
       expect(record.uses).toEqual(e.uses)
+      expect(record.defines ?? []).toEqual(e.defines ?? [])
+    }
+  })
+
+  it('exactly the three families carry defines, listing the six sub-element tags', () => {
+    const families = Object.values(CONTROLS).filter((r) => r.defines !== undefined)
+    expect(Object.fromEntries(families.map((r) => [r.tag, r.defines]))).toEqual({
+      'ui-card': ['ui-card-content', 'ui-card-footer', 'ui-card-header'],
+      'ui-drill': ['ui-drill-panel'],
+      'ui-tabs': ['ui-tab', 'ui-tab-panel'],
+    })
+  })
+
+  it('loading a family record defines every sub-element tag it lists (an alias load is not a no-op)', async () => {
+    for (const record of Object.values(CONTROLS)) {
+      if (record.defines === undefined) continue
+      await record.load()
+      for (const sub of record.defines) expect(customElements.get(sub), `${record.tag} should define ${sub}`).toBeDefined()
     }
   })
 
@@ -110,6 +128,28 @@ describe('controls-gen-driftwire: negative controls (the drift check bites)', ()
       GENERATED_FILES.allCss,
       'package.json',
     ])
+  })
+
+  // The defines half of the gate: a sub-element tag is written into registry.gen.ts only by regeneration.
+  const regeneratedWithCard = (edit: (md: string) => string): ReturnType<typeof generateControls> => {
+    const edited: ControlsReader = (p) => (p === 'card/card.md' ? edit(readControls(p) as string) : readControls(p))
+    return generateControls(controlsGenEntries(fleetFromDescriptors(mdPaths, edited), edited))
+  }
+
+  it('a sub-element added to a descriptor without regenerating is caught', () => {
+    const regenerated = regeneratedWithCard((md) => md.replace('  - ui-card-header\n', '  - ui-card-header\n  - ui-card-media\n'))
+    expect(regenerated.registry).toContain("defines: ['ui-card-content', 'ui-card-footer', 'ui-card-header', 'ui-card-media']")
+    expect(staleControlsArtifacts(inSync, regenerated)).toEqual([GENERATED_FILES.registry])
+  })
+
+  it('a sub-element dropped from a descriptor without regenerating is caught', () => {
+    const regenerated = regeneratedWithCard((md) => md.replace('  - ui-card-footer\n', ''))
+    expect(staleControlsArtifacts(inSync, regenerated)).toEqual([GENERATED_FILES.registry])
+  })
+
+  it('a hand edit of the defines list in registry.gen.ts is caught', () => {
+    const edited: PackageReader = (p) => (p === GENERATED_FILES.registry ? inSync(p)?.replace("defines: ['ui-drill-panel']", 'defines: []') : inSync(p))
+    expect(staleControlsArtifacts(edited, GENERATED)).toEqual([GENERATED_FILES.registry])
   })
 
   it('a removed export key is caught', () => {

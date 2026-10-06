@@ -10,28 +10,19 @@
 //
 // A few factory tags are sub-elements their family's entry module defines on import (`ui-card` defines
 // its three regions, `ui-tabs` its tab and panel, `ui-drill` its panel). The generated registry holds one
-// record per descriptor, so `BUILTIN_CONTROL_RECORDS` adds an alias record per sub-tag that loads the
-// family module. `builtin-controls.test.ts` fails when a shipped factory tag has no record here.
+// record per descriptor and lists such a family's sub-tags in the record's `defines` (the descriptor's
+// `defines:` block, ADR-0233), so `BUILTIN_CONTROL_RECORDS` adds an alias record per declared sub-tag that
+// loads the family module. `builtin-controls.test.ts` fails when a shipped factory tag has no record here.
 
 import { CONTROLS } from '@agent-ui/components/registry'
 import { createControlLoader } from '@agent-ui/components/loader'
 import type { ControlLoader, ControlRecord } from '@agent-ui/components/loader'
 
-/** Sub-element tag → the fleet tag whose entry module defines it on import. */
-const SUB_TAGS: Readonly<Record<string, string>> = {
-  'ui-card-content': 'ui-card',
-  'ui-card-footer': 'ui-card',
-  'ui-card-header': 'ui-card',
-  'ui-drill-panel': 'ui-drill',
-  'ui-tab': 'ui-tabs',
-  'ui-tab-panel': 'ui-tabs',
-}
-
-function withSubTags(records: Readonly<Record<string, ControlRecord>>): Readonly<Record<string, ControlRecord>> {
+/** `records` plus one alias record per `defines` sub-tag, each loading the family module that defines it. */
+export function withSubTags(records: Readonly<Record<string, ControlRecord>>): Readonly<Record<string, ControlRecord>> {
   const out: Record<string, ControlRecord> = { ...records }
-  for (const [tag, family] of Object.entries(SUB_TAGS)) {
-    const record = records[family]
-    if (record !== undefined) out[tag] = { tag, load: record.load }
+  for (const record of Object.values(records)) {
+    for (const tag of record.defines ?? []) out[tag] = { tag, load: record.load }
   }
   return out
 }

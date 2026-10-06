@@ -6,10 +6,11 @@
 //
 // The fleet is every `controls/{folder}/{name}.md` whose folder is not `_`-prefixed (the codemod-uses.mjs
 // discovery); each control's `uses` is read from its descriptor with the descriptor parser, so run
-// `node scripts/codemod-uses.mjs` first when an import changed.
+// `node scripts/codemod-uses.mjs` first when an import changed. A family descriptor's optional `defines:` block
+// (the sub-element tags its entry module also self-defines) is read the same way and written onto its record.
 //
 // Writes, under packages/agent-ui/components:
-//   src/controls/registry.gen.ts   CONTROLS: one lazy record per tag
+//   src/controls/registry.gen.ts   CONTROLS: one lazy record per tag (+ `defines` on a family record)
 //   src/all.gen.ts                 DEMO-ONLY: every control entry module
 //   src/all.gen.css                DEMO-ONLY: the seam sheet, then every control sheet
 //   package.json                   `exports`: stale `./controls/*` keys dropped, `./controls/{name}`,

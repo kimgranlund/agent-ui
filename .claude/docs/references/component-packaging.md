@@ -59,6 +59,16 @@ out-of-sync file). The schema rejects a malformed block as `BAD_USES`, and `src/
 holds every declared list equal to the import graph. The field is optional in the schema, so app descriptors
 validate without it.
 
+**The `defines:` field names a family's sub-elements** ([`ADR-0233`](../adr/0233-per-control-entries-and-generated-control-registry.md)).
+A family entry module that self-defines tags besides its own (`ui-card` and its three regions, `ui-tabs` and
+its tab and panel, `ui-drill` and its panel) lists them in an optional `defines:` block after `uses:`, same
+grammar (`BAD_DEFINES`), sorted. It is the one hand-declared list: `src/controls/defines-driftwire.test.ts`
+holds it equal to the `customElements.define` literals in the modules the entry reaches
+(`deriveDefines` in `src/descriptor/control-graph.ts`), so a new region module reds until the parent
+descriptor names it. `node scripts/generate-controls.mjs` then writes the list onto the family's record in
+`registry.gen.ts` (`ControlRecord.defines`); the A2UI built-in loader serves each listed tag as an alias that
+loads the family module. A sub-element has no descriptor and no record of its own.
+
 **A sheet carries its `uses` too: the prologue rule.** The same codemod writes the CSS half. A sheet
 `{folder}/{name}.css` whose `uses` is non-empty opens, before its first non-comment token, with one marker
 comment (`/* uses: synced from {name}.md by scripts/codemod-uses.mjs */`) and then one relative import per

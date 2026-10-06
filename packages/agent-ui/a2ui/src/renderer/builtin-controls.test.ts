@@ -12,7 +12,9 @@ import { createRenderer } from './renderer.ts'
 import type { A2uiClientMessage, RendererHost } from './renderer.ts'
 import type { A2uiServerMessage } from '../protocol.ts'
 import { Registry } from '../catalog/registry.ts'
-import { BUILTIN_CONTROL_RECORDS, builtinControls } from '../catalog/controls.ts'
+import { BUILTIN_CONTROL_RECORDS, builtinControls, withSubTags } from '../catalog/controls.ts'
+import { CONTROLS } from '@agent-ui/components/registry'
+import type { ControlRecord } from '@agent-ui/components/loader'
 import { composeControlLoaders } from '../catalog/compose.ts'
 import { factoriesOf } from '../catalog/variant.ts'
 import { defaultFactories } from '../catalog/default/factories.ts'
@@ -165,13 +167,42 @@ const MODULES: ReadonlyArray<readonly [string, Table]> = [
   ...SHIPPED_PERSONA_CATALOGS.map((p) => [`${CATALOG}/personas/${p.personaId}/factories.ts`, p.factories as Table] as const),
 ]
 
+const personaRecords = new Set(SHIPPED_PERSONA_CATALOGS.flatMap((p) => (p.controls ?? []).map((r) => r.tag)))
+const factoryControlTags = new Set(MODULES.flatMap(([, table]) => tagsOf(table)).filter(isControlTag))
+
+/** Every custom-element tag a shipped factory names that neither `records` nor a persona's own records serve. */
+const missingRecords = (records: Readonly<Record<string, ControlRecord>>): string[] =>
+  [...factoryControlTags].filter((tag) => !Object.hasOwn(records, tag) && !personaRecords.has(tag)).sort()
+
+/** The six sub-element tags the default catalog's Card, Tabs and Drill factories mint, with no record of their own. */
+const SUB_ELEMENT_TAGS = ['ui-card-content', 'ui-card-footer', 'ui-card-header', 'ui-drill-panel', 'ui-tab', 'ui-tab-panel']
+
 describe('guards: the built-in loader can define every control a shipped factory creates', () => {
   it('every custom-element tag a shipped factory names (tag or uses, every variant arm) has a record', () => {
-    const personaRecords = new Set(SHIPPED_PERSONA_CATALOGS.flatMap((p) => (p.controls ?? []).map((r) => r.tag)))
-    const tags = new Set(MODULES.flatMap(([, table]) => tagsOf(table)).filter(isControlTag))
-    expect(tags.size).toBeGreaterThan(50) // anti-vacuous
-    const missing = [...tags].filter((tag) => !Object.hasOwn(BUILTIN_CONTROL_RECORDS, tag) && !personaRecords.has(tag))
-    expect(missing).toEqual([])
+    expect(factoryControlTags.size).toBeGreaterThan(50) // anti-vacuous
+    expect(missingRecords(BUILTIN_CONTROL_RECORDS)).toEqual([])
+  })
+
+  it('the sub-element aliases come from the generated registry: each loads its family and the family defines it', async () => {
+    for (const tag of SUB_ELEMENT_TAGS) {
+      expect(factoryControlTags.has(tag), `${tag} should be a shipped factory tag`).toBe(true)
+      expect(Object.hasOwn(CONTROLS, tag), `${tag} must have no record of its own in CONTROLS`).toBe(false)
+      expect(BUILTIN_CONTROL_RECORDS[tag]?.tag).toBe(tag)
+    }
+    await builtinControls.ensure(SUB_ELEMENT_TAGS)
+    for (const tag of SUB_ELEMENT_TAGS) expect(customElements.get(tag), tag).toBeDefined()
+  })
+
+  it('negative control: without the generated defines the six sub-element tags have no record and the guard reds', () => {
+    expect(missingRecords(CONTROLS)).toEqual(SUB_ELEMENT_TAGS)
+    const stripped = Object.fromEntries(Object.entries(CONTROLS).map(([tag, { defines: _defines, ...record }]) => [tag, record as ControlRecord]))
+    expect(missingRecords(withSubTags(stripped))).toEqual(SUB_ELEMENT_TAGS)
+    expect(missingRecords(withSubTags(CONTROLS))).toEqual([])
+  })
+
+  it('negative control: one sub-tag dropped from its family record reds only that tag', () => {
+    const dropped = { ...CONTROLS, 'ui-tabs': { ...CONTROLS['ui-tabs']!, defines: ['ui-tab'] } }
+    expect(missingRecords(withSubTags(dropped))).toEqual(['ui-tab-panel'])
   })
 
   it('every ui-* tag a factory module mints with createElement is named by one of its factories', () => {

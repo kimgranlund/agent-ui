@@ -10,6 +10,10 @@ tag: ui-card
 tier: container         # geometry size-class (Container/layout band — spacing off --md-sys-space × density, NO control height; geometry.md)
 extends: UIContainerElement  # the FACE container surface base (NOT form-associated; ADR-0015 / ADR-0016)
 uses: []
+defines:               # the region sub-elements card.ts self-defines on import besides ui-card; held equal to the module graph by defines-driftwire.test.ts, emitted into registry.gen.ts for the A2UI built-in loader (ADR-0233)
+  - ui-card-content
+  - ui-card-footer
+  - ui-card-header
 # marginal: ui-card adds 146 B gz (723 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — the card family: ui-card + ui-card-header/-content/-footer) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:            # attributes-as-API — mirrors card.ts `static props` (the surfaceProps spread + the `scrollable` scroll-mode signal; NO flexProps — a card is a block-flow surface, and the scroll viewport itself in scroll mode)

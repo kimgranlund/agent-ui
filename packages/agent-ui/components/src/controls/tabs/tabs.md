@@ -13,6 +13,9 @@ tier: pattern          # geometry size-class — geometry.md "Pattern" (containe
 extends: UIContainerElement  # the FIRST non-form family — surface axes + reused internals (ARIA); NOT form-associated (face below). NOTE: UIContainerElement enters the descriptor BASE_CLASSES at decomp s12 (integration) — until then validateComponentDescriptor flags BAD_EXTENDS, filtered in tabs-descriptor.test.ts
 uses:
   - ui-menu
+defines:               # the tab and panel sub-elements tabs.ts self-defines on import besides ui-tabs; held equal to the module graph by defines-driftwire.test.ts, emitted into registry.gen.ts for the A2UI built-in loader (ADR-0233)
+  - ui-tab
+  - ui-tab-panel
 # marginal: ui-tabs measures 1421 B gz (re-measured post the overflow-menu build) at the components-barrel LEAVE-ONE-OUT tier — the delta of `npm run size`'s components barrel WITH vs. WITHOUT this control's export, tree-shaken (the tabs compound: ui-tabs + ui-tab + ui-tab-panel, now also composing the shipped `ui-menu` overflow part). Within the per-control ≤ ~2 kB tier budget (plan §10) at THIS tier.
 #
 # RULED 2026-08-08 (Kim, in-session; durable record: https://github.com/kimgranlund/agent-ui/issues/586#issuecomment-5223777160): the `@agent-ui/app` curated bundle (super-shell+master-detail+settings+surface-host+conversation+nav-rail, which reaches ui-tabs via its settings screen) grew from 81692 to 82565 B gz on this build — re-based its checkpoint 80 KB → 83 KB (84992 B gz) in scripts/measure-size.mjs (the same "checkpoint, not a ratchet" convention as GH #454/#480): Slice B's composed-ui-menu vehicle + fit engine, an LLD-accepted tradeoff landing at the app tier, twice-reviewed; the standing app-diet follow-up (GH #468) keeps its tripwire. `node scripts/measure-size.mjs` is green for this row as of commit (see the branch's own log for the SHA that carries this ruling).
