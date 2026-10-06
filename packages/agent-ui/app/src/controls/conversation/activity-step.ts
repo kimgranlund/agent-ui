@@ -25,6 +25,11 @@ export interface ActivityStep {
   readonly durationMs?: number
   /** One line under the label, built from counts and verbs, never from catalog or component type names. */
   readonly summary?: string
+  /** How many times the step failed and was retried before it settled (a self-correct round, a re-sent
+   *  request). Counts above zero put a persistent "N retries" marker in the strip's header, so a turn that
+   *  needed repairing never reads as a plain success once it settles. Ignored when absent, zero or not a
+   *  finite non-negative number. */
+  readonly retries?: number
   /** The raw output behind the step. The strip shows every step's raw text once, together, in a single
    *  collapsed "Raw output" row at the end of the turn. */
   readonly raw?: string
@@ -41,6 +46,19 @@ export interface ActivityFooter {
 }
 
 const grouped = new Intl.NumberFormat('en-US')
+
+/** The strip's retry total: every step's `retries`, summed, ignoring anything that is not a finite number
+ *  above zero. `0` when no step retried (the strip then shows no retry marker). */
+export function totalActivityRetries(steps: Iterable<ActivityStep>): number {
+  let total = 0
+  for (const s of steps) if (typeof s.retries === 'number' && Number.isFinite(s.retries) && s.retries > 0) total += Math.floor(s.retries)
+  return total
+}
+
+/** "1 retry" / "3 retries". */
+export function formatActivityRetries(n: number): string {
+  return `${n} ${n === 1 ? 'retry' : 'retries'}`
+}
 
 /** A count with its noun, or `undefined` for a value that is not a finite, non-negative number. */
 function counted(n: number | undefined, one: string, many: string): string | undefined {

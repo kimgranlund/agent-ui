@@ -5364,11 +5364,12 @@ keeps "Source", so every existing entry renders byte-identically.
   already-rendered entry with that `key`: transitions `status`, grows/replaces streamed `text`, or reveals
   detail. A `key` with no matching entry is a silent no-op — never a throw (a late update after
   truncation is tolerated).
-- **`finalize(options?: { summary?: string }): void`** — the completion invariant: every
+- **`finalize(options?: { summary?: string; badge?: string }): void`** — the completion invariant: every
   still-`pending`/`active` entry renders TRUNCATED (a distinct, non-color-only interrupted affordance on
   the item). Fail-closed. Also stops every ticking elapsed-time display (GH #147/ADR-0153) — a settled
   stream never keeps a clock running. A non-empty `summary` (GH #737/ADR-0184) replaces the computed
-  receipt meta verbatim; `fail()` takes the same bag.
+  receipt meta verbatim; a non-empty `badge` (T-0019) adds a warning-toned chip ("1 retry") to the header
+  that stays visible when the strip collapses to its receipt; `fail()` takes the same bag.
 - **`setPlan(items: readonly string[]): void`** (GH #737/ADR-0184) — the up-front plan block: a code-owned
   "Plan" kicker over an `<ol>` of the items, pinned between the header and the entries. Idempotent
   in-place replace; an empty array removes it. Not an entry — no key, no status, no chronology position.

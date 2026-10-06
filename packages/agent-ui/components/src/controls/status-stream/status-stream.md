@@ -45,9 +45,9 @@ properties:               # IDL beyond attributes-as-API — the imperative stre
   - name: update
     description: 'Method — update(key: string, patch: Partial<StatusEntry>) => void. A KEYED, in-place mutation to the already-rendered entry with that key: transitions status, grows/replaces streamed text, or reveals detail. A key with no matching entry is a silent no-op (never a throw — SPEC-R9 AC2). `patch.startedAt`/`patch.action` re-arm the SAME Fork 1/2 ticking-timer/retry-button mechanism appendEntry does. `patch.source` (GH #240/ADR-0159 wave B) re-stamps an EXISTING per-step reveal''s `<pre data-role="source">` in place (a same-node textContent mutation inside a closed details body — outside the live region''s announcement path); it never CREATES a reveal on an entry born without one (the `parent` set-once precedent — a graceful no-op).'
   - name: finalize
-    description: 'Method — finalize(options?: { summary?: string }) => void. The completion invariant (SPEC-R11): marks every still-pending/active entry TRUNCATED, then settles the header (when opted in) to the escalated FINAL status (ADR-0146 F8; a truncated entry contributes `warning`). Fail-closed — a torn stream never shows "still working." Also stops every ticking elapsed-time display (GH #147/ADR-0153) — a settled stream never keeps a clock running. GH #737/ADR-0184: a non-empty `options.summary` replaces the computed "N steps · total" receipt meta VERBATIM (e.g. "31 components · 94/100 · 5.4s" — nano-ui''s finish-summary shape; never parsed, never recomputed); a bare call keeps the computed shape, which counts STEPS only (note entries are narration, excluded).'
+    description: 'Method — finalize(options?: { summary?: string; badge?: string }) => void. The completion invariant (SPEC-R11): marks every still-pending/active entry TRUNCATED, then settles the header (when opted in) to the escalated FINAL status (ADR-0146 F8; a truncated entry contributes `warning`). Fail-closed — a torn stream never shows "still working." Also stops every ticking elapsed-time display (GH #147/ADR-0153) — a settled stream never keeps a clock running. GH #737/ADR-0184: a non-empty `options.summary` replaces the computed "N steps · total" receipt meta VERBATIM (e.g. "31 components · 94/100 · 5.4s" — nano-ui''s finish-summary shape; never parsed, never recomputed); a bare call keeps the computed shape, which counts STEPS only (note entries are narration, excluded). T-0019: a non-empty `options.badge` adds a short warning-toned `header-badge` chip (e.g. "1 retry") beside the meta, kept visible when the strip collapses to its receipt.'
   - name: fail
-    description: 'Method — fail(options?: { summary?: string }) => void. A FAILED stream (ADR-0146 F8): the completion invariant (like finalize()) PLUS the header forced to `error` regardless of the entries'' own escalation — the completion invariant''s header-level face for a thrown turn. A no-op on the header when `header` is not set. Also stops every ticking elapsed-time display, exactly as finalize() does. Takes the same optional `summary` as finalize() (GH #737/ADR-0184) — the forced-error status ink/glyph stays loud either way.'
+    description: 'Method — fail(options?: { summary?: string; badge?: string }) => void. A FAILED stream (ADR-0146 F8): the completion invariant (like finalize()) PLUS the header forced to `error` regardless of the entries'' own escalation — the completion invariant''s header-level face for a thrown turn. A no-op on the header when `header` is not set. Also stops every ticking elapsed-time display, exactly as finalize() does. Takes the same optional `summary` and `badge` as finalize() (GH #737/ADR-0184, T-0019) — the forced-error status ink/glyph stays loud either way.'
   - name: setPlan
     description: 'Method — setPlan(items: readonly string[]) => void (GH #737/ADR-0184). The up-front plan block (nano-ui''s setPlan shape): a code-owned "Plan" kicker over an `<ol>` of the consumer''s items, pinned after the header (when present) and before every entry — NOT an entry (no key, no status, no place in the chronology). Idempotent replace: repeated calls mutate the existing `<li>` texts IN PLACE (the role=log same-node discipline), growing or shrinking the tail; an EMPTY array removes the block entirely. Hidden while collapsed, exactly like the entry list. Order header → plan → entries holds regardless of call order (a later-created header still prepends first).'
   - name: setPendingSource
@@ -71,6 +71,8 @@ parts:                     # the appended ui-timeline-item children are the "ent
     description: 'GH #147/ADR-0153 Fork 2 — the `[data-role="action"]` cell the host appends onto an entry''s `ui-timeline-item` when that entry carries `action` and its effective status is `error`; hosts one `<ui-button>` (`variant="soft"`, `size="sm"`) labelled from `action.label`.'
   - name: header-meta
     description: 'GH #239/ADR-0159 — the header''s secondary cell, present only in an opted-in (`oneline`/`receipt`) mode: the ticking turn-elapsed ("12s") while the turn runs under `oneline`; the receipt summary ("5 steps · 3.2s") once settled. Tabular digits; secondary ink.'
+  - name: header-badge
+    description: 'T-0019: the settled header chip (a short warning-toned note such as "1 retry"), present only after finalize()/fail() received a non-empty `badge` option; sits before `header-meta` and stays visible when the strip is collapsed to its receipt. Verbatim text, never parsed.'
   - name: header-caret
     description: 'GH #239/ADR-0159 — the disclosure caret (a `caret-down` glyph), present only in an opted-in mode; rotates open when the header row''s `aria-expanded` reads true.'
   - name: source
@@ -229,11 +231,12 @@ keeps "Source", so every existing entry renders byte-identically.
   already-rendered entry with that `key`: transitions `status`, grows/replaces streamed `text`, or reveals
   detail. A `key` with no matching entry is a silent no-op — never a throw (a late update after
   truncation is tolerated).
-- **`finalize(options?: { summary?: string }): void`** — the completion invariant: every
+- **`finalize(options?: { summary?: string; badge?: string }): void`** — the completion invariant: every
   still-`pending`/`active` entry renders TRUNCATED (a distinct, non-color-only interrupted affordance on
   the item). Fail-closed. Also stops every ticking elapsed-time display (GH #147/ADR-0153) — a settled
   stream never keeps a clock running. A non-empty `summary` (GH #737/ADR-0184) replaces the computed
-  receipt meta verbatim; `fail()` takes the same bag.
+  receipt meta verbatim; a non-empty `badge` (T-0019) adds a warning-toned chip ("1 retry") to the header
+  that stays visible when the strip collapses to its receipt; `fail()` takes the same bag.
 - **`setPlan(items: readonly string[]): void`** (GH #737/ADR-0184) — the up-front plan block: a code-owned
   "Plan" kicker over an `<ol>` of the items, pinned between the header and the entries. Idempotent
   in-place replace; an empty array removes it. Not an entry — no key, no status, no chronology position.

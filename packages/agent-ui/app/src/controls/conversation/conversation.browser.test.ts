@@ -1497,3 +1497,140 @@ describe('ui-conversation cross-engine: step mode paints the neutral ActivitySte
     expect(tops[1]!, 'the footer sits last').toBeLessThan(tops[2]!)
   })
 })
+
+// T-0019 in a real engine. Three guards a jsdom run cannot give: the header's retry chip really paints
+// (and in the warning ink, not the meta's secondary ink) once the strip collapses to its receipt; an
+// expanded strip never lets its step list paint over the pinned header row while steps keep arriving;
+// and a Card streamed through the chat surface paints its regions with their inset and seats a trailing
+// Badge on the title row (the Croupier teaching's wire shape).
+describe('ui-conversation cross-engine: the activity strip and the chat Card surface (T-0019)', () => {
+  const frames = (n = 2) =>
+    new Promise<void>((r) => {
+      const tick = (left: number): void => {
+        if (left <= 0) r()
+        else requestAnimationFrame(() => tick(left - 1))
+      }
+      tick(n)
+    })
+
+  function stepTurn(opts: { receipt: boolean }): { el: UIConversationElement; handle: ReturnType<UIConversationElement['beginAgentTurn']> } {
+    // 380px keeps every hit-test point inside the test iframe's own viewport: elementFromPoint is null
+    // outside it, which would read as "nothing on top of the header" and prove nothing.
+    const el = mountConversation('380px', '480px')
+    el.steps = true
+    el.receipt = opts.receipt
+    return { el, handle: el.beginAgentTurn() }
+  }
+
+  it(`${server.browser}: a repaired turn keeps a painted, warning-toned "N retries" chip in the collapsed receipt header`, async () => {
+    const { el, handle } = stepTurn({ receipt: true })
+    handle.step({ id: 'generate', kind: 'generate', label: 'Generated', status: 'ok', durationMs: 1200 })
+    handle.step({ id: 'validate', kind: 'validate', label: 'Validated', status: 'repaired', retries: 1, summary: 'Round 1 failed (SCHEMA), repaired in round 2' })
+    handle.finalize()
+    await whenFlushed()
+    await frames()
+    const strip = el.querySelector('[data-part="narration"]') as HTMLElement
+    const header = strip.querySelector('[data-part="header"]') as HTMLElement
+    const chip = header.querySelector('[data-part="header-badge"]') as HTMLElement
+    const meta = header.querySelector('[data-part="header-meta"]') as HTMLElement
+    expect(header.getAttribute('aria-expanded'), 'the strip is collapsed to its receipt').toBe('false')
+    expect(chip.textContent).toBe('1 retry')
+    const cb = chip.getBoundingClientRect()
+    const hb = header.getBoundingClientRect()
+    expect(cb.width, 'the chip paints a real box').toBeGreaterThan(0)
+    expect(cb.left >= hb.left && cb.right <= hb.right, 'the chip sits inside the header row').toBe(true)
+    expect(getComputedStyle(chip).color, 'warning ink, not the meta cell\'s secondary ink').not.toBe(getComputedStyle(meta).color)
+    expect(header.dataset.status, 'a repaired turn settles the header warning, never a plain done').toBe('warning')
+    // the failure codes are one click away, on the row itself (no raw output needed)
+    header.click()
+    await frames()
+    const validateRow = strip.querySelector<HTMLElement>('ui-timeline-item[data-kind="validate"]')!
+    expect(validateRow.textContent).toContain('SCHEMA')
+    expect(validateRow.getBoundingClientRect().height).toBeGreaterThan(0)
+  })
+
+  it(`${server.browser}: expanded mid-run, steps arriving one frame at a time never paint over the pinned header row`, async () => {
+    const { el, handle } = stepTurn({ receipt: true })
+    handle.step({ id: 's0', kind: 'request', label: 'Request sent', status: 'ok', durationMs: 100 })
+    await whenFlushed()
+    await frames()
+    const strip = el.querySelector('[data-part="narration"]') as HTMLElement
+    const header = strip.querySelector('[data-part="header"]') as HTMLElement
+    header.click() // expand while the turn is still running
+    await frames()
+    expect(header.getAttribute('aria-expanded')).toBe('true')
+    for (let i = 1; i <= 9; i++) {
+      handle.step({ id: `s${i}`, kind: 'tool', label: `Called tool ${i}`, status: i === 9 ? 'running' : 'ok', durationMs: 100, summary: 'Round 1 failed (SCHEMA), retrying in round 2', ...(i === 9 ? { startedAt: Date.now() } : {}) })
+      await frames()
+      const sb = strip.getBoundingClientRect()
+      const hb = header.getBoundingClientRect()
+      expect(hb.top, `step ${i}: the header stays pinned to the strip's top edge`).toBeCloseTo(sb.top, 0)
+      expect(hb.height, `step ${i}: the header row keeps its own height (never squeezed)`).toBeGreaterThan(16)
+      for (const fx of [0.15, 0.5, 0.85]) {
+        const hit = document.elementFromPoint(hb.left + hb.width * fx, hb.top + hb.height / 2)
+        expect(hit, `step ${i}: the probe point is inside the viewport`).not.toBeNull()
+        expect(header.contains(hit), `step ${i}: the topmost element at ${fx} of the header is the header's own (not a step row)`).toBe(true)
+      }
+    }
+    // scrolled to the tail (the live strip tail-follows): still the header on top, still opaque
+    strip.scrollTop = strip.scrollHeight
+    await frames()
+    const hb = header.getBoundingClientRect()
+    expect(hb.top).toBeCloseTo(strip.getBoundingClientRect().top, 0)
+    expect(header.contains(document.elementFromPoint(hb.left + hb.width / 2, hb.top + hb.height / 2))).toBe(true)
+    expect(getComputedStyle(header).backgroundColor, 'the pinned header paints an opaque canvas').not.toMatch(/rgba\(.*,\s*0\)|transparent/)
+    // and the first step row starts below the header, never under it, when the strip sits at the top
+    strip.scrollTop = 0
+    await frames()
+    const first = strip.querySelector<HTMLElement>(':scope > ui-timeline-item')!
+    expect(first.getBoundingClientRect().top).toBeGreaterThanOrEqual(header.getBoundingClientRect().bottom - 0.5)
+  })
+
+  it(`${server.browser}: a streamed Card paints its regions inset, and a trailing Badge sits on the title row`, async () => {
+    const el = mountConversation('380px', '520px')
+    const handle = el.beginAgentTurn()
+    const line = (o: unknown): string => JSON.stringify(o)
+    handle.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'bj', catalogId: 'agent-ui' } }))
+    handle.ingestLine(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'bj',
+          components: [
+            { id: 'root', component: 'Card', children: ['hdr', 'body', 'foot'] },
+            { id: 'hdr', component: 'CardHeader', children: ['title', 'bank'] },
+            { id: 'title', component: 'Text', variant: 'h4', text: 'Blackjack' },
+            { id: 'bank', component: 'Badge', label: 'Bankroll 1100', slot: 'trailing' },
+            { id: 'body', component: 'CardContent', children: ['line'] },
+            { id: 'line', component: 'Text', variant: 'body', text: 'Dealer shows a seven.' },
+            { id: 'foot', component: 'CardFooter', children: ['hit'] },
+            { id: 'hit', component: 'Button', variant: 'solid', label: 'Hit', action: { action: 'hit' } },
+          ],
+        },
+      }),
+    )
+    handle.finalize()
+    await whenFlushed()
+    await frames(3)
+    const card = el.querySelector('ui-card') as HTMLElement
+    const cardBox = card.getBoundingClientRect()
+    for (const tag of ['ui-card-header', 'ui-card-content', 'ui-card-footer']) {
+      const region = card.querySelector(tag) as HTMLElement
+      const cs = getComputedStyle(region)
+      expect(cs.paddingLeft, `${tag} keeps the 12px region inline padding in the chat surface`).toBe('12px')
+      expect(cs.marginLeft, `${tag} keeps the 6px region inset margin`).toBe('6px')
+      const ink = region.firstElementChild as HTMLElement
+      expect(ink.getBoundingClientRect().left - cardBox.left, `${tag}: content is inset from the card edge, never flush`).toBeGreaterThanOrEqual(18 - 0.5)
+    }
+    const title = card.querySelector('ui-card-header ui-text') as HTMLElement
+    const badge = card.querySelector('ui-card-header ui-badge') as HTMLElement
+    const header = card.querySelector('ui-card-header') as HTMLElement
+    const tb = title.getBoundingClientRect()
+    const bb = badge.getBoundingClientRect()
+    const hb = header.getBoundingClientRect()
+    expect(bb.top, 'the trailing Badge shares the title row, not a row under it').toBeLessThan(tb.bottom)
+    expect(bb.left, 'and sits to the right of the title').toBeGreaterThanOrEqual(tb.left)
+    expect(hb.right - bb.right, 'at the header\'s trailing edge, inside its padding').toBeLessThanOrEqual(12 + 0.5)
+    expect(hb.right - bb.right).toBeGreaterThanOrEqual(11.5)
+  })
+})

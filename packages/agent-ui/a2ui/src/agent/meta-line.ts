@@ -265,6 +265,11 @@ export interface TurnProgress {
   round?: number
   detail?: string
   source?: string
+  /** T-0019: on `'retry'`: the validator failure codes the failed round fed back (`SCHEMA`, `UNKNOWN_COMPONENT`,
+   *  ...): the same closed, code-owned names `TurnTrace.failureCodes` carries after the turn, surfaced LIVE so
+   *  a host can say WHY a round failed while it retries. Codes only (never a path, a message or model text), so
+   *  it needs no `progressDetail` opt-in; absent on every other stage and when a round fed back none. */
+  codes?: string[]
 }
 
 /**
@@ -478,12 +483,14 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
     const roundOk = p.round === undefined || typeof p.round === 'number'
     const detailOk = p.detail === undefined || typeof p.detail === 'string'
     const sourceOk = p.source === undefined || typeof p.source === 'string' // GH #240 — same posture as detail
-    if (stageOk && roundOk && detailOk && sourceOk) {
+    const codesOk = p.codes === undefined || (Array.isArray(p.codes) && p.codes.every((c) => typeof c === 'string')) // T-0019: strings only, or the whole progress drops
+    if (stageOk && roundOk && detailOk && sourceOk && codesOk) {
       progress = {
         stage: p.stage as TurnProgressStage,
         ...(p.round !== undefined ? { round: p.round as number } : {}),
         ...(p.detail !== undefined ? { detail: p.detail as string } : {}),
         ...(p.source !== undefined ? { source: p.source as string } : {}),
+        ...(p.codes !== undefined ? { codes: p.codes as string[] } : {}),
       }
     }
   }

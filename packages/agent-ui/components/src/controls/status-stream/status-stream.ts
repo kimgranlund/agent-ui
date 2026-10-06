@@ -334,6 +334,7 @@ export class UIStatusStreamElement extends UIContainerElement {
   // `oneline`/`receipt` is set — the opt-in byte-identical guarantee.
   #headerMeta: HTMLElement | null = null // the "12s" / "5 steps · 3.2s" cell — exists only when opted in
   #headerCaret: HTMLElement | null = null // the expand/collapse affordance — exists only when opted in
+  #headerBadge: HTMLElement | null = null // T-0019: the consumer-supplied settled chip ("1 retry"); exists only while `#badge` is non-empty
   #collapsed = false // the disclosure state (mirrored to :state(collapsed) + aria-expanded)
   #userToggled = false // a user's explicit toggle wins over the oneline auto-collapse until the turn settles
   #turnStartMs: number | null = null // the turn clock's anchor — stamped at the FIRST appendEntry
@@ -358,6 +359,7 @@ export class UIStatusStreamElement extends UIContainerElement {
   #noteKeys = new Set<string>() // keys appended as notes — excluded from the receipt's "N steps" count
   #plan: HTMLElement | null = null // the setPlan() block — exists only once a non-empty plan is set
   #summary: string | null = null // the consumer-supplied receipt meta (finalize/fail options) — verbatim, never parsed
+  #badge: string | null = null // T-0019: the consumer-supplied header chip (finalize/fail options), verbatim, warning-toned, kept when collapsed
 
   // ── the pending/stale-content wiring (GH #974/ADR-0191, GH #999) ───────────────────────────────────
   // The consumer-attached async source `setPendingSource()` writes, or null (no wait currently in flight).
@@ -540,9 +542,12 @@ export class UIStatusStreamElement extends UIContainerElement {
   /** The completion invariant — mark every still-pending/active entry TRUNCATED (SPEC-R11), then settle the
    *  header to the escalated FINAL status (ADR-0146 F8). GH #737/ADR-0184: the optional, additive options
    *  bag — a non-empty `summary` replaces the computed "N steps · total" receipt meta VERBATIM (nano-ui's
-   *  `finish('2 iterations · 94/100 · 7s')` shape; never parsed, never recomputed — the F2 discipline). */
-  finalize(options?: { summary?: string }): void {
-    this.#settle(false, options?.summary)
+   *  `finish('2 iterations · 94/100 · 7s')` shape; never parsed, never recomputed — the F2 discipline).
+   *  T-0019: a non-empty `badge` adds a short warning-toned chip ("1 retry") to the settled header, beside
+   *  the meta; it stays visible when the strip is collapsed to its receipt, so a turn that needed repairing
+   *  never reads as a plain success. Verbatim, like `summary`. */
+  finalize(options?: { summary?: string; badge?: string }): void {
+    this.#settle(false, options?.summary, options?.badge)
   }
 
   /** A failed stream (ADR-0146 F8): the completion invariant PLUS a header forced to `error` — the
@@ -550,8 +555,8 @@ export class UIStatusStreamElement extends UIContainerElement {
    *  as `finalize()` does (a failed turn is also torn), then paints the header `error` regardless of the
    *  entries' own escalation. Takes the same optional `summary` as `finalize()` (GH #737/ADR-0184) — the
    *  forced-error status ink/glyph stays loud either way. */
-  fail(options?: { summary?: string }): void {
-    this.#settle(true, options?.summary)
+  fail(options?: { summary?: string; badge?: string }): void {
+    this.#settle(true, options?.summary, options?.badge)
   }
 
   /** GH #737/ADR-0184 — the up-front plan block (nano-ui's `setPlan` shape): a code-owned "Plan" kicker
@@ -602,7 +607,7 @@ export class UIStatusStreamElement extends UIContainerElement {
 
   /** Shared settle path for finalize()/fail(): truncate the unresolved entries, flip the completion state,
    *  repaint the header to its settled (or forced-error) face. */
-  #settle(failed: boolean, summary?: string): void {
+  #settle(failed: boolean, summary?: string, badge?: string): void {
     for (const item of this.#byKey.values()) {
       if (item.status === 'active' || item.status === 'pending') {
         this.#markTruncated(item)
@@ -639,6 +644,7 @@ export class UIStatusStreamElement extends UIContainerElement {
     if (this.#turnStartMs !== null) this.#totalMs = Date.now() - this.#turnStartMs
     // GH #737/ADR-0184 — the consumer-supplied receipt meta, verbatim; empty/absent keeps the computed shape.
     if (summary !== undefined && summary !== '') this.#summary = summary
+    if (badge !== undefined && badge !== '') this.#badge = badge
     this.#userToggled = false
     if (this.receipt) this.#setCollapsed(true, false)
     else if (this.oneline) this.#setCollapsed(false, false)
@@ -903,6 +909,7 @@ export class UIStatusStreamElement extends UIContainerElement {
     this.#headerLabel = null
     this.#headerMeta = null
     this.#headerCaret = null
+    this.#headerBadge = null
   }
 
   // ── the receipt pattern (GH #238/#239/ADR-0159) — the disclosure + the morphing line ────────────────
@@ -989,6 +996,7 @@ export class UIStatusStreamElement extends UIContainerElement {
       const current = this.#currentKey !== undefined ? this.#byKey.get(this.#currentKey)?.label : undefined
       label.textContent = morphing && current !== undefined && current !== '' ? current : this.label
     }
+    this.#refreshBadge()
     const meta = this.#headerMeta
     if (meta) {
       if (this.#settled()) {
@@ -1008,6 +1016,26 @@ export class UIStatusStreamElement extends UIContainerElement {
         meta.textContent = ''
       }
     }
+  }
+
+  /** T-0019: the settled header chip: present exactly while a consumer-supplied `badge` is set and the
+   *  header exists, inserted just before the meta cell (else the caret, else last) so the row reads
+   *  label · chip · meta · caret. A same-node textContent write once it exists. */
+  #refreshBadge(): void {
+    const header = this.#header
+    if (!header) return
+    if (this.#badge === null) {
+      this.#headerBadge?.remove()
+      this.#headerBadge = null
+      return
+    }
+    if (!this.#headerBadge) {
+      const chip = document.createElement('span')
+      chip.dataset.part = 'header-badge'
+      header.insertBefore(chip, this.#headerMeta ?? this.#headerCaret)
+      this.#headerBadge = chip
+    }
+    this.#headerBadge.textContent = this.#badge
   }
 
   /** Recompute + paint the header's overall status (a no-op before the header exists). Called at every

@@ -6,7 +6,8 @@
 // It lives at the SITE layer on purpose: it is the one layer that may read both the a2ui producer's types
 // and the app control's model, and the control itself stays A2UI-free (a non-A2UI host writes its own
 // adapter against the same model). It changes nothing on the wire: it only reads what the stream already
-// carries.
+// carries (T-0019 added one additive field to that stream, the failure `codes` on the `retry` progress
+// event, so a failed round says why while it is live).
 //
 // Honesty rules, carried over from the narration it replaces for opted-in hosts:
 // - Labels come from the closed stage table below (ADR-0146 F2, ADR-0159 §1's live/done pairs), never
@@ -44,6 +45,8 @@ interface StepState {
   spanStart: number
   summary?: string
   raw?: string
+  /** Failed rounds this step went through (the neutral `ActivityStep.retries`). */
+  retries?: number
 }
 
 export interface A2uiActivity {
@@ -126,12 +129,16 @@ function traceFacts(trace: TurnTrace): TraceFacts {
   }
 }
 
-/** "Round 1 failed (SCHEMA), repaired in round 2". `codes` are the validator codes the last failed round
- *  fed back (TurnTrace.failureCodes); absent when no trace arrived. */
-function repairSummary(rounds: number, codes: readonly string[]): string {
+/** "Round 1 failed (SCHEMA)", "Rounds 1 to 2 failed (SCHEMA, UNKNOWN_COMPONENT)": `rounds` is the round about
+ *  to run (or that succeeded), so `rounds - 1` rounds failed. `codes` are validator codes, never model text. */
+function failedRounds(rounds: number, codes: readonly string[]): string {
   const failed = rounds === 2 ? 'Round 1 failed' : `Rounds 1 to ${rounds - 1} failed`
-  const why = codes.length > 0 ? ` (${codes.join(', ')})` : ''
-  return `${failed}${why}, repaired in round ${rounds}`
+  return codes.length > 0 ? `${failed} (${codes.join(', ')})` : failed
+}
+
+/** "Round 1 failed (SCHEMA), repaired in round 2". */
+function repairSummary(rounds: number, codes: readonly string[]): string {
+  return `${failedRounds(rounds, codes)}, repaired in round ${rounds}`
 }
 
 export function createA2uiActivity(now: () => number = () => Date.now()): A2uiActivity {
@@ -142,6 +149,9 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
   let tools = 0
   let lastCandidate: string | undefined
   let traced: TraceFacts | undefined
+  /** The failure codes the live `retry` events carried, in first-seen order: why each failed round failed,
+   *  known the moment it fails (before any trace). The trace's own codes win once it arrives. */
+  const liveCodes: string[] = []
 
   const view = (s: StepState): ActivityStep => {
     const running = s.status === 'running'
@@ -153,6 +163,7 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
       status: s.status,
       ...(running ? { startedAt: s.spanStart - s.spentMs } : s.timed ? { durationMs: s.spentMs } : {}),
       ...(s.summary !== undefined ? { summary: s.summary } : {}),
+      ...(s.retries !== undefined && s.retries > 0 ? { retries: s.retries } : {}),
       ...(s.raw !== undefined ? { raw: s.raw } : {}),
     }
   }
@@ -182,17 +193,18 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
   const settleValidate = (): StepState | undefined => {
     const v = steps.get('validate')
     if (v === undefined || v.status === 'running') return undefined
-    const before = `${v.status}|${v.summary ?? ''}`
+    const before = `${v.status}|${v.summary ?? ''}|${v.retries ?? 0}`
     const rounds = traced?.rounds ?? round
-    const codes = traced?.codes ?? []
+    const codes = traced !== undefined && traced.codes.length > 0 ? traced.codes : liveCodes
     if (rounds > 1) {
       v.status = 'repaired'
       v.summary = repairSummary(rounds, codes)
+      v.retries = rounds - 1
     } else if (v.status !== 'failed') {
       v.status = 'ok'
       if (codes.length > 0) v.summary = `Noted: ${codes.join(', ')}`
     }
-    return `${v.status}|${v.summary ?? ''}` === before ? undefined : v
+    return `${v.status}|${v.summary ?? ''}|${v.retries ?? 0}` === before ? undefined : v
   }
 
   const outputStep = (id: string, label: string, summary?: string): StepState => {
@@ -212,10 +224,12 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
         const closed = close('ok', t)
         if (closed !== undefined) changed.add(closed)
         round = ev.round ?? round + 1
+        for (const c of ev.codes ?? []) if (c !== '' && !liveCodes.includes(c)) liveCodes.push(c)
         const v = steps.get('validate')
         if (v !== undefined) {
           v.status = 'failed'
-          v.summary = `${round === 2 ? 'Round 1 failed' : `Rounds 1 to ${round - 1} failed`}, retrying in round ${round}`
+          v.summary = `${failedRounds(round, liveCodes)}, retrying in round ${round}`
+          v.retries = round - 1
           changed.add(v)
         }
         return [...changed].map(view)

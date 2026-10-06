@@ -78,6 +78,9 @@
      like the existing header marker. */
   --ui-status-stream-header-meta-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-status-stream-header-caret-box: 1em;
+  /* T-0019: the settled header chip ("1 retry", finalize/fail's `badge` option): warning ink, the same
+     role the header's own warning status glyph reads, so the chip and the glyph agree. */
+  --ui-status-stream-header-badge-ink: var(--md-sys-color-warning);
 
   /* GH #240/ADR-0159 wave B — the per-step source reveal: the mono-rendered raw-wire <pre> inside the
      entry's composed reveal disclosure. The mono face is the fleet's own typeface token (dimensions.css);
@@ -334,6 +337,14 @@
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
+  /* The header chip (T-0019): a short consumer-supplied note ("1 retry") kept in the header at every
+     disclosure state, so a settled-but-repaired turn stays marked once the strip collapses to its receipt. */
+  :scope > [data-part='header'] [data-part='header-badge'] {
+    flex: 0 0 auto;
+    color: var(--ui-status-stream-header-badge-ink);
+    font-weight: 500;
+    white-space: nowrap;
+  }
   /* The caret — points down (expand) collapsed, rotates open when expanded (aria-expanded is the one
      source of truth the CSS keys off — the state the a11y layer already carries). */
   :scope > [data-part='header'] [data-part='header-caret'] {
@@ -427,6 +438,7 @@
     /* GH #239/ADR-0159 — the receipt cells stay legible by SHAPE when fills flatten: meta text + the
        caret glyph resolve to CanvasText like the rest of the header chrome. */
     :scope > [data-part='header'] [data-part='header-meta'],
+    :scope > [data-part='header'] [data-part='header-badge'],
     :scope > [data-part='header'] [data-part='header-caret'] {
       color: CanvasText;
     }

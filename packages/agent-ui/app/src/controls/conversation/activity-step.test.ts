@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatActivityFooter, joinActivityRaw, type ActivityStep } from './activity-step.ts'
+import { formatActivityFooter, formatActivityRetries, joinActivityRaw, totalActivityRetries, type ActivityStep } from './activity-step.ts'
 
 // The neutral activity model (ADR-0159 amendment, T-0016): pure data plus two formatters. No DOM, no
 // A2UI, no catalog. The control-side rendering is conversation.test.ts's; this file pins the formatters.
@@ -32,5 +32,19 @@ describe('joinActivityRaw', () => {
 
   it('no step carries raw: the empty string (the strip then renders no raw row)', () => {
     expect(joinActivityRaw([step('a'), step('b')])).toBe('')
+  })
+})
+
+describe('retries (T-0019)', () => {
+  const retried = (id: string, retries: unknown): ActivityStep => ({ id, kind: 'k', label: id, status: 'repaired', retries: retries as number })
+
+  it('sums every step retry count and formats it singular or plural', () => {
+    expect(totalActivityRetries([retried('a', 1), retried('b', 2), step('c')])).toBe(3)
+    expect(formatActivityRetries(1)).toBe('1 retry')
+    expect(formatActivityRetries(3)).toBe('3 retries')
+  })
+
+  it('zero, negative, NaN or non-number counts are ignored, so a clean turn has no marker', () => {
+    expect(totalActivityRetries([step('a'), retried('b', 0), retried('c', -2), retried('d', Number.NaN), retried('e', '2')])).toBe(0)
   })
 })
