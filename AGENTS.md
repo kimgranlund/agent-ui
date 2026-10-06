@@ -70,7 +70,7 @@ Ten packages under `packages/agent-ui/*`; full layout in [CLAUDE.md](CLAUDE.md).
 - No em dashes anywhere, including commits and issue comments.
 - GH #1798 tracks skills that name plugin agents that are currently disabled.
 
-<!-- sdlc-lite:managed:start v1 sha256:559a254eb95c -->
+<!-- sdlc-lite:managed:start v1 sha256:971fe8256976 -->
 ## Documents
 
 Read [the docs entry](docs/AGENTS.md) before adding or moving a document.
@@ -81,7 +81,7 @@ Managed by SDLC Lite onboard, template 1.
 
 `.sdlc/` holds SDLC Lite tickets, plans, and run records.
 
-- Plan, build, and verify work runs through SDLC Lite: `/sdlc-lite:chain`, `/sdlc-lite:fix`, or `/sdlc-lite:build`, which launch roles with `run.sh`. Do not spawn another plugin's builder, planner, or reviewer agent in their place.
+- Pick the lane first with `steps.py lane <task dir>` (in the plugin's `scripts/` folder): `solo` is the default for size S and M, `/sdlc-lite:fix` runs only when asked or when the lane script prints `fix`, and the full chain (`/sdlc-lite:chain`) needs a stated reason (an L4 or L5 step, a merge step, or cross-cutting scope). Roles launch with `run.sh`. Do not spawn another plugin's builder, planner, or reviewer agent in their place.
 - Handoff files follow the `sdlc-lite:handoff-format` skill.
 - Tickets are created, closed, and archived through the `sdlc-lite:ticket` skill.
 - `.sdlc/roadmap.md` is generated. Do not edit it by hand.
