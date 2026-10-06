@@ -167,7 +167,7 @@ default-off, byte-identical.
   `role=log` discipline (same-node mutation, no insertions) rather than adding a second,
   contradictory announcement path.
 
-## Amendment (2026-10-06, **proposed**): step mode, an opt-in strip that renders a neutral activity model (T-0016)
+## Amendment (2026-10-06, **ratified** by Kim 2026-10-06): step mode, an opt-in strip that renders a neutral activity model (T-0016)
 
 > Append-only, and **proposed**: the Status cell above reads `accepted` for the record as a whole and
 > stays byte-untouched; agents never flip status, and this amendment carries no ratification of its
