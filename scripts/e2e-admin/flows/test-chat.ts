@@ -84,6 +84,17 @@ export const chatSurfaceRender: AdminFlow = {
     assertFlow(builderLabels.length === 0, `the Builder pane renders surface buttons ${JSON.stringify(builderLabels)}, expected none`)
     const produce = produceEntries(ctx.wire)
     assertFlow(produce.length === 1, `wire log holds ${produce.length} produce entries, expected 1`)
+    // T-0016: the real page drives the strip through step mode. The runner's adapter counts the two shipped
+    // lines into two output steps (opened a surface, updated it); no legacy category rows appear.
+    const kinds = await pollUntil(
+      () => admin.activityStepKinds('chat'),
+      (found) => found.length > 0,
+      'activity step rows in the chat pane strip',
+    )
+    assertFlow(
+      kinds.length === 2 && kinds.every((k) => k === 'output'),
+      `the chat strip shows activity steps ${JSON.stringify(kinds)}, expected two output steps`,
+    )
   },
 }
 
