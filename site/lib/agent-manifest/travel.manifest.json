@@ -1,0 +1,11 @@
+{
+  "id": "travel",
+  "preset": "travel",
+  "seedVersion": 2,
+  "seedDigest": "sha256:336c9f94d277667deb7b8c1da67a993b39d788ff26fc2f0f17c42e7c6130375f",
+  "fragment": null,
+  "selection": null,
+  "noFragment": {
+    "why": "Its idioms use Timeline, TimelineItem, Card, Row, Badge, Swiper, SwiperItem, Text, Stat and Button, each already a validated default-catalog row, so the idiom stays prose and earns no fragment under the promotion bar at .claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25 (proposed, GH #497)."
+  }
+}

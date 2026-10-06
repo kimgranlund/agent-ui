@@ -99,6 +99,7 @@ control's own surface must change (a prop the catalog wants to expose does not e
 | Any control TS/CSS change without dogfood rebuild | `sandbox-frame/dogfood/dogfood-assets-freshness.test.ts` |
 | Descriptor prose change without llms regen | `site/lib/llms.test.ts` |
 | ANY catalog.json or selection.json change | `live-agent/prompt-equivalence.test.ts` (byte-pinned prompts) |
+| A persona fragment's `catalog.json` or `selection.json` change, or a preset seed change, with no agent-manifest writer run | `site/lib/agent-manifest/agent-manifest.test.ts` (ADR-0235, proposed) |
 | Catalog type with no example anywhere | `examples/examples.test.ts` (GH #729) |
 | Seed not admitted and not in `DISPOSITION_ALLOWLIST` | `corpus/admission-coverage.test.ts` |
 | Seed invalid / renders with errors | `examples.test.ts` · `site/lib/a2ui-gallery.test.ts` |
@@ -121,6 +122,7 @@ control's own surface must change (a prop the catalog wants to expose does not e
 | any control TS/CSS | `node scripts/build-dogfood-assets.mjs` | dogfood-assets-freshness |
 | any descriptor prose | `node scripts/generate-llms-full.mjs` | llms.test |
 | any `catalog.json` or `selection.json` | `RECAPTURE_BASELINE=1 npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/recapture-baseline.test.ts` — then `git diff` the baseline: ONLY inventory lines move | prompt-equivalence |
+| a persona fragment's `catalog.json` or `selection.json`, or a preset seed | `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts`, then `git diff site/lib/agent-manifest/`: only digests and derived facts move; a `seedVersion` bump is a hand edit | agent-manifest |
 | a seed | `node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts --verdicts <verdicts.json> [--replace <name>]` | admission-coverage |
 | the card | `node scripts/screenshot-a2ui-catalog.mjs --only <Type>` (dev server up) → re-grade | rubric re-check |
 

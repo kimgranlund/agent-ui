@@ -1,0 +1,11 @@
+{
+  "id": "lexicographer",
+  "preset": "lexicographer",
+  "seedVersion": 1,
+  "seedDigest": "sha256:8bb6eb2880c30b6ddf08037eb20ce2a7131f9260b29a14fc97199f2527c324be",
+  "fragment": null,
+  "selection": null,
+  "noFragment": {
+    "why": "Its idioms use Grid, Badge, TextField, List and Toast, each already a validated default-catalog row, so the idiom stays prose and earns no fragment under the promotion bar at .claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25 (proposed, GH #497)."
+  }
+}

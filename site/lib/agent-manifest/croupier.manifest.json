@@ -1,0 +1,20 @@
+{
+  "id": "croupier",
+  "preset": "croupier",
+  "seedVersion": 6,
+  "seedDigest": "sha256:8ba082e925bc8fe411e13a67452faa0ce680530fe46087f01c1096baf5f2f7be",
+  "fragment": {
+    "personaId": "croupier",
+    "types": [
+      "PlayingCard"
+    ],
+    "targetCatalogs": [
+      "agent-ui",
+      "a2ui-basic"
+    ],
+    "digest": "sha256:b12f57cef9b3875f1042394078afc791db67684f1a678365912142f3740eb32e"
+  },
+  "selection": {
+    "digest": "sha256:15fce4de796dd72065826d0ae9016e86a2844fab913721ce45e6e633675b7340"
+  }
+}

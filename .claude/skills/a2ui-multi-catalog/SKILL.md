@@ -61,6 +61,8 @@ two have no merge primitive in common (`persona-catalog-composition.spec.md` §1
    catalog or fragment are reciprocal; the persona edge rule lets a fragment edge point one-way at a
    base type present in every base the fragment targets, since a base can never name persona types.
    A third catalog ships its own sidecar, or its inventory composes with no clause.
+   A new persona fragment also gets a hand-written agent manifest in `site/lib/agent-manifest/`
+   (ADR-0235, proposed), or `site/lib/agent-manifest/agent-manifest.test.ts` reds.
 
 ## Citation key
 

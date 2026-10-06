@@ -1,0 +1,11 @@
+{
+  "id": "dungeon-master",
+  "preset": "dungeon-master",
+  "seedVersion": 1,
+  "seedDigest": "sha256:ed5bd2a73b45e8aee360d05ecaa4a925e896a5ebaaaef94ad57a28f5c017e249",
+  "fragment": null,
+  "selection": null,
+  "noFragment": {
+    "why": "Its idioms use Timeline, Row, Stat, List, Button, Disclosure and Toast, each already a validated default-catalog row, so the idiom stays prose and earns no fragment under the promotion bar at .claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25 (proposed, GH #497)."
+  }
+}

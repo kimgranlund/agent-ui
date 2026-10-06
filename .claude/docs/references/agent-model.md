@@ -147,6 +147,17 @@ header pointing here.
   `selectionGuidanceFor` on `@agent-ui/a2ui/agent` and rendered as a clause on the composed prompt's
   inventory line (ADR-0232, accepted). The human twins are the catalog SPEC §5.2 Notes and the site's
   choosing guide; neither is generated from it.
+- **agent manifest**: the `<id>.manifest.json` file in `site/lib/agent-manifest/`, one per agent
+  preset plus one for `fixture-demo`. It pins the preset's effective `seedVersion` and canonical
+  sha256 digests of its seed, its persona catalog fragment's `catalog.json` and that fragment's
+  `selection.json`; an agent with no fragment records why in `noFragment.why` (the ruling is ADR-0235
+  cl.5, under the bar restated in
+  `.claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25`, proposed).
+  Its gate is `site/lib/agent-manifest/agent-manifest.test.ts`; its writer is
+  `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts`
+  (ADR-0235, proposed). Not the fragment manifest `PersonaCatalogManifest`
+  (`catalog/personas/<id>/manifest.ts`), the Node-safe `personaId`/`fragment`/`targetCatalogs`
+  triple of GH #516, which stays inside the a2ui package.
 - **prompt budget**: the declared character ceiling on the whole composed system prompt, per catalog
   family (`PROMPT_CHAR_BUDGET_BASE`, `PROMPT_CHAR_BUDGET_DERIVED` in `src/agent/prompt-budget.ts`). Each
   turn reports its section sizes against it as `trace.prompt`, and the provider-billed token counts as
@@ -218,5 +229,6 @@ support.google.com/gemini/answer/15236321 (Gemini Gems "Knowledge").
 | `RoutedContent`, `RESOURCE_IDB_TEXT_THRESHOLD_CHARS` | `controls/agent-admin/resource-idb-store.ts` | ADR-0193, ADR-0227 cl.5 exception |
 | `SkillPackSnapshot`, `SkillPackShelfSource` | `controls/agent-admin/skill-pack-store.ts` | ADR-0208 |
 | `Persona` (site alias, a declared subset of `AgentRecord`) | `site/pages/agent-admin-presets.ts` | §4 |
+| `AgentManifest` | `site/lib/agent-manifest/agent-manifest.ts` | ADR-0235 |
 | `AgentTransport`, `Turn` | `packages/agent-ui/a2ui/src/agent/agent-transport.ts` | ADR-0069, ADR-0073 |
 | `DevtoolsEvent`, `DevtoolsCapture` | `packages/agent-ui/devtools/src/timeline/events.ts`, `capture/format.ts` | ADR-0200 |

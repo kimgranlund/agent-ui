@@ -59,6 +59,8 @@ than you meant to, and an armed run on an UNCHANGED tree is a byte-identical no-
   `catalog/selection-guidance.test.ts`, and the default catalog's total by
   `SELECTION_GUIDANCE_CHAR_BUDGET` in `prompt-drift.test.ts` (re-author tersely, never raise it to green).
   A sidecar edit also moves the derived cases of `npm run eval:agent-behavior`, so run its selftest afterwards.
+  A persona fragment sidecar edit also moves its agent manifest digest, so run the writer
+  `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts` (ADR-0235, proposed).
   An edit to `catalog/default/selection.json` also moves the genui dogfood inventory (ADR-0232 amendment),
   which is drift-gated and never byte-captured: its clause sum is held by `DOGFOOD_GUIDANCE_CHAR_BUDGET` in
   `prompt-drift.test.ts` (re-author tersely, never raise it to green). A `notFor` edge to a type with no

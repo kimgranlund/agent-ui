@@ -1,0 +1,23 @@
+{
+  "id": "fixture-demo",
+  "preset": null,
+  "seedVersion": null,
+  "seedDigest": null,
+  "fragment": {
+    "personaId": "fixture-demo",
+    "types": [
+      "FixtureBanner"
+    ],
+    "targetCatalogs": [
+      "agent-ui",
+      "a2ui-basic"
+    ],
+    "digest": "sha256:95ebf36fbc95ca0c53816f3095a5340e38530309151e6dc334145e2955abb77d"
+  },
+  "selection": {
+    "digest": "sha256:82d25e88fc7ff1da2c8e529f35446d2ca76a3c945dab96649fbfa6ee4eed72d1"
+  },
+  "noPreset": {
+    "why": "Mechanism-only fragment: persona-catalog-composition SPEC-N6 ships fixture-demo to exercise the composition seam, so no agent preset stands behind it."
+  }
+}

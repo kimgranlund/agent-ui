@@ -91,13 +91,15 @@ export interface AgentPreset {
   disabledBuiltins?: readonly string[]
   /** Bump when a preset's SEED is rewritten in place (GH #46's Concierge upgrade): a browser holding an
    *  older persisted store for this id gets a one-time reset-to-new-seed (see `presetStore`). Absent = 1.
+   *  Pinned in this agent's `site/lib/agent-manifest/<id>.manifest.json`; a bump is a human edit there too.
    *  User edits on the CURRENT version always survive — only a version bump migrates. */
   seedVersion?: number
   /** GH #497 — this persona's `SHIPPED_PERSONA_CATALOGS` `personaId` (`concierge`/`croupier`), seeded as
    *  its `A2UI_LOCAL_PATTERNS_KEY` selection. Absent (every OTHER preset) ⇒ no local set seeded — the
    *  SAME fail-closed default `A2UI_CATALOG_KEY` already has (no preset seeds that either, `presetSeed`'s
-   *  own comment). Not validated against `SHIPPED_PERSONA_CATALOGS` here — `sanitizeLocalPatterns`
-   *  (agent-admin-schema.ts) is the one fail-closed read gate; a typo here would just read as "none". */
+   *  own comment). `sanitizeLocalPatterns` (agent-admin-schema.ts) is the one fail-closed read gate;
+   *  `site/lib/agent-manifest/agent-manifest.test.ts` validates this value against the shipped persona
+   *  folders and the agent's manifest, so a typo reds that gate instead of reading as "none". */
   localPatterns?: string
   /** GH #525 (design call 2, 2026-08-07) — opts this persona into the persistent-bankroll capability:
    *  its games keep a running score at the FIXED data-model path `/bankroll`, so the app may mirror that

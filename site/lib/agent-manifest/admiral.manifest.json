@@ -1,0 +1,11 @@
+{
+  "id": "admiral",
+  "preset": "admiral",
+  "seedVersion": 1,
+  "seedDigest": "sha256:b863e1e677d03c4a591faf581d4ea33550734ee203ad0f8842af68fba8f24fbb",
+  "fragment": null,
+  "selection": null,
+  "noFragment": {
+    "why": "Its idioms use Grid, Button and Toast, each already a validated default-catalog row, so the idiom stays prose and earns no fragment under the promotion bar at .claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25 (proposed, GH #497)."
+  }
+}
