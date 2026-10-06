@@ -247,7 +247,7 @@ consumer that does not set `steps` (a2ui-chat, a2ui-live, the devtools harness, 
 
 **Repairs**: `packages/agent-ui/app/src/controls/conversation/{activity-step.ts,activity-step.test.ts,conversation.ts,conversation.md,conversation.test.ts,conversation.browser.test.ts}` ·
 `packages/agent-ui/components/src/controls/status-stream/{status-stream.ts,status-stream.md,status-stream.test.ts}` ·
-`packages/agent-ui/app/src/controls/agent-admin/{agent-admin.ts,agent-admin-schema.ts,agent-admin.test.ts,agent-admin-activity-steps.test.ts}` ·
+`packages/agent-ui/app/src/controls/agent-admin/{agent-admin.ts,agent-admin-schema.ts,agent-admin.test.ts,agent-admin-activity-steps.test.ts,agent-admin-chat-surface.browser.test.ts}` ·
 `site/lib/{a2ui-activity.ts,a2ui-activity.test.ts,admin-live-runner.ts,admin-live-runner.test.ts}` ·
 `scripts/e2e-admin/{admin-page.ts,flows/test-chat.ts}` (`chat-surface-render` asserts the real page's step rows) ·
 `.claude/docs/references/agent-model.md` (the "activity step" glossary entry) ·
