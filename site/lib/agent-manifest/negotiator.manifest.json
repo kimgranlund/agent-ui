@@ -1,0 +1,11 @@
+{
+  "id": "negotiator",
+  "preset": "negotiator",
+  "seedVersion": 1,
+  "seedDigest": "sha256:3b4ab46a1473d4be31aba7198c2d93dc8377fd0d287f294009e6e46074322401",
+  "fragment": null,
+  "selection": null,
+  "noFragment": {
+    "why": "Its idioms use Card, Stat, Slider, Button, Sparkline and Badge, each already a validated default-catalog row, so the idiom stays prose and earns no fragment under the promotion bar at .claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25 (proposed, GH #497)."
+  }
+}

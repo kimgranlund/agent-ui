@@ -1,0 +1,11 @@
+{
+  "id": "restaurant",
+  "preset": "restaurant",
+  "seedVersion": 2,
+  "seedDigest": "sha256:c5a72bb0c0de5c26431e70d9235f5f6a2c99a220158b4a5637149410dad8d122",
+  "fragment": null,
+  "selection": null,
+  "noFragment": {
+    "why": "Its idioms use Card, Text, List, Badge, Row, Calendar, Select, Slider and Checkbox, each already a validated default-catalog row, so the idiom stays prose and earns no fragment under the promotion bar at .claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25 (proposed, GH #497)."
+  }
+}

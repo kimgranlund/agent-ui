@@ -1608,5 +1608,12 @@
     "description": "Each turn reports its composed prompt against a declared character budget and the provider-billed token usage on the TurnTrace",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0235",
+    "url": "./adr-index.html#adr-0235",
+    "description": "Each agent preset has one agent manifest that pins its seed, seedVersion, catalog fragment and selection sidecar, held by a drift gate",
+    "level": "L3",
+    "section": "Records"
   }
 ]

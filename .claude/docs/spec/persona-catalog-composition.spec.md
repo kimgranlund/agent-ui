@@ -1,6 +1,8 @@
 # SPEC — Persona Catalog Composition (M-D)
 
-> Status: accepted · v0.3 · 2026-10-05 (v0.2 2026-08-06; v0.3 adds SPEC-R1's optional `controls` records, `ControlRecord`, and SPEC-R2 AC7, the derived entry's control loader, ADR-0233, accepted) · Layer: SPEC (execution contract)
+> Status: accepted · v0.4 · 2026-10-06 (v0.2 2026-08-06; v0.3 2026-10-05 adds SPEC-R1's optional `controls` records, `ControlRecord`, and SPEC-R2 AC7, the derived entry's control loader, ADR-0233, accepted) · Layer: SPEC (execution contract)
+> **v0.4 (2026-10-06):** adds SPEC-R7, the agent manifest drift gate in `site/lib/agent-manifest/`,
+> realizing [ADR-0235](../adr/0235-agent-manifest-drift-gate.md) (proposed). No other clause moves.
 > **v0.2 (2026-08-06):** Kim's acceptance-round rulings fold in (§5, citing
 > [PR #482#issuecomment-5199254913](https://github.com/kimgranlund/agent-ui/pull/482#issuecomment-5199254913)
 > as their provisional record) — OF1 (reject-loud collision policy), OF1b (`<base>--<persona>`
@@ -307,6 +309,34 @@ pass `deps.catalog.catalogId` — the SAME value line `:762`'s `queryOf` already
   modules eligible, ranked the same way) — this clause is additive scoping, not a ranking-behavior
   change for the one catalog every module already targets.
 
+**SPEC-R7: Each agent preset is pinned by one agent manifest, held by a drift gate**
+*(realizes [ADR-0235](../adr/0235-agent-manifest-drift-gate.md), proposed; the ADR amends ADR-0172 cl.1)*.
+Each `AGENT_PRESETS` entry in `site/pages/agent-admin-presets.ts`, plus the mechanism-only
+`fixture-demo` fragment (SPEC-N6), MUST have one hand-authored `<id>.manifest.json` in
+`site/lib/agent-manifest/` that pins the preset's effective `seedVersion`, a canonical sha256 digest
+of its seed, and, when the agent composes a fragment (SPEC-R1), canonical digests of the fragment's
+`catalog.json` and `selection.json` plus its derived `types` and `targetCatalogs`. An agent with no
+fragment declares `fragment: null` with a `noFragment.why`; the ruling those whys record is ADR-0235
+cl.5, under the promotion bar restated in
+`.claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25` (proposed).
+The gate is `site/lib/agent-manifest/agent-manifest.test.ts` (the `site` vitest project, so
+`npm test`); the writer is
+`AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts`.
+- **AC1** *Given* a fragment's `catalog.json` or `selection.json` edited without a writer run, *when*
+  the gate runs, *then* it reds on `fragment-digest` or `selection-digest` for that agent, and goes
+  green once the writer refreshes the manifest.
+- **AC2** *Given* a preset whose `localPatterns` names no shipped persona folder, or a manifest that
+  declares `fragment: null` for a preset that sets `localPatterns`, *when* the gate runs, *then* it
+  reds on `unknown-local-patterns` instead of the value reading as "none".
+- **AC3** *Given* the four persona id lists (`SHIPPED_PERSONA_CATALOGS`,
+  `SHIPPED_PERSONA_CATALOG_MANIFESTS`, the `catalog/personas/` folders holding a `catalog.json`, and
+  the manifests' fragments), *when* the gate runs, *then* any id missing from one list reds on
+  `list-coherence`.
+- **AC4** *Given* a deliberate seed, fragment or sidecar change, *when* the armed writer runs, *then*
+  it rewrites only the digests and the derived `types` and `targetCatalogs`; every id, nullness,
+  `why` and `seedVersion` stays byte-identical, and an unarmed run writes nothing. A `seedVersion`
+  bump stays a human edit to the manifest.
+
 ## 4 · Non-functional requirements (SPEC-N)
 
 | ID | Requirement |
@@ -477,6 +507,7 @@ boundary: no THIRD base, not "no `a2ui-basic`."
 | SPEC-R4 | cl.2 (Q2) | 4 — `a2ui-multi-catalog` SKILL.md fifth pattern | Worked pattern demonstrates both bases (§5 widening) |
 | SPEC-R5 | cl.1 (Q1 — selection, never definitions) | 5 — `PERSONA_STATE_KEYS` gains the local-set key | Gains AC3, the base-mismatch fail-closed degrade (§5 widening) |
 | SPEC-R6 | cl.3 (Q3 — mini-skill `catalogId` gap, named not fixed by the ADR) | 6 — `selectMiniSkills` `catalogId` filter | OF2 ruled: absorbed into this SPEC's build (§5) |
+| SPEC-R7 | cl.1, amended by ADR-0235 (proposed): a fragment folder gains a site-side pin | none | The agent manifest drift gate in `site/lib/agent-manifest/` |
 | SPEC-N1 | — | 6 | RETIRED — absorbed into SPEC-R6 (OF2 ruling, §5); label kept, not renumbered (`docs-grammar.test.ts`'s own S1 precedent) |
 | SPEC-N2 | cl.3 (Q3 — tier needs carving out, not built here) | — | ADR-0172's own scoping |
 | SPEC-N3 | — (ADR-0170 cl.8, standing park) | — | Non-collision restated |

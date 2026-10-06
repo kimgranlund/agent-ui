@@ -1,0 +1,11 @@
+{
+  "id": "curator",
+  "preset": "curator",
+  "seedVersion": 1,
+  "seedDigest": "sha256:e8572e042c79320d81dd2e840e11b956bd9799981c211441a26a0066119c1d0c",
+  "fragment": null,
+  "selection": null,
+  "noFragment": {
+    "why": "Its idioms use Tabs, Tab, Avatar, SwiperItem and Card, each already a validated default-catalog row, so the idiom stays prose and earns no fragment under the promotion bar at .claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25 (proposed, GH #497)."
+  }
+}

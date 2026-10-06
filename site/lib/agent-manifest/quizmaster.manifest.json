@@ -1,0 +1,11 @@
+{
+  "id": "quizmaster",
+  "preset": "quizmaster",
+  "seedVersion": 1,
+  "seedDigest": "sha256:fbaf0f013118d139b582c1e508307e28ec4ec4221545c9c4ee7557c488b69e62",
+  "fragment": null,
+  "selection": null,
+  "noFragment": {
+    "why": "Its idioms use Text, RadioGroup, Button, Disclosure, Modal, Stat and Table, each already a validated default-catalog row, so the idiom stays prose and earns no fragment under the promotion bar at .claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25 (proposed, GH #497)."
+  }
+}

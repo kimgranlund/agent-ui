@@ -1,0 +1,11 @@
+{
+  "id": "alchemist",
+  "preset": "alchemist",
+  "seedVersion": 1,
+  "seedDigest": "sha256:2b86c0f1ba25ea1fc51f463ed928d37f18a55e35a3f28271ec28400a4c3c5395",
+  "fragment": null,
+  "selection": null,
+  "noFragment": {
+    "why": "Its idioms use Swatch, ColorPicker, Ramp, Stat, Progress and Toast, each already a validated default-catalog row, so the idiom stays prose and earns no fragment under the promotion bar at .claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25 (proposed, GH #497)."
+  }
+}
