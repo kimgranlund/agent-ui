@@ -5,8 +5,7 @@
   "private": true,
   "type": "module",
   "sideEffects": [
-    "./src/agent/system-prompt.ts",
-    "./tools/agent/worker/process-shim.ts"
+    "./src/agent/system-prompt.ts"
   ],
   "exports": {
     ".": "./src/index.ts",

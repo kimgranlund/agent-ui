@@ -1,9 +1,8 @@
 // worker-route-guards.test.ts — GH #112: the Worker's route-guard predicates (route-guards.ts) are pure
 // and side-effect-free by design specifically so they're safe to test here, in the shared jsdom process.
-// The rest of worker/index.ts is NOT safe to import into this process — its first import,
-// process-shim.ts, globally overrides `process.cwd()` (correct inside the real Workers isolate; it would
-// silently corrupt every other test in this run if imported here, since `process` is a real Node global,
-// not something vitest's per-file module isolation resets). Full route-dispatch/integration coverage
+// The rest of worker/index.ts is NOT safe to import into this process — it statically
+// imports the corpus `.jsonl` shard as Wrangler Text, plus `providers.json` and catalog JSON, which only
+// the Wrangler bundle loads. Full route-dispatch/integration coverage
 // needs a real Workers runtime (`@cloudflare/vitest-pool-workers`, a separate pool/config) — not set up
 // yet; this file covers what's safely testable today, and the live-agent proxy is additionally verified
 // against the real deployed Worker on every change (see PR #81's test plan).

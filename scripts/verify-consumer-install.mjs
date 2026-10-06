@@ -18,6 +18,11 @@
 //      assert `<ui-button>` genuinely upgrades and renders with real component CSS applied
 //   5. independently fetches one of the README's documented esm.sh CDN URLs and confirms it actually 200s
 //      with real JS/CSS, not a 404/error page — the CDN (no-build-step) recipe stays honest too
+//   6. a plain-Node leg (ADR-0236): installs `@agent-ui-kit/a2ui@<version>` into its own scratch dir and
+//      imports `@agent-ui-kit/a2ui/agent` from `node --input-type=module` (no bundler), asserting
+//      `buildSystemPrompt` returns a prompt with a `ui-card` dogfood row. A release whose installed
+//      `exports` has no `./agent` (published before ADR-0236) skips this leg with a printed note.
+//      `scripts/publish/agent-subpath-smoke.test.mjs` is the same probe pre-publish, against packed tarballs.
 //
 // Red when a published artifact breaks consumers even if the repo's own gates (`npm run check && npm test`)
 // are green — this deliberately never imports anything from `packages/agent-ui/*` source.
@@ -220,6 +225,38 @@ async function assertCdnRecipeIsHonest(version) {
   }
 }
 
+// The same probe as scripts/publish/agent-subpath-smoke.test.mjs: one-type catalog, dogfood on.
+const AGENT_PROBE = `
+import { buildSystemPrompt } from '@agent-ui-kit/a2ui/agent'
+const catalog = { catalogId: 'smoke', protocolVersion: '0.9', components: { Text: { name: 'Text', properties: {} } }, functions: {} }
+const prompt = buildSystemPrompt(catalog, [], undefined, undefined, undefined, { enabled: true, dogfood: true })
+if (typeof prompt !== 'string' || prompt.length === 0) throw new Error('empty prompt')
+if (!/^- ui-card \\S/m.test(prompt)) throw new Error('no ui-card dogfood row in the prompt')
+console.log('  plain Node: buildSystemPrompt returned ' + prompt.length + ' chars with a ui-card dogfood row')
+`
+
+/** The plain-Node leg: `@agent-ui-kit/a2ui/agent` imported with no bundler, in its own scratch dir outside
+ *  the workspace. Skips (green) when the installed release predates the published `./agent` subpath. */
+function assertAgentSubpathInPlainNode(version, keep) {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-ui-agent-smoke-'))
+  console.log(`scratch dir: ${dir}`)
+  try {
+    writeFileSync(join(dir, 'package.json'), `${JSON.stringify({ name: 'agent-smoke', private: true, type: 'module' }, null, 2)}\n`)
+    run('npm', ['install', '--no-audit', '--no-fund', `@agent-ui-kit/a2ui@${version}`], dir)
+    const installed = JSON.parse(readFileSync(join(dir, 'node_modules/@agent-ui-kit/a2ui/package.json'), 'utf8'))
+    if (installed.exports?.['./agent']) {
+      execFileSync('node', ['--input-type=module', '-e', AGENT_PROBE], { cwd: dir, stdio: 'inherit' })
+    } else {
+      console.log(`  SKIP: @agent-ui-kit/a2ui@${version} does not export ./agent (released before ADR-0236)`)
+    }
+  } catch (err) {
+    console.error(`scratch dir left at ${dir} for inspection`)
+    throw err
+  }
+  if (keep) console.log(`--keep passed: scratch dir left at ${dir}`)
+  else rmSync(dir, { recursive: true, force: true })
+}
+
 async function main() {
   const args = process.argv.slice(2)
   const keep = args.includes('--keep')
@@ -248,6 +285,9 @@ async function main() {
 
     console.log('\n--- CDN recipe (esm.sh, no build step) ---')
     await assertCdnRecipeIsHonest(version)
+
+    console.log('\n--- plain Node: @agent-ui-kit/a2ui/agent (no bundler) ---')
+    assertAgentSubpathInPlainNode(version, keep)
 
     console.log(`\n=== PASS: @agent-ui-kit@${version} installs, builds, and renders as consumers see it ===`)
   } catch (err) {

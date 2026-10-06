@@ -24,13 +24,14 @@
   // prefix only, not each package's own `src/` segment) — publish-packages.mjs reads from there per package.
   //
   // "types" adds "node" alongside the inherited "vite/client" — build-only, does NOT touch tsconfig.json's
-  // own dev "types" list. a2ui/src/agent/{mini-skills,system-prompt}.ts are the NODE-FIRST producer-toolkit
-  // modules (CLAUDE.md) and genuinely import 'node:fs' — under the dev config's test-file-inclusive program
-  // this happens to type-check anyway (some *.test.ts elsewhere in the program pulls @types/node's ambient
-  // module declarations in as a side effect), but excluding test files from THIS build (deliberately, so
-  // they never ship in the published package) removes that side channel and exposes the gap directly:
-  // TS2591 "Cannot find name 'node:fs'" plus cascading TS7006 implicit-any on readdirSync's now-unresolved
-  // return type. Declaring the real dependency here is the honest fix, not routing around the symptom.
+  // own dev "types" list. packages/agent-ui/devtools/src/server/harness-plugin.ts is the remaining published
+  // src module that imports 'node:*' ('node:http', 'node:events'); the a2ui ./agent loaders read a
+  // build-time embed since ADR-0236 and import no node builtin. Under the dev config's test-file-inclusive
+  // program this happens to type-check anyway (some *.test.ts elsewhere in the program pulls @types/node's
+  // ambient module declarations in as a side effect), but excluding test files from THIS build
+  // (deliberately, so they never ship in the published package) removes that side channel and exposes the
+  // gap directly: TS2591 on the unresolved 'node:*' module. Declaring the real dependency here is the
+  // honest fix, not routing around the symptom.
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,

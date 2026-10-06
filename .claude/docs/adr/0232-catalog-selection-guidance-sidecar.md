@@ -167,3 +167,14 @@ The repaired records are SPEC-R13 in `../spec/genui-surface.spec.md` (v0.11, §1
 inventory budget, the clause budget and a new AC5), the LLD-C3 REV in `../lld/genui-dogfood.lld.md`
 (v0.4), the `selection-guidance.ts` module-tree line in `../lld/a2ui-live-agent.lld.md`, and the
 `a2ui-prompt-authoring` and `a2ui-build` skills.
+
+## Amendment: Worker registration retired by the asset embed (2026-10-06, ADR-0236, accepted)
+
+> Status: accepted by [ADR-0236](./0236-build-time-asset-embed-for-the-producer-toolkit.md), ratified by Kim 2026-10-06.
+> ratification. Append-only; this does not edit the Decision above.
+
+The "Worker registration" bullet no longer applies once ADR-0236 lands. Sidecars are discovered by rule
+(every `selection.json` under `src/catalog/**`) by `scripts/generate-agent-assets.mjs` and embedded in
+`assets.gen.ts`; `fs-shim-content.ts` and `fs-shim.test.ts` are deleted, and the persona list derives
+from the embedded `catalog/personas/*/selection.json` keys. A new sidecar needs a regeneration, which the
+freshness gate enforces, not a manual registration.

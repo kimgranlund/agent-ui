@@ -22,7 +22,7 @@ The host links the styles: `foundation-styles.css`, `shared-styles.css`, and the
 
 Feed validated A2UI server messages (`createSurface` / `updateComponents` / `updateDataModel`) to the renderer and it maintains live surfaces — two-way input bindings, validity checks, dynamic lists, and action round-trips included. `./examples` ships seed payload transcripts; `./corpus` is the exemplar store.
 
-> The repo's agent-producer toolkit (`./agent`) is intentionally **not** part of the published package — it is node-first, repo-internal machinery. The pure `./agent/meta-line` types ARE published.
+> The agent-producer toolkit (`./agent`) is published and Node-only: import it from a server or CLI, not a browser bundle. Its prompts, selection sidecars and dogfood fleet rows are embedded at build time by `scripts/generate-agent-assets.mjs` (ADR-0236), so it reads no repo path at runtime. The pure `./agent/meta-line` types are published too.
 
 ## CDN (no build step)
 

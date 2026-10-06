@@ -1,6 +1,9 @@
 # LLD, GenUI agent-ui dogfood mode (GH #316)
 
-> Status: proposed · v0.4 · 2026-10-05 · Layer: LLD (implementation plan)
+> Status: proposed · v0.5 · 2026-10-06 · Layer: LLD (implementation plan)
+> **v0.5 (ADR-0236, accepted, 2026-10-06):** LLD-C3's inventory reads the generated `DOGFOOD_FLEET`
+> (`a2ui/src/agent/dogfood-fleet.gen.ts`, from `scripts/generate-agent-assets.mjs`) instead of walking
+> the descriptors at runtime; the parsers move to `dogfood-descriptor.ts`. No other component changes.
 > **v0.4 (T-0008, ADR-0232 amendment, 2026-10-05):** LLD-C3 gains a dated REV: each derived inventory row
 > whose tag maps to an `agent-ui` sidecar entry carries the selection clause, `not for:` targets named as
 > `ui-*` tags (`genui-surface.spec.md` §13, v0.11). §1's LLD-C3 files cell gains
@@ -115,9 +118,10 @@
 ## 4. LLD-C3, the prompt segment
 
 - `genui-surface-config.ts`: `dogfood?: boolean` + doc comment (the `exclusive` shape).
-- `dogfood-inventory.ts` (Node-side, `src/agent/`): reads
-  `packages/agent-ui/components/src/controls/*/{name}.md`, `process.cwd()`-relative paths (the
-  ADR-0135/TKT-0044 mechanics, never `import.meta.url`).
+- `dogfood-inventory.ts` (`src/agent/`, zero `node:*` per ADR-0236): composes from the generated
+  `DOGFOOD_FLEET` rows in `dogfood-fleet.gen.ts`, which `scripts/generate-agent-assets.mjs` derives from
+  `packages/agent-ui/components/src/controls/*/{name}.md` at build time (formerly a `process.cwd()`
+  walk, the ADR-0135/TKT-0044 mechanics); the parsers live in `dogfood-descriptor.ts`.
 
   > **REV (S3 build, measured):** this component ORIGINALLY named "the ONE ADR-0004 parser
   > (`@agent-ui/components/descriptor`)" as the reader, layering-wise a lawful import (a2ui already
@@ -131,10 +135,9 @@
   > unchanged; only the PARSER is local, not the data). This is the SAME local-copy resolution
   > `catalog/conformance.ts`'s `SAFE_HREF_SCHEMES` already established in this codebase for an
   > analogous reachability constraint, do not "fix" this local reader back into a
-  > `@agent-ui/components` import; it will re-red the SAME gate. `gates.test.ts`'s `NODE_ALLOWED` set
-  > (the clause-4 prompt-loading modules) also gained `src/agent/dogfood-inventory.ts` as a fourth,
-  > cited entry, the same "loads real files at call/load time" class `system-prompt.ts`/
-  > `mini-skills.ts`/`prompts/genui-packs.ts` already are.
+  > `@agent-ui/components` import; it will re-red the SAME gate. The `./agent` subpath is now
+  > generated-assets based (ADR-0236): `src/agent/dogfood-inventory.ts` reads the generated
+  > `dogfood-fleet.gen.ts`, and the old node:fs allow-list is gone.
 
   > **REV 2026-07-28 (GH #342 + #346, Kim's rulings, the S3 REV above is now RULED, not a
   > workaround):** the local reader STAYS, and it is no longer a build-seat deviation from the

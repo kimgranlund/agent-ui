@@ -1,7 +1,7 @@
 // route-guards.test.ts — GH #112: direct, cheap coverage for the Worker's pure request predicates.
 // route-guards.ts was split out of index.ts SPECIFICALLY to be safely importable here (its own header) —
-// index.ts and process-shim.ts stay untested in this project (process-shim.ts's global `process.cwd()`
-// override must never leak into a shared test process).
+// index.ts stays untested in this project (it statically imports the corpus `.jsonl` shard as Wrangler
+// Text, plus `providers.json` and catalog JSON, which only the Wrangler bundle loads).
 import { describe, it, expect } from 'vitest'
 import { isSameOriginRequest, isMountedPath, isValidTurnInput } from './route-guards.ts'
 

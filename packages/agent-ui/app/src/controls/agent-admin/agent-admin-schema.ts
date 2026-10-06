@@ -20,7 +20,7 @@ import type { TeamDeclaration } from '@agent-ui/a2ui/agent/meta-line' // GH #119
 export type { TeamDeclaration } // re-exported so `agent-admin.ts` (which never imports @agent-ui/a2ui directly) can name the type for its own `#teamDeclaredRequest`/`onTeamDeclared` seam
 import type { TargetDeclaration } from '@agent-ui/a2ui/agent/meta-line' // GH #1259 (ADR-0206 cl.1) — the declared mutation-target shape ({surfaceId}), the SAME type-only import as its five sibling arms above
 import type { ActivityStep, ActivityFooter } from '../conversation/activity-step.ts' // T-0016: the neutral step model the runner's `step`/`footer` events carry
-import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line' // ADR-0146 F1 — the live-turn progress vocabulary (type-only, from the PURE meta-line module, never the node-first ./agent barrel); a cross-package specifier stays extensionless (the repo's own local-.ts-only convention) — a2ui/package.json exports this as its own subpath
+import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line' // ADR-0146 F1 — the live-turn progress vocabulary (type-only, from the PURE meta-line module, never the ./agent barrel); a cross-package specifier stays extensionless (the repo's own local-.ts-only convention) — a2ui/package.json exports this as its own subpath
 // M-D (SPEC-R3/R5) — the persona catalog compose-time overlay's static id-recognition inputs (the root
 // `@agent-ui/a2ui` barrel, catalog/index.ts's own re-export of `catalog/compose.ts` + `catalog/personas/index.ts`).
 import { derivedCatalogId, derivedCatalogIdsFor, SHIPPED_PERSONA_CATALOGS } from '@agent-ui/a2ui'

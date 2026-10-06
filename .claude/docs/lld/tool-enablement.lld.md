@@ -76,7 +76,7 @@ worth pinning here:
   `worker/index.ts:291-294`). No new mitigation needed; the registry TRUST NOTE is updated to say
   both routes.
 - **Worker bundle imports** — `integrations/index.ts` is imported by the Worker; every new file
-  must stay dependency-free and `process-shim`-compatible (the existing `integrations.ts` already
+  must stay dependency-free and free of `node:*` imports (the existing `integrations.ts` already
   ships there; the split changes module count, not posture).
 - **Non-decision (recorded, no ADR needed):** `tool.name` values for v1 stay identical to `id`s —
   decoupling is a capability this arc buys, not a rename it performs. Nothing observable changes

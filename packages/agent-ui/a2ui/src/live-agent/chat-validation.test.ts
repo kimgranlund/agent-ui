@@ -91,7 +91,8 @@ describe('buildCatalogMap (GH #516 / persona-catalog-composition SPEC-R3 — the
     // module body already ran above (via `buildCatalogMap`'s own import chain) — a source-text assertion
     // is enough to prove BOTH hosts call the exact same helper rather than re-deriving their own map:
     // `worker/index.ts` itself is deliberately never IMPORTED here (vitest.config.ts's `tools` project
-    // comment: its module-scope `process-shim.ts` side effect must never leak into a shared test process).
+    // comment: it statically imports the corpus `.jsonl` shard as Wrangler Text, plus `providers.json` and
+    // catalog JSON, which only the Wrangler bundle loads).
     // `process.cwd()`-relative (the chat-route.test.ts precedent) — jsdom's `import.meta.url` is not a
     // real `file://` URL (vitest.config.ts's own `scripts` project comment names this exact gap).
     const ROOT = `${(process as { cwd(): string }).cwd()}/packages/agent-ui/a2ui/tools/agent`

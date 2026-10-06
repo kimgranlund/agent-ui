@@ -2,9 +2,9 @@
 // Deterministic: no key, no network, no live model — the "key" here is the literal string `not-a-real-key`.
 //
 // Why this file exists at all: LLD-C5 widens the Worker's `envVars(env)` projection to cover registered
-// `serverKey` manifests, and `worker/index.ts` can NEVER be imported into a shared test process (its first
-// import, process-shim.ts, globally overrides `process.cwd()` — see both files' headers, vitest.config.ts's
-// `tools` project comment, and route-guards.test.ts). Rather than settle for reading `envVars`'s source text
+// `serverKey` manifests, and `worker/index.ts` can NEVER be imported into a shared test process (it
+// statically imports the corpus `.jsonl` shard as Wrangler Text, plus `providers.json` and catalog JSON,
+// which only the Wrangler bundle loads — see vitest.config.ts's `tools` project comment and route-guards.test.ts). Rather than settle for reading `envVars`'s source text
 // (chat-route.test.ts's structural idiom for the same un-importable file), the projection itself was split
 // into the pure `env-projection.ts` — route-guards.ts's own precedent — so the widening is proven
 // BEHAVIORALLY against the REAL registry and the REAL providers.json here, and only the two-line wiring

@@ -16,8 +16,9 @@
 import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { splitFrontmatter as realSplitFrontmatter, parseDescriptor } from '@agent-ui/components/descriptor'
-import { catalogTypeForTag, splitFrontmatter as localSplitFrontmatter, readAttributes } from '../agent/dogfood-inventory.ts'
-import type { LocalAttribute } from '../agent/dogfood-inventory.ts'
+import { catalogTypeForTag } from '../agent/dogfood-inventory.ts'
+import { splitFrontmatter as localSplitFrontmatter, readAttributes } from '../agent/dogfood-descriptor.ts'
+import type { LocalAttribute } from '../agent/dogfood-descriptor.ts'
 import { defaultFactories } from '../catalog/default/factories.ts'
 
 declare const process: { cwd(): string }

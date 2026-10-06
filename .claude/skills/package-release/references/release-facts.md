@@ -56,11 +56,11 @@ procedure documents.
   header is the authority on the current status — read it there rather than restating it here. Two gaps
   stay documented in `app/README.md`, not silently dropped: plain Node ESM (no DOM) works for no control
   package in the family, and no CDN probe covers the app package yet.
-- **The published a2ui EXCLUDES its `./agent` subpath** — `EXCLUDE_EXPORTS_FROM_PUBLISH` in
-  `publish-packages.mjs` (its own comment is the authority: the node-first producer reads prompt
-  `.md` files via a cwd path no consumer install can have, so the export would throw on import;
-  `./agent/meta-line`, pure type-only, stays published). Shipping the producer for real is a
-  separate deliberate effort, never a silent default.
+- **The published a2ui ships its `./agent` subpath** (ADR-0236): the producer toolkit's prompts,
+  sidecars and dogfood rows are embedded at build time, so it imports from plain Node. The
+  `EXCLUDE_EXPORTS_FROM_PUBLISH` map in `publish-packages.mjs` stays, exported and empty; a new entry
+  needs a traced consumer break. `scripts/publish/agent-subpath-smoke.test.mjs` proves the packed
+  `./agent` pre-publish, and `verify-consumer-install.mjs` has the same plain-Node leg post-publish.
 - **Adding a package to the family** = extend `PACKAGE_ORDER` (+ its keywords row) in
   `publish-packages.mjs` — the one knob; the DAG-ordered list is the publish order, so a new
   package lands AFTER everything it depends on.

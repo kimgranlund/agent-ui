@@ -222,9 +222,8 @@ describe('the /chat route builds the SHARED tool dispatch (SPEC-R19 AC1 — GH #
   })
 })
 
-// The Worker's `/chat` twin (worker/index.ts `handleChat`) cannot be imported here — process-shim.ts's
-// global `process.cwd()` override must never leak into a shared test process (vitest.config.ts's `tools`
-// project + route-guards.test.ts both say so), and its `.json`/`.jsonl` raw imports are Wrangler-only. So
+// The Worker's `/chat` twin (worker/index.ts `handleChat`) cannot be imported here — its `.json`/`.jsonl`
+// raw imports are Wrangler-only (vitest.config.ts's `tools` project + route-guards.test.ts both say so). So
 // its half of AC1 gets a STRUCTURAL gate instead of a behavioral one: assert the production route resolves
 // and dispatches through the SAME shared pair, so the dev/prod fork GH #108 warned about can't reopen
 // silently. Behavior for the shared pair itself is proven by tool-dispatch.test.ts + the route legs above.

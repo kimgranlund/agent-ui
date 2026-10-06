@@ -57,8 +57,9 @@ describe('validateBuilderMission — the fail-closed trust-boundary posture vali
 
 describe('both hosts thread the validated gate into ProduceOptions (ADR-0168’s both-arms discipline)', () => {
   // The `validate-authoring-surface.test.ts` precedent, verbatim in mechanism: a source-text assertion,
-  // because `worker/index.ts` must never be IMPORTED into a shared test process (its module-scope
-  // `process-shim.ts` side effect would leak — vitest.config.ts's `tools` project says so).
+  // because `worker/index.ts` must never be IMPORTED into a shared test process (it statically
+  // imports the corpus `.jsonl` shard as Wrangler Text, plus `providers.json` and catalog JSON, which only
+  // the Wrangler bundle loads — vitest.config.ts's `tools` project says so).
   const ROOT = `${(process as unknown as { cwd(): string }).cwd()}/packages/agent-ui/a2ui/tools/agent`
   const devProxySrc = readFileSync(`${ROOT}/dev-proxy-plugin.ts`, 'utf8')
   const workerSrc = readFileSync(`${ROOT}/worker/index.ts`, 'utf8')

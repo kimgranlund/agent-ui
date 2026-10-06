@@ -1,6 +1,10 @@
 # SPEC — GenUI surface (sandboxed free-form generative UI): wire · frame · bridge · producer
 
-> Status: proposed · v0.11 · 2026-10-05 · Layer: SPEC (execution contract)
+> Status: proposed · v0.12 · 2026-10-06 · Layer: SPEC (execution contract)
+> **v0.12 amendment (ADR-0236, accepted, 2026-10-06, GH #1808):** SPEC-R9's packs and SPEC-R13(a)'s
+> teaching prose load from the generated `assets.gen.ts` through `asset-source.ts`, and SPEC-R13(b)'s
+> inventory composes from the generated `DOGFOOD_FLEET` rows (`dogfood-fleet.gen.ts`), not a
+> `process.cwd()` walk. No requirement, budget or AC changes.
 > **v0.11 amendment (T-0008, ADR-0232 amendment, 2026-10-05, GH #1815):** SPEC-R13(b)'s inventory row
 > gains the per-type selection clause from the `agent-ui` `selection.json` sidecar, `not for:` targets
 > named as `ui-*` tags; the inventory budget is revised ≤ 19 600 → ≤ 28 200 chars (measured 27 820) and a
@@ -538,6 +542,9 @@ NOT `readFileSync(new URL(…, import.meta.url))` — TKT-0044 measured that pat
 dev`'s Vite-bundled import graph) at module load (Node-only, never a browser bundle)." Every other word
 of SPEC-R9, and every acceptance criterion under it, is UNCHANGED.
 
+**v0.12 (ADR-0236):** the `process.cwd()` `readFileSync` mechanism above is retired. Packs are embedded at
+build time in the generated `assets.gen.ts` and read through `asset-source.ts`; no `node:fs` remains.
+
 ## 10 · Amendment (v0.4, SPEC-R10) — `GenuiSurfaceConfig.exclusive`, the genui-only-consumer signal
 
 Grounding: a live defect report (`gen-ui-live.ts`'s render pane staying empty on a real "make a card
@@ -645,11 +652,11 @@ the asset regenerates. The built pair MUST reference no external `url(...)`/impo
 
 **SPEC-R13 — Dogfood prompt modules: hand prose byte-pinned, derived inventory drift-gated,
 set-equal with the frame.** The dogfood segment MUST compose two parts: (a)
-`prompts/genui-dogfood-teaching.md` — hand-authored, loaded via the ADR-0135 `process.cwd()`
-mechanics, byte-pinned by a NEW field in `prompt-equivalence.baseline.json` (the `genuiPacks`
+`prompts/genui-dogfood-teaching.md` — hand-authored, loaded from the generated `assets.gen.ts`
+through `asset-source.ts` (ADR-0236; formerly the ADR-0135 `process.cwd()` mechanics), byte-pinned by a NEW field in `prompt-equivalence.baseline.json` (the `genuiPacks`
 shape: edit ⇒ deliberate re-capture), budget ≤ 8 000 chars (the SPEC-R9 pack tier); (b) a DERIVED
-fleet inventory (`dogfoodInventory()`) composed at call time from the fleet's `{name}.md`
-descriptors via the ONE ADR-0004 parser — tag, one-line role, key attributes/enums — drift-gated
+fleet inventory (`dogfoodInventory()`) composed at call time from the generated `DOGFOOD_FLEET` rows
+(`dogfood-fleet.gen.ts`, ADR-0236), derived from the fleet's `{name}.md` descriptors via the ONE ADR-0004 parser — tag, one-line role, key attributes/enums — drift-gated
 against the descriptors (the ADR-0071/`prompt-drift` discipline) and NEVER byte-captured (a fleet
 edit updates the composed prompt without re-capturing any baseline), budget ≤ 19 000 chars
 (v0.9: revised from ≤ 18 600 on real corpus evidence per §8 — ADR-0225/GH #1478's `ui-playing-card`

@@ -206,3 +206,14 @@ This is an **intake** ADR — realized in stages:
 - **Do nothing — keep the toolkit site-internal.** Rejected: TKT-0072's screenshots are the standing
   cost — every consumer re-solves "make the model emit real A2UI" from scratch and predictably ships
   markdown box-art instead; the render side already shipped and waits on exactly this half.
+
+## Amendment: build-time asset embed retires node-first (2026-10-06, ADR-0236, accepted)
+
+> Status: accepted by [ADR-0236](./0236-build-time-asset-embed-for-the-producer-toolkit.md), ratified by Kim 2026-10-06.
+> Append-only; this does not edit the clauses above.
+
+Clause 4 ("the pack is NODE-FIRST", `node:fs` admitted in named prompt loaders) is superseded in part.
+The toolkit's prompts, selection sidecars and dogfood fleet rows are embedded at build time into the
+generated `assets.gen.ts` and `dogfood-fleet.gen.ts`, read through `asset-source.ts`; no module in the
+`./agent` graph imports `node:*`, the NODE-FENCE allows zero modules, and `./agent` is published. The
+prompt-source injection seam this clause deferred stays available on top of `asset-source.ts`.

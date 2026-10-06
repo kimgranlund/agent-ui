@@ -1,7 +1,8 @@
 // env-projection.ts — the Worker's env→hostEnv projection (LLD-C5 / SPEC-R18 AC2 / ADR-0168 cl.4), pure
 // and side-effect-free, split out of index.ts for exactly the reason route-guards.ts was (its own header):
-// index.ts's first import, process-shim.ts, globally overrides `process.cwd()`, so index.ts can never be
-// imported into the shared test process — a helper living INSIDE it could only ever be gated by reading
+// index.ts statically imports the corpus `.jsonl` shard as Wrangler Text, plus `providers.json` and
+// catalog JSON, which only the Wrangler bundle loads, so index.ts can never be imported into the shared
+// test process — a helper living INSIDE it could only ever be gated by reading
 // its source text. Living here, the whole projection is behaviorally testable against the REAL registry.
 //
 // GH #115's lesson, now applied to both key registries at once: the set of secret NAMES the Worker projects

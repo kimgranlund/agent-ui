@@ -73,31 +73,21 @@ export default defineConfig({
       },
       {
         extends: true,
-        // fs-shim-content.ts imports `.md`/`.jsonl` files as plain TEXT — a real behavior ONLY under
-        // Wrangler's own "Text" module rule (wrangler.jsonc `rules`), which vitest/Vite has no notion of.
-        // Vite treats an unrecognized extension as a hard parse error unless declared an asset here —
-        // `assetsInclude` is a Vite top-level option (a sibling of `test`, not nested inside it), scoped to
-        // THIS project only (never the fleet's other projects, which have no reason to touch prompt
-        // markdown). This project only inspects `fs-shim-content.ts`'s KEY SET (the drift gate, GH #110) —
-        // the asset-URL string Vite returns for the VALUE is irrelevant; real content correctness is
-        // Wrangler's own build, not this gate's job.
-        assetsInclude: ['**/*.md', '**/*.jsonl'],
         test: {
           // GH #112 — the per-package `tools/` trees (Node-side CLIs, dev-proxy plugins, the Cloudflare
           // Worker) sit outside every OTHER project's `include` glob, same gap `tsconfig.tools.json` closes
           // for TYPES only (CLAUDE.md) — this is their first BEHAVIOR gate. `environment: 'node'`: these
           // are server-side modules (Workers/Node), never meant to run under jsdom. Started narrow to
-          // `worker/` (route-guards.ts, fs-shim.ts + fs-shim-content.ts's drift gate) — `index.ts` and
-          // `process-shim.ts` are NOT safe to import here (process-shim.ts globally overrides
-          // `process.cwd()`, a side effect that must never leak into a shared test process; see both
-          // files' own header comments) — a future full-Worker integration test needs its own isolated
+          // `worker/` (route-guards.ts and its siblings) — `index.ts` is NOT safe to import here (it statically
+          // imports the corpus `.jsonl` shard as Wrangler Text, plus `providers.json` and catalog JSON, which
+          // only the Wrangler bundle loads) — a future full-Worker integration test needs its own isolated
           // runtime (e.g. `@cloudflare/vitest-pool-workers`), not this project; `worker/worker-bundle.test.ts`
           // is the module-load slice of that, evaluating the `wrangler deploy --dry-run` bundle in a child
-          // process so the shim's global override never reaches this one. GH #335 widened it to
+          // process so no bundled module's load-time behavior reaches this one. GH #335 widened it to
           // `a2ui/tools/corpus/` and GH #343 to `a2a/tools/corpus/` — BOTH `import-seeds.ts` modules now
           // carry the same CLI-entry guard (`process.argv[1]?.endsWith('import-seeds.ts')`) keeping
-          // `main()` from firing on import, so each is exactly as safe to import here as `route-guards.ts`/
-          // `fs-shim.ts`. (#335 originally scoped to `a2ui` ONLY because a2a's tool then called `main()`
+          // `main()` from firing on import, so each is exactly as safe to import here as
+          // `route-guards.ts`. (#335 originally scoped to `a2ui` ONLY because a2a's tool then called `main()`
           // UNCONDITIONALLY with real `writeFileSync`s; #343 fixed that, which is what earns a2a its entry.)
           // Both are scoped by package NAME — never a `*/tools/corpus/*.test.ts` wildcard. A wildcard would
           // silently arm the FIRST test anyone adds under any future unguarded `tools/corpus/` tree to fire

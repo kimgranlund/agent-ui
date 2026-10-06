@@ -7,6 +7,7 @@ The A2UI protocol layer. Root `AGENTS.md` and `CLAUDE.md` hold the package DAG, 
 - `src/agent/prompts/` (`src/agent/prompts/grammar.md`, the mode files, `src/agent/prompts/mini-skills/`, `src/agent/prompts/genui-packs/`) is byte-pinned by the golden baseline `src/live-agent/prompt-equivalence.baseline.json`, asserted by `src/live-agent/prompt-equivalence.test.ts`.
 - The whole composed prompt has a declared character budget (`src/agent/prompt-budget.ts`, ADR-0234), gated by `src/live-agent/prompt-budget.test.ts`. Re-author tersely or re-measure deliberately; never raise the ceiling just to get green.
 - After a deliberate prompt change, recapture from the repo root, then diff the baseline: `RECAPTURE_BASELINE=1 npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/recapture-baseline.test.ts`
+- `src/agent/assets.gen.ts` embeds every prompt and `selection.json` sidecar; `src/agent/dogfood-fleet.gen.ts` holds the dogfood rows derived from the components descriptors. After editing a prompt, a sidecar or a components descriptor, run `node scripts/generate-agent-assets.mjs` from the repo root. `src/agent/agent-assets-freshness.test.ts` and `npm run check` stay red until you do.
 
 ## Catalogs
 
@@ -25,7 +26,7 @@ The A2UI protocol layer. Root `AGENTS.md` and `CLAUDE.md` hold the package DAG, 
 ## Boundaries
 
 - Trust boundary: provider keys stay server-side behind the dev-proxy mount `/__a2ui/agent` (`tools/agent/dev-proxy-plugin.ts`, ADR-0073 clause 5). No key, provider adapter or `produce()` import may enter `@agent-ui/devtools` (ADR-0200). `scripts/e2e-admin` answers `/__a2ui/agent` from fixtures through Playwright routes and adds no key path (local only, no CI job).
-- Node-only fence: under `src/agent/`, only the modules in `NODE_ALLOWED` (`src/agent/gates.test.ts`) may import `node:*` (ADR-0137 clause 4).
+- Node-only fence: no module under `src/agent/` imports `node:*`; its prompt, sidecar and dogfood assets come from the build-time embed (ADR-0236), gated by the NODE-FENCE leg of `src/agent/gates.test.ts`.
 
 ## Wire and validator spine
 
