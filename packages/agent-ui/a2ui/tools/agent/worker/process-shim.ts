@@ -9,6 +9,13 @@
 // only once — this file has no imports of its own, so it fully runs before `worker/index.ts` moves on to
 // resolving `produce.ts` → `system-prompt.ts`/`mini-skills.ts`, whose module-level `loadPrompt`/
 // `loadMiniSkills` calls need the global to already exist.
+//
+// Bundler contract: `index.ts` imports this file BARE, for its effect only, and esbuild (Wrangler's
+// bundler) removes a bare import whose package says it has no side effects. `packages/agent-ui/a2ui/
+// package.json` therefore lists this file in `sideEffects`; without that entry the deploy bundle loses
+// the override, `process.cwd()` stays workerd's `/bundle`, and the upload fails with Cloudflare error
+// 10021 ("no bundled directory listing"). `worker-bundle.test.ts` bundles and evaluates the Worker to
+// hold that line.
 
 // `nodejs_compat` (wrangler.jsonc) already installs a global `process` with a WORKING `cwd()` — it just
 // returns `/bundle` (a workerd sentinel), not `''`. That's a function that exists and runs, so a
