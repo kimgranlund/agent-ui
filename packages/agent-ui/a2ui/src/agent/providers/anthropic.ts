@@ -16,6 +16,8 @@
 // the lifecycle frames (`message_start`/`content_block_start`/`content_block_stop`/`message_stop`) and
 // `thinking_delta`s — previously dropped — are now surfaced through the OPTIONAL `onEvent` callback, mapped
 // to the provider-agnostic `ProviderEvent` kinds; the ACCUMULATED text (only `text_delta`) is unchanged.
+// T-0031: in a tool round the optional `ToolUseCollector` also logs the thinking blocks (text, signature) so the
+// tool loop sends them back unmodified with the tool results; that replay is request-side only.
 
 import type { AgentProvider, Turn, Effort, ProviderEvent, ToolDef } from '../agent-transport.ts'
 import type { TokenUsage } from '../meta-line.ts'
@@ -27,6 +29,8 @@ import { AgentTimeoutError } from '../deadlines.ts'
  * plain-string content is unchanged for the text-only path. */
 type AnthropicContentBlock =
   | { type: 'text'; text: string }
+  | { type: 'thinking'; thinking: string; signature: string }
+  | { type: 'redacted_thinking'; data: string }
   | { type: 'tool_use'; id: string; name: string; input: Record<string, unknown> }
   | { type: 'tool_result'; tool_use_id: string; content: string; is_error?: boolean }
 
@@ -35,18 +39,57 @@ interface AnthropicMessage {
   content: string | AnthropicContentBlock[]
 }
 
+/** T-0031: one content block of a tool round, in the order the API sent it. The assistant turn that carries
+ *  the round's `tool_use` blocks back is rebuilt from this log, so the thinking blocks travel with their
+ *  signatures, unmodified and in place (Haiku 5.5 / Sonnet 5 migration guide: pass `thinking` blocks back
+ *  unmodified with tool results; reordering or dropping one edits the prefix of every later turn). `thinking`
+ *  may be empty, since Haiku 5.5 returns only a `signature` by default; the block is still kept. `tool_use`
+ *  points into `ToolUseCollector.calls`. */
+export type RoundBlock =
+  | { type: 'thinking'; thinking: string; signature: string }
+  | { type: 'redacted_thinking'; data: string }
+  | { type: 'text'; text: string }
+  | { type: 'tool_use'; call: number }
+
 /** GH #49 — the per-round tool-call collector `parseAnthropicSSE` fills when tools are active: block
  *  metadata from `content_block_start` (type tool_use), `input_json_delta` accumulation per block index,
- *  and `message_delta`'s stop_reason. PURE state, fixture-testable alongside the parser. */
+ *  and `message_delta`'s stop_reason. T-0031 adds `blocks`, the round's whole content in arrival order
+ *  (see `RoundBlock`); it stays request-side, never yielded and never an event. PURE state, fixture-testable
+ *  alongside the parser. */
 export interface ToolUseCollector {
   calls: Array<{ id: string; name: string; inputJson: string }>
   /** block index → position in `calls` (deltas arrive keyed by index). */
   byIndex: Map<number, number>
+  /** T-0031: every content block of the round in arrival order. */
+  blocks: RoundBlock[]
+  /** T-0031: block index → position in `blocks`. */
+  blockAt: Map<number, number>
   stopReason: string | undefined
 }
 
 export function newToolCollector(): ToolUseCollector {
-  return { calls: [], byIndex: new Map(), stopReason: undefined }
+  return { calls: [], byIndex: new Map(), blocks: [], blockAt: new Map(), stopReason: undefined }
+}
+
+/** Append a block to the round's log, keyed by its stream index when it has one. */
+function openBlock(tools: ToolUseCollector, index: number | undefined, block: RoundBlock): void {
+  if (index !== undefined) tools.blockAt.set(index, tools.blocks.length)
+  tools.blocks.push(block)
+}
+
+/** The `thinking` or `text` block a delta targets: by stream index, or the latest block when the frame
+ *  carries none. A delta whose `content_block_start` never arrived opens a block of its own. */
+function blockFor<T extends 'thinking' | 'text'>(
+  tools: ToolUseCollector,
+  index: number | undefined,
+  type: T,
+): Extract<RoundBlock, { type: T }> {
+  const at = index === undefined ? tools.blocks.length - 1 : (tools.blockAt.get(index) ?? -1)
+  const found = tools.blocks[at]
+  if (found?.type === type) return found as Extract<RoundBlock, { type: T }>
+  const fresh = (type === 'thinking' ? { type, thinking: '', signature: '' } : { type, text: '' }) as Extract<RoundBlock, { type: T }>
+  openBlock(tools, index, fresh)
+  return fresh
 }
 
 /** ADR-0234 (proposed): the per-request token-usage collector `parseAnthropicSSE` fills when one is
@@ -175,12 +218,29 @@ export function* parseAnthropicSSE(
       onEvent?.({ kind: 'block_start' })
       // GH #49 — a tool_use block opening: capture id/name at the block's index so the input_json_delta
       // accumulation below has a home. Ignored entirely when no collector rides the request.
+      // T-0031: the same collector logs the round's other blocks in arrival order (`RoundBlock`).
       if (tools) {
         const parsedStart = safeJson(frame.data)
-        const block = (parsedStart as { index?: number; content_block?: { type?: string; id?: string; name?: string } } | null)
-        if (block?.content_block?.type === 'tool_use' && typeof block.index === 'number' && block.content_block.id && block.content_block.name) {
-          tools.byIndex.set(block.index, tools.calls.length)
-          tools.calls.push({ id: block.content_block.id, name: block.content_block.name, inputJson: '' })
+        const block = (parsedStart as {
+          index?: number
+          content_block?: { type?: string; id?: string; name?: string; thinking?: string; signature?: string; data?: string }
+        } | null)
+        const index = typeof block?.index === 'number' ? block.index : undefined
+        const started = block?.content_block
+        if (started?.type === 'tool_use' && index !== undefined && started.id && started.name) {
+          tools.byIndex.set(index, tools.calls.length)
+          openBlock(tools, index, { type: 'tool_use', call: tools.calls.length })
+          tools.calls.push({ id: started.id, name: started.name, inputJson: '' })
+        } else if (started?.type === 'thinking') {
+          openBlock(tools, index, {
+            type: 'thinking',
+            thinking: typeof started.thinking === 'string' ? started.thinking : '',
+            signature: typeof started.signature === 'string' ? started.signature : '',
+          })
+        } else if (started?.type === 'redacted_thinking' && typeof started.data === 'string') {
+          openBlock(tools, index, { type: 'redacted_thinking', data: started.data })
+        } else if (started?.type === 'text') {
+          openBlock(tools, index, { type: 'text', text: '' })
         }
       }
       continue
@@ -215,16 +275,23 @@ export function* parseAnthropicSSE(
       typeof (parsed as { delta: unknown }).delta === 'object' &&
       (parsed as { delta: unknown }).delta !== null
     ) {
-      const delta = (parsed as { delta: { type?: unknown; text?: unknown; thinking?: unknown; partial_json?: unknown } }).delta
+      const delta = (parsed as { delta: { type?: unknown; text?: unknown; thinking?: unknown; signature?: unknown; partial_json?: unknown } }).delta
+      const at = (parsed as { index?: unknown }).index
+      const blockIndex = typeof at === 'number' ? at : undefined
       if (delta.type === 'text_delta' && typeof delta.text === 'string') {
+        if (tools) blockFor(tools, blockIndex, 'text').text += delta.text
         yield delta.text
       } else if (delta.type === 'thinking_delta' && typeof delta.thinking === 'string') {
+        // T-0031: the collector keeps the text for the tool-loop replay (request-side only).
+        if (tools) blockFor(tools, blockIndex, 'thinking').thinking += delta.thinking
         // Raw chain-of-thought — surfaced as a lifecycle event, NEVER yielded onto the accumulated wire.
         onEvent?.({ kind: 'thinking', text: delta.thinking })
+      } else if (delta.type === 'signature_delta' && typeof delta.signature === 'string') {
+        // T-0031: the signature that makes a thinking block replayable; collector only, never an event.
+        if (tools) blockFor(tools, blockIndex, 'thinking').signature += delta.signature
       } else if (delta.type === 'input_json_delta' && typeof delta.partial_json === 'string' && tools) {
         // GH #49 — a tool call's argument JSON, streamed in fragments keyed by block index.
-        const at = (parsed as { index?: number }).index
-        const slot = typeof at === 'number' ? tools.byIndex.get(at) : undefined
+        const slot = blockIndex !== undefined ? tools.byIndex.get(blockIndex) : undefined
         if (slot !== undefined) tools.calls[slot]!.inputJson += delta.partial_json
       }
     }
@@ -239,6 +306,41 @@ function safeJson(text: string): unknown {
   } catch {
     return null
   }
+}
+
+/** The `input` JSON a tool call streamed, parsed; `{}` for empty or unparseable input (the unparseable case
+ *  is already reported to the model through its `is_error` tool_result, so the echoed block stays well formed). */
+function parseToolInput(inputJson: string): Record<string, unknown> {
+  if (inputJson.trim().length === 0) return {}
+  try {
+    return JSON.parse(inputJson) as Record<string, unknown>
+  } catch {
+    return {}
+  }
+}
+
+/** T-0031: the assistant turn that carries a tool round's calls back to the model, rebuilt from the round's
+ *  block log in the order the API sent it: `thinking` and `redacted_thinking` blocks with their signatures
+ *  (the migration guide: pass them back unmodified with tool results), the round's text, the `tool_use`
+ *  blocks with their parsed input. A `thinking` block is kept even when its `thinking` field is empty (Haiku
+ *  5.5 returns only a signature by default; dropping it silently costs the model its earlier reasoning),
+ *  but one whose signature never arrived is left out, because the API rejects an unsigned block with a 400
+ *  and that would fail the turn. Whitespace-only text is left out too: the API rejects an empty text block. */
+function assistantTurnBlocks(collector: ToolUseCollector): AnthropicContentBlock[] {
+  const out: AnthropicContentBlock[] = []
+  for (const block of collector.blocks) {
+    if (block.type === 'tool_use') {
+      const call = collector.calls[block.call]!
+      out.push({ type: 'tool_use', id: call.id, name: call.name, input: parseToolInput(call.inputJson) })
+    } else if (block.type === 'text') {
+      if (block.text.trim().length > 0) out.push({ type: 'text', text: block.text })
+    } else if (block.type === 'thinking') {
+      if (block.signature.length > 0) out.push({ type: 'thinking', thinking: block.thinking, signature: block.signature })
+    } else {
+      out.push({ type: 'redacted_thinking', data: block.data })
+    }
+  }
+  return out
 }
 
 /** `Turn[]` → the Anthropic Messages-API array. `system` is NOT a message here — it is Anthropic's
@@ -656,18 +758,7 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): 
           }),
         )
 
-        const assistantBlocks: AnthropicContentBlock[] = [
-          ...(roundText.join('').trim().length > 0 ? [{ type: 'text' as const, text: roundText.join('') }] : []),
-          ...results.map(({ call }) => {
-            let input: Record<string, unknown> = {}
-            try {
-              input = call.inputJson.trim().length > 0 ? (JSON.parse(call.inputJson) as Record<string, unknown>) : {}
-            } catch {
-              /* unparseable input already reported via the is_error result — echo an empty object */
-            }
-            return { type: 'tool_use' as const, id: call.id, name: call.name, input }
-          }),
-        ]
+        const assistantBlocks = assistantTurnBlocks(collector)
         extra.push({ role: 'assistant', content: assistantBlocks })
         extra.push({
           role: 'user',

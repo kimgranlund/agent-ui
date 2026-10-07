@@ -140,6 +140,64 @@ describe('parseAnthropicSSE — tool_use collection (GH #49)', () => {
     expect([...parseAnthropicSSE(toolStream)]).toEqual([])
   })
 
+  // T-0031: the collector also keeps the round's thinking blocks, in arrival order, for the tool-loop replay.
+  it('collects a thinking block (text from thinking_delta, signature from signature_delta) and a redacted_thinking block, in order, yielding no text', async () => {
+    const { newToolCollector } = await import('../agent/providers/anthropic.ts')
+    const stream = [
+      'event: content_block_start',
+      'data: {"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":""}}',
+      '',
+      'event: content_block_delta',
+      'data: {"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"step one"}}',
+      '',
+      'event: content_block_delta',
+      'data: {"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"sig_1"}}',
+      '',
+      'event: content_block_start',
+      'data: {"type":"content_block_start","index":1,"content_block":{"type":"redacted_thinking","data":"blob"}}',
+      '',
+      'event: content_block_start',
+      'data: {"type":"content_block_start","index":2,"content_block":{"type":"tool_use","id":"toolu_3","name":"weather"}}',
+      '',
+    ].join('\n')
+    const collector = newToolCollector()
+    const events: ProviderEvent[] = []
+    expect([...parseAnthropicSSE(stream, (ev) => events.push(ev), collector)]).toEqual([])
+    expect(collector.blocks).toEqual([
+      { type: 'thinking', thinking: 'step one', signature: 'sig_1' },
+      { type: 'redacted_thinking', data: 'blob' },
+      { type: 'tool_use', call: 0 },
+    ])
+    expect(events.filter((e) => e.kind === 'thinking')).toEqual([{ kind: 'thinking', text: 'step one' }])
+  })
+
+  it('keeps a signature-only thinking block (the Haiku 5.5 default) with thinking:""', async () => {
+    const { newToolCollector } = await import('../agent/providers/anthropic.ts')
+    const stream = [
+      'event: content_block_start',
+      'data: {"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":""}}',
+      '',
+      'event: content_block_delta',
+      'data: {"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"sig_only"}}',
+      '',
+    ].join('\n')
+    const collector = newToolCollector()
+    expect([...parseAnthropicSSE(stream, undefined, collector)]).toEqual([])
+    expect(collector.blocks).toEqual([{ type: 'thinking', thinking: '', signature: 'sig_only' }])
+  })
+
+  it('with NO collector a thinking stream stays byte-inert (no yield, no throw)', () => {
+    const stream = [
+      'event: content_block_start',
+      'data: {"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":""}}',
+      '',
+      'event: content_block_delta',
+      'data: {"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"sig_1"}}',
+      '',
+    ].join('\n')
+    expect([...parseAnthropicSSE(stream)]).toEqual([])
+  })
+
   it('a mixed stream still yields ONLY text deltas while collecting the tool block beside them', async () => {
     const { newToolCollector } = await import('../agent/providers/anthropic.ts')
     const mixed = [

@@ -407,13 +407,14 @@ GH #1810), which drives `produce()` through scripted providers with no key. Each
 ```ts
 // PURE (fixture-tested — LLD-C8/SPEC-R11 AC3): SSE chunk text → the accumulated model text fragments.
 function* parseAnthropicSSE(chunk: string): Iterable<string> { /* yield delta.text on
-  content_block_delta where delta.type==="text_delta"; ignore ping/thinking/tool; surface event:error */ }
+  content_block_delta where delta.type==="text_delta"; thinking_delta goes to onEvent only, never yielded; with a ToolUseCollector it also logs the round's thinking / redacted_thinking / text / tool_use blocks in arrival order (signature_delta included); ignore ping; surface event:error */ }
 // IMPURE (stubbed-fetch tests; the live-key leg stays MANUAL): the fetch + ReadableStream reader that feeds parseAnthropicSSE.
 async function* stream(req) { /* fetch(endpoint, …); for await (chunk) yield* parseAnthropicSSE(chunk) */ }
 //   first-byte deadline: each attempt's fetch rejects `no response within ANTHROPIC_FIRST_BYTE_TIMEOUT_MS ms` (60000) if headers never arrive; cleared once they do.
 //   stall guard: each body read races ANTHROPIC_STALL_TIMEOUT_MS (60000) of silence, reset per read; on expiry the reader is cancelled and the round throws `StreamStallError` (`stream stalled`), never retried.
 //   turn deadline (T-0023, in produce(), not here): TURN_DEADLINE_MS (300000) bounds the whole turn over every provider and tool round, which no per-wait timer does (a stream that keeps pinging never stalls); it throws `TurnDeadlineError`.
 //   host error line: `failureMessageFor` (chat-validation.ts) writes a timeout's plain-words `userMessage` instead of the generic rephrase text; the produce route writes it on the `error` meta-line, the prose `/chat` route as the `error` field of its 500 body (T-0024).
+//   tool loop replay (T-0031): the assistant turn sent back with the tool_results is rebuilt from that block log, so thinking / redacted_thinking blocks go back unmodified and in order (an empty `thinking` with a signature is kept; a thinking block with no signature is left out, the API 400s it); request-side only, never an event.
 //   fetchWithRetry: a 429/5xx or network error retries up to ANTHROPIC_MAX_RETRIES (2), Retry-After capped at 10000 ms; only before the body is consumed, never after streaming starts, never for a first-byte timeout or a caller abort.
 ```
 

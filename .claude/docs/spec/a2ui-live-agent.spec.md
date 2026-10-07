@@ -202,7 +202,11 @@
 > additive precedent — both absent ⇒ the request shape is byte-identical); the Anthropic adapter owns the whole
 > provider-native tool loop INTERNALLY (bounded MAX_TOOL_ROUNDS=4; scratch text from a tool round is buffered
 > into the assistant context block and NEVER yielded — only the post-tools round reaches the accumulated wire
-> the validate-then-stream law governs, so SPEC-R5 is untouched). `ProduceOptions` relays the pair verbatim.
+> the validate-then-stream law governs, so SPEC-R5 is untouched). T-0031 (2026-10-07): that assistant context
+> block also carries the round's `thinking` and `redacted_thinking` blocks, with their signatures, unmodified
+> and in the order received (the Haiku 5.5 migration guide: pass thinking blocks back unmodified with tool
+> results), so a thinking model keeps its reasoning across the loop; request-side only, nothing new reaches
+> the progress stream or the wire. `ProduceOptions` relays the pair verbatim.
 > ADR-0146's closed progress vocabulary grows by exactly ONE stage, `tool` — a factual process claim carrying
 > the registry tool NAME, never model-composed prose (the F2 honesty law's sanctioned growth; under the queue
 > design tool stages drain just before the final round's text — a recorded latency limit). EXECUTION stays in

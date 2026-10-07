@@ -163,6 +163,157 @@ describe('anthropicProvider — the GH #49 tool-use loop (mocked fetch)', () => 
     expect('tools' in bodies[0]!).toBe(false)
   })
 
+  // T-0031: the Haiku 5.5 / Sonnet 5 migration guide: "pass thinking blocks back unmodified with tool
+  // results", in the order received, signature intact, the empty-`thinking` Haiku 5.5 default included.
+  describe('thinking blocks ride the tool-loop replay unchanged (T-0031)', () => {
+    /** One tool round whose stream opens with the given thinking-block frames, then text, then a tool call. */
+    const thinkingRound = (thinkingFrames: string[]): string[] => [
+      ...thinkingFrames,
+      'event: content_block_start',
+      'data: {"type":"content_block_start","index":1,"content_block":{"type":"text","text":""}}',
+      '',
+      'event: content_block_delta',
+      'data: {"type":"content_block_delta","index":1,"delta":{"type":"text_delta","text":"Let me check that. "}}',
+      '',
+      'event: content_block_start',
+      'data: {"type":"content_block_start","index":2,"content_block":{"type":"tool_use","id":"toolu_x","name":"weather"}}',
+      '',
+      'event: content_block_delta',
+      'data: {"type":"content_block_delta","index":2,"delta":{"type":"input_json_delta","partial_json":"{\\"place\\":\\"Bergen\\"}"}}',
+      '',
+      'event: message_delta',
+      'data: {"type":"message_delta","delta":{"stop_reason":"tool_use"}}',
+      '',
+      'event: message_stop',
+      'data: {"type":"message_stop"}',
+      '',
+    ]
+
+    /** Drive a two-round turn; return the round-2 assistant turn, the yielded text and the ProviderEvents. */
+    async function replayOf(round1: string[]) {
+      const bodies: Array<Record<string, unknown>> = []
+      let call = 0
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
+          bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>)
+          call += 1
+          return call === 1 ? sseResponse(round1) : sseResponse(FINAL_ROUND)
+        }),
+      )
+      const events: ProviderEvent[] = []
+      const fragments: string[] = []
+      for await (const frag of anthropicProvider({ apiKey: 'test-key' }).stream({
+        model: 'claude-haiku-5-5',
+        system: 'sys',
+        messages: [{ role: 'user', content: 'weather in Bergen?' }],
+        tools: TOOLS,
+        executeTool: async () => 'Bergen: 12°C, rain.',
+        onEvent: (ev) => events.push(ev),
+      })) {
+        fragments.push(frag)
+      }
+      const round2 = bodies[1]!.messages as Array<{ role: string; content: unknown }>
+      return { assistant: round2.at(-2)!, fragments, events }
+    }
+
+    const SIGNED_THINKING = [
+      'event: content_block_start',
+      'data: {"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":""}}',
+      '',
+      'event: content_block_delta',
+      'data: {"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"Bergen is wet. "}}',
+      '',
+      'event: content_block_delta',
+      'data: {"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"Ask the weather tool."}}',
+      '',
+      'event: content_block_delta',
+      'data: {"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"sig_abc"}}',
+      '',
+      'event: content_block_stop',
+      'data: {"type":"content_block_stop","index":0}',
+      '',
+    ]
+
+    it('a thinking block before a tool call goes back FIRST in the assistant turn, text and signature intact', async () => {
+      const { assistant, fragments, events } = await replayOf(thinkingRound(SIGNED_THINKING))
+      expect(assistant.role).toBe('assistant')
+      expect(assistant.content).toEqual([
+        { type: 'thinking', thinking: 'Bergen is wet. Ask the weather tool.', signature: 'sig_abc' },
+        { type: 'text', text: 'Let me check that. ' },
+        { type: 'tool_use', id: 'toolu_x', name: 'weather', input: { place: 'Bergen' } },
+      ])
+      // the replay is request-side only: the thinking text never joins the accumulated wire, and the
+      // ProviderEvent stream (ADR-0146 F1, ADR-0240) is unchanged, with no signature on it
+      expect(fragments.join('')).toBe('{"final":true}')
+      expect(events.filter((e) => e.kind === 'thinking').map((e) => e.text)).toEqual(['Bergen is wet. ', 'Ask the weather tool.'])
+      expect(JSON.stringify(events)).not.toContain('sig_abc')
+    })
+
+    it('the Haiku 5.5 default (empty `thinking`, signature only) is kept as {thinking:"", signature}', async () => {
+      const { assistant } = await replayOf(
+        thinkingRound([
+          'event: content_block_start',
+          'data: {"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":""}}',
+          '',
+          'event: content_block_delta',
+          'data: {"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"sig_only"}}',
+          '',
+          'event: content_block_stop',
+          'data: {"type":"content_block_stop","index":0}',
+          '',
+        ]),
+      )
+      expect((assistant.content as unknown[])[0]).toEqual({ type: 'thinking', thinking: '', signature: 'sig_only' })
+    })
+
+    it('a redacted_thinking block goes back as received, in its place', async () => {
+      const { assistant } = await replayOf(
+        thinkingRound([
+          'event: content_block_start',
+          'data: {"type":"content_block_start","index":0,"content_block":{"type":"redacted_thinking","data":"opaque-bytes"}}',
+          '',
+          'event: content_block_stop',
+          'data: {"type":"content_block_stop","index":0}',
+          '',
+        ]),
+      )
+      expect((assistant.content as Array<{ type: string }>).map((b) => b.type)).toEqual(['redacted_thinking', 'text', 'tool_use'])
+      expect((assistant.content as unknown[])[0]).toEqual({ type: 'redacted_thinking', data: 'opaque-bytes' })
+    })
+
+    it('a thinking block whose signature never arrived is left out (the API 400s an unsigned block)', async () => {
+      const { assistant } = await replayOf(
+        thinkingRound([
+          'event: content_block_start',
+          'data: {"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":""}}',
+          '',
+          'event: content_block_delta',
+          'data: {"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"unsigned"}}',
+          '',
+        ]),
+      )
+      expect((assistant.content as Array<{ type: string }>).map((b) => b.type)).toEqual(['text', 'tool_use'])
+    })
+
+    it('two thinking blocks keep their received order around the text', async () => {
+      const second = [
+        'event: content_block_start',
+        'data: {"type":"content_block_start","index":3,"content_block":{"type":"thinking","thinking":""}}',
+        '',
+        'event: content_block_delta',
+        'data: {"type":"content_block_delta","index":3,"delta":{"type":"signature_delta","signature":"sig_two"}}',
+        '',
+      ]
+      const base = thinkingRound(SIGNED_THINKING)
+      // splice a second thinking block between the text block and the tool call (index 2 frames start at 'content_block_start' for tool_use)
+      const at = base.findIndex((l) => l.includes('"index":2,"content_block"')) - 1
+      const { assistant } = await replayOf([...base.slice(0, at), ...second, ...base.slice(at)])
+      expect((assistant.content as Array<{ type: string }>).map((b) => b.type)).toEqual(['thinking', 'text', 'thinking', 'tool_use'])
+      expect((assistant.content as Array<{ signature?: string }>)[2]!.signature).toBe('sig_two')
+    })
+  })
+
   it('CAP EXHAUSTION (PR #59 review): a model that always wants tools makes exactly MAX_TOOL_ROUNDS+1 fetches, MAX_TOOL_ROUNDS executions, and the forced-final round\'s text is PRESERVED', async () => {
     let fetches = 0
     vi.stubGlobal(
