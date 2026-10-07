@@ -49,7 +49,7 @@ export interface SupportedModel {
 /** Rev.4 (Kim, 2026-07-19): Opus and Fable are REMOVED entirely; the roster is the Haiku/Sonnet tier
  *  pair per provider — ids match the dev proxy's own providers.json rows EXACTLY (the one id namespace;
  *  openai/gemini are `implemented: false` there, so a live turn on them degrades visibly until their
- *  adapters land — the grid ships them switched OFF). T-0030 (Kim, 2026-10-07): Haiku 5.5 joins as the
+ *  adapters land; the grid ships them switched OFF). T-0030 (Kim, 2026-10-07): Haiku 5.5 joins as the
  *  default and Haiku 4.5 stays included and selectable, listed after Sonnet so the first non-default row
  *  is still the Sonnet tier. */
 export const SUPPORTED_MODELS: readonly SupportedModel[] = [
