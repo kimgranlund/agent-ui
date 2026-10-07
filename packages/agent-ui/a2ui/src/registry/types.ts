@@ -57,6 +57,17 @@ export interface GuidanceEntry {
 export type GuidanceMap = Readonly<Record<string, GuidanceEntry>>
 
 /**
+ * Every shipped `selection.json` sidecar, keyed by what it pins: base catalog id (`catalogId`) and persona
+ * fragment id (`personaId`). The shape of `RegistrySources.guidance`, and of the committed browser-safe
+ * projection `selection-projection.gen.ts` (T-0025, GH #1815 item 3), which a host with no filesystem and
+ * no `./agent` embed can hand to `composeRegistry` or resolve through `selectionProjectionFor`.
+ */
+export interface SelectionProjection {
+  readonly base: Readonly<Record<string, GuidanceMap>>
+  readonly persona: Readonly<Record<string, GuidanceMap>>
+}
+
+/**
  * One indexed capability. Plain JSON: optional fields are omitted, never `undefined` or `null`, so the
  * committed projection has deterministic bytes. Kind-specific fields:
  * - control: `tag`, `tier`, `description`, `uses`, `catalogs` (scopes whose types render it)
@@ -156,10 +167,7 @@ export interface RegistrySources {
   // runtime tier
   readonly catalogs: readonly CatalogSource[]
   readonly fragments: readonly FragmentSource[]
-  readonly guidance: {
-    readonly base: Readonly<Record<string, GuidanceMap>>
-    readonly persona: Readonly<Record<string, GuidanceMap>>
-  }
+  readonly guidance: SelectionProjection
   readonly miniSkills: readonly MiniSkillSource[]
   readonly feed?: FeedSource
   // build tier

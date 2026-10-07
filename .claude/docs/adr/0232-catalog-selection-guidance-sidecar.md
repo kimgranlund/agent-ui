@@ -91,6 +91,11 @@ catalog, and render it as a clause on that type's inventory line.
 - **In-page tooling cannot read the sidecar.** `scripts/eval-a2ui-catalog.mjs` and the docs site run in
   the browser; only Node evals through `@agent-ui/a2ui/agent` can. The choosing guide cites the sidecar
   as its machine twin rather than deriving from it.
+  Note (2026-10-07, T-0025, GH #1815 item 3): the follow-up landed as a derived copy, not a second source.
+  `npm run generate:registry` also writes `src/registry/selection-projection.gen.ts`, the sidecars alone as pure
+  data, and `selectionProjectionFor(catalogId)` on the `./registry` subpath resolves it with the same id rules as
+  `selectionGuidanceForId`, so a browser host reads guidance with no `./agent` embed. The sidecars stay the one
+  authored home; `selection.test.ts` holds the two resolvers equal.
 - **Reciprocity may force weak reverse `why`s.** The gate cannot tell a real axis from filler. Rubric
   `a2ui-catalog.md` D7 is the review half and rejects filler reverse edges.
   Note (2026-10-06, T-0007, GH #1815 item 3): the ten weakest reverse `why`s were rewritten to name

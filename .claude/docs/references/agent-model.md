@@ -149,9 +149,10 @@ header pointing here.
   Agents SDK); this repo's word is member (vendor docs fetched 2026-08-29, §5).
 - **selection guidance**: per-type "which one when" data for the model: `intents` (the job, in the
   user's words) and `notFor` (a confusable sibling and the axis that separates them). Its machine home
-  is each catalog's Node-only `selection.json` sidecar beside `catalog.json`, read by
+  is each catalog's `selection.json` sidecar beside `catalog.json`, read by
   `selectionGuidanceFor` on `@agent-ui/a2ui/agent` and rendered as a clause on the composed prompt's
-  inventory line (ADR-0232, accepted). The human twins are the catalog SPEC §5.2 Notes and the site's
+  inventory line (ADR-0232, accepted); in-page tooling reads the derived browser-safe copy,
+  `selectionProjectionFor` on `@agent-ui/a2ui/registry`. The human twins are the catalog SPEC §5.2 Notes and the site's
   choosing guide; neither is generated from it.
 - **agent manifest**: the `<id>.manifest.json` file in `site/lib/agent-manifest/`, one per agent
   preset plus one for `fixture-demo`. It pins the preset's effective `seedVersion` and canonical
