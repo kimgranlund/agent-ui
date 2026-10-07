@@ -116,7 +116,7 @@ export interface ProduceDeps {
 export interface ProduceOptions {
   maxRounds: number
   signal?: AbortSignal
-  /** T-0023 (GH #1797) — the whole-turn deadline in milliseconds, covering every provider round, repair
+  /** T-0023 (GH #1797): the whole-turn deadline in milliseconds, covering every provider round, repair
    * round and tool round (`withTurnDeadline`, `deadlines.ts`). Absent ⇒ `TURN_DEADLINE_MS`; `0` or a
    * non-finite value disables the bound. Server-owned: a host sets it, a request body never does. On expiry
    * the turn throws `TurnDeadlineError` and the same abort reaches the provider call and any in-flight tool. */
@@ -943,8 +943,8 @@ const SEMANTIC_HINT =
 /** The bounded turn: `produceTurn`'s whole loop under one absolute deadline (T-0023, `withTurnDeadline`). The
  * composed signal replaces `opts.signal` for the loop, so the provider fetch, its body read and every
  * in-flight tool call (`executeTool`'s third argument) stop together when the limit is reached. */
-export function produce(input: TurnInput, deps: ProduceDeps, opts: ProduceOptions): AsyncIterable<string> {
-  return withTurnDeadline((signal) => produceTurn(input, deps, { ...opts, signal }), opts.signal, opts.turnDeadlineMs)
+export async function* produce(input: TurnInput, deps: ProduceDeps, opts: ProduceOptions): AsyncIterable<string> {
+  yield* withTurnDeadline((signal) => produceTurn(input, deps, { ...opts, signal }), opts.signal, opts.turnDeadlineMs)
 }
 
 async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOptions): AsyncIterable<string> {

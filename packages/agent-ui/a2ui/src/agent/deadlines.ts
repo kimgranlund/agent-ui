@@ -1,4 +1,4 @@
-// deadlines.ts: T-0023 (GH #1797 gap) — the bounds that cap how long one turn may run, and the one error
+// deadlines.ts: T-0023 (GH #1797 gap), the bounds that cap how long one turn may run, and the one error
 // family they throw. The adapter already bounds each wait (first byte, silence between two reads); neither
 // bounds a TURN: a stream that keeps emitting events never stalls, and a loop of provider rounds and tool
 // rounds restarts every per-wait timer. `withTurnDeadline` is the one absolute clock over all of it.
