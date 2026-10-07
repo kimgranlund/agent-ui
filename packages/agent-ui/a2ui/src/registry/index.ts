@@ -5,3 +5,5 @@
 export * from './types.ts'
 export { composeRegistry, registryViewFor, tagForType, typeForTag, FLEET_CATALOG_ID } from './compose.ts'
 export { selectCapabilities } from './select.ts'
+export { selectionProjectionFor } from './selection.ts'
+export { SELECTION_PROJECTION } from './selection-projection.gen.ts'
