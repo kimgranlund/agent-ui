@@ -19,6 +19,9 @@ export class CatalogLoadError extends Error {
   }
 }
 
+/** The message of a caught value, for a `CatalogLoadError` message. */
+export const reasonOf = (cause: unknown): string => (cause instanceof Error ? cause.message : String(cause))
+
 const bodies = new WeakMap<LazyCatalogRecord, Promise<CatalogBody>>()
 
 /** The body of `record`, loaded at most once (a failed load is retried). A synchronous throw becomes a rejection. */

@@ -11,7 +11,7 @@
 import { loadCatalog } from './catalog.ts'
 import type { Catalog } from './catalog.ts'
 import type { ControlLoader } from '@agent-ui/components/loader'
-import { CatalogLoadError, loadCatalogBody } from './loader.ts'
+import { CatalogLoadError, loadCatalogBody, reasonOf } from './loader.ts'
 import type { CatalogEntry, CatalogRegistry, LazyCatalogRecord, VariantDispatch, WidgetFactory } from './types.ts'
 import { factoriesOf } from './variant.ts'
 
@@ -42,7 +42,6 @@ export class Registry implements CatalogRegistry {
   readonly #catalogs = new Map<string, CatalogEntry>()
   // ADR-0241: recorded-but-unloaded catalogs. An id is in at most one of `#catalogs` and `#records`.
   readonly #records = new Map<string, LazyCatalogRecord>()
-  readonly #pending = new Map<string, Promise<void>>()
 
   register(
     catalog: unknown,
@@ -94,12 +93,11 @@ export class Registry implements CatalogRegistry {
   /**
    * Record a catalog by id without loading its body (ADR-0241 cl.3). Internal to the package: `register`
    * stays the one project seam. Last-wins like `register`: a loaded or recorded entry under the same id is
-   * replaced, and a load already in flight for it is discarded.
+   * replaced, and a load already in flight for the old record is discarded when it lands.
    */
   registerLazy(record: LazyCatalogRecord): void {
     if (this.knows(record.id)) warnOverride(record.id)
     this.#catalogs.delete(record.id)
-    this.#pending.delete(record.id)
     this.#records.set(record.id, record)
   }
 
@@ -110,16 +108,15 @@ export class Registry implements CatalogRegistry {
 
   /**
    * Load a recorded catalog's body (module-wide memo, `loader.ts`) and register it into this registry, once
-   * (ADR-0241 cl.4-5). Resolves at once for a loaded id. Rejects with `CatalogLoadError` for an unrecorded
-   * id, a failed load, a body declaring another id, or a factory gap; the next call retries.
+   * (concurrent calls share the one load: the first to resume registers, the rest find the id loaded and
+   * settle on it; ADR-0241 cl.4-5). Resolves at once for a loaded id. Rejects with `CatalogLoadError` for an
+   * unrecorded id, a failed load, a body declaring another id, or a factory gap; the next call retries.
    */
   ensure(id: string): Promise<void> {
     if (this.#catalogs.has(id)) return Promise.resolve()
     const record = this.#records.get(id)
     if (record === undefined) return Promise.reject(new CatalogLoadError(id, `no catalog record for "${id}"`))
-    const known = this.#pending.get(id)
-    if (known !== undefined) return known
-    const pending = loadCatalogBody(record).then(
+    return loadCatalogBody(record).then(
       (body) => {
         // A `register` or newer `registerLazy` for this id landed while the body loaded: it wins, and this
         // call settles on whatever now answers to the id.
@@ -129,19 +126,13 @@ export class Registry implements CatalogRegistry {
         try {
           this.#store(body.catalog, body.factories, body.functions, body.controls, false)
         } catch (cause) {
-          throw new CatalogLoadError(id, `catalog "${id}" failed to register: ${(cause as Error).message}`, { cause })
+          throw new CatalogLoadError(id, `catalog "${id}" failed to register: ${reasonOf(cause)}`, { cause })
         }
       },
       (cause: unknown) => {
-        throw new CatalogLoadError(id, `catalog "${id}" failed to load: ${(cause as Error | undefined)?.message}`, { cause })
+        throw new CatalogLoadError(id, `catalog "${id}" failed to load: ${reasonOf(cause)}`, { cause })
       },
     )
-    this.#pending.set(id, pending)
-    const settle = (): void => {
-      if (this.#pending.get(id) === pending) this.#pending.delete(id)
-    }
-    pending.then(settle, settle)
-    return pending
   }
 
   get(id: string): CatalogEntry | undefined {

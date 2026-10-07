@@ -210,7 +210,7 @@ describe('Registry — VariantDispatch table slots (GH #545)', () => {
 
 // ADR-0241 slice 2: the lazy-record API. These tests cover the SYNCHRONOUS surface (record, knows, the two
 // unions, shadowing); `ensure` and the memoized load are `loader.test.ts`'s. No record here ever loads.
-describe('Registry — lazy records (ADR-0241): knows / get / unions', () => {
+describe('Registry lazy records (ADR-0241): knows / get / unions', () => {
   const load = vi.fn(() => Promise.reject(new Error('registry.test: a record must not load here')))
   const lazy = (id: string, submitGate: string[] = []): LazyCatalogRecord => ({ id, functions: {}, submitGate, load })
 

@@ -28,7 +28,7 @@ const record = (id: string, loaded: CatalogBody = body(id)) => {
 
 afterEach(() => vi.restoreAllMocks())
 
-describe('loadCatalogBody — the module-wide memo (ADR-0241 cl.4)', () => {
+describe('loadCatalogBody: the module-wide memo (ADR-0241 cl.4)', () => {
   it('calls load once however many times it is asked: one promise per record', async () => {
     const { rec, load } = record('a')
     const first = loadCatalogBody(rec)
