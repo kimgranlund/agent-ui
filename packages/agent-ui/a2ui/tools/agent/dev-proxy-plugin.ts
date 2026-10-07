@@ -361,7 +361,7 @@ export function a2uiDevProxyPlugin(opts?: {
 
             // POST — run one turn and stream validated A2UI JSONL back.
             if (req.method === 'POST') {
-              const { input, provider, model, mode, personaSystem, integrations, progressDetail, genui, a2ui, authoring, builderMission, effort, catalogId } = JSON.parse(await readBody(req)) as {
+              const { input, provider, model, mode, personaSystem, integrations, progressDetail, progressReasoning, genui, a2ui, authoring, builderMission, effort, catalogId } = JSON.parse(await readBody(req)) as {
                 input: TurnInput
                 provider: string
                 model: string
@@ -369,6 +369,7 @@ export function a2uiDevProxyPlugin(opts?: {
                 personaSystem?: unknown
                 integrations?: unknown
                 progressDetail?: unknown
+                progressReasoning?: unknown
                 genui?: unknown
                 a2ui?: unknown
                 authoring?: unknown
@@ -442,8 +443,14 @@ export function a2uiDevProxyPlugin(opts?: {
               // (`progressDetail:'source'` — the admin developer surface's opt-in). Membership-validated
               // fail-closed: EXACTLY the literal 'source' is honored; anything else (absent, 'full', a
               // crafted value) degrades to the 'stages' default. 'full' (raw reasoning excerpts) is
-              // deliberately NOT client-grantable — the F3 CoT gate stays server-owned.
+              // deliberately NOT client-grantable (it stays server-owned); the reasoning excerpts are grantable only
+              // through the separate `progressReasoning` flag below (T-0021/ADR-0240, proposed).
               const detail = progressDetail === 'source' ? ('source' as const) : undefined
+              // T-0021/ADR-0240 (proposed) — the reasoning half, on its own axis: a client MAY request the bounded
+              // reasoning excerpts (`progressReasoning:true`, the admin developer surface's opt-in), validated
+              // fail-closed the same way: EXACTLY the boolean `true` is honored, anything else degrades to none.
+              // Thinking text only exists when the effort dial is above low, so this adds no model cost.
+              const reasoning = progressReasoning === true
               // genui-surface.spec.md SPEC-R10/R11 — the SAME fail-closed validation both transports share
               // (chat-validation.ts); a crafted/malformed value degrades to modality-off, never a 400.
               const genuiSurface = validateGenuiSurface(genui)
@@ -465,7 +472,7 @@ export function a2uiDevProxyPlugin(opts?: {
               // default), never a 400.
               const validatedEffort = validateEffort(effort)
               try {
-                for await (const line of produce(input, deps, { maxRounds: 3, signal: controller.signal, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), ...(authoringSurface !== undefined ? { authoringSurface } : {}), ...(builderMissionGate !== undefined ? { builderMission: builderMissionGate } : {}), ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), ...toolOpts })) {
+                for await (const line of produce(input, deps, { maxRounds: 3, signal: controller.signal, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(reasoning ? { progressReasoning: true } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), ...(authoringSurface !== undefined ? { authoringSurface } : {}), ...(builderMissionGate !== undefined ? { builderMission: builderMissionGate } : {}), ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), ...toolOpts })) {
                   res.write(line + '\n')
                 }
               } catch (err) {

@@ -16,9 +16,14 @@
 //   catalog id or surface id never reaches a label or summary.
 // - Times are what this client observed between stage signals. Missing data renders nothing.
 // - Raw output is attached ONCE: the shipped lines (or, for a failed turn, the last candidate).
+// - Reasoning text (T-0021, ADR-0240, proposed) is the one place model text enters a step, and only as the
+//   step's `reasoning` field, never a label or summary: the bounded excerpts the producer puts on `reasoning`
+//   progress events under its raw-reasoning opt-in (ADR-0146 F3), concatenated and capped. A stream without
+//   the opt-in carries no excerpt, and the step has no `reasoning` key at all.
 
 import type { TurnProgress, TurnProgressStage, TurnTrace } from '../../packages/agent-ui/a2ui/src/agent/meta-line.ts'
 import type { ActivityStep, ActivityStatus, ActivityFooter } from '@agent-ui/app/conversation'
+import { ACTIVITY_REASONING_CAP } from '../../packages/agent-ui/app/src/controls/conversation/activity-step.ts'
 
 /** The closed stage → step table. `retry` and `done` are transitions, not rows; `tool` rows are numbered. */
 const STAGE_STEP: Partial<Record<TurnProgressStage, { id: string; live: string; done: string; failed?: string }>> = {
@@ -47,6 +52,10 @@ interface StepState {
   raw?: string
   /** Failed rounds this step went through (the neutral `ActivityStep.retries`). */
   retries?: number
+  /** The reasoning step's accumulated excerpt text (the neutral `ActivityStep.reasoning`). */
+  reasoning?: string
+  /** Set when the step is re-entered in a later round: the next excerpt starts a new paragraph. */
+  reasoningBreak?: boolean
 }
 
 export interface A2uiActivity {
@@ -165,7 +174,21 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
       ...(s.summary !== undefined ? { summary: s.summary } : {}),
       ...(s.retries !== undefined && s.retries > 0 ? { retries: s.retries } : {}),
       ...(s.raw !== undefined ? { raw: s.raw } : {}),
+      ...(s.reasoning !== undefined ? { reasoning: s.reasoning } : {}),
     }
+  }
+
+  /** Fold one `reasoning` excerpt onto its step. Returns whether the text changed. Empty and non-string
+   *  excerpts add nothing, whitespace before any text is dropped, a delta that is only whitespace between
+   *  words is kept, and growth stops once the text passes the cap (a later excerpt then changes nothing). */
+  const addReasoning = (s: StepState, excerpt: unknown): boolean => {
+    if (typeof excerpt !== 'string' || excerpt === '') return false
+    const have = s.reasoning ?? ''
+    if (have === '' && excerpt.trim() === '') return false
+    if (have.length > ACTIVITY_REASONING_CAP) return false
+    s.reasoning = have === '' ? excerpt : s.reasoningBreak === true ? `${have}\n\n${excerpt}` : have + excerpt
+    s.reasoningBreak = false
+    return true
   }
 
   /** Stop the running step's clock and settle it to `status`. */
@@ -180,7 +203,9 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
 
   /** (Re)open a stage step as the running one. A step re-entered in a later round keeps its spent time. */
   const open = (id: string, kind: string, labels: { live: string; done: string; failed?: string }, t: number): StepState => {
-    const s = steps.get(id) ?? { id, kind, ...labels, status: 'running' as ActivityStatus, timed: true, spentMs: 0, spanStart: t }
+    const known = steps.get(id)
+    const s = known ?? { id, kind, ...labels, status: 'running' as ActivityStatus, timed: true, spentMs: 0, spanStart: t }
+    if (known !== undefined && s.reasoning !== undefined) s.reasoningBreak = true // a later round's thoughts are a new paragraph
     s.status = 'running'
     s.spanStart = t
     steps.set(id, s)
@@ -254,9 +279,13 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
         if (row === undefined) return [] // an unknown stage renders nothing (the F2 honesty guard)
         target = { ...row, kind: row.id }
       }
-      if (current?.id === target.id) return [] // the same stage again (e.g. repeated reasoning): no change
+      if (current?.id === target.id) {
+        // The same stage again (repeated reasoning): a change only when it brought new excerpt text.
+        return ev.stage === 'reasoning' && addReasoning(current, ev.detail) ? [view(current)] : []
+      }
       const closed = close('ok', t)
       const opened = open(target.id, target.kind, target, t)
+      if (ev.stage === 'reasoning') addReasoning(opened, ev.detail) // the row is born carrying its first excerpt
       return (closed === undefined ? [opened] : [closed, opened]).map(view)
     },
 
