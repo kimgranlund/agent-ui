@@ -83,7 +83,7 @@ import '@agent-ui/components/controls/icon'
 import { formatTotalElapsed } from '@agent-ui/components/controls/status-stream'
 import type { UIStatusStreamElement, StatusEntry, ItemStatus } from '@agent-ui/components/controls/status-stream'
 // T-0016: the neutral step model step mode renders (pure, no DOM, no A2UI).
-import { formatActivityFooter, formatActivityRetries, joinActivityRaw, totalActivityRetries } from './activity-step.ts'
+import { activityReasoning, formatActivityFooter, formatActivityRetries, joinActivityRaw, totalActivityRetries } from './activity-step.ts'
 import type { ActivityStep, ActivityStatus, ActivityFooter } from './activity-step.ts'
 export type { ActivityStep, ActivityStatus, ActivityFooter } from './activity-step.ts' // hosts and adapters import the model from here
 // GH #291/ADR-0160 clause 3 — the settled-turn action-chip row reuses `ui-button` (the
@@ -462,14 +462,20 @@ const PROGRESS_LABEL: Record<TurnProgressStage, LabelPair> = {
 const STEP_STATUS: Record<ActivityStatus, ItemStatus> = { running: 'active', ok: 'done', repaired: 'warning', failed: 'error' }
 const REPAIRED_GLYPH = 'arrow-clockwise'
 const RAW_LABEL = 'Raw output'
+const REASONING_LABEL = 'Reasoning'
 
 /** Project one step onto the strip's entry shape. Every optional field degrades to an EMPTY cell (never a
  *  stale one from an earlier upsert): a running step ticks from `startedAt` (the strip owns the clock), a
- *  settled one shows its frozen `durationMs`. An unknown status from an untyped host reads `done`. */
+ *  settled one shows its frozen `durationMs`. An unknown status from an untyped host reads `done`. A step's
+ *  `reasoning` rides the strip's per-entry reveal (`source`, labelled "Reasoning", T-0021/ADR-0240): the reveal
+ *  is planted when the row is appended and later text re-stamps it in place, so a row born without text keeps
+ *  none, and a step without text carries no `source` key at all (the row stays byte-identical). */
 function stepEntry(key: string, step: ActivityStep): StatusEntry {
   const running = step.status === 'running'
   const startedAt = step.startedAt
+  const reasoning = activityReasoning(step)
   return {
+    ...(reasoning === '' ? {} : { source: reasoning, sourceLabel: REASONING_LABEL }),
     key,
     status: STEP_STATUS[step.status] ?? 'done',
     label: step.label,

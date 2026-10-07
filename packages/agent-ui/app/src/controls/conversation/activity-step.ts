@@ -33,6 +33,12 @@ export interface ActivityStep {
   /** The raw output behind the step. The strip shows every step's raw text once, together, in a single
    *  collapsed "Raw output" row at the end of the turn. */
   readonly raw?: string
+  /** The model's reasoning text behind the step (T-0021, ADR-0240). The strip shows it in a collapsed
+   *  "Reasoning" panel on this step's own row, as plain text, cut at `ACTIVITY_REASONING_CAP`. It is read once,
+   *  when the row is created: a row born without text never grows a panel later, so a host that streams the
+   *  text hands the first excerpt with the first `step()` call and grows it on the later calls. Absent, empty
+   *  or whitespace-only shows no panel at all. Never part of `raw`. */
+  readonly reasoning?: string
 }
 
 /** Turn-level facts for the strip's footer row. Every field is optional; an absent field renders nothing. */
@@ -46,6 +52,20 @@ export interface ActivityFooter {
 }
 
 const grouped = new Intl.NumberFormat('en-US')
+
+/** The most reasoning text one step's panel shows, in characters (T-0021, ADR-0240). A glance, not a transcript:
+ *  hosts that accumulate the text stop at this length, and `activityReasoning` cuts whatever still arrives longer. */
+export const ACTIVITY_REASONING_CAP = 4000
+const REASONING_TRUNCATION_MARKER = '\n… [truncated]'
+
+/** The reasoning text a step's panel renders: the step's `reasoning`, cut at the cap with an explicit marker.
+ *  `''` for absent, empty, whitespace-only or non-string text (the step then shows no panel). The text is
+ *  otherwise returned exactly as handed, never trimmed or rewritten. */
+export function activityReasoning(step: ActivityStep): string {
+  const text: unknown = step.reasoning
+  if (typeof text !== 'string' || text.trim() === '') return ''
+  return text.length > ACTIVITY_REASONING_CAP ? text.slice(0, ACTIVITY_REASONING_CAP) + REASONING_TRUNCATION_MARKER : text
+}
 
 /** The strip's retry total: every step's `retries`, summed, ignoring anything that is not a finite number
  *  above zero. `0` when no step retried (the strip then shows no retry marker). */
