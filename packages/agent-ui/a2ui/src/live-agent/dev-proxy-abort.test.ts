@@ -2,17 +2,23 @@
 // per-request turn signal on BOTH POST arms (`/chat` and produce), the twin of the Worker's
 // `request.signal`. Drives the REAL dev-proxy middleware with the provider dispatch module mocked (the
 // chat-route.test.ts precedent) and a hand-rolled `res` whose `close` event the test fires. A live
-// Vite/Node socket close stays manual acceptance (chat-route.test.ts header).
+// Vite/Node socket close stays manual acceptance (chat-route.test.ts header). T-0024 (GH #1797 follow-up)
+// adds the `/chat` failure body: a stall, a deadline or an upstream fault thrown by the provider answers
+// 500 with the host's plain-words line (`failureMessageFor`), never the raw `err.message`.
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import { a2uiDevProxyPlugin } from '../../tools/agent/dev-proxy-plugin.ts'
+import { GENERIC_FAILURE_MESSAGE } from '../../tools/agent/chat-validation.ts'
+import { StreamStallError } from '../agent/providers/anthropic.ts'
+import { TURN_DEADLINE_MS, TurnDeadlineError } from '../agent/deadlines.ts'
 
 declare const process: { cwd(): string; env: Record<string, string | undefined> }
 
 const state = vi.hoisted(() => ({
   requests: [] as Array<Record<string, unknown>>,
-  mode: 'hang' as 'hang' | 'complete',
+  mode: 'hang' as 'hang' | 'complete' | 'throw',
   settled: 0,
+  error: undefined as unknown,
 }))
 
 // vitest hoists vi.mock above the imports; the factory may only close over `vi.hoisted` state.
@@ -30,6 +36,8 @@ vi.mock('../../tools/agent/providers/index.ts', () => ({
             yield '{"a2uiMeta":{"note":"ok"}}'
             return
           }
+          // `throw` fails the way the real adapter does: the whole stream call rejects with `state.error`.
+          if (state.mode === 'throw') throw state.error
           const signal = req['signal'] as AbortSignal | undefined
           if (signal === undefined) return
           if (!signal.aborted) await new Promise<void>((r) => signal.addEventListener('abort', () => r(), { once: true }))
@@ -72,6 +80,7 @@ beforeEach(() => {
   state.requests.length = 0
   state.mode = 'hang'
   state.settled = 0
+  state.error = undefined
 })
 
 interface FakeRes {
@@ -191,5 +200,43 @@ describe('dev proxy turn abort on client disconnect (GH #1797)', () => {
 
   it('produce: a completed response never aborts the turn signal (negative control)', async () => {
     await completeThenClose('/produce', PRODUCE_BODY)
+  })
+})
+
+/** Drive one `/chat` turn whose provider throws `error`; return the route's single JSON answer. */
+async function chatFailure(error: unknown): Promise<{ status: number; payload: string; body: { error?: unknown } }> {
+  state.mode = 'throw'
+  state.error = error
+  const { res, done } = start('/chat', CHAT_BODY)
+  await done
+  expect(res.ended).toHaveLength(1)
+  const payload = res.ended[0] as string
+  return { status: res.statusCode, payload, body: JSON.parse(payload) as { error?: unknown } }
+}
+
+describe('dev proxy /chat failure body: plain words, never the raw error (T-0024)', () => {
+  it('a stalled stream answers 500 with the stall userMessage', async () => {
+    const err = new StreamStallError(60_000)
+    const out = await chatFailure(err)
+    expect(out.status).toBe(500)
+    expect(out.body.error).toBe(err.userMessage)
+    expect(out.payload).not.toContain(err.message) // the log line (adapter name, milliseconds) stays server-side
+    expect(out.body.error).not.toBe(GENERIC_FAILURE_MESSAGE)
+  })
+
+  it('the whole-turn deadline answers 500 with the deadline userMessage', async () => {
+    const err = new TurnDeadlineError(TURN_DEADLINE_MS)
+    const out = await chatFailure(err)
+    expect(out.status).toBe(500)
+    expect(out.body.error).toBe(err.userMessage)
+    expect(out.payload).not.toContain(err.message)
+    expect(out.body.error).not.toBe(GENERIC_FAILURE_MESSAGE)
+  })
+
+  it('negative control: an upstream fault keeps the 500 but its raw body never reaches the client', async () => {
+    const out = await chatFailure(new Error('anthropicProvider: upstream error 500: {"secret":"x"}'))
+    expect(out.status).toBe(500)
+    expect(out.body.error).toBe(GENERIC_FAILURE_MESSAGE)
+    expect(out.payload).not.toMatch(/anthropicProvider|secret/)
   })
 })

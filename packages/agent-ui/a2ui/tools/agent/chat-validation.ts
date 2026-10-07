@@ -27,14 +27,15 @@ import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../../src/catalog/personas/ma
 import { ProduceHalt } from '../../src/agent/produce.ts'
 import { AgentTimeoutError } from '../../src/agent/deadlines.ts'
 
-// GH #144: the generic fallback shown for any produce()-loop failure that ISN'T one of the two classes
+// GH #144: the generic fallback shown for any produce()-loop or `/chat` failure that ISN'T one of the classes
 // `failureMessageFor` passes through (an upstream fault, e.g. anthropicProvider's own error message, which
 // embeds up to 500 raw chars of the provider's API response body, an internal detail that must never reach
 // an end user's chat log). One copy for both hosts (the dev proxy and the Worker), the GH #108 anti-fork rule.
 export const GENERIC_FAILURE_MESSAGE = "I couldn't put together a valid response for that — could you try rephrasing, or try again?"
 
 /**
- * The text a host writes on the terminal `error` meta-line for a failed turn (GH #144, T-0023).
+ * The text a host writes for a failed turn (GH #144, T-0023, T-0024): the terminal `error` meta-line on the
+ * produce route, and the `error` field of the 500 JSON body on the prose `/chat` route.
  *   · `ProduceHalt`: safe verbatim, its message names only closed failure CODES (SCHEMA/PARSE/FEED_SCOPE/...)
  *     plus model-authored A2UI id paths (GH #307), never raw upstream text.
  *   · `AgentTimeoutError` (a stalled stream, a first-byte timeout, the whole-turn deadline): its

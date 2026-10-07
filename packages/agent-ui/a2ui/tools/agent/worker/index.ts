@@ -190,12 +190,22 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
   // fix; the seam already existed end-to-end (AgentProvider.stream() accepts `signal`).
   // T-0023: this arm bypasses produce(), so it takes the whole-turn deadline here (the SAME `withTurnDeadline`
   // produce() uses), composed over `request.signal`, which still propagates unchanged.
-  for await (const fragment of withTurnDeadline(
-    (signal) => dispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, signal, ...toolOpts }),
-    request.signal,
-    TURN_DEADLINE_MS,
-  )) {
-    text += fragment
+  try {
+    for await (const fragment of withTurnDeadline(
+      (signal) => dispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, signal, ...toolOpts }),
+      request.signal,
+      TURN_DEADLINE_MS,
+    )) {
+      text += fragment
+    }
+  } catch (err) {
+    // T-0024: the status stays 500, but the body is the host's plain-words line, the produce arm's rule
+    // (`failureMessageFor`): a stall or the whole-turn deadline names itself, and an upstream fault (which
+    // embeds the provider's raw response body) never reaches the client's chat log. The raw error is
+    // server-only: `wrangler tail`/the Cloudflare dashboard, never the wire. A client disconnect has no
+    // reader left, so what this answers then is moot.
+    console.error('/chat turn failed:', err)
+    return json(500, { error: failureMessageFor(err) })
   }
   return json(200, { text })
 }

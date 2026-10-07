@@ -343,7 +343,7 @@ export function a2uiDevProxyPlugin(opts?: {
               try {
                 // T-0023: this arm bypasses produce(), so it takes the whole-turn deadline here (the SAME
                 // `withTurnDeadline` produce() uses). A client disconnect still aborts `controller` and stays silent;
-                // the deadline aborts only the composed signal, so its `TurnDeadlineError` reaches the 500 below.
+                // the deadline aborts only the composed signal, so its `TurnDeadlineError` reaches the catch below.
                 for await (const fragment of withTurnDeadline(
                   (signal) => providerDispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, signal, ...toolOpts }),
                   controller.signal,
@@ -355,7 +355,13 @@ export function a2uiDevProxyPlugin(opts?: {
               } catch (err) {
                 // An aborted turn has no reader left: write nothing to the closed response.
                 if (controller.signal.aborted) return
-                throw err
+                // T-0024: the status stays 500 (nothing has been written, so a real HTTP error is still
+                // possible), but the body is the host's plain-words line, the produce arm's rule
+                // (`failureMessageFor`): a stall or the whole-turn deadline names itself, and an upstream
+                // fault (which embeds the provider's raw response body) never reaches the client's chat log.
+                // The raw error stays on this terminal only.
+                console.error('/chat turn failed:', err)
+                sendJson(res, 500, { error: failureMessageFor(err) })
               }
               return
             }
@@ -513,7 +519,8 @@ export function a2uiDevProxyPlugin(opts?: {
             // before this outer catch would ever see it, so `res.headersSent` should never be true by the
             // time control reaches this block in normal operation — `res.end()` alone covers the residual
             // case (e.g. the inner catch's own write somehow failing) without attempting a second write to
-            // an already-broken response.
+            // an already-broken response. The `/chat` arm's stream failures (T-0024) likewise answer from
+            // their own catch above; what lands here for `/chat` is only its pre-stream faults.
             const message = err instanceof Error ? err.message : 'proxy error'
             if (!res.headersSent) sendJson(res, 500, { error: message })
             else res.end()

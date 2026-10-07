@@ -42,6 +42,38 @@ try {
 }
 `
 
+// T-0024: the Worker route is not importable under vitest, so its `/chat` failure body is exercised through the
+// same emitted bundle. The child stubs `fetch` with a response whose body never emits and shortens ONE of the two
+// real timers (`argv[3]`: the adapter's 60000 ms stall timer, or the whole-turn 300000 ms deadline) to 5 ms, so
+// the real adapter and the real `withTurnDeadline` throw the real error classes, and the Worker's own catch
+// answers. It prints one `CHAT_RESULT` line and exits (the longer timer is still armed).
+const CHAT_RUNNER = `
+import { register } from 'node:module'
+import { pathToFileURL } from 'node:url'
+const hooks = \`
+import { readFile } from 'node:fs/promises'
+export async function load(url, ctx, next) {
+  if (/\\\\.(md|jsonl)$/.test(url)) return { format: 'module', shortCircuit: true, source: 'export default ' + JSON.stringify(await readFile(new URL(url), 'utf8')) }
+  return next(url, ctx)
+}\`
+register('data:text/javascript,' + encodeURIComponent(hooks))
+process.cwd = () => '/bundle'
+const realSetTimeout = globalThis.setTimeout
+const shortened = process.argv[3] === 'stall' ? 60000 : process.argv[3] === 'deadline' ? 300000 : -1
+globalThis.setTimeout = (fn, ms, ...args) => realSetTimeout(fn, ms === shortened ? 5 : ms, ...args)
+globalThis.fetch = async () => new Response(new ReadableStream({ start() {} }), { status: 200 })
+console.error = () => {}
+const mod = await import(pathToFileURL(process.argv[2]).href)
+const request = new Request('https://ui.nonoun.io/__a2ui/agent/chat', {
+  method: 'POST',
+  headers: { origin: 'https://ui.nonoun.io', 'content-type': 'application/json' },
+  body: JSON.stringify({ system: 's', model: 'claude-sonnet-5', messages: [{ role: 'user', content: 'hi' }] }),
+})
+const res = await mod.default.fetch(request, { ASSETS: { fetch: async () => new Response('') }, ANTHROPIC_API_KEY: 'sk-test-value' })
+console.log('CHAT_RESULT ' + JSON.stringify({ status: res.status, body: await res.json() }))
+process.exit(0)
+`
+
 describe('the bundled Worker evaluates its top level (the deploy-time module load)', () => {
   let scratch: string
   let bundle: string
@@ -58,6 +90,7 @@ describe('the bundled Worker evaluates its top level (the deploy-time module loa
     })
     bundle = join(outdir, 'index.js')
     writeFileSync(join(scratch, 'run-bundle.mjs'), RUNNER)
+    writeFileSync(join(scratch, 'run-chat.mjs'), CHAT_RUNNER)
   }, 120_000)
 
   afterAll(() => rmSync(scratch, { recursive: true, force: true }))
@@ -66,5 +99,27 @@ describe('the bundled Worker evaluates its top level (the deploy-time module loa
     const run = spawnSync(process.execPath, [join(scratch, 'run-bundle.mjs'), bundle], { cwd: scratch, encoding: 'utf8' })
     expect(run.stdout.trim()).toBe('WORKER_LOADED')
     expect(run.status).toBe(0)
+  })
+
+  /** POST one `/chat` turn at the bundle with the named timer shortened; return its status and JSON body. */
+  function chatTurn(shorten: 'stall' | 'deadline'): { status: number; body: { error?: string }; stdout: string } {
+    const run = spawnSync(process.execPath, [join(scratch, 'run-chat.mjs'), bundle, shorten], { cwd: scratch, encoding: 'utf8', timeout: 30_000 })
+    const line = run.stdout.split('\n').find((l) => l.startsWith('CHAT_RESULT '))
+    expect(line, `no CHAT_RESULT line; stderr: ${run.stderr}`).toBeDefined()
+    return { ...(JSON.parse(line!.slice('CHAT_RESULT '.length)) as { status: number; body: { error?: string } }), stdout: run.stdout }
+  }
+
+  it('/chat: a stalled stream answers 500 with the plain-words stall line, not the adapter log line (T-0024)', () => {
+    const out = chatTurn('stall')
+    expect(out.status).toBe(500)
+    expect(out.body.error).toMatch(/stopped sending its reply/)
+    expect(out.body.error).not.toMatch(/anthropicProvider|\d ms\b/)
+  })
+
+  it('/chat: the whole-turn deadline answers 500 with the plain-words deadline line (T-0024)', () => {
+    const out = chatTurn('deadline')
+    expect(out.status).toBe(500)
+    expect(out.body.error).toMatch(/taking longer than 300 seconds/)
+    expect(out.body.error).not.toMatch(/\d ms\b/)
   })
 })
