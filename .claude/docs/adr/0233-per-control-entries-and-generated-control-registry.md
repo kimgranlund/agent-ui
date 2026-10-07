@@ -60,6 +60,11 @@ Measured facts:
    renders the existing placeholder. Built-in catalogs register the components registry with
    `css: 'host'`; persona packages add `controls` records. An absent loader keeps today's synchronous
    behavior.
+
+   > Note (2026-10-07, append-only, nothing above is edited): [ADR-0241](./0241-lazy-catalog-bodies-behind-an-eager-manifest.md)
+   > adds a second gate to this deferred-apply queue. A surface on a known-but-unloaded catalog id queues its
+   > `updateComponents` behind the catalog body load first, then behind the control gate above, in the same order-preserving
+   > per-surface queue.
 6. Every package declares `sideEffects`, and publish rewrites it from `./src/` to `./dist/`.
 7. `./components` and `./component-styles.css` are removed with no alias.
 8. Scope: components and a2ui restructure. The other packages get `sideEffects` only, because app, code,

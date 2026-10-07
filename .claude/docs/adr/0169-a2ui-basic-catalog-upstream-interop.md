@@ -153,6 +153,11 @@ every bundle via `defaultFactories`. The `register()` public seam for project ca
 (same two-tier law, SPEC-R6/N1). Renderer/registry tests that assert one supported id update in the same
 change.
 
+> Note (2026-10-07, append-only, the Decision above is UNCHANGED): "registers on every renderer host" stays true
+> by id and no longer by bytes. [ADR-0241](./0241-lazy-catalog-bodies-behind-an-eager-manifest.md) registers
+> `a2ui-basic` (both ids) as a lazy record, known to `supportedCatalogIds()` from construction and loaded on the
+> first surface that names it. The default catalog still registers eagerly.
+
 ### 3 · Server-side selection — both hosts hold BOTH catalogs, keyed by the request's `catalogId`
 
 One shared fail-closed helper in `tools/agent/chat-validation.ts` (the GH #108 anti-fork home — both

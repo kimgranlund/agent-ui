@@ -85,6 +85,11 @@ never re-based upward again.** Five clauses; the build plan is
    closed as a class** — future growth must pay with a diet or a ruled feature-weight ADR, never
    a drift bump.
 
+   > Note (2026-10-07, append-only, nothing above is edited): a downward re-base of this row is the "ordinary" case
+   > named here. [ADR-0241](./0241-lazy-catalog-bodies-behind-an-eager-manifest.md) records the next one: lazy catalog
+   > bodies cut the eager closure by about 5.0 KB gz, and `APP_MARGINAL_BUDGET` re-bases down to the measured figure plus
+   > 2,048 B in the slice that moves them. No upward re-base is part of that change.
+
 ### Forks for Kim (recommendation is the default absent an objection)
 
 - **F1 — accessor vs. subpath-only.** *Recommend: both* (clauses 2+3). Subpath-only (no
