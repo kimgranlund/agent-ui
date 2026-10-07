@@ -16,7 +16,7 @@ describe('buildRequestBody — the Effort dial → Anthropic extended-thinking m
     expect(body['max_tokens']).toBe(4096)
   })
 
-  it.each(['claude-sonnet-5', 'claude-haiku-5-5'])(
+  it.each(['claude-haiku-5-5', 'anthropic.claude-haiku-5-5'])(
     "unset or 'low' effort on %s: no thinking param, max_tokens 4096, output_config.effort 'low' sent explicitly (T-0032: omitted, adaptive runs at its medium default)",
     (model) => {
       for (const effort of [undefined, 'low'] as const) {
@@ -27,6 +27,15 @@ describe('buildRequestBody — the Effort dial → Anthropic extended-thinking m
       }
     },
   )
+
+  it('unset effort on sonnet-5: nothing extra (its default is high; only haiku-5-5 is pinned low), explicit low maps the same', () => {
+    for (const effort of [undefined, 'low'] as const) {
+      const body = buildRequestBody({ ...BASE, ...(effort ? { effort } : {}) })
+      expect(body['thinking']).toBeUndefined()
+      expect(body['output_config']).toBeUndefined()
+      expect(body['max_tokens']).toBe(4096)
+    }
+  })
 
   it("'medium'/'high'/'xhigh' on a CURRENT-family model (sonnet-5): adaptive thinking + output_config.effort — NEVER budget_tokens (TKT-0075: the API 400s on it)", () => {
     for (const [effort, maxTokens] of [

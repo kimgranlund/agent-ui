@@ -374,6 +374,9 @@ const REPLY_HEADROOM = 2048
  *  `medium`), so it takes the current-family arm below. */
 const takesLegacyThinkingBudget = (model: string): boolean => /haiku-4-5/.test(model)
 
+/** Haiku 5.5 (also the Bedrock id `anthropic.claude-haiku-5-5`): the one model whose default effort is `medium`. */
+const isHaiku55 = (model: string): boolean => /haiku-5-5/.test(model)
+
 /** The Anthropic Messages-API request BODY, PURE (SPEC-R11 AC3, fixture-tested — the `parseAnthropicSSE`
  *  precedent, this file's OTHER extracted-for-testability seam): `effort` → thinking/effort params, with
  *  no network/key involved. The impure `stream()` below is the ONLY caller; kept exported so the mapping
@@ -395,15 +398,15 @@ export function buildRequestBody(req: {
     stream: true,
     ...(req.tools && req.tools.length > 0 ? { tools: req.tools } : {}),
   }
-  // 'low' (or unset) ⇒ no thinking params, the pre-Effort max_tokens. On the current family we send
-  // `output_config: {effort: 'low'}` explicitly (T-0032): omitting it lets adaptive thinking run at ITS
-  // default (`medium` on Haiku 5.5), which would cost more than the no-thinking 4.5 behavior this
-  // preserves. We still send no `thinking` field rather than `{type:'disabled'}`, which Fable 5 rejects.
-  // The legacy arm (Haiku 4.5) errors on `output_config.effort`, so it gets nothing.
+  // 'low' (or unset) ⇒ no thinking params, the pre-Effort max_tokens. Haiku 5.5 alone defaults to
+  // `medium` effort (other current models default to high, Haiku 4.5 has no dial), so only it gets
+  // `output_config: {effort: 'low'}` explicitly (T-0032), keeping the cheap no-thinking 4.5 behavior;
+  // a model may still think a little at low. We send no `thinking` field rather than
+  // `{type:'disabled'}`, which Fable 5 rejects.
   if (req.effort === undefined || req.effort === 'low') {
-    return takesLegacyThinkingBudget(req.model)
-      ? { ...base, max_tokens: MAX_TOKENS }
-      : { ...base, max_tokens: MAX_TOKENS, output_config: { effort: 'low' } }
+    return isHaiku55(req.model)
+      ? { ...base, max_tokens: MAX_TOKENS, output_config: { effort: 'low' } }
+      : { ...base, max_tokens: MAX_TOKENS }
   }
   if (takesLegacyThinkingBudget(req.model)) {
     // Pre-4.6 arm (Haiku 4.5): the legacy budget shape, max_tokens strictly above the budget.
