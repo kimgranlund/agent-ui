@@ -24,6 +24,29 @@ import { composePersonaCatalogDocs, semanticChecksForCatalog } from '../../src/c
 import type { SemanticCheck } from '../../src/catalog/semantic-check.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../../src/catalog/personas/manifests.ts'
+import { ProduceHalt } from '../../src/agent/produce.ts'
+import { AgentTimeoutError } from '../../src/agent/deadlines.ts'
+
+// GH #144: the generic fallback shown for any produce()-loop failure that ISN'T one of the two classes
+// `failureMessageFor` passes through (an upstream fault, e.g. anthropicProvider's own error message, which
+// embeds up to 500 raw chars of the provider's API response body, an internal detail that must never reach
+// an end user's chat log). One copy for both hosts (the dev proxy and the Worker), the GH #108 anti-fork rule.
+export const GENERIC_FAILURE_MESSAGE = "I couldn't put together a valid response for that — could you try rephrasing, or try again?"
+
+/**
+ * The text a host writes on the terminal `error` meta-line for a failed turn (GH #144, T-0023).
+ *   · `ProduceHalt`: safe verbatim, its message names only closed failure CODES (SCHEMA/PARSE/FEED_SCOPE/...)
+ *     plus model-authored A2UI id paths (GH #307), never raw upstream text.
+ *   · `AgentTimeoutError` (a stalled stream, a first-byte timeout, the whole-turn deadline): its
+ *     `userMessage` is plain words by construction and carries no upstream body, so it crosses verbatim and
+ *     the user learns the model went quiet or the turn ran long, not that their wording was at fault.
+ *   · anything else: the generic fallback above.
+ */
+export function failureMessageFor(err: unknown): string {
+  if (err instanceof ProduceHalt) return err.message
+  if (err instanceof AgentTimeoutError) return err.userMessage
+  return GENERIC_FAILURE_MESSAGE
+}
 
 // ADR-0090 §4 — `mode` is trusted input at a security-adjacent boundary (Consequences): a crafted/stale
 // `mode` string must NEVER reach `buildSystemPrompt` raw. Unlike `{provider,model}` (a registry lookup via

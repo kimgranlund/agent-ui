@@ -24,6 +24,7 @@ export * from './genui-line.ts'
 export * from './gen-ui-mode.ts'
 export * from './feed-catalog.ts'
 export * from './produce.ts'
+export * from './deadlines.ts'
 export * from '../catalog/semantic-check.ts' // ADR-0238: the hook lives beside compose.ts (ADR-0137 containment)
 export * from './system-prompt.ts'
 export * from './mini-skills.ts'

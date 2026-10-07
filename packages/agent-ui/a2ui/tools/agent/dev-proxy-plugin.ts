@@ -52,7 +52,8 @@ import { readFileSync } from 'node:fs'
 import { loadEnv } from 'vite'
 import type { Plugin } from 'vite'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { produce, ProduceHalt } from '../../src/agent/produce.ts'
+import { produce } from '../../src/agent/produce.ts'
+import { withTurnDeadline, TURN_DEADLINE_MS } from '../../src/agent/deadlines.ts'
 import type { ProduceDeps } from '../../src/agent/produce.ts'
 import { formatErrorLine } from '../../src/agent/meta-line.ts'
 import { resolvePair, validateProvidersConfig } from './providers-config.ts'
@@ -87,6 +88,7 @@ import {
   selectCatalog,
   buildCatalogMap,
   semanticChecksDeps,
+  failureMessageFor,
 } from './chat-validation.ts'
 import type { ChatDispatch } from './chat-validation.ts'
 export { validateMode, validateGenuiSurface, validateA2uiEnabled, validateAuthoringSurface, validateEffort, isChatBody, resolveChatDispatch }
@@ -107,14 +109,6 @@ const MCP_CONFIG_PATH = `${ROOT}/packages/agent-ui/a2ui/tools/agent/mcp-servers.
 
 const MOUNT = '/__a2ui/agent'
 const MAX_BODY = 1 << 20 // 1 MiB — a dev-only intent/turn body is tiny; cap it so a runaway request can't grow unbounded
-// GH #144 — the generic fallback shown for any produce()-loop failure that ISN'T a ProduceHalt (an
-// upstream fault, e.g. anthropicProvider's own error message, which embeds up to 500 raw chars of the
-// provider's API response body — an internal detail that must never reach an end user's chat log).
-// ProduceHalt's own message is safe to show verbatim: it names only closed failure CODES (SCHEMA/PARSE/
-// FEED_SCOPE/…) plus model-authored A2UI id paths (GH #307 — e.g. "IDGRAPH at main:root"), never raw
-// upstream text. Shared verbatim with worker/index.ts's production twin.
-const GENERIC_FAILURE_MESSAGE = "I couldn't put together a valid response for that — could you try rephrasing, or try again?"
-
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     let data = ''
@@ -347,7 +341,14 @@ export function a2uiDevProxyPlugin(opts?: {
               const toolOpts = buildToolDispatch(active, env, controller.signal)
               let text = ''
               try {
-                for await (const fragment of providerDispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, signal: controller.signal, ...toolOpts })) {
+                // T-0023: this arm bypasses produce(), so it takes the whole-turn deadline here (the SAME
+                // `withTurnDeadline` produce() uses). A client disconnect still aborts `controller` and stays silent;
+                // the deadline aborts only the composed signal, so its `TurnDeadlineError` reaches the 500 below.
+                for await (const fragment of withTurnDeadline(
+                  (signal) => providerDispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, signal, ...toolOpts }),
+                  controller.signal,
+                  TURN_DEADLINE_MS,
+                )) {
                   text += fragment // buffered server-side, single-shot (LLD Q3); one full reply, no mid-stream truncation
                 }
                 sendJson(res, 200, { text })
@@ -485,7 +486,8 @@ export function a2uiDevProxyPlugin(opts?: {
                 // and reads as an empty "success" client-side. The message is deliberately NOT the raw
                 // caught error in every case: a `ProduceHalt`'s own text names only closed failure CODES
                 // (safe, internal identifiers) plus model-authored A2UI id paths (GH #307), so it crosses
-                // verbatim; anything else (e.g.
+                // verbatim, as does a timeout's own plain-words `userMessage` (a stalled stream, the whole-turn
+                // deadline: T-0023, `failureMessageFor`); anything else (e.g.
                 // `anthropicProvider`'s upstream-fault message, up to 500 raw chars of the provider's own
                 // API response body) degrades to a generic, safe fallback instead — this is EXACTLY the
                 // "report without leaking a key" discipline the outer catch below already applies to a
@@ -494,7 +496,7 @@ export function a2uiDevProxyPlugin(opts?: {
                 if (!res.destroyed && !controller.signal.aborted) {
                   // Server-only: prints to the dev server's own terminal, never crosses the wire.
                   console.error('produce() turn failed:', err)
-                  const message = err instanceof ProduceHalt ? err.message : GENERIC_FAILURE_MESSAGE
+                  const message = failureMessageFor(err)
                   res.write(formatErrorLine(message) + '\n')
                 }
               }
