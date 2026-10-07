@@ -269,3 +269,9 @@ consumer that does not set `steps` (a2ui-chat, a2ui-live, the devtools harness, 
   a plain green check with the failure reasons gone: a turn that needed a repair settles warning, with the
   persistent "N retries" chip and the codes on the row, which is the visible-repair outcome this
   alternative's rejection was trying to keep by other means.
+
+> Note (2026-10-07, append-only, nothing above is edited): [ADR-0240](./0240-activity-strip-shows-model-reasoning.md)
+> (proposed) adds an optional `ActivityStep.reasoning` text, rendered as a collapsed "Reasoning" panel on the Reasoned
+> row through the reveal above, and an independent `progressReasoning` request flag. It is the "deliberate future
+> member" for a consumer that needs both reasoning text and the raw-source attachment, and it changes the "`'full'` stays
+> server-owned" posture for the admin developer surface only.
