@@ -15,7 +15,7 @@
 
 GH #1841: the Test Chat strip shows "Reasoned 0.0s" and nothing else. Most of the path to the text already exists in the tree, and one part of it is closed on purpose.
 
-- The Anthropic adapter receives `thinking_delta` events and surfaces them through the optional `onEvent` seam as `ProviderEvent{kind:'thinking', text}` (ADR-0146 F1). Thinking only flows when the effort dial is above low; `low` sends no thinking parameters at all.
+- The Anthropic adapter receives `thinking_delta` events and surfaces them through the optional `onEvent` seam as `ProviderEvent{kind:'thinking', text}` (ADR-0146 F1). Thinking only flows when the effort dial is above low; `low` sends no thinking parameters; only Haiku 5.5 (default `medium`) gets `output_config.effort: low` explicitly (T-0032); other current models default to high and send nothing extra. A model may still think a little at low.
 - `produce()` turns each into a `reasoning` progress event. Under `progressDetail:'full'` the event carries `detail`, an excerpt capped at 200 characters (ADR-0146 F3). By default it carries no text.
 - ADR-0146 F3 ruled the UI leg too: raw reasoning renders only behind the opt-in disclosure affordance, collapsed by default. That leg was never built.
 - `progressDetail` holds one value, and `'full'` and `'source'` are independent. The admin runner sends `'source'` (ADR-0159 wave B), so it cannot ask for `'full'` as well. Both proxies honor only `'source'` and drop everything else: "`'full'` stays server-owned".
