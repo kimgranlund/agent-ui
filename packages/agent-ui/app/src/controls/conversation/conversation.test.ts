@@ -2182,7 +2182,7 @@ describe('ui-conversation: step mode renders the neutral ActivityStep model (T-0
     expect(rows(el).map((i) => cell(i, 'label'))).toEqual(['Request sent'])
   })
 
-  // T-0021 (ADR-0240, proposed): a step's optional `reasoning` text is the reveal on that step's OWN row:
+  // T-0021 (ADR-0240): a step's optional `reasoning` text is the reveal on that step's OWN row:
   // the existing per-entry disclosure (collapsed by default, native summary semantics), labelled "Reasoning".
   describe('a step with reasoning text (T-0021, ADR-0240)', () => {
     type Disclosure = HTMLElement & { summary: string; open: boolean }

@@ -16,7 +16,7 @@
 //   catalog id or surface id never reaches a label or summary.
 // - Times are what this client observed between stage signals. Missing data renders nothing.
 // - Raw output is attached ONCE: the shipped lines (or, for a failed turn, the last candidate).
-// - Reasoning text (T-0021, ADR-0240, proposed) is the one place model text enters a step, and only as the
+// - Reasoning text (T-0021, ADR-0240) is the one place model text enters a step, and only as the
 //   step's `reasoning` field, never a label or summary: the bounded excerpts the producer puts on `reasoning`
 //   progress events under its raw-reasoning opt-in (ADR-0146 F3), concatenated and capped. A stream without
 //   the opt-in carries no excerpt, and the step has no `reasoning` key at all.

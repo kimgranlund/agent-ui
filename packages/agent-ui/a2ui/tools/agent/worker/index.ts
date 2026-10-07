@@ -247,9 +247,9 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   // GH #240/ADR-0159 wave B — the client-requested per-step raw-source attachment, membership-validated
   // fail-closed exactly as the dev proxy does: ONLY the literal 'source' is honored ('full' stays
   // server-owned, never client-grantable); anything else ⇒ the 'stages' default. The reasoning excerpts are
-  // grantable only through the separate `progressReasoning` flag below (T-0021/ADR-0240, proposed).
+  // grantable only through the separate `progressReasoning` flag below (T-0021/ADR-0240).
   const detail = progressDetail === 'source' ? ('source' as const) : undefined
-  // T-0021/ADR-0240 (proposed): the reasoning half, on its own axis, validated fail-closed exactly as the dev
+  // T-0021/ADR-0240: the reasoning half, on its own axis, validated fail-closed exactly as the dev
   // proxy does: ONLY the boolean `true` is honored; anything else ⇒ no thinking text on the wire.
   const reasoning = progressReasoning === true
   // genui-surface.spec.md SPEC-R10/R11 — the SAME fail-closed validation the dev proxy uses (chat-

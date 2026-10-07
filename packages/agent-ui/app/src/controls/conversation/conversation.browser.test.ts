@@ -1498,7 +1498,7 @@ describe('ui-conversation cross-engine: step mode paints the neutral ActivitySte
   })
 })
 
-// T-0021 (ADR-0240, proposed) in a real engine: the Reasoned step's panel is collapsed until its summary is
+// T-0021 (ADR-0240) in a real engine: the Reasoned step's panel is collapsed until its summary is
 // clicked, then really paints, stays inside a bounded scrolling box for long text, and a step without text
 // grows no panel. jsdom pins the DOM; only a real layout proves what is hidden and what paints.
 describe('ui-conversation cross-engine: the Reasoned step expands to a reasoning panel (T-0021)', () => {

@@ -1972,7 +1972,7 @@ describe('produce() target meta-line arm — passthrough (GH #1259 / ADR-0206 cl
   })
 })
 
-// ── T-0021/ADR-0240 (proposed): reasoning excerpts as an independent opt-in ──────────────────────────────
+// ── T-0021/ADR-0240: reasoning excerpts as an independent opt-in ──────────────────────────────
 // `progressDetail` is one value, so a consumer that wants BOTH the raw-source attachment ('source') and the
 // reasoning text cannot say so through it ('full' and 'source' stay independent, never a ladder). The
 // additive `progressReasoning` flag is the reasoning half on its own axis: the same bounded excerpts

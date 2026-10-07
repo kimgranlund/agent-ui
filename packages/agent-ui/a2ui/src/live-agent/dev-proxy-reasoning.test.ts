@@ -1,4 +1,4 @@
-// dev-proxy-reasoning.test.ts (T-0021, ADR-0240 proposed): the dev proxy honors the client's
+// dev-proxy-reasoning.test.ts (T-0021, ADR-0240): the dev proxy honors the client's
 // `progressReasoning` request EXACTLY when it is the boolean `true`, so bounded reasoning excerpts ride the
 // `reasoning` progress events only then, and independently of `progressDetail:'source'`. Drives the REAL
 // dev-proxy middleware with the provider dispatch module mocked (the dev-proxy-abort.test.ts precedent) and

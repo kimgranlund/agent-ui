@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-10-07 |
 > | **Proposed by** | the sdlc-lite solo run `reasoning-panel` (T-0021), GH [#1841](https://github.com/kimgranlund/agent-ui/issues/1841), on Kim's scope ruling "Expandable panel" (AskUserQuestion, 2026-10-07). Number 0240 claimed against the file tree (0239 the highest), every sibling worktree under `.claude/worktrees/`, every local and remote branch, the open PR list (empty) and the `.sdlc` tickets (none names 0240) |
-> | **Ratified by** | *(pending: only Kim flips this, via `scripts/adr_ratify.py`)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-10-07, ratified by Kim in the sdlc-lite session (AskUserQuestion) |
 > | **Repairs** | `packages/agent-ui/app/src/controls/conversation/{activity-step.ts,conversation.ts,conversation.md}` (the `reasoning` field, `ACTIVITY_REASONING_CAP`, `activityReasoning`, the row projection) · `packages/agent-ui/a2ui/src/agent/produce.ts` (`ProduceOptions.progressReasoning`) · `packages/agent-ui/a2ui/tools/agent/{dev-proxy-plugin.ts,worker/index.ts}` (the validated request flag) · `site/lib/{a2ui-activity.ts,admin-live-runner.ts}` (the excerpt fold, the request) · `packages/agent-ui/components/src/controls/status-stream/status-stream.md` (the `sourceLabel` text) · [`../spec/a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) (the ADR-0146 amendment, one clause) · [`../references/agent-model.md`](../references/agent-model.md) (the activity step glossary row) · skill `a2ui-jsonl-mcp` (`references/producer-order-and-yield.md`) · append-only pointers in [ADR-0146](./0146-live-turn-lifecycle-progress-channel.md) F3 and [ADR-0159](./0159-status-stream-receipt-pattern.md) |
 > | **Supersedes / Superseded by** | none · **Extends** [ADR-0146](./0146-live-turn-lifecycle-progress-channel.md) F3 (the raw-reasoning opt-in, whose UI leg it builds) and the [ADR-0159](./0159-status-stream-receipt-pattern.md) step-mode amendment (T-0016) · changes one posture of the ADR-0159 wave-B amendment, "the F3 CoT gate stays server-owned", for the admin developer surface only (clause 2) · relates [ADR-0073](./0073-a2ui-live-model-provider-seam.md) (the trust boundary, unchanged) · [ADR-0113](./0113-content-family-v1-scope.md) and [ADR-0143](./0143-timeline-item-recursive-nesting-accordion.md) (the one fold primitive) · [ADR-0239](./0239-devtools-capture-replay-carries-meta-lines.md) (capture and replay, unchanged) |
 

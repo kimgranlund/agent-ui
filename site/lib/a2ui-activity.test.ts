@@ -300,7 +300,7 @@ describe('createA2uiActivity: a failed turn', () => {
   })
 })
 
-// T-0021 (ADR-0240, proposed): the model's reasoning text. Under the raw-reasoning opt-in the producer puts a
+// T-0021 (ADR-0240): the model's reasoning text. Under the raw-reasoning opt-in the producer puts a
 // bounded excerpt of each thinking delta on the `reasoning` progress event's `detail` (ADR-0146 F3); the
 // adapter folds those excerpts onto the Reasoned step's `reasoning`. Without the opt-in no event carries
 // `detail`, and the step is exactly what it was before.

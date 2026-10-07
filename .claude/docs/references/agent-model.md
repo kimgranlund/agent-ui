@@ -191,7 +191,7 @@ header pointing here.
   builds it (`site/lib/a2ui-activity.ts` for A2UI turns). Not a **plan step** (`PlanStep`, the model's
   own declared step list on the meta-line) and not a `TurnProgress` stage (the producer's wire signal
   an adapter reads). ADR-0159 amendment (T-0016, ratified). `reasoning` is the model's thinking text, a collapsed
-  panel on the Reasoned row (ADR-0240, proposed).
+  panel on the Reasoned row (ADR-0240).
 - **Co-pilot**: the builder-interview place (`[Chat | Settings | Co-pilot]`, ADR-0179 as amended by
   GH #686); "Author" is its retired name.
 

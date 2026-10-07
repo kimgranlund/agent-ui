@@ -194,7 +194,7 @@ it token-spams a `role="log"` polite live region, and the ecosystem precedent (O
 policy, not limitation. Default-hidden with two explicit opt-in gates keeps both audiences honest.
 
 > Note (2026-10-07, append-only, the Decision above is UNCHANGED): the UI leg named here, raw reasoning behind a
-> collapsed disclosure, is proposed for build in [ADR-0240](./0240-activity-strip-shows-model-reasoning.md), with an
+> collapsed disclosure, is built in [ADR-0240](./0240-activity-strip-shows-model-reasoning.md), with an
 > independent `progressReasoning` request flag beside `'full'` and `'source'`.
 
 ### F4 — per-provider variance: the stage vocabulary is produce-layer-owned; adapters map INTO it; nothing forecloses OpenAI/Gemini
