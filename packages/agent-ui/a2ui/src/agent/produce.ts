@@ -88,6 +88,7 @@ import { buildSystemPromptSections } from './system-prompt.ts'
 import { assessPromptBudget, promptBudgetFor } from './prompt-budget.ts'
 import { frameClientMessage } from './session.ts'
 import { sessionSurfaceSeeds } from './surface-seeds.ts'
+import { withTurnDeadline } from './deadlines.ts'
 import { readMetaLine } from './meta-line.ts'
 import type { AskDeclaration, PersonaPatch, PlanDeclaration, TargetDeclaration, TeamDeclaration, TokenUsage, TurnProgress, TurnTrace } from './meta-line.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
@@ -115,6 +116,11 @@ export interface ProduceDeps {
 export interface ProduceOptions {
   maxRounds: number
   signal?: AbortSignal
+  /** T-0023 (GH #1797) — the whole-turn deadline in milliseconds, covering every provider round, repair
+   * round and tool round (`withTurnDeadline`, `deadlines.ts`). Absent ⇒ `TURN_DEADLINE_MS`; `0` or a
+   * non-finite value disables the bound. Server-owned: a host sets it, a request body never does. On expiry
+   * the turn throws `TurnDeadlineError` and the same abort reaches the provider call and any in-flight tool. */
+  turnDeadlineMs?: number
   /** The AUTHORITATIVE model. The dev proxy passes the allowlist-VALIDATED `{provider,model}` here, and it
    * takes PRECEDENCE over any client-supplied `input.model` — the trust boundary (SPEC-R12): a crafted
    * `input.model` must never reach the API. `input.model` is only a fallback for callers that don't set it. */
@@ -934,7 +940,14 @@ const SEMANTIC_HINT =
   ' Those findings are contradictions inside your content, not schema errors: change the values so ' +
   'what the surface states agrees with what it shows, and keep every other line as it was.'
 
-export async function* produce(input: TurnInput, deps: ProduceDeps, opts: ProduceOptions): AsyncIterable<string> {
+/** The bounded turn: `produceTurn`'s whole loop under one absolute deadline (T-0023, `withTurnDeadline`). The
+ * composed signal replaces `opts.signal` for the loop, so the provider fetch, its body read and every
+ * in-flight tool call (`executeTool`'s third argument) stop together when the limit is reached. */
+export function produce(input: TurnInput, deps: ProduceDeps, opts: ProduceOptions): AsyncIterable<string> {
+  return withTurnDeadline((signal) => produceTurn(input, deps, { ...opts, signal }), opts.signal, opts.turnDeadlineMs)
+}
+
+async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOptions): AsyncIterable<string> {
   const k = opts.k ?? 3
   const query = queryOf(input, k, deps.catalog.catalogId) // ADR-0169 cl.4 — catalog-aware, not the old pinned literal
   const exemplars = deps.retrieve(query) // SPEC-R7 — top-k over the judged shard

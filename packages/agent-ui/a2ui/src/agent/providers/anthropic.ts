@@ -19,6 +19,7 @@
 
 import type { AgentProvider, Turn, Effort, ProviderEvent, ToolDef } from '../agent-transport.ts'
 import type { TokenUsage } from '../meta-line.ts'
+import { AgentTimeoutError } from '../deadlines.ts'
 
 /** The Anthropic Messages API's per-provider request body (this module's private wire shape — never
  * exported past this adapter; the `AgentProvider` seam is the only public contract). `content` grew the
@@ -410,7 +411,28 @@ function retryAfterMs(res: Response): number | undefined {
 
 /** The first-byte deadline's rejection. A distinct class so `fetchWithRetry` never retries it: the attempt
  *  already waited its full limit. */
-class FirstByteTimeoutError extends Error {}
+class FirstByteTimeoutError extends AgentTimeoutError {
+  constructor(limitMs: number) {
+    super(
+      `anthropicProvider: no response within ${limitMs} ms`,
+      'The model did not answer in time, so I stopped waiting. Please try again.',
+    )
+    this.name = 'FirstByteTimeoutError'
+  }
+}
+
+/** The stall guard's rejection (T-0023): the body went silent for the whole stall window. A distinct class,
+ *  thrown from the body read, which sits after `fetchWithRetry` has returned, so it is never retried; the
+ *  reader is cancelled by `runRound`'s `finally`. Its `userMessage` is the plain-words line a host writes. */
+export class StreamStallError extends AgentTimeoutError {
+  constructor(limitMs: number) {
+    super(
+      `anthropicProvider: stream stalled for ${limitMs} ms`,
+      'The model stopped sending its reply partway through, so I stopped waiting. Please try again.',
+    )
+    this.name = 'StreamStallError'
+  }
+}
 
 function isAbortError(err: unknown, signal: AbortSignal | undefined): boolean {
   if (signal?.aborted) return true
@@ -496,7 +518,7 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): 
         })
       } catch (err) {
         if (deadline.signal.aborted && !signal?.aborted) {
-          throw new FirstByteTimeoutError(`anthropicProvider: no response within ${ANTHROPIC_FIRST_BYTE_TIMEOUT_MS} ms`)
+          throw new FirstByteTimeoutError(ANTHROPIC_FIRST_BYTE_TIMEOUT_MS)
         }
         throw err
       } finally {
@@ -535,10 +557,7 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): 
     const readOrStall = (): Promise<ReadableStreamReadResult<Uint8Array>> => {
       let stallTimer: ReturnType<typeof setTimeout> | undefined
       const stall = new Promise<never>((_, reject) => {
-        stallTimer = setTimeout(
-          () => reject(new Error(`anthropicProvider: stream stalled for ${ANTHROPIC_STALL_TIMEOUT_MS} ms`)),
-          ANTHROPIC_STALL_TIMEOUT_MS,
-        )
+        stallTimer = setTimeout(() => reject(new StreamStallError(ANTHROPIC_STALL_TIMEOUT_MS)), ANTHROPIC_STALL_TIMEOUT_MS)
       })
       return Promise.race([reader.read(), stall]).finally(() => clearTimeout(stallTimer))
     }
