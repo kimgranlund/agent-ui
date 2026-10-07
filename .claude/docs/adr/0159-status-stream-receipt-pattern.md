@@ -275,3 +275,23 @@ consumer that does not set `steps` (a2ui-chat, a2ui-live, the devtools harness, 
 > row through the reveal above, and an independent `progressReasoning` request flag. It is the "deliberate future
 > member" for a consumer that needs both reasoning text and the raw-source attachment, and it changes the "`'full'` stays
 > server-owned" posture for the admin developer surface only.
+
+> Note (2026-10-07, append-only, nothing above is edited; **proposed**, T-0022): the activity strip polish from Kim's
+> 2026-10-07 screenshot review changes the step-mode contract in five places, none of them ratified until Kim gives it.
+> (1) `ActivityStep` gains an optional `details?: readonly string[]` (plain-words lines, one per line), rendered as a
+> collapsed "Details" expand on the step's own row through the per-entry reveal above; like `reasoning` it is read when the
+> row is created, a step with reasoning text shows that panel instead, and a step with neither stays non-expandable.
+> (2) The circled marker family replaces the bare ones: `running` `circle-notch` (the only one that spins), `ok`
+> `check-circle`, `failed` `x-circle`, and `repaired` `warning-circle` (new in the icon pack), so the "`repaired` ... with an
+> `arrow-clockwise` marker" above is superseded: a finished step never wears a spinner-style arrow. (3) The "N retries" chip
+> is superseded: the closed strip reads one summary line, "Done in 13s, 1 retry" or "Failed after 5s" (the status stream's
+> `summary` settle option), so the retry total, the warning escalation and the failure codes on the row are unchanged but the
+> separate chip is no longer passed (the stream's `badge` option stays a generic, unused-here seam). A step under 0.1s shows no
+> time. (4) The footer splits: the counts stay on the footer row and the model id moves to its own muted row
+> (`formatActivityFooter` no longer includes it; `activityFooterModel` returns it). (5) The A2UI adapter folds `started` and
+> `content` into one "Generated" row, says what a failure code means in plain words ("Model output did not parse, retried"),
+> and fills `details` (the failed checks and a repair line on Validated, the surface id and component list on "Updated the
+> surface", the surface id and key names on "Updated data", "No reasoning captured" on a Reasoned row with no text). Names
+> reach `details` only, never a label or summary. Also: the turn's "Agent" sender label is dropped above a step-mode strip
+> (its own header already says "Agent activity"), and the timeline connector now spans the item's full height (the marker
+> cell stretches), a CSS-only fix in `timeline-item.css` that also applies to the durable `ui-timeline`.

@@ -351,3 +351,72 @@ describe('ui-timeline-item — ensureNestedSlot late-mounts a real, rendered nes
     expect(innerMarkerLeft, 'the late-mounted nested rail is indented past the parent rail, not flush with it').toBeGreaterThan(outerMarkerLeft)
   })
 })
+
+// T-0022 (Do 1): the connector ran one row-gap below a fixed-height marker, so any item taller than its marker
+// (a wrapped description, an open expand, even one line at a normal line height) left a gap before the next
+// item. The marker cell now spans the item and the connector runs to the item's end plus its row gap.
+describe('ui-timeline-item: the connector is continuous through every row (T-0022)', () => {
+  const frames = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+  const rect = (el: Element): DOMRect => el.getBoundingClientRect()
+
+  it(`${server.browser}: every non-terminal item's connector ends exactly where the next item begins, for a wrapped row, an open expand and a one-liner`, async () => {
+    const { wrap } = mount(
+      '<div style="width:220px;display:flex;flex-direction:column">' +
+        '<ui-timeline-item status="done" label="Tall" description="A long description that wraps onto several lines in a narrow column"><div data-role="detail">Expanded line one<br>line two<br>line three</div></ui-timeline-item>' +
+        '<ui-timeline-item status="done" label="Short"></ui-timeline-item>' +
+        '<ui-timeline-item status="active" label="Last" data-last></ui-timeline-item>' +
+        '</div>',
+    )
+    const items = [...wrap.querySelectorAll<HTMLElement & { toggleDetail(open?: boolean): void }>('ui-timeline-item')]
+    items[0]!.toggleDetail(true) // open the expand so the item is taller still
+    await frames()
+
+    for (let i = 0; i < items.length - 1; i += 1) {
+      const item = items[i]!
+      const marker = item.querySelector(':scope > [data-part="marker"]')!
+      const mr = rect(marker)
+      const ir = rect(item)
+      expect(Math.abs(mr.top - ir.top), `item ${i}: the marker cell starts at the item top`).toBeLessThanOrEqual(1)
+      expect(Math.abs(mr.height - ir.height), `item ${i}: the marker cell spans the item's full height (${mr.height} vs ${ir.height})`).toBeLessThanOrEqual(1)
+      const after = getComputedStyle(marker, '::after')
+      const connectorBottom = mr.top + px(after.top) + px(after.height)
+      expect(
+        Math.abs(connectorBottom - rect(items[i + 1]!).top),
+        `item ${i}: the connector must reach the next item (ends at ${connectorBottom}, next starts at ${rect(items[i + 1]!).top})`,
+      ).toBeLessThanOrEqual(1)
+    }
+    expect(rect(items[0]!).height, 'anti-vacuous: the first item really is taller than its marker box').toBeGreaterThan(markerBox(items[0]!) * 3)
+  })
+
+  it(`${server.browser}: the mark itself still sits in the FIRST marker-box: a dot, a ring and a glyph all centre on the same row line and rail`, async () => {
+    const { wrap } = mount(
+      '<div style="width:220px;display:flex;flex-direction:column">' +
+        '<ui-timeline-item status="active" label="Dot" description="wraps wraps wraps wraps wraps wraps wraps wraps"></ui-timeline-item>' +
+        '<ui-timeline-item status="pending" label="Ring" description="wraps wraps wraps wraps wraps wraps wraps wraps"></ui-timeline-item>' +
+        '<ui-timeline-item status="done" label="Glyph" description="wraps wraps wraps wraps wraps wraps wraps wraps" data-last></ui-timeline-item>' +
+        '</div>',
+    )
+    await frames()
+    const items = [...wrap.querySelectorAll('ui-timeline-item')]
+    const centreY = (item: Element): number => {
+      const marker = item.querySelector(':scope > [data-part="marker"]')!
+      const glyph = marker.querySelector('[data-role="marker"]')
+      if (glyph) {
+        const r = rect(glyph)
+        return r.top + r.height / 2 - rect(item).top
+      }
+      const before = getComputedStyle(marker, '::before')
+      // the dot/ring: its painted centre = its top + the translateY that centres it + half its border box
+      const borderBox = px(before.height) + px(before.borderTopWidth) + px(before.borderBottomWidth)
+      return px(before.top) + new DOMMatrix(before.transform).m42 + borderBox / 2
+    }
+    const expected = markerBox(items[0]!) / 2
+    for (const [i, item] of items.entries()) expect(centreY(item), `item ${i}: the mark centres in the first marker-box`).toBeCloseTo(expected, 0)
+    const lefts = items.map((item) => {
+      const marker = item.querySelector(':scope > [data-part="marker"]')!
+      const glyph = marker.querySelector('[data-role="marker"]')
+      return rect(glyph ?? marker).left + rect(glyph ?? marker).width / 2
+    })
+    expect(new Set(lefts.map((l) => Math.round(l))).size, `dot, ring and glyph share one rail column: ${lefts.join()}`).toBe(1)
+  })
+})

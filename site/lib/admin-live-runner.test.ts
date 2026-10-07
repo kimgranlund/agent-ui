@@ -124,7 +124,7 @@ describe('createAdminSurfaceTurn', () => {
       if (event.kind === 'footer') footer = event.footer
     }
     expect(kinds.at(-1), 'the footer is the last event').toBe('footer')
-    expect(steps.get('validate')).toMatchObject({ status: 'repaired', summary: 'Round 1 failed (SCHEMA), repaired in round 2', raw: create })
+    expect(steps.get('validate')).toMatchObject({ status: 'repaired', summary: 'Model output broke the message schema, retried', raw: create })
     expect(steps.get('open')).toMatchObject({ label: 'Opened a new surface', status: 'ok' })
     expect(footer).toEqual({ rounds: 2, inputTokens: 10, outputTokens: 4, model: 'model-x' })
     const visible = [...steps.values()].map((st) => `${st.label} ${st.summary ?? ''}`).join(' ')

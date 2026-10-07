@@ -83,7 +83,16 @@ import '@agent-ui/components/controls/icon'
 import { formatTotalElapsed } from '@agent-ui/components/controls/status-stream'
 import type { UIStatusStreamElement, StatusEntry, ItemStatus } from '@agent-ui/components/controls/status-stream'
 // T-0016: the neutral step model step mode renders (pure, no DOM, no A2UI).
-import { activityReasoning, formatActivityFooter, formatActivityRetries, joinActivityRaw, totalActivityRetries } from './activity-step.ts'
+import {
+  ACTIVITY_MIN_DURATION_MS,
+  activityDetails,
+  activityFooterModel,
+  activityReasoning,
+  formatActivityFooter,
+  formatActivitySummary,
+  joinActivityRaw,
+  totalActivityRetries,
+} from './activity-step.ts'
 import type { ActivityStep, ActivityStatus, ActivityFooter } from './activity-step.ts'
 export type { ActivityStep, ActivityStatus, ActivityFooter } from './activity-step.ts' // hosts and adapters import the model from here
 // GH #291/ADR-0160 clause 3 — the settled-turn action-chip row reuses `ui-button` (the
@@ -458,30 +467,48 @@ const PROGRESS_LABEL: Record<TurnProgressStage, LabelPair> = {
 
 /** The step outcome → strip status. `repaired` reads `warning` (T-0019): the turn's output is good but a
  *  round failed on the way, so the header settles amber instead of a plain success check; the row keeps its
- *  own marker glyph (`REPAIRED_GLYPH`) and its summary says why. */
+ *  own marker glyph (`STEP_GLYPH.repaired`) and its summary says why. */
 const STEP_STATUS: Record<ActivityStatus, ItemStatus> = { running: 'active', ok: 'done', repaired: 'warning', failed: 'error' }
-const REPAIRED_GLYPH = 'arrow-clockwise'
+/** The circled marker per outcome (T-0022): one family, so every row's glyph reads as the same kind of mark and
+ *  shares one column on the rail. `circle-notch` is the only one that moves (the item's own spin rule, which
+ *  applies while the row is `active`); the finished three are shape-distinct, never colour alone (ADR-0057), and
+ *  a repaired row's exclamation circle is not a spinner: a finished step never reads as busy. */
+const STEP_GLYPH: Record<ActivityStatus, string> = { running: 'circle-notch', ok: 'check-circle', repaired: 'warning-circle', failed: 'x-circle' }
 const RAW_LABEL = 'Raw output'
 const REASONING_LABEL = 'Reasoning'
+const DETAILS_LABEL = 'Details'
+const COPY_LABEL = 'Copy'
+const COPIED_LABEL = 'Copied'
+
+/** Which reveal a step's expand carries: its `reasoning` text (labelled "Reasoning", T-0021/ADR-0240) wins over
+ *  its plain-words `details` (labelled "Details", T-0022); `''` when it has neither (the row stays flat). */
+function stepReveal(step: ActivityStep): { kind: 'reasoning' | 'details' | ''; text: string } {
+  const reasoning = activityReasoning(step)
+  if (reasoning !== '') return { kind: 'reasoning', text: reasoning }
+  const details = activityDetails(step)
+  return details === '' ? { kind: '', text: '' } : { kind: 'details', text: details }
+}
 
 /** Project one step onto the strip's entry shape. Every optional field degrades to an EMPTY cell (never a
  *  stale one from an earlier upsert): a running step ticks from `startedAt` (the strip owns the clock), a
- *  settled one shows its frozen `durationMs`. An unknown status from an untyped host reads `done`. A step's
- *  `reasoning` rides the strip's per-entry reveal (`source`, labelled "Reasoning", T-0021/ADR-0240): the reveal
- *  is planted when the row is appended and later text re-stamps it in place, so a row born without text keeps
- *  none, and a step without text carries no `source` key at all (the row stays byte-identical). */
+ *  settled one shows its frozen `durationMs` unless it is under a tenth of a second (a "0.0s" says nothing).
+ *  An unknown status from an untyped host reads `done`. A step's `reasoning` or `details` rides the strip's
+ *  per-entry reveal (`source`, T-0021/ADR-0240, T-0022): the reveal is planted when the row is appended and
+ *  later text re-stamps it in place, so a row born without any keeps none, and a step without any carries no
+ *  `source` key at all (the row stays flat and non-expandable). */
 function stepEntry(key: string, step: ActivityStep): StatusEntry {
   const running = step.status === 'running'
   const startedAt = step.startedAt
-  const reasoning = activityReasoning(step)
+  const reveal = stepReveal(step)
+  const timed = !running && step.durationMs !== undefined && Number.isFinite(step.durationMs) && step.durationMs >= ACTIVITY_MIN_DURATION_MS
   return {
-    ...(reasoning === '' ? {} : { source: reasoning, sourceLabel: REASONING_LABEL }),
+    ...(reveal.kind === '' ? {} : { source: reveal.text, sourceLabel: reveal.kind === 'reasoning' ? REASONING_LABEL : DETAILS_LABEL }),
     key,
     status: STEP_STATUS[step.status] ?? 'done',
     label: step.label,
     description: step.summary ?? '',
-    icon: step.status === 'repaired' ? REPAIRED_GLYPH : '',
-    timestamp: !running && step.durationMs !== undefined && Number.isFinite(step.durationMs) ? formatTotalElapsed(step.durationMs) : '',
+    icon: STEP_GLYPH[step.status] ?? '',
+    timestamp: timed ? formatTotalElapsed(step.durationMs!) : '',
     // '' is the strip's documented "no tick" value: it also clears a clock left over from an earlier span.
     startedAt: running && startedAt !== undefined && Number.isFinite(startedAt) ? new Date(startedAt).toISOString() : '',
   }
@@ -901,21 +928,32 @@ export class UIConversationElement extends UIElement {
     const withSteps = this.steps
     const stepRows = new Map<string, { step: ActivityStep; item: HTMLElement }>()
     let footerText = ''
+    let footerModel = ''
+    const turnStartMs = Date.now()
     /** T-0016: the settle-time rows, after every step: ONE collapsed "Raw output" block (every distinct
-     *  step `raw`, step order) and the footer. Both are markerless `note` rows, so the receipt's step count
-     *  never includes them and the completion invariant never truncates them. */
+     *  step `raw`, step order, with a Copy button in its expand) and the footer (counts, then the model on
+     *  its own muted line, T-0022). All are markerless `note` rows, so the receipt's step count never
+     *  includes them and the completion invariant never truncates them. */
     const appendSettleRows = (): void => {
       if (!withSteps) return
       const raw = joinActivityRaw([...stepRows.values()].map((r) => r.step))
-      if (raw !== '') narration.appendEntry({ key: `t${seq}-raw`, note: true, source: raw, sourceLabel: RAW_LABEL }).dataset.activity = 'raw'
+      if (raw !== '') {
+        const item = narration.appendEntry({ key: `t${seq}-raw`, note: true, source: raw, sourceLabel: RAW_LABEL })
+        item.dataset.activity = 'raw'
+        this.#addCopyButton(item, raw)
+      }
       if (footerText !== '') narration.appendEntry({ key: `t${seq}-footer`, note: true, text: footerText }).dataset.activity = 'footer'
+      if (footerModel !== '') narration.appendEntry({ key: `t${seq}-model`, note: true, text: footerModel }).dataset.activity = 'model'
     }
-    /** T-0019: the settle options for the strip's header: in step mode, a turn whose steps retried carries a
-     *  persistent "N retries" chip, so a repaired turn never collapses to a plain success receipt. */
-    const settleOptions = (): { badge: string } | undefined => {
+    /** T-0022: the settle options for the strip's header: in step mode the closed strip reads one line, "Done
+     *  in 13s, 1 retry" (or "Failed after 5s"), so a turn that needed repairing never collapses to a plain
+     *  success and the time and retries sit together in the header's one meta cell. This replaces T-0019's
+     *  separate chip; the retry total and the warning escalation are unchanged. */
+    const settleOptions = (failed: boolean): { summary: string } | undefined => {
       if (!withSteps) return undefined
       const retries = totalActivityRetries([...stepRows.values()].map((r) => r.step))
-      return retries > 0 ? { badge: formatActivityRetries(retries) } : undefined
+      const ms = Date.now() - turnStartMs
+      return { summary: formatActivitySummary(ms >= ACTIVITY_MIN_DURATION_MS ? formatTotalElapsed(ms) : '', retries, failed) }
     }
     // GH #313 — reveals the bubble exactly once, on the first real content of any kind: a streamed note
     // token, a fresh mount, the chip row, or finalize()'s own note/fallback text. A RESUMED bubble never
@@ -1156,12 +1194,18 @@ export class UIConversationElement extends UIElement {
         if (known !== undefined) narration.update(key, stepEntry(key, step))
         const item = known?.item ?? narration.appendEntry(stepEntry(key, step))
         item.dataset.kind = step.kind
+        // The reveal's form is fixed when the row is born (T-0022): prose lines for details, the T-0021 panel for reasoning.
+        if (known === undefined) {
+          const { kind } = stepReveal(step)
+          if (kind !== '') item.dataset.reveal = kind
+        }
         stepRows.set(step.id, { step, item })
         followTail()
       },
       footer: (footer: ActivityFooter) => {
         if (!withSteps || ended) return
         footerText = formatActivityFooter(footer)
+        footerModel = activityFooterModel(footer)
       },
       target: (surfaceId: string) => {
         // GH #1259 / ADR-0206 cl.4 — the model-declared mutation target, arriving on the leading
@@ -1190,7 +1234,7 @@ export class UIConversationElement extends UIElement {
         for (const cat of categoriesSeen) narration.update(`t${seq}-${cat}`, { status: 'done', label: LABEL[cat].done })
         if (lastProgressKey !== undefined) settleProgress(lastProgressKey)
         appendSettleRows() // T-0016: step mode's raw + footer rows, after every step, before the receipt settles
-        narration.finalize(settleOptions())
+        narration.finalize(settleOptions(false))
         const finalNote = noteText ?? summarize(turnLines)
         if (finalNote !== '') revealBubble() // GH #313 — the fallback tally is real content too
         this.#renderBody(note, finalNote)
@@ -1225,7 +1269,7 @@ export class UIConversationElement extends UIElement {
         // partial turn touched (the a2ui-chat.ts `finally` block precedent, unconditional on success/failure).
         narration.appendEntry({ key: `t${seq}-error`, status: 'error', label: `Turn failed — ${message}` })
         appendSettleRows() // T-0016: a failed turn still shows its raw output and facts, after the error row
-        narration.fail(settleOptions())
+        narration.fail(settleOptions(true))
         this.#settleTouchedHosts(touchedIds)
         // GH #805 — don't strand a dead card: re-enable the surface whose OWN action started this now-
         // failed turn, even when the turn never sent it another line (an ask-declared surface's real
@@ -1259,7 +1303,34 @@ export class UIConversationElement extends UIElement {
       narration.setAttribute('receipt', '') // the terminal one-line receipt (GH #239)
     }
     narration.dataset.part = 'narration'
+    // T-0022: a step-mode strip's own header already says "Agent activity", so its turn drops the "Agent" sender
+    // label above it (conversation.css keys the rule off this stamp; a legacy strip keeps the label).
+    if (this.steps) narration.dataset.steps = ''
     return narration
+  }
+
+  /** T-0022: a Copy button at the top of the raw-output expand, so the JSONL can be taken whole without
+   *  selecting it by hand. The click listener is connection-scoped (like the action chips); the label flips
+   *  to "Copied" for a moment, and a host without the clipboard API (or a denied write) leaves the label alone. */
+  #addCopyButton(item: HTMLElement, text: string): void {
+    const body = item.querySelector(':scope > [data-part="detail"] [data-role="detail"]')
+    if (body === null) return
+    const button = document.createElement('ui-button') as UIButtonElement
+    button.setAttribute('variant', 'soft')
+    button.setAttribute('size', 'sm')
+    button.setAttribute('inline', '') // hug the label: controls fill their container by default (ADR-0223)
+    button.dataset.part = 'copy'
+    button.textContent = COPY_LABEL
+    this.listen(button, 'click', () => {
+      void navigator.clipboard?.writeText(text).then(
+        () => {
+          button.textContent = COPIED_LABEL
+          setTimeout(() => (button.textContent = COPY_LABEL), 1500)
+        },
+        () => {},
+      )
+    })
+    body.prepend(button)
   }
 
   /** TKT-0079 — the resume probe: `id`'s OPEN record whose bubble is still in this log, plus the three

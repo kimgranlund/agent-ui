@@ -71,8 +71,7 @@ describe('createA2uiActivity: a clean A2UI turn', () => {
     const rows = [...seen.values()]
     expect(rows.map((s) => [s.id, s.label, s.status, s.durationMs, s.summary])).toEqual([
       ['request', 'Request sent', 'ok', 400, undefined],
-      ['generate', 'Generated', 'ok', 600, undefined],
-      ['response', 'Wrote the response', 'ok', 2000, undefined],
+      ['generate', 'Generated', 'ok', 2600, undefined], // `started` then `content` are ONE row (T-0022): 600ms + 2000ms
       ['validate', 'Validated', 'ok', 100, undefined],
       ['open', 'Opened a new surface', 'ok', undefined, undefined],
       ['components', 'Updated the surface', 'ok', undefined, '3 components'],
@@ -172,12 +171,12 @@ describe('createA2uiActivity: a repaired turn ("Round 1 failed (code), repaired 
     expect(live.find((s) => s.id === 'validate')).toMatchObject({
       status: 'failed',
       label: 'Validation failed',
-      summary: 'Round 1 failed, retrying in round 2',
+      summary: 'Model output failed validation, retrying',
     })
     expect(seen.get('validate')).toMatchObject({
       status: 'repaired',
       label: 'Validated',
-      summary: 'Round 1 failed (SCHEMA), repaired in round 2',
+      summary: 'Model output broke the message schema, retried',
       durationMs: 100, // 50ms in round 1 + 50ms in round 2
     })
     expect(seen.get('request')!.durationMs, 'a stage re-entered in round 2 accumulates its time').toBe(250)
@@ -187,7 +186,7 @@ describe('createA2uiActivity: a repaired turn ("Round 1 failed (code), repaired 
 
   it('trace absent: the repair is still visible from the live retry ordinal, with no code and no footer', () => {
     const { seen, footer } = runRepair(false)
-    expect(seen.get('validate')).toMatchObject({ status: 'repaired', summary: 'Round 1 failed, repaired in round 2' })
+    expect(seen.get('validate')).toMatchObject({ status: 'repaired', summary: 'Model output failed validation, retried' })
     expect(footer).toBeUndefined()
   })
 
@@ -197,7 +196,7 @@ describe('createA2uiActivity: a repaired turn ("Round 1 failed (code), repaired 
     a.progress({ stage: 'done' })
     expect(a.trace(trace({ rounds: 3, failureCodes: ['SCHEMA', 'REF'] }))[0]).toMatchObject({
       status: 'repaired',
-      summary: 'Rounds 1 to 2 failed (SCHEMA, REF), repaired in round 3',
+      summary: 'Model output failed 2 checks, retried',
     })
     const b = createA2uiActivity(clock().now)
     b.progress({ stage: 'validating' })
@@ -219,7 +218,7 @@ describe('createA2uiActivity: failure reasons stay visible (T-0019)', () => {
     const live = a.progress({ stage: 'retry', round: 2, codes: ['SCHEMA', 'UNKNOWN_COMPONENT'] })
     expect(live.find((s) => s.id === 'validate')).toMatchObject({
       status: 'failed',
-      summary: 'Round 1 failed (SCHEMA, UNKNOWN_COMPONENT), retrying in round 2',
+      summary: 'Model output failed 2 checks, retrying',
       retries: 1,
     })
   })
@@ -232,7 +231,7 @@ describe('createA2uiActivity: failure reasons stay visible (T-0019)', () => {
     const done = a.progress({ stage: 'done' })
     expect(done.find((s) => s.id === 'validate')).toMatchObject({
       status: 'repaired',
-      summary: 'Round 1 failed (SCHEMA), repaired in round 2',
+      summary: 'Model output broke the message schema, retried',
       retries: 1,
     })
   })
@@ -244,13 +243,13 @@ describe('createA2uiActivity: failure reasons stay visible (T-0019)', () => {
     a.progress({ stage: 'validating' })
     const second = a.progress({ stage: 'retry', round: 3, codes: ['SCHEMA', 'REF'] })
     expect(second.find((s) => s.id === 'validate')).toMatchObject({
-      summary: 'Rounds 1 to 2 failed (SCHEMA, REF), retrying in round 3',
+      summary: 'Model output failed 2 checks, retrying',
       retries: 2,
     })
     a.progress({ stage: 'validating' })
     a.progress({ stage: 'done' })
     expect(a.trace(trace({ rounds: 3, failureCodes: ['REF'] }))[0]).toMatchObject({
-      summary: 'Rounds 1 to 2 failed (REF), repaired in round 3',
+      summary: 'Model output failed a check (REF), retried',
       retries: 2,
     })
   })
@@ -263,7 +262,7 @@ describe('createA2uiActivity: failure reasons stay visible (T-0019)', () => {
     const bare = createA2uiActivity(clock().now)
     bare.progress({ stage: 'validating' })
     expect(bare.progress({ stage: 'retry', round: 2 }).find((s) => s.id === 'validate')).toMatchObject({
-      summary: 'Round 1 failed, retrying in round 2',
+      summary: 'Model output failed validation, retrying',
       retries: 1,
     })
   })
@@ -289,14 +288,22 @@ describe('createA2uiActivity: a failed turn', () => {
     c.at(80)
     const out = a.fail()
     expect(out).toEqual([
-      { id: 'validate', kind: 'validate', label: 'Validation failed', status: 'failed', durationMs: 80, raw: 'bad candidate' },
+      {
+        id: 'validate',
+        kind: 'validate',
+        label: 'Validation failed',
+        status: 'failed',
+        durationMs: 80,
+        raw: 'bad candidate',
+        details: ['The turn ended before validation passed.'],
+      },
     ])
   })
 
   it('a step interrupted mid-stage keeps its live label (the done form is never claimed for work not completed)', () => {
     const a = createA2uiActivity(clock().now)
     a.progress({ stage: 'content' })
-    expect(a.fail()[0]).toMatchObject({ id: 'response', label: 'Writing the response…', status: 'failed' })
+    expect(a.fail()[0]).toMatchObject({ id: 'generate', label: 'Generating…', status: 'failed' })
   })
 })
 
@@ -392,5 +399,80 @@ describe('createA2uiActivity: reasoning text (T-0021)', () => {
     const { steps } = a.end()
     expect(steps.find((s) => s.raw !== undefined)!.raw).toBe(CREATE)
     expect(JSON.stringify(steps.map((s) => s.raw))).not.toContain('private thoughts')
+  })
+})
+
+// T-0022 (Do 3, Do 5): every step with something to show carries plain-words `details` for its own expand, and the
+// failure copy says what each code means instead of leaving a bare validator name.
+describe('createA2uiActivity: expandable details and plain-words copy (T-0022)', () => {
+  it('Validated: a clean turn says it passed first time; a repaired one lists the failed checks with a plain-words repair line', () => {
+    const clean = createA2uiActivity(clock().now)
+    expect(clean.progress({ stage: 'validating' }).at(-1)!.details, 'born expandable: a row born without details never grows an expand').toEqual([
+      'Checking the response against the component catalog.',
+    ])
+    expect(clean.progress({ stage: 'done' }).find((s) => s.id === 'validate')!.details).toEqual(['Passed on the first attempt.'])
+
+    const a = createA2uiActivity(clock().now)
+    a.progress({ stage: 'validating' })
+    const live = a.progress({ stage: 'retry', round: 2, codes: ['PARSE'] }).find((s) => s.id === 'validate')!
+    expect(live.details).toEqual([
+      'Failed checks: PARSE (model output did not parse)',
+      'Round 1 failed. The model was sent the failures and is trying again in round 2.',
+    ])
+    a.progress({ stage: 'validating' })
+    const done = a.progress({ stage: 'done' }).find((s) => s.id === 'validate')!
+    expect(done.summary, 'PARSE in plain words, no bare code').toBe('Model output did not parse, retried')
+    expect(done.details).toEqual([
+      'Failed checks: PARSE (model output did not parse)',
+      'Round 1 failed. The model was sent the failures and its rewrite passed in round 2.',
+    ])
+  })
+
+  it('Updated the surface / Updated data / Opened a surface: the details name the surface id, the component list and the data keys', () => {
+    const a = createA2uiActivity(clock().now)
+    for (const l of [CREATE, COMPONENTS, DATA, DATA_PATH]) a.line(l)
+    const byId = new Map(a.end().steps.map((s) => [s.id, s]))
+    expect(byId.get('open')!.details).toEqual(['Surface: quokka-board'])
+    expect(byId.get('components')!.details).toEqual(['Surface: quokka-board', 'Components: PangolinColumn, NarwhalText, AxolotlButton'])
+    expect(byId.get('data')!.details, 'whole-object keys, then the path of a path write').toEqual(['Surface: quokka-board', 'Keys: one, two, three, /score'])
+    // names live in details only: the labels and summaries stay free of them (the NO TYPE NAMES test above)
+    expect(`${byId.get('components')!.label} ${byId.get('components')!.summary}`).not.toMatch(TYPE_WORDS)
+  })
+
+  it('Reasoned: text becomes the expand; a Reasoned step with no captured text says so instead of showing nothing', () => {
+    const a = createA2uiActivity(clock().now)
+    const bare = a.progress({ stage: 'reasoning' }).at(-1)!
+    expect(bare).toMatchObject({ id: 'reasoning', details: ['No reasoning captured'] })
+    expect(bare).not.toHaveProperty('reasoning')
+
+    const b = createA2uiActivity(clock().now)
+    const withText = b.progress({ stage: 'reasoning', detail: 'Weighing the dealer up card.' }).at(-1)!
+    expect(withText.reasoning).toBe('Weighing the dealer up card.')
+    expect(withText, 'text is the expand: no placeholder beside it').not.toHaveProperty('details')
+  })
+
+  it('steps with nothing to show (request, generate, a tool call) carry no details key at all', () => {
+    const a = createA2uiActivity(clock().now)
+    const out = [...a.progress({ stage: 'sent' }), ...a.progress({ stage: 'started' }), ...a.progress({ stage: 'tool', detail: 'search' }), ...a.progress({ stage: 'content' })]
+    expect(out.length).toBeGreaterThan(0)
+    for (const s of out) expect(s, s.id).not.toHaveProperty('details')
+  })
+
+  it('Generated and Wrote the response are ONE row: content after started changes nothing, and a content after a reasoning pass re-enters it', () => {
+    const c = clock()
+    const a = createA2uiActivity(c.now)
+    c.at(0)
+    a.progress({ stage: 'started' })
+    c.at(100)
+    expect(a.progress({ stage: 'content' }), 'same row, nothing new to draw').toEqual([])
+    c.at(200)
+    a.progress({ stage: 'reasoning' })
+    c.at(500)
+    const reentered = a.progress({ stage: 'content' })
+    expect(reentered.map((s) => [s.id, s.status])).toEqual([
+      ['reasoning', 'ok'],
+      ['generate', 'running'],
+    ])
+    expect(reentered.find((s) => s.id === 'generate')).toHaveProperty('startedAt', c.now() - 200) // the first 200ms still counts
   })
 })

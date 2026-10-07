@@ -58,11 +58,12 @@ describe('ui-agent-admin Test Chat: the runner drives the activity strip through
     const strip = el.querySelector('[data-part="narration"]')!
     const items = [...strip.querySelectorAll(':scope > ui-timeline-item')]
     const text = (i: Element, role: string): string => i.querySelector(`:scope > [data-role="${role}"]`)?.textContent ?? ''
-    expect(items.map((i) => i.getAttribute('data-activity') ?? text(i, 'label'))).toEqual(['Validated', 'Opened a new surface', 'raw', 'footer'])
+    expect(items.map((i) => i.getAttribute('data-activity') ?? text(i, 'label'))).toEqual(['Validated', 'Opened a new surface', 'raw', 'footer', 'model'])
     expect(text(items[0]!, 'description')).toBe('Round 1 failed (SCHEMA), repaired in round 2')
     expect(text(items[0]!, 'timestamp')).toBe('1.2s')
     expect(strip.querySelectorAll('[data-role="source"]').length, 'the raw output shows once').toBe(1)
-    expect(text(items[3]!, 'text')).toBe('2 rounds · 900 input tokens · 120 output tokens · model-x')
+    expect(text(items[3]!, 'text')).toBe('2 rounds · 900 input tokens · 120 output tokens')
+    expect(text(items[4]!, 'text'), 'the model rides its own line').toBe('model-x')
     expect(el.querySelector('[data-part="canvas"] ui-surface-host'), 'line routing is unchanged').not.toBeNull()
   })
 })

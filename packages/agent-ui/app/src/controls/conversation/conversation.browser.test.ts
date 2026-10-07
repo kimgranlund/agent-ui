@@ -1490,11 +1490,15 @@ describe('ui-conversation cross-engine: step mode paints the neutral ActivitySte
     expect(pre.checkVisibility(), 'one click reveals the raw output').toBe(true)
 
     const footer = strip.querySelector<HTMLElement>('[data-activity="footer"]')!
-    expect(cell(footer, 'text').textContent).toBe('2 rounds · 3,210 input tokens · 845 output tokens · model-x')
+    expect(cell(footer, 'text').textContent).toBe('2 rounds · 3,210 input tokens · 845 output tokens')
     expect(painted(cell(footer, 'text'))).toBe(true)
-    const tops = [items[2]!, raw, footer].map((n) => n.getBoundingClientRect().top)
+    const model = strip.querySelector<HTMLElement>('[data-activity="model"]')!
+    expect(cell(model, 'text').textContent, 'the model id is its own line (T-0022)').toBe('model-x')
+    expect(painted(cell(model, 'text'))).toBe(true)
+    const tops = [items[2]!, raw, footer, model].map((n) => n.getBoundingClientRect().top)
     expect(tops[0]!, 'raw row sits below the last step').toBeLessThan(tops[1]!)
-    expect(tops[1]!, 'the footer sits last').toBeLessThan(tops[2]!)
+    expect(tops[1]!, 'the footer counts sit below the raw row').toBeLessThan(tops[2]!)
+    expect(tops[2]!, 'the model line sits last').toBeLessThan(tops[3]!)
   })
 })
 
@@ -1549,11 +1553,11 @@ describe('ui-conversation cross-engine: the Reasoned step expands to a reasoning
   })
 })
 
-// T-0019 in a real engine: the header's retry chip really paints (and in the warning ink, not the meta's
-// secondary ink) once the strip collapses to its receipt. The expanded-strip header stacking and the chat
-// Card region inset are guarded in the real ui-agent-admin host instead, see
-// agent-admin/agent-admin-chat-surface.browser.test.ts (T-0019 builder report, builder-solo-2.md).
-describe('ui-conversation cross-engine: the settled strip keeps its retry chip (T-0019)', () => {
+// T-0019 in a real engine, reshaped by T-0022: the settled strip keeps its retry count visible once it collapses
+// to its receipt, now as the closed strip's one summary line ("Done, 1 retry") instead of a separate chip. The
+// expanded-strip header stacking and the chat Card region inset are guarded in the real ui-agent-admin host
+// instead, see agent-admin/agent-admin-chat-surface.browser.test.ts (T-0019 builder report, builder-solo-2.md).
+describe('ui-conversation cross-engine: the settled strip keeps its retry count on one summary line (T-0019, T-0022)', () => {
   const frames = (n = 2) =>
     new Promise<void>((r) => {
       const tick = (left: number): void => {
@@ -1570,7 +1574,7 @@ describe('ui-conversation cross-engine: the settled strip keeps its retry chip (
     return { el, handle: el.beginAgentTurn() }
   }
 
-  it(`${server.browser}: a repaired turn keeps a painted, warning-toned "N retries" chip in the collapsed receipt header`, async () => {
+  it(`${server.browser}: a repaired turn keeps a painted "Done, N retry" summary and a warning header in the collapsed receipt`, async () => {
     const { el, handle } = stepTurn({ receipt: true })
     handle.step({ id: 'generate', kind: 'generate', label: 'Generated', status: 'ok', durationMs: 1200 })
     handle.step({ id: 'validate', kind: 'validate', label: 'Validated', status: 'repaired', retries: 1, summary: 'Round 1 failed (SCHEMA), repaired in round 2' })
@@ -1579,15 +1583,14 @@ describe('ui-conversation cross-engine: the settled strip keeps its retry chip (
     await frames()
     const strip = el.querySelector('[data-part="narration"]') as HTMLElement
     const header = strip.querySelector('[data-part="header"]') as HTMLElement
-    const chip = header.querySelector('[data-part="header-badge"]') as HTMLElement
     const meta = header.querySelector('[data-part="header-meta"]') as HTMLElement
     expect(header.getAttribute('aria-expanded'), 'the strip is collapsed to its receipt').toBe('false')
-    expect(chip.textContent).toBe('1 retry')
-    const cb = chip.getBoundingClientRect()
+    expect(header.querySelector('[data-part="header-badge"]'), 'no separate chip: the one summary line carries the retry count').toBeNull()
+    expect(meta.textContent).toMatch(/^Done( in [\d.]+m?s)?, 1 retry$/)
+    const mb = meta.getBoundingClientRect()
     const hb = header.getBoundingClientRect()
-    expect(cb.width, 'the chip paints a real box').toBeGreaterThan(0)
-    expect(cb.left >= hb.left && cb.right <= hb.right, 'the chip sits inside the header row').toBe(true)
-    expect(getComputedStyle(chip).color, 'warning ink, not the meta cell\'s secondary ink').not.toBe(getComputedStyle(meta).color)
+    expect(mb.width, 'the summary paints a real box').toBeGreaterThan(0)
+    expect(mb.left >= hb.left && mb.right <= hb.right, 'the summary sits inside the header row').toBe(true)
     expect(header.dataset.status, 'a repaired turn settles the header warning, never a plain done').toBe('warning')
     // the failure codes are one click away, on the row itself (no raw output needed)
     header.click()
@@ -1595,5 +1598,149 @@ describe('ui-conversation cross-engine: the settled strip keeps its retry chip (
     const validateRow = strip.querySelector<HTMLElement>('ui-timeline-item[data-kind="validate"]')!
     expect(validateRow.textContent).toContain('SCHEMA')
     expect(validateRow.getBoundingClientRect().height).toBeGreaterThan(0)
+  })
+})
+
+// T-0022 in a real engine: the strip's rows keep one continuous rail, circled glyphs, and tabular times; each
+// expand is compact and spaced; the raw output is a contained code surface. jsdom pins the DOM and the copy
+// behaviour; only a real layout proves what paints, what scrolls and how far apart things sit.
+describe('ui-conversation cross-engine: the polished activity strip (T-0022)', () => {
+  const frames = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+  const px = (v: string): number => Number.parseFloat(v)
+  const LONG_JSON = JSON.stringify({ version: 'v1.0', updateComponents: { surfaceId: 'quokka-board', components: [{ id: 'root', component: 'Column', children: Array.from({ length: 24 }, (_, i) => `child-${i}`) }] } })
+
+  async function polishedTurn(): Promise<{ el: UIConversationElement; strip: HTMLElement }> {
+    const el = mountConversation('420px', '640px')
+    el.steps = true
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'request', kind: 'request', label: 'Request sent', status: 'ok', durationMs: 420 })
+    handle.step({ id: 'gen', kind: 'generate', label: 'Generated', status: 'ok', durationMs: 2400 })
+    handle.step({
+      id: 'validate',
+      kind: 'validate',
+      label: 'Validated',
+      status: 'repaired',
+      retries: 1,
+      durationMs: 1200,
+      summary: 'Model output did not parse, retried',
+      details: ['Failed checks: PARSE (model output did not parse)', 'Round 1 failed. The model was sent the failures and its rewrite passed in round 2.'],
+      raw: LONG_JSON,
+    })
+    handle.step({ id: 'components', kind: 'output', label: 'Updated the surface', status: 'ok', summary: '25 components', details: ['Surface: quokka-board', 'Components: Column, Text (24)'] })
+    handle.footer({ rounds: 2, inputTokens: 3210, outputTokens: 845, model: 'model-x' })
+    handle.finalize()
+    await whenFlushed()
+    await frames()
+    return { el, strip: el.querySelector('[data-part="narration"]') as HTMLElement }
+  }
+
+  it(`${server.browser}: the rail is one continuous line down every step row, and every row's mark shares one column`, async () => {
+    const { strip } = await polishedTurn()
+    const header = strip.querySelector('[data-part="header"]') as HTMLElement
+    header.click() // open the receipt: the rows paint
+    await frames()
+    const items = [...strip.querySelectorAll<HTMLElement>(':scope > ui-timeline-item:not([data-note])')]
+    expect(items.length).toBe(4)
+    for (let i = 0; i < items.length - 1; i += 1) {
+      const marker = items[i]!.querySelector(':scope > [data-part="marker"]')!
+      const after = getComputedStyle(marker, '::after')
+      const mr = marker.getBoundingClientRect()
+      const bottom = mr.top + px(after.top) + px(after.height)
+      expect(Math.abs(bottom - items[i + 1]!.getBoundingClientRect().top), `row ${i}: the connector reaches row ${i + 1}`).toBeLessThanOrEqual(1)
+    }
+    const centres = items.map((item) => {
+      const glyph = item.querySelector(':scope > [data-part="marker"] svg[data-role="marker"]')!
+      const r = glyph.getBoundingClientRect()
+      return Math.round(r.left + r.width / 2)
+    })
+    expect(new Set(centres).size, `every circled glyph shares one column: ${centres.join()}`).toBe(1)
+    const headerGlyph = header.querySelector('[data-part="header-marker"] svg')!.getBoundingClientRect()
+    expect(Math.abs(Math.round(headerGlyph.left + headerGlyph.width / 2) - centres[0]!), 'and the header mark sits on that same column').toBeLessThanOrEqual(1)
+  })
+
+  it(`${server.browser}: a repaired row paints a circled warning glyph that does not spin; a running row's ring does`, async () => {
+    const el = mountConversation('420px', '420px')
+    el.steps = true
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'a', kind: 'k', label: 'Repaired', status: 'repaired', durationMs: 500 })
+    handle.step({ id: 'b', kind: 'k', label: 'Running…', status: 'running', startedAt: Date.now() })
+    await whenFlushed()
+    await frames()
+    const strip = el.querySelector('[data-part="narration"]') as HTMLElement
+    const glyph = (n: number): SVGElement => strip.querySelectorAll<HTMLElement>(':scope > ui-timeline-item')[n]!.querySelector('svg[data-role="marker"]') as unknown as SVGElement
+    expect(glyph(0).getAttribute('data-glyph')).toBe('warning-circle')
+    expect(glyph(0).getBoundingClientRect().width, 'painted').toBeGreaterThan(0)
+    expect(getComputedStyle(glyph(0)).animationName, 'a finished row never spins').toBe('none')
+    expect(glyph(1).getAttribute('data-glyph')).toBe('circle-notch')
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) expect(getComputedStyle(glyph(1)).animationName).not.toBe('none')
+    el.beginAgentTurn().finalize()
+  })
+
+  it(`${server.browser}: times are tabular figures, and the step-mode turn drops the redundant "Agent" label`, async () => {
+    const { el, strip } = await polishedTurn()
+    strip.querySelector<HTMLElement>('[data-part="header"]')!.click()
+    await frames()
+    const time = strip.querySelector<HTMLElement>(':scope > ui-timeline-item [data-role="timestamp"]')!
+    expect(getComputedStyle(time).fontVariantNumeric).toContain('tabular-nums')
+    const turn = strip.parentElement as HTMLElement
+    expect(getComputedStyle(turn.querySelector('[data-part="who"]')!).display, 'the strip header already says Agent activity').toBe('none')
+    const legacy = mountConversation('420px', '300px')
+    legacy.beginAgentTurn().finalize()
+    expect(getComputedStyle(legacy.querySelector('[data-part="who"]')!).display, 'a legacy strip keeps its label').not.toBe('none')
+    void el
+  })
+
+  it(`${server.browser}: each expand is a compact summary line spaced off its row, and the Details panel and the Raw output never touch`, async () => {
+    const { strip } = await polishedTurn()
+    strip.querySelector<HTMLElement>('[data-part="header"]')!.click()
+    await frames()
+    const validate = strip.querySelector<HTMLElement>('[data-kind="validate"]')!
+    const summary = validate.querySelector('summary')!
+    expect(summary.textContent).toContain('Details')
+    const fontPx = px(getComputedStyle(summary).fontSize)
+    expect(summary.getBoundingClientRect().height, 'a compact summary line, not a full control-height row').toBeLessThanOrEqual(fontPx * 2.2)
+    const label = validate.querySelector(':scope > [data-role="description"]')!
+    const detail = validate.querySelector(':scope > [data-part="detail"]')!
+    expect(detail.getBoundingClientRect().top - label.getBoundingClientRect().bottom, 'air between the row text and its expand').toBeGreaterThanOrEqual(2)
+    summary.click()
+    await frames()
+    const raw = strip.querySelector<HTMLElement>('[data-activity="raw"]')!
+    const rawSummary = raw.querySelector('summary')!
+    rawSummary.click()
+    await frames()
+    const details = validate.querySelector<HTMLElement>('[data-role="source"]')!
+    expect(details.checkVisibility(), 'the opened Details panel paints').toBe(true)
+    expect(getComputedStyle(details).whiteSpace, 'plain-words lines wrap at word breaks').toBe('pre-wrap')
+    expect(getComputedStyle(details).fontFamily, 'prose, not the code face').toBe(getComputedStyle(validate).fontFamily)
+    const gap = raw.getBoundingClientRect().top - validate.getBoundingClientRect().bottom
+    expect(gap, 'the next row starts clear of the open Details panel').toBeGreaterThanOrEqual(2)
+  })
+
+  it(`${server.browser}: the raw output is a bordered, padded monospace code box that scrolls sideways, with a thin scrollbar and no nested vertical scroller`, async () => {
+    const { strip } = await polishedTurn()
+    strip.querySelector<HTMLElement>('[data-part="header"]')!.click()
+    await frames()
+    const raw = strip.querySelector<HTMLElement>('[data-activity="raw"]')!
+    raw.querySelector('summary')!.click()
+    await frames()
+    const pre = raw.querySelector<HTMLElement>('[data-role="source"]')!
+    const cs = getComputedStyle(pre)
+    expect(cs.whiteSpace, 'no mid-token wrapping').toBe('pre')
+    expect(cs.overflowX, 'a long line scrolls sideways inside the box').toBe('auto')
+    expect(pre.scrollWidth, 'the long JSONL line really overflows the box').toBeGreaterThan(pre.clientWidth)
+    expect(cs.overflowY, 'no vertical scroller nested in the strip').toBe('hidden')
+    expect(pre.scrollHeight, 'and nothing is clipped vertically').toBeLessThanOrEqual(pre.clientHeight + 1)
+    expect(px(cs.borderTopWidth), 'bordered').toBeGreaterThan(0)
+    expect(px(cs.paddingTop) + px(cs.paddingLeft), 'padded').toBeGreaterThan(0)
+    const probe = document.createElement('span')
+    probe.style.fontFamily = 'var(--md-sys-typeface-mono)'
+    pre.append(probe)
+    expect(cs.fontFamily, 'the monospace token').toBe(getComputedStyle(probe).fontFamily)
+    probe.remove()
+    if (CSS.supports('scrollbar-width', 'thin')) expect(cs.scrollbarWidth, 'a thin scrollbar').toBe('thin')
+    const copy = raw.querySelector<HTMLElement>('[data-part="copy"]')!
+    expect(copy.getBoundingClientRect().width, 'the Copy button paints').toBeGreaterThan(0)
+    expect(copy.getBoundingClientRect().width, 'and hugs its label rather than filling the box').toBeLessThan(pre.getBoundingClientRect().width * 0.6)
+    expect(copy.getBoundingClientRect().bottom, 'above the code box, not over it').toBeLessThanOrEqual(pre.getBoundingClientRect().top + 1)
   })
 })
