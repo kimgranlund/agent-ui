@@ -1275,7 +1275,7 @@ describe('GH #880 — a fresh Builder Interview opens on Sonnet 5; the test chat
 
   it('the two defaults are genuinely different ids — the anti-vacuous premise every arm below rests on', () => {
     expect(AUTHORING_DEFAULT_MODEL_ID).toBe('claude-sonnet-5')
-    expect(DEFAULT_MODEL_ID).toBe('claude-haiku-4-5-20251001')
+    expect(DEFAULT_MODEL_ID).toBe('claude-haiku-5-5')
     expect(AUTHORING_DEFAULT_MODEL_ID).not.toBe(DEFAULT_MODEL_ID)
     // …and the interview's default is an OFFERED model, not a label the picker cannot commit to.
     expect(SUPPORTED_MODELS.find((m) => m.id === AUTHORING_DEFAULT_MODEL_ID)?.includedByDefault).toBe(true)
@@ -1293,7 +1293,7 @@ describe('GH #880 — a fresh Builder Interview opens on Sonnet 5; the test chat
     expect(sanitizeAuthoringModel(DEFAULT_MODEL_ID, roster)).toBe(DEFAULT_MODEL_ID)
     expect(sanitizeAuthoringModel('gpt-4.1', roster)).toBe('gpt-4.1')
     // The roster-membership guard: a roster without Sonnet never returns an id the picker cannot offer.
-    expect(sanitizeAuthoringModel(undefined, [{ id: DEFAULT_MODEL_ID, label: 'Haiku 4.5', provider: 'Anthropic', includedByDefault: true }])).toBe(
+    expect(sanitizeAuthoringModel(undefined, [{ id: DEFAULT_MODEL_ID, label: 'Haiku 5.5', provider: 'Anthropic', includedByDefault: true }])).toBe(
       DEFAULT_MODEL_ID,
     )
   })

@@ -42,17 +42,20 @@ export interface SupportedModel {
    *  options grouped by provider") — 'Anthropic' | 'Google' | 'OpenAI' | 'Other', open-ended. */
   provider: string
   /** Whether this model ships INCLUDED (its grid switch on) before the admin ever touches the record
-   *  (rev.4: only Haiku+Sonnet ship on; the OpenAI/Gemini tier-equivalents ship as switchable options). */
+   *  (rev.4: only the Anthropic rows ship on; the OpenAI/Gemini tier-equivalents ship as switchable options). */
   includedByDefault: boolean
 }
 
 /** Rev.4 (Kim, 2026-07-19): Opus and Fable are REMOVED entirely; the roster is the Haiku/Sonnet tier
  *  pair per provider — ids match the dev proxy's own providers.json rows EXACTLY (the one id namespace;
  *  openai/gemini are `implemented: false` there, so a live turn on them degrades visibly until their
- *  adapters land — the grid ships them switched OFF). */
+ *  adapters land; the grid ships them switched OFF). T-0030 (Kim, 2026-10-07): Haiku 5.5 joins as the
+ *  default and Haiku 4.5 stays included and selectable, listed after Sonnet so the first non-default row
+ *  is still the Sonnet tier. */
 export const SUPPORTED_MODELS: readonly SupportedModel[] = [
-  { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5', provider: 'Anthropic', includedByDefault: true },
+  { id: 'claude-haiku-5-5', label: 'Haiku 5.5', provider: 'Anthropic', includedByDefault: true },
   { id: 'claude-sonnet-5', label: 'Sonnet 5', provider: 'Anthropic', includedByDefault: true },
+  { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5', provider: 'Anthropic', includedByDefault: true },
   { id: 'gpt-4.1-mini', label: 'GPT-4.1 mini', provider: 'OpenAI', includedByDefault: false },
   { id: 'gpt-4.1', label: 'GPT-4.1', provider: 'OpenAI', includedByDefault: false },
   { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'Google', includedByDefault: false },
@@ -60,8 +63,8 @@ export const SUPPORTED_MODELS: readonly SupportedModel[] = [
 ]
 
 /** Haiku by default (Kim, 2026-07-19) — the cheap/fast tier is the demo's sane default; Sonnet stays one
- *  commit away in the Balanced list. */
-export const DEFAULT_MODEL_ID: string = 'claude-haiku-4-5-20251001'
+ *  commit away in the Balanced list. Haiku 5.5 since T-0030 (Kim, 2026-10-07). */
+export const DEFAULT_MODEL_ID: string = 'claude-haiku-5-5'
 
 // ── the Model GRID's data half (Kim, 2026-07-19 rev.2) ──────────────────────────────────────────────────
 
@@ -79,7 +82,7 @@ export function modelRoster(): SupportedModel[] {
 }
 
 /** Whether a model is included per the store record — an explicit boolean wins; an absent entry falls
- *  back to the model's OWN `includedByDefault` (rev.4: built-ins ship Haiku+Sonnet on, the OpenAI/Gemini
+ *  back to the model's OWN `includedByDefault` (rev.4: built-ins ship the Anthropic rows on, the OpenAI/Gemini
  *  options off; admin-added customs on — you added it to use it). */
 export function isModelIncluded(record: unknown, model: SupportedModel): boolean {
   if (typeof record === 'object' && record !== null) {

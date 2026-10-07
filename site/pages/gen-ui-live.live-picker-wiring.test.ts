@@ -155,13 +155,13 @@ describe('gen-ui-live.ts — the Model picker is a FLAT, provider-grouped list (
 
   it('selecting a DIFFERENT, enabled model through the REAL DOM path updates the live selection, and the NEXT turn\'s POST body carries the correct {provider, model} pair', async () => {
     const panel = composerEl().querySelector('[data-part="models-menu"] [data-part="panel"]') as HTMLElement
-    const haikuRow = [...panel.children].find((r) => (r as HTMLElement).dataset.value === 'claude-haiku-4-5-20251001') as HTMLElement
+    const haikuRow = [...panel.children].find((r) => (r as HTMLElement).dataset.value === 'claude-haiku-5-5') as HTMLElement
     haikuRow.dispatchEvent(new Event('click', { bubbles: true }))
-    expect(composerEl().model).toBe('claude-haiku-4-5-20251001')
+    expect(composerEl().model).toBe('claude-haiku-5-5')
 
     sendMessage('hello again')
     await waitUntil(() => capturedPostBody !== undefined)
-    expect(capturedPostBody?.model).toBe('claude-haiku-4-5-20251001')
+    expect(capturedPostBody?.model).toBe('claude-haiku-5-5')
     expect(capturedPostBody?.provider).toBe('anthropic') // providerIdForModel() recovered it — no Provider picker exists to supply it directly
   })
 })

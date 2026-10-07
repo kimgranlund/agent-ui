@@ -250,9 +250,9 @@ function toAnthropicMessages(turns: Turn[]): AnthropicMessage[] {
 const DEFAULT_ENDPOINT = 'https://api.anthropic.com/v1/messages'
 const MAX_TOKENS = 4096 // a sane cap (LLD §5) — not a modeled/config value, just a runaway-response guard
 
-/** `effort` → Anthropic's real extended-thinking `budget_tokens` — the PRE-4.6 Messages-API shape,
+/** `effort` → Anthropic's real extended-thinking `budget_tokens`, the PRE-4.6 Messages-API shape,
  *  applied ONLY to the models that still accept it (Haiku 4.5, the one pre-4.6 family in
- *  providers.json). Current families REJECT it — see the branch note in `buildRequestBody`. */
+ *  providers.json). Current families, Haiku 5.5 included, REJECT it: see the branch note in `buildRequestBody`. */
 const THINKING_BUDGET: Record<Exclude<Effort, 'low'>, number> = {
   medium: 1024,
   high: 2048,
@@ -265,9 +265,12 @@ const REPLY_HEADROOM = 2048
 /** A model that still takes the LEGACY extended-thinking shape (`{type:'enabled', budget_tokens}`).
  *  TKT-0075 (API truth, measured 2026-07-16): the Claude 5-family + Opus 4.7/4.8 REJECT budget_tokens
  *  with a 400 (`temperature`-style parameter removal); they take `thinking: {type:'adaptive'}` +
- *  `output_config: {effort}` instead. Haiku 4.5 is the one served model still on the legacy shape —
- *  and `output_config.effort` ERRORS there, so the two arms are mutually exclusive by API design. */
-const takesLegacyThinkingBudget = (model: string): boolean => /haiku/.test(model)
+ *  `output_config: {effort}` instead. Haiku 4.5 is the one served model still on the legacy shape,
+ *  and `output_config.effort` ERRORS there, so the two arms are mutually exclusive by API design.
+ *  T-0030 (2026-10-07): the match is `haiku-4-5`, not bare `haiku`. Haiku 5.5 is adaptive-only (the
+ *  model page and migration guide: `budget_tokens` returns a 400, effort `low` to `max`, default
+ *  `medium`), so it takes the current-family arm below. */
+const takesLegacyThinkingBudget = (model: string): boolean => /haiku-4-5/.test(model)
 
 /** The Anthropic Messages-API request BODY, PURE (SPEC-R11 AC3, fixture-tested — the `parseAnthropicSSE`
  *  precedent, this file's OTHER extracted-for-testability seam): `effort` → thinking/effort params, with
@@ -306,7 +309,7 @@ export function buildRequestBody(req: {
       thinking: { type: 'enabled', budget_tokens: budget },
     }
   }
-  // Current-family arm (Fable 5 / Sonnet 5 / Opus 4.8+): adaptive thinking + the effort dial.
+  // Current-family arm (Fable 5 / Sonnet 5 / Opus 4.8+ / Haiku 5.5): adaptive thinking + the effort dial.
   // budget_tokens returns a 400 here (TKT-0075's silent-empty bug); adaptive is legal on ALL of them
   // (Fable 5: "omit or adaptive"). Effort vocabulary maps 1:1 (low/medium/high/xhigh are all real API
   // values). max_tokens gets the same headroom bump the legacy arm used at the equivalent tier, so the
