@@ -123,11 +123,10 @@ providers now; implement Anthropic now; OpenAI and Gemini are the immediate next
 - **A heavyweight plugin/registry framework for providers.** Rejected as over-engineering: a JSON file
   + one `stream()` signature per module is the whole mechanism; no runtime plugin system is warranted.
 
-## Amendment (2026-10-05, **proposed**): the Anthropic adapter bounds its upstream waits and retries transient connection failures (GH #1797 gaps c and d, PRs #1805 and #1806)
+## Amendment (2026-10-05, **ratified by kimgranlund, 2026-10-07**): the Anthropic adapter bounds its upstream waits and retries transient connection failures (GH #1797 gaps c and d, PRs #1805 and #1806)
 
-> Append-only, and **proposed**: the Status cell above reads `accepted` for the record as a whole
-> and stays byte-untouched; agents never flip status, and this amendment carries no ratification of
-> its own until Kim gives one. Every accepted section above is unedited.
+> Append-only, and ratified by Kim on 2026-10-07: the Status cell above reads `accepted` for the record as a whole
+> and stays byte-untouched. Every accepted section above is unedited.
 
 - The seam is unchanged: `stream()` keeps its signature, and both mechanisms live inside
   `providers/anthropic.ts` (SPEC-N5 isolation holds).
@@ -141,3 +140,7 @@ providers now; implement Anthropic now; OpenAI and Gemini are the immediate next
 - Standing tests: `anthropic-timeouts.test.ts` and `anthropic-retry.test.ts` (stubbed `fetch`, fake
   timers); the live-key leg stays manual acceptance. The LLD-C10 record is
   `../lld/a2ui-live-agent.lld.md` (§2 discovery table and the impure `stream` sketch).
+- Whole-turn deadline (GH #1797, PR #1846, T-0023): `produce()` runs under `withTurnDeadline` (`TURN_DEADLINE_MS`,
+  300000, server-set through `ProduceOptions.turnDeadlineMs`, never read from a request body). The stall and
+  first-byte errors share the `AgentTimeoutError` base, and both hosts write its plain-words line through
+  `failureMessageFor`. The seam and key placement are unchanged.
