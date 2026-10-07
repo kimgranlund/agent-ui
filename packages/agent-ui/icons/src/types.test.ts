@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest'
 import { ICON_NAMES, type IconName, type IconPack } from './types.ts'
 
 describe('ICON_NAMES', () => {
-  it('has exactly ninety-nine names (32 pre-ADR-0169 + 44 ADR-0169 cl.9b Icon-table members + 3 ADR-0179 GH #686 Amendment S7-a members + 2 GH #868 composer-trigger glyphs + 8 GH #1258 weather glyphs + 1 GH #1406 minus stepper glyph + 7 GH #1485 amenity/hospitality glyphs + 2 GH #1508 command-modal Actions glyphs)', () => {
-    expect(ICON_NAMES.length).toBe(99)
+  it('has exactly one hundred names (32 pre-ADR-0169 + 44 ADR-0169 cl.9b Icon-table members + 3 ADR-0179 GH #686 Amendment S7-a members + 2 GH #868 composer-trigger glyphs + 8 GH #1258 weather glyphs + 1 GH #1406 minus stepper glyph + 7 GH #1485 amenity/hospitality glyphs + 2 GH #1508 command-modal Actions glyphs + 1 T-0022 warning-circle activity-strip glyph)', () => {
+    expect(ICON_NAMES.length).toBe(100)
   })
 
   it('is all distinct strings', () => {
@@ -45,6 +45,8 @@ describe('ICON_NAMES', () => {
         'mountains', 'tree', 'campfire', 'bathtub', 'swimming-pool', 'wifi-high', 'paw-print',
         // GH #1508 — /command-modal-demo's Actions group (identity with Phosphor's own names).
         'sign-out', 'share',
+        // T-0022: the activity strip's circled repaired-step glyph (identity with Phosphor's own name).
+        'warning-circle',
       ].sort(),
     )
   })

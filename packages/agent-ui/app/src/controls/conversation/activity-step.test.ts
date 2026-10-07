@@ -1,9 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import {
+  ACTIVITY_MIN_DURATION_MS,
   ACTIVITY_REASONING_CAP,
+  activityDetails,
+  activityFooterModel,
   activityReasoning,
   formatActivityFooter,
   formatActivityRetries,
+  formatActivitySummary,
   joinActivityRaw,
   totalActivityRetries,
   type ActivityStep,
@@ -17,19 +21,63 @@ const step = (id: string, raw?: string): ActivityStep => ({ id, kind: 'k', label
 describe('formatActivityFooter', () => {
   it('renders every present fact in a fixed order, with grouped counts and singular/plural nouns', () => {
     expect(formatActivityFooter({ rounds: 2, inputTokens: 3210, outputTokens: 845, model: 'model-x' })).toBe(
-      '2 rounds · 3,210 input tokens · 845 output tokens · model-x',
+      '2 rounds · 3,210 input tokens · 845 output tokens', // the model id is its own line (T-0022), see activityFooterModel
     )
     expect(formatActivityFooter({ rounds: 1, inputTokens: 1, outputTokens: 1 })).toBe('1 round · 1 input token · 1 output token')
   })
 
   it('absent facts render nothing: an empty footer is the empty string, a partial one shows only what it has', () => {
     expect(formatActivityFooter({})).toBe('')
-    expect(formatActivityFooter({ model: 'model-x' })).toBe('model-x')
+    expect(formatActivityFooter({ model: 'model-x' }), 'a model alone is no counts line').toBe('')
     expect(formatActivityFooter({ outputTokens: 12 })).toBe('12 output tokens')
   })
 
   it('a malformed number (NaN, negative, infinite) or an empty model is dropped, never printed', () => {
     expect(formatActivityFooter({ rounds: Number.NaN, inputTokens: -1, outputTokens: Number.POSITIVE_INFINITY, model: '' })).toBe('')
+  })
+})
+
+describe('activityFooterModel (T-0022)', () => {
+  it('is the model id verbatim, and the empty string for an absent, empty or non-string model', () => {
+    expect(activityFooterModel({ model: 'model-x' })).toBe('model-x')
+    expect(activityFooterModel({})).toBe('')
+    expect(activityFooterModel({ model: '' })).toBe('')
+    expect(activityFooterModel({ model: 7 as unknown as string })).toBe('')
+  })
+})
+
+describe('activityDetails (T-0022)', () => {
+  const withDetails = (details: unknown): ActivityStep => ({ id: 'a', kind: 'k', label: 'a', status: 'ok', details: details as string[] })
+
+  it('joins the non-blank lines in order, one per line', () => {
+    expect(activityDetails(withDetails(['Failed checks: PARSE', '', '   ', 'Repair: round 2']))).toBe('Failed checks: PARSE\nRepair: round 2')
+  })
+
+  it('absent, empty, all-blank, non-array and non-string lines show no expand at all: the empty string', () => {
+    expect(activityDetails(step('a'))).toBe('')
+    expect(activityDetails(withDetails([]))).toBe('')
+    expect(activityDetails(withDetails(['', '  ']))).toBe('')
+    expect(activityDetails(withDetails('Failed checks: PARSE'))).toBe('')
+    expect(activityDetails(withDetails([1, null, {}]))).toBe('')
+  })
+})
+
+describe('the closed strip summary and the duration floor (T-0022)', () => {
+  it('reads "Done in 13s, 1 retry", with the retry clause only when a round was retried', () => {
+    expect(formatActivitySummary('13s', 1, false)).toBe('Done in 13s, 1 retry')
+    expect(formatActivitySummary('3.2s', 3, false)).toBe('Done in 3.2s, 3 retries')
+    expect(formatActivitySummary('13s', 0, false)).toBe('Done in 13s')
+  })
+
+  it('a failed turn says so, and an unknown elapsed drops the clause rather than printing a blank', () => {
+    expect(formatActivitySummary('5s', 0, true)).toBe('Failed after 5s')
+    expect(formatActivitySummary('5s', 2, true)).toBe('Failed after 5s, 2 retries')
+    expect(formatActivitySummary('', 0, false)).toBe('Done')
+    expect(formatActivitySummary('', 1, true)).toBe('Failed, 1 retry')
+  })
+
+  it('the duration floor is a tenth of a second', () => {
+    expect(ACTIVITY_MIN_DURATION_MS).toBe(100)
   })
 })
 

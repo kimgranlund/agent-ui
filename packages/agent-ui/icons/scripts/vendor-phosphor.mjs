@@ -124,6 +124,8 @@ const NAME_MAP = {
   // consumers reach for them by different intent (a single recipient action vs. a network/broadcast one).
   'sign-out': 'sign-out',
   share: 'share',
+  // T-0022: the activity strip's circled repaired-step glyph; identity with Phosphor's own regular name.
+  'warning-circle': 'warning-circle',
 }
 
 const EXPECTED_VIEW_BOX = '0 0 256 256'

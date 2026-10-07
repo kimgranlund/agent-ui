@@ -244,14 +244,19 @@
   }
 
   /* ── the marker cell — dot/ring/pulse (::before) + connector (::after), gutter column, full row span ── */
+  /* T-0022: the marker cell spans EVERY row the item can occupy (label/description, streamed text, the
+     expand: rows 1 to 4; `-1` stopped at the two explicit rows) and stretches to the item's full height, so
+     the connector below can run to the item's real end however many lines or an open expand make it. The
+     marker's own mark (dot or glyph) still sits centred in the FIRST `marker-box`, exactly where it always did. */
   :scope [data-part='marker'] {
     position: relative;
     grid-column: 1;
-    grid-row: 1 / -1;
+    grid-row: 1 / span 4;
+    align-self: stretch;
     inline-size: var(--ui-timeline-item-marker-box);
-    block-size: var(--ui-timeline-item-marker-box);
+    min-block-size: var(--ui-timeline-item-marker-box);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     color: var(--ui-timeline-item-marker-ink);
   }
@@ -260,6 +265,10 @@
   :scope [data-part='marker']::before {
     content: '';
     position: absolute;
+    /* centred in the first marker-box (T-0022: the cell is taller than one box now, so it can no longer centre
+       by flex alone); the transform centres a ring too, whose border grows its box past `dot-size` */
+    inset-block-start: calc(var(--ui-timeline-item-marker-box) / 2);
+    transform: translateY(-50%);
     inline-size: var(--ui-timeline-item-dot-size);
     block-size: var(--ui-timeline-item-dot-size);
     border-radius: 50%;
@@ -308,15 +317,17 @@
     }
   }
 
-  /* the connector — a REAL element, not a pseudo (bridges the item's own margin-block-end row-gap so the
-     line is visually continuous into the next item); suppressed on the host's terminal item. */
+  /* the connector: from the bottom of the first marker-box to the item's real end PLUS its own
+     margin-block-end row-gap, so the line is visually continuous through a multi-line row or an open expand
+     and into the next item (T-0022: it was one row-gap long, so any row taller than its marker-box left a gap);
+     suppressed on the host's terminal item. */
   :scope [data-part='marker']::after {
     content: '';
     position: absolute;
-    top: 100%;
+    inset-block-start: var(--ui-timeline-item-marker-box);
+    inset-block-end: calc(-1 * var(--ui-timeline-item-row-gap));
     inset-inline-start: calc(50% - var(--ui-timeline-item-connector-width) / 2);
     inline-size: var(--ui-timeline-item-connector-width);
-    block-size: var(--ui-timeline-item-row-gap);
     background: var(--ui-timeline-item-connector-ink);
   }
   :scope[data-last] [data-part='marker']::after {
@@ -346,6 +357,10 @@
   :scope [data-role='marker'] {
     inline-size: var(--ui-timeline-item-icon-size);
     block-size: var(--ui-timeline-item-icon-size);
+    flex: none;
+    /* centred in the first marker-box (a negative margin when the glyph is the larger of the two, so it grows
+       outward both ways exactly as flex centring did; see the marker cell above) */
+    margin-block-start: calc((var(--ui-timeline-item-marker-box) - var(--ui-timeline-item-icon-size)) / 2);
   }
 
   /* ── content cells — label/timestamp share row 1, description/trailing share row 2 ── */

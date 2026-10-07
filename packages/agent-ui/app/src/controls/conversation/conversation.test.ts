@@ -2054,14 +2054,16 @@ describe('ui-conversation: step mode renders the neutral ActivityStep model (T-0
     expect(cell(r[0]!, 'timestamp'), 'durationMs renders through formatTotalElapsed').toBe('0.4s')
     expect(cell(r[1]!, 'timestamp')).toBe('1.2s')
     expect(cell(r[1]!, 'description'), 'the summary is the one line under the label').toBe('3 results')
-    expect(r[2]!.icon, 'a repaired step wears its own marker glyph, distinct from a clean done').toBe('arrow-clockwise')
-    expect(r[1]!.icon, 'a clean done keeps the default status glyph').toBe('')
+    expect(r[2]!.icon, 'a repaired step wears its own circled glyph, distinct from a clean done and never a spinner').toBe('warning-circle')
+    expect(r[1]!.icon, 'a clean done wears the circled check').toBe('check-circle')
+    expect(r[3]!.icon, 'a failed step wears the circled x').toBe('x-circle')
     expect(cell(r[3]!, 'timestamp'), 'no durationMs, no time: missing data shows nothing').toBe('')
     expect(cell(r[3]!, 'description')).toBe('')
   })
 
-  // T-0019 (defect 1): a repaired turn must not collapse to a plain success receipt.
-  it('a step with retries puts a persistent "N retries" chip in the header at settle, and the header settles warning', async () => {
+  // T-0019 (defect 1), reshaped by T-0022: a repaired turn must not collapse to a plain success receipt. The
+  // closed strip's one-line summary carries the retry count (the separate chip is gone), the header settles warning.
+  it('a step with retries puts the retry count in the closed strip summary, and the header settles warning', async () => {
     const el = stepMode()
     el.receipt = true
     const handle = el.beginAgentTurn()
@@ -2071,12 +2073,13 @@ describe('ui-conversation: step mode renders the neutral ActivityStep model (T-0
     handle.finalize()
     await whenFlushed()
     const strip = el.querySelector('[data-part="narration"]') as HTMLElement
-    expect(strip.querySelector('[data-part="header-badge"]')?.textContent, 'retries sum across steps').toBe('3 retries')
+    expect(strip.querySelector('[data-part="header-meta"]')?.textContent, 'retries sum across steps, on the one summary line').toBe('Done, 3 retries')
+    expect(strip.querySelector('[data-part="header-badge"]'), 'no separate chip: the summary line carries it').toBeNull()
     expect(strip.querySelector('[data-part="header"]')?.getAttribute('data-status'), 'repaired escalates the header to warning').toBe('warning')
     expect(cell(rows(el).find((i) => i.dataset.kind === 'validate')!, 'description'), 'the codes are on the row, not behind raw output').toContain('SCHEMA, REF')
   })
 
-  it('no retries, no chip: a clean turn settles a plain done header', async () => {
+  it('no retries, no retry clause: a clean turn settles a plain done header', async () => {
     const el = stepMode()
     el.receipt = true
     const handle = el.beginAgentTurn()
@@ -2084,8 +2087,8 @@ describe('ui-conversation: step mode renders the neutral ActivityStep model (T-0
     handle.finalize()
     await whenFlushed()
     const strip = el.querySelector('[data-part="narration"]') as HTMLElement
-    expect(strip.querySelector('[data-part="header-badge"]')).toBeNull()
-    expect(strip.querySelector('[data-part="header"]')?.getAttribute('data-status')).toBe('done')
+    expect(strip.querySelector('[data-part="header-meta"]')?.textContent).toBe('Done')
+    expect(strip.querySelector('[data-part="header"]')?.getAttribute('data-status'), 'no warning glyph without a failure').toBe('done')
   })
 
   it('a running step with startedAt shows a live elapsed time; settling freezes its duration instead', async () => {
@@ -2129,7 +2132,7 @@ describe('ui-conversation: step mode renders the neutral ActivityStep model (T-0
     const disclosure = rawRow.querySelector(':scope > [data-part="detail"]') as HTMLElement & { summary: string; open: boolean }
     expect(disclosure.summary).toBe('Raw output')
     expect(disclosure.open, 'collapsed by default').toBe(false)
-    expect(strip(el).querySelector('[data-part="header-meta"]')?.textContent, 'the receipt counts steps only, never the raw row').toMatch(/^3 steps · /)
+    expect(strip(el).querySelector('[data-part="header-meta"]')?.textContent, 'the closed strip reads one summary line').toBe('Done')
   })
 
   it('no step carries raw: no raw row at all', () => {
@@ -2147,9 +2150,12 @@ describe('ui-conversation: step mode renders the neutral ActivityStep model (T-0
     handle.footer({ rounds: 2, inputTokens: 3210, outputTokens: 845, model: 'model-x' })
     handle.finalize()
     const last = strip(el).querySelector(':scope > ui-timeline-item:last-of-type')!
-    expect(last.getAttribute('data-activity')).toBe('footer')
+    expect(last.getAttribute('data-activity'), 'the model id is its own, last, muted line (T-0022)').toBe('model')
     expect(last.hasAttribute('data-note')).toBe(true)
-    expect(cell(last, 'text')).toBe('2 rounds · 3,210 input tokens · 845 output tokens · model-x')
+    expect(cell(last, 'text')).toBe('model-x')
+    const counts = strip(el).querySelector('[data-activity="footer"]')!
+    expect(counts.nextElementSibling).toBe(last)
+    expect(cell(counts, 'text')).toBe('2 rounds · 3,210 input tokens · 845 output tokens')
 
     const t2 = el.beginAgentTurn()
     t2.footer({})
@@ -2167,7 +2173,7 @@ describe('ui-conversation: step mode renders the neutral ActivityStep model (T-0
     handle.footer({ model: 'model-x' })
     handle.fail('boom')
     const kinds = [...strip(el).querySelectorAll(':scope > ui-timeline-item')].map((i) => i.getAttribute('data-activity') ?? i.getAttribute('data-key'))
-    expect(kinds).toEqual(['t1-step-v', 't1-error', 'raw', 'footer'])
+    expect(kinds).toEqual(['t1-step-v', 't1-error', 'raw', 'model'])
     expect((strip(el).querySelector('[data-key="t1-step-v"]') as Item).status, 'never re-stamped done by the turn ending').toBe('active')
     expect(cell(strip(el).querySelector('[data-key="t1-step-v"]')!, 'label'), 'the live label survives').toBe('Validating…')
   })
@@ -2275,8 +2281,171 @@ describe('ui-conversation: step mode renders the neutral ActivityStep model (T-0
       await whenFlushed()
       const raw = strip(el).querySelector('[data-activity="raw"]')!
       expect(raw.querySelector('[data-role="source"]')!.textContent, 'the raw row holds raw only').toBe('{"a":1}')
-      expect(strip(el).querySelector('[data-part="header-meta"]')?.textContent).toMatch(/^2 steps · /)
+      expect(strip(el).querySelector('[data-part="header-meta"]')?.textContent).toBe('Done')
     })
+  })
+
+  // T-0022 (Do 2): the status glyphs are the circled family, one per outcome.
+  it('T-0022 Do 2: each outcome wears its circled glyph: running spins its ring, done checks, repaired warns, failed crosses', async () => {
+    const el = stepMode()
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'r', kind: 'k', label: 'Running…', status: 'running' })
+    handle.step({ id: 'o', kind: 'k', label: 'Done', status: 'ok' })
+    handle.step({ id: 'p', kind: 'k', label: 'Repaired', status: 'repaired' })
+    handle.step({ id: 'f', kind: 'k', label: 'Failed', status: 'failed' })
+    await whenFlushed()
+    const glyphs = rows(el).map((i) => i.querySelector('[data-part="marker"] svg')?.getAttribute('data-glyph'))
+    expect(glyphs).toEqual(['circle-notch', 'check-circle', 'warning-circle', 'x-circle'])
+    expect(glyphs.filter((g) => g === 'arrow-clockwise'), 'a finished step never wears a spinner-style arrow').toEqual([])
+  })
+
+  // T-0022 (Do 3): every step with something to show expands; the rest stay flat.
+  it('T-0022 Do 3: a step with details expands to those lines; a step without any stays non-expandable', async () => {
+    const el = stepMode()
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'v', kind: 'validate', label: 'Validated', status: 'repaired', details: ['Failed checks: PARSE (model output did not parse)', '', 'Round 1 failed. Passed in round 2.'] })
+    handle.step({ id: 'plain', kind: 'request', label: 'Request sent', status: 'ok' })
+    handle.step({ id: 'blank', kind: 'request', label: 'Blank', status: 'ok', details: ['', '  '] })
+    await whenFlushed()
+    const [validated, plain, blank] = rows(el)
+    const disclosure = validated!.querySelector(':scope > [data-part="detail"]') as (HTMLElement & { summary: string; open: boolean }) | null
+    expect(disclosure, 'details plant the row\'s own expand').not.toBeNull()
+    expect(disclosure!.summary).toBe('Details')
+    expect(disclosure!.open, 'collapsed until opened').toBe(false)
+    expect(validated!.querySelector('[data-role="source"]')!.textContent, 'the non-blank lines, in order').toBe('Failed checks: PARSE (model output did not parse)\nRound 1 failed. Passed in round 2.')
+    expect(validated!.dataset.reveal, 'the prose styling hook').toBe('details')
+    expect(plain!.querySelector('[data-part="detail"], [data-role="source"]'), 'nothing to show: no expand').toBeNull()
+    expect(blank!.querySelector('[data-part="detail"], [data-role="source"]'), 'blank lines show nothing: no expand').toBeNull()
+    expect(plain!.dataset.reveal).toBeUndefined()
+  })
+
+  it('T-0022 Do 3: a step with reasoning text shows the Reasoning panel, never a second Details expand beside it', async () => {
+    const el = stepMode()
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'r', kind: 'reasoning', label: 'Reasoned', status: 'ok', reasoning: 'Weighing the dealer up card.', details: ['No reasoning captured'] })
+    await whenFlushed()
+    const row = rows(el)[0]!
+    expect(row.querySelectorAll('[data-part="detail"]').length, 'one expand per row').toBe(1)
+    expect((row.querySelector(':scope > [data-part="detail"]') as HTMLElement & { summary: string }).summary).toBe('Reasoning')
+    expect(row.querySelector('[data-role="source"]')!.textContent).toBe('Weighing the dealer up card.')
+    expect(row.dataset.reveal).toBe('reasoning')
+  })
+
+  // T-0022 (Do 4): the raw output is a code surface with a Copy button.
+  it('T-0022 Do 4: the raw output expand carries a Copy button that puts the raw text on the clipboard', async () => {
+    const written: string[] = []
+    const original = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: (t: string) => (written.push(t), Promise.resolve()) } })
+    try {
+      const el = stepMode()
+      const handle = el.beginAgentTurn()
+      handle.step({ id: 'a', kind: 'validate', label: 'Validated', status: 'ok', raw: '{"a":1}\n{"b":2}' })
+      handle.step({ id: 'b', kind: 'note', label: 'Wrote the reply', status: 'ok', details: ['A line'] })
+      handle.finalize()
+      await whenFlushed()
+      const copy = strip(el).querySelector<HTMLElement>('[data-activity="raw"] [data-part="copy"]')
+      expect(copy, 'the raw expand has a Copy button').not.toBeNull()
+      expect(copy!.textContent).toBe('Copy')
+      expect(strip(el).querySelectorAll('[data-part="copy"]').length, 'only the raw output is copyable, not every row\'s details').toBe(1)
+      copy!.click()
+      await Promise.resolve()
+      expect(written, 'the whole raw block, exactly').toEqual(['{"a":1}\n{"b":2}'])
+      await Promise.resolve()
+      expect(copy!.textContent, 'the button confirms').toBe('Copied')
+    } finally {
+      if (original) Object.defineProperty(navigator, 'clipboard', original)
+      else delete (navigator as unknown as Record<string, unknown>).clipboard
+    }
+  })
+
+  it('T-0022 Do 4: with no clipboard API (or a denied write) the Copy button is inert, never a throw', async () => {
+    const original = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined })
+    try {
+      const el = stepMode()
+      const handle = el.beginAgentTurn()
+      handle.step({ id: 'a', kind: 'validate', label: 'Validated', status: 'ok', raw: 'x' })
+      handle.finalize()
+      await whenFlushed()
+      const copy = strip(el).querySelector<HTMLElement>('[data-part="copy"]')!
+      expect(() => copy.click()).not.toThrow()
+      expect(copy.textContent).toBe('Copy')
+    } finally {
+      if (original) Object.defineProperty(navigator, 'clipboard', original)
+      else delete (navigator as unknown as Record<string, unknown>).clipboard
+    }
+  })
+
+  // T-0022 (Do 5): copy and header.
+  it('T-0022 Do 5: a duration under a tenth of a second is hidden; at a tenth it shows', async () => {
+    const el = stepMode()
+    const handle = el.beginAgentTurn()
+    handle.step({ id: 'a', kind: 'k', label: 'Quick', status: 'ok', durationMs: 99 })
+    handle.step({ id: 'b', kind: 'k', label: 'Tenth', status: 'ok', durationMs: 100 })
+    handle.step({ id: 'c', kind: 'k', label: 'Zero', status: 'ok', durationMs: 0 })
+    await whenFlushed()
+    expect(rows(el).map((i) => cell(i, 'timestamp'))).toEqual(['', '0.1s', ''])
+  })
+
+  it('T-0022 Do 5: the closed strip after a finished turn reads one line: "Done in 13s, 1 retry"', async () => {
+    const start = 1_700_000_000_000
+    let now = start
+    const spy = vi.spyOn(Date, 'now').mockImplementation(() => now)
+    try {
+      const el = stepMode()
+      el.receipt = true
+      const handle = el.beginAgentTurn()
+      handle.step({ id: 'v', kind: 'validate', label: 'Validated', status: 'repaired', retries: 1 })
+      now = start + 13_200
+      handle.finalize()
+      await whenFlushed()
+      const header = el.querySelector('[data-part="narration"] [data-part="header"]') as HTMLElement
+      expect(header.getAttribute('aria-expanded'), 'closed').toBe('false')
+      expect(header.querySelector('[data-part="header-meta"]')!.textContent).toBe('Done in 13s, 1 retry')
+      expect(header.dataset.status, 'a retried round is a failure: the header warns').toBe('warning')
+      expect(header.querySelector('[data-part="header-marker"] svg')?.getAttribute('data-role')).toBe('marker')
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('T-0022 Do 5: a failed turn reads "Failed after Ns" and a clean one never shows a warning glyph', async () => {
+    const start = 1_700_000_000_000
+    let now = start
+    const spy = vi.spyOn(Date, 'now').mockImplementation(() => now)
+    try {
+      const el = stepMode()
+      el.receipt = true
+      const failed = el.beginAgentTurn()
+      failed.step({ id: 'a', kind: 'k', label: 'Working…', status: 'running' })
+      now = start + 5_000
+      failed.fail('boom')
+      await whenFlushed()
+      const header = (n: number): HTMLElement => el.querySelectorAll<HTMLElement>('[data-part="narration"] [data-part="header"]')[n]!
+      expect(header(0).querySelector('[data-part="header-meta"]')!.textContent).toBe('Failed after 5.0s')
+      expect(header(0).dataset.status).toBe('error')
+
+      now = start + 6_000
+      const clean = el.beginAgentTurn()
+      clean.step({ id: 'a', kind: 'k', label: 'Done', status: 'ok', durationMs: 900 })
+      now = start + 7_000
+      clean.finalize()
+      await whenFlushed()
+      expect(header(1).dataset.status, 'no failure, no warning').toBe('done')
+      expect(header(1).querySelector('[data-part="header-meta"]')!.textContent).toBe('Done in 1.0s')
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('T-0022 Do 5: a step-mode strip drops the redundant "Agent" sender label above it (the stamp the CSS keys off); a legacy strip keeps it', () => {
+    const el = stepMode()
+    el.beginAgentTurn().finalize()
+    expect(strip(el).hasAttribute('data-steps')).toBe(true)
+    const legacy = mount(document.createElement('ui-conversation') as UIConversationElement)
+    legacy.beginAgentTurn().finalize()
+    expect(legacy.querySelector('[data-part="narration"]')!.hasAttribute('data-steps'), 'opt-in only: the legacy strip is byte-identical').toBe(false)
+    expect(legacy.querySelector('[data-part="who"]')!.textContent).toBe('Agent')
   })
 
   it('OPT-IN DEFAULT: with steps absent, step() and footer() are no-ops and the strip is byte-identical (the negative control)', () => {
@@ -2369,13 +2538,15 @@ describe('ui-conversation: step mode is general purpose: a plain tool-calling ch
       'Wrote the reply',
       'raw',
       'footer',
+      'model',
     ])
     expect(text(items[1]!, 'timestamp'), '"Called tool search (1.2s)"').toBe('1.2s')
     expect(text(items[1]!, 'description')).toBe('1 result')
     expect(text(items[2]!, 'timestamp')).toBe('0.9s')
     expect(s.querySelectorAll('[data-role="source"]').length).toBe(1)
     expect(s.querySelector('[data-role="source"]')!.textContent).toBe('{"hits":["a"]}')
-    expect(text(items[4]!, 'text')).toBe('1,200 input tokens · 80 output tokens · model-y')
+    expect(text(items[4]!, 'text')).toBe('1,200 input tokens · 80 output tokens')
+    expect(text(items[5]!, 'text')).toBe('model-y')
     expect(s.textContent, 'no A2UI vocabulary leaks into a non-A2UI host').not.toMatch(/surface|Validat|A2UI/i)
   })
 })

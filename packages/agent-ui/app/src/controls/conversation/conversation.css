@@ -70,6 +70,16 @@
      shipped ladder rung, and the SPEC-R11c/AC19 spacing-drift gate (site/lib/shell-spacing-gate.test.ts)
      requires the token spelling for any literal that equals one. */
   --ui-conversation-reference-tag-gap: var(--md-sys-space-xs);
+
+  /* T-0022: the activity strip's expands (step-mode rows' Details/Reasoning panels and the Raw output block).
+     The spacing, scrollbar and code-surface values are minted here and consumed in @scope below (the
+     SPEC-R11c spacing gate); the status-stream's own `--ui-status-stream-source-*` seams carry the type. */
+  --ui-conversation-strip-detail-gap: var(--md-sys-space-xs);
+  --ui-conversation-strip-code-pad: var(--md-sys-space-sm);
+  --ui-conversation-strip-code-radius: calc(var(--ui-conversation-radius) / 2);
+  --ui-conversation-strip-code-surface: var(--md-sys-color-neutral-surface, transparent);
+  --ui-conversation-strip-scrollbar-width: thin;
+  --ui-conversation-strip-scrollbar-thumb: var(--md-sys-color-neutral-outline-variant, currentColor);
 }
 
 /* ════════════════ [ui-conversation] STYLES — @scope (ui-conversation) consumes ONLY --ui-conversation-* ══ */
@@ -227,6 +237,84 @@
     --ui-status-stream-max-block-size: none;
   }
 
+  /* T-0022: times and counts read as tabular figures through the whole strip (the ticking elapsed cells, the
+     frozen durations, the footer counts), so a column of times never jitters or misaligns. Inherited. */
+  [data-part='narration'] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* T-0022: a step-mode strip's own header already says "Agent activity", so the turn drops the "Agent" sender
+     label above it (conversation.ts stamps `data-steps` on the strip; a legacy strip keeps the label). */
+  [data-part='turn']:has(> [data-part='narration'][data-steps]) > [data-part='who'] {
+    display: none;
+  }
+
+  /* T-0022: every expand under a strip row: a compact, muted summary line (the disclosure's own default is a full
+     control-height row, which stacked tall gaps under every step), a beat of air above it, and body spacing
+     below, so a row's expand and the next row, or a Details panel and the Raw output beneath it, never touch.
+     The compaction goes through the disclosure's own custom properties, its sanctioned override surface. */
+  [data-part='narration'] ui-timeline-item > [data-part='detail'] {
+    margin-block-start: var(--ui-conversation-strip-detail-gap);
+    /* a grid item's automatic minimum is its content's min-content: an unwrapped line in the code box below would
+       widen the row's `1fr` track and push the time cell off the strip. Zero lets the track shrink and the box scroll. */
+    min-inline-size: 0;
+    --ui-disclosure-height: 1.75em;
+    --ui-disclosure-font: 1em;
+    --ui-disclosure-ink: var(--ui-conversation-ink-variant);
+    --ui-disclosure-gap: var(--ui-conversation-strip-detail-gap);
+  }
+  [data-part='narration'] ui-timeline-item > [data-part='detail'] [data-part='body'] {
+    padding-block-end: var(--ui-conversation-strip-detail-gap);
+    /* the summary's own inline start is half its height; the content lines up under it, not flush under the row */
+    padding-inline-start: calc(var(--ui-disclosure-height) / 2);
+  }
+
+  /* T-0022: thin, token-coloured scrollbars on every expand's own scroller (never the platform's thick default). */
+  [data-part='narration'] [data-role='source'] {
+    scrollbar-width: var(--ui-conversation-strip-scrollbar-width);
+    scrollbar-color: var(--ui-conversation-strip-scrollbar-thumb) transparent;
+  }
+
+  /* T-0022: a Details expand is plain-words lines, not code: the strip's own type, wrapping at word breaks, no
+     scroller of its own. (The Reasoning panel keeps its T-0021 bounded scrolling box.) */
+  [data-part='narration'] ui-timeline-item[data-reveal='details'] [data-role='source'] {
+    font: inherit;
+    color: var(--ui-conversation-ink-variant);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    max-block-size: none;
+    overflow: visible;
+  }
+
+  /* T-0022: the Raw output is a contained code surface: bordered, padded, in the monospace token, one line per
+     line of JSONL with NO mid-token wrapping (a long line scrolls sideways inside the box). No vertical cap, so
+     the strip or the page owns the one vertical scroll and there is never a scrollbar nested in a scrollbar. */
+  [data-part='narration'] [data-activity='raw'] [data-role='source'] {
+    box-sizing: border-box;
+    padding: var(--ui-conversation-strip-code-pad);
+    border: 1px solid var(--ui-conversation-border);
+    border-radius: var(--ui-conversation-strip-code-radius);
+    background: var(--ui-conversation-strip-code-surface);
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-block-size: none;
+  }
+  /* the Copy button above it hugs its label and keeps a beat of air over the code box */
+  [data-part='narration'] [data-part='copy'] {
+    margin-block-end: var(--ui-conversation-strip-detail-gap);
+  }
+
+  /* T-0022: the footer's counts, then the model id on its own smaller, muted line hugging them. */
+  [data-part='narration'] ui-timeline-item[data-activity='footer'] {
+    --ui-timeline-item-row-gap: 0;
+  }
+  [data-part='narration'] ui-timeline-item[data-activity='model'] {
+    font-size: 0.92em;
+    opacity: 0.8;
+  }
+
   /* Fresh inline ui-surface-host instances this TURN'S OWN creating call mounted (SPEC-R7) — later turns
      route into these same hosts in place; this turn never grows a SECOND one for a known surfaceId. GH
      #1221 — `mounts` is a SIBLING of `[data-part='bubble']` (both direct children of `[data-part='turn']`),
@@ -367,6 +455,10 @@
     [data-part='reference-tag'] {
       border: 1px solid CanvasText;
       color: CanvasText;
+    }
+    /* T-0022: the Raw output's code box keeps a real border when its tinted surface flattens. */
+    [data-part='narration'] [data-activity='raw'] [data-role='source'] {
+      border-color: CanvasText;
     }
   }
 }

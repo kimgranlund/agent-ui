@@ -13,7 +13,8 @@
 // - Labels come from the closed stage table below (ADR-0146 F2, ADR-0159 §1's live/done pairs), never
 //   from model text. A step that never finished keeps its live label.
 // - Summaries are counts and verbs from message KIND only ("3 components", "4 keys"); a component type,
-//   catalog id or surface id never reaches a label or summary.
+//   catalog id or surface id never reaches a label or summary. They reach a step's `details` (T-0022), the
+//   expand a reader opens on purpose, and only as the names the wire itself carried.
 // - Times are what this client observed between stage signals. Missing data renders nothing.
 // - Raw output is attached ONCE: the shipped lines (or, for a failed turn, the last candidate).
 // - Reasoning text (T-0021, ADR-0240) is the one place model text enters a step, and only as the
@@ -28,9 +29,13 @@ import { ACTIVITY_REASONING_CAP } from '../../packages/agent-ui/app/src/controls
 /** The closed stage → step table. `retry` and `done` are transitions, not rows; `tool` rows are numbered. */
 const STAGE_STEP: Partial<Record<TurnProgressStage, { id: string; live: string; done: string; failed?: string }>> = {
   sent: { id: 'request', live: 'Request sent', done: 'Request sent' },
+  // `started` (the model began) and `content` (the answer text arrived) are one stretch of model time to a
+  // reader: two rows, "Generated" then "Wrote the response", said the same thing twice (T-0022). Both stages
+  // now fold into the ONE `generate` row; a `content` that follows a `reasoning` pass re-enters it and its time
+  // accumulates (the same re-entry a retry round already uses).
   started: { id: 'generate', live: 'Generating…', done: 'Generated' },
   reasoning: { id: 'reasoning', live: 'Reasoning…', done: 'Reasoned' },
-  content: { id: 'response', live: 'Writing the response…', done: 'Wrote the response' },
+  content: { id: 'generate', live: 'Generating…', done: 'Generated' },
   validating: { id: 'validate', live: 'Validating…', done: 'Validated', failed: 'Validation failed' },
 }
 
@@ -54,6 +59,8 @@ interface StepState {
   retries?: number
   /** The reasoning step's accumulated excerpt text (the neutral `ActivityStep.reasoning`). */
   reasoning?: string
+  /** Plain-words lines for the row's expand (the neutral `ActivityStep.details`). */
+  details?: string[]
   /** Set when the step is re-entered in a later round: the next excerpt starts a new paragraph. */
   reasoningBreak?: boolean
 }
@@ -80,10 +87,29 @@ interface Tally {
   dataWrites: number
   closed: number
   other: number
+  /** Names the wire carried, for the rows' `details` only (T-0022): surface ids per message kind, the
+   *  component types in first-seen order with their counts, and the data keys written. */
+  surfaces: { opened: Set<string>; components: Set<string>; data: Set<string>; closed: Set<string> }
+  types: Map<string, number>
+  keys: Set<string>
 }
 
 function tally(lines: readonly string[]): Tally {
-  const t: Tally = { opened: 0, components: 0, dataKeys: 0, dataWrites: 0, closed: 0, other: 0 }
+  const t: Tally = {
+    opened: 0,
+    components: 0,
+    dataKeys: 0,
+    dataWrites: 0,
+    closed: 0,
+    other: 0,
+    surfaces: { opened: new Set(), components: new Set(), data: new Set(), closed: new Set() },
+    types: new Map(),
+    keys: new Set(),
+  }
+  const surface = (into: Set<string>, body: unknown): void => {
+    const id = (body as { surfaceId?: unknown } | null)?.surfaceId
+    if (typeof id === 'string' && id !== '') into.add(id)
+  }
   for (const line of lines) {
     let msg: unknown
     try {
@@ -93,17 +119,34 @@ function tally(lines: readonly string[]): Tally {
     }
     if (typeof msg !== 'object' || msg === null) continue
     const m = msg as Record<string, unknown>
-    if ('createSurface' in m) t.opened += 1
-    else if ('updateComponents' in m) {
-      const list = (m.updateComponents as { components?: unknown } | null)?.components
+    if ('createSurface' in m) {
+      t.opened += 1
+      surface(t.surfaces.opened, m.createSurface)
+    } else if ('updateComponents' in m) {
+      const body = m.updateComponents as { components?: unknown } | null
+      const list = body?.components
       t.components += Array.isArray(list) ? list.length : 0
+      surface(t.surfaces.components, body)
+      if (Array.isArray(list)) {
+        for (const c of list) {
+          const type = (c as { component?: unknown } | null)?.component
+          if (typeof type === 'string' && type !== '') t.types.set(type, (t.types.get(type) ?? 0) + 1)
+        }
+      }
     } else if ('updateDataModel' in m) {
       // A whole-object write counts its top-level keys; a path write (or a scalar) is one key.
-      const value = (m.updateDataModel as { value?: unknown } | null)?.value
-      t.dataKeys += typeof value === 'object' && value !== null && !Array.isArray(value) ? Object.keys(value).length : 1
+      const body = m.updateDataModel as { value?: unknown; path?: unknown } | null
+      const value = body?.value
+      const whole = typeof value === 'object' && value !== null && !Array.isArray(value)
+      t.dataKeys += whole ? Object.keys(value).length : 1
       t.dataWrites += 1
-    } else if ('deleteSurface' in m) t.closed += 1
-    else t.other += 1
+      surface(t.surfaces.data, body)
+      if (whole) for (const k of Object.keys(value)) t.keys.add(k)
+      else t.keys.add(typeof body?.path === 'string' && body.path !== '' ? body.path : '(value)')
+    } else if ('deleteSurface' in m) {
+      t.closed += 1
+      surface(t.surfaces.closed, m.deleteSurface)
+    } else t.other += 1
   }
   return t
 }
@@ -138,17 +181,52 @@ function traceFacts(trace: TurnTrace): TraceFacts {
   }
 }
 
-/** "Round 1 failed (SCHEMA)", "Rounds 1 to 2 failed (SCHEMA, UNKNOWN_COMPONENT)": `rounds` is the round about
- *  to run (or that succeeded), so `rounds - 1` rounds failed. `codes` are validator codes, never model text. */
-function failedRounds(rounds: number, codes: readonly string[]): string {
-  const failed = rounds === 2 ? 'Round 1 failed' : `Rounds 1 to ${rounds - 1} failed`
-  return codes.length > 0 ? `${failed} (${codes.join(', ')})` : failed
+/** The closed validator codes (protocol.ts `ErrorCode`) in plain words, completing "Model output ...". A code
+ *  outside this table is shown by name (never invented a meaning for): the failure codes are validator names,
+ *  never model text, so a closed table keeps the honesty rule. */
+const CODE_WORDS: Readonly<Record<string, string>> = {
+  PARSE: 'did not parse',
+  SCHEMA: 'broke the message schema',
+  CATALOG: 'used a component the catalog does not have',
+  CATALOG_UNKNOWN: 'named an unknown catalog',
+  IDGRAPH: 'had a broken component tree',
+  POINTER: 'pointed at data that does not exist',
+  FUNCTION: 'called an unknown function',
+  DEPTH_EXCEEDED: 'nested components too deeply',
+  CONTAINMENT: 'put a component in the wrong parent',
 }
 
-/** "Round 1 failed (SCHEMA), repaired in round 2". */
-function repairSummary(rounds: number, codes: readonly string[]): string {
-  return `${failedRounds(rounds, codes)}, repaired in round ${rounds}`
+/** "Model output did not parse": what failed, in one clause. One known code names itself; several say how
+ *  many checks failed (the row's expand lists each); an unknown code is named, never explained. */
+function failureWords(codes: readonly string[]): string {
+  if (codes.length === 0) return 'Model output failed validation'
+  if (codes.length === 1) {
+    const words = CODE_WORDS[codes[0]!]
+    return words !== undefined ? `Model output ${words}` : `Model output failed a check (${codes[0]})`
+  }
+  return `Model output failed ${codes.length} checks`
 }
+
+/** The one-line summary of a validate step that failed a round: "Model output did not parse, retrying" while
+ *  the next round runs, "..., retried" once it passed. */
+function retrySummary(codes: readonly string[], settled: boolean): string {
+  return `${failureWords(codes)}, ${settled ? 'retried' : 'retrying'}`
+}
+
+/** The validate row's expand: the failed checks by code with their plain words, then one repair line. */
+function validateDetails(codes: readonly string[], rounds: number, settled: boolean): string[] {
+  const checks = codes.map((c) => (CODE_WORDS[c] !== undefined ? `${c} (model output ${CODE_WORDS[c]})` : c))
+  const failed = rounds === 2 ? 'Round 1 failed' : `Rounds 1 to ${rounds - 1} failed`
+  return [
+    checks.length > 0 ? `Failed checks: ${checks.join('; ')}` : 'No failure codes were reported.',
+    settled
+      ? `${failed}. The model was sent the failures and its rewrite passed in round ${rounds}.`
+      : `${failed}. The model was sent the failures and is trying again in round ${rounds}.`,
+  ]
+}
+
+const CHECKING = ['Checking the response against the component catalog.']
+const NO_REASONING = ['No reasoning captured']
 
 export function createA2uiActivity(now: () => number = () => Date.now()): A2uiActivity {
   const steps = new Map<string, StepState>()
@@ -175,6 +253,7 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
       ...(s.retries !== undefined && s.retries > 0 ? { retries: s.retries } : {}),
       ...(s.raw !== undefined ? { raw: s.raw } : {}),
       ...(s.reasoning !== undefined ? { reasoning: s.reasoning } : {}),
+      ...(s.details !== undefined ? { details: s.details } : {}),
     }
   }
 
@@ -188,6 +267,7 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
     if (have.length > ACTIVITY_REASONING_CAP) return false
     s.reasoning = have === '' ? excerpt : s.reasoningBreak === true ? `${have}\n\n${excerpt}` : have + excerpt
     s.reasoningBreak = false
+    delete s.details // the text is the expand now; the "no reasoning" placeholder is out of date
     return true
   }
 
@@ -218,23 +298,27 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
   const settleValidate = (): StepState | undefined => {
     const v = steps.get('validate')
     if (v === undefined || v.status === 'running') return undefined
-    const before = `${v.status}|${v.summary ?? ''}|${v.retries ?? 0}`
+    const face = (): string => `${v.status}|${v.summary ?? ''}|${v.retries ?? 0}|${v.details?.join('\n') ?? ''}`
+    const before = face()
     const rounds = traced?.rounds ?? round
     const codes = traced !== undefined && traced.codes.length > 0 ? traced.codes : liveCodes
     if (rounds > 1) {
       v.status = 'repaired'
-      v.summary = repairSummary(rounds, codes)
+      v.summary = retrySummary(codes, true)
+      v.details = validateDetails(codes, rounds, true)
       v.retries = rounds - 1
     } else if (v.status !== 'failed') {
       v.status = 'ok'
       if (codes.length > 0) v.summary = `Noted: ${codes.join(', ')}`
+      v.details = ['Passed on the first attempt.', ...(codes.length > 0 ? [`Noted: ${codes.join(', ')}`] : [])]
     }
-    return `${v.status}|${v.summary ?? ''}|${v.retries ?? 0}` === before ? undefined : v
+    return face() === before ? undefined : v
   }
 
-  const outputStep = (id: string, label: string, summary?: string): StepState => {
+  const outputStep = (id: string, label: string, summary?: string, details?: string[]): StepState => {
     const s: StepState = { id, kind: 'output', live: label, done: label, status: 'ok', timed: false, spentMs: 0, spanStart: 0 }
     if (summary !== undefined) s.summary = summary
+    if (details !== undefined && details.length > 0) s.details = details
     steps.set(id, s)
     return s
   }
@@ -253,7 +337,8 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
         const v = steps.get('validate')
         if (v !== undefined) {
           v.status = 'failed'
-          v.summary = `${failedRounds(round, liveCodes)}, retrying in round ${round}`
+          v.summary = retrySummary(liveCodes, false)
+          v.details = validateDetails(liveCodes, round, false)
           v.retries = round - 1
           changed.add(v)
         }
@@ -285,7 +370,10 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
       }
       const closed = close('ok', t)
       const opened = open(target.id, target.kind, target, t)
-      if (ev.stage === 'reasoning') addReasoning(opened, ev.detail) // the row is born carrying its first excerpt
+      if (ev.stage === 'reasoning') {
+        addReasoning(opened, ev.detail) // the row is born carrying its first excerpt
+        if (opened.reasoning === undefined) opened.details = NO_REASONING // an expand needs a row born with one
+      } else if (ev.stage === 'validating' && opened.details === undefined) opened.details = CHECKING
       return (closed === undefined ? [opened] : [closed, opened]).map(view)
     },
 
@@ -307,10 +395,12 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
       if (v !== undefined) changed.add(v)
       const t = tally(lines)
       const outputs: StepState[] = []
-      if (t.opened > 0) outputs.push(outputStep('open', t.opened === 1 ? 'Opened a new surface' : 'Opened new surfaces', t.opened === 1 ? undefined : plural(t.opened, 'surface', 'surfaces')))
-      if (t.components > 0) outputs.push(outputStep('components', 'Updated the surface', plural(t.components, 'component', 'components')))
-      if (t.dataWrites > 0) outputs.push(outputStep('data', 'Updated data', plural(t.dataKeys, 'key', 'keys')))
-      if (t.closed > 0) outputs.push(outputStep('close', t.closed === 1 ? 'Closed the surface' : 'Closed surfaces', t.closed === 1 ? undefined : plural(t.closed, 'surface', 'surfaces')))
+      const ids = (set: ReadonlySet<string>): string[] => (set.size === 0 ? [] : [`${set.size === 1 ? 'Surface' : 'Surfaces'}: ${[...set].join(', ')}`])
+      const types = [...t.types].map(([type, n]) => (n === 1 ? type : `${type} (${n})`))
+      if (t.opened > 0) outputs.push(outputStep('open', t.opened === 1 ? 'Opened a new surface' : 'Opened new surfaces', t.opened === 1 ? undefined : plural(t.opened, 'surface', 'surfaces'), ids(t.surfaces.opened)))
+      if (t.components > 0) outputs.push(outputStep('components', 'Updated the surface', plural(t.components, 'component', 'components'), [...ids(t.surfaces.components), ...(types.length > 0 ? [`Components: ${types.join(', ')}`] : [])]))
+      if (t.dataWrites > 0) outputs.push(outputStep('data', 'Updated data', plural(t.dataKeys, 'key', 'keys'), [...ids(t.surfaces.data), `Keys: ${[...t.keys].join(', ')}`]))
+      if (t.closed > 0) outputs.push(outputStep('close', t.closed === 1 ? 'Closed the surface' : 'Closed surfaces', t.closed === 1 ? undefined : plural(t.closed, 'surface', 'surfaces'), ids(t.surfaces.closed)))
       if (t.other > 0) outputs.push(outputStep('other', 'Sent other messages', plural(t.other, 'message', 'messages')))
       for (const o of outputs) changed.add(o)
       // The raw output, once: the shipped lines, on the validate step (or the first output step without one).
@@ -332,6 +422,9 @@ export function createA2uiActivity(now: () => number = () => Date.now()): A2uiAc
       const changed = new Set<StepState>()
       const failed = close('failed', now())
       if (failed !== undefined) changed.add(failed)
+      if (failed?.id === 'validate') {
+        failed.details = ['The turn ended before validation passed.', ...(liveCodes.length > 0 ? [`Earlier failed checks: ${liveCodes.join(', ')}`] : [])]
+      }
       // A failed turn shipped nothing valid: its one raw block is the last candidate the producer attached.
       const v = steps.get('validate')
       const raw = lines.length > 0 ? lines.join('\n') : lastCandidate

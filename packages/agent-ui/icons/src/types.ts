@@ -55,6 +55,11 @@ export const ICON_NAMES = [
   // GH #1508 — /command-modal-demo's Actions group (Log out / Share file). Identity with Phosphor's
   // own regular-weight names; `share` is distinct from the pre-existing `share-network` (above).
   'sign-out', 'share',
+  // T-0022: the activity strip's circled step glyphs: a repaired step (it failed a round, then passed) wears
+  // `warning-circle`, a circled exclamation in the warning ink, shape-distinct from `x-circle` (failed), from the
+  // circled check (done) and from `circle-notch`'s spinner (running), so a finished step never reads as busy.
+  // Identity with Phosphor's own regular-weight name.
+  'warning-circle',
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 

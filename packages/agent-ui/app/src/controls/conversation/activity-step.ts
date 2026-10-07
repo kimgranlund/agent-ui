@@ -39,6 +39,12 @@ export interface ActivityStep {
    *  text hands the first excerpt with the first `step()` call and grows it on the later calls. Absent, empty
    *  or whitespace-only shows no panel at all. Never part of `raw`. */
   readonly reasoning?: string
+  /** Plain-words facts the row's own expand reveals, one per line (T-0022, ADR-0159 amendment): "Failed checks:
+   *  ...", "Surface: ...". Like `reasoning` it is read once, when the row is created: a row born without any
+   *  never grows an expand later, so a host hands the first lines with the first `step()` call and rewrites them
+   *  on the later calls. Absent, empty or whitespace-only lines show no expand at all, and a step that carries
+   *  `reasoning` text shows that panel instead. Never part of `raw`. */
+  readonly details?: readonly string[]
 }
 
 /** Turn-level facts for the strip's footer row. Every field is optional; an absent field renders nothing. */
@@ -67,6 +73,17 @@ export function activityReasoning(step: ActivityStep): string {
   return text.length > ACTIVITY_REASONING_CAP ? text.slice(0, ACTIVITY_REASONING_CAP) + REASONING_TRUNCATION_MARKER : text
 }
 
+/** The text a step's expand shows from its `details`: the non-blank lines, in order, newline-joined. `''` for
+ *  absent or non-array details and for lines that are all blank or not strings (the step then shows no expand). */
+export function activityDetails(step: ActivityStep): string {
+  const lines: unknown = step.details
+  if (!Array.isArray(lines)) return ''
+  return lines.filter((l): l is string => typeof l === 'string' && l.trim() !== '').join('\n')
+}
+
+/** A step shorter than this shows no time: "0.0s" beside a row says nothing a reader can use (T-0022). */
+export const ACTIVITY_MIN_DURATION_MS = 100
+
 /** The strip's retry total: every step's `retries`, summed, ignoring anything that is not a finite number
  *  above zero. `0` when no step retried (the strip then shows no retry marker). */
 export function totalActivityRetries(steps: Iterable<ActivityStep>): number {
@@ -86,16 +103,30 @@ function counted(n: number | undefined, one: string, many: string): string | und
   return `${grouped.format(n)} ${n === 1 ? one : many}`
 }
 
-/** The footer row's text: the present facts in a fixed order, `·`-separated. `''` when nothing is present
- *  (the strip then renders no footer row at all). */
+/** The footer row's text: the present counts in a fixed order, `·`-separated (the model id is its own line, see
+ *  `activityFooterModel`). `''` when nothing is present (the strip then renders no footer row at all). */
 export function formatActivityFooter(footer: ActivityFooter): string {
   const parts = [
     counted(footer.rounds, 'round', 'rounds'),
     counted(footer.inputTokens, 'input token', 'input tokens'),
     counted(footer.outputTokens, 'output token', 'output tokens'),
-    footer.model !== undefined && footer.model !== '' ? footer.model : undefined,
   ]
   return parts.filter((p) => p !== undefined).join(' · ')
+}
+
+/** The footer's model line: the model id verbatim, on its own muted row beneath the counts (T-0022). `''` when
+ *  absent or empty (the strip then renders no model row). */
+export function activityFooterModel(footer: ActivityFooter): string {
+  return typeof footer.model === 'string' && footer.model !== '' ? footer.model : ''
+}
+
+/** The closed strip's one-line summary: "Done in 13s, 1 retry" / "Failed after 5s". `elapsed` is the host's
+ *  already-formatted turn time (`''` when unknown, then the clause is dropped: "Done"). The retry count rides the
+ *  same line, so a turn that needed repairing never reads as a plain success once it collapses (T-0022; this
+ *  replaces T-0019's separate header chip). */
+export function formatActivitySummary(elapsed: string, retries: number, failed: boolean): string {
+  const head = failed ? (elapsed === '' ? 'Failed' : `Failed after ${elapsed}`) : elapsed === '' ? 'Done' : `Done in ${elapsed}`
+  return retries > 0 ? `${head}, ${formatActivityRetries(retries)}` : head
 }
 
 /** The single raw block for a turn: every distinct non-empty `raw`, in step order, blank-line separated.

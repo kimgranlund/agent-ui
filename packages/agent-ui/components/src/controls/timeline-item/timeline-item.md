@@ -84,7 +84,7 @@ slots:
 
 parts:
   - name: marker
-    description: The control-built `<span data-part="marker">` — paints the status dot/ring/pulse via `::before` and the row connector via `::after` when no consumer marker/icon/status-glyph is present; otherwise holds the adopted or injected glyph.
+    description: The control-built `<span data-part="marker">` — paints the status dot/ring/pulse via `::before` and the row connector via `::after` when no consumer marker/icon/status-glyph is present; otherwise holds the adopted or injected glyph. The cell spans every row the item occupies and stretches to its full height (T-0022), so the connector runs from the first marker-box to the item's end plus its row gap, continuous through a wrapped description or an open expand.
   - name: detail
     description: The control-built `<ui-disclosure data-part="detail">` wrapping the adopted `[data-role="detail"]` content AND/OR the adopted `[data-role="nested"]` `<ui-timeline>` (ADR-0143 F2), present only when either exists at connect. A nested `<ui-timeline>`'s own items paint their own complete, independently-indented rail — no cross-level connector continuity (ADR-0143 F4), zero geometry changes here.
 
