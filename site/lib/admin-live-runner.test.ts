@@ -145,6 +145,36 @@ describe('createAdminSurfaceTurn', () => {
     expect(body.progressDetail, "the server-validated 'source' rung — never 'full' (CoT stays server-owned)").toBe('source')
   })
 
+  it("requests the reasoning excerpts on their own axis: the POST body carries progressReasoning:true beside 'source' (T-0021/ADR-0240, the admin developer surface's opt-in)", async () => {
+    const fetchSpy = vi.fn(
+      async () => new Response(streamOfLines([]), { status: 200, headers: { 'content-type': 'application/x-ndjson' } }),
+    )
+    vi.stubGlobal('fetch', fetchSpy)
+    const runner = createAdminSurfaceTurn()
+    for await (const _event of runner(SURFACE_REQUEST)) {
+      /* drain */
+    }
+    const init = (fetchSpy.mock.calls[0] as unknown[])[1] as { body: string }
+    const body = JSON.parse(init.body) as Record<string, unknown>
+    expect(body.progressReasoning, 'the boolean the proxies validate fail-closed').toBe(true)
+    expect(body.progressDetail, 'the source opt-in is unchanged').toBe('source')
+  })
+
+  it('a reasoning progress event carries its excerpt into a step with reasoning text, labels untouched (T-0021)', async () => {
+    const progress = (p: Record<string, unknown>): string => JSON.stringify({ a2uiMeta: { progress: p } })
+    const lines = [
+      progress({ stage: 'reasoning', detail: 'Weigh the ' }),
+      progress({ stage: 'reasoning', detail: 'hit risk.' }),
+      progress({ stage: 'content' }),
+      progress({ stage: 'done' }),
+    ]
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })))
+    const runner = createAdminSurfaceTurn()
+    const steps = new Map<string, Extract<AdminSurfaceTurnEvent, { kind: 'step' }>['step']>()
+    for await (const event of runner(SURFACE_REQUEST)) if (event.kind === 'step') steps.set(event.step.id, event.step)
+    expect(steps.get('reasoning')).toMatchObject({ label: 'Reasoned', reasoning: 'Weigh the hit risk.' })
+  })
+
   it("a progress event's source attachment rides the progress event to the consumer (byte compare through the meta filter)", async () => {
     const raw = '{"version":"v1.0","createSurface":{"surfaceId":"s1","catalogId":"agent-ui"}}'
     const lines = [

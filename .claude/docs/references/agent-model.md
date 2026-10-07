@@ -186,11 +186,12 @@ header pointing here.
   accepted).
 - **activity step**: one row of a turn's activity strip in `ui-conversation`'s step mode: the neutral
   `ActivityStep` (`id`, `kind`, `label`, `status` of running/ok/repaired/failed, optional `startedAt`,
-  `durationMs`, `summary`, `retries`, `raw`) a host pushes through `AgentTurnHandle.step()`, plus the turn's
+  `durationMs`, `summary`, `retries`, `raw`, `reasoning`) a host pushes through `AgentTurnHandle.step()`, plus the turn's
   `ActivityFooter` facts (rounds, tokens, model). It names no catalog, type or protocol: an adapter
   builds it (`site/lib/a2ui-activity.ts` for A2UI turns). Not a **plan step** (`PlanStep`, the model's
   own declared step list on the meta-line) and not a `TurnProgress` stage (the producer's wire signal
-  an adapter reads). ADR-0159 amendment (T-0016, ratified).
+  an adapter reads). ADR-0159 amendment (T-0016, ratified). `reasoning` is the model's thinking text, a collapsed
+  panel on the Reasoned row (ADR-0240).
 - **Co-pilot**: the builder-interview place (`[Chat | Settings | Co-pilot]`, ADR-0179 as amended by
   GH #686); "Author" is its retired name.
 
@@ -259,6 +260,6 @@ support.google.com/gemini/answer/15236321 (Gemini Gems "Knowledge").
 | `Persona` (site alias, a declared subset of `AgentRecord`) | `site/pages/agent-admin-presets.ts` | §4 |
 | `AgentManifest` | `site/lib/agent-manifest/agent-manifest.ts` | ADR-0235 |
 | `AgentTransport`, `Turn` | `packages/agent-ui/a2ui/src/agent/agent-transport.ts` | ADR-0069, ADR-0073 |
-| `ActivityStep`, `ActivityStatus`, `ActivityFooter` | `controls/conversation/activity-step.ts` (re-exported from `@agent-ui/app/conversation`) | ADR-0159 amendment (T-0016) |
+| `ActivityStep`, `ActivityStatus`, `ActivityFooter` | `controls/conversation/activity-step.ts` (re-exported from `@agent-ui/app/conversation`) | ADR-0159 amendment (T-0016), ADR-0240 (`reasoning`, proposed) |
 | `SemanticCheck`, `SemanticFinding`, `SurfaceView` | `packages/agent-ui/a2ui/src/catalog/semantic-check.ts` | ADR-0238 |
 | `DevtoolsEvent`, `DevtoolsCapture` | `packages/agent-ui/devtools/src/timeline/events.ts`, `capture/format.ts` | ADR-0200 |

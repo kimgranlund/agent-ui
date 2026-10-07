@@ -1498,6 +1498,57 @@ describe('ui-conversation cross-engine: step mode paints the neutral ActivitySte
   })
 })
 
+// T-0021 (ADR-0240) in a real engine: the Reasoned step's panel is collapsed until its summary is
+// clicked, then really paints, stays inside a bounded scrolling box for long text, and a step without text
+// grows no panel. jsdom pins the DOM; only a real layout proves what is hidden and what paints.
+describe('ui-conversation cross-engine: the Reasoned step expands to a reasoning panel (T-0021)', () => {
+  const frames = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+
+  it(`${server.browser}: collapsed by default, one click paints the text in a bounded box, a text-less Reasoned step has no panel`, async () => {
+    const el = mountConversation('420px', '520px')
+    el.steps = true
+    const handle = el.beginAgentTurn()
+    const long = Array.from({ length: 60 }, (_, i) => `Line ${i + 1}: weigh the hit risk against the dealer's up card.`).join('\n')
+    handle.step({ id: 'request', kind: 'request', label: 'Request sent', status: 'ok', durationMs: 420 })
+    handle.step({ id: 'reasoning', kind: 'reasoning', label: 'Reasoned', status: 'ok', durationMs: 2300, reasoning: long })
+    handle.step({ id: 'bare', kind: 'reasoning', label: 'Reasoned', status: 'ok', durationMs: 100 })
+    await whenFlushed()
+    await frames()
+
+    const strip = el.querySelector('[data-part="narration"]') as HTMLElement
+    const row = strip.querySelector<HTMLElement>('[data-key="t1-step-reasoning"]')!
+    const painted = (n: Element): boolean => {
+      const r = n.getBoundingClientRect()
+      return r.width > 0 && r.height > 0
+    }
+    expect(row.querySelector<HTMLElement>(':scope > [data-role="label"]')!.textContent, 'the strip line is still the Reasoned step').toBe('Reasoned')
+    const summary = row.querySelector('summary')!
+    const details = row.querySelector('details')!
+    const pre = row.querySelector<HTMLElement>('[data-role="source"]')!
+    expect(summary.textContent).toContain('Reasoning')
+    expect(painted(summary), 'the "Reasoning" trigger is visible').toBe(true)
+    expect(details.open, 'collapsed by default').toBe(false)
+    expect(pre.checkVisibility(), 'the reasoning text is genuinely hidden until opened').toBe(false)
+
+    summary.focus()
+    expect(document.activeElement, 'the trigger is a native summary: keyboard reachable').toBe(summary)
+    summary.click()
+    await frames()
+    expect(details.open, 'one click expands').toBe(true)
+    expect(pre.checkVisibility(), 'the opened panel paints').toBe(true)
+    expect(pre.textContent!.startsWith('Line 1: weigh the hit risk'), 'the model text is what shows').toBe(true)
+    expect(pre.scrollHeight, 'long text overflows the panel').toBeGreaterThan(pre.clientHeight)
+    expect(pre.getBoundingClientRect().height, 'a bounded scrolling box, never the strip growing without limit').toBeLessThan(260)
+    summary.click()
+    await frames()
+    expect(details.open, 'a second click collapses it again').toBe(false)
+
+    const bare = strip.querySelector<HTMLElement>('[data-key="t1-step-bare"]')!
+    expect(bare.querySelector('summary, details, [data-role="source"]'), 'no text, no panel: today\'s look').toBeNull()
+    expect(painted(bare.querySelector(':scope > [data-role="label"]')!)).toBe(true)
+  })
+})
+
 // T-0019 in a real engine: the header's retry chip really paints (and in the warning ink, not the meta's
 // secondary ink) once the strip collapses to its receipt. The expanded-strip header stacking and the chat
 // Card region inset are guarded in the real ui-agent-admin host instead, see

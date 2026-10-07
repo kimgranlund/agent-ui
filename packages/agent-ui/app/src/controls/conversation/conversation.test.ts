@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, afterEach, beforeAll, afterAll } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 import { UIConversationElement } from './conversation.ts'
+import { ACTIVITY_REASONING_CAP } from './activity-step.ts'
+import type { ActivityStep } from './activity-step.ts'
 import type { UIConversationComposerElement } from './conversation-composer.ts'
 import type { UIConversationDialogElement } from './conversation-dialog.ts'
 import type { UIConversationHeaderElement } from './conversation-header.ts'
@@ -2178,6 +2180,103 @@ describe('ui-conversation: step mode renders the neutral ActivityStep model (T-0
     handle.step({ id: 'late', kind: 'request', label: 'Late', status: 'ok' })
     handle.footer({ model: 'late' })
     expect(rows(el).map((i) => cell(i, 'label'))).toEqual(['Request sent'])
+  })
+
+  // T-0021 (ADR-0240): a step's optional `reasoning` text is the reveal on that step's OWN row:
+  // the existing per-entry disclosure (collapsed by default, native summary semantics), labelled "Reasoning".
+  describe('a step with reasoning text (T-0021, ADR-0240)', () => {
+    type Disclosure = HTMLElement & { summary: string; open: boolean }
+    const panel = (row: Element): Disclosure | null => row.querySelector(':scope > [data-part="detail"]')
+    const pre = (row: Element): HTMLElement | null => row.querySelector('[data-role="source"]')
+    const reasoned = (over: Partial<ActivityStep> = {}): ActivityStep => ({ id: 'reasoning', kind: 'reasoning', label: 'Reasoned', status: 'ok', durationMs: 400, ...over })
+    const row = (el: UIConversationElement, id = 'reasoning'): HTMLElement => strip(el).querySelector<HTMLElement>(`[data-key="t1-step-${id}"]`)!
+
+    it('grows a collapsed "Reasoning" panel on the step row itself, holding the text, beside its label and time', async () => {
+      const el = stepMode()
+      const handle = el.beginAgentTurn()
+      handle.step(reasoned({ reasoning: 'Weigh the hit risk.\n\nStand on 17.' }))
+      await whenFlushed()
+      const r = row(el)
+      expect(cell(r, 'label'), 'the strip line is still the Reasoned step').toBe('Reasoned')
+      expect(cell(r, 'timestamp')).toBe('0.4s')
+      const d = panel(r)!
+      expect(d, 'the row grew a reveal').not.toBeNull()
+      expect(d.summary).toBe('Reasoning')
+      expect(d.open, 'collapsed by default').toBe(false)
+      expect(pre(r)!.textContent).toBe('Weigh the hit risk.\n\nStand on 17.')
+      expect(strip(el).querySelector('[data-activity="raw"]'), 'reasoning is not raw output').toBeNull()
+    })
+
+    it('is born with the first excerpt and grows in place: later text re-stamps the SAME node, never a second panel', async () => {
+      const el = stepMode()
+      const handle = el.beginAgentTurn()
+      handle.step(reasoned({ status: 'running', label: 'Reasoning…', startedAt: Date.now(), durationMs: undefined, reasoning: 'Weigh' }))
+      await whenFlushed()
+      const first = pre(row(el))!
+      handle.step(reasoned({ status: 'running', label: 'Reasoning…', startedAt: Date.now(), durationMs: undefined, reasoning: 'Weigh the hit risk.' }))
+      handle.step(reasoned({ reasoning: 'Weigh the hit risk. Stand on 17.' }))
+      await whenFlushed()
+      expect(row(el).querySelectorAll('[data-role="source"]').length, 'one panel per row').toBe(1)
+      expect(pre(row(el)), 'a same-node text mutation, never an insertion').toBe(first)
+      expect(first.textContent).toBe('Weigh the hit risk. Stand on 17.')
+      expect(cell(row(el), 'label'), 'the settle still flips the label').toBe('Reasoned')
+    })
+
+    it('renders the text as text: markup in the reasoning stays literal and never becomes an element', async () => {
+      const el = stepMode()
+      const handle = el.beginAgentTurn()
+      handle.step(reasoned({ reasoning: '<img src=x onerror=alert(1)> & <b>bold</b>' }))
+      await whenFlushed()
+      expect(pre(row(el))!.textContent).toBe('<img src=x onerror=alert(1)> & <b>bold</b>')
+      expect(row(el).querySelector('img, b'), 'no element was created from the text').toBeNull()
+    })
+
+    it('caps the text: over-long reasoning is cut at the cap with an explicit marker', async () => {
+      const el = stepMode()
+      const handle = el.beginAgentTurn()
+      handle.step(reasoned({ reasoning: 'z'.repeat(ACTIVITY_REASONING_CAP * 3) }))
+      await whenFlushed()
+      const text = pre(row(el))!.textContent!
+      expect(text.length).toBeLessThan(ACTIVITY_REASONING_CAP + 30)
+      expect(text).toMatch(/\[truncated\]$/)
+    })
+
+    it('a step with no text, an empty or whitespace-only text keeps today\'s look: no panel, byte-identical to a step without the field', async () => {
+      const html = async (over: Partial<ActivityStep>): Promise<string> => {
+        const el = stepMode()
+        const handle = el.beginAgentTurn()
+        handle.step(reasoned(over))
+        handle.finalize()
+        await whenFlushed()
+        return strip(el).outerHTML
+      }
+      const plain = await html({})
+      expect(plain).not.toContain('data-role="source"')
+      expect(await html({ reasoning: '' })).toBe(plain)
+      expect(await html({ reasoning: '  \n ' })).toBe(plain)
+    })
+
+    it('a row born without text never grows a panel late (the creation-time reveal degrades, it never throws)', async () => {
+      const el = stepMode()
+      const handle = el.beginAgentTurn()
+      handle.step(reasoned({ status: 'running', label: 'Reasoning…', durationMs: undefined }))
+      expect(() => handle.step(reasoned({ reasoning: 'late text' }))).not.toThrow()
+      await whenFlushed()
+      expect(panel(row(el))).toBeNull()
+    })
+
+    it('reasoning never enters the single "Raw output" row, and does not change the receipt step count', async () => {
+      const el = stepMode()
+      el.receipt = true
+      const handle = el.beginAgentTurn()
+      handle.step(reasoned({ reasoning: 'private thoughts' }))
+      handle.step({ id: 'a', kind: 'validate', label: 'Validated', status: 'ok', raw: '{"a":1}' })
+      handle.finalize()
+      await whenFlushed()
+      const raw = strip(el).querySelector('[data-activity="raw"]')!
+      expect(raw.querySelector('[data-role="source"]')!.textContent, 'the raw row holds raw only').toBe('{"a":1}')
+      expect(strip(el).querySelector('[data-part="header-meta"]')?.textContent).toMatch(/^2 steps · /)
+    })
   })
 
   it('OPT-IN DEFAULT: with steps absent, step() and footer() are no-ops and the strip is byte-identical (the negative control)', () => {

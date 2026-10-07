@@ -276,7 +276,9 @@
 > sharpened predicate (ADR-0146 F1). BUILT (TKT-0083 Slice B, 2026-07-18): the `onEvent` seam, the
 > Anthropic lifecycle mapping, `produce()`'s interleaved progress (opt-in; validate-then-stream preserved),
 > `progressDetail`, and `RecordedTurn.progress` all shipped gate-green; `AgentTransport.turn()` stayed
-> byte-identical, the typed-frame trigger re-deferred as recorded.
+> byte-identical, the typed-frame trigger re-deferred as recorded. T-0021 (2026-10-07, ADR-0240, append-only):
+> `ProduceOptions` also gains `progressReasoning?: boolean`, the bounded reasoning excerpts of `'full'` on their own
+> axis (only the literal `true` counts), so a consumer can have them beside `progressDetail:'source'`.
 >
 > **Amendment (2026-07-24, docs-only — the body below is UNCHANGED, append-only):** the turn stream
 > gains a THIRD reserved line kind, `{"genui":{surfaceId, html}}` ([genui-surface

@@ -44,8 +44,9 @@ are not members of the protocol `ErrorCode` union.
 ## What the consumer sees, in order (validate-then-stream)
 
 1. Progress meta-lines, only when the caller sets `progress: true` (`progressDetail`, one of
-   `stages`, `full`, `source`, only controls what an event carries), as they happen, ahead
-   of all content. Output is byte-identical with progress off. `interleaveProgress` keeps a
+   `stages`, `full`, `source`, only controls what an event carries; `progressReasoning: true`
+   forwards the bounded `reasoning` excerpts on its own axis, so they can ride beside `source`,
+   ADR-0240), as they happen, ahead of all content. Output is byte-identical with progress off. `interleaveProgress` keeps a
    provider that runs a tool round without yielding text from starving progress delivery.
 2. The leading meta-line (`formatMetaLine`), when there is a `note` or a surviving `ask`.
 3. The genui line, intact, when one survived.

@@ -1971,3 +1971,46 @@ describe('produce() target meta-line arm — passthrough (GH #1259 / ADR-0206 cl
     expect(readMetaLine(lines[0]!)!.a2uiMeta.target).toEqual(TARGET)
   })
 })
+
+// ── T-0021/ADR-0240: reasoning excerpts as an independent opt-in ──────────────────────────────
+// `progressDetail` is one value, so a consumer that wants BOTH the raw-source attachment ('source') and the
+// reasoning text cannot say so through it ('full' and 'source' stay independent, never a ladder). The
+// additive `progressReasoning` flag is the reasoning half on its own axis: the same bounded excerpts
+// `progressDetail:'full'` forwards, requestable alongside any `progressDetail` value.
+describe('produce() reasoning excerpts as their own opt-in (T-0021/ADR-0240, progressReasoning)', () => {
+  const run = async (opts: Record<string, unknown>, thinking = 'weighing the layout options'): Promise<string[]> => {
+    const { provider } = progressStub([VALID], { thinking })
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, ...opts })) lines.push(line)
+    return lines
+  }
+
+  it('progressReasoning:true forwards a BOUNDED reasoning excerpt, with progressDetail left at its default', async () => {
+    const lines = await run({ progress: true, progressReasoning: true }, 'x'.repeat(500))
+    const reasoning = progressOf(lines).find((p) => p.stage === 'reasoning')
+    expect(reasoning!.detail, 'the opt-in forwards the excerpt').toBeDefined()
+    expect(reasoning!.detail!.length, 'bounded, never the full 500 chars').toBeLessThanOrEqual(200)
+    expect(progressOf(lines).every((p) => p.source === undefined), 'it unlocks reasoning only, never wire lines').toBe(true)
+  })
+
+  it("combines with progressDetail:'source': reasoning excerpts AND the raw-source attachment ride the same turn", async () => {
+    const lines = await run({ progress: true, progressDetail: 'source', progressReasoning: true })
+    const events = progressOf(lines)
+    expect(events.find((p) => p.stage === 'reasoning')!.detail).toBe('weighing the layout options')
+    expect(events.find((p) => p.stage === 'validating')!.source, 'the source attachment is untouched').toBe(VALID)
+  })
+
+  it('absent (or anything but the literal true) keeps the fail-closed default: no thinking text on any event', async () => {
+    for (const opts of [{ progress: true }, { progress: true, progressReasoning: false }, { progress: true, progressReasoning: 'yes' }, { progress: true, progressDetail: 'source' }]) {
+      const reasoning = progressOf(await run(opts)).find((p) => p.stage === 'reasoning')
+      expect(reasoning, 'the reasoning stage still surfaces').toBeDefined()
+      expect(reasoning!.detail, JSON.stringify(opts)).toBeUndefined()
+    }
+  })
+
+  it('without progress:true nothing rides the wire at all: the flag alone never enables a progress line', async () => {
+    const lines = await run({ progressReasoning: true })
+    expect(progressOf(lines)).toEqual([])
+  })
+})

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { createA2uiActivity } from './a2ui-activity.ts'
+import { ACTIVITY_REASONING_CAP } from '../../packages/agent-ui/app/src/controls/conversation/activity-step.ts'
 import type { ActivityStep } from '@agent-ui/app/conversation'
 import type { TurnTrace } from '../../packages/agent-ui/a2ui/src/agent/meta-line.ts'
 
@@ -296,5 +297,100 @@ describe('createA2uiActivity: a failed turn', () => {
     const a = createA2uiActivity(clock().now)
     a.progress({ stage: 'content' })
     expect(a.fail()[0]).toMatchObject({ id: 'response', label: 'Writing the response…', status: 'failed' })
+  })
+})
+
+// T-0021 (ADR-0240): the model's reasoning text. Under the raw-reasoning opt-in the producer puts a
+// bounded excerpt of each thinking delta on the `reasoning` progress event's `detail` (ADR-0146 F3); the
+// adapter folds those excerpts onto the Reasoned step's `reasoning`. Without the opt-in no event carries
+// `detail`, and the step is exactly what it was before.
+describe('createA2uiActivity: reasoning text (T-0021)', () => {
+  const reasoningStep = (steps: readonly ActivityStep[]): ActivityStep => steps.findLast((s) => s.id === 'reasoning')!
+
+  it('the first excerpt opens the Reasoning step already carrying text; later excerpts grow it; the settle keeps it', () => {
+    const c = clock()
+    const a = createA2uiActivity(c.now)
+    c.at(0)
+    a.progress({ stage: 'started' })
+    c.at(100)
+    const opened = a.progress({ stage: 'reasoning', detail: 'Weigh the ' })
+    expect(opened.at(-1)).toEqual({ id: 'reasoning', kind: 'reasoning', label: 'Reasoning…', status: 'running', startedAt: c.now(), reasoning: 'Weigh the ' })
+    c.at(150)
+    const grown = a.progress({ stage: 'reasoning', detail: 'hit risk.' })
+    expect(grown, 'a repeated stage with new text changes exactly the one step').toHaveLength(1)
+    expect(grown[0]).toMatchObject({ id: 'reasoning', status: 'running', reasoning: 'Weigh the hit risk.' })
+    c.at(2400)
+    const settled = a.progress({ stage: 'content' })
+    expect(settled[0]).toMatchObject({ id: 'reasoning', label: 'Reasoned', status: 'ok', durationMs: 2300, reasoning: 'Weigh the hit risk.' })
+  })
+
+  it('a stages-only stream (no detail on any event) leaves the step with no reasoning key at all', () => {
+    const a = createA2uiActivity(clock().now)
+    const seen = new Map<string, ActivityStep>()
+    fold(seen, a.progress({ stage: 'reasoning' }))
+    fold(seen, a.progress({ stage: 'reasoning' }))
+    fold(seen, a.progress({ stage: 'content' }))
+    expect('reasoning' in seen.get('reasoning')!, 'today\'s look: no key, so no panel').toBe(false)
+    expect(seen.get('reasoning')).toMatchObject({ label: 'Reasoned', status: 'ok' })
+  })
+
+  it('an empty or non-string detail adds nothing and returns no change; whitespace between words is kept, leading whitespace is not', () => {
+    const a = createA2uiActivity(clock().now)
+    a.progress({ stage: 'reasoning' })
+    expect(a.progress({ stage: 'reasoning', detail: '' })).toEqual([])
+    expect(a.progress({ stage: 'reasoning', detail: undefined })).toEqual([])
+    expect(a.progress({ stage: 'reasoning', detail: 7 as unknown as string })).toEqual([])
+    expect(a.progress({ stage: 'reasoning', detail: '\n ' }), 'leading whitespace before any text is dropped').toEqual([])
+    a.progress({ stage: 'reasoning', detail: 'Weigh' })
+    a.progress({ stage: 'reasoning', detail: ' ' })
+    expect(reasoningStep(a.progress({ stage: 'reasoning', detail: 'the risk' })).reasoning, 'a delta that is only a space still separates words').toBe('Weigh the risk')
+  })
+
+  it('stops growing past the cap: the text stays bounded and further excerpts change nothing', () => {
+    const a = createA2uiActivity(clock().now)
+    const chunk = 'a'.repeat(200)
+    let last: ActivityStep[] = []
+    let changes = 0
+    for (let i = 0; i < 200; i++) {
+      last = a.progress({ stage: 'reasoning', detail: chunk })
+      if (last.length > 0) changes += 1
+    }
+    expect(changes, 'it stopped emitting once the cap was passed').toBeLessThan(200)
+    const settled = a.progress({ stage: 'content' })
+    const len = reasoningStep(settled).reasoning!.length
+    expect(len).toBeGreaterThan(ACTIVITY_REASONING_CAP)
+    expect(len, 'bounded by the cap plus at most one excerpt').toBeLessThanOrEqual(ACTIVITY_REASONING_CAP + 200)
+  })
+
+  it('a second reasoning pass in a retry round is a new paragraph on the same step, not run-on text', () => {
+    const a = createA2uiActivity(clock().now)
+    a.progress({ stage: 'reasoning', detail: 'First pass.' })
+    a.progress({ stage: 'validating' })
+    a.progress({ stage: 'retry', round: 2, codes: ['SCHEMA'] })
+    a.progress({ stage: 'sent' })
+    const second = a.progress({ stage: 'reasoning', detail: 'Second pass.' })
+    expect(reasoningStep(second).reasoning).toBe('First pass.\n\nSecond pass.')
+  })
+
+  it('the excerpt never reaches a label or a summary: labels stay the closed stage table', () => {
+    const a = createA2uiActivity(clock().now)
+    const seen = new Map<string, ActivityStep>()
+    fold(seen, a.progress({ stage: 'reasoning', detail: 'SECRET-CHAIN-OF-THOUGHT' }))
+    fold(seen, a.progress({ stage: 'content' }))
+    const r = seen.get('reasoning')!
+    expect(r.label).toBe('Reasoned')
+    expect(JSON.stringify({ label: r.label, summary: r.summary })).not.toContain('SECRET')
+    expect(r.reasoning).toBe('SECRET-CHAIN-OF-THOUGHT')
+  })
+
+  it('reasoning is not raw output: end() attaches the shipped lines only, never the thoughts', () => {
+    const a = createA2uiActivity(clock().now)
+    a.progress({ stage: 'reasoning', detail: 'private thoughts' })
+    a.progress({ stage: 'validating' })
+    a.line(CREATE)
+    a.progress({ stage: 'done' })
+    const { steps } = a.end()
+    expect(steps.find((s) => s.raw !== undefined)!.raw).toBe(CREATE)
+    expect(JSON.stringify(steps.map((s) => s.raw))).not.toContain('private thoughts')
   })
 })

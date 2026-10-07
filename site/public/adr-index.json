@@ -1643,5 +1643,12 @@
     "description": "A devtools capture replays its meta events as meta-lines, in order, widening the line-only replay law",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0240",
+    "url": "./adr-index.html#adr-0240",
+    "description": "The activity strip shows the model's reasoning: bounded excerpts of the provider's thinking, requested through their own opt-in, carried on the neutral Activit…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

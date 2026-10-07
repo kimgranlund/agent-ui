@@ -362,7 +362,7 @@ describe('the produce POST body across the catalog refactor (ADR-0170 acceptance
    *  dropped field is a red test rather than a silent contract change. */
   // ADR-0182 cl.1 — `builderMission` is sent UNCONDITIONALLY (never the absent-⇒-omit shape the other
   // gates use), since its derivation (`session === 'authoring'`) is never itself absent.
-  const EXPECTED_KEYS = ['a2ui', 'builderMission', 'catalogId', 'effort', 'genui', 'input', 'integrations', 'model', 'personaSystem', 'progressDetail', 'provider']
+  const EXPECTED_KEYS = ['a2ui', 'builderMission', 'catalogId', 'effort', 'genui', 'input', 'integrations', 'model', 'personaSystem', 'progressDetail', 'progressReasoning', 'provider']
 
   function ndjsonResponse(lines: readonly string[]): Response {
     const encoder = new TextEncoder()

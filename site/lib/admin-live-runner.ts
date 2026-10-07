@@ -212,6 +212,10 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
       // stays server-owned); every other consumer (a2ui-chat/a2ui-live) never sends it — their streams stay
       // source-free, the fail-closed default. T-0016: the activity adapter keeps the last attached candidate
       // as the one raw block of a turn that fails without shipping lines.
+      // T-0021/ADR-0240: `progressReasoning:true`, the same surface's opt-in to the bounded
+      // reasoning excerpts, on its own axis (one `progressDetail` value cannot name both). Validated
+      // fail-closed server-side (only the boolean `true`); thinking text only exists when the effort dial is
+      // above low, so it adds no model cost. The activity adapter folds the excerpts onto the Reasoned step.
       body: JSON.stringify({
         input,
         provider: PROVIDER,
@@ -219,6 +223,7 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
         personaSystem: req.personaSystem,
         integrations: req.integrations,
         progressDetail: 'source',
+        progressReasoning: true,
         // GH #270's additive precedent (`live-proxy-transport.ts`'s `sel.effort`) — absent ⇒ the POST
         // body carries no `effort` key at all (byte-identical to before this field existed); `produce()`'s
         // own `validateEffort` degrades an absent/malformed value to `undefined` either way.

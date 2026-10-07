@@ -161,8 +161,14 @@ export interface ProduceOptions {
    * failed candidate — otherwise never visible anywhere client-side). Capped at
    * `SOURCE_ATTACHMENT_CAP`. The gate is fail-closed at every layer: absent ⇒ `'stages'` ⇒ zero raw
    * lines ride any progress event; `'full'` does NOT imply `'source'` and vice versa (a consumer
-   * needing both is a deliberate future member, not an accident of ladder ordering). */
+   * needing both sets `progressReasoning` beside `'source'`, T-0021/ADR-0240). */
   progressDetail?: 'stages' | 'full' | 'source'
+  /** T-0021/ADR-0240: the reasoning half of `progressDetail:'full'` on its OWN axis: `true` forwards the
+   * same bounded excerpts on `reasoning` progress events (`TurnProgress.detail`) whatever `progressDetail` says, so
+   * a consumer can have them together with `'source'` (one `progressDetail` value cannot name both). Only the
+   * literal `true` counts; absent or anything else keeps the fail-closed default (no thinking text on the wire).
+   * Needs `progress`, and thinking only flows when the effort dial is above low, so it adds no model cost. */
+  progressReasoning?: boolean
   /** genui-surface SPEC-R10 — the per-turn "may this turn emit GenUI" signal, threaded to
    *  `buildSystemPrompt`'s genui teaching block. Deliberately NOT a `GenUiMode` member and never
    *  consulted by any A2UI-composition logic in this loop (SPEC §4 N2 — a new, orthogonal axis). Absent
@@ -977,6 +983,8 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   // `TurnProgress.source` ONLY under the explicit 'source' member (fail-closed: the 'stages' default AND
   // 'full' both attach nothing — the reasoning and source disclosures are independent opt-ins).
   const attachSource = emitProgress && progressDetail === 'source'
+  // T-0021/ADR-0240: raw reasoning excerpts ride `reasoning` events under 'full' OR the independent flag.
+  const attachReasoning = progressDetail === 'full' || opts.progressReasoning === true
   let failures: RoundFailure[] | undefined
   let lastRaw: string | undefined
   let lastOutput: A2uiOutput | undefined // GH #288 — the prior round's OWN parsed output, so a self-correct round's feedback can resolve "expected type" per failing path (messagesFor/expectedTypeNote)
@@ -1025,7 +1033,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
         sawStarted = true
         channel.push({ stage: 'started' })
       } else if (ev.kind === 'thinking') {
-        if (progressDetail === 'full') channel.push({ stage: 'reasoning', ...(ev.text ? { detail: ev.text.slice(0, REASONING_EXCERPT_CAP) } : {}) })
+        if (attachReasoning) channel.push({ stage: 'reasoning', ...(ev.text ? { detail: ev.text.slice(0, REASONING_EXCERPT_CAP) } : {}) })
         else if (!sawReasoning) {
           sawReasoning = true
           channel.push({ stage: 'reasoning' }) // transition only — NO thinking text on the wire (F3 default)
