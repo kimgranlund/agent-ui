@@ -48,7 +48,7 @@ afterEach(() => {
   vi.unstubAllGlobals() // the ADR-0170 POST-body pins stub `fetch` (admin-live-runner.test.ts's precedent)
 })
 
-const SUPPORTED_MODEL_IDS = new Set(['claude-sonnet-5', 'claude-haiku-4-5-20251001']) // rev.4: the roster pair presets may seed
+const SUPPORTED_MODEL_IDS = new Set(['claude-sonnet-5', 'claude-haiku-5-5']) // rev.4: the roster pair presets may seed (Haiku 5.5 since T-0030)
 const ALL_ENTRY_KEYS = Object.values(ENTRY_KINDS).map((kind) => entriesStoreKey(kind))
 
 describe('AGENT_PRESETS — data integrity (TKT-0074)', () => {

@@ -322,7 +322,7 @@ function wireLiveOverlay(): void {
       runBtn.setAttribute('variant', 'solid')
       runBtn.setAttribute('tabindex', '0')
       runBtn.dataset.liveAction = 'run'
-      runBtn.textContent = 'Run a live match (Sonnet 5 vs Haiku 4.5)'
+      runBtn.textContent = 'Run a live match (Sonnet 5 vs Haiku 5.5)'
       const cancelBtn = document.createElement('ui-button')
       cancelBtn.setAttribute('variant', 'ghost')
       cancelBtn.setAttribute('tabindex', '0')
@@ -366,7 +366,7 @@ function wireLiveOverlay(): void {
           const accumulator = createReplayAccumulator()
           try {
             const stream = await overlay.runLiveMatchStream(
-              { X: { provider: 'anthropic', model: 'claude-sonnet-5' }, O: { provider: 'anthropic', model: 'claude-haiku-4-5-20251001' } },
+              { X: { provider: 'anthropic', model: 'claude-sonnet-5' }, O: { provider: 'anthropic', model: 'claude-haiku-5-5' } },
               { signal: controller.signal },
             )
             for await (const line of stream.lines) {

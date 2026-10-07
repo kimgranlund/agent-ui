@@ -42,6 +42,16 @@ describe('buildRequestBody — the Effort dial → Anthropic extended-thinking m
     }
   })
 
+  it("'medium'/'high'/'xhigh' on haiku-5-5: the CURRENT-family arm, never budget_tokens (T-0030: the Haiku 5.5 model page and migration guide, 2026-10-07: budget_tokens returns a 400, adaptive + effort is the only thinking shape)", () => {
+    for (const model of ['claude-haiku-5-5', 'anthropic.claude-haiku-5-5']) {
+      for (const effort of ['medium', 'high', 'xhigh'] as const) {
+        const body = buildRequestBody({ ...BASE, model, effort })
+        expect(body['thinking'], `${model} @ ${effort}`).toEqual({ type: 'adaptive' })
+        expect(body['output_config'], `${model} @ ${effort}`).toEqual({ effort })
+      }
+    }
+  })
+
   it("'medium'/'high'/'xhigh' on the LEGACY family (haiku-4-5): the budget_tokens shape, NO output_config (effort errors on Haiku 4.5)", () => {
     for (const [effort, budget] of [
       ['medium', 1024],

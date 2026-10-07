@@ -3284,7 +3284,7 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     await whenFlushed() // the models/model props ride ui-conversation's own reactive-prop effect, not synchronous
     const conversation = el.querySelector('ui-conversation') as UIConversationElement
-    // rev.4: the picker offers the INCLUDED roster only — Haiku + Sonnet ship on, the rest ship off
+    // rev.4: the picker offers the INCLUDED roster only: the Anthropic rows ship on (Haiku 5.5, Sonnet 5, Haiku 4.5 since T-0030), the rest ship off
     const included = SUPPORTED_MODELS.filter((m) => m.includedByDefault)
     expect(conversation.models).toEqual(included)
     expect(conversation.model).toBe(DEFAULT_MODEL_ID)
@@ -4497,8 +4497,10 @@ describe('UIAgentAdminElement — a REJECTED library entry surfaces the same err
 describe('SUPPORTED_MODELS lists + the Haiku default (2026-07-19)', () => {
   it('the default model is Haiku; Sonnet remains an offered option', async () => {
     const { DEFAULT_MODEL_ID, SUPPORTED_MODELS } = await import('./agent-admin-schema.ts')
-    expect(DEFAULT_MODEL_ID).toBe('claude-haiku-4-5-20251001')
+    expect(DEFAULT_MODEL_ID).toBe('claude-haiku-5-5')
     expect(SUPPORTED_MODELS.some((m) => m.id === 'claude-sonnet-5')).toBe(true)
+    // T-0030 (Kim, 2026-10-07): Haiku 4.5 stays on the roster, included, so it stays selectable
+    expect(SUPPORTED_MODELS.find((m) => m.id === 'claude-haiku-4-5-20251001')?.includedByDefault).toBe(true)
     // every model carries a list assignment (the grouped-select contract)
     // every model carries a provider (the grid's grouping key, 2026-07-19 rev.2)
     for (const m of SUPPORTED_MODELS) expect(m.provider.length, m.id).toBeGreaterThan(0)
@@ -4538,8 +4540,8 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
     expect(grid).not.toBeNull()
     expect([...grid.querySelectorAll('[data-part="model-provider"]')].map((p) => p.textContent)).toEqual(['Anthropic', 'OpenAI', 'Google'])
     const rows = grid.querySelectorAll('[data-part="model-row"]')
-    expect(rows).toHaveLength(6) // rev.4: the Haiku/Sonnet tier pair per provider — opus/fable are GONE
-    // ship state: only Haiku+Sonnet included; the OpenAI/Gemini options ship switched OFF
+    expect(rows).toHaveLength(7) // rev.4: the Haiku/Sonnet tier pair per provider, opus/fable GONE; T-0030 adds Haiku 5.5 beside Haiku 4.5
+    // ship state: only the Anthropic rows included; the OpenAI/Gemini options ship switched OFF
     const stateOf = (title: string): boolean => {
       const row = [...grid.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
         (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === title,
@@ -4547,10 +4549,11 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
       return (row.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean }).checked
     }
     expect(stateOf('claude-sonnet-5')).toBe(true)
+    expect(stateOf('claude-haiku-4-5-20251001')).toBe(true)
     expect(stateOf('gpt-4.1')).toBe(false)
     expect(stateOf('gemini-2.5-flash')).toBe(false)
     const defaultRow = grid.querySelector('[data-part="model-row"][data-default]') as HTMLElement
-    expect(defaultRow.querySelector('[data-part="model-row-label"]')?.getAttribute('title')).toBe('claude-haiku-4-5-20251001')
+    expect(defaultRow.querySelector('[data-part="model-row-label"]')?.getAttribute('title')).toBe('claude-haiku-5-5')
     const lockSwitch = defaultRow.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean; disabled: boolean }
     expect(lockSwitch.checked, 'the default is always offered').toBe(true)
     expect(lockSwitch.disabled, 'the default row cannot be excluded').toBe(true)
@@ -4583,7 +4586,7 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
     expect((store.get('modelsIncluded') as Record<string, boolean>)['claude-sonnet-5'], 'defaulting re-includes').toBe(true)
     await el.updateComplete
     const haikuRow = [...el.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
-      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-haiku-4-5-20251001',
+      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-haiku-5-5',
     )!
     expect((haikuRow.querySelector('[data-part="model-default"]') as HTMLElement & { checked: boolean }).checked, 'radio semantics: the old default unchecked').toBe(false)
   })

@@ -131,7 +131,7 @@ kind's enabled entry labels. Owner: ADR-0132 cl.6, ADR-0136 cl.3; `controls/agen
 
 **SPEC-R10 (fail-closed reads).** Every stored value is read through a sanitizer with a stated default and no
 migration write:
-- `sanitizeModel` accepts an id on `SUPPORTED_MODELS`, else `DEFAULT_MODEL_ID` (Haiku 4.5);
+- `sanitizeModel` accepts an id on `SUPPORTED_MODELS`, else `DEFAULT_MODEL_ID` (Haiku 5.5 since T-0030; Haiku 4.5 stays on the roster);
   `sanitizeAuthoringModel` is the same clause with `AUTHORING_DEFAULT_MODEL_ID` (Sonnet 5) as the fallback.
 - Master switches (`agentEnabled`, `kindEnabledKey(kind)` = `${kind}sEnabled`) read ON unless explicitly `false`
   (`isEnabledFlag`); the `tool` kind resolves to the pre-existing `toolsEnabled` key.

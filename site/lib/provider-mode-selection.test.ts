@@ -26,7 +26,7 @@ describe('provider-mode-selection — option lists (from the committed providers
     const anthropic = PROVIDER_OPTIONS.find((p) => p.id === 'anthropic')!
     expect(anthropic.disabled).toBe(false) // implemented ⇒ never disabled
     expect(anthropic.label).toBe('Anthropic')
-    expect(anthropic.models).toHaveLength(4)
+    expect(anthropic.models).toHaveLength(5)
     expect(anthropic.defaultModel).toBe('claude-sonnet-5')
     const openai = PROVIDER_OPTIONS.find((p) => p.id === 'openai')!
     expect(openai.disabled).toBe(true)
@@ -93,14 +93,14 @@ describe('provider-mode-selection — persistence (localStorage, the provider-sw
 describe('provider-mode-selection — groupedModelOptions/providerIdForModel (the flat provider-grouped Model roster)', () => {
   it('interleaves a disabled, non-committable header row (id `__group-<providerId>`) before each provider\'s own model rows, from the REAL committed providers.json', () => {
     const options = groupedModelOptions()
-    // anthropic (1 header + 4 models) + openai (1 + 2) + gemini (1 + 2) = 11
-    expect(options).toHaveLength(11)
+    // anthropic (1 header + 5 models) + openai (1 + 2) + gemini (1 + 2) = 12
+    expect(options).toHaveLength(12)
     const anthropicHeaderIndex = options.findIndex((o) => o.id === '__group-anthropic')
     expect(anthropicHeaderIndex).toBe(0) // providers.json's own declaration order
     expect(options[anthropicHeaderIndex]).toEqual({ id: '__group-anthropic', label: 'Anthropic', disabled: true })
-    // the 4 Anthropic models immediately follow their header, none disabled (anthropic IS implemented)
-    const anthropicModelIds = options.slice(anthropicHeaderIndex + 1, anthropicHeaderIndex + 5).map((o) => o.id)
-    expect(anthropicModelIds).toEqual(['claude-opus-4-8', 'claude-sonnet-5', 'claude-haiku-4-5-20251001', 'claude-fable-5'])
+    // the 5 Anthropic models immediately follow their header, none disabled (anthropic IS implemented)
+    const anthropicModelIds = options.slice(anthropicHeaderIndex + 1, anthropicHeaderIndex + 6).map((o) => o.id)
+    expect(anthropicModelIds).toEqual(['claude-opus-4-8', 'claude-sonnet-5', 'claude-haiku-5-5', 'claude-haiku-4-5-20251001', 'claude-fable-5'])
     expect(options.find((o) => o.id === 'claude-sonnet-5')?.disabled).toBe(false)
   })
 

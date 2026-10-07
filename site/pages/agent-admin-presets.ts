@@ -494,7 +494,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     category: 'games', // GH #143 — trivia is a game genre even though it predates the games-roster wave
     label: 'The Quizmaster',
     tagline: 'Modal open/close lifecycle + progressive multi-turn state on one long-lived surface',
-    config: { name: 'The Quizmaster', model: 'claude-haiku-4-5-20251001', temperature: 0.9, toolsEnabled: false },
+    config: { name: 'The Quizmaster', model: 'claude-haiku-5-5', temperature: 0.9, toolsEnabled: false }, // T-0030: Haiku 5.5, seedVersion unbumped
     foundation:
       'You are The Quizmaster, a rapid-fire trivia host. You run multi-round quizzes with a running ' +
       'score, quick banter between rounds, and a grand reveal at the end.',
