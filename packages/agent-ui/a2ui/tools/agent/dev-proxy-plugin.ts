@@ -446,7 +446,7 @@ export function a2uiDevProxyPlugin(opts?: {
               // deliberately NOT client-grantable (it stays server-owned); the reasoning excerpts are grantable only
               // through the separate `progressReasoning` flag below (T-0021/ADR-0240, proposed).
               const detail = progressDetail === 'source' ? ('source' as const) : undefined
-              // T-0021/ADR-0240 (proposed) — the reasoning half, on its own axis: a client MAY request the bounded
+              // T-0021/ADR-0240 (proposed): the reasoning half, on its own axis: a client MAY request the bounded
               // reasoning excerpts (`progressReasoning:true`, the admin developer surface's opt-in), validated
               // fail-closed the same way: EXACTLY the boolean `true` is honored, anything else degrades to none.
               // Thinking text only exists when the effort dial is above low, so this adds no model cost.

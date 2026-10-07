@@ -249,7 +249,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   // server-owned, never client-grantable); anything else ⇒ the 'stages' default. The reasoning excerpts are
   // grantable only through the separate `progressReasoning` flag below (T-0021/ADR-0240, proposed).
   const detail = progressDetail === 'source' ? ('source' as const) : undefined
-  // T-0021/ADR-0240 (proposed) — the reasoning half, on its own axis, validated fail-closed exactly as the dev
+  // T-0021/ADR-0240 (proposed): the reasoning half, on its own axis, validated fail-closed exactly as the dev
   // proxy does: ONLY the boolean `true` is honored; anything else ⇒ no thinking text on the wire.
   const reasoning = progressReasoning === true
   // genui-surface.spec.md SPEC-R10/R11 — the SAME fail-closed validation the dev proxy uses (chat-
@@ -300,7 +300,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
         personaSystem: persona,
         progress: true,
         ...(detail !== undefined ? { progressDetail: detail } : {}), // GH #240 — the validated 'source' opt-in only
-        ...(reasoning ? { progressReasoning: true } : {}), // T-0021 — the validated reasoning opt-in only
+        ...(reasoning ? { progressReasoning: true } : {}), // T-0021: the validated reasoning opt-in only
         ...(genuiSurface !== undefined ? { genuiSurface } : {}), // genui-surface SPEC-R10 — the validated per-turn signal
         ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), // GH #418 — the validated A2UI Surface Option signal
         ...(authoringSurface !== undefined ? { authoringSurface } : {}), // SPEC-R30 — the validated persona-authoring gate

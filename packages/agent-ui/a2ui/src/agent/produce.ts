@@ -163,7 +163,7 @@ export interface ProduceOptions {
    * lines ride any progress event; `'full'` does NOT imply `'source'` and vice versa (a consumer
    * needing both sets `progressReasoning` beside `'source'`, T-0021/ADR-0240). */
   progressDetail?: 'stages' | 'full' | 'source'
-  /** T-0021/ADR-0240 (proposed) — the reasoning half of `progressDetail:'full'` on its OWN axis: `true` forwards the
+  /** T-0021/ADR-0240 (proposed): the reasoning half of `progressDetail:'full'` on its OWN axis: `true` forwards the
    * same bounded excerpts on `reasoning` progress events (`TurnProgress.detail`) whatever `progressDetail` says, so
    * a consumer can have them together with `'source'` (one `progressDetail` value cannot name both). Only the
    * literal `true` counts; absent or anything else keeps the fail-closed default (no thinking text on the wire).
@@ -983,7 +983,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   // `TurnProgress.source` ONLY under the explicit 'source' member (fail-closed: the 'stages' default AND
   // 'full' both attach nothing — the reasoning and source disclosures are independent opt-ins).
   const attachSource = emitProgress && progressDetail === 'source'
-  // T-0021/ADR-0240 — raw reasoning excerpts ride `reasoning` events under 'full' OR the independent flag.
+  // T-0021/ADR-0240: raw reasoning excerpts ride `reasoning` events under 'full' OR the independent flag.
   const attachReasoning = progressDetail === 'full' || opts.progressReasoning === true
   let failures: RoundFailure[] | undefined
   let lastRaw: string | undefined
