@@ -9,17 +9,24 @@ import { buildRequestBody } from '../agent/providers/anthropic.ts'
 const BASE = { model: 'claude-sonnet-5', system: 'be helpful', messages: [] }
 
 describe('buildRequestBody — the Effort dial → Anthropic extended-thinking mapping', () => {
-  it('unset effort: no thinking param, the pre-Effort max_tokens (4096) — byte-identical to the original request shape', () => {
-    const body = buildRequestBody(BASE)
+  it('unset effort on the LEGACY family (haiku-4-5): nothing added, the pre-Effort shape (effort errors there)', () => {
+    const body = buildRequestBody({ ...BASE, model: 'claude-haiku-4-5' })
     expect(body['thinking']).toBeUndefined()
+    expect(body['output_config']).toBeUndefined()
     expect(body['max_tokens']).toBe(4096)
   })
 
-  it("'low' effort: ALSO no thinking param — 'low' means the same as unset, never a behavior change", () => {
-    const body = buildRequestBody({ ...BASE, effort: 'low' })
-    expect(body['thinking']).toBeUndefined()
-    expect(body['max_tokens']).toBe(4096)
-  })
+  it.each(['claude-sonnet-5', 'claude-haiku-5-5'])(
+    "unset or 'low' effort on %s: no thinking param, max_tokens 4096, output_config.effort 'low' sent explicitly (T-0032: omitted, adaptive runs at its medium default)",
+    (model) => {
+      for (const effort of [undefined, 'low'] as const) {
+        const body = buildRequestBody({ ...BASE, model, ...(effort ? { effort } : {}) })
+        expect(body['thinking']).toBeUndefined()
+        expect(body['max_tokens']).toBe(4096)
+        expect(body['output_config']).toEqual({ effort: 'low' })
+      }
+    },
+  )
 
   it("'medium'/'high'/'xhigh' on a CURRENT-family model (sonnet-5): adaptive thinking + output_config.effort — NEVER budget_tokens (TKT-0075: the API 400s on it)", () => {
     for (const [effort, maxTokens] of [

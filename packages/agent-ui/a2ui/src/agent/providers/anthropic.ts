@@ -395,12 +395,15 @@ export function buildRequestBody(req: {
     stream: true,
     ...(req.tools && req.tools.length > 0 ? { tools: req.tools } : {}),
   }
-  // 'low' (or unset) ⇒ no thinking/effort params at all — the exact pre-Effort request shape on every
-  // model, never a behavior change for a caller that predates the dial. (On the Claude 5 family this
-  // means adaptive thinking runs at ITS default; we deliberately send nothing rather than
-  // `{type:'disabled'}`, which Fable 5 rejects.)
+  // 'low' (or unset) ⇒ no thinking params, the pre-Effort max_tokens. On the current family we send
+  // `output_config: {effort: 'low'}` explicitly (T-0032): omitting it lets adaptive thinking run at ITS
+  // default (`medium` on Haiku 5.5), which would cost more than the no-thinking 4.5 behavior this
+  // preserves. We still send no `thinking` field rather than `{type:'disabled'}`, which Fable 5 rejects.
+  // The legacy arm (Haiku 4.5) errors on `output_config.effort`, so it gets nothing.
   if (req.effort === undefined || req.effort === 'low') {
-    return { ...base, max_tokens: MAX_TOKENS }
+    return takesLegacyThinkingBudget(req.model)
+      ? { ...base, max_tokens: MAX_TOKENS }
+      : { ...base, max_tokens: MAX_TOKENS, output_config: { effort: 'low' } }
   }
   if (takesLegacyThinkingBudget(req.model)) {
     // Pre-4.6 arm (Haiku 4.5): the legacy budget shape, max_tokens strictly above the budget.
