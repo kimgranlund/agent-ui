@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { Registry, RegistryError, RegistryErrorCode } from './registry.ts'
-import type { VariantDispatch, WidgetFactory } from './types.ts'
+import type { LazyCatalogRecord, VariantDispatch, WidgetFactory } from './types.ts'
 
 // All fixtures are synthetic — a registry test must not depend on the default catalog or any real
 // `ui-*` control (it is decoupled from the factory/catalog.json slices, which build concurrently).
@@ -205,5 +205,91 @@ describe('Registry — VariantDispatch table slots (GH #545)', () => {
     const reg = new Registry()
     reg.register(synthCatalog('proj', ['Widget']), { Widget: dispatch() })
     expect(reg.submitGateSelector()).toBe('')
+  })
+})
+
+// ADR-0241 slice 2: the lazy-record API. These tests cover the SYNCHRONOUS surface (record, knows, the two
+// unions, shadowing); `ensure` and the memoized load are `loader.test.ts`'s. No record here ever loads.
+describe('Registry — lazy records (ADR-0241): knows / get / unions', () => {
+  const load = vi.fn(() => Promise.reject(new Error('registry.test: a record must not load here')))
+  const lazy = (id: string, submitGate: string[] = []): LazyCatalogRecord => ({ id, functions: {}, submitGate, load })
+
+  afterEach(() => load.mockClear())
+
+  it('registerLazy records an id without loading: known, advertised, but get() answers only for a loaded catalog', () => {
+    const reg = new Registry()
+    reg.registerLazy(lazy('later'))
+    expect(reg.knows('later')).toBe(true)
+    expect(reg.get('later')).toBeUndefined() // the renderer's CATALOG_UNKNOWN allowlist still reads get()
+    expect(reg.supportedCatalogIds()).toEqual(['later'])
+    expect(load).not.toHaveBeenCalled()
+  })
+
+  it('knows is true for a registered id, false for one neither registered nor recorded', () => {
+    const reg = new Registry()
+    reg.register(synthCatalog('eager', ['W']), factoriesFor(['W']))
+    expect(reg.knows('eager')).toBe(true)
+    expect(reg.knows('nope')).toBe(false)
+  })
+
+  it('supportedCatalogIds is the union of loaded and recorded ids, each once', () => {
+    const reg = new Registry()
+    reg.register(synthCatalog('eager', ['W']), factoriesFor(['W']))
+    reg.registerLazy(lazy('a'))
+    reg.registerLazy(lazy('b'))
+    expect(reg.supportedCatalogIds().sort()).toEqual(['a', 'b', 'eager'])
+  })
+
+  it('submitGateSelector unions the loaded factories\' tags with every recorded submitGate tag, deduped', () => {
+    const reg = new Registry()
+    reg.register(synthCatalog('eager', ['Provider']), { Provider: { ...fakeFactory('ui-provider'), submitGate: true } })
+    reg.registerLazy(lazy('a', ['ui-booking-form', 'ui-provider']))
+    reg.registerLazy(lazy('b', ['ui-booking-form']))
+    expect(reg.submitGateSelector().split(', ').sort()).toEqual(['ui-booking-form', 'ui-provider'])
+  })
+
+  it('NEGATIVE: a record with no submitGate tag contributes nothing to the selector', () => {
+    const reg = new Registry()
+    reg.registerLazy(lazy('a'))
+    expect(reg.submitGateSelector()).toBe('')
+  })
+
+  it('register() for a recorded id shadows it (last-wins, logged): the record is dropped, its gate tags stop counting', () => {
+    const reg = new Registry()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    reg.registerLazy(lazy('proj', ['ui-stale-gate']))
+    reg.register(synthCatalog('proj', ['W']), factoriesFor(['W']))
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(reg.get('proj')).toBeDefined()
+    expect(reg.supportedCatalogIds()).toEqual(['proj']) // not listed twice
+    expect(reg.submitGateSelector()).toBe('')
+  })
+
+  it('registerLazy for a recorded id replaces the record and logs the override, as register does', () => {
+    const reg = new Registry()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    reg.registerLazy(lazy('proj', ['ui-old-gate']))
+    reg.registerLazy(lazy('proj', ['ui-new-gate']))
+    expect(reg.submitGateSelector()).toBe('ui-new-gate')
+    expect(reg.supportedCatalogIds()).toEqual(['proj'])
+    expect(warn).toHaveBeenCalledTimes(1)
+  })
+
+  it('registerLazy for a loaded id replaces it: the loaded entry is dropped until the new record loads', () => {
+    const reg = new Registry()
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    reg.register(synthCatalog('proj', ['W']), factoriesFor(['W']))
+    reg.registerLazy(lazy('proj'))
+    expect(reg.get('proj')).toBeUndefined()
+    expect(reg.knows('proj')).toBe(true)
+    expect(reg.supportedCatalogIds()).toEqual(['proj'])
+  })
+
+  it('an absent lazy record changes nothing: the existing register/get/supportedCatalogIds contract is byte-identical', () => {
+    const reg = new Registry()
+    reg.register(synthCatalog('a', ['W']), factoriesFor(['W']))
+    expect(reg.supportedCatalogIds()).toEqual(['a'])
+    expect(reg.submitGateSelector()).toBe('')
+    expect(reg.knows('a')).toBe(true)
   })
 })

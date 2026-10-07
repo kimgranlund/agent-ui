@@ -9,7 +9,7 @@
 // types: `import type` only, zero runtime.
 
 import type { ControlLoader } from '@agent-ui/components/loader'
-import type { Catalog, ValueSlot } from './catalog.ts'
+import type { Catalog, FunctionDef, ValueSlot } from './catalog.ts'
 
 /**
  * A factory that turns one A2UI component type into a live `ui-*` control (catalog LLD-C5, SPEC-R4).
@@ -102,6 +102,32 @@ export interface CatalogEntry {
 }
 
 /**
+ * What a lazy catalog's body module resolves to (ADR-0241 cl.1): exactly `Registry.register`'s argument
+ * list, so the loaded body registers through the same factory-coverage gate as an eager catalog.
+ */
+export interface CatalogBody {
+  catalog: unknown
+  factories: Record<string, WidgetFactory | VariantDispatch>
+  functions?: Record<string, (args: Record<string, unknown>) => unknown>
+  controls?: ControlLoader
+}
+
+/**
+ * A catalog known by id before its body loads (ADR-0241 cl.1): the EAGER manifest plus the lazy `load`.
+ * `functions` is a copy of the body's `catalog.functions` (what `callFunction`'s `clientOnly` scan reads
+ * for an unloaded id, ADR-0241 cl.7); `submitGate` lists the tags of the body's `submitGate` factories
+ * (what the registry's `submitGateSelector` needs before the body loads, ADR-0054). `load` is an
+ * `import()` of the UNCHANGED body module. Slice 4's `records.ts` holds the shipped list and its
+ * bijection test against the bodies.
+ */
+export interface LazyCatalogRecord {
+  readonly id: string
+  readonly functions: Readonly<Record<string, FunctionDef>>
+  readonly submitGate: readonly string[]
+  readonly load: () => Promise<CatalogBody>
+}
+
+/**
  * The catalog registry contract (catalog LLD-C3, SPEC-R6/R7). The default + project catalogs register
  * their factories; the renderer reads `get` (widget resolution, LLD-C7) and `supportedCatalogIds`
  * (capabilities, LLD-C12). Two-tier: a project registers its own catalog with zero package edits (N1).
@@ -129,4 +155,16 @@ export interface CatalogRegistry {
    * selector, a `SyntaxError`); the renderer's `#wireAction` guards this.
    */
   submitGateSelector(): string
+  /**
+   * ADR-0241: `true` for a registered id AND for a recorded (lazy, not yet loaded) one. `get` answers only
+   * for a loaded catalog, so the renderer's `CATALOG_UNKNOWN` allowlist reads `knows` once a surface may
+   * name a lazy id. Optional, so a registry without lazy records (a test double) stays valid.
+   */
+  knows?(id: string): boolean
+  /**
+   * ADR-0241: load a recorded catalog's body and register it into THIS registry (resolves at once for an
+   * already-registered id). Rejects with a `CatalogLoadError` on every failure; a rejected load retries on
+   * the next call. Optional, like `knows`.
+   */
+  ensure?(id: string): Promise<void>
 }
