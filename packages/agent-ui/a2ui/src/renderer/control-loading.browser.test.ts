@@ -27,7 +27,7 @@ describe('renderer control loading (real engine)', () => {
     r.onClientMessage((m) => {
       if ('error' in m) errors.push(m)
     })
-    vi.spyOn(console, 'warn').mockImplementation(() => {}) // "re-registered — last registration wins"
+    vi.spyOn(console, 'warn').mockImplementation(() => {}) // "re-registered, last registration wins"
     // One entry per catalog id, the last registration wins: the default catalog, now in the loader's default
     // URL mode (it links each defined control's sheet) instead of the built-in `'host'` mode.
     r.register(defaultCatalog, defaultFactories, undefined, createControlLoader(CONTROLS))

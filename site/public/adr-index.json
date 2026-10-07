@@ -1650,5 +1650,12 @@
     "description": "The activity strip shows the model's reasoning: bounded excerpts of the provider's thinking, requested through their own opt-in, carried on the neutral Activit…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0241",
+    "url": "./adr-index.html#adr-0241",
+    "description": "Catalog bodies load by catalog id behind an eager manifest: the renderer holds records, not catalogs, for the non-default sets, and defers updateComponents beh…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

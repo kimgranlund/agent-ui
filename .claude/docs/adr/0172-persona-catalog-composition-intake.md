@@ -219,6 +219,11 @@ genuinely distinct `Catalog` document under its own `catalogId` (cl.13's short-i
 naturally: `<base-id>--<persona-id>` or equivalent, an LLD-level naming call). ADR-0097's rejection
 does not apply; a future reader should read this note, not flag a contradiction.
 
+> Note (2026-10-07, append-only, the Decision above is UNCHANGED): the derive-then-register step this clause places
+> at renderer construction moves to load time for the shipped persona sets, behind a lazy record
+> ([ADR-0241](./0241-lazy-catalog-bodies-behind-an-eager-manifest.md) cl.8). The composed result and the
+> `<base>--<persona>` ids are the same; a collision in a shipped set is caught by a CI test instead of at construction.
+
 ### 3 · Q3 — Is "system patterns" an existing layer, or does it need carving out?
 
 **Ruling: it needs carving out as a new, named, catalog-level tier. No existing mechanism occupies
