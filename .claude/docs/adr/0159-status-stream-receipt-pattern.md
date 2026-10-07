@@ -271,13 +271,13 @@ consumer that does not set `steps` (a2ui-chat, a2ui-live, the devtools harness, 
   alternative's rejection was trying to keep by other means.
 
 > Note (2026-10-07, append-only, nothing above is edited): [ADR-0240](./0240-activity-strip-shows-model-reasoning.md)
-> (proposed) adds an optional `ActivityStep.reasoning` text, rendered as a collapsed "Reasoning" panel on the Reasoned
+> (accepted) adds an optional `ActivityStep.reasoning` text, rendered as a collapsed "Reasoning" panel on the Reasoned
 > row through the reveal above, and an independent `progressReasoning` request flag. It is the "deliberate future
 > member" for a consumer that needs both reasoning text and the raw-source attachment, and it changes the "`'full'` stays
 > server-owned" posture for the admin developer surface only.
 
-> Note (2026-10-07, append-only, nothing above is edited; **proposed**, T-0022): the activity strip polish from Kim's
-> 2026-10-07 screenshot review changes the step-mode contract in five places, none of them ratified until Kim gives it.
+> Note (2026-10-07, append-only, nothing above is edited; **ratified by kimgranlund, 2026-10-07**, T-0022): the activity strip polish from Kim's
+> 2026-10-07 screenshot review changes the step-mode contract in five places.
 > (1) `ActivityStep` gains an optional `details?: readonly string[]` (plain-words lines, one per line), rendered as a
 > collapsed "Details" expand on the step's own row through the per-entry reveal above; like `reasoning` it is read when the
 > row is created, a step with reasoning text shows that panel instead, and a step with neither stays non-expandable.
