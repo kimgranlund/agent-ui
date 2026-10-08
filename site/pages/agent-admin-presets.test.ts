@@ -247,3 +247,23 @@ describe('personaInstantiated (GH #1277 — the From-catalog dedup probe)', () =
     expect(personaInstantiated(preset.id), 'reset drops the marker AND the cached store').toBe(false)
   })
 })
+
+describe('the Quizmaster seedVersion bump (T-0036): saved stores move to Haiku 5.5', () => {
+  const quizmaster = () => personaFromPreset(AGENT_PRESETS.find((p) => p.id === 'quizmaster')!)
+
+  it('a pre-bump store (seedVersion 1, Haiku 4.5) migrates to claude-haiku-5-5', () => {
+    const persona = quizmaster()
+    resetPersona(persona) // empties the cache so personaStore re-reads the keys below
+    localStorage.setItem(`${PREFIX}.quizmaster.seedVersion`, '1')
+    localStorage.setItem(`${PREFIX}.quizmaster.model`, JSON.stringify('claude-haiku-4-5'))
+    expect(personaStore(persona).get('model')).toBe('claude-haiku-5-5')
+    expect(persona.seedVersion).toBeGreaterThan(1)
+  })
+
+  it('a current store keeps its edits', () => {
+    const persona = quizmaster()
+    resetPersona(persona)
+    personaStore(persona).set('temperature', 0.1)
+    expect(personaStore(persona).get('temperature')).toBe(0.1)
+  })
+})

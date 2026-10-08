@@ -1,8 +1,8 @@
 {
   "id": "quizmaster",
   "preset": "quizmaster",
-  "seedVersion": 1,
-  "seedDigest": "sha256:688a1b4f3637c2981866c71d812e1bf7ba0baf54565755073b34b0a1fddfefdb",
+  "seedVersion": 2,
+  "seedDigest": "sha256:3248bea2cf98fcc28c54b36de59a006181934980ab33c2b02fb75f3f345d2e5c",
   "fragment": null,
   "selection": null,
   "noFragment": {
