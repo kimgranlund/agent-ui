@@ -3,7 +3,7 @@ import { userEvent } from 'vitest/browser'
 
 // site-nav.browser.test.ts — the CROSS-ENGINE smoke for the shared docs-site nav, a `ui-nav-rail` DERIVED
 // from `sitemap.json` (site/pages/_page.ts `buildNav` → `SITE_NAV_ENTRIES`), grouped by the sitemap's
-// `section`, each item a real `<a>` with a name and (for the tag-bearing Components) a trailing
+// `group` (GH #1600), falling back to `section`, each item a real `<a>` with a name and (for the tag-bearing Components) a trailing
 // `data-role="tag"` (SPEC-R6's name|tag row). This file owns the rail's VERTICAL anatomy + the
 // entry↔anchor bijection in a real engine.
 //
@@ -16,7 +16,7 @@ import { userEvent } from 'vitest/browser'
 //
 // `mountPage` performs the load-bearing foundation cascade (ADR-0003) on import, pulling the foundation roles +
 // dimensional ramp, the self-defining controls, the ui-nav-rail family (+ nav-rail.css), and `_page.css`.
-import { mountPage, SITE_NAV_ENTRIES } from '../../../../site/pages/_page.ts'
+import { mountPage, SITE_NAV_ENTRIES, NAV_TAXONOMY } from '../../../../site/pages/_page.ts'
 
 // The rail entry count is DERIVED from the SAME source the rail is built from — the deduped sitemap entries.
 // buildNav renders ONE link-shaped `ui-nav-rail-item` (one `<a>`) per entry, so the rendered `<a>` count must
@@ -89,7 +89,14 @@ describe('site nav — ui-nav-rail structure (both engines)', () => {
   it('renders section context-labels and the wide name|tag row (proper name + trailing data-role="tag")', async () => {
     await ready()
     const labels = [...rail().querySelectorAll('[data-part="context-label"]')].map((n) => n.textContent)
-    expect(labels).toContain('Components') // the sitemap's own section axis is the group taxonomy
+    // the rail groups by the sitemap's `group` (GH #1600), falling back to `section`; derive the expected labels
+    // from the same source so a taxonomy rename cannot re-stale this assertion
+    const expected = [...new Set(SITE_NAV_ENTRIES.map((e) => e.group ?? e.section))]
+    expect(expected.length, 'no groups derived, so the comparison below would be vacuous').toBeGreaterThan(1)
+    expect(labels).toEqual(expected)
+    // independent anchor: the authored taxonomy (not buildNav's derivation) names at least one label the rail must show
+    expect(NAV_TAXONOMY[0]?.label, 'NAV_TAXONOMY looks empty').toBeTruthy()
+    expect(labels).toContain(NAV_TAXONOMY[0]!.label)
     // a tag-bearing Components entry renders its tag in the trailing tag cell (the name|tag row, SPEC-R6)
     const tag = rail().querySelector('[data-role="tag"]') as HTMLElement
     expect(tag, 'no name|tag trailing cell rendered').not.toBeNull()
