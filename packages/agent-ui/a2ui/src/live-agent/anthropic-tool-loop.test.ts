@@ -345,3 +345,65 @@ describe('anthropicProvider — the GH #49 tool-use loop (mocked fetch)', () => 
     expect(fragments.join('')).toBe('Let me check that. ')
   })
 })
+
+// T-0034 — an object-typed field that arrives as a JSON string (Haiku 5.5 peer report).
+describe('anthropicProvider — stringified object fields (T-0034)', () => {
+  const OBJ_TOOLS: ToolDef[] = [
+    { name: 'weather', description: 'w', input_schema: { type: 'object', properties: { place: { type: 'string' }, opts: { type: 'object' } } } },
+  ]
+  const roundWith = (inputJson: string) => [
+    'event: content_block_start',
+    'data: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_x","name":"weather"}}',
+    '',
+    'event: content_block_delta',
+    `data: ${JSON.stringify({ type: 'content_block_delta', index: 0, delta: { type: 'input_json_delta', partial_json: inputJson } })}`,
+    '',
+    'event: message_delta',
+    'data: {"type":"message_delta","delta":{"stop_reason":"tool_use"}}',
+    '',
+    'event: message_stop',
+    'data: {"type":"message_stop"}',
+    '',
+  ]
+  async function run(inputJson: string) {
+    const bodies: Array<Record<string, unknown>> = []
+    let n = 0
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_u: RequestInfo | URL, init?: RequestInit) => {
+        bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>)
+        n += 1
+        return n === 1 ? sseResponse(roundWith(inputJson)) : sseResponse(FINAL_ROUND)
+      }),
+    )
+    const executed: Array<Record<string, unknown>> = []
+    const provider = anthropicProvider({ apiKey: 'test-key' })
+    for await (const _ of provider.stream({
+      model: 'claude-haiku-5-5',
+      system: 's',
+      messages: [{ role: 'user', content: 'x' }],
+      tools: OBJ_TOOLS,
+      executeTool: async (_name, input) => {
+        executed.push(input)
+        return 'ok'
+      },
+    })) void _
+    const last = (bodies[1]!.messages as Array<{ content: Array<{ content?: string; is_error?: boolean }> }>).at(-1)!.content[0]!
+    return { executed, last }
+  }
+
+  it('parses a stringified object field', async () => {
+    const { executed } = await run('{"place":"Bergen","opts":"{\\"units\\":\\"c\\"}"}')
+    expect(executed).toEqual([{ place: 'Bergen', opts: { units: 'c' } }])
+  })
+  it('rejects a malformed string plainly, naming the field, without executing', async () => {
+    const { executed, last } = await run('{"opts":"not json"}')
+    expect(executed).toEqual([])
+    expect(last.is_error).toBe(true)
+    expect(last.content).toContain('"opts"')
+  })
+  it('leaves a normal object (control) and non-object string fields untouched', async () => {
+    const { executed } = await run('{"place":"{\\"a\\":1}","opts":{"units":"c"}}')
+    expect(executed).toEqual([{ place: '{"a":1}', opts: { units: 'c' } }])
+  })
+})
