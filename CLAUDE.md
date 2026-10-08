@@ -11,12 +11,12 @@ Process `.claude/docs/process.md` · Standards `.claude/docs/references/` · `si
 
 ## Commands
 
-- `npm run check` — the standing gate: `tsc && check:site && check:tools && check:scripts` (all noEmit/test steps)
-- `npm test` — Vitest (jsdom), once · `npm run test:watch` — watch
-- `npm run test:browser` — the real-engine gate: six sequential vitest shards
+- `npm run check`: the standing gate: `tsc && check:site && check:tools && check:scripts` (all noEmit/test steps)
+- `npm test`: Vitest (jsdom), once · `npm run test:watch`: watch
+- `npm run test:browser`: the real-engine gate, six sequential vitest shards
   (packages:{components,app,rest} · site · focus-timing · visual) then `test:eval-catalog`
   (boots its own vite + Chromium, gate-verdicts only). Never re-monolith the shards or add a heap
-  bump — history + the focus-timing extension rule: `component-testing`.
+  bump (history + the focus-timing extension rule: `component-testing`).
 - `npm run eval:agent-behavior -- selftest` is keyless and runs inside `check:scripts`; `-- live --leg selection|persona`
   needs `ANTHROPIC_API_KEY` and is Kim's manual run (exit 0, 1 or 2). Home: `packages/agent-ui/a2ui/tools/agent-eval/`, GH #1810.
 - `npm run e2e:admin`: keyless headless agent-admin flows (Test Chat, Builder, Settings, teams, error and
@@ -29,17 +29,17 @@ Process `.claude/docs/process.md` · Standards `.claude/docs/references/` · `si
   server and tools, the catalog-generated per-type matrix, seeded defects per layer, fuzz; jsdom and Node
   legs plus `kit.ts selftest` (which also rides `check:scripts`). `npm run test:a2ui-kit:browser` runs its
   two real-engine legs in `packages-rest`. Home and format: `packages/agent-ui/a2ui/tools/testkit/README.md`.
-- `npm run dev` / `npm run build` — the docs site (`site/`) is the app entry · `npm run deploy:docs` — ui.nonoun.io
-- `npm run ops:reap-worktrees` / `ops:reap-branches` / `ops:reap-scratch-clones` — gated,
+- `npm run dev` / `npm run build`: the docs site (`site/`) is the app entry · `npm run deploy:docs`: ui.nonoun.io
+- `npm run ops:reap-worktrees` / `ops:reap-branches` / `ops:reap-scratch-clones`: gated,
   dry-run-by-default reap scripts (append `-- --execute` to apply) for `.claude/worktrees/`
   entries, local branches, and orphaned `dispatch_envelope.py` scratch-clone dirs, respectively.
-- `npm run ops:bootstrap-scratch-clone -- <clone-dir> [--root <path>]` — deterministic per-entry
+- `npm run ops:bootstrap-scratch-clone -- <clone-dir> [--root <path>]`: deterministic per-entry
   `node_modules` symlink bootstrap for a `dispatch_envelope.py` scratch clone (GH #1695); a build
   seat in a scratch clone runs this instead of improvising the `seat-map` recipe by hand.
 
 Locally a seat runs `check` + the touched package's tests; CI's `npm test` is the full-suite gate and a PR
 merges on CI green (process.md §Momentum rules, Kim 2026-10-04: one review pass, Lows never block, trivial diffs
-skip the checker). Gates must be green before a change is done — judge by EXIT CODES, never by grepping
+skip the checker). Gates must be green before a change is done; judge by EXIT CODES, never by grepping
 output (a piped grep-count masked a red check and an OOM'd browser run, 2026-07-19). One ruled carve-out:
 a docs-only diff (`.claude/docs/**`, `*.md` outside a descriptor's `attributes[]` fence, code comments) gates on `doc_lint` + `check`, CI runs `test`
 (process.md §1, Kim 2026-08-29); one that touches an ADR title, an L1 descriptor, the ADR log, or the changelog also
@@ -49,34 +49,34 @@ regenerates the sitemap indexes and runs `site/lib/sitemap.test.ts` (the 2026-08
 
 npm-workspaces monorepo; ten packages under `packages/agent-ui/*`.
 
-- `components/` — the framework. `src/` layers, imports downward only:
+- `components/`: the framework. `src/` layers, imports downward only:
   `reactive/` (signals kernel, imports nothing) ← `dom/` (UIElement/UIFormElement, props, template,
   directives) ← `traits/` (`(host, opts) => cleanup`, invoked from `connected()`) ← `controls/`
   (`ui-*` FACE controls, one folder per component, self-define on import).
-- `shared/` — tokens (`src/tokens/{tokens,dimensions}.css` → `@agent-ui/shared/tokens.css`), utility
-  types, and the `StorageAdapter` persistence seam (ADR-0193) — the DAG-bottom home lower layers
+- `shared/`: tokens (`src/tokens/{tokens,dimensions}.css` → `@agent-ui/shared/tokens.css`), utility
+  types, and the `StorageAdapter` persistence seam (ADR-0193), the DAG-bottom home lower layers
   persist through.
-- `a2ui/` — the A2UI protocol layer (renderer/validator/catalog · `./examples` · `./corpus` ·
+- `a2ui/`: the A2UI protocol layer (renderer/validator/catalog · `./examples` · `./corpus` ·
   `./agent`, the producer toolkit with its assets embedded at build time, ADR-0137 and ADR-0236; the
   key/dev-proxy shell stays site-internal).
-- `a2a/` — Agent2Agent wire types + validation pinned to spec v0.3.0, the tic-tac-toe arena, own
+- `a2a/`: Agent2Agent wire types + validation pinned to spec v0.3.0, the tic-tac-toe arena, own
   corpus shards; zero deps.
-- `icons/` — swappable icon-pack adapter (pure core + `./phosphor`; ADR-0065/0066); zero deps.
-- `app/` — app-surface compositions (`ui-super-shell` + presets).
-- `router/` — memory-first SPA router, opt-in URL reflection (ADR-0115).
-- `code/` — code+prose family (ADR-0119): zero-dep core + `./highlight` · `./markdown` · `./editor`
+- `icons/`: swappable icon-pack adapter (pure core + `./phosphor`; ADR-0065/0066); zero deps.
+- `app/`: app-surface compositions (`ui-super-shell` + presets).
+- `router/`: memory-first SPA router, opt-in URL reflection (ADR-0115).
+- `code/`: code+prose family (ADR-0119): zero-dep core + `./highlight` · `./markdown` · `./editor`
   (the CodeMirror exception, ADR-0139).
-- `data/` — headless SaaS data layer (ADR-0192): `DataSource<T>` seam, signal-backed
+- `data/`: headless SaaS data layer (ADR-0192): `DataSource<T>` seam, signal-backed
   `resource()/mutation()/paginated()`, + `./gateway` and `./stream` opt-in subpaths; real consumers:
   agent-admin's persona roster, skill-pack shelf, and AgentTeam records via `app`'s source modules
   (ADR-0227 waves 1–2).
-- `devtools/` — chat & A2UI dev/debug harness (ADR-0200): the three-backend transport shelf behind
+- `devtools/`: chat & A2UI dev/debug harness (ADR-0200): the three-backend transport shelf behind
   the ADR-0137 `AgentTransport` seam, `DevtoolsEvent`/`recordTurn`, + `./server` and `./playwright`
   subpaths; no key/provider/`produce()` ever enters it (the ADR-0073 trust boundary stays at
   `/__a2ui/agent`); the harness PAGE stays site-internal.
-- `.claude/docs/` — adr, prd, spec, lld, rubrics, references, archive; `*.test.ts` co-located with
-  source. Doc grammar + status law: `.claude/skills/doc-standards/`. `tickets/` is FROZEN (ADR-0145)
-  — work items are GitHub Issues; ADR/PRD/SPEC/LLD and PLAN/ROADMAP stay files, always.
+- `.claude/docs/`: adr, prd, spec, lld, rubrics, references, archive; `*.test.ts` co-located with
+  source. Doc grammar + status law: `.claude/skills/doc-standards/`. `tickets/` is FROZEN (ADR-0145):
+  work items are GitHub Issues; ADR/PRD/SPEC/LLD and PLAN/ROADMAP stay files, always.
   backend: B  # doc-writing-rules backend-resolver.md routing-table row, TICKET tier -> gh issue, ADR-0145
 
 ## Conventions (non-obvious only)
@@ -84,26 +84,26 @@ npm-workspaces monorepo; ten packages under `packages/agent-ui/*`.
 - tsconfig is strict in load-bearing ways: `erasableSyntaxOnly` bans `enum`/`namespace`/decorators
   (use `as const` objects + literal unions); `verbatimModuleSyntax` ⇒ `import type` for type-only
   imports; `allowImportingTsExtensions` ⇒ keep the explicit `.ts` on local imports.
-- Vite 8 is Rolldown-based — bundler/plugin behaviour follows Rolldown-Vite, not esbuild/Rollup.
+- Vite 8 is Rolldown-based: bundler/plugin behaviour follows Rolldown-Vite, not esbuild/Rollup.
 - Imports point inward only. Cross-package DAG: `shared` ← `components` ← `a2ui` ← {`app`,
   `devtools`}, with `router`/`code`/`data` as sibling branches off `components`, all three
   catalog-invisible (never imported by `a2ui`); `a2a` ← `devtools`; `app` and `devtools` are peers;
   nothing imports `devtools`; `app` may import `code` and `data` (the ADR-0192 cl.1 reserved edge,
   activated by ADR-0227's roster adoption) but never `router`; `components` also imports `icons` (inward); `icons`/`a2a` import nothing themselves.
-  Enforced by the per-package `layering.test.ts` trip-wires — consult those on any edge
+  Enforced by the per-package `layering.test.ts` trip-wires; consult those on any edge
   question (ADR-0115/0139/0192/0200/0227).
 - Naming: tags `ui-{name}`, classes `UI{Name}Element`, tokens `--ui-{name}-*` / color roles
   `--md-sys-color-{family}-{role}` / type scale `--md-sys-typescale-{role}-{size}-*` (ADR-0078).
   Event names ∈ `change · input · select · open · close · toggle · action` (ADR-0153).
 - Components are light-DOM by default; ARIA via `ElementInternals`, never host attributes; no native
-  form elements (the last carve-out, ui-table's, retired by the ratified ADR-0163 amendment —
+  form elements (the last carve-out, ui-table's, retired by the ratified ADR-0163 amendment;
   descriptor-documented internal non-value activation `<button data-part>`s are the one sanctioned
   class).
 - Sizing is fill-by-default (ADR-0223, ratified + built): controls are block-level and fill their
   container; the one opt-out is the reflected `inline` boolean (hug). `sizing-gates.test.ts` is
-  ENFORCING with an empty DEBT table — a new control ships conformant or reds the gate.
+  ENFORCING with an empty DEBT table: a new control ships conformant or reds the gate.
 - Props are typed signals via `static props` + `ReactiveProps<typeof props>`.
-- Shared/app state follows the ADR-0227 grammar — one signal-backed owner, explicit injection,
+- Shared/app state follows the ADR-0227 grammar: one signal-backed owner, explicit injection,
   `StorageAdapter` persistence, CSS cascade for presentational axes; the routable how-to (incl. the
   `resource()`/`mutation()` worked example) is `.claude/docs/references/state-and-persistence.md`.
 - Agent vocabulary (layers, "harness" disambiguation, glossary, seams) is
