@@ -89,7 +89,7 @@ npm-workspaces monorepo; ten packages under `packages/agent-ui/*`.
   `devtools`}, with `router`/`code`/`data` as sibling branches off `components`, all three
   catalog-invisible (never imported by `a2ui`); `a2a` ← `devtools`; `app` and `devtools` are peers;
   nothing imports `devtools`; `app` may import `code` and `data` (the ADR-0192 cl.1 reserved edge,
-  activated by ADR-0227's roster adoption) but never `router`; `icons`/`a2a` import nothing.
+  activated by ADR-0227's roster adoption) but never `router`; `components` also imports `icons` (inward); `icons`/`a2a` import nothing themselves.
   Enforced by the per-package `layering.test.ts` trip-wires — consult those on any edge
   question (ADR-0115/0139/0192/0200/0227).
 - Naming: tags `ui-{name}`, classes `UI{Name}Element`, tokens `--ui-{name}-*` / color roles
