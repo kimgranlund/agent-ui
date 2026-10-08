@@ -496,7 +496,9 @@ export class UISwiperElement extends UIContainerElement {
    *  no change and emits nothing, whether or not the echo beat the rAF (LLD §5, the same primary/secondary
    *  split `#teleport`'s own comment names for the debounce path). */
   #onSnapChange = (evt: Event): void => {
-    if (this.#teleporting) return
+    // A programmatic animation owns the track until it lands (its end calls `#onSettle`); a late snap event
+    // from the prior layout would commit the OLD slide over the just-written `active`.
+    if (this.#teleporting || this.#animFrame !== null) return
     const e = evt as SnapChangeEvent
     const target = (this.orientation === 'horizontal' ? e.snapTargetInline : e.snapTargetBlock) ?? this.#nearestSlide()
     if (!(target instanceof HTMLElement)) return
