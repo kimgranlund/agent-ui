@@ -104,3 +104,14 @@ after ratification.
   error and exactly the ambiguity the explicit signal removes.
 - **A duplicated emptiness judgment in `conversation.ts`** — rejected: a second judge forks the
   one-implementation law (SPEC-N6); the host presents its own already-held state instead.
+
+## Pointer (2026-10-08, ADR-0241 settle seam)
+
+> Append-only. No clause above changes; this records when the host's terminal-empty verdict is read behind a lazy
+> catalog body ([ADR-0241](./0241-lazy-catalog-bodies-behind-an-eager-manifest.md)).
+
+`ui-surface-host` reads the mount for `data-empty-final` after `finalize()`. While the renderer still holds the
+surface's messages behind an unloaded catalog body (`RendererHost.pending`), an empty mount only means the queue has
+not run, so the verdict waits for `RendererHost.settled()`, and a line that arrives after the finalize retires it as
+before. A surface that rendered never carries the attribute; before this pointer a cold a2ui-basic or persona surface
+read the mount synchronously and kept `data-empty-final` for good ([`surface-host.md`](../../../packages/agent-ui/app/src/controls/surface-host/surface-host.md)).

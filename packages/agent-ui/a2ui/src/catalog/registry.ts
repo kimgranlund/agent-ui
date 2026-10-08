@@ -11,8 +11,8 @@
 import { loadCatalog } from './catalog.ts'
 import type { Catalog } from './catalog.ts'
 import type { ControlLoader } from '@agent-ui/components/loader'
-import { CatalogLoadError, loadCatalogBody, reasonOf } from './loader.ts'
-import type { CatalogEntry, CatalogRegistry, LazyCatalogRecord, VariantDispatch, WidgetFactory } from './types.ts'
+import { CatalogLoadError, loadCatalogBody, loadedCatalogBody, reasonOf } from './loader.ts'
+import type { CatalogBody, CatalogEntry, CatalogRegistry, LazyCatalogRecord, VariantDispatch, WidgetFactory } from './types.ts'
 import { factoriesOf } from './variant.ts'
 
 /** Registration-time diagnostic codes owned by the registry (catalog LLD-C3, error table §8). */
@@ -94,11 +94,22 @@ export class Registry implements CatalogRegistry {
    * Record a catalog by id without loading its body (ADR-0241 cl.3). Internal to the package: `register`
    * stays the one project seam. Last-wins like `register`: a loaded or recorded entry under the same id is
    * replaced, and a load already in flight for the old record is discarded when it lands.
+   *
+   * Warm memo (ADR-0241 Amendment): a record whose body has already loaded in this module registers it at
+   * once, so only the first renderer on a page takes the asynchronous path. A body that does not register
+   * (a mismatched id, a factory gap) leaves the record in place, and `ensure` reports it as before.
    */
   registerLazy(record: LazyCatalogRecord): void {
     if (this.knows(record.id)) warnOverride(record.id)
     this.#catalogs.delete(record.id)
     this.#records.set(record.id, record)
+    const body = loadedCatalogBody(record)
+    if (body === undefined) return
+    try {
+      this.#adopt(record.id, body)
+    } catch {
+      // cold path: the record stays, and the next `ensure` loads and reports it
+    }
   }
 
   /** A registered id or a recorded (not yet loaded) one. `get` answers only for a loaded catalog. */
@@ -126,18 +137,23 @@ export class Registry implements CatalogRegistry {
         // A `register` or newer `registerLazy` for this id landed while the body loaded: it wins, and this
         // call settles on whatever now answers to the id.
         if (this.#records.get(id) !== record) return this.ensure(id)
-        const declared = (body.catalog as { catalogId?: unknown } | null)?.catalogId
-        if (declared !== id) throw new CatalogLoadError(id, `catalog body declares "${String(declared)}", not "${id}"`)
-        try {
-          this.#store(body.catalog, body.factories, body.functions, body.controls, false)
-        } catch (cause) {
-          throw new CatalogLoadError(id, `catalog "${id}" failed to register: ${reasonOf(cause)}`, { cause })
-        }
+        this.#adopt(id, body)
       },
       (cause: unknown) => {
         throw new CatalogLoadError(id, `catalog "${id}" failed to load: ${reasonOf(cause)}`, { cause })
       },
     )
+  }
+
+  // Register a recorded id's loaded body into this registry (`ensure` and the warm memo). Throws `CatalogLoadError`.
+  #adopt(id: string, body: CatalogBody): void {
+    const declared = (body.catalog as { catalogId?: unknown } | null)?.catalogId
+    if (declared !== id) throw new CatalogLoadError(id, `catalog body declares "${String(declared)}", not "${id}"`)
+    try {
+      this.#store(body.catalog, body.factories, body.functions, body.controls, false)
+    } catch (cause) {
+      throw new CatalogLoadError(id, `catalog "${id}" failed to register: ${reasonOf(cause)}`, { cause })
+    }
   }
 
   get(id: string): CatalogEntry | undefined {

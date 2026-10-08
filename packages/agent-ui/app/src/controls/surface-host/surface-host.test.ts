@@ -12,6 +12,10 @@ import {
 import type { ParsedAttribute } from '@agent-ui/components/descriptor'
 // same reverse-coupling fs-read idiom as app-shell.test.ts / layering.test.ts.
 import { readFileSync } from 'node:fs'
+import { createRenderer as warm } from '@agent-ui/a2ui'
+// ADR-0241: warm the default catalog at the top level, ahead of any renderer this file builds (a renderer built before
+// the body lands stays on the asynchronous path, so a beforeAll would be too late).
+await warm().preload('agent-ui')
 declare const process: { cwd(): string }
 
 // LLD-C3 jsdom probes for ui-surface-host — the mount/stream seam (SPEC-R2/R3/R11). Covers: (1) pre-
@@ -387,6 +391,75 @@ describe('ui-surface-host — ADR-0187: terminal-empty state at finalize (GH #82
     // Exactly ONE message — the renderer's IDGRAPH verdict — and nothing minted by this element.
     expect(seen).toHaveLength(1)
     expect(JSON.stringify(seen[0])).toContain('abandoned:root-missing')
+  })
+})
+
+// ── ADR-0241 / ADR-0187: a COLD lazy catalog settles before the post-ingest derivations ─────────────────
+//
+// `ui-surface-host` derives four things right after it forwards a line: the root stretch, `data-root-card`, the
+// superseded sweep and the ADR-0187 empty verdict. Behind a lazy catalog body (ADR-0241) the renderer holds the
+// surface's `updateComponents`/`finalize` in a queue until the chunk lands, so a synchronous read of the mount saw no
+// root and flagged `data-empty-final` for good (the live defect this block pins). The host now re-derives from
+// `RendererHost.settled()` when `pending` is true after the forward. Every id here is cold: this file's other
+// fixtures all use the eagerly registered `agent-ui`, and the loader memo is module-wide, so keep each cold id to the
+// one test that names it.
+describe('ui-surface-host: a cold lazy catalog settles before the post-ingest derivations (ADR-0241, ADR-0187)', () => {
+  const surfaceOf = (el: Element): HTMLElement => el.querySelector('[data-part="surface"]') as HTMLElement
+  const create = (surfaceId: string, catalogId: string): string => line({ version: 'v1.0', createSurface: { surfaceId, catalogId } })
+  const column = (surfaceId: string): string =>
+    line({
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId,
+        components: [
+          { id: 'root', component: 'Column', children: ['t'] },
+          { id: 't', component: 'Text', text: 'hello' },
+        ],
+      },
+    })
+
+  it('a cold a2ui-basic surface: sync ingest x2 + finalize, then the load lands: a root is mounted and data-empty-final is absent', async () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(create('cold', 'a2ui-basic'))
+    el.ingest(column('cold'))
+    el.finalize()
+
+    // The catalog body is still loading: nothing is mounted, and that is NOT a terminal-empty verdict.
+    expect(surfaceOf(el).firstElementChild).toBeNull()
+    expect(el.dataset.emptyFinal, 'no verdict while the catalog is still loading').toBeUndefined()
+
+    await vi.waitFor(() => expect(surfaceOf(el).firstElementChild).not.toBeNull(), { timeout: 10_000 })
+    await whenFlushed()
+    const root = surfaceOf(el).firstElementChild as HTMLElement
+    expect(root.tagName.toLowerCase()).toBe('ui-column')
+    expect(el.dataset.emptyFinal, 'the surface rendered: the verdict must not stick').toBeUndefined()
+    expect(root.hasAttribute('stretch'), 'the root stretch re-derives once the root exists').toBe(true)
+  })
+
+  it('a line that arrives after the finalize retires its verdict: the stream is not over, so a still-empty settle does not flag', async () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(create('cold-late', 'https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json'))
+    el.finalize() // the verdict for this finalize is deferred behind the load ...
+    el.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'cold-late', path: '/x', value: 1 } })) // ... and a newer line supersedes it
+    await vi.waitFor(() => expect(el.querySelector('[data-part="surface"]')).not.toBeNull())
+    await new Promise<void>((resolve) => setTimeout(resolve, 50)) // let the load land and the queue drain
+    expect(el.dataset.emptyFinal).toBeUndefined()
+
+    el.finalize() // the catalog is loaded now, nothing is pending: the verdict is inline again, as for a warm host
+    expect(el.dataset.emptyFinal, 'still rootless at a settled finalize').toBe('')
+  })
+
+  it('disconnecting while the load is pending leaves nothing behind: the late settle touches neither the old nor a rebuilt artboard', async () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(create('cold-gone', 'a2ui-basic--concierge'))
+    el.ingest(column('cold-gone'))
+    el.finalize()
+    const parent = el.parentElement!
+    el.remove()
+    parent.append(el) // a reconnect rebuilds a fresh, empty artboard
+    await new Promise<void>((resolve) => setTimeout(resolve, 50))
+    expect(el.dataset.emptyFinal, 'the stale settle must not flag the rebuilt artboard').toBeUndefined()
+    expect(surfaceOf(el).firstElementChild).toBeNull()
   })
 })
 

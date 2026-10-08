@@ -83,6 +83,14 @@
 // messages and removes the surface, the end state of `CATALOG_UNKNOWN`; a later `createSurface` retries the load.
 // An id neither registered nor recorded is still `CATALOG_UNKNOWN`, synchronously. Once a body is registered in
 // this renderer the path is synchronous again; `preload(id)` starts the load early and lets a caller await it.
+// A renderer built after any renderer loaded a body registers it at construction (the warm memo, `Registry.registerLazy`),
+// so only the first renderer on a page takes the asynchronous path.
+//
+// The settle seam. A host that reads the mount right after `ingest`/`finalize` (`ui-surface-host`'s root stretch and
+// terminal-empty verdict) must know whether the queues above still hold messages back. `RendererHost.pending` is true
+// while any surface has a queue (the catalog gate or the control gate); `settled()` resolves once none is left, at the
+// moment the last queue drains or is dropped (a failed load, `deleteSurface`, a re-`createSurface`, `dispose`), so the
+// waiter runs after everything queued has been applied. Resolved at once when nothing is pending.
 
 import type { ControlLoader } from '@agent-ui/components/loader'
 import { dispatch } from './dispatch.ts'
@@ -191,6 +199,17 @@ export interface RendererHost {
    * a host start the fetch early, or a caller await the synchronous path before ingesting.
    */
   preload(catalogId: string): Promise<void>
+  /**
+   * `true` while any surface holds messages back behind a lazy catalog body or a control load (ADR-0233, ADR-0241), so
+   * the mount does not yet show what `ingest`/`finalize` were given. `false` once every queue has drained or been dropped.
+   */
+  readonly pending: boolean
+  /**
+   * Resolves once `pending` is false: when the last queue has drained and applied its messages, or been dropped (a failed
+   * load, `deleteSurface`, a re-`createSurface` of a pending id, `dispose`). Already resolved when nothing is pending. It
+   * never rejects; a failed load still reports `CATALOG_LOAD`/`CONTROL_LOAD` through `onClientMessage`.
+   */
+  settled(): Promise<void>
   /** Run the shared validator's id-graph check on the COMPLETE component set (ADR-0002, finalize-only). */
   finalize(surfaceId?: string): void
   /** Tear everything down: dispose every surface (leak-free, N3), detach roots, drop subscribers. */
@@ -224,6 +243,8 @@ class Renderer implements RendererHost {
   readonly #revealOrder: boolean // GH #975/ADR-0194 opt-in (default false) — threaded into every SurfaceTree
   // Deferred apply: one queue per surface waiting on its catalog body (ADR-0241) or its control loader (ADR-0233).
   readonly #queues = new Map<string, SurfaceQueue>()
+  // `settled()` resolvers parked while a queue exists; released by `#releaseSettled` once none is left.
+  readonly #settleWaiters: (() => void)[] = []
   #mountEl: HTMLElement | undefined
   #disposed = false
 
@@ -340,6 +361,21 @@ class Renderer implements RendererHost {
     return this.#registry.ensure(catalogId)
   }
 
+  get pending(): boolean {
+    return this.#queues.size > 0
+  }
+
+  settled(): Promise<void> {
+    if (this.#queues.size === 0) return Promise.resolve()
+    return new Promise((resolve) => void this.#settleWaiters.push(resolve))
+  }
+
+  /** Resolve every parked `settled()` once no queue is left. Called after each place a queue can disappear. */
+  #releaseSettled(): void {
+    if (this.#queues.size > 0 || this.#settleWaiters.length === 0) return
+    for (const resolve of this.#settleWaiters.splice(0)) resolve()
+  }
+
   finalize(surfaceId?: string): void {
     if (surfaceId !== undefined) {
       this.#finalizeOrQueue(surfaceId)
@@ -356,6 +392,7 @@ class Renderer implements RendererHost {
     this.#store.disposeAll() // disposes every surface scope + aborts every listener (N3)
     this.#listeners.clear()
     this.#mountEl = undefined
+    this.#releaseSettled()
   }
 
   // ── dispatch handlers ───────────────────────────────────────────────────────────
@@ -408,6 +445,7 @@ class Renderer implements RendererHost {
       }),
     )
     if (!loaded) this.#awaitCatalog(surface.id, body.catalogId)
+    this.#releaseSettled() // a re-createSurface may have dropped a pending queue and left none in its place
   }
 
   #onUpdateComponents(body: A2uiUpdateComponents, version: string): void {
@@ -467,6 +505,7 @@ class Renderer implements RendererHost {
   #onDeleteSurface(body: A2uiDeleteSurface): void {
     this.#teardownSurfaceDom(body.surfaceId)
     this.#store.delete(body.surfaceId) // disposes scope + aborts; no-op if unknown (late message)
+    this.#releaseSettled()
   }
 
   // ── deferred apply (ADR-0233, ADR-0241) ───────────────────────────────────────────
@@ -538,7 +577,10 @@ class Renderer implements RendererHost {
       queue.messages.shift()
       next.run()
     }
-    if (this.#queues.get(id) === queue) this.#queues.delete(id)
+    if (this.#queues.get(id) === queue) {
+      this.#queues.delete(id)
+      this.#releaseSettled()
+    }
   }
 
   /** Start one `ensure` for `queue`; on settle, drain (or report `CONTROL_LOAD` once and drain anyway). */
