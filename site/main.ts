@@ -1655,7 +1655,7 @@ const CARD_GROUPS: readonly CardGroup[] = [
         href: './a2a-tic-tac-toe.html',
         title: 'A2A tic-tac-toe arena',
         blurb:
-          'Two agents play through a deterministic referee that is the ONLY thing either seat ever talks to. Replay a real recorded Sonnet-5-vs-Haiku-4.5 match, then read the isolation panel: it runs the SAME checker the build gate runs, live, over the loaded transcript — flip to a contaminated fixture to watch it fail loudly.',
+          'Two agents play through a deterministic referee that is the ONLY thing either seat ever talks to. Replay a real recorded Sonnet-5-vs-Haiku-5.5 match, then read the isolation panel: it runs the SAME checker the build gate runs, live, over the loaded transcript: flip to a contaminated fixture to watch it fail loudly.',
       },
       {
         href: './a2a-concepts.html',
