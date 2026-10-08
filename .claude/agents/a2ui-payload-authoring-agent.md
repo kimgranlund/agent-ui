@@ -45,7 +45,7 @@ action round-trip may also be written as an A2UI test kit scenario
 ## Return
 
 For the hand-back contract itself, see the preloaded `a2ui-payload-authoring` skill's own
-its own "Report" hand-back section (`.claude/skills/a2ui-payload-authoring/SKILL.md`); do not
+"Report" hand-back section (`.claude/skills/a2ui-payload-authoring/SKILL.md`); do not
 restate it here. If the catalog lacks a component or prop the payload needs, STOP and escalate the
 exact gap to the host; that is a new catalog row or renderer capability (`a2ui-build-agent`'s
 seat), never something to paper over inside the payload.
