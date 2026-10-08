@@ -430,7 +430,8 @@ export function buildRequestBody(req: {
     stream: true,
     ...(req.tools && req.tools.length > 0 ? { tools: req.tools } : {}),
   }
-  // 'low' (or unset) ⇒ no thinking params, the pre-Effort max_tokens. Haiku 5.5 alone defaults to
+  // 'low' (or unset) ⇒ no thinking params. Other models keep the pre-Effort max_tokens; Haiku 5.5 gets its own
+  // scaled default (HAIKU_55_MAX_TOKENS.default, T-0035). Haiku 5.5 alone defaults to
   // `medium` effort (other current models default to high, Haiku 4.5 has no dial), so only it gets
   // `output_config: {effort: 'low'}` explicitly (T-0032), keeping the cheap no-thinking 4.5 behavior;
   // a model may still think a little at low. We send no `thinking` field rather than
@@ -453,7 +454,8 @@ export function buildRequestBody(req: {
   // budget_tokens returns a 400 here (TKT-0075's silent-empty bug); adaptive is legal on ALL of them
   // (Fable 5: "omit or adaptive"). Effort vocabulary maps 1:1 (low/medium/high/xhigh are all real API
   // values). max_tokens gets the same headroom bump the legacy arm used at the equivalent tier, so the
-  // reply room does not shrink with the migration.
+  // reply room does not shrink with the migration; Haiku 5.5 instead takes its ~30% scaled
+  // HAIKU_55_MAX_TOKENS tier (T-0035).
   return {
     ...base,
     max_tokens: isHaiku55(req.model) ? HAIKU_55_MAX_TOKENS[req.effort] : THINKING_BUDGET[req.effort] + REPLY_HEADROOM,
