@@ -1,13 +1,13 @@
 {
-  "recordedAt": "2026-10-06T20:00:04.396Z",
+  "recordedAt": "2026-10-07T21:51:51.727Z",
   "prompt": "black jack",
   "catalogId": "agent-ui--croupier",
   "calls": [
     {
-      "model": "claude-haiku-4-5-20251001",
+      "model": "claude-haiku-5-5",
       "tag": "haiku",
-      "ms": 9061,
-      "lines": 5,
+      "ms": 4529,
+      "lines": 3,
       "halted": null
     },
     {

@@ -1,7 +1,8 @@
-// recorded-replay.test.ts: offline replay of real Haiku Croupier turns (GH #1795, T-0004). The fixtures
-// in __fixtures__/ were captured once through produce() with the Croupier catalog (capture-meta.json); no
-// network or key is needed here. Turn 2 ("stand") is the faces symptom: the dealer draws a third card into
-// the data model but no PlayingCard component renders it. Red before the nested-list fix in checks.ts.
+// recorded-replay.test.ts: offline replay of real Haiku Croupier turns (GH #1795, T-0004; re-recorded on
+// claude-haiku-5-5, T-0033). The fixtures in __fixtures__/ were captured through produce() with the Croupier
+// catalog (capture-meta.json); no network or key is needed here. On 5.5 turn 1 asks for a bet (no hand yet)
+// and turn 2 ("stand") answers in a note with no surface, so the old HAND_COUNT symptom (three dealer cards
+// listed, two rendered) no longer appears in the recording; the nested-list fix stays pinned in checks.test.ts.
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -29,14 +30,13 @@ const session: Session = {
 }
 
 describe('recorded Haiku Croupier turns replay offline', () => {
-  it('turn 1 (deal) states no inconsistent hand', () => {
+  it('turn 1 (bet ask) states no inconsistent hand', () => {
+    expect(turn1.length).toBeGreaterThan(0)
     expect(croupierHandConsistency.check({ surfaces: semanticSurfaceViews({ turns: [] }, turn1) })).toEqual([])
   })
 
-  it('turn 2 (stand) is caught: three dealer cards listed, two rendered', () => {
-    const findings = croupierHandConsistency.check({ surfaces: semanticSurfaceViews(session, turn2) })
-    expect(findings.map((f) => f.code)).toEqual(['HAND_COUNT'])
-    expect(findings[0]!.path).toContain('dealer-cards')
-    expect(findings[0]!.message).toContain('renders 2 cards but /game/dealer/cards lists 3')
+  it('turn 2 (stand with no hand in play) emits no surface and no finding', () => {
+    expect(turn2).toEqual([])
+    expect(croupierHandConsistency.check({ surfaces: semanticSurfaceViews(session, turn2) })).toEqual([])
   })
 })
