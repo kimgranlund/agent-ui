@@ -308,6 +308,33 @@ function safeJson(text: string): unknown {
   }
 }
 
+/** Peer report (T-0034): on Haiku 5.5 with forced tool_use an object-typed input field can arrive as a JSON
+ *  string. Where the tool's `input_schema` declares the field `type: 'object'` and the value is a string,
+ *  parse it to an object; a string that does not parse to a plain object answers an error naming the field.
+ *  Only object-typed fields are touched. */
+export function coerceObjectFields(
+  input: Record<string, unknown>,
+  schema: Record<string, unknown> | undefined,
+): { input: Record<string, unknown> } | { error: string } {
+  const props = (schema?.properties ?? {}) as Record<string, { type?: unknown } | undefined>
+  let out = input
+  for (const [field, def] of Object.entries(props)) {
+    const value = input[field]
+    if (def?.type !== 'object' || typeof value !== 'string') continue
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(value)
+    } catch {
+      parsed = undefined
+    }
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return { error: `tool input field "${field}" must be an object but arrived as a string that is not a JSON object: ${value.slice(0, 200)}` }
+    }
+    out = { ...out, [field]: parsed }
+  }
+  return { input: out }
+}
+
 /** The `input` JSON a tool call streamed, parsed; `{}` for empty or unparseable input (the unparseable case
  *  is already reported to the model through its `is_error` tool_result, so the echoed block stays well formed). */
 function parseToolInput(inputJson: string): Record<string, unknown> {
@@ -754,6 +781,9 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): 
             } catch {
               return { call, content: `tool input was not valid JSON: ${call.inputJson.slice(0, 200)}`, isError: true }
             }
+            const coerced = coerceObjectFields(input, req.tools?.find((t) => t.name === call.name)?.input_schema)
+            if ('error' in coerced) return { call, content: coerced.error, isError: true }
+            input = coerced.input
             try {
               // The turn's abort signal rides into the executor (PR #59 review) — an aborted turn also
               // cancels in-flight tool network work, not just the next round's fetch.
