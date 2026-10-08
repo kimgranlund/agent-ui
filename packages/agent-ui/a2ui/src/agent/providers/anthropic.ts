@@ -404,6 +404,11 @@ const takesLegacyThinkingBudget = (model: string): boolean => /haiku-4-5/.test(m
 /** Haiku 5.5 (also the Bedrock id `anthropic.claude-haiku-5-5`): the one model whose default effort is `medium`. */
 const isHaiku55 = (model: string): boolean => /haiku-5-5/.test(model)
 
+/** T-0035: Haiku 5.5's tokenizer emits ~30% more tokens for the same text, so its max_tokens tiers
+ *  (default/medium/high/xhigh) are scaled ~30% over the 4096/3072/4096/6144 the other models keep.
+ *  Each stays strictly above any thinking budget (adaptive here sends none). */
+const HAIKU_55_MAX_TOKENS = { default: 5376, medium: 4096, high: 5376, xhigh: 8192 } as const
+
 /** The Anthropic Messages-API request BODY, PURE (SPEC-R11 AC3, fixture-tested — the `parseAnthropicSSE`
  *  precedent, this file's OTHER extracted-for-testability seam): `effort` → thinking/effort params, with
  *  no network/key involved. The impure `stream()` below is the ONLY caller; kept exported so the mapping
@@ -432,7 +437,7 @@ export function buildRequestBody(req: {
   // `{type:'disabled'}`, which Fable 5 rejects.
   if (req.effort === undefined || req.effort === 'low') {
     return isHaiku55(req.model)
-      ? { ...base, max_tokens: MAX_TOKENS, output_config: { effort: 'low' } }
+      ? { ...base, max_tokens: HAIKU_55_MAX_TOKENS.default, output_config: { effort: 'low' } }
       : { ...base, max_tokens: MAX_TOKENS }
   }
   if (takesLegacyThinkingBudget(req.model)) {
@@ -451,7 +456,7 @@ export function buildRequestBody(req: {
   // reply room does not shrink with the migration.
   return {
     ...base,
-    max_tokens: THINKING_BUDGET[req.effort] + REPLY_HEADROOM,
+    max_tokens: isHaiku55(req.model) ? HAIKU_55_MAX_TOKENS[req.effort] : THINKING_BUDGET[req.effort] + REPLY_HEADROOM,
     thinking: { type: 'adaptive' },
     output_config: { effort: req.effort },
   }

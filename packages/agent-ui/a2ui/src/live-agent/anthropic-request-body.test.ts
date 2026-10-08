@@ -17,12 +17,12 @@ describe('buildRequestBody — the Effort dial → Anthropic extended-thinking m
   })
 
   it.each(['claude-haiku-5-5', 'anthropic.claude-haiku-5-5'])(
-    "unset or 'low' effort on %s: no thinking param, max_tokens 4096, output_config.effort 'low' sent explicitly (T-0032: omitted, adaptive runs at its medium default)",
+    "unset or 'low' effort on %s: no thinking param, max_tokens 5376 (T-0035: ~30% over 4096 for the heavier tokenizer), output_config.effort 'low' sent explicitly (T-0032: omitted, adaptive runs at its medium default)",
     (model) => {
       for (const effort of [undefined, 'low'] as const) {
         const body = buildRequestBody({ ...BASE, model, ...(effort ? { effort } : {}) })
         expect(body['thinking']).toBeUndefined()
-        expect(body['max_tokens']).toBe(4096)
+        expect(body['max_tokens']).toBe(5376)
         expect(body['output_config']).toEqual({ effort: 'low' })
       }
     },
@@ -64,6 +64,18 @@ describe('buildRequestBody — the Effort dial → Anthropic extended-thinking m
         const body = buildRequestBody({ ...BASE, model, effort })
         expect(body['thinking'], `${model} @ ${effort}`).toEqual({ type: 'adaptive' })
         expect(body['output_config'], `${model} @ ${effort}`).toEqual({ effort })
+      }
+    }
+  })
+
+  it('haiku-5-5 max_tokens tiers are ~30% above the shared 3072/4096/6144 (T-0035: the heavier tokenizer), Bedrock id included', () => {
+    for (const model of ['claude-haiku-5-5', 'anthropic.claude-haiku-5-5']) {
+      for (const [effort, maxTokens] of [
+        ['medium', 4096],
+        ['high', 5376],
+        ['xhigh', 8192],
+      ] as const) {
+        expect(buildRequestBody({ ...BASE, model, effort })['max_tokens'], `${model} @ ${effort}`).toBe(maxTokens)
       }
     }
   })
