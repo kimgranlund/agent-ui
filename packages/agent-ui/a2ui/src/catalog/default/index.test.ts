@@ -15,6 +15,11 @@ import { splitFrontmatter, parseDescriptor } from '@agent-ui/components/descript
 // Raw-text fs read — same reverse-coupling fs-read pattern
 // components/src/descriptor/site-coverage.test.ts uses.
 import { readFileSync, readdirSync } from 'node:fs'
+
+// T-0041 (ADR-0241): warm the default catalog body once, at top level (a `beforeAll` would run after a renderer built at
+// module or describe scope), so every renderer built below registers it synchronously, as the eager catalog did.
+await createRenderer().preload('agent-ui')
+
 declare const process: { cwd(): string }
 
 // jsdom reality (the examples.test.ts precedent, ADR-0055 clause 4): `ElementInternals.setFormValue`/

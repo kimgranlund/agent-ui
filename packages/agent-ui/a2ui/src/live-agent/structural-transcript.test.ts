@@ -17,6 +17,10 @@ import { createRecordedTransport } from '../agent/recorded-transport.ts'
 import { readMetaLine } from '../agent/meta-line.ts'
 import type { Session } from '../agent/agent-transport.ts'
 
+// T-0041 (ADR-0241): warm the default catalog body once, at top level (a `beforeAll` would run after a renderer built at
+// module or describe scope), so every renderer built below registers it synchronously, as the eager catalog did.
+await createRenderer().preload('agent-ui')
+
 const isError = (m: A2uiClientMessage): m is Extract<A2uiClientMessage, { error: unknown }> => 'error' in m
 
 describe('Structural Gen UI worked example — validity (ADR-0090 §3, SPEC-N3/N6 parity)', () => {

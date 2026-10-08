@@ -18,6 +18,10 @@ import type { Session } from '../agent/agent-transport.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 
+// T-0041 (ADR-0241): warm the default catalog body once, at top level (a `beforeAll` would run after a renderer built at
+// module or describe scope), so every renderer built below registers it synchronously, as the eager catalog did.
+await createRenderer().preload('agent-ui')
+
 const isAction = (m: A2uiClientMessage): m is A2uiActionMessage => 'action' in m
 
 describe('recorded backbone round-trip (LLD-C2/C8 / SPEC-R2 AC1)', () => {
