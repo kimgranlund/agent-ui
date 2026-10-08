@@ -123,6 +123,32 @@ describe('ui-swiper — scroll-snap is genuinely suppressed mid-animation (regre
   })
 })
 
+// A stale `scrollsnapchange` (queued from the prior layout) can arrive while a programmatic animation runs. It must
+// not commit the OLD slide over the just-written `active` (T-0038); the animation's closing settle is the one commit.
+const staleSnap = (track: HTMLElement, target: HTMLElement): void => {
+  const evt = new Event('scrollsnapchange') as Event & { snapTargetInline: Element; snapTargetBlock: Element }
+  evt.snapTargetInline = target
+  evt.snapTargetBlock = target
+  track.dispatchEvent(evt)
+}
+
+describe('ui-swiper — a stale snap event cannot override a programmatic write mid-animation (T-0038)', () => {
+  // chromium-only: WebKit has no `scrollsnapchange` (the swiper listens to `scroll` there), so the gate is moot.
+  it.skipIf(server.browser !== 'chromium')('active holds the written key mid-animation, aligns after settle, and emits no select', async () => {
+    const { swiper, items, track } = mount(THREE)
+    const events: CustomEvent[] = []
+    swiper.addEventListener('select', (e) => events.push(e as CustomEvent))
+    swiper.active = '2'
+    await new Promise((r) => setTimeout(r, 100)) // inside the ~300ms animation
+    staleSnap(track, items[0])
+    expect(swiper.active).toBe('2')
+    await settle()
+    expect(swiper.active).toBe('2')
+    expect(swiper.activeIndex).toBe(2)
+    expect(events.length).toBe(0)
+  })
+})
+
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 //  [2] The seamless clone-teleport — a REAL scroll-position assertion (n9/n10)
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
