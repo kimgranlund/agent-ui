@@ -9,7 +9,7 @@ disable-model-invocation: false
 
 # agent-ui seat map & dispatch laws
 
-## Seat map — route by ownership
+## Seat map: route by ownership
 
 | Artifact class | Maker seat | Critic seat |
 |---|---|---|
@@ -21,10 +21,10 @@ disable-model-invocation: false
 | Color / dimension tokens | the host session or an sdlc-lite builder | an sdlc-lite verifier run (`run.sh`) (consuming control, against `.claude/docs/rubrics/component.md`) |
 | PRD / SPEC / LLD / ADR authoring | the host session or an sdlc-lite builder | an sdlc-lite verifier run (`run.sh`) |
 | Non-UI code diffs / slices | an sdlc-lite builder via `run.sh` (`/sdlc-lite:chain` or `/sdlc-lite:build`) | an sdlc-lite verifier run (`run.sh`) |
-| Broad searches / codebase questions | `Explore` (read-only, conclusions not dumps) | — |
+| Broad searches / codebase questions | `Explore` (read-only, conclusions not dumps) | none |
 | Measured experiment loops (regressions, tuning, stress) | the host session or an sdlc-lite builder | host verifies the report |
-| A2UI corpus record admission/judging (ADR-0068) | `a2ui-corpus-curation` (skill, host-run or briefed) | `a2ui-review-agent` (the VerdictsFile judge — never the seed's own author) |
-| One confirmed work-item build (feature/task/bug, by issue id) | `/sdlc-lite:chain` (size S and M: the `sdlc-lite:solo` agent) | per-artifact critic above |
+| A2UI corpus record admission/judging (ADR-0068) | `a2ui-corpus-curation` (skill, host-run or briefed) | `a2ui-review-agent` (the VerdictsFile judge; never the seed's own author) |
+| One confirmed work-item build (feature/task/bug, by issue id) | `/sdlc-lite:chain` (lane picked by `steps.py lane`: solo-L1/L2/L3) | per-artifact critic above |
 | Raw report/idea intake → durable records | a GitHub Issue via `gh issue create` (ADR-0145) | none (intake only, a record and never a build) |
 | A SKILL.md's contract/shape | maker of the change | an sdlc-lite verifier run (`run.sh`) |
 | An agents/*.md definition | maker of the change | an sdlc-lite verifier run (`run.sh`) |
@@ -37,32 +37,32 @@ disable-model-invocation: false
 `example-authoring-agent` and a site-authoring maker share `component-preview.ts` by concern; never dispatch both
 onto that file concurrently.
 
-## Dispatch laws — copy the directive, point at the law
+## Dispatch laws: copy the directive, point at the law
 
 Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the law's full text:
 
 - **Foreground gates.** Every build brief MANDATES running `npm run check && npm test` (plus the
   browser gate when the slice touches rendering) in the seat's own foreground context, judged by
-  EXIT CODES cited in the report — a seat never ends a turn waiting on a backgrounded gate run
+  EXIT CODES cited in the report; a seat never ends a turn waiting on a backgrounded gate run
   (4/9 batch workers stalled exactly there, 2026-08-18); backgrounded gate runs are forbidden.
 - **Batch gate topology.** When N workers run concurrently on one host, each brief carries
-  REDUCED targeted gates — `npm run check` + the slice's own tests + the specific shared-file
-  gates it touches — and the DESK runs the ONE full suite on merged main; that single desk run
+  REDUCED targeted gates: `npm run check` + the slice's own tests + the specific shared-file
+  gates it touches; the DESK runs the ONE full suite on merged main; that single desk run
   caught the one real red all nine reduced gates missed (2026-08-18).
-- **Worktree trap — SYMLINK, don't install (Kim ruling 2026-08-20, the load-108 incident).** A
+- **Worktree trap: SYMLINK, don't install (Kim ruling 2026-08-20, the load-108 incident).** A
   worktree without its own `node_modules` resolves `@agent-ui/*` through the MAIN checkout and
   lies to import-resolving gates; but per-lane `npm install` was the load-108 root cause (seven
   lanes × install churn, Spotlight indexing every byte). The brief now mandates, in order: (1)
-  `git diff --quiet origin/main -- package-lock.json` — lockfile unchanged ⇒ (2) the
+  `git diff --quiet origin/main -- package-lock.json`: lockfile unchanged ⇒ (2) the
   PER-ENTRY symlink recipe below (amended 2026-08-19, the ADR-0224 S2 phantom-TS2345 finding: a
   whole-root `ln -s <root>/node_modules` splits TypeScript type identity, because the root's
-  `node_modules/@agent-ui/*` workspace links point back into MAIN's packages/ — workspace imports
+  `node_modules/@agent-ui/*` workspace links point back into MAIN's packages/; workspace imports
   then typecheck against main's sources while relative imports use the worktree's, and `npm run
   check` goes red on a clean tree); lockfile CHANGED ⇒ `npm ci --prefer-offline` (the one case an
   install is earned); then (3) `readlink node_modules/@agent-ui/shared` MUST print a path inside
   THIS worktree, never the main checkout. **A scratch-clone dispatch (the `Agent`-tool isolation
   rung, no `EnterWorktree` reach) runs `node scripts/bootstrap-scratch-clone.mjs <clone-dir>
-  [--root <path>]` (GH #1695) instead of the by-hand recipe below** — it mechanizes exactly this
+  [--root <path>]` (GH #1695) instead of the by-hand recipe below**; it mechanizes exactly this
   recipe and performs step (3)'s verify itself, exiting non-zero on failure; a live worktree
   session still applies the recipe by hand (no clone-dir argument shape fits there). The recipe,
   for the worktree case or to understand what the script automates:
@@ -71,11 +71,11 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   rm node_modules/@agent-ui && mkdir node_modules/@agent-ui
   for p in packages/agent-ui/*; do ln -s "$PWD/$p" "node_modules/@agent-ui/$(basename "$p")"; done
   ```
-  The second glob term links DOTFILE entries too — a bare `*` silently skips `.bin`/`.package-lock.json`
+  The second glob term links DOTFILE entries too: a bare `*` silently skips `.bin`/`.package-lock.json`
   and the lane dies with `spawn node_modules/.bin/vite ENOENT` (marshal finding, live on the 0223-S3
   lane, 2026-08-19). Third-party deps share main's store (zero churn); @agent-ui/* resolves to the worktree's own
   sources (type identity intact). A red `check` in a worktree whose readlink points at MAIN is
-  ENVIRONMENT, not regression — the desk re-gates on merged main before trusting either verdict.
+  ENVIRONMENT, not regression; the desk re-gates on merged main before trusting either verdict.
   Never a bare `npm install` in a worktree.
 - **Host-shell worktree pin (marshal finding, 2026-08-23).** A HOST session whose shell cd's into
   a seat's `.claude/worktrees/` entry gets pinned there by the isolation guard: subsequent git
@@ -83,13 +83,13 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   worktree nor fast-forward the primary's `main`. Recovery: the OWNING seat reaps its own worktree
   and branch from the primary checkout (one SendMessage), never a cd-and-hope from the pinned
   shell; once the worktree is gone the pin is moot and the host shell re-anchors on the primary.
-  Prevention: the host never cd's into a seat worktree — reads go through absolute paths.
+  Prevention: the host never cd's into a seat worktree; reads go through absolute paths.
 - **Concurrency ceiling (Kim ruling 2026-08-20).** At most **3 gate-running lanes** concurrent
-  on this host (10 cores: `(cores − 2) / 3`, rounded down — each lane's vitest + a checker's
+  on this host (10 cores: `(cores − 2) / 3`, rounded down; each lane's vitest + a checker's
   Chromium shard is ~3 cores of real load); builders beyond the ceiling QUEUE, they don't fan
   out. Every worktree gate command carries `--maxWorkers=4` (3 lanes × 4 = 12 ≈ cores, never
   N×cores). A desk that sees 1-min load > 40 stops dispatching and reaps finished worktrees
-  FIRST — `flaky-gates` owns the red-under-load verdict, this law owns not getting there.
+  FIRST; `flaky-gates` owns the red-under-load verdict, this law owns not getting there.
   Those are the 2026-08-20 values for the 10-core host. Amended 2026-10-05 (Kim): on the
   20-core M1 Ultra (16 performance, 4 efficiency, 128 GB) at most **5 gate-running lanes**, each
   gate command still `--maxWorkers=4` (5 lanes x 4 = 20 = cores). The formula `(cores - 2) / 3`
@@ -104,28 +104,28 @@ Subagents inherit the repo CLAUDE.md, so briefs copy the *directive*, not the la
   `--onto origin/main <old-base-tip>`, push a fresh branch, re-land as a new PR (the #1472/#1473
   precedent).
 - **Reap on lane-return, not campaign-end.** A lane's worktree is removed the moment its branch
-  is merged (or abandoned) — `git worktree remove` + the branch delete — never parked until the
+  is merged (or abandoned): `git worktree remove` + the branch delete, never parked until the
   campaign closes; every parked worktree is a full tree Spotlight/Time Machine keep re-scanning.
   Run it after EVERY merge: `node scripts/reap-worktrees.mjs --execute && node scripts/
-  reap-branches.mjs --execute` (worktree removal first, branch deletion second — the worktree
+  reap-branches.mjs --execute` (worktree removal first, branch deletion second; the worktree
   gate's own Rule 3 equivalent, "never touch a locked worktree," is what makes this safe to run
   unattended; GH #1440).
 - **Maker ≠ critic, serialized.** The building seat never grades its own slice; never send an
-  author a revision directive while its reviewer is mid-read — freeze → review → consolidate →
+  author a revision directive while its reviewer is mid-read: freeze → review → consolidate →
   one revision pass.
 - **Brief by name.** Every dispatch names its seat and bounds its task; no open work-queues to
   self-claim from.
 - **Work items → GitHub Issues.** New items file via `gh issue create` (ADR-0145), never new
   ticket files.
 - **Due process for size:big (GH #969).** Any dispatch brief for a `size:big` issue/PR cites the
-  `due-process` skill by name before design work starts — the four-phase Understand/Research →
+  `due-process` skill by name before design work starts: the four-phase Understand/Research →
   Plan → Execute → Evaluate loop, each phase with its own checkable exit artifact.
   `size:small` is unaffected.
 - **Marshal never rides a fix-inline fork (2026-08-28).** A fork (`context: fork` skill, e.g.
   docs:file-bug) invoked from a marshal-held session inherits the marshal's identity, so its
-  fix-inline branch is the marshal building inline — barred by the 2026-08-27 marshal carve-out.
+  fix-inline branch is the marshal building inline: barred by the 2026-08-27 marshal carve-out.
   From this seat, intake dispatches are record-only; the fix is a separate build dispatch.
-  Upstream guard: claude-plugins#961 / PR claude-plugins#969 (docs 1.21.15) — distinct from this
+  Upstream guard: claude-plugins#961 / PR claude-plugins#969 (docs 1.21.15); distinct from this
   repo's own GH #969 cited above.
 - **Full-suite concurrency ceiling (2026-08-29, rigour plan C).** At most two dispatches may run
   `npm test` (full suite) on this host at once, counted across every repo's seats, not just this

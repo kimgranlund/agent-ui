@@ -133,6 +133,7 @@ class Report:
 # fails loudly.
 ACCEPTED_DIVERGENCES = {
     ".claude/agents/a2ui-payload-authoring-agent.md": ["D9 name suffix is a registered role"],
+    ".claude/agents/a2ui-review-agent.md": ["D9 name suffix is a registered role"],
 }
 
 
