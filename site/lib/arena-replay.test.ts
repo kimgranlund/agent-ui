@@ -56,10 +56,10 @@ describe('buildReplaySteps — the flagship match replays move by move to the re
     expect(steps.length).toBeGreaterThan(5)
   })
 
-  it('ends with an "end" step narrating the recorded winner (X, per the committed fixture)', () => {
+  it('ends with an "end" step narrating the recorded result (a draw, per the committed fixture)', () => {
     const last = steps.at(-1)!
     expect(last.kind).toBe('end')
-    expect(last.narration).toContain('X wins')
+    expect(last.narration).toContain('Draw')
   })
 
   it('each "move" step\'s board reflects EVERY move applied so far, in order (a real running board, not a per-step snapshot of just the last move)', () => {

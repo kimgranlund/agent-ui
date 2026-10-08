@@ -11,7 +11,7 @@ import type { UITimelineItemElement } from '../timeline-item/timeline-item.ts'
 
 // timeline-family.lld.md §4 · SPEC-R10/R11/R19 — the cross-engine tail-follow + completion-invariant +
 // REAL-stream proof for ui-status-stream. The real-stream leg feeds the in-repo arena flagship match
-// transcript (a REAL recorded Sonnet-5-vs-Haiku-4.5 game, packages/agent-ui/a2a/matches/flagship.match.jsonl)
+// transcript (a REAL recorded Sonnet-5-vs-Haiku-5.5 game, packages/agent-ui/a2a/matches/flagship.match.jsonl)
 // through `readNdjsonLines` (the shared LLD-C1 reader) as an INSTRUMENT-BRIDGE: the fixture's A2A wire/
 // game/context lines are projected onto StatusEntry appendEntry/update calls a live consumer would make — the
 // SAME appendEntry/update/finalize path, never a mock of the component's own API.

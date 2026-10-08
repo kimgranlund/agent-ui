@@ -47,7 +47,7 @@ import contaminatedProviderRaw from '../../packages/agent-ui/a2a/matches/contami
 type FixtureKey = 'flagship' | 'scripted' | 'contaminated-control' | 'contaminated-provider-control' | 'live'
 
 const FIXTURES: Record<Exclude<FixtureKey, 'live'>, { label: string; raw: string }> = {
-  flagship: { label: 'Flagship (Sonnet 5 vs Haiku 4.5)', raw: flagshipRaw },
+  flagship: { label: 'Flagship (Sonnet 5 vs Haiku 5.5)', raw: flagshipRaw },
   scripted: { label: 'Scripted (CI backbone)', raw: scriptedRaw },
   'contaminated-control': { label: 'Contaminated — in-transcript', raw: contaminatedControlRaw },
   'contaminated-provider-control': { label: 'Contaminated — shared provider', raw: contaminatedProviderRaw },

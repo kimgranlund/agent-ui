@@ -64,7 +64,7 @@ describe('the A2A tic-tac-toe page — recorded-default replay (SPEC-R13 AC1: ze
   it('advancing to the very last step lands on the recorded end narration and disables next', () => {
     // click "next" far more times than the match has steps — advancing must clamp at the end, not throw
     for (let i = 0; i < 30; i++) click(nextBtn())
-    expect(narration()).toContain('X wins')
+    expect(narration()).toContain('Draw')
     expect(nextBtn().hasAttribute('disabled')).toBe(true)
     click(prevBtn()) // leave the DOM back near the start for the following describe blocks' own clicks
     for (let i = 0; i < 30; i++) click(prevBtn())
