@@ -1,6 +1,12 @@
 # SPEC — Persona Catalog Composition (M-D)
 
-> Status: accepted · v0.5 · 2026-10-06 (v0.4 2026-10-06; v0.2 2026-08-06; v0.3 2026-10-05 adds SPEC-R1's optional `controls` records, `ControlRecord`, and SPEC-R2 AC7, the derived entry's control loader, ADR-0233, accepted) · Layer: SPEC (execution contract)
+> Status: accepted · v0.6 · 2026-10-07 (v0.5 2026-10-06; v0.4 2026-10-06; v0.2 2026-08-06; v0.3 2026-10-05 adds SPEC-R1's optional `controls` records, `ControlRecord`, and SPEC-R2 AC7, the derived entry's control loader, ADR-0233, accepted) · Layer: SPEC (execution contract)
+> **v0.6 (2026-10-07):** the shipped personas derive at body load, not at renderer construction
+> ([ADR-0241](../adr/0241-lazy-catalog-bodies-behind-an-eager-manifest.md) cl.8, accepted): each
+> `<base>--<persona>` id is a lazy record the renderer knows from construction and composes the first time a
+> surface names it. SPEC-R1 AC4, SPEC-R2 (the step's timing, the collision policy's surfacing, AC6), SPEC-R3's
+> mechanism note and SPEC-N4 are edited in place for timing only; the composition, the derived ids and the
+> reject-loud policy do not move.
 > **v0.5 (2026-10-06):** SPEC-R1 gains one sentence: the persona's server-safe manifest MAY declare
 > `semanticChecks`, realizing [ADR-0238](../adr/0238-persona-semantic-checks-in-the-repair-loop.md) (proposed);
 > their runtime contract is [`a2ui-live-agent.spec.md`](./a2ui-live-agent.spec.md) SPEC-R4. No other clause moves.
@@ -131,39 +137,44 @@ carries only a SELECTION, SPEC-R5).
   gate, applied to the fragment's own declared set before composition).
 - **AC4** *Given* a fragment's `targetCatalogs` declaration, *when* read, *then* every named id is
   one of the two currently-registered bases (`agent-ui`, `a2ui-basic`) — naming any other id (a
-  typo, or a hypothetical future third base) is caught at SPEC-R2's constructor-time
-  derive-then-register step (SPEC-R2 AC6), not silently accepted here.
+  typo, or a hypothetical future third base) is caught at SPEC-R2's derive step (SPEC-R2 AC6), not
+  silently accepted here.
 
-**SPEC-R2 — The compose-time overlay + constructor-time derive-then-register step**
-*(ADR-0172 cl.2 · Repairs item 2)*. `Renderer`'s constructor (`renderer.ts:148-160`) MUST gain a
-derive-then-register step, additive to its existing three `register()` calls (`agent-ui` default,
-the `a2ui-basic` short id, and its canonical-URI inbound alias — SPEC-N4, unmodified): for every
-shipped `catalog/personas/<persona-id>/` package (SPEC-R1) and every base catalog id `B` its
-`targetCatalogs` names, `composeCatalog(base, local)` runs once with `base` = the ALREADY-registered
-entry for `B` (`agent-ui` or `a2ui-basic` — never the canonical-URI alias, which is inbound-only
-and never a composition target, ADR-0169 cl.13), and the result registers via
-`this.#registry.register(...)` under its own derived `catalogId` per OF1b's `<base>--<persona-id>`
-convention (§5) — e.g. `agent-ui--concierge`, `a2ui-basic--croupier` — unconditional and
+**SPEC-R2 — The compose-time overlay + the derive-then-register step**
+*(ADR-0172 cl.2 · Repairs item 2; timing per ADR-0241 cl.8)*. Every renderer MUST know, from
+construction, one derived catalog per (shipped `catalog/personas/<persona-id>/` package (SPEC-R1),
+base catalog id `B` its `targetCatalogs` names) pairing, beside the `agent-ui` default and the two
+`a2ui-basic` ids (the short id and its canonical-URI inbound alias, SPEC-N4). Each pairing is a lazy
+record (`catalog/records.ts`) under its own derived `catalogId` per OF1b's `<base>--<persona-id>`
+convention (§5), e.g. `agent-ui--concierge` and `a2ui-basic--croupier`. The first time a surface names
+it (or `preload` does, runtime SPEC-R9 AC4), `composeCatalog(base, local)` runs once with `base` = the
+shipped body for `B` (`agent-ui` or `a2ui-basic`, never the canonical-URI alias, which is
+inbound-only and never a composition target, ADR-0169 cl.13), and the result registers into that
+renderer's registry through the same factory-coverage gate `register()` runs: unconditional and
 package-shipped, the same "interop is a property of the package, not a demo of one page" posture
 ADR-0169 cl.2 already established for `a2ui-basic`, reused here rather than re-argued. A fragment
 whose `targetCatalogs` names BOTH bases produces TWO independently-composed, independently-registered
-derived catalogs at construction — the same fragment content merged against each base separately.
+derived catalogs: the same fragment content merged against each base separately. A persona a project
+registers itself runs the same composition synchronously through `composePersonaCatalogs(registry, …)`
+against the already-registered base entries.
 Composing over a hypothetical future third base is out of this wave's scope (SPEC-N5, §5) — the
 base set this clause composes against is exactly `{agent-ui, a2ui-basic}`, the two bases shipped
 today.
 
 **Collision policy (OF1, ruled — §5): reject-loud.** A local fragment whose declared component OR
 function name already exists in a targeted base's `components`/`functions` map FAILS that
-(fragment, base) pairing's composition with a named, deterministic error at constructor time —
+(fragment, base) pairing's composition with a named, deterministic error when that pairing composes,
 never a silent override, never a namespacing tax. Mirrors `RegistryError`'s existing `code`+
 `message` shape (`registry.ts:23-30`): a `CatalogComposeError` (or equivalent — the exact
 class/name is a build detail, not fixed here) naming the fragment's persona id, the colliding
-base's `catalogId`, and the colliding component/function name. Thrown synchronously inside the
-constructor's derive-then-register step — the SAME fail-loud-at-construction posture
-`RegistryError`'s own `FACTORY_MISSING` gate already has for a malformed base catalog
-(`registry.ts:51-58`): a bad fragment breaks renderer construction, so the defect surfaces at
-dev/test time, before ever shipping — not a half-composed, silently-degraded surface in
-production.
+base's `catalogId`, and the colliding component/function name. Thrown synchronously by the compose
+step: for a project persona inside `composePersonaCatalogs`, and for a shipped persona inside its
+record's body load, where it fails that id's load as one `CatalogLoadError` (surfacing as
+`CATALOG_LOAD` for the surface that named it, runtime SPEC-R9 AC4), the SAME fail-loud posture
+`RegistryError`'s own `FACTORY_MISSING` gate already has for a malformed base catalog. The shipped
+guarantee is a CI gate, `catalog/records.test.ts`, which composes and registers every shipped pairing
+against the real bases, so the defect surfaces at dev/test time, before ever shipping, not a
+half-composed, silently-degraded surface in production.
 
 - **AC1 (identity case, GH #421 AC1)** *Given* a local fragment with empty `components: {}` and
   `functions: {}`, *when* composed against each base its `targetCatalogs` names, *then* EACH
@@ -204,8 +215,9 @@ production.
   a compose-time overlay to carry through.)**
 - **AC6 (the widening's own edge case)** *Given* a fragment's `targetCatalogs` naming an id that
   is NOT one of the two currently-registered bases (a typo, or a not-yet-shipped third base),
-  *when* the constructor's derive-then-register step runs, *then* it fails loud — the SAME
-  posture AC3's collision case has — rather than silently skipping that pairing.
+  *when* the derive step runs or its derived ids are enumerated (`derivedCatalogIdsFor`, which the
+  records bijection gate reads), *then* it fails loud (the SAME posture AC3's collision case has)
+  rather than silently skipping that pairing.
 - **AC7 (control loader, ADR-0233)** *Given* a persona package with `controls` records, *when* the
   derive-then-register step registers its derived entry, *then* the entry's `controls` loader
   (`composeControlLoaders(base.controls, pkg.controls)`) routes each tag with a persona record to a
@@ -227,7 +239,7 @@ never silently sanitized back to `DEFAULT_A2UI_CATALOG_ID` the way an unrecogniz
 local set that names BOTH bases in its `targetCatalogs` (SPEC-R1) contributes TWO recognized ids,
 one per base — this is the widening's own load-bearing requirement (§5): recognition is never
 fenced to a single derived-id family. The exact mechanism — a statically-enumerable options list
-built from the same persona/`targetCatalogs` metadata SPEC-R2's constructor step reads, vs. a live
+built from the same persona/`targetCatalogs` metadata SPEC-R2's derive step reads, vs. a live
 registry-backed lookup — is an implementation choice, not fixed by this SPEC, so long as
 recognition holds for every base a fragment actually targets.
 - **AC1** *Given* a derived catalog registered under id `D` for base `B` and persona `P`
@@ -350,7 +362,7 @@ The gate is `site/lib/agent-manifest/agent-manifest.test.ts` (the `site` vitest 
 | **SPEC-N1** | **RETIRED (2026-08-06 acceptance round).** Absorbed into SPEC-R6 per OF2's ruling (§5) — the mini-skill `catalogId`-scoping gap is now IN this SPEC's build scope, not a non-goal. Left as a named gap here, not renumbered, per the repo's own S1 precedent (`docs-grammar.test.ts`'s own comment: "the label is a citation, not a position"). |
 | **SPEC-N2** | **No "shared system patterns" tier is built.** ADR-0172 cl.3 rules one is needed (a new, named, catalog-level tier distinct from both the default catalog and any one persona's local set); designing and building it is explicitly M-D's OWN future design/build work, not this SPEC's — this SPEC's clauses build the PERSONA-local overlay mechanism only, not the shared-system layer that would compose beneath it. |
 | **SPEC-N3** | **No reopening of ADR-0170 cl.8's suppressed catalog-authoring UI.** `EntryListOptions`'s `customAdd:false`/`contentField:false` for `ENTRY_KINDS.catalog` (`0170:112-116`) stays exactly where it is — local pattern sets are package/code-authored (SPEC-R1), never admin-authored through the entry-list UI, including which base(s) a fragment targets (`targetCatalogs`, SPEC-R1's widening) — only the persona's SELECTION of which local set to compose (SPEC-R5) is runtime-facing. |
-| **SPEC-N4** | **No change to ADR-0169's registration, selection, or threading mechanics.** `Registry.register`/`get`/`supportedCatalogIds`/`submitGateSelector` (`registry.ts:36-91`), `selectCatalog`'s fail-closed degrade, and the produce-time authority stamp (`stampCreateSurfaceCatalogId`, `produce.ts:306`) are all reused byte-identically; SPEC-R2's derive-then-register step is strictly upstream of `register()`, never a fork of it. |
+| **SPEC-N4** | **No change to ADR-0169's registration, selection, or threading mechanics.** `Registry.register`/`get`/`supportedCatalogIds`/`submitGateSelector` (`registry.ts:36-91`), `selectCatalog`'s fail-closed degrade, and the produce-time authority stamp (`stampCreateSurfaceCatalogId`, `produce.ts:306`) are all reused byte-identically; SPEC-R2's derive-then-register step is strictly upstream of `register()`, never a fork of it. ADR-0241 adds `registerLazy`/`knows`/`ensure` beside them (a lazy body registers through the same factory-coverage gate) and widens `supportedCatalogIds`/`submitGateSelector` to recorded ids; `register` itself is unchanged. |
 | **SPEC-N5** | **Composition targets the two currently-registered bases only, widened per the 2026-08-06 acceptance round (§5).** SPEC-R2 composes every shipped local set against every base its `targetCatalogs` (SPEC-R1) names, over `{agent-ui, a2ui-basic}` — no longer the default alone (this document's own first-draft scoping, superseded). A hypothetical future THIRD base is still out of scope — no Repairs-cell item asks for it, and extending to it is a real, distinct future widening, not built here. |
 | **SPEC-N6** | **No shipped persona content.** This SPEC builds the MECHANISM only. `agent-admin-presets.ts`'s two demonstrating personas (concierge/croupier, GH #421 AC2) — and any real local-pattern-set content for them — are a LATER M-D slice (ADR-0172's own Non-goals bullet: "M-D's own build scope, not this intake's" — extended here to mean not this SPEC's first slice either, §7). |
 | **SPEC-N7** | **Fleet DoD holds.** `npm run check && npm test` exit 0, and the per-package `layering.test.ts` trip-wires stay green (`a2ui` imports nothing new outward; `app`'s `agent-admin-schema.ts`/`agent-admin-persona-file.ts` growth stays additive, zero renamed exports). |
@@ -508,7 +520,7 @@ boundary: no THIRD base, not "no `a2ui-basic`."
 | SPEC id | ADR-0172 ruling | Repairs-cell item | Notes |
 |---|---|---|---|
 | SPEC-R1 | cl.1 (Q1 — package-level home) | 1 — new `catalog/<persona-scoped-shape>/` convention | Gains `targetCatalogs` (§5 widening) |
-| SPEC-R2 | cl.2 (Q2 — compose-time overlay) | 2 — renderer constructor derive-then-register | Collision policy + naming ruled (§5); composes per `targetCatalogs`, not default-only (SPEC-N5 widened) |
+| SPEC-R2 | cl.2 (Q2 — compose-time overlay) | 2 — renderer derive-then-register (at body load for shipped personas, ADR-0241 cl.8) | Collision policy + naming ruled (§5); composes per `targetCatalogs`, not default-only (SPEC-N5 widened) |
 | SPEC-R3 | cl.2 (Q2) | 3 — `A2UI_CATALOG_OPTIONS`/`sanitizeCatalog` widen | Recognizes ids across both bases (§5 widening) |
 | SPEC-R4 | cl.2 (Q2) | 4 — `a2ui-multi-catalog` SKILL.md fifth pattern | Worked pattern demonstrates both bases (§5 widening) |
 | SPEC-R5 | cl.1 (Q1 — selection, never definitions) | 5 — `PERSONA_STATE_KEYS` gains the local-set key | Gains AC3, the base-mismatch fail-closed degrade (§5 widening) |

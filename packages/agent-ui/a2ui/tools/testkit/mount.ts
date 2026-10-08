@@ -1,7 +1,8 @@
 // mount.ts: the kit's deterministic renderer mount (T-0011). The ONE kit module that names the control
-// definition seam: `src/catalog/controls.ts` (`builtinControls`), which `createRenderer()` already
-// registers for the built-in catalogs (and persona entries inherit through `composeControlLoaders`). When
-// GH #1814's loader work moves that seam, only this file changes. The legs never import controls.
+// definition seam: `src/catalog/controls.ts` (`builtinControls`), which `createRenderer()` registers with the
+// default catalog and the lazy a2ui-basic bodies carry (persona entries inherit it through
+// `composeControlLoaders`). When GH #1814's loader work moves that seam, only this file changes. The legs never
+// import controls.
 //
 // Deterministic by default: `newId` is a counter yielding `kit-action-<n>` and `now` is fixed, both through
 // `RendererOptions`, so a scenario can match `actionId` and `timestamp` exactly.
@@ -12,7 +13,8 @@
 //
 // `settle()` resolves once all three hold for two consecutive macrotasks:
 //   - every surface this mount saw created, and not deleted since, has its `[data-a2ui-surface]` root
-//     attached under the mount;
+//     attached under the mount (which also holds `settle()` through a pending catalog body load on an
+//     a2ui-basic or persona surface, ADR-0241: nothing attaches before the body registers);
 //   - no DOM mutation under the mount;
 //   - no `builtinControls.ensure` call is in flight (the renderer defers apply until the controls a message
 //     needs are defined, ADR-0233, so a later turn's new control type on an attached surface is awaited).

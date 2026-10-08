@@ -1,4 +1,6 @@
-// builtin-controls.test.ts: the built-in catalogs load their controls on demand (ADR-0233).
+// builtin-controls.test.ts: the built-in catalogs load their controls on demand (ADR-0233). Only the default
+// catalog registers at construction; the others are lazy records (ADR-0241), so their loaders are read off the
+// loaded bodies.
 //
 // The catalog factory modules import no control, so in this file (its own jsdom window) nothing defines a
 // fleet tag until the renderer's `builtinControls` loader does. Every render scenario first asserts its
@@ -43,16 +45,20 @@ function host(): { r: RendererHost; mount: HTMLElement; errors: A2uiClientMessag
 afterEach(() => vi.restoreAllMocks())
 
 describe('a fresh renderer registers the built-in catalogs with a control loader', () => {
-  it('default, both a2ui-basic ids and every derived persona entry carry `controls`; personas with records get a composed loader', () => {
+  it('default, both a2ui-basic ids and every derived persona entry carry `controls`; personas with records get a composed loader', async () => {
     const register = vi.spyOn(Registry.prototype, 'register')
+    const registerLazy = vi.spyOn(Registry.prototype, 'registerLazy')
     createRenderer().dispose()
+    // The default catalog alone registers eagerly (ADR-0241 cl.2); every other built-in is a record.
+    expect(register.mock.calls.map(([catalog, , , controls]) => [(catalog as { catalogId: string }).catalogId, controls])).toEqual([
+      ['agent-ui', builtinControls],
+    ])
     const byId = new Map<string, ControlLoader | undefined>()
-    for (const [catalog, , , controls] of register.mock.calls) byId.set((catalog as { catalogId: string }).catalogId, controls)
+    for (const [record] of registerLazy.mock.calls) byId.set(record.id, (await record.load()).controls)
 
     const builtins = [...byId.keys()].filter((id) => !id.includes('--'))
-    expect(builtins).toContain('agent-ui')
     expect(builtins).toContain('a2ui-basic')
-    expect(builtins.length).toBe(3) // agent-ui, a2ui-basic, and its canonical-URI alias
+    expect(builtins.length).toBe(2) // a2ui-basic and its canonical-URI alias
     for (const id of builtins) expect(byId.get(id), id).toBe(builtinControls)
 
     const derived = [...byId.keys()].filter((id) => id.includes('--'))
@@ -133,6 +139,7 @@ describe('a default-catalog surface on a page that defined nothing', () => {
 
   it('a non-custom factory tag (an a2ui-basic Image is an <img>) never reaches the loader', async () => {
     const { r, mount, errors, cleanup } = host()
+    await r.preload('a2ui-basic') // ADR-0241: a lazy record; once loaded, the path below is synchronous
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'i', catalogId: 'a2ui-basic' } }))
     r.ingest(line({
       version: 'v1.0',

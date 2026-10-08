@@ -763,7 +763,14 @@ const appCssQuerySuffixPlugin = {
 // the controls it renders itself (gate `app/src/control-reach.test.ts`). Measured 69979 B gz marginal;
 // RE-BASED 2026-10-05 under ADR-0197 cl.5 (downward re-bases stay ordinary): 106559 -> 72027 B gz, the
 // measured 69979 B gz plus 2048 B gz headroom.
-const APP_MARGINAL_BUDGET = 72027
+// ADR-0241 (2026-10-07, T-0029): catalog bodies load by catalog id behind an eager manifest. The renderer keeps
+// the default `agent-ui` catalog eager and holds a2ui-basic (both ids), the three shipped personas and the
+// compose step as lazy records, fetched the first time a surface names them; the slice-2 seam had taken the row
+// to 71628 B gz. Measured 67203 B gz marginal with the renderer's catalog gate included; RE-BASED DOWN under
+// ADR-0197 cl.5 (ordinary): 72027 -> 69250 B gz, the measured 67203 B gz plus 2047 B gz headroom. The bodies
+// are reported on the informational lazy-catalog line below; `app/src/catalog-lazy.bundle.test.ts` keeps them
+// out of the eager closure.
+const APP_MARGINAL_BUDGET = 69250
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
@@ -782,6 +789,13 @@ for (const name of appEager) {
 }
 const appEntryCode = appChunks.filter((c) => appEager.has(c.fileName)).map((c) => c.code).join('')
 const appLazyCode = appChunks.filter((c) => !appEager.has(c.fileName)).map((c) => c.code).join('')
+// ADR-0241: the lazy chunks that hold a catalog body (a2ui-basic, the persona packages, the compose step).
+const isCatalogBody = (id) => /\/a2ui\/src\/catalog\/(a2ui-basic\/|personas\/|compose\.ts$)/.test(id)
+const appCatalogLazyCode = appChunks
+  .filter((c) => !appEager.has(c.fileName) && (c.moduleIds ?? []).some(isCatalogBody))
+  .map((c) => c.code)
+  .join('')
+const appCatalogLazyGz = appCatalogLazyCode ? gzipSync(appCatalogLazyCode, { level: 9 }).length : 0
 const appMin = Buffer.byteLength(appEntryCode)
 const appGz = gzipSync(appEntryCode, { level: 9 }).length
 const appLazyGz = appLazyCode ? gzipSync(appLazyCode, { level: 9 }).length : 0
@@ -794,7 +808,12 @@ console.log(
 )
 if (appLazyGz > 0) {
   console.log(
-    `@agent-ui/app — lazy chunk(s) reachable via a dynamic import (the whole agent-admin arm per ADR-0197's loadAgentAdmin(), its CodeMirror editor per ADR-0139 cl.8c/8d, its dogfood asset pair per GH #354, and its pdf.js extractor per ADR-0202 cl.4c/4d), never in the eager bundle: ${appLazyGz} B gz (informational, non-gating)`,
+    `@agent-ui/app — lazy chunk(s) reachable via a dynamic import (the whole agent-admin arm per ADR-0197's loadAgentAdmin(), its CodeMirror editor per ADR-0139 cl.8c/8d, its dogfood asset pair per GH #354, its pdf.js extractor per ADR-0202 cl.4c/4d, and the lazy catalog bodies per ADR-0241), never in the eager bundle: ${appLazyGz} B gz (informational, non-gating)`,
+  )
+}
+if (appCatalogLazyGz > 0) {
+  console.log(
+    `@agent-ui/app: lazy catalog bodies (ADR-0241: a2ui-basic under both ids, the shipped persona packages and the compose step, fetched by catalog id on first use; a chunk shared with the agent-admin arm counts here too): ${appCatalogLazyGz} B gz (informational, non-gating)`,
   )
 }
 

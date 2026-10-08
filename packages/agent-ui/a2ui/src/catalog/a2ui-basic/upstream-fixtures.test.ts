@@ -7,7 +7,8 @@
 // (a FRAMING-only translation — `SUPPORTED_VERSIONS` (protocol.ts) has no `v0.9` member at all, only
 // `v1.0`/`v0.9.1`; every component-tree byte stays verbatim, untouched). `createSurface.catalogId` is
 // exercised in BOTH forms (cl.13): the pinned canonical URI verbatim, and the local short id
-// `a2ui-basic` — both resolve on the SAME renderer (both registered, cl.2).
+// `a2ui-basic` — both resolve on the SAME renderer (both known by id on every renderer, cl.2 as amended by
+// ADR-0241: lazy records, so `mountFixture` awaits `preload` of the fixture's id before ingesting).
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
@@ -76,9 +77,10 @@ describe('upstream fixtures — validate 0 failures against a2uiBasicCatalog (th
   })
 })
 
-/** Mount a fresh renderer, ingest `messages` in order, and return it + the mount root. */
-function mountFixture(messages: readonly A2uiServerMessage[]): { root: HTMLElement; clientMessages: A2uiClientMessage[]; dispose: () => void } {
+/** Mount a fresh renderer, load the fixture's catalog, ingest `messages` in order, and return it + the mount root. */
+async function mountFixture(messages: readonly A2uiServerMessage[]): Promise<{ root: HTMLElement; clientMessages: A2uiClientMessage[]; dispose: () => void }> {
   const r = createRenderer({ newId: () => 'act-1', now: () => '2026-08-04T00:00:00.000Z' })
+  for (const m of messages) if ('createSurface' in m) await r.preload(m.createSurface.catalogId)
   const root = document.createElement('div')
   document.body.appendChild(root)
   r.mount(root)
@@ -99,9 +101,9 @@ describe('upstream fixture — 00_interactive-button', () => {
   it.each([
     ['canonical URI (pinned, verbatim)', A2UI_BASIC_CANONICAL_URI],
     ['local short id (a2ui-basic)', 'a2ui-basic'],
-  ])('renders + a real click on the Button emits {action:"button_clicked", context:{}} via the readActionSpec cl.10 arm — %s', (_label, catalogId) => {
+  ])('renders + a real click on the Button emits {action:"button_clicked", context:{}} via the readActionSpec cl.10 arm — %s', async (_label, catalogId) => {
     const messages = withCatalogId(toV1(interactiveButton.messages), catalogId)
-    const { root, clientMessages, dispose } = mountFixture(messages)
+    const { root, clientMessages, dispose } = await mountFixture(messages)
 
     const button = root.querySelector('ui-button')
     expect(button).toBeTruthy() // Button → ui-button, mounted for real
@@ -122,9 +124,9 @@ describe('upstream fixture — 00_interactive-button', () => {
 })
 
 describe('upstream fixture — 00_simple-login-form', () => {
-  it('renders — TextField.variant maps to the fleet type enum, the button carries the translated action', () => {
+  it('renders — TextField.variant maps to the fleet type enum, the button carries the translated action', async () => {
     const messages = toV1(loginForm.messages)
-    const { root, dispose } = mountFixture(messages)
+    const { root, dispose } = await mountFixture(messages)
 
     const fields = [...root.querySelectorAll('ui-text-field')] as (HTMLElement & { type?: unknown; label?: unknown })[]
     expect(fields.length).toBe(2)
@@ -143,7 +145,7 @@ describe('upstream fixture — 00_simple-login-form', () => {
 describe('upstream fixture — 05_product-card', () => {
   it('renders — Image.url→src/fit→objectFit, and the formatCurrency/formatString+formatNumber+pluralize function chain composes real text (ADR-0027/0028 interpolation, riding the a2ui-basic boolean-dialect function table, cl.8/cl.11)', async () => {
     const messages = toV1(productCard.messages)
-    const { root, dispose } = mountFixture(messages)
+    const { root, dispose } = await mountFixture(messages)
     await whenFlushed()
 
     const img = root.querySelector('img') as HTMLImageElement | null

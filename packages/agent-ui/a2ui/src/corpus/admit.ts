@@ -415,8 +415,8 @@ function mapTier1Code(code: ErrorCode): AdmitCode {
       return 'E_IDGRAPH'
     case 'POINTER':
       return 'E_POINTER'
-    // CONTROL_LOAD (ADR-0233) is a renderer-only, render-time code the validator never emits, so it keeps
-    // the default arm.
+    // CONTROL_LOAD (ADR-0233) and CATALOG_LOAD (ADR-0241) are renderer-only, render-time codes the validator
+    // never emits, so they keep the default arm.
     default:
       return 'E_SCHEMA'
   }

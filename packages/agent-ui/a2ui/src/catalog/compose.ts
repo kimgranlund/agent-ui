@@ -1,17 +1,20 @@
 // compose.ts — the persona catalog compose-time overlay (ADR-0172 cl.2, SPEC-R1/R2, `persona-catalog-
 // composition.spec.md`). Turns a package-authored `CatalogFragment` (a persona's local pattern set,
 // SPEC-R1) into a DERIVED `Catalog` document registered beside every other catalog (SPEC-R2), via a pure
-// merge function (`composeCatalog`) plus the constructor-time derive-then-register step
-// (`composePersonaCatalogs`) `renderer.ts` calls once, additive to its existing three static
-// registrations. Never a fork of `Registry.register` (SPEC-N4) — every derived catalog registers through
-// the SAME `register()` seam ADR-0169 already built, so the FACTORY_MISSING gate (registry.ts:51-58) and
-// `loadCatalog`'s re-validation both apply to a derived catalog exactly as they do to any other.
+// merge function (`composeCatalog`), the pure per-pairing entry (`composePersonaEntry`), and the
+// derive-then-register step (`composePersonaCatalogs`) a project persona runs against a registry. The
+// SHIPPED personas derive at load time instead (ADR-0241 cl.8): each `<base>--<persona>` id is a lazy record
+// (`records.ts`) whose body is `composePersonaEntry`'s result. Never a fork of `Registry.register` (SPEC-N4):
+// every derived catalog registers through the SAME `register()` path ADR-0169 already built, so the
+// FACTORY_MISSING gate and `loadCatalog`'s re-validation both apply to a derived catalog exactly as they do
+// to any other.
 //
 // Collision policy (OF1, ruled — SPEC §5): reject-loud. A local fragment's declared component OR
 // function name that already exists in a targeted base's `components`/`functions` map fails THAT
-// (fragment, base) pairing's composition with a `CatalogComposeError`, synchronously, at
-// constructor time — never a silent override. A collision against one targeted base never blocks a
-// DIFFERENT base's pairing for the same fragment (SPEC-R2 AC3's own second half).
+// (fragment, base) pairing's composition with a `CatalogComposeError`, synchronously, when the pairing
+// composes (registration for a project persona, body load for a shipped one), never a silent override. A
+// collision against one targeted base never blocks a DIFFERENT base's pairing for the same fragment
+// (SPEC-R2 AC3's own second half).
 //
 // Derived-id naming (OF1b, ruled): `<base>--<persona>` (`derivedCatalogId` below) — e.g.
 // `agent-ui--concierge`, `a2ui-basic--croupier`. Disambiguates by construction once composition targets
@@ -222,7 +225,7 @@ function targetsFor(persona: TargetedPersona): readonly string[] {
 /** SPEC-N5 — the EXHAUSTIVE set of ids a `targetCatalogs` entry may legally name this wave: the two
  *  currently-registered SHORT base ids. Deliberately NOT "whatever `registry.get` resolves" — the
  *  `a2ui-basic` canonical-URI alias (`A2UI_BASIC_CANONICAL_URI`) is ALSO a real registry entry
- *  (ADR-0169 cl.13, `renderer.ts`'s third registration), but SPEC-R2's own prose is explicit that base
+ *  (ADR-0169 cl.13, recorded by `records.ts` beside the short id), but SPEC-R2's own prose is explicit that base
  *  "= the ALREADY-registered entry for B (`agent-ui` or `a2ui-basic` — never the canonical-URI alias,
  *  which is inbound-only and never a composition target)". A hypothetical future third base is
  *  likewise illegal here — SPEC-N5 names the boundary as "no THIRD base," not "no `a2ui-basic`." */
@@ -242,7 +245,7 @@ function assertLegalTarget(baseId: string, personaId: string): void {
 }
 
 /**
- * SPEC-R2's constructor-time derive-then-register step: for every shipped persona package and every
+ * SPEC-R2's derive-then-register step: for every persona package passed and every
  * base its `targetCatalogs` names, `composeCatalog` runs once against the ALREADY-registered entry for
  * that base, and the result registers via `registry.register(...)` under its own derived `catalogId`
  * (OF1b). A fragment naming BOTH bases produces TWO independently-composed, independently-registered
@@ -264,13 +267,27 @@ export function composePersonaCatalogs(registry: CatalogRegistry, personas: read
           `CATALOG_COMPOSE_UNKNOWN_TARGET: persona "${persona.personaId}" targets unregistered base catalog "${baseId}"`,
         )
       }
-      const derived = composeCatalog(entry.catalog, persona.fragment, persona.personaId)
-      const factories: Record<string, WidgetFactory | VariantDispatch> = { ...entry.factories, ...persona.factories }
-      const functions =
-        entry.functions !== undefined || persona.functions !== undefined ? { ...entry.functions, ...persona.functions } : undefined
-      registry.register(derived, factories, functions, composeControlLoaders(entry.controls, persona.controls))
+      const derived = composePersonaEntry(entry, persona)
+      registry.register(derived.catalog, derived.factories, derived.functions, derived.controls)
     }
   }
+}
+
+/**
+ * One (persona, base) pairing as a catalog entry, without registering it (ADR-0241 cl.8): the derived document
+ * (`composeCatalog`), the base factory table with the persona's on top, the merged function-impl tables, and the
+ * composed control loader. `composePersonaCatalogs` registers what this returns; a shipped persona's lazy record
+ * (`records.ts`, through `personas/body.ts`) resolves to it as its loaded body. Throws `CatalogComposeError`
+ * exactly as `composeCatalog` does.
+ */
+export function composePersonaEntry(base: CatalogEntry, persona: PersonaCatalogPackage): CatalogEntry {
+  const catalog = composeCatalog(base.catalog, persona.fragment, persona.personaId)
+  const factories: Record<string, WidgetFactory | VariantDispatch> = { ...base.factories, ...persona.factories }
+  const functions = base.functions !== undefined || persona.functions !== undefined ? { ...base.functions, ...persona.functions } : undefined
+  const entry: CatalogEntry = functions !== undefined ? { catalog, factories, functions } : { catalog, factories }
+  const controls = composeControlLoaders(base.controls, persona.controls)
+  if (controls !== undefined) entry.controls = controls
+  return entry
 }
 
 /**
@@ -321,8 +338,8 @@ export function semanticChecksForCatalog(catalogId: string, personas: readonly P
  * to call from `dev-proxy-plugin.ts`'s Node process or `worker/index.ts`'s Workers runtime, neither of
  * which has a DOM. Reuses `composeCatalog`/`targetsFor`/`assertLegalTarget` UNCHANGED — the SAME
  * reject-loud collision (SPEC-R2 AC3) and unknown-target-base (SPEC-R2 AC6) posture as the client:  a
- * malformed shipped persona breaks BOTH server hosts' boot exactly as it breaks the renderer's
- * construction, never a half-composed production surface.
+ * malformed shipped persona breaks BOTH server hosts' boot exactly as it fails the renderer's load of
+ * that derived id (ADR-0241 cl.8), never a half-composed production surface.
  */
 export function composePersonaCatalogDocs(bases: ReadonlyMap<string, Catalog>, personas: readonly PersonaCatalogManifest[]): Map<string, Catalog> {
   const out = new Map<string, Catalog>()
@@ -348,7 +365,7 @@ export function composePersonaCatalogDocs(bases: ReadonlyMap<string, Catalog>, p
  * (fragment, targeted base) pairing enumeration (`targetsFor`'s default included), computed WITHOUT a
  * live registry instance. SPEC-R3's `sanitizeCatalog` widening reads this: `agent-admin-schema.ts` is
  * pure data, with no renderer/registry instance around it, so recognizing a derived id there is a
- * static projection of the same persona/`targetCatalogs` metadata the constructor step reads — not a
+ * static projection of the same persona/`targetCatalogs` metadata the derive step reads, not a
  * live registry-backed lookup (SPEC-R3's own "implementation choice, not fixed by this SPEC" clause).
  */
 export function derivedCatalogIdsFor(personas: readonly PersonaCatalogPackage[]): readonly string[] {

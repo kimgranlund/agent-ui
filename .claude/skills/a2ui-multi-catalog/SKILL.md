@@ -33,8 +33,9 @@ two have no merge primitive in common (`persona-catalog-composition.spec.md` §1
 ## The five patterns (index — read references/interop-patterns.md for the worked clauses)
 
 1. **Registering a catalog beside the default** — a sibling package folder mirroring
-   `default/`'s shape, pre-registered in the `Renderer` constructor (cl.1/cl.2); the
-   gate-encoded declared-or-excluded partition (cl.12/cl.14).
+   `default/`'s shape, known by id on every renderer (cl.1/cl.2): a built-in one is a lazy record in
+   `catalog/records.ts`, its body fetched on first use (ADR-0241); the gate-encoded
+   declared-or-excluded partition (cl.12/cl.14).
    A catalog whose factories create controls the page has not imported registers with a control
    loader, the optional fourth `register` argument (ADR-0233): for example
    `renderer.register(catalog, factories, undefined, createControlLoader(CONTROLS, { css: 'host' }))`

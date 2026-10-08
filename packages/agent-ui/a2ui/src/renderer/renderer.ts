@@ -72,6 +72,17 @@
 // `a2ui-placeholder` path (`widget.ts`). `deleteSurface` (and a re-`createSurface` of the same id) while
 // pending tears down and drops the queue; `dispose()` drops every queue; a late settle is a no-op.
 // `createSurface` and other surfaces are never delayed. A catalog without `controls` never queues.
+//
+// Deferred catalog load (ADR-0241). Only the default `agent-ui` catalog is registered at construction; a2ui-basic
+// (both ids) and every shipped `<base>--<persona>` pairing are records (`catalog/records.ts`), known by id with
+// their bodies behind a dynamic import. `createSurface` on a recorded, not yet loaded id creates the surface and
+// its tree synchronously and starts `registry.ensure` at once, so the chunk fetch overlaps the model's time to
+// first token. The surface gets a queue with a catalog gate ahead of the control gate: every `updateComponents`,
+// `updateDataModel` and `finalize(S)` waits in it, in order. On resolve the queue takes the loaded entry's control
+// loader and drains as above. On reject the host emits one `CATALOG_LOAD` for the surface, drops the queued
+// messages and removes the surface, the end state of `CATALOG_UNKNOWN`; a later `createSurface` retries the load.
+// An id neither registered nor recorded is still `CATALOG_UNKNOWN`, synchronously. Once a body is registered in
+// this renderer the path is synchronous again; `preload(id)` starts the load early and lets a caller await it.
 
 import type { ControlLoader } from '@agent-ui/components/loader'
 import { dispatch } from './dispatch.ts'
@@ -95,11 +106,7 @@ import type { WidgetFactory } from '../catalog/types.ts'
 import { factoriesOf, resolveFactory } from '../catalog/variant.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { defaultFactories } from '../catalog/default/factories.ts'
-import { a2uiBasicCatalog, a2uiBasicCatalogCanonical } from '../catalog/a2ui-basic/index.ts'
-import { a2uiBasicFactories } from '../catalog/a2ui-basic/factories.ts'
-import { a2uiBasicFunctions } from '../catalog/a2ui-basic/functions.ts'
-import { composePersonaCatalogs } from '../catalog/compose.ts'
-import { SHIPPED_PERSONA_CATALOGS } from '../catalog/personas/index.ts'
+import { BUILTIN_CATALOG_RECORDS } from '../catalog/records.ts'
 import { builtinControls } from '../catalog/controls.ts'
 import type {
   A2uiCreateSurface,
@@ -177,6 +184,13 @@ export interface RendererHost {
   ingestMessage(message: A2uiServerMessage): void
   /** Subscribe to client→server messages (actions + errors); returns an unsubscribe (SPEC-R8/R11). */
   onClientMessage(listener: ClientMessageListener): () => void
+  /**
+   * Load a recorded catalog's body and register it into this renderer (ADR-0241). Resolves at once for a
+   * registered id; rejects with a `CatalogLoadError` for an id that is neither registered nor recorded, or a
+   * failed load (the next call retries). A surface never needs it, since `createSurface` loads on demand; it lets
+   * a host start the fetch early, or a caller await the synchronous path before ingesting.
+   */
+  preload(catalogId: string): Promise<void>
   /** Run the shared validator's id-graph check on the COMPLETE component set (ADR-0002, finalize-only). */
   finalize(surfaceId?: string): void
   /** Tear everything down: dispose every surface (leak-free, N3), detach roots, drop subscribers. */
@@ -208,8 +222,8 @@ class Renderer implements RendererHost {
   readonly #handlers: DispatchHandlers
   readonly #defaultVersion: string
   readonly #revealOrder: boolean // GH #975/ADR-0194 opt-in (default false) — threaded into every SurfaceTree
-  // ADR-0233 deferred apply: one queue per surface waiting on its catalog's control loader.
-  readonly #controlQueues = new Map<string, ControlQueue>()
+  // Deferred apply: one queue per surface waiting on its catalog body (ADR-0241) or its control loader (ADR-0233).
+  readonly #queues = new Map<string, SurfaceQueue>()
   #mountEl: HTMLElement | undefined
   #disposed = false
 
@@ -222,19 +236,11 @@ class Renderer implements RendererHost {
     // register `builtinControls`, so a surface defines the controls it names on demand (the factory modules
     // import none); the derived persona entries inherit it through `composeControlLoaders`.
     this.#registry.register(defaultCatalog, defaultFactories, undefined, builtinControls)
-    // ADR-0169 cl.2 — the upstream A2UI v0.9.1 Basic Catalog registers beside the default on EVERY
-    // renderer host: interop is a property of the PACKAGE, not a demo of one page. `a2uiBasicCatalog`
-    // (the local short id `a2ui-basic`) and `a2uiBasicCatalogCanonical` (the same components/factories/
-    // functions bytes, keyed by the upstream canonical URI — an INBOUND-ONLY alias, cl.13) share ONE
-    // factory table and ONE function-impl table.
-    this.#registry.register(a2uiBasicCatalog, a2uiBasicFactories, a2uiBasicFunctions, builtinControls)
-    this.#registry.register(a2uiBasicCatalogCanonical, a2uiBasicFactories, a2uiBasicFunctions, builtinControls)
-    // M-D (`persona-catalog-composition.spec.md` SPEC-R2, ADR-0172 cl.2) — the derive-then-register step:
-    // every shipped `catalog/personas/<persona-id>/` package composes over every base its own
-    // `targetCatalogs` names and registers under its derived `<base>--<persona>` id (OF1b). Strictly
-    // upstream of `register()` (SPEC-N4) — reject-loud (`CatalogComposeError`) on a name collision or an
-    // unregistered target-base id, synchronously, right here at construction time.
-    composePersonaCatalogs(this.#registry, SHIPPED_PERSONA_CATALOGS)
+    // ADR-0241 cl.2 (amends ADR-0169 cl.2, relates ADR-0172 cl.2): the upstream A2UI Basic Catalog under its
+    // short id and its inbound-only canonical-URI alias, and every shipped persona over each base it targets
+    // (`<base>--<persona>`), are known on EVERY renderer host by id; each body loads the first time a surface
+    // names it, and a shipped persona's compose step (reject-loud, SPEC-R2) runs at that load.
+    for (const record of BUILTIN_CATALOG_RECORDS) this.#registry.registerLazy(record)
 
     let seq = 0
     this.#actions = new ActionDispatcher({
@@ -330,6 +336,10 @@ class Renderer implements RendererHost {
     return () => void this.#listeners.delete(listener)
   }
 
+  preload(catalogId: string): Promise<void> {
+    return this.#registry.ensure(catalogId)
+  }
+
   finalize(surfaceId?: string): void {
     if (surfaceId !== undefined) {
       this.#finalizeOrQueue(surfaceId)
@@ -342,7 +352,7 @@ class Renderer implements RendererHost {
     if (this.#disposed) return
     this.#disposed = true
     for (const id of [...this.#trees.keys()]) this.#teardownSurfaceDom(id)
-    this.#controlQueues.clear() // ADR-0233: every pending queue dropped; a late settle sees #disposed
+    this.#queues.clear() // ADR-0233/0241: every pending queue dropped; a late settle sees #disposed
     this.#store.disposeAll() // disposes every surface scope + aborts every listener (N3)
     this.#listeners.clear()
     this.#mountEl = undefined
@@ -352,7 +362,9 @@ class Renderer implements RendererHost {
 
   #onCreateSurface(body: A2uiCreateSurface, version: string): void {
     // Resolve catalogId against the registry — an unbound catalog is `CATALOG_UNKNOWN`, no surface (R2 AC3).
-    if (this.#registry.get(body.catalogId) === undefined) {
+    // ADR-0241: a recorded id is bound too; its body loads behind the surface's catalog gate below.
+    const loaded = this.#registry.get(body.catalogId) !== undefined
+    if (!loaded && !this.#registry.knows(body.catalogId)) {
       this.#emitInternalError(version, {
         code: 'CATALOG_UNKNOWN',
         surfaceId: body.surfaceId,
@@ -395,30 +407,28 @@ class Renderer implements RendererHost {
         revealOrder: this.#revealOrder, // GH #975/ADR-0194 — opt-in, default false
       }),
     )
+    if (!loaded) this.#awaitCatalog(surface.id, body.catalogId)
   }
 
   #onUpdateComponents(body: A2uiUpdateComponents, version: string): void {
     const surface = this.#store.get(body.surfaceId)
     const tree = this.#trees.get(body.surfaceId)
     if (surface === undefined || tree === undefined) return // unknown/deleted surface → no-op (LLD §9)
-    const queued = this.#controlQueues.get(body.surfaceId)
-    const loader = queued?.loader ?? this.#registry.get(surface.catalogId)?.controls
-    if (loader === undefined) {
-      this.#applyComponents(body, version) // no control loader: synchronous, as before ADR-0233
-      return
-    }
-    const tags = this.#controlTagsOf(surface.catalogId, body)
+    const message: QueuedMessage = { components: body, run: () => this.#applyComponents(body, version) }
+    const queued = this.#queues.get(body.surfaceId)
     if (queued !== undefined) {
-      queued.messages.push({ tags, run: () => this.#applyComponents(body, version) })
+      queued.messages.push(message) // behind a pending catalog or control load, in arrival order
       return
     }
-    if (loader.missing(tags).length === 0) {
-      this.#applyComponents(body, version) // the sync fast path: every control is already defined
+    const loader = this.#registry.get(surface.catalogId)?.controls
+    // No control loader (synchronous, as before ADR-0233), or every control already defined (the sync fast path).
+    if (loader === undefined || loader.missing(this.#controlTagsOf(surface.catalogId, body)).length === 0) {
+      message.run()
       return
     }
-    const queue: ControlQueue = { loader, messages: [{ tags, run: () => this.#applyComponents(body, version) }] }
-    this.#controlQueues.set(body.surfaceId, queue)
-    this.#drainControls(body.surfaceId, queue, false)
+    const queue: SurfaceQueue = { catalogId: surface.catalogId, loader, messages: [message] }
+    this.#queues.set(body.surfaceId, queue)
+    this.#drain(body.surfaceId, queue, false)
   }
 
   /** Apply one `updateComponents` to its surface's tree and attach the root (the sync path and the drain). */
@@ -430,9 +440,9 @@ class Renderer implements RendererHost {
   }
 
   #onUpdateDataModel(body: A2uiUpdateDataModel): void {
-    const queued = this.#controlQueues.get(body.surfaceId)
+    const queued = this.#queues.get(body.surfaceId)
     if (queued !== undefined) {
-      queued.messages.push({ run: () => this.#applyDataModel(body) }) // ADR-0233: in order behind the pending load
+      queued.messages.push({ run: () => this.#applyDataModel(body) }) // ADR-0233/0241: in order behind the pending load
       return
     }
     this.#applyDataModel(body)
@@ -459,7 +469,35 @@ class Renderer implements RendererHost {
     this.#store.delete(body.surfaceId) // disposes scope + aborts; no-op if unknown (late message)
   }
 
-  // ── deferred apply (ADR-0233) ─────────────────────────────────────────────────────
+  // ── deferred apply (ADR-0233, ADR-0241) ───────────────────────────────────────────
+
+  /**
+   * The catalog gate (ADR-0241): give the new surface `surfaceId` a queue and load `catalogId`'s body into this
+   * renderer. On resolve the queue takes the loaded entry's control loader and drains through the control gate;
+   * on reject the host emits one `CATALOG_LOAD`, drops the queued messages and removes the surface.
+   */
+  #awaitCatalog(surfaceId: string, catalogId: string): void {
+    const queue: SurfaceQueue = { catalogId, loader: undefined, messages: [] }
+    this.#queues.set(surfaceId, queue)
+    const settle = (error: unknown): void => {
+      if (this.#disposed || this.#queues.get(surfaceId) !== queue) return // late: surface gone or host disposed
+      if (error === undefined) {
+        queue.loader = this.#registry.get(catalogId)?.controls
+        this.#drain(surfaceId, queue, false)
+        return
+      }
+      this.#emitInternalError(this.#versionFor(surfaceId), {
+        code: 'CATALOG_LOAD',
+        surfaceId,
+        message: error instanceof Error ? error.message : `catalog "${catalogId}" failed to load`,
+      })
+      this.#onDeleteSurface({ surfaceId })
+    }
+    this.#registry.ensure(catalogId).then(
+      () => settle(undefined),
+      (error: unknown) => settle(error ?? new Error(`catalog "${catalogId}" failed to load`)),
+    )
+  }
 
   /**
    * The custom-element tags the factories of `body`'s components create (every arm of a variant table):
@@ -481,34 +519,35 @@ class Renderer implements RendererHost {
   }
 
   /**
-   * Run `queue`'s messages in order. A queued `updateComponents` whose tags are still missing starts one
-   * `ensure` and stops the drain until it settles; `failed` (after a failed load) applies everything, so a
-   * still-undefined tag renders as a placeholder. Stops as soon as the queue is dropped (deleteSurface or
+   * Run `queue`'s messages in order, once its catalog is loaded. A queued `updateComponents` whose tags (read at
+   * drain time, since a message queued behind the catalog gate had no factories to read) are still missing starts
+   * one `ensure` and stops the drain until it settles; `failed` (after a failed control load) applies everything,
+   * so a still-undefined tag renders as a placeholder. Stops as soon as the queue is dropped (deleteSurface or
    * dispose from inside a message), and removes the queue once it is empty.
    */
-  #drainControls(id: string, queue: ControlQueue, failed: boolean): void {
-    while (this.#controlQueues.get(id) === queue && queue.messages.length > 0) {
+  #drain(id: string, queue: SurfaceQueue, failed: boolean): void {
+    while (this.#queues.get(id) === queue && queue.messages.length > 0) {
       const next = queue.messages[0]!
-      if (!failed && next.tags !== undefined) {
-        const missing = queue.loader.missing(next.tags)
+      if (!failed && next.components !== undefined && queue.loader !== undefined) {
+        const missing = queue.loader.missing(this.#controlTagsOf(queue.catalogId, next.components))
         if (missing.length > 0) {
-          this.#ensureControls(id, queue, missing)
+          this.#ensureControls(id, queue, queue.loader, missing)
           return
         }
       }
       queue.messages.shift()
       next.run()
     }
-    if (this.#controlQueues.get(id) === queue) this.#controlQueues.delete(id)
+    if (this.#queues.get(id) === queue) this.#queues.delete(id)
   }
 
   /** Start one `ensure` for `queue`; on settle, drain (or report `CONTROL_LOAD` once and drain anyway). */
-  #ensureControls(id: string, queue: ControlQueue, tags: readonly string[]): void {
+  #ensureControls(id: string, queue: SurfaceQueue, loader: ControlLoader, tags: readonly string[]): void {
     const settle = (error: unknown): void => {
-      if (this.#disposed || this.#controlQueues.get(id) !== queue) return // late: surface gone or host disposed
-      const stillMissing = error === undefined ? queue.loader.missing(tags) : tags
+      if (this.#disposed || this.#queues.get(id) !== queue) return // late: surface gone or host disposed
+      const stillMissing = error === undefined ? loader.missing(tags) : tags
       if (error === undefined && stillMissing.length === 0) {
-        this.#drainControls(id, queue, false)
+        this.#drain(id, queue, false)
         return
       }
       const reason = error instanceof Error ? `: ${error.message}` : ''
@@ -517,11 +556,11 @@ class Renderer implements RendererHost {
         surfaceId: id,
         message: `controls failed to load (${stillMissing.join(', ')})${reason}`,
       })
-      this.#drainControls(id, queue, true)
+      this.#drain(id, queue, true)
     }
     let pending: Promise<void>
     try {
-      pending = queue.loader.ensure(tags)
+      pending = loader.ensure(tags)
     } catch (error) {
       pending = Promise.reject(error)
     }
@@ -532,9 +571,9 @@ class Renderer implements RendererHost {
   }
 
   #finalizeOrQueue(id: string): void {
-    const queued = this.#controlQueues.get(id)
+    const queued = this.#queues.get(id)
     if (queued !== undefined) {
-      // ADR-0233: finalize judges the COMPLETE component set, so it waits behind the queued messages.
+      // ADR-0233/0241: finalize judges the COMPLETE component set, so it waits behind the queued messages.
       queued.messages.push({ run: () => this.#finalizeSurface(id) })
       return
     }
@@ -762,7 +801,7 @@ class Renderer implements RendererHost {
     this.#attached.delete(id)
     this.#poisoned.delete(id)
     this.#liveCatalogPaths.delete(id) // a fresh createSurface at this id starts with a clean de-dupe set
-    this.#controlQueues.delete(id) // ADR-0233: a pending queue dies with its surface; a late settle is a no-op
+    this.#queues.delete(id) // ADR-0233/0241: a pending queue dies with its surface; a late settle is a no-op
   }
 
   /**
@@ -791,15 +830,19 @@ class Renderer implements RendererHost {
 
 // ── module helpers ──────────────────────────────────────────────────────────────────
 
-/** One message held behind a pending control load (ADR-0233). `tags` marks an `updateComponents`. */
+/** One message held behind a pending catalog or control load (ADR-0233/0241). `components` marks an `updateComponents`. */
 interface QueuedMessage {
-  readonly tags?: readonly string[]
+  readonly components?: A2uiUpdateComponents
   readonly run: () => void
 }
 
-/** A surface's deferred-apply queue: the loader it waits on and its messages, in arrival order. */
-interface ControlQueue {
-  readonly loader: ControlLoader
+/**
+ * A surface's deferred-apply queue and its messages, in arrival order. `loader` is the catalog's control loader;
+ * it is `undefined` while the catalog body loads (no drain runs then) and for a loaded catalog without one.
+ */
+interface SurfaceQueue {
+  readonly catalogId: string
+  loader: ControlLoader | undefined
   readonly messages: QueuedMessage[]
 }
 

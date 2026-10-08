@@ -93,7 +93,7 @@ const FACETS: ReadonlySet<string> = new Set<Facet>(['exemplar', 'eval', 'multi-t
 const ERROR_CODE_MEMBERS: Readonly<Record<ErrorCode, true>> = {
   PARSE: true, SCHEMA: true, CATALOG: true, CATALOG_UNKNOWN: true, IDGRAPH: true,
   POINTER: true, VERSION_UNSUPPORTED: true, FUNCTION: true, DEPTH_EXCEEDED: true, CONTAINMENT: true,
-  CONTROL_LOAD: true,
+  CONTROL_LOAD: true, CATALOG_LOAD: true,
 }
 const ERROR_CODES: ReadonlySet<string> = new Set(Object.keys(ERROR_CODE_MEMBERS))
 // The six required `A2uiAction` fields (runtime SPEC §5.2 / `protocol.ts`) plus its two optionals.

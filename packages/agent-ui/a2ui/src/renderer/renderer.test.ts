@@ -595,6 +595,7 @@ describe('renderer host: action context resolution (GH #1748, LLD-C9 collectCont
     data: unknown,
   ): Promise<{ buttons: HTMLElement[]; sent: A2uiClientMessage[]; r: RendererHost; cleanup: () => void }> {
     const { r, mount, sent, cleanup } = harness()
+    await r.preload(catalogId) // ADR-0241: a2ui-basic is a lazy record; agent-ui resolves at once
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'sx', catalogId } }))
     r.ingest(line({ version: 'v1.0', updateComponents: { surfaceId: 'sx', components: components as never } }))
     r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'sx', value: data } }))

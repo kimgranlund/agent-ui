@@ -162,6 +162,12 @@ export interface CatalogRegistry {
    */
   knows?(id: string): boolean
   /**
+   * ADR-0241 cl.7: the record of a recorded, not yet loaded id (`undefined` once loaded or never recorded).
+   * `callFunction`'s `clientOnly` scan reads its manifest `functions` so the verdict never depends on which
+   * bodies happen to be loaded. Optional, like `knows`.
+   */
+  recordOf?(id: string): LazyCatalogRecord | undefined
+  /**
    * ADR-0241: load a recorded catalog's body and register it into THIS registry (resolves at once for an
    * already-registered id). Rejects with a `CatalogLoadError` on every failure; a rejected load retries on
    * the next call. Optional, like `knows`.
