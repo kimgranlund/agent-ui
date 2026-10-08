@@ -5700,6 +5700,8 @@ An opt-in-by-support layer, byte-identical fallback on an engine that lacks it:
 - **`scrollsnapchange` adoption** — where the native `scrollsnapchange` event is present (Chromium 129+,
   feature-detected per element), it replaces the settle-debounce/geometry-guess active-slide detection with
   the event's own named snap target. Absent, the pre-existing debounce path runs unchanged.
+  Since #1859 the snap handler drops a stale `scrollsnapchange` while a programmatic animation owns the track
+  (teleport or `#animFrame` in flight); the animation's closing settle is the single commit.
 
 ---
 

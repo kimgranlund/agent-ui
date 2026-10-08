@@ -415,6 +415,7 @@ async function* stream(req) { /* fetch(endpoint, …); for await (chunk) yield* 
 //   turn deadline (T-0023, in produce(), not here): TURN_DEADLINE_MS (300000) bounds the whole turn over every provider and tool round, which no per-wait timer does (a stream that keeps pinging never stalls); it throws `TurnDeadlineError`.
 //   host error line: `failureMessageFor` (chat-validation.ts) writes a timeout's plain-words `userMessage` instead of the generic rephrase text; the produce route writes it on the `error` meta-line, the prose `/chat` route as the `error` field of its 500 body (T-0024).
 //   tool loop replay (T-0031): the assistant turn sent back with the tool_results is rebuilt from that block log, so thinking / redacted_thinking blocks go back unmodified and in order (an empty `thinking` with a signature is kept; a thinking block with no signature is left out, the API 400s it); request-side only, never an event.
+//   tool input coercion (T-0034, #1854): `coerceObjectFields` runs before a tool executes; an object-typed input field that arrives as a JSON string is parsed, a non-object value is rejected with an `is_error` tool_result naming the field.
 //   fetchWithRetry: a 429/5xx or network error retries up to ANTHROPIC_MAX_RETRIES (2), Retry-After capped at 10000 ms; only before the body is consumed, never after streaming starts, never for a first-byte timeout or a caller abort.
 ```
 
