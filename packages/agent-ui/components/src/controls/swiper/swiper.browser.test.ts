@@ -132,7 +132,7 @@ const staleSnap = (track: HTMLElement, target: HTMLElement): void => {
   track.dispatchEvent(evt)
 }
 
-describe('ui-swiper — a stale snap event cannot override a programmatic write mid-animation (T-0038)', () => {
+describe('ui-swiper: a stale snap event cannot override a programmatic write mid-animation (T-0038)', () => {
   // chromium-only: WebKit has no `scrollsnapchange` (the swiper listens to `scroll` there), so the gate is moot.
   it.skipIf(server.browser !== 'chromium')('active holds the written key mid-animation, aligns after settle, and emits no select', async () => {
     const { swiper, items, track } = mount(THREE)
