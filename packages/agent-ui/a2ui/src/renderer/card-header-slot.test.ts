@@ -10,6 +10,10 @@ import { describe, it, expect } from 'vitest'
 import '@agent-ui/components/all' // self-defines ui-* controls (the real default-catalog factories)
 import { createRenderer } from './renderer.ts'
 
+// T-0041 (ADR-0241): warm the default catalog body once, at top level (a `beforeAll` would run after a renderer built at
+// module or describe scope), so every renderer built below registers it synchronously, as the eager catalog did.
+await createRenderer().preload('agent-ui')
+
 function harness() {
   const r = createRenderer()
   const mount = document.createElement('div')

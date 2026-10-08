@@ -9,6 +9,10 @@ import { whenFlushed } from '@agent-ui/components'
 import { createRenderer } from './renderer.ts'
 import type { A2uiServerMessage } from '../protocol.ts'
 
+// T-0041 (ADR-0241): warm the default catalog body once, at top level (a `beforeAll` would run after a renderer built at
+// module or describe scope), so every renderer built below registers it synchronously, as the eager catalog did.
+await createRenderer().preload('agent-ui')
+
 const line = (m: A2uiServerMessage): string => JSON.stringify(m)
 
 describe('bound Text.text — the TKT-0077 empty card tile', () => {

@@ -24,6 +24,10 @@ import { createRenderer } from '../renderer/renderer.ts'
 import { backableWizardSeed } from './catalog-frontier.ts'
 import type { A2uiServerMessage } from '../protocol.ts'
 
+// T-0041 (ADR-0241): warm the default catalog body once, at top level (a `beforeAll` would run after a renderer built at
+// module or describe scope), so every renderer built below registers it synchronously, as the eager catalog did.
+await createRenderer().preload('agent-ui')
+
 // jsdom reality (examples.test.ts's own precedent, restated here since this file mounts REAL Calendar/
 // RadioGroup/Radio controls too): `ElementInternals.setFormValue`/`setValidity` are ABSENT in jsdom, and
 // every form-associated control calls both unconditionally in its own `connectedCallback` — an uncaught

@@ -20,6 +20,10 @@ import '@agent-ui/components/all' // ADR-0233: the catalog factories import no c
 import { createRenderer } from './renderer.ts'
 import type { RendererHost } from './renderer.ts'
 
+// T-0041 (ADR-0241): warm the default catalog body once, at top level (a `beforeAll` would run after a renderer built at
+// module or describe scope), so every renderer built below registers it synchronously, as the eager catalog did.
+await createRenderer().preload('agent-ui')
+
 // jsdom lacks ElementInternals.setFormValue/setValidity entirely — the SAME sanctioned stub
 // `renderer.test.ts` carries for its own real, connected form-associated controls (`ui-radio` here).
 beforeAll(() => {

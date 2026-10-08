@@ -13,6 +13,10 @@ import { defaultFactories } from '../catalog/default/factories.ts'
 import { catalogFunctions } from '../catalog/functions.ts'
 import type { WidgetFactory } from '../catalog/types.ts'
 
+// T-0041 (ADR-0241): warm the default catalog body once, at top level (a `beforeAll` would run after a renderer built at
+// module or describe scope), so every renderer built below registers it synchronously, as the eager catalog did.
+await createRenderer().preload('agent-ui')
+
 // The A1 integration proof (renderer LLD-C13): a STREAMED, multi-message JSONL fixture is fed line by
 // line into the host and must render into REAL `ui-*` controls under the mount — the nine wave-1 modules
 // wired together. Deterministic id/clock providers are injected so the action round-trip asserts exact

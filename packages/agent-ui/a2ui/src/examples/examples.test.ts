@@ -53,6 +53,10 @@ import { plantedBasicSeed, stampCatalogId } from '../catalog/a2ui-basic/planted.
 import { createRenderer } from '../renderer/renderer.ts'
 import type { A2uiClientMessage } from '../renderer/renderer.ts'
 
+// T-0041 (ADR-0241): warm the default catalog body once, at top level (a `beforeAll` would run after a renderer built at
+// module or describe scope), so every renderer built below registers it synchronously, as the eager catalog did.
+await createRenderer().preload('agent-ui')
+
 let savedSetFormValue: unknown
 let savedSetValidity: unknown
 beforeAll(() => {
