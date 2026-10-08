@@ -770,7 +770,13 @@ const appCssQuerySuffixPlugin = {
 // ADR-0197 cl.5 (ordinary): 72027 -> 69250 B gz, the measured 67203 B gz plus 2047 B gz headroom. The bodies
 // are reported on the informational lazy-catalog line below; `app/src/catalog-lazy.bundle.test.ts` keeps them
 // out of the eager closure.
-const APP_MARGINAL_BUDGET = 69250
+// ADR-0241 Amendment (2026-10-08, T-0039 to T-0042): the default `agent-ui` catalog is a lazy record too. T-0039's
+// settle seam and warm memo took the row 67203 -> 67416 B gz inside the old budget (its own figure); main measured
+// 67420 B gz just before the flip. The flip moves the default document, its factories and the built-in control
+// registry out of the eager closure: measured 57878 B gz marginal (-9542), and the informational lazy-catalog line
+// below grows 6985 -> 12136 B gz. RE-BASED DOWN under ADR-0197 cl.5 (ordinary): 69250 -> 59925 B gz, the measured
+// 57878 B gz plus 2047 B gz headroom.
+const APP_MARGINAL_BUDGET = 59925
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
@@ -789,8 +795,9 @@ for (const name of appEager) {
 }
 const appEntryCode = appChunks.filter((c) => appEager.has(c.fileName)).map((c) => c.code).join('')
 const appLazyCode = appChunks.filter((c) => !appEager.has(c.fileName)).map((c) => c.code).join('')
-// ADR-0241: the lazy chunks that hold a catalog body (a2ui-basic, the persona packages, the compose step).
-const isCatalogBody = (id) => /\/a2ui\/src\/catalog\/(a2ui-basic\/|personas\/|compose\.ts$)/.test(id)
+// ADR-0241 and its Amendment: the lazy chunks that hold a catalog body (the default, its control registry,
+// a2ui-basic, the persona packages, the compose step).
+const isCatalogBody = (id) => /\/a2ui\/src\/catalog\/(default\/|controls\.ts$|a2ui-basic\/|personas\/|compose\.ts$)/.test(id)
 const appCatalogLazyCode = appChunks
   .filter((c) => !appEager.has(c.fileName) && (c.moduleIds ?? []).some(isCatalogBody))
   .map((c) => c.code)
@@ -813,7 +820,7 @@ if (appLazyGz > 0) {
 }
 if (appCatalogLazyGz > 0) {
   console.log(
-    `@agent-ui/app: lazy catalog bodies (ADR-0241: a2ui-basic under both ids, the shipped persona packages and the compose step, fetched by catalog id on first use; a chunk shared with the agent-admin arm counts here too): ${appCatalogLazyGz} B gz (informational, non-gating)`,
+    `@agent-ui/app: lazy catalog bodies (ADR-0241 and its Amendment: the default catalog with the built-in control registry, a2ui-basic under both ids, the shipped persona packages and the compose step, fetched by catalog id on first use; a chunk shared with the agent-admin arm counts here too): ${appCatalogLazyGz} B gz (informational, non-gating)`,
   )
 }
 

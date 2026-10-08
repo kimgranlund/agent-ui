@@ -1,6 +1,6 @@
 # LLD — A2UI Catalog (default catalog · registry · validators)
 
-> Status: proposed · v0.2 · 2026-10-07 (v0.1 2026-06-26; v0.2 adds the §4 lazy-record API and `records.ts`, ADR-0241, accepted) · Layer: LLD (implementation plan)
+> Status: proposed · v0.3 · 2026-10-08 (v0.1 2026-06-26; v0.2 adds the §4 lazy-record API and `records.ts`, ADR-0241, accepted; v0.3 makes the default catalog a record too and adds the warm memo, ADR-0241 Amendment 1, ratified) · Layer: LLD (implementation plan)
 > Implements: [`../spec/a2ui-catalog.spec.md`](../spec/a2ui-catalog.spec.md) (SPEC-R1..R9, SPEC-N1..N4), targeting A2UI **v1.0**. Consolidates the previously-planned `a2ui-default-catalog` + `a2ui-catalog-schema` LLDs.
 > Altitude: adds the **how**; cites `SPEC-R*` for behavior. Catalog-conformance validation is contributed *into* the renderer's shared `validate.ts` (renderer LLD-C11) to preserve one-implementation parity.
 
@@ -19,7 +19,7 @@
 | **LLD-C7** | Client function library | SPEC-R5 | `functions.ts` |
 | **LLD-C8** | ~~Theme / surfaceProperties applier~~ — RETIRED (GH #531) | — | — |
 
-**Dependencies.** Factories (LLD-C5) name `ui-*` tags and import no control (ADR-0233); the renderer registers the built-in catalogs with `builtinControls` (`catalog/controls.ts`, over `@agent-ui/components/registry` and `/loader`), which defines a surface's controls on demand. Conformance (LLD-C6) is called by the renderer's `validate.ts` and (transitively) by corpus admission — one implementation, three callers (SPEC-N3). Zero third-party deps (SPEC-N4).
+**Dependencies.** Factories (LLD-C5) name `ui-*` tags and import no control (ADR-0233); the built-in catalogs' lazy bodies carry `builtinControls` (`catalog/controls.ts`, over `@agent-ui/components/registry` and `/loader`), which defines a surface's controls on demand. Conformance (LLD-C6) is called by the renderer's `validate.ts` and (transitively) by corpus admission: one implementation, three callers (SPEC-N3). Zero third-party deps (SPEC-N4).
 
 ## 2. Catalog model & loader — LLD-C1 (SPEC-R1)
 
@@ -52,13 +52,13 @@ class Registry implements CatalogRegistry {
 
 **Two-tier (SPEC-R6, N1):** a project calls `registry.register(projectCatalog, projectFactories)` — a public API, **0 edits to the package**. **Edge:** re-registering an existing `catalogId` replaces it (last-wins) and logs; a project catalog MAY shadow the default by reusing its id or use a fresh id. Unknown `catalogId` at `createSurface` is the renderer's `CATALOG_UNKNOWN` (the registry is the allowlist).
 
-**Lazy records (ADR-0241, Option B).** A catalog may be known by id before its body loads. A `LazyCatalogRecord` is `register()`'s argument list split in two: the eager manifest (`id`, a copy of the body's normalized `catalog.functions`, the tags of its `submitGate` factories) and `load()`, a dynamic import resolving to a `CatalogBody` (`{catalog, factories, functions?, controls?}`, exactly `register()`'s arguments). The registry holds an id in at most one of its loaded map and its record map:
-- `registerLazy(record)` records an id (last-wins, logged, like `register`); package-internal, not a project seam.
+**Lazy records (ADR-0241 and its Amendment 1).** A catalog may be known by id before its body loads. A `LazyCatalogRecord` is `register()`'s argument list split in two: the eager manifest (`id`, a copy of the body's normalized `catalog.functions`, the tags of its `submitGate` factories) and `load()`, a dynamic import resolving to a `CatalogBody` (`{catalog, factories, functions?, controls?}`, exactly `register()`'s arguments). The registry holds an id in at most one of its loaded map and its record map:
+- `registerLazy(record)` records an id (last-wins, logged, like `register`); package-internal, not a project seam. A record whose body has already loaded in this module (`loader.ts`'s `loadedCatalogBody`) registers at once (the warm memo, ADR-0241 Amendment 1 A2), so a registry built after the first load never waits; a body that does not register leaves the record for `ensure` to report.
 - `knows(id)` is true for a loaded or recorded id; `get(id)` answers only for a loaded one; `recordOf(id)` returns the record of a recorded, unloaded id (the `callFunction` manifest scan, renderer LLD-C14).
 - `ensure(id)` loads the body through `loader.ts` and registers it into this registry through the same path `register` takes (the `CATALOG_FACTORY_MISSING` gate included). The body promise is memoized module-wide by record identity, so every renderer's registry shares one fetch while each registers it once; a rejected load leaves the memo so the next call retries. Every failure (no record, a rejected import, a body declaring another id, a factory gap, a persona compose collision) rejects with one `CatalogLoadError` carrying the id and the cause. A `register` or `registerLazy` for the id that lands mid-load wins, and the late body is discarded.
 - `supportedCatalogIds()` is loaded ids plus recorded ids; `submitGateSelector()` unions recorded `submitGate` tags with loaded factory tags.
 
-The built-in records are an explicit list in `records.ts` (no generator): a2ui-basic under its short id and the canonical-URI alias, both loading `a2ui-basic/body.ts`, and one record per shipped persona and base it targets, whose body composes the persona over that base (`personas/body.ts` → `compose.ts`'s `composePersonaEntry`). The default `agent-ui` catalog is not a record: the renderer registers it eagerly. `records.ts` imports no body statically, so the bodies stay out of every eager bundle (`app/src/catalog-lazy.bundle.test.ts`), and `records.test.ts` is its bijection gate: the ids equal the shipped catalog folders, the alias and every persona pairing, each manifest equals its loaded body, and every body registers into a real `Registry`.
+The built-in records are an explicit list in `records.ts` (no generator): the default `agent-ui` catalog loading `default/body.ts` (its document, factories and `builtinControls`; ADR-0241 Amendment 1), a2ui-basic under its short id and the canonical-URI alias, both loading `a2ui-basic/body.ts`, and one record per shipped persona and base it targets, whose body composes the persona over that base (`personas/body.ts` → `compose.ts`'s `composePersonaEntry`). The renderer registers no catalog eagerly. `records.ts` imports no body and no `controls.ts` statically, so the bodies stay out of every eager bundle (`app/src/catalog-lazy.bundle.test.ts`), and `records.test.ts` is its bijection gate: the ids equal the shipped catalog folders, the alias and every persona pairing, each manifest equals its loaded body, and every body registers into a real `Registry`.
 
 ## 5. Default catalog + factories — LLD-C4, LLD-C5 (SPEC-R3, R4, R8)
 
@@ -217,12 +217,12 @@ function validateCatalogConformance(component: A2uiComponent, catalog: Catalog):
 ```
 packages/agent-ui/a2ui/src/catalog/
   catalog.ts naming.ts registry.ts loader.ts records.ts conformance.ts functions.ts controls.ts index.ts
-  default/  catalog.json  factories.ts  index.ts
+  default/  catalog.json  factories.ts  index.ts  body.ts                    (lazy body, ADR-0241 Amendment 1)
   a2ui-basic/  catalog.json  factories.ts  functions.ts  index.ts  body.ts   (lazy body, ADR-0241)
   personas/  index.ts  body.ts  <persona>/…                                   (lazy body, ADR-0241)
 ```
 
-**Integration:** `conformance.ts` is imported by renderer `validate.ts` (renderer LLD-C11) → also reached by corpus admission. `registry.ts` + `WidgetFactory` are consumed by renderer widget resolution (renderer LLD-C7). `default/factories.ts` imports no control (ADR-0233); `controls.ts` exports `builtinControls`, the loader the renderer registers with the default catalog and the a2ui-basic bodies carry. `supportedCatalogIds()` feeds renderer capabilities (renderer LLD-C12). No `theme.ts` — LLD-C8 is retired (GH #531; §7 above).
+**Integration:** `conformance.ts` is imported by renderer `validate.ts` (renderer LLD-C11) → also reached by corpus admission. `registry.ts` + `WidgetFactory` are consumed by renderer widget resolution (renderer LLD-C7). `default/factories.ts` imports no control (ADR-0233); `controls.ts` exports `builtinControls`, the loader the default and a2ui-basic bodies carry (so it loads with them, never with the renderer). `supportedCatalogIds()` feeds renderer capabilities (renderer LLD-C12). No `theme.ts`: LLD-C8 is retired (GH #531; §7 above).
 
 ## 10. Build sequence (dependency-ordered; each step verifiable)
 

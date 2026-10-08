@@ -35,8 +35,9 @@ export class RegistryError extends Error {
 const warnOverride = (id: string): void => console.warn(`[a2ui] catalog "${id}" re-registered, last registration wins`)
 
 /**
- * The default `CatalogRegistry` implementation (catalog LLD-C3). Construct one per runtime; the default
- * catalog and any project catalogs register into it, and the renderer reads from it.
+ * The default `CatalogRegistry` implementation (catalog LLD-C3). Construct one per runtime; the built-in
+ * catalogs are recorded into it (`registerLazy`, ADR-0241), project catalogs register into it, and the
+ * renderer reads from it.
  */
 export class Registry implements CatalogRegistry {
   readonly #catalogs = new Map<string, CatalogEntry>()
@@ -95,8 +96,8 @@ export class Registry implements CatalogRegistry {
    * stays the one project seam. Last-wins like `register`: a loaded or recorded entry under the same id is
    * replaced, and a load already in flight for the old record is discarded when it lands.
    *
-   * Warm memo (ADR-0241 Amendment): a record whose body has already loaded in this module registers it at
-   * once, so only the first renderer on a page takes the asynchronous path. A body that does not register
+   * Warm memo (ADR-0241 Amendment 1, A2): a record whose body has already loaded in this module registers it
+   * at once, so only the first renderer on a page takes the asynchronous path. A body that does not register
    * (a mismatched id, a factory gap) leaves the record in place, and `ensure` reports it as before.
    */
   registerLazy(record: LazyCatalogRecord): void {

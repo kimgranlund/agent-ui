@@ -4,8 +4,8 @@
 // `ui-form-provider` up in the mount. On a COLD default catalog (the lazy record of ADR-0241, first renderer on the
 // page) that lookup finds nothing and the page prints "Form not mounted."; the page's `import '../lib/warm-catalog.ts'`
 // is what keeps the first renderer warm. This file is its own module graph (vitest isolates per file), so nothing
-// else warms the catalog before the page does: dropping that import turns this test red once the default is lazy
-// (on an eager default it passes either way; lib/warm-catalog.test.ts is the leg that bites on any tree).
+// else warms the catalog before the page does: dropping that import turns this test red, since the default is lazy
+// (ADR-0241 Amendment 1; lib/warm-catalog.test.ts is the leg that bites on any tree).
 import { describe, it, expect, beforeAll } from 'vitest'
 
 beforeAll(async () => {

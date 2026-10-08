@@ -13,6 +13,10 @@ import { createRenderer } from './renderer.ts'
 import type { A2uiClientMessage } from './renderer.ts'
 import type { A2uiActionMessage } from './action.ts'
 
+// ADR-0241 Amendment 1: the default catalog is a lazy record, so warm it once at the top level (a `beforeAll` would run
+// after a renderer built at module or describe scope), and every renderer built below registers it synchronously.
+await createRenderer().preload('agent-ui')
+
 const isAction = (m: A2uiClientMessage): m is A2uiActionMessage => 'action' in m
 
 describe('ADR-0161 / GH #314 — a real ui-calendar range pick writes valueStart/valueEnd and a submit action carries both', () => {

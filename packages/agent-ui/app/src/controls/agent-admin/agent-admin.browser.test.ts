@@ -44,6 +44,10 @@ import { SURFACE_AUTHORING_KEY } from './agent-admin-schema.ts'
 // the roster (`SUPPORTED_MODELS` also carries the LABEL the trigger is asserted to print).
 import { AUTHORING_DEFAULT_MODEL_ID, DEFAULT_MODEL_ID, SUPPORTED_MODELS } from './agent-admin-schema.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
+import { createRenderer as warm } from '@agent-ui/a2ui'
+// ADR-0241 Amendment 1: the default catalog is a lazy record, so warm it at the top level, ahead of any renderer this
+// file builds (a renderer built before the body lands stays on the asynchronous path, so a beforeAll would be too late).
+await warm().preload('agent-ui')
 
 const mounted: HTMLElement[] = []
 afterEach(() => {

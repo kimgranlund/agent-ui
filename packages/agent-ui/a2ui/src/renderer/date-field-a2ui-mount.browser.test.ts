@@ -38,6 +38,10 @@ import '@agent-ui/components/all'
 import { createRenderer } from './renderer.ts'
 import { bookingReservationSeed } from '../examples/catalog-coverage.ts'
 
+// ADR-0241 Amendment 1: the default catalog is a lazy record, so warm it once at the top level (a `beforeAll` would run
+// after a renderer built at module or describe scope), and every renderer built below registers it synchronously.
+await createRenderer().preload('agent-ui')
+
 /** True iff `inner`'s box sits fully inside `outer`'s box (with a 1px numeric-rounding tolerance) —
  *  the "the icon is INSIDE the field, not floating above/outside it" assertion. */
 function isContained(outer: DOMRect, inner: DOMRect, tolerance = 1): boolean {

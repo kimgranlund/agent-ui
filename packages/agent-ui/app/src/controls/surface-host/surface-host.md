@@ -175,9 +175,9 @@ Four properties worth knowing:
   GH 805 re-enable arm. The next `finalize()` re-derives the state from the mount's real contents, so a
   surface that received real content stays clear and one still empty re-flags. A reconnect starts clean.
 - **Behind a lazy catalog it waits for the load (ADR-0241).** A surface whose catalog body is not loaded yet
-  (a2ui-basic, a persona, and the default catalog once it is a record) has its `updateComponents` and
-  `finalize` held in the renderer's queue, so a mount read right after `finalize()` is empty only because
-  the queue has not run. While `RendererHost.pending` is true the host sets no verdict. It re-reads the
+  (the default catalog on the first renderer of a page, ADR-0241 Amendment 1, or a2ui-basic or a persona) has
+  its `updateComponents` and `finalize` held in the renderer's queue, so a mount read right after `finalize()`
+  is empty only because the queue has not run. While `RendererHost.pending` is true the host sets no verdict. It re-reads the
   mount once `RendererHost.settled()` resolves, so a surface that rendered never carries the attribute, and
   the root stretch and `data-root-card` follow the same rule. A line, finalize, `dispose()` or disconnect that
   arrives meanwhile supersedes the waiting pass. A warm host (nothing pending) derives everything inline, as
