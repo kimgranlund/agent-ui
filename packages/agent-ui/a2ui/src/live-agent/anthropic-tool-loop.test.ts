@@ -346,8 +346,8 @@ describe('anthropicProvider — the GH #49 tool-use loop (mocked fetch)', () => 
   })
 })
 
-// T-0034 — an object-typed field that arrives as a JSON string (Haiku 5.5 peer report).
-describe('anthropicProvider — stringified object fields (T-0034)', () => {
+// T-0034: an object-typed field that arrives as a JSON string (Haiku 5.5 peer report).
+describe('anthropicProvider: stringified object fields (T-0034)', () => {
   const OBJ_TOOLS: ToolDef[] = [
     { name: 'weather', description: 'w', input_schema: { type: 'object', properties: { place: { type: 'string' }, opts: { type: 'object' } } } },
   ]
