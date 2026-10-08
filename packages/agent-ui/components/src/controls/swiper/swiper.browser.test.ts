@@ -147,6 +147,18 @@ describe('ui-swiper: a stale snap event cannot override a programmatic write mid
     expect(swiper.activeIndex).toBe(2)
     expect(events.length).toBe(0)
   })
+
+  // The engine's own snap settle after a reconnect fires at unpredictable times, so this never waits on it: a
+  // SYNTHETIC snap event proves `disconnected()` released the `#animFrame` gate (the cancelled frame can never clear it).
+  it.skipIf(server.browser !== 'chromium')('a disconnect mid-animation releases the snap gate: a synthetic snap after reconnect commits', async () => {
+    const { wrap, swiper, items, track } = mount(THREE)
+    swiper.active = '2'
+    await new Promise((r) => requestAnimationFrame(r)) // one frame into the animation
+    swiper.remove()
+    wrap.append(swiper)
+    staleSnap(track, items[1])
+    expect(swiper.active, 'the gate stayed held: #animFrame was not reset on disconnect').toBe('1')
+  })
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
