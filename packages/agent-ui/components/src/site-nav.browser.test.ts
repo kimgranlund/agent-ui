@@ -89,7 +89,11 @@ describe('site nav — ui-nav-rail structure (both engines)', () => {
   it('renders section context-labels and the wide name|tag row (proper name + trailing data-role="tag")', async () => {
     await ready()
     const labels = [...rail().querySelectorAll('[data-part="context-label"]')].map((n) => n.textContent)
-    expect(labels).toContain('Components') // the sitemap's own section axis is the group taxonomy
+    // the rail groups by the sitemap's `group` (GH #1600), falling back to `section`; derive the expected labels
+    // from the same source so a taxonomy rename cannot re-stale this assertion
+    const expected = [...new Set(SITE_NAV_ENTRIES.map((e) => e.group ?? e.section))]
+    expect(expected.length, 'no groups derived — the comparison below would be vacuous').toBeGreaterThan(1)
+    expect(labels).toEqual(expected)
     // a tag-bearing Components entry renders its tag in the trailing tag cell (the name|tag row, SPEC-R6)
     const tag = rail().querySelector('[data-role="tag"]') as HTMLElement
     expect(tag, 'no name|tag trailing cell rendered').not.toBeNull()
