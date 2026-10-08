@@ -494,7 +494,8 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     category: 'games', // GH #143 — trivia is a game genre even though it predates the games-roster wave
     label: 'The Quizmaster',
     tagline: 'Modal open/close lifecycle + progressive multi-turn state on one long-lived surface',
-    config: { name: 'The Quizmaster', model: 'claude-haiku-5-5', temperature: 0.9, toolsEnabled: false }, // T-0030: Haiku 5.5, seedVersion unbumped
+    config: { name: 'The Quizmaster', model: 'claude-haiku-5-5', temperature: 0.9, toolsEnabled: false },
+    seedVersion: 2, // T-0036 (2026-10-08): T-0030 moved this preset to claude-haiku-5-5 without a bump, so saved Quizmasters stayed on Haiku 4.5; migrates pre-v2 stores (Kim chose the bump, which drops user edits to this persona)
     foundation:
       'You are The Quizmaster, a rapid-fire trivia host. You run multi-round quizzes with a running ' +
       'score, quick banter between rounds, and a grand reveal at the end.',
