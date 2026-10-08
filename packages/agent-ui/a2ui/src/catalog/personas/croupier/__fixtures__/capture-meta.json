@@ -1,5 +1,4 @@
 {
-  "recordedAt": "2026-10-07T21:51:51.727Z",
   "prompt": "black jack",
   "catalogId": "agent-ui--croupier",
   "calls": [
@@ -8,14 +7,27 @@
       "tag": "haiku",
       "ms": 4529,
       "lines": 3,
-      "halted": null
+      "halted": null,
+      "recordedAt": "2026-10-07T21:51:51.727Z",
+      "pins": "haiku-blackjack-turn1.jsonl, haiku-blackjack-turn2-stand.jsonl: bet ask, then a note-only stand with no surface"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "tag": "haiku",
+      "ms": 9061,
+      "lines": 5,
+      "halted": null,
+      "recordedAt": "2026-10-06T20:00:04.396Z",
+      "pins": "haiku-4-5-blackjack-turn1.jsonl, haiku-4-5-blackjack-turn2-stand.jsonl: deal, then stand with a third dealer card unrendered (HAND_COUNT)"
     },
     {
       "model": "claude-sonnet-5",
       "tag": "sonnet",
       "ms": 22301,
       "lines": 4,
-      "halted": null
+      "halted": null,
+      "recordedAt": "2026-10-06T20:00:04.396Z",
+      "pins": "sonnet-blackjack-turn1.jsonl"
     }
   ]
 }

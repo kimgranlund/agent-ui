@@ -1,8 +1,8 @@
-// recorded-replay.test.ts: offline replay of real Haiku Croupier turns (GH #1795, T-0004; re-recorded on
-// claude-haiku-5-5, T-0033). The fixtures in __fixtures__/ were captured through produce() with the Croupier
-// catalog (capture-meta.json); no network or key is needed here. On 5.5 turn 1 asks for a bet (no hand yet)
-// and turn 2 ("stand") answers in a note with no surface, so the old HAND_COUNT symptom (three dealer cards
-// listed, two rendered) no longer appears in the recording; the nested-list fix stays pinned in checks.test.ts.
+// recorded-replay.test.ts: offline replay of real Haiku Croupier turns, one set per model (GH #1795,
+// T-0004; 5.5 set added by T-0033). Fixtures in __fixtures__/ were captured through produce() with the
+// Croupier catalog (capture-meta.json); no network or key is needed here. The 4.5 turn 2 ("stand") is the
+// faces symptom: the dealer draws a third card into the data model but no PlayingCard renders it (red
+// before the nested-list fix in checks.ts). On 5.5 turn 1 asks for a bet and turn 2 is a note with no surface.
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -20,23 +20,43 @@ const messages = (file: string): A2uiOutput =>
     .map((l) => JSON.parse(l) as A2uiServerMessage)
     .filter((m) => !('a2uiMeta' in m))
 
-const turn1 = messages('haiku-blackjack-turn1.jsonl')
-const turn2 = messages('haiku-blackjack-turn2-stand.jsonl')
-const session: Session = {
+const sessionFor = (turn1: A2uiOutput): Session => ({
   turns: [
     { role: 'user', content: 'black jack' },
     { role: 'assistant', content: turn1.map((m) => JSON.stringify(m)).join('\n') },
   ],
-}
+})
+const findings = (session: Session, out: A2uiOutput) =>
+  croupierHandConsistency.check({ surfaces: semanticSurfaceViews(session, out) })
 
-describe('recorded Haiku Croupier turns replay offline', () => {
-  it('turn 1 (bet ask) states no inconsistent hand', () => {
-    expect(turn1.length).toBeGreaterThan(0)
-    expect(croupierHandConsistency.check({ surfaces: semanticSurfaceViews({ turns: [] }, turn1) })).toEqual([])
+describe('recorded Haiku 4.5 Croupier turns replay offline', () => {
+  const turn1 = messages('haiku-4-5-blackjack-turn1.jsonl')
+  const turn2 = messages('haiku-4-5-blackjack-turn2-stand.jsonl')
+
+  it('turn 1 (deal) states no inconsistent hand', () => {
+    expect(findings({ turns: [] }, turn1)).toEqual([])
   })
 
-  it('turn 2 (stand with no hand in play) emits no surface and no finding', () => {
+  it('turn 2 (stand) is caught: three dealer cards listed, two rendered', () => {
+    const f = findings(sessionFor(turn1), turn2)
+    expect(f.map((x) => x.code)).toEqual(['HAND_COUNT'])
+    expect(f[0]!.path).toContain('dealer-cards')
+    expect(f[0]!.message).toContain('renders 2 cards but /game/dealer/cards lists 3')
+  })
+})
+
+describe('recorded Haiku 5.5 Croupier turns replay offline', () => {
+  const turn1 = messages('haiku-blackjack-turn1.jsonl')
+  const turn2 = messages('haiku-blackjack-turn2-stand.jsonl')
+
+  it('turn 1 asks for a bet: an ask-1 surface with a bet Slider, no hand, no finding', () => {
+    expect(JSON.stringify(turn1)).toContain('"surfaceId":"ask-1"')
+    expect(JSON.stringify(turn1)).toContain('"component":"Slider"')
+    expect(findings({ turns: [] }, turn1)).toEqual([])
+  })
+
+  it('turn 2 (stand with no hand in play) is a note only: no surface, no finding', () => {
     expect(turn2).toEqual([])
-    expect(croupierHandConsistency.check({ surfaces: semanticSurfaceViews(session, turn2) })).toEqual([])
+    expect(findings(sessionFor(turn1), turn2)).toEqual([])
   })
 })
