@@ -76,6 +76,7 @@ import {
   persistSelection,
 } from '../lib/provider-mode-selection.ts'
 import type { StoredSelection, EffortLevel } from '../lib/provider-mode-selection.ts'
+import '../lib/warm-catalog.ts' // ADR-0241 (T-0040): the default catalog body is in before this page builds a renderer, so `refreshHtml` reads a painted canvas
 
 const { content } = mountFullBleedPage()
 

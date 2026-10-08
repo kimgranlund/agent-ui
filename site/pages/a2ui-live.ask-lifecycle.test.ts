@@ -18,6 +18,10 @@ import type { A2uiActionMessage } from '@agent-ui/a2ui'
 // precedent). `agent-runtime.ts` re-exports the OTHER meta-line types (TurnTrace/A2uiMetaEnvelope/
 // AskDeclaration) but not this one, so this test goes straight to the owning subpath.
 import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line'
+// T-0040 (ADR-0241): warm the default catalog body once, at top level (a `beforeAll` would run after a renderer built at
+// module or describe scope), so every renderer built below registers it synchronously, as the eager catalog did.
+import { createRenderer as warm } from '@agent-ui/a2ui'
+await warm().preload('agent-ui')
 
 // `a2ui-live.ts`'s test-only injection seam — bound in `beforeAll` below via a DEFERRED (dynamic) import,
 // never a static one; see the comment there for why ordering is load-bearing here. The optional second arg

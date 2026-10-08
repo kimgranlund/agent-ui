@@ -15,6 +15,10 @@ if (typeof ElementInternals.prototype.setFormValue !== 'function') {
 }
 import '@agent-ui/components/all' // self-defines ui-* controls so the renderer's nodes upgrade
 import { AskRegistry, surfaceIdOf, componentTypesOf } from './ask-registry.ts'
+// T-0040 (ADR-0241): warm the default catalog body once, at top level (a `beforeAll` would run after a renderer built at
+// module or describe scope), so every renderer built below registers it synchronously, as the eager catalog did.
+import { createRenderer as warm } from '@agent-ui/a2ui'
+await warm().preload('agent-ui')
 
 describe('surfaceIdOf (ADR-0097 §2 routing helper)', () => {
   it('reads surfaceId off every envelope kind that carries one', () => {

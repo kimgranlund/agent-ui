@@ -10,6 +10,7 @@
 // vite.config.ts's site/**/*.html glob (matches the nav link ./a2ui-gallery.html) — no config edit.
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import { buildSeedGallery } from '../lib/a2ui-gallery.ts' // the shelf-derived card grid (+ its page-local CSS)
+import '../lib/warm-catalog.ts' // ADR-0241 (T-0040): the default catalog body is in before this page builds a renderer, so each gallery card reads its rendered surface synchronously
 
 const { content } = mountPage({ title: 'A2UI gallery' })
 content.append(

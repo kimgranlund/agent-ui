@@ -18,6 +18,7 @@ import type { UITextFieldElement } from '@agent-ui/components/controls/text-fiel
 import type { UITabsElement } from '@agent-ui/components/controls/tabs'
 import { TIERS, TIER_LABEL, browsableNames, tierOf, seedsUsingType, seedGalleryHref } from '../lib/a2ui-catalog-tiers.ts'
 import type { Tier } from '../lib/a2ui-catalog-tiers.ts'
+import '../lib/warm-catalog.ts' // ADR-0241 (T-0040): the default catalog body is in before the first <component-preview mode="a2ui"> builds its renderer, which that element reads synchronously
 
 // The browsable name list is the ONE derivation in `../lib/a2ui-catalog-tiers.ts` (`browsableNames()` — catalog
 // keys minus NESTED_ONLY, alphabetized); the page consumes it rather than re-deriving its own copy, so the tier

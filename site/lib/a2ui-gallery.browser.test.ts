@@ -33,6 +33,10 @@ import '@agent-ui/components/all.css' // per-control CSS (so a surface has real 
 import '@agent-ui/components/all' // self-defining ui-* controls (the renderer mounts these by tag)
 import { buildSeedGallery, buildSeedCard } from './a2ui-gallery.ts'
 import { documentRowToolbarSeed, bookingReservationSeed, patternSettingsSeed } from '@agent-ui/a2ui/examples'
+// T-0040 (ADR-0241): this file drives a lib the page entry warms (pages/a2ui-gallery.ts), so it warms the default catalog body
+// itself, once at top level (a `beforeAll` would run after a renderer built at module or describe scope).
+import { createRenderer as warm } from '@agent-ui/a2ui'
+await warm().preload('agent-ui')
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles + real-input
 // driver round trips), so its duration is set by the browser's scheduling, which stretches under load.

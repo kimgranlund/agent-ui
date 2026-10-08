@@ -6,6 +6,10 @@
 // devtools-harness.browser.test.ts (the "jsdom-green ≠ done" discipline).
 import { describe, it, expect, beforeAll } from 'vitest'
 import type { DevtoolsEvent, DevtoolsCapture } from '@agent-ui/devtools'
+// T-0040 (ADR-0241): warm the default catalog body once, at top level (a `beforeAll` would run after a renderer built at
+// module or describe scope), so every renderer built below registers it synchronously, as the eager catalog did.
+import { createRenderer as warm } from '@agent-ui/a2ui'
+await warm().preload('agent-ui')
 
 beforeAll(async () => {
   // jsdom reality (the a2ui-chat.test.ts precedent): ElementInternals.setFormValue/setValidity are

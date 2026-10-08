@@ -3,6 +3,10 @@ import '@agent-ui/components/all' // ADR-0233: the catalog factories import no c
 import { buildSeedGallery, buildSeedCard } from './a2ui-gallery.ts'
 import { allSeeds } from '@agent-ui/a2ui/examples'
 import type { ExampleSeed } from '@agent-ui/a2ui/examples'
+// T-0040 (ADR-0241): this file drives a lib the page entry warms (pages/a2ui-gallery.ts), so it warms the default catalog body
+// itself, once at top level (a `beforeAll` would run after a renderer built at module or describe scope).
+import { createRenderer as warm } from '@agent-ui/a2ui'
+await warm().preload('agent-ui')
 
 // a2ui-gallery.test.ts — the DERIVATION + drift gate for the A2UI composition gallery (site/lib/
 // a2ui-gallery.ts). Sister to gallery.test.ts (the ui-* control gallery's derivation gate). The page's
