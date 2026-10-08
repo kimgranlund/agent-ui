@@ -16,6 +16,10 @@ import { userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css' // foundation tokens + dimensional ramp (FIRST — geometry source)
 import '@agent-ui/components/all.css' // per-control CSS (so the specimen has real geometry, not 0×0)
 import './component-preview.ts' // registers <component-preview> + the self-defining ui-* controls
+// T-0040 (ADR-0241): this file drives a lib the page entry warms (pages/a2ui-catalog.ts), so it warms the default catalog body
+// itself, once at top level (a `beforeAll` would run after a renderer built at module or describe scope).
+import { createRenderer as warm } from '@agent-ui/a2ui'
+await warm().preload('agent-ui')
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles + real-input
 // driver round trips), so its duration is set by the browser's scheduling, which stretches under load.

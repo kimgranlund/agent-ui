@@ -33,6 +33,7 @@ import { codeBlock } from '../lib/code-block.ts' // shared <pre><code> previews 
 import { createRenderer } from '@agent-ui/a2ui'
 import type { RendererHost, A2uiClientMessage, A2uiServerMessage } from '@agent-ui/a2ui'
 import { generativeFormSeed } from '@agent-ui/a2ui/examples' // the shared, fine-grained form seed (ADR-0055, fork F1)
+import '../lib/warm-catalog.ts' // ADR-0241 (T-0040): the default catalog body is in before this page builds a renderer, so the first-paint readout counts lines against a painted surface
 
 const { content } = mountPage({ title: 'A2UI streaming' })
 content.append(

@@ -12,6 +12,10 @@ import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
 import { AskRegistry } from './ask-registry.ts'
 import type { A2uiClientMessage } from '@agent-ui/a2ui'
+// T-0040 (ADR-0241): warm the default catalog body once, at top level (a `beforeAll` would run after a renderer built at
+// module or describe scope), so every renderer built below registers it synchronously, as the eager catalog did.
+import { createRenderer as warm } from '@agent-ui/a2ui'
+await warm().preload('agent-ui')
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (real-input driver round trips),
 // so its duration is set by the browser's scheduling, which stretches under concurrent host load.

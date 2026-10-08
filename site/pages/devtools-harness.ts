@@ -49,6 +49,7 @@ import {
 import type { DevtoolsEvent, DevtoolsCapture, BackendId } from '@agent-ui/devtools'
 import { nextTurn, appendUserTurn, appendAssistantTurn, frameClientMessage, shouldRunTurn } from '../lib/agent-runtime.ts'
 import type { AgentTransport, TurnInput, Session } from '../lib/agent-runtime.ts'
+import '../lib/warm-catalog.ts' // ADR-0241 (T-0040): the default catalog body is in before this page builds a renderer, so the render verdict reads a painted canvas
 
 const { content } = mountFullBleedPage()
 

@@ -8,6 +8,10 @@ import { browsableNames } from './a2ui-catalog-tiers.ts'
 // gates use (descriptor/site-coverage.test.ts), resolved by vitest/node at runtime.
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
+// T-0040 (ADR-0241): warm the default catalog body once, at top level (a `beforeAll` would run after a renderer built at
+// module or describe scope), so every renderer built below registers it synchronously, as the eager catalog did.
+import { createRenderer as warm } from '@agent-ui/a2ui'
+await warm().preload('agent-ui')
 declare const process: { cwd(): string }
 
 // jsdom reality (the gallery.test.ts precedent — see its own header comment): the ElementInternals

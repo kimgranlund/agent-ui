@@ -44,6 +44,7 @@ import type { StoredSelection } from '../lib/provider-mode-selection.ts'
 
 // The committed fixture (LLD-C4) — a zero-network static import (Vite `?raw`), the a2a-tic-tac-toe precedent.
 import feedRaw from '../../packages/agent-ui/a2ui/tools/pipeline/fixtures/artifact-feed.a2a.jsonl?raw'
+import '../lib/warm-catalog.ts' // ADR-0241 (T-0040): the default catalog body is in before this page builds a renderer, so a hosted artifact is stretched against its painted root
 
 const { content } = mountPage({
   title: 'A2A Artifact Feed',
