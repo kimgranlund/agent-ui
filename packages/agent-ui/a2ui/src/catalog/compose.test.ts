@@ -167,7 +167,7 @@ describe('composePersonaCatalogs — SPEC-R2 derive-then-register step', () => {
     expect(registry.get('a2ui-basic--p')).toBeUndefined()
   })
 
-  it('AC6 — an unregistered target-base id fails loud at constructor time', () => {
+  it('AC6: an unregistered target-base id fails loud', () => {
     const registry = registryWithBases()
     const persona: PersonaCatalogPackage = {
       personaId: 'p',

@@ -766,8 +766,8 @@ const appCssQuerySuffixPlugin = {
 // ADR-0241 (2026-10-07, T-0029): catalog bodies load by catalog id behind an eager manifest. The renderer keeps
 // the default `agent-ui` catalog eager and holds a2ui-basic (both ids), the three shipped personas and the
 // compose step as lazy records, fetched the first time a surface names them; the slice-2 seam had taken the row
-// to 71628 B gz. Measured 67202 B gz marginal with the renderer's catalog gate included; RE-BASED DOWN under
-// ADR-0197 cl.5 (ordinary): 72027 -> 69250 B gz, the measured 67202 B gz plus 2048 B gz headroom. The bodies
+// to 71628 B gz. Measured 67203 B gz marginal with the renderer's catalog gate included; RE-BASED DOWN under
+// ADR-0197 cl.5 (ordinary): 72027 -> 69250 B gz, the measured 67203 B gz plus 2047 B gz headroom. The bodies
 // are reported on the informational lazy-catalog line below; `app/src/catalog-lazy.bundle.test.ts` keeps them
 // out of the eager closure.
 const APP_MARGINAL_BUDGET = 69250
