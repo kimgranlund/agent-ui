@@ -11,9 +11,14 @@ Citation key in SKILL.md for the full convention).
 
 A new catalog is a sibling package folder mirroring `default/`'s shape — `catalog.json` +
 `index.ts` + `factories.ts` + `functions.ts` + its tests (Decision cl.1) —
-and it pre-registers in the `Renderer` constructor, right after the default:
-`this.#registry.register(catalog, factories, functions)` (cl.2). That makes
-every renderer host catalog-capable with zero call-site edits. Two shapes the ADR explicitly
+and every renderer knows it by id from construction (cl.2). Since ADR-0241 a built-in catalog other
+than the default is a lazy record in `catalog/records.ts`: an eager manifest (the id, a copy of its
+`catalog.functions`, its submit-gate tags) plus a dynamic import of a body module that re-exports
+`catalog`, `factories` and `functions` (`a2ui-basic/body.ts`), registered with `registerLazy` after the
+default and loaded the first time a surface names it. `records.test.ts` holds the list equal to the
+shipped folders and each manifest equal to its body; `app/src/catalog-lazy.bundle.test.ts` fails if a
+body is imported statically. That still makes every renderer host catalog-capable with zero call-site
+edits; a project catalog keeps the synchronous `renderer.register(catalog, factories, functions)`. Two shapes the ADR explicitly
 rejects (cl.2's rejected-alternatives list): rebuild-the-renderer-per-catalogId, and registering only in one
 page's bootstrap — interop is a property of the PACKAGE, not a demo.
 
@@ -83,15 +88,17 @@ cl.3); the one
 A persona's own local pattern set (a booking flow's calendar+confirm idiom, a card-table's
 hand/score layout) is package-authored `catalog.json`-shaped CONTENT, never a whole standalone
 `Catalog` — `composeCatalog(base: Catalog, local: CatalogFragment, personaId: string): Catalog`
-(`catalog/compose.ts`) merges it onto an ALREADY-registered base at `Renderer` construction time
-(`persona-catalog-composition.spec.md` SPEC-R2, ADR-0172 cl.2), producing a NEW, independently-
-registered `Catalog` document — never a fork of `Registry.register` itself (SPEC-N4): the
+(`catalog/compose.ts`) merges it onto a base (`persona-catalog-composition.spec.md` SPEC-R2, ADR-0172
+cl.2): for a shipped persona when its `<base>--<persona>` record's body loads (ADR-0241 cl.8,
+`composePersonaEntry`), for a project persona synchronously in `composePersonaCatalogs`. Either way it
+produces a NEW, independently-registered `Catalog` document, never a fork of `Registry.register` itself (SPEC-N4): the
 derive-then-register step is strictly upstream, calling the SAME `register()` seam §1's whole-
 catalog pattern already uses, so `CATALOG_FACTORY_MISSING` and `loadCatalog`'s re-validation both
 apply unmodified.
 
 **Collision policy: reject-loud (ruled).** A colliding component/function name fails that
-(fragment, base) pairing with a `CatalogComposeError` at `Renderer` construction — never a silent
+(fragment, base) pairing with a `CatalogComposeError` when that pairing composes (a shipped persona's body
+load, where `records.test.ts` catches it in CI; a project persona's registration), never a silent
 override; a collision against one base never blocks another base's non-colliding pairing. The
 full policy prose is ADR-0172 cl.4 + `persona-catalog-composition.spec.md` SPEC-R3 (cite, don't
 restate — this section's earlier copy is exactly what GH #761 thinned).

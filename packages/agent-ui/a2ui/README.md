@@ -20,6 +20,8 @@ import { /* seed payloads */ } from '@agent-ui-kit/a2ui/examples'
 
 The host links the styles: `foundation-styles.css`, `shared-styles.css`, and the control sheets (or `all.css`). You never import the controls yourself: the renderer defines the controls a surface uses, on demand, before it renders them (ADR-0233). A message whose controls are not defined yet waits for them; later messages for that surface queue behind it in order.
 
+Catalogs load the same way (ADR-0241). The default `agent-ui` catalog ships with the renderer. The upstream A2UI Basic catalog (`a2ui-basic`, and its canonical URI) and the persona catalogs (`agent-ui--concierge` and the like) are known by id on every renderer, but their code is a separate chunk fetched the first time a surface names one. Messages for that surface wait for it in order; if the chunk fails to load, the renderer reports one error for the surface and drops it. `await renderer.preload(catalogId)` fetches a catalog ahead of time.
+
 Feed validated A2UI server messages (`createSurface` / `updateComponents` / `updateDataModel`) to the renderer and it maintains live surfaces — two-way input bindings, validity checks, dynamic lists, and action round-trips included. `./examples` ships seed payload transcripts; `./corpus` is the exemplar store.
 
 > The agent-producer toolkit (`./agent`) is published and Node-only: import it from a server or CLI, not a browser bundle. Its prompts, selection sidecars and dogfood fleet rows are embedded at build time by `scripts/generate-agent-assets.mjs` (ADR-0236), so it reads no repo path at runtime. The pure `./agent/meta-line` types are published too.

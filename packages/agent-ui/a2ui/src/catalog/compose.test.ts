@@ -132,7 +132,7 @@ describe('loadCatalogFragment — SPEC-R1 AC2', () => {
   })
 })
 
-describe('composePersonaCatalogs — SPEC-R2 constructor-time derive-then-register step', () => {
+describe('composePersonaCatalogs — SPEC-R2 derive-then-register step', () => {
   function registryWithBases(): Registry {
     const registry = new Registry()
     registry.register(baseCatalog('agent-ui', ['Card']), { Card: fakeFactory('ui-card') })

@@ -45,6 +45,8 @@ Measured options, all against 71,231: lazy non-default bodies (the records mecha
 - Repaired in the same change: pointers from ADR-0169 cl.2, ADR-0172 cl.2, ADR-0233 cl.5 and ADR-0197 cl.5. The SPEC, LLD and README repairs land with the slices that change what they describe, so a doc that says "constructor-time derive" or "registers on every renderer host" reads against this record until then.
 - Open question for Kim, recommended no: whether project catalogs get a public `registerLazy`. `register` is unchanged and stays the only project seam; the new method on `Registry` is internal to the package, until a consumer asks.
 
+> Note (2026-10-07, append-only, the Decision above is UNCHANGED): built by T-0029 (slices 3 to 5). The failed-load question left to slice 3 is decided: the renderer emits one `CATALOG_LOAD` for the surface, drops its queued messages and removes the surface, the end state of `CATALOG_UNKNOWN`, and a later `createSurface` retries ([runtime SPEC-R9 AC4](../spec/a2ui-runtime.spec.md)). The awaitable load is `RendererHost.preload(id)`; `callFunction` reads an unloaded id's manifest through `Registry.recordOf`. Measured with the catalog gate included: the app row 71,628 to 67,202 B gz, and `APP_MARGINAL_BUDGET` re-based down 72,027 to 69,250 B gz (measured plus 2,048).
+
 ## Alternatives considered
 
 - **Raise the budget.** Rejected: ADR-0197 cl.5 closes it, and a budget change here is only the downward re-base.

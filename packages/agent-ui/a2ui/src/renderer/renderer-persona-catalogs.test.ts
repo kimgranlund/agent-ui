@@ -1,7 +1,8 @@
-// renderer-persona-catalogs.test.ts — SPEC-R2's constructor-time derive-then-register step
-// (`persona-catalog-composition.spec.md`), driven through the REAL `Renderer` constructor — every other
-// compose/derive coverage (`catalog/compose.test.ts`) exercises `composePersonaCatalogs` against
-// synthetic registries/arrays, never `createRenderer()`'s own wiring (`renderer.ts`'s constructor).
+// renderer-persona-catalogs.test.ts: SPEC-R2's derive-then-register step (`persona-catalog-composition.spec.md`),
+// driven through the REAL `Renderer`. Every other compose/derive coverage (`catalog/compose.test.ts`)
+// exercises `composePersonaCatalogs` against synthetic registries/arrays, never `createRenderer()`'s own wiring.
+// ADR-0241 cl.8: each shipped `<base>--<persona>` id is a lazy record the renderer knows from construction and
+// composes when its body loads, so `harness(id)` awaits `preload(id)` first; the sync path then holds as before.
 // `RendererHost` exposes no direct registry read, so registration is proven the same BLACK-BOX way
 // `renderer.test.ts`'s own CATALOG_UNKNOWN test proves an id is UNRESOLVED: feed a real `createSurface`
 // naming the derived id and assert NO `CATALOG_UNKNOWN`/`VALIDATION_FAILED` fires, then a real
@@ -16,9 +17,10 @@ import type { A2uiServerMessage } from '../protocol.ts'
 const line = (message: A2uiServerMessage): string => JSON.stringify(message)
 const isError = (m: A2uiClientMessage): m is Extract<A2uiClientMessage, { error: unknown }> => 'error' in m
 
-function harness(): { r: RendererHost; mount: HTMLElement; sent: A2uiClientMessage[]; cleanup: () => void } {
+async function harness(...preload: string[]): Promise<{ r: RendererHost; mount: HTMLElement; sent: A2uiClientMessage[]; cleanup: () => void }> {
   const sent: A2uiClientMessage[] = []
   const r = createRenderer()
+  for (const id of preload) await r.preload(id)
   r.onClientMessage((m) => void sent.push(m))
   const mount = document.createElement('div')
   document.body.appendChild(mount)
@@ -27,8 +29,8 @@ function harness(): { r: RendererHost; mount: HTMLElement; sent: A2uiClientMessa
 }
 
 describe('createRenderer — SPEC-R2 derive-then-register wiring, real constructor', () => {
-  it('agent-ui--fixture-demo resolves: no CATALOG_UNKNOWN, and a real FixtureBanner <div> renders', () => {
-    const { r, mount, sent, cleanup } = harness()
+  it('agent-ui--fixture-demo resolves: no CATALOG_UNKNOWN, and a real FixtureBanner <div> renders', async () => {
+    const { r, mount, sent, cleanup } = await harness('agent-ui--fixture-demo')
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui--fixture-demo' } }))
     r.ingest(
       line({
@@ -43,8 +45,8 @@ describe('createRenderer — SPEC-R2 derive-then-register wiring, real construct
     cleanup()
   })
 
-  it('a2ui-basic--fixture-demo resolves too — the SAME fragment composed independently over the OTHER base', () => {
-    const { r, mount, sent, cleanup } = harness()
+  it('a2ui-basic--fixture-demo resolves too — the SAME fragment composed independently over the OTHER base', async () => {
+    const { r, mount, sent, cleanup } = await harness('a2ui-basic--fixture-demo')
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's2', catalogId: 'a2ui-basic--fixture-demo' } }))
     r.ingest(
       line({
@@ -59,8 +61,8 @@ describe('createRenderer — SPEC-R2 derive-then-register wiring, real construct
     cleanup()
   })
 
-  it('a2ui-basic--fixture-demo ALSO resolves the base catalog\'s own component types (the union, SPEC-R2 AC2)', () => {
-    const { r, mount, sent, cleanup } = harness()
+  it('a2ui-basic--fixture-demo ALSO resolves the base catalog\'s own component types (the union, SPEC-R2 AC2)', async () => {
+    const { r, mount, sent, cleanup } = await harness('a2ui-basic--fixture-demo')
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's3', catalogId: 'a2ui-basic--fixture-demo' } }))
     r.ingest(
       line({ version: 'v1.0', updateComponents: { surfaceId: 's3', components: [{ id: 'root', component: 'Text', text: 'base type' }] } }),
@@ -70,8 +72,8 @@ describe('createRenderer — SPEC-R2 derive-then-register wiring, real construct
     cleanup()
   })
 
-  it('the a2ui-basic canonical-URI alias itself is untouched — it never gained a --fixture-demo derived pairing', () => {
-    const { r, mount, sent, cleanup } = harness()
+  it('the a2ui-basic canonical-URI alias itself is untouched — it never gained a --fixture-demo derived pairing', async () => {
+    const { r, mount, sent, cleanup } = await harness()
     const CANONICAL_URI = 'https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json'
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's4', catalogId: `${CANONICAL_URI}--fixture-demo` } }))
     r.ingest(line({ version: 'v1.0', updateComponents: { surfaceId: 's4', components: [{ id: 'root', component: 'FixtureBanner' }] } }))
@@ -95,8 +97,8 @@ describe('createRenderer — SPEC-R2 derive-then-register wiring, real construct
 // form-associated) has no such gap and is proven fully connected here.
 
 describe('createRenderer — GH #497 concierge/croupier content personas (SPEC-R2 derive-then-register wiring, real constructor)', () => {
-  it('agent-ui--concierge resolves BookingForm as a real ui-form-provider (fields: [] — jsdom-safe)', () => {
-    const { r, mount, sent, cleanup } = harness()
+  it('agent-ui--concierge resolves BookingForm as a real ui-form-provider (fields: [] — jsdom-safe)', async () => {
+    const { r, mount, sent, cleanup } = await harness('agent-ui--concierge')
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's5', catalogId: 'agent-ui--concierge' } }))
     r.ingest(
       line({
@@ -111,8 +113,8 @@ describe('createRenderer — GH #497 concierge/croupier content personas (SPEC-R
     cleanup()
   })
 
-  it('agent-ui--concierge resolves BookingConfirmation as a real ui-card, rows bound to a live data-model object', () => {
-    const { r, mount, sent, cleanup } = harness()
+  it('agent-ui--concierge resolves BookingConfirmation as a real ui-card, rows bound to a live data-model object', async () => {
+    const { r, mount, sent, cleanup } = await harness('agent-ui--concierge')
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's6', catalogId: 'agent-ui--concierge' } }))
     r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 's6', path: '/booking', value: { checkIn: '2026-08-10' } } }))
     r.ingest(
@@ -140,8 +142,8 @@ describe('createRenderer — GH #497 concierge/croupier content personas (SPEC-R
     cleanup()
   })
 
-  it('a2ui-basic--concierge resolves too — the SAME fragment composed independently over the OTHER base', () => {
-    const { r, mount, sent, cleanup } = harness()
+  it('a2ui-basic--concierge resolves too — the SAME fragment composed independently over the OTHER base', async () => {
+    const { r, mount, sent, cleanup } = await harness('a2ui-basic--concierge')
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's7', catalogId: 'a2ui-basic--concierge' } }))
     r.ingest(line({ version: 'v1.0', updateComponents: { surfaceId: 's7', components: [{ id: 'root', component: 'BookingForm', fields: [] }] } }))
     expect(sent.filter(isError)).toEqual([])
@@ -149,8 +151,8 @@ describe('createRenderer — GH #497 concierge/croupier content personas (SPEC-R
     cleanup()
   })
 
-  it('agent-ui--croupier resolves PlayingCard as a real, fully-connected ui-playing-card (ADR-0225 retarget)', () => {
-    const { r, mount, sent, cleanup } = harness()
+  it('agent-ui--croupier resolves PlayingCard as a real, fully-connected ui-playing-card (ADR-0225 retarget)', async () => {
+    const { r, mount, sent, cleanup } = await harness('agent-ui--croupier')
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's8', catalogId: 'agent-ui--croupier' } }))
     r.ingest(
       line({
@@ -166,8 +168,8 @@ describe('createRenderer — GH #497 concierge/croupier content personas (SPEC-R
     cleanup()
   })
 
-  it('a2ui-basic--croupier resolves too — the SAME fragment composed independently over the OTHER base', () => {
-    const { r, mount, sent, cleanup } = harness()
+  it('a2ui-basic--croupier resolves too — the SAME fragment composed independently over the OTHER base', async () => {
+    const { r, mount, sent, cleanup } = await harness('a2ui-basic--croupier')
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's9', catalogId: 'a2ui-basic--croupier' } }))
     r.ingest(
       line({
@@ -189,8 +191,8 @@ describe('createRenderer — GH #497 concierge/croupier content personas (SPEC-R
   // concierge/croupier now registered alongside it — `composeCatalog` never mutates `base` (compose.ts),
   // it only ever produces NEW derived catalogs, so the plain `agent-ui`/`a2ui-basic` entries are
   // untouched by the two new personas' presence.
-  it('byte-compat: a plain "agent-ui" surface (no persona suffix) still renders an ordinary Button exactly as before', () => {
-    const { r, mount, sent, cleanup } = harness()
+  it('byte-compat: a plain "agent-ui" surface (no persona suffix) still renders an ordinary Button exactly as before', async () => {
+    const { r, mount, sent, cleanup } = await harness()
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's10', catalogId: 'agent-ui' } }))
     r.ingest(
       line({
@@ -208,8 +210,8 @@ describe('createRenderer — GH #497 concierge/croupier content personas (SPEC-R
     cleanup()
   })
 
-  it('byte-compat: a plain "a2ui-basic" surface (no persona suffix) still renders its own base types exactly as before', () => {
-    const { r, mount, sent, cleanup } = harness()
+  it('byte-compat: a plain "a2ui-basic" surface (no persona suffix) still renders its own base types exactly as before', async () => {
+    const { r, mount, sent, cleanup } = await harness('a2ui-basic')
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's11', catalogId: 'a2ui-basic' } }))
     r.ingest(line({ version: 'v1.0', updateComponents: { surfaceId: 's11', components: [{ id: 'root', component: 'Text', text: 'base type' }] } }))
     expect(sent.filter(isError)).toEqual([])

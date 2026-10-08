@@ -46,10 +46,12 @@ export function handleCallFunction(
   // Result is order-independent — registration order has no effect on the verdict.
   let declaredInAny = false
   let anyClientOnly = false
+  // ADR-0241 cl.7: a recorded, not yet loaded catalog answers from its eager manifest, so the verdict never
+  // depends on which bodies happen to be loaded.
   for (const catalogId of registry.supportedCatalogIds()) {
-    const entry = registry.get(catalogId)
-    if (entry === undefined) continue
-    const def = entry.catalog.functions[call]
+    const functions = registry.get(catalogId)?.catalog.functions ?? registry.recordOf?.(catalogId)?.functions
+    if (functions === undefined) continue
+    const def = functions[call]
     if (def === undefined) continue // not declared in this catalog — keep scanning
     declaredInAny = true
     if (def.callableFrom === 'clientOnly') {

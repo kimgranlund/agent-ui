@@ -74,10 +74,12 @@ const isError = (m: A2uiClientMessage): m is Extract<A2uiClientMessage, { error:
 
 /** The jsdom real-host smoke (ADR-0055 clause 4b): a fresh renderer, mount, ingest every message as a
  *  JSONL line, finalize the COMPLETE set (ADR-0002), then dispose — returns every client-message the
- *  host emitted so the caller can assert the error channel is empty. */
-function renderSmoke(seed: Pick<ExampleSeed, 'surfaceId' | 'messages'>): A2uiClientMessage[] {
+ *  host emitted so the caller can assert the error channel is empty. Each named catalog is loaded first
+ *  (ADR-0241: a2ui-basic is a lazy record), so the smoke judges a rendered surface, never a queued one. */
+async function renderSmoke(seed: Pick<ExampleSeed, 'surfaceId' | 'messages'>): Promise<A2uiClientMessage[]> {
   const sent: A2uiClientMessage[] = []
   const r = createRenderer()
+  for (const message of seed.messages) if ('createSurface' in message) await r.preload(message.createSurface.catalogId)
   r.onClientMessage((m) => void sent.push(m))
   const mount = document.createElement('div')
   document.body.appendChild(mount)
@@ -131,8 +133,8 @@ describe('the example seed shelf (ADR-0055) — standing validity gate', () => {
         expect(validateA2ui(seed.messages, defaultCatalog)).toEqual({ valid: true, failures: [] })
       })
 
-      it('renders through the real host with an empty error channel', () => {
-        const sent = renderSmoke(seed)
+      it('renders through the real host with an empty error channel', async () => {
+        const sent = await renderSmoke(seed)
         expect(sent.filter(isError)).toEqual([])
       })
     })
@@ -231,8 +233,8 @@ describe('the kpi-panel-lifecycle exemplar — SPEC-R4 fixture validation', () =
     expect(rootDeliveries).toHaveLength(1)
   })
 
-  it('the final deleteSurface leaves no orphaned references (SPEC-R4 AC1) — a fresh renderer finalizes clean', () => {
-    const sent = renderSmoke(kpiPanelLifecycleSeed)
+  it('the final deleteSurface leaves no orphaned references (SPEC-R4 AC1) — a fresh renderer finalizes clean', async () => {
+    const sent = await renderSmoke(kpiPanelLifecycleSeed)
     expect(sent.filter(isError)).toEqual([])
   })
 
@@ -305,8 +307,8 @@ describe('the gate bites — a deliberately-broken fixture (negative control, NO
     expect(v.failures).toContainEqual({ code: 'CATALOG', path: 'root' })
   })
 
-  it('FAILS the real-host smoke too — the placeholder path emits a CATALOG error on the client channel', () => {
-    const sent = renderSmoke(brokenSeed)
+  it('FAILS the real-host smoke too — the placeholder path emits a CATALOG error on the client channel', async () => {
+    const sent = await renderSmoke(brokenSeed)
     const errors = sent.filter(isError)
     expect(errors.length).toBeGreaterThan(0)
     expect(errors[0]!.error.code).toBe('VALIDATION_FAILED') // ADR-0031: CATALOG (internal) → VALIDATION_FAILED (wire)
@@ -397,8 +399,8 @@ describe('ADR-0163 cl.9 coverage fixture — widened Table (selectable/selected/
     expect(validateA2ui(interactiveTableFixture.messages, defaultCatalog)).toEqual({ valid: true, failures: [] })
   })
 
-  it('renders through the real host with an empty error channel (leg b) — a real ui-table selection checkbox and a real ui-pagination both mount', () => {
-    const sent = renderSmoke(interactiveTableFixture)
+  it('renders through the real host with an empty error channel (leg b) — a real ui-table selection checkbox and a real ui-pagination both mount', async () => {
+    const sent = await renderSmoke(interactiveTableFixture)
     expect(sent.filter(isError)).toEqual([])
   })
 
@@ -486,8 +488,8 @@ describe('the Basic example shelf (GH #1737) - standing gate over allBasicSeeds'
         expect(validateBasic(seed)).toEqual({ valid: true, failures: [] })
       })
 
-      it('renders through the real host with an empty error channel', () => {
-        expect(renderSmoke(seed).filter(isError)).toEqual([])
+      it('renders through the real host with an empty error channel', async () => {
+        expect((await renderSmoke(seed)).filter(isError)).toEqual([])
       })
     })
   }
@@ -522,8 +524,8 @@ describe('the Basic example shelf (GH #1737) - the gate bites (planted in-memory
     expect(verdict.failures.every((f) => f.code === 'CATALOG')).toBe(true)
   })
 
-  it('a planted Basic seed renders through the real host with an empty error channel (the default registry carries a2ui-basic)', () => {
-    expect(renderSmoke(planted).filter(isError)).toEqual([])
+  it('a planted Basic seed renders through the real host with an empty error channel (the default registry carries a2ui-basic)', async () => {
+    expect((await renderSmoke(planted)).filter(isError)).toEqual([])
   })
 
   it('a wrong-dialect seed (an agent-ui payload stamped a2ui-basic) FAILS the Basic validator leg', () => {
@@ -532,8 +534,8 @@ describe('the Basic example shelf (GH #1737) - the gate bites (planted in-memory
     expect(verdict.failures.length).toBeGreaterThan(0)
   })
 
-  it('a wrong-dialect seed also FAILS the Basic render leg (VALIDATION_FAILED on the client channel), so both legs bite', () => {
-    const errors = renderSmoke(misStamped).filter(isError)
+  it('a wrong-dialect seed also FAILS the Basic render leg (VALIDATION_FAILED on the client channel), so both legs bite', async () => {
+    const errors = (await renderSmoke(misStamped)).filter(isError)
     expect(errors.length).toBeGreaterThan(0)
     expect(errors[0]!.error.code).toBe('VALIDATION_FAILED')
   })

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { toWireError } from './protocol.ts'
 import type { A2uiError } from './protocol.ts'
 
-// S1 unit-test for toWireError (ADR-0031 clause 2/3/4). ALL 11 internal codes → VALIDATION_FAILED +
+// S1 unit-test for toWireError (ADR-0031 clause 2/3/4). ALL 12 internal codes → VALIDATION_FAILED +
 // surfaceId this wave (flow-grounded resolution: our FUNCTION emits are render-time binding-evaluation
 // failures, not server-initiated function-call rejections). Internal `path` is folded into `message`;
 // the wire object carries NO `path` field. `A2uiWireError` still models both arms (INVALID_FUNCTION_CALL
@@ -30,7 +30,7 @@ describe('toWireError — internal → v1.0 wire mapping (ADR-0031)', () => {
     expect(wire).not.toHaveProperty('functionCallId') // VALIDATION_FAILED excludes functionCallId (the XOR)
   })
 
-  // ── VALIDATION_FAILED arm: all 11 codes (including FUNCTION, DEPTH_EXCEEDED, CONTAINMENT, CONTROL_LOAD)
+  // ── VALIDATION_FAILED arm: all 12 codes (including FUNCTION, DEPTH_EXCEEDED, CONTAINMENT, CONTROL_LOAD, CATALOG_LOAD)
 
   it('PARSE → VALIDATION_FAILED + surfaceId (empty string: PARSE has no surface context)', () => {
     // PARSE has no surfaceId (the line faults before any surface is known) → surfaceId: ''.
@@ -152,9 +152,19 @@ describe('toWireError — internal → v1.0 wire mapping (ADR-0031)', () => {
     expect(wire).not.toHaveProperty('functionCallId')
   })
 
+  it('CATALOG_LOAD → VALIDATION_FAILED + surfaceId, mapped like CATALOG (ADR-0241)', () => {
+    // A recorded catalog's body failed to load: surface-scoped, no path, the message unchanged.
+    const wire = toWireError({ code: 'CATALOG_LOAD', surfaceId: 's9', message: 'catalog "a2ui-basic" failed to load: offline' })
+    expect(wire.code).toBe('VALIDATION_FAILED')
+    expect((wire as { surfaceId?: string }).surfaceId).toBe('s9')
+    expect(wire.message).toBe('catalog "a2ui-basic" failed to load: offline')
+    expect(wire).not.toHaveProperty('path')
+    expect(wire).not.toHaveProperty('functionCallId')
+  })
+
   // ── XOR invariant (structural guarantee of the discriminated union) ───────────────────────────
 
-  it('every toWireError result carries ONLY surfaceId (no functionCallId): all 11 codes this wave', () => {
+  it('every toWireError result carries ONLY surfaceId (no functionCallId): all 12 codes this wave', () => {
     // ALL codes → VALIDATION_FAILED + surfaceId this wave. The INVALID_FUNCTION_CALL arm is modeled
     // by A2uiWireError (forward-ready for #23) but toWireError never produces it at runtime.
     const vf = toWireError({ code: 'SCHEMA', surfaceId: 's', message: 'm' })

@@ -25,6 +25,7 @@ describe('BookingForm — real submitGate required-gating (ADR-0054, native, no 
     const sent: A2uiClientMessage[] = []
     r.onClientMessage((m) => sent.push(m))
 
+    await r.preload('agent-ui--concierge') // ADR-0241: a lazy record; loaded, the ingest below applies synchronously
     r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui--concierge' } })
     r.ingestMessage({
       version: 'v1.0',
@@ -73,6 +74,7 @@ describe('BookingForm → BookingConfirmation — a real day-cell pick round-tri
     const sent: A2uiClientMessage[] = []
     r.onClientMessage((m) => sent.push(m))
 
+    await r.preload('agent-ui--concierge') // ADR-0241: a lazy record; loaded, the ingest below applies synchronously
     r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: 's2', catalogId: 'agent-ui--concierge' } })
     r.ingestMessage({
       version: 'v1.0',

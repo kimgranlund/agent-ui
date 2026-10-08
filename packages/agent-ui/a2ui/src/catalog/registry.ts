@@ -106,6 +106,11 @@ export class Registry implements CatalogRegistry {
     return this.#catalogs.has(id) || this.#records.has(id)
   }
 
+  /** The record of a recorded, not yet loaded id (ADR-0241 cl.7, the `callFunction` manifest scan). */
+  recordOf(id: string): LazyCatalogRecord | undefined {
+    return this.#records.get(id)
+  }
+
   /**
    * Load a recorded catalog's body (module-wide memo, `loader.ts`) and register it into this registry, once
    * (concurrent calls share the one load: the first to resume registers, the rest find the id loaded and

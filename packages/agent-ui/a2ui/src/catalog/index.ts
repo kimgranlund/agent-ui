@@ -25,7 +25,8 @@ export { a2uiBasicFunctions } from './a2ui-basic/functions.ts'
 
 // M-D — the persona catalog compose-time overlay (ADR-0172 cl.2, `persona-catalog-composition.spec.md`
 // SPEC-R1/R2): the pure merge (`composeCatalog`), the fragment loader, the derived-id naming convention,
-// the compose-time error, and the constructor-time derive-then-register step `renderer.ts` calls.
+// the compose-time error, and the derive-then-register step a project persona runs (the shipped personas derive
+// at body load instead, `records.ts`, ADR-0241).
 export {
   composeCatalog,
   loadCatalogFragment,
