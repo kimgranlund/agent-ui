@@ -487,7 +487,8 @@ export class UISwiperElement extends UIContainerElement {
    *  event names the settled target directly, so this skips the debounce timer AND `#nearestSlide`'s geometry
    *  guess entirely — `#mapToReal`/`#teleport`/`#commit` are the same shared machinery `#onSettle` drives,
    *  so both paths converge on an identical committed result. Falls back to the geometry resolve only if the
-   *  event names no snap target on this axis (a legal empty state per spec, e.g. mid-programmatic-scroll).
+   *  event names no snap target on this axis (a legal empty state per spec). A programmatic scroll
+   *  animation never reaches that fallback: the `#animFrame` gate below drops the event first.
    *  Teleport echo on THIS path: a clone-band settle triggers `#teleport`, whose instant jump lands the
    *  scroll offset on the real twin — the UA's snapped target CHANGES, so the engine may fire a second
    *  `scrollsnapchange` naming that twin. `#teleporting` swallows the one that arrives inside the jump's rAF
@@ -496,7 +497,10 @@ export class UISwiperElement extends UIContainerElement {
    *  no change and emits nothing, whether or not the echo beat the rAF (LLD §5, the same primary/secondary
    *  split `#teleport`'s own comment names for the debounce path). */
   #onSnapChange = (evt: Event): void => {
-    if (this.#teleporting) return
+    // A programmatic animation owns the track until it lands: a stale snap event from the prior layout can
+    // arrive mid-animation and would commit the OLD slide over the just-written `active`, so it is dropped
+    // here and the animation's closing `#onSettle` is the single commit.
+    if (this.#teleporting || this.#animFrame !== null) return
     const e = evt as SnapChangeEvent
     const target = (this.orientation === 'horizontal' ? e.snapTargetInline : e.snapTargetBlock) ?? this.#nearestSlide()
     if (!(target instanceof HTMLElement)) return
@@ -653,14 +657,15 @@ export class UISwiperElement extends UIContainerElement {
    * `proximity` downgrade was tried first and still let snap pull the motion to an early stop partway
    * through (measured: 2 intermediate frames instead of the full ~10-frame curve `none` gives).
    *
-   * Suspending snap entirely means the UA fires no `scrollsnapchange` for this move, so `#onSnapChange`
+   * Suspending snap entirely means the UA fires no `scrollsnapchange` for this move itself, so `#onSnapChange`
    * (the loop's clone-band teleport trigger, SPEC-R11) never runs on its own — confirmed by the infinite-
    * loop wrap tests regressing under a first `none`-only attempt. `#onSettle` is the SAME shared commit/
    * teleport machinery both the native-event path and the debounce-timer fallback converge on, and it
    * only needs live geometry (`#nearestSlide`), not an active snap state — so it is called directly, once,
-   * right after restoring `mandatory`, rather than relying on the browser to notice a change into a
-   * position it was already sitting at. Any real native/debounced settle event that still arrives after is
-   * harmless: `#commit`'s changed-index guard makes a repeat call a no-op. */
+   * right after restoring `mandatory`. A STALE snap event (queued from the prior layout) can still arrive
+   * mid-animation and would commit the old slide over the new `active`, so `#onSnapChange` drops events
+   * while `#animFrame` is set; the closing `#onSettle` is the single commit. A repeat after landing is a
+   * no-op via `#commit`'s changed-index guard. */
   #runScrollAnimation(from: number, to: number): void {
     if (this.#animFrame !== null) cancelAnimationFrame(this.#animFrame)
     const track = this.#track
