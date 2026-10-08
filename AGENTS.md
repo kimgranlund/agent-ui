@@ -20,7 +20,7 @@ Ten packages under `packages/agent-ui/*`; full layout in [CLAUDE.md](CLAUDE.md).
 | `data` | headless data layer (`DataSource<T>`) |
 | `devtools` | chat and A2UI dev/debug harness |
 
-- DAG: `shared <- components <- a2ui <- {app, devtools}`; `router`/`code`/`data` are siblings off `components`; `a2a` and `icons` import nothing.
+- DAG: `shared <- components <- a2ui <- {app, devtools}`; `router`/`code`/`data` are siblings off `components`; `components` also imports `icons`; `icons` and `a2a` import nothing themselves.
 - Enforced by each package's `src/layering.test.ts`. Consult those on any edge question.
 
 ## Where truth lives
@@ -69,7 +69,6 @@ Ten packages under `packages/agent-ui/*`; full layout in [CLAUDE.md](CLAUDE.md).
 
 - Stale context is a defect: a change that invalidates a record repairs it in the same change.
 - No em dashes anywhere, including commits and issue comments.
-- GH #1798 tracks skills that name plugin agents that are currently disabled.
 
 <!-- sdlc-lite:managed:start v1 sha256:971fe8256976 -->
 ## Documents
