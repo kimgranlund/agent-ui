@@ -15,7 +15,6 @@
     "./router-link.css": "./src/controls/router-link/router-link.css"
   },
   "dependencies": {
-    "@agent-ui/components": "*",
-    "@agent-ui/shared": "*"
+    "@agent-ui/components": "*"
   }
 }

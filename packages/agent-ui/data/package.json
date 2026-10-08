@@ -11,7 +11,6 @@
     "./stream": "./src/stream/index.ts"
   },
   "dependencies": {
-    "@agent-ui/components": "*",
-    "@agent-ui/shared": "*"
+    "@agent-ui/components": "*"
   }
 }
