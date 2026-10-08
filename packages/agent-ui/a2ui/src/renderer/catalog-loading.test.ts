@@ -39,7 +39,11 @@ const probes = vi.hoisted(() => {
     },
   })
   const PING_CLIENT_ONLY = { ping: { args: {}, returns: { type: 'string' }, callableFrom: 'clientOnly' as const } }
-  const names = ['defer', 'unloaded', 'memo', 'reject', 'delete', 'dispose-ok', 'dispose-bad', 'controls', 'slow']
+  const names = [
+    'defer', 'unloaded', 'memo', 'reject', 'delete', 'dispose-ok', 'dispose-bad', 'controls', 'slow',
+    'warm', 'warm-late',
+    'settle-drain', 'settle-fail', 'settle-delete', 'settle-recreate', 'settle-dispose', 'settle-ctrl', 'settle-a', 'settle-b',
+  ]
   return { slots, PING_CLIENT_ONLY, records: [...names.map((n) => record(`probe-${n}`)), record('probe-fn', PING_CLIENT_ONLY)] }
 })
 
@@ -316,6 +320,173 @@ describe('renderer deferred apply behind a lazy catalog body (ADR-0241)', () => 
     slow.slot().resolve()
     await settle()
     expect(mount.querySelector('[data-a2ui-surface="s1"]')?.textContent).toBe('slow')
+    cleanup()
+  })
+})
+
+describe('warm-memo: a renderer built after a body has loaded registers it at once (ADR-0241 seam)', () => {
+  it('a later renderer takes the loaded body synchronously; a renderer built before the load stays cold', async () => {
+    const p = arm('warm')
+    const early = host()
+    p.slot().resolve()
+    await early.r.preload(p.id)
+
+    const late = host() // built after the one load landed
+    create(late.r, 's', p.id)
+    components(late.r, 's', [{ id: 'root', component: 'Leaf', label: 'warm' }])
+    expect(late.r.pending).toBe(false)
+    expect(late.mount.querySelector(p.leaf)?.textContent).toBe('warm') // same tick: no deferral, no second fetch
+
+    create(early.r, 't', p.id) // `early` registered it through its own preload
+    components(early.r, 't', [{ id: 'root', component: 'Leaf', label: 'early' }])
+    expect(early.mount.querySelector(p.leaf)?.textContent).toBe('early')
+    expect(p.slot().loads).toBe(1)
+    early.cleanup()
+    late.cleanup()
+  })
+
+  it('a renderer built before the load lands defers even after another renderer loaded it', async () => {
+    const p = arm('warm-late')
+    const before = host()
+    const loader = host()
+    p.slot().resolve()
+    await loader.r.preload(p.id)
+
+    create(before.r, 's', p.id)
+    components(before.r, 's', [{ id: 'root', component: 'Leaf', label: 'cold' }])
+    expect(before.r.pending).toBe(true) // its registry never registered the body: the ensure() hop remains
+    expect(before.mount.querySelector(p.leaf)).toBeNull()
+    await before.r.settled()
+    expect(before.mount.querySelector(p.leaf)?.textContent).toBe('cold')
+    before.cleanup()
+    loader.cleanup()
+  })
+})
+
+describe('RendererHost.pending and settled(): the settle seam (ADR-0241, ADR-0187)', () => {
+  const isSettled = async (p: Promise<void>): Promise<boolean> => {
+    let done = false
+    void p.then(() => (done = true))
+    await Promise.resolve()
+    await Promise.resolve()
+    return done
+  }
+
+  it('a cold renderer: pending is false, then true behind the load, then false once the queue drained; settled() resolves after the apply', async () => {
+    const p = arm('settle-drain')
+    const { r, mount, cleanup } = host()
+    expect(r.pending).toBe(false)
+    await expect(isSettled(r.settled())).resolves.toBe(true) // nothing queued: already resolved
+
+    create(r, 's', p.id)
+    components(r, 's', [{ id: 'root', component: 'Leaf', label: 'drained' }])
+    r.finalize('s')
+    expect(r.pending).toBe(true)
+    const first = r.settled()
+    const second = r.settled()
+    await expect(isSettled(first)).resolves.toBe(false) // still behind the gate
+
+    p.slot().resolve()
+    await Promise.all([first, second])
+    expect(r.pending).toBe(false)
+    expect(mount.querySelector(p.leaf)?.textContent).toBe('drained') // the waiter runs after the whole queue applied
+    cleanup()
+  })
+
+  it('pending covers every surface: it stays true until the last queue drains', async () => {
+    const a = arm('settle-a')
+    const b = arm('settle-b')
+    const { r, cleanup } = host()
+    create(r, 'a', a.id)
+    create(r, 'b', b.id)
+    const settled = r.settled()
+    a.slot().resolve()
+    await settle()
+    expect(r.pending).toBe(true) // b is still loading
+    await expect(isSettled(settled)).resolves.toBe(false)
+    b.slot().resolve()
+    await settled
+    expect(r.pending).toBe(false)
+    cleanup()
+  })
+
+  it('pending also covers the control gate behind a loaded body', async () => {
+    let defineControls!: () => void
+    const controlsReady = new Promise<void>((res) => (defineControls = res))
+    const records: Record<string, ControlRecord> = {}
+    const p = arm('settle-ctrl', (f) => {
+      for (const tag of [f.box, f.leaf]) {
+        records[tag] = {
+          tag,
+          load: async () => {
+            await controlsReady
+            if (customElements.get(tag) === undefined) customElements.define(tag, class extends HTMLElement {})
+          },
+        }
+      }
+      return { catalog: f.catalog, factories: f.factories, controls: createControlLoader(records, { css: 'host' }) }
+    })
+    const { r, mount, cleanup } = host()
+    create(r, 's', p.id)
+    components(r, 's', [{ id: 'root', component: 'Leaf', label: 'ctl' }])
+    p.slot().resolve()
+    await settle()
+    expect(r.pending).toBe(true) // the body is in; the controls are not
+    const settled = r.settled()
+    defineControls()
+    await settled
+    expect(r.pending).toBe(false)
+    expect(mount.querySelector(p.leaf)?.textContent).toBe('ctl')
+    cleanup()
+  })
+
+  it('a failed load settles after the surface is removed and CATALOG_LOAD is emitted', async () => {
+    const p = arm('settle-fail')
+    const { r, sent, cleanup } = host()
+    create(r, 's', p.id)
+    components(r, 's', [{ id: 'root', component: 'Leaf', label: 'x' }])
+    const settled = r.settled()
+    p.slot().reject(new Error('chunk offline'))
+    await settled
+    expect(r.pending).toBe(false)
+    expect(sent.filter(isError)).toHaveLength(1)
+    cleanup()
+  })
+
+  it('deleteSurface of the only pending surface settles at once, without the load landing', async () => {
+    const p = arm('settle-delete')
+    const { r, cleanup } = host()
+    create(r, 's', p.id)
+    const settled = r.settled()
+    r.ingest(line({ version: 'v1.0', deleteSurface: { surfaceId: 's' } }))
+    expect(r.pending).toBe(false)
+    await settled
+    cleanup()
+  })
+
+  it('a re-createSurface that swaps a pending surface for a loaded catalog settles too', async () => {
+    const p = arm('settle-recreate')
+    const free = fixture('settle-free')
+    const { r, mount, cleanup } = host()
+    r.register(free.catalog, free.factories)
+    create(r, 's', p.id)
+    const settled = r.settled()
+    create(r, 's', 'probe-settle-free') // replaces the pending surface; the new one has no queue
+    components(r, 's', [{ id: 'root', component: 'Leaf', label: 'swapped' }])
+    expect(r.pending).toBe(false)
+    await settled
+    expect(mount.querySelector(free.leaf)?.textContent).toBe('swapped')
+    cleanup()
+  })
+
+  it('dispose while pending settles every waiter', async () => {
+    const p = arm('settle-dispose')
+    const { r, cleanup } = host()
+    create(r, 's', p.id)
+    const settled = r.settled()
+    r.dispose()
+    expect(r.pending).toBe(false)
+    await settled
     cleanup()
   })
 })

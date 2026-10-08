@@ -170,3 +170,14 @@ click (the segment swap), and awaits `ready`. Measured on this repo's pinned Pla
 
 Net: the amendment's own acceptance criterion — a real-engine visual pin owed by the shell's browser
 suite — is now carried. No defect was found; no runtime behavior changed by this probe.
+
+## Pointer (2026-10-08, ADR-0241 settle seam)
+
+> Append-only. No clause above changes; this records where the "first-paint streaming stays synchronous, always"
+> sentence of the A2UI-surface amendment meets the lazy catalog bodies of [ADR-0241](./0241-lazy-catalog-bodies-behind-an-eager-manifest.md).
+
+The law holds for a warm host: a renderer whose catalog body is registered applies every line at once, and
+`ui-surface-host` derives its post-ingest reads inline. A host on a catalog whose body is still loading (the first
+renderer on a page, or a lazy id) paints once the body lands; `RendererHost.pending` and `settled()` tell
+`ui-surface-host` to re-run those reads then ([`a2ui-runtime.spec.md`](../spec/a2ui-runtime.spec.md) SPEC-R9 AC4,
+`surface-host.md`). The `viewTransitions` wrap is unchanged: it rides the same synchronous callbacks.

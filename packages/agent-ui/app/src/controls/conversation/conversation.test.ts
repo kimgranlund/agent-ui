@@ -17,6 +17,10 @@ import {
 } from '@agent-ui/components/descriptor'
 import type { ParsedAttribute } from '@agent-ui/components/descriptor'
 import { readFileSync } from 'node:fs'
+import { createRenderer as warm } from '@agent-ui/a2ui'
+// ADR-0241: warm the default catalog at the top level, ahead of any renderer this file builds (a renderer built before
+// the body lands stays on the asynchronous path, so a beforeAll would be too late).
+await warm().preload('agent-ui')
 declare const process: { cwd(): string }
 
 // LLD-C7 jsdom probes for ui-conversation — thread/composer/narration/per-surface registry (SPEC-R4/R5/

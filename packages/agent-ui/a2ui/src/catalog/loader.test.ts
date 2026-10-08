@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { CatalogLoadError, loadCatalogBody } from './loader.ts'
+import { CatalogLoadError, loadCatalogBody, loadedCatalogBody } from './loader.ts'
 import { Registry, RegistryError, RegistryErrorCode } from './registry.ts'
 import type { CatalogBody, LazyCatalogRecord, WidgetFactory } from './types.ts'
 
-// ADR-0241 slice 2: the memoized body load and `Registry.ensure`. Every fixture is synthetic (a record's
+// ADR-0241 slice 2: the memoized body load and `Registry.ensure`, plus the warm memo (`loadedCatalogBody`, `registerLazy`). Every fixture is synthetic (a record's
 // `load` is a spy over an in-memory body), so nothing here imports a real catalog or a `ui-*` control.
 
 const fakeFactory = (tag: string): WidgetFactory => ({ tag, create: () => document.createElement('div'), applyProp: () => {} })
@@ -231,5 +231,118 @@ describe('Registry.ensure (ADR-0241 cl.3-5)', () => {
 
     expect(reg.submitGateSelector()).toBe('ui-provider') // from the loaded factory now, once
     expect(reg.supportedCatalogIds()).toEqual(['lazy'])
+  })
+})
+
+describe('loadedCatalogBody: the settled body, kept apart from the memoized promise (warm memo)', () => {
+  it('is undefined until the load resolves, then the body itself, for the record only', async () => {
+    const { rec } = record('a')
+    const other = record('b')
+    expect(loadedCatalogBody(rec)).toBeUndefined() // never asked
+    const loading = loadCatalogBody(rec)
+    expect(loadedCatalogBody(rec)).toBeUndefined() // in flight
+    const loaded = await loading
+    expect(loadedCatalogBody(rec)).toBe(loaded)
+    expect(loadedCatalogBody(other.rec)).toBeUndefined()
+  })
+
+  it('is already set when the first awaiter of the load resumes', async () => {
+    const { rec } = record('a')
+    const seen = await loadCatalogBody(rec).then(() => loadedCatalogBody(rec))
+    expect(seen).toBeDefined()
+  })
+
+  it('a rejected load never sets it; the retry that resolves does', async () => {
+    const load = vi.fn<() => Promise<CatalogBody>>().mockRejectedValueOnce(new Error('chunk 404')).mockResolvedValue(body('a'))
+    const rec: LazyCatalogRecord = { id: 'a', functions: {}, submitGate: [], load }
+    await loadCatalogBody(rec).catch(() => {})
+    expect(loadedCatalogBody(rec)).toBeUndefined()
+    await loadCatalogBody(rec)
+    expect(loadedCatalogBody(rec)).toBeDefined()
+  })
+})
+
+describe('Registry.registerLazy warm memo: a record whose body already loaded registers at once (ADR-0241 Amendment)', () => {
+  it('a registry that records an already-loaded record answers get() in the same tick, without another load', async () => {
+    const { rec, load } = record('warm')
+    await loadCatalogBody(rec)
+
+    const reg = new Registry()
+    reg.registerLazy(rec)
+
+    expect(reg.get('warm')?.catalog.catalogId).toBe('warm')
+    expect(reg.knows('warm')).toBe(true)
+    expect(reg.supportedCatalogIds()).toEqual(['warm']) // once, not as a loaded id and a record
+    expect(reg.recordOf('warm')).toBeUndefined()
+    await reg.ensure('warm')
+    expect(load).toHaveBeenCalledTimes(1)
+  })
+
+  it('threads the body\'s functions and controls into the entry, as ensure does', async () => {
+    const fn = () => true
+    const controls = { missing: () => [], ensure: () => Promise.resolve() }
+    const { rec } = record('warm', { ...body('warm'), functions: { isOk: fn }, controls })
+    await loadCatalogBody(rec)
+
+    const reg = new Registry()
+    reg.registerLazy(rec)
+
+    expect(reg.get('warm')?.functions?.isOk).toBe(fn)
+    expect(reg.get('warm')?.controls).toBe(controls)
+  })
+
+  it('NEGATIVE: a record that has not loaded stays a record (the cold path is unchanged)', () => {
+    const { rec, load } = record('cold')
+    const reg = new Registry()
+    reg.registerLazy(rec)
+    expect(reg.get('cold')).toBeUndefined()
+    expect(reg.recordOf('cold')).toBe(rec)
+    expect(load).not.toHaveBeenCalled()
+  })
+
+  it('a loaded body that does not register falls back to the cold path: the record stays and ensure reports the error', async () => {
+    const mismatched = record('wanted', body('other'))
+    const gap = record('gap', { catalog: synthCatalog('gap', ['A', 'B']), factories: { A: fakeFactory('ui-a') } })
+    await Promise.all([loadCatalogBody(mismatched.rec), loadCatalogBody(gap.rec)])
+
+    const reg = new Registry()
+    expect(() => {
+      reg.registerLazy(mismatched.rec)
+      reg.registerLazy(gap.rec)
+    }).not.toThrow()
+
+    for (const id of ['wanted', 'gap']) {
+      expect(reg.get(id)).toBeUndefined()
+      expect(reg.knows(id)).toBe(true)
+    }
+    expect(reg.get('other')).toBeUndefined() // the body was not stored under its own declared id either
+    await expect(reg.ensure('wanted')).rejects.toBeInstanceOf(CatalogLoadError)
+    await expect(reg.ensure('gap')).rejects.toBeInstanceOf(CatalogLoadError)
+  })
+
+  it('a register() for the same id after a warm registration still wins (last-wins, logged)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { rec } = record('proj', body('proj', ['Lazy']))
+    await loadCatalogBody(rec)
+
+    const reg = new Registry()
+    reg.registerLazy(rec)
+    reg.register(synthCatalog('proj', ['Eager']), { Eager: fakeFactory('ui-eager') })
+
+    expect(Object.keys(reg.get('proj')?.catalog.components ?? {})).toEqual(['Eager'])
+    expect(warn).toHaveBeenCalledTimes(1)
+  })
+
+  it('registering a different, unloaded record under a warm id replaces it: the loaded entry is dropped until that one loads', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const warm = record('proj')
+    await loadCatalogBody(warm.rec)
+    const reg = new Registry()
+    reg.registerLazy(warm.rec)
+    expect(reg.get('proj')).toBeDefined()
+
+    reg.registerLazy(record('proj').rec)
+    expect(reg.get('proj')).toBeUndefined()
+    expect(reg.knows('proj')).toBe(true)
   })
 })

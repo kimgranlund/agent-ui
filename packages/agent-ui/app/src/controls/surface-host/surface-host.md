@@ -160,7 +160,7 @@ while content might still arrive. When `finalize()` runs and nothing was ever mo
 "Nothing was rendered for this surface." A silently blank artboard beside a working card, with no
 indication anything went wrong, was the reported symptom of GH 802.
 
-Three properties worth knowing:
+Four properties worth knowing:
 
 - **It is a state READ, never a second verdict.** The validator is the sole judge of emptiness
   (a2ui-runtime SPEC-N6's one-implementation law); the wire error for such a surface is emitted by the
@@ -174,6 +174,14 @@ Three properties worth knowing:
   demonstrably not over, whatever the line contains — the same "the model came back" reasoning as the
   GH 805 re-enable arm. The next `finalize()` re-derives the state from the mount's real contents, so a
   surface that received real content stays clear and one still empty re-flags. A reconnect starts clean.
+- **Behind a lazy catalog it waits for the load (ADR-0241).** A surface whose catalog body is not loaded yet
+  (a2ui-basic, a persona, and the default catalog once it is a record) has its `updateComponents` and
+  `finalize` held in the renderer's queue, so a mount read right after `finalize()` is empty only because
+  the queue has not run. While `RendererHost.pending` is true the host sets no verdict. It re-reads the
+  mount once `RendererHost.settled()` resolves, so a surface that rendered never carries the attribute, and
+  the root stretch and `data-root-card` follow the same rule. A line, finalize, `dispose()` or disconnect that
+  arrives meanwhile supersedes the waiting pass. A warm host (nothing pending) derives everything inline, as
+  before, and first-paint streaming stays synchronous.
 
 ## Pre-connect calls are a documented no-op
 

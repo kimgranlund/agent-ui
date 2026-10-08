@@ -66,6 +66,15 @@
 //     exactly which elements THIS sweep is the one that flipped false→true — re-enable ever only touches
 //     those; an element already disabled for a payload/checks reason when the sweep ran is never added,
 //     so it is never touched on the way back either.
+//
+// ADR-0241 / ADR-0187, the settle seam. The renderer holds a surface's `updateComponents` and `finalize` back while its
+// catalog body (or a control) is still loading, so right after `ingest`/`finalize` the mount may not show a root yet. The
+// four reads that follow a forward (root stretch, `data-root-card`, the superseded sweep, the terminal-empty verdict) run
+// inline when `RendererHost.pending` is false, exactly as before, so a warm host still paints first-paint streaming
+// synchronously (ADR-0183). When `pending` is true the stretch, root-card and sweep run inline anyway (they are no-ops on
+// a mount with nothing in it) and all four re-run once `RendererHost.settled()` resolves; the verdict waits for the settle
+// alone, because judging an empty mount mid-load was the live defect (`data-empty-final` set for good on a cold surface).
+// `#generation` keeps a deferred pass honest: any later line, finalize, dispose or disconnect supersedes it.
 
 import { UIElement, prop, withViewTransition, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import { createRenderer } from '@agent-ui/a2ui'
@@ -158,6 +167,11 @@ export class UISurfaceHostElement extends UIElement {
   #supersededActive = false
   #supersededDisabled = new WeakSet<Element>()
 
+  // ADR-0241: bumped by every ingest, finalize, dispose and disconnect. A pass deferred behind `settled()` runs only if
+  // the number it captured is still current: a newer call re-derives for itself, a dispose or disconnect has torn down
+  // (or rebuilt) the artboard the pass would have touched, and a line that arrived after a finalize retires its verdict.
+  #generation = 0
+
   protected connected(): void {
     if (this.#host === undefined) {
       const stage = document.createElement('div')
@@ -180,6 +194,10 @@ export class UISurfaceHostElement extends UIElement {
         // would strand the card forever — nothing downstream ever calls back to re-enable it.
         if ('action' in message && message.action.wantResponse !== false) this.#applyInteractiveDisabled(true)
       })
+      // ADR-0241: start the default catalog's fetch before the first line (the renderer would start it at createSurface
+      // anyway). Already registered, this resolves at once. A rejection is the surface's own CATALOG_LOAD to report, not
+      // an unhandled one from connect.
+      this.#host.preload('agent-ui').catch(() => {})
     }
 
     // ARIA via internals only, never a host attribute. A `region` role is meaningful only paired with a
@@ -218,6 +236,7 @@ export class UISurfaceHostElement extends UIElement {
   }
 
   /** One validated A2UI JSONL line → progressive paint (SPEC-R2). A documented no-op pre-connect.
+   *  ADR-0241: a surface on a cold lazy catalog paints once its body lands, and the reads below re-run then.
    *  GH #742/ADR-0183 Amendment: under the `viewTransitions` opt-in, a line arriving AFTER the host
    *  settled once (a re-render of an already-painted surface) applies inside `withViewTransition`;
    *  first-paint streaming stays synchronous, always. `enabled` is evaluated per call — a
@@ -237,21 +256,48 @@ export class UISurfaceHostElement extends UIElement {
     // "the model came back" is a property of a line arriving at all, never of what it changed. The next
     // finalize() re-derives the state from the mount's real contents, so a still-empty surface re-flags.
     delete this.dataset.emptyFinal
+    const generation = ++this.#generation
     withViewTransition(() => {
       // The helper's stated caveat: the transition path runs this ASYNC — a disconnect between queue
       // and run nulls #host (below), so the staleness re-check lives INSIDE the mutate (ADR-0183 cl.1).
-      this.#host?.ingest(line)
+      const host = this.#host
+      host?.ingest(line)
       // GH #1124 — ADR-0160's full-width law holds MID-STREAM too, not only at finalize(): apply the
       // GH #892 root stretch the moment a root exists, so the first streaming paint already spans the
       // artboard instead of centering at fit-content and jumping wider when finalize() lands. Cheap +
       // idempotent (attribute/style writes are no-ops when already applied); no reflow is forced here.
-      this.#applyRootStretch()
       // GH #1164 — a line ingested while STILL superseded (a standalone consumer that never flipped the
       // prop back — ui-conversation always un-supersedes before routing) must not leak live controls in
       // through the re-render: re-run the superseded sweep so newly-mounted enabled descendants are
       // claimed too. Idempotent (already-claimed/already-disabled elements are skipped).
-      if (this.superseded) this.#applySupersededDisabled(true)
+      this.#derive(host, generation, false)
     }, this.viewTransitions && this.#settledOnce)
+  }
+
+  /** The reads that follow a forward to the `RendererHost`: the GH #892 root stretch with its GH #1163 root-card mirror,
+   *  the GH #1164 superseded sweep, and, after a finalize, the ADR-0187 terminal-empty verdict. Run inline
+   *  now, exactly as before the settle seam, and, when the renderer still holds messages back (`host.pending`, ADR-0241),
+   *  once more from `host.settled()` so they see the mount the queued messages built. The verdict is the one read that
+   *  never runs while pending (an empty mount mid-load says nothing about the stream). The deferred pass is dropped if a
+   *  newer ingest/finalize/dispose/disconnect advanced `#generation` meanwhile. */
+  #derive(host: RendererHost | undefined, generation: number, finalizing: boolean): void {
+    const pending = host !== undefined && host.pending
+    this.#deriveNow(finalizing, !pending)
+    if (!pending) return
+    void host.settled().then(() => {
+      if (this.#generation === generation && this.#host === host) this.#deriveNow(finalizing, true)
+    })
+  }
+
+  // The inline reads, in the order they always ran. `verdict` is false while the renderer is still pending.
+  #deriveNow(finalizing: boolean, verdict: boolean): void {
+    this.#applyRootStretch() // GH #892/#1124/#1163; see ingest() and finalize() for the full law
+    if (this.superseded) this.#applySupersededDisabled(true) // GH #1164; idempotent, so it rides a deferred finalize pass too
+    if (!finalizing || !verdict || this.#surface === undefined) return
+    // ADR-0187: the host's own facts. Finalize happened and, once nothing is pending, the mount point holds no element,
+    // which is "no root ever attached" (the renderer appends exactly one root per surface; nothing else writes here).
+    if (this.#surface.firstElementChild === null) this.dataset.emptyFinal = ''
+    else delete this.dataset.emptyFinal
   }
 
   /** GH #892 root stretch (see finalize()'s doc comment for the full law) — factored out so ingest()
@@ -288,14 +334,17 @@ export class UISurfaceHostElement extends UIElement {
    *
    *  ADR-0187/GH #829: also derives the terminal-empty state (see the file-header note) — INSIDE the same
    *  wrapped callback, AFTER `#host.finalize()`, so it reads the mount's settled contents rather than a
-   *  half-applied surface (the same FIFO-ordering reason the root-stretch read lives here). */
+   *  half-applied surface (the same FIFO-ordering reason the root-stretch read lives here).
+   *  ADR-0241: when the renderer still holds the surface's messages behind a lazy catalog body, the verdict
+   *  (and the stretch reads) re-run once `RendererHost.settled()` resolves; see the file-header note. */
   finalize(): void {
     if (!this.#guard('finalize')) return
+    const generation = ++this.#generation
     withViewTransition(() => {
       // Same staleness re-check as ingest() — a disconnect between queue and run nulls both refs.
-      if (this.#host === undefined || this.#surface === undefined) return
-      this.#host.finalize()
-      const root = this.#surface.firstElementChild
+      const host = this.#host
+      if (host === undefined || this.#surface === undefined) return
+      host.finalize()
       // GH #892 — a rendered surface should fill the artboard's available width, root INCLUDED, not just
       // its (already-stretching-by-default, ADR-0030) descendants. `ui-column` owns a dedicated `stretch`
       // PROP (ADR-0016/ADR-0030 — a reflected, semantic opt-in, not an implementation detail) so it gets
@@ -308,13 +357,7 @@ export class UISurfaceHostElement extends UIElement {
       // natural width — the GH #892 acceptance's named exception.
       // (also applied per-ingest since GH #1124 — #applyRootStretch; this settle-time call stays as the
       // authoritative pass for a root that mounts and settles in the same finalize.)
-      this.#applyRootStretch()
-      // ADR-0187 — the host's OWN facts, read once the surface has settled: finalize happened, and the
-      // mount point holds no element. Presentation of a state already established, never a re-judgment
-      // (`root === null` here IS "no root ever attached" — the renderer appends exactly one root element
-      // per surface, and nothing else ever writes into this box).
-      if (root === null) this.dataset.emptyFinal = ''
-      else delete this.dataset.emptyFinal
+      this.#derive(host, generation, true)
     }, this.viewTransitions && this.#settledOnce)
     this.#settledOnce = true
   }
@@ -324,6 +367,7 @@ export class UISurfaceHostElement extends UIElement {
    *  consumer removing this element from the DOM is never required to call this explicitly to avoid a leak. */
   dispose(): void {
     if (!this.#guard('dispose')) return
+    this.#generation++ // ADR-0241: a pass deferred behind settled() must not judge a disposed renderer's empty mount
     this.#host!.dispose()
   }
 
@@ -334,6 +378,7 @@ export class UISurfaceHostElement extends UIElement {
    *  down) stage/surface subtree, so a LATER reconnect rebuilds a fresh, empty artboard via `connected()`'s
    *  own build-guard rather than staying a permanently-dead husk. */
   protected override disconnected(): void {
+    this.#generation++ // ADR-0241: a pass deferred behind settled() must not touch the rebuilt artboard
     this.#host?.dispose()
     this.#host = undefined
     this.#surface = undefined
