@@ -11,6 +11,10 @@ import '@agent-ui/components/all.css'
 import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test asserts the DOM synchronously after ingest
 import './surface-host.css'
 import { UISurfaceHostElement } from './surface-host.ts'
+import { createRenderer as warm } from '@agent-ui/a2ui'
+// ADR-0241 Amendment 1: the default catalog is a lazy record, so warm it at the top level, ahead of any renderer this
+// file builds (a renderer built before the body lands stays on the asynchronous path, so a beforeAll would be too late).
+await warm().preload('agent-ui')
 
 const mounted: HTMLElement[] = []
 afterEach(() => {

@@ -1,7 +1,7 @@
 // records.test.ts: the bijection gate for the built-in lazy catalog records (ADR-0241 cl.9). `records.ts` is an
 // explicit list with hand-copied manifests and no generator, so this file is its drift gate:
-//   - the record ids equal the shipped catalog folders (minus the eager default), the a2ui-basic canonical-URI
-//     alias, and every persona-by-base id `derivedCatalogIdsFor` enumerates;
+//   - the record ids equal the shipped catalog folders (the default `agent-ui` included, ADR-0241 Amendment), the
+//     a2ui-basic canonical-URI alias, and every persona-by-base id `derivedCatalogIdsFor` enumerates;
 //   - each record's `functions` deep-equals its loaded body's normalized `catalog.functions`, and its
 //     `submitGate` equals the tags of the body's submit-gate factories;
 //   - every body registers into a real `Registry` through `ensure`, which runs the FACTORY_MISSING gate and, for
@@ -49,14 +49,14 @@ function manifestProblems(record: LazyCatalogRecord, body: CatalogBody): string[
 }
 
 describe('built-in catalog records: the bijection with the shipped bodies (ADR-0241 cl.9)', () => {
-  it('record ids equal the shipped catalog folders minus the eager default, the canonical alias and every persona pairing', () => {
+  it('record ids equal the shipped catalog folders, the canonical alias and every persona pairing', () => {
     const shipped = shippedCatalogIds()
     expect(shipped, 'anti-vacuous: both base folders are found').toEqual(expect.arrayContaining(['agent-ui', 'a2ui-basic']))
-    const expected = [...shipped.filter((id) => id !== defaultCatalog.catalogId), A2UI_BASIC_CANONICAL_URI, ...derivedCatalogIdsFor(SHIPPED_PERSONA_CATALOGS)]
+    const expected = [...shipped, A2UI_BASIC_CANONICAL_URI, ...derivedCatalogIdsFor(SHIPPED_PERSONA_CATALOGS)]
     const ids = BUILTIN_CATALOG_RECORDS.map((r) => r.id)
     expect(new Set(ids).size, 'no duplicate record').toBe(ids.length)
     expect([...ids].sort()).toEqual([...expected].sort())
-    expect(ids).not.toContain(defaultCatalog.catalogId) // Option B: the default stays eager and synchronous
+    expect(ids).toContain(defaultCatalog.catalogId) // ADR-0241 Amendment: the default is a record too
   })
 
   it.each(BUILTIN_CATALOG_RECORDS.map((r) => [r.id, r] as const))('%s: the manifest agrees with the loaded body', async (_id, record) => {
@@ -66,7 +66,6 @@ describe('built-in catalog records: the bijection with the shipped bodies (ADR-0
 
   it('every record loads and registers into a real Registry (FACTORY_MISSING gate, persona compose against the real bases)', async () => {
     const registry = new Registry()
-    registry.register(defaultCatalog, defaultFactories)
     for (const record of BUILTIN_CATALOG_RECORDS) registry.registerLazy(record)
     for (const record of BUILTIN_CATALOG_RECORDS) {
       await registry.ensure(record.id)

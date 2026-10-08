@@ -157,6 +157,10 @@ change.
 > by id and no longer by bytes. [ADR-0241](./0241-lazy-catalog-bodies-behind-an-eager-manifest.md) registers
 > `a2ui-basic` (both ids) as a lazy record, known to `supportedCatalogIds()` from construction and loaded on the
 > first surface that names it. The default catalog still registers eagerly.
+>
+> Note (2026-10-08, append-only, the Decision above is UNCHANGED): the last sentence of the note above no longer
+> holds. [ADR-0241](./0241-lazy-catalog-bodies-behind-an-eager-manifest.md) Amendment 1 makes the default `agent-ui`
+> catalog a lazy record too, so no catalog registers eagerly; both bases are known by id from construction.
 
 ### 3 · Server-side selection — both hosts hold BOTH catalogs, keyed by the request's `catalogId`
 

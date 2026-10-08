@@ -401,8 +401,8 @@ describe('ui-surface-host — ADR-0187: terminal-empty state at finalize (GH #82
 // surface's `updateComponents`/`finalize` in a queue until the chunk lands, so a synchronous read of the mount saw no
 // root and flagged `data-empty-final` for good (the live defect this block pins). The host now re-derives from
 // `RendererHost.settled()` when `pending` is true after the forward. Every id here is cold: this file's other
-// fixtures all use the eagerly registered `agent-ui`, and the loader memo is module-wide, so keep each cold id to the
-// one test that names it.
+// fixtures all use `agent-ui`, warmed at the top of the file, and the loader memo is module-wide, so keep each cold id
+// to the one test that names it.
 describe('ui-surface-host: a cold lazy catalog settles before the post-ingest derivations (ADR-0241, ADR-0187)', () => {
   const surfaceOf = (el: Element): HTMLElement => el.querySelector('[data-part="surface"]') as HTMLElement
   const create = (surfaceId: string, catalogId: string): string => line({ version: 'v1.0', createSurface: { surfaceId, catalogId } })

@@ -5,9 +5,9 @@
 // each renderer's `Registry` registers the same records: one fetch serves them all, while each registry
 // registers the loaded body into itself (`Registry.ensure`). A rejected load is dropped from the memo so
 // the next call retries (the ADR-0197 cl.3 `loadAgentAdmin()` precedent). A resolved body is also kept apart
-// (`loadedCatalogBody`), so a registry built after the load can register it at once (the warm memo, ADR-0241
-// Amendment). Pure: imports types only and touches no DOM, so `registry.ts` stays safe in the Node and Workers
-// closures that import `compose.ts`.
+// (`loadedCatalogBody`), so a registry built after the load registers it at once in `registerLazy` (the warm
+// memo, ADR-0241 Amendment 1, A2). Pure: imports types only and touches no DOM, so `registry.ts` stays safe in
+// the Node and Workers closures that import `compose.ts`.
 
 import type { CatalogBody, LazyCatalogRecord } from './types.ts'
 

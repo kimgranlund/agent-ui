@@ -11,9 +11,9 @@ declare const process: { cwd(): string }
 // helper really awaits the default body, (b) no shared lib imports it (a top-level await propagates to every
 // importer, so a lib pulled in by many pages would put the lazy chunk on all their critical paths).
 //
-// What bites where: this static gate bites on any tree, including today's eager default. The behavioral legs
+// What bites where: this static gate bites on any tree, eager default or lazy. The behavioral legs
 // (a2ui-form.test.ts and a2ui-stream.test.ts, whose cold-page failure is "Form not mounted." and a wrong first-paint
-// readout) only bite once the default is lazy, so they ride the same convention from the rendered side.
+// readout) bite because the default is lazy (ADR-0241 Amendment 1), so they ride the same convention from the rendered side.
 
 const ROOT = process.cwd()
 const read = (rel: string): string => readFileSync(`${ROOT}/${rel}`, 'utf8') as string

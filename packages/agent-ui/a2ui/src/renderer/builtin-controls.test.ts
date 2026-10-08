@@ -1,6 +1,6 @@
-// builtin-controls.test.ts: the built-in catalogs load their controls on demand (ADR-0233). Only the default
-// catalog registers at construction; the others are lazy records (ADR-0241), so their loaders are read off the
-// loaded bodies.
+// builtin-controls.test.ts: the built-in catalogs load their controls on demand (ADR-0233). No catalog registers
+// at construction; every built-in, the default included, is a lazy record (ADR-0241 and its Amendment), so the
+// loaders are read off the loaded bodies.
 //
 // The catalog factory modules import no control, so in this file (its own jsdom window) nothing defines a
 // fleet tag until the renderer's `builtinControls` loader does. Every render scenario first asserts its
@@ -49,16 +49,15 @@ describe('a fresh renderer registers the built-in catalogs with a control loader
     const register = vi.spyOn(Registry.prototype, 'register')
     const registerLazy = vi.spyOn(Registry.prototype, 'registerLazy')
     createRenderer().dispose()
-    // The default catalog alone registers eagerly (ADR-0241 cl.2); every other built-in is a record.
-    expect(register.mock.calls.map(([catalog, , , controls]) => [(catalog as { catalogId: string }).catalogId, controls])).toEqual([
-      ['agent-ui', builtinControls],
-    ])
+    // Nothing registers eagerly (ADR-0241 Amendment): every built-in, the default included, is a record.
+    expect(register).not.toHaveBeenCalled()
     const byId = new Map<string, ControlLoader | undefined>()
     for (const [record] of registerLazy.mock.calls) byId.set(record.id, (await record.load()).controls)
 
     const builtins = [...byId.keys()].filter((id) => !id.includes('--'))
+    expect(builtins).toContain('agent-ui')
     expect(builtins).toContain('a2ui-basic')
-    expect(builtins.length).toBe(2) // a2ui-basic and its canonical-URI alias
+    expect(builtins.length).toBe(3) // the default, a2ui-basic and its canonical-URI alias
     for (const id of builtins) expect(byId.get(id), id).toBe(builtinControls)
 
     const derived = [...byId.keys()].filter((id) => id.includes('--'))

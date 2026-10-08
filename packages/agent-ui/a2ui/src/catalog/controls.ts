@@ -1,8 +1,9 @@
 // controls.ts: the built-in catalogs' control loader (ADR-0233).
 //
-// Catalog factory modules import no control. The renderer registers the default catalog and both a2ui-basic
-// ids with `builtinControls` (persona entries inherit it through `composeControlLoaders`), so a surface
-// defines exactly the controls its messages name, on demand, before the renderer creates them.
+// Catalog factory modules import no control. The default and a2ui-basic lazy bodies carry `builtinControls`
+// (ADR-0241 Amendment 1, so this module and the registry it reads load with those bodies, never with the
+// renderer), and persona entries inherit it through `composeControlLoaders`, so a surface defines exactly the
+// controls its messages name, on demand, before the renderer creates them.
 //
 // `css: 'host'` keeps the host-page contract (ADR-0003): the host links `foundation-styles.css`,
 // `shared-styles.css` and the control sheets (or `all.css`); the loader never touches `document.head`, so

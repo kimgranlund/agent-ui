@@ -1,6 +1,10 @@
 # SPEC — Persona Catalog Composition (M-D)
 
-> Status: accepted · v0.6 · 2026-10-07 (v0.5 2026-10-06; v0.4 2026-10-06; v0.2 2026-08-06; v0.3 2026-10-05 adds SPEC-R1's optional `controls` records, `ControlRecord`, and SPEC-R2 AC7, the derived entry's control loader, ADR-0233, accepted) · Layer: SPEC (execution contract)
+> Status: accepted · v0.7 · 2026-10-08 (v0.6 2026-10-07; v0.5 2026-10-06; v0.4 2026-10-06; v0.2 2026-08-06; v0.3 2026-10-05 adds SPEC-R1's optional `controls` records, `ControlRecord`, and SPEC-R2 AC7, the derived entry's control loader, ADR-0233, accepted) · Layer: SPEC (execution contract)
+> **v0.7 (2026-10-08):** both bases are lazy records too: the default `agent-ui` catalog joins a2ui-basic behind
+> one ([ADR-0241](../adr/0241-lazy-catalog-bodies-behind-an-eager-manifest.md) Amendment 1, ratified), so a
+> derived record's load fetches its base body first. §2's *Base catalog* definition is edited in place for that
+> fact only; the composition, the derived ids and the reject-loud policy do not move.
 > **v0.6 (2026-10-07):** the shipped personas derive at body load, not at renderer construction
 > ([ADR-0241](../adr/0241-lazy-catalog-bodies-behind-an-eager-manifest.md) cl.8, accepted): each
 > `<base>--<persona>` id is a lazy record the renderer knows from construction and composes the first time a
@@ -67,8 +71,9 @@ default-only, SPEC-N5) are all encoded directly in §2/§3/§4 below.
   carries no `catalogId`/`protocolVersion` of its own — those come from whichever base(s) it
   composes onto, `targetCatalogs`, SPEC-R1). Authored at build time, by a developer, the same way
   `a2ui-basic` was added (ADR-0172 cl.1) — never admin-authored, never runtime-minted.
-- **Base catalog** — a catalog already registered through today's mechanism (`registry.ts:36-46`'s
-  `Registry.register`) — `agent-ui` (default) or `a2ui-basic`, the exhaustive set a compose-time
+- **Base catalog**: `agent-ui` (default) or `a2ui-basic`, each known to every renderer by id as a lazy
+  record (`catalog/records.ts`, ADR-0241 and its Amendment 1) and registered when its body loads, or
+  registered by a project through `Registry.register`; the exhaustive set a compose-time
   overlay may target this wave (SPEC-N5, widened §5). A hypothetical future third base is not yet a
   legal `base`.
 - **Compose-time overlay / `composeCatalog`** — the pure function `composeCatalog(base: Catalog,

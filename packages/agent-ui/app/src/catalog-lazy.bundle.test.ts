@@ -1,7 +1,8 @@
 // catalog-lazy.bundle.test.ts: ADR-0241 cl.9, the bundle-shape gate for lazy catalog bodies. A real Rolldown
-// bundle of the `@agent-ui/app` `.` barrel proves no non-default catalog body (a2ui-basic under both ids, the
-// shipped persona packages and the compose step) is in the EAGER closure, and that each one sits in a
-// non-eager chunk the renderer fetches by catalog id. The `pdf-identity.bundle.test.ts` and
+// bundle of the `@agent-ui/app` `.` barrel proves no catalog body (the default `agent-ui` document, its factories
+// and the built-in control registry since the ADR-0241 Amendment, a2ui-basic under both ids, the shipped persona
+// packages and the compose step) is in the EAGER closure, and that each one sits in a non-eager chunk the
+// renderer fetches by catalog id. The `pdf-identity.bundle.test.ts` and
 // `agent-admin-lazy.bundle.test.ts` shape. It is also the `INEFFECTIVE_DYNAMIC_IMPORT` trip-wire: one static
 // import of a body from an eager module silently undoes the split, and the negative control proves this
 // check catches that.
@@ -12,8 +13,14 @@ import { urlSuffixStubPlugin } from './bundle-test-url-stub.ts'
 const ROOT = process.cwd()
 const APP_ENTRY = `${ROOT}/packages/agent-ui/app/src/index.ts`
 const CATALOG = `${ROOT}/packages/agent-ui/a2ui/src/catalog`
-// The lazy bodies (ADR-0241 cl.2): every module a host that renders only `agent-ui` surfaces must not load.
+// The lazy bodies (ADR-0241 cl.2 and its Amendment): every module a host that renders no surface must not load.
 const BODY_MODULES = [
+  'default/body.ts',
+  'default/index.ts',
+  'default/catalog.json',
+  'default/factories.ts',
+  'controls.ts',
+  'a2ui-basic/body.ts',
   'a2ui-basic/index.ts',
   'a2ui-basic/catalog.json',
   'a2ui-basic/factories.ts',
@@ -53,7 +60,7 @@ const chunksOf = async (input: string, plugins: unknown[] = []): Promise<Chunk[]
 
 const bodiesIn = (chunk: Chunk): string[] => BODY_MODULES.filter((m) => chunk.moduleIds.includes(m))
 
-describe('@agent-ui/app public barrel: non-default catalog bodies are LAZY (ADR-0241 cl.9)', () => {
+describe('@agent-ui/app public barrel: catalog bodies are LAZY (ADR-0241 cl.9)', () => {
   it(
     'no eager chunk holds a body module, and every body module sits in a non-eager chunk',
     async () => {

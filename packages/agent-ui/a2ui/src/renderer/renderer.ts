@@ -73,9 +73,9 @@
 // pending tears down and drops the queue; `dispose()` drops every queue; a late settle is a no-op.
 // `createSurface` and other surfaces are never delayed. A catalog without `controls` never queues.
 //
-// Deferred catalog load (ADR-0241). Only the default `agent-ui` catalog is registered at construction; a2ui-basic
-// (both ids) and every shipped `<base>--<persona>` pairing are records (`catalog/records.ts`), known by id with
-// their bodies behind a dynamic import. `createSurface` on a recorded, not yet loaded id creates the surface and
+// Deferred catalog load (ADR-0241 and its Amendment). No catalog is registered at construction: the default
+// `agent-ui` catalog, a2ui-basic (both ids) and every shipped `<base>--<persona>` pairing are records
+// (`catalog/records.ts`), known by id with their bodies behind a dynamic import. `createSurface` on a recorded, not yet loaded id creates the surface and
 // its tree synchronously and starts `registry.ensure` at once, so the chunk fetch overlaps the model's time to
 // first token. The surface gets a queue with a catalog gate ahead of the control gate: every `updateComponents`,
 // `updateDataModel` and `finalize(S)` waits in it, in order. On resolve the queue takes the loaded entry's control
@@ -112,10 +112,7 @@ import { untracked, type Scope } from '@agent-ui/components'
 import { Registry } from '../catalog/registry.ts'
 import type { WidgetFactory } from '../catalog/types.ts'
 import { factoriesOf, resolveFactory } from '../catalog/variant.ts'
-import { defaultCatalog } from '../catalog/default/index.ts'
-import { defaultFactories } from '../catalog/default/factories.ts'
 import { BUILTIN_CATALOG_RECORDS } from '../catalog/records.ts'
-import { builtinControls } from '../catalog/controls.ts'
 import type {
   A2uiCreateSurface,
   A2uiUpdateComponents,
@@ -216,7 +213,7 @@ export interface RendererHost {
   dispose(): void
 }
 
-/** Construct a renderer host with the default `agent-ui` catalog pre-registered (renderer LLD-C13). */
+/** Construct a renderer host that knows the built-in catalogs by id, the default `agent-ui` among them (renderer LLD-C13). */
 export function createRenderer(options: RendererOptions = {}): RendererHost {
   return new Renderer(options)
 }
@@ -252,15 +249,14 @@ class Renderer implements RendererHost {
     this.#defaultVersion = options.defaultVersion ?? 'v1.0'
     this.#revealOrder = options.revealOrder ?? false
 
-    // Per-runtime registry, default catalog pre-registered so `catalogId:'agent-ui'` resolves out of the
-    // box (two-tier: a project registers more via `register`, SPEC-R6/N1). ADR-0233: the built-in catalogs
-    // register `builtinControls`, so a surface defines the controls it names on demand (the factory modules
-    // import none); the derived persona entries inherit it through `composeControlLoaders`.
-    this.#registry.register(defaultCatalog, defaultFactories, undefined, builtinControls)
-    // ADR-0241 cl.2 (amends ADR-0169 cl.2, relates ADR-0172 cl.2): the upstream A2UI Basic Catalog under its
-    // short id and its inbound-only canonical-URI alias, and every shipped persona over each base it targets
-    // (`<base>--<persona>`), are known on EVERY renderer host by id; each body loads the first time a surface
-    // names it, and a shipped persona's compose step (reject-loud, SPEC-R2) runs at that load.
+    // Per-runtime registry (two-tier: a project registers more via `register`, SPEC-R6/N1). ADR-0241 cl.2 and its
+    // Amendment (amends ADR-0169 cl.2, relates ADR-0172 cl.2): the default `agent-ui` catalog, the upstream A2UI
+    // Basic Catalog under its short id and its inbound-only canonical-URI alias, and every shipped persona over each
+    // base it targets (`<base>--<persona>`), are known on EVERY renderer host by id; each body loads the first time a
+    // surface names it (or at once, when a renderer earlier in the module loaded it: the warm memo), and a shipped
+    // persona's compose step (reject-loud, SPEC-R2) runs at that load. ADR-0233: the built-in bodies carry
+    // `builtinControls`, so a surface defines the controls it names on demand (the factory modules import none); the
+    // derived persona entries inherit it through `composeControlLoaders`.
     for (const record of BUILTIN_CATALOG_RECORDS) this.#registry.registerLazy(record)
 
     let seq = 0

@@ -18,6 +18,10 @@ import { UIConversationElement } from './conversation.ts'
 import type { UIConversationDialogElement } from './conversation-dialog.ts'
 import type { UIConversationHeaderElement } from './conversation-header.ts'
 import { whenFlushed } from '@agent-ui/components'
+import { createRenderer as warm } from '@agent-ui/a2ui'
+// ADR-0241 Amendment 1: the default catalog is a lazy record, so warm it at the top level, ahead of any renderer this
+// file builds (a renderer built before the body lands stays on the asynchronous path, so a beforeAll would be too late).
+await warm().preload('agent-ui')
 
 // jsdom-free here (real engine) — the composer's form-associated ui-button parts need no stub in a REAL
 // browser (only jsdom lacks ElementInternals.setFormValue/setValidity, the settings.test.ts precedent).

@@ -11,11 +11,11 @@ Citation key in SKILL.md for the full convention).
 
 A new catalog is a sibling package folder mirroring `default/`'s shape — `catalog.json` +
 `index.ts` + `factories.ts` + `functions.ts` + its tests (Decision cl.1) —
-and every renderer knows it by id from construction (cl.2). Since ADR-0241 a built-in catalog other
-than the default is a lazy record in `catalog/records.ts`: an eager manifest (the id, a copy of its
-`catalog.functions`, its submit-gate tags) plus a dynamic import of a body module that re-exports
-`catalog`, `factories` and `functions` (`a2ui-basic/body.ts`), registered with `registerLazy` after the
-default and loaded the first time a surface names it. `records.test.ts` holds the list equal to the
+and every renderer knows it by id from construction (cl.2). Since ADR-0241 (and its Amendment 1 for the
+default itself) every built-in catalog is a lazy record in `catalog/records.ts`: an eager manifest (the id,
+a copy of its `catalog.functions`, its submit-gate tags) plus a dynamic import of a body module that
+re-exports `catalog`, `factories`, `functions` and the `controls` loader (`a2ui-basic/body.ts`,
+`default/body.ts`), registered with `registerLazy` and loaded the first time a surface names it. `records.test.ts` holds the list equal to the
 shipped folders and each manifest equal to its body; `app/src/catalog-lazy.bundle.test.ts` fails if a
 body is imported statically. That still makes every renderer host catalog-capable with zero call-site
 edits; a project catalog keeps the synchronous `renderer.register(catalog, factories, functions)`. Two shapes the ADR explicitly
