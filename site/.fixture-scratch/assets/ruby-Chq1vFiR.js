@@ -1,1 +1,0 @@
-var e=`/assets/ruby-GHZpA9m4.css`;export{e as default};

@@ -1,1 +1,0 @@
-var e=`/assets/lagoon--9s5f-1U.css`;export{e as default};

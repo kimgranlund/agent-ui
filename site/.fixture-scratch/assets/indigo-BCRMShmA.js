@@ -1,1 +1,0 @@
-var e=`/assets/indigo-DhjPeRsV.css`;export{e as default};
