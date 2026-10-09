@@ -164,6 +164,13 @@ export interface AgentProvider {
      *  treats as "no tools". */
     tools?: readonly ToolDef[]
     executeTool?: ExecuteTool
+    /** RTS-R2: OPTIONAL names of terminal tools (the `effort?` additive precedent: an adapter that ignores
+     *  it is byte-behavior-unchanged). A round that ends with a call to a named tool executes it once through
+     *  `executeTool`, yields the round's text, and returns with no continuation request. */
+    terminalTools?: readonly string[]
+    /** RTS-R2: OPTIONAL forced tool for the round, sent only where the provider supports it (Anthropic: never
+     *  alongside extended thinking). Ignorable like `effort?`. */
+    toolChoice?: { name: string }
     signal?: AbortSignal
   }): AsyncIterable<string>
 }
