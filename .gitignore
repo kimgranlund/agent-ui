@@ -46,3 +46,4 @@ dist-*
 # raw replies for E_JUDGE_PARSE post-mortems) from `npm run eval:genui-corpus -- generate|judge`; never
 # committed, the same gate-verdicts-only posture as /screenshots/ above.
 packages/agent-ui/a2ui/corpus-genui/runs/
+site/.fixture-scratch/

@@ -1,1 +1,0 @@
-var e=`/assets/ocean-C3imP-i2.css`;export{e as default};
