@@ -35,6 +35,13 @@ Source of truth: `produce` in `packages/agent-ui/a2ui/src/agent/produce.ts` (wit
 9. On an invalid verdict the structured failures feed the next round (SPEC-R4). A genui failure
    rides along on a retry the A2UI verdict already needs; it never causes a round or a halt alone.
 
+The `render_surface` tool round (ADR-0242, proposed): on an a2ui-enabled turn the model's text is the
+reply and the A2UI payload arrives as the `render_surface` tool input, which enters step 4 in place of
+the text; the round ends on that call with no follow-up request. A text channel whose first line parses
+as A2UI is the legacy shape and runs steps 1 to 9 unchanged. Text-channel A2UI lines beside a tool call
+are dropped and tallied `TEXT_JSONL_IGNORED`. At the last round an invalid tool payload with non-empty
+text ships as text, tallied `SURFACE_DEGRADED`, instead of `ProduceHalt`.
+
 `maxRounds` bounds the loop. Exhaustion throws `ProduceHalt` carrying the last failures; a
 transport that already committed a 200 turns that into the terminal error line below.
 `FEED_SCOPE`, `NET_NOOP`, `FLOW_END_MISSING`, the genui codes and a semantic check's own codes
@@ -48,11 +55,15 @@ are not members of the protocol `ErrorCode` union.
    forwards the bounded `reasoning` excerpts on its own axis, so they can ride beside `source`,
    ADR-0240), as they happen, ahead of all content. Output is byte-identical with progress off. `interleaveProgress` keeps a
    provider that runs a tool round without yielding text from starving progress delivery.
-2. The leading meta-line (`formatMetaLine`), when there is a `note` or a surviving `ask`.
-3. The genui line, intact, when one survived.
-4. The validated A2UI lines, one `JSON.stringify` per message, as a synchronous burst.
+2. `textDelta` meta-lines, `{"a2uiMeta":{"textDelta":"..."}}`, one per reply-text fragment as it arrives,
+   only when every declared tool is terminal and the text is not the legacy shape (ADR-0242). With an
+   integration tool active none is yielded and the note ships whole.
+3. The leading meta-line (`formatMetaLine`), when there is a `note` or a surviving `ask`; its `note`
+   carries the whole reply even when `textDelta` lines preceded it.
+4. The genui line, intact, when one survived.
+5. The validated A2UI lines, one `JSON.stringify` per message, as a synchronous burst.
 
-Consequence for UX: nothing invalid is ever painted, but the only early signal is the meta-line.
+Consequence for UX: nothing invalid is ever painted; the early signals are the `textDelta` lines and the meta-line.
 ADR-0206's `target` arm exists for that reason: it names the surface about to be mutated so the
 host can show a working state during the wait. The host's `working` state starts at turn start
 (GH #1104); `target` refines it.

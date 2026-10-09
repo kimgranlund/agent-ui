@@ -174,6 +174,9 @@ interface TurnOutcome {
   failed: boolean
   errorMessage?: string
   plan?: PlanDeclaration
+  /** RTS-R12: the turn's reply text (the last string `note` its meta-lines carried), stored ahead of the
+   *  lines by `appendAssistantTurn`. Absent on a thrown step (`drainStepTurn`'s catch keeps lines only). */
+  note?: string
 }
 
 /** #602 — a genuine mid-stream throw's PARTIAL content: whatever lines had already been yielded (and,
@@ -196,7 +199,8 @@ class PartialTurnError extends Error {
 
 /** Drive ONE `transport.turn()` call to completion, peeling every leading/interleaved meta-line the SAME
  *  way every other consumer in this codebase does (`readMetaLine` — never a page-local re-implementation):
- *  `note`/`ask`/`trace` are silently dropped (an ask on a runner-dispatched turn therefore degrades to its
+ *  `ask`/`trace` are silently dropped and `note` is never content, only kept as `TurnOutcome.note` for the
+ *  stored assistant turn (RTS-R12) (an ask on a runner-dispatched turn therefore degrades to its
  *  prose note by pure INACTION — SPEC-R21's "Asks during a run": no pending-ask machinery exists in this
  *  module at all, so there is nothing here that could ever mount one); `progress` forwards to `onProgress`
  *  when supplied; a terminal `error` meta-line short-circuits with `failed:true` WITHOUT throwing (the
@@ -210,15 +214,17 @@ class PartialTurnError extends Error {
 async function drainTurn(transport: AgentTransport, input: TurnInput, onProgress?: (progress: TurnProgress) => void): Promise<TurnOutcome> {
   const lines: string[] = []
   let plan: PlanDeclaration | undefined
+  let note: string | undefined
   try {
     for await (const line of transport.turn(input)) {
       const meta = readMetaLine(line)
       if (meta !== undefined) {
         if (typeof meta.a2uiMeta.error === 'string' && meta.a2uiMeta.error.length > 0) {
-          return { content: lines.join('\n'), failed: true, errorMessage: meta.a2uiMeta.error, plan }
+          return { content: lines.join('\n'), failed: true, errorMessage: meta.a2uiMeta.error, plan, note }
         }
         if (meta.a2uiMeta.progress !== undefined) onProgress?.(meta.a2uiMeta.progress)
         if (meta.a2uiMeta.plan !== undefined) plan = meta.a2uiMeta.plan
+        if (typeof meta.a2uiMeta.note === 'string') note = meta.a2uiMeta.note // RTS-R12: the reply text, for history
         continue // note/ask/trace/plan are never ingested as content — the meta-line peel every consumer shares
       }
       lines.push(line)
@@ -226,7 +232,7 @@ async function drainTurn(transport: AgentTransport, input: TurnInput, onProgress
   } catch (e) {
     throw new PartialTurnError(e, lines)
   }
-  return { content: lines.join('\n'), failed: false, plan }
+  return { content: lines.join('\n'), failed: false, plan, note }
 }
 
 /** GH #592 fix — the "caller that opts into catch-and-continue" the `TurnOutcome` doc above promises.
@@ -404,7 +410,7 @@ export async function runPlan(opts: RunPlanOptions): Promise<Session> {
     const input: TurnInput = { kind: 'intent', text, session }
     const outcome = await drainStepTurn(transport, input, (p) => onProgress?.(groupKey, p))
     session = appendUserTurn(session, text)
-    session = appendAssistantTurn(session, outcome.content)
+    session = appendAssistantTurn(session, outcome.content, outcome.note)
     if (outcome.failed) {
       onStepState?.(groupKey, 'failed', sanitizeFailureReason(outcome.errorMessage ?? ''))
       priorFailure = step
@@ -423,7 +429,7 @@ export async function runPlan(opts: RunPlanOptions): Promise<Session> {
   const synthesisInput: TurnInput = { kind: 'intent', text: synthesisText, session }
   const synthOutcome = await drainStepTurn(transport, synthesisInput, (p) => onProgress?.(PLAN_SYNTHESIS_GROUP_KEY, p))
   session = appendUserTurn(session, synthesisText)
-  session = appendAssistantTurn(session, synthOutcome.content)
+  session = appendAssistantTurn(session, synthOutcome.content, synthOutcome.note)
   onStepState?.(
     PLAN_SYNTHESIS_GROUP_KEY,
     synthOutcome.failed ? 'failed' : 'done',
@@ -477,7 +483,7 @@ export async function runPlannerTurn(opts: RunPlannerTurnOptions): Promise<Sessi
     const outcome = await drainTurn(transport, input)
     if (outcome.failed) throw new Error(outcome.errorMessage ?? 'Live agent turn failed.')
     let session = appendUserTurn(opts.session, intent)
-    session = appendAssistantTurn(session, outcome.content)
+    session = appendAssistantTurn(session, outcome.content, outcome.note)
     return session
   }
 
@@ -486,7 +492,7 @@ export async function runPlannerTurn(opts: RunPlannerTurnOptions): Promise<Sessi
   const planOutcome = await drainTurn(transport, planInput)
   if (planOutcome.failed) throw new Error(planOutcome.errorMessage ?? 'Live agent turn failed.') // the ONE true abort (SPEC-R22)
   let session = appendUserTurn(opts.session, planText)
-  session = appendAssistantTurn(session, planOutcome.content)
+  session = appendAssistantTurn(session, planOutcome.content, planOutcome.note)
 
   const consumption = consumePlan(planOutcome.plan, opts.stepCap ?? DEFAULT_PLAN_STEP_CAP)
   if (!consumption.consumed) {

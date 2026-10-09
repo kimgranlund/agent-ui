@@ -347,7 +347,7 @@ async function runTurn(input: TurnInput): Promise<void> {
       emitVerdict(surfaceId) // browser truth, visible row + `render` event (SPEC-R9 AC1)
     }
     session = appendUserTurn(session, input.kind === 'intent' ? input.text : frameClientMessage(input.message))
-    session = appendAssistantTurn(session, turnLines.join('\n'))
+    session = appendAssistantTurn(session, turnLines.join('\n'), note)
   } finally {
     busy = false
     turnCount += 1

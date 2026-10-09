@@ -228,6 +228,9 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
         // body carries no `effort` key at all (byte-identical to before this field existed); `produce()`'s
         // own `validateEffort` degrades an absent/malformed value to `undefined` either way.
         ...(req.effort !== undefined ? { effort: req.effort } : {}),
+        // RTS-R7 AC2: the persona's response type hint, the `effort` absent-key precedent: `auto` (the
+        // default) and absent both leave the body with no `prefers` key; the hosts validate the rest.
+        ...(req.prefers !== undefined && req.prefers !== 'auto' ? { prefers: req.prefers } : {}),
         // genui-surface.spec.md SPEC-R10/R11 — a FRESH per-turn read (the component's own live-apply
         // law); the dev proxy / worker thread this straight into `ProduceOptions.genuiSurface` (server-
         // side, Node-first — the pack registry itself never crosses the wire, only the ALREADY-RESOLVED
@@ -262,6 +265,7 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
       throw new Error(`Live agent proxy error (${res.status} ${res.statusText}).`)
     }
     const turnLines: string[] = []
+    let note: string | undefined
     const activity = createA2uiActivity() // T-0016: one adapter per turn
     try {
       for await (const line of readNdjsonLines(res.body)) {
@@ -287,7 +291,13 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
           // `done`: it names the repair on the validate step and feeds the footer at the end. It was
           // peeled and dropped here before; the wire and the trace shape are unchanged.
           if (meta.a2uiMeta.trace) for (const step of activity.trace(meta.a2uiMeta.trace)) yield { kind: 'step', step }
+          // RTS-R5 AC3: a reply-text fragment, streamed ahead of the leading meta-line that carries the
+          // complete note; the conversation paints it and the note replaces it.
+          if (typeof meta.a2uiMeta.textDelta === 'string' && meta.a2uiMeta.textDelta.length > 0) {
+            yield { kind: 'text-delta', text: meta.a2uiMeta.textDelta }
+          }
           if (typeof meta.a2uiMeta.note === 'string' && meta.a2uiMeta.note.length > 0) {
+            note = meta.a2uiMeta.note // RTS-R12: kept for the stored assistant turn below
             yield { kind: 'note', note: meta.a2uiMeta.note }
           }
           // GH #802 (ADR-0097 §1) — a declared feed ASK peels into its own typed event, beside note/
@@ -364,12 +374,13 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
       throw err
     }
     // Append-after-stream, unchanged in law — a thrown turn leaves the transcript untouched — but now
-    // written back to THIS context's own slot, so the two histories stay disjoint.
+    // written back to THIS context's own slot, so the two histories stay disjoint. RTS-R12: the reply text
+    // rides ahead of the lines (`<note>\n<jsonl>`), so the next turn's model sees its own prior answer.
     const withUser = appendUserTurn(
       session,
       req.turn.kind === 'intent' ? req.turn.text : frameClientMessage(req.turn.message as A2uiClientMessage | GenuiActionMessage),
     )
-    sessions.set(sessionKey, appendAssistantTurn(withUser, turnLines.join('\n')))
+    sessions.set(sessionKey, appendAssistantTurn(withUser, turnLines.join('\n'), note))
   }
 }
 

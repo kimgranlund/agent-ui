@@ -15,6 +15,8 @@ import type { Turn, Effort } from '../../src/agent/agent-transport.ts'
 import { GEN_UI_MODES } from '../../src/agent/gen-ui-mode.ts'
 import type { GenUiMode } from '../../src/agent/gen-ui-mode.ts'
 import type { GenuiSurfaceConfig } from '../../src/agent/genui-surface-config.ts'
+import { RESPONSE_PREFERENCES } from '../../src/agent/response-type.ts'
+import type { ResponsePreference } from '../../src/agent/response-type.ts'
 import { selectCatalog as selectCatalogShared } from '../../src/renderer/wire-tolerances.ts'
 // GH #516 (persona-catalog-composition SPEC-R3) — the pure, DOM-less compose step + the shipped
 // persona manifests, imported by LEAF PATH (never `catalog/index.ts`/`catalog/personas/index.ts`,
@@ -122,6 +124,13 @@ export function validateBuilderMission(builderMission: unknown): boolean | undef
 // applies (the `validateMode` precedent) — never a 400. The request itself must never fail on a bad effort.
 export function validateEffort(effort: unknown): Effort | undefined {
   return typeof effort === 'string' && (EFFORT_VALUES as readonly string[]).includes(effort) ? (effort as Effort) : undefined
+}
+
+// RTS-R6 AC3 / RTS-R7: the response preference (`responsePreference`, the gate) and the persona hint
+// (`prefers`) share this validator, the `validateEffort` posture: only the three literals pass, anything
+// else is dropped to `undefined`, never a 400.
+export function validateResponsePreference(v: unknown): ResponsePreference | undefined {
+  return typeof v === 'string' && (RESPONSE_PREFERENCES as readonly string[]).includes(v) ? (v as ResponsePreference) : undefined
 }
 
 /** S1 (ADR-0169 cl.3) — fail-closed catalog selection, moved to `src/renderer/wire-tolerances.ts`

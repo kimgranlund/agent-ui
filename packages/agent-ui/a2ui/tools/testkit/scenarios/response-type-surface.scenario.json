@@ -1,0 +1,36 @@
+{
+  "kind": "agent-ui-a2ui-scenario",
+  "version": 1,
+  "name": "response-type-surface",
+  "description": "A render_surface tool round is captured: its jsonl mounts main and its then text is the reply (RTS-R1).",
+  "catalogId": "agent-ui",
+  "intent": "what plan am I on",
+  "turns": [
+    {
+      "respond": {
+        "rounds": [
+          {
+            "tool": "render_surface",
+            "input": {
+              "jsonl": "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"Text\",\"text\":\"Basic\"}]}}"
+            },
+            "then": "Here is your card."
+          }
+        ]
+      },
+      "expect": {
+        "produce": {
+          "outcome": "first-pass",
+          "rounds": 1
+        },
+        "tree": [
+          {
+            "surfaceId": "main",
+            "select": "*",
+            "textIncludes": "Basic"
+          }
+        ]
+      }
+    }
+  ]
+}

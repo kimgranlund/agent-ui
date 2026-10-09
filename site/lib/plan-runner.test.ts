@@ -167,7 +167,8 @@ describe('SPEC-R21 AC1 — planner mode OFF/absent', () => {
     expect(calls[0]!.kind).toBe('intent')
     expect((calls[0] as { text: string }).text).toBe('build a form') // untouched — no plan-request framing
     expect(session.turns).toHaveLength(2) // one user + one assistant turn, exactly today's shape
-    expect(session.turns[1]!.content).toBe('{"version":"v1.0","createSurface":{"surfaceId":"s"}}') // meta peeled, content unchanged
+    // meta peeled; RTS-R12: the note (`hi`) rides ahead of the lines as the stored reply text
+    expect(session.turns[1]!.content).toBe('hi\n{"version":"v1.0","createSurface":{"surfaceId":"s"}}')
   })
 })
 
@@ -206,7 +207,7 @@ describe('SPEC-R21 AC2 — planner mode ON', () => {
     const session = await runPlannerTurn({ transport, session: EMPTY_SESSION, intent: 'build a form', plannerEnabled: true })
     expect(calls).toHaveLength(1)
     expect(session.turns).toHaveLength(2)
-    expect(session.turns[1]!.content).toBe('{"version":"v1.0","createSurface":{"surfaceId":"s"}}')
+    expect(session.turns[1]!.content).toBe('just building it\n{"version":"v1.0","createSurface":{"surfaceId":"s"}}') // RTS-R12
   })
 })
 
@@ -741,5 +742,35 @@ describe('mid-run suppression is true by construction; runner dispatches are exe
     const { transport, calls } = scriptedTransport(script)
     await runPlan({ transport, session: EMPTY_SESSION, plan }) // this module reads/enforces no external cap at all
     expect(calls).toHaveLength(7)
+  })
+})
+
+// ── RTS-R12: the stored assistant turn carries the reply text (`<note>\n<jsonl>`) ───────────────────────
+
+describe('plan runner reply note', () => {
+  const LINE = '{"version":"v1.0","createSurface":{"surfaceId":"s"}}'
+
+  it('an ordinary turn whose transport yields a note meta-line then a line stores `<note>\n<line>`', async () => {
+    const { transport } = scriptedTransport([{ meta: { note: 'Here is the form.' }, lines: [LINE] }])
+    const session = await runPlannerTurn({ transport, session: EMPTY_SESSION, intent: 'build a form', plannerEnabled: false })
+    expect(session.turns[1]!.content).toBe(`Here is the form.\n${LINE}`)
+  })
+
+  it('a note-only step stores the note alone', async () => {
+    const plan: PlanDeclaration = { steps: [step('s1')] }
+    const { transport } = scriptedTransport([{ meta: { note: 'Nothing to render for this step.' } }, { lines: [LINE] }])
+    const session = await runPlan({ transport, session: EMPTY_SESSION, plan })
+    expect(session.turns[1]!.content).toBe('Nothing to render for this step.')
+    expect(session.turns[3]!.content, 'the synthesis turn had no note: its lines alone').toBe(LINE)
+  })
+
+  it('a step that fails on an `error` meta-line after its note still stores the note', async () => {
+    const plan: PlanDeclaration = { steps: [step('s1')] }
+    const { transport } = scriptedTransport([
+      { meta: { note: 'Trying.' }, lines: [JSON.stringify({ a2uiMeta: { error: 'upstream fault' } })] },
+      { lines: [] },
+    ])
+    const session = await runPlan({ transport, session: EMPTY_SESSION, plan })
+    expect(session.turns[1]!.content).toBe('Trying.')
   })
 })

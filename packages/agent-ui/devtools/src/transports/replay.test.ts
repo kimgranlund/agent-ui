@@ -59,6 +59,7 @@ const ARM_FIXTURES: { [K in keyof DevtoolsMeta]-?: DevtoolsMeta } = {
   },
   progress: { progress: { stage: 'retry', round: 2, detail: 'schema error' } },
   error: { error: 'upstream fault' },
+  textDelta: { textDelta: 'Hel' },
 }
 const ARMS = Object.keys(ARM_FIXTURES) as (keyof DevtoolsMeta)[]
 const metaWire = (meta: DevtoolsMeta): string => JSON.stringify({ a2uiMeta: meta })
@@ -160,7 +161,7 @@ describe('meta replay (SPEC-R3 AC3 / SPEC-R10 AC4, ADR-0239): `meta` events repl
   }
 
   it('anti-vacuous: the fixture really carries every arm of the closed vocabulary, one per meta event', () => {
-    expect(ARMS).toEqual(['note', 'ask', 'plan', 'personaPatch', 'flowEnd', 'team', 'target', 'trace', 'progress', 'error'])
+    expect(ARMS).toEqual(['note', 'ask', 'plan', 'personaPatch', 'flowEnd', 'team', 'target', 'trace', 'progress', 'error', 'textDelta'])
     for (const arm of ARMS) expect(Object.keys(ARM_FIXTURES[arm])).toEqual([arm])
     expect(metaCapture().timeline.filter((e) => e.kind === 'meta')).toHaveLength(ARMS.length)
   })
@@ -236,6 +237,7 @@ describe('meta replay (SPEC-R3 AC3 / SPEC-R10 AC4, ADR-0239): `meta` events repl
       UPDATE,
       metaWire(ARM_FIXTURES.trace),
       metaWire(ARM_FIXTURES.error),
+      metaWire(ARM_FIXTURES.textDelta),
     ]
     const turnB = [CREATE, metaWire(ARM_FIXTURES.note)]
     const opts = { backend: 'replay', now: () => 't', clock: () => 0 }

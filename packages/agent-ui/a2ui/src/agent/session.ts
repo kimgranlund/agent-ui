@@ -97,9 +97,13 @@ export function shouldRunTurn(message: A2uiClientMessage): boolean {
   return true
 }
 
-/** Append the agent's emitted A2UI JSONL as an `assistant` turn — pure (returns a new Session). */
-export function appendAssistantTurn(session: Session, jsonl: string): Session {
-  return { turns: [...session.turns, { role: 'assistant', content: jsonl }] }
+/** Append the agent's emitted A2UI JSONL as an `assistant` turn: pure (returns a new Session).
+ *  RTS-R12: a non-blank `note` (the turn's reply text) is stored ahead of the lines as `<note>\n<jsonl>`,
+ *  or alone when `jsonl` is empty; an absent or blank note stores `jsonl` alone, as before. Both session
+ *  parsers (`sessionKnownSurfaceIds`, `sessionSurfaceSeeds`) skip the non-JSON prose line. */
+export function appendAssistantTurn(session: Session, jsonl: string, note?: string): Session {
+  const content = note !== undefined && note.trim() !== '' ? (jsonl === '' ? note : `${note}\n${jsonl}`) : jsonl
+  return { turns: [...session.turns, { role: 'assistant', content }] }
 }
 
 /** Append a `user` turn (a framed intent or client message) — pure (returns a new Session). */

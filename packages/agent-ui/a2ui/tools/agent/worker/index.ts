@@ -32,6 +32,7 @@ import {
   validateAuthoringSurface,
   validateBuilderMission,
   validateEffort,
+  validateResponsePreference,
   isChatBody,
   resolveChatDispatch,
   selectCatalog,
@@ -219,7 +220,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
 // lazy-headersSent equivalent), so this must run BEFORE the Response is constructed, not inside the
 // detached write-loop's catch.
 async function handleProduce(request: Request, env: Env): Promise<Response> {
-  const { input, provider, model, mode, personaSystem, integrations, progressDetail, progressReasoning, genui, a2ui, authoring, builderMission, effort, catalogId } = JSON.parse(await readBody(request)) as {
+  const { input, provider, model, mode, personaSystem, integrations, progressDetail, progressReasoning, genui, a2ui, authoring, builderMission, effort, responsePreference, prefers, catalogId } = JSON.parse(await readBody(request)) as {
     input: unknown
     provider: string
     model: string
@@ -233,6 +234,8 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
     authoring?: unknown
     builderMission?: unknown
     effort?: unknown
+    responsePreference?: unknown
+    prefers?: unknown
     catalogId?: unknown
   }
   if (!isValidTurnInput(input)) return json(400, { error: 'bad-request' })
@@ -273,6 +276,9 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   // The reasoning-effort dial — the SAME fail-closed validation the dev proxy uses (chat-validation.ts,
   // shared): a crafted/malformed value degrades to `undefined` (the adapter's own default), never a 400.
   const validatedEffort = validateEffort(effort)
+  // RTS-R6 AC3 / RTS-R7: the response preference and the persona hint, dropped when malformed, never a 400.
+  const validatedResponsePreference = validateResponsePreference(responsePreference)
+  const validatedPrefers = validateResponsePreference(prefers)
   // ADR-0168 cl.3 / LLD-C4 — enablement resolves, then the SHARED buildToolDispatch turns the surviving
   // manifests into the tools/executeTool pair (schema-validated dispatch, key resolution, the `{}`-when-
   // empty shape). Byte-for-byte the same builder the dev proxy uses, so the two hosts cannot drift.
@@ -309,6 +315,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
         ...(authoringSurface !== undefined ? { authoringSurface } : {}), // SPEC-R30 — the validated persona-authoring gate
         ...(builderMissionGate !== undefined ? { builderMission: builderMissionGate } : {}), // SPEC-R31 — the validated builder-mission gate
         ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), // the validated reasoning-effort dial
+        ...(validatedResponsePreference !== undefined ? { responsePreference: validatedResponsePreference } : {}), ...(validatedPrefers !== undefined ? { prefers: validatedPrefers } : {}), // T-0060: the validated response-type override and persona hint
         signal: request.signal, // GH #106 — cancel the paid upstream call if the client disconnects
         ...toolOpts,
       })) {

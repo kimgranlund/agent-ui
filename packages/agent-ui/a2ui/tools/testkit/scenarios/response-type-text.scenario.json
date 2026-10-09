@@ -1,0 +1,30 @@
+{
+  "kind": "agent-ui-a2ui-scenario",
+  "version": 1,
+  "name": "response-type-text",
+  "description": "A plain-prose round answers in text: it never halts and mounts no surface (RTS-R3 AC2).",
+  "catalogId": "agent-ui",
+  "intent": "what is the capital of Finland",
+  "turns": [
+    {
+      "respond": {
+        "rounds": [
+          "Helsinki."
+        ]
+      },
+      "expect": {
+        "produce": {
+          "outcome": "first-pass",
+          "rounds": 1
+        },
+        "tree": [
+          {
+            "surfaceId": "main",
+            "select": "*",
+            "count": 0
+          }
+        ]
+      }
+    }
+  ]
+}

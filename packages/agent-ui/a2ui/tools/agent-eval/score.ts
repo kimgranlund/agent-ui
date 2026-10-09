@@ -9,13 +9,15 @@
 //   on no surface (missed-surface), and `both` on no text (missing-text); a halt ships no answer, so it
 //   fails every expect (K4).
 // - Repair is reported, never passed or failed: first-pass (valid in round 1), eventual (valid later),
-//   or halt (`ProduceHalt`).
+//   eventual-text (a `render_surface` payload still invalid at the bound degraded to its text,
+//   `SURFACE_DEGRADED`), or halt (`ProduceHalt`).
 
 import type { RepairOutcome } from './observe.ts'
 import type { ResponseTypeExpect } from './cases.ts'
 
-/** The repair outcome for a turn that halted, or shipped valid after `rounds` produce() rounds. */
-export function repairOutcome(halted: boolean, rounds: number): RepairOutcome {
+/** The repair outcome for a turn that halted, or shipped valid after `rounds` produce() rounds. A degrade
+ *  to text (`eventual-text`) is read from the trace by `observe.ts`, never derived here. */
+export function repairOutcome(halted: boolean, rounds: number): Exclude<RepairOutcome, 'eventual-text'> {
   if (halted) return 'halt'
   return rounds === 1 ? 'first-pass' : 'eventual'
 }

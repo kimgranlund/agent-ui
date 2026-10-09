@@ -1010,3 +1010,19 @@ committed color back into `surface.data`. Gates: check · a2ui 975/975 · the si
   the optionFactory and generative-form comments all say the same thing — appends adopt,
   mid-position still crashes, ship-together stays the composing default. Review NO-GO→scope→GO.
   Gates: check · 1205 targeted jsdom · 138 browser both engines · size +45/+98 B.
+
+## 2026-10-09 (T-0060) - a chat turn picks its response type: text, a surface, or text then a surface
+
+- **Text is the default; UI is a tool call.** On an a2ui-enabled turn `produce()` offers a terminal
+  `render_surface` tool. The model's text channel is the reply; the A2UI payload rides the tool input and
+  is validated exactly as before. No router model call: a clean text or surface turn is still one request.
+- **Text streams first.** With no integration tool active, reply fragments stream as additive
+  `{"a2uiMeta":{"textDelta":"..."}}` lines ahead of any surface; the agent-admin runner paints them.
+- **Never a dead turn.** A surface still invalid at the round bound ships the text written for it,
+  tallied `SURFACE_DEGRADED`, instead of a generic halt.
+- **The user and the persona steer it.** A mechanical override ("just tell me", "show me ... as a table")
+  withholds or forces the tool; a persona's `prefers` setting adds one advisory prompt section.
+- **Records.** [ADR-0242](.claude/docs/adr/0242-render-surface-terminal-tool-response-type.md) (proposed),
+  the response-type PRD, SPEC and LLD, amendment pointers on the live-agent SPEC, the LLD-C3 and LLD-C10
+  folds, a `response-type` eval leg with a 43-prompt labelled set, and three kit scenarios. The legacy
+  text-JSONL shape stays byte-identical, so every existing fixture and capture still replays.

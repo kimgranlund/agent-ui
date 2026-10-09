@@ -35,7 +35,7 @@ async function runLeg<C extends { id: string; prompt: string; catalogId: string;
 ): Promise<LegResult> {
   const lines: string[] = []
   const observations = new Map<string, TurnObservation>()
-  const repair = { 'first-pass': 0, eventual: 0, halt: 0 }
+  const repair = { 'first-pass': 0, eventual: 0, 'eventual-text': 0, halt: 0 }
   let failed = 0
   for (const c of cases) {
     let obs: TurnObservation
@@ -57,7 +57,7 @@ async function runLeg<C extends { id: string; prompt: string; catalogId: string;
     lines.push(`${verdict} ${repairText(obs)}${detail?.(obs) ?? ''}`)
   }
   lines.push(
-    `${leg}: ${cases.length} case(s), ${failed} failed; repair first-pass=${repair['first-pass']} eventual=${repair.eventual} halt=${repair.halt}`,
+    `${leg}: ${cases.length} case(s), ${failed} failed; repair first-pass=${repair['first-pass']} eventual=${repair.eventual} eventual-text=${repair['eventual-text']} halt=${repair.halt}`,
   )
   return { exitCode: failed > 0 ? 1 : 0, lines, observations }
 }

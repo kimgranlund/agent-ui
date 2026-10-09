@@ -238,7 +238,7 @@ async function runTurn(input: TurnInput): Promise<void> {
     return
   }
   session = appendUserTurn(session, input.kind === 'intent' ? input.text : frameClientMessage(input.message))
-  session = appendAssistantTurn(session, turnLines.join('\n'))
+  session = appendAssistantTurn(session, turnLines.join('\n'), note)
 }
 
 function handleClientMessage(message: A2uiClientMessage): void {

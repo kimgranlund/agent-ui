@@ -36,6 +36,7 @@ const SECTION_ORDER: readonly PromptSectionId[] = [
   'genui',
   'authoring',
   'mission',
+  'response-preference',
   'persona',
 ]
 const MODES: readonly GenUiMode[] = ['default', 'specific', 'blue-sky']
@@ -75,6 +76,7 @@ function worstArgs(catalog: Catalog, baseCatalogId: string, mode: GenUiMode): Ar
     true,
     true,
     true,
+    'surface',
   ]
 }
 
@@ -100,6 +102,8 @@ const baselineShapes: { label: string; args: Args }[] = [
   { label: 'a2ui off, genui dogfood', args: [defaultCatalog, [], undefined, undefined, undefined, { enabled: true, dogfood: true }, false] },
   { label: 'a2ui off, nothing else', args: [defaultCatalog, [], undefined, undefined, undefined, undefined, false] },
   { label: 'persona only', args: [defaultCatalog, [], undefined, undefined, 'a persona'] },
+  { label: 'prefers text', args: [defaultCatalog, [], undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'text'] },
+  { label: 'prefers surface, a2ui off', args: [defaultCatalog, [], undefined, undefined, undefined, undefined, false, undefined, undefined, 'surface'] },
 ]
 
 describe('assessPromptBudget (ADR-0234)', () => {
@@ -148,7 +152,7 @@ describe('buildSystemPromptSections section-sum leg (ADR-0234)', () => {
     })
   }
 
-  it('the worst-case matrix composes every one of the nine sections', () => {
+  it('the worst-case matrix composes every one of the ten sections', () => {
     const { sections } = buildSystemPromptSections(...baseMatrix[0]!.args)
     expect(sections.map((s) => s.id)).toEqual(SECTION_ORDER)
   })

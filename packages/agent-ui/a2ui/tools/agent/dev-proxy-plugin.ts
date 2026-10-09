@@ -83,6 +83,7 @@ import {
   validateAuthoringSurface,
   validateBuilderMission,
   validateEffort,
+  validateResponsePreference,
   isChatBody,
   resolveChatDispatch,
   selectCatalog,
@@ -368,7 +369,7 @@ export function a2uiDevProxyPlugin(opts?: {
 
             // POST — run one turn and stream validated A2UI JSONL back.
             if (req.method === 'POST') {
-              const { input, provider, model, mode, personaSystem, integrations, progressDetail, progressReasoning, genui, a2ui, authoring, builderMission, effort, catalogId } = JSON.parse(await readBody(req)) as {
+              const { input, provider, model, mode, personaSystem, integrations, progressDetail, progressReasoning, genui, a2ui, authoring, builderMission, effort, responsePreference, prefers, catalogId } = JSON.parse(await readBody(req)) as {
                 input: TurnInput
                 provider: string
                 model: string
@@ -382,6 +383,8 @@ export function a2uiDevProxyPlugin(opts?: {
                 authoring?: unknown
                 builderMission?: unknown
                 effort?: unknown
+                responsePreference?: unknown
+                prefers?: unknown
                 catalogId?: unknown
               }
               const pair = resolvePair(config, provider, model) // SPEC-R12 PAIR-allowlist — the trust boundary
@@ -478,8 +481,11 @@ export function a2uiDevProxyPlugin(opts?: {
               // chat-validation.ts): a crafted/malformed value degrades to `undefined` (the adapter's own
               // default), never a 400.
               const validatedEffort = validateEffort(effort)
+              // RTS-R6 AC3 / RTS-R7: the response preference and the persona hint, dropped when malformed, never a 400.
+              const validatedResponsePreference = validateResponsePreference(responsePreference)
+              const validatedPrefers = validateResponsePreference(prefers)
               try {
-                for await (const line of produce(input, deps, { maxRounds: 3, signal: controller.signal, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(reasoning ? { progressReasoning: true } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), ...(authoringSurface !== undefined ? { authoringSurface } : {}), ...(builderMissionGate !== undefined ? { builderMission: builderMissionGate } : {}), ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), ...toolOpts })) {
+                for await (const line of produce(input, deps, { maxRounds: 3, signal: controller.signal, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(reasoning ? { progressReasoning: true } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), ...(authoringSurface !== undefined ? { authoringSurface } : {}), ...(builderMissionGate !== undefined ? { builderMission: builderMissionGate } : {}), ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), ...(validatedResponsePreference !== undefined ? { responsePreference: validatedResponsePreference } : {}), ...(validatedPrefers !== undefined ? { prefers: validatedPrefers } : {}), ...toolOpts })) {
                   res.write(line + '\n')
                 }
               } catch (err) {

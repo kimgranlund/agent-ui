@@ -32,14 +32,22 @@ export function renderSurfaceTool(openSurfaceIds: readonly string[]): ToolDef {
   }
 }
 
-const TEXT_PHRASES = ['just tell me', 'in words', 'no card', 'text only', "don't show", 'skip the ui']
-const SURFACE_PHRASES = ['show me', 'as a card', 'as a table', 'as a chart', 'build a', 'make me a', 'render']
+const TEXT_PHRASES = ['just tell me', 'no card', 'text only', "don't show", 'skip the ui']
+const SURFACE_PHRASES = ['as a card', 'as a table', 'as a chart']
+/** These count only when a surface noun follows within the next four words ("show me a pricing table"). */
+const GATED_SURFACE_PHRASES = ['show me', 'build a', 'make me a']
+const SURFACE_NOUNS = [
+  'form', 'card', 'table', 'chart', 'dashboard', 'panel', 'survey', 'calculator',
+  'checklist', 'widget', 'page', 'screen', 'list', 'plans', 'tabs', 'wizard',
+]
 
 const escape = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-const lexicon = (phrases: readonly string[]): RegExp =>
-  new RegExp(`(?<![\\w'])(?:${phrases.map(escape).join('|')})(?![\\w'])`, 'i')
-const TEXT_RE = lexicon(TEXT_PHRASES)
-const SURFACE_RE = lexicon(SURFACE_PHRASES)
+const alt = (phrases: readonly string[]): string => `(?:${phrases.map(escape).join('|')})`
+const lexicon = (pattern: string): RegExp => new RegExp(`(?<![\\w'])${pattern}(?![\\w'])`, 'i')
+const TEXT_RE = lexicon(alt(TEXT_PHRASES))
+const SURFACE_RE = lexicon(
+  `(?:${alt(SURFACE_PHRASES)}|${alt(GATED_SURFACE_PHRASES)}(?:\\s+[^\\s]+){0,3}?\\s+${alt(SURFACE_NOUNS)})`,
+)
 
 /** The user's explicit ask for text or a surface, from an intent turn's words. Text wins a tie (PRD-G2). */
 export function detectUserOverride(input: TurnInput): 'text' | 'surface' | undefined {

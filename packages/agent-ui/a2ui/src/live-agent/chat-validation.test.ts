@@ -14,7 +14,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { selectCatalog, buildCatalogMap, semanticChecksDeps } from '../../tools/agent/chat-validation.ts'
+import { selectCatalog, buildCatalogMap, semanticChecksDeps, validateResponsePreference } from '../../tools/agent/chat-validation.ts'
 import { croupierSemanticChecks } from '../../src/catalog/personas/croupier/checks.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
@@ -146,5 +146,15 @@ describe('semanticChecksDeps (ADR-0238; GH #1795): the selected catalog decides 
       expect(src).toMatch(/const selectedCatalog = selectCatalog\(catalogs, catalogId, catalog\)/)
       expect(src).toMatch(/\.\.\.semanticChecksDeps\(selectedCatalog\)/)
     }
+  })
+})
+
+describe('validateResponsePreference (RTS-R6 AC3, RTS-R7): only the three literals pass, never a 400', () => {
+  it('passes each literal through unchanged', () => {
+    for (const v of ['text', 'surface', 'auto'] as const) expect(validateResponsePreference(v)).toBe(v)
+  })
+
+  it('drops anything else to undefined', () => {
+    for (const v of ['TEXT', 'both', 1, null, undefined, {}]) expect(validateResponsePreference(v)).toBeUndefined()
   })
 })

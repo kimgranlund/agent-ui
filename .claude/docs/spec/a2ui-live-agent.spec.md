@@ -1,6 +1,12 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.22 · 2026-10-06 (v0.21 2026-10-06; v0.20 2026-10-05; v0.19 2026-10-05; v0.18 2026-10-05; v0.17 2026-08-18; v0.16 2026-08-13; v0.15 2026-08-12; v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.23 · 2026-10-09 (v0.22 2026-10-06; v0.21 2026-10-06; v0.20 2026-10-05; v0.19 2026-10-05; v0.18 2026-10-05; v0.17 2026-08-18; v0.16 2026-08-13; v0.15 2026-08-12; v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.23 changelog ([ADR-0242](../adr/0242-render-surface-terminal-tool-response-type.md), proposed; T-0060, docs-only pointer):
+> SPEC-R4, R5, R6 and R11 gain an amendment pointer row to
+> [`response-type-selection.spec.md`](./response-type-selection.spec.md) (the `render_surface` terminal tool,
+> the `textDelta` meta arm, the degrade to text at the round bound, the two composed preference sections,
+> `terminalTools` and `toolChoice` on `AgentProvider.stream`). No ID or AC here is added or removed; the
+> pointed-to SPEC keeps its own `RTS-R#` ids.
 > v0.22 changelog ([ADR-0236](../adr/0236-build-time-asset-embed-for-the-producer-toolkit.md), ACCEPTED (ratified by Kim 2026-10-06), GH #1808): SPEC-N1 is no longer node-first. The `./agent`
 > toolkit reads its prompts, selection sidecars and dogfood fleet rows from the generated `assets.gen.ts`
 > and `dogfood-fleet.gen.ts` through `asset-source.ts`, imports zero `node:*`, and is published; SPEC-R6's
@@ -443,6 +449,15 @@ isolated behind one interface (ADR-0069).
 
 Normative per RFC 2119; each carries an ID, an upstream trace, and acceptance criteria. Acceptance
 criteria are checkable predicates — a command, a standing test, a grep, or a named manual run.
+
+Amendment pointers ([ADR-0242](../adr/0242-render-surface-terminal-tool-response-type.md), proposed, T-0060):
+
+| Requirement | Amended by | What changes |
+|---|---|---|
+| SPEC-R4 | [`response-type-selection.spec.md`](./response-type-selection.spec.md) RTS-R8 | the repair feedback names the `render_surface` tool; at the round bound a failed surface with non-empty text ships as text, tallied `SURFACE_DEGRADED` |
+| SPEC-R5 | [`response-type-selection.spec.md`](./response-type-selection.spec.md) RTS-R3, RTS-R5 | text is not content: the `textDelta` meta arm may precede validation; A2UI lines still never do |
+| SPEC-R6 | [`response-type-selection.spec.md`](./response-type-selection.spec.md) RTS-R7, RTS-R11 | two composed preference sections (text, surface) and the grammar's reply-first opening |
+| SPEC-R11 | [`response-type-selection.spec.md`](./response-type-selection.spec.md) RTS-R2 | `AgentProvider.stream` gains optional `terminalTools` and `toolChoice`; trust boundary unchanged |
 
 ### 3.1 Shape, isolation, and CI safety
 

@@ -42,6 +42,9 @@
 // · ADR-0232 (accepted): per-type selection guidance: `catalogInventory` appends each type's
 //   ` · use: … · not for: …` clause from the catalog's `selection.json` sidecar (`selection-guidance.ts`),
 //   only for a type the sidecar covers, so a catalog with no sidecar composes today's lines byte-identically.
+// · RTS-R11 (T-0060): the grammar intro teaches the text-channel contract (prose reply, UI through the
+//   `render_surface` tool, an optional leading meta-line); RTS-R7: the `response-preference` section
+//   (`prompts/response-preference-{text,surface}.md`), composed from the persona hint `prefers`.
 
 import type { Catalog } from '../catalog/catalog.ts'
 import { describePropType } from '../catalog/catalog.ts'
@@ -54,6 +57,7 @@ import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
 import { dogfoodInventory } from './dogfood-inventory.ts'
 import { selectionGuidanceFor, renderSelectionClause } from './selection-guidance.ts'
 import type { PromptSection, PromptSectionId } from './meta-line.ts'
+import type { ResponsePreference } from './response-type.ts'
 import { readAsset } from './asset-source.ts'
 
 /** Read one prompt file's embedded text (`agent/prompts/<file>`, ADR-0236). Trimmed so an authored
@@ -257,8 +261,8 @@ const GENUI_DOGFOOD_TEACHING = loadPrompt('genui-dogfood-teaching.md')
 // depends on (the client's shared `readMetaLine` peel, `admin-live-runner.ts`, applies identically
 // regardless of modality). A2UI_OFF_NOTE_LINE re-teaches JUST that convention, written genui-only (never
 // referencing "the A2UI JSONL below", which does not exist this turn) — never a copy of GRAMMAR's own
-// A2UI-specific note-line paragraph (that one says "you do NOT reply in prose or HTML", the opposite of
-// what a genui turn does).
+// A2UI-specific meta-line paragraph (that one teaches the prose reply plus the render_surface tool, and a
+// genui-only turn is offered no render_surface).
 const A2UI_OFF_NOTE_LINE = loadPrompt('a2ui-off-note-line.md')
 
 // ---- ADR-0178 cl.1/cl.3, SPEC-R30: the persona-authoring teaching segment — a structural TWIN of
@@ -299,6 +303,23 @@ const BUILDER_MISSION_TEACHING = loadPrompt('builder-mission.md')
 function missionBlock(builderMission: boolean | undefined): string {
   if (builderMission !== true) return ''
   return `\n\n${BUILDER_MISSION_TEACHING}`
+}
+
+// ---- RTS-R7: the persona hint `prefers`, advisory only. One short paragraph per preference, composed from
+// the persona's setting alone (never the per-turn user override), so the system prompt stays stable across
+// turns. 'auto' and absent compose zero bytes. ----
+
+const RESPONSE_PREFERENCE_TEXT = loadPrompt('response-preference-text.md')
+
+const RESPONSE_PREFERENCE_SURFACE = loadPrompt('response-preference-surface.md')
+
+/** RTS-R7: the `response-preference` section. Only on an A2UI-enabled turn, since the paragraph names
+ *  `render_surface`, which `produce()` offers only then. */
+function responsePreferenceBlock(prefers: ResponsePreference | undefined, a2uiOn: boolean): string {
+  if (!a2uiOn) return ''
+  if (prefers === 'text') return `\n\n${RESPONSE_PREFERENCE_TEXT}`
+  if (prefers === 'surface') return `\n\n${RESPONSE_PREFERENCE_SURFACE}`
+  return ''
 }
 
 /** SPEC-R10 — composes ONE genui block when (and only when) the modality is enabled for this turn: the
@@ -387,6 +408,10 @@ function miniSkillsFor(mode: GenUiMode | undefined, selected: readonly MiniSkill
  * SEPARATE gate from `authoringSurface` — a persona may author patches (`authoringSurface: true`)
  * without this being ITS OWN dedicated interview turn (`builderMission`), so the two are threaded and
  * composed independently even though only the Builder's own turn ever sets both.
+ *
+ * RTS-R7: `prefers` is the 10th, additive parameter, the persona hint: `'text'` or `'surface'` composes
+ * one `response-preference` section after the mission block; absent/`'auto'` composes ZERO bytes, so every
+ * nine-argument call is byte-unaffected. A2UI-off turns compose none (the paragraph names the tool).
  */
 export function buildSystemPrompt(
   catalog: Catalog,
@@ -398,6 +423,7 @@ export function buildSystemPrompt(
   a2uiEnabled?: boolean,
   authoringSurface?: boolean,
   builderMission?: boolean,
+  prefers?: ResponsePreference,
 ): string {
   return buildSystemPromptSections(
     catalog,
@@ -409,11 +435,12 @@ export function buildSystemPrompt(
     a2uiEnabled,
     authoringSurface,
     builderMission,
+    prefers,
   ).text
 }
 
 /**
- * ADR-0234 (proposed): the same composition as `buildSystemPrompt` (same nine parameters, and `text` is
+ * ADR-0234 (proposed): the same composition as `buildSystemPrompt` (same ten parameters, and `text` is
  * byte-identical to its return value, which is literally `.text` of this call), plus each composed
  * section's length in characters, in composition order. A section's `chars` counts its own leading
  * `\n\n## ...` header, so the sum of every `chars` equals `text.length`. A zero-length section (an
@@ -430,6 +457,7 @@ export function buildSystemPromptSections(
   a2uiEnabled?: boolean,
   authoringSurface?: boolean,
   builderMission?: boolean,
+  prefers?: ResponsePreference,
 ): { text: string; sections: PromptSection[] } {
   const a2uiOn = a2uiEnabled !== false // absent ⇒ on — the zero-regression default (Decision precedent)
   const parts: [PromptSectionId, string][] = []
@@ -448,6 +476,7 @@ export function buildSystemPromptSections(
   parts.push(['genui', genuiBlock(genui, a2uiOn)])
   parts.push(['authoring', authoringBlock(authoringSurface)])
   parts.push(['mission', missionBlock(builderMission)])
+  parts.push(['response-preference', responsePreferenceBlock(prefers, a2uiOn)])
   parts.push(['persona', personaBlock(personaSystem)])
   const sections: PromptSection[] = []
   for (const [id, body] of parts) if (body.length > 0) sections.push({ id, chars: body.length })

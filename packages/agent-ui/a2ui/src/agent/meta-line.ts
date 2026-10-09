@@ -80,6 +80,11 @@
 // the trace's inner shape, so older readers and captures are unaffected. The types live here, not in
 // `agent-transport.ts`, because this file's law is no imports and the trace field types sit beside the trace.
 //
+// Response type selection (SPEC RTS-R5) adds a runtime-composed `textDelta` arm: `produce()` yields one
+// `{"a2uiMeta":{"textDelta":"<fragment>"}}` line per reply-text fragment while the text arrives, ahead of the
+// final meta-line whose `note` still carries the whole reply. Like `progress` it interleaves and is never
+// content; a non-string value drops only itself.
+//
 // Zero-dep, pure (SPEC-N5): no imports.
 
 /**
@@ -126,6 +131,7 @@ export type PromptSectionId =
   | 'genui'
   | 'authoring'
   | 'mission'
+  | 'response-preference'
   | 'persona'
 
 /** ADR-0234 (proposed): one composed system-prompt section and its length in characters. */
@@ -331,6 +337,10 @@ export interface A2uiMetaEnvelope {
     /** GH #144: a transport-composed terminal failure message — see the interface doc above. Shallow-
      *  validated the same way `note` is (a plain string); a malformed `error` drops only itself. */
     error?: string
+    /** RTS-R5: one runtime-composed fragment of the turn's reply text, yielded live ahead of the final
+     *  meta-line (whose `note` still carries the whole reply). Shallow-validated like `error`: a non-string
+     *  value drops only itself. */
+    textDelta?: string
   }
 }
 
@@ -368,6 +378,8 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
   // GH #144: `error` is shallow-validated the SAME way as `note` — a non-string value drops only itself
   // (the field goes `undefined` below), never the whole envelope.
   const error = typeof m.error === 'string' ? m.error : undefined
+  // RTS-R5: `textDelta` is shallow-validated the same way as `error`; a non-string drops only itself.
+  const textDelta = typeof m.textDelta === 'string' ? m.textDelta : undefined
 
   // ADR-0097 §1: `ask` is shallow-validated the same way as note/trace, but a MALFORMED `ask` drops only
   // itself — never the whole envelope (note/trace still parse normally). Never throws, never invents a
@@ -507,6 +519,8 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
       trace: m.trace as TurnTrace | undefined,
       progress,
       error,
+      // Keyed only when present, so an envelope without the arm keeps its exact pre-RTS shape.
+      ...(textDelta !== undefined ? { textDelta } : {}),
     },
   }
 }

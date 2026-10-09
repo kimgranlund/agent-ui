@@ -2554,3 +2554,50 @@ describe('ui-conversation: step mode is general purpose: a plain tool-calling ch
     expect(s.textContent, 'no A2UI vocabulary leaks into a non-A2UI host').not.toMatch(/surface|Validat|A2UI/i)
   })
 })
+
+// ── RTS-R5 AC3: streamed reply text: `textDelta` paints fragments, the final note replaces them ──────────
+
+describe('text-delta', () => {
+  const agentBody = (el: Element): HTMLElement =>
+    [...el.querySelectorAll('[data-part="bubble"][data-role="agent"] [data-part="body"]')].at(-1) as HTMLElement
+
+  it('paints each fragment into the agent bubble as it arrives, accumulated', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const handle = el.beginAgentTurn()
+    handle.textDelta('Here ')
+    expect(agentBody(el).textContent).toBe('Here ')
+    handle.textDelta('is the table.')
+    expect(agentBody(el).textContent).toBe('Here is the table.')
+    const bubble = agentBody(el).closest('[data-part="bubble"]') as HTMLElement
+    expect(bubble.hidden, 'the first fragment reveals the bubble').toBe(false)
+    handle.finalize()
+  })
+
+  it('the final note replaces the streamed fragments', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const handle = el.beginAgentTurn()
+    handle.textDelta('Here is ')
+    handle.textDelta('the tab')
+    handle.setNote('Here is the table.')
+    expect(agentBody(el).textContent).toBe('Here is the table.')
+    handle.finalize()
+    expect(agentBody(el).textContent, 'finalize keeps the note, never the fragments').toBe('Here is the table.')
+  })
+
+  it('streamed text with no note after it stays, trimmed, at finalize (never a fallback tally over it)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const handle = el.beginAgentTurn()
+    handle.textDelta('Just text. ')
+    handle.finalize()
+    expect(agentBody(el).textContent).toBe('Just text.')
+  })
+
+  it('a fragment after finalize paints nothing', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const handle = el.beginAgentTurn()
+    handle.setNote('Done.')
+    handle.finalize()
+    handle.textDelta(' late')
+    expect(agentBody(el).textContent).toBe('Done.')
+  })
+})

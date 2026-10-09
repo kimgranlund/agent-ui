@@ -1,5 +1,12 @@
 [
   {
+    "name": "2026-10-09 (T-0060) - a chat turn picks its response type: text, a surface, or text then a surface",
+    "url": "./changelog.html#2026-10-09-t-0060-a-chat-turn-picks-its-response-type-text-a-surface-or-text-then-a-surface",
+    "description": "Text is the default; UI is a tool call.",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "2026-07-13 (TKT-0026) — select and combo-box adopt late Options (append-safe; the mid-position truth pinned)",
     "url": "./changelog.html#2026-07-13-tkt-0026-select-and-combo-box-adopt-late-options-append-safe-the-mid-position-truth-pinned",
     "description": "The one-time child-move becomes live adoption: both controls arm a host MutationObserver; an idempotent sync adopts late [role=option]/groups into the panel (c…",
