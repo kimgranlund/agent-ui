@@ -1,0 +1,45 @@
+live model=claude-haiku-5-5 PASS text-capital-finland repair=first-pass rounds=1 failureCodes=[] firstLineMs=646
+live model=claude-haiku-5-5 PASS text-define-latency repair=first-pass rounds=1 failureCodes=[] firstLineMs=672
+live model=claude-haiku-5-5 PASS text-define-idempotent repair=first-pass rounds=1 failureCodes=[] firstLineMs=611
+live model=claude-haiku-5-5 PASS text-why-sky-blue repair=first-pass rounds=1 failureCodes=[] firstLineMs=636
+live model=claude-haiku-5-5 PASS text-howto-git-undo repair=first-pass rounds=1 failureCodes=[] firstLineMs=562
+live model=claude-haiku-5-5 PASS text-howto-boil-egg repair=first-pass rounds=1 failureCodes=[] firstLineMs=600
+live model=claude-haiku-5-5 PASS text-opinion-tabs-spaces repair=first-pass rounds=1 failureCodes=[] firstLineMs=1042
+live model=claude-haiku-5-5 PASS text-opinion-best-first-language repair=first-pass rounds=1 failureCodes=[] firstLineMs=636
+live model=claude-haiku-5-5 PASS text-fact-speed-of-light repair=first-pass rounds=1 failureCodes=[] firstLineMs=591
+live model=claude-haiku-5-5 PASS text-fact-year-moon-landing repair=first-pass rounds=1 failureCodes=[] firstLineMs=585
+live model=claude-haiku-5-5 PASS text-explain-closure repair=first-pass rounds=1 failureCodes=[] firstLineMs=491
+live model=claude-haiku-5-5 PASS text-difference-let-const repair=first-pass rounds=1 failureCodes=[] firstLineMs=663
+live model=claude-haiku-5-5 PASS text-translate-hello repair=first-pass rounds=1 failureCodes=[] firstLineMs=640
+live model=claude-haiku-5-5 PASS text-math-percent repair=first-pass rounds=1 failureCodes=[] firstLineMs=552
+live model=claude-haiku-5-5 PASS text-recommend-book repair=first-pass rounds=1 failureCodes=[] firstLineMs=611
+live model=claude-haiku-5-5 PASS text-summarize-photosynthesis repair=first-pass rounds=1 failureCodes=[] firstLineMs=667
+live model=claude-haiku-5-5 PASS text-yes-no-leap-year repair=first-pass rounds=1 failureCodes=[] firstLineMs=590
+live model=claude-haiku-5-5 PASS text-advice-sleep repair=first-pass rounds=1 failureCodes=[] firstLineMs=657
+live model=claude-haiku-5-5 PASS text-short-howto-reset-router repair=first-pass rounds=1 failureCodes=[] firstLineMs=1907
+live model=claude-haiku-5-5 PASS text-meaning-idiom repair=first-pass rounds=1 failureCodes=[] firstLineMs=622
+live model=claude-haiku-5-5 PASS text-convert-units repair=first-pass rounds=1 failureCodes=[] firstLineMs=536
+live model=claude-haiku-5-5 PASS surface-signup-form repair=first-pass rounds=1 failureCodes=not-observed firstLineMs=5897
+live model=claude-haiku-5-5 PASS surface-contact-form repair=first-pass rounds=1 failureCodes=not-observed firstLineMs=3681
+live model=claude-haiku-5-5 PASS surface-table-planets repair=first-pass rounds=1 failureCodes=not-observed firstLineMs=4576
+live model=claude-haiku-5-5 FAIL surface-compare-phones response-type: missed-surface, expected surface repair=first-pass rounds=1 failureCodes=[] firstLineMs=2252
+live model=claude-haiku-5-5 PASS surface-weekly-schedule repair=first-pass rounds=1 failureCodes=not-observed firstLineMs=3539
+live model=claude-haiku-5-5 FAIL surface-checkout-steps response-type: missed-surface, expected surface repair=first-pass rounds=1 failureCodes=[] firstLineMs=2924
+live model=claude-haiku-5-5 PASS surface-survey repair=first-pass rounds=1 failureCodes=not-observed firstLineMs=2619
+live model=claude-haiku-5-5 PASS surface-settings-panel repair=first-pass rounds=1 failureCodes=not-observed firstLineMs=2350
+live model=claude-haiku-5-5 PASS surface-pricing-tiers repair=first-pass rounds=1 failureCodes=[] firstLineMs=6095
+live model=claude-haiku-5-5 PASS surface-todo-list repair=first-pass rounds=1 failureCodes=[] firstLineMs=2318
+live model=claude-haiku-5-5 FAIL both-explain-compound-interest-table response-type: missed-surface, expected both repair=first-pass rounds=1 failureCodes=[] firstLineMs=3836
+live model=claude-haiku-5-5 PASS both-mortgage-explain-calculator repair=first-pass rounds=1 failureCodes=[] firstLineMs=4010
+live model=claude-haiku-5-5 FAIL both-compare-languages-explain response-type: missed-surface, expected both repair=first-pass rounds=1 failureCodes=[] firstLineMs=1593
+live model=claude-haiku-5-5 FAIL both-trip-plan response-type: missed-surface, expected both repair=first-pass rounds=1 failureCodes=[] firstLineMs=1005
+live model=claude-haiku-5-5 FAIL both-recipe response-type: missed-surface, expected both repair=first-pass rounds=1 failureCodes=[] firstLineMs=909
+live model=claude-haiku-5-5 PASS both-budget-split repair=first-pass rounds=1 failureCodes=[] firstLineMs=2072
+live model=claude-haiku-5-5 FAIL both-workout-intro-plan response-type: missed-surface, expected both repair=first-pass rounds=1 failureCodes=[] firstLineMs=2034
+live model=claude-haiku-5-5 PASS session-text-question-about-shown repair=first-pass rounds=1 failureCodes=[] firstLineMs=1387
+live model=claude-haiku-5-5 PASS session-text-why-recommended repair=first-pass rounds=1 failureCodes=[] firstLineMs=1502
+live model=claude-haiku-5-5 PASS session-surface-update-plan repair=first-pass rounds=1 failureCodes=[] firstLineMs=2035
+live model=claude-haiku-5-5 PASS session-surface-add-row repair=first-pass rounds=1 failureCodes=[] firstLineMs=4428
+live model=claude-haiku-5-5 FAIL session-both-explain-and-update response-type: missed-surface, expected both repair=first-pass rounds=1 failureCodes=[] firstLineMs=4979
+live model=claude-haiku-5-5 response-type: 43 case(s), 8 failed; repair first-pass=43 eventual=0 eventual-text=0 halt=0
+live model=claude-haiku-5-5 response-type rates: false-surface=0/23 missed-surface=8/20; usage input=718589 output=18298 over 37 of 43 turns

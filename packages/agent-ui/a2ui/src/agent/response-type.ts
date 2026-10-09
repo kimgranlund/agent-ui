@@ -21,7 +21,9 @@ export function renderSurfaceTool(openSurfaceIds: readonly string[]): ToolDef {
   return {
     name: RENDER_SURFACE_TOOL_NAME,
     description:
-      'Render or change the A2UI surface. Answer in plain text by default; call this only when the UI changes. ' +
+      'Render or change the A2UI surface. Call this when the answer is a structure the user must scan, compare, ' +
+      'fill in or act on (a comparison, table, steps, schedule, form or choice); facts, definitions and opinions ' +
+      'stay plain text. To explain and show, write the explanation as text, then call this too. ' +
       `${open} Prefer an update to an open surface over creating a new one when one fits. ` +
       '`jsonl` is the A2UI JSONL message stream; `target` is the surface id it updates.',
     input_schema: {
