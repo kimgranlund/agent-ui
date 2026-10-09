@@ -1657,5 +1657,12 @@
     "description": "Catalog bodies load by catalog id behind an eager manifest: the renderer holds records, not catalogs, for the non-default sets, and defers updateComponents beh…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0242",
+    "url": "./adr-index.html#adr-0242",
+    "description": "The response type is decided inside the turn by a terminal render_surface tool: the text channel is the reply, the A2UI payload rides the tool input, text stre…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

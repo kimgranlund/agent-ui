@@ -1,0 +1,47 @@
+# ADR-0242 — The response type is decided inside the turn by a terminal `render_surface` tool: the text channel is the reply, the A2UI payload rides the tool input, text streams first as an additive meta arm, and a failed surface degrades to the text
+
+> Source: agent-ui ADR log (this directory, the numbered files ARE the index; status lives in each ADR's own header). · 2026-10-09
+>
+> | Field | Value |
+> |---|---|
+> | **Status** | proposed |
+> | **Date** | 2026-10-09 |
+> | **Proposed by** | the sdlc-lite run `response-type-selection` (architect L1, T-0060), on Kim's design discussion of 2026-10-09 (tool-call decision over classifier-first). Number 0242 claimed against the file tree (0241 the highest), every sibling worktree under `.claude/worktrees/`, every local and remote branch and the `.sdlc` tickets |
+> | **Ratified by** | pending (Kim; may be ratified under the standing grant and reported after) |
+> | **Repairs** | on ratification and build: [`../spec/a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) SPEC-R4, R5, R6, R11 (amendment pointers to [`../spec/response-type-selection.spec.md`](../spec/response-type-selection.spec.md)) · [`../lld/a2ui-live-agent.lld.md`](../lld/a2ui-live-agent.lld.md) LLD-C3 and LLD-C10 (fold) · [`../references/agent-model.md`](../references/agent-model.md) (glossary rows for the tool and the `textDelta` arm) · skill `a2ui-jsonl-mcp` (`references/producer-order-and-yield.md`) · skill `a2ui-prompt-authoring` (the recapture) · code: `packages/agent-ui/a2ui/src/agent/{produce,meta-line,agent-transport,system-prompt}.ts`, `src/agent/response-type.ts` (new), `src/agent/providers/anthropic.ts`, `src/agent/prompts/grammar.md`, `tools/agent/chat-validation.ts`, `tools/agent-eval/*`, `site/lib/admin-live-runner.ts`, `packages/agent-ui/app/src/controls/agent-admin/agent-admin-schema.ts` |
+> | **Supersedes / Superseded by** | none · **Amends** [ADR-0088](./0088-a2ui-live-conversational-channel.md) §1 (the note is still the leading meta-line's `note` on the wire, but the model authors it as plain text; the model-authored `note` field stays accepted) · **Amends** [ADR-0089](./0089-a2ui-live-clarify-and-catalog-boundary-negotiation.md) (the "do NOT reply in prose" opening of the grammar is retired; the ask-instead-of-guess and catalog-wall behaviours are unchanged) · **Extends** [ADR-0073](./0073-a2ui-live-model-provider-seam.md) (two additive fields on `AgentProvider.stream`, trust boundary unchanged) and the GH #49 tool loop · relates [ADR-0146](./0146-live-turn-lifecycle-progress-channel.md) (progress stays progress; text is a meta arm, never a stage) · relates [ADR-0234](./0234-turn-trace-prompt-budget-and-token-usage.md) (the budget the new sections are measured against) · relates [ADR-0240](./0240-activity-strip-shows-model-reasoning.md) (the `ActivityStep` contract holds) |
+
+## Context
+
+The producer has no decision point for whether a turn is text or UI. `grammar.md` opens with "You do NOT reply in prose" and puts the reply on a leading meta-line followed by A2UI JSONL "omitted entirely if the UI isn't changing"; `produce()` ratifies the result and demotes a surface to text only after the fact (`NET_NOOP`, ask integrity, the round-bound `ProduceHalt` that discards the note). Nothing streams before the whole round validates, and the Anthropic adapter's GH #49 loop buffers every round's text and drops pre-tool text from the wire. Kim ruled the mechanism on 2026-10-09: the decision is the model's, taken inside the turn through a `render_surface` tool, text is the default, and no router model call runs in front.
+
+Two routes carry a tool-call decision through `AgentProvider.stream`, which yields text only. If the payload stays in the text channel and the tool is a bare signal, the adapter must complete a tool_use, tool_result, continuation round trip: one added upstream request on every surface turn, which fails the handoff's "added model calls: 0". If the payload rides the tool input, the model emits a text block then one tool_use block in a single message: the text streams natively before the payload, and no continuation is needed on a clean turn. That route needs the seam to know a terminal tool and the adapter to deliver the input to `produce()`, which is the contract change this record rules.
+
+## Decision
+
+1. `render_surface` is a terminal tool owned by `produce()`. Its input carries the A2UI JSONL (`jsonl`) and optionally the open surface it updates (`target`). `produce()` offers it whenever A2UI is enabled, appends it to the caller's integration tools, and wraps `executeTool` to capture the input. A call ends the model's turn; the result never returns to the model in that turn.
+2. `AgentProvider.stream` gains `terminalTools?: readonly string[]` and `toolChoice?: { name: string }`, both additive and ignorable. In the Anthropic adapter a terminal-only round yields its text live; a mixed round keeps the GH #49 buffering law; a forced `tool_choice` is sent only without extended thinking.
+3. The text channel is the reply. The leading meta-line stays an optional first line for declarations (`ask`, `plan`, `flowEnd`, `personaPatch`, `team`, `target`); the outgoing meta-line's `note` is the text, so clients render unchanged. A legacy-shape round (A2UI JSONL in the text channel) runs the pre-change path byte for byte. Hosts store an assistant turn as the reply text followed by the shipped lines, so a continuation turn sees a reply, never bare JSONL.
+4. Text streams first as the additive meta arm `{"a2uiMeta":{"textDelta":"..."}}`, yielded ahead of any content line when no integration tool is active in the turn. Progress stages are untouched; A2UI content lines still never precede validation.
+5. A payload that fails validation repairs through today's round loop and feedback; at the bound a non-empty text ships as a text turn with `SURFACE_DEGRADED` tallied; an empty text halts as today. `produce()` composes no reply text of its own.
+6. Steering has a fixed precedence: the user override (a mechanical lexicon on the intent, or the `responsePreference` request field) beats the persona hint (`prefers: text | surface | auto`, a composed teaching paragraph); the model decides otherwise. A text override withholds the tool; a surface override forces it or spends one correction round.
+7. The escalation hook is a seam only: `ProduceOptions.onRepairRound` may return an `effort` and a `model` for a repair round. No tier policy ships.
+8. Measurement is a labelled set of at least 40 prompts, a `response-type` eval leg with a pure scorer, keyless scripted turns in the selftest, and Kim's manual live run for the accuracy KPIs.
+
+## Consequences
+
+- One upstream request per clean turn, text or surface, as today; a repair costs one request as today. The text appears before the surface on every surface turn, and streams live on the common no-integration chat turn.
+- The grammar's opening contract changes, so the byte-pinned baseline is recaptured once and every consumer of the prompt stack is affected by that one recapture; the two mode files, the mini-skills, the packs and the sidecars are untouched.
+- Every existing scripted fixture, kit scenario, recorded transport and devtools capture stays valid through the legacy fallback; new fixtures use the tool-round shape the kit already has.
+- The a2ui-chat and a2ui-live pages ignore `textDelta` this wave and render as today; the admin runner paints it.
+- Known limit: while an integration tool is active in a turn, the text ships whole at round end, not token by token. Lifting that needs a round boundary on the seam and is a follow-up.
+- Known limit: a forced surface override under extended thinking is a correction round, not an API-level force.
+
+## Alternatives considered
+
+- A router or classifier model call in front of the turn. Rejected: one added model call and its latency on every turn, a second prompt to maintain and measure, and a decision taken without the catalog and session context the producing turn has; Kim ruled it out on 2026-10-09.
+- A model-declared `response` arm on the leading meta-line (`{"a2uiMeta":{"response":"text"}}`). Rejected: zero added calls and zero seam change, but it is a declaration of what the payload below already shows, gives the model no mechanism that makes text the default, and leaves the whole generation buffered before the first byte reaches the user. Recorded as the fallback if the terminal-tool route cannot meet K3 live.
+- `render_surface` as an ordinary tool whose result returns to the model. Rejected: one added upstream request on every surface turn (K3 fails for surface turns), and the GH #49 buffering law hides the text until the continuation round.
+- Retiring the leading meta-line and moving every declaration into tool inputs. Rejected: six arms consumed host-side would move at once, text-only turns with declarations (`flowEnd`, `plan`, `personaPatch`) would need a surface-less tool, and the legacy fallback would lose its anchor.
+- Runtime-composed text when the surface fails and the model wrote none. Rejected: fabricated model prose (the ADR-0146 F2 posture); the host's generic failure message stays the only runtime-composed user-facing string.
+- A `TurnProgress` stage carrying text deltas. Rejected: progress is not content (ADR-0146), and the stage table is a closed label set.
