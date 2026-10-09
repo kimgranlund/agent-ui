@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
-import { deriveSelectionCases } from './cases.ts'
+import { deriveSelectionCases, loadResponseTypeCases, parseResponseTypeCase, RESPONSE_TYPE_EXPECTS } from './cases.ts'
 
 const CATALOG_DIR = join(process.cwd(), 'packages/agent-ui/a2ui/src/catalog')
 
@@ -53,5 +53,33 @@ describe('deriveSelectionCases', () => {
       expect(c.id).toBe(`${c.source}:${c.expectType}->${c.forbidType}`)
       expect(c.prompt).toBe(prompts.get(c.id))
     }
+  })
+})
+
+describe('response-type labelled set', () => {
+  const fixtures = join(process.cwd(), 'packages/agent-ui/a2ui/tools/agent-eval/fixtures')
+  const raw = (JSON.parse(readFileSync(join(fixtures, 'response-type-cases.json'), 'utf8')) as { cases: Record<string, unknown>[] }).cases
+
+  it('holds at least 40 cases, every expect a literal, at least 4 with a session', () => {
+    expect(raw.length).toBeGreaterThanOrEqual(40)
+    for (const c of raw) expect(['text', 'surface', 'both'], String(c.id)).toContain(c.expect)
+    expect(raw.filter((c) => c.session !== undefined).length).toBeGreaterThanOrEqual(4)
+    expect(new Set(raw.map((c) => c.id)).size).toBe(raw.length)
+  })
+
+  it('the loader returns exactly the raw JSON', () => {
+    expect(loadResponseTypeCases(fixtures)).toEqual(raw)
+  })
+
+  it('a bad expect throws naming the literals', () => {
+    expect(() => parseResponseTypeCase({ id: 'x', catalogId: 'agent-ui', prompt: 'hi', expect: 'card' })).toThrow(RESPONSE_TYPE_EXPECTS.join(', '))
+  })
+
+  it('a session that is not one user then one assistant turn throws', () => {
+    const turn = (role: string) => ({ role, content: 'c' })
+    const base = { id: 'x', catalogId: 'agent-ui', prompt: 'hi', expect: 'text' }
+    expect(() => parseResponseTypeCase({ ...base, session: { turns: [turn('user')] } })).toThrow('session')
+    expect(() => parseResponseTypeCase({ ...base, session: { turns: [turn('assistant'), turn('user')] } })).toThrow('session')
+    expect(parseResponseTypeCase({ ...base, session: { turns: [turn('user'), turn('assistant')] } }).session?.turns).toHaveLength(2)
   })
 })

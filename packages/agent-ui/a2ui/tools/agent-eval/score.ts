@@ -5,10 +5,14 @@
 // - Persona fails when ANY round attempted a foreign type (a type from another persona's fragment),
 //   naming the type and the round. Attempted, not emitted: a Quant turn reaching for `PlayingCard` on the
 //   base catalog halts on `CATALOG` and ships nothing, yet the reach is the behavior under test.
+// - Response type (T-0060, RTS-R10) fails `text` on a shipped surface (false-surface), `surface` or `both`
+//   on no surface (missed-surface), and `both` on no text (missing-text); a halt ships no answer, so it
+//   fails every expect (K4).
 // - Repair is reported, never passed or failed: first-pass (valid in round 1), eventual (valid later),
 //   or halt (`ProduceHalt`).
 
 import type { RepairOutcome } from './observe.ts'
+import type { ResponseTypeExpect } from './cases.ts'
 
 /** The repair outcome for a turn that halted, or shipped valid after `rounds` produce() rounds. */
 export function repairOutcome(halted: boolean, rounds: number): RepairOutcome {
@@ -18,7 +22,7 @@ export function repairOutcome(halted: boolean, rounds: number): RepairOutcome {
 
 /** One failed check, with the offending type named in `message`. */
 export interface Finding {
-  readonly check: 'concept' | 'negative' | 'persona'
+  readonly check: 'concept' | 'negative' | 'persona' | 'response-type'
   readonly type: string
   readonly message: string
 }
@@ -60,4 +64,39 @@ export function foreignTypesFor(persona: string, fragmentTypes: ReadonlyMap<stri
   const out: string[] = []
   for (const [id, types] of fragmentTypes) if (id !== persona) out.push(...types)
   return out
+}
+
+interface Shipped {
+  readonly outcome: RepairOutcome
+  readonly hasText: boolean
+  readonly hasSurface: boolean
+}
+
+/** Response type: one finding per failure against `expect`; a halt fails every expect. */
+export function scoreResponseType(obs: Shipped, expect: ResponseTypeExpect): Finding[] {
+  const finding = (message: string): Finding => ({ check: 'response-type', type: expect, message: `response-type: ${message}` })
+  if (obs.outcome === 'halt') return [finding(`halted, expected ${expect}`)]
+  const out: Finding[] = []
+  if (expect === 'text' && obs.hasSurface) out.push(finding('false-surface, expected text'))
+  if (expect !== 'text' && !obs.hasSurface) out.push(finding(`missed-surface, expected ${expect}`))
+  if (expect === 'both' && !obs.hasText) out.push(finding('missing-text, expected both'))
+  return out
+}
+
+/** The leg's two rates over observed cases only: false-surface over `text` cases, missed-surface over
+ *  `surface` and `both` cases. */
+export function responseTypeRates(rows: readonly { readonly expect: ResponseTypeExpect; readonly hasSurface: boolean }[]): {
+  falseSurface: number
+  textCases: number
+  missedSurface: number
+  surfaceCases: number
+} {
+  const text = rows.filter((r) => r.expect === 'text')
+  const surface = rows.filter((r) => r.expect !== 'text')
+  return {
+    falseSurface: text.filter((r) => r.hasSurface).length,
+    textCases: text.length,
+    missedSurface: surface.filter((r) => !r.hasSurface).length,
+    surfaceCases: surface.length,
+  }
 }

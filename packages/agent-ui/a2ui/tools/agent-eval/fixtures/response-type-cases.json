@@ -1,0 +1,323 @@
+{
+  "label": "labelled",
+  "cases": [
+    {
+      "id": "text-capital-finland",
+      "catalogId": "agent-ui",
+      "prompt": "What is the capital of Finland?",
+      "expect": "text"
+    },
+    {
+      "id": "text-define-latency",
+      "catalogId": "agent-ui",
+      "prompt": "What does latency mean in networking?",
+      "expect": "text"
+    },
+    {
+      "id": "text-define-idempotent",
+      "catalogId": "agent-ui",
+      "prompt": "Define idempotent in one sentence.",
+      "expect": "text"
+    },
+    {
+      "id": "text-why-sky-blue",
+      "catalogId": "agent-ui",
+      "prompt": "Why is the sky blue?",
+      "expect": "text"
+    },
+    {
+      "id": "text-howto-git-undo",
+      "catalogId": "agent-ui",
+      "prompt": "How do I undo my last git commit but keep the changes?",
+      "expect": "text"
+    },
+    {
+      "id": "text-howto-boil-egg",
+      "catalogId": "agent-ui",
+      "prompt": "How long should I boil an egg for a soft yolk?",
+      "expect": "text"
+    },
+    {
+      "id": "text-opinion-tabs-spaces",
+      "catalogId": "agent-ui",
+      "prompt": "Tabs or spaces, which do you prefer and why?",
+      "expect": "text"
+    },
+    {
+      "id": "text-opinion-best-first-language",
+      "catalogId": "agent-ui",
+      "prompt": "Is Python a good first programming language?",
+      "expect": "text"
+    },
+    {
+      "id": "text-fact-speed-of-light",
+      "catalogId": "agent-ui",
+      "prompt": "How fast does light travel in a vacuum?",
+      "expect": "text"
+    },
+    {
+      "id": "text-fact-year-moon-landing",
+      "catalogId": "agent-ui",
+      "prompt": "What year did the first crewed moon landing happen?",
+      "expect": "text"
+    },
+    {
+      "id": "text-explain-closure",
+      "catalogId": "agent-ui",
+      "prompt": "Explain what a closure is in JavaScript.",
+      "expect": "text"
+    },
+    {
+      "id": "text-difference-let-const",
+      "catalogId": "agent-ui",
+      "prompt": "What is the difference between let and const?",
+      "expect": "text"
+    },
+    {
+      "id": "text-translate-hello",
+      "catalogId": "agent-ui",
+      "prompt": "How do you say good morning in Spanish?",
+      "expect": "text"
+    },
+    {
+      "id": "text-math-percent",
+      "catalogId": "agent-ui",
+      "prompt": "What is 15 percent of 240?",
+      "expect": "text"
+    },
+    {
+      "id": "text-recommend-book",
+      "catalogId": "agent-ui",
+      "prompt": "Recommend one good book about habits.",
+      "expect": "text"
+    },
+    {
+      "id": "text-summarize-photosynthesis",
+      "catalogId": "agent-ui",
+      "prompt": "Summarize photosynthesis in two sentences.",
+      "expect": "text"
+    },
+    {
+      "id": "text-yes-no-leap-year",
+      "catalogId": "agent-ui",
+      "prompt": "Is 2028 a leap year?",
+      "expect": "text"
+    },
+    {
+      "id": "text-advice-sleep",
+      "catalogId": "agent-ui",
+      "prompt": "Any quick tips for falling asleep faster?",
+      "expect": "text"
+    },
+    {
+      "id": "text-short-howto-reset-router",
+      "catalogId": "agent-ui",
+      "prompt": "How do I reset my home router?",
+      "expect": "text"
+    },
+    {
+      "id": "text-meaning-idiom",
+      "catalogId": "agent-ui",
+      "prompt": "What does the idiom break the ice mean?",
+      "expect": "text"
+    },
+    {
+      "id": "text-convert-units",
+      "catalogId": "agent-ui",
+      "prompt": "How many kilometers is 10 miles?",
+      "expect": "text"
+    },
+    {
+      "id": "surface-signup-form",
+      "catalogId": "agent-ui",
+      "prompt": "Give me a sign-up form with name, email and password fields.",
+      "expect": "surface"
+    },
+    {
+      "id": "surface-contact-form",
+      "catalogId": "agent-ui",
+      "prompt": "I need a contact form with a message box and a send button.",
+      "expect": "surface"
+    },
+    {
+      "id": "surface-table-planets",
+      "catalogId": "agent-ui",
+      "prompt": "Show a table of the eight planets with their diameter and distance from the sun.",
+      "expect": "surface"
+    },
+    {
+      "id": "surface-compare-phones",
+      "catalogId": "agent-ui",
+      "prompt": "Compare three mid-range phones side by side on price, battery and camera.",
+      "expect": "surface"
+    },
+    {
+      "id": "surface-weekly-schedule",
+      "catalogId": "agent-ui",
+      "prompt": "Lay out my weekly gym schedule: Monday legs, Wednesday back, Friday chest.",
+      "expect": "surface"
+    },
+    {
+      "id": "surface-checkout-steps",
+      "catalogId": "agent-ui",
+      "prompt": "Walk me through checkout as steps: cart, shipping, payment, review.",
+      "expect": "surface"
+    },
+    {
+      "id": "surface-survey",
+      "catalogId": "agent-ui",
+      "prompt": "Make me a short satisfaction survey with a 1 to 5 rating and a comment field.",
+      "expect": "surface"
+    },
+    {
+      "id": "surface-settings-panel",
+      "catalogId": "agent-ui",
+      "prompt": "Build a settings panel with toggles for dark mode, notifications and autoplay.",
+      "expect": "surface"
+    },
+    {
+      "id": "surface-pricing-tiers",
+      "catalogId": "agent-ui",
+      "prompt": "Show the Free, Pro and Team pricing tiers as cards I can pick from.",
+      "expect": "surface"
+    },
+    {
+      "id": "surface-todo-list",
+      "catalogId": "agent-ui",
+      "prompt": "Give me a to-do list I can tick off for moving apartments.",
+      "expect": "surface"
+    },
+    {
+      "id": "both-explain-compound-interest-table",
+      "catalogId": "agent-ui",
+      "prompt": "Explain compound interest and show a table of 1000 dollars growing at 5 percent over 5 years.",
+      "expect": "both"
+    },
+    {
+      "id": "both-mortgage-explain-calculator",
+      "catalogId": "agent-ui",
+      "prompt": "Explain how a mortgage payment is calculated and give me a calculator form for it.",
+      "expect": "both"
+    },
+    {
+      "id": "both-compare-languages-explain",
+      "catalogId": "agent-ui",
+      "prompt": "Briefly explain the tradeoffs, then compare Rust, Go and Java in a table.",
+      "expect": "both"
+    },
+    {
+      "id": "both-trip-plan",
+      "catalogId": "agent-ui",
+      "prompt": "Suggest a 3-day itinerary for Lisbon with a short intro, laid out day by day.",
+      "expect": "both"
+    },
+    {
+      "id": "both-recipe",
+      "catalogId": "agent-ui",
+      "prompt": "Tell me about a classic carbonara and list the ingredients and steps.",
+      "expect": "both"
+    },
+    {
+      "id": "both-budget-split",
+      "catalogId": "agent-ui",
+      "prompt": "Explain the 50/30/20 budget rule and show it applied to a 4000 dollar income.",
+      "expect": "both"
+    },
+    {
+      "id": "both-workout-intro-plan",
+      "catalogId": "agent-ui",
+      "prompt": "Give me a quick rationale and then a beginner 4-week running plan as a schedule.",
+      "expect": "both"
+    },
+    {
+      "id": "session-text-question-about-shown",
+      "catalogId": "agent-ui",
+      "prompt": "What does the 10 GB storage on my plan cover?",
+      "expect": "text",
+      "session": {
+        "turns": [
+          {
+            "role": "user",
+            "content": "show my plan"
+          },
+          {
+            "role": "assistant",
+            "content": "Here is your plan.\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"t1\",\"t2\"]},{\"id\":\"t1\",\"component\":\"Text\",\"text\":\"Basic\"},{\"id\":\"t2\",\"component\":\"Text\",\"text\":\"10 GB storage\"}]}}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "session-text-why-recommended",
+      "catalogId": "agent-ui",
+      "prompt": "Why did you suggest the Basic plan?",
+      "expect": "text",
+      "session": {
+        "turns": [
+          {
+            "role": "user",
+            "content": "show my plan"
+          },
+          {
+            "role": "assistant",
+            "content": "Here is your plan.\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"t1\",\"t2\"]},{\"id\":\"t1\",\"component\":\"Text\",\"text\":\"Basic\"},{\"id\":\"t2\",\"component\":\"Text\",\"text\":\"10 GB storage\"}]}}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "session-surface-update-plan",
+      "catalogId": "agent-ui",
+      "prompt": "Switch the plan shown to Pro with 100 GB storage.",
+      "expect": "surface",
+      "session": {
+        "turns": [
+          {
+            "role": "user",
+            "content": "show my plan"
+          },
+          {
+            "role": "assistant",
+            "content": "Here is your plan.\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"t1\",\"t2\"]},{\"id\":\"t1\",\"component\":\"Text\",\"text\":\"Basic\"},{\"id\":\"t2\",\"component\":\"Text\",\"text\":\"10 GB storage\"}]}}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "session-surface-add-row",
+      "catalogId": "agent-ui",
+      "prompt": "Add Thursday yoga to that schedule.",
+      "expect": "surface",
+      "session": {
+        "turns": [
+          {
+            "role": "user",
+            "content": "show my week"
+          },
+          {
+            "role": "assistant",
+            "content": "Here is your week.\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"week\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"week\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"t1\",\"t2\",\"t3\"]},{\"id\":\"t1\",\"component\":\"Text\",\"text\":\"Monday: legs\"},{\"id\":\"t2\",\"component\":\"Text\",\"text\":\"Wednesday: back\"},{\"id\":\"t3\",\"component\":\"Text\",\"text\":\"Friday: chest\"}]}}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "session-both-explain-and-update",
+      "catalogId": "agent-ui",
+      "prompt": "Explain why rest days matter and add a rest day on Sunday.",
+      "expect": "both",
+      "session": {
+        "turns": [
+          {
+            "role": "user",
+            "content": "show my week"
+          },
+          {
+            "role": "assistant",
+            "content": "Here is your week.\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"week\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"week\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"t1\",\"t2\",\"t3\"]},{\"id\":\"t1\",\"component\":\"Text\",\"text\":\"Monday: legs\"},{\"id\":\"t2\",\"component\":\"Text\",\"text\":\"Wednesday: back\"},{\"id\":\"t3\",\"component\":\"Text\",\"text\":\"Friday: chest\"}]}}"
+          }
+        ]
+      }
+    }
+  ]
+}
