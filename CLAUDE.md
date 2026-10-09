@@ -17,7 +17,7 @@ Process `.claude/docs/process.md` · Standards `.claude/docs/references/` · `si
   (packages:{components,app,rest} · site · focus-timing · visual) then `test:eval-catalog`
   (boots its own vite + Chromium, gate-verdicts only). Never re-monolith the shards or add a heap
   bump (history + the focus-timing extension rule: `component-testing`).
-- `npm run eval:agent-behavior -- selftest` is keyless and runs inside `check:scripts`; `-- live --leg selection|persona`
+- `npm run eval:agent-behavior -- selftest` is keyless and runs inside `check:scripts`; `-- live --leg selection|persona|response-type`
   needs `ANTHROPIC_API_KEY` and is Kim's manual run (exit 0, 1 or 2). Home: `packages/agent-ui/a2ui/tools/agent-eval/`, GH #1810.
 - `npm run e2e:admin`: keyless headless agent-admin flows (Test Chat, Builder, Settings, teams, error and
   abort paths) replayed from fixtures in `scripts/e2e-admin/`; outside the six shards, local only, no CI job.

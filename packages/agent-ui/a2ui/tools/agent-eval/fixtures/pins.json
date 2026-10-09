@@ -2,6 +2,7 @@
   "algorithm": "sha256",
   "files": {
     "persona-cases.json": "8b0265ca8d43a09aca3fc5375fc4e46ae31e00132cf2fed0042b478a541469f6",
-    "scripted-turns.json": "434efdfc91aa8b033433a0be450cca8b74a7a2d4ccfeac981569dbd05ca9909a"
+    "response-type-cases.json": "8a477a851b296b22d1dd64f167a1d8ce3476db03d902d1856b221917ef17bddf",
+    "scripted-turns.json": "40fef679a87e3aae0905277d303c750911ec1240a509fdfbfd118bdb068d99c5"
   }
 }

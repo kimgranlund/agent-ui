@@ -1,6 +1,7 @@
 // eval-agent-behavior.ts: the agent-behavior eval CLI (GH #1810). Scores producer turns on concept
 // selection, negative selection against the `notFor` edges, repair from structured validator errors
-// (first-pass versus eventual versus halt), plus a per-persona leg.
+// (first-pass versus eventual versus halt), plus a per-persona leg and the response-type leg (T-0060:
+// text, surface or both per turn, over the pinned labelled set).
 //
 // Run from the repo root via Node type-stripping:
 //
@@ -11,7 +12,7 @@
 //                                  fixtures/scripted-turns.json and compares it with its `expect`. Every
 //                                  result line is labeled `scripted`: a scripted result is never a model
 //                                  score. Runs in `check:scripts`.
-//   live --leg selection|persona [--model <id>] [--only <case-id substring>] [--repo-root <dir>]
+//   live --leg selection|persona|response-type [--model <id>] [--only <case-id substring>] [--repo-root <dir>]
 //                                  NEEDS KEY. Kim's named manual run against a real model, never a
 //                                  standing gate.
 //
@@ -39,18 +40,18 @@ import { retrieve } from '../../src/corpus/retrieve.ts'
 import { resolvePair, validateProvidersConfig } from '../agent/providers-config.ts'
 import type { ProvidersConfig } from '../agent/providers-config.ts'
 import { readAnthropicApiKey, loadA2uiShard } from '../corpus-genui/fs.ts'
-import { deriveSelectionCases, loadCaseCatalog, loadPersonaCases, parsePersonaCase } from './cases.ts'
-import type { PersonaCase, SelectionCase } from './cases.ts'
+import { deriveSelectionCases, loadCaseCatalog, loadPersonaCases, loadResponseTypeCases, parsePersonaCase, parseResponseTypeCase } from './cases.ts'
+import type { PersonaCase, ResponseTypeCase, SelectionCase } from './cases.ts'
 import { observeTurn } from './observe.ts'
 import type { ObserveDeps } from './observe.ts'
-import { runPersonaLeg, runSelectionLeg } from './legs.ts'
+import { runPersonaLeg, runResponseTypeLeg, runSelectionLeg } from './legs.ts'
 import type { LegResult } from './legs.ts'
 import { scriptedProvider } from './scripted.ts'
 import { verifyPins } from './pins.ts'
 
 const PROVIDERS_CONFIG_PATH = 'packages/agent-ui/a2ui/tools/agent/providers.json'
 const FIXTURES_REL = 'packages/agent-ui/a2ui/tools/agent-eval/fixtures'
-const FIXTURE_FILES = ['scripted-turns.json', 'persona-cases.json', 'pins.json'] as const
+const FIXTURE_FILES = ['scripted-turns.json', 'persona-cases.json', 'response-type-cases.json', 'pins.json'] as const
 
 export function helpText(): string {
   return [
@@ -59,7 +60,7 @@ export function helpText(): string {
     'usage: npm run eval:agent-behavior -- <command> [flags]',
     '',
     '  selftest [--repo-root <dir>]                 KEYLESS   pins + scripted turns (check:scripts)',
-    '  live --leg selection|persona [--model <id>] [--only <case-id substring>] [--repo-root <dir>]',
+    '  live --leg selection|persona|response-type [--model <id>] [--only <case-id substring>] [--repo-root <dir>]',
     '                                               NEEDS KEY manual run against a real model',
     '',
     'exit codes: 0 green, 1 any failure, 2 setup failure',
@@ -83,9 +84,9 @@ interface ScriptedExpect {
   failureCodes?: string[]
 }
 
-interface ScriptedTurn {
+export interface ScriptedTurn {
   id: string
-  leg: 'selection' | 'persona' | 'repair'
+  leg: 'selection' | 'persona' | 'repair' | 'response-type'
   case: unknown
   rounds: string[]
   expect: ScriptedExpect
@@ -95,7 +96,7 @@ function parseScriptedTurns(doc: unknown): ScriptedTurn[] {
   if (!isObject(doc) || !Array.isArray(doc.turns)) throw new Error('scripted-turns.json must hold a "turns" array')
   return doc.turns.map((t: unknown, i: number) => {
     if (!isObject(t) || typeof t.id !== 'string') throw new Error(`scripted turn ${i} needs a string "id"`)
-    if (t.leg !== 'selection' && t.leg !== 'persona' && t.leg !== 'repair') throw new Error(`scripted turn "${t.id}" has an unknown leg`)
+    if (t.leg !== 'selection' && t.leg !== 'persona' && t.leg !== 'repair' && t.leg !== 'response-type') throw new Error(`scripted turn "${t.id}" has an unknown leg`)
     if (!Array.isArray(t.rounds) || t.rounds.length === 0 || !t.rounds.every((r) => typeof r === 'string')) {
       throw new Error(`scripted turn "${t.id}" needs a non-empty "rounds" string array`)
     }
@@ -130,9 +131,18 @@ export async function runScriptedTurn(turn: ScriptedTurn): Promise<{ mismatches:
     }
     return { mismatches, got: `outcome ${obs.outcome}, rounds ${obs.rounds}, failureCodes ${codes}` }
   }
-  const legCase = turn.leg === 'selection' ? asSelectionCase(turn.case, turn.id) : parsePersonaCase(turn.case)
+  const legCase =
+    turn.leg === 'selection'
+      ? asSelectionCase(turn.case, turn.id)
+      : turn.leg === 'response-type'
+        ? parseResponseTypeCase(turn.case)
+        : parsePersonaCase(turn.case)
   const result: LegResult =
-    turn.leg === 'selection' ? await runSelectionLeg([legCase as SelectionCase], deps) : await runPersonaLeg([legCase as PersonaCase], deps)
+    turn.leg === 'selection'
+      ? await runSelectionLeg([legCase as SelectionCase], deps)
+      : turn.leg === 'response-type'
+        ? await runResponseTypeLeg([legCase as ResponseTypeCase], deps)
+        : await runPersonaLeg([legCase as PersonaCase], deps)
   // Only the findings text between `FAIL <case id> ` and ` repair=` counts, matched as a whole word: the
   // case id (`agent-ui:Text->Code`) and the repair suffix (`failureCodes=`) both hold "Code", so matching
   // the whole line would pass vacuously.
@@ -171,6 +181,7 @@ async function runSelftest(fixturesDir: string): Promise<number> {
   try {
     turns = parseScriptedTurns(docs['scripted-turns.json'])
     loadPersonaCases(fixturesDir)
+    loadResponseTypeCases(fixturesDir)
   } catch (err) {
     console.error(`selftest: ${err instanceof Error ? err.message : String(err)}`)
     return 2
@@ -210,8 +221,8 @@ function loadProvidersConfig(): ProvidersConfig {
 
 async function runLive(rest: readonly string[], repoRoot: string, fixturesDir: string, env: Record<string, string | undefined>): Promise<number> {
   const leg = flagValue(rest, 'leg')
-  if (leg !== 'selection' && leg !== 'persona') {
-    console.error(`live: --leg must be selection or persona${leg === undefined ? '' : ` (got "${leg}")`}`)
+  if (leg !== 'selection' && leg !== 'persona' && leg !== 'response-type') {
+    console.error(`live: --leg must be selection, persona or response-type${leg === undefined ? '' : ` (got "${leg}")`}`)
     return 2
   }
   let cfg: ProvidersConfig
@@ -250,6 +261,20 @@ async function runLive(rest: readonly string[], repoRoot: string, fixturesDir: s
       return 2
     }
     result = await runSelectionLeg(cases, deps)
+  } else if (leg === 'response-type') {
+    let all: ResponseTypeCase[]
+    try {
+      all = loadResponseTypeCases(fixturesDir)
+    } catch (err) {
+      console.error(`live: cannot read response-type cases (${err instanceof Error ? err.message : String(err)})`)
+      return 2
+    }
+    const cases = all.filter((c) => only === undefined || c.id.includes(only))
+    if (cases.length === 0) {
+      console.error(`live: --only "${only}" matches no response-type case`)
+      return 2
+    }
+    result = await runResponseTypeLeg(cases, deps, { timing: true })
   } else {
     let all: PersonaCase[]
     try {

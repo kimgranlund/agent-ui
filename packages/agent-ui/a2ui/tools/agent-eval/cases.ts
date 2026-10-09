@@ -13,7 +13,8 @@
 // `selection-guidance.ts` follows at module load.
 //
 // The persona leg's acceptance cases are the hand-authored `fixtures/persona-cases.json`, protected by
-// the pinned hash in `fixtures/pins.json` (`pins.ts`).
+// the pinned hash in `fixtures/pins.json` (`pins.ts`). The response-type leg's labelled set (T-0060,
+// RTS-R10) is the hand-authored `fixtures/response-type-cases.json`, pinned the same way.
 
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -21,6 +22,7 @@ import { loadCatalogById } from '../catalog-files.ts'
 import { composeCatalog, loadCatalogFragment } from '../../src/catalog/compose.ts'
 import type { CatalogFragment } from '../../src/catalog/compose.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
+import type { Session } from '../../src/agent/agent-transport.ts'
 import { selectionGuidanceFor } from '../../src/agent/selection-guidance.ts'
 
 const PERSONAS_DIR = 'packages/agent-ui/a2ui/src/catalog/personas'
@@ -155,4 +157,56 @@ export function loadPersonaCases(fixturesDir: string): PersonaCase[] {
   const doc: unknown = JSON.parse(readFileSync(join(fixturesDir, 'persona-cases.json'), 'utf8'))
   if (!isObject(doc) || !Array.isArray(doc.cases)) throw new Error('agent-eval: persona-cases.json must hold a "cases" array')
   return doc.cases.map(parsePersonaCase)
+}
+
+/** The three response types a labelled case may expect (RTS-R10). */
+export const RESPONSE_TYPE_EXPECTS = ['text', 'surface', 'both'] as const
+export type ResponseTypeExpect = (typeof RESPONSE_TYPE_EXPECTS)[number]
+
+/** One response-type case. `session`, when given, is one prior user turn then one assistant turn stored
+ *  in the RTS-R12 shape (`<note>\n<jsonl>`), threaded into `produce()` as the turn's history. */
+export interface ResponseTypeCase {
+  readonly id: string
+  readonly catalogId: string
+  readonly prompt: string
+  readonly expect: ResponseTypeExpect
+  readonly session?: Session
+}
+
+function parseCaseSession(raw: unknown, id: string): Session {
+  const fail = (): never => {
+    throw new Error(`agent-eval: response-type case "${id}" session must hold exactly one "user" then one "assistant" turn of string "content"`)
+  }
+  if (!isObject(raw) || !Array.isArray(raw.turns) || raw.turns.length !== 2) return fail()
+  const turns = raw.turns.map((t: unknown, i: number) => {
+    if (!isObject(t) || t.role !== (i === 0 ? 'user' : 'assistant') || typeof t.content !== 'string') return fail()
+    return { role: t.role as 'user' | 'assistant', content: t.content as string }
+  })
+  return { turns }
+}
+
+/** Validate one response-type case's shape; throws naming the defect. */
+export function parseResponseTypeCase(raw: unknown): ResponseTypeCase {
+  if (!isObject(raw)) throw new Error('agent-eval: a response-type case must be an object')
+  const { id, catalogId, prompt, expect, session } = raw
+  for (const [key, value] of Object.entries({ id, catalogId, prompt })) {
+    if (typeof value !== 'string' || value.length === 0) throw new Error(`agent-eval: response-type case "${String(id)}" needs a string "${key}"`)
+  }
+  if (typeof expect !== 'string' || !(RESPONSE_TYPE_EXPECTS as readonly string[]).includes(expect)) {
+    throw new Error(`agent-eval: response-type case "${String(id)}" expect must be one of ${RESPONSE_TYPE_EXPECTS.join(', ')}`)
+  }
+  return {
+    id: id as string,
+    catalogId: catalogId as string,
+    prompt: prompt as string,
+    expect: expect as ResponseTypeExpect,
+    ...(session !== undefined ? { session: parseCaseSession(session, id as string) } : {}),
+  }
+}
+
+/** Read the hand-authored labelled set, `<fixturesDir>/response-type-cases.json`. */
+export function loadResponseTypeCases(fixturesDir: string): ResponseTypeCase[] {
+  const doc: unknown = JSON.parse(readFileSync(join(fixturesDir, 'response-type-cases.json'), 'utf8'))
+  if (!isObject(doc) || !Array.isArray(doc.cases)) throw new Error('agent-eval: response-type-cases.json must hold a "cases" array')
+  return doc.cases.map(parseResponseTypeCase)
 }

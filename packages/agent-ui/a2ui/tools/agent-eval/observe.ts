@@ -8,11 +8,17 @@
 // when the model emits a note). Without a trace, `rounds` is the wrapper's call count; on `ProduceHalt`,
 // `failureCodes` is the halt's `failures[].code`; otherwise it is `null`, reported as not observed and
 // never invented. `TurnTrace` is read here, never changed.
+//
+// Response type (T-0060, RTS-R10): `hasText` and `hasSurface` are read from the shipped wire, never
+// declared by the model; `firstLineMs` times the first user-visible line; `usage` is the trace's billed
+// token sum. An optional `session` threads prior turns into `produce()` (RTS-R12 AC2).
 
 import { produce, ProduceHalt } from '../../src/agent/produce.ts'
 import type { ProduceDeps } from '../../src/agent/produce.ts'
-import type { AgentProvider } from '../../src/agent/agent-transport.ts'
+import type { AgentProvider, Session } from '../../src/agent/agent-transport.ts'
 import { readMetaLine } from '../../src/agent/meta-line.ts'
+import type { TokenUsage } from '../../src/agent/meta-line.ts'
+import { isGenuiLine } from '../../src/agent/genui-line.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import { repairOutcome } from './score.ts'
 
@@ -26,6 +32,15 @@ export interface TurnObservation {
   readonly emittedTypes: string[]
   /** Per round: the component types the raw provider text attempted (unparseable lines skipped). */
   readonly attemptedTypes: string[][]
+  /** Some meta-line carries a non-empty `note`. False on a halt. */
+  readonly hasText: boolean
+  /** Some shipped non-meta line is an A2UI message (string `version`) or a genui line. False on a halt. */
+  readonly hasSurface: boolean
+  /** Milliseconds from the start of `observeTurn` to the first `textDelta` line, non-empty note line, or
+   *  content line; `null` when none arrived. */
+  readonly firstLineMs: number | null
+  /** The trace's provider-billed token sum, or `null` when the turn carried none. */
+  readonly usage: TokenUsage | null
 }
 
 export interface ObserveDeps {
@@ -54,6 +69,31 @@ function componentTypesOf(line: string): string[] {
   return components.flatMap((c) => (isObject(c) && typeof c.component === 'string' ? [c.component] : []))
 }
 
+/** True when `line` is a non-meta A2UI message (a JSON object with a string `version`) or a genui line. */
+function isSurfaceLine(line: string): boolean {
+  if (isGenuiLine(line)) return true
+  try {
+    const parsed: unknown = JSON.parse(line)
+    return isObject(parsed) && typeof parsed.version === 'string'
+  } catch {
+    return false
+  }
+}
+
+/** True when `line` is user-visible: a `textDelta` meta-line, a meta-line with a non-empty `note`, or a
+ *  content line. `textDelta` is read from the raw JSON, since `readMetaLine` does not carry the arm yet. */
+function isVisibleLine(line: string): boolean {
+  const meta = readMetaLine(line)
+  if (meta === undefined) return true
+  if (typeof meta.a2uiMeta.note === 'string' && meta.a2uiMeta.note.trim().length > 0) return true
+  try {
+    const parsed: unknown = JSON.parse(line)
+    return isObject(parsed) && isObject(parsed.a2uiMeta) && typeof parsed.a2uiMeta.textDelta === 'string'
+  } catch {
+    return false
+  }
+}
+
 /** Every component type attempted in one round's raw text. A fenced or noisy line simply fails to parse. */
 export function attemptedTypesOf(raw: string): string[] {
   const out: string[] = []
@@ -65,7 +105,9 @@ export function attemptedTypesOf(raw: string): string[] {
 }
 
 /** Run one turn through `produce()` with `maxRounds: 3` and observe it. */
-export async function observeTurn(input: { catalog: Catalog; prompt: string }, deps: ObserveDeps): Promise<TurnObservation> {
+export async function observeTurn(input: { catalog: Catalog; prompt: string; session?: Session }, deps: ObserveDeps): Promise<TurnObservation> {
+  const started = performance.now()
+  let firstLineMs: number | null = null
   const raws: string[] = []
   let calls = 0
   const provider: AgentProvider = {
@@ -84,10 +126,11 @@ export async function observeTurn(input: { catalog: Catalog; prompt: string }, d
   let haltCodes: string[] | undefined
   try {
     for await (const line of produce(
-      { kind: 'intent', text: input.prompt, session: { turns: [] } },
+      { kind: 'intent', text: input.prompt, session: input.session ?? { turns: [] } },
       produceDeps,
       { maxRounds: MAX_ROUNDS, ...(deps.model !== undefined ? { model: deps.model } : {}) },
     )) {
+      if (firstLineMs === null && isVisibleLine(line)) firstLineMs = performance.now() - started
       lines.push(line)
     }
   } catch (err) {
@@ -97,22 +140,39 @@ export async function observeTurn(input: { catalog: Catalog; prompt: string }, d
 
   const attemptedTypes = raws.map(attemptedTypesOf)
   if (haltCodes !== undefined) {
-    return { outcome: repairOutcome(true, calls), rounds: calls, failureCodes: haltCodes, emittedTypes: [], attemptedTypes }
+    return {
+      outcome: repairOutcome(true, calls),
+      rounds: calls,
+      failureCodes: haltCodes,
+      emittedTypes: [],
+      attemptedTypes,
+      hasText: false,
+      hasSurface: false,
+      firstLineMs,
+      usage: null,
+    }
   }
 
   let traceRounds: number | undefined
   let traceCodes: string[] | undefined
+  let usage: TokenUsage | null = null
+  let hasText = false
+  let hasSurface = false
   const emitted: string[] = []
   for (const line of lines) {
     const meta = readMetaLine(line)
     if (meta !== undefined) {
+      const note = meta.a2uiMeta.note
+      if (typeof note === 'string' && note.trim().length > 0) hasText = true
       const trace = meta.a2uiMeta.trace
       if (trace !== undefined && typeof trace.rounds === 'number' && traceRounds === undefined) {
         traceRounds = trace.rounds
         traceCodes = Array.isArray(trace.failureCodes) ? [...trace.failureCodes] : undefined
+        usage = trace.usage ?? null
       }
       continue
     }
+    if (isSurfaceLine(line)) hasSurface = true
     for (const type of componentTypesOf(line)) if (!emitted.includes(type)) emitted.push(type)
   }
   const rounds = traceRounds ?? calls
@@ -122,5 +182,9 @@ export async function observeTurn(input: { catalog: Catalog; prompt: string }, d
     failureCodes: traceCodes ?? null,
     emittedTypes: emitted,
     attemptedTypes,
+    hasText,
+    hasSurface,
+    firstLineMs,
+    usage,
   }
 }

@@ -8,7 +8,8 @@ import { spawnSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { runCli } from './eval-agent-behavior.ts'
+import { runCli, runScriptedTurn } from './eval-agent-behavior.ts'
+import type { ScriptedTurn } from './eval-agent-behavior.ts'
 
 const DIR = join(process.cwd(), 'packages/agent-ui/a2ui/tools/agent-eval')
 const ENTRY = join(DIR, 'eval-agent-behavior.ts')
@@ -54,5 +55,19 @@ describe('the selftest', () => {
     } finally {
       log.mockRestore()
     }
+  })
+})
+
+describe('the response-type selftest turns', () => {
+  it('seeded wrong choice: with its expected failure removed, the turn reports a mismatch', async () => {
+    const doc = JSON.parse(readFileSync(join(DIR, 'fixtures/scripted-turns.json'), 'utf8')) as { turns: ScriptedTurn[] }
+    const seeded = doc.turns.find((t) => t.id === 'response-type-wrong-choice')
+    expect(seeded).toBeDefined()
+    // as pinned, it matches (exit 1, names false-surface)
+    expect((await runScriptedTurn(seeded!)).mismatches).toEqual([])
+    // the same turn expected to pass must not: the wrong choice is caught (RTS-R10 AC1)
+    const { mismatches } = await runScriptedTurn({ ...seeded!, expect: { exitCode: 0 } })
+    expect(mismatches.length).toBeGreaterThan(0)
+    expect(mismatches).toContain('expected exit 0 got 1')
   })
 })
