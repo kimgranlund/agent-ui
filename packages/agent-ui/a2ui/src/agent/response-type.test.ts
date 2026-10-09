@@ -30,10 +30,10 @@ describe('renderSurfaceTool', () => {
       required: ['jsonl'],
     })
   })
-  it('names every open surface, gates on a UI change, and prefers an update', () => {
+  it('names every open surface, gates on a structure, and prefers an update', () => {
     expect(tool.description).toContain('main')
     expect(tool.description).toContain('quiz-7')
-    expect(tool.description).toMatch(/only when the UI changes/)
+    expect(tool.description).toMatch(/scan, compare, fill in or act on/)
     expect(tool.description).toMatch(/update/)
   })
   it('serializes under 1500 chars', () => {
