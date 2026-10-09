@@ -422,6 +422,23 @@ export function buildRequestBody(req: {
    *  messages (assistant tool_use + user tool_result rounds), appended AFTER the mapped turns. */
   tools?: readonly ToolDef[]
   extraMessages?: readonly AnthropicMessage[]
+  /** RTS-R2: force this tool. Sent as `tool_choice` only when the body carries tools and no `thinking`
+   *  field (the API rejects a forced tool choice with extended thinking); otherwise omitted. */
+  toolChoice?: { name: string }
+}): Record<string, unknown> {
+  const body = buildArmBody(req)
+  if (req.toolChoice === undefined || body.tools === undefined || body.thinking !== undefined) return body
+  return { ...body, tool_choice: { type: 'tool', name: req.toolChoice.name } }
+}
+
+/** `buildRequestBody` without the `tool_choice` mapping: the effort arms. */
+function buildArmBody(req: {
+  model: string
+  system: string
+  messages: Turn[]
+  effort?: Effort
+  tools?: readonly ToolDef[]
+  extraMessages?: readonly AnthropicMessage[]
 }): Record<string, unknown> {
   const base = {
     model: req.model,
@@ -754,6 +771,46 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): 
         return
       }
 
+      type Call = ToolUseCollector['calls'][number]
+      // One call through the executor: parse the fully assembled `inputJson` (read only after the round's
+      // stream has ended, never a fragment), coerce object fields, run it. A rejection becomes an is_error
+      // result, never a thrown turn (the ExecuteTool contract).
+      const execute = async (call: Call): Promise<{ call: Call; content: string; isError: boolean }> => {
+        req.onEvent?.({ kind: 'tool', text: call.name })
+        let input: Record<string, unknown> = {}
+        try {
+          input = call.inputJson.trim().length > 0 ? (JSON.parse(call.inputJson) as Record<string, unknown>) : {}
+        } catch {
+          return { call, content: `tool input was not valid JSON: ${call.inputJson.slice(0, 200)}`, isError: true }
+        }
+        const coerced = coerceObjectFields(input, req.tools?.find((t) => t.name === call.name)?.input_schema)
+        if ('error' in coerced) return { call, content: coerced.error, isError: true }
+        input = coerced.input
+        try {
+          // The turn's abort signal rides into the executor (PR #59 review): an aborted turn also
+          // cancels in-flight tool network work, not just the next round's fetch.
+          return { call, content: await req.executeTool!(call.name, input, req.signal), isError: false }
+        } catch (err) {
+          return { call, content: `tool failed: ${err instanceof Error ? err.message : String(err)}`, isError: true }
+        }
+      }
+      // RTS-R2: the first call in the round that names a terminal tool, if the round ended on tool_use.
+      // Terminal calls need no continuation, so the round cap does not apply to them; any integration
+      // calls in the same round are not executed (their results would have nowhere to go).
+      const terminal = new Set(req.terminalTools ?? [])
+      const terminalCall = (collector: ToolUseCollector): Call | undefined =>
+        collector.stopReason === 'tool_use' ? collector.calls.find((c) => terminal.has(c.name)) : undefined
+
+      // RTS-R2: every declared tool is terminal, so no scratch prose can precede a later round. One round,
+      // text yielded live as it arrives, then the terminal call (if any) runs once and the turn ends.
+      if (terminal.size > 0 && req.tools!.every((t) => terminal.has(t.name))) {
+        const collector = newToolCollector()
+        yield* runRound(buildRequestBody(req), req.onEvent, req.signal, collector)
+        const call = terminalCall(collector)
+        if (call) await execute(call)
+        return
+      }
+
       // GH #49 — the bounded tool loop. Each round's TEXT is buffered and flushed ONLY when the round
       // ends withOUT stop_reason 'tool_use': intermediate scratch prose ("checking the weather…") never
       // reaches the accumulated wire the A2UI producer validates — only the post-tools round's real
@@ -765,6 +822,14 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): 
         const roundText: string[] = []
         const body = buildRequestBody({ ...req, tools: req.tools, extraMessages: extra })
         for await (const fragment of runRound(body, req.onEvent, req.signal, collector)) roundText.push(fragment)
+
+        // RTS-R2: a terminal call ends the loop: execute it, flush the round's text, no continuation.
+        const call = terminalCall(collector)
+        if (call) {
+          await execute(call)
+          yield* roundText
+          return
+        }
 
         const wantsTools = collector.stopReason === 'tool_use' && collector.calls.length > 0 && round < MAX_TOOL_ROUNDS
         if (!wantsTools) {
@@ -781,23 +846,7 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string }): 
             if (at >= MAX_CALLS_PER_ROUND) {
               return { call, content: `tool-call cap reached (${MAX_CALLS_PER_ROUND}/round) — consolidate calls or continue without this one`, isError: true }
             }
-            req.onEvent?.({ kind: 'tool', text: call.name })
-            let input: Record<string, unknown> = {}
-            try {
-              input = call.inputJson.trim().length > 0 ? (JSON.parse(call.inputJson) as Record<string, unknown>) : {}
-            } catch {
-              return { call, content: `tool input was not valid JSON: ${call.inputJson.slice(0, 200)}`, isError: true }
-            }
-            const coerced = coerceObjectFields(input, req.tools?.find((t) => t.name === call.name)?.input_schema)
-            if ('error' in coerced) return { call, content: coerced.error, isError: true }
-            input = coerced.input
-            try {
-              // The turn's abort signal rides into the executor (PR #59 review) — an aborted turn also
-              // cancels in-flight tool network work, not just the next round's fetch.
-              return { call, content: await req.executeTool!(call.name, input, req.signal), isError: false }
-            } catch (err) {
-              return { call, content: `tool failed: ${err instanceof Error ? err.message : String(err)}`, isError: true }
-            }
+            return execute(call)
           }),
         )
 
