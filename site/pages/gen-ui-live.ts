@@ -435,7 +435,7 @@ async function runTurn(input: TurnInput): Promise<void> {
       return
     }
     session = appendUserTurn(session, input.kind === 'intent' ? input.text : '')
-    session = appendAssistantTurn(session, genuiLines.join('\n'))
+    session = appendAssistantTurn(session, genuiLines.join('\n'), note)
     addMessage('agent', note ?? `Rendered ${genuiLines.length} GenUI surface(s) — see the render pane.`)
   } catch (e) {
     narration.appendEntry({ key: 'progress-error', status: 'error', label: `Turn failed — ${(e as Error).message}` })

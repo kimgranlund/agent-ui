@@ -12,17 +12,24 @@
 // Response type (T-0060, RTS-R10): `hasText` and `hasSurface` are read from the shipped wire, never
 // declared by the model; `firstLineMs` times the first user-visible line; `usage` is the trace's billed
 // token sum. An optional `session` threads prior turns into `produce()` (RTS-R12 AC2).
+//
+// Tool path (T-0060, LLD section 5): the wrapper also wraps `req.executeTool` to record each call, only when
+// the request carries one (an absent executor stays absent, so a withheld tool stays unexecuted).
+// `toolCalled` is true when a `render_surface` call ran; `attemptedTypes` also reads each captured `jsonl`
+// input, so the persona leg sees a type reached through the tool. `outcome` is `eventual-text` when the
+// trace's `failureCodes` include `SURFACE_DEGRADED` (the payload degraded to its text at the bound).
 
 import { produce, ProduceHalt } from '../../src/agent/produce.ts'
 import type { ProduceDeps } from '../../src/agent/produce.ts'
-import type { AgentProvider, Session } from '../../src/agent/agent-transport.ts'
+import type { AgentProvider, ExecuteTool, Session } from '../../src/agent/agent-transport.ts'
 import { readMetaLine } from '../../src/agent/meta-line.ts'
 import type { TokenUsage } from '../../src/agent/meta-line.ts'
 import { isGenuiLine } from '../../src/agent/genui-line.ts'
+import { RENDER_SURFACE_TOOL_NAME } from '../../src/agent/response-type.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import { repairOutcome } from './score.ts'
 
-export type RepairOutcome = 'first-pass' | 'eventual' | 'halt'
+export type RepairOutcome = 'first-pass' | 'eventual' | 'eventual-text' | 'halt'
 
 export interface TurnObservation {
   readonly outcome: RepairOutcome
@@ -30,8 +37,11 @@ export interface TurnObservation {
   readonly failureCodes: string[] | null
   /** Component types of the validated A2UI lines the turn shipped. */
   readonly emittedTypes: string[]
-  /** Per round: the component types the raw provider text attempted (unparseable lines skipped). */
+  /** Per round: the component types the raw provider text and any captured `render_surface` `jsonl`
+   *  attempted (unparseable lines skipped). */
   readonly attemptedTypes: string[][]
+  /** A `render_surface` call ran through the request's executor. */
+  readonly toolCalled: boolean
   /** Some meta-line carries a non-empty `note`. False on a halt. */
   readonly hasText: boolean
   /** Some shipped non-meta line is an A2UI message (string `version`) or a genui line. False on a halt. */
@@ -109,13 +119,28 @@ export async function observeTurn(input: { catalog: Catalog; prompt: string; ses
   const started = performance.now()
   let firstLineMs: number | null = null
   const raws: string[] = []
+  const toolJsonl: string[] = []
+  let toolCalled = false
   let calls = 0
   const provider: AgentProvider = {
     async *stream(req) {
       calls += 1
       const index = raws.length
       raws.push('')
-      for await (const frag of deps.provider.stream(req)) {
+      toolJsonl.push('')
+      const execute = req.executeTool
+      const recordingTool: ExecuteTool | undefined =
+        execute === undefined
+          ? undefined
+          : (name, toolInput, signal) => {
+              if (name === RENDER_SURFACE_TOOL_NAME) {
+                toolCalled = true
+                if (typeof toolInput.jsonl === 'string') toolJsonl[index] += `${toolInput.jsonl}\n`
+              }
+              return execute(name, toolInput, signal)
+            }
+      const recorded = recordingTool === undefined ? req : { ...req, executeTool: recordingTool }
+      for await (const frag of deps.provider.stream(recorded)) {
         raws[index] += frag
         yield frag
       }
@@ -138,7 +163,7 @@ export async function observeTurn(input: { catalog: Catalog; prompt: string; ses
     haltCodes = err.failures.map((f) => f.code)
   }
 
-  const attemptedTypes = raws.map(attemptedTypesOf)
+  const attemptedTypes = raws.map((raw, i) => [...attemptedTypesOf(raw), ...attemptedTypesOf(toolJsonl[i]!)])
   if (haltCodes !== undefined) {
     return {
       outcome: repairOutcome(true, calls),
@@ -146,6 +171,7 @@ export async function observeTurn(input: { catalog: Catalog; prompt: string; ses
       failureCodes: haltCodes,
       emittedTypes: [],
       attemptedTypes,
+      toolCalled,
       hasText: false,
       hasSurface: false,
       firstLineMs,
@@ -177,11 +203,12 @@ export async function observeTurn(input: { catalog: Catalog; prompt: string; ses
   }
   const rounds = traceRounds ?? calls
   return {
-    outcome: repairOutcome(false, rounds),
+    outcome: traceCodes?.includes('SURFACE_DEGRADED') === true ? 'eventual-text' : repairOutcome(false, rounds),
     rounds,
     failureCodes: traceCodes ?? null,
     emittedTypes: emitted,
     attemptedTypes,
+    toolCalled,
     hasText,
     hasSurface,
     firstLineMs,

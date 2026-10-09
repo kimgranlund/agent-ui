@@ -163,6 +163,9 @@ import {
   SURFACE_AUTHORING_KEY,
   isAuthoringSurfaceEnabled,
   SURFACE_BUBBLES_KEY,
+  PREFERS_KEY,
+  PREFERS_OPTIONS,
+  sanitizePrefers,
   defaultAgentConfigSchema,
   isEnabledFlag,
   isBubblesChromeEnabled,
@@ -803,6 +806,9 @@ export class UIAgentAdminElement extends UIElement {
   // GH #1221 (Kim's 2026-08-17 rulings) — the chat bubble on/off setting's row switch: the markdown/a2ui
   // rows' shape (bare, ungrouped, default ON — `isEnabledFlag`'s law, not the inverse-default one).
   #surfaceBubblesSwitch: (HTMLElement & { checked: boolean }) | null = null
+  // RTS-R7: the response type hint's picker (`PREFERS_KEY`): reflected stored truth, applied in
+  // `#applyMasterStates` like every row switch above.
+  #prefersPicker: UISegmentedControlElement | null = null
   // GH #525/#541 — the bankroll Settings FOLD (its own group since #541): built once; `hidden` reflects
   // the persona's OWN opt-in (`BANKROLL_CAPABLE_KEY`), applied in `#applyMasterStates` like every other
   // row's state — never a DOM add/remove per persona switch.
@@ -1374,6 +1380,35 @@ export class UIAgentAdminElement extends UIElement {
     })
     this.#surfaceBubblesSwitch = bubbles.toggle
 
+    // RTS-R7: the persona's response type hint (`auto` | `text` | `surface`), the row grammar above with a
+    // single-select segmented picker in the switch's place: three values, not an on/off. Advisory only (the
+    // produce loop never changes its tool offer for it), so it is independent of the A2UI master, like
+    // Planner. No help icon: the Surface tab's help set is a fixed, tested roster. Its own `prefers-row` part,
+    // not `surface-row`: that name means a switch-led modality row, enumerated as such by the row-order tests.
+    const prefersRow = document.createElement('div')
+    prefersRow.setAttribute('data-part', 'prefers-row')
+    const prefersPicker = document.createElement('ui-segmented-control') as UISegmentedControlElement
+    prefersPicker.setAttribute('data-part', 'surface-prefers')
+    prefersPicker.setAttribute('aria-label', 'Preferred response type')
+    for (const option of PREFERS_OPTIONS) {
+      const segment = document.createElement('ui-segment') as UISegmentElement
+      segment.setAttribute('value', option)
+      segment.textContent = option === 'auto' ? 'Auto' : option === 'text' ? 'Text' : 'Surface'
+      prefersPicker.append(segment)
+    }
+    prefersPicker.addEventListener('change', (event) => {
+      event.stopPropagation() // the closed seven-event set stays closed (the pane segments' own posture)
+      this.store?.set(PREFERS_KEY, sanitizePrefers(prefersPicker.value))
+      if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+    })
+    const prefersLabel = document.createElement('span')
+    prefersLabel.setAttribute('data-part', 'surface-label')
+    prefersLabel.textContent = 'Response type'
+    const prefersSpacer = document.createElement('span')
+    prefersSpacer.setAttribute('data-part', 'surface-spacer')
+    prefersRow.append(prefersLabel, prefersSpacer, prefersPicker)
+    this.#prefersPicker = prefersPicker
+
     // GH #525 — the bankroll RESET row (design call 3, 2026-08-07: a settings-pane affordance, never a
     // chat command): a plain label + spacer + trailing `<ui-button>` (the entry-list.ts `deleteBtn`
     // precedent), no toggle (there is no on/off here, only a stored figure to clear). GH #541 — it is its
@@ -1406,7 +1441,7 @@ export class UIAgentAdminElement extends UIElement {
     bankrollItem.append(buildAdminHelpForSummary('bankroll'))
     this.#bankrollItem = bankrollItem as HTMLElement & { hidden: boolean }
 
-    surfaceOptions.append(markdown.row, a2uiGroup.group, genuiGroup.group, planner.row, authoring.row, bubbles.row)
+    surfaceOptions.append(markdown.row, a2uiGroup.group, genuiGroup.group, planner.row, authoring.row, bubbles.row, prefersRow)
 
     // GH #225/#226 — each Settings section is a heading-row fold (the GH #222 Context pattern applied to
     // the config column). The master switches (Agent + one per kind) ride their fold's heading row
@@ -3534,6 +3569,9 @@ export class UIAgentAdminElement extends UIElement {
       // The composer's Effort picker selection (see AdminSurfaceTurnRequest.effort) — the same dial the
       // plain-chat arm (`#handleSubmit`'s `AdminTurnRequest`) already threads.
       effort: this.#effort,
+      // RTS-R7: the persona's response type hint, a FRESH sanitized read (the live-apply law). Always the
+      // sanitized value here; the runner drops the key on `auto`.
+      prefers: sanitizePrefers(store?.get(PREFERS_KEY)),
       // Vision rev.6 — the catalog picker's sanitized selection (see AdminSurfaceTurnRequest.catalogId).
       // M-D SPEC-R5 — widened to the EFFECTIVE catalogId: the persona's local-pattern-set selection
       // (A2UI_LOCAL_PATTERNS_KEY), composed onto the base ONLY when its fragment actually targets that
@@ -3646,6 +3684,9 @@ export class UIAgentAdminElement extends UIElement {
         if (epoch !== this.#conversationEpoch) return
         for await (const event of surfaceTurn(request)) {
           if (event.kind === 'note') note = event.note
+          // RTS-R5 AC3: a reply-text fragment paints into the bubble now; the end-of-turn `setNote` below
+          // replaces the streamed text with the turn's complete note.
+          else if (event.kind === 'text-delta') handle.textDelta(event.text)
           else if (event.kind === 'progress') handle.progress(event.progress) // ADR-0146 F1 (inert under step mode, below)
           else if (event.kind === 'step') handle.step(event.step) // T-0016: the runner's neutral activity rows
           else if (event.kind === 'footer') handle.footer(event.footer) // T-0016: rounds, tokens, model
@@ -4108,6 +4149,7 @@ export class UIAgentAdminElement extends UIElement {
     // (`BANKROLL_CAPABLE_KEY`) — there is no in-between "visible but nothing to do" state the way an OFF
     // modality still has, so this is `hidden`, never a `data-disabled` dim.
     if (this.#bankrollItem) this.#bankrollItem.hidden = !isBankrollCapable(store?.get(BANKROLL_CAPABLE_KEY))
+    if (this.#prefersPicker) this.#prefersPicker.value = sanitizePrefers(store?.get(PREFERS_KEY)) // RTS-R7
     // GH #419 — the prompt-section lint is derived from the SAME two stored modality flags this method
     // just reflected, so it re-derives here: every path that can flip a Surface Option ends in a call to
     // this method (the row's own change listener, the store subscription, a rewire), which is exactly when

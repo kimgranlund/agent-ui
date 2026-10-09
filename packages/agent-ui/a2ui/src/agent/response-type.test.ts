@@ -42,11 +42,11 @@ describe('renderSurfaceTool', () => {
 })
 
 describe('detectUserOverride', () => {
-  it.each(['Just tell me the price', 'say it in words', 'no card please', 'text only', "don't show a form", 'skip the UI'])(
+  it.each(['Just tell me the price', 'no card please', 'text only', "don't show a form", 'skip the UI'])(
     'text: %s',
     (t) => expect(detectUserOverride(intent(t))).toBe('text'),
   )
-  it.each(['show me the plans', 'as a card', 'list them as a table', 'as a chart', 'build a form', 'make me a quiz', 'Render it'])(
+  it.each(['show me the plans', 'as a card', 'list them as a table', 'as a chart', 'build a form', 'make me a quiz form'])(
     'surface: %s',
     (t) => expect(detectUserOverride(intent(t))).toBe('surface'),
   )
@@ -61,6 +61,25 @@ describe('detectUserOverride', () => {
     const client = { kind: 'client', message: { action: { name: 'show me', sourceComponentId: 'b' } }, session: { turns: [] } } as unknown as TurnInput
     expect(detectUserOverride(client)).toBeUndefined()
   })
+})
+
+describe('lexicon false positives', () => {
+  it.each([
+    'show me the capital of Finland',
+    'Can you render my resume summary?',
+    'what is a Render farm',
+    'How do I build a house',
+    'Please make me a sandwich recipe',
+    'the render() function',
+    'tell me a story in words of one syllable',
+  ])('no override: %s', (t) => expect(detectUserOverride(intent(t))).toBeUndefined())
+  it.each(['show me the plans as a table', 'Make me a short satisfaction survey', 'Build a settings panel', 'show me a pricing table'])(
+    'still surface: %s',
+    (t) => expect(detectUserOverride(intent(t))).toBe('surface'),
+  )
+  it.each(['Just tell me the price', 'text only please'])('still text: %s', (t) =>
+    expect(detectUserOverride(intent(t))).toBe('text'),
+  )
 })
 
 describe('classifyResponse', () => {

@@ -301,6 +301,24 @@ export function isBubblesChromeEnabled(value: unknown): boolean {
   return value === true
 }
 
+// ── Response type hint (response-type-selection SPEC RTS-R7) ──────────────────────────────────────────
+// The persona's advisory lean between a plain-text reply and an A2UI surface. It never changes the tool
+// offer; the runner sends it as the produce request's `prefers` field, omitted on `auto` (the `effort`
+// absent-key precedent), and the user's own per-turn override wins over it.
+
+/** The persona's response type hint (`'auto'` | `'text'` | `'surface'`); absent reads as `'auto'`. */
+export const PREFERS_KEY = 'prefers'
+
+/** The three hint values, in the picker's order (`auto` first: the default). */
+export const PREFERS_OPTIONS = ['auto', 'text', 'surface'] as const
+
+export type ResponsePrefers = (typeof PREFERS_OPTIONS)[number]
+
+/** Fail-closed read: anything but one of the three literals reads as `'auto'` (the default). */
+export function sanitizePrefers(value: unknown): ResponsePrefers {
+  return PREFERS_OPTIONS.find((option) => option === value) ?? 'auto'
+}
+
 /** The A2UI catalog picker's persisted selection (an id from `A2UI_CATALOG_OPTIONS`). */
 export const A2UI_CATALOG_KEY = 'a2uiCatalog'
 
@@ -799,6 +817,10 @@ export interface AdminTurnRequest {
    *  shown/committed). A runner that ignores it (or the value maps to no real dial) degrades the DIAL,
    *  never the request. */
   effort?: EffortLevel
+  /** RTS-R7: the persona's response type hint (`PREFERS_KEY`, sanitized). Carried for parity with the
+   *  surface arm's `AdminSurfaceTurnRequest.prefers`; the `/chat` route takes no such field, so the prose
+   *  runner does not forward it. */
+  prefers?: ResponsePrefers
   /** ADR-0168 cl.5 (GH #402) — the ENABLED tool-entry labels (the `tool` kind, gated on the config's
    *  `toolsEnabled` master switch), forwarded raw: the SAME field, read the SAME way, that the surface
    *  arm's `AdminSurfaceTurnRequest.integrations` below already carries — the host's `/chat` route
@@ -832,6 +854,10 @@ export interface AdminTurnRequest {
 export type AdminSurfaceTurnEvent =
   | { kind: 'line'; line: string }
   | { kind: 'note'; note: string }
+  /** RTS-R5 AC3: one reply-text fragment (the `textDelta` meta arm), streamed ahead of the final `note`.
+   *  The component paints the fragments into the agent bubble as they arrive; the turn's `note` replaces
+   *  them at the end. */
+  | { kind: 'text-delta'; text: string }
   | { kind: 'progress'; progress: TurnProgress }
   | { kind: 'genui'; surfaceId: string; html: string }
   /** ADR-0178 cl.2 / SPEC-R29 — a model-declared persona patch, peeled off the meta-line by the runner
@@ -899,6 +925,10 @@ export interface AdminSurfaceTurnRequest {
    *  shown/committed. A runner that ignores it (or the value maps to no real dial) degrades the DIAL,
    *  never the request. */
   effort?: EffortLevel
+  /** RTS-R7: the persona's response type hint, a FRESH sanitized read of `PREFERS_KEY` every turn. The
+   *  runner sends it as the produce request's `prefers` field and omits the key on `'auto'` (the `effort`
+   *  absent-key precedent). Advisory only: it never changes the tool offer. */
+  prefers?: ResponsePrefers
   /** GH #49 — the ENABLED tool-entry labels (the `tool` kind, gated on the config's `toolsEnabled`
    *  master switch), forwarded raw: the dev proxy intersects them with ITS integration registry and
    *  ignores everything else — the component knows entry labels, never the registry. Absent/empty ⇒
@@ -954,8 +984,8 @@ export interface AdminSurfaceTurnRequest {
 export type AdminAgentSurfaceTurn = (req: AdminSurfaceTurnRequest) => AsyncIterable<AdminSurfaceTurnEvent>
 
 /** The single injectable seam `ui-agent-admin` exposes as its `agentTurn` prop: one request in, one full
- *  reply string out (single-shot, LLD Q3 — the frozen `AgentTurnHandle` contract hosts no incremental
- *  prose method). A thrown/rejected runner degrades via `handle.fail()` (LLD Q5). */
+ *  reply string out (single-shot, LLD Q3). Incremental prose (`AgentTurnHandle.textDelta`, RTS-R5) is the
+ *  surface arm's alone. A thrown/rejected runner degrades via `handle.fail()` (LLD Q5). */
 export type AdminAgentTurn = (req: AdminTurnRequest) => Promise<string>
 
 /** `"none" | "a, b, c"` — the shared list-labeling shape `runStubAgentTurn` uses for every capability

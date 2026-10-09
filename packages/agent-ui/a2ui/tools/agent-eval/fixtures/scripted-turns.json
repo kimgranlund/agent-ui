@@ -215,6 +215,124 @@
         "exitCode": 1,
         "names": "false-surface"
       }
+    },
+    {
+      "id": "response-type-tool-clean",
+      "leg": "response-type",
+      "case": {
+        "id": "both-plan-card-tool",
+        "catalogId": "agent-ui",
+        "prompt": "What plan am I on?",
+        "expect": "both"
+      },
+      "rounds": [
+        {
+          "tool": "render_surface",
+          "input": {
+            "jsonl": "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"Text\",\"text\":\"Basic\"}]}}"
+          },
+          "then": "Here is your card."
+        }
+      ],
+      "expect": {
+        "exitCode": 0
+      }
+    },
+    {
+      "id": "response-type-degrade",
+      "leg": "repair",
+      "case": {
+        "catalogId": "agent-ui",
+        "prompt": "plan my week"
+      },
+      "rounds": [
+        {
+          "tool": "render_surface",
+          "input": {
+            "jsonl": "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"NotARealComponent\"}]}}"
+          },
+          "then": "Here is the plan."
+        },
+        {
+          "tool": "render_surface",
+          "input": {
+            "jsonl": "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"NotARealComponent\"}]}}"
+          },
+          "then": "Here is the plan."
+        },
+        {
+          "tool": "render_surface",
+          "input": {
+            "jsonl": "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"NotARealComponent\"}]}}"
+          },
+          "then": "Here is the plan."
+        }
+      ],
+      "expect": {
+        "outcome": "eventual-text",
+        "rounds": 3,
+        "failureCodes": [
+          "CATALOG",
+          "SURFACE_DEGRADED"
+        ]
+      }
+    },
+    {
+      "id": "response-type-text-override",
+      "leg": "response-type",
+      "case": {
+        "id": "text-override-pro-price",
+        "catalogId": "agent-ui",
+        "prompt": "just tell me what the Pro plan costs",
+        "expect": "text"
+      },
+      "rounds": [
+        {
+          "tool": "render_surface",
+          "input": {
+            "jsonl": "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"Text\",\"text\":\"Pro: 20 USD a month\"}]}}"
+          },
+          "then": "The Pro plan costs 20 USD a month."
+        }
+      ],
+      "expect": {
+        "exitCode": 0
+      }
+    },
+    {
+      "id": "response-type-tool-session",
+      "leg": "response-type",
+      "case": {
+        "id": "session-upgrade-plan-tool",
+        "catalogId": "agent-ui",
+        "prompt": "Upgrade my plan to Pro and tell me what changed.",
+        "expect": "both",
+        "session": {
+          "turns": [
+            {
+              "role": "user",
+              "content": "show my plan"
+            },
+            {
+              "role": "assistant",
+              "content": "Here is your plan.\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"t1\"]},{\"id\":\"t1\",\"component\":\"Text\",\"text\":\"Basic\"}]}}"
+            }
+          ]
+        }
+      },
+      "rounds": [
+        {
+          "tool": "render_surface",
+          "input": {
+            "jsonl": "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"t1\",\"component\":\"Text\",\"text\":\"Pro\"}]}}",
+            "target": "main"
+          },
+          "then": "Upgraded your plan to Pro."
+        }
+      ],
+      "expect": {
+        "exitCode": 0
+      }
     }
   ]
 }

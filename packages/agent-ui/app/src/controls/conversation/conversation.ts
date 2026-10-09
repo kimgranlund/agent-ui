@@ -319,6 +319,10 @@ export interface AgentTurnHandle {
    *  unless there is content for it"), so a streaming caller may call this repeatedly as text accretes.
    *  `finalize()` re-renders the same (or, if never called, a factual fallback tally) text unconditionally. */
   setNote(text: string): void
+  /** RTS-R5 AC3: paints one streamed reply-text fragment (the `textDelta` meta arm) into the bubble,
+   *  appended to the fragments before it. A later `setNote()` replaces the streamed text with the turn's
+   *  complete note; `finalize()` with no note keeps the streamed text (trimmed) instead of a tally. */
+  textDelta(text: string): void
   /** ADR-0146 F1/F8 — routes one live-turn lifecycle event into the narration strip through a CLOSED,
    *  code-owned stage-label table (never model text, never a fabricated/speculative claim — the F2 honesty
    *  guard; an unobserved/unknown stage renders NOTHING). The fifth handle method the app-surfaces-m2 §4
@@ -784,7 +788,7 @@ export class UIConversationElement extends UIElement {
    *  lookup, never a blind "claim whatever's pending" dequeue. */
   beginAgentTurn(opts?: { intoSurface?: string; disabledSurfaceId?: string }): AgentTurnHandle {
     if (!this.#guard('beginAgentTurn')) {
-      return { ingestLine: () => {}, mountGenui: () => {}, setNote: () => {}, progress: () => {}, step: () => {}, footer: () => {}, target: () => {}, finalize: () => {}, fail: () => {} }
+      return { ingestLine: () => {}, mountGenui: () => {}, setNote: () => {}, textDelta: () => {}, progress: () => {}, step: () => {}, footer: () => {}, target: () => {}, finalize: () => {}, fail: () => {} }
     }
 
     const wasNear = this.#log!.isNearBottom()
@@ -875,6 +879,7 @@ export class UIConversationElement extends UIElement {
       }
     }
     let noteText: string | undefined
+    let streamedText = '' // RTS-R5 AC3: the accumulated `textDelta` fragments, painted until a note replaces them
     const turnLines: string[] = []
     const touchedIds = new Set<string>()
     // ADR-0199 / GH #1104 S5 repair — breathe from TURN START, not first ingested line: the live
@@ -1182,6 +1187,16 @@ export class UIConversationElement extends UIElement {
           followTail() // GH #1627 — the note's own growing text is exactly the "just added" content the guard exists to reveal
         }
       },
+      textDelta: (text: string) => {
+        // RTS-R5 AC3: one reply-text fragment: appended to the streamed text and painted at once, the
+        // setNote reveal posture. Never stored as the note: a later setNote() replaces it, and finalize()
+        // falls back to it only when no note ever arrived.
+        if (ended || text === '') return
+        streamedText += text
+        revealBubble()
+        this.#renderBody(note, streamedText)
+        followTail()
+      },
       progress: (ev: TurnProgress) => {
         if (withSteps) return // T-0016: in step mode the host's steps are the strip's only content
         routeProgress(ev)
@@ -1235,7 +1250,8 @@ export class UIConversationElement extends UIElement {
         if (lastProgressKey !== undefined) settleProgress(lastProgressKey)
         appendSettleRows() // T-0016: step mode's raw + footer rows, after every step, before the receipt settles
         narration.finalize(settleOptions(false))
-        const finalNote = noteText ?? summarize(turnLines)
+        // RTS-R5 AC3: streamed text with no note after it stays as painted (trimmed), never a tally over it.
+        const finalNote = noteText ?? (streamedText.trim() !== '' ? streamedText.trim() : summarize(turnLines))
         if (finalNote !== '') revealBubble() // GH #313 — the fallback tally is real content too
         this.#renderBody(note, finalNote)
         if (this.disclosure && turnLines.length > 0) {

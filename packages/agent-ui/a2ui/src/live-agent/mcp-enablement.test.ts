@@ -134,7 +134,9 @@ function post(handler: Middleware, url: string, body: unknown): Promise<{ status
 /** Drive one turn on the named arm with an enablement list; return the route status plus the `tool.name`s
  *  the provider adapter was actually offered (`[]` when the pair is empty — the produce arm passes
  *  `tools: undefined`, the `/chat` arm omits the key entirely; both normalize to `[]`). Sorted for a
- *  set-equality comparison against the expanded set (registration order is a separate, S1-owned concern). */
+ *  set-equality comparison against the expanded set (registration order is a separate, S1-owned concern).
+ *  RTS-R1: the produce arm also offers `render_surface` on every a2ui-enabled turn; it is not an
+ *  integration, so it is filtered out and this file stays about integration enablement. */
 async function turn(handler: Middleware, arm: 'chat' | 'produce', integrations: string[]): Promise<{ status: number; tools: string[] }> {
   const before = captured.requests.length
   const body =
@@ -144,7 +146,7 @@ async function turn(handler: Middleware, arm: 'chat' | 'produce', integrations: 
   const { status } = await post(handler, arm === 'chat' ? '/chat' : '/produce', body)
   const req = captured.requests[before]
   const rawTools = req?.['tools']
-  const tools = Array.isArray(rawTools) ? (rawTools as Array<{ name: string }>).map((t) => t.name).sort() : []
+  const tools = Array.isArray(rawTools) ? (rawTools as Array<{ name: string }>).map((t) => t.name).filter((n) => n !== 'render_surface').sort() : []
   return { status, tools }
 }
 

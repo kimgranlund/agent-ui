@@ -36,6 +36,7 @@ Two routes carry a tool-call decision through `AgentProvider.stream`, which yiel
 - The a2ui-chat and a2ui-live pages ignore `textDelta` this wave and render as today; the admin runner paints it.
 - Known limit: while an integration tool is active in a turn, the text ships whole at round end, not token by token. Lifting that needs a round boundary on the seam and is a follow-up.
 - Known limit: a forced surface override under extended thinking is a correction round, not an API-level force.
+- Known limit: the user-override lexicon is noun-gated, and surface nouns that are also ordinary words still force a surface wrongly ("build a list of reasons", "make me a table of contents", "show me how a table join works", "build a wizard character"); some real surface asks ("show me a diagram", "Build me a form") are not caught and fall to the model's choice. Whether to tighten further is a close-out decision.
 
 ## Alternatives considered
 

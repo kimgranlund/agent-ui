@@ -47,6 +47,7 @@ import type { ObserveDeps } from './observe.ts'
 import { runPersonaLeg, runResponseTypeLeg, runSelectionLeg } from './legs.ts'
 import type { LegResult } from './legs.ts'
 import { scriptedProvider } from './scripted.ts'
+import type { ScriptedRound } from './scripted.ts'
 import { verifyPins } from './pins.ts'
 
 const PROVIDERS_CONFIG_PATH = 'packages/agent-ui/a2ui/tools/agent/providers.json'
@@ -79,6 +80,7 @@ function isObject(v: unknown): v is Record<string, unknown> {
 interface ScriptedExpect {
   exitCode?: number
   names?: string
+  /** The repair leg's outcome: first-pass, eventual, eventual-text (a `render_surface` degrade) or halt. */
   outcome?: string
   rounds?: number
   failureCodes?: string[]
@@ -88,8 +90,14 @@ export interface ScriptedTurn {
   id: string
   leg: 'selection' | 'persona' | 'repair' | 'response-type'
   case: unknown
-  rounds: string[]
+  rounds: ScriptedRound[]
   expect: ScriptedExpect
+}
+
+/** A round is the provider's text, or a tool round `{ tool, input, then }` (`scripted.ts`). */
+function isScriptedRound(r: unknown): r is ScriptedRound {
+  if (typeof r === 'string') return true
+  return isObject(r) && typeof r.tool === 'string' && isObject(r.input) && typeof r.then === 'string'
 }
 
 function parseScriptedTurns(doc: unknown): ScriptedTurn[] {
@@ -97,11 +105,11 @@ function parseScriptedTurns(doc: unknown): ScriptedTurn[] {
   return doc.turns.map((t: unknown, i: number) => {
     if (!isObject(t) || typeof t.id !== 'string') throw new Error(`scripted turn ${i} needs a string "id"`)
     if (t.leg !== 'selection' && t.leg !== 'persona' && t.leg !== 'repair' && t.leg !== 'response-type') throw new Error(`scripted turn "${t.id}" has an unknown leg`)
-    if (!Array.isArray(t.rounds) || t.rounds.length === 0 || !t.rounds.every((r) => typeof r === 'string')) {
-      throw new Error(`scripted turn "${t.id}" needs a non-empty "rounds" string array`)
+    if (!Array.isArray(t.rounds) || t.rounds.length === 0 || !t.rounds.every(isScriptedRound)) {
+      throw new Error(`scripted turn "${t.id}" needs a non-empty "rounds" array of strings or { tool, input, then } rounds`)
     }
     if (!isObject(t.case)) throw new Error(`scripted turn "${t.id}" needs a "case" object`)
-    return { id: t.id, leg: t.leg, case: t.case, rounds: t.rounds as string[], expect: (isObject(t.expect) ? t.expect : {}) as ScriptedExpect }
+    return { id: t.id, leg: t.leg, case: t.case, rounds: t.rounds as ScriptedRound[], expect: (isObject(t.expect) ? t.expect : {}) as ScriptedExpect }
   })
 }
 

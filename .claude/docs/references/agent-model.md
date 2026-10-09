@@ -113,6 +113,13 @@ header pointing here.
   deletable), "import" means a user-minted one (`imported: true`, `createdAt` set).
 - **GM** (general manager): the team's leading agent, the one an `AgentTeam` names in `gmAgentId`;
   its prompt gains the `## Your team` block. The GM is an ordinary agent; nothing else marks it.
+- **`render_surface`**: the terminal tool `produce()` offers on an a2ui-enabled turn (ADR-0242, proposed;
+  [spec/response-type-selection.spec.md](../spec/response-type-selection.spec.md) RTS-R1). The model calls it
+  with the A2UI JSONL to show UI; its input is validated like any payload and never executed as a tool.
+  Text is the default response type: a turn with no call is a text answer.
+- **`textDelta`**: the additive meta arm `{"a2uiMeta":{"textDelta":"..."}}` carrying one fragment of the
+  reply text as it streams, ahead of the leading meta-line and any content (RTS-R5). A meta arm, not a
+  progress stage; the leading meta-line's `note` still carries the whole reply.
 - **Context: System**: the settings segment showing the compiled agent-system JSON, including the
   composed prompt; the read-only truth of what the next turn will send. Its sibling **Context: Dialog**
   is the per-turn payload log.

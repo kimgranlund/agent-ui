@@ -1,0 +1,36 @@
+{
+  "kind": "agent-ui-a2ui-scenario",
+  "version": 1,
+  "name": "response-type-override",
+  "description": "The user asked for text, so the turn offers no render_surface tool and installs no executor: the same valid payload is never captured and nothing mounts (RTS-R6, K5).",
+  "catalogId": "agent-ui",
+  "intent": "just tell me what the Pro plan costs",
+  "turns": [
+    {
+      "respond": {
+        "rounds": [
+          {
+            "tool": "render_surface",
+            "input": {
+              "jsonl": "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"main\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"main\",\"components\":[{\"id\":\"root\",\"component\":\"Text\",\"text\":\"Basic\"}]}}"
+            },
+            "then": "The Pro plan costs 20 USD a month."
+          }
+        ]
+      },
+      "expect": {
+        "produce": {
+          "outcome": "first-pass",
+          "rounds": 1
+        },
+        "tree": [
+          {
+            "surfaceId": "main",
+            "select": "*",
+            "count": 0
+          }
+        ]
+      }
+    }
+  ]
+}

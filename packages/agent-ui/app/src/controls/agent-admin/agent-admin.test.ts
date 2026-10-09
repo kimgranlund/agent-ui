@@ -4,7 +4,7 @@ import { UIAgentAdminElement } from './agent-admin.ts'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
-import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, SURFACE_GENUI_KEY, SURFACE_PLANNER_KEY, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
+import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, SURFACE_GENUI_KEY, SURFACE_PLANNER_KEY, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog, PREFERS_KEY } from './agent-admin-schema.ts'
 import { ENTRY_KINDS, initialEntryValues, composeSystemPrompt, DEFAULT_SYSTEM_PROMPT_FALLBACK } from './entries.ts'
 import { entriesStoreKey, readEntries, type Entry, type EntryLibraryPack, type NewEntryInput } from '../entry-list/entry-data.ts'
 import { mountEntryList, showAddError, type EntryListHandlers } from '../entry-list/entry-list.ts'
@@ -5410,5 +5410,53 @@ describe('per-pack rejectOnCollision (S3, LLD-C5, SPEC-R6) — the flag opts in 
     expect(calls).toHaveLength(2)
     expect(calls[0]!.context, 'a flagged pack forwards { rejectOnCollision: true }').toEqual({ rejectOnCollision: true })
     expect(calls[1]!.context, 'an unflagged pack forwards undefined — the pre-#783 call, byte-identical').toBeUndefined()
+  })
+})
+
+// ── RTS-R7: the persona's response type hint (`prefers`, default `auto`) beside the Surface Options ─────
+
+describe('prefers persona setting', () => {
+  async function runSurfaceTurn(store: SettingsStore): Promise<{ el: UIAgentAdminElement; seen: Array<{ prefers?: string }> }> {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = store
+    const seen: Array<{ prefers?: string }> = []
+    el.agentSurfaceTurn = async function* (req) {
+      seen.push(req)
+      yield { kind: 'note' as const, note: 'ok' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = 'hello'
+    const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    await whenFlushed()
+    return { el, seen }
+  }
+
+  it('defaults to `auto`: the row renders in Surface Options and an unset store sends `auto`', async () => {
+    const { el, seen } = await runSurfaceTurn(createMemoryStore({ initial: {} }))
+    const picker = el.querySelector('[data-part="surface-options"] > [data-part="prefers-row"] [data-part="surface-prefers"]') as HTMLElement & { value: string | null }
+    expect(picker, 'the picker sits in the Surface Options card').not.toBeNull()
+    expect(picker.value).toBe('auto')
+    expect(seen, 'the surface runner ran').toHaveLength(1)
+    expect(seen[0]!.prefers).toBe('auto')
+  })
+
+  it('a stored `text` is reflected in the picker and sent on the turn', async () => {
+    const { el, seen } = await runSurfaceTurn(createMemoryStore({ initial: { [PREFERS_KEY]: 'text' } }))
+    const picker = el.querySelector('[data-part="surface-prefers"]') as HTMLElement & { value: string | null }
+    expect(picker.value).toBe('text')
+    expect(seen).toHaveLength(1)
+    expect(seen[0]!.prefers).toBe('text')
+  })
+
+  it('a malformed stored value reads as `auto` (fail-closed)', async () => {
+    const { seen } = await runSurfaceTurn(createMemoryStore({ initial: { [PREFERS_KEY]: 'cards please' } }))
+    expect(seen).toHaveLength(1)
+    expect(seen[0]!.prefers).toBe('auto')
   })
 })

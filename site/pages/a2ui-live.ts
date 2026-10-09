@@ -778,7 +778,7 @@ async function runTurn(input: TurnInput): Promise<void> {
     session = appendUserTurn(session, input.kind === 'intent' ? input.text : frameClientMessage(input.message))
     // The session record carries EVERYTHING this turn emitted (turnLines + askLines) — what the agent
     // actually produced, independent of whether the client chose to render the ask structurally.
-    session = appendAssistantTurn(session, [...turnLines, ...askLines].join('\n'))
+    session = appendAssistantTurn(session, [...turnLines, ...askLines].join('\n'), note)
     // ADR-0088 §1: show the model's OWN prose verbatim when it emitted a note; `summarize()` is only the
     // BACKWARD-COMPAT fallback for a turn that carries no note (e.g. the recorded backbone, pre-slice-6).
     addMessage('agent', note ?? summarize(turnLines))

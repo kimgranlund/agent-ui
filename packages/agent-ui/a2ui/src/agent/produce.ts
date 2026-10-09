@@ -74,6 +74,20 @@
 // `SEMANTIC_UNCORRECTED` tallied on the trace (the NET_NOOP/FLOW_END posture for a policy check, because a
 // domain check is a heuristic and a false positive must never stall a turn). A throwing check is skipped
 // and tallied `SEMANTIC_CHECK_ERROR`. Absent or empty `semanticChecks` ⇒ none of this runs: byte-identical.
+//
+// Response type selection (SPEC RTS-R1 to R9, LLD section 3): every a2ui-enabled turn the user did not ask to
+// keep text-only also offers the terminal `render_surface` tool (`response-type.ts`). A round classifies as:
+//   - a capture round: the model called `render_surface`; its `jsonl` is the payload and runs today's chain
+//     (assemble, stamp, validate, FEED_SCOPE, semantic checks, NET_NOOP, ask integrity), and the round's
+//     text, minus any wire or genui lines (tallied `TEXT_JSONL_IGNORED`), is the reply;
+//   - a legacy round (`isLegacyRound`: the first line after the meta-line, inside an outer fence when there
+//     is one, is an A2UI or genui line, or one the shared healer repairs): today's body, byte for byte (RTS-R4);
+//   - a text round: the trimmed text after the optional meta-line is the reply, shipped note-only.
+// The reply becomes the outgoing `note` (the model-authored note when the text is empty). On the first round,
+// with no integration tool live, reply text also streams as `{"a2uiMeta":{"textDelta":...}}` lines while it
+// arrives (RTS-R5). A capture payload still invalid at the bound degrades to its text with `SURFACE_DEGRADED`
+// (RTS-R8). The user override (RTS-R6) withholds the tool or forces it (`SURFACE_REQUESTED`), and
+// `onRepairRound` may swap a repair round's effort or model (RTS-R9).
 
 import type { A2uiServerMessage, A2uiOutput } from '../protocol.ts'
 import type { Catalog } from '../catalog/catalog.ts'
@@ -98,6 +112,8 @@ import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES }
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
 import { runSemanticChecks, semanticSurfaceViews } from '../catalog/semantic-check.ts'
 import type { SemanticCheck } from '../catalog/semantic-check.ts'
+import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, renderSurfaceTool } from './response-type.ts'
+import type { ResponsePreference } from './response-type.ts'
 
 const PROTOCOL_VERSION = 'v1.0'
 const DEFAULT_MODEL = 'claude-sonnet-5' // the registry's defaultModel (providers.json)
@@ -146,7 +162,9 @@ export interface ProduceOptions {
   /** GH #49 — tool declarations + executor, threaded VERBATIM to `provider.stream` (the adapter owns the
    * whole tool-use loop; produce() only relays the seam and maps the 'tool' provider event onto the
    * progress stage). Absent ⇒ the request shape is byte-identical to before (the `effort?` precedent).
-   * Both-or-neither: `tools` without `executeTool` is treated as no tools by the adapter contract. */
+   * Both-or-neither: `tools` without `executeTool` is treated as no tools by the adapter contract.
+   * RTS-R1: on a turn that offers `render_surface` the request carries these tools plus that one, behind a
+   * capture executor that delegates every other name to `executeTool`; any other turn relays the pair verbatim. */
   tools?: readonly ToolDef[]
   executeTool?: ExecuteTool
   /** ADR-0146 F1 — opt IN to interleaved live-turn progress meta-lines. Absent/false ⇒ produce() streams
@@ -190,7 +208,8 @@ export interface ProduceOptions {
    *  instead. Never consulted by the peel/heal/validate loop below (SPEC-N3 — a produce-layer composition
    *  knob only, the SAME posture `mode`/`genuiSurface` already hold): a stray A2UI-shaped line the model
    *  emits anyway still runs the ordinary validate/self-correct path, exactly as an `exclusive` genui-only
-   *  turn's stray A2UI already does today. */
+   *  turn's stray A2UI already does today. RTS-R1: `false` also withholds the `render_surface` tool, so the
+   *  provider request stays exactly as it was before that tool existed. */
   a2uiEnabled?: boolean
   /** ADR-0178 cl.3 / SPEC-R30 — the persona's OWN authoring modality gate, threaded per call to
    *  `buildSystemPrompt`'s authoring teaching block. Absent/`false` ⇒ zero teaching bytes compose (the
@@ -220,6 +239,16 @@ export interface ProduceOptions {
    *  `mode: 'halt'` ⇒ an over-budget prompt throws `ProduceHalt([{code: 'PROMPT_OVER_BUDGET', path: ''}])`
    *  BEFORE the first provider call, so no tokens are spent. `limit` overrides the declared budget. */
   promptBudget?: { mode: 'report' | 'halt'; limit?: number }
+  /** RTS-R6: the mechanical per-turn user override from the request (the composer toggle's path). `'auto'`
+   *  or absent means none; the intent's own override words (`detectUserOverride`) win over it. `'text'`
+   *  withholds `render_surface`; `'surface'` forces it (`toolChoice`). */
+  responsePreference?: ResponsePreference
+  /** RTS-R7: the persona hint, advisory only. It never changes the tool offer or `toolChoice`. */
+  prefers?: ResponsePreference
+  /** RTS-R9: consulted at the top of every self-correct round (`round` is the 1-based ordinal of the round
+   *  about to run); a returned `effort` or `model` replaces that round's request field only, and the trace's
+   *  `model` records the model of the shipped round. Absent ⇒ byte-identical. */
+  onRepairRound?: (ctx: { round: number; failures: readonly { code: string; path: string }[] }) => { effort?: Effort; model?: string } | undefined
 }
 
 /** The bounded raw-reasoning excerpt cap (ADR-0146 F3, `progressDetail:'full'`) — a `thinking` delta can be
@@ -246,6 +275,67 @@ function capSource(source: string): string {
  * enters heal/validate/corpus, and no A2UI content line ever precedes validation (SPEC-R5 untouched). */
 function formatProgressLine(progress: TurnProgress): string {
   return JSON.stringify({ a2uiMeta: { progress } })
+}
+
+/** RTS-R5: one live fragment of the reply text, the same reserved envelope. Not content: it never enters
+ *  heal/validate/corpus, and the final meta-line's `note` still carries the whole reply. */
+function formatTextDeltaLine(textDelta: string): string {
+  return JSON.stringify({ a2uiMeta: { textDelta } })
+}
+
+/**
+ * RTS-R4: one text-channel line today's body would take as payload: an A2UI or genui line (`isLegacyShape`),
+ * or a `{` line that the genui peel or the shared healer accepts (a trailing comma, a missing `version`).
+ */
+function isWireLine(line: string): boolean {
+  if (isLegacyShape(line)) return true
+  return line.startsWith('{') && (isGenuiCandidate(line) || heal(line, { protocolVersion: PROTOCOL_VERSION }).ok)
+}
+
+/** RTS-R3/R4: the round is the legacy shape, so today's body runs on it unchanged. The first line after the
+ *  meta-line, inside an outer code fence when there is one (`stripOuterFence` admits that today), decides. */
+function isLegacyRound(raw: string, afterMeta: string): boolean {
+  if (isLegacyShape(raw)) return true
+  const first = stripOuterFence(afterMeta)
+    .split('\n')
+    .map((l) => l.trim())
+    .find((l) => l !== '')
+  return first !== undefined && isWireLine(first)
+}
+
+/**
+ * RTS-R5: where a round's reply text starts, once that is decidable from the text received so far. Returns
+ * the offset of the first line after an optional leading meta-line, `'wire'` when that line (or the line
+ * after an opening code fence) is a wire line, so the round is the legacy shape and streams no delta, and
+ * `undefined` while undecided. A line that opens with `{` or a backtick is held until it is complete (its
+ * newline arrives, or the stream `ended`); any other first character decides at once.
+ */
+function replyStart(raw: string, ended: boolean): number | 'wire' | undefined {
+  let at = 0
+  let from: number | undefined
+  let metaSeen = false
+  let fenceSeen = false
+  for (;;) {
+    const ws = raw.slice(at).search(/\S/)
+    if (ws === -1) return ended && from !== undefined ? from : undefined
+    const start = at + ws
+    const first = raw[start]
+    if (first !== '{' && first !== '`') return from ?? start
+    const nl = raw.indexOf('\n', start)
+    if (nl === -1 && !ended) return undefined
+    const end = nl === -1 ? raw.length : nl
+    const line = raw.slice(start, end).trim()
+    if (!metaSeen && readMetaLine(line) !== undefined) {
+      metaSeen = true
+    } else if (!fenceSeen && from === undefined && /^```(?:json|jsonl)?$/.test(line)) {
+      fenceSeen = true
+      from = start
+    } else {
+      return isWireLine(line) ? 'wire' : (from ?? start)
+    }
+    if (nl === -1) return from
+    at = end + 1
+  }
 }
 
 /** GH #290 — the channel an `onEvent` callback pushes onto (it cannot itself `yield` from this generator);
@@ -526,16 +616,29 @@ function idgraphHint(failures: RoundFailure[]): string {
     .join('')
 }
 
+/** RTS-R8: the repair tail for a round whose payload came from `render_surface`, in place of the legacy
+ *  "Re-emit the COMPLETE corrected A2UI JSONL" sentence (which legacy rounds keep, byte for byte). */
+const TOOL_REPAIR_SENTENCE = 'Call render_surface again with the COMPLETE corrected JSONL; keep your reply text addressed to the user.'
+
+/** RTS-R6: the one-sentence correction for a surface-override turn whose round returned no payload. */
+const SURFACE_REQUESTED_FEEDBACK =
+  'The user asked to see this as UI (SURFACE_REQUESTED): call render_surface with the A2UI JSONL for it, and keep your reply text addressed to the user.'
+
 function messagesFor(
   input: TurnInput,
   failures: RoundFailure[] | undefined,
   lastRaw: string | undefined,
   catalog: Catalog,
   lastOutput: A2uiOutput | undefined,
+  toolRound = false,
 ): Turn[] {
   const turns: Turn[] = [...input.session.turns, { role: 'user', content: userContent(input) }]
   if (failures && failures.length > 0 && lastRaw !== undefined) {
     turns.push({ role: 'assistant', content: lastRaw })
+    if (failures.every((f) => f.code === 'SURFACE_REQUESTED')) {
+      turns.push({ role: 'user', content: SURFACE_REQUESTED_FEEDBACK })
+      return turns
+    }
     const summary = failures
       .map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}${expectedTypeNote(f, catalog, lastOutput)}${f.detail ? `: ${f.detail}` : ''}`)
       .join('; ')
@@ -547,7 +650,9 @@ function messagesFor(
       (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') // ADR-0238: a semantic-finding round's guidance
     turns.push({
       role: 'user',
-      content: `That output was INVALID (${summary}).${hint} Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,
+      content: toolRound
+        ? `That output was INVALID (${summary}).${hint} ${TOOL_REPAIR_SENTENCE}`
+        : `That output was INVALID (${summary}).${hint} Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,
     })
   }
   return turns
@@ -786,8 +891,10 @@ function formatMetaLine(
 
 /**
  * Every `createSurface` id the SESSION already knows about, scanned from prior ASSISTANT turns' emitted
- * A2UI content (`appendAssistantTurn` stores exactly the validated JSONL a turn shipped, meta-line already
- * excluded — `session.ts`/`a2ui-live.ts`). Used ONLY for the ADR-0097 §1 ask-integrity collision guard: an
+ * A2UI content (`appendAssistantTurn` stores the validated JSONL a turn shipped, meta-line already
+ * excluded: `session.ts`/`a2ui-live.ts`; since RTS-R12 the reply text may precede it as a prose line, which
+ * the non-JSON skip below passes over). Used for the ADR-0097 §1 ask-integrity collision guard (and, since
+ * RTS-R1, to name the open surfaces in the `render_surface` description): an
  * `ask` declaring a surfaceId the agent already created in an EARLIER turn of THIS session is a collision
  * (a stale/reused id), not a fresh ask — dropped, never a halt. A malformed/non-JSON turn line (e.g. a
  * framed user turn, which never lands in this scan since only `assistant`-role turns are inspected) is
@@ -804,7 +911,7 @@ function sessionKnownSurfaceIds(session: Session): Set<string> {
         const msg = JSON.parse(trimmed) as { createSurface?: { surfaceId?: unknown } }
         if (typeof msg.createSurface?.surfaceId === 'string') ids.add(msg.createSurface.surfaceId)
       } catch {
-        // not JSON (shouldn't happen for a stored assistant turn) — skip rather than throw
+        // not JSON (the RTS-R12 reply line of a stored assistant turn): skip rather than throw
       }
     }
   }
@@ -952,7 +1059,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   const query = queryOf(input, k, deps.catalog.catalogId) // ADR-0169 cl.4 — catalog-aware, not the old pinned literal
   const exemplars = deps.retrieve(query) // SPEC-R7 — top-k over the judged shard
   const miniSkills = selectMiniSkills(query.intent, MINI_SKILLS, opts.miniSkillCap ?? DEFAULT_MINI_SKILL_CAP, deps.catalog.catalogId) // ADR-0091 §2 — once per turn, beside retrieve(); ADR-0135 cl.7 — cap now tunable, absent ⇒ default; SPEC-R6 — catalogId-scoped, the SAME value line :762's queryOf already threads into retrieve's own query
-  const { text: system, sections } = buildSystemPromptSections(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface, opts.a2uiEnabled, opts.authoringSurface, opts.builderMission) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10 + GH #418 a2uiEnabled + SPEC-R30 authoring gate + SPEC-R31 builder-mission gate
+  const { text: system, sections } = buildSystemPromptSections(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface, opts.a2uiEnabled, opts.authoringSurface, opts.builderMission, opts.prefers) // SPEC-R6: catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10 + GH #418 a2uiEnabled + SPEC-R30 authoring gate + SPEC-R31 builder-mission gate + RTS-R7 persona hint
   const model = opts.model ?? input.model ?? DEFAULT_MODEL // opts.model = the proxy's allowlist-validated model (SPEC-R12); it WINS over a client-supplied input.model
   // ADR-0088 §2 — data ALREADY flowing above, captured once for the eventual TurnTrace (no new collection).
   // NOTE: this is a `session.turns` MESSAGE index (the alternating Messages-API array, user+assistant per
@@ -978,6 +1085,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       next.cacheCreationInputTokens = (usage?.cacheCreationInputTokens ?? 0) + (u.cacheCreationInputTokens ?? 0)
     usage = next
   }
+  let roundModel = model // RTS-R9: `onRepairRound` may swap one round's model; the trace records the shipped round's
   const traceFor = (rounds: number, healed: number, failureCodes: string[]): TurnTrace => ({
     turnIndex,
     query: { intent: query.intent, k: query.k },
@@ -985,7 +1093,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     rounds,
     healed,
     failureCodes,
-    model,
+    model: roundModel,
     prompt: promptReport,
     ...(usage !== undefined ? { usage: { ...usage } } : {}),
   })
@@ -1007,8 +1115,40 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // ADR-0234 (proposed): the opt-in hard stop: an over-budget prompt halts before ANY provider call.
   if (opts.promptBudget?.mode === 'halt' && promptReport.over) throw new ProduceHalt([{ code: 'PROMPT_OVER_BUDGET', path: '' }])
   let flowEndFedBack = false // GH #1168 — the ONE correction round a closing-shaped turn missing `flowEnd` gets; on refusal (or a last-round hit) the turn ships UNCHANGED — the runtime never synthesizes the field, only tallies FLOW_END_UNCORRECTED on the trace
+
+  // RTS-R6: the effective override. The intent's own words win as the latest instruction, else the request's
+  // `responsePreference` ('auto' means none). The persona hint `prefers` never reaches the offer.
+  const override =
+    detectUserOverride(input) ??
+    (opts.responsePreference === 'text' || opts.responsePreference === 'surface' ? opts.responsePreference : undefined)
+  // RTS-R1: `render_surface` is offered on every a2ui-enabled turn unless the user asked for text. Integration
+  // tools count only with an executor (the GH #49 both-or-neither contract), so a turn that never had live
+  // integrations still has none.
+  const integrationTools = opts.executeTool !== undefined ? (opts.tools ?? []) : []
+  const offeredTools =
+    opts.a2uiEnabled !== false && override !== 'text'
+      ? [...integrationTools, renderSurfaceTool([...sessionKnownSurfaceIds(input.session)])]
+      : undefined
+  const surfaceOverride = offeredTools !== undefined && override === 'surface'
+  // RTS-R5: reply text streams as `textDelta` lines only when no integration tool is live (the adapter then
+  // yields text as it arrives); first round only, since a repair round re-sends a reply already streamed.
+  const streamDeltas = integrationTools.length === 0
+  let lastCaptureRound = false // RTS-R8: the previous round's payload came from `render_surface` (tool-aware repair wording)
+  let surfaceRequestedFedBack = false // RTS-R6: the ONE correction round a surface override with no payload gets
+  let textJsonlIgnored = false // RTS-R3: sticky, a capture round's text channel carried wire or genui lines that were dropped
+  // RTS-R8: the last capture round's reply and declarations, kept for the degrade at the bound.
+  let degrade: Pick<ReturnType<typeof peelMetaLine>, 'plan' | 'personaPatch' | 'flowEnd' | 'team' | 'target'> & { note: string } | undefined
   for (let round = 0; round < opts.maxRounds; round++) {
     const failuresFedBack = failures // what THIS round's prompt carried back — the trace's failureCodes
+    // RTS-R9: the escalation seam, consulted at the top of every self-correct round. A returned field
+    // replaces only this round's effort or model; absent ⇒ byte-identical.
+    roundModel = model
+    let roundEffort = opts.effort
+    if (round > 0 && failures !== undefined && opts.onRepairRound !== undefined) {
+      const patch = opts.onRepairRound({ round: round + 1, failures })
+      if (patch?.model !== undefined) roundModel = patch.model
+      if (patch?.effort !== undefined) roundEffort = patch.effort
+    }
     // ADR-0146 F1 — the lifecycle stages, yielded AS THEY HAPPEN, strictly BEFORE any content line (content
     // still streams only after full validation, SPEC-R5). A self-correct round announces `retry` with the
     // attempt ordinal first, then `sent` before the provider request. All gated on the `progress` opt-in.
@@ -1061,19 +1201,50 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // block_stop/done provider events are NOT mapped to a stage — produce() is the pinned emitter of
       // `content`/`validating`/`done`, owning those transitions itself (F1).
     }
+    // RTS-R1: on a turn that offers `render_surface`, this round's executor captures its input and answers
+    // `received`; every other name goes to the caller's executor. Reset every round.
+    let capture = undefined as { jsonl: string; target: string | undefined } | undefined
+    const captureTool: ExecuteTool = async (name, toolInput, signal) => {
+      if (name === RENDER_SURFACE_TOOL_NAME) {
+        const { jsonl, target: toolTarget } = toolInput
+        capture = { jsonl: typeof jsonl === 'string' ? jsonl : '', target: typeof toolTarget === 'string' && toolTarget !== '' ? toolTarget : undefined }
+        return 'received'
+      }
+      if (opts.executeTool === undefined) throw new Error(`no executor for tool ${name}`)
+      return opts.executeTool(name, toolInput, signal)
+    }
     const providerStream = deps.provider.stream({
-      model,
+      model: roundModel,
       system,
-      messages: messagesFor(input, failures, lastRaw, deps.catalog, lastOutput),
-      effort: opts.effort,
+      messages: messagesFor(input, failures, lastRaw, deps.catalog, lastOutput, lastCaptureRound),
+      effort: roundEffort,
       onEvent,
       // GH #49 — relayed verbatim; the adapter owns the tool loop. Its TEXT stays buffered for the whole
       // round (intentional — GH #290's fix is scoped to PROGRESS delivery only), but its onEvent 'tool'
       // pushes now reach the client in real time via interleaveProgress below, not just at round-end.
-      tools: opts.tools,
-      executeTool: opts.executeTool,
+      // RTS-R1/R2: a turn that offers `render_surface` adds it as a terminal tool behind the capture executor
+      // (forced on a surface override); any other turn relays the caller's pair unchanged.
+      ...(offeredTools !== undefined
+        ? {
+            tools: offeredTools,
+            executeTool: captureTool,
+            terminalTools: [RENDER_SURFACE_TOOL_NAME],
+            ...(surfaceOverride ? { toolChoice: { name: RENDER_SURFACE_TOOL_NAME } } : {}),
+          }
+        : { tools: opts.tools, executeTool: opts.executeTool }),
       signal: opts.signal,
     })
+    // RTS-R5: the live reply text. Held until `replyStart` decides; a legacy-shape round streams nothing.
+    let replyFrom: number | 'wire' | undefined
+    let deltaEnd = 0
+    const nextDelta = (ended: boolean): string | undefined => {
+      if (!streamDeltas || round > 0) return undefined
+      replyFrom ??= replyStart(raw, ended)
+      if (typeof replyFrom !== 'number') return undefined
+      const from = Math.max(replyFrom, deltaEnd)
+      deltaEnd = raw.length
+      return raw.length > from ? formatTextDeltaLine(raw.slice(from)) : undefined
+    }
     if (emitProgress) {
       for await (const item of interleaveProgress(providerStream, channel)) {
         if (item.kind === 'progress') {
@@ -1086,13 +1257,44 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
           yield formatProgressLine({ stage: 'content' })
         }
         raw += item.text
+        const delta = nextDelta(false)
+        if (delta !== undefined) yield delta
       }
     } else {
-      for await (const frag of providerStream) raw += frag
+      for await (const frag of providerStream) {
+        raw += frag
+        const delta = nextDelta(false)
+        if (delta !== undefined) yield delta
+      }
     }
+    const tailDelta = nextDelta(true)
+    if (tailDelta !== undefined) yield tailDelta
     lastRaw = raw
 
-    const { note, ask, plan, personaPatch, flowEnd, team, target, rest: afterMeta } = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 / ADR-0174 cl.2 / ADR-0178 cl.1 / ADR-0198 cl.1 / GH #1196 / ADR-0206 — peeled BEFORE heal/validate
+    const peeled = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 / ADR-0174 cl.2 / ADR-0178 cl.1 / ADR-0198 cl.1 / GH #1196 / ADR-0206: peeled BEFORE heal/validate
+    const { ask, plan, personaPatch, flowEnd, team, target } = peeled
+    let { note, rest: afterMeta } = peeled
+    // RTS-R3/R4: classify the round. A legacy-shape text channel keeps today's body exactly; otherwise the
+    // text after the meta-line is the reply and the payload is the captured `render_surface` input, or none.
+    const captured = capture
+    const textRound = captured === undefined && !isLegacyRound(raw, afterMeta)
+    if (captured !== undefined || textRound) {
+      let reply = afterMeta
+      if (captured !== undefined) {
+        // The tool payload wins: wire or genui lines in the text channel are dropped from the reply.
+        const lines = afterMeta.split('\n')
+        const kept = lines.filter((l) => !isWireLine(l.trim()))
+        if (kept.length !== lines.length) textJsonlIgnored = true
+        reply = kept.join('\n')
+        // The repair round shows the model its own attempt: the reply text, then the payload it sent.
+        lastRaw = [raw.trim(), captured.jsonl.trim()].filter((s) => s !== '').join('\n')
+      }
+      reply = reply.trim()
+      if (reply !== '') note = reply
+      afterMeta = captured?.jsonl ?? ''
+    }
+    lastCaptureRound = captured !== undefined
+    degrade = captured !== undefined && note !== undefined && note.trim() !== '' ? { note, plan, personaPatch, flowEnd, team, target } : undefined
     // genui-surface SPEC-R1 — peeled SECOND, still BEFORE heal/validate: a genui line (valid or not) never
     // reaches the shared A2UI healer/validator, which doesn't know this kind exists. Recomputed FRESH every
     // round (never carried over): a round's genui candidate belongs to THAT round's own raw output, never
@@ -1124,7 +1326,18 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     // note AND/OR a valid genui line to ship — nothing to validate, so nothing to self-correct. Must NOT
     // halt-and-report (empty ≠ invalid). ADR-0097 §1: a declared `ask` here is trivially integrity-invalid
     // too (no payload creates ANYTHING) — dropped, never even reaching `askIntegrityHolds`.
-    if (restLines.length === 0 && (note !== undefined || genuiLine !== undefined)) {
+    // RTS-R8: a `render_surface` call that carried nothing renderable is a failed payload (PARSE below), not a
+    // text turn; a genui-only payload still ships here.
+    if (restLines.length === 0 && (note !== undefined || genuiLine !== undefined) && (captured === undefined || genuiLine !== undefined)) {
+      // RTS-R6: a surface override whose text round returned no payload gets ONE correction round while one
+      // is left; otherwise the text ships with SURFACE_REQUESTED_UNMET tallied below. A legacy round never
+      // reaches this: its shape is today's, byte for byte.
+      const surfaceUnmet = surfaceOverride && textRound
+      if (surfaceUnmet && !surfaceRequestedFedBack && round < opts.maxRounds - 1) {
+        surfaceRequestedFedBack = true
+        failures = [{ code: 'SURFACE_REQUESTED', path: '' }]
+        continue
+      }
       // GH #1168 — the missing-flowEnd correction round (the #1142 NET_NOOP precedent, on the ADR-0187
       // atFinalize correction seam's shape: one targeted round, then pass through unchanged). Trigger,
       // fully mechanical: this turn is CLOSING-SHAPED — a note with NO ask, NO plan, NO genui line, and
@@ -1155,6 +1368,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // trace — SPEC-N4's "every drop path increments an observable counter" applies to this drop too,
       // not only to the retried case already covered by `failuresFedBack` above.
       if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
+      if (textJsonlIgnored) failureCodes.push('TEXT_JSONL_IGNORED') // RTS-R3: a factual tally, never a retry trigger
+      if (surfaceUnmet) failureCodes.push('SURFACE_REQUESTED_UNMET') // RTS-R6: the override asked for a surface and none came
       if (emitProgress) yield formatProgressLine({ stage: 'done' }) // before the final (note-only/genui-only) yield
       if (note !== undefined) yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined, plan, personaPatch, flowEnd, team, target)
       if (genuiLine !== undefined) yield genuiLine // SPEC-R1 AC2 — ships intact, the model's own line verbatim
@@ -1265,7 +1480,11 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
         if (flowEndFedBack && flowEnd === undefined) failureCodes.push('FLOW_END_UNCORRECTED') // GH #1168 — the correction round came back content-bearing and still without flowEnd: ships unchanged, tallied
         failureCodes.push(...semanticTally) // ADR-0238: SEMANTIC_UNCORRECTED / SEMANTIC_CHECK_ERROR on the shipping round, never a retry trigger
-        yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk, plan, personaPatch, flowEnd, team, target) // meta-line FIRST
+        if (textJsonlIgnored) failureCodes.push('TEXT_JSONL_IGNORED') // RTS-R3: a factual tally, never a retry trigger
+        // RTS-R1: the tool's `target` (the open surface this payload updates) states the ADR-0206 target arm
+        // when the meta-line declared none.
+        const shippedTarget = target ?? (captured?.target !== undefined ? { surfaceId: captured.target } : undefined)
+        yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk, plan, personaPatch, flowEnd, team, shippedTarget) // meta-line FIRST
       }
       // genui-surface SPEC-R1 — a genui structural failure on an OTHERWISE-valid A2UI round is DROPPED
       // silently here (never manufactures an extra round purely to fix it: "degrade, never halt" — the
@@ -1278,6 +1497,18 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     // needs (never an independent extra round; genui alone can never cause the eventual `ProduceHalt`
     // below, since that only fires when the A2UI verdict itself is still invalid at round exhaustion).
     failures = genuiPeel.failure !== undefined ? [...verdict.failures, genuiPeel.failure] : verdict.failures // SPEC-R4 — self-correct: feed the structured failures back
+  }
+  // RTS-R8: the bound is spent. When the last round's payload came from `render_surface` and that round has
+  // reply text, the turn degrades to the text: the meta-line with the last codes plus SURFACE_DEGRADED, and
+  // no content line. A legacy round, or a capture round with no text, halts as before.
+  if (degrade !== undefined) {
+    const failureCodes = (failures ?? []).map((f) => f.code)
+    if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY')
+    if (textJsonlIgnored) failureCodes.push('TEXT_JSONL_IGNORED')
+    failureCodes.push('SURFACE_DEGRADED')
+    if (emitProgress) yield formatProgressLine({ stage: 'done' })
+    yield formatMetaLine(degrade.note, traceFor(opts.maxRounds, 0, failureCodes), undefined, degrade.plan, degrade.personaPatch, degrade.flowEnd, degrade.team, degrade.target)
+    return
   }
   throw new ProduceHalt(failures ?? [{ code: 'SCHEMA', path: '' }])
 }

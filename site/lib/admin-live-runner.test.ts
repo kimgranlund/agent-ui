@@ -703,3 +703,101 @@ describe('createAdminSurfaceTurn — the ADR-0097 ask peel (GH #802)', () => {
     expect(events).toEqual([{ kind: 'note', note: 'Which size?' }])
   })
 })
+
+// ── T-0060 step 7 (SPEC RTS-R5 AC3, RTS-R7 AC2, RTS-R12): streamed text, the persona hint, reply history ──
+
+function ndjsonResponse(lines: string[]): Response {
+  return new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })
+}
+
+const SURFACE_LINE = JSON.stringify({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui' } })
+
+describe('text-delta', () => {
+  it('each `textDelta` meta arm becomes a `text-delta` event, in order, ahead of the `note` event and the lines', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        ndjsonResponse([
+          JSON.stringify({ a2uiMeta: { textDelta: 'Here ' } }),
+          JSON.stringify({ a2uiMeta: { textDelta: 'is the ' } }),
+          JSON.stringify({ a2uiMeta: { textDelta: 'table.' } }),
+          JSON.stringify({ a2uiMeta: { note: 'Here is the table.' } }),
+          SURFACE_LINE,
+        ]),
+      ),
+    )
+    const events: AdminSurfaceTurnEvent[] = []
+    for await (const event of createAdminSurfaceTurn()(SURFACE_REQUEST)) events.push(event)
+    const kinds = events.map((e) => e.kind).filter((k) => k === 'text-delta' || k === 'note' || k === 'line')
+    expect(kinds).toEqual(['text-delta', 'text-delta', 'text-delta', 'note', 'line'])
+    const texts = events.flatMap((e) => (e.kind === 'text-delta' ? [e.text] : []))
+    expect(texts).toEqual(['Here ', 'is the ', 'table.'])
+  })
+
+  it('a stream with no `textDelta` arm yields no `text-delta` event (the note ships whole)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ndjsonResponse([JSON.stringify({ a2uiMeta: { note: 'Done.' } }), SURFACE_LINE])))
+    const events: AdminSurfaceTurnEvent[] = []
+    for await (const event of createAdminSurfaceTurn()(SURFACE_REQUEST)) events.push(event)
+    expect(events.some((e) => e.kind === 'text-delta')).toBe(false)
+    expect(events.some((e) => e.kind === 'note')).toBe(true)
+  })
+})
+
+describe('prefers request key', () => {
+  async function postedBody(req: AdminSurfaceTurnRequest): Promise<Record<string, unknown>> {
+    const fetchSpy = vi.fn(async () => ndjsonResponse([]))
+    vi.stubGlobal('fetch', fetchSpy)
+    for await (const _event of createAdminSurfaceTurn()(req)) {
+      /* drain */
+    }
+    const init = (fetchSpy.mock.calls[0] as unknown[])[1] as { body: string }
+    return JSON.parse(init.body) as Record<string, unknown>
+  }
+
+  it('is absent from the POST body on `auto` and when the request carries none', async () => {
+    expect('prefers' in (await postedBody({ ...SURFACE_REQUEST, prefers: 'auto' }))).toBe(false)
+    expect('prefers' in (await postedBody(SURFACE_REQUEST))).toBe(false)
+  })
+
+  it('is present, verbatim, on `text` (and `surface`)', async () => {
+    expect((await postedBody({ ...SURFACE_REQUEST, prefers: 'text' })).prefers).toBe('text')
+    expect((await postedBody({ ...SURFACE_REQUEST, prefers: 'surface' })).prefers).toBe('surface')
+  })
+})
+
+describe('reply note in history', () => {
+  /** Two turns through ONE runner; the second POST's `input.session` is the history the first stored. */
+  async function storedAssistantTurn(firstTurnLines: string[]): Promise<string> {
+    const bodies: Array<{ input: { session: { turns: Array<{ role: string; content: string }> } } }> = []
+    const responses = [firstTurnLines, []]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init: { body: string }) => {
+        bodies.push(JSON.parse(init.body))
+        return ndjsonResponse(responses[bodies.length - 1] ?? [])
+      }),
+    )
+    const runner = createAdminSurfaceTurn()
+    for (const text of ['first', 'second']) {
+      for await (const _event of runner({ ...SURFACE_REQUEST, turn: { kind: 'intent', text } })) {
+        /* drain */
+      }
+    }
+    const turns = bodies[1]!.input.session.turns
+    expect(turns.map((t) => t.role)).toEqual(['user', 'assistant'])
+    return turns[1]!.content
+  }
+
+  it('the stored assistant turn is `<note>\\n<jsonl>`', async () => {
+    const content = await storedAssistantTurn([
+      JSON.stringify({ a2uiMeta: { textDelta: 'Here it is.' } }),
+      JSON.stringify({ a2uiMeta: { note: 'Here it is.' } }),
+      SURFACE_LINE,
+    ])
+    expect(content).toBe(`Here it is.\n${SURFACE_LINE}`)
+  })
+
+  it('a turn with no note stores the lines alone, as before', async () => {
+    expect(await storedAssistantTurn([SURFACE_LINE])).toBe(SURFACE_LINE)
+  })
+})
