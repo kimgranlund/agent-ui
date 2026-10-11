@@ -35,7 +35,7 @@ Source of truth: `produce` in `packages/agent-ui/a2ui/src/agent/produce.ts` (wit
 9. On an invalid verdict the structured failures feed the next round (SPEC-R4). A genui failure
    rides along on a retry the A2UI verdict already needs; it never causes a round or a halt alone.
 
-The `render_surface` tool round (ADR-0242, proposed): on an a2ui-enabled turn the model's text is the
+The `render_surface` tool round (ADR-0242, accepted): on an a2ui-enabled turn the model's text is the
 reply and the A2UI payload arrives as the `render_surface` tool input, which enters step 4 in place of
 the text; the round ends on that call with no follow-up request. A text channel whose first line parses
 as A2UI is the legacy shape and runs steps 1 to 9 unchanged. Text-channel A2UI lines beside a tool call
@@ -76,8 +76,25 @@ A transport (the dev proxy, the Cloudflare Worker) that has already sent its 200
 it as `a2uiMeta.error`. Over HTTP the stream is NDJSON (`application/x-ndjson`, set in
 `tools/agent/dev-proxy-plugin.ts` and `tools/agent/worker/index.ts`).
 
+Turn bounds. `produce()` runs its whole loop under one absolute deadline, `withTurnDeadline`
+(`src/agent/deadlines.ts`): `ProduceOptions.turnDeadlineMs`, default `TURN_DEADLINE_MS` (300000), `0` disables,
+set by the server and never read from a request body. It cuts a provider or tool that ignores the abort signal
+too, and throws `TurnDeadlineError`; a caller abort before the limit keeps its own error. The Anthropic adapter
+adds per-wait bounds (first byte, and `StreamStallError` for silence between reads, 60000 ms each). Both
+errors are `AgentTimeoutError`s carrying a plain-words `userMessage` with no upstream detail. The hosts write
+`failureMessageFor(err)` (`tools/agent/chat-validation.ts`) on the error line and on the prose `/chat` arm's
+500 body: a `ProduceHalt` keeps its message (closed failure codes only), an `AgentTimeoutError` its
+`userMessage`, anything else the generic line; the raw error is logged server-side only (T-0023, T-0024).
+
+The `render_surface` correction round. A user override that asks for UI (`detectUserOverride` in
+`src/agent/response-type.ts`, or the request's `responsePreference: 'surface'`) forces the tool. If the round
+still comes back as text with no payload, the loop feeds one `SURFACE_REQUESTED` correction round while a
+round is left; after that the text ships with `SURFACE_REQUESTED_UNMET` tallied. A text override withholds the
+tool. The lexicon is closed and phrase-based: text phrases win a tie, and `show me`, `build a` and `make me a`
+count as a surface ask only when a surface noun follows within four words.
+
 ## Order is the contract
 
-A consumer may rely on: meta-lines (progress, then the leading one) before any genui or A2UI
+A consumer may rely on: meta-lines (progress, `textDelta`, then the leading one) before any genui or A2UI
 line; at most one genui line; A2UI lines already valid. It must not rely on the count of progress
 lines, on a leading meta-line always existing, or on a `target` arriving without a `note`.

@@ -80,6 +80,13 @@ under **Context: System** (`data-segment="Context: System"`, `agent-admin.ts`) a
 request (`text`, `system`, `model`, optional `effort`, `integrations`). Two runner arms exist:
 `AdminAgentTurn` (prose reply) and `AdminAgentSurfaceTurn` (streamed A2UI lines); both are
 injected, `undefined` by default, so the packaged component ships no fetch or key code (ADR-0136).
+The surface arm also carries the response type hint (ADR-0242): `AdminSurfaceTurnRequest.prefers`
+(`text` | `surface` | `auto`, omitted on `auto`), read fresh each turn from the persona's `prefers` setting,
+which the Surface Options tab edits through its **Response type** picker (`PREFERS_KEY`,
+`agent-admin-schema.ts`; the picker in `agent-admin.ts`). The hint is advisory: it composes one preference
+paragraph into the prompt and never changes the `render_surface` offer. The mechanical per-turn override is a
+different field, the produce request's `responsePreference` (`text` withholds the tool, `surface` forces it;
+`auto` or absent means none), and the user's own words win over both.
 
 **Wrappers.** `AgentTeam` (`agent-team.ts`): `id`, `label`, `tagline?`, `gmAgentId`, `members[]`
 of `{agentId, role, routingDescription, instructions?}`. A team names agents by id and composes into
@@ -113,13 +120,22 @@ header pointing here.
   deletable), "import" means a user-minted one (`imported: true`, `createdAt` set).
 - **GM** (general manager): the team's leading agent, the one an `AgentTeam` names in `gmAgentId`;
   its prompt gains the `## Your team` block. The GM is an ordinary agent; nothing else marks it.
-- **`render_surface`**: the terminal tool `produce()` offers on an a2ui-enabled turn (ADR-0242, proposed;
+- **`render_surface`**: the terminal tool `produce()` offers on an a2ui-enabled turn (ADR-0242, accepted;
   [spec/response-type-selection.spec.md](../spec/response-type-selection.spec.md) RTS-R1). The model calls it
   with the A2UI JSONL to show UI; its input is validated like any payload and never executed as a tool.
   Text is the default response type: a turn with no call is a text answer.
 - **`textDelta`**: the additive meta arm `{"a2uiMeta":{"textDelta":"..."}}` carrying one fragment of the
   reply text as it streams, ahead of the leading meta-line and any content (RTS-R5). A meta arm, not a
   progress stage; the leading meta-line's `note` still carries the whole reply.
+- **whole-turn deadline**: the one absolute time limit `produce()` puts on an entire turn, every provider
+  round, repair round and tool call together (`TURN_DEADLINE_MS`, 300000 by default, `withTurnDeadline` in
+  `src/agent/deadlines.ts`; server-owned, never read from a request body). It is the bound the per-wait
+  timers (first byte, stream stall) cannot give, because a stream that keeps emitting never stalls. Expiry
+  throws `TurnDeadlineError`, an `AgentTimeoutError` (T-0023).
+- **plain-words error**: the user-facing text a host writes when a turn fails: `failureMessageFor(err)`
+  (`tools/agent/chat-validation.ts`) returns a `ProduceHalt`'s own message, an `AgentTimeoutError`'s
+  `userMessage`, or one generic line, so no upstream body, key or id reaches the wire. The raw error stays in
+  the server log (T-0024). Not the terminal `error` meta arm itself, which carries this text.
 - **Context: System**: the settings segment showing the compiled agent-system JSON, including the
   composed prompt; the read-only truth of what the next turn will send. Its sibling **Context: Dialog**
   is the per-turn payload log.
@@ -169,7 +185,7 @@ header pointing here.
   `.claude/docs/decompositions/md-content-concierge-croupier-promotion.decomp.md:21-25`, proposed).
   Its gate is `site/lib/agent-manifest/agent-manifest.test.ts`; its writer is
   `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts`
-  (ADR-0235, proposed). Not the fragment manifest `PersonaCatalogManifest`
+  (ADR-0235, accepted). Not the fragment manifest `PersonaCatalogManifest`
   (`catalog/personas/<id>/manifest.ts`), the Node-safe `personaId`/`fragment`/`targetCatalogs`
   triple of GH #516 (plus any `semanticChecks`), which stays inside the a2ui package.
 - **semantic check**: a pure, deterministic domain check a persona declares on its fragment manifest
@@ -183,7 +199,7 @@ header pointing here.
   family (`PROMPT_CHAR_BUDGET_BASE`, `PROMPT_CHAR_BUDGET_DERIVED` in `src/agent/prompt-budget.ts`). Each
   turn reports its section sizes against it as `trace.prompt`, and the provider-billed token counts as
   `trace.usage`. Over budget is reported, never truncated; halting is opt-in (`PROMPT_OVER_BUDGET`,
-  ADR-0234, proposed).
+  ADR-0234, accepted).
 - **capability registry**: the derived index that joins what an agent can emit: each catalog type with the
   control it renders (one pure tag rule), its selection guidance, the controls no catalog renders and the
   exclusion that excuses them, the mini-skills, genui packs and corpus shards scoped to a catalog id, and per

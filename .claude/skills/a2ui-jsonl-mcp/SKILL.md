@@ -64,7 +64,7 @@ error line is the same kind, `formatErrorLine`.
 - `createRecordedTransport` cannot carry `personaPatch`, `flowEnd`, `team` or `target`, and emits
   a meta-line only when the turn has a `note`.
 - Devtools replay yields a capture's `line` events verbatim and its `meta` events as meta-lines, in
-  capture order (ADR-0239, proposed); the meta-line is equivalent under `readMetaLine`, not byte-identical.
+  capture order (ADR-0239, accepted); the meta-line is equivalent under `readMetaLine`, not byte-identical.
 
 ## Citation key
 

@@ -70,7 +70,11 @@ entirely from the fleet — read them before scaffolding a new host.
    host-minted `{id, name, mimeType, sizeBytes}` descriptors from the renderer's intake seam,
    byte materialization is host/transport policy, and no agent-suppliable endpoint prop exists
    by construction (the exfiltration class is unrepresentable, not validated away). The seam is
-   one mount point; the app never re-implements renderer concerns.
+   one mount point; the app never re-implements renderer concerns. Catalog bodies are lazy (ADR-0241): the
+   first renderer on a page registers the default catalog asynchronously, so an app host that reads its mount
+   right after `ingest` or `finalize` warms first with a top-level `await createRenderer().preload('agent-ui')`
+   (the site's `site/lib/warm-catalog.ts`, imported from the page entry, is the model; a host that only
+   ingests needs nothing, the renderer queue orders a cold surface).
 8. **Prove the spine** — `npm run check` + the app's own probes; tree-shake/size posture per
    the packaging map when the app ships as a bundle; screens and features then compose in
    via [[layout-composition]] / [[ui-composition]].

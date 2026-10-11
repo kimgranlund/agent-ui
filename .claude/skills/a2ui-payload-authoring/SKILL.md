@@ -37,6 +37,10 @@ scope here):
    rule 4 for WHEN to reach for it (a surface whose task is done AND would confuse a later turn left
    visible) versus leaving a finished surface in place as standing history.
 
+On a live `produce()` turn the model does not write this stream into its reply: the JSONL is the
+`jsonl` input of the terminal `render_surface` tool (`produce.ts`, `response-type.ts`), the reply text is the
+prose beside it, and the stream is validated the same either way.
+
 Everything reactive — text that tracks data, two-way inputs, list templates, actions, validity — hangs off
 those nodes via bindings. The catalog (`packages/agent-ui/a2ui/src/catalog/default/catalog.json`) is the
 authority on which components and props exist; never invent a component or prop. For WHICH of the four

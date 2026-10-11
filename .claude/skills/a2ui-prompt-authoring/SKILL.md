@@ -60,7 +60,7 @@ than you meant to, and an armed run on an UNCHANGED tree is a byte-identical no-
   `SELECTION_GUIDANCE_CHAR_BUDGET` in `prompt-drift.test.ts` (re-author tersely, never raise it to green).
   A sidecar edit also moves the derived cases of `npm run eval:agent-behavior`, so run its selftest afterwards.
   A persona fragment sidecar edit also moves its agent manifest digest, so run the writer
-  `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts` (ADR-0235, proposed).
+  `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts` (ADR-0235, accepted).
   An edit to `catalog/default/selection.json` also moves the genui dogfood inventory (ADR-0232 amendment),
   which is drift-gated and never byte-captured: its clause sum is held by `DOGFOOD_GUIDANCE_CHAR_BUDGET` in
   `prompt-drift.test.ts` (re-author tersely, never raise it to green). A `notFor` edge to a type with no
@@ -86,6 +86,28 @@ than you meant to, and an armed run on an UNCHANGED tree is a byte-identical no-
   edits a prompt file, and a derived `<base>--<persona>` catalog still retrieves none of its base's mini-skills
   or exemplars (`SPEC-R6`'s exact `catalogId` filter; widening it was ruled NO, 2026-10-05). A new mini-skill's
   `catalogId` must name a registered catalog id, which `src/registry/registry-wiring.test.ts` gates.
+
+## Response type: the prose-first grammar (ADR-0242)
+
+`prompts/grammar.md` now teaches that the model replies in prose and shows UI only by calling the terminal
+`render_surface` tool with the A2UI JSONL (`src/agent/response-type.ts`); it never writes JSONL into the reply.
+The when-to-call rule lives in the grammar's "Decide the response type" paragraph (plain facts, definitions and
+opinions stay prose; anything the user must scan, compare, fill in or act on is a surface; an explanation plus a
+table is both). It sits inside the four byte-pinned composed prompts, so an edit to it recaptures the baseline
+with the writer above, and it moves the response-type eval leg.
+
+Two more prompt files carry the response type, and neither is in the baseline's four composed prompts:
+- `prompts/response-preference-{text,surface}.md`: the persona hint paragraph (`prefers`, advisory only),
+  composed as the `response-preference` section by `responsePreferenceBlock` on an A2UI-enabled turn and
+  zero bytes on `auto` or absent. Held by `src/live-agent/produce-persona-hint.test.ts` and the
+  `prompt-budget.test.ts` section list, not by the baseline.
+- `prompts/a2ui-off-note-line.md`: the note-line teaching a genui-only turn keeps when GRAMMAR composes zero
+  bytes (never mention `render_surface` there: that turn is offered none).
+
+All three are embedded assets, so run `node scripts/generate-agent-assets.mjs` after editing one. Judge a
+teaching change with the response-type leg of `npm run eval:agent-behavior -- live --leg response-type`
+(`tools/agent-eval/legs.ts` `runResponseTypeLeg`; keyless `selftest` rides `check:scripts`, the live leg needs a
+key and is Kim's manual run): it scores text vs surface vs both over a labelled set.
 
 ## Component clauses bound BOTH axes (routing + content shape)
 
@@ -119,9 +141,12 @@ Mechanics that follow:
 - The keyless A2UI test kit (`packages/agent-ui/a2ui/tools/testkit/README.md`) runs scripted model text
   through the real `produce()` (a `rounds` turn) and pins repair outcomes (`expect.produce`); it never
   touches the byte-pinned baseline, so a prompt edit recaptures that deliberately as above.
-- Transport is validate-then-stream: A2UI lines arrive in one burst after whole-reply validation
-  (live-agent SPEC-R5, ADR-0206). A test that ingests lines mid-turn proves nothing about live timing,
-  and any "mid-stream" renderer state must be driven from turn start (the `target` arm, ADR-0206).
+- Transport is validate-then-stream for A2UI lines: they arrive in one burst after whole-reply validation
+  (live-agent SPEC-R5, ADR-0206). The reply text is the one exception: on the first round with no integration
+  tool live, `{"a2uiMeta":{"textDelta":...}}` meta-lines stream while the text arrives, before any validation
+  (response-type-selection SPEC RTS-R5, `produce.ts` `streamDeltas`). A test that ingests A2UI lines mid-turn
+  proves nothing about live timing, and any "mid-stream" renderer state must be driven from turn start (the
+  `target` arm, ADR-0206).
 
 ## Triage: recurring model misbehavior (before you prompt-nudge)
 
