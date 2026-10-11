@@ -80,6 +80,6 @@ A user asks "what is the capital of Finland": the reply "Helsinki." appears as t
 
 ## 8. Known limitations
 
-- The override lexicon (RTS-R6) is noun-gated: a surface noun within four words of "show me", "make me" or "build" forces a surface. Surface nouns that are also ordinary words still force a surface wrongly: "build a list of reasons", "make me a table of contents", "show me the list of files in my home folder", "show me how a table join works", "show me what a card game looks like", "build a wizard character". Some real surface asks are not caught and fall to the model's own choice: "show me a diagram", "Build me a form". Whether to tighten further is decided at close-out.
+- The override lexicon (RTS-R6) is head-noun-gated: "show me", "build" or "make me" forces a surface only when a surface noun heads the phrase (article, up to two modifiers, then the noun). Round 2 (T-0063) closed the known false positives ("build a list of reasons", "show me how a table join works", "build a wizard character") and the misses ("show me a diagram", "Build me a form"). A surface noun used as a head in a non-UI sense ("show me a table of numbers in words") can still force a surface wrongly; the model's own choice is the backstop.
 - While an integration tool is active in a turn the reply text ships whole at round end, not streamed (ADR-0242).
 - A forced surface override under extended thinking is a correction round, not an API-level force (ADR-0242).
