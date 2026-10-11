@@ -82,6 +82,26 @@ describe('lexicon false positives', () => {
   )
 })
 
+describe('lexicon round 2', () => {
+  it.each([
+    'build a list of reasons',
+    'make me a table of contents',
+    'show me the list of files in my home folder',
+    'show me how a table join works',
+    'show me the screen resolution settings in macOS',
+    'show me what a card game looks like',
+    'build a wizard character',
+  ])('no override: %s', (t) => expect(detectUserOverride(intent(t))).toBeUndefined())
+  it.each(['show me a diagram', 'Build me a form', 'show me a pricing tables', 'show me the plans as a table', 'Make me a short satisfaction survey', 'Build a settings panel', 'show me a chart of sales', 'render the page as a card', 'make me a dashboard'])(
+    'surface: %s',
+    (t) => expect(detectUserOverride(intent(t))).toBe('surface'),
+  )
+  it.each(['just tell me', 'text only'])('text: %s', (t) => expect(detectUserOverride(intent(t))).toBe('text'))
+  it('text wins a tie', () => {
+    expect(detectUserOverride(intent('show me a table, text only'))).toBe('text')
+  })
+})
+
 describe('classifyResponse', () => {
   it('maps the two flags', () => {
     expect(classifyResponse(true, true)).toBe('both')

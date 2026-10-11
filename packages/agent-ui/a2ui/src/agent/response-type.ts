@@ -36,19 +36,26 @@ export function renderSurfaceTool(openSurfaceIds: readonly string[]): ToolDef {
 
 const TEXT_PHRASES = ['just tell me', 'no card', 'text only', "don't show", 'skip the ui']
 const SURFACE_PHRASES = ['as a card', 'as a table', 'as a chart']
-/** These count only when a surface noun follows within the next four words ("show me a pricing table"). */
-const GATED_SURFACE_PHRASES = ['show me', 'build a', 'make me a']
+/** These count only when a surface noun heads the phrase ("show me a pricing table"): optional article, up to two modifiers. */
+const GATED_SURFACE_VERBS = ['show me', 'build me', 'build', 'make me']
 const SURFACE_NOUNS = [
   'form', 'card', 'table', 'chart', 'dashboard', 'panel', 'survey', 'calculator',
-  'checklist', 'widget', 'page', 'screen', 'list', 'plans', 'tabs', 'wizard',
+  'checklist', 'widget', 'page', 'screen', 'list', 'plans', 'tabs', 'wizard', 'diagram',
 ]
+/** Words that open a question or clause, never a modifier of the surface noun ("show me how a table join works"). */
+const NON_MODIFIERS = ['how', 'what', 'why', 'where', 'when', 'a', 'an', 'the', 'some', 'my', 'your', 'our']
+/** What may follow the head noun: the end, punctuation, or a preposition; "list of" and "of contents" never. */
+const NOUN_END = "(?=\\s*(?:$|[.,!?;:])|\\s+(?:of|for|with|to|that|which|as|from|in|on|about|please|and|so|using|showing)\\b)"
 
 const escape = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const alt = (phrases: readonly string[]): string => `(?:${phrases.map(escape).join('|')})`
 const lexicon = (pattern: string): RegExp => new RegExp(`(?<![\\w'])${pattern}(?![\\w'])`, 'i')
+const GATED_RE =
+  `${alt(GATED_SURFACE_VERBS)}\\s+(?:(?:a|an|the|some)\\s+)?(?:(?!${alt(NON_MODIFIERS)}\\b)[\\w'-]+\\s+){0,2}` +
+  `(?:list(?!\\s+of\\b)|${alt(SURFACE_NOUNS.filter((n) => n !== 'list'))})s?(?!\\s+of\\s+contents)${NOUN_END}`
 const TEXT_RE = lexicon(alt(TEXT_PHRASES))
 const SURFACE_RE = lexicon(
-  `(?:${alt(SURFACE_PHRASES)}|${alt(GATED_SURFACE_PHRASES)}(?:\\s+[^\\s]+){0,3}?\\s+${alt(SURFACE_NOUNS)})`,
+  `(?:${alt(SURFACE_PHRASES)}|${GATED_RE})`,
 )
 
 /** The user's explicit ask for text or a surface, from an intent turn's words. Text wins a tie (PRD-G2). */
