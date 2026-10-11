@@ -1,7 +1,7 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
 > Status: accepted · v0.23 · 2026-10-09 (v0.22 2026-10-06; v0.21 2026-10-06; v0.20 2026-10-05; v0.19 2026-10-05; v0.18 2026-10-05; v0.17 2026-08-18; v0.16 2026-08-13; v0.15 2026-08-12; v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
-> v0.23 changelog ([ADR-0242](../adr/0242-render-surface-terminal-tool-response-type.md), proposed; T-0060, docs-only pointer):
+> v0.23 changelog ([ADR-0242](../adr/0242-render-surface-terminal-tool-response-type.md), accepted; T-0060, docs-only pointer):
 > SPEC-R4, R5, R6 and R11 gain an amendment pointer row to
 > [`response-type-selection.spec.md`](./response-type-selection.spec.md) (the `render_surface` terminal tool,
 > the `textDelta` meta arm, the degrade to text at the round bound, the two composed preference sections,
@@ -403,7 +403,7 @@ isolated behind one interface (ADR-0069).
   query, matched `exemplarIds`, self-correct `rounds`, healer `healed` count, `failureCodes`, `model`)
   carried on the same meta-line as the note. It lives parallel to `Session.turns` (never inside it, never
   on the validated A2UI wire) and grounds a later "why X vs Y" turn in the run's real retrieval/
-  correction history instead of a retroactive confabulation. ADR-0234 (proposed) adds two optional
+  correction history instead of a retroactive confabulation. ADR-0234 (accepted) adds two optional
   members: `prompt` (the composed system prompt's section sizes against the declared character budget)
   and `usage` (provider-billed token counts summed over the turn, absent when none arrived).
 - **Runtime loop** — the bounded generate → `heal`+`validate` → self-correct → validated-stream driver
@@ -450,7 +450,7 @@ isolated behind one interface (ADR-0069).
 Normative per RFC 2119; each carries an ID, an upstream trace, and acceptance criteria. Acceptance
 criteria are checkable predicates — a command, a standing test, a grep, or a named manual run.
 
-Amendment pointers ([ADR-0242](../adr/0242-render-surface-terminal-tool-response-type.md), proposed, T-0060):
+Amendment pointers ([ADR-0242](../adr/0242-render-surface-terminal-tool-response-type.md), accepted, T-0060):
 
 | Requirement | Amended by | What changes |
 |---|---|---|
@@ -458,6 +458,16 @@ Amendment pointers ([ADR-0242](../adr/0242-render-surface-terminal-tool-response
 | SPEC-R5 | [`response-type-selection.spec.md`](./response-type-selection.spec.md) RTS-R3, RTS-R5 | text is not content: the `textDelta` meta arm may precede validation; A2UI lines still never do |
 | SPEC-R6 | [`response-type-selection.spec.md`](./response-type-selection.spec.md) RTS-R7, RTS-R11 | two composed preference sections (text, surface) and the grammar's reply-first opening |
 | SPEC-R11 | [`response-type-selection.spec.md`](./response-type-selection.spec.md) RTS-R2 | `AgentProvider.stream` gains optional `terminalTools` and `toolChoice`; trust boundary unchanged |
+
+Amendment pointer (T-0023, T-0024; GH #1797; docs-only, no ADR): the turn is bounded as a class, not only per
+wait. `produce()` runs its whole loop under one absolute deadline (`TURN_DEADLINE_MS`, default 300000,
+`ProduceOptions.turnDeadlineMs`, server-owned, `0` disables) and throws `TurnDeadlineError`; the Anthropic
+adapter's first-byte timeout and `StreamStallError` are its per-wait siblings; all three are
+`AgentTimeoutError`s with a plain-words `userMessage`, and a host writes `failureMessageFor(err)` on the
+terminal error line and the prose `/chat` 500 body, never the raw error. This sits under SPEC-R4 (the bounded
+loop) and SPEC-R5 (the terminal error line) and is specified at implementation depth in the
+[LLD](../lld/a2ui-live-agent.lld.md) LLD-C3 row and §5 (the Anthropic adapter notes); the standing tests are
+`turn-deadline.test.ts`, `anthropic-timeouts.test.ts` and `dev-proxy-abort.test.ts`.
 
 ### 3.1 Shape, isolation, and CI safety
 
@@ -731,7 +741,7 @@ line FORMAT only, never its type set: the inventory still equals `Object.keys(ca
   most that budget; and a derived persona catalog's fragment lines carry their clauses: the
   `prompt-drift.test.ts` selection-guidance block, `npm test` green, no live model.
 
-**The whole system prompt has a declared character budget (ADR-0234, proposed).** `produce()` MUST assess
+**The whole system prompt has a declared character budget (ADR-0234, accepted).** `produce()` MUST assess
 the composed sections (`buildSystemPromptSections`) against `promptBudgetFor(catalogId)`:
 `PROMPT_CHAR_BUDGET_BASE` for a base catalog, `PROMPT_CHAR_BUDGET_DERIVED` for a `<base>--<persona>` id
 (`src/agent/prompt-budget.ts`), or `ProduceOptions.promptBudget.limit` when set. The assessment rides the
@@ -1753,7 +1763,7 @@ interface TurnTrace {
   prompt?: PromptBudgetReport;    // ADR-0234: composed section sizes vs the declared char budget
   usage?: TokenUsage;             // ADR-0234: provider-billed tokens summed over the turn
 }
-// ADR-0234 (proposed): token counts only, no prices. Cache fields appear only when the provider sent them.
+// ADR-0234 (accepted): token counts only, no prices. Cache fields appear only when the provider sent them.
 interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
@@ -1856,7 +1866,7 @@ function buildToolDispatch(active: readonly IntegrationManifest[], env: Record<s
 - **Host-verify — all three RESOLVED (2026-07-04).** (1) Anthropic Messages streaming: `POST
   /v1/messages`, headers `x-api-key` + `anthropic-version: 2023-06-01` + content-type, body
   `"stream":true`; SSE `message_start → content_block_delta`(`text_delta`, text at `delta.text`)`* →
-  message_stop`; `event: error` mid-stream surfaced. Usage (ADR-0234, proposed): `message_start.message.usage`
+  message_stop`; `event: error` mid-stream surfaced. Usage (ADR-0234, accepted): `message_start.message.usage`
   seeds the token counts, each `message_delta.usage` overrides the fields it carries, and at
   `message_stop` the adapter (`newUsageCollector`) emits one `{kind:'usage'}` `ProviderEvent` per request,
   which `produce()` sums into `trace.usage`. An over-budget prompt under `promptBudget: {mode: 'halt'}`
@@ -1951,7 +1961,7 @@ function buildToolDispatch(active: readonly IntegrationManifest[], env: Record<s
 | SPEC-R19 | PRD-G7 (transport interop — enablement reaches every live arm via one shared dispatch; GH #402 branch (a); ADR-0136/0152/0168 §5) |
 | SPEC-R20, R6 AC6 | PRD-G1/G6 (the `plan` meta-line arm — a model-authored, additive, shallow-validated field on the ADR-0088 envelope, following the `ask`-arm precedent exactly; parsed by `readMetaLine` and passed through `produce()`'s outgoing meta-line unchanged; its GRAMMAR-half mechanics teaching folded into SPEC-R6 per ADR-0174 cl.6; the host-side plan→execute→synthesize loop and any `plan`-analogue of the `ask` integrity check are OUT OF SCOPE — ADR-0174 cl.2) |
 | SPEC-R6 AC7 | PRD-G6 (per-type selection guidance on the derived inventory line, sourced from each catalog's Node-only `selection.json` sidecar, coverage-gated by `catalog/selection-guidance.test.ts` and budget-gated by `SELECTION_GUIDANCE_CHAR_BUDGET`; ADR-0232, accepted) |
-| SPEC-R6 AC8 | PRD-G6 (the declared whole-prompt character budget, report-only by default with an opt-in `PROMPT_OVER_BUDGET` halt, plus provider-billed `trace.usage`; budget-gated by `live-agent/prompt-budget.test.ts`; ADR-0234, proposed) |
+| SPEC-R6 AC8 | PRD-G6 (the declared whole-prompt character budget, report-only by default with an opt-in `PROMPT_OVER_BUDGET` halt, plus provider-billed `trace.usage`; budget-gated by `live-agent/prompt-budget.test.ts`; ADR-0234, accepted) |
 | SPEC-R21, R22 | PRD-G1/G6 (the host-side sequential plan-runner — persona-gated opt-in, one ordinary `{kind:'intent'}` dispatch per declared step over one growing `Session`, closing-turn synthesis under SPEC-R5's validate-then-stream law, step lifecycle projected onto the existing status-stream grouping with `TURN_PROGRESS_STAGES` unwidened, a step cap + one `AbortSignal` bounding the run at `(K+2) × maxRounds`, tiered failure grain with fold-in acknowledgment, and the OF1 advisory law — no declaration-vs-output check; ADR-0174 cl.1/cl.3/cl.4/cl.6) |
 | SPEC-R29 | PRD-G1/G6 (the `personaPatch` meta-line arm — a model-authored, additive, shallow-validated seventh field on the ADR-0088 envelope, following the `ask`/`plan`-arm precedent exactly; parsed by `readMetaLine` and passed through `produce()`'s outgoing meta-line unchanged and gate-blind; the merge law ADR-0178 OF1 left open, pinned here (incremental per turn, per-key whole-value last-writer-wins, entries-as-contributions, no deletion semantics); the host-side three-filter apply gate, the runner event kind, and recorded-transport parity are OUT OF SCOPE — ADR-0178 cl.1) |
 | SPEC-R30 | PRD-G1/G6 (the opt-in authoring gate — one persona-scoped, inverse-default, fail-closed modality boolean joining the persona-file key set, threaded per call, gating BOTH the arm's host-owned byte-pinned mechanics teaching (composed as a `genuiBlock`-shaped conditional segment so SPEC-R6's byte-identity baselines never move) AND host consumption, with SPEC-R21's degrade law verbatim; ADR-0178 cl.3) |

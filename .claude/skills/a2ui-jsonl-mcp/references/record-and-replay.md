@@ -40,10 +40,10 @@ Source: `packages/agent-ui/devtools/src/` : `timeline/events.ts` (`recordTurn`, 
   `DEVTOOLS_CAPTURE_VERSION`); `parseCapture` throws a typed `CaptureParseError`.
 - `capturedLineTimelines(capture)` extracts each turn's wire lines: a `line` event's payload
   verbatim, and a `meta` event as the meta-line `{"a2uiMeta": <meta>}`, interleaved in capture
-  order (ADR-0239, proposed; before it, only `line` events replayed). `replayTransport(capture)`
+  order (ADR-0239, accepted; before it, only `line` events replayed). `replayTransport(capture)`
   and `scriptTransport(timelines)` replay those. The whole payload is re-emitted, so every arm in
   `meta-line.ts` replays: `note`, `ask`, `plan`, `personaPatch`, `flowEnd`, `team`, `target`,
-  `trace`, `progress`, `error`. A replayed meta-line is equivalent under `readMetaLine`, not
+  `trace`, `progress`, `error`, `textDelta`. A replayed meta-line is equivalent under `readMetaLine`, not
   byte-identical to the original wire line (`recordTurn` keeps only the parsed payload), and
   `render`/`client` events never replay. A capture with no meta events replays only its lines.
 - Replay has zero I/O, zero timers, zero randomness: lines yield on the microtask queue only, so

@@ -56,13 +56,14 @@ to heal, which adds `version`, and the validator rejects it at SCHEMA. Verified 
 | `flowEnd` | anything but literal `true` | arm alone dropped |
 | `target` | not an object, or `surfaceId` missing, non-string or empty | arm alone dropped |
 | `progress` | `stage` outside `TURN_PROGRESS_STAGES`, non-number `round`, non-string `detail` or `source` | arm alone dropped |
+| `textDelta` | present and not a string | field alone dropped (`meta-line.ts` `readMetaLine`) |
 
 Reason it is built this way: a half-parsed roster or patch is the one shape a host must never be
 handed, and a wrong-but-present `target` would animate the wrong card with full apparent
 authority (ADR-0206 cl.2). A note-only turn is a success; an arm-free meta-line is legal.
 
 Meta-line kinds by author: the model writes `note`, `ask`, `plan`, `personaPatch`, `flowEnd`,
-`team`, `target`; the runtime writes `trace`, `progress`, `error`. What the model-authored arms
+`team`, `target`; the runtime writes `trace`, `progress`, `error`, `textDelta`. What the model-authored arms
 mean is `a2ui-payload-authoring`'s `references/meta-line-vocabulary.md`.
 
 ## The healer

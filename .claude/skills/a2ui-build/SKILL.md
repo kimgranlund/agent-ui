@@ -29,6 +29,9 @@ builds; it never grades its own output (the `a2ui-review-agent` critic does — 
   `a2ui-catalog.lld.md` · `a2ui-streaming-pipeline.lld.md` · `a2ui-corpus-store.lld.md` ·
   `a2ui-harness-wiring.lld.md` · `a2ui-validator-finalize.lld.md` · `renderer-structural-resend.{spec,lld}.md`
   (ADR-0128) · `a2ui-message-lifecycle.{spec,lld}.md` · `a2ui-ecosystem-alignment.spec.md` (v0.3 pin).
+  The producer loop: `a2ui-live-agent.{spec,lld}.md` (SPEC-R#/LLD-C#, `produce()`, the provider seam, the
+  turn deadline) · `response-type-selection.{spec,lld}.md` (RTS-R#, the `render_surface` terminal tool and
+  the `textDelta` arm, ADR-0242).
   A2A work: `a2a-foundations.spec.md` · `a2a-protocol-core.lld.md` · `a2a-a2ui-bridge.lld.md`.
   Devtools work: `devtools-harness.spec.md`.
   Keyless agent-admin replays: `npm run e2e:admin`; capture a new fixture with `npm run e2e:admin:record`
@@ -51,7 +54,10 @@ builds; it never grades its own output (the `a2ui-review-agent` critic does — 
   trio — never the private `html``` entry) · 0187 (validator finalize signal, amends N6) · 0128
   (structural-resend reconciliation) · 0137 (`./agent` producer export) · 0191/0199 (`pending` is the
   STALE dim; `working` is the distinct live-target state) · 0194 (reveal order) · 0206 (`target` meta
-  arm) · 0200 (devtools).
+  arm) · 0200 (devtools) · 0233 (per-control entries; factories never import controls) · 0236 (the
+  build-time asset embed: no `node:*` under `src/agent/`) · 0238 (persona semantic checks in the repair
+  loop) · 0241 (lazy catalog bodies behind an eager manifest) · 0242 (`render_surface` decides the
+  response type).
 - **Conventions** — `CLAUDE.md` (strict TS, `.ts` imports, layering: a2ui depends on
   `@agent-ui/components`, nothing imports upward). `@agent-ui/devtools` sits above `a2ui` + `a2a` and
   nothing imports it, so a2ui code never reaches into it; devtools work routes to ADR-0200.
@@ -101,7 +107,10 @@ builds; it never grades its own output (the `a2ui-review-agent` critic does — 
    territory: escalate the exact interface need, don't cross the package boundary.
 3. **Probe** — co-located `*.test.ts` (jsdom) with negative controls; conformance fixtures where the
    catalog/validator is touched; browser smoke when the unit drives rendered controls
-   (jsdom-green ≠ done).
+   (jsdom-green ≠ done). Lazy-catalog trap (ADR-0241, T-0041): no catalog body is registered eagerly, so a
+   test that asserts synchronously after `ingest` sees an unregistered catalog. Put a top-level
+   `await createRenderer().preload('agent-ui')` after the imports (not a `beforeAll`, which runs after a
+   renderer built at module or describe scope), or `await renderer.preload(id)` for another id.
 
 ## Validation loop (finalize only when clean)
 

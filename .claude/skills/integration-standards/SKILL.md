@@ -31,6 +31,13 @@ ADR/SPEC id and Grep-repaired on line drift, never restated here from memory.
    admin `label` never do double duty.
 2. **Validate before execute** — the declared `input_schema` gates every dispatch through the one
    shared checker, before the executor ever runs.
+   `coerceObjectFields` (`providers/anthropic.ts`) runs first: a string that arrives in a field the
+   `input_schema` declares `type: 'object'` (a Haiku 5.5 forced-tool shape, T-0034) is parsed to the object;
+   one that does not parse to a plain object answers an `is_error` result naming the field. Not an
+   integration: `render_surface` (ADR-0242) is a terminal tool the integration executor never sees.
+   `produce()` wraps it in a capture executor that stores its input and answers `received`, and the
+   adapter ends the round on that call. While an integration tool is live the reply text does not stream as
+   `textDelta` (`produce.ts` `streamDeltas`), so the note ships whole.
 3. **Server keys never cross to the browser** — `serverKey`/`envKey` resolve host-side only; an
    unprovisioned keyed manifest is excluded, never offered to the model.
 4. **ONE shared dispatch on both live arms** — `buildToolDispatch`, never a per-route/per-host

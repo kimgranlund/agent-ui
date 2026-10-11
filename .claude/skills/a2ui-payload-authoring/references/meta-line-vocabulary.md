@@ -14,8 +14,11 @@ FRAMING convention, provably NOT an `A2uiServerMessage` (no `version` key, none 
 envelope keys), peeled by `readMetaLine` BEFORE the validator, never entering the corpus path
 (SPEC-N3 wire purity — restated by every arm's ADR). Adding a field here widens ZERO A2UI protocol
 wire, touches no validator law, and needs no catalog change. The envelope also carries
-runtime-composed fields (`note`, `trace`, `progress`, `error`); this file tracks only the
-MODEL-authored arms — structural facts the model declares.
+runtime-composed fields (`note`, `trace`, `progress`, `error`, `textDelta`); this file tracks only the
+MODEL-authored arms: structural facts the model declares. Since ADR-0242 `note` is the model's prose reply
+itself, not a JSON field it writes: `produce()` lifts the reply text into the outgoing `note`, and
+streams it ahead as `textDelta` fragments (RTS-R5); a legacy turn that still writes a `note` meta-line
+keeps working.
 
 ## The six ratified MODEL-authored arms
 

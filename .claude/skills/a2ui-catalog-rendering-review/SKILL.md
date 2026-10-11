@@ -47,7 +47,9 @@ review that scores B4 without that record scored the control, not the demonstrat
    repo runner (playwright is a repo devDep; run it from the repo root). A tier scope captures `all`
    and filters `index.json` rows by `tier`. Coverage counts DISTINCT `name` values per theme in
    `index.json` (the runner emits one row per theme × card): for `all`, distinct names == the page
-   header's "(N shown)"; each missing name is a ✗ B1 row. `status: empty-canvas` rows are ✗ B1.
+   header's "(N shown)"; each missing name is a ✗ B1 row. `status: empty-canvas` rows are ✗ B1. Before filing one, check the cold lazy catalog body cause: a site
+   page whose entry does not import `site/lib/warm-catalog.ts` can read an empty or unwired canvas until the default
+   catalog body loads (T-0040, ADR-0241 Amendment 1 A6; `references/catalog-pipeline.md` §6).
 3. **Probe the gates** — `node scripts/eval-a2ui-catalog.mjs --out <dir> [--only T]` (shipped 2026-08-18,
    rubric §5): A1 A2 A3 A4 B1 B2 B3g C1 C2 per card, exit-coded, with the §1.1 record fields, the
    component-mode comparison shot, and each overlay's revealed capture emitted alongside. Its header
