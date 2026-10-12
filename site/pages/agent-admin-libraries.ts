@@ -114,9 +114,11 @@ export const HOSPITALITY_SKILLS: readonly NewEntryInput[] = [
     label: 'itinerary-timeline',
     description: 'itinerary, day plan, schedule, local trip, excursion',
     content:
-      'Itineraries are a Timeline: one TimelineItem per stop (status: done/active/pending as the day ' +
-      'progresses), title + one-line detail, times as Badge chips. Cap at ~6 stops per surface; offer a ' +
-      'follow-up action Button ("Evening plan") instead of scrolling sprawl.',
+      'Itineraries are ONE Timeline whose children are a {path:"/stops",componentId} template: a single ' +
+      'TimelineItem repeated per stop, fields bound with relative paths (label the stop, description its ' +
+      'one-line detail, timestamp the time, status done/active/pending as the day progresses), never one ' +
+      'hand-written TimelineItem per stop. Cap at ~6 stops per surface; offer a follow-up action Button ' +
+      '("Evening plan") instead of scrolling sprawl.',
   },
   {
     label: 'menu-card',
@@ -133,6 +135,30 @@ export const HOSPITALITY_SKILLS: readonly NewEntryInput[] = [
       'Facility/policy answers are ONE compact Card: the fact as a title Text, hours/location as labeled ' +
       'body rows, and at most two action Buttons (book, directions). Prose answers stay in chat; the card ' +
       'carries only the structured facts.',
+  },
+]
+
+// ── the Commerce pack (T-0075, ADR-0243 cl.5): the Shopkeeper preset seeds from it; generic (no flavor) ──
+
+export const COMMERCE_SKILLS: readonly NewEntryInput[] = [
+  {
+    label: 'product-grid',
+    description: 'products, catalog, shop, storefront, offers, rooms for sale, pick one to buy',
+    content:
+      'A browse ask is ONE Grid of product tiles, one ProductCard per item repeated from a ' +
+      '{path:"/products",componentId} template (title, price, badge, image and the buy action bound with ' +
+      'relative paths), never one hand-built Card per product. Show 3-6 items per surface; sort or filter ' +
+      'by updating the data model on the SAME surface. Use an Image only with a src you were given. A ' +
+      'badge is a fact ("Sale", "New", "Sold out") spelled out as text.',
+  },
+  {
+    label: 'cart-summary',
+    description: 'cart, basket, order summary, quantity, checkout, total',
+    content:
+      'The cart is ONE summary Card on the same surface: a List of chosen items (name, quantity as ' +
+      'text, line price), a Stat for the total bound to the data model, and exactly one commit Button. ' +
+      'A quantity change updates the data model and the total in place, never a second cart. Never ' +
+      'collect payment details; prices are illustrative demo values.',
   },
 ]
 
@@ -466,7 +492,7 @@ export function setLiveServices(rows: readonly LiveServiceRow[] | undefined): vo
   }))
 }
 
-/** GH #143 — per-preset library scoping. Every OTHER preset (The Quant, The Curator, The Stylist —
+/** GH #143: per-preset library scoping. Every OTHER preset (The Quant, The Curator, The Stylist, The Shopkeeper:
  *  dashboards/collections/tokens; none of them a hotel or a game) sees `undefined`: generic packs only,
  *  never a stray Hospitality or Games pack. Kept to exactly the two flavors the pack catalog actually
  *  has today — a THIRD flavor earns its own union member the day a third persona-flavored pack ships,
@@ -562,6 +588,12 @@ export const ADMIN_LIBRARIES: Record<string, EntryLibraryPack[]> = {
       label: 'Hospitality',
       description: 'Hotel, restaurant, and travel surface idioms (GH #46).',
       entries: HOSPITALITY_SKILLS,
+    },
+    {
+      id: 'commerce',
+      label: 'Commerce',
+      description: 'Product grid and cart-summary idioms the Shopkeeper seeds from (T-0075).',
+      entries: COMMERCE_SKILLS,
     },
     {
       id: 'games',

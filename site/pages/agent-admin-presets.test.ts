@@ -4,7 +4,7 @@
 // dialect — "relies on convention". This is that convention, mechanized, reading the SAME vocabulary the
 // admin UI warns from (`@agent-ui/app`'s `lintSectionContent`, GH #419) so the two can never drift.
 //
-// It is also the lint's own FALSE-POSITIVE gate, which is the direction that matters: fourteen personas'
+// It is also the lint's own FALSE-POSITIVE gate, which is the direction that matters: fifteen personas'
 // worth of real authored prose must come back clean with every modality switched off. A lint that fires on
 // correct text teaches an admin to ignore it, and then the real conflict lands unread.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
@@ -37,8 +37,8 @@ import { ROSTER_ORDER_KEY } from '@agent-ui/app/agent-admin-roster-source'
 const ALL_OFF = { a2ui: false, genui: false }
 
 describe('the shipped personas name no modality (GH #412’s rewrite, gated by GH #419’s vocabulary)', () => {
-  it('all fourteen `surfaceStyle` texts are modality-neutral', () => {
-    expect(AGENT_PRESETS).toHaveLength(14) // anti-vacuity: the loop below really covers the roster
+  it('all fifteen `surfaceStyle` texts are modality-neutral', () => {
+    expect(AGENT_PRESETS).toHaveLength(15) // anti-vacuity: the loop below really covers the roster
     for (const preset of AGENT_PRESETS) {
       expect(lintSectionContent(preset.surfaceStyle, ALL_OFF), `${preset.id} surfaceStyle`).toBeUndefined()
     }

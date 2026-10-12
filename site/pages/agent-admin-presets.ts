@@ -49,7 +49,7 @@ import type { Entry, NewEntryInput } from '@agent-ui/app/entry-data'
 // GH #46 — the hospitality/travel trio seeds from the SAME pack texts the add-from-library menu offers
 // (agent-admin-libraries.ts): one authored source, zero drift between a preset's seeded capability and
 // the pack entry a user would add by hand.
-import { HOSPITALITY_SKILLS, HOSPITALITY_PLAYBOOKS, INTEGRATION_TOOLS, GAMES_SKILLS, GAMES_PLAYBOOKS, GAMES_RULES, CORE_PLAYBOOKS, type PresetCategory } from './agent-admin-libraries.ts'
+import { HOSPITALITY_SKILLS, HOSPITALITY_PLAYBOOKS, INTEGRATION_TOOLS, GAMES_SKILLS, GAMES_PLAYBOOKS, GAMES_RULES, CORE_PLAYBOOKS, COMMERCE_SKILLS, type PresetCategory } from './agent-admin-libraries.ts'
 // GH #497 — the concierge/croupier content personas seed their OWN local pattern set selection (the
 // `SHIPPED_PERSONA_CATALOGS` `personaId`, SPEC-R5) the same way every other persona-scoped config key
 // seeds: through `presetSeed`'s returned record, keyed by the schema's own storage key.
@@ -491,6 +491,39 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
         label: 'contrast-floors',
         description: 'The AA floors any proposed pairing must clear.',
         content: 'Body text 4.5:1; large text 3:1; non-text UI 3:1 against adjacent colors.',
+      },
+    ],
+    tools: [],
+  },
+  {
+    id: 'shopkeeper', // T-0075 (ADR-0243 cl.5), no `category`: a storefront is neither hospitality nor a game; generic packs only. The ProductCard live consumer; config only, no fragment
+    label: 'The Shopkeeper',
+    tagline: 'Storefront browsing + a cart summary: product tiles with price, badge and a buy action (T-0075)',
+    config: { name: 'The Shopkeeper', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: false },
+    foundation:
+      'You are The Shopkeeper of Lantern & Loom, a small home-goods shop (lamps, textiles, ceramics). You ' +
+      'help people browse, compare and choose, answer questions about materials and care, and keep a ' +
+      'running order summary. Warm, plain-spoken, never pushy. Prices and stock are ILLUSTRATIVE demo ' +
+      'values; say so when asked, and never ask for payment details.',
+    surfaceStyle:
+      'A browse or "what do you have" ask → ONE storefront surface: a handful of product tiles, each with ' +
+      'its name, price, a short badge when there is a standout fact (sale, new, sold out) and one buy ' +
+      'action. Picking an item or changing a quantity updates a running order summary on THAT SAME ' +
+      'surface, with the total beside it; a refinement ("only ceramics", "under 40") swaps the tiles in ' +
+      'place rather than minting a second storefront. Material, care and delivery questions stay in prose.',
+    skills: seedFrom(COMMERCE_SKILLS),
+    workflows: [],
+    resources: [
+      {
+        id: 'shop-policies',
+        label: 'shop-policies',
+        description: 'Delivery, returns and care notes the shopkeeper cites.',
+        content:
+          'Illustrative demo policy: orders ship in two working days; delivery is free over 60 and 6 ' +
+          'otherwise; returns are accepted within 30 days if unused. Ceramics are dishwasher-safe unless ' +
+          'the tile says hand-wash; linen textiles shrink about 3 percent on the first warm wash, so ' +
+          'recommend cold. Lamps ship without bulbs. Say plainly that stock, prices and delivery times ' +
+          'here are demo values, not a commitment.',
       },
     ],
     tools: [],
