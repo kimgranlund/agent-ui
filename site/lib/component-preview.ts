@@ -356,7 +356,7 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   // `progress`) ride SAMPLE_TREES rootRef below. The ProductCard image is the shared inline sample.
   ProductCard: { title: 'Harbour View Suite', subtitle: 'King bed, sleeps 2, free cancellation', image: IMAGE_SAMPLE_SRC, imageAlt: 'Suite with a harbour view', price: '$312', priceNote: 'per night', rating: '4.8', badge: 'Best rate', badgeIntent: 'success', actionLabel: 'Book' },
   BoardGrid: { rows: '6', cols: '6', label: 'Enemy waters' },
-  GameHud: { title: 'Dungeon level 3', status: 'Your turn', statusIntent: 'info' },
+  GameHud: { title: 'Dungeon level 3', status: 'Your turn', statusIntent: 'success' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
