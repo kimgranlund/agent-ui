@@ -152,9 +152,16 @@ describe('selectMiniSkills — TF-IDF top-cap selection over the registry (ADR-0
 // SPEC-R6 (`persona-catalog-composition.spec.md`, ADR-0172 cl.3) — the `catalogId` hard filter, applied
 // BEFORE ranking (mirrors `corpus/retrieve.ts:47,63`'s own `meta.catalogId` filter).
 describe('selectMiniSkills — SPEC-R6 catalogId scoping', () => {
-  it('AC2 — a non-agent-ui catalogId (a2ui-basic or a derived id) returns [] even for a strong-match intent', () => {
+  it('AC2: a catalogId outside agent-ui (a2ui-basic, or a derived id on a non-agent-ui base) returns [] even for a strong-match intent', () => {
     expect(selectMiniSkills('build me a settings screen with toggles', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'a2ui-basic')).toEqual([])
-    expect(selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--fixture-demo')).toEqual([])
+    expect(selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'a2ui-basic--croupier')).toEqual([])
+  })
+
+  it('ADR-0243 cl.3: a derived `<base>--<persona>` id selects the BASE mini-skills, identical to the base id', () => {
+    const base = selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui').map((m) => m.id)
+    expect(base.length).toBeGreaterThan(0)
+    expect(selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--croupier').map((m) => m.id)).toEqual(base)
+    expect(selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--fixture-demo').map((m) => m.id)).toEqual(base)
   })
 
   it('AC3 — an agent-ui turn is byte-identical to today (all ten modules eligible, ranked the same way)', () => {

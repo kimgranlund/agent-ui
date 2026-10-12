@@ -305,9 +305,10 @@ describe('personas: the loader list equals the shipped manifests, and the views 
     expect(base.types.map((r) => r.name)).not.toContain('PlayingCard')
   })
 
-  it('the ruled SPEC-R6 exact filter shows through: a derived id retrieves none of the base mini-skills or shards', () => {
-    expect(registryViewFor(REGISTRY, 'agent-ui').retrievable.length).toBeGreaterThan(0)
-    expect(registryViewFor(REGISTRY, 'agent-ui--croupier').retrievable).toEqual([])
+  it('ADR-0243 cl.3 shows through: a derived id retrieves the same base mini-skills and shards as its base', () => {
+    const base = registryViewFor(REGISTRY, 'agent-ui').retrievable
+    expect(base.length).toBeGreaterThan(0)
+    expect(registryViewFor(REGISTRY, 'agent-ui--croupier').retrievable).toEqual(base)
   })
 
   it('selectCapabilities ranks PlayingCard first in the croupier view and never in the base view', () => {

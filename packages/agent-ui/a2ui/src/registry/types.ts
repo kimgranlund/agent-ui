@@ -189,7 +189,7 @@ export interface CapabilityView {
   /** Type rows: the base's, then the persona fragment's. */
   readonly types: readonly CapabilityRow[]
   readonly functions: readonly CapabilityRow[]
-  /** Mini-skill and corpus-shard rows scoped to exactly `catalogId` (the ruled SPEC-R6 exact filter). */
+  /** Mini-skill and corpus-shard rows scoped to the BASE id of `catalogId` (ADR-0243 cl.3: a derived id inherits its base's). */
   readonly retrievable: readonly CapabilityRow[]
   /** Names of the types only the persona fragment adds. */
   readonly personaOnlyTypes: readonly string[]

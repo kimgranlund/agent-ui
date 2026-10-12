@@ -274,8 +274,8 @@ const EMPTY_VIEW = (catalogId: string): CapabilityView => ({
  * `catalog/compose.ts`, the same split `selectionGuidanceForId` makes): a base id maps to its own rows; a
  * derived `<base>--<persona>` id maps to the base's rows plus the persona fragment's when that persona is
  * known and targets the base; an unknown persona half is the base view; an unknown base half is empty.
- * `retrievable` holds only the mini-skills and corpus shards scoped to EXACTLY `catalogId`: a derived id
- * therefore retrieves none of its base's (ADR-0172 SPEC-R6, the ruled exact filter, unchanged).
+ * `retrievable` holds the mini-skills and corpus shards scoped to the BASE id: a derived id inherits its
+ * base's (ADR-0243 cl.3 amending ADR-0172 SPEC-R6, the same first-`--` split the runtime filters make).
  */
 export function registryViewFor(registry: CapabilityRegistry, catalogId: string): CapabilityView {
   const sep = catalogId.indexOf(DERIVED_SEPARATOR)
@@ -307,7 +307,7 @@ export function registryViewFor(registry: CapabilityRegistry, catalogId: string)
     personaId,
     types: [...baseTypes, ...personaTypes],
     functions: [...baseFunctions, ...personaFunctions],
-    retrievable: registry.base.filter((r) => (r.kind === 'mini-skill' || r.kind === 'corpus-shard') && r.scope === catalogId),
+    retrievable: registry.base.filter((r) => (r.kind === 'mini-skill' || r.kind === 'corpus-shard') && r.scope === baseId),
     personaOnlyTypes: personaTypes.map((r) => r.name!).filter((n) => !baseTypeNames.has(n)),
   }
 }
