@@ -663,3 +663,26 @@ describe('game-table-chrome + game-hud: status badges ride the CardHeader traili
     expect(body('game-hud')).toMatch(/\(slot "trailing" when the zone is its own Card\)/)
   })
 })
+
+// T-0073 (ADR-0243): the Croupier fragment ships the CardTable composite, so both game modules teach it
+// first, conditioned on the catalog having it: an `agent-ui` module also fires on a plain `agent-ui` turn,
+// where CardTable is absent and the PlayingCard/Card frame teaching still applies.
+describe('card-layout + game-table-chrome: the CardTable teaching (ADR-0243, T-0073)', () => {
+  const body = (id: string): string => MINI_SKILLS.find((m) => m.id === id)!.body
+
+  it('card-layout binds both CardTable hands to their data-model lists', () => {
+    expect(body('card-layout')).toMatch(/If the catalog has CardTable, it draws both hands/)
+    expect(body('card-layout')).toContain('"dealerHand":{"path":"/dealerHand"}')
+    expect(body('card-layout')).toContain('"playerHand":{"path":"/playerHand"}')
+  })
+
+  it('game-table-chrome makes ONE CardTable the table, with the action Buttons as its children', () => {
+    expect(body('game-table-chrome')).toMatch(/ONE CardTable is the table/)
+    expect(body('game-table-chrome')).toMatch(/the action Buttons as its children/)
+  })
+
+  it('both modules fire on a Croupier blackjack turn (ADR-0243 cl.3, base-segment match)', () => {
+    const ids = selectMiniSkills('Deal a round of Blackjack.', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--croupier').map((m) => m.id)
+    expect(ids).toEqual(expect.arrayContaining(['card-layout', 'game-table-chrome']))
+  })
+})
