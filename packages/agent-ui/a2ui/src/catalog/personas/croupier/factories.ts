@@ -3,7 +3,7 @@
 // mini-skill used to teach as prose (glyph formatting, face-down handling) into a real, enum-constrained
 // catalog row (the decomp note's §1 argument: a malformed card is now a `CATALOG` validation failure,
 // not a silent formatting defect). No composite-binding complexity here (unlike concierge's
-// `BookingForm`) — `rank`/`suit`/`faceDown`/`size` are four ORDINARY top-level bindable props, each resolved
+// `BookingForm`) — `rank`/`suit`/`faceDown` are three ORDINARY top-level bindable props, each resolved
 // independently by the renderer's normal per-prop reactive bind-effect (widget.ts); nothing nested,
 // nothing needing surface access inside the factory.
 //
@@ -33,9 +33,6 @@ export const playingCardFactory: WidgetFactory = {
         break
       case 'faceDown':
         ;(el as unknown as { faceDown: boolean }).faceDown = Boolean(value)
-        break
-      case 'size':
-        ;(el as unknown as { size: string }).size = value == null ? 'md' : String(value)
         break
     }
   },

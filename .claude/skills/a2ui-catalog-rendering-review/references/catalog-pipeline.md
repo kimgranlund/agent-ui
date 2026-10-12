@@ -69,6 +69,8 @@ control's own surface must change (a prop the catalog wants to expose does not e
   → `corpus/exemplar/v1_0/agent-ui.jsonl` + archived VerdictsFile `corpus/verdicts/<date>--<slug>.json`
   (ADR-0068/0165); verdicts come from `a2ui-review-agent` vs `rubrics/a2ui-corpus.md`. Un-admitted seeds
   need a `DISPOSITION_ALLOWLIST` reason.
+- Persona-catalog seeds live on `allPersonaSeeds` in `persona-exemplars.ts`, a page and gate shelf that
+  never enters a corpus shelf.
 
 **Layer 3 — site preview / catalog page**
 - `site/lib/component-preview.ts`: `A2UI_INITIAL` (per-type seed knob values) · `SAMPLE_TREES`
@@ -102,7 +104,7 @@ control's own surface must change (a prop the catalog wants to expose does not e
 | A persona fragment's `catalog.json` or `selection.json` change, or a preset seed change, with no agent-manifest writer run | `site/lib/agent-manifest/agent-manifest.test.ts` (ADR-0235, accepted) |
 | A prompt file, a `selection.json` sidecar or a components descriptor edited, `assets.gen.ts` or `dogfood-fleet.gen.ts` not regenerated | `packages/agent-ui/a2ui/src/agent/agent-assets-freshness.test.ts` (and `--check` in `check:scripts`) |
 | A catalog, sidecar, persona, mini-skill, pack or corpus edit, `site/capability-registry.json` or `selection-projection.gen.ts` stale | `packages/agent-ui/a2ui/tools/registry/generate.test.ts` (names the command) |
-| Catalog type with no example anywhere | `examples/examples.test.ts` (GH #729) |
+| Catalog type with no example anywhere | `examples/examples.test.ts` (GH #729, the agent-ui shelf plus shard) · `examples/every-catalog-coverage.test.ts` (every shipped catalog, residue-guarded `CATALOG_COVERAGE_EXEMPT`) |
 | Seed not admitted and not in `DISPOSITION_ALLOWLIST` | `corpus/admission-coverage.test.ts` |
 | Seed invalid / renders with errors | `examples.test.ts` · `site/lib/a2ui-gallery.test.ts` |
 | Seed in `allSeeds` but not `SEEDS_BY_MODULE` | `import-seeds.ts` halts |
@@ -218,7 +220,7 @@ Further traps from the 2026-08 fix waves (check before filing a factory/control 
 | `ui-video` card is a black void | `ui-video` builds no interior `<video>` until `src` is non-empty (GH #1327); `A2UI_INITIAL.Video` must seed `src` (poster alone paints nothing). Compare `COMPONENT_INITIAL` vs `A2UI_INITIAL`. |
 | Right natively, degraded only on the A2UI path | Mount-context leak (SKILL step 6, GH #1328): `super-shell.css`'s `@scope` lower bound fences only nested shells, so `[data-part='bar']` matched inside shell-hosted content while the runner's component-mode shot sat outside the shell. |
 | Overlay card paints detached from its anchor | An `anchor()`-inset panel whose anchor sits in a `display:none` tier panel computes all insets `auto` (GH #1339). The verify guard demotes it; expected state is guarded, so reveal the tier first, then judge. |
-| Empty or unwired canvas on a card, or a page that reads its mount right after `ingest` or `finalize` finds nothing there | Cold lazy catalog body (ADR-0241 Amendment 1, A6): the default catalog is a lazy record, so the first renderer on a page registers it asynchronously. A page entry must import `site/lib/warm-catalog.ts` (T-0040) so its body is in before the page's own code runs; import it from a page entry, never from a shared lib. |
+| Empty or unwired canvas on a card, or a page that reads its mount right after `ingest` or `finalize` finds nothing there | Cold lazy catalog body (ADR-0241 Amendment 1, A6): the default catalog is a lazy record, so the first renderer on a page registers it asynchronously. A page entry must import `site/lib/warm-catalog.ts` (T-0040) so its body is in before the page's own code runs; import it from a page entry, never from a shared lib. A page that builds a renderer but reads no mount synchronously is listed in `COLD_SAFE_ENTRIES` (`site/lib/warm-catalog.test.ts`, T-0064) with its cold-load leg (`site/pages/a2ui-{patterns,list,canvas}.test.ts`, `a2ui-chat.browser.test.ts`); an entry on neither list reds that gate. |
 | Overlay-like row shows no revealed state | The row's `open` must be a plain bindable prop with NO value mark (ADR-0161), and the type must be in `OVERLAY` in `scripts/eval-a2ui-catalog.mjs` (ComboBox joined in GH #1331). |
 
 Two triage rules proved out: (1) a runner that omits a check may be faithfully implementing the RUBRIC's

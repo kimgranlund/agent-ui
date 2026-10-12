@@ -50,6 +50,15 @@ export interface ExampleSeed<C extends SeedCatalogId = 'agent-ui'> {
   messages: readonly A2uiServerMessage[]
 }
 
+/** A seed rendered against a derived persona catalog, `<base>--<persona>` (`derivedCatalogId`, ADR-0172
+ *  cl.2). Persona seeds are page and gate fixtures (the every-catalog coverage gate, the catalog preview
+ *  page), never corpus candidates, so `SeedCatalogId` stays the two bases and no corpus shelf, shard or
+ *  import-seeds table reads them. They live on their own `allPersonaSeeds` shelf. */
+export interface PersonaExampleSeed extends Omit<ExampleSeed<SeedCatalogId>, 'catalogId'> {
+  /** The derived catalog id this seed renders against, for example `agent-ui--concierge`. */
+  catalogId: `${SeedCatalogId}--${string}`
+}
+
 // ADR-0231 cl.5: the two seed kinds beside `ExampleSeed`, one per new corpus facet. Same pre-alignment
 // posture: `tools/corpus/import-seeds.ts` maps each onto its `CorpusRecord` branch and sets `meta.facet`.
 // They are corpus seeds only: the site's example pages key off `ExampleSeed`, and rendering a multi-turn

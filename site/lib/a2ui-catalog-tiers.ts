@@ -1,5 +1,5 @@
 // site/lib/a2ui-catalog-tiers.ts — the A2UI Catalog page's TIER taxonomy (owner-approved 2026-08-15 audit,
-// GH #970): groups the browsable default-catalog component types (60 as of GH #1209's Video/AudioPlayer additions) into
+// GH #970): groups the browsable default-catalog component types (73 at T-0064) into
 // five page-level tabs — WIDGET · PRIMITIVE · PATTERN · FEATURE · INPUT — plus the type→gallery-example
 // cross-link derivation the page's "see it in real use" links ride. The exact count is DERIVED
 // (`browsableNames().length`, gated by a2ui-catalog-tiers.test.ts) — this comment is a rough orientation
@@ -62,7 +62,7 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   Row: 'PRIMITIVE',
   Text: 'PRIMITIVE',
 
-  // INPUT (13) — form-associated / value-committing controls. Radio carries no independent A2UI `value`
+  // INPUT (18): form-associated / value-committing controls. Radio carries no independent A2UI `value`
   // mark of its own (its group does) but rides with its owning family here — a reader browsing "Input"
   // for "Radio" expects to find it beside RadioGroup, not filed under Widget. It stays browsable (unlike
   // Segment, NESTED_ONLY since GH #1332) because radio.css owns its own indicator chrome — a lone Radio
@@ -136,7 +136,7 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   // associated nor value-committing; INPUT's own header comment above scopes to exactly those two).
   Toggle: 'WIDGET',
 
-  // PATTERN (14) — composite, multi-part interactive constructs. An *Item/*Pane companion rides with its
+  // PATTERN (18): composite, multi-part interactive constructs. An *Item/*Pane companion rides with its
   // owning compound: MenuItem→Menu, SwiperItem→Swiper, SplitPane→Split, TimelineItem→Timeline's per-row
   // anatomy (Timeline itself is FEATURE-class as the whole chronology surface; its row is PATTERN-class,
   // the same composite-row shape as MenuItem/SwiperItem).
@@ -187,8 +187,9 @@ export function tierOf(name: string): Tier {
 }
 
 /** Every catalog component TYPE a seed's message stream renders — walks its `updateComponents` envelopes
- *  (never hand-listed; ADR-0055's own shelf is the only input). */
-function typesInSeed(seed: ExampleSeed): Set<string> {
+ *  (never hand-listed; ADR-0055's own shelf is the only input). Exported for the catalog selector, whose
+ *  seeds come from any shelf (T-0064). */
+export function typesInSeed(seed: { readonly messages: ExampleSeed['messages'] }): Set<string> {
   const types = new Set<string>()
   for (const message of seed.messages) {
     if ('updateComponents' in message) {

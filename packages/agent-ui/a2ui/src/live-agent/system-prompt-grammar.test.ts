@@ -258,9 +258,9 @@ describe('buildSystemPrompt mode axis (ADR-0090 §1)', () => {
     expect(prompt).toMatch(/settings screen/)
     expect(prompt).toMatch(/List of Field/)
     expect(prompt).toMatch(/Wall: none — fully\s+hosted/)
-    // 3. The dashboard — hosted end to end (Stat row, a real chart, a Table); no wall since T-0066.
+    // 3. The dashboard — a second, distinct wall case (charts unhosted).
     expect(prompt).toMatch(/dashboard \/ summary/)
-    expect(prompt).toMatch(/then one chart, then a Table of the detail/)
+    expect(prompt).toMatch(/real charts\/sparklines are not hosted/)
   })
 
   it('the honesty floor (§2) is present, verbatim-equivalent, in EVERY mode — mode never touches it', () => {
@@ -367,7 +367,7 @@ describe('ADR-0091 §4 fix — no double-injection of the ★ calibration exampl
   const UNIQUE_SUBSTRING: Record<string, string> = {
     'card-game-sheet': 'drag-to-reorder, card-flip animation, and playing-card face art are not hosted',
     'settings-screen': 'CardFooter › Button. Wall: none — fully hosted.',
-    'dashboard-kpi-grid': 'then one chart, then a Table of the detail',
+    'dashboard-kpi-grid': 'real charts/sparklines are not hosted',
   }
   const STARRED_IDS = ['card-game-sheet', 'settings-screen', 'dashboard-kpi-grid'] as const
 
