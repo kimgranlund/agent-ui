@@ -95,4 +95,8 @@ export const EXCLUSION_ALLOWLIST: ReadonlyMap<string, string> = new Map<string, 
   ['ProductCard',
     'ADR-0243 ProductCard ships its control ahead of its default catalog row; T-0072 (R1) lands the row ' +
     'and drains this seed.'],
+  ['BoardGrid',
+    'ADR-0243 (BoardGrid fork sheet), TEMPORARY seed: ui-board-grid shipped ahead of its default catalog ' +
+    'row (T-0069 C1 mints the control). T-0072 (R1) lands the BoardGrid row and factory and drains this ' +
+    'seed, the same way every "shipped ahead of its catalog row" seed above was drained.'],
 ])

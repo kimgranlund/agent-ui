@@ -50,6 +50,8 @@ import serviceCardMd from '../../packages/agent-ui/components/src/controls/servi
 import productCardMd from '../../packages/agent-ui/components/src/controls/product-card/product-card.md?raw'
 // ADR-0225 — ui-playing-card, the true card-face/back display leaf (GH #1478).
 import playingCardMd from '../../packages/agent-ui/components/src/controls/playing-card/playing-card.md?raw'
+// ADR-0243: ui-board-grid, a board of cells to target or mark (tier=pattern, so {doc, demo}).
+import boardGridMd from '../../packages/agent-ui/components/src/controls/board-grid/board-grid.md?raw'
 // ADR-0095 (supersedes ADR-0086): the standalone segmented control + its child leaf.
 import segmentMd from '../../packages/agent-ui/components/src/controls/segment/segment.md?raw'
 import segmentedControlMd from '../../packages/agent-ui/components/src/controls/segmented-control/segmented-control.md?raw'
@@ -209,6 +211,8 @@ export const loadServiceCardDoc = (): ComponentDoc => parseDoc(serviceCardMd)
 export const loadProductCardDoc = (): ComponentDoc => parseDoc(productCardMd)
 // ADR-0225 — ui-playing-card, the true card-face/back display leaf (tier=display ⇒ {doc} only).
 export const loadPlayingCardDoc = (): ComponentDoc => parseDoc(playingCardMd)
+// ADR-0243: ui-board-grid, a board of cells to target or mark (tier=pattern, so {doc, demo}).
+export const loadBoardGridDoc = (): ComponentDoc => parseDoc(boardGridMd)
 // ADR-0095 (supersedes ADR-0086): the standalone segmented control + its child leaf.
 export const loadSegmentDoc = (): ComponentDoc => parseDoc(segmentMd)
 export const loadSegmentedControlDoc = (): ComponentDoc => parseDoc(segmentedControlMd)

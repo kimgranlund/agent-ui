@@ -46,6 +46,15 @@
       "group": "Charts & data visuals"
     },
     {
+      "name": "Board Grid",
+      "tag": "ui-board-grid",
+      "url": "./board-grid-demo.html",
+      "description": "A board of cells to target or mark, with one roving tab stop.",
+      "level": "L1",
+      "section": "Components",
+      "group": "Containers & chrome"
+    },
+    {
       "name": "Breadcrumb",
       "tag": "ui-breadcrumb",
       "url": "./breadcrumb-demo.html",

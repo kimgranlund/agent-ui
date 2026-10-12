@@ -1381,6 +1381,9 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   // rank/pip/index content at all — uninstructive. Seeded with the Ace of spades, the same "the simplest
   // representative member" choice ui-icon's `glyph: 'check'` makes.
   'ui-playing-card': { rank: 'A', suit: 'spades' },
+  // ADR-0243: ui-board-grid defaults to a 0 x 0 board (board-grid.md), so a bare specimen paints nothing.
+  // Seeded as the 6x6 board; COMPONENT_SAMPLE_INIT below writes `actionName` and the marked cells.
+  'ui-board-grid': { rows: '6', cols: '6', label: 'Enemy waters' },
 }
 
 // A per-tag static HOST ATTRIBUTE seed (batch C) — distinct from COMPONENT_INITIAL (which seeds a KNOB's
@@ -1477,6 +1480,20 @@ const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
 const COMPONENT_SAMPLE_INIT: Record<string, (el: HTMLElement) => void> = {
   'ui-swiper-pagination': (el) => (el as UISwiperPaginationElement).renderInto(3, 0, () => {}),
   'ui-swiper-paddles': (el) => (el as UISwiperPaddlesElement).fill(() => {}, () => {}, 'horizontal'),
+  // ADR-0243: ui-board-grid's `cells` is a JSON data prop, so the specimen writes a mid-game board directly:
+  // hits, misses and one sunk ship, each with its text mark and intent (never color alone). `actionName` is a
+  // property write: the knob path sets the camelCase name as an attribute, which never reaches `action-name`.
+  'ui-board-grid': (el) => {
+    ;(el as HTMLElement & { actionName: string }).actionName = 'fire'
+    ;(el as HTMLElement & { cells: unknown }).cells = [
+      { row: 0, col: 1, mark: '●', intent: 'danger', disabled: true },
+      { row: 0, col: 2, mark: '●', intent: 'danger', disabled: true },
+      { row: 0, col: 3, mark: '▣', intent: 'success', disabled: true },
+      { row: 1, col: 1, mark: '○', intent: 'neutral', disabled: true },
+      { row: 2, col: 4, mark: '●', intent: 'danger', disabled: true },
+      { row: 4, col: 4, mark: '○', intent: 'neutral', disabled: true },
+    ]
+  },
 }
 
 // ── SLOT_TEXT gating — component mode (the fleet-wide hardening) ──────────────────────────────────────────────
@@ -1595,6 +1612,9 @@ export const NO_SLOT_TEXT = new Set([
   // rank/suit/faceDown PROPS alone, replaceChildren-driven — no light-DOM content model at all (slots:
   // [] — playing-card.md), the ui-stat/ui-pie-chart "no light-DOM content model at all" precedent.
   'ui-playing-card',
+  // ADR-0243: ui-board-grid builds every row and cell part from rows/cols/cells PROPS alone
+  // (replaceChildren-driven, slots: [] in board-grid.md), the ui-playing-card precedent.
+  'ui-board-grid',
 ])
 
 // STRUCTURAL (batch B) — the default slot IS the real content model (children ARE the grid cells / flex items /
