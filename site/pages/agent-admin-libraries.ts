@@ -107,8 +107,7 @@ export const HOSPITALITY_SKILLS: readonly NewEntryInput[] = [
     content:
       'Photo/tour asks render a Swiper (loop + pagination + paddles), one SwiperItem per exhibit: a Card ' +
       'with a title Text, a caption Text (body/sm), and a Badge for the standout fact (view, size, rating). ' +
-      'Lead each card with an Image (usageHint hero, fit cover, alt always set) over the title Text; ' +
-      'never a broken src, so use only a src you were given.',
+      'No Image type exists in the catalog — the card IS the exhibit; lead with evocative text, never a broken src.',
   },
   {
     label: 'itinerary-timeline',
@@ -200,9 +199,8 @@ export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
     label: 'trip-plan',
     description: 'Travel domain — multi-leg trip planning: compare legs, choose, accumulate an itinerary, summarize.',
     content:
-      'Compare 4 or more legs in a Table (mode, duration, price) with a choose action Button per row; ' +
-      'for 2-3 legs use comparison Cards in a Row with a Badge for the price. The user picks via the ' +
-      'row or card action; chosen legs accumulate into an itinerary-timeline surface updated in place. End ' +
+      'Legs render as comparison Cards in a Row (mode, duration, price Badge). The user picks via an ' +
+      'action per card; chosen legs accumulate into an itinerary-timeline surface updated in place. End ' +
       'with a summary Card + total, bound to the accumulated data model.',
   },
 ]
@@ -217,8 +215,7 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'A game board is a Grid of cell Buttons (ghost variant), each with action:{action:"cell", context:' +
       '{row, col}} — the coordinates ride the action context, never the label. Keep boards ≤ 6×6 per ' +
       'surface; mark hits/misses by swapping the cell label to a glyph (✕ / ●) via the data model, and ' +
-      'disable resolved cells rather than removing them. End state: when a fleet is sunk, show a win or ' +
-      'lose Badge and a Play again Button.',
+      'disable resolved cells rather than removing them.',
   },
   {
     label: 'guess-hud',
@@ -227,7 +224,7 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'A guessing game runs on one HUD surface: a Timeline of asked questions (status done/active), a ' +
       'Progress bar for questions used, a Stat for confidence (update its delta each round), and a ' +
       'SegmentedControl for the answer (Yes / No / Sort of). The final guess opens a Modal via the data ' +
-      'model; the player closes it. End state: the reveal says win or lose, with a Play again Button.',
+      'model; the player closes it.',
   },
   {
     label: 'word-tiles',
@@ -236,8 +233,7 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'Word guesses render as a Grid of Badge tiles — one row per guess, one Badge per letter, intent ' +
       'success (right spot) / warning (wrong spot) / neutral (absent). The input is ONE TextField with a ' +
       'regex check (^[a-z]{5}$) gating the Submit button. Show the used-letter state as a compact List, ' +
-      'never a full keyboard. End state: solved or out of guesses shows win or lose plus a Play again ' +
-      'Button.',
+      'never a full keyboard.',
   },
   {
     label: 'color-duel',
@@ -246,7 +242,7 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'A color round shows the target as a Swatch, takes the guess through a ColorPicker (oklch), and ' +
       'scores in coarse closeness BANDS (perfect / close / warm / cold — never numeric distance math). ' +
       'Show the reveal as a Ramp between target and guess, the running score as a Stat, rounds as ' +
-      'Progress. End state: after the last round show the final score and a Play again Button.',
+      'Progress.',
   },
   {
     label: 'deal-sheet',
@@ -255,8 +251,7 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'A negotiation runs on one deal-sheet surface: the item as a Card, asking price and current offer ' +
       'as Stats (mood carries a signed delta), a two-way Slider for the player’s offer with ONE Offer ' +
       'action Button, a price-history Sparkline, and Accept / Walk-away actions. A closed deal disables ' +
-      'the offer controls — never remove them. End state: Accept reads as a win, Walk-away as a loss; ' +
-      'either offers a Play again Button.',
+      'the offer controls — never remove them.',
   },
   {
     label: 'quest-log',
@@ -265,8 +260,7 @@ export const GAMES_SKILLS: readonly NewEntryInput[] = [
       'An adventure runs on one surface: a Timeline quest log (append one item per scene, cap ~8 and ' +
       'summarize older ones), a compact HUD Row of Stats (HP, Gold), an inventory List (≤6 items), and ' +
       '2-3 choice Buttons per scene. Lore goes in a Disclosure, never inline walls of text. Narration ' +
-      'stays in chat; the surface carries STATE. End state: HP at 0 or the quest done shows a lose or win ' +
-      'Badge and a Play again Button.',
+      'stays in chat; the surface carries STATE.',
   },
 ]
 

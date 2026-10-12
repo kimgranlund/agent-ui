@@ -42,7 +42,11 @@ review that scores B4 without that record scored the control, not the demonstrat
 1. **Scope.** `` names one component, one tier key (`WIDGET|PRIMITIVE|PATTERN|FEATURE|INPUT`),
    or `all` (default). Dev server: the runner defaults to `http://localhost:5174`; vite's own default
    is 5173 — pass `--base` to whichever answers 200. When the page 404s → the report opens with the
-   blocker (which port, `npm run dev`) and stops there.
+   blocker (which port, `npm run dev`) and stops there. The page has a catalog selector
+   (`?catalog=<id>`; the ids come from the capability registry). The knob-playground cards and every
+   rubric gate apply to `agent-ui`. The other ids render seed cards whose completeness belongs to
+   `packages/agent-ui/a2ui/src/examples/every-catalog-coverage.test.ts`; a fix there goes to the seed
+   (`persona-exemplars.ts`, `basic-exemplars.ts`) or to `CATALOG_COVERAGE_EXEMPT`.
 2. **Capture.** `node scripts/screenshot-a2ui-catalog.mjs --out <dir> [--theme …] [--only T]` — the
    repo runner (playwright is a repo devDep; run it from the repo root). A tier scope captures `all`
    and filters `index.json` rows by `tier`. Coverage counts DISTINCT `name` values per theme in

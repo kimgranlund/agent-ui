@@ -46,7 +46,8 @@ contract:
    `packages/agent-ui/a2ui/src/examples/types.ts`) is package SOURCE and a pre-aligned authored admission
    candidate. Add the module, export it from `src/examples/index.ts` (named export + `allSeeds` for an
    agent-ui seed, or `allBasicSeeds` for an `a2ui-basic` seed: two separate shelves, GH #1737, so a Basic
-   seed is a compile error on `allSeeds`), and register it in the import script's drift-guarded
+   seed is a compile error on `allSeeds`; persona seeds live on `allPersonaSeeds`, a page and gate shelf
+   that never enters the corpus, so `SeedCatalogId` stays two ids), and register it in the import script's drift-guarded
    `SEEDS_BY_MODULE` (agent-ui) or `BASIC_SEEDS_BY_MODULE` (Basic) (`tools/corpus/import-seeds.ts`, a
    half-wired seed HALTS at the drift guard). One seed is ONE surface: a scenario with two surfaces is two
    seeds, since a corpus record is single-surface (`ADR-0064`; a two-surface draft reds `npm test` via

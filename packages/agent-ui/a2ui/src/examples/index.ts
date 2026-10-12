@@ -3,7 +3,7 @@
 // hygiene: demo payload JSON must never enter a renderer consumer's bundle, the
 // `@agent-ui/components/all` demo-only subpath precedent).
 //
-// 27 seeds: 1 canvas + 4 dynamic-list + 1 generative-form + 5 patterns + 10 catalog-coverage (the
+// The agent-ui shelf's families: 1 canvas + 4 dynamic-list + 1 generative-form + 5 patterns + 10 catalog-coverage (the
 // ADR-0087/ADR-0093/ADR-0095 wave — booking-reservation, rental-filter-panel, document-row-toolbar,
 // stats-grid-dashboard [DROPPED 2026-08-18 per its judged D5 refusals — the ADR-0165 drop path;
 // catalog-coverage.ts (4)] — PLUS report-card-dashboard [ADR-0107 chart-family, chart-family.lld.md LLD-C12],
@@ -213,3 +213,25 @@ export const allSeeds: readonly ExampleSeed[] = [
  *  shelf, so the first seed added here is validated, rendered, admitted and coverage-checked with no
  *  further wiring. */
 export const allBasicSeeds: readonly ExampleSeed<'a2ui-basic'>[] = [...basicExemplarSeeds]
+
+// T-0064: the persona shelf, one seed family per derived `<base>--<persona>` catalog (ADR-0172 cl.2). Page
+// and gate fixtures only, never corpus candidates: no corpus shelf, shard or import-seeds table reads them.
+export type { PersonaExampleSeed } from './types.ts'
+export { personaExemplarSeeds } from './persona-exemplars.ts'
+export { CATALOG_COVERAGE_EXEMPT } from './coverage-exempt.ts'
+
+import type { PersonaExampleSeed } from './types.ts'
+import { personaExemplarSeeds } from './persona-exemplars.ts'
+
+/** Every seed rendered against a derived persona catalog, the third shelf beside `allSeeds` and
+ *  `allBasicSeeds`. Composed from per-module family arrays, never a hand-counted literal. */
+export const allPersonaSeeds: readonly PersonaExampleSeed[] = [...personaExemplarSeeds]
+
+/** The seeds that render against `catalogId`: `allSeeds` for `agent-ui`, `allBasicSeeds` for `a2ui-basic`, and
+ *  for any other id the persona seeds pinned to it (`[]` for an unknown id). The every-catalog coverage gate and
+ *  the catalog preview page both read this one function, so they cannot disagree about which seeds count. */
+export function seedsForCatalog(catalogId: string): readonly (ExampleSeed<SeedCatalogId> | PersonaExampleSeed)[] {
+  if (catalogId === 'agent-ui') return allSeeds
+  if (catalogId === 'a2ui-basic') return allBasicSeeds
+  return allPersonaSeeds.filter((seed) => seed.catalogId === catalogId)
+}

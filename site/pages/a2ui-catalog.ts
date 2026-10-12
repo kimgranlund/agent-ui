@@ -1,16 +1,18 @@
-// a2ui-catalog.ts — the A2UI Catalog gallery. Enumerates EVERY component the shipped default catalog declares
-// and renders each live through the real renderer, via one <component-preview mode="a2ui"> per component (a full
-// live-knobs playground: edit any prop → the canvas re-renders through a fresh renderer). The component list is
-// DERIVED from `defaultCatalog.components` — a new catalog type appears here automatically, so the gallery cannot
-// drift from the shipped catalog. Sub-part helper types (Option, the Tab/TabPanel, the Card regions) render only
-// nested under their owner, so they are folded into that owner's sample content rather than listed standalone.
+// a2ui-catalog.ts: the A2UI Catalog gallery. A `Catalog` selector above the filter picks one shipped catalog id
+// (`../lib/a2ui-catalog-selector.ts`: the capability registry's ids, agent-ui first, then the other bases, then the
+// derived base--persona ids), mirrored in the `?catalog=` query parameter (dropped for agent-ui, T-0064).
 //
-// GH #970 (owner-approved 2026-08-15 audit): the flat 54-item alphabetized list is now grouped into FIVE
-// page-level tabs by TIER — Widget/Primitive/Pattern/Feature/Input (`../lib/a2ui-catalog-tiers.ts`) — via the
-// shipped `ui-tabs` compound. The name filter stays orthogonal to the active tab: it narrows every tier's
-// section list identically regardless of which tab is currently showing, so switching tabs never drops or
-// resets an in-progress search. Each entry additionally cross-links to the A2UI gallery examples that actually
-// render it ("see it in real use") — DERIVED from the example-seed shelf, never hand-listed.
+// agent-ui, the default view: every component the shipped default catalog declares, rendered live through the real
+// renderer via one <component-preview mode="a2ui"> per component (a full live-knobs playground: edit any prop and
+// the canvas re-renders through a fresh renderer). The list is DERIVED from `defaultCatalog.components`, so a new
+// catalog type appears here automatically; sub-part helper types (Option, Tab/TabPanel, the Card regions) render
+// only nested under their owner. GH #970 groups the list into five page-level tier tabs (Widget/Primitive/Pattern/
+// Feature/Input, `../lib/a2ui-catalog-tiers.ts`) via `ui-tabs`; the name filter stays orthogonal to the active tab,
+// and each entry cross-links to the A2UI gallery seeds that render it, derived from the seed shelf.
+//
+// Any other id: the filter, status line and tabs hide, and a cached `div.catalog-alt` shows one card per type that
+// catalog previews (a derived id: only its persona fragment's own types), each rendered from the first example seed
+// that uses it, or naming its documented coverage exemption.
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './a2ui-catalog.css' // page-local: the filter bar + section spacing (after the shared shell)
 import '../lib/component-preview.ts' // registers <component-preview> (side-effect import)
@@ -18,6 +20,11 @@ import type { UITextFieldElement } from '@agent-ui/components/controls/text-fiel
 import type { UITabsElement } from '@agent-ui/components/controls/tabs'
 import { TIERS, TIER_LABEL, browsableNames, tierOf, seedsUsingType, seedGalleryHref } from '../lib/a2ui-catalog-tiers.ts'
 import type { Tier } from '../lib/a2ui-catalog-tiers.ts'
+import type { UISelectElement } from '@agent-ui/components/controls/select'
+import { createRenderer } from '@agent-ui/a2ui'
+import { FLEET_CATALOG_ID } from '@agent-ui/a2ui/registry'
+import { CATALOG_OPTIONS, catalogFromSearch, exampleSeedFor, exemptionFor, typesFor } from '../lib/a2ui-catalog-selector.ts'
+import { createCanvasSurface, applyRootStretch } from '../lib/canvas-surface.ts'
 import '../lib/warm-catalog.ts' // ADR-0241 (T-0040): the default catalog body is in before the first <component-preview mode="a2ui"> builds its renderer, which that element reads synchronously
 
 // The browsable name list is the ONE derivation in `../lib/a2ui-catalog-tiers.ts` (`browsableNames()` — catalog
@@ -30,8 +37,9 @@ content.append(
   pageLead(
     `Every component the default agent-ui catalog declares (${names.length} shown), rendered live through the real ` +
       'renderer. Each card is a playground: edit a prop on the left and the surface on the right re-renders from a ' +
-      'freshly-built A2UI payload. The list is derived from the shipped catalog, so it never drifts from it — ' +
-      'grouped below into tabs by tier (owner-approved 2026-08-15 audit).',
+      'freshly-built A2UI payload. The list is derived from the shipped catalog, so it never drifts from it, and is ' +
+      'grouped below into tabs by tier (owner-approved 2026-08-15 audit). Pick another catalog in the Catalog ' +
+      'selector to preview its types, each rendered from an example seed that uses it.',
   ),
 )
 
@@ -46,6 +54,23 @@ content.append(
     ' — every card there is built from the types on this page.',
   ),
 )
+
+// The catalog selector (T-0064): one option per capability registry catalog id, the capability-registry page
+// precedent. Inline layout keeps the page stylesheet, and the site CSS bundle it joins, untouched.
+const catalogField = document.createElement('ui-field')
+catalogField.setAttribute('label', 'Catalog')
+const catalogSelect = document.createElement('ui-select') as UISelectElement
+catalogSelect.className = 'catalog-select'
+catalogSelect.style.cssText = 'display:grid; inline-size:min(100%, 28rem);'
+for (const id of CATALOG_OPTIONS) {
+  const option = document.createElement('div')
+  option.setAttribute('role', 'option')
+  option.setAttribute('value', id)
+  option.textContent = id
+  catalogSelect.append(option)
+}
+catalogField.append(catalogSelect)
+content.append(catalogField)
 
 // ── name filter (live, case-insensitive) — hides non-matching sections in EVERY tab, not just the active
 // one (GH #970's "search stays orthogonal" acceptance bullet: the filter never resets or re-scopes on a
@@ -164,3 +189,120 @@ filter.addEventListener('input', () => {
       ? `No components match "${filter.value}".`
       : `${total} of ${names.length} components match "${filter.value}" — ${breakdown}.`
 })
+
+// ── the alternate view for any non-default catalog id (T-0064): built once per id, cached, and shown in place
+// of the filter, status line and tier tabs. The agent-ui DOM above is never rebuilt, only hidden. ──────────
+const altViews = new Map<string, HTMLElement>()
+
+/** Hide or show one agent-ui view element. `.catalog-tabs` sets its own `display`, which outranks the UA
+ *  `[hidden]` rule, so an inline `display:none` rides along; showing removes it and any emptied `style`. */
+function setShown(el: HTMLElement, shown: boolean): void {
+  el.hidden = !shown
+  if (shown) {
+    el.style.removeProperty('display')
+    if (el.getAttribute('style') === '') el.removeAttribute('style')
+  } else {
+    el.style.display = 'none'
+  }
+}
+
+/** Render one seed into a fresh canvas; flag the card rendered once the renderer settles with a mounted root. */
+async function renderSeedCard(section: HTMLElement, seed: NonNullable<ReturnType<typeof exampleSeedFor>>): Promise<void> {
+  const { stage, surface } = createCanvasSurface()
+  stage.style.cssText = 'block-size:28rem;'
+  section.append(stage)
+  const host = createRenderer()
+  host.mount(surface)
+  for (const message of seed.messages) host.ingest(JSON.stringify(message))
+  host.finalize(seed.surfaceId)
+  applyRootStretch(surface)
+  await host.settled()
+  section.dataset.rendered = surface.childElementCount > 0 ? 'true' : 'false'
+}
+
+/** Fill one alternate view: a lead line, then one card per type the catalog previews. */
+async function fillAltView(view: HTMLElement, catalogId: string): Promise<void> {
+  const lead = document.createElement('p')
+  const cut = catalogId.indexOf('--')
+  const types = typesFor(catalogId)
+  if (cut === -1) {
+    lead.textContent = `Every type the ${catalogId} catalog declares (${types.length}), each rendered from the first example seed that uses it.`
+  } else {
+    const base = catalogId.slice(0, cut)
+    lead.textContent =
+      `The ${catalogId.slice(cut + 2)} persona on the ${base} base: the ${types.length} types its fragment adds, each ` +
+      `rendered from the first example seed that uses it. The ${base} types are under the ${base} option.`
+  }
+  view.append(lead)
+
+  // Warm the catalog once: the ADR-0241 memo then registers its body on every card's renderer at once.
+  try {
+    await createRenderer().preload(catalogId)
+  } catch (error) {
+    const failed = document.createElement('p')
+    failed.textContent = `The ${catalogId} catalog failed to load: ${error instanceof Error ? error.message : String(error)}`
+    view.append(failed)
+    return
+  }
+
+  const pending: Promise<void>[] = []
+  for (const type of types) {
+    const section = document.createElement('section')
+    section.className = 'catalog-alt-item'
+    section.dataset.type = type
+    section.style.cssText = 'display:grid; gap:0.5rem; margin-block:1.5rem;'
+    const heading = document.createElement('h2')
+    heading.className = 'catalog-alt-title'
+    heading.textContent = type
+    section.append(heading)
+    view.append(section)
+
+    const exemption = exemptionFor(catalogId, type)
+    if (exemption !== undefined) {
+      const note = document.createElement('p')
+      note.className = 'catalog-alt-exempt'
+      note.textContent = `No example seed renders ${type}: ${exemption}`
+      section.append(note)
+      continue
+    }
+    const seed = exampleSeedFor(catalogId, type)
+    const about = document.createElement('p')
+    if (seed === undefined) {
+      about.textContent = `No example seed renders ${type} yet.`
+      section.append(about)
+      continue
+    }
+    about.textContent = `${seed.name}: ${seed.description}`
+    section.append(about)
+    pending.push(renderSeedCard(section, seed))
+  }
+  await Promise.all(pending)
+}
+
+function showCatalog(catalogId: string): void {
+  const isDefault = catalogId === FLEET_CATALOG_ID
+  setShown(filterWrap, isDefault)
+  setShown(filterStatus, isDefault)
+  setShown(tabs, isDefault)
+  if (!isDefault && !altViews.has(catalogId)) {
+    const view = document.createElement('div')
+    view.className = 'catalog-alt'
+    view.dataset.catalog = catalogId
+    altViews.set(catalogId, view)
+    content.append(view)
+    void fillAltView(view, catalogId)
+  }
+  for (const [id, view] of altViews) view.hidden = id !== catalogId
+}
+
+catalogSelect.addEventListener('change', () => {
+  const catalogId = catalogSelect.value
+  const url = new URL(location.href)
+  if (catalogId === FLEET_CATALOG_ID) url.searchParams.delete('catalog')
+  else url.searchParams.set('catalog', catalogId)
+  history.replaceState(history.state, '', url)
+  showCatalog(catalogId)
+})
+const initialCatalog = catalogFromSearch(location.search)
+catalogSelect.value = initialCatalog
+if (initialCatalog !== FLEET_CATALOG_ID) showCatalog(initialCatalog)

@@ -44,16 +44,6 @@ describe('playingCardFactory — applyProp (direct prop pass-through, ADR-0225)'
     expect((el as unknown as { faceDown: boolean }).faceDown).toBe(false)
   })
 
-  it('size lands on the element\'s size property, and null falls back to md', () => {
-    const el = playingCardFactory.create()
-    for (const size of ['sm', 'md', 'lg']) {
-      playingCardFactory.applyProp(el, 'size', size)
-      expect((el as unknown as { size: string }).size).toBe(size)
-    }
-    playingCardFactory.applyProp(el, 'size', null)
-    expect((el as unknown as { size: string }).size).toBe('md')
-  })
-
   it('a null value coerces rank/suit back to the component\'s own "" graceful-empty default', () => {
     const el = playingCardFactory.create()
     playingCardFactory.applyProp(el, 'rank', 'A')

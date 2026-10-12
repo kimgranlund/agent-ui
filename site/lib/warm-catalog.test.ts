@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (agent-schema.test.ts precedent)
-import { readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 declare const process: { cwd(): string }
 
 // warm-catalog.test.ts: the drift gate for the warm-up convention (T-0040, ADR-0241). The default `agent-ui`
@@ -62,5 +62,41 @@ describe('warm-catalog: the helper awaits the default catalog body, and no share
     )
     expect(libs.length, 'found real site/lib modules (anti-vacuous)').toBeGreaterThan(20)
     expect(libs.filter((name) => importsWarmCatalog(read(`site/lib/${name}`)))).toEqual([])
+  })
+})
+
+/** The page entries that build a renderer but read no mount synchronously, each mapped to its cold-load check (T-0064). */
+const COLD_SAFE_ENTRIES: Record<string, string> = {
+  'site/pages/a2ui-patterns.ts': 'site/pages/a2ui-patterns.test.ts',
+  'site/pages/a2ui-list.ts': 'site/pages/a2ui-list.test.ts',
+  'site/pages/a2ui-canvas.ts': 'site/pages/a2ui-canvas.test.ts',
+  'site/pages/a2ui-chat.ts': 'site/pages/a2ui-chat.browser.test.ts',
+}
+
+/** Every page entry whose live code calls `createRenderer(` and sits on neither WARM_ENTRIES nor COLD_SAFE_ENTRIES. */
+const unclassifiedRendererEntries = (entries: Record<string, string>): string[] =>
+  Object.entries(entries)
+    .filter(([, src]) => /\bcreateRenderer\(/.test(stripComments(src)))
+    .filter(([path]) => !WARM_ENTRIES.includes(path) && !(path in COLD_SAFE_ENTRIES))
+    .map(([path]) => path)
+
+describe('warm-catalog: every page that builds a renderer is classified warm or cold-safe', () => {
+  it('every site/pages entry that calls createRenderer is in WARM_ENTRIES or COLD_SAFE_ENTRIES', () => {
+    const names = (readdirSync(`${ROOT}/site/pages`) as string[]).filter(
+      (name) => name.endsWith('.ts') && !name.endsWith('.test.ts') && !name.endsWith('.d.ts'),
+    )
+    expect(names.length, 'found real site/pages entries (anti-vacuous)').toBeGreaterThan(10)
+    const entries = Object.fromEntries(names.map((name) => [`site/pages/${name}`, read(`site/pages/${name}`)]))
+    expect(unclassifiedRendererEntries(entries)).toEqual([])
+    for (const check of Object.values(COLD_SAFE_ENTRIES)) expect(existsSync(`${ROOT}/${check}`), check).toBe(true)
+  })
+
+  it('the classification bites: a planted entry that calls createRenderer on neither list is reported', () => {
+    const planted = {
+      'site/pages/planted.ts': `import { createRenderer } from '@agent-ui/a2ui'\nconst host = createRenderer()\n`,
+      'site/pages/comment-only.ts': `// createRenderer() in a comment only\nconst x = 1\n`,
+      'site/pages/a2ui-list.ts': `const host = createRenderer()\n`,
+    }
+    expect(unclassifiedRendererEntries(planted)).toEqual(['site/pages/planted.ts'])
   })
 })

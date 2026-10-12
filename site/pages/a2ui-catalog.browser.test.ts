@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 // Side-effect import: the page module builds the whole A2UI Catalog page into document.body (mountPage appends
 // to `#app ?? document.body`) and self-imports the foundation cascade + self-defining ui-* controls (_page.ts).
 import './a2ui-catalog.ts'
+import { CATALOG_OPTIONS, exemptionFor, typesFor } from '../lib/a2ui-catalog-selector.ts'
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
 // so its duration is set by the browser's scheduling, which stretches under concurrent host load.
@@ -69,6 +70,25 @@ function panelIsAnchoredToTrigger(panel: HTMLElement, trigger: HTMLElement): boo
   const alignOk =
     Math.abs(p.left - Math.max(0, t.left)) <= EPS || Math.abs(p.right - Math.min(vw, t.right)) <= EPS
   return sideOk && alignOk
+}
+
+/** Poll `predicate` across animation frames until it is true, or fail after `timeoutMs` (the a2ui-chat
+ *  browser test's idiom): each alternate-view card settles its own renderer behind the catalog preload. */
+async function waitUntil(predicate: () => boolean, timeoutMs = 20_000): Promise<void> {
+  const start = Date.now()
+  for (;;) {
+    if (predicate()) return
+    if (Date.now() - start > timeoutMs) throw new Error('waitUntil: condition never became true within the timeout')
+    await raf()
+  }
+}
+
+/** Pick one catalog option through the page's own `change` listener (the capability-registry page precedent). */
+function selectCatalog(id: string): void {
+  const select = document.querySelector('ui-select.catalog-select') as (HTMLElement & { value: string }) | null
+  expect(select, 'no catalog selector on the page').not.toBeNull()
+  select!.value = id
+  select!.dispatchEvent(new Event('change'))
 }
 
 function rectOf(el: HTMLElement): string {
@@ -222,5 +242,51 @@ describe('a2ui-catalog — the tab-strip shape (five tier tabs, one visible pane
     const labelAfter = firstTab!.textContent
     expect(labelAfter, 'the tab label should change once the filter narrows matches').not.toBe(labelBefore)
     expect(labelAfter, 'the collapsed tab label should read a zero count').toMatch(/\(0\)$/)
+  })
+})
+
+// T-0064: the catalog selector. One test per non-default option, so each gets its own 30 s budget under WebKit.
+// The last test switches back to agent-ui, leaving the shared page as the earlier describes expect it.
+describe('a2ui-catalog: the catalog selector (T-0064)', () => {
+  for (const id of CATALOG_OPTIONS.filter((option) => option !== 'agent-ui')) {
+    it(`T-0064: every non-default catalog option renders one card per type, each non-exempt card with a mounted root: ${id}`, async () => {
+      selectCatalog(id)
+      const view = document.querySelector<HTMLElement>(`div.catalog-alt[data-catalog="${id}"]`)
+      expect(view, `no alternate view for ${id}`).not.toBeNull()
+      const types = typesFor(id)
+      expect(types.length, `${id} previews no types`).toBeGreaterThan(0)
+      const live = types.filter((type) => exemptionFor(id, type) === undefined)
+      const card = (type: string): HTMLElement | null => view!.querySelector<HTMLElement>(`:scope > section.catalog-alt-item[data-type="${type}"]`)
+      await waitUntil(() => live.every((type) => card(type)?.dataset.rendered === 'true'))
+
+      expect(view!.hidden, 'the selected alternate view is hidden').toBe(false)
+      expect([...view!.querySelectorAll<HTMLElement>(':scope > section.catalog-alt-item')].map((s) => s.dataset.type)).toEqual([...types])
+      for (const type of types) {
+        const section = card(type)!
+        if (exemptionFor(id, type) !== undefined) {
+          expect(section.querySelector('p.catalog-alt-exempt'), `${id} ${type}: no exemption note`).not.toBeNull()
+          expect(section.querySelector('.canvas-surface'), `${id} ${type}: an exempt card renders no canvas`).toBeNull()
+        } else {
+          expect(section.querySelector('.canvas-surface')!.childElementCount, `${id} ${type}: no mounted root`).toBeGreaterThan(0)
+        }
+      }
+      const tabs = document.querySelector<HTMLElement>('ui-tabs.catalog-tabs')!
+      expect(tabs.hidden, 'the tier tabs stay visible on a non-default catalog').toBe(true)
+      expect(getComputedStyle(tabs).display, 'the tier tabs still lay out on a non-default catalog').toBe('none')
+      expect(new URLSearchParams(location.search).get('catalog'), 'the query parameter does not name the catalog').toBe(id)
+    })
+  }
+
+  it('T-0064: switching back to agent-ui restores the tier tabs and hides the alternate view', async () => {
+    selectCatalog('agent-ui')
+    await raf()
+    const tabs = document.querySelector<HTMLElement>('ui-tabs.catalog-tabs')!
+    expect(tabs.hidden, 'the tier tabs stay hidden on agent-ui').toBe(false)
+    expect(getComputedStyle(tabs).display, 'the tier tabs do not lay out on agent-ui').not.toBe('none')
+    expect(document.querySelector<HTMLElement>('.catalog-filter')!.hidden, 'the filter stays hidden on agent-ui').toBe(false)
+    const views = [...document.querySelectorAll<HTMLElement>('div.catalog-alt')]
+    expect(views.length, 'anti-vacuous: the earlier tests built alternate views').toBeGreaterThan(0)
+    for (const view of views) expect(view.hidden, `${view.dataset.catalog} stays shown on agent-ui`).toBe(true)
+    expect(new URLSearchParams(location.search).has('catalog'), 'agent-ui keeps a catalog query parameter').toBe(false)
   })
 })

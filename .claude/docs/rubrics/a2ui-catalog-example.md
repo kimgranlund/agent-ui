@@ -11,6 +11,8 @@
 
 ## 1 · The unit under evaluation
 
+Scope: this rubric grades the `agent-ui` playground cards (no `?catalog=`, or `?catalog=agent-ui`); the seed cards of other catalogs fall outside it.
+
 One **card** = `section.catalog-item` on the catalog page, for one catalog type `T`:
 
 Each part, its DOM, and what it is derived from (the truth to grade against):
